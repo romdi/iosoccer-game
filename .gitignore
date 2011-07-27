@@ -1,0 +1,13 @@
+tier1.lib
+vgui_controls.lib
+
+*.sdf
+*.opensdf
+*.sbr
+*.suo
+*.user
+*.ncb
+*.*log
+
+[Dd]ebug*/
+[Rr]elease*/
