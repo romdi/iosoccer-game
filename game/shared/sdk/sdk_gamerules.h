@@ -36,6 +36,39 @@
 	#define CSDKGameRulesProxy C_SDKGameRulesProxy
 #endif
 
+enum match_state_t
+{
+	MATCH_INIT = 0,
+	MATCH_WARMUP,
+	MATCH_FIRST_HALF,
+	MATCH_FIRST_HALF_INJURY_TIME,
+	MATCH_HALFTIME,
+	MATCH_SECOND_HALF,
+	MATCH_SECOND_HALF_INJURY_TIME,
+	MATCH_EXTRATIME_INTERMISSION,
+	MATCH_EXTRATIME_FIRST_HALF,
+	MATCH_EXTRATIME_FIRST_HALF_INJURY_TIME,
+	MATCH_EXTRATIME_HALFTIME,
+	MATCH_EXTRATIME_SECOND_HALF,
+	MATCH_EXTRATIME_SECOND_HALF_INJURY_TIME,
+	MATCH_PENALTIES_INTERMISSION,
+	MATCH_PENALTIES,
+	MATCH_COOLDOWN,
+	MATCH_END
+};
+
+class CSDKGameRules;
+
+class CSDKGameRulesStateInfo
+{
+public:
+	match_state_t			m_nMatchState;
+	const char				*m_pStateName;
+
+	void (CSDKGameRules::*pfnEnterState)();	// Init and deinit the state.
+	void (CSDKGameRules::*pfnLeaveState)();
+	void (CSDKGameRules::*pfnThink)();	// Do a PreThink() in this state.
+};
 
 class CSDKGameRulesProxy : public CGameRulesProxy
 {
@@ -192,11 +225,68 @@ private:
 */
 
 public:
-	CNetworkVar( float, m_fStart);			//from wiki
-	CNetworkVar( int, m_iDuration);
+	CNetworkVar(float, m_fStart);			//from wiki
+	CNetworkVar(int, m_iDuration);
+	CNetworkVar(match_state_t, m_nMatchState);
 	int	GetMapRemainingTime(void);				//ios
 	int GetMapTime(void);
 	void StartRoundtimer(int iDuration);
+	inline match_state_t State_Get( void ) { return m_nMatchState; }
+	float m_flStateEnterTime;
+	float m_flStateInjuryTime;
+
+#ifdef GAME_DLL
+protected:
+	CSDKGameRulesStateInfo		*m_pCurStateInfo;			// Per-state data 
+	float						m_flStateTransitionTime;	// Timer for round states
+	// State machine handling
+	void State_Transition( match_state_t newState );
+	void State_Enter(match_state_t newState);	// Initialize the new state.
+	void State_Leave();										// Cleanup the previous state.
+	void State_Think();										// Update the current state.
+	static CSDKGameRulesStateInfo* State_LookupInfo(match_state_t state);	// Find the state info for the specified state.
+
+	// State Functions
+	void State_Enter_INIT();
+	void State_Think_INIT();
+
+	void State_Enter_WARMUP();
+	void State_Think_WARMUP();
+
+	void State_Enter_FIRST_HALF();
+	void State_Think_FIRST_HALF();
+
+	void State_Enter_HALFTIME();
+	void State_Think_HALFTIME();
+
+	void State_Enter_SECOND_HALF();
+	void State_Think_SECOND_HALF();
+
+	void State_Enter_EXTRATIME_INTERMISSION();
+	void State_Think_EXTRATIME_INTERMISSION();
+
+	void State_Enter_EXTRATIME_FIRST_HALF();
+	void State_Think_EXTRATIME_FIRST_HALF();
+
+	void State_Enter_EXTRATIME_HALFTIME();
+	void State_Think_EXTRATIME_HALFTIME();
+
+	void State_Enter_EXTRATIME_SECOND_HALF();
+	void State_Think_EXTRATIME_SECOND_HALF();
+
+	void State_Enter_PENALTIES_INTERMISSION();
+	void State_Think_PENALTIES_INTERMISSION();
+
+	void State_Enter_PENALTIES();
+	void State_Think_PENALTIES();
+
+	void State_Enter_COOLDOWN();
+	void State_Think_COOLDOWN();
+
+	void State_Enter_END();
+	void State_Think_END();
+
+#endif
 
 };
 

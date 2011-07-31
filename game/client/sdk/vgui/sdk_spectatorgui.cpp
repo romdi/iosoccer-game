@@ -151,7 +151,7 @@ void CSDKSpectatorGUI::UpdateTimer()
 	wchar_t szText[ 63 ];
 
 	
-	m_nLastTime = (int)( SDKGameRules()->GetMapRemainingTime() );
+	m_nLastTime = 0;//(int)( SDKGameRules()->GetMapRemainingTime() );
 
 	if ( m_nLastTime < 0 )
 		 m_nLastTime  = 0;

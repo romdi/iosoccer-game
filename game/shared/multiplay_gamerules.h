@@ -59,7 +59,7 @@ typedef struct
 
 } VoiceCommandMenuItem_t;
 
-extern ConVar mp_timelimit;
+//extern ConVar mp_timelimit;
 
 //=========================================================
 // CMultiplayRules - rules for the basic half life multiplayer

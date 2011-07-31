@@ -76,7 +76,7 @@ void CTeamplayRules::Think ( void )
 		return;
 	}
 
-	float flTimeLimit = mp_timelimit.GetFloat() * 60;
+	float flTimeLimit = 0;//mp_timelimit.GetFloat() * 60;
 	
 	if ( flTimeLimit != 0 && gpGlobals->curtime >= flTimeLimit )
 	{

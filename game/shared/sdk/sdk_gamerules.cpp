@@ -81,10 +81,12 @@ BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 	//ios RecvPropFloat( RECVINFO( m_flGameStartTime ) ),
 	RecvPropFloat( RECVINFO( m_fStart) ),
 	RecvPropInt( RECVINFO( m_iDuration) ),
+	RecvPropInt( RECVINFO( m_nMatchState) ),
 #else
 	//ios SendPropFloat( SENDINFO( m_flGameStartTime ), 32, SPROP_NOSCALE ),
 	SendPropFloat( SENDINFO( m_fStart) ),
 	SendPropInt( SENDINFO( m_iDuration) ),
+	SendPropInt( SENDINFO( m_nMatchState ) ),
 #endif
 END_NETWORK_TABLE()
 
@@ -257,14 +259,10 @@ void InitBodyQue()
 
 CSDKGameRules::CSDKGameRules()
 {
-	InitTeams();
+	m_pCurStateInfo = NULL;
+	State_Transition(MATCH_INIT);
 
 	//ios m_bLevelInitialized = false;
-
-#if defined ( SDK_USE_TEAMS )
-	m_iSpawnPointCount_Blue = 0;
-	m_iSpawnPointCount_Red = 0;
-#endif // SDK_USE_TEAMS
 
 	//ios m_flGameStartTime = 0;
 
@@ -283,50 +281,7 @@ void CSDKGameRules::ServerActivate()
 	}
 	*/
 }
-/* ios
-void CSDKGameRules::CheckLevelInitialized()
-{
-	if ( !m_bLevelInitialized )
-	{
-#if defined ( SDK_USE_TEAMS )
-		// Count the number of spawn points for each team
-		// This determines the maximum number of players allowed on each
 
-		CBaseEntity* ent = NULL;
-
-		m_iSpawnPointCount_Blue		= 0;
-		m_iSpawnPointCount_Red		= 0;
-
-		while ( ( ent = gEntList.FindEntityByClassname( ent, "info_player_blue" ) ) != NULL )
-		{
-			if ( IsSpawnPointValid( ent, NULL ) )
-			{
-				m_iSpawnPointCount_Blue++;
-			}
-			else
-			{
-				Warning("Invalid blue spawnpoint at (%.1f,%.1f,%.1f)\n",
-					ent->GetAbsOrigin()[0],ent->GetAbsOrigin()[2],ent->GetAbsOrigin()[2] );
-			}
-		}
-
-		while ( ( ent = gEntList.FindEntityByClassname( ent, "info_player_red" ) ) != NULL )
-		{
-			if ( IsSpawnPointValid( ent, NULL ) ) 
-			{
-				m_iSpawnPointCount_Red++;
-			}
-			else
-			{
-				Warning("Invalid red spawnpoint at (%.1f,%.1f,%.1f)\n",
-					ent->GetAbsOrigin()[0],ent->GetAbsOrigin()[2],ent->GetAbsOrigin()[2] );
-			}
-		}
-#endif // SDK_USE_TEAMS
-		m_bLevelInitialized = true;
-	}
-}
-*/
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -491,10 +446,10 @@ void CSDKGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vec
 
 void CSDKGameRules::Think()
 {
+	State_Think();
 	//BaseClass::Think();		//this breaks stuff, like voice comms!
 
 	GetVoiceGameMgr()->Update( gpGlobals->frametime );
-
 
 	Bot_RunAll();	//ios
 
@@ -508,9 +463,8 @@ void CSDKGameRules::Think()
 		return;
 	}
 
-	if (GetMapRemainingTime() < 0)
-		GoToIntermission();
-
+	//if (GetMapRemainingTime() < 0)
+	//	GoToIntermission();
 }
 
 Vector DropToGround( 
@@ -573,49 +527,6 @@ void CSDKGameRules::GoToIntermission( void )
 	}
 			
 	m_flIntermissionEndTime = gpGlobals->curtime + flWaitTime;
-
-	//who won?
-	int winners = 0;
-	int scoreA = GetGlobalTeam( TEAM_A )->GetScore();
-	int scoreB = GetGlobalTeam( TEAM_B )->GetScore();
-	if (scoreA > scoreB)
-		winners = TEAM_A;
-	if (scoreB > scoreA)
-		winners = TEAM_B;
-
-	for ( int i = 0; i < MAX_PLAYERS; i++ )		//maxclients?
-	{
-		CSDKPlayer *pPlayer = (CSDKPlayer*)UTIL_PlayerByIndex( i );
-
-		if ( !pPlayer )
-			continue;
-
-		pPlayer->ShowViewPortPanel( PANEL_SCOREBOARD );
-
-		//is this player on the winning team
-		if (pPlayer->GetTeamNumber() == winners)
-		{
-			pPlayer->AddFlag (FL_CELEB);
-		}
-		//else
-		//	pPlayer->AddFlag (FL_ATCONTROLS);
-
-		//freezes the players
-		//pPlayer->AddFlag (FL_ATCONTROLS);
-	}
-
-
-	//find a ball
-	CBall *pBall = dynamic_cast<CBall*>(gEntList.FindEntityByClassname( NULL, "football" ));
-	if (pBall)
-	{
-		//this test doesnt show because the scoreboard is on front
-		pBall->SendMainStatus(BALL_MAINSTATUS_FINAL_WHISTLE);
-		pBall->EmitAmbientSound(pBall->entindex(), pBall->GetAbsOrigin(), "Ball.whistle");
-		//cheer
-		pBall->EmitAmbientSound(pBall->entindex(), pBall->GetAbsOrigin(), "Ball.cheer");
-	}
-
 }
 
 
@@ -727,97 +638,6 @@ void CSDKGameRules::AutobalanceTeams(void)
 	//MESSAGE_END();
 }
 
-
-void TestSpawnPointType( const char *pEntClassName )
-{
-	// Find the next spawn spot.
-	CBaseEntity *pSpot = gEntList.FindEntityByClassname( NULL, pEntClassName );
-
-	while( pSpot )
-	{
-		// check if pSpot is valid
-		if( g_pGameRules->IsSpawnPointValid( pSpot, NULL ) )
-		{
-			// the successful spawn point's location
-			NDebugOverlay::Box( pSpot->GetAbsOrigin(), VEC_HULL_MIN, VEC_HULL_MAX, 0, 255, 0, 100, 60 );
-
-			// drop down to ground
-			Vector GroundPos = DropToGround( NULL, pSpot->GetAbsOrigin(), VEC_HULL_MIN, VEC_HULL_MAX );
-
-			// the location the player will spawn at
-			NDebugOverlay::Box( GroundPos, VEC_HULL_MIN, VEC_HULL_MAX, 0, 0, 255, 100, 60 );
-
-			// draw the spawn angles
-			QAngle spotAngles = pSpot->GetLocalAngles();
-			Vector vecForward;
-			AngleVectors( spotAngles, &vecForward );
-			NDebugOverlay::HorzArrow( pSpot->GetAbsOrigin(), pSpot->GetAbsOrigin() + vecForward * 32, 10, 255, 0, 0, 255, true, 60 );
-		}
-		else
-		{
-			// failed spawn point location
-			NDebugOverlay::Box( pSpot->GetAbsOrigin(), VEC_HULL_MIN, VEC_HULL_MAX, 255, 0, 0, 100, 60 );
-		}
-
-		// increment pSpot
-		pSpot = gEntList.FindEntityByClassname( pSpot, pEntClassName );
-	}
-}
-
-void TestSpawns()
-{
-	TestSpawnPointType( "info_player_deathmatch" );
-#if defined ( SDK_USE_TEAMS )
-	TestSpawnPointType( "info_player_blue" );
-	TestSpawnPointType( "info_player_red" );
-#endif // SDK_USE_TEAMS
-}
-ConCommand cc_TestSpawns( "map_showspawnpoints", TestSpawns, "Dev - test the spawn points, draws for 60 seconds", FCVAR_CHEAT );
-
-/* ios
-CBaseEntity *CSDKGameRules::GetPlayerSpawnSpot( CBasePlayer *pPlayer )
-{
-	// get valid spawn point
-	CBaseEntity *pSpawnSpot = pPlayer->EntSelectSpawnPoint();
-
-	// drop down to ground
-	Vector GroundPos = DropToGround( pPlayer, pSpawnSpot->GetAbsOrigin(), VEC_HULL_MIN, VEC_HULL_MAX );
-
-	// Move the player to the place it said.
-	pPlayer->Teleport( &GroundPos, &pSpawnSpot->GetLocalAngles(), &vec3_origin );
-	pPlayer->m_Local.m_vecPunchAngle = vec3_angle;
-
-	return pSpawnSpot;
-}
-
-// checks if the spot is clear of players
-bool CSDKGameRules::IsSpawnPointValid( CBaseEntity *pSpot, CBasePlayer *pPlayer )
-{
-	if ( !pSpot->IsTriggered( pPlayer ) )
-	{
-		return false;
-	}
-
-	// Check if it is disabled by Enable/Disable
-	CSpawnPoint *pSpawnPoint = dynamic_cast< CSpawnPoint * >( pSpot );
-	if ( pSpawnPoint )
-	{
-		if ( pSpawnPoint->IsDisabled() )
-		{
-			return false;
-		}
-	}
-
-	Vector mins = GetViewVectors()->m_vHullMin;
-	Vector maxs = GetViewVectors()->m_vHullMax;
-
-	Vector vTestMins = pSpot->GetAbsOrigin() + mins;
-	Vector vTestMaxs = pSpot->GetAbsOrigin() + maxs;
-
-	// First test the starting origin.
-	return UTIL_IsSpaceEmpty( pPlayer, vTestMins, vTestMaxs );
-}
-*/
 void CSDKGameRules::PlayerSpawn( CBasePlayer *p )
 {	
 	CSDKPlayer *pPlayer = ToSDKPlayer( p );
@@ -826,265 +646,11 @@ void CSDKGameRules::PlayerSpawn( CBasePlayer *p )
 
 	if( team != TEAM_SPECTATOR )
 	{
-#if defined ( SDK_USE_PLAYERCLASSES )
-		if( pPlayer->m_Shared.DesiredPlayerClass() == PLAYERCLASS_RANDOM )
-		{
-			ChooseRandomClass( pPlayer );
-			ClientPrint( pPlayer, HUD_PRINTTALK, "#game_now_as", GetPlayerClassName( pPlayer->m_Shared.PlayerClass(), team ) );
-		}
-		else
-		{
-			pPlayer->m_Shared.SetPlayerClass( pPlayer->m_Shared.DesiredPlayerClass() );
-		}
-
-		int playerclass = pPlayer->m_Shared.PlayerClass();
-
-		if( playerclass != PLAYERCLASS_UNDEFINED )
-		{
-			//Assert( PLAYERCLASS_UNDEFINED < playerclass && playerclass < NUM_PLAYERCLASSES );
-
-			CSDKTeam *pTeam = GetGlobalSDKTeam( team );
-			const CSDKPlayerClassInfo &pClassInfo = pTeam->GetPlayerClassInfo( playerclass );
-
-			Assert( pClassInfo.m_iTeam == team );
-
-			pPlayer->SetModel( pClassInfo.m_szPlayerModel );
-			pPlayer->SetHitboxSet( 0 );
-
-			char buf[64];
-			int bufsize = sizeof(buf);
-
-			//Give weapons
-
-			// Primary weapon
-			Q_snprintf( buf, bufsize, "weapon_%s", WeaponIDToAlias(pClassInfo.m_iPrimaryWeapon) );
-			CBaseEntity *pPrimaryWpn = pPlayer->GiveNamedItem( buf );
-			Assert( pPrimaryWpn );
-
-			// Secondary weapon
-			CBaseEntity *pSecondaryWpn = NULL;
-			if ( pClassInfo.m_iSecondaryWeapon != WEAPON_NONE )
-			{
-				Q_snprintf( buf, bufsize, "weapon_%s", WeaponIDToAlias(pClassInfo.m_iSecondaryWeapon) );
-				pSecondaryWpn = pPlayer->GiveNamedItem( buf );
-			}
-
-			// Melee weapon
-			if ( pClassInfo.m_iMeleeWeapon )
-			{
-				Q_snprintf( buf, bufsize, "weapon_%s", WeaponIDToAlias(pClassInfo.m_iMeleeWeapon) );
-				pPlayer->GiveNamedItem( buf );
-			}
-
-			CWeaponSDKBase *pWpn = NULL;
-
-			// Primary Ammo
-			pWpn = dynamic_cast<CWeaponSDKBase *>(pPrimaryWpn);
-
-			if( pWpn )
-			{
-				int iNumClip = pWpn->GetSDKWpnData().m_iDefaultAmmoClips - 1;	//account for one clip in the gun
-				int iClipSize = pWpn->GetSDKWpnData().iMaxClip1;
-				pPlayer->GiveAmmo( iNumClip * iClipSize, pWpn->GetSDKWpnData().szAmmo1 );
-			}
-
-			// Secondary Ammo
-			if ( pSecondaryWpn )
-			{
-				pWpn = dynamic_cast<CWeaponSDKBase *>(pSecondaryWpn);
-
-				if( pWpn )
-				{
-					int iNumClip = pWpn->GetSDKWpnData().m_iDefaultAmmoClips - 1;	//account for one clip in the gun
-					int iClipSize = pWpn->GetSDKWpnData().iMaxClip1;
-					pPlayer->GiveAmmo( iNumClip * iClipSize, pWpn->GetSDKWpnData().szAmmo1 );
-				}
-			}				
-
-			// Grenade Type 1
-			if ( pClassInfo.m_iGrenType1 != WEAPON_NONE )
-			{
-				Q_snprintf( buf, bufsize, "weapon_%s", WeaponIDToAlias(pClassInfo.m_iGrenType1) );
-				CBaseEntity *pGrenade = pPlayer->GiveNamedItem( buf );
-				Assert( pGrenade );
-				
-				pWpn = dynamic_cast<CWeaponSDKBase *>(pGrenade);
-
-				if( pWpn )
-				{
-					pPlayer->GiveAmmo( pClassInfo.m_iNumGrensType1 - 1, pWpn->GetSDKWpnData().szAmmo1 );
-				}
-			}
-
-			// Grenade Type 2
-			if ( pClassInfo.m_iGrenType2 != WEAPON_NONE )
-			{
-				Q_snprintf( buf, bufsize, "weapon_%s", WeaponIDToAlias(pClassInfo.m_iGrenType2) );
-				CBaseEntity *pGrenade2 = pPlayer->GiveNamedItem( buf );
-				Assert( pGrenade2 );
-				
-				pWpn = dynamic_cast<CWeaponSDKBase *>(pGrenade2);
-
-				if( pWpn )
-				{
-					pPlayer->GiveAmmo( pClassInfo.m_iNumGrensType2 - 1, pWpn->GetSDKWpnData().szAmmo1 );
-				}
-			}
-
-			pPlayer->Weapon_Switch( (CBaseCombatWeapon *)pPrimaryWpn );
-
-//			DevMsg("setting spawn armor to: %d\n", pClassInfo.m_iArmor );
-			pPlayer->SetSpawnArmorValue( pClassInfo.m_iArmor );
-
-		}
-		else
-		{
-//			Assert( !"Player spawning with PLAYERCLASS_UNDEFINED" );
-			pPlayer->SetModel( SDK_PLAYER_MODEL );
-		}
-#else
-		//ios pPlayer->GiveDefaultItems();
-#endif // SDK_USE_PLAYERCLASSES
-		//ios pPlayer->SetMaxSpeed( 600 );
-//pPlayer->PrecacheModel( "models/player/barcelona/barcelona.mdl" );
-//pPlayer->SetModel( "models/player/barcelona/barcelona.mdl" );
-//pPlayer->SetHitboxSet( 0 );
+		//pPlayer->PrecacheModel( "models/player/barcelona/barcelona.mdl" );
+		//pPlayer->SetModel( "models/player/barcelona/barcelona.mdl" );
+		//pPlayer->SetHitboxSet( 0 );
 	}
 }
-#if defined ( SDK_USE_PLAYERCLASSES )
-void CSDKGameRules::ChooseRandomClass( CSDKPlayer *pPlayer )
-{
-	int i;
-	int numChoices = 0;
-	int choices[16];
-	int firstclass = 0;
-
-	CSDKTeam *pTeam = GetGlobalSDKTeam( pPlayer->GetTeamNumber() );
-
-	int lastclass = pTeam->GetNumPlayerClasses();
-
-	int previousClass = pPlayer->m_Shared.PlayerClass();
-
-	// Compile a list of the classes that aren't full
-	for( i=firstclass;i<lastclass;i++ )
-	{
-		// don't join the same class twice in a row
-		if ( i == previousClass )
-			continue;
-
-		if( CanPlayerJoinClass( pPlayer, i ) )
-		{	
-			choices[numChoices] = i;
-			numChoices++;
-		}
-	}
-
-	// If ALL the classes are full
-	if( numChoices == 0 )
-	{
-		Msg( "Random class found that all classes were full - ignoring class limits for this spawn\n" );
-
-		pPlayer->m_Shared.SetPlayerClass( random->RandomFloat( firstclass, lastclass ) );
-	}
-	else
-	{
-		// Choose a slot randomly
-		i = random->RandomInt( 0, numChoices-1 );
-
-		// We are now the class that was in that slot
-		pPlayer->m_Shared.SetPlayerClass( choices[i] );
-	}
-}
-bool CSDKGameRules::CanPlayerJoinClass( CSDKPlayer *pPlayer, int cls )
-{
-	if( cls == PLAYERCLASS_RANDOM )
-	{
-		return mp_allowrandomclass.GetBool();
-	}
-
-	if( ReachedClassLimit( pPlayer->GetTeamNumber(), cls ) )
-		return false;
-
-	return true;
-}
-
-bool CSDKGameRules::ReachedClassLimit( int team, int cls )
-{
-	Assert( cls != PLAYERCLASS_UNDEFINED );
-	Assert( cls != PLAYERCLASS_RANDOM );
-
-	// get the cvar
-	int iClassLimit = GetClassLimit( team, cls );
-
-	// count how many are active
-	int iClassExisting = CountPlayerClass( team, cls );
-
-	if( iClassLimit > -1 && iClassExisting >= iClassLimit )
-	{
-		return true;
-	}
-
-	return false;
-}
-
-int CSDKGameRules::CountPlayerClass( int team, int cls )
-{
-	int num = 0;
-	CSDKPlayer *pSDKPlayer;
-
-	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
-	{
-		pSDKPlayer = ToSDKPlayer( UTIL_PlayerByIndex( i ) );
-
-		if (pSDKPlayer == NULL)
-			continue;
-
-		if (FNullEnt( pSDKPlayer->edict() ))
-			continue;
-
-		if( pSDKPlayer->GetTeamNumber() != team )
-			continue;
-
-		if( pSDKPlayer->m_Shared.DesiredPlayerClass() == cls )
-			num++;
-	}
-
-	return num;
-}
-
-int CSDKGameRules::GetClassLimit( int team, int cls )
-{
-	CSDKTeam *pTeam = GetGlobalSDKTeam( team );
-
-	Assert( pTeam );
-
-	const CSDKPlayerClassInfo &pClassInfo = pTeam->GetPlayerClassInfo( cls );
-
-	int iClassLimit;
-
-	ConVar *pLimitCvar = ( ConVar * )cvar->FindVar( pClassInfo.m_szLimitCvar );
-
-	Assert( pLimitCvar );
-
-	if( pLimitCvar )
-		iClassLimit = pLimitCvar->GetInt();
-	else
-		iClassLimit = -1;
-
-	return iClassLimit;
-}
-
-bool CSDKGameRules::IsPlayerClassOnTeam( int cls, int team )
-{
-	if( cls == PLAYERCLASS_RANDOM )
-		return true;
-
-	CSDKTeam *pTeam = GetGlobalSDKTeam( team );
-
-	return ( cls >= 0 && cls < pTeam->GetNumPlayerClasses() );
-}
-
-#endif // SDK_USE_PLAYERCLASSES
 
 void CSDKGameRules::InitTeams( void )
 {
@@ -1104,56 +670,8 @@ void CSDKGameRules::InitTeams( void )
 		g_Teams.AddToTail( pTeam );
 	}
 
-	//wiki roundtimer
-	m_fStart=-1; // <0 means no timer
-
-	StartRoundtimer(mp_timelimit.GetFloat() * 60.0f);		//timelimit is in mins -start the clock when map loads
-
-	//romd test CreateEntityByName( "sdk_gamerules" );
+	CreateEntityByName( "sdk_gamerules" );
 }
-
-/* original sdk
-void CSDKGameRules::InitTeams( void )
-{
-	Assert( g_Teams.Count() == 0 );
-
-	g_Teams.Purge();	// just in case
-
-#if defined ( SDK_USE_PLAYERCLASSES )
-	// clear the player class data
-	ResetFilePlayerClassInfoDatabase();
-#endif // SDK_USE_PLAYERCLASSES
-
-	// Create the team managers
-
-	//Tony; we have a special unassigned team incase our mod is using classes but not teams.
-	CTeam *pUnassigned = static_cast<CTeam*>(CreateEntityByName( "sdk_team_unassigned" ));
-	Assert( pUnassigned );
-	pUnassigned->Init( pszTeamNames[TEAM_UNASSIGNED], TEAM_UNASSIGNED );
-	g_Teams.AddToTail( pUnassigned );
-
-	//Tony; just use a plain ole sdk_team_manager for spectators
-	CTeam *pSpectator = static_cast<CTeam*>(CreateEntityByName( "sdk_team_manager" ));
-	Assert( pSpectator );
-	pSpectator->Init( pszTeamNames[TEAM_SPECTATOR], TEAM_SPECTATOR );
-	g_Teams.AddToTail( pSpectator );
-
-	//Tony; don't create these two managers unless teams are being used!
-#if defined ( SDK_USE_TEAMS )
-	//Tony; create the blue team
-	CTeam *pBlue = static_cast<CTeam*>(CreateEntityByName( "sdk_team_blue" ));
-	Assert( pBlue );
-	pBlue->Init( pszTeamNames[SDK_TEAM_BLUE], SDK_TEAM_BLUE );
-	g_Teams.AddToTail( pBlue );
-
-	//Tony; create the red team
-	CTeam *pRed = static_cast<CTeam*>(CreateEntityByName( "sdk_team_red" ));
-	Assert( pRed );
-	pRed->Init( pszTeamNames[SDK_TEAM_RED], SDK_TEAM_RED );
-	g_Teams.AddToTail( pRed );
-#endif 
-}
-*/
 
 enum
 {
@@ -1632,67 +1150,6 @@ int CSDKGameRules::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarge
 
 	return GR_NOTTEAMMATE;
 }
-/* ios
-float CSDKGameRules::GetMapRemainingTime()
-{
-#ifdef GAME_DLL
-	if ( nextlevel.GetString() && *nextlevel.GetString() && engine->IsMapValid( nextlevel.GetString() ) )
-	{
-		return 0;
-	}
-#endif
-
-	// if timelimit is disabled, return -1
-	if ( mp_timelimit.GetInt() <= 0 )
-		return -1;
-
-	// timelimit is in minutes
-	float flTimeLeft =  ( m_flGameStartTime + mp_timelimit.GetInt() * 60 ) - gpGlobals->curtime;
-
-	// never return a negative value
-	if ( flTimeLeft < 0 )
-		flTimeLeft = 0;
-
-	return flTimeLeft;
-}
-
-float CSDKGameRules::GetMapElapsedTime( void )
-{
-	return gpGlobals->curtime;
-}
-*/
-
-//shared.
-int CSDKGameRules::GetMapTime(void)
-{
-	return m_fStart<0 ? -1 : int(gpGlobals->curtime-m_fStart);
-}
-
-int CSDKGameRules::GetMapRemainingTime(void)
-{
-	return m_fStart<0 ? -1 : m_iDuration-int(gpGlobals->curtime-m_fStart);
-
-	/* failed hl2mp
-	// if timelimit is disabled, return 0
-	if ( mp_timelimit.GetInt() <= 0 )
-		return 0;
-
-	// timelimit is in minutes
-
-	float timeleft = (m_flGameStartTime + mp_timelimit.GetInt() * 60.0f ) - gpGlobals->curtime;
-
-	return timeleft;
-	*/
-}
-
-//wiki roundtimer
-void CSDKGameRules::StartRoundtimer(int iDuration) 
-{
-#ifndef CLIENT_DLL
-	m_iDuration = iDuration;
-	m_fStart = gpGlobals->curtime;
-#endif
-}
 
 #ifndef CLIENT_DLL
 //-----------------------------------------------------------------------------
@@ -1767,8 +1224,8 @@ void svRestart (void)
 	}
 
 	//reset roundtimer
-	((CSDKGameRules*)g_pGameRules)->m_fStart=-1;
-	((CSDKGameRules*)g_pGameRules)->StartRoundtimer(mp_timelimit.GetFloat() * 60.0f);
+	//((CSDKGameRules*)g_pGameRules)->m_fStart=-1;
+	//((CSDKGameRules*)g_pGameRules)->StartRoundtimer(mp_timelimit.GetFloat() * 60.0f);
 
 
 
@@ -1832,5 +1289,296 @@ void svRestart (void)
 
 
 ConCommand cc_restart( "sv_restart", svRestart, "Restart game", FCVAR_PROTECTED );
+
+#endif
+
+ConVar mp_showstatetransitions( "mp_showstatetransitions", "1", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Show match state transitions." );
+
+ConVar mp_timelimit_match( "mp_timelimit_match", "2", FCVAR_NOTIFY|FCVAR_REPLICATED, "match duration in minutes without breaks (90 is real time)" );
+ConVar mp_timelimit_warmup( "mp_timelimit_warmup", "1", FCVAR_NOTIFY|FCVAR_REPLICATED, "time before match start" );
+ConVar mp_timelimit_cooldown( "mp_timelimit_cooldown", "1", FCVAR_NOTIFY|FCVAR_REPLICATED, "time after match end" );
+ConVar mp_timelimit_halftime( "mp_timelimit_halftime", "1", FCVAR_NOTIFY|FCVAR_REPLICATED, "half time duration" );
+ConVar mp_timelimit_extratime_halftime( "mp_timelimit_extratime_halftime", "1", FCVAR_NOTIFY|FCVAR_REPLICATED, "extra time halftime duration" );
+ConVar mp_timelimit_extratime_intermission( "mp_timelimit_extratime_intermission", "1", FCVAR_NOTIFY|FCVAR_REPLICATED, "time before extra time start" );
+ConVar mp_timelimit_penalties( "mp_timelimit_penalties", "1", FCVAR_NOTIFY|FCVAR_REPLICATED, "limit for penalties duration" );
+ConVar mp_timelimit_penalties_intermission( "mp_timelimit_penalties_intermission", "1", FCVAR_NOTIFY|FCVAR_REPLICATED, "time before penalties start" );
+ConVar mp_extratime( "mp_extratime", "1", FCVAR_NOTIFY|FCVAR_REPLICATED );
+ConVar mp_penalties( "mp_penalties", "1", FCVAR_NOTIFY|FCVAR_REPLICATED );
+
+#ifdef GAME_DLL
+
+void CSDKGameRules::State_Transition( match_state_t newState )
+{
+	State_Leave();
+	State_Enter( newState );
+}
+
+void CSDKGameRules::State_Enter( match_state_t newState )
+{
+	m_nMatchState = newState;
+	m_pCurStateInfo = State_LookupInfo( newState );
+	m_flStateEnterTime = gpGlobals->curtime;
+	m_flStateInjuryTime = 0.0f;
+
+	if ( mp_showstatetransitions.GetInt() > 0 )
+	{
+		if ( m_pCurStateInfo )
+			Msg( "Gamerules: entering state '%s'\n", m_pCurStateInfo->m_pStateName );
+		else
+			Msg( "Gamerules: entering state #%d\n", newState );
+	}
+
+	// Initialize the new state.
+	if ( m_pCurStateInfo && m_pCurStateInfo->pfnEnterState )
+	{
+		(this->*m_pCurStateInfo->pfnEnterState)();
+	}
+}
+
+void CSDKGameRules::State_Leave()
+{
+	if ( m_pCurStateInfo && m_pCurStateInfo->pfnLeaveState )
+	{
+		(this->*m_pCurStateInfo->pfnLeaveState)();
+	}
+}
+
+void CSDKGameRules::State_Think()
+{
+	if ( m_pCurStateInfo && m_pCurStateInfo->pfnThink )
+	{
+		(this->*m_pCurStateInfo->pfnThink)();
+	}
+}
+
+CSDKGameRulesStateInfo* CSDKGameRules::State_LookupInfo( match_state_t state )
+{
+	static CSDKGameRulesStateInfo playerStateInfos[] =
+	{
+		{ MATCH_INIT,						"MATCH_INIT",						&CSDKGameRules::State_Enter_INIT, NULL, &CSDKGameRules::State_Think_INIT },
+		{ MATCH_WARMUP,						"MATCH_WARMUP",						&CSDKGameRules::State_Enter_WARMUP, NULL, &CSDKGameRules::State_Think_WARMUP },
+		{ MATCH_FIRST_HALF,					"MATCH_FIRST_HALF",					&CSDKGameRules::State_Enter_FIRST_HALF, NULL, &CSDKGameRules::State_Think_FIRST_HALF },
+		{ MATCH_HALFTIME,					"MATCH_HALFTIME",					&CSDKGameRules::State_Enter_HALFTIME, NULL, &CSDKGameRules::State_Think_HALFTIME },
+		{ MATCH_SECOND_HALF,				"MATCH_SECOND_HALF",				&CSDKGameRules::State_Enter_SECOND_HALF, NULL, &CSDKGameRules::State_Think_SECOND_HALF },
+		{ MATCH_EXTRATIME_INTERMISSION,		"MATCH_EXTRATIME_INTERMISSION",		&CSDKGameRules::State_Enter_EXTRATIME_INTERMISSION, NULL, &CSDKGameRules::State_Think_EXTRATIME_INTERMISSION },
+		{ MATCH_EXTRATIME_FIRST_HALF,		"MATCH_EXTRATIME_FIRST_HALF",		&CSDKGameRules::State_Enter_EXTRATIME_FIRST_HALF, NULL, &CSDKGameRules::State_Think_EXTRATIME_FIRST_HALF },
+		{ MATCH_EXTRATIME_HALFTIME,			"MATCH_EXTRATIME_HALFTIME",			&CSDKGameRules::State_Enter_EXTRATIME_HALFTIME, NULL, &CSDKGameRules::State_Think_EXTRATIME_HALFTIME },
+		{ MATCH_EXTRATIME_SECOND_HALF,		"MATCH_EXTRATIME_SECOND_HALF",		&CSDKGameRules::State_Enter_EXTRATIME_SECOND_HALF, NULL, &CSDKGameRules::State_Think_EXTRATIME_SECOND_HALF },
+		{ MATCH_PENALTIES_INTERMISSION,		"MATCH_PENALTIES_INTERMISSION",		&CSDKGameRules::State_Enter_PENALTIES_INTERMISSION, NULL, &CSDKGameRules::State_Think_PENALTIES_INTERMISSION },
+		{ MATCH_PENALTIES,					"MATCH_PENALTIES",					&CSDKGameRules::State_Enter_PENALTIES, NULL, &CSDKGameRules::State_Think_PENALTIES },
+		{ MATCH_COOLDOWN,					"MATCH_COOLDOWN",					&CSDKGameRules::State_Enter_COOLDOWN, NULL, &CSDKGameRules::State_Think_COOLDOWN },
+		{ MATCH_END,						"MATCH_END",						&CSDKGameRules::State_Enter_END, NULL, &CSDKGameRules::State_Think_END },
+	};
+
+	for ( int i=0; i < ARRAYSIZE( playerStateInfos ); i++ )
+	{
+		if ( playerStateInfos[i].m_nMatchState == state )
+			return &playerStateInfos[i];
+	}
+
+	return NULL;
+}
+
+void CSDKGameRules::State_Enter_INIT()
+{
+	InitTeams();
+}
+
+void CSDKGameRules::State_Think_INIT()
+{
+	State_Transition(MATCH_WARMUP);
+}
+
+void CSDKGameRules::State_Enter_WARMUP()
+{
+}
+
+void CSDKGameRules::State_Think_WARMUP()
+{
+	if (gpGlobals->curtime > m_flStateEnterTime + mp_timelimit_warmup.GetFloat() * 60)
+		State_Transition(MATCH_FIRST_HALF);
+}
+
+void CSDKGameRules::State_Enter_FIRST_HALF()
+{
+}
+
+void CSDKGameRules::State_Think_FIRST_HALF()
+{
+	if (gpGlobals->curtime > m_flStateEnterTime + mp_timelimit_match.GetFloat() * 60 / 2 + m_flStateInjuryTime)
+	{
+		//if (m_pBall->IsNearGoal())
+		//	m_flStateInjuryTime += 5; // let players finish their attack
+		//else
+			State_Transition(MATCH_HALFTIME);
+	}
+}
+
+void CSDKGameRules::State_Enter_HALFTIME()
+{
+}
+
+void CSDKGameRules::State_Think_HALFTIME()
+{
+	if (gpGlobals->curtime > m_flStateEnterTime + mp_timelimit_halftime.GetFloat() * 60)
+		State_Transition(MATCH_SECOND_HALF);
+}
+
+void CSDKGameRules::State_Enter_SECOND_HALF()
+{
+}
+
+void CSDKGameRules::State_Think_SECOND_HALF()
+{
+	if (gpGlobals->curtime > m_flStateEnterTime + mp_timelimit_match.GetFloat() * 60 / 2 + m_flStateInjuryTime)
+	{
+		if (mp_extratime.GetBool())
+			State_Transition(MATCH_EXTRATIME_INTERMISSION);
+		else if (mp_penalties.GetBool())
+			State_Transition(MATCH_PENALTIES_INTERMISSION);
+		else
+			State_Transition(MATCH_COOLDOWN);
+	}
+}
+
+void CSDKGameRules::State_Enter_EXTRATIME_INTERMISSION()
+{
+
+}
+
+void CSDKGameRules::State_Think_EXTRATIME_INTERMISSION()
+{
+	if (gpGlobals->curtime > m_flStateEnterTime + mp_timelimit_extratime_intermission.GetFloat() * 60)
+	{
+		State_Transition(MATCH_EXTRATIME_FIRST_HALF);
+	}
+}
+
+void CSDKGameRules::State_Enter_EXTRATIME_FIRST_HALF()
+{
+
+}
+
+void CSDKGameRules::State_Think_EXTRATIME_FIRST_HALF()
+{
+	if (gpGlobals->curtime > m_flStateEnterTime + mp_timelimit_match.GetFloat() * 60 / 6 + m_flStateInjuryTime)
+	{
+		State_Transition(MATCH_EXTRATIME_HALFTIME);
+	}
+}
+
+void CSDKGameRules::State_Enter_EXTRATIME_HALFTIME()
+{
+}
+
+void CSDKGameRules::State_Think_EXTRATIME_HALFTIME()
+{
+	if (gpGlobals->curtime > m_flStateEnterTime + mp_timelimit_extratime_halftime.GetFloat() * 60)
+	{
+		State_Transition(MATCH_EXTRATIME_SECOND_HALF);
+	}
+}
+
+void CSDKGameRules::State_Enter_EXTRATIME_SECOND_HALF()
+{
+}
+
+void CSDKGameRules::State_Think_EXTRATIME_SECOND_HALF()
+{
+	if (gpGlobals->curtime > m_flStateEnterTime + mp_timelimit_match.GetFloat() * 60 / 6 + m_flStateInjuryTime)
+	{
+		if (mp_penalties.GetBool())
+			State_Transition(MATCH_PENALTIES_INTERMISSION);
+		else
+			State_Transition(MATCH_COOLDOWN);
+	}
+}
+
+void CSDKGameRules::State_Enter_PENALTIES_INTERMISSION()
+{
+}
+
+void CSDKGameRules::State_Think_PENALTIES_INTERMISSION()
+{
+	if (gpGlobals->curtime > m_flStateEnterTime + mp_timelimit_penalties_intermission.GetFloat() * 60)
+	{
+		State_Transition(MATCH_PENALTIES);
+	}
+}
+
+void CSDKGameRules::State_Enter_PENALTIES()
+{
+}
+
+void CSDKGameRules::State_Think_PENALTIES()
+{
+	if (gpGlobals->curtime > m_flStateEnterTime + mp_timelimit_penalties.GetFloat() * 60)
+	{
+		State_Transition(MATCH_COOLDOWN);
+	}
+}
+
+void CSDKGameRules::State_Enter_COOLDOWN()
+{
+	//who won?
+	int winners = 0;
+	int scoreA = GetGlobalTeam( TEAM_A )->GetScore();
+	int scoreB = GetGlobalTeam( TEAM_B )->GetScore();
+	if (scoreA > scoreB)
+		winners = TEAM_A;
+	if (scoreB > scoreA)
+		winners = TEAM_B;
+
+	//for ( int i = 0; i < MAX_PLAYERS; i++ )		//maxclients?
+	for ( int i = 0; i < gpGlobals->maxClients; i++ )
+	{
+		CSDKPlayer *pPlayer = (CSDKPlayer*)UTIL_PlayerByIndex( i );
+
+		if ( !pPlayer )
+			continue;
+
+		pPlayer->ShowViewPortPanel( PANEL_SCOREBOARD );
+
+		//is this player on the winning team
+		if (pPlayer->GetTeamNumber() == winners)
+		{
+			pPlayer->AddFlag (FL_CELEB);
+		}
+		//else
+		//	pPlayer->AddFlag (FL_ATCONTROLS);
+
+		//freezes the players
+		//pPlayer->AddFlag (FL_ATCONTROLS);
+	}
+
+
+	//find a ball
+	CBall *pBall = dynamic_cast<CBall*>(gEntList.FindEntityByClassname( NULL, "football" ));
+	if (pBall)
+	{
+		//this test doesnt show because the scoreboard is on front
+		pBall->SendMainStatus(BALL_MAINSTATUS_FINAL_WHISTLE);
+		pBall->EmitAmbientSound(pBall->entindex(), pBall->GetAbsOrigin(), "Ball.whistle");
+		//cheer
+		pBall->EmitAmbientSound(pBall->entindex(), pBall->GetAbsOrigin(), "Ball.cheer");
+	}
+}
+
+void CSDKGameRules::State_Think_COOLDOWN()
+{
+	if (gpGlobals->curtime > m_flStateEnterTime + mp_timelimit_cooldown.GetFloat() * 60)
+	{
+		State_Transition(MATCH_END);
+	}
+}
+
+void CSDKGameRules::State_Enter_END()
+{
+	GoToIntermission();
+}
+
+void CSDKGameRules::State_Think_END()
+{
+}
 
 #endif

@@ -51,7 +51,7 @@ ConVar mp_chattime(
 		"amount of time players can chat after the game is over",
 		true, 1,
 		true, 120 );
-
+/*
 #ifdef GAME_DLL
 void MPTimeLimitCallback( IConVar *var, const char *pOldString, float flOldValue )
 {
@@ -72,7 +72,7 @@ ConVar mp_timelimit( "mp_timelimit", "30", FCVAR_NOTIFY|FCVAR_REPLICATED, "game 
 					, MPTimeLimitCallback 
 #endif
 					);
-
+*/
 #ifdef GAME_DLL
 
 ConVar tv_delaymapchange( "tv_delaymapchange", "0", 0, "Delays map change until broadcast is complete" );

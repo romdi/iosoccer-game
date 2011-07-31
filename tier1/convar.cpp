@@ -26,7 +26,7 @@
 
 
 // Comment this out when we release.
-//#define ALLOW_DEVELOPMENT_CVARS
+#define ALLOW_DEVELOPMENT_CVARS
 
 
 
