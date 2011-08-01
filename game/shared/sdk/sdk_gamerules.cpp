@@ -32,6 +32,7 @@ extern void Bot_RunAll( void );
 	#include "sdk_player.h"		//ios
 	#include "game.h"			//ios
 
+	#include "movehelper_server.h"
 #endif
 
 
@@ -75,18 +76,26 @@ END_DATADESC();
 
 REGISTER_GAMERULES_CLASS( CSDKGameRules );
 
+#ifdef CLIENT_DLL
+void RecvProxy_MatchState( const CRecvProxyData *pData, void *pStruct, void *pOut )
+{
+	CSDKGameRules *pGamerules = ( CSDKGameRules *)pStruct;
+	int nMatchState = pData->m_Value.m_Int;
+	pGamerules->SetMatchState( nMatchState );
+}
+#endif 
 
 BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 #if defined ( CLIENT_DLL )
 	//ios RecvPropFloat( RECVINFO( m_flGameStartTime ) ),
-	RecvPropFloat( RECVINFO( m_fStart) ),
-	RecvPropInt( RECVINFO( m_iDuration) ),
-	RecvPropInt( RECVINFO( m_nMatchState) ),
+	//RecvPropFloat( RECVINFO( m_fStart) ),
+	//RecvPropInt( RECVINFO( m_iDuration) ),
+	RecvPropInt( RECVINFO( m_nMatchState), 0, RecvProxy_MatchState ),
 #else
 	//ios SendPropFloat( SENDINFO( m_flGameStartTime ), 32, SPROP_NOSCALE ),
-	SendPropFloat( SENDINFO( m_fStart) ),
-	SendPropInt( SENDINFO( m_iDuration) ),
-	SendPropInt( SENDINFO( m_nMatchState ) ),
+	//SendPropFloat( SENDINFO( m_fStart) ),
+	//SendPropInt( SENDINFO( m_iDuration) ),
+	SendPropInt( SENDINFO( m_nMatchState ), 5 ),
 #endif
 END_NETWORK_TABLE()
 
@@ -1579,6 +1588,15 @@ void CSDKGameRules::State_Enter_END()
 
 void CSDKGameRules::State_Think_END()
 {
+}
+
+#endif
+
+#ifdef CLIENT_DLL
+
+void CSDKGameRules::SetMatchState(int nMatchState)
+{
+	m_nMatchState = nMatchState;
 }
 
 #endif

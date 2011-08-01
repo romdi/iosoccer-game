@@ -145,6 +145,7 @@ public:
 
 	DECLARE_CLIENTCLASS_NOBASE(); // This makes datatables able to access our private vars.
 
+	void SetMatchState(int nMatchState);
 #else
 
 	DECLARE_SERVERCLASS_NOBASE(); // This makes datatables able to access our private vars.
