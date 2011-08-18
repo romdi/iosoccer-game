@@ -1395,6 +1395,7 @@ void CSDKGameRules::State_Think_HALFTIME()
 
 void CSDKGameRules::State_Enter_SECOND_HALF()
 {
+	SwapTeams();
 }
 
 void CSDKGameRules::State_Think_SECOND_HALF()
@@ -1425,7 +1426,7 @@ void CSDKGameRules::State_Think_EXTRATIME_INTERMISSION()
 
 void CSDKGameRules::State_Enter_EXTRATIME_FIRST_HALF()
 {
-
+	SwapTeams();
 }
 
 void CSDKGameRules::State_Think_EXTRATIME_FIRST_HALF()
@@ -1450,6 +1451,7 @@ void CSDKGameRules::State_Think_EXTRATIME_HALFTIME()
 
 void CSDKGameRules::State_Enter_EXTRATIME_SECOND_HALF()
 {
+	SwapTeams();
 }
 
 void CSDKGameRules::State_Think_EXTRATIME_SECOND_HALF()
@@ -1548,6 +1550,26 @@ void CSDKGameRules::State_Enter_END()
 
 void CSDKGameRules::State_Think_END()
 {
+}
+
+void CSDKGameRules::SwapTeams()
+{
+	// swap players
+	for (int i = 0; i < gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer *pPlayer = (CSDKPlayer *)UTIL_PlayerByIndex(i);
+		if (!pPlayer)
+			continue;
+		int team = pPlayer->GetTeamNumber();
+		if (team < TEAM_A)
+			continue;
+
+		pPlayer->ChangeTeam((team == TEAM_A ? TEAM_B : TEAM_A), true, true);
+		//pPlayer->ChooseModel();
+	}
+
+	// swap teams
+	SetTeams(pszTeamNames[TEAM_B], pszTeamNames[TEAM_A]);
 }
 
 #endif

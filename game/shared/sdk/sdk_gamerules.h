@@ -287,6 +287,7 @@ protected:
 	void State_Enter_END();
 	void State_Think_END();
 
+	void SwapTeams();
 #endif
 
 };
