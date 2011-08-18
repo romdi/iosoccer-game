@@ -630,6 +630,7 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "d:\games\steam\
     <ClCompile Include="scripted.cpp" />
     <ClCompile Include="scriptedtarget.cpp" />
     <ClCompile Include="sdk\ball.cpp" />
+    <ClCompile Include="sdk\ios_mapentities.cpp" />
     <ClCompile Include="sdk\keeper.cpp" />
     <ClCompile Include="sendproxy.cpp" />
     <ClCompile Include="..\shared\sequence_Transitioner.cpp" />

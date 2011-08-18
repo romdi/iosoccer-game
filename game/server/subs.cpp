@@ -59,29 +59,6 @@ BEGIN_DATADESC( CBaseDMStart )
 END_DATADESC()
 
 
-class CBaseBallStart : public CPointEntity //IOS
-{
-public:
-
-	DECLARE_CLASS( CBaseBallStart, CPointEntity );
-
-	void Spawn (void);
-
-private:
-};
-
-extern CBaseEntity *CreateBall (const Vector &pos);
-
-//Create ball entity on map startup - IOS
-void CBaseBallStart::Spawn(void)
-{
-
-	Vector pos = GetAbsOrigin();
-	Vector lpos = GetLocalOrigin();
-	CreateBall (pos);
-	
-}
-
 
 // These are the new entry points to entities. 
 #if !defined( SDK_DLL )		//Tony; don't use the normal info_player_deathmatch in the SDK, use the custom one.
@@ -90,57 +67,6 @@ LINK_ENTITY_TO_CLASS(info_player_deathmatch,CBaseDMStart);
 
 LINK_ENTITY_TO_CLASS(info_player_start,CPointEntity);
 LINK_ENTITY_TO_CLASS(info_landmark,CPointEntity);
-
-
-//ios entities
-LINK_ENTITY_TO_CLASS(info_ball_start,CBaseBallStart);	//IOS
-
-LINK_ENTITY_TO_CLASS(info_team1_player1,CBaseDMStart);
-LINK_ENTITY_TO_CLASS(info_team1_player2,CBaseDMStart);
-LINK_ENTITY_TO_CLASS(info_team1_player3,CBaseDMStart);
-LINK_ENTITY_TO_CLASS(info_team1_player4,CBaseDMStart);
-LINK_ENTITY_TO_CLASS(info_team1_player5,CBaseDMStart);
-LINK_ENTITY_TO_CLASS(info_team1_player6,CBaseDMStart);
-LINK_ENTITY_TO_CLASS(info_team1_player7,CBaseDMStart);
-LINK_ENTITY_TO_CLASS(info_team1_player8,CBaseDMStart);
-LINK_ENTITY_TO_CLASS(info_team1_player9,CBaseDMStart);
-LINK_ENTITY_TO_CLASS(info_team1_player10,CBaseDMStart);
-LINK_ENTITY_TO_CLASS(info_team1_player11,CBaseDMStart);
-
-LINK_ENTITY_TO_CLASS(info_team2_player1,CBaseDMStart);
-LINK_ENTITY_TO_CLASS(info_team2_player2,CBaseDMStart);
-LINK_ENTITY_TO_CLASS(info_team2_player3,CBaseDMStart);
-LINK_ENTITY_TO_CLASS(info_team2_player4,CBaseDMStart);
-LINK_ENTITY_TO_CLASS(info_team2_player5,CBaseDMStart);
-LINK_ENTITY_TO_CLASS(info_team2_player6,CBaseDMStart);
-LINK_ENTITY_TO_CLASS(info_team2_player7,CBaseDMStart);
-LINK_ENTITY_TO_CLASS(info_team2_player8,CBaseDMStart);
-LINK_ENTITY_TO_CLASS(info_team2_player9,CBaseDMStart);
-LINK_ENTITY_TO_CLASS(info_team2_player10,CBaseDMStart);
-LINK_ENTITY_TO_CLASS(info_team2_player11,CBaseDMStart);
-
-LINK_ENTITY_TO_CLASS(info_team1_goalkick0,CBaseDMStart);
-LINK_ENTITY_TO_CLASS(info_team1_goalkick1,CBaseDMStart);
-LINK_ENTITY_TO_CLASS(info_team2_goalkick0,CBaseDMStart);
-LINK_ENTITY_TO_CLASS(info_team2_goalkick1,CBaseDMStart);
-
-LINK_ENTITY_TO_CLASS(info_team1_corner0,CBaseDMStart);
-LINK_ENTITY_TO_CLASS(info_team1_corner1,CBaseDMStart);
-LINK_ENTITY_TO_CLASS(info_team2_corner0,CBaseDMStart);
-LINK_ENTITY_TO_CLASS(info_team2_corner1,CBaseDMStart);
-
-LINK_ENTITY_TO_CLASS(info_team1_corner_player0,CBaseDMStart);
-LINK_ENTITY_TO_CLASS(info_team1_corner_player1,CBaseDMStart);
-LINK_ENTITY_TO_CLASS(info_team2_corner_player0,CBaseDMStart);
-LINK_ENTITY_TO_CLASS(info_team2_corner_player1,CBaseDMStart);
-
-LINK_ENTITY_TO_CLASS(info_throw_in,CBaseDMStart);
-
-LINK_ENTITY_TO_CLASS(info_team1_penalty_spot,CBaseDMStart);
-LINK_ENTITY_TO_CLASS(info_team2_penalty_spot,CBaseDMStart);
-
-LINK_ENTITY_TO_CLASS(info_stadium,CBaseDMStart);
-
 
 bool CBaseDMStart::IsTriggered( CBaseEntity *pEntity )
 {
