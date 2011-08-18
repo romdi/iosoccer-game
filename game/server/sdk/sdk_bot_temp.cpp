@@ -142,7 +142,8 @@ CBasePlayer *BotPutInServer( bool bFrozen, int keeper )
 	}
 	else
 	{
-		if (g_IOSRand.RandomInt(0,2))
+		//if (g_IOSRand.RandomInt(0,2))
+		if (g_CurBotNumber % 2 == 1)
 			pPlayer->ChangeTeam( TEAM_A );						//TODO autoassign??
 		else
 			pPlayer->ChangeTeam( TEAM_B );
@@ -152,6 +153,7 @@ CBasePlayer *BotPutInServer( bool bFrozen, int keeper )
 	{
 		pPlayer->ChooseModel();
 		pPlayer->m_TeamPos = 1;
+		pPlayer->ConvertSpawnToShirt();
 		pPlayer->ChooseKeeperSkin();
 		//spawn at correct position
 		pPlayer->Spawn();
@@ -163,6 +165,7 @@ CBasePlayer *BotPutInServer( bool bFrozen, int keeper )
 	{
 		pPlayer->ChooseModel();									//bot player TODO - autoassign
 		pPlayer->m_TeamPos = g_IOSRand.RandomInt(2,11);
+		pPlayer->ConvertSpawnToShirt();
 		pPlayer->ChoosePlayerSkin();
 		pPlayer->Spawn();
 		pPlayer->RemoveEffects( EF_NODRAW );

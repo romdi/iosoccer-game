@@ -175,6 +175,8 @@ IMPLEMENT_SERVERCLASS_ST( CSDKPlayer, DT_SDKPlayer )
 
 	SendPropBool( SENDINFO( m_bSpawnInterpCounter ) ),
 
+	SendPropInt(SENDINFO(m_TeamPos)),
+	SendPropInt(SENDINFO(m_ShirtPos)),
 END_SEND_TABLE()
 
 class CSDKRagdoll : public CBaseAnimatingOverlay
@@ -2535,21 +2537,10 @@ void CSDKPlayer::ChooseKeeperSkin(void)
 
 void CSDKPlayer::ChooseModel(void)
 {
-	CFmtStr model;
-	const char	*pName = GetTeam()->GetName();
-
-	model.sprintf ("%s%s%s%s%s", "models/player/", pName, "/", pName, ".mdl");
+	//TODO: replace with generic player model
+	char *model = "models/player/barcelona/barcelona.mdl";
 	PrecacheModel(model);
 	SetModel (model);
-
-	//see if this model has an idle, if not use default team
-	//removed in 1.0c - this means the server has to have a copy of every custom model.
-	//int test = LookupSequence( "iosidle" );
-	//if (test==-1)
-	//{
-	//	Warning ("ChooseModel: Can't find mode %s\n", pName);
-	//	SetModel(SDK_PLAYER_MODEL);
-	//}
 }
 
 

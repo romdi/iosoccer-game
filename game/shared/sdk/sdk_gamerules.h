@@ -300,5 +300,8 @@ inline CSDKGameRules* SDKGameRules()
 	return static_cast<CSDKGameRules*>(g_pGameRules);
 }
 
+#ifdef GAME_DLL
+void SetTeams(const char *teamHome, const char *teamAway, bool bInitialize = true);
+#endif
 
 #endif // SDK_GAMERULES_H

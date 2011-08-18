@@ -137,6 +137,8 @@ public: // Public Variables
 	CInterpolatedVar< QAngle >	m_iv_angEyeAngles;
 
 	CNetworkVar( int, m_iShotsFired );	// number of shots fired recently
+	CNetworkVar(int, m_TeamPos);
+	CNetworkVar(int, m_ShirtPos);
 
 	EHANDLE	m_hRagdoll;
 

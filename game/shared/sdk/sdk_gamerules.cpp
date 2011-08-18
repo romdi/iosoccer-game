@@ -629,7 +629,7 @@ void CSDKGameRules::AutobalanceTeams(void)
 	}
 
 	pSwapPlayer->m_TeamPos = trypos;
-	pSwapPlayer->ChooseModel();
+	//pSwapPlayer->ChooseModel();
 
 	pSwapPlayer->Spawn();
 	g_pGameRules->GetPlayerSpawnSpot( pSwapPlayer );
@@ -735,18 +735,7 @@ void CSDKGameRules::ChooseTeamNames()
 		teamtype2 = g_IOSRand.RandomInt(0,numKits);
 	}
 
-	//got two teams with different colours
-	strcpy (pszTeamNames[2], gKitDesc[teamtype1].m_KitName);
-	strcpy (pszTeamNames[3], gKitDesc[teamtype2].m_KitName);
-
-	//update mp_teamlist with the teamnames we just chose
-	char	mpname[256];
-	mpname[0] = 0;
-	strcpy (mpname, gKitDesc[teamtype1].m_KitName);
-	strcat (mpname," ");
-	strcat (mpname, gKitDesc[teamtype2].m_KitName);
-	teamlist.SetValue(mpname);
-
+	SetTeams(gKitDesc[teamtype1].m_KitName, gKitDesc[teamtype2].m_KitName, false);
 }
 
 /* create some proxy entities that we use for transmitting data */
@@ -1200,43 +1189,14 @@ void CSDKGameRules::ClientDisconnected( edict_t *pClient )
 
 void svRestart (void)
 {
-	char	szTeamList[256];
-	char	*pName;
 
 	//ffs!
 	if ( !UTIL_IsCommandIssuedByServerAdmin() )
         return;
 
-	//get the string out the "mp_teamlist command"
-	szTeamList[0] = 0;
-	strcpy( szTeamList, teamlist.GetString() );		
-	if (strlen(szTeamList)>0)
-	{
-		pName = szTeamList;
-		//pName = strtok( pName, ";" );
-		pName = strtok( pName, " " );
-		int teamIndex = TEAM_A;
-		while ( pName != NULL && *pName && teamIndex < TEAMS_COUNT)
-		{
-			strcpy( pszTeamNames[teamIndex], pName );
-			teamIndex++;
-			//pName = strtok( NULL, ";" );
-			pName = strtok( NULL, " " );
-		}
-	}
-
-	//update the team names
-	for ( int i = 0; i < ARRAYSIZE( pszTeamNames ); i++ )
-	{
-		CTeam *pTeam = g_Teams[i];
-		pTeam->Init( pszTeamNames[i], i );
-	}
-
 	//reset roundtimer
 	//((CSDKGameRules*)g_pGameRules)->m_fStart=-1;
 	//((CSDKGameRules*)g_pGameRules)->StartRoundtimer(mp_timelimit.GetFloat() * 60.0f);
-
-
 
 	//clear all the players data
 	for ( int i = 1; i <= gpGlobals->maxClients; i++ )	
@@ -1272,7 +1232,7 @@ void svRestart (void)
 		plr->m_fPossessionTime = 0.0f;
 
 		//refresh if team has changed
-		plr->ChooseModel();
+		//plr->ChooseModel();
 
 		if (plr->m_PlayerAnim==PLAYER_THROWIN)
 			plr->DoAnimationEvent( PLAYERANIMEVENT_KICK );		//weird throwin bug
@@ -1598,5 +1558,46 @@ void CSDKGameRules::SetMatchState(int nMatchState)
 {
 	m_nMatchState = nMatchState;
 }
+
+#endif
+
+#ifdef GAME_DLL
+
+void SetTeams(const char *teamHome, const char *teamAway, bool bInitialize)
+{
+	// copy strings to avoid problems (e.g. when swapping teams)
+	char teamHomeCpy[32], teamAwayCpy[32];
+	Q_strncpy(teamHomeCpy, teamHome, sizeof(teamHomeCpy));
+	Q_strncpy(teamAwayCpy, teamAway, sizeof(teamAwayCpy));
+
+	Q_strncpy(pszTeamNames[TEAM_A], teamHomeCpy, sizeof(pszTeamNames[TEAM_A]));
+	Q_strncpy(pszTeamNames[TEAM_B], teamAwayCpy, sizeof(pszTeamNames[TEAM_B]));
+
+	if (bInitialize)
+	{
+		//update the team names
+		for ( int i = 0; i < ARRAYSIZE( pszTeamNames ); i++ )
+		{
+			CTeam *pTeam = g_Teams[i];
+			pTeam->Init( pszTeamNames[i], i );
+		}
+	}
+}
+
+void cc_Teams( const CCommand& args )
+{
+	if ( !UTIL_IsCommandIssuedByServerAdmin() )
+		return;
+
+	if ( args.ArgC() < 3 )
+	{
+		Msg( "Format: mp_teams <home team> <away team>\n" );
+		return;
+	}
+
+	SetTeams(args[1], args[2]);
+}
+
+static ConCommand mp_teams( "mp_teams", cc_Teams, "Set teams" );
 
 #endif

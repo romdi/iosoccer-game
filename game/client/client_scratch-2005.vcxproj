@@ -602,6 +602,7 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
       </PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="sdk\ios_mainstatus.cpp" />
+    <ClCompile Include="sdk\ios_playerskinproxy.cpp" />
     <ClCompile Include="sdk\ios_statusmenu.cpp" />
     <ClCompile Include="simple_keys.cpp" />
     <ClCompile Include="..\..\public\simple_physics.cpp">

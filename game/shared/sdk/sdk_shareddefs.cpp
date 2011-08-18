@@ -52,16 +52,16 @@ ConVar	mp_limit_pc_class3(		"mp_limit_pc_class3", "-1", FCVAR_REPLICATED, "Class
 
 char pszTeamNames[4][32] =
 {
-	"#SDK_Team_Unassigned",
-	"#SDK_Team_Spectator",
+	"Unassigned",
+	"Spectator",
 	/* ios
 #if defined ( SDK_USE_TEAMS )
 	"#SDK_Team_Blue",
 	"#SDK_Team_Red",
 #endif
 	*/
-	"TeamA",			//IOS
-	"TeamB"
+	"ENGLAND",			//IOS
+	"BRAZIL"
 };
 
 //Tony; We need to precache all possible player models that we're going to use

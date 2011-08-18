@@ -133,6 +133,9 @@ IMPLEMENT_CLIENTCLASS_DT( C_SDKPlayer, DT_SDKPlayer, CSDKPlayer )
 	RecvPropInt( RECVINFO( m_iPlayerState ) ),
 
 	RecvPropBool( RECVINFO( m_bSpawnInterpCounter ) ),
+
+	RecvPropInt(RECVINFO(m_TeamPos)),
+	RecvPropInt(RECVINFO(m_ShirtPos)),
 END_RECV_TABLE()
 
 // ------------------------------------------------------------------------------------------ //

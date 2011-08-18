@@ -265,8 +265,8 @@ public:
 	void				CheckRejoin(void);
 	//virtual void		CommitSuicide();
 
-	int					m_TeamPos;								//position on pitch
-	int					m_ShirtPos;								//converted spawn point numbers into shirt numbers
+	CNetworkVar(int, m_TeamPos);								//position on pitch
+	CNetworkVar(int, m_ShirtPos);								//converted spawn point numbers into shirt numbers
 
 	float				m_HoldAnimTime;							//dont let player move until this expires
 

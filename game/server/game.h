@@ -29,7 +29,7 @@ extern ConVar	footsteps;
 extern ConVar	flashlight;
 extern ConVar	aimcrosshair;
 extern ConVar	decalfrequency;
-extern ConVar	teamlist;		//ios
+//extern ConVar	teamlist;		//ios
 extern ConVar	scoretag;		//ios
 extern ConVar	slidetackle;	//ios
 extern ConVar	redcardtime;	//ios
