@@ -46,7 +46,7 @@
 
 //ios
 #include "sdk_player.h"
-#include "sdk_bot_temp.h"
+#include "ios_bot.h"
 
 
 // memdbgon must be the last include file in a .cpp file!!!

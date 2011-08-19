@@ -22,9 +22,6 @@
     <Filter Include="Source Files\SDK\Player">
       <UniqueIdentifier>{a6454de4-c9bd-4f39-9409-acb223f955ba}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\SDK\PerfBots">
-      <UniqueIdentifier>{d9dc9e68-bdd6-4e48-be0e-c581b5311a6c}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Multiplayer">
       <UniqueIdentifier>{4246239e-b9a4-4ee3-bf6c-95c95a6e94a7}</UniqueIdentifier>
     </Filter>
@@ -39,6 +36,9 @@
     </Filter>
     <Filter Include="Tools Framework">
       <UniqueIdentifier>{d73d0574-603d-4d04-a0a0-d710277eb7ae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\SDK\Bots">
+      <UniqueIdentifier>{d9dc9e68-bdd6-4e48-be0e-c581b5311a6c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -1389,9 +1389,6 @@
     <ClCompile Include="sdk\sdk_playermove.cpp">
       <Filter>Source Files\SDK\Player</Filter>
     </ClCompile>
-    <ClCompile Include="sdk\sdk_bot_temp.cpp">
-      <Filter>Source Files\SDK\PerfBots</Filter>
-    </ClCompile>
     <ClCompile Include="..\shared\multiplayer\multiplayer_animstate.cpp">
       <Filter>Source Files\Multiplayer</Filter>
     </ClCompile>
@@ -1407,11 +1404,17 @@
     <ClCompile Include="sdk\ball.cpp">
       <Filter>Source Files\SDK</Filter>
     </ClCompile>
-    <ClCompile Include="sdk\keeper.cpp">
-      <Filter>Source Files\SDK</Filter>
-    </ClCompile>
     <ClCompile Include="sdk\ios_mapentities.cpp">
       <Filter>Source Files\SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\ios_fieldbot.cpp">
+      <Filter>Source Files\SDK\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\ios_keeperbot.cpp">
+      <Filter>Source Files\SDK\Bots</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\ios_bot.cpp">
+      <Filter>Source Files\SDK\Bots</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -2300,9 +2303,6 @@
     <ClInclude Include="..\shared\sdk\sdk_playerclass_info_parse.h">
       <Filter>Source Files\SDK\Player</Filter>
     </ClInclude>
-    <ClInclude Include="sdk\sdk_bot_temp.h">
-      <Filter>Source Files\SDK\PerfBots</Filter>
-    </ClInclude>
     <ClInclude Include="..\shared\multiplayer\multiplayer_animstate.h">
       <Filter>Source Files\Multiplayer</Filter>
     </ClInclude>
@@ -2939,8 +2939,14 @@
     <ClInclude Include="sdk\ball.h">
       <Filter>Source Files\SDK</Filter>
     </ClInclude>
-    <ClInclude Include="sdk\keeper.h">
-      <Filter>Source Files\SDK</Filter>
+    <ClInclude Include="sdk\ios_keeperbot.h">
+      <Filter>Source Files\SDK\Bots</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\ios_bot.h">
+      <Filter>Source Files\SDK\Bots</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\ios_fieldbot.h">
+      <Filter>Source Files\SDK\Bots</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

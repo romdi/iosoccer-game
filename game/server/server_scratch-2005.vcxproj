@@ -630,8 +630,10 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "d:\games\steam\
     <ClCompile Include="scripted.cpp" />
     <ClCompile Include="scriptedtarget.cpp" />
     <ClCompile Include="sdk\ball.cpp" />
+    <ClCompile Include="sdk\ios_bot.cpp" />
+    <ClCompile Include="sdk\ios_fieldbot.cpp" />
+    <ClCompile Include="sdk\ios_keeperbot.cpp" />
     <ClCompile Include="sdk\ios_mapentities.cpp" />
-    <ClCompile Include="sdk\keeper.cpp" />
     <ClCompile Include="sendproxy.cpp" />
     <ClCompile Include="..\shared\sequence_Transitioner.cpp" />
     <ClCompile Include="..\..\public\server_class.cpp">
@@ -806,7 +808,6 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "d:\games\steam\
     <ClCompile Include="..\shared\sdk\sdk_playeranimstate.cpp" />
     <ClCompile Include="..\shared\sdk\sdk_playerclass_info_parse.cpp" />
     <ClCompile Include="sdk\sdk_playermove.cpp" />
-    <ClCompile Include="sdk\sdk_bot_temp.cpp" />
     <ClCompile Include="..\shared\multiplayer\multiplayer_animstate.cpp" />
     <ClCompile Include="playerinfomanager.cpp" />
     <ClCompile Include="entity_tools_server.cpp" />
@@ -1051,7 +1052,9 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "d:\games\steam\
     <ClInclude Include="..\shared\sdk\sdk_player_shared.h" />
     <ClInclude Include="..\..\public\server_class.h" />
     <ClInclude Include="sdk\ball.h" />
-    <ClInclude Include="sdk\keeper.h" />
+    <ClInclude Include="sdk\ios_bot.h" />
+    <ClInclude Include="sdk\ios_fieldbot.h" />
+    <ClInclude Include="sdk\ios_keeperbot.h" />
     <ClInclude Include="ServerNetworkProperty.h" />
     <ClInclude Include="..\..\public\shattersurfacetypes.h" />
     <ClInclude Include="..\shared\sheetsimulator.h" />
@@ -1110,7 +1113,6 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "d:\games\steam\
     <ClInclude Include="sdk\sdk_player_resource.h" />
     <ClInclude Include="..\shared\sdk\sdk_playeranimstate.h" />
     <ClInclude Include="..\shared\sdk\sdk_playerclass_info_parse.h" />
-    <ClInclude Include="sdk\sdk_bot_temp.h" />
     <ClInclude Include="..\shared\multiplayer\multiplayer_animstate.h" />
     <ClInclude Include="..\..\public\mathlib\amd3dx.h" />
     <ClInclude Include="..\shared\ammodef.h" />

@@ -20,7 +20,7 @@
 #include "team.h"	//IOS
 #include "fmtstr.h"	//IOS
 #include "game.h" //IOS
-#include "sdk_bot_temp.h"
+#include "ios_bot.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
