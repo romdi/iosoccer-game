@@ -1425,6 +1425,9 @@
     <ClCompile Include="sdk\ios_playerskinproxy.cpp">
       <Filter>Source Files\SDK</Filter>
     </ClCompile>
+    <ClCompile Include="sdk\ios_hud_powershotbar.cpp">
+      <Filter>Source Files\SDK\Hud Elements</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="achievement_notification_panel.h">
