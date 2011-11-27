@@ -1263,7 +1263,7 @@ ConCommand cc_restart( "sv_restart", svRestart, "Restart game", FCVAR_PROTECTED 
 
 ConVar mp_showstatetransitions( "mp_showstatetransitions", "1", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Show match state transitions." );
 
-ConVar mp_timelimit_match( "mp_timelimit_match", "2", FCVAR_NOTIFY|FCVAR_REPLICATED, "match duration in minutes without breaks (90 is real time)" );
+ConVar mp_timelimit_match( "mp_timelimit_match", "10", FCVAR_NOTIFY|FCVAR_REPLICATED, "match duration in minutes without breaks (90 is real time)" );
 ConVar mp_timelimit_warmup( "mp_timelimit_warmup", "1", FCVAR_NOTIFY|FCVAR_REPLICATED, "time before match start" );
 ConVar mp_timelimit_cooldown( "mp_timelimit_cooldown", "1", FCVAR_NOTIFY|FCVAR_REPLICATED, "time after match end" );
 ConVar mp_timelimit_halftime( "mp_timelimit_halftime", "1", FCVAR_NOTIFY|FCVAR_REPLICATED, "half time duration" );

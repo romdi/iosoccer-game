@@ -234,6 +234,9 @@ public:
 	void			RemoveFlagFromAll(int flag);
 
 	int				m_KickDelay;
+
+private:
+	void SetBallCurve(CSDKPlayer *pPlayer, Vector vel, Vector avel, Vector v_right, Vector v_up);
 };
 
 #endif

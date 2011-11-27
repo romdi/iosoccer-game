@@ -340,9 +340,13 @@ void CBall::VPhysicsCollision( int index, gamevcollisionevent_t	*pEvent	)
 	BaseClass::VPhysicsCollision( index, pEvent );
 }
 
-static const float NORMAL_KICK_STRENGTH = 1.0f * 1.15f;			//pre 1.0c 1.1f;
-static const float POWER_KICK_STRENGTH = 1.15f * 1.2f;
-static const float KEEPER_KICK_STRENGTH = 1.4f * 1.3f;
+static ConVar sv_normalshot_strength("sv_normalshot_strength", "1.0", FCVAR_ARCHIVE);
+static ConVar sv_powershot_strength("sv_powershot_strength", "1.0", FCVAR_ARCHIVE);
+static ConVar sv_keepershot_strength("sv_keepershot_strength", "1.0", FCVAR_ARCHIVE);
+
+//static const float NORMAL_KICK_STRENGTH = 1.0f * 1.0f; //* 1.15f;			//pre 1.0c 1.1f;
+//static const float POWER_KICK_STRENGTH = sv_powershot_strength.GetFloat();// 1.15f * 1.2f;
+//static const float KEEPER_KICK_STRENGTH = 1.4f * 1.0f; //1.3f;
 
 
 
@@ -371,30 +375,43 @@ static const float KEEPER_KICK_STRENGTH = 1.4f * 1.3f;
 //	
 //	
 //==========================================================
+
+#define SPRINT_TIME           6.0f     //IOS sprint amount 5.5
+#define SPRINT_RECHARGE_TIME  12.0f    //IOS time before sprint re-charges
+#define SPRINT_SPEED          90.0f    //IOS sprint increase in speed
+#define MAX_POWERSHOT_STRENGTH 5.0f
+
 int	CBall::Shoot (CBaseEntity *pOther, bool isPowershot)
 {
 	float		shotStrength = 0.0f;
 	Vector		vel, avel = Vector (0.0f, 0.0f, 0.0f);
-	float		powershot = NORMAL_KICK_STRENGTH;
+	float		powershot = sv_normalshot_strength.GetFloat();
+	CSDKPlayer	*pPlayer = ToSDKPlayer(pOther);
 
 	if (m_NextShoot	> gpGlobals->curtime)
 		return false;
 
+	float powershotPercentage = pPlayer->m_nPowershotStrength / MAX_POWERSHOT_STRENGTH;
+
 	//has enough sprint for a powershot?
-	if (isPowershot && ((CSDKPlayer*)pOther)->m_fSprintLeft > 3.0f)
-		powershot = POWER_KICK_STRENGTH;
-	else
-		powershot = NORMAL_KICK_STRENGTH;		//do normal kick instead
-
-
-	if (CheckKeeperKick((CSDKPlayer*)pOther) || (ballStatus == BALL_GOALKICK_PENDING && ((CSDKPlayer*)pOther)->m_TeamPos == 1) )
+	if (isPowershot && pPlayer->m_fSprintLeft >= SPRINT_TIME * powershotPercentage)
 	{
-		powershot = KEEPER_KICK_STRENGTH;				//remove carry and kick hard
-		//do kick anim when keeper - this will do two events if kicking up?
-		((CSDKPlayer*)pOther)->SetAnimation (PLAYER_KICK);
-		((CSDKPlayer*)pOther)->DoAnimationEvent( PLAYERANIMEVENT_KICK );
+		powershot = 0.1f * sv_powershot_strength.GetFloat() + (sv_powershot_strength.GetFloat() * powershotPercentage);
+		pPlayer->m_fSprintLeft = max(0, pPlayer->m_fSprintLeft - SPRINT_TIME * powershotPercentage);                   //reduce sprint energy
 	}
-	else if (CheckKeeperCatch((CSDKPlayer*)pOther))
+	else
+	{
+		powershot = sv_normalshot_strength.GetFloat();		//do normal kick instead
+	}
+
+	if (CheckKeeperKick(pPlayer) || (ballStatus == BALL_GOALKICK_PENDING && pPlayer->m_TeamPos == 1) )
+	{
+		powershot = sv_keepershot_strength.GetFloat();				//remove carry and kick hard
+		//do kick anim when keeper - this will do two events if kicking up?
+		pPlayer->SetAnimation (PLAYER_KICK);
+		pPlayer->DoAnimationEvent( PLAYERANIMEVENT_KICK );
+	}
+	else if (CheckKeeperCatch(pPlayer))
 	{
 		//keeper catch
 		return false;
@@ -402,8 +419,8 @@ int	CBall::Shoot (CBaseEntity *pOther, bool isPowershot)
 	else
 	{
 		//check if keeper kick that may have been a save?
-		if (((CSDKPlayer*)pOther)->m_TeamPos == 1 && pOther != m_LastTouch && m_BallInPenaltyBox != -1)
-			((CSDKPlayer*)pOther)->m_KeeperSaves++;
+		if (pPlayer->m_TeamPos == 1 && pOther != m_LastTouch && m_BallInPenaltyBox != -1)
+			pPlayer->m_KeeperSaves++;
 	}
 
 	//work out strength of kick
@@ -416,7 +433,7 @@ int	CBall::Shoot (CBaseEntity *pOther, bool isPowershot)
 	else if	(ballrel ==	BALL_NEAR_HEAD && ballStatus !=	BALL_THROWIN_PENDING) 
 	{
 		shotStrength = 450.0f; //ioss 600.0f;
-		UpdateHeadbounce((CSDKPlayer*)pOther);
+		UpdateHeadbounce(pPlayer);
 	} 
 	else if (ballStatus ==	BALL_THROWIN_PENDING)
 	{
@@ -435,248 +452,233 @@ int	CBall::Shoot (CBaseEntity *pOther, bool isPowershot)
 	}
 
 	//fix strength for kick from hands
-	if (powershot==KEEPER_KICK_STRENGTH)
+	if (powershot==sv_keepershot_strength.GetFloat())
 		shotStrength = 640.0f;
 
 
 	//kick it
 	Vector		v_forward, v_right, v_up;
-	CSDKPlayer	*pPlayer = ToSDKPlayer( pOther	);
+	//CSDKPlayer	*pPlayer = ToSDKPlayer( pOther	);
 	bool	bInSlide = ((CSDKPlayer*)pPlayer)->m_PlayerAnim == PLAYER_SLIDE ? 1 : 0;
 
 	AngleVectors(pPlayer->EyeAngles(), &v_forward, &v_right, &v_up );
 
 	//EyeVectors( &forward, NULL, &up );
 
-	if (pPlayer	&& pPlayer->IsPlayer())
+	QAngle ang = pPlayer->EyeAngles();
+	if ( ang.x > 180.0f )							//normalise angle (up=270, fwd = ~0, ~365)
+		ang.x -= 360.0f;
+	else if ( ang.x < -180.0f )
+		ang.x += 360.0f;
+	if (ang.x < -60.0f)								//clamp vertical kicks (up = -89)
+		ang.x = -60.0f;
+
+	AngleVectors (ang, &vel);
+
+	//*** this is a mess - why have vel and v_forward.z ? ***
+
+	//if powershoot down, flatten out the shot
+	if (powershot == sv_powershot_strength.GetFloat() && vel.z < 0)
 	{
-		QAngle ang = pPlayer->EyeAngles();
-		if ( ang.x > 180.0f )							//normalise angle (up=270, fwd = ~0, ~365)
-			ang.x -= 360.0f;
-		else if ( ang.x < -180.0f )
-			ang.x += 360.0f;
-		if (ang.x < -60.0f)								//clamp vertical kicks (up = -89)
-			ang.x = -60.0f;
+		v_forward.z = 0.05f;
+		vel.z = 0.05f;
+	}
 
-		AngleVectors (ang, &vel);
-
-		//*** this is a mess - why have vel and v_forward.z ? ***
-
-		//if powershoot down, flatten out the shot
-		if (powershot == POWER_KICK_STRENGTH && vel.z < 0)
+	if (vel.z < 0.0f)
+	{
+		vel.z = 0.0f;
+		//shotStrength *=	0.65f;	//was 0.5 in 1.0b				//damp kick	when trying	to dribble
+		shotStrength *= vel.Length2D() * 0.75f;		//1.0c relate dribble to angle better
+		if (shotStrength < 300.0f)			//min	//was 100 before 1.0c
+			shotStrength = 300.0f;
+		QAngle angle(-1.0f, 0, 0);
+		//why punch?
+		//pPlayer->SetPunchAngle( angle );
+		//play small kick sound
+		if (shotStrength > 400)				//1.0c
+			EmitSound("Ball.touch");
+	}
+	else
+	{
+		vel.z = v_forward.z * 2.5f;		//make z aim more sensitive 
+		avel.y = g_IOSRand.RandomFloat (-30 * shotStrength, 30 * shotStrength);   //spin if lifted into air
+		avel.z = g_IOSRand.RandomFloat (-15 * shotStrength, 15 * shotStrength);
+		QAngle angle(-5.0f, 0, 0);
+		//why punch?
+		//pPlayer->SetPunchAngle( angle );
+		//play kick sound
+		if (ballStatus != BALL_THROWIN_PENDING)
 		{
-			v_forward.z = 0.05f;
-			vel.z = 0.05f;
+			if (powershot==sv_normalshot_strength.GetFloat())
+				EmitSound("Ball.kicknormal");
+			else
+				EmitSound("Ball.kickhard");
 		}
 
-		if (vel.z < 0.0f)
+		if (ballrel	== BALL_NEAR_FEET)
 		{
-			vel.z = 0.0f;
-			//shotStrength *=	0.65f;	//was 0.5 in 1.0b				//damp kick	when trying	to dribble
-			shotStrength *= vel.Length2D() * 0.75f;		//1.0c relate dribble to angle better
-			if (shotStrength < 300.0f)			//min	//was 100 before 1.0c
-				shotStrength = 300.0f;
-			QAngle angle; angle.x = -1.0f; angle.y = 0.0f; angle.z = 0.0f;
-			pPlayer->SetPunchAngle( angle );
-			//play small kick sound
-			if (shotStrength > 400)				//1.0c
-				EmitSound("Ball.touch");
-		}
-		else
-		{
-			vel.z = v_forward.z * 2.5f;		//make z aim more sensitive 
-			avel.y = g_IOSRand.RandomFloat (-30 * shotStrength, 30 * shotStrength);   //spin if lifted into air
-			avel.z = g_IOSRand.RandomFloat (-15 * shotStrength, 15 * shotStrength);
-			QAngle angle; angle.x = -5.0f; angle.y = 0.0f; angle.z = 0.0f;
-			pPlayer->SetPunchAngle( angle );
-			//play kick sound
-			if (ballStatus != BALL_THROWIN_PENDING)
+			//get height above ground using longwided method!
+			Vector pos;
+			float playerHeight, ballHeight;
+			extern CNavMesh *TheNavMesh;
+			TheNavMesh->GetSimpleGroundHeight(pPlayer->GetAbsOrigin(), &playerHeight);
+			TheNavMesh->GetSimpleGroundHeight(GetAbsOrigin(), &ballHeight);
+			playerHeight = pPlayer->GetAbsOrigin().z - playerHeight;
+			ballHeight = GetAbsOrigin().z - ballHeight;
+
+			if (!(pPlayer->GetFlags() & FL_ONGROUND) && ballHeight > 9.0f && playerHeight > 6.0f)
 			{
-				if (powershot==NORMAL_KICK_STRENGTH)
-					EmitSound("Ball.kicknormal");
-				else
-					EmitSound("Ball.kickhard");
+				shotStrength = 720;
+				vel.z *= 0.5f;
+
+				if (!bInSlide)		//bot keepers dont volley 1.0c
+				{
+					if (!(pPlayer->GetFlags() & FL_FAKECLIENT))
+					{
+						((CSDKPlayer*)pPlayer)->DoAnimationEvent( PLAYERANIMEVENT_VOLLEY );
+						pPlayer->SetAnimation (PLAYER_VOLLEY);
+					}
+					else
+					{
+						((CSDKPlayer*)pPlayer)->DoAnimationEvent( PLAYERANIMEVENT_JUMP );
+						pPlayer->SetAnimation (PLAYER_JUMP);
+					}
+				}
 			}
-
-			if (ballrel	== BALL_NEAR_FEET)
+			else if (ang.x <= -50.0f)
 			{
-				//kick anim
-		         //if (pOther->IsPlayer() && !(pOther->pev->iuser4 & 1))    //check not slidetackling
-			    //pPlayer->SetAnimation (PLAYER_KICK);   //kick anim - does this have any effect!?
-				//((CSDKPlayer*)pPlayer)->DoAnimationEvent( PLAYERANIMEVENT_KICK );
+				//check for heel kick
+				Vector dir = GetAbsOrigin() - pPlayer->GetAbsOrigin();
+				dir.z = 0.0f;
+				VectorNormalize(dir);
+				Vector fwd = v_forward;
+				fwd.z = 0.0f;
+				VectorNormalize(fwd);
+				float dot = DotProduct( dir, fwd );
 
-				//get height above ground using longwided method!
-				Vector pos;
-				float playerHeight, ballHeight;
-				extern CNavMesh *TheNavMesh;
-				TheNavMesh->GetSimpleGroundHeight(pPlayer->GetAbsOrigin(), &playerHeight);
-				TheNavMesh->GetSimpleGroundHeight(GetAbsOrigin(), &ballHeight);
-				playerHeight = pPlayer->GetAbsOrigin().z - playerHeight;
-				ballHeight = GetAbsOrigin().z - ballHeight;
-				//Warning ("ball %f, player %f\n",ballHeight,playerHeight);
+				if (!bInSlide)
+				{
+					//ball must be behind us
+					if ( dot < -0.8f )
+					{
+						((CSDKPlayer*)pPlayer)->DoAnimationEvent( PLAYERANIMEVENT_HEELKICK );
+						pPlayer->SetAnimation (PLAYER_HEELKICK);
+						shotStrength *= 0.9f;
+						powershot=sv_normalshot_strength.GetFloat();
+					}
+					else
+					{
+						pPlayer->SetAnimation (PLAYER_KICK);
+						((CSDKPlayer*)pPlayer)->DoAnimationEvent( PLAYERANIMEVENT_KICK );
+					}
+				}
+			}
+			else
+			{
+				if (!bInSlide)
+				{
+					pPlayer->SetAnimation (PLAYER_KICK);   //kick anim - does this have any effect!?
+					((CSDKPlayer*)pPlayer)->DoAnimationEvent( PLAYERANIMEVENT_KICK );
 
-				//norma values (both on ground) is ball=5.4 player = 0
-				//so for the ball to be off the ground, say > 9 and player > 6
+				}
+			}
+		}
+		else if (ballrel == BALL_NEAR_HEAD)
+		{
+			if (!bInSlide)
+			{
+				//check for diving header
+				if (	(pPlayer->m_nButtons & IN_FORWARD) 
+					&& (pPlayer->GetAbsVelocity().Length2D() > 220)
+					&& (pPlayer->m_TeamPos > 1) 
+					&& (m_BallInPenaltyBox != -1) 
+					&& (powershot==sv_powershot_strength.GetFloat())
+					&& ((CSDKPlayer*)pPlayer)->m_PlayerAnim != PLAYER_SLIDE )
+				{
+					((CSDKPlayer*)pPlayer)->DoAnimationEvent( PLAYERANIMEVENT_DIVINGHEADER );
+					pPlayer->SetAnimation (PLAYER_DIVINGHEADER);
+					((CSDKPlayer*)pPlayer)->m_NextSlideTime = gpGlobals->curtime + 1.5f;
+					shotStrength = 600;
+					vel.z *= 0.1f;
+				}
 
-				//test volley (player off ground and ball above his feet) - needs anim..
-				//Warning ("ball %f, player %f\n",GetAbsOrigin().z, pPlayer->GetAbsOrigin().z);
-				//if (!(pPlayer->GetFlags() & FL_ONGROUND) && GetAbsOrigin().z >= pPlayer->GetAbsOrigin().z - 4.0f)
-				//if (!(pPlayer->GetFlags() & FL_ONGROUND) && GetAbsOrigin().z >= pPlayer->GetAbsOrigin().z + 6.0f)
 				//if (m_pKeeperParry == pPlayer)
 				//{
 				//	((CSDKPlayer*)pPlayer)->DoAnimationEvent( PLAYERANIMEVENT_JUMP );
 				//	pPlayer->SetAnimation (PLAYER_JUMP);
 				//}
-				//else
-				if (!(pPlayer->GetFlags() & FL_ONGROUND) && ballHeight > 9.0f && playerHeight > 6.0f)
+				//head anim
+				//if in the air play jumping header anim
+				else if (!(pPlayer->GetFlags() & FL_ONGROUND))
 				{
-					shotStrength = 720;
-					vel.z *= 0.5f;
-
-					if (!bInSlide)		//bot keepers dont volley 1.0c
-					{
-						if (!(pPlayer->GetFlags() & FL_FAKECLIENT))
-						{
-							((CSDKPlayer*)pPlayer)->DoAnimationEvent( PLAYERANIMEVENT_VOLLEY );
-							pPlayer->SetAnimation (PLAYER_VOLLEY);
-						}
-						else
-						{
-							((CSDKPlayer*)pPlayer)->DoAnimationEvent( PLAYERANIMEVENT_JUMP );
-							pPlayer->SetAnimation (PLAYER_JUMP);
-						}
-					}
-				}
-				else if (ang.x <= -50.0f)
-				{
-					//check for heel kick
-					Vector dir = GetAbsOrigin() - pPlayer->GetAbsOrigin();
-					dir.z = 0.0f;
-					VectorNormalize(dir);
-					Vector fwd = v_forward;
-					fwd.z = 0.0f;
-					VectorNormalize(fwd);
-					float dot = DotProduct( dir, fwd );
-
-					if (!bInSlide)
-					{
-						//ball must be behind us
-						if ( dot < -0.8f )
-						{
-							((CSDKPlayer*)pPlayer)->DoAnimationEvent( PLAYERANIMEVENT_HEELKICK );
-							pPlayer->SetAnimation (PLAYER_HEELKICK);
-							shotStrength *= 0.9f;
-							powershot=NORMAL_KICK_STRENGTH;
-						}
-						else
-						{
-							pPlayer->SetAnimation (PLAYER_KICK);
-							((CSDKPlayer*)pPlayer)->DoAnimationEvent( PLAYERANIMEVENT_KICK );
-						}
-					}
-				}
-				else
-				{
-					if (!bInSlide)
-					{
-						pPlayer->SetAnimation (PLAYER_KICK);   //kick anim - does this have any effect!?
-						((CSDKPlayer*)pPlayer)->DoAnimationEvent( PLAYERANIMEVENT_KICK );
-							
-					}
-				}
-			}
-			else if (ballrel == BALL_NEAR_HEAD)
-			{
-				if (!bInSlide)
-				{
-					//check for diving header
-					if (	(pPlayer->m_nButtons & IN_FORWARD) 
-							&& (pPlayer->GetAbsVelocity().Length2D() > 220)
-							&& (pPlayer->m_TeamPos > 1) 
-							&& (m_BallInPenaltyBox != -1) 
-							&& (powershot==POWER_KICK_STRENGTH)
-							&& ((CSDKPlayer*)pPlayer)->m_PlayerAnim != PLAYER_SLIDE )
-					{
-						((CSDKPlayer*)pPlayer)->DoAnimationEvent( PLAYERANIMEVENT_DIVINGHEADER );
-						pPlayer->SetAnimation (PLAYER_DIVINGHEADER);
-						((CSDKPlayer*)pPlayer)->m_NextSlideTime = gpGlobals->curtime + 1.5f;
-						shotStrength = 600;
-						vel.z *= 0.1f;
-					}
-
-					//if (m_pKeeperParry == pPlayer)
-					//{
-					//	((CSDKPlayer*)pPlayer)->DoAnimationEvent( PLAYERANIMEVENT_JUMP );
-					//	pPlayer->SetAnimation (PLAYER_JUMP);
-					//}
-					//head anim
-					//if in the air play jumping header anim
-					else if (!(pPlayer->GetFlags() & FL_ONGROUND))
-					{
-						pPlayer->SetAnimation (PLAYER_HEADER);
-						((CSDKPlayer*)pPlayer)->DoAnimationEvent( PLAYERANIMEVENT_HEADER );
-					}
+					pPlayer->SetAnimation (PLAYER_HEADER);
+					((CSDKPlayer*)pPlayer)->DoAnimationEvent( PLAYERANIMEVENT_HEADER );
 				}
 			}
 		}
-
-		//adjust according to kick type
-		//float kickStrength = 1.1f;
-		//if (powershot==POWER_KICK_STRENGTH)
-		//	kickStrength = 1.2f;
-		//if (powershot==KEEPER_KICK_STRENGTH)
-		//	kickStrength = 1.3f;
-
-		//reduce strength if sprinting
-		if (((CSDKPlayer*)pPlayer)->InSprint())
-			powershot *= 0.9f;
-
-		vel.NormalizeInPlace();	//test - added Jan08
-		vel *= shotStrength * powershot /** kickStrength*/;
-
-		VPhysicsGetObject()->SetVelocity(&vel, &avel);								//kick it
 	}
 
-	//curve if strafing and lifted into the air
-	Vector ballVel, ballAvel;
-	VPhysicsGetObject()->GetVelocity( &ballVel, &ballAvel );
-	if (pPlayer->m_nButtons & IN_MOVELEFT && ballVel.z > 0) 
-	{
-		curve = -v_right * g_IOSRand.RandomFloat(18,22);
-		avel.x = 0.0f;
-		avel.y = 2500.0f;
-		avel.z = 0.0f;
-		VPhysicsGetObject()->SetVelocity(NULL, &avel);
-	} 
-	else if (pPlayer->m_nButtons & IN_MOVERIGHT && ballVel.z > 0) 
-	{
-		curve = v_right * g_IOSRand.RandomFloat(18,22);
-		avel.x = 0.0f;
-		avel.y = -2500.0f;
-		avel.z = 0.0f;
-		VPhysicsGetObject()->SetVelocity(NULL, &avel);
-	} 
-	else 
-	{
-		curve = Vector (0.0f, 0.0f, 0.0f);
-	}
+	//reduce strength if sprinting
+	//don't reduce for now to make more predictable for players
+	//if (((CSDKPlayer*)pPlayer)->InSprint())
+	//	powershot *= 0.9f;
 
+	vel.NormalizeInPlace();	//test - added Jan08
+	vel *= shotStrength * powershot /** kickStrength*/;
+
+	VPhysicsGetObject()->SetVelocity(&vel, &avel);								//kick it
+
+
+	SetBallCurve(pPlayer, vel, avel, v_right, v_up);
+	
 	m_NextShoot	= gpGlobals->curtime + 0.2f;
 
 	//m_NextShoot	= gpGlobals->curtime + 0.1f;
 
-	if (((CSDKPlayer*)pOther)->m_fSprintLeft > 0.0f && powershot == POWER_KICK_STRENGTH)
-	{
-		((CSDKPlayer*)pOther)->m_fSprintLeft -= 3.0f;                   //reduce sprint energy
-		if (((CSDKPlayer*)pOther)->m_fSprintLeft < 0.0f)
-			((CSDKPlayer*)pOther)->m_fSprintLeft = 0.0f;
-	}
+	//if (pPlayer->m_fSprintLeft > 0.0f && powershot == sv_powershot_strength.GetFloat())
+	//{
+	//	pPlayer->m_fSprintLeft = max(0, pPlayer->m_fSprintLeft - 3);                   //reduce sprint energy
+	//}
 
 	//m_pKeeperParry = NULL;
 
 	return true;
 }
 
+void CBall::SetBallCurve(CSDKPlayer *pPlayer, Vector vel, Vector avel, Vector v_right, Vector v_up)
+{
+	//curve if strafing and lifted into the air
+	Vector ballVel, ballAvel;
+	VPhysicsGetObject()->GetVelocity( &ballVel, &ballAvel );
+	curve = Vector(0, 0, 0);
+	avel = Vector(0, 0, 0);
+	if (ballVel.z > 0)
+	{
+		if (pPlayer->m_nButtons & IN_MOVELEFT) 
+		{
+			curve = -v_right * 20; //g_IOSRand.RandomFloat(18,22);
+			avel.y = 5000.0f;
+		} 
+		else if (pPlayer->m_nButtons & IN_MOVERIGHT) 
+		{
+			curve = v_right * 20; //g_IOSRand.RandomFloat(18,22);
+			avel.y = -5000.0f;
+		}
+
+		if (pPlayer->m_nButtons & IN_TOPSPIN)
+		{
+			curve += -v_up * 20;
+			avel.z = 5000.0f;
+		}
+		else if (pPlayer->m_nButtons & IN_BACKSPIN)
+		{
+			curve += v_up * 20;
+			avel.z = -5000.0f;
+		}
+	}
+
+	VPhysicsGetObject()->SetVelocity(NULL, &avel);
+}
 
 void CBall::UpdateHeadbounce(CSDKPlayer *pPlayer)
 {

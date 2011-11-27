@@ -513,6 +513,8 @@ void CSDKPlayer::Spawn()
 	pl.deadflag = false;
 	*/
 
+	if (m_nPowershotStrength == 0)
+		m_nPowershotStrength = 3;
 	
 	if (!GetModelPtr())
 		SetModel( SDK_PLAYER_MODEL );		//only do it first time through, then let the team stuff set it.
@@ -2336,6 +2338,17 @@ void CSDKPlayer::SetAnimation( PLAYER_ANIM playerAnim )
 bool CSDKPlayer::ClientCommand( const CCommand &args )
 {
 	const char *pcmd = args[0];
+
+	if (FStrEq(pcmd, "powershot_strength"))
+	{
+		if (args.ArgC() < 2)
+		{
+			Warning("Player sent bad powershot_strength syntax\n");
+			return false;
+		}
+		m_nPowershotStrength = clamp(atoi(args[1]), 1, 5);
+		return true;
+	}
 
 	if ( FStrEq( pcmd, "jointeam" ) ) 
 	{

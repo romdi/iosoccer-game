@@ -120,6 +120,8 @@ static	kbutton_t	in_break;
 static	kbutton_t	in_zoom;
 static  kbutton_t   in_grenade1;
 static  kbutton_t   in_grenade2;
+static	kbutton_t	in_topspin;
+static	kbutton_t	in_backspin;
 kbutton_t	in_ducktoggle;
 
 /*
@@ -464,6 +466,10 @@ void IN_Grenade1Up( const CCommand &args ) { KeyUp( &in_grenade1, args[1] ); }
 void IN_Grenade1Down( const CCommand &args ) { KeyDown( &in_grenade1, args[1] ); }
 void IN_Grenade2Up( const CCommand &args ) { KeyUp( &in_grenade2, args[1] ); }
 void IN_Grenade2Down( const CCommand &args ) { KeyDown( &in_grenade2, args[1] ); }
+void IN_TopspinUp( const CCommand &args ) { KeyUp( &in_topspin, args[1] ); }
+void IN_TopspinDown( const CCommand &args ) { KeyDown( &in_topspin, args[1] ); }
+void IN_BackspinUp( const CCommand &args ) { KeyUp( &in_backspin, args[1] ); }
+void IN_BackspinDown( const CCommand &args ) { KeyDown( &in_backspin, args[1] ); }
 void IN_XboxStub( const CCommand &args ) { /*do nothing*/ }
 
 void IN_DuckToggle( const CCommand &args ) 
@@ -1300,6 +1306,8 @@ int CInput::GetButtonBits( int bResetState )
 	CalcButtonBits( bits, IN_ZOOM, s_ClearInputState, &in_zoom, bResetState );
 	CalcButtonBits( bits, IN_GRENADE1, s_ClearInputState, &in_grenade1, bResetState );
 	CalcButtonBits( bits, IN_GRENADE2, s_ClearInputState, &in_grenade2, bResetState );
+	CalcButtonBits( bits, IN_TOPSPIN, s_ClearInputState, &in_topspin, bResetState );
+	CalcButtonBits( bits, IN_BACKSPIN, s_ClearInputState, &in_backspin, bResetState );
 
 	if ( KeyState(&in_ducktoggle) )
 	{
@@ -1455,6 +1463,10 @@ static ConCommand endgrenade1( "-grenade1", IN_Grenade1Up );
 static ConCommand startgrenade1( "+grenade1", IN_Grenade1Down );
 static ConCommand endgrenade2( "-grenade2", IN_Grenade2Up );
 static ConCommand startgrenade2( "+grenade2", IN_Grenade2Down );
+static ConCommand starttopspin( "+topspin", IN_TopspinDown );
+static ConCommand endtopspin( "-topspin", IN_TopspinUp );
+static ConCommand startbackspin( "+backspin", IN_BackspinDown );
+static ConCommand endbackspin( "-backspin", IN_BackspinUp );
 
 #ifdef TF_CLIENT_DLL
 static ConCommand toggle_duck( "toggle_duck", IN_DuckToggle );

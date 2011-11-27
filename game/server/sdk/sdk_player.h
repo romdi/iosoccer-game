@@ -343,6 +343,7 @@ public:
 
 	//int					m_BallInPenaltyBox;	 //-1 =	not	in box,	0,1	= teams	box
 
+	int					m_nPowershotStrength;
 };
 
 
