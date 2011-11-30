@@ -19,6 +19,25 @@
 
 #include "team.h"
 
+static ConVar sv_ball_mass( "sv_ball_mass", "50", FCVAR_ARCHIVE );
+static ConVar sv_ball_inertia( "sv_ball_inertia", "1.0", FCVAR_ARCHIVE );
+static ConVar sv_ball_rotinertialimit( "sv_ball_rotinertialimit", "0.05", FCVAR_ARCHIVE );
+static ConVar sv_ball_damping( "sv_ball_damping", "0.3", FCVAR_ARCHIVE );
+static ConVar sv_ball_rotdamping( "sv_ball_rotdamping", "0.5", FCVAR_ARCHIVE );
+static ConVar sv_ball_dragcoefficient( "sv_ball_dragcoefficient", "0.47", FCVAR_ARCHIVE );
+static ConVar sv_ball_angdragcoefficient( "sv_ball_angdragcoefficient", "0.47", FCVAR_ARCHIVE );
+//static ConVar sv_ball_elasticity( "sv_ball_elasticity", "65", FCVAR_ARCHIVE );
+//static ConVar sv_ball_friction( "sv_ball_friction", "1", FCVAR_ARCHIVE );
+static ConVar sv_ball_speed( "sv_ball_speed", "1500", FCVAR_ARCHIVE );
+static ConVar sv_ball_spin( "sv_ball_spin", "25", FCVAR_ARCHIVE );
+static ConVar sv_ball_spin_damping( "sv_ball_spin_damping", "0.5", FCVAR_ARCHIVE );
+static ConVar sv_ball_magnus( "sv_ball_magnus", "0.06", FCVAR_ARCHIVE );
+static ConVar sv_ball_cone( "sv_ball_cone", "90", FCVAR_ARCHIVE );
+static ConVar sv_ball_maxdist( "sv_ball_maxdist", "80", FCVAR_ARCHIVE );
+static ConVar sv_ball_a1_speed( "sv_ball_a1_speed", "500", FCVAR_ARCHIVE );
+static ConVar sv_ball_a1_zoffset( "sv_ball_a1_zoffset", "10", FCVAR_ARCHIVE );
+static ConVar sv_ball_radius( "sv_ball_radius", "5.2", FCVAR_ARCHIVE );
+static ConVar sv_ball_gravity( "sv_ball_gravity", "10", FCVAR_ARCHIVE );
 
 LINK_ENTITY_TO_CLASS( football,	CBall );
 
@@ -96,15 +115,7 @@ void CBall::Spawn (void)
 	if (fColType==1.0f)
 		SetCollisionGroup( COLLISION_GROUP_PUSHAWAY );	//ios1.1 server var mp_collisiontype - requires map change
 
-	m_fMass	= VPhysicsGetObject()->GetMass();
-
-	VPhysicsGetObject()->SetMass( 0.05f	);
-	VPhysicsGetObject()->EnableGravity(	true );
-	VPhysicsGetObject()->EnableDrag( false );
-	float flDamping	= 0.0f;
-	float flAngDamping = 2.5f;
-	VPhysicsGetObject()->SetDamping( &flDamping, &flAngDamping );
-//	VPhysicsGetObject()->SetInertia( Vector( 0.0023225760f,	0.0023225760f, 0.0023225760f ) );
+	SetPhysics();
 
 	SetUse(	&CBall::Use	);
 	//SetTouch (&CBall::BallTouch);
@@ -122,6 +133,20 @@ void CBall::Spawn (void)
 	PrecacheScriptSound( "Ball.net" );
 	PrecacheScriptSound( "Ball.whistle" );
 	PrecacheScriptSound( "Ball.cheer" );
+}
+
+void CBall::SetPhysics()
+{
+	m_fMass	= VPhysicsGetObject()->GetMass();
+
+	VPhysicsGetObject()->SetMass( 0.05f	);
+	VPhysicsGetObject()->EnableGravity(	true );
+	VPhysicsGetObject()->EnableDrag( false );
+	float flDamping	= sv_ball_damping.GetFloat(); //0.0f
+	float flAngDamping = sv_ball_rotdamping.GetFloat(); //2.5f
+	VPhysicsGetObject()->SetDamping( &flDamping, &flAngDamping );
+//	VPhysicsGetObject()->SetInertia( Vector( 0.0023225760f,	0.0023225760f, 0.0023225760f ) );
+
 }
 
 //==========================================================
@@ -626,7 +651,7 @@ int	CBall::Shoot (CBaseEntity *pOther, bool isPowershot)
 	vel.NormalizeInPlace();	//test - added Jan08
 	vel *= shotStrength * powershot /** kickStrength*/;
 
-	VPhysicsGetObject()->SetVelocity(&vel, &avel);								//kick it
+	VPhysicsGetObject()->SetVelocity(&vel, NULL);								//kick it
 
 
 	SetBallCurve(pPlayer, vel, avel, v_right, v_up);
@@ -645,6 +670,8 @@ int	CBall::Shoot (CBaseEntity *pOther, bool isPowershot)
 	return true;
 }
 
+//static ConVar sv_ball_spin("sv_ball_spin", "10000", FCVAR_ARCHIVE);
+
 void CBall::SetBallCurve(CSDKPlayer *pPlayer, Vector vel, Vector avel, Vector v_right, Vector v_up)
 {
 	//curve if strafing and lifted into the air
@@ -652,32 +679,45 @@ void CBall::SetBallCurve(CSDKPlayer *pPlayer, Vector vel, Vector avel, Vector v_
 	VPhysicsGetObject()->GetVelocity( &ballVel, &ballAvel );
 	curve = Vector(0, 0, 0);
 	avel = Vector(0, 0, 0);
+	AngularImpulse aimp(0, 0, 0);
+	Vector m_vRot(0, 0, 0);
 	if (ballVel.z > 0)
 	{
 		if (pPlayer->m_nButtons & IN_MOVELEFT) 
 		{
 			curve = -v_right * 20; //g_IOSRand.RandomFloat(18,22);
 			avel.y = 5000.0f;
+			aimp.z = 10000;
+			m_vRot += Vector(0, 0, 1);
 		} 
 		else if (pPlayer->m_nButtons & IN_MOVERIGHT) 
 		{
 			curve = v_right * 20; //g_IOSRand.RandomFloat(18,22);
 			avel.y = -5000.0f;
+			aimp.z = -10000;
+			m_vRot += Vector(0, 0, -1);//-v_up;
 		}
 
 		if (pPlayer->m_nButtons & IN_TOPSPIN)
 		{
 			curve += -v_up * 20;
 			avel.z = 5000.0f;
+			m_vRot += -v_right;
 		}
 		else if (pPlayer->m_nButtons & IN_BACKSPIN)
 		{
 			curve += v_up * 20;
 			avel.z = -5000.0f;
+			m_vRot += v_right;
 		}
 	}
 
-	VPhysicsGetObject()->SetVelocity(NULL, &avel);
+	VectorNormalizeFast(m_vRot);
+
+	QAngle angles;
+	VPhysicsGetObject()->GetPosition(NULL, &angles);
+	AngularImpulse ang = WorldToLocalRotation( SetupMatrixAngles(angles), m_vRot, sv_ball_spin.GetInt() * 1000 );
+	VPhysicsGetObject()->SetVelocity(NULL, &ang);
 }
 
 void CBall::UpdateHeadbounce(CSDKPlayer *pPlayer)
@@ -911,7 +951,7 @@ int CBall::Pass ( CBaseEntity *pOther)
 
 
 
-
+static ConVar sv_ball_curve("sv_ball_curve", "1.0", FCVAR_ARCHIVE);
 
 //==========================================================
 //	
@@ -932,12 +972,28 @@ void CBall::BallThink( void	)
 	if (GetFlags() & FL_ONGROUND)
 		curve.x = curve.y = curve.z = 0.0f;
 
-	//curve in air
-	Vector ballVel, ballAvel;
-	VPhysicsGetObject()->GetVelocity( &ballVel, &ballAvel );
-	//ballVel += curve * 1.0f;
-	ballVel += curve * 0.1667f;							//6x faster update 1.0c
-	VPhysicsGetObject()->SetVelocity(&ballVel, NULL);
+	//QAngle angles;
+	//VPhysicsGetObject()->GetPosition(NULL, &angles);
+	//AngularImpulse ang = WorldToLocalRotation( SetupMatrixAngles(angles), m_vRot, sv_ball_spin.GetInt() );
+	//VPhysicsGetObject()->SetVelocity(NULL, &ang);
+
+	Vector vel;
+	AngularImpulse angImp;
+	VPhysicsGetObject()->GetVelocity(&vel, &angImp);
+	//Vector rot = LocaltoWorld(
+	Vector curve = vel.Cross(angImp);
+	//QAngle angles;
+	//VectorAngles(angImp, angles);
+	//VectorNormalizeFast(curve);
+	vel += curve / sv_ball_curve.GetFloat();
+	VPhysicsGetObject()->SetVelocity(&vel, NULL);
+
+	////curve in air
+	//Vector ballVel, ballAvel;
+	//VPhysicsGetObject()->GetVelocity( &ballVel, &ballAvel );
+	////ballVel += curve * 1.0f;
+	//ballVel += curve * 0.1667f;							//6x faster update 1.0c
+	//VPhysicsGetObject()->SetVelocity(&ballVel, NULL);
 
 	//SetNextThink( gpGlobals->curtime + 0.1f );
 	SetNextThink( gpGlobals->curtime + 0.01667f );		//6x faster update 1.0c
@@ -1810,7 +1866,7 @@ void CBall::HandleKickOff ( void )
 	if (pSpotBall) 
 	{
 		SetAbsOrigin(pSpotBall->GetAbsOrigin());
-		VPhysicsGetObject()->SetPosition(pSpotBall->GetLocalOrigin(), pSpotBall->GetAbsAngles(), true);
+		VPhysicsGetObject()->SetPosition(pSpotBall->GetLocalOrigin(), pSpotBall->GetAbsAngles(), false);
 		Vector zero = Vector(0.0f,0.0f,0.0f);
 		VPhysicsGetObject()->SetVelocityInstantaneous( &zero, &zero);
 

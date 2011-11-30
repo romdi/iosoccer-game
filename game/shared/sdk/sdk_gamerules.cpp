@@ -76,26 +76,28 @@ END_DATADESC();
 
 REGISTER_GAMERULES_CLASS( CSDKGameRules );
 
-#ifdef CLIENT_DLL
-void RecvProxy_MatchState( const CRecvProxyData *pData, void *pStruct, void *pOut )
-{
-	CSDKGameRules *pGamerules = ( CSDKGameRules *)pStruct;
-	int nMatchState = pData->m_Value.m_Int;
-	pGamerules->SetMatchState( nMatchState );
-}
-#endif 
+//#ifdef CLIENT_DLL
+//void RecvProxy_MatchState( const CRecvProxyData *pData, void *pStruct, void *pOut )
+//{
+//	CSDKGameRules *pGamerules = ( CSDKGameRules *)pStruct;
+//	match_state_t eMatchState = (match_state_t)pData->m_Value.m_Int;
+//	pGamerules->SetMatchState( eMatchState );
+//}
+//#endif 
 
 BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 #if defined ( CLIENT_DLL )
-	//ios RecvPropFloat( RECVINFO( m_flGameStartTime ) ),
+	RecvPropFloat( RECVINFO( m_flStateEnterTime ) ),
 	//RecvPropFloat( RECVINFO( m_fStart) ),
 	//RecvPropInt( RECVINFO( m_iDuration) ),
-	RecvPropInt( RECVINFO( m_nMatchState), 0, RecvProxy_MatchState ),
+	RecvPropInt( RECVINFO( m_eMatchState) ),// 0, RecvProxy_MatchState ),
+	RecvPropInt( RECVINFO( m_nAnnouncedInjuryTime) ),// 0, RecvProxy_MatchState ),
 #else
-	//ios SendPropFloat( SENDINFO( m_flGameStartTime ), 32, SPROP_NOSCALE ),
+	SendPropFloat( SENDINFO( m_flStateEnterTime ), 32, SPROP_NOSCALE ),
 	//SendPropFloat( SENDINFO( m_fStart) ),
 	//SendPropInt( SENDINFO( m_iDuration) ),
-	SendPropInt( SENDINFO( m_nMatchState ), 5 ),
+	SendPropInt( SENDINFO( m_eMatchState ), 5 ),
+	SendPropInt( SENDINFO( m_nAnnouncedInjuryTime ), 5 ),
 #endif
 END_NETWORK_TABLE()
 
@@ -270,25 +272,24 @@ CSDKGameRules::CSDKGameRules()
 {
 	m_pCurStateInfo = NULL;
 	State_Transition(MATCH_INIT);
-
+	
 	//ios m_bLevelInitialized = false;
 
-	//ios m_flGameStartTime = 0;
+	//m_flMatchStartTime = 0;
 
 }
 void CSDKGameRules::ServerActivate()
 {
 	//Tony; initialize the level
 	//ios CheckLevelInitialized();
-	/*ios
+
 	//Tony; do any post stuff
-	m_flGameStartTime = gpGlobals->curtime;
-	if ( !IsFinite( m_flGameStartTime.Get() ) )
+	//m_flMatchStartTime = gpGlobals->curtime;
+	/*if ( !IsFinite( m_flMatchStartTime.Get() ) )
 	{
 		Warning( "Trying to set a NaN game start time\n" );
-		m_flGameStartTime.GetForModify() = 0.0f;
-	}
-	*/
+		m_flMatchStartTime.GetForModify() = 0.0f;
+	}*/
 }
 
 //-----------------------------------------------------------------------------
@@ -1187,17 +1188,8 @@ void CSDKGameRules::ClientDisconnected( edict_t *pClient )
 
 #ifndef CLIENT_DLL
 
-void svRestart (void)
+void CSDKGameRules::RestartMatch()
 {
-
-	//ffs!
-	if ( !UTIL_IsCommandIssuedByServerAdmin() )
-        return;
-
-	//reset roundtimer
-	//((CSDKGameRules*)g_pGameRules)->m_fStart=-1;
-	//((CSDKGameRules*)g_pGameRules)->StartRoundtimer(mp_timelimit.GetFloat() * 60.0f);
-
 	//clear all the players data
 	for ( int i = 1; i <= gpGlobals->maxClients; i++ )	
 	{
@@ -1251,9 +1243,25 @@ void svRestart (void)
 		pBall->ballStatusTime = 0;
 		pBall->ShieldOff();
 		pBall->HandleKickOff();
+		pBall->SetPhysics();
 	}
 
+	State_Transition(MATCH_WARMUP);
+}
 
+void svRestart (void)
+{
+	//ffs!
+	if ( !UTIL_IsCommandIssuedByServerAdmin() )
+        return;
+
+	SDKGameRules()->RestartMatch();
+
+	//reset roundtimer
+	//((CSDKGameRules*)g_pGameRules)->m_fStart=-1;
+	//((CSDKGameRules*)g_pGameRules)->StartRoundtimer(mp_timelimit.GetFloat() * 60.0f);
+
+	//((CSDKGameRules*)g_pGameRules)->m_flMatchStartTime = gpGlobals->curtime;
 }
 
 
@@ -1261,7 +1269,7 @@ ConCommand cc_restart( "sv_restart", svRestart, "Restart game", FCVAR_PROTECTED 
 
 #endif
 
-ConVar mp_showstatetransitions( "mp_showstatetransitions", "1", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Show match state transitions." );
+ConVar mp_showstatetransitions( "mp_showstatetransitions", "1", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Show game state transitions." );
 
 ConVar mp_timelimit_match( "mp_timelimit_match", "10", FCVAR_NOTIFY|FCVAR_REPLICATED, "match duration in minutes without breaks (90 is real time)" );
 ConVar mp_timelimit_warmup( "mp_timelimit_warmup", "1", FCVAR_NOTIFY|FCVAR_REPLICATED, "time before match start" );
@@ -1284,10 +1292,11 @@ void CSDKGameRules::State_Transition( match_state_t newState )
 
 void CSDKGameRules::State_Enter( match_state_t newState )
 {
-	m_nMatchState = newState;
+	m_eMatchState = newState;
 	m_pCurStateInfo = State_LookupInfo( newState );
 	m_flStateEnterTime = gpGlobals->curtime;
 	m_flStateInjuryTime = 0.0f;
+	m_nAnnouncedInjuryTime = 0;
 
 	if ( mp_showstatetransitions.GetInt() > 0 )
 	{
@@ -1316,6 +1325,11 @@ void CSDKGameRules::State_Think()
 {
 	if ( m_pCurStateInfo && m_pCurStateInfo->pfnThink )
 	{
+		if (m_pCurStateInfo->m_MinDurationConVar == NULL)
+			m_flStateTimeLeft = 0.0f;
+		else
+			m_flStateTimeLeft = (m_flStateEnterTime + m_pCurStateInfo->m_MinDurationConVar->GetFloat() * 60 / m_pCurStateInfo->m_flMinDurationDivisor) - gpGlobals->curtime;
+		
 		(this->*m_pCurStateInfo->pfnThink)();
 	}
 }
@@ -1324,24 +1338,24 @@ CSDKGameRulesStateInfo* CSDKGameRules::State_LookupInfo( match_state_t state )
 {
 	static CSDKGameRulesStateInfo playerStateInfos[] =
 	{
-		{ MATCH_INIT,						"MATCH_INIT",						&CSDKGameRules::State_Enter_INIT, NULL, &CSDKGameRules::State_Think_INIT },
-		{ MATCH_WARMUP,						"MATCH_WARMUP",						&CSDKGameRules::State_Enter_WARMUP, NULL, &CSDKGameRules::State_Think_WARMUP },
-		{ MATCH_FIRST_HALF,					"MATCH_FIRST_HALF",					&CSDKGameRules::State_Enter_FIRST_HALF, NULL, &CSDKGameRules::State_Think_FIRST_HALF },
-		{ MATCH_HALFTIME,					"MATCH_HALFTIME",					&CSDKGameRules::State_Enter_HALFTIME, NULL, &CSDKGameRules::State_Think_HALFTIME },
-		{ MATCH_SECOND_HALF,				"MATCH_SECOND_HALF",				&CSDKGameRules::State_Enter_SECOND_HALF, NULL, &CSDKGameRules::State_Think_SECOND_HALF },
-		{ MATCH_EXTRATIME_INTERMISSION,		"MATCH_EXTRATIME_INTERMISSION",		&CSDKGameRules::State_Enter_EXTRATIME_INTERMISSION, NULL, &CSDKGameRules::State_Think_EXTRATIME_INTERMISSION },
-		{ MATCH_EXTRATIME_FIRST_HALF,		"MATCH_EXTRATIME_FIRST_HALF",		&CSDKGameRules::State_Enter_EXTRATIME_FIRST_HALF, NULL, &CSDKGameRules::State_Think_EXTRATIME_FIRST_HALF },
-		{ MATCH_EXTRATIME_HALFTIME,			"MATCH_EXTRATIME_HALFTIME",			&CSDKGameRules::State_Enter_EXTRATIME_HALFTIME, NULL, &CSDKGameRules::State_Think_EXTRATIME_HALFTIME },
-		{ MATCH_EXTRATIME_SECOND_HALF,		"MATCH_EXTRATIME_SECOND_HALF",		&CSDKGameRules::State_Enter_EXTRATIME_SECOND_HALF, NULL, &CSDKGameRules::State_Think_EXTRATIME_SECOND_HALF },
-		{ MATCH_PENALTIES_INTERMISSION,		"MATCH_PENALTIES_INTERMISSION",		&CSDKGameRules::State_Enter_PENALTIES_INTERMISSION, NULL, &CSDKGameRules::State_Think_PENALTIES_INTERMISSION },
-		{ MATCH_PENALTIES,					"MATCH_PENALTIES",					&CSDKGameRules::State_Enter_PENALTIES, NULL, &CSDKGameRules::State_Think_PENALTIES },
-		{ MATCH_COOLDOWN,					"MATCH_COOLDOWN",					&CSDKGameRules::State_Enter_COOLDOWN, NULL, &CSDKGameRules::State_Think_COOLDOWN },
-		{ MATCH_END,						"MATCH_END",						&CSDKGameRules::State_Enter_END, NULL, &CSDKGameRules::State_Think_END },
+		{ MATCH_INIT,						"MATCH_INIT",						&CSDKGameRules::State_Enter_INIT,					NULL, &CSDKGameRules::State_Think_INIT,						NULL, 1	},
+		{ MATCH_WARMUP,						"MATCH_WARMUP",						&CSDKGameRules::State_Enter_WARMUP,					NULL, &CSDKGameRules::State_Think_WARMUP,					&mp_timelimit_warmup, 1	},
+		{ MATCH_FIRST_HALF,					"MATCH_FIRST_HALF",					&CSDKGameRules::State_Enter_FIRST_HALF,				NULL, &CSDKGameRules::State_Think_FIRST_HALF,				&mp_timelimit_match, 2 },
+		{ MATCH_HALFTIME,					"MATCH_HALFTIME",					&CSDKGameRules::State_Enter_HALFTIME,				NULL, &CSDKGameRules::State_Think_HALFTIME,					&mp_timelimit_halftime, 1 },
+		{ MATCH_SECOND_HALF,				"MATCH_SECOND_HALF",				&CSDKGameRules::State_Enter_SECOND_HALF,			NULL, &CSDKGameRules::State_Think_SECOND_HALF,				&mp_timelimit_match, 2 },
+		{ MATCH_EXTRATIME_INTERMISSION,		"MATCH_EXTRATIME_INTERMISSION",		&CSDKGameRules::State_Enter_EXTRATIME_INTERMISSION, NULL, &CSDKGameRules::State_Think_EXTRATIME_INTERMISSION,	&mp_timelimit_extratime_intermission, 1	},
+		{ MATCH_EXTRATIME_FIRST_HALF,		"MATCH_EXTRATIME_FIRST_HALF",		&CSDKGameRules::State_Enter_EXTRATIME_FIRST_HALF,	NULL, &CSDKGameRules::State_Think_EXTRATIME_FIRST_HALF,		&mp_timelimit_match, 6 },
+		{ MATCH_EXTRATIME_HALFTIME,			"MATCH_EXTRATIME_HALFTIME",			&CSDKGameRules::State_Enter_EXTRATIME_HALFTIME,		NULL, &CSDKGameRules::State_Think_EXTRATIME_HALFTIME,		&mp_timelimit_extratime_halftime, 1 },
+		{ MATCH_EXTRATIME_SECOND_HALF,		"MATCH_EXTRATIME_SECOND_HALF",		&CSDKGameRules::State_Enter_EXTRATIME_SECOND_HALF,	NULL, &CSDKGameRules::State_Think_EXTRATIME_SECOND_HALF,	&mp_timelimit_match, 6 },
+		{ MATCH_PENALTIES_INTERMISSION,		"MATCH_PENALTIES_INTERMISSION",		&CSDKGameRules::State_Enter_PENALTIES_INTERMISSION, NULL, &CSDKGameRules::State_Think_PENALTIES_INTERMISSION,	&mp_timelimit_penalties_intermission, 1 },
+		{ MATCH_PENALTIES,					"MATCH_PENALTIES",					&CSDKGameRules::State_Enter_PENALTIES,				NULL, &CSDKGameRules::State_Think_PENALTIES,				&mp_timelimit_penalties, 1 },
+		{ MATCH_COOLDOWN,					"MATCH_COOLDOWN",					&CSDKGameRules::State_Enter_COOLDOWN,				NULL, &CSDKGameRules::State_Think_COOLDOWN,					&mp_timelimit_cooldown, 1 },
+		{ MATCH_END,						"MATCH_END",						&CSDKGameRules::State_Enter_END,					NULL, &CSDKGameRules::State_Think_END,						NULL, 1},
 	};
 
 	for ( int i=0; i < ARRAYSIZE( playerStateInfos ); i++ )
 	{
-		if ( playerStateInfos[i].m_nMatchState == state )
+		if ( playerStateInfos[i].m_eMatchState == state )
 			return &playerStateInfos[i];
 	}
 
@@ -1364,7 +1378,7 @@ void CSDKGameRules::State_Enter_WARMUP()
 
 void CSDKGameRules::State_Think_WARMUP()
 {
-	if (gpGlobals->curtime > m_flStateEnterTime + mp_timelimit_warmup.GetFloat() * 60)
+	if (m_flStateTimeLeft <= 0.0f)
 		State_Transition(MATCH_FIRST_HALF);
 }
 
@@ -1374,12 +1388,16 @@ void CSDKGameRules::State_Enter_FIRST_HALF()
 
 void CSDKGameRules::State_Think_FIRST_HALF()
 {
-	if (gpGlobals->curtime > m_flStateEnterTime + mp_timelimit_match.GetFloat() * 60 / 2 + m_flStateInjuryTime)
+	if (m_flStateTimeLeft <= 10 && m_nAnnouncedInjuryTime == 0)
 	{
+		m_nAnnouncedInjuryTime = max(1, (int)m_flStateInjuryTime);
+	}
+	else if (m_flStateTimeLeft + m_flStateInjuryTime <= 0)
+	{	
 		//if (m_pBall->IsNearGoal())
 		//	m_flStateInjuryTime += 5; // let players finish their attack
 		//else
-			State_Transition(MATCH_HALFTIME);
+		State_Transition(MATCH_HALFTIME);
 	}
 }
 
@@ -1389,7 +1407,7 @@ void CSDKGameRules::State_Enter_HALFTIME()
 
 void CSDKGameRules::State_Think_HALFTIME()
 {
-	if (gpGlobals->curtime > m_flStateEnterTime + mp_timelimit_halftime.GetFloat() * 60)
+	if (m_flStateTimeLeft <= 0)
 		State_Transition(MATCH_SECOND_HALF);
 }
 
@@ -1400,7 +1418,11 @@ void CSDKGameRules::State_Enter_SECOND_HALF()
 
 void CSDKGameRules::State_Think_SECOND_HALF()
 {
-	if (gpGlobals->curtime > m_flStateEnterTime + mp_timelimit_match.GetFloat() * 60 / 2 + m_flStateInjuryTime)
+	if (m_flStateTimeLeft <= 10 && m_nAnnouncedInjuryTime == 0)
+	{
+		m_nAnnouncedInjuryTime = max(1, (int)m_flStateInjuryTime);
+	}
+	else if (m_flStateTimeLeft + m_flStateInjuryTime <= 0)
 	{
 		if (mp_extratime.GetBool())
 			State_Transition(MATCH_EXTRATIME_INTERMISSION);
@@ -1418,7 +1440,7 @@ void CSDKGameRules::State_Enter_EXTRATIME_INTERMISSION()
 
 void CSDKGameRules::State_Think_EXTRATIME_INTERMISSION()
 {
-	if (gpGlobals->curtime > m_flStateEnterTime + mp_timelimit_extratime_intermission.GetFloat() * 60)
+	if (m_flStateTimeLeft <= 0)
 	{
 		State_Transition(MATCH_EXTRATIME_FIRST_HALF);
 	}
@@ -1431,7 +1453,11 @@ void CSDKGameRules::State_Enter_EXTRATIME_FIRST_HALF()
 
 void CSDKGameRules::State_Think_EXTRATIME_FIRST_HALF()
 {
-	if (gpGlobals->curtime > m_flStateEnterTime + mp_timelimit_match.GetFloat() * 60 / 6 + m_flStateInjuryTime)
+	if (m_flStateTimeLeft <= 10 && m_nAnnouncedInjuryTime == 0)
+	{
+		m_nAnnouncedInjuryTime = max(1, (int)m_flStateInjuryTime);
+	}
+	else if (m_flStateTimeLeft + m_flStateInjuryTime <= 0)
 	{
 		State_Transition(MATCH_EXTRATIME_HALFTIME);
 	}
@@ -1443,7 +1469,7 @@ void CSDKGameRules::State_Enter_EXTRATIME_HALFTIME()
 
 void CSDKGameRules::State_Think_EXTRATIME_HALFTIME()
 {
-	if (gpGlobals->curtime > m_flStateEnterTime + mp_timelimit_extratime_halftime.GetFloat() * 60)
+	if (m_flStateTimeLeft <= 0)
 	{
 		State_Transition(MATCH_EXTRATIME_SECOND_HALF);
 	}
@@ -1456,7 +1482,11 @@ void CSDKGameRules::State_Enter_EXTRATIME_SECOND_HALF()
 
 void CSDKGameRules::State_Think_EXTRATIME_SECOND_HALF()
 {
-	if (gpGlobals->curtime > m_flStateEnterTime + mp_timelimit_match.GetFloat() * 60 / 6 + m_flStateInjuryTime)
+	if (m_flStateTimeLeft <= 10 && m_nAnnouncedInjuryTime == 0)
+	{
+		m_nAnnouncedInjuryTime = max(1, (int)m_flStateInjuryTime);
+	}
+	else if (m_flStateTimeLeft + m_flStateInjuryTime <= 0)
 	{
 		if (mp_penalties.GetBool())
 			State_Transition(MATCH_PENALTIES_INTERMISSION);
@@ -1471,7 +1501,7 @@ void CSDKGameRules::State_Enter_PENALTIES_INTERMISSION()
 
 void CSDKGameRules::State_Think_PENALTIES_INTERMISSION()
 {
-	if (gpGlobals->curtime > m_flStateEnterTime + mp_timelimit_penalties_intermission.GetFloat() * 60)
+	if (m_flStateTimeLeft <= 0)
 	{
 		State_Transition(MATCH_PENALTIES);
 	}
@@ -1483,7 +1513,7 @@ void CSDKGameRules::State_Enter_PENALTIES()
 
 void CSDKGameRules::State_Think_PENALTIES()
 {
-	if (gpGlobals->curtime > m_flStateEnterTime + mp_timelimit_penalties.GetFloat() * 60)
+	if (m_flStateTimeLeft <= 0)
 	{
 		State_Transition(MATCH_COOLDOWN);
 	}
@@ -1508,7 +1538,7 @@ void CSDKGameRules::State_Enter_COOLDOWN()
 		if ( !pPlayer )
 			continue;
 
-		pPlayer->ShowViewPortPanel( PANEL_SCOREBOARD );
+		//pPlayer->ShowViewPortPanel( PANEL_SCOREBOARD );
 
 		//is this player on the winning team
 		if (pPlayer->GetTeamNumber() == winners)
@@ -1537,7 +1567,7 @@ void CSDKGameRules::State_Enter_COOLDOWN()
 
 void CSDKGameRules::State_Think_COOLDOWN()
 {
-	if (gpGlobals->curtime > m_flStateEnterTime + mp_timelimit_cooldown.GetFloat() * 60)
+	if (m_flStateTimeLeft <= 0)
 	{
 		State_Transition(MATCH_END);
 	}
@@ -1565,6 +1595,7 @@ void CSDKGameRules::SwapTeams()
 			continue;
 
 		pPlayer->ChangeTeam((team == TEAM_A ? TEAM_B : TEAM_A), true, true);
+		GetPlayerSpawnSpot(pPlayer);
 		//pPlayer->ChooseModel();
 	}
 
@@ -1574,14 +1605,14 @@ void CSDKGameRules::SwapTeams()
 
 #endif
 
-#ifdef CLIENT_DLL
-
-void CSDKGameRules::SetMatchState(int nMatchState)
-{
-	m_nMatchState = nMatchState;
-}
-
-#endif
+//#ifdef CLIENT_DLL
+//
+//void CSDKGameRules::SetMatchState(match_state_t eMatchState)
+//{
+//	m_eMatchState = eMatchState;
+//}
+//
+//#endif
 
 #ifdef GAME_DLL
 
@@ -1621,5 +1652,21 @@ void cc_Teams( const CCommand& args )
 }
 
 static ConCommand mp_teams( "mp_teams", cc_Teams, "Set teams" );
+
+void OnTeamlistChange(IConVar *var, const char *pOldValue, float flOldValue)
+{
+#ifdef GAME_DLL
+	//if (gpGlobals->curtime > 10)
+	if (SDKGameRules() != NULL)
+	{
+		char teamlist[256];
+		Q_strncpy(teamlist, ((ConVar*)var)->GetString(), sizeof(teamlist));
+		char *home = strtok(teamlist, ";");
+		char *away = strtok(NULL, ";");
+		SetTeams(home, away);
+	}
+}
+#endif
+static ConVar mp_teamlist("mp_teamlist", "ENGLAND;BRAZIL", FCVAR_REPLICATED|FCVAR_NOTIFY, "Set team names", &OnTeamlistChange);
 
 #endif

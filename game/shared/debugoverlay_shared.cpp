@@ -86,9 +86,81 @@ void NDebugOverlay::SweptBox( const Vector& start, const Vector& end, const Vect
 //-----------------------------------------------------------------------------
 void NDebugOverlay::EntityBounds( const CBaseEntity *pEntity, int r, int g, int b, int a, float flDuration )
 {
+//	const CCollisionProperty *pCollide = pEntity->CollisionProp();
+//	BoxAngles( pCollide->GetCollisionOrigin(), pCollide->OBBMins(), pCollide->OBBMaxs(), pCollide->GetCollisionAngles(), r, g, b, a, flDuration );
+
 	const CCollisionProperty *pCollide = pEntity->CollisionProp();
+	// Draw the base OBB for the object (default color is orange)
 	BoxAngles( pCollide->GetCollisionOrigin(), pCollide->OBBMins(), pCollide->OBBMaxs(), pCollide->GetCollisionAngles(), r, g, b, a, flDuration );
+
+	// This is the axis of rotation in world space
+	Vector rotationAxisWs(1,0,0);
+	const float rotationAngle = gpGlobals->curtime*10; // 10 degrees per second animated rotation
+	//const float rotationAngle = 45; // degrees, Source's convention is that positive rotation is counter-clockwise
+	
+
+	// Example 1: Applying the rotation in the local space of the entity
+
+	// Compute rotation axis in entity local space
+	// Compute the transform as a matrix so we can concatenate it with the entity's current transform
+	Vector rotationAxisLs;
+
+	/* The matrix maps vectors from entity space to world space, since we have a world space 
+	vector that we want in entity space we use the inverse operator VectorIRotate instead of VectorRotate
+        Note, you could also invert the matrix and use VectorRotate instead */
+	VectorIRotate( rotationAxisWs, pEntity->EntityToWorldTransform(), rotationAxisLs );
+
+	/* Build a transform that rotates around that axis in local space by the angle
+	If there were an AxisAngleMatrix() routine we could use that directly, but there isn't 
+	So convert to a quaternion first, then a matrix */
+	Quaternion q;
+
+	// NOTE: Assumes axis is a unit vector, non-unit vectors will bias the resulting rotation angle (but not the axis)
+	AxisAngleQuaternion( rotationAxisLs, rotationAngle, q );
+	
+	// Convert to a matrix
+	matrix3x4_t xform;
+	QuaternionMatrix( q, vec3_origin, xform );
+	
+	// Apply the rotation to the entity input space (local)
+	matrix3x4_t localToWorldMatrix;
+	ConcatTransforms( pEntity->EntityToWorldTransform(), xform, localToWorldMatrix );
+
+	// Extract the compound rotation as a QAngle
+	QAngle localAngles;
+	MatrixAngles( localToWorldMatrix, localAngles );
+
+	// Draw the rotated box in blue
+	BoxAngles( pCollide->GetCollisionOrigin(), pCollide->OBBMins(), pCollide->OBBMaxs(), localAngles, 0, 0, 255, a, flDuration );
+
+
+	{
+
+		// Example 2: Applying the rotation in world space directly
+
+		/* Build a transform that rotates around that axis in world space by the angle
+		NOTE: Add ten degrees so the boxes are separately visible
+		Then compute the transform as a matrix so we can concatenate it with the entity's current transform */
+		Quaternion q;
+		AxisAngleQuaternion( rotationAxisWs, rotationAngle+10, q );
+
+		// Convert to a matrix
+		matrix3x4_t xform;
+		QuaternionMatrix( q, vec3_origin, xform );
+
+		// Apply the rotation to the entity output space (world)
+		matrix3x4_t localToWorldMatrix;
+		ConcatTransforms( xform, pEntity->EntityToWorldTransform(), localToWorldMatrix );
+
+		// Extract the compound rotation as a QAngle
+		QAngle localAngles;
+		MatrixAngles( localToWorldMatrix, localAngles );
+
+		// Draw the rotated + 10 box in yellow
+		BoxAngles( pCollide->GetCollisionOrigin(), pCollide->OBBMins(), pCollide->OBBMaxs(), localAngles, 255, 255, 0, a, flDuration );
+	}
 }
+
 
 //-----------------------------------------------------------------------------
 // Purpose: Draws a line from one position to another

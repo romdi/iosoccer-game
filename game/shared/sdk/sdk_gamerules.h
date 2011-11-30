@@ -36,6 +36,8 @@
 	#define CSDKGameRulesProxy C_SDKGameRulesProxy
 #endif
 
+extern ConVar mp_timelimit_match, mp_timelimit_extratime_halftime, mp_timelimit_extratime_intermission, mp_timelimit_halftime, mp_timelimit_warmup;
+
 enum match_state_t
 {
 	MATCH_INIT = 0,
@@ -62,12 +64,15 @@ class CSDKGameRules;
 class CSDKGameRulesStateInfo
 {
 public:
-	match_state_t			m_nMatchState;
+	match_state_t			m_eMatchState;
 	const char				*m_pStateName;
 
 	void (CSDKGameRules::*pfnEnterState)();	// Init and deinit the state.
 	void (CSDKGameRules::*pfnLeaveState)();
 	void (CSDKGameRules::*pfnThink)();	// Do a PreThink() in this state.
+
+	ConVar					*m_MinDurationConVar;
+	float					m_flMinDurationDivisor;
 };
 
 class CSDKGameRulesProxy : public CGameRulesProxy
@@ -145,7 +150,7 @@ public:
 
 	DECLARE_CLIENTCLASS_NOBASE(); // This makes datatables able to access our private vars.
 
-	void SetMatchState(int nMatchState);
+	//void SetMatchState(match_state_t nMatchState);
 #else
 
 	DECLARE_SERVERCLASS_NOBASE(); // This makes datatables able to access our private vars.
@@ -220,24 +225,28 @@ public:
 public:
 	float GetMapRemainingTime();	// time till end of map, -1 if timelimit is disabled
 	float GetMapElapsedTime();		// How much time has elapsed since the map started.
-
-private:
-	CNetworkVar( float, m_flGameStartTime );
 */
 
 public:
-	CNetworkVar(float, m_fStart);			//from wiki
-	CNetworkVar(int, m_iDuration);
-	CNetworkVar(match_state_t, m_nMatchState);
+	//CNetworkVar(float, m_fStart);			//from wiki
+	//CNetworkVar(int, m_iDuration);
+	CNetworkVar(match_state_t, m_eMatchState);
+	//CNetworkVar( float, m_flMatchStartTime );
+	CNetworkVar(int, m_nAnnouncedInjuryTime);
+
 	int	GetMapRemainingTime(void);				//ios
 	int GetMapTime(void);
 	void StartRoundtimer(int iDuration);
-	inline match_state_t State_Get( void ) { return m_nMatchState; }
-	float m_flStateEnterTime;
+	inline match_state_t State_Get( void ) { return m_eMatchState; }
+	CNetworkVar(float, m_flStateEnterTime);
 	float m_flStateInjuryTime;
+
+	void RestartMatch();
 
 #ifdef GAME_DLL
 protected:
+	float m_flStateTimeLeft;
+
 	CSDKGameRulesStateInfo		*m_pCurStateInfo;			// Per-state data 
 	float						m_flStateTransitionTime;	// Timer for round states
 	// State machine handling

@@ -235,8 +235,10 @@ public:
 
 	int				m_KickDelay;
 
+	void			SetPhysics();
+
 private:
-	void SetBallCurve(CSDKPlayer *pPlayer, Vector vel, Vector avel, Vector v_right, Vector v_up);
+	void			SetBallCurve(CSDKPlayer *pPlayer, Vector vel, Vector avel, Vector v_right, Vector v_up);
 };
 
 #endif
