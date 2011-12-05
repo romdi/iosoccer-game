@@ -3256,5 +3256,14 @@
     <Library Include="..\..\lib\public\vstdlib.lib">
       <Filter>Link Libraries</Filter>
     </Library>
+    <Library Include="..\..\thirdparty\lib\libcurl.lib">
+      <Filter>Link Libraries</Filter>
+    </Library>
+    <Library Include="..\..\thirdparty\lib\zlibstat.lib">
+      <Filter>Link Libraries</Filter>
+    </Library>
+    <Library Include="..\..\thirdparty\lib\zlibwapi.lib">
+      <Filter>Link Libraries</Filter>
+    </Library>
   </ItemGroup>
 </Project>

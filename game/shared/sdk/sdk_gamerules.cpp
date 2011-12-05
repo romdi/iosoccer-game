@@ -1222,6 +1222,7 @@ void CSDKGameRules::RestartMatch()
 		plr->m_GoalKicks = 0;
 		plr->ResetFragCount();
 		plr->m_fPossessionTime = 0.0f;
+		plr->m_fSprintLeft = SPRINT_TIME;
 
 		//refresh if team has changed
 		//plr->ChooseModel();
@@ -1584,6 +1585,17 @@ void CSDKGameRules::State_Think_END()
 
 void CSDKGameRules::SwapTeams()
 {
+	//reset (kick off) the first ball we find
+	CBall *pBall = dynamic_cast<CBall*>(gEntList.FindEntityByClassname( NULL, "football" ));
+	if (pBall)
+	{
+		pBall->DropBall();
+		pBall->ballStatusTime = 0;
+		pBall->ShieldOff();
+		pBall->HandleKickOff();
+		pBall->SetPhysics();
+	}
+
 	// swap players
 	for (int i = 0; i < gpGlobals->maxClients; i++)
 	{
@@ -1637,36 +1649,190 @@ void SetTeams(const char *teamHome, const char *teamAway, bool bInitialize)
 	}
 }
 
-void cc_Teams( const CCommand& args )
-{
-	if ( !UTIL_IsCommandIssuedByServerAdmin() )
-		return;
-
-	if ( args.ArgC() < 3 )
-	{
-		Msg( "Format: mp_teams <home team> <away team>\n" );
-		return;
-	}
-
-	SetTeams(args[1], args[2]);
-}
-
-static ConCommand mp_teams( "mp_teams", cc_Teams, "Set teams" );
+//void cc_Teams( const CCommand& args )
+//{
+//	if ( !UTIL_IsCommandIssuedByServerAdmin() )
+//		return;
+//
+//	if ( args.ArgC() < 3 )
+//	{
+//		Msg( "Format: mp_teams <home team> <away team>\n" );
+//		return;
+//	}
+//
+//	SetTeams(args[1], args[2]);
+//}
+//
+//static ConCommand mp_teams( "mp_teams", cc_Teams, "Set teams" );
 
 void OnTeamlistChange(IConVar *var, const char *pOldValue, float flOldValue)
 {
-#ifdef GAME_DLL
 	//if (gpGlobals->curtime > 10)
 	if (SDKGameRules() != NULL)
 	{
 		char teamlist[256];
 		Q_strncpy(teamlist, ((ConVar*)var)->GetString(), sizeof(teamlist));
+		//CUtlVector<char*, CUtlMemory<char*> > teams;
+		//Q_SplitString(teamlist, ";", teams);
+		//teams
 		char *home = strtok(teamlist, ";");
 		char *away = strtok(NULL, ";");
-		SetTeams(home, away);
+		if (home == NULL || away == NULL)
+			Msg( "Format: mp_teamlist \"<home team>;<away team>\"\n" );
+		else
+		{
+			//ReadTeamInfo(home);
+			//ReadTeamInfo(away);
+			SetTeams(home, away);
+		}
 	}
 }
-#endif
 static ConVar mp_teamlist("mp_teamlist", "ENGLAND;BRAZIL", FCVAR_REPLICATED|FCVAR_NOTIFY, "Set team names", &OnTeamlistChange);
+static ConVar sv_teamrotation("mp_teamrotation", "brazil;germany;italy;scotland;barcelona;bayern;liverpool;milan;palmeiras", 0, "Set available teams");
+
+#endif
+
+
+
+#ifdef CLIENT_DLL
+
+#include "Filesystem.h"
+#include "utlbuffer.h"
+
+struct kit
+{
+	char type[16];
+	char firstColor[16];
+	char secondColor[16];
+};
+
+struct teamInfo
+{
+	char teamCode[8];
+	char shortName[16];
+	char fullName[32];
+	kit kits[8];
+};
+
+void ReadTeamInfo(const char *teamname)
+{
+	//char filename[64];
+	//Q_snprintf(filename, sizeof(filename), "materials/models/player_new/%s/teaminfo", teamname);
+	//V_SetExtension(filename, ".txt", sizeof(filename));
+	//V_FixSlashes(filename);
+
+	//CUtlBuffer buf;
+	//if (filesystem->ReadFile(filename, "GAME", buf))
+	//{
+	//	char* gameInfo = new char[buf.Size() + 1];
+	//	buf.GetString(gameInfo);
+	//	gameInfo[buf.Size()] = 0; // null terminator
+
+	//	DevMsg("Team info: %s\n", gameInfo);
+
+	//	delete[] gameInfo;
+	//}
+
+	char path[64], filename[64];
+	Q_snprintf(path, sizeof(path), "materials/models/player_new/%s", teamname);
+
+	int length;
+	CUtlVector<char*, CUtlMemory<char*> > lines, values;
+	Q_snprintf(filename, sizeof(filename), "%s/teaminfo.txt", path);
+	char *teaminfostr = (char *)UTIL_LoadFileForMe(filename, &length);
+	if (teaminfostr && length > 0)
+	{
+		const char *separators[2] = { "\n", ";" };
+		Q_SplitString2(teaminfostr, separators, 2, lines);
+		//teamInfo t = { teaminfo[0], teaminfo[1], teaminfo[2], teaminfo[3], teaminfo[4], teaminfo[5] };
+		teamInfo ti;
+		Q_strncpy(ti.teamCode, lines[0], sizeof(ti.teamCode));
+		Q_strncpy(ti.shortName, lines[1], sizeof(ti.shortName));
+		Q_strncpy(ti.fullName, lines[2], sizeof(ti.fullName));
+
+		for (int i = 3; i < lines.Count(); i += 3)
+		{
+			kit k;
+			Q_strncpy(k.type, lines[i], sizeof(k.type));
+			Q_strncpy(k.firstColor, lines[i + 1], sizeof(k.firstColor));
+			Q_strncpy(k.secondColor, lines[i + 2], sizeof(k.secondColor));
+			ti.kits[i/3-1] = k; //todo: neue variable vom stack?
+		}
+	}
+}
+
+#include "curl/curl.h"
+#include "Filesystem.h"
+#include "utlbuffer.h"
+  
+struct curl_t
+{
+	char filename[32];
+	CUtlBuffer buf;
+	FileHandle_t fh;
+};
+
+// Called when curl receives data from the server
+static size_t rcvData(void *ptr, size_t size, size_t nmemb, curl_t* vars)
+{
+	//Msg((char*)ptr); // up to 989 characters each time
+	//CUtlBuffer buf(0, 0, CUtlBuffer::TEXT_BUFFER);
+	//vars->buf.Put(ptr, nmemb);
+	filesystem->Write(ptr, nmemb, vars->fh);
+	//filesystem->WriteFile(VarArgs("materials/models/player_new/foobar/%s", vars->filename), "MOD", buf);
+	return size * nmemb;
+}
+
+ 
+unsigned DoCurl( void *params )
+{
+	curl_t* vars = (curl_t*) params; // always use a struct!
+ 
+	// do some stuff
+ 
+	/*vars->buf = CUtlBuffer(0, 0, CUtlBuffer::TEXT_BUFFER);
+	vars->buf.SetBufferType(false, false);*/
+	//vars->buf = CUtlBuffer();
+
+	//filesystem->UnzipFile("test.zip", "MOD", "unziptest");
+
+	vars->fh = filesystem->Open(VarArgs("materials/models/player_new/foobar/%s", vars->filename), "a+b", "MOD");
+
+	if (vars->fh)
+	{
+		CURL *curl;
+		curl = curl_easy_init();
+		curl_easy_setopt(curl, CURLOPT_URL, VarArgs("http://127.0.0.1:8000/%s", vars->filename));
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, rcvData);
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, vars);
+		curl_easy_perform(curl);
+		curl_easy_cleanup(curl);
+
+		filesystem->Close(vars->fh);
+
+		//filesystem->WriteFile(VarArgs("materials/models/player_new/foobar/%s", vars->filename), "MOD", vars->buf);
+
+		//Msg("Cannot print to console from this threaded function\n");
+	}
+	// clean up the memory
+	delete vars;
+
+	return 0;
+}
+
+void Curl(const CCommand &args)
+{
+	if (args.ArgC() < 2)
+	{
+		Msg("Which file?\n");
+		return;
+	}
+
+	curl_t* vars = new curl_t;
+	Q_strncpy(vars->filename, args[1], sizeof(vars->filename));
+	CreateSimpleThread( DoCurl, vars );
+}
+
+static ConCommand cl_curl("cl_curl", Curl);
 
 #endif
