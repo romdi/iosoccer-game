@@ -21,6 +21,13 @@ const int MODEL_PLAYER			= 0;
 const int MODEL_KEEPER			= 1;
 const int MODEL_KEEPER_AND_BALL	= 2;
 
+
+#define PLAYER_SPEED 280.0f
+
+#define SPRINT_TIME           6.0f     //IOS sprint amount 5.5
+#define SPRINT_RECHARGE_TIME  12.0f    //IOS time before sprint re-charges
+#define SPRINT_SPEED          90.0f    //IOS sprint increase in speed
+
 // Function table for each player state.
 class CSDKPlayerStateInfo
 {
@@ -267,6 +274,8 @@ public:
 
 	CNetworkVar(int, m_TeamPos);								//position on pitch
 	CNetworkVar(int, m_ShirtPos);								//converted spawn point numbers into shirt numbers
+	
+	float				m_flNextShot;
 
 	float				m_HoldAnimTime;							//dont let player move until this expires
 

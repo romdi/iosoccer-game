@@ -38,9 +38,9 @@ class CKeeperBot;
 #define FRONTPOST_ANGLE   75
 #define FRONTPOST_DIST    90 
 
-#define WALKSPD   150
-#define RUNSPD    280	//320 //220   //was220
-#define SAVESPD   280	//320 //260   //320
+#define WALKSPD   100
+#define RUNSPD    100//280	//320 //220   //was220
+#define SAVESPD   100//280	//320 //260   //320
 
 LINK_ENTITY_TO_CLASS(ios_keeperbot, CKeeperBot);
 
@@ -120,16 +120,22 @@ void CKeeperBot::BotThink()
 	//keeper carrying ball (don't do normal ai)
 	if (pBall->m_KeeperCarrying == this) 
 	{
-		m_cmd.viewangles.y = (-90.0f * o) + g_IOSRand.RandomFloat(-35.0f,35.0f);   //force angle of kick
-		SetLocalAngles(m_cmd.viewangles);		//force angle
-		float frametime = gpGlobals->frametime;
-		RunPlayerMove( m_cmd, frametime );		//run move now to fix up Y rot!! oh dear
+		
 
-		if (pBall->m_KeeperCarryTime < gpGlobals->curtime + 7.0f )	//carry for 3 secs (since carrytime is time+10)
+		if (gpGlobals->curtime > pBall->m_KeeperCarryTime - 9.0f/*7.0f*/ )	//carry for 3 secs (since carrytime is time+10)
 		{
+			m_cmd.viewangles.y = (-90.0f * o) + g_IOSRand.RandomFloat(-35.0f,35.0f);   //force angle of kick
 			m_cmd.viewangles.x = -35.0f + g_IOSRand.RandomFloat(-15.0f,15.0f);
+			SetLocalAngles(m_cmd.viewangles);		//force angle
+			float frametime = gpGlobals->frametime;
+			RunPlayerMove( m_cmd, frametime );		//run move now to fix up Y rot!! oh dear
+
 			m_cmd.buttons |= IN_ATTACK;
 		}
+		/*else if (gpGlobals->curtime > pBall->m_KeeperCarryTime - 9.5f)
+		{
+
+		}*/
 		return;
 	}
 
@@ -243,18 +249,66 @@ void CKeeperBot::BotThink()
 ///////////////////////////////////////////////////
 // Keeper Head to Centre of Goal
 //
+//void CKeeperBot::KeeperCentre(int o)
+//{
+//	//edict_t *pEdict = pEdict;
+//	Vector pos = GetAbsOrigin();
+//
+//	//head to centre of goal
+//	if (pos.x > m_SpawnPos.x + 5) 
+//	{
+//		m_cmd.sidemove = RUNSPD * o;
+//		m_cmd.viewangles.y = m_SpawnAngle.y;
+//	} 
+//	else if (pos.x < m_SpawnPos.x - 5) 
+//	{
+//		m_cmd.sidemove = -RUNSPD * o;
+//		m_cmd.viewangles.y = m_SpawnAngle.y;
+//	}
+//
+//	if (o==-1) 
+//	{
+//		if (pos.y < m_SpawnPos.y - (OFFLINE_NEAR * o)) 
+//		{
+//			m_cmd.forwardmove = -RUNSPD * o;
+//			m_cmd.viewangles.y = m_SpawnAngle.y;
+//		} 
+//		else if (pos.y > m_SpawnPos.y - (OFFLINE_FAR * o)) 
+//		{
+//			m_cmd.forwardmove = RUNSPD * o;
+//			m_cmd.viewangles.y = m_SpawnAngle.y;
+//		}
+//	} 
+//	else 
+//	{
+//		if (pos.y < m_SpawnPos.y - (OFFLINE_FAR * o)) 
+//		{
+//			m_cmd.forwardmove = -RUNSPD * o;
+//			m_cmd.viewangles.y = m_SpawnAngle.y;
+//		} 
+//		else if (pos.y > m_SpawnPos.y - (OFFLINE_NEAR * o)) 
+//		{
+//			m_cmd.forwardmove = RUNSPD * o;
+//			m_cmd.viewangles.y = m_SpawnAngle.y;
+//		}
+//	}
+//}
+
 void CKeeperBot::KeeperCentre(int o)
 {
 	//edict_t *pEdict = pEdict;
 	Vector pos = GetAbsOrigin();
+	Vector ballPos;
+	BotFindBall()->VPhysicsGetObject()->GetPosition(&ballPos, NULL);
+	Vector newPos = m_SpawnPos + (ballPos - m_SpawnPos) / 3;
 
 	//head to centre of goal
-	if (pos.x > m_SpawnPos.x + 5) 
+	if (pos.x > newPos.x + 5) 
 	{
 		m_cmd.sidemove = RUNSPD * o;
 		m_cmd.viewangles.y = m_SpawnAngle.y;
 	} 
-	else if (pos.x < m_SpawnPos.x - 5) 
+	else if (pos.x < newPos.x - 5) 
 	{
 		m_cmd.sidemove = -RUNSPD * o;
 		m_cmd.viewangles.y = m_SpawnAngle.y;
@@ -262,12 +316,12 @@ void CKeeperBot::KeeperCentre(int o)
 
 	if (o==-1) 
 	{
-		if (pos.y < m_SpawnPos.y - (OFFLINE_NEAR * o)) 
+		if (pos.y < newPos.y - (OFFLINE_NEAR * o)) 
 		{
 			m_cmd.forwardmove = -RUNSPD * o;
 			m_cmd.viewangles.y = m_SpawnAngle.y;
 		} 
-		else if (pos.y > m_SpawnPos.y - (OFFLINE_FAR * o)) 
+		else if (pos.y > newPos.y - (OFFLINE_FAR * o)) 
 		{
 			m_cmd.forwardmove = RUNSPD * o;
 			m_cmd.viewangles.y = m_SpawnAngle.y;
@@ -275,19 +329,18 @@ void CKeeperBot::KeeperCentre(int o)
 	} 
 	else 
 	{
-		if (pos.y < m_SpawnPos.y - (OFFLINE_FAR * o)) 
+		if (pos.y < newPos.y - (OFFLINE_FAR * o)) 
 		{
 			m_cmd.forwardmove = -RUNSPD * o;
 			m_cmd.viewangles.y = m_SpawnAngle.y;
 		} 
-		else if (pos.y > m_SpawnPos.y - (OFFLINE_NEAR * o)) 
+		else if (pos.y > newPos.y - (OFFLINE_NEAR * o)) 
 		{
 			m_cmd.forwardmove = RUNSPD * o;
 			m_cmd.viewangles.y = m_SpawnAngle.y;
 		}
 	}
 }
-
 
 ///////////////////////////////////////////////////
 // Keeper Start Frame

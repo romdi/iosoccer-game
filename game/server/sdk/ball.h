@@ -67,6 +67,35 @@ class CBall	: public CPhysicsProp, public IMultiplayerPhysics
 	float			GetMass(void) {	return m_fMass;	}
 	int				ObjectCaps(void)	{  return BaseClass::ObjectCaps() |	FCAP_CONTINUOUS_USE; }
 
+private:
+	void			RunCheck();
+	CSDKPlayer		*SelectShooter();
+	bool			SelectAction();
+	bool			DoGroundShot();
+	bool			DoVolleyShot();
+	bool			DoChestDrop();
+	bool			DoHeader();
+	void			SetBallCurve();
+
+	CSDKPlayer		*m_pPl; // Player who may shoot
+	Vector			m_vPlVel;
+	Vector			m_vPlPos;
+	QAngle			m_aPlAng;
+	Vector			m_vPlForward;
+	Vector			m_vPlRight;
+	Vector			m_vPlUp;
+
+	Vector			m_vPos;
+	Vector			m_vVel;
+	QAngle			m_aAng;
+	AngularImpulse	m_vAngImp;
+	Vector			m_vNewVel;
+	AngularImpulse	m_vNewAngImp;
+
+	bool			m_bIsPowershot;
+	bool			m_bSetVel;
+	bool			m_bSetAngImp;
+
 public:
 	bool			IsAsleep(void) { return	false; }
 	virtual	void	Spawn(void);
@@ -236,9 +265,6 @@ public:
 	int				m_KickDelay;
 
 	void			SetPhysics();
-
-private:
-	void			SetBallCurve(CSDKPlayer *pPlayer, Vector vel, Vector avel, Vector v_right, Vector v_up);
 };
 
 #endif

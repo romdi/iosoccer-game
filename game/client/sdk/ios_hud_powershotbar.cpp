@@ -180,10 +180,11 @@ void CHudPowershotBar::Paint()
 	{
 		y0 = yOffset + height / 5 * i;
 		int x0, x1, linepadding;
+		int powershotStrength = cl_powershot_strength.GetInt();
 
-		if ((5 - i) == cl_powershot_strength.GetInt())
+		if ((5 - i) == powershotStrength)
 		{
-			if (sprint >= (cl_powershot_strength.GetInt() / 5.0f))
+			if (sprint >= (powershotStrength / 5.0f - 0.001f))
 				surface()->DrawSetColor(200, 255, 200, 255);
 			else
 				surface()->DrawSetColor(255, 200, 200, 255);

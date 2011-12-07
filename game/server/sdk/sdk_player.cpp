@@ -32,12 +32,6 @@ CUniformRandomStream g_IOSRand;
 //#define SDK_PLAYER_MODEL "models/player/terror.mdl"
 //#define SDK_PLAYER_MODEL "models/player/brazil/brazil.mdl"		//need to precache one to start with
 
-#define PLAYER_SPEED 280.0f
-
-#define SPRINT_TIME           6.0f     //IOS sprint amount 5.5
-#define SPRINT_RECHARGE_TIME  12.0f    //IOS time before sprint re-charges
-#define SPRINT_SPEED          90.0f    //IOS sprint increase in speed
-
 ConVar SDK_ShowStateTransitions( "sdk_ShowStateTransitions", "-2", FCVAR_CHEAT, "sdk_ShowStateTransitions <ent index or -1 for all>. Show player state transitions." );
 
 
@@ -340,7 +334,8 @@ void CSDKPlayer::LookAtBall(void)
 			//if (pitch > 180) pitch -= 360;
 			//if (pitch < -180) pitch += 360;
 
-			if (yaw > -30 && yaw < 30) 
+			//if (yaw > -30 && yaw < 30)
+			if (yaw > -60 && yaw < 60) 
 			{   
 				yaw = curyaw + (yaw-curyaw)*0.1f;
 				//pitch = curpitch + (pitch-curpitch)*0.1f;
@@ -512,6 +507,8 @@ void CSDKPlayer::Spawn()
 	SetContextThink( &CSDKPlayer::SDKPushawayThink, gpGlobals->curtime + PUSHAWAY_THINK_INTERVAL, SDK_PUSHAWAY_THINK_CONTEXT );
 	pl.deadflag = false;
 	*/
+
+	m_flNextShot = gpGlobals->curtime;
 
 	if (m_nPowershotStrength == 0)
 		m_nPowershotStrength = 3;
@@ -1971,6 +1968,7 @@ CBaseEntity *CSDKPlayer::FindUseEntity()
 //-----------------------------------------------------------------------------
 void CSDKPlayer::PlayerUse ( void )
 {
+	return;
 
 	if (m_TeamPos < 1)
 		return;

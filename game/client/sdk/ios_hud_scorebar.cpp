@@ -134,10 +134,10 @@ void CHudScorebar::Paint( void )
 	wchar_t teamHomeName[64];
 	wchar_t teamAwayName[64];
 	wchar_t time[64];
-	wchar_t prefix[16] = L"";
+	//wchar_t prefix[16] = L"";
 
 	float flTime = gpGlobals->curtime - SDKGameRules()->m_flStateEnterTime;
-	int nTime;
+	int nTime = 0;
 
 	switch ( SDKGameRules()->m_eMatchState )
 	{
@@ -161,18 +161,21 @@ void CHudScorebar::Paint( void )
 	//// End fall through
 
 	case MATCH_EXTRATIME_SECOND_HALF: case MATCH_EXTRATIME_SECOND_HALF_INJURY_TIME:
-		if (wcslen(prefix) == 0) _snwprintf(prefix, sizeof(prefix), L"EX2");
-	case MATCH_EXTRATIME_FIRST_HALF: case MATCH_EXTRATIME_FIRST_HALF_INJURY_TIME:
-		if (wcslen(prefix) == 0) _snwprintf(prefix, sizeof(prefix), L"EX1");
-	case MATCH_SECOND_HALF: case MATCH_SECOND_HALF_INJURY_TIME:
-		if (wcslen(prefix) == 0) _snwprintf(prefix, sizeof(prefix), L"H2");
-	case MATCH_FIRST_HALF: case MATCH_FIRST_HALF_INJURY_TIME:
-		if (wcslen(prefix) == 0) _snwprintf(prefix, sizeof(prefix), L"H1");
-
-		nTime = ( int )( flTime * ( 90.0f / mp_timelimit_match.GetInt() ) );
-		_snwprintf( time, ARRAYSIZE( time ), L"%s % 3d:%02d", prefix, nTime / 60, nTime % 60 );
+		nTime = ( int )( flTime * ( 90.0f / mp_timelimit_match.GetInt() ) ) + (90 + 15) * 60;
+		_snwprintf( time, ARRAYSIZE( time ), L"EX2 % 3d:%02d", nTime / 60, nTime % 60 );
 		break;
-
+	case MATCH_EXTRATIME_FIRST_HALF: case MATCH_EXTRATIME_FIRST_HALF_INJURY_TIME:
+		nTime = ( int )( flTime * ( 90.0f / mp_timelimit_match.GetInt() ) ) + 90 * 60;
+		_snwprintf( time, ARRAYSIZE( time ), L"EX1 % 3d:%02d", nTime / 60, nTime % 60 );
+		break;
+	case MATCH_SECOND_HALF: case MATCH_SECOND_HALF_INJURY_TIME:
+		nTime = ( int )( flTime * ( 90.0f / mp_timelimit_match.GetInt() ) ) + 45 * 60;
+		_snwprintf( time, ARRAYSIZE( time ), L"H2 % 3d:%02d", nTime / 60, nTime % 60 );
+		break;
+	case MATCH_FIRST_HALF: case MATCH_FIRST_HALF_INJURY_TIME:
+		nTime = ( int )( flTime * ( 90.0f / mp_timelimit_match.GetInt() ) );
+		_snwprintf( time, ARRAYSIZE( time ), L"H1 % 3d:%02d", nTime / 60, nTime % 60 );
+		break;
 	case MATCH_WARMUP:
 		_snwprintf( time, ARRAYSIZE( time ), L"WARMUP" );
 		break;
@@ -180,19 +183,22 @@ void CHudScorebar::Paint( void )
 		_snwprintf( time, ARRAYSIZE( time ), L"HALFTIME" );
 		break;
 	case MATCH_EXTRATIME_INTERMISSION:
-		_snwprintf( time, ARRAYSIZE( time ), L"EXTRATIME INTERMISSION" );
+		_snwprintf( time, ARRAYSIZE( time ), L"EX INTERM" );
 		break;
 	case MATCH_EXTRATIME_HALFTIME:
-		_snwprintf( time, ARRAYSIZE( time ), L"EXTRATIME HALFTIME" );
+		_snwprintf( time, ARRAYSIZE( time ), L"EX HALFTIME" );
 		break;
 	case MATCH_PENALTIES_INTERMISSION:
-		_snwprintf( time, ARRAYSIZE( time ), L"PENALTIES INTERMISSION" );
+		_snwprintf( time, ARRAYSIZE( time ), L"PEN INTERM" );
 		break;
 	case MATCH_PENALTIES:
 		_snwprintf( time, ARRAYSIZE( time ), L"PENALTIES" );
 		break;
 	case MATCH_COOLDOWN:
 		_snwprintf( time, ARRAYSIZE( time ), L"COOLDOWN" );
+		break;
+	default:
+		_snwprintf( time, ARRAYSIZE( time ), L"" );
 		break;
 	}
 
