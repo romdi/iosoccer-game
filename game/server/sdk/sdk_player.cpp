@@ -2382,7 +2382,8 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 				else
 					ChangeTeam(TEAM_A);
 				ChooseModel();
-				ShowViewPortPanel( PANEL_CLASS ); 
+				//ShowViewPortPanel( PANEL_CLASS ); 
+				engine->ClientCommand( edict(), "pos %d", atoi(args[2]) );
 			}
 			break;
 
@@ -2415,7 +2416,8 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 
 				ChangeTeam( iTeam );
 				ChooseModel();
-				ShowViewPortPanel( PANEL_CLASS ); 
+				//ShowViewPortPanel( PANEL_CLASS );
+				engine->ClientCommand( edict(), "pos %d", atoi(args[2]) );
 			break;
 		}
 
@@ -2466,7 +2468,8 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 		}
 		else
 		{
-			ShowViewPortPanel( PANEL_CLASS );
+			//ShowViewPortPanel( PANEL_CLASS );
+			engine->ClientCommand( edict(), "pos %d", posWanted % 11 + 1 );
 			return true;
 		}
 	}

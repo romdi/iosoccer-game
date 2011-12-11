@@ -208,6 +208,16 @@ bool CBall::DoGroundShot()
 		EmitSound("Ball.kickhard");
 		m_pPl->SetAnimation(PLAYER_KICK);
 		m_pPl->DoAnimationEvent(PLAYERANIMEVENT_KICK);
+
+		//CReliableBroadcastRecipientFilter filter;
+		//UserMessageBegin(filter, "MatchEvent");
+		//	WRITE_BYTE(0);
+		//	WRITE_BYTE(m_pPl->entindex());
+		//MessageEnd();
+
+		//trace_t tr;
+		//UTIL_TraceLine( m_vPlPos + Vector(0, 0, 100), m_vPlPos + Vector(0, 0, 100) + m_vPlForward * 500, MASK_SHOT, m_pPl, COLLISION_GROUP_NONE, &tr );
+		//UTIL_BloodDecalTrace( &tr, BLOOD_COLOR_RED );
 	}
 	else
 	{

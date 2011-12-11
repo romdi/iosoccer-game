@@ -89,13 +89,28 @@ void CPlayerSkinProxy::OnBind( C_BaseEntity *pEnt )
 		char skin[64];
 		
 		if (Q_stricmp(type, "shirt") == 0)
+		{
 			Q_snprintf(skin, sizeof(skin), "models/player_new/%s/%i", team, pos);
+			/*
+			float c = pow(abs(((int)(5 * gpGlobals->curtime) % 101) - 50) / 50.0f * 1.5f + 0.5f, 2.2f);
+			IMaterialVar *var = pMaterial->FindVar("$color", NULL);
+			const char* val = var->GetStringValue();
+			var->SetValueAutodetectType(VarArgs("[ %f %f %f ]", 1.0f, c, 1.0f));*/
+		}
 		else if (Q_stricmp(type, "keeper") == 0)
 			Q_snprintf(skin, sizeof(skin), "models/player_new/%s/keeper", team);
 		else if (Q_stricmp(type, "socks") == 0)
 			Q_snprintf(skin, sizeof(skin), "models/player_new/%s/socks", team);
 		else if (Q_stricmp(type, "gksocks") == 0)
 			Q_snprintf(skin, sizeof(skin), "models/player_new/%s/gksocks", team);
+		else if (Q_stricmp(type, "skin") == 0)
+		{
+			/*float c = pow(abs(((int)(5 * gpGlobals->curtime) % 101) - 50) / 50.0f * 1.5f + 0.5f, 2.2f);
+			IMaterialVar *var = pMaterial->FindVar("$color", NULL);
+			const char* val = var->GetStringValue();
+			var->SetValueAutodetectType(VarArgs("[ %f %f %f ]", c, c, c));*/
+			return;
+		}
 
 		m_pNewTexture = materials->FindTexture( skin, NULL);
 		m_pBaseTextureVar->SetTextureValue( m_pNewTexture );

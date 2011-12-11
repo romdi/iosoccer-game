@@ -32,6 +32,8 @@
 #include <stdio.h>
 #include "byteswap.h"
 
+#include "sdk_backgroundpanel.h"
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -76,49 +78,89 @@ CTeamMenu::CTeamMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_TEAM )
 	m_iJumpKey = BUTTON_CODE_INVALID; // this is looked up in Activate()
 	m_iScoreBoardKey = BUTTON_CODE_INVALID; // this is looked up in Activate()
 
-	// initialize dialog
+	SetSize(1200, 700);
 	SetTitle("", true);
-
-	// load the new scheme early!!
-	SetScheme("ClientScheme");
 	SetMoveable(false);
 	SetSizeable(false);
-
-	// hide the system buttons
 	SetTitleBarVisible( false );
-	SetProportional(true);
-
-	// info window about this map
-	m_pMapInfo = new RichText( this, "MapInfo" );
-
-#if defined( ENABLE_HTML_WINDOW )
-	m_pMapInfoHTML = new HTML( this, "MapInfoHTML");
-#endif
-
-	LoadControlSettings("Resource/UI/TeamMenu.res");
-	InvalidateLayout();
-
-	m_szMapName[0] = 0;
+	SetProportional(false);
+	SetPaintBackgroundEnabled(false);
+	SetPaintBorderEnabled(false);
 	
-	m_szTeamName[0][0] = 0;
-	m_szTeamName[1][0] = 0;
+	m_szTeamNames[0][0] = 0;
+	m_szTeamNames[1][0] = 0;
+
+	m_pTeamPanels[0] = new Panel(this, "HomeTeamPanel");
+	m_pTeamPanels[1] = new Panel(this, "AwayTeamPanel");
+
+	m_pTeamNames[0] = new Label(m_pTeamPanels[0], "HomeTeamLabel", "");
+	m_pTeamNames[1] = new Label(m_pTeamPanels[1], "AwayTeamLabel", "");
+
+	MakeTeamButtons();
+}
+
+void CTeamMenu::PaintBackground()
+{
+	int wide, tall;
+	GetSize( wide, tall );
+	int offset = 50;
+
+	DrawRoundedBackground(Color(150, 150, 150, 200), wide / 2 - offset, tall - 100, 0, 100 );
+
+	DrawRoundedBackground(Color(150, 150, 150, 200), wide / 2 - offset, tall - 100, wide / 2 + offset, 100 );
+}
+
+void CTeamMenu::PaintBorder()
+{
+	int wide, tall;
+	GetSize( wide, tall );
+	int offset = 50;
+
+	DrawRoundedBorder(Color(100, 100, 100, 200), wide / 2 - offset, tall - 100, 0, 100 );
+
+	DrawRoundedBorder(Color(100, 100, 100, 200), wide / 2 - offset, tall - 100, wide / 2 + offset, 100 );
+}
+
+void CTeamMenu::PerformLayout()
+{
+	BaseClass::PerformLayout();
+
+	MoveToCenterOfScreen();
+
+	int s = 128;
+
+	int pos[11][2] = {
+				{ s*0.5f, 0 }, { s*1.5f, 0 }, { s*2.5f, 0 },
+			{ s*0.5f, s }, { s*1.5f, s }, { s*2.5f, s },
+		{ 0, s*2 }, { s, s*2 }, { s*2, s*2 }, { s*3, s*2 },
+						{ s*1.5f, s*3 }
+	};
+
+	for(int i = 0; i < 2; i++)
+	{
+		m_pTeamNames[i]->SetBounds(0, 0, 550, 50);
+		m_pTeamNames[i]->SetTextInset(50, 10);
+		//m_pTeamNames[i]->SetPinCorner(Panel::PIN_TOPRIGHT, 10, 10);
+		m_pTeamNames[i]->SetFgColor(Color(255, 255, 255, 255));
+		IScheme *pScheme = scheme()->GetIScheme( GetScheme() );
+		HFont font = pScheme->GetFont("IOSUbuntuFont");
+		m_pTeamNames[i]->SetFont(font);
+
+		m_pTeamPanels[i]->SetBounds(0 + i * 650, 0, 550, 700);
+		m_pTeamPanels[i]->SetBgColor(Color(0, 0, 0, 200));
+		m_pTeamPanels[i]->SetPaintBackgroundEnabled(true);
+		m_pTeamPanels[i]->SetPaintBackgroundType(2);
+
+		for(int j = 0; j < 11; j++)
+		{
+			CBitmapButton *button = m_pPosButtons[i][j];
+			button->SetBounds(pos[j][0], pos[j][1] + 100, s, s);
+		}
+	}
 }
 
 void CTeamMenu::SetData(KeyValues *data)
 {
-	//get the team name when the panel is shown because the actual teamname 
-	//(from GameResources()->GetTeamName( 2 ) etc) hasn't arrived yet because
-	//this panel is shown as soon as the player joins the server.
-	char	text[256];
-
-	m_szTeamName[0][0] = 0;
-	m_szTeamName[1][0] = 0;
-
-	strcpy (text, data->GetString( "team1" ));
-	strcat(m_szTeamName[0], text);
-	
-	strcpy (text, data->GetString( "team2" ));
-	strcat(m_szTeamName[1], text);
 }
 
 //-----------------------------------------------------------------------------
@@ -128,41 +170,12 @@ CTeamMenu::~CTeamMenu()
 {
 }
 
-//iosadded
-Panel *CTeamMenu::CreateControlByName(const char *controlName)
-{
-
-	if (!Q_strncmp(controlName, "MaterialButton", 20))			//ios
-	{
-		return new CBitmapButton(NULL, "BitmapButton", "");
-	}
-
-	//if( !Q_stricmp( "MouseOverPanelButton", controlName ) )
-	//{
-	//	MouseOverPanelButton *newButton = CreateNewMouseOverPanelButton( m_pPanel );
-
-	//	m_mouseoverButtons.AddToTail( newButton );
-	//	return newButton;
-	//}
-	//else
-	{
-		return BaseClass::CreateControlByName( controlName );
-	}
-}
-
-
 //-----------------------------------------------------------------------------
 // Purpose: sets the text color of the map description field
 //-----------------------------------------------------------------------------
 void CTeamMenu::ApplySchemeSettings(IScheme *pScheme)
 {
 	BaseClass::ApplySchemeSettings(pScheme);
-	m_pMapInfo->SetFgColor( pScheme->GetColor("MapDescriptionText", Color(255, 255, 255, 0)) );
-
-	if ( *m_szMapName )
-	{
-		LoadMapPage( m_szMapName ); // reload the map description to pick up the color
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -174,6 +187,15 @@ void CTeamMenu::AutoAssign()
 	OnClose();
 }
 
+void CTeamMenu::Reset()
+{
+	m_flNextUpdateTime = gpGlobals->curtime;
+}
+
+bool CTeamMenu::NeedsUpdate()
+{
+	return m_flNextUpdateTime <= gpGlobals->curtime;
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: shows the team menu
@@ -186,9 +208,9 @@ void CTeamMenu::ShowPanel(bool bShow)
 	if ( bShow )
 	{
 		Activate();
-
+		Reset();
+		Update();
 		SetMouseInputEnabled( true );
-
 		// get key bindings if shown
 
 		if( m_iJumpKey == BUTTON_CODE_INVALID ) // you need to lookup the jump key AFTER the engine has loaded
@@ -202,253 +224,117 @@ void CTeamMenu::ShowPanel(bool bShow)
 		}
 		
 		//set teamnames on join team panel buttons
-		SetLabelText("teamabutton", m_szTeamName[0]);
-		SetLabelText("teambbutton", m_szTeamName[1]);
+		SetLabelText("teamabutton", m_szTeamNames[0]);
+		SetLabelText("teambbutton", m_szTeamNames[1]);
 	}
 	else
 	{
 		SetVisible( false );
 		SetMouseInputEnabled( false );
 	}
-
-	m_pViewPort->ShowBackGround( bShow );
 }
-
 
 //-----------------------------------------------------------------------------
 // Purpose: updates the UI with a new map name and map html page, and sets up the team buttons
 //-----------------------------------------------------------------------------
 void CTeamMenu::Update()
 {
-	char mapname[MAX_MAP_NAME];
+	//BaseClass::Update();
 
-	Q_FileBase( engine->GetLevelName(), mapname, sizeof(mapname) );
-
-	SetLabelText( "mapname", mapname );
-
-	LoadMapPage( mapname );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: chooses and loads the text page to display that describes mapName map
-//-----------------------------------------------------------------------------
-void CTeamMenu::LoadMapPage( const char *mapName )
-{
-	// Save off the map name so we can re-load the page in ApplySchemeSettings().
-	Q_strncpy( m_szMapName, mapName, strlen( mapName ) + 1 );
-	
-	char mapRES[ MAX_PATH ];
-
-	char uilanguage[ 64 ];
-	engine->GetUILanguage( uilanguage, sizeof( uilanguage ) );
-
-	Q_snprintf( mapRES, sizeof( mapRES ), "resource/maphtml/%s_%s.html", mapName, uilanguage );
-
-	bool bFoundHTML = false;
-
-	if ( !g_pFullFileSystem->FileExists( mapRES ) )
-	{
-		// try english
-		Q_snprintf( mapRES, sizeof( mapRES ), "resource/maphtml/%s_english.html", mapName );
-	}
-	else
-	{
-		bFoundHTML = true;
-	}
-
-	if( bFoundHTML || g_pFullFileSystem->FileExists( mapRES ) )
-	{
-		// it's a local HTML file
-		char localURL[ _MAX_PATH + 7 ];
-		Q_strncpy( localURL, "file://", sizeof( localURL ) );
-
-		char pPathData[ _MAX_PATH ];
-		g_pFullFileSystem->GetLocalPath( mapRES, pPathData, sizeof(pPathData) );
-		Q_strncat( localURL, pPathData, sizeof( localURL ), COPY_ALL_CHARACTERS );
-
-		// force steam to dump a local copy
-		g_pFullFileSystem->GetLocalCopy( pPathData );
-
-		m_pMapInfo->SetVisible( false );
-
-#if defined( ENABLE_HTML_WINDOW )
-		m_pMapInfoHTML->SetVisible( true );
-		m_pMapInfoHTML->OpenURL( localURL );
-#endif
-		InvalidateLayout();
-		Repaint();		
-
+	IGameResources *gr = GameResources();
+	if (!gr)
 		return;
-	}
-	else
+
+	bool posTaken[2][11];
+
+	// walk all the players and make sure they're in the scoreboard
+	for ( int i = 1; i <= gpGlobals->maxClients; ++i )
 	{
-		m_pMapInfo->SetVisible( true );
-
-#if defined( ENABLE_HTML_WINDOW )
-		m_pMapInfoHTML->SetVisible( false );
-#endif
-	}
-
-	Q_snprintf( mapRES, sizeof( mapRES ), "maps/%s.txt", mapName);
-
-	// if no map specific description exists, load default text
-	if( !g_pFullFileSystem->FileExists( mapRES ) )
-	{
-		if ( g_pFullFileSystem->FileExists( "maps/default.txt" ) )
+		if (gr->IsConnected( i ) )
 		{
-			Q_snprintf ( mapRES, sizeof( mapRES ), "maps/default.txt");
-		}
-		else
-		{
-			m_pMapInfo->SetText( "" );
-			return; 
+			int team = gr->GetTeam(i);
+			int pos = gr->GetPosition(i);
+			if ((team == TEAM_A || team == TEAM_B) && pos >= 1 && pos <= 11)
+			{
+				CBitmapButton *button = m_pPosButtons[team - 2][11 - pos];
+				char buttonText[32];
+				Q_snprintf( buttonText, sizeof(buttonText), "%s", gr->GetPlayerName(i));
+				button->SetText( buttonText );
+				button->SetEnabled(false);
+				posTaken[team - 2][11 - pos] = true;
+			}	
 		}
 	}
 
-	FileHandle_t f = g_pFullFileSystem->Open( mapRES, "r" );
-
-	// read into a memory block
-	int fileSize = g_pFullFileSystem->Size(f);
-	int dataSize = fileSize + sizeof( wchar_t );
-	if ( dataSize % 2 )
-		++dataSize;
-	wchar_t *memBlock = (wchar_t *)malloc(dataSize);
-	memset( memBlock, 0x0, dataSize);
-	int bytesRead = g_pFullFileSystem->Read(memBlock, fileSize, f);
-	if ( bytesRead < fileSize )
+	for (int i = 0; i < 2; i++)
 	{
-		// NULL-terminate based on the length read in, since Read() can transform \r\n to \n and
-		// return fewer bytes than we were expecting.
-		char *data = reinterpret_cast<char *>( memBlock );
-		data[ bytesRead ] = 0;
-		data[ bytesRead+1 ] = 0;
+		for (int j = 0; j < 11; j++)
+		{
+			if (!posTaken[i][j])
+			{
+				char buttonText[32];
+				Q_snprintf(buttonText, sizeof(buttonText), "Pos &%d", 11 - j);
+				m_pPosButtons[i][j]->SetText(buttonText);
+				m_pPosButtons[i][j]->SetEnabled(true);
+			}
+		}
 	}
 
-	// null-terminate the stream (redundant, since we memset & then trimmed the transformed buffer already)
-	memBlock[dataSize / sizeof(wchar_t) - 1] = 0x0000;
+	m_pTeamNames[0]->SetText(gr->GetTeamName(TEAM_A));
+	m_pTeamNames[1]->SetText(gr->GetTeamName(TEAM_B));
 
-	// ensure little-endian unicode reads correctly on all platforms
-	CByteswap byteSwap;
-	byteSwap.SetTargetBigEndian( false );
-	byteSwap.SwapBufferToTargetEndian( memBlock, memBlock, dataSize/sizeof(wchar_t) );
-
-	// check the first character, make sure this a little-endian unicode file
-	if ( memBlock[0] != 0xFEFF )
-	{
-		// its a ascii char file
-		m_pMapInfo->SetText( reinterpret_cast<char *>( memBlock ) );
-	}
-	else
-	{
-		m_pMapInfo->SetText( memBlock+1 );
-	}
-	// go back to the top of the text buffer
-	m_pMapInfo->GotoTextStart();
-
-	g_pFullFileSystem->Close( f );
-	free(memBlock);
-
-	InvalidateLayout();
-	Repaint();
+	m_flNextUpdateTime = gpGlobals->curtime + 1.0f;
 }
-
 
 //-----------------------------------------------------------------------------
 // IOS Added
 //-----------------------------------------------------------------------------
 void CTeamMenu::OnCommand( char const *cmd )
 {
-	if (!stricmp(cmd, "jointeam 0") )
+	if (!strnicmp(cmd, "jointeam", 8))
 	{
-		engine->ClientCmd("jointeam 0");
-	}
-	if (!stricmp(cmd, "jointeam 1") )
-	{
-		engine->ClientCmd("jointeam 1");
-	}
-	if (!stricmp(cmd, "jointeam 2") )
-	{
-		engine->ClientCmd("jointeam 2");
-	}
-	if (!stricmp(cmd, "jointeam 3") )
-	{
-		engine->ClientCmd("jointeam 3");
+		engine->ClientCmd(cmd);
 	}
 
 	Close();
 
-	gViewPortInterface->ShowBackGround( false );
-
 	BaseClass::OnCommand(cmd);
-
 }
 
-/*
-//-----------------------------------------------------------------------------
-// Purpose: sets the text on and displays the team buttons
-//-----------------------------------------------------------------------------
-void CTeamMenu::MakeTeamButtons(void)
+void CTeamMenu::MakeTeamButtons()
 {
-	int i = 0;
-
-	for( i = 0; i< m_pTeamButtons.Count(); i++ )
+	for (int i = 0; i < 2; i++)
 	{
-		m_pTeamButtons[i]->SetVisible(false);
-	}
-
-	i = 0;
-
-	while( true )
-	{
-		const char *teamname = GameResources()->GetTeamName( i );
-
-		if ( !teamname || !teamname[0] )
-			return; // no more teams
-	
-		char buttonText[32];
-		Q_snprintf( buttonText, sizeof(buttonText), "&%i %s", i +1, teamname ); 
-		m_pTeamButtons[i]->SetText( buttonText );
-
-		m_pTeamButtons[i]->SetCommand( new KeyValues("TeamButton", "team", i ) );	
-		IScheme *pScheme = scheme()->GetIScheme( GetScheme() );
-		m_pTeamButtons[i]->SetArmedColor(pScheme->GetColor(GetStringTeamColor(i), Color(255, 255, 255, 255))  ,  pScheme->GetColor("SelectionBG", Color(255, 255, 255, 0)) );
-		m_pTeamButtons[i]->SetDepressedColor( pScheme->GetColor(GetStringTeamColor(i), Color(255, 255, 255, 255)), pScheme->GetColor("ButtonArmedBgColor", Color(255, 255, 255, 0)) );
-		m_pTeamButtons[i]->SetDefaultColor( pScheme->GetColor(GetStringTeamColor(i), Color(255, 255, 255, 255)), pScheme->GetColor("ButtonDepressedBgColor", Color(255, 255, 255, 0)) );
-		m_pTeamButtons[i]->SetVisible(true);
-
-		i++;
-	}
-} 
-
-
-//-----------------------------------------------------------------------------
-// Purpose: When a team button is pressed it triggers this function to cause the player to join a team
-//-----------------------------------------------------------------------------
-void CTeamMenu::OnTeamButton( int team )
-{
-	char cmd[64];
-	if( team >= m_iNumTeams )  // its a special button
-	{
-		if( team == m_iNumTeams ) // first extra team is auto assign	
+		for (int j = 0; j < 11; j++)
 		{
-			Q_snprintf( cmd, sizeof( cmd ), "jointeam 5" );
-		}
-		else // next is spectate
-		{
-			// DuckMessage( "#Spec_Duck" );
-			gViewPortInterface->ShowBackGround( false );
+			CBitmapButton *button = new CBitmapButton(m_pTeamPanels[i], "BitmapButton", "");
+
+			IScheme *pScheme = scheme()->GetIScheme( GetScheme() );
+
+			char buttonText[32];
+			Q_snprintf( buttonText, sizeof(buttonText), "Pos &%d", 11 - j); 
+			button->SetText( buttonText );
+			button->SetTextColorState(Label::CS_BRIGHT);
+			button->SetContentAlignment(Label::a_south);
+
+			button->SetFgColor(Color(100, 255, 100, 255));	
+			button->SetCommand(VarArgs("jointeam %d %d", i + 2, 11 - j));
+			button->AddActionSignalTarget(this);
+			button->SetVisible(true);
+			button->SetBgColor(Color(100, 255, 100, 255));
+			button->SetPaintBackgroundEnabled(true);
+			button->SetPaintBorderEnabled(false);
+
+			color32 color = { 255, 255, 255, 255 };
+			button->SetImage(CBitmapButton::BUTTON_ENABLED, "gui/glassbutt", color);
+			button->SetImage(CBitmapButton::BUTTON_ENABLED_MOUSE_OVER, "gui/glassbuttover", color);
+			button->SetImage(CBitmapButton::BUTTON_PRESSED, "gui/glassbuttdown", color);
+			button->SetImage(CBitmapButton::BUTTON_DISABLED, "gui/glassbutt", color);
+
+			m_pPosButtons[i][j] = button;
 		}
 	}
-	else
-	{
-		Q_snprintf( cmd, sizeof( cmd ), "jointeam %i", team + 1 );
-		//g_iTeamNumber = team + 1;
-	}
-
-	engine->ClientCmd(cmd);
-	SetVisible( false );
-	OnClose();
-} */
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Sets the text of a control by name

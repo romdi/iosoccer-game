@@ -14,12 +14,12 @@
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void DrawRoundedBackground( Color bgColor, int wide, int tall );
+void DrawRoundedBackground( Color bgColor, int wide, int tall, int xOrigin = 0, int yOrigin = 0 );
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void DrawRoundedBorder( Color borderColor, int wide, int tall );
+void DrawRoundedBorder( Color borderColor, int wide, int tall, int xOrigin = 0, int yOrigin = 0 );
 
 //-----------------------------------------------------------------------------
 #endif // SDK_BACKHROUNDPANEL_H

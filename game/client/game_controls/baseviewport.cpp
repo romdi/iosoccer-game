@@ -222,7 +222,7 @@ void CBaseViewport::CreateDefaultPanels( void )
 	AddNewPanel( CreatePanelByName( PANEL_SPECMENU ), "PANEL_SPECMENU" );
 	AddNewPanel( CreatePanelByName( PANEL_NAV_PROGRESS ), "PANEL_NAV_PROGRESS" );
 	AddNewPanel( CreatePanelByName( PANEL_TEAM ), "PANEL_TEAM" );			//ios uncommented this
-	AddNewPanel( CreatePanelByName( PANEL_CLASS ), "PANEL_CLASS" );		//ios uncommented this
+	//AddNewPanel( CreatePanelByName( PANEL_CLASS ), "PANEL_CLASS" );		//ios uncommented this
 	AddNewPanel( CreatePanelByName( PANEL_STATUS ), "PANEL_STATUS" );		//ios added this
 	AddNewPanel( CreatePanelByName( PANEL_MAINSTATUS ), "PANEL_MAINSTATUS" );	//ios added this
 #endif
@@ -265,10 +265,10 @@ IViewPortPanel* CBaseViewport::CreatePanelByName(const char *szPanelName)
 	{
 		newpanel = new CTeamMenu( this );
 	}
-	else if ( Q_strcmp(PANEL_CLASS, szPanelName) == 0 )			//IOS added ffs
-	{
-		newpanel = new CClassMenu( this );
-	}
+	//else if ( Q_strcmp(PANEL_CLASS, szPanelName) == 0 )			//IOS added ffs
+	//{
+	//	newpanel = new CClassMenu( this );
+	//}
 	else if ( Q_strcmp(PANEL_STATUS, szPanelName) == 0 )		//IOS added
 	{
 		newpanel = new CStatusBar( this );

@@ -146,43 +146,43 @@ IViewPortPanel* SDKViewport::CreatePanelByName(const char *szPanelName)
 {
 	IViewPortPanel* newpanel = NULL;
 
-	if ( Q_strcmp( PANEL_SCOREBOARD, szPanelName) == 0 )
-	{
-		newpanel = new CSDKScoreboard( this );
-	}
-	else if ( Q_strcmp( PANEL_INFO, szPanelName) == 0 )
-	{
-		newpanel = new CSDKTextWindow( this );
-	}
-	else if ( Q_strcmp(PANEL_SPECGUI, szPanelName) == 0 )
-	{
-		newpanel = new CSDKSpectatorGUI( this );	
-	}
-
-#if defined ( SDK_USE_PLAYERCLASSES )
-	#if !defined ( SDK_USE_TEAMS )
-		else if ( Q_strcmp( PANEL_CLASS_NOTEAMS, szPanelName) == 0 )
-		{
-			newpanel = new CSDKClassMenu_NoTeams( this );
-		}
-	#else
-		else if ( Q_strcmp( PANEL_CLASS_BLUE, szPanelName) == 0 )
-		{
-			newpanel = new CSDKClassMenu_Blue( this );
-		}
-		else if ( Q_strcmp( PANEL_CLASS_RED, szPanelName) == 0 )
-		{
-			newpanel = new CSDKClassMenu_Red( this );
-		}
-	#endif
-#endif
-#if defined ( SDK_USE_TEAMS )
-	else if ( Q_strcmp( PANEL_TEAM, szPanelName) == 0 )
-	{
-		newpanel = new CSDKTeamMenu( this );
-	}
-#endif
-	else
+//	if ( Q_strcmp( PANEL_SCOREBOARD, szPanelName) == 0 )
+//	{
+//		newpanel = new CSDKScoreboard( this );
+//	}
+//	else if ( Q_strcmp( PANEL_INFO, szPanelName) == 0 )
+//	{
+//		newpanel = new CSDKTextWindow( this );
+//	}
+//	else if ( Q_strcmp(PANEL_SPECGUI, szPanelName) == 0 )
+//	{
+//		newpanel = new CSDKSpectatorGUI( this );	
+//	}
+//
+//#if defined ( SDK_USE_PLAYERCLASSES )
+//	#if !defined ( SDK_USE_TEAMS )
+//		else if ( Q_strcmp( PANEL_CLASS_NOTEAMS, szPanelName) == 0 )
+//		{
+//			newpanel = new CSDKClassMenu_NoTeams( this );
+//		}
+//	#else
+//		else if ( Q_strcmp( PANEL_CLASS_BLUE, szPanelName) == 0 )
+//		{
+//			newpanel = new CSDKClassMenu_Blue( this );
+//		}
+//		else if ( Q_strcmp( PANEL_CLASS_RED, szPanelName) == 0 )
+//		{
+//			newpanel = new CSDKClassMenu_Red( this );
+//		}
+//	#endif
+//#endif
+//#if defined ( SDK_USE_TEAMS )
+//	else if ( Q_strcmp( PANEL_TEAM, szPanelName) == 0 )
+//	{
+//		newpanel = new CSDKTeamMenu( this );
+//	}
+//#endif
+//	else
 	{
 		// create a generic base panel, don't add twice
 		newpanel = BaseClass::CreatePanelByName( szPanelName );
