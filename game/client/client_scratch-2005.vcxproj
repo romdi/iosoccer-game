@@ -601,6 +601,7 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
       </PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="sdk\c_ios_mapentities.cpp" />
     <ClCompile Include="sdk\ios_hud_powershotbar.cpp" />
     <ClCompile Include="sdk\ios_hud_scorebar.cpp" />
     <ClCompile Include="sdk\ios_mainstatus.cpp" />

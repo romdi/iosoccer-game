@@ -415,3 +415,108 @@ LINK_ENTITY_TO_CLASS(info_team2_penalty_spot, CPointEntity);
 
 LINK_ENTITY_TO_CLASS(info_stadium, CPointEntity);
 
+
+class CBallShield : public CBaseEntity
+{
+public:
+	DECLARE_CLASS( CTriggerPenaltyBox, CBaseEntity );
+	DECLARE_SERVERCLASS();
+
+	void Spawn( void );
+	bool ForceVPhysicsCollide( CBaseEntity *pEntity );
+	bool CreateVPhysics();
+	bool ShouldCollide( int collisionGroup, int contentsMask ) const;
+
+	int UpdateTransmitState()	// always send to all clients
+	{
+		return SetTransmitState( FL_EDICT_ALWAYS );
+	}
+};
+
+LINK_ENTITY_TO_CLASS(ball_shield, CBallShield);
+
+IMPLEMENT_SERVERCLASS_ST( CBallShield, DT_BallShield )
+END_SEND_TABLE()
+
+//-----------------------------------------------------------------------------
+// Purpose: Called when spawning, after keyvalues have been handled.
+//-----------------------------------------------------------------------------
+void CBallShield::Spawn( )
+{
+	BaseClass::Spawn();
+
+	SetMoveType( MOVETYPE_PUSH );  // so it doesn't get pushed by anything
+	SetSolid( SOLID_VPHYSICS );
+	//AddSolidFlags( FSOLID_NOT_SOLID );
+	RemoveSolidFlags(FSOLID_NOT_SOLID);
+	SetSolid(SOLID_VPHYSICS);
+	//AddFlag(FL_WORLDBRUSH);
+
+	SetCollisionGroup(COLLISION_GROUP_BALL_SHIELD);
+	//SetCollisionBounds(WorldAlignMins(), WorldAlignMaxs());
+	SetCollisionBounds(Vector(0, 0, 0), Vector(500, 500, 500));
+
+	CBaseEntity *ent = gEntList.FindEntityByClassname(NULL, "trigger_PenaltyBox");
+
+	SetModel( STRING( ent->GetModelName() ) );
+	//SetModel( STRING( GetModelName() ) );
+	//SetModel( "models/player/barcelona/barcelona.mdl" );
+	//AddEffects( EF_NODRAW );
+	RemoveEffects(EF_NODRAW);
+	CreateVPhysics();
+	VPhysicsGetObject()->EnableCollisions( true );
+}
+
+#include "vcollide_parse.h"
+
+bool CBallShield::CreateVPhysics( void )
+{
+	//VPhysicsInitStatic();
+
+	objectparams_t params =
+	{
+		NULL,
+		1.0, //mass
+		1.0, // inertia
+		0.1f, // damping
+		0.1f, // rotdamping
+		0.05f, // rotIntertiaLimit
+		"DEFAULT",
+		NULL,// game data
+		1.f, // volume (leave 0 if you don't have one or call physcollision->CollideVolume() to compute it)
+		1.0f, // drag coefficient
+		true,// enable collisions?
+	};
+
+	params.pGameData = static_cast<void	*>(this);
+	//objectparams_t params = g_PhysDefaultObjectParams;
+	//solid_t solid;
+	//solid.params = params;	// copy world's params
+	//solid.params.enableCollisions = true;
+	//solid.params.pName = "fluid";
+	//solid.params.pGameData = static_cast<void *>(this);
+	int	nMaterialIndex = physprops->GetSurfaceIndex("ios");
+	IPhysicsObject *obj = physenv->CreatePolyObjectStatic(PhysCreateBbox(Vector(0, 0, 0), Vector(500, 500, 500)), nMaterialIndex, GetLocalOrigin(), GetLocalAngles(), &params);
+	//IPhysicsObject *obj = physenv->CreateSphereObject(200.0f, nMaterialIndex, GetLocalOrigin(), GetLocalAngles(), &params, true);
+	VPhysicsSetObject(obj);
+	return true;
+}
+
+bool CBallShield::ForceVPhysicsCollide( CBaseEntity *pEntity )
+{
+	return true;
+}
+
+bool CBallShield::ShouldCollide( int collisionGroup, int contentsMask ) const
+{
+	// Rebel owned projectiles (grenades etc) and players will collide.
+	if ( collisionGroup == COLLISION_GROUP_PLAYER_MOVEMENT || collisionGroup == COLLISION_GROUP_PROJECTILE )
+	{
+
+		if ( ( contentsMask & CONTENTS_TEAM1 ) )
+			return true;
+		else
+			return false;
+	}
+	return BaseClass::ShouldCollide( collisionGroup, contentsMask );
+}

@@ -363,6 +363,8 @@ enum Collision_Group_t
 	COLLISION_GROUP_NPC_ACTOR,		// Used so NPCs in scripts ignore the player.
 	COLLISION_GROUP_NPC_SCRIPTED,	// USed for NPCs in scripts that should not collide with each other
 
+	COLLISION_GROUP_BALL_SHIELD,
+
 	LAST_SHARED_COLLISION_GROUP
 };
 

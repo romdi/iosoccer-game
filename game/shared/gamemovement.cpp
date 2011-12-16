@@ -637,9 +637,25 @@ CGameMovement::~CGameMovement( void )
 //-----------------------------------------------------------------------------
 // Purpose: Allow bots etc to use slightly different solid masks
 //-----------------------------------------------------------------------------
+//unsigned int CGameMovement::PlayerSolidMask( bool brushOnly )
+//{
+//	return ( brushOnly ) ? MASK_PLAYERSOLID_BRUSHONLY : MASK_PLAYERSOLID;
+//}
+
 unsigned int CGameMovement::PlayerSolidMask( bool brushOnly )
 {
-	return ( brushOnly ) ? MASK_PLAYERSOLID_BRUSHONLY : MASK_PLAYERSOLID;
+	int mask = 0;
+	switch ( player->GetTeamNumber() )
+	{
+	case TEAM_A:
+		mask = CONTENTS_TEAM1;
+		break;
+
+	case TEAM_B:
+		mask = CONTENTS_TEAM2;
+		break;
+	}
+	return ( mask | (( brushOnly ) ? MASK_PLAYERSOLID_BRUSHONLY : MASK_PLAYERSOLID) );
 }
 
 //-----------------------------------------------------------------------------
