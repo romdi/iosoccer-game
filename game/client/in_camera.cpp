@@ -70,6 +70,8 @@ static kbutton_t cam_in, cam_out; // -- "cam_move" is unused
 
 extern const ConVar *sv_cheats;
 
+extern ConVar cam_offset;
+
 // API Wrappers
 
 /*
@@ -576,47 +578,53 @@ void CInput::CAM_Think( void )
 			float adjDist = idealAngles[ DIST ];
 
 			Vector origin = localPlayer->GetLocalOrigin(); // find our player's origin
-			origin += localPlayer->GetViewOffset(); // and from there, his eye position
+			//origin += localPlayer->GetViewOffset(); // and from there, his eye position
+			origin.z += cam_offset.GetInt();
 
 			Vector camForward;
 			AngleVectors( QAngle(camOffset.x, camOffset.y, camOffset.z),
 				&camForward, NULL, NULL ); // get the forward vector
 
 			//ios - dont use trace unless hitting floor?
-			Vector endPoint = origin - (camForward * idealAngles[ DIST ]);
-			if (endPoint.z < localPlayer->GetLocalOrigin().z+10)
-			{
-				int iterations = 3;
-				IHandleEntity	*pIgnoreEnt=NULL;
-				Vector start = origin;
-				Vector end = origin - (camForward * idealAngles[ DIST ]);
-				while (iterations > 0)
-				{
-					UTIL_TraceHull( start, end, CAM_HULL_MIN, CAM_HULL_MAX, CONTENTS_SOLID|CONTENTS_WATER, pIgnoreEnt, NULL, &tr );
+			//Vector endPoint = origin - (camForward * idealAngles[ DIST ]);
+			//if (endPoint.z < localPlayer->GetLocalOrigin().z+10)
+			//{
+			//	int iterations = 3;
+			//	IHandleEntity	*pIgnoreEnt=NULL;
+			//	Vector start = origin;
+			//	Vector end = origin - (camForward * idealAngles[ DIST ]);
+			//	while (iterations > 0)
+			//	{
+			//		UTIL_TraceHull( start, end, CAM_HULL_MIN, CAM_HULL_MAX, CONTENTS_SOLID|CONTENTS_WATER, pIgnoreEnt, NULL, &tr );
 
-					if( tr.fraction == 1.0f)
-						break;
+			//		if( tr.fraction == 1.0f)
+			//			break;
 
-					if (tr.DidHitWorld())	//ios - rule out hitting ball
-						break;
+			//		if (tr.DidHitWorld())	//ios - rule out hitting ball
+			//			break;
 
-					//hit something else otherthan map so keep looking
-					start = tr.endpos;
-					pIgnoreEnt = tr.m_pEnt;
-					iterations--;
-				}
+			//		//hit something else otherthan map so keep looking
+			//		start = tr.endpos;
+			//		pIgnoreEnt = tr.m_pEnt;
+			//		iterations--;
+			//	}
 
-				adjDist = idealAngles[ DIST ] * tr.fraction; // move the camera closer if it hit something
-			}
-			else 
-			{
-				adjDist = idealAngles[ DIST ]; // no trace hit, use cam_idealdist without adjusting it
-			}
+			//	adjDist = idealAngles[ DIST ] * tr.fraction; // move the camera closer if it hit something
+			//}
+			//else 
+			//{
+			//	adjDist = idealAngles[ DIST ]; // no trace hit, use cam_idealdist without adjusting it
+			//}
+
+			//Vector endPoint = origin - (camForward * idealAngles[ DIST ]);
+			//if (endPoint.z - localPlayer->GetLocalOrigin().z + 10 )
+			adjDist = camOffset[PITCH] >= 0 ? idealAngles[DIST] : min((VEC_VIEW.z + cam_offset.GetInt() - 5) / cos(DEG2RAD(camOffset[PITCH] + 90)), idealAngles[DIST]);
+			//adjDist = clamp(origin - (camForward * idealAngles[DIST])
 
 			//if( adjDist < CAM_MIN_DIST )
 			//	adjDist = CAM_MIN_DIST; // clamp up to minimum
-			if( adjDist > CAM_MAX_DIST )
-				adjDist = CAM_MAX_DIST; // clamp down to maximum
+			//if( adjDist > CAM_MAX_DIST )
+			//	adjDist = CAM_MAX_DIST; // clamp down to maximum
 			camOffset[ DIST ] = adjDist;
 		}
 

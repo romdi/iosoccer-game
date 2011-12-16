@@ -251,6 +251,10 @@ ConVar cam_firstperson( "cam_firstperson", "0", FCVAR_ARCHIVE, "Enable experimen
 ConVar cam_firstperson_xy( "cam_firstperson_xy", "15", FCVAR_ARCHIVE, "X/Y offset");
 ConVar cam_firstperson_z( "cam_firstperson_z", "5", FCVAR_ARCHIVE, "Z offset");
 
+ConVar cam_offset("cam_offset", "50", FCVAR_ARCHIVE, "Z offset in thirdperson mode");
+ConVar cam_alt("cam_alt", "0", FCVAR_ARCHIVE, "Alternative thirdperson mode");
+ConVar cam_alt_dist("cam_alt_dist", "100", FCVAR_ARCHIVE, "Camera distance in alternative thirdperson mode");
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : *pSetup - 
@@ -279,7 +283,18 @@ void ClientModeShared::OverrideView( CViewSetup *pSetup )
 		Vector camForward, camRight, camUp;
 		AngleVectors( camAngles, &camForward, &camRight, &camUp );
 
-		VectorMA( pSetup->origin, -cam_ofs[ ROLL ], camForward, pSetup->origin );
+		Vector oldOrigin = pSetup->origin;
+
+		if (cam_alt.GetBool())
+		{
+			Vector xyForward = Vector(camForward.x, camForward.y, 0);
+			xyForward.NormalizeInPlace();
+			VectorMA( pSetup->origin, -cam_alt_dist.GetInt(), xyForward, pSetup->origin );		
+		}
+		else
+		{
+			VectorMA( pSetup->origin, -cam_ofs[ ROLL ], camForward, pSetup->origin );
+		}
 
 		//ios
 		if (cam_firstperson.GetBool())
@@ -291,6 +306,20 @@ void ClientModeShared::OverrideView( CViewSetup *pSetup )
 			firstpersonOffset.z = cam_firstperson_z.GetFloat();
 			pSetup->origin += firstpersonOffset;
 		}
+		else
+		{
+			pSetup->origin.z += cam_offset.GetInt();
+		}
+
+		//if (cam_offset_xy.GetInt() > 0)
+		//{
+		//	VectorMA( pSetup->origin, cam_offset_xy.GetInt(), camRight, pSetup->origin );
+		//	//camAngles[YAW] -= cam_offset_xy.GetInt();
+		//	Vector newDir = oldOrigin - pSetup->origin;
+		//	newDir.NormalizeInPlace();
+		//	float angle = RAD2DEG(acos(DotProduct2D(newDir.AsVector2D(), camForward.AsVector2D())));
+		//	camAngles[YAW] += angle;
+		//}
 
 		// Override angles from third person camera
 		VectorCopy( camAngles, pSetup->angles );
