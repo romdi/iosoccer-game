@@ -33,7 +33,7 @@ Vector g_vSplashColor( 0.5, 0.5, 0.5 );
 float g_flSplashScale = 0.15;
 float g_flSplashLifetime = 0.5f;
 float g_flSplashAlpha = 0.3f;
-ConVar r_RainSplashPercentage( "r_RainSplashPercentage", "20", FCVAR_CHEAT ); // N% chance of a rain particle making a splash.
+ConVar r_RainSplashPercentage( "r_RainSplashPercentage", "10", FCVAR_CHEAT ); // N% chance of a rain particle making a splash.
 
 
 float GUST_INTERVAL_MIN = 1;
@@ -197,6 +197,8 @@ private:
 
 	int								m_iAshCount;
 
+	CUniformRandomStream m_Random;
+
 private:
 	CClient_Precipitation( const CClient_Precipitation & ); // not defined, not accessible
 };
@@ -324,22 +326,41 @@ inline bool CClient_Precipitation::SimulateRain( CPrecipitationParticle* pPartic
 		}
 	}
 
+	/*
 	// No longer in the air? punt.
 	if ( !IsInAir( pParticle->m_Pos ) )
 	{
-		// Possibly make a splash if we hit a water surface and it's in front of the view.
-		if ( m_Splashes.Count() < 20 )
-		{
-			if ( RandomInt( 0, 100 ) < r_RainSplashPercentage.GetInt() )
-			{
-				trace_t trace;
-				UTIL_TraceLine(vOldPos, pParticle->m_Pos, MASK_WATER, NULL, COLLISION_GROUP_NONE, &trace);
-				if( trace.fraction < 1 )
-				{
-					m_Splashes.AddToTail( trace.endpos );
-				}
-			}
-		}
+	// Possibly make a splash if we hit a water surface and it's in front of the view.
+	if ( m_Splashes.Count() < 20 )
+	{
+	if ( RandomInt( 0, 100 ) < r_RainSplashPercentage.GetInt() )
+	{
+	trace_t trace;
+	UTIL_TraceLine(vOldPos, pParticle->m_Pos, MASK_WATER, NULL, C COLLISION_GROUP_NONE, &trace);
+	if( trace.fraction < 1 )
+	{
+	m_Splashes.AddToTail( trace.endpos );
+	}
+	}
+	}
+
+	// Tell the framework it's time to remove the particle from the list
+	return false;
+	}*/
+	/*Tony; the traceline replaces the IsInAir check.
+	you also don't want the random's to be around the traceline either, or it will only check SOMETIMES. it  needs to check _all_ the time.
+	you also probably want to do some radius checking of the particles position (ignoring z) for if it's in range of the local player to run this code or not
+	otherwise you will have traces for every particle all over the place even if there's no way that the player can see it
+	so when the player is out of that radius, you would only use if ( !IsInAir( pParticle->m_Pos ) { return  false; }
+	probably also need to check to make sure that it doesn't splash on sky, too.
+	*/
+	trace_t trace;
+	UTIL_TraceLine(vOldPos, pParticle->m_Pos, MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &trace);
+
+	if( trace.fraction < 1 || trace.DidHit() )
+	{
+		if ( RandomInt( 0, 100 ) <= r_RainSplashPercentage.GetInt() )
+			DispatchParticleEffect( "slime_splash_01", trace.endpos,trace.m_pEnt->GetAbsAngles() , NULL );
 
 		// Tell the framework it's time to remove the particle from the list
 		return false;
@@ -349,11 +370,11 @@ inline bool CClient_Precipitation::SimulateRain( CPrecipitationParticle* pPartic
 	return true;
 }
 
-
 inline bool CClient_Precipitation::SimulateSnow( CPrecipitationParticle* pParticle, float dt )
 {
-	if ( IsInAir( pParticle->m_Pos ) )
+	//if ( IsInAir( pParticle->m_Pos ) )
 	{
+		Vector vOldPos = pParticle->m_Pos;
 		// Update position
 		VectorMA( pParticle->m_Pos, dt, pParticle->m_Velocity, 
 					pParticle->m_Pos );
@@ -383,6 +404,18 @@ inline bool CClient_Precipitation::SimulateSnow( CPrecipitationParticle* pPartic
 				if ( pParticle->m_Velocity[i] < s_WindVector[i] )
 					pParticle->m_Velocity[i] = s_WindVector[i];
 			}
+		}
+		
+		trace_t trace;
+		UTIL_TraceLine(vOldPos, pParticle->m_Pos, MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &trace);
+
+		if( trace.fraction < 1 || trace.DidHit() )
+		{
+			if ( RandomInt( 0, 100 ) <= r_RainSplashPercentage.GetInt() )
+				DispatchParticleEffect( "slime_splash_01", trace.endpos,trace.m_pEnt->GetAbsAngles() , NULL );
+
+			// Tell the framework it's time to remove the particle from the list
+			return false;
 		}
 
 		return true;
@@ -514,6 +547,9 @@ inline void CClient_Precipitation::RenderParticle( CPrecipitationParticle* pPart
 			// X and Y are measured in world space; need to convert to camera space
 			VectorAdd( start, camSpiral, start );
 			VectorAdd( delta, camSpiral, delta );
+
+			if ( start.z > -1 )
+				return;
 		}
 
 		// shrink the trails on spiraling flakes.
@@ -629,6 +665,8 @@ void CClient_Precipitation::Render()
 
 CClient_Precipitation::CClient_Precipitation() : m_Remainder(0.0f)
 {
+	m_Random.SetSeed((int)(gpGlobals->curtime * 1000));
+
 	m_nPrecipType = PRECIPITATION_TYPE_RAIN;
 	m_MatHandle = INVALID_MATERIAL_HANDLE;
 	m_flHalfScreenWidth = 1;
@@ -1067,10 +1105,10 @@ void CClient_Precipitation::EmitParticles( float fTimeDelta )
 
 	// Emit all the particles
 	for ( int i = 0 ; i < cParticles ; i++ )
-	{									 
+	{							
 		Vector vParticlePos = org;
-		vParticlePos[ 0 ] += size[ 0 ] * random->RandomFloat(0, 1);
-		vParticlePos[ 1 ] += size[ 1 ] * random->RandomFloat(0, 1);
+		vParticlePos[ 0 ] += size[ 0 ] * m_Random.RandomFloat(0, 1);// * random->RandomFloat(0, 1);// * randTest.RandomFloat(0, 1);
+		vParticlePos[ 1 ] += size[ 1 ] * m_Random.RandomFloat(0, 1);// * random->RandomFloat(0, 1);// * randTest.RandomFloat(0, 1);
 
 		// Figure out where the particle should lie in Z by tracing a line from the player's height up to the 
 		// desired height and making sure it doesn't hit a wall.
