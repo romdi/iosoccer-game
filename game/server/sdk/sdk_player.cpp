@@ -2551,8 +2551,7 @@ void CSDKPlayer::ChooseKeeperSkin(void)
 
 void CSDKPlayer::ChooseModel(void)
 {
-	//TODO: replace with generic player model
-	char *model = "models/player/barcelona/barcelona.mdl";
+	char *model = "models/player/player.mdl";
 	PrecacheModel(model);
 	SetModel (model);
 }
