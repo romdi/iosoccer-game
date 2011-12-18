@@ -151,9 +151,13 @@ ConVar mp_limitteams(
 static CSDKViewVectors g_SDKViewVectors(
 
 	Vector( 0, 0, 58 ),			//VEC_VIEW
+	//Vector( 0, 0, 100 ),			//VEC_VIEW
 								
-	Vector(-16, -16, 0 ),		//VEC_HULL_MIN
-	Vector( 16,  16,  72 ),		//VEC_HULL_MAX
+	//Vector(-16, -16, 0 ),		//VEC_HULL_MIN
+	//Vector( 16,  16,  72 ),		//VEC_HULL_MAX
+	
+	Vector(-10, -10, 0 ),		//VEC_HULL_MIN
+	Vector( 10,  10,  72 ),		//VEC_HULL_MAX
 													
 	Vector(-16, -16, 0 ),		//VEC_DUCK_HULL_MIN
 	Vector( 16,  16, 45 ),		//VEC_DUCK_HULL_MAX
