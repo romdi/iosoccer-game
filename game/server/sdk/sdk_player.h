@@ -281,9 +281,6 @@ public:
 
 	int					m_RejoinTime;							//delay before brining up join menu (after kill or red)
 
-	float				m_NextPowerShotCharge;
-	float				m_PowerShotStrength;
-
 	float				m_fPossessionTime;
 
 	//stats
@@ -351,8 +348,6 @@ public:
 	virtual void		VPhysicsCollision( int index, gamevcollisionevent_t *pEvent );
 
 	//int					m_BallInPenaltyBox;	 //-1 =	not	in box,	0,1	= teams	box
-
-	int					m_nPowershotStrength;
 };
 
 

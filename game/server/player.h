@@ -239,6 +239,8 @@ public:
 	CBasePlayer();
 	~CBasePlayer();
 
+	byte					m_nPowershotStrength;
+
 	// IPlayerInfo passthrough (because we can't do multiple inheritance)
 	IPlayerInfo *GetPlayerInfo() { return &m_PlayerInfo; }
 	IBotController *GetBotController() { return &m_PlayerInfo; }

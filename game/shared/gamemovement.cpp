@@ -1001,6 +1001,8 @@ void CGameMovement::CheckParameters( void )
 {
 	QAngle	v_angle;
 
+	SetPlayerSpeed();
+
 	if ( player->GetMoveType() != MOVETYPE_ISOMETRIC &&
 		 player->GetMoveType() != MOVETYPE_NOCLIP &&
 		 player->GetMoveType() != MOVETYPE_OBSERVER )
@@ -1106,6 +1108,60 @@ void CGameMovement::CheckParameters( void )
 
 void CGameMovement::ReduceTimers( void )
 {
+	CSDKPlayer *pPl = (CSDKPlayer *)player;
+
+	Vector vecPlayerVelocity = pPl->GetAbsVelocity();
+
+#if defined ( SDK_USE_STAMINA ) || defined ( SDK_USE_SPRINTING )
+	float flStamina = pPl->m_Shared.GetStamina();
+#endif
+	
+#if defined ( SDK_USE_SPRINTING )
+
+	float fl2DVelocitySquared = vecPlayerVelocity.x * vecPlayerVelocity.x + 
+								vecPlayerVelocity.y * vecPlayerVelocity.y;	
+
+	if ( !( mv->m_nButtons & IN_SPEED ) )
+	{
+		pPl->m_Shared.ResetSprintPenalty();
+	}
+
+	// Can only sprint in forward direction.
+	bool bSprinting = ( (mv->m_nButtons & IN_SPEED) && ( mv->m_nButtons & IN_FORWARD ) );
+
+	// If we're holding the sprint key and also actually moving, remove some stamina
+	Vector vel = pPl->GetAbsVelocity();
+	if ( bSprinting && fl2DVelocitySquared > 10000 ) //speed > 100
+	{
+		flStamina -= 20 * gpGlobals->frametime;
+
+		pPl->m_Shared.SetStamina( flStamina );
+	}
+	else
+#endif // SDK_USE_SPRINTING
+
+#if defined ( SDK_USE_STAMINA ) || defined ( SDK_USE_SPRINTING )
+	{
+		//gain some back		
+		if ( fl2DVelocitySquared <= 0 )
+		{
+			flStamina += 20 * gpGlobals->frametime;
+		}
+		else if ( ( pPl->GetFlags() & FL_ONGROUND ) && 
+					( mv->m_nButtons & IN_DUCK ) &&
+					( pPl->GetFlags() & FL_DUCKING ) )
+		{
+			flStamina += 50 * gpGlobals->frametime;
+		}
+		else
+		{
+			flStamina += 10 * gpGlobals->frametime;
+		}
+
+		pPl->m_Shared.SetStamina( flStamina );	
+	}
+#endif 
+
 	float frame_msec = 1000.0f * gpGlobals->frametime;
 
 	if ( player->m_Local.m_flDucktime > 0 )
@@ -4526,6 +4582,33 @@ void CGameMovement::PlayerMove( void )
 
 	AngleVectors (mv->m_vecViewAngles, &m_vecForward, &m_vecRight, &m_vecUp );  // Determine movement angles
 
+	//mv->m_flForwardMove		= mv->m_flForwardMove < 0 ? max(mv->m_flForwardMove, -400) : mv->m_flForwardMove;
+	//mv->m_flSideMove = clamp(mv->m_flSideMove, -400, 400);
+	//mv->m_flUpMove			= clamp(mv->m_flUpMove, -400, 400);
+
+	//CBasePlayer *opl = UTIL_PlayerByIndex(1);
+	//if (player != opl)
+	//{
+	//	Vector dir = opl->GetLocalOrigin() - mv->GetAbsOrigin();
+	//	if (dir.Length2D() < 200)
+	//	{
+	//		Vector vel = mv->m_flForwardMove * m_vecForward + mv->m_flSideMove * m_vecRight;
+	//		if (vel.Length2D() != 0)
+	//		{
+	//			dir.NormalizeInPlace();
+	//			vel.NormalizeInPlace();
+	//			float ang = RAD2DEG(acos(DotProduct2D(dir.AsVector2D(), vel.AsVector2D())));
+	//			if (abs(ang) < 90)
+	//			{
+	//				mv->m_vecVelocity.x = 0;
+	//				mv->m_vecVelocity.y = 0;
+	//				mv->m_flForwardMove = 0;
+	//				mv->m_flSideMove = 0;
+	//			}
+	//		}
+	//	}
+	//}
+
 	// Always try and unstick us unless we are using a couple of the movement modes
 	if ( player->GetMoveType() != MOVETYPE_NOCLIP && 
 		 player->GetMoveType() != MOVETYPE_NONE && 		 
@@ -4850,4 +4933,78 @@ void CGameMovement::IsometricMove( void )
 bool CGameMovement::GameHasLadders() const
 {
 	return true;
+}
+
+void CGameMovement::SetPlayerSpeed()
+{
+	CSDKPlayer *pPl = (CSDKPlayer *)player;
+
+	#if defined ( SDK_USE_PRONE )
+	// This check is now simplified, just use CanChangePosition because it checks the two things we need to check anyway.
+	if ( m_pSDKPlayer->m_Shared.IsProne() && m_pSDKPlayer->m_Shared.CanChangePosition() && m_pSDKPlayer->GetGroundEntity() != NULL )
+	{
+			mv->m_flClientMaxSpeed = m_pSDKPlayer->m_Shared.m_flProneSpeed;		//Base prone speed 
+	}
+	else	//not prone - standing or crouching and possibly moving
+#endif // SDK_USE_PRONE
+	{
+		float stamina = 100.0f;
+#if defined ( SDK_USE_STAMINA ) || defined ( SDK_USE_SPRINTING )
+		stamina = pPl->m_Shared.GetStamina();
+#endif
+		if ( mv->m_nButtons & IN_DUCK )
+		{
+			mv->m_flClientMaxSpeed = pPl->m_Shared.m_flRunSpeed;	//gets cut in fraction later
+		}
+		else
+		{
+			float flMaxSpeed;	
+#if defined ( SDK_USE_SPRINTING )
+			if ( ( mv->m_nButtons & IN_SPEED ) && ( stamina > 0 ) && ( mv->m_nButtons & IN_FORWARD ) )
+			{
+				flMaxSpeed = pPl->m_Shared.m_flSprintSpeed;	//sprinting
+			}
+			else
+#endif // SDK_USE_SPRINTING
+			{
+				flMaxSpeed = pPl->m_Shared.m_flRunSpeed;	//jogging
+			}
+
+			mv->m_flClientMaxSpeed = flMaxSpeed - 100 + stamina;
+		}
+	}
+
+#if defined ( SDK_USE_PRONE )
+	if ( m_pSDKPlayer->GetGroundEntity() != NULL )
+	{
+		if( m_pSDKPlayer->m_Shared.IsGoingProne() )
+		{
+			float pronetime = m_pSDKPlayer->m_Shared.m_flGoProneTime - gpGlobals->curtime;
+
+			//interp to prone speed
+			float flProneFraction = SimpleSpline( pronetime / TIME_TO_PRONE );
+
+			float maxSpeed = mv->m_flClientMaxSpeed;
+
+			if ( m_pSDKPlayer->m_bUnProneToDuck )
+				maxSpeed *= 0.33;
+			
+			mv->m_flClientMaxSpeed = ( ( 1 - flProneFraction ) * m_pSDKPlayer->m_Shared.m_flProneSpeed ) + ( flProneFraction * maxSpeed );
+		}
+		else if ( m_pSDKPlayer->m_Shared.IsGettingUpFromProne() )
+		{
+			float pronetime = m_pSDKPlayer->m_Shared.m_flUnProneTime - gpGlobals->curtime;
+
+			//interp to regular speed speed
+			float flProneFraction = SimpleSpline( pronetime / TIME_TO_PRONE );
+			
+			float maxSpeed = mv->m_flClientMaxSpeed;
+
+			if ( m_pSDKPlayer->m_bUnProneToDuck )
+				maxSpeed *= 0.33;
+
+			mv->m_flClientMaxSpeed = ( flProneFraction * m_pSDKPlayer->m_Shared.m_flProneSpeed ) + ( ( 1 - flProneFraction ) * maxSpeed );
+		}
+	}	
+#endif // SDK_USE_PRONE
 }

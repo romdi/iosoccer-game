@@ -39,6 +39,8 @@ public:
 		mousedy = 0;
 
 		hasbeenpredicted = false;
+
+		powershot_strength = 0;
 	}
 
 	CBotCmd& operator =( const CBotCmd& src )
@@ -60,6 +62,7 @@ public:
 		mousedx				= src.mousedx;
 		mousedy				= src.mousedy;
 		hasbeenpredicted	= src.hasbeenpredicted;
+		powershot_strength	= src.powershot_strength;
 		return *this;
 	}
 
@@ -93,6 +96,8 @@ public:
 
 	// Client only, tracks whether we've predicted this command at least once
 	bool	hasbeenpredicted;
+
+	byte powershot_strength;
 };
 
 

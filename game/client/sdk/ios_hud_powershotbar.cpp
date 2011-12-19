@@ -15,6 +15,7 @@
 #include <vgui/ISurface.h>
 #include <vgui/ILocalize.h>
 #include <igameresources.h>
+#include "c_baseplayer.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -23,10 +24,13 @@
 
 static void OnPowershotStrengthChange(IConVar *var, const char *pOldValue, float flOldValue)
 {
-	engine->ServerCmd(VarArgs("powershot_strength %d", ((ConVar*)var)->GetInt()));
+	//engine->ServerCmd(VarArgs("powershot_strength %d", ((ConVar*)var)->GetInt()));
+	//C_BasePlayer::GetLocalPlayer();
 }
  
-ConVar cl_powershot_strength("cl_powershot_strength", "3", 0, "Powershot Strength (1-5)", true, 1, true, 5, OnPowershotStrengthChange );
+ConVar cl_powershot_strength("cl_powershot_strength", "50", 0, "Powershot Strength (0-100)", true, 0, true, 100, OnPowershotStrengthChange );
+
+//extern ConVar cl_powershot_strength;
 
 static void OnIncreasePowershotStrength(const CCommand &args)
 {
@@ -71,6 +75,7 @@ protected:
 	virtual void	ApplySchemeSettings( vgui::IScheme *scheme );
 	virtual void	Paint();
 
+	float m_flStamina;
 };
 
 DECLARE_HUDELEMENT( CHudPowershotBar );
@@ -106,7 +111,7 @@ void CHudPowershotBar::ApplySchemeSettings( IScheme *scheme )
 //-----------------------------------------------------------------------------
 void CHudPowershotBar::Init( void )
 {
-	//m_flStamina = STAMINA_INIT;
+	m_flStamina = -1;
 	//m_flStaminaLow = -1;
 }
 
@@ -139,13 +144,34 @@ bool CHudPowershotBar::ShouldDraw()
 //-----------------------------------------------------------------------------
 void CHudPowershotBar::OnThink( void )
 {
+	float flCurrentStamina = 0;
+	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+	if ( !pPlayer )
+		return;
 
+	flCurrentStamina = pPlayer->m_Shared.GetStamina();
+
+	// Only update if we've changed stamina
+	if ( flCurrentStamina == m_flStamina )
+		return;
+
+	//if ( flCurrentStamina >= 100.0f && m_flStamina < 100.0f )
+	//{
+	//	// we've reached max stamina
+	//	g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("SuitStaminaMax");
+	//}
+	//else if ( flCurrentStamina < 100.0f && (m_flStamina >= 100.0f || m_flStamina == STAMINA_INIT) )
+	//{
+	//	// we've lost stamina
+	//	g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("SuitStaminaNotMax");
+	//}
+	m_flStamina = flCurrentStamina;
 }
 
 #define SPRINT_TIME           6.0f     //IOS sprint amount 5.5
 #define SPRINT_RECHARGE_TIME  12.0f    //IOS time before sprint re-charges
 #define SPRINT_SPEED          90.0f    //IOS sprint increase in speed
-
+#define SEGMENTS 3
 //-----------------------------------------------------------------------------
 // Purpose: draws the stamina bar
 //-----------------------------------------------------------------------------
@@ -156,9 +182,9 @@ void CHudPowershotBar::Paint()
 	if ( !pPlayer )
 		return;
 
-	IGameResources *gr = GameResources();
+	//IGameResources *gr = GameResources();
 
-	float sprint = gr->GetSprint(pPlayer->index) / (SPRINT_TIME * 10);
+	float sprint = m_flStamina / 100.0f;//gr->GetSprint(pPlayer->index) / (SPRINT_TIME * 10);
 	int height = 150;
 	int width = 25;
 	int xOffset = 20;
@@ -171,44 +197,53 @@ void CHudPowershotBar::Paint()
 	surface()->DrawSetColor(0, 0, 0, 150);
 	surface()->DrawFilledRect(xOffset, yOffset, xOffset + width, yOffset + height);
 	surface()->DrawSetColor(255 * (1 - sprint), 255 * sprint, 0, 200);
-	int y0 = yOffset + height - (int)(height * sprint);
+	int y0 = yOffset + height * (1 - sprint);
 	surface()->DrawFilledRect(xOffset, y0, xOffset + width, y0 + (int)(height * sprint));
 
 	surface()->DrawSetColor(0, 0, 0, 255);
 
-	for (int i = 0; i < 6; i++)
-	{
-		y0 = yOffset + height / 5 * i;
-		int x0, x1, linepadding;
-		int powershotStrength = cl_powershot_strength.GetInt();
+	float powershotStrength = cl_powershot_strength.GetInt() / 100.0f;
+	int x0, x1, linepadding;
+	y0 = yOffset + height * (1 - powershotStrength);
+	x0 = xOffset - 10;
+	x1 = x0 + 10 + width + 10;
+	linepadding = 2;
+	surface()->DrawSetColor(255, 255, 255, 255);
+	surface()->DrawFilledRect(x0, y0 - linepadding, x1, y0 + linepadding);
 
-		if ((5 - i) == powershotStrength)
-		{
-			if (sprint >= (powershotStrength / 5.0f - 0.001f))
-				surface()->DrawSetColor(200, 255, 200, 255);
-			else
-				surface()->DrawSetColor(255, 200, 200, 255);
+	//for (int i = 0; i < SEGMENTS + 1; i++)
+	//{
+	//	y0 = yOffset + height / SEGMENTS * i;
+	//	int x0, x1, linepadding;
+	//	float powershotStrength = cl_powershot_strength.GetInt() / 100.0f;
 
-			x0 = xOffset - 10;
-			x1 = x0 + 10 + width + 10;
-			linepadding = 2;
-			//surface()->DrawSetTextFont(scheme()->GetIScheme(GetScheme())->GetFont("Default"));
-			//surface()->DrawSetTextColor(255, 255, 255, 150);
-			//surface()->DrawSetTextPos(0, y0 - 8);
-			////surface()->DrawSetTextScale(2.0f, 2.0f);
-			//surface()->DrawPrintText(L">", wcslen(L">"));
-			////surface()->DrawPolyLine
-		}
-		else
-		{
-			surface()->DrawSetColor(0, 0, 0, 200);
-			x0 = xOffset;
-			x1 = x0 + width;
-			linepadding = 1;
-		}
+	//	if (i == powershotStrength)
+	//	{
+	//		if (sprint >= (powershotStrength / 5.0f - FLT_EPSILON))
+	//			surface()->DrawSetColor(200, 255, 200, 255);
+	//		else
+	//			surface()->DrawSetColor(255, 200, 200, 255);
 
-		surface()->DrawFilledRect(x0, y0 - linepadding, x1, y0 + linepadding);
-	}
+	//		x0 = xOffset - 10;
+	//		x1 = x0 + 10 + width + 10;
+	//		linepadding = 2;
+	//		//surface()->DrawSetTextFont(scheme()->GetIScheme(GetScheme())->GetFont("Default"));
+	//		//surface()->DrawSetTextColor(255, 255, 255, 150);
+	//		//surface()->DrawSetTextPos(0, y0 - 8);
+	//		////surface()->DrawSetTextScale(2.0f, 2.0f);
+	//		//surface()->DrawPrintText(L">", wcslen(L">"));
+	//		////surface()->DrawPolyLine
+	//	}
+	//	else
+	//	{
+	//		surface()->DrawSetColor(0, 0, 0, 200);
+	//		x0 = xOffset;
+	//		x1 = x0 + width;
+	//		linepadding = 1;
+	//	}
+
+	//	surface()->DrawFilledRect(x0, y0 - linepadding, x1, y0 + linepadding);
+	//}
 }
 //#endif // SDK_USE_STAMINA || SDK_USE_SPRINTING
 

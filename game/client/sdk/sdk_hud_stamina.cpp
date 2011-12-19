@@ -20,7 +20,8 @@ using namespace vgui;
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-#if defined ( SDK_USE_STAMINA ) || defined ( SDK_USE_SPRINTING )
+//#if defined ( SDK_USE_STAMINA ) || defined ( SDK_USE_SPRINTING )
+#if 0
 
 DECLARE_HUDELEMENT( CHudStamina );
 

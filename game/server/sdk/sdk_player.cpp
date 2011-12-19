@@ -283,7 +283,7 @@ void CSDKPlayer::PreThink(void)
 		return;
 	}
 
-	UpdateSprint();
+	//UpdateSprint();
 
 	CheckRejoin();
 
@@ -462,25 +462,14 @@ void CSDKPlayer::SDKPushawayThink(void)
 
 void CSDKPlayer::Spawn()
 {
-	/* ios
-	SetModel( SDK_PLAYER_MODEL );	//Tony; basically, leave this alone ;) unless you're not using classes or teams, then you can change it to whatever.
-	
-	SetBloodColor( BLOOD_COLOR_RED );
+	if (!GetModelPtr())
+		SetModel( SDK_PLAYER_MODEL );	//Tony; basically, leave this alone ;) unless you're not using classes or teams, then you can change it to whatever.
 	
 	SetMoveType( MOVETYPE_WALK );
 	RemoveSolidFlags( FSOLID_NOT_SOLID );
 
-	//Tony; if we're spawning in active state, equip the suit so the hud works. -- Gotta love base code !
-	if ( State_Get() == STATE_ACTIVE )
-	{
-		EquipSuit( false );
-//Tony; bleh, don't do this here.
-//		GiveDefaultItems();
-	}
-
-	m_hRagdoll = NULL;
-	
 	BaseClass::Spawn();
+
 #if defined ( SDK_USE_STAMINA ) || defined ( SDK_USE_SPRINTING )
 	m_Shared.SetStamina( 100 );
 #endif
@@ -506,25 +495,17 @@ void CSDKPlayer::Spawn()
 
 	SetContextThink( &CSDKPlayer::SDKPushawayThink, gpGlobals->curtime + PUSHAWAY_THINK_INTERVAL, SDK_PUSHAWAY_THINK_CONTEXT );
 	pl.deadflag = false;
-	*/
 
 	m_flNextShot = gpGlobals->curtime;
 
-	if (m_nPowershotStrength == 0)
-		m_nPowershotStrength = 3;
-	
-	if (!GetModelPtr())
-		SetModel( SDK_PLAYER_MODEL );		//only do it first time through, then let the team stuff set it.
-
-	SetMoveType( MOVETYPE_WALK );
-	RemoveSolidFlags( FSOLID_NOT_SOLID );
+	//if (m_nPowershotStrength == 0)
+	//	m_nPowershotStrength = 3;
 
 	//SetSolid( SOLID_BBOX );
 	AddSolidFlags( FSOLID_NOT_STANDABLE );
 
 	m_hRagdoll = NULL;
 	
-	BaseClass::Spawn();
 	//ios
 	SetMaxSpeed(PLAYER_SPEED);
 
@@ -2337,7 +2318,7 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 {
 	const char *pcmd = args[0];
 
-	if (FStrEq(pcmd, "powershot_strength"))
+	/*if (FStrEq(pcmd, "powershot_strength"))
 	{
 		if (args.ArgC() < 2)
 		{
@@ -2346,7 +2327,7 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 		}
 		m_nPowershotStrength = clamp(atoi(args[1]), 1, 5);
 		return true;
-	}
+	}*/
 
 	if ( FStrEq( pcmd, "jointeam" ) ) 
 	{

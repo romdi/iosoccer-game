@@ -38,6 +38,8 @@ public:
 	CGameMovement( void );
 	virtual			~CGameMovement( void );
 
+	virtual void	SetPlayerSpeed( void );
+
 	virtual void	ProcessMovement( CBasePlayer *pPlayer, CMoveData *pMove );
 
 	virtual void	StartTrackPredictionErrors( CBasePlayer *pPlayer );

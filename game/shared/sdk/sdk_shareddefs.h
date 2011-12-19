@@ -31,12 +31,12 @@
 //
 // Do your players have stamina? - this is a pre-requisite for sprinting, if you define sprinting, and don't uncomment this, it will be included anyway.
 // define SDK_USE_STAMINA
-//#define SDK_USE_STAMINA
+#define SDK_USE_STAMINA
 
 //
 // Are your players able to sprint?
 // define SDK_USE_SPRINTING
-//#define SDK_USE_SPRINTING
+#define SDK_USE_SPRINTING
 
 //Tony; stamina is a pre-requisite to sprinting, if you don't declare stamina but you do declare sprinting
 //stamina needs to be included.
@@ -131,8 +131,8 @@ extern const char *pszPossiblePlayerModels[];
 extern char pszTeamNames[4][32];
 
 //Tony; these defines handle the default speeds for all of these - all are listed regardless of which option is enabled.
-#define SDK_DEFAULT_PLAYER_RUNSPEED			220
-#define SDK_DEFAULT_PLAYER_SPRINTSPEED		330
+#define SDK_DEFAULT_PLAYER_RUNSPEED			280//220
+#define SDK_DEFAULT_PLAYER_SPRINTSPEED		380//330
 #define SDK_DEFAULT_PLAYER_PRONESPEED		50
 
 //--------------------------------------------------------------------------------------------------------
