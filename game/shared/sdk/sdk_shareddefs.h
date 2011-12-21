@@ -123,10 +123,7 @@ enum sdkteams_e
 
 #endif // SDK_USE_PLAYERCLASSES
 
-#define SDK_PLAYER_MODEL "models/player/brazil/brazil.mdl"
-
-//Tony; We need to precache all possible player models that we're going to use
-extern const char *pszPossiblePlayerModels[];
+#define SDK_PLAYER_MODEL "models/player/player.mdl"
 
 extern char pszTeamNames[4][32];
 
@@ -205,5 +202,23 @@ enum
 
 // Player avoidance
 #define PUSHAWAY_THINK_INTERVAL		(1.0f / 20.0f)
+
+enum match_event_t
+{
+	MATCH_EVENT_GOAL = 0,
+	MATCH_EVENT_FREEKICK,
+	MATCH_EVENT_GOALKICK,
+	MATCH_EVENT_KICKOFF,
+	MATCH_EVENT_CORNER,
+	MATCH_EVENT_THROWIN,
+	MATCH_EVENT_FOUL,
+	MATCH_EVENT_PENALTY,
+	MATCH_EVENT_PLAY_ON,
+	MATCH_EVENT_FINAL_WHISTLE,
+	NUM_MATCH_EVENTS
+};
+
+extern const char *g_szMatchEventNames[32];
+
 
 #endif // SDK_SHAREDDEFS_H

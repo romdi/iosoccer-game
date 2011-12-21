@@ -64,15 +64,6 @@ char pszTeamNames[4][32] =
 	"BRAZIL"
 };
 
-//Tony; We need to precache all possible player models that we're going to use
-const char *pszPossiblePlayerModels[] =
-{
-	SDK_PLAYER_MODEL,
-	"models/player/blue_player.mdl",
-	"models/player/red_player.mdl",
-	NULL
-};
-
 // ----------------------------------------------------------------------------- //
 // Global Weapon Definitions
 // ----------------------------------------------------------------------------- //
@@ -117,4 +108,17 @@ const char *WeaponIDToAlias( int id )
 	return s_WeaponAliasInfo[id];
 }
 
-
+const char *g_szMatchEventNames[32] =
+{
+	"GOAL",
+	"FREEKICK",
+	"GOALKICK",
+	"KICKOFF",
+	"CORNER",
+	"THROWIN",
+	"FOUL",
+	"PENALTY",
+	"PLAY ON",
+	"FINAL WHISTLE",
+	NULL
+};

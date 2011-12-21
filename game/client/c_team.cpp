@@ -6,6 +6,7 @@
 //=============================================================================//
 #include "cbase.h"
 #include "c_team.h"
+#include "sdk_gamerules.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -28,12 +29,27 @@ void RecvProxyArrayLength_PlayerArray( void *pStruct, int objectID, int currentA
 		pTeam->m_aPlayers.SetSize( currentArrayLength );
 }
 
+void RecvProxy_Teamname( const CRecvProxyData *pData, void *pStruct, void *pOut )
+{
+	C_Team *pTeam = (C_Team *)pStruct;
+	Q_strncpy(pTeam->m_szTeamname, pData->m_Value.m_pString, sizeof(pTeam->m_szTeamname));
+
+	for (int i = 0; Q_stricmp(gKitDesc[i].m_KitName, "END") != 0; i++)
+	{
+		if (Q_stricmp(gKitDesc[i].m_KitName, pData->m_Value.m_pString) == 0)
+		{
+			Q_strncpy(pTeam->m_szFullName, gKitDesc[i].m_FullName, sizeof(pTeam->m_szFullName));
+			break;
+		}
+	}
+}
+
 
 IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_Team, DT_Team, CTeam)
 	RecvPropInt( RECVINFO(m_iTeamNum)),
 	RecvPropInt( RECVINFO(m_iScore)),
 	RecvPropInt( RECVINFO(m_iRoundsWon) ),
-	RecvPropString( RECVINFO(m_szTeamname)),
+	RecvPropString( RECVINFO(m_szTeamname), 0, RecvProxy_Teamname),
 	
 	RecvPropArray2( 
 		RecvProxyArrayLength_PlayerArray,
@@ -120,6 +136,11 @@ int C_Team::GetTeamNumber() const
 char *C_Team::Get_Name( void )
 {
 	return m_szTeamname;
+}
+
+char *C_Team::Get_FullName( void )
+{
+	return m_szFullName;
 }
 
 //-----------------------------------------------------------------------------

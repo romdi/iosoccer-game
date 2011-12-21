@@ -405,23 +405,7 @@ void CSDKPlayer::IOSSPlayerCollision(void)
 
 void CSDKPlayer::Precache()
 {
-
-	//Tony; go through our list of player models that we may be using and cache them
-	/* ios
-	int i = 0;
-	while( pszPossiblePlayerModels[i] != NULL )
-	{
-		PrecacheModel( pszPossiblePlayerModels[i] );
-		i++;
-	}	
-	*/
-
-	//PrecacheModel( SDK_PLAYER_MODEL );
-
-	//precache every model?
-	PrecacheModel("models/player/brazil/brazil.mdl");
-	//PrecacheModel("models/player/england/england.mdl");
-
+	PrecacheModel( SDK_PLAYER_MODEL );
 	PrecacheScriptSound("Player.Oomph");
 	PrecacheScriptSound("Player.DiveKeeper");
 	PrecacheScriptSound("Player.Save");

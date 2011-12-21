@@ -32,6 +32,7 @@ public:
 
 	// Data Handling
 	virtual char	*Get_Name( void );
+	virtual char	*Get_FullName( void );
 	virtual int		Get_Score( void );
 	virtual int		Get_Deaths( void );
 	virtual int		Get_Ping( void );
@@ -63,6 +64,7 @@ public:
 	// Data received from the server
 	CUtlVector< int > m_aPlayers;
 	char	m_szTeamname[ MAX_TEAM_NAME_LENGTH ];
+	char	m_szFullName[MAX_TEAM_NAME_LENGTH];
 	int		m_iScore;
 	int		m_iRoundsWon;
 

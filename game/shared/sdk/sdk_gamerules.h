@@ -314,4 +314,24 @@ inline CSDKGameRules* SDKGameRules()
 void SetTeams(const char *teamHome, const char *teamAway, bool bInitialize = true);
 #endif
 
+enum
+{
+	WHITE,
+	YELLOW,
+	BLUE,
+	GREEN,
+	RED,
+
+	END
+};
+
+struct s_KitData
+{
+	char	m_KitName[128];
+	char	m_FullName[128];
+	int		m_KitColour;
+};
+
+extern const s_KitData gKitDesc[];
+
 #endif // SDK_GAMERULES_H

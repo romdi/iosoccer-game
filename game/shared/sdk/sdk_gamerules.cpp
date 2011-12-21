@@ -39,6 +39,20 @@ extern void Bot_RunAll( void );
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+static const s_KitData gKitDesc[] =
+{
+	{	"Brazil", "Brazil",		YELLOW },
+	{	"England", "England",		WHITE },
+	{	"Germany", "Germany",		WHITE },
+	{	"Italy",	"Italy",	BLUE },
+	{	"Scotland", "Scotland",		BLUE },
+	{	"Barcelona", "FC Barcelona",	BLUE },
+	{	"Bayern",	"FC Bayern Munich",	RED },
+	{	"Liverpool", "Liverpool FC",	RED },
+	{	"Milan",	"AC Milan", 	RED },
+	{	"Palmeiras", "Sociedade Esportiva Palmeiras",	GREEN },
+	{	"END", "END", END },
+};
 
 #ifndef CLIENT_DLL
 
@@ -687,38 +701,6 @@ void CSDKGameRules::InitTeams( void )
 	CreateEntityByName( "sdk_gamerules" );
 }
 
-enum
-{
-	WHITE,
-	YELLOW,
-	BLUE,
-	GREEN,
-	RED,
-
-	END
-};
-
-struct s_KitData
-{
-	char	m_KitName[128];
-	int		m_KitColour;
-};
-
-static const s_KitData gKitDesc[] =
-{
-	{	"BRAZIL",		YELLOW },
-	{	"ENGLAND",		WHITE },
-	{	"GERMANY",		WHITE },
-	{	"ITALY",		BLUE },
-	{	"SCOTLAND",		BLUE },
-	{	"BARCELONA",	BLUE },
-	{	"BAYERN",		RED },
-	{	"LIVERPOOL",	RED },
-	{	"MILAN",		RED },
-	{	"PALMEIRAS",	GREEN },
-	{	"END", END },
-};
-
 //ios
 void CSDKGameRules::ChooseTeamNames()
 {
@@ -1248,7 +1230,7 @@ void CSDKGameRules::RestartMatch()
 		pBall->ballStatusTime = 0;
 		pBall->ShieldOff();
 		pBall->HandleKickOff();
-		pBall->SetPhysics();
+		pBall->CreateVPhysics();
 	}
 
 	State_Transition(MATCH_WARMUP);
@@ -1597,7 +1579,7 @@ void CSDKGameRules::SwapTeams()
 		pBall->ballStatusTime = 0;
 		pBall->ShieldOff();
 		pBall->HandleKickOff();
-		pBall->SetPhysics();
+		pBall->CreateVPhysics();
 	}
 
 	// swap players
