@@ -42,6 +42,7 @@ public : // IGameResources intreface
 	virtual bool	IsHLTV(int index);
 
 	virtual const char *GetPlayerName( int index );
+	virtual const char *GetClubName( int index );
 	virtual int		GetPing( int index );
 //	virtual int		GetPacketloss( int index );
 	virtual int		GetPlayerScore( int index );
@@ -75,6 +76,7 @@ protected:
 	// Data for each player that's propagated to all clients
 	// Stored in individual arrays so they can be sent down via datatables
 	string_t	m_szName[MAX_PLAYERS+1];
+	char	m_szClubNames[MAX_PLAYERS+1][32];
 	int		m_iPing[MAX_PLAYERS+1];
 	int		m_iScore[MAX_PLAYERS+1];
 	int		m_iDeaths[MAX_PLAYERS+1];
@@ -99,7 +101,6 @@ protected:
 	int		m_GoalKicks[MAX_PLAYERS+1];
 	int		m_Position[MAX_PLAYERS+1];
 	int		m_Sprint[MAX_PLAYERS+1];
-
 };
 
 extern C_PlayerResource *g_PR;

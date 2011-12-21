@@ -312,6 +312,9 @@ public:
 	int					GetTeamPosition(void) { return m_ShirtPos; }
 	int					GetSprint(void) { if (m_fSprintLeft < 0.0f) return 0; else return ((int)(m_fSprintLeft * 10.0f)); }
 
+	char				*GetClubName() { return m_szClubName; }
+	void				SetClubName(const char *name) { Q_strncpy(m_szClubName, name, sizeof(m_szClubName)); m_bClubNameChanged = true; } 
+
 	void				UpdateSprint( void );
 	bool				InSprint(void);
 	float				m_fSprintLeft;
@@ -348,6 +351,9 @@ public:
 	virtual void		VPhysicsCollision( int index, gamevcollisionevent_t *pEvent );
 
 	//int					m_BallInPenaltyBox;	 //-1 =	not	in box,	0,1	= teams	box
+
+	char				m_szClubName[32];
+	bool				m_bClubNameChanged;
 };
 
 

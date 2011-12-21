@@ -36,7 +36,15 @@
 	#define CSDKGameRulesProxy C_SDKGameRulesProxy
 #endif
 
-extern ConVar mp_timelimit_match, mp_timelimit_extratime_halftime, mp_timelimit_extratime_intermission, mp_timelimit_halftime, mp_timelimit_warmup;
+extern ConVar 
+	mp_timelimit_match, 
+	mp_timelimit_extratime_halftime, 
+	mp_timelimit_extratime_intermission,
+	mp_timelimit_halftime, 
+	mp_timelimit_warmup,
+	mp_timelimit_penalties_intermission,
+	mp_timelimit_penalties,
+	mp_timelimit_cooldown;
 
 enum match_state_t
 {
@@ -297,6 +305,9 @@ protected:
 	void State_Think_END();
 
 	void SwapTeams();
+
+public:
+	void ClientSettingsChanged( CBasePlayer *pPlayer );
 #endif
 
 };

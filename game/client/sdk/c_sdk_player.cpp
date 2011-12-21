@@ -29,8 +29,8 @@ ConVar cl_ragdoll_physics_enable( "cl_ragdoll_physics_enable", "1", 0, "Enable/d
 #if defined( CSDKPlayer )
 	#undef CSDKPlayer
 #endif
-
-
+ 
+ConVar clubname("clubname", "Team Arthur", FCVAR_USERINFO | FCVAR_ARCHIVE, "The name of your club");//, OnClubNameChange);
 
 // -------------------------------------------------------------------------------- //
 // Player animation event. Sent to the client when a player fires, jumps, reloads, etc..

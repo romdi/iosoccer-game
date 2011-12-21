@@ -1676,6 +1676,69 @@ void OnTeamlistChange(IConVar *var, const char *pOldValue, float flOldValue)
 static ConVar mp_teamlist("mp_teamlist", "ENGLAND;BRAZIL", FCVAR_REPLICATED|FCVAR_NOTIFY, "Set team names", &OnTeamlistChange);
 static ConVar sv_teamrotation("mp_teamrotation", "brazil;germany;italy;scotland;barcelona;bayern;liverpool;milan;palmeiras", 0, "Set available teams");
 
+
+void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
+{
+	/* TODO: handle skin, model & team changes 
+
+  	char text[1024];
+
+	// skin/color/model changes
+	int iTeam = Q_atoi( engine->GetClientConVarValue( pPlayer->entindex(), "cl_team" ) );
+	int iClass = Q_atoi( engine->GetClientConVarValue( pPlayer->entindex(), "cl_class" ) );
+
+	if ( defaultteam.GetBool() )
+	{
+		// int clientIndex = pPlayer->entindex();
+
+		// engine->SetClientKeyValue( clientIndex, "model", pPlayer->TeamName() );
+		// engine->SetClientKeyValue( clientIndex, "team", pPlayer->TeamName() );
+		UTIL_SayText( "Not allowed to change teams in this game!\n", pPlayer );
+		return;
+	}
+
+	if ( defaultteam.GetFloat() || !IsValidTeam( mdls ) )
+	{
+		// int clientIndex = pPlayer->entindex();
+
+		// engine->SetClientKeyValue( clientIndex, "model", pPlayer->TeamName() );
+		Q_snprintf( text,sizeof(text), "Can't change team to \'%s\'\n", mdls );
+		UTIL_SayText( text, pPlayer );
+		Q_snprintf( text,sizeof(text), "Server limits teams to \'%s\'\n", m_szTeamList );
+		UTIL_SayText( text, pPlayer );
+		return;
+	}
+
+	ChangePlayerTeam( pPlayer, mdls, true, true );
+	// recound stuff
+	RecountTeams(); */
+
+	const char *pszClubName = engine->GetClientConVarValue( pPlayer->entindex(), "clubname" );
+
+	((CSDKPlayer *)pPlayer)->SetClubName(pszClubName);
+
+	const char *pszName = engine->GetClientConVarValue( pPlayer->entindex(), "name" );
+
+	const char *pszOldName = pPlayer->GetPlayerName();
+
+	// msg everyone if someone changes their name,  and it isn't the first time (changing no name to current name)
+	// Note, not using FStrEq so that this is case sensitive
+	if ( pszOldName[0] != 0 && Q_strcmp( pszOldName, pszName ) )
+	{
+		IGameEvent * event = gameeventmanager->CreateEvent( "player_changename" );
+		if ( event )
+		{
+			event->SetInt( "userid", pPlayer->GetUserID() );
+			event->SetString( "oldname", pszOldName );
+			event->SetString( "newname", pszName );
+			gameeventmanager->FireEvent( event );
+		}
+		
+		pPlayer->SetPlayerName( pszName );
+	}
+}
+
+
 #endif
 
 

@@ -52,7 +52,8 @@ protected:
 	CNetworkArray( int, m_GoalKicks, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_Position, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_Sprint, MAX_PLAYERS+1 );
-
+	
+	CNetworkArray( string_t, m_szClubNames, MAX_PLAYERS+1 );
 		
 	int	m_nUpdateCounter;
 };

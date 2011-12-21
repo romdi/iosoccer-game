@@ -44,12 +44,15 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_PlayerResource, DT_PlayerResource, CPlayerReso
 	RecvPropArray3( RECVINFO_ARRAY(m_Position), RecvPropInt( RECVINFO(m_Position[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_Sprint), RecvPropInt( RECVINFO(m_Sprint[0]))),
 
+	RecvPropArray3( RECVINFO_ARRAY(m_szClubNames), RecvPropString( RECVINFO(m_szClubNames[0]))),
+	//RecvPropArray( RecvPropString( RECVINFO( m_szClubName[0]) ), m_szClubName ),
 
 END_RECV_TABLE()
 
 BEGIN_PREDICTION_DATA( C_PlayerResource )
 
 	DEFINE_PRED_ARRAY( m_szName, FIELD_STRING, MAX_PLAYERS+1, FTYPEDESC_PRIVATE ),
+	//DEFINE_PRED_ARRAY( m_szClubName, FIELD_STRING, MAX_PLAYERS+1, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_ARRAY( m_iPing, FIELD_INTEGER, MAX_PLAYERS+1, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_ARRAY( m_iScore, FIELD_INTEGER, MAX_PLAYERS+1, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_ARRAY( m_iDeaths, FIELD_INTEGER, MAX_PLAYERS+1, FTYPEDESC_PRIVATE ),
@@ -93,6 +96,8 @@ C_PlayerResource::C_PlayerResource()
 	memset( m_GoalKicks, 0, sizeof( m_GoalKicks ) );
 	memset( m_Position, 0, sizeof( m_Position ) );
 	memset( m_Sprint, 0, sizeof( m_Sprint ) );
+
+	memset( m_szClubNames, 0, sizeof( m_szClubNames ) );
 
 	for ( int i=0; i<MAX_TEAMS; i++ )
 	{
@@ -178,6 +183,20 @@ const char *C_PlayerResource::GetPlayerName( int iIndex )
 
 	// This gets updated in ClientThink, so it could be up to 1 second out of date, oh well.
 	return m_szName[iIndex];
+}
+
+const char *C_PlayerResource::GetClubName( int iIndex )
+{
+	if ( iIndex < 1 || iIndex > MAX_PLAYERS )
+	{
+		Assert( false );
+		return "ERRORNAME";
+	}
+	
+	if ( !IsConnected( iIndex ) )
+		return PLAYER_UNCONNECTED_NAME;
+
+	return m_szClubNames[iIndex];
 }
 
 bool C_PlayerResource::IsAlive(int iIndex )

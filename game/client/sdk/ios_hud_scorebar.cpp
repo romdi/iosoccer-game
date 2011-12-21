@@ -58,11 +58,6 @@ protected:
 	virtual void ApplySchemeSettings( vgui::IScheme *scheme );
 
 private:
-	CPanelAnimationVar( vgui::HFont, m_hTextFont, "TextFont", "Default" );
-	CPanelAnimationVar( Color, m_TextColor, "TextColor", "FgColor" );
-	CPanelAnimationVarAliasType( float, text_xpos, "text_xpos", "8", "proportional_float" );
-	CPanelAnimationVarAliasType( float, text_ypos, "text_ypos", "8", "proportional_float" );
-	CPanelAnimationVarAliasType( float, text_ygap, "text_ygap", "14", "proportional_float" );
 
 	Panel *m_pScorebarPanel;
 	Label *m_pScorebarTimeLabel;
@@ -88,7 +83,7 @@ DECLARE_HUD_MESSAGE(CHudScorebar, MatchEvent);
 //-----------------------------------------------------------------------------
 CHudScorebar::CHudScorebar( const char *pElementName ) : BaseClass(NULL, "HudScorebar"), CHudElement( pElementName )
 {
-	SetHiddenBits(HIDEHUD_PLAYERDEAD);
+	//SetHiddenBits(HIDEHUD_PLAYERDEAD);
 	vgui::Panel *pParent = g_pClientMode->GetViewport();
 	SetParent( pParent );
 
@@ -144,7 +139,7 @@ void CHudScorebar::ApplySchemeSettings( IScheme *scheme )
 	{
 		m_pScorebarTeamLabels[i]->SetBounds(i * 400 + 250, 5, 200, 40);
 		m_pScorebarTeamLabels[i]->SetContentAlignment(Label::a_center);
-		m_pScorebarTeamLabels[i]->SetTextInset(30, 0);
+		m_pScorebarTeamLabels[i]->SetTextInset(10, 0);
 		//m_pScorebarTeamLabels[i]->SetAutoResize(Panel::PIN_TOPLEFT, AUTORESIZE_RIGHT, 10, 0, 10, 0);
 		m_pScorebarTeamLabels[i]->SetFont(scheme->GetFont("IOSScorebar"));
 		m_pScorebarTeamLabels[i]->SetPaintBackgroundType(2);
@@ -203,13 +198,32 @@ void CHudScorebar::DrawText( int x, int y, HFont hFont, Color clr, const wchar_t
 	surface()->DrawUnicodeString( szText, vgui::FONT_DRAW_NONADDITIVE );
 }
 
+const char *g_szStateNames[32] =
+{
+	"Init",
+	"Warmup",
+	"1st Half",
+	"1st Half",
+	"Halftime",
+	"2nd Half",
+	"2nd Half",
+	"Extratime",
+	"Ex 1st Half",
+	"Ex 1st Half",
+	"Ex Halftime"
+	"Ex 2nd Half",
+	"Ex 2nd Half",
+	"Penalties"
+	"Penalties",
+	"Cooldown",
+	"End"
+};
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 void CHudScorebar::Paint( void )
 {
-	//wchar_t *team1Name = NULL;
-	//wchar_t *team2Name = NULL;
 	C_Team *teamHome = GetGlobalTeam( 2 );
 	C_Team *teamAway = GetGlobalTeam( 3 );
 	if ( !teamHome || !teamAway )
@@ -217,55 +231,58 @@ void CHudScorebar::Paint( void )
 
 	wchar_t teamHomeName[64];
 	wchar_t teamAwayName[64];
-	wchar_t time[64];
-	//wchar_t prefix[16] = L"";
+	//wchar_t curTime[64];
 
 	float flTime = gpGlobals->curtime - SDKGameRules()->m_flStateEnterTime;
-	int nTime = 0;
+	int nTime;
+
+	//_snwprintf(curTime, sizeof(curTime), L"%s", g_szStateNames[SDKGameRules()->m_eMatchState]
 
 	switch ( SDKGameRules()->m_eMatchState )
 	{
 	case MATCH_EXTRATIME_SECOND_HALF: case MATCH_EXTRATIME_SECOND_HALF_INJURY_TIME:
-		nTime = ( int )( flTime * ( 90.0f / mp_timelimit_match.GetInt() ) ) + (90 + 15) * 60;
-		_snwprintf( time, ARRAYSIZE( time ), L"EX2 % 3d:%02d", nTime / 60, nTime % 60 );
+		nTime = (int)(flTime * (90.0f / mp_timelimit_match.GetInt())) + (90 + 15) * 60;
 		break;
 	case MATCH_EXTRATIME_FIRST_HALF: case MATCH_EXTRATIME_FIRST_HALF_INJURY_TIME:
-		nTime = ( int )( flTime * ( 90.0f / mp_timelimit_match.GetInt() ) ) + 90 * 60;
-		_snwprintf( time, ARRAYSIZE( time ), L"EX1 % 3d:%02d", nTime / 60, nTime % 60 );
+		nTime = (int)(flTime * (90.0f / mp_timelimit_match.GetInt())) + 90 * 60;
 		break;
 	case MATCH_SECOND_HALF: case MATCH_SECOND_HALF_INJURY_TIME:
-		nTime = ( int )( flTime * ( 90.0f / mp_timelimit_match.GetInt() ) ) + 45 * 60;
-		_snwprintf( time, ARRAYSIZE( time ), L"H2 % 3d:%02d", nTime / 60, nTime % 60 );
+		nTime = (int)(flTime * (90.0f / mp_timelimit_match.GetInt())) + 45 * 60;
 		break;
 	case MATCH_FIRST_HALF: case MATCH_FIRST_HALF_INJURY_TIME:
-		nTime = ( int )( flTime * ( 90.0f / mp_timelimit_match.GetInt() ) );
-		_snwprintf( time, ARRAYSIZE( time ), L"H1 % 3d:%02d", nTime / 60, nTime % 60 );
+		nTime = (int)(flTime * (90.0f / mp_timelimit_match.GetInt()));
 		break;
 	case MATCH_WARMUP:
-		_snwprintf( time, ARRAYSIZE( time ), L"WARMUP" );
+		nTime = (int)(flTime - mp_timelimit_warmup.GetInt() * 60);
 		break;
 	case MATCH_HALFTIME:
-		_snwprintf( time, ARRAYSIZE( time ), L"HALFTIME" );
+		nTime = (int)(flTime - mp_timelimit_halftime.GetInt() * 60);
 		break;
 	case MATCH_EXTRATIME_INTERMISSION:
-		_snwprintf( time, ARRAYSIZE( time ), L"EX INTERM" );
+		nTime = (int)(flTime - mp_timelimit_extratime_intermission.GetInt() * 60);
 		break;
 	case MATCH_EXTRATIME_HALFTIME:
-		_snwprintf( time, ARRAYSIZE( time ), L"EX HALFTIME" );
+		nTime = (int)(flTime - mp_timelimit_extratime_halftime.GetInt() * 60);
 		break;
 	case MATCH_PENALTIES_INTERMISSION:
-		_snwprintf( time, ARRAYSIZE( time ), L"PEN INTERM" );
+		nTime = (int)(flTime - mp_timelimit_penalties_intermission.GetInt() * 60);
 		break;
 	case MATCH_PENALTIES:
-		_snwprintf( time, ARRAYSIZE( time ), L"PENALTIES" );
+		nTime = (int)(flTime - mp_timelimit_penalties.GetInt() * 60);
 		break;
 	case MATCH_COOLDOWN:
-		_snwprintf( time, ARRAYSIZE( time ), L"COOLDOWN" );
+		nTime = (int)(flTime - mp_timelimit_cooldown.GetInt() * 60);
 		break;
 	default:
-		_snwprintf( time, ARRAYSIZE( time ), L"" );
+		nTime = 0;
 		break;
 	}
+
+	nTime = abs(nTime);
+
+	char stateText[32];
+	char *timeText = nTime > 0 ? VarArgs("% 3d:%02d", nTime / 60, nTime % 60) : VarArgs(" 3%d", nTime);
+	Q_snprintf(stateText, sizeof(stateText), "%s %s", g_szStateNames[SDKGameRules()->m_eMatchState], timeText);
 
 	//_snwprintf(time, sizeof(time), L"%d", (int)();
 	wchar_t scoreHome[3];
@@ -275,34 +292,7 @@ void CHudScorebar::Paint( void )
 	g_pVGuiLocalize->ConvertANSIToUnicode( teamHome->Get_FullName(), teamHomeName, sizeof( teamHomeName ) );
 	g_pVGuiLocalize->ConvertANSIToUnicode( teamAway->Get_FullName(), teamAwayName, sizeof( teamAwayName ) );
 
-	//surface()->DrawSetColor(0, 0, 0, 150);
-	//surface()->DrawFilledRect(0, 0, 500, 50);
-	//m_pScorebarPanel->DrawBox(0, 0, 50, 50, Color(255, 0, 0, 200), 1.0f, false);
-	//m_pEventPanel->DrawBox(0, 0, 50, 50, Color(0, 255, 0, 200), 1.0f, false);
-
-	//DrawText( 0, 0, m_hTextFont, GameResources()->GetTeamColor(2), teamHomeName);
-	//DrawText( 100, 0, m_hTextFont, GameResources()->GetTeamColor(0), scoreHome);
-	//DrawText( 200, 0, m_hTextFont, GameResources()->GetTeamColor(0), time);
-	//DrawText( 300, 0, m_hTextFont, GameResources()->GetTeamColor(0), scoreAway);
-	//DrawText( 400, 0, m_hTextFont, GameResources()->GetTeamColor(3), teamAwayName);
-
-	//if (SDKGameRules()->m_nAnnouncedInjuryTime > 0)
-	//{
-	//	surface()->DrawSetColor(0, 0, 0, 150);
-	//	//surface()->DrawFilledRect(10, 60, 110, 110);
-	//	surface()->DrawSetTextPos(15, 65);
-	//	wchar_t announcedInjuryTime[8];
-	//	_snwprintf(announcedInjuryTime, sizeof(announcedInjuryTime), L"+%d", SDKGameRules()->m_nAnnouncedInjuryTime);
-	//	surface()->DrawUnicodeString(announcedInjuryTime);
-	//}
-
-	//wchar_t scorebarText[64];
-
-	//_snwprintf(scorebarText, sizeof(scorebarText), L"%s | %s %s - %s %s", time, teamHomeName, scoreHome, scoreAway, teamAwayName);
-
-	//m_pScorebarTimeLabel->SetText(scorebarText);
-
-	m_pScorebarTimeLabel->SetText(time);
+	m_pScorebarTimeLabel->SetText(stateText);
 	m_pScorebarTeamLabels[0]->SetText(teamHomeName);
 	m_pScorebarTeamLabels[1]->SetText(teamAwayName);
 	wchar_t scoreText[32];
@@ -361,7 +351,8 @@ void CHudScorebar::MsgFunc_MatchEvent(bf_read &msg)
 	match_event_t eventType = (match_event_t)msg.ReadByte();
 	int playerIndex = msg.ReadByte();
 	m_pEventTypeLabel->SetText(VarArgs("%s", g_szMatchEventNames[eventType]));
-	m_pEventTeamLabels[0]->SetText(VarArgs("%s", gr->GetPlayerName(playerIndex)));
+	char *club = VarArgs("%s", gr->GetPlayerName(playerIndex));
+	m_pEventTeamLabels[0]->SetText(club);
 	int wide, tall;
 	m_pEventTeamLabels[0]->GetContentSize(wide, tall);
 	//m_pEventTeamLabels[0]->SetBounds(m_pEventTeamLabels[0]->GetParent()->GetWide() / 2 - wide / 2, m_pEventTeamLabels[0]->GetParent()->GetTall() / 2 - tall / 2, wide, tall);

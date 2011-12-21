@@ -13,6 +13,12 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+void SendProxy_String_tToString( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID )
+{
+	string_t *pString = (string_t*)pData;
+	pOut->m_pString = (char*)STRING( *pString );
+}
+
 // Datatable
 IMPLEMENT_SERVERCLASS_ST_NOBASE(CPlayerResource, DT_PlayerResource)
 //	SendPropArray( SendPropString( SENDINFO(m_szName[0]) ), SENDARRAYINFO(m_szName) ),
@@ -40,6 +46,9 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CPlayerResource, DT_PlayerResource)
 	SendPropArray3( SENDINFO_ARRAY3(m_GoalKicks), SendPropInt( SENDINFO_ARRAY(m_GoalKicks), 5, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_Position), SendPropInt( SENDINFO_ARRAY(m_Position), 5 ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_Sprint), SendPropInt( SENDINFO_ARRAY(m_Sprint), 8, SPROP_UNSIGNED ) ),
+
+	SendPropArray3( SENDINFO_ARRAY3(m_szClubNames), SendPropString( SENDINFO_ARRAY(m_szClubNames), 0, SendProxy_String_tToString ) ),
+	//SendPropArray( SendPropString( SENDINFO_ARRAY( m_szClubName ), 0, SendProxy_String_tToString ), m_szClubName ),
 	
 END_SEND_TABLE()
 
@@ -94,6 +103,8 @@ void CPlayerResource::Spawn( void )
 		m_GoalKicks.Set( i, 0 );
 		m_Position.Set( i, 0 );
 		m_Sprint.Set( i, 0 );
+
+		m_szClubNames.Set( i, MAKE_STRING("") );
 	}
 
 	SetThink( &CPlayerResource::ResourceThink );
@@ -157,6 +168,16 @@ void CPlayerResource::UpdatePlayerData( void )
 				m_GoalKicks.Set(i, max( 0, SDKPlayer->GetGoalKicks() ) );
 				m_Position.Set(i, max( 0, SDKPlayer->GetTeamPosition() ) );
 				m_Sprint.Set(i, max( 0, SDKPlayer->GetSprint() ) );
+				//m_Sprint.Set(i, (int)gpGlobals->curtime % 100);
+
+				m_szClubNames.Set(i, MAKE_STRING(SDKPlayer->GetClubName()));
+
+				// RomD: Enforce client update, since the value changes without notice
+				if (SDKPlayer->m_bClubNameChanged)
+				{
+					m_szClubNames.GetForModify(i);
+					SDKPlayer->m_bClubNameChanged = false;
+				}
 			}
 
 			// Don't update ping / packetloss everytime
