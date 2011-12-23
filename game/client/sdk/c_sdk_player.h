@@ -35,7 +35,7 @@ public:
 	virtual void PostDataUpdate( DataUpdateType_t updateType );
 	virtual void OnDataChanged( DataUpdateType_t updateType );
 
-	virtual void CalcVehicleView(IClientVehicle *pVehicle, Vector& eyeOrigin, QAngle& eyeAngles, float& zNear, float& zFar, float& fov );
+	virtual void CalcVehicleView(IClientVehicle *pVehicle, Vector& eyeOrigin, QAngle& eyeAngles, float& zNear, float& zFar, float& fov ) {};
 
 	// Player avoidance
 	bool ShouldCollide( int collisionGroup, int contentsMask ) const;
@@ -55,7 +55,7 @@ public:
 	void DoAnimationEvent( PlayerAnimEvent_t event, int nData = 0 );
 	virtual bool ShouldDraw();
 
-	CWeaponSDKBase *GetActiveSDKWeapon() const;
+	CWeaponSDKBase *GetActiveSDKWeapon() const { return NULL; };
 
 	virtual C_BaseAnimating * BecomeRagdollOnClient();
 	virtual IRagdoll* GetRepresentativeRagdoll() const;
@@ -69,7 +69,7 @@ public:
 		CBaseEntity *pevAttacker,
 		bool bDoEffects,
 		float x,
-		float y );
+		float y ) {};
 
 	//ios added
 	//virtual ShadowType_t	ShadowCastType( void );
@@ -92,7 +92,7 @@ public:
 	bool CanMove() const;
 
 	// Returns true if the player is allowed to attack.
-	bool CanAttack( void );
+	bool CanAttack( void ) { return false; };
 
 #if defined ( SDK_USE_SPRINTING )
 	void SetSprinting( bool bIsSprinting );

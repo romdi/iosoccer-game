@@ -60,29 +60,29 @@ public:
 	// This passes the event to the client's and server's CPlayerAnimState.
 	void DoAnimationEvent( PlayerAnimEvent_t event, int nData = 0 );
 
-	virtual void FlashlightTurnOn( void );
-	virtual void FlashlightTurnOff( void );
-	virtual int FlashlightIsOn( void );
+	virtual void FlashlightTurnOn( void ) {};
+	virtual void FlashlightTurnOff( void ) {};
+	virtual int FlashlightIsOn( void ) { return 0; };
 
 	virtual void PreThink();
 	virtual void PostThink();
 	virtual void Spawn();
 	virtual void InitialSpawn();
 
-	virtual void GiveDefaultItems();
+	virtual void GiveDefaultItems() {};
 
 	// Animstate handles this.
 	void SetAnimation( PLAYER_ANIM playerAnim ); //ios {return; }
 
 	virtual void Precache();
-	virtual int			OnTakeDamage( const CTakeDamageInfo &inputInfo );
-	virtual int			OnTakeDamage_Alive( const CTakeDamageInfo &info );
-	virtual void Event_Killed( const CTakeDamageInfo &info );
-	virtual void TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &vecDir, trace_t *ptr );
-	virtual void LeaveVehicle( const Vector &vecExitPoint, const QAngle &vecExitAngles );
+	virtual int			OnTakeDamage( const CTakeDamageInfo &inputInfo ) { return 0; };
+	virtual int			OnTakeDamage_Alive( const CTakeDamageInfo &info ) { return 0; };
+	virtual void Event_Killed( const CTakeDamageInfo &info ) {};
+	virtual void TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &vecDir, trace_t *ptr ) {};
+	virtual void LeaveVehicle( const Vector &vecExitPoint, const QAngle &vecExitAngles ) {};
 	
-	CWeaponSDKBase* GetActiveSDKWeapon() const;
-	virtual void	CreateViewModel( int viewmodelindex = 0 );
+	CWeaponSDKBase* GetActiveSDKWeapon() const { return NULL; };
+	virtual void	CreateViewModel( int viewmodelindex = 0 ) {};
 
 	virtual void	CheatImpulseCommands( int iImpulse );
 	
@@ -120,10 +120,10 @@ public:
 		CBaseEntity *pevAttacker,
 		bool bDoEffects,
 		float x,
-		float y );
+		float y ) {};
 
 	CNetworkVarEmbedded( CSDKPlayerShared, m_Shared );
-	virtual void			PlayerDeathThink( void );
+	virtual void			PlayerDeathThink( void ) {};
 	virtual bool		ClientCommand( const CCommand &args );
 
 	void IncreaseShotsFired() { m_iShotsFired++; if (m_iShotsFired > 16) m_iShotsFired = 16; }
@@ -135,12 +135,12 @@ public:
 	void SetSprinting( bool bIsSprinting );
 #endif // SDK_USE_SPRINTING
 	// Returns true if the player is allowed to attack.
-	bool CanAttack( void );
+	bool CanAttack( void ) { return false; };
 
 	virtual int GetPlayerStance();
 
 	// Called whenever this player fires a shot.
-	void NoteWeaponFired();
+	void NoteWeaponFired() {};
 	virtual bool WantsLagCompensationOnEntity( const CBasePlayer *pPlayer, const CUserCmd *pCmd, const CBitVec<MAX_EDICTS> *pEntityTransmitBits ) const;
 
 // ------------------------------------------------------------------------------------------------ //
@@ -229,17 +229,17 @@ private:
 	// Last usercmd we shot a bullet on.
 	int m_iLastWeaponFireUsercmd;
 
-	virtual void Weapon_Equip( CBaseCombatWeapon *pWeapon );		//Tony; override so diethink can be cleared
-	virtual void ThrowActiveWeapon( void );
-	virtual void SDKThrowWeapon( CWeaponSDKBase *pWeapon, const Vector &vecForward, const QAngle &vecAngles, float flDiameter  );
-	virtual void SDKThrowWeaponDir( CWeaponSDKBase *pWeapon, const Vector &vecForward, Vector *pVecThrowDir );
+	virtual void Weapon_Equip( CBaseCombatWeapon *pWeapon ) {};		//Tony; override so diethink can be cleared
+	virtual void ThrowActiveWeapon( void ) {};
+	virtual void SDKThrowWeapon( CWeaponSDKBase *pWeapon, const Vector &vecForward, const QAngle &vecAngles, float flDiameter  ) {};
+	virtual void SDKThrowWeaponDir( CWeaponSDKBase *pWeapon, const Vector &vecForward, Vector *pVecThrowDir ) {};
 	// When the player joins, it cycles their view between trigger_camera entities.
 	// This is the current camera, and the time that we'll switch to the next one.
 	EHANDLE m_pIntroCamera;
 	float m_fIntroCamTime;
 
-	void CreateRagdollEntity();
-	void DestroyRagdoll( void );
+	void CreateRagdollEntity() {};
+	void DestroyRagdoll( void ) {};
 
 
 	CSDKPlayerAnimState *m_PlayerAnimState;
@@ -258,8 +258,8 @@ public:
 
 public:
 	//virtual void		SetAnimation( PLAYER_ANIM playerAnim );
-	void				PlayerUse ( void );				//IOS
-	CBaseEntity			*FindUseEntity(void);
+	void				PlayerUse ( void ) {};				//IOS
+	CBaseEntity			*FindUseEntity(void) { return NULL; };
 	//bool				ClientCommand(const char *pcmd);
 	//CBaseEntity			*EntSelectSpawnPoint(void);
 

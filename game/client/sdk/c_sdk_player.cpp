@@ -771,44 +771,6 @@ bool C_SDKPlayer::ShouldDraw( void )
 	return BaseClass::ShouldDraw();
 }
 
-CWeaponSDKBase* C_SDKPlayer::GetActiveSDKWeapon() const
-{
-	return dynamic_cast< CWeaponSDKBase* >( GetActiveWeapon() );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Non-Caching CalcVehicleView for Scratch SDK + Multiplayer
-// TODO: fix the normal CalcVehicleView so that Caching can work in multiplayer.
-//-----------------------------------------------------------------------------
-void C_SDKPlayer::CalcVehicleView(IClientVehicle *pVehicle,	Vector& eyeOrigin, QAngle& eyeAngles,	float& zNear, float& zFar, float& fov )
-{
-	Assert( pVehicle );
-
-	// Start with our base origin and angles
-	int nRole = pVehicle->GetPassengerRole( this );
-
-	// Get our view for this frame
-	pVehicle->GetVehicleViewPosition( nRole, &eyeOrigin, &eyeAngles, &fov );
-
-	// Allows the vehicle to change the clip planes
-	pVehicle->GetVehicleClipPlanes( zNear, zFar );
-
-	// Snack off the origin before bob + water offset are applied
-	Vector vecBaseEyePosition = eyeOrigin;
-
-	CalcViewRoll( eyeAngles );
-
-	// Apply punch angle
-	VectorAdd( eyeAngles, m_Local.m_vecPunchAngle, eyeAngles );
-
-	if ( !prediction->InPrediction() )
-	{
-		// Shake it up baby!
-		vieweffects->CalcShake();
-		vieweffects->ApplyShake( eyeOrigin, eyeAngles, 1.0 );
-	}
-}
-
 #if defined ( SDK_USE_PLAYERCLASSES )
 bool C_SDKPlayer::CanShowClassMenu( void )
 {
