@@ -162,6 +162,10 @@ public:
 	void GetSize(int &wide, int &tall);	// gets size of panel
 	void SetBounds(int x, int y, int wide, int tall);		// combination of SetPos/SetSize
 	void GetBounds(int &x, int &y, int &wide, int &tall);	// combination of GetPos/GetSize
+	void SetX(int x);
+	int	 GetX();
+	void SetY(int y);
+	int  GetY();
 	int  GetWide();	// returns width of panel
 	void SetWide(int wide);	// sets width of panel
 	int  GetTall();	// returns height of panel
