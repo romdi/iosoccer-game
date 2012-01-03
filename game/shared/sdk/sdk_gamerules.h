@@ -36,6 +36,8 @@
 	#define CSDKGameRulesProxy C_SDKGameRulesProxy
 #endif
 
+CUniformRandomStream g_IOSRand;
+
 extern ConVar 
 	mp_timelimit_match, 
 	mp_timelimit_extratime_halftime, 
@@ -167,7 +169,7 @@ public:
 	virtual ~CSDKGameRules();
 	virtual const char *GetGameDescription( void ) { return SDK_GAME_DESCRIPTION; } 
 	virtual bool ClientCommand( CBaseEntity *pEdict, const CCommand &args );
-	virtual void RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrcIn, float flRadius, int iClassIgnore );
+	virtual void RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrcIn, float flRadius, int iClassIgnore ) {};
 	virtual void Think();
 
 	void InitTeams( void );
@@ -221,11 +223,11 @@ private:
 	int	m_iSpawnPointCount_Red;	//number of red spawns on the map
 #endif // SDK_USE_TEAMS
 
-	void RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrcIn, float flRadius, int iClassIgnore, bool bIgnoreWorld );
+	void RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrcIn, float flRadius, int iClassIgnore, bool bIgnoreWorld ) {};
 
 public:
-	virtual void DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &info );
-	const char *GetKillingWeaponName( const CTakeDamageInfo &info, CSDKPlayer *pVictim, int *iWeaponID );
+	virtual void DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &info ) {};
+	const char *GetKillingWeaponName( const CTakeDamageInfo &info, CSDKPlayer *pVictim, int *iWeaponID ) {};
 
 #endif
 

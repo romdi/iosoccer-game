@@ -288,6 +288,8 @@ void InitBodyQue()
 
 CSDKGameRules::CSDKGameRules()
 {
+	g_IOSRand.SetSeed(gpGlobals->curtime * 1000);
+
 	m_pCurStateInfo = NULL;
 	State_Transition(MATCH_INIT);
 	
@@ -351,125 +353,6 @@ bool CSDKGameRules::ClientCommand( CBaseEntity *pEdict, const CCommand &args )
 		return true;
 	}
 	return false;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Player has just spawned. Equip them.
-//-----------------------------------------------------------------------------
-
-void CSDKGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrcIn, float flRadius, int iClassIgnore )
-{
-	RadiusDamage( info, vecSrcIn, flRadius, iClassIgnore, false );
-}
-
-// Add the ability to ignore the world trace
-void CSDKGameRules::RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrcIn, float flRadius, int iClassIgnore, bool bIgnoreWorld )
-{
-	CBaseEntity *pEntity = NULL;
-	trace_t		tr;
-	float		flAdjustedDamage, falloff;
-	Vector		vecSpot;
-	Vector		vecToTarget;
-	Vector		vecEndPos;
-
-	Vector vecSrc = vecSrcIn;
-
-	if ( flRadius )
-		falloff = info.GetDamage() / flRadius;
-	else
-		falloff = 1.0;
-
-	int bInWater = (UTIL_PointContents ( vecSrc ) & MASK_WATER) ? true : false;
-
-	vecSrc.z += 1;// in case grenade is lying on the ground
-
-	// iterate on all entities in the vicinity.
-	for ( CEntitySphereQuery sphere( vecSrc, flRadius ); ( pEntity = sphere.GetCurrentEntity() ) != NULL; sphere.NextEntity() )
-	{
-		if ( pEntity->m_takedamage != DAMAGE_NO )
-		{
-			// UNDONE: this should check a damage mask, not an ignore
-			if ( iClassIgnore != CLASS_NONE && pEntity->Classify() == iClassIgnore )
-			{// houndeyes don't hurt other houndeyes with their attack
-				continue;
-			}
-
-			// blast's don't tavel into or out of water
-			if (bInWater && pEntity->GetWaterLevel() == 0)
-				continue;
-			if (!bInWater && pEntity->GetWaterLevel() == 3)
-				continue;
-
-			// radius damage can only be blocked by the world
-			vecSpot = pEntity->BodyTarget( vecSrc );
-
-
-
-			bool bHit = false;
-
-			if( bIgnoreWorld )
-			{
-				vecEndPos = vecSpot;
-				bHit = true;
-			}
-			else
-			{
-				UTIL_TraceLine( vecSrc, vecSpot, MASK_SOLID_BRUSHONLY, info.GetInflictor(), COLLISION_GROUP_NONE, &tr );
-
-				if (tr.startsolid)
-				{
-					// if we're stuck inside them, fixup the position and distance
-					tr.endpos = vecSrc;
-					tr.fraction = 0.0;
-				}
-
-				vecEndPos = tr.endpos;
-
-				if( tr.fraction == 1.0 || tr.m_pEnt == pEntity )
-				{
-					bHit = true;
-				}
-			}
-
-			if ( bHit )
-			{
-				// the explosion can 'see' this entity, so hurt them!
-				//vecToTarget = ( vecSrc - vecEndPos );
-				vecToTarget = ( vecEndPos - vecSrc );
-
-				// decrease damage for an ent that's farther from the bomb.
-				flAdjustedDamage = vecToTarget.Length() * falloff;
-				flAdjustedDamage = info.GetDamage() - flAdjustedDamage;
-
-				if ( flAdjustedDamage > 0 )
-				{
-					CTakeDamageInfo adjustedInfo = info;
-					adjustedInfo.SetDamage( flAdjustedDamage );
-
-					Vector dir = vecToTarget;
-					VectorNormalize( dir );
-
-					// If we don't have a damage force, manufacture one
-					if ( adjustedInfo.GetDamagePosition() == vec3_origin || adjustedInfo.GetDamageForce() == vec3_origin )
-					{
-						CalculateExplosiveDamageForce( &adjustedInfo, dir, vecSrc, 1.5	/* explosion scale! */ );
-					}
-					else
-					{
-						// Assume the force passed in is the maximum force. Decay it based on falloff.
-						float flForce = adjustedInfo.GetDamageForce().Length() * falloff;
-						adjustedInfo.SetDamageForce( dir * flForce );
-						adjustedInfo.SetDamagePosition( vecSrc );
-					}
-
-					pEntity->TakeDamage( adjustedInfo );
-
-					// Now hit all triggers along the way that respond to damage... 
-					pEntity->TraceAttackToTriggers( adjustedInfo, vecSrc, vecEndPos, dir );
-				}
-			}
-		}
-	}
 }
 
 void CSDKGameRules::Think()
@@ -738,248 +621,8 @@ void CSDKGameRules::CreateStandardEntities()
 		CBaseEntity::Create( "sdk_gamerules", vec3_origin, vec3_angle );
 	Assert( pEnt );
 }
-/* ios
-int CSDKGameRules::SelectDefaultTeam()
-{
-	int team = TEAM_UNASSIGNED;
 
-#if defined ( SDK_USE_TEAMS )
-	CSDKTeam *pBlue = GetGlobalSDKTeam(SDK_TEAM_BLUE);
-	CSDKTeam *pRed = GetGlobalSDKTeam(SDK_TEAM_RED);
-
-	int iNumBlue = pBlue->GetNumPlayers();
-	int iNumRed = pRed->GetNumPlayers();
-
-	int iBluePoints = pBlue->GetScore();
-	int iRedPoints  = pRed->GetScore();
-
-	// Choose the team that's lacking players
-	if ( iNumBlue < iNumRed )
-	{
-		team = SDK_TEAM_BLUE;
-	}
-	else if ( iNumBlue > iNumRed )
-	{
-		team = SDK_TEAM_RED;
-	}
-	// choose the team with fewer points
-	else if ( iBluePoints < iRedPoints )
-	{
-		team = SDK_TEAM_BLUE;
-	}
-	else if ( iBluePoints > iRedPoints )
-	{
-		team = SDK_TEAM_RED;
-	}
-	else
-	{
-		// Teams and scores are equal, pick a random team
-		team = ( random->RandomInt(0,1) == 0 ) ? SDK_TEAM_BLUE : SDK_TEAM_RED;		
-	}
-
-	if ( TeamFull( team ) )
-	{
-		// Pick the opposite team
-		if ( team == SDK_TEAM_BLUE )
-		{
-			team = SDK_TEAM_RED;
-		}
-		else
-		{
-			team = SDK_TEAM_BLUE;
-		}
-
-		// No choices left
-		if ( TeamFull( team ) )
-			return TEAM_UNASSIGNED;
-	}
-#endif // SDK_USE_TEAMS
-	return team;
-}
-#if defined ( SDK_USE_TEAMS )
-//Tony; we only check this when using teams, unassigned can never get full.
-bool CSDKGameRules::TeamFull( int team_id )
-{
-	switch ( team_id )
-	{
-	case SDK_TEAM_BLUE:
-		{
-			int iNumBlue = GetGlobalSDKTeam(SDK_TEAM_BLUE)->GetNumPlayers();
-			return iNumBlue >= m_iSpawnPointCount_Blue;
-		}
-	case SDK_TEAM_RED:
-		{
-			int iNumRed = GetGlobalSDKTeam(SDK_TEAM_RED)->GetNumPlayers();
-			return iNumRed >= m_iSpawnPointCount_Red;
-		}
-	}
-	return false;
-}
-
-//checks to see if the desired team is stacked, returns true if it is
-bool CSDKGameRules::TeamStacked( int iNewTeam, int iCurTeam  )
-{
-	//players are allowed to change to their own team
-	if(iNewTeam == iCurTeam)
-		return false;
-
-#if defined ( SDK_USE_TEAMS )
-	int iTeamLimit = mp_limitteams.GetInt();
-
-	// Tabulate the number of players on each team.
-	int iNumBlue = GetGlobalTeam( SDK_TEAM_BLUE )->GetNumPlayers();
-	int iNumRed = GetGlobalTeam( SDK_TEAM_RED )->GetNumPlayers();
-
-	switch ( iNewTeam )
-	{
-	case SDK_TEAM_BLUE:
-		if( iCurTeam != TEAM_UNASSIGNED && iCurTeam != TEAM_SPECTATOR )
-		{
-			if((iNumBlue + 1) > (iNumRed + iTeamLimit - 1))
-				return true;
-			else
-				return false;
-		}
-		else
-		{
-			if((iNumBlue + 1) > (iNumRed + iTeamLimit))
-				return true;
-			else
-				return false;
-		}
-		break;
-	case SDK_TEAM_RED:
-		if( iCurTeam != TEAM_UNASSIGNED && iCurTeam != TEAM_SPECTATOR )
-		{
-			if((iNumRed + 1) > (iNumBlue + iTeamLimit - 1))
-				return true;
-			else
-				return false;
-		}
-		else
-		{
-			if((iNumRed + 1) > (iNumBlue + iTeamLimit))
-				return true;
-			else
-				return false;
-		}
-		break;
-	}
-#endif // SDK_USE_TEAMS
-
-	return false;
-}
-
-#endif // SDK_USE_TEAMS
-*/
-//-----------------------------------------------------------------------------
-// Purpose: determine the class name of the weapon that got a kill
-//-----------------------------------------------------------------------------
-const char *CSDKGameRules::GetKillingWeaponName( const CTakeDamageInfo &info, CSDKPlayer *pVictim, int *iWeaponID )
-{
-	CBaseEntity *pInflictor = info.GetInflictor();
-	CBaseEntity *pKiller = info.GetAttacker();
-	CBasePlayer *pScorer = SDKGameRules()->GetDeathScorer( pKiller, pInflictor, pVictim );
-
-	const char *killer_weapon_name = "world";
-	*iWeaponID = SDK_WEAPON_NONE;
-
-	if ( pScorer && pInflictor && ( pInflictor == pScorer ) )
-	{
-		// If the inflictor is the killer,  then it must be their current weapon doing the damage
-		if ( pScorer->GetActiveWeapon() )
-		{
-			killer_weapon_name = pScorer->GetActiveWeapon()->GetClassname(); 
-			if ( pScorer->IsPlayer() )
-			{
-				*iWeaponID = ToSDKPlayer(pScorer)->GetActiveSDKWeapon()->GetWeaponID();
-			}
-		}
-	}
-	else if ( pInflictor )
-	{
-		killer_weapon_name = STRING( pInflictor->m_iClassname );
-
-		CWeaponSDKBase *pWeapon = dynamic_cast< CWeaponSDKBase * >( pInflictor );
-		if ( pWeapon )
-		{
-			*iWeaponID = pWeapon->GetWeaponID();
-		}
-		else
-		{
-			CBaseGrenadeProjectile *pBaseGrenade = dynamic_cast<CBaseGrenadeProjectile*>( pInflictor );
-			if ( pBaseGrenade )
-			{
-				*iWeaponID = pBaseGrenade->GetWeaponID();
-			}
-		}
-	}
-
-	// strip certain prefixes from inflictor's classname
-	const char *prefix[] = { "weapon_", "NPC_", "func_" };
-	for ( int i = 0; i< ARRAYSIZE( prefix ); i++ )
-	{
-		// if prefix matches, advance the string pointer past the prefix
-		int len = Q_strlen( prefix[i] );
-		if ( strncmp( killer_weapon_name, prefix[i], len ) == 0 )
-		{
-			killer_weapon_name += len;
-			break;
-		}
-	}
-
-	// grenade projectiles need to be translated to 'grenade' 
-	if ( 0 == Q_strcmp( killer_weapon_name, "grenade_projectile" ) )
-	{
-		killer_weapon_name = "grenade";
-	}
-
-	return killer_weapon_name;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *pVictim - 
-//			*pKiller - 
-//			*pInflictor - 
-//-----------------------------------------------------------------------------
-void CSDKGameRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &info )
-{
-	int killer_ID = 0;
-
-	// Find the killer & the scorer
-	CSDKPlayer *pSDKPlayerVictim = ToSDKPlayer( pVictim );
-	CBaseEntity *pInflictor = info.GetInflictor();
-	CBaseEntity *pKiller = info.GetAttacker();
-	CBasePlayer *pScorer = GetDeathScorer( pKiller, pInflictor, pVictim );
-//	CSDKPlayer *pAssister = ToSDKPlayer( GetAssister( pVictim, pScorer, pInflictor ) );
-
-	// Work out what killed the player, and send a message to all clients about it
-	int iWeaponID;
-	const char *killer_weapon_name = GetKillingWeaponName( info, pSDKPlayerVictim, &iWeaponID );
-
-	if ( pScorer )	// Is the killer a client?
-	{
-		killer_ID = pScorer->GetUserID();
-	}
-
-	IGameEvent * event = gameeventmanager->CreateEvent( "player_death" );
-
-	if ( event )
-	{
-		event->SetInt( "userid", pVictim->GetUserID() );
-		event->SetInt( "attacker", killer_ID );
-//		event->SetInt( "assister", pAssister ? pAssister->GetUserID() : -1 );
-		event->SetString( "weapon", killer_weapon_name );
-		event->SetInt( "weaponid", iWeaponID );
-		event->SetInt( "damagebits", info.GetDamageType() );
-		event->SetInt( "customkill", info.GetDamageCustom() );
-		event->SetInt( "priority", 7 );	// HLTV event priority, not transmitted
-		gameeventmanager->FireEvent( event );
-	}		
-}
 #endif
-
 
 bool CSDKGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 {
@@ -1176,83 +819,23 @@ void CSDKGameRules::ClientDisconnected( edict_t *pClient )
 
 void CSDKGameRules::RestartMatch()
 {
-	//clear all the players data
-	for ( int i = 1; i <= gpGlobals->maxClients; i++ )	
-	{
-		CSDKPlayer *plr = (CSDKPlayer*)UTIL_PlayerByIndex( i );
-
-		if (!plr)
-			continue;
-
-		if (!plr->IsPlayer())
-			continue;
-
-		if ( !plr->IsConnected() )
-			continue;
-
-		//check for null,disconnected player
-		if (strlen(plr->GetPlayerName()) == 0)
-			continue;
-
-		plr->m_RedCards = 0;
-		plr->m_YellowCards = 0;
-		plr->m_Fouls = 0;
-		plr->m_Assists = 0;
-		plr->m_Possession = 0;
-		plr->m_Passes = 0;
-		plr->m_FreeKicks = 0;
-		plr->m_Penalties = 0;
-		plr->m_Corners = 0;
-		plr->m_ThrowIns = 0;
-		plr->m_KeeperSaves = 0;
-		plr->m_GoalKicks = 0;
-		plr->ResetFragCount();
-		plr->m_fPossessionTime = 0.0f;
-		plr->m_fSprintLeft = SPRINT_TIME;
-
-		//refresh if team has changed
-		//plr->ChooseModel();
-
-		if (plr->m_PlayerAnim==PLAYER_THROWIN)
-			plr->DoAnimationEvent( PLAYERANIMEVENT_KICK );		//weird throwin bug
-
-		//get rid of any stationary anim states
-		plr->RemoveFlag(FL_ATCONTROLS);
-		plr->m_HoldAnimTime = 0.0f;
-		plr->SetAnimation( PLAYER_IDLE );
-	}
-
-	//reset (kick off) the first ball we find
-	CBall *pBall = dynamic_cast<CBall*>(gEntList.FindEntityByClassname( NULL, "football" ));
-	if (pBall)
-	{
-		pBall->DropBall();
-		pBall->ballStatusTime = 0;
-		pBall->ShieldOff();
-		pBall->HandleKickOff();
-		pBall->CreateVPhysics();
-	}
-
 	State_Transition(MATCH_WARMUP);
 }
 
-void svRestart (void)
+void CC_SV_Restart(const CCommand &args)
 {
 	//ffs!
 	if ( !UTIL_IsCommandIssuedByServerAdmin() )
         return;
 
+	if (args.ArgC() > 1)
+		mp_timelimit_warmup.SetValue((float)atof(args[1]));
+
 	SDKGameRules()->RestartMatch();
-
-	//reset roundtimer
-	//((CSDKGameRules*)g_pGameRules)->m_fStart=-1;
-	//((CSDKGameRules*)g_pGameRules)->StartRoundtimer(mp_timelimit.GetFloat() * 60.0f);
-
-	//((CSDKGameRules*)g_pGameRules)->m_flMatchStartTime = gpGlobals->curtime;
 }
 
 
-ConCommand cc_restart( "sv_restart", svRestart, "Restart game", FCVAR_PROTECTED );
+ConCommand sv_restart( "sv_restart", CC_SV_Restart, "Restart game", 0 );
 
 #endif
 
@@ -1371,6 +954,36 @@ void CSDKGameRules::State_Think_WARMUP()
 
 void CSDKGameRules::State_Enter_FIRST_HALF()
 {
+	//clear all the players data
+	for ( int i = 1; i <= gpGlobals->maxClients; i++ )	
+	{
+		CSDKPlayer *plr = (CSDKPlayer*)UTIL_PlayerByIndex( i );
+
+		if (!plr)
+			continue;
+
+		plr->ResetMatchStats();
+
+		if (plr->m_PlayerAnim==PLAYER_THROWIN)
+			plr->DoAnimationEvent( PLAYERANIMEVENT_KICK );		//weird throwin bug
+
+		//get rid of any stationary anim states
+		plr->RemoveFlag(FL_ATCONTROLS);
+		plr->m_HoldAnimTime = 0.0f;
+		plr->SetAnimation( PLAYER_IDLE );
+	}
+
+	//reset (kick off) the first ball we find
+	CBall *pBall = dynamic_cast<CBall*>(gEntList.FindEntityByClassname( NULL, "football" ));
+	if (pBall)
+	{
+		pBall->DropBall();
+		pBall->ballStatusTime = 0;
+		pBall->ShieldOff();
+		pBall->CreateVPhysics();
+		//pBall->HandleKickOff();
+		pBall->State_Transition(BALL_KICKOFF);
+	}
 }
 
 void CSDKGameRules::State_Think_FIRST_HALF()
@@ -1545,7 +1158,7 @@ void CSDKGameRules::State_Enter_COOLDOWN()
 	if (pBall)
 	{
 		//this test doesnt show because the scoreboard is on front
-		pBall->SendMainStatus(BALL_MAINSTATUS_FINAL_WHISTLE);
+		pBall->SendMatchEvent(MATCH_EVENT_FINAL_WHISTLE);
 		pBall->EmitAmbientSound(pBall->entindex(), pBall->GetAbsOrigin(), "Ball.whistle");
 		//cheer
 		pBall->EmitAmbientSound(pBall->entindex(), pBall->GetAbsOrigin(), "Ball.cheer");
@@ -1592,7 +1205,7 @@ void CSDKGameRules::SwapTeams()
 		if (team < TEAM_A)
 			continue;
 
-		pPlayer->ChangeTeam((team == TEAM_A ? TEAM_B : TEAM_A), true, true);
+		pPlayer->ChangeTeam((team == TEAM_A ? TEAM_B : TEAM_A));
 		GetPlayerSpawnSpot(pPlayer);
 		//pPlayer->ChooseModel();
 	}
