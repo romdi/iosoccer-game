@@ -4,370 +4,132 @@
 #include "sdk_player.h"
 #include "ball.h"
 
-class CTriggerGoal : public CBaseTrigger
+class CBallTrigger : public CBaseTrigger
 {
 public:
-	DECLARE_CLASS( CTriggerGoal, CBaseTrigger );
-
-	void Spawn( void );
-	void StartTouch( CBaseEntity *pOther );
-	//void Touch( CBaseEntity *pOther );
-	//void Untouch( CBaseEntity *pOther );
-
-	int	m_iTeam;
-
+	DECLARE_CLASS( CBallTrigger, CBaseTrigger );
 	DECLARE_DATADESC();
-
-	// Outputs
 	COutputEvent m_OnTrigger;
+
+	void Spawn()
+	{
+		BaseClass::Spawn();
+		InitTrigger();
+	};
+	void StartTouch( CBaseEntity *pOther )
+	{
+		CBall *pBall = dynamic_cast<CBall *>(pOther);
+		if (pBall && !pBall->IgnoreTriggers())
+		{
+			m_OnTrigger.FireOutput(pOther, this);
+			BallStartTouch(pBall);
+		}
+	};
+	virtual void BallStartTouch(CBall *pBall) = 0;
+};
+
+BEGIN_DATADESC( CBallTrigger )
+	DEFINE_OUTPUT(m_OnTrigger, "OnTrigger"),
+END_DATADESC()
+
+const static float CELEBRATION_TIME = 10.0f;
+
+class CTriggerGoal : public CBallTrigger
+{
+public:
+	DECLARE_CLASS( CTriggerGoal, CBallTrigger );
+	DECLARE_DATADESC();
+	int	m_nTeam;
+	COutputEvent m_OnTrigger;
+
+	void BallStartTouch(CBall *pBall)
+	{
+		pBall->TriggerGoal(m_nTeam == 1 ? TEAM_A : TEAM_B);
+	};
 };
 
 BEGIN_DATADESC( CTriggerGoal )
-	DEFINE_KEYFIELD( m_iTeam, FIELD_INTEGER, "Team" ),
+	DEFINE_KEYFIELD( m_nTeam, FIELD_INTEGER, "Team" ),
 	DEFINE_OUTPUT(m_OnTrigger, "OnTrigger"),
 END_DATADESC()
 
 LINK_ENTITY_TO_CLASS( trigger_goal, CTriggerGoal );
 
 
-//-----------------------------------------------------------------------------
-// Purpose: Called when spawning, after keyvalues have been handled.
-//-----------------------------------------------------------------------------
-void CTriggerGoal::Spawn( )
-{
-	BaseClass::Spawn();
-	InitTrigger();
-}
-
-const static float CELEBRATION_TIME = 10.0f;
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *pOther - 
-//-----------------------------------------------------------------------------
-void CTriggerGoal::StartTouch( CBaseEntity *pOther )
-//void CTriggerGoal::Touch( CBaseEntity *pOther )
-{
-	//if (!PassesTriggerFilters(pOther))
-	//	return;
-
-	//if (dynamic_cast<CBall *>(pOther))
-	if (FClassnameIs( pOther, "football" ))
-	{
-		m_OnTrigger.FireOutput(pOther, this);
-
-		CBall	*pBall = (CBall*)pOther;
-
-		if (pBall->ballStatus==0)
-		{
-			//if the keeper is carrying the ball, only award a goal if they hold it in the net for a while
-			//stops a bug where the ball is in the net on the same frame they catch?
-			//also stops silly mistakes where keeper backs over the line accidentally
-			//if (pBall->m_KeeperCarrying)
-			//{
-			//	m_KeeperGoalFrameCount++;
-			//	if (m_KeeperGoalFrameCount < 60)
-			//		return;
-			//}
-
-			//m_KeeperGoalFrameCount = 0;
-
-			//nb: the teams goal trigger is at the other teams end, so team1 goal means
-			//team1 has scored into oppositions net. map must be setup like this.
-			if (m_iTeam==1)
-			{
-				pBall->m_TeamGoal = TEAM_A;
-				pBall->m_KickOff = TEAM_B;
-				//SDKGameRules()->m_Team1Goal = true;
-			}
-			else if (m_iTeam==2)
-			{
-				pBall->m_TeamGoal = TEAM_B;
-				pBall->m_KickOff = TEAM_A;
-				//SDKGameRules()->m_Team2Goal = true;
-			}
-			//Warning( "GOAL For Team %d!\n", m_iTeam );
-
-			pBall->ballStatus = BALL_GOAL;		//flag goal occured so corners etc get ignored
-			//pBall->ballStatusTime = gpGlobals->curtime + CELEBRATION_TIME;
-			//pBall->SendMainStatus();
-		}
-	}
-}
-
-
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////
-//
-// Goal Line Trigger -> Goal Kick or Corner
-//
-///////////////////////////////////////////////////////////////////////////////////////////////
-class CTriggerGoalLine : public CBaseTrigger
+class CTriggerGoalLine : public CBallTrigger
 {
 public:
-	DECLARE_CLASS( CTriggerGoalLine, CBaseTrigger );
-
-	void Spawn( void );
-	void StartTouch( CBaseEntity *pOther );
-	int	m_iTeam;
-	int	m_iSide;
+	DECLARE_CLASS( CTriggerGoalLine, CBallTrigger );
 	DECLARE_DATADESC();
+	int	m_nTeam;
+	int	m_nSide;
 
-	// Outputs
-	COutputEvent m_OnTrigger;
+	void BallStartTouch(CBall *pBall)
+	{
+		pBall->TriggerGoalline(m_nTeam == 1 ? TEAM_A : TEAM_B, m_nSide);
+	};
 };
 
 BEGIN_DATADESC( CTriggerGoalLine )
-	DEFINE_KEYFIELD( m_iTeam, FIELD_INTEGER, "Team" ),
-	DEFINE_KEYFIELD( m_iSide, FIELD_INTEGER, "Side" ),
-	DEFINE_OUTPUT(m_OnTrigger, "OnTrigger"),
+	DEFINE_KEYFIELD( m_nTeam, FIELD_INTEGER, "Team" ),
+	DEFINE_KEYFIELD( m_nSide, FIELD_INTEGER, "Side" ),
 END_DATADESC()
 
 LINK_ENTITY_TO_CLASS( trigger_GoalLine, CTriggerGoalLine );
 
 
-//-----------------------------------------------------------------------------
-// Purpose: Called when spawning, after keyvalues have been handled.
-//-----------------------------------------------------------------------------
-void CTriggerGoalLine::Spawn( )
-{
-	BaseClass::Spawn();
-	InitTrigger();
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *pOther - 
-//-----------------------------------------------------------------------------
-void CTriggerGoalLine::StartTouch( CBaseEntity *pOther )
-{
-	if (FClassnameIs(pOther, "football") && ((CBall*)pOther)->ballStatus==0) 
-	{
-		CBall	*pBall = (CBall*)pOther;
-
-		m_OnTrigger.FireOutput(pOther, this);
-
-		//give to other team (team who didnt kick it out)
-		if (pBall->m_LastTouch->GetTeamNumber() == TEAM_A)
-			pBall->m_team = TEAM_B;
-		else
-			pBall->m_team = TEAM_A;
-
-
-		//n.b. map team numbers are 1 or 2, our teamnum is 2,3
-		if (m_iTeam == pBall->m_LastTouch->GetTeamNumber() - (TEAM_A-1))
-		{
-			pBall->ballStatus = BALL_CORNER;
-			pBall->m_Foulee = (CSDKPlayer*)((CBall*)pOther)->FindPlayerForAction (pBall->m_team,0);   //find who was nearest as soon as it went out (store in foulee)
-		} 
-		else 
-		{
-			pBall->ballStatus = BALL_GOALKICK;
-		}
-		pBall->ballStatusTime = gpGlobals->curtime + 2.0f;
-
-		//side of goal mouth
-		pBall->m_side = m_iSide;
-
-		((CBall*)pOther)->SendMainStatus();
-		//Warning( "CORNER For Team %d!\n", m_iTeam );
-	}
-}
-
-
-
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////
-//
-// Side Line Trigger -> Throw Ins
-//
-///////////////////////////////////////////////////////////////////////////////////////////////
-class CTriggerSideLine : public CBaseTrigger
+class CTriggerSideLine : public CBallTrigger
 {
 public:
-	DECLARE_CLASS( CTriggerSideLine, CBaseTrigger );
-
-	void Spawn( void );
-	void StartTouch( CBaseEntity *pOther );
-	int	m_iSide;
+	DECLARE_CLASS( CTriggerSideLine, CBallTrigger );
 	DECLARE_DATADESC();
+	int	m_nSide;
 
-	// Outputs
-	//COutputEvent m_OnTrigger;
+	void BallStartTouch(CBall *pBall)
+	{
+		pBall->TriggerSideline(m_nSide);
+	};
 };
 
 BEGIN_DATADESC( CTriggerSideLine )
-	DEFINE_KEYFIELD( m_iSide, FIELD_INTEGER, "Side" ),
-	//DEFINE_OUTPUT(m_OnTrigger, "OnTrigger"),
+	DEFINE_KEYFIELD( m_nSide, FIELD_INTEGER, "Side" ),
 END_DATADESC()
 
 LINK_ENTITY_TO_CLASS( trigger_SideLine, CTriggerSideLine );
 
 
-//-----------------------------------------------------------------------------
-// Purpose: Called when spawning, after keyvalues have been handled.
-//-----------------------------------------------------------------------------
-void CTriggerSideLine::Spawn( )
-{
-	BaseClass::Spawn();
-	InitTrigger();
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *pOther - 
-//-----------------------------------------------------------------------------
-void CTriggerSideLine::StartTouch( CBaseEntity *pOther )
-{
-	if (FClassnameIs(pOther, "football") && ((CBall*)pOther)->ballStatus==0) 
-	{
-		//m_OnTrigger.FireOutput(pOther, this);
-
-		//CBall	*pBall = (CBall*)pOther;
-
-		CBall *pBall = dynamic_cast< CBall* >(pOther);
-
-		if (!pBall)
-		{
-			Warning ("NOT A BALL!");
-			return;
-		}
-    
-		pBall->ballStatus = BALL_THROWIN;
-		pBall->ballStatusTime = gpGlobals->curtime + 2.0f;
-
-		//pBall->m_team = !pBall->m_LastTouch->GetTeamNumber();  //team who didnt kick it out
-		if (pBall->m_LastTouch->GetTeamNumber() == TEAM_A)
-			pBall->m_team = TEAM_B;
-		else
-			pBall->m_team = TEAM_A;
-
-		pBall->m_side = m_iSide;
-		pBall->m_FoulPos = pBall->GetAbsOrigin();							// ((CBall*)pOther)->pev->origin;      //record where ball went out at first
-		pBall->m_Foulee = (CSDKPlayer*)((CBall*)pOther)->FindPlayerForAction (((CBall*)pOther)->m_team,0);   //find who was nearest as soon as it went out (store in foulee)
-
-		((CBall*)pOther)->SendMainStatus();
-
-		//Warning( "THROWIN For Team %d!\n", pBall->m_team );
-	}
-}
-
-
-
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////
-//
-// Penalty Box Trigger -> Penalties
-//
-///////////////////////////////////////////////////////////////////////////////////////////////
-class CTriggerPenaltyBox : public CBaseTrigger
+class CTriggerPenaltyBox : public CBallTrigger
 {
 public:
-	DECLARE_CLASS( CTriggerPenaltyBox, CBaseTrigger );
+	DECLARE_CLASS( CTriggerPenaltyBox, CBallTrigger );
 
-	void Spawn( void );
-	void Touch( CBaseEntity *pOther );
-	void StartTouch( CBaseEntity *pOther );
-	int	m_iTeam;
-	int	m_iSide;
+	int	m_nTeam;
+	int	m_nSide;
 	DECLARE_DATADESC();
 
-	// Outputs
-	COutputEvent m_OnTrigger;
+	void BallStartTouch(CBall *pBall) {};
 };
 
 BEGIN_DATADESC( CTriggerPenaltyBox )
-	DEFINE_KEYFIELD( m_iTeam, FIELD_INTEGER, "Team" ),
-	DEFINE_KEYFIELD( m_iSide, FIELD_INTEGER, "Side" ),
-	DEFINE_OUTPUT(m_OnTrigger, "OnTrigger"),
+	DEFINE_KEYFIELD( m_nTeam, FIELD_INTEGER, "Team" ),
 END_DATADESC()
 
 LINK_ENTITY_TO_CLASS( trigger_PenaltyBox, CTriggerPenaltyBox );
 
-
-//-----------------------------------------------------------------------------
-// Purpose: Called when spawning, after keyvalues have been handled.
-//-----------------------------------------------------------------------------
-void CTriggerPenaltyBox::Spawn( )
-{
-	BaseClass::Spawn();
-	InitTrigger();
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *pOther - 
-//-----------------------------------------------------------------------------
-void CTriggerPenaltyBox::Touch( CBaseEntity *pOther )
-{
-	if (FClassnameIs(pOther, "football")) 
-	{
-		CBall	*pBall = (CBall*)pOther; 
-		//pBall->m_BallInPenaltyBox = !(m_iTeam-1);  //whos penalty box is it 1 or 2 (-1 means outside box)
-
-		if (m_iTeam == 1)
-			pBall->m_BallInPenaltyBox = TEAM_A;
-		else
-			pBall->m_BallInPenaltyBox = TEAM_B;
-	}
-	//else if (FClassnameIs(pOther, "player"))
-	//{
-	//	CSDKPlayer	*pPlayer = (CSDKPlayer*)pOther;
-
-	//	if (m_iTeam == 1)
-	//		pPlayer->m_BallInPenaltyBox = TEAM_A;
-	//	else
-	//		pPlayer->m_BallInPenaltyBox = TEAM_B;
-	//}
-}
-
-
-//-----------------------------------------------------------------------------
-// do ontrigger when ball first goes in pen area
-//
-//-----------------------------------------------------------------------------
-void CTriggerPenaltyBox::StartTouch( CBaseEntity *pOther )
-{
-	if (FClassnameIs(pOther, "football")) 
-	{
-		m_OnTrigger.FireOutput(pOther, this);
-	}
-}
-
-
-
-class CBaseBallStart : public CPointEntity //IOS
-{
-public:
-
-	DECLARE_CLASS( CBaseBallStart, CPointEntity );
-
-	void Spawn (void);
-
-private:
-};
-
 extern CBaseEntity *CreateBall (const Vector &pos);
 
-//Create ball entity on map startup - IOS
-void CBaseBallStart::Spawn(void)
+class CBallStart : public CPointEntity //IOS
 {
-
-	Vector pos = GetAbsOrigin();
-	Vector lpos = GetLocalOrigin();
-	CreateBall (pos);
-	
-}
-
+public:
+	DECLARE_CLASS( CBallStart, CPointEntity );
+	void Spawn(void)
+	{
+		CreateBall (GetLocalOrigin());	
+	};
+};
 
 //ios entities
-LINK_ENTITY_TO_CLASS(info_ball_start, CBaseBallStart);	//IOS
+LINK_ENTITY_TO_CLASS(info_ball_start, CBallStart);	//IOS
 
 LINK_ENTITY_TO_CLASS(info_team1_player1, CPointEntity);
 LINK_ENTITY_TO_CLASS(info_team1_player2, CPointEntity);
@@ -416,107 +178,107 @@ LINK_ENTITY_TO_CLASS(info_team2_penalty_spot, CPointEntity);
 LINK_ENTITY_TO_CLASS(info_stadium, CPointEntity);
 
 
-class CBallShield : public CBaseEntity
-{
-public:
-	DECLARE_CLASS( CTriggerPenaltyBox, CBaseEntity );
-	DECLARE_SERVERCLASS();
-
-	void Spawn( void );
-	bool ForceVPhysicsCollide( CBaseEntity *pEntity );
-	bool CreateVPhysics();
-	bool ShouldCollide( int collisionGroup, int contentsMask ) const;
-
-	int UpdateTransmitState()	// always send to all clients
-	{
-		return SetTransmitState( FL_EDICT_ALWAYS );
-	}
-};
-
-LINK_ENTITY_TO_CLASS(ball_shield, CBallShield);
-
-IMPLEMENT_SERVERCLASS_ST( CBallShield, DT_BallShield )
-END_SEND_TABLE()
-
-//-----------------------------------------------------------------------------
-// Purpose: Called when spawning, after keyvalues have been handled.
-//-----------------------------------------------------------------------------
-void CBallShield::Spawn( )
-{
-	BaseClass::Spawn();
-
-	SetMoveType( MOVETYPE_PUSH );  // so it doesn't get pushed by anything
-	SetSolid( SOLID_VPHYSICS );
-	//AddSolidFlags( FSOLID_NOT_SOLID );
-	RemoveSolidFlags(FSOLID_NOT_SOLID);
-	SetSolid(SOLID_VPHYSICS);
-	//AddFlag(FL_WORLDBRUSH);
-
-	SetCollisionGroup(COLLISION_GROUP_BALL_SHIELD);
-	//SetCollisionBounds(WorldAlignMins(), WorldAlignMaxs());
-	SetCollisionBounds(Vector(0, 0, 0), Vector(500, 500, 500));
-
-	CBaseEntity *ent = gEntList.FindEntityByClassname(NULL, "trigger_PenaltyBox");
-
-	SetModel( STRING( ent->GetModelName() ) );
-	//SetModel( STRING( GetModelName() ) );
-	//SetModel( "models/player/barcelona/barcelona.mdl" );
-	//AddEffects( EF_NODRAW );
-	RemoveEffects(EF_NODRAW);
-	CreateVPhysics();
-	VPhysicsGetObject()->EnableCollisions( true );
-}
-
-#include "vcollide_parse.h"
-
-bool CBallShield::CreateVPhysics( void )
-{
-	//VPhysicsInitStatic();
-
-	objectparams_t params =
-	{
-		NULL,
-		1.0, //mass
-		1.0, // inertia
-		0.1f, // damping
-		0.1f, // rotdamping
-		0.05f, // rotIntertiaLimit
-		"DEFAULT",
-		NULL,// game data
-		1.f, // volume (leave 0 if you don't have one or call physcollision->CollideVolume() to compute it)
-		1.0f, // drag coefficient
-		true,// enable collisions?
-	};
-
-	params.pGameData = static_cast<void	*>(this);
-	//objectparams_t params = g_PhysDefaultObjectParams;
-	//solid_t solid;
-	//solid.params = params;	// copy world's params
-	//solid.params.enableCollisions = true;
-	//solid.params.pName = "fluid";
-	//solid.params.pGameData = static_cast<void *>(this);
-	int	nMaterialIndex = physprops->GetSurfaceIndex("ios");
-	IPhysicsObject *obj = physenv->CreatePolyObjectStatic(PhysCreateBbox(Vector(0, 0, 0), Vector(500, 500, 500)), nMaterialIndex, GetLocalOrigin(), GetLocalAngles(), &params);
-	//IPhysicsObject *obj = physenv->CreateSphereObject(200.0f, nMaterialIndex, GetLocalOrigin(), GetLocalAngles(), &params, true);
-	VPhysicsSetObject(obj);
-	return true;
-}
-
-bool CBallShield::ForceVPhysicsCollide( CBaseEntity *pEntity )
-{
-	return true;
-}
-
-bool CBallShield::ShouldCollide( int collisionGroup, int contentsMask ) const
-{
-	// Rebel owned projectiles (grenades etc) and players will collide.
-	if ( collisionGroup == COLLISION_GROUP_PLAYER_MOVEMENT || collisionGroup == COLLISION_GROUP_PROJECTILE )
-	{
-
-		if ( ( contentsMask & CONTENTS_TEAM1 ) )
-			return true;
-		else
-			return false;
-	}
-	return BaseClass::ShouldCollide( collisionGroup, contentsMask );
-}
+//class CBallShield : public CBaseEntity
+//{
+//public:
+//	DECLARE_CLASS( CTriggerPenaltyBox, CBaseEntity );
+//	DECLARE_SERVERCLASS();
+//
+//	void Spawn( void );
+//	bool ForceVPhysicsCollide( CBaseEntity *pEntity );
+//	bool CreateVPhysics();
+//	bool ShouldCollide( int collisionGroup, int contentsMask ) const;
+//
+//	int UpdateTransmitState()	// always send to all clients
+//	{
+//		return SetTransmitState( FL_EDICT_ALWAYS );
+//	}
+//};
+//
+//LINK_ENTITY_TO_CLASS(ball_shield, CBallShield);
+//
+//IMPLEMENT_SERVERCLASS_ST( CBallShield, DT_BallShield )
+//END_SEND_TABLE()
+//
+////-----------------------------------------------------------------------------
+//// Purpose: Called when spawning, after keyvalues have been handled.
+////-----------------------------------------------------------------------------
+//void CBallShield::Spawn( )
+//{
+//	BaseClass::Spawn();
+//
+//	SetMoveType( MOVETYPE_PUSH );  // so it doesn't get pushed by anything
+//	SetSolid( SOLID_VPHYSICS );
+//	//AddSolidFlags( FSOLID_NOT_SOLID );
+//	RemoveSolidFlags(FSOLID_NOT_SOLID);
+//	SetSolid(SOLID_VPHYSICS);
+//	//AddFlag(FL_WORLDBRUSH);
+//
+//	SetCollisionGroup(COLLISION_GROUP_BALL_SHIELD);
+//	//SetCollisionBounds(WorldAlignMins(), WorldAlignMaxs());
+//	SetCollisionBounds(Vector(0, 0, 0), Vector(500, 500, 500));
+//
+//	CBaseEntity *ent = gEntList.FindEntityByClassname(NULL, "trigger_PenaltyBox");
+//
+//	SetModel( STRING( ent->GetModelName() ) );
+//	//SetModel( STRING( GetModelName() ) );
+//	//SetModel( "models/player/barcelona/barcelona.mdl" );
+//	//AddEffects( EF_NODRAW );
+//	RemoveEffects(EF_NODRAW);
+//	CreateVPhysics();
+//	VPhysicsGetObject()->EnableCollisions( true );
+//}
+//
+//#include "vcollide_parse.h"
+//
+//bool CBallShield::CreateVPhysics( void )
+//{
+//	//VPhysicsInitStatic();
+//
+//	objectparams_t params =
+//	{
+//		NULL,
+//		1.0, //mass
+//		1.0, // inertia
+//		0.1f, // damping
+//		0.1f, // rotdamping
+//		0.05f, // rotIntertiaLimit
+//		"DEFAULT",
+//		NULL,// game data
+//		1.f, // volume (leave 0 if you don't have one or call physcollision->CollideVolume() to compute it)
+//		1.0f, // drag coefficient
+//		true,// enable collisions?
+//	};
+//
+//	params.pGameData = static_cast<void	*>(this);
+//	//objectparams_t params = g_PhysDefaultObjectParams;
+//	//solid_t solid;
+//	//solid.params = params;	// copy world's params
+//	//solid.params.enableCollisions = true;
+//	//solid.params.pName = "fluid";
+//	//solid.params.pGameData = static_cast<void *>(this);
+//	int	nMaterialIndex = physprops->GetSurfaceIndex("ios");
+//	IPhysicsObject *obj = physenv->CreatePolyObjectStatic(PhysCreateBbox(Vector(0, 0, 0), Vector(500, 500, 500)), nMaterialIndex, GetLocalOrigin(), GetLocalAngles(), &params);
+//	//IPhysicsObject *obj = physenv->CreateSphereObject(200.0f, nMaterialIndex, GetLocalOrigin(), GetLocalAngles(), &params, true);
+//	VPhysicsSetObject(obj);
+//	return true;
+//}
+//
+//bool CBallShield::ForceVPhysicsCollide( CBaseEntity *pEntity )
+//{
+//	return true;
+//}
+//
+//bool CBallShield::ShouldCollide( int collisionGroup, int contentsMask ) const
+//{
+//	// Rebel owned projectiles (grenades etc) and players will collide.
+//	if ( collisionGroup == COLLISION_GROUP_PLAYER_MOVEMENT || collisionGroup == COLLISION_GROUP_PROJECTILE )
+//	{
+//
+//		if ( ( contentsMask & CONTENTS_TEAM1 ) )
+//			return true;
+//		else
+//			return false;
+//	}
+//	return BaseClass::ShouldCollide( collisionGroup, contentsMask );
+//}
