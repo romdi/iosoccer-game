@@ -90,6 +90,8 @@ protected:
 	//CUtlVectorFixed<CBitmapButton *, 11> m_pTeamButtons;
 	CBitmapButton *m_pPosButtons[2][11];
 
+	Button *m_pSpectateButton;
+
 	char m_szTeamNames[2][32];
 	Label *m_pTeamNames[2];
 

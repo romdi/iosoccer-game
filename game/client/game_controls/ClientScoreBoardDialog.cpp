@@ -718,7 +718,7 @@ bool CClientScoreBoardDialog::GetPlayerScoreInfo(int playerIndex, KeyValues *kv)
 	if (!gr )
 		return false;
 
-	    kv->SetInt("frags", gr->GetFrags( playerIndex ) );
+	kv->SetInt("frags", gr->GetFrags( playerIndex ) );
     kv->SetInt("ping", gr->GetPing( playerIndex ) ) ;
     kv->SetString("name", gr->GetPlayerName( playerIndex ) );
     kv->SetInt("playerIndex", playerIndex);
@@ -735,7 +735,7 @@ bool CClientScoreBoardDialog::GetPlayerScoreInfo(int playerIndex, KeyValues *kv)
 	kv->SetInt("throws", gr->GetThrowIns(playerIndex));
 	kv->SetInt("saves", gr->GetKeeperSaves(playerIndex));
 	kv->SetInt("goalkicks", gr->GetGoalKicks(playerIndex));
-	kv->SetInt("position", gr->GetPosition(playerIndex));
+	kv->SetInt("position", gr->GetTeamPosition(playerIndex));
 
     //kv->SetInt("voice",  s_VoiceImage[GetClientVoiceMgr()->GetSpeakerStatus( playerIndex - 1) ]); 
 

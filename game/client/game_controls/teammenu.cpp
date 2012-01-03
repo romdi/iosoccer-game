@@ -41,34 +41,6 @@ extern IGameUIFuncs *gameuifuncs; // for key binding details
 
 using namespace vgui;
 
-void UpdateCursorState();
-// void DuckMessage(const char *str);
-
-// helper function
-const char *GetStringTeamColor( int i )
-{
-	switch( i )
-	{
-	case 0:
-		return "team0";
-
-	case 1:
-		return "team1";
-
-	case 2:
-		return "team2";
-
-	case 3:
-		return "team3";
-
-	case 4:
-	default:
-		return "team4";
-	}
-}
-
-
-
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
@@ -95,6 +67,8 @@ CTeamMenu::CTeamMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_TEAM )
 
 	m_pTeamNames[0] = new Label(m_pTeamPanels[0], "HomeTeamLabel", "");
 	m_pTeamNames[1] = new Label(m_pTeamPanels[1], "AwayTeamLabel", "");
+
+	m_pSpectateButton = new Button(this, "SpectateButton", "Spectate", this, VarArgs("jointeam %d 1", TEAM_SPECTATOR));
 
 	MakeTeamButtons();
 }
@@ -157,6 +131,8 @@ void CTeamMenu::PerformLayout()
 			button->SetBounds(pos[j][0], pos[j][1] + 100, s, s);
 		}
 	}
+
+	m_pSpectateButton->SetBounds(GetWide() / 2 - 100 / 2, 0, 100, 50);
 }
 
 void CTeamMenu::SetData(KeyValues *data)
@@ -184,7 +160,7 @@ void CTeamMenu::ApplySchemeSettings(IScheme *pScheme)
 void CTeamMenu::AutoAssign()
 {
 	engine->ClientCmd("jointeam 0");
-	OnClose();
+	//OnClose();
 }
 
 void CTeamMenu::Reset()
@@ -245,7 +221,7 @@ void CTeamMenu::Update()
 	if (!gr)
 		return;
 
-	bool posTaken[2][11];
+	bool posTaken[2][11] = {};
 
 	// walk all the players and make sure they're in the scoreboard
 	for ( int i = 1; i <= gpGlobals->maxClients; ++i )
@@ -253,7 +229,7 @@ void CTeamMenu::Update()
 		if (gr->IsConnected( i ) )
 		{
 			int team = gr->GetTeam(i);
-			int pos = gr->GetPosition(i);
+			int pos = gr->GetTeamPosition(i);
 			if ((team == TEAM_A || team == TEAM_B) && pos >= 1 && pos <= 11)
 			{
 				CBitmapButton *button = m_pPosButtons[team - 2][11 - pos];
@@ -296,7 +272,7 @@ void CTeamMenu::OnCommand( char const *cmd )
 		engine->ClientCmd(cmd);
 	}
 
-	Close();
+	//Close();
 
 	BaseClass::OnCommand(cmd);
 }
@@ -356,8 +332,9 @@ void CTeamMenu::OnKeyCodePressed(KeyCode code)
 	}
 	else if ( m_iScoreBoardKey != BUTTON_CODE_INVALID && m_iScoreBoardKey == code )
 	{
-		gViewPortInterface->ShowPanel( PANEL_SCOREBOARD, true );
-		gViewPortInterface->PostMessageToPanel( PANEL_SCOREBOARD, new KeyValues( "PollHideCode", "code", code ) );
+		//gViewPortInterface->ShowPanel( PANEL_SCOREBOARD, true );
+		//gViewPortInterface->PostMessageToPanel( PANEL_SCOREBOARD, new KeyValues( "PollHideCode", "code", code ) );
+		//Close();
 	}
 	else
 	{

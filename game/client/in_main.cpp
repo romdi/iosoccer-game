@@ -514,7 +514,7 @@ void IN_ScoreDown( const CCommand &args )
 	KeyDown( &in_score, args[1] );
 	if ( gViewPortInterface )
 	{
-		gViewPortInterface->ShowPanel( PANEL_SCOREBOARD, true );
+		gViewPortInterface->ShowPanel( PANEL_TEAM, true );
 	}
 }
 
@@ -523,7 +523,7 @@ void IN_ScoreUp( const CCommand &args )
 	KeyUp( &in_score, args[1] );
 	if ( gViewPortInterface )
 	{
-		gViewPortInterface->ShowPanel( PANEL_SCOREBOARD, false );
+		gViewPortInterface->ShowPanel( PANEL_TEAM, false );
 		GetClientVoiceMgr()->StopSquelchMode();
 	}
 }
