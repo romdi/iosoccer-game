@@ -76,6 +76,8 @@ protected:
 	virtual void	Paint();
 
 	float m_flStamina;
+	Panel *m_pStaminaPanel;
+	Panel *m_pPowershotIndicator;
 };
 
 DECLARE_HUDELEMENT( CHudPowershotBar );
@@ -92,17 +94,42 @@ CHudPowershotBar::CHudPowershotBar( const char *pElementName ) : CHudElement( pE
 
 	SetHiddenBits(HIDEHUD_PLAYERDEAD);
 	//SetHiddenBits( HIDEHUD_HEALTH | HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT );
+
+	m_pStaminaPanel = new Panel(this, "StaminaPanel");
+	m_pPowershotIndicator = new Panel(this, "PowershotIndicator");
 }
+
+#define WIDTH 300
+#define HEIGHT 40
+#define MARGIN 25
+#define PADDING 3
+#define WIDTH_INDICATOR 9
 
 void CHudPowershotBar::ApplySchemeSettings( IScheme *scheme )
 {
 	BaseClass::ApplySchemeSettings( scheme );
 
-	SetPaintBackgroundEnabled( true );
+ 	SetPaintBackgroundType (2); // Rounded corner box
+ 	SetPaintBackgroundEnabled(true);
+	//SetPaintBorderEnabled(true);
+	SetBgColor( Color( 0, 0, 0, 255 ) );
+	SetBounds(ScreenWidth() - WIDTH - MARGIN, MARGIN, WIDTH, HEIGHT);
+	//SetBounds(ScreenWidth() / 2 - SIZE_WIDTH / 2, ScreenHeight() / 2 - SIZE_HEIGHT / 2, SIZE_WIDTH, SIZE_HEIGHT);
+	//SetBounds(ScreenWidth() / 2 - SIZE_WIDTH / 2, ScreenHeight() / 2 - SIZE_HEIGHT / 2, SIZE_WIDTH, SIZE_HEIGHT);
+
+	m_pStaminaPanel->SetPaintBackgroundType (2); // Rounded corner box
+ 	m_pStaminaPanel->SetPaintBackgroundEnabled(true);
+	m_pStaminaPanel->SetBgColor( Color( 0, 255, 0, 255 ) );
+	m_pStaminaPanel->SetBounds(PADDING, PADDING, WIDTH - 2 * PADDING, HEIGHT - 2 * PADDING);
+
+	//m_pPowershotIndicator->SetPaintBackgroundType (0); // Rounded corner box
+ 	m_pPowershotIndicator->SetPaintBackgroundEnabled(true);
+	m_pPowershotIndicator->SetBgColor( Color( 255, 255, 255, 255 ) );
+	m_pPowershotIndicator->SetBounds(WIDTH / 2 - WIDTH_INDICATOR / 2, PADDING, WIDTH_INDICATOR, HEIGHT - 2 * PADDING);
 
     //SetSize( ScreenWidth(), ScreenHeight() );
-	SetSize(75, 200);
-	SetPos(ScreenWidth() - 100, ScreenHeight() - 250);
+	//SetSize(75, 200);
+	//SetPos(ScreenWidth() - 100, ScreenHeight() - 250);
 }
 
 
@@ -184,66 +211,63 @@ void CHudPowershotBar::Paint()
 
 	//IGameResources *gr = GameResources();
 
-	float sprint = m_flStamina / 100.0f;//gr->GetSprint(pPlayer->index) / (SPRINT_TIME * 10);
-	int height = 150;
-	int width = 25;
-	int xOffset = 20;
-	int yOffset = 10;
+	//float sprint = m_flStamina / 100.0f;//gr->GetSprint(pPlayer->index) / (SPRINT_TIME * 10);
+	//int height = 150;
+	//int width = 25;
+	//int xOffset = 20;
+	//int yOffset = 10;
 
-	surface()->DrawSetColor(0, 0, 0, 200);
-	//surface()->DrawFilledRect(xOffset - 1, yOffset - 1, xOffset + width + 1, yOffset + height + 1);
-	surface()->DrawLine(xOffset - 1, yOffset - 1, xOffset - 1, yOffset + height);
-	surface()->DrawLine(xOffset + width, yOffset - 1, xOffset + width, yOffset + height);
-	surface()->DrawSetColor(0, 0, 0, 150);
-	surface()->DrawFilledRect(xOffset, yOffset, xOffset + width, yOffset + height);
-	surface()->DrawSetColor(255 * (1 - sprint), 255 * sprint, 0, 200);
-	int y0 = yOffset + height * (1 - sprint);
-	surface()->DrawFilledRect(xOffset, y0, xOffset + width, y0 + (int)(height * sprint));
+	//surface()->DrawSetColor(0, 0, 0, 200);
+	////surface()->DrawFilledRect(xOffset - 1, yOffset - 1, xOffset + width + 1, yOffset + height + 1);
+	//surface()->DrawLine(xOffset - 1, yOffset - 1, xOffset - 1, yOffset + height);
+	//surface()->DrawLine(xOffset + width, yOffset - 1, xOffset + width, yOffset + height);
+	//surface()->DrawSetColor(0, 0, 0, 150);
+	//surface()->DrawFilledRect(xOffset, yOffset, xOffset + width, yOffset + height);
+	//surface()->DrawSetColor(255 * (1 - sprint), 255 * sprint, 0, 200);
+	//int y0 = yOffset + height * (1 - sprint);
+	//surface()->DrawFilledRect(xOffset, y0, xOffset + width, y0 + (int)(height * sprint));
 
-	surface()->DrawSetColor(0, 0, 0, 255);
+	//surface()->DrawSetColor(0, 0, 0, 255);
 
-	float powershotStrength = cl_powershot_strength.GetInt() / 100.0f;
-	int x0, x1, linepadding;
-	y0 = yOffset + height * (1 - powershotStrength);
-	x0 = xOffset - 10;
-	x1 = x0 + 10 + width + 10;
-	linepadding = 2;
-	surface()->DrawSetColor(255, 255, 255, 255);
-	surface()->DrawFilledRect(x0, y0 - linepadding, x1, y0 + linepadding);
+	//float powershotStrength = cl_powershot_strength.GetInt() / 100.0f;
+	//int x0, x1, linepadding;
+	//y0 = yOffset + height * (1 - powershotStrength);
+	//x0 = xOffset - 10;
+	//x1 = x0 + 10 + width + 10;
+	//linepadding = 2;
+	//surface()->DrawSetColor(255, 255, 255, 255);
+	//surface()->DrawFilledRect(x0, y0 - linepadding, x1, y0 + linepadding);
 
-	//for (int i = 0; i < SEGMENTS + 1; i++)
-	//{
-	//	y0 = yOffset + height / SEGMENTS * i;
-	//	int x0, x1, linepadding;
-	//	float powershotStrength = cl_powershot_strength.GetInt() / 100.0f;
+	//float sprint = m_flStamina / 100.0f;//gr->GetSprint(pPlayer->index) / (SPRINT_TIME * 10);
+	//int height = 50;
+	//int width = 500;
+	//int xOffset = 20;
+	//int yOffset = 10;
 
-	//	if (i == powershotStrength)
-	//	{
-	//		if (sprint >= (powershotStrength / 5.0f - FLT_EPSILON))
-	//			surface()->DrawSetColor(200, 255, 200, 255);
-	//		else
-	//			surface()->DrawSetColor(255, 200, 200, 255);
+	////surface()->DrawSetColor(0, 0, 0, 255);
+	////surface()->DrawOutlinedRect(0, 0, width, height);
 
-	//		x0 = xOffset - 10;
-	//		x1 = x0 + 10 + width + 10;
-	//		linepadding = 2;
-	//		//surface()->DrawSetTextFont(scheme()->GetIScheme(GetScheme())->GetFont("Default"));
-	//		//surface()->DrawSetTextColor(255, 255, 255, 150);
-	//		//surface()->DrawSetTextPos(0, y0 - 8);
-	//		////surface()->DrawSetTextScale(2.0f, 2.0f);
-	//		//surface()->DrawPrintText(L">", wcslen(L">"));
-	//		////surface()->DrawPolyLine
-	//	}
-	//	else
-	//	{
-	//		surface()->DrawSetColor(0, 0, 0, 200);
-	//		x0 = xOffset;
-	//		x1 = x0 + width;
-	//		linepadding = 1;
-	//	}
+	////surface()->DrawSetColor(0, 0, 0, 150);
+	////surface()->DrawFilledRect(0, 0, width, height);
 
-	//	surface()->DrawFilledRect(x0, y0 - linepadding, x1, y0 + linepadding);
-	//}
+	//surface()->DrawSetColor(255 * (1 - sprint), 255 * sprint, 0, 150);
+	//surface()->DrawFilledRect(0, 0, width * sprint, height);
+
+	//surface()->DrawSetColor(0, 0, 0, 255);
+
+	//float powershotStrength = cl_powershot_strength.GetInt() / 100.0f;
+	//int x0 = width * powershotStrength;
+	//surface()->DrawSetColor(255, 255, 255, 255);
+	//surface()->DrawFilledRect(x0 - 4, 0, x0 + 4, height);
+
+	float relStamina = m_flStamina / 100.0f;
+
+	m_pStaminaPanel->SetWide(GetWide() * relStamina - 2 * PADDING);
+	m_pStaminaPanel->SetBgColor(Color(200 * (1 - relStamina), 200 * relStamina, 0, 255));
+
+	int offset = 2 * PADDING + m_pPowershotIndicator->GetWide() / 2 * 2;
+
+	m_pPowershotIndicator->SetPos(offset + cl_powershot_strength.GetInt() / 100.0f * (GetWide() - 2 * offset) - m_pPowershotIndicator->GetWide() / 2, PADDING);
 }
 //#endif // SDK_USE_STAMINA || SDK_USE_SPRINTING
 

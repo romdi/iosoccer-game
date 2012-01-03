@@ -18,20 +18,24 @@
 #define	MAX_OFFS		16
 #define	MAX_ASSIST		10
 
-#define	BALL_NORMAL				 0
-#define	BALL_GOAL				 1
-#define	BALL_CORNER				 2
-#define	BALL_GOALKICK			 3
-#define	BALL_THROWIN			 4
-#define	BALL_FOUL				 5
-#define BALL_KICKOFF			 6
-#define	BALL_PENALTY			 7
-#define	BALL_GOALKICK_PENDING	 8
-#define	BALL_CORNERKICK_PENDING	 9
-#define	BALL_THROWIN_PENDING	 10
-#define	BALL_FOUL_PENDING		 11
-#define	BALL_PENALTY_PENDING	 12
-#define	BALL_KICKOFF_PENDING	 13
+enum ball_state_t
+{
+	BALL_NOSTATE = -1,
+	BALL_NORMAL = 0,
+	BALL_GOAL,
+	BALL_CORNER,
+	BALL_GOALKICK,
+	BALL_THROWIN,
+	BALL_FOUL,
+	BALL_KICKOFF,
+	BALL_PENALTY,
+	BALL_GOALKICK_PENDING,
+	BALL_CORNERKICK_PENDING,
+	BALL_THROWIN_PENDING,
+	BALL_FOUL_PENDING,
+	BALL_PENALTY_PENDING,
+	BALL_KICKOFF_PENDING
+};
 
 #define	PS_OFF					 0
 #define	PS_BESTOFFIVE			 1
@@ -47,6 +51,29 @@
 #define BALL_MAINSTATUS_PENALTY	5
 #define BALL_MAINSTATUS_FINAL_WHISTLE		6
 
+class CBall;
+
+struct CBallStateInfo
+{
+	ball_state_t			m_eBallState;
+	const char				*m_pStateName;
+
+	void (CBall::*pfnEnterState)();	// Init and deinit the state.
+	void (CBall::*pfnLeaveState)();
+	void (CBall::*pfnThink)();	// Do a PreThink() in this state.
+};
+
+struct BallHistory
+{
+	float snapshotTime;
+	Vector pos;
+	QAngle ang;
+	Vector vel;
+	AngularImpulse angImp;
+
+	BallHistory(float snapshotTime, Vector pos, QAngle ang, Vector vel, AngularImpulse angImp) : snapshotTime(snapshotTime), pos(pos), ang(ang), vel(vel), angImp(angImp) {}
+};
+
 //==========================================================
 //	
 //	
@@ -59,7 +86,8 @@ class CBall	: public CPhysicsProp, public IMultiplayerPhysics
 	DECLARE_SERVERCLASS();
 	DECLARE_DATADESC();
 
-	CBall::CBall()	{ m_iPhysicsMode = PHYSICS_MULTIPLAYER_AUTODETECT; }
+	CBall();//	{ m_iPhysicsMode = PHYSICS_MULTIPLAYER_AUTODETECT; }
+	~CBall();
 
 	void			SetPhysicsMode(int iMode)	{ m_iPhysicsMode = iMode; }
 	int				GetPhysicsMode(void) { return m_iPhysicsMode; }
@@ -68,14 +96,17 @@ class CBall	: public CPhysicsProp, public IMultiplayerPhysics
 	int				ObjectCaps(void)	{  return BaseClass::ObjectCaps() |	FCAP_CONTINUOUS_USE; }
 
 private:
-	void			RunCheck();
-	CSDKPlayer		*SelectShooter();
+	CSDKPlayer		*FindEligibleCarrier();
 	bool			SelectAction();
 	bool			DoGroundShot();
 	bool			DoVolleyShot();
 	bool			DoChestDrop();
 	bool			DoHeader();
-	void			SetBallCurve();
+	void			SetBallCurve(bool bReset);
+	float			GetPitchModifier();
+	float			GetPowershotModifier();
+
+	IPhysicsObject	*m_pPhys;
 
 	CSDKPlayer		*m_pPl; // Player who may shoot
 	Vector			m_vPlVel;
@@ -86,41 +117,41 @@ private:
 	Vector			m_vPlUp;
 
 	Vector			m_vPos;
+	Vector			m_vNewPos;
 	Vector			m_vVel;
-	QAngle			m_aAng;
-	AngularImpulse	m_vAngImp;
 	Vector			m_vNewVel;
+	QAngle			m_aAng;
+	QAngle			m_aNewAng;
+	AngularImpulse	m_vAngImp;
 	AngularImpulse	m_vNewAngImp;
 
+	Vector			m_vSpawnPos;
+
 	bool			m_bIsPowershot;
-	bool			m_bSetVel;
-	bool			m_bSetAngImp;
+	
+	CUtlVector<BallHistory>	m_History;
+	bool			m_bDoReplay;
+	int				m_nReplaySnapshotIndex;
 
 public:
+	void			SendMatchEvent(match_event_t matchEvent);
+
+	void			TakeReplaySnapshot();
+	void			StartReplay();
+	void			RestoreReplaySnapshot();
+
 	bool			IsAsleep(void) { return	false; }
 	virtual	void	Spawn(void);
 	void			BallThink( void	);
-	void			Use( CBaseEntity *pActivator, CBaseEntity *pCaller,	USE_TYPE useType, float	value );
 	void			BallTouch( CBaseEntity *pOther );
 	void			VPhysicsCollision( int index, gamevcollisionevent_t	*pEvent	);
-	//void			VPhysicsShadowCollision( int index, gamevcollisionevent_t *pEvent );
+	void			VPhysicsUpdate(IPhysicsObject *pPhysics);
+	bool			CreateVPhysics();
 
-	float			m_NextShoot;
-
-
-//	void ResetPos (	void );
 	void HandleKickOff ( void	);
-//	void Dribble( CBaseEntity *pOther, int pPlayerh	);
 	int	 Shoot ( CBaseEntity *pOther, bool isPowershot=false);
-//	int	 GoalKick (	CBaseEntity	*pOther);
-//	int	 CornerKick	( CBaseEntity *pOther);
 	int	 Pass (	CBaseEntity	*pOther);
-//	int	 PowerShot ( CBaseEntity *pOther);
 	CBaseEntity	*FindTarget	(CBaseEntity *pPlayer);
-	int	GetRelativeBallPos (CBaseEntity	*pOther);
-//	void PlayShootSound	( CBaseEntity *pOther, int hard);
-//	void PlayPassSound ( CBaseEntity *pOther);
-//	void PlayTouchSound	( CBaseEntity *pOther);
 	void ProcessStatus (void);
 	void ShieldBall	(CSDKPlayer	*pPlayer);
 	void UpdateBallShield (void);
@@ -128,21 +159,16 @@ public:
 	CBaseEntity	*FindPlayerForAction (int team,	int	allowkeepers); //who should	take corner	etc
 	CBaseEntity	*FindThrowInEnt	(void);				   //find throwin position marker
 	CSDKPlayer	*FindKeeperForAction (int team);	   //who should	take goal kick
-//	void  FreezeKeepersForPenalty (int team);		   //freeze	and	position human keepers
-//	void  DoubleTouchFoul (CSDKPlayer *player);
 	int	KeepersBall	(void);
-//	int	KeepersBallBot (void);
 	int	KeepersBallHuman (void);
 	int	CheckKeeperCatch (CSDKPlayer *keeper);
 	int	CheckKeeperKick (CSDKPlayer *keeper);
-//	int	CheckHumanKeeperPass (CSDKPlayer *keeper); 
 
 	int	  CheckOffSide (CSDKPlayer *kicker);
 	int	  CheckOffsideReceive (CSDKPlayer* pOther);
 	int	  CheckOffsideReceiver (CSDKPlayer*	pOther,	int	i);
 	int	  PlayerInOwnHalf (CSDKPlayer *pOther);
 	void  ClearOffsideFlags	(void);
-//	void  ClearGlowShells (void);
 	int	  NextOffsideSlot (void);
 	void  RecordOffside	(CSDKPlayer	*offside, CSDKPlayer *kicker, CSDKPlayer *against);
 
@@ -152,10 +178,6 @@ public:
 	Vector			m_OffsideFoulPos[MAX_OFFS];
 	int				m_NumOffsidePlayers;
 
-	float			nextBallSound;
-	float			nextShootSound;
-	float			m_NextPass;
-	float			m_NextTouch;
 	float			m_NextDoubleTouch;
 	int				m_DoubleTouchCount;
 	int				m_HeadTouch;
@@ -187,24 +209,6 @@ public:
 
 	int				m_KickOff;			//which	team should	kick off next
 
-/*
-	void		psInit (void);
-	void EXPORT	psThink	(void);
-	CSDKPlayer *psFindPenTaker (int	team);
-	void		psMovePlayers (int end);
-	void		psProcessStatus	(void);
-	void		psCheckPenaltyKick (CSDKPlayer *kicker);
-	int			m_psMode;
-	int			m_psNextPen;
-	int			m_penaltiesTaken0;
-	int			m_penaltiesTaken1;
-	int			m_Team0PlayerToTakeTeamPos;
-	int			m_Team1PlayerToTakeTeamPos;
-	CSDKPlayer *m_PenaltyTaker;
-	float		m_PenTime;
-	int			m_PenKicked;
-*/
-
 	CSDKPlayer		*m_Assist[MAX_ASSIST];
 	void			AddAssist (CSDKPlayer *pNewTouch);
 	void			AssistDisconnect (CSDKPlayer *discon);
@@ -219,9 +223,6 @@ public:
 	void			UpdatePossession (CSDKPlayer *pPlayer);
 	int				GetTeamPossession (int team);
 
-	void			SendVGUIStatusMessage (const char *title, const char *text, bool bShow, bool bMainStatus=false);
-	void			SendMainStatus(int other=0);
-
 	int				m_TeamGoal;			//team that scored
 	float			m_KickOffTime;
 
@@ -232,9 +233,6 @@ public:
 	void			HandleFoul(void);
 	void			HandlePenalty(void);
 
-	void			RespawnPlayers(void);
-
-	CSDKPlayer		*m_pPowerShotUser;
 	int				m_PowerShotStrength;
 	void			ChargePowerShot();
 
@@ -253,18 +251,48 @@ public:
 
 	float			m_fUseOffsideRule;
 
-	float			m_FreezeBallTime;
-	Vector			m_FreezeBallPos;
-
 	CSDKPlayer*		m_pKeeperParry;
 
 	void			ApplyKickDelayToAll(void);
 
 	void			RemoveFlagFromAll(int flag);
 
-	int				m_KickDelay;
+private:
+	ball_state_t	m_eBallState;
+	ball_state_t	m_eNewState;
+	float			m_flStateEnterTime;
+	CBallStateInfo	*m_pCurStateInfo;
 
-	void			SetPhysics();
+	bool			m_bIgnoreTriggers;
+
+public:
+	CSDKPlayer *FindNearestPlayer(int nTeam = TEAM_INVALID);
+	void SetPos(const Vector &pos);
+	void TriggerGoal(int team);
+	void TriggerGoalline(int team, int side);
+	void TriggerSideline(int side);
+	bool IgnoreTriggers() { return m_bIgnoreTriggers; };
+
+	void PreStateHook();
+	void PostStateHook();
+
+	void State_Transition( ball_state_t newState );
+	void State_DoTransition( ball_state_t newState );
+	void State_Enter(ball_state_t newState);	// Initialize the new state.
+	void State_Leave();										// Cleanup the previous state.
+	void State_Think();										// Update the current state.
+	static CBallStateInfo* State_LookupInfo(ball_state_t state);	// Find the state info for the specified state.
+
+	void State_Enter_NORMAL();
+	void State_Think_NORMAL();
+
+	void State_Enter_KICKOFF();
+	void State_Think_KICKOFF();
+	void State_Leave_KICKOFF();
+
+	void State_Enter_THROWIN();
+	void State_Think_THROWIN();
+	void State_Leave_THROWIN();
 };
 
 #endif

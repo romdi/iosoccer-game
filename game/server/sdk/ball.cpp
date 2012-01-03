@@ -19,7 +19,9 @@
 
 #include "team.h"
 
-static ConVar sv_ball_mass( "sv_ball_mass", "50", FCVAR_ARCHIVE );
+#include "triggers.h"
+
+static ConVar sv_ball_mass( "sv_ball_mass", "1", FCVAR_ARCHIVE );
 static ConVar sv_ball_inertia( "sv_ball_inertia", "1.0", FCVAR_ARCHIVE );
 static ConVar sv_ball_rotinertialimit( "sv_ball_rotinertialimit", "0.05", FCVAR_ARCHIVE );
 static ConVar sv_ball_damping( "sv_ball_damping", "0.3", FCVAR_ARCHIVE );
@@ -30,6 +32,7 @@ static ConVar sv_ball_angdragcoefficient( "sv_ball_angdragcoefficient", "0.47", 
 //static ConVar sv_ball_friction( "sv_ball_friction", "1", FCVAR_ARCHIVE );
 //static ConVar sv_ball_speed( "sv_ball_speed", "1500", FCVAR_ARCHIVE );
 static ConVar sv_ball_spin( "sv_ball_spin", "3000", FCVAR_ARCHIVE );
+static ConVar sv_ball_maxspin( "sv_ball_maxspin", "1000", FCVAR_ARCHIVE );
 static ConVar sv_ball_curve("sv_ball_curve", "250", FCVAR_ARCHIVE);
 static ConVar sv_ball_touchcone( "sv_ball_touchcone", "90", FCVAR_ARCHIVE );
 static ConVar sv_ball_touchradius( "sv_ball_touchradius", "80", FCVAR_ARCHIVE );
@@ -41,6 +44,20 @@ static ConVar sv_ball_radius( "sv_ball_radius", "5.2", FCVAR_ARCHIVE );
 static ConVar sv_ball_normalshot_strength("sv_ball_normalshot_strength", "550", FCVAR_ARCHIVE);
 static ConVar sv_ball_powershot_strength("sv_ball_powershot_strength", "650", FCVAR_ARCHIVE);
 static ConVar sv_ball_keepershot_strength("sv_ball_keepershot_strength", "100", FCVAR_ARCHIVE);
+
+void OnTriggerSolidChange(IConVar *var, const char *pOldValue, float flOldValue)
+{
+	CBaseTrigger *penBox = (CBaseTrigger *)gEntList.FindEntityByClassname(NULL, "trigger_PenaltyBox");
+	if (!penBox)
+		return;
+
+	if (((ConVar *)var)->GetBool())
+		penBox->SetSolid(SOLID_BBOX);
+	else
+		penBox->SetSolid(SOLID_NONE);
+
+}
+static ConVar mp_ball_pushaway("mp_ball_pushaway", "0", FCVAR_REPLICATED|FCVAR_NOTIFY, "Push ball away on touch", &OnTriggerSolidChange);
 
 LINK_ENTITY_TO_CLASS( football,	CBall );
 
@@ -88,313 +105,17 @@ static const float KICK_DELAY  = 2.0f;		//at throwins etc
 #define SPRINT_TIME           6.0f     //IOS sprint amount 5.5
 #define SPRINT_RECHARGE_TIME  12.0f    //IOS time before sprint re-charges
 #define SPRINT_SPEED          90.0f    //IOS sprint increase in speed
-#define MAX_POWERSHOT_STRENGTH 5.0f
+#define MAX_POWERSHOT_STRENGTH 100.0f
 
-void CBall::RunCheck()
+CBall::CBall()
 {
-	VPhysicsGetObject()->GetPosition(&m_vPos, &m_aAng);
-	VPhysicsGetObject()->GetVelocity(&m_vVel, &m_vAngImp);
-
-	m_bSetVel = false;
-	m_bSetAngImp = false;
-
-	m_pPl = SelectShooter();
-
-	if (!m_pPl)
-		return;
-
-	m_vPlPos = m_pPl->GetLocalOrigin();
-	m_vPlVel = m_pPl->GetLocalVelocity();
-	m_aPlAng = m_pPl->EyeAngles();
-	AngleVectors(m_aPlAng, &m_vPlForward, &m_vPlRight, &m_vPlUp);
-
-	m_bIsPowershot = m_pPl->m_nButtons & IN_ALT1;
-
-	if (!SelectAction())
-		return;
-
-	ballStatus = BALL_NORMAL;
-
-	m_pPl->m_flNextShot = gpGlobals->curtime + SHOT_DELAY;
-
-	m_bSetVel = true;
-
-	//if (m_vVel.Length() >= 500)
-	//	m_vNewVel += m_vVel;
+	m_eNewState = BALL_NOSTATE;
+	m_bIgnoreTriggers = false;
 }
 
-CSDKPlayer *CBall::SelectShooter()
+CBall::~CBall()
 {
-	CSDKPlayer *pNearest = NULL;
-	float smallestDist = FLT_MAX;
-
-	for (int i = 1; i <= gpGlobals->maxClients; i++)
-	{
-		CSDKPlayer *pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(i));
-
-		if (!(pPlayer &&
-			pPlayer->GetTeamNumber() != TEAM_SPECTATOR &&
-			pPlayer->IsAlive()))
-			continue;
-
-		if (!((pPlayer->m_nButtons & IN_ATTACK || pPlayer->m_nButtons & IN_ALT1) &&
-			pPlayer->m_flNextShot <= gpGlobals->curtime))
-			continue;
-
-		Vector dir = m_vPos - pPlayer->GetLocalOrigin();
-		float xyDist = dir.Length2D();
-		float zDist = m_vPos.z - (pPlayer->GetLocalOrigin().z + SDKGameRules()->GetViewVectors()->m_vHullMax.z); //pPlayer->GetPlayerMaxs().z);// 
-		float dist = max(xyDist, zDist);
-
-		if (dist > sv_ball_touchradius.GetFloat() || dist >= smallestDist)
-			continue;
-
-		dir.z = 0;
-		dir.NormalizeInPlace();
-		float angle = RAD2DEG(acos(pPlayer->EyeDirection2D().Dot(dir)));
-		if (angle > sv_ball_touchcone.GetFloat())
-			continue;
-
-		smallestDist = dist;
-		pNearest = pPlayer;	
-	}
-
-	return pNearest;
 }
-
-#define BODY_FEET_START		0
-#define BODY_FEET_END		15
-#define BODY_VOLLEY_START	15
-#define BODY_VOLLEY_END		30
-#define BODY_CHEST_START	45
-#define BODY_CHEST_END		55
-#define BODY_HEAD_START		65
-#define BODY_HEAD_END		80
-
-bool CBall::SelectAction()
-{
-	float zDist = (m_vPos - m_vPlPos).z;
-
-	if (zDist >= BODY_FEET_START && zDist < BODY_FEET_END)
-		return DoGroundShot();
-
-	if (zDist >= BODY_VOLLEY_START && zDist < BODY_VOLLEY_END)
-		return DoVolleyShot();
-
-	if (zDist >= BODY_CHEST_START && zDist < BODY_CHEST_END)
-		return DoChestDrop();
-
-	if (zDist >= BODY_HEAD_START && zDist < BODY_HEAD_END)
-		return DoHeader();
-
-	return false;
-}
-
-#define BEST_SHOT_ANGLE 20
-
-bool CBall::DoGroundShot()
-{
-	float powershotPercentage = m_pPl->m_nPowershotStrength / MAX_POWERSHOT_STRENGTH;
-	float shotStrength;
-
-	float modifier = (90 - (abs((clamp(m_aPlAng[PITCH], -75, 75) - BEST_SHOT_ANGLE) * 0.5f + BEST_SHOT_ANGLE))) / 90.0f;
-
-	//has enough sprint for a powershot?
-	if (m_bIsPowershot && m_pPl->m_fSprintLeft >= (SPRINT_TIME * powershotPercentage - 0.001f)) // - 0.1f for floating point comparison craziness
-	{
-		//float modifier = 1 - (abs(m_vPlForward.z) * 0.5f);
-		shotStrength = sv_ball_powershot_strength.GetFloat() + (sv_ball_powershot_strength.GetFloat() * powershotPercentage);
-		m_pPl->m_fSprintLeft = max(0, m_pPl->m_fSprintLeft - SPRINT_TIME * powershotPercentage);                   //reduce sprint energy
-		EmitSound("Ball.kickhard");
-		m_pPl->SetAnimation(PLAYER_KICK);
-		m_pPl->DoAnimationEvent(PLAYERANIMEVENT_KICK);
-
-		//CReliableBroadcastRecipientFilter filter;
-		//UserMessageBegin(filter, "MatchEvent");
-		//	WRITE_BYTE(0);
-		//	WRITE_BYTE(m_pPl->entindex());
-		//MessageEnd();
-
-		//trace_t tr;
-		//UTIL_TraceLine( m_vPlPos + Vector(0, 0, 100), m_vPlPos + Vector(0, 0, 100) + m_vPlForward * 500, MASK_SHOT, m_pPl, COLLISION_GROUP_NONE, &tr );
-		//UTIL_BloodDecalTrace( &tr, BLOOD_COLOR_RED );
-	}
-	else
-	{
-		//float modifier = 1 - (abs((m_vPlForward.z + 0.5f) * 0.5f - 0.5f));
-		shotStrength = sv_ball_normalshot_strength.GetFloat() * modifier;		//do normal kick instead
-		//if (shotStrength < 500)
-		//{
-			EmitSound("Ball.touch");
-		//}
-		//else
-		//{
-		//	EmitSound("Ball.kicknormal");
-		//	m_pPl->SetAnimation(PLAYER_KICK);
-		//	m_pPl->DoAnimationEvent(PLAYERANIMEVENT_KICK);
-		//}
-	}
-
-	QAngle shotAngle = m_aPlAng;
-	shotAngle[PITCH] = min(-10, m_aPlAng[PITCH]);
-
-	Vector shotDir;
-	AngleVectors(shotAngle, &shotDir);
-
-	m_vNewVel = shotDir * shotStrength;
-	SetBallCurve();
-
-	return true;
-}
-
-#define VOLLEY_ANGLE 15
-
-bool CBall::DoVolleyShot()
-{
-	if (!m_bIsPowershot || m_vPlVel.Length2D() <= 10)
-		return false;
-
-	Vector dir = m_vPos - m_vPlPos;
-	dir.z = 0;
-	float angle = RAD2DEG(acos(m_vPlRight.Dot(dir)));
-	if (angle > 90)
-		angle = abs(angle - 180);
-	if (angle > VOLLEY_ANGLE)
-		return false;
-
-	m_vNewVel = m_vPlForward * sv_ball_powershot_strength.GetFloat() * 2;
-
-	EmitSound("Ball.kickhard");
-	m_pPl->SetAnimation(PLAYER_VOLLEY);
-	m_pPl->DoAnimationEvent(PLAYERANIMEVENT_VOLLEY);
-
-	return true;
-}
-
-bool CBall::DoChestDrop()
-{
-	return false;
-}
-
-bool CBall::DoHeader()
-{
-	if (m_bIsPowershot && m_vPlVel.Length2D() >= PLAYER_SPEED + SPRINT_SPEED - 0.001f)
-	{
-		m_vNewVel = m_vPlForward * (sv_ball_powershot_strength.GetFloat() * 1.5f + m_vPlVel.Length());
-
-		EmitSound("Ball.kickhard");
-		m_pPl->SetAnimation (PLAYER_DIVINGHEADER);
-		m_pPl->DoAnimationEvent(PLAYERANIMEVENT_DIVINGHEADER);
-	}
-	else
-	{
-		m_vNewVel = m_vPlForward * (sv_ball_normalshot_strength.GetFloat() + m_vPlVel.Length());
-
-		EmitSound("Ball.kicknormal");
-		m_pPl->SetAnimation (PLAYER_HEADER);
-		m_pPl->DoAnimationEvent(PLAYERANIMEVENT_HEADER);
-	}
-
-	return true;
-}
-
-void CBall::SetBallCurve()
-{
-	Vector m_vRot(0, 0, 0);
-
-	if (m_pPl->m_nButtons & IN_MOVELEFT) 
-	{
-		m_vRot += Vector(0, 0, 1);
-	} 
-	else if (m_pPl->m_nButtons & IN_MOVERIGHT) 
-	{
-		m_vRot += Vector(0, 0, -1);//-v_up;
-	}
-
-	if (m_pPl->m_nButtons & IN_TOPSPIN)
-	{
-		m_vRot += -m_vPlRight;
-	}
-	else if (m_pPl->m_nButtons & IN_BACKSPIN)
-	{
-		m_vRot += m_vPlRight;
-	}
-
-	m_vRot.NormalizeInPlace();
-
-	float spin;
-
-	if (m_vRot.IsZero())
-	{
-		// weak backspin on every shot
-		m_vRot = m_vPlRight;
-		spin = sv_ball_spin.GetFloat() / 3;
-	}
-	else
-	{
-		spin = sv_ball_spin.GetFloat();
-	}
-
-	m_vNewAngImp = WorldToLocalRotation(SetupMatrixAngles(m_aAng), m_vRot, spin);
-
-	m_bSetAngImp = true;
-}
-
-void CBall::BallThink( void	)
-{
-	RunCheck();
-	
-	if (m_bSetVel)
-		m_vVel = m_vNewVel;
-
-	if (m_bSetAngImp)
-		m_vAngImp = m_vNewAngImp;
-	
-	Vector worldAngImp;
-	EntityToWorldSpace(m_vAngImp, &worldAngImp);
-
-	Vector magnusDir = worldAngImp.Cross(m_vVel);
-
-	float length = m_vVel.Length();
-	if (length > 0)
-	{
-		m_vVel += magnusDir * 1e-8 * sv_ball_curve.GetFloat();
-		//m_vVel.NormalizeInPlace();
-		//m_vVel *= length;
-	}
-
-	VPhysicsGetObject()->SetVelocity(&m_vVel, &m_vAngImp);
-
-	if (KeepersBall())
-		return;
-
-	if (ballStatus)
-		ProcessStatus();
-
-	UpdateBallShield();
-
-	m_BallInPenaltyBox  = -1;
-
-	SetNextThink(gpGlobals->curtime + 0.01f);
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 //==========================================================
 //	
@@ -409,38 +130,17 @@ void CBall::Spawn (void)
 	//VPHYSICS from	CombineBall
 	PrecacheModel( ENTITY_MODEL	);
 	SetModel( ENTITY_MODEL );
-	SetSolid( SOLID_VPHYSICS );
-	SetSolidFlags( FSOLID_NOT_STANDABLE	);
-	//UTIL_SetSize( this,	-Vector(5.0f,5.0f,5.0f), Vector(5.0f,5.0f,5.0f)	);
-	UTIL_SetSize( this,	-Vector(3.0f,3.0f,3.0f), Vector(3.0f,3.0f,3.0f)	);
-	objectparams_t params =	g_IOSPhysDefaultObjectParams;
-	params.pGameData = static_cast<void	*>(this);
-	int	nMaterialIndex = physprops->GetSurfaceIndex("ios");
-	IPhysicsObject *pPhysicsObject = physenv->CreateSphereObject( 5.0f,	nMaterialIndex,	GetAbsOrigin(),	GetAbsAngles(),	&params, false );
-	if ( !pPhysicsObject )
-		return;
 
-	VPhysicsSetObject( pPhysicsObject );
-	SetMoveType( MOVETYPE_VPHYSICS );
-	pPhysicsObject->Wake();
+	CreateVPhysics();
 
-	PhysSetGameFlags( pPhysicsObject, FVPHYSICS_NO_PLAYER_PICKUP );
-
-	float fColType = collisionType.GetFloat();
-
-	if (fColType==1.0f)
-		SetCollisionGroup( COLLISION_GROUP_PUSHAWAY );	//ios1.1 server var mp_collisiontype - requires map change
-
-	SetPhysics();
-
-	SetUse(	&CBall::Use	);
-	//SetTouch (&CBall::BallTouch);
 	SetThink (&CBall::BallThink);
-	SetNextThink( gpGlobals->curtime + 0.1f );
+	SetNextThink( gpGlobals->curtime + 0.01f );
 
 	m_nBody = 0; 
 	m_nSkin = g_IOSRand.RandomInt(0,5);
 	m_TeamGoal = 0;
+	m_vSpawnPos = GetLocalOrigin();
+	m_pPhys->SetPosition(GetLocalOrigin(), GetLocalAngles(), true);
 
 	PrecacheScriptSound( "Ball.kicknormal" );
 	PrecacheScriptSound( "Ball.kickhard" );
@@ -449,20 +149,145 @@ void CBall::Spawn (void)
 	PrecacheScriptSound( "Ball.net" );
 	PrecacheScriptSound( "Ball.whistle" );
 	PrecacheScriptSound( "Ball.cheer" );
+
+	State_Transition(BALL_NORMAL);
 }
 
-void CBall::SetPhysics()
-{
-	m_fMass	= VPhysicsGetObject()->GetMass();
+bool CBall::CreateVPhysics()
+{	
+	if (m_pPhys)
+	{
+		VPhysicsDestroyObject();
+		m_pPhys = NULL;
+	}
 
-	VPhysicsGetObject()->SetMass( 0.05f	);
-	VPhysicsGetObject()->EnableGravity(	true );
-	VPhysicsGetObject()->EnableDrag( false );
+	objectparams_t params =	g_IOSPhysDefaultObjectParams;
+	params.pGameData = static_cast<void	*>(this);
+	int	nMaterialIndex = physprops->GetSurfaceIndex("ios");
+	m_pPhys = physenv->CreateSphereObject( 5.0f,	nMaterialIndex,	GetAbsOrigin(),	GetAbsAngles(),	&params, false );
+	if (!m_pPhys)
+		return false;
+
+	VPhysicsSetObject( m_pPhys );
+	
+	SetSolid( SOLID_VPHYSICS );
+	SetSolidFlags( FSOLID_NOT_STANDABLE	);
+	//UTIL_SetSize( this,	-Vector(5.0f,5.0f,5.0f), Vector(5.0f,5.0f,5.0f)	);
+	UTIL_SetSize( this,	-Vector(3.0f,3.0f,3.0f), Vector(3.0f,3.0f,3.0f)	);
+
+	SetMoveType( MOVETYPE_VPHYSICS );
+
+	PhysSetGameFlags(m_pPhys, FVPHYSICS_NO_PLAYER_PICKUP);
+
+	m_pPhys->SetMass(sv_ball_mass.GetFloat());//0.05f	);
+	m_fMass	= m_pPhys->GetMass();
+	m_pPhys->EnableGravity(	true );
+	m_pPhys->EnableDrag( false );
 	float flDamping	= sv_ball_damping.GetFloat(); //0.0f
 	float flAngDamping = sv_ball_rotdamping.GetFloat(); //2.5f
-	VPhysicsGetObject()->SetDamping( &flDamping, &flAngDamping );
+	m_pPhys->SetDamping( &flDamping, &flAngDamping );
 //	VPhysicsGetObject()->SetInertia( Vector( 0.0023225760f,	0.0023225760f, 0.0023225760f ) );
+	SetPhysicsMode(PHYSICS_MULTIPLAYER_SOLID);
+	SetCollisionGroup( COLLISION_GROUP_PUSHAWAY );
 
+	m_pPhys->Wake();
+
+	return true;
+}
+
+CBall *GetBall()
+{
+	return (CBall *)gEntList.FindEntityByClassname(NULL, "football");
+}
+
+static ConVar sv_replay_duration("sv_replay_duration", "10");
+
+void cc_StartReplay(const CCommand &args)
+{
+	GetBall()->StartReplay();
+}
+
+static ConCommand start_replay("start_replay", cc_StartReplay);
+//static ConCommand start_replay("stop_replay", cc_StopReplay);
+
+void CBall::VPhysicsUpdate(IPhysicsObject *pPhysics)
+{
+	if (m_bDoReplay)
+		RestoreReplaySnapshot();
+	else if (sv_replay_duration.GetInt() > 0)
+		TakeReplaySnapshot();
+
+	Vector vel, worldAngImp;
+	AngularImpulse angImp;
+	m_pPhys->GetVelocity(&vel, &angImp);
+	EntityToWorldSpace(angImp, &worldAngImp);
+	Vector magnusDir = worldAngImp.Cross(vel);
+
+	float length = vel.Length();
+	if (length > 0)
+	{
+		vel += magnusDir * 1e-6 * sv_ball_curve.GetFloat() * gpGlobals->frametime;
+		//m_vVel.NormalizeInPlace();
+		//m_vVel *= length;
+	}
+
+	VPhysicsGetObject()->SetVelocity(&vel, NULL);
+
+	BaseClass::VPhysicsUpdate(pPhysics);
+}
+
+void CBall::TakeReplaySnapshot()
+{
+	// remove snapshots which are too old
+	//while (m_History.Count() > 0 && gpGlobals->curtime - m_History.Head().snapTime > 10)
+	//	m_History.Remove(0);
+
+	Vector pos, vel;
+	QAngle ang;
+	AngularImpulse angImp;
+
+	m_pPhys->GetPosition(&pos, &ang);
+	m_pPhys->GetVelocity(&vel, &angImp);
+
+	m_History.AddToTail(BallHistory(gpGlobals->curtime, pos, ang, vel, angImp));
+	
+	if (m_History.Count() > sv_replay_duration.GetInt() * (1.0f / TICK_INTERVAL))
+	{
+		m_History.Remove(0);
+	}
+}
+
+void CBall::StartReplay()
+{
+	/*for (int i = 0; i < m_History.Count(); i++)
+	{
+		if (abs((gpGlobals->curtime - m_History[i].snapTime) - duration) > 0.1f)
+			m_History.Remove(0);
+		else
+			break;
+	}*/
+
+	if (m_History.Count() > 0)
+	{
+		m_nReplaySnapshotIndex = 0;
+		m_bDoReplay = true;
+	}
+}
+
+void CBall::RestoreReplaySnapshot()
+{
+	if (m_History.Count() > 0 && m_nReplaySnapshotIndex < m_History.Count())
+	{
+		BallHistory history = m_History[m_nReplaySnapshotIndex];
+		m_nReplaySnapshotIndex += 1;
+		//m_History.Remove(0);
+		m_pPhys->SetPosition(history.pos, history.ang, false);
+		m_pPhys->SetVelocity(&history.vel, &history.angImp);
+	}
+	else
+	{
+		m_bDoReplay = false;
+	}
 }
 
 //==========================================================
@@ -478,58 +303,6 @@ CBaseEntity	*CreateBall( const Vector &origin )
 	pBall->SetModelName( MAKE_STRING("models/w_fb.mdl" ) );
 	pBall->Spawn();
 	return pBall;
-}
-
-
-//==========================================================
-//	
-//	
-//==========================================================
-void CBall::Use	( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
-{
-	return;
-	int ok = false;
-
-	if (!pActivator	|| !pActivator->IsPlayer() )	
-		return;
-
-	if (useType == USE_SHOOT)
-		ok = Shoot (pActivator);
-
-	if (useType == USE_PASS)
-		ok = Pass (pActivator);
-
-	if (useType == USE_POWERSHOT_KICK)
-		ok = Shoot(pActivator, true);
-
-
-
-
-//	 if	(useType ==	USE_GOALKICK)
-//		ok = GoalKick (pActivator);
-
-//	 if	(useType ==	USE_POWERSHOT)
-//		ok = PowerShot (pActivator);
-
-   /*trap the ball - deaden	vel
-   if (value ==	1.0	&& CVAR_GET_FLOAT("mp_allowtrap")) {
-	  if (((CSDKPlayer*)pActivator)->SprintLeft	> 0.0f)
-	  {
-		 pev->velocity.x = pev->velocity.x * 0.9f;
-		 pev->velocity.y = pev->velocity.y * 0.9f;
-		 ((CSDKPlayer*)pActivator)->SprintLeft -= (4 * gpGlobals->frametime);	//reduce sprint	energy when	using trap
-	  }
-   }*/
-
-   //didn't	actually manage	to kick	so quit
-   if (!ok)
-	  return;
-
-   //psCheckPenaltyKick((CSDKPlayer*)pActivator);
-
-
-   KickedBall((CSDKPlayer*)pActivator);			//do all the things associated with kick/touch of the ball
-
 }
 
 //////////////////////////////////////////////
@@ -569,7 +342,6 @@ void CBall::KickedBall(CSDKPlayer *pPlayer, const bool bKick)
 	{
 		if (bKick)
 		{
-			m_NextPass = gpGlobals->curtime + 0.25f;			//1.0c
 			//m_NextTouch	= gpGlobals->curtime + 0.1f;
 			pPlayer->m_HoldAnimTime = 0.0f;
 			pPlayer->SetAnimation (PLAYER_THROW);
@@ -636,8 +408,6 @@ void CBall::KickedBall(CSDKPlayer *pPlayer, const bool bKick)
 //==========================================================
 void CBall::VPhysicsCollision( int index, gamevcollisionevent_t	*pEvent	)
 {
-	curve = Vector(0.0f, 0.0f, 0.0f);  //loose any curve from a previous shot
-
 	Vector preVelocity = pEvent->preVelocity[index];
 	float flSpeed =	VectorNormalize( preVelocity );
 	int surfaceProps = pEvent->surfaceProps[!index];
@@ -672,7 +442,8 @@ void CBall::VPhysicsCollision( int index, gamevcollisionevent_t	*pEvent	)
 		if (flSpeed > 900.0f)
 			pOther->EmitSound ("Player.Oomph");
 
-		KickedBall((CSDKPlayer*)pOther, false);		//a touch
+		//KickedBall((CSDKPlayer*)pOther, false);		//a touch
+		m_LastTouch = ToSDKPlayer(pOther);
 
 		EmitSound("Ball.touch");
 	}
@@ -680,304 +451,6 @@ void CBall::VPhysicsCollision( int index, gamevcollisionevent_t	*pEvent	)
 	//Warning ("surfaceprops index %d\n", surfaceProps);
 
 	BaseClass::VPhysicsCollision( index, pEvent );
-}
-
-
-//static const float NORMAL_KICK_STRENGTH = 1.0f * 1.0f; //* 1.15f;			//pre 1.0c 1.1f;
-//static const float POWER_KICK_STRENGTH = sv_powershot_strength.GetFloat();// 1.15f * 1.2f;
-//static const float KEEPER_KICK_STRENGTH = 1.4f * 1.0f; //1.3f;
-
-
-
-//void CBall::VPhysicsShadowCollision( int index, gamevcollisionevent_t *pEvent )
-//{
-//	Vector preVelocity = pEvent->preVelocity[index];
-//	float flSpeed =	VectorNormalize( preVelocity );
-//
-//	///////////////////////////////////////////////////////////////////////
-//	// player
-//	//this doesnt seem to get called often enough to be any use!!
-//	IPhysicsObject *pPhysObj = pEvent->pObjects[!index];
-//	CBaseEntity *pOther = static_cast<CBaseEntity *>(pPhysObj->GetGameData());
-//	if (pOther && pOther->IsPlayer())
-//	{
-//		if (flSpeed > 900.0f)
-//			pOther->EmitSound ("Player.Oomph");
-//
-//		KickedBall((CSDKPlayer*)pOther, false);		//a touch
-//
-//		EmitSound("Ball.touch");
-//	}
-//}
-
-//==========================================================
-//	
-//	
-//==========================================================
-
-int	CBall::Shoot (CBaseEntity *pOther, bool isPowershot)
-{
-	float		shotStrength = 0.0f;
-	Vector		vel, avel = Vector (0.0f, 0.0f, 0.0f);
-	float		powershot = sv_ball_normalshot_strength.GetFloat();
-	CSDKPlayer	*pPlayer = ToSDKPlayer(pOther);
-
-	if (m_NextShoot	> gpGlobals->curtime)
-		return false;
-
-	float powershotPercentage = pPlayer->m_nPowershotStrength / MAX_POWERSHOT_STRENGTH;
-
-	//has enough sprint for a powershot?
-	if (isPowershot && pPlayer->m_fSprintLeft >= (SPRINT_TIME * powershotPercentage - 0.001f)) // - 0.1f for floating point comparison craziness
-	{
-		powershot = 0.1f * sv_ball_powershot_strength.GetFloat() + (sv_ball_powershot_strength.GetFloat() * powershotPercentage);
-		pPlayer->m_fSprintLeft = max(0, pPlayer->m_fSprintLeft - SPRINT_TIME * powershotPercentage);                   //reduce sprint energy
-	}
-	else
-	{
-		powershot = sv_ball_normalshot_strength.GetFloat();		//do normal kick instead
-	}
-
-	if (CheckKeeperKick(pPlayer) || (ballStatus == BALL_GOALKICK_PENDING && pPlayer->m_TeamPos == 1) )
-	{
-		powershot = sv_ball_keepershot_strength.GetFloat();				//remove carry and kick hard
-		//do kick anim when keeper - this will do two events if kicking up?
-		pPlayer->SetAnimation (PLAYER_KICK);
-		pPlayer->DoAnimationEvent( PLAYERANIMEVENT_KICK );
-	}
-	else if (CheckKeeperCatch(pPlayer))
-	{
-		//keeper catch
-		return false;
-	}
-	else
-	{
-		//check if keeper kick that may have been a save?
-		if (pPlayer->m_TeamPos == 1 && pOther != m_LastTouch && m_BallInPenaltyBox != -1)
-			pPlayer->m_KeeperSaves++;
-	}
-
-	//work out strength of kick
-	int	ballrel	= GetRelativeBallPos(pOther);
-	if (ballrel	== BALL_NEAR_FEET && ballStatus != BALL_CORNERKICK_PENDING) 
-	{
-		shotStrength = 700.0f;
-		m_PlayerWhoHeaded = NULL;
-	} 
-	else if	(ballrel ==	BALL_NEAR_HEAD && ballStatus !=	BALL_THROWIN_PENDING) 
-	{
-		shotStrength = 450.0f; //ioss 600.0f;
-		UpdateHeadbounce(pPlayer);
-	} 
-	else if (ballStatus ==	BALL_THROWIN_PENDING)
-	{
-		shotStrength = 600;
-		m_PlayerWhoHeaded = NULL;
-	}
-	else if (ballStatus ==	BALL_CORNERKICK_PENDING)
-	{
-		shotStrength = 750;
-		m_PlayerWhoHeaded = NULL;
-	}
-	else 
-	{
-		shotStrength = 0;//300.0f;
-		m_PlayerWhoHeaded = NULL;
-	}
-
-	//fix strength for kick from hands
-	if (powershot==sv_ball_keepershot_strength.GetFloat())
-		shotStrength = 640.0f;
-
-
-	//kick it
-	Vector		v_forward, v_right, v_up;
-	//CSDKPlayer	*pPlayer = ToSDKPlayer( pOther	);
-	bool	bInSlide = ((CSDKPlayer*)pPlayer)->m_PlayerAnim == PLAYER_SLIDE ? 1 : 0;
-
-	AngleVectors(pPlayer->EyeAngles(), &v_forward, &v_right, &v_up );
-
-	//EyeVectors( &forward, NULL, &up );
-
-	QAngle ang = pPlayer->EyeAngles();
-	if ( ang.x > 180.0f )							//normalise angle (up=270, fwd = ~0, ~365)
-		ang.x -= 360.0f;
-	else if ( ang.x < -180.0f )
-		ang.x += 360.0f;
-	if (ang.x < -60.0f)								//clamp vertical kicks (up = -89)
-		ang.x = -60.0f;
-
-	AngleVectors (ang, &vel);
-
-	//*** this is a mess - why have vel and v_forward.z ? ***
-
-	//if powershoot down, flatten out the shot
-	if (powershot == sv_ball_powershot_strength.GetFloat() && vel.z < 0)
-	{
-		v_forward.z = 0.05f;
-		vel.z = 0.05f;
-	}
-
-	if (vel.z < 0.0f)
-	{
-		vel.z = 0.0f;
-		//shotStrength *=	0.65f;	//was 0.5 in 1.0b				//damp kick	when trying	to dribble
-		shotStrength *= vel.Length2D() * 0.75f;		//1.0c relate dribble to angle better
-		if (shotStrength < 300.0f)			//min	//was 100 before 1.0c
-			shotStrength = 300.0f;
-		QAngle angle(-1.0f, 0, 0);
-		//why punch?
-		//pPlayer->SetPunchAngle( angle );
-		//play small kick sound
-		if (shotStrength > 400)				//1.0c
-			EmitSound("Ball.touch");
-	}
-	else
-	{
-		vel.z = v_forward.z * 2.5f;		//make z aim more sensitive 
-		avel.y = g_IOSRand.RandomFloat (-30 * shotStrength, 30 * shotStrength);   //spin if lifted into air
-		avel.z = g_IOSRand.RandomFloat (-15 * shotStrength, 15 * shotStrength);
-		QAngle angle(-5.0f, 0, 0);
-		//why punch?
-		//pPlayer->SetPunchAngle( angle );
-		//play kick sound
-		if (ballStatus != BALL_THROWIN_PENDING)
-		{
-			if (powershot==sv_ball_normalshot_strength.GetFloat())
-				EmitSound("Ball.kicknormal");
-			else
-				EmitSound("Ball.kickhard");
-		}
-
-		if (ballrel	== BALL_NEAR_FEET)
-		{
-			//get height above ground using longwided method!
-			Vector pos;
-			float playerHeight, ballHeight;
-			extern CNavMesh *TheNavMesh;
-			TheNavMesh->GetSimpleGroundHeight(pPlayer->GetAbsOrigin(), &playerHeight);
-			TheNavMesh->GetSimpleGroundHeight(GetAbsOrigin(), &ballHeight);
-			playerHeight = pPlayer->GetAbsOrigin().z - playerHeight;
-			ballHeight = GetAbsOrigin().z - ballHeight;
-
-			//if (!(pPlayer->GetFlags() & FL_ONGROUND) && ballHeight > 9.0f && playerHeight > 6.0f)
-			if (ballHeight > 9.0f && pPlayer->GetLocalVelocity().Length2D() < 50)
-			{
-				shotStrength = 720;
-				vel.z *= 0.5f;
-
-				if (!bInSlide)		//bot keepers dont volley 1.0c
-				{
-					if (!(pPlayer->GetFlags() & FL_FAKECLIENT))
-					{
-						((CSDKPlayer*)pPlayer)->DoAnimationEvent( PLAYERANIMEVENT_VOLLEY );
-						pPlayer->SetAnimation (PLAYER_VOLLEY);
-					}
-					else
-					{
-						((CSDKPlayer*)pPlayer)->DoAnimationEvent( PLAYERANIMEVENT_JUMP );
-						pPlayer->SetAnimation (PLAYER_JUMP);
-					}
-				}
-			}
-			else if (ang.x <= -50.0f)
-			{
-				//check for heel kick
-				Vector dir = GetAbsOrigin() - pPlayer->GetAbsOrigin();
-				dir.z = 0.0f;
-				VectorNormalize(dir);
-				Vector fwd = v_forward;
-				fwd.z = 0.0f;
-				VectorNormalize(fwd);
-				float dot = DotProduct( dir, fwd );
-
-				if (!bInSlide)
-				{
-					//ball must be behind us
-					if ( dot < -0.8f )
-					{
-						((CSDKPlayer*)pPlayer)->DoAnimationEvent( PLAYERANIMEVENT_HEELKICK );
-						pPlayer->SetAnimation (PLAYER_HEELKICK);
-						shotStrength *= 0.9f;
-						powershot=sv_ball_normalshot_strength.GetFloat();
-					}
-					else
-					{
-						pPlayer->SetAnimation (PLAYER_KICK);
-						((CSDKPlayer*)pPlayer)->DoAnimationEvent( PLAYERANIMEVENT_KICK );
-					}
-				}
-			}
-			else
-			{
-				if (!bInSlide)
-				{
-					pPlayer->SetAnimation (PLAYER_KICK);   //kick anim - does this have any effect!?
-					((CSDKPlayer*)pPlayer)->DoAnimationEvent( PLAYERANIMEVENT_KICK );
-
-				}
-			}
-		}
-		else if (ballrel == BALL_NEAR_HEAD)
-		{
-			if (!bInSlide)
-			{
-				//check for diving header
-				if (	(pPlayer->m_nButtons & IN_FORWARD) 
-					&& (pPlayer->GetAbsVelocity().Length2D() > 220)
-					&& (pPlayer->m_TeamPos > 1) 
-					&& (m_BallInPenaltyBox != -1) 
-					&& (powershot==sv_ball_powershot_strength.GetFloat())
-					&& ((CSDKPlayer*)pPlayer)->m_PlayerAnim != PLAYER_SLIDE )
-				{
-					((CSDKPlayer*)pPlayer)->DoAnimationEvent( PLAYERANIMEVENT_DIVINGHEADER );
-					pPlayer->SetAnimation (PLAYER_DIVINGHEADER);
-					((CSDKPlayer*)pPlayer)->m_NextSlideTime = gpGlobals->curtime + 1.5f;
-					shotStrength = 600;
-					vel.z *= 0.1f;
-				}
-
-				//if (m_pKeeperParry == pPlayer)
-				//{
-				//	((CSDKPlayer*)pPlayer)->DoAnimationEvent( PLAYERANIMEVENT_JUMP );
-				//	pPlayer->SetAnimation (PLAYER_JUMP);
-				//}
-				//head anim
-				//if in the air play jumping header anim
-				else if (!(pPlayer->GetFlags() & FL_ONGROUND))
-				{
-					pPlayer->SetAnimation (PLAYER_HEADER);
-					((CSDKPlayer*)pPlayer)->DoAnimationEvent( PLAYERANIMEVENT_HEADER );
-				}
-			}
-		}
-	}
-
-	//reduce strength if sprinting
-	//don't reduce for now to make more predictable for players
-	//if (((CSDKPlayer*)pPlayer)->InSprint())
-	//	powershot *= 0.9f;
-
-	vel.NormalizeInPlace();	//test - added Jan08
-	vel *= shotStrength * powershot /** kickStrength*/;
-
-	VPhysicsGetObject()->SetVelocity(&vel, NULL);								//kick it
-
-
-	//SetBallCurve(pPlayer, vel, avel, v_right, v_up);
-	
-	m_NextShoot	= gpGlobals->curtime + 0.2f;
-
-	//m_NextShoot	= gpGlobals->curtime + 0.1f;
-
-	//if (pPlayer->m_fSprintLeft > 0.0f && powershot == sv_powershot_strength.GetFloat())
-	//{
-	//	pPlayer->m_fSprintLeft = max(0, pPlayer->m_fSprintLeft - 3);                   //reduce sprint energy
-	//}
-
-	//m_pKeeperParry = NULL;
-
-	return true;
 }
 
 //static ConVar sv_ball_spin("sv_ball_spin", "10000", FCVAR_ARCHIVE);
@@ -1057,380 +530,18 @@ CBaseEntity *CBall::FindTarget (CBaseEntity *pPlayer)
 	return pClosest;
 }
 
-//==========================================================
-//
-//	
-//==========================================================
-int CBall::Pass ( CBaseEntity *pOther)
+void CBall::SendMatchEvent(match_event_t matchEvent)
 {
-   Vector      dist;
-   CBaseEntity *pEntity = NULL;
-   float       length  = 0.0f;
-   int         throwout = false;
+	UTIL_LogPrintf( "\"%s<%d><%s><%s>\" triggered \"%d\"\n",
+		m_pPl->GetPlayerName(), m_pPl->GetUserID(),
+		m_pPl->GetNetworkIDString(), m_pPl->GetTeam()->GetName(), matchEvent);
 
-   if (m_NextPass > gpGlobals->curtime)
-      return false;
-
-   if (ballStatus == BALL_THROWIN_PENDING)
-      return false;
-
-   if (ballStatus == BALL_PENALTY_PENDING)
-      return false;
-
-   	bool	bInSlide = ((CSDKPlayer*)pOther)->m_PlayerAnim == PLAYER_SLIDE ? 1 : 0;
-
-   throwout = CheckKeeperKick ((CSDKPlayer*)pOther);   //see if we're holding a ball and should pass now
-
-   pEntity = FindTarget (pOther);
-
-   //is it a teammate etc?
-   if (pEntity && pEntity->IsPlayer() && pEntity != pOther) 
-   {
-		Vector ballVel, ballAvel;
-		VPhysicsGetObject()->GetVelocity( &ballVel, &ballAvel );
-
-		Vector OriginThru;
-		//find point ahead of target player using their current movement direction
-		//float mag = pEntity->pev->velocity.Length2D();
-		float mag = pEntity->GetAbsVelocity().Length2D();
-		Vector unitvel = pEntity->GetAbsVelocity();
-		VectorNormalize(unitvel);
-		unitvel.x *= 1.2; unitvel.y *= 1.2;                   //lookahead more (beta3)
-		OriginThru.x = pEntity->GetAbsOrigin().x + unitvel.x * mag; 
-		OriginThru.y = pEntity->GetAbsOrigin().y + unitvel.y * mag; 
-		OriginThru.z = 0.0f;
-		dist = OriginThru - GetAbsOrigin();
-		dist.z = 0.0f;
-		length = sqrt( dist.x * dist.x + dist.y * dist.y );
-		ballVel.z = 0;     //beta3 damp volley passes - this gets overwritten by the next line?!?!?
-		ballVel = dist;
-		VectorNormalize(ballVel);
-		//use vertical angle to pass in air or on ground
-		//UTIL_MakeVectors ( pOther->pev->v_angle );
-		Vector vForward;
-		AngleVectors (pOther->EyeAngles(), &vForward);
-
-		//if it's a keeper diving then damp the pass
-		//TODOif ( pOther && (((CSDKPlayer*)pOther)->m_TeamPos == 1) && !(((CSDKPlayer*)pOther)->pev->flags & FL_ONGROUND) )
-		//   length = 600;
-
-		//clamp length before pass specific modifiers
-		if (length < 700)
-			length = 700;      //min pass strength  (was 450 before beta4)
-
-		if (length > 900)
-			length = 900;      //max pass strength	(was 850 before 1.0d)
-
-		//pass looking down
-		//if (gpGlobals->v_forward.z < 0.0f) {
-		if (vForward.z < 0.0f) 
-		{
-			//pev->velocity.z = 0.20;
-			ballVel.z = 0.2f;
-			if (GetFlags() & FL_ONGROUND) 
-			{        
-				//length *= 0.95f;                                //beta3 boost ground pass strength
-			} 
-			else 
-			{
-				if (GetRelativeBallPos (pOther)!=BALL_NEAR_FEET && !throwout)     //throw/pass ball out strong
-					length *= 0.45f;                                   //weaker pass if headed
-				//else
-				//   length *= 0.65f;
-			}
-		}
-		else
-		{
-			//pass looking up
-			//ballVel.z += vForward.z * 6.0f;							//pev->velocity.z += gpGlobals->v_forward.z * 6;  //* 3;   //beta2
-			ballVel.z = vForward.z * 2.5f;		//make z aim more sensitive ; 
-			if (GetRelativeBallPos (pOther)!=BALL_NEAR_FEET && !throwout)
-				length *= 0.45f;                                    //weaker pass if headed
-			//else
-			//   length *= 0.65;
-		}
-
-		//if (length < 200)     //beta2
-		//   length = 200;      //min pass strength
-
-		//pev->velocity = pev->velocity * length;
-
-		ballVel.NormalizeInPlace();
-		ballVel = ballVel * length;
-
-		//ioss - damp final mag to stop high shots being too strong
-		//float finalMag = ballVel.Length();
-		//if (finalMag > 1000)
-		//	ballVel *= (1000/finalMag);
-
-
-		//TODOPlayPassSound(pOther);
-		if (pOther->IsPlayer() /*TODO&& !(pOther->pev->iuser4 & 1)*/) //check not slidetackling
-		{
-			//dont change anim for very small touches - like miss-hits etc
-			if (length > 650)
-			{
-				int ballPos = GetRelativeBallPos (pOther);
-				if (ballPos==BALL_NEAR_FEET || throwout)
-				{
-					if (!bInSlide)
-					{
-						//pass when moving
-						if (pOther->GetAbsVelocity().Length2D() > 0)
-							((CSDKPlayer*)pOther)->DoAnimationEvent( PLAYERANIMEVENT_PASS );
-						else
-							((CSDKPlayer*)pOther)->DoAnimationEvent( PLAYERANIMEVENT_PASS_STATIONARY );
-					}
-				}
-				else if (ballPos==BALL_NEAR_HEAD /*TODO&& !(pOther->pev->iuser4 & 1) && !((CSDKPlayer*)pOther)->Tackled*/)   //4.0a check for death by headtouch before playing this anim
-				{
-					//header when moving
-					//TODO:
-					//if (pOther->GetAbsVelocity().Length2D() > 0)
-					//	((CSDKPlayer*)pOther)->SetAnimation (PLAYER_HEADER);    //b4 pass anim
-					//else
-					//	((CSDKPlayer*)pOther)->SetAnimation (PLAYER_HEADER_STATIONARY);    //b4 pass anim
-				}
-			}
-			((CSDKPlayer*)pOther)->m_Passes++;
-
-		}
-		VPhysicsGetObject()->SetVelocity(&ballVel, &ballAvel);								//kick it
-		EmitSound("Ball.kicknormal");
-		m_NextPass = gpGlobals->curtime + 0.4f;		//beta4 0.4f;     //was 0.2f b1-b3a
-		return true;
-	}
-	else
-	{
-		//no-one to pass to, do a regular kick
-		return Shoot(pOther);
-	}
-
-	return false;
-}
-
-
-
-
-
-//static ConVar sv_ball_curve("sv_ball_curve", "1.0", FCVAR_ARCHIVE);
-
-//==========================================================
-//	
-//	
-//==========================================================
-/*
-void CBall::BallThink( void	)
-{
-	RunCheck();
-	//if (m_FreezeBallTime > gpGlobals->curtime)
-	//{
-	//	Vector zero = Vector(0.0f, 0.0f, 0.0f);
-	//	const QAngle zeroAng = QAngle(0.0f, 0.0f, 0.0f);
-	//	VPhysicsGetObject()->SetPosition(m_FreezeBallPos, zeroAng, true);
-	//	VPhysicsGetObject()->SetVelocityInstantaneous( &zero, &zero);
-	//}
-
-	//try to fix bug where ball continues to curve! should get cleared in vphysicscollision
-	//if (GetFlags() & FL_ONGROUND)
-	//	curve.x = curve.y = curve.z = 0.0f;
-
-	//QAngle angles;
-	//VPhysicsGetObject()->GetPosition(NULL, &angles);
-	//AngularImpulse ang = WorldToLocalRotation( SetupMatrixAngles(angles), m_vRot, sv_ball_spin.GetInt() );
-	//VPhysicsGetObject()->SetVelocity(NULL, &ang);
-
-	Vector vel;
-	AngularImpulse angImp;
-	VPhysicsGetObject()->GetVelocity(&vel, &angImp);
-	//Vector rot = LocaltoWorld(
-	Vector curve = vel.Cross(angImp);
-	//QAngle angles;
-	//VectorAngles(angImp, angles);
-	//VectorNormalizeFast(curve);
-	vel += curve / sv_ball_curve.GetFloat();
-//	VPhysicsGetObject()->SetVelocity(&vel, NULL);
-
-	////curve in air
-	//Vector ballVel, ballAvel;
-	//VPhysicsGetObject()->GetVelocity( &ballVel, &ballAvel );
-	////ballVel += curve * 1.0f;
-	//ballVel += curve * 0.1667f;							//6x faster update 1.0c
-	//VPhysicsGetObject()->SetVelocity(&ballVel, NULL);
-
-	//SetNextThink( gpGlobals->curtime + 0.1f );
-	SetNextThink( gpGlobals->curtime + 0.01667f );		//6x faster update 1.0c
-
-	if (KeepersBall())
-		return;
-
-	if (ballStatus)
-		ProcessStatus();
-
-
-	//this didn't seem to move the ball when it was excuted. - it crashes the server when thrown into crowd!
-	//if ball rolls off head put it back on
-	//if (ballStatus == BALL_THROWIN_PENDING && GetAbsOrigin().z < m_FoulPos.z - 10) 
-	//{
-	//	Warning ("resetting\n");
-	//	SetAbsOrigin(m_FoulPos);
-	//	Vector zero = Vector(0.0f,0.0f,0.0f);
-	//	VPhysicsGetObject()->SetVelocityInstantaneous( &zero, &zero);
-	//}
-
-
-	UpdateBallShield();
-
-	m_BallInPenaltyBox  = -1;
-}
-*/
-/*
-void CBall::BallTouch( CBaseEntity *pOther )
-{
-	if (pOther->IsPlayer())
-	{
-		KickedBall((CSDKPlayer*)pOther, false);		//a touch
-
-		//ignore touches unless it's in normal play
-		if (ballStatus == 0)
-		{
-			Vector vel, avel;
-			vel = pOther->GetAbsVelocity() * 0.1f;
-			vel.z = 0.0f;
-			VPhysicsGetObject()->AddVelocity(&vel, &avel);
-		}
-	}
-}*/
-
-
-//==========================================================
-// See if the ball is near the players feet, head
-// or elswehere
-//==========================================================
-int	CBall::GetRelativeBallPos	(CBaseEntity *pOther)
-{
-   //keepers can always	kick
-   if (pOther->GetFlags() &	FL_FAKECLIENT)
-	  return BALL_NEAR_FEET;
-
-   //check ball	pos	to player
-   if (GetAbsOrigin().z < pOther->GetAbsOrigin().z + 30.0f)
-   {
-	  //DevMsg ( "low\n" );
-	  return BALL_NEAR_FEET;
-   } 
-   else if (GetAbsOrigin().z > pOther->GetAbsOrigin().z + 50.0f) 
-   {
-	  //DevMsg ( "high\n" );
-	  return BALL_NEAR_HEAD;
-   }
-   else
-   {
-	  //DevMsg ( "med\n" );
-	  return BALL_ELSEWHERE;
-   }
-}
-
-
-//==========================================================
-//	Sends a VGUIMenu message to everyone.
-// 
-//==========================================================
-void CBall::SendVGUIStatusMessage (const char *title, const char *text, bool bShow, bool bMainStatus)
-{
 	CReliableBroadcastRecipientFilter filter;
-	char name[256] = "status";
-
-	//send big display? (default is the status bar display)
-	if (bMainStatus)
-		strcpy (&name[0], "mainstatus");
-
-	KeyValues *data = new KeyValues("data");
-	data->SetString( "title", title );			// info panel title
-	//data->SetString( "type", "1" );			// show userdata from stringtable entry
-	data->SetString( "msg",	text );				// use this stringtable entry
-	//data->SetString( "cmd", "impulse 101" );	// exec this command if panel closed
-
-	int count = 0;
-	KeyValues *subkey = NULL;
-
-	if ( data )
-	{
-		subkey = data->GetFirstSubKey();
-		while ( subkey )
-		{
-			count++; subkey = subkey->GetNextKey();
-		}
-
-		subkey = data->GetFirstSubKey(); // reset 
-	}
-
-	UserMessageBegin( filter, "VGUIMenu" );
-		WRITE_STRING( name ); // menu name
-		WRITE_BYTE( bShow?1:0 );
-		WRITE_BYTE( count );
-		
-		// write additional data (be carefull not more than 192 bytes!)
-		while ( subkey )
-		{
-			WRITE_STRING( subkey->GetName() );
-			WRITE_STRING( subkey->GetString() );
-			subkey = subkey->GetNextKey();
-		}
+	UserMessageBegin(filter, "MatchEvent");
+		WRITE_BYTE(matchEvent);
+		WRITE_BYTE(m_pPl->entindex());
 	MessageEnd();
 }
-
-
-//==========================================================
-//	Display the big status according to ball status
-// 
-//==========================================================
-void CBall::SendMainStatus(int other)
-{
-	char	title[16] = "MAIN";
-	char	text[256] = "";
-
-	switch (ballStatus)
-	{
-		case BALL_GOAL:
-			strcpy (&text[0], "GOAL!");
-		break;
-		case BALL_CORNER:
-			strcpy (&text[0], "CORNER");
-		break;
-		case BALL_GOALKICK:
-			strcpy (&text[0], "GOAL KICK");
-		break;
-		case BALL_THROWIN:
-			strcpy (&text[0], "THROW IN");
-		break;
-		case BALL_FOUL:
-			//check kind of foul
-			if (other == BALL_MAINSTATUS_YELLOW)
-				strcpy (&text[0], "YELLOW");
-			else if (other == BALL_MAINSTATUS_RED)
-				strcpy (&text[0], "RED");
-			else if (other == BALL_MAINSTATUS_OFFSIDE)
-				strcpy (&text[0], "OFFSIDE");
-			else
-				strcpy (&text[0], "FOUL");
-		break;
-
-		case BALL_PENALTY:
-			strcpy (&text[0], "PENALTY!");
-		break;
-
-		default:
-			if (other == BALL_MAINSTATUS_PLAYON)
-				strcpy (&text[0], "PLAY ON");
-			if (other == BALL_MAINSTATUS_FINAL_WHISTLE)
-				strcpy (&text[0], "FINAL WHISTLE");
-		break;
-	}
-
-	SendVGUIStatusMessage (title, text, true, true);
-}
-
 
 //==========================================================
 //
@@ -1444,7 +555,7 @@ void CBall::ProcessStatus (void)
 	{
 		if (ballStatusTime < gpGlobals->curtime)
 		{
-			SendMainStatus(BALL_MAINSTATUS_PLAYON);
+			SendMatchEvent(MATCH_EVENT_PLAY_ON);
 			ballStatus = 0;
 			if (m_BallShieldPlayer)
 				m_BallShieldPlayer->GiveRedCard();
@@ -1550,7 +661,7 @@ void CBall::HandleGoal(void)
 	}
 
 	ballStatusTime = gpGlobals->curtime + CELEBRATION_TIME;
-	SendMainStatus();
+	SendMatchEvent(MATCH_EVENT_GOAL);
 	ballStatus = BALL_KICKOFF;
 	EmitAmbientSound(entindex(), GetAbsOrigin(), "Ball.whistle");
 
@@ -1572,24 +683,14 @@ void CBall::HandleGoal(void)
 	char	msg[64];
 	if (!ownGoal)
 	{
-		Q_snprintf (msg, sizeof (msg), "%s scored! ", scorer->GetPlayerName());
-		SendVGUIStatusMessage (title, msg, true);
+		SendMatchEvent(MATCH_EVENT_GOAL);
 
 		CheckForAssist(scorer);
-
-		UTIL_LogPrintf( "\"%s<%i><%s><%s>\" triggered \"goal\"\n", 
-					scorer->GetPlayerName(), scorer->GetUserID(),
-					scorer->GetNetworkIDString(), scorer->GetTeam()->GetName() );
-
 	}
 	else
 	{
+		SendMatchEvent(MATCH_EVENT_GOAL);
 		Q_snprintf (msg, sizeof (msg), "%s scored an own goal. ", scorer->GetPlayerName());
-		SendVGUIStatusMessage (title, msg, true);
-
-		UTIL_LogPrintf( "\"%s<%i><%s><%s>\" triggered \"owngoal\"\n", 
-					scorer->GetPlayerName(), scorer->GetUserID(),
-					scorer->GetNetworkIDString(), scorer->GetTeam()->GetName() );
 	}
 
 
@@ -1695,8 +796,7 @@ void CBall::HandleCorner(void)
 	if (pSpot) 
 	{
 		VPhysicsGetObject()->SetPosition(pSpot->GetAbsOrigin(), pSpot->GetAbsAngles(), true);
-		Vector zero = Vector(0.0f,0.0f,0.0f);
-		VPhysicsGetObject()->SetVelocityInstantaneous( &zero, &zero);
+		VPhysicsGetObject()->SetVelocityInstantaneous( &vec3_origin, &vec3_origin);
 	}
 	//move player to corner
 	if (playerToTake && pSpotPlayer) 
@@ -1704,37 +804,14 @@ void CBall::HandleCorner(void)
 		Vector origin = pSpotPlayer->GetAbsOrigin();
 		origin.z = playerToTake->GetAbsOrigin().z;
 		playerToTake->SetAbsOrigin(origin);
-
 		playerToTake->SetAbsAngles (pSpotPlayer->GetAbsAngles());
 		((CSDKPlayer*)playerToTake)->SnapEyeAngles( pSpotPlayer->GetAbsAngles() );
-
 		playerToTake->RemoveFlag(FL_ATCONTROLS);        //incase happened in slide
-		//put up ball shield
 		ShieldBall ((CSDKPlayer*)playerToTake);
-		//m_NextShoot = gpGlobals->curtime + KICK_DELAY;			//cant kick right away
-		((CSDKPlayer*)playerToTake)->m_KickDelay = gpGlobals->curtime + kickDelay.GetFloat();
 		playerToTake->AddFlag(FL_FROZEN);
-
-
 		((CSDKPlayer*)playerToTake)->m_Corners++;
-
-		//start timeout/foul
-		//ballStatus = BALL_CORNERKICK_PENDING;
-		//ballStatusTime = gpGlobals->curtime + BALL_STATUS_TIME;
-
-		char  msg[64];
-		const char	title[16] = "CORNER\n";
-		Q_snprintf (msg, sizeof (msg), "%s to take corner. ", ((CSDKPlayer*)playerToTake)->GetPlayerName());
-		SendVGUIStatusMessage (title, msg, true);
-
-		UTIL_LogPrintf( "\"%s<%i><%s><%s>\" triggered \"corner\"\n", 
-					((CSDKPlayer*)playerToTake)->GetPlayerName(), ((CSDKPlayer*)playerToTake)->GetUserID(),
-					((CSDKPlayer*)playerToTake)->GetNetworkIDString(), ((CSDKPlayer*)playerToTake)->GetTeam()->GetName() );
+		SendMatchEvent(MATCH_EVENT_CORNER);
 	} 
-	//else 
-	//{
-	//	ballStatus = 0;                              //no one to take corner - just finish - (this may retrigger the corner)
-	//}
 
 	ballStatus = BALL_CORNERKICK_PENDING;
 	ballStatusTime = gpGlobals->curtime + BALL_STATUS_TIME;
@@ -1793,14 +870,7 @@ void CBall::HandleGoalkick(void)
 
 		playerToTake->m_GoalKicks++;
 
-		char  msg[64];
-		const char	title[16] = "GOALKICK\n";
-		Q_snprintf (msg, sizeof (msg), "%s to take goal kick. ", playerToTake->GetPlayerName());
-		SendVGUIStatusMessage (title, msg, true);
-
-		UTIL_LogPrintf( "\"%s<%i><%s><%s>\" triggered \"goalkick\"\n", 
-					playerToTake->GetPlayerName(), playerToTake->GetUserID(),
-					playerToTake->GetNetworkIDString(), playerToTake->GetTeam()->GetName() );
+		SendMatchEvent(MATCH_EVENT_GOALKICK);
 	} 
 	//else 
 	//{
@@ -1861,21 +931,7 @@ void CBall::HandleThrowin(void)
 		VPhysicsGetObject()->SetPosition(ballOrigin, pThrowIn->GetAbsAngles(), true);
 		Vector zero = Vector(0.0f,0.0f,0.0f);
 		VPhysicsGetObject()->SetVelocityInstantaneous( &zero, &zero);
-
-		////tells ballthink to try and keep the ball at this pos. stops it rolling?
-		//m_FreezeBallTime = gpGlobals->curtime + 0.1f;
-		//m_FreezeBallPos = ballOrigin;
-
-		//m_FoulPos = ballOrigin;      //save the ball's throwin pos on players head
-
-		//put up ball shield
 		ShieldBall (playerToTake);
-		//m_NextShoot = gpGlobals->curtime + KICK_DELAY;			//cant kick right away
-
-		//this breaks player?!
-		//((CSDKPlayer*)playerToTake)->m_KickDelay = gpGlobals->curtime + KICK_DELAY;
-		//playerToTake->AddFlag(FL_FROZEN);
-
 		(playerToTake)->m_ThrowIns++;
 
 		//start timeout/foul
@@ -1883,14 +939,7 @@ void CBall::HandleThrowin(void)
 		ballStatusTime = gpGlobals->curtime + BALL_STATUS_TIME;
 		EmitAmbientSound(entindex(), GetAbsOrigin(), "Ball.whistle");
 
-		char  msg[64];
-		const char	title[16] = "THROWIN\n";
-		Q_snprintf (msg, sizeof (msg), "%s to take throw in. ", playerToTake->GetPlayerName());
-		SendVGUIStatusMessage (title, msg, true);
-
-		UTIL_LogPrintf( "\"%s<%i><%s><%s>\" triggered \"throwin\"\n", 
-					(playerToTake)->GetPlayerName(), (playerToTake)->GetUserID(),
-					(playerToTake)->GetNetworkIDString(), (playerToTake)->GetTeam()->GetName() );
+		SendMatchEvent(MATCH_EVENT_THROWIN);
 	} 
 	else 
 	{
@@ -1959,28 +1008,17 @@ void CBall::HandleFoul(void)
 		Vector zero = Vector(0.0f,0.0f,0.0f);
 		VPhysicsGetObject()->SetVelocityInstantaneous( &zero, &zero);
 
-		//tells ballthink to try and keep the ball at this pos. stops it rolling?
-		m_FreezeBallTime = gpGlobals->curtime + 0.1f;
-		m_FreezeBallPos = m_FoulPos;
-
 		//put up ball shield
 		ShieldBall ((CSDKPlayer*)playerToTake);
 		//m_NextShoot = gpGlobals->curtime + KICK_DELAY;			//cant kick right away
-		((CSDKPlayer*)playerToTake)->m_KickDelay = gpGlobals->curtime + kickDelay.GetFloat();
+		//((CSDKPlayer*)playerToTake)->m_KickDelay = gpGlobals->curtime + kickDelay.GetFloat();
 		playerToTake->AddFlag(FL_FROZEN);
 
 		//start timeout/foul
 		ballStatus = BALL_FOUL_PENDING;
 		ballStatusTime = gpGlobals->curtime + BALL_STATUS_TIME;
-
-		char  msg[64];
-		const char	title[16] = "FOUL\n";
-		Q_snprintf (msg, sizeof (msg), "%s to take free kick. ", ((CSDKPlayer*)playerToTake)->GetPlayerName());
-		SendVGUIStatusMessage (title, msg, true);
-
-		UTIL_LogPrintf( "\"%s<%i><%s><%s>\" triggered \"freekick\"\n", 
-					((CSDKPlayer*)playerToTake)->GetPlayerName(), ((CSDKPlayer*)playerToTake)->GetUserID(),
-					((CSDKPlayer*)playerToTake)->GetNetworkIDString(), ((CSDKPlayer*)playerToTake)->GetTeam()->GetName() );
+		
+		SendMatchEvent(MATCH_EVENT_FREEKICK);
 	} 
 	else 
 	{
@@ -2059,14 +1097,10 @@ void CBall::HandlePenalty(void)
 		Vector zero = Vector(0.0f,0.0f,0.0f);
 		VPhysicsGetObject()->SetVelocityInstantaneous( &zero, &zero);
 
-		//tells ballthink to try and keep the ball at this pos. stops it rolling?
-		m_FreezeBallTime = gpGlobals->curtime + 0.1f;
-		m_FreezeBallPos = pPenaltySpot->GetAbsOrigin();
-
 		//put up ball shield
 		ShieldBall ((CSDKPlayer*)playerToTake);
 		//m_NextShoot = gpGlobals->curtime + KICK_DELAY;			//cant kick right away
-		((CSDKPlayer*)playerToTake)->m_KickDelay = gpGlobals->curtime + kickDelay.GetFloat();
+		//((CSDKPlayer*)playerToTake)->m_KickDelay = gpGlobals->curtime + kickDelay.GetFloat();
 		playerToTake->AddFlag(FL_FROZEN);
 
 		//start timeout/foul
@@ -2074,14 +1108,7 @@ void CBall::HandlePenalty(void)
 		ballStatusTime = gpGlobals->curtime + BALL_STATUS_TIME;
 		EmitAmbientSound(entindex(), GetAbsOrigin(), "Ball.whistle");
 
-		char  msg[64];
-		const char	title[16] = "PENALTY\n";
-		Q_snprintf (msg, sizeof (msg), "%s to take penalty. ", ((CSDKPlayer*)playerToTake)->GetPlayerName());
-		SendVGUIStatusMessage (title, msg, true);
-
-		UTIL_LogPrintf( "\"%s<%i><%s><%s>\" triggered \"penalty\"\n", 
-					((CSDKPlayer*)playerToTake)->GetPlayerName(), ((CSDKPlayer*)playerToTake)->GetUserID(),
-					((CSDKPlayer*)playerToTake)->GetNetworkIDString(), ((CSDKPlayer*)playerToTake)->GetTeam()->GetName() );
+		SendMatchEvent(MATCH_EVENT_PENALTY);
 
 		((CSDKPlayer*)playerToTake)->m_Penalties++;
 	} 
@@ -2106,37 +1133,24 @@ void CBall::HandleKickOff ( void )
 	if (ballStatusTime > gpGlobals->curtime)
 		return;
 
-   //if in penaly shootout mode don't do a kickoff after a goal.
-   //if (m_psMode != 0)
-   //{
-   //   ballStatus = 0;
-   //   return;
-   //}
-	((CSDKGameRules*)g_pGameRules)->AutobalanceTeams();
+	//((CSDKGameRules*)g_pGameRules)->AutobalanceTeams();
 
+	for (int i = 1; i <= gpGlobals->maxClients; i++) 
+	{
+		CSDKPlayer *pPlayer = (CSDKPlayer *)UTIL_PlayerByIndex(i);
 
-	//reset everyone, then choose kicker
-	RespawnPlayers();
+		if (!(pPlayer && pPlayer->GetTeamNumber() >= TEAM_A))
+			continue;
+
+		SDKGameRules()->GetPlayerSpawnSpot(pPlayer);
+		pPlayer->RemoveFlag(FL_ATCONTROLS);
+	}
 
 	//remove celeb anims
 	DisableCeleb();
 
-	CBaseEntity *pSpot=NULL, *pSpotBall=NULL;
-	//get keeper position info because it gets lost in teamplay spawning etc.
-	pSpotBall = gEntList.FindEntityByClassname( NULL, "info_ball_start" );
-
-	//this is always 0,0,0 position?!
-	if (pSpotBall) 
-	{
-		SetAbsOrigin(pSpotBall->GetAbsOrigin());
-		VPhysicsGetObject()->SetPosition(pSpotBall->GetLocalOrigin(), pSpotBall->GetAbsAngles(), false);
-		Vector zero = Vector(0.0f,0.0f,0.0f);
-		VPhysicsGetObject()->SetVelocityInstantaneous( &zero, &zero);
-
-		//tells ballthink to try and keep the ball at this pos. stops it rolling?
-		m_FreezeBallTime = gpGlobals->curtime + 0.1f;
-		m_FreezeBallPos = pSpotBall->GetAbsOrigin();
-	}
+	VPhysicsGetObject()->SetVelocityInstantaneous( &vec3_origin, &vec3_origin);
+	VPhysicsGetObject()->SetPosition(m_vSpawnPos, vec3_angle, true);
 
 	//find a valid player
 	CBaseEntity *playerToTake = NULL;
@@ -2148,7 +1162,7 @@ void CBall::HandleKickOff ( void )
 	playerToTake = FindPlayerForAction (m_KickOff,0);
 
 	//find 'shooting' direction so we know which way to kick
-	pSpot = NULL;
+	CBaseEntity *pSpot = NULL;
 	if (m_KickOff==TEAM_A) 
 	{
 		pSpot = gEntList.FindEntityByClassname( NULL, "info_team2_player1" );	//shoot to opposite goalie direction
@@ -2162,12 +1176,12 @@ void CBall::HandleKickOff ( void )
 
 	if (playerToTake && pSpot) 
 	{
-		Vector dir = (pSpot->GetAbsOrigin() - pSpotBall->GetAbsOrigin());	//vector stright up the pitch
+		Vector dir = (pSpot->GetAbsOrigin() - m_vSpawnPos);	//vector stright up the pitch
 		VectorNormalize(dir);
 		QAngle goal_angle;
 		VectorAngles(dir, goal_angle);
 		Vector pos = playerToTake->GetAbsOrigin();
-		Vector origin = pSpotBall->GetAbsOrigin();
+		Vector origin = m_vSpawnPos;
 		origin.z = pos.z;
 		if (dir.x > 0)
 			origin.x -= 70;								//move to side of ball
@@ -2178,31 +1192,21 @@ void CBall::HandleKickOff ( void )
 
 		//face the ball
 		QAngle spawntoball_angle, playerAngle;
-		VectorAngles( pSpotBall->GetAbsOrigin() - playerToTake->GetAbsOrigin(),  spawntoball_angle);
+		VectorAngles( m_vSpawnPos - playerToTake->GetAbsOrigin(),  spawntoball_angle);
 		playerAngle = playerToTake->GetAbsAngles();
 		playerAngle.y = spawntoball_angle.y;
 		playerToTake->SetAbsAngles (playerAngle);
 		((CSDKPlayer*)playerToTake)->SnapEyeAngles( playerAngle );
 
 		playerToTake->RemoveFlag(FL_ATCONTROLS);        //incase happened in slide
-		//put up ball shield
 		ShieldBall ((CSDKPlayer*)playerToTake);
-		//m_NextShoot = gpGlobals->curtime + KICK_DELAY;			//cant kick right away
-		((CSDKPlayer*)playerToTake)->m_KickDelay = gpGlobals->curtime + kickDelay.GetFloat();
-		playerToTake->AddFlag(FL_FROZEN);
+		//playerToTake->AddFlag(FL_FROZEN);
 
 		//start timeout/foul
 		ballStatus = BALL_KICKOFF_PENDING;
 		ballStatusTime = gpGlobals->curtime + BALL_STATUS_TIME;     //time to take the kick off
 
-		char  msg[64];
-		const char	title[16] = "KICK OFF\n";
-		Q_snprintf (msg, sizeof (msg), "%s to kick off. ", ((CSDKPlayer*)playerToTake)->GetPlayerName());
-		SendVGUIStatusMessage (title, msg, true);
-
-		UTIL_LogPrintf( "\"%s<%i><%s><%s>\" triggered \"kickoff\"\n", 
-					((CSDKPlayer*)playerToTake)->GetPlayerName(), ((CSDKPlayer*)playerToTake)->GetUserID(),
-					((CSDKPlayer*)playerToTake)->GetNetworkIDString(), ((CSDKPlayer*)playerToTake)->GetTeam()->GetName() );
+		SendMatchEvent(MATCH_EVENT_KICKOFF);
 	} 
 	else 
 	{
@@ -2211,26 +1215,14 @@ void CBall::HandleKickOff ( void )
 
 	EmitAmbientSound(entindex(), GetAbsOrigin(), "Ball.whistle");
 
-
-	//allow for change after each goal
-	//gUseOffsideRule = CVAR_GET_FLOAT("mp_offside");
 	m_fUseOffsideRule = offside.GetFloat();
-
-	//gBallFriction = CVAR_GET_FLOAT("mp_ballfriction"); //0-10
-	//gBallFriction = min(gBallFriction, 10);
-	//gBallFriction = max(0,gBallFriction);
-
-	//pev->movetype = MOVETYPE_BOUNCE;
-	//pev->effects &= ~EF_NODRAW;
 
 	if (m_KeeperCarrying)
 		m_KeeperCarrying->DoAnimationEvent( PLAYERANIMEVENT_CARRY_END );
-		//m_KeeperCarrying->RemoveFlag (FL_CARRY);
+
 	m_KeeperCarrying = NULL;
 
 	ClrAssists();
-
-	//gGoalScorer = NULL;
 }
 
 
@@ -2333,27 +1325,6 @@ CBaseEntity *CBall::FindThrowInEnt (void)
 	return pClosest;
 }
 
-///////////////////////////////////////////////////
-// respawn all playing players
-//
-void CBall::RespawnPlayers (void)
-{
-	//for ( int i = 0; i < MAX_PLAYERS; i++ )
-	//{
-	for (int i = 1; i <= gpGlobals->maxClients; i++) 
-	{
-		CSDKPlayer *pPlayer = (CSDKPlayer *)UTIL_PlayerByIndex (i);
-
-		if ( !pPlayer )
-			continue;
-
-		if (pPlayer->GetTeamNumber() < TEAM_A)
-			continue;
-
-		g_pGameRules->GetPlayerSpawnSpot( pPlayer );
-	}
-}
-
 
 
 ///////////////////////////////////////////////////
@@ -2361,6 +1332,8 @@ void CBall::RespawnPlayers (void)
 //
 void CBall::ShieldBall (CSDKPlayer *pPlayer)
 {
+	return;
+
    m_BallShield = true;
    m_BallShieldPlayer = pPlayer;		//only this player allowed inside Shielded area
    UpdateBallShield();					//1.0c
@@ -2527,115 +1500,7 @@ void CBall::UpdateBallShield (void)
 			}
 		}    
 	}
-
-
-
-/*
-		//do special ball sheild at kick off to keep everyone in the correct half
-		if (ballStatus == BALL_KICKOFF_PENDING) 
-		{
-			if (!PlayerInOwnHalf (pPlayer)) 
-			{
-				pSpot=NULL;
-				if (pPlayer->GetTeamNumber()==TEAM_A) 
-				{
-					pSpot = gEntList.FindEntityByClassname( NULL, "info_team1_player1" );
-				} 
-				else 
-				{
-					pSpot = gEntList.FindEntityByClassname( NULL, "info_team2_player1" );
-				}
-				if (pSpot) 
-				{
-					Vector vec = (pSpot->GetAbsOrigin() - pPlayer->GetAbsOrigin());
-					VectorNormalize(vec);
-					vec *= 32.0f;
-					vec.z = 0;
-					pPlayer->SetAbsOrigin(pPlayer->GetAbsOrigin() + vec);
-					pPlayer->SetAbsVelocity(Vector(0.0f, 0.0f, 0.0f));
-				}
-			}
-		}
-
-
-
-		float   shieldDist = SHIELD_NORMAL;  //10yards = 10 * 3ft * 12inches
-
-		if (ballStatus==BALL_PENALTY_PENDING)
-			shieldDist = SHIELD_LARGE;       //15ft during penalty to stop people staying in the goal mouth
-
-		if (m_KeeperCarrying)
-			shieldDist = SHIELD_SMALL;
-
-		//is this player near the ball
-		if ( (pPlayer->GetAbsOrigin() - GetAbsOrigin()).Length2D() < shieldDist) 
-		{
-			//teleport the player a little way towards the centre of the pitch
-			//(or towards their own goalie if its a kick off)
-			//IOS - or vector from ball to player so they go straight back?
-			pSpot=NULL;
-			Vector vec;
-			vec = pPlayer->GetAbsOrigin() - GetAbsOrigin();		//IOSS
-			VectorNormalize(vec);
-			vec *= 16.0f;
-			vec.z = 0; //clr the vertical component
-			//keep teleporting on this vector until out side 10 yards
-			while ((pPlayer->GetAbsOrigin() - GetAbsOrigin()).Length2D() < shieldDist) 
-			{
-				pPlayer->SetAbsOrigin(pPlayer->GetAbsOrigin() + vec);
-				pPlayer->SetAbsVelocity(Vector(0.0f, 0.0f, 0.0f));
-			}
-
-			//TODOpPlayer->pev->flags &= ~FL_ONTRAIN;       //let them move if we bounced them
-
-		} //end shield check
-
-
-		//check players if outside double the shield dist
-		if ( (pPlayer->GetAbsOrigin() - GetAbsOrigin()).Length2D() < 2*shieldDist) 
-		{
-			pSpot=NULL;
-			//pSpot = gEntList.FindEntityByClassname( pSpot, "info_ball_start" );
-	            
-			//Vector vec = (pSpot->GetAbsOrigin() - pPlayer->GetAbsOrigin());
-			Vector vec = pPlayer->GetAbsOrigin() - GetAbsOrigin();		//IOSS
-			VectorNormalize(vec);
-			vec *= 16.0f;
-			vec.z = 0; //clr the vertical component
-
-			int clear = false;
-			while (!clear)
-			{
-				//check if this position has another player already there?
-				CBaseEntity *ent = NULL;
-				clear = true;
-				while ( (ent = gEntList.FindEntityInSphere( ent, pPlayer->GetAbsOrigin(), 128 )) != NULL )  //was 96 in v1.0, 128 in v2.0
-				{
-					//teleport the player some more
-					if ( ent->IsPlayer() && ent != pPlayer) //TODO&& !(((CSDKPlayer*)ent)->m_afPhysicsFlags & PFLAG_OBSERVER)) 
-					{
-						while ((pPlayer->GetAbsOrigin() - ent->GetAbsOrigin()).Length2D() < 48) 
-						{
-							pPlayer->SetAbsOrigin(pPlayer->GetAbsOrigin() + vec);
-							pPlayer->SetAbsVelocity(Vector(0.0f, 0.0f, 0.0f));
-							clear = false;
-						}
-					}
-				}
-			}
-		}    
-	}
-	*/
 }
-
-
-
-
-
-
-
-//////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 
 void CBall::AddAssist (CSDKPlayer *pNewTouch)
@@ -2715,23 +1580,14 @@ void CBall::CheckForAssist (CSDKPlayer *scorer)
    {
 		//update assist score
 		assist1->m_Assists++;
-		Q_snprintf (msg, sizeof (msg), "Assist by %s ", assist1->GetPlayerName());
-		SendVGUIStatusMessage ("", msg, true);
-		UTIL_LogPrintf( "\"%s<%i><%s><%s>\" triggered \"assist\"\n", 
-					assist1->GetPlayerName(), assist1->GetUserID(),
-					assist1->GetNetworkIDString(), assist1->GetTeam()->GetName() );
-
+		SendMatchEvent(MATCH_EVENT_ASSIST);
    }
 
    if (assist2)
    {
 		//update assist score
 		assist2->m_Assists++;
-		Q_snprintf (msg, sizeof (msg), "and %s ", assist2->GetPlayerName());
-		SendVGUIStatusMessage ("", msg, true);
-		UTIL_LogPrintf( "\"%s<%i><%s><%s>\" triggered \"assist\"\n", 
-					assist2->GetPlayerName(), assist2->GetUserID(),
-					assist2->GetNetworkIDString(), assist2->GetTeam()->GetName() );
+		SendMatchEvent(MATCH_EVENT_ASSIST);
    }
 
    ClrAssists();
@@ -3156,15 +2012,7 @@ int CBall::CheckOffsideReceiver (CSDKPlayer* pOther, int i)
 
 		ballStatusTime = gpGlobals->curtime + 3.0f;
 
-		SendMainStatus(BALL_MAINSTATUS_OFFSIDE);
-
-		char  msg[64];
-		const char	title[16] = "OFFSIDE\n";
-		Q_snprintf (msg, sizeof (msg), "%s was offside. ", ((CSDKPlayer*)pOther)->GetPlayerName());
-		SendVGUIStatusMessage (title, msg, true);
-		UTIL_LogPrintf( "\"%s<%i><%s><%s>\" triggered \"offside\"\n", 
-					((CSDKPlayer*)pOther)->GetPlayerName(), ((CSDKPlayer*)pOther)->GetUserID(),
-					((CSDKPlayer*)pOther)->GetNetworkIDString(), ((CSDKPlayer*)pOther)->GetTeam()->GetName() );
+		SendMatchEvent(MATCH_EVENT_OFFSIDE);
 		return true;
 	}
 
@@ -3336,17 +2184,17 @@ void CBall::DoubleTouchFoul (CSDKPlayer *player)
 	}
 #endif
 
-   //dont bother with doubletouch fouls during penalty shootout (4.0)
-   //if (m_psMode != PS_OFF && m_psMode != PS_DONE)
-   //{
-   //   playerWhoTook = NULL;
-   //   m_DoubleTouchCount = 0;
-   //   return;
-   //}
-      
-   //check cvar
-  	//if (!(svDoubleTouch = (int)CVAR_GET_FLOAT("mp_doubletouch")))
-   //   return;
+	//dont bother with doubletouch fouls during penalty shootout (4.0)
+	//if (m_psMode != PS_OFF && m_psMode != PS_DONE)
+	//{
+	//   playerWhoTook = NULL;
+	//   m_DoubleTouchCount = 0;
+	//   return;
+	//}
+
+	//check cvar
+	//if (!(svDoubleTouch = (int)CVAR_GET_FLOAT("mp_doubletouch")))
+	//   return;
 	svDoubleTouch = 1;
 
 	m_DoubleTouchCount++;
@@ -3357,33 +2205,24 @@ void CBall::DoubleTouchFoul (CSDKPlayer *player)
 	m_Foulee = NULL;
 	EmitAmbientSound(entindex(), GetAbsOrigin(), "Ball.whistle");
 
-   //get this message in before the 'card' messages
-	char  msg[64];
-	const char	title[16] = "FOUL\n";
-	Q_snprintf (msg, sizeof (msg), "%s double touch fouled. ", player->GetPlayerName());
-	SendVGUIStatusMessage (title, msg, true);
+	SendMatchEvent(MATCH_EVENT_FOUL);
 
-	UTIL_LogPrintf( "\"%s<%i><%s><%s>\" triggered \"doubletouch\"\n", 
-				player->GetPlayerName(), player->GetUserID(),
-				player->GetNetworkIDString(), player->GetTeam()->GetName() );
+	player->m_Fouls++;
 
-
-   player->m_Fouls++;
-   
-   //common to foul/yellow/red
-   ballStatus = BALL_FOUL;
-   if (player->GetTeamNumber() == TEAM_A)
+	//common to foul/yellow/red
+	ballStatus = BALL_FOUL;
+	if (player->GetTeamNumber() == TEAM_A)
 		m_team = TEAM_B;
-   else
+	else
 		m_team = TEAM_A;
 
-   //need to keep current pos so can be placed for foul to be taken
-   m_FoulPos = player->GetAbsOrigin();
-   m_FoulPos.z += 8.0f;
+	//need to keep current pos so can be placed for foul to be taken
+	m_FoulPos = player->GetAbsOrigin();
+	m_FoulPos.z += 8.0f;
 
-   //m_FoulPos.x = player->pev->origin.x;
-   //m_FoulPos.y = player->pev->origin.y;
-   //m_FoulPos.z = pev->origin.z;
+	//m_FoulPos.x = player->pev->origin.x;
+	//m_FoulPos.y = player->pev->origin.y;
+	//m_FoulPos.z = pev->origin.z;
 	ballStatusTime = gpGlobals->curtime + 3.0f;
 	EmitAmbientSound(entindex(), GetAbsOrigin(), "Player.Card");
 
@@ -3489,7 +2328,7 @@ void CBall::ApplyKickDelayToAll(void)
 		if (pPlayer == m_BallShieldPlayer)
 			continue;
 
-		pPlayer->m_NextShoot = gpGlobals->curtime + KICK_DELAY;
+		//pPlayer->m_NextShoot = gpGlobals->curtime + KICK_DELAY;
 	}
 }
 
@@ -3517,3 +2356,546 @@ void CBall::RemoveFlagFromAll(int flag)
 
 
 
+
+CSDKPlayer *CBall::FindNearestPlayer(int nTeam/* = TEAM_INVALID*/)
+{
+	CSDKPlayer *pNearest = NULL;
+	float shortestDist = FLT_MAX;
+
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer *pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(i));
+
+		if (!(pPlayer &&
+			pPlayer->GetTeamNumber() != TEAM_SPECTATOR &&
+			pPlayer->IsAlive()))
+			continue;
+
+		if (nTeam != TEAM_INVALID && pPlayer->GetTeamNumber() != nTeam)
+			continue;
+
+		Vector dir = m_vPos - pPlayer->GetLocalOrigin();
+		float xyDist = dir.Length2D();
+		float zDist = m_vPos.z - (pPlayer->GetLocalOrigin().z + SDKGameRules()->GetViewVectors()->m_vHullMax.z); //pPlayer->GetPlayerMaxs().z);// 
+		float dist = max(xyDist, zDist);
+
+		shortestDist = dist;
+		pNearest = pPlayer;	
+	}
+
+	return pNearest;
+}
+
+void CBall::SetPos(const Vector &pos)
+{
+	//m_pPhys->SetVelocityInstantaneous(&vec3_origin, &vec3_origin);
+	//m_pPhys->SetPosition(pos, NULL, true);
+	m_vNewPos = pos;
+	m_vNewVel = vec3_origin;
+	m_vNewAngImp = vec3_origin;
+}
+
+void CBall::PreStateHook()
+{
+	m_pPhys->GetPosition(&m_vPos, &m_aAng);
+	m_pPhys->GetVelocity(&m_vVel, &m_vAngImp);
+	m_vNewPos = m_vPos;
+	m_aNewAng = m_aAng;
+	m_vNewVel = m_vVel;
+	m_vNewAngImp = m_vAngImp;
+}
+
+void CBall::PostStateHook()
+{
+	if (m_vNewVel == vec3_origin)
+	{
+		m_pPhys->SetPosition(m_vNewPos, m_aNewAng, true);
+		//SetLocalOrigin(m_vNewPos);
+		//m_pPhys->SetVelocity(&m_vNewVel, &m_vNewAngImp);
+		m_pPhys->SetVelocityInstantaneous(&m_vNewVel, &m_vNewAngImp);
+		//SetLocalVelocity(m_vNewVel);
+		//VPhysicsUpdate(m_pPhys);
+	}
+	else
+	{
+		m_pPhys->SetVelocity(&m_vNewVel, &m_vNewAngImp);
+	}
+	m_vPos = m_vNewPos;
+	m_aAng = m_aNewAng;
+	m_vVel = m_vNewVel;
+	m_vAngImp = m_vNewAngImp;
+}
+
+ConVar mp_showballstatetransitions( "mp_showballstatetransitions", "1", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Show ball state transitions." );
+
+void CBall::State_Transition( ball_state_t newState )
+{
+	m_eNewState = newState;
+}
+
+void CBall::State_DoTransition( ball_state_t newState )
+{
+	State_Leave();
+	State_Enter( newState );
+}
+
+void CBall::State_Enter( ball_state_t newState )
+{
+	m_eBallState = newState;
+	m_pCurStateInfo = State_LookupInfo( newState );
+	m_flStateEnterTime = gpGlobals->curtime;
+
+	if ( mp_showballstatetransitions.GetInt() > 0 )
+	{
+		if ( m_pCurStateInfo )
+			Msg( "Ball: entering state '%s'\n", m_pCurStateInfo->m_pStateName );
+		else
+			Msg( "Ball: entering state #%d\n", newState );
+	}
+
+	// Initialize the new state.
+	if ( m_pCurStateInfo && m_pCurStateInfo->pfnEnterState )
+	{
+		(this->*m_pCurStateInfo->pfnEnterState)();
+	}
+}
+
+void CBall::State_Leave()
+{
+	if ( m_pCurStateInfo && m_pCurStateInfo->pfnLeaveState )
+	{
+		(this->*m_pCurStateInfo->pfnLeaveState)();
+	}
+}
+
+void CBall::State_Think()
+{
+	PreStateHook();
+	if (m_eNewState != BALL_NOSTATE)
+	{
+		State_DoTransition(m_eNewState);
+		m_eNewState = BALL_NOSTATE;
+	}
+	if ( m_pCurStateInfo && m_pCurStateInfo->pfnThink )
+	{	
+		(this->*m_pCurStateInfo->pfnThink)();
+	}
+	PostStateHook();
+}
+
+CBallStateInfo* CBall::State_LookupInfo( ball_state_t state )
+{
+	static CBallStateInfo ballStateInfos[] =
+	{
+		{ BALL_NORMAL,	"BALL_NORMAL",	&CBall::State_Enter_NORMAL,		NULL,							&CBall::State_Think_NORMAL },
+		{ BALL_KICKOFF,	"BALL_KICKOFF",	&CBall::State_Enter_KICKOFF,	&CBall::State_Leave_KICKOFF,	&CBall::State_Think_KICKOFF },
+		{ BALL_THROWIN,	"BALL_THROWIN",	&CBall::State_Enter_THROWIN,	&CBall::State_Leave_THROWIN,	&CBall::State_Think_THROWIN },
+	};
+
+	for ( int i=0; i < ARRAYSIZE( ballStateInfos ); i++ )
+	{
+		if ( ballStateInfos[i].m_eBallState == state )
+			return &ballStateInfos[i];
+	}
+
+	return NULL;
+}
+
+void CBall::State_Enter_NORMAL()
+{
+}
+
+void CBall::State_Think_NORMAL()
+{
+	//if (KeepersBall())
+	//	return;
+
+	//if (ballStatus)
+	//	ProcessStatus();
+
+	//UpdateBallShield();
+
+	//m_BallInPenaltyBox  = -1;
+
+	m_pPl = FindEligibleCarrier();
+
+	if (!m_pPl)
+		return;
+
+	m_vPlPos = m_pPl->GetLocalOrigin();
+	m_vPlVel = m_pPl->GetLocalVelocity();
+	m_aPlAng = m_pPl->EyeAngles();
+	AngleVectors(m_aPlAng, &m_vPlForward, &m_vPlRight, &m_vPlUp);
+
+	m_bIsPowershot = m_pPl->m_nButtons & IN_ALT1;
+
+	if (!SelectAction())
+		return;
+
+	CBaseTrigger *pBox = (CBaseTrigger *)gEntList.FindEntityByClassname(NULL, "trigger_PenaltyBox");
+
+	m_LastTouch = m_LastPlayer = m_LastNonKeeper = m_pPl;
+
+	//ballStatus = BALL_NORMAL;
+
+	m_pPl->m_flNextShot = gpGlobals->curtime + SHOT_DELAY;
+}
+
+void CBall::State_Enter_KICKOFF()
+{
+	for (int i = 1; i <= gpGlobals->maxClients; i++) 
+	{
+		CSDKPlayer *pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(i));
+
+		if (!(pPlayer && pPlayer->GetTeamNumber() >= TEAM_A))
+			continue;
+
+		SDKGameRules()->GetPlayerSpawnSpot(pPlayer);
+		pPlayer->RemoveFlag(FL_ATCONTROLS);
+	}
+
+	m_pPl = FindNearestPlayer();
+	if (!m_pPl)
+		return;
+
+	SetPos(m_vSpawnPos);
+
+	Vector pos = m_vSpawnPos;
+	pos.x -= 30;
+
+	m_pPl->m_HoldAnimTime = -1;
+	m_pPl->AddFlag(FL_ATCONTROLS);
+	m_pPl->SetLocalOrigin(pos);
+	m_pPl->SnapEyeAngles(QAngle(0, 0, 0));
+
+	ShieldBall(NULL);
+	SendMatchEvent(MATCH_EVENT_KICKOFF);
+}
+
+void CBall::State_Think_KICKOFF()
+{
+	if (!m_pPl)
+		return;
+
+	if (m_pPl->m_nButtons & IN_ATTACK)
+	{
+		m_pPl->m_flNextShot = gpGlobals->curtime + SHOT_DELAY;
+		m_vNewVel = m_pPl->EyeDirection2D() * 150;
+		m_pPl->m_HoldAnimTime = gpGlobals->curtime + 1;
+		State_Transition(BALL_NORMAL);
+	}
+}
+
+void CBall::State_Leave_KICKOFF()
+{
+	//if (m_pPl)
+	//	m_pPl->RemoveFlag(FL_ATCONTROLS);
+	ShieldOff();
+}
+
+void CBall::State_Enter_THROWIN()
+{
+	m_pPl = FindNearestPlayer(m_LastTouch->GetTeamNumber() == TEAM_A ? TEAM_B : TEAM_A);
+	if (!m_pPl)
+		return;
+
+	int sign = (m_vSpawnPos - m_vPos).x > 0 ? 1 : -1;
+	m_pPl->SetLocalOrigin(Vector(m_vPos.x - 30 * sign, m_vPos.y, m_vPos.z));
+	m_pPl->SnapEyeAngles(QAngle(0, -180 * sign + 180, 0));
+	m_pPl->AddFlag(FL_ATCONTROLS);
+	m_pPl->m_HoldAnimTime = -1;
+	m_pPl->SetAnimation(PLAYER_THROWIN);
+	m_pPl->DoAnimationEvent(PLAYERANIMEVENT_THROWIN);
+
+	ShieldBall(NULL);
+	SetPos(m_vPos + Vector(0, 0, 82));
+
+
+	m_bIgnoreTriggers = true;
+
+
+	//m_pPl->m_HoldAnimTime = gpGlobals->curtime + BALL_STATUS_TIME;	//hold player still
+	EmitAmbientSound(entindex(), GetAbsOrigin(), "Ball.whistle");
+	SendMatchEvent(MATCH_EVENT_THROWIN);
+}
+
+void CBall::State_Think_THROWIN()
+{
+	if (!m_pPl)
+		return;
+
+	if (m_pPl->m_nButtons & (IN_ATTACK | IN_ALT1))
+	{
+		if (m_pPl->m_nButtons & IN_ATTACK)
+		{
+			m_vNewVel = m_pPl->EyeDirection3D() * 250;
+		}
+		else
+		{
+			m_vNewVel = m_pPl->EyeDirection3D() * (250 + 500 * GetPowershotModifier() * GetPitchModifier());
+		}
+
+		m_pPl->m_flNextShot = gpGlobals->curtime + SHOT_DELAY;
+		m_pPl->m_HoldAnimTime = gpGlobals->curtime + 1;
+		m_pPl->SetAnimation(PLAYER_THROW);
+		m_pPl->DoAnimationEvent(PLAYERANIMEVENT_THROW);
+		State_Transition(BALL_NORMAL);
+	}
+}
+
+void CBall::State_Leave_THROWIN()
+{
+	ShieldOff();
+	//m_pPl->RemoveFlag(FL_ATCONTROLS);
+}
+
+CSDKPlayer *CBall::FindEligibleCarrier()
+{
+	CSDKPlayer *pNearest = NULL;
+	float shortestDist = FLT_MAX;
+
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer *pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(i));
+
+		if (!(pPlayer &&
+			pPlayer->GetTeamNumber() != TEAM_SPECTATOR &&
+			pPlayer->IsAlive()))
+			continue;
+
+		if (!((pPlayer->m_nButtons & IN_ATTACK || pPlayer->m_nButtons & IN_ALT1) &&
+			pPlayer->m_flNextShot <= gpGlobals->curtime))
+			continue;
+
+		Vector dir = m_vPos - pPlayer->GetLocalOrigin();
+		float xyDist = dir.Length2D();
+		float zDist = m_vPos.z - (pPlayer->GetLocalOrigin().z + SDKGameRules()->GetViewVectors()->m_vHullMax.z); //pPlayer->GetPlayerMaxs().z);// 
+		float dist = max(xyDist, zDist);
+
+		if (dist > sv_ball_touchradius.GetFloat() || dist >= shortestDist)
+			continue;
+
+		dir.z = 0;
+		dir.NormalizeInPlace();
+		float angle = RAD2DEG(acos(pPlayer->EyeDirection2D().Dot(dir)));
+		if (angle > sv_ball_touchcone.GetFloat())
+			continue;
+
+		shortestDist = dist;
+		pNearest = pPlayer;	
+	}
+
+	return pNearest;
+}
+
+#define BODY_FEET_START		0
+#define BODY_FEET_END		15
+#define BODY_VOLLEY_START	15
+#define BODY_VOLLEY_END		30
+#define BODY_CHEST_START	45
+#define BODY_CHEST_END		55
+#define BODY_HEAD_START		65
+#define BODY_HEAD_END		80
+
+bool CBall::SelectAction()
+{
+	float zDist = (m_vPos - m_vPlPos).z;
+
+	if (zDist >= BODY_FEET_START && zDist < BODY_FEET_END)
+		return DoGroundShot();
+
+	if (zDist >= BODY_VOLLEY_START && zDist < BODY_VOLLEY_END)
+		return DoVolleyShot();
+
+	if (zDist >= BODY_CHEST_START && zDist < BODY_CHEST_END)
+		return DoChestDrop();
+
+	if (zDist >= BODY_HEAD_START && zDist < BODY_HEAD_END)
+		return DoHeader();
+
+	return false;
+}
+
+#define BEST_SHOT_ANGLE -20
+#define PITCH_LIMIT 89
+
+float CBall::GetPitchModifier()
+{
+	//float modifier = (90 - (abs((clamp(m_aPlAng[PITCH], -75, 75) - BEST_SHOT_ANGLE) * 0.5f + BEST_SHOT_ANGLE))) / 90.0f;
+	//float modifier = (1 - (cos((90 - abs(clamp(m_aPlAng[PITCH], -90, 90))) / 90.0f * M_PI))) / 2.0f;
+	return pow(cos((m_pPl->EyeAngles()[PITCH] - BEST_SHOT_ANGLE) / (PITCH_LIMIT - BEST_SHOT_ANGLE) * M_PI / 2), 2);
+}
+
+float CBall::GetPowershotModifier()
+{
+	int powershotStrength = min(m_pPl->m_nPowershotStrength, m_pPl->m_Shared.GetStamina());
+	m_pPl->m_Shared.SetStamina(m_pPl->m_Shared.GetStamina() - powershotStrength);
+	return powershotStrength / 100.0f;
+}
+
+bool CBall::DoGroundShot()
+{
+	int shotStrength;
+
+	float modifier = GetPitchModifier();
+
+	//has enough sprint for a powershot?
+	if (m_bIsPowershot)
+	{
+		shotStrength = sv_ball_powershot_strength.GetFloat() * (1 + GetPowershotModifier()) * modifier;
+		EmitSound("Ball.kickhard");
+		m_pPl->SetAnimation(PLAYER_KICK);
+		m_pPl->DoAnimationEvent(PLAYERANIMEVENT_KICK);
+
+		//trace_t tr;
+		//UTIL_TraceLine( m_vPlPos + Vector(0, 0, 100), m_vPlPos + Vector(0, 0, 100) + m_vPlForward * 500, MASK_SHOT, m_pPl, COLLISION_GROUP_NONE, &tr );
+		//UTIL_BloodDecalTrace( &tr, BLOOD_COLOR_RED );
+	}
+	else
+	{
+		//float modifier = 1 - (abs((m_vPlForward.z + 0.5f) * 0.5f - 0.5f));
+		shotStrength = sv_ball_normalshot_strength.GetFloat() * modifier;		//do normal kick instead
+		//if (shotStrength < 500)
+		//{
+		EmitSound("Ball.touch");
+		//}
+		//else
+		//{
+		//	EmitSound("Ball.kicknormal");
+		//	m_pPl->SetAnimation(PLAYER_KICK);
+		//	m_pPl->DoAnimationEvent(PLAYERANIMEVENT_KICK);
+		//}
+	}
+
+	QAngle shotAngle = m_aPlAng;
+	shotAngle[PITCH] = min(-5, m_aPlAng[PITCH]);
+
+	Vector shotDir;
+	AngleVectors(shotAngle, &shotDir);
+
+	m_vNewVel = shotDir * shotStrength;
+
+	//SetBallCurve(shotStrength == 0);
+	SetBallCurve(false);
+
+	return true;
+}
+
+#define VOLLEY_ANGLE 15
+
+bool CBall::DoVolleyShot()
+{
+	if (!m_bIsPowershot || m_vPlVel.Length2D() <= 10)
+		return false;
+
+	Vector dir = m_vPos - m_vPlPos;
+	dir.z = 0;
+	float angle = RAD2DEG(acos(m_vPlRight.Dot(dir)));
+	if (angle > 90)
+		angle = abs(angle - 180);
+	if (angle > VOLLEY_ANGLE)
+		return false;
+
+	m_vNewVel = m_vPlForward * sv_ball_powershot_strength.GetFloat() * 2;
+
+	EmitSound("Ball.kickhard");
+	m_pPl->SetAnimation(PLAYER_VOLLEY);
+	m_pPl->DoAnimationEvent(PLAYERANIMEVENT_VOLLEY);
+
+	return true;
+}
+
+bool CBall::DoChestDrop()
+{
+	return false;
+}
+
+bool CBall::DoHeader()
+{
+	if (m_bIsPowershot && 
+		m_vPlVel.Length2D() >= PLAYER_SPEED + SPRINT_SPEED - FLT_EPSILON &&
+		m_pPl->m_TeamPos > 1 &&
+		m_BallInPenaltyBox != -1 &&
+		m_pPl->m_PlayerAnim != PLAYER_SLIDE)
+	{
+		m_vNewVel = m_vPlForward * (sv_ball_powershot_strength.GetFloat() * 1.5f + m_vPlVel.Length());
+
+		EmitSound("Ball.kickhard");
+		m_pPl->SetAnimation (PLAYER_DIVINGHEADER);
+		m_pPl->DoAnimationEvent(PLAYERANIMEVENT_DIVINGHEADER);
+		m_pPl->m_NextSlideTime = gpGlobals->curtime + 1.5f;
+	}
+	else
+	{
+		m_vNewVel = m_vPlForward * (sv_ball_normalshot_strength.GetFloat() + m_vPlVel.Length());
+
+		EmitSound("Ball.kicknormal");
+		m_pPl->SetAnimation (PLAYER_HEADER);
+		m_pPl->DoAnimationEvent(PLAYERANIMEVENT_HEADER);
+	}
+
+	return true;
+}
+
+void CBall::SetBallCurve(bool bReset)
+{
+	Vector m_vRot(0, 0, 0);
+
+	if (!bReset)
+	{
+		if (m_pPl->m_nButtons & IN_MOVELEFT) 
+		{
+			m_vRot += Vector(0, 0, 1);
+		} 
+		else if (m_pPl->m_nButtons & IN_MOVERIGHT) 
+		{
+			m_vRot += Vector(0, 0, -1);//-v_up;
+		}
+
+		if (m_pPl->m_nButtons & IN_TOPSPIN)
+		{
+			m_vRot += -m_vPlRight;
+		}
+		else if (m_pPl->m_nButtons & IN_BACKSPIN)
+		{
+			m_vRot += m_vPlRight;
+		}
+	}
+
+	m_vRot.NormalizeInPlace();
+
+	float spin = min(1, m_vNewVel.Length() / sv_ball_maxspin.GetInt()) * sv_ball_spin.GetFloat();
+
+	//if (m_vRot.IsZero())
+	//{
+	//	// weak backspin on every shot
+	//	//m_vRot = m_vPlRight;
+	//	//spin = sv_ball_spin.GetFloat() / 3;
+	//}
+
+	m_vNewAngImp = WorldToLocalRotation(SetupMatrixAngles(m_aAng), m_vRot, spin);
+
+	//m_bSetAngImp = true;
+}
+
+void CBall::BallThink( void	)
+{
+	SetNextThink(gpGlobals->curtime + 0.01f);
+
+	State_Think();
+}
+
+void CBall::TriggerGoal(int team)
+{
+
+}
+
+void CBall::TriggerGoalline(int team, int side)
+{
+
+}
+
+void CBall::TriggerSideline(int side)
+{
+	State_Transition(BALL_THROWIN);
+}
