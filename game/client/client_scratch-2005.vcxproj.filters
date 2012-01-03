@@ -1422,9 +1422,6 @@
     <ClCompile Include="sdk\ios_statusmenu.cpp">
       <Filter>Source Files\SDK\Hud Elements</Filter>
     </ClCompile>
-    <ClCompile Include="sdk\ios_playerskinproxy.cpp">
-      <Filter>Source Files\SDK</Filter>
-    </ClCompile>
     <ClCompile Include="sdk\ios_hud_powershotbar.cpp">
       <Filter>Source Files\SDK\Hud Elements</Filter>
     </ClCompile>
@@ -1432,6 +1429,9 @@
       <Filter>Source Files\SDK\Hud Elements</Filter>
     </ClCompile>
     <ClCompile Include="sdk\c_ios_mapentities.cpp">
+      <Filter>Source Files\SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\ios_playertextureproxy.cpp">
       <Filter>Source Files\SDK</Filter>
     </ClCompile>
   </ItemGroup>
