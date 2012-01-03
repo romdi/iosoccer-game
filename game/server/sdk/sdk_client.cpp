@@ -42,24 +42,6 @@ extern bool			g_fGameOver;
 void FinishClientPutInServer( CSDKPlayer *pPlayer )
 {
 	pPlayer->InitialSpawn();
-	pPlayer->Spawn();
-
-	//Tony; changed from old SDK, we want to start out dead etc beacuse we're using states.
-
-//	if (!pPlayer->IsBot())	//Tony; even bots should start out like this; we finish a spawn sequence.
-	{
-		// When the player first joins the server, they
-		pPlayer->m_takedamage = DAMAGE_NO;
-		pPlayer->pl.deadflag = true;
-		pPlayer->m_lifeState = LIFE_DEAD;
-		pPlayer->AddEffects( EF_NODRAW );
-		pPlayer->ChangeTeam( TEAM_UNASSIGNED );
-		pPlayer->SetThink( NULL );
-
-		// Move them to the first intro camera.
-		//ios pPlayer->MoveToNextIntroCamera();
-		//ios pPlayer->SetMoveType( MOVETYPE_NONE );
-	}
 
 	char sName[128];
 	Q_strncpy( sName, pPlayer->GetPlayerName(), sizeof( sName ) );

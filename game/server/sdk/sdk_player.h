@@ -102,9 +102,8 @@ public:
 	void PhysObjectSleep();
 	void PhysObjectWake();
 
-#if defined ( SDK_USE_TEAMS )
 	virtual void ChangeTeam( int iTeamNum );
-#endif
+
 	// Player avoidance
 	virtual	bool		ShouldCollide( int collisionGroup, int contentsMask ) const;
 	void SDKPushawayThink(void);
@@ -175,6 +174,7 @@ private:
 	void State_PreThink_ACTIVE();
 
 	void State_Enter_OBSERVER_MODE();
+	void State_Leave_OBSERVER_MODE();
 	void State_PreThink_OBSERVER_MODE();
 
 	void State_Enter_DEATH_ANIM();
@@ -190,9 +190,7 @@ private:
 
 	CSDKPlayerStateInfo *m_pCurStateInfo;			// This can be NULL if no state info is defined for m_iPlayerState.
 	bool HandleCommand_JoinTeam( int iTeam );
-#if defined ( SDK_USE_TEAMS )
 	bool	m_bTeamChanged;		//have we changed teams this spawn? Used to enforce one team switch per death rule
-#endif
 
 #if defined ( SDK_USE_PLAYERCLASSES )
 	bool HandleCommand_JoinClass( int iClass );
@@ -272,8 +270,8 @@ public:
 	void				CheckRejoin(void);
 	//virtual void		CommitSuicide();
 
-	CNetworkVar(int, m_TeamPos);								//position on pitch
-	CNetworkVar(int, m_ShirtPos);								//converted spawn point numbers into shirt numbers
+	int					m_TeamPos;								//position on pitch
+	int					m_ShirtPos;								//converted spawn point numbers into shirt numbers
 	
 	float				m_flNextShot;
 
@@ -309,17 +307,13 @@ public:
 	int					GetThrowIns(void) { return m_ThrowIns; }
 	int					GetKeeperSaves(void) { return m_KeeperSaves; }
 	int					GetGoalKicks(void) { return m_GoalKicks; }
-	int					GetTeamPosition(void) { return m_ShirtPos; }
-	int					GetSprint(void) { if (m_fSprintLeft < 0.0f) return 0; else return ((int)(m_fSprintLeft * 10.0f)); }
+	int					GetTeamPosition(void) { return m_TeamPos; }
+	int					GetShirtPosition(void) { return m_ShirtPos; }
 
 	char				*GetClubName() { return m_szClubName; }
 	void				SetClubName(const char *name) { Q_strncpy(m_szClubName, name, sizeof(m_szClubName)); m_bClubNameChanged = true; } 
 
-	void				UpdateSprint( void );
-	bool				InSprint(void);
-	float				m_fSprintLeft;
-	float				m_fSprintIdle;
-	float				m_fSprintUpdate;
+	void				ResetMatchStats();
 
 	virtual void		Duck( void );
 
@@ -344,16 +338,15 @@ public:
 
 	void				IOSSPlayerCollision(void);
 
-	float				m_NextShoot;					//can block this individual from kicking
-
-	float				m_KickDelay;					//frozen while on
-
 	virtual void		VPhysicsCollision( int index, gamevcollisionevent_t *pEvent );
 
 	//int					m_BallInPenaltyBox;	 //-1 =	not	in box,	0,1	= teams	box
 
 	char				m_szClubName[32];
 	bool				m_bClubNameChanged;
+
+	Vector EyeDirection2D();
+	Vector EyeDirection3D();
 };
 
 

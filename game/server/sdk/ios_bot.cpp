@@ -141,51 +141,28 @@ CBasePlayer *BotPutInServer( bool bFrozen, int keeper )
 	if ( bFrozen )
 		pPlayer->AddEFlags( EFL_BOT_FROZEN );
 
-	pPlayer->ChangeTeam( TEAM_UNASSIGNED );
-	pPlayer->RemoveAllItems( true );
+	//pPlayer->ChangeTeam( TEAM_UNASSIGNED );
+	//pPlayer->RemoveAllItems( true );
 	//pPlayer->Spawn();	//spawning here then moving to goal caused the extremely strange keeper teleport bug. Im not sure why!
 
 	g_CurBotNumber++;
 
-	if (keeper==1)
-	{
-		pPlayer->ChangeTeam( TEAM_A );
-	}
-	else if (keeper==2)
-	{
-		pPlayer->ChangeTeam( TEAM_B );
-	}
-	else
-	{
-		//if (g_IOSRand.RandomInt(0,2))
-		if (g_CurBotNumber % 2 == 1)
-			pPlayer->ChangeTeam( TEAM_A );						//TODO autoassign??
-		else
-			pPlayer->ChangeTeam( TEAM_B );
-	}
-
 	if (keeper>0)
 	{
-		pPlayer->ChooseModel();
 		pPlayer->m_TeamPos = 1;
 		pPlayer->ConvertSpawnToShirt();
 		pPlayer->ChooseKeeperSkin();
 		//spawn at correct position
-		pPlayer->Spawn();
-		pPlayer->RemoveEffects( EF_NODRAW );
-		pPlayer->SetSolid( SOLID_BBOX );
-		pPlayer->RemoveFlag(FL_FROZEN);
+		//pPlayer->Spawn();
+		pPlayer->ChangeTeam(keeper == 1 ? TEAM_A : TEAM_B);
 	}
 	else
 	{
-		pPlayer->ChooseModel();									//bot player TODO - autoassign
 		pPlayer->m_TeamPos = g_IOSRand.RandomInt(2,11);
 		pPlayer->ConvertSpawnToShirt();
 		pPlayer->ChoosePlayerSkin();
-		pPlayer->Spawn();
-		pPlayer->RemoveEffects( EF_NODRAW );
-		pPlayer->SetSolid( SOLID_BBOX );
-		pPlayer->RemoveFlag(FL_FROZEN);
+		//pPlayer->Spawn();
+		pPlayer->ChangeTeam(g_CurBotNumber % 2 == 0 ? TEAM_A : TEAM_B);
 	}
 
 

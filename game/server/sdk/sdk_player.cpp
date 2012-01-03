@@ -27,8 +27,6 @@
 
 extern int gEvilImpulse101;
 
-CUniformRandomStream g_IOSRand;
-
 //#define SDK_PLAYER_MODEL "models/player/terror.mdl"
 //#define SDK_PLAYER_MODEL "models/player/brazil/brazil.mdl"		//need to precache one to start with
 
@@ -168,9 +166,6 @@ IMPLEMENT_SERVERCLASS_ST( CSDKPlayer, DT_SDKPlayer )
 	SendPropInt( SENDINFO( m_iPlayerState ), Q_log2( NUM_PLAYER_STATES )+1, SPROP_UNSIGNED ),
 
 	SendPropBool( SENDINFO( m_bSpawnInterpCounter ) ),
-
-	SendPropInt(SENDINFO(m_TeamPos)),
-	SendPropInt(SENDINFO(m_ShirtPos)),
 END_SEND_TABLE()
 
 class CSDKRagdoll : public CBaseAnimatingOverlay
@@ -416,70 +411,8 @@ void CSDKPlayer::SDKPushawayThink(void)
 
 void CSDKPlayer::Spawn()
 {
-	if (!GetModelPtr())
-		SetModel( SDK_PLAYER_MODEL );	//Tony; basically, leave this alone ;) unless you're not using classes or teams, then you can change it to whatever.
-	
-	SetMoveType( MOVETYPE_WALK );
-	RemoveSolidFlags( FSOLID_NOT_SOLID );
-
 	BaseClass::Spawn();
 
-#if defined ( SDK_USE_STAMINA ) || defined ( SDK_USE_SPRINTING )
-	m_Shared.SetStamina( 100 );
-#endif
-
-#if defined ( SDK_USE_TEAMS )
-	m_bTeamChanged	= false;
-#endif
-
-#if defined ( SDK_USE_PRONE )
-	InitProne();
-#endif
-
-#if defined ( SDK_USE_SPRINTING )
-	InitSprinting();
-#endif
-
-	// update this counter, used to not interp players when they spawn
-	m_bSpawnInterpCounter = !m_bSpawnInterpCounter;
-
-	InitSpeeds(); //Tony; initialize player speeds.
-
-	SetArmorValue(SpawnArmorValue());
-
-	SetContextThink( &CSDKPlayer::SDKPushawayThink, gpGlobals->curtime + PUSHAWAY_THINK_INTERVAL, SDK_PUSHAWAY_THINK_CONTEXT );
-	pl.deadflag = false;
-
-	m_flNextShot = gpGlobals->curtime;
-
-	//if (m_nPowershotStrength == 0)
-	//	m_nPowershotStrength = 3;
-
-	//SetSolid( SOLID_BBOX );
-	AddSolidFlags( FSOLID_NOT_STANDABLE );
-
-	m_hRagdoll = NULL;
-	
-	//ios
-	SetMaxSpeed(PLAYER_SPEED);
-
-	m_NextShoot = 0;
-	m_KickDelay = 0;
-
-	//SetCollisionGroup( COLLISION_GROUP_PUSHAWAY );
-
-	//ios hide/nocollision/freeze players on menu
-	AddEffects( EF_NODRAW );
-	SetSolid( SOLID_NONE );
-	AddFlag(FL_FROZEN);
-
-	AddFlag(FL_ONGROUND);		//doesn't seem to get start on initial join?
-
-	//// Select the scanner's idle sequence
-	//SetSequence( LookupSequence("iospass") );
-	//// Set the animation speed to 100%
-	//SetPlaybackRate( 1.0f );
-	//// Tell the client to animate this model
 	//UseClientSideAnimation();
 }
 
@@ -487,7 +420,7 @@ void CSDKPlayer::Spawn()
 // Purpose: Put the player in the specified team
 //-----------------------------------------------------------------------------
 //Tony; if we're not using actual teams, we don't need to override this.
-#if defined ( SDK_USE_TEAMS )
+
 void CSDKPlayer::ChangeTeam( int iTeamNum )
 {
 	if ( !GetGlobalTeam( iTeamNum ) )
@@ -514,55 +447,32 @@ void CSDKPlayer::ChangeTeam( int iTeamNum )
 	}
 	else if ( iTeamNum == TEAM_SPECTATOR )
 	{
-		RemoveAllItems( true );
-		
 		State_Transition( STATE_OBSERVER_MODE );
 	}
 	else // active player
 	{
-		if ( !IsDead() )
-		{
-			// Kill player if switching teams while alive
-			CommitSuicide();
-
-			// add 1 to frags to balance out the 1 subtracted for killing yourself
-			IncrementFragCount( 1 );
-		}
-
 		if( iOldTeam == TEAM_SPECTATOR )
 			SetMoveType( MOVETYPE_NONE );
-//Tony; pop up the class menu if we're using classes, otherwise just spawn.
-#if defined ( SDK_USE_PLAYERCLASSES )
-		// Put up the class selection menu.
-		State_Transition( STATE_PICKINGCLASS );
-#else
+
 		State_Transition( STATE_ACTIVE );
-#endif
 	}
 }
-
-#endif // SDK_USE_TEAMS
 
 void CSDKPlayer::InitialSpawn( void )
 {
 	BaseClass::InitialSpawn();
 
-	//ios State_Enter( STATE_WELCOME );
+	m_takedamage = DAMAGE_NO;
+	pl.deadflag = true;
+	m_lifeState = LIFE_DEAD;
+	AddEffects( EF_NODRAW );
+	//ChangeTeam( TEAM_UNASSIGNED );
+	SetThink( NULL );
+	InitSpeeds(); //Tony; initialize player speeds.
+	SetModel( SDK_PLAYER_MODEL );	//Tony; basically, leave this alone ;) unless you're not using classes or teams, then you can change it to whatever.
 
-	//const ConVar *hostname = cvar->FindVar( "hostname" );
-	//const char *title = (hostname) ? hostname->GetString() : "MESSAGE OF THE DAY";
-
-	// open info panel on client showing MOTD:
-	KeyValues *data = new KeyValues("data");
-	//data->SetString( "title", title );		// info panel title
-	//data->SetString( "type", "1" );			// show userdata from stringtable entry
-	//data->SetString( "msg",	"motd" );		// use this stringtable entry
-	//data->SetString( "cmd", "impulse 101" );// exec this command if panel closed
-	data->SetString("team1", GetGlobalTeam( TEAM_A )->GetName());
-	data->SetString("team2", GetGlobalTeam( TEAM_B )->GetName());
-
-	//ShowViewPortPanel( PANEL_INFO, true, data );
-	ShowViewPortPanel( PANEL_TEAM, true, data );		//ios - send team names in data?
+	//SharedSpawn();
+	Spawn();
 
 	m_RejoinTime = 0;
 	m_RedCards=0;
@@ -580,13 +490,16 @@ void CSDKPlayer::InitialSpawn( void )
 	m_fPossessionTime=0.0f;
 	ResetFragCount();
 
-	m_fSprintLeft = SPRINT_TIME;
-	m_fSprintIdle = 0.0f;
+	//Spawn();
 
-	m_NextShoot = 0;
-	m_KickDelay = 0;
+	if (!IsBot())
+		ChangeTeam(TEAM_SPECTATOR);
 
-	data->deleteThis();
+	/*if (!IsBot())
+		ChangeTeam(
+		State_Enter(STATE_OBSERVER_MODE);
+	else
+		State_Enter(STATE_ACTIVE);*/
 }
 
 void CSDKPlayer::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
@@ -710,8 +623,7 @@ CSDKPlayerStateInfo* CSDKPlayer::State_LookupInfo( SDKPlayerState state )
 #if defined ( SDK_USE_PLAYERCLASSES )
 		{ STATE_PICKINGCLASS,	"STATE_PICKINGCLASS",	&CSDKPlayer::State_Enter_PICKINGCLASS, NULL,	&CSDKPlayer::State_PreThink_WELCOME },
 #endif
-		{ STATE_DEATH_ANIM,		"STATE_DEATH_ANIM",		&CSDKPlayer::State_Enter_DEATH_ANIM,	NULL, &CSDKPlayer::State_PreThink_DEATH_ANIM },
-		{ STATE_OBSERVER_MODE,	"STATE_OBSERVER_MODE",	&CSDKPlayer::State_Enter_OBSERVER_MODE,	NULL, &CSDKPlayer::State_PreThink_OBSERVER_MODE }
+		{ STATE_OBSERVER_MODE,	"STATE_OBSERVER_MODE",	&CSDKPlayer::State_Enter_OBSERVER_MODE,	&CSDKPlayer::State_Leave_OBSERVER_MODE, &CSDKPlayer::State_PreThink_OBSERVER_MODE }
 	};
 
 	for ( int i=0; i < ARRAYSIZE( playerStateInfos ); i++ )
@@ -828,113 +740,61 @@ void CSDKPlayer::State_PreThink_WELCOME()
 	}
 }
 
-void CSDKPlayer::State_Enter_DEATH_ANIM()
-{
-	if ( HasWeapons() )
-	{
-		// we drop the guns here because weapons that have an area effect and can kill their user
-		// will sometimes crash coming back from CBasePlayer::Killed() if they kill their owner because the
-		// player class sometimes is freed. It's safer to manipulate the weapons once we know
-		// we aren't calling into any of their code anymore through the player pointer.
-		PackDeadPlayerItems();
-	}
-
-	// Used for a timer.
-	m_flDeathTime = gpGlobals->curtime;
-
-	StartObserverMode( OBS_MODE_DEATHCAM );	// go to observer mode
-
-	RemoveEffects( EF_NODRAW );	// still draw player body
-}
-
-
-void CSDKPlayer::State_PreThink_DEATH_ANIM()
-{
-	// If the anim is done playing, go to the next state (waiting for a keypress to 
-	// either respawn the guy or put him into observer mode).
-	if ( GetFlags() & FL_ONGROUND )
-	{
-		float flForward = GetAbsVelocity().Length() - 20;
-		if (flForward <= 0)
-		{
-			SetAbsVelocity( vec3_origin );
-		}
-		else
-		{
-			Vector vAbsVel = GetAbsVelocity();
-			VectorNormalize( vAbsVel );
-			vAbsVel *= flForward;
-			SetAbsVelocity( vAbsVel );
-		}
-	}
-
-	if ( gpGlobals->curtime >= (m_flDeathTime + SDK_PLAYER_DEATH_TIME ) )	// let the death cam stay going up to min spawn time.
-	{
-		m_lifeState = LIFE_DEAD;
-
-		StopAnimation();
-
-		AddEffects( EF_NOINTERP );
-
-		if ( GetMoveType() != MOVETYPE_NONE && (GetFlags() & FL_ONGROUND) )
-			SetMoveType( MOVETYPE_NONE );
-	}
-
-	//Tony; if we're now dead, and not changing classes, spawn
-	if ( m_lifeState == LIFE_DEAD )
-	{
-#if defined ( SDK_USE_PLAYERCLASSES )
-		//Tony; if the class menu is open, don't respawn them, wait till they're done.
-		if (IsClassMenuOpen())
-			return;
-#endif
-		State_Transition( STATE_ACTIVE );
-	}
-}
-
 void CSDKPlayer::State_Enter_OBSERVER_MODE()
 {
 	// Always start a spectator session in roaming mode
 	m_iObserverLastMode = OBS_MODE_ROAMING;
 
-	if( m_hObserverTarget == NULL )
-	{
-		// find a new observer target
-		CheckObserverSettings();
-	}
+	//if( m_hObserverTarget == NULL )
+	//{
+	//	// find a new observer target
+	//	CheckObserverSettings();
+	//}
 
-	// Change our observer target to the nearest teammate
-	CTeam *pTeam = GetGlobalTeam( GetTeamNumber() );
+	//// Change our observer target to the nearest teammate
+	//CTeam *pTeam = GetGlobalTeam( GetTeamNumber() );
 
-	CBasePlayer *pPlayer;
-	Vector localOrigin = GetAbsOrigin();
-	Vector targetOrigin;
-	float flMinDist = FLT_MAX;
-	float flDist;
+	//CBasePlayer *pPlayer;
+	//Vector localOrigin = GetAbsOrigin();
+	//Vector targetOrigin;
+	//float flMinDist = FLT_MAX;
+	//float flDist;
 
-	for ( int i=0;i<pTeam->GetNumPlayers();i++ )
-	{
-		pPlayer = pTeam->GetPlayer(i);
+	//for ( int i=0;i<pTeam->GetNumPlayers();i++ )
+	//{
+	//	pPlayer = pTeam->GetPlayer(i);
 
-		if ( !pPlayer )
-			continue;
+	//	if ( !pPlayer )
+	//		continue;
 
-		if ( !IsValidObserverTarget(pPlayer) )
-			continue;
+	//	if ( !IsValidObserverTarget(pPlayer) )
+	//		continue;
 
-		targetOrigin = pPlayer->GetAbsOrigin();
+	//	targetOrigin = pPlayer->GetAbsOrigin();
 
-		flDist = ( targetOrigin - localOrigin ).Length();
+	//	flDist = ( targetOrigin - localOrigin ).Length();
 
-		if ( flDist < flMinDist )
-		{
-			m_hObserverTarget.Set( pPlayer );
-			flMinDist = flDist;
-		}
-	}
+	//	if ( flDist < flMinDist )
+	//	{
+	//		m_hObserverTarget.Set( pPlayer );
+	//		flMinDist = flDist;
+	//	}
+	//}
+
+	//pl.deadflag = true;
+	m_lifeState = LIFE_DEAD;
+	AddEffects(EF_NODRAW);
+	//ChangeTeam(TEAM_SPECTATOR);
+	SetMoveType(MOVETYPE_OBSERVER);
+	AddSolidFlags(FSOLID_NOT_SOLID);
 
 	StartObserverMode( m_iObserverLastMode );
 	PhysObjectSleep();
+}
+
+void CSDKPlayer::State_Leave_OBSERVER_MODE()
+{
+	StopObserverMode();
 }
 
 void CSDKPlayer::State_PreThink_OBSERVER_MODE()
@@ -992,9 +852,26 @@ void CSDKPlayer::State_Enter_ACTIVE()
     m_Local.m_iHideHUD = 0;
 	PhysObjectWake();
 
+	AddSolidFlags( FSOLID_NOT_STANDABLE );
+	m_Shared.SetStamina( 100 );
+	m_bTeamChanged = false;
+	InitSprinting();
+	// update this counter, used to not interp players when they spawn
+	m_bSpawnInterpCounter = !m_bSpawnInterpCounter;
+	SetContextThink( &CSDKPlayer::SDKPushawayThink, gpGlobals->curtime + PUSHAWAY_THINK_INTERVAL, SDK_PUSHAWAY_THINK_CONTEXT );
+	pl.deadflag = false;
+	m_flNextShot = gpGlobals->curtime;
+	m_hRagdoll = NULL;
+	m_lifeState = LIFE_ALIVE;
+	RemoveEffects(EF_NODRAW);
+
+	SetViewOffset( VEC_VIEW );
+
+	SDKGameRules()->GetPlayerSpawnSpot(this);
+
 	//Tony; call spawn again now -- remember; when we add respawn timers etc, to just put them into the spawn queue, and let the queue respawn them.
-	Spawn();
-	RemoveEffects(EF_NODRAW); //ios hack - player spawns invisible sometimes
+	//Spawn();
+	//RemoveEffects(EF_NODRAW); //ios hack - player spawns invisible sometimes
 }
 
 void CSDKPlayer::State_PreThink_ACTIVE()
@@ -1046,10 +923,10 @@ void CSDKPlayer::SetAnimation( PLAYER_ANIM playerAnim )
 		RemoveFlag(FL_ATCONTROLS);
 
 
-	if (m_KickDelay > gpGlobals->curtime)
+	/*if (m_KickDelay > gpGlobals->curtime)
 		return;
 	else if (m_TeamPos>=1 && m_TeamPos<=11)
-		RemoveFlag(FL_FROZEN);
+		RemoveFlag(FL_FROZEN);*/
 
 
 	speed = GetAbsVelocity().Length2D();
@@ -1277,143 +1154,57 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 {
 	const char *pcmd = args[0];
 
-	/*if (FStrEq(pcmd, "powershot_strength"))
-	{
-		if (args.ArgC() < 2)
-		{
-			Warning("Player sent bad powershot_strength syntax\n");
-			return false;
-		}
-		m_nPowershotStrength = clamp(atoi(args[1]), 1, 5);
-		return true;
-	}*/
-
 	if ( FStrEq( pcmd, "jointeam" ) ) 
 	{
-		if ( args.ArgC() < 2)
+		if ( args.ArgC() < 3)
 		{
 			Warning( "Player sent bad jointeam syntax\n" );
 			return false;	//go away
 		}
 
-		//block joining from on pitch etc
-		if (GetTeamNumber() != TEAM_UNASSIGNED)
-			return false;
-		if (m_TeamPos > 0)
-			return false;
+		int nTeam = clamp(atoi(args[1]), TEAM_SPECTATOR, TEAM_B);
 
-		int iTeam = atoi( args[1] );
-
-		if (iTeam < TEAM_UNASSIGNED || iTeam > TEAM_B)
-			return false;
-
-		CSDKGameRules* pGamerules = static_cast <CSDKGameRules*>(g_pGameRules);
-
-		switch (iTeam)
+		if (nTeam == TEAM_SPECTATOR)
 		{
-			case TEAM_UNASSIGNED:		//AUTO
-			default:
-			{
-				pGamerules->CountTeams();
-				int na = pGamerules->m_PlayersOnTeam[TEAM_A];
-				int nb = pGamerules->m_PlayersOnTeam[TEAM_B];
-				if (na > nb)
-					ChangeTeam(TEAM_B);
-				else
-					ChangeTeam(TEAM_A);
-				ChooseModel();
-				//ShowViewPortPanel( PANEL_CLASS ); 
-				engine->ClientCommand( edict(), "pos %d", atoi(args[2]) );
-			}
-			break;
-
-			case TEAM_SPECTATOR:		//SPEC
-				ChangeTeam(TEAM_SPECTATOR);
-				Spawn();
-				m_TeamPos = -1;
-				RemoveFlag(FL_FROZEN);
-				return true;
-			break;
-
-			case TEAM_A:
-			case TEAM_B:
-				pGamerules->CountTeams();
-				//only check if autobalance is on
-				float flDoAutobalance = autobalance.GetBool();
-				if (flDoAutobalance)
-				{
-					//limit teams as you join
-					int na = pGamerules->m_PlayersOnTeam[TEAM_A];
-					int nb = pGamerules->m_PlayersOnTeam[TEAM_B];
-					int diff = na-nb;
-					//check for trying to join the "wrong" team (build in a tolerance)
-					if ((diff < -1 && iTeam==TEAM_B) || (diff > 1 && iTeam==TEAM_A)) 
-					{
-						ShowViewPortPanel( PANEL_TEAM ); 
-						return true;
-					}
-				}
-
-				ChangeTeam( iTeam );
-				ChooseModel();
-				//ShowViewPortPanel( PANEL_CLASS );
-				engine->ClientCommand( edict(), "pos %d", atoi(args[2]) );
-			break;
-		}
-
-		return true;
-	}
-
-	if ( FStrEq( pcmd, "pos" ) ) 
-	{
-		if ( args.ArgC() < 2)
-		{
-			return false;	//go away
-		}
-
-		int posWanted = atoi (args[1]);	//teampos matches spawn points on the map 2-11
-
-		if (posWanted < 1 || posWanted > 11)
-			return false;
-
-		if (GetTeamNumber() < TEAM_A)
-			return false;
-
-		//block pos when already got a teampos
-		if (m_TeamPos > 0)
-			return false;
-
-		if (TeamPosFree(GetTeamNumber(), posWanted, true))
-		{
-			m_TeamPos = posWanted;	//teampos matches spawn points on the map 2-11
-
-			ConvertSpawnToShirt();					//shirtpos is the formation number 3,4,5,2 11,8,6,7 10,9
-
-			if (m_ShirtPos > 1)
-			{
-				ChoosePlayerSkin();				
-			}
-			else
-			{
-				ChooseKeeperSkin();
-			}
-
-			//spawn at correct position
-			Spawn();
-			g_pGameRules->GetPlayerSpawnSpot( this );
-			RemoveEffects( EF_NODRAW );
-			SetSolid( SOLID_BBOX );
-			RemoveFlag(FL_FROZEN);
-			return true;
+			m_TeamPos = 1;
+			ConvertSpawnToShirt();
+			//RemoveFlag(FL_FROZEN);
+			ChangeTeam(TEAM_SPECTATOR);
 		}
 		else
 		{
-			//ShowViewPortPanel( PANEL_CLASS );
-			engine->ClientCommand( edict(), "pos %d", posWanted % 11 + 1 );
-			return true;
-		}
-	}
+			int posWanted = clamp(atoi(args[2]), 1, 11);
+			if (TeamPosFree(nTeam, posWanted, true))
+			{
+				m_TeamPos = posWanted;	//teampos matches spawn points on the map 2-11
 
+				ConvertSpawnToShirt();					//shirtpos is the formation number 3,4,5,2 11,8,6,7 10,9
+
+				if (m_ShirtPos > 1)
+				{
+					ChoosePlayerSkin();				
+				}
+				else
+				{
+					ChooseKeeperSkin();
+				}
+
+				ChangeTeam(nTeam);
+
+				//spawn at correct position
+				//Spawn();
+				//SDKGameRules()->GetPlayerSpawnSpot( this );
+				//RemoveEffects( EF_NODRAW );
+				//SetSolid( SOLID_BBOX );
+				//RemoveFlag(FL_FROZEN);
+			}
+			else
+			{
+				ShowViewPortPanel(PANEL_TEAM);
+			}
+		}
+		return true;
+	}
 
 	return BaseClass::ClientCommand (args);
 }
@@ -1607,6 +1398,8 @@ void CSDKPlayer::CheckRejoin(void)
 
 void CSDKPlayer::CommitSuicide( bool bExplode /*= false*/, bool bForce /*= false*/ )
 {
+	State_Transition(STATE_OBSERVER_MODE);
+	/*
 	int teamNumber = GetTeamNumber();
 	int teamPos = m_TeamPos;
 	bool isBot = IsBot();
@@ -1652,58 +1445,13 @@ void CSDKPlayer::CommitSuicide( bool bExplode /*= false*/, bool bForce /*= false
 
 		pBall = GetBall(pBall);
 	}
-
-	// have the player kill themself
-	m_iHealth = 0;
-	Event_Killed( CTakeDamageInfo( this, this, 0, DMG_NEVERGIB ) );
-	Event_Dying();
-
-	if (!isBot && teamPos == 1 && botkeepers.GetBool())
+	*/
+	if (!IsBot() && m_TeamPos == 1 && botkeepers.GetBool())
 	{
 		//RomD: Add bot keeper if killed player was a keeper
-		BotPutInServer(false, teamNumber == TEAM_A ? 1 : 2); 
+		BotPutInServer(false, GetTeamNumber() == TEAM_A ? 1 : 2); 
 	}
 }
-
-
-bool CSDKPlayer::InSprint(void)
-{
-	return ((m_nButtons & IN_RELOAD) ? 1 : 0);
-}
-
-void CSDKPlayer::UpdateSprint(void)
-{
-	//if pressing sprint, set speed and reduce sprint
-	if (m_nButtons & IN_RELOAD)
-	{
-		if (m_fSprintLeft > 0.0f) 
-		{
-			if (GetAbsVelocity().Length2D() > 10.0f)
-			{
-				SetMaxSpeed(PLAYER_SPEED + SPRINT_SPEED);
-				m_fSprintLeft -= gpGlobals->frametime;
-			}
-		}
-		else
-		{
-			SetMaxSpeed(PLAYER_SPEED);		//none left
-			m_fSprintIdle = 0.0f;
-		}
-		return;
-	}
-
-	//not pressing sprint so recharge 
-	if (m_fSprintIdle < gpGlobals->curtime) 
-	{
-		m_fSprintIdle = gpGlobals->curtime + 0.25f;
-		m_fSprintLeft += (SPRINT_TIME / (SPRINT_RECHARGE_TIME * 4.0f));
-		if (m_fSprintLeft > SPRINT_TIME)
-			m_fSprintLeft = SPRINT_TIME;
-	}
-
-	SetMaxSpeed(PLAYER_SPEED);
-}
-
 
 /////////////////////////////////////////////////////////////////////////////
 //slidetackle - not really related to Duck (which is in gamemovement.cpp)
@@ -1840,47 +1588,40 @@ void CSDKPlayer::Duck(void)
 		//EmitAmbientSound(entindex(), GetAbsOrigin(), "Player.Card");
 
 		//do foul message before card message
-		char  msg[256];
-		const char	title[16] = "FOUL\n";
-		Q_snprintf (msg, sizeof (msg), "%s fouled by %s. ", pClosest->GetPlayerName(), GetPlayerName());
-		pBall->SendVGUIStatusMessage (title, msg, true);
+		pBall->SendMatchEvent(MATCH_EVENT_FOUL);
 
 		//check for foul, yellow or red depending on distance from ball
 		if (fBallDist < fClosestDist+64 && bLegalTackle) 
 		{
 			m_Fouls++;
 			if (pBall->ballStatus == BALL_PENALTY)
-				pBall->SendMainStatus(BALL_MAINSTATUS_PENALTY);
+				pBall->SendMatchEvent(MATCH_EVENT_PENALTY);
 			else
-				pBall->SendMainStatus(BALL_MAINSTATUS_FOUL);
-			UTIL_LogPrintf( "\"%s<%i><%s><%s>\" triggered \"foul\"\n", GetPlayerName(), GetUserID(),GetNetworkIDString(), GetTeam()->GetName() );
+				pBall->SendMatchEvent(MATCH_EVENT_FOUL);
 		}
 		else if (fBallDist < fClosestDist+128)
 		{
 			m_YellowCards++;
 			if (pBall->ballStatus == BALL_PENALTY)
-				pBall->SendMainStatus(BALL_MAINSTATUS_PENALTY);
+				pBall->SendMatchEvent(MATCH_EVENT_PENALTY);
 			else
-				pBall->SendMainStatus(BALL_MAINSTATUS_YELLOW);
-			UTIL_LogPrintf( "\"%s<%i><%s><%s>\" triggered \"yellowcard\"\n", GetPlayerName(), GetUserID(),GetNetworkIDString(), GetTeam()->GetName() );
+				pBall->SendMatchEvent(MATCH_EVENT_YELLOWCARD);
 
 			if (!(m_YellowCards & 0x0001))   //is it a second yellow?
 			{
 				if (pBall->ballStatus == BALL_PENALTY)
-					pBall->SendMainStatus(BALL_MAINSTATUS_PENALTY);
+					pBall->SendMatchEvent(MATCH_EVENT_PENALTY);
 				else
-					pBall->SendMainStatus(BALL_MAINSTATUS_RED);
-				UTIL_LogPrintf( "\"%s<%i><%s><%s>\" triggered \"redcard\"\n", GetPlayerName(), GetUserID(),GetNetworkIDString(), GetTeam()->GetName() );
+					pBall->SendMatchEvent(MATCH_EVENT_REDCARD);
 				GiveRedCard();
 			}
 		} 
 		else 
 		{
 			if (pBall->ballStatus == BALL_PENALTY)
-				pBall->SendMainStatus(BALL_MAINSTATUS_PENALTY);
+				pBall->SendMatchEvent(MATCH_EVENT_PENALTY);
 			else
-				pBall->SendMainStatus(BALL_MAINSTATUS_RED);
-			UTIL_LogPrintf( "\"%s<%i><%s><%s>\" triggered \"redcard\"\n", GetPlayerName(), GetUserID(),GetNetworkIDString(), GetTeam()->GetName() );
+				pBall->SendMatchEvent(MATCH_EVENT_REDCARD);
 			GiveRedCard();
 		}
 	}
@@ -2064,4 +1805,41 @@ void CSDKPlayer::VPhysicsCollision( int index, gamevcollisionevent_t *pEvent )
 	//{
 	//	pUseEntity->AcceptInput( "Use", this, this, emptyVariant, USE_SHOOT );
 	//}
+}
+
+void CSDKPlayer::ResetMatchStats()
+{
+	
+	m_RedCards = 0;
+	m_YellowCards = 0;
+	m_Fouls = 0;
+	m_Assists = 0;
+	m_Possession = 0;
+	m_Passes = 0;
+	m_FreeKicks = 0;
+	m_Penalties = 0;
+	m_Corners = 0;
+	m_ThrowIns = 0;
+	m_KeeperSaves = 0;
+	m_GoalKicks = 0;
+	ResetFragCount();
+	m_fPossessionTime = 0.0f;
+}
+
+Vector CSDKPlayer::EyeDirection2D( void )
+{
+	Vector vecReturn = EyeDirection3D();
+	vecReturn.z = 0;
+	vecReturn.AsVector2D().NormalizeInPlace();
+
+	return vecReturn;
+}
+
+//---------------------------------------------------------
+//---------------------------------------------------------
+Vector CSDKPlayer::EyeDirection3D( void )
+{
+	Vector vecForward;
+	AngleVectors( EyeAngles(), &vecForward );
+	return vecForward;
 }

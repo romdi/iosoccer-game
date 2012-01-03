@@ -430,7 +430,7 @@ void C_BasePlayer::Spawn( void )
 
 	m_flNextJump = gpGlobals->curtime; //ios
 
-    SetModel( "models/player.mdl" );
+	//SetModel(SDK_PLAYER_MODEL);
 
 	Precache();
 

@@ -51,8 +51,8 @@ public:
 	virtual int		GetThrowIns( int index ) = 0;
 	virtual int		GetKeeperSaves( int index ) = 0;
 	virtual int		GetGoalKicks( int index ) = 0;
-	virtual int		GetPosition( int index ) = 0;
-	virtual int		GetSprint( int index ) = 0;
+	virtual int		GetTeamPosition( int iIndex ) = 0;
+	virtual int		GetShirtPosition( int iIndex ) = 0;
 };
 
 extern IGameResources *GameResources( void ); // singelton accessor

@@ -41,8 +41,8 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_PlayerResource, DT_PlayerResource, CPlayerReso
 	RecvPropArray3( RECVINFO_ARRAY(m_ThrowIns), RecvPropInt( RECVINFO(m_ThrowIns[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_KeeperSaves), RecvPropInt( RECVINFO(m_KeeperSaves[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_GoalKicks), RecvPropInt( RECVINFO(m_GoalKicks[0]))),
-	RecvPropArray3( RECVINFO_ARRAY(m_Position), RecvPropInt( RECVINFO(m_Position[0]))),
-	RecvPropArray3( RECVINFO_ARRAY(m_Sprint), RecvPropInt( RECVINFO(m_Sprint[0]))),
+	RecvPropArray3( RECVINFO_ARRAY(m_TeamPosition), RecvPropInt( RECVINFO(m_TeamPosition[0]))),
+	RecvPropArray3( RECVINFO_ARRAY(m_ShirtPosition), RecvPropInt( RECVINFO(m_ShirtPosition[0]))),
 
 	RecvPropArray3( RECVINFO_ARRAY(m_szClubNames), RecvPropString( RECVINFO(m_szClubNames[0]))),
 	//RecvPropArray( RecvPropString( RECVINFO( m_szClubName[0]) ), m_szClubName ),
@@ -94,8 +94,8 @@ C_PlayerResource::C_PlayerResource()
 	memset( m_ThrowIns, 0, sizeof( m_ThrowIns ) );
 	memset( m_KeeperSaves, 0, sizeof( m_KeeperSaves ) );
 	memset( m_GoalKicks, 0, sizeof( m_GoalKicks ) );
-	memset( m_Position, 0, sizeof( m_Position ) );
-	memset( m_Sprint, 0, sizeof( m_Sprint ) );
+	memset( m_TeamPosition, 0, sizeof( m_TeamPosition ) );
+	memset( m_ShirtPosition, 0, sizeof( m_ShirtPosition ) );
 
 	memset( m_szClubNames, 0, sizeof( m_szClubNames ) );
 
@@ -469,17 +469,18 @@ int	C_PlayerResource::GetGoalKicks( int iIndex )
 
 	return m_GoalKicks[iIndex];
 }
-int	C_PlayerResource::GetPosition( int iIndex )
+int	C_PlayerResource::GetTeamPosition( int iIndex )
 {
 	if ( !IsConnected( iIndex ) )
 		return 0;
 
-	return m_Position[iIndex];
+	return m_TeamPosition[iIndex];
 }
-int	C_PlayerResource::GetSprint( int iIndex )
+int	C_PlayerResource::GetShirtPosition( int iIndex )
 {
 	if ( !IsConnected( iIndex ) )
 		return 0;
 
-	return m_Sprint[iIndex];
+	return m_ShirtPosition[iIndex];
 }
+

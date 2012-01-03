@@ -4814,9 +4814,7 @@ void CBasePlayer::Spawn( void )
 	SetSimulatedEveryTick( true );
 	SetAnimatedEveryTick( true );
 
-	m_ArmorValue		= SpawnArmorValue();
 	SetBlocksLOS( false );
-	m_iMaxHealth		= m_iHealth;
 
 	// Clear all flags except for FL_FULLEDICT
 	if ( GetFlags() & FL_FAKECLIENT )
@@ -4833,7 +4831,6 @@ void CBasePlayer::Spawn( void )
 	AddFlag( FL_AIMTARGET );
 
 	m_AirFinished	= gpGlobals->curtime + AIRTIME;
-	m_nDrownDmgRate	= DROWNING_DAMAGE_INITIAL;
 	
  // only preserve the shadow flag
 	int effects = GetEffects() & EF_NOSHADOW;
@@ -4842,23 +4839,14 @@ void CBasePlayer::Spawn( void )
 	// Initialize the fog controller.
 	InitFogController();
 
-	m_DmgTake		= 0;
-	m_DmgSave		= 0;
-	m_bitsHUDDamage		= -1;
-	m_bitsDamageType	= 0;
 	m_afPhysicsFlags	= 0;
 
 	m_flNextJump = gpGlobals->curtime; //ios
-
-	m_idrownrestored = m_idrowndmg;
 
 	SetFOV( this, 0 );
 
 	m_flNextDecalTime	= 0;// let this player decal as soon as he spawns.
 
-	m_flgeigerDelay = gpGlobals->curtime + 2.0;	// wait a few seconds until user-defined message registrations
-												// are recieved by all clients
-	
 	m_flFieldOfView		= 0.766;// some NPCs use this to determine whether or not the player is looking at them.
 
 	m_vecAdditionalPVSOrigin = vec3_origin;
@@ -4873,17 +4861,8 @@ void CBasePlayer::Spawn( void )
 	m_Local.m_bDucking = false;
     SetViewOffset( VEC_VIEW );
 	Precache();
-	
-	m_bitsDamageType = 0;
-	m_bitsHUDDamage = -1;
+
 	SetPlayerUnderwater( false );
-
-	m_iTrain = TRAIN_NEW;
-	
-	m_HackedGunPos		= Vector( 0, 32, 0 );
-
-	m_iBonusChallenge = sv_bonus_challenge.GetInt();
-	sv_bonus_challenge.SetValue( 0 );
 
 	if ( m_iPlayerSound == SOUNDLIST_EMPTY )
 	{
@@ -4892,8 +4871,6 @@ void CBasePlayer::Spawn( void )
 
 	SetThink(NULL);
 	m_fInitHUD = true;
-	m_fWeapon = false;
-	m_iClientBattery = -1;
 
 	m_lastx = m_lasty = 0;
 
@@ -4912,25 +4889,14 @@ void CBasePlayer::Spawn( void )
 	CSingleUserRecipientFilter user( this );
 	enginesound->SetPlayerDSP( user, 0, false );
 
-	CreateViewModel();
-
 	SetCollisionGroup( COLLISION_GROUP_PLAYER );
 
 	// if the player is locked, make sure he stays locked
-	if ( m_iPlayerLocked )
-	{
-		m_iPlayerLocked = false;
-		LockPlayerInPlace();
-	}
-
-	if ( GetTeamNumber() != TEAM_SPECTATOR )
-	{
-		StopObserverMode();
-	}
-	else
-	{
-		StartObserverMode( m_iObserverLastMode );
-	}
+	//if ( m_iPlayerLocked )
+	//{
+	//	m_iPlayerLocked = false;
+	//	LockPlayerInPlace();
+	//}
 
 	StopReplayMode();
 
@@ -4953,9 +4919,6 @@ void CBasePlayer::Spawn( void )
 	}
 
 	RumbleEffect( RUMBLE_STOP_ALL, 0, RUMBLE_FLAGS_NONE );
-
-	// Calculate this immediately
-	m_nVehicleViewSavedFrame = 0;
 }
 
 void CBasePlayer::Activate( void )
