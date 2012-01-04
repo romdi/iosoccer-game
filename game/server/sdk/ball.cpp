@@ -13,13 +13,11 @@
 #include "sdk_gamerules.h"
 #include "in_buttons.h"
 #include "nav_mesh.h"
-
 #include "game.h"
 #include "ball.h"
-
 #include "team.h"
-
 #include "triggers.h"
+#include "ios_mapentities.h"
 
 static ConVar sv_ball_mass( "sv_ball_mass", "1", FCVAR_ARCHIVE );
 static ConVar sv_ball_inertia( "sv_ball_inertia", "1.0", FCVAR_ARCHIVE );
@@ -2357,7 +2355,7 @@ void CBall::RemoveFlagFromAll(int flag)
 
 
 
-CSDKPlayer *CBall::FindNearestPlayer(int nTeam/* = TEAM_INVALID*/)
+CSDKPlayer *CBall::FindNearestPlayer(int nTeam /*= TEAM_INVALID*/, bool ignoreKeepers /*= true*/)
 {
 	CSDKPlayer *pNearest = NULL;
 	float shortestDist = FLT_MAX;
@@ -2366,12 +2364,13 @@ CSDKPlayer *CBall::FindNearestPlayer(int nTeam/* = TEAM_INVALID*/)
 	{
 		CSDKPlayer *pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(i));
 
-		if (!(pPlayer &&
+		if (!(
+			pPlayer &&
 			pPlayer->GetTeamNumber() != TEAM_SPECTATOR &&
-			pPlayer->IsAlive()))
-			continue;
-
-		if (nTeam != TEAM_INVALID && pPlayer->GetTeamNumber() != nTeam)
+			pPlayer->IsAlive() &&
+			(nTeam == TEAM_INVALID || pPlayer->GetTeamNumber() == nTeam) &&
+			(!ignoreKeepers || pPlayer->GetTeamPosition() != 1)
+			))
 			continue;
 
 		Vector dir = m_vPos - pPlayer->GetLocalOrigin();
@@ -2435,6 +2434,7 @@ void CBall::State_Transition( ball_state_t newState )
 
 void CBall::State_DoTransition( ball_state_t newState )
 {
+	m_eNewState = BALL_NOSTATE;
 	State_Leave();
 	State_Enter( newState );
 }
@@ -2444,6 +2444,8 @@ void CBall::State_Enter( ball_state_t newState )
 	m_eBallState = newState;
 	m_pCurStateInfo = State_LookupInfo( newState );
 	m_flStateEnterTime = gpGlobals->curtime;
+	m_flStateAutoLeaveTime = FLT_MAX;
+	m_eAutoLeaveState = BALL_NORMAL;
 
 	if ( mp_showballstatetransitions.GetInt() > 0 )
 	{
@@ -2471,14 +2473,16 @@ void CBall::State_Leave()
 void CBall::State_Think()
 {
 	PreStateHook();
-	if (m_eNewState != BALL_NOSTATE)
+	while (m_eNewState != BALL_NOSTATE)
 	{
 		State_DoTransition(m_eNewState);
-		m_eNewState = BALL_NOSTATE;
 	}
 	if ( m_pCurStateInfo && m_pCurStateInfo->pfnThink )
 	{	
-		(this->*m_pCurStateInfo->pfnThink)();
+		if (gpGlobals->curtime < m_flStateAutoLeaveTime)
+			(this->*m_pCurStateInfo->pfnThink)();
+		else
+			State_Transition(m_eAutoLeaveState);
 	}
 	PostStateHook();
 }
@@ -2487,9 +2491,12 @@ CBallStateInfo* CBall::State_LookupInfo( ball_state_t state )
 {
 	static CBallStateInfo ballStateInfos[] =
 	{
-		{ BALL_NORMAL,	"BALL_NORMAL",	&CBall::State_Enter_NORMAL,		NULL,							&CBall::State_Think_NORMAL },
-		{ BALL_KICKOFF,	"BALL_KICKOFF",	&CBall::State_Enter_KICKOFF,	&CBall::State_Leave_KICKOFF,	&CBall::State_Think_KICKOFF },
-		{ BALL_THROWIN,	"BALL_THROWIN",	&CBall::State_Enter_THROWIN,	&CBall::State_Leave_THROWIN,	&CBall::State_Think_THROWIN },
+		{ BALL_NORMAL,		"BALL_NORMAL",		&CBall::State_Enter_NORMAL,		NULL,							&CBall::State_Think_NORMAL },
+		{ BALL_KICKOFF,		"BALL_KICKOFF",		&CBall::State_Enter_KICKOFF,	&CBall::State_Leave_KICKOFF,	&CBall::State_Think_KICKOFF },
+		{ BALL_THROWIN,		"BALL_THROWIN",		&CBall::State_Enter_THROWIN,	&CBall::State_Leave_THROWIN,	&CBall::State_Think_THROWIN },
+		{ BALL_GOALKICK,	"BALL_GOALKICK",	&CBall::State_Enter_GOALKICK,	&CBall::State_Leave_GOALKICK,	&CBall::State_Think_GOALKICK },
+		{ BALL_CORNER,		"BALL_CORNER",		&CBall::State_Enter_CORNER,		&CBall::State_Leave_CORNER,		&CBall::State_Think_CORNER },
+		{ BALL_GOAL,		"BALL_GOAL",		&CBall::State_Enter_GOAL,		&CBall::State_Leave_GOAL,		&CBall::State_Think_GOAL },
 	};
 
 	for ( int i=0; i < ARRAYSIZE( ballStateInfos ); i++ )
@@ -2555,8 +2562,7 @@ void CBall::State_Enter_KICKOFF()
 	}
 
 	m_pPl = FindNearestPlayer();
-	if (!m_pPl)
-		return;
+	if (!m_pPl) { State_Transition(BALL_NORMAL); return; }
 
 	SetPos(m_vSpawnPos);
 
@@ -2574,9 +2580,6 @@ void CBall::State_Enter_KICKOFF()
 
 void CBall::State_Think_KICKOFF()
 {
-	if (!m_pPl)
-		return;
-
 	if (m_pPl->m_nButtons & IN_ATTACK)
 	{
 		m_pPl->m_flNextShot = gpGlobals->curtime + SHOT_DELAY;
@@ -2596,8 +2599,7 @@ void CBall::State_Leave_KICKOFF()
 void CBall::State_Enter_THROWIN()
 {
 	m_pPl = FindNearestPlayer(m_LastTouch->GetTeamNumber() == TEAM_A ? TEAM_B : TEAM_A);
-	if (!m_pPl)
-		return;
+	if (!m_pPl) { State_Transition(BALL_NORMAL); return; }
 
 	int sign = (m_vSpawnPos - m_vPos).x > 0 ? 1 : -1;
 	m_pPl->SetLocalOrigin(Vector(m_vPos.x - 30 * sign, m_vPos.y, m_vPos.z));
@@ -2610,9 +2612,7 @@ void CBall::State_Enter_THROWIN()
 	ShieldBall(NULL);
 	SetPos(m_vPos + Vector(0, 0, 82));
 
-
 	m_bIgnoreTriggers = true;
-
 
 	//m_pPl->m_HoldAnimTime = gpGlobals->curtime + BALL_STATUS_TIME;	//hold player still
 	EmitAmbientSound(entindex(), GetAbsOrigin(), "Ball.whistle");
@@ -2621,9 +2621,6 @@ void CBall::State_Enter_THROWIN()
 
 void CBall::State_Think_THROWIN()
 {
-	if (!m_pPl)
-		return;
-
 	if (m_pPl->m_nButtons & (IN_ATTACK | IN_ALT1))
 	{
 		if (m_pPl->m_nButtons & IN_ATTACK)
@@ -2646,7 +2643,142 @@ void CBall::State_Think_THROWIN()
 void CBall::State_Leave_THROWIN()
 {
 	ShieldOff();
+	m_bIgnoreTriggers = false;
 	//m_pPl->RemoveFlag(FL_ATCONTROLS);
+}
+
+void CBall::State_Enter_GOALKICK()
+{
+	m_pPl = NULL;
+
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer *pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(i));
+
+		if (!(pPlayer &&
+			pPlayer->GetTeamNumber() != TEAM_SPECTATOR &&
+			pPlayer->IsAlive() &&
+			pPlayer->GetTeamNumber() != m_LastTouch->GetTeamNumber() &&
+			pPlayer->m_TeamPos == 1))
+			continue;
+
+		m_pPl = pPlayer;
+		break;
+	}
+
+	if (!m_pPl) { State_Transition(BALL_NORMAL); return; }
+
+	Vector ballPos;
+	if ((m_vNewPos - GetOwnTeamSpots(m_pPl)->m_vPlayers[0]).x > 0)
+		ballPos = GetOwnTeamSpots(m_pPl)->m_vGoalkickLeft;
+	else
+		ballPos = GetOwnTeamSpots(m_pPl)->m_vGoalkickRight;
+
+	int ySign = (ballPos - GetOwnTeamSpots(m_pPl)->m_vPlayers[0] ).y > 0 ? 1 : -1;
+	m_pPl->SetLocalOrigin(Vector(ballPos.x, ballPos.y - 200 * ySign, ballPos.z));
+	m_pPl->SnapEyeAngles(QAngle(0, 90 * ySign, 0));
+
+	ShieldBall(NULL);
+	SetPos(ballPos);
+
+	EmitAmbientSound(entindex(), GetAbsOrigin(), "Ball.whistle");
+	SendMatchEvent(MATCH_EVENT_GOALKICK);
+}
+
+void CBall::State_Think_GOALKICK()
+{
+	if (m_pPl->m_nButtons & (IN_ATTACK | IN_ATTACK2))
+	{
+		m_pPl->m_flNextShot = gpGlobals->curtime + SHOT_DELAY;
+		m_vNewVel = m_pPl->EyeDirection3D() * 1000;
+		State_Transition(BALL_NORMAL);
+	}
+}
+
+void CBall::State_Leave_GOALKICK()
+{
+	ShieldOff();
+	//m_pPl->RemoveFlag(FL_ATCONTROLS);
+}
+
+void CBall::State_Enter_CORNER()
+{
+	m_pPl = FindNearestPlayer(m_LastTouch->GetTeamNumber() == TEAM_A ? TEAM_B : TEAM_A);
+	if (!m_pPl) { State_Transition(BALL_NORMAL); return; }
+
+	Vector ballPos;
+	if ((m_vNewPos - GetOpponentTeamSpots(m_pPl)->m_vPlayers[0]).x > 0)
+		ballPos = GetOpponentTeamSpots(m_pPl)->m_vCornerLeft;
+	else
+		ballPos = GetOpponentTeamSpots(m_pPl)->m_vCornerRight;
+
+	int xSign = (m_vSpawnPos - ballPos).x > 0 ? 1 : -1;
+	int ySign = (m_vSpawnPos - ballPos).y > 0 ? 1 : -1;
+	m_pPl->SetLocalOrigin(Vector(ballPos.x - 50 * xSign, ballPos.y - 50 * ySign, ballPos.z));
+	m_pPl->SnapEyeAngles(QAngle(0, 45 * xSign * ySign, 0));
+	
+	ShieldBall(NULL);
+	SetPos(ballPos);
+
+	EmitAmbientSound(entindex(), GetAbsOrigin(), "Ball.whistle");
+	SendMatchEvent(MATCH_EVENT_CORNER);
+}
+
+void CBall::State_Think_CORNER()
+{
+	if (m_pPl->m_nButtons & (IN_ATTACK | IN_ATTACK2))
+	{
+		m_pPl->m_flNextShot = gpGlobals->curtime + SHOT_DELAY;
+		m_vNewVel = m_pPl->EyeDirection3D() * 1000;
+		State_Transition(BALL_NORMAL);
+	}
+}
+
+void CBall::State_Leave_CORNER()
+{
+	ShieldOff();
+	//m_pPl->RemoveFlag(FL_ATCONTROLS);
+}
+
+void CBall::State_Enter_GOAL()
+{
+	m_bIgnoreTriggers = true;
+
+	m_pPl = m_LastPlayer;
+	if (!m_pPl) { State_Transition(BALL_NORMAL); return; }
+
+	bool ownGoal = false;
+
+	if (m_pPl->GetTeamNumber() == m_TeamGoal)
+	{
+		//give scorer a goal
+		m_pPl->IncrementFragCount( 1 );
+		m_pPl->AddPointsToTeam( 1, false );
+	}
+	else
+	{
+		ownGoal = true;
+		//add points directly to other team...
+		GetGlobalTeam( m_TeamGoal )->AddScore( 1 );
+	}
+
+	EnableCeleb();
+
+	m_flStateAutoLeaveTime = gpGlobals->curtime + 10;
+	m_eAutoLeaveState = BALL_KICKOFF;
+	
+	EmitSound("Ball.whistle");
+	SendMatchEvent(MATCH_EVENT_GOAL);
+}
+
+void CBall::State_Think_GOAL()
+{
+}
+
+void CBall::State_Leave_GOAL()
+{
+	m_bIgnoreTriggers = false;
+	DisableCeleb();
 }
 
 CSDKPlayer *CBall::FindEligibleCarrier()
@@ -2866,16 +2998,7 @@ void CBall::SetBallCurve(bool bReset)
 
 	float spin = min(1, m_vNewVel.Length() / sv_ball_maxspin.GetInt()) * sv_ball_spin.GetFloat();
 
-	//if (m_vRot.IsZero())
-	//{
-	//	// weak backspin on every shot
-	//	//m_vRot = m_vPlRight;
-	//	//spin = sv_ball_spin.GetFloat() / 3;
-	//}
-
 	m_vNewAngImp = WorldToLocalRotation(SetupMatrixAngles(m_aAng), m_vRot, spin);
-
-	//m_bSetAngImp = true;
 }
 
 void CBall::BallThink( void	)
@@ -2887,12 +3010,18 @@ void CBall::BallThink( void	)
 
 void CBall::TriggerGoal(int team)
 {
-
+	m_TeamGoal = m_team = team;
+	State_Transition(BALL_GOAL);
 }
 
 void CBall::TriggerGoalline(int team, int side)
 {
+	m_side = side;
 
+	if (m_LastTouch->GetTeamNumber() == team)
+		State_Transition(BALL_CORNER);
+	else
+		State_Transition(BALL_GOALKICK);
 }
 
 void CBall::TriggerSideline(int side)

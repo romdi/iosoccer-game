@@ -31,6 +31,7 @@ extern void Bot_RunAll( void );
 	#include "sdk_basegrenade_projectile.h"
 	#include "sdk_player.h"		//ios
 	#include "game.h"			//ios
+	#include "ios_mapentities.h"
 
 	#include "movehelper_server.h"
 #endif
@@ -291,7 +292,6 @@ CSDKGameRules::CSDKGameRules()
 	g_IOSRand.SetSeed(gpGlobals->curtime * 1000);
 
 	m_pCurStateInfo = NULL;
-	State_Transition(MATCH_INIT);
 	
 	//ios m_bLevelInitialized = false;
 
@@ -310,6 +310,10 @@ void CSDKGameRules::ServerActivate()
 		Warning( "Trying to set a NaN game start time\n" );
 		m_flMatchStartTime.GetForModify() = 0.0f;
 	}*/
+
+	InitMapSpots();
+
+	State_Transition(MATCH_INIT);
 }
 
 //-----------------------------------------------------------------------------
@@ -1185,15 +1189,15 @@ void CSDKGameRules::State_Think_END()
 void CSDKGameRules::SwapTeams()
 {
 	//reset (kick off) the first ball we find
-	CBall *pBall = dynamic_cast<CBall*>(gEntList.FindEntityByClassname( NULL, "football" ));
-	if (pBall)
-	{
-		pBall->DropBall();
-		pBall->ballStatusTime = 0;
-		pBall->ShieldOff();
-		pBall->HandleKickOff();
-		pBall->CreateVPhysics();
-	}
+	//CBall *pBall = dynamic_cast<CBall*>(gEntList.FindEntityByClassname( NULL, "football" ));
+	//if (pBall)
+	//{
+	//	pBall->DropBall();
+	//	pBall->ballStatusTime = 0;
+	//	pBall->ShieldOff();
+	//	pBall->HandleKickOff();
+	//	pBall->CreateVPhysics();
+	//}
 
 	// swap players
 	for (int i = 0; i < gpGlobals->maxClients; i++)

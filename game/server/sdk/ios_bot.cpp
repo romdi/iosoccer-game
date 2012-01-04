@@ -17,6 +17,7 @@
 #include "in_buttons.h"
 #include "movehelper_server.h"
 #include "gameinterface.h"
+#include "game.h"
 
 #include "ios_keeperbot.h"
 #include "ios_fieldbot.h"
@@ -217,6 +218,33 @@ ConCommand cc_Keeper2( "sv_addkeeper2", BotAdd_Keeper2, "Add keeper2" );
 //-----------------------------------------------------------------------------
 void Bot_RunAll( void )
 {
+	// Add keeper bot if spot is empty
+	if (botkeepers.GetBool())
+	{
+		bool keeperSpotTaken[2] = {};
+
+		for (int i = 1; i <= gpGlobals->maxClients; i++)
+		{
+			CSDKPlayer *pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(i));
+
+			if (!(
+				pPlayer &&
+				pPlayer->GetTeamNumber() != TEAM_SPECTATOR &&
+				pPlayer->IsAlive() &&
+				pPlayer->GetTeamPosition() == 1
+				))
+				continue;
+
+			keeperSpotTaken[pPlayer->GetTeamNumber() - TEAM_A] = true;
+		}
+
+		for (int i = 0; i < 2; i++)
+		{
+			if (!keeperSpotTaken[i])
+				BotPutInServer(false, i + 1);
+		}
+	}
+
 	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
 	{
 		CSDKPlayer *pPlayer = ToSDKPlayer( UTIL_PlayerByIndex( i ) );

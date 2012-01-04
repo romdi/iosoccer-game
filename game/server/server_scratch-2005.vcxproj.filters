@@ -2948,6 +2948,9 @@
     <ClInclude Include="sdk\ios_fieldbot.h">
       <Filter>Source Files\SDK\Bots</Filter>
     </ClInclude>
+    <ClInclude Include="sdk\ios_mapentities.h">
+      <Filter>Source Files\SDK</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\..\lib\public\choreoobjects.lib">

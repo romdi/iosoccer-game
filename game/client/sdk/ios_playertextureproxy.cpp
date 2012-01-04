@@ -80,8 +80,8 @@ void CPlayerTextureProxy::OnBind( C_BaseEntity *pEnt )
 
 	C_SDKPlayer *pPlayer = (C_SDKPlayer *)pEnt;
 
-	const char *team = pPlayer->GetTeam()->Get_Name();
-	//const char *team = GameResources()->GetTeam(pEnt->index)
+	//const char *team = pPlayer->GetTeam()->Get_Name();
+	const char *team = GameResources()->GetTeamName(GameResources()->GetTeam(pEnt->index));
 	int pos = GameResources()->GetShirtPosition(pEnt->index);
 	//int pos = pPlayer->m_ShirtPos;
 
@@ -98,7 +98,7 @@ void CPlayerTextureProxy::OnBind( C_BaseEntity *pEnt )
 	else if (Q_stricmp(m_szTextureType, "skin") == 0)
 		Q_snprintf(texture, sizeof(texture), m_pDefaultTexture->GetName(), team);
 
-	m_pDefaultTexture = materials->FindTexture(texture, NULL, false);
+	m_pDefaultTexture = materials->FindTexture(texture, NULL, true);
 		
 	m_pBaseTextureVar->SetTextureValue(m_pDefaultTexture);
 

@@ -233,10 +233,9 @@ void CTeamMenu::Update()
 			if ((team == TEAM_A || team == TEAM_B) && pos >= 1 && pos <= 11)
 			{
 				CBitmapButton *button = m_pPosButtons[team - 2][11 - pos];
-				char buttonText[32];
-				Q_snprintf( buttonText, sizeof(buttonText), "%s", gr->GetPlayerName(i));
-				button->SetText( buttonText );
-				button->SetEnabled(false);
+				button->SetText(gr->GetPlayerName(i));
+				bool isBotKeeper = Q_strncmp(gr->GetPlayerName(i), "KEEPER", 6) == 0;
+				button->SetEnabled(isBotKeeper);
 				posTaken[team - 2][11 - pos] = true;
 			}	
 		}
@@ -259,7 +258,7 @@ void CTeamMenu::Update()
 	m_pTeamNames[0]->SetText(gr->GetTeamName(TEAM_A));
 	m_pTeamNames[1]->SetText(gr->GetTeamName(TEAM_B));
 
-	m_flNextUpdateTime = gpGlobals->curtime + 1.0f;
+	m_flNextUpdateTime = gpGlobals->curtime + 0.5f;
 }
 
 //-----------------------------------------------------------------------------

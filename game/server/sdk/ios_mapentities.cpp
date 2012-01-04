@@ -3,6 +3,7 @@
 #include "sdk_gamerules.h"
 #include "sdk_player.h"
 #include "ball.h"
+#include "ios_mapentities.h"
 
 class CBallTrigger : public CBaseTrigger
 {
@@ -40,7 +41,6 @@ public:
 	DECLARE_CLASS( CTriggerGoal, CBallTrigger );
 	DECLARE_DATADESC();
 	int	m_nTeam;
-	COutputEvent m_OnTrigger;
 
 	void BallStartTouch(CBall *pBall)
 	{
@@ -50,7 +50,6 @@ public:
 
 BEGIN_DATADESC( CTriggerGoal )
 	DEFINE_KEYFIELD( m_nTeam, FIELD_INTEGER, "Team" ),
-	DEFINE_OUTPUT(m_OnTrigger, "OnTrigger"),
 END_DATADESC()
 
 LINK_ENTITY_TO_CLASS( trigger_goal, CTriggerGoal );
@@ -177,6 +176,44 @@ LINK_ENTITY_TO_CLASS(info_team2_penalty_spot, CPointEntity);
 
 LINK_ENTITY_TO_CLASS(info_stadium, CPointEntity);
 
+Vector GetSpotPos(const char *name)
+{
+	CBaseEntity *pEnt = gEntList.FindEntityByClassname(NULL, name);
+	if (pEnt)
+		return pEnt->GetLocalOrigin();
+	else
+		return vec3_origin;
+}
+
+void InitMapSpots()
+{
+	g_vBallSpot = GetSpotPos("info_ball_start");
+
+	for (int i = 0; i < 2; i++)
+	{
+		g_pTeamSpots[i] = new CTeamSpots();
+		g_pTeamSpots[i]->m_vCornerLeft = GetSpotPos(UTIL_VarArgs("info_team%d_corner1", i + 1));
+		g_pTeamSpots[i]->m_vCornerRight = GetSpotPos(UTIL_VarArgs("info_team%d_corner0", i + 1));
+		g_pTeamSpots[i]->m_vGoalkickLeft = GetSpotPos(UTIL_VarArgs("info_team%d_goalkick1", i + 1));
+		g_pTeamSpots[i]->m_vGoalkickRight = GetSpotPos(UTIL_VarArgs("info_team%d_goalkick0", i + 1));
+		g_pTeamSpots[i]->m_vPenalty = GetSpotPos(UTIL_VarArgs("info_team%d_penalty_spot", i + 1));
+
+		for (int j = 0; j < 11; j++)
+		{
+			g_pTeamSpots[i]->m_vPlayers[j] = GetSpotPos(UTIL_VarArgs("info_team%d_player%d", i + 1, j + 1));
+		}
+	}
+}
+
+CTeamSpots *GetOwnTeamSpots(CSDKPlayer *pPl)
+{
+	return g_pTeamSpots[pPl->GetTeamNumber() - TEAM_A];
+}
+
+CTeamSpots *GetOpponentTeamSpots(CSDKPlayer *pPl)
+{
+	return g_pTeamSpots[TEAM_B - pPl->GetTeamNumber()];
+}
 
 //class CBallShield : public CBaseEntity
 //{

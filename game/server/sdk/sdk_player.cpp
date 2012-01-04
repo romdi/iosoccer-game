@@ -21,6 +21,7 @@
 #include "fmtstr.h"	//IOS
 #include "game.h" //IOS
 #include "ios_bot.h"
+#include "player_resource.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -454,7 +455,11 @@ void CSDKPlayer::ChangeTeam( int iTeamNum )
 		if( iOldTeam == TEAM_SPECTATOR )
 			SetMoveType( MOVETYPE_NONE );
 
-		State_Transition( STATE_ACTIVE );
+		// transmit changes for player position right away
+		g_pPlayerResource->UpdatePlayerData();
+
+		if (iOldTeam != TEAM_A && iOldTeam != TEAM_B)
+			State_Transition( STATE_ACTIVE );
 	}
 }
 

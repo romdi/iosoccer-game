@@ -260,13 +260,15 @@ public:
 private:
 	ball_state_t	m_eBallState;
 	ball_state_t	m_eNewState;
+	ball_state_t	m_eAutoLeaveState;
 	float			m_flStateEnterTime;
+	float			m_flStateAutoLeaveTime;
 	CBallStateInfo	*m_pCurStateInfo;
 
 	bool			m_bIgnoreTriggers;
 
 public:
-	CSDKPlayer *FindNearestPlayer(int nTeam = TEAM_INVALID);
+	CSDKPlayer *FindNearestPlayer(int nTeam = TEAM_INVALID, bool ignoreKeepers = true);
 	void SetPos(const Vector &pos);
 	void TriggerGoal(int team);
 	void TriggerGoalline(int team, int side);
@@ -293,6 +295,18 @@ public:
 	void State_Enter_THROWIN();
 	void State_Think_THROWIN();
 	void State_Leave_THROWIN();
+
+	void State_Enter_GOALKICK();
+	void State_Think_GOALKICK();
+	void State_Leave_GOALKICK();
+
+	void State_Enter_CORNER();
+	void State_Think_CORNER();
+	void State_Leave_CORNER();
+	
+	void State_Enter_GOAL();
+	void State_Think_GOAL();
+	void State_Leave_GOAL();
 };
 
 #endif

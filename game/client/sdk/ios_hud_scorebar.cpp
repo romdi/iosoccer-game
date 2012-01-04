@@ -298,37 +298,37 @@ void CHudScorebar::Paint( void )
 	switch ( SDKGameRules()->m_eMatchState )
 	{
 	case MATCH_EXTRATIME_SECOND_HALF: case MATCH_EXTRATIME_SECOND_HALF_INJURY_TIME:
-		nTime = (int)(flTime * (90.0f / mp_timelimit_match.GetInt())) + (90 + 15) * 60;
+		nTime = (int)(flTime * (90.0f / mp_timelimit_match.GetFloat())) + (90 + 15) * 60;
 		break;
 	case MATCH_EXTRATIME_FIRST_HALF: case MATCH_EXTRATIME_FIRST_HALF_INJURY_TIME:
-		nTime = (int)(flTime * (90.0f / mp_timelimit_match.GetInt())) + 90 * 60;
+		nTime = (int)(flTime * (90.0f / mp_timelimit_match.GetFloat())) + 90 * 60;
 		break;
 	case MATCH_SECOND_HALF: case MATCH_SECOND_HALF_INJURY_TIME:
-		nTime = (int)(flTime * (90.0f / mp_timelimit_match.GetInt())) + 45 * 60;
+		nTime = (int)(flTime * (90.0f / mp_timelimit_match.GetFloat())) + 45 * 60;
 		break;
 	case MATCH_FIRST_HALF: case MATCH_FIRST_HALF_INJURY_TIME:
-		nTime = (int)(flTime * (90.0f / mp_timelimit_match.GetInt()));
+		nTime = (int)(flTime * (90.0f / mp_timelimit_match.GetFloat()));
 		break;
 	case MATCH_WARMUP:
-		nTime = (int)(flTime - mp_timelimit_warmup.GetInt() * 60);
+		nTime = (int)(flTime - mp_timelimit_warmup.GetFloat() * 60);
 		break;
 	case MATCH_HALFTIME:
-		nTime = (int)(flTime - mp_timelimit_halftime.GetInt() * 60);
+		nTime = (int)(flTime - mp_timelimit_halftime.GetFloat() * 60);
 		break;
 	case MATCH_EXTRATIME_INTERMISSION:
-		nTime = (int)(flTime - mp_timelimit_extratime_intermission.GetInt() * 60);
+		nTime = (int)(flTime - mp_timelimit_extratime_intermission.GetFloat() * 60);
 		break;
 	case MATCH_EXTRATIME_HALFTIME:
-		nTime = (int)(flTime - mp_timelimit_extratime_halftime.GetInt() * 60);
+		nTime = (int)(flTime - mp_timelimit_extratime_halftime.GetFloat() * 60);
 		break;
 	case MATCH_PENALTIES_INTERMISSION:
-		nTime = (int)(flTime - mp_timelimit_penalties_intermission.GetInt() * 60);
+		nTime = (int)(flTime - mp_timelimit_penalties_intermission.GetFloat() * 60);
 		break;
 	case MATCH_PENALTIES:
-		nTime = (int)(flTime - mp_timelimit_penalties.GetInt() * 60);
+		nTime = (int)(flTime - mp_timelimit_penalties.GetFloat() * 60);
 		break;
 	case MATCH_COOLDOWN:
-		nTime = (int)(flTime - mp_timelimit_cooldown.GetInt() * 60);
+		nTime = (int)(flTime - mp_timelimit_cooldown.GetFloat() * 60);
 		break;
 	default:
 		nTime = 0;

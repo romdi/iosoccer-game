@@ -1055,6 +1055,7 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "d:\games\steam\
     <ClInclude Include="sdk\ios_bot.h" />
     <ClInclude Include="sdk\ios_fieldbot.h" />
     <ClInclude Include="sdk\ios_keeperbot.h" />
+    <ClInclude Include="sdk\ios_mapentities.h" />
     <ClInclude Include="ServerNetworkProperty.h" />
     <ClInclude Include="..\..\public\shattersurfacetypes.h" />
     <ClInclude Include="..\shared\sheetsimulator.h" />
