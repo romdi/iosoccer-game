@@ -176,6 +176,9 @@ LINK_ENTITY_TO_CLASS(info_team2_penalty_spot, CPointEntity);
 
 LINK_ENTITY_TO_CLASS(info_stadium, CPointEntity);
 
+CTeamSpots	*g_pTeamSpots[2];
+Vector		g_vKickOffSpot;
+
 Vector GetSpotPos(const char *name)
 {
 	CBaseEntity *pEnt = gEntList.FindEntityByClassname(NULL, name);
@@ -187,7 +190,7 @@ Vector GetSpotPos(const char *name)
 
 void InitMapSpots()
 {
-	g_vBallSpot = GetSpotPos("info_ball_start");
+	g_vKickOffSpot = GetSpotPos("info_ball_start");
 
 	for (int i = 0; i < 2; i++)
 	{

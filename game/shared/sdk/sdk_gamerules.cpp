@@ -40,6 +40,8 @@ extern void Bot_RunAll( void );
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+CUniformRandomStream g_IOSRand;
+
 static const s_KitData gKitDesc[] =
 {
 	{	"Brazil", "Brazil",		YELLOW },

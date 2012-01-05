@@ -1007,6 +1007,12 @@ bool C_BasePlayer::CreateMove( float flInputSampleTime, CUserCmd *pCmd )
 		m_bWasFrozen = false;
 	}
 
+	if (GetFlags() & FL_REMOTECONTROLLED)
+	{
+		pCmd->viewangles = pl.v_angle;
+		engine->SetViewAngles( pCmd->viewangles );		
+	}
+
 	m_vecOldViewAngles = pCmd->viewangles;
 	
 	// Check to see if we're in vgui input mode...

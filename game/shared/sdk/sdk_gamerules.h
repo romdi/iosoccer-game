@@ -36,7 +36,7 @@
 	#define CSDKGameRulesProxy C_SDKGameRulesProxy
 #endif
 
-CUniformRandomStream g_IOSRand;
+extern CUniformRandomStream g_IOSRand;
 
 extern ConVar 
 	mp_timelimit_match, 

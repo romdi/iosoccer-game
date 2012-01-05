@@ -15,8 +15,8 @@ public:
 
 };
 
-CTeamSpots	*g_pTeamSpots[2];
-Vector		g_vBallSpot;
+extern CTeamSpots	*g_pTeamSpots[2];
+extern Vector		g_vKickOffSpot;
 
 extern void InitMapSpots();
 extern CTeamSpots *GetOwnTeamSpots(CSDKPlayer *pPl);

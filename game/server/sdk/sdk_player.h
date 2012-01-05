@@ -14,8 +14,7 @@
 #include "sdk_playeranimstate.h"
 #include "sdk_player_shared.h"
 #include "ball.h"
-
-extern CUniformRandomStream g_IOSRand;
+#include "sdk_gamerules.h"
 
 const int MODEL_PLAYER			= 0;
 const int MODEL_KEEPER			= 1;
@@ -345,8 +344,16 @@ public:
 	char				m_szClubName[32];
 	bool				m_bClubNameChanged;
 
-	Vector EyeDirection2D();
-	Vector EyeDirection3D();
+	Vector				EyeDirection2D();
+	Vector				EyeDirection3D();
+
+	void				WalkToPosition(Vector pos, float speed, float tolerance);
+	void				DoWalkToPosition();
+
+private:
+	Vector				m_vWalkToPos;
+	float				m_flWalkToTolerance;
+	float				m_flWalkToSpeed;
 };
 
 

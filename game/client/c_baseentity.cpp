@@ -2523,6 +2523,17 @@ void C_BaseEntity::PostDataUpdate( DataUpdateType_t updateType )
 //-----------------------------------------------------------------------------
 void C_BaseEntity::CheckInitPredictable( const char *context )
 {
+	if (GetFlags() & FL_REMOTECONTROLLED)
+	{
+		if (cl_predict->GetBool())
+			cl_predict->SetValue(0);
+	}
+	else
+	{
+		if (!cl_predict->GetBool())
+			cl_predict->SetValue(1);
+	}
+
 #if !defined( NO_ENTITY_PREDICTION )
 	// Prediction is disabled
 	if ( !cl_predict->GetInt() )

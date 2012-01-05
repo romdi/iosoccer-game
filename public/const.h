@@ -96,7 +96,7 @@
 // PLAYER SPECIFIC FLAGS FIRST BECAUSE WE USE ONLY A FEW BITS OF NETWORK PRECISION
 #define	FL_ONGROUND				(1<<0)	// At rest / on the ground
 #define FL_DUCKING				(1<<1)	// Player flag -- Player is fully crouched
-#define	FL_WATERJUMP			(1<<2)	// player jumping out of water
+#define	FL_REMOTECONTROLLED		(1<<2)	// player is remote controlled
 #define FL_ONTRAIN				(1<<3) // Player is _controlling_ a train, so movement commands should be ignored on client during prediction.
 #define FL_INRAIN				(1<<4)	// Indicates the entity is standing in rain
 #define FL_FROZEN				(1<<5) // Player is frozen for 3rd person camera

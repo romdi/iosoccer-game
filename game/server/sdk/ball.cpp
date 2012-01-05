@@ -107,7 +107,8 @@ static const float KICK_DELAY  = 2.0f;		//at throwins etc
 
 CBall::CBall()
 {
-	m_eNewState = BALL_NOSTATE;
+	m_eNextState = BALL_NOSTATE;
+	m_flStateLeaveTime = gpGlobals->curtime;
 	m_bIgnoreTriggers = false;
 }
 
@@ -2408,12 +2409,14 @@ void CBall::PostStateHook()
 {
 	if (m_vNewVel == vec3_origin)
 	{
+		AddEffects(EF_NOINTERP);
 		m_pPhys->SetPosition(m_vNewPos, m_aNewAng, true);
 		//SetLocalOrigin(m_vNewPos);
 		//m_pPhys->SetVelocity(&m_vNewVel, &m_vNewAngImp);
 		m_pPhys->SetVelocityInstantaneous(&m_vNewVel, &m_vNewAngImp);
 		//SetLocalVelocity(m_vNewVel);
 		//VPhysicsUpdate(m_pPhys);
+		RemoveEffects(EF_NOINTERP);
 	}
 	else
 	{
@@ -2427,14 +2430,15 @@ void CBall::PostStateHook()
 
 ConVar mp_showballstatetransitions( "mp_showballstatetransitions", "1", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Show ball state transitions." );
 
-void CBall::State_Transition( ball_state_t newState )
+void CBall::State_Transition( ball_state_t newState, float delay /*= 0.0f*/ )
 {
-	m_eNewState = newState;
+	m_eNextState = newState;
+	m_flStateLeaveTime = gpGlobals->curtime + delay;
 }
 
 void CBall::State_DoTransition( ball_state_t newState )
 {
-	m_eNewState = BALL_NOSTATE;
+	m_eNextState = BALL_NOSTATE;
 	State_Leave();
 	State_Enter( newState );
 }
@@ -2444,8 +2448,6 @@ void CBall::State_Enter( ball_state_t newState )
 	m_eBallState = newState;
 	m_pCurStateInfo = State_LookupInfo( newState );
 	m_flStateEnterTime = gpGlobals->curtime;
-	m_flStateAutoLeaveTime = FLT_MAX;
-	m_eAutoLeaveState = BALL_NORMAL;
 
 	if ( mp_showballstatetransitions.GetInt() > 0 )
 	{
@@ -2473,16 +2475,13 @@ void CBall::State_Leave()
 void CBall::State_Think()
 {
 	PreStateHook();
-	while (m_eNewState != BALL_NOSTATE)
+	while (m_eNextState != BALL_NOSTATE && m_flStateLeaveTime <= gpGlobals->curtime)
 	{
-		State_DoTransition(m_eNewState);
+		State_DoTransition(m_eNextState);
 	}
 	if ( m_pCurStateInfo && m_pCurStateInfo->pfnThink )
 	{	
-		if (gpGlobals->curtime < m_flStateAutoLeaveTime)
-			(this->*m_pCurStateInfo->pfnThink)();
-		else
-			State_Transition(m_eAutoLeaveState);
+		(this->*m_pCurStateInfo->pfnThink)();
 	}
 	PostStateHook();
 }
@@ -2574,6 +2573,7 @@ void CBall::State_Enter_KICKOFF()
 	m_pPl->SetLocalOrigin(pos);
 	m_pPl->SnapEyeAngles(QAngle(0, 0, 0));
 
+	//m_pPl->WalkToPosition(g_vKickOffSpot, m_pPl->m_Shared.m_flSprintSpeed, 50);
 	ShieldBall(NULL);
 	SendMatchEvent(MATCH_EVENT_KICKOFF);
 }
@@ -2602,16 +2602,19 @@ void CBall::State_Enter_THROWIN()
 	if (!m_pPl) { State_Transition(BALL_NORMAL); return; }
 
 	int sign = (m_vSpawnPos - m_vPos).x > 0 ? 1 : -1;
-	m_pPl->SetLocalOrigin(Vector(m_vPos.x - 30 * sign, m_vPos.y, m_vPos.z));
+	m_vNewPos.x = m_vPos.x - 30 * sign;
+	m_pPl->SetLocalOrigin(m_vNewPos);
 	m_pPl->SnapEyeAngles(QAngle(0, -180 * sign + 180, 0));
 	m_pPl->AddFlag(FL_ATCONTROLS);
+	m_pPl->SetLocalVelocity(vec3_origin);
 	m_pPl->m_HoldAnimTime = -1;
 	m_pPl->SetAnimation(PLAYER_THROWIN);
 	m_pPl->DoAnimationEvent(PLAYERANIMEVENT_THROWIN);
 
 	ShieldBall(NULL);
-	SetPos(m_vPos + Vector(0, 0, 82));
-
+	SetPos(m_vNewPos + Vector(0, 0, VEC_HULL_MAX.z + 2));
+	//m_pPhys->EnableGravity(false);
+	m_pPhys->EnableMotion(false);
 	m_bIgnoreTriggers = true;
 
 	//m_pPl->m_HoldAnimTime = gpGlobals->curtime + BALL_STATUS_TIME;	//hold player still
@@ -2636,7 +2639,13 @@ void CBall::State_Think_THROWIN()
 		m_pPl->m_HoldAnimTime = gpGlobals->curtime + 1;
 		m_pPl->SetAnimation(PLAYER_THROW);
 		m_pPl->DoAnimationEvent(PLAYERANIMEVENT_THROW);
+		//m_pPhys->EnableGravity(true);
+		m_pPhys->EnableMotion(true);
 		State_Transition(BALL_NORMAL);
+	}
+	else
+	{
+		//m_aNewAng = m_pPl->GetLocalAngles();
 	}
 }
 
@@ -2764,8 +2773,7 @@ void CBall::State_Enter_GOAL()
 
 	EnableCeleb();
 
-	m_flStateAutoLeaveTime = gpGlobals->curtime + 10;
-	m_eAutoLeaveState = BALL_KICKOFF;
+	State_Transition(BALL_KICKOFF, 5);
 	
 	EmitSound("Ball.whistle");
 	SendMatchEvent(MATCH_EVENT_GOAL);

@@ -259,10 +259,9 @@ public:
 
 private:
 	ball_state_t	m_eBallState;
-	ball_state_t	m_eNewState;
-	ball_state_t	m_eAutoLeaveState;
+	ball_state_t	m_eNextState;
 	float			m_flStateEnterTime;
-	float			m_flStateAutoLeaveTime;
+	float			m_flStateLeaveTime;
 	CBallStateInfo	*m_pCurStateInfo;
 
 	bool			m_bIgnoreTriggers;
@@ -278,7 +277,7 @@ public:
 	void PreStateHook();
 	void PostStateHook();
 
-	void State_Transition( ball_state_t newState );
+	void State_Transition( ball_state_t newState, float delay = 0.0f );
 	void State_DoTransition( ball_state_t newState );
 	void State_Enter(ball_state_t newState);	// Initialize the new state.
 	void State_Leave();										// Cleanup the previous state.

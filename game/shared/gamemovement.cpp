@@ -1409,7 +1409,7 @@ void CGameMovement::CheckWaterJump( void )
 			{
 				mv->m_vecVelocity[2] = 256.0f;			// Push up
 				mv->m_nOldButtons |= IN_JUMP;		// Don't jump again until released
-				player->AddFlag( FL_WATERJUMP );
+				player->AddFlag( FL_REMOTECONTROLLED );
 				player->m_flWaterJumpTime = 2000.0f;	// Do this for 2 seconds
 			}
 		}
@@ -1432,7 +1432,7 @@ void CGameMovement::WaterJump( void )
 	if (player->m_flWaterJumpTime <= 0 || !player->GetWaterLevel())
 	{
 		player->m_flWaterJumpTime = 0;
-		player->RemoveFlag( FL_WATERJUMP );
+		player->RemoveFlag( FL_REMOTECONTROLLED );
 	}
 	
 	mv->m_vecVelocity[0] = player->m_vecWaterJumpVel[0];
@@ -5007,4 +5007,9 @@ void CGameMovement::SetPlayerSpeed()
 		}
 	}	
 #endif // SDK_USE_PRONE
+
+	if (pPl->GetFlags() & FL_REMOTECONTROLLED)
+	{
+		mv->m_flClientMaxSpeed = pPl->m_Shared.m_flSprintSpeed;
+	}
 }

@@ -233,7 +233,6 @@ CSDKPlayer::CSDKPlayer()
 	m_angEyeAngles.Init();
 
 	m_pCurStateInfo = NULL;	// no state yet
-
 }
 
 
@@ -881,6 +880,8 @@ void CSDKPlayer::State_Enter_ACTIVE()
 
 void CSDKPlayer::State_PreThink_ACTIVE()
 {
+	if (GetFlags() & FL_REMOTECONTROLLED)
+		DoWalkToPosition();
 }
 
 int CSDKPlayer::GetPlayerStance()
@@ -1847,4 +1848,38 @@ Vector CSDKPlayer::EyeDirection3D( void )
 	Vector vecForward;
 	AngleVectors( EyeAngles(), &vecForward );
 	return vecForward;
+}
+
+void CSDKPlayer::WalkToPosition(Vector pos, float speed, float tolerance)
+{
+	m_vWalkToPos = pos;
+	m_flWalkToSpeed = speed;
+	m_flWalkToTolerance = tolerance;
+	SetLocalVelocity(vec3_origin);
+	AddFlag(FL_REMOTECONTROLLED);	
+}
+
+void CSDKPlayer::DoWalkToPosition()
+{
+	float dist = GetLocalOrigin().DistTo(m_vWalkToPos);
+
+	if (dist < m_flWalkToTolerance)
+	{
+		SetLocalVelocity(vec3_origin);
+		RemoveFlag(FL_REMOTECONTROLLED);
+	}
+	else
+	{
+		m_flRemoteForwardmove = m_flWalkToSpeed;
+		m_flRemoteSidemove = 0;
+		m_flRemoteUpmove = 0;
+		m_nRemoteButtons = 0;
+		QAngle ang;
+		VectorAngles(m_vWalkToPos - GetLocalOrigin(), ang);
+		ang[PITCH] += ang[PITCH] < -180 ? 360 : (ang[PITCH] > 180 ? -360 : 0);
+		ang[YAW] += ang[YAW] < -180 ? 360 : (ang[YAW] > 180 ? -360 : 0);
+		ang[ROLL] = 0;
+		m_aRemoteViewangles = ang;
+		SnapEyeAngles(ang);
+	}
 }
