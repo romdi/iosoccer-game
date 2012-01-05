@@ -19,12 +19,9 @@
 #define CTEXTURESMAX		512			// max number of textures loaded
 #define CBTEXTURENAMEMAX	13			// only load first n chars of name
 
-#define GAMEMOVEMENT_DUCK_TIME				1000.0f		// ms
 #define GAMEMOVEMENT_JUMP_TIME				510.0f		// ms approx - based on the 21 unit height jump
 //ios #define GAMEMOVEMENT_JUMP_HEIGHT			21.0f		// units
 #define GAMEMOVEMENT_JUMP_HEIGHT			15.0f		// units
-#define GAMEMOVEMENT_TIME_TO_UNDUCK			( TIME_TO_UNDUCK * 1000.0f )		// ms
-#define GAMEMOVEMENT_TIME_TO_UNDUCK_INV		( GAMEMOVEMENT_DUCK_TIME - GAMEMOVEMENT_TIME_TO_UNDUCK )
 
 struct surfacedata_t;
 
@@ -58,15 +55,10 @@ public:
 protected:
 	// Input/Output for this movement
 	CMoveData		*mv;
-	
-	int				m_nOldWaterLevel;
-	float			m_flWaterEntryTime;
-	int				m_nOnLadder;
 
 	Vector			m_vecForward;
 	Vector			m_vecRight;
 	Vector			m_vecUp;
-
 
 	// Does most of the player movement logic.
 	// Returns with origin, angles, and velocity modified in place.
@@ -76,15 +68,7 @@ protected:
 	// Set ground data, etc.
 	void			FinishMove( void );
 
-	virtual float	CalcRoll( const QAngle &angles, const Vector &velocity, float rollangle, float rollspeed );
-
-	virtual	void	DecayPunchAngle( void );
-
-	virtual void	CheckWaterJump(void );
-
-	virtual void	WaterMove( void );
-
-	void			WaterJump( void );
+	virtual float	CalcRoll( const QAngle &angles, const Vector &velocity, float rollangle, float rollspeed );;
 
 	// Handles both ground friction and water friction
 	void			Friction( void );
@@ -145,19 +129,9 @@ protected:
 	// Player is a Observer chasing another player
 	void			FullObserverMove( void );
 
-	// Handle movement when in MOVETYPE_LADDER mode.
-	virtual void	FullLadderMove();
-
 	// The basic solid body movement clip that slides along multiple planes
 	virtual int		TryPlayerMove( Vector *pFirstDest=NULL, trace_t *pFirstTrace=NULL );
 	
-	virtual bool	LadderMove( void );
-	virtual bool	OnLadder( trace_t &trace );
-	virtual float	LadderDistance( void ) const { return 2.0f; }	///< Returns the distance a player can be from a ladder and still attach to it
-	virtual unsigned int LadderMask( void ) const { return MASK_PLAYERSOLID; }
-	virtual float	ClimbSpeed( void ) const { return MAX_CLIMB_SPEED; }
-	virtual float	LadderLateralMultiplier( void ) const { return 1.0f; }
-
 	// See if the player has a bogus velocity value.
 	void			CheckVelocity( void );
 
@@ -178,11 +152,6 @@ protected:
 #endif
 	int				CheckStuck( void );
 	
-	// Check if the point is in water.
-	// Sets refWaterLevel and refWaterType appropriately.
-	// If in water, applies current to baseVelocity, and returns true.
-	virtual bool			CheckWater( void );
-	
 	// Determine if player is in water, on ground, etc.
 	virtual void CategorizePosition( void );
 
@@ -190,42 +159,13 @@ protected:
 
 	virtual	void	ReduceTimers( void );
 
-	virtual void	CheckFalling( void );
-
-	virtual void	PlayerRoughLandingEffects( float fvol );
-
-	void			PlayerWaterSounds( void );
-
 	void ResetGetPointContentsCache();
 	int GetPointContentsCached( const Vector &point, int slot );
 
-	// Ducking
-	virtual void	Duck( void );
-	virtual void	HandleDuckingSpeedCrop();
-	virtual void	FinishUnDuck( void );
-	virtual void	FinishDuck( void );
-	virtual bool	CanUnduck();
-	void			UpdateDuckJumpEyeOffset( void );
-	bool			CanUnDuckJump( trace_t &trace );
-	void			StartUnDuckJump( void );
-	void			FinishUnDuckJump( trace_t &trace );
-	void			SetDuckedEyeOffset( float duckFraction );
-	void			FixPlayerCrouchStuck( bool moveup );
-
-	float			SplineFraction( float value, float scale );
-
 	void			CategorizeGroundSurface( trace_t &pm );
-
-	bool			InWater( void );
-
-	// Commander view movement
-	void			IsometricMove( void );
 
 	// Traces the player bbox as it is swept from start to end
 	virtual CBaseHandle		TestPlayerPosition( const Vector& pos, int collisionGroup, trace_t& pm );
-
-	// Checks to see if we should actually jump 
-	void			PlaySwimSound();
 
 	bool			IsDead( void ) const;
 
@@ -240,8 +180,6 @@ protected:
 
 	// Performs the collision resolution for fliers.
 	void			PerformFlyCollisionResolution( trace_t &pm, Vector &move );
-
-	virtual bool	GameHasLadders() const;
 
 	enum
 	{
@@ -262,13 +200,6 @@ protected:
 	bool			m_bSpeedCropped;
 
 	float			m_flStuckCheckTime[MAX_PLAYERS+1][2]; // Last time we did a full test
-
-	// special function for teleport-with-duck for episodic
-#ifdef HL2_EPISODIC
-public:
-	void			ForceDuck( void );
-
-#endif
 };
 
 
