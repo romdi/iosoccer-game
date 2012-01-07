@@ -265,36 +265,3 @@ IMPLEMENT_CLIENTCLASS_DT( CPhysicsPropMultiplayer, DT_PhysicsPropMultiplayer, CP
 	RecvPropVector( RECVINFO( m_collisionMaxs ) ),
 END_RECV_TABLE()
 #endif
-
-//IOS
-class CBall : public CPhysicsProp, public IMultiplayerPhysics
-{
-	DECLARE_CLASS( CBall, CPhysicsProp );
-
-	virtual int GetMultiplayerPhysicsMode()
-	{
-		Assert( m_iPhysicsMode != PHYSICS_MULTIPLAYER_CLIENTSIDE );
-		Assert( m_iPhysicsMode != PHYSICS_MULTIPLAYER_AUTODETECT );
-		return m_iPhysicsMode;
-	}
-
-	virtual float GetMass()
-	{
-		return m_fMass;
-	}
-	virtual bool IsAsleep()
-	{
-		Assert ( 0 );
-		return true;
-	}
-	CNetworkVar( int, m_iPhysicsMode );	// One of the PHYSICS_MULTIPLAYER_ defines.	
-	CNetworkVar( float, m_fMass );
-
-	DECLARE_CLIENTCLASS();
-};
-
-IMPLEMENT_CLIENTCLASS_DT( CBall, DT_Ball, CBall )
-	RecvPropInt( RECVINFO( m_iPhysicsMode ) ),
-	RecvPropFloat( RECVINFO( m_fMass ) ),
-	//RecvPropVector( RECVINFO_NAME( m_vecNetworkOrigin, m_vecOrigin ) ),	//ios1.1
-END_RECV_TABLE()

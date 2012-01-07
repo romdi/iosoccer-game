@@ -529,16 +529,20 @@ CBaseEntity *CBall::FindTarget (CBaseEntity *pPlayer)
 	return pClosest;
 }
 
-void CBall::SendMatchEvent(match_event_t matchEvent)
+void CBall::SendMatchEvent(match_event_t matchEvent, CSDKPlayer *pPlayer1, CSDKPlayer *pPlayer2)
 {
-	UTIL_LogPrintf( "\"%s<%d><%s><%s>\" triggered \"%d\"\n",
-		m_pPl->GetPlayerName(), m_pPl->GetUserID(),
-		m_pPl->GetNetworkIDString(), m_pPl->GetTeam()->GetName(), matchEvent);
+	if (pPlayer1)
+	{
+		UTIL_LogPrintf( "\"%s<%d><%s><%s>\" triggered \"%d\"\n",
+			pPlayer1->GetPlayerName(), pPlayer1->GetUserID(),
+			pPlayer1->GetNetworkIDString(), pPlayer1->GetTeam()->GetName(), matchEvent);
+	}
 
 	CReliableBroadcastRecipientFilter filter;
 	UserMessageBegin(filter, "MatchEvent");
 		WRITE_BYTE(matchEvent);
-		WRITE_BYTE(m_pPl->entindex());
+		WRITE_BYTE(pPlayer1 ? pPlayer1->entindex() : 0);
+		WRITE_BYTE(pPlayer2 ? pPlayer2->entindex() : 0);
 	MessageEnd();
 }
 
@@ -2574,8 +2578,8 @@ void CBall::State_Enter_KICKOFF()
 	m_pPl->SnapEyeAngles(QAngle(0, 0, 0));
 
 	//m_pPl->WalkToPosition(g_vKickOffSpot, m_pPl->m_Shared.m_flSprintSpeed, 50);
-	ShieldBall(NULL);
-	SendMatchEvent(MATCH_EVENT_KICKOFF);
+	//EnableShield(true, g_vKickOffSpot, Vector(100, 0, 0));
+	SendMatchEvent(MATCH_EVENT_KICKOFF, m_pPl, m_pPl);
 }
 
 void CBall::State_Think_KICKOFF()
@@ -2593,7 +2597,7 @@ void CBall::State_Leave_KICKOFF()
 {
 	//if (m_pPl)
 	//	m_pPl->RemoveFlag(FL_ATCONTROLS);
-	ShieldOff();
+	//DisableShield();
 }
 
 void CBall::State_Enter_THROWIN()
@@ -2686,8 +2690,15 @@ void CBall::State_Enter_GOALKICK()
 	int ySign = (ballPos - GetOwnTeamSpots(m_pPl)->m_vPlayers[0] ).y > 0 ? 1 : -1;
 	m_pPl->SetLocalOrigin(Vector(ballPos.x, ballPos.y - 200 * ySign, ballPos.z));
 	m_pPl->SnapEyeAngles(QAngle(0, 90 * ySign, 0));
-
-	ShieldBall(NULL);
+	Vector penPos = g_pTeamSpots[m_pPl->GetTeamNumber() - TEAM_A]->m_vPenalty;
+	int teamFlag = m_pPl->GetTeamNumber() == TEAM_A ? FL_SHIELD_TEAM_HOME : FL_SHIELD_TEAM_AWAY;
+	CBaseEntity *pPenBox = gEntList.FindEntityByClassnameNearest("trigger_PenaltyBox", penPos, 99999);
+	SDKGameRules()->EnableCircShield(teamFlag, 360, penPos);
+	//SDKGameRules()->EnableRectShield(teamFlag, Vector(penPos.x - 850, penPos.y - 300, 0), Vector(penPos.x + 850, penPos.y + 300, 0));
+	Vector min, max;
+	//modelinfo->GetModelBounds(pPenBox->GetModel(), min, max);
+	pPenBox->CollisionProp()->WorldSpaceTriggerBounds( &min, &max );
+	SDKGameRules()->EnableRectShield(teamFlag, min, max);
 	SetPos(ballPos);
 
 	EmitAmbientSound(entindex(), GetAbsOrigin(), "Ball.whistle");

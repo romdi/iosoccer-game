@@ -134,7 +134,7 @@ private:
 	int				m_nReplaySnapshotIndex;
 
 public:
-	void			SendMatchEvent(match_event_t matchEvent);
+	void			SendMatchEvent(match_event_t matchEvent, CSDKPlayer *pPlayer1 = NULL, CSDKPlayer *pPlayer2 = NULL);
 
 	void			TakeReplaySnapshot();
 	void			StartReplay();

@@ -33,8 +33,6 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-#define INIT_BAT	-1
-
 using namespace vgui;
 
 struct Event_t
@@ -58,7 +56,6 @@ public:
 	void Reset( void );
 	void VidInit( void );
 	void DrawText( int x, int y, HFont hFont, Color clr, const wchar_t *szText );
-	void ShowMatchEvent();
 	void DoEventSlide();
 	void MsgFunc_MatchEvent(bf_read &msg);
 
@@ -356,175 +353,11 @@ void CHudScorebar::Paint( void )
 	_snwprintf(scoreText, sizeof(scoreText), L"%s - %s", scoreHome, scoreAway);
 	m_pScorebarScoreLabel->SetText(scoreText);
 
-	//if (m_flEventStart != -1)
-	//	ShowMatchEvent();
 	DoEventSlide();
-}
-
-#define SHOW_DURATION 5
-#define SLIDE_DURATION 1
-#define FLASH_COUNT 3
-
-void CHudScorebar::ShowMatchEvent()
-{
-	float timeleft = m_flNotificationTime - gpGlobals->curtime;
-	float timePassed = gpGlobals->curtime - m_flEventStart;
-
-	if (timePassed <= SLIDE_DURATION)
-	{
-		//m_pEventPanel->SetPos(0, 150 * (1 - (timePassed - 4) / SLIDE_DURATION) - m_pEventPanel->GetTall());
-		//m_pEventPanel->SetPos(0, m_pEventPanel->GetTall() * (timePassed / SLIDE_DURATION - 1) - 10);
-		int pos = pow(cos((timePassed / SLIDE_DURATION) * M_PI / 2), 2) * -m_pEventPanel->GetTall() + HEIGHT_SCOREBAR - HEIGHT_OVERLAP;
-		m_pEventPanel->SetPos(0, pos);
-	}
-	else if (timePassed <= SLIDE_DURATION + SHOW_DURATION)
-	{
-		//float c = sin((1 - abs(timeleft - 1 - 1.5f) / 1.5f) * (M_PI*2));//(int)(timeleft * 10) % 2 == 0 ? 
-		float colorModifier;
-		if (m_bFlash)
-			//colorModifier = 1 - (cos((1 - (timeleft - 1) / 3.0f) * (2*M_PI*5)) + 1) / 2.0f;//(int)(timeleft * 10) % 2 == 0 ? 
-			colorModifier = pow(cos(((timePassed - SLIDE_DURATION) / SHOW_DURATION - 0.5f) * M_PI * FLASH_COUNT), 2);
-		else
-			colorModifier = 0;
-
-		m_pEventTypePanel->SetBgColor(Color(colorModifier * 200, colorModifier * 200, colorModifier * 200, 200));
-	}
-	else if (timePassed <= SLIDE_DURATION + SHOW_DURATION + SLIDE_DURATION)
-	{
-		int pos = pow(cos((1 - (timePassed - SLIDE_DURATION - SHOW_DURATION) / SLIDE_DURATION) * M_PI / 2), 2) * -m_pEventPanel->GetTall() + HEIGHT_SCOREBAR - HEIGHT_OVERLAP;
-		m_pEventPanel->SetPos(0, pos);
-	}
-	else
-	{
-		m_flNotificationTime = -1;
-		m_flEventStart = -1;
-		//m_pEventPanel->SetVisible(false);
-		//m_pEventPanel->SetBgColor(Color(0, 0, 0, 150));
-	}
 }
 
 void CHudScorebar::DoEventSlide()
 {
-	/*int panelHeight = m_pEventTypePanel->GetTall();
-
-	for (int i = 0; i < m_vEventList.Count(); i++)
-	{
-	Event_t event = m_vEventList[i];
-	if (event.endTime <= gpGlobals->curtime)
-	{
-	int x, y, w, h;
-	event.pEventType->GetBounds(x, y, w, h);
-
-	int newY = HEIGHT_OVERLAP + i * HEIGHT_EVENTLABEL * (1 - (gpGlobals->curtime - event.endTime) / 1.0f);
-	panelHeight -= y - newY;
-
-	if (newY + h > HEIGHT_OVERLAP)
-	{
-	event.pEventType->SetPos(0, y);
-	event.pHomeTeam->SetPos(0, y);
-	event.pAwayTeam->SetPos(0, y);
-	}
-	else
-	{
-	delete event.pEventType;
-	delete event.pHomeTeam;
-	delete event.pAwayTeam;
-	m_vEventList.Remove(i);
-	i -= 1;
-	}
-	}
-	}
-
-	for (int i = 0; i < m_pEventPanel->GetChildCount(); i++)
-	{
-	m_pEventPanel->GetChild(i)->SetTall(HEIGHT_OVERLAP + HEIGHT_EVENTLABEL * m_vEventList.Count());
-	}*/
-
-	/*if (m_vEventList.Count() == 0)
-	return;
-
-	Event_t head = m_vEventList.Head();
-	Event_t tail = m_vEventList.Tail();
-	int panelHeight = HEIGHT_OVERLAP + HEIGHT_EVENTLABEL * m_vEventList.Count();
-
-	if (gpGlobals->curtime - tail.startTime <= 1)
-	{
-	panelHeight -=  HEIGHT_EVENTLABEL * (1 - (gpGlobals->curtime - tail.startTime) / 1.0f);
-	}
-
-	if (gpGlobals->curtime - head.startTime >= 6)
-	{
-	int headY = HEIGHT_OVERLAP - HEIGHT_EVENTLABEL * (gpGlobals->curtime - (head.startTime + 1 + 5)) / 1.0f;
-
-	for (int i = 0; i < m_vEventList.Count(); i++)
-	{
-	Event_t event = m_vEventList[i];
-	event.pEventType->SetY(headY + i * HEIGHT_EVENTLABEL);
-	event.pHomeTeam->SetY(headY + i * HEIGHT_EVENTLABEL);
-	event.pAwayTeam->SetY(headY + i * HEIGHT_EVENTLABEL);
-	}
-
-	panelHeight += headY - HEIGHT_OVERLAP;
-
-	if (headY + HEIGHT_EVENTLABEL <= HEIGHT_OVERLAP)
-	{
-	delete head.pEventType;
-	delete head.pHomeTeam;
-	delete head.pAwayTeam;
-	m_vEventList.Remove(0);
-	}
-	}
-
-	for (int i = 0; i < m_pEventPanel->GetChildCount(); i++)
-	{
-	m_pEventPanel->GetChild(i)->SetTall(panelHeight);
-	}
-	*/
-
-	//if (m_vEventList.Count() == 0)
-	//	return;
-
-	//int height = HEIGHT_OVERLAP;
-
-	//for (int i = 0; i < m_vEventList.Count(); i++)
-	//{
-	//	Event_t event = m_vEventList[i];
-
-	//	event.pEventType->SetY(height);
-	//	event.pHomeTeam->SetY(height);
-	//	event.pAwayTeam->SetY(height);
-
-	//	if (gpGlobals->curtime - event.startTime <= 1)
-	//	{
-	//		height += HEIGHT_EVENTLABEL * min(1, gpGlobals->curtime - event.startTime) / 1.0f;
-	//	}
-	//	else if (gpGlobals->curtime - event.startTime >= 6)
-	//	{
-	//		height -= HEIGHT_EVENTLABEL;
-	//		height += HEIGHT_EVENTLABEL * (1 - min(1, gpGlobals->curtime - (event.startTime + 1 + 5)) / 1.0f);
-	//		event.pEventType->SetY(height);
-	//		event.pHomeTeam->SetY(height);
-	//		event.pAwayTeam->SetY(height);
-
-	//		if (height == HEIGHT_OVERLAP)
-	//		{
-	//			delete event.pEventType;
-	//			delete event.pHomeTeam;
-	//			delete event.pAwayTeam;
-	//			m_vEventList.Remove(0);
-	//		}
-	//	}
-	//	else
-	//	{
-	//		height += HEIGHT_EVENTLABEL;
-	//	}
-	//}
-
-	//for (int i = 0; i < m_pEventPanel->GetChildCount(); i++)
-	//{
-	//	m_pEventPanel->GetChild(i)->SetTall(height);
-	//}
-
 	if (m_vEventList.Count() == 0)
 	{
 		for (int i = 0; i < m_pEventPanel->GetChildCount(); i++)
@@ -601,26 +434,16 @@ void CHudScorebar::DoEventSlide()
 	}
 }
 
+#include "ehandle.h"
+#include "c_sdk_player.h"
+
 void CHudScorebar::MsgFunc_MatchEvent(bf_read &msg)
 {
 	IGameResources *gr = GameResources();
 	match_event_t eventType = (match_event_t)msg.ReadByte();
-	int playerIndex = msg.ReadByte();
-	//m_pEventTypeLabels[0]->SetText(VarArgs("%s", g_szMatchEventNames[eventType]));
-	m_pEventTypeLabels[0]->SetText(VarArgs("%s", g_szMatchEventNames[6]));
-	//m_pEventTypeLabels[0]->SetVisible(true);
-	m_pEventTypeLabels[1]->SetText(VarArgs("%s", g_szMatchEventNames[6]));
-	//char *club = VarArgs("%s", gr->GetPlayerName(playerIndex));
-
-	m_pEventTeamLabels[0][0]->SetText("(F) ThisIsAVeryLongName");
-	//m_pEventTeamLabels[0][0]->SetVisible(true);
-	m_pEventTeamLabels[1][0]->SetText("(R) ThisIsAnotherLongName");
-	//m_pEventTeamLabels[1][0]->SetVisible(true);
-
-	m_pEventTeamLabels[0][1]->SetText("(F) ThisIsAVeryLongName");
-	//m_pEventTeamLabels[0][1]->SetVisible(true);
-	m_pEventTeamLabels[1][1]->SetText("(R) ThisIsAnotherLongName");
-	//m_pEventTeamLabels[1][1]->SetVisible(true);
+	int playerIndices[] = { msg.ReadByte(), msg.ReadByte() };
+	//C_SDKPlayer *pPlayer1 = (C_SDKPlayer *)CHandle<C_SDKPlayer>::FromIndex(msg.ReadLong());
+	//C_SDKPlayer *pPlayer2 = (C_SDKPlayer *)CHandle<C_SDKPlayer>::FromIndex(msg.ReadLong());
 
 	Label *pEventType = new Label(m_pEventTypePanel, "EventTypeLabel", g_szMatchEventNames[eventType]);
 	pEventType->SetFont(pScheme->GetFont("IOSMatchEvent"));
@@ -632,7 +455,7 @@ void CHudScorebar::MsgFunc_MatchEvent(bf_read &msg)
 	Label *pTeams[2];
 	for (int i = 0; i < 2; i++)
 	{
-		pTeams[i] = new Label(m_pEventTeamPanels[i], VarArgs("TeamLabel%d", i + 1), "(R) ThisIsAnotherLongName");
+		pTeams[i] = new Label(m_pEventTeamPanels[i], VarArgs("TeamLabel%d", i + 1), playerIndices[i] == 0 ? "" : gr->GetPlayerName(playerIndices[i]));
 		pTeams[i]->SetBounds(0, HEIGHT_OVERLAP + m_vEventList.Count() * HEIGHT_EVENTLABEL, WIDTH_TEAMLABEL, HEIGHT_EVENTLABEL);
 		pTeams[i]->SetFgColor(Color(255, 255, 255, 0));
 		pTeams[i]->SetFont(pScheme->GetFont("IOSTeamEvent"));
@@ -647,19 +470,7 @@ void CHudScorebar::MsgFunc_MatchEvent(bf_read &msg)
 
 	m_nTargetHeight += HEIGHT_EVENTLABEL;
 
-	/*for (int i = 0; i < m_pEventPanel->GetChildCount(); i++)
-	{
-		m_pEventPanel->GetChild(i)->SetTall(m_pEventPanel->GetChild(i)->GetTall() + HEIGHT_EVENTLABEL);
-	}*/
-
-	//m_pEventPanel->SetPos(0, HEIGHT_SCOREBAR - HEIGHT_OVERLAP);
-
-	//m_pEventPanel->SetTall(HEIGHT_OVERLAP + HEIGHT_EVENTBAR * 2);
-	//m_pEventTeamPanels[0]->SetTall(HEIGHT_OVERLAP + HEIGHT_EVENTBAR * 2);
-
 	m_flEventStart = gpGlobals->curtime;
 	m_flNotificationTime = gpGlobals->curtime + 5;
 	m_bFlash = eventType == MATCH_EVENT_GOAL ? true : false;
-	//m_pEventPanel->SetPos(0, 0);
-	//m_pEventPanel->SetVisible(true);
 }

@@ -65,6 +65,8 @@ protected:
 	// were contacted during the move.
 	virtual void	PlayerMove(	void );
 
+	void			CheckBallShield();
+
 	// Set ground data, etc.
 	void			FinishMove( void );
 

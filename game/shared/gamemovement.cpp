@@ -3111,6 +3111,8 @@ void CGameMovement::CategorizePosition( void )
 
 static ConVar sv_optimizedmovement( "sv_optimizedmovement", "1", FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
 
+#include "sdk_gamerules.h"
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -3130,32 +3132,7 @@ void CGameMovement::PlayerMove( void )
 
 	AngleVectors (mv->m_vecViewAngles, &m_vecForward, &m_vecRight, &m_vecUp );  // Determine movement angles
 
-	//mv->m_flForwardMove		= mv->m_flForwardMove < 0 ? max(mv->m_flForwardMove, -400) : mv->m_flForwardMove;
-	//mv->m_flSideMove = clamp(mv->m_flSideMove, -400, 400);
-	//mv->m_flUpMove			= clamp(mv->m_flUpMove, -400, 400);
-
-	//CBasePlayer *opl = UTIL_PlayerByIndex(1);
-	//if (player != opl)
-	//{
-	//	Vector dir = opl->GetLocalOrigin() - mv->GetAbsOrigin();
-	//	if (dir.Length2D() < 200)
-	//	{
-	//		Vector vel = mv->m_flForwardMove * m_vecForward + mv->m_flSideMove * m_vecRight;
-	//		if (vel.Length2D() != 0)
-	//		{
-	//			dir.NormalizeInPlace();
-	//			vel.NormalizeInPlace();
-	//			float ang = RAD2DEG(acos(DotProduct2D(dir.AsVector2D(), vel.AsVector2D())));
-	//			if (abs(ang) < 90)
-	//			{
-	//				mv->m_vecVelocity.x = 0;
-	//				mv->m_vecVelocity.y = 0;
-	//				mv->m_flForwardMove = 0;
-	//				mv->m_flSideMove = 0;
-	//			}
-	//		}
-	//	}
-	//}
+	CheckBallShield();
 
 	// Always try and unstick us unless we are using a couple of the movement modes
 	if ( player->GetMoveType() != MOVETYPE_NOCLIP && 
@@ -3235,6 +3212,77 @@ void CGameMovement::PlayerMove( void )
 	}
 }
 
+void CGameMovement::CheckBallShield()
+{
+	int teamFlag = player->GetTeamNumber() == TEAM_A ? FL_SHIELD_TEAM_HOME : FL_SHIELD_TEAM_AWAY;
+
+	if (SDKGameRules()->m_nShieldFlags & (FL_SHIELD_CIRC | FL_SHIELD_RECT) && !(SDKGameRules()->m_nShieldFlags & teamFlag))
+	{
+		Vector vel = mv->m_flForwardMove * m_vecForward + mv->m_flSideMove * m_vecRight;
+		vel.z = 0;
+		vel.NormalizeInPlace();
+
+		if (vel.Length2D() != 0)
+		{
+			bool stopPlayer = false;
+
+			if (SDKGameRules()->m_nShieldFlags & FL_SHIELD_CIRC)
+			{
+				Vector dir = SDKGameRules()->m_vCircShieldPos - mv->GetAbsOrigin();
+				if (dir.Length2D() <= SDKGameRules()->m_nCircShieldRadius)
+				{
+					dir.z = 0;
+					dir.NormalizeInPlace();
+					float ang = RAD2DEG(acos(DotProduct(dir, vel)));
+					if (abs(ang) < 90)
+						stopPlayer = true;
+				}
+			}
+
+			if (!stopPlayer && SDKGameRules()->m_nShieldFlags & FL_SHIELD_RECT)
+			{
+				Vector vMin = SDKGameRules()->m_vRectShieldMin;
+				Vector vMax = SDKGameRules()->m_vRectShieldMax;
+				Vector pos = mv->GetAbsOrigin();
+
+				if (pos.x >= vMin.x && pos.y >= vMin.y && pos.x <= vMax.x && pos.y <= vMax.y)
+				{
+					Vector center = (vMin + vMax) / 2;
+					Vector dir = mv->GetAbsOrigin() - center;
+					Vector zeroDir = vMax - center;
+					dir.z = 0;
+					dir.NormalizeInPlace();
+					zeroDir.z = 0;
+					zeroDir.NormalizeInPlace();
+					float partAng = RAD2DEG(acos(DotProduct(zeroDir, Vector(1, 0, 0))));
+					float smallAng = partAng * 2;
+					float bigAng = 180 - smallAng;
+					float ang = RAD2DEG(acos(DotProduct(zeroDir, dir)));
+					float cross = zeroDir.Cross(dir).z;
+					if (cross > 0)
+						ang = 360 - ang;
+
+					if (ang >= 0 && ang <= smallAng)
+						stopPlayer = vel.x < 0;
+					else if (ang > smallAng && ang <= smallAng + bigAng)
+						stopPlayer = vel.y > 0;
+					else if (ang > smallAng + bigAng && ang <= smallAng * 2 + bigAng)
+						stopPlayer = vel.x > 0;
+					else
+						stopPlayer = vel.y < 0;
+				}
+			}
+
+			if (stopPlayer)
+			{
+				mv->m_vecVelocity.x = 0;
+				mv->m_vecVelocity.y = 0;
+				mv->m_flForwardMove = 0;
+				mv->m_flSideMove = 0;
+			}
+		}
+	}
+}
 
 //-----------------------------------------------------------------------------
 // Performs the collision resolution for fliers.

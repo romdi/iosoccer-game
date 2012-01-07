@@ -109,12 +109,24 @@ BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 	//RecvPropInt( RECVINFO( m_iDuration) ),
 	RecvPropInt( RECVINFO( m_eMatchState) ),// 0, RecvProxy_MatchState ),
 	RecvPropInt( RECVINFO( m_nAnnouncedInjuryTime) ),// 0, RecvProxy_MatchState ),
+
+	RecvPropInt(RECVINFO(m_nShieldFlags)),
+	RecvPropInt(RECVINFO(m_nCircShieldRadius)),
+	RecvPropVector(RECVINFO(m_vCircShieldPos)),
+	RecvPropVector(RECVINFO(m_vRectShieldMin)),
+	RecvPropVector(RECVINFO(m_vRectShieldMax)),
 #else
 	SendPropFloat( SENDINFO( m_flStateEnterTime ), 32, SPROP_NOSCALE ),
 	//SendPropFloat( SENDINFO( m_fStart) ),
 	//SendPropInt( SENDINFO( m_iDuration) ),
-	SendPropInt( SENDINFO( m_eMatchState ), 5 ),
-	SendPropInt( SENDINFO( m_nAnnouncedInjuryTime ), 5 ),
+	SendPropInt( SENDINFO( m_eMatchState )),
+	SendPropInt( SENDINFO( m_nAnnouncedInjuryTime )),
+
+	SendPropInt(SENDINFO(m_nShieldFlags)),
+	SendPropInt(SENDINFO(m_nCircShieldRadius)),
+	SendPropVector(SENDINFO(m_vCircShieldPos), -1, SPROP_COORD),
+	SendPropVector(SENDINFO(m_vRectShieldMin), -1, SPROP_COORD),
+	SendPropVector(SENDINFO(m_vRectShieldMax), -1, SPROP_COORD),
 #endif
 END_NETWORK_TABLE()
 
@@ -291,9 +303,15 @@ void InitBodyQue()
 
 CSDKGameRules::CSDKGameRules()
 {
-	g_IOSRand.SetSeed(gpGlobals->curtime * 1000);
+	g_IOSRand.SetSeed(gpGlobals->curtime);
 
 	m_pCurStateInfo = NULL;
+
+	m_nShieldFlags = 0;
+	m_nCircShieldRadius = 0;
+	m_vCircShieldPos = vec3_origin;
+	m_vRectShieldMin = vec3_origin;
+	m_vRectShieldMax = vec3_origin;
 	
 	//ios m_bLevelInitialized = false;
 
@@ -1357,10 +1375,26 @@ void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 	}
 }
 
+void CSDKGameRules::EnableCircShield(int nTeamFlag, int nRadius, Vector vPos)
+{
+	m_nShieldFlags |= FL_SHIELD_CIRC | nTeamFlag;
+	m_nCircShieldRadius = nRadius;
+	m_vCircShieldPos = vPos;
+}
+
+void CSDKGameRules::EnableRectShield(int nTeamFlag, Vector vMin, Vector vMax)
+{
+	m_nShieldFlags |= FL_SHIELD_RECT | nTeamFlag;
+	m_vRectShieldMin = vMin;
+	m_vRectShieldMax = vMax;
+}
+
+void CSDKGameRules::DisableShields()
+{
+	m_nShieldFlags = 0;
+}
 
 #endif
-
-
 
 #ifdef CLIENT_DLL
 

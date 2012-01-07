@@ -69,6 +69,11 @@ enum match_state_t
 	MATCH_END
 };
 
+#define FL_SHIELD_CIRC			(1<<0)
+#define FL_SHIELD_RECT			(1<<1)
+#define FL_SHIELD_TEAM_HOME		(1<<2)
+#define FL_SHIELD_TEAM_AWAY		(1<<3)
+
 class CSDKGameRules;
 
 class CSDKGameRulesStateInfo
@@ -310,8 +315,18 @@ protected:
 
 public:
 	void ClientSettingsChanged( CBasePlayer *pPlayer );
+
+	void EnableCircShield(int nTeamFlag, int nRadius, Vector vPos);
+	void EnableRectShield(int nTeamFlag, Vector vMin, Vector vMax);
+	void DisableShields();
 #endif
 
+public:
+	CNetworkVar(int, m_nShieldFlags);
+	CNetworkVar(int, m_nCircShieldRadius);
+	CNetworkVector(m_vCircShieldPos);
+	CNetworkVector(m_vRectShieldMin);
+	CNetworkVector(m_vRectShieldMax);
 };
 
 //-----------------------------------------------------------------------------
