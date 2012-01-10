@@ -372,7 +372,10 @@ void CBot::BotFrame()
 		//	BotFieldplayerThink(pBot);//return;
 		//}
 
-		BotThink();
+		RunMimicCommand(m_cmd);
+
+		if (bot_mimic.GetInt() == 0)
+			BotThink();
 
 		// Fix up the m_fEffects flags
 		PostClientMessagesSent();
@@ -384,8 +387,8 @@ void CBot::BotFrame()
 		//cmd.impulse = 0;
 
 		//m_cmd.viewangles = pBot->GetLocalAngles();
-		m_cmd.upmove = 0;
-		m_cmd.impulse = 0;
+		//m_cmd.upmove = 0;
+		//m_cmd.impulse = 0;
 	//}
 
 

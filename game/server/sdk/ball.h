@@ -29,12 +29,30 @@ enum ball_state_t
 	BALL_FOUL,
 	BALL_KICKOFF,
 	BALL_PENALTY,
+	BALL_FREEKICK,
 	BALL_GOALKICK_PENDING,
 	BALL_CORNERKICK_PENDING,
 	BALL_THROWIN_PENDING,
 	BALL_FOUL_PENDING,
 	BALL_PENALTY_PENDING,
 	BALL_KICKOFF_PENDING
+};
+
+enum body_part_t
+{
+	BODY_NONE = -1,
+	BODY_FEET = 0,
+	BODY_CHEST,
+	BODY_HEAD
+};
+
+enum foul_type_t
+{
+	FOUL_NONE = -1,
+	FOUL_NORMAL,
+	FOUL_OFFSIDE,
+	FOUL_DOUBLETOUCH,
+	FOUL_TIMEWASTING
 };
 
 #define	PS_OFF					 0
@@ -52,6 +70,8 @@ enum ball_state_t
 #define BALL_MAINSTATUS_FINAL_WHISTLE		6
 
 class CBall;
+
+extern CBall *GetBall();
 
 struct CBallStateInfo
 {
@@ -97,7 +117,7 @@ class CBall	: public CPhysicsProp, public IMultiplayerPhysics
 
 private:
 	CSDKPlayer		*FindEligibleCarrier();
-	bool			SelectAction();
+	bool			DoBodyPartAction();
 	bool			DoGroundShot();
 	bool			DoVolleyShot();
 	bool			DoChestDrop();
@@ -105,8 +125,12 @@ private:
 	void			SetBallCurve(bool bReset);
 	float			GetPitchModifier();
 	float			GetPowershotModifier();
+	bool			SetCarrier(CSDKPlayer *pPlayer);
+	void			UpdateCarrier();
 
 	IPhysicsObject	*m_pPhys;
+	float			m_flPhysRadius;
+	bool			m_bFreeze;
 
 	CSDKPlayer		*m_pPl; // Player who may shoot
 	Vector			m_vPlVel;
@@ -115,19 +139,18 @@ private:
 	Vector			m_vPlForward;
 	Vector			m_vPlRight;
 	Vector			m_vPlUp;
+	int				m_nPlTeam;
+	bool			m_bIsPowershot;
+	bool			m_bIsRemoteControlled;
+	body_part_t		m_eBodyPart;
+
+	CSDKPlayer		*m_pFoulingPl;
+	foul_type_t		m_eFoulType;
 
 	Vector			m_vPos;
-	Vector			m_vNewPos;
 	Vector			m_vVel;
-	Vector			m_vNewVel;
 	QAngle			m_aAng;
-	QAngle			m_aNewAng;
 	AngularImpulse	m_vAngImp;
-	AngularImpulse	m_vNewAngImp;
-
-	Vector			m_vSpawnPos;
-
-	bool			m_bIsPowershot;
 	
 	CUtlVector<BallHistory>	m_History;
 	bool			m_bDoReplay;
@@ -263,7 +286,6 @@ private:
 	float			m_flStateEnterTime;
 	float			m_flStateLeaveTime;
 	CBallStateInfo	*m_pCurStateInfo;
-
 	bool			m_bIgnoreTriggers;
 
 public:
@@ -274,8 +296,12 @@ public:
 	void TriggerSideline(int side);
 	bool IgnoreTriggers() { return m_bIgnoreTriggers; };
 
+	void MarkOffsidePlayers();
+	void UnmarkOffsidePlayers();
+
 	void PreStateHook();
 	void PostStateHook();
+	void Kicked(body_part_t bodyPart);
 
 	void State_Transition( ball_state_t newState, float delay = 0.0f );
 	void State_DoTransition( ball_state_t newState );
@@ -306,6 +332,10 @@ public:
 	void State_Enter_GOAL();
 	void State_Think_GOAL();
 	void State_Leave_GOAL();
+
+	void State_Enter_FREEKICK();
+	void State_Think_FREEKICK();
+	void State_Leave_FREEKICK();
 };
 
 #endif

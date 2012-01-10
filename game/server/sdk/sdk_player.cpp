@@ -880,8 +880,6 @@ void CSDKPlayer::State_Enter_ACTIVE()
 
 void CSDKPlayer::State_PreThink_ACTIVE()
 {
-	if (GetFlags() & FL_REMOTECONTROLLED)
-		DoWalkToPosition();
 }
 
 int CSDKPlayer::GetPlayerStance()
@@ -1850,36 +1848,49 @@ Vector CSDKPlayer::EyeDirection3D( void )
 	return vecForward;
 }
 
+#include "ios_mapentities.h"
+
 void CSDKPlayer::WalkToPosition(Vector pos, float speed, float tolerance)
 {
 	m_vWalkToPos = pos;
 	m_flWalkToSpeed = speed;
-	m_flWalkToTolerance = tolerance;
+	m_flWalkToTolerance = max(1, tolerance);
 	SetLocalVelocity(vec3_origin);
+	Vector newPos = GetLocalOrigin();
+	newPos.z = g_flGroundZ;
+	SetLocalOrigin(newPos);
 	AddFlag(FL_REMOTECONTROLLED);	
 }
 
-void CSDKPlayer::DoWalkToPosition()
+void CSDKPlayer::PlayerRunCommand(CUserCmd *ucmd, IMoveHelper *moveHelper)
 {
-	float dist = GetLocalOrigin().DistTo(m_vWalkToPos);
+	if (GetFlags() & FL_REMOTECONTROLLED)
+	{
+		float dist = (m_vWalkToPos - GetLocalOrigin()).Length2D();
 
-	if (dist < m_flWalkToTolerance)
-	{
-		SetLocalVelocity(vec3_origin);
-		RemoveFlag(FL_REMOTECONTROLLED);
+		if (dist <= 5.0f/*m_flWalkToTolerance*/)
+		{
+			SetLocalVelocity(vec3_origin);
+			SetLocalOrigin(Vector(m_vWalkToPos.x, m_vWalkToPos.y, g_flGroundZ));
+			RemoveFlag(FL_REMOTECONTROLLED);
+		}
+		else
+		{
+			ucmd->forwardmove = max(50, m_flWalkToSpeed * min(1.0f, (dist - 5) / 100));
+			ucmd->sidemove = 0;
+			ucmd->upmove = 0;
+			ucmd->buttons = 0;
+			QAngle ang;
+			VectorAngles(m_vWalkToPos - GetLocalOrigin(), ang);
+			//ang[PITCH] += ang[PITCH] < -180 ? 360 : (ang[PITCH] > 180 ? -360 : 0);
+			ang[PITCH] = 0;
+			ang[YAW] += ang[YAW] < -180 ? 360 : (ang[YAW] > 180 ? -360 : 0);
+			ang[ROLL] = 0;
+			ucmd->viewangles = ang;
+			SnapEyeAngles(ang);
+			pl.v_angle = ang;
+		}
 	}
-	else
-	{
-		m_flRemoteForwardmove = m_flWalkToSpeed;
-		m_flRemoteSidemove = 0;
-		m_flRemoteUpmove = 0;
-		m_nRemoteButtons = 0;
-		QAngle ang;
-		VectorAngles(m_vWalkToPos - GetLocalOrigin(), ang);
-		ang[PITCH] += ang[PITCH] < -180 ? 360 : (ang[PITCH] > 180 ? -360 : 0);
-		ang[YAW] += ang[YAW] < -180 ? 360 : (ang[YAW] > 180 ? -360 : 0);
-		ang[ROLL] = 0;
-		m_aRemoteViewangles = ang;
-		SnapEyeAngles(ang);
-	}
+
+	BaseClass::PlayerRunCommand(ucmd, moveHelper);
 }

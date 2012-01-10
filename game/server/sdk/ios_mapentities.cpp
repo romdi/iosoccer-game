@@ -178,33 +178,46 @@ LINK_ENTITY_TO_CLASS(info_stadium, CPointEntity);
 
 CTeamSpots	*g_pTeamSpots[2];
 Vector		g_vKickOffSpot;
+float		g_flGroundZ;
 
 Vector GetSpotPos(const char *name)
 {
 	CBaseEntity *pEnt = gEntList.FindEntityByClassname(NULL, name);
 	if (pEnt)
-		return pEnt->GetLocalOrigin();
+		return Vector(pEnt->GetLocalOrigin().x, pEnt->GetLocalOrigin().y, g_flGroundZ);
 	else
 		return vec3_origin;
 }
 
 void InitMapSpots()
 {
+	CBaseEntity *pEnt = gEntList.FindEntityByClassname(NULL, "info_ball_start");
+	trace_t tr;
+	UTIL_TraceLine(pEnt->GetLocalOrigin(), Vector(0, 0, -500), MASK_SOLID_BRUSHONLY, NULL, COLLISION_GROUP_NONE, &tr);
+	g_flGroundZ = tr.endpos.z;
+
 	g_vKickOffSpot = GetSpotPos("info_ball_start");
 
 	for (int i = 0; i < 2; i++)
 	{
-		g_pTeamSpots[i] = new CTeamSpots();
-		g_pTeamSpots[i]->m_vCornerLeft = GetSpotPos(UTIL_VarArgs("info_team%d_corner1", i + 1));
-		g_pTeamSpots[i]->m_vCornerRight = GetSpotPos(UTIL_VarArgs("info_team%d_corner0", i + 1));
-		g_pTeamSpots[i]->m_vGoalkickLeft = GetSpotPos(UTIL_VarArgs("info_team%d_goalkick1", i + 1));
-		g_pTeamSpots[i]->m_vGoalkickRight = GetSpotPos(UTIL_VarArgs("info_team%d_goalkick0", i + 1));
-		g_pTeamSpots[i]->m_vPenalty = GetSpotPos(UTIL_VarArgs("info_team%d_penalty_spot", i + 1));
+		CTeamSpots *pSpot = new CTeamSpots();
+		pSpot->m_vCornerLeft = GetSpotPos(UTIL_VarArgs("info_team%d_corner1", i + 1));
+		pSpot->m_vCornerRight = GetSpotPos(UTIL_VarArgs("info_team%d_corner0", i + 1));
+		pSpot->m_vGoalkickLeft = GetSpotPos(UTIL_VarArgs("info_team%d_goalkick1", i + 1));
+		pSpot->m_vGoalkickRight = GetSpotPos(UTIL_VarArgs("info_team%d_goalkick0", i + 1));
+		pSpot->m_vPenalty = GetSpotPos(UTIL_VarArgs("info_team%d_penalty_spot", i + 1));
 
 		for (int j = 0; j < 11; j++)
 		{
-			g_pTeamSpots[i]->m_vPlayers[j] = GetSpotPos(UTIL_VarArgs("info_team%d_player%d", i + 1, j + 1));
+			pSpot->m_vPlayers[j] = GetSpotPos(UTIL_VarArgs("info_team%d_player%d", i + 1, j + 1));
 		}
+
+		pSpot->m_nForward = (g_vKickOffSpot - pSpot->m_vPlayers[0]).y > 0 ? 1 : -1;
+		pSpot->m_nBack = -pSpot->m_nForward;
+		pSpot->m_nRight = (pSpot->m_vCornerRight - pSpot->m_vPlayers[0]).x > 0 ? 1 : -1;
+		pSpot->m_nLeft = -pSpot->m_nRight;
+
+		g_pTeamSpots[i] = pSpot;
 	}
 }
 
@@ -213,7 +226,7 @@ CTeamSpots *GetOwnTeamSpots(CSDKPlayer *pPl)
 	return g_pTeamSpots[pPl->GetTeamNumber() - TEAM_A];
 }
 
-CTeamSpots *GetOpponentTeamSpots(CSDKPlayer *pPl)
+CTeamSpots *GetOppTeamSpots(CSDKPlayer *pPl)
 {
 	return g_pTeamSpots[TEAM_B - pPl->GetTeamNumber()];
 }

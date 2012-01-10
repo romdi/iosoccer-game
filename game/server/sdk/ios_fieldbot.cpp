@@ -43,14 +43,14 @@ void CFieldBot::BotThink()
 
 	Vector dir = pEnt->GetLocalOrigin() - GetLocalOrigin();
 	m_cmd.buttons &= ~IN_ATTACK;
-	m_cmd.buttons &= ~IN_ALT1;
+	m_cmd.buttons &= ~IN_ATTACK2;
 	m_cmd.forwardmove = 0;
 	float pitch = 0;
 
 	if (plballdir.Length2D() > 150)
 	{
-		m_cmd.forwardmove = clamp(dir.Length2D() / 2, 50, 150);
-		pitch = clamp(plballdir.Length2D() / -50 + 10, -30, 10); //-45;
+		//m_cmd.forwardmove = clamp(dir.Length2D() / 2, PLAYER_WALKSPEED, PLAYER_SPRINTSPEED);
+		pitch = clamp(plballdir.Length2D() / -50 + 10, -40, 10); //-45;
 
 		if (dir.Length2D() > 50)
 		{
@@ -64,11 +64,26 @@ void CFieldBot::BotThink()
 				target += right * 50;
 			}
 			dir = target - GetLocalOrigin();
+
+			m_cmd.forwardmove = PLAYER_SPRINTSPEED / 3.5f;
+			//m_cmd.buttons &= IN_SPEED;
 		}
 		else
 		{
 			dir = plballdir * -1;
-			m_cmd.buttons |= plballdir.Length2D() < 2000 ? IN_ATTACK : IN_ALT1;
+
+			/*if (plballdir.Length2D() < 500)
+			{
+				m_cmd.buttons |= IN_ATTACK;
+			}
+			else
+			{*/
+				m_cmd.buttons |= IN_ATTACK2;
+				m_cmd.powershot_strength = 100 * min(1, dir.Length2D() / 1000);
+			//}
+
+			m_cmd.forwardmove = PLAYER_RUNSPEED / 3.5f;
+			//m_cmd.buttons &= ~IN_SPEED;
 		}
 	}
 

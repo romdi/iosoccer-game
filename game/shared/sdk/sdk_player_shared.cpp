@@ -400,9 +400,9 @@ void CSDKPlayerShared::ComputeWorldSpaceSurroundingBox( Vector *pVecWorldMins, V
 void CSDKPlayer::InitSpeeds()
 {
 #if !defined ( SDK_USE_PLAYERCLASSES )
-	m_Shared.m_flRunSpeed = SDK_DEFAULT_PLAYER_RUNSPEED;
-	m_Shared.m_flSprintSpeed = SDK_DEFAULT_PLAYER_SPRINTSPEED;
-	m_Shared.m_flProneSpeed = SDK_DEFAULT_PLAYER_PRONESPEED;
+	m_Shared.m_flRunSpeed = PLAYER_RUNSPEED;
+	m_Shared.m_flSprintSpeed = PLAYER_SPRINTSPEED;
+	m_Shared.m_flProneSpeed = PLAYER_PRONESPEED;
 	// Set the absolute max to sprint speed
 	//ios SetMaxSpeed( m_Shared.m_flSprintSpeed ); 
 	SetMaxSpeed( m_Shared.m_flRunSpeed ); 

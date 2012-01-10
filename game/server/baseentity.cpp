@@ -4211,6 +4211,17 @@ int CBaseEntity::GetTeamNumber( void ) const
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
+int CBaseEntity::GetOppTeamNumber( void ) const
+{
+	if (m_iTeamNum == TEAM_SPECTATOR)
+		return TEAM_SPECTATOR;
+
+	return m_iTeamNum == TEAM_A ? TEAM_B : TEAM_A;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 bool CBaseEntity::IsInAnyTeam( void ) const
 {
 	return ( GetTeam() != NULL );

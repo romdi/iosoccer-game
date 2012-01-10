@@ -3483,16 +3483,6 @@ ConVar xc_crouch_debounce( "xc_crouch_debounce", "0", FCVAR_NONE );
 //-----------------------------------------------------------------------------
 void CBasePlayer::PlayerRunCommand(CUserCmd *ucmd, IMoveHelper *moveHelper)
 {
-	if (GetFlags() & FL_REMOTECONTROLLED)
-	{
-		ucmd->forwardmove = m_flRemoteForwardmove;
-		ucmd->sidemove = m_flRemoteSidemove;
-		ucmd->upmove = m_flRemoteUpmove;
-		ucmd->buttons = m_nRemoteButtons;
-		ucmd->viewangles = m_aRemoteViewangles;
-		pl.v_angle = m_aRemoteViewangles;
-	}
-
 	m_touchedPhysObject = false;
 
 	if ( pl.fixangle == FIXANGLE_NONE)

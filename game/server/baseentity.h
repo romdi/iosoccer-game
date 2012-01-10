@@ -934,6 +934,7 @@ public:
 	// Team Handling
 	CTeam			*GetTeam( void ) const;				// Get the Team this entity is on
 	int				GetTeamNumber( void ) const;		// Get the Team number of the team this entity is on
+	int				GetOppTeamNumber( void ) const;
 	virtual void	ChangeTeam( int iTeamNum );			// Assign this entity to a team.
 	bool			IsInTeam( CTeam *pTeam ) const;		// Returns true if this entity's in the specified team
 	bool			InSameTeam( CBaseEntity *pEntity ) const;	// Returns true if the specified entity is on the same team as this one

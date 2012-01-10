@@ -241,12 +241,6 @@ public:
 
 	byte					m_nPowershotStrength;
 
-	float					m_flRemoteForwardmove;
-	float					m_flRemoteSidemove;
-	float					m_flRemoteUpmove;
-	int						m_nRemoteButtons;
-	QAngle					m_aRemoteViewangles;
-
 	// IPlayerInfo passthrough (because we can't do multiple inheritance)
 	IPlayerInfo *GetPlayerInfo() { return &m_PlayerInfo; }
 	IBotController *GetBotController() { return &m_PlayerInfo; }

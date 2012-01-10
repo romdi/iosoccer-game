@@ -316,8 +316,8 @@ protected:
 public:
 	void ClientSettingsChanged( CBasePlayer *pPlayer );
 
-	void EnableCircShield(int nTeamFlag, int nRadius, Vector vPos);
-	void EnableRectShield(int nTeamFlag, Vector vMin, Vector vMax);
+	void EnableCircShield(int nTeam, int nRadius, Vector vPos);
+	void EnableRectShield(int nTeam, Vector vMin, Vector vMax);
 	void DisableShields();
 #endif
 

@@ -348,12 +348,15 @@ public:
 	Vector				EyeDirection3D();
 
 	void				WalkToPosition(Vector pos, float speed, float tolerance);
-	void				DoWalkToPosition();
+	void				SetOffside(bool offside) { m_bOffside = offside; }
+	bool				IsOffside() { return m_bOffside; }
+	void				PlayerRunCommand(CUserCmd *ucmd, IMoveHelper *moveHelper);
 
 private:
 	Vector				m_vWalkToPos;
 	float				m_flWalkToTolerance;
 	float				m_flWalkToSpeed;
+	bool				m_bOffside;
 };
 
 

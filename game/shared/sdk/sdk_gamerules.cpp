@@ -1375,15 +1375,17 @@ void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 	}
 }
 
-void CSDKGameRules::EnableCircShield(int nTeamFlag, int nRadius, Vector vPos)
+void CSDKGameRules::EnableCircShield(int nTeam, int nRadius, Vector vPos)
 {
+	int nTeamFlag = nTeam == TEAM_A ? FL_SHIELD_TEAM_HOME : FL_SHIELD_TEAM_AWAY;
 	m_nShieldFlags |= FL_SHIELD_CIRC | nTeamFlag;
 	m_nCircShieldRadius = nRadius;
 	m_vCircShieldPos = vPos;
 }
 
-void CSDKGameRules::EnableRectShield(int nTeamFlag, Vector vMin, Vector vMax)
+void CSDKGameRules::EnableRectShield(int nTeam, Vector vMin, Vector vMax)
 {
+	int nTeamFlag = nTeam == TEAM_A ? FL_SHIELD_TEAM_HOME : FL_SHIELD_TEAM_AWAY;
 	m_nShieldFlags |= FL_SHIELD_RECT | nTeamFlag;
 	m_vRectShieldMin = vMin;
 	m_vRectShieldMax = vMax;
