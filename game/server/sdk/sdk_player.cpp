@@ -619,15 +619,15 @@ CSDKPlayerStateInfo* CSDKPlayer::State_LookupInfo( SDKPlayerState state )
 	// This table MUST match the 
 	static CSDKPlayerStateInfo playerStateInfos[] =
 	{
-		{ STATE_ACTIVE,			"STATE_ACTIVE",			&CSDKPlayer::State_Enter_ACTIVE, NULL, &CSDKPlayer::State_PreThink_ACTIVE },
-		{ STATE_WELCOME,		"STATE_WELCOME",		&CSDKPlayer::State_Enter_WELCOME, NULL, &CSDKPlayer::State_PreThink_WELCOME },
+		{ STATE_ACTIVE,			"STATE_ACTIVE",			&CSDKPlayer::State_ACTIVE_Enter, NULL, &CSDKPlayer::State_ACTIVE_PreThink },
+		{ STATE_WELCOME,		"STATE_WELCOME",		&CSDKPlayer::State_WELCOME_Enter, NULL, &CSDKPlayer::State_WELCOME_PreThink },
 #if defined ( SDK_USE_TEAMS )
-		{ STATE_PICKINGTEAM,	"STATE_PICKINGTEAM",	&CSDKPlayer::State_Enter_PICKINGTEAM, NULL,	&CSDKPlayer::State_PreThink_WELCOME },
+		{ STATE_PICKINGTEAM,	"STATE_PICKINGTEAM",	&CSDKPlayer::State_PICKINGTEAM_Enter, NULL,	&CSDKPlayer::State_WELCOME_PreThink },
 #endif
 #if defined ( SDK_USE_PLAYERCLASSES )
-		{ STATE_PICKINGCLASS,	"STATE_PICKINGCLASS",	&CSDKPlayer::State_Enter_PICKINGCLASS, NULL,	&CSDKPlayer::State_PreThink_WELCOME },
+		{ STATE_PICKINGCLASS,	"STATE_PICKINGCLASS",	&CSDKPlayer::State_PICKINGCLASS_Enter, NULL,	&CSDKPlayer::State_WELCOME_PreThink },
 #endif
-		{ STATE_OBSERVER_MODE,	"STATE_OBSERVER_MODE",	&CSDKPlayer::State_Enter_OBSERVER_MODE,	&CSDKPlayer::State_Leave_OBSERVER_MODE, &CSDKPlayer::State_PreThink_OBSERVER_MODE }
+		{ STATE_OBSERVER_MODE,	"STATE_OBSERVER_MODE",	&CSDKPlayer::State_OBSERVER_MODE_Enter,	&CSDKPlayer::State_OBSERVER_MODE_Leave, &CSDKPlayer::State_OBSERVER_MODE_PreThink }
 	};
 
 	for ( int i=0; i < ARRAYSIZE( playerStateInfos ); i++ )
@@ -652,7 +652,7 @@ void CSDKPlayer::PhysObjectWake()
 	if ( pObj )
 		pObj->Wake();
 }
-void CSDKPlayer::State_Enter_WELCOME()
+void CSDKPlayer::State_WELCOME_Enter()
 {
 	// Important to set MOVETYPE_NONE or our physics object will fall while we're sitting at one of the intro cameras.
 	SetMoveType( MOVETYPE_NONE );
@@ -735,7 +735,7 @@ void CSDKPlayer::MoveToNextIntroCamera()
 	m_fIntroCamTime = gpGlobals->curtime + 6;
 }
 
-void CSDKPlayer::State_PreThink_WELCOME()
+void CSDKPlayer::State_WELCOME_PreThink()
 {
 	// Update whatever intro camera it's at.
 	if( m_pIntroCamera && (gpGlobals->curtime >= m_fIntroCamTime) )
@@ -744,7 +744,7 @@ void CSDKPlayer::State_PreThink_WELCOME()
 	}
 }
 
-void CSDKPlayer::State_Enter_OBSERVER_MODE()
+void CSDKPlayer::State_OBSERVER_MODE_Enter()
 {
 	// Always start a spectator session in roaming mode
 	m_iObserverLastMode = OBS_MODE_ROAMING;
@@ -796,12 +796,12 @@ void CSDKPlayer::State_Enter_OBSERVER_MODE()
 	PhysObjectSleep();
 }
 
-void CSDKPlayer::State_Leave_OBSERVER_MODE()
+void CSDKPlayer::State_OBSERVER_MODE_Leave()
 {
 	StopObserverMode();
 }
 
-void CSDKPlayer::State_PreThink_OBSERVER_MODE()
+void CSDKPlayer::State_OBSERVER_MODE_PreThink()
 {
 
 	//Tony; if we're in eye, or chase, validate the target - if it's invalid, find a new one, or go back to roaming
@@ -832,7 +832,7 @@ void CSDKPlayer::State_PreThink_OBSERVER_MODE()
 }
 
 #if defined ( SDK_USE_PLAYERCLASSES )
-void CSDKPlayer::State_Enter_PICKINGCLASS()
+void CSDKPlayer::State_PICKINGCLASS_Enter()
 {
 	ShowClassSelectMenu();
 	PhysObjectSleep();
@@ -841,7 +841,7 @@ void CSDKPlayer::State_Enter_PICKINGCLASS()
 #endif // SDK_USE_PLAYERCLASSES
 
 #if defined ( SDK_USE_TEAMS )
-void CSDKPlayer::State_Enter_PICKINGTEAM()
+void CSDKPlayer::State_PICKINGTEAM_Enter()
 {
 	ShowViewPortPanel( PANEL_TEAM );
 	PhysObjectSleep();
@@ -849,7 +849,7 @@ void CSDKPlayer::State_Enter_PICKINGTEAM()
 }
 #endif // SDK_USE_TEAMS
 
-void CSDKPlayer::State_Enter_ACTIVE()
+void CSDKPlayer::State_ACTIVE_Enter()
 {
 	SetMoveType( MOVETYPE_WALK );
 	RemoveSolidFlags( FSOLID_NOT_SOLID );
@@ -878,7 +878,7 @@ void CSDKPlayer::State_Enter_ACTIVE()
 	//RemoveEffects(EF_NODRAW); //ios hack - player spawns invisible sometimes
 }
 
-void CSDKPlayer::State_PreThink_ACTIVE()
+void CSDKPlayer::State_ACTIVE_PreThink()
 {
 }
 

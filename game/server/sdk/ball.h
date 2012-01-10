@@ -310,32 +310,32 @@ public:
 	void State_Think();										// Update the current state.
 	static CBallStateInfo* State_LookupInfo(ball_state_t state);	// Find the state info for the specified state.
 
-	void State_Enter_NORMAL();
-	void State_Think_NORMAL();
+	void State_NORMAL_Enter();
+	void State_NORMAL_Think();
 
-	void State_Enter_KICKOFF();
-	void State_Think_KICKOFF();
-	void State_Leave_KICKOFF();
+	void State_KICKOFF_Enter();
+	void State_KICKOFF_Think();
+	void State_KICKOFF_Leave();
 
-	void State_Enter_THROWIN();
-	void State_Think_THROWIN();
-	void State_Leave_THROWIN();
+	void State_THROWIN_Enter();
+	void State_THROWIN_Think();
+	void State_THROWIN_Leave();
 
-	void State_Enter_GOALKICK();
-	void State_Think_GOALKICK();
-	void State_Leave_GOALKICK();
+	void State_GOALKICK_Enter();
+	void State_GOALKICK_Think();
+	void State_GOALKICK_Leave();
 
-	void State_Enter_CORNER();
-	void State_Think_CORNER();
-	void State_Leave_CORNER();
+	void State_CORNER_Enter();
+	void State_CORNER_Think();
+	void State_CORNER_Leave();
 	
-	void State_Enter_GOAL();
-	void State_Think_GOAL();
-	void State_Leave_GOAL();
+	void State_GOAL_Enter();
+	void State_GOAL_Think();
+	void State_GOAL_Leave();
 
-	void State_Enter_FREEKICK();
-	void State_Think_FREEKICK();
-	void State_Leave_FREEKICK();
+	void State_FREEKICK_Enter();
+	void State_FREEKICK_Think();
+	void State_FREEKICK_Leave();
 };
 
 #endif

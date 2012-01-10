@@ -272,44 +272,44 @@ protected:
 	static CSDKGameRulesStateInfo* State_LookupInfo(match_state_t state);	// Find the state info for the specified state.
 
 	// State Functions
-	void State_Enter_INIT();
-	void State_Think_INIT();
+	void State_INIT_Enter();
+	void State_INIT_Think();
 
-	void State_Enter_WARMUP();
-	void State_Think_WARMUP();
+	void State_WARMUP_Enter();
+	void State_WARMUP_Think();
 
-	void State_Enter_FIRST_HALF();
-	void State_Think_FIRST_HALF();
+	void State_FIRST_HALF_Enter();
+	void State_FIRST_HALF_Think();
 
-	void State_Enter_HALFTIME();
-	void State_Think_HALFTIME();
+	void State_HALFTIME_Enter();
+	void State_HALFTIME_Think();
 
-	void State_Enter_SECOND_HALF();
-	void State_Think_SECOND_HALF();
+	void State_SECOND_HALF_Enter();
+	void State_SECOND_HALF_Think();
 
-	void State_Enter_EXTRATIME_INTERMISSION();
-	void State_Think_EXTRATIME_INTERMISSION();
+	void State_EXTRATIME_INTERMISSION_Enter();
+	void State_EXTRATIME_INTERMISSION_Think();
 
-	void State_Enter_EXTRATIME_FIRST_HALF();
-	void State_Think_EXTRATIME_FIRST_HALF();
+	void State_EXTRATIME_FIRST_HALF_Enter();
+	void State_EXTRATIME_FIRST_HALF_Think();
 
-	void State_Enter_EXTRATIME_HALFTIME();
-	void State_Think_EXTRATIME_HALFTIME();
+	void State_EXTRATIME_HALFTIME_Enter();
+	void State_EXTRATIME_HALFTIME_Think();
 
-	void State_Enter_EXTRATIME_SECOND_HALF();
-	void State_Think_EXTRATIME_SECOND_HALF();
+	void State_EXTRATIME_SECOND_HALF_Enter();
+	void State_EXTRATIME_SECOND_HALF_Think();
 
-	void State_Enter_PENALTIES_INTERMISSION();
-	void State_Think_PENALTIES_INTERMISSION();
+	void State_PENALTIES_INTERMISSION_Enter();
+	void State_PENALTIES_INTERMISSION_Think();
 
-	void State_Enter_PENALTIES();
-	void State_Think_PENALTIES();
+	void State_PENALTIES_Enter();
+	void State_PENALTIES_Think();
 
-	void State_Enter_COOLDOWN();
-	void State_Think_COOLDOWN();
+	void State_COOLDOWN_Enter();
+	void State_COOLDOWN_Think();
 
-	void State_Enter_END();
-	void State_Think_END();
+	void State_END_Enter();
+	void State_END_Think();
 
 	void SwapTeams();
 

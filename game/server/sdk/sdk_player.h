@@ -159,25 +159,25 @@ private:
 	void State_PreThink();							// Update the current state.
 
 	// Specific state handler functions.
-	void State_Enter_WELCOME();
-	void State_PreThink_WELCOME();
+	void State_WELCOME_Enter();
+	void State_WELCOME_PreThink();
 
-	void State_Enter_PICKINGTEAM();
-	void State_Enter_PICKINGCLASS();
+	void State_PICKINGTEAM_Enter();
+	void State_PICKINGCLASS_Enter();
 
 public: //Tony; I had this private but I need it public for initial spawns.
 	void MoveToNextIntroCamera();
 private:
 
-	void State_Enter_ACTIVE();
-	void State_PreThink_ACTIVE();
+	void State_ACTIVE_Enter();
+	void State_ACTIVE_PreThink();
 
-	void State_Enter_OBSERVER_MODE();
-	void State_Leave_OBSERVER_MODE();
-	void State_PreThink_OBSERVER_MODE();
+	void State_OBSERVER_MODE_Enter();
+	void State_OBSERVER_MODE_Leave();
+	void State_OBSERVER_MODE_PreThink();
 
-	void State_Enter_DEATH_ANIM();
-	void State_PreThink_DEATH_ANIM();
+	void State_DEATH_ANIM_Enter();
+	void State_DEATH_ANIM_PreThink();
 
 	// Find the state info for the specified state.
 	static CSDKPlayerStateInfo* State_LookupInfo( SDKPlayerState state );

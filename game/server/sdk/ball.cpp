@@ -2511,13 +2511,13 @@ CBallStateInfo* CBall::State_LookupInfo( ball_state_t state )
 {
 	static CBallStateInfo ballStateInfos[] =
 	{
-		{ BALL_NORMAL,		"BALL_NORMAL",		&CBall::State_Enter_NORMAL,		NULL,							&CBall::State_Think_NORMAL },
-		{ BALL_KICKOFF,		"BALL_KICKOFF",		&CBall::State_Enter_KICKOFF,	&CBall::State_Leave_KICKOFF,	&CBall::State_Think_KICKOFF },
-		{ BALL_THROWIN,		"BALL_THROWIN",		&CBall::State_Enter_THROWIN,	&CBall::State_Leave_THROWIN,	&CBall::State_Think_THROWIN },
-		{ BALL_GOALKICK,	"BALL_GOALKICK",	&CBall::State_Enter_GOALKICK,	&CBall::State_Leave_GOALKICK,	&CBall::State_Think_GOALKICK },
-		{ BALL_CORNER,		"BALL_CORNER",		&CBall::State_Enter_CORNER,		&CBall::State_Leave_CORNER,		&CBall::State_Think_CORNER },
-		{ BALL_GOAL,		"BALL_GOAL",		&CBall::State_Enter_GOAL,		&CBall::State_Leave_GOAL,		&CBall::State_Think_GOAL },
-		{ BALL_FREEKICK,	"BALL_FREEKICK",	&CBall::State_Enter_FREEKICK,	&CBall::State_Leave_FREEKICK,	&CBall::State_Think_FREEKICK },
+		{ BALL_NORMAL,		"BALL_NORMAL",		&CBall::State_NORMAL_Enter,		NULL,							&CBall::State_NORMAL_Think },
+		{ BALL_KICKOFF,		"BALL_KICKOFF",		&CBall::State_KICKOFF_Enter,	&CBall::State_KICKOFF_Leave,	&CBall::State_KICKOFF_Think },
+		{ BALL_THROWIN,		"BALL_THROWIN",		&CBall::State_THROWIN_Enter,	&CBall::State_THROWIN_Leave,	&CBall::State_THROWIN_Think },
+		{ BALL_GOALKICK,	"BALL_GOALKICK",	&CBall::State_GOALKICK_Enter,	&CBall::State_GOALKICK_Leave,	&CBall::State_GOALKICK_Think },
+		{ BALL_CORNER,		"BALL_CORNER",		&CBall::State_CORNER_Enter,		&CBall::State_CORNER_Leave,		&CBall::State_CORNER_Think },
+		{ BALL_GOAL,		"BALL_GOAL",		&CBall::State_GOAL_Enter,		&CBall::State_GOAL_Leave,		&CBall::State_GOAL_Think },
+		{ BALL_FREEKICK,	"BALL_FREEKICK",	&CBall::State_FREEKICK_Enter,	&CBall::State_FREEKICK_Leave,	&CBall::State_FREEKICK_Think },
 	};
 
 	for ( int i=0; i < ARRAYSIZE( ballStateInfos ); i++ )
@@ -2529,11 +2529,11 @@ CBallStateInfo* CBall::State_LookupInfo( ball_state_t state )
 	return NULL;
 }
 
-void CBall::State_Enter_NORMAL()
+void CBall::State_NORMAL_Enter()
 {
 }
 
-void CBall::State_Think_NORMAL()
+void CBall::State_NORMAL_Think()
 {
 	if (!SetCarrier(FindEligibleCarrier()))
 		return;
@@ -2551,7 +2551,7 @@ void CBall::State_Think_NORMAL()
 	}
 }
 
-void CBall::State_Enter_KICKOFF()
+void CBall::State_KICKOFF_Enter()
 {
 	if (!SetCarrier(FindNearestPlayer(m_LastPlayer ? m_LastPlayer->GetOppTeamNumber() : TEAM_INVALID)))
 	{
@@ -2592,7 +2592,7 @@ void CBall::State_Enter_KICKOFF()
 	//SendMatchEvent(MATCH_EVENT_KICKOFF, m_pPl, m_pPl);
 }
 
-void CBall::State_Think_KICKOFF()
+void CBall::State_KICKOFF_Think()
 {
 	for (int i = 1; i <= gpGlobals->maxClients; i++) 
 	{
@@ -2626,13 +2626,13 @@ void CBall::State_Think_KICKOFF()
 	}
 }
 
-void CBall::State_Leave_KICKOFF()
+void CBall::State_KICKOFF_Leave()
 {
 	if (m_pPl)
 		m_pPl->RemoveFlag(FL_ATCONTROLS);
 }
 
-void CBall::State_Enter_THROWIN()
+void CBall::State_THROWIN_Enter()
 {
 	if (!SetCarrier(FindNearestPlayer(m_LastTouch->GetTeamNumber() == TEAM_A ? TEAM_B : TEAM_A)))
 	{ 
@@ -2660,7 +2660,7 @@ void CBall::State_Enter_THROWIN()
 	SendMatchEvent(MATCH_EVENT_THROWIN);
 }
 
-void CBall::State_Think_THROWIN()
+void CBall::State_THROWIN_Think()
 {
 	if (m_pPl->GetFlags() & FL_REMOTECONTROLLED)
 		return;
@@ -2702,14 +2702,14 @@ void CBall::State_Think_THROWIN()
 	}
 }
 
-void CBall::State_Leave_THROWIN()
+void CBall::State_THROWIN_Leave()
 {
 	SDKGameRules()->DisableShields();
 	m_bIgnoreTriggers = false;
 	//m_pPl->RemoveFlag(FL_ATCONTROLS);
 }
 
-void CBall::State_Enter_GOALKICK()
+void CBall::State_GOALKICK_Enter()
 {
 	CSDKPlayer *pKeeper = NULL;
 
@@ -2757,7 +2757,7 @@ void CBall::State_Enter_GOALKICK()
 	SendMatchEvent(MATCH_EVENT_GOALKICK);
 }
 
-void CBall::State_Think_GOALKICK()
+void CBall::State_GOALKICK_Think()
 {
 	if (m_pPl->m_nButtons & (IN_ATTACK | IN_ATTACK2))
 	{
@@ -2769,13 +2769,13 @@ void CBall::State_Think_GOALKICK()
 	}
 }
 
-void CBall::State_Leave_GOALKICK()
+void CBall::State_GOALKICK_Leave()
 {
 	SDKGameRules()->DisableShields();
 	//m_pPl->RemoveFlag(FL_ATCONTROLS);
 }
 
-void CBall::State_Enter_CORNER()
+void CBall::State_CORNER_Enter()
 {
 	if (!SetCarrier(FindNearestPlayer(m_LastTouch->GetTeamNumber() == TEAM_A ? TEAM_B : TEAM_A)))
 	{
@@ -2806,7 +2806,7 @@ void CBall::State_Enter_CORNER()
 	SendMatchEvent(MATCH_EVENT_CORNER);
 }
 
-void CBall::State_Think_CORNER()
+void CBall::State_CORNER_Think()
 {
 	if (m_pPl->GetFlags() & FL_REMOTECONTROLLED)
 		return;
@@ -2826,12 +2826,12 @@ void CBall::State_Think_CORNER()
 	}
 }
 
-void CBall::State_Leave_CORNER()
+void CBall::State_CORNER_Leave()
 {
 	SDKGameRules()->DisableShields();
 }
 
-void CBall::State_Enter_GOAL()
+void CBall::State_GOAL_Enter()
 {
 	if (!SetCarrier(m_LastPlayer))
 	{
@@ -2862,17 +2862,17 @@ void CBall::State_Enter_GOAL()
 	State_Transition(BALL_KICKOFF, 5);
 }
 
-void CBall::State_Think_GOAL()
+void CBall::State_GOAL_Think()
 {
 }
 
-void CBall::State_Leave_GOAL()
+void CBall::State_GOAL_Leave()
 {
 	m_bIgnoreTriggers = false;
 	DisableCeleb();
 }
 
-void CBall::State_Enter_FREEKICK()
+void CBall::State_FREEKICK_Enter()
 {
 	if (!SetCarrier(FindNearestPlayer(m_pFoulingPl->GetTeamNumber())))
 	{
@@ -2884,7 +2884,7 @@ void CBall::State_Enter_FREEKICK()
 	m_bIsRemoteControlled = true;
 }
 
-void CBall::State_Think_FREEKICK()
+void CBall::State_FREEKICK_Think()
 {
 	if (m_pPl->GetFlags() & FL_REMOTECONTROLLED)
 		return;
@@ -2904,7 +2904,7 @@ void CBall::State_Think_FREEKICK()
 	}
 }
 
-void CBall::State_Leave_FREEKICK()
+void CBall::State_FREEKICK_Leave()
 {
 }
 
