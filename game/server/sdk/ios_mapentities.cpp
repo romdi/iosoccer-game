@@ -33,7 +33,6 @@ BEGIN_DATADESC( CBallTrigger )
 	DEFINE_OUTPUT(m_OnTrigger, "OnTrigger"),
 END_DATADESC()
 
-const static float CELEBRATION_TIME = 10.0f;
 
 class CTriggerGoal : public CBallTrigger
 {

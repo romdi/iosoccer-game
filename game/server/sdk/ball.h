@@ -100,6 +100,7 @@ struct BallHistory
 //==========================================================
 class CBall	: public CPhysicsProp, public IMultiplayerPhysics
 {
+public:
 	DECLARE_CLASS( CBall, CPhysicsProp );
 	CNetworkVar( int, m_iPhysicsMode );	// One of the PHYSICS_MULTIPLAYER_ defines.	
 	CNetworkVar( float,	m_fMass	);
@@ -115,7 +116,54 @@ class CBall	: public CPhysicsProp, public IMultiplayerPhysics
 	float			GetMass(void) {	return m_fMass;	}
 	int				ObjectCaps(void)	{  return BaseClass::ObjectCaps() |	FCAP_CONTINUOUS_USE; }
 
+	void			SendMatchEvent(match_event_t matchEvent, CSDKPlayer *pPlayer1 = NULL, CSDKPlayer *pPlayer2 = NULL);
+
+	void			TakeReplaySnapshot();
+	void			StartReplay();
+	void			RestoreReplaySnapshot();
+
+	bool			IsAsleep(void) { return	false; }
+	void			Spawn(void);
+	void			BallThink( void	);
+	void			BallTouch( CBaseEntity *pOther );
+	void			VPhysicsCollision( int index, gamevcollisionevent_t	*pEvent	);
+	void			VPhysicsUpdate(IPhysicsObject *pPhysics);
+	bool			CreateVPhysics();
+	
+	void TriggerGoal(int team);
+	void TriggerGoalline(int team, int side);
+	void TriggerSideline(int side);
+	bool IgnoreTriggers() { return m_bIgnoreTriggers; };
+
+	void State_Transition( ball_state_t newState, float delay = 0.0f );
+
 private:
+	void State_NORMAL_Enter();		void State_NORMAL_Think();
+	void State_KICKOFF_Enter();		void State_KICKOFF_Think();		void State_KICKOFF_Leave();
+	void State_THROWIN_Enter();		void State_THROWIN_Think();		void State_THROWIN_Leave();
+	void State_GOALKICK_Enter();	void State_GOALKICK_Think();	void State_GOALKICK_Leave();
+	void State_CORNER_Enter();		void State_CORNER_Think();		void State_CORNER_Leave();
+	void State_GOAL_Enter();		void State_GOAL_Think();		void State_GOAL_Leave();
+	void State_FREEKICK_Enter();	void State_FREEKICK_Think();	void State_FREEKICK_Leave();
+
+	void PreStateHook();
+	void PostStateHook();
+	void State_Enter(ball_state_t newState);	// Initialize the new state.
+	void State_Leave();										// Cleanup the previous state.
+	void State_Think();										// Update the current state.
+	void State_DoTransition( ball_state_t newState );
+	static CBallStateInfo* State_LookupInfo(ball_state_t state);	// Find the state info for the specified state.
+	ball_state_t	m_eBallState;
+	ball_state_t	m_eNextState;
+	float			m_flStateEnterTime;
+	float			m_flStateLeaveTime;
+	CBallStateInfo	*m_pCurStateInfo;
+	
+	void			SetPos(const Vector &pos);
+	void			MarkOffsidePlayers();
+	void			UnmarkOffsidePlayers();
+
+	CSDKPlayer		*FindNearestPlayer(int nTeam = TEAM_INVALID, bool ignoreKeepers = true);
 	CSDKPlayer		*FindEligibleCarrier();
 	bool			DoBodyPartAction();
 	bool			DoGroundShot();
@@ -127,18 +175,20 @@ private:
 	float			GetPowershotModifier();
 	bool			SetCarrier(CSDKPlayer *pPlayer);
 	void			UpdateCarrier();
+	void			Kicked(body_part_t bodyPart);
 
 	IPhysicsObject	*m_pPhys;
 	float			m_flPhysRadius;
 	bool			m_bFreeze;
+	
+	CSDKPlayer		*m_pPl;				  // Current player for state
+	CSDKPlayer		*m_LastTouch;		  //last	touch by anyone	- for corners/goal kicks etc
+	CSDKPlayer		*m_LastPlayer;		  //last	touch (by a	real player) - for goals
+	CSDKPlayer		*m_LastNonKeeper;	  //last	touch by a real	player who isn't a keeper
+	CSDKPlayer		*m_LastTouchBeforeMe; //last touch before me
 
-	CSDKPlayer		*m_pPl; // Player who may shoot
-	Vector			m_vPlVel;
-	Vector			m_vPlPos;
 	QAngle			m_aPlAng;
-	Vector			m_vPlForward;
-	Vector			m_vPlRight;
-	Vector			m_vPlUp;
+	Vector			m_vPlVel, m_vPlPos, m_vPlForward, m_vPlRight, m_vPlUp;
 	int				m_nPlTeam;
 	bool			m_bIsPowershot;
 	bool			m_bIsRemoteControlled;
@@ -147,8 +197,7 @@ private:
 	CSDKPlayer		*m_pFoulingPl;
 	foul_type_t		m_eFoulType;
 
-	Vector			m_vPos;
-	Vector			m_vVel;
+	Vector			m_vPos, m_vVel;
 	QAngle			m_aAng;
 	AngularImpulse	m_vAngImp;
 	
@@ -156,186 +205,15 @@ private:
 	bool			m_bDoReplay;
 	int				m_nReplaySnapshotIndex;
 
-public:
-	void			SendMatchEvent(match_event_t matchEvent, CSDKPlayer *pPlayer1 = NULL, CSDKPlayer *pPlayer2 = NULL);
-
-	void			TakeReplaySnapshot();
-	void			StartReplay();
-	void			RestoreReplaySnapshot();
-
-	bool			IsAsleep(void) { return	false; }
-	virtual	void	Spawn(void);
-	void			BallThink( void	);
-	void			BallTouch( CBaseEntity *pOther );
-	void			VPhysicsCollision( int index, gamevcollisionevent_t	*pEvent	);
-	void			VPhysicsUpdate(IPhysicsObject *pPhysics);
-	bool			CreateVPhysics();
-
-	void HandleKickOff ( void	);
-	int	 Shoot ( CBaseEntity *pOther, bool isPowershot=false);
-	int	 Pass (	CBaseEntity	*pOther);
-	CBaseEntity	*FindTarget	(CBaseEntity *pPlayer);
-	void ProcessStatus (void);
-	void ShieldBall	(CSDKPlayer	*pPlayer);
-	void UpdateBallShield (void);
-	void ShieldOff (void);
-	CBaseEntity	*FindPlayerForAction (int team,	int	allowkeepers); //who should	take corner	etc
-	CBaseEntity	*FindThrowInEnt	(void);				   //find throwin position marker
-	CSDKPlayer	*FindKeeperForAction (int team);	   //who should	take goal kick
-	int	KeepersBall	(void);
-	int	KeepersBallHuman (void);
-	int	CheckKeeperCatch (CSDKPlayer *keeper);
-	int	CheckKeeperKick (CSDKPlayer *keeper);
-
-	int	  CheckOffSide (CSDKPlayer *kicker);
-	int	  CheckOffsideReceive (CSDKPlayer* pOther);
-	int	  CheckOffsideReceiver (CSDKPlayer*	pOther,	int	i);
-	int	  PlayerInOwnHalf (CSDKPlayer *pOther);
-	void  ClearOffsideFlags	(void);
-	int	  NextOffsideSlot (void);
-	void  RecordOffside	(CSDKPlayer	*offside, CSDKPlayer *kicker, CSDKPlayer *against);
-
-	CSDKPlayer		*m_OffsidePlayer[MAX_OFFS];
-	CSDKPlayer		*m_OffsideKicker[MAX_OFFS];
-	float			m_OffsideTimeout[MAX_OFFS];
-	Vector			m_OffsideFoulPos[MAX_OFFS];
-	int				m_NumOffsidePlayers;
-
-	float			m_NextDoubleTouch;
-	int				m_DoubleTouchCount;
-	int				m_HeadTouch;
-	CSDKPlayer		*m_PlayerWhoHeaded;
-
-	CSDKPlayer		*m_LastTouch;		 //last	touch by anyone	- for corners/goal kicks etc
-	CSDKPlayer		*m_LastPlayer;		 //last	touch (by a	real player) - for goals
-	CSDKPlayer		*m_LastNonKeeper;	 //last	touch by a real	player who isn't a keeper
-	CSDKPlayer		*m_LastTouchBeforeMe;//last touch before me
-
-	CSDKPlayer		*m_PlayerWhoTook;	 //player who took throwin etc
-
-	CSDKPlayer		*m_KeeperCarrying;
-	float			m_KeeperCarryTime;
-	int				m_NextKeeperCatch;
-
-	int				ballStatus;			  //corner,	goalkick, throwin, foul, penalty
-	float			ballStatusTime;		  //time to	process	the	status change (gives a grace period	when ball goes out of play etc)
 	int				m_team;				  //team the ball can be kicked	by (during a corner	etc) (0=any)
 	int				m_side;				  //side of	the	pitch the corner/goalkick should be	taken from
 	int				m_BallInPenaltyBox;	 //-1 =	not	in box,	0,1	= teams	box
 	int				m_FoulInPenaltyBox;	 //-1 =	not	in box,	0,1	= teams	box - recorded when foul occurs
-	Vector			curve;
 
-	int				m_BallShield;			//1=on, 0=off,	exclusion zone around ball
-	CSDKPlayer		*m_BallShieldPlayer;	//player allowed into exclusion	zone
-	Vector			m_FoulPos;				//where to	take foul from
-	CSDKPlayer		*m_Foulee;				//who was fouled, i.e. who should take freekick/penalty
-
-	int				m_KickOff;			//which	team should	kick off next
-
-	CSDKPlayer		*m_Assist[MAX_ASSIST];
-	void			AddAssist (CSDKPlayer *pNewTouch);
-	void			AssistDisconnect (CSDKPlayer *discon);
-	void			CheckForAssist (CSDKPlayer *scorer);
-	void			ClrAssists (void);
-
-	float			m_poss[2];		  //total time of possession
-	float			m_possStart;	  //start time of current possession							
-	int				m_possTeam;		  //team currently in possession
-	CSDKPlayer*		m_pPossPlayer;		//player who kicked the ball before
-	void			ResetPossession	(void);
-	void			UpdatePossession (CSDKPlayer *pPlayer);
-	int				GetTeamPossession (int team);
-
-	int				m_TeamGoal;			//team that scored
-	float			m_KickOffTime;
-
-	void			HandleGoal(void);
-	void			HandleCorner(void);
-	void			HandleGoalkick(void);
-	void			HandleThrowin(void);
-	void			HandleFoul(void);
-	void			HandlePenalty(void);
-
-	int				m_PowerShotStrength;
-	void			ChargePowerShot();
-
-	void			EnableCeleb(void);
-	void			DisableCeleb(void);
-
-	void			FreezeKeepersForPenalty(int team);
-
-	void			DoubleTouchFoul(CSDKPlayer *player);
-
-	void			KickedBall(CSDKPlayer *pPlayer, bool bKick = true);
-
-	void			DropBall(void);
-
-	void			UpdateHeadbounce(CSDKPlayer *pPlayer);
-
-	float			m_fUseOffsideRule;
-
-	CSDKPlayer*		m_pKeeperParry;
-
-	void			ApplyKickDelayToAll(void);
-
-	void			RemoveFlagFromAll(int flag);
-
-private:
-	ball_state_t	m_eBallState;
-	ball_state_t	m_eNextState;
-	float			m_flStateEnterTime;
-	float			m_flStateLeaveTime;
-	CBallStateInfo	*m_pCurStateInfo;
 	bool			m_bIgnoreTriggers;
 
 public:
-	CSDKPlayer *FindNearestPlayer(int nTeam = TEAM_INVALID, bool ignoreKeepers = true);
-	void SetPos(const Vector &pos);
-	void TriggerGoal(int team);
-	void TriggerGoalline(int team, int side);
-	void TriggerSideline(int side);
-	bool IgnoreTriggers() { return m_bIgnoreTriggers; };
 
-	void MarkOffsidePlayers();
-	void UnmarkOffsidePlayers();
-
-	void PreStateHook();
-	void PostStateHook();
-	void Kicked(body_part_t bodyPart);
-
-	void State_Transition( ball_state_t newState, float delay = 0.0f );
-	void State_DoTransition( ball_state_t newState );
-	void State_Enter(ball_state_t newState);	// Initialize the new state.
-	void State_Leave();										// Cleanup the previous state.
-	void State_Think();										// Update the current state.
-	static CBallStateInfo* State_LookupInfo(ball_state_t state);	// Find the state info for the specified state.
-
-	void State_NORMAL_Enter();
-	void State_NORMAL_Think();
-
-	void State_KICKOFF_Enter();
-	void State_KICKOFF_Think();
-	void State_KICKOFF_Leave();
-
-	void State_THROWIN_Enter();
-	void State_THROWIN_Think();
-	void State_THROWIN_Leave();
-
-	void State_GOALKICK_Enter();
-	void State_GOALKICK_Think();
-	void State_GOALKICK_Leave();
-
-	void State_CORNER_Enter();
-	void State_CORNER_Think();
-	void State_CORNER_Leave();
-	
-	void State_GOAL_Enter();
-	void State_GOAL_Think();
-	void State_GOAL_Leave();
-
-	void State_FREEKICK_Enter();
-	void State_FREEKICK_Think();
-	void State_FREEKICK_Leave();
 };
 
 #endif

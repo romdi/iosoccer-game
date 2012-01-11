@@ -809,30 +809,6 @@ int CSDKGameRules::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarge
 //-----------------------------------------------------------------------------
 void CSDKGameRules::ClientDisconnected( edict_t *pClient )
 {
-	CSDKPlayer *pPlayer = (CSDKPlayer *)CBaseEntity::Instance( pClient );
-	if ( pPlayer )
-	{
-		pPlayer->m_TeamPos = -1;
-
-		//check all balls for interaction with this player
-		CBall	*pBall = pPlayer->GetBall(NULL);
-		while (pBall)
-		{
-			if (pBall->m_BallShieldPlayer == pPlayer)		//remove ball shield
-			{
-				pBall->ballStatusTime = 0;
-				pBall->ShieldOff();
-			}
-
-			if (pBall->m_Foulee == pPlayer)
-				pBall->m_Foulee = NULL;
-
-			if (pBall->m_KeeperCarrying == pPlayer)
-				pBall->DropBall();
-
-			pBall = pPlayer->GetBall(pBall);
-		}
-	}
 	BaseClass::ClientDisconnected( pClient );
 }
 #endif
@@ -1001,11 +977,7 @@ void CSDKGameRules::State_FIRST_HALF_Enter()
 	CBall *pBall = dynamic_cast<CBall*>(gEntList.FindEntityByClassname( NULL, "football" ));
 	if (pBall)
 	{
-		pBall->DropBall();
-		pBall->ballStatusTime = 0;
-		pBall->ShieldOff();
 		pBall->CreateVPhysics();
-		//pBall->HandleKickOff();
 		pBall->State_Transition(BALL_KICKOFF);
 	}
 }
