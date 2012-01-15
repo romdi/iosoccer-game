@@ -122,6 +122,10 @@ CBall::CBall()
 	m_eFoulType = FOUL_NONE;
 	m_bIsRemoteControlled = false;
 	m_bFreeze = false;
+	m_pPossessor = NULL;
+	m_flPossessionStart = 0.0f;
+	m_pPl = NULL;
+	m_nPlTeam = TEAM_INVALID;
 }
 
 CBall::~CBall()
@@ -149,7 +153,6 @@ void CBall::Spawn (void)
 
 	m_nBody = 0; 
 	m_nSkin = g_IOSRand.RandomInt(0,5);
-	g_vKickOffSpot = GetLocalOrigin();
 	m_pPhys->SetPosition(GetLocalOrigin(), GetLocalAngles(), true);
 
 	PrecacheScriptSound( "Ball.kicknormal" );
@@ -159,6 +162,19 @@ void CBall::Spawn (void)
 	PrecacheScriptSound( "Ball.net" );
 	PrecacheScriptSound( "Ball.whistle" );
 	PrecacheScriptSound( "Ball.cheer" );
+
+	PrecacheMaterial("sprites/physBeam.vmt");
+	m_pOffsideLine = CBeam::BeamCreate("sprites/physBeam.vmt", 10);
+	m_pOffsideLine->SetColor(255, 100, 100);
+	DisableOffsideLine();
+	EnableOffsideLine(g_vKickOffSpot.y);
+
+	////
+	//CBeam *pBeam;
+	//pBeam = CBeam::BeamCreate("sprites/physBeam.vmt", 10);
+	//pBeam->SetColor(150, 255, 150);
+	//pBeam->SetAbsStartPos(g_vKickOffSpot - Vector(500, 0, 0));
+	//pBeam->SetAbsEndPos(g_vKickOffSpot + Vector(500, 0, 0));
 
 	State_Transition(BALL_NORMAL);
 }
@@ -347,14 +363,7 @@ void CBall::VPhysicsCollision( int index, gamevcollisionevent_t	*pEvent	)
 		if (flSpeed > 900.0f)
 			pOther->EmitSound ("Player.Oomph");
 
-		//KickedBall((CSDKPlayer*)pOther, false);		//a touch
-		m_LastTouch = ToSDKPlayer(pOther);
-		if (m_LastTouch->IsOffside())
-		{
-			m_eFoulType = FOUL_OFFSIDE;
-			m_pFoulingPl = m_LastTouch;
-			State_Transition(BALL_FREEKICK);
-		}
+		Touched(ToSDKPlayer(pOther), false);
 
 		EmitSound("Ball.touch");
 	}
@@ -364,38 +373,40 @@ void CBall::VPhysicsCollision( int index, gamevcollisionevent_t	*pEvent	)
 	BaseClass::VPhysicsCollision( index, pEvent );
 }
 
-void CBall::SendMatchEvent(match_event_t matchEvent, CSDKPlayer *pPlayer1, CSDKPlayer *pPlayer2)
+void CBall::SendMatchEvent(match_event_t matchEvent, CSDKPlayer *pPlayer)
 {
-	if (pPlayer1)
+	if (!pPlayer)
+		pPlayer = m_pPl;
+
+	if (pPlayer)
 	{
 		UTIL_LogPrintf( "\"%s<%d><%s><%s>\" triggered \"%d\"\n",
-			pPlayer1->GetPlayerName(), pPlayer1->GetUserID(),
-			pPlayer1->GetNetworkIDString(), pPlayer1->GetTeam()->GetName(), matchEvent);
+			pPlayer->GetPlayerName(), pPlayer->GetUserID(),
+			pPlayer->GetNetworkIDString(), pPlayer->GetTeam()->GetName(), matchEvent);
 	}
 
 	CReliableBroadcastRecipientFilter filter;
 	UserMessageBegin(filter, "MatchEvent");
 		WRITE_BYTE(matchEvent);
-		WRITE_BYTE(pPlayer1 ? pPlayer1->entindex() : 0);
-		WRITE_BYTE(pPlayer2 ? pPlayer2->entindex() : 0);
+		WRITE_BYTE(pPlayer ? pPlayer->entindex() : 1);
 	MessageEnd();
 }
 
-CSDKPlayer *CBall::FindNearestPlayer(int nTeam /*= TEAM_INVALID*/, bool ignoreKeepers /*= true*/)
+CSDKPlayer *CBall::FindNearestPlayer(int team /*= TEAM_INVALID*/, int posFlags /*= FL_POS_FIELD*/)
 {
 	CSDKPlayer *pNearest = NULL;
 	float shortestDist = FLT_MAX;
+	if (team == TEAM_INVALID)
+		team = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
 		CSDKPlayer *pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(i));
 
 		if (!(
-			pPlayer &&
-			pPlayer->GetTeamNumber() != TEAM_SPECTATOR &&
-			pPlayer->IsAlive() &&
-			(nTeam == TEAM_INVALID || pPlayer->GetTeamNumber() == nTeam) &&
-			(!ignoreKeepers || pPlayer->GetTeamPosition() != 1)
+			PlOnField(pPlayer) &&
+			pPlayer->GetTeamNumber() == team &&
+			(posFlags & FL_POS_KEEPER && pPlayer->GetTeamPosition() == 1 || posFlags & FL_POS_FIELD && pPlayer->GetTeamPosition() != 1)
 			))
 			continue;
 
@@ -421,14 +432,14 @@ void CBall::SetPos(const Vector &pos)
 	m_vAngImp = vec3_origin;
 }
 
-void CBall::PreStateHook()
+void CBall::State_PreThink()
 {
 	m_pPhys->GetPosition(&m_vPos, &m_aAng);
 	m_pPhys->GetVelocity(&m_vVel, &m_vAngImp);
-	UpdateCarrier();
+	UpdateCarrier(m_pPl);
 }
 
-void CBall::PostStateHook()
+void CBall::State_PostThink()
 {
 	if (!m_bFreeze)
 		m_pPhys->EnableMotion(true);
@@ -474,6 +485,8 @@ void CBall::State_Enter( ball_state_t newState )
 	m_pCurStateInfo = State_LookupInfo( newState );
 	m_flStateEnterTime = gpGlobals->curtime;
 
+	m_pPl = NULL;
+
 	if ( mp_showballstatetransitions.GetInt() > 0 )
 	{
 		if ( m_pCurStateInfo )
@@ -499,7 +512,7 @@ void CBall::State_Leave()
 
 void CBall::State_Think()
 {
-	PreStateHook();
+	State_PreThink();
 	while (m_eNextState != BALL_NOSTATE && m_flStateLeaveTime <= gpGlobals->curtime)
 	{
 		State_DoTransition(m_eNextState);
@@ -508,14 +521,14 @@ void CBall::State_Think()
 	{	
 		(this->*m_pCurStateInfo->pfnThink)();
 	}
-	PostStateHook();
+	State_PostThink();
 }
 
 CBallStateInfo* CBall::State_LookupInfo( ball_state_t state )
 {
 	static CBallStateInfo ballStateInfos[] =
 	{
-		{ BALL_NORMAL,		"BALL_NORMAL",		&CBall::State_NORMAL_Enter,		NULL,							&CBall::State_NORMAL_Think },
+		{ BALL_NORMAL,		"BALL_NORMAL",		&CBall::State_NORMAL_Enter,		&CBall::State_NORMAL_Leave,		&CBall::State_NORMAL_Think },
 		{ BALL_KICKOFF,		"BALL_KICKOFF",		&CBall::State_KICKOFF_Enter,	&CBall::State_KICKOFF_Leave,	&CBall::State_KICKOFF_Think },
 		{ BALL_THROWIN,		"BALL_THROWIN",		&CBall::State_THROWIN_Enter,	&CBall::State_THROWIN_Leave,	&CBall::State_THROWIN_Think },
 		{ BALL_GOALKICK,	"BALL_GOALKICK",	&CBall::State_GOALKICK_Enter,	&CBall::State_GOALKICK_Leave,	&CBall::State_GOALKICK_Think },
@@ -539,13 +552,11 @@ void CBall::State_NORMAL_Enter()
 
 void CBall::State_NORMAL_Think()
 {
-	if (!SetCarrier(FindEligibleCarrier()))
+	if (!UpdateCarrier(FindEligibleCarrier(), false))
 		return;
 
 	if (!DoBodyPartAction())
 		return;
-
-	MarkOffsidePlayers();
 
 	if (m_pPl->IsOffside())
 	{
@@ -553,41 +564,27 @@ void CBall::State_NORMAL_Think()
 		m_pFoulingPl = m_pPl;
 		State_Transition(BALL_FREEKICK);
 	}
+	else
+		MarkOffsidePlayers();
+}
+
+void CBall::State_NORMAL_Leave()
+{
 }
 
 void CBall::State_KICKOFF_Enter()
 {
-	if (!SetCarrier(FindNearestPlayer(m_LastPlayer ? m_LastPlayer->GetOppTeamNumber() : TEAM_INVALID)))
-	{
-		State_Transition(BALL_NORMAL);
-		return;
-	}
-
 	for (int i = 1; i <= gpGlobals->maxClients; i++) 
 	{
 		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
 
-		if (!(pPl && pPl->GetTeamNumber() >= TEAM_A))
+		if (!PlOnField(pPl))
 			continue;
 
-		//SDKGameRules()->GetPlayerSpawnSpot(pPlayer);
-		//pPlayer->RemoveFlag(FL_ATCONTROLS);
-		Vector pos;
-
-		if (pPl == m_pPl)
-		{
-			pos = g_vKickOffSpot;
-			pos.x -= 30;
-		}
-		else
-		{
-			pos = GetOwnTeamSpots(pPl)->m_vPlayers[pPl->GetTeamPosition() - 1];
-		}
-
-		pPl->WalkToPosition(pos, PLAYER_SPRINTSPEED, 10);
-		m_bIsRemoteControlled = true;
+		pPl->WalkToPosition(GetOwnTeamSpots(pPl)->m_vPlayers[pPl->GetTeamPosition() - 1], PLAYER_SPRINTSPEED, 10);
 	}
 
+	m_bIsRemoteControlled = true;
 	SetPos(g_vKickOffSpot);
 	m_bFreeze = true;
 
@@ -598,11 +595,21 @@ void CBall::State_KICKOFF_Enter()
 
 void CBall::State_KICKOFF_Think()
 {
+	if (!PlOnField(m_pPl) && !UpdateCarrier(FindNearestPlayer(LastOppTeam(true))))
+		return State_Transition(BALL_NORMAL);
+
+	if (m_bPlChanged)
+	{
+		UpdatePossession(m_pPl);
+		if (m_pPl->WalkToPosition(Vector(m_vPos.x - 30, m_vPos.y, g_flGroundZ), PLAYER_SPRINTSPEED, 10))
+			m_bIsRemoteControlled = true;
+	}
+
 	for (int i = 1; i <= gpGlobals->maxClients; i++) 
 	{
 		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
 
-		if (!(pPl && pPl->GetTeamNumber() >= TEAM_A))
+		if (!(pPl && (pPl->GetTeamNumber() == TEAM_A || pPl->GetTeamNumber() == TEAM_B)))
 			continue;
 
 		// Wait until everyone has reached his target position
@@ -623,7 +630,7 @@ void CBall::State_KICKOFF_Think()
 
 	if (m_pPl->m_nButtons & (IN_ATTACK | IN_ATTACK2))
 	{
-		m_vVel = m_vPlForward * 100;
+		m_vVel = m_vPlForward * 200;
 		Kicked(BODY_FEET);
 		m_bFreeze = false;
 		State_Transition(BALL_NORMAL);
@@ -638,27 +645,15 @@ void CBall::State_KICKOFF_Leave()
 
 void CBall::State_THROWIN_Enter()
 {
-	if (!SetCarrier(FindNearestPlayer(m_LastTouch->GetTeamNumber() == TEAM_A ? TEAM_B : TEAM_A)))
-	{ 
-		State_Transition(BALL_NORMAL);
-		return;
-	}
+	if (!PlOnField(m_pPl) && !UpdateCarrier(FindNearestPlayer(LastOppTeam(false))))
+		return State_Transition(BALL_NORMAL);
 
 	UnmarkOffsidePlayers();
-
-	int sign = (g_vKickOffSpot - m_vPos).x > 0 ? 1 : -1;
-	m_vPos.z = g_flGroundZ;
-	m_vPos.x -= 30 * sign;
-	//m_pPl->SetLocalOrigin(m_vNewPos);
-	m_pPl->WalkToPosition(m_vPos, PLAYER_SPRINTSPEED, 5);
-	m_bIsRemoteControlled = true;
-
-	SetPos(m_vPos + Vector(0, 0, VEC_HULL_MAX.z + 2));
-	SDKGameRules()->EnableCircShield(m_nPlTeam, 360, m_vPos);
+	SetPos(Vector(m_vTriggerTouchPos.x - 30 * Sign((g_vKickOffSpot - m_vTriggerTouchPos).x), m_vTriggerTouchPos.y, g_vKickOffSpot.z + VEC_HULL_MAX.z + 2));
+	SDKGameRules()->EnableCircShield(LastOppTeam(false), 360, m_vPos);
 	//m_pPhys->EnableGravity(false);
 	m_bFreeze = true;
 	m_bIgnoreTriggers = true;
-
 	//m_pPl->m_HoldAnimTime = gpGlobals->curtime + BALL_STATUS_TIME;	//hold player still
 	EmitAmbientSound(entindex(), GetAbsOrigin(), "Ball.whistle");
 	SendMatchEvent(MATCH_EVENT_THROWIN);
@@ -666,12 +661,21 @@ void CBall::State_THROWIN_Enter()
 
 void CBall::State_THROWIN_Think()
 {
+	if (!PlOnField(m_pPl) && !UpdateCarrier(FindNearestPlayer(LastOppTeam(false))))
+		return State_Transition(BALL_NORMAL);
+
+	if (m_bPlChanged)
+	{
+		UpdatePossession(m_pPl);
+		m_bIsRemoteControlled = m_pPl->WalkToPosition(Vector(m_vPos.x, m_vPos.y, g_flGroundZ), PLAYER_SPRINTSPEED, 5);
+	}
+
 	if (m_pPl->GetFlags() & FL_REMOTECONTROLLED)
 		return;
 
 	if (m_bIsRemoteControlled)
 	{
-		int sign = (g_vKickOffSpot - m_vPos).x > 0 ? 1 : -1;
+		//int sign = (g_vKickOffSpot - m_vPos).x > 0 ? 1 : -1;
 		//m_pPl->SnapEyeAngles(QAngle(0, 180 * sign, 0));
 		m_pPl->AddFlag(FL_ATCONTROLS);
 		//m_pPl->SetLocalVelocity(vec3_origin);
@@ -698,6 +702,8 @@ void CBall::State_THROWIN_Think()
 		m_pPl->DoAnimationEvent(PLAYERANIMEVENT_THROW);
 		//m_pPhys->EnableGravity(true);
 		m_bFreeze = false;
+		m_bIgnoreTriggers = false;
+		SDKGameRules()->DisableShields();
 		State_Transition(BALL_NORMAL);
 	}
 	else
@@ -708,53 +714,21 @@ void CBall::State_THROWIN_Think()
 
 void CBall::State_THROWIN_Leave()
 {
-	SDKGameRules()->DisableShields();
-	m_bIgnoreTriggers = false;
 	//m_pPl->RemoveFlag(FL_ATCONTROLS);
 }
 
 void CBall::State_GOALKICK_Enter()
 {
-	CSDKPlayer *pKeeper = NULL;
-
-	for (int i = 1; i <= gpGlobals->maxClients; i++)
-	{
-		CSDKPlayer *pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(i));
-
-		if (!(pPlayer &&
-			pPlayer->GetTeamNumber() != TEAM_SPECTATOR &&
-			pPlayer->IsAlive() &&
-			pPlayer->GetTeamNumber() != m_LastTouch->GetTeamNumber() &&
-			pPlayer->m_TeamPos == 1))
-			continue;
-
-		pKeeper = pPlayer;
-		break;
-	}
-
-	if (!SetCarrier(pKeeper))
-	{ 
-		State_Transition(BALL_NORMAL);
-		return;
-	}
+	int team = LastOppTeam(false);
 
 	Vector ballPos;
-	if ((m_vPos - GetOwnTeamSpots(m_pPl)->m_vPlayers[0]).x > 0)
-		ballPos = GetOwnTeamSpots(m_pPl)->m_vGoalkickLeft;
+	if ((m_vTriggerTouchPos - g_vKickOffSpot).x > 0)
+		ballPos = GetTeamSpots(team)->m_vGoalkickLeft;
 	else
-		ballPos = GetOwnTeamSpots(m_pPl)->m_vGoalkickRight;
+		ballPos = GetTeamSpots(team)->m_vGoalkickRight;
 
-	int ySign = (ballPos - GetOwnTeamSpots(m_pPl)->m_vPlayers[0] ).y > 0 ? 1 : -1;
-	m_pPl->SetLocalOrigin(Vector(ballPos.x, ballPos.y - 200 * ySign, ballPos.z));
-	m_pPl->SnapEyeAngles(QAngle(0, 90 * ySign, 0));
-	Vector penPos = g_pTeamSpots[m_pPl->GetTeamNumber() - TEAM_A]->m_vPenalty;
-	CBaseEntity *pPenBox = gEntList.FindEntityByClassnameNearest("trigger_PenaltyBox", penPos, 99999);
-	SDKGameRules()->EnableCircShield(m_pPl->GetTeamNumber(), 360, penPos);
-	//SDKGameRules()->EnableRectShield(teamFlag, Vector(penPos.x - 850, penPos.y - 300, 0), Vector(penPos.x + 850, penPos.y + 300, 0));
-	Vector min, max;
-	//modelinfo->GetModelBounds(pPenBox->GetModel(), min, max);
-	pPenBox->CollisionProp()->WorldSpaceTriggerBounds( &min, &max );
-	SDKGameRules()->EnableRectShield(m_pPl->GetTeamNumber(), min, max);
+	SDKGameRules()->EnableCircShield(team, 360, GetTeamSpots(team)->m_vPenalty);
+	SDKGameRules()->EnableRectShield(team, GetTeamSpots(LastOppTeam(false))->m_vPenaltyMin, GetTeamSpots(LastOppTeam(false))->m_vPenaltyMax);
 	SetPos(ballPos);
 
 	EmitAmbientSound(entindex(), GetAbsOrigin(), "Ball.whistle");
@@ -763,6 +737,22 @@ void CBall::State_GOALKICK_Enter()
 
 void CBall::State_GOALKICK_Think()
 {
+	if (!PlOnField(m_pPl) && !UpdateCarrier(FindNearestPlayer(LastOppTeam(false), FL_POS_KEEPER)))
+		return State_Transition(BALL_NORMAL);
+
+	if (m_bPlChanged)
+	{
+		UpdatePossession(m_pPl);
+		m_bIsRemoteControlled = m_pPl->WalkToPosition(Vector(m_vPos.x, m_vPos.y + 200 * GetOwnTeamSpots(m_pPl)->m_nBack, g_flGroundZ), PLAYER_SPRINTSPEED, 5);
+	}
+
+	if (m_pPl->GetFlags() & FL_REMOTECONTROLLED)
+		return;
+
+	if (m_bIsRemoteControlled)
+	{
+	}
+
 	if (m_pPl->m_nButtons & (IN_ATTACK | IN_ATTACK2))
 	{
 		if (DoGroundShot())
@@ -781,26 +771,18 @@ void CBall::State_GOALKICK_Leave()
 
 void CBall::State_CORNER_Enter()
 {
-	if (!SetCarrier(FindNearestPlayer(m_LastTouch->GetTeamNumber() == TEAM_A ? TEAM_B : TEAM_A)))
-	{
-		State_Transition(BALL_NORMAL);
-		return;
-	}
-
 	UnmarkOffsidePlayers();
 
 	Vector ballPos;
-	if ((m_vPos - GetOppTeamSpots(m_pPl)->m_vPlayers[0]).x > 0)
-		ballPos = GetOppTeamSpots(m_pPl)->m_vCornerLeft;
-	else
-		ballPos = GetOppTeamSpots(m_pPl)->m_vCornerRight;
+	CTeamSpots *spots = GetTeamSpots(LastTeam(false));
 
-	int xSign = (g_vKickOffSpot - ballPos).x > 0 ? 1 : -1;
-	int ySign = (g_vKickOffSpot - ballPos).y > 0 ? 1 : -1;
+	if (Sign((m_vTriggerTouchPos - g_vKickOffSpot).x) == spots->m_nLeft)
+		ballPos = spots->m_vCornerLeft;
+	else
+		ballPos = spots->m_vCornerRight;
+
 	//m_pPl->SetLocalOrigin(Vector(ballPos.x - 50 * xSign, ballPos.y - 50 * ySign, ballPos.z));
 	//m_pPl->SnapEyeAngles(QAngle(0, 45 * xSign * ySign, 0));
-	m_pPl->WalkToPosition(Vector(ballPos.x - 50 * xSign, ballPos.y - 50 * ySign, g_flGroundZ), PLAYER_SPRINTSPEED, 5);
-	m_bIsRemoteControlled = true;
 	
 	SDKGameRules()->EnableCircShield(m_nPlTeam, 360, ballPos);
 	SetPos(ballPos);
@@ -812,6 +794,15 @@ void CBall::State_CORNER_Enter()
 
 void CBall::State_CORNER_Think()
 {
+	if (!PlOnField(m_pPl) && !UpdateCarrier(FindNearestPlayer(LastOppTeam(false))))
+		return State_Transition(BALL_NORMAL);
+
+	if (m_bPlChanged)
+	{
+		UpdatePossession(m_pPl);
+		m_bIsRemoteControlled = m_pPl->WalkToPosition(Vector(m_vPos.x - 50 * Sign((g_vKickOffSpot - m_vPos).x), m_vPos.y - 50 * Sign((g_vKickOffSpot - m_vPos).y), g_flGroundZ), PLAYER_SPRINTSPEED, 5);
+	}
+
 	if (m_pPl->GetFlags() & FL_REMOTECONTROLLED)
 		return;
 
@@ -837,27 +828,22 @@ void CBall::State_CORNER_Leave()
 
 void CBall::State_GOAL_Enter()
 {
-	if (!SetCarrier(m_LastPlayer))
-	{
-		State_Transition(BALL_NORMAL);
-		return;
-	}
+	//if (!UpdateCarrier(LastTeam(true)))
+	//	return State_Transition(BALL_NORMAL);
 
+	UpdatePossession(NULL);
 	m_bIgnoreTriggers = true;
 
-	bool ownGoal = false;
+	if (m_team == LastTeam(true))
+	{
+		if (LastPl(true))
+			LastPl(true)->IncrementFragCount(1);
 
-	if (m_pPl->GetTeamNumber() == m_team)
-	{
-		//give scorer a goal
-		m_pPl->IncrementFragCount( 1 );
-		m_pPl->AddPointsToTeam( 1, false );
+		GetGlobalTeam(LastTeam(true))->AddScore(1);
 	}
-	else
+	else if (m_team == LastOppTeam(true))
 	{
-		ownGoal = true;
-		//add points directly to other team...
-		GetGlobalTeam( m_pPl->GetOppTeamNumber() )->AddScore( 1 );
+		GetGlobalTeam(LastOppTeam(true))->AddScore(1);
 	}
 
 	//EnableCeleb();
@@ -874,15 +860,23 @@ void CBall::State_GOAL_Leave()
 {
 	m_bIgnoreTriggers = false;
 	//DisableCeleb();
+	//for (int i = m_Touches.Count() - 1; i >= 0; i--)
+	//{
+	//	DevMsg("Toucher: %s\n", m_Touches[i].m_pPl->GetPlayerName());
+	//}
+	m_Touches.RemoveAll();
 }
 
 void CBall::State_FREEKICK_Enter()
 {
-	if (!SetCarrier(FindNearestPlayer(m_pFoulingPl->GetTeamNumber())))
+	if (!UpdateCarrier(FindNearestPlayer(m_pFoulingPl->GetTeamNumber())))
 	{
 		State_Transition(BALL_NORMAL);
 		return;
 	}
+
+	//DisableOffsideLine();
+	UpdatePossession(m_pPl);
 
 	m_pPl->WalkToPosition(m_vPos, PLAYER_SPRINTSPEED, 50);
 	m_bIsRemoteControlled = true;
@@ -921,13 +915,7 @@ CSDKPlayer *CBall::FindEligibleCarrier()
 	{
 		CSDKPlayer *pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(i));
 
-		if (!(pPlayer &&
-			pPlayer->GetTeamNumber() != TEAM_SPECTATOR &&
-			pPlayer->IsAlive()))
-			continue;
-
-		if (!((pPlayer->m_nButtons & IN_ATTACK || pPlayer->m_nButtons & IN_ATTACK2) &&
-			pPlayer->m_flNextShot <= gpGlobals->curtime))
+		if (!(PlOnField(pPlayer) && pPlayer->m_nButtons & (IN_ATTACK | IN_ATTACK2) && pPlayer->m_flNextShot <= gpGlobals->curtime))
 			continue;
 
 		Vector dir = m_vPos - pPlayer->GetLocalOrigin();
@@ -1151,55 +1139,75 @@ void CBall::TriggerGoal(int team)
 	State_Transition(BALL_GOAL);
 }
 
-void CBall::TriggerGoalline(int team, int side)
+void CBall::TriggerGoalLine(int team)
 {
-	m_side = side;
+	m_pPhys->GetPosition(&m_vTriggerTouchPos, NULL);
 
-	if (m_LastTouch->GetTeamNumber() == team)
+	if (LastTeam(false) == team)
 		State_Transition(BALL_CORNER);
 	else
 		State_Transition(BALL_GOALKICK);
 }
 
-void CBall::TriggerSideline(int side)
+void CBall::TriggerSideline()
 {
-	State_Transition(BALL_THROWIN);
+	Vector vel;
+	m_pPhys->GetVelocity(&vel, NULL);
+	m_pPhys->GetPosition(&m_vTriggerTouchPos, NULL);
+
+	if (Sign(vel.x) == Sign(m_vTriggerTouchPos.x - g_vKickOffSpot.x))
+		State_Transition(BALL_THROWIN);
 }
 
-bool CBall::SetCarrier(CSDKPlayer *pPlayer)
+CSDKPlayer *CBall::UpdateCarrier(CSDKPlayer *pPl, bool findNextPl /*= true*/)
 {
-	if (!pPlayer)
-		return false;
+	m_bPlChanged = false;
 
-	m_pPl = pPlayer;
-	UpdateCarrier();
+	if (pPl != m_pPl)
+		m_bPlChanged = true;
 
-	return true;
+	m_pPl = pPl;
+
+	if (findNextPl && !PlOnField(m_pPl) && (m_nPlTeam == TEAM_A || m_nPlTeam == TEAM_B))
+	{
+		m_pPl = FindNearestPlayer(m_nPlTeam, m_nPlPos);
+		m_bPlChanged = true;
+	}
+
+	if (m_pPl)
+	{
+		m_vPlPos = m_pPl->GetLocalOrigin();
+		m_vPlVel = m_pPl->GetLocalVelocity();
+		m_aPlAng = m_pPl->EyeAngles();
+		AngleVectors(m_aPlAng, &m_vPlForward, &m_vPlRight, &m_vPlUp);
+		m_nPlTeam = m_pPl->GetTeamNumber();
+		m_nPlPos = m_pPl->GetTeamPosition();
+		m_bIsPowershot = (m_pPl->m_nButtons & IN_ATTACK2) != 0;
+	}
+	else
+	{
+		m_nPlTeam = TEAM_INVALID;
+		m_nPlPos = 0;
+	}
+
+	return m_pPl;
 }
 
-void CBall::UpdateCarrier()
+bool CBall::PlOnField(CSDKPlayer *pPl)
 {
-	if (!m_pPl)
-		return;
-
-	m_vPlPos = m_pPl->GetLocalOrigin();
-	m_vPlVel = m_pPl->GetLocalVelocity();
-	m_aPlAng = m_pPl->EyeAngles();
-	AngleVectors(m_aPlAng, &m_vPlForward, &m_vPlRight, &m_vPlUp);
-	m_nPlTeam = m_pPl->GetTeamNumber();
-	m_bIsPowershot = m_pPl->m_nButtons & IN_ATTACK2;
+	return (pPl && (pPl->GetTeamNumber() == TEAM_A || pPl->GetTeamNumber() == TEAM_B));
 }
 
 void CBall::MarkOffsidePlayers()
 {
-	for (int i = 1; i < gpGlobals->maxClients; i++)
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
 		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
 
 		if (pPl)
 			pPl->SetOffside(false);
 
-		if (!(pPl && pPl->GetTeamNumber() == m_nPlTeam))
+		if (!(pPl && pPl != m_pPl && pPl->GetTeamNumber() == m_nPlTeam))
 			continue;
 
 		Vector pos = pPl->GetLocalOrigin();
@@ -1216,9 +1224,9 @@ void CBall::MarkOffsidePlayers()
 		int nearerPlayerCount = 0;
 
 		// Count players who are nearer to goal
-		for (int i = 1; i < gpGlobals->maxClients; i++)
+		for (int j = 1; j <= gpGlobals->maxClients; j++)
 		{
-			CSDKPlayer *pOpp = ToSDKPlayer(UTIL_PlayerByIndex(i));
+			CSDKPlayer *pOpp = ToSDKPlayer(UTIL_PlayerByIndex(j));
 			if (!(pOpp && pOpp->GetTeamNumber() == pPl->GetOppTeamNumber()))
 				continue;
 
@@ -1233,7 +1241,7 @@ void CBall::MarkOffsidePlayers()
 
 void CBall::UnmarkOffsidePlayers()
 {
-	for (int i = 0; i < gpGlobals->maxClients; i++)
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
 		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
 
@@ -1245,6 +1253,94 @@ void CBall::UnmarkOffsidePlayers()
 void CBall::Kicked(body_part_t bodyPart)
 {
 	m_eBodyPart = bodyPart;
-	m_LastTouch = m_LastPlayer = m_LastNonKeeper = m_pPl;
 	m_pPl->m_flNextShot = gpGlobals->curtime + SHOT_DELAY;
+	Touched(m_pPl, true);
+}
+
+void CBall::Touched(CSDKPlayer *pPl, bool isShot)
+{
+	if (m_Touches.Count() > 0 && m_Touches.Tail().m_pPl == pPl)
+	{
+		m_Touches.Tail().m_bIsShot = isShot;
+	}
+	else
+	{
+		UpdatePossession(pPl);
+
+		CBallTouchInfo info = { pPl, pPl->GetTeamNumber(), isShot };
+		m_Touches.AddToTail(info);
+	}
+	
+	if (pPl->IsOffside())
+	{
+		m_eFoulType = FOUL_OFFSIDE;
+		m_pFoulingPl = pPl;
+		EnableOffsideLine(m_vPos.y);
+		State_Transition(BALL_FREEKICK);
+	}
+}
+
+CBallTouchInfo *CBall::LastInfo(bool wasShooting)
+{
+	for (int i = m_Touches.Count() - 1; i >= 0; i--)
+	{
+		if (!wasShooting || m_Touches[i].m_bIsShot)
+			return &m_Touches[i];
+	}
+
+	return NULL;
+}
+
+CSDKPlayer *CBall::LastPl(bool wasShooting)
+{
+	CBallTouchInfo *info = LastInfo(wasShooting);
+	return info ? info->m_pPl : NULL;
+}
+
+int CBall::LastTeam(bool wasShooting)
+{
+	CBallTouchInfo *info = LastInfo(wasShooting);
+	return info ? info->m_nTeam : TEAM_INVALID;
+}
+
+int CBall::LastOppTeam(bool wasShooting)
+{
+	CBallTouchInfo *info = LastInfo(wasShooting);
+	return info ? (info->m_nTeam == TEAM_A ? TEAM_B : TEAM_A) : TEAM_INVALID;
+}
+
+void CBall::UpdatePossession(CSDKPlayer *pNewPossessor)
+{
+	if (m_pPossessor == pNewPossessor)
+		return;
+
+	if (m_pPossessor)
+	{
+		float duration = gpGlobals->curtime - m_flPossessionStart;
+		m_pPossessor->m_flPossessionTime += duration;
+		m_pPossessor->GetTeam()->m_flPossessionTime += duration;
+		float totalPossession = max(1, m_pPossessor->GetTeam()->m_flPossessionTime + m_pPossessor->GetOppTeam()->m_flPossessionTime);
+		m_pPossessor->m_Possession = 100 * m_pPossessor->m_flPossessionTime / totalPossession;
+		m_pPossessor->GetTeam()->m_nPossession = 100 * m_pPossessor->GetTeam()->m_flPossessionTime / totalPossession;		
+		m_pPossessor->GetOppTeam()->m_nPossession = 100 - m_pPossessor->GetTeam()->m_nPossession;
+	}
+
+	m_pPossessor = pNewPossessor;
+	m_flPossessionStart = gpGlobals->curtime;
+}
+
+void CBall::EnableOffsideLine(float yPos)
+{
+	m_pOffsideLine->SetAbsStartPos(Vector(g_vFieldMin.x, yPos, g_flGroundZ + 10));
+	m_pOffsideLine->SetAbsEndPos(Vector(g_vFieldMax.x, yPos, g_flGroundZ + 10));
+	//m_pOffsideLine->SetAbsStartPos(g_vKickOffSpot + Vector(-500, 0, 100));
+	//m_pOffsideLine->SetAbsEndPos(g_vKickOffSpot + Vector(500, 0, 100));
+	//m_pOffsideLine->SetAbsStartPos(g_vKickOffSpot - Vector(500, 0, 0));
+	//m_pOffsideLine->SetAbsEndPos(g_vKickOffSpot + Vector(500, 0, 0));
+	m_pOffsideLine->TurnOn();
+}
+
+void CBall::DisableOffsideLine()
+{
+	m_pOffsideLine->TurnOff();
 }

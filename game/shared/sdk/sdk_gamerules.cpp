@@ -944,6 +944,7 @@ void CSDKGameRules::State_INIT_Think()
 
 void CSDKGameRules::State_WARMUP_Enter()
 {
+	GetBall()->SetIgnoreTriggers(true);
 }
 
 void CSDKGameRules::State_WARMUP_Think()
@@ -973,13 +974,9 @@ void CSDKGameRules::State_FIRST_HALF_Enter()
 		plr->SetAnimation( PLAYER_IDLE );
 	}
 
-	//reset (kick off) the first ball we find
-	CBall *pBall = dynamic_cast<CBall*>(gEntList.FindEntityByClassname( NULL, "football" ));
-	if (pBall)
-	{
-		pBall->CreateVPhysics();
-		pBall->State_Transition(BALL_KICKOFF);
-	}
+	GetBall()->CreateVPhysics();
+	GetBall()->SetIgnoreTriggers(false);
+	GetBall()->State_Transition(BALL_KICKOFF);
 }
 
 void CSDKGameRules::State_FIRST_HALF_Think()
@@ -999,6 +996,7 @@ void CSDKGameRules::State_FIRST_HALF_Think()
 
 void CSDKGameRules::State_HALFTIME_Enter()
 {
+	GetBall()->SetIgnoreTriggers(true);
 }
 
 void CSDKGameRules::State_HALFTIME_Think()
@@ -1009,6 +1007,7 @@ void CSDKGameRules::State_HALFTIME_Think()
 
 void CSDKGameRules::State_SECOND_HALF_Enter()
 {
+	GetBall()->SetIgnoreTriggers(false);
 	SwapTeams();
 }
 
@@ -1031,7 +1030,7 @@ void CSDKGameRules::State_SECOND_HALF_Think()
 
 void CSDKGameRules::State_EXTRATIME_INTERMISSION_Enter()
 {
-
+	GetBall()->SetIgnoreTriggers(true);
 }
 
 void CSDKGameRules::State_EXTRATIME_INTERMISSION_Think()
@@ -1044,6 +1043,7 @@ void CSDKGameRules::State_EXTRATIME_INTERMISSION_Think()
 
 void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Enter()
 {
+	GetBall()->SetIgnoreTriggers(false);
 	SwapTeams();
 }
 
@@ -1061,6 +1061,7 @@ void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Think()
 
 void CSDKGameRules::State_EXTRATIME_HALFTIME_Enter()
 {
+	GetBall()->SetIgnoreTriggers(true);
 }
 
 void CSDKGameRules::State_EXTRATIME_HALFTIME_Think()
@@ -1073,6 +1074,7 @@ void CSDKGameRules::State_EXTRATIME_HALFTIME_Think()
 
 void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Enter()
 {
+	GetBall()->SetIgnoreTriggers(false);
 	SwapTeams();
 }
 
@@ -1093,6 +1095,7 @@ void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Think()
 
 void CSDKGameRules::State_PENALTIES_INTERMISSION_Enter()
 {
+	GetBall()->SetIgnoreTriggers(true);
 }
 
 void CSDKGameRules::State_PENALTIES_INTERMISSION_Think()
@@ -1105,6 +1108,7 @@ void CSDKGameRules::State_PENALTIES_INTERMISSION_Think()
 
 void CSDKGameRules::State_PENALTIES_Enter()
 {
+	GetBall()->SetIgnoreTriggers(false);
 }
 
 void CSDKGameRules::State_PENALTIES_Think()
@@ -1117,6 +1121,8 @@ void CSDKGameRules::State_PENALTIES_Think()
 
 void CSDKGameRules::State_COOLDOWN_Enter()
 {
+	GetBall()->SetIgnoreTriggers(true);
+
 	//who won?
 	int winners = 0;
 	int scoreA = GetGlobalTeam( TEAM_A )->GetScore();
@@ -1148,17 +1154,11 @@ void CSDKGameRules::State_COOLDOWN_Enter()
 		//pPlayer->AddFlag (FL_ATCONTROLS);
 	}
 
-
-	//find a ball
-	CBall *pBall = dynamic_cast<CBall*>(gEntList.FindEntityByClassname( NULL, "football" ));
-	if (pBall)
-	{
-		//this test doesnt show because the scoreboard is on front
-		pBall->SendMatchEvent(MATCH_EVENT_FINAL_WHISTLE);
-		pBall->EmitAmbientSound(pBall->entindex(), pBall->GetAbsOrigin(), "Ball.whistle");
-		//cheer
-		pBall->EmitAmbientSound(pBall->entindex(), pBall->GetAbsOrigin(), "Ball.cheer");
-	}
+	//this test doesnt show because the scoreboard is on front
+	GetBall()->SendMatchEvent(MATCH_EVENT_FINAL_WHISTLE);
+	GetBall()->EmitSound("Ball.whistle");
+	//cheer
+	GetBall()->EmitSound("Ball.cheer");
 }
 
 void CSDKGameRules::State_COOLDOWN_Think()

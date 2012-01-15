@@ -6,7 +6,7 @@
 #include "props.h"
 #include "sdk_player.h"
 #include "in_buttons.h"
-
+#include "beam_shared.h"
 
 
 #define	ENTITY_MODEL	 "models/w_fb.mdl"
@@ -49,25 +49,31 @@ enum body_part_t
 enum foul_type_t
 {
 	FOUL_NONE = -1,
-	FOUL_NORMAL,
+	FOUL_NORMAL = 0,
 	FOUL_OFFSIDE,
 	FOUL_DOUBLETOUCH,
 	FOUL_TIMEWASTING
 };
 
-#define	PS_OFF					 0
-#define	PS_BESTOFFIVE			 1
-#define	PS_SUDDENDEATH			 2
-#define	PS_DONE					 3
+#define FL_POS_KEEPER					(1<<0)
+#define FL_POS_DEFENDER					(1<<1)
+#define FL_POS_MIDFIELDER				(1<<2)
+#define FL_POS_ATTACKER					(1<<3)
+#define FL_POS_FIELD					(FL_POS_DEFENDER | FL_POS_MIDFIELDER | FL_POS_ATTACKER)
+#define FL_POS_ALL						(FL_POS_KEEPER | FL_POS_FIELD)
 
+#define	PS_OFF							0
+#define	PS_BESTOFFIVE					1
+#define	PS_SUDDENDEATH					2
+#define	PS_DONE							3
 
-#define BALL_MAINSTATUS_FOUL	0
-#define BALL_MAINSTATUS_YELLOW	1
-#define BALL_MAINSTATUS_RED		2
-#define BALL_MAINSTATUS_OFFSIDE	3
-#define BALL_MAINSTATUS_PLAYON	4
-#define BALL_MAINSTATUS_PENALTY	5
-#define BALL_MAINSTATUS_FINAL_WHISTLE		6
+#define BALL_MAINSTATUS_FOUL			0
+#define BALL_MAINSTATUS_YELLOW			1
+#define BALL_MAINSTATUS_RED				2
+#define BALL_MAINSTATUS_OFFSIDE			3
+#define BALL_MAINSTATUS_PLAYON			4
+#define BALL_MAINSTATUS_PENALTY			5
+#define BALL_MAINSTATUS_FINAL_WHISTLE	6
 
 class CBall;
 
@@ -94,6 +100,13 @@ struct BallHistory
 	BallHistory(float snapshotTime, Vector pos, QAngle ang, Vector vel, AngularImpulse angImp) : snapshotTime(snapshotTime), pos(pos), ang(ang), vel(vel), angImp(angImp) {}
 };
 
+struct CBallTouchInfo
+{
+	CSDKPlayer	*m_pPl;
+	int			m_nTeam;
+	bool		m_bIsShot;
+};
+
 //==========================================================
 //	
 //	
@@ -116,7 +129,7 @@ public:
 	float			GetMass(void) {	return m_fMass;	}
 	int				ObjectCaps(void)	{  return BaseClass::ObjectCaps() |	FCAP_CONTINUOUS_USE; }
 
-	void			SendMatchEvent(match_event_t matchEvent, CSDKPlayer *pPlayer1 = NULL, CSDKPlayer *pPlayer2 = NULL);
+	void			SendMatchEvent(match_event_t matchEvent, CSDKPlayer *pPlayer1 = NULL);
 
 	void			TakeReplaySnapshot();
 	void			StartReplay();
@@ -130,15 +143,16 @@ public:
 	void			VPhysicsUpdate(IPhysicsObject *pPhysics);
 	bool			CreateVPhysics();
 	
-	void TriggerGoal(int team);
-	void TriggerGoalline(int team, int side);
-	void TriggerSideline(int side);
-	bool IgnoreTriggers() { return m_bIgnoreTriggers; };
+	void			TriggerGoal(int team);
+	void			TriggerGoalLine(int team);
+	void			TriggerSideline();
+	bool			IgnoreTriggers() { return m_bIgnoreTriggers; };
+	void			SetIgnoreTriggers(bool ignoreTriggers) { m_bIgnoreTriggers = ignoreTriggers; };
 
-	void State_Transition( ball_state_t newState, float delay = 0.0f );
+	void			State_Transition( ball_state_t newState, float delay = 0.0f );
 
 private:
-	void State_NORMAL_Enter();		void State_NORMAL_Think();
+	void State_NORMAL_Enter();		void State_NORMAL_Think();		void State_NORMAL_Leave();
 	void State_KICKOFF_Enter();		void State_KICKOFF_Think();		void State_KICKOFF_Leave();
 	void State_THROWIN_Enter();		void State_THROWIN_Think();		void State_THROWIN_Leave();
 	void State_GOALKICK_Enter();	void State_GOALKICK_Think();	void State_GOALKICK_Leave();
@@ -146,8 +160,8 @@ private:
 	void State_GOAL_Enter();		void State_GOAL_Think();		void State_GOAL_Leave();
 	void State_FREEKICK_Enter();	void State_FREEKICK_Think();	void State_FREEKICK_Leave();
 
-	void PreStateHook();
-	void PostStateHook();
+	void State_PreThink();
+	void State_PostThink();
 	void State_Enter(ball_state_t newState);	// Initialize the new state.
 	void State_Leave();										// Cleanup the previous state.
 	void State_Think();										// Update the current state.
@@ -162,8 +176,10 @@ private:
 	void			SetPos(const Vector &pos);
 	void			MarkOffsidePlayers();
 	void			UnmarkOffsidePlayers();
+	void			EnableOffsideLine(float yPos);
+	void			DisableOffsideLine();
 
-	CSDKPlayer		*FindNearestPlayer(int nTeam = TEAM_INVALID, bool ignoreKeepers = true);
+	CSDKPlayer		*FindNearestPlayer(int team = TEAM_INVALID, int posFlags = FL_POS_FIELD);
 	CSDKPlayer		*FindEligibleCarrier();
 	bool			DoBodyPartAction();
 	bool			DoGroundShot();
@@ -173,25 +189,30 @@ private:
 	void			SetBallCurve(bool bReset);
 	float			GetPitchModifier();
 	float			GetPowershotModifier();
-	bool			SetCarrier(CSDKPlayer *pPlayer);
-	void			UpdateCarrier();
+	CSDKPlayer		*UpdateCarrier(CSDKPlayer *pPl, bool findNextPl = true);
+	bool			PlOnField(CSDKPlayer *pPl);
 	void			Kicked(body_part_t bodyPart);
+	void			Touched(CSDKPlayer *pPl, bool isShot);
+	CBallTouchInfo	*LastInfo(bool wasShooting);
+	CSDKPlayer		*LastPl(bool wasShooting);
+	int				LastTeam(bool wasShooting);
+	int				LastOppTeam(bool wasShooting);
+	void			UpdatePossession(CSDKPlayer *pNewPossessor);
 
 	IPhysicsObject	*m_pPhys;
 	float			m_flPhysRadius;
 	bool			m_bFreeze;
+	Vector			m_vTriggerTouchPos;
 	
 	CSDKPlayer		*m_pPl;				  // Current player for state
-	CSDKPlayer		*m_LastTouch;		  //last	touch by anyone	- for corners/goal kicks etc
-	CSDKPlayer		*m_LastPlayer;		  //last	touch (by a	real player) - for goals
-	CSDKPlayer		*m_LastNonKeeper;	  //last	touch by a real	player who isn't a keeper
-	CSDKPlayer		*m_LastTouchBeforeMe; //last touch before me
 
 	QAngle			m_aPlAng;
 	Vector			m_vPlVel, m_vPlPos, m_vPlForward, m_vPlRight, m_vPlUp;
 	int				m_nPlTeam;
+	int				m_nPlPos;
 	bool			m_bIsPowershot;
 	bool			m_bIsRemoteControlled;
+	bool			m_bPlChanged;
 	body_part_t		m_eBodyPart;
 
 	CSDKPlayer		*m_pFoulingPl;
@@ -211,9 +232,13 @@ private:
 	int				m_FoulInPenaltyBox;	 //-1 =	not	in box,	0,1	= teams	box - recorded when foul occurs
 
 	bool			m_bIgnoreTriggers;
+	
+	CSDKPlayer		*m_pPossessor;
+	float			m_flPossessionStart;
 
-public:
+	CUtlVector<CBallTouchInfo> m_Touches;
 
+	CBeam *m_pOffsideLine;
 };
 
 #endif

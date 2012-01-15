@@ -4169,6 +4169,13 @@ CTeam *CBaseEntity::GetTeam( void ) const
 	return GetGlobalTeam( m_iTeamNum );
 }
 
+CTeam *CBaseEntity::GetOppTeam( void ) const
+{
+	if (m_iTeamNum == TEAM_SPECTATOR)
+		return GetGlobalTeam(TEAM_SPECTATOR);
+
+	return m_iTeamNum == TEAM_A ? GetGlobalTeam(TEAM_B) : GetGlobalTeam(TEAM_A);
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Returns true if these players are both in at least one team together

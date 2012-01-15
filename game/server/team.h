@@ -90,6 +90,9 @@ public:
 	int		m_iLastSpawn;		// Index of the last spawnpoint used
 
 	CNetworkVar( int, m_iTeamNum );			// Which team is this?
+
+	float	m_flPossessionTime;
+	int		m_nPossession;
 };
 
 extern CUtlVector< CTeam * > g_Teams;

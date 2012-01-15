@@ -120,5 +120,9 @@ const char *g_szMatchEventNames[32] =
 	"PENALTY",
 	"PLAY ON",
 	"FINAL WHISTLE",
+	"OFFSIDE",
+	"YELLOW CARD",
+	"RED CARD",
+	"ASSIST",
 	NULL
 };

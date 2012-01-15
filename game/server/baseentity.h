@@ -933,6 +933,7 @@ public:
 
 	// Team Handling
 	CTeam			*GetTeam( void ) const;				// Get the Team this entity is on
+	CTeam			*GetOppTeam( void ) const;				// Get the Team this entity is on
 	int				GetTeamNumber( void ) const;		// Get the Team number of the team this entity is on
 	int				GetOppTeamNumber( void ) const;
 	virtual void	ChangeTeam( int iTeamNum );			// Assign this entity to a team.

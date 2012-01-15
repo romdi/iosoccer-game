@@ -21,21 +21,23 @@ void CFieldBot::BotThink()
 	for (int i = 1; i <= gpGlobals->maxClients; i++ )
 	{
 		CSDKPlayer *pPlayer = ( CSDKPlayer *) UTIL_PlayerByIndex( i );
-		if ( pPlayer &&
+		if (!(
+			pPlayer &&
 			pPlayer->GetTeamNumber() > LAST_SHARED_TEAM &&
 			pPlayer->IsAlive() &&
-			(pPlayer->m_TeamPos > 1))
-		{
-			float dist = GetLocalOrigin().DistTo(pPlayer->GetLocalOrigin());
-			if (dist < closestDist)
-			{
-				closestDist = dist;
-				pClosest = pPlayer;
-				plballdir = pEnt->GetLocalOrigin() - pPlayer->GetLocalOrigin();
-				pldir = pPlayer->GetLocalOrigin() - GetLocalOrigin();
-				break;
-			}
-		}
+			!(pPlayer->GetFlags() & FL_FAKECLIENT)
+			))
+			continue;
+
+		float dist = GetLocalOrigin().DistTo(pPlayer->GetLocalOrigin());
+		if (dist >= closestDist)
+			continue;
+
+		closestDist = dist;
+		pClosest = pPlayer;
+		plballdir = pEnt->GetLocalOrigin() - pPlayer->GetLocalOrigin();
+		pldir = pPlayer->GetLocalOrigin() - GetLocalOrigin();
+		break;
 	}
 
 	if (!pClosest)
@@ -50,7 +52,7 @@ void CFieldBot::BotThink()
 	if (plballdir.Length2D() > 150)
 	{
 		//m_cmd.forwardmove = clamp(dir.Length2D() / 2, PLAYER_WALKSPEED, PLAYER_SPRINTSPEED);
-		pitch = clamp(plballdir.Length2D() / -50 + 10, -40, 10); //-45;
+		pitch = clamp(plballdir.Length2D() / -50 + 0, -40, 10); //-45;
 
 		if (dir.Length2D() > 50)
 		{

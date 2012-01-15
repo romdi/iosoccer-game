@@ -491,7 +491,7 @@ void CSDKPlayer::InitialSpawn( void )
 	m_KeeperSaves=0;
 	m_GoalKicks=0;
 	m_Possession=0;
-	m_fPossessionTime=0.0f;
+	m_flPossessionTime=0.0f;
 	ResetFragCount();
 
 	//Spawn();
@@ -1660,7 +1660,7 @@ void CSDKPlayer::ResetMatchStats()
 	m_KeeperSaves = 0;
 	m_GoalKicks = 0;
 	ResetFragCount();
-	m_fPossessionTime = 0.0f;
+	m_flPossessionTime = 0.0f;
 }
 
 Vector CSDKPlayer::EyeDirection2D( void )
@@ -1683,8 +1683,11 @@ Vector CSDKPlayer::EyeDirection3D( void )
 
 #include "ios_mapentities.h"
 
-void CSDKPlayer::WalkToPosition(Vector pos, float speed, float tolerance)
+bool CSDKPlayer::WalkToPosition(Vector pos, float speed, float tolerance)
 {
+	if ((pos - GetLocalOrigin()).Length2D() <= tolerance)
+		return false;
+
 	m_vWalkToPos = pos;
 	m_flWalkToSpeed = speed;
 	m_flWalkToTolerance = max(1, tolerance);
@@ -1692,7 +1695,9 @@ void CSDKPlayer::WalkToPosition(Vector pos, float speed, float tolerance)
 	Vector newPos = GetLocalOrigin();
 	newPos.z = g_flGroundZ;
 	SetLocalOrigin(newPos);
-	AddFlag(FL_REMOTECONTROLLED);	
+	AddFlag(FL_REMOTECONTROLLED);
+
+	return true;
 }
 
 void CSDKPlayer::PlayerRunCommand(CUserCmd *ucmd, IMoveHelper *moveHelper)
@@ -1701,7 +1706,7 @@ void CSDKPlayer::PlayerRunCommand(CUserCmd *ucmd, IMoveHelper *moveHelper)
 	{
 		float dist = (m_vWalkToPos - GetLocalOrigin()).Length2D();
 
-		if (dist <= 5.0f/*m_flWalkToTolerance*/)
+		if (dist <= m_flWalkToTolerance)
 		{
 			SetLocalVelocity(vec3_origin);
 			SetLocalOrigin(Vector(m_vWalkToPos.x, m_vWalkToPos.y, g_flGroundZ));

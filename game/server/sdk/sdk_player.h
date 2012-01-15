@@ -278,7 +278,7 @@ public:
 
 	int					m_RejoinTime;							//delay before brining up join menu (after kill or red)
 
-	float				m_fPossessionTime;
+	float				m_flPossessionTime;
 
 	//stats
 	int					m_RedCards;
@@ -347,7 +347,7 @@ public:
 	Vector				EyeDirection2D();
 	Vector				EyeDirection3D();
 
-	void				WalkToPosition(Vector pos, float speed, float tolerance);
+	bool				WalkToPosition(Vector pos, float speed, float tolerance);
 	void				SetOffside(bool offside) { m_bOffside = offside; }
 	bool				IsOffside() { return m_bOffside; }
 	void				PlayerRunCommand(CUserCmd *ucmd, IMoveHelper *moveHelper);
