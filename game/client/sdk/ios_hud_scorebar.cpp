@@ -37,9 +37,8 @@ using namespace vgui;
 
 struct Event_t
 {
-	Label *pEventType;
-	Label *pHomeTeam;
-	Label *pAwayTeam;
+	Label *pType;
+	Label *pText;
 	float startTime;
 };
 
@@ -65,41 +64,37 @@ protected:
 
 private:
 
-	Panel *m_pScorebarPanel;
-	Label *m_pScorebarTimeLabel;
-	Label *m_pScorebarTeamLabels[2];
-	Label *m_pScorebarScoreLabel;
+	Panel *m_pTimePanel;
+	Label *m_pTimeLabel;
+	Label *m_pTeamLabels[2];
+	Label *m_pScoreLabels[2];
+	Panel *m_pTeamPanels[2];
+	Panel *m_pEventPanels[2];
+	Panel *m_pTeamColorPanels[2];
 
-	Panel *m_pEventPanel;
-	Panel *m_pEventTypePanel;
-	Panel *m_pEventTeamPanels[2];
-
-	CUtlVector<Event_t> m_vEventList;
-
-	float m_flNotificationTime;
-	float m_flEventStart;
-	bool m_bFlash;
+	CUtlVector<Event_t> m_vEventList[2];
 
 	IScheme *pScheme;
-	int m_nTargetHeight;
-	int m_nTargetY;
-	float m_flCurrentHeight;
-	float m_flCurrentY;
 };
 
 DECLARE_HUDELEMENT( CHudScorebar );
 DECLARE_HUD_MESSAGE(CHudScorebar, MatchEvent);
 
-#define HEIGHT_SCOREBAR			40
-#define HEIGHT_EVENTBAR			400
-#define HEIGHT_OVERLAP			10
-#define HEIGHT_EVENTLABEL		30
-#define WIDTH_TEAMLABEL			220
+#define	HEIGHT_MARGIN			5
+#define HEIGHT_TIMEBAR			35
+#define HEIGHT_TEAMBAR			35
+
+#define WIDTH_MARGIN			5
+#define WIDTH_OVERLAP			10
+#define WIDTH_EVENTTYPE			120
+#define WIDTH_EVENTTEXT			150
+#define WIDTH_TEAM				150
+#define WIDTH_SCORE				35
 #define WIDTH_TIME				150
-#define WIDTH_SCORE				65
-#define WIDTH_MARGIN			10
-#define WIDTH_TEAMLABELMARGIN	5
-#define WIDTH_SCOREBAR			WIDTH_MARGIN + WIDTH_TIME + WIDTH_MARGIN + WIDTH_TEAMLABEL + WIDTH_MARGIN + WIDTH_SCORE + WIDTH_MARGIN + WIDTH_TEAMLABEL + WIDTH_MARGIN
+#define WIDTH_TIMEBAR			150
+#define WIDTH_TEAMCOLOR			10
+
+#define WIDTH_TEAMBAR			WIDTH_MARGIN + WIDTH_TEAMCOLOR + WIDTH_MARGIN + WIDTH_TEAM + WIDTH_MARGIN + WIDTH_SCORE + WIDTH_MARGIN
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -110,24 +105,17 @@ CHudScorebar::CHudScorebar( const char *pElementName ) : BaseClass(NULL, "HudSco
 	vgui::Panel *pParent = g_pClientMode->GetViewport();
 	SetParent( pParent );
 
-	m_pScorebarPanel = new Panel(this, "TopPanel");
-	m_pScorebarTimeLabel = new Label(m_pScorebarPanel, "TimeLabel", "");
-	m_pScorebarScoreLabel = new Label(m_pScorebarPanel, "ScoreLabel", "");
-	m_pEventPanel = new Panel(this, "BottomPanel");
-	m_pEventTypePanel = new Panel(m_pEventPanel, "EventPanel");
+	m_pTimePanel = new Panel(this, "TopPanel");
+	m_pTimeLabel = new Label(m_pTimePanel, "TimeLabel", "");
+
 	for (int i = 0; i < 2; i++)
 	{
-		m_pScorebarTeamLabels[i] = new Label(m_pScorebarPanel, VarArgs("TeamLabel%d", i), "");
-		m_pEventTeamPanels[i] = new Panel(m_pEventPanel, VarArgs("TeamPanel%d", i + 1));
+		m_pTeamPanels[i] = new Panel(this, VarArgs("TeamPanel%d", i + 1));
+		m_pTeamLabels[i] = new Label(m_pTeamPanels[i], VarArgs("TeamLabel%d", i), "");
+		m_pTeamColorPanels[i] = new Panel(m_pTeamPanels[i], VarArgs("TeamColorPanel%d", i));
+		m_pScoreLabels[i] = new Label(m_pTeamPanels[i], VarArgs("ScoreLabel%d", i), "");
+		m_pEventPanels[i] = new Label(this, VarArgs("ScoreLabel%d", i), "");
 	}
-	
-	m_pScorebarTimeLabel = new Label(m_pScorebarPanel, "ScorebarLabel", "");
-	m_flNotificationTime = -1;
-	m_flEventStart = -1;
-	m_nTargetHeight = 0;
-	m_nTargetY = 0;
-	m_flCurrentHeight = 0.0f;
-	m_flCurrentY = 0.0f;
 }
 
 void CHudScorebar::ApplySchemeSettings( IScheme *scheme )
@@ -136,57 +124,58 @@ void CHudScorebar::ApplySchemeSettings( IScheme *scheme )
 
 	pScheme = scheme;
 	
-	SetPos( 25, 25);
-	SetSize( WIDTH_SCOREBAR, 500 );
+	SetPos( 20, 20);
+	SetSize( ScreenWidth() - 50, 200 );
  	//SetPaintBackgroundType (2); // Rounded corner box
  	//SetPaintBackgroundEnabled(true);
 	//SetBgColor( Color( 0, 0, 255, 255 ) );
 
-	Color bgColor = Color(0, 0, 0, 255);
-	Color bgColorTransparent = Color(0, 0, 0, 200);
+	Color bgColor = Color(25, 25, 25, 255);
+	Color bgColorTransparent = Color(25, 25, 25, 200);
 
-	m_pScorebarPanel->SetBounds(0, 0, WIDTH_SCOREBAR, HEIGHT_SCOREBAR);
-	m_pScorebarPanel->SetPaintBackgroundEnabled(true);
-	m_pScorebarPanel->SetPaintBackgroundType(2);
-	m_pScorebarPanel->SetBgColor(bgColor);
+	m_pTimePanel->SetBounds(0, 2 * (HEIGHT_TEAMBAR + HEIGHT_MARGIN), WIDTH_TIMEBAR, HEIGHT_TIMEBAR);
+	m_pTimePanel->SetPaintBackgroundEnabled(true);
+	m_pTimePanel->SetPaintBackgroundType(2);
+	m_pTimePanel->SetBgColor(bgColor);
 
-	m_pScorebarTimeLabel->SetBounds(WIDTH_MARGIN, 0, WIDTH_TIME, HEIGHT_SCOREBAR);
-	//m_pScorebarTimeLabel->SetContentAlignment(Label::a_center);
-	m_pScorebarTimeLabel->SetFont(scheme->GetFont("IOSScorebar"));
-	m_pScorebarTimeLabel->SetFgColor(Color(255, 255, 255, 255));
-
-	m_pScorebarScoreLabel->SetBounds(WIDTH_MARGIN + WIDTH_TIME + WIDTH_MARGIN + WIDTH_TEAMLABEL + WIDTH_MARGIN, 0, WIDTH_SCORE, HEIGHT_SCOREBAR);
-	m_pScorebarScoreLabel->SetContentAlignment(Label::a_center);
-	m_pScorebarScoreLabel->SetFont(scheme->GetFont("IOSScorebar"));
-	m_pScorebarScoreLabel->SetFgColor(Color(255, 255, 255, 255));
-
-	m_pEventPanel->SetBounds(0, HEIGHT_SCOREBAR - HEIGHT_OVERLAP, WIDTH_SCOREBAR, HEIGHT_EVENTBAR + HEIGHT_OVERLAP);
-	m_pEventPanel->SetZPos(-1);
-
-	m_pEventTypePanel->SetPaintBackgroundEnabled(true);
-	m_pEventTypePanel->SetPaintBackgroundType(2);
-	m_pEventTypePanel->SetBgColor(bgColorTransparent);
-	m_pEventTypePanel->SetBounds(WIDTH_MARGIN, 0, WIDTH_TIME, HEIGHT_OVERLAP);
+	m_pTimeLabel->SetBounds(WIDTH_MARGIN, 0, WIDTH_TIME, HEIGHT_TIMEBAR);
+	//m_pTimeLabel->SetContentAlignment(Label::a_center);
+	m_pTimeLabel->SetFont(scheme->GetFont("IOSScorebar"));
+	m_pTimeLabel->SetFgColor(Color(255, 255, 255, 255));
 
 	for (int i = 0; i < 2; i++)
-	{
-		m_pScorebarTeamLabels[i]->SetBounds(WIDTH_MARGIN + WIDTH_TIME + WIDTH_MARGIN + (i == 0 ? 0 : WIDTH_TEAMLABEL + WIDTH_MARGIN + WIDTH_SCORE + WIDTH_MARGIN), WIDTH_TEAMLABELMARGIN, WIDTH_TEAMLABEL, HEIGHT_SCOREBAR - 2 * WIDTH_TEAMLABELMARGIN);
-		m_pScorebarTeamLabels[i]->SetContentAlignment(Label::a_center);
-		m_pScorebarTeamLabels[i]->SetTextInset(0, 0);
-		//m_pScorebarTeamLabels[i]->SetAutoResize(Panel::PIN_TOPLEFT, AUTORESIZE_RIGHT, 10, 0, 10, 0);
-		m_pScorebarTeamLabels[i]->SetFont(scheme->GetFont("IOSScorebar"));
-		m_pScorebarTeamLabels[i]->SetPaintBackgroundType(2);
-		m_pScorebarTeamLabels[i]->SetBgColor(Color(100 * i, 100 * (1 - i), 0, 150));
-		m_pScorebarTeamLabels[i]->SetFgColor(Color(255, 255, 255, 255));
+	{		
+		m_pTeamPanels[i]->SetBounds(0, i * (HEIGHT_TEAMBAR + HEIGHT_MARGIN), WIDTH_TEAMBAR, HEIGHT_TEAMBAR);
+		m_pTeamPanels[i]->SetPaintBackgroundEnabled(true);
+		m_pTeamPanels[i]->SetPaintBackgroundType(2);
+		m_pTeamPanels[i]->SetBgColor(bgColor);
 
-		m_pEventTeamPanels[i]->SetBounds(WIDTH_MARGIN + WIDTH_TIME + WIDTH_MARGIN + (i == 0 ? 0 : WIDTH_TEAMLABEL + WIDTH_MARGIN + WIDTH_SCORE + WIDTH_MARGIN), 0, WIDTH_TEAMLABEL, HEIGHT_OVERLAP);
-		m_pEventTeamPanels[i]->SetPaintBackgroundEnabled(true);
-		m_pEventTeamPanels[i]->SetPaintBackgroundType(2);
-		m_pEventTeamPanels[i]->SetBgColor(bgColorTransparent);
+		m_pTeamColorPanels[i]->SetBounds(WIDTH_MARGIN, HEIGHT_MARGIN, WIDTH_TEAMCOLOR, HEIGHT_TEAMBAR - 2 * HEIGHT_MARGIN);
+		m_pTeamColorPanels[i]->SetBgColor(Color(100 * i, 100 * (1 - i), 0, 255));
+
+		m_pTeamLabels[i]->SetBounds(WIDTH_MARGIN + WIDTH_TEAMCOLOR + WIDTH_MARGIN, HEIGHT_MARGIN, WIDTH_TEAM, HEIGHT_TEAMBAR - 2 * HEIGHT_MARGIN);
+		m_pTeamLabels[i]->SetContentAlignment(Label::a_west);
+		m_pTeamLabels[i]->SetTextInset(0, 0);
+		//m_pTeamLabels[i]->SetAutoResize(Panel::PIN_TOPLEFT, AUTORESIZE_RIGHT, 10, 0, 10, 0);
+		m_pTeamLabels[i]->SetFont(scheme->GetFont("IOSScorebar"));
+		m_pTeamLabels[i]->SetPaintBackgroundType(2);
+		//m_pTeamLabels[i]->SetBgColor(Color(100 * i, 100 * (1 - i), 0, 255));
+		m_pTeamLabels[i]->SetFgColor(Color(255, 255, 255, 255));
+		
+		m_pScoreLabels[i]->SetBounds(WIDTH_MARGIN + WIDTH_TEAMCOLOR + WIDTH_MARGIN + WIDTH_TEAM + WIDTH_MARGIN, HEIGHT_MARGIN, WIDTH_SCORE, HEIGHT_TEAMBAR - 2 * HEIGHT_MARGIN);
+		m_pScoreLabels[i]->SetContentAlignment(Label::a_center);
+		m_pScoreLabels[i]->SetTextInset(0, 0);
+		//m_pScoreLabels[i]->SetAutoResize(Panel::PIN_TOPLEFT, AUTORESIZE_RIGHT, 10, 0, 10, 0);
+		m_pScoreLabels[i]->SetFont(scheme->GetFont("IOSScorebar"));
+		m_pScoreLabels[i]->SetPaintBackgroundType(0);
+		m_pScoreLabels[i]->SetBgColor(Color(255, 255, 255, 255));
+		m_pScoreLabels[i]->SetFgColor(Color(0, 0, 0, 255));
+
+		m_pEventPanels[i]->SetBounds(WIDTH_MARGIN + WIDTH_TEAMCOLOR + WIDTH_MARGIN + WIDTH_TEAM + WIDTH_MARGIN + WIDTH_SCORE + WIDTH_MARGIN - WIDTH_OVERLAP, i * (HEIGHT_TEAMBAR + HEIGHT_MARGIN), 0, HEIGHT_TEAMBAR);
+		m_pEventPanels[i]->SetPaintBackgroundType(2);
+		m_pEventPanels[i]->SetBgColor(bgColorTransparent);
+		m_pEventPanels[i]->SetZPos(-1);
 	}
-
-	m_nTargetHeight = HEIGHT_OVERLAP;
-	m_nTargetY = 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -316,12 +305,13 @@ void CHudScorebar::Paint( void )
 	g_pVGuiLocalize->ConvertANSIToUnicode( teamHome->Get_FullName(), teamHomeName, sizeof( teamHomeName ) );
 	g_pVGuiLocalize->ConvertANSIToUnicode( teamAway->Get_FullName(), teamAwayName, sizeof( teamAwayName ) );
 
-	m_pScorebarTimeLabel->SetText(stateText);
-	m_pScorebarTeamLabels[0]->SetText(teamHomeName);
-	m_pScorebarTeamLabels[1]->SetText(teamAwayName);
-	wchar_t scoreText[32];
-	_snwprintf(scoreText, sizeof(scoreText), L"%s - %s", scoreHome, scoreAway);
-	m_pScorebarScoreLabel->SetText(scoreText);
+	m_pTimeLabel->SetText(stateText);
+	m_pTeamLabels[0]->SetText(teamHomeName);
+	m_pTeamLabels[1]->SetText(teamAwayName);
+	//wchar_t scoreText[32];
+	//_snwprintf(scoreText, sizeof(scoreText), L"%s - %s", scoreHome, scoreAway);
+	m_pScoreLabels[1]->SetText(scoreHome);
+	m_pScoreLabels[0]->SetText(scoreAway);
 
 	DoEventSlide();
 }
@@ -331,147 +321,66 @@ void CHudScorebar::Paint( void )
 
 void CHudScorebar::DoEventSlide()
 {
-	int prevY2 = HEIGHT_OVERLAP;
-	bool isAdding = false;
-
-	for (int i = 0; i < m_vEventList.Count(); i++)
+	for (int team = 0; team < 2; team++)
 	{
-		Event_t *event = &m_vEventList[i];
-		float timePassed = gpGlobals->curtime - event->startTime;
+		int prevX2 = 0;
+		bool isAdding = false;
 
-		// Remove events which slided out on top
-		if (timePassed >= EVENT_STAY_TIME + EVENT_SLIDE_TIME)
+		for (int i = 0; i < m_vEventList[team].Count(); i++)
 		{
-			event->pEventType->DeletePanel();
-			event->pHomeTeam->DeletePanel();
-			event->pAwayTeam->DeletePanel();
-			m_vEventList.Remove(0);
-			/*if (m_vEventList.Count() > 0)
-				m_vEventList[0].startTime += EVENT_SLIDE_TIME;*/
-			i = -1;
-			continue;
-		}
+			Event_t *event = &m_vEventList[team][i];
+			float timePassed = gpGlobals->curtime - event->startTime;
 
-		int y = prevY2;
-
-		// Slide out on top
-		if (timePassed >= EVENT_STAY_TIME)
-		{
-			if (i == 0)
-				y -= HEIGHT_EVENTLABEL * min(1, (timePassed - EVENT_STAY_TIME) / EVENT_SLIDE_TIME);
-			else
-				event->startTime = gpGlobals->curtime - EVENT_STAY_TIME;
-		}
-
-		event->pEventType->SetY(y);
-		event->pHomeTeam->SetY(y);
-		event->pAwayTeam->SetY(y);
-
-		// Slide in from bottom after adding
-		if (timePassed <= EVENT_SLIDE_TIME)
-		{
-			if (!isAdding)
+			// Remove events which slided out on top
+			if (timePassed >= EVENT_STAY_TIME + EVENT_SLIDE_TIME)
 			{
-				
-				prevY2 = y + HEIGHT_EVENTLABEL * max(0, timePassed / EVENT_SLIDE_TIME);
-				isAdding = true;
+				event->pType->DeletePanel();
+				event->pText->DeletePanel();
+				m_vEventList[team].Remove(0);
+				/*if (m_vEventList.Count() > 0)
+				m_vEventList[0].startTime += EVENT_SLIDE_TIME;*/
+				i = -1;
+				continue;
+			}
+
+			int x = prevX2;
+
+			// Slide out on top
+			if (timePassed >= EVENT_STAY_TIME)
+			{
+				if (i == 0)
+					x -= (WIDTH_EVENTTYPE + WIDTH_MARGIN + WIDTH_EVENTTEXT) * min(1, (timePassed - EVENT_STAY_TIME) / EVENT_SLIDE_TIME);
+				else
+					event->startTime = gpGlobals->curtime - EVENT_STAY_TIME;
+			}
+
+			event->pType->SetX(x);
+			event->pText->SetX(x + WIDTH_EVENTTYPE + WIDTH_MARGIN);
+
+			// Slide in from bottom after adding
+			if (timePassed <= EVENT_SLIDE_TIME)
+			{
+				if (!isAdding)
+				{		
+					prevX2 = x + (WIDTH_EVENTTYPE + WIDTH_MARGIN + WIDTH_EVENTTEXT) * max(0, timePassed / EVENT_SLIDE_TIME);
+					isAdding = true;
+				}
+				else
+				{	
+					event->startTime = gpGlobals->curtime;
+				}
 			}
 			else
-			{	
-				event->startTime = gpGlobals->curtime;
+			{
+				event->pType->SetVisible(true);
+				event->pText->SetVisible(true);
+				prevX2 = x + (WIDTH_EVENTTYPE + WIDTH_MARGIN + WIDTH_EVENTTEXT);
 			}
 		}
-		else
-		{
-			event->pEventType->SetVisible(true);
-			event->pHomeTeam->SetVisible(true);
-			event->pAwayTeam->SetVisible(true);
-			prevY2 = y + HEIGHT_EVENTLABEL;
-		}
+
+		m_pEventPanels[team]->SetWide(WIDTH_OVERLAP + prevX2);
 	}
-
-	m_pEventTypePanel->SetTall(prevY2);
-	m_pEventTeamPanels[0]->SetTall(prevY2);
-	m_pEventTeamPanels[1]->SetTall(prevY2);
 }
-
-//void CHudScorebar::DoEventSlide()
-//{
-//	if (m_vEventList.Count() == 0)
-//	{
-//		for (int i = 0; i < m_pEventPanel->GetChildCount(); i++)
-//		{
-//			m_nTargetHeight = m_flCurrentHeight = HEIGHT_OVERLAP;
-//			m_nTargetY = m_flCurrentY = 0;
-//			m_pEventPanel->GetChild(i)->SetTall(m_flCurrentHeight);
-//			m_pEventPanel->GetChild(i)->SetY(m_flCurrentY);
-//			return;
-//		}
-//	}
-//
-//	for (int i = 0; i < m_vEventList.Count(); i++)
-//	{
-//		Event_t *event = &m_vEventList[i];
-//
-//		int alpha = 255;
-//
-//		if (event->pEventType->GetY() + event->pEventType->GetTall() < m_pEventTypePanel->GetTall())
-//		{
-//			int alpha = event->pEventType->GetFgColor().a() + 100 * gpGlobals->frametime;
-//		}
-//		event->pEventType->SetFgColor(Color(255, 255, 255, alpha));
-//		event->pHomeTeam->SetFgColor(Color(255, 255, 255, alpha));
-//		event->pAwayTeam->SetFgColor(Color(255, 255, 255, alpha));
-//
-//		if (event->startTime == -1)
-//		{
-//			if (m_pEventTypePanel->GetY() + event->pHomeTeam->GetY() + event->pHomeTeam->GetTall() <= HEIGHT_OVERLAP)
-//			{
-//				delete event->pEventType;
-//				delete event->pHomeTeam;
-//				delete event->pAwayTeam;
-//				m_vEventList.Remove(0);
-//			}
-//		}
-//		else if (gpGlobals->curtime - event->startTime <= 1)
-//		{
-//	/*		int alpha = 255 * (gpGlobals->curtime - event->startTime);
-//			event->pEventType->SetFgColor(Color(255, 255, 255, alpha));
-//			event->pHomeTeam->SetFgColor(Color(255, 255, 255, alpha));
-//			event->pAwayTeam->SetFgColor(Color(255, 255, 255, alpha));*/
-//		}
-//		else if (gpGlobals->curtime - event->startTime >= 6)
-//		{
-//			m_nTargetY -= HEIGHT_EVENTLABEL;
-//			event->startTime = -1;
-//		/*	if (height == HEIGHT_OVERLAP)
-//			{
-//				delete event.pEventType;
-//				delete event.pHomeTeam;
-//				delete event.pAwayTeam;
-//				m_vEventList.Remove(0);
-//			}*/
-//		}
-//	}
-//
-//	for (int i = 0; i < m_pEventPanel->GetChildCount(); i++)
-//	{		
-//		//if (heightDiff > 0)
-//		//	m_pEventPanel->GetChild(i)->SetTall(m_pEventPanel->GetChild(i)->GetTall() + heightDiff);
-//		//else if (heightDiff < 0)
-//		//	m_pEventPanel->GetChild(i)->SetY(m_pEventPanel->GetChild(i)->GetY() + heightDiff);
-//		if (m_nTargetHeight > m_flCurrentHeight)
-//		{
-//			m_flCurrentHeight += 10 * gpGlobals->frametime;
-//			m_pEventPanel->GetChild(i)->SetTall(m_flCurrentHeight);
-//		}
-//		if (m_nTargetY < m_flCurrentY)
-//		{
-//			m_flCurrentY -= 10 * gpGlobals->frametime;
-//			m_pEventPanel->GetChild(i)->SetY(m_flCurrentY);
-//		}
-//	}
-//}
 
 #include "ehandle.h"
 #include "c_sdk_player.h"
@@ -479,33 +388,28 @@ void CHudScorebar::DoEventSlide()
 void CHudScorebar::MsgFunc_MatchEvent(bf_read &msg)
 {
 	IGameResources *gr = GameResources();
-	match_event_t eventType = MATCH_EVENT_GOAL;// (match_event_t)msg.ReadByte();
-	int playerIndices[] = { msg.ReadByte(), msg.ReadByte() };
+	match_event_t eventType = (match_event_t)msg.ReadByte();
+	int playerIndex = msg.ReadByte();
+	int teamIndex = gr->GetTeam(playerIndex) - TEAM_A;
 	//C_SDKPlayer *pPlayer1 = (C_SDKPlayer *)CHandle<C_SDKPlayer>::FromIndex(msg.ReadLong());
 	//C_SDKPlayer *pPlayer2 = (C_SDKPlayer *)CHandle<C_SDKPlayer>::FromIndex(msg.ReadLong());
 
-	Label *pEventType = new Label(m_pEventTypePanel, "EventTypeLabel", g_szMatchEventNames[eventType]);
+	Label *pEventType = new Label(m_pEventPanels[teamIndex], "EventTypeLabel", g_szMatchEventNames[eventType]);
 	pEventType->SetFont(pScheme->GetFont("IOSMatchEvent"));
 	pEventType->SetContentAlignment(Label::a_center);
 	pEventType->SetFgColor(Color(255, 255, 255, 255));
-	pEventType->SetBounds(0, HEIGHT_OVERLAP - HEIGHT_EVENTLABEL, WIDTH_TIME, HEIGHT_EVENTLABEL);
+	pEventType->SetBounds(0, HEIGHT_MARGIN, WIDTH_EVENTTYPE, HEIGHT_TEAMBAR - 2 * HEIGHT_MARGIN);
 	pEventType->SetAlpha(100);
 	pEventType->SetVisible(false);
 
-	Label *pTeams[2];
-	for (int i = 0; i < 2; i++)
-	{
-		pTeams[i] = new Label(m_pEventTeamPanels[i], VarArgs("TeamLabel%d", i + 1), playerIndices[i] == 0 ? "NOPLAYER" : gr->GetPlayerName(playerIndices[i]));
-		pTeams[i]->SetBounds(0, HEIGHT_OVERLAP - HEIGHT_EVENTLABEL, WIDTH_TEAMLABEL, HEIGHT_EVENTLABEL);
-		pTeams[i]->SetFgColor(Color(255, 255, 255, 255));
-		pTeams[i]->SetFont(pScheme->GetFont("IOSTeamEvent"));
-		pTeams[i]->SetContentAlignment(Label::a_center);
-		pTeams[i]->SetAlpha(100);
-		pTeams[i]->SetVisible(false);
-	}
+	Label *pEventText = new Label(m_pEventPanels[teamIndex], "EventTextLabel", gr->GetPlayerName(playerIndex));
+	pEventText->SetBounds(0, HEIGHT_MARGIN, WIDTH_EVENTTEXT, HEIGHT_TEAMBAR - 2 * HEIGHT_MARGIN);
+	pEventText->SetFgColor(Color(255, 255, 255, 255));
+	pEventText->SetFont(pScheme->GetFont("IOSTeamEvent"));
+	pEventText->SetContentAlignment(Label::a_center);
+	pEventText->SetAlpha(100);
+	pEventText->SetVisible(false);
 
-	Event_t e = { pEventType, pTeams[0], pTeams[1], gpGlobals->curtime };
-	m_vEventList.AddToTail(e);
-
-	m_nTargetHeight += HEIGHT_EVENTLABEL;
+	Event_t e = { pEventType, pEventText, gpGlobals->curtime };
+	m_vEventList[teamIndex].AddToTail(e);
 }
