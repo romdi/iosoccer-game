@@ -1919,7 +1919,7 @@ bool C_BasePlayer::ShouldPredict( void )
 {
 #if !defined( NO_ENTITY_PREDICTION )
 	// Do this before calling into baseclass so prediction data block gets allocated
-	if ( IsLocalPlayer() )
+	if ( IsLocalPlayer() && !(GetFlags() & FL_REMOTECONTROLLED) )
 	{
 		return true;
 	}
