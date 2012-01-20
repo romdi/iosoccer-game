@@ -189,7 +189,7 @@ private:
 	void			SetBallCurve(bool bReset);
 	float			GetPitchModifier();
 	float			GetPowershotModifier();
-	CSDKPlayer		*UpdateCarrier(CSDKPlayer *pPl, bool findNextPl = true);
+	void			UpdateCarrier();
 	bool			PlOnField(CSDKPlayer *pPl);
 	void			Kicked(body_part_t bodyPart);
 	void			Touched(CSDKPlayer *pPl, bool isShot);
@@ -212,10 +212,10 @@ private:
 	int				m_nPlPos;
 	bool			m_bIsPowershot;
 	bool			m_bIsRemoteControlled;
-	bool			m_bPlChanged;
 	body_part_t		m_eBodyPart;
 
 	CSDKPlayer		*m_pFoulingPl;
+	int				m_nFoulingTeam;
 	foul_type_t		m_eFoulType;
 
 	Vector			m_vPos, m_vVel;

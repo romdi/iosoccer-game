@@ -419,6 +419,10 @@ CSDKPlayer *CBall::FindNearestPlayer(int team /*= TEAM_INVALID*/, int posFlags /
 		pNearest = pPlayer;	
 	}
 
+	//// If we didn't find a player of a certain team, just look for any other player
+	//if (!pNearest && team != TEAM_INVALID)
+	//	pNearest = FindNearestPlayer();
+
 	return pNearest;
 }
 
@@ -436,7 +440,6 @@ void CBall::State_PreThink()
 {
 	m_pPhys->GetPosition(&m_vPos, &m_aAng);
 	m_pPhys->GetVelocity(&m_vVel, &m_vAngImp);
-	UpdateCarrier(m_pPl);
 }
 
 void CBall::State_PostThink()
@@ -513,14 +516,22 @@ void CBall::State_Leave()
 void CBall::State_Think()
 {
 	State_PreThink();
+
 	while (m_eNextState != BALL_NOSTATE && m_flStateLeaveTime <= gpGlobals->curtime)
 	{
 		State_DoTransition(m_eNextState);
 	}
+
 	if ( m_pCurStateInfo && m_pCurStateInfo->pfnThink )
 	{	
 		(this->*m_pCurStateInfo->pfnThink)();
 	}
+
+	while (m_eNextState != BALL_NOSTATE && m_flStateLeaveTime <= gpGlobals->curtime)
+	{
+		State_DoTransition(m_eNextState);
+	}
+
 	State_PostThink();
 }
 
@@ -552,8 +563,11 @@ void CBall::State_NORMAL_Enter()
 
 void CBall::State_NORMAL_Think()
 {
-	if (!UpdateCarrier(FindEligibleCarrier(), false))
+	m_pPl = FindEligibleCarrier();
+	if (!m_pPl)
 		return;
+
+	UpdateCarrier();
 
 	if (!DoBodyPartAction())
 		return;
@@ -562,6 +576,7 @@ void CBall::State_NORMAL_Think()
 	{
 		m_eFoulType = FOUL_OFFSIDE;
 		m_pFoulingPl = m_pPl;
+		m_nFoulingTeam = m_pPl->GetTeamNumber();
 		State_Transition(BALL_FREEKICK);
 	}
 	else
@@ -595,21 +610,35 @@ void CBall::State_KICKOFF_Enter()
 
 void CBall::State_KICKOFF_Think()
 {
-	if (!PlOnField(m_pPl) && !UpdateCarrier(FindNearestPlayer(LastOppTeam(true))))
-		return State_Transition(BALL_NORMAL);
-
-	if (m_bPlChanged)
+	if (!PlOnField(m_pPl))
 	{
+		m_pPl = FindNearestPlayer(LastOppTeam(true));
+		if (!m_pPl)
+			m_pPl = FindNearestPlayer();
+		if (!m_pPl)
+			return;
+
 		UpdatePossession(m_pPl);
-		if (m_pPl->WalkToPosition(Vector(m_vPos.x - 30, m_vPos.y, g_flGroundZ), PLAYER_SPRINTSPEED, 10))
-			m_bIsRemoteControlled = true;
+		m_bIsRemoteControlled = m_pPl->WalkToPosition(Vector(m_vPos.x - 30, m_vPos.y, g_flGroundZ), PLAYER_SPRINTSPEED, 5);
+
+		for (int i = 1; i <= gpGlobals->maxClients; i++) 
+		{
+			CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+
+			if (pPl == m_pPl || !PlOnField(pPl))
+				continue;
+
+			pPl->WalkToPosition(GetOwnTeamSpots(pPl)->m_vPlayers[pPl->GetTeamPosition() - 1], PLAYER_SPRINTSPEED, 5);
+		}
 	}
+
+	UpdateCarrier();
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++) 
 	{
 		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
 
-		if (!(pPl && (pPl->GetTeamNumber() == TEAM_A || pPl->GetTeamNumber() == TEAM_B)))
+		if (!PlOnField(pPl))
 			continue;
 
 		// Wait until everyone has reached his target position
@@ -632,22 +661,20 @@ void CBall::State_KICKOFF_Think()
 	{
 		m_vVel = m_vPlForward * 200;
 		Kicked(BODY_FEET);
-		m_bFreeze = false;
 		State_Transition(BALL_NORMAL);
 	}
 }
 
 void CBall::State_KICKOFF_Leave()
 {
-	if (m_pPl)
+	m_bFreeze = false;
+
+	if (PlOnField(m_pPl))
 		m_pPl->RemoveFlag(FL_ATCONTROLS);
 }
 
 void CBall::State_THROWIN_Enter()
 {
-	if (!PlOnField(m_pPl) && !UpdateCarrier(FindNearestPlayer(LastOppTeam(false))))
-		return State_Transition(BALL_NORMAL);
-
 	UnmarkOffsidePlayers();
 	SetPos(Vector(m_vTriggerTouchPos.x - 30 * Sign((g_vKickOffSpot - m_vTriggerTouchPos).x), m_vTriggerTouchPos.y, g_vKickOffSpot.z + VEC_HULL_MAX.z + 2));
 	SDKGameRules()->EnableCircShield(LastOppTeam(false), 360, m_vPos);
@@ -661,14 +688,19 @@ void CBall::State_THROWIN_Enter()
 
 void CBall::State_THROWIN_Think()
 {
-	if (!PlOnField(m_pPl) && !UpdateCarrier(FindNearestPlayer(LastOppTeam(false))))
-		return State_Transition(BALL_NORMAL);
-
-	if (m_bPlChanged)
+	if (!PlOnField(m_pPl))
 	{
+		m_pPl = FindNearestPlayer(LastOppTeam(false));
+		if (!m_pPl)
+			m_pPl = FindNearestPlayer();
+		if (!m_pPl)
+			return;
+
 		UpdatePossession(m_pPl);
 		m_bIsRemoteControlled = m_pPl->WalkToPosition(Vector(m_vPos.x, m_vPos.y, g_flGroundZ), PLAYER_SPRINTSPEED, 5);
 	}
+
+	UpdateCarrier();
 
 	if (m_pPl->GetFlags() & FL_REMOTECONTROLLED)
 		return;
@@ -700,10 +732,7 @@ void CBall::State_THROWIN_Think()
 		m_pPl->m_HoldAnimTime = gpGlobals->curtime + 1;
 		m_pPl->SetAnimation(PLAYER_THROW);
 		m_pPl->DoAnimationEvent(PLAYERANIMEVENT_THROW);
-		//m_pPhys->EnableGravity(true);
-		m_bFreeze = false;
-		m_bIgnoreTriggers = false;
-		SDKGameRules()->DisableShields();
+
 		State_Transition(BALL_NORMAL);
 	}
 	else
@@ -714,7 +743,10 @@ void CBall::State_THROWIN_Think()
 
 void CBall::State_THROWIN_Leave()
 {
-	//m_pPl->RemoveFlag(FL_ATCONTROLS);
+	//m_pPhys->EnableGravity(true);
+	m_bFreeze = false;
+	m_bIgnoreTriggers = false;
+	SDKGameRules()->DisableShields();
 }
 
 void CBall::State_GOALKICK_Enter()
@@ -737,21 +769,22 @@ void CBall::State_GOALKICK_Enter()
 
 void CBall::State_GOALKICK_Think()
 {
-	if (!PlOnField(m_pPl) && !UpdateCarrier(FindNearestPlayer(LastOppTeam(false), FL_POS_KEEPER)))
-		return State_Transition(BALL_NORMAL);
-
-	if (m_bPlChanged)
+	if (!PlOnField(m_pPl))
 	{
+		m_pPl = FindNearestPlayer(LastOppTeam(false), FL_POS_KEEPER);
+		if (!m_pPl)
+			m_pPl = FindNearestPlayer(LastOppTeam(false));
+		if (!m_pPl)
+			return State_Transition(BALL_NORMAL);
+
 		UpdatePossession(m_pPl);
 		m_bIsRemoteControlled = m_pPl->WalkToPosition(Vector(m_vPos.x, m_vPos.y + 200 * GetOwnTeamSpots(m_pPl)->m_nBack, g_flGroundZ), PLAYER_SPRINTSPEED, 5);
 	}
 
+	UpdateCarrier();
+
 	if (m_pPl->GetFlags() & FL_REMOTECONTROLLED)
 		return;
-
-	if (m_bIsRemoteControlled)
-	{
-	}
 
 	if (m_pPl->m_nButtons & (IN_ATTACK | IN_ATTACK2))
 	{
@@ -794,28 +827,27 @@ void CBall::State_CORNER_Enter()
 
 void CBall::State_CORNER_Think()
 {
-	if (!PlOnField(m_pPl) && !UpdateCarrier(FindNearestPlayer(LastOppTeam(false))))
-		return State_Transition(BALL_NORMAL);
-
-	if (m_bPlChanged)
+	if (!PlOnField(m_pPl))
 	{
+		m_pPl = FindNearestPlayer(LastOppTeam(false));
+		if (!m_pPl)
+			m_pPl = FindNearestPlayer();
+		if (!m_pPl)
+			return;
+
 		UpdatePossession(m_pPl);
 		m_bIsRemoteControlled = m_pPl->WalkToPosition(Vector(m_vPos.x - 50 * Sign((g_vKickOffSpot - m_vPos).x), m_vPos.y - 50 * Sign((g_vKickOffSpot - m_vPos).y), g_flGroundZ), PLAYER_SPRINTSPEED, 5);
 	}
 
+	UpdateCarrier();
+
 	if (m_pPl->GetFlags() & FL_REMOTECONTROLLED)
 		return;
-
-	if (m_bIsRemoteControlled)
-	{
-		m_bIsRemoteControlled = false;
-	}
 
 	if (m_pPl->m_nButtons & (IN_ATTACK | IN_ATTACK2))
 	{
 		if (DoGroundShot())
 		{
-			m_bFreeze = false;
 			State_Transition(BALL_NORMAL);
 		}
 	}
@@ -823,6 +855,7 @@ void CBall::State_CORNER_Think()
 
 void CBall::State_CORNER_Leave()
 {
+	m_bFreeze = false;
 	SDKGameRules()->DisableShields();
 }
 
@@ -869,28 +902,24 @@ void CBall::State_GOAL_Leave()
 
 void CBall::State_FREEKICK_Enter()
 {
-	if (!UpdateCarrier(FindNearestPlayer(m_pFoulingPl->GetTeamNumber())))
-	{
-		State_Transition(BALL_NORMAL);
-		return;
-	}
-
-	//DisableOffsideLine();
-	UpdatePossession(m_pPl);
-
-	m_pPl->WalkToPosition(m_vPos, PLAYER_SPRINTSPEED, 50);
-	m_bIsRemoteControlled = true;
 }
 
 void CBall::State_FREEKICK_Think()
 {
+	if (!PlOnField(m_pPl))
+	{
+		m_pPl = FindNearestPlayer(m_nFoulingTeam);
+		if (!m_pPl)
+			return State_Transition(BALL_NORMAL);
+
+		UpdatePossession(m_pPl);
+		m_bIsRemoteControlled = m_pPl->WalkToPosition(Vector(m_vPos.x, m_vPos.y + 200 * GetOwnTeamSpots(m_pPl)->m_nBack, g_flGroundZ), PLAYER_SPRINTSPEED, 5);
+	}
+
+	UpdateCarrier();
+
 	if (m_pPl->GetFlags() & FL_REMOTECONTROLLED)
 		return;
-
-	if (m_bIsRemoteControlled)
-	{
-		m_bIsRemoteControlled = false;
-	}
 
 	if (m_pPl->m_nButtons & (IN_ATTACK | IN_ATTACK2))
 	{
@@ -1159,22 +1188,9 @@ void CBall::TriggerSideline()
 		State_Transition(BALL_THROWIN);
 }
 
-CSDKPlayer *CBall::UpdateCarrier(CSDKPlayer *pPl, bool findNextPl /*= true*/)
+void CBall::UpdateCarrier()
 {
-	m_bPlChanged = false;
-
-	if (pPl != m_pPl)
-		m_bPlChanged = true;
-
-	m_pPl = pPl;
-
-	if (findNextPl && !PlOnField(m_pPl) && (m_nPlTeam == TEAM_A || m_nPlTeam == TEAM_B))
-	{
-		m_pPl = FindNearestPlayer(m_nPlTeam, m_nPlPos);
-		m_bPlChanged = true;
-	}
-
-	if (m_pPl)
+	if (PlOnField(m_pPl))
 	{
 		m_vPlPos = m_pPl->GetLocalOrigin();
 		m_vPlVel = m_pPl->GetLocalVelocity();
@@ -1189,8 +1205,6 @@ CSDKPlayer *CBall::UpdateCarrier(CSDKPlayer *pPl, bool findNextPl /*= true*/)
 		m_nPlTeam = TEAM_INVALID;
 		m_nPlPos = 0;
 	}
-
-	return m_pPl;
 }
 
 bool CBall::PlOnField(CSDKPlayer *pPl)
@@ -1275,6 +1289,7 @@ void CBall::Touched(CSDKPlayer *pPl, bool isShot)
 	{
 		m_eFoulType = FOUL_OFFSIDE;
 		m_pFoulingPl = pPl;
+		m_nFoulingTeam = pPl->GetTeamNumber();
 		EnableOffsideLine(m_vPos.y);
 		State_Transition(BALL_FREEKICK);
 	}
