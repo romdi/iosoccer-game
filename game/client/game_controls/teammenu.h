@@ -77,7 +77,6 @@ protected:
 
 	// helper functions
 	virtual void SetLabelText(const char *textEntryName, const char *text);
-	virtual void MakeTeamButtons( void );
 	
 	// command callbacks
 	// MESSAGE_FUNC_INT( OnTeamButton, "TeamButton", team );
@@ -88,7 +87,10 @@ protected:
 	ButtonCode_t m_iScoreBoardKey;
 
 	//CUtlVectorFixed<CBitmapButton *, 11> m_pTeamButtons;
-	CBitmapButton *m_pPosButtons[2][11];
+	Button *m_pPosButtons[2][11];
+	Panel *m_pPosInfoPanels[2][11];
+	Label *m_pPosNames[2][11];
+	Label *m_pPosNumbers[2][11];
 
 	Button *m_pSpectateButton;
 

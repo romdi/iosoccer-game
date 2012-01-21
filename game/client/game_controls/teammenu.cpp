@@ -58,19 +58,22 @@ CTeamMenu::CTeamMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_TEAM )
 	SetProportional(false);
 	SetPaintBackgroundEnabled(false);
 	SetPaintBorderEnabled(false);
-	
-	m_szTeamNames[0][0] = 0;
-	m_szTeamNames[1][0] = 0;
-
-	m_pTeamPanels[0] = new Panel(this, "HomeTeamPanel");
-	m_pTeamPanels[1] = new Panel(this, "AwayTeamPanel");
-
-	m_pTeamNames[0] = new Label(m_pTeamPanels[0], "HomeTeamLabel", "");
-	m_pTeamNames[1] = new Label(m_pTeamPanels[1], "AwayTeamLabel", "");
 
 	m_pSpectateButton = new Button(this, "SpectateButton", "Spectate", this, VarArgs("jointeam %d 1", TEAM_SPECTATOR));
 
-	MakeTeamButtons();
+	for (int i = 0; i < 2; i++)
+	{
+		m_pTeamPanels[i] = new Panel(this, VarArgs("TeamPanel%d", i));
+		m_pTeamNames[i] = new Label(m_pTeamPanels[i], VarArgs("TeamLabel%d", i), "");
+		m_szTeamNames[i][0] = 0;
+		for (int j = 0; j < 11; j++)
+		{
+			m_pPosButtons[i][j] = new Button(m_pTeamPanels[i], "Button", "");
+			m_pPosInfoPanels[i][j] = new Panel(m_pPosButtons[i][j], "Panel");
+			m_pPosNumbers[i][j] = new Label(m_pPosInfoPanels[i][j], "Number", "");
+			m_pPosNames[i][j] = new Label(m_pPosInfoPanels[i][j], "Name", "");
+		}
+	}
 }
 
 void CTeamMenu::PaintBackground()
@@ -95,30 +98,35 @@ void CTeamMenu::PaintBorder()
 	DrawRoundedBorder(Color(100, 100, 100, 200), wide / 2 - offset, tall - 100, wide / 2 + offset, 100 );
 }
 
+#define BUTTON_SIZE		110
+#define BUTTON_MARGIN	5
+#define NUMBER_MARGIN	2
+#define NUMBER_WIDTH	20
+#define NAME_WIDTH		BUTTON_SIZE - NUMBER_WIDTH - NUMBER_MARGIN
+#define NAME_HEIGHT		30
+
 void CTeamMenu::PerformLayout()
 {
 	BaseClass::PerformLayout();
 
+	IScheme *pScheme = scheme()->GetIScheme(GetScheme());
+
 	MoveToCenterOfScreen();
 
-	int s = 128;
-
-	int pos[11][2] = {
-				{ s*0.5f, 0 }, { s*1.5f, 0 }, { s*2.5f, 0 },
-			{ s*0.5f, s }, { s*1.5f, s }, { s*2.5f, s },
-		{ 0, s*2 }, { s, s*2 }, { s*2, s*2 }, { s*3, s*2 },
-						{ s*1.5f, s*3 }
+	float pos[11][2] = {
+				{ 0.5f, 0 }, { 1.5f, 0 }, { 2.5f, 0 },
+				{ 0.5f, 1 }, { 1.5f, 1 }, { 2.5f, 1 },
+			{ 0, 2 }, { 1, 2 }, { 2, 2 }, { 3, 2 },
+							  { 1.5f, 3 }
 	};
 
 	for(int i = 0; i < 2; i++)
 	{
 		m_pTeamNames[i]->SetBounds(0, 0, 550, 50);
-		m_pTeamNames[i]->SetTextInset(50, 10);
+		//m_pTeamNames[i]->SetTextInset(50, 10);
 		//m_pTeamNames[i]->SetPinCorner(Panel::PIN_TOPRIGHT, 10, 10);
 		m_pTeamNames[i]->SetFgColor(Color(255, 255, 255, 255));
-		IScheme *pScheme = scheme()->GetIScheme( GetScheme() );
-		HFont font = pScheme->GetFont("IOSUbuntuFont");
-		m_pTeamNames[i]->SetFont(font);
+		m_pTeamNames[i]->SetFont(pScheme->GetFont("IOSScorebar"));
 
 		m_pTeamPanels[i]->SetBounds(0 + i * 650, 0, 550, 700);
 		m_pTeamPanels[i]->SetBgColor(Color(0, 0, 0, 200));
@@ -127,8 +135,43 @@ void CTeamMenu::PerformLayout()
 
 		for(int j = 0; j < 11; j++)
 		{
-			CBitmapButton *button = m_pPosButtons[i][j];
-			button->SetBounds(pos[j][0], pos[j][1] + 100, s, s);
+			Button *button = m_pPosButtons[i][j];
+			Panel *info = m_pPosInfoPanels[i][j];
+			Label *number = m_pPosNumbers[i][j];
+			Label *name = m_pPosNames[i][j];
+
+			//button->SetContentAlignment(Label::a_center);
+			button->SetCommand(VarArgs("jointeam %d %d", i + 2, 11 - j));
+			button->AddActionSignalTarget(this);
+			button->SetPaintBackgroundEnabled(true);
+			button->SetPaintBorderEnabled(false);
+			button->SetPaintBackgroundType(2);
+			button->SetBounds(pos[j][0] * (BUTTON_SIZE + BUTTON_MARGIN) + 50, pos[j][1] * (BUTTON_SIZE + BUTTON_MARGIN) + 100, BUTTON_SIZE, BUTTON_SIZE);
+			button->SetCursor(dc_hand);
+			button->SetDefaultColor(Color(), Color(0,0,0,100));
+			button->SetArmedColor(Color(), Color(150, 150, 150, 100));
+			button->SetDepressedColor(Color(), Color(255, 255, 255, 100));
+			button->SetButtonBorderEnabled(false);
+
+			info->SetBounds(0, button->GetTall() - NAME_HEIGHT, BUTTON_SIZE, NAME_HEIGHT);
+			info->SetPaintBackgroundEnabled(true);
+			info->SetPaintBackgroundType(2);
+			info->SetBgColor(Color(0, 0, 0, 255));
+
+			number->SetText(VarArgs("%d", 11 - j));
+			number->SetContentAlignment(Label::a_center);
+			number->SetFont(pScheme->GetFont("IOSScorebar"));
+			number->SetFgColor(Color(0, 0, 0, 255));
+			number->SetBgColor(Color(255, 255, 255, 255));	
+			number->SetPaintBackgroundEnabled(true);
+			number->SetPaintBackgroundType(2);
+			number->SetBounds(NUMBER_MARGIN, NUMBER_MARGIN, NUMBER_WIDTH, NAME_HEIGHT - 2 * NUMBER_MARGIN);
+
+			name->SetText(VarArgs(""));
+			name->SetContentAlignment(Label::a_center);
+			name->SetFont(pScheme->GetFont("IOSScorebar"));
+			name->SetFgColor(Color(255, 255, 255, 255));	
+			name->SetBounds(NUMBER_MARGIN + NUMBER_WIDTH, 0, NAME_WIDTH, NAME_HEIGHT);
 		}
 	}
 
@@ -152,6 +195,8 @@ CTeamMenu::~CTeamMenu()
 void CTeamMenu::ApplySchemeSettings(IScheme *pScheme)
 {
 	BaseClass::ApplySchemeSettings(pScheme);
+
+	
 }
 
 //-----------------------------------------------------------------------------
@@ -224,18 +269,17 @@ void CTeamMenu::Update()
 	bool posTaken[2][11] = {};
 
 	// walk all the players and make sure they're in the scoreboard
-	for ( int i = 1; i <= gpGlobals->maxClients; ++i )
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
-		if (gr->IsConnected( i ) )
+		if (gr->IsConnected(i))
 		{
 			int team = gr->GetTeam(i);
 			int pos = gr->GetTeamPosition(i);
 			if ((team == TEAM_A || team == TEAM_B) && pos >= 1 && pos <= 11)
 			{
-				CBitmapButton *button = m_pPosButtons[team - 2][11 - pos];
-				button->SetText(gr->GetPlayerName(i));
-				bool isBotKeeper = Q_strncmp(gr->GetPlayerName(i), "KEEPER", 6) == 0;
-				button->SetEnabled(isBotKeeper);
+				Button *button = m_pPosButtons[team - 2][11 - pos];
+				m_pPosNames[team - 2][11 - pos]->SetText(gr->GetPlayerName(i));
+				m_pPosButtons[team - 2][11 - pos]->SetEnabled(Q_strncmp(gr->GetPlayerName(i), "KEEPER", 6) == 0);
 				posTaken[team - 2][11 - pos] = true;
 			}	
 		}
@@ -247,9 +291,7 @@ void CTeamMenu::Update()
 		{
 			if (!posTaken[i][j])
 			{
-				char buttonText[32];
-				Q_snprintf(buttonText, sizeof(buttonText), "Pos &%d", 11 - j);
-				m_pPosButtons[i][j]->SetText(buttonText);
+				m_pPosNames[i][j]->SetText("");
 				m_pPosButtons[i][j]->SetEnabled(true);
 			}
 		}
@@ -274,41 +316,6 @@ void CTeamMenu::OnCommand( char const *cmd )
 	//Close();
 
 	BaseClass::OnCommand(cmd);
-}
-
-void CTeamMenu::MakeTeamButtons()
-{
-	for (int i = 0; i < 2; i++)
-	{
-		for (int j = 0; j < 11; j++)
-		{
-			CBitmapButton *button = new CBitmapButton(m_pTeamPanels[i], "BitmapButton", "");
-
-			IScheme *pScheme = scheme()->GetIScheme( GetScheme() );
-
-			char buttonText[32];
-			Q_snprintf( buttonText, sizeof(buttonText), "Pos &%d", 11 - j); 
-			button->SetText( buttonText );
-			button->SetTextColorState(Label::CS_BRIGHT);
-			button->SetContentAlignment(Label::a_south);
-
-			button->SetFgColor(Color(100, 255, 100, 255));	
-			button->SetCommand(VarArgs("jointeam %d %d", i + 2, 11 - j));
-			button->AddActionSignalTarget(this);
-			button->SetVisible(true);
-			button->SetBgColor(Color(100, 255, 100, 255));
-			button->SetPaintBackgroundEnabled(true);
-			button->SetPaintBorderEnabled(false);
-
-			color32 color = { 255, 255, 255, 255 };
-			button->SetImage(CBitmapButton::BUTTON_ENABLED, "gui/glassbutt", color);
-			button->SetImage(CBitmapButton::BUTTON_ENABLED_MOUSE_OVER, "gui/glassbuttover", color);
-			button->SetImage(CBitmapButton::BUTTON_PRESSED, "gui/glassbuttdown", color);
-			button->SetImage(CBitmapButton::BUTTON_DISABLED, "gui/glassbutt", color);
-
-			m_pPosButtons[i][j] = button;
-		}
-	}
 }
 
 //-----------------------------------------------------------------------------
