@@ -312,7 +312,7 @@ CSDKGameRules::CSDKGameRules()
 	m_vCircShieldPos = vec3_origin;
 	m_vRectShieldMin = vec3_origin;
 	m_vRectShieldMax = vec3_origin;
-	
+	m_bTeamsSwapped = false;
 	//ios m_bLevelInitialized = false;
 
 	//m_flMatchStartTime = 0;
@@ -945,6 +945,7 @@ void CSDKGameRules::State_INIT_Think()
 void CSDKGameRules::State_WARMUP_Enter()
 {
 	GetBall()->SetIgnoreTriggers(true);
+	m_bTeamsSwapped = false;
 }
 
 void CSDKGameRules::State_WARMUP_Think()
@@ -974,7 +975,7 @@ void CSDKGameRules::State_FIRST_HALF_Enter()
 		plr->SetAnimation( PLAYER_IDLE );
 	}
 
-	GetBall()->CreateVPhysics();
+	//GetBall()->CreateVPhysics();
 	GetBall()->SetIgnoreTriggers(false);
 	GetBall()->State_Transition(BALL_KICKOFF);
 }
@@ -1008,7 +1009,8 @@ void CSDKGameRules::State_HALFTIME_Think()
 void CSDKGameRules::State_SECOND_HALF_Enter()
 {
 	GetBall()->SetIgnoreTriggers(false);
-	SwapTeams();
+	m_bTeamsSwapped = true;
+	GetBall()->State_Transition(BALL_KICKOFF);
 }
 
 void CSDKGameRules::State_SECOND_HALF_Think()
@@ -1044,7 +1046,8 @@ void CSDKGameRules::State_EXTRATIME_INTERMISSION_Think()
 void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Enter()
 {
 	GetBall()->SetIgnoreTriggers(false);
-	SwapTeams();
+	m_bTeamsSwapped = false;
+	GetBall()->State_Transition(BALL_KICKOFF);
 }
 
 void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Think()
@@ -1075,7 +1078,8 @@ void CSDKGameRules::State_EXTRATIME_HALFTIME_Think()
 void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Enter()
 {
 	GetBall()->SetIgnoreTriggers(false);
-	SwapTeams();
+	m_bTeamsSwapped = true;
+	GetBall()->State_Transition(BALL_KICKOFF);
 }
 
 void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Think()
@@ -1176,38 +1180,6 @@ void CSDKGameRules::State_END_Enter()
 
 void CSDKGameRules::State_END_Think()
 {
-}
-
-void CSDKGameRules::SwapTeams()
-{
-	//reset (kick off) the first ball we find
-	//CBall *pBall = dynamic_cast<CBall*>(gEntList.FindEntityByClassname( NULL, "football" ));
-	//if (pBall)
-	//{
-	//	pBall->DropBall();
-	//	pBall->ballStatusTime = 0;
-	//	pBall->ShieldOff();
-	//	pBall->HandleKickOff();
-	//	pBall->CreateVPhysics();
-	//}
-
-	// swap players
-	for (int i = 0; i < gpGlobals->maxClients; i++)
-	{
-		CSDKPlayer *pPlayer = (CSDKPlayer *)UTIL_PlayerByIndex(i);
-		if (!pPlayer)
-			continue;
-		int team = pPlayer->GetTeamNumber();
-		if (team < TEAM_A)
-			continue;
-
-		pPlayer->ChangeTeam((team == TEAM_A ? TEAM_B : TEAM_A));
-		GetPlayerSpawnSpot(pPlayer);
-		//pPlayer->ChooseModel();
-	}
-
-	// swap teams
-	SetTeams(pszTeamNames[TEAM_B], pszTeamNames[TEAM_A]);
 }
 
 #endif

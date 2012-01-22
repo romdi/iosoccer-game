@@ -817,7 +817,7 @@ void CBall::State_CORNER_Enter()
 	//m_pPl->SetLocalOrigin(Vector(ballPos.x - 50 * xSign, ballPos.y - 50 * ySign, ballPos.z));
 	//m_pPl->SnapEyeAngles(QAngle(0, 45 * xSign * ySign, 0));
 	
-	SDKGameRules()->EnableCircShield(m_nPlTeam, 360, ballPos);
+	SDKGameRules()->EnableCircShield(LastOppTeam(false), 360, ballPos);
 	SetPos(ballPos);
 	m_bFreeze = true;
 
@@ -1164,12 +1164,21 @@ void CBall::BallThink( void	)
 
 void CBall::TriggerGoal(int team)
 {
+	if (SDKGameRules()->TeamsSwapped())
+	{
+		team = team == TEAM_A ? TEAM_B : TEAM_A;
+	}
 	m_team = team;
 	State_Transition(BALL_GOAL);
 }
 
 void CBall::TriggerGoalLine(int team)
 {
+	if (SDKGameRules()->TeamsSwapped())
+	{
+		team = team == TEAM_A ? TEAM_B : TEAM_A;
+	}
+
 	m_pPhys->GetPosition(&m_vTriggerTouchPos, NULL);
 
 	if (LastTeam(false) == team)

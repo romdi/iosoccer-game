@@ -311,9 +311,10 @@ protected:
 	void State_END_Enter();
 	void State_END_Think();
 
-	void SwapTeams();
-
+	bool m_bTeamsSwapped;
 public:
+	bool TeamsSwapped() { return m_bTeamsSwapped; };
+
 	void ClientSettingsChanged( CBasePlayer *pPlayer );
 
 	void EnableCircShield(int nTeam, int nRadius, Vector vPos);

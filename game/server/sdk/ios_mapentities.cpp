@@ -257,15 +257,19 @@ void InitMapSpots()
 
 CTeamSpots *GetOwnTeamSpots(CSDKPlayer *pPl)
 {
-	return g_pTeamSpots[pPl->GetTeamNumber() - TEAM_A];
+	return GetTeamSpots(pPl->GetTeamNumber());
 }
 
 CTeamSpots *GetOppTeamSpots(CSDKPlayer *pPl)
 {
-	return g_pTeamSpots[TEAM_B - pPl->GetTeamNumber()];
+	return GetTeamSpots(pPl->GetTeamNumber() == TEAM_A ? TEAM_B : TEAM_A);
 }
 
 CTeamSpots *GetTeamSpots(int team)
 {
-	return g_pTeamSpots[team - TEAM_A];
+	if (SDKGameRules()->TeamsSwapped())
+	{
+		team = team == TEAM_A ? TEAM_B : TEAM_A;
+	}
+	return g_pTeamSpots[team == TEAM_A ? 0 : 1];
 }
