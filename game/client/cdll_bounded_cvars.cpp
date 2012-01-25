@@ -33,6 +33,12 @@ public:
 
 	  virtual float GetFloat() const
 	  {
+		  C_BasePlayer *pLocal = C_BasePlayer::GetLocalPlayer();
+		  if (!pLocal)
+			  return 0;
+		  if (pLocal->GetFlags() & FL_REMOTECONTROLLED)
+			  return 0;
+
 		  // Used temporarily for CS kill cam.
 		  if ( g_bForceCLPredictOff )
 			  return 0;
