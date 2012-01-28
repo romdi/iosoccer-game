@@ -319,12 +319,10 @@ public:
 	int					m_PlayerAnim;
 	float				m_NextSlideTime;
 	float				m_TackleTime;
-	CBall*				GetBall(CBall *pNext);
 	bool				IsOnPitch(void);
 	bool				IsOffPitch(void);
 	bool				m_bTackleDone;
 	CSDKPlayer*			FindNearestSlideTarget(void);
-	CBall*				FindNearestBall(void);
 	void				GiveRedCard(void);
 	bool				ApplyTackledAnim(CSDKPlayer *pTackled);
 	bool				m_bSlideKick;

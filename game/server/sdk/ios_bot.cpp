@@ -54,8 +54,6 @@ public:
 			//init bot?
 			pPlayer->SetPlayerName( playername );
 			pPlayer->m_JoinTime = gpGlobals->curtime;
-			pPlayer->m_fMissTime = 0.0f;
-			pPlayer->m_fNextDive = 0.0f;
 			Q_memset( &pPlayer->m_cmd, 0, sizeof( pPlayer->m_cmd ) );
 		}
 
@@ -219,7 +217,7 @@ ConCommand cc_Keeper2( "sv_addkeeper2", BotAdd_Keeper2, "Add keeper2" );
 void Bot_RunAll( void )
 {
 	// Add keeper bot if spot is empty
-	if (botkeepers.GetBool())
+	if (false)
 	{
 		bool keeperSpotTaken[2] = {};
 
@@ -329,68 +327,34 @@ void CBot::BotFrame()
 	// Make sure we stay being a bot
 	AddFlag( FL_FAKECLIENT );
 
-
-	//CUserCmd cmd;
-	//Q_memset( &cmd, 0, sizeof( cmd ) );
-	
 	Q_memset( &m_cmd, 0, sizeof( m_cmd ) );
-	
-	// Finally, override all this stuff if the bot is being forced to mimic a player.
-	/* ios
-	if ( !Bot_RunMimicCommand( cmd ) && !bot_frozen.GetBool() )
+
+	RunMimicCommand(m_cmd);
+
+	if (bot_mimic.GetInt() == 0)
 	{
-		cmd.sidemove = pBot->m_flSideMove;
+		GetBall()->VPhysicsGetObject()->GetPosition(&m_vBallPos, &m_aBallAng);
+		GetBall()->VPhysicsGetObject()->GetVelocity(&m_vBallVel, &m_vBallAngImp);
 
-		if ( pBot->IsAlive() && (pBot->GetSolid() == SOLID_BBOX) )
-		{
-			Bot_SetForwardMovement( pBot, cmd );
+		BotThink();
 
-			// Only turn if I haven't been hurt
-			if ( !pBot->IsEFlagSet(EFL_BOT_FROZEN) && pBot->m_iHealth == 100 )
-			{
-				Bot_UpdateDirection( pBot );
-				Bot_UpdateStrafing( pBot, cmd );
-			}
+		if (m_cmd.viewangles[YAW] > 180.0f )
+			m_cmd.viewangles[YAW] -= 360.0f;
+		else if ( m_cmd.viewangles[YAW] < -180.0f )
+			m_cmd.viewangles[YAW] += 360.0f;
 
-			// Handle console settings.
-			Bot_ForceFireWeapon( pBot, cmd );
-			Bot_HandleSendCmd( pBot );
-		}
-		else
-		{
-			Bot_HandleRespawn( pBot, cmd );
-		}
+		if (m_cmd.viewangles[PITCH] > 180.0f )
+			m_cmd.viewangles[PITCH] -= 360.0f;
+		else if ( m_cmd.viewangles[PITCH] < -180.0f )
+			m_cmd.viewangles[PITCH] += 360.0f;
 
-		Bot_FlipOut( pBot, cmd );
-		*/
+		m_LastAngles = m_cmd.viewangles;
+		SetLocalAngles(m_cmd.viewangles);
+		SnapEyeAngles(m_cmd.viewangles);
+	}
 
-		//if (pBot->m_TeamPos==1)
-		//	pBot->BotThink();
-		//	//BotKeeperThink(pBot);
-		//else
-		//{
-		//	BotFieldplayerThink(pBot);//return;
-		//}
-
-		RunMimicCommand(m_cmd);
-
-		if (bot_mimic.GetInt() == 0)
-			BotThink();
-
-		// Fix up the m_fEffects flags
-		PostClientMessagesSent();
-
-		
-		
-		//cmd.viewangles = pBot->GetLocalAngles();
-		//cmd.upmove = 0;
-		//cmd.impulse = 0;
-
-		//m_cmd.viewangles = pBot->GetLocalAngles();
-		//m_cmd.upmove = 0;
-		//m_cmd.impulse = 0;
-	//}
-
+	// Fix up the m_fEffects flags
+	PostClientMessagesSent();
 
 	float frametime = gpGlobals->frametime;
 	//ios RunPlayerMove( pBot, cmd, frametime );

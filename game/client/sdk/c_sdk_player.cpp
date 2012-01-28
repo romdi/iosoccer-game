@@ -1179,3 +1179,16 @@ ShadowType_t C_SDKPlayer::ShadowCastType( void )
 //		g_pClientShadowMgr->UpdateProjectedTexture( GetShadowHandle(),true );
 //}
 //end IOS
+
+void C_SDKPlayer::ApplyBoneMatrixTransform(matrix3x4_t& transform)
+{
+	//BaseClass::ApplyBoneMatrixTransform(transform);
+
+	//if (this->GetTeamNumber() == TEAM_A)
+	//{
+	//	float scale = 2;
+	//	VectorScale( transform[0], scale, transform[0] );
+	//	VectorScale( transform[1], scale, transform[1] );
+	//	VectorScale( transform[2], scale, transform[2] );
+	//}
+}

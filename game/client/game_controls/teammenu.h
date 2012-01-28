@@ -51,8 +51,8 @@ public:
 	virtual bool NeedsUpdate( void );
 	virtual bool HasInputElements( void ) { return true; }
 	virtual void ShowPanel( bool bShow );
-	virtual void PaintBackground();
-	virtual void PaintBorder();
+	//virtual void PaintBackground();
+	//virtual void PaintBorder();
 
 	// both vgui::Frame and IViewPortPanel define these, so explicitly define them here as passthroughs to vgui
 	vgui::VPANEL GetVPanel( void ) { return BaseClass::GetVPanel(); }
@@ -87,12 +87,16 @@ protected:
 	ButtonCode_t m_iScoreBoardKey;
 
 	//CUtlVectorFixed<CBitmapButton *, 11> m_pTeamButtons;
-	Button *m_pPosButtons[2][11];
-	Panel *m_pPosInfoPanels[2][11];
+	CBitmapButton *m_pPosButtons[2][11];
+	Label *m_pPosInfos[2][11];
+	Label *m_pPlayerNames[2][11];
 	Label *m_pPosNames[2][11];
 	Label *m_pPosNumbers[2][11];
 
 	Button *m_pSpectateButton;
+	Button *m_pTabButtons[2];
+
+	int m_nActiveTeam;
 
 	char m_szTeamNames[2][32];
 	Label *m_pTeamNames[2];

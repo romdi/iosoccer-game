@@ -110,7 +110,8 @@ BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 	RecvPropInt( RECVINFO( m_eMatchState) ),// 0, RecvProxy_MatchState ),
 	RecvPropInt( RECVINFO( m_nAnnouncedInjuryTime) ),// 0, RecvProxy_MatchState ),
 
-	RecvPropInt(RECVINFO(m_nShieldFlags)),
+	RecvPropInt(RECVINFO(m_nShieldType)),
+	RecvPropInt(RECVINFO(m_nShieldTarget)),
 	RecvPropInt(RECVINFO(m_nCircShieldRadius)),
 	RecvPropVector(RECVINFO(m_vCircShieldPos)),
 	RecvPropVector(RECVINFO(m_vRectShieldMin)),
@@ -122,7 +123,8 @@ BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 	SendPropInt( SENDINFO( m_eMatchState )),
 	SendPropInt( SENDINFO( m_nAnnouncedInjuryTime )),
 
-	SendPropInt(SENDINFO(m_nShieldFlags)),
+	SendPropInt(SENDINFO(m_nShieldType)),
+	SendPropInt(SENDINFO(m_nShieldTarget)),
 	SendPropInt(SENDINFO(m_nCircShieldRadius)),
 	SendPropVector(SENDINFO(m_vCircShieldPos), -1, SPROP_COORD),
 	SendPropVector(SENDINFO(m_vRectShieldMin), -1, SPROP_COORD),
@@ -307,7 +309,7 @@ CSDKGameRules::CSDKGameRules()
 
 	m_pCurStateInfo = NULL;
 
-	m_nShieldFlags = 0;
+	m_nShieldType = 0;
 	m_nCircShieldRadius = 0;
 	m_vCircShieldPos = vec3_origin;
 	m_vRectShieldMin = vec3_origin;
@@ -977,6 +979,8 @@ void CSDKGameRules::State_FIRST_HALF_Enter()
 
 	//GetBall()->CreateVPhysics();
 	GetBall()->SetIgnoreTriggers(false);
+	GetBall()->SetRegularKickOff(true);
+	m_nKickOffTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
 	GetBall()->State_Transition(BALL_KICKOFF);
 }
 
@@ -1010,6 +1014,7 @@ void CSDKGameRules::State_SECOND_HALF_Enter()
 {
 	GetBall()->SetIgnoreTriggers(false);
 	m_bTeamsSwapped = true;
+	GetBall()->SetRegularKickOff(true);
 	GetBall()->State_Transition(BALL_KICKOFF);
 }
 
@@ -1047,6 +1052,7 @@ void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Enter()
 {
 	GetBall()->SetIgnoreTriggers(false);
 	m_bTeamsSwapped = false;
+	GetBall()->SetRegularKickOff(true);
 	GetBall()->State_Transition(BALL_KICKOFF);
 }
 
@@ -1319,25 +1325,29 @@ void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 	}
 }
 
-void CSDKGameRules::EnableCircShield(int nTeam, int nRadius, Vector vPos)
+void CSDKGameRules::EnableCircShield(int type, int target, int radius, Vector pos, bool disablePrevShields /*=true*/)
 {
-	int nTeamFlag = nTeam == TEAM_A ? FL_SHIELD_TEAM_HOME : FL_SHIELD_TEAM_AWAY;
-	m_nShieldFlags |= FL_SHIELD_CIRC | nTeamFlag;
-	m_nCircShieldRadius = nRadius;
-	m_vCircShieldPos = vPos;
+	if (disablePrevShields)
+		DisableShields();
+	m_nShieldType |= FL_SHIELD_CIRC | type;
+	m_nShieldTarget = 1 << (type == FL_SHIELD_TEAM ? target - TEAM_A : target - 1);
+	m_nCircShieldRadius = radius;
+	m_vCircShieldPos = pos;
 }
 
-void CSDKGameRules::EnableRectShield(int nTeam, Vector vMin, Vector vMax)
+void CSDKGameRules::EnableRectShield(int type, int target, Vector min, Vector max, bool disablePrevShields /*=true*/)
 {
-	int nTeamFlag = nTeam == TEAM_A ? FL_SHIELD_TEAM_HOME : FL_SHIELD_TEAM_AWAY;
-	m_nShieldFlags |= FL_SHIELD_RECT | nTeamFlag;
-	m_vRectShieldMin = vMin;
-	m_vRectShieldMax = vMax;
+	if (disablePrevShields)
+		DisableShields();
+	m_nShieldType |= FL_SHIELD_RECT | type;
+	m_nShieldTarget = 1 << (type == FL_SHIELD_TEAM ? target - TEAM_A : target - 1);
+	m_vRectShieldMin = min;
+	m_vRectShieldMax = max;
 }
 
 void CSDKGameRules::DisableShields()
 {
-	m_nShieldFlags = 0;
+	m_nShieldType = 0;
 }
 
 #endif

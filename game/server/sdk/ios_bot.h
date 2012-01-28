@@ -12,6 +12,7 @@
 #endif
 
 #include "sdk_player.h"
+#include "ios_mapentities.h"
 
 // This is our bot class.
 class CBot : public CSDKPlayer
@@ -33,6 +34,11 @@ public:
 	QAngle			m_SpawnAngle;
 
 	CUserCmd		m_cmd;
+
+	Vector			m_vBallPos;
+	Vector			m_vBallVel;
+	AngularImpulse	m_vBallAngImp;
+	QAngle			m_aBallAng;
 
 	void BotFrame();
 	virtual void BotThink();

@@ -583,9 +583,6 @@ public:
 		if (player == m_ignore)
 			return true;
 
-		if (!player->IsOnLadder())
-			return true;
-
 		// player is on a ladder - is it this one?
 		const Vector &feet = player->GetAbsOrigin();
 

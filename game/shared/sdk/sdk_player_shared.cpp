@@ -460,6 +460,10 @@ bool CSDKPlayer::ShouldCollide( int collisionGroup, int contentsMask ) const
 		}
 	}
 #endif
+
+	if (GetFlags() & FL_REMOTECONTROLLED)
+		return false;
+
 	return BaseClass::ShouldCollide( collisionGroup, contentsMask );
 }
 

@@ -2038,18 +2038,7 @@ float C_BasePlayer::GetFOV( void )
 	}
 
 	// Allow our vehicle to override our FOV if it's currently at the default FOV.
-	float flDefaultFOV;
-	IClientVehicle *pVehicle = GetVehicle();
-	if ( pVehicle )
-	{
-		CacheVehicleView();
-		flDefaultFOV = ( m_flVehicleViewFOV == 0 ) ? GetDefaultFOV() : m_flVehicleViewFOV;
-	}
-	else
-	{
-		flDefaultFOV = GetDefaultFOV();
-	}
-	
+	float flDefaultFOV = GetDefaultFOV();
 	float fFOV = ( m_iFOV == 0 ) ? flDefaultFOV : m_iFOV;
 
 	// Don't do lerping during prediction. It's only necessary when actually rendering,

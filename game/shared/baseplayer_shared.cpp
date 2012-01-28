@@ -98,42 +98,6 @@ float CBasePlayer::GetTimeBase( void ) const
 //-----------------------------------------------------------------------------
 void CBasePlayer::ItemPreFrame()
 {
-	// Handle use events
-	PlayerUse();
-
-	//Tony; re-ordered this for efficiency and to make sure that certain things happen in the correct order!
-    if ( gpGlobals->curtime < m_flNextAttack )
-	{
-		return;
-	}
-
-	if (!GetActiveWeapon())
-		return;
-
-#if defined( CLIENT_DLL )
-	// Not predicting this weapon
-	if ( !GetActiveWeapon()->IsPredicted() )
-		return;
-#endif
-
-	GetActiveWeapon()->ItemPreFrame();
-
-	CBaseCombatWeapon *pWeapon;
-
-	CBaseCombatWeapon *pActive = GetActiveWeapon();
-	// Allow all the holstered weapons to update
-	for ( int i = 0; i < WeaponCount(); ++i )
-	{
-		pWeapon = GetWeapon( i );
-
-		if ( pWeapon == NULL )
-			continue;
-
-		if ( pActive == pWeapon )
-			continue;
-
-		pWeapon->ItemHolsterFrame();
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -170,72 +134,6 @@ bool CBasePlayer::UsingStandardWeaponsInVehicle( void )
 void CBasePlayer::ItemPostFrame()
 {
 	VPROF( "CBasePlayer::ItemPostFrame" );
-
-	// Put viewmodels into basically correct place based on new player origin
-	CalcViewModelView( EyePosition(), EyeAngles() );
-
-	// Don't process items while in a vehicle.
-	if ( GetVehicle() )
-	{
-#if defined( CLIENT_DLL )
-		IClientVehicle *pVehicle = GetVehicle();
-#else
-		IServerVehicle *pVehicle = GetVehicle();
-#endif
-
-		bool bUsingStandardWeapons = UsingStandardWeaponsInVehicle();
-
-#if defined( CLIENT_DLL )
-		if ( pVehicle->IsPredicted() )
-#endif
-		{
-			pVehicle->ItemPostFrame( this );
-		}
-
-		if (!bUsingStandardWeapons || !GetVehicle())
-			return;
-	}
-
-
-	// check if the player is using something
-	if ( m_hUseEntity != NULL )
-	{
-#if !defined( CLIENT_DLL )
-		Assert( !IsInAVehicle() );
-		ImpulseCommands();// this will call playerUse
-#endif
-		return;
-	}
-
-    if ( gpGlobals->curtime < m_flNextAttack )
-	{
-		if ( GetActiveWeapon() )
-		{
-			GetActiveWeapon()->ItemBusyFrame();
-		}
-	}
-	else
-	{
-		if ( GetActiveWeapon() && (!IsInAVehicle() || UsingStandardWeaponsInVehicle()) )
-		{
-#if defined( CLIENT_DLL )
-			// Not predicting this weapon
-			if ( GetActiveWeapon()->IsPredicted() )
-#endif
-
-			{
-				GetActiveWeapon()->ItemPostFrame( );
-			}
-		}
-	}
-
-#if !defined( CLIENT_DLL )
-	ImpulseCommands();
-#else
-	// NOTE: If we ever support full impulse commands on the client,
-	// remove this line and call ImpulseCommands instead.
-	m_nImpulse = 0;
-#endif
 }
 
 
@@ -273,28 +171,19 @@ const QAngle &CBasePlayer::LocalEyeAngles()
 //-----------------------------------------------------------------------------
 Vector CBasePlayer::EyePosition( )
 {
-	if ( GetVehicle() != NULL )
-	{
-		// Return the cached result
-		CacheVehicleView();
-		return m_vecVehicleViewOrigin;
-	}
-	else
-	{
 #ifdef CLIENT_DLL
-		if ( IsObserver() )
+	if ( IsObserver() )
+	{
+		if ( m_iObserverMode == OBS_MODE_CHASE )
 		{
-			if ( m_iObserverMode == OBS_MODE_CHASE )
+			if ( IsLocalPlayer() )
 			{
-				if ( IsLocalPlayer() )
-				{
-					return MainViewOrigin();
-				}
+				return MainViewOrigin();
 			}
 		}
-#endif
-		return BaseClass::EyePosition();
 	}
+#endif
+	return BaseClass::EyePosition();
 }
 
 
@@ -305,21 +194,7 @@ Vector CBasePlayer::EyePosition( )
 //-----------------------------------------------------------------------------
 const Vector CBasePlayer::GetPlayerMins( void ) const
 {
-	if ( IsObserver() )
-	{
-		return VEC_OBS_HULL_MIN;	
-	}
-	else
-	{
-		if ( GetFlags() & FL_DUCKING )
-		{
-			return VEC_DUCK_HULL_MIN;
-		}
-		else
-		{
-			return VEC_HULL_MIN;
-		}
-	}
+	return VEC_HULL_MIN;
 }
 
 //-----------------------------------------------------------------------------
@@ -329,46 +204,7 @@ const Vector CBasePlayer::GetPlayerMins( void ) const
 //-----------------------------------------------------------------------------
 const Vector CBasePlayer::GetPlayerMaxs( void ) const
 {	
-	if ( IsObserver() )
-	{
-		return VEC_OBS_HULL_MAX;	
-	}
-	else
-	{
-		if ( GetFlags() & FL_DUCKING )
-		{
-			return VEC_DUCK_HULL_MAX;
-		}
-		else
-		{
-			return VEC_HULL_MAX;
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Update the vehicle view, or simply return the cached position and angles
-//-----------------------------------------------------------------------------
-void CBasePlayer::CacheVehicleView( void )
-{
-	// If we've calculated the view this frame, then there's no need to recalculate it
-	if ( m_nVehicleViewSavedFrame == gpGlobals->framecount )
-		return;
-
-#ifdef CLIENT_DLL
-	IClientVehicle *pVehicle = GetVehicle();
-#else
-	IServerVehicle *pVehicle = GetVehicle();
-#endif
-
-	if ( pVehicle != NULL )
-	{		
-		int nRole = pVehicle->GetPassengerRole( this );
-
-		// Get our view for this frame
-		pVehicle->GetVehicleViewPosition( nRole, &m_vecVehicleViewOrigin, &m_vecVehicleViewAngles, &m_flVehicleViewFOV );
-		m_nVehicleViewSavedFrame = gpGlobals->framecount;
-	}
+	return VEC_HULL_MAX;
 }
 
 //-----------------------------------------------------------------------------
@@ -376,16 +212,7 @@ void CBasePlayer::CacheVehicleView( void )
 //-----------------------------------------------------------------------------
 void CBasePlayer::EyeVectors( Vector *pForward, Vector *pRight, Vector *pUp )
 {
-	if ( GetVehicle() != NULL )
-	{
-		// Cache or retrieve our calculated position in the vehicle
-		CacheVehicleView();
-		AngleVectors( m_vecVehicleViewAngles, pForward, pRight, pUp );
-	}
-	else
-	{
-		AngleVectors( EyeAngles(), pForward, pRight, pUp );
-	}
+	AngleVectors( EyeAngles(), pForward, pRight, pUp );
 }
 
 //-----------------------------------------------------------------------------
@@ -394,22 +221,8 @@ void CBasePlayer::EyeVectors( Vector *pForward, Vector *pRight, Vector *pUp )
 void CBasePlayer::EyePositionAndVectors( Vector *pPosition, Vector *pForward,
 										 Vector *pRight, Vector *pUp )
 {
-	// Handle the view in the vehicle
-	if ( GetVehicle() != NULL )
-	{
-		CacheVehicleView();
-		AngleVectors( m_vecVehicleViewAngles, pForward, pRight, pUp );
-		
-		if ( pPosition != NULL )
-		{
-			*pPosition = m_vecVehicleViewOrigin;
-		}
-	}
-	else
-	{
-		VectorCopy( BaseClass::EyePosition(), *pPosition );
-		AngleVectors( EyeAngles(), pForward, pRight, pUp );
-	}
+	VectorCopy( BaseClass::EyePosition(), *pPosition );
+	AngleVectors( EyeAngles(), pForward, pRight, pUp );
 }
 
 #ifdef CLIENT_DLL
@@ -419,19 +232,10 @@ surfacedata_t * CBasePlayer::GetFootstepSurface( const Vector &origin, const cha
 }
 #endif
 
-surfacedata_t *CBasePlayer::GetLadderSurface( const Vector &origin )
-{
-#ifdef CLIENT_DLL
-	return GetFootstepSurface( origin, "ladder" );
-#else
-	return physprops->GetSurfaceData( physprops->GetSurfaceIndex( "ladder" ) );
-#endif
-}
-
 void CBasePlayer::UpdateStepSound( surfacedata_t *psurface, const Vector &vecOrigin, const Vector &vecVelocity )
 {
 	bool bWalking;
-	float fvol;
+	float fvol = 1.0f;
 	Vector knee;
 	Vector feet;
 	float height;
@@ -473,17 +277,10 @@ void CBasePlayer::UpdateStepSound( surfacedata_t *psurface, const Vector &vecOri
 	bool movingalongground = ( groundspeed > 0.0001f );
 	bool moving_fast_enough =  ( speed >= velwalk );
 
-#ifdef PORTAL
-	// In Portal we MUST play footstep sounds even when the player is moving very slowly
-	// This is used to count the number of footsteps they take in the challenge mode
-	// -Jeep
-	moving_fast_enough = true;
-#endif
-
 	// To hear step sounds you must be either on a ladder or moving along the ground AND
 	// You must be moving fast enough
 
-	if ( !moving_fast_enough || !(fLadder || ( onground && movingalongground )) )
+	if ( !moving_fast_enough || !( onground && movingalongground ) )
 			return;
 
 //	MoveHelper()->PlayerSetAnimation( PLAYER_WALK );
@@ -497,86 +294,10 @@ void CBasePlayer::UpdateStepSound( surfacedata_t *psurface, const Vector &vecOri
 
 	knee[2] = vecOrigin[2] + 0.2 * height;
 
-	// find out what we're stepping in or on...
-	if ( fLadder )
-	{
-		psurface = GetLadderSurface(vecOrigin);
-		fvol = 0.5;
+	if ( !psurface )
+		return;
 
-		SetStepSoundTime( STEPSOUNDTIME_ON_LADDER, bWalking );
-	}
-	else if ( GetWaterLevel() == WL_Waist )
-	{
-		static int iSkipStep = 0;
-
-		if ( iSkipStep == 0 )
-		{
-			iSkipStep++;
-			return;
-		}
-
-		if ( iSkipStep++ == 3 )
-		{
-			iSkipStep = 0;
-		}
-		psurface = physprops->GetSurfaceData( physprops->GetSurfaceIndex( "wade" ) );
-		fvol = 0.65;
-		SetStepSoundTime( STEPSOUNDTIME_WATER_KNEE, bWalking );
-	}
-	else if ( GetWaterLevel() == WL_Feet )
-	{
-		psurface = physprops->GetSurfaceData( physprops->GetSurfaceIndex( "water" ) );
-		fvol = bWalking ? 0.2 : 0.5;
-
-		SetStepSoundTime( STEPSOUNDTIME_WATER_FOOT, bWalking );
-	}
-	else
-	{
-		if ( !psurface )
-			return;
-
-		SetStepSoundTime( STEPSOUNDTIME_NORMAL, bWalking );
-
-		switch ( psurface->game.material )
-		{
-		default:
-		case CHAR_TEX_CONCRETE:						
-			fvol = bWalking ? 0.2 : 0.5;
-			break;
-
-		case CHAR_TEX_METAL:	
-			fvol = bWalking ? 0.2 : 0.5;
-			break;
-
-		case CHAR_TEX_DIRT:
-			fvol = bWalking ? 0.25 : 0.55;
-			break;
-
-		case CHAR_TEX_VENT:	
-			fvol = bWalking ? 0.4 : 0.7;
-			break;
-
-		case CHAR_TEX_GRATE:
-			fvol = bWalking ? 0.2 : 0.5;
-			break;
-
-		case CHAR_TEX_TILE:	
-			fvol = bWalking ? 0.2 : 0.5;
-			break;
-
-		case CHAR_TEX_SLOSH:
-			fvol = bWalking ? 0.2 : 0.5;
-			break;
-		}
-	}
-	
-	// play the sound
-	// 65% volume if ducking
-	if ( GetFlags() & FL_DUCKING )
-	{
-		fvol *= 0.65;
-	}
-
+	SetStepSoundTime( STEPSOUNDTIME_NORMAL, bWalking );
 	PlayStepSound( feet, psurface, fvol, false );
 }
 
@@ -1436,27 +1157,14 @@ void CBasePlayer::ResetObserverMode()
 //-----------------------------------------------------------------------------
 void CBasePlayer::CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNear, float &zFar, float &fov )
 {
-#if defined( CLIENT_DLL )
-	IClientVehicle *pVehicle; 
-#else
-	IServerVehicle *pVehicle;
-#endif
-	pVehicle = GetVehicle();
 
-	if ( !pVehicle )
+	if ( IsObserver() )
 	{
-		if ( IsObserver() )
-		{
-			CalcObserverView( eyeOrigin, eyeAngles, fov );
-		}
-		else
-		{
-			CalcPlayerView( eyeOrigin, eyeAngles, fov );
-		}
+		CalcObserverView( eyeOrigin, eyeAngles, fov );
 	}
 	else
 	{
-		CalcVehicleView( pVehicle, eyeOrigin, eyeAngles, zNear, zFar, fov );
+		CalcPlayerView( eyeOrigin, eyeAngles, fov );
 	}
 }
 
@@ -1523,53 +1231,6 @@ void CBasePlayer::CalcPlayerView( Vector& eyeOrigin, QAngle& eyeAngles, float& f
 	// calc current FOV
 	fov = GetFOV();
 }
-
-//-----------------------------------------------------------------------------
-// Purpose: The main view setup function for vehicles
-//-----------------------------------------------------------------------------
-void CBasePlayer::CalcVehicleView( 
-#if defined( CLIENT_DLL )
-	IClientVehicle *pVehicle, 
-#else
-	IServerVehicle *pVehicle,
-#endif
-	Vector& eyeOrigin, QAngle& eyeAngles,
-	float& zNear, float& zFar, float& fov )
-{
-	Assert( pVehicle );
-
-	// Start with our base origin and angles
-	CacheVehicleView();
-	eyeOrigin = m_vecVehicleViewOrigin;
-	eyeAngles = m_vecVehicleViewAngles;
-
-#if defined( CLIENT_DLL )
-
-	fov = GetFOV();
-
-	// Allows the vehicle to change the clip planes
-	pVehicle->GetVehicleClipPlanes( zNear, zFar );
-#endif
-
-	// Snack off the origin before bob + water offset are applied
-	Vector vecBaseEyePosition = eyeOrigin;
-
-	CalcViewRoll( eyeAngles );
-
-	// Apply punch angle
-	VectorAdd( eyeAngles, m_Local.m_vecPunchAngle, eyeAngles );
-
-#if defined( CLIENT_DLL )
-	if ( !prediction->InPrediction() )
-	{
-		// Shake it up baby!
-		vieweffects->CalcShake();
-		vieweffects->ApplyShake( eyeOrigin, eyeAngles, 1.0 );
-	}
-#endif
-
-}
-
 
 void CBasePlayer::CalcObserverView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov )
 {

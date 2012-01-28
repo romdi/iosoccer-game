@@ -6,6 +6,55 @@ LINK_ENTITY_TO_CLASS(ios_fieldbot, CFieldBot);
 
 void CFieldBot::BotThink()
 {
+	Vector ballDir = (m_vBallPos - GetLocalOrigin());
+	VectorAngles(ballDir, m_cmd.viewangles);
+
+	if (ballDir.Length2D() > 50)
+		BotRunToBall(ballDir);
+	else
+		BotShootBall();
+}
+
+void CFieldBot::BotShootBall()
+{
+	Vector shotDir = Vector(g_IOSRand.RandomFloat(-1, 1), GetOwnTeamSpots(this)->m_nForward, 0);
+	VectorAngles(shotDir, m_cmd.viewangles);
+	m_cmd.buttons |= IN_ATTACK2;
+	m_cmd.powershot_strength = 100 * g_IOSRand.RandomFloat(0, 1);
+	m_cmd.viewangles[PITCH] = -40 + 50 * (1 - m_cmd.powershot_strength / 100.0f);
+}
+
+void CFieldBot::BotRunToBall(Vector ballDir)
+{
+	float closestDist = FLT_MAX;
+	CSDKPlayer *pClosest = NULL;
+
+	for (int i = 1; i <= gpGlobals->maxClients; i++ )
+	{
+		CSDKPlayer *pPl = (CSDKPlayer *)UTIL_PlayerByIndex(i);
+
+		if (!(pPl && pPl->IsConnected() && (pPl->GetTeamNumber() == TEAM_A || pPl->GetTeamNumber() == TEAM_B)))
+			continue;
+
+		if (pPl->GetTeamNumber() != GetTeamNumber())
+			continue;
+
+		float dist = (m_vBallPos - pPl->GetLocalOrigin()).Length2D();
+		if (dist >= closestDist)
+			continue;
+
+		closestDist = dist;
+		pClosest = pPl;
+	}
+
+	if (pClosest != this)
+		return;
+
+	m_cmd.forwardmove = max(0, ballDir.Length2D() + 10);
+}
+
+void CFieldBot::BotFetchAndPass()
+{
 	QAngle angle;
 
 	angle = GetLocalAngles();

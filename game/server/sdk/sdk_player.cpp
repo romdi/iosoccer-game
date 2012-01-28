@@ -298,7 +298,7 @@ void CSDKPlayer::PostThink()
 void CSDKPlayer::LookAtBall(void)
 {
 	//IOS LOOKAT Ball. Turn head to look at ball - headtracking.
-	CBall *pBall = FindNearestBall();
+	CBall *pBall = GetBall();
 	if (pBall) 
 	{
 		float curyaw = GetBoneController(2);
@@ -1544,36 +1544,6 @@ CSDKPlayer	*CSDKPlayer::FindNearestSlideTarget(void)
 		}
 	}
 	return (CSDKPlayer*)pClosest;
-}
-
-
-////////////////////////////////////////////////
-//
-CBall *CSDKPlayer::FindNearestBall(void)
-{
-	CBall *pClosest = NULL;
-	float distSq, maxDistSq = FLT_MAX;
-
-	CBall	*pBall = GetBall(NULL);
-	while (pBall)
-	{
-		distSq = ((pBall->GetAbsOrigin()-GetAbsOrigin()) * (pBall->GetAbsOrigin()-GetAbsOrigin())).LengthSqr();
-		if (distSq < maxDistSq)
-		{
-			maxDistSq = distSq;
-			pClosest = pBall;
-		}
-		pBall = GetBall(pBall);
-	}
-	return pClosest;
-}
-
-
-////////////////////////////////////////////////
-//
-CBall *CSDKPlayer::GetBall(CBall *pNext)
-{
-	return dynamic_cast<CBall*>(gEntList.FindEntityByClassname( pNext, "football" ));
 }
 
 ////////////////////////////////////////////////

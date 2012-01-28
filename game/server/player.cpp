@@ -1956,34 +1956,6 @@ void CBasePlayer::WaterMove()
 	UpdateUnderwaterState();
 }
 
-
-// true if the player is attached to a ladder
-bool CBasePlayer::IsOnLadder( void )
-{ 
-	return (GetMoveType() == MOVETYPE_LADDER);
-}
-
-
-float CBasePlayer::GetWaterJumpTime() const
-{
-	return m_flWaterJumpTime;
-}
-
-void CBasePlayer::SetWaterJumpTime( float flWaterJumpTime )
-{
-	m_flWaterJumpTime = flWaterJumpTime;
-}
-
-float CBasePlayer::GetSwimSoundTime( void ) const
-{
-	return m_flSwimSoundTime;
-}
-
-void CBasePlayer::SetSwimSoundTime( float flSwimSoundTime )
-{
-	m_flSwimSoundTime = flSwimSoundTime;
-}
-
 void CBasePlayer::ShowViewPortPanel( const char * name, bool bShow, KeyValues *data )
 {
 	CSingleUserRecipientFilter filter( this );
@@ -8153,19 +8125,7 @@ void CBasePlayer::SetVCollisionState( const Vector &vecAbsOrigin, const Vector &
 //-----------------------------------------------------------------------------
 int CBasePlayer::GetFOV( void )
 {
-	int nDefaultFOV;
-
-	// The vehicle's FOV wins if we're asking for a default value
-	if ( GetVehicle() )
-	{
-		CacheVehicleView();
-		nDefaultFOV = ( m_flVehicleViewFOV == 0 ) ? GetDefaultFOV() : (int) m_flVehicleViewFOV;
-	}
-	else
-	{
-		nDefaultFOV = GetDefaultFOV();
-	}
-	
+	int nDefaultFOV = GetDefaultFOV();
 	int fFOV = ( m_iFOV == 0 ) ? nDefaultFOV : m_iFOV;
 
 	// If it's immediate, just do it
@@ -8194,18 +8154,7 @@ int CBasePlayer::GetFOV( void )
 //-----------------------------------------------------------------------------
 int CBasePlayer::GetFOVForNetworking( void )
 {
-	int nDefaultFOV;
-
-	// The vehicle's FOV wins if we're asking for a default value
-	if ( GetVehicle() )
-	{
-		CacheVehicleView();
-		nDefaultFOV = ( m_flVehicleViewFOV == 0 ) ? GetDefaultFOV() : (int) m_flVehicleViewFOV;
-	}
-	else
-	{
-		nDefaultFOV = GetDefaultFOV();
-	}
+	int nDefaultFOV = GetDefaultFOV();
 
 	int fFOV = ( m_iFOV == 0 ) ? nDefaultFOV : m_iFOV;
 
@@ -8898,46 +8847,46 @@ bool CPlayerInfo::IsEFlagSet( int nEFlagMask )
 
 void CPlayerInfo::RunPlayerMove( CBotCmd *ucmd ) 
 { 
-	if ( m_pParent->IsBot() )
-	{
-		Assert( m_pParent );
-		CUserCmd cmd;
-		cmd.buttons = ucmd->buttons;
-		cmd.command_number = ucmd->command_number;
-		cmd.forwardmove = ucmd->forwardmove;
-		cmd.hasbeenpredicted = ucmd->hasbeenpredicted;
-		cmd.impulse = ucmd->impulse;
-		cmd.mousedx = ucmd->mousedx;
-		cmd.mousedy = ucmd->mousedy;
-		cmd.random_seed = ucmd->random_seed;
-		cmd.sidemove = ucmd->sidemove;
-		cmd.tick_count = ucmd->tick_count;
-		cmd.upmove = ucmd->upmove;
-		cmd.viewangles = ucmd->viewangles;
-		cmd.weaponselect = ucmd->weaponselect;
-		cmd.weaponsubtype = ucmd->weaponsubtype;
-		cmd.powershot_strength = ucmd->powershot_strength;
+	//if ( m_pParent->IsBot() )
+	//{
+	//	Assert( m_pParent );
+	//	CUserCmd cmd;
+	//	cmd.buttons = ucmd->buttons;
+	//	cmd.command_number = ucmd->command_number;
+	//	cmd.forwardmove = ucmd->forwardmove;
+	//	cmd.hasbeenpredicted = ucmd->hasbeenpredicted;
+	//	cmd.impulse = ucmd->impulse;
+	//	cmd.mousedx = ucmd->mousedx;
+	//	cmd.mousedy = ucmd->mousedy;
+	//	cmd.random_seed = ucmd->random_seed;
+	//	cmd.sidemove = ucmd->sidemove;
+	//	cmd.tick_count = ucmd->tick_count;
+	//	cmd.upmove = ucmd->upmove;
+	//	cmd.viewangles = ucmd->viewangles;
+	//	cmd.weaponselect = ucmd->weaponselect;
+	//	cmd.weaponsubtype = ucmd->weaponsubtype;
+	//	cmd.powershot_strength = ucmd->powershot_strength;
 
-		// Store off the globals.. they're gonna get whacked
-		float flOldFrametime = gpGlobals->frametime;
-		float flOldCurtime = gpGlobals->curtime;
+	//	// Store off the globals.. they're gonna get whacked
+	//	float flOldFrametime = gpGlobals->frametime;
+	//	float flOldCurtime = gpGlobals->curtime;
 
-		m_pParent->SetTimeBase( gpGlobals->curtime );
+	//	m_pParent->SetTimeBase( gpGlobals->curtime );
 
-		MoveHelperServer()->SetHost( m_pParent );
-		m_pParent->PlayerRunCommand( &cmd, MoveHelperServer() );
+	//	MoveHelperServer()->SetHost( m_pParent );
+	//	m_pParent->PlayerRunCommand( &cmd, MoveHelperServer() );
 
-		// save off the last good usercmd
-		m_pParent->SetLastUserCommand( cmd );
+	//	// save off the last good usercmd
+	//	m_pParent->SetLastUserCommand( cmd );
 
-		// Clear out any fixangle that has been set
-		m_pParent->pl.fixangle = FIXANGLE_NONE;
+	//	// Clear out any fixangle that has been set
+	//	m_pParent->pl.fixangle = FIXANGLE_NONE;
 
-		// Restore the globals..
-		gpGlobals->frametime = flOldFrametime;
-		gpGlobals->curtime = flOldCurtime;
-		MoveHelperServer()->SetHost( NULL );
-	}
+	//	// Restore the globals..
+	//	gpGlobals->frametime = flOldFrametime;
+	//	gpGlobals->curtime = flOldCurtime;
+	//	MoveHelperServer()->SetHost( NULL );
+	//}
 }
 
 void CPlayerInfo::SetLastUserCommand( const CBotCmd &ucmd ) 

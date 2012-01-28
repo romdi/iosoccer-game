@@ -35,8 +35,6 @@ public:
 	virtual void PostDataUpdate( DataUpdateType_t updateType );
 	virtual void OnDataChanged( DataUpdateType_t updateType );
 
-	virtual void CalcVehicleView(IClientVehicle *pVehicle, Vector& eyeOrigin, QAngle& eyeAngles, float& zNear, float& zFar, float& fov ) {};
-
 	// Player avoidance
 	bool ShouldCollide( int collisionGroup, int contentsMask ) const;
 	void AvoidPlayers( CUserCmd *pCmd );
@@ -155,6 +153,8 @@ public: // Public Variables
 
 	int	  m_iIDEntIndex;
 	int GetArmorValue() { return m_ArmorValue; }
+
+	void ApplyBoneMatrixTransform(matrix3x4_t& transform);
 private:
 	void UpdateSoundEvents();
 

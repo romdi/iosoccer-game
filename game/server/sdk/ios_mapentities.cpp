@@ -20,7 +20,7 @@ public:
 	void StartTouch( CBaseEntity *pOther )
 	{
 		CBall *pBall = dynamic_cast<CBall *>(pOther);
-		if (pBall && !pBall->IgnoreTriggers())
+		if (pBall && !pBall->GetIgnoreTriggers())
 		{
 			m_OnTrigger.FireOutput(pOther, this);
 			BallStartTouch(pBall);
@@ -204,8 +204,8 @@ void InitMapSpots()
 	for (int i = 0; i < 2; i++)
 	{
 		CTeamSpots *pSpot = new CTeamSpots();
-		pSpot->m_vCornerLeft = GetSpotPos(UTIL_VarArgs("info_team%d_corner1", i + 1));
-		pSpot->m_vCornerRight = GetSpotPos(UTIL_VarArgs("info_team%d_corner0", i + 1));
+		pSpot->m_vCornerLeft = GetSpotPos(UTIL_VarArgs("info_team%d_corner%d", i + 1, 1 - i));
+		pSpot->m_vCornerRight = GetSpotPos(UTIL_VarArgs("info_team%d_corner%d", i + 1, i));
 
 
 		if (pSpot->m_vCornerLeft.x < g_vFieldMin.x)
@@ -267,7 +267,7 @@ CTeamSpots *GetOppTeamSpots(CSDKPlayer *pPl)
 
 CTeamSpots *GetTeamSpots(int team)
 {
-	if (SDKGameRules()->TeamsSwapped())
+	if (SDKGameRules()->GetTeamsSwapped())
 	{
 		team = team == TEAM_A ? TEAM_B : TEAM_A;
 	}

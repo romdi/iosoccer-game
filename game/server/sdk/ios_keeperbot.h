@@ -19,15 +19,9 @@
 class CKeeperBot : public CBot
 {
 public:
-
-	//ios
-	int				m_KeeperMode;
-	float			m_fMissTime;
-	float			m_fNextDive;
-
 	void BotThink();
-	void KeeperCentre(int o);
-	int KeeperStartFrame();
+	void BotCenter();
+	void BotAdjustPos();
 };
 
 #endif

@@ -158,9 +158,6 @@ public:
 
 	// Returns eye vectors
 	void			EyeVectors( Vector *pForward, Vector *pRight = NULL, Vector *pUp = NULL );
-	void			CacheVehicleView( void );	// Calculate and cache the position of the player in the vehicle
-
-
 	bool			IsSuitEquipped( void ) { return m_Local.m_bWearingSuit; };
 
 	// Team handlers
@@ -330,12 +327,7 @@ public:
 	// Called by the renderer to apply the prediction error smoothing.
 	void GetPredictionErrorSmoothingVector( Vector &vOffset ); 
 
-	virtual void ExitLadder() {}
-	surfacedata_t *GetLadderSurface( const Vector &origin );
-
 	surfacedata_t *GetSurfaceData( void ) { return m_pSurfaceData; }
-
-	void SetLadderNormal( Vector vecLadderNormal ) { m_vecLadderNormal = vecLadderNormal; }
 
 	// Hints
 	virtual CHintSystem		*Hints( void ) { return NULL; }
@@ -403,8 +395,6 @@ protected:
 
 	//Tony; made all of these virtual so mods can override.
 	virtual void		CalcPlayerView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
-	virtual void		CalcVehicleView(IClientVehicle *pVehicle, Vector& eyeOrigin, QAngle& eyeAngles,
-							float& zNear, float& zFar, float& fov );
 	virtual void		CalcObserverView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
 	virtual Vector		GetChaseCamViewOffset( CBaseEntity *target );
 	virtual void		CalcChaseCamView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );

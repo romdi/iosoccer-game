@@ -146,8 +146,9 @@ public:
 	void			TriggerGoal(int team);
 	void			TriggerGoalLine(int team);
 	void			TriggerSideline();
-	bool			IgnoreTriggers() { return m_bIgnoreTriggers; };
+	bool			GetIgnoreTriggers() { return m_bIgnoreTriggers; };
 	void			SetIgnoreTriggers(bool ignoreTriggers) { m_bIgnoreTriggers = ignoreTriggers; };
+	void			SetRegularKickOff(bool regular) { m_bRegularKickOff = regular; };
 
 	void			State_Transition( ball_state_t newState, float delay = 0.0f );
 
@@ -233,8 +234,11 @@ private:
 
 	bool			m_bIgnoreTriggers;
 	
-	CSDKPlayer		*m_pPossessor;
+	CSDKPlayer		*m_pPossessingPl;
+	int				m_nPossessingTeam;
 	float			m_flPossessionStart;
+
+	bool			m_bRegularKickOff;
 
 	CUtlVector<CBallTouchInfo> m_Touches;
 

@@ -42,9 +42,9 @@ public:
 	virtual void	StartTrackPredictionErrors( CBasePlayer *pPlayer );
 	virtual void	FinishTrackPredictionErrors( CBasePlayer *pPlayer );
 	virtual void	DiffPrint( char const *fmt, ... );
-	virtual const Vector&	GetPlayerMins( bool ducked ) const;
-	virtual const Vector&	GetPlayerMaxs( bool ducked ) const;
-	virtual const Vector&	GetPlayerViewOffset( bool ducked ) const;
+	virtual const Vector&	GetPlayerMins( bool ducked ) const { return VEC_HULL_MIN; };
+	virtual const Vector&	GetPlayerMaxs( bool ducked ) const { return VEC_HULL_MAX; };
+	virtual const Vector&	GetPlayerViewOffset( bool ducked ) const { return VEC_VIEW; };
 
 // For sanity checking getting stuck on CMoveData::SetAbsOrigin
 	virtual void			TracePlayerBBox( const Vector& start, const Vector& end, unsigned int fMask, int collisionGroup, trace_t& pm );
@@ -70,8 +70,6 @@ protected:
 	// Set ground data, etc.
 	void			FinishMove( void );
 
-	virtual float	CalcRoll( const QAngle &angles, const Vector &velocity, float rollangle, float rollspeed );;
-
 	// Handles both ground friction and water friction
 	void			Friction( void );
 
@@ -94,8 +92,8 @@ protected:
 	// Implement this if you want to know when the player collides during OnPlayerMove
 	virtual void	OnTryPlayerMoveCollision( trace_t &tr ) {}
 
-	virtual const Vector&	GetPlayerMins( void ) const; // uses local player
-	virtual const Vector&	GetPlayerMaxs( void ) const; // uses local player
+	virtual const Vector&	GetPlayerMins( void ) const { return VEC_HULL_MIN; }; // uses local player
+	virtual const Vector&	GetPlayerMaxs( void ) const { return VEC_HULL_MAX; }; // uses local player
 
 	typedef enum
 	{
@@ -124,9 +122,6 @@ protected:
 
 	// Returns true if he started a jump (ie: should he play the jump animation)?
 	virtual bool	CheckJumpButton( void );	// Overridden by each game.
-
-	// Dead player flying through air., e.g.
-	virtual void    FullTossMove( void );
 	
 	// Player is a Observer chasing another player
 	void			FullObserverMove( void );
@@ -149,10 +144,6 @@ protected:
 	// If pmove.origin is in a solid position,
 	// try nudging slightly on all axis to
 	// allow for the cut precision of the net coordinates
-#ifdef PORTAL
-	virtual 
-#endif
-	int				CheckStuck( void );
 	
 	// Determine if player is in water, on ground, etc.
 	virtual void CategorizePosition( void );
@@ -161,18 +152,7 @@ protected:
 
 	virtual	void	ReduceTimers( void );
 
-	void ResetGetPointContentsCache();
-	int GetPointContentsCached( const Vector &point, int slot );
-
-	void			CategorizeGroundSurface( trace_t &pm );
-
-	// Traces the player bbox as it is swept from start to end
-	virtual CBaseHandle		TestPlayerPosition( const Vector& pos, int collisionGroup, trace_t& pm );
-
 	bool			IsDead( void ) const;
-
-	// Figures out how the constraint should slow us down
-	float			ComputeConstraintSpeedFactor( void );
 
 	virtual void	SetGroundEntity( trace_t *pm );
 
@@ -200,8 +180,6 @@ protected:
 
 //private:
 	bool			m_bSpeedCropped;
-
-	float			m_flStuckCheckTime[MAX_PLAYERS+1][2]; // Last time we did a full test
 };
 
 
