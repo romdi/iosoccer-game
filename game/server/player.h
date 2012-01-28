@@ -314,8 +314,8 @@ public:
 	virtual int				TakeHealth( float flHealth, int bitsDamageType );
 	virtual void			TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr );
 	bool					ShouldTakeDamageInCommentaryMode( const CTakeDamageInfo &inputInfo );
-	virtual int				OnTakeDamage( const CTakeDamageInfo &info );
-	virtual void			DamageEffect(float flDamage, int fDamageType);
+	virtual int				OnTakeDamage( const CTakeDamageInfo &info ) { return 0; };
+	virtual void			DamageEffect(float flDamage, int fDamageType) {};
 
 	virtual void			OnDamagedByExplosion( const CTakeDamageInfo &info );
 
@@ -340,12 +340,12 @@ public:
 	virtual bool			ShouldFadeOnDeath( void ) { return FALSE; }
 	
 	virtual const impactdamagetable_t &GetPhysicsImpactDamageTable();
-	virtual int				OnTakeDamage_Alive( const CTakeDamageInfo &info );
-	virtual void			Event_Killed( const CTakeDamageInfo &info );
+	virtual int				OnTakeDamage_Alive( const CTakeDamageInfo &info ) { return 0; };
+	virtual void			Event_Killed( const CTakeDamageInfo &info ) {};
 	// Notifier that I've killed some other entity. (called from Victim's Event_Killed).
 	virtual void			Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo &info );
 
-	void					Event_Dying( void );
+	void					Event_Dying( void ) {};
 
 	bool					IsHLTV( void ) const { return pl.hltv; }
 	virtual	bool			IsPlayer( void ) const { return true; }			// Spectators return TRUE for this, use IsObserver to seperate cases
@@ -386,8 +386,8 @@ public:
 	virtual bool			ShouldSavePhysics();
 	virtual void			OnRestore( void );
 
-	virtual void			PackDeadPlayerItems( void );
-	virtual void			RemoveAllItems( bool removeSuit );
+	virtual void			PackDeadPlayerItems( void ) {};
+	virtual void			RemoveAllItems( bool removeSuit ) {};
 	bool					IsDead() const;
 #ifdef CSTRIKE_DLL
 	virtual bool			IsRunning( void ) const	{ return false; } // bot support under cstrike (AR)

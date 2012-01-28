@@ -1381,7 +1381,6 @@ void C_BasePlayer::CalcFreezeCamView( Vector& eyeOrigin, QAngle& eyeAngles, floa
 	C_BaseEntity *pTarget = GetObserverTarget();
 	if ( !pTarget )
 	{
-		CalcDeathCamView( eyeOrigin, eyeAngles, fov );
 		return;
 	}
 
@@ -1507,62 +1506,6 @@ void C_BasePlayer::CalcInEyeCamView(Vector& eyeOrigin, QAngle& eyeAngles, float&
 
 	engine->SetViewAngles( eyeAngles );
 }
-
-void C_BasePlayer::CalcDeathCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov)
-{
-	CBaseEntity	* pKiller = NULL; 
-
-	if ( mp_forcecamera.GetInt() == OBS_ALLOW_ALL )
-	{
-		// if mp_forcecamera is off let user see killer or look around
-		pKiller = GetObserverTarget();
-		eyeAngles = EyeAngles();
-	}
-
-	float interpolation = ( gpGlobals->curtime - m_flDeathTime ) / DEATH_ANIMATION_TIME;
-	interpolation = clamp( interpolation, 0.0f, 1.0f );
-
-	m_flObserverChaseDistance += gpGlobals->frametime*48.0f;
-	m_flObserverChaseDistance = clamp( m_flObserverChaseDistance, 16, CHASE_CAM_DISTANCE );
-
-	QAngle aForward = eyeAngles;
-	Vector origin = EyePosition();			
-
-	IRagdoll *pRagdoll = GetRepresentativeRagdoll();
-	if ( pRagdoll )
-	{
-		origin = pRagdoll->GetRagdollOrigin();
-		origin.z += VEC_DEAD_VIEWHEIGHT.z; // look over ragdoll, not through
-	}
-	
-	if ( pKiller && pKiller->IsPlayer() && (pKiller != this) ) 
-	{
-		Vector vKiller = pKiller->EyePosition() - origin;
-		QAngle aKiller; VectorAngles( vKiller, aKiller );
-		InterpolateAngles( aForward, aKiller, eyeAngles, interpolation );
-	};
-
-	Vector vForward; AngleVectors( eyeAngles, &vForward );
-
-	VectorNormalize( vForward );
-
-	VectorMA( origin, -m_flObserverChaseDistance, vForward, eyeOrigin );
-
-	trace_t trace; // clip against world
-	C_BaseEntity::PushEnableAbsRecomputations( false ); // HACK don't recompute positions while doing RayTrace
-	UTIL_TraceHull( origin, eyeOrigin, WALL_MIN, WALL_MAX, MASK_SOLID, this, COLLISION_GROUP_NONE, &trace );
-	C_BaseEntity::PopEnableAbsRecomputations();
-
-	if (trace.fraction < 1.0)
-	{
-		eyeOrigin = trace.endpos;
-		m_flObserverChaseDistance = VectorLength(origin - eyeOrigin);
-	}
-
-	fov = GetFOV();
-}
-
-
 
 //-----------------------------------------------------------------------------
 // Purpose: Return the weapon to have open the weapon selection on, based upon our currently active weapon

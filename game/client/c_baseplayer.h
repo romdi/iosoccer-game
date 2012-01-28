@@ -399,7 +399,6 @@ protected:
 	virtual Vector		GetChaseCamViewOffset( CBaseEntity *target );
 	virtual void		CalcChaseCamView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
 	virtual void		CalcInEyeCamView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
-	virtual void		CalcDeathCamView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
 	virtual void		CalcRoamingView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov);
 	virtual void		CalcFreezeCamView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
 

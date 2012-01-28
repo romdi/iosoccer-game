@@ -467,8 +467,8 @@ void CSDKPlayer::InitialSpawn( void )
 	BaseClass::InitialSpawn();
 
 	m_takedamage = DAMAGE_NO;
-	pl.deadflag = true;
-	m_lifeState = LIFE_DEAD;
+	//pl.deadflag = true;
+	//m_lifeState = LIFE_DEAD;
 	AddEffects( EF_NODRAW );
 	//ChangeTeam( TEAM_UNASSIGNED );
 	SetThink( NULL );
@@ -786,7 +786,7 @@ void CSDKPlayer::State_OBSERVER_MODE_Enter()
 	//}
 
 	//pl.deadflag = true;
-	m_lifeState = LIFE_DEAD;
+	//m_lifeState = LIFE_DEAD;
 	AddEffects(EF_NODRAW);
 	//ChangeTeam(TEAM_SPECTATOR);
 	SetMoveType(MOVETYPE_OBSERVER);
@@ -863,10 +863,10 @@ void CSDKPlayer::State_ACTIVE_Enter()
 	// update this counter, used to not interp players when they spawn
 	m_bSpawnInterpCounter = !m_bSpawnInterpCounter;
 	SetContextThink( &CSDKPlayer::SDKPushawayThink, gpGlobals->curtime + PUSHAWAY_THINK_INTERVAL, SDK_PUSHAWAY_THINK_CONTEXT );
-	pl.deadflag = false;
+	//pl.deadflag = false;
 	m_flNextShot = gpGlobals->curtime;
 	m_hRagdoll = NULL;
-	m_lifeState = LIFE_ALIVE;
+	//m_lifeState = LIFE_ALIVE;
 	RemoveEffects(EF_NODRAW);
 
 	SetViewOffset( VEC_VIEW );
