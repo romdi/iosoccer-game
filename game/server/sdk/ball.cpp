@@ -450,14 +450,14 @@ void CBall::State_PostThink()
 
 	if (m_vVel == vec3_origin)
 	{
-		AddEffects(EF_NOINTERP);
+		//AddEffects(EF_NOINTERP);
 		m_pPhys->SetPosition(m_vPos, m_aAng, true);
 		//SetLocalOrigin(m_vNewPos);
 		//m_pPhys->SetVelocity(&m_vNewVel, &m_vNewAngImp);
 		m_pPhys->SetVelocityInstantaneous(&m_vVel, &m_vAngImp);
 		//SetLocalVelocity(m_vNewVel);
 		//VPhysicsUpdate(m_pPhys);
-		RemoveEffects(EF_NOINTERP);
+		//RemoveEffects(EF_NOINTERP);
 	}
 	else
 	{
@@ -895,7 +895,7 @@ void CBall::State_GOAL_Leave()
 	//{
 	//	DevMsg("Toucher: %s\n", m_Touches[i].m_pPl->GetPlayerName());
 	//}
-	m_Touches.RemoveAll();
+	m_Touches.RemoveMultiple(0, m_Touches.Count());
 }
 
 void CBall::State_FREEKICK_Enter()

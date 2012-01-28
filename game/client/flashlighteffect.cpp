@@ -156,7 +156,7 @@ void CFlashlightEffect::UpdateLightNew(const Vector &vecPos, const Vector &vecFo
 	FlashlightState_t state;
 
 	// We will lock some of the flashlight params if player is on a ladder, to prevent oscillations due to the trace-rays
-	bool bPlayerOnLadder = ( C_BasePlayer::GetLocalPlayer()->GetMoveType() == MOVETYPE_LADDER );
+	bool bPlayerOnLadder = false;
 
 	const float flEpsilon = 0.1f;			// Offset flashlight position along vecUp
 	const float flDistCutoff = 128.0f;

@@ -269,7 +269,7 @@ void CBasePlayer::UpdateStepSound( surfacedata_t *psurface, const Vector &vecOri
 	float groundspeed = Vector2DLength( vecVelocity.AsVector2D() );
 
 	// determine if we are on a ladder
-	fLadder = ( GetMoveType() == MOVETYPE_LADDER );
+	fLadder = false;
 
 	GetStepSoundVelocities( &velwalk, &velrun );
 
@@ -394,17 +394,8 @@ void CBasePlayer::UpdateButtonState( int nUserCmdButtonMask )
 //-----------------------------------------------------------------------------
 void CBasePlayer::GetStepSoundVelocities( float *velwalk, float *velrun )
 {
-	// UNDONE: need defined numbers for run, walk, crouch, crouch run velocities!!!!	
-	if ( ( GetFlags() & FL_DUCKING) || ( GetMoveType() == MOVETYPE_LADDER ) )
-	{
-		*velwalk = 60;		// These constants should be based on cl_movespeedkey * cl_forwardspeed somehow
-		*velrun = 80;		
-	}
-	else
-	{
-		*velwalk = 90;
-		*velrun = 220;
-	}
+	*velwalk = 90;
+	*velrun = 220;
 }
 
 //-----------------------------------------------------------------------------
@@ -430,12 +421,6 @@ void CBasePlayer::SetStepSoundTime( stepsoundtimes_t iStepSoundTime, bool bWalki
 	default:
 		Assert(0);
 		break;
-	}
-
-	// UNDONE: need defined numbers for run, walk, crouch, crouch run velocities!!!!	
-	if ( ( GetFlags() & FL_DUCKING) || ( GetMoveType() == MOVETYPE_LADDER ) )
-	{
-		m_flStepSoundTime += 100;
 	}
 }
 

@@ -3292,6 +3292,12 @@ void CBaseEntity::SetMoveType( MoveType_t val, MoveCollide_t moveCollide )
 			UpdateWaterState();
 		}
 		break;
+	case MOVETYPE_REMOTECONTROLLED:
+		{
+			SetSimulatedEveryTick( true );
+			SetAnimatedEveryTick( true );
+		}
+		break;
 	default:
 		{
 			SetSimulatedEveryTick( true );

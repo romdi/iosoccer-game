@@ -3902,7 +3902,8 @@ bool C_BaseAnimating::IsSelfAnimating()
 		  iMoveType != MOVETYPE_NONE && 
 		  iMoveType != MOVETYPE_WALK &&
 		  iMoveType != MOVETYPE_FLY &&
-		  iMoveType != MOVETYPE_FLYGRAVITY )
+		  iMoveType != MOVETYPE_FLYGRAVITY &&
+		  iMoveType != MOVETYPE_REMOTECONTROLLED)
 	{
 		return true;
 	}

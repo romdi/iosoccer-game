@@ -1397,8 +1397,8 @@ void CGameMovement::WalkMove( void )
 	//else
 	//	StepMove( dest, pm );
 
-	//StepMove( dest, pm );
-	//StayOnGround();
+	StepMove( dest, pm );
+	StayOnGround();
 }
 
 //-----------------------------------------------------------------------------
@@ -1648,6 +1648,30 @@ void CGameMovement::FullNoClipMove( float factor, float maxacceleration )
 	{
 		mv->m_vecVelocity.Init();
 	}
+}
+
+void CGameMovement::FullRemoteControlledMove()
+{
+	Vector wishvel = vec3_origin;
+	Vector dest;
+	Vector forward, right, up;
+
+	AngleVectors(mv->m_vecViewAngles, &forward, &right, &up);  // Determine movement angles
+
+	for (int i=0 ; i<2 ; i++)       // Determine x and y parts of velocity
+		wishvel[i] = forward[i] * mv->m_flForwardMove + right[i] * mv->m_flSideMove;
+
+	mv->m_vecVelocity = wishvel;
+
+	// first try just moving to the destination	
+	dest[0] = mv->GetAbsOrigin()[0] + mv->m_vecVelocity[0] * gpGlobals->frametime;
+	dest[1] = mv->GetAbsOrigin()[1] + mv->m_vecVelocity[1] * gpGlobals->frametime;	
+	dest[2] = mv->GetAbsOrigin()[2];
+
+	// If we made it all the way, then copy trace end as new player position.
+	mv->m_outWishVel += wishvel;
+	mv->SetAbsOrigin(dest);
+	//StayOnGround();
 }
 
 //-----------------------------------------------------------------------------
@@ -2361,8 +2385,7 @@ void CGameMovement::CategorizePosition( void )
 	}
 
 	// Was on ground, but now suddenly am not
-	if ( bMovingUpRapidly || 
-		( bMovingUp && player->GetMoveType() == MOVETYPE_LADDER ) )   
+	if ( bMovingUpRapidly )   
 	{
 		SetGroundEntity( NULL );
 	}
@@ -2395,30 +2418,6 @@ void CGameMovement::CategorizePosition( void )
 		{
 			SetGroundEntity( &pm );  // Otherwise, point to index of ent under us.
 		}
-
-#ifndef CLIENT_DLL
-		
-		//Adrian: vehicle code handles for us.
-		if ( player->IsInAVehicle() == false )
-		{
-			// If our gamematerial has changed, tell any player surface triggers that are watching
-			IPhysicsSurfaceProps *physprops = MoveHelper()->GetSurfaceProps();
-			surfacedata_t *pSurfaceProp = physprops->GetSurfaceData( pm.surface.surfaceProps );
-			char cCurrGameMaterial = pSurfaceProp->game.material;
-			if ( !player->GetGroundEntity() )
-			{
-				cCurrGameMaterial = 0;
-			}
-
-			// Changed?
-			if ( player->m_chPreviousTextureType != cCurrGameMaterial )
-			{
-				CEnvPlayerSurfaceTrigger::SetPlayerSurface( player, cCurrGameMaterial );
-			}
-
-			player->m_chPreviousTextureType = cCurrGameMaterial;
-		}
-#endif
 	}
 }
 
@@ -2476,12 +2475,14 @@ void CGameMovement::PlayerMove( void )
 		case MOVETYPE_NONE:
 		case MOVETYPE_FLY:
 		case MOVETYPE_FLYGRAVITY:
-		case MOVETYPE_LADDER:
 		case MOVETYPE_ISOMETRIC:
 			break;
 
 		case MOVETYPE_NOCLIP:
-			FullNoClipMove( sv_noclipspeed.GetFloat(), sv_noclipaccelerate.GetFloat() );
+			if (player->GetFlags() & FL_REMOTECONTROLLED)
+				FullRemoteControlledMove();
+			else
+				FullNoClipMove( sv_noclipspeed.GetFloat(), sv_noclipaccelerate.GetFloat() );
 			break;
 
 		case MOVETYPE_WALK:
@@ -2500,6 +2501,9 @@ void CGameMovement::PlayerMove( void )
 
 void CGameMovement::CheckBallShield()
 {
+	if (player->GetTeamNumber() == TEAM_SPECTATOR)
+		return;
+
 	if (!(SDKGameRules()->m_nShieldType & (FL_SHIELD_CIRC | FL_SHIELD_RECT)))
 		return;
 

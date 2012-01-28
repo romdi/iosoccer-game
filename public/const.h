@@ -145,7 +145,7 @@ enum MoveType_t
 	MOVETYPE_VPHYSICS,			// uses VPHYSICS for simulation
 	MOVETYPE_PUSH,				// no clip to world, push and crush
 	MOVETYPE_NOCLIP,			// No gravity, no collisions, still do velocity/avelocity
-	MOVETYPE_LADDER,			// Used by players only when going onto a ladder
+	MOVETYPE_REMOTECONTROLLED,	// Used by players only when going onto a ladder
 	MOVETYPE_OBSERVER,			// Observer movement, depends on player's observer mode
 	MOVETYPE_CUSTOM,			// Allows the entity to describe its own physics
 

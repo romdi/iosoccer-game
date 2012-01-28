@@ -1665,6 +1665,7 @@ bool CSDKPlayer::WalkToPosition(Vector pos, float speed, float tolerance)
 	Vector newPos = GetLocalOrigin();
 	newPos.z = g_flGroundZ;
 	SetLocalOrigin(newPos);
+	SetMoveType(MOVETYPE_NOCLIP);
 	AddFlag(FL_REMOTECONTROLLED);
 
 	return true;
@@ -1680,6 +1681,7 @@ void CSDKPlayer::PlayerRunCommand(CUserCmd *ucmd, IMoveHelper *moveHelper)
 		{
 			SetLocalVelocity(vec3_origin);
 			SetLocalOrigin(Vector(m_vWalkToPos.x, m_vWalkToPos.y, g_flGroundZ));
+			SetMoveType(MOVETYPE_WALK);
 			RemoveFlag(FL_REMOTECONTROLLED);
 		}
 		else

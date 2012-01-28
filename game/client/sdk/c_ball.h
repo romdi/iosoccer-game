@@ -28,8 +28,7 @@ public:
 	}
 	virtual bool IsAsleep()
 	{
-		Assert ( 0 );
-		return true;
+		return false;
 	}
 
 	int m_iPhysicsMode;	// One of the PHYSICS_MULTIPLAYER_ defines.	
