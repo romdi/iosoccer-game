@@ -396,15 +396,15 @@ public:
 	bool					HasPhysicsFlag( unsigned int flag ) { return (m_afPhysicsFlags & flag) != 0; }
 
 	// Weapon stuff
-	virtual Vector			Weapon_ShootPosition( );
-	virtual bool			Weapon_CanUse( CBaseCombatWeapon *pWeapon );
-	virtual void			Weapon_Equip( CBaseCombatWeapon *pWeapon );
-	virtual	void			Weapon_Drop( CBaseCombatWeapon *pWeapon, const Vector *pvecTarget /* = NULL */, const Vector *pVelocity /* = NULL */ );
-	virtual	bool			Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelindex = 0 );		// Switch to given weapon if has ammo (false if failed)
-	virtual void			Weapon_SetLast( CBaseCombatWeapon *pWeapon );
+	virtual Vector			Weapon_ShootPosition( ) { return vec3_origin; };
+	virtual bool			Weapon_CanUse( CBaseCombatWeapon *pWeapon ) { return false; };
+	virtual void			Weapon_Equip( CBaseCombatWeapon *pWeapon ) {};
+	virtual	void			Weapon_Drop( CBaseCombatWeapon *pWeapon, const Vector *pvecTarget /* = NULL */, const Vector *pVelocity /* = NULL */ ) {};
+	virtual	bool			Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelindex = 0 ) { return false; };		// Switch to given weapon if has ammo (false if failed)
+	virtual void			Weapon_SetLast( CBaseCombatWeapon *pWeapon ) {};
 	virtual bool			Weapon_ShouldSetLast( CBaseCombatWeapon *pOldWeapon, CBaseCombatWeapon *pNewWeapon ) { return true; }
-	virtual bool			Weapon_ShouldSelectItem( CBaseCombatWeapon *pWeapon );
-	void					Weapon_DropSlot( int weaponSlot );
+	virtual bool			Weapon_ShouldSelectItem( CBaseCombatWeapon *pWeapon ) { return false; };
+	void					Weapon_DropSlot( int weaponSlot ) {};
 	CBaseCombatWeapon		*Weapon_GetLast( void ) { return m_hLastWeapon.Get(); }
 
 	bool					HasAnyAmmoOfType( int nAmmoIndex );

@@ -1228,12 +1228,12 @@ int C_BasePlayer::DrawModel( int flags )
 	// if local player is spectating this player in first person mode, don't draw it
 	C_BasePlayer * player = C_BasePlayer::GetLocalPlayer();
 
-	if ( player && player->IsObserver() )
-	{
-		if ( player->GetObserverMode() == OBS_MODE_IN_EYE &&
-			 player->GetObserverTarget() == this )
-			return 0;
-	}
+	//if ( player && player->IsObserver() )
+	//{
+	//	if ( player->GetObserverMode() == OBS_MODE_IN_EYE &&
+	//		 player->GetObserverTarget() == this )
+	//		return 0;
+	//}
 
 	return BaseClass::DrawModel( flags );
 }
@@ -1278,20 +1278,14 @@ void C_BasePlayer::CalcChaseCamView(Vector& eyeOrigin, QAngle& eyeAngles, float&
 		return;
 	}
 
-	// QAngle tmpangles;
-
 	Vector forward, viewpoint;
-
-	// GetObserverCamOrigin() returns ragdoll pos if player is ragdolled
-	Vector origin = target->GetObserverCamOrigin();
-
-	VectorAdd( origin, GetChaseCamViewOffset( target ), origin );
 
 	QAngle viewangles;
 
 	if ( GetObserverMode() == OBS_MODE_IN_EYE )
 	{
-		viewangles = eyeAngles;
+		viewangles = target->EyeAngles();
+		engine->SetViewAngles(viewangles);
 	}
 	else if ( IsLocalPlayer() )
 	{
@@ -1301,37 +1295,9 @@ void C_BasePlayer::CalcChaseCamView(Vector& eyeOrigin, QAngle& eyeAngles, float&
 	{
 		viewangles = EyeAngles();
 	}
-
-	m_flObserverChaseDistance += gpGlobals->frametime*48.0f;
-
-	float flMaxDistance = CHASE_CAM_DISTANCE;
-	if ( target && target->IsBaseTrain() )
-	{
-		// if this is a train, we want to be back a little further so we can see more of it
-		flMaxDistance *= 2.5f;
-	}
-	m_flObserverChaseDistance = clamp( m_flObserverChaseDistance, 16, flMaxDistance );
-	
-	AngleVectors( viewangles, &forward );
-
-	VectorNormalize( forward );
-
-	VectorMA(origin, -m_flObserverChaseDistance, forward, viewpoint );
-
-	trace_t trace;
-	CTraceFilterNoNPCsOrPlayer filter( target, COLLISION_GROUP_NONE );
-	C_BaseEntity::PushEnableAbsRecomputations( false ); // HACK don't recompute positions while doing RayTrace
-	UTIL_TraceHull( origin, viewpoint, WALL_MIN, WALL_MAX, MASK_SOLID, &filter, &trace );
-	C_BaseEntity::PopEnableAbsRecomputations();
-
-	if (trace.fraction < 1.0)
-	{
-		viewpoint = trace.endpos;
-		m_flObserverChaseDistance = VectorLength(origin - eyeOrigin);
-	}
 	
 	VectorCopy( viewangles, eyeAngles );
-	VectorCopy( viewpoint, eyeOrigin );
+	VectorCopy( target->EyePosition(), eyeOrigin );
 
 	fov = GetFOV();
 }

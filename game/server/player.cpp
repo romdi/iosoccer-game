@@ -6399,105 +6399,6 @@ void CBasePlayer::ResetAutoaim( void )
 	m_fOnTarget = false;
 }
 
-// ==========================================================================
-//	> Weapon stuff
-// ==========================================================================
-
-//-----------------------------------------------------------------------------
-// Purpose: Override base class, player can always use weapon
-// Input  : A weapon
-// Output :	true or false
-//-----------------------------------------------------------------------------
-bool CBasePlayer::Weapon_CanUse( CBaseCombatWeapon *pWeapon )
-{
-	return true;
-}
-
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Override to clear dropped weapon from the hud
-//-----------------------------------------------------------------------------
-void CBasePlayer::Weapon_Drop( CBaseCombatWeapon *pWeapon, const Vector *pvecTarget /* = NULL */, const Vector *pVelocity /* = NULL */ )
-{
-	bool bWasActiveWeapon = false;
-	if ( pWeapon == GetActiveWeapon() )
-	{
-		bWasActiveWeapon = true;
-	}
-
-	if ( pWeapon )
-	{
-		if ( bWasActiveWeapon )
-		{
-			pWeapon->SendWeaponAnim( ACT_VM_IDLE );
-		}
-	}
-
-	BaseClass::Weapon_Drop( pWeapon, pvecTarget, pVelocity );
-
-	if ( bWasActiveWeapon )
-	{
-		if (!SwitchToNextBestWeapon( NULL ))
-		{
-			CBaseViewModel *vm = GetViewModel();
-			if ( vm )
-			{
-				vm->AddEffects( EF_NODRAW );
-			}
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : weaponSlot - 
-//-----------------------------------------------------------------------------
-void CBasePlayer::Weapon_DropSlot( int weaponSlot )
-{
-	CBaseCombatWeapon *pWeapon;
-
-	// Check for that slot being occupied already
-	for ( int i=0; i < MAX_WEAPONS; i++ )
-	{
-		pWeapon = GetWeapon( i );
-		
-		if ( pWeapon != NULL )
-		{
-			// If the slots match, it's already occupied
-			if ( pWeapon->GetSlot() == weaponSlot )
-			{
-				Weapon_Drop( pWeapon, NULL, NULL );
-			}
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Override to add weapon to the hud
-//-----------------------------------------------------------------------------
-void CBasePlayer::Weapon_Equip( CBaseCombatWeapon *pWeapon )
-{
-	BaseClass::Weapon_Equip( pWeapon );
-
-	bool bShouldSwitch = g_pGameRules->FShouldSwitchWeapon( this, pWeapon );
-
-#ifdef HL2_DLL
-	if ( bShouldSwitch == false && PhysCannonGetHeldEntity( GetActiveWeapon() ) == pWeapon && 
-		 Weapon_OwnsThisType( pWeapon->GetClassname(), pWeapon->GetSubType()) )
-	{
-		bShouldSwitch = true;
-	}
-#endif//HL2_DLL
-
-	// should we switch to this item?
-	if ( bShouldSwitch )
-	{
-		Weapon_Switch( pWeapon );
-	}
-}
-
-
 //=========================================================
 // HasNamedPlayerItem Does the player already have this item?
 //=========================================================
@@ -6516,8 +6417,6 @@ CBaseEntity *CBasePlayer::HasNamedPlayerItem( const char *pszItemName )
 
 	return NULL;
 }
-
-
 
 //================================================================================
 // TEAM HANDLING

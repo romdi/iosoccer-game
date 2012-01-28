@@ -582,7 +582,7 @@ void CViewRender::SetUpView()
 				}
 			}
 
-			pPlayer->CalcViewModelView( m_View.origin, m_View.angles );
+			//pPlayer->CalcViewModelView( m_View.origin, m_View.angles );
 		}
 
 		// Even if the engine is paused need to override the view

@@ -439,49 +439,9 @@ void CBasePlayer::SetStepSoundTime( stepsoundtimes_t iStepSoundTime, bool bWalki
 	}
 }
 
-Vector CBasePlayer::Weapon_ShootPosition( )
-{
-	return EyePosition();
-}
-
 void CBasePlayer::SetAnimationExtension( const char *pExtension )
 {
 	Q_strncpy( m_szAnimExtension, pExtension, sizeof(m_szAnimExtension) );
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Set the weapon to switch to when the player uses the 'lastinv' command
-//-----------------------------------------------------------------------------
-void CBasePlayer::Weapon_SetLast( CBaseCombatWeapon *pWeapon )
-{
-	m_hLastWeapon = pWeapon;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Override base class so player can reset autoaim
-// Input  :
-// Output :
-//-----------------------------------------------------------------------------
-bool CBasePlayer::Weapon_Switch( CBaseCombatWeapon *pWeapon, int viewmodelindex /*=0*/ ) 
-{
-	CBaseCombatWeapon *pLastWeapon = GetActiveWeapon();
-
-	if ( BaseClass::Weapon_Switch( pWeapon, viewmodelindex ))
-	{
-		if ( pLastWeapon && Weapon_ShouldSetLast( pLastWeapon, GetActiveWeapon() ) )
-		{
-			Weapon_SetLast( pLastWeapon->GetLastWeapon() );
-		}
-
-		CBaseViewModel *pViewModel = GetViewModel( viewmodelindex );
-		Assert( pViewModel );
-		if ( pViewModel )
-			pViewModel->RemoveEffects( EF_NODRAW );
-		ResetAutoaim( );
-		return true;
-	}
-	return false;
 }
 
 void CBasePlayer::SelectLastItem(void)
@@ -627,14 +587,6 @@ void CBasePlayer::ClearPlayerSimulationList( void )
 	m_SimulatedByThisPlayer.RemoveAll();
 }
 #endif
-
-//-----------------------------------------------------------------------------
-// Purpose: Return true if we should allow selection of the specified item
-//-----------------------------------------------------------------------------
-bool CBasePlayer::Weapon_ShouldSelectItem( CBaseCombatWeapon *pWeapon )
-{
-	return ( pWeapon != GetActiveWeapon() );
-}
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -1245,7 +1197,7 @@ void CBasePlayer::CalcObserverView( Vector& eyeOrigin, QAngle& eyeAngles, float&
 		case OBS_MODE_FIXED		:	CalcRoamingView( eyeOrigin, eyeAngles, fov );
 									break;
 
-		case OBS_MODE_IN_EYE	:	CalcInEyeCamView( eyeOrigin, eyeAngles, fov );
+		case OBS_MODE_IN_EYE	:	CalcChaseCamView( eyeOrigin, eyeAngles, fov ); //CalcInEyeCamView( eyeOrigin, eyeAngles, fov );
 									break;
 
 		case OBS_MODE_CHASE		:	CalcChaseCamView( eyeOrigin, eyeAngles, fov  );

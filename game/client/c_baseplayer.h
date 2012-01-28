@@ -110,7 +110,7 @@ public:
 	void					UpdateUnderwaterState( void );
 	bool					IsPlayerUnderwater( void ) { return m_bPlayerUnderwater; }
 
-	virtual Vector			Weapon_ShootPosition();
+	virtual Vector			Weapon_ShootPosition() { return vec3_origin; };
 	virtual void			Weapon_DropPrimary( void ) {}
 
 	virtual Vector			GetAutoaimVector( float flScale );
@@ -226,10 +226,10 @@ public:
 	virtual void				AbortReload( void );
 
 	virtual void				SelectLastItem(void);
-	virtual void				Weapon_SetLast( C_BaseCombatWeapon *pWeapon );
+	virtual void				Weapon_SetLast( C_BaseCombatWeapon *pWeapon ) {};
 	virtual bool				Weapon_ShouldSetLast( C_BaseCombatWeapon *pOldWeapon, C_BaseCombatWeapon *pNewWeapon ) { return true; }
-	virtual bool				Weapon_ShouldSelectItem( C_BaseCombatWeapon *pWeapon );
-	virtual	bool				Weapon_Switch( C_BaseCombatWeapon *pWeapon, int viewmodelindex = 0 );		// Switch to given weapon if has ammo (false if failed)
+	virtual bool				Weapon_ShouldSelectItem( C_BaseCombatWeapon *pWeapon ) { return false; };
+	virtual	bool				Weapon_Switch( C_BaseCombatWeapon *pWeapon, int viewmodelindex = 0 ) { return false; };		// Switch to given weapon if has ammo (false if failed)
 	virtual C_BaseCombatWeapon *GetLastWeapon( void ) { return m_hLastWeapon.Get(); }
 	void						ResetAutoaim( void );
 	virtual void 				SelectItem( const char *pstr, int iSubType = 0 );
