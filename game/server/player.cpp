@@ -1567,6 +1567,7 @@ bool CBasePlayer::SetObserverMode(int mode )
 			break;
 			
 		case OBS_MODE_ROAMING :
+		case OBS_MODE_TVCAM :
 			SetFOV( this, 0 );	// Reset FOV
 			SetObserverTarget( m_hObserverTarget );
 			SetViewOffset( vec3_origin );
@@ -1647,7 +1648,7 @@ void CBasePlayer::CheckObserverSettings()
 
 	// check if our spectating target is still a valid one
 	
-	if (  m_iObserverMode == OBS_MODE_IN_EYE || m_iObserverMode == OBS_MODE_CHASE || m_iObserverMode == OBS_MODE_FIXED )
+	if (  m_iObserverMode == OBS_MODE_IN_EYE || m_iObserverMode == OBS_MODE_CHASE || m_iObserverMode == OBS_MODE_FIXED || m_iObserverMode == OBS_MODE_TVCAM )
 	{
 		ValidateCurrentObserverTarget();
 				
@@ -1868,6 +1869,8 @@ bool CBasePlayer::SetObserverTarget(CBaseEntity *target)
 	return true;
 }
 
+#include "ball.h"
+
 bool CBasePlayer::IsValidObserverTarget(CBaseEntity * target)
 {
 	if ( target == NULL )
@@ -1875,10 +1878,15 @@ bool CBasePlayer::IsValidObserverTarget(CBaseEntity * target)
 
 	// MOD AUTHORS: Add checks on target here or in derived method
 
-	if ( !target->IsPlayer() )	// only track players
-		return false;
+	//if ( !target->IsPlayer() )	// only track players
+	//	return false;
 
 	CBasePlayer * player = ToBasePlayer( target );
+
+	if (!player)
+	{
+		return (CBall *)target;
+	}
 
 	/* Don't spec observers or players who haven't picked a class yet
  	if ( player->IsObserver() )
@@ -1935,13 +1943,15 @@ int CBasePlayer::GetNextObserverSearchStartPoint( bool bReverse )
 	}
 
 	startIndex += iDir;
-	if (startIndex > gpGlobals->maxClients)
-		startIndex = 1;
-	else if (startIndex < 1)
-		startIndex = gpGlobals->maxClients;
+	//if (startIndex > gpGlobals->maxClients)
+	//	startIndex = 1;
+	//else if (startIndex < 1)
+	//	startIndex = gpGlobals->maxClients;
 
 	return startIndex;
 }
+
+#include "ball.h"
 
 CBaseEntity * CBasePlayer::FindNextObserverTarget(bool bReverse)
 {
@@ -1956,30 +1966,47 @@ CBaseEntity * CBasePlayer::FindNextObserverTarget(bool bReverse)
 	m_flNextFollowTime = gpGlobals->time + 0.25;
 	*/	// TODO move outside this function
 
-	int startIndex = GetNextObserverSearchStartPoint( bReverse );
-	
-	int	currentIndex = startIndex;
+	int startIndex;// = GetNextObserverSearchStartPoint( bReverse );
+
+	if ( m_hObserverTarget )
+	{
+		if (m_hObserverTarget->entindex() == GetBall()->entindex())
+			startIndex = 0;
+		else
+			// start using last followed player
+			startIndex = m_hObserverTarget->entindex();	
+	}
+	else
+	{
+		return GetBall();
+	}
+
 	int iDir = bReverse ? -1 : 1; 
+	int	currentIndex = startIndex;
 	
 	do
 	{
-		CBaseEntity * nextTarget = UTIL_PlayerByIndex( currentIndex );
+		currentIndex += iDir;
+
+		if (currentIndex > gpGlobals->maxClients)
+			currentIndex = 0;
+		else if (currentIndex < 0)
+			currentIndex = gpGlobals->maxClients;
+
+		CBaseEntity *nextTarget;
+		
+		if (currentIndex == 0)
+			nextTarget = GetBall();
+		else
+			nextTarget = UTIL_PlayerByIndex( currentIndex );
 
 		if ( IsValidObserverTarget( nextTarget ) )
 		{
 			return nextTarget;	// found next valid player
 		}
 
-		currentIndex += iDir;
-
-		// Loop through the clients
-  		if (currentIndex > gpGlobals->maxClients)
-  			currentIndex = 1;
-		else if (currentIndex < 1)
-  			currentIndex = gpGlobals->maxClients;
-
 	} while ( currentIndex != startIndex );
-		
+	
 	return NULL;
 }
 

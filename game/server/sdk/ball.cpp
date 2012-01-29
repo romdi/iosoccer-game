@@ -379,12 +379,11 @@ void CBall::SendMatchEvent(match_event_t matchEvent, CSDKPlayer *pPlayer)
 	if (!pPlayer)
 		pPlayer = m_pPl;
 
-	if (pPlayer)
-	{
-		UTIL_LogPrintf( "\"%s<%d><%s><%s>\" triggered \"%d\"\n",
-			pPlayer->GetPlayerName(), pPlayer->GetUserID(),
-			pPlayer->GetNetworkIDString(), pPlayer->GetTeam()->GetName(), matchEvent);
-	}
+	Assert(pPlayer);
+
+	UTIL_LogPrintf( "\"%s<%d><%s><%s>\" triggered \"%d\"\n",
+		pPlayer->GetPlayerName(), pPlayer->GetUserID(),
+		pPlayer->GetNetworkIDString(), pPlayer->GetTeam()->GetName(), matchEvent);
 
 	CReliableBroadcastRecipientFilter filter;
 	UserMessageBegin(filter, "MatchEvent");
@@ -1151,6 +1150,7 @@ void CBall::SetBallCurve(bool bReset)
 	float spin = min(1, m_vVel.Length() / sv_ball_maxspin.GetInt()) * sv_ball_spin.GetFloat();
 
 	m_vAngImp = WorldToLocalRotation(SetupMatrixAngles(m_aAng), m_vRot, spin);
+	m_vAngImp += AngularImpulse(g_IOSRand.RandomInt(0, 100), g_IOSRand.RandomInt(0, 100), g_IOSRand.RandomInt(0, 100));
 }
 
 void CBall::BallThink( void	)

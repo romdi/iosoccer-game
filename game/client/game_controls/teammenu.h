@@ -14,6 +14,7 @@
 #include <vgui_controls/Frame.h>
 #include <vgui_controls/Button.h>
 #include <vgui_bitmapbutton.h>
+#include <vgui_controls/ImagePanel.h>
 
 #include <game/client/iviewport.h>
 
@@ -30,6 +31,17 @@ namespace vgui
 class TeamFortressViewport;
 
 using namespace vgui;
+
+struct PosPanel_t
+{
+	Panel *pPosPanel;
+	ImagePanel *pPlayerImage; 
+	Label *pPosInfo;
+	Button *pPlayerName;
+	Label *pClubName;
+	Label *pPosName;
+	Label *pPosNumber;
+};
 
 //-----------------------------------------------------------------------------
 // Purpose: Displays the team menu
@@ -51,8 +63,6 @@ public:
 	virtual bool NeedsUpdate( void );
 	virtual bool HasInputElements( void ) { return true; }
 	virtual void ShowPanel( bool bShow );
-	//virtual void PaintBackground();
-	//virtual void PaintBorder();
 
 	// both vgui::Frame and IViewPortPanel define these, so explicitly define them here as passthroughs to vgui
 	vgui::VPANEL GetVPanel( void ) { return BaseClass::GetVPanel(); }
@@ -75,26 +85,19 @@ protected:
 	virtual void ApplySchemeSettings(vgui::IScheme *pScheme);
 	virtual void OnKeyCodePressed(vgui::KeyCode code);
 
-	// helper functions
-	virtual void SetLabelText(const char *textEntryName, const char *text);
-	
-	// command callbacks
-	// MESSAGE_FUNC_INT( OnTeamButton, "TeamButton", team );
-
 	IViewPort	*m_pViewPort;
 //	int m_iNumTeams;
 	ButtonCode_t m_iJumpKey;
 	ButtonCode_t m_iScoreBoardKey;
 
 	//CUtlVectorFixed<CBitmapButton *, 11> m_pTeamButtons;
-	CBitmapButton *m_pPosButtons[2][11];
-	Label *m_pPosInfos[2][11];
-	Label *m_pPlayerNames[2][11];
-	Label *m_pPosNames[2][11];
-	Label *m_pPosNumbers[2][11];
+	PosPanel_t *m_pPosPanels[2][11];
 
 	Button *m_pSpectateButton;
 	Button *m_pTabButtons[2];
+	Button *m_pToggleStats;
+
+	bool m_bShowStats;
 
 	int m_nActiveTeam;
 

@@ -32,6 +32,8 @@
 #include <stdio.h>
 #include "byteswap.h"
 
+#include "c_ball.h"
+
 #include "sdk_backgroundpanel.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -62,6 +64,8 @@ CTeamMenu::CTeamMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_TEAM )
 	SetPaintBorderEnabled(false);
 
 	m_pSpectateButton = new Button(this, "SpectateButton", "Spectate");
+	m_pToggleStats = new Button(this, "Stats", "Show Stats");
+	m_bShowStats = false;
 
 	for (int i = 0; i < 2; i++)
 	{
@@ -72,36 +76,18 @@ CTeamMenu::CTeamMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_TEAM )
 
 		for (int j = 0; j < 11; j++)
 		{
-			m_pPosButtons[i][j] = new CBitmapButton(m_pTeamPanels[i], "Button", "");
-			m_pPosInfos[i][j] = new Label(m_pPosButtons[i][j], "Info", "");
-			m_pPosNumbers[i][j] = new Label(m_pPosButtons[i][j], "Number", "");
-			m_pPlayerNames[i][j] = new Label(m_pPosButtons[i][j], "Name", "");
-			m_pPosNames[i][j] = new Label(m_pPosButtons[i][j], "Name", "");
+			PosPanel_t *pPanel = new PosPanel_t;
+			pPanel->pPosPanel = new Panel(m_pTeamPanels[i]);
+			pPanel->pPlayerImage = new ImagePanel(pPanel->pPosPanel, "Image");
+			pPanel->pPosInfo = new Label(pPanel->pPosPanel, "Label", "");
+			pPanel->pPlayerName = new Button(pPanel->pPosPanel, "Button", "");
+			pPanel->pClubName = new Label(pPanel->pPosPanel, "Label", "");
+			pPanel->pPosNumber = new Label(pPanel->pPosPanel, "Label", "");
+			pPanel->pPosName = new Label(pPanel->pPosPanel, "Label", "");
+			m_pPosPanels[i][j] = pPanel;
 		}
 	}
 }
-
-//void CTeamMenu::PaintBackground()
-//{
-//	int wide, tall;
-//	GetSize( wide, tall );
-//	int offset = 50;
-//
-//	DrawRoundedBackground(Color(150, 150, 150, 200), wide / 2 - offset, tall - 100, 0, 100 );
-//
-//	DrawRoundedBackground(Color(150, 150, 150, 200), wide / 2 - offset, tall - 100, wide / 2 + offset, 100 );
-//}
-//
-//void CTeamMenu::PaintBorder()
-//{
-//	int wide, tall;
-//	GetSize( wide, tall );
-//	int offset = 50;
-//
-//	DrawRoundedBorder(Color(100, 100, 100, 200), wide / 2 - offset, tall - 100, 0, 100 );
-//
-//	DrawRoundedBorder(Color(100, 100, 100, 200), wide / 2 - offset, tall - 100, wide / 2 + offset, 100 );
-//}
 
 #define BUTTON_WIDTH	200
 #define BUTTON_HEIGHT	120
@@ -112,6 +98,8 @@ CTeamMenu::CTeamMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_TEAM )
 #define NAME_WIDTH		BUTTON_SIZE - NUMBER_WIDTH - NUMBER_MARGIN
 #define NAME_HEIGHT		30
 #define INFO_WIDTH		20
+#define INFO_HEIGHT		30
+#define IMAGE_SIZE		60
 
 const char *g_szPosNames[32] =
 {
@@ -164,67 +152,51 @@ void CTeamMenu::PerformLayout()
 
 		for(int j = 0; j < 11; j++)
 		{
-			CBitmapButton *button = m_pPosButtons[i][j];
-			Label *info = m_pPosInfos[i][j];
-			Label *number = m_pPosNumbers[i][j];
-			Label *playername = m_pPlayerNames[i][j];
-			Label *posname = m_pPosNames[i][j];
+			PosPanel_t *pPanel = m_pPosPanels[i][j];
 
-			//button->SetContentAlignment(Label::a_center);
-			button->SetCommand(VarArgs("jointeam %d %d", i + 2, 11 - j));
-			button->AddActionSignalTarget(this);
-			button->SetPaintBackgroundEnabled(true);
-			button->SetPaintBorderEnabled(false);
-			button->SetPaintBackgroundType(2);
-			button->SetBounds(pos[j][0] * (BUTTON_WIDTH + BUTTON_MARGIN) + 20, pos[j][1] * (BUTTON_HEIGHT + 2 * BUTTON_MARGIN) + 50, BUTTON_WIDTH, BUTTON_HEIGHT);
-			button->SetCursor(dc_hand);
-			//button->SetDefaultColor(Color(), Color(0,0,0,100));
-			//button->SetArmedColor(Color(), Color(150, 150, 150, 100));
-			//button->SetDepressedColor(Color(), Color(255, 255, 255, 100));
-			button->SetButtonBorderEnabled(false);
-			color32 enabled = { 200, 200, 200, 255 };
-			color32 mouseover = { 225, 225, 255, 255 };
-			color32 pressed = { 255, 255, 255, 255 };
-			color32 disabled = { 150, 150, 150, 255 };
-			button->SetImage(CBitmapButton::BUTTON_ENABLED, "gui/shirt", enabled);
-			button->SetImage(CBitmapButton::BUTTON_ENABLED_MOUSE_OVER, "gui/shirt", mouseover);
-			button->SetImage(CBitmapButton::BUTTON_PRESSED, "gui/shirt", pressed);
-			button->SetImage(CBitmapButton::BUTTON_DISABLED, "gui/shirt", disabled);
+			pPanel->pPosPanel->SetBounds(pos[j][0] * (BUTTON_WIDTH + BUTTON_MARGIN) + 20, pos[j][1] * (BUTTON_HEIGHT + 2 * BUTTON_MARGIN) + 50, BUTTON_WIDTH, BUTTON_HEIGHT);
+			
+			pPanel->pPlayerImage->SetBounds(pPanel->pPosPanel->GetWide() / 2 - IMAGE_SIZE / 2, pPanel->pPosPanel->GetTall() / 2 - IMAGE_SIZE / 2 - 2 * NAME_HEIGHT, IMAGE_SIZE, IMAGE_SIZE);
+			pPanel->pPlayerImage->SetImage("shirt");
+			pPanel->pPlayerImage->SetShouldScaleImage(true);
 
-			info->SetBounds(0, button->GetTall() * 0.33f, INFO_WIDTH, button->GetTall() * 0.66f);
-			//info->SetPaintBackgroundEnabled(true);
-			//info->SetPaintBackgroundType(2);
-			//info->SetBgColor(Color(0, 0, 0, 255));
-			info->SetFgColor(Color(255, 255, 255, 255));
 			int possession = 10;
 			int goals = 2;
 			int assists = 3;
 			int fouls = 1;
 			int yellows = 1;
 			int reds = 1;
-			info->SetText(VarArgs("%d%%\n%d\n%d", possession, goals, assists));
-			//info->SetContentAlignment(Label::a_center);
+			pPanel->pPosInfo->SetBounds(0, INFO_HEIGHT, pPanel->pPosPanel->GetWide(), INFO_HEIGHT);
+			pPanel->pPosInfo->SetText(VarArgs("%d%%P/%dG/%dA/%dF/%dY/%dR", possession, goals, assists, fouls, yellows, reds));
+			pPanel->pPosInfo->SetContentAlignment(Label::a_center);
+			pPanel->pPosInfo->SetFont(pScheme->GetFont("IOSScorebar"));
+			pPanel->pPosInfo->SetVisible(false);
 
-			number->SetText(VarArgs("%d", 11 - j));
-			number->SetContentAlignment(Label::a_center);
-			number->SetFont(pScheme->GetFont("IOSScorebar"));
-			number->SetFgColor(Color(0, 0, 0, 255));
-			//number->SetBgColor(Color(255, 255, 255, 255));
-			//number->SetPaintBackgroundEnabled(true);
-			//number->SetPaintBackgroundType(2);
-			number->SetBounds(button->GetWide() / 2 - NUMBER_WIDTH / 2, button->GetTall() / 2 - NUMBER_HEIGHT / 2, NUMBER_WIDTH, NUMBER_HEIGHT);
+			pPanel->pPlayerName->SetBounds(0, pPanel->pPosPanel->GetTall() - 2 * NAME_HEIGHT, pPanel->pPosPanel->GetWide(), NAME_HEIGHT);
+			pPanel->pPlayerName->SetCommand(VarArgs("jointeam %d %d", i + 2, 11 - j));
+			pPanel->pPlayerName->AddActionSignalTarget(this);
+			pPanel->pPlayerName->SetPaintBackgroundEnabled(true);
+			pPanel->pPlayerName->SetPaintBorderEnabled(false);
+			pPanel->pPlayerName->SetPaintBackgroundType(2);
+			pPanel->pPlayerName->SetBgColor(Color(255, 255, 255, 200));
+			pPanel->pPlayerName->SetDefaultColor(Color(0, 0, 0, 200), Color(255, 255, 255, 200));
+			pPanel->pPlayerName->SetArmedColor(Color(50, 50, 50, 200), Color(150, 150, 150, 200));
+			pPanel->pPlayerName->SetDepressedColor(Color(100, 100, 100, 200), Color(255, 255, 255, 200));
+			pPanel->pPlayerName->SetButtonBorderEnabled(false);
+			pPanel->pPlayerName->SetContentAlignment(Label::a_center);
+			pPanel->pPlayerName->SetFont(pScheme->GetFont("IOSScorebar"));
 
-			playername->SetText(VarArgs(""));
-			playername->SetContentAlignment(Label::a_center);
-			playername->SetFont(pScheme->GetFont("IOSScorebar"));
-			playername->SetFgColor(Color(0, 0, 0, 255));	
-			playername->SetBounds(0, button->GetTall() - NAME_HEIGHT - NAME_HEIGHT / 2, button->GetWide(), NAME_HEIGHT);
+			pPanel->pPosName->SetBounds(0, pPanel->pPosPanel->GetTall() - NAME_HEIGHT, NUMBER_WIDTH, NAME_HEIGHT);
+			pPanel->pPosName->SetText(g_szPosNames[10 - j]);
+			pPanel->pPosName->SetFont(pScheme->GetFont("IOSScorebar"));
 
-			posname->SetText(g_szPosNames[10 - j]);
-			posname->SetContentAlignment(Label::a_center);
-			posname->SetFont(pScheme->GetFont("IOSScorebar"));
-			posname->SetFgColor(Color(0, 0, 0, 255));	
-			posname->SetBounds(0, NAME_HEIGHT / 2, button->GetWide(), NAME_HEIGHT);
+			pPanel->pClubName->SetBounds(0, pPanel->pPosPanel->GetTall() - NAME_HEIGHT, pPanel->pPosPanel->GetWide(), NAME_HEIGHT);
+			pPanel->pClubName->SetContentAlignment(Label::a_center);
+			pPanel->pClubName->SetFont(pScheme->GetFont("IOSScorebar"));
+
+			pPanel->pPosNumber->SetBounds(pPanel->pPosPanel->GetWide() - NUMBER_WIDTH, pPanel->pPosPanel->GetTall() - NAME_HEIGHT, NUMBER_WIDTH, NAME_HEIGHT);
+			pPanel->pPosNumber->SetText(VarArgs("%d", 11 - j));
+			pPanel->pPosNumber->SetFont(pScheme->GetFont("IOSScorebar"));
 		}
 	}
 
@@ -232,6 +204,9 @@ void CTeamMenu::PerformLayout()
 	m_pSpectateButton->SetCommand(VarArgs("jointeam %d 1", TEAM_SPECTATOR));
 	m_pSpectateButton->AddActionSignalTarget(this);
 
+	m_pToggleStats->SetBounds(100 * 4, 0, 100, 50);
+	m_pToggleStats->SetCommand("togglestats");
+	m_pToggleStats->AddActionSignalTarget(this);
 }
 
 void CTeamMenu::SetData(KeyValues *data)
@@ -300,9 +275,6 @@ void CTeamMenu::ShowPanel(bool bShow)
 			m_iScoreBoardKey = gameuifuncs->GetButtonCodeForBind( "showscores" );
 		}
 		
-		//set teamnames on join team panel buttons
-		SetLabelText("teamabutton", m_szTeamNames[0]);
-		SetLabelText("teambbutton", m_szTeamNames[1]);
 	}
 	else
 	{
@@ -333,9 +305,10 @@ void CTeamMenu::Update()
 			int pos = gr->GetTeamPosition(i);
 			if ((team == TEAM_A || team == TEAM_B) && pos >= 1 && pos <= 11)
 			{
-				CBitmapButton *button = m_pPosButtons[team - 2][11 - pos];
-				m_pPlayerNames[team - 2][11 - pos]->SetText(gr->GetPlayerName(i));
-				m_pPosButtons[team - 2][11 - pos]->SetEnabled(Q_strncmp(gr->GetPlayerName(i), "KEEPER", 6) == 0);
+				m_pPosPanels[team - 2][11 - pos]->pPlayerName->SetText(gr->GetPlayerName(i));
+				m_pPosPanels[team - 2][11 - pos]->pPlayerName->SetCursor(dc_arrow);
+				m_pPosPanels[team - 2][11 - pos]->pPlayerName->SetEnabled(Q_strncmp(gr->GetPlayerName(i), "KEEPER", 6) == 0);
+				m_pPosPanels[team - 2][11 - pos]->pClubName->SetText(gr->GetClubName(i));
 				posTaken[team - 2][11 - pos] = true;
 			}	
 		}
@@ -350,8 +323,10 @@ void CTeamMenu::Update()
 		{
 			if (!posTaken[i][j])
 			{
-				m_pPlayerNames[i][j]->SetText("");
-				m_pPosButtons[i][j]->SetEnabled(true);
+				m_pPosPanels[i][j]->pPlayerName->SetText("JOIN");
+				m_pPosPanels[i][j]->pPlayerName->SetCursor(dc_hand);
+				m_pPosPanels[i][j]->pPlayerName->SetEnabled(true);
+				m_pPosPanels[i][j]->pClubName->SetText("");
 			}
 		}
 	}
@@ -375,24 +350,25 @@ void CTeamMenu::OnCommand( char const *cmd )
 		m_nActiveTeam = 0;
 	else if (!stricmp(cmd, "showteam 1"))
 		m_nActiveTeam = 1;
+	else if (!stricmp(cmd, "togglestats"))
+	{
+		m_bShowStats = !m_bShowStats;
+		for (int i = 0; i < 2; i++)
+		{
+			for (int j = 0; j < 11; j++)
+			{
+				m_pPosPanels[i][j]->pPlayerImage->SetVisible(!m_bShowStats);
+				m_pPosPanels[i][j]->pPosInfo->SetVisible(m_bShowStats);
+			}
+		}
+		m_pToggleStats->SetText(m_bShowStats ? "Hide Stats" : "Show Stats");
+	}
 
 	//Close();
 
 	BaseClass::OnCommand(cmd);
 
 	m_flNextUpdateTime = gpGlobals->curtime;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Sets the text of a control by name
-//-----------------------------------------------------------------------------
-void CTeamMenu::SetLabelText(const char *textEntryName, const char *text)
-{
-	Label *entry = dynamic_cast<Label *>(FindChildByName(textEntryName));
-	if (entry)
-	{
-		entry->SetText(text);
-	}
 }
 
 void CTeamMenu::OnKeyCodePressed(KeyCode code)

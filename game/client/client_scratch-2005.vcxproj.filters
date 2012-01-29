@@ -1437,6 +1437,9 @@
     <ClCompile Include="sdk\c_ball.cpp">
       <Filter>Source Files\SDK</Filter>
     </ClCompile>
+    <ClCompile Include="sdk\c_ios_tvcamera.cpp">
+      <Filter>Source Files\SDK</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="achievement_notification_panel.h">
@@ -3222,6 +3225,9 @@
       <Filter>Source Files\SDK\Hud Elements</Filter>
     </ClInclude>
     <ClInclude Include="sdk\c_ball.h">
+      <Filter>Source Files\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\c_ios_tvcamera.h">
       <Filter>Source Files\SDK</Filter>
     </ClInclude>
   </ItemGroup>

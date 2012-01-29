@@ -40,6 +40,10 @@
 #include "voice_status.h"
 #include "fx.h"
 
+#include "c_ios_tvcamera.h"
+
+#include "sdk_gamerules.h"
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -1433,7 +1437,7 @@ void C_BasePlayer::CalcInEyeCamView(Vector& eyeOrigin, QAngle& eyeAngles, float&
 		return;
 	};
 
-	if ( !target->IsAlive() )
+	if ( !target->IsAlive() || !((C_BasePlayer *)target) )
 	{
 		// if dead, show from 3rd person
 		CalcChaseCamView( eyeOrigin, eyeAngles, fov );
@@ -1471,6 +1475,13 @@ void C_BasePlayer::CalcInEyeCamView(Vector& eyeOrigin, QAngle& eyeAngles, float&
 	}
 
 	engine->SetViewAngles( eyeAngles );
+}
+
+void C_BasePlayer::CalcTVCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov)
+{
+	C_TVCamera::GetInstance()->GetPositionAndAngle(eyeOrigin, eyeAngles);
+	engine->SetViewAngles(eyeAngles);
+	fov = GetFOV();
 }
 
 //-----------------------------------------------------------------------------

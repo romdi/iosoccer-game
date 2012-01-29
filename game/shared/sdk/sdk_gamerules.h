@@ -249,6 +249,9 @@ public:
 	//CNetworkVar( float, m_flMatchStartTime );
 	CNetworkVar(int, m_nAnnouncedInjuryTime);
 
+	CNetworkVector(m_vFieldMin);
+	CNetworkVector(m_vFieldMax);
+
 	int	GetMapRemainingTime(void);				//ios
 	int GetMapTime(void);
 	void StartRoundtimer(int iDuration);

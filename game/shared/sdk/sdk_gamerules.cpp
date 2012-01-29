@@ -116,6 +116,9 @@ BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 	RecvPropVector(RECVINFO(m_vCircShieldPos)),
 	RecvPropVector(RECVINFO(m_vRectShieldMin)),
 	RecvPropVector(RECVINFO(m_vRectShieldMax)),
+
+	RecvPropVector(RECVINFO(m_vFieldMin)),
+	RecvPropVector(RECVINFO(m_vFieldMax)),
 #else
 	SendPropFloat( SENDINFO( m_flStateEnterTime ), 32, SPROP_NOSCALE ),
 	//SendPropFloat( SENDINFO( m_fStart) ),
@@ -129,6 +132,9 @@ BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 	SendPropVector(SENDINFO(m_vCircShieldPos), -1, SPROP_COORD),
 	SendPropVector(SENDINFO(m_vRectShieldMin), -1, SPROP_COORD),
 	SendPropVector(SENDINFO(m_vRectShieldMax), -1, SPROP_COORD),
+
+	SendPropVector(SENDINFO(m_vFieldMin), -1, SPROP_COORD),
+	SendPropVector(SENDINFO(m_vFieldMax), -1, SPROP_COORD),
 #endif
 END_NETWORK_TABLE()
 
@@ -334,6 +340,8 @@ void CSDKGameRules::ServerActivate()
 	}*/
 
 	InitMapSpots();
+	m_vFieldMin = g_vFieldMin;
+	m_vFieldMax = g_vFieldMax;
 
 	State_Transition(MATCH_INIT);
 }
@@ -1002,6 +1010,8 @@ void CSDKGameRules::State_FIRST_HALF_Think()
 void CSDKGameRules::State_HALFTIME_Enter()
 {
 	GetBall()->SetIgnoreTriggers(true);
+	GetBall()->EmitSound("Ball.whistle");
+	GetBall()->EmitSound("Ball.cheer");
 }
 
 void CSDKGameRules::State_HALFTIME_Think()
@@ -1038,6 +1048,8 @@ void CSDKGameRules::State_SECOND_HALF_Think()
 void CSDKGameRules::State_EXTRATIME_INTERMISSION_Enter()
 {
 	GetBall()->SetIgnoreTriggers(true);
+	GetBall()->EmitSound("Ball.whistle");
+	GetBall()->EmitSound("Ball.cheer");
 }
 
 void CSDKGameRules::State_EXTRATIME_INTERMISSION_Think()
@@ -1071,6 +1083,8 @@ void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Think()
 void CSDKGameRules::State_EXTRATIME_HALFTIME_Enter()
 {
 	GetBall()->SetIgnoreTriggers(true);
+	GetBall()->EmitSound("Ball.whistle");
+	GetBall()->EmitSound("Ball.cheer");
 }
 
 void CSDKGameRules::State_EXTRATIME_HALFTIME_Think()
@@ -1106,6 +1120,8 @@ void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Think()
 void CSDKGameRules::State_PENALTIES_INTERMISSION_Enter()
 {
 	GetBall()->SetIgnoreTriggers(true);
+	GetBall()->EmitSound("Ball.whistle");
+	GetBall()->EmitSound("Ball.cheer");
 }
 
 void CSDKGameRules::State_PENALTIES_INTERMISSION_Think()
@@ -1163,12 +1179,6 @@ void CSDKGameRules::State_COOLDOWN_Enter()
 		//freezes the players
 		//pPlayer->AddFlag (FL_ATCONTROLS);
 	}
-
-	//this test doesnt show because the scoreboard is on front
-	GetBall()->SendMatchEvent(MATCH_EVENT_FINAL_WHISTLE);
-	GetBall()->EmitSound("Ball.whistle");
-	//cheer
-	GetBall()->EmitSound("Ball.cheer");
 }
 
 void CSDKGameRules::State_COOLDOWN_Think()

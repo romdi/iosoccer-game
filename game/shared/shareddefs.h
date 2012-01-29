@@ -408,11 +408,12 @@ enum {
 	OBS_MODE_IN_EYE,	// follow a player in first person view
 	OBS_MODE_CHASE,		// follow a player in third person view
 	OBS_MODE_ROAMING,	// free roaming
+	OBS_MODE_TVCAM,
 
 	NUM_OBSERVER_MODES,
 };
 
-#define LAST_PLAYER_OBSERVERMODE	OBS_MODE_ROAMING
+#define LAST_PLAYER_OBSERVERMODE	OBS_MODE_TVCAM
 
 // Force Camera Restrictions with mp_forcecamera
 enum {

@@ -1190,6 +1190,9 @@ void CBasePlayer::CalcObserverView( Vector& eyeOrigin, QAngle& eyeAngles, float&
 
 		case OBS_MODE_FREEZECAM	:	CalcFreezeCamView( eyeOrigin, eyeAngles, fov  );
 									break;
+		
+		case OBS_MODE_TVCAM		:	CalcTVCamView( eyeOrigin, eyeAngles, fov  );
+									break;
 	}
 #else
 	// on server just copy target postions, final view positions will be calculated on client
