@@ -41,6 +41,7 @@
 #include "fx.h"
 
 #include "c_ios_tvcamera.h"
+#include "c_ball.h"
 
 #include "sdk_gamerules.h"
 
@@ -1286,7 +1287,12 @@ void C_BasePlayer::CalcChaseCamView(Vector& eyeOrigin, QAngle& eyeAngles, float&
 
 	QAngle viewangles;
 
-	if ( GetObserverMode() == OBS_MODE_IN_EYE )
+	if (dynamic_cast<C_Ball *>(target))
+	{
+		viewangles = QAngle(89, 0, 0);
+		engine->SetViewAngles(viewangles);
+	}
+	else if ( GetObserverMode() == OBS_MODE_IN_EYE)
 	{
 		viewangles = target->EyeAngles();
 		engine->SetViewAngles(viewangles);

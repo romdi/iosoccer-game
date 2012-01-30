@@ -923,7 +923,8 @@ void CInput::ControllerMove( float frametime, CUserCmd *cmd )
 {
 	if ( IsPC() )
 	{
-		if ( !m_fCameraInterceptingMouse && m_fMouseActive )
+		C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
+		if ( !m_fCameraInterceptingMouse && m_fMouseActive && pPlayer->GetObserverMode() != OBS_MODE_IN_EYE && pPlayer->GetObserverMode() != OBS_MODE_TVCAM )
 		{
 			MouseMove( cmd);
 		}

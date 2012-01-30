@@ -1439,8 +1439,7 @@ void CGameMovement::FullWalkMove( )
 	}
 
 	// Set final flags.
-	if (!(player->GetFlags() & FL_REMOTECONTROLLED))
-		CategorizePosition();
+	CategorizePosition();
 
 	// Make sure velocity is valid.
 	CheckVelocity();

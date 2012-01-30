@@ -1881,12 +1881,10 @@ bool CBasePlayer::IsValidObserverTarget(CBaseEntity * target)
 	//if ( !target->IsPlayer() )	// only track players
 	//	return false;
 
-	CBasePlayer * player = ToBasePlayer( target );
+	if (dynamic_cast<CBall *>(target))
+		return true;
 
-	if (!player)
-	{
-		return (CBall *)target;
-	}
+	CBasePlayer * player = ToBasePlayer( target );
 
 	/* Don't spec observers or players who haven't picked a class yet
  	if ( player->IsObserver() )
