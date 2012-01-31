@@ -622,6 +622,7 @@ void CBall::State_KICKOFF_Think()
 
 		UpdatePossession(m_pPl);
 		m_bIsRemoteControlled = m_pPl->WalkToPosition(Vector(m_vPos.x - 30, m_vPos.y, g_flGroundZ), PLAYER_SPRINTSPEED, 5);
+		SDKGameRules()->EnableCircShield(FL_SHIELD_PLAYER, m_pPl->entindex(), 360, m_vPos);
 
 		for (int i = 1; i <= gpGlobals->maxClients; i++) 
 		{
@@ -729,12 +730,16 @@ void CBall::State_THROWIN_Think()
 			m_vVel = m_pPl->EyeDirection3D() * (250 + 500 * GetPowershotModifier() * GetPitchModifier());
 		}
 
+		Touched(m_pPl, true);
 		m_pPl->m_flNextShot = gpGlobals->curtime + SHOT_DELAY;
 		m_pPl->m_HoldAnimTime = gpGlobals->curtime + 1;
 		m_pPl->SetAnimation(PLAYER_THROW);
 		m_pPl->DoAnimationEvent(PLAYERANIMEVENT_THROW);
 
-		State_Transition(BALL_NORMAL);
+		if (Sign(m_vVel.x) == Sign((m_vPos - g_vKickOffSpot).x))
+			State_Transition(BALL_THROWIN, 3);
+		else
+			State_Transition(BALL_NORMAL);
 	}
 	else
 	{

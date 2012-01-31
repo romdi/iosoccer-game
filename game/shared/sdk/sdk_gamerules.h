@@ -69,6 +69,15 @@ enum match_state_t
 	MATCH_END
 };
 
+enum ball_shield_type_t
+{
+	SHIELD_NONE = -1,
+	SHIELD_DYNAMIC = 0,
+	SHIELD_GOALKICK,
+	SHIELD_KICKOFF,
+	SHIELD_PENALTY
+};
+
 #define FL_SHIELD_CIRC			(1<<0)
 #define FL_SHIELD_RECT			(1<<1)
 #define FL_SHIELD_TEAM			(1<<2)

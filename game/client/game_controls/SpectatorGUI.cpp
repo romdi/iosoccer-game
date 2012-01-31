@@ -126,6 +126,8 @@ CSpectatorMenu::CSpectatorMenu( IViewPort *pViewPort ) : Frame( NULL, PANEL_SPEC
 	// create view mode menu
 	menu = new CommandMenu(m_pViewOptions, "spectatormodes", gViewPortInterface);
 	menu->LoadFromFile("Resource/spectatormodes.res");
+	menu->AddMenuItem("Foobar", "spec_mode 1", this);
+	//MenuItem *m = new MenuItem("Foobar", "spec_mode 1", this);
 	m_pViewOptions->SetMenu( menu );	// attach menu to combo box
 
 	LoadControlSettings("Resource/UI/BottomSpectator.res");
@@ -312,7 +314,7 @@ void CSpectatorMenu::Update( void )
 		if ( gr->IsLocalPlayer( iPlayerIndex ) )
 			continue;
 
-		if ( !gr->IsAlive( iPlayerIndex ) )
+		if ( gr->GetTeam( iPlayerIndex ) == TEAM_SPECTATOR )
 			continue;
 
 		wchar_t playerText[ 80 ], playerName[ 64 ], *team, teamText[ 64 ];

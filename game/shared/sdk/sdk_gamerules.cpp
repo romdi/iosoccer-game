@@ -396,7 +396,7 @@ void CSDKGameRules::Think()
 
 	GetVoiceGameMgr()->Update( gpGlobals->frametime );
 
-	Bot_RunAll();	//ios
+	//Bot_RunAll();	//ios
 
 	//IOS hold on intermission
 	if (m_flIntermissionEndTime > gpGlobals->curtime)

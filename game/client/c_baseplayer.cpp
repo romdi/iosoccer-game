@@ -1287,7 +1287,7 @@ void C_BasePlayer::CalcChaseCamView(Vector& eyeOrigin, QAngle& eyeAngles, float&
 
 	QAngle viewangles;
 
-	if (dynamic_cast<C_Ball *>(target))
+	if (GetObserverMode() == OBS_MODE_IN_EYE && dynamic_cast<C_Ball *>(target))
 	{
 		viewangles = QAngle(89, 0, 0);
 		engine->SetViewAngles(viewangles);

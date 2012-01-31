@@ -50,7 +50,7 @@ void CFieldBot::BotRunToBall(Vector ballDir)
 	if (pClosest != this)
 		return;
 
-	m_cmd.forwardmove = max(0, ballDir.Length2D() + 10);
+	m_cmd.forwardmove = PLAYER_SPRINTSPEED;
 }
 
 void CFieldBot::BotFetchAndPass()
