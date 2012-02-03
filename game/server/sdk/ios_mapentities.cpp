@@ -26,7 +26,17 @@ public:
 			BallStartTouch(pBall);
 		}
 	};
+	void EndTouch(CBaseEntity *pOther)
+	{
+		CBall *pBall = dynamic_cast<CBall *>(pOther);
+		if (pBall && !pBall->GetIgnoreTriggers())
+		{
+			m_OnTrigger.FireOutput(pOther, this);
+			BallEndTouch(pBall);
+		}
+	};
 	virtual void BallStartTouch(CBall *pBall) = 0;
+	virtual void BallEndTouch(CBall *pBall) {};
 };
 
 BEGIN_DATADESC( CBallTrigger )
@@ -104,7 +114,14 @@ public:
 	int	m_nTeam;
 	DECLARE_DATADESC();
 
-	void BallStartTouch(CBall *pBall) {};
+	void BallStartTouch(CBall *pBall)
+	{
+		pBall->TriggerPenaltyBox(m_nTeam == 1 ? TEAM_A : TEAM_B);
+	};
+	void BallEndTouch(CBall *pBall)
+	{
+		pBall->TriggerPenaltyBox(TEAM_INVALID);
+	};
 };
 
 BEGIN_DATADESC( CTriggerPenaltyBox )

@@ -126,8 +126,6 @@ protected:
 	// Player is a Observer chasing another player
 	void			FullObserverMove( void );
 
-	void			FullRemoteControlledMove();
-
 	// The basic solid body movement clip that slides along multiple planes
 	virtual int		TryPlayerMove( Vector *pFirstDest=NULL, trace_t *pFirstTrace=NULL );
 	

@@ -966,27 +966,7 @@ void CSDKGameRules::State_WARMUP_Think()
 
 void CSDKGameRules::State_FIRST_HALF_Enter()
 {
-	//clear all the players data
-	for ( int i = 1; i <= gpGlobals->maxClients; i++ )	
-	{
-		CSDKPlayer *plr = (CSDKPlayer*)UTIL_PlayerByIndex( i );
-
-		if (!plr)
-			continue;
-
-		plr->ResetMatchStats();
-
-		if (plr->m_PlayerAnim==PLAYER_THROWIN)
-			plr->DoAnimationEvent( PLAYERANIMEVENT_KICK );		//weird throwin bug
-
-		//get rid of any stationary anim states
-		plr->RemoveFlag(FL_ATCONTROLS);
-		plr->m_HoldAnimTime = 0.0f;
-		plr->SetAnimation( PLAYER_IDLE );
-	}
-
 	//GetBall()->CreateVPhysics();
-	GetBall()->SetIgnoreTriggers(false);
 	GetBall()->SetRegularKickOff(true);
 	m_nKickOffTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
 	GetBall()->State_Transition(BALL_KICKOFF);

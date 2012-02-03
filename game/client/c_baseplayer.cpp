@@ -1012,12 +1012,6 @@ bool C_BasePlayer::CreateMove( float flInputSampleTime, CUserCmd *pCmd )
 		m_bWasFrozen = false;
 	}
 
-	if (GetFlags() & FL_REMOTECONTROLLED)
-	{
-		pCmd->viewangles = pl.v_angle;
-		engine->SetViewAngles( pCmd->viewangles );		
-	}
-
 	m_vecOldViewAngles = pCmd->viewangles;
 	
 	// Check to see if we're in vgui input mode...
@@ -1845,7 +1839,7 @@ bool C_BasePlayer::ShouldPredict( void )
 {
 #if !defined( NO_ENTITY_PREDICTION )
 	// Do this before calling into baseclass so prediction data block gets allocated
-	if ( IsLocalPlayer() && !(GetFlags() & FL_REMOTECONTROLLED) )
+	if ( IsLocalPlayer() )
 	{
 		return true;
 	}

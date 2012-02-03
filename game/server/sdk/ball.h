@@ -43,7 +43,8 @@ enum body_part_t
 	BODY_NONE = -1,
 	BODY_FEET = 0,
 	BODY_CHEST,
-	BODY_HEAD
+	BODY_HEAD,
+	BODY_HANDS
 };
 
 enum foul_type_t
@@ -60,7 +61,7 @@ enum foul_type_t
 #define FL_POS_MIDFIELDER				(1<<2)
 #define FL_POS_ATTACKER					(1<<3)
 #define FL_POS_FIELD					(FL_POS_DEFENDER | FL_POS_MIDFIELDER | FL_POS_ATTACKER)
-#define FL_POS_ALL						(FL_POS_KEEPER | FL_POS_FIELD)
+#define FL_POS_ANY						(FL_POS_KEEPER | FL_POS_FIELD)
 
 #define	PS_OFF							0
 #define	PS_BESTOFFIVE					1
@@ -146,6 +147,7 @@ public:
 	void			TriggerGoal(int team);
 	void			TriggerGoalLine(int team);
 	void			TriggerSideline();
+	void			TriggerPenaltyBox(int team);
 	bool			GetIgnoreTriggers() { return m_bIgnoreTriggers; };
 	void			SetIgnoreTriggers(bool ignoreTriggers) { m_bIgnoreTriggers = ignoreTriggers; };
 	void			SetRegularKickOff(bool regular) { m_bRegularKickOff = regular; };
@@ -153,13 +155,13 @@ public:
 	void			State_Transition( ball_state_t newState, float delay = 0.0f );
 
 private:
-	void State_NORMAL_Enter();		void State_NORMAL_Think();		void State_NORMAL_Leave();
-	void State_KICKOFF_Enter();		void State_KICKOFF_Think();		void State_KICKOFF_Leave();
-	void State_THROWIN_Enter();		void State_THROWIN_Think();		void State_THROWIN_Leave();
-	void State_GOALKICK_Enter();	void State_GOALKICK_Think();	void State_GOALKICK_Leave();
-	void State_CORNER_Enter();		void State_CORNER_Think();		void State_CORNER_Leave();
-	void State_GOAL_Enter();		void State_GOAL_Think();		void State_GOAL_Leave();
-	void State_FREEKICK_Enter();	void State_FREEKICK_Think();	void State_FREEKICK_Leave();
+	void State_NORMAL_Enter();		void State_NORMAL_Think();
+	void State_KICKOFF_Enter();		void State_KICKOFF_Think();
+	void State_THROWIN_Enter();		void State_THROWIN_Think();
+	void State_GOALKICK_Enter();	void State_GOALKICK_Think();
+	void State_CORNER_Enter();		void State_CORNER_Think();
+	void State_GOAL_Enter();		void State_GOAL_Think();
+	void State_FREEKICK_Enter();	void State_FREEKICK_Think();
 
 	void State_PreThink();
 	void State_PostThink();
@@ -175,19 +177,23 @@ private:
 	CBallStateInfo	*m_pCurStateInfo;
 	
 	void			SetPos(const Vector &pos);
+	void			SetVel(const Vector &vel);
+	void			SetRot(const AngularImpulse &rot = NULL);
+	void			SetPlPos(const Vector &pos);
+	void			SetPlAng(const QAngle &ang);
 	void			MarkOffsidePlayers();
 	void			UnmarkOffsidePlayers();
 	void			EnableOffsideLine(float yPos);
 	void			DisableOffsideLine();
 
-	CSDKPlayer		*FindNearestPlayer(int team = TEAM_INVALID, int posFlags = FL_POS_FIELD);
-	CSDKPlayer		*FindEligibleCarrier();
+	CSDKPlayer		*FindNearestPlayer(int team = TEAM_INVALID, int posFlags = FL_POS_FIELD, bool checkIfShooting = false);
+	bool			IsPlayerCloseEnough(CSDKPlayer *pPl);
 	bool			DoBodyPartAction();
 	bool			DoGroundShot();
 	bool			DoVolleyShot();
 	bool			DoChestDrop();
 	bool			DoHeader();
-	void			SetBallCurve(bool bReset);
+	void			SetBallCurve();
 	float			GetPitchModifier();
 	float			GetPowershotModifier();
 	void			UpdateCarrier();
@@ -202,7 +208,6 @@ private:
 
 	IPhysicsObject	*m_pPhys;
 	float			m_flPhysRadius;
-	bool			m_bFreeze;
 	Vector			m_vTriggerTouchPos;
 	
 	CSDKPlayer		*m_pPl;				  // Current player for state
@@ -212,7 +217,6 @@ private:
 	int				m_nPlTeam;
 	int				m_nPlPos;
 	bool			m_bIsPowershot;
-	bool			m_bIsRemoteControlled;
 	body_part_t		m_eBodyPart;
 
 	CSDKPlayer		*m_pFoulingPl;
@@ -221,7 +225,7 @@ private:
 
 	Vector			m_vPos, m_vVel;
 	QAngle			m_aAng;
-	AngularImpulse	m_vAngImp;
+	AngularImpulse	m_vRot;
 	
 	CUtlVector<BallHistory>	m_History;
 	bool			m_bDoReplay;
@@ -229,7 +233,7 @@ private:
 
 	int				m_team;				  //team the ball can be kicked	by (during a corner	etc) (0=any)
 	int				m_side;				  //side of	the	pitch the corner/goalkick should be	taken from
-	int				m_BallInPenaltyBox;	 //-1 =	not	in box,	0,1	= teams	box
+	int				m_nBallInPenaltyBox;	 //-1 =	not	in box,	0,1	= teams	box
 	int				m_FoulInPenaltyBox;	 //-1 =	not	in box,	0,1	= teams	box - recorded when foul occurs
 
 	bool			m_bIgnoreTriggers;
