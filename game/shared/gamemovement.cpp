@@ -37,8 +37,10 @@ extern IFileSystem *filesystem;
 
 #ifdef CLIENT_DLL
 	#include "c_sdk_player.h"
+	#include "c_team.h"
 #else
 	#include "sdk_player.h"
+	#include "team.h"
 #endif
 
 // tickcount currently isn't set during prediction, although gpGlobals->curtime and
@@ -738,8 +740,7 @@ void CGameMovement::CheckParameters( void )
 		}
 	}
 
-	if ( player->GetFlags() & FL_FROZEN ||
-		 player->GetFlags() & FL_ONTRAIN )
+	if ( player->GetFlags() & FL_FROZEN )
 	{
 		mv->m_flForwardMove = 0;
 		mv->m_flSideMove    = 0;
@@ -792,17 +793,11 @@ void CGameMovement::ReduceTimers( void )
 		//gain some back		
 		if ( fl2DVelocitySquared <= 0 )
 		{
-			flStamina += 20 * gpGlobals->frametime;
-		}
-		else if ( ( pPl->GetFlags() & FL_ONGROUND ) && 
-					( mv->m_nButtons & IN_DUCK ) &&
-					( pPl->GetFlags() & FL_DUCKING ) )
-		{
-			flStamina += 50 * gpGlobals->frametime;
+			flStamina += 30 * gpGlobals->frametime;
 		}
 		else
 		{
-			flStamina += 10 * gpGlobals->frametime;
+			flStamina += 15 * gpGlobals->frametime;
 		}
 
 		pPl->m_Shared.SetStamina( flStamina );	
@@ -2456,7 +2451,19 @@ void CGameMovement::PlayerMove( void )
 			break;
 
 		case MOVETYPE_NOCLIP:
-			FullNoClipMove( sv_noclipspeed.GetFloat(), sv_noclipaccelerate.GetFloat() );
+			{
+				CSDKPlayer *pPl = ToSDKPlayer(player);
+				if (pPl->GetFlags() & FL_REMOTECONTROLLED)
+				{
+					#ifdef GAME_DLL
+					MoveToTargetPos();
+					#endif
+				}
+				else
+				{
+					FullNoClipMove( sv_noclipspeed.GetFloat(), sv_noclipaccelerate.GetFloat() );
+				}
+			}
 			break;
 
 		case MOVETYPE_WALK:
@@ -2473,6 +2480,47 @@ void CGameMovement::PlayerMove( void )
 	}
 }
 
+#ifdef GAME_DLL
+
+void CGameMovement::MoveToTargetPos()
+{
+	CSDKPlayer *pPl = ToSDKPlayer(player);
+	if (pPl->m_bIsAtTargetPos)
+		return;
+
+	if (mv->GetAbsOrigin() == pPl->m_vTargetPos)
+	{
+		mv->m_vecVelocity = vec3_origin;
+		pPl->m_bIsAtTargetPos = true;
+		if (!pPl->m_bHoldAtTargetPos)
+		{
+			pPl->RemoveFlag(FL_REMOTECONTROLLED);
+			pPl->SetMoveType(MOVETYPE_WALK);
+		}
+		return;
+	}
+
+	Vector dir = pPl->m_vTargetPos - mv->GetAbsOrigin();
+	dir.z = 0;
+
+	VectorAngles(dir, mv->m_vecAbsViewAngles);
+	//mv->m_flForwardMove = PLAYER_RUNSPEED;
+	float distToTarget = dir.Length2D();
+	dir.NormalizeInPlace();
+	float wishDist = PLAYER_SPRINTSPEED * gpGlobals->frametime;
+	mv->m_vecVelocity = dir * PLAYER_SPRINTSPEED;
+	Vector pos;
+
+	if (wishDist < distToTarget)
+		pos = mv->GetAbsOrigin() + mv->m_vecVelocity * gpGlobals->frametime;
+	else
+		pos = pPl->m_vTargetPos;
+
+	mv->SetAbsOrigin(Vector(pos.x, pos.y, SDKGameRules()->m_vKickOff.GetZ()));
+}
+
+#endif
+
 #ifdef CLIENT_DLL
 	#include "c_ball.h"
 	#define CBall C_Ball
@@ -2485,137 +2533,85 @@ void CGameMovement::CheckBallShield(Vector oldPos)
 	CSDKPlayer *pPl = ToSDKPlayer(player);
 	CBall *pBall = GetBall();
 
-	if (SDKGameRules()->m_nShieldType & (FL_SHIELD_CIRC | FL_SHIELD_RECT))
+	bool stopPlayer = false;
+	Vector pos = mv->GetAbsOrigin();
+
+	if (SDKGameRules()->m_nShieldType != SHIELD_NONE)
 	{
-		bool playerIsAllowed = false;
-
-		if (SDKGameRules()->m_nShieldType & FL_SHIELD_TEAM && SDKGameRules()->m_nShieldTarget & player->GetTeamNumber())
-			playerIsAllowed = true;
-
-		if (SDKGameRules()->m_nShieldType & FL_SHIELD_PLAYER && SDKGameRules()->m_nShieldTarget & (1 << (player->entindex() - 1)))
-			playerIsAllowed = true;
-
-		//Vector newVel = mv->m_flForwardMove * m_vecForward + mv->m_flSideMove * m_vecRight;
-		//Vector vel = mv->m_vecVelocity.Length2D() > newVel.Length2D() ? mv->m_vecVelocity : newVel;
-		//vel.z = 0;
-		//vel.NormalizeInPlace();
-
-		//if (vel.Length2D() == 0)
-		//	return false;
-
-		bool rectBlock = false;
-		bool circBlock = false;
-		bool isInRect = false;
-		bool isInCirc = false;
-		float threshold = 2 * (playerIsAllowed ? -VEC_HULL_MAX.x : VEC_HULL_MAX.x);
-		Vector newPos = mv->GetAbsOrigin();
-
-		if (SDKGameRules()->m_nShieldType & FL_SHIELD_RECT)
+		float threshold = 2 * (pPl->GetFlags() & FL_SHIELD_KEEP_IN ? -VEC_HULL_MAX.x : VEC_HULL_MAX.x);
+		
+		if (SDKGameRules()->m_nShieldType == SHIELD_CIRCLE || SDKGameRules()->m_nShieldType == SHIELD_KICKOFF)
 		{
-			Vector min = SDKGameRules()->m_vRectShieldMin;
+			float radius = CIRCLE_SHIELD_RADIUS + threshold;
+			Vector dir = pos - SDKGameRules()->m_vShieldPos;
+			dir.z = 0;
+			if (pPl->GetFlags() & FL_SHIELD_KEEP_OUT && dir.Length2D() < radius || pPl->GetFlags() & FL_SHIELD_KEEP_IN && dir.Length2D() > radius)
+			{
+				dir.NormalizeInPlace();
+				pos = SDKGameRules()->m_vShieldPos + dir * radius;
+				stopPlayer = true;
+			}
+			if (SDKGameRules()->m_nShieldType == SHIELD_KICKOFF && pPl->GetFlags() & FL_SHIELD_KEEP_OUT)
+			{
+				int forward;
+				#ifdef CLIENT_DLL
+					forward = GetPlayersTeam(pPl)->m_nForward;
+				#else
+					forward = pPl->GetTeam()->m_nForward;
+				#endif
+				float yBorder = SDKGameRules()->m_vKickOff.GetY() - abs(threshold) * forward;
+				if (Sign(pos.y - yBorder) == forward)
+				{
+					pos.y = yBorder;
+					stopPlayer = true;
+				}
+			}
+		}
+		else if (SDKGameRules()->m_nShieldType == SHIELD_GOALKICK)
+		{
+			Vector min = GetGlobalTeam(SDKGameRules()->m_nShieldSide)->m_vPenBoxMin;
+			Vector max = GetGlobalTeam(SDKGameRules()->m_nShieldSide)->m_vPenBoxMax;
+
 			min.x -= threshold;
 			min.y -= threshold;
-			Vector max = SDKGameRules()->m_vRectShieldMax;
 			max.x += threshold;
 			max.y += threshold;
-			Vector pos = mv->GetAbsOrigin();
 
 			bool isInsideBox = pos.x > min.x && pos.y > min.y && pos.x < max.x && pos.y < max.y; 
-			isInRect = isInsideBox;
 			Vector boxCenter = (min + max) / 2;
 
-			if (!playerIsAllowed && isInsideBox)
+			if (pPl->GetFlags() & FL_SHIELD_KEEP_OUT && isInsideBox)
 			{
-				newPos = mv->GetAbsOrigin();
+				if (pos.x > min.x && oldPos.x <= min.x && pos.x < boxCenter.x)
+					pos.x = min.x;
+				else if (pos.x < max.x && oldPos.x >= max.x && pos.x > boxCenter.x)
+					pos.x = max.x;
 
-				if (newPos.x > min.x && oldPos.x <= min.x && newPos.x < boxCenter.x)
-					newPos.x = min.x;
-				else if (newPos.x < max.x && oldPos.x >= max.x && newPos.x > boxCenter.x)
-					newPos.x = max.x;
+				if (pos.y > min.y && oldPos.y <= min.y && pos.y < boxCenter.y)
+					pos.y = min.y;
+				else if (pos.y < max.y && oldPos.y >= max.y && pos.y > boxCenter.y)
+					pos.y = max.y;
 
-				if (newPos.y > min.y && oldPos.y <= min.y && newPos.y < boxCenter.y)
-					newPos.y = min.y;
-				else if (newPos.y < max.y && oldPos.y >= max.y && newPos.y > boxCenter.y)
-					newPos.y = max.y;
-
-				rectBlock = true;
+				stopPlayer = true;
 			}
-			else if (playerIsAllowed && !isInsideBox)
+			else if (pPl->GetFlags() & FL_SHIELD_KEEP_IN && !isInsideBox)
 			{
-				newPos = mv->GetAbsOrigin();
+				if (pos.x < min.x)
+					pos.x = min.x;
+				else if (pos.x > max.x)
+					pos.x = max.x;
 
-				if (newPos.x < min.x)
-					newPos.x = min.x;
-				else if (newPos.x > max.x)
-					newPos.x = max.x;
+				if (pos.y < min.y)
+					pos.y = min.y;
+				else if (pos.y > max.y)
+					pos.y = max.y;
 
-				if (newPos.y < min.y)
-					newPos.y = min.y;
-				else if (newPos.y > max.y)
-					newPos.y = max.y;
-
-				rectBlock = true;
+				stopPlayer = true;
 			}
-		}
-
-		if (SDKGameRules()->m_nShieldType & FL_SHIELD_CIRC)
-		{
-			if (!(SDKGameRules()->m_nShieldType & FL_SHIELD_RECT))
-			{
-				float radius = SDKGameRules()->m_nCircShieldRadius + threshold;
-				Vector dir = SDKGameRules()->m_vCircShieldPos - mv->GetAbsOrigin();
-				dir.z = 0;
-				if (!playerIsAllowed && dir.Length2D() < radius || playerIsAllowed && dir.Length2D() > radius)
-				{
-					dir.NormalizeInPlace();
-					newPos = SDKGameRules()->m_vCircShieldPos - dir * radius;
-					newPos.z = mv->GetAbsOrigin().z;
-					circBlock = true;
-				}
-			}
-			else
-			{
-				if (!isInRect)
-				{
-					Vector min = SDKGameRules()->m_vRectShieldMin;
-					min.x -= threshold;
-					min.y -= threshold;
-					Vector max = SDKGameRules()->m_vRectShieldMax;
-					max.x += threshold;
-					max.y += threshold;
-					Vector pos = mv->GetAbsOrigin();
-
-					bool isInsideBox = pos.x > min.x && pos.y > min.y && pos.x < max.x && pos.y < max.y; 
-					isInRect = isInsideBox;
-					Vector boxCenter = (min + max) / 2;
-
-					bool circPos = SDKGameRules()->m_vCircShieldPos[1] > boxCenter.y;
-					float yLineBox = circPos ? max.y : min.y;
-					float yLineCircle = yLineBox + (circPos ? 1 : -1) * SDKGameRules()->m_nCircShieldRadius - (max.y - min.y) / 3.0f;
-				}
-			}
-		}
-
-		if (playerIsAllowed && SDKGameRules()->m_nShieldType & FL_SHIELD_RECT && SDKGameRules()->m_nShieldType & FL_SHIELD_CIRC)
-		{
-			if (isInRect)
-			{
-				//circBlock = false;
-			}
-		}
-
-		if (circBlock || rectBlock)
-		{
-			mv->m_vecVelocity.x = 0;
-			mv->m_vecVelocity.y = 0;
-			mv->m_flForwardMove = 0;
-			mv->m_flSideMove = 0;
-			mv->SetAbsOrigin(newPos);
 		}
 	}
 
 	float threshold = 150;
-	Vector pos = mv->GetAbsOrigin();
 	Vector min = SDKGameRules()->m_vFieldMin - threshold;
 	Vector max = SDKGameRules()->m_vFieldMax + threshold;
 
@@ -2631,11 +2627,14 @@ void CGameMovement::CheckBallShield(Vector oldPos)
 		else if (pos.y > max.y)
 			pos.y = max.y;
 
+		stopPlayer = true;
+	}
+
+	if (stopPlayer)
+	{
+		mv->m_vecVelocity.x = (pos - oldPos).x * 35;
+		mv->m_vecVelocity.y = (pos - oldPos).y * 35;
 		mv->SetAbsOrigin(pos);
-		mv->m_vecVelocity.x = 0;
-		mv->m_vecVelocity.y = 0;
-		mv->m_flForwardMove = 0;
-		mv->m_flSideMove = 0;
 	}
 }
 

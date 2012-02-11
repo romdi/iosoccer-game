@@ -56,12 +56,12 @@ enum foul_type_t
 	FOUL_TIMEWASTING
 };
 
-#define FL_POS_KEEPER					(1<<0)
-#define FL_POS_DEFENDER					(1<<1)
-#define FL_POS_MIDFIELDER				(1<<2)
-#define FL_POS_ATTACKER					(1<<3)
-#define FL_POS_FIELD					(FL_POS_DEFENDER | FL_POS_MIDFIELDER | FL_POS_ATTACKER)
-#define FL_POS_ANY						(FL_POS_KEEPER | FL_POS_FIELD)
+#define FL_POS_KEEPER					1
+#define FL_POS_DEFENDER					2
+#define FL_POS_MIDFIELDER				4
+#define FL_POS_ATTACKER					8
+#define FL_POS_FIELD					16
+#define FL_POS_ANY						32
 
 #define	PS_OFF							0
 #define	PS_BESTOFFIVE					1
@@ -145,8 +145,8 @@ public:
 	bool			CreateVPhysics();
 	
 	void			TriggerGoal(int team);
-	void			TriggerGoalLine(int team);
-	void			TriggerSideline();
+	void			TriggerGoalLine(int team, float touchPosY);
+	void			TriggerSideline(float touchPosX);
 	void			TriggerPenaltyBox(int team);
 	bool			GetIgnoreTriggers() { return m_bIgnoreTriggers; };
 	void			SetIgnoreTriggers(bool ignoreTriggers) { m_bIgnoreTriggers = ignoreTriggers; };
@@ -185,6 +185,8 @@ private:
 	void			UnmarkOffsidePlayers();
 	void			EnableOffsideLine(float yPos);
 	void			DisableOffsideLine();
+
+	bool			PlayersAtTargetPos(bool holdAtTargetPos);
 
 	CSDKPlayer		*FindNearestPlayer(int team = TEAM_INVALID, int posFlags = FL_POS_FIELD, bool checkIfShooting = false);
 	bool			IsPlayerCloseEnough(CSDKPlayer *pPl);

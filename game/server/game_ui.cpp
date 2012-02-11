@@ -289,7 +289,6 @@ void CGameUI::Think( void )
 		}
 	}
 
-	pPlayer->AddFlag( FL_ONTRAIN );
 	SetNextThink( gpGlobals->curtime );
 
 	// Deactivate if they jump or press +use.

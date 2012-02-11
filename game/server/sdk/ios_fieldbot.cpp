@@ -1,30 +1,43 @@
 #include "cbase.h"
 #include "ios_fieldbot.h"
 #include "sdk_player.h"
+#include "sdk_team.h"
 
 LINK_ENTITY_TO_CLASS(ios_fieldbot, CFieldBot);
 
 void CFieldBot::BotThink()
 {
-	Vector ballDir = (m_vBallPos - GetLocalOrigin());
-	VectorAngles(ballDir, m_cmd.viewangles);
-
-	if (ballDir.Length2D() > 50)
-		BotRunToBall(ballDir);
+	if (m_vDirToBall.Length2D() > 50)
+		BotRunToBall();
 	else
 		BotShootBall();
 }
 
 void CFieldBot::BotShootBall()
 {
-	Vector shotDir = Vector(g_IOSRand.RandomFloat(-1, 1), GetOwnTeamSpots(this)->m_nForward, 0);
+	Vector shotDir;
+
+	if (GetFlags() & FL_ATCONTROLS)
+	{
+		//float xDir = g_IOSRand.RandomFloat(0.1f, 1) * Sign((SDKGameRules()->m_vKickOff - GetLocalOrigin()).x);
+		float xDir = g_IOSRand.RandomFloat(-1, 1);
+		shotDir = Vector(xDir, GetTeam()->m_nForward, 0);
+	}
+	else
+	{
+		shotDir = Vector(g_IOSRand.RandomFloat(-1, 1), GetTeam()->m_nForward, 0);
+	}
+
 	VectorAngles(shotDir, m_cmd.viewangles);
 	m_cmd.buttons |= IN_ATTACK2;
 	m_cmd.powershot_strength = 100 * g_IOSRand.RandomFloat(0, 1);
 	m_cmd.viewangles[PITCH] = -40 + 50 * (1 - m_cmd.powershot_strength / 100.0f);
+
+	if (m_vDirToBall.z > VEC_HULL_MAX.z + 10)
+		m_cmd.buttons |= IN_JUMP;
 }
 
-void CFieldBot::BotRunToBall(Vector ballDir)
+void CFieldBot::BotRunToBall()
 {
 	float closestDist = FLT_MAX;
 	CSDKPlayer *pClosest = NULL;
@@ -33,24 +46,31 @@ void CFieldBot::BotRunToBall(Vector ballDir)
 	{
 		CSDKPlayer *pPl = (CSDKPlayer *)UTIL_PlayerByIndex(i);
 
-		if (!(pPl && pPl->IsConnected() && (pPl->GetTeamNumber() == TEAM_A || pPl->GetTeamNumber() == TEAM_B)))
+		if (!CSDKPlayer::IsOnField(pPl))
 			continue;
 
 		if (pPl->GetTeamNumber() != GetTeamNumber())
 			continue;
 
 		float dist = (m_vBallPos - pPl->GetLocalOrigin()).Length2D();
-		if (dist >= closestDist)
-			continue;
-
-		closestDist = dist;
-		pClosest = pPl;
+		if (dist < closestDist)
+		{
+			closestDist = dist;
+			pClosest = pPl;
+		}
 	}
 
-	if (pClosest != this)
-		return;
-
-	m_cmd.forwardmove = PLAYER_SPRINTSPEED;
+	if (pClosest == this)
+	{
+		VectorAngles(m_vDirToBall, m_cmd.viewangles);
+		m_cmd.forwardmove = clamp(m_oldcmd.forwardmove + g_IOSRand.RandomFloat(-200, 200) * gpGlobals->frametime * 2, PLAYER_RUNSPEED, PLAYER_SPRINTSPEED);
+	}
+	else
+	{
+		m_cmd.viewangles[YAW] = m_oldcmd.viewangles[YAW] + g_IOSRand.RandomFloat(-180, 180) * gpGlobals->frametime * 4;
+		m_cmd.forwardmove = clamp(m_oldcmd.forwardmove + g_IOSRand.RandomFloat(-200, 200) * gpGlobals->frametime * 2, -PLAYER_WALKSPEED, PLAYER_WALKSPEED);
+		m_cmd.sidemove = clamp(m_oldcmd.sidemove + g_IOSRand.RandomFloat(-200, 200) * gpGlobals->frametime * 2, -PLAYER_WALKSPEED, PLAYER_WALKSPEED);
+	}
 }
 
 void CFieldBot::BotFetchAndPass()

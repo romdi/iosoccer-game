@@ -176,7 +176,15 @@ void CHudPowershotBar::Paint()
 
 	m_pStaminaPanel->SetTall(GetTall() * relStamina - 2 * PADDING);
 	m_pStaminaPanel->SetY(GetTall() - PADDING - m_pStaminaPanel->GetTall());
-	m_pStaminaPanel->SetBgColor(Color(255 * (1 - relStamina), 255 * relStamina, 0, 255));
+
+	Color bgColor;
+
+	if (pPlayer->GetFlags() & FL_REMOTECONTROLLED)
+		bgColor = Color(255, 255, 255, 255);
+	else
+		bgColor = Color(255 * (1 - relStamina), 255 * relStamina, 0, 255);
+
+	m_pStaminaPanel->SetBgColor(bgColor);
 
 	m_pPowershotIndicator->SetY(PADDING + m_pPowershotIndicator->GetTall() + (1 - cl_powershot_strength.GetInt() / 100.0f) * (HEIGHT - 2 * PADDING - 3 * m_pPowershotIndicator->GetTall()));
 }

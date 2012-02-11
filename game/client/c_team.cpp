@@ -50,6 +50,16 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_Team, DT_Team, CTeam)
 	RecvPropInt( RECVINFO(m_iScore)),
 	RecvPropInt( RECVINFO(m_iRoundsWon) ),
 	RecvPropString( RECVINFO(m_szTeamname), 0, RecvProxy_Teamname),
+
+	RecvPropVector(RECVINFO(m_vCornerLeft)),
+	RecvPropVector(RECVINFO(m_vCornerRight)),
+	RecvPropVector(RECVINFO(m_vGoalkickLeft)),
+	RecvPropVector(RECVINFO(m_vGoalkickRight)),
+	RecvPropVector(RECVINFO(m_vPenalty)),
+	RecvPropVector(RECVINFO(m_vPenBoxMin)),
+	RecvPropVector(RECVINFO(m_vPenBoxMax)),
+	RecvPropInt(RECVINFO(m_nForward)),
+	RecvPropInt(RECVINFO(m_nRight)),
 	
 	RecvPropArray2( 
 		RecvProxyArrayLength_PlayerArray,

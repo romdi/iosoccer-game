@@ -111,14 +111,12 @@ BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 	RecvPropInt( RECVINFO( m_nAnnouncedInjuryTime) ),// 0, RecvProxy_MatchState ),
 
 	RecvPropInt(RECVINFO(m_nShieldType)),
-	RecvPropInt(RECVINFO(m_nShieldTarget)),
-	RecvPropInt(RECVINFO(m_nCircShieldRadius)),
-	RecvPropVector(RECVINFO(m_vCircShieldPos)),
-	RecvPropVector(RECVINFO(m_vRectShieldMin)),
-	RecvPropVector(RECVINFO(m_vRectShieldMax)),
+	RecvPropInt(RECVINFO(m_nShieldSide)),
+	RecvPropVector(RECVINFO(m_vShieldPos)),
 
 	RecvPropVector(RECVINFO(m_vFieldMin)),
 	RecvPropVector(RECVINFO(m_vFieldMax)),
+	RecvPropVector(RECVINFO(m_vKickOff)),
 #else
 	SendPropFloat( SENDINFO( m_flStateEnterTime ), 32, SPROP_NOSCALE ),
 	//SendPropFloat( SENDINFO( m_fStart) ),
@@ -127,14 +125,12 @@ BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 	SendPropInt( SENDINFO( m_nAnnouncedInjuryTime )),
 
 	SendPropInt(SENDINFO(m_nShieldType)),
-	SendPropInt(SENDINFO(m_nShieldTarget)),
-	SendPropInt(SENDINFO(m_nCircShieldRadius)),
-	SendPropVector(SENDINFO(m_vCircShieldPos), -1, SPROP_COORD),
-	SendPropVector(SENDINFO(m_vRectShieldMin), -1, SPROP_COORD),
-	SendPropVector(SENDINFO(m_vRectShieldMax), -1, SPROP_COORD),
+	SendPropInt(SENDINFO(m_nShieldSide)),
+	SendPropVector(SENDINFO(m_vShieldPos), -1, SPROP_COORD),
 
 	SendPropVector(SENDINFO(m_vFieldMin), -1, SPROP_COORD),
 	SendPropVector(SENDINFO(m_vFieldMax), -1, SPROP_COORD),
+	SendPropVector(SENDINFO(m_vKickOff), -1, SPROP_COORD),
 #endif
 END_NETWORK_TABLE()
 
@@ -315,11 +311,8 @@ CSDKGameRules::CSDKGameRules()
 
 	m_pCurStateInfo = NULL;
 
-	m_nShieldType = 0;
-	m_nCircShieldRadius = 0;
-	m_vCircShieldPos = vec3_origin;
-	m_vRectShieldMin = vec3_origin;
-	m_vRectShieldMax = vec3_origin;
+	m_nShieldType = SHIELD_NONE;
+	m_vShieldPos = vec3_invalid;
 	m_bTeamsSwapped = false;
 	//ios m_bLevelInitialized = false;
 
@@ -339,9 +332,18 @@ void CSDKGameRules::ServerActivate()
 		m_flMatchStartTime.GetForModify() = 0.0f;
 	}*/
 
-	InitMapSpots();
-	m_vFieldMin = g_vFieldMin;
-	m_vFieldMax = g_vFieldMax;
+	InitTeams();
+
+	CBaseEntity *pEnt = gEntList.FindEntityByClassname(NULL, "info_ball_start");
+	trace_t tr;
+	UTIL_TraceLine(pEnt->GetLocalOrigin(), Vector(0, 0, -500), MASK_SOLID_BRUSHONLY, NULL, COLLISION_GROUP_NONE, &tr);
+
+	m_vKickOff = Vector(pEnt->GetLocalOrigin().x, pEnt->GetLocalOrigin().y, tr.endpos.z);
+	m_vFieldMin = Vector(FLT_MAX, FLT_MAX, m_vKickOff.GetZ());
+	m_vFieldMax = Vector(FLT_MIN, FLT_MIN, m_vKickOff.GetZ());
+
+	GetGlobalTeam(TEAM_A)->InitFieldSpots(TEAM_A);
+	GetGlobalTeam(TEAM_B)->InitFieldSpots(TEAM_B);
 
 	State_Transition(MATCH_INIT);
 }
@@ -944,7 +946,6 @@ CSDKGameRulesStateInfo* CSDKGameRules::State_LookupInfo( match_state_t state )
 
 void CSDKGameRules::State_INIT_Enter()
 {
-	InitTeams();
 }
 
 void CSDKGameRules::State_INIT_Think()
@@ -955,7 +956,7 @@ void CSDKGameRules::State_INIT_Think()
 void CSDKGameRules::State_WARMUP_Enter()
 {
 	GetBall()->SetIgnoreTriggers(true);
-	m_bTeamsSwapped = false;
+	SetTeamsSwapped(false);
 }
 
 void CSDKGameRules::State_WARMUP_Think()
@@ -1003,7 +1004,7 @@ void CSDKGameRules::State_HALFTIME_Think()
 void CSDKGameRules::State_SECOND_HALF_Enter()
 {
 	GetBall()->SetIgnoreTriggers(false);
-	m_bTeamsSwapped = true;
+	SetTeamsSwapped(true);
 	GetBall()->SetRegularKickOff(true);
 	GetBall()->State_Transition(BALL_KICKOFF);
 }
@@ -1043,7 +1044,7 @@ void CSDKGameRules::State_EXTRATIME_INTERMISSION_Think()
 void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Enter()
 {
 	GetBall()->SetIgnoreTriggers(false);
-	m_bTeamsSwapped = false;
+	SetTeamsSwapped(false);
 	GetBall()->SetRegularKickOff(true);
 	GetBall()->State_Transition(BALL_KICKOFF);
 }
@@ -1078,7 +1079,7 @@ void CSDKGameRules::State_EXTRATIME_HALFTIME_Think()
 void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Enter()
 {
 	GetBall()->SetIgnoreTriggers(false);
-	m_bTeamsSwapped = true;
+	SetTeamsSwapped(true);
 	GetBall()->State_Transition(BALL_KICKOFF);
 }
 
@@ -1315,29 +1316,53 @@ void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 	}
 }
 
-void CSDKGameRules::EnableCircShield(int type, int target, int radius, Vector pos, bool disablePrevShields /*=true*/)
+void CSDKGameRules::EnableStaticShield(int type, int side)
 {
-	if (disablePrevShields)
-		DisableShields();
-	m_nShieldType |= FL_SHIELD_CIRC | type;
-	m_nShieldTarget = 1 << (type == FL_SHIELD_TEAM ? target - TEAM_A : target - 1);
-	m_nCircShieldRadius = radius;
-	m_vCircShieldPos = pos;
+	switch (type)
+	{
+	case SHIELD_GOALKICK:
+		break;
+	case SHIELD_KICKOFF:
+		m_vShieldPos = m_vKickOff;
+		break;
+	case SHIELD_PENALTY:
+		break;
+	}
+	m_nShieldSide = side;
+	m_nShieldType = type;
 }
 
-void CSDKGameRules::EnableRectShield(int type, int target, Vector min, Vector max, bool disablePrevShields /*=true*/)
+void CSDKGameRules::EnableCircleShield(Vector pos)
 {
-	if (disablePrevShields)
-		DisableShields();
-	m_nShieldType |= FL_SHIELD_RECT | type;
-	m_nShieldTarget = 1 << (type == FL_SHIELD_TEAM ? target - TEAM_A : target - 1);
-	m_vRectShieldMin = min;
-	m_vRectShieldMax = max;
+	m_vShieldPos = Vector(pos.x, pos.y, SDKGameRules()->m_vKickOff.GetZ());
+	m_nShieldType = SHIELD_CIRCLE;
 }
 
-void CSDKGameRules::DisableShields()
+void CSDKGameRules::DisableShield()
 {
-	m_nShieldType = 0;
+	m_nShieldType = SHIELD_NONE;
+
+	for (int i = 1; i <= gpGlobals->maxClients; i++) 
+	{
+		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+
+		if (!CSDKPlayer::IsOnField(pPl))
+			continue;
+
+		pPl->RemoveFlag(FL_REMOTECONTROLLED | FL_SHIELD_KEEP_IN | FL_SHIELD_KEEP_OUT);
+		pPl->SetMoveType(MOVETYPE_WALK);
+		pPl->m_bIsAtTargetPos = true;
+	}
+}
+
+void CSDKGameRules::SetTeamsSwapped(bool swapped)
+{
+	if (swapped != m_bTeamsSwapped)
+	{
+		GetGlobalTeam(TEAM_A)->InitFieldSpots(swapped ? TEAM_B : TEAM_A);
+		GetGlobalTeam(TEAM_B)->InitFieldSpots(swapped ? TEAM_A : TEAM_B);
+		m_bTeamsSwapped = swapped;
+	}
 }
 
 #endif

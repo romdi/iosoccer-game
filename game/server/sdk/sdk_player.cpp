@@ -1170,8 +1170,8 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 
 		if (nTeam == TEAM_SPECTATOR)
 		{
-			m_TeamPos = 1;
-			ConvertSpawnToShirt();
+			//m_TeamPos = 1;
+			//ConvertSpawnToShirt();
 			//RemoveFlag(FL_FROZEN);
 			ChangeTeam(TEAM_SPECTATOR);
 		}
@@ -1226,30 +1226,23 @@ bool CSDKPlayer::TeamPosFree (int team, int pos, bool kickBotKeeper)
 		return false;
 
 	//normal check
-	for ( int i = 1; i <= gpGlobals->maxClients; i++ )	
+	for (int i = 1; i <= gpGlobals->maxClients; i++)	
 	{
-		CSDKPlayer *plr = (CSDKPlayer*)UTIL_PlayerByIndex( i );
+		CSDKPlayer *pPl = (CSDKPlayer*)UTIL_PlayerByIndex(i);
 
-		if (!plr)
+		if (!CSDKPlayer::IsOnField(pPl))
 			continue;
 
-		if (!plr->IsPlayer())
-			continue;
-
-		if ( !plr->IsConnected() )
-			continue;
-
-		//check for null,disconnected player
-		if (strlen(plr->GetPlayerName()) == 0)
-			continue;
-
-		if (plr->GetTeamNumber() == team && plr->m_TeamPos == pos)
+		if (pPl->GetTeamNumber() == team && pPl->GetTeamPosition() == pos)
 		{
-			if (!plr->IsBot() || !kickBotKeeper)
+			if (IsBot())
+				return false;
+
+			if (!pPl->IsBot() || !kickBotKeeper)
 				return false;
 
 			char kickcmd[512];
-			Q_snprintf(kickcmd, sizeof(kickcmd), "kickid %i Human player taking the spot\n", plr->GetUserID());
+			Q_snprintf(kickcmd, sizeof(kickcmd), "kickid %i Human player taking the spot\n", pPl->GetUserID());
 			engine->ServerCommand(kickcmd);
 			return true;
 		}
@@ -1649,4 +1642,95 @@ Vector CSDKPlayer::EyeDirection3D( void )
 	Vector vecForward;
 	AngleVectors( EyeAngles(), &vecForward );
 	return vecForward;
+}
+
+void CSDKPlayer::SetPosInsideShield(Vector pos, bool holdAtTargetPos)
+{
+	AddFlag(FL_REMOTECONTROLLED | FL_SHIELD_KEEP_IN);
+	m_vTargetPos = pos;
+	m_bIsAtTargetPos = false;
+	m_bHoldAtTargetPos = holdAtTargetPos;
+	SetMoveType(MOVETYPE_NOCLIP);
+}
+
+void CSDKPlayer::SetPosOutsideShield(bool holdAtTargetPos)
+{
+	AddFlag(FL_SHIELD_KEEP_OUT);
+	m_bHoldAtTargetPos = holdAtTargetPos;
+	m_bIsAtTargetPos = false;
+
+	switch (SDKGameRules()->m_nShieldType)
+	{
+	case SHIELD_CIRCLE:
+		{
+			Vector dir = GetLocalOrigin() - SDKGameRules()->m_vShieldPos;
+			dir.z = 0;
+			if (dir.Length2D() >= (CIRCLE_SHIELD_RADIUS + 2 * VEC_HULL_MAX.x))
+			{
+				m_bIsAtTargetPos = true;
+			}
+			else
+			{
+				AddFlag(FL_REMOTECONTROLLED);
+				if (dir.Length2D() == 0)
+				{
+					dir = SDKGameRules()->m_vKickOff - GetLocalOrigin();
+					dir.z = 0;
+				}
+				dir.NormalizeInPlace();
+				Vector pos = SDKGameRules()->m_vShieldPos + dir * (CIRCLE_SHIELD_RADIUS + 2 * VEC_HULL_MAX.x);
+
+				float threshold = 0;//150;
+				Vector min = SDKGameRules()->m_vFieldMin - threshold;
+				Vector max = SDKGameRules()->m_vFieldMax + threshold;
+
+				if (pos.x < min.x || pos.y < min.y || pos.x > max.x || pos.y > max.y)
+				{
+					pos = SDKGameRules()->m_vShieldPos - dir * (CIRCLE_SHIELD_RADIUS + 2 * VEC_HULL_MAX.x);
+				}
+
+				m_vTargetPos = pos;
+				m_bIsAtTargetPos = false;
+				SetMoveType(MOVETYPE_NOCLIP);
+			}
+		}
+		break;
+	case SHIELD_GOALKICK:
+		{
+			float threshold = 2 * VEC_HULL_MAX.x;
+			Vector min = GetGlobalTeam(SDKGameRules()->m_nShieldSide)->m_vPenBoxMin - threshold;
+			Vector max = GetGlobalTeam(SDKGameRules()->m_nShieldSide)->m_vPenBoxMax + threshold;
+			Vector pos = GetLocalOrigin();
+			bool isInsideBox = pos.x > min.x && pos.y > min.y && pos.x < max.x && pos.y < max.y;
+
+			if (!isInsideBox)
+			{
+				m_bIsAtTargetPos = true;
+			}
+			else
+			{
+				AddFlag(FL_REMOTECONTROLLED);
+				float targetPosY = GetGlobalTeam(SDKGameRules()->m_nShieldSide)->m_nForward == 1 ? max.y : min.y;
+				m_vTargetPos = Vector(pos.x, targetPosY, SDKGameRules()->m_vKickOff.GetZ());
+				m_bIsAtTargetPos = false;
+				SetMoveType(MOVETYPE_NOCLIP);
+			}
+		}
+		break;
+	case SHIELD_KICKOFF:
+		{
+			AddFlag(FL_REMOTECONTROLLED);
+			m_vTargetPos = GetTeam()->m_vPlayerSpawns[GetTeamPosition() - 1];
+			m_bIsAtTargetPos = false;
+			SetMoveType(MOVETYPE_NOCLIP);
+		}
+		break;
+	case SHIELD_PENALTY:
+		break;
+	}
+}
+
+bool CSDKPlayer::IsOnField(CSDKPlayer *pPl)
+{
+	return (pPl && pPl->IsConnected() && (pPl->GetTeamNumber() == TEAM_A || pPl->GetTeamNumber() == TEAM_B));
 }

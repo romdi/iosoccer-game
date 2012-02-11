@@ -34,11 +34,14 @@ public:
 	QAngle			m_SpawnAngle;
 
 	CUserCmd		m_cmd;
+	CUserCmd		m_oldcmd;
 
 	Vector			m_vBallPos;
 	Vector			m_vBallVel;
 	AngularImpulse	m_vBallAngImp;
 	QAngle			m_aBallAng;
+
+	Vector			m_vDirToBall;
 
 	void BotFrame();
 	virtual void BotThink();

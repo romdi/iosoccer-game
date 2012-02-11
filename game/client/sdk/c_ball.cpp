@@ -8,3 +8,10 @@ IMPLEMENT_CLIENTCLASS_DT( C_Ball, DT_Ball, CBall )
 	RecvPropFloat( RECVINFO( m_fMass ) ),
 	//RecvPropVector( RECVINFO_NAME( m_vecNetworkOrigin, m_vecOrigin ) ),	//ios1.1
 END_RECV_TABLE()
+
+C_Ball *g_pBall = NULL;
+
+C_Ball *GetBall()
+{
+	return g_pBall;
+}

@@ -22,6 +22,7 @@ public:
 	void BotThink();
 	void BotCenter();
 	void BotAdjustPos();
+	CSDKPlayer *FindClosestPlayerToBall();
 };
 
 #endif

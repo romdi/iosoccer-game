@@ -347,6 +347,15 @@ public:
 
 	void				SetOffside(bool offside) { m_bOffside = offside; }
 	bool				IsOffside() { return m_bOffside; }
+	
+	void				SetPosInsideShield(Vector pos, bool holdAtTargetPos);
+	void				SetPosOutsideShield(bool holdAtTargetPos);
+
+	Vector				m_vTargetPos;
+	bool				m_bIsAtTargetPos;
+	bool				m_bHoldAtTargetPos;
+
+	static bool			IsOnField(CSDKPlayer *pPl);
 
 private:
 

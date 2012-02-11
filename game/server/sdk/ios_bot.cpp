@@ -144,9 +144,19 @@ CBasePlayer *BotPutInServer( bool bFrozen, int keeper )
 	//pPlayer->RemoveAllItems( true );
 	//pPlayer->Spawn();	//spawning here then moving to goal caused the extremely strange keeper teleport bug. Im not sure why!
 
-	g_CurBotNumber++;
+	int playerCount[2] = {};
 
-	if (keeper>0)
+	for (int i = 1; i <= gpGlobals->maxClients; i++) 
+	{
+		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+
+		if (!(pPl && pPl->IsConnected() && (pPl->GetTeamNumber() == TEAM_A || pPl->GetTeamNumber() == TEAM_B)))
+			continue;
+
+		playerCount[pPl->GetTeamNumber() - TEAM_A] += 1;
+	}
+
+	if (keeper > 0)
 	{
 		pPlayer->m_TeamPos = 1;
 		pPlayer->ConvertSpawnToShirt();
@@ -157,13 +167,33 @@ CBasePlayer *BotPutInServer( bool bFrozen, int keeper )
 	}
 	else
 	{
-		pPlayer->m_TeamPos = g_IOSRand.RandomInt(2,11);
-		pPlayer->ConvertSpawnToShirt();
-		pPlayer->ChoosePlayerSkin();
-		//pPlayer->Spawn();
-		pPlayer->ChangeTeam(g_CurBotNumber % 2 == 0 ? TEAM_A : TEAM_B);
-	}
+		//int team = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
+		//int team = g_CurBotNumber % 2 == 0 ? TEAM_A : TEAM_B;
+		int team = playerCount[0] < playerCount[1] ? TEAM_A : TEAM_B;
 
+		if (playerCount[team] == 11)
+		{
+			team = team == TEAM_A ? TEAM_B : TEAM_A;
+			if (playerCount[team] == 11)
+				pPlayer->ChangeTeam(TEAM_SPECTATOR);
+		}
+		else
+		{
+			while (true)
+			{
+				int posWanted = g_IOSRand.RandomInt(2,11);
+				if (pPlayer->TeamPosFree(team, posWanted, true))
+				{
+					pPlayer->m_TeamPos = posWanted;
+					pPlayer->ConvertSpawnToShirt();
+					pPlayer->ChoosePlayerSkin();
+					pPlayer->ChangeTeam(team);
+					g_CurBotNumber += 1;
+					break;
+				}
+			}
+		}
+	}
 
 	return pPlayer;
 }
@@ -217,7 +247,7 @@ ConCommand cc_Keeper2( "sv_addkeeper2", BotAdd_Keeper2, "Add keeper2" );
 void Bot_RunAll( void )
 {
 	// Add keeper bot if spot is empty
-	if (false)
+	if (botkeepers.GetBool())
 	{
 		bool keeperSpotTaken[2] = {};
 
@@ -259,12 +289,8 @@ void Bot_RunAll( void )
 
 bool CBot::RunMimicCommand( CUserCmd& cmd )
 {
-	if ( bot_mimic.GetInt() <= 0 )
-		return false;
-
 	if ( bot_mimic.GetInt() > gpGlobals->maxClients )
 		return false;
-
 	
 	CBasePlayer *pPlayer = UTIL_PlayerByIndex( bot_mimic.GetInt()  );
 	if ( !pPlayer )
@@ -327,14 +353,18 @@ void CBot::BotFrame()
 	// Make sure we stay being a bot
 	AddFlag( FL_FAKECLIENT );
 
-	Q_memset( &m_cmd, 0, sizeof( m_cmd ) );
+	Q_memcpy(&m_oldcmd, &m_cmd, sizeof(m_oldcmd));
+	Q_memset(&m_cmd, 0, sizeof(m_cmd));
 
-	RunMimicCommand(m_cmd);
-
-	if (bot_mimic.GetInt() == 0)
+	if ( bot_mimic.GetInt() > 0 )
+		RunMimicCommand(m_cmd);
+	else
 	{
 		GetBall()->VPhysicsGetObject()->GetPosition(&m_vBallPos, &m_aBallAng);
 		GetBall()->VPhysicsGetObject()->GetVelocity(&m_vBallVel, &m_vBallAngImp);
+
+		m_vDirToBall = m_vBallPos - GetLocalOrigin();
+		float length = m_vDirToBall.Length2D();
 
 		BotThink();
 

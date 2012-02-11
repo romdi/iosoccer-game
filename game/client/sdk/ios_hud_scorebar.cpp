@@ -91,7 +91,7 @@ DECLARE_HUD_MESSAGE(CHudScorebar, MatchEvent);
 #define WIDTH_TEAM				150
 #define WIDTH_SCORE				30
 #define WIDTH_TIME				150
-#define WIDTH_TIMEBAR			150
+#define WIDTH_TIMEBAR			175
 #define WIDTH_TEAMCOLOR			15
 
 #define WIDTH_TEAMBAR			BORDER + WIDTH_TEAMCOLOR + WIDTH_MARGIN + WIDTH_TEAM + WIDTH_MARGIN + WIDTH_SCORE + BORDER
@@ -214,17 +214,17 @@ const char *g_szStateNames[32] =
 {
 	"Init",
 	"Warmup",
-	"1st Half",
-	"1st Half",
+	"Half 1",
+	"Half 1",
 	"Halftime",
-	"2nd Half",
-	"2nd Half",
-	"Extratime",
-	"Ex 1st Half",
-	"Ex 1st Half",
-	"Ex Halftime",
-	"Ex 2nd Half",
-	"Ex 2nd Half",
+	"Half 2",
+	"Half 2",
+	"ET Break",
+	"ET Half 1",
+	"ET Half 1",
+	"ET Halftime",
+	"ET Half 2",
+	"ET Half 2",
 	"Penalties",
 	"Penalties",
 	"Cooldown",

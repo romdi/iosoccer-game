@@ -10,7 +10,7 @@ class CFieldBot : public CBot
 {
 	void BotThink();
 	void BotFetchAndPass();
-	void BotRunToBall(Vector ballDir);
+	void BotRunToBall();
 	void BotShootBall();
 };
 

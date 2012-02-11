@@ -11,7 +11,7 @@
 
 class C_Ball;
 
-C_Ball *g_pBall = NULL;
+extern C_Ball *g_pBall;
 
 class C_Ball : public C_PhysicsProp, public IMultiplayerPhysics
 {
@@ -44,9 +44,6 @@ public:
 	float m_fMass;
 };
 
-C_Ball *GetBall()
-{
-	return g_pBall;
-}
+extern C_Ball *GetBall();
 
 #endif

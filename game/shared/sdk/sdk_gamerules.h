@@ -36,6 +36,8 @@
 	#define CSDKGameRulesProxy C_SDKGameRulesProxy
 #endif
 
+#define CIRCLE_SHIELD_RADIUS 360
+
 extern CUniformRandomStream g_IOSRand;
 
 extern ConVar 
@@ -71,17 +73,12 @@ enum match_state_t
 
 enum ball_shield_type_t
 {
-	SHIELD_NONE = -1,
-	SHIELD_DYNAMIC = 0,
+	SHIELD_NONE = 0,
+	SHIELD_CIRCLE,
 	SHIELD_GOALKICK,
 	SHIELD_KICKOFF,
 	SHIELD_PENALTY
 };
-
-#define FL_SHIELD_CIRC			(1<<0)
-#define FL_SHIELD_RECT			(1<<1)
-#define FL_SHIELD_TEAM			(1<<2)
-#define FL_SHIELD_PLAYER		(1<<3)
 
 class CSDKGameRules;
 
@@ -260,6 +257,7 @@ public:
 
 	CNetworkVector(m_vFieldMin);
 	CNetworkVector(m_vFieldMax);
+	CNetworkVector(m_vKickOff);
 
 	int	GetMapRemainingTime(void);				//ios
 	int GetMapTime(void);
@@ -327,23 +325,21 @@ protected:
 	int m_nKickOffTeam;
 public:
 	bool GetTeamsSwapped() { return m_bTeamsSwapped; };
+	void SetTeamsSwapped(bool swapped);
 	void SetKickOffTeam(int team) { m_nKickOffTeam = team; };
 	int GetKickOffTeam() { return m_nKickOffTeam; };
 
 	void ClientSettingsChanged( CBasePlayer *pPlayer );
 
-	void EnableCircShield(int type, int target, int radius, Vector pos, bool disablePrevShields = true);
-	void EnableRectShield(int type, int target, Vector min, Vector max, bool disablePrevShields = true);
-	void DisableShields();
+	void EnableStaticShield(int type, int side);
+	void EnableCircleShield(Vector pos);
+	void DisableShield();
 #endif
 
 public:
 	CNetworkVar(int, m_nShieldType);
-	CNetworkVar(int, m_nShieldTarget);
-	CNetworkVar(int, m_nCircShieldRadius);
-	CNetworkVector(m_vCircShieldPos);
-	CNetworkVector(m_vRectShieldMin);
-	CNetworkVector(m_vRectShieldMax);
+	CNetworkVar(int, m_nShieldSide);
+	CNetworkVector(m_vShieldPos);
 };
 
 //-----------------------------------------------------------------------------

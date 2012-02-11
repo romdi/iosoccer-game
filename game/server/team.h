@@ -93,6 +93,21 @@ public:
 
 	float	m_flPossessionTime;
 	int		m_nPossession;
+
+	CNetworkVector(m_vCornerLeft);
+	CNetworkVector(m_vCornerRight);
+	CNetworkVector(m_vGoalkickLeft);
+	CNetworkVector(m_vGoalkickRight);
+	CNetworkVector(m_vPenalty);
+	CNetworkVector(m_vPenBoxMin);
+	CNetworkVector(m_vPenBoxMax);
+	CNetworkVar(int, m_nForward);
+	CNetworkVar(int, m_nRight);
+
+	Vector m_vPlayerSpawns[11];
+
+	Vector GetSpotPos(const char *name);
+	void InitFieldSpots(int team);
 };
 
 extern CUtlVector< CTeam * > g_Teams;

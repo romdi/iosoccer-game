@@ -898,7 +898,7 @@ protected:
 	int						m_iReplayEntity;	// follow this entity in replay
 
 private:
-	void HandleFuncTrain();
+	void HandleFuncTrain() {};
 
 // DATA
 private:

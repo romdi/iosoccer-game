@@ -8,6 +8,7 @@
 #include "team.h"
 #include "player.h"
 #include "team_spawnpoint.h"
+#include "sdk_gamerules.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -42,6 +43,16 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CTeam, DT_Team)
 	SendPropInt( SENDINFO(m_iScore), 0 ),
 	SendPropInt( SENDINFO(m_iRoundsWon), 8 ),
 	SendPropString( SENDINFO( m_szTeamname ) ),
+
+	SendPropVector(SENDINFO(m_vCornerLeft), -1, SPROP_COORD),
+	SendPropVector(SENDINFO(m_vCornerRight), -1, SPROP_COORD),
+	SendPropVector(SENDINFO(m_vGoalkickLeft), -1, SPROP_COORD),
+	SendPropVector(SENDINFO(m_vGoalkickRight), -1, SPROP_COORD),
+	SendPropVector(SENDINFO(m_vPenalty), -1, SPROP_COORD),
+	SendPropVector(SENDINFO(m_vPenBoxMin), -1, SPROP_COORD),
+	SendPropVector(SENDINFO(m_vPenBoxMax), -1, SPROP_COORD),
+	SendPropInt(SENDINFO(m_nForward)),
+	SendPropInt(SENDINFO(m_nRight)),
 
 	SendPropArray2( 
 		SendProxyArrayLength_PlayerArray,
@@ -326,4 +337,59 @@ void CTeam::AwardAchievement( int iAchievement )
 	UserMessageBegin( filter, "AchievementEvent" );
 		WRITE_SHORT( iAchievement );
 	MessageEnd();
+}
+
+Vector CTeam::GetSpotPos(const char *name)
+{
+	CBaseEntity *pEnt = gEntList.FindEntityByClassname(NULL, name);
+	if (pEnt)
+		return Vector(pEnt->GetLocalOrigin().x, pEnt->GetLocalOrigin().y, SDKGameRules()->m_vKickOff.GetZ());
+	else
+		return vec3_invalid;
+}
+
+void CTeam::InitFieldSpots(int team)
+{
+	int index = team - TEAM_A;
+	m_vCornerLeft = GetSpotPos(UTIL_VarArgs("info_team%d_corner%d", index + 1, 1 - index));
+	m_vCornerRight = GetSpotPos(UTIL_VarArgs("info_team%d_corner%d", index + 1, index));
+
+	if (m_vCornerLeft[0] < SDKGameRules()->m_vFieldMin[0])
+		SDKGameRules()->m_vFieldMin.SetX(m_vCornerLeft[0]);
+
+	if (m_vCornerLeft[1] < SDKGameRules()->m_vFieldMin[1])
+		SDKGameRules()->m_vFieldMin.SetY(m_vCornerLeft[1]);
+
+	if (m_vCornerRight[0] < SDKGameRules()->m_vFieldMin[0])
+		SDKGameRules()->m_vFieldMin.SetX(m_vCornerRight[0]);
+
+	if (m_vCornerRight[1] < SDKGameRules()->m_vFieldMin[1])
+		SDKGameRules()->m_vFieldMin.SetY(m_vCornerRight[1]);
+
+	if (m_vCornerLeft[0] > SDKGameRules()->m_vFieldMax[0])
+		SDKGameRules()->m_vFieldMax.SetX(m_vCornerLeft[0]);
+
+	if (m_vCornerLeft[1] > SDKGameRules()->m_vFieldMax[1])
+		SDKGameRules()->m_vFieldMax.SetY(m_vCornerLeft[1]);
+
+	if (m_vCornerRight[0] > SDKGameRules()->m_vFieldMax[0])
+		SDKGameRules()->m_vFieldMax.SetX(m_vCornerRight[0]);
+
+	if (m_vCornerRight[1] > SDKGameRules()->m_vFieldMax[1])
+		SDKGameRules()->m_vFieldMax.SetY(m_vCornerRight[1]);
+
+	m_vGoalkickLeft = GetSpotPos(UTIL_VarArgs("info_team%d_goalkick1", index + 1));
+	m_vGoalkickRight = GetSpotPos(UTIL_VarArgs("info_team%d_goalkick0", index + 1));
+	m_vPenalty = GetSpotPos(UTIL_VarArgs("info_team%d_penalty_spot", index + 1));
+
+	CBaseEntity *pPenBox = gEntList.FindEntityByClassnameNearest("trigger_PenaltyBox", m_vPenalty, 9999);
+	pPenBox->CollisionProp()->WorldSpaceTriggerBounds(&m_vPenBoxMin.GetForModify(), &m_vPenBoxMax.GetForModify());
+
+	for (int j = 0; j < 11; j++)
+	{
+		m_vPlayerSpawns[j] = GetSpotPos(UTIL_VarArgs("info_team%d_player%d", index + 1, j + 1));
+	}
+
+	m_nForward = Sign((SDKGameRules()->m_vKickOff - m_vPlayerSpawns[0]).y);
+	m_nRight = Sign((m_vCornerRight - m_vPlayerSpawns[0]).x);
 }

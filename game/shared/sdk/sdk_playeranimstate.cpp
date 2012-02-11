@@ -377,6 +377,11 @@ void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 
 	switch( event )
 	{
+	case PLAYERANIMEVENT_CANCEL:
+		{
+			ClearAnimationState();
+		}
+		break;
 	case PLAYERANIMEVENT_KICK:			//ios
 	case PLAYERANIMEVENT_PASS:
 	case PLAYERANIMEVENT_VOLLEY:

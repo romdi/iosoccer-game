@@ -137,6 +137,10 @@ void CTeamMenu::PerformLayout()
 		m_pTabButtons[i]->SetBounds(100 * i, 0, 100, 50);
 		m_pTabButtons[i]->SetCommand(VarArgs("showteam %d", i));
 		m_pTabButtons[i]->AddActionSignalTarget(this);
+		m_pTabButtons[i]->SetBgColor(Color(255, 255, 255, 200));
+		m_pTabButtons[i]->SetDefaultColor(Color(0, 0, 0, 200), Color(255, 255, 255, 200));
+		m_pTabButtons[i]->SetArmedColor(Color(50, 50, 50, 200), Color(150, 150, 150, 200));
+		m_pTabButtons[i]->SetDepressedColor(Color(100, 100, 100, 200), Color(255, 255, 255, 200));
 
 		m_pTeamNames[i]->SetBounds(0, 0, 550, 50);
 		//m_pTeamNames[i]->SetTextInset(50, 10);
@@ -203,10 +207,18 @@ void CTeamMenu::PerformLayout()
 	m_pSpectateButton->SetBounds(100 * 3, 0, 100, 50);
 	m_pSpectateButton->SetCommand(VarArgs("jointeam %d 1", TEAM_SPECTATOR));
 	m_pSpectateButton->AddActionSignalTarget(this);
+	m_pSpectateButton->SetBgColor(Color(255, 255, 255, 200));
+	m_pSpectateButton->SetDefaultColor(Color(0, 0, 0, 200), Color(255, 255, 255, 200));
+	m_pSpectateButton->SetArmedColor(Color(50, 50, 50, 200), Color(150, 150, 150, 200));
+	m_pSpectateButton->SetDepressedColor(Color(100, 100, 100, 200), Color(255, 255, 255, 200));
 
 	m_pToggleStats->SetBounds(100 * 4, 0, 100, 50);
 	m_pToggleStats->SetCommand("togglestats");
 	m_pToggleStats->AddActionSignalTarget(this);
+	m_pToggleStats->SetBgColor(Color(255, 255, 255, 200));
+	m_pToggleStats->SetDefaultColor(Color(0, 0, 0, 200), Color(255, 255, 255, 200));
+	m_pToggleStats->SetArmedColor(Color(50, 50, 50, 200), Color(150, 150, 150, 200));
+	m_pToggleStats->SetDepressedColor(Color(100, 100, 100, 200), Color(255, 255, 255, 200));
 }
 
 void CTeamMenu::SetData(KeyValues *data)
@@ -333,6 +345,8 @@ void CTeamMenu::Update()
 
 	m_pTeamNames[0]->SetText(gr->GetTeamName(TEAM_A));
 	m_pTeamNames[1]->SetText(gr->GetTeamName(TEAM_B));
+	m_pTabButtons[0]->SetText(gr->GetTeamName(TEAM_A));
+	m_pTabButtons[1]->SetText(gr->GetTeamName(TEAM_B));
 
 	m_flNextUpdateTime = gpGlobals->curtime + 0.5f;
 }

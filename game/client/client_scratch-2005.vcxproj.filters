@@ -1428,9 +1428,6 @@
     <ClCompile Include="sdk\ios_hud_scorebar.cpp">
       <Filter>Source Files\SDK\Hud Elements</Filter>
     </ClCompile>
-    <ClCompile Include="sdk\c_ios_mapentities.cpp">
-      <Filter>Source Files\SDK</Filter>
-    </ClCompile>
     <ClCompile Include="sdk\ios_playertextureproxy.cpp">
       <Filter>Source Files\SDK</Filter>
     </ClCompile>

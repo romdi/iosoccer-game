@@ -74,7 +74,10 @@ public:
 
 	void BallStartTouch(CBall *pBall)
 	{
-		pBall->TriggerGoalLine(m_nTeam == 1 ? TEAM_A : TEAM_B);
+		Vector min, max;
+		CollisionProp()->WorldSpaceTriggerBounds(&min, &max);
+		float touchPosY = Sign((SDKGameRules()->m_vKickOff - GetLocalOrigin()).y) == 1 ? max.y : min.y;
+		pBall->TriggerGoalLine(m_nTeam == 1 ? TEAM_A : TEAM_B, touchPosY);
 	};
 };
 
@@ -95,7 +98,10 @@ public:
 
 	void BallStartTouch(CBall *pBall)
 	{
-		pBall->TriggerSideline();
+		Vector min, max;
+		CollisionProp()->WorldSpaceTriggerBounds(&min, &max);
+		float touchPosX = Sign((SDKGameRules()->m_vKickOff - GetLocalOrigin()).x) == 1 ? max.x : min.x;
+		pBall->TriggerSideline(touchPosX);
 	};
 };
 
@@ -190,103 +196,3 @@ LINK_ENTITY_TO_CLASS(info_team1_penalty_spot, CPointEntity);
 LINK_ENTITY_TO_CLASS(info_team2_penalty_spot, CPointEntity);
 
 LINK_ENTITY_TO_CLASS(info_stadium, CPointEntity);
-
-CTeamSpots	*g_pTeamSpots[2];
-Vector		g_vKickOffSpot;
-Vector		g_vFieldMin;
-Vector		g_vFieldMax;
-float		g_flGroundZ;
-
-Vector GetSpotPos(const char *name)
-{
-	CBaseEntity *pEnt = gEntList.FindEntityByClassname(NULL, name);
-	if (pEnt)
-		return Vector(pEnt->GetLocalOrigin().x, pEnt->GetLocalOrigin().y, g_flGroundZ);
-	else
-		return vec3_origin;
-}
-
-void InitMapSpots()
-{
-	CBaseEntity *pEnt = gEntList.FindEntityByClassname(NULL, "info_ball_start");
-	trace_t tr;
-	UTIL_TraceLine(pEnt->GetLocalOrigin(), Vector(0, 0, -500), MASK_SOLID_BRUSHONLY, NULL, COLLISION_GROUP_NONE, &tr);
-	g_flGroundZ = tr.endpos.z;
-
-	g_vKickOffSpot = GetSpotPos("info_ball_start");
-
-	g_vFieldMin = Vector(FLT_MAX, FLT_MAX, g_flGroundZ);
-	g_vFieldMax = Vector(-FLT_MAX, -FLT_MAX, g_flGroundZ);
-
-	for (int i = 0; i < 2; i++)
-	{
-		CTeamSpots *pSpot = new CTeamSpots();
-		pSpot->m_vCornerLeft = GetSpotPos(UTIL_VarArgs("info_team%d_corner%d", i + 1, 1 - i));
-		pSpot->m_vCornerRight = GetSpotPos(UTIL_VarArgs("info_team%d_corner%d", i + 1, i));
-
-
-		if (pSpot->m_vCornerLeft.x < g_vFieldMin.x)
-			g_vFieldMin.x = pSpot->m_vCornerLeft.x;
-
-		if (pSpot->m_vCornerLeft.y < g_vFieldMin.y)
-			g_vFieldMin.y = pSpot->m_vCornerLeft.y;
-
-		if (pSpot->m_vCornerRight.x < g_vFieldMin.x)
-			g_vFieldMin.x = pSpot->m_vCornerRight.x;
-
-		if (pSpot->m_vCornerRight.y < g_vFieldMin.y)
-			g_vFieldMin.y = pSpot->m_vCornerRight.y;
-
-
-		if (pSpot->m_vCornerLeft.x > g_vFieldMax.x)
-			g_vFieldMax.x = pSpot->m_vCornerLeft.x;
-
-		if (pSpot->m_vCornerLeft.y > g_vFieldMax.y)
-			g_vFieldMax.y = pSpot->m_vCornerLeft.y;
-
-		if (pSpot->m_vCornerRight.x > g_vFieldMax.x)
-			g_vFieldMax.x = pSpot->m_vCornerRight.x;
-
-		if (pSpot->m_vCornerRight.y > g_vFieldMax.y)
-			g_vFieldMax.y = pSpot->m_vCornerRight.y;
-
-
-		pSpot->m_vGoalkickLeft = GetSpotPos(UTIL_VarArgs("info_team%d_goalkick1", i + 1));
-		pSpot->m_vGoalkickRight = GetSpotPos(UTIL_VarArgs("info_team%d_goalkick0", i + 1));
-		pSpot->m_vPenalty = GetSpotPos(UTIL_VarArgs("info_team%d_penalty_spot", i + 1));
-
-		CBaseEntity *pPenBox = gEntList.FindEntityByClassnameNearest("trigger_PenaltyBox", pSpot->m_vPenalty, 9999);
-		pPenBox->CollisionProp()->WorldSpaceTriggerBounds( &pSpot->m_vPenaltyMin, &pSpot->m_vPenaltyMax );
-
-		for (int j = 0; j < 11; j++)
-		{
-			pSpot->m_vPlayers[j] = GetSpotPos(UTIL_VarArgs("info_team%d_player%d", i + 1, j + 1));
-		}
-
-		pSpot->m_nForward = (g_vKickOffSpot - pSpot->m_vPlayers[0]).y > 0 ? 1 : -1;
-		pSpot->m_nBack = -pSpot->m_nForward;
-		pSpot->m_nRight = (pSpot->m_vCornerRight - pSpot->m_vPlayers[0]).x > 0 ? 1 : -1;
-		pSpot->m_nLeft = -pSpot->m_nRight;
-
-		g_pTeamSpots[i] = pSpot;
-	}
-}
-
-CTeamSpots *GetOwnTeamSpots(CSDKPlayer *pPl)
-{
-	return GetTeamSpots(pPl->GetTeamNumber());
-}
-
-CTeamSpots *GetOppTeamSpots(CSDKPlayer *pPl)
-{
-	return GetTeamSpots(pPl->GetTeamNumber() == TEAM_A ? TEAM_B : TEAM_A);
-}
-
-CTeamSpots *GetTeamSpots(int team)
-{
-	if (SDKGameRules()->GetTeamsSwapped())
-	{
-		team = team == TEAM_A ? TEAM_B : TEAM_A;
-	}
-	return g_pTeamSpots[team == TEAM_A ? 0 : 1];
-}

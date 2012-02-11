@@ -66,6 +66,7 @@ protected:
 	virtual void	PlayerMove(	void );
 
 	void			CheckBallShield(Vector oldPos);
+	void			MoveToTargetPos();
 
 	// Set ground data, etc.
 	void			FinishMove( void );

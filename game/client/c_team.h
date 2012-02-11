@@ -73,6 +73,16 @@ public:
 	int		m_iPing;
 	int		m_iPacketloss;
 	int		m_iTeamNum;
+
+	Vector	m_vCornerLeft;
+	Vector	m_vCornerRight;
+	Vector	m_vGoalkickLeft;
+	Vector	m_vGoalkickRight;
+	Vector	m_vPenalty;
+	Vector	m_vPenBoxMin;
+	Vector	m_vPenBoxMax;
+	int		m_nForward;
+	int		m_nRight;
 };
 
 
