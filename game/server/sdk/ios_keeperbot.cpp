@@ -75,7 +75,7 @@ void CKeeperBot::BotAdjustPos()
 	float modifier;
 	QAngle ang;
 
-	if (m_vDirToBall.Length2D() < 50)
+	if (m_vDirToBall.Length2D() < 50 && m_vDirToBall.z < 80)
 	{
 		modifier = 0.9f;
 		m_cmd.buttons |= IN_ATTACK2;
@@ -87,16 +87,35 @@ void CKeeperBot::BotAdjustPos()
 		if (m_vDirToBall.z > VEC_HULL_MAX.z + 10)
 			m_cmd.buttons |= IN_JUMP;
 	}
-	//else if (m_vBallPos.WithinAABox(GetOwnTeamSpots(this)->m_vPenaltyMin, GetOwnTeamSpots(this)->m_vPenaltyMax))
 	else
 	{
-		float distToGoal = (m_vBallPos - GetTeam()->m_vPlayerSpawns[0]).Length2D();
-		if (distToGoal < 1000 && FindClosestPlayerToBall() == this)
+		float ballDistToGoal = (m_vBallPos - GetTeam()->m_vPlayerSpawns[0]).Length2D();
+		CSDKPlayer *pClosest = FindClosestPlayerToBall();
+
+		if (ballDistToGoal < 750)
+		{
+			if (m_vDirToBall.z < 80)
+			{
+				if (pClosest == this)
+					modifier = 1.0f;
+				else if (pClosest->GetTeam() != GetTeam())
+					modifier = 0.75f;
+				else
+					modifier = 0.33f;
+			}
+			else
+			{
+				modifier = 0.15f;
+			}
+		}
+		else if (ballDistToGoal < 1000 && m_vDirToBall.z < 80 && pClosest == this)
+		{
 			modifier = 1.0f;
-		else if (distToGoal < 750)
-			modifier = 0.75f;
+		}
 		else
+		{
 			modifier = 0.33f;
+		}
 
 		VectorAngles(m_vDirToBall, ang);
 	}

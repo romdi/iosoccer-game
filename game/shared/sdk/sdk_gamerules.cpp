@@ -42,7 +42,7 @@ extern void Bot_RunAll( void );
 
 CUniformRandomStream g_IOSRand;
 
-static const s_KitData gKitDesc[] =
+const s_KitData gKitDesc[] =
 {
 	{	"Brazil", "Brazil",		YELLOW },
 	{	"England", "England",		WHITE },
@@ -55,6 +55,11 @@ static const s_KitData gKitDesc[] =
 	{	"Milan",	"AC Milan", 	RED },
 	{	"Palmeiras", "Sociedade Esportiva Palmeiras",	GREEN },
 	{	"END", "END", END },
+};
+
+const char *g_szPosNames[32] =
+{
+	"GK", "RB", "CB", "CB", "LB", "RM", "CM", "LM", "RF", "CF", "LF", NULL
 };
 
 #ifndef CLIENT_DLL
@@ -112,6 +117,7 @@ BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 
 	RecvPropInt(RECVINFO(m_nShieldType)),
 	RecvPropInt(RECVINFO(m_nShieldSide)),
+	RecvPropInt(RECVINFO(m_nShieldRadius)),
 	RecvPropVector(RECVINFO(m_vShieldPos)),
 
 	RecvPropVector(RECVINFO(m_vFieldMin)),
@@ -126,6 +132,7 @@ BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 
 	SendPropInt(SENDINFO(m_nShieldType)),
 	SendPropInt(SENDINFO(m_nShieldSide)),
+	SendPropInt(SENDINFO(m_nShieldRadius)),
 	SendPropVector(SENDINFO(m_vShieldPos), -1, SPROP_COORD),
 
 	SendPropVector(SENDINFO(m_vFieldMin), -1, SPROP_COORD),
@@ -776,7 +783,7 @@ const char *CSDKGameRules::GetChatFormat( bool bTeamOnly, CBasePlayer *pPlayer )
 			if (pPlayer->m_lifeState != LIFE_ALIVE )
 				pszFormat = "SDK_Chat_Team_Dead";
 			else
-				pszFormat = "SDK_Chat_Team";
+				pszFormat = "SDK_Chat_Team_Loc";
 		}
 	}
 	else
@@ -788,12 +795,18 @@ const char *CSDKGameRules::GetChatFormat( bool bTeamOnly, CBasePlayer *pPlayer )
 			if (pPlayer->m_lifeState != LIFE_ALIVE )
 				pszFormat = "SDK_Chat_All_Dead";
 			else
-				pszFormat = "SDK_Chat_All";
+				pszFormat = "SDK_Chat_All_Loc";
 		}
 	}
 
 	return pszFormat;
 }
+
+const char *CSDKGameRules::GetChatLocation( bool bTeamOnly, CBasePlayer *pPlayer )
+{
+	 return g_szPosNames[ToSDKPlayer(pPlayer)->GetTeamPosition() - 1];
+}
+
 #endif
 
 //-----------------------------------------------------------------------------
@@ -863,6 +876,12 @@ ConVar mp_timelimit_penalties( "mp_timelimit_penalties", "1", FCVAR_NOTIFY|FCVAR
 ConVar mp_timelimit_penalties_intermission( "mp_timelimit_penalties_intermission", "1", FCVAR_NOTIFY|FCVAR_REPLICATED, "time before penalties start" );
 ConVar mp_extratime( "mp_extratime", "1", FCVAR_NOTIFY|FCVAR_REPLICATED );
 ConVar mp_penalties( "mp_penalties", "1", FCVAR_NOTIFY|FCVAR_REPLICATED );
+
+ConVar mp_shield_throwin_radius("mp_shield_throwin_radius", "100", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar mp_shield_freekick_radius("mp_shield_freekick_radius", "360", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar mp_shield_corner_radius("mp_shield_corner_radius", "360", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar mp_shield_kickoff_radius("mp_shield_kickoff_radius", "360", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar mp_offside("mp_offside", "1", FCVAR_NOTIFY|FCVAR_REPLICATED);
 
 #ifdef GAME_DLL
 
@@ -1316,26 +1335,12 @@ void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 	}
 }
 
-void CSDKGameRules::EnableStaticShield(int type, int side)
+void CSDKGameRules::EnableShield(int type, int sideOrRadius, Vector pos /*= vec3_invalid*/)
 {
-	switch (type)
-	{
-	case SHIELD_GOALKICK:
-		break;
-	case SHIELD_KICKOFF:
-		m_vShieldPos = m_vKickOff;
-		break;
-	case SHIELD_PENALTY:
-		break;
-	}
-	m_nShieldSide = side;
 	m_nShieldType = type;
-}
-
-void CSDKGameRules::EnableCircleShield(Vector pos)
-{
 	m_vShieldPos = Vector(pos.x, pos.y, SDKGameRules()->m_vKickOff.GetZ());
-	m_nShieldType = SHIELD_CIRCLE;
+	m_nShieldSide = sideOrRadius;
+	m_nShieldRadius = sideOrRadius;
 }
 
 void CSDKGameRules::DisableShield()
@@ -1366,6 +1371,22 @@ void CSDKGameRules::SetTeamsSwapped(bool swapped)
 }
 
 #endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #ifdef CLIENT_DLL
 

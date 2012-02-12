@@ -14,10 +14,10 @@
 */
 
 #include "cbase.h"
-#include "player.h"
+#include "sdk_player.h"
 #include "client.h"
 #include "soundent.h"
-#include "gamerules.h"
+#include "sdk_gamerules.h"
 #include "game.h"
 #include "physics.h"
 #include "entitylist.h"
@@ -193,12 +193,18 @@ void Host_Say( edict_t *pEdict, const CCommand &args, bool teamonly )
 		}
 		else
 		{
-			Q_snprintf( text, sizeof(text), "%s %s: ", pszPrefix, pszPlayerName );
+			if (pPlayer)
+				Q_snprintf( text, sizeof(text), "%s [%s] %s: ", pszPrefix, g_szPosNames[ToSDKPlayer(pPlayer)->GetTeamPosition() - 1], pszPlayerName );
+			else
+				Q_snprintf( text, sizeof(text), "%s %s: ", pszPrefix, pszPlayerName );
 		}
 	}
 	else
 	{
-		Q_snprintf( text, sizeof(text), "%s: ", pszPlayerName );
+		if (pPlayer)
+			Q_snprintf( text, sizeof(text), "[%s] %s: ", g_szPosNames[ToSDKPlayer(pPlayer)->GetTeamPosition() - 1], pszPlayerName );
+		else
+			Q_snprintf( text, sizeof(text), "%s: ", pszPlayerName );
 	}
 
 	j = sizeof(text) - 2 - strlen(text);  // -2 for /n and null terminator

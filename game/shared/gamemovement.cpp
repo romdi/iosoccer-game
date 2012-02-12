@@ -38,6 +38,7 @@ extern IFileSystem *filesystem;
 #ifdef CLIENT_DLL
 	#include "c_sdk_player.h"
 	#include "c_team.h"
+	#include "c_playerresource.h"
 #else
 	#include "sdk_player.h"
 	#include "team.h"
@@ -1653,16 +1654,14 @@ void CGameMovement::FullNoClipMove( float factor, float maxacceleration )
 //-----------------------------------------------------------------------------
 bool CGameMovement::CheckJumpButton( void )
 {
-	//ios
+	CSDKPlayer *pPl = ToSDKPlayer(player);
+
+	if (pPl->m_Shared.GetStamina() < 20)
+		return false;
+
 	if (gpGlobals->curtime < player->m_flNextJump)
 	{
 		mv->m_nOldButtons |= IN_JUMP;
-		return false;
-	}
-
-	if (player->pl.deadflag)
-	{
-		mv->m_nOldButtons |= IN_JUMP ;	// don't jump again until released
 		return false;
 	}
 
@@ -1676,18 +1675,9 @@ bool CGameMovement::CheckJumpButton( void )
 	if ( mv->m_nOldButtons & IN_JUMP )
 		return false;		// don't pogo stick
 
-	// Cannot jump will in the unduck transition.
-	if ( player->m_Local.m_bDucking && (  player->GetFlags() & FL_DUCKING ) )
-		return false;
-
 	//ios cant jump during throwin
 	if (player->GetFlags() & FL_ATCONTROLS)
 		return false;
-
-	// Still updating the eye position.
-	if ( player->m_Local.m_flDuckJumpTime > 0.0f )
-		return false;
-
 
 	// In the air now.
     SetGroundEntity( NULL );
@@ -1695,101 +1685,47 @@ bool CGameMovement::CheckJumpButton( void )
 	player->PlayStepSound( (Vector &)mv->GetAbsOrigin(), player->m_pSurfaceData, 1.0, true );
 
 	MoveHelper()->PlayerSetAnimation( PLAYER_JUMP );
-	//#ifdef CLIENT_DLL
-	//	((C_SDKPlayer*)player)->DoAnimationEvent( PLAYERANIMEVENT_JUMP );
-	//#else
-	//	((CSDKPlayer*)player)->DoAnimationEvent( PLAYERANIMEVENT_JUMP );
-	//#endif
 
-	//ios jump
-	bool isKeeper = false;
+	bool isKeeper;
 #ifdef CLIENT_DLL
-	if (((C_SDKPlayer*)player)->m_nBody > 0)
-		isKeeper = true;
+	isKeeper = GameResources()->GetTeamPosition(pPl->index) == 1;
 #else
-	if (((CSDKPlayer*)player)->m_nBody > 0)
-		isKeeper = true;
+	isKeeper = pPl->GetTeamPosition() == 1;
 #endif
 
-	PlayerAnimEvent_t anim;
-	if (mv->m_nButtons & IN_MOVELEFT && isKeeper)
+	PlayerAnimEvent_t anim = PLAYERANIMEVENT_JUMP;
+
+	if (isKeeper && mv->m_nButtons & IN_SPEED)
 	{
-		anim = PLAYERANIMEVENT_DIVE_LEFT;
 		MoveHelper()->StartSound( mv->GetAbsOrigin(), "Player.DiveKeeper" );
-	}
-	else if (mv->m_nButtons & IN_MOVERIGHT && isKeeper)
-	{
-		anim = PLAYERANIMEVENT_DIVE_RIGHT;
-		MoveHelper()->StartSound( mv->GetAbsOrigin(), "Player.DiveKeeper" );
-	}
-	else
-		anim = PLAYERANIMEVENT_JUMP;
 
-#ifdef CLIENT_DLL
-	((C_SDKPlayer*)player)->DoAnimationEvent( anim );
-#else
-	((CSDKPlayer*)player)->DoAnimationEvent( anim );
-#endif
-
-	float flGroundFactor = 1.0f;
-	if (player->m_pSurfaceData)
-	{
-		flGroundFactor = player->m_pSurfaceData->game.jumpFactor; 
+		if (mv->m_nButtons & IN_MOVELEFT)
+			anim = PLAYERANIMEVENT_DIVE_LEFT;
+		else if (mv->m_nButtons & IN_MOVERIGHT)
+			anim = PLAYERANIMEVENT_DIVE_RIGHT;
+		else if (mv->m_nButtons & IN_FORWARD)
+			anim = PLAYERANIMEVENT_TACKLED_FORWARD;
+		else if (mv->m_nButtons & IN_BACK)
+			anim = PLAYERANIMEVENT_TACKLED_BACKWARD;
 	}
 
-	float flMul;
-	if ( g_bMovementOptimizations )
-	{
-#if defined(HL2_DLL) || defined(HL2_CLIENT_DLL)
-		Assert( sv_gravity.GetFloat() == 600.0f );
-		flMul = 160.0f;	// approx. 21 units.
-#else
-		Assert( sv_gravity.GetFloat() == 800.0f );
-		flMul = 268.3281572999747f;
-#endif
+	pPl->DoAnimationEvent(anim);
 
-	}
-	else
-	{
-		flMul = sqrt(2 * sv_gravity.GetFloat() * GAMEMOVEMENT_JUMP_HEIGHT);
-	}
-
-	// Acclerate upward
-	// If we are ducking...
-	float startz = mv->m_vecVelocity[2];
-	if ( (  player->m_Local.m_bDucking ) || (  player->GetFlags() & FL_DUCKING ) )
-	{
-		// d = 0.5 * g * t^2		- distance traveled with linear accel
-		// t = sqrt(2.0 * 45 / g)	- how long to fall 45 units
-		// v = g * t				- velocity at the end (just invert it to jump up that high)
-		// v = g * sqrt(2.0 * 45 / g )
-		// v^2 = g * g * 2.0 * 45 / g
-		// v = sqrt( g * 2.0 * 45 )
-		mv->m_vecVelocity[2] = flGroundFactor * flMul;  // 2 * gravity * height
-	}
-	else
-	{
-		mv->m_vecVelocity[2] += flGroundFactor * flMul;  // 2 * gravity * height
-	}
+	mv->m_vecVelocity.z = sqrt(2 * sv_gravity.GetFloat() * GAMEMOVEMENT_JUMP_HEIGHT);
 
 	FinishGravity();
 
 	CheckV( player->CurrentCommandNumber(), "CheckJump", mv->m_vecVelocity );
 
-	mv->m_outJumpVel.z += mv->m_vecVelocity[2] - startz;
+	mv->m_outJumpVel.z += mv->m_vecVelocity.z;
 	mv->m_outStepHeight += 0.15f;
-
-	// Set jump time.
-	if ( gpGlobals->maxClients == 1 )
-	{
-		player->m_Local.m_flJumpTime = GAMEMOVEMENT_JUMP_TIME;
-		player->m_Local.m_bInDuckJump = true;
-	}
 
 	// Flag that we jumped.
 	mv->m_nOldButtons |= IN_JUMP;	// don't jump again until released
 
 	player->m_flNextJump = gpGlobals->curtime + sv_jumpdelay.GetFloat();
+
+	pPl->m_Shared.SetStamina(pPl->m_Shared.GetStamina() - 20);
 
 	return true;
 }
@@ -2540,9 +2476,12 @@ void CGameMovement::CheckBallShield(Vector oldPos)
 	{
 		float threshold = 2 * (pPl->GetFlags() & FL_SHIELD_KEEP_IN ? -VEC_HULL_MAX.x : VEC_HULL_MAX.x);
 		
-		if (SDKGameRules()->m_nShieldType == SHIELD_CIRCLE || SDKGameRules()->m_nShieldType == SHIELD_KICKOFF)
+		if (SDKGameRules()->m_nShieldType == SHIELD_THROWIN || 
+			SDKGameRules()->m_nShieldType == SHIELD_FREEKICK || 
+			SDKGameRules()->m_nShieldType == SHIELD_CORNER ||  
+			SDKGameRules()->m_nShieldType == SHIELD_KICKOFF)
 		{
-			float radius = CIRCLE_SHIELD_RADIUS + threshold;
+			float radius = SDKGameRules()->m_nShieldRadius + threshold;
 			Vector dir = pos - SDKGameRules()->m_vShieldPos;
 			dir.z = 0;
 			if (pPl->GetFlags() & FL_SHIELD_KEEP_OUT && dir.Length2D() < radius || pPl->GetFlags() & FL_SHIELD_KEEP_IN && dir.Length2D() > radius)

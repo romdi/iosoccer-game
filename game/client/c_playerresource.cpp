@@ -32,6 +32,7 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_PlayerResource, DT_PlayerResource, CPlayerReso
 	RecvPropArray3( RECVINFO_ARRAY(m_RedCard), RecvPropInt( RECVINFO(m_RedCard[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_YellowCard), RecvPropInt( RECVINFO(m_YellowCard[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_Fouls), RecvPropInt( RECVINFO(m_Fouls[0]))),
+	RecvPropArray3( RECVINFO_ARRAY(m_Goals), RecvPropInt( RECVINFO(m_Goals[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_Assists), RecvPropInt( RECVINFO(m_Assists[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_Possession), RecvPropInt( RECVINFO(m_Possession[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_Passes), RecvPropInt( RECVINFO(m_Passes[0]))),
@@ -85,6 +86,7 @@ C_PlayerResource::C_PlayerResource()
 	memset( m_RedCard, 0, sizeof( m_RedCard ) );
 	memset( m_YellowCard, 0, sizeof( m_YellowCard ) );
 	memset( m_Fouls, 0, sizeof( m_Fouls ) );
+	memset( m_Goals, 0, sizeof( m_Goals ) );
 	memset( m_Assists, 0, sizeof( m_Assists ) );
 	memset( m_Possession, 0, sizeof( m_Possession ) );
 	memset( m_Passes, 0, sizeof( m_Passes ) );
@@ -99,16 +101,10 @@ C_PlayerResource::C_PlayerResource()
 
 	memset( m_szClubNames, 0, sizeof( m_szClubNames ) );
 
-	for ( int i=0; i<MAX_TEAMS; i++ )
-	{
-		m_Colors[i] = COLOR_WHITE;	//ios: was grey
-	}
-
-#ifdef HL2MP
-	m_Colors[TEAM_A] = COLOR_WHITE;	//ioscols scoreboard
-	m_Colors[TEAM_B] = COLOR_WHITE;
-	m_Colors[TEAM_UNASSIGNED] = COLOR_YELLOW;
-#endif
+	m_Colors[TEAM_A] = COLOR_BLUE;
+	m_Colors[TEAM_B] = COLOR_RED;
+	m_Colors[TEAM_UNASSIGNED] = COLOR_WHITE;
+	m_Colors[TEAM_SPECTATOR] = COLOR_WHITE;
 
 	g_PR = this;
 }
@@ -249,7 +245,7 @@ const char *C_PlayerResource::GetScoreTag(int index)
 }
 
 
-int C_PlayerResource::GetFrags(int index )
+int C_PlayerResource::GetScore(int index )
 {
 	//IOS Scoreboard
     if ( !IsConnected( index ) )
@@ -405,6 +401,13 @@ int	C_PlayerResource::GetFouls( int iIndex )
 		return 0;
 
 	return m_Fouls[iIndex];
+}
+int	C_PlayerResource::GetGoals( int iIndex )
+{
+	if ( !IsConnected( iIndex ) )
+		return 0;
+
+	return m_Goals[iIndex];
 }
 int	C_PlayerResource::GetAssists( int iIndex )
 {

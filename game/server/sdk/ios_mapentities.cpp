@@ -53,7 +53,12 @@ public:
 
 	void BallStartTouch(CBall *pBall)
 	{
-		pBall->TriggerGoal(m_nTeam == 1 ? TEAM_A : TEAM_B);
+		int team = m_nTeam == 1 ? TEAM_B : TEAM_A;
+		if (SDKGameRules()->GetTeamsSwapped())
+		{
+			team = team == TEAM_A ? TEAM_B : TEAM_A;
+		}
+		pBall->TriggerGoal(team);
 	};
 };
 
@@ -77,7 +82,12 @@ public:
 		Vector min, max;
 		CollisionProp()->WorldSpaceTriggerBounds(&min, &max);
 		float touchPosY = Sign((SDKGameRules()->m_vKickOff - GetLocalOrigin()).y) == 1 ? max.y : min.y;
-		pBall->TriggerGoalLine(m_nTeam == 1 ? TEAM_A : TEAM_B, touchPosY);
+		int team = m_nTeam == 1 ? TEAM_A : TEAM_B;
+		if (SDKGameRules()->GetTeamsSwapped())
+		{
+			team = team == TEAM_A ? TEAM_B : TEAM_A;
+		}
+		pBall->TriggerGoalLine(team, touchPosY);
 	};
 };
 
@@ -122,7 +132,12 @@ public:
 
 	void BallStartTouch(CBall *pBall)
 	{
-		pBall->TriggerPenaltyBox(m_nTeam == 1 ? TEAM_A : TEAM_B);
+		int team = m_nTeam == 1 ? TEAM_A : TEAM_B;
+		if (SDKGameRules()->GetTeamsSwapped())
+		{
+			team = team == TEAM_A ? TEAM_B : TEAM_A;
+		}
+		pBall->TriggerPenaltyBox(team);
 	};
 	void BallEndTouch(CBall *pBall)
 	{

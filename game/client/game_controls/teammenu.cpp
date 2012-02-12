@@ -33,8 +33,8 @@
 #include "byteswap.h"
 
 #include "c_ball.h"
-
 #include "sdk_backgroundpanel.h"
+#include "sdk_gamerules.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -76,46 +76,42 @@ CTeamMenu::CTeamMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_TEAM )
 
 		for (int j = 0; j < 11; j++)
 		{
-			PosPanel_t *pPanel = new PosPanel_t;
-			pPanel->pPosPanel = new Panel(m_pTeamPanels[i]);
-			pPanel->pPlayerImage = new ImagePanel(pPanel->pPosPanel, "Image");
-			pPanel->pPosInfo = new Label(pPanel->pPosPanel, "Label", "");
-			pPanel->pPlayerName = new Button(pPanel->pPosPanel, "Button", "");
-			pPanel->pClubName = new Label(pPanel->pPosPanel, "Label", "");
-			pPanel->pPosNumber = new Label(pPanel->pPosPanel, "Label", "");
-			pPanel->pPosName = new Label(pPanel->pPosPanel, "Label", "");
-			m_pPosPanels[i][j] = pPanel;
+			PosPanel_t *pPos = new PosPanel_t;
+			pPos->pPosPanel = new Panel(m_pTeamPanels[i]);
+			pPos->pPlayerImage = new ImagePanel(pPos->pPosPanel, "Image");
+			pPos->pPosInfo = new Label(pPos->pPosPanel, "Label", "");
+			pPos->pPlayerName = new Button(pPos->pPosPanel, "Button", "");
+			pPos->pClubName = new Label(pPos->pPosPanel, "Label", "");
+			pPos->pPosNumber = new Label(pPos->pPosPanel, "Label", "");
+			pPos->pPosName = new Label(pPos->pPosPanel, "Label", "");
+			m_pPosPanels[i][j] = pPos;
+
+			StatPanel_t *pStats = new StatPanel_t;
+			pStats->pPanel = new Panel(pPos->pPosPanel);
+			pStats->pGoals = new Label(pStats->pPanel, "Stat", "");
+			pStats->pAssists = new Label(pStats->pPanel, "Stat", "");
+			pStats->pYellows = new Label(pStats->pPanel, "Stat", "");
+			pStats->pReds = new Label(pStats->pPanel, "Stat", "");
+			pStats->pPossession = new Label(pStats->pPanel, "Stat", "");
+			m_pStatPanels[i][j] = pStats;
 		}
 	}
 }
 
-#define BUTTON_WIDTH	200
-#define BUTTON_HEIGHT	120
-#define BUTTON_MARGIN	20
-#define NUMBER_MARGIN	2
-#define NUMBER_WIDTH	30
-#define NUMBER_HEIGHT	40
-#define NAME_WIDTH		BUTTON_SIZE - NUMBER_WIDTH - NUMBER_MARGIN
-#define NAME_HEIGHT		30
-#define INFO_WIDTH		20
-#define INFO_HEIGHT		30
-#define IMAGE_SIZE		60
-
-const char *g_szPosNames[32] =
-{
-	"GK",
-	"RB",
-	"CB",
-	"CB",
-	"LB",
-	"RM",
-	"CM",
-	"LM",
-	"RF",
-	"CF",
-	"LF",
-	NULL
-};
+#define BUTTON_WIDTH		200
+#define BUTTON_HEIGHT		120
+#define BUTTON_MARGIN		20
+#define NUMBER_MARGIN		2
+#define NUMBER_WIDTH		30
+#define NUMBER_HEIGHT		40
+#define NAME_WIDTH			BUTTON_SIZE - NUMBER_WIDTH - NUMBER_MARGIN
+#define NAME_HEIGHT			30
+#define INFO_WIDTH			20
+#define INFO_HEIGHT			30
+#define IMAGE_SIZE			60
+#define	STATS_WIDTH			30
+#define	STATS_HEIGHT		30
+#define	STATS_MARGIN		5
 
 void CTeamMenu::PerformLayout()
 {
@@ -156,13 +152,14 @@ void CTeamMenu::PerformLayout()
 
 		for(int j = 0; j < 11; j++)
 		{
-			PosPanel_t *pPanel = m_pPosPanels[i][j];
+			PosPanel_t *pPos = m_pPosPanels[i][j];
 
-			pPanel->pPosPanel->SetBounds(pos[j][0] * (BUTTON_WIDTH + BUTTON_MARGIN) + 20, pos[j][1] * (BUTTON_HEIGHT + 2 * BUTTON_MARGIN) + 50, BUTTON_WIDTH, BUTTON_HEIGHT);
+			pPos->pPosPanel->SetBounds(pos[j][0] * (BUTTON_WIDTH + BUTTON_MARGIN) + 20, pos[j][1] * (BUTTON_HEIGHT + 2 * BUTTON_MARGIN) + 50, BUTTON_WIDTH, BUTTON_HEIGHT);
 			
-			pPanel->pPlayerImage->SetBounds(pPanel->pPosPanel->GetWide() / 2 - IMAGE_SIZE / 2, pPanel->pPosPanel->GetTall() / 2 - IMAGE_SIZE / 2 - 2 * NAME_HEIGHT, IMAGE_SIZE, IMAGE_SIZE);
-			pPanel->pPlayerImage->SetImage("shirt");
-			pPanel->pPlayerImage->SetShouldScaleImage(true);
+			pPos->pPlayerImage->SetBounds(pPos->pPosPanel->GetWide() / 2 - IMAGE_SIZE / 2, pPos->pPosPanel->GetTall() / 2 - IMAGE_SIZE / 2 - 2 * NAME_HEIGHT, IMAGE_SIZE, IMAGE_SIZE);
+			pPos->pPlayerImage->SetImage("shirt");
+			pPos->pPlayerImage->SetShouldScaleImage(true);
+			pPos->pPlayerImage->SetVisible(false);
 
 			int possession = 10;
 			int goals = 2;
@@ -170,37 +167,71 @@ void CTeamMenu::PerformLayout()
 			int fouls = 1;
 			int yellows = 1;
 			int reds = 1;
-			pPanel->pPosInfo->SetBounds(0, INFO_HEIGHT, pPanel->pPosPanel->GetWide(), INFO_HEIGHT);
-			pPanel->pPosInfo->SetText(VarArgs("%d%%P/%dG/%dA/%dF/%dY/%dR", possession, goals, assists, fouls, yellows, reds));
-			pPanel->pPosInfo->SetContentAlignment(Label::a_center);
-			pPanel->pPosInfo->SetFont(pScheme->GetFont("IOSScorebar"));
-			pPanel->pPosInfo->SetVisible(false);
+			pPos->pPosInfo->SetBounds(0, INFO_HEIGHT, pPos->pPosPanel->GetWide(), INFO_HEIGHT);
+			pPos->pPosInfo->SetText(VarArgs("%d%%P/%dG/%dA/%dF/%dY/%dR", possession, goals, assists, fouls, yellows, reds));
+			pPos->pPosInfo->SetContentAlignment(Label::a_center);
+			pPos->pPosInfo->SetFont(pScheme->GetFont("IOSScorebar"));
+			pPos->pPosInfo->SetVisible(false);
 
-			pPanel->pPlayerName->SetBounds(0, pPanel->pPosPanel->GetTall() - 2 * NAME_HEIGHT, pPanel->pPosPanel->GetWide(), NAME_HEIGHT);
-			pPanel->pPlayerName->SetCommand(VarArgs("jointeam %d %d", i + 2, 11 - j));
-			pPanel->pPlayerName->AddActionSignalTarget(this);
-			pPanel->pPlayerName->SetPaintBackgroundEnabled(true);
-			pPanel->pPlayerName->SetPaintBorderEnabled(false);
-			pPanel->pPlayerName->SetPaintBackgroundType(2);
-			pPanel->pPlayerName->SetBgColor(Color(255, 255, 255, 200));
-			pPanel->pPlayerName->SetDefaultColor(Color(0, 0, 0, 200), Color(255, 255, 255, 200));
-			pPanel->pPlayerName->SetArmedColor(Color(50, 50, 50, 200), Color(150, 150, 150, 200));
-			pPanel->pPlayerName->SetDepressedColor(Color(100, 100, 100, 200), Color(255, 255, 255, 200));
-			pPanel->pPlayerName->SetButtonBorderEnabled(false);
-			pPanel->pPlayerName->SetContentAlignment(Label::a_center);
-			pPanel->pPlayerName->SetFont(pScheme->GetFont("IOSScorebar"));
+			pPos->pPlayerName->SetBounds(0, pPos->pPosPanel->GetTall() - 2 * NAME_HEIGHT, pPos->pPosPanel->GetWide(), NAME_HEIGHT);
+			pPos->pPlayerName->SetCommand(VarArgs("jointeam %d %d", i + 2, 11 - j));
+			pPos->pPlayerName->AddActionSignalTarget(this);
+			pPos->pPlayerName->SetPaintBackgroundEnabled(true);
+			pPos->pPlayerName->SetPaintBorderEnabled(false);
+			pPos->pPlayerName->SetPaintBackgroundType(2);
+			pPos->pPlayerName->SetBgColor(Color(255, 255, 255, 200));
+			pPos->pPlayerName->SetDefaultColor(Color(0, 0, 0, 200), Color(255, 255, 255, 200));
+			pPos->pPlayerName->SetArmedColor(Color(50, 50, 50, 200), Color(150, 150, 150, 200));
+			pPos->pPlayerName->SetDepressedColor(Color(100, 100, 100, 200), Color(255, 255, 255, 200));
+			pPos->pPlayerName->SetButtonBorderEnabled(false);
+			pPos->pPlayerName->SetContentAlignment(Label::a_center);
+			pPos->pPlayerName->SetFont(pScheme->GetFont("IOSScorebar"));
 
-			pPanel->pPosName->SetBounds(0, pPanel->pPosPanel->GetTall() - NAME_HEIGHT, NUMBER_WIDTH, NAME_HEIGHT);
-			pPanel->pPosName->SetText(g_szPosNames[10 - j]);
-			pPanel->pPosName->SetFont(pScheme->GetFont("IOSScorebar"));
+			pPos->pPosName->SetBounds(0, pPos->pPosPanel->GetTall() - NAME_HEIGHT, NUMBER_WIDTH, NAME_HEIGHT);
+			pPos->pPosName->SetText(g_szPosNames[10 - j]);
+			pPos->pPosName->SetFont(pScheme->GetFont("IOSScorebar"));
 
-			pPanel->pClubName->SetBounds(0, pPanel->pPosPanel->GetTall() - NAME_HEIGHT, pPanel->pPosPanel->GetWide(), NAME_HEIGHT);
-			pPanel->pClubName->SetContentAlignment(Label::a_center);
-			pPanel->pClubName->SetFont(pScheme->GetFont("IOSScorebar"));
+			pPos->pClubName->SetBounds(0, pPos->pPosPanel->GetTall() - NAME_HEIGHT, pPos->pPosPanel->GetWide(), NAME_HEIGHT);
+			pPos->pClubName->SetContentAlignment(Label::a_center);
+			pPos->pClubName->SetFont(pScheme->GetFont("IOSScorebar"));
 
-			pPanel->pPosNumber->SetBounds(pPanel->pPosPanel->GetWide() - NUMBER_WIDTH, pPanel->pPosPanel->GetTall() - NAME_HEIGHT, NUMBER_WIDTH, NAME_HEIGHT);
-			pPanel->pPosNumber->SetText(VarArgs("%d", 11 - j));
-			pPanel->pPosNumber->SetFont(pScheme->GetFont("IOSScorebar"));
+			pPos->pPosNumber->SetBounds(pPos->pPosPanel->GetWide() - NUMBER_WIDTH, pPos->pPosPanel->GetTall() - NAME_HEIGHT, NUMBER_WIDTH, NAME_HEIGHT);
+			pPos->pPosNumber->SetText(VarArgs("%d", 11 - j));
+			pPos->pPosNumber->SetFont(pScheme->GetFont("IOSScorebar"));
+
+			StatPanel_t *pStats = m_pStatPanels[i][j];
+
+			pStats->pPanel->SetBounds(0, pPos->pPosPanel->GetTall() - 2 * NAME_HEIGHT - STATS_HEIGHT - STATS_MARGIN, pPos->pPosPanel->GetWide(), STATS_HEIGHT);
+
+			pStats->pGoals->SetBounds(STATS_MARGIN, 0, STATS_WIDTH, STATS_HEIGHT);
+			pStats->pGoals->SetFgColor(Color(0, 0, 0, 255));
+			pStats->pGoals->SetBgColor(Color(245, 245, 245, 255));
+			pStats->pGoals->SetFont(pScheme->GetFont("IOSScorebar"));
+			pStats->pGoals->SetContentAlignment(Label::a_center);
+
+			pStats->pAssists->SetBounds(STATS_MARGIN + STATS_WIDTH + STATS_MARGIN, 0, STATS_WIDTH, STATS_HEIGHT);
+			pStats->pAssists->SetFgColor(Color(0, 0, 0, 255));
+			pStats->pAssists->SetBgColor(Color(176, 196, 222, 255));
+			pStats->pAssists->SetFont(pScheme->GetFont("IOSScorebar"));
+			pStats->pAssists->SetContentAlignment(Label::a_center);
+
+			pStats->pYellows->SetBounds(STATS_MARGIN + 2 * (STATS_WIDTH + STATS_MARGIN), 0, STATS_WIDTH, STATS_HEIGHT);
+			pStats->pYellows->SetFgColor(Color(0, 0, 0, 255));
+			pStats->pYellows->SetBgColor(Color(240, 230, 140, 255));
+			pStats->pYellows->SetFont(pScheme->GetFont("IOSScorebar"));
+			pStats->pYellows->SetContentAlignment(Label::a_center);
+
+			pStats->pReds->SetBounds(STATS_MARGIN + 3 * (STATS_WIDTH + STATS_MARGIN), 0, STATS_WIDTH, STATS_HEIGHT);
+			pStats->pReds->SetFgColor(Color(0, 0, 0, 255));
+			pStats->pReds->SetBgColor(Color(250, 128, 114, 255));
+			pStats->pReds->SetFont(pScheme->GetFont("IOSScorebar"));
+			pStats->pReds->SetContentAlignment(Label::a_center);
+
+			pStats->pPossession->SetBounds(STATS_MARGIN + 4 * (STATS_WIDTH + STATS_MARGIN), 0, STATS_WIDTH, STATS_HEIGHT);
+			pStats->pPossession->SetFgColor(Color(0, 0, 0, 255));
+			pStats->pPossession->SetBgColor(Color(255, 255, 255, 255));
+			pStats->pPossession->SetFont(pScheme->GetFont("IOSScorebar"));
+			pStats->pPossession->SetContentAlignment(Label::a_center);
 		}
 	}
 
@@ -219,6 +250,7 @@ void CTeamMenu::PerformLayout()
 	m_pToggleStats->SetDefaultColor(Color(0, 0, 0, 200), Color(255, 255, 255, 200));
 	m_pToggleStats->SetArmedColor(Color(50, 50, 50, 200), Color(150, 150, 150, 200));
 	m_pToggleStats->SetDepressedColor(Color(100, 100, 100, 200), Color(255, 255, 255, 200));
+	m_pToggleStats->SetVisible(false);
 }
 
 void CTeamMenu::SetData(KeyValues *data)
@@ -295,6 +327,8 @@ void CTeamMenu::ShowPanel(bool bShow)
 	}
 }
 
+#define GET_STAT_TEXT(count) (count > 0 ? VarArgs("%d", count) : "")
+
 //-----------------------------------------------------------------------------
 // Purpose: updates the UI with a new map name and map html page, and sets up the team buttons
 //-----------------------------------------------------------------------------
@@ -315,13 +349,32 @@ void CTeamMenu::Update()
 		{
 			int team = gr->GetTeam(i);
 			int pos = gr->GetTeamPosition(i);
-			if ((team == TEAM_A || team == TEAM_B) && pos >= 1 && pos <= 11)
+
+			if (team == TEAM_A || team == TEAM_B)
 			{
-				m_pPosPanels[team - 2][11 - pos]->pPlayerName->SetText(gr->GetPlayerName(i));
-				m_pPosPanels[team - 2][11 - pos]->pPlayerName->SetCursor(dc_arrow);
-				m_pPosPanels[team - 2][11 - pos]->pPlayerName->SetEnabled(Q_strncmp(gr->GetPlayerName(i), "KEEPER", 6) == 0);
-				m_pPosPanels[team - 2][11 - pos]->pClubName->SetText(gr->GetClubName(i));
-				posTaken[team - 2][11 - pos] = true;
+				PosPanel_t *pPos = m_pPosPanels[team - TEAM_A][11 - pos];
+				pPos->pPlayerName->SetText(gr->GetPlayerName(i));
+				pPos->pPlayerName->SetCursor(gr->IsFakePlayer(i) ? dc_hand : dc_arrow);
+				pPos->pPlayerName->SetEnabled(gr->IsFakePlayer(i));
+				pPos->pClubName->SetText(gr->GetClubName(i));
+				posTaken[team - TEAM_A][11 - pos] = true;
+
+				StatPanel_t *pStats = m_pStatPanels[team - TEAM_A][11 - pos];
+
+				pStats->pGoals->SetText(GET_STAT_TEXT(gr->GetGoals(i)));
+				pStats->pGoals->SetVisible(gr->GetGoals(i) > 0);
+
+				pStats->pAssists->SetText(GET_STAT_TEXT(gr->GetAssists(i)));
+				pStats->pAssists->SetVisible(gr->GetAssists(i) > 0);
+
+				pStats->pYellows->SetText(GET_STAT_TEXT(gr->GetYellowCards(i)));
+				pStats->pYellows->SetVisible(gr->GetYellowCards(i) > 0);
+
+				pStats->pReds->SetText(GET_STAT_TEXT(gr->GetRedCards(i)));
+				pStats->pReds->SetVisible(gr->GetRedCards(i) > 0);
+
+				pStats->pPossession->SetText(GET_STAT_TEXT(gr->GetPossession(i)));
+				pStats->pPossession->SetVisible(false);
 			}	
 		}
 	}
@@ -335,10 +388,18 @@ void CTeamMenu::Update()
 		{
 			if (!posTaken[i][j])
 			{
-				m_pPosPanels[i][j]->pPlayerName->SetText("JOIN");
-				m_pPosPanels[i][j]->pPlayerName->SetCursor(dc_hand);
-				m_pPosPanels[i][j]->pPlayerName->SetEnabled(true);
-				m_pPosPanels[i][j]->pClubName->SetText("");
+				PosPanel_t *pPos = m_pPosPanels[i][j];
+				pPos->pPlayerName->SetText("JOIN");
+				pPos->pPlayerName->SetCursor(dc_hand);
+				pPos->pPlayerName->SetEnabled(true);
+				pPos->pClubName->SetText("");
+
+				StatPanel_t *pStats = m_pStatPanels[i][j];
+				pStats->pGoals->SetVisible(false);
+				pStats->pAssists->SetVisible(false);
+				pStats->pYellows->SetVisible(false);
+				pStats->pReds->SetVisible(false);
+				pStats->pPossession->SetVisible(false);
 			}
 		}
 	}

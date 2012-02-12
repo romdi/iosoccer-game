@@ -482,6 +482,7 @@ void CSDKPlayer::InitialSpawn( void )
 	m_RedCards=0;
 	m_YellowCards=0;
 	m_Fouls=0;
+	m_Goals=0;
 	m_Assists=0;
 	m_Passes=0;
 	m_FreeKicks=0;
@@ -1609,10 +1610,10 @@ void CSDKPlayer::VPhysicsCollision( int index, gamevcollisionevent_t *pEvent )
 
 void CSDKPlayer::ResetMatchStats()
 {
-	
 	m_RedCards = 0;
 	m_YellowCards = 0;
 	m_Fouls = 0;
+	m_Goals = 0;
 	m_Assists = 0;
 	m_Possession = 0;
 	m_Passes = 0;
@@ -1622,8 +1623,9 @@ void CSDKPlayer::ResetMatchStats()
 	m_ThrowIns = 0;
 	m_KeeperSaves = 0;
 	m_GoalKicks = 0;
-	ResetFragCount();
 	m_flPossessionTime = 0.0f;
+
+	ResetFragCount();
 }
 
 Vector CSDKPlayer::EyeDirection2D( void )
@@ -1661,11 +1663,11 @@ void CSDKPlayer::SetPosOutsideShield(bool holdAtTargetPos)
 
 	switch (SDKGameRules()->m_nShieldType)
 	{
-	case SHIELD_CIRCLE:
+	case SHIELD_THROWIN: case SHIELD_FREEKICK: case SHIELD_CORNER:
 		{
 			Vector dir = GetLocalOrigin() - SDKGameRules()->m_vShieldPos;
 			dir.z = 0;
-			if (dir.Length2D() >= (CIRCLE_SHIELD_RADIUS + 2 * VEC_HULL_MAX.x))
+			if (dir.Length2D() >= (SDKGameRules()->m_nShieldRadius + 2 * VEC_HULL_MAX.x))
 			{
 				m_bIsAtTargetPos = true;
 			}
@@ -1678,7 +1680,7 @@ void CSDKPlayer::SetPosOutsideShield(bool holdAtTargetPos)
 					dir.z = 0;
 				}
 				dir.NormalizeInPlace();
-				Vector pos = SDKGameRules()->m_vShieldPos + dir * (CIRCLE_SHIELD_RADIUS + 2 * VEC_HULL_MAX.x);
+				Vector pos = SDKGameRules()->m_vShieldPos + dir * (SDKGameRules()->m_nShieldRadius + 2 * VEC_HULL_MAX.x);
 
 				float threshold = 0;//150;
 				Vector min = SDKGameRules()->m_vFieldMin - threshold;
@@ -1686,7 +1688,7 @@ void CSDKPlayer::SetPosOutsideShield(bool holdAtTargetPos)
 
 				if (pos.x < min.x || pos.y < min.y || pos.x > max.x || pos.y > max.y)
 				{
-					pos = SDKGameRules()->m_vShieldPos - dir * (CIRCLE_SHIELD_RADIUS + 2 * VEC_HULL_MAX.x);
+					pos = SDKGameRules()->m_vShieldPos - dir * (SDKGameRules()->m_nShieldRadius + 2 * VEC_HULL_MAX.x);
 				}
 
 				m_vTargetPos = pos;
@@ -1733,4 +1735,9 @@ void CSDKPlayer::SetPosOutsideShield(bool holdAtTargetPos)
 bool CSDKPlayer::IsOnField(CSDKPlayer *pPl)
 {
 	return (pPl && pPl->IsConnected() && (pPl->GetTeamNumber() == TEAM_A || pPl->GetTeamNumber() == TEAM_B));
+}
+
+bool CSDKPlayer::IsOffside()
+{
+	return mp_offside.GetBool() ? m_bOffside : false;
 }

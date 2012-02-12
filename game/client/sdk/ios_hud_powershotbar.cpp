@@ -77,6 +77,8 @@ protected:
 
 	Panel *m_pStaminaPanel;
 	Panel *m_pPowershotIndicator;
+	float m_flOldStamina;
+	float m_flNextUpdate;
 };
 
 DECLARE_HUDELEMENT( CHudPowershotBar );
@@ -96,6 +98,8 @@ CHudPowershotBar::CHudPowershotBar( const char *pElementName ) : CHudElement( pE
 
 	m_pStaminaPanel = new Panel(this, "StaminaPanel");
 	m_pPowershotIndicator = new Panel(this, "PowershotIndicator");
+	m_flOldStamina = 100;
+	m_flNextUpdate = gpGlobals->curtime;
 }
 
 #define WIDTH 40
@@ -160,6 +164,13 @@ bool CHudPowershotBar::ShouldDraw()
 //-----------------------------------------------------------------------------
 void CHudPowershotBar::OnThink( void )
 {
+	BaseClass::OnThink();
+
+	//if (m_flNextUpdate <= gpGlobals->curtime)
+	//{
+	//	m_flOldStamina = 
+	//	m_flNextUpdate = gpGlobals->curtime + 1.0f;
+	//}
 }
 
 //-----------------------------------------------------------------------------
@@ -172,7 +183,23 @@ void CHudPowershotBar::Paint()
 	if ( !pPlayer )
 		return;
 
-	float relStamina = pPlayer->m_Shared.GetStamina() / 100.0f;
+	//float stamina = Lerp(0.25f * gpGlobals->frametime, m_flOldStamina, pPlayer->m_Shared.GetStamina());
+
+	float stamina = pPlayer->m_Shared.GetStamina();
+	//float staminaDiff = pPlayer->m_Shared.GetStamina() - m_flOldStamina;
+
+	//if (staminaDiff >= 5)
+	//{
+	//	stamina = min(pPlayer->m_Shared.GetStamina(), m_flOldStamina + 1 * gpGlobals->frametime);
+	//}
+	//else if (staminaDiff <= -5)
+	//{
+	//	stamina = max(pPlayer->m_Shared.GetStamina(), m_flOldStamina - 1 * gpGlobals->frametime);
+	//}
+
+	//m_flOldStamina = stamina;
+
+	float relStamina = stamina / 100.0f;
 
 	m_pStaminaPanel->SetTall(GetTall() * relStamina - 2 * PADDING);
 	m_pStaminaPanel->SetY(GetTall() - PADDING - m_pStaminaPanel->GetTall());

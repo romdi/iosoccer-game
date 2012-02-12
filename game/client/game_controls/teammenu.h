@@ -43,6 +43,16 @@ struct PosPanel_t
 	Label *pPosNumber;
 };
 
+struct StatPanel_t
+{
+	Panel *pPanel;
+	Label *pGoals;
+	Label *pAssists;
+	Label *pYellows;
+	Label *pReds;
+	Label *pPossession;
+};
+
 //-----------------------------------------------------------------------------
 // Purpose: Displays the team menu
 //-----------------------------------------------------------------------------
@@ -92,6 +102,7 @@ protected:
 
 	//CUtlVectorFixed<CBitmapButton *, 11> m_pTeamButtons;
 	PosPanel_t *m_pPosPanels[2][11];
+	StatPanel_t *m_pStatPanels[2][11];
 
 	Button *m_pSpectateButton;
 	Button *m_pTabButtons[2];

@@ -718,7 +718,7 @@ bool CClientScoreBoardDialog::GetPlayerScoreInfo(int playerIndex, KeyValues *kv)
 	if (!gr )
 		return false;
 
-	kv->SetInt("frags", gr->GetFrags( playerIndex ) );
+	kv->SetInt("frags", gr->GetScore( playerIndex ) );
     kv->SetInt("ping", gr->GetPing( playerIndex ) ) ;
     kv->SetString("name", gr->GetPlayerName( playerIndex ) );
     kv->SetInt("playerIndex", playerIndex);

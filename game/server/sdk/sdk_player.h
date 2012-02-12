@@ -284,6 +284,7 @@ public:
 	int					m_RedCards;
 	int					m_YellowCards;
 	int					m_Fouls;
+	int					m_Goals;
 	int					m_Assists;
 	int					m_Possession;
 	int					m_Passes;
@@ -297,6 +298,7 @@ public:
 	int					GetRedCards(void) { return m_RedCards; }
 	int					GetYellowCards(void) { return m_YellowCards; }
 	int					GetFouls(void) { return m_Fouls; }
+	int					GetGoals(void) { return m_Goals; }
 	int					GetAssists(void) { return m_Assists; }
 	int					GetPossession(void) { return m_Possession; }
 	int					GetPasses(void) { return m_Passes; }
@@ -346,7 +348,7 @@ public:
 	Vector				EyeDirection3D();
 
 	void				SetOffside(bool offside) { m_bOffside = offside; }
-	bool				IsOffside() { return m_bOffside; }
+	bool				IsOffside();
 	
 	void				SetPosInsideShield(Vector pos, bool holdAtTargetPos);
 	void				SetPosOutsideShield(bool holdAtTargetPos);

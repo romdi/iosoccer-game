@@ -20,8 +20,8 @@
 
 enum ball_state_t
 {
-	BALL_NOSTATE = -1,
-	BALL_NORMAL = 0,
+	BALL_NOSTATE = 0,
+	BALL_NORMAL,
 	BALL_GOAL,
 	BALL_CORNER,
 	BALL_GOALKICK,
@@ -30,6 +30,7 @@ enum ball_state_t
 	BALL_KICKOFF,
 	BALL_PENALTY,
 	BALL_FREEKICK,
+	BALL_HANDS,
 	BALL_GOALKICK_PENDING,
 	BALL_CORNERKICK_PENDING,
 	BALL_THROWIN_PENDING,
@@ -40,12 +41,27 @@ enum ball_state_t
 
 enum body_part_t
 {
-	BODY_NONE = -1,
-	BODY_FEET = 0,
+	BODY_NONE = 0,
+	BODY_FEET,
+	BODY_HIP,
 	BODY_CHEST,
 	BODY_HEAD,
 	BODY_HANDS
 };
+
+#define BODY_FEET_START		0
+#define BODY_FEET_END		15
+#define BODY_HIP_START		15
+#define BODY_HIP_END		30
+#define BODY_CHEST_START	45
+#define BODY_CHEST_END		55
+#define BODY_HEAD_START		65
+#define BODY_HEAD_END		80
+
+#define SHOT_DELAY			0.5f
+#define BEST_SHOT_ANGLE		-20
+#define PITCH_LIMIT			89
+#define VOLLEY_ANGLE		15
 
 enum foul_type_t
 {
@@ -86,7 +102,6 @@ struct CBallStateInfo
 	const char				*m_pStateName;
 
 	void (CBall::*pfnEnterState)();	// Init and deinit the state.
-	void (CBall::*pfnLeaveState)();
 	void (CBall::*pfnThink)();	// Do a PreThink() in this state.
 };
 
@@ -101,11 +116,12 @@ struct BallHistory
 	BallHistory(float snapshotTime, Vector pos, QAngle ang, Vector vel, AngularImpulse angImp) : snapshotTime(snapshotTime), pos(pos), ang(ang), vel(vel), angImp(angImp) {}
 };
 
-struct CBallTouchInfo
+struct BallTouchInfo
 {
-	CSDKPlayer	*m_pPl;
-	int			m_nTeam;
-	bool		m_bIsShot;
+	CSDKPlayer		*m_pPl;
+	int				m_nTeam;
+	bool			m_bIsShot;
+	body_part_t		m_eBodyPart;
 };
 
 //==========================================================
@@ -162,11 +178,12 @@ private:
 	void State_CORNER_Enter();		void State_CORNER_Think();
 	void State_GOAL_Enter();		void State_GOAL_Think();
 	void State_FREEKICK_Enter();	void State_FREEKICK_Think();
+	void State_PENALTY_Enter();		void State_PENALTY_Think();
+	void State_HANDS_Enter();		void State_HANDS_Think();
 
 	void State_PreThink();
 	void State_PostThink();
 	void State_Enter(ball_state_t newState);	// Initialize the new state.
-	void State_Leave();										// Cleanup the previous state.
 	void State_Think();										// Update the current state.
 	void State_DoTransition( ball_state_t newState );
 	static CBallStateInfo* State_LookupInfo(ball_state_t state);	// Find the state info for the specified state.
@@ -190,22 +207,24 @@ private:
 
 	CSDKPlayer		*FindNearestPlayer(int team = TEAM_INVALID, int posFlags = FL_POS_FIELD, bool checkIfShooting = false);
 	bool			IsPlayerCloseEnough(CSDKPlayer *pPl);
+	body_part_t		GetBodyPart(Vector pos, CSDKPlayer *pPl);
 	bool			DoBodyPartAction();
 	bool			DoGroundShot();
 	bool			DoVolleyShot();
 	bool			DoChestDrop();
 	bool			DoHeader();
+	bool			DoKeeperHandShot();
+	bool			DoKeeperHandThrow();
 	void			SetBallCurve();
 	float			GetPitchModifier();
 	float			GetPowershotModifier();
 	void			UpdateCarrier();
-	bool			PlOnField(CSDKPlayer *pPl);
 	void			Kicked(body_part_t bodyPart);
-	void			Touched(CSDKPlayer *pPl, bool isShot);
-	CBallTouchInfo	*LastInfo(bool wasShooting);
-	CSDKPlayer		*LastPl(bool wasShooting);
-	int				LastTeam(bool wasShooting);
-	int				LastOppTeam(bool wasShooting);
+	void			Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart);
+	BallTouchInfo	*LastInfo(bool wasShooting, CSDKPlayer *pSkipPl = NULL);
+	CSDKPlayer		*LastPl(bool wasShooting, CSDKPlayer *pSkipPl = NULL);
+	int				LastTeam(bool wasShooting, CSDKPlayer *pSkipPl = NULL);
+	int				LastOppTeam(bool wasShooting, CSDKPlayer *pSkipPl = NULL);
 	void			UpdatePossession(CSDKPlayer *pNewPossessor);
 
 	IPhysicsObject	*m_pPhys;
@@ -219,7 +238,7 @@ private:
 	int				m_nPlTeam;
 	int				m_nPlPos;
 	bool			m_bIsPowershot;
-	body_part_t		m_eBodyPart;
+	body_part_t		m_eLastBodyPart;
 
 	CSDKPlayer		*m_pFoulingPl;
 	int				m_nFoulingTeam;
@@ -233,9 +252,9 @@ private:
 	bool			m_bDoReplay;
 	int				m_nReplaySnapshotIndex;
 
-	int				m_team;				  //team the ball can be kicked	by (during a corner	etc) (0=any)
+	int				m_nTeam;				  //team the ball can be kicked	by (during a corner	etc) (0=any)
 	int				m_side;				  //side of	the	pitch the corner/goalkick should be	taken from
-	int				m_nBallInPenaltyBox;	 //-1 =	not	in box,	0,1	= teams	box
+	int				m_nPenBoxTeam;	 //-1 =	not	in box,	0,1	= teams	box
 	int				m_FoulInPenaltyBox;	 //-1 =	not	in box,	0,1	= teams	box - recorded when foul occurs
 
 	bool			m_bIgnoreTriggers;
@@ -246,7 +265,7 @@ private:
 
 	bool			m_bRegularKickOff;
 
-	CUtlVector<CBallTouchInfo> m_Touches;
+	CUtlVector<BallTouchInfo> m_Touches;
 
 	CBeam *m_pOffsideLine;
 };

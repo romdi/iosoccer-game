@@ -36,8 +36,6 @@
 	#define CSDKGameRulesProxy C_SDKGameRulesProxy
 #endif
 
-#define CIRCLE_SHIELD_RADIUS 360
-
 extern CUniformRandomStream g_IOSRand;
 
 extern ConVar 
@@ -48,7 +46,12 @@ extern ConVar
 	mp_timelimit_warmup,
 	mp_timelimit_penalties_intermission,
 	mp_timelimit_penalties,
-	mp_timelimit_cooldown;
+	mp_timelimit_cooldown,
+	mp_shield_throwin_radius,
+	mp_shield_freekick_radius,
+	mp_shield_corner_radius,
+	mp_shield_kickoff_radius,
+	mp_offside;
 
 enum match_state_t
 {
@@ -74,7 +77,9 @@ enum match_state_t
 enum ball_shield_type_t
 {
 	SHIELD_NONE = 0,
-	SHIELD_CIRCLE,
+	SHIELD_THROWIN,
+	SHIELD_FREEKICK,
+	SHIELD_CORNER,
 	SHIELD_GOALKICK,
 	SHIELD_KICKOFF,
 	SHIELD_PENALTY
@@ -189,7 +194,7 @@ public:
 
 	virtual const char *GetChatPrefix( bool bTeamOnly, CBasePlayer *pPlayer );
 	virtual const char *GetChatFormat( bool bTeamOnly, CBasePlayer *pPlayer );
-
+	virtual const char *GetChatLocation( bool bTeamOnly, CBasePlayer *pPlayer );
 	
 	//IOS
 	int		m_PlayersOnTeam[TEAMS_COUNT];
@@ -269,6 +274,7 @@ public:
 	void RestartMatch();
 
 #ifdef GAME_DLL
+
 protected:
 	float m_flStateTimeLeft;
 
@@ -327,18 +333,18 @@ public:
 	bool GetTeamsSwapped() { return m_bTeamsSwapped; };
 	void SetTeamsSwapped(bool swapped);
 	void SetKickOffTeam(int team) { m_nKickOffTeam = team; };
-	int GetKickOffTeam() { return m_nKickOffTeam; };
+	int GetKickOffTeam() { return m_bTeamsSwapped ? (m_nKickOffTeam == TEAM_A ? TEAM_B : TEAM_A) : m_nKickOffTeam; };
 
 	void ClientSettingsChanged( CBasePlayer *pPlayer );
 
-	void EnableStaticShield(int type, int side);
-	void EnableCircleShield(Vector pos);
+	void EnableShield(int type, int sideOrRadius, Vector pos = vec3_invalid);
 	void DisableShield();
 #endif
 
 public:
 	CNetworkVar(int, m_nShieldType);
 	CNetworkVar(int, m_nShieldSide);
+	CNetworkVar(int, m_nShieldRadius);
 	CNetworkVector(m_vShieldPos);
 };
 
@@ -374,5 +380,7 @@ struct s_KitData
 };
 
 extern const s_KitData gKitDesc[];
+
+extern const char *g_szPosNames[32];
 
 #endif // SDK_GAMERULES_H

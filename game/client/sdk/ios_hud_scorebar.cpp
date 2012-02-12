@@ -53,9 +53,6 @@ class CHudScorebar : public CHudElement, public vgui::Panel
 public:
 	CHudScorebar( const char *pElementName );
 	void Init( void );
-	void Reset( void );
-	void VidInit( void );
-	void DrawText( int x, int y, HFont hFont, Color clr, const wchar_t *szText );
 	void DoEventSlide();
 	void MsgFunc_MatchEvent(bf_read &msg);
 
@@ -66,6 +63,7 @@ protected:
 private:
 
 	Panel *m_pTimeBar;
+	Label *m_pMatchState;
 	Label *m_pTime;
 	Label *m_pTeams[2];
 	Label *m_pScores[2];
@@ -90,8 +88,9 @@ DECLARE_HUD_MESSAGE(CHudScorebar, MatchEvent);
 #define WIDTH_EVENTTEXT			100
 #define WIDTH_TEAM				150
 #define WIDTH_SCORE				30
-#define WIDTH_TIME				150
-#define WIDTH_TIMEBAR			175
+#define WIDTH_TIMEBAR			176
+#define WIDTH_MATCHSTATE		85
+#define WIDTH_TIME				85
 #define WIDTH_TEAMCOLOR			15
 
 #define WIDTH_TEAMBAR			BORDER + WIDTH_TEAMCOLOR + WIDTH_MARGIN + WIDTH_TEAM + WIDTH_MARGIN + WIDTH_SCORE + BORDER
@@ -106,6 +105,7 @@ CHudScorebar::CHudScorebar( const char *pElementName ) : BaseClass(NULL, "HudSco
 	SetParent( pParent );
 
 	m_pTimeBar = new Panel(this, "TopPanel");
+	m_pMatchState = new Label(m_pTimeBar, "MatchStateLabel", "");
 	m_pTime = new Label(m_pTimeBar, "TimeLabel", "");
 
 	for (int i = 0; i < 2; i++)
@@ -128,6 +128,7 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
  	//SetPaintBackgroundEnabled(true);
 	//SetBgColor( Color( 0, 0, 255, 255 ) );
 
+	Color fgColor = Color(245, 245, 245, 255);
 	Color bgColor = Color(25, 25, 25, 255);
 	Color bgColorTransparent = Color(25, 25, 25, 200);
 
@@ -136,10 +137,15 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 	m_pTimeBar->SetPaintBackgroundType(2);
 	m_pTimeBar->SetBgColor(bgColor);
 
-	m_pTime->SetBounds(WIDTH_MARGIN, BORDER, WIDTH_TIME, HEIGHT_TIMEBAR - 2 * BORDER);
-	//m_pTime->SetContentAlignment(Label::a_center);
+	m_pMatchState->SetBounds(WIDTH_MARGIN, BORDER, WIDTH_MATCHSTATE, HEIGHT_TIMEBAR - 2 * BORDER);
+	m_pMatchState->SetContentAlignment(Label::a_east);
+	m_pMatchState->SetFont(pScheme->GetFont("IOSScorebar"));
+	m_pMatchState->SetFgColor(fgColor);
+
+	m_pTime->SetBounds(WIDTH_MARGIN + WIDTH_TIME + WIDTH_MARGIN, BORDER, WIDTH_TIME, HEIGHT_TIMEBAR - 2 * BORDER);
+	m_pTime->SetContentAlignment(Label::a_west);
 	m_pTime->SetFont(pScheme->GetFont("IOSScorebar"));
-	m_pTime->SetFgColor(Color(255, 255, 255, 255));
+	m_pTime->SetFgColor(fgColor);
 
 	for (int i = 0; i < 2; i++)
 	{		
@@ -159,7 +165,7 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 		m_pTeams[i]->SetFont(pScheme->GetFont("IOSScorebar"));
 		m_pTeams[i]->SetPaintBackgroundType(2);
 		//m_pTeams[i]->SetBgColor(Color(100 * i, 100 * (1 - i), 0, 255));
-		m_pTeams[i]->SetFgColor(Color(255, 255, 255, 255));
+		m_pTeams[i]->SetFgColor(fgColor);
 		
 		m_pScores[i]->SetBounds(BORDER + WIDTH_TEAMCOLOR + WIDTH_MARGIN + WIDTH_TEAM + WIDTH_MARGIN, BORDER, WIDTH_SCORE, HEIGHT_TEAMBAR - 2 * BORDER);
 		m_pScores[i]->SetContentAlignment(Label::a_center);
@@ -167,8 +173,8 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 		//m_pScores[i]->SetAutoResize(Panel::PIN_TOPLEFT, AUTORESIZE_RIGHT, 10, 0, 10, 0);
 		m_pScores[i]->SetFont(pScheme->GetFont("IOSScorebar"));
 		m_pScores[i]->SetPaintBackgroundType(2);
-		m_pScores[i]->SetBgColor(Color(255, 255, 255, 255));
-		m_pScores[i]->SetFgColor(Color(0, 0, 0, 255));
+		m_pScores[i]->SetBgColor(fgColor);
+		m_pScores[i]->SetFgColor(Color(25, 25, 25, 255));
 
 		m_pEventBars[i]->SetBounds(WIDTH_TEAMBAR - WIDTH_OVERLAP, i * (HEIGHT_TEAMBAR + HEIGHT_MARGIN), 0, HEIGHT_TEAMBAR);
 		m_pEventBars[i]->SetPaintBackgroundType(2);
@@ -183,31 +189,6 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 void CHudScorebar::Init( void )
 {
 	HOOK_HUD_MESSAGE(CHudScorebar, MatchEvent);
-	Reset();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CHudScorebar::Reset( void )
-{
-
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CHudScorebar::VidInit( void )
-{
-	Reset();
-}
-
-void CHudScorebar::DrawText( int x, int y, HFont hFont, Color clr, const wchar_t *szText )
-{
-	surface()->DrawSetTextPos( x, y );
-	surface()->DrawSetTextColor( clr );
-	surface()->DrawSetTextFont( hFont );	//reset the font, draw icon can change it
-	surface()->DrawUnicodeString( szText, vgui::FONT_DRAW_NONADDITIVE );
 }
 
 const char *g_szStateNames[32] =
@@ -236,19 +217,13 @@ const char *g_szStateNames[32] =
 //-----------------------------------------------------------------------------
 void CHudScorebar::Paint( void )
 {
-	C_Team *teamHome = GetGlobalTeam( 2 );
-	C_Team *teamAway = GetGlobalTeam( 3 );
-	if ( !teamHome || !teamAway )
+	C_Team *teamHome = GetGlobalTeam(TEAM_A);
+	C_Team *teamAway = GetGlobalTeam(TEAM_B);
+	if (!teamHome || !teamAway)
 		return;
-
-	wchar_t teamHomeName[64];
-	wchar_t teamAwayName[64];
-	//wchar_t curTime[64];
 
 	float flTime = gpGlobals->curtime - SDKGameRules()->m_flStateEnterTime;
 	int nTime;
-
-	//_snwprintf(curTime, sizeof(curTime), L"%s", g_szStateNames[SDKGameRules()->m_eMatchState]
 
 	switch ( SDKGameRules()->m_eMatchState )
 	{
@@ -292,32 +267,22 @@ void CHudScorebar::Paint( void )
 
 	nTime = abs(nTime);
 
-	char stateText[32];
-	char *timeText = nTime > 0 ? VarArgs("% 3d:%02d", nTime / 60, nTime % 60) : VarArgs(" 3%d", nTime);
-	Q_snprintf(stateText, sizeof(stateText), "%s %s", g_szStateNames[SDKGameRules()->m_eMatchState], timeText);
+	m_pTime->SetText(nTime > 0 ? VarArgs("% 3d:%02d", nTime / 60, nTime % 60) : VarArgs(" 3%d", nTime));
 
-	//_snwprintf(time, sizeof(time), L"%d", (int)();
-	wchar_t scoreHome[3];
-	_snwprintf(scoreHome, sizeof(scoreHome), L"%d", teamHome->Get_Score());
-	wchar_t scoreAway[3];
-	_snwprintf(scoreAway, sizeof(scoreAway), L"%d", teamAway->Get_Score());
-	g_pVGuiLocalize->ConvertANSIToUnicode( teamHome->Get_FullName(), teamHomeName, sizeof( teamHomeName ) );
-	g_pVGuiLocalize->ConvertANSIToUnicode( teamAway->Get_FullName(), teamAwayName, sizeof( teamAwayName ) );
+	m_pMatchState->SetText(g_szStateNames[SDKGameRules()->m_eMatchState]);
 
-	m_pTime->SetText(stateText);
-	m_pTeams[0]->SetText(teamHomeName);
-	m_pTeams[1]->SetText(teamAwayName);
-	//wchar_t scoreText[32];
-	//_snwprintf(scoreText, sizeof(scoreText), L"%s - %s", scoreHome, scoreAway);
-	m_pScores[1]->SetText(scoreHome);
-	m_pScores[0]->SetText(scoreAway);
+	m_pTeams[0]->SetText(teamHome->Get_Name());
+	m_pTeams[1]->SetText(teamAway->Get_Name());
+
+	m_pScores[0]->SetText(VarArgs("%d", teamHome->Get_Score()));
+	m_pScores[1]->SetText(VarArgs("%d", teamAway->Get_Score()));
 
 	DoEventSlide();
 }
 
 #define EVENT_SLIDE_IN_TIME		0.5f
 #define EVENT_FADE_IN_TIME		0.5f
-#define EVENT_STAY_TIME			5.0f
+#define EVENT_STAY_TIME			3.0f
 #define EVENT_SLIDE_OUT_TIME	0.5f
 
 void CHudScorebar::DoEventSlide()

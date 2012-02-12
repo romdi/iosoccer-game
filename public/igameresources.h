@@ -34,7 +34,7 @@ public:
 	virtual int		GetPing( int index ) = 0;
 //	virtual int		GetPacketloss( int index ) = 0;
 	virtual int		GetDeaths( int index ) = 0;
-	virtual int		GetFrags( int index ) = 0;
+	virtual int		GetScore( int index ) = 0;
 	virtual int		GetTeam( int index ) = 0;
 	virtual int		GetHealth( int index ) = 0;
 
@@ -42,6 +42,7 @@ public:
 	virtual int		GetRedCards( int index ) = 0;
 	virtual int		GetYellowCards( int index ) = 0;
 	virtual int		GetFouls( int index ) = 0;
+	virtual int		GetGoals( int index ) = 0;
 	virtual int		GetAssists( int index ) = 0;
 	virtual int		GetPossession( int index ) = 0;
 	virtual int		GetPasses( int index ) = 0;

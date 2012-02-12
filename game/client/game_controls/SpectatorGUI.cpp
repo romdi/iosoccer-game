@@ -184,13 +184,16 @@ void CSpectatorMenu::OnTextChanged(KeyValues *data)
 			const char *player = kv->GetString("player");
 
 			int currentPlayerNum = GetSpectatorTarget();
-			const char *currentPlayerName = GameResources()->GetPlayerName( currentPlayerNum );
-
-			if ( !FStrEq( currentPlayerName, player ) )
+			if (currentPlayerNum > 0)
 			{
-				char command[128];
-				Q_snprintf( command, sizeof(command), "spec_player \"%s\"", player );
-				engine->ClientCmd( command );
+				const char *currentPlayerName = GameResources()->GetPlayerName( currentPlayerNum );
+
+				if ( !FStrEq( currentPlayerName, player ) )
+				{
+					char command[128];
+					Q_snprintf( command, sizeof(command), "spec_player \"%s\"", player );
+					engine->ClientCmd( command );
+				}
 			}
 		}
 	}
@@ -349,14 +352,18 @@ void CSpectatorMenu::Update( void )
 
 	// make sure the player combo box is up to date
 	int playernum = GetSpectatorTarget();
-	const char *selectedPlayerName = gr->GetPlayerName( playernum );
-	for ( iPlayerIndex=0; iPlayerIndex<m_pPlayerList->GetItemCount(); ++iPlayerIndex )
+
+	if (playernum > 0)
 	{
-		KeyValues *kv = m_pPlayerList->GetItemUserData( iPlayerIndex );
-		if ( kv && FStrEq( kv->GetString( "player" ), selectedPlayerName ) )
+		const char *selectedPlayerName = gr->GetPlayerName( playernum );
+		for ( iPlayerIndex=0; iPlayerIndex<m_pPlayerList->GetItemCount(); ++iPlayerIndex )
 		{
-			m_pPlayerList->ActivateItemByRow( iPlayerIndex );
-			break;
+			KeyValues *kv = m_pPlayerList->GetItemUserData( iPlayerIndex );
+			if ( kv && FStrEq( kv->GetString( "player" ), selectedPlayerName ) )
+			{
+				m_pPlayerList->ActivateItemByRow( iPlayerIndex );
+				break;
+			}
 		}
 	}
 }
@@ -425,8 +432,8 @@ CSpectatorGUI::~CSpectatorGUI()
 void CSpectatorGUI::ApplySchemeSettings(IScheme *pScheme)
 {
 	LoadControlSettings("Resource/UI/Spectator.res");
-	m_pBottomBarBlank->SetVisible( true );
-	m_pTopBar->SetVisible( true );
+	m_pBottomBarBlank->SetVisible( false );
+	m_pTopBar->SetVisible( false );
 
 	BaseClass::ApplySchemeSettings( pScheme );
 	SetBgColor(Color( 0,0,0,0 ) ); // make the background transparent
@@ -633,21 +640,23 @@ void CSpectatorGUI::Update()
 		
 		Q_strncpy( tempstr, HLTVCamera()->GetTitleText(), sizeof(tempstr) );
 		g_pVGuiLocalize->ConvertANSIToUnicode(tempstr,szTitleLabel,sizeof(szTitleLabel));
+		SetLabelText("extrainfo", szEtxraInfo );
+		SetLabelText("titlelabel", szTitleLabel );
 	}
 	else
 	{
-		// otherwise show map name
-		Q_FileBase( engine->GetLevelName(), tempstr, sizeof(tempstr) );
+		//// otherwise show map name
+		//Q_FileBase( engine->GetLevelName(), tempstr, sizeof(tempstr) );
 
-		wchar_t wMapName[64];
-		g_pVGuiLocalize->ConvertANSIToUnicode(tempstr,wMapName,sizeof(wMapName));
-		g_pVGuiLocalize->ConstructString( szEtxraInfo,sizeof( szEtxraInfo ), g_pVGuiLocalize->Find("#Spec_Map" ),1, wMapName );
+		//wchar_t wMapName[64];
+		//g_pVGuiLocalize->ConvertANSIToUnicode(tempstr,wMapName,sizeof(wMapName));
+		//g_pVGuiLocalize->ConstructString( szEtxraInfo,sizeof( szEtxraInfo ), g_pVGuiLocalize->Find("#Spec_Map" ),1, wMapName );
 
-		g_pVGuiLocalize->ConvertANSIToUnicode( "" ,szTitleLabel,sizeof(szTitleLabel));
+		//g_pVGuiLocalize->ConvertANSIToUnicode( "" ,szTitleLabel,sizeof(szTitleLabel));
 	}
 
-	SetLabelText("extrainfo", szEtxraInfo );
-	SetLabelText("titlelabel", szTitleLabel );
+	//SetLabelText("extrainfo", szEtxraInfo );
+	//SetLabelText("titlelabel", szTitleLabel );
 }
 
 //-----------------------------------------------------------------------------
