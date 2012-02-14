@@ -52,14 +52,12 @@ enum body_part_t
 #define BODY_FEET_START		0
 #define BODY_FEET_END		15
 #define BODY_HIP_START		15
-#define BODY_HIP_END		30
-#define BODY_CHEST_START	45
-#define BODY_CHEST_END		55
-#define BODY_HEAD_START		65
+#define BODY_HIP_END		40
+#define BODY_CHEST_START	40
+#define BODY_CHEST_END		60
+#define BODY_HEAD_START		60
 #define BODY_HEAD_END		80
 
-#define SHOT_DELAY			0.5f
-#define BEST_SHOT_ANGLE		-20
 #define PITCH_LIMIT			89
 #define VOLLEY_ANGLE		15
 

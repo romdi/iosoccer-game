@@ -13,7 +13,7 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-void SendProxy_String_tToString( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID )
+void SendProxy_String_tToStringPR( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID )
 {
 	string_t *pString = (string_t*)pData;
 	pOut->m_pString = (char*)STRING( *pString );
@@ -48,7 +48,7 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CPlayerResource, DT_PlayerResource)
 	SendPropArray3( SENDINFO_ARRAY3(m_TeamPosition), SendPropInt( SENDINFO_ARRAY(m_TeamPosition), 5 ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_ShirtPosition), SendPropInt( SENDINFO_ARRAY(m_ShirtPosition), 5 ) ),
 
-	SendPropArray3( SENDINFO_ARRAY3(m_szClubNames), SendPropString( SENDINFO_ARRAY(m_szClubNames), 0, SendProxy_String_tToString ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_szClubNames), SendPropString( SENDINFO_ARRAY(m_szClubNames), 0, SendProxy_String_tToStringPR ) ),
 	//SendPropArray( SendPropString( SENDINFO_ARRAY( m_szClubName ), 0, SendProxy_String_tToString ), m_szClubName ),
 	
 END_SEND_TABLE()

@@ -15,6 +15,7 @@
 #include "sdk_player_shared.h"
 #include "ball.h"
 #include "sdk_gamerules.h"
+#include "sdk_shareddefs.h"
 
 const int MODEL_PLAYER			= 0;
 const int MODEL_KEEPER			= 1;

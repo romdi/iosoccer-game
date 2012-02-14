@@ -400,9 +400,9 @@ void CSDKPlayerShared::ComputeWorldSpaceSurroundingBox( Vector *pVecWorldMins, V
 void CSDKPlayer::InitSpeeds()
 {
 #if !defined ( SDK_USE_PLAYERCLASSES )
-	m_Shared.m_flRunSpeed = PLAYER_RUNSPEED;
-	m_Shared.m_flSprintSpeed = PLAYER_SPRINTSPEED;
-	m_Shared.m_flProneSpeed = PLAYER_PRONESPEED;
+	m_Shared.m_flRunSpeed = mp_runspeed.GetInt();
+	m_Shared.m_flSprintSpeed = mp_sprintspeed.GetInt();
+	m_Shared.m_flProneSpeed = 50;//PLAYER_PRONESPEED;
 	// Set the absolute max to sprint speed
 	//ios SetMaxSpeed( m_Shared.m_flSprintSpeed ); 
 	SetMaxSpeed( m_Shared.m_flRunSpeed ); 
@@ -414,8 +414,8 @@ void CSDKPlayer::InitSpeeds()
 		//Tony; error checkings.
 		if ( playerclass == PLAYERCLASS_UNDEFINED )
 		{
-			m_Shared.m_flRunSpeed = SDK_DEFAULT_PLAYER_RUNSPEED;
-			m_Shared.m_flSprintSpeed = SDK_DEFAULT_PLAYER_SPRINTSPEED;
+			m_Shared.m_flRunSpeed = SDK_DEFAULT_mp_runspeed.GetInt();
+			m_Shared.m_flSprintSpeed = SDK_DEFAULT_mp_sprintspeed.GetInt();
 			m_Shared.m_flProneSpeed = SDK_DEFAULT_PLAYER_PRONESPEED;
 		}
 		else

@@ -32,6 +32,16 @@ class TeamFortressViewport;
 
 using namespace vgui;
 
+struct StatPanel_t
+{
+	Panel *pPanel;
+	Label *pGoals;
+	Label *pAssists;
+	Label *pYellows;
+	Label *pReds;
+	Label *pPossession;
+};
+
 struct PosPanel_t
 {
 	Panel *pPosPanel;
@@ -41,16 +51,8 @@ struct PosPanel_t
 	Label *pClubName;
 	Label *pPosName;
 	Label *pPosNumber;
-};
-
-struct StatPanel_t
-{
-	Panel *pPanel;
-	Label *pGoals;
-	Label *pAssists;
-	Label *pYellows;
-	Label *pReds;
-	Label *pPossession;
+	StatPanel_t *pStatPanel;
+	Button *pKickButton;
 };
 
 //-----------------------------------------------------------------------------
@@ -102,11 +104,12 @@ protected:
 
 	//CUtlVectorFixed<CBitmapButton *, 11> m_pTeamButtons;
 	PosPanel_t *m_pPosPanels[2][11];
-	StatPanel_t *m_pStatPanels[2][11];
+	//StatPanel_t *m_pStatPanels[2][11];
 
 	Button *m_pSpectateButton;
 	Button *m_pTabButtons[2];
 	Button *m_pToggleStats;
+	Button *m_pKickButton[2][11];
 
 	bool m_bShowStats;
 

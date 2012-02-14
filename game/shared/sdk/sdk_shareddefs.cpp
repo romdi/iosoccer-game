@@ -127,3 +127,7 @@ const char *g_szMatchEventNames[32] =
 	"ASSIST",
 	NULL
 };
+
+ConVar mp_walkspeed("mp_walkspeed", "180", FCVAR_ARCHIVE | FCVAR_REPLICATED | FCVAR_NOTIFY);
+ConVar mp_runspeed("mp_runspeed", "280", FCVAR_ARCHIVE | FCVAR_REPLICATED | FCVAR_NOTIFY);
+ConVar mp_sprintspeed("mp_sprintspeed", "380", FCVAR_ARCHIVE | FCVAR_REPLICATED | FCVAR_NOTIFY);

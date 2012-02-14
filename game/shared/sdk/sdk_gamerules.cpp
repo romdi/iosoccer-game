@@ -1213,13 +1213,8 @@ void CSDKGameRules::State_END_Think()
 
 void SetTeams(const char *teamHome, const char *teamAway, bool bInitialize)
 {
-	// copy strings to avoid problems (e.g. when swapping teams)
-	char teamHomeCpy[32], teamAwayCpy[32];
-	Q_strncpy(teamHomeCpy, teamHome, sizeof(teamHomeCpy));
-	Q_strncpy(teamAwayCpy, teamAway, sizeof(teamAwayCpy));
-
-	Q_strncpy(pszTeamNames[TEAM_A], teamHomeCpy, sizeof(pszTeamNames[TEAM_A]));
-	Q_strncpy(pszTeamNames[TEAM_B], teamAwayCpy, sizeof(pszTeamNames[TEAM_B]));
+	Q_strncpy(pszTeamNames[TEAM_A], teamHome, sizeof(pszTeamNames[TEAM_A]));
+	Q_strncpy(pszTeamNames[TEAM_B], teamAway, sizeof(pszTeamNames[TEAM_B]));
 
 	if (bInitialize)
 	{
@@ -1368,6 +1363,22 @@ void CSDKGameRules::SetTeamsSwapped(bool swapped)
 		GetGlobalTeam(TEAM_B)->InitFieldSpots(swapped ? TEAM_A : TEAM_B);
 		m_bTeamsSwapped = swapped;
 	}
+}
+
+CBaseEntity *CSDKGameRules::GetPlayerSpawnSpot( CBasePlayer *pPlayer )
+{
+	Vector spawnPos = pPlayer->GetTeam()->m_vPlayerSpawns[ToSDKPlayer(pPlayer)->GetTeamPosition() - 1];
+	Vector dir = Vector(0, pPlayer->GetTeam()->m_nForward, 0);
+	QAngle ang;
+	VectorAngles(dir, ang);
+	pPlayer->SetLocalOrigin(spawnPos);
+	pPlayer->SetLocalVelocity(vec3_origin);
+	pPlayer->SetLocalAngles(ang);
+	pPlayer->m_Local.m_vecPunchAngle = vec3_angle;
+	pPlayer->m_Local.m_vecPunchAngleVel = vec3_angle;
+	pPlayer->SnapEyeAngles(ang);
+
+	return NULL;
 }
 
 #endif

@@ -10,6 +10,8 @@
 #pragma once
 #endif
 
+#include "convar.h"
+
 //=========================
 // GAMEPLAY RELATED OPTIONS
 //=========================
@@ -127,11 +129,9 @@ enum sdkteams_e
 
 extern char pszTeamNames[4][32];
 
-//Tony; these defines handle the default speeds for all of these - all are listed regardless of which option is enabled.
-#define PLAYER_WALKSPEED		180
-#define PLAYER_RUNSPEED			280//220
-#define PLAYER_SPRINTSPEED		380//330
-#define PLAYER_PRONESPEED		50
+extern ConVar mp_walkspeed;
+extern ConVar mp_runspeed;
+extern ConVar mp_sprintspeed;
 
 //--------------------------------------------------------------------------------------------------------
 //

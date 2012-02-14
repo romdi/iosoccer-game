@@ -4054,7 +4054,7 @@ void CBasePlayer::Spawn( void )
 	SetEffects( effects | EF_NOINTERP );
 
 	// Initialize the fog controller.
-	InitFogController();
+	//InitFogController();
 
 	m_afPhysicsFlags	= 0;
 
@@ -4068,11 +4068,6 @@ void CBasePlayer::Spawn( void )
 
 	m_vecAdditionalPVSOrigin = vec3_origin;
 	m_vecCameraPVSOrigin = vec3_origin;
-
-	if ( !m_fGameHUDInitialized )
-		g_pGameRules->SetDefaultPlayerTeam( this );
-
-	g_pGameRules->GetPlayerSpawnSpot( this );
 
 	m_Local.m_bDucked = false;// This will persist over round restart if you hold duck otherwise. 
 	m_Local.m_bDucking = false;
@@ -4118,10 +4113,10 @@ void CBasePlayer::Spawn( void )
 	StopReplayMode();
 
 	// Clear any screenfade
-	color32 nothing = {0,0,0,255};
-	UTIL_ScreenFade( this, nothing, 0, 0, FFADE_IN | FFADE_PURGE );
+	//color32 nothing = {0,0,0,255};
+	//UTIL_ScreenFade( this, nothing, 0, 0, FFADE_IN | FFADE_PURGE );
 
-	g_pGameRules->PlayerSpawn( this );
+	//g_pGameRules->PlayerSpawn( this );
 
 	m_flLaggedMovementValue = 1.0f;
 	m_vecSmoothedVelocity = vec3_origin;
@@ -4135,7 +4130,7 @@ void CBasePlayer::Spawn( void )
 		gameeventmanager->FireEvent( event );
 	}
 
-	RumbleEffect( RUMBLE_STOP_ALL, 0, RUMBLE_FLAGS_NONE );
+	//RumbleEffect( RUMBLE_STOP_ALL, 0, RUMBLE_FLAGS_NONE );
 }
 
 void CBasePlayer::Activate( void )

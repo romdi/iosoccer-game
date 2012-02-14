@@ -35,7 +35,11 @@ extern ConVar sv_specaccelerate;
 extern ConVar sv_specspeed;
 extern ConVar sv_specnoclip;
 
-extern ConVar sv_jumpdelay; //ios
+extern ConVar mp_jump_delay; //ios
+extern ConVar mp_stamina_drain_jumping; //ios
+extern ConVar mp_stamina_drain_sprinting; //ios
+extern ConVar mp_stamina_replenish_standing; //ios
+extern ConVar mp_stamina_replenish_running; //ios
 
 // Vehicle convars
 extern ConVar r_VehicleViewDampen;

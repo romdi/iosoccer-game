@@ -188,6 +188,8 @@ public:
 	virtual void RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrcIn, float flRadius, int iClassIgnore ) {};
 	virtual void Think();
 
+	virtual CBaseEntity *GetPlayerSpawnSpot( CBasePlayer *pPlayer );
+
 	void InitTeams( void );
 
 	void CreateStandardEntities( void );

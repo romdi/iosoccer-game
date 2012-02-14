@@ -57,8 +57,8 @@ ConVar lookspring( "lookspring", "0", FCVAR_ARCHIVE );
 ConVar lookstrafe( "lookstrafe", "0", FCVAR_ARCHIVE );
 ConVar in_joystick( "joystick","0", FCVAR_ARCHIVE );
 
-//ConVar cl_powershot_strength("cl_powershot_strength", "50", 0);
 extern ConVar cl_powershot_strength;
+extern ConVar cl_powershot_fixed_strength;
 
 ConVar thirdperson_platformer( "thirdperson_platformer", "0", 0, "Player will aim in the direction they are moving." );
 ConVar thirdperson_screenspace( "thirdperson_screenspace", "0", 0, "Movement will be relative to the camera, eg: left means screen-left" );
@@ -1072,10 +1072,17 @@ void CInput::CreateMove ( int sequence_number, float input_sample_frametime, boo
 		m_hSelectedWeapon = NULL;
 	}
 
-	cmd->powershot_strength = clamp(cl_powershot_strength.GetInt(), 0, 100);
-
 	// Set button and flag bits
 	cmd->buttons = GetButtonBits( 1 );
+
+	if (cmd->buttons & IN_ALT1)
+	{
+		cmd->powershot_strength = clamp(cl_powershot_fixed_strength.GetInt(), 0, 100);
+	}
+	else
+	{
+		cmd->powershot_strength = clamp(cl_powershot_strength.GetInt(), 0, 100);
+	}
 
 	// Using joystick?
 	if ( in_joystick.GetInt() )

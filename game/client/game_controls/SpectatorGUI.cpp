@@ -353,7 +353,7 @@ void CSpectatorMenu::Update( void )
 	// make sure the player combo box is up to date
 	int playernum = GetSpectatorTarget();
 
-	if (playernum > 0)
+	if (playernum >= 1 && playernum <= gpGlobals->maxClients)
 	{
 		const char *selectedPlayerName = gr->GetPlayerName( playernum );
 		for ( iPlayerIndex=0; iPlayerIndex<m_pPlayerList->GetItemCount(); ++iPlayerIndex )
