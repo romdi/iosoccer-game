@@ -994,6 +994,7 @@ private:
 	Vector					m_vecLadderNormal;
 
 	float					m_flNextJump;
+	float					m_flNextSlide;
 
 
 	float					m_flFlashTime;
