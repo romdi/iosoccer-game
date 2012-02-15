@@ -174,6 +174,10 @@ private:
 		float m_flEventTime;	// Play the event when gpGlobals->curtime goes past this.
 	};
 	CUtlLinkedList<CSDKSoundEvent,int> m_SoundEvents;
+
+public:
+
+	PlayerAnimEvent_t m_ePlayerAnimEvent;
 };
 
 

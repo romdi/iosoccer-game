@@ -59,7 +59,6 @@ enum body_part_t
 #define BODY_HEAD_END		80
 
 #define PITCH_LIMIT			89
-#define VOLLEY_ANGLE		15
 
 enum foul_type_t
 {
@@ -205,6 +204,7 @@ private:
 
 	CSDKPlayer		*FindNearestPlayer(int team = TEAM_INVALID, int posFlags = FL_POS_FIELD, bool checkIfShooting = false);
 	bool			IsPlayerCloseEnough(CSDKPlayer *pPl);
+	bool			CanKeeperCatch(body_part_t bodyPart);
 	body_part_t		GetBodyPart(Vector pos, CSDKPlayer *pPl);
 	bool			DoBodyPartAction();
 	bool			DoGroundShot();

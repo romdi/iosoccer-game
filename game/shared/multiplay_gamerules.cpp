@@ -1017,7 +1017,7 @@ bool CMultiplayRules::Init()
 	bool CMultiplayRules::FAllowNPCs( void )
 	{
 		return true; // E3 hack
-		return ( allowNPCs.GetInt() != 0 );
+		//return ( allowNPCs.GetInt() != 0 );
 	}
 
 	//=========================================================

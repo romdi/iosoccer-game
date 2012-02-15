@@ -200,7 +200,12 @@ void CHudPowershotBar::Paint()
 
 	//m_flOldStamina = stamina;
 
-	float relStamina = stamina / 100.0f;
+	float relStamina;
+
+	//if (pPlayer->GetFlags() & FL_REMOTECONTROLLED)
+	//	relStamina = 1.0f;
+	//else
+		relStamina = stamina / 100.0f;
 
 	m_pStaminaPanel->SetTall(GetTall() * relStamina - 2 * PADDING);
 	m_pStaminaPanel->SetY(GetTall() - PADDING - m_pStaminaPanel->GetTall());

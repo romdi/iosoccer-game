@@ -353,8 +353,6 @@ BEGIN_DATADESC( CBasePlayer )
 	DEFINE_FIELD( m_flSwimSoundTime, FIELD_TIME ),
 	DEFINE_FIELD( m_vecLadderNormal, FIELD_VECTOR ),
 
-	DEFINE_FIELD( m_flNextJump, FIELD_TIME ), //ios
-
 	DEFINE_FIELD( m_flFlashTime, FIELD_TIME ),
 	DEFINE_FIELD( m_nDrownDmgRate, FIELD_INTEGER ),
 	DEFINE_FIELD( m_iSuicideCustomKillFlags, FIELD_INTEGER ),
@@ -4059,6 +4057,7 @@ void CBasePlayer::Spawn( void )
 	m_afPhysicsFlags	= 0;
 
 	m_flNextJump = gpGlobals->curtime; //ios
+	m_flNextSlide = gpGlobals->curtime; //ios
 
 	SetFOV( this, 0 );
 

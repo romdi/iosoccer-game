@@ -33,6 +33,7 @@
 #include "byteswap.h"
 
 #include "c_ball.h"
+#include "c_team.h"
 #include "sdk_backgroundpanel.h"
 #include "sdk_gamerules.h"
 
@@ -182,7 +183,7 @@ void CTeamMenu::PerformLayout()
 			pPos->pPlayerName->AddActionSignalTarget(this);
 			pPos->pPlayerName->SetPaintBackgroundEnabled(true);
 			pPos->pPlayerName->SetPaintBorderEnabled(false);
-			pPos->pPlayerName->SetPaintBackgroundType(2);
+			//pPos->pPlayerName->SetBorder(2);
 			pPos->pPlayerName->SetBgColor(Color(255, 255, 255, 200));
 			pPos->pPlayerName->SetDefaultColor(Color(0, 0, 0, 200), Color(255, 255, 255, 200));
 			pPos->pPlayerName->SetArmedColor(Color(50, 50, 50, 200), Color(150, 150, 150, 200));
@@ -194,14 +195,17 @@ void CTeamMenu::PerformLayout()
 			pPos->pPosName->SetBounds(0, pPos->pPosPanel->GetTall() - NAME_HEIGHT, NUMBER_WIDTH, NAME_HEIGHT);
 			pPos->pPosName->SetText(g_szPosNames[10 - j]);
 			pPos->pPosName->SetFont(pScheme->GetFont("IOSScorebar"));
+			pPos->pPosName->SetFgColor(Color(255, 255, 255, 255));
 
 			pPos->pClubName->SetBounds(0, pPos->pPosPanel->GetTall() - NAME_HEIGHT, pPos->pPosPanel->GetWide(), NAME_HEIGHT);
 			pPos->pClubName->SetContentAlignment(Label::a_center);
 			pPos->pClubName->SetFont(pScheme->GetFont("IOSScorebar"));
+			pPos->pClubName->SetFgColor(Color(255, 255, 255, 255));
 
 			pPos->pPosNumber->SetBounds(pPos->pPosPanel->GetWide() - NUMBER_WIDTH, pPos->pPosPanel->GetTall() - NAME_HEIGHT, NUMBER_WIDTH, NAME_HEIGHT);
 			pPos->pPosNumber->SetText(VarArgs("%d", 11 - j));
 			pPos->pPosNumber->SetFont(pScheme->GetFont("IOSScorebar"));
+			pPos->pPosNumber->SetFgColor(Color(255, 255, 255, 255));
 
 			StatPanel_t *pStats = pPos->pStatPanel;
 
@@ -369,6 +373,7 @@ void CTeamMenu::Update()
 		posTaken[team - TEAM_A][11 - pos] = true;
 		PosPanel_t *pPos = m_pPosPanels[team - TEAM_A][11 - pos];
 		pPos->pPlayerName->SetText(gr->GetPlayerName(i));
+		pPos->pPlayerName->SetFgColor(gr->GetTeamColor(team));
 		pPos->pPlayerName->SetCursor(gr->IsFakePlayer(i) ? dc_hand : dc_arrow);
 		pPos->pPlayerName->SetEnabled(gr->IsFakePlayer(i));
 		pPos->pClubName->SetText(gr->GetClubName(i));
@@ -406,6 +411,7 @@ void CTeamMenu::Update()
 				pPos->pPlayerName->SetText("JOIN");
 				pPos->pPlayerName->SetCursor(dc_hand);
 				pPos->pPlayerName->SetEnabled(true);
+				pPos->pPlayerName->SetFgColor(gr->GetTeamColor(TEAM_UNASSIGNED));
 				pPos->pClubName->SetText("");
 
 				StatPanel_t *pStats = pPos->pStatPanel;

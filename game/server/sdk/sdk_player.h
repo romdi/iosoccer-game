@@ -360,6 +360,8 @@ public:
 
 	static bool			IsOnField(CSDKPlayer *pPl);
 
+	PlayerAnimEvent_t	m_ePlayerAnimEvent;
+
 private:
 
 	bool				m_bOffside;

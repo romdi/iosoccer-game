@@ -994,6 +994,7 @@ private:
 	Vector					m_vecLadderNormal;
 
 	float					m_flNextJump;
+	float					m_flNextSlide;
 
 	float					m_flFlashTime;
 	int						m_nDrownDmgRate;		// Drowning damage in points per second without air.

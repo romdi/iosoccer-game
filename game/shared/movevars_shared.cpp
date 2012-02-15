@@ -53,7 +53,10 @@ ConVar  sv_maxspeed		( "sv_maxspeed", "380", FCVAR_NOTIFY | FCVAR_REPLICATED | F
 ConVar  sv_accelerate	( "sv_accelerate", "10", FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY);
 
 ConVar  mp_jump_delay	("mp_jump_delay", "0", FCVAR_ARCHIVE | FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar  mp_slide_delay	("mp_slide_delay", "0", FCVAR_ARCHIVE | FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar  mp_stamina_slowdown	("mp_stamina_slowdown", "0", FCVAR_ARCHIVE | FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar  mp_stamina_drain_jumping	("mp_stamina_drain_jumping", "20", FCVAR_ARCHIVE | FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar  mp_stamina_drain_sliding	("mp_stamina_drain_sliding", "20", FCVAR_ARCHIVE | FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar  mp_stamina_drain_sprinting	("mp_stamina_drain_sprinting", "20", FCVAR_ARCHIVE | FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar  mp_stamina_replenish_standing	("mp_stamina_replenish_standing", "30", FCVAR_ARCHIVE | FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar  mp_stamina_replenish_running	("mp_stamina_replenish_running", "15", FCVAR_ARCHIVE | FCVAR_NOTIFY | FCVAR_REPLICATED);
