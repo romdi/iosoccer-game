@@ -30,7 +30,7 @@ enum ball_state_t
 	BALL_KICKOFF,
 	BALL_PENALTY,
 	BALL_FREEKICK,
-	BALL_HANDS,
+	BALL_KEEPERHANDS,
 	BALL_GOALKICK_PENDING,
 	BALL_CORNERKICK_PENDING,
 	BALL_THROWIN_PENDING,
@@ -52,16 +52,13 @@ enum body_part_t
 #define BODY_FEET_START		0
 #define BODY_FEET_END		15
 #define BODY_HIP_START		15
-#define BODY_HIP_END		30
-#define BODY_CHEST_START	45
-#define BODY_CHEST_END		55
-#define BODY_HEAD_START		65
+#define BODY_HIP_END		40
+#define BODY_CHEST_START	40
+#define BODY_CHEST_END		60
+#define BODY_HEAD_START		60
 #define BODY_HEAD_END		80
 
-#define SHOT_DELAY			0.5f
-#define BEST_SHOT_ANGLE		-20
 #define PITCH_LIMIT			89
-#define VOLLEY_ANGLE		15
 
 enum foul_type_t
 {
@@ -165,10 +162,13 @@ public:
 	void			TriggerSideline(float touchPosX);
 	void			TriggerPenaltyBox(int team);
 	bool			GetIgnoreTriggers() { return m_bIgnoreTriggers; };
-	void			SetIgnoreTriggers(bool ignoreTriggers) { m_bIgnoreTriggers = ignoreTriggers; };
+	//void			SetIgnoreTriggers(bool ignoreTriggers) { m_bIgnoreTriggers = ignoreTriggers; };
 	void			SetRegularKickOff(bool regular) { m_bRegularKickOff = regular; };
 
 	void			State_Transition( ball_state_t newState, float delay = 0.0f );
+
+	CNetworkVar(float, m_flOffsideLineY);
+	CNetworkVar(bool, m_bShowOffsideLine);
 
 private:
 	void State_NORMAL_Enter();		void State_NORMAL_Think();
@@ -179,7 +179,7 @@ private:
 	void State_GOAL_Enter();		void State_GOAL_Think();
 	void State_FREEKICK_Enter();	void State_FREEKICK_Think();
 	void State_PENALTY_Enter();		void State_PENALTY_Think();
-	void State_HANDS_Enter();		void State_HANDS_Think();
+	void State_KEEPERHANDS_Enter();		void State_KEEPERHANDS_Think();
 
 	void State_PreThink();
 	void State_PostThink();
@@ -196,8 +196,6 @@ private:
 	void			SetPos(const Vector &pos);
 	void			SetVel(const Vector &vel);
 	void			SetRot(const AngularImpulse &rot = NULL);
-	void			SetPlPos(const Vector &pos);
-	void			SetPlAng(const QAngle &ang);
 	void			MarkOffsidePlayers();
 	void			UnmarkOffsidePlayers();
 	void			EnableOffsideLine(float yPos);
@@ -205,8 +203,9 @@ private:
 
 	bool			PlayersAtTargetPos(bool holdAtTargetPos);
 
-	CSDKPlayer		*FindNearestPlayer(int team = TEAM_INVALID, int posFlags = FL_POS_FIELD, bool checkIfShooting = false);
-	bool			IsPlayerCloseEnough(CSDKPlayer *pPl);
+	CSDKPlayer		*FindNearestPlayer(int team = TEAM_INVALID, int posFlags = FL_POS_FIELD, bool checkIfShooting = false, int ignoredPlayersBits = 0);
+	bool			IsPlayerCloseEnough(CSDKPlayer *pPl, bool isKeeper = false);
+	bool			CanKeeperCatch(body_part_t bodyPart);
 	body_part_t		GetBodyPart(Vector pos, CSDKPlayer *pPl);
 	bool			DoBodyPartAction();
 	bool			DoGroundShot();
@@ -243,6 +242,7 @@ private:
 	CSDKPlayer		*m_pFoulingPl;
 	int				m_nFoulingTeam;
 	foul_type_t		m_eFoulType;
+	Vector			m_vFoulPos;
 
 	Vector			m_vPos, m_vVel;
 	QAngle			m_aAng;
@@ -258,6 +258,7 @@ private:
 	int				m_FoulInPenaltyBox;	 //-1 =	not	in box,	0,1	= teams	box - recorded when foul occurs
 
 	bool			m_bIgnoreTriggers;
+	bool			m_bSetNewPos;
 	
 	CSDKPlayer		*m_pPossessingPl;
 	int				m_nPossessingTeam;

@@ -47,7 +47,6 @@ public:
 	virtual void BotThink();
 	void RunPlayerMove( CUserCmd &cmd, float frametime );
 	bool RunMimicCommand(CUserCmd &cmd);
-	CBall* BotFindBall();
 };
 
 // If iTeam or iClass is -1, then a team or class is randomly chosen.

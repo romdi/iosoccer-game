@@ -20,7 +20,7 @@ public:
 	void StartTouch( CBaseEntity *pOther )
 	{
 		CBall *pBall = dynamic_cast<CBall *>(pOther);
-		if (pBall && !pBall->GetIgnoreTriggers())
+		if (pBall && !pBall->GetIgnoreTriggers() && !SDKGameRules()->IsIntermissionState())
 		{
 			m_OnTrigger.FireOutput(pOther, this);
 			BallStartTouch(pBall);
@@ -110,7 +110,11 @@ public:
 	{
 		Vector min, max;
 		CollisionProp()->WorldSpaceTriggerBounds(&min, &max);
-		float touchPosX = Sign((SDKGameRules()->m_vKickOff - GetLocalOrigin()).x) == 1 ? max.x : min.x;
+		float meX = WorldSpaceCenter().x;
+		float kickX = SDKGameRules()->m_vKickOff.GetX();
+		float sign = Sign(SDKGameRules()->m_vKickOff.GetX() - WorldSpaceCenter().x);
+		bool wq = sign == 1;
+		float touchPosX = Sign(SDKGameRules()->m_vKickOff.GetX() - WorldSpaceCenter().x) == 1 ? max.x : min.x;
 		pBall->TriggerSideline(touchPosX);
 	};
 };

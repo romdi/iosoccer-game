@@ -15,6 +15,7 @@
 #include "sdk_player_shared.h"
 #include "ball.h"
 #include "sdk_gamerules.h"
+#include "sdk_shareddefs.h"
 
 const int MODEL_PLAYER			= 0;
 const int MODEL_KEEPER			= 1;
@@ -347,8 +348,9 @@ public:
 	Vector				EyeDirection2D();
 	Vector				EyeDirection3D();
 
-	void				SetOffside(bool offside) { m_bOffside = offside; }
+	void				SetOffside(bool offside);
 	bool				IsOffside();
+	Vector				GetOffsidePos();
 	
 	void				SetPosInsideShield(Vector pos, bool holdAtTargetPos);
 	void				SetPosOutsideShield(bool holdAtTargetPos);
@@ -359,9 +361,12 @@ public:
 
 	static bool			IsOnField(CSDKPlayer *pPl);
 
+	PlayerAnimEvent_t	m_ePlayerAnimEvent;
+
 private:
 
 	bool				m_bOffside;
+	Vector				m_vOffsidePos;
 };
 
 

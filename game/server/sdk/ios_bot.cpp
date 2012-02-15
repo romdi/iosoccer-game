@@ -79,17 +79,6 @@ public:
 	}
 };
 
-
-///////////////////////////////////////////////////
-// BotFindBall
-//
-CBall* CBot::BotFindBall()
-{
-	CBaseEntity *pEnt = gEntList.FindEntityByClassnameNearest( "football", GetAbsOrigin(), 10000.0f);
-	CBall *pBall = dynamic_cast<CBall*>( pEnt );
-	return pBall;
-}
-
 //-----------------------------------------------------------------------------
 // Purpose: Create a new Bot and put it in the game.
 // Output : Pointer to the new Bot, or NULL if there's no free clients.

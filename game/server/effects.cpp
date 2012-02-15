@@ -1472,19 +1472,6 @@ void CItemSoda::CanTouch ( CBaseEntity *pOther )
 // technology demo
 //=========================================================
 
-class CPrecipitation : public CBaseEntity
-{
-public:
-	DECLARE_CLASS( CPrecipitation, CBaseEntity );
-	DECLARE_DATADESC();
-	DECLARE_SERVERCLASS();
-
-	CPrecipitation();
-	void	Spawn( void );
-
-	CNetworkVar( PrecipitationType_t, m_nPrecipType );
-};
-
 LINK_ENTITY_TO_CLASS( func_precipitation, CPrecipitation );
 
 BEGIN_DATADESC( CPrecipitation )
@@ -1512,7 +1499,8 @@ void CPrecipitation::Spawn( void )
 	Precache();
 	SetSolid( SOLID_NONE );							// Remove model & collisions
 	SetMoveType( MOVETYPE_NONE );
-	SetModel( STRING( GetModelName() ) );		// Set size
+	//SetModel( STRING( GetModelName() ) );		// Set size
+	SetModel( STRING( gEntList.FindEntityByClassname(NULL, "trigger_PenaltyBox")->GetModelName() ) );		// Set size
 
 	// Default to rain.
 	if ( m_nPrecipType < 0 || m_nPrecipType > NUM_PRECIPITATION_TYPES )
@@ -1520,6 +1508,12 @@ void CPrecipitation::Spawn( void )
 
 	m_nRenderMode = kRenderEnvironmental;
 }
+
+void CPrecipitation::SetType(PrecipitationType_t type)
+{
+	m_nPrecipType = type;
+}
+
 #endif
 
 //-----------------------------------------------------------------------------

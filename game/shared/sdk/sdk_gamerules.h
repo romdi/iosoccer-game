@@ -27,7 +27,7 @@
 	#include "sdk_player.h"
 	#include "utlqueue.h"
 	#include "playerclass_info_parse.h"
-
+	#include "effects.h"
 #endif
 
 
@@ -188,6 +188,8 @@ public:
 	virtual void RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrcIn, float flRadius, int iClassIgnore ) {};
 	virtual void Think();
 
+	virtual CBaseEntity *GetPlayerSpawnSpot( CBasePlayer *pPlayer );
+
 	void InitTeams( void );
 
 	void CreateStandardEntities( void );
@@ -329,7 +331,10 @@ protected:
 
 	bool m_bTeamsSwapped;
 	int m_nKickOffTeam;
+	CPrecipitation *m_pPrecip;
+
 public:
+
 	bool GetTeamsSwapped() { return m_bTeamsSwapped; };
 	void SetTeamsSwapped(bool swapped);
 	void SetKickOffTeam(int team) { m_nKickOffTeam = team; };
@@ -339,9 +344,13 @@ public:
 
 	void EnableShield(int type, int sideOrRadius, Vector pos = vec3_invalid);
 	void DisableShield();
+
+	void SetWeather(PrecipitationType_t type);
 #endif
 
 public:
+	bool IsIntermissionState();
+
 	CNetworkVar(int, m_nShieldType);
 	CNetworkVar(int, m_nShieldSide);
 	CNetworkVar(int, m_nShieldRadius);

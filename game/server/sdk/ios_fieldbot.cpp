@@ -63,13 +63,21 @@ void CFieldBot::BotRunToBall()
 	if (pClosest == this)
 	{
 		VectorAngles(m_vDirToBall, m_cmd.viewangles);
-		m_cmd.forwardmove = clamp(m_oldcmd.forwardmove + g_IOSRand.RandomFloat(-200, 200) * gpGlobals->frametime * 2, PLAYER_RUNSPEED, PLAYER_SPRINTSPEED);
+		m_cmd.forwardmove = clamp(m_oldcmd.forwardmove + g_IOSRand.RandomFloat(-200, 200) * gpGlobals->frametime * 2, m_Shared.m_flRunSpeed, m_Shared.m_flSprintSpeed);
 	}
 	else
 	{
-		m_cmd.viewangles[YAW] = m_oldcmd.viewangles[YAW] + g_IOSRand.RandomFloat(-180, 180) * gpGlobals->frametime * 4;
-		m_cmd.forwardmove = clamp(m_oldcmd.forwardmove + g_IOSRand.RandomFloat(-200, 200) * gpGlobals->frametime * 2, -PLAYER_WALKSPEED, PLAYER_WALKSPEED);
-		m_cmd.sidemove = clamp(m_oldcmd.sidemove + g_IOSRand.RandomFloat(-200, 200) * gpGlobals->frametime * 2, -PLAYER_WALKSPEED, PLAYER_WALKSPEED);
+		Vector pos = GetLocalOrigin();
+		if (pos.x < SDKGameRules()->m_vFieldMin.GetX() - 100 || pos.x > SDKGameRules()->m_vFieldMax.GetX() + 100 || pos.y < SDKGameRules()->m_vFieldMin.GetY() - 100 || pos.y > SDKGameRules()->m_vFieldMax.GetY() + 100)
+		{
+			QAngle ang;
+			VectorAngles(SDKGameRules()->m_vKickOff - pos, ang);
+			m_cmd.viewangles[YAW] = ang[YAW];
+		}
+		else
+			m_cmd.viewangles[YAW] = m_oldcmd.viewangles[YAW] + g_IOSRand.RandomFloat(-180, 180) * gpGlobals->frametime * 4;
+		m_cmd.forwardmove = clamp(m_oldcmd.forwardmove + g_IOSRand.RandomFloat(-200, 200) * gpGlobals->frametime * 2, -mp_walkspeed.GetInt() / 2, mp_walkspeed.GetInt());
+		m_cmd.sidemove = clamp(m_oldcmd.sidemove + g_IOSRand.RandomFloat(-200, 200) * gpGlobals->frametime * 2, -mp_walkspeed.GetInt() / 2, mp_walkspeed.GetInt() / 2);
 	}
 }
 
@@ -120,7 +128,7 @@ void CFieldBot::BotFetchAndPass()
 
 	if (plballdir.Length2D() > 150)
 	{
-		//m_cmd.forwardmove = clamp(dir.Length2D() / 2, PLAYER_WALKSPEED, PLAYER_SPRINTSPEED);
+		//m_cmd.forwardmove = clamp(dir.Length2D() / 2, mp_walkspeed.GetInt(), mp_sprintspeed.GetInt());
 		pitch = clamp(plballdir.Length2D() / -50 + 0, -40, 10); //-45;
 
 		if (dir.Length2D() > 50)
@@ -136,7 +144,7 @@ void CFieldBot::BotFetchAndPass()
 			}
 			dir = target - GetLocalOrigin();
 
-			m_cmd.forwardmove = PLAYER_SPRINTSPEED / 3.5f;
+			m_cmd.forwardmove = mp_sprintspeed.GetInt() / 3.5f;
 			//m_cmd.buttons &= IN_SPEED;
 		}
 		else
@@ -153,7 +161,7 @@ void CFieldBot::BotFetchAndPass()
 				m_cmd.powershot_strength = 100 * min(1, dir.Length2D() / 1000);
 			//}
 
-			m_cmd.forwardmove = PLAYER_RUNSPEED / 3.5f;
+			m_cmd.forwardmove = m_Shared.m_flRunSpeed / 3.5f;
 			//m_cmd.buttons &= ~IN_SPEED;
 		}
 	}

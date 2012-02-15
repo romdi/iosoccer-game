@@ -22,6 +22,7 @@
 #include "collisionutils.h"
 #include "tier0/vprof.h"
 #include "viewrender.h"
+#include "sdk_gamerules.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -33,7 +34,7 @@ Vector g_vSplashColor( 0.5, 0.5, 0.5 );
 float g_flSplashScale = 0.15;
 float g_flSplashLifetime = 0.5f;
 float g_flSplashAlpha = 0.3f;
-ConVar r_RainSplashPercentage( "r_RainSplashPercentage", "10", FCVAR_CHEAT ); // N% chance of a rain particle making a splash.
+ConVar r_RainSplashPercentage( "r_RainSplashPercentage", "0", FCVAR_CHEAT ); // N% chance of a rain particle making a splash.
 
 
 float GUST_INTERVAL_MIN = 1;
@@ -124,6 +125,8 @@ public:
 
 	void Render();
 
+	void TypeChanged();
+
 private:
 
 	// Creates a single particle
@@ -197,12 +200,14 @@ private:
 
 	int								m_iAshCount;
 
-	CUniformRandomStream m_Random;
+	CUniformRandomStream			m_Random;
+
+	Vector							m_vAreaMin;
+	Vector							m_vAreaMax;
 
 private:
 	CClient_Precipitation( const CClient_Precipitation & ); // not defined, not accessible
 };
-
 
 // Just receive the normal data table stuff
 IMPLEMENT_CLIENTCLASS_DT(CClient_Precipitation, DT_Precipitation, CPrecipitation)
@@ -264,9 +269,12 @@ ConVar r_rainalphapow( "r_rainalphapow", "0.8", FCVAR_CHEAT );
 
 Vector CClient_Precipitation::s_WindVector;		// Stores the wind speed vector
 
-
 void CClient_Precipitation::OnDataChanged( DataUpdateType_t updateType )
 {
+	m_MatHandle = INVALID_MATERIAL_HANDLE;
+
+	Precache();
+
 	// Simulate every frame.
 	if ( updateType == DATA_UPDATE_CREATED )
 	{
@@ -359,7 +367,7 @@ inline bool CClient_Precipitation::SimulateRain( CPrecipitationParticle* pPartic
 
 	if( trace.fraction < 1 || trace.DidHit() )
 	{
-		if ( RandomInt( 0, 100 ) <= r_RainSplashPercentage.GetInt() )
+		if ( r_RainSplashPercentage.GetInt() != 0 && RandomInt( 0, 100 ) <= r_RainSplashPercentage.GetInt() )
 			DispatchParticleEffect( "slime_splash_01", trace.endpos,trace.m_pEnt->GetAbsAngles() , NULL );
 
 		// Tell the framework it's time to remove the particle from the list
@@ -411,7 +419,7 @@ inline bool CClient_Precipitation::SimulateSnow( CPrecipitationParticle* pPartic
 
 		if( trace.fraction < 1 || trace.DidHit() )
 		{
-			if ( RandomInt( 0, 100 ) <= r_RainSplashPercentage.GetInt() )
+			if ( r_RainSplashPercentage.GetInt() != 0 && RandomInt( 0, 100 ) <= r_RainSplashPercentage.GetInt() )
 				DispatchParticleEffect( "slime_splash_01", trace.endpos,trace.m_pEnt->GetAbsAngles() , NULL );
 
 			// Tell the framework it's time to remove the particle from the list
@@ -429,6 +437,9 @@ inline bool CClient_Precipitation::SimulateSnow( CPrecipitationParticle* pPartic
 
 void CClient_Precipitation::Simulate( float dt )
 {
+	if (m_nPrecipType == PRECIPITATION_TYPE_NONE)
+		return;
+
 	// NOTE: When client-side prechaching works, we need to remove this
 	Precache();
 
@@ -452,11 +463,12 @@ void CClient_Precipitation::Simulate( float dt )
 
 	// calculate the max amount of time it will take this flake to fall.
 	// This works if we assume the wind doesn't have a z component
-	if ( r_RainHack.GetInt() )
-		m_Lifetime = (GetClientWorldEntity()->m_WorldMaxs[2] - GetClientWorldEntity()->m_WorldMins[2]) / m_Speed;
-	else
-		m_Lifetime = (WorldAlignMaxs()[2] - WorldAlignMins()[2]) / m_Speed;
+	//if ( r_RainHack.GetInt() )
+	//	m_Lifetime = (GetClientWorldEntity()->m_WorldMaxs[2] - GetClientWorldEntity()->m_WorldMins[2]) / m_Speed;
+	//else
+	//	m_Lifetime = (WorldAlignMaxs()[2] - WorldAlignMins()[2]) / m_Speed;
 
+	m_Lifetime = (m_vAreaMax[2] - m_vAreaMin[2]) / m_Speed;
 
 	if ( !r_RainSimulate.GetInt() )
 		return;
@@ -595,6 +607,9 @@ void CClient_Precipitation::CreateWaterSplashes()
 
 void CClient_Precipitation::Render()
 {
+	if (m_nPrecipType == PRECIPITATION_TYPE_NONE)
+		return;
+
 	if ( !r_DrawRain.GetInt() )
 		return;
 
@@ -667,7 +682,7 @@ CClient_Precipitation::CClient_Precipitation() : m_Remainder(0.0f)
 {
 	m_Random.SetSeed((int)(gpGlobals->curtime * 1000));
 
-	m_nPrecipType = PRECIPITATION_TYPE_RAIN;
+	m_nPrecipType = PRECIPITATION_TYPE_NONE;
 	m_MatHandle = INVALID_MATERIAL_HANDLE;
 	m_flHalfScreenWidth = 1;
 	
@@ -784,13 +799,20 @@ bool CClient_Precipitation::ComputeEmissionArea( Vector& origin, Vector2D& size 
 	// FIXME: Compute the precipitation area based on computational power
 	float emissionSize = r_RainRadius.GetFloat();	// size of box to emit particles in
 
-	Vector vMins = WorldAlignMins();
-	Vector vMaxs = WorldAlignMaxs();
-	if ( r_RainHack.GetInt() )
-	{
-		vMins = GetClientWorldEntity()->m_WorldMins;
-		vMaxs = GetClientWorldEntity()->m_WorldMaxs;
-	}
+	//Vector vMins = WorldAlignMins();
+	//Vector vMaxs = WorldAlignMaxs();
+	//if ( r_RainHack.GetInt() )
+	//{
+	//	vMins = GetClientWorldEntity()->m_WorldMins;
+	//	vMaxs = GetClientWorldEntity()->m_WorldMaxs;
+	//}
+
+	m_vAreaMin = SDKGameRules()->m_vFieldMin;
+	m_vAreaMax = SDKGameRules()->m_vFieldMax;
+	m_vAreaMax.z = 1000;
+
+	Vector vMins = m_vAreaMin;
+	Vector vMaxs = m_vAreaMax;
 
 	// calculate a volume around the player to snow in. Intersect this big magic
 	// box around the player with the volume of the current environmental ent.
@@ -902,8 +924,8 @@ void CClient_Precipitation::CreateAshParticle( void )
 
 	Vector vPushOrigin;
 
-	Vector absmins = WorldAlignMins();
-	Vector absmaxs = WorldAlignMaxs();
+	Vector absmins = m_vAreaMin;//WorldAlignMins();
+	Vector absmaxs = m_vAreaMax;//WorldAlignMaxs();
 
 	//15 Traces a second.
 	while ( m_tAshParticleTraceTimer.NextEvent( curTime ) )

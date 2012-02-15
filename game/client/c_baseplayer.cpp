@@ -434,6 +434,7 @@ void C_BasePlayer::Spawn( void )
 	m_iFOV	= 0;	// init field of view.
 
 	m_flNextJump = gpGlobals->curtime; //ios
+	m_flNextSlide = gpGlobals->curtime; //ios
 
 	//SetModel(SDK_PLAYER_MODEL);
 

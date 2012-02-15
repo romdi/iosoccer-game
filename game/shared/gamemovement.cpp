@@ -14,6 +14,7 @@
 #include "decals.h"
 #include "coordsize.h"
 #include "rumble_shared.h"
+#include "sdk_shareddefs.h"
 
 #if defined(HL2_DLL) || defined(HL2_CLIENT_DLL)
 	#include "hl_movedata.h"
@@ -785,7 +786,7 @@ void CGameMovement::ReduceTimers( void )
 	Vector vel = pPl->GetAbsVelocity();
 	if ( bSprinting && fl2DVelocitySquared > 10000 ) //speed > 100
 	{
-		flStamina -= 20 * gpGlobals->frametime;
+		flStamina -= mp_stamina_drain_sprinting.GetInt() * gpGlobals->frametime;
 
 		pPl->m_Shared.SetStamina( flStamina );
 	}
@@ -794,11 +795,11 @@ void CGameMovement::ReduceTimers( void )
 		//gain some back		
 		if ( fl2DVelocitySquared <= 0 )
 		{
-			flStamina += 30 * gpGlobals->frametime;
+			flStamina += mp_stamina_replenish_standing.GetInt() * gpGlobals->frametime;
 		}
 		else
 		{
-			flStamina += 15 * gpGlobals->frametime;
+			flStamina += mp_stamina_replenish_running.GetInt() * gpGlobals->frametime;
 		}
 
 		pPl->m_Shared.SetStamina( flStamina );	
@@ -1093,9 +1094,6 @@ void CGameMovement::Friction( void )
 void CGameMovement::FinishGravity( void )
 {
 	float ent_gravity;
-
-	if ( player->m_flWaterJumpTime )
-		return;
 
 	if ( player->GetGravity() )
 		ent_gravity = player->GetGravity();
@@ -1416,6 +1414,15 @@ void CGameMovement::FullWalkMove( )
 		mv->m_nOldButtons &= ~IN_JUMP;
 	}
 
+	if (mv->m_nButtons & IN_DUCK)
+	{
+		CheckSlideButton();
+	}
+	else
+	{
+		mv->m_nOldButtons &= ~IN_DUCK;
+	}
+
 	// Fricion is handled before we add in any base velocity. That way, if we are on a conveyor, 
 	//  we don't slow when standing still, relative to the conveyor.
 	if (player->GetGroundEntity() != NULL)
@@ -1656,9 +1663,6 @@ bool CGameMovement::CheckJumpButton( void )
 {
 	CSDKPlayer *pPl = ToSDKPlayer(player);
 
-	if (pPl->m_Shared.GetStamina() < 20)
-		return false;
-
 	if (gpGlobals->curtime < player->m_flNextJump)
 	{
 		mv->m_nOldButtons |= IN_JUMP;
@@ -1672,12 +1676,21 @@ bool CGameMovement::CheckJumpButton( void )
 		return false;		// in air, so no effect
 	}
 
-	if ( mv->m_nOldButtons & IN_JUMP )
-		return false;		// don't pogo stick
-
 	//ios cant jump during throwin
 	if (player->GetFlags() & FL_ATCONTROLS)
-		return false;
+	{
+		mv->m_nOldButtons |= IN_JUMP;
+		return false;		// in air, so no effect
+	}
+
+	if (pPl->m_Shared.GetStamina() < mp_stamina_drain_jumping.GetInt())
+	{
+		mv->m_nOldButtons |= IN_JUMP;
+		return false;		// in air, so no effect
+	}
+
+	if ( mv->m_nOldButtons & IN_JUMP )
+		return false;		// don't pogo stick
 
 	// In the air now.
     SetGroundEntity( NULL );
@@ -1723,9 +1736,50 @@ bool CGameMovement::CheckJumpButton( void )
 	// Flag that we jumped.
 	mv->m_nOldButtons |= IN_JUMP;	// don't jump again until released
 
-	player->m_flNextJump = gpGlobals->curtime + sv_jumpdelay.GetFloat();
+	pPl->m_Shared.SetStamina(pPl->m_Shared.GetStamina() - mp_stamina_drain_jumping.GetInt());
 
-	pPl->m_Shared.SetStamina(pPl->m_Shared.GetStamina() - 20);
+	player->m_flNextJump = gpGlobals->curtime + mp_jump_delay.GetFloat();
+
+	return true;
+}
+
+bool CGameMovement::CheckSlideButton()
+{
+	CSDKPlayer *pPl = ToSDKPlayer(player);
+
+	if (player->GetFlags() & FL_ATCONTROLS)
+	{
+		mv->m_nOldButtons |= IN_DUCK;
+		return false;
+	}
+
+	if (pPl->m_Shared.GetStamina() < mp_stamina_drain_sliding.GetInt())
+	{
+		mv->m_nOldButtons |= IN_DUCK;
+		return false;
+	}
+
+	if (gpGlobals->curtime < player->m_flNextSlide)
+	{
+		mv->m_nOldButtons |= IN_DUCK;
+		return false;
+	}
+
+	if (mv->m_nOldButtons & IN_DUCK)
+		return false;
+
+	MoveHelper()->PlayerSetAnimation(PLAYER_SLIDE);
+	pPl->DoAnimationEvent(PLAYERANIMEVENT_SLIDE);
+
+	//FinishGravity();
+
+	mv->m_flMaxSpeed = pPl->m_Shared.m_flRunSpeed / 2;
+
+	mv->m_nOldButtons |= IN_DUCK;
+
+	pPl->m_Shared.SetStamina(pPl->m_Shared.GetStamina() - mp_stamina_drain_sliding.GetInt());
+
+	player->m_flNextSlide = gpGlobals->curtime + mp_slide_delay.GetFloat();
 
 	return true;
 }
@@ -2440,11 +2494,11 @@ void CGameMovement::MoveToTargetPos()
 	dir.z = 0;
 
 	VectorAngles(dir, mv->m_vecAbsViewAngles);
-	//mv->m_flForwardMove = PLAYER_RUNSPEED;
+	//mv->m_flForwardMove = mp_runspeed.GetInt();
 	float distToTarget = dir.Length2D();
 	dir.NormalizeInPlace();
-	float wishDist = PLAYER_SPRINTSPEED * gpGlobals->frametime;
-	mv->m_vecVelocity = dir * PLAYER_SPRINTSPEED;
+	float wishDist = mp_sprintspeed.GetInt() * gpGlobals->frametime;
+	mv->m_vecVelocity = dir * mp_sprintspeed.GetInt();
 	Vector pos;
 
 	if (wishDist < distToTarget)
@@ -2550,23 +2604,26 @@ void CGameMovement::CheckBallShield(Vector oldPos)
 		}
 	}
 
-	float threshold = 150;
-	Vector min = SDKGameRules()->m_vFieldMin - threshold;
-	Vector max = SDKGameRules()->m_vFieldMax + threshold;
-
-	if (pos.x < min.x || pos.y < min.y || pos.x > max.x || pos.y > max.y)
+	if (!SDKGameRules()->IsIntermissionState())
 	{
-		if (pos.x < min.x)
-			pos.x = min.x;
-		else if (pos.x > max.x)
-			pos.x = max.x;
+		float threshold = 150;
+		Vector min = SDKGameRules()->m_vFieldMin - threshold;
+		Vector max = SDKGameRules()->m_vFieldMax + threshold;
 
-		if (pos.y < min.y)
-			pos.y = min.y;
-		else if (pos.y > max.y)
-			pos.y = max.y;
+		if (pos.x < min.x || pos.y < min.y || pos.x > max.x || pos.y > max.y)
+		{
+			if (pos.x < min.x)
+				pos.x = min.x;
+			else if (pos.x > max.x)
+				pos.x = max.x;
 
-		stopPlayer = true;
+			if (pos.y < min.y)
+				pos.y = min.y;
+			else if (pos.y > max.y)
+				pos.y = max.y;
+
+			stopPlayer = true;
+		}
 	}
 
 	if (stopPlayer)
@@ -2649,24 +2706,20 @@ void CGameMovement::SetPlayerSpeed()
 {
 	CSDKPlayer *pPl = (CSDKPlayer *)player;
 
-	float stamina = 100.0f;
-	stamina = pPl->m_Shared.GetStamina();
-	if ( mv->m_nButtons & IN_DUCK )
+	float stamina = pPl->m_Shared.GetStamina();
+
+	float flMaxSpeed;	
+	if ( ( mv->m_nButtons & IN_SPEED ) && ( stamina > 0 ) && ( mv->m_nButtons & IN_FORWARD ) )
 	{
-		mv->m_flClientMaxSpeed = pPl->m_Shared.m_flRunSpeed;	//gets cut in fraction later
+		flMaxSpeed = mp_sprintspeed.GetInt();	//sprinting
 	}
 	else
 	{
-		float flMaxSpeed;	
-		if ( ( mv->m_nButtons & IN_SPEED ) && ( stamina > 0 ) && ( mv->m_nButtons & IN_FORWARD ) )
-		{
-			flMaxSpeed = pPl->m_Shared.m_flSprintSpeed;	//sprinting
-		}
-		else
-		{
-			flMaxSpeed = pPl->m_Shared.m_flRunSpeed;	//jogging
-		}
-
-		mv->m_flClientMaxSpeed = flMaxSpeed - 100 + stamina;
+		flMaxSpeed = mp_runspeed.GetInt();	//jogging
 	}
+
+	if (mp_stamina_slowdown.GetBool())
+		mv->m_flClientMaxSpeed = flMaxSpeed - 100 + stamina;
+	else
+		mv->m_flClientMaxSpeed = flMaxSpeed;
 }

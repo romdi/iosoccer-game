@@ -452,6 +452,7 @@ private:
 	int				m_nImpulse;
 
 	float			m_flNextJump; //ios
+	float			m_flNextSlide; //ios
 
 	float			m_flSwimSoundTime;
 	Vector			m_vecLadderNormal;

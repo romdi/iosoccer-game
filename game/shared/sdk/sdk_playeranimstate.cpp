@@ -375,6 +375,8 @@ void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 {
 	Activity iGestureActivity = ACT_INVALID;
 
+	GetSDKPlayer()->m_ePlayerAnimEvent = event;
+
 	switch( event )
 	{
 	case PLAYERANIMEVENT_CANCEL:
@@ -394,283 +396,76 @@ void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 	case PLAYERANIMEVENT_TACKLED_BACKWARD:
 	case PLAYERANIMEVENT_DIVINGHEADER:
 	case PLAYERANIMEVENT_PASS_STATIONARY:
-	{
-		m_flFireCycle = 0;
-		m_iFireSequence = CalcFireLayerSequence( event );
-		m_bFiring = m_iFireSequence != -1;
-		break;
-	}
+		{
+			m_flFireCycle = 0;
+			m_iFireSequence = CalcFireLayerSequence( event );
+			m_bFiring = m_iFireSequence != -1;
+			break;
+		}
 	case PLAYERANIMEVENT_JUMP:
 	case PLAYERANIMEVENT_DIVE_LEFT:
 	case PLAYERANIMEVENT_DIVE_RIGHT:
-	{
-		// Play the jump animation.
-		if (!m_bJumping)
 		{
-			m_bJumping = true;
-			m_bFirstJumpFrame = true;
-			m_flJumpStartTime = gpGlobals->curtime;
-			if (m_bCarryHold)									//dont dive when carrying
+			// Play the jump animation.
+			if (!m_bJumping)
 			{
-				m_KeeperDive = 0;								//normal jump
-			}
-			else if (event == PLAYERANIMEVENT_DIVE_LEFT)
-			{
-				m_KeeperDive = PLAYERANIMEVENT_DIVE_LEFT;
-				m_fDiveTime = gpGlobals->curtime + 0.8f;
-			}
-			else if (event == PLAYERANIMEVENT_DIVE_RIGHT)
-			{
-				m_KeeperDive = PLAYERANIMEVENT_DIVE_RIGHT;
-				m_fDiveTime = gpGlobals->curtime + 0.8f;
-			}
-			else
-			{
-				if (GetBasePlayer()->GetFlags() & FL_CELEB)				//celeb cartwheel time
-				{
-					m_KeeperDive = 1;								//needs to be non-zero thats all
-					m_fDiveTime = gpGlobals->curtime + 1.0f;
-				}
-				else
+				m_bJumping = true;
+				m_bFirstJumpFrame = true;
+				m_flJumpStartTime = gpGlobals->curtime;
+				if (m_bCarryHold)									//dont dive when carrying
 				{
 					m_KeeperDive = 0;								//normal jump
 				}
+				else if (event == PLAYERANIMEVENT_DIVE_LEFT)
+				{
+					m_KeeperDive = PLAYERANIMEVENT_DIVE_LEFT;
+					m_fDiveTime = gpGlobals->curtime + 0.8f;
+				}
+				else if (event == PLAYERANIMEVENT_DIVE_RIGHT)
+				{
+					m_KeeperDive = PLAYERANIMEVENT_DIVE_RIGHT;
+					m_fDiveTime = gpGlobals->curtime + 0.8f;
+				}
+				else
+				{
+					if (GetBasePlayer()->GetFlags() & FL_CELEB)				//celeb cartwheel time
+					{
+						m_KeeperDive = 1;								//needs to be non-zero thats all
+						m_fDiveTime = gpGlobals->curtime + 1.0f;
+					}
+					else
+					{
+						m_KeeperDive = 0;								//normal jump
+					}
+				}
 			}
+			break;
 		}
-		break;
-	}
 
 	case PLAYERANIMEVENT_CARRY:
-	{
-		m_iReloadSequence = CalcReloadLayerSequence();			//add keeper carry as layer
-		if ( m_iReloadSequence != -1 )
 		{
-			m_bReloading = true;
-			m_flReloadCycle = 0;
-			m_bCarryHold = true;
+			m_iReloadSequence = CalcReloadLayerSequence();			//add keeper carry as layer
+			if ( m_iReloadSequence != -1 )
+			{
+				m_bReloading = true;
+				m_flReloadCycle = 0;
+				m_bCarryHold = true;
+			}
+			break;
 		}
-		break;
-	}
 	case PLAYERANIMEVENT_CARRY_END:
-	{
-		m_iReloadSequence = CalcReloadLayerSequence();
-		if ( m_iReloadSequence != -1 )
 		{
-			m_bReloading = true;
-			m_flReloadCycle = 1.1f;
-			m_bCarryHold = false;
-		}
-		break;
-	}
-
-			/* ios
-	case PLAYERANIMEVENT_ATTACK_PRIMARY:
-		{
-			// Weapon primary fire.
-#if defined ( SDK_USE_PRONE )
-			if ( m_pSDKPlayer->m_Shared.IsProne() )
+			m_iReloadSequence = CalcReloadLayerSequence();
+			if ( m_iReloadSequence != -1 )
 			{
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_PRONE_PRIMARYFIRE );
+				m_bReloading = true;
+				m_flReloadCycle = 1.1f;
+				m_bCarryHold = false;
 			}
-			else
-#endif //SDK_USE_PRONE
-			if ( m_pSDKPlayer->GetFlags() & FL_DUCKING )
-			{
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_CROUCH_PRIMARYFIRE );
-			}
-			else
-			{
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_STAND_PRIMARYFIRE );
-			}
-
-			iGestureActivity = ACT_VM_PRIMARYATTACK;
 			break;
-		}
-
-	case PLAYERANIMEVENT_VOICE_COMMAND_GESTURE:
-		{
-			if ( !IsGestureSlotActive( GESTURE_SLOT_ATTACK_AND_RELOAD ) )
-			{
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, (Activity)nData );
-			}
-			iGestureActivity = ACT_VM_IDLE; //TODO?
-			break;
-		}
-	case PLAYERANIMEVENT_ATTACK_SECONDARY:
-		{
-			// Weapon secondary fire.
-#if defined ( SDK_USE_PRONE )
-			if ( m_pSDKPlayer->m_Shared.IsProne() )
-			{
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_PRONE_SECONDARYFIRE );
-			}
-			else
-#endif //SDK_USE_PRONE
-			if ( m_pSDKPlayer->GetFlags() & FL_DUCKING )
-			{
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_CROUCH_SECONDARYFIRE );
-			}
-			else
-			{
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_STAND_SECONDARYFIRE );
-			}
-
-			iGestureActivity = ACT_VM_PRIMARYATTACK;
-			break;
-		}
-	case PLAYERANIMEVENT_ATTACK_PRE:
-		{
-			if ( m_pSDKPlayer->GetFlags() & FL_DUCKING ) 
-			{
-				// Weapon pre-fire. Used for minigun windup, sniper aiming start, etc in crouch.
-				iGestureActivity = ACT_MP_ATTACK_CROUCH_PREFIRE;
-			}
-			else
-			{
-				// Weapon pre-fire. Used for minigun windup, sniper aiming start, etc.
-				iGestureActivity = ACT_MP_ATTACK_STAND_PREFIRE;
-			}
-
-			RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, iGestureActivity, false );
-			iGestureActivity = ACT_VM_IDLE; //TODO?
-
-			break;
-		}
-	case PLAYERANIMEVENT_ATTACK_POST:
-		{
-			RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_ATTACK_STAND_POSTFIRE );
-			iGestureActivity = ACT_VM_IDLE; //TODO?
-			break;
-		}
-
-	case PLAYERANIMEVENT_RELOAD:
-		{
-			// Weapon reload.
-#if defined ( SDK_USE_PRONE )
-			if ( m_pSDKPlayer->m_Shared.IsProne() )
-			{
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_PRONE );
-			}
-			else
-#endif //SDK_USE_PRONE
-			if ( GetBasePlayer()->GetFlags() & FL_DUCKING )
-			{
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_CROUCH );
-			}
-			else
-			{
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_STAND );
-			}
-			iGestureActivity = ACT_VM_RELOAD; //Make view reload if it isn't already
-			break;
-		}
-	case PLAYERANIMEVENT_RELOAD_LOOP:
-		{
-			// Weapon reload.
-#if defined ( SDK_USE_PRONE )
-			if ( m_pSDKPlayer->m_Shared.IsProne() )
-			{
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_PRONE_LOOP );
-			}
-			else
-#endif //SDK_USE_PRONE
-			if ( GetBasePlayer()->GetFlags() & FL_DUCKING )
-			{
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_CROUCH_LOOP );
-			}
-			else
-			{
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_STAND_LOOP );
-			}
-			iGestureActivity = ACT_INVALID; //TODO: fix
-			break;
-		}
-	case PLAYERANIMEVENT_RELOAD_END:
-		{
-			// Weapon reload.
-#if defined ( SDK_USE_PRONE )
-			if ( m_pSDKPlayer->m_Shared.IsProne() )
-			{
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_PRONE_END );
-			}
-			else
-#endif //SDK_USE_PRONE
-			if ( GetBasePlayer()->GetFlags() & FL_DUCKING )
-			{
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_CROUCH_END );
-			}
-			else
-			{
-				RestartGesture( GESTURE_SLOT_ATTACK_AND_RELOAD, ACT_MP_RELOAD_STAND_END );
-			}
-			iGestureActivity = ACT_INVALID; //TODO: fix
-			break;
-		}
-#if defined ( SDK_USE_PRONE )
-	case PLAYERANIMEVENT_STAND_TO_PRONE:
-		{
-			m_bProneTransition = true;
-			m_bProneTransitionFirstFrame = true;
-			m_iProneActivity = ACT_MP_STAND_TO_PRONE;
-			RestartMainSequence();
-			iGestureActivity = ACT_VM_IDLE; //Clear for weapon, we have no stand->prone so just idle.
-		}
-		break;
-	case PLAYERANIMEVENT_CROUCH_TO_PRONE:
-		{
-			m_bProneTransition = true;
-			m_bProneTransitionFirstFrame = true;
-			m_iProneActivity = ACT_MP_CROUCH_TO_PRONE;
-			RestartMainSequence();
-			iGestureActivity = ACT_VM_IDLE; //Clear for weapon, we have no crouch->prone so just idle.
-		}
-		break;
-	case PLAYERANIMEVENT_PRONE_TO_STAND:
-		{
-			m_bProneTransition = true;
-			m_bProneTransitionFirstFrame = true;
-			m_iProneActivity = ACT_MP_PRONE_TO_STAND;
-			RestartMainSequence();
-			iGestureActivity = ACT_VM_IDLE; //Clear for weapon, we have no prone->stand so just idle.
-		}
-		break;
-	case PLAYERANIMEVENT_PRONE_TO_CROUCH:
-		{
-			m_bProneTransition = true;
-			m_bProneTransitionFirstFrame = true;
-			m_iProneActivity = ACT_MP_PRONE_TO_CROUCH;
-			RestartMainSequence();
-			iGestureActivity = ACT_VM_IDLE; //Clear for weapon, we have no prone->crouch so just idle.
-		}
-		break;
-#endif
-		
-	default:
-		{
-			BaseClass::DoAnimationEvent( event, nData );
-			break;
-		}
-		*/
-	}
-	/*
-#ifdef CLIENT_DLL
-	// Make the weapon play the animation as well
-	if ( iGestureActivity != ACT_INVALID && GetSDKPlayer() != CSDKPlayer::GetLocalSDKPlayer())
-	{
-		CBaseCombatWeapon *pWeapon = GetSDKPlayer()->GetActiveWeapon();
-		if ( pWeapon )
-		{
-			pWeapon->EnsureCorrectRenderingModel();
-			pWeapon->SendWeaponAnim( iGestureActivity );
-			// Force animation events!
-			pWeapon->ResetEventsParity();		// reset event parity so the animation events will occur on the weapon. 
-			pWeapon->DoAnimationEvents( pWeapon->GetModelPtr() );
 		}
 	}
-#endif
-	*/
 }
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : *idealActivity - 

@@ -12,6 +12,7 @@
 #pragma once
 #endif
 
+#include "precipitation_shared.h"
 
 class CBaseEntity;
 class Vector;
@@ -64,5 +65,18 @@ private:
 };
 CEnvQuadraticBeam *CreateQuadraticBeam( const char *pSpriteName, const Vector &start, const Vector &control, const Vector &end, float width, CBaseEntity *pOwner );
 
+class CPrecipitation : public CBaseEntity
+{
+public:
+	DECLARE_CLASS( CPrecipitation, CBaseEntity );
+	DECLARE_DATADESC();
+	DECLARE_SERVERCLASS();
+
+	CPrecipitation();
+	void	Spawn( void );
+	void	SetType(PrecipitationType_t type);
+
+	CNetworkVar( PrecipitationType_t, m_nPrecipType );
+};
 
 #endif // EFFECTS_H

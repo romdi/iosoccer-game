@@ -22,6 +22,7 @@ public:
 	C_Ball()
 	{
 		g_pBall = this;
+		m_bShowOffsideLine = false;
 	}
 
 	virtual int GetMultiplayerPhysicsMode()
@@ -40,8 +41,13 @@ public:
 		return false;
 	}
 
+	void SetOffsideLine();
+	void OnDataChanged(DataUpdateType_t updateType);
+
 	int m_iPhysicsMode;	// One of the PHYSICS_MULTIPLAYER_ defines.	
 	float m_fMass;
+	float m_flOffsideLineY;
+	bool m_bShowOffsideLine;
 };
 
 extern C_Ball *GetBall();

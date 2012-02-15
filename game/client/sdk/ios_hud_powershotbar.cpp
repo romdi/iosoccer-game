@@ -29,6 +29,7 @@ static void OnPowershotStrengthChange(IConVar *var, const char *pOldValue, float
 }
  
 ConVar cl_powershot_strength("cl_powershot_strength", "50", 0, "Powershot Strength (0-100)", true, 0, true, 100, OnPowershotStrengthChange );
+ConVar cl_powershot_fixed_strength("cl_powershot_fixed_strength", "50", 0, "Powershot Fixed Strength (0-100)", true, 0, true, 100, OnPowershotStrengthChange );
 
 //extern ConVar cl_powershot_strength;
 
@@ -104,7 +105,7 @@ CHudPowershotBar::CHudPowershotBar( const char *pElementName ) : CHudElement( pE
 
 #define WIDTH 40
 #define HEIGHT 200
-#define MARGIN 25
+#define MARGIN 30
 #define PADDING 2
 #define HEIGHT_INDICATOR 9
 
@@ -199,7 +200,12 @@ void CHudPowershotBar::Paint()
 
 	//m_flOldStamina = stamina;
 
-	float relStamina = stamina / 100.0f;
+	float relStamina;
+
+	//if (pPlayer->GetFlags() & FL_REMOTECONTROLLED)
+	//	relStamina = 1.0f;
+	//else
+		relStamina = stamina / 100.0f;
 
 	m_pStaminaPanel->SetTall(GetTall() * relStamina - 2 * PADDING);
 	m_pStaminaPanel->SetY(GetTall() - PADDING - m_pStaminaPanel->GetTall());

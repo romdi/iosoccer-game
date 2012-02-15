@@ -353,8 +353,6 @@ BEGIN_DATADESC( CBasePlayer )
 	DEFINE_FIELD( m_flSwimSoundTime, FIELD_TIME ),
 	DEFINE_FIELD( m_vecLadderNormal, FIELD_VECTOR ),
 
-	DEFINE_FIELD( m_flNextJump, FIELD_TIME ), //ios
-
 	DEFINE_FIELD( m_flFlashTime, FIELD_TIME ),
 	DEFINE_FIELD( m_nDrownDmgRate, FIELD_INTEGER ),
 	DEFINE_FIELD( m_iSuicideCustomKillFlags, FIELD_INTEGER ),
@@ -3717,6 +3715,10 @@ void CBasePlayer::Touch( CBaseEntity *pOther )
 //-----------------------------------------------------------------------------
 void CBasePlayer::PostThinkVPhysics( void )
 {
+	if (abs(GetAbsOrigin().y - SDKGameRules()->m_vKickOff.GetY()) < 10)
+	{
+		int i = 2;
+	}
 	// Check to see if things are initialized!
 	if ( !m_pPhysicsController )
 		return;
@@ -4054,11 +4056,12 @@ void CBasePlayer::Spawn( void )
 	SetEffects( effects | EF_NOINTERP );
 
 	// Initialize the fog controller.
-	InitFogController();
+	//InitFogController();
 
 	m_afPhysicsFlags	= 0;
 
 	m_flNextJump = gpGlobals->curtime; //ios
+	m_flNextSlide = gpGlobals->curtime; //ios
 
 	SetFOV( this, 0 );
 
@@ -4068,11 +4071,6 @@ void CBasePlayer::Spawn( void )
 
 	m_vecAdditionalPVSOrigin = vec3_origin;
 	m_vecCameraPVSOrigin = vec3_origin;
-
-	if ( !m_fGameHUDInitialized )
-		g_pGameRules->SetDefaultPlayerTeam( this );
-
-	g_pGameRules->GetPlayerSpawnSpot( this );
 
 	m_Local.m_bDucked = false;// This will persist over round restart if you hold duck otherwise. 
 	m_Local.m_bDucking = false;
@@ -4118,10 +4116,10 @@ void CBasePlayer::Spawn( void )
 	StopReplayMode();
 
 	// Clear any screenfade
-	color32 nothing = {0,0,0,255};
-	UTIL_ScreenFade( this, nothing, 0, 0, FFADE_IN | FFADE_PURGE );
+	//color32 nothing = {0,0,0,255};
+	//UTIL_ScreenFade( this, nothing, 0, 0, FFADE_IN | FFADE_PURGE );
 
-	g_pGameRules->PlayerSpawn( this );
+	//g_pGameRules->PlayerSpawn( this );
 
 	m_flLaggedMovementValue = 1.0f;
 	m_vecSmoothedVelocity = vec3_origin;
@@ -4135,7 +4133,7 @@ void CBasePlayer::Spawn( void )
 		gameeventmanager->FireEvent( event );
 	}
 
-	RumbleEffect( RUMBLE_STOP_ALL, 0, RUMBLE_FLAGS_NONE );
+	//RumbleEffect( RUMBLE_STOP_ALL, 0, RUMBLE_FLAGS_NONE );
 }
 
 void CBasePlayer::Activate( void )

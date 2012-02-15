@@ -75,16 +75,16 @@ void CKeeperBot::BotAdjustPos()
 	float modifier;
 	QAngle ang;
 
-	if (m_vDirToBall.Length2D() < 50 && m_vDirToBall.z < 80)
+	if (m_vDirToBall.Length2D() < 50 && m_vDirToBall.z < VEC_HULL_MAX.z + 50)
 	{
 		modifier = 0.9f;
 		m_cmd.buttons |= IN_ATTACK2;
 		m_cmd.powershot_strength = 50;
 		VectorAngles(Vector(0, GetTeam()->m_nForward, 0), ang);
 		ang[YAW] += g_IOSRand.RandomFloat(-45, 45);
-		ang[PITCH] = -20;
+		ang[PITCH] = g_IOSRand.RandomFloat(-40, 0);
 
-		if (m_vDirToBall.z > VEC_HULL_MAX.z + 10)
+		if (m_vDirToBall.z > VEC_HULL_MAX.z)
 			m_cmd.buttons |= IN_JUMP;
 	}
 	else
@@ -126,8 +126,14 @@ void CKeeperBot::BotAdjustPos()
 	VectorNormalizeFast(targetPosDir);
 	Vector localDir;
 	VectorIRotate(targetPosDir, EntityToWorldTransform(), localDir);
-	float speed = (dist < 10 ? 0 : PLAYER_RUNSPEED);
-	//float speed = clamp(dist - 10, 0, PLAYER_RUNSPEED);
+	float speed;
+	if (dist < 10)
+		speed = 0;
+	else if (dist < 100)
+		speed = mp_runspeed.GetInt();
+	else
+		speed = mp_sprintspeed.GetInt();
+	//float speed = clamp(dist - 10, 0, mp_runspeed.GetInt());
 	m_cmd.forwardmove = localDir.x * speed;
 	m_cmd.sidemove = -localDir.y * speed;
 	m_cmd.viewangles = ang;

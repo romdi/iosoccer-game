@@ -40,8 +40,8 @@ CSDKPlayerClassInfo::CSDKPlayerClassInfo()
 	m_iGrenType2		= WEAPON_NONE;
 
 	m_szLimitCvar[0]	= '\0';
-	m_flRunSpeed		= SDK_DEFAULT_PLAYER_RUNSPEED;
-	m_flSprintSpeed		= SDK_DEFAULT_PLAYER_SPRINTSPEED;
+	m_flRunSpeed		= SDK_DEFAULT_mp_runspeed.GetInt();
+	m_flSprintSpeed		= SDK_DEFAULT_mp_sprintspeed.GetInt();
 	m_flProneSpeed		= SDK_DEFAULT_PLAYER_PRONESPEED;
 
 	m_iArmor			= 0;
@@ -127,8 +127,8 @@ void CSDKPlayerClassInfo::Parse( KeyValues *pKeyValuesData, const char *szWeapon
 	Q_strncpy( m_szClassImage, pKeyValuesData->GetString( "classimage", "white" ), sizeof( m_szClassImage ) );
 	Q_strncpy( m_szClassImageBG, pKeyValuesData->GetString( "classimagebg", "white" ), sizeof( m_szClassImageBG ) );
 
-	m_flRunSpeed		= pKeyValuesData->GetFloat( "RunSpeed", SDK_DEFAULT_PLAYER_RUNSPEED );
-	m_flSprintSpeed		= pKeyValuesData->GetFloat( "SprintSpeed", SDK_DEFAULT_PLAYER_SPRINTSPEED );
+	m_flRunSpeed		= pKeyValuesData->GetFloat( "RunSpeed", SDK_DEFAULT_mp_runspeed.GetInt() );
+	m_flSprintSpeed		= pKeyValuesData->GetFloat( "SprintSpeed", SDK_DEFAULT_mp_sprintspeed.GetInt() );
 	m_flProneSpeed		= pKeyValuesData->GetFloat( "ProneSpeed", SDK_DEFAULT_PLAYER_PRONESPEED );
 
 	m_iArmor			= pKeyValuesData->GetInt( "armor", 0 );

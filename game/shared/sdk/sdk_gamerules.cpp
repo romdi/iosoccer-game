@@ -352,6 +352,10 @@ void CSDKGameRules::ServerActivate()
 	GetGlobalTeam(TEAM_A)->InitFieldSpots(TEAM_A);
 	GetGlobalTeam(TEAM_B)->InitFieldSpots(TEAM_B);
 
+	m_pPrecip = (CPrecipitation *)CreateEntityByName("func_precipitation");
+	m_pPrecip->SetType(PRECIPITATION_TYPE_NONE);
+	m_pPrecip->Spawn();
+
 	State_Transition(MATCH_INIT);
 }
 
@@ -862,6 +866,18 @@ void CC_SV_Restart(const CCommand &args)
 
 ConCommand sv_restart( "sv_restart", CC_SV_Restart, "Restart game", 0 );
 
+void CSDKGameRules::SetWeather(PrecipitationType_t type)
+{
+	m_pPrecip->SetType(type);
+}
+
+static void OnWeatherTypeChange(IConVar *var, const char *pOldValue, float flOldValue)
+{
+	SDKGameRules()->SetWeather((PrecipitationType_t)((ConVar*)var)->GetInt());
+}
+ 
+ConVar mp_weather("mp_weather", "0", 0, "Weather (0 = sunny, 1 = rainy, 2 = snowy)", true, 0, true, 2, OnWeatherTypeChange );
+
 #endif
 
 ConVar mp_showstatetransitions( "mp_showstatetransitions", "1", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Show game state transitions." );
@@ -974,7 +990,6 @@ void CSDKGameRules::State_INIT_Think()
 
 void CSDKGameRules::State_WARMUP_Enter()
 {
-	GetBall()->SetIgnoreTriggers(true);
 	SetTeamsSwapped(false);
 }
 
@@ -1009,7 +1024,6 @@ void CSDKGameRules::State_FIRST_HALF_Think()
 
 void CSDKGameRules::State_HALFTIME_Enter()
 {
-	GetBall()->SetIgnoreTriggers(true);
 	GetBall()->EmitSound("Ball.whistle");
 	GetBall()->EmitSound("Ball.cheer");
 }
@@ -1022,7 +1036,6 @@ void CSDKGameRules::State_HALFTIME_Think()
 
 void CSDKGameRules::State_SECOND_HALF_Enter()
 {
-	GetBall()->SetIgnoreTriggers(false);
 	SetTeamsSwapped(true);
 	GetBall()->SetRegularKickOff(true);
 	GetBall()->State_Transition(BALL_KICKOFF);
@@ -1047,7 +1060,6 @@ void CSDKGameRules::State_SECOND_HALF_Think()
 
 void CSDKGameRules::State_EXTRATIME_INTERMISSION_Enter()
 {
-	GetBall()->SetIgnoreTriggers(true);
 	GetBall()->EmitSound("Ball.whistle");
 	GetBall()->EmitSound("Ball.cheer");
 }
@@ -1062,7 +1074,6 @@ void CSDKGameRules::State_EXTRATIME_INTERMISSION_Think()
 
 void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Enter()
 {
-	GetBall()->SetIgnoreTriggers(false);
 	SetTeamsSwapped(false);
 	GetBall()->SetRegularKickOff(true);
 	GetBall()->State_Transition(BALL_KICKOFF);
@@ -1082,7 +1093,6 @@ void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Think()
 
 void CSDKGameRules::State_EXTRATIME_HALFTIME_Enter()
 {
-	GetBall()->SetIgnoreTriggers(true);
 	GetBall()->EmitSound("Ball.whistle");
 	GetBall()->EmitSound("Ball.cheer");
 }
@@ -1097,7 +1107,6 @@ void CSDKGameRules::State_EXTRATIME_HALFTIME_Think()
 
 void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Enter()
 {
-	GetBall()->SetIgnoreTriggers(false);
 	SetTeamsSwapped(true);
 	GetBall()->State_Transition(BALL_KICKOFF);
 }
@@ -1119,7 +1128,6 @@ void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Think()
 
 void CSDKGameRules::State_PENALTIES_INTERMISSION_Enter()
 {
-	GetBall()->SetIgnoreTriggers(true);
 	GetBall()->EmitSound("Ball.whistle");
 	GetBall()->EmitSound("Ball.cheer");
 }
@@ -1134,7 +1142,6 @@ void CSDKGameRules::State_PENALTIES_INTERMISSION_Think()
 
 void CSDKGameRules::State_PENALTIES_Enter()
 {
-	GetBall()->SetIgnoreTriggers(false);
 }
 
 void CSDKGameRules::State_PENALTIES_Think()
@@ -1147,8 +1154,6 @@ void CSDKGameRules::State_PENALTIES_Think()
 
 void CSDKGameRules::State_COOLDOWN_Enter()
 {
-	GetBall()->SetIgnoreTriggers(true);
-
 	//who won?
 	int winners = 0;
 	int scoreA = GetGlobalTeam( TEAM_A )->GetScore();
@@ -1213,13 +1218,8 @@ void CSDKGameRules::State_END_Think()
 
 void SetTeams(const char *teamHome, const char *teamAway, bool bInitialize)
 {
-	// copy strings to avoid problems (e.g. when swapping teams)
-	char teamHomeCpy[32], teamAwayCpy[32];
-	Q_strncpy(teamHomeCpy, teamHome, sizeof(teamHomeCpy));
-	Q_strncpy(teamAwayCpy, teamAway, sizeof(teamAwayCpy));
-
-	Q_strncpy(pszTeamNames[TEAM_A], teamHomeCpy, sizeof(pszTeamNames[TEAM_A]));
-	Q_strncpy(pszTeamNames[TEAM_B], teamAwayCpy, sizeof(pszTeamNames[TEAM_B]));
+	Q_strncpy(pszTeamNames[TEAM_A], teamHome, sizeof(pszTeamNames[TEAM_A]));
+	Q_strncpy(pszTeamNames[TEAM_B], teamAway, sizeof(pszTeamNames[TEAM_B]));
 
 	if (bInitialize)
 	{
@@ -1370,9 +1370,39 @@ void CSDKGameRules::SetTeamsSwapped(bool swapped)
 	}
 }
 
+CBaseEntity *CSDKGameRules::GetPlayerSpawnSpot( CBasePlayer *pPlayer )
+{
+	Vector spawnPos = pPlayer->GetTeam()->m_vPlayerSpawns[ToSDKPlayer(pPlayer)->GetTeamPosition() - 1];
+	Vector dir = Vector(0, pPlayer->GetTeam()->m_nForward, 0);
+	QAngle ang;
+	VectorAngles(dir, ang);
+	pPlayer->SetLocalOrigin(spawnPos);
+	pPlayer->SetLocalVelocity(vec3_origin);
+	pPlayer->SetLocalAngles(ang);
+	pPlayer->m_Local.m_vecPunchAngle = vec3_angle;
+	pPlayer->m_Local.m_vecPunchAngleVel = vec3_angle;
+	pPlayer->SnapEyeAngles(ang);
+
+	return NULL;
+}
+
 #endif
 
-
+bool CSDKGameRules::IsIntermissionState()
+{
+	switch (State_Get())
+	{
+	case MATCH_WARMUP:
+	case MATCH_HALFTIME:
+	case MATCH_EXTRATIME_INTERMISSION:
+	case MATCH_EXTRATIME_HALFTIME:
+	case MATCH_PENALTIES_INTERMISSION:
+	case MATCH_COOLDOWN:
+		return true;
+	default:
+		return false;
+	}
+}
 
 
 

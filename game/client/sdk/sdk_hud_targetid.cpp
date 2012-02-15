@@ -20,8 +20,10 @@
 #define PLAYER_HINT_DISTANCE	150
 #define PLAYER_HINT_DISTANCE_SQ	(PLAYER_HINT_DISTANCE*PLAYER_HINT_DISTANCE)
 
-static ConVar hud_centerid( "hud_centerid", "1" );
-static ConVar hud_showtargetid( "hud_showtargetid", "1" );
+static ConVar hud_names_show("hud_names_show", "1");
+static ConVar hud_names_offset("hud_names_offset", "120");
+
+using namespace vgui;
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -38,11 +40,7 @@ public:
 	void VidInit( void );
 
 private:
-	Color			GetColorForTargetTeam( int iTeamNumber );
-
 	vgui::HFont		m_hFont;
-	int				m_iLastEntIndex;
-	float			m_flLastChangeTime;
 };
 
 DECLARE_HUDELEMENT( CSDKTargetId );
@@ -59,10 +57,9 @@ CSDKTargetId::CSDKTargetId( const char *pElementName ) :
 	SetParent( pParent );
 
 	m_hFont = g_hFontTrebuchet24;
-	m_flLastChangeTime = 0;
-	m_iLastEntIndex = 0;
 
-	SetHiddenBits( HIDEHUD_MISCSTATUS );
+	//SetHiddenBits( HIDEHUD_MISCSTATUS );
+	SetHiddenBits(HIDEHUD_PLAYERDEAD);
 }
 
 //-----------------------------------------------------------------------------
@@ -76,9 +73,11 @@ void CSDKTargetId::ApplySchemeSettings( vgui::IScheme *scheme )
 {
 	BaseClass::ApplySchemeSettings( scheme );
 
-	m_hFont = scheme->GetFont( "TargetID", IsProportional() );
+	//m_hFont = scheme->GetFont( "TargetID", IsProportional() );
+	m_hFont = scheme->GetFont("IOSPlayerName");
 
 	SetPaintBackgroundEnabled( false );
+	SetBounds(0, 0, ScreenWidth(), ScreenHeight());
 }
 
 //-----------------------------------------------------------------------------
@@ -87,136 +86,61 @@ void CSDKTargetId::ApplySchemeSettings( vgui::IScheme *scheme )
 void CSDKTargetId::VidInit()
 {
 	CHudElement::VidInit();
-
-	m_flLastChangeTime = 0;
-	m_iLastEntIndex = 0;
 }
-
-Color CSDKTargetId::GetColorForTargetTeam( int iTeamNumber )
-{
-	return GameResources()->GetTeamColor( iTeamNumber );
-} 
 
 //-----------------------------------------------------------------------------
 // Purpose: Draw function for the element
 //-----------------------------------------------------------------------------
 void CSDKTargetId::Paint()
 {
-#define MAX_ID_STRING 256
-	wchar_t sIDString[ MAX_ID_STRING ];
-	sIDString[0] = 0;
-
-	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
-
-	if ( !pPlayer )
+	if (hud_names_show.GetInt() == 0)
 		return;
 
-	Color c;
+	C_SDKPlayer *pLocal = C_SDKPlayer::GetLocalSDKPlayer();
 
-	// Get our target's ent index
-	int iEntIndex = pPlayer->GetIDTarget();
-	// Didn't find one?
-	if ( !iEntIndex )
-	{
-		// Check to see if we should clear our ID
-		if ( m_flLastChangeTime && (gpGlobals->curtime > (m_flLastChangeTime + 0.5)) )
-		{
-			m_flLastChangeTime = 0;
-			sIDString[0] = 0;
-			m_iLastEntIndex = 0;
-		}
-		else
-		{
-			// Keep re-using the old one
-			iEntIndex = m_iLastEntIndex;
-		}
-	}
-	else
-	{
-		m_flLastChangeTime = gpGlobals->curtime;
-	}
+	if (!pLocal)
+		return;
 
-	// Is this an entindex sent by the server?
-	if ( iEntIndex )
+	for (int i = 0; i <= gpGlobals->maxClients; i++)
 	{
-		C_BasePlayer *pPlayer = static_cast<C_BasePlayer*>(cl_entitylist->GetEnt( iEntIndex ));
-		C_BasePlayer *pLocalPlayer = C_BasePlayer::GetLocalPlayer();
+		C_SDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+
+		if (!pPl || pPl == pLocal)
+			continue;
+
+		if (pPl->IsDormant())
+			continue;
 
 		const char *printFormatString = NULL;
-		wchar_t wszPlayerName[ MAX_PLAYER_NAME_LENGTH ];
-		wchar_t wszHealthText[ 10 ];
-		bool bShowHealth = false;
-		bool bShowPlayerName = false;
+		wchar_t wszPlayerName[MAX_PLAYER_NAME_LENGTH];
+		wchar_t wszPosName[10];
+		wchar_t wszPlayerText[MAX_PLAYER_NAME_LENGTH + 10];
 
-		// Some entities we always want to check, cause the text may change
-		// even while we're looking at it
-		// Is it a player?
-		if ( IsPlayerIndex( iEntIndex ) )
-		{
-			c = GetColorForTargetTeam( pPlayer->GetTeamNumber() );
+		g_pVGuiLocalize->ConvertANSIToUnicode(pPl->GetPlayerName(), wszPlayerName, sizeof(wszPlayerName));
+		g_pVGuiLocalize->ConvertANSIToUnicode(g_szPosNames[GameResources()->GetTeamPosition(i) - 1], wszPosName, sizeof(wszPosName));
 
-			bShowPlayerName = true;
-			g_pVGuiLocalize->ConvertANSIToUnicode( pPlayer->GetPlayerName(),  wszPlayerName, sizeof(wszPlayerName) );
-			
-			if ( SDKGameRules()->IsTeamplay() == true && pPlayer->InSameTeam(pLocalPlayer) )
-			{
-				printFormatString = "#SDK_Playerid_sameteam";
-				bShowHealth = true;
-			}
-			else
-			{
-				printFormatString = "#SDK_Playerid_diffteam";
-			}
-		
+		//_snwprintf( wszPlayerText, ARRAYSIZE(wszPlayerText) - 1, L"%s %s", wszPosName, wszPlayerName);
+		_snwprintf( wszPlayerText, ARRAYSIZE(wszPlayerText) - 1, L"%s", wszPlayerName);
+		wszPlayerText[ ARRAYSIZE(wszPlayerText)-1 ] = '\0';
 
-			if ( bShowHealth )
-			{
-				_snwprintf( wszHealthText, ARRAYSIZE(wszHealthText) - 1, L"%.0f%%",  ((float)pPlayer->GetHealth() / (float)pPlayer->GetMaxHealth() ) );
-				wszHealthText[ ARRAYSIZE(wszHealthText)-1 ] = '\0';
-			}
-		}
+		int wide, tall;
+		int xPos, yPos;
+		int zOffset = 120;
 
-		if ( printFormatString )
-		{
-			if ( bShowPlayerName && bShowHealth )
-			{
-				g_pVGuiLocalize->ConstructString( sIDString, sizeof(sIDString), g_pVGuiLocalize->Find(printFormatString), 2, wszPlayerName, wszHealthText );
-			}
-			else if ( bShowPlayerName )
-			{
-				g_pVGuiLocalize->ConstructString( sIDString, sizeof(sIDString), g_pVGuiLocalize->Find(printFormatString), 1, wszPlayerName );
-			}
-			else if ( bShowHealth )
-			{
-				g_pVGuiLocalize->ConstructString( sIDString, sizeof(sIDString), g_pVGuiLocalize->Find(printFormatString), 1, wszHealthText );
-			}
-			else
-			{
-				g_pVGuiLocalize->ConstructString( sIDString, sizeof(sIDString), g_pVGuiLocalize->Find(printFormatString), 0 );
-			}
-		}
+		vgui::surface()->GetTextSize(m_hFont, wszPlayerText, wide, tall);
 
-		if ( sIDString[0] )
-		{
-			int wide, tall;
-			int ypos = YRES(260);
-			int xpos = XRES(10);
+		Color c = GameResources()->GetTeamColor(pPl->GetTeamNumber());
+		c = Color(c.r(), c.g(), c.b(), 255);
 
-			vgui::surface()->GetTextSize( m_hFont, sIDString, wide, tall );
+		Vector pos = pPl->GetLocalOrigin();
+		pos.z += VEC_HULL_MAX.z + hud_names_offset.GetInt();
+		GetVectorInScreenSpace(pos, xPos, yPos);
 
-			if( hud_centerid.GetInt() == 0 )
-			{
-				ypos = YRES(420);
-			}
-			else
-			{
-				xpos = (ScreenWidth() - wide) / 2;
-			}
-			
-			vgui::surface()->DrawSetTextFont( m_hFont );
-			vgui::surface()->DrawSetTextPos( xpos, ypos );
-			vgui::surface()->DrawSetTextColor( c );
-			vgui::surface()->DrawPrintText( sIDString, wcslen(sIDString) );
-		}
+		//surface()->DrawSetColor(c);
+		//surface()->DrawLine(xPos, yStartPos, xPos, yEndPos);
+		surface()->DrawSetTextFont(m_hFont);
+		surface()->DrawSetTextPos(xPos - wide / 2, yPos - tall);
+		surface()->DrawSetTextColor(c);
+		surface()->DrawPrintText(wszPlayerText, wcslen(wszPlayerText));
 	}
 }

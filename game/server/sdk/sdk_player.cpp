@@ -297,55 +297,53 @@ void CSDKPlayer::PostThink()
 
 void CSDKPlayer::LookAtBall(void)
 {
-	//IOS LOOKAT Ball. Turn head to look at ball - headtracking.
 	CBall *pBall = GetBall();
-	if (pBall) 
+
+	if (!pBall)
+		return;
+
+	float yaw, pitch;
+
+	if (GetFlags() & FL_REMOTECONTROLLED)
+	{
+		yaw = 0;
+		pitch = 0;
+	}
+	else
 	{
 		float curyaw = GetBoneController(2);
-		//float curpitch = GetBoneController(3);
+		float curpitch = GetBoneController(3);
+		Vector ballPos;
+		pBall->VPhysicsGetObject()->GetPosition(&ballPos, NULL);
+		Vector dirToBall = ballPos - Vector(GetLocalOrigin().x, GetLocalOrigin().y, GetLocalOrigin().z + VEC_VIEW.z);
 
-		float distSq = (pBall->GetAbsOrigin() - GetAbsOrigin()).Length2DSqr();
-		if (distSq > 72.0f*72.0f)		//6 ft
-		{
-  			QAngle ball_angle;
-			VectorAngles((pBall->GetAbsOrigin() - GetAbsOrigin()), ball_angle );
+		QAngle angToBall;
+		VectorAngles(dirToBall, angToBall );
 
-			float yaw = ball_angle.y - GetAbsAngles().y;
-			//float pitch = ball_angle.x - GetAbsAngles().x;
+		yaw = angToBall[YAW] - GetLocalAngles()[YAW];
+		pitch = angToBall[PITCH] - GetLocalAngles()[PITCH];
 
-			if (yaw > 180) yaw -= 360;
-			if (yaw < -180) yaw += 360;
-			//if (pitch > 180) pitch -= 360;
-			//if (pitch < -180) pitch += 360;
+		if (yaw > 180) yaw -= 360;
+		if (yaw < -180) yaw += 360;
+		if (pitch > 180) pitch -= 360;
+		if (pitch < -180) pitch += 360;
 
-			//if (yaw > -30 && yaw < 30)
-			if (yaw > -60 && yaw < 60) 
-			{   
-				yaw = curyaw + (yaw-curyaw)*0.1f;
-				//pitch = curpitch + (pitch-curpitch)*0.1f;
-				//only move head if ball is in forward view cone.
-				SetBoneController(2, yaw);
-				//IOSS 1.0a removed cos it vibrates SetBoneController(3, pitch);
-			}
-			else 
-			{
-				SetBoneController(2, curyaw * 0.9f );
-				//IOSS 1.0a removed cos it vibrates SetBoneController(3, curpitch * 0.9f );
-			}
-
-			//stop keeper wobbly head when carrying
-			//if (m_TeamPos == 1 && pBall->m_KeeperCarrying)
-			//{
-			//	SetBoneController(2, 0 );
-			//	SetBoneController(3, 0 );
-			//}
+		if (dirToBall.Length2D() > 10.0f && yaw > -60 && yaw < 60) 
+		{   
+			//yaw = (curyaw > yaw ? -1 : 1) * 1000 * gpGlobals->frametime;
+			yaw = curyaw + (yaw - curyaw) * 0.1f;
+			pitch = curpitch + (pitch - curpitch) * 0.1f;
 		}
-		else
+		else 
 		{
-			SetBoneController(2, curyaw * 0.9f );
-			//IOSS 1.0a removed cos it vibrates SetBoneController(3, curpitch * 0.9f );
+			//yaw = (curyaw > 0 ? -1 : 1) * 1000 * gpGlobals->frametime;
+			yaw = curyaw * 0.9f;
+			pitch = curpitch * 0.9f;
 		}
 	}
+
+	SetBoneController(2, yaw);
+	SetBoneController(3, pitch);
 }
 
 #define IOSSCOLDIST (36.0f * 36.0f)
@@ -497,7 +495,7 @@ void CSDKPlayer::InitialSpawn( void )
 
 	//Spawn();
 
-	if (!IsBot())
+	//if (!IsBot())
 		ChangeTeam(TEAM_SPECTATOR);
 
 	/*if (!IsBot())
@@ -1648,6 +1646,7 @@ Vector CSDKPlayer::EyeDirection3D( void )
 
 void CSDKPlayer::SetPosInsideShield(Vector pos, bool holdAtTargetPos)
 {
+	RemoveFlag(FL_SHIELD_KEEP_OUT);
 	AddFlag(FL_REMOTECONTROLLED | FL_SHIELD_KEEP_IN);
 	m_vTargetPos = pos;
 	m_bIsAtTargetPos = false;
@@ -1657,6 +1656,7 @@ void CSDKPlayer::SetPosInsideShield(Vector pos, bool holdAtTargetPos)
 
 void CSDKPlayer::SetPosOutsideShield(bool holdAtTargetPos)
 {
+	RemoveFlag(FL_SHIELD_KEEP_IN);
 	AddFlag(FL_SHIELD_KEEP_OUT);
 	m_bHoldAtTargetPos = holdAtTargetPos;
 	m_bIsAtTargetPos = false;
@@ -1740,4 +1740,17 @@ bool CSDKPlayer::IsOnField(CSDKPlayer *pPl)
 bool CSDKPlayer::IsOffside()
 {
 	return mp_offside.GetBool() ? m_bOffside : false;
+}
+
+void CSDKPlayer::SetOffside(bool offside)
+{
+	if (offside)
+		m_vOffsidePos = GetLocalOrigin();
+
+	m_bOffside = offside;
+}
+
+Vector CSDKPlayer::GetOffsidePos()
+{
+	return m_vOffsidePos;
 }
