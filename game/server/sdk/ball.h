@@ -119,6 +119,7 @@ struct BallTouchInfo
 	int				m_nTeam;
 	bool			m_bIsShot;
 	body_part_t		m_eBodyPart;
+	ball_state_t	m_eBallState;
 };
 
 //==========================================================
@@ -168,6 +169,8 @@ public:
 
 	void			State_Transition( ball_state_t newState, float delay = 0.0f );
 
+	void			ResetStats();
+
 	CNetworkVar(float, m_flOffsideLineY);
 	CNetworkVar(bool, m_bShowOffsideLine);
 
@@ -188,11 +191,10 @@ private:
 	void State_Think();										// Update the current state.
 	void State_DoTransition( ball_state_t newState );
 	static CBallStateInfo* State_LookupInfo(ball_state_t state);	// Find the state info for the specified state.
-	ball_state_t	m_eBallState;
 	ball_state_t	m_eNextState;
 	float			m_flStateEnterTime;
 	float			m_flStateLeaveTime;
-	float			m_flStateAutoLeaveTime;
+	float			m_flStateTimelimit;
 	CBallStateInfo	*m_pCurStateInfo;
 	
 	void			SetPos(const Vector &pos);
@@ -205,7 +207,7 @@ private:
 
 	bool			PlayersAtTargetPos(bool holdAtTargetPos);
 
-	CSDKPlayer		*FindNearestPlayer(int team = TEAM_INVALID, int posFlags = FL_POS_FIELD, bool checkIfShooting = false, int ignoredPlayersBits = 0);
+	CSDKPlayer		*FindNearestPlayer(int team = TEAM_INVALID, int posFlags = FL_POS_FIELD, bool checkIfShooting = false, int ignoredPlayerBits = 0);
 	bool			IsPlayerCloseEnough(CSDKPlayer *pPl, bool isKeeper = false);
 	bool			CanKeeperCatch(body_part_t bodyPart);
 	body_part_t		GetBodyPart(Vector pos, CSDKPlayer *pPl);

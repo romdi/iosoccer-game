@@ -75,7 +75,7 @@ CTeamMenu::CTeamMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_TEAM )
 {
 	m_pViewPort = pViewPort;
 	m_iJumpKey = BUTTON_CODE_INVALID; // this is looked up in Activate()
-	m_iScoreBoardKey = BUTTON_CODE_INVALID; // this is looked up in Activate()
+	m_nGoalsBoardKey = BUTTON_CODE_INVALID; // this is looked up in Activate()
 	m_nActiveTeam = 0;
 
 	SetBounds(PANEL_MARGIN, PANEL_MARGIN, PANEL_WIDTH, PANEL_HEIGHT);
@@ -351,9 +351,9 @@ void CTeamMenu::ShowPanel(bool bShow)
 			m_iJumpKey = gameuifuncs->GetButtonCodeForBind( "jump" );
 		}
 
-		if ( m_iScoreBoardKey == BUTTON_CODE_INVALID ) 
+		if ( m_nGoalsBoardKey == BUTTON_CODE_INVALID ) 
 		{
-			m_iScoreBoardKey = gameuifuncs->GetButtonCodeForBind( "showscores" );
+			m_nGoalsBoardKey = gameuifuncs->GetButtonCodeForBind( "showscores" );
 		}
 		
 	}
@@ -397,7 +397,7 @@ void CTeamMenu::Update()
 		posTaken[team - TEAM_A][11 - pos] = true;
 		PosPanel_t *pPos = m_pPosPanels[team - TEAM_A][11 - pos];
 		if (gr->GetTeamToJoin(i) != TEAM_INVALID)
-			pPos->pPlayerName->SetText(VarArgs("%s (%d)", gr->GetPlayerName(i), (int)(gr->GetNextJoin(i) - gpGlobals->curtime)));
+			pPos->pPlayerName->SetText(VarArgs("%s [%d]", gr->GetPlayerName(i), (int)(gr->GetNextJoin(i) - gpGlobals->curtime)));
 		else
 			pPos->pPlayerName->SetText(gr->GetPlayerName(i));
 		pPos->pPlayerName->SetFgColor(gr->GetTeamColor(team));
@@ -468,9 +468,9 @@ void CTeamMenu::Update()
 		}
 	}
 	C_Team *pTeamA = GetGlobalTeam(TEAM_A);
-	m_pTeamNames[0]->SetText(VarArgs("%s (%s) - %d players", pTeamA->Get_Name(), pTeamA->Get_FullName(), pTeamA->Get_Number_Players()));
+	m_pTeamNames[0]->SetText(VarArgs("%s (%s) - %d player%s - %d%% possession", pTeamA->Get_Name(), pTeamA->Get_FullName(), pTeamA->Get_Number_Players(), (pTeamA->Get_Number_Players() > 0 ? "s" : ""), pTeamA->Get_Possession()));
 	C_Team *pTeamB = GetGlobalTeam(TEAM_B);
-	m_pTeamNames[1]->SetText(VarArgs("%s (%s) - %d players", pTeamB->Get_Name(), pTeamB->Get_FullName(), pTeamB->Get_Number_Players()));
+	m_pTeamNames[1]->SetText(VarArgs("%s (%s) - %d player%s - %d%% possession", pTeamB->Get_Name(), pTeamB->Get_FullName(), pTeamB->Get_Number_Players(), (pTeamB->Get_Number_Players() > 0 ? "s" : ""), pTeamB->Get_Possession()));
 
 	m_pTabButtons[0]->SetText(gr->GetTeamName(TEAM_A));
 	m_pTabButtons[1]->SetText(gr->GetTeamName(TEAM_B));
@@ -521,7 +521,7 @@ void CTeamMenu::OnKeyCodePressed(KeyCode code)
 	{
 		AutoAssign();
 	}
-	else if ( m_iScoreBoardKey != BUTTON_CODE_INVALID && m_iScoreBoardKey == code )
+	else if ( m_nGoalsBoardKey != BUTTON_CODE_INVALID && m_nGoalsBoardKey == code )
 	{
 		//gViewPortInterface->ShowPanel( PANEL_SCOREBOARD, true );
 		//gViewPortInterface->PostMessageToPanel( PANEL_SCOREBOARD, new KeyValues( "PollHideCode", "code", code ) );

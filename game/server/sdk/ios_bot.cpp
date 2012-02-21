@@ -147,11 +147,15 @@ void CBot::BotJoinTeam(int keeper)
 	for (int i = 1; i <= gpGlobals->maxClients; i++) 
 	{
 		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
-
-		if (!CSDKPlayer::IsOnField(pPl))
+		if (!pPl)
 			continue;
 
-		playerCount[pPl->GetTeamNumber() - TEAM_A] += 1;
+		if (!(CSDKPlayer::IsOnField(pPl) || pPl->GetTeamToJoin() != TEAM_INVALID))
+			continue;
+
+		int team = CSDKPlayer::IsOnField(pPl) ? pPl->GetTeamNumber() : pPl->GetTeamToJoin();
+
+		playerCount[team - TEAM_A] += 1;
 	}
 
 	if (keeper > 0)

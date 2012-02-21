@@ -1003,6 +1003,7 @@ void CSDKGameRules::State_WARMUP_Think()
 void CSDKGameRules::State_FIRST_HALF_Enter()
 {
 	//GetBall()->CreateVPhysics();
+	GetBall()->ResetStats();
 	GetBall()->SetRegularKickOff(true);
 	m_nKickOffTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
 	GetBall()->State_Transition(BALL_KICKOFF);

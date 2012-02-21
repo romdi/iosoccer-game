@@ -40,8 +40,9 @@ int SendProxyArrayLength_PlayerArray( const void *pStruct, int objectID )
 // Datatable
 IMPLEMENT_SERVERCLASS_ST_NOBASE(CTeam, DT_Team)
 	SendPropInt( SENDINFO(m_iTeamNum), 5 ),
-	SendPropInt( SENDINFO(m_iScore), 0 ),
+	SendPropInt( SENDINFO(m_nGoals), 0 ),
 	SendPropInt( SENDINFO(m_iRoundsWon), 8 ),
+	SendPropInt( SENDINFO(m_nPossession), 0 ),
 	SendPropString( SENDINFO( m_szTeamname ) ),
 
 	SendPropVector(SENDINFO(m_vCornerLeft), -1, SPROP_COORD),
@@ -137,7 +138,7 @@ void CTeam::Init( const char *pName, int iNumber )
 	InitializeSpawnpoints();
 	InitializePlayers();
 
-	m_iScore = 0;
+	m_nGoals = 0;
 
 	Q_strncpy( m_szTeamname.GetForModify(), pName, MAX_TEAM_NAME_LENGTH );
 	m_iTeamNum = iNumber;
@@ -291,12 +292,12 @@ CBasePlayer *CTeam::GetPlayer( int iIndex )
 //-----------------------------------------------------------------------------
 void CTeam::AddScore( int iScore )
 {
-	m_iScore += iScore;
+	m_nGoals += iScore;
 }
 
 void CTeam::SetScore( int iScore )
 {
-	m_iScore = iScore;
+	m_nGoals = iScore;
 }
 
 //-----------------------------------------------------------------------------
@@ -304,7 +305,7 @@ void CTeam::SetScore( int iScore )
 //-----------------------------------------------------------------------------
 int CTeam::GetScore( void )
 {
-	return m_iScore;
+	return m_nGoals;
 }
 
 //-----------------------------------------------------------------------------
@@ -392,4 +393,11 @@ void CTeam::InitFieldSpots(int team)
 
 	m_nForward = Sign((SDKGameRules()->m_vKickOff - m_vPlayerSpawns[0]).y);
 	m_nRight = Sign((m_vCornerRight - m_vPlayerSpawns[0]).x);
+}
+
+void CTeam::ResetStats()
+{
+	m_flPossessionTime = 0;
+	m_nPossession = 0;
+	m_nGoals = 0;
 }

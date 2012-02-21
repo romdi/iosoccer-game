@@ -30,7 +30,7 @@ protected:
 	// Data for each player that's propagated to all clients
 	// Stored in individual arrays so they can be sent down via datatables
 	CNetworkArray( int, m_iPing, MAX_PLAYERS+1 );
-	CNetworkArray( int, m_iScore, MAX_PLAYERS+1 );
+	CNetworkArray( int, m_nGoals, MAX_PLAYERS+1 );
 //	CNetworkArray( int, m_iDeaths, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_bConnected, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_iTeam, MAX_PLAYERS+1 );

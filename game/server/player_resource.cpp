@@ -24,7 +24,7 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CPlayerResource, DT_PlayerResource)
 //	SendPropArray( SendPropString( SENDINFO(m_szName[0]) ), SENDARRAYINFO(m_szName) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_iPing), SendPropInt( SENDINFO_ARRAY(m_iPing), 10, SPROP_UNSIGNED ) ),
 //	SendPropArray( SendPropInt( SENDINFO_ARRAY(m_iPacketloss), 7, SPROP_UNSIGNED ), m_iPacketloss ),
-	SendPropArray3( SENDINFO_ARRAY3(m_iScore), SendPropInt( SENDINFO_ARRAY(m_iScore), 12 ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_nGoals), SendPropInt( SENDINFO_ARRAY(m_nGoals), 12 ) ),
 //	SendPropArray3( SENDINFO_ARRAY3(m_iDeaths), SendPropInt( SENDINFO_ARRAY(m_iDeaths), 12 ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_bConnected), SendPropInt( SENDINFO_ARRAY(m_bConnected), 1, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_iTeam), SendPropInt( SENDINFO_ARRAY(m_iTeam), 4 ) ),
@@ -60,7 +60,7 @@ BEGIN_DATADESC( CPlayerResource )
 
 	// DEFINE_ARRAY( m_iPing, FIELD_INTEGER, MAX_PLAYERS+1 ),
 	// DEFINE_ARRAY( m_iPacketloss, FIELD_INTEGER, MAX_PLAYERS+1 ),
-	// DEFINE_ARRAY( m_iScore, FIELD_INTEGER, MAX_PLAYERS+1 ),
+	// DEFINE_ARRAY( m_nGoals, FIELD_INTEGER, MAX_PLAYERS+1 ),
 	// DEFINE_ARRAY( m_iDeaths, FIELD_INTEGER, MAX_PLAYERS+1 ),
 	// DEFINE_ARRAY( m_bConnected, FIELD_INTEGER, MAX_PLAYERS+1 ),
 	// DEFINE_FIELD( m_flNextPingUpdate, FIELD_FLOAT ),
@@ -86,7 +86,7 @@ void CPlayerResource::Spawn( void )
 	for ( int i=0; i < MAX_PLAYERS+1; i++ )
 	{
 		m_iPing.Set( i, 0 );
-		m_iScore.Set( i, 0 );
+		m_nGoals.Set( i, 0 );
 //		m_iDeaths.Set( i, 0 );
 		m_bConnected.Set( i, 0 );
 		m_iTeam.Set( i, 0 );
@@ -152,7 +152,7 @@ void CPlayerResource::UpdatePlayerData( void )
 		
 		if ( pPlayer && pPlayer->IsConnected() )
 		{
-			m_iScore.Set( i, pPlayer->FragCount() );
+			m_nGoals.Set( i, pPlayer->FragCount() );
 //			m_iDeaths.Set( i, pPlayer->DeathCount() );
 			m_bConnected.Set( i, 1 );
 			m_iTeam.Set( i, pPlayer->GetTeamNumber() );

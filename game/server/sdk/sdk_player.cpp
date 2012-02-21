@@ -460,6 +460,8 @@ void CSDKPlayer::ChangeTeam( int iTeamNum )
 	}
 	else // active player
 	{
+		ResetStats();
+
 		m_nTeamToJoin = TEAM_INVALID;
 
 		if( iOldTeam == TEAM_SPECTATOR )
@@ -489,22 +491,7 @@ void CSDKPlayer::InitialSpawn( void )
 	//SharedSpawn();
 	Spawn();
 
-	m_RejoinTime = 0;
-	m_RedCards=0;
-	m_YellowCards=0;
-	m_Fouls=0;
-	m_Goals=0;
-	m_Assists=0;
-	m_Passes=0;
-	m_FreeKicks=0;
-	m_Penalties=0;
-	m_Corners=0;
-	m_ThrowIns=0;
-	m_KeeperSaves=0;
-	m_GoalKicks=0;
-	m_Possession=0;
-	m_flPossessionTime=0.0f;
-	ResetFragCount();
+	ResetStats();
 
 	//Spawn();
 
@@ -1765,4 +1752,24 @@ void CSDKPlayer::SetOffside(bool offside)
 Vector CSDKPlayer::GetOffsidePos()
 {
 	return m_vOffsidePos;
+}
+
+void CSDKPlayer::ResetStats()
+{
+	m_RejoinTime = 0;
+	m_RedCards=0;
+	m_YellowCards=0;
+	m_Fouls=0;
+	m_Goals=0;
+	m_Assists=0;
+	m_Passes=0;
+	m_FreeKicks=0;
+	m_Penalties=0;
+	m_Corners=0;
+	m_ThrowIns=0;
+	m_KeeperSaves=0;
+	m_GoalKicks=0;
+	m_Possession=0;
+	m_flPossessionTime=0.0f;
+	ResetFragCount();
 }

@@ -102,7 +102,7 @@ protected:
 	IViewPort	*m_pViewPort;
 //	int m_iNumTeams;
 	ButtonCode_t m_iJumpKey;
-	ButtonCode_t m_iScoreBoardKey;
+	ButtonCode_t m_nGoalsBoardKey;
 
 	//CUtlVectorFixed<CBitmapButton *, 11> m_pTeamButtons;
 	PosPanel_t *m_pPosPanels[2][11];

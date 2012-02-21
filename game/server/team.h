@@ -82,8 +82,9 @@ public:
 
 	// Data
 	CNetworkString( m_szTeamname, MAX_TEAM_NAME_LENGTH );
-	CNetworkVar( int, m_iScore );
+	CNetworkVar( int, m_nGoals );
 	CNetworkVar( int, m_iRoundsWon );
+	CNetworkVar( int, m_nPossession );
 	int		m_iDeaths;
 
 	// Spawnpoints
@@ -92,7 +93,6 @@ public:
 	CNetworkVar( int, m_iTeamNum );			// Which team is this?
 
 	float	m_flPossessionTime;
-	int		m_nPossession;
 
 	CNetworkVector(m_vCornerLeft);
 	CNetworkVector(m_vCornerRight);
@@ -108,6 +108,7 @@ public:
 
 	Vector GetSpotPos(const char *name);
 	void InitFieldSpots(int team);
+	void ResetStats();
 };
 
 extern CUtlVector< CTeam * > g_Teams;

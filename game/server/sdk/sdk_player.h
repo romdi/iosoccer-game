@@ -369,6 +369,8 @@ public:
 
 	static bool			IsOnField(CSDKPlayer *pPl);
 
+	void				ResetStats();
+
 	PlayerAnimEvent_t	m_ePlayerAnimEvent;
 	bool				m_bShotButtonsDepressed;
 

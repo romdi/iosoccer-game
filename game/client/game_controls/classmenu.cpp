@@ -58,7 +58,7 @@ ConVar hud_classautokill( "hud_classautokill", "1", HUD_CLASSAUTOKILL_FLAGS, "Au
 CClassMenu::CClassMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_CLASS)
 {
 	m_pViewPort = pViewPort;
-	m_iScoreBoardKey = BUTTON_CODE_INVALID; // this is looked up in Activate()
+	m_nGoalsBoardKey = BUTTON_CODE_INVALID; // this is looked up in Activate()
 	m_iTeam = 0;
 
 	// initialize dialog
@@ -85,7 +85,7 @@ CClassMenu::CClassMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_CLASS)
 CClassMenu::CClassMenu(IViewPort *pViewPort, const char *panelName) : Frame(NULL, panelName)
 {
 	m_pViewPort = pViewPort;
-	m_iScoreBoardKey = BUTTON_CODE_INVALID; // this is looked up in Activate()
+	m_nGoalsBoardKey = BUTTON_CODE_INVALID; // this is looked up in Activate()
 	m_iTeam = 0;
 
 	// initialize dialog
@@ -243,9 +243,9 @@ void CClassMenu::ShowPanel(bool bShow)
 			}
 		}
 		
-		if ( m_iScoreBoardKey == BUTTON_CODE_INVALID ) 
+		if ( m_nGoalsBoardKey == BUTTON_CODE_INVALID ) 
 		{
-			m_iScoreBoardKey = gameuifuncs->GetButtonCodeForBind( "showscores" );
+			m_nGoalsBoardKey = gameuifuncs->GetButtonCodeForBind( "showscores" );
 		}
 	}
 	else
@@ -289,7 +289,7 @@ void CClassMenu::SetVisibleButton(const char *textEntryName, bool state)
 
 void CClassMenu::OnKeyCodePressed(KeyCode code)
 {
-	if ( m_iScoreBoardKey != BUTTON_CODE_INVALID && m_iScoreBoardKey == code )
+	if ( m_nGoalsBoardKey != BUTTON_CODE_INVALID && m_nGoalsBoardKey == code )
 	{
 		gViewPortInterface->ShowPanel( PANEL_SCOREBOARD, true );
 		gViewPortInterface->PostMessageToPanel( PANEL_SCOREBOARD, new KeyValues( "PollHideCode", "code", code ) );

@@ -84,7 +84,7 @@ protected:
 	char	m_szClubNames[MAX_PLAYERS+1][32];
 	char	m_szCountryNames[MAX_PLAYERS+1][32];
 	int		m_iPing[MAX_PLAYERS+1];
-	int		m_iScore[MAX_PLAYERS+1];
+	int		m_nGoals[MAX_PLAYERS+1];
 	int		m_iDeaths[MAX_PLAYERS+1];
 	bool	m_bConnected[MAX_PLAYERS+1];
 	int		m_iTeam[MAX_PLAYERS+1];

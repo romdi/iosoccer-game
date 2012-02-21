@@ -50,6 +50,7 @@ ConVar sv_ball_keepersideangle("sv_ball_keepersideangle", "30", FCVAR_ARCHIVE | 
 ConVar sv_ball_normalshot_strength("sv_ball_normalshot_strength", "550", FCVAR_ARCHIVE | FCVAR_NOTIFY);
 ConVar sv_ball_powershot_strength("sv_ball_powershot_strength", "650", FCVAR_ARCHIVE | FCVAR_NOTIFY);
 ConVar sv_ball_keepershot_strength("sv_ball_keepershot_strength", "100", FCVAR_ARCHIVE | FCVAR_NOTIFY);
+ConVar sv_ball_doubletouchfouls("sv_ball_doubletouchfouls", "1", FCVAR_ARCHIVE | FCVAR_NOTIFY);
 
 void CC_SendMatchEvent(const CCommand &args)
 {
@@ -110,7 +111,7 @@ CBall::CBall()
 	g_pBall = this;
 	m_eNextState = BALL_NOSTATE;
 	m_flStateLeaveTime = gpGlobals->curtime;
-	m_flStateAutoLeaveTime = -1;
+	m_flStateTimelimit = -1;
 	m_bIgnoreTriggers = false;
 	m_eFoulType = FOUL_NONE;
 	m_pPossessingPl = NULL;
@@ -413,7 +414,7 @@ void CBall::SendMatchEvent(match_event_t matchEvent, CSDKPlayer *pPlayer)
 	MessageEnd();
 }
 
-CSDKPlayer *CBall::FindNearestPlayer(int team /*= TEAM_INVALID*/, int posFlags /*= FL_POS_FIELD*/, bool checkIfShooting /*= false*/, int ignoredPlayersBits /*= 0*/)
+CSDKPlayer *CBall::FindNearestPlayer(int team /*= TEAM_INVALID*/, int posFlags /*= FL_POS_FIELD*/, bool checkIfShooting /*= false*/, int ignoredPlayerBits /*= 0*/)
 {
 	CSDKPlayer *pNearest = NULL;
 	float shortestDist = FLT_MAX;
@@ -427,7 +428,7 @@ CSDKPlayer *CBall::FindNearestPlayer(int team /*= TEAM_INVALID*/, int posFlags /
 		if (!CSDKPlayer::IsOnField(pPlayer))
 			continue;
 
-		if (ignoredPlayersBits & (1 << (pPlayer->entindex() - 1)))
+		if (ignoredPlayerBits & (1 << (pPlayer->entindex() - 1)))
 			continue;
 
 		if (!(posFlags & FL_POS_ANY) && ((posFlags & FL_POS_KEEPER) && pPlayer->GetTeamPosition() != 1 || (posFlags & FL_POS_FIELD) && pPlayer->GetTeamPosition() == 1))
@@ -501,10 +502,9 @@ void CBall::State_DoTransition( ball_state_t newState )
 
 void CBall::State_Enter( ball_state_t newState )
 {
-	m_eBallState = newState;
 	m_pCurStateInfo = State_LookupInfo( newState );
 	m_flStateEnterTime = gpGlobals->curtime;
-	m_flStateAutoLeaveTime = -1;
+	m_flStateTimelimit = -1;
 
 	m_pPl = NULL;
 	SDKGameRules()->DisableShield();
@@ -548,8 +548,8 @@ void CBall::State_Think()
 	m_pPhys->GetPosition(&m_vPos, &m_aAng);
 	m_pPhys->GetVelocity(&m_vVel, &m_vRot);
 
-	//if (m_flStateAutoLeaveTime != -1 && m_flStateAutoLeaveTime <= gpGlobals->curtime)
-	if (m_pCurStateInfo && m_pCurStateInfo->m_eBallState != BALL_NORMAL && m_flStateAutoLeaveTime != -1 && gpGlobals->curtime >= m_flStateAutoLeaveTime)
+	//if (m_flStateTimelimit != -1 && m_flStateTimelimit <= gpGlobals->curtime)
+	if (m_pCurStateInfo && m_pCurStateInfo->m_eBallState != BALL_NORMAL && m_flStateTimelimit != -1 && gpGlobals->curtime >= m_flStateTimelimit)
 	{
 		if (CSDKPlayer::IsOnField(m_pPl))
 			m_pPl->ChangeTeam(TEAM_SPECTATOR);
@@ -596,16 +596,16 @@ void CBall::State_NORMAL_Enter()
 
 void CBall::State_NORMAL_Think()
 {
-	for (int ignoredPlayersBits = 0;;)
+	for (int ignoredPlayerBits = 0;;)
 	{
-		m_pPl = FindNearestPlayer(TEAM_INVALID, FL_POS_ANY, true, ignoredPlayersBits);
+		m_pPl = FindNearestPlayer(TEAM_INVALID, FL_POS_ANY, true, ignoredPlayerBits);
 		if (!m_pPl)
 			return;
 
 		if (IsPlayerCloseEnough(m_pPl))
 			break;
 
-		ignoredPlayersBits |= (1 << (m_pPl->entindex() - 1));
+		ignoredPlayerBits |= (1 << (m_pPl->entindex() - 1));
 	}
 
 	UpdateCarrier();
@@ -659,7 +659,7 @@ void CBall::State_KICKOFF_Think()
 		SDKGameRules()->EnableShield(SHIELD_KICKOFF, mp_shield_kickoff_radius.GetInt(), SDKGameRules()->m_vKickOff);
 		UpdatePossession(m_pPl);
 		m_pPl->SetPosInsideShield(Vector(m_vPos.x - m_pPl->GetTeam()->m_nRight * 30, m_vPos.y, SDKGameRules()->m_vKickOff[2]), true);
-		m_flStateAutoLeaveTime = -1;
+		m_flStateTimelimit = -1;
 		EmitSound("Ball.whistle");
 		SendMatchEvent(MATCH_EVENT_KICKOFF);
 	}
@@ -688,8 +688,8 @@ void CBall::State_KICKOFF_Think()
 		}
 	}
 
-	if (m_flStateAutoLeaveTime == -1)
-		m_flStateAutoLeaveTime = gpGlobals->curtime + 5;
+	if (m_flStateTimelimit == -1)
+		m_flStateTimelimit = gpGlobals->curtime + 5;
 
 	UpdateCarrier();
 
@@ -722,7 +722,7 @@ void CBall::State_THROWIN_Think()
 		SDKGameRules()->EnableShield(SHIELD_THROWIN, mp_shield_throwin_radius.GetInt(), m_vPos);
 		UpdatePossession(m_pPl);
 		m_pPl->SetPosInsideShield(Vector(m_vPos.x, m_vPos.y, SDKGameRules()->m_vKickOff.GetZ()), true);
-		m_flStateAutoLeaveTime = -1;
+		m_flStateTimelimit = -1;
 		SendMatchEvent(MATCH_EVENT_THROWIN);
 		EmitSound("Ball.whistle");
 	}
@@ -742,8 +742,8 @@ void CBall::State_THROWIN_Think()
 		return; // Give bots time to detect FL_ATCONTROLS
 	}
 
-	if (m_flStateAutoLeaveTime == -1)
-		m_flStateAutoLeaveTime = gpGlobals->curtime + 5;
+	if (m_flStateTimelimit == -1)
+		m_flStateTimelimit = gpGlobals->curtime + 5;
 
 	UpdateCarrier();
 
@@ -805,7 +805,7 @@ void CBall::State_GOALKICK_Think()
 		SDKGameRules()->EnableShield(SHIELD_GOALKICK, LastOppTeam(false));
 		UpdatePossession(m_pPl);
 		m_pPl->SetPosInsideShield(Vector(m_vPos.x, m_vPos.y - 100 * m_pPl->GetTeam()->m_nForward, SDKGameRules()->m_vKickOff.GetZ()), false);
-		m_flStateAutoLeaveTime = -1;
+		m_flStateTimelimit = -1;
 		SendMatchEvent(MATCH_EVENT_GOALKICK);
 		EmitSound("Ball.whistle");
 	}
@@ -813,8 +813,8 @@ void CBall::State_GOALKICK_Think()
 	if (!PlayersAtTargetPos(false))
 		return;
 
-	if (m_flStateAutoLeaveTime == -1)
-		m_flStateAutoLeaveTime = gpGlobals->curtime + 5;
+	if (m_flStateTimelimit == -1)
+		m_flStateTimelimit = gpGlobals->curtime + 5;
 
 	UpdateCarrier();
 
@@ -852,7 +852,7 @@ void CBall::State_CORNER_Think()
 		SDKGameRules()->EnableShield(SHIELD_CORNER, mp_shield_corner_radius.GetInt(), m_vPos);
 		m_pPl->SetPosInsideShield(Vector(m_vPos.x - 50 * Sign((SDKGameRules()->m_vKickOff - m_vPos).x), m_vPos.y - 50 * Sign((SDKGameRules()->m_vKickOff - m_vPos).y), SDKGameRules()->m_vKickOff[2]), false);
 		UpdatePossession(m_pPl);
-		m_flStateAutoLeaveTime = -1;
+		m_flStateTimelimit = -1;
 		SendMatchEvent(MATCH_EVENT_CORNER);
 		EmitSound("Ball.whistle");
 	}
@@ -860,8 +860,8 @@ void CBall::State_CORNER_Think()
 	if (!PlayersAtTargetPos(false))
 		return;
 
-	if (m_flStateAutoLeaveTime == -1)
-		m_flStateAutoLeaveTime = gpGlobals->curtime + 5;
+	if (m_flStateTimelimit == -1)
+		m_flStateTimelimit = gpGlobals->curtime + 5;
 
 	UpdateCarrier();
 
@@ -941,7 +941,7 @@ void CBall::State_FREEKICK_Think()
 		SDKGameRules()->EnableShield(SHIELD_FREEKICK, mp_shield_freekick_radius.GetInt(), m_vPos);
 		m_pPl->SetPosInsideShield(Vector(m_vPos.x, m_vPos.y - 100 * m_pPl->GetTeam()->m_nForward, SDKGameRules()->m_vKickOff.GetZ()), false);
 		UpdatePossession(m_pPl);
-		m_flStateAutoLeaveTime = -1;
+		m_flStateTimelimit = -1;
 		SendMatchEvent(MATCH_EVENT_FREEKICK);
 		EmitSound("Ball.whistle");
 	}
@@ -949,8 +949,8 @@ void CBall::State_FREEKICK_Think()
 	if (!PlayersAtTargetPos(false))
 		return;
 
-	if (m_flStateAutoLeaveTime == -1)
-		m_flStateAutoLeaveTime = gpGlobals->curtime + 5;
+	if (m_flStateTimelimit == -1)
+		m_flStateTimelimit = gpGlobals->curtime + 5;
 
 	UpdateCarrier();
 
@@ -988,15 +988,15 @@ void CBall::State_KEEPERHANDS_Think()
 		m_pPl->m_nSkin = m_pPl->m_nBaseSkin + m_nSkin;
 		SetEffects(EF_NODRAW);
 		m_pPhys->EnableCollisions(false);
-		m_flStateAutoLeaveTime = -1;
+		m_flStateTimelimit = -1;
 		Touched(m_pPl, true, BODY_HANDS);
 
 		if (m_pPl->m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1)))
 			m_pPl->m_bShotButtonsDepressed = false;
 	}
 
-	if (m_flStateAutoLeaveTime == -1)
-		m_flStateAutoLeaveTime = gpGlobals->curtime + 5;
+	if (m_flStateTimelimit == -1)
+		m_flStateTimelimit = gpGlobals->curtime + 5;
 
 	UpdateCarrier();
 
@@ -1434,15 +1434,28 @@ void CBall::Kicked(body_part_t bodyPart)
 
 void CBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart)
 {
-	if (m_Touches.Count() > 0 && m_Touches.Tail().m_pPl == pPl && m_Touches.Tail().m_pPl->GetTeamNumber() == pPl->GetTeamNumber())
+	if (m_Touches.Count() > 0 && m_Touches.Tail().m_pPl == pPl && m_Touches.Tail().m_nTeam == pPl->GetTeamNumber())
 	{
-		m_Touches.Tail().m_bIsShot = isShot;
-		m_Touches.Tail().m_eBodyPart = bodyPart;
+		if (sv_ball_doubletouchfouls.GetBool() && m_Touches.Tail().m_eBallState != BALL_NORMAL)
+		{
+			m_eFoulType = FOUL_DOUBLETOUCH;
+			m_pFoulingPl = pPl;
+			m_nFoulingTeam = pPl->GetTeamNumber();
+			m_vFoulPos = pPl->GetLocalOrigin();
+			State_Transition(BALL_FREEKICK, 1);
+			return;
+		}
+		else
+		{
+			m_Touches.Tail().m_bIsShot = isShot;
+			m_Touches.Tail().m_eBodyPart = bodyPart;
+			m_Touches.Tail().m_eBallState = m_pCurStateInfo->m_eBallState;
+		}
 	}
 	else
 	{
 		UpdatePossession(pPl);
-		BallTouchInfo info = { pPl, pPl->GetTeamNumber(), isShot, bodyPart };
+		BallTouchInfo info = { pPl, pPl->GetTeamNumber(), isShot, bodyPart, m_pCurStateInfo->m_eBallState };
 		m_Touches.AddToTail(info);
 	}
 	
@@ -1500,12 +1513,12 @@ void CBall::UpdatePossession(CSDKPlayer *pNewPossessor)
 	if (m_flPossessionStart != -1)
 	{
 		float duration = gpGlobals->curtime - m_flPossessionStart;
-		CTeam *possessingTeam = GetGlobalTeam(m_nPossessingTeam);
-		CTeam *otherTeam = GetGlobalTeam(m_nPossessingTeam == TEAM_A ? TEAM_B : TEAM_A);
-		possessingTeam->m_flPossessionTime += duration;
-		float total = max(1, possessingTeam->m_flPossessionTime + otherTeam->m_flPossessionTime);
-		possessingTeam->m_nPossession = 100 * possessingTeam->m_flPossessionTime / total;		
-		otherTeam->m_nPossession = 100 - possessingTeam->m_nPossession;
+		CTeam *pPossessingTeam = GetGlobalTeam(m_nPossessingTeam);
+		CTeam *pOtherTeam = GetGlobalTeam(m_nPossessingTeam == TEAM_A ? TEAM_B : TEAM_A);
+		pPossessingTeam->m_flPossessionTime += duration;
+		float total = max(1, pPossessingTeam->m_flPossessionTime + pOtherTeam->m_flPossessionTime);
+		pPossessingTeam->m_nPossession = 100 * pPossessingTeam->m_flPossessionTime / total;		
+		pOtherTeam->m_nPossession = 100 - pPossessingTeam->m_nPossession;
 
 		if (CSDKPlayer::IsOnField(m_pPossessingPl))
 		{
@@ -1550,4 +1563,21 @@ void CBall::DisableOffsideLine()
 int CBall::UpdateTransmitState()
 {
 	return SetTransmitState( FL_EDICT_ALWAYS );
+}
+
+void CBall::ResetStats()
+{
+	m_Touches.RemoveAll();
+
+	GetGlobalTeam(TEAM_A)->ResetStats();
+	GetGlobalTeam(TEAM_B)->ResetStats();
+
+	for (int i = 1; i < gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+		if (!CSDKPlayer::IsOnField(pPl))
+			continue;
+
+		pPl->ResetStats();
+	}
 }

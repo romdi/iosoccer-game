@@ -38,6 +38,8 @@ public:
 	virtual int		Get_Ping( void );
 	virtual char	*GetScoreTag( void ) { return 0; }		//ios base
 
+	virtual int		Get_Possession();
+
 	// Player Handling
 	virtual int		Get_Number_Players( void );
 	virtual bool	ContainsPlayer( int iPlayerIndex );
@@ -65,8 +67,9 @@ public:
 	CUtlVector< int > m_aPlayers;
 	char	m_szTeamname[ MAX_TEAM_NAME_LENGTH ];
 	char	m_szFullName[MAX_TEAM_NAME_LENGTH];
-	int		m_iScore;
+	int		m_nGoals;
 	int		m_iRoundsWon;
+	int		m_nPossession;
 
 	// Data for the scoreboard
 	int		m_iDeaths;
