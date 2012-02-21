@@ -106,8 +106,8 @@ public:
 	void				CalcViewRoll( QAngle& eyeAngles );
 	void				CreateWaterEffects( void );
 
-	virtual void			SetPlayerUnderwater( bool state );
-	void					UpdateUnderwaterState( void );
+	virtual void			SetPlayerUnderwater( bool state ) {}
+	void					UpdateUnderwaterState( void ) {}
 	bool					IsPlayerUnderwater( void ) { return m_bPlayerUnderwater; }
 
 	virtual Vector			Weapon_ShootPosition() { return vec3_origin; };
@@ -221,18 +221,18 @@ public:
 	virtual void				PreThink( void );
 	virtual void				PostThink( void );
 
-	virtual void				ItemPreFrame( void );
-	virtual void				ItemPostFrame( void );
-	virtual void				AbortReload( void );
+	virtual void				ItemPreFrame( void ) {}
+	virtual void				ItemPostFrame( void ) {}
+	virtual void				AbortReload( void ) {}
 
-	virtual void				SelectLastItem(void);
-	virtual void				Weapon_SetLast( C_BaseCombatWeapon *pWeapon ) {};
+	virtual void				SelectLastItem(void) {}
+	virtual void				Weapon_SetLast( C_BaseCombatWeapon *pWeapon ) {}
 	virtual bool				Weapon_ShouldSetLast( C_BaseCombatWeapon *pOldWeapon, C_BaseCombatWeapon *pNewWeapon ) { return true; }
-	virtual bool				Weapon_ShouldSelectItem( C_BaseCombatWeapon *pWeapon ) { return false; };
-	virtual	bool				Weapon_Switch( C_BaseCombatWeapon *pWeapon, int viewmodelindex = 0 ) { return false; };		// Switch to given weapon if has ammo (false if failed)
+	virtual bool				Weapon_ShouldSelectItem( C_BaseCombatWeapon *pWeapon ) { return false; }
+	virtual	bool				Weapon_Switch( C_BaseCombatWeapon *pWeapon, int viewmodelindex = 0 ) { return false; }	// Switch to given weapon if has ammo (false if failed)
 	virtual C_BaseCombatWeapon *GetLastWeapon( void ) { return m_hLastWeapon.Get(); }
 	void						ResetAutoaim( void );
-	virtual void 				SelectItem( const char *pstr, int iSubType = 0 );
+	virtual void 				SelectItem( const char *pstr, int iSubType = 0 ) {}
 
 	virtual void				UpdateClientData( void );
 
@@ -272,13 +272,13 @@ public:
 	C_BaseEntity				*GetUseEntity();
 
 	// Vehicles...
-	IClientVehicle			*GetVehicle();
+	IClientVehicle			*GetVehicle() { return NULL; }
 
 	bool			IsInAVehicle() const	{ return ( NULL != m_hVehicle.Get() ) ? true : false; }
-	virtual void	SetVehicleRole( int nRole );
-	void					LeaveVehicle( void );
+	virtual void	SetVehicleRole( int nRole ) {}
+	void					LeaveVehicle( void ) {}
 
-	bool					UsingStandardWeaponsInVehicle( void );
+	bool					UsingStandardWeaponsInVehicle( void ) { return false; }
 
 	virtual void			SetAnimation( PLAYER_ANIM playerAnim );
 
@@ -596,13 +596,6 @@ inline C_BasePlayer *ToBasePlayer( C_BaseEntity *pEntity )
 inline C_BaseEntity *C_BasePlayer::GetUseEntity() 
 { 
 	return m_hUseEntity;
-}
-
-
-inline IClientVehicle *C_BasePlayer::GetVehicle() 
-{ 
-	C_BaseEntity *pVehicleEnt = m_hVehicle.Get();
-	return pVehicleEnt ? pVehicleEnt->GetClientVehicle() : NULL;
 }
 
 inline bool C_BasePlayer::IsObserver() const 

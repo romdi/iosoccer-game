@@ -465,7 +465,6 @@ void CSDKGameRules::CountTeams(void)
 	}
 }
 
-extern ConVar mp_chattime;
 extern ConVar tv_delaymapchange;
 #include "hltvdirector.h"
 #include "viewport_panel_names.h"
@@ -477,11 +476,11 @@ void CSDKGameRules::GoToIntermission( void )
 
 	g_fGameOver = true;
 
-	float flWaitTime = mp_chattime.GetInt();
+	float flWaitTime = 0;
 
 	if ( tv_delaymapchange.GetBool() && HLTVDirector()->IsActive() )	
 	{
-		flWaitTime = max ( flWaitTime, HLTVDirector()->GetDelay() );
+		flWaitTime = HLTVDirector()->GetDelay();
 	}
 			
 	m_flIntermissionEndTime = gpGlobals->curtime + flWaitTime;

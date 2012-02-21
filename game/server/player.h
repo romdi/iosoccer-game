@@ -459,7 +459,7 @@ public:
 	virtual void			ForceObserverMode(int mode); // sets a temporary mode, force because of invalid targets
 	virtual void			ResetObserverMode(); // resets all observer related settings
 	virtual void			ValidateCurrentObserverTarget( void ); // Checks the current observer target, and moves on if it's not valid anymore
-	virtual void			AttemptToExitFreezeCam( void );
+	virtual void			AttemptToExitFreezeCam( void ) {};
 
 	virtual bool			StartReplayMode( float fDelay, float fDuration, int iEntity );
 	virtual void			StopReplayMode();
@@ -470,45 +470,45 @@ public:
 	virtual CBaseEntity		*EntSelectSpawnPoint( void );
 
 	// Vehicles
-	virtual bool			IsInAVehicle( void ) const;
-			bool			CanEnterVehicle( IServerVehicle *pVehicle, int nRole );
-	virtual bool			GetInVehicle( IServerVehicle *pVehicle, int nRole );
-	virtual void			LeaveVehicle( const Vector &vecExitPoint = vec3_origin, const QAngle &vecExitAngles = vec3_angle );
+	virtual bool			IsInAVehicle( void ) const { return false; }
+	bool					CanEnterVehicle( IServerVehicle *pVehicle, int nRole ) { return false; }
+	virtual bool			GetInVehicle( IServerVehicle *pVehicle, int nRole ) { return false; }
+	virtual void			LeaveVehicle( const Vector &vecExitPoint = vec3_origin, const QAngle &vecExitAngles = vec3_angle ) {}
 	int						GetVehicleAnalogControlBias() { return m_iVehicleAnalogBias; }
 	void					SetVehicleAnalogControlBias( int bias ) { m_iVehicleAnalogBias = bias; }
 	
 	// override these for 
 	virtual void			OnVehicleStart() {}
 	virtual void			OnVehicleEnd( Vector &playerDestPosition ) {} 
-	IServerVehicle			*GetVehicle();
-	CBaseEntity				*GetVehicleEntity( void );
-	bool					UsingStandardWeaponsInVehicle( void );
+	IServerVehicle			*GetVehicle() { return NULL; }
+	CBaseEntity				*GetVehicleEntity( void ) { return NULL; }
+	bool					UsingStandardWeaponsInVehicle( void ) { return false; }
 	
 	void					AddPoints( int score, bool bAllowNegativeScore );
 	void					AddPointsToTeam( int score, bool bAllowNegativeScore );
-	virtual bool			BumpWeapon( CBaseCombatWeapon *pWeapon );
-	bool					RemovePlayerItem( CBaseCombatWeapon *pItem );
-	CBaseEntity				*HasNamedPlayerItem( const char *pszItemName );
-	bool 					HasWeapons( void );// do I have ANY weapons?
-	virtual void			SelectLastItem(void);
-	virtual void 			SelectItem( const char *pstr, int iSubType = 0 );
-	void					ItemPreFrame( void );
-	virtual void			ItemPostFrame( void );
-	virtual CBaseEntity		*GiveNamedItem( const char *szName, int iSubType = 0 );
+	virtual bool			BumpWeapon( CBaseCombatWeapon *pWeapon ) { return false; }
+	bool					RemovePlayerItem( CBaseCombatWeapon *pItem ) { return false; }
+	CBaseEntity				*HasNamedPlayerItem( const char *pszItemName ) { return NULL; }
+	bool 					HasWeapons( void ) { return false; }// do I have ANY weapons?
+	virtual void			SelectLastItem(void) {}
+	virtual void 			SelectItem( const char *pstr, int iSubType = 0 ) {}
+	void					ItemPreFrame( void ) {}
+	virtual void			ItemPostFrame( void ) {}
+	virtual CBaseEntity		*GiveNamedItem( const char *szName, int iSubType = 0 ) { return NULL; }
 	void					EnableControl(bool fControl);
-	virtual void			CheckTrainUpdate( void );
-	void					AbortReload( void );
+	virtual void			CheckTrainUpdate( void ) {}
+	void					AbortReload( void ) {}
 
-	void					SendAmmoUpdate(void);
+	void					SendAmmoUpdate(void) {}
 
-	void					WaterMove( void );
-	float					GetWaterJumpTime() const;
-	void					SetWaterJumpTime( float flWaterJumpTime );
-	float					GetSwimSoundTime( void ) const;
-	void					SetSwimSoundTime( float flSwimSoundTime );
+	void					WaterMove( void ) {}
+	float					GetWaterJumpTime() const { return 0; }
+	void					SetWaterJumpTime( float flWaterJumpTime ) {}
+	float					GetSwimSoundTime( void ) const { return 0; }
+	void					SetSwimSoundTime( float flSwimSoundTime ) {}
 
-	virtual void			SetPlayerUnderwater( bool state );
-	void					UpdateUnderwaterState( void );
+	virtual void			SetPlayerUnderwater( bool state ) {}
+	void					UpdateUnderwaterState( void ) {}
 	bool					IsPlayerUnderwater( void ) { return m_bPlayerUnderwater; }
 
 	virtual bool			CanBreatheUnderwater() const { return false; }
@@ -1217,22 +1217,6 @@ inline const CUserCmd *CBasePlayer::GetCurrentUserCommand() const
 {
 	Assert( m_pCurrentCommand );
 	return m_pCurrentCommand;
-}
-
-inline IServerVehicle *CBasePlayer::GetVehicle() 
-{ 
-	CBaseEntity *pVehicleEnt = m_hVehicle.Get();
-	return pVehicleEnt ? pVehicleEnt->GetServerVehicle() : NULL;
-}
-
-inline CBaseEntity *CBasePlayer::GetVehicleEntity() 
-{ 
-	return m_hVehicle.Get();
-}
-
-inline bool CBasePlayer::IsInAVehicle( void ) const 
-{ 
-	return ( NULL != m_hVehicle.Get() ) ? true : false; 
 }
 
 inline void CBasePlayer::SetTouchedPhysics( bool bTouch ) 

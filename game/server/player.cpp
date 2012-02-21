@@ -1186,91 +1186,6 @@ WaterMove
 
 #endif
 
-void CBasePlayer::WaterMove()
-{
-	return; //ios
-
-	if ( ( GetMoveType() == MOVETYPE_NOCLIP ) && !GetMoveParent() )
-	{
-		m_AirFinished = gpGlobals->curtime + AIRTIME;
-		return;
-	}
-
-	if ( m_iHealth < 0 || !IsAlive() )
-	{
-		UpdateUnderwaterState();
-		return;
-	}
-
-	// waterlevel 0 - not in water (WL_NotInWater)
-	// waterlevel 1 - feet in water (WL_Feet)
-	// waterlevel 2 - waist in water (WL_Waist)
-	// waterlevel 3 - head in water (WL_Eyes)
-
-	if (GetWaterLevel() != WL_Eyes || CanBreatheUnderwater()) 
-	{
-		// not underwater
-		
-		// play 'up for air' sound
-		
-		if (m_AirFinished < gpGlobals->curtime)
-		{
-			EmitSound( "Player.DrownStart" );
-		}
-
-		m_AirFinished = gpGlobals->curtime + AIRTIME;
-		m_nDrownDmgRate = DROWNING_DAMAGE_INITIAL;
-
-		// if we took drowning damage, give it back slowly
-		if (m_idrowndmg > m_idrownrestored)
-		{
-			// set drowning damage bit.  hack - dmg_drownrecover actually
-			// makes the time based damage code 'give back' health over time.
-			// make sure counter is cleared so we start count correctly.
-			
-			// NOTE: this actually causes the count to continue restarting
-			// until all drowning damage is healed.
-
-			m_bitsDamageType |= DMG_DROWNRECOVER;
-			m_bitsDamageType &= ~DMG_DROWN;
-			m_rgbTimeBasedDamage[itbd_DrownRecover] = 0;
-		}
-
-	}
-	else
-	{	// fully under water
-		// stop restoring damage while underwater
-		m_bitsDamageType &= ~DMG_DROWNRECOVER;
-		m_rgbTimeBasedDamage[itbd_DrownRecover] = 0;
-
-		if (m_AirFinished < gpGlobals->curtime && !(GetFlags() & FL_GODMODE) )		// drown!
-		{
-			if (m_PainFinished < gpGlobals->curtime)
-			{
-				// take drowning damage
-				m_nDrownDmgRate += 1;
-				if (m_nDrownDmgRate > DROWNING_DAMAGE_MAX)
-				{
-					m_nDrownDmgRate = DROWNING_DAMAGE_MAX;
-				}
-
-				OnTakeDamage( CTakeDamageInfo( GetContainingEntity(INDEXENT(0)), GetContainingEntity(INDEXENT(0)), m_nDrownDmgRate, DMG_DROWN ) );
-				m_PainFinished = gpGlobals->curtime + 1;
-				
-				// track drowning damage, give it back when
-				// player finally takes a breath
-				m_idrowndmg += m_nDrownDmgRate;
-			} 
-		}
-		else
-		{
-			m_bitsDamageType &= ~DMG_DROWN;
-		}
-	}
-
-	UpdateUnderwaterState();
-}
-
 void CBasePlayer::ShowViewPortPanel( const char * name, bool bShow, KeyValues *data )
 {
 	CSingleUserRecipientFilter filter( this );
@@ -1714,14 +1629,6 @@ void CBasePlayer::ValidateCurrentObserverTarget( void )
 			}
 		}
 	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CBasePlayer::AttemptToExitFreezeCam( void )
-{
-	StartObserverMode( OBS_MODE_DEATHCAM );
 }
 
 bool CBasePlayer::StartReplayMode( float fDelay, float fDuration, int iEntity )
@@ -2876,14 +2783,6 @@ void CBasePlayer::PreThink(void)
 	{
 		Hints()->Update();
 	}
-
-	ItemPreFrame( );
-	WaterMove();
-
-	if ( g_pGameRules && g_pGameRules->FAllowFlashlight() )
-		m_Local.m_iHideHUD &= ~HIDEHUD_FLASHLIGHT;
-	else
-		m_Local.m_iHideHUD |= HIDEHUD_FLASHLIGHT;
 
 	// checks if new client data (for HUD and view control) needs to be sent to the client
 	UpdateClientData();
@@ -4073,8 +3972,6 @@ void CBasePlayer::Spawn( void )
     SetViewOffset( VEC_VIEW );
 	Precache();
 
-	SetPlayerUnderwater( false );
-
 	if ( m_iPlayerSound == SOUNDLIST_EMPTY )
 	{
 		Msg( "Couldn't alloc player sound slot!\n" );
@@ -4197,7 +4094,6 @@ void CBasePlayer::Precache( void )
 	// @Note (toml 04-19-04): These are saved, used to be slammed here
 	m_bitsDamageType = 0;
 	m_bitsHUDDamage = -1;
-	SetPlayerUnderwter( false );
 
 	m_iTrain = TRAIN_NEW;
 #endif
@@ -4418,24 +4314,6 @@ void CBasePlayer::CommitSuicide( const Vector &vecForce, bool bExplode /*= false
 	TakeDamage( info );
 }
 
-//==============================================
-// HasWeapons - do I have any weapons at all?
-//==============================================
-bool CBasePlayer::HasWeapons( void )
-{
-	int i;
-
-	for ( i = 0 ; i < WeaponCount() ; i++ )
-	{
-		if ( GetWeapon(i) )
-		{
-			return true;
-		}
-	}
-
-	return false;
-}
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : &vecForce - 
@@ -4446,203 +4324,6 @@ void CBasePlayer::VelocityPunch( const Vector &vecForce )
 	SetGroundEntity( NULL );
 	ApplyAbsVelocityImpulse(vecForce );
 }
-
-
-//--------------------------------------------------------------------------------------------------------------
-// VEHICLES
-//-----------------------------------------------------------------------------
-
-//-----------------------------------------------------------------------------
-// Purpose: Whether or not the player is currently able to enter the vehicle
-// Output : Returns true on success, false on failure.
-//-----------------------------------------------------------------------------
-bool CBasePlayer::CanEnterVehicle( IServerVehicle *pVehicle, int nRole )
-{
-	// Must not have a passenger there already
-	if ( pVehicle->GetPassenger( nRole ) )
-		return false;
-
-	// Must be able to holster our current weapon (ie. grav gun!)
-	if ( pVehicle->IsPassengerUsingStandardWeapons( nRole ) == false )
-	{
-		//Must be able to stow our weapon
-		CBaseCombatWeapon *pWeapon = GetActiveWeapon();
-		if ( ( pWeapon != NULL ) && ( pWeapon->CanHolster() == false ) )
-			return false;
-	}
-
-	// Must be alive
-	if ( IsAlive() == false )
-		return false;
-
-	// Can't be pulled by a barnacle
-	if ( IsEFlagSet( EFL_IS_BEING_LIFTED_BY_BARNACLE ) )
-		return false;
-
-	return true;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Put this player in a vehicle 
-//-----------------------------------------------------------------------------
-bool CBasePlayer::GetInVehicle( IServerVehicle *pVehicle, int nRole )
-{
-	Assert( NULL == m_hVehicle.Get() );
-	Assert( nRole >= 0 );
-	
-	// Make sure we can enter the vehicle
-	if ( CanEnterVehicle( pVehicle, nRole ) == false )
-		return false;
-
-	CBaseEntity *pEnt = pVehicle->GetVehicleEnt();
-	Assert( pEnt );
-
-	// Try to stow weapons
-	if ( pVehicle->IsPassengerUsingStandardWeapons( nRole ) == false )
-	{
-		CBaseCombatWeapon *pWeapon = GetActiveWeapon();
-		if ( pWeapon != NULL )
-		{
-			pWeapon->Holster( NULL );
-		}
-
-#ifndef HL2_DLL
-		m_Local.m_iHideHUD |= HIDEHUD_WEAPONSELECTION;
-#endif
-		m_Local.m_iHideHUD |= HIDEHUD_INVEHICLE;
-	}
-
-	if ( !pVehicle->IsPassengerVisible( nRole ) )
-	{
-		AddEffects( EF_NODRAW );
-	}
-
-	// Put us in the vehicle
-	pVehicle->SetPassenger( nRole, this );
-
-	ViewPunchReset();
-
-	// Setting the velocity to 0 will cause the IDLE animation to play
-	SetAbsVelocity( vec3_origin );
-	SetMoveType( MOVETYPE_NOCLIP );
-
-	// This is a hack to fixup the player's stats since they really didn't "cheat" and enter noclip from the console
-	gamestats->Event_DecrementPlayerEnteredNoClip( this );
-
-	// Get the seat position we'll be at in this vehicle
-	Vector vSeatOrigin;
-	QAngle qSeatAngles;
-	pVehicle->GetPassengerSeatPoint( nRole, &vSeatOrigin, &qSeatAngles );
-	
-	// Set us to that position
-	SetAbsOrigin( vSeatOrigin );
-	SetAbsAngles( qSeatAngles );
-	
-	// Parent to the vehicle
-	SetParent( pEnt );
-
-	SetCollisionGroup( COLLISION_GROUP_IN_VEHICLE );
-	
-	// We cannot be ducking -- do all this before SetPassenger because it
-	// saves our view offset for restoration when we exit the vehicle.
-	RemoveFlag( FL_DUCKING );
-	SetViewOffset( VEC_VIEW );
-	m_Local.m_bDucked = false;
-	m_Local.m_bDucking  = false;
-	m_Local.m_flDucktime = 0.0f;
-	m_Local.m_flDuckJumpTime = 0.0f;
-	m_Local.m_flJumpTime = 0.0f;
-
-	// Turn our toggled duck off
-	if ( GetToggledDuckState() )
-	{
-		ToggleDuck();
-	}
-
-	m_hVehicle = pEnt;
-
-	// Throw an event indicating that the player entered the vehicle.
-	g_pNotify->ReportNamedEvent( this, "PlayerEnteredVehicle" );
-
-	m_iVehicleAnalogBias = VEHICLE_ANALOG_BIAS_NONE;
-
-	OnVehicleStart();
-
-	return true;
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Remove this player from a vehicle
-//-----------------------------------------------------------------------------
-void CBasePlayer::LeaveVehicle( const Vector &vecExitPoint, const QAngle &vecExitAngles )
-{
-	if ( NULL == m_hVehicle.Get() )
-		return;
-
-	IServerVehicle *pVehicle = GetVehicle();
-	Assert( pVehicle );
-
-	int nRole = pVehicle->GetPassengerRole( this );
-	Assert( nRole >= 0 );
-
-	SetParent( NULL );
-
-	// Find the first non-blocked exit point:
-	Vector vNewPos = GetAbsOrigin();
-	QAngle qAngles = GetAbsAngles();
-	if ( vecExitPoint == vec3_origin )
-	{
-		// FIXME: this might fail to find a safe exit point!!
-		pVehicle->GetPassengerExitPoint( nRole, &vNewPos, &qAngles );
-	}
-	else
-	{
-		vNewPos = vecExitPoint;
-		qAngles = vecExitAngles;
-	}
-	OnVehicleEnd( vNewPos );
-	SetAbsOrigin( vNewPos );
-	SetAbsAngles( qAngles );
-	// Clear out any leftover velocity
-	SetAbsVelocity( vec3_origin );
-
-	qAngles[ROLL] = 0;
-	SnapEyeAngles( qAngles );
-
-#ifndef HL2_DLL
-	m_Local.m_iHideHUD &= ~HIDEHUD_WEAPONSELECTION;
-#endif
-
-	m_Local.m_iHideHUD &= ~HIDEHUD_INVEHICLE;
-
-	RemoveEffects( EF_NODRAW );
-
-	SetMoveType( MOVETYPE_WALK );
-	SetCollisionGroup( COLLISION_GROUP_PLAYER );
-
-	if ( VPhysicsGetObject() )
-	{
-		VPhysicsGetObject()->SetPosition( vNewPos, vec3_angle, true );
-	}
-
-	m_hVehicle = NULL;
-	pVehicle->SetPassenger(nRole, NULL);
-
-	// Re-deploy our weapon
-	if ( IsAlive() )
-	{
-		if ( GetActiveWeapon() && GetActiveWeapon()->IsWeaponVisible() == false )
-		{
-			GetActiveWeapon()->Deploy();
-			ShowCrosshair( true );
-		}
-	}
-
-	// Just cut all of the rumble effects. 
-	RumbleEffect( RUMBLE_STOP_ALL, 0, RUMBLE_FLAGS_NONE );
-}
-
 
 //==============================================
 // !!!UNDONE:ultra temporary SprayCan entity to apply
@@ -4736,47 +4417,6 @@ void CBloodSplat::Think( void )
 		UTIL_BloodDecalTrace( &tr, BLOOD_COLOR_RED );
 	}
 	UTIL_Remove( this );
-}
-
-//==============================================
-
-//-----------------------------------------------------------------------------
-// Purpose: Create and give the named item to the player. Then return it.
-//-----------------------------------------------------------------------------
-CBaseEntity	*CBasePlayer::GiveNamedItem( const char *pszName, int iSubType )
-{
-	// If I already own this type don't create one
-	if ( Weapon_OwnsThisType(pszName, iSubType) )
-		return NULL;
-
-	// Msg( "giving %s\n", pszName );
-
-	EHANDLE pent;
-
-	pent = CreateEntityByName(pszName);
-	if ( pent == NULL )
-	{
-		Msg( "NULL Ent in GiveNamedItem!\n" );
-		return NULL;
-	}
-
-	pent->SetLocalOrigin( GetLocalOrigin() );
-	pent->AddSpawnFlags( SF_NORESPAWN );
-
-	CBaseCombatWeapon *pWeapon = dynamic_cast<CBaseCombatWeapon*>( (CBaseEntity*)pent );
-	if ( pWeapon )
-	{
-		pWeapon->SetSubType( iSubType );
-	}
-
-	DispatchSpawn( pent );
-
-	if ( pent != NULL && !(pent->IsMarkedForDeletion()) ) 
-	{
-		pent->Touch( this );
-	}
-
-	return pent;
 }
 
 //-----------------------------------------------------------------------------
@@ -5630,124 +5270,6 @@ bool CBasePlayer::ClientCommand( const CCommand &args )
 extern bool UTIL_ItemCanBeTouchedByPlayer( CBaseEntity *pItem, CBasePlayer *pPlayer );
 
 //-----------------------------------------------------------------------------
-// Purpose: Player reacts to bumping a weapon. 
-// Input  : pWeapon - the weapon that the player bumped into.
-// Output : Returns true if player picked up the weapon
-//-----------------------------------------------------------------------------
-bool CBasePlayer::BumpWeapon( CBaseCombatWeapon *pWeapon )
-{
-	CBaseCombatCharacter *pOwner = pWeapon->GetOwner();
-
-	// Can I have this weapon type?
-	if ( !IsAllowedToPickupWeapons() )
-		return false;
-
-	if ( pOwner || !Weapon_CanUse( pWeapon ) || !g_pGameRules->CanHavePlayerItem( this, pWeapon ) )
-	{
-		if ( gEvilImpulse101 )
-		{
-			UTIL_Remove( pWeapon );
-		}
-		return false;
-	}
-
-	// Act differently in the episodes
-	if ( hl2_episodic.GetBool() )
-	{
-		// Don't let the player touch the item unless unobstructed
-		if ( !UTIL_ItemCanBeTouchedByPlayer( pWeapon, this ) && !gEvilImpulse101 )
-			return false;
-	}
-	else
-	{
-		// Don't let the player fetch weapons through walls (use MASK_SOLID so that you can't pickup through windows)
-		if( pWeapon->FVisible( this, MASK_SOLID ) == false && !(GetFlags() & FL_NOTARGET) )
-			return false;
-	}
-	
-	// ----------------------------------------
-	// If I already have it just take the ammo
-	// ----------------------------------------
-	if (Weapon_OwnsThisType( pWeapon->GetClassname(), pWeapon->GetSubType())) 
-	{
-		if( Weapon_EquipAmmoOnly( pWeapon ) )
-		{
-			// Only remove me if I have no ammo left
-			if ( pWeapon->HasPrimaryAmmo() )
-				return false;
-
-			UTIL_Remove( pWeapon );
-			return true;
-		}
-		else
-		{
-			return false;
-		}
-	}
-	// -------------------------
-	// Otherwise take the weapon
-	// -------------------------
-	else 
-	{
-		pWeapon->CheckRespawn();
-
-		pWeapon->AddSolidFlags( FSOLID_NOT_SOLID );
-		pWeapon->AddEffects( EF_NODRAW );
-
-		Weapon_Equip( pWeapon );
-		if ( IsInAVehicle() )
-		{
-			pWeapon->Holster();
-		}
-		else
-		{
-#ifdef HL2_DLL
-
-			if ( IsX360() )
-			{
-				CFmtStr hint;
-				hint.sprintf( "#valve_hint_select_%s", pWeapon->GetClassname() );
-				UTIL_HudHintText( this, hint.Access() );
-			}
-
-			// Always switch to a newly-picked up weapon
-			if ( !PlayerHasMegaPhysCannon() )
-			{
-				// If it uses clips, load it full. (this is the first time you've picked up this type of weapon)
-				if ( pWeapon->UsesClipsForAmmo1() )
-				{
-					pWeapon->m_iClip1 = pWeapon->GetMaxClip1();
-				}
-
-				Weapon_Switch( pWeapon );
-			}
-#endif
-		}
-		return true;
-	}
-}
-
-
-bool CBasePlayer::RemovePlayerItem( CBaseCombatWeapon *pItem )
-{
-	if (GetActiveWeapon() == pItem)
-	{
-		ResetAutoaim( );
-		pItem->Holster( );
-		pItem->SetNextThink( TICK_NEVER_THINK );; // crowbar may be trying to swing again, etc
-		pItem->SetThink( NULL );
-	}
-
-	if ( m_hLastWeapon.Get() == pItem )
-	{
-		Weapon_SetLast( NULL );
-	}
-
-	return Weapon_Detach( pItem );
-}
-
-
-//-----------------------------------------------------------------------------
 // Purpose: Hides or shows the player's view model. The "r_drawviewmodel" cvar
 //			can still hide the viewmodel even if this is set to true.
 // Input  : bShow - true to show, false to hide the view model.
@@ -5943,22 +5465,6 @@ void CBasePlayer::EnableControl(bool fControl)
 	else
 		RemoveFlag( FL_FROZEN );
 
-}
-
-void CBasePlayer::CheckTrainUpdate( void )
-{
-	if ( ( m_iTrain & TRAIN_NEW ) )
-	{
-		CSingleUserRecipientFilter user( this );
-		user.MakeReliable();
-
-		// send "Train" update message
-		UserMessageBegin( user, "Train" );
-			WRITE_BYTE(m_iTrain & 0xF);
-		MessageEnd();
-
-		m_iTrain &= ~TRAIN_NEW;
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -6324,25 +5830,6 @@ void CBasePlayer::ResetAutoaim( void )
 		engine->CrosshairAngle( edict(), 0, 0 );
 	}
 	m_fOnTarget = false;
-}
-
-//=========================================================
-// HasNamedPlayerItem Does the player already have this item?
-//=========================================================
-CBaseEntity *CBasePlayer::HasNamedPlayerItem( const char *pszItemName )
-{
-	for ( int i = 0 ; i < WeaponCount() ; i++ )
-	{
-		if ( !GetWeapon(i) )
-			continue;
-
-		if ( FStrEq( pszItemName, GetWeapon(i)->GetClassname() ) )
-		{
-			return GetWeapon(i);
-		}
-	}
-
-	return NULL;
 }
 
 //================================================================================

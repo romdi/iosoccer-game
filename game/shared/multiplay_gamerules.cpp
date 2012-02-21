@@ -44,35 +44,6 @@
 
 REGISTER_GAMERULES_CLASS( CMultiplayRules );
 
-ConVar mp_chattime(
-		"mp_chattime", 
-		"10", 
-		FCVAR_REPLICATED,
-		"amount of time players can chat after the game is over",
-		true, 1,
-		true, 120 );
-/*
-#ifdef GAME_DLL
-void MPTimeLimitCallback( IConVar *var, const char *pOldString, float flOldValue )
-{
-	if ( mp_timelimit.GetInt() < 0 )
-	{
-		mp_timelimit.SetValue( 0 );
-	}
-
-	if ( MultiplayRules() )
-	{
-		MultiplayRules()->HandleTimeLimitChange();
-	}
-}
-#endif 
-
-ConVar mp_timelimit( "mp_timelimit", "30", FCVAR_NOTIFY|FCVAR_REPLICATED, "game time per map in minutes"
-#ifdef GAME_DLL
-					, MPTimeLimitCallback 
-#endif
-					);
-*/
 #ifdef GAME_DLL
 
 ConVar tv_delaymapchange( "tv_delaymapchange", "0", 0, "Delays map change until broadcast is complete" );
@@ -1030,7 +1001,7 @@ bool CMultiplayRules::Init()
 
 		g_fGameOver = true;
 
-		float flWaitTime = mp_chattime.GetInt();
+		float flWaitTime = 0;
 
 		if ( tv_delaymapchange.GetBool() && HLTVDirector()->IsActive() )	
 		{

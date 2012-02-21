@@ -594,23 +594,6 @@ bool C_BasePlayer::IsPlayerDead()
 }
 
 //-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void C_BasePlayer::SetVehicleRole( int nRole )
-{
-	if ( !IsInAVehicle() )
-		return;
-
-	// HL2 has only a player in a vehicle.
-	if ( nRole > VEHICLE_ROLE_DRIVER )
-		return;
-
-	char szCmd[64];
-	Q_snprintf( szCmd, sizeof( szCmd ), "vehicleRole %i\n", nRole );
-	engine->ServerCmd( szCmd );
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: Store original ammo data to see what has changed
 // Input  : bnewentity - 
 //-----------------------------------------------------------------------------
@@ -2059,49 +2042,6 @@ void RecvProxy_ObserverTarget( const CRecvProxyData *pData, void *pStruct, void 
 
 	pPlayer->SetObserverTarget( hTarget );
 }
-
-//-----------------------------------------------------------------------------
-// Purpose: Remove this player from a vehicle
-//-----------------------------------------------------------------------------
-void C_BasePlayer::LeaveVehicle( void )
-{
-	if ( NULL == m_hVehicle.Get() )
-		return;
-
-// Let server do this for now
-#if 0
-	IClientVehicle *pVehicle = GetVehicle();
-	Assert( pVehicle );
-
-	int nRole = pVehicle->GetPassengerRole( this );
-	Assert( nRole != VEHICLE_ROLE_NONE );
-
-	SetParent( NULL );
-
-	// Find the first non-blocked exit point:
-	Vector vNewPos = GetAbsOrigin();
-	QAngle qAngles = GetAbsAngles();
-	pVehicle->GetPassengerExitPoint( nRole, &vNewPos, &qAngles );
-	OnVehicleEnd( vNewPos );
-	SetAbsOrigin( vNewPos );
-	SetAbsAngles( qAngles );
-
-	m_Local.m_iHideHUD &= ~HIDEHUD_WEAPONSELECTION;
-	RemoveEffects( EF_NODRAW );
-
-	SetMoveType( MOVETYPE_WALK );
-	SetCollisionGroup( COLLISION_GROUP_PLAYER );
-
-	qAngles[ROLL] = 0;
-	SnapEyeAngles( qAngles );
-
-	m_hVehicle = NULL;
-	pVehicle->SetPassenger(nRole, NULL);
-
-	Weapon_Switch( m_hLastWeapon );
-#endif
-}
-
 
 float C_BasePlayer::GetMinFOV()	const
 {

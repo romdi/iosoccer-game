@@ -95,50 +95,6 @@ float CBasePlayer::GetTimeBase( void ) const
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Called every usercmd by the player PreThink
-//-----------------------------------------------------------------------------
-void CBasePlayer::ItemPreFrame()
-{
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Output : Returns true on success, false on failure.
-//-----------------------------------------------------------------------------
-bool CBasePlayer::UsingStandardWeaponsInVehicle( void )
-{
-	Assert( IsInAVehicle() );
-#if !defined( CLIENT_DLL )
-	IServerVehicle *pVehicle = GetVehicle();
-#else
-	IClientVehicle *pVehicle = GetVehicle();
-#endif
-	Assert( pVehicle );
-	if ( !pVehicle )
-		return true;
-
-	// NOTE: We *have* to do this before ItemPostFrame because ItemPostFrame
-	// may dump us out of the vehicle
-	int nRole = pVehicle->GetPassengerRole( this );
-	bool bUsingStandardWeapons = pVehicle->IsPassengerUsingStandardWeapons( nRole );
-
-	// Fall through and check weapons, etc. if we're using them 
-	if (!bUsingStandardWeapons )
-		return false;
-
-	return true;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Called every usercmd by the player PostThink
-//-----------------------------------------------------------------------------
-void CBasePlayer::ItemPostFrame()
-{
-	VPROF( "CBasePlayer::ItemPostFrame" );
-}
-
-
-//-----------------------------------------------------------------------------
 // Eye angles
 //-----------------------------------------------------------------------------
 const QAngle &CBasePlayer::EyeAngles( )
@@ -430,29 +386,6 @@ void CBasePlayer::SetAnimationExtension( const char *pExtension )
 	Q_strncpy( m_szAnimExtension, pExtension, sizeof(m_szAnimExtension) );
 }
 
-void CBasePlayer::SelectLastItem(void)
-{
-	if ( m_hLastWeapon.Get() == NULL )
-		return;
-
-	if ( GetActiveWeapon() && !GetActiveWeapon()->CanHolster() )
-		return;
-
-	SelectItem( m_hLastWeapon.Get()->GetClassname(), m_hLastWeapon.Get()->GetSubType() );
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Abort any reloads we're in
-//-----------------------------------------------------------------------------
-void CBasePlayer::AbortReload( void )
-{
-	if ( GetActiveWeapon() )
-	{
-		GetActiveWeapon()->AbortReload();
-	}
-}
-
 #if !defined( NO_ENTITY_PREDICTION )
 void CBasePlayer::AddToPlayerSimulationList( CBaseEntity *other )
 {
@@ -573,38 +506,6 @@ void CBasePlayer::ClearPlayerSimulationList( void )
 	m_SimulatedByThisPlayer.RemoveAll();
 }
 #endif
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CBasePlayer::SelectItem( const char *pstr, int iSubType )
-{
-	if (!pstr)
-		return;
-
-	CBaseCombatWeapon *pItem = Weapon_OwnsThisType( pstr, iSubType );
-
-	if (!pItem)
-		return;
-
-	if( GetObserverMode() != OBS_MODE_NONE )
-		return;// Observers can't select things.
-
-	if ( !Weapon_ShouldSelectItem( pItem ) )
-		return;
-
-	// FIX, this needs to queue them up and delay
-	// Make sure the current weapon can be holstered
-	if ( GetActiveWeapon() )
-	{
-		if ( !GetActiveWeapon()->CanHolster() )
-			return;
-
-		ResetAutoaim( );
-	}
-
-	Weapon_Switch( pItem );
-}
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -1455,72 +1356,6 @@ bool CBasePlayer::SetFOV( CBaseEntity *pRequester, int FOV, float zoomRate, int 
 
 	return true;
 }
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CBasePlayer::UpdateUnderwaterState( void )
-{
-	if ( GetWaterLevel() == WL_Eyes )
-	{
-		if ( IsPlayerUnderwater() == false )
-		{
-			SetPlayerUnderwater( true );
-		}
-		return;
-	}
-
-	if ( IsPlayerUnderwater() )
-	{
-		SetPlayerUnderwater( false );
-	}
-
-	if ( GetWaterLevel() == 0 )
-	{
-		if ( GetFlags() & FL_INWATER )
-		{
-#ifndef CLIENT_DLL
-			if ( m_iHealth > 0 && IsAlive() )
-			{
-				EmitSound( "Player.Wade" );
-			}
-#endif
-			RemoveFlag( FL_INWATER );
-		}
-	}
-	else if ( !(GetFlags() & FL_INWATER) )
-	{
-#ifndef CLIENT_DLL
-		// player enter water sound
-		if (GetWaterType() == CONTENTS_WATER)
-		{
-			EmitSound( "Player.Wade" );
-		}
-#endif
-
-		AddFlag( FL_INWATER );
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: data accessor
-// ensure that for every emitsound there is a matching stopsound
-//-----------------------------------------------------------------------------
-void CBasePlayer::SetPlayerUnderwater( bool state )
-{
-	if ( m_bPlayerUnderwater != state )
-	{
-		m_bPlayerUnderwater = state;
-
-#ifdef CLIENT_DLL
-		if ( state )
-			EmitSound( "Player.AmbientUnderWater" );
-		else
-			StopSound( "Player.AmbientUnderWater" );		
-#endif
-	}
-}
-
 
 void CBasePlayer::SetPreviouslyPredictedOrigin( const Vector &vecAbsOrigin )
 {
