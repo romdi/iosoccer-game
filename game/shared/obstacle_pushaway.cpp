@@ -10,13 +10,14 @@
 
 //-----------------------------------------------------------------------------------------------------
 //IOS added cheat just in case...
-ConVar sv_pushaway_force( "sv_pushaway_force", "30000", FCVAR_REPLICATED | FCVAR_CHEAT, "How hard physics objects are pushed away from the players on the server." );
-ConVar sv_pushaway_min_player_speed( "sv_pushaway_min_player_speed", "75", FCVAR_REPLICATED | FCVAR_CHEAT, "If a player is moving slower than this, don't push away physics objects (enables ducking behind things)." );
+ConVar sv_pushaway_force( "sv_pushaway_force", "25", FCVAR_REPLICATED | FCVAR_CHEAT, "How hard physics objects are pushed away from the players on the server." );
+ConVar sv_pushaway_min_player_speed( "sv_pushaway_min_player_speed", "0", FCVAR_REPLICATED | FCVAR_CHEAT, "If a player is moving slower than this, don't push away physics objects (enables ducking behind things)." );
 ConVar sv_pushaway_max_force( "sv_pushaway_max_force", "1000", FCVAR_REPLICATED | FCVAR_CHEAT, "Maximum amount of force applied to physics objects by players." );
-ConVar sv_pushaway_clientside( "sv_pushaway_clientside", "0", FCVAR_REPLICATED | FCVAR_CHEAT, "Clientside physics push away (0=off, 1=only localplayer, 1=all players)" );
+ConVar sv_pushaway_clientside( "sv_pushaway_clientside", "2", FCVAR_REPLICATED | FCVAR_CHEAT, "Clientside physics push away (0=off, 1=only localplayer, 1=all players)" );
 
 ConVar sv_pushaway_player_force( "sv_pushaway_player_force", "200000", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "How hard the player is pushed away from physics objects (falls off with inverse square of distance)." );
 ConVar sv_pushaway_max_player_force( "sv_pushaway_max_player_force", "10000", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Maximum of how hard the player is pushed away from physics objects." );
+ConVar sv_pushaway_player_expand( "sv_pushaway_player_expand", "3", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Maximum of how hard the player is pushed away from physics objects." );
 
 #ifdef CLIENT_DLL
 ConVar sv_turbophysics( "sv_turbophysics", "0", FCVAR_REPLICATED, "Turns on turbo physics" );
@@ -294,9 +295,9 @@ void PerformObstaclePushaway( CBaseCombatCharacter *pPushingEntity )
 	if ( (sv_pushaway_clientside.GetInt() == 1) && (!pPlayer || !pPlayer->IsLocalPlayer()) )
 		return;
 
-	int nEnts = GetPushawayEnts( pPushingEntity, props, ARRAYSIZE( props ), 3.0f, PARTITION_CLIENT_RESPONSIVE_EDICTS, NULL );
+	int nEnts = GetPushawayEnts( pPushingEntity, props, ARRAYSIZE( props ), sv_pushaway_player_expand.GetFloat(), PARTITION_CLIENT_RESPONSIVE_EDICTS, NULL );
 #else
-	int nEnts = GetPushawayEnts( pPushingEntity, props, ARRAYSIZE( props ), 3.0f, PARTITION_ENGINE_SOLID_EDICTS, NULL );
+	int nEnts = GetPushawayEnts( pPushingEntity, props, ARRAYSIZE( props ), sv_pushaway_player_expand.GetFloat(), PARTITION_ENGINE_SOLID_EDICTS, NULL );
 #endif
 	
 	for ( int i=0; i < nEnts; i++ )

@@ -67,6 +67,8 @@ public : // IGameResources intreface
 	virtual int		GetGoalKicks( int index );
 	virtual int		GetTeamPosition( int iIndex );
 	virtual int		GetShirtPosition( int iIndex );
+	virtual int		GetTeamToJoin( int iIndex );
+	virtual float	GetNextJoin( int iIndex );
 
 	virtual void ClientThink();
 	virtual	void	OnDataChanged(DataUpdateType_t updateType);
@@ -103,6 +105,9 @@ protected:
 	int		m_GoalKicks[MAX_PLAYERS+1];
 	int		m_TeamPosition[MAX_PLAYERS+1];
 	int		m_ShirtPosition[MAX_PLAYERS+1];
+
+	int		m_TeamToJoin[MAX_PLAYERS+1];
+	float	m_NextJoin[MAX_PLAYERS+1];
 };
 
 extern C_PlayerResource *g_PR;

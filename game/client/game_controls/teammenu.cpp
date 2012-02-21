@@ -36,6 +36,7 @@
 #include "c_team.h"
 #include "sdk_backgroundpanel.h"
 #include "sdk_gamerules.h"
+#include "c_sdk_player.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -367,18 +368,27 @@ void CTeamMenu::Update()
 		int team = gr->GetTeam(i);
 		int pos = gr->GetTeamPosition(i);
 
+		if (gr->GetTeamToJoin(i) != TEAM_INVALID)
+			team = gr->GetTeamToJoin(i);
+
 		if (team != TEAM_A && team != TEAM_B)
 			continue;
 
 		posTaken[team - TEAM_A][11 - pos] = true;
 		PosPanel_t *pPos = m_pPosPanels[team - TEAM_A][11 - pos];
-		pPos->pPlayerName->SetText(gr->GetPlayerName(i));
+		if (gr->GetTeamToJoin(i) != TEAM_INVALID)
+			pPos->pPlayerName->SetText(VarArgs("%s (%d)", gr->GetPlayerName(i), (int)(gr->GetNextJoin(i) - gpGlobals->curtime)));
+		else
+			pPos->pPlayerName->SetText(gr->GetPlayerName(i));
 		pPos->pPlayerName->SetFgColor(gr->GetTeamColor(team));
 		pPos->pPlayerName->SetCursor(gr->IsFakePlayer(i) ? dc_hand : dc_arrow);
 		pPos->pPlayerName->SetEnabled(gr->IsFakePlayer(i));
 		pPos->pClubName->SetText(gr->GetClubName(i));
-		pPos->pKickButton->SetCommand(VarArgs("kickid %d", UTIL_PlayerByIndex(i)->GetUserID()));
-		pPos->pKickButton->SetVisible(true);
+		if (UTIL_PlayerByIndex(i))
+		{
+			pPos->pKickButton->SetCommand(VarArgs("kickid %d", UTIL_PlayerByIndex(i)->GetUserID()));
+			pPos->pKickButton->SetVisible(true);
+		}
 
 		StatPanel_t *pStats = pPos->pStatPanel;
 
@@ -405,24 +415,24 @@ void CTeamMenu::Update()
 
 		for (int j = 0; j < 11; j++)
 		{
-			if (!posTaken[i][j])
-			{
-				PosPanel_t *pPos = m_pPosPanels[i][j];
-				pPos->pPlayerName->SetText("JOIN");
-				pPos->pPlayerName->SetCursor(dc_hand);
-				pPos->pPlayerName->SetEnabled(true);
-				pPos->pPlayerName->SetFgColor(gr->GetTeamColor(TEAM_UNASSIGNED));
-				pPos->pClubName->SetText("");
+			if (posTaken[i][j])
+				continue;
+			
+			PosPanel_t *pPos = m_pPosPanels[i][j];
+			pPos->pPlayerName->SetText("JOIN");
+			pPos->pPlayerName->SetCursor(dc_hand);
+			pPos->pPlayerName->SetEnabled(true);
+			pPos->pPlayerName->SetFgColor(gr->GetTeamColor(TEAM_UNASSIGNED));
+			pPos->pClubName->SetText("");
 
-				StatPanel_t *pStats = pPos->pStatPanel;
-				pStats->pGoals->SetVisible(false);
-				pStats->pAssists->SetVisible(false);
-				pStats->pYellows->SetVisible(false);
-				pStats->pReds->SetVisible(false);
-				pStats->pPossession->SetVisible(false);
+			StatPanel_t *pStats = pPos->pStatPanel;
+			pStats->pGoals->SetVisible(false);
+			pStats->pAssists->SetVisible(false);
+			pStats->pYellows->SetVisible(false);
+			pStats->pReds->SetVisible(false);
+			pStats->pPossession->SetVisible(false);
 
-				pPos->pKickButton->SetVisible(false);
-			}
+			pPos->pKickButton->SetVisible(false);
 		}
 	}
 

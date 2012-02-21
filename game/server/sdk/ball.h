@@ -142,6 +142,7 @@ public:
 	int				GetMultiplayerPhysicsMode(void)	{ return m_iPhysicsMode; }
 	float			GetMass(void) {	return m_fMass;	}
 	int				ObjectCaps(void)	{  return BaseClass::ObjectCaps() |	FCAP_CONTINUOUS_USE; }
+	virtual int		UpdateTransmitState();
 
 	void			SendMatchEvent(match_event_t matchEvent, CSDKPlayer *pPlayer1 = NULL);
 
@@ -191,6 +192,7 @@ private:
 	ball_state_t	m_eNextState;
 	float			m_flStateEnterTime;
 	float			m_flStateLeaveTime;
+	float			m_flStateAutoLeaveTime;
 	CBallStateInfo	*m_pCurStateInfo;
 	
 	void			SetPos(const Vector &pos);

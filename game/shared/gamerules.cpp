@@ -640,13 +640,11 @@ bool CGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 		swap(collisionGroup0,collisionGroup1);
 	}
 
-	////ios - this works with ball but leaves player-player as before (jerky?)
-	//if ( collisionGroup0 == COLLISION_GROUP_PLAYER && collisionGroup1 == COLLISION_GROUP_PUSHAWAY 
-	//	|| collisionGroup1 == COLLISION_GROUP_PLAYER && collisionGroup0 == COLLISION_GROUP_PUSHAWAY)
-	//{
-	//	// let ball and player collide
-	//	return true;
-	//}
+	if ( (collisionGroup0 == COLLISION_GROUP_PLAYER || collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT) &&
+		collisionGroup1 == COLLISION_GROUP_PUSHAWAY )
+	{
+		return true;
+	}
 
 #ifndef HL2MP
 	if ( (collisionGroup0 == COLLISION_GROUP_PLAYER || collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT) &&

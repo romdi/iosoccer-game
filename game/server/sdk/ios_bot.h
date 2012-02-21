@@ -18,6 +18,8 @@
 class CBot : public CSDKPlayer
 {
 public:
+	float			m_flNextBotJoin;
+
 	bool			m_bBackwards;
 
 	float			m_flNextTurnTime;
@@ -47,6 +49,7 @@ public:
 	virtual void BotThink();
 	void RunPlayerMove( CUserCmd &cmd, float frametime );
 	bool RunMimicCommand(CUserCmd &cmd);
+	void BotJoinTeam(int keeper);
 };
 
 // If iTeam or iClass is -1, then a team or class is randomly chosen.

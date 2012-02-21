@@ -2906,12 +2906,12 @@ void CBasePlayer::PreThink(void)
 	{
 		// If on a ladder, jump off the ladder
 		// else Jump
-		Jump();
+		//Jump();
 	}
 
 	// If trying to duck, already ducked, or in the process of ducking
 	//ios if ((m_nButtons & IN_DUCK) || (GetFlags() & FL_DUCKING) || (m_afPhysicsFlags & PFLAG_DUCKING) )
-		Duck();
+		//Duck();
 
 	//
 	// If we're not on the ground, we're falling. Update our falling velocity.
@@ -3715,10 +3715,6 @@ void CBasePlayer::Touch( CBaseEntity *pOther )
 //-----------------------------------------------------------------------------
 void CBasePlayer::PostThinkVPhysics( void )
 {
-	if (abs(GetAbsOrigin().y - SDKGameRules()->m_vKickOff.GetY()) < 10)
-	{
-		int i = 2;
-	}
 	// Check to see if things are initialized!
 	if ( !m_pPhysicsController )
 		return;

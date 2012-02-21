@@ -266,7 +266,7 @@ public:
 	void				ChooseModel(void);
 	void				ChoosePlayerSkin(void);
 	void				ChooseKeeperSkin(void);
-	bool				TeamPosFree (int team, int pos, bool kickBotKeeper = false);
+	bool				TeamPosFree(int team, int pos, bool kickBotKeeper = false);
 	void				CheckRejoin(void);
 	//virtual void		CommitSuicide();
 
@@ -311,6 +311,8 @@ public:
 	int					GetGoalKicks(void) { return m_GoalKicks; }
 	int					GetTeamPosition(void) { return m_TeamPos; }
 	int					GetShirtPosition(void) { return m_ShirtPos; }
+	int					GetTeamToJoin(void) { return m_nTeamToJoin; }
+	int					GetNextJoin(void) { return m_flNextJoin; }
 
 	char				*GetClubName() { return m_szClubName; }
 	void				SetClubName(const char *name) { Q_strncpy(m_szClubName, name, sizeof(m_szClubName)); m_bClubNameChanged = true; } 
@@ -362,6 +364,10 @@ public:
 	static bool			IsOnField(CSDKPlayer *pPl);
 
 	PlayerAnimEvent_t	m_ePlayerAnimEvent;
+	bool				m_bShotButtonsDepressed;
+
+	float				m_flNextJoin;
+	int					m_nTeamToJoin;
 
 private:
 

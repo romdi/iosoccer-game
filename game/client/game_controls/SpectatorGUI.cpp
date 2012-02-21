@@ -399,17 +399,6 @@ CSpectatorGUI::CSpectatorGUI(IViewPort *pViewPort) : EditablePanel( NULL, PANEL_
  	m_pBottomBarBlank = new Panel( this, "bottombarblank" );
 
 	// m_pBannerImage = new ImagePanel( m_pTopBar, NULL );
-	m_pPlayerLabel = new Label( this, "playerlabel", "" );
-	m_pPlayerLabel->SetVisible( false );
-	TextImage *image = m_pPlayerLabel->GetTextImage();
-	if ( image )
-	{
-		HFont hFallbackFont = scheme()->GetIScheme( GetScheme() )->GetFont( "DefaultVerySmallFallBack", false );
-		if ( INVALID_FONT != hFallbackFont )
-		{
-			image->SetUseFallbackFont( true, hFallbackFont );
-		}
-	}
 
 	SetPaintBorderEnabled(false);
 	SetPaintBackgroundEnabled(false);
@@ -592,39 +581,6 @@ void CSpectatorGUI::Update()
 		// full top bar
 		m_pTopBar->SetSize( wide , btall ); // change width, keep height
 		m_pTopBar->SetPos( 0, 0 );
-	}
-
-	m_pPlayerLabel->SetVisible( ShouldShowPlayerLabel(specmode) );
-
-	// update player name filed, text & color
-
-	if ( playernum > 0 && playernum <= gpGlobals->maxClients && gr )
-	{
-		Color c = gr->GetTeamColor( gr->GetTeam(playernum) ); // Player's team color
-
-		m_pPlayerLabel->SetFgColor( c );
-		
-		wchar_t playerText[ 80 ], playerName[ 64 ], health[ 10 ];
-		wcscpy( playerText, L"Unable to find #Spec_PlayerItem*" );
-		memset( playerName, 0x0, sizeof( playerName ) );
-
-		g_pVGuiLocalize->ConvertANSIToUnicode( UTIL_SafeName(gr->GetPlayerName( playernum )), playerName, sizeof( playerName ) );
-		int iHealth = gr->GetHealth( playernum );
-		if ( iHealth > 0  && gr->IsAlive(playernum) )
-		{
-			_snwprintf( health, sizeof( health ), L"%i", iHealth );
-			g_pVGuiLocalize->ConstructString( playerText, sizeof( playerText ), g_pVGuiLocalize->Find( "#Spec_PlayerItem_Team" ), 2, playerName,  health );
-		}
-		else
-		{
-			g_pVGuiLocalize->ConstructString( playerText, sizeof( playerText ), g_pVGuiLocalize->Find( "#Spec_PlayerItem" ), 1, playerName );
-		}
-
-		m_pPlayerLabel->SetText( playerText );
-	}
-	else
-	{
-		m_pPlayerLabel->SetText( L"" );
 	}
 
 	// update extra info field

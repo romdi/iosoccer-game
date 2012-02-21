@@ -53,6 +53,8 @@ protected:
 	CNetworkArray( int, m_GoalKicks, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_TeamPosition, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_ShirtPosition, MAX_PLAYERS+1 );
+	CNetworkArray( float, m_NextJoin, MAX_PLAYERS+1 );
+	CNetworkArray( int, m_TeamToJoin, MAX_PLAYERS+1 );
 	
 	CNetworkArray( string_t, m_szClubNames, MAX_PLAYERS+1 );
 		

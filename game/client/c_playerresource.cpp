@@ -44,6 +44,8 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_PlayerResource, DT_PlayerResource, CPlayerReso
 	RecvPropArray3( RECVINFO_ARRAY(m_GoalKicks), RecvPropInt( RECVINFO(m_GoalKicks[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_TeamPosition), RecvPropInt( RECVINFO(m_TeamPosition[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_ShirtPosition), RecvPropInt( RECVINFO(m_ShirtPosition[0]))),
+	RecvPropArray3( RECVINFO_ARRAY(m_TeamToJoin), RecvPropInt( RECVINFO(m_TeamToJoin[0]))),
+	RecvPropArray3( RECVINFO_ARRAY(m_NextJoin), RecvPropFloat( RECVINFO(m_NextJoin[0]))),
 
 	RecvPropArray3( RECVINFO_ARRAY(m_szClubNames), RecvPropString( RECVINFO(m_szClubNames[0]))),
 	//RecvPropArray( RecvPropString( RECVINFO( m_szClubName[0]) ), m_szClubName ),
@@ -98,6 +100,8 @@ C_PlayerResource::C_PlayerResource()
 	memset( m_GoalKicks, 0, sizeof( m_GoalKicks ) );
 	memset( m_TeamPosition, 0, sizeof( m_TeamPosition ) );
 	memset( m_ShirtPosition, 0, sizeof( m_ShirtPosition ) );
+	memset( m_TeamToJoin, 0, sizeof( m_TeamToJoin ) );
+	memset( m_NextJoin, 0, sizeof( m_NextJoin ) );
 
 	memset( m_szClubNames, 0, sizeof( m_szClubNames ) );
 
@@ -487,3 +491,18 @@ int	C_PlayerResource::GetShirtPosition( int iIndex )
 	return m_ShirtPosition[iIndex];
 }
 
+int C_PlayerResource::GetTeamToJoin( int iIndex )
+{
+	if ( iIndex < 1 || iIndex > MAX_PLAYERS )
+		return false;
+	else
+		return m_TeamToJoin[iIndex];
+}
+
+float C_PlayerResource::GetNextJoin( int iIndex )
+{
+	if ( iIndex < 1 || iIndex > MAX_PLAYERS )
+		return false;
+	else
+		return m_NextJoin[iIndex];
+}

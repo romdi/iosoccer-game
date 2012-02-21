@@ -848,6 +848,7 @@ void CSDKGameRules::ClientDisconnected( edict_t *pClient )
 
 void CSDKGameRules::RestartMatch()
 {
+	GetBall()->CreateVPhysics();
 	State_Transition(MATCH_WARMUP);
 }
 
@@ -898,6 +899,7 @@ ConVar mp_shield_freekick_radius("mp_shield_freekick_radius", "360", FCVAR_NOTIF
 ConVar mp_shield_corner_radius("mp_shield_corner_radius", "360", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar mp_shield_kickoff_radius("mp_shield_kickoff_radius", "360", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar mp_offside("mp_offside", "1", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar mp_joindelay("mp_joindelay", "3", FCVAR_NOTIFY|FCVAR_REPLICATED);
 
 #ifdef GAME_DLL
 

@@ -62,43 +62,39 @@ protected:
 
 private:
 
-	Panel *m_pMatchStateBar;
-	Label *m_pMatchState;
 	Panel *m_pTimeBar;
+	Label *m_pMatchState;
 	Label *m_pTime;
 	Label *m_pTeams[2];
 	Label *m_pScores[2];
 	Panel *m_pTeamBars[2];
 	Panel *m_pEventBars[2];
-	Label *m_pTeamColors[2][2];
+	Label *m_pTeamColors[2];
 	CUtlVector<Event_t> m_vEventLists[2];
 };
 
 DECLARE_HUDELEMENT( CHudScorebar );
 DECLARE_HUD_MESSAGE(CHudScorebar, MatchEvent);
 
-#define SCOREBAR_MARGIN			30
-#define	HEIGHT_MARGIN			2
+#define	HEIGHT_MARGIN			3
 #define HEIGHT_TIMEBAR			35
-#define HEIGHT_MATCHSTATEBAR	35
 #define HEIGHT_TEAMBAR			35
-#define HEIGHT_EVENTBAR			35
+#define HEIGHT_EVENTBAR
 #define BORDER					3
+
 #define WIDTH_MARGIN			5
-#define WIDTH_OVERLAP			15
+#define WIDTH_OVERLAP			20
 #define WIDTH_EVENTTYPE			150
 #define WIDTH_EVENTTEXT			100
-#define WIDTH_TEAM				100
+#define WIDTH_TEAM				90
 #define WIDTH_SCORE				30
-#define WIDTH_MATCHSTATEBAR		85
-#define WIDTH_MATCHSTATE		85
-#define WIDTH_TIMEBAR			85
-#define WIDTH_TIME				85
-#define WIDTH_TEAMCOLOR			7
-#define WIDTH_TEAMBAR			BORDER + 2 * WIDTH_TEAMCOLOR + WIDTH_MARGIN + WIDTH_TEAM + BORDER
+//#define WIDTH_TIMEBAR			150
+#define WIDTH_MATCHSTATE		60
+#define WIDTH_TIME				60
+#define WIDTH_TEAMCOLOR			5
 
-#define BAR_HEIGHT				35
-#define BAR_WIDTH				BORDER + WIDTH_MATCHSTATE + WIDTH_MARGIN + WIDTH_TEAMBAR + WIDTH_MARGIN + WIDTH_SCORE + BORDER
+#define WIDTH_TEAMBAR			BORDER + WIDTH_TEAM + WIDTH_MARGIN + WIDTH_TEAMCOLOR + WIDTH_MARGIN + WIDTH_SCORE + BORDER
+#define WIDTH_TIMEBAR			WIDTH_TEAMBAR
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -109,93 +105,81 @@ CHudScorebar::CHudScorebar( const char *pElementName ) : BaseClass(NULL, "HudSco
 	vgui::Panel *pParent = g_pClientMode->GetViewport();
 	SetParent( pParent );
 
-	m_pMatchStateBar = new Panel(this, "TopPanel");
-	m_pMatchState = new Label(m_pMatchStateBar, "MatchStateLabel", "");
 	m_pTimeBar = new Panel(this, "TopPanel");
+	m_pMatchState = new Label(m_pTimeBar, "MatchStateLabel", "");
 	m_pTime = new Label(m_pTimeBar, "TimeLabel", "");
 
 	for (int i = 0; i < 2; i++)
 	{
 		m_pTeamBars[i] = new Panel(this, VarArgs("TeamPanel%d", i + 1));
 		m_pTeams[i] = new Label(m_pTeamBars[i], VarArgs("TeamLabel%d", i), "");
-		m_pTeamColors[i][0] = new Label(m_pTeamBars[i], VarArgs("TeamColor%d", i), "");
-		m_pTeamColors[i][1] = new Label(m_pTeamBars[i], VarArgs("TeamColor%d", i), "");
-		//m_pScores[i] = new Label(m_pTeamBars[i], VarArgs("ScoreLabel%d", i), "");
+		m_pTeamColors[i] = new Label(m_pTeamBars[i], VarArgs("TeamColor%d", i), "");
+		m_pScores[i] = new Label(m_pTeamBars[i], VarArgs("ScoreLabel%d", i), "");
 		m_pEventBars[i] = new Label(this, VarArgs("ScoreLabel%d", i), "");
 	}
-
-	m_pScores[0] = new Label(m_pMatchStateBar, "ScoreLabel", "");
-	m_pScores[1] = new Label(m_pTimeBar, "ScoreLabel", "");
 }
 
 void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 {
 	BaseClass::ApplySchemeSettings( pScheme );
 	
-	SetPos( SCOREBAR_MARGIN, SCOREBAR_MARGIN);
-	SetSize( ScreenWidth() - SCOREBAR_MARGIN, 200 );
+	SetPos( 30, 30);
+	SetSize( ScreenWidth() - 30, 200 );
  	//SetPaintBackgroundType (2); // Rounded corner box
  	//SetPaintBackgroundEnabled(true);
 	//SetBgColor( Color( 0, 0, 255, 255 ) );
 
-	Color light = Color(245, 245, 245, 255);
-	Color dark = Color(25, 25, 25, 255);
-	Color darkTrans = Color(25, 25, 25, 200);
+	Color fgColor = Color(220, 220, 220, 255);
+	Color bgColor = Color(35, 30, 40, 255);
+	Color bgColorTransparent = Color(30, 30, 40, 200);
 
-	m_pMatchStateBar->SetBounds(0, 0, BAR_WIDTH, HEIGHT_TIMEBAR);
-	m_pMatchStateBar->SetPaintBackgroundEnabled(true);
-	m_pMatchStateBar->SetPaintBackgroundType(2);
-	m_pMatchStateBar->SetBgColor(dark);
-	
-	m_pMatchState->SetBounds(BORDER, BORDER, WIDTH_MATCHSTATE, BAR_HEIGHT - 2 * BORDER);
-	//m_pMatchState->SetContentAlignment(Label::a_center);
-	m_pMatchState->SetFont(pScheme->GetFont("IOSScorebar"));
-	m_pMatchState->SetFgColor(light);
-
-	m_pTimeBar->SetBounds(0, HEIGHT_MATCHSTATEBAR + HEIGHT_MARGIN, BAR_WIDTH, HEIGHT_TIMEBAR);
+	m_pTimeBar->SetBounds(0, 2 * (HEIGHT_TEAMBAR + HEIGHT_MARGIN), WIDTH_TIMEBAR, HEIGHT_TIMEBAR);
 	m_pTimeBar->SetPaintBackgroundEnabled(true);
 	m_pTimeBar->SetPaintBackgroundType(2);
-	m_pTimeBar->SetBgColor(dark);
+	m_pTimeBar->SetBgColor(bgColor);
 
-	m_pTime->SetBounds(BORDER, BORDER, WIDTH_TIME, BAR_HEIGHT - 2 * BORDER);
-	//m_pTime->SetContentAlignment(Label::a_center);
+	m_pMatchState->SetBounds(BORDER, BORDER, WIDTH_MATCHSTATE, HEIGHT_TIMEBAR - 2 * BORDER);
+	m_pMatchState->SetContentAlignment(Label::a_west);
+	m_pMatchState->SetFont(pScheme->GetFont("IOSScorebarSmall"));
+	m_pMatchState->SetFgColor(fgColor);
+
+	m_pTime->SetBounds(BORDER + WIDTH_MATCHSTATE + WIDTH_MARGIN, BORDER, WIDTH_TIME, HEIGHT_TIMEBAR - 2 * BORDER);
+	m_pTime->SetContentAlignment(Label::a_east);
 	m_pTime->SetFont(pScheme->GetFont("IOSScorebar"));
-	m_pTime->SetFgColor(light);
+	m_pTime->SetFgColor(fgColor);
 
 	for (int i = 0; i < 2; i++)
 	{		
-		m_pTeamBars[i]->SetBounds(BORDER + WIDTH_MATCHSTATE + WIDTH_MARGIN, i * (BAR_HEIGHT + HEIGHT_MARGIN) + BORDER, WIDTH_TEAMBAR, BAR_HEIGHT - 2 * BORDER);
+		m_pTeamBars[i]->SetBounds(0, i * (HEIGHT_TEAMBAR + HEIGHT_MARGIN), WIDTH_TEAMBAR, HEIGHT_TEAMBAR);
 		m_pTeamBars[i]->SetPaintBackgroundEnabled(true);
 		m_pTeamBars[i]->SetPaintBackgroundType(2);
-		m_pTeamBars[i]->SetBgColor(light);
+		m_pTeamBars[i]->SetBgColor(bgColor);
 
-		m_pTeamColors[i][0]->SetBounds(BORDER, BORDER, WIDTH_TEAMCOLOR, m_pTeamBars[i]->GetTall() - 2 * BORDER);
-		m_pTeamColors[i][0]->SetBgColor(Color(g_IOSRand.RandomInt(0, 255), g_IOSRand.RandomInt(0, 255), g_IOSRand.RandomInt(0, 255), 255));
+		m_pTeamColors[i]->SetBounds(BORDER + WIDTH_TEAM + WIDTH_MARGIN, BORDER, WIDTH_TEAMCOLOR, HEIGHT_TEAMBAR - 2 * BORDER);
+		m_pTeamColors[i]->SetBgColor(Color(100 * i, 100 * (1 - i), 0, 255));
+		//m_pTeamColors[i]->SetPaintBackgroundType(2);
 
-		m_pTeamColors[i][1]->SetBounds(BORDER + m_pTeamColors[i][0]->GetWide(), BORDER, WIDTH_TEAMCOLOR, m_pTeamBars[i]->GetTall() - 2 * BORDER);
-		m_pTeamColors[i][1]->SetBgColor(Color(g_IOSRand.RandomInt(0, 255), g_IOSRand.RandomInt(0, 255), g_IOSRand.RandomInt(0, 255), 255));
-
-		m_pTeams[i]->SetBounds(BORDER + 2 * WIDTH_TEAMCOLOR + WIDTH_MARGIN, BORDER, WIDTH_TEAM, m_pTeamBars[i]->GetTall() - 2 * BORDER);
+		m_pTeams[i]->SetBounds(BORDER, BORDER, WIDTH_TEAM, HEIGHT_TEAMBAR - 2 * BORDER);
 		m_pTeams[i]->SetContentAlignment(Label::a_west);
 		m_pTeams[i]->SetTextInset(0, 0);
 		//m_pTeams[i]->SetAutoResize(Panel::PIN_TOPLEFT, AUTORESIZE_RIGHT, 10, 0, 10, 0);
 		m_pTeams[i]->SetFont(pScheme->GetFont("IOSScorebar"));
 		m_pTeams[i]->SetPaintBackgroundType(2);
 		//m_pTeams[i]->SetBgColor(Color(100 * i, 100 * (1 - i), 0, 255));
-		m_pTeams[i]->SetFgColor(dark);
+		m_pTeams[i]->SetFgColor(fgColor);
 		
-		m_pScores[i]->SetBounds(BAR_WIDTH - WIDTH_SCORE - BORDER, BORDER, WIDTH_SCORE, BAR_HEIGHT - 2 * BORDER);
+		m_pScores[i]->SetBounds(BORDER + WIDTH_TEAMCOLOR + WIDTH_MARGIN + WIDTH_TEAM + WIDTH_MARGIN, BORDER, WIDTH_SCORE, HEIGHT_TEAMBAR - 2 * BORDER);
 		m_pScores[i]->SetContentAlignment(Label::a_center);
 		m_pScores[i]->SetTextInset(0, 0);
 		//m_pScores[i]->SetAutoResize(Panel::PIN_TOPLEFT, AUTORESIZE_RIGHT, 10, 0, 10, 0);
 		m_pScores[i]->SetFont(pScheme->GetFont("IOSScorebar"));
-		//m_pScores[i]->SetPaintBackgroundType(2);
-		//m_pScores[i]->SetBgColor(dark);
-		m_pScores[i]->SetFgColor(light);
+		m_pScores[i]->SetPaintBackgroundType(2);
+		//m_pScores[i]->SetBgColor(fgColor);
+		m_pScores[i]->SetFgColor(fgColor);
 
-		m_pEventBars[i]->SetBounds(BAR_WIDTH - WIDTH_OVERLAP, i * (HEIGHT_TEAMBAR + HEIGHT_MARGIN), 0, HEIGHT_TEAMBAR);
+		m_pEventBars[i]->SetBounds(WIDTH_TEAMBAR - WIDTH_OVERLAP, i * (HEIGHT_TEAMBAR + HEIGHT_MARGIN), 0, HEIGHT_TEAMBAR);
 		m_pEventBars[i]->SetPaintBackgroundType(2);
-		m_pEventBars[i]->SetBgColor(darkTrans);
+		m_pEventBars[i]->SetBgColor(bgColorTransparent);
 		m_pEventBars[i]->SetZPos(-1);
 	}
 }
@@ -298,8 +282,8 @@ void CHudScorebar::Paint( void )
 }
 
 #define EVENT_SLIDE_IN_TIME		0.4f
-#define EVENT_FADE_IN_TIME		0.25f
-#define EVENT_STAY_TIME			3.0f
+#define EVENT_FADE_IN_TIME		0.4f
+#define EVENT_STAY_TIME			2.5f
 #define EVENT_SLIDE_OUT_TIME	0.4f
 
 void CHudScorebar::DoEventSlide()
@@ -387,16 +371,16 @@ void CHudScorebar::MsgFunc_MatchEvent(bf_read &msg)
 	//C_SDKPlayer *pPlayer2 = (C_SDKPlayer *)CHandle<C_SDKPlayer>::FromIndex(msg.ReadLong());
 
 	Panel *pEventBox = new Panel(m_pEventBars[teamIndex], "EventPanel");
-	pEventBox->SetBounds(0, BORDER, BORDER + WIDTH_EVENTTYPE + WIDTH_EVENTTEXT, HEIGHT_TEAMBAR - 2 * BORDER);
+	pEventBox->SetBounds(0, BORDER, WIDTH_MARGIN + WIDTH_EVENTTYPE + WIDTH_EVENTTEXT, HEIGHT_TEAMBAR - 2 * BORDER);
 	pEventBox->SetVisible(false);
 
 	Label *pEventType = new Label(pEventBox, "EventTypeLabel", g_szMatchEventNames[eventType]);
-	pEventType->SetBounds(BORDER, 0, WIDTH_EVENTTYPE, pEventBox->GetTall());
 	pEventType->SetFont(pScheme->GetFont("IOSMatchEvent"));
 	pEventType->SetContentAlignment(Label::a_center);
+	pEventType->SetBounds(WIDTH_MARGIN, 0, WIDTH_EVENTTYPE, pEventBox->GetTall());
 
 	Label *pEventText = new Label(pEventBox, "EventTextLabel", gr->GetPlayerName(playerIndex));
-	pEventText->SetBounds(BORDER + WIDTH_EVENTTYPE, 0, WIDTH_EVENTTEXT, pEventBox->GetTall());
+	pEventText->SetBounds(WIDTH_MARGIN + WIDTH_EVENTTYPE, 0, WIDTH_EVENTTEXT, pEventBox->GetTall());
 	pEventText->SetFont(pScheme->GetFont("IOSTeamEvent"));
 	pEventText->SetContentAlignment(Label::a_center);
 

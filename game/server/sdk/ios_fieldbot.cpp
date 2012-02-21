@@ -5,6 +5,8 @@
 
 LINK_ENTITY_TO_CLASS(ios_fieldbot, CFieldBot);
 
+ConVar bot_shootatgoal("bot_shootatgoal", "0");
+
 void CFieldBot::BotThink()
 {
 	if (m_vDirToBall.Length2D() > 50)
@@ -17,15 +19,22 @@ void CFieldBot::BotShootBall()
 {
 	Vector shotDir;
 
-	if (GetFlags() & FL_ATCONTROLS)
+	if (bot_shootatgoal.GetBool())
 	{
-		//float xDir = g_IOSRand.RandomFloat(0.1f, 1) * Sign((SDKGameRules()->m_vKickOff - GetLocalOrigin()).x);
-		float xDir = g_IOSRand.RandomFloat(-1, 1);
-		shotDir = Vector(xDir, GetTeam()->m_nForward, 0);
+		shotDir = GetOppTeam()->m_vPlayerSpawns[0] - GetLocalOrigin();
 	}
 	else
 	{
-		shotDir = Vector(g_IOSRand.RandomFloat(-1, 1), GetTeam()->m_nForward, 0);
+		if (GetFlags() & FL_ATCONTROLS)
+		{
+			//float xDir = g_IOSRand.RandomFloat(0.1f, 1) * Sign((SDKGameRules()->m_vKickOff - GetLocalOrigin()).x);
+			float xDir = g_IOSRand.RandomFloat(-1, 1);
+			shotDir = Vector(xDir, GetTeam()->m_nForward, 0);
+		}
+		else
+		{
+			shotDir = Vector(g_IOSRand.RandomFloat(-1, 1), GetTeam()->m_nForward, 0);
+		}
 	}
 
 	VectorAngles(shotDir, m_cmd.viewangles);

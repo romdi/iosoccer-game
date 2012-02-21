@@ -233,6 +233,9 @@ CSDKPlayer::CSDKPlayer()
 	m_angEyeAngles.Init();
 
 	m_pCurStateInfo = NULL;	// no state yet
+	m_bShotButtonsDepressed = true;
+	m_nTeamToJoin = TEAM_INVALID;
+	m_flNextJoin = gpGlobals->curtime;
 }
 
 
@@ -269,7 +272,13 @@ void CSDKPlayer::PreThink(void)
 
 	//UpdateSprint();
 
-	CheckRejoin();
+	//CheckRejoin();
+
+	if (m_nTeamToJoin != TEAM_INVALID && gpGlobals->curtime >= m_flNextJoin)
+		ChangeTeam(m_nTeamToJoin);
+
+	if (!(m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1))))
+		m_bShotButtonsDepressed = true;
 
 	BaseClass::PreThink();
 }
@@ -430,13 +439,15 @@ void CSDKPlayer::ChangeTeam( int iTeamNum )
 	int iOldTeam = GetTeamNumber();
 
 	// if this is our current team, just abort
-	if ( iTeamNum == iOldTeam )
-		return;
+	//if (iTeamNum == iOldTeam)
+	//	return;
 	
 	m_bTeamChanged = true;
 
 	// do the team change:
 	BaseClass::ChangeTeam( iTeamNum );
+
+	g_pPlayerResource->UpdatePlayerData();
 
 	// update client state 
 	if ( iTeamNum == TEAM_UNASSIGNED )
@@ -449,11 +460,13 @@ void CSDKPlayer::ChangeTeam( int iTeamNum )
 	}
 	else // active player
 	{
+		m_nTeamToJoin = TEAM_INVALID;
+
 		if( iOldTeam == TEAM_SPECTATOR )
 			SetMoveType( MOVETYPE_NONE );
 
 		// transmit changes for player position right away
-		g_pPlayerResource->UpdatePlayerData();
+		//g_pPlayerResource->UpdatePlayerData();
 
 		if (iOldTeam != TEAM_A && iOldTeam != TEAM_B)
 			State_Transition( STATE_ACTIVE );
@@ -746,58 +759,51 @@ void CSDKPlayer::State_WELCOME_PreThink()
 void CSDKPlayer::State_OBSERVER_MODE_Enter()
 {
 	// Always start a spectator session in roaming mode
-	m_iObserverLastMode = OBS_MODE_ROAMING;
+	m_iObserverLastMode = OBS_MODE_TVCAM;
 
-	//if( m_hObserverTarget == NULL )
-	//{
-	//	// find a new observer target
-	//	CheckObserverSettings();
-	//}
-
-	//// Change our observer target to the nearest teammate
-	//CTeam *pTeam = GetGlobalTeam( GetTeamNumber() );
-
-	//CBasePlayer *pPlayer;
-	//Vector localOrigin = GetAbsOrigin();
-	//Vector targetOrigin;
-	//float flMinDist = FLT_MAX;
-	//float flDist;
-
-	//for ( int i=0;i<pTeam->GetNumPlayers();i++ )
-	//{
-	//	pPlayer = pTeam->GetPlayer(i);
-
-	//	if ( !pPlayer )
-	//		continue;
-
-	//	if ( !IsValidObserverTarget(pPlayer) )
-	//		continue;
-
-	//	targetOrigin = pPlayer->GetAbsOrigin();
-
-	//	flDist = ( targetOrigin - localOrigin ).Length();
-
-	//	if ( flDist < flMinDist )
-	//	{
-	//		m_hObserverTarget.Set( pPlayer );
-	//		flMinDist = flDist;
-	//	}
-	//}
-
-	//pl.deadflag = true;
-	//m_lifeState = LIFE_DEAD;
 	AddEffects(EF_NODRAW);
-	//ChangeTeam(TEAM_SPECTATOR);
 	SetMoveType(MOVETYPE_OBSERVER);
 	AddSolidFlags(FSOLID_NOT_SOLID);
-
-	StartObserverMode( m_iObserverLastMode );
+	RemoveFlag(FL_ATCONTROLS | FL_FROZEN | FL_REMOTECONTROLLED);
 	PhysObjectSleep();
+
+	if ( !IsObserver() )
+	{
+		// set position to last view offset
+		SetAbsOrigin( GetAbsOrigin() + GetViewOffset() );
+		SetViewOffset( vec3_origin );
+	}
+	
+	m_afPhysicsFlags |= PFLAG_OBSERVER;
+
+	SetGroundEntity( (CBaseEntity *)NULL );
+
+	SetObserverMode( m_iObserverLastMode );
+
+	if ( gpGlobals->eLoadType != MapLoad_Background )
+	{
+		ShowViewPortPanel( "specgui" , ModeWantsSpectatorGUI(m_iObserverLastMode) );
+	}
 }
 
 void CSDKPlayer::State_OBSERVER_MODE_Leave()
 {
-	StopObserverMode();
+	m_bForcedObserverMode = false;
+	m_afPhysicsFlags &= ~PFLAG_OBSERVER;
+
+	if ( m_iObserverMode == OBS_MODE_NONE )
+		return;
+
+	if ( m_iObserverMode  > OBS_MODE_DEATHCAM )
+	{
+		m_iObserverLastMode = m_iObserverMode;
+	}
+
+	m_iObserverMode.Set( OBS_MODE_NONE );
+
+	ShowViewPortPanel( "specmenu", false );
+	ShowViewPortPanel( "specgui", false );
+	ShowViewPortPanel( "overview", false );
 }
 
 void CSDKPlayer::State_OBSERVER_MODE_PreThink()
@@ -867,6 +873,7 @@ void CSDKPlayer::State_ACTIVE_Enter()
 	m_hRagdoll = NULL;
 	//m_lifeState = LIFE_ALIVE;
 	RemoveEffects(EF_NODRAW);
+	RemoveFlag(FL_ATCONTROLS | FL_FROZEN | FL_REMOTECONTROLLED);
 
 	SetViewOffset( VEC_VIEW );
 
@@ -1165,9 +1172,9 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 			return false;	//go away
 		}
 
-		int nTeam = clamp(atoi(args[1]), TEAM_SPECTATOR, TEAM_B);
+		int team = clamp(atoi(args[1]), TEAM_SPECTATOR, TEAM_B);
 
-		if (nTeam == TEAM_SPECTATOR)
+		if (team == TEAM_SPECTATOR)
 		{
 			//m_TeamPos = 1;
 			//ConvertSpawnToShirt();
@@ -1177,7 +1184,7 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 		else
 		{
 			int posWanted = clamp(atoi(args[2]), 1, 11);
-			if (TeamPosFree(nTeam, posWanted, true))
+			if (TeamPosFree(team, posWanted, true))
 			{
 				m_TeamPos = posWanted;	//teampos matches spawn points on the map 2-11
 
@@ -1192,7 +1199,11 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 					ChooseKeeperSkin();
 				}
 
-				ChangeTeam(nTeam);
+				m_nTeamToJoin = team;
+				m_flNextJoin = gpGlobals->curtime + mp_joindelay.GetFloat();
+
+				ChangeTeam(TEAM_SPECTATOR);
+				//ChangeTeam(team);
 
 				//spawn at correct position
 				//Spawn();
@@ -1216,7 +1227,7 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 /////////////////////////////////////////
 //check if this IOS team position is free
 //
-bool CSDKPlayer::TeamPosFree (int team, int pos, bool kickBotKeeper)
+bool CSDKPlayer::TeamPosFree(int team, int pos, bool kickBotKeeper)
 {
 	//stop keeper from being picked unless mp_keepers is 0 
 	//(otherwise you can pick keeper just before bots spawn)
@@ -1229,13 +1240,14 @@ bool CSDKPlayer::TeamPosFree (int team, int pos, bool kickBotKeeper)
 	{
 		CSDKPlayer *pPl = (CSDKPlayer*)UTIL_PlayerByIndex(i);
 
-		if (!CSDKPlayer::IsOnField(pPl))
+		//if (!CSDKPlayer::IsOnField(pPl))
+		if (!pPl)
 			continue;
 
-		if (pPl->GetTeamNumber() == team && pPl->GetTeamPosition() == pos)
+		if (pPl->GetTeamPosition() == pos && (pPl->GetTeamNumber() == team || pPl->m_nTeamToJoin == team))
 		{
-			if (IsBot())
-				return false;
+			//if (IsBot())
+			//	return false;
 
 			if (!pPl->IsBot() || !kickBotKeeper)
 				return false;

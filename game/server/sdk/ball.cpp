@@ -21,27 +21,30 @@
 #include "sdk_shareddefs.h"
 
 ConVar sv_ball_mass( "sv_ball_mass", "1", FCVAR_ARCHIVE | FCVAR_NOTIFY );
-ConVar sv_ball_inertia( "sv_ball_inertia", "1.0", FCVAR_ARCHIVE | FCVAR_NOTIFY  );
-ConVar sv_ball_rotinertialimit( "sv_ball_rotinertialimit", "0.05", FCVAR_ARCHIVE | FCVAR_NOTIFY  );
+//ConVar sv_ball_inertia( "sv_ball_inertia", "1.0", FCVAR_ARCHIVE | FCVAR_NOTIFY  );
+//ConVar sv_ball_rotinertialimit( "sv_ball_rotinertialimit", "0.05", FCVAR_ARCHIVE | FCVAR_NOTIFY  );
 ConVar sv_ball_damping( "sv_ball_damping", "0.3", FCVAR_ARCHIVE | FCVAR_NOTIFY  );
 ConVar sv_ball_rotdamping( "sv_ball_rotdamping", "0.3", FCVAR_ARCHIVE | FCVAR_NOTIFY  );
-ConVar sv_ball_dragcoefficient( "sv_ball_dragcoefficient", "0.47", FCVAR_ARCHIVE | FCVAR_NOTIFY  );
-ConVar sv_ball_angdragcoefficient( "sv_ball_angdragcoefficient", "0.47", FCVAR_ARCHIVE | FCVAR_NOTIFY  );
+//ConVar sv_ball_dragcoefficient( "sv_ball_dragcoefficient", "0.47", FCVAR_ARCHIVE | FCVAR_NOTIFY  );
+//ConVar sv_ball_angdragcoefficient( "sv_ball_angdragcoefficient", "0.47", FCVAR_ARCHIVE | FCVAR_NOTIFY  );
 //ConVar sv_ball_elasticity( "sv_ball_elasticity", "65", FCVAR_ARCHIVE );
 //ConVar sv_ball_friction( "sv_ball_friction", "1", FCVAR_ARCHIVE );
 //ConVar sv_ball_speed( "sv_ball_speed", "1500", FCVAR_ARCHIVE );
 ConVar sv_ball_spin( "sv_ball_spin", "3000", FCVAR_ARCHIVE | FCVAR_NOTIFY );
-ConVar sv_ball_maxspin( "sv_ball_maxspin", "1000", FCVAR_ARCHIVE | FCVAR_NOTIFY );
+ConVar sv_ball_defaultspin( "sv_ball_defaultspin", "30", FCVAR_ARCHIVE | FCVAR_NOTIFY );
+//ConVar sv_ball_maxspin( "sv_ball_maxspin", "1000", FCVAR_ARCHIVE | FCVAR_NOTIFY );
 ConVar sv_ball_curve("sv_ball_curve", "250", FCVAR_ARCHIVE | FCVAR_NOTIFY);
 ConVar sv_ball_touchcone( "sv_ball_touchcone", "90", FCVAR_ARCHIVE | FCVAR_NOTIFY );
 ConVar sv_ball_touchradius( "sv_ball_touchradius", "80", FCVAR_ARCHIVE | FCVAR_NOTIFY );
 ConVar sv_ball_keepertouchradius( "sv_ball_keepertouchradius", "80", FCVAR_ARCHIVE | FCVAR_NOTIFY );
 //ConVar sv_ball_a1_speed( "sv_ball_a1_speed", "500", FCVAR_ARCHIVE );
 //ConVar sv_ball_a1_zoffset( "sv_ball_a1_zoffset", "10", FCVAR_ARCHIVE );
-ConVar sv_ball_radius( "sv_ball_radius", "5.2", FCVAR_ARCHIVE | FCVAR_NOTIFY );
+//ConVar sv_ball_radius( "sv_ball_radius", "5.2", FCVAR_ARCHIVE | FCVAR_NOTIFY );
 //ConVar sv_ball_gravity( "sv_ball_gravity", "10", FCVAR_ARCHIVE );
-ConVar sv_ball_delay("sv_ball_delay", "0.5", FCVAR_ARCHIVE | FCVAR_NOTIFY);
-ConVar sv_ball_bestshotangle("sv_ball_bestshotangle", "-10", FCVAR_ARCHIVE | FCVAR_NOTIFY);
+//ConVar sv_ball_enable_gravity( "sv_ball_enable_gravity", "1", FCVAR_ARCHIVE );
+//ConVar sv_ball_enable_drag( "sv_ball_enable_drag", "1", FCVAR_ARCHIVE );
+ConVar sv_ball_shotdelay("sv_ball_shotdelay", "0.5", FCVAR_ARCHIVE | FCVAR_NOTIFY);
+ConVar sv_ball_bestshotangle("sv_ball_bestshotangle", "-30", FCVAR_ARCHIVE | FCVAR_NOTIFY);
 ConVar sv_ball_volleysideangle("sv_ball_volleysideangle", "30", FCVAR_ARCHIVE | FCVAR_NOTIFY);
 ConVar sv_ball_keepersideangle("sv_ball_keepersideangle", "30", FCVAR_ARCHIVE | FCVAR_NOTIFY);
 ConVar sv_ball_normalshot_strength("sv_ball_normalshot_strength", "550", FCVAR_ARCHIVE | FCVAR_NOTIFY);
@@ -107,6 +110,7 @@ CBall::CBall()
 	g_pBall = this;
 	m_eNextState = BALL_NOSTATE;
 	m_flStateLeaveTime = gpGlobals->curtime;
+	m_flStateAutoLeaveTime = -1;
 	m_bIgnoreTriggers = false;
 	m_eFoulType = FOUL_NONE;
 	m_pPossessingPl = NULL;
@@ -197,16 +201,23 @@ bool CBall::CreateVPhysics()
 
 	m_pPhys->SetMass(sv_ball_mass.GetFloat());//0.05f	);
 	m_fMass	= m_pPhys->GetMass();
-	m_pPhys->EnableGravity(	true );
-	m_pPhys->EnableDrag( false );
+	//m_pPhys->EnableGravity(	sv_ball_enable_gravity.GetFloat() );
+	m_pPhys->EnableGravity(true);
+	//m_pPhys->EnableDrag( sv_ball_enable_drag.GetFloat() );
+	m_pPhys->EnableDrag(false);
+	//SetElasticity(sv_ball_elasticity.GetFloat());
+	//SetGravity(sv_ball_gravity.GetFloat());
+	//float drag = sv_ball_dragcoefficient.GetFloat();
+	//float angdrag = sv_ball_angdragcoefficient.GetFloat();
+	//m_pPhys->SetDragCoefficient(&drag, &angdrag);
 	float flDamping	= sv_ball_damping.GetFloat(); //0.0f
 	float flAngDamping = sv_ball_rotdamping.GetFloat(); //2.5f
 	m_pPhys->SetDamping( &flDamping, &flAngDamping );
-//	VPhysicsGetObject()->SetInertia( Vector( 0.0023225760f,	0.0023225760f, 0.0023225760f ) );
-	//SetPhysicsMode(PHYSICS_MULTIPLAYER_SOLID);
+	//m_pPhys->SetInertia(sv_ball_inertia.GetFloat());
+	//VPhysicsGetObject()->SetInertia( Vector( 0.0023225760f,	0.0023225760f, 0.0023225760f ) );
+	SetPhysicsMode(PHYSICS_MULTIPLAYER_SOLID);
 	//SetPhysicsMode(PHYSICS_MULTIPLAYER_AUTODETECT);
 	SetCollisionGroup( COLLISION_GROUP_PUSHAWAY );
-
 	m_pPhys->Wake();
 
 	return true;
@@ -493,11 +504,14 @@ void CBall::State_Enter( ball_state_t newState )
 	m_eBallState = newState;
 	m_pCurStateInfo = State_LookupInfo( newState );
 	m_flStateEnterTime = gpGlobals->curtime;
+	m_flStateAutoLeaveTime = -1;
 
 	m_pPl = NULL;
 	SDKGameRules()->DisableShield();
 	UnmarkOffsidePlayers();
 	m_bIgnoreTriggers = false;
+	RemoveEffects(EF_NODRAW);
+	m_pPhys->EnableCollisions(true);
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++) 
 	{
@@ -529,19 +543,24 @@ void CBall::State_Enter( ball_state_t newState )
 void CBall::State_Think()
 {
 	if (m_flStateLeaveTime > gpGlobals->curtime)
-	{
 		return;
-	}
 
 	m_pPhys->GetPosition(&m_vPos, &m_aAng);
 	m_pPhys->GetVelocity(&m_vVel, &m_vRot);
+
+	//if (m_flStateAutoLeaveTime != -1 && m_flStateAutoLeaveTime <= gpGlobals->curtime)
+	if (m_pCurStateInfo && m_pCurStateInfo->m_eBallState != BALL_NORMAL && m_flStateAutoLeaveTime != -1 && gpGlobals->curtime >= m_flStateAutoLeaveTime)
+	{
+		if (CSDKPlayer::IsOnField(m_pPl))
+			m_pPl->ChangeTeam(TEAM_SPECTATOR);
+	}
 
 	while (m_eNextState != BALL_NOSTATE && m_flStateLeaveTime <= gpGlobals->curtime)
 	{
 		State_DoTransition(m_eNextState);
 	}
 
-	if ( m_pCurStateInfo && m_pCurStateInfo->pfnThink )
+	if (m_pCurStateInfo && m_pCurStateInfo->pfnThink)
 	{	
 		(this->*m_pCurStateInfo->pfnThink)();
 	}
@@ -573,7 +592,6 @@ CBallStateInfo* CBall::State_LookupInfo( ball_state_t state )
 
 void CBall::State_NORMAL_Enter()
 {
-	//m_bIgnoreTriggers = false;
 }
 
 void CBall::State_NORMAL_Think()
@@ -641,6 +659,7 @@ void CBall::State_KICKOFF_Think()
 		SDKGameRules()->EnableShield(SHIELD_KICKOFF, mp_shield_kickoff_radius.GetInt(), SDKGameRules()->m_vKickOff);
 		UpdatePossession(m_pPl);
 		m_pPl->SetPosInsideShield(Vector(m_vPos.x - m_pPl->GetTeam()->m_nRight * 30, m_vPos.y, SDKGameRules()->m_vKickOff[2]), true);
+		m_flStateAutoLeaveTime = -1;
 		EmitSound("Ball.whistle");
 		SendMatchEvent(MATCH_EVENT_KICKOFF);
 	}
@@ -669,6 +688,9 @@ void CBall::State_KICKOFF_Think()
 		}
 	}
 
+	if (m_flStateAutoLeaveTime == -1)
+		m_flStateAutoLeaveTime = gpGlobals->curtime + 5;
+
 	UpdateCarrier();
 
 	if (m_pPl->m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1)))
@@ -692,11 +714,15 @@ void CBall::State_THROWIN_Think()
 	{
 		m_pPl = FindNearestPlayer(LastOppTeam(false));
 		if (!m_pPl)
+		{
+			SetPos(Vector(m_vPos.x, m_vPos.y, SDKGameRules()->m_vKickOff.GetZ()));
 			return State_Transition(BALL_NORMAL);
+		}
 
 		SDKGameRules()->EnableShield(SHIELD_THROWIN, mp_shield_throwin_radius.GetInt(), m_vPos);
 		UpdatePossession(m_pPl);
 		m_pPl->SetPosInsideShield(Vector(m_vPos.x, m_vPos.y, SDKGameRules()->m_vKickOff.GetZ()), true);
+		m_flStateAutoLeaveTime = -1;
 		SendMatchEvent(MATCH_EVENT_THROWIN);
 		EmitSound("Ball.whistle");
 	}
@@ -715,6 +741,9 @@ void CBall::State_THROWIN_Think()
 		m_pPl->DoAnimationEvent(PLAYERANIMEVENT_THROWIN);
 		return; // Give bots time to detect FL_ATCONTROLS
 	}
+
+	if (m_flStateAutoLeaveTime == -1)
+		m_flStateAutoLeaveTime = gpGlobals->curtime + 5;
 
 	UpdateCarrier();
 
@@ -776,12 +805,16 @@ void CBall::State_GOALKICK_Think()
 		SDKGameRules()->EnableShield(SHIELD_GOALKICK, LastOppTeam(false));
 		UpdatePossession(m_pPl);
 		m_pPl->SetPosInsideShield(Vector(m_vPos.x, m_vPos.y - 100 * m_pPl->GetTeam()->m_nForward, SDKGameRules()->m_vKickOff.GetZ()), false);
+		m_flStateAutoLeaveTime = -1;
 		SendMatchEvent(MATCH_EVENT_GOALKICK);
 		EmitSound("Ball.whistle");
 	}
 
 	if (!PlayersAtTargetPos(false))
 		return;
+
+	if (m_flStateAutoLeaveTime == -1)
+		m_flStateAutoLeaveTime = gpGlobals->curtime + 5;
 
 	UpdateCarrier();
 
@@ -819,12 +852,16 @@ void CBall::State_CORNER_Think()
 		SDKGameRules()->EnableShield(SHIELD_CORNER, mp_shield_corner_radius.GetInt(), m_vPos);
 		m_pPl->SetPosInsideShield(Vector(m_vPos.x - 50 * Sign((SDKGameRules()->m_vKickOff - m_vPos).x), m_vPos.y - 50 * Sign((SDKGameRules()->m_vKickOff - m_vPos).y), SDKGameRules()->m_vKickOff[2]), false);
 		UpdatePossession(m_pPl);
+		m_flStateAutoLeaveTime = -1;
 		SendMatchEvent(MATCH_EVENT_CORNER);
 		EmitSound("Ball.whistle");
 	}
 
 	if (!PlayersAtTargetPos(false))
 		return;
+
+	if (m_flStateAutoLeaveTime == -1)
+		m_flStateAutoLeaveTime = gpGlobals->curtime + 5;
 
 	UpdateCarrier();
 
@@ -904,12 +941,16 @@ void CBall::State_FREEKICK_Think()
 		SDKGameRules()->EnableShield(SHIELD_FREEKICK, mp_shield_freekick_radius.GetInt(), m_vPos);
 		m_pPl->SetPosInsideShield(Vector(m_vPos.x, m_vPos.y - 100 * m_pPl->GetTeam()->m_nForward, SDKGameRules()->m_vKickOff.GetZ()), false);
 		UpdatePossession(m_pPl);
+		m_flStateAutoLeaveTime = -1;
 		SendMatchEvent(MATCH_EVENT_FREEKICK);
 		EmitSound("Ball.whistle");
 	}
 
 	if (!PlayersAtTargetPos(false))
 		return;
+
+	if (m_flStateAutoLeaveTime == -1)
+		m_flStateAutoLeaveTime = gpGlobals->curtime + 5;
 
 	UpdateCarrier();
 
@@ -947,14 +988,21 @@ void CBall::State_KEEPERHANDS_Think()
 		m_pPl->m_nSkin = m_pPl->m_nBaseSkin + m_nSkin;
 		SetEffects(EF_NODRAW);
 		m_pPhys->EnableCollisions(false);
-		Kicked(BODY_HANDS);
+		m_flStateAutoLeaveTime = -1;
+		Touched(m_pPl, true, BODY_HANDS);
+
+		if (m_pPl->m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1)))
+			m_pPl->m_bShotButtonsDepressed = false;
 	}
+
+	if (m_flStateAutoLeaveTime == -1)
+		m_flStateAutoLeaveTime = gpGlobals->curtime + 5;
 
 	UpdateCarrier();
 
 	SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + BODY_CHEST_END) + Vector(m_vPlForward.x, m_vPlForward.y, 0) * 2 * VEC_HULL_MAX.x);
 
-	if (m_pPl->m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1)) && m_pPl->m_flNextShot <= gpGlobals->curtime)
+	if (m_pPl->m_bShotButtonsDepressed && (m_pPl->m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1))) && m_pPl->m_flNextShot <= gpGlobals->curtime)
 	{
 		RemoveEffects(EF_NODRAW);
 		m_pPhys->EnableCollisions(true);
@@ -1064,25 +1112,20 @@ bool CBall::DoBodyPartAction()
 	{
 		if (CanKeeperCatch(bodyPart))
 		{
-			bool canCatch = LastTeam(true, m_pPl) != m_pPl->GetTeamNumber();
+			if (LastPl(true) == m_pPl && LastInfo(true)->m_eBodyPart == BODY_HANDS)
+				return false;
 
-			if (!canCatch)
-			{
-				BallTouchInfo *pInfo = LastInfo(true);
-				if (pInfo)
-					canCatch = (pInfo->m_eBodyPart == BODY_HEAD || pInfo->m_eBodyPart == BODY_CHEST);
-			}
+			BallTouchInfo *pInfo = LastInfo(true, m_pPl);
+			if (!pInfo)
+				return false;
 
-			if (canCatch)
-			{
-				State_Transition(BALL_KEEPERHANDS);
-				return true;
-			}
-			
-			return false;
+			if (pInfo->m_nTeam == m_pPl->GetTeamNumber() && pInfo->m_eBodyPart != BODY_HEAD && pInfo->m_eBodyPart != BODY_CHEST)
+				return false;
+
+			State_Transition(BALL_KEEPERHANDS);
+			return true;
 		}
-
-		if (bodyPart == BODY_FEET)
+		else if (bodyPart == BODY_FEET)
 		{
 			return DoGroundShot();
 		}
@@ -1255,12 +1298,16 @@ void CBall::SetBallCurve()
 		rot += m_vPlRight;
 
 	rot.NormalizeInPlace();
-	float spin = min(1, m_vVel.Length() / sv_ball_maxspin.GetInt()) * sv_ball_spin.GetFloat();
+	//float spin = min(1, m_vVel.Length() / sv_ball_maxspin.GetInt()) * sv_ball_spin.GetFloat();
+	float spin = m_vVel.Length() * sv_ball_spin.GetFloat();
 
-	AngularImpulse randRot;
-	for (int i = 0; i < 3; i++)
+	AngularImpulse randRot = AngularImpulse(0, 0, 0);
+	if (rot.Length() == 0)
 	{
-		randRot[i] = g_IOSRand.RandomFloat(250, 500) * (g_IOSRand.RandomInt(0, 1) == 1 ? 1 : -1);
+		for (int i = 0; i < 3; i++)
+		{
+			randRot[i] = m_vVel.Length() * sv_ball_defaultspin.GetFloat() * (g_IOSRand.RandomInt(0, 1) == 1 ? 1 : -1);
+		}
 	}
 	SetRot(WorldToLocalRotation(SetupMatrixAngles(m_aAng), rot, spin) + randRot);
 }
@@ -1381,7 +1428,7 @@ void CBall::UnmarkOffsidePlayers()
 
 void CBall::Kicked(body_part_t bodyPart)
 {
-	m_pPl->m_flNextShot = gpGlobals->curtime + sv_ball_delay.GetFloat();
+	m_pPl->m_flNextShot = gpGlobals->curtime + sv_ball_shotdelay.GetFloat();
 	Touched(m_pPl, true, bodyPart);
 }
 
@@ -1498,4 +1545,9 @@ void CBall::DisableOffsideLine()
 {
 	//m_pOffsideLine->TurnOff();
 	m_bShowOffsideLine = false;
+}
+
+int CBall::UpdateTransmitState()
+{
+	return SetTransmitState( FL_EDICT_ALWAYS );
 }

@@ -129,17 +129,26 @@ CBasePlayer *BotPutInServer( bool bFrozen, int keeper )
 	if ( bFrozen )
 		pPlayer->AddEFlags( EFL_BOT_FROZEN );
 
+	pPlayer->m_flNextBotJoin = -1;
+
 	//pPlayer->ChangeTeam( TEAM_UNASSIGNED );
 	//pPlayer->RemoveAllItems( true );
 	//pPlayer->Spawn();	//spawning here then moving to goal caused the extremely strange keeper teleport bug. Im not sure why!
 
+	pPlayer->BotJoinTeam(keeper);
+
+	return pPlayer;
+}
+
+void CBot::BotJoinTeam(int keeper)
+{
 	int playerCount[2] = {};
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++) 
 	{
 		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
 
-		if (!(pPl && pPl->IsConnected() && (pPl->GetTeamNumber() == TEAM_A || pPl->GetTeamNumber() == TEAM_B)))
+		if (!CSDKPlayer::IsOnField(pPl))
 			continue;
 
 		playerCount[pPl->GetTeamNumber() - TEAM_A] += 1;
@@ -147,12 +156,16 @@ CBasePlayer *BotPutInServer( bool bFrozen, int keeper )
 
 	if (keeper > 0)
 	{
-		pPlayer->m_TeamPos = 1;
-		pPlayer->ConvertSpawnToShirt();
-		pPlayer->ChooseKeeperSkin();
+		m_TeamPos = 1;
+		ConvertSpawnToShirt();
+		ChooseKeeperSkin();
 		//spawn at correct position
 		//pPlayer->Spawn();
-		pPlayer->ChangeTeam(keeper == 1 ? TEAM_A : TEAM_B);
+		//ChangeTeam(keeper == 1 ? TEAM_A : TEAM_B);
+		m_nTeamToJoin = keeper == 1 ? TEAM_A : TEAM_B;
+		m_flNextJoin = gpGlobals->curtime + mp_joindelay.GetFloat();
+		//ChangeTeam(TEAM_SPECTATOR);
+		g_CurBotNumber += 1;
 	}
 	else
 	{
@@ -161,30 +174,30 @@ CBasePlayer *BotPutInServer( bool bFrozen, int keeper )
 		int team = playerCount[0] < playerCount[1] ? TEAM_A : TEAM_B;
 
 		if (playerCount[team] == 11)
-		{
 			team = team == TEAM_A ? TEAM_B : TEAM_A;
-			if (playerCount[team] == 11)
-				pPlayer->ChangeTeam(TEAM_SPECTATOR);
-		}
+
+		if (playerCount[team] == 11)
+			ChangeTeam(TEAM_SPECTATOR);
 		else
 		{
 			while (true)
 			{
 				int posWanted = g_IOSRand.RandomInt(2,11);
-				if (pPlayer->TeamPosFree(team, posWanted, true))
+				if (TeamPosFree(team, posWanted, true))
 				{
-					pPlayer->m_TeamPos = posWanted;
-					pPlayer->ConvertSpawnToShirt();
-					pPlayer->ChoosePlayerSkin();
-					pPlayer->ChangeTeam(team);
+					m_TeamPos = posWanted;
+					ConvertSpawnToShirt();
+					ChoosePlayerSkin();
+					//ChangeTeam(team);
+					m_nTeamToJoin = team;
+					m_flNextJoin = gpGlobals->curtime + mp_joindelay.GetFloat();
+					//ChangeTeam(TEAM_SPECTATOR);
 					g_CurBotNumber += 1;
 					break;
 				}
 			}
 		}
 	}
-
-	return pPlayer;
 }
 
 // Handler for the "bot" command.
@@ -244,15 +257,17 @@ void Bot_RunAll( void )
 		{
 			CSDKPlayer *pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(i));
 
-			if (!(
-				pPlayer &&
-				pPlayer->GetTeamNumber() != TEAM_SPECTATOR &&
-				pPlayer->IsAlive() &&
-				pPlayer->GetTeamPosition() == 1
-				))
+			if (!pPlayer)
 				continue;
 
-			keeperSpotTaken[pPlayer->GetTeamNumber() - TEAM_A] = true;
+			int team = TEAM_INVALID;
+			if (CSDKPlayer::IsOnField(pPlayer))
+				team = pPlayer->GetTeamNumber();
+			else if (pPlayer->GetTeamToJoin() != TEAM_INVALID)
+				team = pPlayer->GetTeamToJoin();
+
+			if (team != TEAM_INVALID && pPlayer->GetTeamPosition() == 1)
+				keeperSpotTaken[team - TEAM_A] = true;
 		}
 
 		for (int i = 0; i < 2; i++)
@@ -345,31 +360,45 @@ void CBot::BotFrame()
 	Q_memcpy(&m_oldcmd, &m_cmd, sizeof(m_oldcmd));
 	Q_memset(&m_cmd, 0, sizeof(m_cmd));
 
-	if ( bot_mimic.GetInt() > 0 )
-		RunMimicCommand(m_cmd);
-	else
+	if (GetTeamNumber() == TEAM_SPECTATOR && m_nTeamToJoin == TEAM_INVALID)
 	{
-		GetBall()->VPhysicsGetObject()->GetPosition(&m_vBallPos, &m_aBallAng);
-		GetBall()->VPhysicsGetObject()->GetVelocity(&m_vBallVel, &m_vBallAngImp);
+		if (m_flNextBotJoin == -1)
+			m_flNextBotJoin = gpGlobals->curtime + 3;
+		else if (gpGlobals->curtime >= m_flNextBotJoin)
+		{
+			BotJoinTeam(g_IOSRand.RandomInt(0, 2));
+			m_flNextBotJoin = -1;
+		}
+	}
 
-		m_vDirToBall = m_vBallPos - GetLocalOrigin();
-		float length = m_vDirToBall.Length2D();
+	if (CSDKPlayer::IsOnField(this))
+	{
+		if ( bot_mimic.GetInt() > 0 )
+			RunMimicCommand(m_cmd);
+		else
+		{
+			GetBall()->VPhysicsGetObject()->GetPosition(&m_vBallPos, &m_aBallAng);
+			GetBall()->VPhysicsGetObject()->GetVelocity(&m_vBallVel, &m_vBallAngImp);
 
-		BotThink();
+			m_vDirToBall = m_vBallPos - GetLocalOrigin();
+			float length = m_vDirToBall.Length2D();
 
-		if (m_cmd.viewangles[YAW] > 180.0f )
-			m_cmd.viewangles[YAW] -= 360.0f;
-		else if ( m_cmd.viewangles[YAW] < -180.0f )
-			m_cmd.viewangles[YAW] += 360.0f;
+			BotThink();
 
-		if (m_cmd.viewangles[PITCH] > 180.0f )
-			m_cmd.viewangles[PITCH] -= 360.0f;
-		else if ( m_cmd.viewangles[PITCH] < -180.0f )
-			m_cmd.viewangles[PITCH] += 360.0f;
+			if (m_cmd.viewangles[YAW] > 180.0f )
+				m_cmd.viewangles[YAW] -= 360.0f;
+			else if ( m_cmd.viewangles[YAW] < -180.0f )
+				m_cmd.viewangles[YAW] += 360.0f;
 
-		m_LastAngles = m_cmd.viewangles;
-		SetLocalAngles(m_cmd.viewangles);
-		SnapEyeAngles(m_cmd.viewangles);
+			if (m_cmd.viewangles[PITCH] > 180.0f )
+				m_cmd.viewangles[PITCH] -= 360.0f;
+			else if ( m_cmd.viewangles[PITCH] < -180.0f )
+				m_cmd.viewangles[PITCH] += 360.0f;
+
+			m_LastAngles = m_cmd.viewangles;
+			SetLocalAngles(m_cmd.viewangles);
+			SnapEyeAngles(m_cmd.viewangles);
+		}
 	}
 
 	// Fix up the m_fEffects flags
