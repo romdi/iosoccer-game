@@ -31,6 +31,7 @@ public : // IGameResources intreface
 	// Team data access 
 	virtual int		GetTeamScore( int index );
 	virtual const char *GetTeamName( int index );
+	virtual const char *GetFullTeamName( int index );
 	virtual const Color&GetTeamColor( int index );
 	virtual const char *GetScoreTag( int index );	//ios
 
@@ -43,6 +44,7 @@ public : // IGameResources intreface
 
 	virtual const char *GetPlayerName( int index );
 	virtual const char *GetClubName( int index );
+	virtual const char *GetCountryName( int index );
 	virtual int		GetPing( int index );
 //	virtual int		GetPacketloss( int index );
 	virtual int		GetPlayerScore( int index );
@@ -80,6 +82,7 @@ protected:
 	// Stored in individual arrays so they can be sent down via datatables
 	string_t	m_szName[MAX_PLAYERS+1];
 	char	m_szClubNames[MAX_PLAYERS+1][32];
+	char	m_szCountryNames[MAX_PLAYERS+1][32];
 	int		m_iPing[MAX_PLAYERS+1];
 	int		m_iScore[MAX_PLAYERS+1];
 	int		m_iDeaths[MAX_PLAYERS+1];

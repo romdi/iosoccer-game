@@ -31,7 +31,7 @@ ConVar sv_ball_rotdamping( "sv_ball_rotdamping", "0.3", FCVAR_ARCHIVE | FCVAR_NO
 //ConVar sv_ball_friction( "sv_ball_friction", "1", FCVAR_ARCHIVE );
 //ConVar sv_ball_speed( "sv_ball_speed", "1500", FCVAR_ARCHIVE );
 ConVar sv_ball_spin( "sv_ball_spin", "3000", FCVAR_ARCHIVE | FCVAR_NOTIFY );
-ConVar sv_ball_defaultspin( "sv_ball_defaultspin", "30", FCVAR_ARCHIVE | FCVAR_NOTIFY );
+ConVar sv_ball_defaultspin( "sv_ball_defaultspin", "0.5", FCVAR_ARCHIVE | FCVAR_NOTIFY );
 //ConVar sv_ball_maxspin( "sv_ball_maxspin", "1000", FCVAR_ARCHIVE | FCVAR_NOTIFY );
 ConVar sv_ball_curve("sv_ball_curve", "250", FCVAR_ARCHIVE | FCVAR_NOTIFY);
 ConVar sv_ball_touchcone( "sv_ball_touchcone", "90", FCVAR_ARCHIVE | FCVAR_NOTIFY );

@@ -317,6 +317,9 @@ public:
 	char				*GetClubName() { return m_szClubName; }
 	void				SetClubName(const char *name) { Q_strncpy(m_szClubName, name, sizeof(m_szClubName)); m_bClubNameChanged = true; } 
 
+	char				*GetCountryName() { return m_szCountryName; }
+	void				SetCountryName(const char *name) { Q_strncpy(m_szCountryName, name, sizeof(m_szCountryName)); m_bCountryNameChanged = true; } 
+
 	void				ResetMatchStats();
 
 	virtual void		Duck( void );
@@ -346,6 +349,9 @@ public:
 
 	char				m_szClubName[32];
 	bool				m_bClubNameChanged;
+
+	char				m_szCountryName[32];
+	bool				m_bCountryNameChanged;
 
 	Vector				EyeDirection2D();
 	Vector				EyeDirection3D();

@@ -48,6 +48,7 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_PlayerResource, DT_PlayerResource, CPlayerReso
 	RecvPropArray3( RECVINFO_ARRAY(m_NextJoin), RecvPropFloat( RECVINFO(m_NextJoin[0]))),
 
 	RecvPropArray3( RECVINFO_ARRAY(m_szClubNames), RecvPropString( RECVINFO(m_szClubNames[0]))),
+	RecvPropArray3( RECVINFO_ARRAY(m_szCountryNames), RecvPropString( RECVINFO(m_szCountryNames[0]))),
 	//RecvPropArray( RecvPropString( RECVINFO( m_szClubName[0]) ), m_szClubName ),
 
 END_RECV_TABLE()
@@ -104,6 +105,7 @@ C_PlayerResource::C_PlayerResource()
 	memset( m_NextJoin, 0, sizeof( m_NextJoin ) );
 
 	memset( m_szClubNames, 0, sizeof( m_szClubNames ) );
+	memset( m_szCountryNames, 0, sizeof( m_szCountryNames ) );
 
 	m_Colors[TEAM_A] = COLOR_BLUE;
 	m_Colors[TEAM_B] = COLOR_RED;
@@ -199,6 +201,20 @@ const char *C_PlayerResource::GetClubName( int iIndex )
 	return m_szClubNames[iIndex];
 }
 
+const char *C_PlayerResource::GetCountryName( int iIndex )
+{
+	if ( iIndex < 1 || iIndex > MAX_PLAYERS )
+	{
+		Assert( false );
+		return "ERRORNAME";
+	}
+	
+	if ( !IsConnected( iIndex ) )
+		return PLAYER_UNCONNECTED_NAME;
+
+	return m_szCountryNames[iIndex];
+}
+
 bool C_PlayerResource::IsAlive(int iIndex )
 {
 	return m_bAlive[iIndex];
@@ -226,6 +242,16 @@ const char * C_PlayerResource::GetTeamName(int index)
 		return "Unknown";
 
 	return team->Get_Name();
+}
+
+const char * C_PlayerResource::GetFullTeamName(int index)
+{
+	C_Team *team = GetGlobalTeam( index );
+
+	if ( !team )
+		return "Unknown";
+
+	return team->Get_FullName();
 }
 
 int C_PlayerResource::GetTeamScore(int index)

@@ -37,6 +37,7 @@
 #include "sdk_backgroundpanel.h"
 #include "sdk_gamerules.h"
 #include "c_sdk_player.h"
+#include "steam\steam_api.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -44,6 +45,28 @@
 extern IGameUIFuncs *gameuifuncs; // for key binding details
 
 using namespace vgui;
+
+#define PANEL_MARGIN		5
+#define PANEL_WIDTH			1024 - 2 * PANEL_MARGIN
+#define PANEL_HEIGHT		768 - 2 * PANEL_MARGIN
+#define BUTTON_WIDTH		200
+#define BUTTON_HEIGHT		120
+#define BUTTON_MARGIN		20
+#define NUMBER_MARGIN		2
+#define NUMBER_WIDTH		30
+#define NUMBER_HEIGHT		40
+#define NAME_WIDTH			BUTTON_SIZE - NUMBER_WIDTH - NUMBER_MARGIN
+#define NAME_HEIGHT			30
+#define INFO_WIDTH			20
+#define INFO_HEIGHT			30
+#define IMAGE_SIZE			60
+#define	STATS_WIDTH			30
+#define	STATS_HEIGHT		30
+#define	STATS_MARGIN		5
+#define	KICKBUTTON_SIZE		20
+#define TABBUTTON_HEIGHT	30
+#define TABBUTTON_WIDTH		100
+#define TABBUTTON_MARGIN	5
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -55,7 +78,7 @@ CTeamMenu::CTeamMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_TEAM )
 	m_iScoreBoardKey = BUTTON_CODE_INVALID; // this is looked up in Activate()
 	m_nActiveTeam = 0;
 
-	SetSize(960, 720);
+	SetBounds(PANEL_MARGIN, PANEL_MARGIN, PANEL_WIDTH, PANEL_HEIGHT);
 	SetTitle("", true);
 	SetMoveable(false);
 	SetSizeable(false);
@@ -94,6 +117,8 @@ CTeamMenu::CTeamMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_TEAM )
 			pStats->pYellows = new Label(pStats->pPanel, "Stat", "");
 			pStats->pReds = new Label(pStats->pPanel, "Stat", "");
 			pStats->pPossession = new Label(pStats->pPanel, "Stat", "");
+			pStats->pPing = new Label(pStats->pPanel, "Stat", "");
+			pStats->pCountryFlag = new ImagePanel(pStats->pPanel, "Stat");
 			pPos->pStatPanel = pStats;
 
 			pPos->pKickButton = new Button(pPos->pPosPanel, "KickButton", "x");
@@ -102,22 +127,6 @@ CTeamMenu::CTeamMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_TEAM )
 		}
 	}
 }
-
-#define BUTTON_WIDTH		200
-#define BUTTON_HEIGHT		120
-#define BUTTON_MARGIN		20
-#define NUMBER_MARGIN		2
-#define NUMBER_WIDTH		30
-#define NUMBER_HEIGHT		40
-#define NAME_WIDTH			BUTTON_SIZE - NUMBER_WIDTH - NUMBER_MARGIN
-#define NAME_HEIGHT			30
-#define INFO_WIDTH			20
-#define INFO_HEIGHT			30
-#define IMAGE_SIZE			60
-#define	STATS_WIDTH			30
-#define	STATS_HEIGHT		30
-#define	STATS_MARGIN		5
-#define	KICKBUTTON_SIZE		20
 
 void CTeamMenu::PerformLayout()
 {
@@ -136,22 +145,41 @@ void CTeamMenu::PerformLayout()
 
 	for(int i = 0; i < 2; i++)
 	{
-		m_pTabButtons[i]->SetBounds(100 * i, 0, 100, 50);
+		m_pTabButtons[i]->SetBounds(TABBUTTON_MARGIN + i * (TABBUTTON_WIDTH + TABBUTTON_MARGIN), 0, TABBUTTON_WIDTH, TABBUTTON_HEIGHT);
 		m_pTabButtons[i]->SetCommand(VarArgs("showteam %d", i));
 		m_pTabButtons[i]->AddActionSignalTarget(this);
-		m_pTabButtons[i]->SetBgColor(Color(255, 255, 255, 200));
-		m_pTabButtons[i]->SetDefaultColor(Color(0, 0, 0, 200), Color(255, 255, 255, 200));
-		m_pTabButtons[i]->SetArmedColor(Color(50, 50, 50, 200), Color(150, 150, 150, 200));
-		m_pTabButtons[i]->SetDepressedColor(Color(100, 100, 100, 200), Color(255, 255, 255, 200));
+		m_pTabButtons[i]->SetBgColor(Color(255, 255, 255, 255));
+		m_pTabButtons[i]->SetDefaultColor(Color(0, 0, 0, 255), Color(255, 255, 255, 255));
+		m_pTabButtons[i]->SetArmedColor(Color(50, 50, 50, 255), Color(150, 150, 150, 255));
+		m_pTabButtons[i]->SetDepressedColor(Color(100, 100, 100, 255), Color(255, 255, 255, 255));
+		m_pTabButtons[i]->SetCursor(dc_hand);
 
-		m_pTeamNames[i]->SetBounds(0, 0, 550, 50);
+		m_pSpectateButton->SetBounds(TABBUTTON_MARGIN + 3 * (TABBUTTON_WIDTH + TABBUTTON_MARGIN), 0, TABBUTTON_WIDTH, TABBUTTON_HEIGHT);
+		m_pSpectateButton->SetCommand(VarArgs("jointeam %d 1", TEAM_SPECTATOR));
+		m_pSpectateButton->AddActionSignalTarget(this);
+		m_pSpectateButton->SetBgColor(Color(255, 255, 255, 255));
+		m_pSpectateButton->SetDefaultColor(Color(0, 0, 0, 255), Color(255, 255, 255, 255));
+		m_pSpectateButton->SetArmedColor(Color(50, 50, 50, 255), Color(150, 150, 150, 255));
+		m_pSpectateButton->SetDepressedColor(Color(100, 100, 100, 255), Color(255, 255, 255, 255));
+		m_pSpectateButton->SetCursor(dc_hand);
+
+		m_pToggleStats->SetBounds(TABBUTTON_MARGIN + 4 * (TABBUTTON_WIDTH + TABBUTTON_MARGIN), 0, TABBUTTON_WIDTH, TABBUTTON_HEIGHT);
+		m_pToggleStats->SetCommand("togglestats");
+		m_pToggleStats->AddActionSignalTarget(this);
+		m_pToggleStats->SetBgColor(Color(255, 255, 255, 255));
+		m_pToggleStats->SetDefaultColor(Color(0, 0, 0, 255), Color(255, 255, 255, 255));
+		m_pToggleStats->SetArmedColor(Color(50, 50, 50, 255), Color(150, 150, 150, 255));
+		m_pToggleStats->SetDepressedColor(Color(100, 100, 100, 255), Color(255, 255, 255, 255));
+		m_pToggleStats->SetVisible(false);
+
+		m_pTeamNames[i]->SetBounds(50, 0, 550, 50);
 		//m_pTeamNames[i]->SetTextInset(50, 10);
 		//m_pTeamNames[i]->SetPinCorner(Panel::PIN_TOPRIGHT, 10, 10);
 		m_pTeamNames[i]->SetFgColor(Color(255, 255, 255, 255));
 		m_pTeamNames[i]->SetFont(pScheme->GetFont("IOSScorebar"));
 
-		m_pTeamPanels[i]->SetBounds(0, 50, 960, 670);
-		m_pTeamPanels[i]->SetBgColor(Color(0, 0, 0, 200));
+		m_pTeamPanels[i]->SetBounds(0, TABBUTTON_HEIGHT, PANEL_WIDTH, PANEL_HEIGHT - TABBUTTON_HEIGHT);
+		m_pTeamPanels[i]->SetBgColor(Color(0, 0, 0, 230));
 		m_pTeamPanels[i]->SetPaintBackgroundEnabled(true);
 		m_pTeamPanels[i]->SetPaintBackgroundType(2);
 		m_pTeamPanels[i]->SetVisible(i == m_nActiveTeam);
@@ -184,7 +212,7 @@ void CTeamMenu::PerformLayout()
 			pPos->pPlayerName->AddActionSignalTarget(this);
 			pPos->pPlayerName->SetPaintBackgroundEnabled(true);
 			pPos->pPlayerName->SetPaintBorderEnabled(false);
-			//pPos->pPlayerName->SetBorder(2);
+			//pPos->pPlayerName->SetBorder(pScheme->GetBorder("ButtonBorder"));
 			pPos->pPlayerName->SetBgColor(Color(255, 255, 255, 200));
 			pPos->pPlayerName->SetDefaultColor(Color(0, 0, 0, 200), Color(255, 255, 255, 200));
 			pPos->pPlayerName->SetArmedColor(Color(50, 50, 50, 200), Color(150, 150, 150, 200));
@@ -210,7 +238,7 @@ void CTeamMenu::PerformLayout()
 
 			StatPanel_t *pStats = pPos->pStatPanel;
 
-			pStats->pPanel->SetBounds(0, pPos->pPosPanel->GetTall() - 2 * NAME_HEIGHT - STATS_HEIGHT - STATS_MARGIN, pPos->pPosPanel->GetWide(), STATS_HEIGHT);
+			pStats->pPanel->SetBounds(0, pPos->pPosPanel->GetTall() - 2 * NAME_HEIGHT - (2 * STATS_HEIGHT + STATS_MARGIN), pPos->pPosPanel->GetWide(), 2 * STATS_HEIGHT);
 
 			pStats->pGoals->SetBounds(STATS_MARGIN, 0, STATS_WIDTH, STATS_HEIGHT);
 			pStats->pGoals->SetFgColor(Color(0, 0, 0, 255));
@@ -242,6 +270,15 @@ void CTeamMenu::PerformLayout()
 			pStats->pPossession->SetFont(pScheme->GetFont("IOSScorebar"));
 			pStats->pPossession->SetContentAlignment(Label::a_center);
 
+			pStats->pPing->SetBounds(STATS_MARGIN, STATS_HEIGHT + STATS_MARGIN, STATS_WIDTH, STATS_HEIGHT);
+			pStats->pPing->SetFgColor(Color(0, 0, 0, 255));
+			pStats->pPing->SetBgColor(Color(255, 255, 255, 255));
+			pStats->pPing->SetFont(pScheme->GetFont("IOSScorebar"));
+			pStats->pPing->SetContentAlignment(Label::a_center);
+
+			pStats->pCountryFlag->SetBounds(STATS_MARGIN + STATS_WIDTH + STATS_MARGIN, STATS_HEIGHT + STATS_MARGIN, STATS_WIDTH, STATS_HEIGHT);
+			pStats->pCountryFlag->SetShouldScaleImage(true);
+
 			pPos->pKickButton->SetBounds(pPos->pPosPanel->GetWide() - KICKBUTTON_SIZE, 0, KICKBUTTON_SIZE, KICKBUTTON_SIZE);
 			pPos->pKickButton->AddActionSignalTarget(this);
 			pPos->pKickButton->SetBgColor(Color(255, 255, 255, 200));
@@ -251,23 +288,6 @@ void CTeamMenu::PerformLayout()
 			pPos->pKickButton->SetCursor(dc_hand);
 		}
 	}
-
-	m_pSpectateButton->SetBounds(100 * 3, 0, 100, 50);
-	m_pSpectateButton->SetCommand(VarArgs("jointeam %d 1", TEAM_SPECTATOR));
-	m_pSpectateButton->AddActionSignalTarget(this);
-	m_pSpectateButton->SetBgColor(Color(255, 255, 255, 200));
-	m_pSpectateButton->SetDefaultColor(Color(0, 0, 0, 200), Color(255, 255, 255, 200));
-	m_pSpectateButton->SetArmedColor(Color(50, 50, 50, 200), Color(150, 150, 150, 200));
-	m_pSpectateButton->SetDepressedColor(Color(100, 100, 100, 200), Color(255, 255, 255, 200));
-
-	m_pToggleStats->SetBounds(100 * 4, 0, 100, 50);
-	m_pToggleStats->SetCommand("togglestats");
-	m_pToggleStats->AddActionSignalTarget(this);
-	m_pToggleStats->SetBgColor(Color(255, 255, 255, 200));
-	m_pToggleStats->SetDefaultColor(Color(0, 0, 0, 200), Color(255, 255, 255, 200));
-	m_pToggleStats->SetArmedColor(Color(50, 50, 50, 200), Color(150, 150, 150, 200));
-	m_pToggleStats->SetDepressedColor(Color(100, 100, 100, 200), Color(255, 255, 255, 200));
-	m_pToggleStats->SetVisible(false);
 }
 
 void CTeamMenu::SetData(KeyValues *data)
@@ -406,6 +426,16 @@ void CTeamMenu::Update()
 
 		pStats->pPossession->SetText(GET_STAT_TEXT(gr->GetPossession(i)));
 		pStats->pPossession->SetVisible(false);
+
+		pStats->pPing->SetText(VarArgs("%d", gr->GetPing(i)));
+		pStats->pPing->SetVisible(true);
+
+		if (Q_strlen(gr->GetCountryName(i)) > 0)
+		{
+			pStats->pCountryFlag->SetImage(VarArgs("countryflags/%s", gr->GetCountryName(i)));
+			pStats->pCountryFlag->SetVisible(true);
+			//steamapicontext->SteamUtils()->GetIPCountry()
+		}
 	}
 
 	for (int i = 0; i < 2; i++)
@@ -431,17 +461,21 @@ void CTeamMenu::Update()
 			pStats->pYellows->SetVisible(false);
 			pStats->pReds->SetVisible(false);
 			pStats->pPossession->SetVisible(false);
+			pStats->pPing->SetVisible(false);
+			pStats->pCountryFlag->SetVisible(false);
 
 			pPos->pKickButton->SetVisible(false);
 		}
 	}
+	C_Team *pTeamA = GetGlobalTeam(TEAM_A);
+	m_pTeamNames[0]->SetText(VarArgs("%s (%s) - %d players", pTeamA->Get_Name(), pTeamA->Get_FullName(), pTeamA->Get_Number_Players()));
+	C_Team *pTeamB = GetGlobalTeam(TEAM_B);
+	m_pTeamNames[1]->SetText(VarArgs("%s (%s) - %d players", pTeamB->Get_Name(), pTeamB->Get_FullName(), pTeamB->Get_Number_Players()));
 
-	m_pTeamNames[0]->SetText(gr->GetTeamName(TEAM_A));
-	m_pTeamNames[1]->SetText(gr->GetTeamName(TEAM_B));
 	m_pTabButtons[0]->SetText(gr->GetTeamName(TEAM_A));
 	m_pTabButtons[1]->SetText(gr->GetTeamName(TEAM_B));
 
-	m_flNextUpdateTime = gpGlobals->curtime + 0.5f;
+	m_flNextUpdateTime = gpGlobals->curtime + 0.25f;
 }
 
 //-----------------------------------------------------------------------------

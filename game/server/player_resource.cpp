@@ -51,6 +51,7 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CPlayerResource, DT_PlayerResource)
 	SendPropArray3( SENDINFO_ARRAY3(m_TeamToJoin), SendPropInt( SENDINFO_ARRAY(m_TeamToJoin), 5 ) ),
 
 	SendPropArray3( SENDINFO_ARRAY3(m_szClubNames), SendPropString( SENDINFO_ARRAY(m_szClubNames), 0, SendProxy_String_tToStringPR ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_szCountryNames), SendPropString( SENDINFO_ARRAY(m_szCountryNames), 0, SendProxy_String_tToStringPR ) ),
 	//SendPropArray( SendPropString( SENDINFO_ARRAY( m_szClubName ), 0, SendProxy_String_tToString ), m_szClubName ),
 	
 END_SEND_TABLE()
@@ -111,6 +112,7 @@ void CPlayerResource::Spawn( void )
 		m_TeamToJoin.Set( i, 0 );
 
 		m_szClubNames.Set( i, MAKE_STRING("") );
+		m_szCountryNames.Set( i, MAKE_STRING("") );
 	}
 
 	SetThink( &CPlayerResource::ResourceThink );
@@ -185,6 +187,15 @@ void CPlayerResource::UpdatePlayerData( void )
 				{
 					m_szClubNames.GetForModify(i);
 					SDKPlayer->m_bClubNameChanged = false;
+				}
+
+				m_szCountryNames.Set(i, MAKE_STRING(SDKPlayer->GetCountryName()));
+
+				// RomD: Enforce client update, since the value changes without notice
+				if (SDKPlayer->m_bCountryNameChanged)
+				{
+					m_szCountryNames.GetForModify(i);
+					SDKPlayer->m_bCountryNameChanged = false;
 				}
 			}
 

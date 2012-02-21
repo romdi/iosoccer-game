@@ -1312,8 +1312,10 @@ void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 	RecountTeams(); */
 
 	const char *pszClubName = engine->GetClientConVarValue( pPlayer->entindex(), "clubname" );
-
 	((CSDKPlayer *)pPlayer)->SetClubName(pszClubName);
+
+	const char *pszCountryName = engine->GetClientConVarValue( pPlayer->entindex(), "countryname" );
+	((CSDKPlayer *)pPlayer)->SetCountryName(pszCountryName);
 
 	const char *pszName = engine->GetClientConVarValue( pPlayer->entindex(), "name" );
 

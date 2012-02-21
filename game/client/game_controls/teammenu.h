@@ -40,6 +40,8 @@ struct StatPanel_t
 	Label *pYellows;
 	Label *pReds;
 	Label *pPossession;
+	Label *pPing;
+	ImagePanel *pCountryFlag;
 };
 
 struct PosPanel_t
