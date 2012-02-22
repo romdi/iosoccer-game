@@ -28,6 +28,8 @@ const int MODEL_KEEPER_AND_BALL	= 2;
 #define SPRINT_RECHARGE_TIME  12.0f    //IOS time before sprint re-charges
 #define SPRINT_SPEED          90.0f    //IOS sprint increase in speed
 
+class CBall;
+
 // Function table for each player state.
 class CSDKPlayerStateInfo
 {
@@ -245,9 +247,6 @@ public:
 	bool m_bUnProneToDuck;		//Tony; GAMEMOVEMENT USED VARIABLE
 #endif // SDK_USE_PRONE
 
-
-
-
 public:
 	//virtual void		SetAnimation( PLAYER_ANIM playerAnim );
 	void				PlayerUse ( void ) {};				//IOS
@@ -363,6 +362,12 @@ private:
 
 	bool				m_bOffside;
 	Vector				m_vOffsidePos;
+	CBall				*m_pPlayerBall;
+
+public:
+
+	void				SetPlayerBall(CBall *pPlayerBall) { m_pPlayerBall = pPlayerBall; }
+	CBall				*GetPlayerBall() { return m_pPlayerBall; }
 };
 
 

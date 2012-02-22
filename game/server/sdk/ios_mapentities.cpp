@@ -20,7 +20,7 @@ public:
 	void StartTouch( CBaseEntity *pOther )
 	{
 		CBall *pBall = dynamic_cast<CBall *>(pOther);
-		if (pBall && !pBall->GetIgnoreTriggers() && !SDKGameRules()->IsIntermissionState())
+		if (pBall && !pBall->GetIgnoreTriggers() && !SDKGameRules()->IsIntermissionState() && !pBall->GetOwnerEntity())
 		{
 			m_OnTrigger.FireOutput(pOther, this);
 			BallStartTouch(pBall);
@@ -155,7 +155,7 @@ END_DATADESC()
 
 LINK_ENTITY_TO_CLASS( trigger_PenaltyBox, CTriggerPenaltyBox );
 
-extern CBaseEntity *CreateBall (const Vector &pos);
+extern CBall *CreateBall (const Vector &pos, CSDKPlayer *pOwner);
 
 class CBallStart : public CPointEntity //IOS
 {
@@ -163,7 +163,7 @@ public:
 	DECLARE_CLASS( CBallStart, CPointEntity );
 	void Spawn(void)
 	{
-		CreateBall (GetLocalOrigin());	
+		CreateBall(GetLocalOrigin(), NULL);	
 	};
 };
 

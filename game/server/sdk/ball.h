@@ -9,7 +9,7 @@
 #include "beam_shared.h"
 
 
-#define	ENTITY_MODEL	 "models/w_fb.mdl"
+#define	BALL_MODEL	 "models/w_fb.mdl"
 
 #define	BALL_ELSEWHERE	0
 #define	BALL_NEAR_FEET	1
@@ -138,6 +138,8 @@ public:
 	CBall();//	{ m_iPhysicsMode = PHYSICS_MULTIPLAYER_AUTODETECT; }
 	~CBall();
 
+	void		RemovePlayerBalls();
+
 	void			SetPhysicsMode(int iMode)	{ m_iPhysicsMode = iMode; }
 	int				GetPhysicsMode(void) { return m_iPhysicsMode; }
 	int				GetMultiplayerPhysicsMode(void)	{ return m_iPhysicsMode; }
@@ -173,8 +175,13 @@ public:
 
 	CNetworkVar(float, m_flOffsideLineY);
 	CNetworkVar(bool, m_bShowOffsideLine);
+	
+	void			SetPos(const Vector &pos);
+	void			SetVel(const Vector &vel);
+	void			SetRot(const AngularImpulse &rot = NULL);
 
 private:
+
 	void State_NORMAL_Enter();		void State_NORMAL_Think();
 	void State_KICKOFF_Enter();		void State_KICKOFF_Think();
 	void State_THROWIN_Enter();		void State_THROWIN_Think();
@@ -196,10 +203,7 @@ private:
 	float			m_flStateLeaveTime;
 	float			m_flStateTimelimit;
 	CBallStateInfo	*m_pCurStateInfo;
-	
-	void			SetPos(const Vector &pos);
-	void			SetVel(const Vector &vel);
-	void			SetRot(const AngularImpulse &rot = NULL);
+
 	void			MarkOffsidePlayers();
 	void			UnmarkOffsidePlayers();
 	void			EnableOffsideLine(float yPos);
@@ -218,7 +222,7 @@ private:
 	bool			DoHeader();
 	bool			DoKeeperHandShot();
 	bool			DoKeeperHandThrow();
-	void			SetBallCurve();
+	void			SetBallSpin();
 	float			GetPitchModifier();
 	float			GetPowershotModifier();
 	void			UpdateCarrier();

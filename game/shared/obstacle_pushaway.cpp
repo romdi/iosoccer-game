@@ -10,14 +10,18 @@
 
 //-----------------------------------------------------------------------------------------------------
 //IOS added cheat just in case...
-ConVar sv_pushaway_force( "sv_pushaway_force", "25", FCVAR_REPLICATED | FCVAR_CHEAT, "How hard physics objects are pushed away from the players on the server." );
-ConVar sv_pushaway_min_player_speed( "sv_pushaway_min_player_speed", "0", FCVAR_REPLICATED | FCVAR_CHEAT, "If a player is moving slower than this, don't push away physics objects (enables ducking behind things)." );
-ConVar sv_pushaway_max_force( "sv_pushaway_max_force", "1000", FCVAR_REPLICATED | FCVAR_CHEAT, "Maximum amount of force applied to physics objects by players." );
-ConVar sv_pushaway_clientside( "sv_pushaway_clientside", "2", FCVAR_REPLICATED | FCVAR_CHEAT, "Clientside physics push away (0=off, 1=only localplayer, 1=all players)" );
 
-ConVar sv_pushaway_player_force( "sv_pushaway_player_force", "200000", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "How hard the player is pushed away from physics objects (falls off with inverse square of distance)." );
-ConVar sv_pushaway_max_player_force( "sv_pushaway_max_player_force", "10000", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Maximum of how hard the player is pushed away from physics objects." );
-ConVar sv_pushaway_player_expand( "sv_pushaway_player_expand", "3", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Maximum of how hard the player is pushed away from physics objects." );
+ConVar sv_pushaway_dopush( "sv_pushaway_dopush", "1", FCVAR_REPLICATED | FCVAR_ARCHIVE | FCVAR_CHEAT, "" );
+ConVar sv_pushaway_getpushed( "sv_pushaway_getpushed", "1", FCVAR_REPLICATED | FCVAR_ARCHIVE | FCVAR_CHEAT, "" );
+ConVar sv_pushaway_force( "sv_pushaway_force", "25", FCVAR_REPLICATED | FCVAR_ARCHIVE | FCVAR_CHEAT, "How hard physics objects are pushed away from the players on the server." );
+ConVar sv_pushaway_min_player_speed( "sv_pushaway_min_player_speed", "0", FCVAR_REPLICATED | FCVAR_ARCHIVE | FCVAR_CHEAT, "If a player is moving slower than this, don't push away physics objects (enables ducking behind things)." );
+ConVar sv_pushaway_max_force( "sv_pushaway_max_force", "1000", FCVAR_REPLICATED | FCVAR_ARCHIVE | FCVAR_CHEAT, "Maximum amount of force applied to physics objects by players." );
+ConVar sv_pushaway_clientside( "sv_pushaway_clientside", "2", FCVAR_REPLICATED | FCVAR_ARCHIVE | FCVAR_CHEAT, "Clientside physics push away (0=off, 1=only localplayer, 1=all players)" );
+
+ConVar sv_pushaway_player_force( "sv_pushaway_player_force", "200000", FCVAR_REPLICATED | FCVAR_ARCHIVE | FCVAR_CHEAT, "How hard the player is pushed away from physics objects (falls off with inverse square of distance)." );
+ConVar sv_pushaway_max_player_force( "sv_pushaway_max_player_force", "10000", FCVAR_REPLICATED | FCVAR_ARCHIVE | FCVAR_CHEAT, "Maximum of how hard the player is pushed away from physics objects." );
+ConVar sv_pushaway_player_expand( "sv_pushaway_player_expand", "3", FCVAR_REPLICATED | FCVAR_ARCHIVE | FCVAR_CHEAT, "Radius" );
+ConVar sv_pushaway_player_speed_force_modifier( "sv_pushaway_player_speed_force_modifier", "1", FCVAR_REPLICATED | FCVAR_ARCHIVE | FCVAR_CHEAT, "Radius" );
 
 #ifdef CLIENT_DLL
 ConVar sv_turbophysics( "sv_turbophysics", "0", FCVAR_REPLICATED, "Turns on turbo physics" );
@@ -190,6 +194,9 @@ int GetPushawayEnts( CBaseCombatCharacter *pPushingEntity, CBaseEntity **ents, i
 
 void AvoidPushawayProps( CBaseCombatCharacter *pPlayer, CUserCmd *pCmd )
 {
+	if (!sv_pushaway_getpushed.GetBool())
+		return;
+
 	// Figure out what direction we're moving and the extents of the box we're going to sweep 
 	// against physics objects.
 	Vector currentdir;
@@ -233,7 +240,7 @@ void AvoidPushawayProps( CBaseCombatCharacter *pPlayer, CUserCmd *pCmd )
 		Vector vPushAway = (nearestPlayerPoint - nearestPropPoint);
 		float flDist = VectorNormalize( vPushAway );
 
-		const float MaxPushawayDistance = 5.0f;
+		const float MaxPushawayDistance = sv_pushaway_player_expand.GetFloat();
 		if ( flDist > MaxPushawayDistance && !pPlayer->CollisionProp()->IsPointInBounds( nearestPropPoint ) )
 		{
 			continue;
@@ -278,6 +285,9 @@ void AvoidPushawayProps( CBaseCombatCharacter *pPlayer, CUserCmd *pCmd )
 //-----------------------------------------------------------------------------------------------------
 void PerformObstaclePushaway( CBaseCombatCharacter *pPushingEntity )
 {
+	if (!sv_pushaway_dopush.GetBool())
+		return;
+
 	if (  pPushingEntity->m_lifeState != LIFE_ALIVE )
 		return;
 
@@ -323,6 +333,7 @@ void PerformObstaclePushaway( CBaseCombatCharacter *pPushingEntity )
 			flDist = max( flDist, 1 );
 			
 			float flForce = sv_pushaway_force.GetFloat() / flDist;
+			flForce += pPushingEntity->GetAbsVelocity().Length2D() * sv_pushaway_player_speed_force_modifier.GetFloat();
 			flForce = min( flForce, sv_pushaway_max_force.GetFloat() );
 
 			pObj->ApplyForceOffset( vPushAway * flForce, pPushingEntity->WorldSpaceCenter() );

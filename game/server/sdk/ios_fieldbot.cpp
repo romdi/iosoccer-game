@@ -96,10 +96,6 @@ void CFieldBot::BotFetchAndPass()
 
 	angle = GetLocalAngles();
 
-	CBaseEntity *pEnt = gEntList.FindEntityByClassnameNearest("football", GetLocalOrigin(), 999999);
-	if (!pEnt)
-		return;
-
 	Vector plballdir;
 	Vector pldir;
 	float closestDist = FLT_MAX;
@@ -121,7 +117,7 @@ void CFieldBot::BotFetchAndPass()
 
 		closestDist = dist;
 		pClosest = pPlayer;
-		plballdir = pEnt->GetLocalOrigin() - pPlayer->GetLocalOrigin();
+		plballdir = m_vBallPos - pPlayer->GetLocalOrigin();
 		pldir = pPlayer->GetLocalOrigin() - GetLocalOrigin();
 		break;
 	}
@@ -129,7 +125,7 @@ void CFieldBot::BotFetchAndPass()
 	if (!pClosest)
 		return;
 
-	Vector dir = pEnt->GetLocalOrigin() - GetLocalOrigin();
+	Vector dir = m_vBallPos - GetLocalOrigin();
 	m_cmd.buttons &= ~IN_ATTACK;
 	m_cmd.buttons &= ~IN_ATTACK2;
 	m_cmd.forwardmove = 0;
@@ -143,7 +139,7 @@ void CFieldBot::BotFetchAndPass()
 		if (dir.Length2D() > 50)
 		{
 			Vector target;
-			target = pEnt->GetLocalOrigin() + (plballdir / plballdir.Length()) * 50;
+			target = m_vBallPos + (plballdir / plballdir.Length()) * 50;
 			if (dir.Dot(plballdir) > 0) // < 90°
 			{
 				VectorAngles(Vector(dir.x, dir.y, 0), angle);

@@ -60,13 +60,9 @@ void CSDKPlayerMove::StartCommand( CBasePlayer *player, CUserCmd *cmd )
 //-----------------------------------------------------------------------------
 void CSDKPlayerMove::SetupMove( CBasePlayer *player, CUserCmd *ucmd, IMoveHelper *pHelper, CMoveData *move )
 {
-	BaseClass::SetupMove( player, ucmd, pHelper, move );
+	player->AvoidPhysicsProps(ucmd);
 
-	IServerVehicle *pVehicle = player->GetVehicle();
-	if (pVehicle && gpGlobals->frametime != 0)
-	{
-		pVehicle->SetupMove( player, ucmd, pHelper, move ); 
-	}
+	BaseClass::SetupMove( player, ucmd, pHelper, move );
 }
 
 

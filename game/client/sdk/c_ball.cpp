@@ -78,7 +78,7 @@ void C_Ball::SetOffsideLine()
 	//	"effects/splashwake1", 
 	//	0 );
 
-	FX_AddCube(start, end, Vector(1, 1, 1), 10, "football/black");
+	FX_AddCube(start, end, Vector(1, 1, 1), 3, "football/black");
 
 	m_bShowOffsideLine = false;
 }

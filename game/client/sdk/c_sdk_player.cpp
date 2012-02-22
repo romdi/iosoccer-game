@@ -941,7 +941,6 @@ extern ConVar cl_sidespeed;
 void C_SDKPlayer::AvoidPlayers( CUserCmd *pCmd )
 {
 // Player Avoidance is only active with teams
-#if defined ( SDK_USE_TEAMS )
 	// Don't test if the player doesn't exist or is dead.
 	if ( IsAlive() == false )
 		return;
@@ -1129,7 +1128,6 @@ void C_SDKPlayer::AvoidPlayers( CUserCmd *pCmd )
 	pCmd->sidemove *= flScale;
 
 	//Msg( "Pforwardmove=%f, sidemove=%f\n", pCmd->forwardmove, pCmd->sidemove );
-#endif
 }
 
 bool C_SDKPlayer::CreateMove( float flInputSampleTime, CUserCmd *pCmd )
@@ -1140,7 +1138,8 @@ bool C_SDKPlayer::CreateMove( float flInputSampleTime, CUserCmd *pCmd )
 
 	BaseClass::CreateMove( flInputSampleTime, pCmd );
 
-	AvoidPlayers( pCmd );
+	//AvoidPlayers( pCmd );
+	//AvoidPhysicsProps(pCmd);
 
 	return true;
 }

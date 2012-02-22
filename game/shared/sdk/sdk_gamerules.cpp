@@ -678,6 +678,12 @@ bool CSDKGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 		swap(collisionGroup0,collisionGroup1);
 	}
 
+	if ( (collisionGroup0 == COLLISION_GROUP_PLAYER || collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT) &&
+		collisionGroup1 == COLLISION_GROUP_PUSHAWAY )
+	{
+		return false;
+	}
+
 	//Don't stand on COLLISION_GROUP_WEAPON
 	if( collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT &&
 		collisionGroup1 == COLLISION_GROUP_WEAPON )
@@ -929,6 +935,11 @@ void CSDKGameRules::State_Enter( match_state_t newState )
 	{
 		(this->*m_pCurStateInfo->pfnEnterState)();
 	}
+
+	if (IsIntermissionState())
+		GetBall()->State_Transition(BALL_NORMAL);
+	else
+		GetBall()->RemovePlayerBalls();
 }
 
 void CSDKGameRules::State_Leave()

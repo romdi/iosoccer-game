@@ -237,6 +237,7 @@ CSDKPlayer::CSDKPlayer()
 	m_nTeamToJoin = TEAM_INVALID;
 	m_flNextJoin = gpGlobals->curtime;
 	m_TeamPos = m_ShirtPos = 1;
+	m_pPlayerBall = NULL;
 }
 
 
