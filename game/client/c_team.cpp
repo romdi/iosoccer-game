@@ -48,7 +48,6 @@ void RecvProxy_Teamname( const CRecvProxyData *pData, void *pStruct, void *pOut 
 IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_Team, DT_Team, CTeam)
 	RecvPropInt( RECVINFO(m_iTeamNum)),
 	RecvPropInt( RECVINFO(m_nGoals)),
-	RecvPropInt( RECVINFO(m_iRoundsWon) ),
 	RecvPropInt( RECVINFO(m_nPossession) ),
 	RecvPropString( RECVINFO(m_szTeamname), 0, RecvProxy_Teamname),
 
@@ -72,13 +71,11 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_Team, DT_Team, CTeam)
 END_RECV_TABLE()
 
 BEGIN_PREDICTION_DATA( C_Team )
+	DEFINE_PRED_FIELD( m_iTeamNum, FIELD_INTEGER, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_ARRAY( m_szTeamname, FIELD_CHARACTER, MAX_TEAM_NAME_LENGTH, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_FIELD( m_nGoals, FIELD_INTEGER, FTYPEDESC_PRIVATE ),
-	DEFINE_PRED_FIELD( m_iRoundsWon, FIELD_INTEGER, FTYPEDESC_PRIVATE ),
-	DEFINE_PRED_FIELD( m_iDeaths, FIELD_INTEGER, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_FIELD( m_iPing, FIELD_INTEGER, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_FIELD( m_iPacketloss, FIELD_INTEGER, FTYPEDESC_PRIVATE ),
-	DEFINE_PRED_FIELD( m_iTeamNum, FIELD_INTEGER, FTYPEDESC_PRIVATE ),
 END_PREDICTION_DATA();
 
 // Global list of client side team entities
@@ -93,11 +90,9 @@ CUtlVector< C_Team * > g_Teams;
 C_Team::C_Team()
 {
 	m_nGoals = 0;
-	m_iRoundsWon = 0;
 	m_nPossession = 0;
 	memset( m_szTeamname, 0, sizeof(m_szTeamname) );
 
-	m_iDeaths = 0;
 	m_iPing = 0;
 	m_iPacketloss = 0;
 
@@ -133,18 +128,17 @@ C_BasePlayer* C_Team::GetPlayer( int idx )
 	return (C_BasePlayer*)cl_entitylist->GetEnt(m_aPlayers[idx]);
 }
 
-
-int C_Team::GetTeamNumber() const
-{
-	return m_iTeamNum;
-}
-
-
 //=================================================================================================
 // TEAM HANDLING
 //=================================================================================================
 // Purpose: 
 //-----------------------------------------------------------------------------
+
+int	C_Team::GetTeamNumber( void ) const
+{
+	return m_iTeamNum;
+}
+
 char *C_Team::Get_Name( void )
 {
 	return m_szTeamname;
@@ -161,14 +155,6 @@ char *C_Team::Get_FullName( void )
 int C_Team::Get_Score( void )
 {
 	return m_nGoals;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-int C_Team::Get_Deaths( void )
-{
-	return m_iDeaths;
 }
 
 //-----------------------------------------------------------------------------

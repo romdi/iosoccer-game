@@ -1158,8 +1158,8 @@ void CSDKGameRules::State_COOLDOWN_Enter()
 {
 	//who won?
 	int winners = 0;
-	int scoreA = GetGlobalTeam( TEAM_A )->GetScore();
-	int scoreB = GetGlobalTeam( TEAM_B )->GetScore();
+	int scoreA = GetGlobalTeam( TEAM_A )->GetGoals();
+	int scoreB = GetGlobalTeam( TEAM_B )->GetGoals();
 	if (scoreA > scoreB)
 		winners = TEAM_A;
 	if (scoreB > scoreA)

@@ -880,7 +880,7 @@ void CBall::State_GOAL_Enter()
 
 	if (m_nTeam == LastTeam(true))
 	{
-		GetGlobalTeam(LastOppTeam(true))->AddScore(1);
+		GetGlobalTeam(LastOppTeam(true))->AddGoal();
 		SendMatchEvent(MATCH_EVENT_OWNGOAL, LastPl(true));
 	}
 	else
@@ -910,7 +910,7 @@ void CBall::State_GOAL_Enter()
 				pPl->AddFlag(FL_CELEB);
 		}
 
-		GetGlobalTeam(LastTeam(true))->AddScore(1);
+		GetGlobalTeam(LastTeam(true))->AddGoal();
 	}
 
 	if (m_Touches.Count() >= 2)
@@ -1434,6 +1434,7 @@ void CBall::Kicked(body_part_t bodyPart)
 
 void CBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart)
 {
+	DevMsg("Touched %0.2f\n", gpGlobals->curtime);
 	if (m_Touches.Count() > 0 && m_Touches.Tail().m_pPl == pPl && m_Touches.Tail().m_nTeam == pPl->GetTeamNumber())
 	{
 		if (sv_ball_doubletouchfouls.GetBool() && m_Touches.Tail().m_eBallState != BALL_NORMAL)

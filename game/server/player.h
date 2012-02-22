@@ -467,7 +467,6 @@ public:
 	virtual int				GetReplayEntity();
 
 	virtual void			CreateCorpse( void ) { }
-	virtual CBaseEntity		*EntSelectSpawnPoint( void );
 
 	// Vehicles
 	virtual bool			IsInAVehicle( void ) const { return false; }

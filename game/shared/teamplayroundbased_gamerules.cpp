@@ -1026,7 +1026,7 @@ bool CTeamplayRoundBasedRules::CheckWinLimit( void )
 			CTeam *pTeam = GetGlobalTeam(i);
 			Assert( pTeam );
 
-			if ( pTeam->GetScore() >= iWinLimit )
+			if ( pTeam->GetGoals() >= iWinLimit )
 			{
 				IGameEvent *event = gameeventmanager->CreateEvent( "teamplay_game_over" );
 				if ( event )
@@ -1408,7 +1408,7 @@ void CTeamplayRoundBasedRules::State_Think_RND_RUNNING( void )
 			bool bTeamsAreDrawn = true;
 			for ( int i = FIRST_GAME_TEAM; (i < GetNumberOfTeams()) && bTeamsAreDrawn; i++ )
 			{
-				int iTeamScore = GetGlobalTeam(i)->GetScore();
+				int iTeamScore = GetGlobalTeam(i)->GetGoals();
 
 				if ( iTeamScore > iDrawScoreCheck )
 				{

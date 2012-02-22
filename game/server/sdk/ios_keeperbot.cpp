@@ -73,18 +73,25 @@ void CKeeperBot::BotCenter()
 void CKeeperBot::BotAdjustPos()
 {
 	float modifier;
-	QAngle ang;
+	QAngle ang = m_oldcmd.viewangles;
 
 	if (m_nBody == MODEL_KEEPER_AND_BALL)
 	{
-		m_bShotButtonsDepressed = true;
-		VectorAngles(Vector(0, GetTeam()->m_nForward, 0), ang);
-		modifier = 0.9f;
-		m_cmd.buttons |= IN_ATTACK2;
-		m_cmd.powershot_strength = 50;
-		VectorAngles(Vector(0, GetTeam()->m_nForward, 0), ang);
-		ang[YAW] += g_IOSRand.RandomFloat(-45, 45);
-		ang[PITCH] = g_IOSRand.RandomFloat(-40, 0);
+		if (!m_bShotButtonsDepressed)
+		{
+			m_bShotButtonsDepressed = true;
+			m_flBotNextShot = gpGlobals->curtime + 1;
+		}
+		else if (gpGlobals->curtime >= m_flBotNextShot)
+		{
+			VectorAngles(Vector(0, GetTeam()->m_nForward, 0), ang);
+			modifier = 0.9f;
+			m_cmd.buttons |= IN_ATTACK2;
+			m_cmd.powershot_strength = 50;
+			VectorAngles(Vector(0, GetTeam()->m_nForward, 0), ang);
+			ang[YAW] += g_IOSRand.RandomFloat(-45, 45);
+			ang[PITCH] = g_IOSRand.RandomFloat(-40, 0);
+		}
 	}
 	else
 	{

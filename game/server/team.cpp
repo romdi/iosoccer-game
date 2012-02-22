@@ -41,7 +41,6 @@ int SendProxyArrayLength_PlayerArray( const void *pStruct, int objectID )
 IMPLEMENT_SERVERCLASS_ST_NOBASE(CTeam, DT_Team)
 	SendPropInt( SENDINFO(m_iTeamNum), 5 ),
 	SendPropInt( SENDINFO(m_nGoals), 0 ),
-	SendPropInt( SENDINFO(m_iRoundsWon), 8 ),
 	SendPropInt( SENDINFO(m_nPossession), 0 ),
 	SendPropString( SENDINFO( m_szTeamname ) ),
 
@@ -92,6 +91,7 @@ int GetNumberOfTeams( void )
 CTeam::CTeam( void )
 {
 	memset( m_szTeamname.GetForModify(), 0, sizeof(m_szTeamname) );
+	ResetStats();
 }
 
 //-----------------------------------------------------------------------------
@@ -99,7 +99,6 @@ CTeam::CTeam( void )
 //-----------------------------------------------------------------------------
 CTeam::~CTeam( void )
 {
-	m_aSpawnPoints.Purge();
 	m_aPlayers.Purge();
 }
 
@@ -135,22 +134,28 @@ bool CTeam::ShouldTransmitToPlayer( CBasePlayer* pRecipient, CBaseEntity* pEntit
 //-----------------------------------------------------------------------------
 void CTeam::Init( const char *pName, int iNumber )
 {
-	InitializeSpawnpoints();
-	InitializePlayers();
-
-	m_nGoals = 0;
-
 	Q_strncpy( m_szTeamname.GetForModify(), pName, MAX_TEAM_NAME_LENGTH );
 	m_iTeamNum = iNumber;
 }
 
-//-----------------------------------------------------------------------------
-// DATA HANDLING
-//-----------------------------------------------------------------------------
 int CTeam::GetTeamNumber( void ) const
 {
 	return m_iTeamNum;
 }
+
+int CTeam::GetOppTeamNumber( void ) const
+{
+	if (m_iTeamNum != TEAM_A && m_iTeamNum != TEAM_B)
+		return m_iTeamNum;
+
+	return m_iTeamNum == TEAM_A ? TEAM_B : TEAM_A;
+}
+
+void CTeam::SetTeamNumber(int teamNum)
+{
+	m_iTeamNum = teamNum;
+}
+
 
 //-----------------------------------------------------------------------------
 // Purpose: Get the team's name
@@ -165,88 +170,6 @@ const char *CTeam::GetName( void )
 // Purpose: Update the player's client data
 //-----------------------------------------------------------------------------
 void CTeam::UpdateClientData( CBasePlayer *pPlayer )
-{
-}
-
-//------------------------------------------------------------------------------------------------------------------
-// SPAWNPOINTS
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTeam::InitializeSpawnpoints( void )
-{
-	m_iLastSpawn = 0;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTeam::AddSpawnpoint( CTeamSpawnPoint *pSpawnpoint )
-{
-	m_aSpawnPoints.AddToTail( pSpawnpoint );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTeam::RemoveSpawnpoint( CTeamSpawnPoint *pSpawnpoint )
-{
-	for (int i = 0; i < m_aSpawnPoints.Size(); i++ )
-	{
-		if ( m_aSpawnPoints[i] == pSpawnpoint )
-		{
-			m_aSpawnPoints.Remove( i );
-			return;
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Spawn the player at one of this team's spawnpoints. Return true if successful.
-//-----------------------------------------------------------------------------
-CBaseEntity *CTeam::SpawnPlayer( CBasePlayer *pPlayer )
-{
-	if ( m_aSpawnPoints.Size() == 0 )
-		return NULL;
-
-	// Randomize the start spot
-	int iSpawn = m_iLastSpawn + random->RandomInt( 1,3 );
-	if ( iSpawn >= m_aSpawnPoints.Size() )
-		iSpawn -= m_aSpawnPoints.Size();
-	int iStartingSpawn = iSpawn;
-
-	// Now loop through the spawnpoints and pick one
-	int loopCount = 0;
-	do 
-	{
-		if ( iSpawn >= m_aSpawnPoints.Size() )
-		{
-			++loopCount;
-			iSpawn = 0;
-		}
-
-		// check if pSpot is valid, and that the player is on the right team
-		if ( (loopCount > 3) || m_aSpawnPoints[iSpawn]->IsValid( pPlayer ) )
-		{
-			// DevMsg( 1, "player: spawning at (%s)\n", STRING(m_aSpawnPoints[iSpawn]->m_iName) );
-			m_aSpawnPoints[iSpawn]->m_OnPlayerSpawn.FireOutput( pPlayer, m_aSpawnPoints[iSpawn] );
-
-			m_iLastSpawn = iSpawn;
-			return m_aSpawnPoints[iSpawn];
-		}
-
-		iSpawn++;
-	} while ( iSpawn != iStartingSpawn ); // loop if we're not back to the start
-
-	return NULL;
-}
-
-//------------------------------------------------------------------------------------------------------------------
-// PLAYERS
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTeam::InitializePlayers( void )
 {
 }
 
@@ -290,30 +213,22 @@ CBasePlayer *CTeam::GetPlayer( int iIndex )
 //-----------------------------------------------------------------------------
 // Purpose: Add / Remove score for this team
 //-----------------------------------------------------------------------------
-void CTeam::AddScore( int iScore )
+void CTeam::AddGoal()
 {
-	m_nGoals += iScore;
+	m_nGoals += 1;
 }
 
-void CTeam::SetScore( int iScore )
+void CTeam::SetGoals( int goals )
 {
-	m_nGoals = iScore;
+	m_nGoals = goals;
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: Get this team's score
 //-----------------------------------------------------------------------------
-int CTeam::GetScore( void )
+int CTeam::GetGoals( void )
 {
 	return m_nGoals;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTeam::ResetScores( void )
-{
-	SetScore(0);
 }
 
 //-----------------------------------------------------------------------------

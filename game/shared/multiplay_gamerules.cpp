@@ -940,7 +940,7 @@ bool CMultiplayRules::Init()
 
 	CBaseEntity *CMultiplayRules::GetPlayerSpawnSpot( CBasePlayer *pPlayer )
 	{
-		CBaseEntity *pentSpawnSpot = BaseClass::GetPlayerSpawnSpot( pPlayer );	
+		CBaseEntity *pentSpawnSpot = NULL;	
 
 	//!! replace this with an Event
 	/*

@@ -23,6 +23,8 @@ public:
 	void BotCenter();
 	void BotAdjustPos();
 	CSDKPlayer *FindClosestPlayerToBall();
+private:
+	float m_flBotNextShot;
 };
 
 #endif

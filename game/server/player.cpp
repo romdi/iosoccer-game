@@ -2100,10 +2100,6 @@ void CBasePlayer::AddPoints( int score, bool bAllowNegativeScore )
 
 void CBasePlayer::AddPointsToTeam( int score, bool bAllowNegativeScore )
 {
-	if ( GetTeam() )
-	{
-		GetTeam()->AddScore( score );
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -3752,104 +3748,6 @@ CBaseEntity *FindPlayerStart(const char *pszClassName)
 	return pStartFirst;
 }
 
-/*
-============
-EntSelectSpawnPoint
-
-Returns the entity to spawn at
-
-USES AND SETS GLOBAL g_pLastSpawn
-============
-*/
-CBaseEntity *CBasePlayer::EntSelectSpawnPoint()
-{
-	CBaseEntity *pSpot;
-	edict_t		*player;
-
-	player = edict();
-
-// choose a info_player_deathmatch point
-	if (g_pGameRules->IsCoOp())
-	{
-		pSpot = gEntList.FindEntityByClassname( g_pLastSpawn, "info_player_coop");
-		if ( pSpot )
-			goto ReturnSpot;
-		pSpot = gEntList.FindEntityByClassname( g_pLastSpawn, "info_player_start");
-		if ( pSpot ) 
-			goto ReturnSpot;
-	}
-	else if ( g_pGameRules->IsDeathmatch() )
-	{
-		pSpot = g_pLastSpawn;
-		// Randomize the start spot
-		for ( int i = random->RandomInt(1,5); i > 0; i-- )
-			pSpot = gEntList.FindEntityByClassname( pSpot, "info_player_deathmatch" );
-		if ( !pSpot )  // skip over the null point
-			pSpot = gEntList.FindEntityByClassname( pSpot, "info_player_deathmatch" );
-
-		CBaseEntity *pFirstSpot = pSpot;
-
-		do 
-		{
-			if ( pSpot )
-			{
-				// check if pSpot is valid
-				if ( g_pGameRules->IsSpawnPointValid( pSpot, this ) )
-				{
-					if ( pSpot->GetLocalOrigin() == vec3_origin )
-					{
-						pSpot = gEntList.FindEntityByClassname( pSpot, "info_player_deathmatch" );
-						continue;
-					}
-
-					// if so, go to pSpot
-					goto ReturnSpot;
-				}
-			}
-			// increment pSpot
-			pSpot = gEntList.FindEntityByClassname( pSpot, "info_player_deathmatch" );
-		} while ( pSpot != pFirstSpot ); // loop if we're not back to the start
-
-		// we haven't found a place to spawn yet,  so kill any guy at the first spawn point and spawn there
-		if ( pSpot )
-		{
-			//IOS removed telefrag
-			//CBaseEntity *ent = NULL;
-			//for ( CEntitySphereQuery sphere( pSpot->GetAbsOrigin(), 128 ); (ent = sphere.GetCurrentEntity()) != NULL; sphere.NextEntity() )
-			//{
-			//	// if ent is a client, kill em (unless they are ourselves)
-			//	if ( ent->IsPlayer() && !(ent->edict() == player) )
-			//		ent->TakeDamage( CTakeDamageInfo( GetContainingEntity(INDEXENT(0)), GetContainingEntity(INDEXENT(0)), 300, DMG_GENERIC ) );
-			//}
-			goto ReturnSpot;
-		}
-	}
-
-	// If startspot is set, (re)spawn there.
-	if ( !gpGlobals->startspot || !strlen(STRING(gpGlobals->startspot)))
-	{
-		pSpot = FindPlayerStart( "info_player_start" );
-		if ( pSpot )
-			goto ReturnSpot;
-	}
-	else
-	{
-		pSpot = gEntList.FindEntityByName( NULL, gpGlobals->startspot );
-		if ( pSpot )
-			goto ReturnSpot;
-	}
-
-ReturnSpot:
-	if ( !pSpot  )
-	{
-		Warning( "PutClientInServer: no info_player_start on level\n");
-		return CBaseEntity::Instance( INDEXENT( 0 ) );
-	}
-
-	g_pLastSpawn = pSpot;
-	return pSpot;
-}
-
 //-----------------------------------------------------------------------------
 // Purpose: Called the first time the player's created
 //-----------------------------------------------------------------------------
@@ -4161,10 +4059,6 @@ int CBasePlayer::Restore( IRestore &restore )
 	{
 		Msg( "No Landmark:%s\n", pSaveData->levelInfo.szLandmarkName );
 
-		// default to normal spawn
-		CBaseEntity *pSpawnSpot = EntSelectSpawnPoint();
-		SetLocalOrigin( pSpawnSpot->GetLocalOrigin() + Vector(0,0,1) );
-		SetLocalAngles( pSpawnSpot->GetLocalAngles() );
 	}
 
 	QAngle newViewAngles = pl.v_angle;
@@ -4598,94 +4492,6 @@ ImpulseCommands
 
 void CBasePlayer::ImpulseCommands( )
 {
-	trace_t	tr;
-		
-	int iImpulse = (int)m_nImpulse;
-	switch (iImpulse)
-	{
-	case 100:
-        // temporary flashlight for level designers
-        if ( FlashlightIsOn() )
-		{
-			FlashlightTurnOff();
-		}
-        else 
-		{
-			FlashlightTurnOn();
-		}
-		break;
-
-	case 200:
-		if ( sv_cheats->GetBool() )
-		{
-			CBaseCombatWeapon *pWeapon;
-
-			pWeapon = GetActiveWeapon();
-			
-			if( pWeapon->IsEffectActive( EF_NODRAW ) )
-			{
-				pWeapon->Deploy();
-			}
-			else
-			{
-				pWeapon->Holster();
-			}
-		}
-		break;
-
-	case	201:// paint decal
-		
-		if ( gpGlobals->curtime < m_flNextDecalTime )
-		{
-			// too early!
-			break;
-		}
-
-		if (!((CSDKPlayer*)this)->IsOffPitch())			//IOS
-			break;
-
-		{
-			Vector forward;
-			EyeVectors( &forward );
-			UTIL_TraceLine ( EyePosition(), 
-				EyePosition() + forward * 128, 
-				MASK_SOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, & tr);
-		}
-
-		if ( tr.fraction != 1.0 )
-		{// line hit something, so paint a decal
-			m_flNextDecalTime = gpGlobals->curtime + decalfrequency.GetFloat();
-			CSprayCan *pCan = CREATE_UNSAVED_ENTITY( CSprayCan, "spraycan" );
-			pCan->Spawn( this );
-		}
-
-		break;
-
-	case	202:// player jungle sound 
-		if ( gpGlobals->curtime < m_flNextDecalTime )
-		{
-			// too early!
-			break;
-
-		}
-
-		if (!((CSDKPlayer*)this)->IsOffPitch())			//IOS
-			break;
-		
-		EntityMessageBegin( this );
-			WRITE_BYTE( PLAY_PLAYER_JINGLE );
-		MessageEnd();
-
-		m_flNextDecalTime = gpGlobals->curtime + decalfrequency.GetFloat();
-		break;
-
-	default:
-		// check all of the cheat impulse commands now
-		CheatImpulseCommands( iImpulse );
-		break;
-	}
-	
-	m_nImpulse = 0;
 }
 
 #ifdef HL2_EPISODIC
@@ -5841,47 +5647,6 @@ void CBasePlayer::ResetAutoaim( void )
 
 void CBasePlayer::ChangeTeam( int iTeamNum, bool bAutoTeam, bool bSilent)
 {
-	if ( !GetGlobalTeam( iTeamNum ) )
-	{
-		Warning( "CBasePlayer::ChangeTeam( %d ) - invalid team index.\n", iTeamNum );
-		return;
-	}
-
-	// if this is our current team, just abort
-	if ( iTeamNum == GetTeamNumber() )
-	{
-		return;
-	}
-
-	// Immediately tell all clients that he's changing team. This has to be done
-	// first, so that all user messages that follow as a result of the team change
-	// come after this one, allowing the client to be prepared for them.
-	IGameEvent * event = gameeventmanager->CreateEvent( "player_team" );
-	if ( event )
-	{
-		event->SetInt("userid", GetUserID() );
-		event->SetInt("team", iTeamNum );
-		event->SetInt("oldteam", GetTeamNumber() );
-		event->SetInt("disconnect", IsDisconnecting());
-		event->SetInt("autoteam", bAutoTeam );
-		event->SetInt("silent", bSilent );
-		event->SetString("name", GetPlayerName() );
-
-		gameeventmanager->FireEvent( event );
-	}
-
-	// Remove him from his current team
-	if ( GetTeam() )
-	{
-		GetTeam()->RemovePlayer( this );
-	}
-
-	// Are we being added to a team?
-	if ( iTeamNum )
-	{
-		GetGlobalTeam( iTeamNum )->AddPlayer( this );
-	}
-
 	BaseClass::ChangeTeam( iTeamNum );
 }
 

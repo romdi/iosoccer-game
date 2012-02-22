@@ -307,7 +307,10 @@ CBaseEntity::CBaseEntity( bool bServerOnly )
 	m_flElasticity   = 1.0f;
 	m_flShadowCastDistance = m_flDesiredShadowCastDistance = 0;
 	SetRenderColor( 255, 255, 255, 255 );
-	m_iTeamNum = m_iInitialTeamNum = TEAM_UNASSIGNED;
+	if (dynamic_cast<CBasePlayer *>(this))
+		m_iTeamNum = m_iInitialTeamNum = TEAM_SPECTATOR;
+	else
+		m_iTeamNum = m_iInitialTeamNum = TEAM_UNASSIGNED;
 	m_nLastThinkTick = gpGlobals->tickcount;
 	m_nSimulationTick = -1;
 	SetIdentityMatrix( m_rgflCoordinateFrame );
@@ -4226,10 +4229,15 @@ int CBaseEntity::GetTeamNumber( void ) const
 //-----------------------------------------------------------------------------
 int CBaseEntity::GetOppTeamNumber( void ) const
 {
-	if (m_iTeamNum == TEAM_SPECTATOR)
-		return TEAM_SPECTATOR;
+	if (m_iTeamNum != TEAM_A || m_iTeamNum != TEAM_B)
+		return m_iTeamNum;
 
 	return m_iTeamNum == TEAM_A ? TEAM_B : TEAM_A;
+}
+
+void CBaseEntity::SetTeamNumber(int teamNum)
+{
+	m_iTeamNum = teamNum;
 }
 
 //-----------------------------------------------------------------------------

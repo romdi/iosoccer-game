@@ -50,7 +50,6 @@ public : // IGameResources intreface
 	virtual int		GetPlayerScore( int index );
 	virtual int		GetDeaths( int index );
 	virtual int		GetTeam( int index );
-	virtual int		GetScore( int index );
 	virtual int		GetHealth( int index );
 
 	//ios

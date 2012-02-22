@@ -36,26 +36,20 @@ public:
 	//-----------------------------------------------------------------------------
 	virtual void		Init( const char *pName, int iNumber );
 
+	virtual int		GetTeamNumber( void ) const;
+	virtual int		GetOppTeamNumber( void ) const;
+	virtual void	SetTeamNumber(int teamNum);
+
 	//-----------------------------------------------------------------------------
 	// Data Handling
 	//-----------------------------------------------------------------------------
-	virtual int			GetTeamNumber( void ) const;
 	virtual const char *GetName( void );
 	virtual void		UpdateClientData( CBasePlayer *pPlayer );
 	virtual bool		ShouldTransmitToPlayer( CBasePlayer* pRecipient, CBaseEntity* pEntity );
 
 	//-----------------------------------------------------------------------------
-	// Spawnpoints
-	//-----------------------------------------------------------------------------
-	virtual void InitializeSpawnpoints( void );
-	virtual void AddSpawnpoint( CTeamSpawnPoint *pSpawnpoint );
-	virtual void RemoveSpawnpoint( CTeamSpawnPoint *pSpawnpoint );
-	virtual CBaseEntity *SpawnPlayer( CBasePlayer *pPlayer );
-
-	//-----------------------------------------------------------------------------
 	// Players
 	//-----------------------------------------------------------------------------
-	virtual void InitializePlayers( void );
 	virtual void AddPlayer( CBasePlayer *pPlayer );
 	virtual void RemovePlayer( CBasePlayer *pPlayer );
 	virtual int  GetNumPlayers( void );
@@ -64,33 +58,26 @@ public:
 	//-----------------------------------------------------------------------------
 	// Scoring
 	//-----------------------------------------------------------------------------
-	virtual void AddScore( int iScore );
-	virtual void SetScore( int iScore );
-	virtual int  GetScore( void );
-	virtual void ResetScores( void );
-
-	// Round scoring
-	virtual int GetRoundsWon( void ) { return m_iRoundsWon; }
-	virtual void SetRoundsWon( int iRounds ) { m_iRoundsWon = iRounds; }
-	virtual void IncrementRoundsWon( void ) { m_iRoundsWon++; }
+	virtual void AddGoal();
+	virtual void SetGoals( int goals );
+	virtual int  GetGoals( void );
 
 	void AwardAchievement( int iAchievement );
 
 public:
-	CUtlVector< CTeamSpawnPoint * > m_aSpawnPoints;
 	CUtlVector< CBasePlayer * >		m_aPlayers;
 
 	// Data
 	CNetworkString( m_szTeamname, MAX_TEAM_NAME_LENGTH );
+	CNetworkVar( int, m_iTeamNum );
 	CNetworkVar( int, m_nGoals );
-	CNetworkVar( int, m_iRoundsWon );
 	CNetworkVar( int, m_nPossession );
 	int		m_iDeaths;
 
 	// Spawnpoints
 	int		m_iLastSpawn;		// Index of the last spawnpoint used
 
-	CNetworkVar( int, m_iTeamNum );			// Which team is this?
+	//CNetworkVar( int, m_iTeamNum );			// Which team is this?
 
 	float	m_flPossessionTime;
 

@@ -102,8 +102,6 @@ bool CSDKTeam::IsClassOnTeam( const char *pszClassName, int &iClassNum ) const
 #endif // SDK_USE_PLAYERCLASSES
 void CSDKTeam::ResetScores( void )
 {
-	SetRoundsWon(0);
-	SetScore(0);
 }
 
 //

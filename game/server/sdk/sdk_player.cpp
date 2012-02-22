@@ -236,6 +236,7 @@ CSDKPlayer::CSDKPlayer()
 	m_bShotButtonsDepressed = true;
 	m_nTeamToJoin = TEAM_INVALID;
 	m_flNextJoin = gpGlobals->curtime;
+	m_TeamPos = m_ShirtPos = 1;
 }
 
 
@@ -271,8 +272,6 @@ void CSDKPlayer::PreThink(void)
 	}
 
 	//UpdateSprint();
-
-	//CheckRejoin();
 
 	if (m_nTeamToJoin != TEAM_INVALID && gpGlobals->curtime >= m_flNextJoin)
 		ChangeTeam(m_nTeamToJoin);
@@ -439,13 +438,36 @@ void CSDKPlayer::ChangeTeam( int iTeamNum )
 	int iOldTeam = GetTeamNumber();
 
 	// if this is our current team, just abort
-	//if (iTeamNum == iOldTeam)
-	//	return;
-	
-	m_bTeamChanged = true;
+	if (iTeamNum == iOldTeam)
+		return;
 
-	// do the team change:
-	BaseClass::ChangeTeam( iTeamNum );
+	// Immediately tell all clients that he's changing team. This has to be done
+	// first, so that all user messages that follow as a result of the team change
+	// come after this one, allowing the client to be prepared for them.
+	IGameEvent * event = gameeventmanager->CreateEvent( "player_team" );
+	if ( event )
+	{
+		event->SetInt("userid", GetUserID() );
+		event->SetInt("team", iTeamNum );
+		event->SetInt("oldteam", GetTeamNumber() );
+		event->SetBool("disconnect", IsDisconnecting());
+		event->SetBool("autoteam", false );
+		event->SetBool("silent", false );
+		event->SetString("name", GetPlayerName() );
+		event->SetInt("teampos", GetTeamPosition());
+
+		gameeventmanager->FireEvent( event );
+	}
+
+	// Remove him from his current team
+	if ( GetTeam() )
+		GetTeam()->RemovePlayer( this );
+
+	// Are we being added to a team?
+	if ( iTeamNum )
+		GetGlobalTeam( iTeamNum )->AddPlayer( this );
+
+	SetTeamNumber(iTeamNum);
 
 	g_pPlayerResource->UpdatePlayerData();
 
@@ -653,94 +675,10 @@ void CSDKPlayer::PhysObjectWake()
 }
 void CSDKPlayer::State_WELCOME_Enter()
 {
-	// Important to set MOVETYPE_NONE or our physics object will fall while we're sitting at one of the intro cameras.
-	SetMoveType( MOVETYPE_NONE );
-	AddSolidFlags( FSOLID_NOT_SOLID );
-
-	PhysObjectSleep();
-
-	// Show info panel
-	if ( IsBot() )
-	{
-		// If they want to auto join a team for debugging, pretend they clicked the button.
-		CCommand args;
-		args.Tokenize( "joingame" );
-		ClientCommand( args );
-	}
-	else
-	{
-		const ConVar *hostname = cvar->FindVar( "hostname" );
-		const char *title = (hostname) ? hostname->GetString() : "MESSAGE OF THE DAY";
-
-		// open info panel on client showing MOTD:
-		KeyValues *data = new KeyValues("data");
-		data->SetString( "title", title );		// info panel title
-		data->SetString( "type", "1" );			// show userdata from stringtable entry
-		data->SetString( "msg",	"motd" );		// use this stringtable entry
-		data->SetString( "cmd", "joingame" );// exec this command if panel closed
-
-		ShowViewPortPanel( PANEL_INFO, true, data );
-
-		data->deleteThis();
-	}	
-}
-
-void CSDKPlayer::MoveToNextIntroCamera()
-{
-	m_pIntroCamera = gEntList.FindEntityByClassname( m_pIntroCamera, "point_viewcontrol" );
-
-	// if m_pIntroCamera is NULL we just were at end of list, start searching from start again
-	if(!m_pIntroCamera)
-		m_pIntroCamera = gEntList.FindEntityByClassname(m_pIntroCamera, "point_viewcontrol");
-
-	// find the target
-	CBaseEntity *Target = NULL;
-	
-	if( m_pIntroCamera )
-	{
-		Target = gEntList.FindEntityByName( NULL, STRING(m_pIntroCamera->m_target) );
-	}
-
-	// if we still couldn't find a camera, goto T spawn
-	if(!m_pIntroCamera)
-		m_pIntroCamera = gEntList.FindEntityByClassname(m_pIntroCamera, "info_player_terrorist");
-
-	SetViewOffset( vec3_origin );	// no view offset
-	UTIL_SetSize( this, vec3_origin, vec3_origin ); // no bbox
-
-	if( !Target ) //if there are no cameras(or the camera has no target, find a spawn point and black out the screen
-	{
-		if ( m_pIntroCamera.IsValid() )
-			SetAbsOrigin( m_pIntroCamera->GetAbsOrigin() + VEC_VIEW );
-
-		SetAbsAngles( QAngle( 0, 0, 0 ) );
-		
-		m_pIntroCamera = NULL;  // never update again
-		return;
-	}
-	
-
-	Vector vCamera = Target->GetAbsOrigin() - m_pIntroCamera->GetAbsOrigin();
-	Vector vIntroCamera = m_pIntroCamera->GetAbsOrigin();
-	
-	VectorNormalize( vCamera );
-		
-	QAngle CamAngles;
-	VectorAngles( vCamera, CamAngles );
-
-	SetAbsOrigin( vIntroCamera );
-	SetAbsAngles( CamAngles );
-	SnapEyeAngles( CamAngles );
-	m_fIntroCamTime = gpGlobals->curtime + 6;
 }
 
 void CSDKPlayer::State_WELCOME_PreThink()
 {
-	// Update whatever intro camera it's at.
-	if( m_pIntroCamera && (gpGlobals->curtime >= m_fIntroCamTime) )
-	{
-		MoveToNextIntroCamera();
-	}
 }
 
 void CSDKPlayer::State_OBSERVER_MODE_Enter()
@@ -850,7 +788,6 @@ void CSDKPlayer::State_ACTIVE_Enter()
 
 	AddSolidFlags( FSOLID_NOT_STANDABLE );
 	m_Shared.SetStamina( 100 );
-	m_bTeamChanged = false;
 	InitSprinting();
 	// update this counter, used to not interp players when they spawn
 	m_bSpawnInterpCounter = !m_bSpawnInterpCounter;
@@ -1173,6 +1110,8 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 			int posWanted = clamp(atoi(args[2]), 1, 11);
 			if (TeamPosFree(team, posWanted, true))
 			{
+				ChangeTeam(TEAM_SPECTATOR);
+
 				m_TeamPos = posWanted;	//teampos matches spawn points on the map 2-11
 
 				ConvertSpawnToShirt();					//shirtpos is the formation number 3,4,5,2 11,8,6,7 10,9
@@ -1189,7 +1128,6 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 				m_nTeamToJoin = team;
 				m_flNextJoin = gpGlobals->curtime + mp_joindelay.GetFloat();
 
-				ChangeTeam(TEAM_SPECTATOR);
 				//ChangeTeam(team);
 
 				//spawn at correct position
@@ -1275,14 +1213,6 @@ void CSDKPlayer::ChooseKeeperSkin(void)
 	m_nBody = MODEL_KEEPER;
 }
 
-void CSDKPlayer::ChooseModel(void)
-{
-	char *model = "models/player/player.mdl";
-	PrecacheModel(model);
-	SetModel (model);
-}
-
-
 void CSDKPlayer::ConvertSpawnToShirt(void)
 {
 	switch (m_TeamPos)
@@ -1344,243 +1274,6 @@ void CSDKPlayer::RequestTeamChange( int iTeamNum )
 
 extern CBaseEntity *FindPlayerStart(const char *pszClassName);
 extern CBaseEntity	*g_pLastSpawn;
-/*
-============
-EntSelectSpawnPoint
-
-Returns the entity to spawn at
-
-USES AND SETS GLOBAL g_pLastSpawn
-============
-*/
-CBaseEntity *CSDKPlayer::EntSelectSpawnPoint(void)
-{
-	CBaseEntity *pSpot;
-	edict_t		*player;
-	char		szSpawnName[120];
-	player = edict();
-
-												
-	if ( GetTeamNumber() == TEAM_A )
-		Q_snprintf( szSpawnName , sizeof(szSpawnName) , "info_team1_player%d", m_TeamPos );
-	else
-		Q_snprintf( szSpawnName , sizeof(szSpawnName) , "info_team2_player%d", m_TeamPos );
-
-	pSpot = FindPlayerStart(szSpawnName);
-
-	if ( !pSpot  )
-	{
-		pSpot = BaseClass::EntSelectSpawnPoint();
-	}
-
-	g_pLastSpawn = pSpot;
-	return pSpot;
-}
-
-
-void CSDKPlayer::CheckRejoin(void)
-{
-	if (m_RejoinTime && m_RejoinTime < gpGlobals->curtime)
-	{
-		//show menu again
-		KeyValues *data = new KeyValues("data");
-		data->SetString("team1", GetGlobalTeam( TEAM_A )->GetName());
-		data->SetString("team2", GetGlobalTeam( TEAM_B )->GetName());
-		ShowViewPortPanel( PANEL_TEAM, true, data );		//ios - send team names in data?
-		m_RejoinTime = 0;
-	}
-}
-
-void CSDKPlayer::CommitSuicide( bool bExplode /*= false*/, bool bForce /*= false*/ )
-{
-	State_Transition(STATE_OBSERVER_MODE);
-	/*
-	int teamNumber = GetTeamNumber();
-	int teamPos = m_TeamPos;
-	bool isBot = IsBot();
-
-	if (GetTeamNumber()==TEAM_SPECTATOR)
-	{
-		m_RejoinTime = gpGlobals->curtime + 3;
-		ChangeTeam( TEAM_UNASSIGNED );
-		m_TeamPos = -1;
-		return;
-	}
-
-	if( !IsAlive() )
-		return;
-		
-	// prevent suiciding too often
-	if ( m_fNextSuicideTime > gpGlobals->curtime )
-		return;
-
-	// don't let them suicide for 5 seconds after suiciding
-	m_fNextSuicideTime = gpGlobals->curtime + 5;  
-
-	m_RejoinTime = gpGlobals->curtime + 3;
-
-	ChangeTeam( TEAM_UNASSIGNED );
-	m_TeamPos = -1;
-
-	//check all balls for interaction with this player
-	CBall	*pBall = GetBall(NULL);
-	while (pBall)
-	{
-		if (pBall->m_BallShieldPlayer == this)		//remove ball shield
-		{
-			pBall->ballStatusTime = 0;
-			pBall->ShieldOff();
-		}
-
-		if (pBall->m_Foulee == this)
-			pBall->m_Foulee = NULL;
-
-		if (pBall->m_KeeperCarrying == this)
-			pBall->DropBall();
-
-		pBall = GetBall(pBall);
-	}
-	*/
-	if (!IsBot() && m_TeamPos == 1 && botkeepers.GetBool())
-	{
-		//RomD: Add bot keeper if killed player was a keeper
-		BotPutInServer(false, GetTeamNumber() == TEAM_A ? 1 : 2); 
-	}
-}
-
-/////////////////////////////////////////////////////////////////////////////
-//slidetackle - not really related to Duck (which is in gamemovement.cpp)
-//
-void CSDKPlayer::Duck(void)
-{
-}
-
-/////////////////////////////////////////
-//
-// Choose anim depending on dir of tackle.
-//	return true = from front or side = legal
-//  return false = from behind
-bool CSDKPlayer::ApplyTackledAnim(CSDKPlayer *pTackled)
-{
-	Vector vForward;
-	AngleVectors (pTackled->EyeAngles(), &vForward);
-	Vector vTackleDir = (pTackled->GetAbsOrigin() - GetAbsOrigin());
-	VectorNormalize(vTackleDir);
-	bool bLegalTackle = true;
-
-	float fDot = DotProduct (vForward, vTackleDir);
-
-	if (fDot > 0.0f)
-	{
-		pTackled->DoAnimationEvent(PLAYERANIMEVENT_TACKLED_FORWARD);		//send the event
-		SetAnimation (PLAYER_TACKLED_FORWARD);								//freezes movement
-	}
-	else
-	{
-		pTackled->DoAnimationEvent(PLAYERANIMEVENT_TACKLED_BACKWARD);
-		SetAnimation (PLAYER_TACKLED_BACKWARD);
-	}
-
-	if (fDot > 0.8f)														//if it's quite behind then illegal.
-		bLegalTackle = false;
-
-	return bLegalTackle;
-}
-
-/////////////////////////////////////////
-//
-// IOS give red card to this player
-//
-void CSDKPlayer::GiveRedCard(void)
-{
-	float t = redcardtime.GetFloat();							//time to keep player out, 0=disable
-
-	m_RedCards++;												//inc
-
-	if (t)
-	{
-		CommitSuicide();										//this gives a default rejoin of 3
-		m_RejoinTime = gpGlobals->curtime + (t * m_RedCards);	//this makes it longer
-	}
-}
-
-
-////////////////////////////////////////////////
-//
-CSDKPlayer	*CSDKPlayer::FindNearestSlideTarget(void)
-{
-	CBaseEntity *pTarget = NULL;
-	CBaseEntity *pClosest = NULL;
-	Vector		vecLOS;
-	float flMaxDot = VIEW_FIELD_WIDE;
-	float flDot;
-	Vector	vForwardUs;
-	AngleVectors (EyeAngles(),	&vForwardUs);
-	
-	while ((pTarget = gEntList.FindEntityInSphere( pTarget, GetAbsOrigin(), 64 )) != NULL)
-	{
-		if (pTarget->IsPlayer() && IsOnPitch()) 
-		{
-			vecLOS = pTarget->GetAbsOrigin() - GetAbsOrigin();
-			vecLOS.z = 0.0f;		//remove the UP
-			VectorNormalize(vecLOS);
-			if (vecLOS.x==0.0f && vecLOS.y==0.0f)
-				continue;
-			flDot = DotProduct (vecLOS, vForwardUs);
-			if (flDot > flMaxDot)
-			{  
-				flMaxDot = flDot;	//find nearest thing in view (using dist means not neccessarily the most direct onfront)
-         		pClosest = pTarget;
-			}
-		}
-	}
-	return (CSDKPlayer*)pClosest;
-}
-
-////////////////////////////////////////////////
-//
-bool CSDKPlayer::IsOnPitch(void)
-{
-	CBaseEntity *pSpotTL=NULL;
-	CBaseEntity *pSpotBR=NULL;
-
-	pSpotTL = gEntList.FindEntityByClassname( NULL, "info_team1_corner0" );
-	pSpotBR  = gEntList.FindEntityByClassname( NULL, "info_team2_corner1" );
-
-	if (pSpotTL==NULL || pSpotBR==NULL)
-		return true;     //daft mapper didn't put corner flags in the map
-
-	if (GetAbsOrigin().x > pSpotTL->GetAbsOrigin().x &&
-		GetAbsOrigin().x < pSpotBR->GetAbsOrigin().x &&
-		GetAbsOrigin().y < pSpotTL->GetAbsOrigin().y &&
-		GetAbsOrigin().y > pSpotBR->GetAbsOrigin().y)
-		return true;
-	else
-		return false;
-}
-
-//paint decal check. OPPOSITE and more strict than IsPlayerOnPitch
-bool CSDKPlayer::IsOffPitch(void)
-{
-	CBaseEntity *pSpotTL=NULL;
-	CBaseEntity *pSpotBR=NULL;
-
-	//use the player corener pos to get a safe border around the pitch
-	pSpotTL = gEntList.FindEntityByClassname( NULL, "info_team1_corner_player0" );
-	pSpotBR  = gEntList.FindEntityByClassname( NULL, "info_team2_corner_player1" );
-
-	//cant spray at all on maps without off-pitch areas. ie always on pitch
-	if (pSpotTL==NULL || pSpotBR==NULL)
-		return false;
-
-	if (GetAbsOrigin().x > pSpotTL->GetAbsOrigin().x &&
-		GetAbsOrigin().x < pSpotBR->GetAbsOrigin().x &&
-		GetAbsOrigin().y < pSpotTL->GetAbsOrigin().y &&
-		GetAbsOrigin().y > pSpotBR->GetAbsOrigin().y)
-		return false;	//dont spray on pitch area
-	else
-		return true;	//ok spray around edge
-}
 
 //-----------------------------------------------------------------------------
 // The ball doesnt get every collision, so try player - for dribbling
@@ -1603,26 +1296,6 @@ void CSDKPlayer::VPhysicsCollision( int index, gamevcollisionevent_t *pEvent )
 	//{
 	//	pUseEntity->AcceptInput( "Use", this, this, emptyVariant, USE_SHOOT );
 	//}
-}
-
-void CSDKPlayer::ResetMatchStats()
-{
-	m_RedCards = 0;
-	m_YellowCards = 0;
-	m_Fouls = 0;
-	m_Goals = 0;
-	m_Assists = 0;
-	m_Possession = 0;
-	m_Passes = 0;
-	m_FreeKicks = 0;
-	m_Penalties = 0;
-	m_Corners = 0;
-	m_ThrowIns = 0;
-	m_KeeperSaves = 0;
-	m_GoalKicks = 0;
-	m_flPossessionTime = 0.0f;
-
-	ResetFragCount();
 }
 
 Vector CSDKPlayer::EyeDirection2D( void )

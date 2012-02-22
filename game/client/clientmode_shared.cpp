@@ -32,6 +32,7 @@
 #include "achievementmgr.h"
 #include "c_playerresource.h"
 #include <vgui/ILocalize.h>
+#include "sdk_gamerules.h"
 #if defined( _X360 )
 #include "xbox/xbox_console.h"
 #endif
@@ -797,8 +798,12 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 			return;
 
 		int team = event->GetInt( "team" );
-		bool bAutoTeamed = event->GetInt( "autoteam", false );
-		bool bSilent = event->GetInt( "silent", false );
+
+		if (team == TEAM_UNASSIGNED)
+			return;
+
+		bool bAutoTeamed = event->GetBool( "autoteam", false );
+		bool bSilent = event->GetBool( "silent", false );
 
 		const char *pszName = event->GetString( "name" );
 		if ( PlayerNameNotSetYet( pszName ) )
@@ -829,7 +834,24 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 				}
 				else
 				{
-					g_pVGuiLocalize->ConstructString( wszLocalized, sizeof( wszLocalized ), g_pVGuiLocalize->Find( "#game_player_joined_team" ), 2, wszPlayerName, wszTeam );
+					wchar_t wszTeamPos[4];
+					g_pVGuiLocalize->ConvertANSIToUnicode(g_szPosNames[event->GetInt("teampos") - 1], wszTeamPos, sizeof(wszTeamPos));
+
+					if (team == TEAM_A || team == TEAM_B)
+						g_pVGuiLocalize->ConstructString( wszLocalized, sizeof( wszLocalized ), g_pVGuiLocalize->Find( "#game_player_joined_team" ), 3, wszPlayerName, wszTeam, wszTeamPos );
+					else
+					{
+						int oldteam = event->GetInt("oldteam");
+
+						if (oldteam == TEAM_A || oldteam == TEAM_B)
+						{
+							wchar_t wszOldTeam[64];
+							g_pVGuiLocalize->ConvertANSIToUnicode( GetGlobalTeam(oldteam)->Get_Name(), wszOldTeam, sizeof(wszOldTeam) );
+							g_pVGuiLocalize->ConstructString( wszLocalized, sizeof( wszLocalized ), g_pVGuiLocalize->Find( "#game_player_left_team" ), 3, wszPlayerName, wszOldTeam, wszTeamPos );
+						}
+						else
+							g_pVGuiLocalize->ConstructString( wszLocalized, sizeof( wszLocalized ), g_pVGuiLocalize->Find( "#game_player_joined_spectator" ), 1, wszPlayerName );
+					}
 				}
 
 				char szLocalized[100];

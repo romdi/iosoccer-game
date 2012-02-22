@@ -31,10 +31,10 @@ public:
 	virtual void	PreDataUpdate( DataUpdateType_t updateType );
 
 	// Data Handling
+	virtual int		GetTeamNumber( void ) const;
 	virtual char	*Get_Name( void );
 	virtual char	*Get_FullName( void );
 	virtual int		Get_Score( void );
-	virtual int		Get_Deaths( void );
 	virtual int		Get_Ping( void );
 	virtual char	*GetScoreTag( void ) { return 0; }		//ios base
 
@@ -47,10 +47,6 @@ public:
 
 	// for shared code, use the same function name
 	virtual int		GetNumPlayers( void ) { return Get_Number_Players(); }
-
-	int		GetTeamNumber() const;
-
-	int		GetRoundsWon(void) { return m_iRoundsWon; }
 
 	void	RemoveAllPlayers();
 
@@ -65,17 +61,16 @@ public:
 
 	// Data received from the server
 	CUtlVector< int > m_aPlayers;
+	int		m_iTeamNum;
 	char	m_szTeamname[ MAX_TEAM_NAME_LENGTH ];
 	char	m_szFullName[MAX_TEAM_NAME_LENGTH];
 	int		m_nGoals;
-	int		m_iRoundsWon;
 	int		m_nPossession;
 
 	// Data for the scoreboard
-	int		m_iDeaths;
 	int		m_iPing;
 	int		m_iPacketloss;
-	int		m_iTeamNum;
+	//int		m_iTeamNum;
 
 	Vector	m_vCornerLeft;
 	Vector	m_vCornerRight;

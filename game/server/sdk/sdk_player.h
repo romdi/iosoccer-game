@@ -166,8 +166,6 @@ private:
 	void State_PICKINGTEAM_Enter();
 	void State_PICKINGCLASS_Enter();
 
-public: //Tony; I had this private but I need it public for initial spawns.
-	void MoveToNextIntroCamera();
 private:
 
 	void State_ACTIVE_Enter();
@@ -190,7 +188,6 @@ private:
 
 	CSDKPlayerStateInfo *m_pCurStateInfo;			// This can be NULL if no state info is defined for m_iPlayerState.
 	bool HandleCommand_JoinTeam( int iTeam );
-	bool	m_bTeamChanged;		//have we changed teams this spawn? Used to enforce one team switch per death rule
 
 #if defined ( SDK_USE_PLAYERCLASSES )
 	bool HandleCommand_JoinClass( int iClass );
@@ -213,15 +210,12 @@ private:
 	// from CBasePlayer
 	void			SetupVisibility( CBaseEntity *pViewEntity, unsigned char *pvs, int pvssize );
 
-	CBaseEntity*	EntSelectSpawnPoint();
 	bool			CanMove( void ) const;
 
 	virtual void	SharedSpawn();
 
 	virtual const Vector	GetPlayerMins( void ) const; // uses local player
 	virtual const Vector	GetPlayerMaxs( void ) const; // uses local player
-
-	virtual void		CommitSuicide( bool bExplode = false, bool bForce = false );
 
 private:
 	// Last usercmd we shot a bullet on.
@@ -263,12 +257,9 @@ public:
 
 	void				RequestTeamChange( int iTeamNum );
 	void				ConvertSpawnToShirt(void);
-	void				ChooseModel(void);
 	void				ChoosePlayerSkin(void);
 	void				ChooseKeeperSkin(void);
 	bool				TeamPosFree(int team, int pos, bool kickBotKeeper = false);
-	void				CheckRejoin(void);
-	//virtual void		CommitSuicide();
 
 	int					m_TeamPos;								//position on pitch
 	int					m_ShirtPos;								//converted spawn point numbers into shirt numbers
@@ -320,19 +311,10 @@ public:
 	char				*GetCountryName() { return m_szCountryName; }
 	void				SetCountryName(const char *name) { Q_strncpy(m_szCountryName, name, sizeof(m_szCountryName)); m_bCountryNameChanged = true; } 
 
-	void				ResetMatchStats();
-
-	virtual void		Duck( void );
-
 	int					m_PlayerAnim;
 	float				m_NextSlideTime;
 	float				m_TackleTime;
-	bool				IsOnPitch(void);
-	bool				IsOffPitch(void);
 	bool				m_bTackleDone;
-	CSDKPlayer*			FindNearestSlideTarget(void);
-	void				GiveRedCard(void);
-	bool				ApplyTackledAnim(CSDKPlayer *pTackled);
 	bool				m_bSlideKick;
 
 	int					m_nBaseSkin;					//keeper skin before ball offset added

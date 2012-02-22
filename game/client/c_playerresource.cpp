@@ -274,18 +274,6 @@ const char *C_PlayerResource::GetScoreTag(int index)
 	return team->GetScoreTag();
 }
 
-
-int C_PlayerResource::GetScore(int index )
-{
-	//IOS Scoreboard
-    if ( !IsConnected( index ) )
-        return 0;
-
-    return m_nGoals[index];
-
-	//return 666;
-}
-
 bool C_PlayerResource::IsLocalPlayer(int index)
 {
 	C_BasePlayer *pPlayer =	C_BasePlayer::GetLocalPlayer();
