@@ -945,10 +945,6 @@ void C_SDKPlayer::AvoidPlayers( CUserCmd *pCmd )
 	if ( IsAlive() == false )
 		return;
 
-	C_SDKTeam *pTeam = ( C_SDKTeam * )GetTeam();
-	if ( !pTeam )
-		return;
-
 	// Up vector.
 	static Vector vecUp( 0.0f, 0.0f, 1.0f );
 
@@ -968,9 +964,10 @@ void C_SDKPlayer::AvoidPlayers( CUserCmd *pCmd )
 	float flAvoidRadius = 0.0f;
 
 	Vector vecAvoidCenter, vecAvoidMin, vecAvoidMax;
-	for ( int i = 0; i < pTeam->GetNumPlayers(); ++i )
+	for ( int i = 1; i <= gpGlobals->maxClients; ++i )
 	{
-		C_SDKPlayer *pAvoidPlayer = static_cast< C_SDKPlayer * >( pTeam->GetPlayer( i ) );
+		//C_SDKPlayer *pAvoidPlayer = static_cast< C_SDKPlayer * >( pTeam->GetPlayer( i ) );
+		C_SDKPlayer *pAvoidPlayer = static_cast< C_SDKPlayer * >( UTIL_PlayerByIndex(i) );
 		if ( pAvoidPlayer == NULL )
 			continue;
 		// Is the avoid player me?
@@ -1138,7 +1135,7 @@ bool C_SDKPlayer::CreateMove( float flInputSampleTime, CUserCmd *pCmd )
 
 	BaseClass::CreateMove( flInputSampleTime, pCmd );
 
-	//AvoidPlayers( pCmd );
+	AvoidPlayers( pCmd );
 	//AvoidPhysicsProps(pCmd);
 
 	return true;

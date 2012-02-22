@@ -213,8 +213,7 @@ private:
 
 	CSDKPlayer		*FindNearestPlayer(int team = TEAM_INVALID, int posFlags = FL_POS_FIELD, bool checkIfShooting = false, int ignoredPlayerBits = 0);
 	bool			IsPlayerCloseEnough(CSDKPlayer *pPl, bool isKeeper = false);
-	bool			CanKeeperCatch(body_part_t bodyPart);
-	body_part_t		GetBodyPart(Vector pos, CSDKPlayer *pPl);
+	body_part_t		GetBodyPart();
 	bool			DoBodyPartAction();
 	bool			DoGroundShot();
 	bool			DoVolleyShot();
