@@ -66,13 +66,14 @@ END_SEND_TABLE()
 
 static CTEPlayerAnimEvent g_TEPlayerAnimEvent( "PlayerAnimEvent" );
 
-void TE_PlayerAnimEvent( CBasePlayer *pPlayer, PlayerAnimEvent_t event, int nData )
+void TE_PlayerAnimEvent( CBasePlayer *pPlayer, PlayerAnimEvent_t event, bool sendToPlayerClient, int nData )
 {
 	CPVSFilter filter( (const Vector&)pPlayer->EyePosition() );
 
 	//Tony; pull the player who is doing it out of the recipientlist, this is predicted!!
 	//ios: this may come from the ball -> not predicted
-	//filter.RemoveRecipient( pPlayer );
+	if (!sendToPlayerClient)
+		filter.RemoveRecipient( pPlayer );
 
 	g_TEPlayerAnimEvent.m_hPlayer = pPlayer;
 	g_TEPlayerAnimEvent.m_iEvent = event;
@@ -238,6 +239,7 @@ CSDKPlayer::CSDKPlayer()
 	m_flNextJoin = gpGlobals->curtime;
 	m_TeamPos = m_ShirtPos = 1;
 	m_pPlayerBall = NULL;
+	m_flHoldEndTime = -1;
 }
 
 
@@ -258,21 +260,13 @@ void CSDKPlayer::PreThink(void)
 {
 	State_PreThink();
 
-	// Riding a vehicle?
-	if ( IsInAVehicle() )	
-	{
-		// make sure we update the client, check for timed damage and update suit even if we are in a vehicle
-		UpdateClientData();		
-		CheckTimeBasedDamage();
-
-		// Allow the suit to recharge when in the vehicle.
-		CheckSuitUpdate();
-		
-		WaterMove();	
-		return;
-	}
-
 	//UpdateSprint();
+
+	if (m_flHoldEndTime != -1 && gpGlobals->curtime >= m_flHoldEndTime)
+	{
+		RemoveFlag(FL_ATCONTROLS | FL_FROZEN);
+		m_flHoldEndTime = -1;
+	}
 
 	if (m_nTeamToJoin != TEAM_INVALID && gpGlobals->curtime >= m_flNextJoin)
 		ChangeTeam(m_nTeamToJoin);
@@ -528,36 +522,14 @@ void CSDKPlayer::InitialSpawn( void )
 		State_Enter(STATE_ACTIVE);*/
 }
 
-void CSDKPlayer::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
+void CSDKPlayer::DoAnimationEvent( PlayerAnimEvent_t event, bool sendToPlayerClient, int nData )
 {
 	m_PlayerAnimState->DoAnimationEvent( event, nData );
-	TE_PlayerAnimEvent( this, event, nData );	// Send to any clients who can see this guy.
+	TE_PlayerAnimEvent( this, event, sendToPlayerClient, nData );	// Send to any clients who can see this guy.
 }
 
 void CSDKPlayer::CheatImpulseCommands( int iImpulse )
 {
-	return; //ios
-
-	if ( !sv_cheats->GetBool() )
-	{
-		return;
-	}
-
-	if ( iImpulse != 101 )
-	{
-		BaseClass::CheatImpulseCommands( iImpulse );
-		return ;
-	}
-	gEvilImpulse101 = true;
-
-	EquipSuit();
-	
-	if ( GetHealth() < 100 )
-	{
-		TakeHealth( 25, DMG_GENERIC );
-	}
-
-	gEvilImpulse101		= false;
 }
 
 #if defined ( SDK_USE_PRONE )
@@ -845,242 +817,6 @@ bool CSDKPlayer::WantsLagCompensationOnEntity( const CBasePlayer *pPlayer, const
 // Set the activity based on an event or current state
 void CSDKPlayer::SetAnimation( PLAYER_ANIM playerAnim )
 {
-	int animDesired;
-	char szAnim[64];
-
-	float speed;
-
-
-	//ios - if hold anim playing just return
-	if (m_HoldAnimTime > gpGlobals->curtime)
-		return;
-	else if (m_HoldAnimTime != -1)						//-1 means something else is using fl_atcontrols
-		RemoveFlag(FL_ATCONTROLS);
-
-
-	/*if (m_KickDelay > gpGlobals->curtime)
-		return;
-	else if (m_TeamPos>=1 && m_TeamPos<=11)
-		RemoveFlag(FL_FROZEN);*/
-
-
-	speed = GetAbsVelocity().Length2D();
-
-	//if (GetFlags() & (FL_FROZEN|FL_ATCONTROLS))
-	if (GetFlags() & (FL_FROZEN))
-	{
-		speed = 0;
-		playerAnim = PLAYER_IDLE;
-	}
-
-	Activity idealActivity = ACT_WALK;// TEMP!!!!!
-
-	// This could stand to be redone. Why is playerAnim abstracted from activity? (sjb)
-	if (playerAnim == PLAYER_JUMP)
-	{
-		idealActivity = ACT_HOP;
-	}
-	else if (playerAnim == PLAYER_DIVE_LEFT)
-	{
-		idealActivity = ACT_ROLL_LEFT;
-	}
-	else if (playerAnim == PLAYER_DIVE_RIGHT)
-	{
-		idealActivity = ACT_ROLL_RIGHT;
-	}
-	else if (playerAnim == PLAYER_SUPERJUMP)
-	{
-		idealActivity = ACT_LEAP;
-	}
-	else if (playerAnim == PLAYER_DIE)
-	{
-		if ( m_lifeState == LIFE_ALIVE )
-		{
-			idealActivity = GetDeathActivity();
-		}
-	}
-	else if (playerAnim == PLAYER_ATTACK1)
-	{
-		if ( m_Activity == ACT_HOVER	|| 
-			 m_Activity == ACT_SWIM		||
-			 m_Activity == ACT_HOP		||
-			 m_Activity == ACT_LEAP		||
-			 m_Activity == ACT_DIESIMPLE )
-		{
-			idealActivity = m_Activity;
-		}
-		else
-		{
-			idealActivity = ACT_RANGE_ATTACK1;
-		}
-	}
-	else if (playerAnim == PLAYER_IDLE || playerAnim == PLAYER_WALK)
-	{
-		if ( !( GetFlags() & FL_ONGROUND ) && (m_Activity == ACT_HOP || m_Activity == ACT_LEAP) )	// Still jumping
-		{
-			idealActivity = m_Activity;
-		}
-		else if ( GetWaterLevel() > 1 )
-		{
-			if ( speed == 0 )
-				idealActivity = ACT_HOVER;
-			else
-				idealActivity = ACT_SWIM;
-		}
-		else
-		{
-			//ios idealActivity = ACT_WALK;
-			idealActivity = ACT_IOS_JUMPCELEB;
-		}
-	}
-	else if (playerAnim == PLAYER_VOLLEY)
-	{
-		if (m_HoldAnimTime < gpGlobals->curtime)
-		{
-			m_HoldAnimTime = gpGlobals->curtime + 0.6f;
-			AddFlag(FL_ATCONTROLS);
-			SetAbsVelocity( vec3_origin );
-		}
-	}
-	else if (playerAnim == PLAYER_HEELKICK)
-	{
-		if (m_HoldAnimTime < gpGlobals->curtime)
-		{
-			m_HoldAnimTime = gpGlobals->curtime + 0.5333f;
-			AddFlag(FL_ATCONTROLS);
-			SetAbsVelocity( vec3_origin );
-		}
-	}
-	else if (playerAnim == PLAYER_THROWIN)
-	{
-		//hold arms up - timer is held on by throwin code in ball.cpp
-	}
-	else if (playerAnim == PLAYER_THROW)
-	{
-		//actually throw the ball from a throwin
-		if (m_HoldAnimTime < gpGlobals->curtime)
-		{
-			m_HoldAnimTime = gpGlobals->curtime + 0.5333f;
-			AddFlag(FL_ATCONTROLS);
-			SetAbsVelocity( vec3_origin );
-		}
-	}
-	else if (playerAnim == PLAYER_SLIDE)
-	{
-		//slide tackle hold
-		if (m_HoldAnimTime < gpGlobals->curtime)
-		{
-			m_HoldAnimTime = gpGlobals->curtime + 1.7f;
-		}
-	}
-	else if (playerAnim == PLAYER_TACKLED_FORWARD)
-	{
-		if (m_HoldAnimTime < gpGlobals->curtime)
-		{
-			m_HoldAnimTime = gpGlobals->curtime + 3.0f;
-			AddFlag(FL_ATCONTROLS);
-			SetAbsVelocity( vec3_origin );
-		}
-	}
-	else if (playerAnim == PLAYER_TACKLED_BACKWARD)
-	{
-		if (m_HoldAnimTime < gpGlobals->curtime)
-		{
-			m_HoldAnimTime = gpGlobals->curtime + 3.0f;
-			AddFlag(FL_ATCONTROLS);
-			SetAbsVelocity( vec3_origin );
-		}
-	}
-	else if (playerAnim == PLAYER_DIVINGHEADER)
-	{
-		if (m_HoldAnimTime < gpGlobals->curtime)
-		{
-			m_HoldAnimTime = gpGlobals->curtime + 1.5f;
-			EmitSound ("Player.DivingHeader");
-		}
-	}
-
-
-	m_PlayerAnim = playerAnim;
-	
-	if (idealActivity == ACT_RANGE_ATTACK1)
-	{
-		if ( GetFlags() & FL_DUCKING )	// crouching
-		{
-			Q_strncpy( szAnim, "crouch_shoot_" ,sizeof(szAnim));
-		}
-		else
-		{
-			Q_strncpy( szAnim, "ref_shoot_" ,sizeof(szAnim));
-		}
-		Q_strncat( szAnim, m_szAnimExtension ,sizeof(szAnim), COPY_ALL_CHARACTERS );
-		animDesired = LookupSequence( szAnim );
-		if (animDesired == -1)
-			animDesired = 0;
-
-		if ( GetSequence() != animDesired || !SequenceLoops() )
-		{
-			SetCycle( 0 );
-		}
-
-		// Tracker 24588:  In single player when firing own weapon this causes eye and punchangle to jitter
-		//if (!SequenceLoops())
-		//{
-		//	AddEffects( EF_NOINTERP );
-		//}
-
-		SetActivity( idealActivity );
-		ResetSequence( animDesired );
-	}
-	else if (idealActivity == ACT_WALK)
-	{
-		if (GetActivity() != ACT_RANGE_ATTACK1 || IsActivityFinished())
-		{
-			if ( GetFlags() & FL_DUCKING )	// crouching
-			{
-				Q_strncpy( szAnim, "crouch_aim_" ,sizeof(szAnim));
-			}
-			else
-			{
-				Q_strncpy( szAnim, "ref_aim_" ,sizeof(szAnim));
-			}
-			Q_strncat( szAnim, m_szAnimExtension,sizeof(szAnim), COPY_ALL_CHARACTERS );
-			animDesired = LookupSequence( szAnim );
-			if (animDesired == -1)
-				animDesired = 0;
-			SetActivity( ACT_WALK );
-		}
-		else
-		{
-			animDesired = GetSequence();
-		}
-	}
-	else
-	{
-		if ( GetActivity() == idealActivity)
-			return;
-	
-		SetActivity( idealActivity );
-
-		animDesired = SelectWeightedSequence( m_Activity );
-
-		// Already using the desired animation?
-		if (GetSequence() == animDesired)
-			return;
-
-		ResetSequence( animDesired );
-		SetCycle( 0 );
-		return;
-	}
-
-	// Already using the desired animation?
-	if (GetSequence() == animDesired)
-		return;
-
-	//Msg( "Set animation to %d\n", animDesired );
-	// Reset to first frame of desired animation
-	ResetSequence( animDesired );
-	SetCycle( 0 );
 }
 
 //ConVar mp_autobalance( "mp_autobalance", "1", FCVAR_REPLICATED|FCVAR_NOTIFY, "autobalance teams after a goal. blocks joining unbalanced teams" );
@@ -1430,7 +1166,6 @@ Vector CSDKPlayer::GetOffsidePos()
 
 void CSDKPlayer::ResetStats()
 {
-	m_RejoinTime = 0;
 	m_RedCards=0;
 	m_YellowCards=0;
 	m_Fouls=0;

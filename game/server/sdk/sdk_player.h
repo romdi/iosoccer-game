@@ -60,7 +60,7 @@ public:
 	static CSDKPlayer* Instance( int iEnt );
 
 	// This passes the event to the client's and server's CPlayerAnimState.
-	void DoAnimationEvent( PlayerAnimEvent_t event, int nData = 0 );
+	void DoAnimationEvent( PlayerAnimEvent_t event, bool sendToPlayerClient = false, int nData = 0 );
 
 	virtual void FlashlightTurnOn( void ) {};
 	virtual void FlashlightTurnOff( void ) {};
@@ -83,7 +83,6 @@ public:
 	virtual void TraceAttack( const CTakeDamageInfo &inputInfo, const Vector &vecDir, trace_t *ptr ) {};
 	virtual void LeaveVehicle( const Vector &vecExitPoint, const QAngle &vecExitAngles ) {};
 	
-	CWeaponSDKBase* GetActiveSDKWeapon() const { return NULL; };
 	virtual void	CreateViewModel( int viewmodelindex = 0 ) {};
 
 	virtual void	CheatImpulseCommands( int iImpulse );
@@ -212,8 +211,6 @@ private:
 	// from CBasePlayer
 	void			SetupVisibility( CBaseEntity *pViewEntity, unsigned char *pvs, int pvssize );
 
-	bool			CanMove( void ) const;
-
 	virtual void	SharedSpawn();
 
 	virtual const Vector	GetPlayerMins( void ) const; // uses local player
@@ -265,10 +262,6 @@ public:
 	
 	float				m_flNextShot;
 
-	float				m_HoldAnimTime;							//dont let player move until this expires
-
-	int					m_RejoinTime;							//delay before brining up join menu (after kill or red)
-
 	float				m_flPossessionTime;
 
 	//stats
@@ -310,7 +303,6 @@ public:
 	char				*GetCountryName() { return m_szCountryName; }
 	void				SetCountryName(const char *name) { Q_strncpy(m_szCountryName, name, sizeof(m_szCountryName)); m_bCountryNameChanged = true; } 
 
-	int					m_PlayerAnim;
 	float				m_NextSlideTime;
 	float				m_TackleTime;
 	bool				m_bTackleDone;
@@ -363,11 +355,13 @@ private:
 	bool				m_bOffside;
 	Vector				m_vOffsidePos;
 	CBall				*m_pPlayerBall;
+	float				m_flHoldEndTime;
 
 public:
 
 	void				SetPlayerBall(CBall *pPlayerBall) { m_pPlayerBall = pPlayerBall; }
 	CBall				*GetPlayerBall() { return m_pPlayerBall; }
+	void				HoldAtCurPos(float holdTime, bool freeze = false);
 };
 
 

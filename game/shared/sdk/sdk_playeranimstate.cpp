@@ -22,10 +22,6 @@
 #include "sdk_player.h"
 #endif
 
-#define SDK_RUN_SPEED				320.0f
-#define SDK_WALK_SPEED				75.0f
-#define SDK_CROUCHWALK_SPEED		110.0f
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : *pPlayer - 
@@ -38,8 +34,8 @@ CSDKPlayerAnimState* CreateSDKPlayerAnimState( CSDKPlayer *pPlayer )
 	// Setup the movement data.
 	MultiPlayerMovementData_t movementData;
 	movementData.m_flBodyYawRate = 720.0f;
-	movementData.m_flRunSpeed = SDK_RUN_SPEED;
-	movementData.m_flWalkSpeed = SDK_WALK_SPEED;
+	movementData.m_flRunSpeed = mp_runspeed.GetInt();
+	movementData.m_flWalkSpeed = mp_walkspeed.GetInt();
 	movementData.m_flSprintSpeed = -1.0f;
 
 	// Create animation state for this player.
@@ -90,11 +86,6 @@ CSDKPlayerAnimState::~CSDKPlayerAnimState()
 void CSDKPlayerAnimState::InitSDKAnimState( CSDKPlayer *pPlayer )
 {
 	m_pSDKPlayer = pPlayer;
-#if defined ( SDK_USE_PRONE )
-	m_iProneActivity = ACT_MP_STAND_TO_PRONE;
-	m_bProneTransition = false;
-	m_bProneTransitionFirstFrame = false;
-#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -102,10 +93,6 @@ void CSDKPlayerAnimState::InitSDKAnimState( CSDKPlayer *pPlayer )
 //-----------------------------------------------------------------------------
 void CSDKPlayerAnimState::ClearAnimationState( void )
 {
-#if defined ( SDK_USE_PRONE )
-	m_bProneTransition = false;
-	m_bProneTransitionFirstFrame = false;
-#endif
 	m_bFiring = false;
 	m_bReloading = false;
 	ClearAnimationLayers();
@@ -466,119 +453,6 @@ void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 		}
 	}
 }
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *idealActivity - 
-//-----------------------------------------------------------------------------
-bool CSDKPlayerAnimState::HandleSwimming( Activity &idealActivity )
-{
-	bool bInWater = BaseClass::HandleSwimming( idealActivity );
-
-	return bInWater;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *idealActivity - 
-// Output : Returns true on success, false on failure.
-//-----------------------------------------------------------------------------
-bool CSDKPlayerAnimState::HandleMoving( Activity &idealActivity )
-{
-	return BaseClass::HandleMoving( idealActivity );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *idealActivity - 
-// Output : Returns true on success, false on failure.
-//-----------------------------------------------------------------------------
-bool CSDKPlayerAnimState::HandleDucking( Activity &idealActivity )
-{
-	if ( m_pSDKPlayer->GetFlags() & FL_DUCKING )
-	{
-		if ( GetOuterXYSpeed() < MOVING_MINIMUM_SPEED )
-		{
-			idealActivity = ACT_MP_CROUCH_IDLE;		
-		}
-		else
-		{
-			idealActivity = ACT_MP_CROUCHWALK;		
-		}
-
-		return true;
-	}
-	
-	return false;
-}
-#if defined ( SDK_USE_PRONE )
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *idealActivity - 
-// Output : Returns true on success, false on failure.
-//-----------------------------------------------------------------------------
-bool CSDKPlayerAnimState::HandleProne( Activity &idealActivity )
-{
-	if ( m_pSDKPlayer->m_Shared.IsProne() )
-	{
-		if ( GetOuterXYSpeed() < MOVING_MINIMUM_SPEED )
-		{
-			idealActivity = ACT_MP_PRONE_IDLE;		
-		}
-		else
-		{
-			idealActivity = ACT_MP_PRONE_CRAWL;		
-		}
-
-		return true;
-	}
-	
-	return false;
-}
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *idealActivity - 
-// Output : Returns true on success, false on failure.
-//-----------------------------------------------------------------------------
-bool CSDKPlayerAnimState::HandleProneTransition( Activity &idealActivity )
-{
-	if ( m_bProneTransition )
-	{
-		if (m_bProneTransitionFirstFrame)
-		{
-			m_bProneTransitionFirstFrame = false;
-			RestartMainSequence();	// Reset the animation.
-		}
-
-		//Tony; check the cycle, and then stop overriding
-		if ( GetBasePlayer()->GetCycle() >= 0.99 )
-			m_bProneTransition = false;
-		else
-			idealActivity = m_iProneActivity;
-	}
-
-	return m_bProneTransition;
-}
-#endif // SDK_USE_PRONE
-
-#if defined ( SDK_USE_SPRINTING )
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *idealActivity - 
-// Output : Returns true on success, false on failure.
-//-----------------------------------------------------------------------------
-bool CSDKPlayerAnimState::HandleSprinting( Activity &idealActivity )
-{
-	if ( m_pSDKPlayer->m_Shared.IsSprinting() )
-	{
-		idealActivity = ACT_SPRINT;		
-
-		return true;
-	}
-	
-	return false;
-}
-#endif // SDK_USE_SPRINTING
-
 
 bool CSDKPlayerAnimState::HandleJumping( Activity &idealActivity )
 {
@@ -614,87 +488,10 @@ bool CSDKPlayerAnimState::HandleJumping( Activity &idealActivity )
 			}
 		}
 	}
-	//hacks - no event - this is crap - markg - ios - why cant they release an sdk where jump works...
-	//else if (!(m_pOuter->GetFlags() & FL_ONGROUND) && m_pOuter->GetAbsVelocity().z > 0.0f)
-	//{
-	//	m_bJumping = true;
-	//	m_bFirstJumpFrame = true;
-	//	m_flJumpStartTime = gpGlobals->curtime;
-	//}
 
-
-	// Are we still jumping? If so, keep playing the jump animation.
 	return m_bJumping;
 }
 
-
-/* ios original sdk
-//-----------------------------------------------------------------------------
-// Purpose: 
-bool CSDKPlayerAnimState::HandleJumping( Activity &idealActivity )
-{
-	Vector vecVelocity;
-	GetOuterAbsVelocity( vecVelocity );
-
-	if ( m_bJumping )
-	{
-		static bool bNewJump = false; //Tony; the sample dod player models that I'm using don't have the jump anims split up like tf2.
-
-		if ( m_bFirstJumpFrame )
-		{
-			m_bFirstJumpFrame = false;
-			RestartMainSequence();	// Reset the animation.
-		}
-
-		// Reset if we hit water and start swimming.
-		if ( m_pSDKPlayer->GetWaterLevel() >= WL_Waist )
-		{
-			m_bJumping = false;
-			RestartMainSequence();
-		}
-		// Don't check if he's on the ground for a sec.. sometimes the client still has the
-		// on-ground flag set right when the message comes in.
-		else if ( gpGlobals->curtime - m_flJumpStartTime > 0.2f )
-		{
-			if ( m_pSDKPlayer->GetFlags() & FL_ONGROUND )
-			{
-				m_bJumping = false;
-				RestartMainSequence();
-
-				if ( bNewJump )
-				{
-					RestartGesture( GESTURE_SLOT_JUMP, ACT_MP_JUMP_LAND );					
-				}
-			}
-		}
-
-		// if we're still jumping
-		if ( m_bJumping )
-		{
-			if ( bNewJump )
-			{
-				if ( gpGlobals->curtime - m_flJumpStartTime > 0.5 )
-				{
-					idealActivity = ACT_MP_JUMP_FLOAT;
-				}
-				else
-				{
-					idealActivity = ACT_MP_JUMP_START;
-				}
-			}
-			else
-			{
-				idealActivity = ACT_MP_JUMP;
-			}
-		}
-	}	
-
-	if ( m_bJumping )
-		return true;
-
-	return false;
-}
-*/
 //-----------------------------------------------------------------------------
 // Purpose: Overriding CMultiplayerAnimState to add prone and sprinting checks as necessary.
 // Input  :  - 
@@ -703,52 +500,10 @@ bool CSDKPlayerAnimState::HandleJumping( Activity &idealActivity )
 #ifdef CLIENT_DLL
 extern ConVar anim_showmainactivity;
 #endif
-/*
-Activity CSDKPlayerAnimState::CalcMainActivity()
-{
-	Activity idealActivity = ACT_MP_STAND_IDLE;
-
-	if ( HandleJumping( idealActivity ) || 
-#if defined ( SDK_USE_PRONE )
-		//Tony; handle these before ducking !!
-		HandleProneTransition( idealActivity ) ||
-		HandleProne( idealActivity ) ||
-#endif
-		HandleDucking( idealActivity ) || 
-		HandleSwimming( idealActivity ) || 
-		HandleDying( idealActivity ) 
-#if defined ( SDK_USE_SPRINTING )
-		|| HandleSprinting( idealActivity )
-#endif
-		)
-	{
-		// intentionally blank
-	}
-	else
-	{
-		HandleMoving( idealActivity );
-	}
-
-	ShowDebugInfo();
-
-	// Client specific.
-#ifdef CLIENT_DLL
-
-	if ( anim_showmainactivity.GetBool() )
-	{
-		DebugShowActivity( idealActivity );
-	}
-
-#endif
-
-	return idealActivity;
-}
-*/
 
 Activity CSDKPlayerAnimState::CalcMainActivity()
 {
-	//return BaseClass::CalcMainActivity();
-	
+
 	float flOuterSpeed = GetOuterXYSpeed();
 
 	CSDKPlayer	*pPlayer = dynamic_cast<CSDKPlayer*>(GetBasePlayer());
@@ -770,47 +525,31 @@ Activity CSDKPlayerAnimState::CalcMainActivity()
 	}
 	else
 	{
-		if ( pPlayer->GetFlags() & FL_DUCKING )
+		if ( flOuterSpeed > MOVING_MINIMUM_SPEED )
 		{
-			idealActivity = ACT_CROUCH;					//ios slidetackle
-			//if ( flOuterSpeed > MOVING_MINIMUM_SPEED )
-			//	idealActivity = ACT_RUN_CROUCH;
-			//else
-			//	idealActivity = ACT_CROUCHIDLE;
-		}
-		//else if ( m_pOuter->GetFlags() & FL_CARRY)			//ios - uses reload layer now
-		//{
-		//	idealActivity = ACT_IOS_CARRY;
-		//}
-		else
-		{
-			if ( flOuterSpeed > MOVING_MINIMUM_SPEED )
+			if ( flOuterSpeed > 350.0f )
 			{
-				if ( flOuterSpeed > 350.0f )
-				{
-					idealActivity = ACT_SPRINT;
-				}
-				else if ( flOuterSpeed > ARBITRARY_RUN_SPEED )
-				{
-					if (pPlayer->GetFlags() & FL_CELEB)		//now on layer
-						idealActivity = ACT_IOS_RUNCELEB;
-					else
-						idealActivity = ACT_RUN;
-				}
+				idealActivity = ACT_SPRINT;
+			}
+			else if ( flOuterSpeed > ARBITRARY_RUN_SPEED )
+			{
+				if (pPlayer->GetFlags() & FL_CELEB)		//now on layer
+					idealActivity = ACT_IOS_RUNCELEB;
 				else
-				{
-					idealActivity = ACT_WALK;
-				}
+					idealActivity = ACT_RUN;
 			}
 			else
 			{
-				idealActivity = ACT_IDLE;
+				idealActivity = ACT_WALK;
 			}
+		}
+		else
+		{
+			idealActivity = ACT_IDLE;
 		}
 
 		return idealActivity;
 	}
-
 }
 
 void CSDKPlayerAnimState::ComputeSequences( CStudioHdr *pStudioHdr )
@@ -826,46 +565,6 @@ void CSDKPlayerAnimState::ComputeSequences( CStudioHdr *pStudioHdr )
 	ComputeFireSequence(pStudioHdr);
 	ComputeReloadSequence( pStudioHdr );
 }
-
-/*
-void CSDKPlayerAnimState::ComputeIosSequence(CStudioHdr *pStudioHdr)
-{
-	#ifdef CLIENT_DLL
-	//void CSDKPlayerAnimState::UpdateLayerSequenceGeneric( CStudioHdr *pStudioHdr, int iLayer, bool &bEnabled, float &flCurCycle, int &iSequence, bool bWaitAtEnd )
-	//{
-		if ( !bEnabled )
-			return;
-
-		// Increment the fire sequence's cycle.
-		flCurCycle += m_pOuter->GetSequenceCycleRate( pStudioHdr, iSequence ) * gpGlobals->frametime;
-		if ( flCurCycle > 1 )
-		{
-			if ( bWaitAtEnd )
-			{
-				flCurCycle = 1;
-			}
-			else
-			{
-				// Not firing anymore.
-				bEnabled = false;
-				iSequence = 0;
-				return;
-			}
-		}
-
-		// Now dump the state into its animation layer.
-		C_AnimationLayer *pLayer = getbaseplayer->GetAnimOverlay( iLayer );
-
-		pLayer->m_flCycle = flCurCycle;
-		pLayer->m_nSequence = iSequence;
-
-		pLayer->m_flPlaybackRate = 1.0;
-		pLayer->m_flWeight = 1.0f;
-		pLayer->m_nOrder = iLayer;
-	//}
-#endif
-}
-*/
 
 float CSDKPlayerAnimState::GetCurrentMaxGroundSpeed()
 {

@@ -53,8 +53,6 @@ public:
 	void DoAnimationEvent( PlayerAnimEvent_t event, int nData = 0 );
 	virtual bool ShouldDraw();
 
-	CWeaponSDKBase *GetActiveSDKWeapon() const { return NULL; };
-
 	virtual C_BaseAnimating * BecomeRagdollOnClient();
 	virtual IRagdoll* GetRepresentativeRagdoll() const;
 
@@ -83,19 +81,11 @@ public:
 	
 	void InitSpeeds( void ); //Tony; called EVERY spawn on server and client after class has been chosen (if any!)
 
-//Tony; pronetodo!
-//	void CheckProneMoveSound( int groundspeed, bool onground );
-
-	// Returns true if the player is allowed to move.
-	bool CanMove() const;
-
 	// Returns true if the player is allowed to attack.
 	bool CanAttack( void ) { return false; };
 
-#if defined ( SDK_USE_SPRINTING )
 	void SetSprinting( bool bIsSprinting );
 	bool IsSprinting( void );
-#endif
 
 	CSDKPlayerShared m_Shared;
 
@@ -167,6 +157,8 @@ private:
 
 	int m_ArmorValue;
 
+	float m_flHoldEndTime;
+
 	class CSDKSoundEvent
 	{
 	public:
@@ -178,6 +170,7 @@ private:
 public:
 
 	PlayerAnimEvent_t m_ePlayerAnimEvent;
+	void				HoldAtCurPos(float holdTime, bool freeze = false);
 };
 
 

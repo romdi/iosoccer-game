@@ -46,19 +46,9 @@ public:
 
 	void	DoAnimationEvent( PlayerAnimEvent_t event, int nData = 0 );
 
-	bool	HandleMoving( Activity &idealActivity );
 	bool	HandleJumping( Activity &idealActivity );
-	bool	HandleDucking( Activity &idealActivity );
-	bool	HandleSwimming( Activity &idealActivity );
 
-#if defined ( SDK_USE_PRONE )
-	bool	HandleProne( Activity &idealActivity );
-	bool	HandleProneTransition( Activity &idealActivity );
-#endif
-
-#if defined ( SDK_USE_SPRINTING )
-	bool	HandleSprinting( Activity &idealActivity );
-#endif
+	float GetCurrentMaxGroundSpeed();
 
 	//Tony; overriding because the SDK Player models pose parameter is flipped the opposite direction
 	virtual void		ComputePoseParam_MoveYaw( CStudioHdr *pStudioHdr );
@@ -85,7 +75,6 @@ private:
 	void ComputeReloadSequence( CStudioHdr *pStudioHdr );
 	int CalcReloadLayerSequence();
 	int CalcSequenceIndex( const char *pBaseName, ... );
-	float GetCurrentMaxGroundSpeed();
 	void ClearAnimationLayers();
 
 	bool m_bFiring;						// If this is on, then it'll continue the fire animation in the fire layer

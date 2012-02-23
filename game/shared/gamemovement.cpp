@@ -1697,6 +1697,8 @@ bool CGameMovement::CheckJumpButton( void )
 
 	player->PlayStepSound( (Vector &)mv->GetAbsOrigin(), player->m_pSurfaceData, 1.0, true );
 
+	PlayerAnimEvent_t animEvent = PLAYERANIMEVENT_JUMP;
+
 	bool isKeeper;
 #ifdef CLIENT_DLL
 	isKeeper = GameResources()->GetTeamPosition(pPl->index) == 1;
@@ -1704,36 +1706,28 @@ bool CGameMovement::CheckJumpButton( void )
 	isKeeper = pPl->GetTeamPosition() == 1;
 #endif
 
-	PLAYER_ANIM anim = PLAYER_JUMP;
-	PlayerAnimEvent_t animEvent = PLAYERANIMEVENT_JUMP;
-
-	if (isKeeper && mv->m_nButtons & IN_SPEED)
+	if (isKeeper && pPl->m_nButtons & IN_SPEED)
 	{
 		MoveHelper()->StartSound( mv->GetAbsOrigin(), "Player.DiveKeeper" );
 
 		if (mv->m_nButtons & IN_MOVELEFT)
 		{
-			anim = PLAYER_DIVE_LEFT;
 			animEvent = PLAYERANIMEVENT_DIVE_LEFT;
 		}
 		else if (mv->m_nButtons & IN_MOVERIGHT)
 		{
-			anim = PLAYER_DIVE_RIGHT;
 			animEvent = PLAYERANIMEVENT_DIVE_RIGHT;
 		}
 		else if (mv->m_nButtons & IN_FORWARD)
 		{
-			anim = PLAYER_TACKLED_FORWARD;
 			animEvent = PLAYERANIMEVENT_TACKLED_FORWARD;
 		}
 		else if (mv->m_nButtons & IN_BACK)
 		{
-			anim = PLAYER_TACKLED_BACKWARD;
 			animEvent = PLAYERANIMEVENT_TACKLED_BACKWARD;
 		}
 	}
 
-	MoveHelper()->PlayerSetAnimation(anim);
 	pPl->DoAnimationEvent(animEvent);
 
 	mv->m_vecVelocity.z = sqrt(2 * sv_gravity.GetFloat() * GAMEMOVEMENT_JUMP_HEIGHT);
@@ -1780,8 +1774,9 @@ bool CGameMovement::CheckSlideButton()
 	if (mv->m_nOldButtons & IN_DUCK)
 		return false;
 
-	MoveHelper()->PlayerSetAnimation(PLAYER_SLIDE);
-	pPl->DoAnimationEvent(PLAYERANIMEVENT_SLIDE);
+	PlayerAnimEvent_t animEvent = PLAYERANIMEVENT_SLIDE;
+
+	pPl->DoAnimationEvent(animEvent);
 
 	//FinishGravity();
 

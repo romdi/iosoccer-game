@@ -44,7 +44,6 @@ public:
 
 	float m_flRunSpeed;
 	float m_flSprintSpeed;
-	float m_flProneSpeed;
 
 	int m_iArmor;
 };

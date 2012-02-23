@@ -536,7 +536,7 @@ C_SDKPlayer::C_SDKPlayer() :
 	AddVar( &m_angEyeAngles, &m_iv_angEyeAngles, LATCH_SIMULATION_VAR );
 
 	m_fNextThinkPushAway = 0.0f;
-
+	m_flHoldEndTime = -1;
 }
 
 
@@ -687,7 +687,7 @@ void C_SDKPlayer::PlayReloadEffect()
 	}
 
 	// Get the view model for our current gun.
-	CWeaponSDKBase *pWeapon = GetActiveSDKWeapon();
+	CWeaponSDKBase *pWeapon = NULL;
 	if ( !pWeapon )
 		return;
 
@@ -837,6 +837,12 @@ void C_SDKPlayer::ClientThink()
 	{
 		PerformObstaclePushaway( this );
 		m_fNextThinkPushAway =  gpGlobals->curtime + PUSHAWAY_THINK_INTERVAL;
+	}
+
+	if (m_flHoldEndTime != -1 && gpGlobals->curtime >= m_flHoldEndTime)
+	{
+		RemoveFlag(FL_ATCONTROLS | FL_FROZEN);
+		m_flHoldEndTime = -1;
 	}
 }
 

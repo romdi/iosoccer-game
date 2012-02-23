@@ -538,6 +538,7 @@ void CBall::State_Enter( ball_state_t newState )
 	m_bIgnoreTriggers = false;
 	RemoveEffects(EF_NODRAW);
 	m_pPhys->EnableCollisions(true);
+	m_pPhys->EnableMotion(true);
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++) 
 	{
@@ -545,6 +546,15 @@ void CBall::State_Enter( ball_state_t newState )
 
 		if (!CSDKPlayer::IsOnField(pPl))
 			continue;
+
+		if (pPl->GetTeamPosition() == 1)
+		{
+			if (pPl->m_nBody == MODEL_KEEPER_AND_BALL)
+			{
+				pPl->m_nBody = MODEL_KEEPER;
+				pPl->DoAnimationEvent(PLAYERANIMEVENT_CARRY_END, true);
+			}
+		}
 
 		pPl->m_bIsAtTargetPos = false;
 		pPl->RemoveFlag(FL_REMOTECONTROLLED);
@@ -652,10 +662,8 @@ void CBall::State_KICKOFF_Enter()
 		if (!CSDKPlayer::IsOnField(pPl))
 			continue;
 
-		pPl->RemoveFlag(FL_ATCONTROLS);
-		pPl->m_HoldAnimTime = -1;
-		pPl->SetAnimation(PLAYER_IDLE);
-		pPl->DoAnimationEvent(PLAYERANIMEVENT_CANCEL);
+		pPl->HoldAtCurPos(0);
+		pPl->DoAnimationEvent(PLAYERANIMEVENT_CANCEL, true);
 	}
 
 	//m_bIgnoreTriggers = false;
@@ -700,7 +708,7 @@ void CBall::State_KICKOFF_Think()
 	{
 		m_pPl->RemoveFlag(FL_REMOTECONTROLLED);
 		m_pPl->SetMoveType(MOVETYPE_WALK);
-		m_pPl->AddFlag(FL_ATCONTROLS);
+		m_pPl->HoldAtCurPos(-1);
 	}
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++) 
@@ -726,7 +734,7 @@ void CBall::State_KICKOFF_Think()
 	{
 		SetVel(m_vPlForward * 200);
 		Kicked(BODY_FEET);
-		m_pPl->RemoveFlag(FL_ATCONTROLS);
+		m_pPl->HoldAtCurPos(0);
 		State_Transition(BALL_NORMAL);
 	}
 }
@@ -764,10 +772,8 @@ void CBall::State_THROWIN_Think()
 		SetPos(Vector(m_vPos.x, m_vPos.y, SDKGameRules()->m_vKickOff.GetZ() + VEC_HULL_MAX.z + 2));
 		m_pPl->RemoveFlag(FL_REMOTECONTROLLED);
 		m_pPl->SetMoveType(MOVETYPE_WALK);
-		m_pPl->AddFlag(FL_ATCONTROLS);
-		m_pPl->m_HoldAnimTime = -1;
-		m_pPl->SetAnimation(PLAYER_THROWIN);
-		m_pPl->DoAnimationEvent(PLAYERANIMEVENT_THROWIN);
+		m_pPl->HoldAtCurPos(-1);
+		m_pPl->DoAnimationEvent(PLAYERANIMEVENT_THROWIN, true);
 		return; // Give bots time to detect FL_ATCONTROLS
 	}
 
@@ -794,9 +800,8 @@ void CBall::State_THROWIN_Think()
 		}
 
 		Kicked(BODY_HANDS);
-		m_pPl->m_HoldAnimTime = gpGlobals->curtime + 0.75f;
-		m_pPl->SetAnimation(PLAYER_THROW);
-		m_pPl->DoAnimationEvent(PLAYERANIMEVENT_THROW);
+		m_pPl->HoldAtCurPos(0.75f);
+		m_pPl->DoAnimationEvent(PLAYERANIMEVENT_THROW, true);
 
 		Vector2D dirToKickOff = Vector2D((SDKGameRules()->m_vKickOff - m_vPos).x, 0);
 		dirToKickOff.NormalizeInPlace();
@@ -1013,7 +1018,7 @@ void CBall::State_KEEPERHANDS_Think()
 
 		UpdatePossession(m_pPl);
 		m_pPl->m_nBody = MODEL_KEEPER_AND_BALL;
-		m_pPl->DoAnimationEvent(PLAYERANIMEVENT_CARRY);
+		m_pPl->DoAnimationEvent(PLAYERANIMEVENT_CARRY, true);
 		m_pPl->m_nSkin = m_pPl->m_nBaseSkin + m_nSkin;
 		SetEffects(EF_NODRAW);
 		m_pPhys->EnableCollisions(false);
@@ -1031,25 +1036,29 @@ void CBall::State_KEEPERHANDS_Think()
 
 	SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + BODY_CHEST_END) + Vector(m_vPlForward.x, m_vPlForward.y, 0) * 2 * VEC_HULL_MAX.x);
 
+	if (m_nPenBoxTeam != m_pPl->GetTeamNumber())
+	{
+		Kicked(BODY_HANDS);
+		MarkOffsidePlayers();
+		return State_Transition(BALL_NORMAL);
+	}
+
 	if (m_pPl->m_bShotButtonsDepressed && (m_pPl->m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1))) && m_pPl->m_flNextShot <= gpGlobals->curtime)
 	{
-		RemoveEffects(EF_NODRAW);
-		m_pPhys->EnableCollisions(true);
-		m_pPl->m_nBody = MODEL_KEEPER;
-		m_pPl->DoAnimationEvent(PLAYERANIMEVENT_CARRY_END);
-
 		if (m_bIsPowershot)
 		{
 			SetVel(m_vPlForward * sv_ball_powershot_strength.GetFloat() * (1 + GetPowershotModifier()) * GetPitchModifier());
+			m_pPl->DoAnimationEvent(PLAYERANIMEVENT_VOLLEY, true);
 		}
 		else
 		{
-			SetVel(m_vPlForward * sv_ball_normalshot_strength.GetFloat() * GetPitchModifier()); 
+			SetVel(m_vPlForward * sv_ball_powershot_strength.GetFloat() * (1 + GetPowershotModifier()) * GetPitchModifier());
+			m_pPl->DoAnimationEvent(PLAYERANIMEVENT_THROW, true);
 		}
 
 		Kicked(BODY_HANDS);
 		MarkOffsidePlayers();
-		State_Transition(BALL_NORMAL);
+		return State_Transition(BALL_NORMAL);
 	}
 }
 
@@ -1104,7 +1113,7 @@ body_part_t CBall::GetBodyPart()
 	float zDist = dirToBall.z;
 	float xyDist = dirToBall.Length2D();
 
-	if (m_pPl->m_PlayerAnim == PLAYER_SLIDE)
+	if (m_pPl->m_ePlayerAnimEvent == PLAYERANIMEVENT_SLIDE)
 	{
 		if (xyDist <= sv_ball_touchradius.GetFloat() * 2)
 		{
@@ -1113,18 +1122,18 @@ body_part_t CBall::GetBodyPart()
 				return BODY_FEET;
 		}
 	}
-	else if (m_pPl->m_PlayerAnim == PLAYER_DIVE_LEFT || m_pPl->m_PlayerAnim == PLAYER_DIVE_RIGHT || 
-			 m_pPl->m_PlayerAnim == PLAYER_TACKLED_FORWARD || m_pPl->m_PlayerAnim == PLAYER_TACKLED_BACKWARD)
+	else if (m_pPl->m_ePlayerAnimEvent == PLAYERANIMEVENT_DIVE_LEFT || m_pPl->m_ePlayerAnimEvent == PLAYERANIMEVENT_DIVE_RIGHT || 
+			 m_pPl->m_ePlayerAnimEvent == PLAYERANIMEVENT_TACKLED_FORWARD || m_pPl->m_ePlayerAnimEvent == PLAYERANIMEVENT_TACKLED_BACKWARD)
 	{
 		if (xyDist <= sv_ball_keepertouchradius.GetFloat() * 2)
 		{
 			Vector plDir;
-			switch (m_pPl->m_PlayerAnim)
+			switch (m_pPl->m_ePlayerAnimEvent)
 			{
-			case PLAYER_DIVE_LEFT: plDir = -m_vPlRight; break;
-			case PLAYER_DIVE_RIGHT: plDir = m_vPlRight; break;
-			case PLAYER_TACKLED_FORWARD: plDir = m_vPlForward; break;
-			case PLAYER_TACKLED_BACKWARD: plDir = -m_vPlForward; break;
+			case PLAYERANIMEVENT_DIVE_LEFT: plDir = -m_vPlRight; break;
+			case PLAYERANIMEVENT_DIVE_RIGHT: plDir = m_vPlRight; break;
+			case PLAYERANIMEVENT_TACKLED_FORWARD: plDir = m_vPlForward; break;
+			case PLAYERANIMEVENT_TACKLED_BACKWARD: plDir = -m_vPlForward; break;
 			}
 			Vector dirToBall = m_vPos - m_vPlPos;
 			dirToBall.z = 0;
@@ -1227,8 +1236,7 @@ bool CBall::DoGroundShot()
 	{
 		shotStrength = sv_ball_powershot_strength.GetFloat() * (1 + GetPowershotModifier()) * modifier;
 		EmitSound("Ball.kickhard");
-		m_pPl->SetAnimation(PLAYER_KICK);
-		m_pPl->DoAnimationEvent(PLAYERANIMEVENT_KICK);
+		m_pPl->DoAnimationEvent(PLAYERANIMEVENT_KICK, true);
 	}
 	else
 	{
@@ -1241,8 +1249,7 @@ bool CBall::DoGroundShot()
 		//else
 		//{
 		//	EmitSound("Ball.kicknormal");
-		//	m_pPl->SetAnimation(PLAYER_KICK);
-		//	m_pPl->DoAnimationEvent(PLAYERANIMEVENT_KICK);
+		//	m_pPl->DoAnimationEvent(PLAYERANIMEVENT_KICK, true);
 		//}
 	}
 
@@ -1281,8 +1288,7 @@ bool CBall::DoVolleyShot()
 	SetBallSpin();
 
 	EmitSound("Ball.kickhard");
-	m_pPl->SetAnimation(PLAYER_VOLLEY);
-	m_pPl->DoAnimationEvent(PLAYERANIMEVENT_VOLLEY);
+	m_pPl->DoAnimationEvent(PLAYERANIMEVENT_VOLLEY, true);
 
 	Kicked(BODY_FEET);
 
@@ -1305,16 +1311,14 @@ bool CBall::DoHeader()
 		SetVel(m_vPlForward * (sv_ball_powershot_strength.GetFloat() / 2.0f + m_vPlVel.Length()) * (1 + GetPowershotModifier()) * GetPitchModifier());
 		//SetVel(m_vPlForward * (sv_ball_powershot_strength.GetFloat() * 1.5f + m_vPlVel.Length()));
 		EmitSound("Ball.kickhard");
-		m_pPl->SetAnimation (PLAYER_DIVINGHEADER);
-		m_pPl->DoAnimationEvent(PLAYERANIMEVENT_DIVINGHEADER);
+		m_pPl->DoAnimationEvent(PLAYERANIMEVENT_DIVINGHEADER, true);
 		m_pPl->m_NextSlideTime = gpGlobals->curtime + 1.5f;
 	}
 	else if (m_bIsPowershot)
 	{
 		SetVel(m_vPlForward * (sv_ball_powershot_strength.GetFloat() / 2.0f + m_vPlVel.Length()) * (1 + GetPowershotModifier()) * GetPitchModifier());
 		EmitSound("Ball.kickhard");
-		m_pPl->SetAnimation (PLAYER_HEADER);
-		m_pPl->DoAnimationEvent(PLAYERANIMEVENT_HEADER);
+		m_pPl->DoAnimationEvent(PLAYERANIMEVENT_HEADER, true);
 	}
 	else
 	{
