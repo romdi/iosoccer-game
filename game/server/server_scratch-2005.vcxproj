@@ -634,6 +634,7 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "d:\games\steam\
     <ClCompile Include="sdk\ios_fieldbot.cpp" />
     <ClCompile Include="sdk\ios_keeperbot.cpp" />
     <ClCompile Include="sdk\ios_mapentities.cpp" />
+    <ClCompile Include="sdk\ios_replaymanager.cpp" />
     <ClCompile Include="sendproxy.cpp" />
     <ClCompile Include="..\shared\sequence_Transitioner.cpp" />
     <ClCompile Include="..\..\public\server_class.cpp">
@@ -1056,6 +1057,7 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "d:\games\steam\
     <ClInclude Include="sdk\ios_fieldbot.h" />
     <ClInclude Include="sdk\ios_keeperbot.h" />
     <ClInclude Include="sdk\ios_mapentities.h" />
+    <ClInclude Include="sdk\ios_replaymanager.h" />
     <ClInclude Include="ServerNetworkProperty.h" />
     <ClInclude Include="..\..\public\shattersurfacetypes.h" />
     <ClInclude Include="..\shared\sheetsimulator.h" />

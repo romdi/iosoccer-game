@@ -1416,6 +1416,9 @@
     <ClCompile Include="sdk\ios_bot.cpp">
       <Filter>Source Files\SDK\Bots</Filter>
     </ClCompile>
+    <ClCompile Include="sdk\ios_replaymanager.cpp">
+      <Filter>Source Files\SDK</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\achievement_saverestore.h">
@@ -2949,6 +2952,9 @@
       <Filter>Source Files\SDK\Bots</Filter>
     </ClInclude>
     <ClInclude Include="sdk\ios_mapentities.h">
+      <Filter>Source Files\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\ios_replaymanager.h">
       <Filter>Source Files\SDK</Filter>
     </ClInclude>
   </ItemGroup>

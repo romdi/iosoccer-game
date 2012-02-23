@@ -19,6 +19,7 @@
 #include "triggers.h"
 #include "ios_mapentities.h"
 #include "sdk_shareddefs.h"
+#include "ios_replaymanager.h"
 
 ConVar sv_ball_mass( "sv_ball_mass", "1", FCVAR_ARCHIVE | FCVAR_NOTIFY );
 //ConVar sv_ball_inertia( "sv_ball_inertia", "1.0", FCVAR_ARCHIVE | FCVAR_NOTIFY  );
@@ -265,25 +266,9 @@ bool CBall::CreateVPhysics()
 	return true;
 }
 
-static ConVar sv_replay_duration("sv_replay_duration", "10");
-
-void cc_StartReplay(const CCommand &args)
-{
-	if (!UTIL_IsCommandIssuedByServerAdmin())
-        return;
-
-	GetBall()->StartReplay();
-}
-
-static ConCommand start_replay("start_replay", cc_StartReplay);
-//static ConCommand start_replay("stop_replay", cc_StopReplay);
-
 void CBall::VPhysicsUpdate(IPhysicsObject *pPhysics)
 {
-	if (m_bDoReplay)
-		RestoreReplaySnapshot();
-	else if (sv_replay_duration.GetInt() > 0)
-		TakeReplaySnapshot();
+	CReplayManager::GetInstance()->CheckReplay();
 
 	bool ignoreTriggers = m_bIgnoreTriggers;
 
@@ -316,59 +301,6 @@ void CBall::VPhysicsUpdate(IPhysicsObject *pPhysics)
 	m_bIgnoreTriggers = ignoreTriggers;
 }
 
-void CBall::TakeReplaySnapshot()
-{
-	// remove snapshots which are too old
-	//while (m_History.Count() > 0 && gpGlobals->curtime - m_History.Head().snapTime > 10)
-	//	m_History.Remove(0);
-
-	Vector pos, vel;
-	QAngle ang;
-	AngularImpulse angImp;
-
-	m_pPhys->GetPosition(&pos, &ang);
-	m_pPhys->GetVelocity(&vel, &angImp);
-
-	m_History.AddToTail(BallHistory(gpGlobals->curtime, pos, ang, vel, angImp));
-	
-	if (m_History.Count() > sv_replay_duration.GetInt() * (1.0f / TICK_INTERVAL))
-	{
-		m_History.Remove(0);
-	}
-}
-
-void CBall::StartReplay()
-{
-	/*for (int i = 0; i < m_History.Count(); i++)
-	{
-		if (abs((gpGlobals->curtime - m_History[i].snapTime) - duration) > 0.1f)
-			m_History.Remove(0);
-		else
-			break;
-	}*/
-
-	if (m_History.Count() > 0)
-	{
-		m_nReplaySnapshotIndex = 0;
-		m_bDoReplay = true;
-	}
-}
-
-void CBall::RestoreReplaySnapshot()
-{
-	if (m_History.Count() > 0 && m_nReplaySnapshotIndex < m_History.Count())
-	{
-		BallHistory history = m_History[m_nReplaySnapshotIndex];
-		m_nReplaySnapshotIndex += 1;
-		//m_History.Remove(0);
-		m_pPhys->SetPosition(history.pos, history.ang, false);
-		m_pPhys->SetVelocity(&history.vel, &history.angImp);
-	}
-	else
-	{
-		m_bDoReplay = false;
-	}
-}
 
 void CBall::VPhysicsCollision( int index, gamevcollisionevent_t	*pEvent	)
 {

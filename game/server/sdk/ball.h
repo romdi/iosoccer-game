@@ -102,17 +102,6 @@ struct CBallStateInfo
 	void (CBall::*pfnThink)();	// Do a PreThink() in this state.
 };
 
-struct BallHistory
-{
-	float snapshotTime;
-	Vector pos;
-	QAngle ang;
-	Vector vel;
-	AngularImpulse angImp;
-
-	BallHistory(float snapshotTime, Vector pos, QAngle ang, Vector vel, AngularImpulse angImp) : snapshotTime(snapshotTime), pos(pos), ang(ang), vel(vel), angImp(angImp) {}
-};
-
 struct BallTouchInfo
 {
 	CSDKPlayer		*m_pPl;
@@ -148,10 +137,6 @@ public:
 	virtual int		UpdateTransmitState();
 
 	void			SendMatchEvent(match_event_t matchEvent, CSDKPlayer *pPlayer1 = NULL);
-
-	void			TakeReplaySnapshot();
-	void			StartReplay();
-	void			RestoreReplaySnapshot();
 
 	bool			IsAsleep(void) { return	false; }
 	void			Spawn(void);
@@ -254,10 +239,6 @@ private:
 	Vector			m_vPos, m_vVel;
 	QAngle			m_aAng;
 	AngularImpulse	m_vRot;
-	
-	CUtlVector<BallHistory>	m_History;
-	bool			m_bDoReplay;
-	int				m_nReplaySnapshotIndex;
 
 	int				m_nTeam;				  //team the ball can be kicked	by (during a corner	etc) (0=any)
 	int				m_side;				  //side of	the	pitch the corner/goalkick should be	taken from
