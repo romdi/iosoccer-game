@@ -552,7 +552,7 @@ void CBall::State_Enter( ball_state_t newState )
 			if (pPl->m_nBody == MODEL_KEEPER_AND_BALL)
 			{
 				pPl->m_nBody = MODEL_KEEPER;
-				pPl->DoAnimationEvent(PLAYERANIMEVENT_CARRY_END, true);
+				pPl->DoServerAnimationEvent(PLAYERANIMEVENT_CARRY_END);
 			}
 		}
 
@@ -663,7 +663,7 @@ void CBall::State_KICKOFF_Enter()
 			continue;
 
 		pPl->HoldAtCurPos(0);
-		pPl->DoAnimationEvent(PLAYERANIMEVENT_CANCEL, true);
+		pPl->DoServerAnimationEvent(PLAYERANIMEVENT_CANCEL);
 	}
 
 	//m_bIgnoreTriggers = false;
@@ -772,8 +772,8 @@ void CBall::State_THROWIN_Think()
 		SetPos(Vector(m_vPos.x, m_vPos.y, SDKGameRules()->m_vKickOff.GetZ() + VEC_HULL_MAX.z + 2));
 		m_pPl->RemoveFlag(FL_REMOTECONTROLLED);
 		m_pPl->SetMoveType(MOVETYPE_WALK);
-		m_pPl->HoldAtCurPos(-1);
-		m_pPl->DoAnimationEvent(PLAYERANIMEVENT_THROWIN, true);
+		//m_pPl->HoldAtCurPos(-1);
+		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_THROWIN, -1, true);
 		return; // Give bots time to detect FL_ATCONTROLS
 	}
 
@@ -800,8 +800,8 @@ void CBall::State_THROWIN_Think()
 		}
 
 		Kicked(BODY_HANDS);
-		m_pPl->HoldAtCurPos(0.75f);
-		m_pPl->DoAnimationEvent(PLAYERANIMEVENT_THROW, true);
+		//m_pPl->HoldAtCurPos(0.75f);
+		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_THROW, 1, true);
 
 		Vector2D dirToKickOff = Vector2D((SDKGameRules()->m_vKickOff - m_vPos).x, 0);
 		dirToKickOff.NormalizeInPlace();
@@ -1018,7 +1018,7 @@ void CBall::State_KEEPERHANDS_Think()
 
 		UpdatePossession(m_pPl);
 		m_pPl->m_nBody = MODEL_KEEPER_AND_BALL;
-		m_pPl->DoAnimationEvent(PLAYERANIMEVENT_CARRY, true);
+		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_CARRY);
 		m_pPl->m_nSkin = m_pPl->m_nBaseSkin + m_nSkin;
 		SetEffects(EF_NODRAW);
 		m_pPhys->EnableCollisions(false);
@@ -1048,12 +1048,12 @@ void CBall::State_KEEPERHANDS_Think()
 		if (m_bIsPowershot)
 		{
 			SetVel(m_vPlForward * sv_ball_powershot_strength.GetFloat() * (1 + GetPowershotModifier()) * GetPitchModifier());
-			m_pPl->DoAnimationEvent(PLAYERANIMEVENT_VOLLEY, true);
+			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_VOLLEY);
 		}
 		else
 		{
 			SetVel(m_vPlForward * sv_ball_powershot_strength.GetFloat() * (1 + GetPowershotModifier()) * GetPitchModifier());
-			m_pPl->DoAnimationEvent(PLAYERANIMEVENT_THROW, true);
+			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_THROW);
 		}
 
 		Kicked(BODY_HANDS);
@@ -1236,7 +1236,7 @@ bool CBall::DoGroundShot()
 	{
 		shotStrength = sv_ball_powershot_strength.GetFloat() * (1 + GetPowershotModifier()) * modifier;
 		EmitSound("Ball.kickhard");
-		m_pPl->DoAnimationEvent(PLAYERANIMEVENT_KICK, true);
+		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KICK);
 	}
 	else
 	{
@@ -1249,7 +1249,7 @@ bool CBall::DoGroundShot()
 		//else
 		//{
 		//	EmitSound("Ball.kicknormal");
-		//	m_pPl->DoAnimationEvent(PLAYERANIMEVENT_KICK, true);
+		//	m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KICK, true);
 		//}
 	}
 
@@ -1288,7 +1288,7 @@ bool CBall::DoVolleyShot()
 	SetBallSpin();
 
 	EmitSound("Ball.kickhard");
-	m_pPl->DoAnimationEvent(PLAYERANIMEVENT_VOLLEY, true);
+	m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_VOLLEY);
 
 	Kicked(BODY_FEET);
 
@@ -1311,14 +1311,14 @@ bool CBall::DoHeader()
 		SetVel(m_vPlForward * (sv_ball_powershot_strength.GetFloat() / 2.0f + m_vPlVel.Length()) * (1 + GetPowershotModifier()) * GetPitchModifier());
 		//SetVel(m_vPlForward * (sv_ball_powershot_strength.GetFloat() * 1.5f + m_vPlVel.Length()));
 		EmitSound("Ball.kickhard");
-		m_pPl->DoAnimationEvent(PLAYERANIMEVENT_DIVINGHEADER, true);
+		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_DIVINGHEADER);
 		m_pPl->m_NextSlideTime = gpGlobals->curtime + 1.5f;
 	}
 	else if (m_bIsPowershot)
 	{
 		SetVel(m_vPlForward * (sv_ball_powershot_strength.GetFloat() / 2.0f + m_vPlVel.Length()) * (1 + GetPowershotModifier()) * GetPitchModifier());
 		EmitSound("Ball.kickhard");
-		m_pPl->DoAnimationEvent(PLAYERANIMEVENT_HEADER, true);
+		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEADER);
 	}
 	else
 	{

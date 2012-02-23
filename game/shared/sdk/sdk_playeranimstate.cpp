@@ -358,11 +358,14 @@ int CSDKPlayerAnimState::CalcSequenceIndex( const char *pBaseName, ... )
 // Purpose: 
 // Input  : event - 
 //-----------------------------------------------------------------------------
-void CSDKPlayerAnimState::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
+void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event, float duration, bool hold, bool freeze)
 {
-	Activity iGestureActivity = ACT_INVALID;
-
 	GetSDKPlayer()->m_ePlayerAnimEvent = event;
+	GetSDKPlayer()->m_flAnimEventEnd = duration == -1 ? -1 : gpGlobals->curtime + duration;
+	if (hold)
+		GetSDKPlayer()->AddFlag(FL_ATCONTROLS);
+	if (freeze)
+		GetSDKPlayer()->AddFlag(FL_FROZEN);
 
 	switch( event )
 	{

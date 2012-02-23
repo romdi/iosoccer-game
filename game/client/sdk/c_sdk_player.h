@@ -50,7 +50,7 @@ public:
 public:
 	SDKPlayerState State_Get() const;
 	
-	void DoAnimationEvent( PlayerAnimEvent_t event, int nData = 0 );
+	void DoAnimationEvent(PlayerAnimEvent_t event, float duration = 0, bool hold = false, bool freeze = false);
 	virtual bool ShouldDraw();
 
 	virtual C_BaseAnimating * BecomeRagdollOnClient();
@@ -157,8 +157,6 @@ private:
 
 	int m_ArmorValue;
 
-	float m_flHoldEndTime;
-
 	class CSDKSoundEvent
 	{
 	public:
@@ -169,8 +167,10 @@ private:
 
 public:
 
-	PlayerAnimEvent_t m_ePlayerAnimEvent;
+	float				m_flAnimEventEnd;
+	PlayerAnimEvent_t	m_ePlayerAnimEvent;
 	void				HoldAtCurPos(float holdTime, bool freeze = false);
+	bool				IsPlayingAnimEvent();
 };
 
 

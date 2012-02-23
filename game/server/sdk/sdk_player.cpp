@@ -55,18 +55,22 @@ public:
 
 	CNetworkHandle( CBasePlayer, m_hPlayer );
 	CNetworkVar( int, m_iEvent );
-	CNetworkVar( int, m_nData );
+	CNetworkVar(float, m_flDuration);
+	CNetworkVar( bool, m_bHold );
+	CNetworkVar( bool, m_bFreeze );
 };
 
 IMPLEMENT_SERVERCLASS_ST_NOBASE( CTEPlayerAnimEvent, DT_TEPlayerAnimEvent )
 	SendPropEHandle( SENDINFO( m_hPlayer ) ),
 	SendPropInt( SENDINFO( m_iEvent ), Q_log2( PLAYERANIMEVENT_COUNT ) + 1, SPROP_UNSIGNED ),
-	SendPropInt( SENDINFO( m_nData ), 32 )
+	SendPropFloat(SENDINFO(m_flDuration)),
+	SendPropBool( SENDINFO( m_bHold )),
+	SendPropBool( SENDINFO( m_bFreeze ))
 END_SEND_TABLE()
 
 static CTEPlayerAnimEvent g_TEPlayerAnimEvent( "PlayerAnimEvent" );
 
-void TE_PlayerAnimEvent( CBasePlayer *pPlayer, PlayerAnimEvent_t event, bool sendToPlayerClient, int nData )
+void TE_PlayerAnimEvent( CBasePlayer *pPlayer, PlayerAnimEvent_t event, bool sendToPlayerClient, float duration, bool hold, bool freeze)
 {
 	CPVSFilter filter( (const Vector&)pPlayer->EyePosition() );
 
@@ -77,7 +81,7 @@ void TE_PlayerAnimEvent( CBasePlayer *pPlayer, PlayerAnimEvent_t event, bool sen
 
 	g_TEPlayerAnimEvent.m_hPlayer = pPlayer;
 	g_TEPlayerAnimEvent.m_iEvent = event;
-	g_TEPlayerAnimEvent.m_nData = nData;
+	g_TEPlayerAnimEvent.m_flDuration = duration;
 	g_TEPlayerAnimEvent.Create( filter, 0 );
 }
 
@@ -239,7 +243,7 @@ CSDKPlayer::CSDKPlayer()
 	m_flNextJoin = gpGlobals->curtime;
 	m_TeamPos = m_ShirtPos = 1;
 	m_pPlayerBall = NULL;
-	m_flHoldEndTime = -1;
+	m_flAnimEventEnd = -1;
 }
 
 
@@ -262,10 +266,10 @@ void CSDKPlayer::PreThink(void)
 
 	//UpdateSprint();
 
-	if (m_flHoldEndTime != -1 && gpGlobals->curtime >= m_flHoldEndTime)
+	if (m_flAnimEventEnd != -1 && gpGlobals->curtime >= m_flAnimEventEnd)
 	{
 		RemoveFlag(FL_ATCONTROLS | FL_FROZEN);
-		m_flHoldEndTime = -1;
+		m_flAnimEventEnd = -1;
 	}
 
 	if (m_nTeamToJoin != TEAM_INVALID && gpGlobals->curtime >= m_flNextJoin)
@@ -522,10 +526,16 @@ void CSDKPlayer::InitialSpawn( void )
 		State_Enter(STATE_ACTIVE);*/
 }
 
-void CSDKPlayer::DoAnimationEvent( PlayerAnimEvent_t event, bool sendToPlayerClient, int nData )
+void CSDKPlayer::DoServerAnimationEvent(PlayerAnimEvent_t event, float duration, bool hold, bool freeze)
 {
-	m_PlayerAnimState->DoAnimationEvent( event, nData );
-	TE_PlayerAnimEvent( this, event, sendToPlayerClient, nData );	// Send to any clients who can see this guy.
+	m_PlayerAnimState->DoAnimationEvent( event, duration, hold, freeze );
+	TE_PlayerAnimEvent( this, event, true, duration, hold, freeze);	// Send to any clients who can see this guy.
+}
+
+void CSDKPlayer::DoAnimationEvent(PlayerAnimEvent_t event, float duration, bool hold, bool freeze)
+{
+	m_PlayerAnimState->DoAnimationEvent( event, duration, hold, freeze );
+	TE_PlayerAnimEvent( this, event, false, duration, hold, freeze );	// Send to any clients who can see this guy.
 }
 
 void CSDKPlayer::CheatImpulseCommands( int iImpulse )
@@ -836,10 +846,10 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 		int team = clamp(atoi(args[1]), TEAM_SPECTATOR, TEAM_B);
 
 		if (team == TEAM_SPECTATOR)
-		{
-			//m_TeamPos = 1;
-			//ConvertSpawnToShirt();
-			//RemoveFlag(FL_FROZEN);
+		{		
+			if (GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B)
+				m_flNextJoin = gpGlobals->curtime + mp_joindelay.GetFloat();
+
 			ChangeTeam(TEAM_SPECTATOR);
 		}
 		else
@@ -847,7 +857,13 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 			int posWanted = clamp(atoi(args[2]), 1, 11);
 			if (TeamPosFree(team, posWanted, true))
 			{
-				ChangeTeam(TEAM_SPECTATOR);
+				if (GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B)
+				{
+					m_flNextJoin = gpGlobals->curtime + mp_joindelay.GetFloat();
+					ChangeTeam(TEAM_SPECTATOR);
+				}
+
+				m_nTeamToJoin = team;
 
 				m_TeamPos = posWanted;	//teampos matches spawn points on the map 2-11
 
@@ -861,18 +877,6 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 				{
 					ChooseKeeperSkin();
 				}
-
-				m_nTeamToJoin = team;
-				m_flNextJoin = gpGlobals->curtime + mp_joindelay.GetFloat();
-
-				//ChangeTeam(team);
-
-				//spawn at correct position
-				//Spawn();
-				//SDKGameRules()->GetPlayerSpawnSpot( this );
-				//RemoveEffects( EF_NODRAW );
-				//SetSolid( SOLID_BBOX );
-				//RemoveFlag(FL_FROZEN);
 			}
 			else
 			{

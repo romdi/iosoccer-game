@@ -1663,6 +1663,12 @@ bool CGameMovement::CheckJumpButton( void )
 {
 	CSDKPlayer *pPl = ToSDKPlayer(player);
 
+	if (pPl->IsPlayingAnimEvent())
+	{
+		mv->m_nOldButtons |= IN_JUMP;
+		return false;
+	}
+
 	if (gpGlobals->curtime < player->m_flNextJump)
 	{
 		mv->m_nOldButtons |= IN_JUMP;
@@ -1728,7 +1734,7 @@ bool CGameMovement::CheckJumpButton( void )
 		}
 	}
 
-	pPl->DoAnimationEvent(animEvent);
+	pPl->DoAnimationEvent(animEvent, 1);
 
 	mv->m_vecVelocity.z = sqrt(2 * sv_gravity.GetFloat() * GAMEMOVEMENT_JUMP_HEIGHT);
 
@@ -1753,6 +1759,12 @@ bool CGameMovement::CheckSlideButton()
 {
 	CSDKPlayer *pPl = ToSDKPlayer(player);
 
+	if (pPl->IsPlayingAnimEvent())
+	{
+		mv->m_nOldButtons |= IN_DUCK;
+		return false;
+	}
+
 	if (player->GetFlags() & FL_ATCONTROLS)
 	{
 		mv->m_nOldButtons |= IN_DUCK;
@@ -1776,7 +1788,7 @@ bool CGameMovement::CheckSlideButton()
 
 	PlayerAnimEvent_t animEvent = PLAYERANIMEVENT_SLIDE;
 
-	pPl->DoAnimationEvent(animEvent);
+	pPl->DoAnimationEvent(animEvent, 1);
 
 	//FinishGravity();
 

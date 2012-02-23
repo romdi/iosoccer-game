@@ -60,7 +60,8 @@ public:
 	static CSDKPlayer* Instance( int iEnt );
 
 	// This passes the event to the client's and server's CPlayerAnimState.
-	void DoAnimationEvent( PlayerAnimEvent_t event, bool sendToPlayerClient = false, int nData = 0 );
+	void DoServerAnimationEvent(PlayerAnimEvent_t event, float duration = 0, bool hold = false, bool freeze = false);
+	void DoAnimationEvent(PlayerAnimEvent_t event, float duration = 0, bool hold = false, bool freeze = false);
 
 	virtual void FlashlightTurnOn( void ) {};
 	virtual void FlashlightTurnOff( void ) {};
@@ -355,10 +356,11 @@ private:
 	bool				m_bOffside;
 	Vector				m_vOffsidePos;
 	CBall				*m_pPlayerBall;
-	float				m_flHoldEndTime;
 
 public:
 
+	bool				IsPlayingAnimEvent();
+	float				m_flAnimEventEnd;
 	void				SetPlayerBall(CBall *pPlayerBall) { m_pPlayerBall = pPlayerBall; }
 	CBall				*GetPlayerBall() { return m_pPlayerBall; }
 	void				HoldAtCurPos(float holdTime, bool freeze = false);

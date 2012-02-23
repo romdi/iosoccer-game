@@ -44,7 +44,7 @@ public:
 	virtual Activity TranslateActivity( Activity actDesired );
 	virtual void Update( float eyeYaw, float eyePitch );
 
-	void	DoAnimationEvent( PlayerAnimEvent_t event, int nData = 0 );
+	void	DoAnimationEvent(PlayerAnimEvent_t event, float duration = 0, bool hold = false, bool freeze = false);
 
 	bool	HandleJumping( Activity &idealActivity );
 

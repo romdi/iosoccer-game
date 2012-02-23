@@ -110,10 +110,6 @@ public:
 	{
 		Vector min, max;
 		CollisionProp()->WorldSpaceTriggerBounds(&min, &max);
-		float meX = WorldSpaceCenter().x;
-		float kickX = SDKGameRules()->m_vKickOff.GetX();
-		float sign = Sign(SDKGameRules()->m_vKickOff.GetX() - WorldSpaceCenter().x);
-		bool wq = sign == 1;
 		float touchPosX = Sign(SDKGameRules()->m_vKickOff.GetX() - WorldSpaceCenter().x) == 1 ? max.x : min.x;
 		pBall->TriggerSideline(touchPosX);
 	};
