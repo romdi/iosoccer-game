@@ -195,7 +195,8 @@ private:
 	void			DisableOffsideLine();
 
 	bool			PlayersAtTargetPos(bool holdAtTargetPos);
-
+	bool			CheckFoul();
+	void			TriggerFoul(foul_type_t type, CSDKPlayer *pPl, Vector pos);
 	CSDKPlayer		*FindNearestPlayer(int team = TEAM_INVALID, int posFlags = FL_POS_FIELD, bool checkIfShooting = false, int ignoredPlayerBits = 0);
 	bool			IsPlayerCloseEnough(CSDKPlayer *pPl, bool isKeeper = false);
 	body_part_t		GetBodyPart();

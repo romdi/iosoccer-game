@@ -125,6 +125,7 @@ const char *g_szMatchEventNames[32] =
 	"YELLOW CARD",
 	"RED CARD",
 	"ASSIST",
+	"DOUBLE TOUCH",
 	NULL
 };
 

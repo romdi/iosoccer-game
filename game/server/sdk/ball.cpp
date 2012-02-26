@@ -53,6 +53,7 @@ ConVar sv_ball_powershot_strength("sv_ball_powershot_strength", "650", FCVAR_ARC
 ConVar sv_ball_keepershot_strength("sv_ball_keepershot_strength", "100", FCVAR_ARCHIVE | FCVAR_NOTIFY);
 ConVar sv_ball_doubletouchfouls("sv_ball_doubletouchfouls", "1", FCVAR_ARCHIVE | FCVAR_NOTIFY);
 ConVar sv_ball_timelimit("sv_ball_timelimit", "10", FCVAR_ARCHIVE | FCVAR_NOTIFY);
+ConVar sv_ball_slideangle("sv_ball_slideangle", "30", FCVAR_ARCHIVE | FCVAR_NOTIFY);
 
 CBall *CreateBall(const Vector &pos, CSDKPlayer *pOwner)
 {
@@ -894,6 +895,17 @@ void CBall::State_FREEKICK_Enter()
 {
 	DisableOffsideLine();
 	SetPos(m_vFoulPos);
+	if (CSDKPlayer::IsOnField(m_pFoulingPl))
+	{
+		match_event_t matchEvent;
+		switch (m_eFoulType)
+		{
+		case FOUL_NORMAL: matchEvent = MATCH_EVENT_FOUL; break;
+		case FOUL_DOUBLETOUCH: matchEvent = MATCH_EVENT_DOUBLETOUCH; break;
+		case FOUL_OFFSIDE: matchEvent = MATCH_EVENT_OFFSIDE; break;
+		}
+		SendMatchEvent(matchEvent, m_pFoulingPl);
+	}
 }
 
 void CBall::State_FREEKICK_Think()
@@ -1020,6 +1032,53 @@ bool CBall::PlayersAtTargetPos(bool holdAtTargetPos)
 	return playersAtTarget;
 }
 
+bool CBall::CheckFoul()
+{
+	for (int i = 1; i <= gpGlobals->maxClients; i++) 
+	{
+		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+
+		if (!CSDKPlayer::IsOnField(pPl))
+			continue;
+
+		if (pPl == m_pPl || pPl->GetTeamNumber() == m_nPlTeam)
+			continue;
+
+		Vector dirToPl = pPl->GetLocalOrigin() - m_vPlPos;
+		if (dirToPl.Length2D() > sv_ball_touchradius.GetFloat() * 2)
+			continue;
+
+		dirToPl.NormalizeInPlace();
+		if (RAD2DEG(acos(m_vPlForward.Dot(dirToPl))) > sv_ball_slideangle.GetFloat())
+			continue;
+
+		Vector ballDirToPl = m_vPlPos - m_vPos;
+		ballDirToPl.z = 0;
+		ballDirToPl.NormalizeInPlace();
+
+		Vector ballDirToOpp = pPl->GetLocalOrigin() - m_vPos;
+		ballDirToOpp.z = 0;
+		ballDirToOpp.NormalizeInPlace();
+
+		if (RAD2DEG(acos(ballDirToPl.Dot(ballDirToOpp))) > sv_ball_slideangle.GetFloat())
+			continue;
+
+		pPl->DoAnimationEvent(PLAYERANIMEVENT_TACKLED_FORWARD);
+		TriggerFoul(FOUL_NORMAL, m_pPl, pPl->GetLocalOrigin());
+		return true;
+	}
+
+	return false;
+}
+
+void CBall::TriggerFoul(foul_type_t type, CSDKPlayer *pPl, Vector pos)
+{
+	m_eFoulType = type;
+	m_pFoulingPl = pPl;
+	m_nFoulingTeam = pPl->GetTeamNumber();
+	m_vFoulPos = pos;
+}
+
 bool CBall::IsPlayerCloseEnough(CSDKPlayer *pPl, bool isKeeper /*= false*/)
 {
 	Vector dir = m_vPos - pPl->GetLocalOrigin();
@@ -1044,13 +1103,21 @@ body_part_t CBall::GetBodyPart()
 	Vector dirToBall = m_vPos - m_vPlPos;
 	float zDist = dirToBall.z;
 	float xyDist = dirToBall.Length2D();
+	dirToBall.z = 0;
+	dirToBall.NormalizeInPlace();
 
 	if (m_pPl->m_ePlayerAnimEvent == PLAYERANIMEVENT_SLIDE)
 	{
 		if (xyDist <= sv_ball_touchradius.GetFloat() * 2)
 		{
-			dirToBall.NormalizeInPlace();
-			if (RAD2DEG(acos(m_vPlForward.Dot(dirToBall))) <= 30)
+			if (CheckFoul())
+			{
+				TriggerFoul(FOUL_NORMAL, m_pPl, m_vPlPos);
+				State_Transition(BALL_FREEKICK);
+				return BODY_NONE;
+			}
+
+			if (RAD2DEG(acos(m_vPlForward.Dot(dirToBall))) <= sv_ball_slideangle.GetFloat())
 				return BODY_FEET;
 		}
 	}
@@ -1067,9 +1134,6 @@ body_part_t CBall::GetBodyPart()
 			case PLAYERANIMEVENT_TACKLED_FORWARD: plDir = m_vPlForward; break;
 			case PLAYERANIMEVENT_TACKLED_BACKWARD: plDir = -m_vPlForward; break;
 			}
-			Vector dirToBall = m_vPos - m_vPlPos;
-			dirToBall.z = 0;
-			dirToBall.NormalizeInPlace();
 
 			if (RAD2DEG(acos(plDir.Dot(dirToBall))) <= sv_ball_keepersideangle.GetInt())
 				return BODY_HANDS;
@@ -1137,6 +1201,8 @@ bool CBall::DoBodyPartAction()
 			return DoChestDrop();
 		case BODY_HEAD:
 			return DoHeader();
+		case BODY_NONE:
+			return false;
 		}
 	}
 
@@ -1432,10 +1498,7 @@ void CBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart)
 	{
 		if (sv_ball_doubletouchfouls.GetBool() && m_Touches.Tail().m_eBallState != BALL_NORMAL)
 		{
-			m_eFoulType = FOUL_DOUBLETOUCH;
-			m_pFoulingPl = pPl;
-			m_nFoulingTeam = pPl->GetTeamNumber();
-			m_vFoulPos = pPl->GetLocalOrigin();
+			TriggerFoul(FOUL_DOUBLETOUCH, pPl, pPl->GetLocalOrigin());
 			State_Transition(BALL_FREEKICK, 1);
 			return;
 		}
@@ -1455,10 +1518,7 @@ void CBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart)
 	
 	if (pPl->IsOffside())
 	{
-		m_eFoulType = FOUL_OFFSIDE;
-		m_pFoulingPl = pPl;
-		m_nFoulingTeam = pPl->GetTeamNumber();
-		m_vFoulPos = pPl->GetOffsidePos();
+		TriggerFoul(FOUL_OFFSIDE, pPl, pPl->GetOffsidePos());
 		EnableOffsideLine(m_vFoulPos.y);
 		State_Transition(BALL_FREEKICK, 1);
 	}

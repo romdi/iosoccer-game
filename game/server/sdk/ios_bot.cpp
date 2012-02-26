@@ -377,7 +377,10 @@ void CBot::BotFrame()
 
 	if (CSDKPlayer::IsOnField(this))
 	{
-		if ( bot_mimic.GetInt() > 0 )
+		if (bot_frozen.GetBool())
+		{
+		}
+		else if (bot_mimic.GetInt() > 0)
 			RunMimicCommand(m_cmd);
 		else
 		{
