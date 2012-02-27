@@ -81,29 +81,14 @@ public:
 	virtual		void		ClearInputButton( int bits );
 
 	virtual		void		CAM_Think( void );
-	virtual		int			CAM_IsThirdPerson( void );
+	virtual		int			CAM_IsThirdPerson( void ) { return true; }
 	virtual		void		CAM_GetCameraOffset( Vector& ofs );
-	virtual		void		CAM_ToThirdPerson(void);
-	virtual		void		CAM_ToFirstPerson(void);
-	virtual		void		CAM_StartMouseMove(void);
-	virtual		void		CAM_EndMouseMove(void);
-	virtual		void		CAM_StartDistance(void);
-	virtual		void		CAM_EndDistance(void);
-	virtual		int			CAM_InterceptingMouse( void );
-
-	// orthographic camera info
-	virtual		void		CAM_ToOrthographic();
-	virtual		bool		CAM_IsOrthographic() const;
-	virtual		void		CAM_OrthographicSize( float& w, float& h ) const;
 	
 #if defined( HL2_CLIENT_DLL )
 	// IK back channel info
 	virtual		void		AddIKGroundContactInfo( int entindex, float minheight, float maxheight );
 #endif
 	virtual		void		LevelInit( void );
-
-	virtual		void		CAM_SetCameraThirdData( CameraThirdData_t *pCameraData, const QAngle &vecCameraOffset );
-	virtual		void		CAM_CameraThirdThink( void );	
 
 // Private Implementation
 private:
@@ -212,22 +197,8 @@ private:
 	
 	// Is the 3rd person camera using the mouse?
 	bool		m_fCameraInterceptingMouse;
-	// Are we in 3rd person view?
-	bool		m_fCameraInThirdPerson;
-	// Should we move view along with mouse?
-	bool		m_fCameraMovingWithMouse;
 	// What is the current camera offset from the view origin?
 	Vector		m_vecCameraOffset;
-	// Is the camera in distance moving mode?
-	bool		m_fCameraDistanceMove;
-	// Old and current mouse position readings.
-	int			m_nCameraOldX;
-	int			m_nCameraOldY;
-	int			m_nCameraX;
-	int			m_nCameraY;
-
-	// orthographic camera settings
-	bool		m_CameraIsOrthographic;
 
 	QAngle		m_angPreviousViewAngles;
 
@@ -243,8 +214,6 @@ private:
 				
 	CUserCmd	*m_pCommands;
 	CVerifiedUserCmd *m_pVerifiedCommands;
-
-	CameraThirdData_t	*m_pCameraThirdData;
 
 	// Set until polled by CreateMove and cleared
 	CHandle< C_BaseCombatWeapon > m_hSelectedWeapon;

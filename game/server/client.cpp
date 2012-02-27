@@ -672,7 +672,7 @@ void kill_helper( const CCommand &args, bool bExplode )
 		}
 	}
 }
-
+/*
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 CON_COMMAND( kill, "Kills the player with generic damage" )
@@ -686,7 +686,7 @@ CON_COMMAND( explode, "Kills the player with explosive damage" )
 {
 	kill_helper( args, true );
 }
-
+*/
 //------------------------------------------------------------------------------
 // helper function for killvector and explodevector
 //------------------------------------------------------------------------------

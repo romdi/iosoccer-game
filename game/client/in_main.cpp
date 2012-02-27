@@ -129,26 +129,6 @@ kbutton_t	in_ducktoggle;
 
 /*
 ===========
-IN_CenterView_f
-===========
-*/
-void IN_CenterView_f (void)
-{
-	QAngle viewangles;
-
-	if ( UsingMouselook() == false )
-	{
-		if ( !::input->CAM_InterceptingMouse() )
-		{
-			engine->GetViewAngles( viewangles );
-			viewangles[PITCH] = 0;
-			engine->SetViewAngles( viewangles );
-		}
-	}
-}
-
-/*
-===========
 IN_Joystick_Advanced_f
 ===========
 */
@@ -291,7 +271,6 @@ void CInput::AddKeyButton( const char *name, kbutton_t *pkb )
 CInput::CInput( void )
 {
 	m_pCommands = NULL;
-	m_pCameraThirdData = NULL;
 	m_pVerifiedCommands = NULL;
 }
 
@@ -1468,7 +1447,6 @@ static ConCommand startgraph("+graph", IN_GraphDown);
 static ConCommand endgraph("-graph", IN_GraphUp);
 static ConCommand startbreak("+break",IN_BreakDown);
 static ConCommand endbreak("-break",IN_BreakUp);
-static ConCommand force_centerview("force_centerview", IN_CenterView_f);
 static ConCommand joyadvancedupdate("joyadvancedupdate", IN_Joystick_Advanced_f, "", FCVAR_CLIENTCMD_CAN_EXECUTE);
 static ConCommand startzoom("+zoom", IN_ZoomDown);
 static ConCommand endzoom("-zoom", IN_ZoomUp);

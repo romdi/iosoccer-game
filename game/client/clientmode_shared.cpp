@@ -325,18 +325,6 @@ void ClientModeShared::OverrideView( CViewSetup *pSetup )
 		// Override angles from third person camera
 		VectorCopy( camAngles, pSetup->angles );
 	}
-	else if (::input->CAM_IsOrthographic())
-	{
-		pSetup->m_bOrtho = true;
-		float w, h;
-		::input->CAM_OrthographicSize( w, h );
-		w *= 0.5f;
-		h *= 0.5f;
-		pSetup->m_OrthoLeft   = -w;
-		pSetup->m_OrthoTop    = -h;
-		pSetup->m_OrthoRight  = w;
-		pSetup->m_OrthoBottom = h;
-	}
 }
 
 //-----------------------------------------------------------------------------

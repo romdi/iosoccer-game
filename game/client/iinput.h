@@ -17,16 +17,6 @@ class CUserCmd;
 class C_BaseCombatWeapon;
 struct kbutton_t;
 
-struct CameraThirdData_t
-{
-	float	m_flPitch;
-	float	m_flYaw;
-	float	m_flDist;
-	float	m_flLag;
-	Vector	m_vecHullMin;
-	Vector	m_vecHullMax;
-};
-
 abstract_class IInput
 {
 public:
@@ -81,18 +71,6 @@ public:
 	virtual void		CAM_Think( void ) = 0;
 	virtual int			CAM_IsThirdPerson( void ) = 0;
 	virtual void		CAM_GetCameraOffset( Vector& ofs ) = 0;
-	virtual void		CAM_ToThirdPerson(void) = 0;
-	virtual void		CAM_ToFirstPerson(void) = 0;
-	virtual void		CAM_StartMouseMove(void) = 0;
-	virtual void		CAM_EndMouseMove(void) = 0;
-	virtual void		CAM_StartDistance(void) = 0;
-	virtual void		CAM_EndDistance(void) = 0;
-	virtual int			CAM_InterceptingMouse( void ) = 0;
-
-	// orthographic camera info	( TODO/FIXME:  Move this to a separate interface? )
-	virtual void		CAM_ToOrthographic() = 0;
-	virtual	bool		CAM_IsOrthographic() const = 0;
-	virtual	void		CAM_OrthographicSize( float& w, float& h ) const = 0;
 
 #if defined( HL2_CLIENT_DLL )
 	// IK back channel info
@@ -103,9 +81,6 @@ public:
 
 	// Causes an input to have to be re-pressed to become active
 	virtual void		ClearInputButton( int bits ) = 0;
-
-	virtual	void		CAM_SetCameraThirdData( CameraThirdData_t *pCameraData, const QAngle &vecCameraOffset ) = 0;
-	virtual void		CAM_CameraThirdThink( void ) = 0;
 };
 
 extern ::IInput *input;
