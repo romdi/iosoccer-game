@@ -388,7 +388,6 @@ void CBot::BotFrame()
 			GetBall()->VPhysicsGetObject()->GetVelocity(&m_vBallVel, &m_vBallAngImp);
 
 			m_vDirToBall = m_vBallPos - GetLocalOrigin();
-			float length = m_vDirToBall.Length2D();
 
 			BotThink();
 

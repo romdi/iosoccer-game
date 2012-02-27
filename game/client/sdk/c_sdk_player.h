@@ -50,7 +50,7 @@ public:
 public:
 	SDKPlayerState State_Get() const;
 	
-	void DoAnimationEvent(PlayerAnimEvent_t event, float duration = 0, bool hold = false, bool freeze = false);
+	void DoAnimationEvent(PlayerAnimEvent_t event);
 	virtual bool ShouldDraw();
 
 	virtual C_BaseAnimating * BecomeRagdollOnClient();
@@ -167,11 +167,8 @@ private:
 
 public:
 
-	float				m_flAnimEventEnd;
-	float				m_flAnimEventStart;
+	float				m_flPlayerAnimEventStart;
 	PlayerAnimEvent_t	m_ePlayerAnimEvent;
-	void				HoldAtCurPos(float holdTime, bool freeze = false);
-	bool				IsPlayingAnimEvent();
 };
 
 

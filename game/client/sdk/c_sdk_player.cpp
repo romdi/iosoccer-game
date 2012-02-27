@@ -49,16 +49,13 @@ public:
 		C_SDKPlayer *pPlayer = dynamic_cast< C_SDKPlayer* >( m_hPlayer.Get() );
 		if ( pPlayer && !pPlayer->IsDormant() )
 		{
-			pPlayer->DoAnimationEvent( (PlayerAnimEvent_t)m_iEvent.Get(), m_flDuration, m_bHold, m_bFreeze );
+			pPlayer->DoAnimationEvent( (PlayerAnimEvent_t)m_iEvent.Get() );
 		}	
 	}
 
 public:
 	CNetworkHandle( CBasePlayer, m_hPlayer );
 	CNetworkVar( int, m_iEvent );
-	CNetworkVar(float, m_flDuration);
-	CNetworkVar( bool, m_bHold );
-	CNetworkVar( bool, m_bFreeze );
 };
 
 IMPLEMENT_CLIENTCLASS_EVENT( C_TEPlayerAnimEvent, DT_TEPlayerAnimEvent, CTEPlayerAnimEvent );
@@ -66,9 +63,6 @@ IMPLEMENT_CLIENTCLASS_EVENT( C_TEPlayerAnimEvent, DT_TEPlayerAnimEvent, CTEPlaye
 BEGIN_RECV_TABLE_NOBASE( C_TEPlayerAnimEvent, DT_TEPlayerAnimEvent )
 	RecvPropEHandle( RECVINFO( m_hPlayer ) ),
 	RecvPropInt( RECVINFO( m_iEvent ) ),
-	RecvPropFloat(RECVINFO(m_flDuration)),
-	RecvPropBool( RECVINFO( m_bHold ) ),
-	RecvPropBool( RECVINFO( m_bFreeze ) ),
 END_RECV_TABLE()
 
 void __MsgFunc_ReloadEffect( bf_read &msg )
@@ -540,7 +534,8 @@ C_SDKPlayer::C_SDKPlayer() :
 	AddVar( &m_angEyeAngles, &m_iv_angEyeAngles, LATCH_SIMULATION_VAR );
 
 	m_fNextThinkPushAway = 0.0f;
-	m_flAnimEventEnd = -1;
+	m_flPlayerAnimEventStart = gpGlobals->curtime;
+	m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
 }
 
 
@@ -734,7 +729,7 @@ void C_SDKPlayer::PlayReloadEffect()
 	}	
 }
 
-void C_SDKPlayer::DoAnimationEvent(PlayerAnimEvent_t event, float duration, bool hold, bool freeze)
+void C_SDKPlayer::DoAnimationEvent(PlayerAnimEvent_t event)
 {
 	if ( IsLocalPlayer() )
 	{
@@ -743,7 +738,7 @@ void C_SDKPlayer::DoAnimationEvent(PlayerAnimEvent_t event, float duration, bool
 	}
 
 	MDLCACHE_CRITICAL_SECTION();
-	m_PlayerAnimState->DoAnimationEvent(event, duration, hold, freeze);
+	m_PlayerAnimState->DoAnimationEvent(event);
 }
 
 bool C_SDKPlayer::ShouldDraw( void )
@@ -841,12 +836,6 @@ void C_SDKPlayer::ClientThink()
 	{
 		PerformObstaclePushaway( this );
 		m_fNextThinkPushAway =  gpGlobals->curtime + PUSHAWAY_THINK_INTERVAL;
-	}
-
-	if (m_flAnimEventEnd != -1 && gpGlobals->curtime >= m_flAnimEventEnd)
-	{
-		RemoveFlag(FL_ATCONTROLS | FL_FROZEN);
-		m_flAnimEventEnd = -1;
 	}
 }
 

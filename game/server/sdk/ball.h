@@ -226,7 +226,7 @@ private:
 	CSDKPlayer		*m_pPl;				  // Current player for state
 
 	QAngle			m_aPlAng;
-	Vector			m_vPlVel, m_vPlPos, m_vPlForward, m_vPlRight, m_vPlUp;
+	Vector			m_vPlVel, m_vPlPos, m_vPlForward, m_vPlForward2D, m_vPlRight, m_vPlUp;
 	int				m_nPlTeam;
 	int				m_nPlPos;
 	bool			m_bIsPowershot;

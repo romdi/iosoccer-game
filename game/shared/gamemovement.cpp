@@ -1404,23 +1404,17 @@ void CGameMovement::FullWalkMove( )
 
 	StartGravity();
 
-	switch (ToSDKPlayer(player)->m_ePlayerAnimEvent)
+	if (!CheckPlayerAnimEvent())
 	{
-	case PLAYERANIMEVENT_SLIDE: DoSlide(); break;
-	case PLAYERANIMEVENT_TACKLED_FORWARD: DoDive(); break;
-	case PLAYERANIMEVENT_TACKLED_BACKWARD: DoDive(); break;
-	default:
-		{
-			if (mv->m_nButtons & IN_JUMP)
-				CheckJumpButton();
-			else
-				mv->m_nOldButtons &= ~IN_JUMP;
+		if (mv->m_nButtons & IN_JUMP)
+			CheckJumpButton();
+		else
+			mv->m_nOldButtons &= ~IN_JUMP;
 
-			if (mv->m_nButtons & IN_DUCK)
-				CheckSlideButton();
-			else
-				mv->m_nOldButtons &= ~IN_DUCK;
-		}
+		if (mv->m_nButtons & IN_DUCK)
+			CheckSlideButton();
+		else
+			mv->m_nOldButtons &= ~IN_DUCK;
 	}
 
 	// Fricion is handled before we add in any base velocity. That way, if we are on a conveyor, 
@@ -1460,23 +1454,75 @@ void CGameMovement::FullWalkMove( )
 	CheckBallShield(oldPos);
 }
 
-void CGameMovement::DoSlide()
+bool CGameMovement::CheckPlayerAnimEvent()
 {
-	float timePassed = gpGlobals->curtime - ToSDKPlayer(player)->m_flAnimEventStart;
-	mv->m_flForwardMove = mp_sprintspeed.GetInt() * max(0, (1 - timePassed / 1.0f));
-	mv->m_flSideMove = 0;
-	mv->m_flUpMove = 0;
-	//Vector forward;
-	//AngleVectors(mv->m_vecAbsViewAngles, &forward);
-	//mv->m_vecVelocity = forward * mp_sprintspeed.GetInt() * max(0, (1 - timePassed / 0.5f));
-	//mv->m_vecVelocity.z = 0;
-}
+	float timePassed = gpGlobals->curtime - ToSDKPlayer(player)->m_flPlayerAnimEventStart;
 
-void CGameMovement::DoDive()
-{
-	mv->m_flForwardMove = 0;
-	mv->m_flSideMove = 0;
-	mv->m_flUpMove = 0;
+	switch (ToSDKPlayer(player)->m_ePlayerAnimEvent)
+	{
+	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT:
+		{
+			mv->m_flForwardMove = 0;
+			mv->m_flSideMove = -mp_sprintspeed.GetInt() * max(0, (1 - timePassed / 1.0f));
+			mv->m_flUpMove = 0;
+			break;
+		}
+	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT:
+		{
+			mv->m_flForwardMove = 0;
+			mv->m_flSideMove = mp_sprintspeed.GetInt() * max(0, (1 - timePassed / 1.0f));
+			mv->m_flUpMove = 0;
+			break;
+		}
+	case PLAYERANIMEVENT_KEEPER_DIVE_FORWARD:
+		{
+			mv->m_flForwardMove = mp_sprintspeed.GetInt() * max(0, (1 - timePassed / 1.0f));
+			mv->m_flSideMove = 0;
+			mv->m_flUpMove = 0;
+			break;
+		}
+	case PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD:
+		{
+			mv->m_flForwardMove = -mp_sprintspeed.GetInt() * max(0, (1 - timePassed / 1.0f));
+			mv->m_flSideMove = 0;
+			mv->m_flUpMove = 0;
+			break;
+		}
+	case PLAYERANIMEVENT_KEEPER_HANDS_THROW:
+	case PLAYERANIMEVENT_KEEPER_HANDS_KICK:
+		{
+			break;
+		}
+	case PLAYERANIMEVENT_SLIDE:
+		{
+			mv->m_flForwardMove = mp_sprintspeed.GetInt() * max(0, (1 - timePassed / 1.0f));
+			mv->m_flSideMove = 0;
+			mv->m_flUpMove = 0;
+			break;
+		}
+	case PLAYERANIMEVENT_TACKLED_FORWARD:
+	case PLAYERANIMEVENT_TACKLED_BACKWARD:
+		{
+			mv->m_flForwardMove = 0;
+			mv->m_flSideMove = 0;
+			mv->m_flUpMove = 0;
+			break;
+		}
+	case PLAYERANIMEVENT_THROWIN:
+	case PLAYERANIMEVENT_THROW:
+		{
+			mv->m_flForwardMove = 0;
+			mv->m_flSideMove = 0;
+			mv->m_flUpMove = 0;
+			break;
+		}
+	default:
+		{
+			return false;
+		}
+	}
+
+	return true;
 }
 
 //-----------------------------------------------------------------------------
@@ -1682,12 +1728,6 @@ bool CGameMovement::CheckJumpButton( void )
 {
 	CSDKPlayer *pPl = ToSDKPlayer(player);
 
-	if (pPl->IsPlayingAnimEvent())
-	{
-		mv->m_nOldButtons |= IN_JUMP;
-		return false;
-	}
-
 	if (gpGlobals->curtime < player->m_flNextJump)
 	{
 		mv->m_nOldButtons |= IN_JUMP;
@@ -1724,36 +1764,7 @@ bool CGameMovement::CheckJumpButton( void )
 
 	PlayerAnimEvent_t animEvent = PLAYERANIMEVENT_JUMP;
 
-	bool isKeeper;
-#ifdef CLIENT_DLL
-	isKeeper = GameResources()->GetTeamPosition(pPl->index) == 1;
-#else
-	isKeeper = pPl->GetTeamPosition() == 1;
-#endif
-
-	if (isKeeper && pPl->m_nButtons & IN_SPEED)
-	{
-		MoveHelper()->StartSound( mv->GetAbsOrigin(), "Player.DiveKeeper" );
-
-		if (mv->m_nButtons & IN_MOVELEFT)
-		{
-			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_LEFT;
-		}
-		else if (mv->m_nButtons & IN_MOVERIGHT)
-		{
-			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_RIGHT;
-		}
-		else if (mv->m_nButtons & IN_FORWARD)
-		{
-			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_FORWARD;
-		}
-		else if (mv->m_nButtons & IN_BACK)
-		{
-			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD;
-		}
-	}
-
-	pPl->DoAnimationEvent(animEvent, 1);
+	pPl->DoAnimationEvent(animEvent);
 
 	mv->m_vecVelocity.z = sqrt(2 * sv_gravity.GetFloat() * GAMEMOVEMENT_JUMP_HEIGHT);
 
@@ -1778,12 +1789,6 @@ bool CGameMovement::CheckSlideButton()
 {
 	CSDKPlayer *pPl = ToSDKPlayer(player);
 
-	if (pPl->IsPlayingAnimEvent())
-	{
-		mv->m_nOldButtons |= IN_DUCK;
-		return false;
-	}
-
 	if (player->GetFlags() & FL_ATCONTROLS)
 	{
 		mv->m_nOldButtons |= IN_DUCK;
@@ -1807,9 +1812,36 @@ bool CGameMovement::CheckSlideButton()
 
 	PlayerAnimEvent_t animEvent = PLAYERANIMEVENT_SLIDE;
 
-	pPl->DoAnimationEvent(animEvent, 1);
+	bool isKeeper;
+#ifdef CLIENT_DLL
+	isKeeper = GameResources()->GetTeamPosition(pPl->index) == 1;
+#else
+	isKeeper = pPl->GetTeamPosition() == 1;
+#endif
 
-	pPl->m_flAnimEventStart = gpGlobals->curtime;
+	if (isKeeper)
+	{
+		MoveHelper()->StartSound( mv->GetAbsOrigin(), "Player.DiveKeeper" );
+
+		if (mv->m_nButtons & IN_MOVELEFT)
+		{
+			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_LEFT;
+		}
+		else if (mv->m_nButtons & IN_MOVERIGHT)
+		{
+			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_RIGHT;
+		}
+		else if (mv->m_nButtons & IN_FORWARD)
+		{
+			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_FORWARD;
+		}
+		else if (mv->m_nButtons & IN_BACK)
+		{
+			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD;
+		}
+	}
+
+	pPl->DoAnimationEvent(animEvent);
 
 	//FinishGravity();
 
@@ -2369,7 +2401,6 @@ void CGameMovement::CategorizePosition( void )
 #define NON_JUMP_VELOCITY 140.0f
 
 	float zvel = mv->m_vecVelocity[2];
-	bool bMovingUp = zvel > 0.0f;
 	bool bMovingUpRapidly = zvel > NON_JUMP_VELOCITY;
 	float flGroundEntityVelZ = 0.0f;
 	if ( bMovingUpRapidly )
@@ -2551,17 +2582,9 @@ void CGameMovement::MoveToTargetPos()
 
 #endif
 
-#ifdef CLIENT_DLL
-	#include "c_ball.h"
-	#define CBall C_Ball
-#else
-	#include "ball.h"
-#endif
-
 void CGameMovement::CheckBallShield(Vector oldPos)
 {
 	CSDKPlayer *pPl = ToSDKPlayer(player);
-	CBall *pBall = GetBall();
 
 	bool stopPlayer = false;
 	Vector pos = mv->GetAbsOrigin();

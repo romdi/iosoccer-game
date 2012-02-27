@@ -595,7 +595,7 @@ void CBall::State_KICKOFF_Enter()
 		if (!CSDKPlayer::IsOnField(pPl))
 			continue;
 
-		pPl->HoldAtCurPos(0);
+		pPl->RemoveFlag(FL_ATCONTROLS);
 		pPl->DoServerAnimationEvent(PLAYERANIMEVENT_CANCEL);
 	}
 
@@ -641,7 +641,7 @@ void CBall::State_KICKOFF_Think()
 	{
 		m_pPl->RemoveFlag(FL_REMOTECONTROLLED);
 		m_pPl->SetMoveType(MOVETYPE_WALK);
-		m_pPl->HoldAtCurPos(-1);
+		m_pPl->AddFlag(FL_ATCONTROLS);
 	}
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++) 
@@ -667,7 +667,7 @@ void CBall::State_KICKOFF_Think()
 	{
 		SetVel(m_vPlForward * 200);
 		Kicked(BODY_FEET);
-		m_pPl->HoldAtCurPos(0);
+		m_pPl->RemoveFlag(FL_ATCONTROLS);
 		State_Transition(BALL_NORMAL);
 	}
 }
@@ -705,8 +705,7 @@ void CBall::State_THROWIN_Think()
 		SetPos(Vector(m_vPos.x, m_vPos.y, SDKGameRules()->m_vKickOff.GetZ() + VEC_HULL_MAX.z + 2));
 		m_pPl->RemoveFlag(FL_REMOTECONTROLLED);
 		m_pPl->SetMoveType(MOVETYPE_WALK);
-		//m_pPl->HoldAtCurPos(-1);
-		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_THROWIN, -1, true);
+		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_THROWIN);
 		return; // Give bots time to detect FL_ATCONTROLS
 	}
 
@@ -733,8 +732,7 @@ void CBall::State_THROWIN_Think()
 		}
 
 		Kicked(BODY_HANDS);
-		//m_pPl->HoldAtCurPos(0.75f);
-		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_THROW, 1, true);
+		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_THROW);
 
 		Vector2D dirToKickOff = Vector2D((SDKGameRules()->m_vKickOff - m_vPos).x, 0);
 		dirToKickOff.NormalizeInPlace();
@@ -978,7 +976,7 @@ void CBall::State_KEEPERHANDS_Think()
 
 	UpdateCarrier();
 
-	SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + BODY_CHEST_END) + Vector(m_vPlForward.x, m_vPlForward.y, 0) * 2 * VEC_HULL_MAX.x);
+	SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + BODY_CHEST_END) + m_vPlForward2D * 2 * VEC_HULL_MAX.x);
 
 	if (m_nPenBoxTeam != m_pPl->GetTeamNumber())
 	{
@@ -992,12 +990,12 @@ void CBall::State_KEEPERHANDS_Think()
 		if (m_bIsPowershot)
 		{
 			SetVel(m_vPlForward * sv_ball_powershot_strength.GetFloat() * (1 + GetPowershotModifier()) * GetPitchModifier());
-			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_VOLLEY);
+			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KEEPER_HANDS_KICK);
 		}
 		else
 		{
 			SetVel(m_vPlForward * sv_ball_powershot_strength.GetFloat() * (1 + GetPowershotModifier()) * GetPitchModifier());
-			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_THROW);
+			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KEEPER_HANDS_THROW);
 		}
 
 		Kicked(BODY_HANDS);
@@ -1135,8 +1133,8 @@ body_part_t CBall::GetBodyPart()
 			{
 			case PLAYERANIMEVENT_KEEPER_DIVE_LEFT: plDir = -m_vPlRight; break;
 			case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT: plDir = m_vPlRight; break;
-			case PLAYERANIMEVENT_KEEPER_DIVE_FORWARD: plDir = m_vPlForward; break;
-			case PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD: plDir = -m_vPlForward; break;
+			case PLAYERANIMEVENT_KEEPER_DIVE_FORWARD: plDir = m_vPlForward2D; break;
+			case PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD: plDir = -m_vPlForward2D; break;
 			}
 
 			if (RAD2DEG(acos(plDir.Dot(dirToBall))) <= sv_ball_keepersideangle.GetInt())
@@ -1190,7 +1188,14 @@ bool CBall::DoBodyPartAction()
 		}
 		else if (bodyPart == BODY_FEET)
 		{
-			return DoGroundShot();
+			if (m_pPl->m_ePlayerAnimEvent == PLAYERANIMEVENT_SLIDE)
+			{
+				SetVel(m_vPlForward2D * sv_ball_normalshot_strength.GetInt());
+				Kicked(BODY_FEET);
+				return true;
+			}
+			else
+				return DoGroundShot();
 		}
 	}
 	else
@@ -1326,6 +1331,8 @@ bool CBall::DoHeader()
 	{
 		SetVel(m_vPlForward * (sv_ball_normalshot_strength.GetFloat() + m_vPlVel.Length()) * GetPitchModifier());
 		EmitSound("Ball.kicknormal");
+		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEADER_STATIONARY);
+
 	}
 	
 	Kicked(BODY_HEAD);
@@ -1423,6 +1430,9 @@ void CBall::UpdateCarrier()
 		m_vPlVel = m_pPl->GetLocalVelocity();
 		m_aPlAng = m_pPl->EyeAngles();
 		AngleVectors(m_aPlAng, &m_vPlForward, &m_vPlRight, &m_vPlUp);
+		m_vPlForward2D = m_vPlForward;
+		m_vPlForward2D.z = 0;
+		m_vPlForward2D.NormalizeInPlace();
 		m_nPlTeam = m_pPl->GetTeamNumber();
 		m_nPlPos = m_pPl->GetTeamPosition();
 		m_bIsPowershot = (m_pPl->m_nButtons & (IN_ATTACK2 | IN_ALT1)) != 0;

@@ -259,38 +259,29 @@ int CSDKPlayerAnimState::CalcReloadLayerSequence()
 
 int CSDKPlayerAnimState::CalcFireLayerSequence(PlayerAnimEvent_t event)
 {
-	//ios anim events
-	if (event == PLAYERANIMEVENT_KICK)
-		return CalcSequenceIndex( "ioskick" );
-	else if (event == PLAYERANIMEVENT_PASS)
-		return CalcSequenceIndex( "iospass" );
-	else if (event == PLAYERANIMEVENT_PASS_STATIONARY)
-		return CalcSequenceIndex( "iospass_stationary" );
-	else if (event == PLAYERANIMEVENT_VOLLEY)
-		return CalcSequenceIndex( "iosvolley" );
-	else if (event == PLAYERANIMEVENT_HEELKICK)
-		return CalcSequenceIndex( "iosheelkick" );
-	else if (event == PLAYERANIMEVENT_HEADER)
-		return CalcSequenceIndex( "iosheader" );
-	else if (event == PLAYERANIMEVENT_THROWIN)
-		return CalcSequenceIndex( "iosthrowin" );
-	else if (event == PLAYERANIMEVENT_THROW)
-		return CalcSequenceIndex( "iosthrow" );
-	else if (event == PLAYERANIMEVENT_SLIDE)
+	switch (event)
 	{
-		if (GetBasePlayer()->GetFlags() & FL_CELEB)
-			return CalcSequenceIndex( "iosslideceleb" );		//override the normal anim if flag set
-		else
-			return CalcSequenceIndex( "iosslide" );
+	case PLAYERANIMEVENT_KICK: return CalcSequenceIndex("ioskick");
+	case PLAYERANIMEVENT_PASS: return CalcSequenceIndex("iospass");
+	case PLAYERANIMEVENT_PASS_STATIONARY: return CalcSequenceIndex("iospass_stationary");
+	case PLAYERANIMEVENT_VOLLEY: return CalcSequenceIndex("iosvolley");
+	case PLAYERANIMEVENT_HEELKICK: return CalcSequenceIndex("iosheelkick");
+	case PLAYERANIMEVENT_HEADER: return CalcSequenceIndex("iosheader");
+	case PLAYERANIMEVENT_HEADER_STATIONARY: return CalcSequenceIndex("iosheader_stationary");
+	case PLAYERANIMEVENT_THROWIN: return CalcSequenceIndex("iosthrowin");
+	case PLAYERANIMEVENT_THROW: return CalcSequenceIndex("iosthrow");
+	case PLAYERANIMEVENT_SLIDE: return CalcSequenceIndex((GetBasePlayer()->GetFlags() & FL_CELEB) ? "iosslideceleb" : "iosslide");
+	case PLAYERANIMEVENT_TACKLED_FORWARD: return CalcSequenceIndex("iostackled_forward");
+	case PLAYERANIMEVENT_TACKLED_BACKWARD: return CalcSequenceIndex("iostackled_backward");
+	case PLAYERANIMEVENT_DIVINGHEADER: return CalcSequenceIndex("iosdivingheader");
+	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT: return CalcSequenceIndex("iosdiveright");
+	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT: return CalcSequenceIndex("iosdiveleft");
+	case PLAYERANIMEVENT_KEEPER_DIVE_FORWARD: return CalcSequenceIndex("iostackled_forward");
+	case PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD: return CalcSequenceIndex("iostackled_backward");
+	case PLAYERANIMEVENT_KEEPER_HANDS_THROW: return CalcSequenceIndex("iosthrow");
+	case PLAYERANIMEVENT_KEEPER_HANDS_KICK: return CalcSequenceIndex("iosvolley");
+	default: return -1;
 	}
-	else if (event == PLAYERANIMEVENT_TACKLED_FORWARD)
-		return CalcSequenceIndex( "iostackled_forward" );
-	else if (event == PLAYERANIMEVENT_TACKLED_BACKWARD)
-		return CalcSequenceIndex( "iostackled_backward" );
-	else if (event == PLAYERANIMEVENT_DIVINGHEADER)
-		return CalcSequenceIndex( "iosdivingheader" );
-	
-	return -1;
 }
 
 
@@ -359,14 +350,10 @@ int CSDKPlayerAnimState::CalcSequenceIndex( const char *pBaseName, ... )
 // Purpose: 
 // Input  : event - 
 //-----------------------------------------------------------------------------
-void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event, float duration, bool hold, bool freeze)
+void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 {
 	GetSDKPlayer()->m_ePlayerAnimEvent = event;
-	GetSDKPlayer()->m_flAnimEventEnd = duration == -1 ? -1 : gpGlobals->curtime + duration;
-	if (hold)
-		GetSDKPlayer()->AddFlag(FL_ATCONTROLS);
-	if (freeze)
-		GetSDKPlayer()->AddFlag(FL_FROZEN);
+	GetSDKPlayer()->m_flPlayerAnimEventStart = gpGlobals->curtime;
 
 	switch( event )
 	{
@@ -387,6 +374,12 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event, float durati
 	case PLAYERANIMEVENT_TACKLED_BACKWARD:
 	case PLAYERANIMEVENT_DIVINGHEADER:
 	case PLAYERANIMEVENT_PASS_STATIONARY:
+	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT:
+	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT:
+	case PLAYERANIMEVENT_KEEPER_DIVE_FORWARD:
+	case PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD:
+	case PLAYERANIMEVENT_KEEPER_HANDS_THROW:
+	case PLAYERANIMEVENT_KEEPER_HANDS_KICK:
 		{
 			m_flFireCycle = 0;
 			m_iFireSequence = CalcFireLayerSequence( event );
@@ -394,10 +387,6 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event, float durati
 			break;
 		}
 	case PLAYERANIMEVENT_JUMP:
-	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT:
-	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT:
-	case PLAYERANIMEVENT_KEEPER_DIVE_FORWARD:
-	case PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD:
 		{
 			// Play the jump animation.
 			if (!m_bJumping)
@@ -405,42 +394,6 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event, float durati
 				m_bJumping = true;
 				m_bFirstJumpFrame = true;
 				m_flJumpStartTime = gpGlobals->curtime;
-				if (m_bCarryHold)									//dont dive when carrying
-				{
-					m_KeeperDive = 0;								//normal jump
-				}
-				else if (event == PLAYERANIMEVENT_KEEPER_DIVE_LEFT)
-				{
-					m_KeeperDive = PLAYERANIMEVENT_KEEPER_DIVE_LEFT;
-					m_fDiveTime = gpGlobals->curtime + 0.8f;
-				}
-				else if (event == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT)
-				{
-					m_KeeperDive = PLAYERANIMEVENT_KEEPER_DIVE_RIGHT;
-					m_fDiveTime = gpGlobals->curtime + 0.8f;
-				}
-				else if (event == PLAYERANIMEVENT_KEEPER_DIVE_FORWARD)
-				{
-					m_KeeperDive = PLAYERANIMEVENT_KEEPER_DIVE_FORWARD;
-					m_fDiveTime = gpGlobals->curtime + 0.8f;
-				}
-				else if (event == PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD)
-				{
-					m_KeeperDive = PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD;
-					m_fDiveTime = gpGlobals->curtime + 0.8f;
-				}
-				else
-				{
-					if (GetBasePlayer()->GetFlags() & FL_CELEB)				//celeb cartwheel time
-					{
-						m_KeeperDive = 1;								//needs to be non-zero thats all
-						m_fDiveTime = gpGlobals->curtime + 1.0f;
-					}
-					else
-					{
-						m_KeeperDive = 0;								//normal jump
-					}
-				}
 			}
 			break;
 		}
@@ -484,23 +437,10 @@ bool CSDKPlayerAnimState::HandleJumping( Activity &idealActivity )
 		// on-ground flag set right when the message comes in.
 		if ( gpGlobals->curtime - m_flJumpStartTime > 0.2f )
 		{
-			//normal jump - stop whe hits ground
-			if (!m_KeeperDive)
+			if ( GetBasePlayer()->GetFlags() & FL_ONGROUND )
 			{
-				if ( GetBasePlayer()->GetFlags() & FL_ONGROUND )
-				{
-					m_bJumping = false;
-					RestartMainSequence();	// Reset the animation.
-				}
-			}
-			else
-			{
-				//diving, wait for anim end
-				if (gpGlobals->curtime > m_fDiveTime)
-				{
-					m_bJumping = false;
-					RestartMainSequence();	// Reset the animation.
-				}
+				m_bJumping = false;
+				RestartMainSequence();	// Reset the animation.
 			}
 		}
 	}
@@ -519,7 +459,6 @@ extern ConVar anim_showmainactivity;
 
 Activity CSDKPlayerAnimState::CalcMainActivity()
 {
-
 	float flOuterSpeed = GetOuterXYSpeed();
 
 	CSDKPlayer	*pPlayer = dynamic_cast<CSDKPlayer*>(GetBasePlayer());
@@ -530,14 +469,6 @@ Activity CSDKPlayerAnimState::CalcMainActivity()
 	{
 		if (pPlayer->GetFlags() & FL_CELEB)
 			return ACT_IOS_JUMPCELEB;							//cartwheel celeb
-		else if (m_KeeperDive == PLAYERANIMEVENT_KEEPER_DIVE_LEFT)
-			return ACT_ROLL_RIGHT;								//wrong way round because animated facing keeper
-		else if (m_KeeperDive == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT)
-			return ACT_ROLL_LEFT;
-		else if (m_KeeperDive == PLAYERANIMEVENT_KEEPER_DIVE_FORWARD)
-			return ACT_DIEFORWARD;								//wrong way round because animated facing keeper
-		else if (m_KeeperDive == PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD)
-			return ACT_DIEBACKWARD;
 		else if (pPlayer->m_nBody > 0)
 			return ACT_LEAP;									//keepers jump
 		else

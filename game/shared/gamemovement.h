@@ -126,8 +126,7 @@ protected:
 
 	bool			CheckSlideButton();
 
-	void			DoSlide();
-	void			DoDive();
+	bool			CheckPlayerAnimEvent();
 	
 	// Player is a Observer chasing another player
 	void			FullObserverMove( void );

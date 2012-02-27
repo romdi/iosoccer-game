@@ -55,22 +55,16 @@ public:
 
 	CNetworkHandle( CBasePlayer, m_hPlayer );
 	CNetworkVar( int, m_iEvent );
-	CNetworkVar(float, m_flDuration);
-	CNetworkVar( bool, m_bHold );
-	CNetworkVar( bool, m_bFreeze );
 };
 
 IMPLEMENT_SERVERCLASS_ST_NOBASE( CTEPlayerAnimEvent, DT_TEPlayerAnimEvent )
 	SendPropEHandle( SENDINFO( m_hPlayer ) ),
 	SendPropInt( SENDINFO( m_iEvent ), Q_log2( PLAYERANIMEVENT_COUNT ) + 1, SPROP_UNSIGNED ),
-	SendPropFloat(SENDINFO(m_flDuration)),
-	SendPropBool( SENDINFO( m_bHold )),
-	SendPropBool( SENDINFO( m_bFreeze ))
 END_SEND_TABLE()
 
 static CTEPlayerAnimEvent g_TEPlayerAnimEvent( "PlayerAnimEvent" );
 
-void TE_PlayerAnimEvent( CBasePlayer *pPlayer, PlayerAnimEvent_t event, bool sendToPlayerClient, float duration, bool hold, bool freeze)
+void TE_PlayerAnimEvent( CBasePlayer *pPlayer, PlayerAnimEvent_t event, bool sendToPlayerClient )
 {
 	CPVSFilter filter( (const Vector&)pPlayer->EyePosition() );
 
@@ -81,7 +75,6 @@ void TE_PlayerAnimEvent( CBasePlayer *pPlayer, PlayerAnimEvent_t event, bool sen
 
 	g_TEPlayerAnimEvent.m_hPlayer = pPlayer;
 	g_TEPlayerAnimEvent.m_iEvent = event;
-	g_TEPlayerAnimEvent.m_flDuration = duration;
 	g_TEPlayerAnimEvent.Create( filter, 0 );
 }
 
@@ -243,7 +236,8 @@ CSDKPlayer::CSDKPlayer()
 	m_flNextJoin = gpGlobals->curtime;
 	m_TeamPos = m_ShirtPos = 1;
 	m_pPlayerBall = NULL;
-	m_flAnimEventEnd = -1;
+	m_flPlayerAnimEventStart = gpGlobals->curtime;
+	m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
 }
 
 
@@ -265,12 +259,6 @@ void CSDKPlayer::PreThink(void)
 	State_PreThink();
 
 	//UpdateSprint();
-
-	if (m_flAnimEventEnd != -1 && m_flAnimEventEnd <= gpGlobals->curtime)
-	{
-		RemoveFlag(FL_ATCONTROLS | FL_FROZEN);
-		m_flAnimEventEnd = -1;
-	}
 
 	if (m_nTeamToJoin != TEAM_INVALID && m_flNextJoin <= gpGlobals->curtime)
 		ChangeTeam(m_nTeamToJoin);
@@ -526,16 +514,16 @@ void CSDKPlayer::InitialSpawn( void )
 		State_Enter(STATE_ACTIVE);*/
 }
 
-void CSDKPlayer::DoServerAnimationEvent(PlayerAnimEvent_t event, float duration, bool hold, bool freeze)
+void CSDKPlayer::DoServerAnimationEvent(PlayerAnimEvent_t event)
 {
-	m_PlayerAnimState->DoAnimationEvent( event, duration, hold, freeze );
-	TE_PlayerAnimEvent( this, event, true, duration, hold, freeze);	// Send to any clients who can see this guy.
+	m_PlayerAnimState->DoAnimationEvent( event );
+	TE_PlayerAnimEvent( this, event, true );	// Send to any clients who can see this guy.
 }
 
-void CSDKPlayer::DoAnimationEvent(PlayerAnimEvent_t event, float duration, bool hold, bool freeze)
+void CSDKPlayer::DoAnimationEvent(PlayerAnimEvent_t event)
 {
-	m_PlayerAnimState->DoAnimationEvent( event, duration, hold, freeze );
-	TE_PlayerAnimEvent( this, event, false, duration, hold, freeze );	// Send to any clients who can see this guy.
+	m_PlayerAnimState->DoAnimationEvent( event );
+	TE_PlayerAnimEvent( this, event, false );	// Send to any clients who can see this guy.
 }
 
 void CSDKPlayer::CheatImpulseCommands( int iImpulse )
@@ -1226,7 +1214,7 @@ void CPlayerPersistentData::SavePlayerData(CSDKPlayer *pPl)
 
 	if (!data)
 	{
-		data = new CPlayerPersistentData();
+		data = new CPlayerPersistentData;
 		m_PlayerPersistentData.AddToTail(data);
 	}
 

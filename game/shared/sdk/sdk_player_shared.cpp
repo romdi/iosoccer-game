@@ -180,15 +180,3 @@ bool CSDKPlayer::ShouldCollide( int collisionGroup, int contentsMask ) const
 {
 	return BaseClass::ShouldCollide( collisionGroup, contentsMask );
 }
-
-void CSDKPlayer::HoldAtCurPos(float holdTime, bool freeze)
-{
-	m_flAnimEventEnd = holdTime == -1 ? -1 : gpGlobals->curtime + holdTime;
-	AddFlag(freeze ? FL_FROZEN : FL_ATCONTROLS);
-	SetLocalVelocity(vec3_origin);
-}
-
-bool CSDKPlayer::IsPlayingAnimEvent()
-{
-	return gpGlobals->curtime < m_flAnimEventEnd;
-}
