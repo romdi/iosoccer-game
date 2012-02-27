@@ -16,6 +16,7 @@
 #include "ball.h"
 #include "sdk_gamerules.h"
 #include "sdk_shareddefs.h"
+#include "steam/steam_api.h"
 
 const int MODEL_PLAYER			= 0;
 const int MODEL_KEEPER			= 1;
@@ -29,6 +30,20 @@ const int MODEL_KEEPER_AND_BALL	= 2;
 #define SPRINT_SPEED          90.0f    //IOS sprint increase in speed
 
 class CBall;
+
+class CPlayerPersistentData
+{
+public:
+	const CSteamID *m_SteamID;
+	int m_nYellowCards;
+	int m_nRedCards;
+	float m_flNextJoin;
+
+//	CPlayerPersistentData(const CSteamID *steamID);
+	static void RetrievePlayerData(CSDKPlayer *pPl);
+	static void SavePlayerData(CSDKPlayer *pPl);
+	static CUtlVector<CPlayerPersistentData *> m_PlayerPersistentData;
+};
 
 // Function table for each player state.
 class CSDKPlayerStateInfo

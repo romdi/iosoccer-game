@@ -266,13 +266,13 @@ void CSDKPlayer::PreThink(void)
 
 	//UpdateSprint();
 
-	if (m_flAnimEventEnd != -1 && gpGlobals->curtime >= m_flAnimEventEnd)
+	if (m_flAnimEventEnd != -1 && m_flAnimEventEnd <= gpGlobals->curtime)
 	{
 		RemoveFlag(FL_ATCONTROLS | FL_FROZEN);
 		m_flAnimEventEnd = -1;
 	}
 
-	if (m_nTeamToJoin != TEAM_INVALID && gpGlobals->curtime >= m_flNextJoin)
+	if (m_nTeamToJoin != TEAM_INVALID && m_flNextJoin <= gpGlobals->curtime)
 		ChangeTeam(m_nTeamToJoin);
 
 	if (!(m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1))))
@@ -848,7 +848,10 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 		if (team == TEAM_SPECTATOR)
 		{		
 			if (GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B)
-				m_flNextJoin = gpGlobals->curtime + mp_joindelay.GetFloat();
+			{
+				if (m_flNextJoin <= gpGlobals->curtime)
+					m_flNextJoin = gpGlobals->curtime + mp_joindelay.GetFloat();
+			}
 
 			ChangeTeam(TEAM_SPECTATOR);
 		}
@@ -859,7 +862,9 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 			{
 				if (GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B)
 				{
-					m_flNextJoin = gpGlobals->curtime + mp_joindelay.GetFloat();
+					if (m_flNextJoin <= gpGlobals->curtime)
+						m_flNextJoin = gpGlobals->curtime + mp_joindelay.GetFloat();
+
 					ChangeTeam(TEAM_SPECTATOR);
 				}
 
@@ -1185,4 +1190,48 @@ void CSDKPlayer::ResetStats()
 	m_Possession=0;
 	m_flPossessionTime=0.0f;
 	ResetFragCount();
+}
+
+CUtlVector<CPlayerPersistentData *> CPlayerPersistentData::m_PlayerPersistentData;
+
+void CPlayerPersistentData::RetrievePlayerData(CSDKPlayer *pPl)
+{
+	const CSteamID *steamID = engine->GetClientSteamID(pPl->edict());
+
+	for (int i = 0; i < m_PlayerPersistentData.Count(); i++)
+	{
+		if (m_PlayerPersistentData[i]->m_SteamID != steamID)
+			continue;
+
+		pPl->m_YellowCards = m_PlayerPersistentData[i]->m_nYellowCards;
+		pPl->m_RedCards = m_PlayerPersistentData[i]->m_nRedCards;
+		pPl->m_flNextJoin = m_PlayerPersistentData[i]->m_flNextJoin;
+		break;
+	}
+}
+
+void CPlayerPersistentData::SavePlayerData(CSDKPlayer *pPl)
+{
+	const CSteamID *steamID = engine->GetClientSteamID(pPl->edict());
+	CPlayerPersistentData *data = NULL;
+
+	for (int i = 0; i < m_PlayerPersistentData.Count(); i++)
+	{
+		if (m_PlayerPersistentData[i]->m_SteamID != steamID)
+			continue;
+
+		data = m_PlayerPersistentData[i];
+		break;
+	}
+
+	if (!data)
+	{
+		data = new CPlayerPersistentData();
+		m_PlayerPersistentData.AddToTail(data);
+	}
+
+	data->m_SteamID = engine->GetClientSteamID(pPl->edict());
+	data->m_nYellowCards = pPl->m_YellowCards;
+	data->m_nRedCards = pPl->m_RedCards;
+	data->m_flNextJoin = pPl->m_flNextJoin;
 }

@@ -843,6 +843,9 @@ int CSDKGameRules::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarge
 //-----------------------------------------------------------------------------
 void CSDKGameRules::ClientDisconnected( edict_t *pClient )
 {
+	CSDKPlayer *pPl = (CSDKPlayer *)CBaseEntity::Instance(pClient);
+	CPlayerPersistentData::SavePlayerData(pPl);
+
 	BaseClass::ClientDisconnected( pClient );
 }
 #endif

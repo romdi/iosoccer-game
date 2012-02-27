@@ -43,6 +43,8 @@ void FinishClientPutInServer( CSDKPlayer *pPlayer )
 {
 	pPlayer->InitialSpawn();
 
+	CPlayerPersistentData::RetrievePlayerData(pPlayer);
+
 	char sName[128];
 	Q_strncpy( sName, pPlayer->GetPlayerName(), sizeof( sName ) );
 	
@@ -70,7 +72,7 @@ void ClientPutInServer( edict_t *pEdict, const char *playername )
 	// Allocate a CBaseTFPlayer for pev, and call spawn
 	CSDKPlayer *pPlayer = CSDKPlayer::CreatePlayer( "player", pEdict );
 	pPlayer->SetPlayerName( playername );
-	pPlayer->m_JoinTime = gpGlobals->curtime; //ios
+	//pPlayer->m_JoinTime = gpGlobals->curtime; //ios
 }
 
 

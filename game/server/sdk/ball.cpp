@@ -897,7 +897,7 @@ void CBall::State_FREEKICK_Enter()
 	SetPos(m_vFoulPos);
 	if (CSDKPlayer::IsOnField(m_pFoulingPl))
 	{
-		match_event_t matchEvent;
+		match_event_t matchEvent = MATCH_EVENT_NONE;
 		switch (m_eFoulType)
 		{
 		case FOUL_NORMAL: matchEvent = MATCH_EVENT_FOUL; break;
@@ -1063,6 +1063,7 @@ bool CBall::CheckFoul()
 		if (RAD2DEG(acos(ballDirToPl.Dot(ballDirToOpp))) > sv_ball_slideangle.GetFloat())
 			continue;
 
+		m_pPl->m_YellowCards += 1;
 		pPl->DoAnimationEvent(PLAYERANIMEVENT_TACKLED_FORWARD);
 		TriggerFoul(FOUL_NORMAL, m_pPl, pPl->GetLocalOrigin());
 		return true;
