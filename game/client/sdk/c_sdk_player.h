@@ -168,6 +168,7 @@ private:
 public:
 
 	float				m_flAnimEventEnd;
+	float				m_flAnimEventStart;
 	PlayerAnimEvent_t	m_ePlayerAnimEvent;
 	void				HoldAtCurPos(float holdTime, bool freeze = false);
 	bool				IsPlayingAnimEvent();

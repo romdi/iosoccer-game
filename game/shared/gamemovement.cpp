@@ -1404,23 +1404,23 @@ void CGameMovement::FullWalkMove( )
 
 	StartGravity();
 
-	// Was jump button pressed?
-	if (mv->m_nButtons & IN_JUMP)
+	switch (ToSDKPlayer(player)->m_ePlayerAnimEvent)
 	{
-		CheckJumpButton();
-	}
-	else
-	{
-		mv->m_nOldButtons &= ~IN_JUMP;
-	}
+	case PLAYERANIMEVENT_SLIDE: DoSlide(); break;
+	case PLAYERANIMEVENT_TACKLED_FORWARD: DoDive(); break;
+	case PLAYERANIMEVENT_TACKLED_BACKWARD: DoDive(); break;
+	default:
+		{
+			if (mv->m_nButtons & IN_JUMP)
+				CheckJumpButton();
+			else
+				mv->m_nOldButtons &= ~IN_JUMP;
 
-	if (mv->m_nButtons & IN_DUCK)
-	{
-		CheckSlideButton();
-	}
-	else
-	{
-		mv->m_nOldButtons &= ~IN_DUCK;
+			if (mv->m_nButtons & IN_DUCK)
+				CheckSlideButton();
+			else
+				mv->m_nOldButtons &= ~IN_DUCK;
+		}
 	}
 
 	// Fricion is handled before we add in any base velocity. That way, if we are on a conveyor, 
@@ -1458,6 +1458,25 @@ void CGameMovement::FullWalkMove( )
 	}
 
 	CheckBallShield(oldPos);
+}
+
+void CGameMovement::DoSlide()
+{
+	float timePassed = gpGlobals->curtime - ToSDKPlayer(player)->m_flAnimEventStart;
+	mv->m_flForwardMove = mp_sprintspeed.GetInt() * max(0, (1 - timePassed / 1.0f));
+	mv->m_flSideMove = 0;
+	mv->m_flUpMove = 0;
+	//Vector forward;
+	//AngleVectors(mv->m_vecAbsViewAngles, &forward);
+	//mv->m_vecVelocity = forward * mp_sprintspeed.GetInt() * max(0, (1 - timePassed / 0.5f));
+	//mv->m_vecVelocity.z = 0;
+}
+
+void CGameMovement::DoDive()
+{
+	mv->m_flForwardMove = 0;
+	mv->m_flSideMove = 0;
+	mv->m_flUpMove = 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -1718,19 +1737,19 @@ bool CGameMovement::CheckJumpButton( void )
 
 		if (mv->m_nButtons & IN_MOVELEFT)
 		{
-			animEvent = PLAYERANIMEVENT_DIVE_LEFT;
+			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_LEFT;
 		}
 		else if (mv->m_nButtons & IN_MOVERIGHT)
 		{
-			animEvent = PLAYERANIMEVENT_DIVE_RIGHT;
+			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_RIGHT;
 		}
 		else if (mv->m_nButtons & IN_FORWARD)
 		{
-			animEvent = PLAYERANIMEVENT_TACKLED_FORWARD;
+			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_FORWARD;
 		}
 		else if (mv->m_nButtons & IN_BACK)
 		{
-			animEvent = PLAYERANIMEVENT_TACKLED_BACKWARD;
+			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD;
 		}
 	}
 
@@ -1789,6 +1808,8 @@ bool CGameMovement::CheckSlideButton()
 	PlayerAnimEvent_t animEvent = PLAYERANIMEVENT_SLIDE;
 
 	pPl->DoAnimationEvent(animEvent, 1);
+
+	pPl->m_flAnimEventStart = gpGlobals->curtime;
 
 	//FinishGravity();
 

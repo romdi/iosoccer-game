@@ -1101,6 +1101,9 @@ bool CBall::IsPlayerCloseEnough(CSDKPlayer *pPl, bool isKeeper /*= false*/)
 
 body_part_t CBall::GetBodyPart()
 {
+	if (m_pPl->m_flNextShot > gpGlobals->curtime)
+		return BODY_NONE;
+
 	Vector dirToBall = m_vPos - m_vPlPos;
 	float zDist = dirToBall.z;
 	float xyDist = dirToBall.Length2D();
@@ -1114,7 +1117,7 @@ body_part_t CBall::GetBodyPart()
 			if (CheckFoul())
 			{
 				TriggerFoul(FOUL_NORMAL, m_pPl, m_vPlPos);
-				State_Transition(BALL_FREEKICK);
+				State_Transition(BALL_FREEKICK, 1);
 				return BODY_NONE;
 			}
 
@@ -1122,18 +1125,18 @@ body_part_t CBall::GetBodyPart()
 				return BODY_FEET;
 		}
 	}
-	else if (m_pPl->m_ePlayerAnimEvent == PLAYERANIMEVENT_DIVE_LEFT || m_pPl->m_ePlayerAnimEvent == PLAYERANIMEVENT_DIVE_RIGHT || 
-			 m_pPl->m_ePlayerAnimEvent == PLAYERANIMEVENT_TACKLED_FORWARD || m_pPl->m_ePlayerAnimEvent == PLAYERANIMEVENT_TACKLED_BACKWARD)
+	else if (m_pPl->m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_DIVE_LEFT || m_pPl->m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT || 
+			 m_pPl->m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_DIVE_FORWARD || m_pPl->m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD)
 	{
 		if (xyDist <= sv_ball_keepertouchradius.GetFloat() * 2)
 		{
 			Vector plDir;
 			switch (m_pPl->m_ePlayerAnimEvent)
 			{
-			case PLAYERANIMEVENT_DIVE_LEFT: plDir = -m_vPlRight; break;
-			case PLAYERANIMEVENT_DIVE_RIGHT: plDir = m_vPlRight; break;
-			case PLAYERANIMEVENT_TACKLED_FORWARD: plDir = m_vPlForward; break;
-			case PLAYERANIMEVENT_TACKLED_BACKWARD: plDir = -m_vPlForward; break;
+			case PLAYERANIMEVENT_KEEPER_DIVE_LEFT: plDir = -m_vPlRight; break;
+			case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT: plDir = m_vPlRight; break;
+			case PLAYERANIMEVENT_KEEPER_DIVE_FORWARD: plDir = m_vPlForward; break;
+			case PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD: plDir = -m_vPlForward; break;
 			}
 
 			if (RAD2DEG(acos(plDir.Dot(dirToBall))) <= sv_ball_keepersideangle.GetInt())

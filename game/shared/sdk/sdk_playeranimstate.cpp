@@ -228,27 +228,27 @@ void CSDKPlayerAnimState::ComputePoseParam_MoveYaw( CStudioHdr *pStudioHdr )
 
 void CSDKPlayerAnimState::ComputeFireSequence( CStudioHdr *pStudioHdr )
 {
-#ifdef CLIENT_DLL
-	//if (m_iFireSequence > -1)
+//#ifdef CLIENT_DLL
+	if (m_iFireSequence > -1)
 		UpdateLayerSequenceGeneric( pStudioHdr, FIRESEQUENCE_LAYER, m_bFiring, m_flFireCycle, m_iFireSequence, false );
-#else
+//#else
 	// Server doesn't bother with different fire sequences.
-#endif
+//#endif
 }
 
 void CSDKPlayerAnimState::ComputeReloadSequence( CStudioHdr *pStudioHdr )
 {
-#ifdef CLIENT_DLL
+//#ifdef CLIENT_DLL
 
 	//Keeper Carry layer
-	//if (m_iReloadSequence > -1)
+	if (m_iReloadSequence > -1)
 		UpdateLayerSequenceGeneric( pStudioHdr, RELOADSEQUENCE_LAYER, m_bReloading, m_flReloadCycle, m_iReloadSequence, m_bCarryHold);
 
 	//Run Celeb layer
 	//UpdateLayerSequenceGeneric( pStudioHdr, RELOADSEQUENCE_LAYER, m_bCeleb, m_flCelebCycle, m_iCelebSequence, m_bCelebHold);
-#else
+//#else
 	// Server doesn't bother with different fire sequences.
-#endif
+//#endif
 }
 
 int CSDKPlayerAnimState::CalcReloadLayerSequence()
@@ -319,7 +319,7 @@ int CSDKPlayerAnimState::CalcSequenceIndex( const char *pBaseName, ... )
 	return iSequence;
 }
 
-#ifdef CLIENT_DLL
+
 	void CSDKPlayerAnimState::UpdateLayerSequenceGeneric( CStudioHdr *pStudioHdr, int iLayer, bool &bEnabled, float &flCurCycle, int &iSequence, bool bWaitAtEnd )
 	{
 		if ( !bEnabled )
@@ -338,10 +338,11 @@ int CSDKPlayerAnimState::CalcSequenceIndex( const char *pBaseName, ... )
 				// Not firing anymore.
 				bEnabled = false;
 				iSequence = 0;
+				GetSDKPlayer()->m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
 				return;
 			}
 		}
-
+#ifdef CLIENT_DLL
 		// Now dump the state into its animation layer.
 		C_AnimationLayer *pLayer = GetBasePlayer()->GetAnimOverlay( iLayer );
 
@@ -351,8 +352,8 @@ int CSDKPlayerAnimState::CalcSequenceIndex( const char *pBaseName, ... )
 		pLayer->m_flPlaybackRate = 1.0;
 		pLayer->m_flWeight = 1.0f;
 		pLayer->m_nOrder = iLayer;
-	}
 #endif
+	}
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -372,8 +373,8 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event, float durati
 	case PLAYERANIMEVENT_CANCEL:
 		{
 			ClearAnimationState();
+			break;
 		}
-		break;
 	case PLAYERANIMEVENT_KICK:			//ios
 	case PLAYERANIMEVENT_PASS:
 	case PLAYERANIMEVENT_VOLLEY:
@@ -393,8 +394,10 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event, float durati
 			break;
 		}
 	case PLAYERANIMEVENT_JUMP:
-	case PLAYERANIMEVENT_DIVE_LEFT:
-	case PLAYERANIMEVENT_DIVE_RIGHT:
+	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT:
+	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT:
+	case PLAYERANIMEVENT_KEEPER_DIVE_FORWARD:
+	case PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD:
 		{
 			// Play the jump animation.
 			if (!m_bJumping)
@@ -406,14 +409,24 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event, float durati
 				{
 					m_KeeperDive = 0;								//normal jump
 				}
-				else if (event == PLAYERANIMEVENT_DIVE_LEFT)
+				else if (event == PLAYERANIMEVENT_KEEPER_DIVE_LEFT)
 				{
-					m_KeeperDive = PLAYERANIMEVENT_DIVE_LEFT;
+					m_KeeperDive = PLAYERANIMEVENT_KEEPER_DIVE_LEFT;
 					m_fDiveTime = gpGlobals->curtime + 0.8f;
 				}
-				else if (event == PLAYERANIMEVENT_DIVE_RIGHT)
+				else if (event == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT)
 				{
-					m_KeeperDive = PLAYERANIMEVENT_DIVE_RIGHT;
+					m_KeeperDive = PLAYERANIMEVENT_KEEPER_DIVE_RIGHT;
+					m_fDiveTime = gpGlobals->curtime + 0.8f;
+				}
+				else if (event == PLAYERANIMEVENT_KEEPER_DIVE_FORWARD)
+				{
+					m_KeeperDive = PLAYERANIMEVENT_KEEPER_DIVE_FORWARD;
+					m_fDiveTime = gpGlobals->curtime + 0.8f;
+				}
+				else if (event == PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD)
+				{
+					m_KeeperDive = PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD;
 					m_fDiveTime = gpGlobals->curtime + 0.8f;
 				}
 				else
@@ -517,10 +530,14 @@ Activity CSDKPlayerAnimState::CalcMainActivity()
 	{
 		if (pPlayer->GetFlags() & FL_CELEB)
 			return ACT_IOS_JUMPCELEB;							//cartwheel celeb
-		else if (m_KeeperDive == PLAYERANIMEVENT_DIVE_LEFT)
+		else if (m_KeeperDive == PLAYERANIMEVENT_KEEPER_DIVE_LEFT)
 			return ACT_ROLL_RIGHT;								//wrong way round because animated facing keeper
-		else if (m_KeeperDive == PLAYERANIMEVENT_DIVE_RIGHT)
+		else if (m_KeeperDive == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT)
 			return ACT_ROLL_LEFT;
+		else if (m_KeeperDive == PLAYERANIMEVENT_KEEPER_DIVE_FORWARD)
+			return ACT_DIEFORWARD;								//wrong way round because animated facing keeper
+		else if (m_KeeperDive == PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD)
+			return ACT_DIEBACKWARD;
 		else if (pPlayer->m_nBody > 0)
 			return ACT_LEAP;									//keepers jump
 		else

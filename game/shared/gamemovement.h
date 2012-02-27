@@ -125,6 +125,9 @@ protected:
 	virtual bool	CheckJumpButton( void );	// Overridden by each game.
 
 	bool			CheckSlideButton();
+
+	void			DoSlide();
+	void			DoDive();
 	
 	// Player is a Observer chasing another player
 	void			FullObserverMove( void );

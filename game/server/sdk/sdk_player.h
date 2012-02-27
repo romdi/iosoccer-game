@@ -376,6 +376,7 @@ public:
 
 	bool				IsPlayingAnimEvent();
 	float				m_flAnimEventEnd;
+	float				m_flAnimEventStart;
 	void				SetPlayerBall(CBall *pPlayerBall) { m_pPlayerBall = pPlayerBall; }
 	CBall				*GetPlayerBall() { return m_pPlayerBall; }
 	void				HoldAtCurPos(float holdTime, bool freeze = false);
