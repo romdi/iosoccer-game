@@ -217,8 +217,8 @@ private:
 	float			m_flPhysRadius;
 	Vector			m_vTriggerTouchPos;
 	
-	CSDKPlayer		*m_pPl;				  // Current player for state
-	CSDKPlayer		*m_pOtherPl;
+	CHandle<CSDKPlayer>	m_pPl;				  // Current player for state
+	CHandle<CSDKPlayer>	m_pOtherPl;
 
 	QAngle			m_aPlAng;
 	Vector			m_vPlVel, m_vPlPos, m_vPlForward, m_vPlForward2D, m_vPlRight, m_vPlUp;
@@ -244,7 +244,7 @@ private:
 	bool			m_bIgnoreTriggers;
 	bool			m_bSetNewPos;
 	
-	CSDKPlayer		*m_pPossessingPl;
+	CHandle<CSDKPlayer>	m_pPossessingPl;
 	int				m_nPossessingTeam;
 	float			m_flPossessionStart;
 
