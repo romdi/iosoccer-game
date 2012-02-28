@@ -30,13 +30,7 @@ enum ball_state_t
 	BALL_KICKOFF,
 	BALL_PENALTY,
 	BALL_FREEKICK,
-	BALL_KEEPERHANDS,
-	BALL_GOALKICK_PENDING,
-	BALL_CORNERKICK_PENDING,
-	BALL_THROWIN_PENDING,
-	BALL_FOUL_PENDING,
-	BALL_PENALTY_PENDING,
-	BALL_KICKOFF_PENDING
+	BALL_KEEPERHANDS
 };
 
 enum body_part_t
@@ -195,7 +189,7 @@ private:
 	void			DisableOffsideLine();
 
 	bool			PlayersAtTargetPos(bool holdAtTargetPos);
-	bool			CheckFoul();
+	bool			CheckFoul(bool canShootBall);
 	void			TriggerFoul(foul_type_t type, CSDKPlayer *pPl, Vector pos);
 	CSDKPlayer		*FindNearestPlayer(int team = TEAM_INVALID, int posFlags = FL_POS_FIELD, bool checkIfShooting = false, int ignoredPlayerBits = 0);
 	bool			IsPlayerCloseEnough(CSDKPlayer *pPl, bool isKeeper = false);
@@ -224,6 +218,7 @@ private:
 	Vector			m_vTriggerTouchPos;
 	
 	CSDKPlayer		*m_pPl;				  // Current player for state
+	CSDKPlayer		*m_pOtherPl;
 
 	QAngle			m_aPlAng;
 	Vector			m_vPlVel, m_vPlPos, m_vPlForward, m_vPlForward2D, m_vPlRight, m_vPlUp;
@@ -243,7 +238,7 @@ private:
 
 	int				m_nTeam;				  //team the ball can be kicked	by (during a corner	etc) (0=any)
 	int				m_side;				  //side of	the	pitch the corner/goalkick should be	taken from
-	int				m_nPenBoxTeam;	 //-1 =	not	in box,	0,1	= teams	box
+	int				m_nInPenBoxOfTeam;	 //-1 =	not	in box,	0,1	= teams	box
 	int				m_FoulInPenaltyBox;	 //-1 =	not	in box,	0,1	= teams	box - recorded when foul occurs
 
 	bool			m_bIgnoreTriggers;

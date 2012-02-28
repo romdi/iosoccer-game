@@ -2623,7 +2623,7 @@ void CGameMovement::CheckBallShield(Vector oldPos)
 				}
 			}
 		}
-		else if (SDKGameRules()->m_nShieldType == SHIELD_GOALKICK)
+		else if (SDKGameRules()->m_nShieldType == SHIELD_GOALKICK || SDKGameRules()->m_nShieldType == SHIELD_PENALTY)
 		{
 			Vector min = GetGlobalTeam(SDKGameRules()->m_nShieldSide)->m_vPenBoxMin;
 			Vector max = GetGlobalTeam(SDKGameRules()->m_nShieldSide)->m_vPenBoxMax;

@@ -1134,6 +1134,26 @@ void CSDKPlayer::SetPosOutsideShield(bool holdAtTargetPos)
 		}
 		break;
 	case SHIELD_PENALTY:
+		{
+			float threshold = 2 * VEC_HULL_MAX.x;
+			Vector min = GetGlobalTeam(SDKGameRules()->m_nShieldSide)->m_vPenBoxMin - threshold;
+			Vector max = GetGlobalTeam(SDKGameRules()->m_nShieldSide)->m_vPenBoxMax + threshold;
+			Vector pos = GetLocalOrigin();
+			bool isInsideBox = pos.x > min.x && pos.y > min.y && pos.x < max.x && pos.y < max.y;
+
+			if (!isInsideBox)
+			{
+				m_bIsAtTargetPos = true;
+			}
+			else
+			{
+				AddFlag(FL_REMOTECONTROLLED);
+				float targetPosY = GetGlobalTeam(SDKGameRules()->m_nShieldSide)->m_nForward == 1 ? max.y : min.y;
+				m_vTargetPos = Vector(pos.x, targetPosY, SDKGameRules()->m_vKickOff.GetZ());
+				m_bIsAtTargetPos = false;
+				SetMoveType(MOVETYPE_NOCLIP);
+			}
+		}
 		break;
 	}
 }
