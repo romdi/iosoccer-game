@@ -238,6 +238,7 @@ CSDKPlayer::CSDKPlayer()
 	m_pPlayerBall = NULL;
 	m_flPlayerAnimEventStart = gpGlobals->curtime;
 	m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
+	m_nInPenBoxOfTeam = TEAM_INVALID;
 }
 
 

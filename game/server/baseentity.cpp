@@ -4229,7 +4229,7 @@ int CBaseEntity::GetTeamNumber( void ) const
 //-----------------------------------------------------------------------------
 int CBaseEntity::GetOppTeamNumber( void ) const
 {
-	if (m_iTeamNum != TEAM_A || m_iTeamNum != TEAM_B)
+	if (m_iTeamNum != TEAM_A && m_iTeamNum != TEAM_B)
 		return m_iTeamNum;
 
 	return m_iTeamNum == TEAM_A ? TEAM_B : TEAM_A;

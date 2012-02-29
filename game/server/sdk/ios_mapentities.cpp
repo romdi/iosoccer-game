@@ -25,18 +25,32 @@ public:
 			m_OnTrigger.FireOutput(pOther, this);
 			BallStartTouch(pBall);
 		}
+
+		CSDKPlayer *pPl = dynamic_cast<CSDKPlayer *>(pOther);
+		if (pPl && !GetBall()->GetIgnoreTriggers() && !SDKGameRules()->IsIntermissionState())
+		{
+			PlayerStartTouch(pPl);
+		}
 	};
 	void EndTouch(CBaseEntity *pOther)
 	{
 		CBall *pBall = dynamic_cast<CBall *>(pOther);
-		if (pBall && !pBall->GetIgnoreTriggers())
+		if (pBall && !pBall->GetIgnoreTriggers() && !SDKGameRules()->IsIntermissionState() && !pBall->GetOwnerEntity())
 		{
 			m_OnTrigger.FireOutput(pOther, this);
 			BallEndTouch(pBall);
 		}
+	
+		CSDKPlayer *pPl = dynamic_cast<CSDKPlayer *>(pOther);
+		if (pPl && !GetBall()->GetIgnoreTriggers() && !SDKGameRules()->IsIntermissionState())
+		{
+			PlayerEndTouch(pPl);
+		}
 	};
 	virtual void BallStartTouch(CBall *pBall) = 0;
 	virtual void BallEndTouch(CBall *pBall) {};
+	virtual void PlayerStartTouch(CSDKPlayer *pPl) {};
+	virtual void PlayerEndTouch(CSDKPlayer *pPl) {};
 };
 
 BEGIN_DATADESC( CBallTrigger )
@@ -139,9 +153,25 @@ public:
 		}
 		pBall->TriggerPenaltyBox(team);
 	};
+
 	void BallEndTouch(CBall *pBall)
 	{
 		pBall->TriggerPenaltyBox(TEAM_INVALID);
+	};
+
+	void PlayerStartTouch(CSDKPlayer *pPl)
+	{
+		int team = m_nTeam == 1 ? TEAM_A : TEAM_B;
+		if (SDKGameRules()->GetTeamsSwapped())
+		{
+			team = team == TEAM_A ? TEAM_B : TEAM_A;
+		}
+		pPl->m_nInPenBoxOfTeam = team;
+	};
+
+	void PlayerEndTouch(CSDKPlayer *pPl)
+	{
+		pPl->m_nInPenBoxOfTeam = TEAM_INVALID;
 	};
 };
 

@@ -319,7 +319,6 @@ public:
 	char				*GetCountryName() { return m_szCountryName; }
 	void				SetCountryName(const char *name) { Q_strncpy(m_szCountryName, name, sizeof(m_szCountryName)); m_bCountryNameChanged = true; } 
 
-	float				m_NextSlideTime;
 	float				m_TackleTime;
 	bool				m_bTackleDone;
 	bool				m_bSlideKick;
@@ -355,6 +354,8 @@ public:
 	Vector				m_vTargetPos;
 	bool				m_bIsAtTargetPos;
 	bool				m_bHoldAtTargetPos;
+
+	int					m_nInPenBoxOfTeam;
 
 	static bool			IsOnField(CSDKPlayer *pPl);
 

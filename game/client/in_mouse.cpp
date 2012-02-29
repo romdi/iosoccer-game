@@ -9,6 +9,7 @@
 #if !defined( _X360 )
 #include <windows.h>
 #endif
+#include "cbase.h"
 #include "hud.h"
 #include "cdll_int.h"
 #include "kbutton.h"
@@ -561,8 +562,23 @@ void CInput::MouseMove( CUserCmd *cmd )
 	float	mx, my;
 	QAngle	viewangles;
 
-	// Get view angles from engine
-	engine->GetViewAngles( viewangles );
+	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
+
+	if (pPlayer->GetFlags() & (FL_FREECAM | FL_REMOTECONTROLLED))
+	{
+		viewangles = m_aCameraViewAngles;
+		m_bWasFreeCam = true;
+	}
+	else
+	{
+		if (m_bWasFreeCam)
+		{
+			viewangles = m_aCameraViewAngles;
+			m_bWasFreeCam = false;
+		}
+		else
+			engine->GetViewAngles( viewangles );
+	}
 
 	// Validate mouse speed/acceleration settings
 	CheckMouseAcclerationVars();
@@ -597,8 +613,10 @@ void CInput::MouseMove( CUserCmd *cmd )
 		ResetMouse();
 	}
 
-	// Store out the new viewangles.
-	engine->SetViewAngles( viewangles );
+	m_aCameraViewAngles = viewangles;
+
+	if (!(pPlayer->GetFlags() & (FL_FREECAM | FL_REMOTECONTROLLED)))
+		engine->SetViewAngles( viewangles );
 }
 
 //-----------------------------------------------------------------------------

@@ -5,7 +5,7 @@
 
 LINK_ENTITY_TO_CLASS(ios_fieldbot, CFieldBot);
 
-ConVar bot_shootatgoal("bot_shootatgoal", "0");
+ConVar bot_shootatgoal("bot_shootatgoal", "1");
 
 void CFieldBot::BotThink()
 {
@@ -21,7 +21,9 @@ void CFieldBot::BotShootBall()
 
 	if (bot_shootatgoal.GetBool())
 	{
-		shotDir = GetOppTeam()->m_vPlayerSpawns[0] - GetLocalOrigin();
+		Vector target = GetOppTeam()->m_vPlayerSpawns[0];
+		target.x += g_IOSRand.RandomFloat(-200, 200);
+		shotDir = target - GetLocalOrigin();
 	}
 	else
 	{

@@ -91,7 +91,9 @@ void CInput::CAM_Think( void )
 	idealAngles[ YAW ]   = cam_idealyaw.GetFloat();
 	idealAngles[ DIST ]  = cam_idealdist.GetFloat();
 
-	engine->GetViewAngles( viewangles );
+	//engine->GetViewAngles( viewangles );
+
+	viewangles = m_aCameraViewAngles;
 
 	VectorCopy( m_vecCameraOffset, camOffset );
 

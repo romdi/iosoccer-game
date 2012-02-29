@@ -1018,7 +1018,7 @@ void CSDKGameRules::State_FIRST_HALF_Enter()
 {
 	//GetBall()->CreateVPhysics();
 	GetBall()->ResetStats();
-	GetBall()->SetRegularKickOff(true);
+	GetBall()->SetKickOffAfterGoal(false);
 	m_nKickOffTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
 	GetBall()->State_Transition(BALL_KICKOFF);
 }
@@ -1053,7 +1053,7 @@ void CSDKGameRules::State_HALFTIME_Think()
 void CSDKGameRules::State_SECOND_HALF_Enter()
 {
 	SetTeamsSwapped(true);
-	GetBall()->SetRegularKickOff(true);
+	GetBall()->SetKickOffAfterGoal(false);
 	GetBall()->State_Transition(BALL_KICKOFF);
 }
 
@@ -1091,7 +1091,7 @@ void CSDKGameRules::State_EXTRATIME_INTERMISSION_Think()
 void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Enter()
 {
 	SetTeamsSwapped(false);
-	GetBall()->SetRegularKickOff(true);
+	GetBall()->SetKickOffAfterGoal(false);
 	GetBall()->State_Transition(BALL_KICKOFF);
 }
 

@@ -598,6 +598,7 @@ void CBall::State_KICKOFF_Enter()
 
 		pPl->RemoveFlag(FL_ATCONTROLS);
 		pPl->DoServerAnimationEvent(PLAYERANIMEVENT_CANCEL);
+		//pPl->m_nInPenBoxOfTeam = TEAM_INVALID;
 	}
 
 	//m_bIgnoreTriggers = false;
@@ -609,16 +610,16 @@ void CBall::State_KICKOFF_Think()
 	if (!CSDKPlayer::IsOnField(m_pPl))
 	{
 		int kickOffTeam;
-		if (m_bRegularKickOff)
+		if (m_bKickOffAfterGoal)
+		{
+			kickOffTeam = LastOppTeam(true);
+		}
+		else
 		{
 			if (SDKGameRules()->GetTeamsSwapped())
 				kickOffTeam = SDKGameRules()->GetKickOffTeam() == TEAM_A ? TEAM_B : TEAM_A;
 			else
 				kickOffTeam = SDKGameRules()->GetKickOffTeam();
-		}
-		else
-		{
-			kickOffTeam = LastOppTeam(true);
 		}
 
 		m_pPl = FindNearestPlayer(kickOffTeam);
@@ -681,7 +682,7 @@ void CBall::State_KICKOFF_Think()
 
 	if (m_pPl->m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1)))
 	{
-		SetVel(m_vPlForward * 200);
+		SetVel(m_vPlForward2D * 200);
 		Kicked(BODY_FEET);
 		m_pPl->RemoveFlag(FL_ATCONTROLS);
 		if (m_pOtherPl)
@@ -859,7 +860,7 @@ void CBall::State_GOAL_Enter()
 {
 	UpdatePossession(NULL);
 	//m_bIgnoreTriggers = true;
-	m_bRegularKickOff = false;
+	m_bKickOffAfterGoal = true;
 
 	if (m_nTeam == LastTeam(true))
 	{
@@ -911,7 +912,7 @@ void CBall::State_FREEKICK_Enter()
 {
 	DisableOffsideLine();
 	SetPos(m_vFoulPos);
-	if (CSDKPlayer::IsOnField(m_pFoulingPl))
+	if (m_pFoulingPl)
 	{
 		match_event_t matchEvent = MATCH_EVENT_NONE;
 		switch (m_eFoulType)
@@ -960,7 +961,7 @@ void CBall::State_PENALTY_Enter()
 {
 	SetPos(GetGlobalTeam(m_nFoulingTeam)->m_vPenalty);
 
-	if (CSDKPlayer::IsOnField(m_pFoulingPl))
+	if (m_pFoulingPl)
 		SendMatchEvent(MATCH_EVENT_FOUL, m_pFoulingPl);
 }
 
@@ -1114,29 +1115,26 @@ bool CBall::CheckFoul(bool canShootBall)
 			continue;
 
 		Vector dirToPl = pPl->GetLocalOrigin() - m_vPlPos;
-		if (dirToPl.Length2D() > sv_ball_touchradius.GetFloat() * 2)
+		float distToPl = dirToPl.Length2D();
+
+		if (distToPl > sv_ball_touchradius.GetFloat() * 2)
 			continue;
 
+		dirToPl.z = 0;
 		dirToPl.NormalizeInPlace();
-		if (RAD2DEG(acos(m_vPlForward.Dot(dirToPl))) > sv_ball_slideangle.GetFloat())
+		if (RAD2DEG(acos(m_vPlForward2D.Dot(dirToPl))) > sv_ball_slideangle.GetFloat())
 			continue;
 
-		if (canShootBall)
-		{
-			Vector ballDirToPl = m_vPlPos - m_vPos;
-			ballDirToPl.z = 0;
-			ballDirToPl.NormalizeInPlace();
-
-			Vector ballDirToOpp = pPl->GetLocalOrigin() - m_vPos;
-			ballDirToOpp.z = 0;
-			ballDirToOpp.NormalizeInPlace();
-
-			if (RAD2DEG(acos(ballDirToPl.Dot(ballDirToOpp))) > sv_ball_slideangle.GetFloat())
-				continue;
-		}
+		if (canShootBall && distToPl >= (m_vPos - m_vPlPos).Length2D())
+			continue;
 
 		m_pPl->m_YellowCards += 1;
-		pPl->DoAnimationEvent(PLAYERANIMEVENT_TACKLED_FORWARD);
+		//if (m_pPl->m_YellowCards % 2 == 0)
+		//{
+		//	m_pPl->m_flNextJoin = gpGlobals->curtime + 30;
+		//	m_pPl->ChangeTeam(TEAM_SPECTATOR);
+		//}
+		pPl->DoAnimationEvent(RAD2DEG(acos(m_vPlForward2D.Dot(pPl->EyeDirection2D()))) <= 90 ? PLAYERANIMEVENT_TACKLED_BACKWARD : PLAYERANIMEVENT_TACKLED_FORWARD);
 		TriggerFoul(FOUL_NORMAL, m_pPl, pPl->GetLocalOrigin());
 		return true;
 	}
@@ -1183,7 +1181,7 @@ body_part_t CBall::GetBodyPart()
 	{
 		if (xyDist <= sv_ball_touchradius.GetFloat() * 2)
 		{
-			bool canShootBall = RAD2DEG(acos(m_vPlForward.Dot(dirToBall))) <= sv_ball_slideangle.GetFloat();
+			bool canShootBall = RAD2DEG(acos(m_vPlForward2D.Dot(dirToBall))) <= sv_ball_slideangle.GetFloat();
 
 			if (CheckFoul(canShootBall))
 			{
@@ -1394,16 +1392,16 @@ bool CBall::DoChestDrop()
 bool CBall::DoHeader()
 {
 	if (m_bIsPowershot && 
-		m_vPlVel.Length2D() >= mp_runspeed.GetInt() - FLT_EPSILON &&
+		m_vPlVel.Length2D() > 0 &&// mp_runspeed.GetInt() - FLT_EPSILON &&
 		m_pPl->m_TeamPos > 1 &&
-		m_nInPenBoxOfTeam != TEAM_INVALID &&
+		m_nInPenBoxOfTeam == m_pPl->GetOppTeamNumber() &&
 		m_pPl->m_flNextSlide <= gpGlobals->curtime)
 	{
 		SetVel(m_vPlForward * (sv_ball_powershot_strength.GetFloat() / 2.0f + m_vPlVel.Length()) * (1 + GetPowershotModifier()) * GetPitchModifier());
 		//SetVel(m_vPlForward * (sv_ball_powershot_strength.GetFloat() * 1.5f + m_vPlVel.Length()));
 		EmitSound("Ball.kickhard");
+		m_pPl->AddFlag(FL_FREECAM);
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_DIVINGHEADER);
-		m_pPl->m_NextSlideTime = gpGlobals->curtime + 1.5f;
 	}
 	else if (m_bIsPowershot)
 	{

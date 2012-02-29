@@ -460,6 +460,7 @@ private:
 	QAngle			m_vecOldViewAngles;
 
 	bool			m_bWasFrozen;
+	bool			m_bWasFreeCam;
 	int				m_flPhysics;
 
 	int				m_nTickBase;

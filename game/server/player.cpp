@@ -2703,6 +2703,11 @@ void CBasePlayer::PlayerRunCommand(CUserCmd *ucmd, IMoveHelper *moveHelper)
 		VectorCopy ( ucmd->viewangles, pl.v_angle );
 	}
 
+	//if (GetFlags() & (FL_FREECAM | FL_REMOTECONTROLLED))
+	//{
+	//	ucmd->viewangles = pl.v_angle;
+	//}
+
 	// Handle FL_FROZEN.
 	// Prevent player moving for some seconds after New Game, so that they pick up everything
 	if( GetFlags() & FL_FROZEN || 

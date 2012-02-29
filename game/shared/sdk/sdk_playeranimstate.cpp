@@ -311,40 +311,41 @@ int CSDKPlayerAnimState::CalcSequenceIndex( const char *pBaseName, ... )
 }
 
 
-	void CSDKPlayerAnimState::UpdateLayerSequenceGeneric( CStudioHdr *pStudioHdr, int iLayer, bool &bEnabled, float &flCurCycle, int &iSequence, bool bWaitAtEnd )
+void CSDKPlayerAnimState::UpdateLayerSequenceGeneric( CStudioHdr *pStudioHdr, int iLayer, bool &bEnabled, float &flCurCycle, int &iSequence, bool bWaitAtEnd )
+{
+	if ( !bEnabled )
+		return;
+
+	// Increment the fire sequence's cycle.
+	flCurCycle += GetBasePlayer()->GetSequenceCycleRate( pStudioHdr, iSequence ) * gpGlobals->frametime;
+	if ( flCurCycle > 1 )
 	{
-		if ( !bEnabled )
-			return;
-
-		// Increment the fire sequence's cycle.
-		flCurCycle += GetBasePlayer()->GetSequenceCycleRate( pStudioHdr, iSequence ) * gpGlobals->frametime;
-		if ( flCurCycle > 1 )
+		if ( bWaitAtEnd )
 		{
-			if ( bWaitAtEnd )
-			{
-				flCurCycle = 1;
-			}
-			else
-			{
-				// Not firing anymore.
-				bEnabled = false;
-				iSequence = 0;
-				GetSDKPlayer()->m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
-				return;
-			}
+			flCurCycle = 1;
 		}
-#ifdef CLIENT_DLL
-		// Now dump the state into its animation layer.
-		C_AnimationLayer *pLayer = GetBasePlayer()->GetAnimOverlay( iLayer );
-
-		pLayer->m_flCycle = flCurCycle;
-		pLayer->m_nSequence = iSequence;
-
-		pLayer->m_flPlaybackRate = 1.0;
-		pLayer->m_flWeight = 1.0f;
-		pLayer->m_nOrder = iLayer;
-#endif
+		else
+		{
+			// Not firing anymore.
+			bEnabled = false;
+			iSequence = 0;
+			GetSDKPlayer()->m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
+			GetSDKPlayer()->RemoveFlag(FL_FREECAM);
+			return;
+		}
 	}
+#ifdef CLIENT_DLL
+	// Now dump the state into its animation layer.
+	C_AnimationLayer *pLayer = GetBasePlayer()->GetAnimOverlay( iLayer );
+
+	pLayer->m_flCycle = flCurCycle;
+	pLayer->m_nSequence = iSequence;
+
+	pLayer->m_flPlaybackRate = 1.0;
+	pLayer->m_flWeight = 1.0f;
+	pLayer->m_nOrder = iLayer;
+#endif
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: 

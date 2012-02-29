@@ -301,6 +301,18 @@ void CTeam::InitFieldSpots(int team)
 	CBaseEntity *pPenBox = gEntList.FindEntityByClassnameNearest("trigger_PenaltyBox", m_vPenalty, 9999);
 	pPenBox->CollisionProp()->WorldSpaceTriggerBounds(&m_vPenBoxMin.GetForModify(), &m_vPenBoxMax.GetForModify());
 
+	if (SDKGameRules()->m_vKickOff.GetY() > m_vPenBoxMin.GetY())
+		m_vPenBoxMin.SetY(m_vPenBoxMin.GetY() - 150);
+	else
+		m_vPenBoxMax.SetY(m_vPenBoxMax.GetY() + 150);
+
+	CBaseEntity *pCrossbar = gEntList.FindEntityByName(NULL, UTIL_VarArgs("team%d_crossbar", index + 1));
+	if (pCrossbar)
+	{
+		pCrossbar->SetRenderMode(kRenderTransColor);
+		pCrossbar->SetRenderColorA(100);
+	}
+
 	for (int j = 0; j < 11; j++)
 	{
 		m_vPlayerSpawns[j] = GetSpotPos(UTIL_VarArgs("info_team%d_player%d", index + 1, j + 1));

@@ -98,7 +98,7 @@ struct CBallStateInfo
 
 struct BallTouchInfo
 {
-	CSDKPlayer		*m_pPl;
+	CHandle<CSDKPlayer>	m_pPl;
 	int				m_nTeam;
 	bool			m_bIsShot;
 	body_part_t		m_eBodyPart;
@@ -146,7 +146,7 @@ public:
 	void			TriggerPenaltyBox(int team);
 	bool			GetIgnoreTriggers() { return m_bIgnoreTriggers; };
 	//void			SetIgnoreTriggers(bool ignoreTriggers) { m_bIgnoreTriggers = ignoreTriggers; };
-	void			SetRegularKickOff(bool regular) { m_bRegularKickOff = regular; };
+	void			SetKickOffAfterGoal(bool kickOffAfterGoal) { m_bKickOffAfterGoal = kickOffAfterGoal; };
 
 	void			State_Transition( ball_state_t newState, float delay = 0.0f );
 
@@ -227,7 +227,7 @@ private:
 	bool			m_bIsPowershot;
 	body_part_t		m_eLastBodyPart;
 
-	CSDKPlayer		*m_pFoulingPl;
+	CHandle<CSDKPlayer>	m_pFoulingPl;
 	int				m_nFoulingTeam;
 	foul_type_t		m_eFoulType;
 	Vector			m_vFoulPos;
@@ -248,7 +248,7 @@ private:
 	int				m_nPossessingTeam;
 	float			m_flPossessionStart;
 
-	bool			m_bRegularKickOff;
+	bool			m_bKickOffAfterGoal;
 
 	CUtlVector<BallTouchInfo> m_Touches;
 

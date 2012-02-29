@@ -387,6 +387,7 @@ C_BasePlayer::C_BasePlayer() : m_iv_vecViewOffset( "C_BasePlayer::m_iv_vecViewOf
 	m_flPredictionErrorTime = -100;
 	m_StuckLast = 0;
 	m_bWasFrozen = false;
+	m_bWasFreeCam = false;
 
 	m_bResampleWaterSurface = true;
 	
@@ -947,34 +948,26 @@ void C_BasePlayer::DetermineVguiInputMode( CUserCmd *pCmd )
 //-----------------------------------------------------------------------------
 bool C_BasePlayer::CreateMove( float flInputSampleTime, CUserCmd *pCmd )
 {
-	// Allow the vehicle to clamp the view angles
-	if ( IsInAVehicle() )
+	if ( joy_autosprint.GetBool() )
 	{
-		IClientVehicle *pVehicle = m_hVehicle.Get()->GetClientVehicle();
-		if ( pVehicle )
+		if ( input->KeyState( &in_joyspeed ) != 0.0f )
 		{
-			pVehicle->UpdateViewAngles( this, pCmd );
-			engine->SetViewAngles( pCmd->viewangles );
+			pCmd->buttons |= IN_SPEED;
 		}
 	}
-	else 
-	{
-#ifndef _X360
-		if ( joy_autosprint.GetBool() )
-#endif
-		{
-			if ( input->KeyState( &in_joyspeed ) != 0.0f )
-			{
-				pCmd->buttons |= IN_SPEED;
-			}
-		}
 
-		CBaseCombatWeapon *pWeapon = GetActiveWeapon();
-		if ( pWeapon )
-		{
-			pWeapon->CreateMove( flInputSampleTime, pCmd, m_vecOldViewAngles );
-		}
-	}
+	//if (GetFlags() & (FL_FREECAM | FL_REMOTECONTROLLED))
+	//{
+	//	//if (m_bWasFreeCam)
+	//	{
+	//		pCmd->viewangles = m_vecOldViewAngles;
+	//		engine->SetViewAngles( pCmd->viewangles );
+	//	}
+	//	//else
+	//	//	m_bWasFreeCam = true;
+	//}
+	//else
+	//	m_bWasFreeCam = false;
 
 	// If the frozen flag is set, prevent view movement (server prevents the rest of the movement)
 	if ( GetFlags() & FL_FROZEN )

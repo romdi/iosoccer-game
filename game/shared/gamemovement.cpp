@@ -1412,7 +1412,10 @@ void CGameMovement::FullWalkMove( )
 			mv->m_nOldButtons &= ~IN_JUMP;
 
 		if (mv->m_nButtons & IN_DUCK)
-			CheckSlideButton();
+		{
+			if (CheckSlideButton())
+				CheckPlayerAnimEvent();
+		}
 		else
 			mv->m_nOldButtons &= ~IN_DUCK;
 	}
@@ -1512,6 +1515,13 @@ bool CGameMovement::CheckPlayerAnimEvent()
 	case PLAYERANIMEVENT_THROW:
 		{
 			mv->m_flForwardMove = 0;
+			mv->m_flSideMove = 0;
+			mv->m_flUpMove = 0;
+			break;
+		}
+	case PLAYERANIMEVENT_DIVINGHEADER:
+		{
+			mv->m_flForwardMove = mp_sprintspeed.GetInt() * max(0, (1 - timePassed / 1.0f));
 			mv->m_flSideMove = 0;
 			mv->m_flUpMove = 0;
 			break;
@@ -1841,11 +1851,13 @@ bool CGameMovement::CheckSlideButton()
 		}
 	}
 
+	pPl->AddFlag(FL_FREECAM);
+
 	pPl->DoAnimationEvent(animEvent);
 
 	//FinishGravity();
 
-	mv->m_flMaxSpeed = pPl->m_Shared.m_flRunSpeed / 2;
+	//mv->m_flMaxSpeed = pPl->m_Shared.m_flRunSpeed / 2;
 
 	mv->m_nOldButtons |= IN_DUCK;
 
@@ -2564,7 +2576,9 @@ void CGameMovement::MoveToTargetPos()
 	Vector dir = pPl->m_vTargetPos - mv->GetAbsOrigin();
 	dir.z = 0;
 
-	VectorAngles(dir, mv->m_vecAbsViewAngles);
+	VectorAngles(dir, mv->m_vecAngles);
+	mv->m_vecAbsViewAngles = mv->m_vecViewAngles = mv->m_vecAngles;
+	pPl->SnapEyeAngles(mv->m_vecAngles);
 	//mv->m_flForwardMove = mp_runspeed.GetInt();
 	float distToTarget = dir.Length2D();
 	dir.NormalizeInPlace();
