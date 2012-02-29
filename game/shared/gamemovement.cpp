@@ -1454,6 +1454,20 @@ void CGameMovement::FullWalkMove( )
 		mv->m_vecVelocity[2] = 0;
 	}
 
+	Vector newPos = mv->GetAbsOrigin();
+
+	if (player->GetFlags() & FL_NO_X_MOVEMENT)
+	{
+		mv->m_vecVelocity[0] = 0;
+		mv->SetAbsOrigin(Vector(oldPos.x, newPos.y, newPos.z));
+	}
+
+	if (player->GetFlags() & FL_NO_Y_MOVEMENT)
+	{
+		mv->m_vecVelocity[1] = 0;
+		mv->SetAbsOrigin(Vector(newPos.x, oldPos.y, newPos.z));
+	}
+
 	CheckBallShield(oldPos);
 }
 
@@ -2565,11 +2579,12 @@ void CGameMovement::MoveToTargetPos()
 	{
 		mv->m_vecVelocity = vec3_origin;
 		pPl->m_bIsAtTargetPos = true;
-		if (!pPl->m_bHoldAtTargetPos)
-		{
-			pPl->RemoveFlag(FL_REMOTECONTROLLED);
-			pPl->SetMoveType(MOVETYPE_WALK);
-		}
+		pPl->RemoveFlag(FL_REMOTECONTROLLED);
+		pPl->SetMoveType(MOVETYPE_WALK);
+
+		if (pPl->m_bHoldAtTargetPos)
+			pPl->AddFlag(FL_ATCONTROLS);
+
 		return;
 	}
 

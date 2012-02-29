@@ -141,8 +141,8 @@ public:
 	bool			CreateVPhysics();
 	
 	void			TriggerGoal(int team);
-	void			TriggerGoalLine(int team, float touchPosY);
-	void			TriggerSideline(float touchPosX);
+	void			TriggerGoalLine(int team);
+	void			TriggerSideline();
 	void			TriggerPenaltyBox(int team);
 	bool			GetIgnoreTriggers() { return m_bIgnoreTriggers; };
 	//void			SetIgnoreTriggers(bool ignoreTriggers) { m_bIgnoreTriggers = ignoreTriggers; };
@@ -158,6 +158,8 @@ public:
 	void			SetPos(const Vector &pos);
 	void			SetVel(const Vector &vel);
 	void			SetRot(const AngularImpulse &rot = NULL);
+
+	void			SetHasLeftSidelineTrigger(bool hasLeftSidelineTrigger) { m_bHasLeftSidelineTrigger = hasLeftSidelineTrigger; }
 
 private:
 
@@ -192,7 +194,6 @@ private:
 	bool			CheckFoul(bool canShootBall);
 	void			TriggerFoul(foul_type_t type, CSDKPlayer *pPl, Vector pos);
 	CSDKPlayer		*FindNearestPlayer(int team = TEAM_INVALID, int posFlags = FL_POS_FIELD, bool checkIfShooting = false, int ignoredPlayerBits = 0);
-	bool			IsPlayerCloseEnough(CSDKPlayer *pPl, bool isKeeper = false);
 	body_part_t		GetBodyPart();
 	bool			DoBodyPartAction();
 	bool			DoGroundShot();
@@ -252,7 +253,8 @@ private:
 
 	CUtlVector<BallTouchInfo> m_Touches;
 
-	CBeam *m_pOffsideLine;
+	bool			m_bHasLeftSidelineTrigger;
+	bool			m_bCheckSidelineTrigger;
 };
 
 #endif

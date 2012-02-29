@@ -27,11 +27,12 @@ public:
 		}
 
 		CSDKPlayer *pPl = dynamic_cast<CSDKPlayer *>(pOther);
-		if (pPl && !GetBall()->GetIgnoreTriggers() && !SDKGameRules()->IsIntermissionState())
+		if (pPl/* && !GetBall()->GetIgnoreTriggers() && !SDKGameRules()->IsIntermissionState()*/)
 		{
 			PlayerStartTouch(pPl);
 		}
 	};
+
 	void EndTouch(CBaseEntity *pOther)
 	{
 		CBall *pBall = dynamic_cast<CBall *>(pOther);
@@ -42,7 +43,7 @@ public:
 		}
 	
 		CSDKPlayer *pPl = dynamic_cast<CSDKPlayer *>(pOther);
-		if (pPl && !GetBall()->GetIgnoreTriggers() && !SDKGameRules()->IsIntermissionState())
+		if (pPl/* && !GetBall()->GetIgnoreTriggers() && !SDKGameRules()->IsIntermissionState()*/)
 		{
 			PlayerEndTouch(pPl);
 		}
@@ -93,15 +94,15 @@ public:
 
 	void BallStartTouch(CBall *pBall)
 	{
-		Vector min, max;
-		CollisionProp()->WorldSpaceTriggerBounds(&min, &max);
-		float touchPosY = Sign((SDKGameRules()->m_vKickOff - GetLocalOrigin()).y) == 1 ? max.y : min.y;
+		//Vector min, max;
+		//CollisionProp()->WorldSpaceTriggerBounds(&min, &max);
+		//float touchPosY = Sign((SDKGameRules()->m_vKickOff - GetLocalOrigin()).y) == 1 ? max.y : min.y;
 		int team = m_nTeam == 1 ? TEAM_A : TEAM_B;
 		if (SDKGameRules()->GetTeamsSwapped())
 		{
 			team = team == TEAM_A ? TEAM_B : TEAM_A;
 		}
-		pBall->TriggerGoalLine(team, touchPosY);
+		pBall->TriggerGoalLine(team);
 	};
 };
 
@@ -122,11 +123,17 @@ public:
 
 	void BallStartTouch(CBall *pBall)
 	{
-		Vector min, max;
-		CollisionProp()->WorldSpaceTriggerBounds(&min, &max);
-		float touchPosX = Sign(SDKGameRules()->m_vKickOff.GetX() - WorldSpaceCenter().x) == 1 ? max.x : min.x;
-		pBall->TriggerSideline(touchPosX);
+		//Vector min, max;
+		//CollisionProp()->WorldSpaceTriggerBounds(&min, &max);
+		//float touchPosX = Sign(SDKGameRules()->m_vKickOff.GetX() - WorldSpaceCenter().x) == 1 ? max.x : min.x;
+		pBall->SetHasLeftSidelineTrigger(false);
+		pBall->TriggerSideline();
 	};
+
+	void BallEndTouch(CBall *pBall)
+	{
+		pBall->SetHasLeftSidelineTrigger(true);
+	}
 };
 
 BEGIN_DATADESC( CTriggerSideLine )

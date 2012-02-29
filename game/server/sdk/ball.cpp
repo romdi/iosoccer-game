@@ -61,6 +61,7 @@ CBall *CreateBall(const Vector &pos, CSDKPlayer *pOwner)
 	pBall->SetAbsOrigin(pos);
 	pBall->SetOwnerEntity(pOwner);
 	pBall->Spawn();
+	pBall->SetPos(pos);
 	return pBall;
 }
 
@@ -79,10 +80,7 @@ void CC_CreatePlayerBall(const CCommand &args)
 	if (pPl->GetPlayerBall())
 		pPl->GetPlayerBall()->SetPos(pos);
 	else
-	{
 		pPl->SetPlayerBall(CreateBall(pos, pPl));
-		pPl->GetPlayerBall()->SetPos(pos);
-	}
 }
 
 static ConCommand createplayerball("createplayerball", CC_CreatePlayerBall);
@@ -147,6 +145,8 @@ CBall::CBall()
 	m_pPl = NULL;
 	m_nPlTeam = TEAM_INVALID;
 	m_bSetNewPos = false;
+	m_bCheckSidelineTrigger = false;
+	m_bHasLeftSidelineTrigger = true;
 }
 
 CBall::~CBall()
@@ -352,6 +352,12 @@ void CBall::VPhysicsCollision( int index, gamevcollisionevent_t	*pEvent	)
 
 	//Warning ("surfaceprops index %d\n", surfaceProps);
 
+	if (!GetOwnerEntity() && m_bCheckSidelineTrigger && !m_bHasLeftSidelineTrigger)
+	{
+		m_bCheckSidelineTrigger = false;
+		State_Transition(BALL_THROWIN, 1);
+	}
+
 	BaseClass::VPhysicsCollision( index, pEvent );
 }
 
@@ -491,8 +497,7 @@ void CBall::State_Enter( ball_state_t newState )
 		}
 
 		pPl->m_bIsAtTargetPos = false;
-		pPl->RemoveFlag(FL_REMOTECONTROLLED);
-		pPl->RemoveFlag(FL_CELEB);
+		pPl->RemoveFlag(FL_REMOTECONTROLLED | FL_CELEB | FL_NO_X_MOVEMENT | FL_NO_Y_MOVEMENT | FL_ATCONTROLS | FL_FROZEN);
 	}
 
 	if ( mp_showballstatetransitions.GetInt() > 0 )
@@ -577,9 +582,6 @@ void CBall::State_NORMAL_Think()
 		if (DoBodyPartAction())
 			break;
 
-		//if (IsPlayerCloseEnough(m_pPl))
-		//	break;
-
 		ignoredPlayerBits |= (1 << (m_pPl->entindex() - 1));
 	}
 
@@ -602,6 +604,7 @@ void CBall::State_KICKOFF_Enter()
 	}
 
 	//m_bIgnoreTriggers = false;
+	m_bCheckSidelineTrigger = false;
 	SetPos(SDKGameRules()->m_vKickOff);
 }
 
@@ -646,19 +649,6 @@ void CBall::State_KICKOFF_Think()
 	if (!PlayersAtTargetPos(true))
 		return;
 
-	//if (m_pPl->GetFlags() & FL_REMOTECONTROLLED)
-	//{
-	//	m_pPl->RemoveFlag(FL_REMOTECONTROLLED);
-	//	m_pPl->SetMoveType(MOVETYPE_WALK);
-	//	m_pPl->AddFlag(FL_ATCONTROLS);
-	//}
-
-	//if (m_pOtherPl && (m_pOtherPl->GetFlags() & FL_REMOTECONTROLLED))
-	//{
-	//	m_pPl->RemoveFlag(FL_REMOTECONTROLLED);
-	//	m_pPl->SetMoveType(MOVETYPE_WALK);
-	//}
-
 	for (int i = 1; i <= gpGlobals->maxClients; i++) 
 	{
 		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
@@ -666,12 +656,10 @@ void CBall::State_KICKOFF_Think()
 		if (!CSDKPlayer::IsOnField(pPl))
 			continue;
 
-		if (pPl->GetFlags() & FL_REMOTECONTROLLED)
+		if (pPl->GetFlags() & FL_ATCONTROLS)
 		{
-			pPl->RemoveFlag(FL_REMOTECONTROLLED);
-			pPl->SetMoveType(MOVETYPE_WALK);
-			if (pPl == m_pPl || pPl == m_pOtherPl)
-				pPl->AddFlag(FL_ATCONTROLS);
+			if (pPl != m_pPl && pPl != m_pOtherPl)
+				pPl->RemoveFlag(FL_ATCONTROLS);
 		}
 	}
 
@@ -694,7 +682,7 @@ void CBall::State_KICKOFF_Think()
 void CBall::State_THROWIN_Enter()
 {
 	//m_bIgnoreTriggers = true;
-	SetPos(Vector(m_vTriggerTouchPos.x - 10 * Sign((SDKGameRules()->m_vKickOff - m_vTriggerTouchPos).x), m_vTriggerTouchPos.y, SDKGameRules()->m_vKickOff.GetZ()));
+	SetPos(Vector(m_vTriggerTouchPos.x - 20 * Sign((SDKGameRules()->m_vKickOff - m_vTriggerTouchPos).x), m_vTriggerTouchPos.y, SDKGameRules()->m_vKickOff.GetZ()));
 }
 
 void CBall::State_THROWIN_Think()
@@ -719,13 +707,12 @@ void CBall::State_THROWIN_Think()
 	if (!PlayersAtTargetPos(false))
 		return;
 
-	if (m_pPl->GetFlags() & FL_REMOTECONTROLLED)
+	if (m_pPl->GetFlags() & FL_ATCONTROLS)
 	{
 		SetPos(Vector(m_vPos.x, m_vPos.y, SDKGameRules()->m_vKickOff.GetZ() + VEC_HULL_MAX.z + 2));
-		m_pPl->RemoveFlag(FL_REMOTECONTROLLED);
-		m_pPl->SetMoveType(MOVETYPE_WALK);
+		m_pPl->RemoveFlag(FL_ATCONTROLS);
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_THROWIN);
-		return; // Give bots time to detect FL_ATCONTROLS
+		//return; // Give bots time to detect FL_ATCONTROLS
 	}
 
 	if (m_flStateTimelimit == -1)
@@ -753,15 +740,17 @@ void CBall::State_THROWIN_Think()
 		Kicked(BODY_HANDS);
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_THROW);
 
-		Vector2D dirToKickOff = Vector2D((SDKGameRules()->m_vKickOff - m_vPos).x, 0);
-		dirToKickOff.NormalizeInPlace();
+		Vector2D dirToKickOff = Vector2D(Sign(SDKGameRules()->m_vKickOff.GetX() - m_vPos.x), 0);
 		Vector2D vel = m_vVel.AsVector2D();
 		vel.NormalizeInPlace();
 
-		if (RAD2DEG(acos(DotProduct2D(dirToKickOff, vel))) > 80)
+		if (RAD2DEG(acos(DotProduct2D(dirToKickOff, vel))) >= 90)
 			State_Transition(BALL_THROWIN, 1);
 		else
+		{
+			m_bCheckSidelineTrigger = true;
 			State_Transition(BALL_NORMAL);
+		}
 	}
 }
 
@@ -802,7 +791,7 @@ void CBall::State_GOALKICK_Think()
 
 	UpdateCarrier();
 
-	if (m_pPl->m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1)) && IsPlayerCloseEnough(m_pPl))
+	if (m_pPl->m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1)) && (m_vPos - m_vPlPos).Length2D() <= sv_ball_touchradius.GetFloat())
 	{
 		DoGroundShot();
 		MarkOffsidePlayers();
@@ -849,7 +838,7 @@ void CBall::State_CORNER_Think()
 
 	UpdateCarrier();
 
-	if (m_pPl->m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1)) && IsPlayerCloseEnough(m_pPl))
+	if (m_pPl->m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1)) && (m_vPos - m_vPlPos).Length2D() <= sv_ball_touchradius.GetFloat())
 	{
 		DoGroundShot();
 		State_Transition(BALL_NORMAL);
@@ -949,7 +938,7 @@ void CBall::State_FREEKICK_Think()
 
 	UpdateCarrier();
 
-	if (m_pPl->m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1)) && IsPlayerCloseEnough(m_pPl))
+	if (m_pPl->m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1)) && (m_vPos - m_vPlPos).Length2D() <= sv_ball_touchradius.GetFloat())
 	{
 		DoGroundShot();
 		MarkOffsidePlayers();
@@ -993,16 +982,13 @@ void CBall::State_PENALTY_Think()
 	if (!PlayersAtTargetPos(false))
 		return;
 
-	if (m_pPl->GetFlags() & FL_REMOTECONTROLLED)
-	{
-		m_pPl->RemoveFlag(FL_REMOTECONTROLLED);
-		m_pPl->SetMoveType(MOVETYPE_WALK);
-	}
+	if (m_pPl->GetFlags() & FL_ATCONTROLS)
+		m_pPl->RemoveFlag(FL_ATCONTROLS);
 
-	if (m_pOtherPl->GetFlags() & FL_REMOTECONTROLLED)
+	if (m_pOtherPl->GetFlags() & FL_ATCONTROLS)
 	{
-		m_pOtherPl->RemoveFlag(FL_REMOTECONTROLLED);
-		m_pOtherPl->SetMoveType(MOVETYPE_WALK);
+		m_pOtherPl->RemoveFlag(FL_ATCONTROLS);
+		m_pOtherPl->AddFlag(FL_NO_Y_MOVEMENT);
 	}
 
 	if (m_flStateTimelimit == -1)
@@ -1010,8 +996,9 @@ void CBall::State_PENALTY_Think()
 
 	UpdateCarrier();
 
-	if (m_pPl->m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1)) && IsPlayerCloseEnough(m_pPl))
+	if (m_pPl->m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1)) && (m_vPos - m_vPlPos).Length2D() <= sv_ball_touchradius.GetFloat())
 	{
+		m_pOtherPl->RemoveFlag(FL_NO_Y_MOVEMENT);
 		DoGroundShot();
 		MarkOffsidePlayers();
 		State_Transition(BALL_NORMAL);
@@ -1136,6 +1123,11 @@ bool CBall::CheckFoul(bool canShootBall)
 		//}
 		pPl->DoAnimationEvent(RAD2DEG(acos(m_vPlForward2D.Dot(pPl->EyeDirection2D()))) <= 90 ? PLAYERANIMEVENT_TACKLED_BACKWARD : PLAYERANIMEVENT_TACKLED_FORWARD);
 		TriggerFoul(FOUL_NORMAL, m_pPl, pPl->GetLocalOrigin());
+		if (pPl->m_nInPenBoxOfTeam == m_nPlTeam)
+			State_Transition(BALL_PENALTY, 1);
+		else
+			State_Transition(BALL_FREEKICK, 1);
+
 		return true;
 	}
 
@@ -1148,25 +1140,6 @@ void CBall::TriggerFoul(foul_type_t type, CSDKPlayer *pPl, Vector pos)
 	m_pFoulingPl = pPl;
 	m_nFoulingTeam = pPl->GetTeamNumber();
 	m_vFoulPos = pos;
-}
-
-bool CBall::IsPlayerCloseEnough(CSDKPlayer *pPl, bool isKeeper /*= false*/)
-{
-	Vector dir = m_vPos - pPl->GetLocalOrigin();
-	float xyDist = dir.Length2D();
-	float zDist = min(abs(pPl->GetLocalOrigin().z - m_vPos.z), abs(m_vPos.z - (pPl->GetLocalOrigin().z + VEC_HULL_MAX.z))); //pPlayer->GetPlayerMaxs().z);// 
-	float dist = max(xyDist, zDist);
-
-	if (isKeeper && dist > sv_ball_keepertouchradius.GetFloat() || !isKeeper && dist > sv_ball_touchradius.GetFloat())
-		return false;
-
-	dir.z = 0;
-	dir.NormalizeInPlace();
-	float angle = RAD2DEG(acos(pPl->EyeDirection2D().Dot(dir)));
-	if (angle > sv_ball_touchcone.GetFloat())
-		return false;
-
-	return true;
 }
 
 body_part_t CBall::GetBodyPart()
@@ -1184,14 +1157,7 @@ body_part_t CBall::GetBodyPart()
 			bool canShootBall = RAD2DEG(acos(m_vPlForward2D.Dot(dirToBall))) <= sv_ball_slideangle.GetFloat();
 
 			if (CheckFoul(canShootBall))
-			{
-				TriggerFoul(FOUL_NORMAL, m_pPl, m_vPlPos);
-				if (m_nInPenBoxOfTeam == m_nPlTeam)
-					State_Transition(BALL_PENALTY, 1);
-				else
-					State_Transition(BALL_FREEKICK, 1);
 				return BODY_NONE;
-			}
 			else if (canShootBall)
 				return BODY_FEET;
 		}
@@ -1474,10 +1440,10 @@ void CBall::TriggerGoal(int team)
 	State_Transition(BALL_GOAL, 1);
 }
 
-void CBall::TriggerGoalLine(int team, float touchPosY)
+void CBall::TriggerGoalLine(int team)
 {
 	m_pPhys->GetPosition(&m_vTriggerTouchPos, NULL);
-	m_vTriggerTouchPos.y = touchPosY;
+	//m_vTriggerTouchPos.y = touchPosY;
 	//m_bIgnoreTriggers = true;
 
 	if (LastTeam(false) == team)
@@ -1486,17 +1452,17 @@ void CBall::TriggerGoalLine(int team, float touchPosY)
 		State_Transition(BALL_GOALKICK, 1);
 }
 
-void CBall::TriggerSideline(float touchPosX)
+void CBall::TriggerSideline()
 {
-	Vector vel;
-	m_pPhys->GetVelocity(&vel, NULL);
+	//Vector vel;
+	//m_pPhys->GetVelocity(&vel, NULL);
 	m_pPhys->GetPosition(&m_vTriggerTouchPos, NULL);
-	m_vTriggerTouchPos.x = touchPosX;
-	//DevMsg("trigger touch pos: %0.2f\n", m_vTriggerTouchPos.x);
-	m_bIgnoreTriggers = true;
+	//m_vTriggerTouchPos.x = touchPosX;
+	DevMsg("trigger touch pos: %0.2f %0.2f\n", gpGlobals->curtime, m_vTriggerTouchPos.x);
+	//m_bIgnoreTriggers = true;
 
-	if (Sign(vel.x) != Sign(SDKGameRules()->m_vKickOff.GetX() - m_vTriggerTouchPos.x))
-		State_Transition(BALL_THROWIN, 1);
+	//if (Sign(vel.x) != Sign(SDKGameRules()->m_vKickOff.GetX() - m_vTriggerTouchPos.x))
+	State_Transition(BALL_THROWIN, 1);
 }
 
 void CBall::TriggerPenaltyBox(int team)
@@ -1588,6 +1554,12 @@ void CBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart)
 {
 	if (SDKGameRules()->IsIntermissionState() || GetOwnerEntity())
 		return;
+
+	if (m_bCheckSidelineTrigger && !m_bHasLeftSidelineTrigger)
+	{
+		m_bCheckSidelineTrigger = false;
+		State_Transition(BALL_THROWIN, 1);
+	}
 
 	//DevMsg("Touched %0.2f\n", gpGlobals->curtime);
 	if (m_Touches.Count() > 0 && m_Touches.Tail().m_pPl == pPl && m_Touches.Tail().m_nTeam == pPl->GetTeamNumber())

@@ -270,6 +270,9 @@ void Bot_RunAll( void )
 			else if (pPlayer->GetTeamToJoin() != TEAM_INVALID)
 				team = pPlayer->GetTeamToJoin();
 
+			if (pPlayer->IsBot() && pPlayer->GetTeamPosition() == 1)
+				team = Q_strcmp(pPlayer->GetPlayerName(), "KEEPER1") == 0 ? TEAM_A : TEAM_B;
+
 			if (team != TEAM_INVALID && pPlayer->GetTeamPosition() == 1)
 				keeperSpotTaken[team - TEAM_A] = true;
 		}
@@ -370,7 +373,7 @@ void CBot::BotFrame()
 			m_flNextBotJoin = gpGlobals->curtime + 3;
 		else if (gpGlobals->curtime >= m_flNextBotJoin)
 		{
-			BotJoinTeam(g_IOSRand.RandomInt(0, 2));
+			BotJoinTeam(0);
 			m_flNextBotJoin = -1;
 		}
 	}

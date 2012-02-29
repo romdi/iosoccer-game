@@ -661,7 +661,7 @@ void CSDKPlayer::State_OBSERVER_MODE_Enter()
 	AddEffects(EF_NODRAW);
 	SetMoveType(MOVETYPE_OBSERVER);
 	AddSolidFlags(FSOLID_NOT_SOLID);
-	RemoveFlag(FL_ATCONTROLS | FL_FROZEN | FL_REMOTECONTROLLED);
+	RemoveFlag(FL_ATCONTROLS | FL_FROZEN | FL_REMOTECONTROLLED | FL_NO_X_MOVEMENT | FL_NO_Y_MOVEMENT);
 	PhysObjectSleep();
 
 	if ( !IsObserver() )
