@@ -280,6 +280,8 @@ public:
 
 protected:
 	float m_flStateTimeLeft;
+	float m_flNextPenalty;
+	int m_nPenaltyTakingTeam;
 
 	CSDKGameRulesStateInfo		*m_pCurStateInfo;			// Per-state data 
 	float						m_flStateTransitionTime;	// Timer for round states
@@ -330,16 +332,16 @@ protected:
 	void State_END_Enter();
 	void State_END_Think();
 
-	bool m_bTeamsSwapped;
+	bool m_bAreTeamsSwapped;
 	int m_nKickOffTeam;
 	CPrecipitation *m_pPrecip;
 
 public:
 
-	bool GetTeamsSwapped() { return m_bTeamsSwapped; };
-	void SetTeamsSwapped(bool swapped);
+	bool GetTeamsSwapped() { return m_bAreTeamsSwapped; };
+	void SetAreTeamsSwapped(bool swapped);
 	void SetKickOffTeam(int team) { m_nKickOffTeam = team; };
-	int GetKickOffTeam() { return m_bTeamsSwapped ? (m_nKickOffTeam == TEAM_A ? TEAM_B : TEAM_A) : m_nKickOffTeam; };
+	int GetKickOffTeam() { return m_bAreTeamsSwapped ? (m_nKickOffTeam == TEAM_A ? TEAM_B : TEAM_A) : m_nKickOffTeam; };
 
 	void ClientSettingsChanged( CBasePlayer *pPlayer );
 

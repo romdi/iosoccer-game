@@ -94,9 +94,6 @@ public:
 
 	void BallStartTouch(CBall *pBall)
 	{
-		//Vector min, max;
-		//CollisionProp()->WorldSpaceTriggerBounds(&min, &max);
-		//float touchPosY = Sign((SDKGameRules()->m_vKickOff - GetLocalOrigin()).y) == 1 ? max.y : min.y;
 		int team = m_nTeam == 1 ? TEAM_A : TEAM_B;
 		if (SDKGameRules()->GetTeamsSwapped())
 		{
@@ -123,17 +120,8 @@ public:
 
 	void BallStartTouch(CBall *pBall)
 	{
-		//Vector min, max;
-		//CollisionProp()->WorldSpaceTriggerBounds(&min, &max);
-		//float touchPosX = Sign(SDKGameRules()->m_vKickOff.GetX() - WorldSpaceCenter().x) == 1 ? max.x : min.x;
-		pBall->SetHasLeftSidelineTrigger(false);
 		pBall->TriggerSideline();
 	};
-
-	void BallEndTouch(CBall *pBall)
-	{
-		pBall->SetHasLeftSidelineTrigger(true);
-	}
 };
 
 BEGIN_DATADESC( CTriggerSideLine )

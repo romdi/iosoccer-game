@@ -226,7 +226,7 @@ void CHudScorebar::Paint( void )
 	float flTime = gpGlobals->curtime - SDKGameRules()->m_flStateEnterTime;
 	int nTime;
 
-	switch ( SDKGameRules()->m_eMatchState )
+	switch ( SDKGameRules()->State_Get() )
 	{
 	case MATCH_EXTRATIME_SECOND_HALF: case MATCH_EXTRATIME_SECOND_HALF_INJURY_TIME:
 		nTime = (int)(flTime * (90.0f / mp_timelimit_match.GetFloat())) + (90 + 15) * 60;
@@ -270,7 +270,7 @@ void CHudScorebar::Paint( void )
 
 	m_pTime->SetText(nTime > 0 ? VarArgs("% 3d:%02d", nTime / 60, nTime % 60) : VarArgs(" 3%d", nTime));
 
-	m_pMatchState->SetText(g_szStateNames[SDKGameRules()->m_eMatchState]);
+	m_pMatchState->SetText(g_szStateNames[SDKGameRules()->State_Get()]);
 
 	m_pTeams[0]->SetText(teamHome->Get_Name());
 	m_pTeams[1]->SetText(teamAway->Get_Name());

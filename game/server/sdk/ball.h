@@ -43,6 +43,23 @@ enum body_part_t
 	BODY_HANDS
 };
 
+enum foul_type_t
+{
+	FOUL_NONE = -1,
+	FOUL_NORMAL = 0,
+	FOUL_OFFSIDE,
+	FOUL_DOUBLETOUCH,
+	FOUL_TIMEWASTING
+};
+
+enum penalty_state_t
+{
+	PENALTY_NONE = 0,
+	PENALTY_ASSIGNED,
+	PENALTY_KICKED,
+	PENALTY_ABORTED
+};
+
 #define BODY_FEET_START		0
 #define BODY_FEET_END		15
 #define BODY_HIP_START		15
@@ -53,15 +70,6 @@ enum body_part_t
 #define BODY_HEAD_END		80
 
 #define PITCH_LIMIT			89
-
-enum foul_type_t
-{
-	FOUL_NONE = -1,
-	FOUL_NORMAL = 0,
-	FOUL_OFFSIDE,
-	FOUL_DOUBLETOUCH,
-	FOUL_TIMEWASTING
-};
 
 #define FL_POS_KEEPER					1
 #define FL_POS_DEFENDER					2
@@ -145,8 +153,8 @@ public:
 	void			TriggerSideline();
 	void			TriggerPenaltyBox(int team);
 	bool			GetIgnoreTriggers() { return m_bIgnoreTriggers; };
-	//void			SetIgnoreTriggers(bool ignoreTriggers) { m_bIgnoreTriggers = ignoreTriggers; };
-	void			SetKickOffAfterGoal(bool kickOffAfterGoal) { m_bKickOffAfterGoal = kickOffAfterGoal; };
+	void			SetIgnoreTriggers(bool ignoreTriggers) { m_bIgnoreTriggers = ignoreTriggers; };
+	void			SetIsKickOffAfterGoal(bool isKickOffAfterGoal) { m_bIsKickOffAfterGoal = isKickOffAfterGoal; };
 
 	void			State_Transition( ball_state_t newState, float delay = 0.0f );
 
@@ -159,7 +167,12 @@ public:
 	void			SetVel(const Vector &vel);
 	void			SetRot(const AngularImpulse &rot = NULL);
 
-	void			SetHasLeftSidelineTrigger(bool hasLeftSidelineTrigger) { m_bHasLeftSidelineTrigger = hasLeftSidelineTrigger; }
+	void			SetPenaltyState(penalty_state_t penaltyState) { m_ePenaltyState = penaltyState; }
+	penalty_state_t	GetPenaltyState() { return m_ePenaltyState; }
+
+	void			SetPenaltyTaker(CSDKPlayer *pPl) { m_pFouledPl = pPl; }
+
+	inline ball_state_t State_Get( void ) { return m_eBallState; }
 
 private:
 
@@ -179,6 +192,7 @@ private:
 	void State_Think();										// Update the current state.
 	void State_DoTransition( ball_state_t newState );
 	static CBallStateInfo* State_LookupInfo(ball_state_t state);	// Find the state info for the specified state.
+	ball_state_t	m_eBallState;
 	ball_state_t	m_eNextState;
 	float			m_flStateEnterTime;
 	float			m_flStateLeaveTime;
@@ -192,7 +206,7 @@ private:
 
 	bool			PlayersAtTargetPos(bool holdAtTargetPos);
 	bool			CheckFoul(bool canShootBall);
-	void			TriggerFoul(foul_type_t type, CSDKPlayer *pPl, Vector pos);
+	void			TriggerFoul(foul_type_t type, Vector pos, CSDKPlayer *pFoulingPl, CSDKPlayer *pFouledPl = NULL);
 	CSDKPlayer		*FindNearestPlayer(int team = TEAM_INVALID, int posFlags = FL_POS_FIELD, bool checkIfShooting = false, int ignoredPlayerBits = 0);
 	body_part_t		GetBodyPart();
 	bool			DoBodyPartAction();
@@ -228,6 +242,7 @@ private:
 	bool			m_bIsPowershot;
 	body_part_t		m_eLastBodyPart;
 
+	CHandle<CSDKPlayer>	m_pFouledPl;
 	CHandle<CSDKPlayer>	m_pFoulingPl;
 	int				m_nFoulingTeam;
 	foul_type_t		m_eFoulType;
@@ -249,12 +264,11 @@ private:
 	int				m_nPossessingTeam;
 	float			m_flPossessionStart;
 
-	bool			m_bKickOffAfterGoal;
+	bool			m_bIsKickOffAfterGoal;
 
 	CUtlVector<BallTouchInfo> m_Touches;
 
-	bool			m_bHasLeftSidelineTrigger;
-	bool			m_bCheckSidelineTrigger;
+	penalty_state_t m_ePenaltyState;
 };
 
 #endif

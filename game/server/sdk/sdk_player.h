@@ -355,7 +355,7 @@ public:
 	bool				m_bIsAtTargetPos;
 	bool				m_bHoldAtTargetPos;
 
-	int					m_nInPenBoxOfTeam;
+	CNetworkVar(int, m_nInPenBoxOfTeam);
 
 	static bool			IsOnField(CSDKPlayer *pPl);
 
@@ -366,6 +366,8 @@ public:
 
 	float				m_flNextJoin;
 	int					m_nTeamToJoin;
+
+	int					m_ePenaltyState;
 
 private:
 

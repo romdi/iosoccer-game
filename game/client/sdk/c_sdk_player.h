@@ -169,6 +169,7 @@ public:
 
 	float				m_flPlayerAnimEventStart;
 	PlayerAnimEvent_t	m_ePlayerAnimEvent;
+	int					m_nInPenBoxOfTeam;
 };
 
 

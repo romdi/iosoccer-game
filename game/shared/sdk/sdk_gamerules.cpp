@@ -320,11 +320,13 @@ CSDKGameRules::CSDKGameRules()
 
 	m_nShieldType = SHIELD_NONE;
 	m_vShieldPos = vec3_invalid;
-	m_bTeamsSwapped = false;
+	m_bAreTeamsSwapped = false;
+	m_flStateTimeLeft = 0;
+	m_flNextPenalty = gpGlobals->curtime;
+	m_nPenaltyTakingTeam = TEAM_A;
+
 	//ios m_bLevelInitialized = false;
-
 	//m_flMatchStartTime = 0;
-
 }
 void CSDKGameRules::ServerActivate()
 {
@@ -1005,7 +1007,7 @@ void CSDKGameRules::State_INIT_Think()
 
 void CSDKGameRules::State_WARMUP_Enter()
 {
-	SetTeamsSwapped(false);
+	SetAreTeamsSwapped(false);
 }
 
 void CSDKGameRules::State_WARMUP_Think()
@@ -1018,7 +1020,7 @@ void CSDKGameRules::State_FIRST_HALF_Enter()
 {
 	//GetBall()->CreateVPhysics();
 	GetBall()->ResetStats();
-	GetBall()->SetKickOffAfterGoal(false);
+	GetBall()->SetIsKickOffAfterGoal(false);
 	m_nKickOffTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
 	GetBall()->State_Transition(BALL_KICKOFF);
 }
@@ -1052,8 +1054,8 @@ void CSDKGameRules::State_HALFTIME_Think()
 
 void CSDKGameRules::State_SECOND_HALF_Enter()
 {
-	SetTeamsSwapped(true);
-	GetBall()->SetKickOffAfterGoal(false);
+	SetAreTeamsSwapped(true);
+	GetBall()->SetIsKickOffAfterGoal(false);
 	GetBall()->State_Transition(BALL_KICKOFF);
 }
 
@@ -1065,9 +1067,9 @@ void CSDKGameRules::State_SECOND_HALF_Think()
 	}
 	else if (m_flStateTimeLeft + m_flStateInjuryTime <= 0)
 	{
-		if (mp_extratime.GetBool())
+		if (mp_extratime.GetBool() && GetGlobalTeam(TEAM_A)->GetGoals() == GetGlobalTeam(TEAM_B)->GetGoals())
 			State_Transition(MATCH_EXTRATIME_INTERMISSION);
-		else if (mp_penalties.GetBool())
+		else if (mp_penalties.GetBool() && GetGlobalTeam(TEAM_A)->GetGoals() == GetGlobalTeam(TEAM_B)->GetGoals())
 			State_Transition(MATCH_PENALTIES_INTERMISSION);
 		else
 			State_Transition(MATCH_COOLDOWN);
@@ -1090,8 +1092,8 @@ void CSDKGameRules::State_EXTRATIME_INTERMISSION_Think()
 
 void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Enter()
 {
-	SetTeamsSwapped(false);
-	GetBall()->SetKickOffAfterGoal(false);
+	SetAreTeamsSwapped(false);
+	GetBall()->SetIsKickOffAfterGoal(false);
 	GetBall()->State_Transition(BALL_KICKOFF);
 }
 
@@ -1123,7 +1125,7 @@ void CSDKGameRules::State_EXTRATIME_HALFTIME_Think()
 
 void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Enter()
 {
-	SetTeamsSwapped(true);
+	SetAreTeamsSwapped(true);
 	GetBall()->State_Transition(BALL_KICKOFF);
 }
 
@@ -1135,7 +1137,7 @@ void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Think()
 	}
 	else if (m_flStateTimeLeft + m_flStateInjuryTime <= 0)
 	{
-		if (mp_penalties.GetBool())
+		if (mp_penalties.GetBool() && GetGlobalTeam(TEAM_A)->GetGoals() == GetGlobalTeam(TEAM_B)->GetGoals())
 			State_Transition(MATCH_PENALTIES_INTERMISSION);
 		else
 			State_Transition(MATCH_COOLDOWN);
@@ -1158,6 +1160,8 @@ void CSDKGameRules::State_PENALTIES_INTERMISSION_Think()
 
 void CSDKGameRules::State_PENALTIES_Enter()
 {
+	m_nPenaltyTakingTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
+	GetBall()->SetPenaltyState(PENALTY_NONE);
 }
 
 void CSDKGameRules::State_PENALTIES_Think()
@@ -1165,6 +1169,34 @@ void CSDKGameRules::State_PENALTIES_Think()
 	if (m_flStateTimeLeft <= 0)
 	{
 		State_Transition(MATCH_COOLDOWN);
+		return;
+	}
+
+	if (GetBall()->GetPenaltyState() == PENALTY_KICKED)
+	{
+		//GetBall()->SetIgnoreTriggers(true);
+		GetBall()->SetPenaltyState(PENALTY_NONE);
+		m_flNextPenalty = gpGlobals->curtime + 5;
+		m_nPenaltyTakingTeam = m_nPenaltyTakingTeam == TEAM_A ? TEAM_B : TEAM_A;
+	}
+
+	if ((GetBall()->GetPenaltyState() == PENALTY_NONE || GetBall()->GetPenaltyState() == PENALTY_ABORTED) && m_flNextPenalty <= gpGlobals->curtime)
+	{
+		for (int i = 1; i <= gpGlobals->maxClients; i++)
+		{
+			CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+			if (!CSDKPlayer::IsOnField(pPl))
+				continue;
+
+			if (pPl->GetTeamNumber() != m_nPenaltyTakingTeam || pPl->m_ePenaltyState == PENALTY_KICKED)
+				continue;
+
+			GetBall()->SetPenaltyTaker(pPl);
+			GetBall()->SetPenaltyState(PENALTY_ASSIGNED);
+			GetBall()->State_Transition(BALL_PENALTY);
+			//m_flNextPenalty = gpGlobals->curtime + 5;
+			break;
+		}
 	}
 }
 
@@ -1180,7 +1212,7 @@ void CSDKGameRules::State_COOLDOWN_Enter()
 		winners = TEAM_B;
 
 	//for ( int i = 0; i < MAX_PLAYERS; i++ )		//maxclients?
-	for ( int i = 0; i < gpGlobals->maxClients; i++ )
+	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
 	{
 		CSDKPlayer *pPlayer = (CSDKPlayer*)UTIL_PlayerByIndex( i );
 
@@ -1378,13 +1410,13 @@ void CSDKGameRules::DisableShield()
 	}
 }
 
-void CSDKGameRules::SetTeamsSwapped(bool swapped)
+void CSDKGameRules::SetAreTeamsSwapped(bool swapped)
 {
-	if (swapped != m_bTeamsSwapped)
+	if (swapped != m_bAreTeamsSwapped)
 	{
 		GetGlobalTeam(TEAM_A)->InitFieldSpots(swapped ? TEAM_B : TEAM_A);
 		GetGlobalTeam(TEAM_B)->InitFieldSpots(swapped ? TEAM_A : TEAM_B);
-		m_bTeamsSwapped = swapped;
+		m_bAreTeamsSwapped = swapped;
 	}
 }
 

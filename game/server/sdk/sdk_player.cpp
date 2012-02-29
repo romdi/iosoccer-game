@@ -126,6 +126,7 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayer, DT_SDKLocalPlayerExclusive )
 //	SendPropAngle( SENDINFO_VECTORELEM(m_angEyeAngles, 1), 10, SPROP_CHANGES_OFTEN ),
 
 //ios	SendPropInt( SENDINFO( m_ArmorValue ), 8, SPROP_UNSIGNED ),
+	SendPropInt(SENDINFO(m_nInPenBoxOfTeam))
 END_SEND_TABLE()
 
 BEGIN_SEND_TABLE_NOBASE( CSDKPlayer, DT_SDKNonLocalPlayerExclusive )
@@ -239,6 +240,7 @@ CSDKPlayer::CSDKPlayer()
 	m_flPlayerAnimEventStart = gpGlobals->curtime;
 	m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
 	m_nInPenBoxOfTeam = TEAM_INVALID;
+	m_ePenaltyState = PENALTY_NONE;
 }
 
 
