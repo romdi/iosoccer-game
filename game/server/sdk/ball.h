@@ -136,7 +136,7 @@ public:
 	int				GetMultiplayerPhysicsMode(void)	{ return m_iPhysicsMode; }
 	float			GetMass(void) {	return m_fMass;	}
 	int				ObjectCaps(void)	{  return BaseClass::ObjectCaps() |	FCAP_CONTINUOUS_USE; }
-	virtual int		UpdateTransmitState();
+	int				UpdateTransmitState();
 
 	void			SendMatchEvent(match_event_t matchEvent, CSDKPlayer *pPlayer1 = NULL);
 

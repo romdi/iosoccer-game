@@ -30,36 +30,14 @@ C_TVCamera::C_TVCamera()
 
 void C_TVCamera::GetPositionAndAngle(Vector &pos, QAngle &ang)
 {
-	C_Ball *pBall = GetBall();
-
-	Vector newPos = Vector(SDKGameRules()->m_vFieldMin[0] - 400, (SDKGameRules()->m_vFieldMin[1] + SDKGameRules()->m_vFieldMax[1]) / 2, SDKGameRules()->m_vFieldMin[2] + 400);
-	Vector newDir = pBall->GetLocalOrigin() - newPos;
+	Vector ballPos = GetBall()->GetLocalOrigin();
+	Vector newPos = Vector(SDKGameRules()->m_vFieldMin.GetX() - 500, ballPos.y, SDKGameRules()->m_vKickOff.GetZ() + 700);
+	newPos.y = clamp(newPos.y, SDKGameRules()->m_vFieldMin.GetY() + 800, SDKGameRules()->m_vFieldMax.GetY() - 800);
+	Vector newDir = ballPos - newPos;
 	newDir.NormalizeInPlace();
-	newPos = pBall->GetLocalOrigin() - newDir * 750;
+	newPos = ballPos - newDir * 800;
 
-	if (m_vDir == vec3_invalid)
-	{
-		m_flLerpTime = 1;
-		m_vPos = m_vOldPos = m_vNewPos = newPos;
-		m_vDir = m_vOldDir = m_vNewDir = newDir;
-	}
-
-	if (RAD2DEG(acos(m_vDir.Dot(newDir))) <= cl_tvcam_angle.GetFloat() && (m_vPos - newPos).Length() <= cl_tvcam_dist.GetFloat())
-	{
-	}
-	else
-	{
-		Vector camDir = newPos - m_vPos;
-		float dist = min(camDir.Length(), camDir.Length() * cl_tvcam_posspeed.GetFloat() * gpGlobals->frametime);
-		camDir.NormalizeInPlace();
-		m_vPos += camDir * dist;
-
-		camDir = newDir - m_vDir;
-		dist = min(camDir.Length(), camDir.Length() * cl_tvcam_angspeed.GetFloat() * gpGlobals->frametime);
-		camDir.NormalizeInPlace();
-		m_vDir += camDir * dist;
-	}
-
-	pos = m_vPos;
-	VectorAngles(m_vDir, ang);
+	pos = newPos;
+	VectorAngles(newDir, ang);
+	//ang[PITCH] = min(89, ang[PITCH] + 50);
 }

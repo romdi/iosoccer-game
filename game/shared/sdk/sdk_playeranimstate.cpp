@@ -280,6 +280,7 @@ int CSDKPlayerAnimState::CalcFireLayerSequence(PlayerAnimEvent_t event)
 	case PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD: return CalcSequenceIndex("iostackled_backward");
 	case PLAYERANIMEVENT_KEEPER_HANDS_THROW: return CalcSequenceIndex("iosthrow");
 	case PLAYERANIMEVENT_KEEPER_HANDS_KICK: return CalcSequenceIndex("iosvolley");
+	case PLAYERANIMEVENT_KEEPER_HANDS_PUNCH: return CalcSequenceIndex("iosthrow");
 	default: return -1;
 	}
 }
@@ -334,9 +335,9 @@ void CSDKPlayerAnimState::UpdateLayerSequenceGeneric( CStudioHdr *pStudioHdr, in
 			return;
 		}
 	}
-#ifdef CLIENT_DLL
+
 	// Now dump the state into its animation layer.
-	C_AnimationLayer *pLayer = GetBasePlayer()->GetAnimOverlay( iLayer );
+	CAnimationLayer *pLayer = GetBasePlayer()->GetAnimOverlay( iLayer );
 
 	pLayer->m_flCycle = flCurCycle;
 	pLayer->m_nSequence = iSequence;
@@ -344,7 +345,6 @@ void CSDKPlayerAnimState::UpdateLayerSequenceGeneric( CStudioHdr *pStudioHdr, in
 	pLayer->m_flPlaybackRate = 1.0;
 	pLayer->m_flWeight = 1.0f;
 	pLayer->m_nOrder = iLayer;
-#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -382,6 +382,7 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 	case PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD:
 	case PLAYERANIMEVENT_KEEPER_HANDS_THROW:
 	case PLAYERANIMEVENT_KEEPER_HANDS_KICK:
+	case PLAYERANIMEVENT_KEEPER_HANDS_PUNCH:
 		{
 			m_flFireCycle = 0;
 			m_iFireSequence = CalcFireLayerSequence( event );

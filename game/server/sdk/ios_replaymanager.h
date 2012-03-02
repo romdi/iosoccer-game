@@ -14,13 +14,39 @@ struct BallSnapshot
 	BallSnapshot(Vector pos, QAngle ang, Vector vel, AngularImpulse rot) : pos(pos), ang(ang), vel(vel), rot(rot) {}
 };
 
+struct LayerRecord
+{
+	int m_sequence;
+	float m_cycle;
+	float m_weight;
+	int m_order;
+
+	LayerRecord()
+	{
+		m_sequence = 0;
+		m_cycle = 0;
+		m_weight = 0;
+		m_order = 0;
+	}
+
+	LayerRecord( const LayerRecord& src )
+	{
+		m_sequence = src.m_sequence;
+		m_cycle = src.m_cycle;
+		m_weight = src.m_weight;
+		m_order = src.m_order;
+	}
+};
+
 struct PlayerSnapshot
 {
 	CSDKPlayer *pPl;
 	Vector pos;
 	QAngle ang;
 	Vector vel;
-	//animation
+	LayerRecord				m_layerRecords[15];
+	int						m_masterSequence;
+	float					m_masterCycle;
 	PlayerSnapshot(CSDKPlayer *pPl, Vector pos, QAngle ang, Vector vel) : pPl(pPl), pos(pos), ang(ang), vel(vel) {}
 };
 

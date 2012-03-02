@@ -11,6 +11,11 @@ void cc_StartReplay(const CCommand &args)
 	if (!UTIL_IsCommandIssuedByServerAdmin())
         return;
 
+	if (args.ArgC() > 1)
+		engine->ServerCommand(UTIL_VarArgs("host_timescale %f\n", (float)atof(args[1])));
+
+	GetBall()->SetIgnoreTriggers(true);
+	GetBall()->VPhysicsGetObject()->EnableMotion(true);
 	CReplayManager::GetInstance()->StartReplay();
 }
 
@@ -63,6 +68,22 @@ void CReplayManager::TakeSnapshot()
 		ang = pPl->GetLocalAngles();
 
 		PlayerSnapshot *pPlayerSnapshot = new PlayerSnapshot(pPl, pos, ang, vel);
+
+		int layerCount = pPl->GetNumAnimOverlays();
+		for( int layerIndex = 0; layerIndex < layerCount; ++layerIndex )
+		{
+			CAnimationLayer *currentLayer = pPl->GetAnimOverlay(layerIndex);
+			if( currentLayer )
+			{
+				pPlayerSnapshot->m_layerRecords[layerIndex].m_cycle = currentLayer->m_flCycle;
+				pPlayerSnapshot->m_layerRecords[layerIndex].m_order = currentLayer->m_nOrder;
+				pPlayerSnapshot->m_layerRecords[layerIndex].m_sequence = currentLayer->m_nSequence;
+				pPlayerSnapshot->m_layerRecords[layerIndex].m_weight = currentLayer->m_flWeight;
+			}
+		}
+		pPlayerSnapshot->m_masterSequence = pPl->GetSequence();
+		pPlayerSnapshot->m_masterCycle = pPl->GetCycle();
+
 		snapshot.pPlayerSnapshot[i - 1] = pPlayerSnapshot;
 	}
 
@@ -92,10 +113,10 @@ void CReplayManager::RestoreSnapshot()
 {
 	if (m_Snapshots.Count() > 0 && m_nSnapshotIndex < m_Snapshots.Count())
 	{
-		Snapshot snapshot = m_Snapshots[m_nSnapshotIndex];
+		Snapshot *snapshot = &m_Snapshots[m_nSnapshotIndex];
 		m_nSnapshotIndex += 1;
-		GetBall()->VPhysicsGetObject()->SetPosition(snapshot.pBallSnapshot->pos, snapshot.pBallSnapshot->ang, false);
-		GetBall()->VPhysicsGetObject()->SetVelocity(&snapshot.pBallSnapshot->vel, &snapshot.pBallSnapshot->rot);
+		GetBall()->VPhysicsGetObject()->SetPosition(snapshot->pBallSnapshot->pos, snapshot->pBallSnapshot->ang, false);
+		GetBall()->VPhysicsGetObject()->SetVelocity(&snapshot->pBallSnapshot->vel, &snapshot->pBallSnapshot->rot);
 
 		for (int i = 1; i <= gpGlobals->maxClients; i++)
 		{
@@ -103,13 +124,38 @@ void CReplayManager::RestoreSnapshot()
 			if (!CSDKPlayer::IsOnField(pPl))
 				continue;
 
-			pPl->SetLocalOrigin(snapshot.pPlayerSnapshot[i - 1]->pos);
-			pPl->SetLocalVelocity(snapshot.pPlayerSnapshot[i - 1]->vel);
-			pPl->SetLocalAngles(snapshot.pPlayerSnapshot[i - 1]->ang);
+			PlayerSnapshot *pPlSnap = snapshot->pPlayerSnapshot[i - 1];
+
+			pPl->SetLocalOrigin(pPlSnap->pos);
+			pPl->SetLocalVelocity(pPlSnap->vel);
+			pPl->SetLocalAngles(pPlSnap->ang);
+
+			pPl->SetSequence(pPlSnap->m_masterSequence);
+			pPl->SetCycle(pPlSnap->m_masterCycle);
+
+			int layerCount = pPl->GetNumAnimOverlays();
+			for( int layerIndex = 0; layerIndex < layerCount; ++layerIndex )
+			{
+				CAnimationLayer *currentLayer = pPl->GetAnimOverlay(layerIndex);
+				if(!currentLayer)
+					continue;
+
+				pPlSnap->m_layerRecords[layerIndex].m_cycle = currentLayer->m_flCycle;
+				pPlSnap->m_layerRecords[layerIndex].m_order = currentLayer->m_nOrder;
+				pPlSnap->m_layerRecords[layerIndex].m_sequence = currentLayer->m_nSequence;
+				pPlSnap->m_layerRecords[layerIndex].m_weight = currentLayer->m_flWeight;
+
+				//Either no interp, or interp failed.  Just use record.
+				currentLayer->m_flCycle = pPlSnap->m_layerRecords[layerIndex].m_cycle;
+				currentLayer->m_nOrder = pPlSnap->m_layerRecords[layerIndex].m_order;
+				currentLayer->m_nSequence = pPlSnap->m_layerRecords[layerIndex].m_sequence;
+				currentLayer->m_flWeight = pPlSnap->m_layerRecords[layerIndex].m_weight;
+			}
 		}
 	}
 	else
 	{
 		m_bDoReplay = false;
+		engine->ServerCommand("host_timescale 1\n");
 	}
 }

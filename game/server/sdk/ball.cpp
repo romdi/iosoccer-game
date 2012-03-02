@@ -48,6 +48,7 @@ ConVar sv_ball_shotdelay("sv_ball_shotdelay", "0.25", FCVAR_ARCHIVE | FCVAR_NOTI
 ConVar sv_ball_bestshotangle("sv_ball_bestshotangle", "-30", FCVAR_ARCHIVE | FCVAR_NOTIFY);
 ConVar sv_ball_volleysideangle("sv_ball_volleysideangle", "30", FCVAR_ARCHIVE | FCVAR_NOTIFY);
 ConVar sv_ball_keepersideangle("sv_ball_keepersideangle", "30", FCVAR_ARCHIVE | FCVAR_NOTIFY);
+ConVar sv_ball_keepercatchspeed("sv_ball_keepercatchspeed", "200", FCVAR_ARCHIVE | FCVAR_NOTIFY);
 ConVar sv_ball_normalshot_strength("sv_ball_normalshot_strength", "650", FCVAR_ARCHIVE | FCVAR_NOTIFY);
 ConVar sv_ball_powershot_strength("sv_ball_powershot_strength", "650", FCVAR_ARCHIVE | FCVAR_NOTIFY);
 ConVar sv_ball_keepershot_strength("sv_ball_keepershot_strength", "100", FCVAR_ARCHIVE | FCVAR_NOTIFY);
@@ -164,7 +165,7 @@ void CBall::RemovePlayerBalls()
 			break;
 
 		if (pBall != this)
-			pBall->Remove();
+			UTIL_Remove(pBall);
 	}
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
@@ -1114,6 +1115,12 @@ bool CBall::CheckFoul(bool canShootBall)
 		if (!CSDKPlayer::IsOnField(pPl))
 			continue;
 
+		Vector plPos = pPl->GetLocalOrigin();
+
+		if (plPos.x < SDKGameRules()->m_vFieldMin.GetX() || plPos.y < SDKGameRules()->m_vFieldMin.GetY() ||
+			plPos.x > SDKGameRules()->m_vFieldMax.GetX() || plPos.y > SDKGameRules()->m_vFieldMax.GetY())
+			continue;
+
 		if (pPl == m_pPl || pPl->GetTeamNumber() == m_nPlTeam)
 			continue;
 
@@ -1171,7 +1178,7 @@ body_part_t CBall::GetBodyPart()
 	{
 		if (xyDist <= sv_ball_touchradius.GetFloat() * 2)
 		{
-			bool canShootBall = RAD2DEG(acos(m_vPlForward2D.Dot(dirToBall))) <= sv_ball_slideangle.GetFloat();
+			bool canShootBall = RAD2DEG(acos(m_vPlForward2D.Dot(dirToBall))) <= sv_ball_slideangle.GetFloat() && zDist <= BODY_FEET_END;
 
 			if (CheckFoul(canShootBall))
 				return BODY_NONE;
@@ -1182,7 +1189,7 @@ body_part_t CBall::GetBodyPart()
 	else if (m_pPl->m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_DIVE_LEFT || m_pPl->m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT || 
 			 m_pPl->m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_DIVE_FORWARD || m_pPl->m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD)
 	{
-		if (xyDist <= sv_ball_keepertouchradius.GetFloat() * 2)
+		if (xyDist <= sv_ball_keepertouchradius.GetFloat() * 2 && zDist <= BODY_HEAD_END + 20)
 		{
 			Vector plDir;
 			switch (m_pPl->m_ePlayerAnimEvent)
@@ -1239,7 +1246,16 @@ bool CBall::DoBodyPartAction()
 			if (pInfo->m_nTeam == m_pPl->GetTeamNumber() && pInfo->m_eBodyPart != BODY_HEAD && pInfo->m_eBodyPart != BODY_CHEST)
 				return false;
 
-			State_Transition(BALL_KEEPERHANDS);
+			if (m_vVel.Length2D() > sv_ball_keepercatchspeed.GetInt())
+			{
+				m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KEEPER_HANDS_PUNCH);
+				SetVel(m_vPlForward * m_vVel.Length2D() * 0.75f);
+				Kicked(BODY_HANDS);
+				return true;
+			}
+			else
+				State_Transition(BALL_KEEPERHANDS);
+
 			return true;
 		}
 		else if (bodyPart == BODY_FEET)

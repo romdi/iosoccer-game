@@ -348,8 +348,49 @@ void CSDKGameRules::ServerActivate()
 	UTIL_TraceLine(pEnt->GetLocalOrigin(), Vector(0, 0, -500), MASK_SOLID_BRUSHONLY, NULL, COLLISION_GROUP_NONE, &tr);
 
 	m_vKickOff = Vector(pEnt->GetLocalOrigin().x, pEnt->GetLocalOrigin().y, tr.endpos.z);
-	m_vFieldMin = Vector(FLT_MAX, FLT_MAX, m_vKickOff.GetZ());
-	m_vFieldMax = Vector(FLT_MIN, FLT_MIN, m_vKickOff.GetZ());
+	
+	float minX = -FLT_MAX;
+	float maxX = FLT_MAX;
+
+	CBaseEntity *pSidelineTrigger = NULL;
+	while (pSidelineTrigger = gEntList.FindEntityByClassname(pSidelineTrigger, "trigger_SideLine"))
+	{
+		Vector min, max;
+		pSidelineTrigger->CollisionProp()->WorldSpaceTriggerBounds(&min, &max);
+		if (max.x > m_vKickOff.GetX())
+		{
+			if (max.x < maxX)
+				maxX = max.x;
+		}
+		else
+		{
+			if (min.x > minX)
+				minX = min.x;
+		}
+	}
+
+	float minY = -FLT_MAX;
+	float maxY = FLT_MAX;
+
+	CBaseEntity *pGoalTrigger = NULL;
+	while (pGoalTrigger = gEntList.FindEntityByClassname(pGoalTrigger, "trigger_goal"))
+	{
+		Vector min, max;
+		pGoalTrigger->CollisionProp()->WorldSpaceTriggerBounds(&min, &max);
+		if (max.y > m_vKickOff.GetY())
+		{
+			if (max.y < maxY)
+				maxY = max.y;
+		}
+		else
+		{
+			if (min.y > minY)
+				minY = min.y;
+		}
+	}
+
+	m_vFieldMin = Vector(minX, minY, m_vKickOff.GetZ());
+	m_vFieldMax = Vector(maxX, maxY, m_vKickOff.GetZ());
 
 	GetGlobalTeam(TEAM_A)->InitFieldSpots(TEAM_A);
 	GetGlobalTeam(TEAM_B)->InitFieldSpots(TEAM_B);
@@ -357,6 +398,15 @@ void CSDKGameRules::ServerActivate()
 	m_pPrecip = (CPrecipitation *)CreateEntityByName("func_precipitation");
 	m_pPrecip->SetType(PRECIPITATION_TYPE_NONE);
 	m_pPrecip->Spawn();
+
+
+	//TODO: remove this
+	CBaseEntity *pCrossbar = NULL;
+	while (pCrossbar = gEntList.FindEntityByModel(pCrossbar, "goalposts.mdl"))
+	{
+		pCrossbar->SetRenderMode(kRenderTransColor);
+		pCrossbar->SetRenderColorA(75);
+	}
 
 	State_Transition(MATCH_INIT);
 }
@@ -894,13 +944,13 @@ ConVar mp_weather("mp_weather", "0", 0, "Weather (0 = sunny, 1 = rainy, 2 = snow
 ConVar mp_showstatetransitions( "mp_showstatetransitions", "1", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Show game state transitions." );
 
 ConVar mp_timelimit_match( "mp_timelimit_match", "10", FCVAR_NOTIFY|FCVAR_REPLICATED, "match duration in minutes without breaks (90 is real time)" );
-ConVar mp_timelimit_warmup( "mp_timelimit_warmup", "1", FCVAR_NOTIFY|FCVAR_REPLICATED, "time before match start" );
-ConVar mp_timelimit_cooldown( "mp_timelimit_cooldown", "1", FCVAR_NOTIFY|FCVAR_REPLICATED, "time after match end" );
-ConVar mp_timelimit_halftime( "mp_timelimit_halftime", "1", FCVAR_NOTIFY|FCVAR_REPLICATED, "half time duration" );
-ConVar mp_timelimit_extratime_halftime( "mp_timelimit_extratime_halftime", "1", FCVAR_NOTIFY|FCVAR_REPLICATED, "extra time halftime duration" );
-ConVar mp_timelimit_extratime_intermission( "mp_timelimit_extratime_intermission", "1", FCVAR_NOTIFY|FCVAR_REPLICATED, "time before extra time start" );
+ConVar mp_timelimit_warmup( "mp_timelimit_warmup", "0.5", FCVAR_NOTIFY|FCVAR_REPLICATED, "time before match start" );
+ConVar mp_timelimit_cooldown( "mp_timelimit_cooldown", "0.5", FCVAR_NOTIFY|FCVAR_REPLICATED, "time after match end" );
+ConVar mp_timelimit_halftime( "mp_timelimit_halftime", "0.5", FCVAR_NOTIFY|FCVAR_REPLICATED, "half time duration" );
+ConVar mp_timelimit_extratime_halftime( "mp_timelimit_extratime_halftime", "0.5", FCVAR_NOTIFY|FCVAR_REPLICATED, "extra time halftime duration" );
+ConVar mp_timelimit_extratime_intermission( "mp_timelimit_extratime_intermission", "0.5", FCVAR_NOTIFY|FCVAR_REPLICATED, "time before extra time start" );
 ConVar mp_timelimit_penalties( "mp_timelimit_penalties", "1", FCVAR_NOTIFY|FCVAR_REPLICATED, "limit for penalties duration" );
-ConVar mp_timelimit_penalties_intermission( "mp_timelimit_penalties_intermission", "1", FCVAR_NOTIFY|FCVAR_REPLICATED, "time before penalties start" );
+ConVar mp_timelimit_penalties_intermission( "mp_timelimit_penalties_intermission", "0.5", FCVAR_NOTIFY|FCVAR_REPLICATED, "time before penalties start" );
 ConVar mp_extratime( "mp_extratime", "1", FCVAR_NOTIFY|FCVAR_REPLICATED );
 ConVar mp_penalties( "mp_penalties", "1", FCVAR_NOTIFY|FCVAR_REPLICATED );
 

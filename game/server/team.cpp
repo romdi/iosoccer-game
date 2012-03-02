@@ -269,31 +269,6 @@ void CTeam::InitFieldSpots(int team)
 	int index = team - TEAM_A;
 	m_vCornerLeft = GetSpotPos(UTIL_VarArgs("info_team%d_corner%d", index + 1, 1 - index));
 	m_vCornerRight = GetSpotPos(UTIL_VarArgs("info_team%d_corner%d", index + 1, index));
-
-	if (m_vCornerLeft[0] < SDKGameRules()->m_vFieldMin[0])
-		SDKGameRules()->m_vFieldMin.SetX(m_vCornerLeft[0]);
-
-	if (m_vCornerLeft[1] < SDKGameRules()->m_vFieldMin[1])
-		SDKGameRules()->m_vFieldMin.SetY(m_vCornerLeft[1]);
-
-	if (m_vCornerRight[0] < SDKGameRules()->m_vFieldMin[0])
-		SDKGameRules()->m_vFieldMin.SetX(m_vCornerRight[0]);
-
-	if (m_vCornerRight[1] < SDKGameRules()->m_vFieldMin[1])
-		SDKGameRules()->m_vFieldMin.SetY(m_vCornerRight[1]);
-
-	if (m_vCornerLeft[0] > SDKGameRules()->m_vFieldMax[0])
-		SDKGameRules()->m_vFieldMax.SetX(m_vCornerLeft[0]);
-
-	if (m_vCornerLeft[1] > SDKGameRules()->m_vFieldMax[1])
-		SDKGameRules()->m_vFieldMax.SetY(m_vCornerLeft[1]);
-
-	if (m_vCornerRight[0] > SDKGameRules()->m_vFieldMax[0])
-		SDKGameRules()->m_vFieldMax.SetX(m_vCornerRight[0]);
-
-	if (m_vCornerRight[1] > SDKGameRules()->m_vFieldMax[1])
-		SDKGameRules()->m_vFieldMax.SetY(m_vCornerRight[1]);
-
 	m_vGoalkickLeft = GetSpotPos(UTIL_VarArgs("info_team%d_goalkick1", index + 1));
 	m_vGoalkickRight = GetSpotPos(UTIL_VarArgs("info_team%d_goalkick0", index + 1));
 	m_vPenalty = GetSpotPos(UTIL_VarArgs("info_team%d_penalty_spot", index + 1));
@@ -306,20 +281,13 @@ void CTeam::InitFieldSpots(int team)
 	else
 		m_vPenBoxMax.SetY(m_vPenBoxMax.GetY() + 150);
 
-	CBaseEntity *pCrossbar = gEntList.FindEntityByName(NULL, UTIL_VarArgs("team%d_crossbar", index + 1));
-	if (pCrossbar)
-	{
-		pCrossbar->SetRenderMode(kRenderTransColor);
-		pCrossbar->SetRenderColorA(100);
-	}
-
 	for (int j = 0; j < 11; j++)
 	{
 		m_vPlayerSpawns[j] = GetSpotPos(UTIL_VarArgs("info_team%d_player%d", index + 1, j + 1));
 	}
 
-	m_nForward = Sign((SDKGameRules()->m_vKickOff - m_vPlayerSpawns[0]).y);
-	m_nRight = Sign((m_vCornerRight - m_vPlayerSpawns[0]).x);
+	m_nForward = Sign(SDKGameRules()->m_vKickOff.GetY() - m_vPlayerSpawns[0].y);
+	m_nRight = Sign(m_vCornerRight.GetX() - m_vPlayerSpawns[0].x);
 }
 
 void CTeam::ResetStats()

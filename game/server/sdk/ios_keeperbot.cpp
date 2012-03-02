@@ -84,31 +84,56 @@ void CKeeperBot::BotAdjustPos()
 		}
 		else if (gpGlobals->curtime >= m_flBotNextShot)
 		{
-			VectorAngles(Vector(0, GetTeam()->m_nForward, 0), ang);
 			modifier = 0.9f;
 			m_cmd.buttons |= IN_ATTACK2;
 			m_cmd.powershot_strength = 50;
 			VectorAngles(Vector(0, GetTeam()->m_nForward, 0), ang);
 			ang[YAW] += g_IOSRand.RandomFloat(-45, 45);
 			ang[PITCH] = g_IOSRand.RandomFloat(-40, 0);
+			m_flBotNextShot = gpGlobals->curtime + 1;
 		}
 	}
-	else
+	else if (gpGlobals->curtime >= m_flBotNextShot)
 	{
-		if (m_vDirToBall.Length2D() < 50 && m_vDirToBall.z < VEC_HULL_MAX.z + 50)
+		if ((m_vDirToBall.Length2D() < 150 && m_vDirToBall.z < 150)/* || Sign(m_vDirToBall.y) != GetTeam()->m_nForward*/)
 		{
 			modifier = 0.9f;
-			m_cmd.buttons |= IN_ATTACK2;
 			m_cmd.powershot_strength = 50;
 			VectorAngles(Vector(0, GetTeam()->m_nForward, 0), ang);
-			ang[YAW] += g_IOSRand.RandomFloat(-45, 45);
 			ang[PITCH] = g_IOSRand.RandomFloat(-40, 0);
 
-			if (m_vDirToBall.z > VEC_HULL_MAX.z)
-				m_cmd.buttons |= IN_JUMP;
+			if (GetBall()->State_Get() != BALL_NORMAL)
+			{
+				if (m_vDirToBall.Length2D() < 50)
+				{
+					ang[YAW] += g_IOSRand.RandomFloat(-45, 45);
+					m_flBotNextShot = gpGlobals->curtime + 1;
+					m_cmd.buttons |= IN_ATTACK2;
+				}
+			}
+			else
+			{
+				m_cmd.buttons |= IN_ATTACK2;
+
+				if (m_vDirToBall.z > 100)
+				{
+					m_cmd.buttons |= IN_JUMP;
+				}
+				else if (abs(m_vDirToBall.x) > 50)
+				{
+					m_cmd.buttons |= IN_JUMP;
+					m_cmd.buttons |= Sign(m_vDirToBall.x) == GetTeam()->m_nRight ? IN_MOVERIGHT : IN_MOVELEFT;
+				}
+				else if (abs(m_vDirToBall.y) > 50)
+				{
+					m_cmd.buttons |= IN_JUMP;
+					m_cmd.buttons |= Sign(m_vDirToBall.y) == GetTeam()->m_nForward ? IN_FORWARD : IN_BACK;
+				}
+			}
 		}
 		else
 		{
+			VectorAngles(m_vDirToBall, ang);
 			float ballDistToGoal = (m_vBallPos - GetTeam()->m_vPlayerSpawns[0]).Length2D();
 			CSDKPlayer *pClosest = FindClosestPlayerToBall();
 
@@ -136,8 +161,6 @@ void CKeeperBot::BotAdjustPos()
 			{
 				modifier = 0.33f;
 			}
-
-			VectorAngles(m_vDirToBall, ang);
 		}
 
 		Vector targetPosDir = GetTeam()->m_vPlayerSpawns[0] + modifier * (m_vBallPos - GetTeam()->m_vPlayerSpawns[0]) - GetLocalOrigin();

@@ -269,6 +269,9 @@ void ClientModeShared::OverrideView( CViewSetup *pSetup )
 	if(!pPlayer)
 		return;
 
+	if (pPlayer->IsObserver() && pPlayer->GetObserverMode() != OBS_MODE_IN_EYE && pPlayer->GetObserverMode() != OBS_MODE_CHASE)
+		return;
+
 	pPlayer->OverrideView( pSetup );
 
 	if( ::input->CAM_IsThirdPerson() )
