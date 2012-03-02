@@ -494,6 +494,7 @@ void CBall::State_Enter( ball_state_t newState )
 
 		pPl->m_bIsAtTargetPos = false;
 		pPl->RemoveFlag(FL_REMOTECONTROLLED | FL_CELEB | FL_NO_X_MOVEMENT | FL_NO_Y_MOVEMENT | FL_ATCONTROLS | FL_FROZEN);
+		pPl->SetMoveType(MOVETYPE_WALK);
 	}
 
 	if ( mp_showballstatetransitions.GetInt() > 0 )
@@ -755,14 +756,19 @@ void CBall::State_GOALKICK_Think()
 
 		SDKGameRules()->EnableShield(SHIELD_GOALKICK, LastOppTeam(false));
 		UpdatePossession(m_pPl);
-		m_pPl->SetPosInsideShield(Vector(m_vPos.x, m_vPos.y - 100 * m_pPl->GetTeam()->m_nForward, SDKGameRules()->m_vKickOff.GetZ()), false);
+		m_pPl->m_bIsAtTargetPos = true;
+		//m_pPl->SetPosInsideShield(Vector(m_vPos.x, m_vPos.y - 100 * m_pPl->GetTeam()->m_nForward, SDKGameRules()->m_vKickOff.GetZ()), false);
 		m_flStateTimelimit = -1;
 		SendMatchEvent(MATCH_EVENT_GOALKICK);
 		EmitSound("Ball.whistle");
+		PlayersAtTargetPos(false);
 	}
 
-	if (!PlayersAtTargetPos(false))
+	if (!m_pPl->m_bIsAtTargetPos)
 		return;
+
+	//if (!PlayersAtTargetPos(false))
+	//	return;
 
 	if (m_flStateTimelimit == -1)
 		m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit.GetFloat();
@@ -1034,7 +1040,10 @@ void CBall::State_KEEPERHANDS_Think()
 		if (!m_pPl)
 			return State_Transition(BALL_NORMAL);
 
+		SDKGameRules()->EnableShield(SHIELD_GOALKICK, m_pPl->GetTeamNumber());
 		UpdatePossession(m_pPl);
+		m_pPl->m_bIsAtTargetPos = true;
+
 		m_pPl->m_nBody = MODEL_KEEPER_AND_BALL;
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_CARRY);
 		m_pPl->m_nSkin = m_pPl->m_nBaseSkin + m_nSkin;
@@ -1045,7 +1054,12 @@ void CBall::State_KEEPERHANDS_Think()
 
 		if (m_pPl->m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1)))
 			m_pPl->m_bShotButtonsDepressed = false;
+
+		PlayersAtTargetPos(false);
 	}
+
+	if (!m_pPl->m_bIsAtTargetPos)
+		return;
 
 	if (m_flStateTimelimit == -1)
 		m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit.GetFloat();

@@ -266,9 +266,9 @@ void CHudScorebar::Paint( void )
 		break;
 	}
 
-	nTime = abs(nTime);
+	nTime = abs(min(0, nTime));
 
-	m_pTime->SetText(nTime > 0 ? VarArgs("% 3d:%02d", nTime / 60, nTime % 60) : VarArgs(" 3%d", nTime));
+	m_pTime->SetText(VarArgs("% 3d:%02d", nTime / 60, nTime % 60));
 
 	m_pMatchState->SetText(g_szStateNames[SDKGameRules()->State_Get()]);
 
