@@ -361,25 +361,22 @@ public:
 
 	void				ResetStats();
 
-	PlayerAnimEvent_t	m_ePlayerAnimEvent;
 	bool				m_bShotButtonsDepressed;
 
 	float				m_flNextJoin;
 	int					m_nTeamToJoin;
 
 	int					m_ePenaltyState;
+	PlayerAnimEvent_t	m_ePlayerAnimEvent;
+	float				m_flPlayerAnimEventStart;
+	void				SetPlayerBall(CBall *pPlayerBall) { m_pPlayerBall = pPlayerBall; }
+	CBall				*GetPlayerBall() { return m_pPlayerBall; }
 
 private:
 
 	bool				m_bOffside;
 	Vector				m_vOffsidePos;
 	CBall				*m_pPlayerBall;
-
-public:
-
-	float				m_flPlayerAnimEventStart;
-	void				SetPlayerBall(CBall *pPlayerBall) { m_pPlayerBall = pPlayerBall; }
-	CBall				*GetPlayerBall() { return m_pPlayerBall; }
 };
 
 

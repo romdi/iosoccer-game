@@ -44,6 +44,7 @@ public:
 	QAngle			m_aBallAng;
 
 	Vector			m_vDirToBall;
+	float			m_flAngToBallVel;
 
 	void BotFrame();
 	virtual void BotThink();

@@ -266,7 +266,7 @@ void CHudScorebar::Paint( void )
 		break;
 	}
 
-	nTime = abs(min(0, nTime));
+	nTime = abs(nTime);
 
 	m_pTime->SetText(VarArgs("% 3d:%02d", nTime / 60, nTime % 60));
 
@@ -367,6 +367,7 @@ void CHudScorebar::MsgFunc_MatchEvent(bf_read &msg)
 	match_event_t eventType = (match_event_t)msg.ReadByte();
 	int playerIndex = msg.ReadByte();
 	int teamIndex = gr->GetTeam(playerIndex) - TEAM_A;
+	Assert(teamIndex == 0 || teamIndex == 1);
 	//C_SDKPlayer *pPlayer1 = (C_SDKPlayer *)CHandle<C_SDKPlayer>::FromIndex(msg.ReadLong());
 	//C_SDKPlayer *pPlayer2 = (C_SDKPlayer *)CHandle<C_SDKPlayer>::FromIndex(msg.ReadLong());
 

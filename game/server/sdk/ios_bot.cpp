@@ -391,6 +391,20 @@ void CBot::BotFrame()
 			GetBall()->VPhysicsGetObject()->GetVelocity(&m_vBallVel, &m_vBallAngImp);
 
 			m_vDirToBall = m_vBallPos - GetLocalOrigin();
+			if (m_vBallVel.Length2D() == 0)
+			{
+				m_flAngToBallVel = 0;
+			}
+			else
+			{
+				Vector vel = m_vBallVel;
+				vel.z = 0;
+				vel.NormalizeInPlace();
+				Vector dir = -m_vDirToBall;
+				dir.z = 0;
+				dir.NormalizeInPlace();
+				m_flAngToBallVel = RAD2DEG(acos(dir.Dot(vel)));
+			}
 
 			BotThink();
 

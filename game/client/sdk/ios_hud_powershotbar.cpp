@@ -207,8 +207,9 @@ void CHudPowershotBar::Paint()
 	//else
 		relStamina = stamina / 100.0f;
 
-	m_pStaminaPanel->SetTall(GetTall() * relStamina - 2 * PADDING);
-	m_pStaminaPanel->SetY(GetTall() - PADDING - m_pStaminaPanel->GetTall());
+	int height = GetTall() * relStamina - 2 * PADDING;
+	m_pStaminaPanel->SetTall(height);
+	m_pStaminaPanel->SetY(GetTall() - PADDING - height);
 
 	Color bgColor;
 

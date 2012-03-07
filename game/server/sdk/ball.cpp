@@ -367,6 +367,10 @@ void CBall::SendMatchEvent(match_event_t matchEvent, CSDKPlayer *pPlayer)
 		pPlayer->GetPlayerName(), pPlayer->GetUserID(),
 		pPlayer->GetNetworkIDString(), pPlayer->GetTeam()->GetName(), matchEvent);
 
+	DevMsg( "\"%s<%d><%s><%s>\" triggered \"%d\"\n",
+		pPlayer->GetPlayerName(), pPlayer->GetUserID(),
+		pPlayer->GetNetworkIDString(), pPlayer->GetTeam()->GetName(), matchEvent);
+
 	CReliableBroadcastRecipientFilter filter;
 	UserMessageBegin(filter, "MatchEvent");
 		WRITE_BYTE(matchEvent);
@@ -1068,12 +1072,12 @@ void CBall::State_KEEPERHANDS_Think()
 
 	SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + BODY_CHEST_END) + m_vPlForward2D * 2 * VEC_HULL_MAX.x);
 
-	if (m_nInPenBoxOfTeam != m_pPl->GetTeamNumber())
-	{
-		Kicked(BODY_HANDS);
-		MarkOffsidePlayers();
-		return State_Transition(BALL_NORMAL);
-	}
+	//if (m_nInPenBoxOfTeam != m_pPl->GetTeamNumber())
+	//{
+	//	Kicked(BODY_HANDS);
+	//	MarkOffsidePlayers();
+	//	return State_Transition(BALL_NORMAL);
+	//}
 
 	if (m_pPl->m_bShotButtonsDepressed && (m_pPl->m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1))) && m_pPl->m_flNextShot <= gpGlobals->curtime)
 	{
@@ -1262,7 +1266,7 @@ bool CBall::DoBodyPartAction()
 
 			if (m_vVel.Length2D() > sv_ball_keepercatchspeed.GetInt())
 			{
-				m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KEEPER_HANDS_PUNCH);
+				//m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KEEPER_HANDS_PUNCH);
 				SetVel(m_vPlForward * m_vVel.Length2D() * 0.75f);
 				Kicked(BODY_HANDS);
 				return true;

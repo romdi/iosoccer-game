@@ -41,7 +41,6 @@ struct StatPanel_t
 	Label *pReds;
 	Label *pPossession;
 	Label *pPing;
-	ImagePanel *pCountryFlag;
 };
 
 struct PosPanel_t
@@ -55,6 +54,7 @@ struct PosPanel_t
 	Label *pPosNumber;
 	StatPanel_t *pStatPanel;
 	Button *pKickButton;
+	ImagePanel *pCountryFlag;
 };
 
 //-----------------------------------------------------------------------------

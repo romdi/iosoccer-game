@@ -52,7 +52,6 @@ LINK_ENTITY_TO_CLASS(ios_keeperbot, CKeeperBot);
 //
 void CKeeperBot::BotThink()
 {
-	Vector dirToBall = m_vBallPos - GetLocalOrigin();
 	//if (dirToBall.Length2D() > 400)
 	//{
 	//	BotCenter();
@@ -72,10 +71,10 @@ void CKeeperBot::BotCenter()
 
 void CKeeperBot::BotAdjustPos()
 {
-	float modifier;
+	float modifier = 25;
 	QAngle ang = m_oldcmd.viewangles;
 
-	if (m_nBody == MODEL_KEEPER_AND_BALL)
+	if (GetBall()->State_Get() == BALL_KEEPERHANDS && GetBall()->GetCurrentPlayer() == this)
 	{
 		if (!m_bShotButtonsDepressed)
 		{
@@ -84,83 +83,78 @@ void CKeeperBot::BotAdjustPos()
 		}
 		else if (gpGlobals->curtime >= m_flBotNextShot)
 		{
-			modifier = 0.9f;
+			modifier = 0.99f;
 			m_cmd.buttons |= IN_ATTACK2;
 			m_cmd.powershot_strength = 50;
 			VectorAngles(Vector(0, GetTeam()->m_nForward, 0), ang);
 			ang[YAW] += g_IOSRand.RandomFloat(-45, 45);
 			ang[PITCH] = g_IOSRand.RandomFloat(-40, 0);
-			m_flBotNextShot = gpGlobals->curtime + 1;
+			//m_flBotNextShot = gpGlobals->curtime + 1;
 		}
 	}
-	else if (gpGlobals->curtime >= m_flBotNextShot)
+	else// if (gpGlobals->curtime >= m_flBotNextShot)
 	{
-		if ((m_vDirToBall.Length2D() < 150 && m_vDirToBall.z < 150)/* || Sign(m_vDirToBall.y) != GetTeam()->m_nForward*/)
+		VectorAngles(m_vDirToBall, ang);
+		float ballDistToGoal = (m_vBallPos - GetTeam()->m_vPlayerSpawns[0]).Length2D();
+		CSDKPlayer *pClosest = FindClosestPlayerToBall();
+
+		if (ballDistToGoal < 750 && m_vDirToBall.Length2D() < 200 && m_vDirToBall.z < 200)
 		{
-			modifier = 0.9f;
+			modifier = 0.99f;// max(0.15f, 1 - ballDistToGoal / 750);
 			m_cmd.powershot_strength = 50;
 			VectorAngles(Vector(0, GetTeam()->m_nForward, 0), ang);
-			ang[PITCH] = g_IOSRand.RandomFloat(-40, 0);
+			bool diving = false;
 
-			if (GetBall()->State_Get() != BALL_NORMAL)
+			if (m_flAngToBallVel < 60 && m_flAngToBallVel > 15)
+			{
+				if (abs(m_vDirToBall.x) > 50 && abs(m_vDirToBall.x) < 200 && m_vDirToBall.z < 150 && abs(m_vDirToBall.y) < 150 && m_vBallVel.Length() > 200)
+				{
+					m_cmd.buttons |= IN_JUMP;
+					m_cmd.buttons |= Sign(m_vDirToBall.x) == GetTeam()->m_nRight ? IN_MOVERIGHT : IN_MOVELEFT;
+					m_cmd.buttons |= IN_ATTACK2;
+					diving = true;
+				}
+				else if (m_vDirToBall.z > 100 && m_vDirToBall.z < 150 && m_vDirToBall.Length2D() < 50)
+				{
+					m_cmd.buttons |= IN_JUMP;
+					m_cmd.buttons |= IN_ATTACK2;
+					diving = true;
+				}
+				else if (abs(m_vDirToBall.y) > 50 && abs(m_vDirToBall.y) < 200 && m_vDirToBall.z < 100 && abs(m_vDirToBall.x) < 50 && m_vBallVel.Length() < 200 && pClosest != this)
+				{
+					m_cmd.buttons |= IN_JUMP;
+					m_cmd.buttons |= Sign(m_vDirToBall.y) == GetTeam()->m_nForward ? IN_FORWARD : IN_BACK;
+					m_cmd.buttons |= IN_ATTACK2;
+					diving = true;
+				}
+			}
+
+			if (!diving)
 			{
 				if (m_vDirToBall.Length2D() < 50)
 				{
 					ang[YAW] += g_IOSRand.RandomFloat(-45, 45);
-					m_flBotNextShot = gpGlobals->curtime + 1;
+					ang[PITCH] = g_IOSRand.RandomFloat(-40, 0);
 					m_cmd.buttons |= IN_ATTACK2;
 				}
+				else
+					modifier = 0.99f;
 			}
+		}
+		else if (ballDistToGoal < 1250 && m_flAngToBallVel < 60 && m_vBallVel.Length2D() > 300 && (m_vBallVel.z > 100 || m_vDirToBall.z > 100))
+		{
+			modifier = 0.01f;
+		}
+		else if (ballDistToGoal < 1000 && m_vDirToBall.z < 80 && m_vBallVel.Length2D() < 300 && m_vBallVel.z < 100)
+		{
+			if ((pClosest == this || ballDistToGoal < 750))
+				modifier = 0.99f;
 			else
-			{
-				m_cmd.buttons |= IN_ATTACK2;
-
-				if (m_vDirToBall.z > 100)
-				{
-					m_cmd.buttons |= IN_JUMP;
-				}
-				else if (abs(m_vDirToBall.x) > 50)
-				{
-					m_cmd.buttons |= IN_JUMP;
-					m_cmd.buttons |= Sign(m_vDirToBall.x) == GetTeam()->m_nRight ? IN_MOVERIGHT : IN_MOVELEFT;
-				}
-				else if (abs(m_vDirToBall.y) > 50)
-				{
-					m_cmd.buttons |= IN_JUMP;
-					m_cmd.buttons |= Sign(m_vDirToBall.y) == GetTeam()->m_nForward ? IN_FORWARD : IN_BACK;
-				}
-			}
+				modifier = 0.25f;
 		}
 		else
 		{
-			VectorAngles(m_vDirToBall, ang);
-			float ballDistToGoal = (m_vBallPos - GetTeam()->m_vPlayerSpawns[0]).Length2D();
-			CSDKPlayer *pClosest = FindClosestPlayerToBall();
-
-			if (ballDistToGoal < 750)
-			{
-				if (m_vDirToBall.z < 80)
-				{
-					if (pClosest == this)
-						modifier = 1.0f;
-					else if (pClosest->GetTeam() != GetTeam())
-						modifier = 0.75f;
-					else
-						modifier = 0.33f;
-				}
-				else
-				{
-					modifier = 0.15f;
-				}
-			}
-			else if (ballDistToGoal < 1000 && m_vDirToBall.z < 80 && pClosest == this)
-			{
-				modifier = 1.0f;
-			}
-			else
-			{
-				modifier = 0.33f;
-			}
+			modifier = 0.25f;
 		}
 
 		Vector targetPosDir = GetTeam()->m_vPlayerSpawns[0] + modifier * (m_vBallPos - GetTeam()->m_vPlayerSpawns[0]) - GetLocalOrigin();
@@ -169,14 +163,17 @@ void CKeeperBot::BotAdjustPos()
 		VectorNormalizeFast(targetPosDir);
 		Vector localDir;
 		VectorIRotate(targetPosDir, EntityToWorldTransform(), localDir);
-		float speed;
-		if (dist < 10)
-			speed = 0;
-		else if (dist < 100)
-			speed = mp_runspeed.GetInt();
-		else
-			speed = mp_sprintspeed.GetInt();
+		//float speed;
+		//if (dist < 10)
+		//	speed = 0;
+		//else if (dist < 100)
+		//	speed = mp_runspeed.GetInt();
+		//else
+		//	speed = mp_sprintspeed.GetInt();
 		//float speed = clamp(dist - 10, 0, mp_runspeed.GetInt());
+		float speed = 0;
+		if (dist > 20)
+			speed = clamp(3 * dist, 0, mp_sprintspeed.GetInt());
 		m_cmd.forwardmove = localDir.x * speed;
 		m_cmd.sidemove = -localDir.y * speed;
 	}

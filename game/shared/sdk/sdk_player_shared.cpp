@@ -167,7 +167,7 @@ void CSDKPlayer::InitSpeeds()
 	m_Shared.m_flRunSpeed = mp_runspeed.GetInt();
 	m_Shared.m_flSprintSpeed = mp_sprintspeed.GetInt();
 	// Set the absolute max to sprint speed
-	SetMaxSpeed( m_Shared.m_flSprintSpeed ); 
+	SetMaxSpeed( m_Shared.m_flRunSpeed ); 
 	return;
 }
 

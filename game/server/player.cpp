@@ -3650,7 +3650,7 @@ void CBasePlayer::PostThinkVPhysics( void )
 	if ( !(TouchedPhysics() || pPhysGround) )
 	{
 		float maxSpeed = m_flMaxspeed > 0.0f ? m_flMaxspeed : sv_maxspeed.GetFloat();
-		maxSpeed *= 0.5f;		//ios
+		//maxSpeed *= 0.5f;		//ios
 		g_pMoveData->m_outWishVel.Init( maxSpeed, maxSpeed, maxSpeed );
 	}
 
@@ -3845,7 +3845,7 @@ void CBasePlayer::Spawn( void )
 		AddFlag( FL_CLIENT );
 	}
 
-	AddFlag( FL_AIMTARGET );
+	//AddFlag( FL_AIMTARGET );
 
 	m_AirFinished	= gpGlobals->curtime + AIRTIME;
 	

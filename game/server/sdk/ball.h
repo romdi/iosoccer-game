@@ -174,6 +174,8 @@ public:
 
 	inline ball_state_t State_Get( void ) { return m_eBallState; }
 
+	CSDKPlayer		*GetCurrentPlayer() { return m_pPl; }
+
 private:
 
 	void State_NORMAL_Enter();		void State_NORMAL_Think();
