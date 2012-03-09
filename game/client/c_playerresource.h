@@ -29,7 +29,7 @@ public:
 public : // IGameResources intreface
 
 	// Team data access 
-	virtual int		GetTeamScore( int index );
+	virtual int		GetTeamGoals( int index );
 	virtual const char *GetTeamName( int index );
 	virtual const char *GetFullTeamName( int index );
 	virtual const Color&GetTeamColor( int index );
@@ -56,6 +56,7 @@ public : // IGameResources intreface
 	virtual int		GetRedCards( int index );
 	virtual int		GetYellowCards( int index );
 	virtual int		GetFouls( int index );
+	virtual int		GetOffsides( int index );
 	virtual int		GetGoals( int index );
 	virtual int		GetAssists( int index );
 	virtual int		GetPossession( int index );
@@ -95,6 +96,7 @@ protected:
 	int		m_RedCard[MAX_PLAYERS+1];
 	int		m_YellowCard[MAX_PLAYERS+1];
 	int		m_Fouls[MAX_PLAYERS+1];
+	int		m_Offsides[MAX_PLAYERS+1];
 	int		m_Goals[MAX_PLAYERS+1];
 	int		m_Assists[MAX_PLAYERS+1];
 	int		m_Possession[MAX_PLAYERS+1];

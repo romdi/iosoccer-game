@@ -71,8 +71,17 @@ void CKeeperBot::BotCenter()
 
 void CKeeperBot::BotAdjustPos()
 {
-	float modifier = 25;
+	float modifier = 0.25f;
 	QAngle ang = m_oldcmd.viewangles;
+	Vector target = GetTeam()->m_vPlayerSpawns[0];
+
+	if (m_vBallVel.Length2D() != 0 && Sign(m_vBallVel.y) != GetTeam()->m_nForward)
+	{
+		float yDist = GetTeam()->m_vPlayerSpawns[0].y - m_vBallPos.y;
+		float vAng = acos(Sign(yDist) * m_vBallDir2D.y);
+		float xDist = Sign(m_vBallDir2D.x) * abs(yDist) * tan(vAng);
+		target.x = clamp(m_vBallPos.x + xDist, GetTeam()->m_vPlayerSpawns[0].x - 150, GetTeam()->m_vPlayerSpawns[0].x + 150);
+	}
 
 	if (GetBall()->State_Get() == BALL_KEEPERHANDS && GetBall()->GetCurrentPlayer() == this)
 	{
@@ -107,14 +116,14 @@ void CKeeperBot::BotAdjustPos()
 
 			if (m_flAngToBallVel < 60 && m_flAngToBallVel > 15)
 			{
-				if (abs(m_vDirToBall.x) > 50 && abs(m_vDirToBall.x) < 200 && m_vDirToBall.z < 150 && abs(m_vDirToBall.y) < 150 && m_vBallVel.Length() > 200)
+				if (abs(m_vDirToBall.x) > 50 && abs(m_vDirToBall.x) < 200 && m_vDirToBall.z < 150 && abs(m_vDirToBall.x) < 150 && m_vBallVel.Length() > 200)
 				{
 					m_cmd.buttons |= IN_JUMP;
 					m_cmd.buttons |= Sign(m_vDirToBall.x) == GetTeam()->m_nRight ? IN_MOVERIGHT : IN_MOVELEFT;
 					m_cmd.buttons |= IN_ATTACK2;
 					diving = true;
 				}
-				else if (m_vDirToBall.z > 100 && m_vDirToBall.z < 150 && m_vDirToBall.Length2D() < 50)
+				else if (m_vDirToBall.z > 100 && m_vDirToBall.z < 150 && m_vDirToBall.Length2D() < 100)
 				{
 					m_cmd.buttons |= IN_JUMP;
 					m_cmd.buttons |= IN_ATTACK2;
@@ -123,7 +132,7 @@ void CKeeperBot::BotAdjustPos()
 				else if (abs(m_vDirToBall.y) > 50 && abs(m_vDirToBall.y) < 200 && m_vDirToBall.z < 100 && abs(m_vDirToBall.x) < 50 && m_vBallVel.Length() < 200 && pClosest != this)
 				{
 					m_cmd.buttons |= IN_JUMP;
-					m_cmd.buttons |= Sign(m_vDirToBall.y) == GetTeam()->m_nForward ? IN_FORWARD : IN_BACK;
+					m_cmd.buttons |= Sign(m_vLocalDirToBall.x) == GetTeam()->m_nForward ? IN_FORWARD : IN_BACK;
 					m_cmd.buttons |= IN_ATTACK2;
 					diving = true;
 				}
@@ -157,7 +166,7 @@ void CKeeperBot::BotAdjustPos()
 			modifier = 0.25f;
 		}
 
-		Vector targetPosDir = GetTeam()->m_vPlayerSpawns[0] + modifier * (m_vBallPos - GetTeam()->m_vPlayerSpawns[0]) - GetLocalOrigin();
+		Vector targetPosDir = target + modifier * (m_vBallPos - target) - GetLocalOrigin();
 		targetPosDir.z = 0;
 		float dist = targetPosDir.Length2D();
 		VectorNormalizeFast(targetPosDir);

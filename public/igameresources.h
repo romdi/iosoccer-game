@@ -20,7 +20,7 @@ public:
 	// Team data access 
 	virtual const char		*GetTeamName( int index ) = 0;
 	virtual const char		*GetFullTeamName( int index ) = 0;
-	virtual int				GetTeamScore( int index ) = 0;
+	virtual int				GetTeamGoals( int index ) = 0;
 	virtual const Color&	GetTeamColor( int index ) = 0;
 
 	// Player data access
@@ -43,6 +43,7 @@ public:
 	virtual int		GetRedCards( int index ) = 0;
 	virtual int		GetYellowCards( int index ) = 0;
 	virtual int		GetFouls( int index ) = 0;
+	virtual int		GetOffsides( int index ) = 0;
 	virtual int		GetGoals( int index ) = 0;
 	virtual int		GetAssists( int index ) = 0;
 	virtual int		GetPossession( int index ) = 0;

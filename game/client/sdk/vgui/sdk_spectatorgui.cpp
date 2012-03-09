@@ -100,7 +100,7 @@ void CSDKSpectatorGUI::UpdateSpectatorPlayerList()
 	if ( blue )
 	{
 		wchar_t frags[ 10 ];
-		_snwprintf( frags, sizeof( frags ), L"%i",  blue->Get_Score()  );
+		_snwprintf( frags, sizeof( frags ), L"%i",  blue->Get_Goals()  );
 
 		SetLabelText( "BlueScoreValue", frags );
 	}
@@ -109,7 +109,7 @@ void CSDKSpectatorGUI::UpdateSpectatorPlayerList()
 	if ( red )
 	{
 		wchar_t frags[ 10 ];
-		_snwprintf( frags, sizeof( frags ), L"%i", red->Get_Score()  );
+		_snwprintf( frags, sizeof( frags ), L"%i", red->Get_Goals()  );
 		
 		SetLabelText( "RedScoreValue", frags );
 	}

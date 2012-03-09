@@ -36,22 +36,27 @@ struct StatPanel_t
 {
 	Panel *pPanel;
 	Label *pGoals;
+	Label *pGoalText;
 	Label *pAssists;
-	Label *pYellows;
-	Label *pReds;
+	Label *pAssistText;
+	Label *pFouls;
+	Label *pFoulsText;
+	Label *pYellowCards;
+	Label *pYellowCardText;
+	Label *pRedCards;
+	Label *pRedCardText;
 	Label *pPossession;
+	Label *pPossessionText;
 	Label *pPing;
+	Label *pPingText;
 };
 
 struct PosPanel_t
 {
 	Panel *pPosPanel;
-	ImagePanel *pPlayerImage; 
-	Label *pPosInfo;
 	Button *pPlayerName;
 	Label *pClubName;
 	Label *pPosName;
-	Label *pPosNumber;
 	StatPanel_t *pStatPanel;
 	Button *pKickButton;
 	ImagePanel *pCountryFlag;
@@ -110,19 +115,19 @@ protected:
 
 	Button *m_pSpectateButton;
 	Button *m_pTabButtons[2];
-	Button *m_pToggleStats;
-	Button *m_pKickButton[2][11];
-
-	bool m_bShowStats;
 
 	int m_nActiveTeam;
 
-	char m_szTeamNames[2][32];
 	Label *m_pTeamNames[2];
+	Label *m_pTeamPossession[2];
+	Label *m_pTeamPlayerCount[2];
 
 	Panel *m_pTeamPanels[2];
 
+	Label *m_pSpectatorNames;
+
 	float m_flNextUpdateTime;
+	int m_nMaxPlayers;
 };
 
 

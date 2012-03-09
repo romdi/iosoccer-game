@@ -284,6 +284,7 @@ public:
 	int					m_RedCards;
 	int					m_YellowCards;
 	int					m_Fouls;
+	int					m_Offsides;
 	int					m_Goals;
 	int					m_Assists;
 	int					m_Possession;
@@ -298,6 +299,7 @@ public:
 	int					GetRedCards(void) { return m_RedCards; }
 	int					GetYellowCards(void) { return m_YellowCards; }
 	int					GetFouls(void) { return m_Fouls; }
+	int					GetOffsides(void) { return m_Offsides; }
 	int					GetGoals(void) { return m_Goals; }
 	int					GetAssists(void) { return m_Assists; }
 	int					GetPossession(void) { return m_Possession; }

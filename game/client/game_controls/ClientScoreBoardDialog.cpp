@@ -354,7 +354,7 @@ void CClientScoreBoardDialog::UpdateTeamInfo()
             teamLatency[i] = 0;
 
         wchar_t sz[64];
-        swprintf(sz, L"%d", gr->GetTeamScore(i));
+        swprintf(sz, L"%d", gr->GetTeamGoals(i));
         m_pPlayerList->ModifyColumn(sectionId, "frags", sz);
         if (teamLatency[i] < 1)
         {

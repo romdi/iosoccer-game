@@ -390,7 +390,12 @@ void CBot::BotFrame()
 			GetBall()->VPhysicsGetObject()->GetPosition(&m_vBallPos, &m_aBallAng);
 			GetBall()->VPhysicsGetObject()->GetVelocity(&m_vBallVel, &m_vBallAngImp);
 
+			m_vBallDir2D = m_vBallVel;
+			m_vBallDir2D.z = 0;
+			m_vBallDir2D.NormalizeInPlace();
 			m_vDirToBall = m_vBallPos - GetLocalOrigin();
+			VectorIRotate(m_vDirToBall, EntityToWorldTransform(), m_vLocalDirToBall);
+
 			if (m_vBallVel.Length2D() == 0)
 			{
 				m_flAngToBallVel = 0;

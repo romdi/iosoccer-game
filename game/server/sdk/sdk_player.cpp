@@ -286,7 +286,7 @@ void CSDKPlayer::PostThink()
 
     m_PlayerAnimState->Update( m_angEyeAngles[YAW], m_angEyeAngles[PITCH] );
 	
-	LookAtBall();
+	//LookAtBall();
 
 	//IOSSPlayerCollision();
 
@@ -908,8 +908,8 @@ bool CSDKPlayer::TeamPosFree(int team, int pos, bool kickBotKeeper)
 
 		if (pPl->GetTeamPosition() == pos && (pPl->GetTeamNumber() == team || pPl->m_nTeamToJoin == team))
 		{
-			//if (IsBot())
-			//	return false;
+			if (IsBot())
+				return false;
 
 			if (!pPl->IsBot() || !kickBotKeeper)
 				return false;
@@ -1189,6 +1189,7 @@ void CSDKPlayer::ResetStats()
 	m_RedCards=0;
 	m_YellowCards=0;
 	m_Fouls=0;
+	m_Offsides=0;
 	m_Goals=0;
 	m_Assists=0;
 	m_Passes=0;

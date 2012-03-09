@@ -495,18 +495,19 @@ void IN_ScoreDown( const CCommand &args )
 	KeyDown( &in_score, args[1] );
 	if ( gViewPortInterface )
 	{
-		gViewPortInterface->ShowPanel( PANEL_TEAM, true );
+		bool show = !gViewPortInterface->FindPanelByName(PANEL_TEAM)->IsVisible();
+		gViewPortInterface->ShowPanel(PANEL_TEAM, show);
 	}
 }
 
 void IN_ScoreUp( const CCommand &args )
 {
 	KeyUp( &in_score, args[1] );
-	if ( gViewPortInterface )
-	{
-		gViewPortInterface->ShowPanel( PANEL_TEAM, false );
-		GetClientVoiceMgr()->StopSquelchMode();
-	}
+	//if ( gViewPortInterface )
+	//{
+	//	gViewPortInterface->ShowPanel( PANEL_TEAM, false );
+	//	GetClientVoiceMgr()->StopSquelchMode();
+	//}
 }
 
 

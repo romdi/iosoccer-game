@@ -35,6 +35,7 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CPlayerResource, DT_PlayerResource)
 	SendPropArray3( SENDINFO_ARRAY3(m_RedCard), SendPropInt( SENDINFO_ARRAY(m_RedCard), 5, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_YellowCard), SendPropInt( SENDINFO_ARRAY(m_YellowCard), 5, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_Fouls), SendPropInt( SENDINFO_ARRAY(m_Fouls), 5, SPROP_UNSIGNED ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_Offsides), SendPropInt( SENDINFO_ARRAY(m_Offsides), 5, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_Goals), SendPropInt( SENDINFO_ARRAY(m_Goals), 5, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_Assists), SendPropInt( SENDINFO_ARRAY(m_Assists), 5, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_Possession), SendPropInt( SENDINFO_ARRAY(m_Possession), 7, SPROP_UNSIGNED ) ),
@@ -96,6 +97,7 @@ void CPlayerResource::Spawn( void )
 		m_RedCard.Set( i, 0 );
 		m_YellowCard.Set( i, 0 );
 		m_Fouls.Set( i, 0 );
+		m_Offsides.Set( i, 0 );
 		m_Goals.Set( i, 0 );
 		m_Assists.Set( i, 0 );
 		m_Possession.Set( i, 0 );
@@ -165,6 +167,7 @@ void CPlayerResource::UpdatePlayerData( void )
 				m_RedCard.Set(i, max( 0, SDKPlayer->GetRedCards() ) );
 				m_YellowCard.Set(i, max( 0, SDKPlayer->GetYellowCards() ) );
 				m_Fouls.Set(i, max( 0, SDKPlayer->GetFouls() ) );
+				m_Offsides.Set(i, max( 0, SDKPlayer->GetOffsides() ) );
 				m_Goals.Set(i, max( 0, SDKPlayer->GetGoals() ) );
 				m_Assists.Set(i, max( 0, SDKPlayer->GetAssists() ) );
 				m_Possession.Set(i, max( 0, SDKPlayer->GetPossession() ) );

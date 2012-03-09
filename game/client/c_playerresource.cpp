@@ -32,6 +32,7 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_PlayerResource, DT_PlayerResource, CPlayerReso
 	RecvPropArray3( RECVINFO_ARRAY(m_RedCard), RecvPropInt( RECVINFO(m_RedCard[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_YellowCard), RecvPropInt( RECVINFO(m_YellowCard[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_Fouls), RecvPropInt( RECVINFO(m_Fouls[0]))),
+	RecvPropArray3( RECVINFO_ARRAY(m_Offsides), RecvPropInt( RECVINFO(m_Offsides[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_Goals), RecvPropInt( RECVINFO(m_Goals[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_Assists), RecvPropInt( RECVINFO(m_Assists[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_Possession), RecvPropInt( RECVINFO(m_Possession[0]))),
@@ -89,6 +90,7 @@ C_PlayerResource::C_PlayerResource()
 	memset( m_RedCard, 0, sizeof( m_RedCard ) );
 	memset( m_YellowCard, 0, sizeof( m_YellowCard ) );
 	memset( m_Fouls, 0, sizeof( m_Fouls ) );
+	memset( m_Offsides, 0, sizeof( m_Offsides ) );
 	memset( m_Goals, 0, sizeof( m_Goals ) );
 	memset( m_Assists, 0, sizeof( m_Assists ) );
 	memset( m_Possession, 0, sizeof( m_Possession ) );
@@ -254,14 +256,14 @@ const char * C_PlayerResource::GetFullTeamName(int index)
 	return team->Get_FullName();
 }
 
-int C_PlayerResource::GetTeamScore(int index)
+int C_PlayerResource::GetTeamGoals(int index)
 {
 	C_Team *team = GetGlobalTeam( index );
 
 	if ( !team )
 		return 0;
 
-	return team->Get_Score();
+	return team->Get_Goals();
 }
 
 const char *C_PlayerResource::GetScoreTag(int index)
@@ -419,6 +421,13 @@ int	C_PlayerResource::GetFouls( int iIndex )
 		return 0;
 
 	return m_Fouls[iIndex];
+}
+int	C_PlayerResource::GetOffsides( int iIndex )
+{
+	if ( !IsConnected( iIndex ) )
+		return 0;
+
+	return m_Offsides[iIndex];
 }
 int	C_PlayerResource::GetGoals( int iIndex )
 {

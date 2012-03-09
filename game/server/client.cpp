@@ -1111,32 +1111,6 @@ void CC_Player_NoClip( void )
 
 static ConCommand noclip("noclip", CC_Player_NoClip, "Toggle. Player becomes non-solid and flies.", FCVAR_CHEAT);
 
-
-//------------------------------------------------------------------------------
-// Sets client to godmode
-//------------------------------------------------------------------------------
-void CC_God_f (void)
-{
-	if ( !sv_cheats->GetBool() )
-		return;
-
-	CBasePlayer *pPlayer = ToBasePlayer( UTIL_GetCommandClient() ); 
-	if ( !pPlayer )
-		return;
-
-	if ( gpGlobals->deathmatch )
-		return;
-
-	pPlayer->ToggleFlag( FL_GODMODE );
-	if (!(pPlayer->GetFlags() & FL_GODMODE ) )
-		ClientPrint( pPlayer, HUD_PRINTCONSOLE, "godmode OFF\n");
-	else
-		ClientPrint( pPlayer, HUD_PRINTCONSOLE, "godmode ON\n");
-}
-
-static ConCommand god("god", CC_God_f, "Toggle. Player becomes invulnerable.", FCVAR_CHEAT );
-
-
 //------------------------------------------------------------------------------
 // Sets client to godmode
 //------------------------------------------------------------------------------

@@ -34,7 +34,7 @@ public:
 	virtual int		GetTeamNumber( void ) const;
 	virtual char	*Get_Name( void );
 	virtual char	*Get_FullName( void );
-	virtual int		Get_Score( void );
+	virtual int		Get_Goals( void );
 	virtual int		Get_Ping( void );
 	virtual char	*GetScoreTag( void ) { return 0; }		//ios base
 

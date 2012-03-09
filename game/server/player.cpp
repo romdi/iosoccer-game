@@ -5665,7 +5665,7 @@ void CBasePlayer::LockPlayerInPlace( void )
 	if ( m_iPlayerLocked )
 		return;
 
-	AddFlag( FL_GODMODE | FL_FROZEN );
+	AddFlag( FL_FROZEN );
 	SetMoveType( MOVETYPE_NONE );
 	m_iPlayerLocked = true;
 
@@ -5682,7 +5682,7 @@ void CBasePlayer::UnlockPlayer( void )
 	if ( !m_iPlayerLocked )
 		return;
 
-	RemoveFlag( FL_GODMODE | FL_FROZEN );
+	RemoveFlag( FL_FROZEN );
 	SetMoveType( MOVETYPE_WALK );
 	m_iPlayerLocked = false;
 }

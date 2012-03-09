@@ -52,7 +52,8 @@ extern ConVar
 	mp_shield_corner_radius,
 	mp_shield_kickoff_radius,
 	mp_offside,
-	mp_joindelay;
+	mp_joindelay,
+	mp_maxplayers;
 
 enum match_state_t
 {

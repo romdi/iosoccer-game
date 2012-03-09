@@ -190,7 +190,7 @@ void CSDKScoreboard::UpdateTeamInfo()
 
 				// update stats
 				wchar_t val[6];
-				swprintf(val, L"%d", team->Get_Score());
+				swprintf(val, L"%d", team->Get_Goals());
 				m_pPlayerList->ModifyColumn(sectionID, "frags", val);
 				if (team->Get_Ping() < 1)
 				{

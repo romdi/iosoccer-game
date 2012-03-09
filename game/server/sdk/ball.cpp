@@ -1156,6 +1156,7 @@ bool CBall::CheckFoul(bool canShootBall)
 		if (canShootBall && distToPl >= (m_vPos - m_vPlPos).Length2D())
 			continue;
 
+		m_pPl->m_Fouls += 1;
 		m_pPl->m_YellowCards += 1;
 		//if (m_pPl->m_YellowCards % 2 == 0)
 		//{
@@ -1611,6 +1612,7 @@ void CBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart)
 	{
 		if (sv_ball_doubletouchfouls.GetBool() && m_Touches.Tail().m_eBallState != BALL_NORMAL)
 		{
+			pPl->m_Fouls += 1;
 			TriggerFoul(FOUL_DOUBLETOUCH, pPl->GetLocalOrigin(), pPl);
 			State_Transition(BALL_FREEKICK, 1);
 			return;
@@ -1631,6 +1633,7 @@ void CBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart)
 	
 	if (pPl->IsOffside())
 	{
+		pPl->m_Offsides += 1;
 		TriggerFoul(FOUL_OFFSIDE, pPl->GetOffsidePos(), pPl);
 		EnableOffsideLine(m_vFoulPos.y);
 		State_Transition(BALL_FREEKICK, 1);

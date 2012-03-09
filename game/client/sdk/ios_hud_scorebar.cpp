@@ -275,8 +275,8 @@ void CHudScorebar::Paint( void )
 	m_pTeams[0]->SetText(teamHome->Get_Name());
 	m_pTeams[1]->SetText(teamAway->Get_Name());
 
-	m_pScores[0]->SetText(VarArgs("%d", teamHome->Get_Score()));
-	m_pScores[1]->SetText(VarArgs("%d", teamAway->Get_Score()));
+	m_pScores[0]->SetText(VarArgs("%d", teamHome->Get_Goals()));
+	m_pScores[1]->SetText(VarArgs("%d", teamAway->Get_Goals()));
 
 	DoEventSlide();
 }
