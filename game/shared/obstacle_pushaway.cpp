@@ -11,8 +11,8 @@
 //-----------------------------------------------------------------------------------------------------
 //IOS added cheat just in case...
 
-ConVar sv_pushaway_dopush( "sv_pushaway_dopush", "1", FCVAR_REPLICATED | FCVAR_ARCHIVE | FCVAR_CHEAT, "" );
-ConVar sv_pushaway_getpushed( "sv_pushaway_getpushed", "1", FCVAR_REPLICATED | FCVAR_ARCHIVE | FCVAR_CHEAT, "" );
+ConVar sv_pushaway_dopush( "sv_pushaway_dopush", "0", FCVAR_REPLICATED | FCVAR_ARCHIVE | FCVAR_CHEAT, "" );
+ConVar sv_pushaway_getpushed( "sv_pushaway_getpushed", "0", FCVAR_REPLICATED | FCVAR_ARCHIVE | FCVAR_CHEAT, "" );
 ConVar sv_pushaway_force( "sv_pushaway_force", "25", FCVAR_REPLICATED | FCVAR_ARCHIVE | FCVAR_CHEAT, "How hard physics objects are pushed away from the players on the server." );
 ConVar sv_pushaway_min_player_speed( "sv_pushaway_min_player_speed", "0", FCVAR_REPLICATED | FCVAR_ARCHIVE | FCVAR_CHEAT, "If a player is moving slower than this, don't push away physics objects (enables ducking behind things)." );
 ConVar sv_pushaway_max_force( "sv_pushaway_max_force", "1000", FCVAR_REPLICATED | FCVAR_ARCHIVE | FCVAR_CHEAT, "Maximum amount of force applied to physics objects by players." );

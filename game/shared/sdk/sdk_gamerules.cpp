@@ -728,6 +728,8 @@ void CSDKGameRules::CreateStandardEntities()
 
 #endif
 
+ConVar mp_ball_player_collision("mp_ball_player_collision", "0", FCVAR_ARCHIVE | FCVAR_NOTIFY | FCVAR_REPLICATED);
+
 bool CSDKGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 {
 	if ( collisionGroup0 > collisionGroup1 )
@@ -739,7 +741,10 @@ bool CSDKGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 	if ( (collisionGroup0 == COLLISION_GROUP_PLAYER || collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT) &&
 		collisionGroup1 == COLLISION_GROUP_PUSHAWAY )
 	{
-		return false;
+		if (mp_ball_player_collision.GetBool())
+			return true;
+		else
+			return false;
 	}
 
 	//Don't stand on COLLISION_GROUP_WEAPON

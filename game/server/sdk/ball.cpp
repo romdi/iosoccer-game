@@ -55,6 +55,7 @@ ConVar sv_ball_keepershot_strength("sv_ball_keepershot_strength", "100", FCVAR_A
 ConVar sv_ball_doubletouchfouls("sv_ball_doubletouchfouls", "1", FCVAR_ARCHIVE | FCVAR_NOTIFY);
 ConVar sv_ball_timelimit("sv_ball_timelimit", "10", FCVAR_ARCHIVE | FCVAR_NOTIFY);
 ConVar sv_ball_slideangle("sv_ball_slideangle", "30", FCVAR_ARCHIVE | FCVAR_NOTIFY);
+ConVar sv_ball_statetransitiondelay("sv_ball_statetransitiondelay", "1", FCVAR_ARCHIVE | FCVAR_NOTIFY);
 
 CBall *CreateBall(const Vector &pos, CSDKPlayer *pOwner)
 {
@@ -1171,9 +1172,9 @@ bool CBall::CheckFoul(bool canShootBall)
 		pPl->DoAnimationEvent(RAD2DEG(acos(m_vPlForward2D.Dot(pPl->EyeDirection2D()))) <= 90 ? PLAYERANIMEVENT_TACKLED_BACKWARD : PLAYERANIMEVENT_TACKLED_FORWARD);
 		TriggerFoul(FOUL_NORMAL, pPl->GetLocalOrigin(), m_pPl, pPl);
 		if (pPl->m_nInPenBoxOfTeam == m_nPlTeam)
-			State_Transition(BALL_PENALTY, 1);
+			State_Transition(BALL_PENALTY, sv_ball_statetransitiondelay.GetFloat());
 		else
-			State_Transition(BALL_FREEKICK, 1);
+			State_Transition(BALL_FREEKICK, sv_ball_statetransitiondelay.GetFloat());
 
 		return true;
 	}
@@ -1494,7 +1495,7 @@ void CBall::BallThink( void	)
 void CBall::TriggerGoal(int team)
 {
 	m_nTeam = team;
-	State_Transition(BALL_GOAL, 1);
+	State_Transition(BALL_GOAL, sv_ball_statetransitiondelay.GetFloat());
 }
 
 void CBall::TriggerGoalLine(int team)
@@ -1502,9 +1503,9 @@ void CBall::TriggerGoalLine(int team)
 	m_pPhys->GetPosition(&m_vTriggerTouchPos, NULL);
 
 	if (LastTeam(false) == team)
-		State_Transition(BALL_CORNER, 1);
+		State_Transition(BALL_CORNER, sv_ball_statetransitiondelay.GetFloat());
 	else
-		State_Transition(BALL_GOALKICK, 1);
+		State_Transition(BALL_GOALKICK, sv_ball_statetransitiondelay.GetFloat());
 }
 
 void CBall::TriggerSideline()
@@ -1519,7 +1520,7 @@ void CBall::TriggerSideline()
 		return;
 
 	m_vTriggerTouchPos = pThrowIn->GetLocalOrigin();
-	State_Transition(BALL_THROWIN, 1);
+	State_Transition(BALL_THROWIN, sv_ball_statetransitiondelay.GetFloat());
 }
 
 void CBall::TriggerPenaltyBox(int team)
@@ -1619,7 +1620,7 @@ void CBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart)
 		{
 			pPl->m_Fouls += 1;
 			TriggerFoul(FOUL_DOUBLETOUCH, pPl->GetLocalOrigin(), pPl);
-			State_Transition(BALL_FREEKICK, 1);
+			State_Transition(BALL_FREEKICK, sv_ball_statetransitiondelay.GetFloat());
 			return;
 		}
 		else
@@ -1641,7 +1642,7 @@ void CBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart)
 		pPl->m_Offsides += 1;
 		TriggerFoul(FOUL_OFFSIDE, pPl->GetOffsidePos(), pPl);
 		EnableOffsideLine(m_vFoulPos.y);
-		State_Transition(BALL_FREEKICK, 1);
+		State_Transition(BALL_FREEKICK, sv_ball_statetransitiondelay.GetFloat());
 	}
 }
 
