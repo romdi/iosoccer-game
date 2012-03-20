@@ -223,7 +223,9 @@ void CHudScorebar::Paint( void )
 	if (!teamHome || !teamAway)
 		return;
 
-	float flTime = gpGlobals->curtime - SDKGameRules()->m_flStateEnterTime;
+	float flTime = gpGlobals->curtime - SDKGameRules()->m_flStateEnterTime - SDKGameRules()->m_flInjuryTime;
+	if (SDKGameRules()->m_flInjuryTimeStart != -1)
+		flTime -= gpGlobals->curtime - SDKGameRules()->m_flInjuryTimeStart;
 	int nTime;
 
 	switch ( SDKGameRules()->State_Get() )

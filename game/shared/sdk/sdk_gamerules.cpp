@@ -114,6 +114,8 @@ BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 	//RecvPropInt( RECVINFO( m_iDuration) ),
 	RecvPropInt( RECVINFO( m_eMatchState) ),// 0, RecvProxy_MatchState ),
 	RecvPropInt( RECVINFO( m_nAnnouncedInjuryTime) ),// 0, RecvProxy_MatchState ),
+	RecvPropFloat( RECVINFO( m_flInjuryTimeStart) ),// 0, RecvProxy_MatchState ),
+	RecvPropFloat( RECVINFO( m_flInjuryTime) ),// 0, RecvProxy_MatchState ),
 
 	RecvPropInt(RECVINFO(m_nShieldType)),
 	RecvPropInt(RECVINFO(m_nShieldSide)),
@@ -129,6 +131,8 @@ BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 	//SendPropInt( SENDINFO( m_iDuration) ),
 	SendPropInt( SENDINFO( m_eMatchState )),
 	SendPropInt( SENDINFO( m_nAnnouncedInjuryTime )),
+	SendPropFloat( SENDINFO( m_flInjuryTimeStart ), 32, SPROP_NOSCALE ),
+	SendPropFloat( SENDINFO( m_flInjuryTime ), 32, SPROP_NOSCALE ),
 
 	SendPropInt(SENDINFO(m_nShieldType)),
 	SendPropInt(SENDINFO(m_nShieldSide)),
@@ -324,6 +328,8 @@ CSDKGameRules::CSDKGameRules()
 	m_flStateTimeLeft = 0;
 	m_flNextPenalty = gpGlobals->curtime;
 	m_nPenaltyTakingTeam = TEAM_A;
+	m_flInjuryTime = 0;
+	m_flInjuryTimeStart = -1;
 
 	//ios m_bLevelInitialized = false;
 	//m_flMatchStartTime = 0;
@@ -975,7 +981,8 @@ void CSDKGameRules::State_Enter( match_state_t newState )
 	m_eMatchState = newState;
 	m_pCurStateInfo = State_LookupInfo( newState );
 	m_flStateEnterTime = gpGlobals->curtime;
-	m_flStateInjuryTime = 0.0f;
+	m_flInjuryTime = 0.0f;
+	m_flInjuryTimeStart = -1;
 	m_nAnnouncedInjuryTime = 0;
 
 	if ( mp_showstatetransitions.GetInt() > 0 )
@@ -1080,12 +1087,12 @@ void CSDKGameRules::State_FIRST_HALF_Think()
 {
 	if (m_flStateTimeLeft <= 10 && m_nAnnouncedInjuryTime == 0)
 	{
-		m_nAnnouncedInjuryTime = max(1, (int)m_flStateInjuryTime);
+		m_nAnnouncedInjuryTime = max(1, (int)m_flInjuryTime);
 	}
-	else if (m_flStateTimeLeft + m_flStateInjuryTime <= 0)
+	else if (m_flStateTimeLeft + m_flInjuryTime <= 0)
 	{	
 		//if (m_pBall->IsNearGoal())
-		//	m_flStateInjuryTime += 5; // let players finish their attack
+		//	m_flInjuryTime += 5; // let players finish their attack
 		//else
 		State_Transition(MATCH_HALFTIME);
 	}
@@ -1114,9 +1121,9 @@ void CSDKGameRules::State_SECOND_HALF_Think()
 {
 	if (m_flStateTimeLeft <= 10 && m_nAnnouncedInjuryTime == 0)
 	{
-		m_nAnnouncedInjuryTime = max(1, (int)m_flStateInjuryTime);
+		m_nAnnouncedInjuryTime = max(1, (int)m_flInjuryTime);
 	}
-	else if (m_flStateTimeLeft + m_flStateInjuryTime <= 0)
+	else if (m_flStateTimeLeft + m_flInjuryTime <= 0)
 	{
 		if (mp_extratime.GetBool() && GetGlobalTeam(TEAM_A)->GetGoals() == GetGlobalTeam(TEAM_B)->GetGoals())
 			State_Transition(MATCH_EXTRATIME_INTERMISSION);
@@ -1152,9 +1159,9 @@ void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Think()
 {
 	if (m_flStateTimeLeft <= 10 && m_nAnnouncedInjuryTime == 0)
 	{
-		m_nAnnouncedInjuryTime = max(1, (int)m_flStateInjuryTime);
+		m_nAnnouncedInjuryTime = max(1, (int)m_flInjuryTime);
 	}
-	else if (m_flStateTimeLeft + m_flStateInjuryTime <= 0)
+	else if (m_flStateTimeLeft + m_flInjuryTime <= 0)
 	{
 		State_Transition(MATCH_EXTRATIME_HALFTIME);
 	}
@@ -1184,9 +1191,9 @@ void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Think()
 {
 	if (m_flStateTimeLeft <= 10 && m_nAnnouncedInjuryTime == 0)
 	{
-		m_nAnnouncedInjuryTime = max(1, (int)m_flStateInjuryTime);
+		m_nAnnouncedInjuryTime = max(1, (int)m_flInjuryTime);
 	}
-	else if (m_flStateTimeLeft + m_flStateInjuryTime <= 0)
+	else if (m_flStateTimeLeft + m_flInjuryTime <= 0)
 	{
 		if (mp_penalties.GetBool() && GetGlobalTeam(TEAM_A)->GetGoals() == GetGlobalTeam(TEAM_B)->GetGoals())
 			State_Transition(MATCH_PENALTIES_INTERMISSION);
@@ -1487,6 +1494,21 @@ CBaseEntity *CSDKGameRules::GetPlayerSpawnSpot( CBasePlayer *pPlayer )
 	return NULL;
 }
 
+void CSDKGameRules::StartInjuryTime()
+{
+	EndInjuryTime();
+	m_flInjuryTimeStart = gpGlobals->curtime;
+}
+
+void CSDKGameRules::EndInjuryTime()
+{
+	if (m_flInjuryTimeStart != -1)
+	{
+		m_flInjuryTime += gpGlobals->curtime - m_flInjuryTimeStart;
+		m_flInjuryTimeStart = -1;
+	}
+}
+
 #endif
 
 bool CSDKGameRules::IsIntermissionState()
@@ -1504,8 +1526,6 @@ bool CSDKGameRules::IsIntermissionState()
 		return false;
 	}
 }
-
-
 
 
 

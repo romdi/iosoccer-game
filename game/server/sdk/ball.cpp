@@ -501,6 +501,11 @@ void CBall::State_Enter( ball_state_t newState )
 		pPl->SetMoveType(MOVETYPE_WALK);
 	}
 
+	if (newState == BALL_NORMAL)
+		SDKGameRules()->EndInjuryTime();
+	else
+		SDKGameRules()->StartInjuryTime();
+
 	if ( mp_showballstatetransitions.GetInt() > 0 )
 	{
 		if ( m_pCurStateInfo )

@@ -263,6 +263,7 @@ public:
 	CNetworkVar(match_state_t, m_eMatchState);
 	//CNetworkVar( float, m_flMatchStartTime );
 	CNetworkVar(int, m_nAnnouncedInjuryTime);
+	CNetworkVar(float, m_flInjuryTime);
 
 	CNetworkVector(m_vFieldMin);
 	CNetworkVector(m_vFieldMax);
@@ -273,7 +274,6 @@ public:
 	void StartRoundtimer(int iDuration);
 	inline match_state_t State_Get( void ) { return m_eMatchState; }
 	CNetworkVar(float, m_flStateEnterTime);
-	float m_flStateInjuryTime;
 
 	void RestartMatch();
 
@@ -343,9 +343,9 @@ public:
 	void SetAreTeamsSwapped(bool swapped);
 	void SetKickOffTeam(int team) { m_nKickOffTeam = team; };
 	int GetKickOffTeam() { return m_bAreTeamsSwapped ? (m_nKickOffTeam == TEAM_A ? TEAM_B : TEAM_A) : m_nKickOffTeam; };
-
+	void StartInjuryTime();
+	void EndInjuryTime();
 	void ClientSettingsChanged( CBasePlayer *pPlayer );
-
 	void EnableShield(int type, int sideOrRadius, Vector pos = vec3_invalid);
 	void DisableShield();
 
@@ -359,6 +359,8 @@ public:
 	CNetworkVar(int, m_nShieldSide);
 	CNetworkVar(int, m_nShieldRadius);
 	CNetworkVector(m_vShieldPos);
+
+	CNetworkVar(float, m_flInjuryTimeStart);
 };
 
 //-----------------------------------------------------------------------------
