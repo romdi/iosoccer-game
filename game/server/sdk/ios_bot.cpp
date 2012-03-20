@@ -160,15 +160,7 @@ void CBot::BotJoinTeam(int keeper)
 
 	if (keeper > 0)
 	{
-		m_TeamPos = 1;
-		ConvertSpawnToShirt();
-		ChooseKeeperSkin();
-		//spawn at correct position
-		//pPlayer->Spawn();
-		//ChangeTeam(keeper == 1 ? TEAM_A : TEAM_B);
-		m_nTeamToJoin = keeper == 1 ? TEAM_A : TEAM_B;
-		m_flNextJoin = gpGlobals->curtime + mp_joindelay.GetFloat();
-		//ChangeTeam(TEAM_SPECTATOR);
+		ChangePosition(keeper == 1 ? TEAM_A : TEAM_B, 1, true);
 		g_CurBotNumber += 1;
 	}
 	else
@@ -177,28 +169,28 @@ void CBot::BotJoinTeam(int keeper)
 		//int team = g_CurBotNumber % 2 == 0 ? TEAM_A : TEAM_B;
 		int team = playerCount[0] < playerCount[1] ? TEAM_A : TEAM_B;
 
-		if (playerCount[team] == 11)
+		if (playerCount[team] == mp_maxplayers.GetInt())
 			team = team == TEAM_A ? TEAM_B : TEAM_A;
 
-		if (playerCount[team] == 11)
+		if (playerCount[team] == mp_maxplayers.GetInt())
 			ChangeTeam(TEAM_SPECTATOR);
 		else
 		{
+			int startPos = g_IOSRand.RandomInt(2,11);
+			int pos = startPos;
 			while (true)
 			{
-				int posWanted = g_IOSRand.RandomInt(2,11);
-				if (TeamPosFree(team, posWanted, true))
+				if (TeamPosFree(team, pos, true))
 				{
-					m_TeamPos = posWanted;
-					ConvertSpawnToShirt();
-					ChoosePlayerSkin();
-					//ChangeTeam(team);
-					m_nTeamToJoin = team;
-					m_flNextJoin = gpGlobals->curtime + mp_joindelay.GetFloat();
-					//ChangeTeam(TEAM_SPECTATOR);
+					ChangePosition(team, pos, true);
 					g_CurBotNumber += 1;
 					break;
 				}
+				pos += 1;
+				if (pos == 12)
+					pos = 2;
+				if (pos == startPos)
+					break;
 			}
 		}
 	}
@@ -270,8 +262,11 @@ void Bot_RunAll( void )
 			else if (pPlayer->GetTeamToJoin() != TEAM_INVALID)
 				team = pPlayer->GetTeamToJoin();
 
-			if (pPlayer->IsBot() && pPlayer->GetTeamPosition() == 1)
+			if (pPlayer->IsBot() && pPlayer->GetTeamPosition() == 1 && !CSDKPlayer::IsOnField(pPlayer))
+			{
 				team = Q_strcmp(pPlayer->GetPlayerName(), "KEEPER1") == 0 ? TEAM_A : TEAM_B;
+				pPlayer->ChangePosition(team, 1, true);
+			}
 
 			if (team != TEAM_INVALID && pPlayer->GetTeamPosition() == 1)
 				keeperSpotTaken[team - TEAM_A] = true;

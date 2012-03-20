@@ -412,6 +412,55 @@ void CSDKPlayer::Spawn()
 	//UseClientSideAnimation();
 }
 
+void CSDKPlayer::ChangePosition(int team, int pos, bool instantly /*= false*/)
+{
+	if (team != TEAM_SPECTATOR && team != TEAM_A && team != TEAM_B)
+		return;
+
+	if (pos < 1 || pos > 11)
+		return;
+
+	if (!IsValidPosition(11 - pos))
+		return;
+	
+	if (team == TEAM_SPECTATOR)
+	{		
+		if (GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B)
+		{
+			if (m_flNextJoin <= gpGlobals->curtime)
+				m_flNextJoin = gpGlobals->curtime + mp_joindelay.GetFloat();
+
+			ChangeTeam(TEAM_SPECTATOR);
+		}
+	}
+	else
+	{
+		if (TeamPosFree(team, pos, true))
+		{
+			if (GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B)
+			{
+				if (m_flNextJoin <= gpGlobals->curtime)
+					m_flNextJoin = gpGlobals->curtime + mp_joindelay.GetFloat();
+
+				ChangeTeam(TEAM_SPECTATOR);
+			}
+
+			m_nTeamToJoin = team;
+			m_TeamPos = pos;			//teampos matches spawn points on the map 2-11
+			ConvertSpawnToShirt();		//shirtpos is the formation number 3,4,5,2 11,8,6,7 10,9
+
+			if (m_ShirtPos > 1)
+			{
+				ChoosePlayerSkin();				
+			}
+			else
+			{
+				ChooseKeeperSkin();
+			}
+		}
+	}
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Put the player in the specified team
 //-----------------------------------------------------------------------------
@@ -834,51 +883,8 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 			return false;	//go away
 		}
 
-		int team = clamp(atoi(args[1]), TEAM_SPECTATOR, TEAM_B);
+		ChangePosition(atoi(args[1]), atoi(args[2]));
 
-		if (team == TEAM_SPECTATOR)
-		{		
-			if (GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B)
-			{
-				if (m_flNextJoin <= gpGlobals->curtime)
-					m_flNextJoin = gpGlobals->curtime + mp_joindelay.GetFloat();
-			}
-
-			ChangeTeam(TEAM_SPECTATOR);
-		}
-		else
-		{
-			int posWanted = clamp(atoi(args[2]), 1, 11);
-			if (TeamPosFree(team, posWanted, true))
-			{
-				if (GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B)
-				{
-					if (m_flNextJoin <= gpGlobals->curtime)
-						m_flNextJoin = gpGlobals->curtime + mp_joindelay.GetFloat();
-
-					ChangeTeam(TEAM_SPECTATOR);
-				}
-
-				m_nTeamToJoin = team;
-
-				m_TeamPos = posWanted;	//teampos matches spawn points on the map 2-11
-
-				ConvertSpawnToShirt();					//shirtpos is the formation number 3,4,5,2 11,8,6,7 10,9
-
-				if (m_ShirtPos > 1)
-				{
-					ChoosePlayerSkin();				
-				}
-				else
-				{
-					ChooseKeeperSkin();
-				}
-			}
-			else
-			{
-				ShowViewPortPanel(PANEL_TEAM);
-			}
-		}
 		return true;
 	}
 
@@ -893,6 +899,9 @@ bool CSDKPlayer::TeamPosFree(int team, int pos, bool kickBotKeeper)
 {
 	//stop keeper from being picked unless mp_keepers is 0 
 	//(otherwise you can pick keeper just before bots spawn)
+
+	if (!IsValidPosition(11 - pos))
+		return false;
 
 	if (pos == 1 && !humankeepers.GetBool())
 		return false;

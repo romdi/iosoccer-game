@@ -57,10 +57,87 @@ const s_KitData gKitDesc[] =
 	{	"END", "END", END },
 };
 
-const char *g_szPosNames[32] =
+const char g_szPosNames[11][5] =
 {
-	"GK", "RB", "CB", "CB", "LB", "RM", "CM", "LM", "RF", "CF", "LF", NULL
+	"LF", "CF", "RF", "LM", "CM", "RM", "LB", "CB", "CB", "RB", "GK"
 };
+
+#define HIDDEN { -1, -1 }
+
+const float g_Positions[11][11][2] =
+{
+	{//1
+			HIDDEN, HIDDEN, HIDDEN,
+			HIDDEN, HIDDEN, HIDDEN,
+		HIDDEN, HIDDEN, HIDDEN, HIDDEN,
+						{ 1.5f, 3 }
+	},
+	{//2
+			HIDDEN, HIDDEN, HIDDEN,
+			HIDDEN, { 1.5f, 1 }, HIDDEN,
+		HIDDEN, HIDDEN, HIDDEN, HIDDEN,
+						{ 1.5f, 3 }
+	},
+	{//3
+			HIDDEN, HIDDEN, HIDDEN,
+			{ 0.5f, 1 }, HIDDEN, { 2.5f, 1 },
+		HIDDEN, HIDDEN, HIDDEN, HIDDEN,
+						{ 1.5f, 3 }
+	},
+	{//4
+			HIDDEN, HIDDEN, HIDDEN,
+			{ 0.5f, 1 }, HIDDEN, { 2.5f, 1 },
+		HIDDEN, { 1, 2 }, HIDDEN, HIDDEN,
+						{ 1.5f, 3 }
+	},
+	{//5
+			HIDDEN, HIDDEN, HIDDEN,
+			{ 0.5f, 1 }, HIDDEN, { 2.5f, 1 },
+		{ 0, 2 }, HIDDEN, HIDDEN, { 3, 2 },
+						{ 1.5f, 3 }
+	},
+	{//6
+			{ 0.5f, 0.5f }, HIDDEN, { 2.5f, 0.5f },
+			HIDDEN, { 1.5f, 1 }, HIDDEN,
+		{ 0.75f, 2 }, HIDDEN, HIDDEN, { 2.25f, 2 },
+						{ 1.5f, 3 }
+	},
+	{//7
+			HIDDEN, { 1.5f, 0 }, HIDDEN,
+			{ 0.5f, 1 }, { 1.5f, 1 }, { 2.5f, 1 },
+		{ 0, 2 }, HIDDEN, HIDDEN, { 3, 2 },
+						{ 1.5f, 3 }
+	},
+	{//8
+			HIDDEN, { 1.5f, 0 }, HIDDEN,
+			{ 0.5f, 1 }, { 1.5f, 1 }, { 2.5f, 1 },
+		{ 0, 2 }, { 1, 2 }, HIDDEN, { 3, 2 },
+						{ 1.5f, 3 }
+	},
+	{//9
+			{ 0.5f, 0 }, HIDDEN, { 2.5f, 0 },
+			{ 0.5f, 1 }, { 1.5f, 1 }, { 2.5f, 1 },
+		{ 0, 2 }, { 1, 2 }, HIDDEN, { 3, 2 },
+						{ 1.5f, 3 }
+	},
+	{//10
+			{ 0.5f, 0 }, { 1.5f, 0 }, { 2.5f, 0 },
+			{ 0.5f, 1 }, { 1.5f, 1 }, { 2.5f, 1 },
+		{ 0, 2 }, { 1, 2 }, HIDDEN, { 3, 2 },
+						{ 1.5f, 3 }
+	},
+	{//11
+			{ 0.5f, 0 }, { 1.5f, 0 }, { 2.5f, 0 },
+			{ 0.5f, 1 }, { 1.5f, 1 }, { 2.5f, 1 },
+		{ 0, 2 }, { 1, 2 }, { 2, 2 }, { 3, 2 },
+						{ 1.5f, 3 }
+	}
+};
+
+bool IsValidPosition(int posIndex)
+{
+	return g_Positions[mp_maxplayers.GetInt() - 1][posIndex][0] != -1;
+}
 
 #ifndef CLIENT_DLL
 

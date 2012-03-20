@@ -396,6 +396,10 @@ struct s_KitData
 
 extern const s_KitData gKitDesc[];
 
-extern const char *g_szPosNames[32];
+extern const char g_szPosNames[11][5];
+
+extern const float g_Positions[11][11][2];
+
+bool IsValidPosition(int posIndex);
 
 #endif // SDK_GAMERULES_H

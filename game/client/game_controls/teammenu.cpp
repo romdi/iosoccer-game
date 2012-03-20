@@ -143,8 +143,6 @@ CTeamMenu::CTeamMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_TEAM )
 	}
 }
 
-#define HIDDEN { -1, -1 }
-
 void CTeamMenu::PerformLayout()
 {
 	BaseClass::PerformLayout();
@@ -153,77 +151,7 @@ void CTeamMenu::PerformLayout()
 
 	MoveToCenterOfScreen();
 
-	static float pos[11][11][2] =
-	{
-		{//1
-			 HIDDEN, HIDDEN, HIDDEN,
-			 HIDDEN, HIDDEN, HIDDEN,
-			HIDDEN, HIDDEN, HIDDEN, HIDDEN,
-						  { 1.5f, 3 }
-		},
-		{//2
-			 HIDDEN, HIDDEN, HIDDEN,
-			 HIDDEN, { 1.5f, 1 }, HIDDEN,
-			HIDDEN, HIDDEN, HIDDEN, HIDDEN,
-						  { 1.5f, 3 }
-		},
-		{//3
-			 HIDDEN, HIDDEN, HIDDEN,
-			 { 0.5f, 1 }, HIDDEN, { 2.5f, 1 },
-			HIDDEN, HIDDEN, HIDDEN, HIDDEN,
-						  { 1.5f, 3 }
-		},
-		{//4
-			 HIDDEN, HIDDEN, HIDDEN,
-			 { 0.5f, 1 }, HIDDEN, { 2.5f, 1 },
-			HIDDEN, { 1, 2 }, HIDDEN, HIDDEN,
-						  { 1.5f, 3 }
-		},
-		{//5
-			 HIDDEN, HIDDEN, HIDDEN,
-			 { 0.5f, 1 }, HIDDEN, { 2.5f, 1 },
-			{ 0, 2 }, HIDDEN, HIDDEN, { 3, 2 },
-						  { 1.5f, 3 }
-		},
-		{//6
-			 { 0.5f, 0.5f }, HIDDEN, { 2.5f, 0.5f },
-			 HIDDEN, { 1.5f, 1 }, HIDDEN,
-			{ 0.75f, 2 }, HIDDEN, HIDDEN, { 2.25f, 2 },
-						  { 1.5f, 3 }
-		},
-		{//7
-			 HIDDEN, { 1.5f, 0 }, HIDDEN,
-			 { 0.5f, 1 }, { 1.5f, 1 }, { 2.5f, 1 },
-			{ 0, 2 }, HIDDEN, HIDDEN, { 3, 2 },
-						  { 1.5f, 3 }
-		},
-		{//8
-			 HIDDEN, { 1.5f, 0 }, HIDDEN,
-			 { 0.5f, 1 }, { 1.5f, 1 }, { 2.5f, 1 },
-			{ 0, 2 }, { 1, 2 }, HIDDEN, { 3, 2 },
-						  { 1.5f, 3 }
-		},
-		{//9
-			 { 0.5f, 0 }, HIDDEN, { 2.5f, 0 },
-			 { 0.5f, 1 }, { 1.5f, 1 }, { 2.5f, 1 },
-			{ 0, 2 }, { 1, 2 }, HIDDEN, { 3, 2 },
-						  { 1.5f, 3 }
-		},
-		{//10
-			 { 0.5f, 0 }, { 1.5f, 0 }, { 2.5f, 0 },
-			 { 0.5f, 1 }, { 1.5f, 1 }, { 2.5f, 1 },
-			{ 0, 2 }, { 1, 2 }, HIDDEN, { 3, 2 },
-						  { 1.5f, 3 }
-		},
-		{//11
-			 { 0.5f, 0 }, { 1.5f, 0 }, { 2.5f, 0 },
-			 { 0.5f, 1 }, { 1.5f, 1 }, { 2.5f, 1 },
-			{ 0, 2 }, { 1, 2 }, { 2, 2 }, { 3, 2 },
-						  { 1.5f, 3 }
-		}
-	};
-
-	for(int i = 0; i < 2; i++)
+	for (int i = 0; i < 2; i++)
 	{
 		m_pTeamPanels[i]->SetBounds(0, 0, PANEL_WIDTH, PANEL_HEIGHT);
 		m_pTeamPanels[i]->SetBgColor(Color(0, 0, 0, 245));
@@ -266,15 +194,15 @@ void CTeamMenu::PerformLayout()
 		m_pSpectatorNames->SetFont(pScheme->GetFont("IOSTeamMenuBig"));
 		m_pSpectatorNames->SetZPos(1);
 
-		for(int j = 0; j < 11; j++)
+		for (int j = 0; j < 11; j++)
 		{
 			PosPanel_t *pPos = m_pPosPanels[i][j];
 
-			if (pos[m_nMaxPlayers - 1][j][0] == -1)
+			if (!IsValidPosition(j))
 				pPos->pPosPanel->SetVisible(false);
 			else
 			{
-				pPos->pPosPanel->SetBounds(pos[m_nMaxPlayers - 1][j][0] * (BUTTON_WIDTH + BUTTON_HMARGIN) + BUTTON_LEFTMARGIN, pos[m_nMaxPlayers - 1][j][1] * (BUTTON_HEIGHT + 2 * BUTTON_VMARGIN) + BUTTON_TOPMARGIN, BUTTON_WIDTH, BUTTON_HEIGHT);
+				pPos->pPosPanel->SetBounds(g_Positions[m_nMaxPlayers - 1][j][0] * (BUTTON_WIDTH + BUTTON_HMARGIN) + BUTTON_LEFTMARGIN, g_Positions[m_nMaxPlayers - 1][j][1] * (BUTTON_HEIGHT + 2 * BUTTON_VMARGIN) + BUTTON_TOPMARGIN, BUTTON_WIDTH, BUTTON_HEIGHT);
 				pPos->pPosPanel->SetPaintBackgroundEnabled(true);
 				pPos->pPosPanel->SetPaintBackgroundType(2);
 				pPos->pPosPanel->SetBgColor(Color(0, 0, 0, 150));
@@ -282,7 +210,7 @@ void CTeamMenu::PerformLayout()
 			}
 
 			pPos->pPlayerName->SetBounds(0, pPos->pPosPanel->GetTall() - 2 * NAME_HEIGHT, pPos->pPosPanel->GetWide(), NAME_HEIGHT);
-			pPos->pPlayerName->SetCommand(VarArgs("jointeam %d %d", i + 2, 11 - j));
+			pPos->pPlayerName->SetCommand(VarArgs("jointeam %d %d", i + TEAM_A, 11 - j));
 			pPos->pPlayerName->AddActionSignalTarget(this);
 			pPos->pPlayerName->SetPaintBackgroundEnabled(true);
 			pPos->pPlayerName->SetPaintBorderEnabled(false);
@@ -294,7 +222,7 @@ void CTeamMenu::PerformLayout()
 
 			pPos->pPosName->SetBounds(0, pPos->pPosPanel->GetTall() - 2 * NAME_HEIGHT, NUMBER_WIDTH, NAME_HEIGHT);
 			pPos->pPosName->SetContentAlignment(Label::a_east);
-			pPos->pPosName->SetText(g_szPosNames[10 - j]);
+			pPos->pPosName->SetText(g_szPosNames[j]);
 			pPos->pPosName->SetFont(pScheme->GetFont("IOSTeamMenuBig"));
 			pPos->pPosName->SetZPos(1);
 
