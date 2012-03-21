@@ -367,11 +367,9 @@ void CHudScorebar::MsgFunc_MatchEvent(bf_read &msg)
 
 	IGameResources *gr = GameResources();
 	match_event_t eventType = (match_event_t)msg.ReadByte();
-	int playerIndex = msg.ReadByte();
-	int teamIndex = gr->GetTeam(playerIndex) - TEAM_A;
-	Assert(teamIndex == 0 || teamIndex == 1);
-	//C_SDKPlayer *pPlayer1 = (C_SDKPlayer *)CHandle<C_SDKPlayer>::FromIndex(msg.ReadLong());
-	//C_SDKPlayer *pPlayer2 = (C_SDKPlayer *)CHandle<C_SDKPlayer>::FromIndex(msg.ReadLong());
+	char playerName[MAX_PLAYER_NAME_LENGTH]; 
+	msg.ReadString(playerName, sizeof(playerName));
+	int teamIndex = msg.ReadByte() - TEAM_A;
 
 	Panel *pEventBox = new Panel(m_pEventBars[teamIndex], "EventPanel");
 	pEventBox->SetBounds(0, BORDER, WIDTH_MARGIN + WIDTH_EVENTTYPE + WIDTH_EVENTTEXT, HEIGHT_TEAMBAR - 2 * BORDER);
@@ -382,7 +380,7 @@ void CHudScorebar::MsgFunc_MatchEvent(bf_read &msg)
 	pEventType->SetContentAlignment(Label::a_center);
 	pEventType->SetBounds(WIDTH_MARGIN, 0, WIDTH_EVENTTYPE, pEventBox->GetTall());
 
-	Label *pEventText = new Label(pEventBox, "EventTextLabel", gr->GetPlayerName(playerIndex));
+	Label *pEventText = new Label(pEventBox, "EventTextLabel", playerName);
 	pEventText->SetBounds(WIDTH_MARGIN + WIDTH_EVENTTYPE, 0, WIDTH_EVENTTEXT, pEventBox->GetTall());
 	pEventText->SetFont(pScheme->GetFont("IOSTeamEvent"));
 	pEventText->SetContentAlignment(Label::a_center);

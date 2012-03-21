@@ -18,8 +18,6 @@
 class CBot : public CSDKPlayer
 {
 public:
-	float			m_flNextBotJoin;
-
 	bool			m_bBackwards;
 
 	float			m_flNextTurnTime;

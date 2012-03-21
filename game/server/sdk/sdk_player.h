@@ -370,7 +370,7 @@ public:
 	float				m_flPlayerAnimEventStart;
 	void				SetPlayerBall(CBall *pPlayerBall) { m_pPlayerBall = pPlayerBall; }
 	CBall				*GetPlayerBall() { return m_pPlayerBall; }
-	void				ChangePosition(int team, int pos, bool instantly = false);
+	void				ChangeTeamPos(int team, int pos, bool instantly = false);
 
 private:
 

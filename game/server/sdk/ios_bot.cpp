@@ -129,15 +129,6 @@ CBasePlayer *BotPutInServer( bool bFrozen, int keeper )
 	if ( bFrozen )
 		pPlayer->AddEFlags( EFL_BOT_FROZEN );
 
-	pPlayer->m_flNextBotJoin = -1;
-
-	//pPlayer->ChangeTeam( TEAM_UNASSIGNED );
-	//pPlayer->RemoveAllItems( true );
-	//pPlayer->Spawn();	//spawning here then moving to goal caused the extremely strange keeper teleport bug. Im not sure why!
-
-	if (keeper == 0)
-		pPlayer->FieldBotJoinTeam();
-
 	return pPlayer;
 }
 
@@ -174,8 +165,8 @@ void CBot::FieldBotJoinTeam()
 		{
 			if (TeamPosFree(team, pos, false))
 			{
-				ChangePosition(team, pos, true);
-				g_CurBotNumber += 1;
+				ChangeTeamPos(team, pos, true);
+				//g_CurBotNumber += 1;
 				break;
 			}
 			pos += 1;
@@ -200,102 +191,88 @@ CON_COMMAND_F( bot_add, "Add a bot.", FCVAR_CHEAT )
 	// Ok, spawn all the bots.
 	while ( --count >= 0 )
 	{
-		BotPutInServer( bFrozen, 0 );
+		CBot *pBot = (CBot *)BotPutInServer(bFrozen, 0);
+		pBot->FieldBotJoinTeam();
 	}
 }
-
-void BotAdd_Keeper1()
-{
-	//ffs!
-	if ( !UTIL_IsCommandIssuedByServerAdmin() )
-        return;
-
-	//extern int FindEngineArgInt( const char *pName, int defaultVal );
-	//extern const char* FindEngineArg( const char *pName );
-	BotPutInServer( FALSE, 1 );
-}
-void BotAdd_Keeper2()
-{
-	//ffs!
-	if ( !UTIL_IsCommandIssuedByServerAdmin() )
-        return;
-
-	//extern int FindEngineArgInt( const char *pName, int defaultVal );
-	//extern const char* FindEngineArg( const char *pName );
-	BotPutInServer( FALSE, 2 );
-}
-
-
-ConCommand cc_Keeper1( "sv_addkeeper1", BotAdd_Keeper1, "Add keeper1" );
-ConCommand cc_Keeper2( "sv_addkeeper2", BotAdd_Keeper2, "Add keeper2" );
-
 
 //-----------------------------------------------------------------------------
 // Purpose: Run through all the Bots in the game and let them think.
 //-----------------------------------------------------------------------------
 void Bot_RunAll( void )
 {
-	// Add keeper bot if spot is empty
-	if (botkeepers.GetBool())
-	{
 		bool keeperSpotTaken[2] = {};
+
+		int keeperPosIndex = GetKeeperPosIndex();
 
 		for (int i = 1; i <= gpGlobals->maxClients; i++)
 		{
-			CSDKPlayer *pPlayer = ToSDKPlayer(UTIL_PlayerByIndex(i));
+			CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
 
-			if (!pPlayer)
+			if (!pPl)
 				continue;
 
-			int team = TEAM_INVALID;
-			if (CSDKPlayer::IsOnField(pPlayer))
-				team = pPlayer->GetTeamNumber();
-			else if (pPlayer->GetTeamToJoin() != TEAM_INVALID)
-				team = pPlayer->GetTeamToJoin();
-
-			if (pPlayer->IsBot() && !Q_strncmp(pPlayer->GetPlayerName(), "KEEPER", 6))
+			if (pPl->IsBot())
 			{
-				if (!CSDKPlayer::IsOnField(pPlayer) && pPlayer->GetTeamToJoin() != TEAM_A && pPlayer->GetTeamToJoin() != TEAM_B)
+				if (!Q_strncmp(pPl->GetPlayerName(), "KEEPER", 6))
 				{
-					team = !Q_strcmp(pPlayer->GetPlayerName(), "KEEPER1") ? TEAM_A : TEAM_B;
-		
-					for (int posIndex = 0; posIndex < 11; posIndex++)
-					{
-						if (g_Positions[mp_maxplayers.GetInt() - 1][posIndex][POS_NUMBER] != 1)
-							continue;
+					int team = !Q_strcmp(pPl->GetPlayerName(), "KEEPER1") ? TEAM_A : TEAM_B;
 
-						if (!pPlayer->TeamPosFree(team, posIndex, true))
+					if (!botkeepers.GetBool())
+					{
+						char kickcmd[512];
+						Q_snprintf(kickcmd, sizeof(kickcmd), "kickid %i Bot keepers not allowed\n", pPl->GetUserID());
+						engine->ServerCommand(kickcmd);
+					}
+					else if (!CSDKPlayer::IsOnField(pPl) && pPl->GetTeamToJoin() != TEAM_A && pPl->GetTeamToJoin() != TEAM_B)
+					{
+						if (!pPl->TeamPosFree(team, keeperPosIndex, true))
 						{
 							char kickcmd[512];
-							Q_snprintf(kickcmd, sizeof(kickcmd), "kickid %i Position already taken\n", pPlayer->GetUserID());
+							Q_snprintf(kickcmd, sizeof(kickcmd), "kickid %i Position already taken\n", pPl->GetUserID());
 							engine->ServerCommand(kickcmd);
-							break;
 						}
-
-						pPlayer->ChangePosition(team, posIndex, true);
+						else
+						{
+							pPl->ChangeTeamPos(team, keeperPosIndex, true);
+							keeperSpotTaken[team - TEAM_A] = true;
+						}
+					}
+					else
+					{
+						keeperSpotTaken[team - TEAM_A] = true;
 					}
 				}
+				else
+				{
+					if (!CSDKPlayer::IsOnField(pPl) && pPl->GetTeamToJoin() != TEAM_A && pPl->GetTeamToJoin() != TEAM_B)
+						((CBot *)pPl)->FieldBotJoinTeam();
+				}
 			}
-
-			if (team != TEAM_INVALID && pPlayer->GetTeamPosition() == 1)
-				keeperSpotTaken[team - TEAM_A] = true;
+			else
+			{
+				if (CSDKPlayer::IsOnField(pPl) && pPl->GetTeamPosition() == 1)
+					keeperSpotTaken[pPl->GetTeamNumber() - TEAM_A] = true;
+			}
 		}
 
 		for (int i = 0; i < 2; i++)
 		{
 			if (!keeperSpotTaken[i])
-				BotPutInServer(false, i + 1);
+			{
+				CSDKPlayer *pPl = ToSDKPlayer(BotPutInServer(false, i + 1));
+				pPl->ChangeTeamPos(i == 0 ? TEAM_A : TEAM_B, keeperPosIndex, true);
+			}
 		}
-	}
 
 	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
 	{
-		CSDKPlayer *pPlayer = ToSDKPlayer( UTIL_PlayerByIndex( i ) );
+		CSDKPlayer *pPl = ToSDKPlayer( UTIL_PlayerByIndex( i ) );
 
 		// Ignore plugin bots
-		if ( pPlayer && (pPlayer->GetFlags() & FL_FAKECLIENT) && !pPlayer->IsEFlagSet( EFL_PLUGIN_BASED_BOT ) )
+		if ( pPl && (pPl->GetFlags() & FL_FAKECLIENT) && !pPl->IsEFlagSet( EFL_PLUGIN_BASED_BOT ) )
 		{
-			CBot *pBot = dynamic_cast< CBot* >( pPlayer );
+			CBot *pBot = dynamic_cast< CBot* >( pPl );
 			if ( pBot )
 				pBot->BotFrame();
 		}
@@ -370,17 +347,6 @@ void CBot::BotFrame()
 
 	Q_memcpy(&m_oldcmd, &m_cmd, sizeof(m_oldcmd));
 	Q_memset(&m_cmd, 0, sizeof(m_cmd));
-
-	if (GetTeamNumber() == TEAM_SPECTATOR && m_nTeamToJoin == TEAM_INVALID)
-	{
-		if (m_flNextBotJoin == -1)
-			m_flNextBotJoin = gpGlobals->curtime + 3;
-		else if (gpGlobals->curtime >= m_flNextBotJoin)
-		{
-			FieldBotJoinTeam();
-			m_flNextBotJoin = -1;
-		}
-	}
 
 	if (CSDKPlayer::IsOnField(this))
 	{

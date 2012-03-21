@@ -412,7 +412,7 @@ void CSDKPlayer::Spawn()
 	//UseClientSideAnimation();
 }
 
-void CSDKPlayer::ChangePosition(int team, int pos, bool instantly /*= false*/)
+void CSDKPlayer::ChangeTeamPos(int team, int pos, bool instantly /*= false*/)
 {
 	if (team != TEAM_SPECTATOR && team != TEAM_A && team != TEAM_B)
 		return;
@@ -882,7 +882,7 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 			return false;	//go away
 		}
 
-		ChangePosition(atoi(args[1]), atoi(args[2]));
+		ChangeTeamPos(atoi(args[1]), atoi(args[2]));
 
 		return true;
 	}

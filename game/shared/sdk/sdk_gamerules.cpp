@@ -155,6 +155,16 @@ bool IsValidPosition(int posIndex)
 	return g_Positions[mp_maxplayers.GetInt() - 1][posIndex][POS_NUMBER] != -1;
 }
 
+int GetKeeperPosIndex()
+{
+	for (int posIndex = 0; posIndex < 11; posIndex++)
+	{
+		if (g_Positions[mp_maxplayers.GetInt() - 1][posIndex][POS_NAME] == GK)
+			return posIndex;
+	}
+	return 0;
+}
+
 #ifndef CLIENT_DLL
 
 class CSpawnPoint : public CPointEntity
@@ -1064,7 +1074,22 @@ ConVar mp_shield_corner_radius("mp_shield_corner_radius", "360", FCVAR_NOTIFY|FC
 ConVar mp_shield_kickoff_radius("mp_shield_kickoff_radius", "360", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar mp_offside("mp_offside", "1", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar mp_joindelay("mp_joindelay", "3", FCVAR_NOTIFY|FCVAR_REPLICATED);
-ConVar mp_maxplayers("mp_maxplayers", "6", FCVAR_NOTIFY|FCVAR_REPLICATED, "Maximum number of players per team <1-11>");
+
+static void OnMaxPlayersChange(IConVar *var, const char *pOldValue, float flOldValue)
+{
+#ifdef GAME_DLL
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+		if (!pPl)
+			continue;
+
+		pPl->ChangeTeamPos(TEAM_SPECTATOR, 0, true);
+	}
+#endif
+}
+
+ConVar mp_maxplayers("mp_maxplayers", "6", FCVAR_NOTIFY|FCVAR_REPLICATED, "Maximum number of players per team <1-11>", true, 1, true, 11, OnMaxPlayersChange);
 
 #ifdef GAME_DLL
 

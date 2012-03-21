@@ -75,7 +75,7 @@ void CKeeperBot::BotAdjustPos()
 	QAngle ang = m_oldcmd.viewangles;
 	Vector target = GetTeam()->m_vPlayerSpawns[0];
 
-	if (m_vBallVel.Length2D() != 0 && Sign(m_vBallVel.y) != GetTeam()->m_nForward)
+	if (m_vBallVel.Length2D() > 750 && m_flAngToBallVel < 60)
 	{
 		float yDist = GetTeam()->m_vPlayerSpawns[0].y - m_vBallPos.y;
 		float vAng = acos(Sign(yDist) * m_vBallDir2D.y);

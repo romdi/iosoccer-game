@@ -1233,8 +1233,13 @@ void CGameMovement::Accelerate( Vector& wishdir, float wishspeed, float accel )
 	if ( !CanAccelerate() )
 		return;
 
+	//omega; WALLSTRAFE FIX
+
 	// See if we are changing direction a bit
-	currentspeed = mv->m_vecVelocity.Dot(wishdir);
+	//	currentspeed = mv->m_vecVelocity.Dot(wishdir);
+
+	currentspeed = sqrt( DotProduct(mv->m_vecVelocity, mv->m_vecVelocity) );
+	//omega; END WALLSTRAFE FIX
 
 	// Reduce wishspeed by the amount of veer.
 	addspeed = wishspeed - currentspeed;
@@ -1318,16 +1323,27 @@ void CGameMovement::WalkMove( void )
 	smove = mv->m_flSideMove;
 
 	// Zero out z components of movement vectors
-	if ( forward[2] != 0 )
+	if ( g_bMovementOptimizations )
+	{
+		if ( forward[2] != 0 )
+		{
+			forward[2] = 0;
+			VectorNormalize( forward );
+		}
+
+		if ( right[2] != 0 )
+		{
+			right[2] = 0;
+			VectorNormalize( right );
+		}
+	}
+	else
 	{
 		forward[2] = 0;
-		VectorNormalize( forward );
-	}
-
-	if ( right[2] != 0 )
-	{
-		right[2] = 0;
-		VectorNormalize( right );
+		right[2]   = 0;
+		
+		VectorNormalize (forward);  // Normalize remainder of vectors.
+		VectorNormalize (right);    // 
 	}
 
 	for (int i=0 ; i<2 ; i++)       // Determine x and y parts of velocity
@@ -2624,6 +2640,7 @@ void CGameMovement::CheckBallShield(Vector oldPos)
 
 	bool stopPlayer = false;
 	Vector pos = mv->GetAbsOrigin();
+	Vector walkDir = vec3_origin;
 
 	if (SDKGameRules()->m_nShieldType != SHIELD_NONE)
 	{
@@ -2637,12 +2654,27 @@ void CGameMovement::CheckBallShield(Vector oldPos)
 			float radius = SDKGameRules()->m_nShieldRadius + threshold;
 			Vector dir = pos - SDKGameRules()->m_vShieldPos;
 			dir.z = 0;
+
 			if (pPl->GetFlags() & FL_SHIELD_KEEP_OUT && dir.Length2D() < radius || pPl->GetFlags() & FL_SHIELD_KEEP_IN && dir.Length2D() > radius)
 			{
 				dir.NormalizeInPlace();
-				pos = SDKGameRules()->m_vShieldPos + dir * radius;
-				stopPlayer = true;
+
+				if (pPl->GetFlags() & FL_REMOTECONTROLLED)
+				{
+					walkDir = pPl->GetFlags() & FL_SHIELD_KEEP_OUT ? dir : -dir;
+				}
+				else
+				{
+					pos = SDKGameRules()->m_vShieldPos + dir * radius;
+					stopPlayer = true;
+				}
 			}
+			else
+			{
+				if (pPl->GetFlags() & FL_REMOTECONTROLLED)
+					pPl->RemoveFlag(FL_REMOTECONTROLLED);
+			}
+
 			if (SDKGameRules()->m_nShieldType == SHIELD_KICKOFF && pPl->GetFlags() & FL_SHIELD_KEEP_OUT)
 			{
 				int forward;
@@ -2674,31 +2706,50 @@ void CGameMovement::CheckBallShield(Vector oldPos)
 
 			if (pPl->GetFlags() & FL_SHIELD_KEEP_OUT && isInsideBox)
 			{
-				if (pos.x > min.x && oldPos.x <= min.x && pos.x < boxCenter.x)
-					pos.x = min.x;
-				else if (pos.x < max.x && oldPos.x >= max.x && pos.x > boxCenter.x)
-					pos.x = max.x;
+				if (pPl->GetFlags() & FL_REMOTECONTROLLED)
+				{
+					walkDir = Vector(0, GetGlobalTeam(SDKGameRules()->m_nShieldSide)->m_nForward, 0);
+				}
+				else
+				{
+					if (pos.x > min.x && oldPos.x <= min.x && pos.x < boxCenter.x)
+						pos.x = min.x;
+					else if (pos.x < max.x && oldPos.x >= max.x && pos.x > boxCenter.x)
+						pos.x = max.x;
 
-				if (pos.y > min.y && oldPos.y <= min.y && pos.y < boxCenter.y)
-					pos.y = min.y;
-				else if (pos.y < max.y && oldPos.y >= max.y && pos.y > boxCenter.y)
-					pos.y = max.y;
+					if (pos.y > min.y && oldPos.y <= min.y && pos.y < boxCenter.y)
+						pos.y = min.y;
+					else if (pos.y < max.y && oldPos.y >= max.y && pos.y > boxCenter.y)
+						pos.y = max.y;
 
-				stopPlayer = true;
+					stopPlayer = true;
+				}
 			}
 			else if (pPl->GetFlags() & FL_SHIELD_KEEP_IN && !isInsideBox)
 			{
-				if (pos.x < min.x)
-					pos.x = min.x;
-				else if (pos.x > max.x)
-					pos.x = max.x;
+				if (pPl->GetFlags() & FL_REMOTECONTROLLED)
+				{
+					walkDir = boxCenter - pos;
+				}
+				else
+				{
+					if (pos.x < min.x)
+						pos.x = min.x;
+					else if (pos.x > max.x)
+						pos.x = max.x;
 
-				if (pos.y < min.y)
-					pos.y = min.y;
-				else if (pos.y > max.y)
-					pos.y = max.y;
+					if (pos.y < min.y)
+						pos.y = min.y;
+					else if (pos.y > max.y)
+						pos.y = max.y;
 
-				stopPlayer = true;
+					stopPlayer = true;
+				}
+			}
+			else
+			{
+				if (pPl->GetFlags() & FL_REMOTECONTROLLED)
+					pPl->RemoveFlag(FL_REMOTECONTROLLED);
 			}
 		}
 	}
@@ -2725,11 +2776,23 @@ void CGameMovement::CheckBallShield(Vector oldPos)
 		}
 	}
 
-	if (stopPlayer)
+	if (pPl->GetFlags() & FL_REMOTECONTROLLED)
 	{
-		mv->m_vecVelocity.x = (pos - oldPos).x * 35;
-		mv->m_vecVelocity.y = (pos - oldPos).y * 35;
-		mv->SetAbsOrigin(pos);
+		walkDir.z = 0;
+		walkDir.NormalizeInPlace();
+		mv->m_vecVelocity = walkDir * mp_sprintspeed.GetInt();
+		VectorAngles(walkDir, mv->m_vecAngles);
+		mv->m_vecAbsViewAngles = mv->m_vecViewAngles = mv->m_vecAngles;
+		//pPl->SnapEyeAngles(mv->m_vecAngles);
+	}
+	else
+	{
+		if (stopPlayer)
+		{
+			mv->m_vecVelocity.x = (pos - oldPos).x * 35;
+			mv->m_vecVelocity.y = (pos - oldPos).y * 35;
+			mv->SetAbsOrigin(pos);
+		}
 	}
 }
 

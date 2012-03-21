@@ -375,7 +375,8 @@ void CBall::SendMatchEvent(match_event_t matchEvent, CSDKPlayer *pPlayer)
 	CReliableBroadcastRecipientFilter filter;
 	UserMessageBegin(filter, "MatchEvent");
 		WRITE_BYTE(matchEvent);
-		WRITE_BYTE(pPlayer->entindex());
+		WRITE_STRING(pPlayer->GetPlayerName());
+		WRITE_BYTE(pPlayer->GetTeamNumber());
 	MessageEnd();
 }
 
@@ -766,16 +767,30 @@ void CBall::State_GOALKICK_Think()
 
 		SDKGameRules()->EnableShield(SHIELD_GOALKICK, LastOppTeam(false));
 		UpdatePossession(m_pPl);
-		m_pPl->m_bIsAtTargetPos = true;
+		//m_pPl->m_bIsAtTargetPos = true;
+		m_pPl->AddFlag(FL_SHIELD_KEEP_IN | FL_REMOTECONTROLLED);
 		//m_pPl->SetPosInsideShield(Vector(m_vPos.x, m_vPos.y - 100 * m_pPl->GetTeam()->m_nForward, SDKGameRules()->m_vKickOff.GetZ()), false);
 		m_flStateTimelimit = -1;
 		SendMatchEvent(MATCH_EVENT_GOALKICK);
 		EmitSound("Ball.whistle");
-		PlayersAtTargetPos(false);
+		//PlayersAtTargetPos(false);
+
+		for (int i = 1; i <= gpGlobals->maxClients; i++) 
+		{
+			CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+
+			if (!CSDKPlayer::IsOnField(pPl))
+				continue;
+
+			if (pPl == m_pPl)
+				continue;
+
+			pPl->AddFlag(FL_SHIELD_KEEP_OUT | FL_REMOTECONTROLLED);
+		}
 	}
 
-	if (!m_pPl->m_bIsAtTargetPos)
-		return;
+	//if (!m_pPl->m_bIsAtTargetPos)
+	//	return;
 
 	//if (!PlayersAtTargetPos(false))
 	//	return;
@@ -1417,7 +1432,7 @@ bool CBall::DoHeader()
 {
 	if (m_bIsPowershot && 
 		m_vPlVel.Length2D() > 0 &&// mp_runspeed.GetInt() - FLT_EPSILON &&
-		m_pPl->m_TeamPos > 1 &&
+		m_pPl->GetTeamPosition() > 1 &&
 		m_nInPenBoxOfTeam == m_pPl->GetOppTeamNumber() &&
 		m_pPl->m_flNextSlide <= gpGlobals->curtime)
 	{
