@@ -68,7 +68,7 @@ public : // IGameResources intreface
 	virtual int		GetKeeperSaves( int index );
 	virtual int		GetGoalKicks( int index );
 	virtual int		GetTeamPosition( int iIndex );
-	virtual int		GetShirtPosition( int iIndex );
+	virtual int		GetTeamPosIndex( int iIndex );
 	virtual int		GetTeamToJoin( int iIndex );
 	virtual float	GetNextJoin( int iIndex );
 
@@ -108,7 +108,6 @@ protected:
 	int		m_KeeperSaves[MAX_PLAYERS+1];
 	int		m_GoalKicks[MAX_PLAYERS+1];
 	int		m_TeamPosition[MAX_PLAYERS+1];
-	int		m_ShirtPosition[MAX_PLAYERS+1];
 
 	int		m_TeamToJoin[MAX_PLAYERS+1];
 	float	m_NextJoin[MAX_PLAYERS+1];

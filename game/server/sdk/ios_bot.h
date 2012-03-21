@@ -52,7 +52,7 @@ public:
 	virtual void BotThink();
 	void RunPlayerMove( CUserCmd &cmd, float frametime );
 	bool RunMimicCommand(CUserCmd &cmd);
-	void BotJoinTeam(int keeper);
+	void FieldBotJoinTeam();
 };
 
 // If iTeam or iClass is -1, then a team or class is randomly chosen.

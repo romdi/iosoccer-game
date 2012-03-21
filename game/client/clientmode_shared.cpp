@@ -826,7 +826,7 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 				else
 				{
 					wchar_t wszTeamPos[4];
-					g_pVGuiLocalize->ConvertANSIToUnicode(g_szPosNames[event->GetInt("teampos") - 1], wszTeamPos, sizeof(wszTeamPos));
+					g_pVGuiLocalize->ConvertANSIToUnicode(g_szPosNames[(int)g_Positions[mp_maxplayers.GetInt() - 1][event->GetInt("teampos")][POS_NAME]], wszTeamPos, sizeof(wszTeamPos));
 
 					if (team == TEAM_A || team == TEAM_B)
 						g_pVGuiLocalize->ConstructString( wszLocalized, sizeof( wszLocalized ), g_pVGuiLocalize->Find( "#game_player_joined_team" ), 3, wszPlayerName, wszTeam, wszTeamPos );

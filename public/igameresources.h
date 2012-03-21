@@ -55,7 +55,7 @@ public:
 	virtual int		GetKeeperSaves( int index ) = 0;
 	virtual int		GetGoalKicks( int index ) = 0;
 	virtual int		GetTeamPosition( int iIndex ) = 0;
-	virtual int		GetShirtPosition( int iIndex ) = 0;
+	virtual int		GetTeamPosIndex( int iIndex ) = 0;
 	virtual int		GetTeamToJoin( int iIndex ) = 0;
 	virtual float	GetNextJoin( int iIndex ) = 0;
 };

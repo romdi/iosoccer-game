@@ -394,11 +394,19 @@ struct s_KitData
 	int		m_KitColour;
 };
 
+enum
+{
+	POS_XPOS = 0,
+	POS_YPOS,
+	POS_NAME,
+	POS_NUMBER
+};
+
 extern const s_KitData gKitDesc[];
 
-extern const char g_szPosNames[11][5];
+extern const char g_szPosNames[21][5];
 
-extern const float g_Positions[11][11][2];
+extern const float g_Positions[11][11][4];
 
 bool IsValidPosition(int posIndex);
 

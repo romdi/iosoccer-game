@@ -78,12 +78,8 @@ void CPlayerTextureProxy::OnBind( C_BaseEntity *pEnt )
 	if ( !m_pBaseTextureVar )
 		return;
 
-	C_SDKPlayer *pPlayer = (C_SDKPlayer *)pEnt;
-
-	//const char *team = pPlayer->GetTeam()->Get_Name();
 	const char *team = GameResources()->GetTeamName(GameResources()->GetTeam(pEnt->index));
-	int pos = GameResources()->GetShirtPosition(pEnt->index);
-	//int pos = pPlayer->m_ShirtPos;
+	int pos = GameResources()->GetTeamPosition(pEnt->index);
 
 	char texture[64];
 

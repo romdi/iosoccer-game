@@ -135,12 +135,13 @@ CBasePlayer *BotPutInServer( bool bFrozen, int keeper )
 	//pPlayer->RemoveAllItems( true );
 	//pPlayer->Spawn();	//spawning here then moving to goal caused the extremely strange keeper teleport bug. Im not sure why!
 
-	pPlayer->BotJoinTeam(keeper);
+	if (keeper == 0)
+		pPlayer->FieldBotJoinTeam();
 
 	return pPlayer;
 }
 
-void CBot::BotJoinTeam(int keeper)
+void CBot::FieldBotJoinTeam()
 {
 	int playerCount[2] = {};
 
@@ -158,40 +159,30 @@ void CBot::BotJoinTeam(int keeper)
 		playerCount[team - TEAM_A] += 1;
 	}
 
-	if (keeper > 0)
-	{
-		ChangePosition(keeper == 1 ? TEAM_A : TEAM_B, 1, true);
-		g_CurBotNumber += 1;
-	}
+	int team = playerCount[0] < playerCount[1] ? TEAM_A : TEAM_B;
+
+	if (playerCount[team] == mp_maxplayers.GetInt())
+		team = team == TEAM_A ? TEAM_B : TEAM_A;
+
+	if (playerCount[team] == mp_maxplayers.GetInt())
+		ChangeTeam(TEAM_SPECTATOR);
 	else
 	{
-		//int team = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
-		//int team = g_CurBotNumber % 2 == 0 ? TEAM_A : TEAM_B;
-		int team = playerCount[0] < playerCount[1] ? TEAM_A : TEAM_B;
-
-		if (playerCount[team] == mp_maxplayers.GetInt())
-			team = team == TEAM_A ? TEAM_B : TEAM_A;
-
-		if (playerCount[team] == mp_maxplayers.GetInt())
-			ChangeTeam(TEAM_SPECTATOR);
-		else
+		int startPos = g_IOSRand.RandomInt(0, 10);
+		int pos = startPos;
+		while (true)
 		{
-			int startPos = g_IOSRand.RandomInt(2,11);
-			int pos = startPos;
-			while (true)
+			if (TeamPosFree(team, pos, false))
 			{
-				if (TeamPosFree(team, pos, true))
-				{
-					ChangePosition(team, pos, true);
-					g_CurBotNumber += 1;
-					break;
-				}
-				pos += 1;
-				if (pos == 12)
-					pos = 2;
-				if (pos == startPos)
-					break;
+				ChangePosition(team, pos, true);
+				g_CurBotNumber += 1;
+				break;
 			}
+			pos += 1;
+			if (pos == 12)
+				pos = 2;
+			if (pos == startPos)
+				break;
 		}
 	}
 }
@@ -262,10 +253,28 @@ void Bot_RunAll( void )
 			else if (pPlayer->GetTeamToJoin() != TEAM_INVALID)
 				team = pPlayer->GetTeamToJoin();
 
-			if (pPlayer->IsBot() && pPlayer->GetTeamPosition() == 1 && !CSDKPlayer::IsOnField(pPlayer))
+			if (pPlayer->IsBot() && !Q_strncmp(pPlayer->GetPlayerName(), "KEEPER", 6))
 			{
-				team = Q_strcmp(pPlayer->GetPlayerName(), "KEEPER1") == 0 ? TEAM_A : TEAM_B;
-				pPlayer->ChangePosition(team, 1, true);
+				if (!CSDKPlayer::IsOnField(pPlayer) && pPlayer->GetTeamToJoin() != TEAM_A && pPlayer->GetTeamToJoin() != TEAM_B)
+				{
+					team = !Q_strcmp(pPlayer->GetPlayerName(), "KEEPER1") ? TEAM_A : TEAM_B;
+		
+					for (int posIndex = 0; posIndex < 11; posIndex++)
+					{
+						if (g_Positions[mp_maxplayers.GetInt() - 1][posIndex][POS_NUMBER] != 1)
+							continue;
+
+						if (!pPlayer->TeamPosFree(team, posIndex, true))
+						{
+							char kickcmd[512];
+							Q_snprintf(kickcmd, sizeof(kickcmd), "kickid %i Position already taken\n", pPlayer->GetUserID());
+							engine->ServerCommand(kickcmd);
+							break;
+						}
+
+						pPlayer->ChangePosition(team, posIndex, true);
+					}
+				}
 			}
 
 			if (team != TEAM_INVALID && pPlayer->GetTeamPosition() == 1)
@@ -368,7 +377,7 @@ void CBot::BotFrame()
 			m_flNextBotJoin = gpGlobals->curtime + 3;
 		else if (gpGlobals->curtime >= m_flNextBotJoin)
 		{
-			BotJoinTeam(0);
+			FieldBotJoinTeam();
 			m_flNextBotJoin = -1;
 		}
 	}

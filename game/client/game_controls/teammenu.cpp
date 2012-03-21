@@ -87,7 +87,7 @@ CTeamMenu::CTeamMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_TEAM )
 	m_iJumpKey = BUTTON_CODE_INVALID; // this is looked up in Activate()
 	m_nGoalsBoardKey = BUTTON_CODE_INVALID; // this is looked up in Activate()
 	m_nActiveTeam = 0;
-	m_nMaxPlayers = 11;
+	m_nOldMaxPlayers = 11;
 
 	SetBounds(PANEL_MARGIN, PANEL_MARGIN, PANEL_WIDTH, PANEL_HEIGHT);
 	SetTitle("", true);
@@ -202,7 +202,7 @@ void CTeamMenu::PerformLayout()
 				pPos->pPosPanel->SetVisible(false);
 			else
 			{
-				pPos->pPosPanel->SetBounds(g_Positions[m_nMaxPlayers - 1][j][0] * (BUTTON_WIDTH + BUTTON_HMARGIN) + BUTTON_LEFTMARGIN, g_Positions[m_nMaxPlayers - 1][j][1] * (BUTTON_HEIGHT + 2 * BUTTON_VMARGIN) + BUTTON_TOPMARGIN, BUTTON_WIDTH, BUTTON_HEIGHT);
+				pPos->pPosPanel->SetBounds(g_Positions[mp_maxplayers.GetInt() - 1][j][0] * (BUTTON_WIDTH + BUTTON_HMARGIN) + BUTTON_LEFTMARGIN, g_Positions[mp_maxplayers.GetInt() - 1][j][1] * (BUTTON_HEIGHT + 2 * BUTTON_VMARGIN) + BUTTON_TOPMARGIN, BUTTON_WIDTH, BUTTON_HEIGHT);
 				pPos->pPosPanel->SetPaintBackgroundEnabled(true);
 				pPos->pPosPanel->SetPaintBackgroundType(2);
 				pPos->pPosPanel->SetBgColor(Color(0, 0, 0, 150));
@@ -210,7 +210,7 @@ void CTeamMenu::PerformLayout()
 			}
 
 			pPos->pPlayerName->SetBounds(0, pPos->pPosPanel->GetTall() - 2 * NAME_HEIGHT, pPos->pPosPanel->GetWide(), NAME_HEIGHT);
-			pPos->pPlayerName->SetCommand(VarArgs("jointeam %d %d", i + TEAM_A, 11 - j));
+			pPos->pPlayerName->SetCommand(VarArgs("jointeam %d %d", i + TEAM_A, j));
 			pPos->pPlayerName->AddActionSignalTarget(this);
 			pPos->pPlayerName->SetPaintBackgroundEnabled(true);
 			pPos->pPlayerName->SetPaintBorderEnabled(false);
@@ -222,7 +222,7 @@ void CTeamMenu::PerformLayout()
 
 			pPos->pPosName->SetBounds(0, pPos->pPosPanel->GetTall() - 2 * NAME_HEIGHT, NUMBER_WIDTH, NAME_HEIGHT);
 			pPos->pPosName->SetContentAlignment(Label::a_east);
-			pPos->pPosName->SetText(g_szPosNames[j]);
+			pPos->pPosName->SetText(g_szPosNames[(int)g_Positions[mp_maxplayers.GetInt() - 1][j][2]]);
 			pPos->pPosName->SetFont(pScheme->GetFont("IOSTeamMenuBig"));
 			pPos->pPosName->SetZPos(1);
 
@@ -405,9 +405,9 @@ void CTeamMenu::Update()
 {
 	//BaseClass::Update();
 
-	if (m_nMaxPlayers != mp_maxplayers.GetInt())
+	if (m_nOldMaxPlayers != mp_maxplayers.GetInt())
 	{
-		m_nMaxPlayers = mp_maxplayers.GetInt();
+		m_nOldMaxPlayers = mp_maxplayers.GetInt();
 		PerformLayout();
 	}
 
@@ -427,7 +427,7 @@ void CTeamMenu::Update()
 			continue;
 
 		int team = gr->GetTeam(i);
-		int pos = gr->GetTeamPosition(i);
+		int pos = gr->GetTeamPosIndex(i);
 
 		if (gr->GetTeamToJoin(i) != TEAM_INVALID)
 			team = gr->GetTeamToJoin(i);
@@ -442,8 +442,8 @@ void CTeamMenu::Update()
 			continue;
 		}
 
-		posTaken[team - TEAM_A][11 - pos] = true;
-		PosPanel_t *pPos = m_pPosPanels[team - TEAM_A][11 - pos];
+		posTaken[team - TEAM_A][pos] = true;
+		PosPanel_t *pPos = m_pPosPanels[team - TEAM_A][pos];
 		if (gr->GetTeamToJoin(i) != TEAM_INVALID)
 			pPos->pPlayerName->SetText(VarArgs("%s [%d]", gr->GetPlayerName(i), (int)(gr->GetNextJoin(i) - gpGlobals->curtime)));
 		else

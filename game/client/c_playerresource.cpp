@@ -8,6 +8,7 @@
 #include "c_playerresource.h"
 #include "c_team.h"
 #include "gamestringpool.h"
+#include "sdk_gamerules.h"
 
 #ifdef HL2MP
 #include "hl2mp_gamerules.h"
@@ -44,7 +45,6 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_PlayerResource, DT_PlayerResource, CPlayerReso
 	RecvPropArray3( RECVINFO_ARRAY(m_KeeperSaves), RecvPropInt( RECVINFO(m_KeeperSaves[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_GoalKicks), RecvPropInt( RECVINFO(m_GoalKicks[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_TeamPosition), RecvPropInt( RECVINFO(m_TeamPosition[0]))),
-	RecvPropArray3( RECVINFO_ARRAY(m_ShirtPosition), RecvPropInt( RECVINFO(m_ShirtPosition[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_TeamToJoin), RecvPropInt( RECVINFO(m_TeamToJoin[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_NextJoin), RecvPropFloat( RECVINFO(m_NextJoin[0]))),
 
@@ -102,7 +102,6 @@ C_PlayerResource::C_PlayerResource()
 	memset( m_KeeperSaves, 0, sizeof( m_KeeperSaves ) );
 	memset( m_GoalKicks, 0, sizeof( m_GoalKicks ) );
 	memset( m_TeamPosition, 0, sizeof( m_TeamPosition ) );
-	memset( m_ShirtPosition, 0, sizeof( m_ShirtPosition ) );
 	memset( m_TeamToJoin, 0, sizeof( m_TeamToJoin ) );
 	memset( m_NextJoin, 0, sizeof( m_NextJoin ) );
 
@@ -504,14 +503,15 @@ int	C_PlayerResource::GetTeamPosition( int iIndex )
 	if ( !IsConnected( iIndex ) )
 		return 0;
 
-	return m_TeamPosition[iIndex];
+	return (int)g_Positions[mp_maxplayers.GetInt() - 1][m_TeamPosition[iIndex]][POS_NUMBER];
 }
-int	C_PlayerResource::GetShirtPosition( int iIndex )
+
+int	C_PlayerResource::GetTeamPosIndex( int iIndex )
 {
 	if ( !IsConnected( iIndex ) )
 		return 0;
 
-	return m_ShirtPosition[iIndex];
+	return m_TeamPosition[iIndex];
 }
 
 int C_PlayerResource::GetTeamToJoin( int iIndex )

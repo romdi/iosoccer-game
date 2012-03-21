@@ -235,7 +235,7 @@ CSDKPlayer::CSDKPlayer()
 	m_bShotButtonsDepressed = true;
 	m_nTeamToJoin = TEAM_INVALID;
 	m_flNextJoin = gpGlobals->curtime;
-	m_TeamPos = m_ShirtPos = 1;
+	m_TeamPos = 0;
 	m_pPlayerBall = NULL;
 	m_flPlayerAnimEventStart = gpGlobals->curtime;
 	m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
@@ -417,10 +417,10 @@ void CSDKPlayer::ChangePosition(int team, int pos, bool instantly /*= false*/)
 	if (team != TEAM_SPECTATOR && team != TEAM_A && team != TEAM_B)
 		return;
 
-	if (pos < 1 || pos > 11)
+	if (pos < 0 || pos > 10)
 		return;
 
-	if (!IsValidPosition(11 - pos))
+	if (!IsValidPosition(pos))
 		return;
 	
 	if (team == TEAM_SPECTATOR)
@@ -446,10 +446,9 @@ void CSDKPlayer::ChangePosition(int team, int pos, bool instantly /*= false*/)
 			}
 
 			m_nTeamToJoin = team;
-			m_TeamPos = pos;			//teampos matches spawn points on the map 2-11
-			ConvertSpawnToShirt();		//shirtpos is the formation number 3,4,5,2 11,8,6,7 10,9
+			m_TeamPos = pos;
 
-			if (m_ShirtPos > 1)
+			if (GetTeamPosition() > 1)
 			{
 				ChoosePlayerSkin();				
 			}
@@ -493,7 +492,7 @@ void CSDKPlayer::ChangeTeam( int iTeamNum )
 		event->SetBool("autoteam", false );
 		event->SetBool("silent", false );
 		event->SetString("name", GetPlayerName() );
-		event->SetInt("teampos", GetTeamPosition());
+		event->SetInt("teampos", GetTeamPosIndex());
 
 		gameeventmanager->FireEvent( event );
 	}
@@ -900,11 +899,14 @@ bool CSDKPlayer::TeamPosFree(int team, int pos, bool kickBotKeeper)
 	//stop keeper from being picked unless mp_keepers is 0 
 	//(otherwise you can pick keeper just before bots spawn)
 
-	if (!IsValidPosition(11 - pos))
+	if (!IsValidPosition(pos))
 		return false;
 
-	if (pos == 1 && !humankeepers.GetBool())
-		return false;
+	if (g_Positions[mp_maxplayers.GetInt() - 1][pos][POS_NUMBER] == 1)
+	{
+		if ((!IsBot() && !humankeepers.GetBool()) || (IsBot() && !kickBotKeeper))
+			return false;
+	}
 
 	//normal check
 	for (int i = 1; i <= gpGlobals->maxClients; i++)	
@@ -915,7 +917,7 @@ bool CSDKPlayer::TeamPosFree(int team, int pos, bool kickBotKeeper)
 		if (!pPl)
 			continue;
 
-		if (pPl->GetTeamPosition() == pos && (pPl->GetTeamNumber() == team || pPl->m_nTeamToJoin == team))
+		if (pPl->GetTeamPosIndex() == pos && (pPl->GetTeamNumber() == team || pPl->m_nTeamToJoin == team))
 		{
 			if (IsBot())
 				return false;
@@ -924,7 +926,7 @@ bool CSDKPlayer::TeamPosFree(int team, int pos, bool kickBotKeeper)
 				return false;
 
 			char kickcmd[512];
-			Q_snprintf(kickcmd, sizeof(kickcmd), "kickid %i Human player taking the spot\n", pPl->GetUserID());
+			Q_snprintf(kickcmd, sizeof(kickcmd), "kickid %i Human player taking the position\n", pPl->GetUserID());
 			engine->ServerCommand(kickcmd);
 			return true;
 		}
@@ -941,7 +943,7 @@ static const int NUM_BALL_TYPES = 6;
 //
 void CSDKPlayer::ChoosePlayerSkin(void)
 {
-	m_nSkin = m_ShirtPos-2 + (g_IOSRand.RandomInt(0,NUM_PLAYER_FACES-1) * 10);		//player skin
+	m_nSkin = GetTeamPosition() - 2 + (g_IOSRand.RandomInt(0, NUM_PLAYER_FACES - 1) * 10);		//player skin
 	m_nBody = MODEL_PLAYER;
 }
 
@@ -958,68 +960,6 @@ void CSDKPlayer::ChooseKeeperSkin(void)
 	m_nBaseSkin = m_nSkin;
 	m_nBody = MODEL_KEEPER;
 }
-
-void CSDKPlayer::ConvertSpawnToShirt(void)
-{
-	switch (m_TeamPos)
-	{
-		case 1: m_ShirtPos = 1; break;
-		case 2: m_ShirtPos = 3; break;
-		case 3: m_ShirtPos = 4; break;
-		case 4: m_ShirtPos = 5; break;
-		case 5: m_ShirtPos = 2; break;
-		case 6: m_ShirtPos = 11; break;
-		case 7: m_ShirtPos = 8; break;
-		case 8: m_ShirtPos = 6; break;
-		case 9: m_ShirtPos = 7; break;
-		case 10: m_ShirtPos = 10; break;
-		case 11: m_ShirtPos = 9; break;
-	}
-}
-
-#include "team.h"
-
-void CSDKPlayer::RequestTeamChange( int iTeamNum )
-{
-	if ( iTeamNum == 0 )	// this player chose to auto-select his team
-	{
-		int iNumTeamA = GetGlobalTeam( TEAM_A )->GetNumPlayers();
-		int iNumTeamB = GetGlobalTeam ( TEAM_B )->GetNumPlayers();
-
-		if ( iNumTeamA > iNumTeamB)
-			iTeamNum = TEAM_B;
-		else if ( iNumTeamB > iNumTeamA)
-			iTeamNum = TEAM_A;
-		else
-			iTeamNum = TEAM_A;	// the default team
-	}
-
-	if ( !GetGlobalTeam( iTeamNum ) )
-	{
-		Warning( "CBasePlayer::ChangeTeam( %d ) - invalid team index.\n", iTeamNum );
-		return;
-	}
-
-	// if this is our current team, just abort
-	if ( iTeamNum == GetTeamNumber() )
-		return;
-
-	ChangeTeam (iTeamNum);		// TeamChanges are actually done at the round start.
-
-	if ( IsBot() == false )
-	{
-		// Now force the player to choose a model
-		if ( iTeamNum == TEAM_A )
-			ShowViewPortPanel( PANEL_CLASS_CT );
-		else if ( iTeamNum == TEAM_B )
-			ShowViewPortPanel( PANEL_CLASS_TEAMB );
-	}
-
-}
-
-
-extern CBaseEntity *FindPlayerStart(const char *pszClassName);
-extern CBaseEntity	*g_pLastSpawn;
 
 //-----------------------------------------------------------------------------
 // The ball doesnt get every collision, so try player - for dribbling
@@ -1211,6 +1151,11 @@ void CSDKPlayer::ResetStats()
 	m_Possession=0;
 	m_flPossessionTime=0.0f;
 	ResetFragCount();
+}
+
+int CSDKPlayer::GetTeamPosition()
+{
+	return (int)g_Positions[mp_maxplayers.GetInt() - 1][GetTeamPosIndex()][POS_NUMBER];
 }
 
 CUtlVector<CPlayerPersistentData *> CPlayerPersistentData::m_PlayerPersistentData;

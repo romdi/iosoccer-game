@@ -127,7 +127,7 @@ protected:
 	Label *m_pSpectatorNames;
 
 	float m_flNextUpdateTime;
-	int m_nMaxPlayers;
+	int m_nOldMaxPlayers;
 };
 
 

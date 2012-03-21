@@ -267,14 +267,11 @@ public:
 	//bool				ClientCommand(const char *pcmd);
 	//CBaseEntity			*EntSelectSpawnPoint(void);
 
-	void				RequestTeamChange( int iTeamNum );
-	void				ConvertSpawnToShirt(void);
 	void				ChoosePlayerSkin(void);
 	void				ChooseKeeperSkin(void);
-	bool				TeamPosFree(int team, int pos, bool kickBotKeeper = false);
+	bool				TeamPosFree(int team, int pos, bool kickBotKeeper);
 
-	int					m_TeamPos;								//position on pitch
-	int					m_ShirtPos;								//converted spawn point numbers into shirt numbers
+	int					m_TeamPos;
 	
 	float				m_flNextShot;
 
@@ -310,8 +307,8 @@ public:
 	int					GetThrowIns(void) { return m_ThrowIns; }
 	int					GetKeeperSaves(void) { return m_KeeperSaves; }
 	int					GetGoalKicks(void) { return m_GoalKicks; }
-	int					GetTeamPosition(void) { return m_TeamPos; }
-	int					GetShirtPosition(void) { return m_ShirtPos; }
+	int					GetTeamPosition(void);
+	int					GetTeamPosIndex(void) { return m_TeamPos; }
 	int					GetTeamToJoin(void) { return m_nTeamToJoin; }
 	int					GetNextJoin(void) { return m_flNextJoin; }
 

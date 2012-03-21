@@ -194,7 +194,7 @@ void Host_Say( edict_t *pEdict, const CCommand &args, bool teamonly )
 		else
 		{
 			if (pPlayer)
-				Q_snprintf( text, sizeof(text), "%s [%s] %s: ", pszPrefix, g_szPosNames[ToSDKPlayer(pPlayer)->GetTeamPosition() - 1], pszPlayerName );
+				Q_snprintf( text, sizeof(text), "%s [%s] %s: ", pszPrefix, SDKGameRules()->GetChatLocation(false, pPlayer), pszPlayerName );
 			else
 				Q_snprintf( text, sizeof(text), "%s %s: ", pszPrefix, pszPlayerName );
 		}
@@ -202,7 +202,7 @@ void Host_Say( edict_t *pEdict, const CCommand &args, bool teamonly )
 	else
 	{
 		if (pPlayer)
-			Q_snprintf( text, sizeof(text), "[%s] %s: ", g_szPosNames[ToSDKPlayer(pPlayer)->GetTeamPosition() - 1], pszPlayerName );
+			Q_snprintf( text, sizeof(text), "[%s] %s: ", SDKGameRules()->GetChatLocation(false, pPlayer), pszPlayerName );
 		else
 			Q_snprintf( text, sizeof(text), "%s: ", pszPlayerName );
 	}

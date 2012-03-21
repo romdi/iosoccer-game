@@ -57,86 +57,102 @@ const s_KitData gKitDesc[] =
 	{	"END", "END", END },
 };
 
-const char g_szPosNames[11][5] =
+const char g_szPosNames[21][5] =
 {
-	"LF", "CF", "RF", "LM", "CM", "RM", "LB", "CB", "CB", "RB", "GK"
+	"GK", "SWP", "LB", "RB", "CB", "LCB", "RCB", "LWB", "RWB", "LM", "RM", "DM", "CM", "AM", "LF", "RF", "CF", "ST", "SS", "LW", "RW"
 };
 
-#define HIDDEN { -1, -1 }
+enum g_PosNames_t
+{
+	GK = 0, SWP, LB, RB, CB, LCB, RCB, LWB, RWB, LM, RM, DM, CM, AM, LF, RF, CF, ST, SS, LW, RW
+};
 
-const float g_Positions[11][11][2] =
+#define HIDDEN { -1, -1, -1, -1 }
+
+const float g_Positions[11][11][4] =
 {
 	{//1
-			HIDDEN, HIDDEN, HIDDEN,
-			HIDDEN, HIDDEN, HIDDEN,
-		HIDDEN, HIDDEN, HIDDEN, HIDDEN,
-						{ 1.5f, 3 }
+								{ 1.5f, 3, GK, 1 },
+
+		HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN
 	},
 	{//2
-			HIDDEN, HIDDEN, HIDDEN,
-			HIDDEN, { 1.5f, 1 }, HIDDEN,
-		HIDDEN, HIDDEN, HIDDEN, HIDDEN,
-						{ 1.5f, 3 }
+								{ 1.5f, 1, CM, 10 },
+								{ 1.5f, 3, GK, 1 },
+
+		HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN
 	},
 	{//3
-			HIDDEN, HIDDEN, HIDDEN,
-			{ 0.5f, 1 }, HIDDEN, { 2.5f, 1 },
-		HIDDEN, HIDDEN, HIDDEN, HIDDEN,
-						{ 1.5f, 3 }
+					{ 0.5f, 1, LM, 11 }, { 2.5f, 1, RM, 9 },
+								{ 1.5f, 3, GK, 1 },
+
+		HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN
 	},
 	{//4
-			HIDDEN, HIDDEN, HIDDEN,
-			{ 0.5f, 1 }, HIDDEN, { 2.5f, 1 },
-		HIDDEN, { 1, 2 }, HIDDEN, HIDDEN,
-						{ 1.5f, 3 }
+					{ 0.5f, 1, LF, 11 }, { 2.5f, 1, RF, 9 },
+								{ 1, 2, CM, 10 },
+								{ 1.5f, 3, GK, 1 },
+
+		HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN
 	},
 	{//5
-			HIDDEN, HIDDEN, HIDDEN,
-			{ 0.5f, 1 }, HIDDEN, { 2.5f, 1 },
-		{ 0, 2 }, HIDDEN, HIDDEN, { 3, 2 },
-						{ 1.5f, 3 }
+					{ 0.5f, 1, LM, 11 }, { 2.5f, 1, RM, 9 },
+						{ 0, 2, LB, 2 }, { 3, 2, RB, 3 },
+								{ 1.5f, 3, GK, 1 },
+
+		HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN
 	},
 	{//6
-			{ 0.5f, 0.5f }, HIDDEN, { 2.5f, 0.5f },
-			HIDDEN, { 1.5f, 1 }, HIDDEN,
-		{ 0.75f, 2 }, HIDDEN, HIDDEN, { 2.25f, 2 },
-						{ 1.5f, 3 }
+					{ 0.5f, 0.5f, LF, 11 }, { 2.5f, 0.5f, RF, 9 },
+								{ 1.5f, 1, CM, 10 },
+					{ 0.75f, 2, LB, 2 }, { 2.25f, 2, RB, 3 },
+								{ 1.5f, 3, GK, 1 },
+
+		HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN
 	},
 	{//7
-			HIDDEN, { 1.5f, 0 }, HIDDEN,
-			{ 0.5f, 1 }, { 1.5f, 1 }, { 2.5f, 1 },
-		{ 0, 2 }, HIDDEN, HIDDEN, { 3, 2 },
-						{ 1.5f, 3 }
+								{ 1.5f, 0, CF, 10 },
+			{ 0.5f, 1, LM, 8 }, { 1.5f, 1, CM, 6 }, { 2.5f, 1, RM, 7 },
+						{ 0, 2, LB, 2 }, { 3, 2, RB, 3 },
+								{ 1.5f, 3, GK, 1 },
+
+		HIDDEN, HIDDEN, HIDDEN, HIDDEN
 	},
 	{//8
-			HIDDEN, { 1.5f, 0 }, HIDDEN,
-			{ 0.5f, 1 }, { 1.5f, 1 }, { 2.5f, 1 },
-		{ 0, 2 }, { 1, 2 }, HIDDEN, { 3, 2 },
-						{ 1.5f, 3 }
+								{ 1.5f, 0, CF, 10 },
+			{ 0.5f, 1, LM, 11 }, { 1.5f, 1, CM, 6 }, { 2.5f, 1, RM, 7 },
+				{ 0, 2, LB, 3 }, { 1, 2, CB, 4 }, { 3, 2, RB, 5 },
+								{ 1.5f, 3, GK, 1 },
+
+		HIDDEN, HIDDEN, HIDDEN
 	},
 	{//9
-			{ 0.5f, 0 }, HIDDEN, { 2.5f, 0 },
-			{ 0.5f, 1 }, { 1.5f, 1 }, { 2.5f, 1 },
-		{ 0, 2 }, { 1, 2 }, HIDDEN, { 3, 2 },
-						{ 1.5f, 3 }
+					{ 0.5f, 0, LF, 11 }, { 2.5f, 0, RF, 9 },
+			{ 0.5f, 1, LM, 11 }, { 1.5f, 1, CM, 10 }, { 2.5f, 1, RM, 7 },
+							{ 0, 2, LB, 2 }, { 1, 2, CB, 3 }, { 3, 2, RB, 4 },
+								{ 1.5f, 3, GK, 1 },
+
+		HIDDEN, HIDDEN
 	},
 	{//10
-			{ 0.5f, 0 }, { 1.5f, 0 }, { 2.5f, 0 },
-			{ 0.5f, 1 }, { 1.5f, 1 }, { 2.5f, 1 },
-		{ 0, 2 }, { 1, 2 }, HIDDEN, { 3, 2 },
-						{ 1.5f, 3 }
+			{ 0.5f, 0, LW, 11 }, { 1.5f, 0, CF, 10 }, { 2.5f, 0, RW, 9 },
+			{ 0.5f, 1, LM, 8 }, { 1.5f, 1, CM, 6 }, { 2.5f, 1, RM, 7 },
+				{ 0, 2, LB, 2 }, { 1, 2, CB, 3 }, { 3, 2, RB, 4 },
+								{ 1.5f, 3, GK, 1 },
+
+		HIDDEN
 	},
 	{//11
-			{ 0.5f, 0 }, { 1.5f, 0 }, { 2.5f, 0 },
-			{ 0.5f, 1 }, { 1.5f, 1 }, { 2.5f, 1 },
-		{ 0, 2 }, { 1, 2 }, { 2, 2 }, { 3, 2 },
-						{ 1.5f, 3 }
+			{ 0.5f, 0, LW, 11 }, { 1.5f, 0, CF, 10 }, { 2.5f, 0, RW, 9 },
+			{ 0.5f, 1, LM, 8 }, { 1.5f, 1, CM, 6 }, { 2.5f, 1, RM, 7 },
+		{ 0, 2, RB, 2 }, { 1, 2, LCB, 3 }, { 2, 2, RCB, 4 }, { 3, 2, RB, 5 },
+								{ 1.5f, 3, GK, 1 }
 	}
 };
 
 bool IsValidPosition(int posIndex)
 {
-	return g_Positions[mp_maxplayers.GetInt() - 1][posIndex][0] != -1;
+	return g_Positions[mp_maxplayers.GetInt() - 1][posIndex][POS_NUMBER] != -1;
 }
 
 #ifndef CLIENT_DLL
@@ -395,7 +411,7 @@ void InitBodyQue()
 
 CSDKGameRules::CSDKGameRules()
 {
-	g_IOSRand.SetSeed(gpGlobals->curtime);
+	g_IOSRand.SetSeed(Plat_FloatTime() * 1000);
 
 	m_pCurStateInfo = NULL;
 
@@ -682,8 +698,8 @@ void CSDKGameRules::AutobalanceTeams(void)
 			continue;
 
 		//dont switch keepers
-		if (plr->m_TeamPos == 1)
-			continue;
+		//if (plr->m_TeamPos == 1)
+		//	continue;
 
 		//found one
 		if (plr->GetTeamNumber() == teamNow) 
@@ -705,13 +721,13 @@ void CSDKGameRules::AutobalanceTeams(void)
 	//SetPlayerTeam(swapPlayer, teamToBe+1);
 	pSwapPlayer->ChangeTeam(teamToBe);
 
-	int trypos = 11;
-	while (!pSwapPlayer->TeamPosFree(teamToBe, trypos) && trypos > 1) 
-	{
-		trypos--;
-	}
+	//int trypos = 11;
+	//while (!pSwapPlayer->TeamPosFree(teamToBe, trypos) && trypos > 1) 
+	//{
+	//	trypos--;
+	//}
 
-	pSwapPlayer->m_TeamPos = trypos;
+	//pSwapPlayer->m_TeamPos = trypos;
 	//pSwapPlayer->ChooseModel();
 
 	pSwapPlayer->Spawn();
@@ -953,7 +969,7 @@ const char *CSDKGameRules::GetChatFormat( bool bTeamOnly, CBasePlayer *pPlayer )
 
 const char *CSDKGameRules::GetChatLocation( bool bTeamOnly, CBasePlayer *pPlayer )
 {
-	 return g_szPosNames[ToSDKPlayer(pPlayer)->GetTeamPosition() - 1];
+	return g_szPosNames[(int)g_Positions[mp_maxplayers.GetInt() - 1][ToSDKPlayer(pPlayer)->GetTeamPosIndex()][POS_NAME]];
 }
 
 #endif
