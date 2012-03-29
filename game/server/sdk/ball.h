@@ -160,7 +160,8 @@ public:
 
 	void			ResetStats();
 
-	CNetworkVar(float, m_flOffsideLineY);
+	CNetworkVar(float, m_flOffsideLineBallY);
+	CNetworkVar(float, m_flOffsideLinePlayerY);
 	CNetworkVar(bool, m_bShowOffsideLine);
 	
 	void			SetPos(const Vector &pos);
@@ -203,14 +204,13 @@ private:
 
 	void			MarkOffsidePlayers();
 	void			UnmarkOffsidePlayers();
-	void			EnableOffsideLine(float yPos);
+	void			EnableOffsideLine(float ballPosY, float playerPosY);
 	void			DisableOffsideLine();
 
 	bool			PlayersAtTargetPos(bool holdAtTargetPos);
 	bool			CheckFoul(bool canShootBall);
 	void			TriggerFoul(foul_type_t type, Vector pos, CSDKPlayer *pFoulingPl, CSDKPlayer *pFouledPl = NULL);
 	CSDKPlayer		*FindNearestPlayer(int team = TEAM_INVALID, int posFlags = FL_POS_FIELD, bool checkIfShooting = false, int ignoredPlayerBits = 0);
-	body_part_t		GetBodyPart();
 	bool			DoBodyPartAction();
 	bool			DoGroundShot();
 	bool			DoVolleyShot();
@@ -250,7 +250,7 @@ private:
 	foul_type_t		m_eFoulType;
 	Vector			m_vFoulPos;
 
-	Vector			m_vPos, m_vVel;
+	Vector			m_vPos, m_vVel, m_vOffsidePos;
 	QAngle			m_aAng;
 	AngularImpulse	m_vRot;
 

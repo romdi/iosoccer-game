@@ -110,7 +110,11 @@ BEGIN_RECV_TABLE_NOBASE( C_SDKPlayer, DT_SDKLocalPlayerExclusive )
 	RecvPropFloat( RECVINFO( m_angEyeAngles[0] ) ),
 //	RecvPropFloat( RECVINFO( m_angEyeAngles[1] ) ),
 //ios	RecvPropInt( RECVINFO( m_ArmorValue ) ),
-	RecvPropInt(RECVINFO(m_nInPenBoxOfTeam))
+	RecvPropInt(RECVINFO(m_nInPenBoxOfTeam)),
+	RecvPropVector(RECVINFO(m_vTargetPos)),
+	RecvPropBool(RECVINFO(m_bIsAtTargetPos)),
+	RecvPropBool(RECVINFO(m_bHoldAtTargetPos)),
+	RecvPropBool(RECVINFO(m_bMoveToExactPos)),
 END_RECV_TABLE()
 
 BEGIN_RECV_TABLE_NOBASE( C_SDKPlayer, DT_SDKNonLocalPlayerExclusive )

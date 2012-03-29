@@ -169,7 +169,13 @@ public:
 
 	float				m_flPlayerAnimEventStart;
 	PlayerAnimEvent_t	m_ePlayerAnimEvent;
-	int					m_nInPenBoxOfTeam;
+
+	CNetworkVector(m_vTargetPos);
+	CNetworkVar(bool, m_bIsAtTargetPos);
+	CNetworkVar(bool, m_bHoldAtTargetPos);
+	CNetworkVar(bool, m_bMoveToExactPos);
+
+	CNetworkVar(int, m_nInPenBoxOfTeam);
 };
 
 

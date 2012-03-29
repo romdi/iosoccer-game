@@ -18,7 +18,8 @@ void RecvProxy_SetOffsideLine( const CRecvProxyData *pData, void *pStruct, void 
 IMPLEMENT_CLIENTCLASS_DT( C_Ball, DT_Ball, CBall )
 	RecvPropInt( RECVINFO( m_iPhysicsMode ) ),
 	RecvPropFloat( RECVINFO( m_fMass ) ),
-	RecvPropFloat(RECVINFO(m_flOffsideLineY)),
+	RecvPropFloat(RECVINFO(m_flOffsideLineBallY)),
+	RecvPropFloat(RECVINFO(m_flOffsideLinePlayerY)),
 	RecvPropInt(RECVINFO(m_bShowOffsideLine), 0, RecvProxy_SetOffsideLine),
 	//RecvPropVector( RECVINFO_NAME( m_vecNetworkOrigin, m_vecOrigin ) ),	//ios1.1
 END_RECV_TABLE()
@@ -40,45 +41,13 @@ void C_Ball::SetOffsideLine()
 	if (!pLocal)
 		return;
 
-	//FXLineData_t lineData;
+	Vector ballLineStart = Vector(SDKGameRules()->m_vFieldMin.GetX(), m_flOffsideLineBallY - 2, SDKGameRules()->m_vKickOff.GetZ());
+	Vector ballLineEnd = Vector(SDKGameRules()->m_vFieldMax.GetX(), m_flOffsideLineBallY + 2, SDKGameRules()->m_vKickOff.GetZ() + 4);
+	FX_AddCube(ballLineStart, ballLineEnd, Vector(0, 1, 0), 3, "pitch/offside_line_ball");
 
-	Vector start = Vector(SDKGameRules()->m_vFieldMin.GetX(), m_flOffsideLineY - 2, SDKGameRules()->m_vKickOff.GetZ());
-	Vector end = Vector(SDKGameRules()->m_vFieldMax.GetX(), m_flOffsideLineY + 2, SDKGameRules()->m_vKickOff.GetZ() + 4);
-
-	//lineData.m_flDieTime = 10;
-
-	//lineData.m_flStartAlpha= 1;
-	//lineData.m_flEndAlpha = 1;
-
-	//lineData.m_flStartScale = 5;
-	//lineData.m_flEndScale = 5; 
-
-	//lineData.m_pMaterial = materials->FindMaterial( "effects/splash3", 0, 0 );
-
-	//lineData.m_vecStart = start;
-	//lineData.m_vecStartVelocity = vec3_origin;
-
-	//lineData.m_vecEnd = end;
-	//lineData.m_vecEndVelocity = vec3_origin;
-
-	//FX_AddLine( lineData );
-
-	//FX_AddQuad(start, 
-	//	Vector(0, 0, 1), 
-	//	50, 
-	//	50, 
-	//	1,
-	//	1,	// start alpha
-	//	1,		// end alpha
-	//	1,
-	//	0,
-	//	0,
-	//	Vector(1, 1, 1), 
-	//	30, 
-	//	"effects/splashwake1", 
-	//	0 );
-
-	FX_AddCube(start, end, Vector(1, 1, 1), 3, "football/black");
+	Vector playerLineStart = Vector(SDKGameRules()->m_vFieldMin.GetX(), m_flOffsideLinePlayerY - 2, SDKGameRules()->m_vKickOff.GetZ());
+	Vector playerLineEnd = Vector(SDKGameRules()->m_vFieldMax.GetX(), m_flOffsideLinePlayerY + 2, SDKGameRules()->m_vKickOff.GetZ() + 4);
+	FX_AddCube(playerLineStart, playerLineEnd, Vector(1, 0, 0), 3, "pitch/offside_line_player");
 
 	m_bShowOffsideLine = false;
 }

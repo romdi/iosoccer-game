@@ -42,7 +42,7 @@ void CFieldBot::BotShootBall()
 	VectorAngles(shotDir, m_cmd.viewangles);
 	m_cmd.buttons |= IN_ATTACK2;
 	m_cmd.powershot_strength = 100 * g_IOSRand.RandomFloat(0, 1);
-	m_cmd.viewangles[PITCH] = -40 + 50 * (1 - m_cmd.powershot_strength / 100.0f);
+	m_cmd.viewangles[PITCH] = -30 + 30 * (1 - m_cmd.powershot_strength / 100.0f);
 
 	if (m_vDirToBall.z > VEC_HULL_MAX.z + 10)
 		m_cmd.buttons |= IN_JUMP;

@@ -1838,6 +1838,10 @@ bool CGameMovement::CheckJumpButton( void )
 			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD;
 			pPl->AddFlag(FL_FREECAM);
 		}
+		else
+		{
+			animEvent = PLAYERANIMEVENT_KEEPER_JUMP;
+		}
 	}
 
 	pPl->DoAnimationEvent(animEvent);
@@ -2562,7 +2566,7 @@ void CGameMovement::PlayerMove( void )
 
 		case MOVETYPE_NOCLIP:
 			{
-				CSDKPlayer *pPl = ToSDKPlayer(player);
+	/*			CSDKPlayer *pPl = ToSDKPlayer(player);
 				if (pPl->GetFlags() & FL_REMOTECONTROLLED)
 				{
 					#ifdef GAME_DLL
@@ -2570,9 +2574,9 @@ void CGameMovement::PlayerMove( void )
 					#endif
 				}
 				else
-				{
+				{*/
 					FullNoClipMove( sv_noclipspeed.GetFloat(), sv_noclipaccelerate.GetFloat() );
-				}
+				//}
 			}
 			break;
 
@@ -2641,6 +2645,7 @@ void CGameMovement::CheckBallShield(Vector oldPos)
 	bool stopPlayer = false;
 	Vector pos = mv->GetAbsOrigin();
 	Vector walkDir = vec3_origin;
+	Vector targetPos = vec3_origin;
 
 	if (SDKGameRules()->m_nShieldType != SHIELD_NONE)
 	{
@@ -2653,26 +2658,13 @@ void CGameMovement::CheckBallShield(Vector oldPos)
 		{
 			float radius = SDKGameRules()->m_nShieldRadius + threshold;
 			Vector dir = pos - SDKGameRules()->m_vShieldPos;
-			dir.z = 0;
 
 			if (pPl->GetFlags() & FL_SHIELD_KEEP_OUT && dir.Length2D() < radius || pPl->GetFlags() & FL_SHIELD_KEEP_IN && dir.Length2D() > radius)
 			{
+				dir.z = 0;
 				dir.NormalizeInPlace();
-
-				if (pPl->GetFlags() & FL_REMOTECONTROLLED)
-				{
-					walkDir = pPl->GetFlags() & FL_SHIELD_KEEP_OUT ? dir : -dir;
-				}
-				else
-				{
-					pos = SDKGameRules()->m_vShieldPos + dir * radius;
-					stopPlayer = true;
-				}
-			}
-			else
-			{
-				if (pPl->GetFlags() & FL_REMOTECONTROLLED)
-					pPl->RemoveFlag(FL_REMOTECONTROLLED);
+				pos = SDKGameRules()->m_vShieldPos + dir * radius;
+				stopPlayer = true;
 			}
 
 			if (SDKGameRules()->m_nShieldType == SHIELD_KICKOFF && pPl->GetFlags() & FL_SHIELD_KEEP_OUT)
@@ -2690,6 +2682,16 @@ void CGameMovement::CheckBallShield(Vector oldPos)
 					stopPlayer = true;
 				}
 			}
+
+			if ((pPl->GetFlags() & FL_REMOTECONTROLLED) && pPl->m_vTargetPos == vec3_invalid)
+			{
+				Vector shieldDir = oldPos - SDKGameRules()->m_vShieldPos;
+				if (shieldDir.Length2D() == 0)
+					shieldDir = SDKGameRules()->m_vKickOff - oldPos;
+				shieldDir.z = 0;
+				shieldDir.NormalizeInPlace();
+				pPl->m_vTargetPos = SDKGameRules()->m_vShieldPos + shieldDir * radius;
+			}
 		}
 		else if (SDKGameRules()->m_nShieldType == SHIELD_GOALKICK || SDKGameRules()->m_nShieldType == SHIELD_PENALTY)
 		{
@@ -2706,50 +2708,37 @@ void CGameMovement::CheckBallShield(Vector oldPos)
 
 			if (pPl->GetFlags() & FL_SHIELD_KEEP_OUT && isInsideBox)
 			{
-				if (pPl->GetFlags() & FL_REMOTECONTROLLED)
-				{
-					walkDir = Vector(0, GetGlobalTeam(SDKGameRules()->m_nShieldSide)->m_nForward, 0);
-				}
-				else
-				{
-					if (pos.x > min.x && oldPos.x <= min.x && pos.x < boxCenter.x)
-						pos.x = min.x;
-					else if (pos.x < max.x && oldPos.x >= max.x && pos.x > boxCenter.x)
-						pos.x = max.x;
+				if (pos.x > min.x && oldPos.x <= min.x && pos.x < boxCenter.x)
+					pos.x = min.x;
+				else if (pos.x < max.x && oldPos.x >= max.x && pos.x > boxCenter.x)
+					pos.x = max.x;
 
-					if (pos.y > min.y && oldPos.y <= min.y && pos.y < boxCenter.y)
-						pos.y = min.y;
-					else if (pos.y < max.y && oldPos.y >= max.y && pos.y > boxCenter.y)
-						pos.y = max.y;
+				if (pos.y > min.y && oldPos.y <= min.y && pos.y < boxCenter.y)
+					pos.y = min.y;
+				else if (pos.y < max.y && oldPos.y >= max.y && pos.y > boxCenter.y)
+					pos.y = max.y;
 
-					stopPlayer = true;
-				}
+				stopPlayer = true;
 			}
 			else if (pPl->GetFlags() & FL_SHIELD_KEEP_IN && !isInsideBox)
 			{
-				if (pPl->GetFlags() & FL_REMOTECONTROLLED)
-				{
-					walkDir = boxCenter - pos;
-				}
-				else
-				{
-					if (pos.x < min.x)
-						pos.x = min.x;
-					else if (pos.x > max.x)
-						pos.x = max.x;
+				if (pos.x < min.x)
+					pos.x = min.x;
+				else if (pos.x > max.x)
+					pos.x = max.x;
 
-					if (pos.y < min.y)
-						pos.y = min.y;
-					else if (pos.y > max.y)
-						pos.y = max.y;
+				if (pos.y < min.y)
+					pos.y = min.y;
+				else if (pos.y > max.y)
+					pos.y = max.y;
 
-					stopPlayer = true;
-				}
+				stopPlayer = true;
 			}
-			else
+
+			if ((pPl->GetFlags() & FL_REMOTECONTROLLED) && pPl->m_vTargetPos == vec3_invalid)
 			{
-				if (pPl->GetFlags() & FL_REMOTECONTROLLED)
-					pPl->RemoveFlag(FL_REMOTECONTROLLED);
+				pPl->m_vTargetPos = Vector(oldPos.x, oldPos.y, SDKGameRules()->m_vKickOff.GetZ());
+				pPl->m_vTargetPos.SetY(GetGlobalTeam(SDKGameRules()->m_nShieldSide)->m_nForward == 1 ? max.y + 1 : min.y - 1);
 			}
 		}
 	}
@@ -2778,12 +2767,39 @@ void CGameMovement::CheckBallShield(Vector oldPos)
 
 	if (pPl->GetFlags() & FL_REMOTECONTROLLED)
 	{
-		walkDir.z = 0;
-		walkDir.NormalizeInPlace();
-		mv->m_vecVelocity = walkDir * mp_sprintspeed.GetInt();
-		VectorAngles(walkDir, mv->m_vecAngles);
-		mv->m_vecAbsViewAngles = mv->m_vecViewAngles = mv->m_vecAngles;
-		//pPl->SnapEyeAngles(mv->m_vecAngles);
+		if (oldPos == pPl->m_vTargetPos || !pPl->m_bMoveToExactPos && !stopPlayer)
+		{
+			pPl->m_bIsAtTargetPos = true;
+			pPl->RemoveFlag(FL_REMOTECONTROLLED);
+
+			if (pPl->m_bHoldAtTargetPos)
+				pPl->AddFlag(FL_ATCONTROLS);
+
+			mv->m_vecVelocity = vec3_origin;
+			mv->SetAbsOrigin(oldPos);
+		}
+		else
+		{
+			Vector dir = pPl->m_vTargetPos - oldPos;
+			dir.z = 0;
+
+			VectorAngles(dir, mv->m_vecAngles);
+			mv->m_vecAbsViewAngles = mv->m_vecViewAngles = mv->m_vecAngles;
+			//pPl->SnapEyeAngles(mv->m_vecAngles);
+			//mv->m_flForwardMove = mp_runspeed.GetInt();
+			float distToTarget = dir.Length2D();
+			dir.NormalizeInPlace();
+			float wishDist = mp_sprintspeed.GetInt() * gpGlobals->frametime;
+			mv->m_vecVelocity = dir * mp_sprintspeed.GetInt();
+			Vector newPos;
+
+			if (wishDist < distToTarget)
+				newPos = oldPos + mv->m_vecVelocity * gpGlobals->frametime;
+			else
+				newPos = pPl->m_vTargetPos;
+
+			mv->SetAbsOrigin(Vector(newPos.x, newPos.y, SDKGameRules()->m_vKickOff.GetZ()));
+		}
 	}
 	else
 	{

@@ -46,7 +46,8 @@ public:
 
 	int m_iPhysicsMode;	// One of the PHYSICS_MULTIPLAYER_ defines.	
 	float m_fMass;
-	float m_flOffsideLineY;
+	float m_flOffsideLineBallY;
+	float m_flOffsideLinePlayerY;
 	bool m_bShowOffsideLine;
 };
 

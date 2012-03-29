@@ -390,6 +390,7 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 			break;
 		}
 	case PLAYERANIMEVENT_JUMP:
+	case PLAYERANIMEVENT_KEEPER_JUMP:
 		{
 			// Play the jump animation.
 			if (!m_bJumping)
@@ -443,6 +444,7 @@ bool CSDKPlayerAnimState::HandleJumping( Activity &idealActivity )
 			if ( GetBasePlayer()->GetFlags() & FL_ONGROUND )
 			{
 				m_bJumping = false;
+				GetSDKPlayer()->m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
 				RestartMainSequence();	// Reset the animation.
 			}
 		}
@@ -472,7 +474,8 @@ Activity CSDKPlayerAnimState::CalcMainActivity()
 	{
 		if (pPlayer->GetFlags() & FL_CELEB)
 			return ACT_IOS_JUMPCELEB;							//cartwheel celeb
-		else if (pPlayer->m_nBody > 0)
+		//else if (pPlayer->m_nBody > 0)
+		else if (pPlayer->m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_JUMP)
 			return ACT_LEAP;									//keepers jump
 		else
 			return ACT_HOP;										//normal jump

@@ -350,9 +350,10 @@ public:
 	void				SetPosInsideShield(Vector pos, bool holdAtTargetPos);
 	void				SetPosOutsideShield(bool holdAtTargetPos);
 
-	Vector				m_vTargetPos;
-	bool				m_bIsAtTargetPos;
-	bool				m_bHoldAtTargetPos;
+	CNetworkVector(m_vTargetPos);
+	CNetworkVar(bool, m_bIsAtTargetPos);
+	CNetworkVar(bool, m_bHoldAtTargetPos);
+	CNetworkVar(bool, m_bMoveToExactPos);
 
 	CNetworkVar(int, m_nInPenBoxOfTeam);
 

@@ -126,7 +126,11 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayer, DT_SDKLocalPlayerExclusive )
 //	SendPropAngle( SENDINFO_VECTORELEM(m_angEyeAngles, 1), 10, SPROP_CHANGES_OFTEN ),
 
 //ios	SendPropInt( SENDINFO( m_ArmorValue ), 8, SPROP_UNSIGNED ),
-	SendPropInt(SENDINFO(m_nInPenBoxOfTeam))
+	SendPropInt(SENDINFO(m_nInPenBoxOfTeam)),
+	SendPropVector(SENDINFO(m_vTargetPos), -1, SPROP_NOSCALE),
+	SendPropBool(SENDINFO(m_bIsAtTargetPos)),
+	SendPropBool(SENDINFO(m_bHoldAtTargetPos)),
+	SendPropBool(SENDINFO(m_bMoveToExactPos)),
 END_SEND_TABLE()
 
 BEGIN_SEND_TABLE_NOBASE( CSDKPlayer, DT_SDKNonLocalPlayerExclusive )
@@ -1009,103 +1013,36 @@ void CSDKPlayer::SetPosInsideShield(Vector pos, bool holdAtTargetPos)
 	m_vTargetPos = pos;
 	m_bIsAtTargetPos = false;
 	m_bHoldAtTargetPos = holdAtTargetPos;
-	SetMoveType(MOVETYPE_NOCLIP);
+	//SetMoveType(MOVETYPE_NOCLIP);
+
+	switch (SDKGameRules()->m_nShieldType)
+	{
+	case SHIELD_KICKOFF:
+	case SHIELD_THROWIN:
+		m_bMoveToExactPos = true;
+		break;
+	default:
+		m_bMoveToExactPos = false;
+		break;
+	}
 }
 
 void CSDKPlayer::SetPosOutsideShield(bool holdAtTargetPos)
 {
 	RemoveFlag(FL_SHIELD_KEEP_IN);
-	AddFlag(FL_SHIELD_KEEP_OUT);
+	AddFlag(FL_REMOTECONTROLLED | FL_SHIELD_KEEP_OUT);
 	m_bHoldAtTargetPos = holdAtTargetPos;
 	m_bIsAtTargetPos = false;
 
 	switch (SDKGameRules()->m_nShieldType)
 	{
-	case SHIELD_THROWIN: case SHIELD_FREEKICK: case SHIELD_CORNER:
-		{
-			Vector dir = GetLocalOrigin() - SDKGameRules()->m_vShieldPos;
-			dir.z = 0;
-			if (dir.Length2D() >= (SDKGameRules()->m_nShieldRadius + 2 * VEC_HULL_MAX.x))
-			{
-				m_bIsAtTargetPos = true;
-			}
-			else
-			{
-				AddFlag(FL_REMOTECONTROLLED);
-				if (dir.Length2D() == 0)
-				{
-					dir = SDKGameRules()->m_vKickOff - GetLocalOrigin();
-					dir.z = 0;
-				}
-				dir.NormalizeInPlace();
-				Vector pos = SDKGameRules()->m_vShieldPos + dir * (SDKGameRules()->m_nShieldRadius + 2 * VEC_HULL_MAX.x);
-
-				float threshold = 0;//150;
-				Vector min = SDKGameRules()->m_vFieldMin - threshold;
-				Vector max = SDKGameRules()->m_vFieldMax + threshold;
-
-				if (pos.x < min.x || pos.y < min.y || pos.x > max.x || pos.y > max.y)
-				{
-					pos = SDKGameRules()->m_vShieldPos - dir * (SDKGameRules()->m_nShieldRadius + 2 * VEC_HULL_MAX.x);
-				}
-
-				m_vTargetPos = pos;
-				m_bIsAtTargetPos = false;
-				SetMoveType(MOVETYPE_NOCLIP);
-			}
-		}
-		break;
-	case SHIELD_GOALKICK:
-		{
-			float threshold = 2 * VEC_HULL_MAX.x;
-			Vector min = GetGlobalTeam(SDKGameRules()->m_nShieldSide)->m_vPenBoxMin - threshold;
-			Vector max = GetGlobalTeam(SDKGameRules()->m_nShieldSide)->m_vPenBoxMax + threshold;
-			Vector pos = GetLocalOrigin();
-			bool isInsideBox = pos.x > min.x && pos.y > min.y && pos.x < max.x && pos.y < max.y;
-
-			if (!isInsideBox)
-			{
-				m_bIsAtTargetPos = true;
-			}
-			else
-			{
-				AddFlag(FL_REMOTECONTROLLED);
-				float targetPosY = GetGlobalTeam(SDKGameRules()->m_nShieldSide)->m_nForward == 1 ? max.y : min.y;
-				m_vTargetPos = Vector(pos.x, targetPosY, SDKGameRules()->m_vKickOff.GetZ());
-				m_bIsAtTargetPos = false;
-				SetMoveType(MOVETYPE_NOCLIP);
-			}
-		}
-		break;
 	case SHIELD_KICKOFF:
-		{
-			AddFlag(FL_REMOTECONTROLLED);
-			m_vTargetPos = GetTeam()->m_vPlayerSpawns[GetTeamPosition() - 1];
-			m_bIsAtTargetPos = false;
-			SetMoveType(MOVETYPE_NOCLIP);
-		}
+		m_vTargetPos = GetTeam()->m_vPlayerSpawns[GetTeamPosition() - 1];
+		m_bMoveToExactPos = true;
 		break;
-	case SHIELD_PENALTY:
-		{
-			float threshold = 2 * VEC_HULL_MAX.x;
-			Vector min = GetGlobalTeam(SDKGameRules()->m_nShieldSide)->m_vPenBoxMin - threshold;
-			Vector max = GetGlobalTeam(SDKGameRules()->m_nShieldSide)->m_vPenBoxMax + threshold;
-			Vector pos = GetLocalOrigin();
-			bool isInsideBox = pos.x > min.x && pos.y > min.y && pos.x < max.x && pos.y < max.y;
-
-			if (!isInsideBox)
-			{
-				m_bIsAtTargetPos = true;
-			}
-			else
-			{
-				AddFlag(FL_REMOTECONTROLLED);
-				float targetPosY = GetGlobalTeam(SDKGameRules()->m_nShieldSide)->m_nForward == 1 ? max.y : min.y;
-				m_vTargetPos = Vector(pos.x, targetPosY, SDKGameRules()->m_vKickOff.GetZ());
-				m_bIsAtTargetPos = false;
-				SetMoveType(MOVETYPE_NOCLIP);
-			}
-		}
+	default:
+		m_vTargetPos = vec3_invalid;
+		m_bMoveToExactPos = false;
 		break;
 	}
 }
