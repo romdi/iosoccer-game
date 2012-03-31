@@ -180,3 +180,184 @@ bool CSDKPlayer::ShouldCollide( int collisionGroup, int contentsMask ) const
 {
 	return BaseClass::ShouldCollide( collisionGroup, contentsMask );
 }
+
+void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vector &oldVel, Vector &newVel, const QAngle &oldAng, QAngle &newAng)
+{
+	bool stopPlayer = false;
+	Vector pos = newPos;
+	Vector walkDir = vec3_origin;
+	Vector targetPos = vec3_origin;
+
+	if (SDKGameRules()->m_nShieldType != SHIELD_NONE)
+	{
+		float threshold = 2 * (GetFlags() & FL_SHIELD_KEEP_IN ? -VEC_HULL_MAX.x : VEC_HULL_MAX.x);
+		
+		if (SDKGameRules()->m_nShieldType == SHIELD_THROWIN || 
+			SDKGameRules()->m_nShieldType == SHIELD_FREEKICK || 
+			SDKGameRules()->m_nShieldType == SHIELD_CORNER ||  
+			SDKGameRules()->m_nShieldType == SHIELD_KICKOFF)
+		{
+			float radius = SDKGameRules()->m_nShieldRadius + threshold;
+			Vector dir = pos - SDKGameRules()->m_vShieldPos;
+
+			if (GetFlags() & FL_SHIELD_KEEP_OUT && dir.Length2D() < radius || GetFlags() & FL_SHIELD_KEEP_IN && dir.Length2D() > radius)
+			{
+				dir.z = 0;
+				dir.NormalizeInPlace();
+				pos = SDKGameRules()->m_vShieldPos + dir * radius;
+				stopPlayer = true;
+			}
+
+			if (SDKGameRules()->m_nShieldType == SHIELD_KICKOFF && GetFlags() & FL_SHIELD_KEEP_OUT)
+			{
+				int forward;
+				#ifdef CLIENT_DLL
+					forward = GetPlayersTeam(this)->m_nForward;
+				#else
+					forward = GetTeam()->m_nForward;
+				#endif
+				float yBorder = SDKGameRules()->m_vKickOff.GetY() - abs(threshold) * forward;
+				if (Sign(pos.y - yBorder) == forward)
+				{
+					pos.y = yBorder;
+					stopPlayer = true;
+				}
+			}
+
+			if ((GetFlags() & FL_REMOTECONTROLLED) && m_vTargetPos == vec3_invalid)
+			{
+				Vector shieldDir = oldPos - SDKGameRules()->m_vShieldPos;
+				if (shieldDir.Length2D() == 0)
+					shieldDir = SDKGameRules()->m_vKickOff - oldPos;
+				shieldDir.z = 0;
+				shieldDir.NormalizeInPlace();
+				m_vTargetPos = SDKGameRules()->m_vShieldPos + shieldDir * radius;
+			}
+		}
+		else if (SDKGameRules()->m_nShieldType == SHIELD_GOALKICK || SDKGameRules()->m_nShieldType == SHIELD_PENALTY)
+		{
+			Vector min = GetGlobalTeam(SDKGameRules()->m_nShieldSide)->m_vPenBoxMin;
+			Vector max = GetGlobalTeam(SDKGameRules()->m_nShieldSide)->m_vPenBoxMax;
+
+			min.x -= threshold;
+			min.y -= threshold;
+			max.x += threshold;
+			max.y += threshold;
+
+			if (GetFlags() & FL_SHIELD_KEEP_OUT || SDKGameRules()->m_nShieldType == SHIELD_PENALTY)
+			{
+				if (SDKGameRules()->m_vKickOff.GetY() > min.y)
+					min.y -= 200;
+				else
+					max.y += 200;
+			}
+
+			bool isInsideBox = pos.x > min.x && pos.y > min.y && pos.x < max.x && pos.y < max.y; 
+			Vector boxCenter = (min + max) / 2;
+
+			if (GetFlags() & FL_SHIELD_KEEP_OUT && isInsideBox)
+			{
+				if (pos.x > min.x && oldPos.x <= min.x && pos.x < boxCenter.x)
+					pos.x = min.x;
+				else if (pos.x < max.x && oldPos.x >= max.x && pos.x > boxCenter.x)
+					pos.x = max.x;
+
+				if (pos.y > min.y && oldPos.y <= min.y && pos.y < boxCenter.y)
+					pos.y = min.y;
+				else if (pos.y < max.y && oldPos.y >= max.y && pos.y > boxCenter.y)
+					pos.y = max.y;
+
+				stopPlayer = true;
+			}
+			else if (GetFlags() & FL_SHIELD_KEEP_IN && !isInsideBox)
+			{
+				if (pos.x < min.x)
+					pos.x = min.x;
+				else if (pos.x > max.x)
+					pos.x = max.x;
+
+				if (pos.y < min.y)
+					pos.y = min.y;
+				else if (pos.y > max.y)
+					pos.y = max.y;
+
+				stopPlayer = true;
+			}
+
+			if ((GetFlags() & FL_REMOTECONTROLLED) && m_vTargetPos == vec3_invalid)
+			{
+				m_vTargetPos = Vector(oldPos.x, oldPos.y, SDKGameRules()->m_vKickOff.GetZ());
+				m_vTargetPos.SetY(GetGlobalTeam(SDKGameRules()->m_nShieldSide)->m_nForward == 1 ? max.y + 1 : min.y - 1);
+			}
+		}
+	}
+
+	if (!SDKGameRules()->IsIntermissionState())
+	{
+		float threshold = 150;
+		Vector min = SDKGameRules()->m_vFieldMin - threshold;
+		Vector max = SDKGameRules()->m_vFieldMax + threshold;
+
+		if (pos.x < min.x || pos.y < min.y || pos.x > max.x || pos.y > max.y)
+		{
+			if (pos.x < min.x)
+				pos.x = min.x;
+			else if (pos.x > max.x)
+				pos.x = max.x;
+
+			if (pos.y < min.y)
+				pos.y = min.y;
+			else if (pos.y > max.y)
+				pos.y = max.y;
+
+			stopPlayer = true;
+		}
+	}
+
+	if (GetFlags() & FL_REMOTECONTROLLED)
+	{
+		if (oldPos == m_vTargetPos || !m_bMoveToExactPos && !stopPlayer)
+		{
+			m_bIsAtTargetPos = true;
+			RemoveFlag(FL_REMOTECONTROLLED);
+
+			if (m_bHoldAtTargetPos)
+				AddFlag(FL_ATCONTROLS);
+
+			newVel = vec3_origin;
+			newPos = oldPos;
+		}
+		else
+		{
+			Vector dir = m_vTargetPos - oldPos;
+			dir.z = 0;
+			float distToTarget = dir.Length2D();
+			dir.NormalizeInPlace();
+
+			VectorAngles(dir, newAng);
+			//mv->m_vecAbsViewAngles = mv->m_vecViewAngles = mv->m_vecAngles;
+			//pPl->SnapEyeAngles(mv->m_vecAngles);
+			//mv->m_flForwardMove = mp_runspeed.GetInt();
+	
+			float wishDist = mp_sprintspeed.GetInt() * gpGlobals->frametime;
+			newVel = dir * mp_sprintspeed.GetInt();
+
+			if (wishDist < distToTarget)
+				newPos = oldPos + newVel * gpGlobals->frametime;
+			else
+				newPos = m_vTargetPos;
+
+			newPos.z = SDKGameRules()->m_vKickOff.GetZ();
+		}
+	}
+	else
+	{
+		if (stopPlayer)
+		{
+			newVel = oldVel;
+			newVel.x = (pos - oldPos).x * 35;
+			newVel.y = (pos - oldPos).y * 35;
+			newPos = pos;
+		}
+	}
+}

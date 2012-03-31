@@ -373,6 +373,8 @@ public:
 	CBall				*GetPlayerBall() { return m_pPlayerBall; }
 	void				ChangeTeamPos(int team, int pos, bool instantly = false);
 
+	void CheckBallShield(const Vector &oldPos, Vector &newPos, const Vector &oldVel, Vector &newVel, const QAngle &oldAng, QAngle &newAng);
+
 private:
 
 	bool				m_bOffside;

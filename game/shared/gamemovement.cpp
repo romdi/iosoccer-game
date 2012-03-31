@@ -1417,6 +1417,8 @@ void CGameMovement::WalkMove( void )
 void CGameMovement::FullWalkMove( )
 {
 	Vector oldPos = mv->GetAbsOrigin();
+	Vector oldVel = mv->m_vecVelocity;
+	QAngle oldAng = mv->m_vecAbsViewAngles;
 
 	StartGravity();
 
@@ -1484,7 +1486,13 @@ void CGameMovement::FullWalkMove( )
 		mv->SetAbsOrigin(Vector(newPos.x, oldPos.y, newPos.z));
 	}
 
-	CheckBallShield(oldPos);
+	//CheckBallShield(oldPos);
+	Vector newVel = mv->m_vecVelocity;
+	QAngle newAng = mv->m_vecAbsViewAngles;
+	ToSDKPlayer(player)->CheckBallShield(oldPos, newPos, oldVel, newVel, oldAng, newAng);
+	mv->SetAbsOrigin(newPos);
+	mv->m_vecVelocity = newVel;
+	mv->m_vecAbsViewAngles = newAng;
 }
 
 bool CGameMovement::CheckPlayerAnimEvent()
@@ -2565,19 +2573,7 @@ void CGameMovement::PlayerMove( void )
 			break;
 
 		case MOVETYPE_NOCLIP:
-			{
-	/*			CSDKPlayer *pPl = ToSDKPlayer(player);
-				if (pPl->GetFlags() & FL_REMOTECONTROLLED)
-				{
-					#ifdef GAME_DLL
-					MoveToTargetPos();
-					#endif
-				}
-				else
-				{*/
-					FullNoClipMove( sv_noclipspeed.GetFloat(), sv_noclipaccelerate.GetFloat() );
-				//}
-			}
+			FullNoClipMove( sv_noclipspeed.GetFloat(), sv_noclipaccelerate.GetFloat() );
 			break;
 
 		case MOVETYPE_WALK:
@@ -2591,224 +2587,6 @@ void CGameMovement::PlayerMove( void )
 		default:
 			DevMsg( 1, "Bogus pmove player movetype %i on (%i) 0=cl 1=sv\n", player->GetMoveType(), player->IsServer());
 			break;
-	}
-}
-
-#ifdef GAME_DLL
-
-void CGameMovement::MoveToTargetPos()
-{
-	CSDKPlayer *pPl = ToSDKPlayer(player);
-	if (pPl->m_bIsAtTargetPos)
-		return;
-
-	if (mv->GetAbsOrigin() == pPl->m_vTargetPos)
-	{
-		mv->m_vecVelocity = vec3_origin;
-		pPl->m_bIsAtTargetPos = true;
-		pPl->RemoveFlag(FL_REMOTECONTROLLED);
-		pPl->SetMoveType(MOVETYPE_WALK);
-
-		if (pPl->m_bHoldAtTargetPos)
-			pPl->AddFlag(FL_ATCONTROLS);
-
-		return;
-	}
-
-	Vector dir = pPl->m_vTargetPos - mv->GetAbsOrigin();
-	dir.z = 0;
-
-	VectorAngles(dir, mv->m_vecAngles);
-	mv->m_vecAbsViewAngles = mv->m_vecViewAngles = mv->m_vecAngles;
-	pPl->SnapEyeAngles(mv->m_vecAngles);
-	//mv->m_flForwardMove = mp_runspeed.GetInt();
-	float distToTarget = dir.Length2D();
-	dir.NormalizeInPlace();
-	float wishDist = mp_sprintspeed.GetInt() * gpGlobals->frametime;
-	mv->m_vecVelocity = dir * mp_sprintspeed.GetInt();
-	Vector pos;
-
-	if (wishDist < distToTarget)
-		pos = mv->GetAbsOrigin() + mv->m_vecVelocity * gpGlobals->frametime;
-	else
-		pos = pPl->m_vTargetPos;
-
-	mv->SetAbsOrigin(Vector(pos.x, pos.y, SDKGameRules()->m_vKickOff.GetZ()));
-}
-
-#endif
-
-void CGameMovement::CheckBallShield(Vector oldPos)
-{
-	CSDKPlayer *pPl = ToSDKPlayer(player);
-
-	bool stopPlayer = false;
-	Vector pos = mv->GetAbsOrigin();
-	Vector walkDir = vec3_origin;
-	Vector targetPos = vec3_origin;
-
-	if (SDKGameRules()->m_nShieldType != SHIELD_NONE)
-	{
-		float threshold = 2 * (pPl->GetFlags() & FL_SHIELD_KEEP_IN ? -VEC_HULL_MAX.x : VEC_HULL_MAX.x);
-		
-		if (SDKGameRules()->m_nShieldType == SHIELD_THROWIN || 
-			SDKGameRules()->m_nShieldType == SHIELD_FREEKICK || 
-			SDKGameRules()->m_nShieldType == SHIELD_CORNER ||  
-			SDKGameRules()->m_nShieldType == SHIELD_KICKOFF)
-		{
-			float radius = SDKGameRules()->m_nShieldRadius + threshold;
-			Vector dir = pos - SDKGameRules()->m_vShieldPos;
-
-			if (pPl->GetFlags() & FL_SHIELD_KEEP_OUT && dir.Length2D() < radius || pPl->GetFlags() & FL_SHIELD_KEEP_IN && dir.Length2D() > radius)
-			{
-				dir.z = 0;
-				dir.NormalizeInPlace();
-				pos = SDKGameRules()->m_vShieldPos + dir * radius;
-				stopPlayer = true;
-			}
-
-			if (SDKGameRules()->m_nShieldType == SHIELD_KICKOFF && pPl->GetFlags() & FL_SHIELD_KEEP_OUT)
-			{
-				int forward;
-				#ifdef CLIENT_DLL
-					forward = GetPlayersTeam(pPl)->m_nForward;
-				#else
-					forward = pPl->GetTeam()->m_nForward;
-				#endif
-				float yBorder = SDKGameRules()->m_vKickOff.GetY() - abs(threshold) * forward;
-				if (Sign(pos.y - yBorder) == forward)
-				{
-					pos.y = yBorder;
-					stopPlayer = true;
-				}
-			}
-
-			if ((pPl->GetFlags() & FL_REMOTECONTROLLED) && pPl->m_vTargetPos == vec3_invalid)
-			{
-				Vector shieldDir = oldPos - SDKGameRules()->m_vShieldPos;
-				if (shieldDir.Length2D() == 0)
-					shieldDir = SDKGameRules()->m_vKickOff - oldPos;
-				shieldDir.z = 0;
-				shieldDir.NormalizeInPlace();
-				pPl->m_vTargetPos = SDKGameRules()->m_vShieldPos + shieldDir * radius;
-			}
-		}
-		else if (SDKGameRules()->m_nShieldType == SHIELD_GOALKICK || SDKGameRules()->m_nShieldType == SHIELD_PENALTY)
-		{
-			Vector min = GetGlobalTeam(SDKGameRules()->m_nShieldSide)->m_vPenBoxMin;
-			Vector max = GetGlobalTeam(SDKGameRules()->m_nShieldSide)->m_vPenBoxMax;
-
-			min.x -= threshold;
-			min.y -= threshold;
-			max.x += threshold;
-			max.y += threshold;
-
-			bool isInsideBox = pos.x > min.x && pos.y > min.y && pos.x < max.x && pos.y < max.y; 
-			Vector boxCenter = (min + max) / 2;
-
-			if (pPl->GetFlags() & FL_SHIELD_KEEP_OUT && isInsideBox)
-			{
-				if (pos.x > min.x && oldPos.x <= min.x && pos.x < boxCenter.x)
-					pos.x = min.x;
-				else if (pos.x < max.x && oldPos.x >= max.x && pos.x > boxCenter.x)
-					pos.x = max.x;
-
-				if (pos.y > min.y && oldPos.y <= min.y && pos.y < boxCenter.y)
-					pos.y = min.y;
-				else if (pos.y < max.y && oldPos.y >= max.y && pos.y > boxCenter.y)
-					pos.y = max.y;
-
-				stopPlayer = true;
-			}
-			else if (pPl->GetFlags() & FL_SHIELD_KEEP_IN && !isInsideBox)
-			{
-				if (pos.x < min.x)
-					pos.x = min.x;
-				else if (pos.x > max.x)
-					pos.x = max.x;
-
-				if (pos.y < min.y)
-					pos.y = min.y;
-				else if (pos.y > max.y)
-					pos.y = max.y;
-
-				stopPlayer = true;
-			}
-
-			if ((pPl->GetFlags() & FL_REMOTECONTROLLED) && pPl->m_vTargetPos == vec3_invalid)
-			{
-				pPl->m_vTargetPos = Vector(oldPos.x, oldPos.y, SDKGameRules()->m_vKickOff.GetZ());
-				pPl->m_vTargetPos.SetY(GetGlobalTeam(SDKGameRules()->m_nShieldSide)->m_nForward == 1 ? max.y + 1 : min.y - 1);
-			}
-		}
-	}
-
-	if (!SDKGameRules()->IsIntermissionState())
-	{
-		float threshold = 150;
-		Vector min = SDKGameRules()->m_vFieldMin - threshold;
-		Vector max = SDKGameRules()->m_vFieldMax + threshold;
-
-		if (pos.x < min.x || pos.y < min.y || pos.x > max.x || pos.y > max.y)
-		{
-			if (pos.x < min.x)
-				pos.x = min.x;
-			else if (pos.x > max.x)
-				pos.x = max.x;
-
-			if (pos.y < min.y)
-				pos.y = min.y;
-			else if (pos.y > max.y)
-				pos.y = max.y;
-
-			stopPlayer = true;
-		}
-	}
-
-	if (pPl->GetFlags() & FL_REMOTECONTROLLED)
-	{
-		if (oldPos == pPl->m_vTargetPos || !pPl->m_bMoveToExactPos && !stopPlayer)
-		{
-			pPl->m_bIsAtTargetPos = true;
-			pPl->RemoveFlag(FL_REMOTECONTROLLED);
-
-			if (pPl->m_bHoldAtTargetPos)
-				pPl->AddFlag(FL_ATCONTROLS);
-
-			mv->m_vecVelocity = vec3_origin;
-			mv->SetAbsOrigin(oldPos);
-		}
-		else
-		{
-			Vector dir = pPl->m_vTargetPos - oldPos;
-			dir.z = 0;
-
-			VectorAngles(dir, mv->m_vecAngles);
-			mv->m_vecAbsViewAngles = mv->m_vecViewAngles = mv->m_vecAngles;
-			//pPl->SnapEyeAngles(mv->m_vecAngles);
-			//mv->m_flForwardMove = mp_runspeed.GetInt();
-			float distToTarget = dir.Length2D();
-			dir.NormalizeInPlace();
-			float wishDist = mp_sprintspeed.GetInt() * gpGlobals->frametime;
-			mv->m_vecVelocity = dir * mp_sprintspeed.GetInt();
-			Vector newPos;
-
-			if (wishDist < distToTarget)
-				newPos = oldPos + mv->m_vecVelocity * gpGlobals->frametime;
-			else
-				newPos = pPl->m_vTargetPos;
-
-			mv->SetAbsOrigin(Vector(newPos.x, newPos.y, SDKGameRules()->m_vKickOff.GetZ()));
-		}
-	}
-	else
-	{
-		if (stopPlayer)
-		{
-			mv->m_vecVelocity.x = (pos - oldPos).x * 35;
-			mv->m_vecVelocity.y = (pos - oldPos).y * 35;
-			mv->SetAbsOrigin(pos);
-		}
 	}
 }
 

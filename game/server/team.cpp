@@ -276,10 +276,10 @@ void CTeam::InitFieldSpots(int team)
 	CBaseEntity *pPenBox = gEntList.FindEntityByClassnameNearest("trigger_PenaltyBox", m_vPenalty, 9999);
 	pPenBox->CollisionProp()->WorldSpaceTriggerBounds(&m_vPenBoxMin.GetForModify(), &m_vPenBoxMax.GetForModify());
 
-	if (SDKGameRules()->m_vKickOff.GetY() > m_vPenBoxMin.GetY())
-		m_vPenBoxMin.SetY(m_vPenBoxMin.GetY() - 150);
-	else
-		m_vPenBoxMax.SetY(m_vPenBoxMax.GetY() + 150);
+	//if (SDKGameRules()->m_vKickOff.GetY() > m_vPenBoxMin.GetY())
+	//	m_vPenBoxMin.SetY(m_vPenBoxMin.GetY() - 150);
+	//else
+	//	m_vPenBoxMax.SetY(m_vPenBoxMax.GetY() + 150);
 
 	for (int j = 0; j < 11; j++)
 	{

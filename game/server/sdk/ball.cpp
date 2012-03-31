@@ -944,10 +944,8 @@ void CBall::State_FREEKICK_Think()
 		m_flStateTimelimit = -1;
 		SendMatchEvent(MATCH_EVENT_FREEKICK);
 		EmitSound("Ball.whistle");
+		PlayersAtTargetPos(false);
 	}
-
-	if (!PlayersAtTargetPos(false))
-		return;
 
 	if (m_flStateTimelimit == -1)
 		m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit.GetFloat();
@@ -1016,8 +1014,6 @@ void CBall::State_PENALTY_Think()
 				m_ePenaltyState = PENALTY_ABORTED;
 				return State_Transition(BALL_NORMAL);
 			}
-
-			m_pOtherPl->SetPosInsideShield(GetGlobalTeam(TEAM_A)->m_vPlayerSpawns[0], true);
 		}
 		else
 		{
@@ -1025,8 +1021,9 @@ void CBall::State_PENALTY_Think()
 			if (!m_pOtherPl)
 				return State_Transition(BALL_NORMAL);
 
-			m_pOtherPl->SetPosInsideShield(m_pOtherPl->GetTeam()->m_vPlayerSpawns[0], true);
 		}
+
+		m_pOtherPl->SetPosInsideShield(m_pOtherPl->GetTeam()->m_vPlayerSpawns[0], true);
 	}
 
 	if (!PlayersAtTargetPos(false))
@@ -1468,11 +1465,12 @@ void CBall::SetBallSpin()
 		rot += Vector(0, 0, -1);
 
 	if (m_pPl->m_nButtons & IN_TOPSPIN)
-		rot += -m_vPlRight;
+		rot += -m_vPlRight * 0.75f;
 	else if (m_pPl->m_nButtons & IN_BACKSPIN)
-		rot += m_vPlRight;
+		rot += m_vPlRight * 0.75f;
 
-	rot.NormalizeInPlace();
+	if (rot.z != 0)
+		rot.NormalizeInPlace();
 	//float spin = min(1, m_vVel.Length() / sv_ball_maxspin.GetInt()) * sv_ball_spin.GetFloat();
 	float spin = m_vVel.Length() * sv_ball_spin.GetInt() / 100.0f;
 
@@ -1484,6 +1482,7 @@ void CBall::SetBallSpin()
 			randRot[i] = m_vVel.Length() * sv_ball_defaultspin.GetInt() / 100.0f * (g_IOSRand.RandomInt(0, 1) == 1 ? 1 : -1);
 		}
 	}
+
 	SetRot(WorldToLocalRotation(SetupMatrixAngles(m_aAng), rot, spin) + randRot);
 }
 

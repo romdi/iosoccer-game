@@ -176,6 +176,8 @@ public:
 	CNetworkVar(bool, m_bMoveToExactPos);
 
 	CNetworkVar(int, m_nInPenBoxOfTeam);
+
+	void CheckBallShield(const Vector &oldPos, Vector &newPos, const Vector &oldVel, Vector &newVel, const QAngle &oldAng, QAngle &newAng);
 };
 
 

@@ -1019,12 +1019,18 @@ void CSDKPlayer::SetPosInsideShield(Vector pos, bool holdAtTargetPos)
 	{
 	case SHIELD_KICKOFF:
 	case SHIELD_THROWIN:
+	case SHIELD_PENALTY:
 		m_bMoveToExactPos = true;
 		break;
 	default:
 		m_bMoveToExactPos = false;
 		break;
 	}
+
+	Vector plPos = GetLocalOrigin();
+	Vector vel = GetLocalVelocity();
+	QAngle ang = GetLocalAngles();
+	CheckBallShield(plPos, plPos, vel, vel, ang, ang);
 }
 
 void CSDKPlayer::SetPosOutsideShield(bool holdAtTargetPos)
@@ -1045,6 +1051,11 @@ void CSDKPlayer::SetPosOutsideShield(bool holdAtTargetPos)
 		m_bMoveToExactPos = false;
 		break;
 	}
+
+	Vector pos = GetLocalOrigin();
+	Vector vel = GetLocalVelocity();
+	QAngle ang = GetLocalAngles();
+	CheckBallShield(pos, pos, vel, vel, ang, ang);
 }
 
 bool CSDKPlayer::IsOnField(CSDKPlayer *pPl)
