@@ -426,6 +426,9 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClCompile Include="..\shared\gamestringpool.cpp" />
     <ClCompile Include="gametrace_client.cpp" />
     <ClCompile Include="..\shared\gamevars_shared.cpp" />
+    <ClCompile Include="game_controls\matchmenu.cpp" />
+    <ClCompile Include="game_controls\settingsmenu.cpp" />
+    <ClCompile Include="game_controls\statsmenu.cpp" />
     <ClCompile Include="geiger.cpp" />
     <ClCompile Include="glow_overlay.cpp" />
     <ClCompile Include="..\shared\hintmessage.cpp" />
@@ -840,6 +843,9 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClInclude Include="cdll_bounded_cvars.h" />
     <ClInclude Include="commentary_modelviewer.h" />
     <ClInclude Include="..\shared\GameStats.h" />
+    <ClInclude Include="game_controls\matchmenu.h" />
+    <ClInclude Include="game_controls\settingsmenu.h" />
+    <ClInclude Include="game_controls\statsmenu.h" />
     <ClInclude Include="hud_basedeathnotice.h" />
     <ClInclude Include="..\shared\particle_parse.h" />
     <ClInclude Include="..\shared\particle_property.h" />

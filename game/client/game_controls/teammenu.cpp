@@ -48,9 +48,6 @@ extern IGameUIFuncs *gameuifuncs; // for key binding details
 
 using namespace vgui;
 
-#define PANEL_MARGIN		5
-#define PANEL_WIDTH			(1024 - 2 * PANEL_MARGIN)
-#define PANEL_HEIGHT		(768 - 2 * PANEL_MARGIN)
 #define BUTTON_WIDTH		230
 #define BUTTON_HEIGHT		130
 #define BUTTON_HMARGIN		15
@@ -70,7 +67,6 @@ using namespace vgui;
 #define	STATS_MARGIN		5
 #define	KICKBUTTON_SIZE		20
 #define TABBUTTON_HEIGHT	40
-#define TABBUTTON_WIDTH		(PANEL_WIDTH / 2)
 #define TABBUTTON_MARGIN	7
 #define SPECLIST_HEIGHT		50
 #define SPECLIST_MARGIN		10
@@ -81,23 +77,12 @@ using namespace vgui;
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
-CTeamMenu::CTeamMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_TEAM )
+CTeamMenu::CTeamMenu(Panel *parent, const char *name) : Panel(parent, name)
 {
-	m_pViewPort = pViewPort;
-	m_iJumpKey = BUTTON_CODE_INVALID; // this is looked up in Activate()
-	m_nGoalsBoardKey = BUTTON_CODE_INVALID; // this is looked up in Activate()
 	m_nActiveTeam = 0;
 	m_nOldMaxPlayers = 11;
 
-	SetBounds(PANEL_MARGIN, PANEL_MARGIN, PANEL_WIDTH, PANEL_HEIGHT);
-	SetTitle("", true);
-	SetMoveable(false);
-	SetSizeable(false);
-	SetTitleBarVisible( false );
-	SetProportional(false);
-	SetPaintBackgroundEnabled(false);
-	//SetPaintBackgroundType(2);
-	SetPaintBorderEnabled(false);
+	//SetBounds(0, PANEL_MARGIN, GetWide(), GetTall());
 
 	m_pSpectateButton = new Button(this, "SpectateButton", "Spectate");
 	m_pSpectatorNames = new Label(this, "Spectators", "");
@@ -143,23 +128,23 @@ CTeamMenu::CTeamMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_TEAM )
 	}
 }
 
-void CTeamMenu::PerformLayout()
+void CTeamMenu::ApplySchemeSettings(IScheme *pScheme)
 {
-	BaseClass::PerformLayout();
+	//BaseClass::PerformLayout();
 
-	IScheme *pScheme = scheme()->GetIScheme(GetScheme());
+	//IScheme *pScheme = scheme()->GetIScheme(GetScheme());
 
-	MoveToCenterOfScreen();
+	//MoveToCenterOfScreen();
 
 	for (int i = 0; i < 2; i++)
 	{
-		m_pTeamPanels[i]->SetBounds(0, 0, PANEL_WIDTH, PANEL_HEIGHT);
+		m_pTeamPanels[i]->SetBounds(0, 0, GetWide(), GetTall());
 		m_pTeamPanels[i]->SetBgColor(Color(0, 0, 0, 245));
 		m_pTeamPanels[i]->SetPaintBackgroundEnabled(true);
 		m_pTeamPanels[i]->SetPaintBackgroundType(2);
 		m_pTeamPanels[i]->SetVisible(i == m_nActiveTeam);
 
-		m_pTabButtons[i]->SetBounds(i * TABBUTTON_WIDTH, TABBUTTON_MARGIN, TABBUTTON_WIDTH, TABBUTTON_HEIGHT);
+		m_pTabButtons[i]->SetBounds(i * GetWide() / 2, TABBUTTON_MARGIN, GetWide() / 2, TABBUTTON_HEIGHT);
 		m_pTabButtons[i]->SetCommand(VarArgs("showteam %d", i));
 		m_pTabButtons[i]->AddActionSignalTarget(this);
 		m_pTabButtons[i]->SetFont(pScheme->GetFont("IOSTeamMenuBig"));
@@ -178,7 +163,7 @@ void CTeamMenu::PerformLayout()
 		//m_pTeamNames[i]->SetFont(pScheme->GetFont("IOSTeamMenuBig"));
 		//m_pTeamNames[i]->SetZPos(1);
 
-		m_pSpectateButton->SetBounds(PANEL_WIDTH - SPECBUTTON_WIDTH - SPECBUTTON_MARGIN, PANEL_HEIGHT - SPECBUTTON_HEIGHT - SPECBUTTON_MARGIN, SPECBUTTON_WIDTH, SPECBUTTON_HEIGHT);
+		m_pSpectateButton->SetBounds(GetWide() - SPECBUTTON_WIDTH - SPECBUTTON_MARGIN, GetTall() - SPECBUTTON_HEIGHT - SPECBUTTON_MARGIN, SPECBUTTON_WIDTH, SPECBUTTON_HEIGHT);
 		m_pSpectateButton->SetCommand(VarArgs("jointeam %d 1", TEAM_SPECTATOR));
 		m_pSpectateButton->AddActionSignalTarget(this);
 		m_pSpectateButton->SetDefaultColor(Color(0, 0, 0, 255), Color(200, 200, 200, 255));
@@ -189,7 +174,7 @@ void CTeamMenu::PerformLayout()
 		m_pSpectateButton->SetContentAlignment(Label::a_center);
 		m_pSpectateButton->SetZPos(1);
 
-		m_pSpectatorNames->SetBounds(SPECLIST_MARGIN, PANEL_HEIGHT - SPECLIST_HEIGHT, PANEL_WIDTH - SPECBUTTON_WIDTH, SPECLIST_HEIGHT);
+		m_pSpectatorNames->SetBounds(SPECLIST_MARGIN, GetTall() - SPECLIST_HEIGHT, GetWide() - SPECBUTTON_WIDTH, SPECLIST_HEIGHT);
 		m_pSpectatorNames->SetFgColor(Color(200, 200, 200, 255));
 		m_pSpectatorNames->SetFont(pScheme->GetFont("IOSTeamMenuBig"));
 		m_pSpectatorNames->SetZPos(1);
@@ -320,10 +305,6 @@ void CTeamMenu::PerformLayout()
 	}
 }
 
-void CTeamMenu::SetData(KeyValues *data)
-{
-}
-
 //-----------------------------------------------------------------------------
 // Purpose: Destructor
 //-----------------------------------------------------------------------------
@@ -331,79 +312,17 @@ CTeamMenu::~CTeamMenu()
 {
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: sets the text color of the map description field
-//-----------------------------------------------------------------------------
-void CTeamMenu::ApplySchemeSettings(IScheme *pScheme)
-{
-	BaseClass::ApplySchemeSettings(pScheme);
-
-	
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: makes the user choose the auto assign option
-//-----------------------------------------------------------------------------
-void CTeamMenu::AutoAssign()
-{
-	engine->ClientCmd("jointeam 0");
-	//OnClose();
-}
-
-void CTeamMenu::Reset()
-{
-	m_flNextUpdateTime = gpGlobals->curtime;
-}
-
-bool CTeamMenu::NeedsUpdate()
-{
-	return m_flNextUpdateTime <= gpGlobals->curtime;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: shows the team menu
-//-----------------------------------------------------------------------------
-void CTeamMenu::ShowPanel(bool bShow)
-{
-	if ( BaseClass::IsVisible() == bShow )
-		return;
-
-	if ( bShow )
-	{
-		Activate();
-		Reset();
-		Update();
-		SetMouseInputEnabled( true );
-		SetKeyBoardInputEnabled( true );
-		// get key bindings if shown
-
-		if( m_iJumpKey == BUTTON_CODE_INVALID ) // you need to lookup the jump key AFTER the engine has loaded
-		{
-			m_iJumpKey = gameuifuncs->GetButtonCodeForBind( "jump" );
-		}
-
-		if ( m_nGoalsBoardKey == BUTTON_CODE_INVALID ) 
-		{
-			m_nGoalsBoardKey = gameuifuncs->GetButtonCodeForBind( "showscores" );
-		}
-		
-	}
-	else
-	{
-		SetVisible( false );
-		SetMouseInputEnabled( false );
-		SetKeyBoardInputEnabled( false );
-	}
-}
-
 #define GET_STAT_TEXT(count, letter) (count > 0 ? VarArgs("%d%s", count, letter) : "0")
 
 //-----------------------------------------------------------------------------
 // Purpose: updates the UI with a new map name and map html page, and sets up the team buttons
 //-----------------------------------------------------------------------------
-void CTeamMenu::Update()
+void CTeamMenu::OnThink()
 {
 	//BaseClass::Update();
+
+	if (m_flNextUpdateTime > gpGlobals->curtime)
+		return;
 
 	if (m_nOldMaxPlayers != mp_maxplayers.GetInt())
 	{
@@ -534,9 +453,9 @@ void CTeamMenu::Update()
 
 	m_pTeamPanels[1 - m_nActiveTeam]->SetVisible(false);
 
-	m_pTabButtons[1 - m_nActiveTeam]->SetDefaultColor(Color(0, 0, 0, 255), Color(200, 200, 200, 255));
-	m_pTabButtons[1 - m_nActiveTeam]->SetArmedColor(Color(0, 0, 0, 255), Color(150, 150, 150, 255));
-	m_pTabButtons[1 - m_nActiveTeam]->SetDepressedColor(Color(0, 0, 0, 255), Color(200, 200, 200, 255));
+	m_pTabButtons[1 - m_nActiveTeam]->SetDefaultColor(Color(100, 100, 100, 255), Color(200, 200, 200, 255));
+	m_pTabButtons[1 - m_nActiveTeam]->SetArmedColor(Color(100, 100, 100, 255), Color(150, 150, 150, 255));
+	m_pTabButtons[1 - m_nActiveTeam]->SetDepressedColor(Color(100, 100, 100, 255), Color(200, 200, 200, 255));
 	m_pTabButtons[1 - m_nActiveTeam]->SetCursor(dc_hand);
 
 	for (int i = 0; i < 2; i++)
@@ -577,9 +496,11 @@ void CTeamMenu::Update()
 		}
 	}
 	C_Team *pTeamA = GetGlobalTeam(TEAM_A);
-	m_pTabButtons[0]->SetText(VarArgs("%-40s %2d %-7s %17d%% poss. %17d", pTeamA->Get_Name(), pTeamA->Get_Number_Players(), (pTeamA->Get_Number_Players() == 1 ? "player" : "players"), pTeamA->Get_Possession(), pTeamA->Get_Goals()));
+	//m_pTabButtons[0]->SetText(VarArgs("%-40s %2d %-7s %17d%% poss. %17d", pTeamA->Get_Name(), pTeamA->Get_Number_Players(), (pTeamA->Get_Number_Players() == 1 ? "player" : "players"), pTeamA->Get_Possession(), pTeamA->Get_Goals()));
+	m_pTabButtons[0]->SetText(pTeamA->Get_FullName());
 	C_Team *pTeamB = GetGlobalTeam(TEAM_B);
-	m_pTabButtons[1]->SetText(VarArgs("   %-13d %3d%% poss. %13d %-7s %40s", pTeamB->Get_Goals(), pTeamB->Get_Possession(), pTeamB->Get_Number_Players(), (pTeamB->Get_Number_Players() == 1 ? "player" : "players"), pTeamB->Get_Name()));
+	//m_pTabButtons[1]->SetText(VarArgs("   %-13d %3d%% poss. %13d %-7s %40s", pTeamB->Get_Goals(), pTeamB->Get_Possession(), pTeamB->Get_Number_Players(), (pTeamB->Get_Number_Players() == 1 ? "player" : "players"), pTeamB->Get_Name()));
+	m_pTabButtons[1]->SetText(pTeamB->Get_FullName());
 
 	//m_pTabButtons[0]->SetText(gr->GetFullTeamName(TEAM_A));
 	//m_pTabButtons[1]->SetText(gr->GetFullTeamName(TEAM_B));
@@ -611,27 +532,4 @@ void CTeamMenu::OnCommand( char const *cmd )
 	BaseClass::OnCommand(cmd);
 
 	m_flNextUpdateTime = gpGlobals->curtime;
-}
-
-void CTeamMenu::OnKeyCodePressed(KeyCode code)
-{
-	//if( m_iJumpKey != BUTTON_CODE_INVALID && m_iJumpKey == code )
-	//{
-	//	AutoAssign();
-	//}
-	//else if ( m_nGoalsBoardKey != BUTTON_CODE_INVALID && m_nGoalsBoardKey == code )
-	//{
-	//	//gViewPortInterface->ShowPanel( PANEL_SCOREBOARD, true );
-	//	//gViewPortInterface->PostMessageToPanel( PANEL_SCOREBOARD, new KeyValues( "PollHideCode", "code", code ) );
-	//	//Close();
-	//}
-	//else
-	//{
-	//	BaseClass::OnKeyCodePressed( code );
-	//}
-
-	if (code == KEY_TAB)
-		Close();
-	else
-		BaseClass::OnKeyCodePressed( code );
 }

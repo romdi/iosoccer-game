@@ -35,6 +35,7 @@
 #include "clientscoreboarddialog.h"
 #include "spectatorgui.h"
 #include "teammenu.h"
+#include "matchmenu.h"
 #include "classmenu.h"				//IOS
 #include "ios_statusmenu.h"			//IOS
 #include "ios_mainstatus.h"			//IOS
@@ -222,6 +223,7 @@ void CBaseViewport::CreateDefaultPanels( void )
 	AddNewPanel( CreatePanelByName( PANEL_SPECMENU ), "PANEL_SPECMENU" );
 	AddNewPanel( CreatePanelByName( PANEL_NAV_PROGRESS ), "PANEL_NAV_PROGRESS" );
 	AddNewPanel( CreatePanelByName( PANEL_TEAM ), "PANEL_TEAM" );			//ios uncommented this
+	AddNewPanel( CreatePanelByName( PANEL_MATCH ), "PANEL_MATCH" );			//ios uncommented this
 	//AddNewPanel( CreatePanelByName( PANEL_CLASS ), "PANEL_CLASS" );		//ios uncommented this
 	AddNewPanel( CreatePanelByName( PANEL_STATUS ), "PANEL_STATUS" );		//ios added this
 	AddNewPanel( CreatePanelByName( PANEL_MAINSTATUS ), "PANEL_MAINSTATUS" );	//ios added this
@@ -261,9 +263,13 @@ IViewPortPanel* CBaseViewport::CreatePanelByName(const char *szPanelName)
 		newpanel = new CMapOverview( this );
 	}
 	*/
-	else if ( Q_strcmp(PANEL_TEAM, szPanelName) == 0 )
+	//else if ( Q_strcmp(PANEL_TEAM, szPanelName) == 0 )
+	//{
+	//	newpanel = new CTeamMenu( this );
+	//}
+	else if ( Q_strcmp(PANEL_MATCH, szPanelName) == 0 )
 	{
-		newpanel = new CTeamMenu( this );
+		newpanel = new CMatchMenu( this );
 	}
 	//else if ( Q_strcmp(PANEL_CLASS, szPanelName) == 0 )			//IOS added ffs
 	//{

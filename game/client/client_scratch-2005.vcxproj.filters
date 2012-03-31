@@ -1437,6 +1437,15 @@
     <ClCompile Include="sdk\c_ios_tvcamera.cpp">
       <Filter>Source Files\SDK</Filter>
     </ClCompile>
+    <ClCompile Include="game_controls\matchmenu.cpp">
+      <Filter>Source Files\game_controls</Filter>
+    </ClCompile>
+    <ClCompile Include="game_controls\settingsmenu.cpp">
+      <Filter>Source Files\game_controls</Filter>
+    </ClCompile>
+    <ClCompile Include="game_controls\statsmenu.cpp">
+      <Filter>Source Files\game_controls</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="achievement_notification_panel.h">
@@ -3226,6 +3235,15 @@
     </ClInclude>
     <ClInclude Include="sdk\c_ios_tvcamera.h">
       <Filter>Source Files\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="game_controls\matchmenu.h">
+      <Filter>game_controls Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="game_controls\settingsmenu.h">
+      <Filter>game_controls Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="game_controls\statsmenu.h">
+      <Filter>game_controls Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

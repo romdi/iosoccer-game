@@ -495,8 +495,8 @@ void IN_ScoreDown( const CCommand &args )
 	KeyDown( &in_score, args[1] );
 	if ( gViewPortInterface )
 	{
-		bool show = !gViewPortInterface->FindPanelByName(PANEL_TEAM)->IsVisible();
-		gViewPortInterface->ShowPanel(PANEL_TEAM, show);
+		bool show = !gViewPortInterface->FindPanelByName(PANEL_MATCH)->IsVisible();
+		gViewPortInterface->ShowPanel(PANEL_MATCH, show);
 	}
 }
 

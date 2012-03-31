@@ -5,8 +5,8 @@
 // $NoKeywords: $
 //=============================================================================//
 
-#ifndef TEAMMENU_H
-#define TEAMMENU_H
+#ifndef STATSMENU_H
+#define STATSMENU_H
 #ifdef _WIN32
 #pragma once
 #endif
@@ -22,58 +22,44 @@
 #include <UtlVector.h>
 
 #include <vgui_controls/EditablePanel.h>
-
-namespace vgui
-{
-	class RichText;
-	class HTML;
-}
-class TeamFortressViewport;
+#include <vgui_controls/ComboBox.h>
 
 using namespace vgui;
 
-struct StatPanel_t
+enum Stats
 {
-	Panel *pPanel;
-	Label *pGoals;
-	Label *pGoalText;
-	Label *pAssists;
-	Label *pAssistText;
-	Label *pFouls;
-	Label *pFoulsText;
-	Label *pYellowCards;
-	Label *pYellowCardText;
-	Label *pRedCards;
-	Label *pRedCardText;
-	Label *pPossession;
-	Label *pPossessionText;
-	Label *pPing;
-	Label *pPingText;
+	STAT_PLAYERS = 0,
+	STAT_GOALS,
+	STAT_POSSESSION,
+	STAT_PING,
+	STAT_COUNT
 };
 
-struct PosPanel_t
+char g_szStatNames[STAT_COUNT][32] =
 {
-	Panel *pPosPanel;
-	Button *pPlayerName;
-	Label *pClubName;
-	Label *pPosName;
-	StatPanel_t *pStatPanel;
-	Button *pKickButton;
-	ImagePanel *pCountryFlag;
+	"PLAYERS", "GOALS", "POSSESSION", "PING"
+};
+
+struct StatRow_t
+{
+	Panel *pPanel;
+	Label *pTeams[2];
+	Label *pName;
 };
 
 //-----------------------------------------------------------------------------
 // Purpose: Displays the team menu
 //-----------------------------------------------------------------------------
-class CTeamMenu : public Panel
+class CStatsMenu : public Panel
 {
 private:
 	//DECLARE_CLASS_SIMPLE( CTeamMenu, vgui::Frame );
-	DECLARE_CLASS_SIMPLE( CTeamMenu, Panel );
+	DECLARE_CLASS_SIMPLE( CStatsMenu, Panel );
+	MESSAGE_FUNC_PARAMS( OnTextChanged, "TextChanged", data );
 
 public:
-	CTeamMenu(Panel *parent, const char *name);
-	virtual ~CTeamMenu();
+	CStatsMenu(Panel *parent, const char *name);
+	virtual ~CStatsMenu();
 
 	virtual const char *GetName( void ) { return PANEL_TEAM; }
 	virtual void OnThink();
@@ -85,24 +71,10 @@ protected:
 	
 	// VGUI2 overrides
 	virtual void ApplySchemeSettings(vgui::IScheme *pScheme);
-
-	PosPanel_t *m_pPosPanels[2][11];
-
-	Button *m_pSpectateButton;
-	Button *m_pTabButtons[2];
-
-	int m_nActiveTeam;
-
-	Label *m_pTeamNames[2];
-	Label *m_pTeamPossession[2];
-	Label *m_pTeamPlayerCount[2];
-
-	Panel *m_pTeamPanels[2];
-
-	Label *m_pSpectatorNames;
-
 	float m_flNextUpdateTime;
-	int m_nOldMaxPlayers;
+
+	ComboBox *m_pStatTargets[2];
+	StatRow_t *m_pStatRows[STAT_COUNT];
 };
 
 
