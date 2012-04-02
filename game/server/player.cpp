@@ -1480,6 +1480,12 @@ bool CBasePlayer::SetObserverMode(int mode )
 			break;
 			
 		case OBS_MODE_ROAMING :
+			SetFOV( this, 0 );	// Reset FOV
+			SetObserverTarget( m_hObserverTarget );
+			SetViewOffset( VEC_VIEW );
+			SetMoveType( MOVETYPE_OBSERVER );
+			break;
+
 		case OBS_MODE_TVCAM :
 			SetFOV( this, 0 );	// Reset FOV
 			SetObserverTarget( m_hObserverTarget );

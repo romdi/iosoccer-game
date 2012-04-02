@@ -191,53 +191,12 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 	if (SDKGameRules()->m_nShieldType != SHIELD_NONE)
 	{
 		float threshold = 2 * (GetFlags() & FL_SHIELD_KEEP_IN ? -VEC_HULL_MAX.x : VEC_HULL_MAX.x);
-		
-		if (SDKGameRules()->m_nShieldType == SHIELD_THROWIN || 
-			SDKGameRules()->m_nShieldType == SHIELD_FREEKICK || 
-			SDKGameRules()->m_nShieldType == SHIELD_CORNER ||  
-			SDKGameRules()->m_nShieldType == SHIELD_KICKOFF)
+
+		if (SDKGameRules()->m_nShieldType == SHIELD_GOALKICK || 
+			SDKGameRules()->m_nShieldType == SHIELD_PENALTY)
 		{
-			float radius = SDKGameRules()->m_nShieldRadius + threshold;
-			Vector dir = pos - SDKGameRules()->m_vShieldPos;
-
-			if (GetFlags() & FL_SHIELD_KEEP_OUT && dir.Length2D() < radius || GetFlags() & FL_SHIELD_KEEP_IN && dir.Length2D() > radius)
-			{
-				dir.z = 0;
-				dir.NormalizeInPlace();
-				pos = SDKGameRules()->m_vShieldPos + dir * radius;
-				stopPlayer = true;
-			}
-
-			if (SDKGameRules()->m_nShieldType == SHIELD_KICKOFF && GetFlags() & FL_SHIELD_KEEP_OUT)
-			{
-				int forward;
-				#ifdef CLIENT_DLL
-					forward = GetPlayersTeam(this)->m_nForward;
-				#else
-					forward = GetTeam()->m_nForward;
-				#endif
-				float yBorder = SDKGameRules()->m_vKickOff.GetY() - abs(threshold) * forward;
-				if (Sign(pos.y - yBorder) == forward)
-				{
-					pos.y = yBorder;
-					stopPlayer = true;
-				}
-			}
-
-			if ((GetFlags() & FL_REMOTECONTROLLED) && m_vTargetPos == vec3_invalid)
-			{
-				Vector shieldDir = oldPos - SDKGameRules()->m_vShieldPos;
-				if (shieldDir.Length2D() == 0)
-					shieldDir = SDKGameRules()->m_vKickOff - oldPos;
-				shieldDir.z = 0;
-				shieldDir.NormalizeInPlace();
-				m_vTargetPos = SDKGameRules()->m_vShieldPos + shieldDir * radius;
-			}
-		}
-		else if (SDKGameRules()->m_nShieldType == SHIELD_GOALKICK || SDKGameRules()->m_nShieldType == SHIELD_PENALTY)
-		{
-			Vector min = GetGlobalTeam(SDKGameRules()->m_nShieldSide)->m_vPenBoxMin;
-			Vector max = GetGlobalTeam(SDKGameRules()->m_nShieldSide)->m_vPenBoxMax;
+			Vector min = GetGlobalTeam(SDKGameRules()->m_nShieldDir)->m_vPenBoxMin;
+			Vector max = GetGlobalTeam(SDKGameRules()->m_nShieldDir)->m_vPenBoxMax;
 
 			min.x -= threshold;
 			min.y -= threshold;
@@ -287,7 +246,63 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 			if ((GetFlags() & FL_REMOTECONTROLLED) && m_vTargetPos == vec3_invalid)
 			{
 				m_vTargetPos = Vector(oldPos.x, oldPos.y, SDKGameRules()->m_vKickOff.GetZ());
-				m_vTargetPos.SetY(GetGlobalTeam(SDKGameRules()->m_nShieldSide)->m_nForward == 1 ? max.y + 1 : min.y - 1);
+				m_vTargetPos.SetY(GetGlobalTeam(SDKGameRules()->m_nShieldDir)->m_nForward == 1 ? max.y : min.y);
+			}
+		}
+
+		if (SDKGameRules()->m_nShieldType == SHIELD_THROWIN || 
+			SDKGameRules()->m_nShieldType == SHIELD_FREEKICK || 
+			SDKGameRules()->m_nShieldType == SHIELD_CORNER ||  
+			SDKGameRules()->m_nShieldType == SHIELD_KICKOFF ||
+			SDKGameRules()->m_nShieldType == SHIELD_PENALTY && GetFlags() & FL_SHIELD_KEEP_OUT)
+		{
+			float radius = SDKGameRules()->GetShieldRadius() + threshold;
+			Vector dir = pos - SDKGameRules()->m_vShieldPos;
+
+			if (GetFlags() & FL_SHIELD_KEEP_OUT && dir.Length2D() < radius || GetFlags() & FL_SHIELD_KEEP_IN && dir.Length2D() > radius)
+			{
+				dir.z = 0;
+				dir.NormalizeInPlace();
+				pos = SDKGameRules()->m_vShieldPos + dir * radius;
+				stopPlayer = true;
+			}
+
+			if (SDKGameRules()->m_nShieldType == SHIELD_KICKOFF && GetFlags() & FL_SHIELD_KEEP_OUT)
+			{
+				int forward;
+				#ifdef CLIENT_DLL
+					forward = GetPlayersTeam(this)->m_nForward;
+				#else
+					forward = GetTeam()->m_nForward;
+				#endif
+				float yBorder = SDKGameRules()->m_vKickOff.GetY() - abs(threshold) * forward;
+				if (Sign(pos.y - yBorder) == forward)
+				{
+					pos.y = yBorder;
+					stopPlayer = true;
+				}
+			}
+
+			if ((GetFlags() & FL_REMOTECONTROLLED) && m_vTargetPos == vec3_invalid)
+			{
+				Vector moveDir;
+				if (SDKGameRules()->m_nShieldType == SHIELD_PENALTY)
+					moveDir = Vector(0, GetGlobalTeam(SDKGameRules()->m_nShieldDir)->m_nForward, 0);
+				else
+				{
+					moveDir = GetGlobalTeam(SDKGameRules()->m_nShieldDir)->m_vPenalty - oldPos;
+					moveDir.z = 0;
+					moveDir.NormalizeInPlace();
+				}
+
+				m_vTargetPos = SDKGameRules()->m_vShieldPos + moveDir * radius;
+
+				//Vector shieldDir = oldPos - SDKGameRules()->m_vShieldPos;
+				//if (shieldDir.Length2D() == 0)
+				//	shieldDir = SDKGameRules()->m_vKickOff - oldPos;
+				//shieldDir.z = 0;
+				//shieldDir.NormalizeInPlace();
+				//m_vTargetPos = SDKGameRules()->m_vShieldPos + shieldDir * radius;
 			}
 		}
 	}

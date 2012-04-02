@@ -53,7 +53,8 @@ extern ConVar
 	mp_shield_kickoff_radius,
 	mp_offside,
 	mp_joindelay,
-	mp_maxplayers;
+	mp_maxplayers,
+	mp_weather;
 
 enum match_state_t
 {
@@ -337,6 +338,8 @@ protected:
 	int m_nKickOffTeam;
 	CPrecipitation *m_pPrecip;
 
+	void CalcBallZone();
+
 public:
 
 	bool GetTeamsSwapped() { return m_bAreTeamsSwapped; };
@@ -346,7 +349,7 @@ public:
 	void StartInjuryTime();
 	void EndInjuryTime();
 	void ClientSettingsChanged( CBasePlayer *pPlayer );
-	void EnableShield(int type, int sideOrRadius, Vector pos = vec3_invalid);
+	void EnableShield(int type, int dir, const Vector &pos = vec3_origin);
 	void DisableShield();
 
 	void SetWeather(PrecipitationType_t type);
@@ -354,13 +357,13 @@ public:
 
 public:
 	bool IsIntermissionState();
+	int GetShieldRadius();
 
 	CNetworkVar(int, m_nShieldType);
-	CNetworkVar(int, m_nShieldSide);
-	CNetworkVar(int, m_nShieldRadius);
+	CNetworkVar(int, m_nShieldDir);
 	CNetworkVector(m_vShieldPos);
-
 	CNetworkVar(float, m_flInjuryTimeStart);
+	CNetworkVar(int, m_nBallZone);
 };
 
 //-----------------------------------------------------------------------------

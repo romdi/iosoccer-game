@@ -709,7 +709,6 @@ void CSDKPlayer::State_WELCOME_PreThink()
 
 void CSDKPlayer::State_OBSERVER_MODE_Enter()
 {
-	// Always start a spectator session in roaming mode
 	m_iObserverLastMode = OBS_MODE_TVCAM;
 
 	AddEffects(EF_NODRAW);
@@ -1043,7 +1042,7 @@ void CSDKPlayer::SetPosOutsideShield(bool holdAtTargetPos)
 	switch (SDKGameRules()->m_nShieldType)
 	{
 	case SHIELD_KICKOFF:
-		m_vTargetPos = GetTeam()->m_vPlayerSpawns[GetTeamPosition() - 1];
+		m_vTargetPos = GetTeamPosition() == 1 ? GetTeam()->m_vPenalty : GetTeam()->m_vPlayerSpawns[GetTeamPosition() - 1];
 		m_bMoveToExactPos = true;
 		break;
 	default:
@@ -1065,7 +1064,7 @@ bool CSDKPlayer::IsOnField(CSDKPlayer *pPl)
 
 bool CSDKPlayer::IsOffside()
 {
-	return mp_offside.GetBool() ? m_bOffside : false;
+	return mp_offside.GetBool() ? m_bIsOffside : false;
 }
 
 void CSDKPlayer::SetOffside(bool offside)
@@ -1073,7 +1072,7 @@ void CSDKPlayer::SetOffside(bool offside)
 	if (offside)
 		m_vOffsidePos = GetLocalOrigin();
 
-	m_bOffside = offside;
+	m_bIsOffside = offside;
 }
 
 Vector CSDKPlayer::GetOffsidePos()
@@ -1083,22 +1082,23 @@ Vector CSDKPlayer::GetOffsidePos()
 
 void CSDKPlayer::ResetStats()
 {
-	m_RedCards=0;
-	m_YellowCards=0;
-	m_Fouls=0;
-	m_Offsides=0;
-	m_Goals=0;
-	m_Assists=0;
-	m_Passes=0;
-	m_FreeKicks=0;
-	m_Penalties=0;
-	m_Corners=0;
-	m_ThrowIns=0;
-	m_KeeperSaves=0;
-	m_GoalKicks=0;
-	m_Possession=0;
-	m_flPossessionTime=0.0f;
-	ResetFragCount();
+	m_RedCards = 0;
+	m_YellowCards = 0;
+	m_Fouls = 0;
+	m_Offsides = 0;
+	m_Goals = 0;
+	m_Assists = 0;
+	m_Passes = 0;
+	m_FreeKicks = 0;
+	m_Penalties = 0;
+	m_Corners = 0;
+	m_ThrowIns = 0;
+	m_KeeperSaves = 0;
+	m_GoalKicks = 0;
+	m_Possession = 0;
+	m_flPossessionTime = 0.0f;
+	m_bIsOffside = false;
+	m_ePenaltyState = PENALTY_NONE;
 }
 
 int CSDKPlayer::GetTeamPosition()

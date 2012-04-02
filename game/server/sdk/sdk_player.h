@@ -377,7 +377,7 @@ public:
 
 private:
 
-	bool				m_bOffside;
+	bool				m_bIsOffside;
 	Vector				m_vOffsidePos;
 	CBall				*m_pPlayerBall;
 };

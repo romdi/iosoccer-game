@@ -221,30 +221,32 @@ BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 	RecvPropFloat( RECVINFO( m_flInjuryTime) ),// 0, RecvProxy_MatchState ),
 
 	RecvPropInt(RECVINFO(m_nShieldType)),
-	RecvPropInt(RECVINFO(m_nShieldSide)),
-	RecvPropInt(RECVINFO(m_nShieldRadius)),
+	RecvPropInt(RECVINFO(m_nShieldDir)),
 	RecvPropVector(RECVINFO(m_vShieldPos)),
 
 	RecvPropVector(RECVINFO(m_vFieldMin)),
 	RecvPropVector(RECVINFO(m_vFieldMax)),
 	RecvPropVector(RECVINFO(m_vKickOff)),
+
+	RecvPropInt(RECVINFO(m_nBallZone)),
 #else
-	SendPropFloat( SENDINFO( m_flStateEnterTime ), 32, SPROP_NOSCALE ),
+	SendPropTime( SENDINFO( m_flStateEnterTime )),
 	//SendPropFloat( SENDINFO( m_fStart) ),
 	//SendPropInt( SENDINFO( m_iDuration) ),
 	SendPropInt( SENDINFO( m_eMatchState )),
 	SendPropInt( SENDINFO( m_nAnnouncedInjuryTime )),
-	SendPropFloat( SENDINFO( m_flInjuryTimeStart ), 32, SPROP_NOSCALE ),
-	SendPropFloat( SENDINFO( m_flInjuryTime ), 32, SPROP_NOSCALE ),
+	SendPropTime( SENDINFO( m_flInjuryTimeStart )),
+	SendPropTime( SENDINFO( m_flInjuryTime )),
 
 	SendPropInt(SENDINFO(m_nShieldType)),
-	SendPropInt(SENDINFO(m_nShieldSide)),
-	SendPropInt(SENDINFO(m_nShieldRadius)),
+	SendPropInt(SENDINFO(m_nShieldDir)),
 	SendPropVector(SENDINFO(m_vShieldPos), -1, SPROP_COORD),
 
 	SendPropVector(SENDINFO(m_vFieldMin), -1, SPROP_COORD),
 	SendPropVector(SENDINFO(m_vFieldMax), -1, SPROP_COORD),
 	SendPropVector(SENDINFO(m_vKickOff), -1, SPROP_COORD),
+
+	SendPropInt(SENDINFO(m_nBallZone)),
 #endif
 END_NETWORK_TABLE()
 
@@ -433,6 +435,7 @@ CSDKGameRules::CSDKGameRules()
 	m_nPenaltyTakingTeam = TEAM_A;
 	m_flInjuryTime = 0;
 	m_flInjuryTimeStart = -1;
+	m_pPrecip = NULL;
 
 	//ios m_bLevelInitialized = false;
 	//m_flMatchStartTime = 0;
@@ -462,7 +465,7 @@ void CSDKGameRules::ServerActivate()
 	float maxX = FLT_MAX;
 
 	CBaseEntity *pSidelineTrigger = NULL;
-	while (pSidelineTrigger = gEntList.FindEntityByClassname(pSidelineTrigger, "trigger_SideLine"))
+	while ((pSidelineTrigger = gEntList.FindEntityByClassname(pSidelineTrigger, "trigger_SideLine")) != NULL)
 	{
 		Vector min, max;
 		pSidelineTrigger->CollisionProp()->WorldSpaceTriggerBounds(&min, &max);
@@ -482,7 +485,7 @@ void CSDKGameRules::ServerActivate()
 	float maxY = FLT_MAX;
 
 	CBaseEntity *pGoalTrigger = NULL;
-	while (pGoalTrigger = gEntList.FindEntityByClassname(pGoalTrigger, "trigger_goal"))
+	while ((pGoalTrigger = gEntList.FindEntityByClassname(pGoalTrigger, "trigger_goal")) != NULL)
 	{
 		Vector min, max;
 		pGoalTrigger->CollisionProp()->WorldSpaceTriggerBounds(&min, &max);
@@ -511,7 +514,7 @@ void CSDKGameRules::ServerActivate()
 
 	//TODO: remove this
 	CBaseEntity *pCrossbar = NULL;
-	while (pCrossbar = gEntList.FindEntityByModel(pCrossbar, "goalposts.mdl"))
+	while ((pCrossbar = gEntList.FindEntityByModel(pCrossbar, "goalposts.mdl")) != NULL)
 	{
 		pCrossbar->SetRenderMode(kRenderTransColor);
 		pCrossbar->SetRenderColorA(75);
@@ -1043,37 +1046,40 @@ ConCommand sv_restart( "sv_restart", CC_SV_Restart, "Restart game", 0 );
 
 void CSDKGameRules::SetWeather(PrecipitationType_t type)
 {
-	m_pPrecip->SetType(type);
+	if (m_pPrecip)
+		m_pPrecip->SetType(type);
 }
+#endif
 
 static void OnWeatherTypeChange(IConVar *var, const char *pOldValue, float flOldValue)
 {
-	SDKGameRules()->SetWeather((PrecipitationType_t)((ConVar*)var)->GetInt());
-}
- 
-ConVar mp_weather("mp_weather", "0", 0, "Weather (0 = sunny, 1 = rainy, 2 = snowy)", true, 0, true, 2, OnWeatherTypeChange );
-
+#ifdef GAME_DLL
+	if (SDKGameRules())
+		SDKGameRules()->SetWeather((PrecipitationType_t)((ConVar*)var)->GetInt());
 #endif
+}
+
+ConVar mp_weather("mp_weather", "0", FCVAR_NOTIFY|FCVAR_REPLICATED, "Weather (0 = sunny, 1 = rainy, 2 = snowy)", true, 0, true, 2, OnWeatherTypeChange );
 
 ConVar mp_showstatetransitions( "mp_showstatetransitions", "1", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Show game state transitions." );
 
-ConVar mp_timelimit_match( "mp_timelimit_match", "10", FCVAR_NOTIFY|FCVAR_REPLICATED, "match duration in minutes without breaks (90 is real time)" );
-ConVar mp_timelimit_warmup( "mp_timelimit_warmup", "0.5", FCVAR_NOTIFY|FCVAR_REPLICATED, "time before match start" );
-ConVar mp_timelimit_cooldown( "mp_timelimit_cooldown", "0.5", FCVAR_NOTIFY|FCVAR_REPLICATED, "time after match end" );
-ConVar mp_timelimit_halftime( "mp_timelimit_halftime", "0.5", FCVAR_NOTIFY|FCVAR_REPLICATED, "half time duration" );
-ConVar mp_timelimit_extratime_halftime( "mp_timelimit_extratime_halftime", "0.5", FCVAR_NOTIFY|FCVAR_REPLICATED, "extra time halftime duration" );
-ConVar mp_timelimit_extratime_intermission( "mp_timelimit_extratime_intermission", "0.5", FCVAR_NOTIFY|FCVAR_REPLICATED, "time before extra time start" );
-ConVar mp_timelimit_penalties( "mp_timelimit_penalties", "1", FCVAR_NOTIFY|FCVAR_REPLICATED, "limit for penalties duration" );
-ConVar mp_timelimit_penalties_intermission( "mp_timelimit_penalties_intermission", "0.5", FCVAR_NOTIFY|FCVAR_REPLICATED, "time before penalties start" );
-ConVar mp_extratime( "mp_extratime", "1", FCVAR_NOTIFY|FCVAR_REPLICATED );
-ConVar mp_penalties( "mp_penalties", "1", FCVAR_NOTIFY|FCVAR_REPLICATED );
+ConVar mp_timelimit_match( "mp_timelimit_match", "10", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_ARCHIVE, "match duration in minutes without breaks (90 is real time)" );
+ConVar mp_timelimit_warmup( "mp_timelimit_warmup", "0.5", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_ARCHIVE, "time before match start" );
+ConVar mp_timelimit_cooldown( "mp_timelimit_cooldown", "0.5", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_ARCHIVE, "time after match end" );
+ConVar mp_timelimit_halftime( "mp_timelimit_halftime", "0.5", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_ARCHIVE, "half time duration" );
+ConVar mp_timelimit_extratime_halftime( "mp_timelimit_extratime_halftime", "0.5", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_ARCHIVE, "extra time halftime duration" );
+ConVar mp_timelimit_extratime_intermission( "mp_timelimit_extratime_intermission", "0.5", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_ARCHIVE, "time before extra time start" );
+ConVar mp_timelimit_penalties( "mp_timelimit_penalties", "1", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_ARCHIVE, "limit for penalties duration" );
+ConVar mp_timelimit_penalties_intermission( "mp_timelimit_penalties_intermission", "0.5", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_ARCHIVE, "time before penalties start" );
+ConVar mp_extratime( "mp_extratime", "1", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_ARCHIVE );
+ConVar mp_penalties( "mp_penalties", "1", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_ARCHIVE );
 
-ConVar mp_shield_throwin_radius("mp_shield_throwin_radius", "100", FCVAR_NOTIFY|FCVAR_REPLICATED);
-ConVar mp_shield_freekick_radius("mp_shield_freekick_radius", "360", FCVAR_NOTIFY|FCVAR_REPLICATED);
-ConVar mp_shield_corner_radius("mp_shield_corner_radius", "360", FCVAR_NOTIFY|FCVAR_REPLICATED);
-ConVar mp_shield_kickoff_radius("mp_shield_kickoff_radius", "360", FCVAR_NOTIFY|FCVAR_REPLICATED);
-ConVar mp_offside("mp_offside", "1", FCVAR_NOTIFY|FCVAR_REPLICATED);
-ConVar mp_joindelay("mp_joindelay", "3", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar mp_shield_throwin_radius("mp_shield_throwin_radius", "180", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_ARCHIVE);
+ConVar mp_shield_freekick_radius("mp_shield_freekick_radius", "360", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_ARCHIVE);
+ConVar mp_shield_corner_radius("mp_shield_corner_radius", "360", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_ARCHIVE);
+ConVar mp_shield_kickoff_radius("mp_shield_kickoff_radius", "360", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_ARCHIVE);
+ConVar mp_offside("mp_offside", "1", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_ARCHIVE);
+ConVar mp_joindelay("mp_joindelay", "3", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_ARCHIVE);
 
 static void OnMaxPlayersChange(IConVar *var, const char *pOldValue, float flOldValue)
 {
@@ -1145,6 +1151,8 @@ void CSDKGameRules::State_Think()
 		else
 			m_flStateTimeLeft = (m_flStateEnterTime + m_pCurStateInfo->m_MinDurationConVar->GetFloat() * 60 / m_pCurStateInfo->m_flMinDurationDivisor) - gpGlobals->curtime;
 		
+		CalcBallZone();
+	
 		(this->*m_pCurStateInfo->pfnThink)();
 	}
 }
@@ -1341,7 +1349,9 @@ void CSDKGameRules::State_PENALTIES_INTERMISSION_Think()
 
 void CSDKGameRules::State_PENALTIES_Enter()
 {
+	m_flNextPenalty = -1;
 	m_nPenaltyTakingTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
+	SetAreTeamsSwapped(m_nPenaltyTakingTeam == TEAM_A ? false : true);
 	GetBall()->SetPenaltyState(PENALTY_NONE);
 }
 
@@ -1355,14 +1365,21 @@ void CSDKGameRules::State_PENALTIES_Think()
 
 	if (GetBall()->GetPenaltyState() == PENALTY_KICKED)
 	{
-		//GetBall()->SetIgnoreTriggers(true);
-		GetBall()->SetPenaltyState(PENALTY_NONE);
-		m_flNextPenalty = gpGlobals->curtime + 5;
-		m_nPenaltyTakingTeam = m_nPenaltyTakingTeam == TEAM_A ? TEAM_B : TEAM_A;
+		if (m_flNextPenalty == -1)
+		{
+			m_flNextPenalty = gpGlobals->curtime + 3;
+		}
+		else if (m_flNextPenalty <= gpGlobals->curtime)
+		{
+			GetBall()->SetPenaltyState(PENALTY_NONE);
+			m_nPenaltyTakingTeam = m_nPenaltyTakingTeam == TEAM_A ? TEAM_B : TEAM_A;
+			SetAreTeamsSwapped(m_nPenaltyTakingTeam == TEAM_A ? false : true);
+		}
 	}
-
-	if ((GetBall()->GetPenaltyState() == PENALTY_NONE || GetBall()->GetPenaltyState() == PENALTY_ABORTED) && m_flNextPenalty <= gpGlobals->curtime)
+	else if (GetBall()->GetPenaltyState() == PENALTY_NONE || GetBall()->GetPenaltyState() == PENALTY_ABORTED)
 	{
+		CSDKPlayer *pPenTaker = NULL;
+
 		for (int i = 1; i <= gpGlobals->maxClients; i++)
 		{
 			CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
@@ -1372,11 +1389,24 @@ void CSDKGameRules::State_PENALTIES_Think()
 			if (pPl->GetTeamNumber() != m_nPenaltyTakingTeam || pPl->m_ePenaltyState == PENALTY_KICKED)
 				continue;
 
-			GetBall()->SetPenaltyTaker(pPl);
+			if (pPl->GetTeamPosition() == 1 && pPl->IsBot())
+				continue;
+
+			pPenTaker = pPl;
+			break;
+		}
+
+		if (pPenTaker)
+		{
+			GetBall()->SetPenaltyTaker(pPenTaker);
 			GetBall()->SetPenaltyState(PENALTY_ASSIGNED);
 			GetBall()->State_Transition(BALL_PENALTY);
-			//m_flNextPenalty = gpGlobals->curtime + 5;
-			break;
+			m_flNextPenalty = -1;
+		}
+		else
+		{
+			State_Transition(MATCH_COOLDOWN);
+			return;
 		}
 	}
 }
@@ -1566,12 +1596,11 @@ void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 	}
 }
 
-void CSDKGameRules::EnableShield(int type, int sideOrRadius, Vector pos /*= vec3_invalid*/)
+void CSDKGameRules::EnableShield(int type, int dir, const Vector &pos /*= vec3_origin*/)
 {
 	m_nShieldType = type;
+	m_nShieldDir = dir;
 	m_vShieldPos = Vector(pos.x, pos.y, SDKGameRules()->m_vKickOff.GetZ());
-	m_nShieldSide = sideOrRadius;
-	m_nShieldRadius = sideOrRadius;
 }
 
 void CSDKGameRules::DisableShield()
@@ -1632,6 +1661,20 @@ void CSDKGameRules::EndInjuryTime()
 	}
 }
 
+void CSDKGameRules::CalcBallZone()
+{
+	if (!GetBall())
+		return;
+
+	Vector pos;
+	GetBall()->VPhysicsGetObject()->GetPosition(&pos, NULL);
+	float fieldLength = m_vFieldMax.GetY() - m_vFieldMin.GetY();
+	float dist = pos.y - m_vFieldMin.GetY();
+	m_nBallZone = clamp(dist * 100 / fieldLength, 0, 100);
+	if (GetGlobalTeam(TEAM_A)->m_nForward == -1)
+		m_nBallZone = 100 - m_nBallZone;
+}
+
 #endif
 
 bool CSDKGameRules::IsIntermissionState()
@@ -1650,7 +1693,18 @@ bool CSDKGameRules::IsIntermissionState()
 	}
 }
 
-
+int CSDKGameRules::GetShieldRadius()
+{
+	switch (m_nShieldType)
+	{
+	case SHIELD_THROWIN: return mp_shield_throwin_radius.GetInt();
+	case SHIELD_FREEKICK: return mp_shield_freekick_radius.GetInt();
+	case SHIELD_CORNER: return mp_shield_corner_radius.GetInt();
+	case SHIELD_KICKOFF: return mp_shield_kickoff_radius.GetInt();
+	case SHIELD_PENALTY: return mp_shield_kickoff_radius.GetInt();
+	default: return 0;
+	}
+}
 
 
 

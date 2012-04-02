@@ -171,7 +171,7 @@ public:
 	void			SetPenaltyState(penalty_state_t penaltyState) { m_ePenaltyState = penaltyState; }
 	penalty_state_t	GetPenaltyState() { return m_ePenaltyState; }
 
-	void			SetPenaltyTaker(CSDKPlayer *pPl) { m_pFouledPl = pPl; }
+	void			SetPenaltyTaker(CSDKPlayer *pPl);
 
 	inline ball_state_t State_Get( void ) { return m_eBallState; }
 
@@ -216,8 +216,6 @@ private:
 	bool			DoVolleyShot();
 	bool			DoChestDrop();
 	bool			DoHeader();
-	bool			DoKeeperHandShot();
-	bool			DoKeeperHandThrow();
 	void			SetBallSpin();
 	float			GetPitchModifier();
 	float			GetPowershotModifier();
