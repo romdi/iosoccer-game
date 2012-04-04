@@ -156,7 +156,7 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 		m_pTeamBars[i]->SetBgColor(bgColor);
 
 		m_pTeamColors[i]->SetBounds(BORDER + WIDTH_TEAM + WIDTH_MARGIN, BORDER, WIDTH_TEAMCOLOR, HEIGHT_TEAMBAR - 2 * BORDER);
-		m_pTeamColors[i]->SetBgColor(Color(100 * i, 100 * (1 - i), 0, 255));
+		m_pTeamColors[i]->SetBgColor(bgColor);
 		//m_pTeamColors[i]->SetPaintBackgroundType(2);
 
 		m_pTeams[i]->SetBounds(BORDER, BORDER, WIDTH_TEAM, HEIGHT_TEAMBAR - 2 * BORDER);
@@ -274,8 +274,11 @@ void CHudScorebar::Paint( void )
 
 	m_pMatchState->SetText(g_szStateNames[SDKGameRules()->State_Get()]);
 
-	m_pTeams[0]->SetText(teamHome->Get_Name());
-	m_pTeams[1]->SetText(teamAway->Get_Name());
+	m_pTeams[0]->SetText(teamHome->Get_ShortName());
+	m_pTeams[1]->SetText(teamAway->Get_ShortName());
+
+	m_pTeamColors[0]->SetBgColor(teamHome->Get_PrimaryKitColor());
+	m_pTeamColors[1]->SetBgColor(teamAway->Get_PrimaryKitColor());
 
 	m_pScores[0]->SetText(VarArgs("%d", teamHome->Get_Goals()));
 	m_pScores[1]->SetText(VarArgs("%d", teamAway->Get_Goals()));

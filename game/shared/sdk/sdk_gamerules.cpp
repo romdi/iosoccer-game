@@ -18,13 +18,13 @@ extern void Bot_RunAll( void );
 
 	#include "precache_register.h"
 	#include "c_sdk_player.h"
-	#include "c_sdk_team.h"
+	#include "c_team.h"
 
 #else
 	
 	#include "voice_gamemgr.h"
 	#include "sdk_player.h"
-	#include "sdk_team.h"
+	#include "team.h"
 	#include "sdk_playerclass_info_parse.h"
 	#include "player_resource.h"
 	#include "mapentities.h"
@@ -42,19 +42,18 @@ extern void Bot_RunAll( void );
 
 CUniformRandomStream g_IOSRand;
 
-const s_KitData gKitDesc[] =
+const KitData_t g_Kits[] =
 {
-	{	"Brazil", "Brazil",		YELLOW },
-	{	"England", "England",		WHITE },
-	{	"Germany", "Germany",		WHITE },
-	{	"Italy",	"Italy",	BLUE },
-	{	"Scotland", "Scotland",		BLUE },
-	{	"Barcelona", "FC Barcelona",	BLUE },
-	{	"Bayern",	"FC Bayern Munich",	RED },
-	{	"Liverpool", "Liverpool FC",	RED },
-	{	"Milan",	"AC Milan", 	RED },
-	{	"Palmeiras", "Sociedade Esportiva Palmeiras",	GREEN },
-	{	"END", "END", END },
+	{ false, true,		"Brazil",		"BRA",		"Brazil",		"Brazil",							KITCOLOR_YELLOW,	KITCOLOR_BLUE },
+	{ false, true,		"England",		"ENG",		"England",		"England",							KITCOLOR_WHITE,		KITCOLOR_BLACK },
+	{ false, true,		"Germany",		"GER",		"Germany",		"Germany",							KITCOLOR_WHITE,		KITCOLOR_BLACK },
+	{ false, true,		"Italy",		"ITA",		"Italy",		"Italy",							KITCOLOR_BLUE,		KITCOLOR_WHITE },
+	{ false, true,		"Scotland",		"SCO",		"Scotland",		"Scotland",							KITCOLOR_BLUE,		KITCOLOR_WHITE },
+	{ true, true,		"Barcelona",	"FCB",		"Barcelona",	"FC Barcelona",						KITCOLOR_BLUE,		KITCOLOR_RED },
+	{ true, true,		"Bayern",		"BAY",		"Bayern",		"FC Bayern Munich",					KITCOLOR_RED,		KITCOLOR_WHITE },
+	{ true, true,		"Liverpool",	"LFC",		"Liverpool",	"Liverpool FC",						KITCOLOR_RED,		KITCOLOR_WHITE },
+	{ true, true,		"Milan",		"ACM",		"Milan",		"AC Milan", 						KITCOLOR_RED,		KITCOLOR_WHITE },
+	{ true,	true,		"Palmeiras",	"PLM",		"Palmeiras",	"Sociedade Esportiva Palmeiras",	KITCOLOR_GREEN,		KITCOLOR_WHITE }
 };
 
 const char g_szPosNames[21][5] =
@@ -779,43 +778,50 @@ void CSDKGameRules::InitTeams( void )
 
 	g_Teams.Purge();	// just in case
 
-	ChooseTeamNames();
-
 	// Create the team managers
 	for ( int i = 0; i < ARRAYSIZE( pszTeamNames ); i++ )
 	{
-		CTeam *pTeam = static_cast<CTeam*>(CreateEntityByName( "sdk_team_manager" ));
+		CTeam *pTeam = static_cast<CTeam*>(CreateEntityByName( "team_manager" ));
 
 		pTeam->Init( pszTeamNames[i], i );
 
 		g_Teams.AddToTail( pTeam );
 	}
 
+	ChooseTeamNames(0, 1);
+
 	CreateEntityByName( "sdk_gamerules" );
 }
 
-//ios
-void CSDKGameRules::ChooseTeamNames()
+void CSDKGameRules::ChooseTeamNames(int anyOrClubOrCountry, int anyOrRealOrFictitious)
 {
-	int numKits = 0;
-
-	//count the available kits
-	while (strcmp(gKitDesc[numKits].m_KitName, "END"))
-		numKits++;
-
-	numKits--;		//adjust the final values
-
-	//now look for two random that dont have the same colour
-	int teamtype1 = 0;
-	int teamtype2 = 0;
-
-	while (gKitDesc[teamtype1].m_KitColour == gKitDesc[teamtype2].m_KitColour)
+	do
 	{
-		teamtype1 = g_IOSRand.RandomInt(0,numKits);
-		teamtype2 = g_IOSRand.RandomInt(0,numKits);
-	}
+		int teamHome = g_IOSRand.RandomInt(0, KIT_COUNT - 1);
+		int teamAway = g_IOSRand.RandomInt(0, KIT_COUNT - 1);
 
-	SetTeams(gKitDesc[teamtype1].m_KitName, gKitDesc[teamtype2].m_KitName, false);
+		if (g_Kits[teamHome].isClubTeam && anyOrClubOrCountry == 2 || !g_Kits[teamHome].isClubTeam && anyOrClubOrCountry == 1)
+			continue;
+
+		if (g_Kits[teamHome].isRealTeam && anyOrRealOrFictitious == 2 || !g_Kits[teamHome].isRealTeam && anyOrRealOrFictitious == 1)
+			continue;
+
+		if (g_Kits[teamAway].isClubTeam && anyOrClubOrCountry == 2 || !g_Kits[teamAway].isClubTeam && anyOrClubOrCountry == 1)
+			continue;
+
+		if (g_Kits[teamAway].isRealTeam && anyOrRealOrFictitious == 2 || !g_Kits[teamAway].isRealTeam && anyOrRealOrFictitious == 1)
+			continue;
+
+
+		if (g_Kits[teamHome].primaryKitColor == g_Kits[teamAway].primaryKitColor ||
+			g_Kits[teamHome].isClubTeam != g_Kits[teamAway].isClubTeam ||
+			g_Kits[teamHome].isRealTeam != g_Kits[teamAway].isRealTeam)
+			continue;
+
+			GetGlobalTeam(TEAM_A)->SetKitName(g_Kits[teamHome].kitName);
+			GetGlobalTeam(TEAM_B)->SetKitName(g_Kits[teamAway].kitName);
+			break;
+	} while (true);
 }
 
 /* create some proxy entities that we use for transmitting data */
@@ -1031,7 +1037,6 @@ void CSDKGameRules::RestartMatch()
 
 void CC_SV_Restart(const CCommand &args)
 {
-	//ffs!
 	if ( !UTIL_IsCommandIssuedByServerAdmin() )
         return;
 
@@ -1041,14 +1046,32 @@ void CC_SV_Restart(const CCommand &args)
 	SDKGameRules()->RestartMatch();
 }
 
-
 ConCommand sv_restart( "sv_restart", CC_SV_Restart, "Restart game", 0 );
+
+
+void CC_SV_RandomTeams(const CCommand &args)
+{
+	if ( !UTIL_IsCommandIssuedByServerAdmin() )
+        return;
+
+	if (args.ArgC() < 3)
+	{
+		Msg( "Usage: Set random teams.\nParameters: <any: 0, club: 1, country: 2> <any: 0, real: 1, fictitious: 2>\nExample: sv_randomteams 0 1\n" );
+		return;
+	}
+
+	SDKGameRules()->ChooseTeamNames(clamp(atoi(args[1]), 0, 2), clamp(atoi(args[2]), 0, 2));
+}
+
+ConCommand sv_randomteams( "sv_randomteams", CC_SV_RandomTeams, "", 0 );
+
 
 void CSDKGameRules::SetWeather(PrecipitationType_t type)
 {
 	if (m_pPrecip)
 		m_pPrecip->SetType(type);
 }
+
 #endif
 
 static void OnWeatherTypeChange(IConVar *var, const char *pOldValue, float flOldValue)
@@ -1468,53 +1491,11 @@ void CSDKGameRules::State_END_Think()
 
 #endif
 
-//#ifdef CLIENT_DLL
-//
-//void CSDKGameRules::SetMatchState(match_state_t eMatchState)
-//{
-//	m_eMatchState = eMatchState;
-//}
-//
-//#endif
-
 #ifdef GAME_DLL
-
-void SetTeams(const char *teamHome, const char *teamAway, bool bInitialize)
-{
-	Q_strncpy(pszTeamNames[TEAM_A], teamHome, sizeof(pszTeamNames[TEAM_A]));
-	Q_strncpy(pszTeamNames[TEAM_B], teamAway, sizeof(pszTeamNames[TEAM_B]));
-
-	if (bInitialize)
-	{
-		//update the team names
-		for ( int i = 0; i < ARRAYSIZE( pszTeamNames ); i++ )
-		{
-			CTeam *pTeam = g_Teams[i];
-			pTeam->Init( pszTeamNames[i], i );
-		}
-	}
-}
-
-//void cc_Teams( const CCommand& args )
-//{
-//	if ( !UTIL_IsCommandIssuedByServerAdmin() )
-//		return;
-//
-//	if ( args.ArgC() < 3 )
-//	{
-//		Msg( "Format: mp_teams <home team> <away team>\n" );
-//		return;
-//	}
-//
-//	SetTeams(args[1], args[2]);
-//}
-//
-//static ConCommand mp_teams( "mp_teams", cc_Teams, "Set teams" );
 
 void OnTeamlistChange(IConVar *var, const char *pOldValue, float flOldValue)
 {
-	//if (gpGlobals->curtime > 10)
-	if (SDKGameRules() != NULL)
+	if (SDKGameRules())
 	{
 		char teamlist[256];
 		Q_strncpy(teamlist, ((ConVar*)var)->GetString(), sizeof(teamlist));
@@ -1527,9 +1508,8 @@ void OnTeamlistChange(IConVar *var, const char *pOldValue, float flOldValue)
 			Msg( "Format: mp_teamlist \"<home team>;<away team>\"\n" );
 		else
 		{
-			//ReadTeamInfo(home);
-			//ReadTeamInfo(away);
-			SetTeams(home, away);
+			GetGlobalTeam(TEAM_A)->SetKitName(home);
+			GetGlobalTeam(TEAM_B)->SetKitName(away);
 		}
 	}
 }

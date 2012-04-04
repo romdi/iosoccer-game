@@ -1,7 +1,7 @@
 #include "cbase.h"
 #include "ios_fieldbot.h"
 #include "sdk_player.h"
-#include "sdk_team.h"
+#include "team.h"
 
 LINK_ENTITY_TO_CLASS(ios_fieldbot, CFieldBot);
 

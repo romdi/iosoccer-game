@@ -32,11 +32,16 @@ public:
 
 	// Data Handling
 	virtual int		GetTeamNumber( void ) const;
-	virtual char	*Get_Name( void );
+	virtual bool	Get_IsClubTeam( void );
+	virtual bool	Get_IsRealTeam( void );
+	virtual char	*Get_TeamCode( void );
+	virtual char	*Get_ShortName( void );
 	virtual char	*Get_FullName( void );
+	virtual char	*Get_KitName( void );
+	virtual Color	Get_PrimaryKitColor( void );
+	virtual Color	Get_SecondaryKitColor( void );
 	virtual int		Get_Goals( void );
 	virtual int		Get_Ping( void );
-	virtual char	*GetScoreTag( void ) { return 0; }		//ios base
 
 	virtual int		Get_Possession();
 
@@ -62,8 +67,14 @@ public:
 	// Data received from the server
 	CUtlVector< int > m_aPlayers;
 	int		m_iTeamNum;
-	char	m_szTeamname[ MAX_TEAM_NAME_LENGTH ];
+	bool	m_bIsClubTeam;
+	bool	m_bIsRealTeam;
+	char	m_szTeamCode[MAX_TEAM_NAME_LENGTH];
+	char	m_szKitName[MAX_TEAM_NAME_LENGTH];
 	char	m_szFullName[MAX_TEAM_NAME_LENGTH];
+	char	m_szShortName[MAX_TEAM_NAME_LENGTH];
+	Color	m_PrimaryKitColor;
+	Color	m_SecondaryKitColor;
 	int		m_nGoals;
 	int		m_nPossession;
 

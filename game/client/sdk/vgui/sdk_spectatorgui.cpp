@@ -13,7 +13,7 @@
 #include <vgui/ISurface.h>
 #include <filesystem.h>
 #include "sdk_gamerules.h"
-#include "c_sdk_team.h"
+#include "c_team.h"
 #include "c_sdk_player_resource.h"
 #include "vtf/vtf.h"
 #include "clientmode.h"

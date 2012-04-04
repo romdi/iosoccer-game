@@ -7,7 +7,7 @@
 
 #include "cbase.h"
 #include "sdk_player.h"
-#include "sdk_team.h"
+#include "team.h"
 #include "sdk_gamerules.h"
 #include "weapon_sdkbase.h"
 #include "predicted_viewmodel.h"

@@ -29,27 +29,33 @@ void RecvProxyArrayLength_PlayerArray( void *pStruct, int objectID, int currentA
 		pTeam->m_aPlayers.SetSize( currentArrayLength );
 }
 
-void RecvProxy_Teamname( const CRecvProxyData *pData, void *pStruct, void *pOut )
+void RecvProxy_KitName( const CRecvProxyData *pData, void *pStruct, void *pOut )
 {
 	C_Team *pTeam = (C_Team *)pStruct;
-	Q_strncpy(pTeam->m_szTeamname, pData->m_Value.m_pString, sizeof(pTeam->m_szTeamname));
+	Q_strncpy(pTeam->m_szKitName, pData->m_Value.m_pString, sizeof(pTeam->m_szKitName));
 
-	for (int i = 0; Q_stricmp(gKitDesc[i].m_KitName, "END") != 0; i++)
+	for (int i = 0; i < KIT_COUNT; i++)
 	{
-		if (Q_stricmp(gKitDesc[i].m_KitName, pData->m_Value.m_pString) == 0)
+		if (Q_stricmp(g_Kits[i].kitName, pData->m_Value.m_pString) == 0)
 		{
-			Q_strncpy(pTeam->m_szFullName, gKitDesc[i].m_FullName, sizeof(pTeam->m_szFullName));
+			pTeam->m_bIsClubTeam = g_Kits[i].isClubTeam;
+			pTeam->m_bIsRealTeam = g_Kits[i].isRealTeam;
+			Q_strncpy(pTeam->m_szKitName, g_Kits[i].kitName, sizeof(pTeam->m_szKitName));
+			Q_strncpy(pTeam->m_szTeamCode, g_Kits[i].teamCode, sizeof(pTeam->m_szTeamCode));
+			Q_strncpy(pTeam->m_szFullName, g_Kits[i].fullTeamName, sizeof(pTeam->m_szFullName));
+			Q_strncpy(pTeam->m_szShortName, g_Kits[i].shortTeamName, sizeof(pTeam->m_szShortName));
+			pTeam->m_PrimaryKitColor = g_Kits[i].primaryKitColor;
+			pTeam->m_SecondaryKitColor = g_Kits[i].secondaryKitColor;
 			break;
 		}
 	}
 }
 
-
 IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_Team, DT_Team, CTeam)
 	RecvPropInt( RECVINFO(m_iTeamNum)),
 	RecvPropInt( RECVINFO(m_nGoals)),
 	RecvPropInt( RECVINFO(m_nPossession) ),
-	RecvPropString( RECVINFO(m_szTeamname), 0, RecvProxy_Teamname),
+	RecvPropString( RECVINFO(m_szKitName), 0, RecvProxy_KitName),
 
 	RecvPropVector(RECVINFO(m_vCornerLeft)),
 	RecvPropVector(RECVINFO(m_vCornerRight)),
@@ -72,7 +78,7 @@ END_RECV_TABLE()
 
 BEGIN_PREDICTION_DATA( C_Team )
 	DEFINE_PRED_FIELD( m_iTeamNum, FIELD_INTEGER, FTYPEDESC_PRIVATE ),
-	DEFINE_PRED_ARRAY( m_szTeamname, FIELD_CHARACTER, MAX_TEAM_NAME_LENGTH, FTYPEDESC_PRIVATE ),
+	DEFINE_PRED_ARRAY( m_szKitName, FIELD_CHARACTER, MAX_TEAM_NAME_LENGTH, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_FIELD( m_nGoals, FIELD_INTEGER, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_FIELD( m_iPing, FIELD_INTEGER, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_FIELD( m_iPacketloss, FIELD_INTEGER, FTYPEDESC_PRIVATE ),
@@ -91,7 +97,7 @@ C_Team::C_Team()
 {
 	m_nGoals = 0;
 	m_nPossession = 0;
-	memset( m_szTeamname, 0, sizeof(m_szTeamname) );
+	memset( m_szKitName, 0, sizeof(m_szKitName) );
 
 	m_iPing = 0;
 	m_iPacketloss = 0;
@@ -139,14 +145,44 @@ int	C_Team::GetTeamNumber( void ) const
 	return m_iTeamNum;
 }
 
-char *C_Team::Get_Name( void )
+bool C_Team::Get_IsClubTeam( void )
 {
-	return m_szTeamname;
+	return m_bIsClubTeam;
+}
+
+bool C_Team::Get_IsRealTeam( void )
+{
+	return m_bIsRealTeam;
+}
+
+char *C_Team::Get_TeamCode( void )
+{
+	return m_szTeamCode;
 }
 
 char *C_Team::Get_FullName( void )
 {
 	return m_szFullName;
+}
+
+char *C_Team::Get_ShortName( void )
+{
+	return m_szShortName;
+}
+
+char *C_Team::Get_KitName( void )
+{
+	return m_szKitName;
+}
+
+Color C_Team::Get_PrimaryKitColor()
+{
+	return m_PrimaryKitColor;
+}
+
+Color C_Team::Get_SecondaryKitColor()
+{
+	return m_SecondaryKitColor;
 }
 
 //-----------------------------------------------------------------------------

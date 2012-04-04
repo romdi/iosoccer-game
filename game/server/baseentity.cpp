@@ -4205,7 +4205,7 @@ const char *CBaseEntity::TeamID( void ) const
 	if ( GetTeam() == NULL )
 		return "";
 
-	return GetTeam()->GetName();
+	return GetTeam()->GetKitName();
 }
 
 //-----------------------------------------------------------------------------

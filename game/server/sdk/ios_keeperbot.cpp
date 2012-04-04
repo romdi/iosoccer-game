@@ -26,7 +26,7 @@
 
 #include "ios_keeperbot.h"
 #include "game.h"
-#include "sdk_team.h"
+#include "team.h"
 
 class CKeeperBot;
 

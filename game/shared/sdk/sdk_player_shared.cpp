@@ -26,7 +26,7 @@
 #ifdef CLIENT_DLL
 	
 	#include "c_sdk_player.h"
-	#include "c_sdk_team.h"
+	#include "c_team.h"
 	#include "prediction.h"
 	#include "clientmode_sdk.h"
 	#include "vgui_controls/AnimationController.h"
@@ -34,7 +34,7 @@
 	#define CRecipientFilter C_RecipientFilter
 #else
 	#include "sdk_player.h"
-	#include "sdk_team.h"
+	#include "team.h"
 #endif
 ConVar sv_showimpacts("sv_showimpacts", "0", FCVAR_REPLICATED, "Shows client (red) and server (blue) bullet impact point" );
 

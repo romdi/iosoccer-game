@@ -819,7 +819,6 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClCompile Include="..\shared\sdk\weapon_pistol.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_sdkbase.cpp" />
     <ClCompile Include="..\shared\sdk\weapon_shotgun.cpp" />
-    <ClCompile Include="sdk\c_sdk_team.cpp" />
     <ClCompile Include="..\shared\sdk\sdk_gamerules.cpp" />
     <ClCompile Include="sdk\c_sdk_player.cpp" />
     <ClCompile Include="sdk\c_sdk_player_resource.cpp" />
@@ -880,7 +879,6 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClInclude Include="..\shared\sdk\weapon_basesdkgrenade.h" />
     <ClInclude Include="..\shared\sdk\weapon_grenade.h" />
     <ClInclude Include="..\shared\sdk\weapon_sdkbase.h" />
-    <ClInclude Include="sdk\c_sdk_team.h" />
     <ClInclude Include="..\shared\sdk\sdk_gamerules.h" />
     <ClInclude Include="sdk\c_sdk_player.h" />
     <ClInclude Include="sdk\c_sdk_player_resource.h" />

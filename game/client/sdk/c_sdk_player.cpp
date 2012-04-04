@@ -17,7 +17,7 @@
 #include "view_scene.h"
 #include "fx.h"
 #include "collisionutils.h"
-#include "c_sdk_team.h"
+#include "c_team.h"
 #include "obstacle_pushaway.h"
 #include "bone_setup.h"
 #include "cl_animevent.h"

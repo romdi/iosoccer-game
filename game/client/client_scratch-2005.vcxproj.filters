@@ -1377,9 +1377,6 @@
     <ClCompile Include="..\shared\sdk\weapon_shotgun.cpp">
       <Filter>Source Files\SDK\Weapons</Filter>
     </ClCompile>
-    <ClCompile Include="sdk\c_sdk_team.cpp">
-      <Filter>Source Files\SDK\Rules</Filter>
-    </ClCompile>
     <ClCompile Include="..\shared\sdk\sdk_gamerules.cpp">
       <Filter>Source Files\SDK\Rules</Filter>
     </ClCompile>
@@ -1567,9 +1564,6 @@
     </ClInclude>
     <ClInclude Include="..\shared\sdk\weapon_sdkbase.h">
       <Filter>Source Files\SDK\Weapons</Filter>
-    </ClInclude>
-    <ClInclude Include="sdk\c_sdk_team.h">
-      <Filter>Source Files\SDK\Rules</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\sdk\sdk_gamerules.h">
       <Filter>Source Files\SDK\Rules</Filter>

@@ -40,11 +40,12 @@ public:
 	virtual int		GetOppTeamNumber( void ) const;
 	CTeam			*GetOppTeam( void ) const;
 	virtual void	SetTeamNumber(int teamNum);
+	void			SetKitName(const char *pName);
 
 	//-----------------------------------------------------------------------------
 	// Data Handling
 	//-----------------------------------------------------------------------------
-	virtual const char *GetName( void );
+	virtual const char *GetKitName( void );
 	virtual void		UpdateClientData( CBasePlayer *pPlayer );
 	virtual bool		ShouldTransmitToPlayer( CBasePlayer* pRecipient, CBaseEntity* pEntity );
 
@@ -69,7 +70,7 @@ public:
 	CUtlVector< CBasePlayer * >		m_aPlayers;
 
 	// Data
-	CNetworkString( m_szTeamname, MAX_TEAM_NAME_LENGTH );
+	CNetworkString( m_szKitName, MAX_TEAM_NAME_LENGTH );
 	CNetworkVar( int, m_iTeamNum );
 	CNetworkVar( int, m_nGoals );
 	CNetworkVar( int, m_nPossession );

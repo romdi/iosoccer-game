@@ -16,7 +16,7 @@
 #include <vgui/IScheme.h>
 #include <vgui/ILocalize.h>
 #include "engine/IEngineSound.h"
-#include "c_sdk_team.h"
+#include "c_team.h"
 #include "c_playerresource.h"
 #include "c_sdk_player.h"
 #include "sdk_gamerules.h"

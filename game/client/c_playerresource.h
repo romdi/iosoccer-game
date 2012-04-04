@@ -30,10 +30,15 @@ public : // IGameResources intreface
 
 	// Team data access 
 	virtual int		GetTeamGoals( int index );
-	virtual const char *GetTeamName( int index );
+	virtual bool	IsClubTeam( int index );
+	virtual bool	IsRealTeam( int index );
+	virtual const char *GetTeamCode( int index );
+	virtual const char *GetShortTeamName( int index );
 	virtual const char *GetFullTeamName( int index );
+	virtual const char *GetTeamKitName( int index );
+	virtual Color GetPrimaryTeamKitColor(int index);
+	virtual Color GetSecondaryTeamKitColor(int index);
 	virtual const Color&GetTeamColor( int index );
-	virtual const char *GetScoreTag( int index );	//ios
 
 	// Player data access
 	virtual bool	IsConnected( int index );

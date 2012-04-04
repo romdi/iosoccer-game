@@ -86,7 +86,7 @@ bool CEventLog::PrintPlayerEvent( IGameEvent *event )
 			team = pPlayer->GetTeam();
 		}
 
-		UTIL_LogPrintf( "\"%s<%i><%s><%s>\" disconnected (reason \"%s\")\n", name, userid, networkid, team ? team->GetName() : "", reason );
+		UTIL_LogPrintf( "\"%s<%i><%s><%s>\" disconnected (reason \"%s\")\n", name, userid, networkid, team ? team->GetKitName() : "", reason );
 		return true;
 	}
 
@@ -112,8 +112,8 @@ bool CEventLog::PrintPlayerEvent( IGameEvent *event )
 			pPlayer->GetPlayerName(),
 			pPlayer->GetUserID(),
 			pPlayer->GetNetworkIDString(),
-			oldteam->GetName(),
-			team->GetName() );
+			oldteam->GetKitName(),
+			team->GetKitName() );
 		}
 
 		return true;
@@ -150,7 +150,7 @@ bool CEventLog::PrintPlayerEvent( IGameEvent *event )
 							pPlayer->GetPlayerName(),
 							userid,
 							pPlayer->GetNetworkIDString(),
-							team ? team->GetName() : "",
+							team ? team->GetKitName() : "",
 							pAttacker->GetClassname()
 							);
 #endif
@@ -176,11 +176,11 @@ bool CEventLog::PrintPlayerEvent( IGameEvent *event )
 							pAttacker->GetPlayerName(),
 							attackerid,
 							pAttacker->GetNetworkIDString(),
-							attackerTeam ? attackerTeam->GetName() : "",
+							attackerTeam ? attackerTeam->GetKitName() : "",
 							pPlayer->GetPlayerName(),
 							userid,
 							pPlayer->GetNetworkIDString(),
-							team ? team->GetName() : ""
+							team ? team->GetKitName() : ""
 							);								
 #endif
 		}
@@ -191,7 +191,7 @@ bool CEventLog::PrintPlayerEvent( IGameEvent *event )
 							pPlayer->GetPlayerName(),
 							userid,
 							pPlayer->GetNetworkIDString(),
-							team ? team->GetName() : ""
+							team ? team->GetKitName() : ""
 							);
 		}
 		return true;
@@ -215,7 +215,7 @@ bool CEventLog::PrintPlayerEvent( IGameEvent *event )
 					oldName,
 					userid,
 					pPlayer->GetNetworkIDString(),
-					team ? team->GetName() : "",
+					team ? team->GetKitName() : "",
 					newName
 					);
 		return true;

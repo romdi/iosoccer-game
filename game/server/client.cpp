@@ -289,7 +289,7 @@ void Host_Say( edict_t *pEdict, const CCommand &args, bool teamonly )
 		CTeam *team = pPlayer->GetTeam();
 		if ( team )
 		{
-			playerTeam = team->GetName();
+			playerTeam = team->GetKitName();
 		}
 	}
 		

@@ -32,7 +32,7 @@
 
 #include "sdk_gamerules.h"
 #include "c_sdk_player.h"
-#include "c_sdk_team.h"
+#include "c_team.h"
 
 #include "sdk_classmenu.h"
 

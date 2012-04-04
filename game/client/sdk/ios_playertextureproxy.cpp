@@ -6,7 +6,7 @@
 #include <KeyValues.h>
 
 #include "c_sdk_player.h"
-#include "c_sdk_team.h"
+#include "c_team.h"
 #include "sdk_gamerules.h"
 #include "c_playerresource.h"
 
@@ -78,7 +78,7 @@ void CPlayerTextureProxy::OnBind( C_BaseEntity *pEnt )
 	if ( !m_pBaseTextureVar )
 		return;
 
-	const char *team = GameResources()->GetTeamName(GameResources()->GetTeam(pEnt->index));
+	const char *team = GameResources()->GetTeamKitName(GameResources()->GetTeam(pEnt->index));
 	int pos = GameResources()->GetTeamPosition(pEnt->index);
 
 	char texture[64];

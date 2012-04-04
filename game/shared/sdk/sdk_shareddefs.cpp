@@ -60,8 +60,8 @@ char pszTeamNames[4][32] =
 	"#SDK_Team_Red",
 #endif
 	*/
-	"ENGLAND",			//IOS
-	"BRAZIL"
+	"Home Team",			//IOS
+	"Away Team"
 };
 
 // ----------------------------------------------------------------------------- //

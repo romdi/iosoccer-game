@@ -698,13 +698,13 @@ private:
 	inline bool ShouldKillPlayer( void ) { return (m_spawnflags & SF_PTEAM_KILL) ? true : false; }
 	inline bool ShouldGibPlayer( void ) { return (m_spawnflags & SF_PTEAM_GIB) ? true : false; }
 	
-	const char *TargetTeamName( const char *pszTargetName, CBaseEntity *pActivator );
+	const char *TarGetShortTeamName( const char *pszTargetName, CBaseEntity *pActivator );
 };
 
 LINK_ENTITY_TO_CLASS( game_player_team, CGamePlayerTeam );
 
 
-const char *CGamePlayerTeam::TargetTeamName( const char *pszTargetName, CBaseEntity *pActivator )
+const char *CGamePlayerTeam::TarGetShortTeamName( const char *pszTargetName, CBaseEntity *pActivator )
 {
 	CBaseEntity *pTeamEntity = NULL;
 
@@ -725,7 +725,7 @@ void CGamePlayerTeam::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TY
 
 	if ( pActivator->IsPlayer() )
 	{
-		const char *pszTargetTeam = TargetTeamName( STRING(m_target), pActivator );
+		const char *pszTargetTeam = TarGetShortTeamName( STRING(m_target), pActivator );
 		if ( pszTargetTeam )
 		{
 			CBasePlayer *pPlayer = (CBasePlayer *)pActivator;

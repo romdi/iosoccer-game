@@ -324,7 +324,7 @@ void CSpectatorMenu::Update( void )
 		char localizeTeamName[64];
 		char szPlayerIndex[16];
 		g_pVGuiLocalize->ConvertANSIToUnicode( UTIL_SafeName( gr->GetPlayerName(iPlayerIndex) ), playerName, sizeof( playerName ) );
-		const char * teamname = gr->GetTeamName( gr->GetTeam(iPlayerIndex) );
+		const char * teamname = gr->GetShortTeamName( gr->GetTeam(iPlayerIndex) );
 		if ( teamname )
 		{	
 			Q_snprintf( localizeTeamName, sizeof( localizeTeamName ), "#%s", teamname );

@@ -235,14 +235,44 @@ int C_PlayerResource::GetTeam(int iIndex )
 	}
 }
 
-const char * C_PlayerResource::GetTeamName(int index)
+bool C_PlayerResource::IsClubTeam(int index)
 {
 	C_Team *team = GetGlobalTeam( index );
 
 	if ( !team )
-		return "Unknown";
+		return false;
 
-	return team->Get_Name();
+	return team->Get_IsClubTeam();
+}
+
+bool C_PlayerResource::IsRealTeam(int index)
+{
+	C_Team *team = GetGlobalTeam( index );
+
+	if ( !team )
+		return false;
+
+	return team->Get_IsRealTeam();
+}
+
+const char * C_PlayerResource::GetTeamCode(int index)
+{
+	C_Team *team = GetGlobalTeam( index );
+
+	if ( !team )
+		return "???";
+
+	return team->Get_TeamCode();
+}
+
+const char * C_PlayerResource::GetShortTeamName(int index)
+{
+	C_Team *team = GetGlobalTeam( index );
+
+	if ( !team )
+		return "???";
+
+	return team->Get_ShortName();
 }
 
 const char * C_PlayerResource::GetFullTeamName(int index)
@@ -250,9 +280,39 @@ const char * C_PlayerResource::GetFullTeamName(int index)
 	C_Team *team = GetGlobalTeam( index );
 
 	if ( !team )
-		return "Unknown";
+		return "???";
 
 	return team->Get_FullName();
+}
+
+const char * C_PlayerResource::GetTeamKitName(int index)
+{
+	C_Team *team = GetGlobalTeam( index );
+
+	if ( !team )
+		return "???";
+
+	return team->Get_KitName();
+}
+
+Color C_PlayerResource::GetPrimaryTeamKitColor(int index)
+{
+	C_Team *team = GetGlobalTeam( index );
+
+	if ( !team )
+		return Color(0, 0, 0);
+
+	return team->Get_PrimaryKitColor();
+}
+
+Color C_PlayerResource::GetSecondaryTeamKitColor(int index)
+{
+	C_Team *team = GetGlobalTeam( index );
+
+	if ( !team )
+		return Color(0, 0, 0);
+
+	return team->Get_SecondaryKitColor();
 }
 
 int C_PlayerResource::GetTeamGoals(int index)
@@ -263,16 +323,6 @@ int C_PlayerResource::GetTeamGoals(int index)
 		return 0;
 
 	return team->Get_Goals();
-}
-
-const char *C_PlayerResource::GetScoreTag(int index)
-{
-	C_Team *team = GetGlobalTeam( index );
-
-	if ( !team )
-		return 0;
-
-	return team->GetScoreTag();
 }
 
 bool C_PlayerResource::IsLocalPlayer(int index)
@@ -384,7 +434,10 @@ const Color &C_PlayerResource::GetTeamColor(int index )
 	}
 	else
 	{
-		return m_Colors[index];
+		if (index == TEAM_A || index == TEAM_B)
+			return GetPrimaryTeamKitColor(index);
+		else
+			return m_Colors[index];
 	}
 }
 

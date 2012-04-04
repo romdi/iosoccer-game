@@ -367,11 +367,11 @@ void CBall::SendMatchEvent(match_event_t matchEvent, CSDKPlayer *pPlayer)
 
 	UTIL_LogPrintf( "\"%s<%d><%s><%s>\" triggered \"%d\"\n",
 		pPlayer->GetPlayerName(), pPlayer->GetUserID(),
-		pPlayer->GetNetworkIDString(), pPlayer->GetTeam()->GetName(), matchEvent);
+		pPlayer->GetNetworkIDString(), pPlayer->GetTeam()->GetKitName(), matchEvent);
 
 	DevMsg( "\"%s<%d><%s><%s>\" triggered \"%d\"\n",
 		pPlayer->GetPlayerName(), pPlayer->GetUserID(),
-		pPlayer->GetNetworkIDString(), pPlayer->GetTeam()->GetName(), matchEvent);
+		pPlayer->GetNetworkIDString(), pPlayer->GetTeam()->GetKitName(), matchEvent);
 
 	CReliableBroadcastRecipientFilter filter;
 	UserMessageBegin(filter, "MatchEvent");

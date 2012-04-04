@@ -10,7 +10,7 @@
 #include "KeyValues.h"
 
 #include "sdk_player.h"
-#include "sdk_team.h"
+#include "team.h"
 
 class CSDKEventLog : public CEventLog
 {

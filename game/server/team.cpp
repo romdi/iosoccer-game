@@ -42,7 +42,7 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CTeam, DT_Team)
 	SendPropInt( SENDINFO(m_iTeamNum), 5 ),
 	SendPropInt( SENDINFO(m_nGoals), 0 ),
 	SendPropInt( SENDINFO(m_nPossession), 0 ),
-	SendPropString( SENDINFO( m_szTeamname ) ),
+	SendPropString( SENDINFO( m_szKitName ) ),
 
 	SendPropVector(SENDINFO(m_vCornerLeft), -1, SPROP_COORD),
 	SendPropVector(SENDINFO(m_vCornerRight), -1, SPROP_COORD),
@@ -90,7 +90,7 @@ int GetNumberOfTeams( void )
 //-----------------------------------------------------------------------------
 CTeam::CTeam( void )
 {
-	memset( m_szTeamname.GetForModify(), 0, sizeof(m_szTeamname) );
+	memset( m_szKitName.GetForModify(), 0, sizeof(m_szKitName) );
 	ResetStats();
 }
 
@@ -134,7 +134,7 @@ bool CTeam::ShouldTransmitToPlayer( CBasePlayer* pRecipient, CBaseEntity* pEntit
 //-----------------------------------------------------------------------------
 void CTeam::Init( const char *pName, int iNumber )
 {
-	Q_strncpy( m_szTeamname.GetForModify(), pName, MAX_TEAM_NAME_LENGTH );
+	Q_strncpy( m_szKitName.GetForModify(), pName, MAX_TEAM_NAME_LENGTH );
 	m_iTeamNum = iNumber;
 }
 
@@ -164,15 +164,18 @@ void CTeam::SetTeamNumber(int teamNum)
 	m_iTeamNum = teamNum;
 }
 
+void CTeam::SetKitName(const char *pName)
+{
+	Q_strncpy( m_szKitName.GetForModify(), pName, MAX_TEAM_NAME_LENGTH );
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Get the team's name
 //-----------------------------------------------------------------------------
-const char *CTeam::GetName( void )
+const char *CTeam::GetKitName( void )
 {
-	return m_szTeamname;
+	return m_szKitName;
 }
-
 
 //-----------------------------------------------------------------------------
 // Purpose: Update the player's client data

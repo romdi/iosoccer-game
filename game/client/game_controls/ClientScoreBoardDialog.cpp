@@ -344,7 +344,7 @@ void CClientScoreBoardDialog::UpdateTeamInfo()
         else
             sprintf(plural,"s");
 
-        sprintf(cstring, "%s - (%i player%s)", gr->GetTeamName(i),  numPlayersOnTeam[i], plural);
+        sprintf(cstring, "%s - (%i player%s)", gr->GetShortTeamName(i),  numPlayersOnTeam[i], plural);
         g_pVGuiLocalize->ConvertANSIToUnicode(cstring, tn, sizeof(tn));
         m_pPlayerList->ModifyColumn(sectionId, "name", tn);
 
@@ -582,12 +582,12 @@ int CClientScoreBoardDialog::AddSection(int teamType, int teamNumber)
             return -1;
 
         // setup the team name
-        wchar_t *teamName = g_pVGuiLocalize->Find( gr->GetTeamName(teamNumber) );
+        wchar_t *teamName = g_pVGuiLocalize->Find( gr->GetShortTeamName(teamNumber) );
         wchar_t name[64];
        
         if (!teamName)
         {
-            g_pVGuiLocalize->ConvertANSIToUnicode(gr->GetTeamName(teamNumber), name, sizeof(name));
+            g_pVGuiLocalize->ConvertANSIToUnicode(gr->GetShortTeamName(teamNumber), name, sizeof(name));
             teamName = name;
         }
 
@@ -639,13 +639,13 @@ int CClientScoreBoardDialog::AddSection(int teamType, int teamNumber)
 			return;
 
 		// setup the team name
-		wchar_t *teamName = g_pVGuiLocalize->Find( gr->GetTeamName(teamNumber) );
+		wchar_t *teamName = g_pVGuiLocalize->Find( gr->GetShortTeamName(teamNumber) );
 		wchar_t name[64];
 		wchar_t string1[1024];
 		
 		if (!teamName)
 		{
-			g_pVGuiLocalize->ConvertANSIToUnicode(gr->GetTeamName(teamNumber), name, sizeof(name));
+			g_pVGuiLocalize->ConvertANSIToUnicode(gr->GetShortTeamName(teamNumber), name, sizeof(name));
 			teamName = name;
 		}
 

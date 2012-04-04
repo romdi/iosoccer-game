@@ -8,7 +8,7 @@
 #include "cbase.h"
 #include "hud.h"
 #include "sdk_scoreboard.h"
-#include "c_sdk_team.h"
+#include "c_team.h"
 #include "c_sdk_player_resource.h"
 #include "sdk_gamerules.h"
 #include "sdk_backgroundpanel.h"
@@ -175,7 +175,7 @@ void CSDKScoreboard::UpdateTeamInfo()
 
 				if (!teamName && team)
 				{
-					g_pVGuiLocalize->ConvertANSIToUnicode(team->Get_Name(), name, sizeof(name));
+					g_pVGuiLocalize->ConvertANSIToUnicode(team->Get_ShortName(), name, sizeof(name));
 					teamName = name;
 				}
 
