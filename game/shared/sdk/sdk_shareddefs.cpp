@@ -133,3 +133,4 @@ const char *g_szMatchEventNames[32] =
 ConVar mp_walkspeed("mp_walkspeed", "180", FCVAR_ARCHIVE | FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_runspeed("mp_runspeed", "280", FCVAR_ARCHIVE | FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_sprintspeed("mp_sprintspeed", "380", FCVAR_ARCHIVE | FCVAR_REPLICATED | FCVAR_NOTIFY);
+ConVar mp_remotecontrolledspeed("mp_remotecontrolledspeed", "380", FCVAR_ARCHIVE | FCVAR_REPLICATED | FCVAR_NOTIFY);

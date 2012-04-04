@@ -349,11 +349,11 @@ public:
 	
 	void				SetPosInsideShield(Vector pos, bool holdAtTargetPos);
 	void				SetPosOutsideShield(bool holdAtTargetPos);
+	void				GetTargetPos(const Vector &pos, Vector &targetPos);
 
 	CNetworkVector(m_vTargetPos);
 	CNetworkVar(bool, m_bIsAtTargetPos);
 	CNetworkVar(bool, m_bHoldAtTargetPos);
-	CNetworkVar(bool, m_bMoveToExactPos);
 
 	CNetworkVar(int, m_nInPenBoxOfTeam);
 
@@ -374,6 +374,7 @@ public:
 	void				ChangeTeamPos(int team, int pos, bool instantly = false);
 
 	void CheckBallShield(const Vector &oldPos, Vector &newPos, const Vector &oldVel, Vector &newVel, const QAngle &oldAng, QAngle &newAng);
+	void MoveToTargetPos(Vector &pos, Vector &vel, QAngle &ang);
 
 private:
 

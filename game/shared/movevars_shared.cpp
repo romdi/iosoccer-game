@@ -58,7 +58,8 @@ ConVar  mp_stamina_slowdown	("mp_stamina_slowdown", "0", FCVAR_ARCHIVE | FCVAR_N
 ConVar  mp_stamina_drain_jumping	("mp_stamina_drain_jumping", "20", FCVAR_ARCHIVE | FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar  mp_stamina_drain_sliding	("mp_stamina_drain_sliding", "20", FCVAR_ARCHIVE | FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar  mp_stamina_drain_sprinting	("mp_stamina_drain_sprinting", "20", FCVAR_ARCHIVE | FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar  mp_stamina_replenish_standing	("mp_stamina_replenish_standing", "30", FCVAR_ARCHIVE | FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar  mp_stamina_replenish_standing	("mp_stamina_replenish_standing", "25", FCVAR_ARCHIVE | FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar  mp_stamina_replenish_walking	("mp_stamina_replenish_walking", "20", FCVAR_ARCHIVE | FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar  mp_stamina_replenish_running	("mp_stamina_replenish_running", "15", FCVAR_ARCHIVE | FCVAR_NOTIFY | FCVAR_REPLICATED);
 
 ConVar	sv_airaccelerate(  "sv_airaccelerate", "10", FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );    

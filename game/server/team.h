@@ -38,6 +38,7 @@ public:
 
 	virtual int		GetTeamNumber( void ) const;
 	virtual int		GetOppTeamNumber( void ) const;
+	CTeam			*GetOppTeam( void ) const;
 	virtual void	SetTeamNumber(int teamNum);
 
 	//-----------------------------------------------------------------------------
@@ -76,8 +77,6 @@ public:
 
 	// Spawnpoints
 	int		m_iLastSpawn;		// Index of the last spawnpoint used
-
-	//CNetworkVar( int, m_iTeamNum );			// Which team is this?
 
 	float	m_flPossessionTime;
 

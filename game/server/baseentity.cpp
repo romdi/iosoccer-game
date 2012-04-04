@@ -4180,8 +4180,8 @@ CTeam *CBaseEntity::GetTeam( void ) const
 
 CTeam *CBaseEntity::GetOppTeam( void ) const
 {
-	if (m_iTeamNum == TEAM_SPECTATOR)
-		return GetGlobalTeam(TEAM_SPECTATOR);
+	if (m_iTeamNum != TEAM_A && m_iTeamNum != TEAM_B)
+		return GetGlobalTeam(m_iTeamNum);
 
 	return m_iTeamNum == TEAM_A ? GetGlobalTeam(TEAM_B) : GetGlobalTeam(TEAM_A);
 }

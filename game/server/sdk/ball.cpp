@@ -501,7 +501,8 @@ void CBall::State_Enter( ball_state_t newState )
 
 		pPl->m_bIsAtTargetPos = false;
 		pPl->RemoveFlag(FL_REMOTECONTROLLED | FL_CELEB | FL_NO_X_MOVEMENT | FL_NO_Y_MOVEMENT | FL_ATCONTROLS | FL_FROZEN);
-		pPl->SetMoveType(MOVETYPE_WALK);
+		//pPl->SetMoveType(MOVETYPE_WALK);
+		pPl->RemoveSolidFlags(FSOLID_NOT_SOLID);
 	}
 
 	if (newState == BALL_NORMAL)
@@ -977,7 +978,7 @@ void CBall::State_PENALTY_Enter()
 {
 	if (SDKGameRules()->State_Get() == MATCH_PENALTIES)
 	{
-		SetPos(GetGlobalTeam(m_nFoulingTeam/*TEAM_A*/)->m_vPenalty);
+		SetPos(GetGlobalTeam(m_nFoulingTeam)->m_vPenalty);
 	}
 	else
 	{
@@ -998,12 +999,12 @@ void CBall::State_PENALTY_Think()
 		{
 			if (!CSDKPlayer::IsOnField(m_pPl))
 			{
-				m_ePenaltyState = PENALTY_ABORTED;
+				m_ePenaltyState = PENALTY_ABORTED_NO_TAKER;
 				return State_Transition(BALL_NORMAL);
 			}
 
 			SDKGameRules()->EnableShield(SHIELD_PENALTY, m_nFoulingTeam, GetGlobalTeam(m_nFoulingTeam)->m_vPenalty);
-			m_pPl->SetPosInsideShield(Vector(m_vPos.x, m_vPos.y - 100 * m_pPl->GetTeam()->m_nForward, SDKGameRules()->m_vKickOff.GetZ()), true);
+			m_pPl->SetPosInsideShield(Vector(m_vPos.x, m_vPos.y - 150 * m_pPl->GetTeam()->m_nForward, SDKGameRules()->m_vKickOff.GetZ()), true);
 		}
 		else
 		{
@@ -1015,7 +1016,7 @@ void CBall::State_PENALTY_Think()
 			}
 
 			SDKGameRules()->EnableShield(SHIELD_PENALTY, m_nFoulingTeam, GetGlobalTeam(m_nFoulingTeam)->m_vPenalty);
-			m_pPl->SetPosInsideShield(Vector(m_vPos.x, m_vPos.y - 100 * m_pPl->GetTeam()->m_nForward, SDKGameRules()->m_vKickOff.GetZ()), true);
+			m_pPl->SetPosInsideShield(Vector(m_vPos.x, m_vPos.y - 150 * m_pPl->GetTeam()->m_nForward, SDKGameRules()->m_vKickOff.GetZ()), true);
 		}
 
 		UpdatePossession(m_pPl);
@@ -1031,7 +1032,7 @@ void CBall::State_PENALTY_Think()
 			m_pOtherPl = FindNearestPlayer(m_pPl->GetOppTeamNumber(), FL_POS_KEEPER);
 			if (!m_pOtherPl)
 			{
-				m_ePenaltyState = PENALTY_ABORTED;
+				m_ePenaltyState = PENALTY_ABORTED_NO_KEEPER;
 				return State_Transition(BALL_NORMAL);
 			}
 		}
@@ -1087,7 +1088,7 @@ void CBall::State_KEEPERHANDS_Think()
 		if (!m_pPl)
 			return State_Transition(BALL_NORMAL);
 
-		SDKGameRules()->EnableShield(SHIELD_GOALKICK, m_pPl->GetTeamNumber());
+		SDKGameRules()->EnableShield(SHIELD_KEEPERHANDS, m_pPl->GetTeamNumber());
 		UpdatePossession(m_pPl);
 		//m_pPl->m_bIsAtTargetPos = true;
 		m_pPl->SetPosInsideShield(vec3_invalid, false);

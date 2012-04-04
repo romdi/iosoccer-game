@@ -797,6 +797,10 @@ void CGameMovement::ReduceTimers( void )
 		{
 			flStamina += mp_stamina_replenish_standing.GetInt() * gpGlobals->frametime;
 		}
+		else if (mv->m_nButtons & IN_WALK)
+		{
+			flStamina += mp_stamina_replenish_walking.GetInt() * gpGlobals->frametime;
+		}
 		else
 		{
 			flStamina += mp_stamina_replenish_running.GetInt() * gpGlobals->frametime;
@@ -1486,13 +1490,31 @@ void CGameMovement::FullWalkMove( )
 		mv->SetAbsOrigin(Vector(newPos.x, oldPos.y, newPos.z));
 	}
 
-	//CheckBallShield(oldPos);
+	newPos = mv->GetAbsOrigin();
 	Vector newVel = mv->m_vecVelocity;
 	QAngle newAng = mv->m_vecAbsViewAngles;
+
 	ToSDKPlayer(player)->CheckBallShield(oldPos, newPos, oldVel, newVel, oldAng, newAng);
+
 	mv->SetAbsOrigin(newPos);
 	mv->m_vecVelocity = newVel;
 	mv->m_vecAbsViewAngles = newAng;
+}
+
+void CGameMovement::MoveToTargetPos()
+{
+	#ifdef GAME_DLL
+		Vector pos = mv->GetAbsOrigin();
+		Vector vel = mv->m_vecVelocity;
+		QAngle ang = mv->m_vecAbsViewAngles;
+
+		ToSDKPlayer(player)->MoveToTargetPos(pos, vel, ang);
+
+		mv->SetAbsOrigin(pos);
+		mv->m_vecVelocity = vel;
+		mv->m_vecAbsViewAngles = ang;
+		player->SnapEyeAngles(ang);
+	#endif
 }
 
 bool CGameMovement::CheckPlayerAnimEvent()
@@ -2573,11 +2595,17 @@ void CGameMovement::PlayerMove( void )
 			break;
 
 		case MOVETYPE_NOCLIP:
-			FullNoClipMove( sv_noclipspeed.GetFloat(), sv_noclipaccelerate.GetFloat() );
+			//if (player->GetFlags() & FL_REMOTECONTROLLED)
+			//	MoveToTargetPos();
+			//else
+				FullNoClipMove( sv_noclipspeed.GetFloat(), sv_noclipaccelerate.GetFloat() );
 			break;
 
 		case MOVETYPE_WALK:
-			FullWalkMove();
+			if (player->GetFlags() & FL_REMOTECONTROLLED)
+				MoveToTargetPos();
+			else
+				FullWalkMove();
 			break;
 			
 		case MOVETYPE_OBSERVER:
@@ -2668,6 +2696,10 @@ void CGameMovement::SetPlayerSpeed()
 	if ( ( mv->m_nButtons & IN_SPEED ) && ( stamina > 0 ) && ( mv->m_nButtons & IN_FORWARD ) )
 	{
 		flMaxSpeed = mp_sprintspeed.GetInt();	//sprinting
+	}
+	else if (mv->m_nButtons & IN_WALK)
+	{
+		flMaxSpeed = mp_walkspeed.GetInt();
 	}
 	else
 	{

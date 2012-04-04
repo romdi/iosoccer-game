@@ -42,6 +42,7 @@ extern ConVar mp_stamina_drain_jumping; //ios
 extern ConVar mp_stamina_drain_sliding; //ios
 extern ConVar mp_stamina_drain_sprinting; //ios
 extern ConVar mp_stamina_replenish_standing; //ios
+extern ConVar mp_stamina_replenish_walking; //ios
 extern ConVar mp_stamina_replenish_running; //ios
 
 // Vehicle convars

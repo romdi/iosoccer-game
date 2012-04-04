@@ -1363,7 +1363,7 @@ void CSDKGameRules::State_PENALTIES_Think()
 		return;
 	}
 
-	if (GetBall()->GetPenaltyState() == PENALTY_KICKED)
+	if (GetBall()->GetPenaltyState() == PENALTY_KICKED || GetBall()->GetPenaltyState() == PENALTY_ABORTED_NO_KEEPER)
 	{
 		if (m_flNextPenalty == -1)
 		{
@@ -1371,12 +1371,16 @@ void CSDKGameRules::State_PENALTIES_Think()
 		}
 		else if (m_flNextPenalty <= gpGlobals->curtime)
 		{
+			if (GetBall()->GetPenaltyState() == PENALTY_KICKED)
+			{
+				m_nPenaltyTakingTeam = m_nPenaltyTakingTeam == TEAM_A ? TEAM_B : TEAM_A;
+				SetAreTeamsSwapped(m_nPenaltyTakingTeam == TEAM_A ? false : true);
+			}
+
 			GetBall()->SetPenaltyState(PENALTY_NONE);
-			m_nPenaltyTakingTeam = m_nPenaltyTakingTeam == TEAM_A ? TEAM_B : TEAM_A;
-			SetAreTeamsSwapped(m_nPenaltyTakingTeam == TEAM_A ? false : true);
 		}
 	}
-	else if (GetBall()->GetPenaltyState() == PENALTY_NONE || GetBall()->GetPenaltyState() == PENALTY_ABORTED)
+	else if (GetBall()->GetPenaltyState() == PENALTY_NONE || GetBall()->GetPenaltyState() == PENALTY_ABORTED_NO_TAKER)
 	{
 		CSDKPlayer *pPenTaker = NULL;
 

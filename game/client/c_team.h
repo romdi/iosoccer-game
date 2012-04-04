@@ -70,7 +70,6 @@ public:
 	// Data for the scoreboard
 	int		m_iPing;
 	int		m_iPacketloss;
-	//int		m_iTeamNum;
 
 	Vector	m_vCornerLeft;
 	Vector	m_vCornerRight;

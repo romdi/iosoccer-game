@@ -151,6 +151,14 @@ int CTeam::GetOppTeamNumber( void ) const
 	return m_iTeamNum == TEAM_A ? TEAM_B : TEAM_A;
 }
 
+CTeam *CTeam::GetOppTeam( void ) const
+{
+	if (m_iTeamNum != TEAM_A && m_iTeamNum != TEAM_B)
+		return GetGlobalTeam(m_iTeamNum);
+
+	return m_iTeamNum == TEAM_A ? GetGlobalTeam(TEAM_B) : GetGlobalTeam(TEAM_A);
+}
+
 void CTeam::SetTeamNumber(int teamNum)
 {
 	m_iTeamNum = teamNum;

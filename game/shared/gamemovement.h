@@ -86,6 +86,7 @@ protected:
 
 	// Handle MOVETYPE_WALK.
 	virtual void	FullWalkMove();
+	virtual void	MoveToTargetPos();
 
 	// Implement this if you want to know when the player collides during OnPlayerMove
 	virtual void	OnTryPlayerMoveCollision( trace_t &tr ) {}

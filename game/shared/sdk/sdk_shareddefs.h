@@ -132,6 +132,7 @@ extern char pszTeamNames[4][32];
 extern ConVar mp_walkspeed;
 extern ConVar mp_runspeed;
 extern ConVar mp_sprintspeed;
+extern ConVar mp_remotecontrolledspeed;
 
 //--------------------------------------------------------------------------------------------------------
 //
