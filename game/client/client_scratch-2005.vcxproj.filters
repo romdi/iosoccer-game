@@ -1446,6 +1446,9 @@
     <ClCompile Include="sdk\ios_crowdtextureproxy.cpp">
       <Filter>Source Files\SDK</Filter>
     </ClCompile>
+    <ClCompile Include="..\shared\sdk\ios_teamkit_parse.cpp">
+      <Filter>Source Files\SDK</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="achievement_notification_panel.h">
@@ -3241,6 +3244,9 @@
     </ClInclude>
     <ClInclude Include="game_controls\statsmenu.h">
       <Filter>game_controls Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\sdk\ios_teamkit_parse.h">
+      <Filter>Source Files\SDK</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -14,7 +14,7 @@
 #include "shareddefs.h"
 #include "utlvector.h"
 #include "client_thinklist.h"
-
+#include "ios_teamkit_parse.h"
 
 class C_BasePlayer;
 
@@ -35,11 +35,11 @@ public:
 	virtual bool	Get_IsClubTeam( void );
 	virtual bool	Get_IsRealTeam( void );
 	virtual char	*Get_TeamCode( void );
-	virtual char	*Get_ShortName( void );
-	virtual char	*Get_FullName( void );
+	virtual char	*Get_ShortTeamName( void );
+	virtual char	*Get_FullTeamName( void );
 	virtual char	*Get_KitName( void );
-	virtual Color	Get_PrimaryKitColor( void );
-	virtual Color	Get_SecondaryKitColor( void );
+	virtual Color	&Get_PrimaryKitColor( void );
+	virtual Color	&Get_SecondaryKitColor( void );
 	virtual int		Get_Goals( void );
 	virtual int		Get_Ping( void );
 
@@ -55,6 +55,7 @@ public:
 
 	void	RemoveAllPlayers();
 
+	void	SetKitName(const char *pKitName);
 
 // IClientThinkable overrides.
 public:
@@ -66,15 +67,9 @@ public:
 
 	// Data received from the server
 	CUtlVector< int > m_aPlayers;
+	CTeamKitInfo *m_pTeamKitInfo;
 	int		m_iTeamNum;
-	bool	m_bIsClubTeam;
-	bool	m_bIsRealTeam;
-	char	m_szTeamCode[MAX_TEAM_NAME_LENGTH];
-	char	m_szKitName[MAX_TEAM_NAME_LENGTH];
-	char	m_szFullName[MAX_TEAM_NAME_LENGTH];
-	char	m_szShortName[MAX_TEAM_NAME_LENGTH];
-	Color	m_PrimaryKitColor;
-	Color	m_SecondaryKitColor;
+	char	m_szKitName[MAX_KITNAME_LENGTH];
 	int		m_nGoals;
 	int		m_nPossession;
 

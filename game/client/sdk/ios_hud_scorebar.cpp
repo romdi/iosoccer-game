@@ -274,8 +274,8 @@ void CHudScorebar::Paint( void )
 
 	m_pMatchState->SetText(g_szStateNames[SDKGameRules()->State_Get()]);
 
-	m_pTeams[0]->SetText(teamHome->Get_ShortName());
-	m_pTeams[1]->SetText(teamAway->Get_ShortName());
+	m_pTeams[0]->SetText(teamHome->Get_ShortTeamName());
+	m_pTeams[1]->SetText(teamAway->Get_ShortTeamName());
 
 	m_pTeamColors[0]->SetBgColor(teamHome->Get_PrimaryKitColor());
 	m_pTeamColors[1]->SetBgColor(teamAway->Get_PrimaryKitColor());

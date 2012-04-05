@@ -11,6 +11,7 @@
 #include "ammodef.h"
 #include "KeyValues.h"
 #include "weapon_sdkbase.h"
+#include "ios_teamkit_parse.h"
 
 extern void Bot_RunAll( void );
 
@@ -41,20 +42,6 @@ extern void Bot_RunAll( void );
 #include "tier0/memdbgon.h"
 
 CUniformRandomStream g_IOSRand;
-
-const KitData_t g_Kits[] =
-{
-	{ false, true,		"Brazil",		"BRA",		"Brazil",		"Brazil",							KITCOLOR_YELLOW,	KITCOLOR_BLUE },
-	{ false, true,		"England",		"ENG",		"England",		"England",							KITCOLOR_WHITE,		KITCOLOR_BLACK },
-	{ false, true,		"Germany",		"GER",		"Germany",		"Germany",							KITCOLOR_WHITE,		KITCOLOR_BLACK },
-	{ false, true,		"Italy",		"ITA",		"Italy",		"Italy",							KITCOLOR_BLUE,		KITCOLOR_WHITE },
-	{ false, true,		"Scotland",		"SCO",		"Scotland",		"Scotland",							KITCOLOR_BLUE,		KITCOLOR_WHITE },
-	{ true, true,		"Barcelona",	"FCB",		"Barcelona",	"FC Barcelona",						KITCOLOR_BLUE,		KITCOLOR_RED },
-	{ true, true,		"Bayern",		"BAY",		"Bayern",		"FC Bayern Munich",					KITCOLOR_RED,		KITCOLOR_WHITE },
-	{ true, true,		"Liverpool",	"LFC",		"Liverpool",	"Liverpool FC",						KITCOLOR_RED,		KITCOLOR_WHITE },
-	{ true, true,		"Milan",		"ACM",		"Milan",		"AC Milan", 						KITCOLOR_RED,		KITCOLOR_WHITE },
-	{ true,	true,		"Palmeiras",	"PLM",		"Palmeiras",	"Sociedade Esportiva Palmeiras",	KITCOLOR_GREEN,		KITCOLOR_WHITE }
-};
 
 const char g_szPosNames[21][5] =
 {
@@ -452,6 +439,8 @@ void CSDKGameRules::ServerActivate()
 		m_flMatchStartTime.GetForModify() = 0.0f;
 	}*/
 
+	CTeamKitInfo::FindTeamKits();
+
 	InitTeams();
 
 	CBaseEntity *pEnt = gEntList.FindEntityByClassname(NULL, "info_ball_start");
@@ -788,40 +777,79 @@ void CSDKGameRules::InitTeams( void )
 		g_Teams.AddToTail( pTeam );
 	}
 
-	ChooseTeamNames(0, 1);
+	ChooseTeamNames(true, true, true, false);
 
 	CreateEntityByName( "sdk_gamerules" );
 }
 
-void CSDKGameRules::ChooseTeamNames(int anyOrClubOrCountry, int anyOrRealOrFictitious)
+void CSDKGameRules::ChooseTeamNames(bool clubTeams, bool countryTeams, bool realTeams, bool fictitiousTeams)
 {
+	int kitCount = m_TeamKitInfoDatabase.Count();
+	//int clubTeamCount = 0;
+	//int countryTeamCount = 0;
+	//int realTeamCount = 0;
+	//int fictitiousTeamCount = 0;
+
+	//for (int i = 0; i < kitCount; i++)
+	//{
+	//	if (m_TeamKitInfoDatabase[i]->m_bIsClubTeam)
+	//		clubTeamCount += 1;
+	//	else
+	//		countryTeamCount += 1;
+
+	//	if (m_TeamKitInfoDatabase[i]->m_bIsRealTeam)
+	//		realTeamCount += 1;
+	//	else
+	//		fictitiousTeamCount += 1;
+	//}
+
+	//if (clubTeamCount == 0 && clubTeams)
+	//	clubTeams = false;
+
+	//if (countryTeamCount == 0 && countryTeams)
+	//	countryTeams = false;
+
+	//if (realTeamCount == 0 && realTeams)
+	//	realTeams = false;
+
+	//if (fictitiousTeamCount == 0 && fictitiousTeams)
+	//	fictitiousTeams = false;
+
+	int attemptCount = 0;
+	int teamHome;
+	int teamAway;
+
 	do
 	{
-		int teamHome = g_IOSRand.RandomInt(0, KIT_COUNT - 1);
-		int teamAway = g_IOSRand.RandomInt(0, KIT_COUNT - 1);
+		attemptCount += 1;
+		teamHome = g_IOSRand.RandomInt(0, kitCount - 1);
+		teamAway = g_IOSRand.RandomInt(0, kitCount - 1);
 
-		if (g_Kits[teamHome].isClubTeam && anyOrClubOrCountry == 2 || !g_Kits[teamHome].isClubTeam && anyOrClubOrCountry == 1)
+		if (m_TeamKitInfoDatabase[teamHome]->m_bIsClubTeam && !clubTeams || !m_TeamKitInfoDatabase[teamHome]->m_bIsClubTeam && !countryTeams)
 			continue;
 
-		if (g_Kits[teamHome].isRealTeam && anyOrRealOrFictitious == 2 || !g_Kits[teamHome].isRealTeam && anyOrRealOrFictitious == 1)
+		if (m_TeamKitInfoDatabase[teamHome]->m_bIsRealTeam && !realTeams || !m_TeamKitInfoDatabase[teamHome]->m_bIsRealTeam && !fictitiousTeams)
 			continue;
 
-		if (g_Kits[teamAway].isClubTeam && anyOrClubOrCountry == 2 || !g_Kits[teamAway].isClubTeam && anyOrClubOrCountry == 1)
+		if (m_TeamKitInfoDatabase[teamAway]->m_bIsClubTeam && !clubTeams || !m_TeamKitInfoDatabase[teamAway]->m_bIsClubTeam && !countryTeams)
 			continue;
 
-		if (g_Kits[teamAway].isRealTeam && anyOrRealOrFictitious == 2 || !g_Kits[teamAway].isRealTeam && anyOrRealOrFictitious == 1)
+		if (m_TeamKitInfoDatabase[teamAway]->m_bIsRealTeam && !realTeams || !m_TeamKitInfoDatabase[teamAway]->m_bIsRealTeam && !fictitiousTeams)
 			continue;
 
-
-		if (g_Kits[teamHome].primaryKitColor == g_Kits[teamAway].primaryKitColor ||
-			g_Kits[teamHome].isClubTeam != g_Kits[teamAway].isClubTeam ||
-			g_Kits[teamHome].isRealTeam != g_Kits[teamAway].isRealTeam)
+		if (m_TeamKitInfoDatabase[teamHome]->m_PrimaryKitColor == m_TeamKitInfoDatabase[teamAway]->m_PrimaryKitColor ||
+			m_TeamKitInfoDatabase[teamHome]->m_bIsClubTeam != m_TeamKitInfoDatabase[teamAway]->m_bIsClubTeam ||
+			m_TeamKitInfoDatabase[teamHome]->m_bIsRealTeam != m_TeamKitInfoDatabase[teamAway]->m_bIsRealTeam)
 			continue;
 
-			GetGlobalTeam(TEAM_A)->SetKitName(g_Kits[teamHome].kitName);
-			GetGlobalTeam(TEAM_B)->SetKitName(g_Kits[teamAway].kitName);
-			break;
-	} while (true);
+		GetGlobalTeam(TEAM_A)->SetKitName(m_TeamKitInfoDatabase[teamHome]->m_szKitName);
+		GetGlobalTeam(TEAM_B)->SetKitName(m_TeamKitInfoDatabase[teamAway]->m_szKitName);
+		break;
+
+	} while (attemptCount < 1000);
+
+	if (attemptCount == 1000)
+		Msg("ERROR: No compatible teams found. Check sv_randomteams parameters.\n");
 }
 
 /* create some proxy entities that we use for transmitting data */
@@ -1054,13 +1082,13 @@ void CC_SV_RandomTeams(const CCommand &args)
 	if ( !UTIL_IsCommandIssuedByServerAdmin() )
         return;
 
-	if (args.ArgC() < 3)
+	if (args.ArgC() < 5)
 	{
-		Msg( "Usage: Set random teams.\nParameters: <any: 0, club: 1, country: 2> <any: 0, real: 1, fictitious: 2>\nExample: sv_randomteams 0 1\n" );
+		Msg( "Usage: Set random teams.\nParameters for allowed team type: <club: 0/1> <country: 0/1> <real: 0/1> <fictitious: 0/1>\nExample: sv_randomteams 1 1 1 1\n" );
 		return;
 	}
 
-	SDKGameRules()->ChooseTeamNames(clamp(atoi(args[1]), 0, 2), clamp(atoi(args[2]), 0, 2));
+	SDKGameRules()->ChooseTeamNames(atoi(args[1]) != 0, atoi(args[2]) != 0, atoi(args[3]) != 0, atoi(args[4]) != 0);
 }
 
 ConCommand sv_randomteams( "sv_randomteams", CC_SV_RandomTeams, "", 0 );
@@ -1701,71 +1729,6 @@ int CSDKGameRules::GetShieldRadius()
 
 
 #ifdef CLIENT_DLL
-
-#include "Filesystem.h"
-#include "utlbuffer.h"
-
-struct kit
-{
-	char type[16];
-	char firstColor[16];
-	char secondColor[16];
-};
-
-struct teamInfo
-{
-	char teamCode[8];
-	char shortName[16];
-	char fullName[32];
-	kit kits[8];
-};
-
-void ReadTeamInfo(const char *teamname)
-{
-	//char filename[64];
-	//Q_snprintf(filename, sizeof(filename), "materials/models/player_new/%s/teaminfo", teamname);
-	//V_SetExtension(filename, ".txt", sizeof(filename));
-	//V_FixSlashes(filename);
-
-	//CUtlBuffer buf;
-	//if (filesystem->ReadFile(filename, "GAME", buf))
-	//{
-	//	char* gameInfo = new char[buf.Size() + 1];
-	//	buf.GetString(gameInfo);
-	//	gameInfo[buf.Size()] = 0; // null terminator
-
-	//	DevMsg("Team info: %s\n", gameInfo);
-
-	//	delete[] gameInfo;
-	//}
-
-	char path[64], filename[64];
-	Q_snprintf(path, sizeof(path), "materials/models/player_new/%s", teamname);
-
-	int length;
-	CUtlVector<char*, CUtlMemory<char*> > lines, values;
-	Q_snprintf(filename, sizeof(filename), "%s/teaminfo.txt", path);
-	char *teaminfostr = (char *)UTIL_LoadFileForMe(filename, &length);
-	if (teaminfostr && length > 0)
-	{
-		const char *separators[2] = { "\n", ";" };
-		Q_SplitString2(teaminfostr, separators, 2, lines);
-		//teamInfo t = { teaminfo[0], teaminfo[1], teaminfo[2], teaminfo[3], teaminfo[4], teaminfo[5] };
-		teamInfo ti;
-		Q_strncpy(ti.teamCode, lines[0], sizeof(ti.teamCode));
-		Q_strncpy(ti.shortName, lines[1], sizeof(ti.shortName));
-		Q_strncpy(ti.fullName, lines[2], sizeof(ti.fullName));
-
-		for (int i = 3; i < lines.Count(); i += 3)
-		{
-			kit k;
-			Q_strncpy(k.type, lines[i], sizeof(k.type));
-			Q_strncpy(k.firstColor, lines[i + 1], sizeof(k.firstColor));
-			Q_strncpy(k.secondColor, lines[i + 2], sizeof(k.secondColor));
-			ti.kits[i/3-1] = k; //todo: neue variable vom stack?
-		}
-	}
-}
 
 #include "curl/curl.h"
 #include "Filesystem.h"

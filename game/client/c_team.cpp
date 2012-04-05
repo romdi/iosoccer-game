@@ -31,24 +31,7 @@ void RecvProxyArrayLength_PlayerArray( void *pStruct, int objectID, int currentA
 
 void RecvProxy_KitName( const CRecvProxyData *pData, void *pStruct, void *pOut )
 {
-	C_Team *pTeam = (C_Team *)pStruct;
-	Q_strncpy(pTeam->m_szKitName, pData->m_Value.m_pString, sizeof(pTeam->m_szKitName));
-
-	for (int i = 0; i < KIT_COUNT; i++)
-	{
-		if (Q_stricmp(g_Kits[i].kitName, pData->m_Value.m_pString) == 0)
-		{
-			pTeam->m_bIsClubTeam = g_Kits[i].isClubTeam;
-			pTeam->m_bIsRealTeam = g_Kits[i].isRealTeam;
-			Q_strncpy(pTeam->m_szKitName, g_Kits[i].kitName, sizeof(pTeam->m_szKitName));
-			Q_strncpy(pTeam->m_szTeamCode, g_Kits[i].teamCode, sizeof(pTeam->m_szTeamCode));
-			Q_strncpy(pTeam->m_szFullName, g_Kits[i].fullTeamName, sizeof(pTeam->m_szFullName));
-			Q_strncpy(pTeam->m_szShortName, g_Kits[i].shortTeamName, sizeof(pTeam->m_szShortName));
-			pTeam->m_PrimaryKitColor = g_Kits[i].primaryKitColor;
-			pTeam->m_SecondaryKitColor = g_Kits[i].secondaryKitColor;
-			break;
-		}
-	}
+	((C_Team *)pStruct)->SetKitName(pData->m_Value.m_pString);
 }
 
 IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_Team, DT_Team, CTeam)
@@ -147,27 +130,33 @@ int	C_Team::GetTeamNumber( void ) const
 
 bool C_Team::Get_IsClubTeam( void )
 {
-	return m_bIsClubTeam;
+	return m_pTeamKitInfo->m_bIsClubTeam;
 }
 
 bool C_Team::Get_IsRealTeam( void )
 {
-	return m_bIsRealTeam;
+	return m_pTeamKitInfo-> m_bIsRealTeam;
 }
 
 char *C_Team::Get_TeamCode( void )
 {
-	return m_szTeamCode;
+	return m_pTeamKitInfo->m_szTeamCode;
 }
 
-char *C_Team::Get_FullName( void )
+char *C_Team::Get_FullTeamName( void )
 {
-	return m_szFullName;
+	if (m_iTeamNum == TEAM_A || m_iTeamNum == TEAM_B)
+		return m_pTeamKitInfo->m_szFullTeamName;
+	else
+		return m_szKitName;
 }
 
-char *C_Team::Get_ShortName( void )
+char *C_Team::Get_ShortTeamName( void )
 {
-	return m_szShortName;
+	if (m_iTeamNum == TEAM_A || m_iTeamNum == TEAM_B)
+		return m_pTeamKitInfo->m_szShortTeamName;
+	else
+		return m_szKitName;
 }
 
 char *C_Team::Get_KitName( void )
@@ -175,14 +164,14 @@ char *C_Team::Get_KitName( void )
 	return m_szKitName;
 }
 
-Color C_Team::Get_PrimaryKitColor()
+Color &C_Team::Get_PrimaryKitColor()
 {
-	return m_PrimaryKitColor;
+	return m_pTeamKitInfo->m_PrimaryKitColor;
 }
 
-Color C_Team::Get_SecondaryKitColor()
+Color &C_Team::Get_SecondaryKitColor()
 {
-	return m_SecondaryKitColor;
+	return m_pTeamKitInfo->m_SecondaryKitColor;
 }
 
 //-----------------------------------------------------------------------------
@@ -231,6 +220,17 @@ bool C_Team::ContainsPlayer( int iPlayerIndex )
 
 void C_Team::ClientThink()
 {
+}
+
+void C_Team::SetKitName(const char *pKitName)
+{
+	Q_strncpy(m_szKitName, pKitName, MAX_KITNAME_LENGTH);
+
+	TEAMKIT_FILE_INFO_HANDLE hKitHandle;
+	if (ReadTeamKitDataFromFileForSlot(filesystem, pKitName, &hKitHandle))
+	{
+		m_pTeamKitInfo = GetTeamKitInfoFromHandle(hKitHandle);
+	}
 }
 
 

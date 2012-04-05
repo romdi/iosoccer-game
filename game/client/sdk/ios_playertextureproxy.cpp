@@ -72,6 +72,8 @@ bool CPlayerTextureProxy::Init( IMaterial *pMaterial, KeyValues *pKeyValues )
 	return true;
 }
 
+#define PLAYERTEXTURE_PATH "models/player/teams"
+
 void CPlayerTextureProxy::OnBind( C_BaseEntity *pEnt )
 {
 	// Bail if no base variable
@@ -84,13 +86,13 @@ void CPlayerTextureProxy::OnBind( C_BaseEntity *pEnt )
 	char texture[64];
 
 	if (Q_stricmp(m_szTextureType, "shirt") == 0)
-		Q_snprintf(texture, sizeof(texture), "models/player/%s/%d", team, pos);
+		Q_snprintf(texture, sizeof(texture), "%s/%s/%d", PLAYERTEXTURE_PATH, team, pos);
 	else if (Q_stricmp(m_szTextureType, "keeper") == 0)
-		Q_snprintf(texture, sizeof(texture), "models/player/%s/keeper", team);
+		Q_snprintf(texture, sizeof(texture), "%s/%s/keeper", PLAYERTEXTURE_PATH, team);
 	else if (Q_stricmp(m_szTextureType, "socks") == 0)
-		Q_snprintf(texture, sizeof(texture), "models/player/%s/socks", team);
+		Q_snprintf(texture, sizeof(texture), "%s/%s/socks", PLAYERTEXTURE_PATH, team);
 	else if (Q_stricmp(m_szTextureType, "gksocks") == 0)
-		Q_snprintf(texture, sizeof(texture), "models/player/%s/gksocks", team);
+		Q_snprintf(texture, sizeof(texture), "%s/%s/gksocks", PLAYERTEXTURE_PATH, team);
 	else if (Q_stricmp(m_szTextureType, "skin") == 0)
 		Q_snprintf(texture, sizeof(texture), m_pDefaultTexture->GetName(), team);
 

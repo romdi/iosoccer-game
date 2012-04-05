@@ -497,10 +497,10 @@ void CTeamMenu::OnThink()
 	}
 	C_Team *pTeamA = GetGlobalTeam(TEAM_A);
 	//m_pTabButtons[0]->SetText(VarArgs("%-40s %2d %-7s %17d%% poss. %17d", pTeamA->Get_Name(), pTeamA->Get_Number_Players(), (pTeamA->Get_Number_Players() == 1 ? "player" : "players"), pTeamA->Get_Possession(), pTeamA->Get_Goals()));
-	m_pTabButtons[0]->SetText(pTeamA->Get_FullName());
+	m_pTabButtons[0]->SetText(pTeamA->Get_FullTeamName());
 	C_Team *pTeamB = GetGlobalTeam(TEAM_B);
 	//m_pTabButtons[1]->SetText(VarArgs("   %-13d %3d%% poss. %13d %-7s %40s", pTeamB->Get_Goals(), pTeamB->Get_Possession(), pTeamB->Get_Number_Players(), (pTeamB->Get_Number_Players() == 1 ? "player" : "players"), pTeamB->Get_Name()));
-	m_pTabButtons[1]->SetText(pTeamB->Get_FullName());
+	m_pTabButtons[1]->SetText(pTeamB->Get_FullTeamName());
 
 	//m_pTabButtons[0]->SetText(gr->GetFullTeamName(TEAM_A));
 	//m_pTabButtons[1]->SetText(gr->GetFullTeamName(TEAM_B));

@@ -175,7 +175,7 @@ void CSDKScoreboard::UpdateTeamInfo()
 
 				if (!teamName && team)
 				{
-					g_pVGuiLocalize->ConvertANSIToUnicode(team->Get_ShortName(), name, sizeof(name));
+					g_pVGuiLocalize->ConvertANSIToUnicode(team->Get_ShortTeamName(), name, sizeof(name));
 					teamName = name;
 				}
 

@@ -272,7 +272,7 @@ const char * C_PlayerResource::GetShortTeamName(int index)
 	if ( !team )
 		return "???";
 
-	return team->Get_ShortName();
+	return team->Get_ShortTeamName();
 }
 
 const char * C_PlayerResource::GetFullTeamName(int index)
@@ -282,7 +282,7 @@ const char * C_PlayerResource::GetFullTeamName(int index)
 	if ( !team )
 		return "???";
 
-	return team->Get_FullName();
+	return team->Get_FullTeamName();
 }
 
 const char * C_PlayerResource::GetTeamKitName(int index)
@@ -295,22 +295,30 @@ const char * C_PlayerResource::GetTeamKitName(int index)
 	return team->Get_KitName();
 }
 
-Color C_PlayerResource::GetPrimaryTeamKitColor(int index)
+Color &C_PlayerResource::GetPrimaryTeamKitColor(int index)
 {
 	C_Team *team = GetGlobalTeam( index );
 
 	if ( !team )
-		return Color(0, 0, 0);
+	{
+		Assert( false );
+		static Color color;
+		return color;
+	}
 
 	return team->Get_PrimaryKitColor();
 }
 
-Color C_PlayerResource::GetSecondaryTeamKitColor(int index)
+Color &C_PlayerResource::GetSecondaryTeamKitColor(int index)
 {
 	C_Team *team = GetGlobalTeam( index );
 
 	if ( !team )
-		return Color(0, 0, 0);
+	{
+		Assert( false );
+		static Color color;
+		return color;
+	}
 
 	return team->Get_SecondaryKitColor();
 }

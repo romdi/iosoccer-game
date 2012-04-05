@@ -204,7 +204,7 @@ public:
 	
 	//IOS
 	int		m_PlayersOnTeam[TEAMS_COUNT];
-	void	ChooseTeamNames(int anyOrClubOrCountry, int anyOrRealOrFictitious);
+	void	ChooseTeamNames(bool clubTeams, bool countryTeams, bool realTeams, bool fictitiousTeams);
 	void	CountTeams(void);
 
 	virtual void	ClientDisconnected( edict_t *pClient );		//ios
@@ -376,25 +376,6 @@ inline CSDKGameRules* SDKGameRules()
 	return static_cast<CSDKGameRules*>(g_pGameRules);
 }
 
-#define KITCOLOR_BLACK		Color(0, 0, 0, 255)
-#define KITCOLOR_WHITE		Color(255, 255, 255, 255)
-#define KITCOLOR_YELLOW		Color(255, 255, 0, 255)
-#define KITCOLOR_BLUE		Color(0, 0, 255, 255)
-#define KITCOLOR_GREEN		Color(0, 255, 0, 255)
-#define KITCOLOR_RED		Color(255, 0, 0, 255)
-
-struct KitData_t
-{
-	bool		isClubTeam;
-	bool		isRealTeam;
-	char		kitName[32];
-	char		teamCode[8];
-	char		shortTeamName[32];
-	char		fullTeamName[64];
-	Color		primaryKitColor;
-	Color		secondaryKitColor;
-};
-
 enum
 {
 	POS_XPOS = 0,
@@ -402,10 +383,6 @@ enum
 	POS_NAME,
 	POS_NUMBER
 };
-
-#define KIT_COUNT 10
-
-extern const KitData_t g_Kits[KIT_COUNT];
 
 extern const char g_szPosNames[21][5];
 
