@@ -225,11 +225,19 @@ void C_Team::ClientThink()
 void C_Team::SetKitName(const char *pKitName)
 {
 	Q_strncpy(m_szKitName, pKitName, MAX_KITNAME_LENGTH);
+	if (!Q_strcmp(pKitName, "Unassigned") || !Q_strcmp(pKitName, "Spectator"))
+		return;
 
 	TEAMKIT_FILE_INFO_HANDLE hKitHandle;
 	if (ReadTeamKitDataFromFileForSlot(filesystem, pKitName, &hKitHandle))
 	{
+		//Q_strncpy(m_szKitName, pKitName, MAX_KITNAME_LENGTH);
 		m_pTeamKitInfo = GetTeamKitInfoFromHandle(hKitHandle);
+	}
+	else
+	{
+		DownloadTeamKit(pKitName);
+		//materials->ReloadTextures();
 	}
 }
 

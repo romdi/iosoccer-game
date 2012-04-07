@@ -35,6 +35,7 @@ private:
 
 	int m_nActiveTab;
 	float m_flNextUpdateTime;
+	IScheme *m_pScheme;
 
 public:
 	CMatchMenu(IViewPort *pViewPort);

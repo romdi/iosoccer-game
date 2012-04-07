@@ -272,17 +272,17 @@ void ClientModeShared::OverrideView( CViewSetup *pSetup )
 	if (pPlayer->IsObserver() && pPlayer->GetObserverMode() != OBS_MODE_IN_EYE && pPlayer->GetObserverMode() != OBS_MODE_CHASE)
 		return;
 
-	pPlayer->OverrideView( pSetup );
+	//pPlayer->OverrideView( pSetup );
 
 	if( ::input->CAM_IsThirdPerson() )
 	{
-		Vector cam_ofs;
+		Vector cam_ofs = vec3_origin;
 
 		::input->CAM_GetCameraOffset( cam_ofs );
 
 		camAngles[ PITCH ] = cam_ofs[ PITCH ];
 		camAngles[ YAW ] = cam_ofs[ YAW ];
-		camAngles[ ROLL ] = 0;
+		camAngles[ ROLL ] = 0;		
 
 		Vector camForward, camRight, camUp;
 		AngleVectors( camAngles, &camForward, &camRight, &camUp );

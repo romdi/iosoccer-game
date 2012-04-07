@@ -37,11 +37,8 @@
 #include "teammenu.h"
 #include "matchmenu.h"
 #include "classmenu.h"				//IOS
-#include "ios_statusmenu.h"			//IOS
-#include "ios_mainstatus.h"			//IOS
 #include "vguitextwindow.h"
 #include "IGameUIFuncs.h"
-#include "mapoverview.h"
 #include "hud.h"
 #include "NavProgress.h"
 #include "commentary_modelviewer.h"
@@ -275,14 +272,6 @@ IViewPortPanel* CBaseViewport::CreatePanelByName(const char *szPanelName)
 	//{
 	//	newpanel = new CClassMenu( this );
 	//}
-	else if ( Q_strcmp(PANEL_STATUS, szPanelName) == 0 )		//IOS added
-	{
-		newpanel = new CStatusBar( this );
-	}
-	else if ( Q_strcmp(PANEL_MAINSTATUS, szPanelName) == 0 )	//IOS added
-	{
-		newpanel = new CMainStatus( this );
-	}
 	else if ( Q_strcmp(PANEL_SPECMENU, szPanelName) == 0 )
 	{
 		newpanel = new CSpectatorMenu( this );

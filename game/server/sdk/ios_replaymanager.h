@@ -72,7 +72,9 @@ public:
 	void CheckReplay();
 	void TakeSnapshot();
 	void StartReplay();
+	void StopReplay();
 	void RestoreSnapshot();
+	bool IsReplaying() { return m_bDoReplay; }
 };
 
 #endif

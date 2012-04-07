@@ -66,8 +66,9 @@ using namespace vgui;
 #define	STATS_TEXTHEIGHT	15
 #define	STATS_MARGIN		5
 #define	KICKBUTTON_SIZE		20
-#define TABBUTTON_HEIGHT	40
-#define TABBUTTON_MARGIN	7
+#define TEAMBUTTON_HEIGHT	40
+#define TEAMCREST_SIZE		80
+#define	TEAMBUTTON_VMARGIN	7
 #define SPECLIST_HEIGHT		50
 #define SPECLIST_MARGIN		10
 #define SPECBUTTON_WIDTH	90
@@ -93,7 +94,8 @@ CTeamMenu::CTeamMenu(Panel *parent, const char *name) : Panel(parent, name)
 		m_pTeamNames[i] = new Label(m_pTeamPanels[i], VarArgs("TeamLabel%d", i), "");
 		m_pTeamPossession[i] = new Label(m_pTeamPanels[i], "", "");
 		m_pTeamPlayerCount[i] = new Label(m_pTeamPanels[i], "", "");
-		m_pTabButtons[i] = new Button(this, "TabButton", VarArgs("Team%d", i + 1));
+		m_pTeamButtons[i] = new Button(this, "TabButton", VarArgs("Team%d", i + 1));
+		m_pTeamCrests[i] = new ImagePanel(this, "");
 
 		for (int j = 0; j < 11; j++)
 		{
@@ -130,6 +132,7 @@ CTeamMenu::CTeamMenu(Panel *parent, const char *name) : Panel(parent, name)
 
 void CTeamMenu::ApplySchemeSettings(IScheme *pScheme)
 {
+	m_pScheme = pScheme;
 	//BaseClass::PerformLayout();
 
 	//IScheme *pScheme = scheme()->GetIScheme(GetScheme());
@@ -144,13 +147,15 @@ void CTeamMenu::ApplySchemeSettings(IScheme *pScheme)
 		m_pTeamPanels[i]->SetPaintBackgroundType(2);
 		m_pTeamPanels[i]->SetVisible(i == m_nActiveTeam);
 
-		m_pTabButtons[i]->SetBounds(i * GetWide() / 2, TABBUTTON_MARGIN, GetWide() / 2, TABBUTTON_HEIGHT);
-		m_pTabButtons[i]->SetCommand(VarArgs("showteam %d", i));
-		m_pTabButtons[i]->AddActionSignalTarget(this);
-		m_pTabButtons[i]->SetFont(pScheme->GetFont("IOSTeamMenuBig"));
-		m_pTabButtons[i]->SetPaintBorderEnabled(false);
-		m_pTabButtons[i]->SetContentAlignment(i == 0 ? Label::a_west : Label::a_east);
-		m_pTabButtons[i]->SetZPos(1);
+		m_pTeamButtons[i]->SetCommand(VarArgs("showteam %d", i));
+		m_pTeamButtons[i]->AddActionSignalTarget(this);
+		m_pTeamButtons[i]->SetFont(pScheme->GetFont("IOSTeamMenuBig"));
+		m_pTeamButtons[i]->SetPaintBorderEnabled(false);
+		m_pTeamButtons[i]->SetContentAlignment(i == 0 ? Label::a_west : Label::a_east);
+
+		m_pTeamCrests[i]->SetBounds(i == 0 ? 0 : GetWide() - TEAMCREST_SIZE, TEAMBUTTON_VMARGIN, TEAMCREST_SIZE, TEAMCREST_SIZE);
+		m_pTeamCrests[i]->SetShouldScaleImage(true);
+		m_pTeamCrests[i]->SetZPos(2);
 
 		//m_pTeamNames[i]->SetBounds(50, 0, 550, 50);
 		//m_pTeamNames[i]->SetFgColor(Color(200, 200, 200, 255));
@@ -203,9 +208,10 @@ void CTeamMenu::ApplySchemeSettings(IScheme *pScheme)
 			//pPos->pPlayerName->SetBgColor(Color(200, 200, 200, 200));
 			pPos->pPlayerName->SetButtonBorderEnabled(false);
 			pPos->pPlayerName->SetContentAlignment(Label::a_center);
-			pPos->pPlayerName->SetFont(pScheme->GetFont("IOSTeamMenuBig"));
+			//pPos->pPlayerName->SetFont(pScheme->GetFont("IOSTeamMenuBig"));
 
-			pPos->pPosName->SetBounds(0, pPos->pPosPanel->GetTall() - 2 * NAME_HEIGHT, NUMBER_WIDTH, NAME_HEIGHT);
+			pPos->pPosName->SetBounds(0, pPos->pPosPanel->GetTall() - NAME_HEIGHT, NUMBER_WIDTH, NAME_HEIGHT);
+			pPos->pPosName->SetFgColor(Color(225, 225, 225, 255));
 			pPos->pPosName->SetContentAlignment(Label::a_east);
 			pPos->pPosName->SetText(g_szPosNames[(int)g_Positions[mp_maxplayers.GetInt() - 1][j][2]]);
 			pPos->pPosName->SetFont(pScheme->GetFont("IOSTeamMenuBig"));
@@ -214,9 +220,9 @@ void CTeamMenu::ApplySchemeSettings(IScheme *pScheme)
 			pPos->pClubName->SetBounds(0, pPos->pPosPanel->GetTall() - NAME_HEIGHT, pPos->pPosPanel->GetWide(), NAME_HEIGHT);
 			pPos->pClubName->SetContentAlignment(Label::a_center);
 			pPos->pClubName->SetFont(pScheme->GetFont("IOSTeamMenuBig"));
-			pPos->pClubName->SetFgColor(Color(200, 200, 200, 255));
+			pPos->pClubName->SetFgColor(Color(225, 225, 225, 255));
 
-			pPos->pCountryFlag->SetBounds(pPos->pPosPanel->GetWide() - NUMBER_WIDTH, pPos->pPosPanel->GetTall() - 2 * NAME_HEIGHT, NUMBER_WIDTH, NAME_HEIGHT);
+			pPos->pCountryFlag->SetBounds(pPos->pPosPanel->GetWide() - NUMBER_WIDTH, pPos->pPosPanel->GetTall() - NAME_HEIGHT, NUMBER_WIDTH, NAME_HEIGHT);
 			pPos->pCountryFlag->SetShouldScaleImage(true);
 			pPos->pCountryFlag->SetZPos(1);
 
@@ -321,6 +327,13 @@ void CTeamMenu::OnThink()
 {
 	//BaseClass::Update();
 
+	Color black = Color(0, 0, 0, 255);
+	Color darker = Color(75, 75, 75, 255);
+	Color dark = Color(125, 125, 125, 255);
+	Color light = Color(175, 175, 175, 255);
+	Color lighter = Color(225, 225, 225, 255);
+	Color white = Color(255, 255, 255, 255);
+
 	if (m_flNextUpdateTime > gpGlobals->curtime)
 		return;
 
@@ -370,14 +383,15 @@ void CTeamMenu::OnThink()
 		pPos->pPlayerName->SetFgColor(gr->GetTeamColor(team));
 		pPos->pPlayerName->SetCursor(gr->IsFakePlayer(i) ? dc_hand : dc_arrow);
 		pPos->pPlayerName->SetEnabled(gr->IsFakePlayer(i));
-		pPos->pPlayerName->SetDefaultColor(Color(0, 0, 0, 255), Color(150, 150, 150, 255));
-		pPos->pPlayerName->SetArmedColor(Color(0, 0, 0, 255), Color(200, 200, 200, 255));
-		pPos->pPlayerName->SetDepressedColor(Color(0, 0, 0, 255), Color(150, 150, 150, 255));
+		pPos->pPlayerName->SetDefaultColor(black, lighter);
+		pPos->pPlayerName->SetArmedColor(black, white);
+		pPos->pPlayerName->SetDepressedColor(black, lighter);
 		pPos->pPlayerName->SetDisabledFgColor1(Color(0, 0, 0, 0));
-		pPos->pPlayerName->SetDisabledFgColor2(Color(0, 0, 0, 255));
+		pPos->pPlayerName->SetDisabledFgColor2(black);
+		pPos->pPlayerName->SetFont(m_pScheme->GetFont("IOSTeamMenuBig"));
 		pPos->pClubName->SetText(gr->GetClubName(i));
 		pPos->pClubName->SetVisible(true);
-		pPos->pPosName->SetFgColor(Color(0, 0, 0, 255));
+		//pPos->pPosName->SetFgColor(Color(0, 0, 0, 255));
 		if (UTIL_PlayerByIndex(i))
 		{
 			pPos->pKickButton->SetCommand(VarArgs("kickid %d", UTIL_PlayerByIndex(i)->GetUserID()));
@@ -446,17 +460,21 @@ void CTeamMenu::OnThink()
 
 	m_pTeamPanels[m_nActiveTeam]->SetVisible(true);
 
-	m_pTabButtons[m_nActiveTeam]->SetDefaultColor(Color(200, 200, 200, 255), Color(0, 0, 0, 0));
-	m_pTabButtons[m_nActiveTeam]->SetArmedColor(Color(200, 200, 200, 255), Color(0, 0, 0, 0));
-	m_pTabButtons[m_nActiveTeam]->SetDepressedColor(Color(200, 200, 200, 255), Color(0, 0, 0, 0));
-	m_pTabButtons[m_nActiveTeam]->SetCursor(dc_arrow);
+	m_pTeamButtons[m_nActiveTeam]->SetDefaultColor(black, lighter);
+	m_pTeamButtons[m_nActiveTeam]->SetArmedColor(black, lighter);
+	m_pTeamButtons[m_nActiveTeam]->SetDepressedColor(black, lighter);
+	m_pTeamButtons[m_nActiveTeam]->SetCursor(dc_arrow);
+	m_pTeamButtons[m_nActiveTeam]->SetBounds(TEAMCREST_SIZE, TEAMBUTTON_VMARGIN, GetWide() - 2 * TEAMCREST_SIZE, TEAMBUTTON_HEIGHT + 5);
+	m_pTeamButtons[m_nActiveTeam]->SetZPos(1);
 
 	m_pTeamPanels[1 - m_nActiveTeam]->SetVisible(false);
 
-	m_pTabButtons[1 - m_nActiveTeam]->SetDefaultColor(Color(100, 100, 100, 255), Color(200, 200, 200, 255));
-	m_pTabButtons[1 - m_nActiveTeam]->SetArmedColor(Color(100, 100, 100, 255), Color(150, 150, 150, 255));
-	m_pTabButtons[1 - m_nActiveTeam]->SetDepressedColor(Color(100, 100, 100, 255), Color(200, 200, 200, 255));
-	m_pTabButtons[1 - m_nActiveTeam]->SetCursor(dc_hand);
+	m_pTeamButtons[1 - m_nActiveTeam]->SetDefaultColor(black, light);
+	m_pTeamButtons[1 - m_nActiveTeam]->SetArmedColor(black, lighter);
+	m_pTeamButtons[1 - m_nActiveTeam]->SetDepressedColor(black, light);
+	m_pTeamButtons[1 - m_nActiveTeam]->SetCursor(dc_hand);
+	m_pTeamButtons[1 - m_nActiveTeam]->SetZPos(2);
+	m_pTeamButtons[1 - m_nActiveTeam]->SetBounds(1 - m_nActiveTeam == 0 ? TEAMCREST_SIZE : GetWide() / 2, TEAMBUTTON_VMARGIN, GetWide() / 2 - TEAMCREST_SIZE, TEAMBUTTON_HEIGHT);
 
 	for (int i = 0; i < 2; i++)
 	{
@@ -470,11 +488,11 @@ void CTeamMenu::OnThink()
 			pPos->pPlayerName->SetCursor(dc_hand);
 			pPos->pPlayerName->SetEnabled(true);
 			//pPos->pPlayerName->SetFgColor(gr->GetTeamColor(TEAM_UNASSIGNED));
-			pPos->pPlayerName->SetDefaultColor(Color(200, 200, 200, 255), Color(50, 50, 50, 255));
-			pPos->pPlayerName->SetArmedColor(Color(200, 200, 200, 255), Color(100, 100, 100, 255));
-			pPos->pPlayerName->SetDepressedColor(Color(200, 200, 200, 255), Color(50, 50, 50, 255));
+			pPos->pPlayerName->SetDefaultColor(black, darker);
+			pPos->pPlayerName->SetArmedColor(black, dark);
+			pPos->pPlayerName->SetDepressedColor(black, darker);
+			pPos->pPlayerName->SetFont(m_pScheme->GetFont("IOSTeamMenuBigBold"));
 			pPos->pClubName->SetVisible(false);
-			pPos->pPosName->SetFgColor(Color(200, 200, 200, 255));
 			pPos->pCountryFlag->SetVisible(false);
 			pPos->pKickButton->SetVisible(false);
 
@@ -495,15 +513,29 @@ void CTeamMenu::OnThink()
 			pStats->pPingText->SetVisible(false);
 		}
 	}
-	C_Team *pTeamA = GetGlobalTeam(TEAM_A);
-	//m_pTabButtons[0]->SetText(VarArgs("%-40s %2d %-7s %17d%% poss. %17d", pTeamA->Get_Name(), pTeamA->Get_Number_Players(), (pTeamA->Get_Number_Players() == 1 ? "player" : "players"), pTeamA->Get_Possession(), pTeamA->Get_Goals()));
-	m_pTabButtons[0]->SetText(pTeamA->Get_FullTeamName());
-	C_Team *pTeamB = GetGlobalTeam(TEAM_B);
-	//m_pTabButtons[1]->SetText(VarArgs("   %-13d %3d%% poss. %13d %-7s %40s", pTeamB->Get_Goals(), pTeamB->Get_Possession(), pTeamB->Get_Number_Players(), (pTeamB->Get_Number_Players() == 1 ? "player" : "players"), pTeamB->Get_Name()));
-	m_pTabButtons[1]->SetText(pTeamB->Get_FullTeamName());
 
-	//m_pTabButtons[0]->SetText(gr->GetFullTeamName(TEAM_A));
-	//m_pTabButtons[1]->SetText(gr->GetFullTeamName(TEAM_B));
+	//m_pTeamButtons[0]->SetText(VarArgs("%-40s %2d %-7s %17d%% poss. %17d", pTeamA->Get_Name(), pTeamA->Get_Number_Players(), (pTeamA->Get_Number_Players() == 1 ? "player" : "players"), pTeamA->Get_Possession(), pTeamA->Get_Goals()));
+	//m_pTeamButtons[1]->SetText(VarArgs("   %-13d %3d%% poss. %13d %-7s %40s", pTeamB->Get_Goals(), pTeamB->Get_Possession(), pTeamB->Get_Number_Players(), (pTeamB->Get_Number_Players() == 1 ? "player" : "players"), pTeamB->Get_Name()));
+
+	for (int team = TEAM_A; team <= TEAM_B; team++)
+	{
+		int index = team - TEAM_A;
+
+		m_pTeamButtons[index]->SetText(gr->GetFullTeamName(team));
+
+		ITexture *pTex = materials->FindTexture(VarArgs("vgui/teamcrests/%s", gr->GetTeamKitName(team)), NULL, false);
+		if (!pTex->IsError())
+		{
+			m_pTeamCrests[index]->SetImage(VarArgs("teamcrests/%s", gr->GetTeamKitName(team)));
+			m_pTeamCrests[index]->SetVisible(true);
+		}
+		else
+			m_pTeamCrests[index]->SetVisible(false);
+
+	}
+
+	//m_pTeamButtons[0]->SetText(gr->GetFullTeamName(TEAM_A));
+	//m_pTeamButtons[1]->SetText(gr->GetFullTeamName(TEAM_B));
 
 	m_pSpectatorNames->SetText(spectatorNames);
 

@@ -8,6 +8,7 @@ using namespace vgui;
 #define BUTTON_WIDTH		200
 #define BUTTON_HEIGHT		50
 #define BUTTON_MARGIN		5
+#define BUTTON_LEFTMARGIN	10	
 #define PANEL_MARGIN		5
 #define PANEL_WIDTH			(1024 - 2 * PANEL_MARGIN)
 #define PANEL_HEIGHT		(768 - 2 * PANEL_MARGIN)
@@ -47,7 +48,9 @@ CMatchMenu::~CMatchMenu()
 
 void CMatchMenu::ApplySchemeSettings(IScheme *pScheme)
 {
-	BaseClass::ApplySchemeSettings(pScheme);	
+	BaseClass::ApplySchemeSettings(pScheme);
+
+	m_pScheme = pScheme;
 }
 
 void CMatchMenu::PerformLayout()
@@ -57,11 +60,13 @@ void CMatchMenu::PerformLayout()
 
 	for (int i = 0; i < TAB_COUNT; i++)
 	{
-		m_pTabButtons[i]->SetBounds(i * (BUTTON_WIDTH + BUTTON_MARGIN), 0, BUTTON_WIDTH, BUTTON_HEIGHT);
+		m_pTabButtons[i]->SetBounds(BUTTON_LEFTMARGIN + i * (BUTTON_WIDTH + BUTTON_MARGIN), 0, BUTTON_WIDTH, BUTTON_HEIGHT);
 		m_pTabButtons[i]->SetCommand(VarArgs("showtab %d", i));
 		m_pTabButtons[i]->SetDefaultColor(Color(0, 0, 0, 255), Color(200, 200, 200, 255));
 		m_pTabButtons[i]->SetArmedColor(Color(50, 50, 50, 255), Color(150, 150, 150, 255));
 		m_pTabButtons[i]->SetDepressedColor(Color(100, 100, 100, 255), Color(200, 200, 200, 255));
+		m_pTabButtons[i]->SetFont(m_pScheme->GetFont("IOSTeamMenuBig"));
+		m_pTabButtons[i]->SetPaintBorderEnabled(false);
 		m_pTabButtons[i]->SetCursor(dc_hand);
 
 		m_pTabPanels[i]->SetBounds(0, BUTTON_HEIGHT, PANEL_WIDTH, PANEL_HEIGHT - BUTTON_HEIGHT);

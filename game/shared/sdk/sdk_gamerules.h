@@ -391,4 +391,8 @@ extern const float g_Positions[11][11][4];
 bool IsValidPosition(int posIndex);
 int GetKeeperPosIndex();
 
+#ifdef CLIENT_DLL
+void DownloadTeamKit(const char *pKitName);
+#endif
+
 #endif // SDK_GAMERULES_H

@@ -14,13 +14,22 @@ void cc_StartReplay(const CCommand &args)
 	if (args.ArgC() > 1)
 		engine->ServerCommand(UTIL_VarArgs("host_timescale %f\n", (float)atof(args[1])));
 
-	GetBall()->SetIgnoreTriggers(true);
-	GetBall()->VPhysicsGetObject()->EnableMotion(true);
 	CReplayManager::GetInstance()->StartReplay();
 }
 
 static ConCommand start_replay("start_replay", cc_StartReplay);
-//static ConCommand start_replay("stop_replay", cc_StopReplay);
+
+
+void cc_StopReplay(const CCommand &args)
+{
+	if (!UTIL_IsCommandIssuedByServerAdmin())
+        return;
+
+	CReplayManager::GetInstance()->StopReplay();
+}
+
+static ConCommand stop_replay("stop_replay", cc_StopReplay);
+
 
 CReplayManager *CReplayManager::m_pInstance = NULL;
 
@@ -34,7 +43,7 @@ CReplayManager *CReplayManager::GetInstance()
 
 CReplayManager::CReplayManager()
 {
-
+	m_bDoReplay = false;
 }
 
 void CReplayManager::CheckReplay()
@@ -102,60 +111,86 @@ void CReplayManager::TakeSnapshot()
 
 void CReplayManager::StartReplay()
 {
-	if (m_Snapshots.Count() > 0)
+	if (m_Snapshots.Count() == 0)
+		return;
+
+	m_nSnapshotIndex = 0;
+	m_bDoReplay = true;
+
+	GetBall()->VPhysicsGetObject()->EnableMotion(true);
+	GetBall()->SetIgnoreTriggers(true);
+
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
-		m_nSnapshotIndex = 0;
-		m_bDoReplay = true;
+		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+		if (!CSDKPlayer::IsOnField(pPl))
+			continue;
+
+		pPl->AddFlag(FL_REMOTECONTROLLED);
+	}
+}
+
+void CReplayManager::StopReplay()
+{
+	m_bDoReplay = false;
+	GetBall()->SetIgnoreTriggers(false);
+	engine->ServerCommand("host_timescale 1\n");
+
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+		if (!CSDKPlayer::IsOnField(pPl))
+			continue;
+
+		pPl->RemoveFlag(FL_REMOTECONTROLLED);
 	}
 }
 
 void CReplayManager::RestoreSnapshot()
 {
-	if (m_Snapshots.Count() > 0 && m_nSnapshotIndex < m_Snapshots.Count())
+	if (m_Snapshots.Count() == 0 || m_nSnapshotIndex >= m_Snapshots.Count())
 	{
-		Snapshot *snapshot = &m_Snapshots[m_nSnapshotIndex];
-		m_nSnapshotIndex += 1;
-		GetBall()->VPhysicsGetObject()->SetPosition(snapshot->pBallSnapshot->pos, snapshot->pBallSnapshot->ang, false);
-		GetBall()->VPhysicsGetObject()->SetVelocity(&snapshot->pBallSnapshot->vel, &snapshot->pBallSnapshot->rot);
+		StopReplay();
+		return;
+	}
 
-		for (int i = 1; i <= gpGlobals->maxClients; i++)
+	Snapshot *snapshot = &m_Snapshots[m_nSnapshotIndex];
+	m_nSnapshotIndex += 1;
+	GetBall()->VPhysicsGetObject()->SetPosition(snapshot->pBallSnapshot->pos, snapshot->pBallSnapshot->ang, false);
+	GetBall()->VPhysicsGetObject()->SetVelocity(&snapshot->pBallSnapshot->vel, &snapshot->pBallSnapshot->rot);
+
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+		if (!CSDKPlayer::IsOnField(pPl))
+			continue;
+
+		PlayerSnapshot *pPlSnap = snapshot->pPlayerSnapshot[i - 1];
+
+		pPl->SetLocalOrigin(pPlSnap->pos);
+		pPl->SetLocalVelocity(pPlSnap->vel);
+		pPl->SetLocalAngles(pPlSnap->ang);
+
+		pPl->SetSequence(pPlSnap->m_masterSequence);
+		pPl->SetCycle(pPlSnap->m_masterCycle);
+
+		int layerCount = pPl->GetNumAnimOverlays();
+		for( int layerIndex = 0; layerIndex < layerCount; ++layerIndex )
 		{
-			CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
-			if (!CSDKPlayer::IsOnField(pPl))
+			CAnimationLayer *currentLayer = pPl->GetAnimOverlay(layerIndex);
+			if(!currentLayer)
 				continue;
 
-			PlayerSnapshot *pPlSnap = snapshot->pPlayerSnapshot[i - 1];
+			pPlSnap->m_layerRecords[layerIndex].m_cycle = currentLayer->m_flCycle;
+			pPlSnap->m_layerRecords[layerIndex].m_order = currentLayer->m_nOrder;
+			pPlSnap->m_layerRecords[layerIndex].m_sequence = currentLayer->m_nSequence;
+			pPlSnap->m_layerRecords[layerIndex].m_weight = currentLayer->m_flWeight;
 
-			pPl->SetLocalOrigin(pPlSnap->pos);
-			pPl->SetLocalVelocity(pPlSnap->vel);
-			pPl->SetLocalAngles(pPlSnap->ang);
-
-			pPl->SetSequence(pPlSnap->m_masterSequence);
-			pPl->SetCycle(pPlSnap->m_masterCycle);
-
-			int layerCount = pPl->GetNumAnimOverlays();
-			for( int layerIndex = 0; layerIndex < layerCount; ++layerIndex )
-			{
-				CAnimationLayer *currentLayer = pPl->GetAnimOverlay(layerIndex);
-				if(!currentLayer)
-					continue;
-
-				pPlSnap->m_layerRecords[layerIndex].m_cycle = currentLayer->m_flCycle;
-				pPlSnap->m_layerRecords[layerIndex].m_order = currentLayer->m_nOrder;
-				pPlSnap->m_layerRecords[layerIndex].m_sequence = currentLayer->m_nSequence;
-				pPlSnap->m_layerRecords[layerIndex].m_weight = currentLayer->m_flWeight;
-
-				//Either no interp, or interp failed.  Just use record.
-				currentLayer->m_flCycle = pPlSnap->m_layerRecords[layerIndex].m_cycle;
-				currentLayer->m_nOrder = pPlSnap->m_layerRecords[layerIndex].m_order;
-				currentLayer->m_nSequence = pPlSnap->m_layerRecords[layerIndex].m_sequence;
-				currentLayer->m_flWeight = pPlSnap->m_layerRecords[layerIndex].m_weight;
-			}
+			//Either no interp, or interp failed.  Just use record.
+			currentLayer->m_flCycle = pPlSnap->m_layerRecords[layerIndex].m_cycle;
+			currentLayer->m_nOrder = pPlSnap->m_layerRecords[layerIndex].m_order;
+			currentLayer->m_nSequence = pPlSnap->m_layerRecords[layerIndex].m_sequence;
+			currentLayer->m_flWeight = pPlSnap->m_layerRecords[layerIndex].m_weight;
 		}
-	}
-	else
-	{
-		m_bDoReplay = false;
-		engine->ServerCommand("host_timescale 1\n");
 	}
 }

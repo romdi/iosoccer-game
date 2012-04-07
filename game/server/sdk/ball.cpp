@@ -1330,10 +1330,12 @@ bool CBall::DoBodyPartAction()
 		return DoGroundShot();
 
 	if (zDist >= BODY_HIP_START && zDist < BODY_HIP_END && xyDist <= sv_ball_touchradius.GetInt())
+	{
 		if (DoVolleyShot())
 			return true;
 		else
-			return DoGroundShot();
+			return DoChestDrop();
+	}
 
 	if (zDist >= BODY_CHEST_START && zDist < BODY_CHEST_END && xyDist <= sv_ball_touchradius.GetInt())
 		return DoChestDrop();
@@ -1404,19 +1406,17 @@ bool CBall::DoGroundShot()
 
 bool CBall::DoVolleyShot()
 {
-	if (!m_bIsPowershot || m_vPlVel.Length2D() > 10)
+	if (!m_bIsPowershot || m_vPlVel.Length2D() > 50 || m_pPl->GetGroundEntity())
 		return false;
 
-	Vector dir = m_vPos - m_vPlPos;
-	dir.z = 0;
-	dir.NormalizeInPlace();
+	//Vector dirToBall = m_vPos - m_vPlPos;
+	//Vector localDirToBall;
+	//VectorIRotate(dirToBall, m_pPl->EntityToWorldTransform(), localDirToBall);
 
-	float angle = RAD2DEG(acos(m_vPlForward.Dot(dir)));
+	//if (abs(localDirToBall.x) < 10 || abs(localDirToBall.x) > 50)
+	//	return false;
 
-	if (angle < (90 - sv_ball_volleysideangle.GetInt() / 2) || angle > (90 + sv_ball_volleysideangle.GetInt() / 2))
-		return false;
-
-	SetVel(m_vPlForward * sv_ball_powershot_strength.GetFloat() * 1.5f);
+	SetVel(m_vPlForward * 1.5f * sv_ball_powershot_strength.GetFloat() * (1 + GetPowershotModifier()) * GetPitchModifier());
 
 	SetBallSpin();
 

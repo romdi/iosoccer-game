@@ -30,7 +30,11 @@ C_TVCamera::C_TVCamera()
 
 void C_TVCamera::GetPositionAndAngle(Vector &pos, QAngle &ang)
 {
-	Vector ballPos = GetBall()->GetLocalOrigin();
+	C_BaseEntity *pTarget = CBasePlayer::GetLocalPlayer()->GetObserverTarget();
+	if (!pTarget)
+		pTarget = GetBall();
+
+	Vector ballPos = pTarget->GetLocalOrigin();
 	Vector newPos = Vector(SDKGameRules()->m_vFieldMin.GetX() - 500, ballPos.y, SDKGameRules()->m_vKickOff.GetZ() + 700);
 	newPos.y = clamp(newPos.y, SDKGameRules()->m_vFieldMin.GetY() + 800, SDKGameRules()->m_vFieldMax.GetY() - 800);
 	Vector newDir = ballPos - newPos;

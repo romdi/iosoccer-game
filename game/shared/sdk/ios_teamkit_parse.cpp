@@ -103,9 +103,8 @@ bool ReadTeamKitDataFromFileForSlot(IFileSystem* filesystem, const char *szTeamK
 		return true;
 
 	char filename[128];
-	Q_snprintf(filename, sizeof(filename), "%s/%s", KITSCRIPT_PATH, szTeamKitName);
-	V_SetExtension(filename, ".txt", sizeof(filename));
-	KeyValues *pKV = new KeyValues("TeamKit");
+	Q_snprintf(filename, sizeof(filename), "%s/%s/kitdata.txt", KITSCRIPT_PATH, szTeamKitName);
+	KeyValues *pKV = new KeyValues("KitData");
 
 	if (!pKV->LoadFromFile(filesystem, filename, "MOD"))
 	{
@@ -153,7 +152,7 @@ void CTeamKitInfo::Parse( KeyValues *pKeyValuesData, const char *szWeaponName )
 void CTeamKitInfo::FindTeamKits()
 {
 	char filefilter[128];
-	Q_snprintf(filefilter, sizeof(filefilter), "%s/*.txt", KITSCRIPT_PATH);
+	Q_snprintf(filefilter, sizeof(filefilter), "%s/*.*", KITSCRIPT_PATH);
 	FileFindHandle_t findHandle;
 	const char *pFilename = filesystem->FindFirstEx(filefilter, "MOD", &findHandle);
 	while (pFilename)

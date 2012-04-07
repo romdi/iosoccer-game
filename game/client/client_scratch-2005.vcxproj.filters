@@ -1242,9 +1242,6 @@
     <ClCompile Include="game_controls\intromenu.cpp">
       <Filter>Source Files\game_controls</Filter>
     </ClCompile>
-    <ClCompile Include="game_controls\MapOverview.cpp">
-      <Filter>Source Files\game_controls</Filter>
-    </ClCompile>
     <ClCompile Include="game_controls\NavProgress.cpp">
       <Filter>Source Files\game_controls</Filter>
     </ClCompile>
@@ -1288,9 +1285,6 @@
       <Filter>Source Files\SDK\GUI</Filter>
     </ClCompile>
     <ClCompile Include="sdk\sdk_scoreboard.cpp">
-      <Filter>Source Files\SDK\GUI</Filter>
-    </ClCompile>
-    <ClCompile Include="sdk\vgui\sdk_spectatorgui.cpp">
       <Filter>Source Files\SDK\GUI</Filter>
     </ClCompile>
     <ClCompile Include="sdk\vgui\sdk_teammenu.cpp">
@@ -1413,12 +1407,6 @@
     <ClCompile Include="toolframework_client.cpp">
       <Filter>Tool Framework</Filter>
     </ClCompile>
-    <ClCompile Include="sdk\ios_mainstatus.cpp">
-      <Filter>Source Files\SDK\Hud Elements</Filter>
-    </ClCompile>
-    <ClCompile Include="sdk\ios_statusmenu.cpp">
-      <Filter>Source Files\SDK\Hud Elements</Filter>
-    </ClCompile>
     <ClCompile Include="sdk\ios_hud_powershotbar.cpp">
       <Filter>Source Files\SDK\Hud Elements</Filter>
     </ClCompile>
@@ -1524,9 +1512,6 @@
       <Filter>Source Files\SDK\GUI</Filter>
     </ClInclude>
     <ClInclude Include="sdk\sdk_scoreboard.h">
-      <Filter>Source Files\SDK\GUI</Filter>
-    </ClInclude>
-    <ClInclude Include="sdk\vgui\sdk_spectatorgui.h">
       <Filter>Source Files\SDK\GUI</Filter>
     </ClInclude>
     <ClInclude Include="sdk\vgui\sdk_teammenu.h">
@@ -2441,9 +2426,6 @@
     <ClInclude Include="..\..\public\vgui_controls\ImagePanel.h">
       <Filter>Public Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\public\imapoverview.h">
-      <Filter>Public Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\public\materialsystem\imaterial.h">
       <Filter>Public Header Files</Filter>
     </ClInclude>
@@ -3206,9 +3188,6 @@
     <ClInclude Include="game_controls\intromenu.h">
       <Filter>game_controls Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="game_controls\mapoverview.h">
-      <Filter>game_controls Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="game_controls\mouseoverhtmlbutton.h">
       <Filter>game_controls Header Files</Filter>
     </ClInclude>
@@ -3223,12 +3202,6 @@
     </ClInclude>
     <ClInclude Include="game_controls\vguitextwindow.h">
       <Filter>game_controls Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sdk\ios_statusmenu.h">
-      <Filter>Source Files\SDK\Hud Elements</Filter>
-    </ClInclude>
-    <ClInclude Include="sdk\ios_mainstatus.h">
-      <Filter>Source Files\SDK\Hud Elements</Filter>
     </ClInclude>
     <ClInclude Include="sdk\c_ball.h">
       <Filter>Source Files\SDK</Filter>

@@ -49,8 +49,6 @@ ConVar spec_scoreboard( "spec_scoreboard", "0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE 
 
 CSpectatorGUI *g_pSpectatorGUI = NULL;
 
-static char *s_SpectatorModes[] = { "#Spec_Mode0", "#Spec_Mode1", "#Spec_Mode2", "#Spec_Mode3", "#Spec_Mode4", "#Spec_Mode5", "" };
-
 using namespace vgui;
 
 ConVar cl_spec_mode(
@@ -126,7 +124,10 @@ CSpectatorMenu::CSpectatorMenu( IViewPort *pViewPort ) : Frame( NULL, PANEL_SPEC
 	// create view mode menu
 	menu = new CommandMenu(m_pViewOptions, "spectatormodes", gViewPortInterface);
 	menu->LoadFromFile("Resource/spectatormodes.res");
-	menu->AddMenuItem("Foobar", "spec_mode 1", this);
+	menu->AddMenuItem("Locked Chase", VarArgs("spec_mode %d", OBS_MODE_IN_EYE), this);
+	menu->AddMenuItem("Free Chase", VarArgs("spec_mode %d", OBS_MODE_CHASE), this);
+	menu->AddMenuItem("Roaming", VarArgs("spec_mode %d", OBS_MODE_ROAMING), this);
+	menu->AddMenuItem("TV Camera", VarArgs("spec_mode %d", OBS_MODE_TVCAM), this);
 	//MenuItem *m = new MenuItem("Foobar", "spec_mode 1", this);
 	m_pViewOptions->SetMenu( menu );	// attach menu to combo box
 
@@ -182,19 +183,27 @@ void CSpectatorMenu::OnTextChanged(KeyValues *data)
 		if ( kv && GameResources() )
 		{
 			const char *player = kv->GetString("player");
-
 			int currentPlayerNum = GetSpectatorTarget();
-			if (currentPlayerNum > 0)
-			{
-				const char *currentPlayerName = GameResources()->GetPlayerName( currentPlayerNum );
+			bool update = false;
 
-				if ( !FStrEq( currentPlayerName, player ) )
-				{
-					char command[128];
-					Q_snprintf( command, sizeof(command), "spec_player \"%s\"", player );
-					engine->ClientCmd( command );
-				}
+			if (!Q_stricmp(player, "ball"))
+			{
+				if (currentPlayerNum < gpGlobals->maxClients)
+					update = true;
 			}
+			else
+			{
+				if (currentPlayerNum >= 1 && currentPlayerNum <= gpGlobals->maxClients)
+				{
+					const char *currentPlayerName = GameResources()->GetPlayerName( currentPlayerNum );
+					update = Q_strcmp(currentPlayerName, player) != 0;
+				}
+				else
+					update = true;
+			}
+
+			if (update)
+				engine->ClientCmd( VarArgs("spec_player %d", atoi(kv->GetString("index"))) );
 		}
 	}
 }
@@ -208,6 +217,10 @@ void CSpectatorMenu::OnCommand( const char *command )
 	else if (!stricmp(command, "specprev") )
 	{
 		engine->ClientCmd("spec_prev");
+	}
+	else if (!strnicmp(command, "spec_mode", 9))
+	{
+		engine->ClientCmd(command);
 	}
 }
 
@@ -223,8 +236,11 @@ void CSpectatorMenu::FireGameEvent( IGameEvent * event )
 
 		// make sure the player combo box is up to date
 		int playernum = GetSpectatorTarget();
-		if ( playernum < 1 || playernum > MAX_PLAYERS )
+		if ( playernum < 1 || playernum > gpGlobals->maxClients )
+		{
+			m_pPlayerList->ActivateItemByRow(0);
 			return;
+		}
 
 		const char *selectedPlayerName = gr->GetPlayerName( playernum );
 		const char *currentPlayerName = "";
@@ -306,6 +322,10 @@ void CSpectatorMenu::Update( void )
 	if ( !gr )
 		return;
 
+	KeyValues *kv = new KeyValues( "UserData", "player", "ball", "index", "0" );
+	m_pPlayerList->AddItem( L"Ball", kv );
+	kv->deleteThis();
+
 	int iPlayerIndex;
 	for ( iPlayerIndex = 1 ; iPlayerIndex <= gpGlobals->maxClients; iPlayerIndex++ )
 	{
@@ -317,32 +337,16 @@ void CSpectatorMenu::Update( void )
 		if ( gr->IsLocalPlayer( iPlayerIndex ) )
 			continue;
 
-		if ( gr->GetTeam( iPlayerIndex ) == TEAM_SPECTATOR )
+		if ( gr->GetTeam(iPlayerIndex) != TEAM_A && gr->GetTeam(iPlayerIndex) != TEAM_B )
 			continue;
 
-		wchar_t playerText[ 80 ], playerName[ 64 ], *team, teamText[ 64 ];
+		wchar_t playerText[ 80 ], playerName[ 64 ], *team, teamName[ 64 ];
 		char localizeTeamName[64];
 		char szPlayerIndex[16];
 		g_pVGuiLocalize->ConvertANSIToUnicode( UTIL_SafeName( gr->GetPlayerName(iPlayerIndex) ), playerName, sizeof( playerName ) );
-		const char * teamname = gr->GetShortTeamName( gr->GetTeam(iPlayerIndex) );
-		if ( teamname )
-		{	
-			Q_snprintf( localizeTeamName, sizeof( localizeTeamName ), "#%s", teamname );
-			team=g_pVGuiLocalize->Find( localizeTeamName );
+		g_pVGuiLocalize->ConvertANSIToUnicode(gr->GetShortTeamName( gr->GetTeam(iPlayerIndex) ), teamName, sizeof( teamName ) );
 
-			if ( !team ) 
-			{
-				g_pVGuiLocalize->ConvertANSIToUnicode( teamname , teamText, sizeof( teamText ) );
-				team = teamText;
-			}
-
-			g_pVGuiLocalize->ConstructString( playerText, sizeof( playerText ), g_pVGuiLocalize->Find( "#Spec_PlayerItem_Team" ), 2, playerName, team );
-		}
-		else
-		{
-			g_pVGuiLocalize->ConstructString( playerText, sizeof( playerText ), g_pVGuiLocalize->Find( "#Spec_PlayerItem" ), 1, playerName );
-		}
-
+		_snwprintf(playerText, ARRAYSIZE(playerText), L"%s - %s", playerName, teamName);
 		Q_snprintf( szPlayerIndex, sizeof( szPlayerIndex ), "%d", iPlayerIndex );
 
 		KeyValues *kv = new KeyValues( "UserData", "player", gr->GetPlayerName( iPlayerIndex ), "index", szPlayerIndex );
@@ -352,7 +356,6 @@ void CSpectatorMenu::Update( void )
 
 	// make sure the player combo box is up to date
 	int playernum = GetSpectatorTarget();
-
 	if (playernum >= 1 && playernum <= gpGlobals->maxClients)
 	{
 		const char *selectedPlayerName = gr->GetPlayerName( playernum );
@@ -395,7 +398,6 @@ CSpectatorGUI::CSpectatorGUI(IViewPort *pViewPort) : EditablePanel( NULL, PANEL_
 	SetMouseInputEnabled( false );
 	SetKeyBoardInputEnabled( false );
 
-	m_pTopBar = new Panel( this, "topbar" );
  	m_pBottomBarBlank = new Panel( this, "bottombarblank" );
 
 	// m_pBannerImage = new ImagePanel( m_pTopBar, NULL );
@@ -422,11 +424,9 @@ void CSpectatorGUI::ApplySchemeSettings(IScheme *pScheme)
 {
 	LoadControlSettings("Resource/UI/Spectator.res");
 	m_pBottomBarBlank->SetVisible( false );
-	m_pTopBar->SetVisible( false );
 
 	BaseClass::ApplySchemeSettings( pScheme );
 	SetBgColor(Color( 0,0,0,0 ) ); // make the background transparent
-	m_pTopBar->SetBgColor(GetBlackBarColor());
 	m_pBottomBarBlank->SetBgColor(GetBlackBarColor());
 	// m_pBottomBar->SetBgColor(Color( 0,0,0,0 ));
 	SetPaintBorderEnabled(false);
@@ -468,17 +468,6 @@ void CSpectatorGUI::OnThink()
 				gViewPortInterface->ShowPanel( PANEL_SCOREBOARD, m_bSpecScoreboard );
 			}
 		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: sets the image to display for the banner in the top right corner
-//-----------------------------------------------------------------------------
-void CSpectatorGUI::SetLogoImage(const char *image)
-{
-	if ( m_pBannerImage )
-	{
-		m_pBannerImage->SetImage( scheme()->GetImage(image, false) );
 	}
 }
 
@@ -543,76 +532,6 @@ bool CSpectatorGUI::ShouldShowPlayerLabel( int specmode )
 //-----------------------------------------------------------------------------
 void CSpectatorGUI::Update()
 {
-	int wide, tall;
-	int bx, by, bwide, btall;
-
-	GetHudSize(wide, tall);
-	m_pTopBar->GetBounds( bx, by, bwide, btall );
-
-	IGameResources *gr = GameResources();
-	int specmode = GetSpectatorMode();
-	int playernum = GetSpectatorTarget();
-
-	IViewPortPanel *overview = gViewPortInterface->FindPanelByName( PANEL_OVERVIEW );
-
-	if ( overview && overview->IsVisible() )
-	{
-		int mx, my, mwide, mtall;
-
-		VPANEL p = overview->GetVPanel();
-		vgui::ipanel()->GetPos( p, mx, my );
-		vgui::ipanel()->GetSize( p, mwide, mtall );
-				
-		if ( my < btall )
-		{
-			// reduce to bar 
-			m_pTopBar->SetSize( wide - (mx + mwide), btall );
-			m_pTopBar->SetPos( (mx + mwide), 0 );
-		}
-		else
-		{
-			// full top bar
-			m_pTopBar->SetSize( wide , btall );
-			m_pTopBar->SetPos( 0, 0 );
-		}
-	}
-	else
-	{
-		// full top bar
-		m_pTopBar->SetSize( wide , btall ); // change width, keep height
-		m_pTopBar->SetPos( 0, 0 );
-	}
-
-	// update extra info field
-	wchar_t szEtxraInfo[1024];
-	wchar_t szTitleLabel[1024];
-	char tempstr[128];
-
-	if ( engine->IsHLTV() )
-	{
-		// set spectator number and HLTV title
-		Q_snprintf(tempstr,sizeof(tempstr),"Spectators : %d", HLTVCamera()->GetNumSpectators() );
-		g_pVGuiLocalize->ConvertANSIToUnicode(tempstr,szEtxraInfo,sizeof(szEtxraInfo));
-		
-		Q_strncpy( tempstr, HLTVCamera()->GetTitleText(), sizeof(tempstr) );
-		g_pVGuiLocalize->ConvertANSIToUnicode(tempstr,szTitleLabel,sizeof(szTitleLabel));
-		SetLabelText("extrainfo", szEtxraInfo );
-		SetLabelText("titlelabel", szTitleLabel );
-	}
-	else
-	{
-		//// otherwise show map name
-		//Q_FileBase( engine->GetLevelName(), tempstr, sizeof(tempstr) );
-
-		//wchar_t wMapName[64];
-		//g_pVGuiLocalize->ConvertANSIToUnicode(tempstr,wMapName,sizeof(wMapName));
-		//g_pVGuiLocalize->ConstructString( szEtxraInfo,sizeof( szEtxraInfo ), g_pVGuiLocalize->Find("#Spec_Map" ),1, wMapName );
-
-		//g_pVGuiLocalize->ConvertANSIToUnicode( "" ,szTitleLabel,sizeof(szTitleLabel));
-	}
-
-	//SetLabelText("extrainfo", szEtxraInfo );
-	//SetLabelText("titlelabel", szTitleLabel );
 }
 
 //-----------------------------------------------------------------------------
@@ -620,16 +539,6 @@ void CSpectatorGUI::Update()
 //-----------------------------------------------------------------------------
 void CSpectatorGUI::UpdateTimer()
 {
-	wchar_t szText[ 63 ];
-
-	int timer = 0;
-
-	_snwprintf ( szText, sizeof( szText ), L"%d:%02d\n", (timer / 60), (timer % 60) );
-
-	szText[63] = 0;
-
-
-	SetLabelText("timerlabel", szText );
 }
 
 static void ForwardSpecCmdToServer( const CCommand &args )

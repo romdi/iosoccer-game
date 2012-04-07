@@ -2693,6 +2693,8 @@ void CBasePlayer::DumpPerfToRecipient( CBasePlayer *pRecipient, int nMaxRecords 
 	}
 }
 
+#include "ios_replaymanager.h"
+
 // Duck debouncing code to stop menu changes from disallowing crouch/uncrouch
 ConVar xc_crouch_debounce( "xc_crouch_debounce", "0", FCVAR_NONE );
 //-----------------------------------------------------------------------------
@@ -2702,6 +2704,9 @@ ConVar xc_crouch_debounce( "xc_crouch_debounce", "0", FCVAR_NONE );
 //-----------------------------------------------------------------------------
 void CBasePlayer::PlayerRunCommand(CUserCmd *ucmd, IMoveHelper *moveHelper)
 {
+	if (CReplayManager::GetInstance()->IsReplaying())
+		return;
+
 	m_touchedPhysObject = false;
 
 	if ( pl.fixangle == FIXANGLE_NONE)
@@ -5019,11 +5024,11 @@ bool CBasePlayer::ClientCommand( const CCommand &args )
 		{
 			int index = atoi( args[1] );
 
-			CBasePlayer * target;
+			CBaseEntity * target;
 
 			if ( index == 0 )
 			{
-				target = UTIL_PlayerByName( args[1] );
+				target = GetBall(); //UTIL_PlayerByName( args[1] );
 			}
 			else
 			{

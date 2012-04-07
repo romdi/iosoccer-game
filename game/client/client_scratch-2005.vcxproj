@@ -610,9 +610,7 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClCompile Include="sdk\ios_crowdtextureproxy.cpp" />
     <ClCompile Include="sdk\ios_hud_powershotbar.cpp" />
     <ClCompile Include="sdk\ios_hud_scorebar.cpp" />
-    <ClCompile Include="sdk\ios_mainstatus.cpp" />
     <ClCompile Include="sdk\ios_playertextureproxy.cpp" />
-    <ClCompile Include="sdk\ios_statusmenu.cpp" />
     <ClCompile Include="simple_keys.cpp" />
     <ClCompile Include="..\..\public\simple_physics.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -775,7 +773,6 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClCompile Include="game_controls\commandmenu.cpp" />
     <ClCompile Include="game_controls\IconPanel.cpp" />
     <ClCompile Include="game_controls\intromenu.cpp" />
-    <ClCompile Include="game_controls\MapOverview.cpp" />
     <ClCompile Include="game_controls\NavProgress.cpp" />
     <ClCompile Include="game_controls\SpectatorGUI.cpp" />
     <ClCompile Include="game_controls\teammenu.cpp" />
@@ -791,7 +788,6 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClCompile Include="sdk\sdk_backgroundpanel.cpp" />
     <ClCompile Include="sdk\vgui\sdk_classmenu.cpp" />
     <ClCompile Include="sdk\sdk_scoreboard.cpp" />
-    <ClCompile Include="sdk\vgui\sdk_spectatorgui.cpp" />
     <ClCompile Include="sdk\vgui\sdk_teammenu.cpp" />
     <ClCompile Include="sdk\vgui\sdk_textwindow.cpp" />
     <ClCompile Include="sdk\vgui\sdkviewport.cpp" />
@@ -855,8 +851,6 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClInclude Include="..\shared\point_bonusmaps_accessor.h" />
     <ClInclude Include="sdk\c_ball.h" />
     <ClInclude Include="sdk\c_ios_tvcamera.h" />
-    <ClInclude Include="sdk\ios_mainstatus.h" />
-    <ClInclude Include="sdk\ios_statusmenu.h" />
     <ClInclude Include="vgui_avatarimage.h" />
     <ClInclude Include="viewdebug.h" />
     <ClInclude Include="viewpostprocess.h" />
@@ -867,7 +861,6 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClInclude Include="sdk\sdk_backgroundpanel.h" />
     <ClInclude Include="sdk\vgui\sdk_classmenu.h" />
     <ClInclude Include="sdk\sdk_scoreboard.h" />
-    <ClInclude Include="sdk\vgui\sdk_spectatorgui.h" />
     <ClInclude Include="sdk\vgui\sdk_teammenu.h" />
     <ClInclude Include="sdk\vgui\sdk_textwindow.h" />
     <ClInclude Include="sdk\vgui\sdkviewport.h" />
@@ -1172,7 +1165,6 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClInclude Include="..\..\public\vgui_controls\Image.h" />
     <ClInclude Include="..\..\public\vgui_controls\ImageList.h" />
     <ClInclude Include="..\..\public\vgui_controls\ImagePanel.h" />
-    <ClInclude Include="..\..\public\imapoverview.h" />
     <ClInclude Include="..\..\public\materialsystem\imaterial.h" />
     <ClInclude Include="..\..\public\materialsystem\imaterialproxy.h" />
     <ClInclude Include="..\..\public\materialsystem\imaterialsystem.h" />
@@ -1427,7 +1419,6 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClInclude Include="game_controls\IconPanel.h" />
     <ClInclude Include="game_controls\imagemouseoverbutton.h" />
     <ClInclude Include="game_controls\intromenu.h" />
-    <ClInclude Include="game_controls\mapoverview.h" />
     <ClInclude Include="game_controls\mouseoverhtmlbutton.h" />
     <ClInclude Include="game_controls\mouseoverpanelbutton.h" />
     <ClInclude Include="game_controls\spectatorgui.h" />

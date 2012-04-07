@@ -782,6 +782,15 @@ void CSDKGameRules::InitTeams( void )
 	CreateEntityByName( "sdk_gamerules" );
 }
 
+double ColorDistance(const Color &e1, const Color &e2)
+{
+  long rmean = ( (long)e1.r() + (long)e2.r() ) / 2;
+  long r = (long)e1.r() - (long)e2.r();
+  long g = (long)e1.g() - (long)e2.g();
+  long b = (long)e1.b() - (long)e2.b();
+  return sqrtl((((512+rmean)*r*r)>>8) + 4*g*g + (((767-rmean)*b*b)>>8));
+}
+
 void CSDKGameRules::ChooseTeamNames(bool clubTeams, bool countryTeams, bool realTeams, bool fictitiousTeams)
 {
 	int kitCount = m_TeamKitInfoDatabase.Count();
@@ -841,6 +850,8 @@ void CSDKGameRules::ChooseTeamNames(bool clubTeams, bool countryTeams, bool real
 			m_TeamKitInfoDatabase[teamHome]->m_bIsClubTeam != m_TeamKitInfoDatabase[teamAway]->m_bIsClubTeam ||
 			m_TeamKitInfoDatabase[teamHome]->m_bIsRealTeam != m_TeamKitInfoDatabase[teamAway]->m_bIsRealTeam)
 			continue;
+
+		Msg("color distance: %f\n", ColorDistance(m_TeamKitInfoDatabase[teamHome]->m_PrimaryKitColor, m_TeamKitInfoDatabase[teamAway]->m_PrimaryKitColor));
 
 		GetGlobalTeam(TEAM_A)->SetKitName(m_TeamKitInfoDatabase[teamHome]->m_szKitName);
 		GetGlobalTeam(TEAM_B)->SetKitName(m_TeamKitInfoDatabase[teamAway]->m_szKitName);
@@ -1736,8 +1747,8 @@ int CSDKGameRules::GetShieldRadius()
   
 struct curl_t
 {
-	char filename[32];
-	CUtlBuffer buf;
+	char kitName[32];
+	//CUtlBuffer buf;
 	FileHandle_t fh;
 };
 
@@ -1756,40 +1767,49 @@ static size_t rcvData(void *ptr, size_t size, size_t nmemb, curl_t* vars)
 unsigned DoCurl( void *params )
 {
 	curl_t* vars = (curl_t*) params; // always use a struct!
- 
-	// do some stuff
- 
-	/*vars->buf = CUtlBuffer(0, 0, CUtlBuffer::TEXT_BUFFER);
-	vars->buf.SetBufferType(false, false);*/
-	//vars->buf = CUtlBuffer();
 
-	//filesystem->UnzipFile("test.zip", "MOD", "unziptest");
+	char *textures[14] = { "kitdata.txt", "2.vtf", "3.vtf", "4.vtf", "5.vtf", "6.vtf", "7.vtf", "8.vtf", "9.vtf", "10.vtf", "11.vtf", "gksocks.vtf", "keeper.vtf", "socks.vtf" };
 
-	vars->fh = filesystem->Open(VarArgs("materials/models/player_new/foobar/%s", vars->filename), "a+b", "MOD");
-
-	if (vars->fh)
+	for (int i = 0; i < 14; i++)
 	{
+		//filesystem->RemoveFile(filename);
+		//filesystem->RemoveFile(VarArgs("materials/models/player/teams/%s", vars->kitName));
+		filesystem->CreateDirHierarchy(VarArgs("materials/models/player/teams/%s", vars->kitName));
+		const char *filename = VarArgs("materials/models/player/teams/%s/%s", vars->kitName, textures[i]);
+		vars->fh = filesystem->Open(filename, "a+b", "MOD");
+
+		if (!vars->fh)
+			continue;
+
 		CURL *curl;
 		curl = curl_easy_init();
-		curl_easy_setopt(curl, CURLOPT_URL, VarArgs("http://127.0.0.1:8000/%s", vars->filename));
+		//struct curl_slist *headers=NULL;
+		//headers = curl_slist_append(headers, "ACCEPT_ENCODING: gzip");
+		//curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+		curl_easy_setopt(curl, CURLOPT_URL, VarArgs("http://127.0.0.1:8000/%s/%s", vars->kitName, textures[i]));
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, rcvData);
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, vars);
+		//curl_easy_setopt(curl, CURLOPT_ENCODING, "gzip");
 		curl_easy_perform(curl);
 		curl_easy_cleanup(curl);
 
 		filesystem->Close(vars->fh);
-
-		//filesystem->WriteFile(VarArgs("materials/models/player_new/foobar/%s", vars->filename), "MOD", vars->buf);
-
-		//Msg("Cannot print to console from this threaded function\n");
 	}
+
 	// clean up the memory
 	delete vars;
-
+	materials->ReloadTextures();
 	return 0;
 }
 
-void Curl(const CCommand &args)
+void DownloadTeamKit(const char *pKitName)
+{
+	curl_t* vars = new curl_t;
+	Q_strncpy(vars->kitName, pKitName, sizeof(vars->kitName));
+	CreateSimpleThread( DoCurl, vars );
+}
+
+void CC_CL_Curl(const CCommand &args)
 {
 	if (args.ArgC() < 2)
 	{
@@ -1797,11 +1817,9 @@ void Curl(const CCommand &args)
 		return;
 	}
 
-	curl_t* vars = new curl_t;
-	Q_strncpy(vars->filename, args[1], sizeof(vars->filename));
-	CreateSimpleThread( DoCurl, vars );
+	DownloadTeamKit(args[1]);
 }
 
-static ConCommand cl_curl("cl_curl", Curl);
+static ConCommand cl_curl("cl_curl", CC_CL_Curl);
 
 #endif

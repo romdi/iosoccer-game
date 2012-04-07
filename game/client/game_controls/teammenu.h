@@ -86,10 +86,14 @@ protected:
 	// VGUI2 overrides
 	virtual void ApplySchemeSettings(vgui::IScheme *pScheme);
 
+	IScheme *m_pScheme;
+
 	PosPanel_t *m_pPosPanels[2][11];
 
 	Button *m_pSpectateButton;
-	Button *m_pTabButtons[2];
+	Button *m_pTeamButtons[2];
+
+	ImagePanel *m_pTeamCrests[2];
 
 	int m_nActiveTeam;
 

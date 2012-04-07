@@ -38,7 +38,6 @@
 #include "c_sdk_player.h"
 #include "sdk_scoreboard.h"
 #include "sdk_textwindow.h"
-#include "sdk_spectatorgui.h"
 #if defined ( SDK_USE_PLAYERCLASSES )
 #include "sdk_classmenu.h"
 #endif

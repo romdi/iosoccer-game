@@ -91,15 +91,7 @@ void CInput::CAM_Think( void )
 	idealAngles[ YAW ]   = cam_idealyaw.GetFloat();
 	idealAngles[ DIST ]  = cam_idealdist.GetFloat();
 
-	//engine->GetViewAngles( viewangles );
-
-	viewangles = m_aCameraViewAngles;
-
 	VectorCopy( m_vecCameraOffset, camOffset );
-
-	camOffset[ YAW ] = cam_idealyaw.GetFloat() + viewangles[ YAW ];
-	camOffset[ PITCH ] = cam_idealpitch.GetFloat() + viewangles[ PITCH ];
-	camOffset[ DIST ] = cam_idealdist.GetFloat();
 
 	C_BasePlayer* localPlayer = C_BasePlayer::GetLocalPlayer();
 
@@ -110,6 +102,15 @@ void CInput::CAM_Think( void )
 	}
 	else
 	{
+		if (localPlayer->IsObserver() && localPlayer->GetObserverMode() == OBS_MODE_IN_EYE)
+			engine->GetViewAngles( viewangles );
+		else
+			viewangles = m_aCameraViewAngles;
+
+		camOffset[ YAW ] = cam_idealyaw.GetFloat() + viewangles[ YAW ];
+		camOffset[ PITCH ] = cam_idealpitch.GetFloat() + viewangles[ PITCH ];
+		camOffset[ DIST ] = cam_idealdist.GetFloat();
+
 		// move the camera closer to the player if it hit something
 		if ( cam_collision.GetInt() )
 		{
