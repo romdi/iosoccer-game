@@ -10,7 +10,7 @@
 #endif
 
 #include "convar.h"
-#include "basecombatweapon_shared.h"
+//#include "basecombatweapon_shared.h"
 
 #if defined( CLIENT_DLL )
 class C_BasePlayer;

@@ -11,23 +11,23 @@
 NAME=server
 
 # the location of the vcproj that builds the mod
-MOD_PROJ=../game/server/server_hl2mp-2005.vcproj
+MOD_PROJ="../game/server/server_scratch-2005.vcxproj"
 # the name of the mod configuration (typically <proj name>_<build type><build target>)
-MOD_CONFIG=ServerHL2MP_ReleaseWin32
+MOD_CONFIG="ServerSDK_DebugWin32"
 
 # the directory the base binaries (tier0_i486.so, etc) are located
 # this should point to your orange box subfolder of where you have srcds installed.
-GAME_DIR=~/srcds/orangebox
+GAME_DIR="/home/roman/hlserver/files/orangebox"
 
 # the path to your mods directory
 # set this so that 'make install' or 'make installrelease' will copy your binary over automatically.
-MOD_DIR=$(GAME_DIR)/SampleMod
+MOD_DIR=$(GAME_DIR)/ios_dev
 
 # compiler options (gcc 3.4.1 will work - 4.2.2 recommended)
-CC=/usr/local/bin/gcc
-CPLUS=/usr/local/bin/g++
-CLINK=/usr/local/bin/gcc
-CPP_LIB="/usr/local/lib/libstdc++.a /usr/local/lib/gcc/i686-pc-linux-gnu/4.2.2/libgcc_eh.a"
+CC="gcc"
+CPLUS="g++"
+CLINK="gcc"
+CPP_LIB="/usr/lib/gcc/i486-linux-gnu/4.2.4/libstdc++.a /usr/lib/gcc/i486-linux-gnu/4.2.4/libgcc_eh.a"
 
 # GCC 4.2.2 optimization flags, if you're using anything below, don't use these!
 OPTFLAGS=-O1 -fomit-frame-pointer -ffast-math -fforce-addr -funroll-loops -fthread-jumps -fcrossjumping -foptimize-sibling-calls -fcse-follow-jumps -fcse-skip-blocks -fgcse -fgcse-lm -fexpensive-optimizations -frerun-cse-after-loop -fcaller-saves -fpeephole2 -fschedule-insns2 -fsched-interblock -fsched-spec -fregmove -fstrict-overflow -fdelete-null-pointer-checks -freorder-blocks -freorder-functions -falign-functions -falign-jumps -falign-loops -falign-labels -ftree-vrp -ftree-pre -finline-functions -funswitch-loops -fgcse-after-reload

@@ -35,10 +35,7 @@ enum Stats
 	STAT_COUNT
 };
 
-char g_szStatNames[STAT_COUNT][32] =
-{
-	"PLAYERS", "GOALS", "POSSESSION", "PING"
-};
+extern char g_szStatNames[STAT_COUNT][32];
 
 struct StatRow_t
 {

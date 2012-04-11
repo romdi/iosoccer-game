@@ -1221,7 +1221,7 @@ float CAI_Navigator::GetPathTimeToGoal()
 
 AI_PathNode_t CAI_Navigator::GetNearestNode()
 {
-	COMPILE_TIME_ASSERT( (int)AIN_NO_NODE == NO_NODE );
+	//COMPILE_TIME_ASSERT( (int)AIN_NO_NODE == NO_NODE );
 	return (AI_PathNode_t)( GetPathfinder()->NearestNodeToNPC() );
 }
 

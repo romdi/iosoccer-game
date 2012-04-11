@@ -782,6 +782,7 @@ void CSDKGameRules::InitTeams( void )
 	CreateEntityByName( "sdk_gamerules" );
 }
 
+//Source: http://www.compuphase.com/cmetric.htm
 double ColorDistance(const Color &e1, const Color &e2)
 {
   long rmean = ( (long)e1.r() + (long)e2.r() ) / 2;

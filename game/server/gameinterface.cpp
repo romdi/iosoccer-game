@@ -1806,7 +1806,8 @@ void UpdateChapterRestrictions( const char *mapname )
 		return;
 
 	// make sure the specified chapter title is unlocked
-	strlwr( chapterTitle );
+	//strlwr( chapterTitle );
+	Q_strlower(chapterTitle);
 	
 	// Get our active mod directory name
 	char modDir[MAX_PATH];

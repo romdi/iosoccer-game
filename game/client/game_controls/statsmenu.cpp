@@ -51,6 +51,11 @@ using namespace vgui;
 #define ROW_HEIGHT 50
 #define ROW_MARGIN 5
 
+char g_szStatNames[STAT_COUNT][32] =
+{
+	"PLAYERS", "GOALS", "POSSESSION", "PING"
+};
+
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
