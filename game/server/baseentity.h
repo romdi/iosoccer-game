@@ -1066,21 +1066,21 @@ public:
 
 	ENTITYFUNCPTR TouchSet( ENTITYFUNCPTR func, char *name ) 
 	{ 
-		//COMPILE_TIME_ASSERT( sizeof(func) == 4 );
+		//Linux debug build fix: //COMPILE_TIME_ASSERT( sizeof(func) == 4 );
 		m_pfnTouch = func; 
 		FunctionCheck( *(reinterpret_cast<void **>(&m_pfnTouch)), name ); 
 		return func;
 	}
 	USEPTR	UseSet( USEPTR func, char *name ) 
 	{ 
-		//COMPILE_TIME_ASSERT( sizeof(func) == 4 );
+		//Linux debug build fix: //COMPILE_TIME_ASSERT( sizeof(func) == 4 );
 		m_pfnUse = func; 
 		FunctionCheck( *(reinterpret_cast<void **>(&m_pfnUse)), name ); 
 		return func;
 	}
 	ENTITYFUNCPTR	BlockedSet( ENTITYFUNCPTR func, char *name ) 
 	{ 
-		//COMPILE_TIME_ASSERT( sizeof(func) == 4 );
+		//Linux debug build fix: //COMPILE_TIME_ASSERT( sizeof(func) == 4 );
 		m_pfnBlocked = func; 
 		FunctionCheck( *(reinterpret_cast<void **>(&m_pfnBlocked)), name ); 
 		return func;

@@ -684,8 +684,7 @@ int CAI_HintManager::GetFlags( const char *token )
 
 	char *lowercase = (char *)_alloca( len + 1 );
 	Q_strncpy( lowercase, token, len+1 );
-	//Linux debug build fix:
-	//strlwr( lowercase );
+	//Linux debug build fix: //strlwr( lowercase );
 	Q_strlower(lowercase);
 
 	if ( strstr( "none", lowercase ) )
