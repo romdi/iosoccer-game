@@ -365,13 +365,9 @@ void CBall::SendMatchEvent(match_event_t matchEvent, CSDKPlayer *pPlayer)
 
 	Assert(pPlayer);
 
-	UTIL_LogPrintf( "\"%s<%d><%s><%s>\" triggered \"%d\"\n",
+	UTIL_LogPrintf( "\"%s<%d><%s><%s>\" triggered \"%s\"\n",
 		pPlayer->GetPlayerName(), pPlayer->GetUserID(),
-		pPlayer->GetNetworkIDString(), pPlayer->GetTeam()->GetKitName(), matchEvent);
-
-	DevMsg( "\"%s<%d><%s><%s>\" triggered \"%d\"\n",
-		pPlayer->GetPlayerName(), pPlayer->GetUserID(),
-		pPlayer->GetNetworkIDString(), pPlayer->GetTeam()->GetKitName(), matchEvent);
+		pPlayer->GetNetworkIDString(), pPlayer->GetTeam()->GetKitName(), g_szMatchEventNames[matchEvent]);
 
 	CReliableBroadcastRecipientFilter filter;
 	UserMessageBegin(filter, "MatchEvent");
@@ -461,12 +457,6 @@ void CBall::State_Transition( ball_state_t newState, float delay /*= 0.0f*/ )
 	m_bIgnoreTriggers = true;
 }
 
-void CBall::State_DoTransition( ball_state_t newState )
-{
-	m_eNextState = BALL_NOSTATE;
-	State_Enter( newState );
-}
-
 void CBall::State_Enter( ball_state_t newState )
 {
 	m_eBallState = newState;
@@ -513,9 +503,9 @@ void CBall::State_Enter( ball_state_t newState )
 	if ( mp_showballstatetransitions.GetInt() > 0 )
 	{
 		if ( m_pCurStateInfo )
-			Msg( "Ball: entering state '%s'\n", m_pCurStateInfo->m_pStateName );
+			UTIL_LogPrintf( "Ball: entering state '%s'\n", m_pCurStateInfo->m_pStateName );
 		else
-			Msg( "Ball: entering state #%d\n", newState );
+			UTIL_LogPrintf( "Ball: entering state #%d\n", newState );
 	}
 
 	// Initialize the new state.
@@ -527,22 +517,20 @@ void CBall::State_Enter( ball_state_t newState )
 
 void CBall::State_Think()
 {
-	if (m_flStateLeaveTime > gpGlobals->curtime)
-		return;
+	if (m_eNextState != BALL_NOSTATE && m_flStateLeaveTime <= gpGlobals->curtime)
+	{
+		ball_state_t nextState = m_eNextState;
+		m_eNextState = BALL_NOSTATE;
+		State_Enter(nextState);
+	}
 
 	m_pPhys->GetPosition(&m_vPos, &m_aAng);
 	m_pPhys->GetVelocity(&m_vVel, &m_vRot);
 
-	//if (m_flStateTimelimit != -1 && m_flStateTimelimit <= gpGlobals->curtime)
 	if (m_pCurStateInfo && m_pCurStateInfo->m_eBallState != BALL_NORMAL && m_flStateTimelimit != -1 && gpGlobals->curtime >= m_flStateTimelimit)
 	{
 		if (CSDKPlayer::IsOnField(m_pPl))
 			m_pPl->ChangeTeam(TEAM_SPECTATOR);
-	}
-
-	while (m_eNextState != BALL_NOSTATE && m_flStateLeaveTime <= gpGlobals->curtime)
-	{
-		State_DoTransition(m_eNextState);
 	}
 
 	if (m_pCurStateInfo && m_pCurStateInfo->pfnThink)
@@ -876,6 +864,7 @@ void CBall::State_CORNER_Think()
 void CBall::State_GOAL_Enter()
 {
 	UpdatePossession(NULL);
+	m_bIgnoreTriggers = true;
 	m_bIsKickOffAfterGoal = true;
 
 	if (m_nTeam == LastTeam(true))
@@ -1329,16 +1318,16 @@ bool CBall::DoBodyPartAction()
 	if (zDist >= BODY_FEET_START && zDist < BODY_FEET_END && xyDist <= sv_ball_touchradius.GetInt())
 		return DoGroundShot();
 
-	if (zDist >= BODY_HIP_START && zDist < BODY_HIP_END && xyDist <= sv_ball_touchradius.GetInt())
-	{
-		if (DoVolleyShot())
-			return true;
-		else
-			return DoChestDrop();
-	}
+	//if (zDist >= BODY_HIP_START && zDist < BODY_HIP_END && xyDist <= sv_ball_touchradius.GetInt())
+	//{
+	//	if (DoVolleyShot())
+	//		return true;
+	//	else
+	//		return DoChestDrop();
+	//}
 
-	if (zDist >= BODY_CHEST_START && zDist < BODY_CHEST_END && xyDist <= sv_ball_touchradius.GetInt())
-		return DoChestDrop();
+	//if (zDist >= BODY_CHEST_START && zDist < BODY_CHEST_END && xyDist <= sv_ball_touchradius.GetInt())
+	//	return DoChestDrop();
 
 	if (zDist >= BODY_HEAD_START && zDist < BODY_HEAD_END && xyDist <= sv_ball_touchradius.GetInt())
 		return DoHeader();
@@ -1371,7 +1360,7 @@ bool CBall::DoGroundShot()
 	{
 		shotStrength = sv_ball_powershot_strength.GetFloat() * (1 + GetPowershotModifier()) * modifier;
 		EmitSound("Ball.kickhard");
-		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KICK);
+		//m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KICK);
 	}
 	else
 	{
@@ -1395,6 +1384,9 @@ bool CBall::DoGroundShot()
 	AngleVectors(shotAngle, &shotDir);
 
 	SetVel(shotDir * shotStrength);
+
+	if (m_vVel.Length() > 600)
+		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KICK);
 
 	//SetBallCurve(shotStrength == 0);
 	SetBallSpin();
@@ -1637,7 +1629,7 @@ void CBall::Kicked(body_part_t bodyPart)
 
 void CBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart)
 {
-	if (SDKGameRules()->IsIntermissionState() || GetOwnerEntity())
+	if (SDKGameRules()->IsIntermissionState() || m_bIgnoreTriggers || GetOwnerEntity())
 		return;
 
 	//DevMsg("Touched %0.2f\n", gpGlobals->curtime);

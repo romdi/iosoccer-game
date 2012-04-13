@@ -153,9 +153,9 @@ public:
 	void			TriggerGoalLine(int team);
 	void			TriggerSideline();
 	void			TriggerPenaltyBox(int team);
-	bool			GetIgnoreTriggers() { return m_bIgnoreTriggers; };
-	void			SetIgnoreTriggers(bool ignoreTriggers) { m_bIgnoreTriggers = ignoreTriggers; };
-	void			SetIsKickOffAfterGoal(bool isKickOffAfterGoal) { m_bIsKickOffAfterGoal = isKickOffAfterGoal; };
+	bool			GetIgnoreTriggers() { return m_bIgnoreTriggers; }
+	void			SetIgnoreTriggers(bool ignoreTriggers) { m_bIgnoreTriggers = ignoreTriggers; }
+	void			SetIsKickOffAfterGoal(bool isKickOffAfterGoal) { m_bIsKickOffAfterGoal = isKickOffAfterGoal; }
 
 	void			State_Transition( ball_state_t newState, float delay = 0.0f );
 
@@ -194,7 +194,6 @@ private:
 	void State_PostThink();
 	void State_Enter(ball_state_t newState);	// Initialize the new state.
 	void State_Think();										// Update the current state.
-	void State_DoTransition( ball_state_t newState );
 	static CBallStateInfo* State_LookupInfo(ball_state_t state);	// Find the state info for the specified state.
 	ball_state_t	m_eBallState;
 	ball_state_t	m_eNextState;

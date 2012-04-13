@@ -854,6 +854,7 @@ void CSDKGameRules::ChooseTeamNames(bool clubTeams, bool countryTeams, bool real
 
 		Msg("color distance: %f\n", ColorDistance(m_TeamKitInfoDatabase[teamHome]->m_PrimaryKitColor, m_TeamKitInfoDatabase[teamAway]->m_PrimaryKitColor));
 
+		UTIL_LogPrintf("Setting random teams: %s against %s\n", m_TeamKitInfoDatabase[teamHome]->m_szKitName, m_TeamKitInfoDatabase[teamAway]->m_szKitName);
 		GetGlobalTeam(TEAM_A)->SetKitName(m_TeamKitInfoDatabase[teamHome]->m_szKitName);
 		GetGlobalTeam(TEAM_B)->SetKitName(m_TeamKitInfoDatabase[teamAway]->m_szKitName);
 		break;
@@ -862,6 +863,7 @@ void CSDKGameRules::ChooseTeamNames(bool clubTeams, bool countryTeams, bool real
 
 	if (attemptCount == 1000)
 		Msg("ERROR: No compatible teams found. Check sv_randomteams parameters.\n");
+	
 }
 
 /* create some proxy entities that we use for transmitting data */
@@ -1180,9 +1182,9 @@ void CSDKGameRules::State_Enter( match_state_t newState )
 	if ( mp_showstatetransitions.GetInt() > 0 )
 	{
 		if ( m_pCurStateInfo )
-			Msg( "Gamerules: entering state '%s'\n", m_pCurStateInfo->m_pStateName );
+			UTIL_LogPrintf( "Gamerules: entering state '%s'\n", m_pCurStateInfo->m_pStateName );
 		else
-			Msg( "Gamerules: entering state #%d\n", newState );
+			UTIL_LogPrintf( "Gamerules: entering state #%d\n", newState );
 	}
 
 	// Initialize the new state.
@@ -1548,6 +1550,7 @@ void OnTeamlistChange(IConVar *var, const char *pOldValue, float flOldValue)
 			Msg( "Format: mp_teamlist \"<home team>;<away team>\"\n" );
 		else
 		{
+			UTIL_LogPrintf("Setting new teams: %s against %s\n", home, away);
 			GetGlobalTeam(TEAM_A)->SetKitName(home);
 			GetGlobalTeam(TEAM_B)->SetKitName(away);
 		}
@@ -1651,6 +1654,7 @@ void CSDKGameRules::SetAreTeamsSwapped(bool swapped)
 		GetGlobalTeam(TEAM_A)->InitFieldSpots(swapped ? TEAM_B : TEAM_A);
 		GetGlobalTeam(TEAM_B)->InitFieldSpots(swapped ? TEAM_A : TEAM_B);
 		m_bAreTeamsSwapped = swapped;
+		UTIL_LogPrintf("Swapping teams\n");
 	}
 }
 

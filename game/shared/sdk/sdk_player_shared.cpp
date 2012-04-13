@@ -227,7 +227,6 @@ void CSDKPlayer::MoveToTargetPos(Vector &pos, Vector &vel, QAngle &ang)
 void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vector &oldVel, Vector &newVel, const QAngle &oldAng, QAngle &newAng)
 {
 	bool stopPlayer = false;
-	Vector pos = newPos;
 
 	if (SDKGameRules()->m_nShieldType != SHIELD_NONE)
 	{
@@ -248,34 +247,34 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 					max.y += 200;
 			}
 
-			bool isInsideBox = pos.x > min.x && pos.y > min.y && pos.x < max.x && pos.y < max.y; 
+			bool isInsideBox = newPos.x > min.x && newPos.y > min.y && newPos.x < max.x && newPos.y < max.y; 
 			Vector boxCenter = (min + max) / 2;
 
 			if (GetFlags() & FL_SHIELD_KEEP_OUT && isInsideBox)
 			{
-				if (pos.x > min.x && oldPos.x <= min.x && pos.x < boxCenter.x)
-					pos.x = min.x;
-				else if (pos.x < max.x && oldPos.x >= max.x && pos.x > boxCenter.x)
-					pos.x = max.x;
+				if (newPos.x > min.x && oldPos.x <= min.x && newPos.x < boxCenter.x)
+					newPos.x = min.x;
+				else if (newPos.x < max.x && oldPos.x >= max.x && newPos.x > boxCenter.x)
+					newPos.x = max.x;
 
-				if (pos.y > min.y && oldPos.y <= min.y && pos.y < boxCenter.y)
-					pos.y = min.y;
-				else if (pos.y < max.y && oldPos.y >= max.y && pos.y > boxCenter.y)
-					pos.y = max.y;
+				if (newPos.y > min.y && oldPos.y <= min.y && newPos.y < boxCenter.y)
+					newPos.y = min.y;
+				else if (newPos.y < max.y && oldPos.y >= max.y && newPos.y > boxCenter.y)
+					newPos.y = max.y;
 
 				stopPlayer = true;
 			}
 			else if (GetFlags() & FL_SHIELD_KEEP_IN && !isInsideBox)
 			{
-				if (pos.x < min.x)
-					pos.x = min.x;
-				else if (pos.x > max.x)
-					pos.x = max.x;
+				if (newPos.x < min.x)
+					newPos.x = min.x;
+				else if (newPos.x > max.x)
+					newPos.x = max.x;
 
-				if (pos.y < min.y)
-					pos.y = min.y;
-				else if (pos.y > max.y)
-					pos.y = max.y;
+				if (newPos.y < min.y)
+					newPos.y = min.y;
+				else if (newPos.y > max.y)
+					newPos.y = max.y;
 
 				stopPlayer = true;
 			}
@@ -288,13 +287,13 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 			SDKGameRules()->m_nShieldType == SHIELD_PENALTY && (GetFlags() & FL_SHIELD_KEEP_OUT))
 		{
 			float radius = SDKGameRules()->GetShieldRadius() + threshold;
-			Vector dir = pos - SDKGameRules()->m_vShieldPos;
+			Vector dir = newPos - SDKGameRules()->m_vShieldPos;
 
 			if (GetFlags() & FL_SHIELD_KEEP_OUT && dir.Length2D() < radius || GetFlags() & FL_SHIELD_KEEP_IN && dir.Length2D() > radius)
 			{
 				dir.z = 0;
 				dir.NormalizeInPlace();
-				pos = SDKGameRules()->m_vShieldPos + dir * radius;
+				newPos = SDKGameRules()->m_vShieldPos + dir * radius;
 				stopPlayer = true;
 			}
 
@@ -307,9 +306,9 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 					forward = GetTeam()->m_nForward;
 				#endif
 				float yBorder = SDKGameRules()->m_vKickOff.GetY() - abs(threshold) * forward;
-				if (Sign(pos.y - yBorder) == forward)
+				if (Sign(newPos.y - yBorder) == forward)
 				{
-					pos.y = yBorder;
+					newPos.y = yBorder;
 					stopPlayer = true;
 				}
 			}
@@ -322,17 +321,17 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 		Vector min = SDKGameRules()->m_vFieldMin - threshold;
 		Vector max = SDKGameRules()->m_vFieldMax + threshold;
 
-		if (pos.x < min.x || pos.y < min.y || pos.x > max.x || pos.y > max.y)
+		if (newPos.x < min.x || newPos.y < min.y || newPos.x > max.x || newPos.y > max.y)
 		{
-			if (pos.x < min.x)
-				pos.x = min.x;
-			else if (pos.x > max.x)
-				pos.x = max.x;
+			if (newPos.x < min.x)
+				newPos.x = min.x;
+			else if (newPos.x > max.x)
+				newPos.x = max.x;
 
-			if (pos.y < min.y)
-				pos.y = min.y;
-			else if (pos.y > max.y)
-				pos.y = max.y;
+			if (newPos.y < min.y)
+				newPos.y = min.y;
+			else if (newPos.y > max.y)
+				newPos.y = max.y;
 
 			stopPlayer = true;
 		}
@@ -340,9 +339,9 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 
 	if (stopPlayer)
 	{
-		newVel = oldVel;
-		newVel.x = (pos - oldPos).x * 35;
-		newVel.y = (pos - oldPos).y * 35;
-		newPos = pos;
+		//newVel = oldVel;
+		newVel.x = (newPos - oldPos).x * 35;
+		newVel.y = (newPos - oldPos).y * 35;
+		//newPos = pos;
 	}
 }

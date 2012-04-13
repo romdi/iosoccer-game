@@ -259,7 +259,7 @@ void Bot_RunAll( void )
 
 		for (int i = 0; i < 2; i++)
 		{
-			if (!keeperSpotTaken[i])
+			if (!keeperSpotTaken[i] && botkeepers.GetBool())
 			{
 				CSDKPlayer *pPl = ToSDKPlayer(BotPutInServer(false, i + 1));
 				pPl->ChangeTeamPos(i == 0 ? TEAM_A : TEAM_B, keeperPosIndex, true);

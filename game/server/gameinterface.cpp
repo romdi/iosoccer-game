@@ -2473,7 +2473,6 @@ void CServerGameClients::ClientSettingsChanged( edict_t *pEdict )
 		float flLerpRatio = Q_atof( QUICKGETCVARVALUE("cl_interp_ratio") );
 		if ( flLerpRatio == 0 )
 			flLerpRatio = 1.0f;
-		float flLerpAmount = Q_atof( QUICKGETCVARVALUE("cl_interp") );
 
 		static const ConVar *pMin = g_pCVar->FindVar( "sv_client_min_interp_ratio" );
 		static const ConVar *pMax = g_pCVar->FindVar( "sv_client_max_interp_ratio" );
@@ -2487,7 +2486,7 @@ void CServerGameClients::ClientSettingsChanged( edict_t *pEdict )
 				flLerpRatio = 1.0f;
 		}
 		// #define FIXME_INTERP_RATIO
-		player->m_fLerpTime = max( flLerpAmount, flLerpRatio / player->m_nUpdateRate );
+		player->m_fLerpTime = flLerpRatio / player->m_nUpdateRate;
 	}
 	else
 	{
@@ -2499,8 +2498,8 @@ void CServerGameClients::ClientSettingsChanged( edict_t *pEdict )
 
 	if ( usePrediction )
 	{
-		player->m_bPredictWeapons  = Q_atoi( QUICKGETCVARVALUE("cl_predictweapons")) != 0;
-		player->m_bLagCompensation = Q_atoi( QUICKGETCVARVALUE("cl_lagcompensation")) != 0;
+		player->m_bPredictWeapons  = false;//Q_atoi( QUICKGETCVARVALUE("cl_predictweapons")) != 0;
+		player->m_bLagCompensation = false;//Q_atoi( QUICKGETCVARVALUE("cl_lagcompensation")) != 0;
 	}
 	else
 #endif
