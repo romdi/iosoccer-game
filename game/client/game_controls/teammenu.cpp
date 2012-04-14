@@ -54,9 +54,7 @@ using namespace vgui;
 #define BUTTON_VMARGIN		10
 #define BUTTON_LEFTMARGIN	25
 #define BUTTON_TOPMARGIN	70
-#define NUMBER_MARGIN		2
-#define NUMBER_WIDTH		30
-#define NUMBER_HEIGHT		40
+#define POSNAME_WIDTH		35
 #define NAME_HEIGHT			30
 #define INFO_WIDTH			20
 #define INFO_HEIGHT			30
@@ -210,7 +208,7 @@ void CTeamMenu::ApplySchemeSettings(IScheme *pScheme)
 			pPos->pPlayerName->SetContentAlignment(Label::a_center);
 			//pPos->pPlayerName->SetFont(pScheme->GetFont("IOSTeamMenuBig"));
 
-			pPos->pPosName->SetBounds(0, pPos->pPosPanel->GetTall() - NAME_HEIGHT, NUMBER_WIDTH, NAME_HEIGHT);
+			pPos->pPosName->SetBounds(0, pPos->pPosPanel->GetTall() - NAME_HEIGHT, POSNAME_WIDTH, NAME_HEIGHT);
 			pPos->pPosName->SetFgColor(Color(225, 225, 225, 255));
 			pPos->pPosName->SetContentAlignment(Label::a_east);
 			pPos->pPosName->SetText(g_szPosNames[(int)g_Positions[mp_maxplayers.GetInt() - 1][j][2]]);
@@ -222,7 +220,7 @@ void CTeamMenu::ApplySchemeSettings(IScheme *pScheme)
 			pPos->pClubName->SetFont(pScheme->GetFont("IOSTeamMenuBig"));
 			pPos->pClubName->SetFgColor(Color(225, 225, 225, 255));
 
-			pPos->pCountryFlag->SetBounds(pPos->pPosPanel->GetWide() - NUMBER_WIDTH, pPos->pPosPanel->GetTall() - NAME_HEIGHT, NUMBER_WIDTH, NAME_HEIGHT);
+			pPos->pCountryFlag->SetBounds(pPos->pPosPanel->GetWide() - POSNAME_WIDTH, pPos->pPosPanel->GetTall() - NAME_HEIGHT, POSNAME_WIDTH, NAME_HEIGHT);
 			pPos->pCountryFlag->SetShouldScaleImage(true);
 			pPos->pCountryFlag->SetZPos(1);
 

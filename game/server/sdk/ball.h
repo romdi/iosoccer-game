@@ -161,8 +161,9 @@ public:
 
 	void			ResetStats();
 
-	CNetworkVar(float, m_flOffsideLineBallY);
-	CNetworkVar(float, m_flOffsideLinePlayerY);
+	CNetworkVar(float, m_flOffsideLineBallPosY);
+	CNetworkVar(float, m_flOffsideLineOffsidePlayerPosY);
+	CNetworkVar(float, m_flOffsideLineLastPlayerPosY);
 	CNetworkVar(bool, m_bShowOffsideLine);
 	
 	void			SetPos(const Vector &pos);
@@ -204,7 +205,7 @@ private:
 
 	void			MarkOffsidePlayers();
 	void			UnmarkOffsidePlayers();
-	void			EnableOffsideLine(float ballPosY, float playerPosY);
+	void			EnableOffsideLine(float ballPosY, float offsidePlayerPosY, float lastPlayerPosY);
 	void			DisableOffsideLine();
 
 	bool			PlayersAtTargetPos(bool holdAtTargetPos);

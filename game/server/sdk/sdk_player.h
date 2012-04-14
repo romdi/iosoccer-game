@@ -343,9 +343,11 @@ public:
 	Vector				EyeDirection2D();
 	Vector				EyeDirection3D();
 
-	void				SetOffside(bool offside);
+	void				SetOffside(bool isOffside);
 	bool				IsOffside();
 	Vector				GetOffsidePos();
+	void				SetLastOffsidePlayerPos(Vector pos);
+	Vector				GetLastOffsidePlayerPos();
 	
 	void				SetPosInsideShield(Vector pos, bool holdAtTargetPos);
 	void				SetPosOutsideShield(bool holdAtTargetPos);
@@ -376,11 +378,12 @@ public:
 	void CheckBallShield(const Vector &oldPos, Vector &newPos, const Vector &oldVel, Vector &newVel, const QAngle &oldAng, QAngle &newAng);
 	void MoveToTargetPos(Vector &pos, Vector &vel, QAngle &ang);
 
-private:
+protected:
 
 	bool				m_bIsOffside;
 	Vector				m_vOffsidePos;
 	CBall				*m_pPlayerBall;
+	Vector				m_vLastOffsidePlayerPos;
 };
 
 

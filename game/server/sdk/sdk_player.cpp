@@ -1171,17 +1171,27 @@ bool CSDKPlayer::IsOffside()
 	return mp_offside.GetBool() ? m_bIsOffside : false;
 }
 
-void CSDKPlayer::SetOffside(bool offside)
+void CSDKPlayer::SetOffside(bool isOffside)
 {
-	if (offside)
+	if (isOffside)
 		m_vOffsidePos = GetLocalOrigin();
 
-	m_bIsOffside = offside;
+	m_bIsOffside = isOffside;
 }
 
 Vector CSDKPlayer::GetOffsidePos()
 {
 	return m_vOffsidePos;
+}
+
+void CSDKPlayer::SetLastOffsidePlayerPos(Vector pos)
+{
+	m_vLastOffsidePlayerPos = pos;
+}
+
+Vector CSDKPlayer::GetLastOffsidePlayerPos()
+{
+	return m_vLastOffsidePlayerPos;
 }
 
 void CSDKPlayer::ResetStats()

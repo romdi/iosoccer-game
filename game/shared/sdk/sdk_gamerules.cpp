@@ -131,7 +131,7 @@ const float g_Positions[11][11][4] =
 	{//11
 			{ 0.5f, 0, LW, 11 }, { 1.5f, 0, CF, 10 }, { 2.5f, 0, RW, 9 },
 			{ 0.5f, 1, LM, 8 }, { 1.5f, 1, CM, 6 }, { 2.5f, 1, RM, 7 },
-		{ 0, 2, RB, 2 }, { 1, 2, LCB, 3 }, { 2, 2, RCB, 4 }, { 3, 2, RB, 5 },
+		{ 0, 2, LB, 2 }, { 1, 2, LCB, 3 }, { 2, 2, RCB, 4 }, { 3, 2, RB, 5 },
 								{ 1.5f, 3, GK, 1 }
 	}
 };
@@ -459,13 +459,13 @@ void CSDKGameRules::ServerActivate()
 		pSidelineTrigger->CollisionProp()->WorldSpaceTriggerBounds(&min, &max);
 		if (max.x > m_vKickOff.GetX())
 		{
-			if (max.x < maxX)
-				maxX = max.x;
+			if (min.x < maxX)
+				maxX = min.x;
 		}
 		else
 		{
-			if (min.x > minX)
-				minX = min.x;
+			if (max.x > minX)
+				minX = max.x;
 		}
 	}
 
@@ -479,13 +479,13 @@ void CSDKGameRules::ServerActivate()
 		pGoalTrigger->CollisionProp()->WorldSpaceTriggerBounds(&min, &max);
 		if (max.y > m_vKickOff.GetY())
 		{
-			if (max.y < maxY)
-				maxY = max.y;
+			if (min.y < maxY)
+				maxY = min.y;
 		}
 		else
 		{
-			if (min.y > minY)
-				minY = min.y;
+			if (max.y > minY)
+				minY = max.y;
 		}
 	}
 
@@ -1281,15 +1281,12 @@ void CSDKGameRules::State_FIRST_HALF_Enter()
 
 void CSDKGameRules::State_FIRST_HALF_Think()
 {
-	if (m_flStateTimeLeft <= 10 && m_nAnnouncedInjuryTime == 0)
+	if (m_flStateTimeLeft <= 15 && m_nAnnouncedInjuryTime == 0)
 	{
-		m_nAnnouncedInjuryTime = max(1, (int)m_flInjuryTime);
+		m_nAnnouncedInjuryTime = g_IOSRand.RandomInt(1, 4);
 	}
-	else if (m_flStateTimeLeft + m_flInjuryTime <= 0)
+	else if (m_flStateTimeLeft + m_nAnnouncedInjuryTime <= 0 && abs(m_nBallZone) < 50)
 	{	
-		//if (m_pBall->IsNearGoal())
-		//	m_flInjuryTime += 5; // let players finish their attack
-		//else
 		State_Transition(MATCH_HALFTIME);
 	}
 }
@@ -1315,11 +1312,11 @@ void CSDKGameRules::State_SECOND_HALF_Enter()
 
 void CSDKGameRules::State_SECOND_HALF_Think()
 {
-	if (m_flStateTimeLeft <= 10 && m_nAnnouncedInjuryTime == 0)
+	if (m_flStateTimeLeft <= 15 && m_nAnnouncedInjuryTime == 0)
 	{
-		m_nAnnouncedInjuryTime = max(1, (int)m_flInjuryTime);
+		m_nAnnouncedInjuryTime = g_IOSRand.RandomInt(1, 4);
 	}
-	else if (m_flStateTimeLeft + m_flInjuryTime <= 0)
+	else if (m_flStateTimeLeft + m_nAnnouncedInjuryTime <= 0 && abs(m_nBallZone) < 50)
 	{
 		if (mp_extratime.GetBool() && GetGlobalTeam(TEAM_A)->GetGoals() == GetGlobalTeam(TEAM_B)->GetGoals())
 			State_Transition(MATCH_EXTRATIME_INTERMISSION);
@@ -1353,11 +1350,11 @@ void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Enter()
 
 void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Think()
 {
-	if (m_flStateTimeLeft <= 10 && m_nAnnouncedInjuryTime == 0)
+	if (m_flStateTimeLeft <= 15 && m_nAnnouncedInjuryTime == 0)
 	{
-		m_nAnnouncedInjuryTime = max(1, (int)m_flInjuryTime);
+		m_nAnnouncedInjuryTime = g_IOSRand.RandomInt(1, 4);
 	}
-	else if (m_flStateTimeLeft + m_flInjuryTime <= 0)
+	else if (m_flStateTimeLeft + m_nAnnouncedInjuryTime <= 0 && abs(m_nBallZone) < 50)
 	{
 		State_Transition(MATCH_EXTRATIME_HALFTIME);
 	}
@@ -1385,11 +1382,11 @@ void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Enter()
 
 void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Think()
 {
-	if (m_flStateTimeLeft <= 10 && m_nAnnouncedInjuryTime == 0)
+	if (m_flStateTimeLeft <= 15 && m_nAnnouncedInjuryTime == 0)
 	{
-		m_nAnnouncedInjuryTime = max(1, (int)m_flInjuryTime);
+		m_nAnnouncedInjuryTime = g_IOSRand.RandomInt(1, 4);
 	}
-	else if (m_flStateTimeLeft + m_flInjuryTime <= 0)
+	else if (m_flStateTimeLeft + m_nAnnouncedInjuryTime <= 0 && abs(m_nBallZone) < 50)
 	{
 		if (mp_penalties.GetBool() && GetGlobalTeam(TEAM_A)->GetGoals() == GetGlobalTeam(TEAM_B)->GetGoals())
 			State_Transition(MATCH_PENALTIES_INTERMISSION);
@@ -1697,10 +1694,8 @@ void CSDKGameRules::CalcBallZone()
 	Vector pos;
 	GetBall()->VPhysicsGetObject()->GetPosition(&pos, NULL);
 	float fieldLength = m_vFieldMax.GetY() - m_vFieldMin.GetY();
-	float dist = pos.y - m_vFieldMin.GetY();
-	m_nBallZone = clamp(dist * 100 / fieldLength, 0, 100);
-	if (GetGlobalTeam(TEAM_A)->m_nForward == -1)
-		m_nBallZone = 100 - m_nBallZone;
+	float dist = pos.y - m_vKickOff.GetY();
+	m_nBallZone = clamp(dist * 100 / (fieldLength / 2), -100, 100);
 }
 
 #endif

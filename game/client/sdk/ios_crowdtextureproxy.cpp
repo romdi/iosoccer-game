@@ -57,7 +57,7 @@ void CCrowdTextureProxy::OnBind( void *pEntity )
 	// Prevent multiple Wrap callbacks to be sent for no wrap mode
 
 	if (SDKGameRules())
-		m_FrameRate = max(0, (int)(30 * abs(SDKGameRules()->m_nBallZone - 50) * 2 / 100.0f));
+		m_FrameRate = max(0, (int)(30 * abs(SDKGameRules()->m_nBallZone) / 100.0f));
 	else
 		m_FrameRate = 0;
 

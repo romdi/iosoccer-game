@@ -19,11 +19,8 @@ public:
 	DECLARE_CLIENTCLASS();
 	DECLARE_CLASS( C_Ball, C_PhysicsProp );
 
-	C_Ball()
-	{
-		g_pBall = this;
-		m_bShowOffsideLine = false;
-	}
+	C_Ball();
+	~C_Ball() {}
 
 	virtual int GetMultiplayerPhysicsMode()
 	{
@@ -41,14 +38,16 @@ public:
 		return false;
 	}
 
-	void SetOffsideLine();
 	void OnDataChanged(DataUpdateType_t updateType);
+	int DrawModel(int flags);
 
 	int m_iPhysicsMode;	// One of the PHYSICS_MULTIPLAYER_ defines.	
 	float m_fMass;
-	float m_flOffsideLineBallY;
-	float m_flOffsideLinePlayerY;
+	float m_flOffsideLineBallPosY;
+	float m_flOffsideLineOffsidePlayerPosY;
+	float m_flOffsideLineLastPlayerPosY;
 	bool m_bShowOffsideLine;
+	IMaterial *m_pOffsideLineMaterial;
 };
 
 extern C_Ball *GetBall();

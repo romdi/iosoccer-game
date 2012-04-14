@@ -113,8 +113,9 @@ END_DATADESC()
 IMPLEMENT_SERVERCLASS_ST( CBall, DT_Ball )
 	SendPropInt( SENDINFO( m_iPhysicsMode ), 2,	SPROP_UNSIGNED ),
 	SendPropFloat( SENDINFO( m_fMass ),	0, SPROP_NOSCALE ),
-	SendPropFloat(SENDINFO(m_flOffsideLineBallY), 0, SPROP_COORD),
-	SendPropFloat(SENDINFO(m_flOffsideLinePlayerY), 0, SPROP_COORD),
+	SendPropFloat(SENDINFO(m_flOffsideLineBallPosY), 0, SPROP_COORD),
+	SendPropFloat(SENDINFO(m_flOffsideLineOffsidePlayerPosY), 0, SPROP_COORD),
+	SendPropFloat(SENDINFO(m_flOffsideLineLastPlayerPosY), 0, SPROP_COORD),
 	SendPropBool(SENDINFO(m_bShowOffsideLine))
 	//ios1.1
     //SendPropVector(SENDINFO(m_vecOrigin), -1, SPROP_NOSCALE|SPROP_CHANGES_OFTEN, 0.0f, HIGH_DEFAULT, SendProxy_Origin ),
@@ -452,9 +453,16 @@ ConVar mp_showballstatetransitions( "mp_showballstatetransitions", "1", FCVAR_CH
 
 void CBall::State_Transition( ball_state_t newState, float delay /*= 0.0f*/ )
 {
-	m_eNextState = newState;
-	m_flStateLeaveTime = gpGlobals->curtime + delay;
-	m_bIgnoreTriggers = true;
+	if (delay == 0)
+	{
+		State_Enter(newState);
+	}
+	else
+	{
+		m_eNextState = newState;
+		m_flStateLeaveTime = gpGlobals->curtime + delay;
+		m_bIgnoreTriggers = true;
+	}
 }
 
 void CBall::State_Enter( ball_state_t newState )
@@ -467,7 +475,7 @@ void CBall::State_Enter( ball_state_t newState )
 	m_pPl = NULL;
 	m_pOtherPl = NULL;
 	SDKGameRules()->DisableShield();
-	UnmarkOffsidePlayers();
+	//UnmarkOffsidePlayers();
 	m_bIgnoreTriggers = false;
 	RemoveEffects(EF_NODRAW);
 	m_pPhys->EnableCollisions(true);
@@ -490,7 +498,7 @@ void CBall::State_Enter( ball_state_t newState )
 		}
 
 		pPl->m_bIsAtTargetPos = false;
-		pPl->RemoveFlag(FL_REMOTECONTROLLED | FL_CELEB | FL_NO_X_MOVEMENT | FL_NO_Y_MOVEMENT | FL_ATCONTROLS | FL_FROZEN);
+		pPl->RemoveFlag(FL_REMOTECONTROLLED | FL_FREECAM | FL_CELEB | FL_NO_X_MOVEMENT | FL_NO_Y_MOVEMENT | FL_ATCONTROLS | FL_FROZEN);
 		//pPl->SetMoveType(MOVETYPE_WALK);
 		pPl->RemoveSolidFlags(FSOLID_NOT_SOLID);
 	}
@@ -686,6 +694,7 @@ void CBall::State_KICKOFF_Think()
 
 void CBall::State_THROWIN_Enter()
 {
+	UnmarkOffsidePlayers();
 	SetPos(Vector(m_vTriggerTouchPos.x + 0 * Sign(SDKGameRules()->m_vKickOff.GetX() - m_vTriggerTouchPos.x), m_vTriggerTouchPos.y, SDKGameRules()->m_vKickOff.GetZ()));
 }
 
@@ -848,6 +857,9 @@ void CBall::State_CORNER_Think()
 	//if (!PlayersAtTargetPos(false))
 	//	return;
 
+	if (!m_pPl->m_bIsAtTargetPos)
+		return;
+
 	if (m_flStateTimelimit == -1)
 		m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit.GetFloat();
 
@@ -863,6 +875,7 @@ void CBall::State_CORNER_Think()
 
 void CBall::State_GOAL_Enter()
 {
+	UnmarkOffsidePlayers();
 	UpdatePossession(NULL);
 	m_bIgnoreTriggers = true;
 	m_bIsKickOffAfterGoal = true;
@@ -913,17 +926,20 @@ void CBall::State_GOAL_Think()
 
 void CBall::State_FREEKICK_Enter()
 {
-	DisableOffsideLine();
 	SetPos(m_vFoulPos);
+
 	if (m_pFoulingPl)
 	{
-		match_event_t matchEvent = MATCH_EVENT_NONE;
+		match_event_t matchEvent;
+
 		switch (m_eFoulType)
 		{
 		case FOUL_NORMAL: matchEvent = MATCH_EVENT_FOUL; break;
 		case FOUL_DOUBLETOUCH: matchEvent = MATCH_EVENT_DOUBLETOUCH; break;
-		case FOUL_OFFSIDE: matchEvent = MATCH_EVENT_OFFSIDE; break;
+		case FOUL_OFFSIDE: matchEvent = MATCH_EVENT_OFFSIDE; EnableOffsideLine(m_vOffsidePos.y, m_pFoulingPl->GetOffsidePos().y, m_pFoulingPl->GetLastOffsidePlayerPos().y); break;
+		default: matchEvent = MATCH_EVENT_NONE;
 		}
+
 		SendMatchEvent(matchEvent, m_pFoulingPl);
 	}
 }
@@ -933,9 +949,11 @@ void CBall::State_FREEKICK_Think()
 	if (!CSDKPlayer::IsOnField(m_pPl))
 	{
 		m_pPl = m_pFouledPl;
+
 		if (!CSDKPlayer::IsOnField(m_pPl))
 		{
 			m_pPl = FindNearestPlayer(GetGlobalTeam(m_nFoulingTeam)->GetOppTeamNumber());
+
 			if (!m_pPl)
 				return State_Transition(BALL_NORMAL);
 		}
@@ -949,10 +967,15 @@ void CBall::State_FREEKICK_Think()
 		PlayersAtTargetPos(false);
 	}
 
+	if (!m_pPl->m_bIsAtTargetPos)
+		return;
+
 	if (m_flStateTimelimit == -1)
 		m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit.GetFloat();
 
 	UpdateCarrier();
+
+	DisableOffsideLine();
 
 	if (m_pPl->m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1)) && (m_vPos - m_vPlPos).Length2D() <= sv_ball_touchradius.GetFloat())
 	{
@@ -965,6 +988,8 @@ void CBall::State_FREEKICK_Think()
 
 void CBall::State_PENALTY_Enter()
 {
+	UnmarkOffsidePlayers();
+
 	if (SDKGameRules()->State_Get() == MATCH_PENALTIES)
 	{
 		SetPos(GetGlobalTeam(m_nFoulingTeam)->m_vPenalty);
@@ -1060,7 +1085,6 @@ void CBall::State_PENALTY_Think()
 		m_pPl->m_ePenaltyState = PENALTY_KICKED;
 		m_pOtherPl->RemoveFlag(FL_NO_Y_MOVEMENT);
 		DoGroundShot();
-		MarkOffsidePlayers();
 		State_Transition(BALL_NORMAL);
 	}
 }
@@ -1217,7 +1241,9 @@ void CBall::TriggerFoul(foul_type_t type, Vector pos, CSDKPlayer *pFoulingPl, CS
 	m_pFoulingPl = pFoulingPl;
 	m_pFouledPl = pFouledPl;
 	m_nFoulingTeam = pFoulingPl->GetTeamNumber();
-	m_vFoulPos = pos;
+	m_vFoulPos.x = clamp(pos.x, SDKGameRules()->m_vFieldMin.GetX() + 2 * m_flPhysRadius, SDKGameRules()->m_vFieldMax.GetX() - 2 * m_flPhysRadius);
+	m_vFoulPos.y = clamp(pos.y, SDKGameRules()->m_vFieldMin.GetY() + 2 * m_flPhysRadius, SDKGameRules()->m_vFieldMax.GetY() - 2 * m_flPhysRadius);
+	m_vFoulPos.z = SDKGameRules()->m_vKickOff.GetZ();
 }
 
 bool CBall::DoBodyPartAction()
@@ -1236,7 +1262,7 @@ bool CBall::DoBodyPartAction()
 		{
 			bool canShootBall = RAD2DEG(acos(m_vPlForward2D.Dot(dirToBall))) <= sv_ball_slideangle.GetFloat() && zDist <= BODY_FEET_END;
 
-			if (CheckFoul(canShootBall))
+			if (!m_bIgnoreTriggers && CheckFoul(canShootBall))
 				return false;
 
 			if (canShootBall)
@@ -1592,8 +1618,10 @@ void CBall::MarkOffsidePlayers()
 		if (Sign((pos - m_vPos).y) != forward)
 			continue;
 
+		int oppPlayerCount = 0;
 		int nearerPlayerCount = 0;
-
+		CSDKPlayer *pLastPl = NULL;
+		float shortestDist = FLT_MAX;
 		// Count players who are nearer to goal
 		for (int j = 1; j <= gpGlobals->maxClients; j++)
 		{
@@ -1601,12 +1629,31 @@ void CBall::MarkOffsidePlayers()
 			if (!(pOpp && pOpp->GetTeamNumber() == pPl->GetOppTeamNumber()))
 				continue;
 
-			if (Sign((pOpp->GetLocalOrigin() - pos).y) == forward)
+			oppPlayerCount += 1;
+
+			if (Sign(pOpp->GetLocalOrigin().y - pos.y) == forward)
 				nearerPlayerCount += 1;
+			else
+			{
+				float dist = abs(pos.y - pOpp->GetLocalOrigin().y);
+				if (dist < shortestDist)
+				{
+					shortestDist = dist;
+					pLastPl = pOpp;
+				}
+			}
 		}
 
-		if (nearerPlayerCount <= 1)
+		if (oppPlayerCount >= 2 && nearerPlayerCount <= 1)
+		{
 			pPl->SetOffside(true);
+			pPl->SetLastOffsidePlayerPos(pLastPl->GetLocalOrigin());
+			/*pPl->m_Offsides += 1;
+			TriggerFoul(FOUL_OFFSIDE, pPl->GetOffsidePos(), pPl);
+			EnableOffsideLine(m_vOffsidePos.y, pPl->GetOffsidePos().y, pLastPl->GetLocalOrigin().y);
+			State_Transition(BALL_FREEKICK, sv_ball_statetransitiondelay.GetFloat());
+			break;*/
+		}
 	}
 }
 
@@ -1660,7 +1707,6 @@ void CBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart)
 	{
 		pPl->m_Offsides += 1;
 		TriggerFoul(FOUL_OFFSIDE, pPl->GetOffsidePos(), pPl);
-		EnableOffsideLine(m_vOffsidePos.y, pPl->GetOffsidePos().y);
 		State_Transition(BALL_FREEKICK, sv_ball_statetransitiondelay.GetFloat());
 	}
 }
@@ -1736,10 +1782,11 @@ void CBall::UpdatePossession(CSDKPlayer *pNewPossessor)
 	}
 }
 
-void CBall::EnableOffsideLine(float ballPosY, float playerPosY)
+void CBall::EnableOffsideLine(float ballPosY, float offsidePlayerPosY, float lastPlayerPosY)
 {
-	m_flOffsideLineBallY = ballPosY;
-	m_flOffsideLinePlayerY = playerPosY;
+	m_flOffsideLineBallPosY = ballPosY;
+	m_flOffsideLineOffsidePlayerPosY = offsidePlayerPosY;
+	m_flOffsideLineLastPlayerPosY = lastPlayerPosY;
 	m_bShowOffsideLine = true;
 }
 
