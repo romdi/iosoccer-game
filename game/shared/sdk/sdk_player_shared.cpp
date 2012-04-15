@@ -230,14 +230,14 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 
 	if (SDKGameRules()->m_nShieldType != SHIELD_NONE)
 	{
-		float threshold = 2 * (GetFlags() & FL_SHIELD_KEEP_IN ? -VEC_HULL_MAX.x : VEC_HULL_MAX.x);
+		float border = 2 * (GetFlags() & FL_SHIELD_KEEP_IN ? -mp_shield_border.GetInt() : mp_shield_border.GetInt());
 
 		if (SDKGameRules()->m_nShieldType == SHIELD_GOALKICK || 
 			SDKGameRules()->m_nShieldType == SHIELD_PENALTY ||
 			SDKGameRules()->m_nShieldType == SHIELD_KEEPERHANDS)
 		{
-			Vector min = GetGlobalTeam(SDKGameRules()->m_nShieldDir)->m_vPenBoxMin - threshold;
-			Vector max = GetGlobalTeam(SDKGameRules()->m_nShieldDir)->m_vPenBoxMax + threshold;
+			Vector min = GetGlobalTeam(SDKGameRules()->m_nShieldDir)->m_vPenBoxMin - border;
+			Vector max = GetGlobalTeam(SDKGameRules()->m_nShieldDir)->m_vPenBoxMax + border;
 
 			if (GetFlags() & FL_SHIELD_KEEP_OUT || SDKGameRules()->m_nShieldType == SHIELD_PENALTY)
 			{
@@ -286,7 +286,7 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 			SDKGameRules()->m_nShieldType == SHIELD_KICKOFF ||
 			SDKGameRules()->m_nShieldType == SHIELD_PENALTY && (GetFlags() & FL_SHIELD_KEEP_OUT))
 		{
-			float radius = SDKGameRules()->GetShieldRadius() + threshold;
+			float radius = SDKGameRules()->GetShieldRadius() + border;
 			Vector dir = newPos - SDKGameRules()->m_vShieldPos;
 
 			if (GetFlags() & FL_SHIELD_KEEP_OUT && dir.Length2D() < radius || GetFlags() & FL_SHIELD_KEEP_IN && dir.Length2D() > radius)
@@ -305,7 +305,7 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 				#else
 					forward = GetTeam()->m_nForward;
 				#endif
-				float yBorder = SDKGameRules()->m_vKickOff.GetY() - abs(threshold) * forward;
+				float yBorder = SDKGameRules()->m_vKickOff.GetY() - abs(border) * forward;
 				if (Sign(newPos.y - yBorder) == forward)
 				{
 					newPos.y = yBorder;
@@ -317,9 +317,9 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 
 	if (!SDKGameRules()->IsIntermissionState())
 	{
-		float threshold = 150;
-		Vector min = SDKGameRules()->m_vFieldMin - threshold;
-		Vector max = SDKGameRules()->m_vFieldMax + threshold;
+		float border = mp_field_border.GetInt();
+		Vector min = SDKGameRules()->m_vFieldMin - border;
+		Vector max = SDKGameRules()->m_vFieldMax + border;
 
 		if (newPos.x < min.x || newPos.y < min.y || newPos.x > max.x || newPos.y > max.y)
 		{

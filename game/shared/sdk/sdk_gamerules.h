@@ -51,6 +51,8 @@ extern ConVar
 	mp_shield_freekick_radius,
 	mp_shield_corner_radius,
 	mp_shield_kickoff_radius,
+	mp_shield_border,
+	mp_field_border,
 	mp_offside,
 	mp_joindelay,
 	mp_maxplayers,

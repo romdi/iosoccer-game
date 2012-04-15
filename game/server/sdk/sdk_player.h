@@ -353,6 +353,8 @@ public:
 	void				SetPosOutsideShield(bool holdAtTargetPos);
 	void				GetTargetPos(const Vector &pos, Vector &targetPos);
 
+	Vector				GetSpawnPos();
+
 	CNetworkVector(m_vTargetPos);
 	CNetworkVar(bool, m_bIsAtTargetPos);
 	CNetworkVar(bool, m_bHoldAtTargetPos);

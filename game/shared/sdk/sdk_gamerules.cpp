@@ -1143,6 +1143,10 @@ ConVar mp_shield_throwin_radius("mp_shield_throwin_radius", "180", FCVAR_NOTIFY|
 ConVar mp_shield_freekick_radius("mp_shield_freekick_radius", "360", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_ARCHIVE);
 ConVar mp_shield_corner_radius("mp_shield_corner_radius", "360", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_ARCHIVE);
 ConVar mp_shield_kickoff_radius("mp_shield_kickoff_radius", "360", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_ARCHIVE);
+ConVar mp_shield_border("mp_shield_border", "20", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_ARCHIVE);
+
+ConVar mp_field_border("mp_field_border", "150", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_ARCHIVE);
+
 ConVar mp_offside("mp_offside", "1", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_ARCHIVE);
 ConVar mp_joindelay("mp_joindelay", "3", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_ARCHIVE);
 
@@ -1657,17 +1661,6 @@ void CSDKGameRules::SetAreTeamsSwapped(bool swapped)
 
 CBaseEntity *CSDKGameRules::GetPlayerSpawnSpot( CBasePlayer *pPlayer )
 {
-	Vector spawnPos = pPlayer->GetTeam()->m_vPlayerSpawns[ToSDKPlayer(pPlayer)->GetTeamPosition() - 1];
-	Vector dir = Vector(0, pPlayer->GetTeam()->m_nForward, 0);
-	QAngle ang;
-	VectorAngles(dir, ang);
-	pPlayer->SetLocalOrigin(spawnPos);
-	pPlayer->SetLocalVelocity(vec3_origin);
-	pPlayer->SetLocalAngles(ang);
-	pPlayer->m_Local.m_vecPunchAngle = vec3_angle;
-	pPlayer->m_Local.m_vecPunchAngleVel = vec3_angle;
-	pPlayer->SnapEyeAngles(ang);
-
 	return NULL;
 }
 

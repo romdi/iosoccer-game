@@ -275,7 +275,6 @@ void CSDKPlayer::PreThink(void)
 	BaseClass::PreThink();
 }
 
-
 void CSDKPlayer::PostThink()
 {
 	BaseClass::PostThink();
@@ -287,7 +286,7 @@ void CSDKPlayer::PostThink()
 	// Store the eye angles pitch so the client can compute its animation state correctly.
 	m_angEyeAngles = EyeAngles();
 
-    m_PlayerAnimState->Update( m_angEyeAngles[YAW], m_angEyeAngles[PITCH] );
+	m_PlayerAnimState->Update( m_angEyeAngles[YAW], m_angEyeAngles[PITCH] );
 	
 	//LookAtBall();
 
@@ -825,7 +824,16 @@ void CSDKPlayer::State_ACTIVE_Enter()
 
 	SetViewOffset( VEC_VIEW );
 
-	SDKGameRules()->GetPlayerSpawnSpot(this);
+	Vector spawnPos = GetSpawnPos();
+	Vector dir = Vector(0, GetTeam()->m_nForward, 0);
+	QAngle ang;
+	VectorAngles(dir, ang);
+	SetLocalOrigin(spawnPos);
+	SetLocalVelocity(vec3_origin);
+	SetLocalAngles(ang);
+	m_Local.m_vecPunchAngle = vec3_angle;
+	m_Local.m_vecPunchAngleVel = vec3_angle;
+	SnapEyeAngles(ang);
 
 	//Tony; call spawn again now -- remember; when we add respawn timers etc, to just put them into the spawn queue, and let the queue respawn them.
 	//Spawn();
@@ -1054,7 +1062,8 @@ void CSDKPlayer::SetPosOutsideShield(bool holdAtTargetPos)
 	switch (SDKGameRules()->m_nShieldType)
 	{
 	case SHIELD_KICKOFF:
-		m_vTargetPos = GetTeamPosition() == 1 ? GetTeam()->m_vPenalty : GetTeam()->m_vPlayerSpawns[GetTeamPosition() - 1];
+		//m_vTargetPos = GetTeamPosition() == 1 ? GetTeam()->m_vPenalty : GetTeam()->m_vPlayerSpawns[GetTeamPosition() - 1];
+		m_vTargetPos = GetSpawnPos();
 		break;
 	default:
 		GetTargetPos(GetLocalOrigin(), m_vTargetPos.GetForModify());
@@ -1078,14 +1087,14 @@ void CSDKPlayer::SetPosOutsideShield(bool holdAtTargetPos)
 
 void CSDKPlayer::GetTargetPos(const Vector &pos, Vector &targetPos)
 {
-	float threshold = 2 * (GetFlags() & FL_SHIELD_KEEP_IN ? -VEC_HULL_MAX.x : VEC_HULL_MAX.x);
+	float border = 2 * (GetFlags() & FL_SHIELD_KEEP_IN ? -mp_shield_border.GetInt() : mp_shield_border.GetInt());
 
 	if (SDKGameRules()->m_nShieldType == SHIELD_GOALKICK || 
 		SDKGameRules()->m_nShieldType == SHIELD_PENALTY ||
 		SDKGameRules()->m_nShieldType == SHIELD_KEEPERHANDS)
 	{
-		Vector min = GetGlobalTeam(SDKGameRules()->m_nShieldDir)->m_vPenBoxMin - threshold;
-		Vector max = GetGlobalTeam(SDKGameRules()->m_nShieldDir)->m_vPenBoxMax + threshold;
+		Vector min = GetGlobalTeam(SDKGameRules()->m_nShieldDir)->m_vPenBoxMin - border;
+		Vector max = GetGlobalTeam(SDKGameRules()->m_nShieldDir)->m_vPenBoxMax + border;
 
 		if (GetFlags() & FL_SHIELD_KEEP_OUT || SDKGameRules()->m_nShieldType == SHIELD_PENALTY)
 		{
@@ -1120,7 +1129,7 @@ void CSDKPlayer::GetTargetPos(const Vector &pos, Vector &targetPos)
 		SDKGameRules()->m_nShieldType == SHIELD_KICKOFF ||
 		SDKGameRules()->m_nShieldType == SHIELD_PENALTY && (GetFlags() & FL_SHIELD_KEEP_OUT))
 	{
-		float radius = SDKGameRules()->GetShieldRadius() + threshold;
+		float radius = SDKGameRules()->GetShieldRadius() + border;
 		Vector tempPos = (SDKGameRules()->m_nShieldType == SHIELD_PENALTY && targetPos != vec3_invalid) ? targetPos : pos;
 
 		Vector dir = tempPos - SDKGameRules()->m_vShieldPos;
@@ -1213,6 +1222,25 @@ void CSDKPlayer::ResetStats()
 	m_flPossessionTime = 0.0f;
 	m_bIsOffside = false;
 	m_ePenaltyState = PENALTY_NONE;
+}
+
+Vector CSDKPlayer::GetSpawnPos()
+{
+	//Vector spawnPos = pPlayer->GetTeam()->m_vPlayerSpawns[ToSDKPlayer(pPlayer)->GetTeamPosition() - 1];
+	Vector halfField = (SDKGameRules()->m_vFieldMax - SDKGameRules()->m_vFieldMin);
+	halfField.y /= 2;
+	float xDist = halfField.x / 5;
+	float yDist = halfField.y / 5;
+	float xPos = g_Positions[mp_maxplayers.GetInt() - 1][GetTeamPosIndex()][POS_XPOS] * xDist + xDist;
+	float yPos = g_Positions[mp_maxplayers.GetInt() - 1][GetTeamPosIndex()][POS_YPOS] * yDist + max(mp_shield_freekick_radius.GetInt() + mp_shield_border.GetInt(), yDist);
+
+	Vector spawnPos;
+	if (GetTeam()->m_nForward == 1)
+		spawnPos = Vector(SDKGameRules()->m_vFieldMin.GetX(), SDKGameRules()->m_vKickOff.GetY(), SDKGameRules()->m_vKickOff.GetZ()) + Vector(xPos, -yPos, 0);
+	else
+		spawnPos = Vector(SDKGameRules()->m_vFieldMax.GetX(), SDKGameRules()->m_vKickOff.GetY(), SDKGameRules()->m_vKickOff.GetZ()) + Vector(-xPos, yPos, 0);
+
+	return spawnPos;
 }
 
 int CSDKPlayer::GetTeamPosition()
