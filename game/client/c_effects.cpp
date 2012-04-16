@@ -27,14 +27,14 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-ConVar	cl_winddir			( "cl_winddir", "0", FCVAR_CHEAT | FCVAR_ARCHIVE, "Weather effects wind direction angle" );
-ConVar	cl_windspeed		( "cl_windspeed", "0", FCVAR_CHEAT | FCVAR_ARCHIVE, "Weather effects wind speed scalar" );
+ConVar	cl_winddir			( "cl_winddir", "0", FCVAR_ARCHIVE, "Weather effects wind direction angle" );
+ConVar	cl_windspeed		( "cl_windspeed", "0", FCVAR_ARCHIVE, "Weather effects wind speed scalar" );
 
 Vector g_vSplashColor( 0.5, 0.5, 0.5 );
 float g_flSplashScale = 0.15;
 float g_flSplashLifetime = 0.5f;
 float g_flSplashAlpha = 0.3f;
-ConVar r_rain_splashpercentage( "r_rain_splashpercentage", "0", FCVAR_CHEAT | FCVAR_ARCHIVE ); // N% chance of a rain particle making a splash.
+ConVar r_rain_splashpercentage( "r_rain_splashpercentage", "0", FCVAR_ARCHIVE ); // N% chance of a rain particle making a splash.
 
 
 float GUST_INTERVAL_MIN = 1;
@@ -47,32 +47,32 @@ float MIN_SCREENSPACE_RAIN_WIDTH = 1;
 
 #ifndef _XBOX
 
-ConVar r_weather_hack( "r_weather_hack", "0", FCVAR_CHEAT | FCVAR_ARCHIVE );
+ConVar r_weather_hack( "r_weather_hack", "0", FCVAR_ARCHIVE );
 ConVar r_weather_profile( "r_weather_profile", "0", FCVAR_CHEAT, "Enable/disable rain profiling." );
 
-ConVar r_rain_radius( "r_rain_radius", "1500", FCVAR_CHEAT | FCVAR_ARCHIVE );
-ConVar r_rain_height( "r_rain_height", "500", FCVAR_CHEAT | FCVAR_ARCHIVE );
-ConVar r_rain_playervelmultiplier( "r_rain_playervelmultiplier", "1", FCVAR_CHEAT | FCVAR_ARCHIVE );
-ConVar r_rain_sidevel( "r_rain_sidevel", "130", FCVAR_CHEAT | FCVAR_ARCHIVE, "How much sideways velocity rain gets." );
-ConVar r_rain_density( "r_rain_density","0.001", FCVAR_CHEAT | FCVAR_ARCHIVE);
-ConVar r_rain_width( "r_rain_width", "0.5", FCVAR_CHEAT | FCVAR_ARCHIVE );
-ConVar r_rain_length( "r_rain_length", "0.1f", FCVAR_CHEAT | FCVAR_ARCHIVE );
-ConVar r_rain_speed( "r_rain_speed", "600.0f", FCVAR_CHEAT | FCVAR_ARCHIVE );
-ConVar r_rain_alpha( "r_rain_alpha", "0.4", FCVAR_CHEAT | FCVAR_ARCHIVE );
-ConVar r_rain_alphapow( "r_rain_alphapow", "0.8", FCVAR_CHEAT | FCVAR_ARCHIVE );
-ConVar r_rain_initialramp( "r_rain_initialramp", "0.6", FCVAR_CHEAT | FCVAR_ARCHIVE );
+ConVar r_rain_radius( "r_rain_radius", "1500", FCVAR_ARCHIVE );
+ConVar r_rain_height( "r_rain_height", "500", FCVAR_ARCHIVE );
+ConVar r_rain_playervelmultiplier( "r_rain_playervelmultiplier", "1", FCVAR_ARCHIVE );
+ConVar r_rain_sidevel( "r_rain_sidevel", "130", FCVAR_ARCHIVE, "How much sideways velocity rain gets." );
+ConVar r_rain_density( "r_rain_density","0.001", FCVAR_ARCHIVE);
+ConVar r_rain_width( "r_rain_width", "0.5", FCVAR_ARCHIVE );
+ConVar r_rain_length( "r_rain_length", "0.1f", FCVAR_ARCHIVE );
+ConVar r_rain_speed( "r_rain_speed", "600.0f", FCVAR_ARCHIVE );
+ConVar r_rain_alpha( "r_rain_alpha", "0.4", FCVAR_ARCHIVE );
+ConVar r_rain_alphapow( "r_rain_alphapow", "0.8", FCVAR_ARCHIVE );
+ConVar r_rain_initialramp( "r_rain_initialramp", "0.6", FCVAR_ARCHIVE );
 
-ConVar r_snow_radius( "r_snow_radius", "1500", FCVAR_CHEAT | FCVAR_ARCHIVE );
-ConVar r_snow_height( "r_snow_height", "500", FCVAR_CHEAT | FCVAR_ARCHIVE );
-ConVar r_snow_playervelmultiplier( "r_snow_playervelmultiplier", "1", FCVAR_CHEAT | FCVAR_ARCHIVE );
-ConVar r_snow_sidevel( "r_snow_sidevel", "130", FCVAR_CHEAT | FCVAR_ARCHIVE, "How much sideways velocity snow gets." );
-ConVar r_snow_density( "r_snow_density","0.001", FCVAR_CHEAT | FCVAR_ARCHIVE);
-ConVar r_snow_width( "r_snow_width", "0.5", FCVAR_CHEAT | FCVAR_ARCHIVE );
-ConVar r_snow_length( "r_snow_length", "0.1f", FCVAR_CHEAT | FCVAR_ARCHIVE );
-ConVar r_snow_speed( "r_snow_speed", "600.0f", FCVAR_CHEAT | FCVAR_ARCHIVE );
-ConVar r_snow_alpha( "r_snow_alpha", "0.4", FCVAR_CHEAT | FCVAR_ARCHIVE );
-ConVar r_snow_alphapow( "r_snow_alphapow", "0.8", FCVAR_CHEAT | FCVAR_ARCHIVE );
-ConVar r_snow_initialramp( "r_snow_initialramp", "1.0", FCVAR_CHEAT | FCVAR_ARCHIVE );
+ConVar r_snow_radius( "r_snow_radius", "1500", FCVAR_ARCHIVE );
+ConVar r_snow_height( "r_snow_height", "500", FCVAR_ARCHIVE );
+ConVar r_snow_playervelmultiplier( "r_snow_playervelmultiplier", "1", FCVAR_ARCHIVE );
+ConVar r_snow_sidevel( "r_snow_sidevel", "130", FCVAR_ARCHIVE, "How much sideways velocity snow gets." );
+ConVar r_snow_density( "r_snow_density","0.001", FCVAR_ARCHIVE);
+ConVar r_snow_width( "r_snow_width", "0.5", FCVAR_ARCHIVE );
+ConVar r_snow_length( "r_snow_length", "0.1f", FCVAR_ARCHIVE );
+ConVar r_snow_speed( "r_snow_speed", "600.0f", FCVAR_ARCHIVE );
+ConVar r_snow_alpha( "r_snow_alpha", "0.4", FCVAR_ARCHIVE );
+ConVar r_snow_alphapow( "r_snow_alphapow", "0.8", FCVAR_ARCHIVE );
+ConVar r_snow_initialramp( "r_snow_initialramp", "1.0", FCVAR_ARCHIVE );
 
 //Precahce the effects
 CLIENTEFFECT_REGISTER_BEGIN( PrecachePrecipitation )
