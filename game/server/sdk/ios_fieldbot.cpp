@@ -120,23 +120,23 @@ void CFieldBot::BotRunToBall()
 	else
 	{
 		Vector pos = GetLocalOrigin();
-		//if (pos.x < SDKGameRules()->m_vFieldMin.GetX() - 100 || pos.x > SDKGameRules()->m_vFieldMax.GetX() + 100 || pos.y < SDKGameRules()->m_vFieldMin.GetY() - 100 || pos.y > SDKGameRules()->m_vFieldMax.GetY() + 100)
-		//{
-		//	QAngle ang;
-		//	VectorAngles(SDKGameRules()->m_vKickOff - pos, ang);
-		//	m_cmd.viewangles[YAW] = ang[YAW];
-		//}
-		//else
-		//	m_cmd.viewangles[YAW] = m_oldcmd.viewangles[YAW] + g_IOSRand.RandomFloat(-180, 180) * gpGlobals->frametime * 4;
-		//m_cmd.forwardmove = clamp(m_oldcmd.forwardmove + g_IOSRand.RandomFloat(-200, 200) * gpGlobals->frametime * 2, -mp_walkspeed.GetInt() / 2, mp_walkspeed.GetInt());
-		//m_cmd.sidemove = clamp(m_oldcmd.sidemove + g_IOSRand.RandomFloat(-200, 200) * gpGlobals->frametime * 2, -mp_walkspeed.GetInt() / 2, mp_walkspeed.GetInt() / 2);
-		Vector forward = Vector(0, GetTeam()->m_nForward, 0);
-		VectorAngles(forward, m_cmd.viewangles);
-		
-		if (!m_bIsOffside && Sign(m_vDirToBall.y) == GetTeam()->m_nForward)
-			m_cmd.forwardmove = mp_runspeed.GetInt();
-		else if (Sign(pos.y - GetTeam()->m_vPlayerSpawns[GetTeamPosition() - 1].y) == GetTeam()->m_nForward)
-			m_cmd.forwardmove = -mp_runspeed.GetInt();
+		if (pos.x < SDKGameRules()->m_vFieldMin.GetX() - 100 || pos.x > SDKGameRules()->m_vFieldMax.GetX() + 100 || pos.y < SDKGameRules()->m_vFieldMin.GetY() - 100 || pos.y > SDKGameRules()->m_vFieldMax.GetY() + 100)
+		{
+			QAngle ang;
+			VectorAngles(SDKGameRules()->m_vKickOff - pos, ang);
+			m_cmd.viewangles[YAW] = ang[YAW];
+		}
+		else
+			m_cmd.viewangles[YAW] = m_oldcmd.viewangles[YAW] + g_IOSRand.RandomFloat(-180, 180) * gpGlobals->frametime * 4;
+		m_cmd.forwardmove = clamp(m_oldcmd.forwardmove + g_IOSRand.RandomFloat(-200, 200) * gpGlobals->frametime * 2, -mp_walkspeed.GetInt() / 2, mp_walkspeed.GetInt());
+		m_cmd.sidemove = clamp(m_oldcmd.sidemove + g_IOSRand.RandomFloat(-200, 200) * gpGlobals->frametime * 2, -mp_walkspeed.GetInt() / 2, mp_walkspeed.GetInt() / 2);
+		//Vector forward = Vector(0, GetTeam()->m_nForward, 0);
+		//VectorAngles(forward, m_cmd.viewangles);
+		//
+		//if (!m_bIsOffside && Sign(m_vDirToBall.y) == GetTeam()->m_nForward)
+		//	m_cmd.forwardmove = mp_runspeed.GetInt();
+		//else if (Sign(pos.y - GetTeam()->m_vPlayerSpawns[GetTeamPosition() - 1].y) == GetTeam()->m_nForward)
+		//	m_cmd.forwardmove = -mp_runspeed.GetInt();
 	}
 }
 

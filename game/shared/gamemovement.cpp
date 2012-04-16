@@ -1851,6 +1851,7 @@ bool CGameMovement::CheckJumpButton( void )
 		if (mv->m_nButtons & IN_MOVELEFT)
 		{
 			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_LEFT;
+			//mv->m_flSideMove = 2 * -mp_sprintspeed.GetInt();
 			pPl->AddFlag(FL_FREECAM);
 		}
 		else if (mv->m_nButtons & IN_MOVERIGHT)

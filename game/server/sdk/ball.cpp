@@ -56,6 +56,7 @@ ConVar sv_ball_doubletouchfouls("sv_ball_doubletouchfouls", "1", FCVAR_ARCHIVE |
 ConVar sv_ball_timelimit("sv_ball_timelimit", "10", FCVAR_ARCHIVE | FCVAR_NOTIFY);
 ConVar sv_ball_slideangle("sv_ball_slideangle", "30", FCVAR_ARCHIVE | FCVAR_NOTIFY);
 ConVar sv_ball_statetransitiondelay("sv_ball_statetransitiondelay", "1", FCVAR_ARCHIVE | FCVAR_NOTIFY);
+ConVar sv_ball_thinkinterval("sv_ball_thinkinterval", "0", FCVAR_ARCHIVE | FCVAR_NOTIFY);
 
 CBall *CreateBall(const Vector &pos, CSDKPlayer *pOwner)
 {
@@ -200,7 +201,7 @@ void CBall::Spawn (void)
 	CreateVPhysics();
 
 	SetThink (&CBall::BallThink);
-	SetNextThink(gpGlobals->curtime + (GetOwnerEntity() ? 0.05f : 0.01f));
+	SetNextThink(gpGlobals->curtime + sv_ball_thinkinterval.GetFloat());
 
 	m_nBody = 0; 
 	m_nSkin = g_IOSRand.RandomInt(0,5);
@@ -1303,7 +1304,7 @@ bool CBall::DoBodyPartAction()
 
 		if (!canCatch)
 		{
-			if (zDist >= BODY_FEET_START && zDist < BODY_HIP_END && xyDist <= sv_ball_touchradius.GetInt())
+			if (/*zDist >= BODY_FEET_START && */zDist < BODY_HIP_END && xyDist <= sv_ball_touchradius.GetInt())
 				return DoGroundShot();
 			else
 				return false;
@@ -1341,16 +1342,16 @@ bool CBall::DoBodyPartAction()
 		}
 	}
 
-	if (zDist >= BODY_FEET_START && zDist < BODY_FEET_END && xyDist <= sv_ball_touchradius.GetInt())
+	if (/*zDist >= BODY_FEET_START && */zDist < BODY_FEET_END && xyDist <= sv_ball_touchradius.GetInt())
 		return DoGroundShot();
 
-	//if (zDist >= BODY_HIP_START && zDist < BODY_HIP_END && xyDist <= sv_ball_touchradius.GetInt())
-	//{
-	//	if (DoVolleyShot())
-	//		return true;
-	//	else
-	//		return DoChestDrop();
-	//}
+	if (zDist >= BODY_HIP_START && zDist < BODY_HIP_END && xyDist <= sv_ball_touchradius.GetInt())
+	{
+		if (DoVolleyShot())
+			return true;
+		//else
+		//	return DoChestDrop();
+	}
 
 	//if (zDist >= BODY_CHEST_START && zDist < BODY_CHEST_END && xyDist <= sv_ball_touchradius.GetInt())
 	//	return DoChestDrop();
@@ -1521,7 +1522,7 @@ void CBall::SetBallSpin()
 
 void CBall::BallThink( void	)
 {
-	SetNextThink(gpGlobals->curtime + 0.01f);
+	SetNextThink(gpGlobals->curtime + sv_ball_thinkinterval.GetFloat());
 
 	State_Think();
 }

@@ -2704,8 +2704,8 @@ ConVar xc_crouch_debounce( "xc_crouch_debounce", "0", FCVAR_NONE );
 //-----------------------------------------------------------------------------
 void CBasePlayer::PlayerRunCommand(CUserCmd *ucmd, IMoveHelper *moveHelper)
 {
-	if (CReplayManager::GetInstance()->IsReplaying())
-		return;
+	//if (CReplayManager::GetInstance()->IsReplaying())
+	//	return;
 
 	m_touchedPhysObject = false;
 

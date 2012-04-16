@@ -252,7 +252,7 @@ ConVar cam_firstperson( "cam_firstperson", "0", FCVAR_ARCHIVE, "Enable experimen
 ConVar cam_firstperson_xy( "cam_firstperson_xy", "15", FCVAR_ARCHIVE, "X/Y offset");
 ConVar cam_firstperson_z( "cam_firstperson_z", "5", FCVAR_ARCHIVE, "Z offset");
 
-ConVar cam_offset("cam_offset", "50", FCVAR_ARCHIVE, "Z offset in thirdperson mode");
+ConVar cam_height("cam_height", "25", FCVAR_ARCHIVE, "Z offset in thirdperson mode");
 ConVar cam_alt("cam_alt", "0", FCVAR_ARCHIVE, "Alternative thirdperson mode");
 ConVar cam_alt_dist("cam_alt_dist", "100", FCVAR_ARCHIVE, "Camera distance in alternative thirdperson mode");
 
@@ -312,7 +312,7 @@ void ClientModeShared::OverrideView( CViewSetup *pSetup )
 		}
 		else
 		{
-			pSetup->origin.z += cam_offset.GetInt();
+			pSetup->origin.z += cam_height.GetInt();
 		}
 
 		//if (cam_offset_xy.GetInt() > 0)

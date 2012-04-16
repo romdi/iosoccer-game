@@ -44,9 +44,10 @@ struct PlayerSnapshot
 	Vector pos;
 	QAngle ang;
 	Vector vel;
-	LayerRecord				m_layerRecords[15];
+	LayerRecord				m_layerRecords[CBaseAnimatingOverlay::MAX_OVERLAYS];
 	int						m_masterSequence;
 	float					m_masterCycle;
+	float					m_flSimulationTime;
 	PlayerSnapshot(CSDKPlayer *pPl, Vector pos, QAngle ang, Vector vel) : pPl(pPl), pos(pos), ang(ang), vel(vel) {}
 };
 

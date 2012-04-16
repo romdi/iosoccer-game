@@ -92,6 +92,7 @@ void CReplayManager::TakeSnapshot()
 		}
 		pPlayerSnapshot->m_masterSequence = pPl->GetSequence();
 		pPlayerSnapshot->m_masterCycle = pPl->GetCycle();
+		pPlayerSnapshot->m_flSimulationTime = pPl->GetSimulationTime();
 
 		snapshot.pPlayerSnapshot[i - 1] = pPlayerSnapshot;
 	}
@@ -170,9 +171,11 @@ void CReplayManager::RestoreSnapshot()
 		pPl->SetLocalOrigin(pPlSnap->pos);
 		pPl->SetLocalVelocity(pPlSnap->vel);
 		pPl->SetLocalAngles(pPlSnap->ang);
+		pPl->SnapEyeAngles(pPlSnap->ang);
 
 		pPl->SetSequence(pPlSnap->m_masterSequence);
 		pPl->SetCycle(pPlSnap->m_masterCycle);
+		pPl->SetSimulationTime(pPlSnap->m_flSimulationTime);
 
 		int layerCount = pPl->GetNumAnimOverlays();
 		for( int layerIndex = 0; layerIndex < layerCount; ++layerIndex )
@@ -181,10 +184,10 @@ void CReplayManager::RestoreSnapshot()
 			if(!currentLayer)
 				continue;
 
-			pPlSnap->m_layerRecords[layerIndex].m_cycle = currentLayer->m_flCycle;
-			pPlSnap->m_layerRecords[layerIndex].m_order = currentLayer->m_nOrder;
-			pPlSnap->m_layerRecords[layerIndex].m_sequence = currentLayer->m_nSequence;
-			pPlSnap->m_layerRecords[layerIndex].m_weight = currentLayer->m_flWeight;
+			//pPlSnap->m_layerRecords[layerIndex].m_cycle = currentLayer->m_flCycle;
+			//pPlSnap->m_layerRecords[layerIndex].m_order = currentLayer->m_nOrder;
+			//pPlSnap->m_layerRecords[layerIndex].m_sequence = currentLayer->m_nSequence;
+			//pPlSnap->m_layerRecords[layerIndex].m_weight = currentLayer->m_flWeight;
 
 			//Either no interp, or interp failed.  Just use record.
 			currentLayer->m_flCycle = pPlSnap->m_layerRecords[layerIndex].m_cycle;

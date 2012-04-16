@@ -56,7 +56,8 @@ extern ConVar
 	mp_offside,
 	mp_joindelay,
 	mp_maxplayers,
-	mp_weather;
+	mp_weather,
+	mp_teamlist;
 
 enum match_state_t
 {

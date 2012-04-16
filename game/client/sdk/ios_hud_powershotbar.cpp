@@ -29,7 +29,7 @@ static void OnPowershotStrengthChange(IConVar *var, const char *pOldValue, float
 }
  
 ConVar cl_powershot_strength("cl_powershot_strength", "50", 0, "Powershot Strength (0-100)", true, 0, true, 100, OnPowershotStrengthChange );
-ConVar cl_powershot_fixed_strength("cl_powershot_fixed_strength", "50", 0, "Powershot Fixed Strength (0-100)", true, 0, true, 100, OnPowershotStrengthChange );
+ConVar cl_powershot_fixed_strength("cl_powershot_fixed_strength", "50", FCVAR_ARCHIVE, "Powershot Fixed Strength (0-100)", true, 0, true, 100, OnPowershotStrengthChange );
 
 //extern ConVar cl_powershot_strength;
 

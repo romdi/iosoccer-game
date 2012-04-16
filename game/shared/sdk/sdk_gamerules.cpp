@@ -501,12 +501,12 @@ void CSDKGameRules::ServerActivate()
 
 
 	//TODO: remove this
-	CBaseEntity *pCrossbar = NULL;
-	while ((pCrossbar = gEntList.FindEntityByModel(pCrossbar, "goalposts.mdl")) != NULL)
-	{
-		pCrossbar->SetRenderMode(kRenderTransColor);
-		pCrossbar->SetRenderColorA(75);
-	}
+	//CBaseEntity *pCrossbar = NULL;
+	//while ((pCrossbar = gEntList.FindEntityByModel(pCrossbar, "goalposts.mdl")) != NULL)
+	//{
+	//	pCrossbar->SetRenderMode(kRenderTransColor);
+	//	pCrossbar->SetRenderColorA(75);
+	//}
 
 	State_Transition(MATCH_INIT);
 }
@@ -854,6 +854,7 @@ void CSDKGameRules::ChooseTeamNames(bool clubTeams, bool countryTeams, bool real
 
 		Msg("color distance: %f\n", ColorDistance(m_TeamKitInfoDatabase[teamHome]->m_PrimaryKitColor, m_TeamKitInfoDatabase[teamAway]->m_PrimaryKitColor));
 
+		mp_teamlist.SetValue(UTIL_VarArgs("%s;%s", m_TeamKitInfoDatabase[teamHome]->m_szKitName, m_TeamKitInfoDatabase[teamAway]->m_szKitName));
 		UTIL_LogPrintf("Setting random teams: %s against %s\n", m_TeamKitInfoDatabase[teamHome]->m_szKitName, m_TeamKitInfoDatabase[teamAway]->m_szKitName);
 		GetGlobalTeam(TEAM_A)->SetKitName(m_TeamKitInfoDatabase[teamHome]->m_szKitName);
 		GetGlobalTeam(TEAM_B)->SetKitName(m_TeamKitInfoDatabase[teamAway]->m_szKitName);
@@ -1266,6 +1267,8 @@ void CSDKGameRules::State_INIT_Think()
 void CSDKGameRules::State_WARMUP_Enter()
 {
 	SetAreTeamsSwapped(false);
+	GetBall()->ResetStats();
+	GetBall()->State_Transition(BALL_NORMAL);
 }
 
 void CSDKGameRules::State_WARMUP_Think()
@@ -1277,7 +1280,6 @@ void CSDKGameRules::State_WARMUP_Think()
 void CSDKGameRules::State_FIRST_HALF_Enter()
 {
 	//GetBall()->CreateVPhysics();
-	GetBall()->ResetStats();
 	GetBall()->SetIsKickOffAfterGoal(false);
 	m_nKickOffTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
 	GetBall()->State_Transition(BALL_KICKOFF);
@@ -1557,8 +1559,8 @@ void OnTeamlistChange(IConVar *var, const char *pOldValue, float flOldValue)
 		}
 	}
 }
-static ConVar mp_teamlist("mp_teamlist", "ENGLAND;BRAZIL", FCVAR_REPLICATED|FCVAR_NOTIFY, "Set team names", &OnTeamlistChange);
-static ConVar sv_teamrotation("mp_teamrotation", "brazil;germany;italy;scotland;barcelona;bayern;liverpool;milan;palmeiras", 0, "Set available teams");
+ConVar mp_teamlist("mp_teamlist", "england;brazil", FCVAR_REPLICATED|FCVAR_NOTIFY, "Set team names", &OnTeamlistChange);
+ConVar sv_teamrotation("mp_teamrotation", "brazil;germany;italy;scotland;barcelona;bayern;liverpool;milan;palmeiras", 0, "Set available teams");
 
 
 void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )

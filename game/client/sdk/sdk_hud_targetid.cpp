@@ -20,8 +20,15 @@
 #define PLAYER_HINT_DISTANCE	150
 #define PLAYER_HINT_DISTANCE_SQ	(PLAYER_HINT_DISTANCE*PLAYER_HINT_DISTANCE)
 
-static ConVar hud_names_show("hud_names_show", "1");
-static ConVar hud_names_offset("hud_names_offset", "120");
+ConVar hud_names_visible("hud_names_visible", "1");
+ConVar hud_names_offset("hud_names_offset", "120");
+
+void CC_HudNamesToggle(const CCommand &args)
+{
+	hud_names_visible.SetValue(!hud_names_visible.GetBool());
+}
+
+ConCommand hud_names_toggle("hud_names_toggle", CC_HudNamesToggle);
 
 using namespace vgui;
 
@@ -93,7 +100,7 @@ void CSDKTargetId::VidInit()
 //-----------------------------------------------------------------------------
 void CSDKTargetId::Paint()
 {
-	if (hud_names_show.GetInt() == 0)
+	if (hud_names_visible.GetInt() == 0)
 		return;
 
 	C_SDKPlayer *pLocal = C_SDKPlayer::GetLocalSDKPlayer();

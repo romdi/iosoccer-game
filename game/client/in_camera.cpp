@@ -70,7 +70,7 @@ static kbutton_t cam_in, cam_out; // -- "cam_move" is unused
 
 extern const ConVar *sv_cheats;
 
-extern ConVar cam_offset;
+extern ConVar cam_height;
 
 
 /*
@@ -119,13 +119,13 @@ void CInput::CAM_Think( void )
 
 			Vector origin = localPlayer->GetLocalOrigin(); // find our player's origin
 			//origin += localPlayer->GetViewOffset(); // and from there, his eye position
-			origin.z += cam_offset.GetInt();
+			origin.z += cam_height.GetInt();
 
 			Vector camForward;
 			AngleVectors( QAngle(camOffset.x, camOffset.y, camOffset.z),
 				&camForward, NULL, NULL ); // get the forward vector
 
-			adjDist = camOffset[PITCH] >= 0 ? idealAngles[DIST] : min((VEC_VIEW.z + cam_offset.GetInt() - 5) / cos(DEG2RAD(camOffset[PITCH] + 90)), idealAngles[DIST]);
+			adjDist = camOffset[PITCH] >= 0 ? idealAngles[DIST] : min((VEC_VIEW.z + cam_height.GetInt() - 5) / cos(DEG2RAD(camOffset[PITCH] + 90)), idealAngles[DIST]);
 			camOffset[ DIST ] = adjDist;
 		}
 

@@ -72,7 +72,7 @@ private:
 	Label *m_pScores[2];
 	Panel *m_pTeamBars[2];
 	Panel *m_pEventBars[2];
-	Label *m_pTeamColors[2];
+	Panel *m_pTeamColors[2][2];
 	CUtlVector<Event_t> m_vEventLists[2];
 };
 
@@ -92,9 +92,9 @@ DECLARE_HUD_MESSAGE(CHudScorebar, MatchEvent);
 #define WIDTH_TEAM				115
 #define WIDTH_SCORE				30
 //#define WIDTH_TIMEBAR			150
-#define WIDTH_MATCHSTATE		35
+#define WIDTH_MATCHSTATE		40
 #define WIDTH_TIME				70
-#define WIDTH_TEAMCOLOR			5
+#define WIDTH_TEAMCOLOR			10
 #define WIDTH_INJURYTIME		30
 
 #define WIDTH_TEAMBAR			(HPADDING + WIDTH_TEAM + WIDTH_MARGIN + WIDTH_TEAMCOLOR + WIDTH_MARGIN + WIDTH_SCORE + HPADDING)
@@ -119,7 +119,8 @@ CHudScorebar::CHudScorebar( const char *pElementName ) : BaseClass(NULL, "HudSco
 	{
 		m_pTeamBars[i] = new Panel(this, VarArgs("TeamPanel%d", i + 1));
 		m_pTeams[i] = new Label(m_pTeamBars[i], VarArgs("TeamLabel%d", i), "");
-		m_pTeamColors[i] = new Label(m_pTeamBars[i], VarArgs("TeamColor%d", i), "");
+		m_pTeamColors[i][0] = new Panel(m_pTeamBars[i], VarArgs("TeamColor%d", i));
+		m_pTeamColors[i][1] = new Panel(m_pTeamBars[i], VarArgs("TeamColor%d", i));
 		m_pScores[i] = new Label(m_pTeamBars[i], VarArgs("ScoreLabel%d", i), "");
 		m_pEventBars[i] = new Label(this, VarArgs("ScoreLabel%d", i), "");
 	}
@@ -176,9 +177,8 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 		m_pTeamBars[i]->SetPaintBackgroundType(2);
 		m_pTeamBars[i]->SetBgColor(bgColor);
 
-		m_pTeamColors[i]->SetBounds(HPADDING + WIDTH_TEAM + WIDTH_MARGIN, VPADDING, WIDTH_TEAMCOLOR, HEIGHT_TEAMBAR - 2 * VPADDING);
-		m_pTeamColors[i]->SetBgColor(bgColor);
-		//m_pTeamColors[i]->SetPaintBackgroundType(2);
+		m_pTeamColors[i][0]->SetBounds(HPADDING + WIDTH_TEAM + WIDTH_MARGIN, VPADDING, WIDTH_TEAMCOLOR / 2, HEIGHT_TEAMBAR - 2 * VPADDING);
+		m_pTeamColors[i][1]->SetBounds(HPADDING + WIDTH_TEAM + WIDTH_MARGIN + WIDTH_TEAMCOLOR / 2, VPADDING, WIDTH_TEAMCOLOR / 2, HEIGHT_TEAMBAR - 2 * VPADDING);
 
 		m_pTeams[i]->SetBounds(HPADDING, VPADDING, WIDTH_TEAM, HEIGHT_TEAMBAR - 2 * VPADDING);
 		m_pTeams[i]->SetContentAlignment(Label::a_west);
@@ -239,11 +239,6 @@ const char *g_szStateNames[32] =
 //-----------------------------------------------------------------------------
 void CHudScorebar::Paint( void )
 {
-	C_Team *teamHome = GetGlobalTeam(TEAM_A);
-	C_Team *teamAway = GetGlobalTeam(TEAM_B);
-	if (!teamHome || !teamAway)
-		return;
-
 	float flTime = gpGlobals->curtime - SDKGameRules()->m_flStateEnterTime - SDKGameRules()->m_flInjuryTime;
 	if (SDKGameRules()->m_flInjuryTimeStart != -1)
 		flTime -= gpGlobals->curtime - SDKGameRules()->m_flInjuryTimeStart;
@@ -302,14 +297,13 @@ void CHudScorebar::Paint( void )
 	else
 		m_pInjuryTimeBar->SetVisible(false);
 
-	m_pTeams[0]->SetText(teamHome->Get_ShortTeamName());
-	m_pTeams[1]->SetText(teamAway->Get_ShortTeamName());
-
-	m_pTeamColors[0]->SetBgColor(teamHome->Get_PrimaryKitColor());
-	m_pTeamColors[1]->SetBgColor(teamAway->Get_PrimaryKitColor());
-
-	m_pScores[0]->SetText(VarArgs("%d", teamHome->Get_Goals()));
-	m_pScores[1]->SetText(VarArgs("%d", teamAway->Get_Goals()));
+	for (int team = TEAM_A; team <= TEAM_B; team++)
+	{
+		m_pTeams[team - TEAM_A]->SetText(GetGlobalTeam(team)->Get_ShortTeamName());
+		m_pTeamColors[team - TEAM_A][0]->SetBgColor(GetGlobalTeam(team)->Get_PrimaryKitColor());
+		m_pTeamColors[team - TEAM_A][1]->SetBgColor(GetGlobalTeam(team)->Get_SecondaryKitColor());
+		m_pScores[team - TEAM_A]->SetText(VarArgs("%d", GetGlobalTeam(team)->Get_Goals()));
+	}
 
 	DoEventSlide();
 }
