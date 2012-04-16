@@ -154,6 +154,7 @@ void CTeamMenu::ApplySchemeSettings(IScheme *pScheme)
 		m_pTeamCrests[i]->SetBounds(i == 0 ? 0 : GetWide() - TEAMCREST_SIZE, TEAMBUTTON_VMARGIN, TEAMCREST_SIZE, TEAMCREST_SIZE);
 		m_pTeamCrests[i]->SetShouldScaleImage(true);
 		m_pTeamCrests[i]->SetZPos(2);
+		m_pTeamCrests[i]->SetImage(i == 0 ? "hometeamcrest" : "awayteamcrest");
 
 		//m_pTeamNames[i]->SetBounds(50, 0, 550, 50);
 		//m_pTeamNames[i]->SetFgColor(Color(200, 200, 200, 255));
@@ -521,10 +522,11 @@ void CTeamMenu::OnThink()
 
 		m_pTeamButtons[index]->SetText(gr->GetFullTeamName(team));
 
-		ITexture *pTex = materials->FindTexture(VarArgs("vgui/teamcrests/%s", gr->GetTeamKitName(team)), NULL, false);
-		if (!pTex->IsError())
+		/*ITexture *pTex = materials->FindTexture(VarArgs("vgui/teamcrests/%s", gr->GetTeamKitName(team)), NULL, false);
+		if (!pTex->IsError())*/
+		if (gr->HasTeamCrest(team))
 		{
-			m_pTeamCrests[index]->SetImage(VarArgs("teamcrests/%s", gr->GetTeamKitName(team)));
+			//m_pTeamCrests[index]->SetImage(VarArgs("../models/player/teams/%s/teamcrest", gr->GetTeamKitName(team)));
 			m_pTeamCrests[index]->SetVisible(true);
 		}
 		else

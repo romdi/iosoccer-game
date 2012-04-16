@@ -20,6 +20,7 @@ public:
 	// Team data access 
 	virtual bool			IsClubTeam( int index ) = 0;
 	virtual bool			IsRealTeam( int index ) = 0;
+	virtual bool			HasTeamCrest( int index ) = 0;
 	virtual const char		*GetTeamCode( int index ) = 0;
 	virtual const char		*GetShortTeamName( int index ) = 0;
 	virtual const char		*GetFullTeamName( int index ) = 0;

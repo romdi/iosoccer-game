@@ -1437,6 +1437,9 @@
     <ClCompile Include="..\shared\sdk\ios_teamkit_parse.cpp">
       <Filter>Source Files\SDK</Filter>
     </ClCompile>
+    <ClCompile Include="worldlight.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="achievement_notification_panel.h">
@@ -3220,6 +3223,9 @@
     </ClInclude>
     <ClInclude Include="..\shared\sdk\ios_teamkit_parse.h">
       <Filter>Source Files\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="worldlight.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

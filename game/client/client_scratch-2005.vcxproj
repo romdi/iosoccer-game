@@ -828,6 +828,7 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClCompile Include="..\..\public\tools\bonelist.cpp" />
     <ClCompile Include="entity_client_tools.cpp" />
     <ClCompile Include="toolframework_client.cpp" />
+    <ClCompile Include="worldlight.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\sdk\ios_teamkit_parse.h" />
@@ -1424,6 +1425,7 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClInclude Include="game_controls\spectatorgui.h" />
     <ClInclude Include="game_controls\teammenu.h" />
     <ClInclude Include="game_controls\vguitextwindow.h" />
+    <ClInclude Include="worldlight.h" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\..\lib\public\bitmap.lib" />

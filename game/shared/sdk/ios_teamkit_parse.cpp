@@ -125,6 +125,7 @@ CTeamKitInfo::CTeamKitInfo()
 
 	m_bIsClubTeam = false;
 	m_bIsRealTeam = false;
+	m_bHasTeamCrest = false;
 	m_szTeamCode[0] = 0;
 	m_szKitName[0] = 0;
 	m_szShortTeamName[0] = 0;
@@ -139,6 +140,7 @@ void CTeamKitInfo::Parse( KeyValues *pKeyValuesData, const char *szWeaponName )
 
 	m_bIsClubTeam = pKeyValuesData->GetInt("isclubteam", 0) != 0;
 	m_bIsRealTeam = pKeyValuesData->GetInt("isrealteam", 0) != 0;
+	m_bHasTeamCrest = pKeyValuesData->GetInt("hasteamcrest", 0) != 0;
 	Q_strncpy(m_szTeamCode, pKeyValuesData->GetString("teamcode", "???"), MAX_TEAMCODE_LENGTH);
 	Q_strncpy(m_szKitName, pKeyValuesData->GetString("kitname", "???"), MAX_KITNAME_LENGTH);
 	Q_strncpy(m_szShortTeamName, pKeyValuesData->GetString("shortteamname", "???"), MAX_SHORTTEAMNAME_LENGTH);

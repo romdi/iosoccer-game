@@ -34,6 +34,7 @@ public:
 	virtual int		GetTeamNumber( void ) const;
 	virtual bool	Get_IsClubTeam( void );
 	virtual bool	Get_IsRealTeam( void );
+	virtual bool	Get_HasTeamCrest( void );
 	virtual char	*Get_TeamCode( void );
 	virtual char	*Get_ShortTeamName( void );
 	virtual char	*Get_FullTeamName( void );

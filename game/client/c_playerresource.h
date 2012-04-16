@@ -32,6 +32,7 @@ public : // IGameResources intreface
 	virtual int		GetTeamGoals( int index );
 	virtual bool	IsClubTeam( int index );
 	virtual bool	IsRealTeam( int index );
+	virtual bool	HasTeamCrest( int index );
 	virtual const char *GetTeamCode( int index );
 	virtual const char *GetShortTeamName( int index );
 	virtual const char *GetFullTeamName( int index );

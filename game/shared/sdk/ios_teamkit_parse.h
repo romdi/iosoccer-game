@@ -43,6 +43,7 @@ public:
 
 	bool		m_bIsClubTeam;
 	bool		m_bIsRealTeam;
+	bool		m_bHasTeamCrest;
 	char		m_szTeamCode[MAX_TEAMCODE_LENGTH];
 	char		m_szKitName[MAX_KITNAME_LENGTH];
 	char		m_szShortTeamName[MAX_SHORTTEAMNAME_LENGTH];

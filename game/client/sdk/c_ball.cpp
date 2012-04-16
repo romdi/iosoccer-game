@@ -3,6 +3,7 @@
 #include "c_sdk_player.h"
 #include "fx_line.h"
 #include "sdk_gamerules.h"
+#include "c_team.h"
 
 LINK_ENTITY_TO_CLASS(football, C_Ball);
 
@@ -97,6 +98,84 @@ void DrawOffsideLine(IMaterial *pMaterial, float posY, Vector &color)
 	DrawBoxSide(0, 1, 2, mins[0], mins[1], maxs[0], maxs[1], maxs[2], true, color);
 }
 
+//void DrawHomeTeamCrest()
+//{
+//	Vector vFinalRight = Vector(1, 0, 0);
+//	Vector vFinalForward = Vector(0, 1, 0);
+//	float m_flSpellPreviewRadius = 250;
+//	Vector vFinalOrigin = SDKGameRules()->m_vKickOff;
+//	vFinalOrigin.y += 3 * m_flSpellPreviewRadius;
+//
+//	CMatRenderContextPtr pRenderContext( materials );
+//	IMaterial *pPreviewMaterial = materials->FindMaterial( "vgui/hometeamcrest", TEXTURE_GROUP_CLIENT_EFFECTS );
+//	//IMaterial *pPreviewMaterial = materials->FindMaterial( "debug/debugspritewireframe", TEXTURE_GROUP_OTHER );
+//	pRenderContext->Bind( pPreviewMaterial );
+//	IMesh *pMesh = pRenderContext->GetDynamicMesh();
+//	CMeshBuilder meshBuilder;
+//	meshBuilder.Begin( pMesh, MATERIAL_QUADS, 1 );
+//
+//	meshBuilder.Color3f( 1.0, 1.0, 1.0 );
+//	meshBuilder.TexCoord2f( 0,0,0 );
+//	meshBuilder.Position3fv( (vFinalOrigin + (vFinalRight * m_flSpellPreviewRadius) + (vFinalForward * -m_flSpellPreviewRadius)).Base() );
+//	meshBuilder.AdvanceVertex();
+//
+//	meshBuilder.Color3f( 1.0, 1.0, 1.0 );
+//	meshBuilder.TexCoord2f( 0,1,0 );
+//	meshBuilder.Position3fv( (vFinalOrigin + (vFinalRight * -m_flSpellPreviewRadius) + (vFinalForward * -m_flSpellPreviewRadius)).Base() );
+//	meshBuilder.AdvanceVertex();
+//
+//	meshBuilder.Color3f( 1.0, 1.0, 1.0 );
+//	meshBuilder.TexCoord2f( 0,1,1 );
+//	meshBuilder.Position3fv( (vFinalOrigin + (vFinalRight * -m_flSpellPreviewRadius) + (vFinalForward * m_flSpellPreviewRadius)).Base() );
+//	meshBuilder.AdvanceVertex();
+//
+//	meshBuilder.Color3f( 1.0, 1.0, 1.0 );
+//	meshBuilder.TexCoord2f( 0,0,1 );
+//	meshBuilder.Position3fv( (vFinalOrigin + (vFinalRight * m_flSpellPreviewRadius) + (vFinalForward * m_flSpellPreviewRadius)).Base() );
+//	meshBuilder.AdvanceVertex();
+//	meshBuilder.End();
+//	pMesh->Draw();
+//}
+//
+//void DrawAwayTeamCrest()
+//{
+//	Vector vFinalRight = Vector(1, 0, 0);
+//	Vector vFinalForward = Vector(0, 1, 0);
+//	float m_flSpellPreviewRadius = 250;
+//	Vector vFinalOrigin = SDKGameRules()->m_vKickOff;
+//	vFinalOrigin.y -= 3 * m_flSpellPreviewRadius;
+//
+//	CMatRenderContextPtr pRenderContext( materials );
+//	IMaterial *pPreviewMaterial = materials->FindMaterial( "vgui/awayteamcrest", TEXTURE_GROUP_CLIENT_EFFECTS );
+//	//IMaterial *pPreviewMaterial = materials->FindMaterial( "debug/debugspritewireframe", TEXTURE_GROUP_OTHER );
+//	pRenderContext->Bind( pPreviewMaterial );
+//	IMesh *pMesh = pRenderContext->GetDynamicMesh();
+//	CMeshBuilder meshBuilder;
+//	meshBuilder.Begin( pMesh, MATERIAL_QUADS, 1 );
+//
+//	meshBuilder.Color3f( 1.0, 1.0, 1.0 );
+//	meshBuilder.TexCoord2f( 0,0,0 );
+//	meshBuilder.Position3fv( (vFinalOrigin + (vFinalRight * -m_flSpellPreviewRadius) + (vFinalForward * m_flSpellPreviewRadius)).Base() );
+//	meshBuilder.AdvanceVertex();
+//
+//	meshBuilder.Color3f( 1.0, 1.0, 1.0 );
+//	meshBuilder.TexCoord2f( 0,1,0 );
+//	meshBuilder.Position3fv( (vFinalOrigin + (vFinalRight * m_flSpellPreviewRadius) + (vFinalForward * m_flSpellPreviewRadius)).Base() );
+//	meshBuilder.AdvanceVertex();
+//
+//	meshBuilder.Color3f( 1.0, 1.0, 1.0 );
+//	meshBuilder.TexCoord2f( 0,1,1 );
+//	meshBuilder.Position3fv( (vFinalOrigin + (vFinalRight * m_flSpellPreviewRadius) + (vFinalForward * -m_flSpellPreviewRadius)).Base() );
+//	meshBuilder.AdvanceVertex();
+//
+//	meshBuilder.Color3f( 1.0, 1.0, 1.0 );
+//	meshBuilder.TexCoord2f( 0,0,1 );
+//	meshBuilder.Position3fv( (vFinalOrigin + (vFinalRight * -m_flSpellPreviewRadius) + (vFinalForward * -m_flSpellPreviewRadius)).Base() );
+//	meshBuilder.AdvanceVertex();
+//	meshBuilder.End();
+//	pMesh->Draw();
+//}
+
 int C_Ball::DrawModel(int flags)
 {
 	if (m_bShowOffsideLine)
@@ -106,6 +185,9 @@ int C_Ball::DrawModel(int flags)
 		DrawOffsideLine(m_pOffsideLineMaterial, m_flOffsideLineLastPlayerPosY, Vector(0, 1, 0));
 		//DrawOffsideLine(m_pOffsideLineMaterial, m_flOffsideLinePlayerY);
 	}
+
+	//DrawHomeTeamCrest();
+	//DrawAwayTeamCrest();
 
 	//float m_flSpellPreviewRadius = 200;
 	//Vector vFinalOrigin = SDKGameRules()->m_vKickOff;

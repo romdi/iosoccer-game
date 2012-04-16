@@ -135,7 +135,12 @@ bool C_Team::Get_IsClubTeam( void )
 
 bool C_Team::Get_IsRealTeam( void )
 {
-	return m_pTeamKitInfo-> m_bIsRealTeam;
+	return m_pTeamKitInfo->m_bIsRealTeam;
+}
+
+bool C_Team::Get_HasTeamCrest( void )
+{
+	return m_pTeamKitInfo->m_bHasTeamCrest;
 }
 
 char *C_Team::Get_TeamCode( void )

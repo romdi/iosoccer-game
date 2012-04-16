@@ -255,6 +255,16 @@ bool C_PlayerResource::IsRealTeam(int index)
 	return team->Get_IsRealTeam();
 }
 
+bool C_PlayerResource::HasTeamCrest(int index)
+{
+	C_Team *team = GetGlobalTeam( index );
+
+	if ( !team )
+		return false;
+
+	return team->Get_HasTeamCrest();
+}
+
 const char * C_PlayerResource::GetTeamCode(int index)
 {
 	C_Team *team = GetGlobalTeam( index );
