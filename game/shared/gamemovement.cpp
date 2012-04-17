@@ -1791,6 +1791,8 @@ void CGameMovement::FullNoClipMove( float factor, float maxacceleration )
 	}
 }
 
+ConVar mp_jump_height("mp_jump_height", "15", FCVAR_ARCHIVE | FCVAR_REPLICATED | FCVAR_NOTIFY);
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -1877,7 +1879,7 @@ bool CGameMovement::CheckJumpButton( void )
 
 	pPl->DoAnimationEvent(animEvent);
 
-	mv->m_vecVelocity.z = sqrt(2 * sv_gravity.GetFloat() * GAMEMOVEMENT_JUMP_HEIGHT);
+	mv->m_vecVelocity.z = sqrt(2 * sv_gravity.GetFloat() * mp_jump_height.GetInt());
 
 	FinishGravity();
 

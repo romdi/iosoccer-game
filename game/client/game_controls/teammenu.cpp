@@ -584,8 +584,3 @@ void CTeamMenu::OnCommand( char const *cmd )
 
 	m_flNextUpdateTime = gpGlobals->curtime;
 }
-
-void CTeamMenu::SetNextUpdate()
-{
-	m_flNextUpdateTime = gpGlobals->curtime;
-}

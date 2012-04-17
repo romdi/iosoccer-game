@@ -230,7 +230,7 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 
 	if (SDKGameRules()->m_nShieldType != SHIELD_NONE)
 	{
-		float border = 2 * (GetFlags() & FL_SHIELD_KEEP_IN ? -mp_shield_border.GetInt() : mp_shield_border.GetInt());
+		float border = (GetFlags() & FL_SHIELD_KEEP_IN) ? -mp_shield_border.GetInt() : mp_shield_border.GetInt();
 
 		if (SDKGameRules()->m_nShieldType == SHIELD_GOALKICK || 
 			SDKGameRules()->m_nShieldType == SHIELD_PENALTY ||

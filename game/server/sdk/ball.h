@@ -95,6 +95,7 @@ enum penalty_state_t
 class CBall;
 
 extern CBall *GetBall();
+extern CBall *GetNearestBall(const Vector &pos);
 
 struct CBallStateInfo
 {
@@ -163,7 +164,7 @@ public:
 
 	CNetworkVar(float, m_flOffsideLineBallPosY);
 	CNetworkVar(float, m_flOffsideLineOffsidePlayerPosY);
-	CNetworkVar(float, m_flOffsideLineLastPlayerPosY);
+	CNetworkVar(float, m_flOffsideLineLastOppPlayerPosY);
 	CNetworkVar(bool, m_bShowOffsideLine);
 	
 	void			SetPos(const Vector &pos);
@@ -205,7 +206,7 @@ private:
 
 	void			MarkOffsidePlayers();
 	void			UnmarkOffsidePlayers();
-	void			EnableOffsideLine(float ballPosY, float offsidePlayerPosY, float lastPlayerPosY);
+	void			EnableOffsideLine(float ballPosY, float offsidePlayerPosY, float lastOppPlayerPosY);
 	void			DisableOffsideLine();
 
 	bool			PlayersAtTargetPos(bool holdAtTargetPos);
@@ -213,6 +214,8 @@ private:
 	void			TriggerFoul(foul_type_t type, Vector pos, CSDKPlayer *pFoulingPl, CSDKPlayer *pFouledPl = NULL);
 	CSDKPlayer		*FindNearestPlayer(int team = TEAM_INVALID, int posFlags = FL_POS_FIELD, bool checkIfShooting = false, int ignoredPlayerBits = 0);
 	bool			DoBodyPartAction();
+	bool			DoSlideAction();
+	bool			DoKeeperPenBoxAction();
 	bool			DoGroundShot();
 	bool			DoVolleyShot();
 	bool			DoChestDrop();

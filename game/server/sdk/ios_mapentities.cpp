@@ -20,14 +20,14 @@ public:
 	void StartTouch( CBaseEntity *pOther )
 	{
 		CBall *pBall = dynamic_cast<CBall *>(pOther);
-		if (pBall && !pBall->GetIgnoreTriggers() && !SDKGameRules()->IsIntermissionState() && !pBall->GetOwnerEntity())
+		if (pBall)
 		{
 			m_OnTrigger.FireOutput(pOther, this);
 			BallStartTouch(pBall);
 		}
 
 		CSDKPlayer *pPl = dynamic_cast<CSDKPlayer *>(pOther);
-		if (pPl/* && !GetBall()->GetIgnoreTriggers() && !SDKGameRules()->IsIntermissionState()*/)
+		if (pPl)
 		{
 			PlayerStartTouch(pPl);
 		}
@@ -36,14 +36,14 @@ public:
 	void EndTouch(CBaseEntity *pOther)
 	{
 		CBall *pBall = dynamic_cast<CBall *>(pOther);
-		if (pBall && !pBall->GetIgnoreTriggers() && !SDKGameRules()->IsIntermissionState() && !pBall->GetOwnerEntity())
+		if (pBall)
 		{
 			m_OnTrigger.FireOutput(pOther, this);
 			BallEndTouch(pBall);
 		}
 	
 		CSDKPlayer *pPl = dynamic_cast<CSDKPlayer *>(pOther);
-		if (pPl/* && !GetBall()->GetIgnoreTriggers() && !SDKGameRules()->IsIntermissionState()*/)
+		if (pPl)
 		{
 			PlayerEndTouch(pPl);
 		}
@@ -68,6 +68,9 @@ public:
 
 	void BallStartTouch(CBall *pBall)
 	{
+		if (pBall->GetIgnoreTriggers() || SDKGameRules()->IsIntermissionState())
+			return;
+
 		int team = m_nTeam == 1 ? TEAM_B : TEAM_A;
 		if (SDKGameRules()->GetTeamsSwapped())
 		{
@@ -94,6 +97,9 @@ public:
 
 	void BallStartTouch(CBall *pBall)
 	{
+		if (pBall->GetIgnoreTriggers() || SDKGameRules()->IsIntermissionState())
+			return;
+
 		int team = m_nTeam == 1 ? TEAM_A : TEAM_B;
 		if (SDKGameRules()->GetTeamsSwapped())
 		{
@@ -120,6 +126,9 @@ public:
 
 	void BallStartTouch(CBall *pBall)
 	{
+		if (pBall->GetIgnoreTriggers() || SDKGameRules()->IsIntermissionState())
+			return;
+
 		pBall->TriggerSideline();
 	};
 };

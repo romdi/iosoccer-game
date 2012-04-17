@@ -21,7 +21,7 @@
 
 #define GAMEMOVEMENT_JUMP_TIME				510.0f		// ms approx - based on the 21 unit height jump
 //ios #define GAMEMOVEMENT_JUMP_HEIGHT			21.0f		// units
-#define GAMEMOVEMENT_JUMP_HEIGHT			15.0f		// units
+#define GAMEMOVEMENT_JUMP_HEIGHT			81//15.0f		// units
 
 struct surfacedata_t;
 

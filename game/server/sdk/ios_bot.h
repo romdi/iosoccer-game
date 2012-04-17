@@ -13,6 +13,7 @@
 
 #include "sdk_player.h"
 #include "ios_mapentities.h"
+#include "ball.h"
 
 // This is our bot class.
 class CBot : public CSDKPlayer
@@ -36,6 +37,7 @@ public:
 	CUserCmd		m_cmd;
 	CUserCmd		m_oldcmd;
 
+	CBall			*m_pBall;
 	Vector			m_vBallPos;
 	Vector			m_vBallVel;
 	Vector			m_vBallDir2D;

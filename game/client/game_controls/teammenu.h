@@ -80,7 +80,6 @@ public:
 	virtual bool HasInputElements( void ) { return true; }
 	virtual void OnCommand( char const *cmd );
 	virtual void PerformLayout();
-	void SetNextUpdate();
 	float m_flNextUpdateTime;
 	
 protected:

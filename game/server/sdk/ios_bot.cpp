@@ -358,8 +358,9 @@ void CBot::BotFrame()
 			RunMimicCommand(m_cmd);
 		else
 		{
-			GetBall()->VPhysicsGetObject()->GetPosition(&m_vBallPos, &m_aBallAng);
-			GetBall()->VPhysicsGetObject()->GetVelocity(&m_vBallVel, &m_vBallAngImp);
+			m_pBall = GetNearestBall(GetLocalOrigin());
+			m_pBall->VPhysicsGetObject()->GetPosition(&m_vBallPos, &m_aBallAng);
+			m_pBall->VPhysicsGetObject()->GetVelocity(&m_vBallVel, &m_vBallAngImp);
 
 			m_vBallDir2D = m_vBallVel;
 			m_vBallDir2D.z = 0;

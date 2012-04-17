@@ -26,7 +26,6 @@ CMatchMenu::CMatchMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_MATCH)
 	//SetBgColor(Color(100, 100, 100, 255));
 
 	//m_pTeamMenu->Activate();
-
 	m_pTabPanels[TAB_TEAM_JOIN] = new CTeamMenu(this, "");
 	m_pTabPanels[TAB_TEAM_STATS] = new CStatsMenu(this, "");
 	m_pTabPanels[TAB_PLAYER_SETTINGS] = new CSettingsMenu(this, "");
@@ -87,9 +86,9 @@ void CMatchMenu::ShowPanel(bool bShow)
 	if ( bShow )
 	{
 		Activate();
-		((CTeamMenu *)m_pTabButtons[TAB_TEAM_JOIN])->SetNextUpdate();
-		((CStatsMenu *)m_pTabButtons[TAB_TEAM_STATS])->m_flNextUpdateTime = gpGlobals->curtime;
-		((CSettingsMenu *)m_pTabButtons[TAB_PLAYER_SETTINGS])->m_flNextUpdateTime = gpGlobals->curtime;
+		dynamic_cast<CTeamMenu *>(m_pTabPanels[TAB_TEAM_JOIN])->m_flNextUpdateTime = gpGlobals->curtime;
+		dynamic_cast<CStatsMenu *>(m_pTabPanels[TAB_TEAM_STATS])->m_flNextUpdateTime = gpGlobals->curtime;
+		dynamic_cast<CSettingsMenu *>(m_pTabPanels[TAB_PLAYER_SETTINGS])->m_flNextUpdateTime = gpGlobals->curtime;
 		m_flNextUpdateTime = gpGlobals->curtime;
 		SetMouseInputEnabled( true );
 		SetKeyBoardInputEnabled( true );

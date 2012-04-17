@@ -288,7 +288,7 @@ void CSDKPlayer::PostThink()
 
 	m_PlayerAnimState->Update( m_angEyeAngles[YAW], m_angEyeAngles[PITCH] );
 	
-	//LookAtBall();
+	LookAtBall();
 
 	//IOSSPlayerCollision();
 
@@ -297,7 +297,7 @@ void CSDKPlayer::PostThink()
 
 void CSDKPlayer::LookAtBall(void)
 {
-	CBall *pBall = GetBall();
+	CBall *pBall = GetNearestBall(GetLocalOrigin());
 
 	if (!pBall)
 		return;
@@ -343,7 +343,8 @@ void CSDKPlayer::LookAtBall(void)
 	}
 
 	SetBoneController(2, yaw);
-	SetBoneController(3, pitch);
+	// FIXME: Head pitch movement is jerky
+	//SetBoneController(3, pitch);
 }
 
 #define IOSSCOLDIST (36.0f * 36.0f)
@@ -1016,6 +1017,16 @@ Vector CSDKPlayer::EyeDirection3D( void )
 	return vecForward;
 }
 
+const Vector CSDKPlayer::GetVisualLocalOrigin()
+{
+	Vector origin = GetLocalOrigin();
+	// FIXME: Hack, because the ios player model moves up, but the bounding box doesn't
+	if (!GetGroundEntity())
+		origin.z += 20;
+
+	return origin;
+}
+
 void CSDKPlayer::SetPosInsideShield(Vector pos, bool holdAtTargetPos)
 {
 	RemoveFlag(FL_SHIELD_KEEP_OUT);
@@ -1091,7 +1102,7 @@ void CSDKPlayer::SetPosOutsideShield(bool holdAtTargetPos)
 
 void CSDKPlayer::GetTargetPos(const Vector &pos, Vector &targetPos)
 {
-	float border = 2 * (GetFlags() & FL_SHIELD_KEEP_IN ? -mp_shield_border.GetInt() : mp_shield_border.GetInt());
+	float border = (GetFlags() & FL_SHIELD_KEEP_IN) ? -mp_shield_border.GetInt() : mp_shield_border.GetInt();
 
 	if (SDKGameRules()->m_nShieldType == SHIELD_GOALKICK || 
 		SDKGameRules()->m_nShieldType == SHIELD_PENALTY ||
@@ -1186,10 +1197,12 @@ bool CSDKPlayer::IsOffside()
 
 void CSDKPlayer::SetOffside(bool isOffside)
 {
-	if (isOffside)
-		m_vOffsidePos = GetLocalOrigin();
-
 	m_bIsOffside = isOffside;
+}
+
+void CSDKPlayer::SetOffsidePos(Vector pos)
+{
+	m_vOffsidePos = GetLocalOrigin();
 }
 
 Vector CSDKPlayer::GetOffsidePos()
@@ -1197,14 +1210,24 @@ Vector CSDKPlayer::GetOffsidePos()
 	return m_vOffsidePos;
 }
 
-void CSDKPlayer::SetLastOffsidePlayerPos(Vector pos)
+void CSDKPlayer::SetOffsideLastOppPlayerPos(Vector pos)
 {
-	m_vLastOffsidePlayerPos = pos;
+	m_vOffsideLastOppPlayerPos = pos;
 }
 
-Vector CSDKPlayer::GetLastOffsidePlayerPos()
+Vector CSDKPlayer::GetOffsideLastOppPlayerPos()
 {
-	return m_vLastOffsidePlayerPos;
+	return m_vOffsideLastOppPlayerPos;
+}
+
+void CSDKPlayer::SetOffsideBallPos(Vector pos)
+{
+	m_vOffsideLastOppPlayerPos = pos;
+}
+
+Vector CSDKPlayer::GetOffsideBallPos()
+{
+	return m_vOffsideBallPos;
 }
 
 void CSDKPlayer::ResetStats()
