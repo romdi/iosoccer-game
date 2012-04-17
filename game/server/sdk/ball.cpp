@@ -533,6 +533,12 @@ void CBall::State_Think()
 		State_Enter(nextState);
 	}
 
+	// FIXME: Temporary hack to avoid touching and triggering between states
+	if (m_eNextState != BALL_NOSTATE && m_flStateLeaveTime > gpGlobals->curtime)
+	{
+		return;
+	}
+
 	m_pPhys->GetPosition(&m_vPos, &m_aAng);
 	m_pPhys->GetVelocity(&m_vVel, &m_vRot);
 
@@ -976,10 +982,9 @@ void CBall::State_FREEKICK_Think()
 
 	UpdateCarrier();
 
-	DisableOffsideLine();
-
 	if (m_pPl->m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1)) && (m_vPos - m_vPlPos).Length2D() <= sv_ball_touchradius.GetFloat())
 	{
+		DisableOffsideLine();
 		m_Touches.RemoveAll();
 		DoGroundShot();
 		MarkOffsidePlayers();
@@ -1205,12 +1210,16 @@ bool CBall::CheckFoul(bool canShootBall)
 		Vector dirToPl = pPl->GetLocalOrigin() - m_vPlPos;
 		float distToPl = dirToPl.Length2D();
 
-		if (distToPl > sv_ball_touchradius.GetFloat() * 2)
+		if (distToPl > sv_ball_touchradius.GetFloat() * 1.5f)
 			continue;
+
+		Vector localDirToPl;
+		VectorIRotate(dirToPl, m_pPl->EntityToWorldTransform(), localDirToPl);
 
 		dirToPl.z = 0;
 		dirToPl.NormalizeInPlace();
-		if (RAD2DEG(acos(m_vPlForward2D.Dot(dirToPl))) > sv_ball_slideangle.GetFloat())
+		//if (RAD2DEG(acos(m_vPlForward2D.Dot(dirToPl))) > sv_ball_slideangle.GetFloat())
+		if (localDirToPl.x < 0 || localDirToPl.x > sv_ball_touchradius.GetFloat() * 1.5f || abs(localDirToPl.y) > sv_ball_touchradius.GetFloat())		
 			continue;
 
 		if (canShootBall && distToPl >= (m_vPos - m_vPlPos).Length2D())
@@ -1259,16 +1268,17 @@ bool CBall::DoBodyPartAction()
 
 	if (m_pPl->m_ePlayerAnimEvent == PLAYERANIMEVENT_SLIDE)
 	{
-		if (xyDist <= sv_ball_touchradius.GetFloat() * 2)
+		if (xyDist <= sv_ball_touchradius.GetFloat() * 1.5f)
 		{
-			bool canShootBall = RAD2DEG(acos(m_vPlForward2D.Dot(dirToBall))) <= sv_ball_slideangle.GetFloat() && zDist <= BODY_FEET_END;
+			//bool canShootBall = RAD2DEG(acos(m_vPlForward2D.Dot(dirToBall))) <= sv_ball_slideangle.GetFloat() && zDist <= BODY_FEET_END;
+			bool canShootBall = zDist <= BODY_FEET_END && localDirToBall.x >= 0 && localDirToBall.x <= sv_ball_touchradius.GetFloat() * 1.5f && abs(localDirToBall.y) <= sv_ball_touchradius.GetFloat();
 
 			if (!m_bIgnoreTriggers && CheckFoul(canShootBall))
 				return false;
 
 			if (canShootBall)
 			{
-				SetVel(m_vPlForward2D * m_vPlVel.Length2D() * 2.5f);
+				SetVel(m_vPlForward2D * m_vPlVel.Length2D() * 3.0f);
 				Kicked(BODY_FEET);
 				return true;
 			}

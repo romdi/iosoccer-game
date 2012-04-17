@@ -59,6 +59,35 @@ extern ConVar
 	mp_weather,
 	mp_teamlist;
 
+extern ConVar
+	r_winddir,
+	r_windspeed,
+	r_weather_hack,
+	r_weather_profile,
+	r_rain_radius,
+	r_rain_height,
+	r_rain_playervelmultiplier,
+	r_rain_sidevel,
+	r_rain_density,
+	r_rain_width,
+	r_rain_length,
+	r_rain_speed,
+	r_rain_alpha,
+	r_rain_alphapow,
+	r_rain_initialramp,
+	r_rain_splashpercentage,
+	r_snow_radius,
+	r_snow_height,
+	r_snow_playervelmultiplier,
+	r_snow_sidevel,
+	r_snow_density,
+	r_snow_width,
+	r_snow_length,
+	r_snow_speed,
+	r_snow_alpha,
+	r_snow_alphapow,
+	r_snow_initialramp;
+
 enum match_state_t
 {
 	MATCH_INIT = 0,

@@ -83,7 +83,16 @@ CStatsMenu::CStatsMenu(Panel *parent, const char *name) : Panel(parent, name)
 
 void CStatsMenu::ApplySchemeSettings(IScheme *pScheme)
 {
-	//BaseClass::ApplySchemeSettings( pScheme );
+	BaseClass::ApplySchemeSettings(pScheme);
+
+	m_pScheme = pScheme;
+}
+
+void CStatsMenu::PerformLayout()
+{
+	BaseClass::PerformLayout();
+
+	m_flNextUpdateTime = gpGlobals->curtime;
 
 	SetBgColor(Color(0, 0, 0, 245));
 	SetPaintBackgroundEnabled(true);
@@ -97,7 +106,7 @@ void CStatsMenu::ApplySchemeSettings(IScheme *pScheme)
 		m_pStatTargets[i]->GetMenu()->SetBgColor(Color(255, 255, 255, 255));
 		m_pStatTargets[i]->SetFgColor(Color(0, 0, 0, 255));
 		m_pStatTargets[i]->SetBgColor(Color(255, 255, 255, 255));
-		m_pStatTargets[i]->GetMenu()->SetFont(pScheme->GetFont("IOSTeamMenuNormal"));
+		m_pStatTargets[i]->GetMenu()->SetFont(m_pScheme->GetFont("IOSTeamMenuNormal"));
 		m_pStatTargets[i]->GetMenu()->AddActionSignalTarget(this);
 		m_pStatTargets[i]->AddActionSignalTarget(this);
 	}
@@ -109,15 +118,15 @@ void CStatsMenu::ApplySchemeSettings(IScheme *pScheme)
 		pStat->pPanel->SetBounds(0, (i + 1) * (ROW_HEIGHT + ROW_MARGIN), GetWide(), ROW_HEIGHT);
 
 		pStat->pTeams[0]->SetBounds(0, 0, VALUE_WIDTH, ROW_HEIGHT);
-		pStat->pTeams[0]->SetFont(pScheme->GetFont("IOSTeamMenuBig"));
+		pStat->pTeams[0]->SetFont(m_pScheme->GetFont("IOSTeamMenuBig"));
 		pStat->pTeams[0]->SetContentAlignment(Label::a_west);
 
 		pStat->pName->SetBounds(VALUE_WIDTH, 0, NAME_WIDTH, ROW_HEIGHT);
-		pStat->pName->SetFont(pScheme->GetFont("IOSTeamMenuBig"));
+		pStat->pName->SetFont(m_pScheme->GetFont("IOSTeamMenuBig"));
 		pStat->pName->SetContentAlignment(Label::a_center);
 
 		pStat->pTeams[1]->SetBounds(VALUE_WIDTH + NAME_WIDTH, 0, VALUE_WIDTH, ROW_HEIGHT);
-		pStat->pTeams[1]->SetFont(pScheme->GetFont("IOSTeamMenuBig"));
+		pStat->pTeams[1]->SetFont(m_pScheme->GetFont("IOSTeamMenuBig"));
 		pStat->pTeams[1]->SetContentAlignment(Label::a_east);
 	}
 }
@@ -137,7 +146,7 @@ void CStatsMenu::OnThink()
 	if (m_flNextUpdateTime > gpGlobals->curtime)
 		return;
 
-	C_Team *pTeams[2] = { GetGlobalTeam(TEAM_A), GetGlobalTeam(TEAM_B) };
+	//C_Team *pTeams[2] = { GetGlobalTeam(TEAM_A), GetGlobalTeam(TEAM_B) };
 	IGameResources *gr = GameResources();
 
 	for (int i = 0; i < 2; i++)

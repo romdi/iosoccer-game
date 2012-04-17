@@ -69,6 +69,22 @@ CSettingsMenu::CSettingsMenu(Panel *parent, const char *name) : Panel(parent, na
 
 	m_pSaveButton = new Button(this, "", "Save Settings");
 
+	m_flNextUpdateTime = gpGlobals->curtime;
+}
+
+void CSettingsMenu::ApplySchemeSettings(IScheme *pScheme)
+{
+	BaseClass::ApplySchemeSettings(pScheme);
+
+	m_pScheme = pScheme;
+}
+
+void CSettingsMenu::PerformLayout()
+{
+	BaseClass::PerformLayout();
+
+	m_flNextUpdateTime = gpGlobals->curtime;
+
 	SetBgColor(Color(0, 0, 0, 245));
 	SetPaintBackgroundEnabled(true);
 	SetPaintBackgroundType(2);
@@ -95,7 +111,6 @@ CSettingsMenu::CSettingsMenu(Panel *parent, const char *name) : Panel(parent, na
 	m_pCountryNameList->SetSelectionBgColor(Color(255, 255, 0, 255));
 	m_pCountryNameList->SetFgColor(Color(0, 0, 0, 255));
 	m_pCountryNameList->SetBgColor(Color(255, 255, 255, 255));
-	m_pCountryNameList->DeleteAllItems();
 
 	for (int i = 0; i < COUNTRY_NAMES_COUNT; i++)
 	{
@@ -107,52 +122,12 @@ CSettingsMenu::CSettingsMenu(Panel *parent, const char *name) : Panel(parent, na
 	m_pSaveButton->SetBounds(LABEL_WIDTH, 4 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
 	m_pSaveButton->SetCommand("save_settings");
 	m_pSaveButton->AddActionSignalTarget(this);
-
-	C_SDKPlayer *pLocal = C_SDKPlayer::GetLocalSDKPlayer();
-
-	if (!pLocal)
-		return;
-
-	m_pPlayerNameText->SetText(pLocal->GetPlayerName());
-}
-
-void CSettingsMenu::ApplySchemeSettings(IScheme *pScheme)
-{
-	BaseClass::ApplySchemeSettings( pScheme );
-
-	return;
-
-	SetBgColor(Color(0, 0, 0, 245));
-	SetPaintBackgroundEnabled(true);
-	SetPaintBackgroundType(2);
-	SetMouseInputEnabled( true );
-	SetKeyBoardInputEnabled( true );
-
-	m_pPlayerNameLabel->SetBounds(0, 0, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pPlayerNameText->SetBounds(INPUT_WIDTH, 0, INPUT_WIDTH, TEXT_HEIGHT);
-	//m_pNameText->SetEditable(true);
-	//m_pNameText->SetEnabled(true);
-	m_pPlayerNameText->AddActionSignalTarget( this );
-	m_pPlayerNameText->SendNewLine(true); // with the txtEntry Type you need to set it to pass the return key as a message
-
-	m_pClubNameLabel->SetBounds(0, TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pClubNameText->SetBounds(LABEL_WIDTH, TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
-
-	m_pCountryNameLabel->SetBounds(0, 2 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pCountryNameList->SetBounds(LABEL_WIDTH, 2 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
-	//m_pCountryNameList->GetMenu()->AddActionSignalTarget(this);
-	m_pCountryNameList->DeleteAllItems();
-
-	for (int i = 0; i < COUNTRY_NAMES_COUNT; i++)
-	{
-		KeyValues *kv = new KeyValues("UserData", "index", i);
-		m_pCountryNameList->AddItem(g_szCountryNames[i], kv);
-		kv->deleteThis();
-	}
-
-	m_pSaveButton->SetBounds(LABEL_WIDTH, 4 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
-	m_pSaveButton->SetCommand("save_settings");
-	m_pSaveButton->AddActionSignalTarget(this);
+	m_pSaveButton->SetDefaultColor(Color(0, 0, 0, 255), Color(200, 200, 200, 255));
+	m_pSaveButton->SetArmedColor(Color(50, 50, 50, 255), Color(150, 150, 150, 255));
+	m_pSaveButton->SetDepressedColor(Color(100, 100, 100, 255), Color(200, 200, 200, 255));
+	m_pSaveButton->SetCursor(dc_hand);
+	m_pSaveButton->SetFont(m_pScheme->GetFont("IOSTeamMenuNormal"));
+	m_pSaveButton->SetContentAlignment(Label::a_center);
 
 	C_SDKPlayer *pLocal = C_SDKPlayer::GetLocalSDKPlayer();
 

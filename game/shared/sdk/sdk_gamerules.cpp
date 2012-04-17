@@ -43,6 +43,37 @@ extern void Bot_RunAll( void );
 
 CUniformRandomStream g_IOSRand;
 
+ConVar	r_winddir( "r_winddir", "0", FCVAR_REPLICATED, "Weather effects wind direction angle" );
+ConVar	r_windspeed	( "r_windspeed", "0", FCVAR_REPLICATED, "Weather effects wind speed scalar" );
+
+ConVar r_weather_hack( "r_weather_hack", "0", FCVAR_REPLICATED );
+ConVar r_weather_profile( "r_weather_profile", "0", FCVAR_REPLICATED, "Enable/disable rain profiling." );
+
+ConVar r_rain_radius( "r_rain_radius", "700", FCVAR_REPLICATED );
+ConVar r_rain_height( "r_rain_height", "500", FCVAR_REPLICATED );
+ConVar r_rain_playervelmultiplier( "r_rain_playervelmultiplier", "1", FCVAR_REPLICATED );
+ConVar r_rain_sidevel( "r_rain_sidevel", "130", FCVAR_REPLICATED, "How much sideways velocity rain gets." );
+ConVar r_rain_density( "r_rain_density","0.5", FCVAR_REPLICATED);
+ConVar r_rain_width( "r_rain_width", "0.5", FCVAR_REPLICATED );
+ConVar r_rain_length( "r_rain_length", "0.1f", FCVAR_REPLICATED );
+ConVar r_rain_speed( "r_rain_speed", "600.0f", FCVAR_REPLICATED );
+ConVar r_rain_alpha( "r_rain_alpha", "1", FCVAR_REPLICATED );
+ConVar r_rain_alphapow( "r_rain_alphapow", "0.8", FCVAR_REPLICATED );
+ConVar r_rain_initialramp( "r_rain_initialramp", "0.6", FCVAR_REPLICATED );
+ConVar r_rain_splashpercentage( "r_rain_splashpercentage", "0", FCVAR_REPLICATED ); // N% chance of a rain particle making a splash.
+
+ConVar r_snow_radius( "r_snow_radius", "700", FCVAR_REPLICATED );
+ConVar r_snow_height( "r_snow_height", "250", FCVAR_REPLICATED );
+ConVar r_snow_playervelmultiplier( "r_snow_playervelmultiplier", "1", FCVAR_REPLICATED );
+ConVar r_snow_sidevel( "r_snow_sidevel", "50", FCVAR_REPLICATED, "How much sideways velocity snow gets." );
+ConVar r_snow_density( "r_snow_density","0.25", FCVAR_REPLICATED);
+ConVar r_snow_width( "r_snow_width", "3", FCVAR_REPLICATED );
+ConVar r_snow_length( "r_snow_length", "0.07f", FCVAR_REPLICATED );
+ConVar r_snow_speed( "r_snow_speed", "80.0f", FCVAR_REPLICATED );
+ConVar r_snow_alpha( "r_snow_alpha", "1", FCVAR_REPLICATED );
+ConVar r_snow_alphapow( "r_snow_alphapow", "0.8", FCVAR_REPLICATED );
+ConVar r_snow_initialramp( "r_snow_initialramp", "1.0", FCVAR_REPLICATED );
+
 const char g_szPosNames[21][5] =
 {
 	"GK", "SWP", "LB", "RB", "CB", "LCB", "RCB", "LWB", "RWB", "LM", "RM", "DM", "CM", "AM", "LF", "RF", "CF", "ST", "SS", "LW", "RW"
@@ -75,31 +106,31 @@ const float g_Positions[11][11][4] =
 		HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN
 	},
 	{//4
-					{ 0.5f, 1, LF, 11 }, { 2.5f, 1, RF, 9 },
-								{ 1, 2, CM, 10 },
+					{ 0.5f, 1, LM, 11 }, { 2.5f, 1, RM, 9 },
+								{ 1.5f, 1.5f, CM, 10 },
 								{ 1.5f, 3, GK, 1 },
 
 		HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN
 	},
 	{//5
 					{ 0.5f, 1, LM, 11 }, { 2.5f, 1, RM, 9 },
-						{ 0, 2, LB, 2 }, { 3, 2, RB, 3 },
+						{ 0.5f, 2, LB, 2 }, { 2.5f, 2, RB, 3 },
 								{ 1.5f, 3, GK, 1 },
 
 		HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN
 	},
 	{//6
-					{ 0.5f, 0.5f, LF, 11 }, { 2.5f, 0.5f, RF, 9 },
+					{ 0.5f, 0, LW, 11 }, { 2.5f, 0, RW, 9 },
 								{ 1.5f, 1, CM, 10 },
-					{ 0.75f, 2, LB, 2 }, { 2.25f, 2, RB, 3 },
+					{ 0.5f, 2, LB, 2 }, { 2.5f, 2, RB, 3 },
 								{ 1.5f, 3, GK, 1 },
 
 		HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN
 	},
 	{//7
 								{ 1.5f, 0, CF, 10 },
-			{ 0.5f, 1, LM, 8 }, { 1.5f, 1, CM, 6 }, { 2.5f, 1, RM, 7 },
-						{ 0, 2, LB, 2 }, { 3, 2, RB, 3 },
+			{ 0.5f, 1, LM, 8 }, { 1.5f, 1.5f, CM, 6 }, { 2.5f, 1, RM, 7 },
+						{ 0.5f, 2, LB, 2 }, { 2.5f, 2, RB, 3 },
 								{ 1.5f, 3, GK, 1 },
 
 		HIDDEN, HIDDEN, HIDDEN, HIDDEN
@@ -107,15 +138,15 @@ const float g_Positions[11][11][4] =
 	{//8
 								{ 1.5f, 0, CF, 10 },
 			{ 0.5f, 1, LM, 11 }, { 1.5f, 1, CM, 6 }, { 2.5f, 1, RM, 7 },
-				{ 0, 2, LB, 3 }, { 1, 2, CB, 4 }, { 3, 2, RB, 5 },
+			{ 0.5f, 2, LB, 3 }, { 1.5f, 2, CB, 4 }, { 2.5f, 2, RB, 5 },
 								{ 1.5f, 3, GK, 1 },
 
 		HIDDEN, HIDDEN, HIDDEN
 	},
 	{//9
-					{ 0.5f, 0, LF, 11 }, { 2.5f, 0, RF, 9 },
-			{ 0.5f, 1, LM, 11 }, { 1.5f, 1, CM, 10 }, { 2.5f, 1, RM, 7 },
-							{ 0, 2, LB, 2 }, { 1, 2, CB, 3 }, { 3, 2, RB, 4 },
+					{ 0.5f, 0, LW, 11 }, { 2.5f, 0, RW, 9 },
+			{ 0.5f, 1, LM, 11 }, { 1.5f, 0.5f, CM, 10 }, { 2.5f, 1, RM, 7 },
+			{ 0.5f, 2, LB, 2 }, { 1.5f, 2, CB, 3 }, { 2.5f, 2, RB, 4 },
 								{ 1.5f, 3, GK, 1 },
 
 		HIDDEN, HIDDEN
@@ -123,7 +154,7 @@ const float g_Positions[11][11][4] =
 	{//10
 			{ 0.5f, 0, LW, 11 }, { 1.5f, 0, CF, 10 }, { 2.5f, 0, RW, 9 },
 			{ 0.5f, 1, LM, 8 }, { 1.5f, 1, CM, 6 }, { 2.5f, 1, RM, 7 },
-				{ 0, 2, LB, 2 }, { 1, 2, CB, 3 }, { 3, 2, RB, 4 },
+			{ 0.5f, 2, LB, 2 }, { 1.5f, 2, CB, 3 }, { 2.5f, 2, RB, 4 },
 								{ 1.5f, 3, GK, 1 },
 
 		HIDDEN
@@ -198,13 +229,13 @@ REGISTER_GAMERULES_CLASS( CSDKGameRules );
 
 BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 #if defined ( CLIENT_DLL )
-	RecvPropFloat( RECVINFO( m_flStateEnterTime ) ),
+	RecvPropTime( RECVINFO( m_flStateEnterTime ) ),
 	//RecvPropFloat( RECVINFO( m_fStart) ),
 	//RecvPropInt( RECVINFO( m_iDuration) ),
 	RecvPropInt( RECVINFO( m_eMatchState) ),// 0, RecvProxy_MatchState ),
 	RecvPropInt( RECVINFO( m_nAnnouncedInjuryTime) ),// 0, RecvProxy_MatchState ),
-	RecvPropFloat( RECVINFO( m_flInjuryTimeStart) ),// 0, RecvProxy_MatchState ),
-	RecvPropFloat( RECVINFO( m_flInjuryTime) ),// 0, RecvProxy_MatchState ),
+	RecvPropTime( RECVINFO( m_flInjuryTimeStart) ),// 0, RecvProxy_MatchState ),
+	RecvPropTime( RECVINFO( m_flInjuryTime) ),// 0, RecvProxy_MatchState ),
 
 	RecvPropInt(RECVINFO(m_nShieldType)),
 	RecvPropInt(RECVINFO(m_nShieldDir)),
@@ -1061,8 +1092,8 @@ int CSDKGameRules::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarge
 //-----------------------------------------------------------------------------
 void CSDKGameRules::ClientDisconnected( edict_t *pClient )
 {
-	CSDKPlayer *pPl = (CSDKPlayer *)CBaseEntity::Instance(pClient);
-	CPlayerPersistentData::SavePlayerData(pPl);
+	//CSDKPlayer *pPl = (CSDKPlayer *)CBaseEntity::Instance(pClient);
+	//CPlayerPersistentData::SavePlayerData(pPl);
 
 	BaseClass::ClientDisconnected( pClient );
 }

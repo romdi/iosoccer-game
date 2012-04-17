@@ -429,7 +429,9 @@ void CSDKPlayer::ChangeTeamPos(int team, int pos, bool instantly /*= false*/)
 	{		
 		if (GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B)
 		{
-			if (m_flNextJoin <= gpGlobals->curtime)
+			if (instantly)
+				m_flNextJoin = gpGlobals->curtime;
+			else if (m_flNextJoin <= gpGlobals->curtime)
 				m_flNextJoin = gpGlobals->curtime + mp_joindelay.GetFloat();
 
 			ChangeTeam(TEAM_SPECTATOR);
@@ -441,7 +443,9 @@ void CSDKPlayer::ChangeTeamPos(int team, int pos, bool instantly /*= false*/)
 		{
 			if (GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B)
 			{
-				if (m_flNextJoin <= gpGlobals->curtime)
+				if (instantly)
+					m_flNextJoin = gpGlobals->curtime;
+				else if (m_flNextJoin <= gpGlobals->curtime)
 					m_flNextJoin = gpGlobals->curtime + mp_joindelay.GetFloat();
 
 				ChangeTeam(TEAM_SPECTATOR);
@@ -712,7 +716,7 @@ void CSDKPlayer::State_OBSERVER_MODE_Enter()
 	AddEffects(EF_NODRAW);
 	SetMoveType(MOVETYPE_OBSERVER);
 	AddSolidFlags(FSOLID_NOT_SOLID);
-	RemoveFlag(FL_ATCONTROLS | FL_FROZEN | FL_REMOTECONTROLLED | FL_NO_X_MOVEMENT | FL_NO_Y_MOVEMENT);
+	RemoveFlag(FL_ATCONTROLS | FL_FROZEN | FL_REMOTECONTROLLED | FL_NO_X_MOVEMENT | FL_NO_Y_MOVEMENT | FL_FREECAM);
 	PhysObjectSleep();
 
 	if ( !IsObserver() )
@@ -824,7 +828,7 @@ void CSDKPlayer::State_ACTIVE_Enter()
 
 	SetViewOffset( VEC_VIEW );
 
-	Vector spawnPos = GetSpawnPos();
+	Vector spawnPos = GetSpawnPos(true);
 	Vector dir = Vector(0, GetTeam()->m_nForward, 0);
 	QAngle ang;
 	VectorAngles(dir, ang);
@@ -1063,7 +1067,7 @@ void CSDKPlayer::SetPosOutsideShield(bool holdAtTargetPos)
 	{
 	case SHIELD_KICKOFF:
 		//m_vTargetPos = GetTeamPosition() == 1 ? GetTeam()->m_vPenalty : GetTeam()->m_vPlayerSpawns[GetTeamPosition() - 1];
-		m_vTargetPos = GetSpawnPos();
+		m_vTargetPos = GetSpawnPos(false);
 		break;
 	default:
 		GetTargetPos(GetLocalOrigin(), m_vTargetPos.GetForModify());
@@ -1224,7 +1228,7 @@ void CSDKPlayer::ResetStats()
 	m_ePenaltyState = PENALTY_NONE;
 }
 
-Vector CSDKPlayer::GetSpawnPos()
+Vector CSDKPlayer::GetSpawnPos(bool findSafePos)
 {
 	//Vector spawnPos = pPlayer->GetTeam()->m_vPlayerSpawns[ToSDKPlayer(pPlayer)->GetTeamPosition() - 1];
 	Vector halfField = (SDKGameRules()->m_vFieldMax - SDKGameRules()->m_vFieldMin);
@@ -1239,6 +1243,41 @@ Vector CSDKPlayer::GetSpawnPos()
 		spawnPos = Vector(SDKGameRules()->m_vFieldMin.GetX(), SDKGameRules()->m_vKickOff.GetY(), SDKGameRules()->m_vKickOff.GetZ()) + Vector(xPos, -yPos, 0);
 	else
 		spawnPos = Vector(SDKGameRules()->m_vFieldMax.GetX(), SDKGameRules()->m_vKickOff.GetY(), SDKGameRules()->m_vKickOff.GetZ()) + Vector(-xPos, yPos, 0);
+
+	if (findSafePos)
+	{
+		bool hasSafePos = false;
+		int maxCheckDist = VEC_HULL_MAX.x * 10;
+
+		for (int x = 0; x < maxCheckDist; x++)
+		{
+			for (int y = 0; y < maxCheckDist * 10; y++)
+			{
+				for (int sign = -1; sign <= 1; sign += 2)
+				{
+					Vector checkPos = spawnPos + Vector(x, y, 0);
+					trace_t	trace;
+					UTIL_TraceHull(checkPos, checkPos, VEC_HULL_MIN, VEC_HULL_MAX, MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &trace);
+
+					if (!trace.startsolid)
+					{
+						hasSafePos = true;
+						spawnPos = checkPos;
+						break;
+					}
+				}
+
+				if (hasSafePos)
+					break;
+			}
+
+			if (hasSafePos)
+				break;
+		}
+
+		if (!hasSafePos)
+			spawnPos.z += VEC_HULL_MAX.z * 2;
+	}
 
 	return spawnPos;
 }

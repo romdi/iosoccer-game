@@ -126,12 +126,31 @@ CTeamMenu::CTeamMenu(Panel *parent, const char *name) : Panel(parent, name)
 			m_pPosPanels[i][j] = pPos;
 		}
 	}
+
+	m_flNextUpdateTime = gpGlobals->curtime;
 }
 
 void CTeamMenu::ApplySchemeSettings(IScheme *pScheme)
 {
+	BaseClass::ApplySchemeSettings(pScheme);
+
 	m_pScheme = pScheme;
-	//BaseClass::PerformLayout();
+
+	//for (int i = 0; i < 2; i++)
+	//{
+	//	m_pTeamPanels[i]->SetBounds(0, 0, GetWide(), GetTall());
+	//	m_pTeamPanels[i]->SetBgColor(Color(0, 0, 0, 245));
+	//	m_pTeamPanels[i]->SetPaintBackgroundEnabled(true);
+	//	m_pTeamPanels[i]->SetPaintBackgroundType(2);
+	//	m_pTeamPanels[i]->SetVisible(i == m_nActiveTeam);
+	//}
+}
+
+void CTeamMenu::PerformLayout()
+{
+	BaseClass::PerformLayout();
+
+	m_flNextUpdateTime = gpGlobals->curtime;
 
 	//IScheme *pScheme = scheme()->GetIScheme(GetScheme());
 
@@ -147,7 +166,7 @@ void CTeamMenu::ApplySchemeSettings(IScheme *pScheme)
 
 		m_pTeamButtons[i]->SetCommand(VarArgs("showteam %d", i));
 		m_pTeamButtons[i]->AddActionSignalTarget(this);
-		m_pTeamButtons[i]->SetFont(pScheme->GetFont("IOSTeamMenuBig"));
+		m_pTeamButtons[i]->SetFont(m_pScheme->GetFont("IOSTeamMenuBig"));
 		m_pTeamButtons[i]->SetPaintBorderEnabled(false);
 		m_pTeamButtons[i]->SetContentAlignment(i == 0 ? Label::a_west : Label::a_east);
 
@@ -174,13 +193,13 @@ void CTeamMenu::ApplySchemeSettings(IScheme *pScheme)
 		m_pSpectateButton->SetArmedColor(Color(50, 50, 50, 255), Color(150, 150, 150, 255));
 		m_pSpectateButton->SetDepressedColor(Color(100, 100, 100, 255), Color(200, 200, 200, 255));
 		m_pSpectateButton->SetCursor(dc_hand);
-		m_pSpectateButton->SetFont(pScheme->GetFont("IOSTeamMenuNormal"));
+		m_pSpectateButton->SetFont(m_pScheme->GetFont("IOSTeamMenuNormal"));
 		m_pSpectateButton->SetContentAlignment(Label::a_center);
 		m_pSpectateButton->SetZPos(1);
 
 		m_pSpectatorNames->SetBounds(SPECLIST_MARGIN, GetTall() - SPECLIST_HEIGHT, GetWide() - SPECBUTTON_WIDTH, SPECLIST_HEIGHT);
 		m_pSpectatorNames->SetFgColor(Color(200, 200, 200, 255));
-		m_pSpectatorNames->SetFont(pScheme->GetFont("IOSTeamMenuBig"));
+		m_pSpectatorNames->SetFont(m_pScheme->GetFont("IOSTeamMenuBig"));
 		m_pSpectatorNames->SetZPos(1);
 
 		for (int j = 0; j < 11; j++)
@@ -191,7 +210,9 @@ void CTeamMenu::ApplySchemeSettings(IScheme *pScheme)
 				pPos->pPosPanel->SetVisible(false);
 			else
 			{
-				pPos->pPosPanel->SetBounds(g_Positions[mp_maxplayers.GetInt() - 1][j][0] * (BUTTON_WIDTH + BUTTON_HMARGIN) + BUTTON_LEFTMARGIN, g_Positions[mp_maxplayers.GetInt() - 1][j][1] * (BUTTON_HEIGHT + 2 * BUTTON_VMARGIN) + BUTTON_TOPMARGIN, BUTTON_WIDTH, BUTTON_HEIGHT);
+				int x = g_Positions[mp_maxplayers.GetInt() - 1][j][POS_XPOS] * (BUTTON_WIDTH + BUTTON_HMARGIN) + BUTTON_LEFTMARGIN;
+				int y = g_Positions[mp_maxplayers.GetInt() - 1][j][POS_YPOS] * (BUTTON_HEIGHT + 2 * BUTTON_VMARGIN) + BUTTON_TOPMARGIN;
+				pPos->pPosPanel->SetBounds(x, y, BUTTON_WIDTH, BUTTON_HEIGHT);
 				pPos->pPosPanel->SetPaintBackgroundEnabled(true);
 				pPos->pPosPanel->SetPaintBackgroundType(2);
 				pPos->pPosPanel->SetBgColor(Color(0, 0, 0, 150));
@@ -213,12 +234,12 @@ void CTeamMenu::ApplySchemeSettings(IScheme *pScheme)
 			pPos->pPosName->SetFgColor(Color(225, 225, 225, 255));
 			pPos->pPosName->SetContentAlignment(Label::a_east);
 			pPos->pPosName->SetText(g_szPosNames[(int)g_Positions[mp_maxplayers.GetInt() - 1][j][2]]);
-			pPos->pPosName->SetFont(pScheme->GetFont("IOSTeamMenuBig"));
+			pPos->pPosName->SetFont(m_pScheme->GetFont("IOSTeamMenuBig"));
 			pPos->pPosName->SetZPos(1);
 
 			pPos->pClubName->SetBounds(0, pPos->pPosPanel->GetTall() - NAME_HEIGHT, pPos->pPosPanel->GetWide(), NAME_HEIGHT);
 			pPos->pClubName->SetContentAlignment(Label::a_center);
-			pPos->pClubName->SetFont(pScheme->GetFont("IOSTeamMenuBig"));
+			pPos->pClubName->SetFont(m_pScheme->GetFont("IOSTeamMenuBig"));
 			pPos->pClubName->SetFgColor(Color(225, 225, 225, 255));
 
 			pPos->pCountryFlag->SetBounds(pPos->pPosPanel->GetWide() - POSNAME_WIDTH, pPos->pPosPanel->GetTall() - NAME_HEIGHT, POSNAME_WIDTH, NAME_HEIGHT);
@@ -239,72 +260,72 @@ void CTeamMenu::ApplySchemeSettings(IScheme *pScheme)
 
 			pStats->pGoals->SetBounds(0, 0, STATS_WIDTH, STATS_VALUEHEIGHT);
 			pStats->pGoals->SetFgColor(Color(0, 200, 0, 255));
-			pStats->pGoals->SetFont(pScheme->GetFont("IOSTeamMenuBig"));
+			pStats->pGoals->SetFont(m_pScheme->GetFont("IOSTeamMenuBig"));
 			pStats->pGoals->SetContentAlignment(Label::a_center);
 
 			pStats->pGoalText->SetBounds(0, STATS_VALUEHEIGHT, STATS_WIDTH, STATS_TEXTHEIGHT);
 			pStats->pGoalText->SetFgColor(Color(0, 200, 0, 255));
-			pStats->pGoalText->SetFont(pScheme->GetFont("IOSTeamMenuSmall"));
+			pStats->pGoalText->SetFont(m_pScheme->GetFont("IOSTeamMenuSmall"));
 			pStats->pGoalText->SetContentAlignment(Label::a_center);
 
 			pStats->pAssists->SetBounds(STATS_WIDTH, 0, STATS_WIDTH, STATS_VALUEHEIGHT);
 			pStats->pAssists->SetFgColor(Color(107, 142, 35, 255));
-			pStats->pAssists->SetFont(pScheme->GetFont("IOSTeamMenuBig"));
+			pStats->pAssists->SetFont(m_pScheme->GetFont("IOSTeamMenuBig"));
 			pStats->pAssists->SetContentAlignment(Label::a_center);
 
 			pStats->pAssistText->SetBounds(STATS_WIDTH, STATS_VALUEHEIGHT, STATS_WIDTH, STATS_TEXTHEIGHT);
 			pStats->pAssistText->SetFgColor(Color(107, 142, 35, 255));
-			pStats->pAssistText->SetFont(pScheme->GetFont("IOSTeamMenuSmall"));
+			pStats->pAssistText->SetFont(m_pScheme->GetFont("IOSTeamMenuSmall"));
 			pStats->pAssistText->SetContentAlignment(Label::a_center);
 
 			pStats->pFouls->SetBounds(2 * STATS_WIDTH, 0, STATS_WIDTH, STATS_VALUEHEIGHT);
 			pStats->pFouls->SetFgColor(Color(200, 99, 71, 255));
-			pStats->pFouls->SetFont(pScheme->GetFont("IOSTeamMenuBig"));
+			pStats->pFouls->SetFont(m_pScheme->GetFont("IOSTeamMenuBig"));
 			pStats->pFouls->SetContentAlignment(Label::a_center);
 
 			pStats->pFoulsText->SetBounds(2 * STATS_WIDTH, STATS_VALUEHEIGHT, STATS_WIDTH, STATS_TEXTHEIGHT);
 			pStats->pFoulsText->SetFgColor(Color(200, 99, 71, 255));
-			pStats->pFoulsText->SetFont(pScheme->GetFont("IOSTeamMenuSmall"));
+			pStats->pFoulsText->SetFont(m_pScheme->GetFont("IOSTeamMenuSmall"));
 			pStats->pFoulsText->SetContentAlignment(Label::a_center);
 
 			pStats->pYellowCards->SetBounds(3 * STATS_WIDTH, 0, STATS_WIDTH, STATS_VALUEHEIGHT);
 			pStats->pYellowCards->SetFgColor(Color(200, 200, 0, 255));
-			pStats->pYellowCards->SetFont(pScheme->GetFont("IOSTeamMenuBig"));
+			pStats->pYellowCards->SetFont(m_pScheme->GetFont("IOSTeamMenuBig"));
 			pStats->pYellowCards->SetContentAlignment(Label::a_center);
 
 			pStats->pYellowCardText->SetBounds(3 * STATS_WIDTH, STATS_VALUEHEIGHT, STATS_WIDTH, STATS_TEXTHEIGHT);
 			pStats->pYellowCardText->SetFgColor(Color(200, 200, 0, 255));
-			pStats->pYellowCardText->SetFont(pScheme->GetFont("IOSTeamMenuSmall"));
+			pStats->pYellowCardText->SetFont(m_pScheme->GetFont("IOSTeamMenuSmall"));
 			pStats->pYellowCardText->SetContentAlignment(Label::a_center);
 
 			pStats->pRedCards->SetBounds(4 * STATS_WIDTH, 0, STATS_WIDTH, STATS_VALUEHEIGHT);
 			pStats->pRedCards->SetFgColor(Color(200, 0, 0, 255));
-			pStats->pRedCards->SetFont(pScheme->GetFont("IOSTeamMenuBig"));
+			pStats->pRedCards->SetFont(m_pScheme->GetFont("IOSTeamMenuBig"));
 			pStats->pRedCards->SetContentAlignment(Label::a_center);
 
 			pStats->pRedCardText->SetBounds(4 * STATS_WIDTH, STATS_VALUEHEIGHT, STATS_WIDTH, STATS_TEXTHEIGHT);
 			pStats->pRedCardText->SetFgColor(Color(200, 0, 0, 255));
-			pStats->pRedCardText->SetFont(pScheme->GetFont("IOSTeamMenuSmall"));
+			pStats->pRedCardText->SetFont(m_pScheme->GetFont("IOSTeamMenuSmall"));
 			pStats->pRedCardText->SetContentAlignment(Label::a_center);
 
 			pStats->pPing->SetBounds(0, STATS_VALUEHEIGHT + STATS_TEXTHEIGHT, STATS_WIDTH, STATS_VALUEHEIGHT);
 			pStats->pPing->SetFgColor(Color(200, 200, 200, 255));
-			pStats->pPing->SetFont(pScheme->GetFont("IOSTeamMenuBig"));
+			pStats->pPing->SetFont(m_pScheme->GetFont("IOSTeamMenuBig"));
 			pStats->pPing->SetContentAlignment(Label::a_center);
 
 			pStats->pPingText->SetBounds(0, 2 * STATS_VALUEHEIGHT + STATS_TEXTHEIGHT, STATS_WIDTH, STATS_TEXTHEIGHT);
 			pStats->pPingText->SetFgColor(Color(200, 200, 200, 255));
-			pStats->pPingText->SetFont(pScheme->GetFont("IOSTeamMenuSmall"));
+			pStats->pPingText->SetFont(m_pScheme->GetFont("IOSTeamMenuSmall"));
 			pStats->pPingText->SetContentAlignment(Label::a_center);
 
 			pStats->pPossession->SetBounds(STATS_WIDTH, STATS_VALUEHEIGHT + STATS_TEXTHEIGHT, STATS_WIDTH, STATS_VALUEHEIGHT);
 			pStats->pPossession->SetFgColor(Color(200, 200, 200, 255));
-			pStats->pPossession->SetFont(pScheme->GetFont("IOSTeamMenuBig"));
+			pStats->pPossession->SetFont(m_pScheme->GetFont("IOSTeamMenuBig"));
 			pStats->pPossession->SetContentAlignment(Label::a_center);
 
 			pStats->pPossessionText->SetBounds(STATS_WIDTH, 2 * STATS_VALUEHEIGHT + STATS_TEXTHEIGHT, STATS_WIDTH, STATS_TEXTHEIGHT);
 			pStats->pPossessionText->SetFgColor(Color(200, 200, 200, 255));
-			pStats->pPossessionText->SetFont(pScheme->GetFont("IOSTeamMenuSmall"));
+			pStats->pPossessionText->SetFont(m_pScheme->GetFont("IOSTeamMenuSmall"));
 			pStats->pPossessionText->SetContentAlignment(Label::a_center);
 		}
 	}
@@ -324,7 +345,10 @@ CTeamMenu::~CTeamMenu()
 //-----------------------------------------------------------------------------
 void CTeamMenu::OnThink()
 {
-	//BaseClass::Update();
+	if (m_flNextUpdateTime > gpGlobals->curtime)
+		return;
+
+	m_flNextUpdateTime = gpGlobals->curtime + 0.1f;
 
 	Color black = Color(0, 0, 0, 255);
 	Color darker = Color(75, 75, 75, 255);
@@ -332,9 +356,6 @@ void CTeamMenu::OnThink()
 	Color light = Color(175, 175, 175, 255);
 	Color lighter = Color(225, 225, 225, 255);
 	Color white = Color(255, 255, 255, 255);
-
-	if (m_flNextUpdateTime > gpGlobals->curtime)
-		return;
 
 	if (m_nOldMaxPlayers != mp_maxplayers.GetInt())
 	{
@@ -538,8 +559,6 @@ void CTeamMenu::OnThink()
 	//m_pTeamButtons[1]->SetText(gr->GetFullTeamName(TEAM_B));
 
 	m_pSpectatorNames->SetText(spectatorNames);
-
-	m_flNextUpdateTime = gpGlobals->curtime + 0.25f;
 }
 
 //-----------------------------------------------------------------------------
@@ -563,5 +582,10 @@ void CTeamMenu::OnCommand( char const *cmd )
 
 	BaseClass::OnCommand(cmd);
 
+	m_flNextUpdateTime = gpGlobals->curtime;
+}
+
+void CTeamMenu::SetNextUpdate()
+{
 	m_flNextUpdateTime = gpGlobals->curtime;
 }

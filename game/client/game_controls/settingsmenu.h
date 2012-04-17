@@ -40,6 +40,8 @@ private:
 
 	MESSAGE_FUNC_PARAMS( NewLineMessage, "NewLineMessage", data );
 
+	IScheme *m_pScheme;
+
 public:
 	CSettingsMenu(Panel *parent, const char *name);
 	virtual ~CSettingsMenu();
@@ -47,8 +49,10 @@ public:
 	virtual const char *GetName( void ) { return PANEL_TEAM; }
 	virtual void OnThink();
 	virtual bool HasInputElements( void ) { return true; }
-	
+	virtual void PerformLayout();
 	virtual void OnCommand( char const *cmd );
+
+	float m_flNextUpdateTime;
 	
 protected:
 	
@@ -62,7 +66,6 @@ protected:
 	Label *m_pCountryNameLabel;
 	ComboBox *m_pCountryNameList;
 	Button *m_pSaveButton;
-	float m_flNextUpdateTime;
 };
 
 

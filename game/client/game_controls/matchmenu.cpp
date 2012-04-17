@@ -39,7 +39,8 @@ CMatchMenu::CMatchMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_MATCH)
 
 	m_nActiveTab = TAB_TEAM_JOIN;
 	m_pTabPanels[TAB_TEAM_JOIN]->SetVisible(true);
-	Reset();
+
+	m_flNextUpdateTime = gpGlobals->curtime;
 }
 
 CMatchMenu::~CMatchMenu()
@@ -56,6 +57,7 @@ void CMatchMenu::ApplySchemeSettings(IScheme *pScheme)
 void CMatchMenu::PerformLayout()
 {
 	BaseClass::PerformLayout();
+
 	MoveToCenterOfScreen();
 
 	for (int i = 0; i < TAB_COUNT; i++)
@@ -73,9 +75,7 @@ void CMatchMenu::PerformLayout()
 	}
 
 	m_pTabButtons[TAB_TEAM_JOIN]->SetText("Teams");
-
 	m_pTabButtons[TAB_TEAM_STATS]->SetText("Statistics");
-
 	m_pTabButtons[TAB_PLAYER_SETTINGS]->SetText("Settings");
 }
 
@@ -87,8 +87,10 @@ void CMatchMenu::ShowPanel(bool bShow)
 	if ( bShow )
 	{
 		Activate();
-		Reset();
-		Update();
+		((CTeamMenu *)m_pTabButtons[TAB_TEAM_JOIN])->SetNextUpdate();
+		((CStatsMenu *)m_pTabButtons[TAB_TEAM_STATS])->m_flNextUpdateTime = gpGlobals->curtime;
+		((CSettingsMenu *)m_pTabButtons[TAB_PLAYER_SETTINGS])->m_flNextUpdateTime = gpGlobals->curtime;
+		m_flNextUpdateTime = gpGlobals->curtime;
 		SetMouseInputEnabled( true );
 		SetKeyBoardInputEnabled( true );
 	}
@@ -124,7 +126,7 @@ void CMatchMenu::OnCommand( char const *cmd )
 
 	BaseClass::OnCommand(cmd);
 
-	Reset();
+	m_flNextUpdateTime = gpGlobals->curtime;
 }
 
 void CMatchMenu::Reset()

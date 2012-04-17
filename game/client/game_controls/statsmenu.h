@@ -54,6 +54,8 @@ private:
 	DECLARE_CLASS_SIMPLE( CStatsMenu, Panel );
 	MESSAGE_FUNC_PARAMS( OnTextChanged, "TextChanged", data );
 
+	IScheme *m_pScheme;
+
 public:
 	CStatsMenu(Panel *parent, const char *name);
 	virtual ~CStatsMenu();
@@ -61,14 +63,15 @@ public:
 	virtual const char *GetName( void ) { return PANEL_TEAM; }
 	virtual void OnThink();
 	virtual bool HasInputElements( void ) { return true; }
-	
+	virtual void PerformLayout();
 	virtual void OnCommand( char const *cmd );
+
+	float m_flNextUpdateTime;
 	
 protected:
 	
 	// VGUI2 overrides
 	virtual void ApplySchemeSettings(vgui::IScheme *pScheme);
-	float m_flNextUpdateTime;
 
 	ComboBox *m_pStatTargets[2];
 	StatRow_t *m_pStatRows[STAT_COUNT];

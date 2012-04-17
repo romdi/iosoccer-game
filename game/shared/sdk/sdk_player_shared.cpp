@@ -340,6 +340,14 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 	if (stopPlayer)
 	{
 		//newVel = oldVel;
+		trace_t	trace;
+		UTIL_TraceHull(newPos, newPos, VEC_HULL_MIN, VEC_HULL_MAX, MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &trace);
+
+		if (trace.startsolid)
+		{
+			newPos = oldPos;
+		}
+
 		newVel.x = (newPos - oldPos).x * 35;
 		newVel.y = (newPos - oldPos).y * 35;
 		//newPos = pos;

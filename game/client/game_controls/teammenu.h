@@ -78,8 +78,10 @@ public:
 	virtual const char *GetName( void ) { return PANEL_TEAM; }
 	virtual void OnThink();
 	virtual bool HasInputElements( void ) { return true; }
-	
 	virtual void OnCommand( char const *cmd );
+	virtual void PerformLayout();
+	void SetNextUpdate();
+	float m_flNextUpdateTime;
 	
 protected:
 	
@@ -105,7 +107,6 @@ protected:
 
 	Label *m_pSpectatorNames;
 
-	float m_flNextUpdateTime;
 	int m_nOldMaxPlayers;
 };
 
