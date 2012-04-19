@@ -239,51 +239,7 @@ const char *g_szStateNames[32] =
 //-----------------------------------------------------------------------------
 void CHudScorebar::Paint( void )
 {
-	float flTime = gpGlobals->curtime - SDKGameRules()->m_flStateEnterTime - SDKGameRules()->m_flInjuryTime;
-	if (SDKGameRules()->m_flInjuryTimeStart != -1)
-		flTime -= gpGlobals->curtime - SDKGameRules()->m_flInjuryTimeStart;
-	int nTime;
-
-	switch ( SDKGameRules()->State_Get() )
-	{
-	case MATCH_EXTRATIME_SECOND_HALF: case MATCH_EXTRATIME_SECOND_HALF_INJURY_TIME:
-		nTime = (int)(flTime * (90.0f / mp_timelimit_match.GetFloat())) + (90 + 15) * 60;
-		break;
-	case MATCH_EXTRATIME_FIRST_HALF: case MATCH_EXTRATIME_FIRST_HALF_INJURY_TIME:
-		nTime = (int)(flTime * (90.0f / mp_timelimit_match.GetFloat())) + 90 * 60;
-		break;
-	case MATCH_SECOND_HALF: case MATCH_SECOND_HALF_INJURY_TIME:
-		nTime = (int)(flTime * (90.0f / mp_timelimit_match.GetFloat())) + 45 * 60;
-		break;
-	case MATCH_FIRST_HALF: case MATCH_FIRST_HALF_INJURY_TIME:
-		nTime = (int)(flTime * (90.0f / mp_timelimit_match.GetFloat()));
-		break;
-	case MATCH_WARMUP:
-		nTime = (int)(flTime - mp_timelimit_warmup.GetFloat() * 60);
-		break;
-	case MATCH_HALFTIME:
-		nTime = (int)(flTime - mp_timelimit_halftime.GetFloat() * 60);
-		break;
-	case MATCH_EXTRATIME_INTERMISSION:
-		nTime = (int)(flTime - mp_timelimit_extratime_intermission.GetFloat() * 60);
-		break;
-	case MATCH_EXTRATIME_HALFTIME:
-		nTime = (int)(flTime - mp_timelimit_extratime_halftime.GetFloat() * 60);
-		break;
-	case MATCH_PENALTIES_INTERMISSION:
-		nTime = (int)(flTime - mp_timelimit_penalties_intermission.GetFloat() * 60);
-		break;
-	case MATCH_PENALTIES:
-		nTime = (int)(flTime - mp_timelimit_penalties.GetFloat() * 60);
-		break;
-	case MATCH_COOLDOWN:
-		nTime = (int)(flTime - mp_timelimit_cooldown.GetFloat() * 60);
-		break;
-	default:
-		nTime = 0;
-		break;
-	}
-
+	int nTime = SDKGameRules()->GetMatchDisplayTime();
 	nTime = abs(nTime);
 
 	m_pMatchState->SetText(g_szStateNames[SDKGameRules()->State_Get()]);

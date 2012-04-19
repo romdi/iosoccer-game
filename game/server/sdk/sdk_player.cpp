@@ -516,6 +516,9 @@ void CSDKPlayer::ChangeTeam( int iTeamNum )
 
 	g_pPlayerResource->UpdatePlayerData();
 
+	//ResetStats();
+	ResetFlags();
+
 	// update client state 
 	if ( iTeamNum == TEAM_UNASSIGNED )
 	{
@@ -527,8 +530,6 @@ void CSDKPlayer::ChangeTeam( int iTeamNum )
 	}
 	else // active player
 	{
-		ResetStats();
-
 		m_nTeamToJoin = TEAM_INVALID;
 
 		if( iOldTeam == TEAM_SPECTATOR )
@@ -547,29 +548,12 @@ void CSDKPlayer::InitialSpawn( void )
 	BaseClass::InitialSpawn();
 
 	m_takedamage = DAMAGE_NO;
-	//pl.deadflag = true;
-	//m_lifeState = LIFE_DEAD;
 	AddEffects( EF_NODRAW );
-	//ChangeTeam( TEAM_UNASSIGNED );
 	SetThink( NULL );
 	InitSpeeds(); //Tony; initialize player speeds.
 	SetModel( SDK_PLAYER_MODEL );	//Tony; basically, leave this alone ;) unless you're not using classes or teams, then you can change it to whatever.
-
-	//SharedSpawn();
 	Spawn();
-
-	ResetStats();
-
-	//Spawn();
-
-	//if (!IsBot())
-		ChangeTeam(TEAM_SPECTATOR);
-
-	/*if (!IsBot())
-		ChangeTeam(
-		State_Enter(STATE_OBSERVER_MODE);
-	else
-		State_Enter(STATE_ACTIVE);*/
+	ChangeTeam(TEAM_SPECTATOR);
 }
 
 void CSDKPlayer::DoServerAnimationEvent(PlayerAnimEvent_t event)
@@ -717,7 +701,6 @@ void CSDKPlayer::State_OBSERVER_MODE_Enter()
 	AddEffects(EF_NODRAW);
 	SetMoveType(MOVETYPE_OBSERVER);
 	AddSolidFlags(FSOLID_NOT_SOLID);
-	RemoveFlag(FL_ATCONTROLS | FL_FROZEN | FL_REMOTECONTROLLED | FL_NO_X_MOVEMENT | FL_NO_Y_MOVEMENT | FL_FREECAM);
 	PhysObjectSleep();
 
 	if ( !IsObserver() )
@@ -825,7 +808,6 @@ void CSDKPlayer::State_ACTIVE_Enter()
 	m_hRagdoll = NULL;
 	//m_lifeState = LIFE_ALIVE;
 	RemoveEffects(EF_NODRAW);
-	RemoveFlag(FL_ATCONTROLS | FL_FROZEN | FL_REMOTECONTROLLED);
 
 	SetViewOffset( VEC_VIEW );
 
@@ -1308,6 +1290,27 @@ Vector CSDKPlayer::GetSpawnPos(bool findSafePos)
 int CSDKPlayer::GetTeamPosition()
 {
 	return (int)g_Positions[mp_maxplayers.GetInt() - 1][GetTeamPosIndex()][POS_NUMBER];
+}
+
+void CSDKPlayer::ResetFlags()
+{
+	m_bIsAtTargetPos = false;
+	RemoveFlag(FL_REMOTECONTROLLED | FL_FREECAM | FL_CELEB | FL_NO_X_MOVEMENT | FL_NO_Y_MOVEMENT | FL_ATCONTROLS | FL_FROZEN);
+	DoServerAnimationEvent(PLAYERANIMEVENT_CANCEL);
+
+	if (GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B)
+	{
+		RemoveSolidFlags(FSOLID_NOT_SOLID);
+	}
+
+	if (GetTeamPosition() == 1)
+	{
+		if (m_nBody == MODEL_KEEPER_AND_BALL)
+		{
+			m_nBody = MODEL_KEEPER;
+			DoServerAnimationEvent(PLAYERANIMEVENT_CARRY_END);
+		}
+	}
 }
 
 CUtlVector<CPlayerPersistentData *> CPlayerPersistentData::m_PlayerPersistentData;

@@ -46,7 +46,7 @@ public:
 	float m_flOffsideLineBallPosY;
 	float m_flOffsideLineOffsidePlayerPosY;
 	float m_flOffsideLineLastOppPlayerPosY;
-	bool m_bShowOffsideLine;
+	bool m_bOffsideLinesEnabled;
 	IMaterial *m_pOffsideLineMaterial;
 };
 

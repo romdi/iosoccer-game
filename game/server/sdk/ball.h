@@ -115,6 +115,15 @@ struct BallTouchInfo
 	ball_state_t	m_eBallState;
 };
 
+struct MatchEventPlayerInfo
+{
+	CHandle<CSDKPlayer>	pPl;
+	const char			*szPlayerName;
+	int					team;
+	int					userId;
+	const char			*szNetworkIDString;				
+};
+
 //==========================================================
 //	
 //	
@@ -140,7 +149,9 @@ public:
 	int				ObjectCaps(void)	{  return BaseClass::ObjectCaps() |	FCAP_CONTINUOUS_USE; }
 	int				UpdateTransmitState();
 
-	void			SendMatchEvent(match_event_t matchEvent, CSDKPlayer *pPlayer1 = NULL);
+	void			SendMatchEvent(match_event_t matchEvent, CSDKPlayer *pPlayer = NULL);
+	void			SendMatchEvent(match_event_t matchEvent, MatchEventPlayerInfo *pMatchEventPlayerInfo);
+	void			SendMatchEvent(match_event_t matchEvent, const char *szPlayerName, int playerTeam, int playerUserID, const char *szPlayerNetworkIDString);
 
 	bool			IsAsleep(void) { return	false; }
 	void			Spawn(void);
@@ -160,12 +171,12 @@ public:
 
 	void			State_Transition( ball_state_t newState, float delay = 0.0f );
 
-	void			ResetStats();
+	void			ResetMatch();
 
 	CNetworkVar(float, m_flOffsideLineBallPosY);
 	CNetworkVar(float, m_flOffsideLineOffsidePlayerPosY);
 	CNetworkVar(float, m_flOffsideLineLastOppPlayerPosY);
-	CNetworkVar(bool, m_bShowOffsideLine);
+	CNetworkVar(bool, m_bOffsideLinesEnabled);
 	
 	void			SetPos(const Vector &pos);
 	void			SetVel(const Vector &vel);
@@ -206,8 +217,8 @@ private:
 
 	void			MarkOffsidePlayers();
 	void			UnmarkOffsidePlayers();
-	void			EnableOffsideLine(float ballPosY, float offsidePlayerPosY, float lastOppPlayerPosY);
-	void			DisableOffsideLine();
+	void			SetOffsideLinePositions(float ballPosY, float offsidePlayerPosY, float lastOppPlayerPosY);
+	void			SetOffsideLinesEnabled(bool enable);
 
 	bool			PlayersAtTargetPos(bool holdAtTargetPos);
 	bool			CheckFoul(bool canShootBall);
@@ -244,7 +255,6 @@ private:
 	int				m_nPlTeam;
 	int				m_nPlPos;
 	bool			m_bIsPowershot;
-	body_part_t		m_eLastBodyPart;
 
 	CHandle<CSDKPlayer>	m_pFouledPl;
 	CHandle<CSDKPlayer>	m_pFoulingPl;
@@ -257,9 +267,7 @@ private:
 	AngularImpulse	m_vRot;
 
 	int				m_nTeam;				  //team the ball can be kicked	by (during a corner	etc) (0=any)
-	int				m_side;				  //side of	the	pitch the corner/goalkick should be	taken from
 	int				m_nInPenBoxOfTeam;	 //-1 =	not	in box,	0,1	= teams	box
-	int				m_FoulInPenaltyBox;	 //-1 =	not	in box,	0,1	= teams	box - recorded when foul occurs
 
 	bool			m_bIgnoreTriggers;
 	bool			m_bSetNewPos;
@@ -273,6 +281,8 @@ private:
 	CUtlVector<BallTouchInfo> m_Touches;
 
 	penalty_state_t m_ePenaltyState;
+
+	MatchEventPlayerInfo m_MatchEventPlayerInfo;
 };
 
 #endif

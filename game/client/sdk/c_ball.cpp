@@ -13,7 +13,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_Ball, DT_Ball, CBall )
 	RecvPropFloat(RECVINFO(m_flOffsideLineBallPosY)),
 	RecvPropFloat(RECVINFO(m_flOffsideLineOffsidePlayerPosY)),
 	RecvPropFloat(RECVINFO(m_flOffsideLineLastOppPlayerPosY)),
-	RecvPropInt(RECVINFO(m_bShowOffsideLine)),
+	RecvPropInt(RECVINFO(m_bOffsideLinesEnabled)),
 END_RECV_TABLE()
 
 C_Ball *g_pBall = NULL;
@@ -26,7 +26,7 @@ C_Ball *GetBall()
 C_Ball::C_Ball()
 {
 	g_pBall = this;
-	m_bShowOffsideLine = false;
+	m_bOffsideLinesEnabled = false;
 	PrecacheMaterial("pitch/offside_line");
 	m_pOffsideLineMaterial = materials->FindMaterial( "pitch/offside_line", TEXTURE_GROUP_CLIENT_EFFECTS );
 }
@@ -178,7 +178,7 @@ void DrawOffsideLine(IMaterial *pMaterial, float posY, Vector &color)
 
 int C_Ball::DrawModel(int flags)
 {
-	if (m_bShowOffsideLine)
+	if (m_bOffsideLinesEnabled)
 	{
 		DrawOffsideLine(m_pOffsideLineMaterial, m_flOffsideLineBallPosY, Vector(0, 0, 1));
 		DrawOffsideLine(m_pOffsideLineMaterial, m_flOffsideLineLastOppPlayerPosY, Vector(1, 1, 0));

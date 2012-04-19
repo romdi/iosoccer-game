@@ -310,6 +310,7 @@ public:
 	CNetworkVar(float, m_flStateEnterTime);
 
 	void RestartMatch();
+	void StartPenalties();
 
 #ifdef GAME_DLL
 
@@ -391,6 +392,7 @@ public:
 public:
 	bool IsIntermissionState();
 	int GetShieldRadius();
+	int GetMatchDisplayTime();
 
 	CNetworkVar(int, m_nShieldType);
 	CNetworkVar(int, m_nShieldDir);

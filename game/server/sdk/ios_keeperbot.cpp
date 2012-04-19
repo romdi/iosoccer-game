@@ -52,14 +52,9 @@ LINK_ENTITY_TO_CLASS(ios_keeperbot, CKeeperBot);
 //
 void CKeeperBot::BotThink()
 {
-	//if (dirToBall.Length2D() > 400)
-	//{
-	//	BotCenter();
-	//}
-	//else
-	{
+	// Prevent bot from running all the way back to his goal on penalties
+	if (SDKGameRules()->State_Get() != MATCH_PENALTIES || (GetFlags() & FL_NO_Y_MOVEMENT))
 		BotAdjustPos();
-	}
 }
 
 void CKeeperBot::BotCenter()

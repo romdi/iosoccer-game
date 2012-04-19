@@ -312,6 +312,8 @@ public:
 	int					GetTeamToJoin(void) { return m_nTeamToJoin; }
 	int					GetNextJoin(void) { return m_flNextJoin; }
 
+	void				ResetFlags();
+
 	char				*GetClubName() { return m_szClubName; }
 	void				SetClubName(const char *name) { Q_strncpy(m_szClubName, name, sizeof(m_szClubName)); m_bClubNameChanged = true; } 
 
