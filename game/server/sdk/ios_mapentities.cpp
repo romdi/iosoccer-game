@@ -22,7 +22,7 @@ public:
 		CBall *pBall = dynamic_cast<CBall *>(pOther);
 		if (pBall)
 		{
-			m_OnTrigger.FireOutput(pOther, this);
+			//m_OnTrigger.FireOutput(pOther, this);
 			BallStartTouch(pBall);
 		}
 
@@ -38,7 +38,7 @@ public:
 		CBall *pBall = dynamic_cast<CBall *>(pOther);
 		if (pBall)
 		{
-			m_OnTrigger.FireOutput(pOther, this);
+			//m_OnTrigger.FireOutput(pOther, this);
 			BallEndTouch(pBall);
 		}
 	
@@ -68,7 +68,7 @@ public:
 
 	void BallStartTouch(CBall *pBall)
 	{
-		if (pBall->GetIgnoreTriggers() || SDKGameRules()->IsIntermissionState())
+		if (pBall->IgnoreTriggers() || SDKGameRules()->IsIntermissionState())
 			return;
 
 		int team = m_nTeam == 1 ? TEAM_B : TEAM_A;
@@ -97,7 +97,7 @@ public:
 
 	void BallStartTouch(CBall *pBall)
 	{
-		if (pBall->GetIgnoreTriggers() || SDKGameRules()->IsIntermissionState())
+		if (pBall->IgnoreTriggers() || SDKGameRules()->IsIntermissionState())
 			return;
 
 		int team = m_nTeam == 1 ? TEAM_A : TEAM_B;
@@ -126,7 +126,7 @@ public:
 
 	void BallStartTouch(CBall *pBall)
 	{
-		if (pBall->GetIgnoreTriggers() || SDKGameRules()->IsIntermissionState())
+		if (pBall->IgnoreTriggers() || SDKGameRules()->IsIntermissionState())
 			return;
 
 		pBall->TriggerSideline();

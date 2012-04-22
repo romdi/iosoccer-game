@@ -36,6 +36,7 @@
 #include "spectatorgui.h"
 #include "teammenu.h"
 #include "matchmenu.h"
+#include "ios_actionmenu.h"
 #include "classmenu.h"				//IOS
 #include "vguitextwindow.h"
 #include "IGameUIFuncs.h"
@@ -221,6 +222,7 @@ void CBaseViewport::CreateDefaultPanels( void )
 	AddNewPanel( CreatePanelByName( PANEL_NAV_PROGRESS ), "PANEL_NAV_PROGRESS" );
 	AddNewPanel( CreatePanelByName( PANEL_TEAM ), "PANEL_TEAM" );			//ios uncommented this
 	AddNewPanel( CreatePanelByName( PANEL_MATCH ), "PANEL_MATCH" );			//ios uncommented this
+	AddNewPanel( CreatePanelByName( PANEL_ACTION ), "PANEL_ACTION" );			//ios uncommented this
 	//AddNewPanel( CreatePanelByName( PANEL_CLASS ), "PANEL_CLASS" );		//ios uncommented this
 	AddNewPanel( CreatePanelByName( PANEL_STATUS ), "PANEL_STATUS" );		//ios added this
 	AddNewPanel( CreatePanelByName( PANEL_MAINSTATUS ), "PANEL_MAINSTATUS" );	//ios added this
@@ -267,6 +269,10 @@ IViewPortPanel* CBaseViewport::CreatePanelByName(const char *szPanelName)
 	else if ( Q_strcmp(PANEL_MATCH, szPanelName) == 0 )
 	{
 		newpanel = new CMatchMenu( this );
+	}
+	else if ( Q_strcmp(PANEL_ACTION, szPanelName) == 0 )
+	{
+		newpanel = new CActionMenu( this );
 	}
 	//else if ( Q_strcmp(PANEL_CLASS, szPanelName) == 0 )			//IOS added ffs
 	//{

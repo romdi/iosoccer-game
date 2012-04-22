@@ -886,7 +886,7 @@ void CSDKGameRules::ChooseTeamNames(bool clubTeams, bool countryTeams, bool real
 		Msg("color distance: %f\n", ColorDistance(m_TeamKitInfoDatabase[teamHome]->m_PrimaryKitColor, m_TeamKitInfoDatabase[teamAway]->m_PrimaryKitColor));
 
 		mp_teamlist.SetValue(UTIL_VarArgs("%s;%s", m_TeamKitInfoDatabase[teamHome]->m_szKitName, m_TeamKitInfoDatabase[teamAway]->m_szKitName));
-		UTIL_LogPrintf("Setting random teams: %s against %s\n", m_TeamKitInfoDatabase[teamHome]->m_szKitName, m_TeamKitInfoDatabase[teamAway]->m_szKitName);
+		IOS_LogPrintf("Setting random teams: %s against %s\n", m_TeamKitInfoDatabase[teamHome]->m_szKitName, m_TeamKitInfoDatabase[teamAway]->m_szKitName);
 		GetGlobalTeam(TEAM_A)->SetKitName(m_TeamKitInfoDatabase[teamHome]->m_szKitName);
 		GetGlobalTeam(TEAM_B)->SetKitName(m_TeamKitInfoDatabase[teamAway]->m_szKitName);
 		break;
@@ -1235,9 +1235,9 @@ void CSDKGameRules::State_Enter( match_state_t newState )
 	if ( mp_showstatetransitions.GetInt() > 0 )
 	{
 		if ( m_pCurStateInfo )
-			UTIL_LogPrintf( "Gamerules: entering state '%s'\n", m_pCurStateInfo->m_pStateName );
+			IOS_LogPrintf( "Gamerules: entering state '%s'\n", m_pCurStateInfo->m_pStateName );
 		else
-			UTIL_LogPrintf( "Gamerules: entering state #%d\n", newState );
+			IOS_LogPrintf( "Gamerules: entering state #%d\n", newState );
 	}
 
 	// Initialize the new state.
@@ -1335,7 +1335,7 @@ void CSDKGameRules::State_FIRST_HALF_Enter()
 
 void CSDKGameRules::State_FIRST_HALF_Think()
 {
-	if ((45 * 60 - GetMatchDisplayTime()) <= 60 && m_nAnnouncedInjuryTime == 0)
+	if ((45 * 60 - GetMatchDisplayTimeSeconds()) <= 60 && m_nAnnouncedInjuryTime == 0)
 	{
 		m_nAnnouncedInjuryTime = g_IOSRand.RandomInt(1, 4);
 	}
@@ -1366,7 +1366,7 @@ void CSDKGameRules::State_SECOND_HALF_Enter()
 
 void CSDKGameRules::State_SECOND_HALF_Think()
 {
-	if ((90 * 60 - GetMatchDisplayTime()) <= 60 && m_nAnnouncedInjuryTime == 0)
+	if ((90 * 60 - GetMatchDisplayTimeSeconds()) <= 60 && m_nAnnouncedInjuryTime == 0)
 	{
 		m_nAnnouncedInjuryTime = g_IOSRand.RandomInt(1, 4);
 	}
@@ -1404,7 +1404,7 @@ void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Enter()
 
 void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Think()
 {
-	if ((105 * 60 - GetMatchDisplayTime()) <= 60 && m_nAnnouncedInjuryTime == 0)
+	if ((105 * 60 - GetMatchDisplayTimeSeconds()) <= 60 && m_nAnnouncedInjuryTime == 0)
 	{
 		m_nAnnouncedInjuryTime = g_IOSRand.RandomInt(1, 4);
 	}
@@ -1436,7 +1436,7 @@ void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Enter()
 
 void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Think()
 {
-	if ((120 * 60 - GetMatchDisplayTime()) <= 60 && m_nAnnouncedInjuryTime == 0)
+	if ((120 * 60 - GetMatchDisplayTimeSeconds()) <= 60 && m_nAnnouncedInjuryTime == 0)
 	{
 		m_nAnnouncedInjuryTime = g_IOSRand.RandomInt(1, 4);
 	}
@@ -1601,7 +1601,7 @@ void OnTeamlistChange(IConVar *var, const char *pOldValue, float flOldValue)
 			Msg( "Format: mp_teamlist \"<home team>;<away team>\"\n" );
 		else
 		{
-			UTIL_LogPrintf("Setting new teams: %s against %s\n", home, away);
+			IOS_LogPrintf("Setting new teams: %s against %s\n", home, away);
 			GetGlobalTeam(TEAM_A)->SetKitName(home);
 			GetGlobalTeam(TEAM_B)->SetKitName(away);
 		}
@@ -1693,7 +1693,7 @@ void CSDKGameRules::DisableShield()
 			continue;
 
 		pPl->RemoveFlag(FL_REMOTECONTROLLED | FL_SHIELD_KEEP_IN | FL_SHIELD_KEEP_OUT);
-		pPl->SetMoveType(MOVETYPE_WALK);
+		pPl->RemoveSolidFlags(FSOLID_NOT_SOLID);
 		pPl->m_bIsAtTargetPos = true;
 	}
 }
@@ -1705,7 +1705,7 @@ void CSDKGameRules::SetAreTeamsSwapped(bool swapped)
 		GetGlobalTeam(TEAM_A)->InitFieldSpots(swapped ? TEAM_B : TEAM_A);
 		GetGlobalTeam(TEAM_B)->InitFieldSpots(swapped ? TEAM_A : TEAM_B);
 		m_bAreTeamsSwapped = swapped;
-		UTIL_LogPrintf("Swapping teams\n");
+		IOS_LogPrintf("Swapping teams\n");
 	}
 }
 
@@ -1772,7 +1772,7 @@ int CSDKGameRules::GetShieldRadius()
 	}
 }
 
-int CSDKGameRules::GetMatchDisplayTime()
+int CSDKGameRules::GetMatchDisplayTimeSeconds()
 {
 	float flTime = gpGlobals->curtime - SDKGameRules()->m_flStateEnterTime - SDKGameRules()->m_flInjuryTime;
 	if (SDKGameRules()->m_flInjuryTimeStart != -1)
@@ -1822,9 +1822,24 @@ int CSDKGameRules::GetMatchDisplayTime()
 	return nTime;
 }
 
+#ifdef GAME_DLL
+void IOS_LogPrintf( char *fmt, ... )
+{
+	va_list		argptr;
+	char		tempString[1024];
+	
+	va_start ( argptr, fmt );
+	Q_vsnprintf( tempString, sizeof(tempString), fmt, argptr );
+	va_end   ( argptr );
 
+	int seconds = SDKGameRules()->GetMatchDisplayTimeSeconds();
 
+	Q_snprintf( tempString, sizeof(tempString), UTIL_VarArgs("[Match Time: % 3d:%02d] - %s", seconds / 60, seconds % 60, tempString));
 
+	// Print to server console
+	engine->LogPrint( tempString );
+}
+#endif
 
 
 

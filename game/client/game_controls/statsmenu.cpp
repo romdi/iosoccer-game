@@ -199,7 +199,7 @@ void CStatsMenu::OnTextChanged(KeyValues *data)
 			int side = box == m_pStatTargets[0] ? 0 : 1;
 			IGameResources *gr = GameResources();
 
-			m_pStatRows[STAT_PLAYERS]->pTeams[side]->SetText(g_szPosNames[(int)g_Positions[mp_maxplayers.GetInt() -1][gr->GetTeamPosIndex(index)][POS_NAME]]);
+			m_pStatRows[STAT_PLAYERS]->pTeams[side]->SetText(g_szPosNames[(int)g_Positions[mp_maxplayers.GetInt() - 1][gr->GetTeamPosIndex(index)][POS_NAME]]);
 			m_pStatRows[STAT_GOALS]->pTeams[side]->SetText(VarArgs("%d", gr->GetGoals(index)));
 			m_pStatRows[STAT_POSSESSION]->pTeams[side]->SetText(VarArgs("%d", gr->GetPossession(index)));
 		}

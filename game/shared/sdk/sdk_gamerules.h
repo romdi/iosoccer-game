@@ -36,6 +36,10 @@
 	#define CSDKGameRulesProxy C_SDKGameRulesProxy
 #endif
 
+#ifdef GAME_DLL
+void IOS_LogPrintf(char *fmt, ...);
+#endif
+
 extern CUniformRandomStream g_IOSRand;
 
 extern ConVar 
@@ -392,7 +396,7 @@ public:
 public:
 	bool IsIntermissionState();
 	int GetShieldRadius();
-	int GetMatchDisplayTime();
+	int GetMatchDisplayTimeSeconds();
 
 	CNetworkVar(int, m_nShieldType);
 	CNetworkVar(int, m_nShieldDir);

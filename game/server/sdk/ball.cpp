@@ -59,6 +59,7 @@ ConVar sv_ball_chestdrop_strength("sv_ball_chestdrop_strength", "250", FCVAR_ARC
 ConVar sv_ball_powerdivingheader_strength("sv_ball_powerdivingheader_strength", "350", FCVAR_ARCHIVE | FCVAR_NOTIFY); 
 ConVar sv_ball_normalheader_strength("sv_ball_normalheader_strength", "250", FCVAR_ARCHIVE | FCVAR_NOTIFY); 
 ConVar sv_ball_powerheader_strength("sv_ball_powerheader_strength", "250", FCVAR_ARCHIVE | FCVAR_NOTIFY); 
+ConVar sv_ball_minshotstrength("sv_ball_minshotstrength", "100", FCVAR_ARCHIVE | FCVAR_NOTIFY); 
 
 CBall *CreateBall(const Vector &pos, CSDKPlayer *pOwner)
 {
@@ -315,7 +316,6 @@ void CBall::VPhysicsUpdate(IPhysicsObject *pPhysics)
 	if (m_bSetNewPos)
 	{
 		m_bIgnoreTriggers = true;
-		m_bSetNewPos = false;
 	}
 	else
 	{
@@ -338,7 +338,11 @@ void CBall::VPhysicsUpdate(IPhysicsObject *pPhysics)
 
 	BaseClass::VPhysicsUpdate(pPhysics);
 
-	m_bIgnoreTriggers = ignoreTriggers;
+	if (m_bSetNewPos)
+	{
+		m_bIgnoreTriggers = ignoreTriggers;
+		m_bSetNewPos = false;
+	}
 }
 
 
@@ -411,7 +415,7 @@ void CBall::SendMatchEvent(match_event_t matchEvent, MatchEventPlayerInfo *pMatc
 
 void CBall::SendMatchEvent(match_event_t matchEvent, const char *szPlayerName, int playerTeam, int playerUserID, const char *szPlayerNetworkIDString)
 {
-	UTIL_LogPrintf( "\"%s<%d><%s><%s>\" triggered \"%s\"\n", szPlayerName, playerUserID, szPlayerNetworkIDString, GetGlobalTeam(playerTeam)->GetKitName(), g_szMatchEventNames[matchEvent]);
+	IOS_LogPrintf( "\"%s<%d><%s><%s>\" triggered \"%s\"\n", szPlayerName, playerUserID, szPlayerNetworkIDString, GetGlobalTeam(playerTeam)->GetKitName(), g_szMatchEventNames[matchEvent]);
 
 	CReliableBroadcastRecipientFilter filter;
 	UserMessageBegin(filter, "MatchEvent");
@@ -515,6 +519,7 @@ void CBall::State_Enter( ball_state_t newState )
 
 	m_pPl = NULL;
 	m_pOtherPl = NULL;
+	m_bIgnoreTriggers = false;
 
 	for (int i = 1; i < gpGlobals->maxClients; i++)
 	{
@@ -531,9 +536,9 @@ void CBall::State_Enter( ball_state_t newState )
 	if ( mp_showballstatetransitions.GetInt() > 0 )
 	{
 		if ( m_pCurStateInfo )
-			UTIL_LogPrintf( "Ball: entering state '%s'\n", m_pCurStateInfo->m_pStateName );
+			IOS_LogPrintf( "Ball: entering state '%s'\n", m_pCurStateInfo->m_pStateName );
 		else
-			UTIL_LogPrintf( "Ball: entering state #%d\n", newState );
+			IOS_LogPrintf( "Ball: entering state #%d\n", newState );
 	}
 
 	// Initialize the new state.
@@ -545,6 +550,9 @@ void CBall::State_Enter( ball_state_t newState )
 
 void CBall::State_Think()
 {
+	m_pPhys->GetPosition(&m_vPos, &m_aAng);
+	m_pPhys->GetVelocity(&m_vVel, &m_vRot);
+
 	if (m_eNextState != BALL_NOSTATE && m_flStateLeaveTime <= gpGlobals->curtime)
 	{
 		ball_state_t nextState = m_eNextState;
@@ -552,16 +560,13 @@ void CBall::State_Think()
 		State_Enter(nextState);
 	}
 
-	// FIXME: Temporary hack to avoid touching and triggering between states
-	if (m_eNextState != BALL_NOSTATE && m_flStateLeaveTime > gpGlobals->curtime)
-	{
-		return;
-	}
+	//// FIXME: Temporary hack to avoid touching and triggering between states
+	//if (m_eNextState != BALL_NOSTATE && m_flStateLeaveTime > gpGlobals->curtime)
+	//{
+	//	return;
+	//}
 
-	m_pPhys->GetPosition(&m_vPos, &m_aAng);
-	m_pPhys->GetVelocity(&m_vVel, &m_vRot);
-
-	if (m_pCurStateInfo && m_pCurStateInfo->m_eBallState != BALL_NORMAL && m_flStateTimelimit != -1 && gpGlobals->curtime >= m_flStateTimelimit)
+	if (m_pCurStateInfo && m_pCurStateInfo->m_eBallState != BALL_NORMAL && m_eNextState == BALL_NOSTATE && m_flStateTimelimit != -1 && gpGlobals->curtime >= m_flStateTimelimit)
 	{
 		if (CSDKPlayer::IsOnField(m_pPl))
 		{
@@ -601,9 +606,8 @@ CBallStateInfo* CBall::State_LookupInfo( ball_state_t state )
 
 void CBall::State_NORMAL_Enter()
 {
-	SDKGameRules()->DisableShield();
 	m_pPhys->EnableMotion(true);
-	m_bIgnoreTriggers = false;
+	//m_bIgnoreTriggers = false;
 	SDKGameRules()->DisableShield();
 	SDKGameRules()->EndInjuryTime();
 }
@@ -768,7 +772,6 @@ void CBall::State_THROWIN_Think()
 
 	if (m_pPl->m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1)))
 	{
-		m_Touches.RemoveAll();
 		QAngle ang = m_pPl->EyeAngles();
 		if (ang[PITCH] > 20)
 			ang[PITCH] = 20;
@@ -784,6 +787,7 @@ void CBall::State_THROWIN_Think()
 			SetVel(dir * (sv_ball_throwin_base_strength.GetInt() + sv_ball_throwin_powerthrow_strength.GetInt() * GetPowershotModifier() * GetPitchModifier()));
 		}
 
+		m_Touches.RemoveAll();
 		Kicked(BODY_HANDS);
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_THROW);
 		State_Transition(BALL_NORMAL);
@@ -1402,7 +1406,7 @@ bool CBall::DoKeeperPenBoxAction()
 			return false;
 	}
 
-	if (m_vVel.Length2D() > sv_ball_keepercatchspeed.GetInt())
+	if (m_vVel.Length2D() > sv_ball_keepercatchspeed.GetInt() || SDKGameRules()->IsIntermissionState())
 	{
 		//m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KEEPER_HANDS_PUNCH);
 		//if (zDist >= (m_pPl->m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_JUMP ? BODY_HEAD_END + 10 : VEC_HULL_MAX.z))
@@ -1415,11 +1419,6 @@ bool CBall::DoKeeperPenBoxAction()
 			SetVel(m_vPlForward * m_vVel.Length2D() * 0.75f);
 
 		Kicked(BODY_HANDS);
-		return true;
-	}
-	else if (SDKGameRules()->IsIntermissionState())
-	{
-		SetVel(0);
 		return true;
 	}
 
@@ -1475,7 +1474,7 @@ bool CBall::DoGroundShot()
 	Vector shotDir;
 	AngleVectors(shotAngle, &shotDir);
 
-	SetVel(shotDir * shotStrength);
+	SetVel(shotDir * max(shotStrength, sv_ball_minshotstrength.GetInt()));
 
 	if (m_vVel.Length() > 600)
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KICK);
@@ -1599,6 +1598,7 @@ void CBall::TriggerGoal(int team)
 
 void CBall::TriggerGoalLine(int team)
 {
+	DevMsg("Trigger goal line\n");
 	if (SDKGameRules()->State_Get() == MATCH_PENALTIES)
 		return;
 
@@ -1615,8 +1615,8 @@ void CBall::TriggerSideline()
 	if (SDKGameRules()->State_Get() == MATCH_PENALTIES)
 		return;
 
-	if (m_eBallState == BALL_THROWIN || m_eNextState == BALL_THROWIN)
-		return;
+	//if (m_eBallState == BALL_THROWIN || m_eNextState == BALL_THROWIN)
+	//	return;
 
 	Vector ballPos;
 	m_pPhys->GetPosition(&ballPos, NULL);

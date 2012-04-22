@@ -165,7 +165,7 @@ public:
 	void			TriggerGoalLine(int team);
 	void			TriggerSideline();
 	void			TriggerPenaltyBox(int team);
-	bool			GetIgnoreTriggers() { return m_bIgnoreTriggers; }
+	bool			IgnoreTriggers() { return m_bIgnoreTriggers; }
 	void			SetIgnoreTriggers(bool ignoreTriggers) { m_bIgnoreTriggers = ignoreTriggers; }
 	void			SetIsKickOffAfterGoal(bool isKickOffAfterGoal) { m_bIsKickOffAfterGoal = isKickOffAfterGoal; }
 

@@ -1042,8 +1042,9 @@ void CSDKPlayer::SetPosInsideShield(Vector pos, bool holdAtTargetPos)
 	else
 	{
 		m_bIsAtTargetPos = false;
+		RemoveFlag(FL_FREECAM);
+		DoServerAnimationEvent(PLAYERANIMEVENT_CANCEL);
 		AddFlag(FL_REMOTECONTROLLED);
-		//SetMoveType(MOVETYPE_NOCLIP);
 		AddSolidFlags(FSOLID_NOT_SOLID);
 	}
 }
@@ -1076,8 +1077,9 @@ void CSDKPlayer::SetPosOutsideShield(bool holdAtTargetPos)
 	else
 	{
 		m_bIsAtTargetPos = false;
+		RemoveFlag(FL_FREECAM);
+		DoServerAnimationEvent(PLAYERANIMEVENT_CANCEL);
 		AddFlag(FL_REMOTECONTROLLED);
-		//SetMoveType(MOVETYPE_NOCLIP);
 		AddSolidFlags(FSOLID_NOT_SOLID);
 	};
 }

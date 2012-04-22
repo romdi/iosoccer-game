@@ -239,7 +239,7 @@ const char *g_szStateNames[32] =
 //-----------------------------------------------------------------------------
 void CHudScorebar::Paint( void )
 {
-	int nTime = SDKGameRules()->GetMatchDisplayTime();
+	int nTime = SDKGameRules()->GetMatchDisplayTimeSeconds();
 	nTime = abs(nTime);
 
 	m_pMatchState->SetText(g_szStateNames[SDKGameRules()->State_Get()]);

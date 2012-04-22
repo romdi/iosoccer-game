@@ -213,7 +213,6 @@ void CSDKPlayer::MoveToTargetPos(Vector &pos, Vector &vel, QAngle &ang)
 		{
 			m_bIsAtTargetPos = true;
 			RemoveFlag(FL_REMOTECONTROLLED);
-			//SetMoveType(MOVETYPE_WALK);
 			RemoveSolidFlags(FSOLID_NOT_SOLID);
 
 			if (m_bHoldAtTargetPos)
