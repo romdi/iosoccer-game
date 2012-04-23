@@ -183,7 +183,7 @@ void Host_Say( edict_t *pEdict, const CCommand &args, bool teamonly )
 		pszLocation = g_pGameRules->GetChatLocation( teamonly, pPlayer );
 	}
 
-	const char *pszPlayerName = pPlayer ? pPlayer->GetPlayerName():"Console";
+	const char *pszPlayerName = pPlayer ? pPlayer->GetPlayerName() : "Stadium Announcer";
 
 	if ( pszPrefix && strlen( pszPrefix ) > 0 )
 	{

@@ -704,7 +704,7 @@ void CBall::State_KICKOFF_Think()
 
 	UpdateCarrier();
 
-	if (m_pPl->m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1)))
+	if (m_pPl->m_bShotButtonsReleased && m_pPl->m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1)))
 	{
 		m_Touches.RemoveAll();
 		SetVel(m_vPlForward2D * 200);
@@ -757,7 +757,7 @@ void CBall::State_THROWIN_Think()
 
 	UpdateCarrier();
 
-	if (m_pPl->m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1)))
+	if (m_pPl->m_bShotButtonsReleased && m_pPl->m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1)))
 	{
 		QAngle ang = m_pPl->EyeAngles();
 		if (ang[PITCH] > 20)
@@ -804,40 +804,22 @@ void CBall::State_GOALKICK_Think()
 
 		SDKGameRules()->EnableShield(SHIELD_GOALKICK, m_pPl->GetTeamNumber());
 		UpdatePossession(m_pPl);
-		//m_pPl->m_bIsAtTargetPos = true;
-		//m_pPl->AddFlag(FL_SHIELD_KEEP_IN | FL_REMOTECONTROLLED);
 		m_pPl->SetPosInsideShield(Vector(m_vPos.x, m_vPos.y - 100 * m_pPl->GetTeam()->m_nForward, SDKGameRules()->m_vKickOff.GetZ()), false);
 		m_flStateTimelimit = -1;
 		SendMatchEvent(MATCH_EVENT_GOALKICK);
 		EmitSound("Ball.whistle");
 		PlayersAtTargetPos(false);
-
-		//for (int i = 1; i <= gpGlobals->maxClients; i++) 
-		//{
-		//	CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
-
-		//	if (!CSDKPlayer::IsOnField(pPl))
-		//		continue;
-
-		//	if (pPl == m_pPl)
-		//		continue;
-
-		//	pPl->AddFlag(FL_SHIELD_KEEP_OUT | FL_REMOTECONTROLLED);
-		//}
 	}
 
 	if (!m_pPl->m_bIsAtTargetPos)
 		return;
-
-	//if (!PlayersAtTargetPos(false))
-	//	return;
 
 	if (m_flStateTimelimit == -1)
 		m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit.GetFloat();
 
 	UpdateCarrier();
 
-	if (m_pPl->m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1)) && (m_vPos - m_vPlPos).Length2D() <= sv_ball_touchradius.GetFloat())
+	if (m_pPl->m_bShotButtonsReleased && m_pPl->m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1)) && (m_vPos - m_vPlPos).Length2D() <= sv_ball_touchradius.GetFloat())
 	{
 		m_Touches.RemoveAll();
 		DoGroundShot();
@@ -889,7 +871,7 @@ void CBall::State_CORNER_Think()
 
 	UpdateCarrier();
 
-	if (m_pPl->m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1)) && (m_vPos - m_vPlPos).Length2D() <= sv_ball_touchradius.GetFloat())
+	if (m_pPl->m_bShotButtonsReleased && m_pPl->m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1)) && (m_vPos - m_vPlPos).Length2D() <= sv_ball_touchradius.GetFloat())
 	{
 		m_Touches.RemoveAll();
 		DoGroundShot();
@@ -1007,7 +989,9 @@ void CBall::State_FREEKICK_Think()
 
 	UpdateCarrier();
 
-	if (m_pPl->m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1)) && (m_vPos - m_vPlPos).Length2D() <= sv_ball_touchradius.GetFloat())
+
+
+	if (m_pPl->m_bShotButtonsReleased && m_pPl->m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1)) && (m_vPos - m_vPlPos).Length2D() <= sv_ball_touchradius.GetFloat())
 	{
 		SetOffsideLinesEnabled(false);
 		m_Touches.RemoveAll();
@@ -1109,7 +1093,7 @@ void CBall::State_PENALTY_Think()
 
 	UpdateCarrier();
 
-	if (m_pPl->m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1)) && (m_vPos - m_vPlPos).Length2D() <= sv_ball_touchradius.GetFloat())
+	if (m_pPl->m_bShotButtonsReleased && m_pPl->m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1)) && (m_vPos - m_vPlPos).Length2D() <= sv_ball_touchradius.GetFloat())
 	{
 		m_Touches.RemoveAll();
 		m_ePenaltyState = PENALTY_KICKED;
@@ -1148,10 +1132,6 @@ void CBall::State_KEEPERHANDS_Think()
 		m_pPhys->EnableCollisions(false);
 		m_flStateTimelimit = -1;
 		Touched(m_pPl, true, BODY_HANDS);
-
-		if (m_pPl->m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1)))
-			m_pPl->m_bShotButtonsReleased = false;
-
 		PlayersAtTargetPos(false);
 	}
 

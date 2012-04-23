@@ -218,6 +218,11 @@ void CSDKPlayer::MoveToTargetPos(Vector &pos, Vector &vel, QAngle &ang)
 			if (m_bHoldAtTargetPos)
 				AddFlag(FL_ATCONTROLS);
 
+#ifdef GAME_DLL
+			if (m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1)))
+				m_bShotButtonsReleased = false;
+#endif
+
 			vel = vec3_origin;
 		}
 	}

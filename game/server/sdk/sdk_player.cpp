@@ -269,9 +269,6 @@ void CSDKPlayer::PreThink(void)
 	if (m_nTeamToJoin != TEAM_INVALID && m_flNextJoin <= gpGlobals->curtime)
 		ChangeTeam(m_nTeamToJoin);
 
-	if (!(m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1))))
-		m_bShotButtonsReleased = true;
-
 	BaseClass::PreThink();
 }
 
@@ -829,6 +826,8 @@ void CSDKPlayer::State_ACTIVE_Enter()
 
 void CSDKPlayer::State_ACTIVE_PreThink()
 {
+	if (!(m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1))))
+		m_bShotButtonsReleased = true;
 }
 
 int CSDKPlayer::GetPlayerStance()
@@ -1038,6 +1037,9 @@ void CSDKPlayer::SetPosInsideShield(Vector pos, bool holdAtTargetPos)
 		m_bIsAtTargetPos = true;
 		if (m_bHoldAtTargetPos)
 			AddFlag(FL_ATCONTROLS);
+
+		if (m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1)))
+			m_bShotButtonsReleased = false;
 	}
 	else
 	{

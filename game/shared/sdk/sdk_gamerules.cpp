@@ -452,6 +452,10 @@ CSDKGameRules::CSDKGameRules()
 	m_flInjuryTime = 0;
 	m_flInjuryTimeStart = -1;
 	m_pPrecip = NULL;
+	m_nFirstHalfLeftSideTeam = TEAM_A;
+	m_nLeftSideTeam = TEAM_A;
+	m_nFirstHalfKickOffTeam = TEAM_A;
+	m_nKickOffTeam = TEAM_A;
 
 	//ios m_bLevelInitialized = false;
 	//m_flMatchStartTime = 0;
@@ -875,8 +879,8 @@ CAmmoDef* GetAmmoDef()
 
 const char *CSDKGameRules::GetChatPrefix( bool bTeamOnly, CBasePlayer *pPlayer )
 {
-	//Tony; no prefix for now, it isn't needed.
-	//ios return "";
+	if (!pPlayer)
+		return NULL;
 
 	if (bTeamOnly)
 		return "(TEAM)";
@@ -921,6 +925,9 @@ const char *CSDKGameRules::GetChatFormat( bool bTeamOnly, CBasePlayer *pPlayer )
 
 const char *CSDKGameRules::GetChatLocation( bool bTeamOnly, CBasePlayer *pPlayer )
 {
+	if (!pPlayer)
+		return NULL;
+
 	return g_szPosNames[(int)g_Positions[mp_maxplayers.GetInt() - 1][ToSDKPlayer(pPlayer)->GetTeamPosIndex()][POS_NAME]];
 }
 
@@ -1198,8 +1205,8 @@ void CSDKGameRules::State_FIRST_HALF_Think()
 	{
 		m_nAnnouncedInjuryTime = g_IOSRand.RandomInt(1, 4);
 	}
-	else if (m_flStateTimeLeft + m_flInjuryTime + m_nAnnouncedInjuryTime / (90.0f / mp_timelimit_match.GetFloat()) + (abs(m_nBallZone) < 50 ? 0 : 3 / (90.0f / mp_timelimit_match.GetFloat())) <= 0)
-	{	
+	else if (m_flStateTimeLeft + m_flInjuryTime + (m_nAnnouncedInjuryTime + abs(m_nBallZone) < 50 ? 0 : 3) / (90.0f / mp_timelimit_match.GetFloat()) <= 0)
+	{
 		State_Transition(MATCH_HALFTIME);
 	}
 }
@@ -1229,7 +1236,7 @@ void CSDKGameRules::State_SECOND_HALF_Think()
 	{
 		m_nAnnouncedInjuryTime = g_IOSRand.RandomInt(1, 4);
 	}
-	else if (m_flStateTimeLeft + m_flInjuryTime + m_nAnnouncedInjuryTime / (90.0f / mp_timelimit_match.GetFloat()) + (abs(m_nBallZone) < 50 ? 0 : 3 / (90.0f / mp_timelimit_match.GetFloat())) <= 0)
+	else if (m_flStateTimeLeft + m_flInjuryTime + (m_nAnnouncedInjuryTime + abs(m_nBallZone) < 50 ? 0 : 3) / (90.0f / mp_timelimit_match.GetFloat()) <= 0)
 	{
 		if (mp_extratime.GetBool() && GetGlobalTeam(TEAM_A)->GetGoals() == GetGlobalTeam(TEAM_B)->GetGoals())
 			State_Transition(MATCH_EXTRATIME_INTERMISSION);
@@ -1267,7 +1274,7 @@ void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Think()
 	{
 		m_nAnnouncedInjuryTime = g_IOSRand.RandomInt(1, 4);
 	}
-	else if (m_flStateTimeLeft + m_flInjuryTime + m_nAnnouncedInjuryTime / (90.0f / mp_timelimit_match.GetFloat()) + (abs(m_nBallZone) < 50 ? 0 : 3 / (90.0f / mp_timelimit_match.GetFloat())) <= 0)
+	else if (m_flStateTimeLeft + m_flInjuryTime + (m_nAnnouncedInjuryTime + abs(m_nBallZone) < 50 ? 0 : 3) / (90.0f / mp_timelimit_match.GetFloat()) <= 0)
 	{
 		State_Transition(MATCH_EXTRATIME_HALFTIME);
 	}
@@ -1300,7 +1307,7 @@ void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Think()
 	{
 		m_nAnnouncedInjuryTime = g_IOSRand.RandomInt(1, 4);
 	}
-	else if (m_flStateTimeLeft + m_flInjuryTime + m_nAnnouncedInjuryTime / (90.0f / mp_timelimit_match.GetFloat()) + (abs(m_nBallZone) < 50 ? 0 : 3 / (90.0f / mp_timelimit_match.GetFloat())) <= 0)
+	else if (m_flStateTimeLeft + m_flInjuryTime + (m_nAnnouncedInjuryTime + abs(m_nBallZone) < 50 ? 0 : 3) / (90.0f / mp_timelimit_match.GetFloat()) <= 0)
 	{
 		if (mp_penalties.GetBool() && GetGlobalTeam(TEAM_A)->GetGoals() == GetGlobalTeam(TEAM_B)->GetGoals())
 			State_Transition(MATCH_PENALTIES_INTERMISSION);
