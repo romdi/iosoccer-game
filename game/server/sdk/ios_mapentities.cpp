@@ -4,6 +4,7 @@
 #include "sdk_player.h"
 #include "ball.h"
 #include "ios_mapentities.h"
+#include "team.h"
 
 class CBallTrigger : public CBaseTrigger
 {
@@ -71,11 +72,7 @@ public:
 		if (pBall->IgnoreTriggers() || SDKGameRules()->IsIntermissionState())
 			return;
 
-		int team = m_nTeam == 1 ? TEAM_B : TEAM_A;
-		if (SDKGameRules()->GetTeamsSwapped())
-		{
-			team = team == TEAM_A ? TEAM_B : TEAM_A;
-		}
+		int team = m_nTeam == 1 ? SDKGameRules()->GetRightSideTeam() : SDKGameRules()->GetLeftSideTeam();
 		pBall->TriggerGoal(team);
 	};
 };
@@ -100,11 +97,7 @@ public:
 		if (pBall->IgnoreTriggers() || SDKGameRules()->IsIntermissionState())
 			return;
 
-		int team = m_nTeam == 1 ? TEAM_A : TEAM_B;
-		if (SDKGameRules()->GetTeamsSwapped())
-		{
-			team = team == TEAM_A ? TEAM_B : TEAM_A;
-		}
+		int team = m_nTeam == 1 ? SDKGameRules()->GetLeftSideTeam() : SDKGameRules()->GetRightSideTeam();
 		pBall->TriggerGoalLine(team);
 	};
 };
@@ -150,11 +143,7 @@ public:
 
 	void BallStartTouch(CBall *pBall)
 	{
-		int team = m_nTeam == 1 ? TEAM_A : TEAM_B;
-		if (SDKGameRules()->GetTeamsSwapped())
-		{
-			team = team == TEAM_A ? TEAM_B : TEAM_A;
-		}
+		int team = m_nTeam == 1 ? SDKGameRules()->GetLeftSideTeam() : SDKGameRules()->GetRightSideTeam();
 		pBall->TriggerPenaltyBox(team);
 	};
 
@@ -165,11 +154,7 @@ public:
 
 	void PlayerStartTouch(CSDKPlayer *pPl)
 	{
-		int team = m_nTeam == 1 ? TEAM_A : TEAM_B;
-		if (SDKGameRules()->GetTeamsSwapped())
-		{
-			team = team == TEAM_A ? TEAM_B : TEAM_A;
-		}
+		int team = m_nTeam == 1 ? SDKGameRules()->GetLeftSideTeam() : SDKGameRules()->GetRightSideTeam();
 		pPl->m_nInPenBoxOfTeam = team;
 	};
 

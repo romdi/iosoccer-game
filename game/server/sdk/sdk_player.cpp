@@ -235,7 +235,7 @@ CSDKPlayer::CSDKPlayer()
 	m_angEyeAngles.Init();
 
 	m_pCurStateInfo = NULL;	// no state yet
-	m_bShotButtonsDepressed = true;
+	m_bShotButtonsReleased = true;
 	m_nTeamToJoin = TEAM_INVALID;
 	m_flNextJoin = gpGlobals->curtime;
 	m_TeamPos = 0;
@@ -270,7 +270,7 @@ void CSDKPlayer::PreThink(void)
 		ChangeTeam(m_nTeamToJoin);
 
 	if (!(m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1))))
-		m_bShotButtonsDepressed = true;
+		m_bShotButtonsReleased = true;
 
 	BaseClass::PreThink();
 }

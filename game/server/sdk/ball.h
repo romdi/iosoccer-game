@@ -167,7 +167,6 @@ public:
 	void			TriggerPenaltyBox(int team);
 	bool			IgnoreTriggers() { return m_bIgnoreTriggers; }
 	void			SetIgnoreTriggers(bool ignoreTriggers) { m_bIgnoreTriggers = ignoreTriggers; }
-	void			SetIsKickOffAfterGoal(bool isKickOffAfterGoal) { m_bIsKickOffAfterGoal = isKickOffAfterGoal; }
 
 	void			State_Transition( ball_state_t newState, float delay = 0.0f );
 
@@ -275,8 +274,6 @@ private:
 	CHandle<CSDKPlayer>	m_pPossessingPl;
 	int				m_nPossessingTeam;
 	float			m_flPossessionStart;
-
-	bool			m_bIsKickOffAfterGoal;
 
 	CUtlVector<BallTouchInfo> m_Touches;
 

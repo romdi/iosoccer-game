@@ -207,11 +207,6 @@ public:
 	//Tony; define a default encryption key.
 	virtual const unsigned char *GetEncryptionKey( void ) { return (unsigned char *)"a1b2c3d4"; }
 
-	//Tony; in shared space
-#if defined ( SDK_USE_PLAYERCLASSES )
-	const char *GetPlayerClassName( int cls, int team );
-#endif
-
 #ifdef CLIENT_DLL
 
 	DECLARE_CLIENTCLASS_NOBASE(); // This makes datatables able to access our private vars.
@@ -238,48 +233,19 @@ public:
 	virtual const char *GetChatFormat( bool bTeamOnly, CBasePlayer *pPlayer );
 	virtual const char *GetChatLocation( bool bTeamOnly, CBasePlayer *pPlayer );
 	
-	//IOS
-	int		m_PlayersOnTeam[TEAMS_COUNT];
 	void	ChooseTeamNames(bool clubTeams, bool countryTeams, bool realTeams, bool fictitiousTeams);
-	void	CountTeams(void);
 
-	virtual void	ClientDisconnected( edict_t *pClient );		//ios
+	virtual void	ClientDisconnected( edict_t *pClient );
 
-	virtual void	GoToIntermission( void );		//ios ver
+	virtual void	GoToIntermission( void );
 
 	void			AutobalanceTeams(void);
 
-
-	//ios CBaseEntity *GetPlayerSpawnSpot( CBasePlayer *pPlayer );
-	//ios bool IsSpawnPointValid( CBaseEntity *pSpot, CBasePlayer *pPlayer );
 	virtual void PlayerSpawn( CBasePlayer *pPlayer );
 
-#if defined ( SDK_USE_PLAYERCLASSES )
-	bool IsPlayerClassOnTeam( int cls, int team );
-	bool CanPlayerJoinClass( CSDKPlayer *pPlayer, int cls );
-	void ChooseRandomClass( CSDKPlayer *pPlayer );
-	bool ReachedClassLimit( int team, int cls );
-	int CountPlayerClass( int team, int cls );
-	int GetClassLimit( int team, int cls );
-#endif 
-	//bool TeamFull( int team_id );
-	//bool TeamStacked( int iNewTeam, int iCurTeam );
-	//int SelectDefaultTeam( void );
-
 	virtual void ServerActivate();
-protected:
-	//void CheckPlayerPositions( void );
 
 private:
-	//void CheckLevelInitialized( void );
-	//bool m_bLevelInitialized;
-
-	Vector2D	m_vecPlayerPositions[MAX_PLAYERS];
-
-#if defined ( SDK_USE_TEAMS )
-	int	m_iSpawnPointCount_Blue;	//number of blue spawns on the map
-	int	m_iSpawnPointCount_Red;	//number of red spawns on the map
-#endif // SDK_USE_TEAMS
 
 	void RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrcIn, float flRadius, int iClassIgnore, bool bIgnoreWorld ) {};
 
@@ -289,17 +255,8 @@ public:
 
 #endif
 
-/* ios
 public:
-	float GetMapRemainingTime();	// time till end of map, -1 if timelimit is disabled
-	float GetMapElapsedTime();		// How much time has elapsed since the map started.
-*/
-
-public:
-	//CNetworkVar(float, m_fStart);			//from wiki
-	//CNetworkVar(int, m_iDuration);
 	CNetworkVar(match_state_t, m_eMatchState);
-	//CNetworkVar( float, m_flMatchStartTime );
 	CNetworkVar(int, m_nAnnouncedInjuryTime);
 	CNetworkVar(float, m_flInjuryTime);
 
@@ -307,7 +264,7 @@ public:
 	CNetworkVector(m_vFieldMax);
 	CNetworkVector(m_vKickOff);
 
-	int	GetMapRemainingTime(void);				//ios
+	int	GetMapRemainingTime(void);
 	int GetMapTime(void);
 	void StartRoundtimer(int iDuration);
 	inline match_state_t State_Get( void ) { return m_eMatchState; }
@@ -372,28 +329,32 @@ protected:
 	void State_END_Enter();
 	void State_END_Think();
 
-	bool m_bAreTeamsSwapped;
+	int m_nFirstHalfKickOffTeam;
 	int m_nKickOffTeam;
+	int m_nFirstHalfLeftSideTeam;
+	int m_nLeftSideTeam;
 	CPrecipitation *m_pPrecip;
 
 	void CalcBallZone();
 
 public:
 
-	bool GetTeamsSwapped() { return m_bAreTeamsSwapped; };
-	void SetAreTeamsSwapped(bool swapped);
-	void SetKickOffTeam(int team) { m_nKickOffTeam = team; };
-	int GetKickOffTeam() { return m_bAreTeamsSwapped ? (m_nKickOffTeam == TEAM_A ? TEAM_B : TEAM_A) : m_nKickOffTeam; };
+	void SetLeftSideTeam(int team);
+	int GetLeftSideTeam();
+	int GetRightSideTeam();
+	void SetKickOffTeam(int team);
+	int GetKickOffTeam();
 	void StartInjuryTime();
 	void EndInjuryTime();
 	void ClientSettingsChanged( CBasePlayer *pPlayer );
 	void EnableShield(int type, int dir, const Vector &pos = vec3_origin);
 	void DisableShield();
-
 	void SetWeather(PrecipitationType_t type);
+
 #endif
 
 public:
+
 	bool IsIntermissionState();
 	int GetShieldRadius();
 	int GetMatchDisplayTimeSeconds();

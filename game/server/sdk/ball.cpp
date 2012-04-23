@@ -660,22 +660,9 @@ void CBall::State_KICKOFF_Think()
 {
 	if (!CSDKPlayer::IsOnField(m_pPl))
 	{
-		int kickOffTeam;
-		if (m_bIsKickOffAfterGoal)
-		{
-			kickOffTeam = LastOppTeam(true);
-		}
-		else
-		{
-			if (SDKGameRules()->GetTeamsSwapped())
-				kickOffTeam = SDKGameRules()->GetKickOffTeam() == TEAM_A ? TEAM_B : TEAM_A;
-			else
-				kickOffTeam = SDKGameRules()->GetKickOffTeam();
-		}
-
-		m_pPl = FindNearestPlayer(kickOffTeam);
+		m_pPl = FindNearestPlayer(SDKGameRules()->GetKickOffTeam());
 		if (!m_pPl)
-			m_pPl = FindNearestPlayer(GetGlobalTeam(kickOffTeam)->GetOppTeamNumber());
+			m_pPl = FindNearestPlayer(GetGlobalTeam(SDKGameRules()->GetKickOffTeam())->GetOppTeamNumber());
 		if (!m_pPl)
 			return State_Transition(BALL_NORMAL);
 
@@ -915,7 +902,7 @@ void CBall::State_GOAL_Enter()
 	UnmarkOffsidePlayers();
 	UpdatePossession(NULL);
 	m_bIgnoreTriggers = true;
-	m_bIsKickOffAfterGoal = true;
+	SDKGameRules()->SetKickOffTeam(m_nTeam);
 
 	if (m_nTeam == LastTeam(true))
 	{
@@ -1163,7 +1150,7 @@ void CBall::State_KEEPERHANDS_Think()
 		Touched(m_pPl, true, BODY_HANDS);
 
 		if (m_pPl->m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1)))
-			m_pPl->m_bShotButtonsDepressed = false;
+			m_pPl->m_bShotButtonsReleased = false;
 
 		PlayersAtTargetPos(false);
 	}
@@ -1185,7 +1172,7 @@ void CBall::State_KEEPERHANDS_Think()
 	//	return State_Transition(BALL_NORMAL);
 	//}
 
-	if (m_pPl->m_bShotButtonsDepressed && (m_pPl->m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1))) && m_pPl->m_flNextShot <= gpGlobals->curtime)
+	if (m_pPl->m_bShotButtonsReleased && (m_pPl->m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1))) && m_pPl->m_flNextShot <= gpGlobals->curtime)
 	{
 		m_Touches.RemoveAll();
 		if (m_bIsPowershot)

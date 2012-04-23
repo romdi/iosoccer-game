@@ -372,7 +372,7 @@ public:
 
 	void				ResetStats();
 
-	bool				m_bShotButtonsDepressed;
+	bool				m_bShotButtonsReleased;
 
 	float				m_flNextJoin;
 	int					m_nTeamToJoin;

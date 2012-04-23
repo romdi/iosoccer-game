@@ -80,9 +80,9 @@ void CKeeperBot::BotAdjustPos()
 
 	if (m_pBall->State_Get() == BALL_KEEPERHANDS && GetBall()->GetCurrentPlayer() == this)
 	{
-		if (!m_bShotButtonsDepressed)
+		if (!m_bShotButtonsReleased)
 		{
-			m_bShotButtonsDepressed = true;
+			m_bShotButtonsReleased = true;
 			m_flBotNextShot = gpGlobals->curtime + 1;
 		}
 		else if (gpGlobals->curtime >= m_flBotNextShot)

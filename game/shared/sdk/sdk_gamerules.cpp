@@ -446,7 +446,6 @@ CSDKGameRules::CSDKGameRules()
 
 	m_nShieldType = SHIELD_NONE;
 	m_vShieldPos = vec3_invalid;
-	m_bAreTeamsSwapped = false;
 	m_flStateTimeLeft = 0;
 	m_flNextPenalty = gpGlobals->curtime;
 	m_nPenaltyTakingTeam = TEAM_A;
@@ -619,35 +618,6 @@ Vector DropToGround(
 	return trace.endpos;
 }
 
-//the 'recountteams' in teamplay_gamerules looks like the hl1 version so usin CTeam stuff here
-void CSDKGameRules::CountTeams(void)
-{
-	//clr current
-	for (int j = 0; j < TEAMS_COUNT; j++)
-		m_PlayersOnTeam[j] = 0;
-
-	//count players on team
-	for ( int i = 1; i <= gpGlobals->maxClients; i++ )	
-	{
-		CSDKPlayer *plr = (CSDKPlayer*)UTIL_PlayerByIndex( i );
-
-		if (!plr)
-			continue;
-
-		if (!plr->IsPlayer())
-			continue;
-
-		if ( !plr->IsConnected() )
-			continue;
-
-		//check for null,disconnected player
-		if (strlen(plr->GetPlayerName()) == 0)
-			continue;
-
-		m_PlayersOnTeam[plr->GetTeamNumber()]++;
-	}
-}
-
 extern ConVar tv_delaymapchange;
 #include "hltvdirector.h"
 #include "viewport_panel_names.h"
@@ -675,121 +645,10 @@ void CSDKGameRules::GoToIntermission( void )
 //
 void CSDKGameRules::AutobalanceTeams(void)
 {
-	CSDKPlayer *pSwapPlayer=NULL;
-	int teamNow = 0, teamToBe;
-	float mostRecent = 0.0f;
-
-	bool bDoAutobalance = autobalance.GetBool();
-
-	if (!bDoAutobalance)
-		return;
-
-	//check if teams need autobalancing
-	CountTeams();
-	if (m_PlayersOnTeam[TEAM_A] > m_PlayersOnTeam[TEAM_B]+1) 
-	{
-		teamNow  = TEAM_A;
-		teamToBe = TEAM_B;
-	} 
-	else if (m_PlayersOnTeam[TEAM_B] > m_PlayersOnTeam[TEAM_A]+1) 
-	{
-		teamNow  = TEAM_B;
-		teamToBe = TEAM_A;
-	}
-	else 
-	{
-		//no balancing required
-		return;
-	}
-
-   //find 1 player to change per round?
-   bool bFoundValidPlayer = false;
-	//clear all the players data
-	for ( int i = 1; i <= gpGlobals->maxClients; i++ )	
-	{
-		CSDKPlayer *plr = (CSDKPlayer*)UTIL_PlayerByIndex( i );
-
-		if (!plr)
-			continue;
-
-		if (!plr->IsPlayer())
-			continue;
-
-		if ( !plr->IsConnected() )
-			continue;
-
-		//check for null,disconnected player
-		if (strlen(plr->GetPlayerName()) == 0)
-			continue;
-
-		//ignore bots
-		if (plr->GetFlags() & FL_FAKECLIENT)
-			continue;
-
-		if (plr->GetTeamNumber() < TEAM_A)
-			continue;
-
-		//dont switch keepers
-		//if (plr->m_TeamPos == 1)
-		//	continue;
-
-		//found one
-		if (plr->GetTeamNumber() == teamNow) 
-		{
-			//see if player is new to the game
-			if (plr->m_JoinTime > mostRecent) 
-			{
-				pSwapPlayer = plr;
-				mostRecent = plr->m_JoinTime;
-				bFoundValidPlayer = true;
-			}
-		}
-	}  
-
-	if (!bFoundValidPlayer)
-		return;
-
-	//mimic vgui team selection
-	//SetPlayerTeam(swapPlayer, teamToBe+1);
-	pSwapPlayer->ChangeTeam(teamToBe);
-
-	//int trypos = 11;
-	//while (!pSwapPlayer->TeamPosFree(teamToBe, trypos) && trypos > 1) 
-	//{
-	//	trypos--;
-	//}
-
-	//pSwapPlayer->m_TeamPos = trypos;
-	//pSwapPlayer->ChooseModel();
-
-	pSwapPlayer->Spawn();
-	g_pGameRules->GetPlayerSpawnSpot( pSwapPlayer );
-	pSwapPlayer->RemoveEffects( EF_NODRAW );
-	pSwapPlayer->SetSolid( SOLID_BBOX );
-	pSwapPlayer->RemoveFlag(FL_FROZEN);
-
-
-	//print autobalance msg - markg
-	//char text[256];
-	//sprintf( text, "%s was team autobalanced\n",  STRING( swapPlayer->pev->netname ));
-	//MESSAGE_BEGIN( MSG_ALL, gmsgSayText, NULL );
-	//	WRITE_BYTE( ENTINDEX(swapPlayer->edict()) );
-	//	WRITE_STRING( text );
-	//MESSAGE_END();
 }
 
 void CSDKGameRules::PlayerSpawn( CBasePlayer *p )
 {	
-	CSDKPlayer *pPlayer = ToSDKPlayer( p );
-
-	int team = pPlayer->GetTeamNumber();
-
-	if( team != TEAM_SPECTATOR )
-	{
-		//pPlayer->PrecacheModel( "models/player/barcelona/barcelona.mdl" );
-		//pPlayer->SetModel( "models/player/barcelona/barcelona.mdl" );
-		//pPlayer->SetHitboxSet( 0 );
-	}
 }
 
 void CSDKGameRules::InitTeams( void )
@@ -1124,7 +983,7 @@ ConCommand sv_restart( "sv_restart", CC_SV_Restart, "Restart game", 0 );
 
 void CSDKGameRules::StartPenalties()
 {
-	SetAreTeamsSwapped(false);
+	SetLeftSideTeam(m_nFirstHalfLeftSideTeam);
 	GetBall()->ResetMatch();
 	State_Transition(MATCH_PENALTIES);
 }
@@ -1314,7 +1173,6 @@ void CSDKGameRules::State_INIT_Think()
 
 void CSDKGameRules::State_WARMUP_Enter()
 {
-	SetAreTeamsSwapped(false);
 	GetBall()->ResetMatch();
 	GetBall()->State_Transition(BALL_NORMAL);
 }
@@ -1327,9 +1185,10 @@ void CSDKGameRules::State_WARMUP_Think()
 
 void CSDKGameRules::State_FIRST_HALF_Enter()
 {
-	//GetBall()->CreateVPhysics();
-	GetBall()->SetIsKickOffAfterGoal(false);
-	m_nKickOffTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
+	m_nFirstHalfLeftSideTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
+	SetLeftSideTeam(m_nFirstHalfLeftSideTeam);
+	m_nFirstHalfKickOffTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
+	SetKickOffTeam(m_nFirstHalfKickOffTeam);
 	GetBall()->State_Transition(BALL_KICKOFF);
 }
 
@@ -1359,8 +1218,8 @@ void CSDKGameRules::State_HALFTIME_Think()
 
 void CSDKGameRules::State_SECOND_HALF_Enter()
 {
-	SetAreTeamsSwapped(true);
-	GetBall()->SetIsKickOffAfterGoal(false);
+	SetLeftSideTeam(GetGlobalTeam(m_nFirstHalfLeftSideTeam)->GetOppTeamNumber());
+	SetKickOffTeam(GetGlobalTeam(m_nFirstHalfKickOffTeam)->GetOppTeamNumber());
 	GetBall()->State_Transition(BALL_KICKOFF);
 }
 
@@ -1397,8 +1256,8 @@ void CSDKGameRules::State_EXTRATIME_INTERMISSION_Think()
 
 void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Enter()
 {
-	SetAreTeamsSwapped(false);
-	GetBall()->SetIsKickOffAfterGoal(false);
+	SetLeftSideTeam(m_nFirstHalfLeftSideTeam);
+	SetKickOffTeam(m_nFirstHalfKickOffTeam);
 	GetBall()->State_Transition(BALL_KICKOFF);
 }
 
@@ -1430,7 +1289,8 @@ void CSDKGameRules::State_EXTRATIME_HALFTIME_Think()
 
 void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Enter()
 {
-	SetAreTeamsSwapped(true);
+	SetLeftSideTeam(GetGlobalTeam(m_nFirstHalfLeftSideTeam)->GetOppTeamNumber());
+	SetKickOffTeam(GetGlobalTeam(m_nFirstHalfKickOffTeam)->GetOppTeamNumber());
 	GetBall()->State_Transition(BALL_KICKOFF);
 }
 
@@ -1467,7 +1327,7 @@ void CSDKGameRules::State_PENALTIES_Enter()
 {
 	m_flNextPenalty = -1;
 	m_nPenaltyTakingTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
-	SetAreTeamsSwapped(m_nPenaltyTakingTeam == TEAM_A ? false : true);
+	SetLeftSideTeam(GetGlobalTeam(m_nPenaltyTakingTeam)->GetOppTeamNumber());
 	GetBall()->SetPenaltyState(PENALTY_NONE);
 }
 
@@ -1489,8 +1349,8 @@ void CSDKGameRules::State_PENALTIES_Think()
 		{
 			if (GetBall()->GetPenaltyState() == PENALTY_KICKED)
 			{
-				m_nPenaltyTakingTeam = m_nPenaltyTakingTeam == TEAM_A ? TEAM_B : TEAM_A;
-				SetAreTeamsSwapped(m_nPenaltyTakingTeam == TEAM_A ? false : true);
+				m_nPenaltyTakingTeam = GetGlobalTeam(m_nPenaltyTakingTeam)->GetOppTeamNumber();
+				SetLeftSideTeam(GetGlobalTeam(m_nPenaltyTakingTeam)->GetOppTeamNumber());
 			}
 
 			GetBall()->SetPenaltyState(PENALTY_NONE);
@@ -1698,15 +1558,35 @@ void CSDKGameRules::DisableShield()
 	}
 }
 
-void CSDKGameRules::SetAreTeamsSwapped(bool swapped)
+void CSDKGameRules::SetLeftSideTeam(int team)
 {
-	if (swapped != m_bAreTeamsSwapped)
-	{
-		GetGlobalTeam(TEAM_A)->InitFieldSpots(swapped ? TEAM_B : TEAM_A);
-		GetGlobalTeam(TEAM_B)->InitFieldSpots(swapped ? TEAM_A : TEAM_B);
-		m_bAreTeamsSwapped = swapped;
-		IOS_LogPrintf("Swapping teams\n");
-	}
+	if (team == m_nLeftSideTeam)
+		return;
+
+	m_nLeftSideTeam = team;
+	GetGlobalTeam(TEAM_A)->InitFieldSpots(team);
+	GetGlobalTeam(TEAM_B)->InitFieldSpots(GetGlobalTeam(team)->GetOppTeamNumber());
+	IOS_LogPrintf("Left team set to %s\n", GetGlobalTeam(team)->GetKitName());
+}
+
+int CSDKGameRules::GetLeftSideTeam()
+{
+	return m_nLeftSideTeam;
+}
+
+int CSDKGameRules::GetRightSideTeam()
+{
+	return GetGlobalTeam(m_nLeftSideTeam)->GetOppTeamNumber();
+}
+
+void CSDKGameRules::SetKickOffTeam(int team)
+{
+	m_nKickOffTeam = team;
+}
+
+int CSDKGameRules::GetKickOffTeam()
+{
+	return m_nKickOffTeam;
 }
 
 CBaseEntity *CSDKGameRules::GetPlayerSpawnSpot( CBasePlayer *pPlayer )
