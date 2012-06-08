@@ -225,7 +225,7 @@ private:
 	CSDKPlayer		*FindNearestPlayer(int team = TEAM_INVALID, int posFlags = FL_POS_FIELD, bool checkIfShooting = false, int ignoredPlayerBits = 0);
 	bool			DoBodyPartAction();
 	bool			DoSlideAction();
-	bool			DoKeeperPenBoxAction();
+	bool			CheckKeeperCatch();
 	bool			DoGroundShot();
 	bool			DoVolleyShot();
 	bool			DoChestDrop();

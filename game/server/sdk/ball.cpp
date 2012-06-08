@@ -635,7 +635,7 @@ void CBall::State_NORMAL_Think()
 		ignoredPlayerBits |= (1 << (m_pPl->entindex() - 1));
 	}
 
-	if (!SDKGameRules()->IsIntermissionState())
+	if (!SDKGameRules()->IsIntermissionState() && !IgnoreTriggers())
 		MarkOffsidePlayers();
 }
 
@@ -1279,7 +1279,7 @@ bool CBall::DoBodyPartAction()
 
 	if (m_pPl->GetTeamPosition() == 1 && m_nInPenBoxOfTeam == m_pPl->GetTeamNumber())
 	{
-		if (DoKeeperPenBoxAction())
+		if (CheckKeeperCatch())
 			return true;
 	}
 
@@ -1325,7 +1325,7 @@ bool CBall::DoSlideAction()
 	return true;
 }
 
-bool CBall::DoKeeperPenBoxAction()
+bool CBall::CheckKeeperCatch()
 {
 	Vector dirToBall = m_vPos - m_vPlPos;
 	float zDist = dirToBall.z;
@@ -1373,7 +1373,7 @@ bool CBall::DoKeeperPenBoxAction()
 			return false;
 	}
 
-	if (m_vVel.Length2D() > sv_ball_keepercatchspeed.GetInt() || SDKGameRules()->IsIntermissionState())
+	if (m_vVel.Length2D() > sv_ball_keepercatchspeed.GetInt() || SDKGameRules()->IsIntermissionState() || IgnoreTriggers())
 	{
 		//m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KEEPER_HANDS_PUNCH);
 		//if (zDist >= (m_pPl->m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_JUMP ? BODY_HEAD_END + 10 : VEC_HULL_MAX.z))
@@ -1386,10 +1386,10 @@ bool CBall::DoKeeperPenBoxAction()
 			SetVel(m_vPlForward * m_vVel.Length2D() * 0.75f);
 
 		Kicked(BODY_HANDS);
-		return true;
 	}
+	else
+		State_Transition(BALL_KEEPERHANDS);
 
-	State_Transition(BALL_KEEPERHANDS);
 	return true;
 }
 

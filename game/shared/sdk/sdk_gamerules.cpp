@@ -1756,6 +1756,7 @@ static size_t rcvData(void *ptr, size_t size, size_t nmemb, curl_t* vars)
 	return size * nmemb;
 }
 
+ConVar cl_download_url("cl_download_url", "http://downloads.iosoccer.co.uk/teamkits/");
  
 unsigned DoCurl( void *params )
 {
@@ -1779,7 +1780,7 @@ unsigned DoCurl( void *params )
 		//struct curl_slist *headers=NULL;
 		//headers = curl_slist_append(headers, "ACCEPT_ENCODING: gzip");
 		//curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-		curl_easy_setopt(curl, CURLOPT_URL, VarArgs("http://127.0.0.1:8000/%s/%s", vars->kitName, textures[i]));
+		curl_easy_setopt(curl, CURLOPT_URL, VarArgs("%s/%s/%s", cl_download_url.GetString(), vars->kitName, textures[i]));
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, rcvData);
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, vars);
 		//curl_easy_setopt(curl, CURLOPT_ENCODING, "gzip");
