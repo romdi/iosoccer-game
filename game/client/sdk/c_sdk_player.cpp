@@ -21,6 +21,7 @@
 #include "obstacle_pushaway.h"
 #include "bone_setup.h"
 #include "cl_animevent.h"
+#include "sdk_gamerules.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 ConVar cl_ragdoll_physics_enable( "cl_ragdoll_physics_enable", "1", 0, "Enable/disable ragdoll physics." );
@@ -1191,4 +1192,85 @@ void C_SDKPlayer::ApplyBoneMatrixTransform(matrix3x4_t& transform)
 	//	VectorScale( transform[1], scale, transform[1] );
 	//	VectorScale( transform[2], scale, transform[2] );
 	//}
+}
+
+void DrawCircle(Vector &vFinalOrigin, Vector &vFinalForward, Vector &vFinalRight, float m_flSpellPreviewRadius, Vector4D &color, IMaterial *pPreviewMaterial)
+{
+	CMatRenderContextPtr pRenderContext( materials );
+	//IMaterial *pPreviewMaterial = materials->FindMaterial( "debug/debugspritewireframe", TEXTURE_GROUP_OTHER );
+	pRenderContext->Bind( pPreviewMaterial );
+	IMesh *pMesh = pRenderContext->GetDynamicMesh();
+	CMeshBuilder meshBuilder;
+	meshBuilder.Begin( pMesh, MATERIAL_QUADS, 1 );
+
+	meshBuilder.Color4fv( color.Base() );
+	meshBuilder.TexCoord2f( 0,0,0 );
+	meshBuilder.Position3fv( (vFinalOrigin + (vFinalRight * -m_flSpellPreviewRadius) + (vFinalForward * m_flSpellPreviewRadius)).Base() );
+	meshBuilder.AdvanceVertex();
+
+	meshBuilder.Color4fv( color.Base() );
+	meshBuilder.TexCoord2f( 0,1,0 );
+	meshBuilder.Position3fv( (vFinalOrigin + (vFinalRight * m_flSpellPreviewRadius) + (vFinalForward * m_flSpellPreviewRadius)).Base() );
+	meshBuilder.AdvanceVertex();
+
+	meshBuilder.Color4fv( color.Base() );
+	meshBuilder.TexCoord2f( 0,1,1 );
+	meshBuilder.Position3fv( (vFinalOrigin + (vFinalRight * m_flSpellPreviewRadius) + (vFinalForward * -m_flSpellPreviewRadius)).Base() );
+	meshBuilder.AdvanceVertex();
+
+	meshBuilder.Color4fv( color.Base() );
+	meshBuilder.TexCoord2f( 0,0,1 );
+	meshBuilder.Position3fv( (vFinalOrigin + (vFinalRight * -m_flSpellPreviewRadius) + (vFinalForward * -m_flSpellPreviewRadius)).Base() );
+	meshBuilder.AdvanceVertex();
+	meshBuilder.End();
+	pMesh->Draw();
+}
+
+void DrawPlayerCircle(C_BasePlayer *pPlayer)
+{
+	C_SDKPlayer *pLocal = C_SDKPlayer::GetLocalSDKPlayer();
+
+	if (!pPlayer || !pLocal)
+		return;
+
+	Vector vFinalRight = Vector(1, 0, 0);
+	Vector vFinalForward = Vector(0, 1, 0);
+	Vector vFinalOrigin = pPlayer->GetLocalOrigin();
+	vFinalOrigin.z = SDKGameRules()->m_vKickOff.GetZ();
+
+	float m_flSpellPreviewRadius;
+	IMaterial *pPreviewMaterial;
+	Vector4D color;
+
+	if (pPlayer == pLocal)
+	{
+		if (g_pCVar->FindVar("hud_show_circle")->GetBool())
+		{
+			float radiusMultiplier = 0.66f;
+			m_flSpellPreviewRadius = radiusMultiplier * g_pCVar->FindVar("cl_powershot_strength")->GetFloat();
+			pPreviewMaterial = materials->FindMaterial( "zm/zombie_select", TEXTURE_GROUP_CLIENT_EFFECTS );
+			color = Vector4D(0, 0, 0, 1);
+			DrawCircle(vFinalOrigin, vFinalForward, vFinalRight, radiusMultiplier * 100, color, pPreviewMaterial);
+			color = Vector4D(0, 1, 0, 1);
+			DrawCircle(vFinalOrigin, vFinalForward, vFinalRight, pLocal->m_Shared.GetStamina() * radiusMultiplier, color, pPreviewMaterial);
+			color = Vector4D(1, 0, 0, 1);
+			DrawCircle(vFinalOrigin, vFinalForward, vFinalRight, m_flSpellPreviewRadius, color, pPreviewMaterial);
+		}
+	}
+	else
+	{
+		m_flSpellPreviewRadius = 50;
+		pPreviewMaterial = materials->FindMaterial( "zm/zm_arrows", TEXTURE_GROUP_CLIENT_EFFECTS );
+		color = Vector4D(1, 1, 1, 1);
+		DrawCircle(vFinalOrigin, vFinalForward, vFinalRight, m_flSpellPreviewRadius, color, pPreviewMaterial);
+	}
+}
+
+int C_SDKPlayer::DrawModel( int flags )
+{
+	int retVal = BaseClass::DrawModel( flags );
+
+	DrawPlayerCircle(this);
+
+	return retVal;
 }

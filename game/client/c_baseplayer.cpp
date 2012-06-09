@@ -1202,7 +1202,7 @@ bool C_BasePlayer::ShouldDraw()
 int C_BasePlayer::DrawModel( int flags )
 {
 	// if local player is spectating this player in first person mode, don't draw it
-	C_BasePlayer * player = C_BasePlayer::GetLocalPlayer();
+	//C_BasePlayer * player = C_BasePlayer::GetLocalPlayer();
 
 	//if ( player && player->IsObserver() )
 	//{

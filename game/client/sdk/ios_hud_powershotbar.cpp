@@ -16,6 +16,7 @@
 #include <vgui/ILocalize.h>
 #include <igameresources.h>
 #include "c_baseplayer.h"
+#include "in_buttons.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -30,6 +31,10 @@ static void OnPowershotStrengthChange(IConVar *var, const char *pOldValue, float
  
 ConVar cl_powershot_strength("cl_powershot_strength", "50", 0, "Powershot Strength (0-100)", true, 0, true, 100, OnPowershotStrengthChange );
 ConVar cl_powershot_fixed_strength("cl_powershot_fixed_strength", "50", FCVAR_ARCHIVE, "Powershot Fixed Strength (0-100)", true, 0, true, 100, OnPowershotStrengthChange );
+ConVar cl_chargedshot_duration("cl_chargedshot_duration", "0.5", FCVAR_ARCHIVE);
+ConVar cl_chargedshot_bounce("cl_chargedshot_bounce", "0", FCVAR_ARCHIVE);
+ConVar hud_show_bar("hud_show_bar", "1", FCVAR_ARCHIVE);
+ConVar hud_show_circle("hud_show_circle", "1", FCVAR_ARCHIVE);
 
 //extern ConVar cl_powershot_strength;
 
@@ -80,6 +85,10 @@ protected:
 	Panel *m_pPowershotIndicator;
 	float m_flOldStamina;
 	float m_flNextUpdate;
+	bool m_bIsChargingShot;
+	float m_flChargingStartTime;
+	int m_nChargingStartPower;
+	bool m_bChargingUp;
 };
 
 DECLARE_HUDELEMENT( CHudPowershotBar );
@@ -101,6 +110,10 @@ CHudPowershotBar::CHudPowershotBar( const char *pElementName ) : CHudElement( pE
 	m_pPowershotIndicator = new Panel(this, "PowershotIndicator");
 	m_flOldStamina = 100;
 	m_flNextUpdate = gpGlobals->curtime;
+	m_bIsChargingShot = false;
+	m_flChargingStartTime = gpGlobals->curtime;
+	m_nChargingStartPower = 0;
+	m_bChargingUp = true;
 }
 
 #define WIDTH 40
@@ -184,6 +197,58 @@ void CHudPowershotBar::Paint()
 	if ( !pPlayer )
 		return;
 
+	if (pPlayer->m_nButtons & IN_RELOAD)
+	{
+		if (m_bIsChargingShot)
+		{
+			float power = (gpGlobals->curtime - m_flChargingStartTime) / cl_chargedshot_duration.GetFloat();
+
+			if (cl_chargedshot_bounce.GetBool())
+			{
+				//if (m_bChargingUp)
+				//	power += m_nChargingStartPower
+				//else
+				//	power = m_nChargingStartPower -;
+
+				if ((int)power % 2 == 0)
+				{
+					power = fmod(power, 1);
+					m_bChargingUp = true;
+				}
+				else
+				{
+					power = 1 - fmod(power, 1);
+					m_bChargingUp = false;
+				}
+			}
+
+			cl_powershot_strength.SetValue(power * 100);
+		}
+		else
+		{
+			//if (cl_chargedshot_bounce.GetBool())
+			//{
+			//	m_nChargingStartPower = cl_powershot_strength.GetInt();
+			//}
+			//else
+			//{
+				cl_powershot_strength.SetValue(0);
+				m_nChargingStartPower = 0;
+				m_bChargingUp = true;
+			//}
+
+			m_bIsChargingShot = true;
+			m_flChargingStartTime = gpGlobals->curtime;
+		}
+	}
+	else
+	{
+		if (m_bIsChargingShot)
+		{
+			m_bIsChargingShot = false;
+		}
+	}
+
 	//float stamina = Lerp(0.25f * gpGlobals->frametime, m_flOldStamina, pPlayer->m_Shared.GetStamina());
 
 	float stamina = pPlayer->m_Shared.GetStamina();
@@ -221,4 +286,8 @@ void CHudPowershotBar::Paint()
 	m_pStaminaPanel->SetBgColor(bgColor);
 
 	m_pPowershotIndicator->SetY(PADDING + m_pPowershotIndicator->GetTall() + (1 - cl_powershot_strength.GetInt() / 100.0f) * (HEIGHT - 2 * PADDING - 3 * m_pPowershotIndicator->GetTall()));
+
+	SetPaintBackgroundEnabled(hud_show_bar.GetBool());
+	m_pStaminaPanel->SetVisible(hud_show_bar.GetBool());
+	m_pPowershotIndicator->SetVisible(hud_show_bar.GetBool());
 }
