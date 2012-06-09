@@ -82,7 +82,9 @@ protected:
 	virtual void	Paint();
 
 	Panel *m_pStaminaPanel;
+	Panel *m_pStaminaIndicator;
 	Panel *m_pPowershotIndicator;
+	Panel *m_pSpinIndicators[2];
 	float m_flOldStamina;
 	float m_flNextUpdate;
 	bool m_bIsChargingShot;
@@ -107,7 +109,10 @@ CHudPowershotBar::CHudPowershotBar( const char *pElementName ) : CHudElement( pE
 	//SetHiddenBits( HIDEHUD_HEALTH | HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT );
 
 	m_pStaminaPanel = new Panel(this, "StaminaPanel");
-	m_pPowershotIndicator = new Panel(this, "PowershotIndicator");
+	m_pStaminaIndicator = new Panel(m_pStaminaPanel, "StaminaIndicator");
+	m_pPowershotIndicator = new Panel(m_pStaminaPanel, "PowershotIndicator");
+	for (int i = 0; i < 2; i++)
+		m_pSpinIndicators[i] = new Panel(this, "");
 	m_flOldStamina = 100;
 	m_flNextUpdate = gpGlobals->curtime;
 	m_bIsChargingShot = false;
@@ -116,29 +121,41 @@ CHudPowershotBar::CHudPowershotBar( const char *pElementName ) : CHudElement( pE
 	m_bChargingUp = true;
 }
 
-#define WIDTH 40
-#define HEIGHT 200
-#define MARGIN 30
-#define PADDING 2
-#define HEIGHT_INDICATOR 9
+#define BAR_WIDTH 40
+#define BAR_HEIGHT 200
+#define BAR_MARGIN 30
+#define BAR_PADDING 2
+#define PS_INDICATOR_HEIGHT 9
+#define SPIN_MARGIN 5
+#define SPIN_HEIGHT 10
 
 void CHudPowershotBar::ApplySchemeSettings( IScheme *scheme )
 {
-	BaseClass::ApplySchemeSettings( scheme );
+	BaseClass::ApplySchemeSettings(scheme);
 
- 	SetPaintBackgroundType (2); // Rounded corner box
- 	SetPaintBackgroundEnabled(true);
-	SetBgColor( Color( 0, 0, 0, 255 ) );
-	SetBounds(ScreenWidth() - WIDTH - MARGIN, ScreenHeight() - HEIGHT - MARGIN, WIDTH, HEIGHT);
+	SetBounds(ScreenWidth() - BAR_WIDTH - BAR_MARGIN, ScreenHeight() - BAR_HEIGHT - BAR_MARGIN - 2 * SPIN_HEIGHT, BAR_WIDTH, BAR_HEIGHT + 2 * SPIN_HEIGHT + BAR_MARGIN);
 
-	m_pStaminaPanel->SetPaintBackgroundType (2); // Rounded corner box
+	m_pStaminaPanel->SetPaintBackgroundType(2); // Rounded corner box
  	m_pStaminaPanel->SetPaintBackgroundEnabled(true);
-	m_pStaminaPanel->SetBgColor( Color( 0, 255, 0, 255 ) );
-	m_pStaminaPanel->SetBounds(PADDING, PADDING, WIDTH - 2 * PADDING, HEIGHT - 2 * PADDING);
+	m_pStaminaPanel->SetBgColor(Color(0, 0, 0, 255));
+	m_pStaminaPanel->SetBounds(0, SPIN_HEIGHT, BAR_WIDTH, BAR_HEIGHT);
+
+	m_pStaminaIndicator->SetPaintBackgroundType(2); // Rounded corner box
+ 	m_pStaminaIndicator->SetPaintBackgroundEnabled(true);
+	m_pStaminaIndicator->SetBgColor(Color(0, 255, 0, 255) );
+	m_pStaminaIndicator->SetBounds(BAR_PADDING, BAR_PADDING, BAR_WIDTH - 2 * BAR_PADDING, BAR_HEIGHT - 2 * BAR_PADDING);
 
  	m_pPowershotIndicator->SetPaintBackgroundEnabled(true);
-	m_pPowershotIndicator->SetBgColor( Color( 255, 255, 255, 255 ) );
-	m_pPowershotIndicator->SetBounds(PADDING, HEIGHT / 2 - HEIGHT_INDICATOR / 2, WIDTH - 2 * PADDING, HEIGHT_INDICATOR);
+	m_pPowershotIndicator->SetBgColor(Color(255, 255, 255, 255));
+	m_pPowershotIndicator->SetBounds(BAR_PADDING, BAR_HEIGHT / 2 - PS_INDICATOR_HEIGHT / 2, BAR_WIDTH - 2 * BAR_PADDING, PS_INDICATOR_HEIGHT);
+
+	for (int i = 0; i < 2; i++)
+	{
+		m_pSpinIndicators[i]->SetPaintBackgroundEnabled(true);
+		m_pSpinIndicators[i]->SetBgColor(Color(0, 0, 255, 255));
+		m_pSpinIndicators[i]->SetBounds(SPIN_MARGIN, i * (SPIN_HEIGHT + BAR_HEIGHT), BAR_WIDTH - 2 * SPIN_MARGIN, SPIN_HEIGHT);
+		m_pSpinIndicators[i]->SetVisible(false);
+	}
 }
 
 
@@ -272,9 +289,9 @@ void CHudPowershotBar::Paint()
 	//else
 		relStamina = stamina / 100.0f;
 
-	int height = GetTall() * relStamina - 2 * PADDING;
-	m_pStaminaPanel->SetTall(height);
-	m_pStaminaPanel->SetY(GetTall() - PADDING - height);
+	int height = m_pStaminaPanel->GetTall() * relStamina - 2 * BAR_PADDING;
+	m_pStaminaIndicator->SetTall(height);
+	m_pStaminaIndicator->SetY(m_pStaminaPanel->GetTall() - BAR_PADDING - height);
 
 	Color bgColor;
 
@@ -283,11 +300,14 @@ void CHudPowershotBar::Paint()
 	else
 		bgColor = Color(255 * (1 - relStamina), 255 * relStamina, 0, 255);
 
-	m_pStaminaPanel->SetBgColor(bgColor);
+	m_pStaminaIndicator->SetBgColor(bgColor);
 
-	m_pPowershotIndicator->SetY(PADDING + m_pPowershotIndicator->GetTall() + (1 - cl_powershot_strength.GetInt() / 100.0f) * (HEIGHT - 2 * PADDING - 3 * m_pPowershotIndicator->GetTall()));
+	m_pPowershotIndicator->SetY(BAR_PADDING + m_pPowershotIndicator->GetTall() + (1 - cl_powershot_strength.GetInt() / 100.0f) * (BAR_HEIGHT - 2 * BAR_PADDING - 3 * m_pPowershotIndicator->GetTall()));
 
-	SetPaintBackgroundEnabled(hud_show_bar.GetBool());
-	m_pStaminaPanel->SetVisible(hud_show_bar.GetBool());
+	m_pStaminaPanel->SetPaintBackgroundEnabled(hud_show_bar.GetBool());
+	m_pStaminaIndicator->SetVisible(hud_show_bar.GetBool());
 	m_pPowershotIndicator->SetVisible(hud_show_bar.GetBool());
+
+	m_pSpinIndicators[0]->SetVisible(pPlayer->m_nButtons & IN_TOPSPIN);
+	m_pSpinIndicators[1]->SetVisible(pPlayer->m_nButtons & IN_BACKSPIN);
 }

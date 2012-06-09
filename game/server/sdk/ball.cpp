@@ -1525,9 +1525,9 @@ void CBall::SetBallSpin()
 		rot += Vector(0, 0, -1);
 
 	if (m_pPl->m_nButtons & IN_TOPSPIN)
-		rot += -m_vPlRight;// * 0.75f;
+		rot += -m_vPlRight * GetPitchModifier();// * 0.75f;
 	else if (m_pPl->m_nButtons & IN_BACKSPIN)
-		rot += m_vPlRight;// * 0.75f;
+		rot += m_vPlRight * GetPitchModifier();// * 0.75f;
 
 	if (rot.z != 0)
 		rot.NormalizeInPlace();
