@@ -1208,7 +1208,7 @@ Vector CSDKPlayer::GetOffsideLastOppPlayerPos()
 
 void CSDKPlayer::SetOffsideBallPos(Vector pos)
 {
-	m_vOffsideLastOppPlayerPos = pos;
+	m_vOffsideBallPos = pos;
 }
 
 Vector CSDKPlayer::GetOffsideBallPos()
@@ -1315,6 +1315,21 @@ void CSDKPlayer::ResetFlags()
 			DoServerAnimationEvent(PLAYERANIMEVENT_CARRY_END);
 		}
 	}
+}
+
+bool CSDKPlayer::IsNormalshooting()
+{
+	return (m_nButtons & IN_ATTACK) && !(m_nButtons & IN_ATTACK2);
+}
+
+bool CSDKPlayer::IsPowershooting()
+{
+	return (m_nButtons & IN_ATTACK) && (m_nButtons & IN_ATTACK2);
+}
+
+bool CSDKPlayer::IsShooting()
+{
+	return IsNormalshooting() || IsPowershooting();
 }
 
 CUtlVector<CPlayerPersistentData *> CPlayerPersistentData::m_PlayerPersistentData;

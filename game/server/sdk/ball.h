@@ -190,6 +190,8 @@ public:
 
 	CSDKPlayer		*GetCurrentPlayer() { return m_pPl; }
 
+	void			SetCreator(CSDKPlayer *pCreator);
+
 private:
 
 	void State_NORMAL_Enter();		void State_NORMAL_Think();
@@ -253,7 +255,6 @@ private:
 	Vector			m_vPlVel, m_vPlPos, m_vPlForward, m_vPlForward2D, m_vPlRight, m_vPlUp;
 	int				m_nPlTeam;
 	int				m_nPlPos;
-	bool			m_bIsPowershot;
 
 	CHandle<CSDKPlayer>	m_pFouledPl;
 	CHandle<CSDKPlayer>	m_pFoulingPl;
@@ -280,6 +281,8 @@ private:
 	penalty_state_t m_ePenaltyState;
 
 	MatchEventPlayerInfo m_MatchEventPlayerInfo;
+
+	CHandle<CSDKPlayer> m_pCreator;
 };
 
 #endif

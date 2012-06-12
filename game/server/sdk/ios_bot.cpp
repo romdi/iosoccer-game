@@ -18,7 +18,7 @@
 #include "movehelper_server.h"
 #include "gameinterface.h"
 #include "game.h"
-
+#include "ios_bot.h"
 #include "ios_keeperbot.h"
 #include "ios_fieldbot.h"
 
@@ -436,4 +436,12 @@ void CBot::BotFrame()
 
 void CBot::BotThink()
 {
+}
+
+void CBot::PhysicsSimulate()
+{
+	BaseClass::PhysicsSimulate();
+
+	// Since this isn't called for bots.. call it here
+	UpdateVPhysicsPosition(m_vNewVPhysicsPosition, m_vNewVPhysicsVelocity, gpGlobals->frametime);
 }

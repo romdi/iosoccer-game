@@ -1475,7 +1475,7 @@ void OnTeamlistChange(IConVar *var, const char *pOldValue, float flOldValue)
 	}
 }
 ConVar mp_teamlist("mp_teamlist", "england;brazil", FCVAR_REPLICATED|FCVAR_NOTIFY, "Set team names", &OnTeamlistChange);
-ConVar sv_teamrotation("mp_teamrotation", "brazil;germany;italy;scotland;barcelona;bayern;liverpool;milan;palmeiras", 0, "Set available teams");
+ConVar mp_teamrotation("mp_teamrotation", "brazil;germany;italy;scotland;barcelona;bayern;liverpool;milan;palmeiras", 0, "Set available teams");
 
 
 void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )

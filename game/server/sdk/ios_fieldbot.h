@@ -9,7 +9,6 @@
 class CFieldBot : public CBot
 {
 	void BotThink();
-	void BotFetchAndPass();
 	void BotRunToBall();
 	void BotShootBall();
 };

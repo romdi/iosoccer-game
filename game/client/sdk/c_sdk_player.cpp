@@ -1270,7 +1270,7 @@ int C_SDKPlayer::DrawModel( int flags )
 {
 	int retVal = BaseClass::DrawModel( flags );
 
-	DrawPlayerCircle(this);
+	//DrawPlayerCircle(this);
 
 	return retVal;
 }

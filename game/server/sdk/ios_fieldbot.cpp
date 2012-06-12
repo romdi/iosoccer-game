@@ -54,12 +54,12 @@ void CFieldBot::BotShootBall()
 				m_cmd.buttons |= IN_ATTACK;
 			else
 			{
-				m_cmd.buttons |= IN_ATTACK2;
+				m_cmd.buttons |= (IN_ATTACK2 | IN_ATTACK);
 			}
 		}
 		else
 		{
-			m_cmd.buttons |= IN_ATTACK2;
+			m_cmd.buttons |= (IN_ATTACK2 | IN_ATTACK);
 		}
 
 		VectorAngles(shotDir, m_cmd.viewangles);
@@ -80,7 +80,7 @@ void CFieldBot::BotShootBall()
 		}
 
 		VectorAngles(shotDir, m_cmd.viewangles);
-		m_cmd.buttons |= IN_ATTACK2;
+		m_cmd.buttons |= (IN_ATTACK2 | IN_ATTACK);
 		m_cmd.powershot_strength = 100 * g_IOSRand.RandomFloat(0, 1);
 		m_cmd.viewangles[PITCH] = -30 + 30 * (1 - m_cmd.powershot_strength / 100.0f);
 	}
@@ -138,92 +138,4 @@ void CFieldBot::BotRunToBall()
 		//else if (Sign(pos.y - GetTeam()->m_vPlayerSpawns[GetTeamPosition() - 1].y) == GetTeam()->m_nForward)
 		//	m_cmd.forwardmove = -mp_runspeed.GetInt();
 	}
-}
-
-void CFieldBot::BotFetchAndPass()
-{
-	QAngle angle;
-
-	angle = GetLocalAngles();
-
-	Vector plballdir;
-	Vector pldir;
-	float closestDist = FLT_MAX;
-	CSDKPlayer *pClosest = NULL;
-	for (int i = 1; i <= gpGlobals->maxClients; i++ )
-	{
-		CSDKPlayer *pPlayer = ( CSDKPlayer *) UTIL_PlayerByIndex( i );
-		if (!(
-			pPlayer &&
-			pPlayer->GetTeamNumber() > LAST_SHARED_TEAM &&
-			pPlayer->IsAlive() &&
-			!(pPlayer->GetFlags() & FL_FAKECLIENT)
-			))
-			continue;
-
-		float dist = GetLocalOrigin().DistTo(pPlayer->GetLocalOrigin());
-		if (dist >= closestDist)
-			continue;
-
-		closestDist = dist;
-		pClosest = pPlayer;
-		plballdir = m_vBallPos - pPlayer->GetLocalOrigin();
-		pldir = pPlayer->GetLocalOrigin() - GetLocalOrigin();
-		break;
-	}
-
-	if (!pClosest)
-		return;
-
-	Vector dir = m_vBallPos - GetLocalOrigin();
-	m_cmd.buttons &= ~IN_ATTACK;
-	m_cmd.buttons &= ~IN_ATTACK2;
-	m_cmd.forwardmove = 0;
-	float pitch = 0;
-
-	if (plballdir.Length2D() > 150)
-	{
-		//m_cmd.forwardmove = clamp(dir.Length2D() / 2, mp_walkspeed.GetInt(), mp_sprintspeed.GetInt());
-		pitch = clamp(plballdir.Length2D() / -50 + 0, -40, 10); //-45;
-
-		if (dir.Length2D() > 50)
-		{
-			Vector target;
-			target = m_vBallPos + (plballdir / plballdir.Length()) * 50;
-			if (dir.Dot(plballdir) > 0) // < 90°
-			{
-				VectorAngles(Vector(dir.x, dir.y, 0), angle);
-				Vector forward, right, up;
-				AngleVectors(angle, &forward, &right, &up);
-				target += right * 50;
-			}
-			dir = target - GetLocalOrigin();
-
-			m_cmd.forwardmove = mp_sprintspeed.GetInt() / 3.5f;
-			//m_cmd.buttons &= IN_SPEED;
-		}
-		else
-		{
-			dir = plballdir * -1;
-
-			/*if (plballdir.Length2D() < 500)
-			{
-				m_cmd.buttons |= IN_ATTACK;
-			}
-			else
-			{*/
-				m_cmd.buttons |= IN_ATTACK2;
-				m_cmd.powershot_strength = 100 * min(1, dir.Length2D() / 1000);
-			//}
-
-			m_cmd.forwardmove = m_Shared.m_flRunSpeed / 3.5f;
-			//m_cmd.buttons &= ~IN_SPEED;
-		}
-	}
-
-	VectorAngles(Vector(dir.x, dir.y, 0), angle);
-	angle[PITCH] = pitch;
-	m_LastAngles = angle;
-	SetLocalAngles( angle );
-	m_cmd.viewangles = angle;
 }

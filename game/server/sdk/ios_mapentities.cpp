@@ -170,7 +170,7 @@ END_DATADESC()
 
 LINK_ENTITY_TO_CLASS( trigger_PenaltyBox, CTriggerPenaltyBox );
 
-extern CBall *CreateBall (const Vector &pos, CSDKPlayer *pOwner);
+extern CBall *CreateBall(const Vector &pos, CSDKPlayer *pCreator);
 
 class CBallStart : public CPointEntity //IOS
 {

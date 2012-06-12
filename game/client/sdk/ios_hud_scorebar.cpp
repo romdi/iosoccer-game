@@ -341,6 +341,7 @@ void CHudScorebar::DoEventSlide()
 
 #include "ehandle.h"
 #include "c_sdk_player.h"
+//#include <Windows.h>
 
 void CHudScorebar::MsgFunc_MatchEvent(bf_read &msg)
 {
@@ -377,4 +378,13 @@ void CHudScorebar::MsgFunc_MatchEvent(bf_read &msg)
 
 	Event_t e = { pEventBox, pEventType, pEventText, gpGlobals->curtime };
 	m_vEventLists[teamIndex].AddToTail(e);
+
+	//FLASHWINFO flashInfo;
+ //   flashInfo.cbSize = sizeof(FLASHWINFO);
+ //   flashInfo.hwnd = FindWindow(NULL, "IOS Source Dev");
+ //   flashInfo.dwFlags = FLASHW_TRAY | FLASHW_TIMERNOFG;
+ //   flashInfo.uCount = 10;
+ //   flashInfo.dwTimeout = 0;
+ //   FlashWindowEx(&flashInfo);
+	//SetWindowText(FindWindow(NULL, "IOS Source Dev"), "LIVE - IOS Source Dev");
 }

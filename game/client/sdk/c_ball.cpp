@@ -181,7 +181,7 @@ int C_Ball::DrawModel(int flags)
 	if (m_bOffsideLinesEnabled)
 	{
 		DrawOffsideLine(m_pOffsideLineMaterial, m_flOffsideLineBallPosY, Vector(0, 0, 1));
-		DrawOffsideLine(m_pOffsideLineMaterial, m_flOffsideLineLastOppPlayerPosY, Vector(1, 1, 0));
+		DrawOffsideLine(m_pOffsideLineMaterial, m_flOffsideLineLastOppPlayerPosY, Vector(0, 1, 0));
 		DrawOffsideLine(m_pOffsideLineMaterial, m_flOffsideLineOffsidePlayerPosY, Vector(1, 0, 0));
 		//DrawOffsideLine(m_pOffsideLineMaterial, m_flOffsideLinePlayerY);
 	}

@@ -387,6 +387,10 @@ public:
 	void CheckBallShield(const Vector &oldPos, Vector &newPos, const Vector &oldVel, Vector &newVel, const QAngle &oldAng, QAngle &newAng);
 	void MoveToTargetPos(Vector &pos, Vector &vel, QAngle &ang);
 
+	bool				IsNormalshooting();
+	bool				IsPowershooting();
+	bool				IsShooting();
+
 protected:
 
 	bool				m_bIsOffside;

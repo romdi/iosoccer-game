@@ -53,6 +53,8 @@ public:
 	void RunPlayerMove( CUserCmd &cmd, float frametime );
 	bool RunMimicCommand(CUserCmd &cmd);
 	void FieldBotJoinTeam();
+
+	virtual void PhysicsSimulate();
 };
 
 // If iTeam or iClass is -1, then a team or class is randomly chosen.

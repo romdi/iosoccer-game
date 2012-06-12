@@ -88,12 +88,26 @@ void CKeeperBot::BotAdjustPos()
 		else if (gpGlobals->curtime >= m_flBotNextShot)
 		{
 			modifier = 0.99f;
-			m_cmd.buttons |= IN_ATTACK2;
-			m_cmd.powershot_strength = 50;
-			VectorAngles(Vector(0, GetTeam()->m_nForward, 0), ang);
-			ang[YAW] += g_IOSRand.RandomFloat(-45, 45);
-			ang[PITCH] = g_IOSRand.RandomFloat(-40, 0);
-			//m_flBotNextShot = gpGlobals->curtime + 1;
+			m_cmd.buttons |= (IN_ATTACK2 | IN_ATTACK);
+			CSDKPlayer *pPl = FindClosestPlayerToSelf(true);
+			if (!pPl)
+				pPl = FindClosestPlayerToSelf(false);
+
+			if (pPl)
+			{
+				m_cmd.powershot_strength = 66;
+				VectorAngles(pPl->GetLocalOrigin() - GetLocalOrigin(), ang);
+				ang[PITCH] = g_IOSRand.RandomFloat(-40, 0);
+				//m_flBotNextShot = gpGlobals->curtime + 1;
+			}
+			else
+			{
+				m_cmd.powershot_strength = g_IOSRand.RandomFloat(50, 100);
+				VectorAngles(Vector(0, GetTeam()->m_nForward, 0), ang);
+				ang[YAW] += g_IOSRand.RandomFloat(-45, 45);
+				ang[PITCH] = g_IOSRand.RandomFloat(-40, 0);
+				//m_flBotNextShot = gpGlobals->curtime + 1;
+			}
 		}
 	}
 	else// if (gpGlobals->curtime >= m_flBotNextShot)
@@ -115,20 +129,20 @@ void CKeeperBot::BotAdjustPos()
 				{
 					m_cmd.buttons |= IN_JUMP;
 					m_cmd.buttons |= Sign(m_vDirToBall.x) == GetTeam()->m_nRight ? IN_MOVERIGHT : IN_MOVELEFT;
-					m_cmd.buttons |= IN_ATTACK2;
+					m_cmd.buttons |= (IN_ATTACK2 | IN_ATTACK);
 					diving = true;
 				}
 				else if (m_vDirToBall.z > 100 && m_vDirToBall.z < 150 && m_vDirToBall.Length2D() < 100)
 				{
 					m_cmd.buttons |= IN_JUMP;
-					m_cmd.buttons |= IN_ATTACK2;
+					m_cmd.buttons |= (IN_ATTACK2 | IN_ATTACK);
 					diving = true;
 				}
 				else if (abs(m_vDirToBall.y) > 50 && abs(m_vDirToBall.y) < 200 && m_vDirToBall.z < 100 && abs(m_vDirToBall.x) < 50 && m_vBallVel.Length() < 200 && pClosest != this)
 				{
 					m_cmd.buttons |= IN_JUMP;
 					m_cmd.buttons |= Sign(m_vLocalDirToBall.x) == GetTeam()->m_nForward ? IN_FORWARD : IN_BACK;
-					m_cmd.buttons |= IN_ATTACK2;
+					m_cmd.buttons |= (IN_ATTACK2 | IN_ATTACK);
 					diving = true;
 				}
 			}
@@ -137,9 +151,27 @@ void CKeeperBot::BotAdjustPos()
 			{
 				if (m_vDirToBall.Length2D() < 50)
 				{
-					ang[YAW] += g_IOSRand.RandomFloat(-45, 45);
-					ang[PITCH] = g_IOSRand.RandomFloat(-40, 0);
-					m_cmd.buttons |= IN_ATTACK2;
+					modifier = 0.99f;
+					m_cmd.buttons |= (IN_ATTACK2 | IN_ATTACK);
+					CSDKPlayer *pPl = FindClosestPlayerToSelf(true);
+					if (!pPl)
+						pPl = FindClosestPlayerToSelf(false);
+
+					if (pPl)
+					{
+						m_cmd.powershot_strength = 66;
+						VectorAngles(pPl->GetLocalOrigin() - GetLocalOrigin(), ang);
+						ang[PITCH] = g_IOSRand.RandomFloat(-40, 0);
+						//m_flBotNextShot = gpGlobals->curtime + 1;
+					}
+					else
+					{
+						m_cmd.powershot_strength = g_IOSRand.RandomFloat(50, 100);
+						VectorAngles(Vector(0, GetTeam()->m_nForward, 0), ang);
+						ang[YAW] += g_IOSRand.RandomFloat(-45, 45);
+						ang[PITCH] = g_IOSRand.RandomFloat(-40, 0);
+						//m_flBotNextShot = gpGlobals->curtime + 1;
+					}
 				}
 				else
 					modifier = 0.99f;
@@ -187,7 +219,7 @@ void CKeeperBot::BotAdjustPos()
 
 CSDKPlayer *CKeeperBot::FindClosestPlayerToBall()
 {
-	float closestDist = FLT_MAX;
+	float shortestDist = FLT_MAX;
 	CSDKPlayer *pClosest = NULL;
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
@@ -198,9 +230,35 @@ CSDKPlayer *CKeeperBot::FindClosestPlayerToBall()
 
 		float dist = (m_vBallPos - pPl->GetLocalOrigin()).Length2D();
 
-		if (dist < closestDist)
+		if (dist < shortestDist)
 		{
-			closestDist = dist;
+			shortestDist = dist;
+			pClosest = pPl;
+		}
+	}
+
+	return pClosest;
+}
+
+CSDKPlayer *CKeeperBot::FindClosestPlayerToSelf(bool teammatesOnly)
+{
+	float shortestDist = FLT_MAX;
+	CSDKPlayer *pClosest = NULL;
+
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+		if (!CSDKPlayer::IsOnField(pPl) || pPl == this)
+			continue;
+
+		if (teammatesOnly && pPl->GetTeamNumber() != GetTeamNumber())
+			continue;
+
+		float dist = (pPl->GetLocalOrigin() - GetLocalOrigin()).Length2D();
+
+		if (dist < shortestDist)
+		{
+			shortestDist = dist;
 			pClosest = pPl;
 		}
 	}
