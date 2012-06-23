@@ -1319,12 +1319,12 @@ void CSDKPlayer::ResetFlags()
 
 bool CSDKPlayer::IsNormalshooting()
 {
-	return (m_nButtons & IN_ATTACK) && !(m_nButtons & IN_ATTACK2);
+	return (m_nButtons & IN_ATTACK) != 0 && !IsPowershooting();
 }
 
 bool CSDKPlayer::IsPowershooting()
 {
-	return (m_nButtons & IN_ATTACK) && (m_nButtons & IN_ATTACK2);
+	return (m_nButtons & IN_ATTACK2) != 0 || (m_nButtons & IN_ALT1) != 0;
 }
 
 bool CSDKPlayer::IsShooting()

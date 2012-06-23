@@ -31,9 +31,6 @@ static void OnPowershotStrengthChange(IConVar *var, const char *pOldValue, float
  
 ConVar cl_powershot_strength("cl_powershot_strength", "50", 0, "Powershot Strength (0-100)", true, 0, true, 100, OnPowershotStrengthChange );
 ConVar cl_powershot_fixed_strength("cl_powershot_fixed_strength", "50", FCVAR_ARCHIVE, "Powershot Fixed Strength (0-100)", true, 0, true, 100, OnPowershotStrengthChange );
-ConVar cl_chargedshot_duration("cl_chargedshot_duration", "0.5", FCVAR_ARCHIVE);
-ConVar hud_show_bar("hud_show_bar", "1", FCVAR_ARCHIVE);
-//ConVar hud_show_circle("hud_show_circle", "1", FCVAR_ARCHIVE);
 
 //extern ConVar cl_powershot_strength;
 
@@ -213,45 +210,6 @@ void CHudPowershotBar::Paint()
 	if ( !pPlayer )
 		return;
 
-	if (pPlayer->m_nButtons & IN_ATTACK2)
-	{
-		if (pPlayer->m_nButtons & IN_ATTACK)
-		{
-			m_bIsChargingShot = false;
-			m_bIsHoldingShot = true;
-		}
-		else if (!m_bIsHoldingShot)
-		{
-			if (m_bIsChargingShot)
-			{
-				float power = (gpGlobals->curtime - m_flChargingStartTime) / cl_chargedshot_duration.GetFloat();
-				cl_powershot_strength.SetValue(power * 100);
-			}
-			else
-			{
-				cl_powershot_strength.SetValue(0);
-				m_nChargingStartPower = 0;
-				m_bIsChargingShot = true;
-				m_flChargingStartTime = gpGlobals->curtime;
-			}
-		}
-	}
-	else
-	{
-		if (m_bIsChargingShot)
-		{
-			m_bIsChargingShot = false;
-			cl_powershot_strength.SetValue(0);
-		}
-	}
-
-	if ((!(pPlayer->m_nButtons & IN_ATTACK) || !(pPlayer->m_nButtons & IN_ATTACK)) && m_bIsHoldingShot)
-	{
-		cl_powershot_strength.SetValue(0);
-		if (!(pPlayer->m_nButtons & IN_ATTACK2))
-			m_bIsHoldingShot = false;
-	}
-
 	//float stamina = Lerp(0.25f * gpGlobals->frametime, m_flOldStamina, pPlayer->m_Shared.GetStamina());
 
 	float stamina = pPlayer->m_Shared.GetStamina();
@@ -289,10 +247,6 @@ void CHudPowershotBar::Paint()
 	m_pStaminaIndicator->SetBgColor(bgColor);
 
 	m_pPowershotIndicator->SetY(BAR_PADDING + m_pPowershotIndicator->GetTall() + (1 - cl_powershot_strength.GetInt() / 100.0f) * (BAR_HEIGHT - 2 * BAR_PADDING - 3 * m_pPowershotIndicator->GetTall()));
-
-	m_pStaminaPanel->SetPaintBackgroundEnabled(hud_show_bar.GetBool());
-	m_pStaminaIndicator->SetVisible(hud_show_bar.GetBool());
-	m_pPowershotIndicator->SetVisible(hud_show_bar.GetBool());
 
 	m_pSpinIndicators[0]->SetVisible(pPlayer->m_nButtons & IN_TOPSPIN);
 	m_pSpinIndicators[1]->SetVisible(pPlayer->m_nButtons & IN_BACKSPIN);
