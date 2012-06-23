@@ -326,16 +326,11 @@ void CBall::VPhysicsUpdate(IPhysicsObject *pPhysics)
 		Vector vel, worldAngImp;
 		AngularImpulse angImp;
 		m_pPhys->GetVelocity(&vel, &angImp);
-		EntityToWorldSpace(angImp, &worldAngImp);
+		VectorRotate(angImp, EntityToWorldTransform(), worldAngImp);
 		Vector magnusDir = worldAngImp.Cross(vel);
 
-		float length = vel.Length();
-		if (length > 0)
-		{
+		if (vel.Length() > 0)
 			vel += magnusDir * 1e-6 * sv_ball_curve.GetFloat() * gpGlobals->frametime;
-			//m_vVel.NormalizeInPlace();
-			//m_vVel *= length;
-		}
 
 		VPhysicsGetObject()->SetVelocity(&vel, &angImp);
 	}
