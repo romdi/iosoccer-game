@@ -191,6 +191,7 @@ public:
 	CSDKPlayer		*GetCurrentPlayer() { return m_pPl; }
 
 	void			SetCreator(CSDKPlayer *pCreator);
+	void			EnablePlayerCollisions(bool enable);
 
 private:
 
@@ -283,6 +284,8 @@ private:
 	MatchEventPlayerInfo m_MatchEventPlayerInfo;
 
 	CHandle<CSDKPlayer> m_pCreator;
+
+	float			m_flNextShot;
 };
 
 #endif

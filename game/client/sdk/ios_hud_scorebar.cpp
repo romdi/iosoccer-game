@@ -74,6 +74,8 @@ private:
 	Panel *m_pEventBars[2];
 	Panel *m_pTeamColors[2][2];
 	CUtlVector<Event_t> m_vEventLists[2];
+	Label *m_pPlayers[2];
+	Label *m_pEvent;
 };
 
 DECLARE_HUDELEMENT( CHudScorebar );
@@ -100,6 +102,11 @@ DECLARE_HUD_MESSAGE(CHudScorebar, MatchEvent);
 #define WIDTH_TEAMBAR			(HPADDING + WIDTH_TEAM + WIDTH_MARGIN + WIDTH_TEAMCOLOR + WIDTH_MARGIN + WIDTH_SCORE + HPADDING)
 #define WIDTH_TIMEBAR			(HPADDING + WIDTH_MATCHSTATE + WIDTH_MARGIN + WIDTH_TIME + HPADDING)
 
+#define PLAYER_WIDTH			300
+#define PLAYER_HEIGHT			200
+#define EVENT_WIDTH				300
+#define EVENT_HEIGHT			200
+
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
@@ -123,7 +130,11 @@ CHudScorebar::CHudScorebar( const char *pElementName ) : BaseClass(NULL, "HudSco
 		m_pTeamColors[i][1] = new Panel(m_pTeamBars[i], VarArgs("TeamColor%d", i));
 		m_pScores[i] = new Label(m_pTeamBars[i], VarArgs("ScoreLabel%d", i), "");
 		m_pEventBars[i] = new Label(this, VarArgs("ScoreLabel%d", i), "");
+
+		m_pPlayers[i] = new Label(this, "", "");
 	}
+
+	m_pEvent = new Label(this, "", "");
 }
 
 void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
@@ -131,7 +142,7 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 	BaseClass::ApplySchemeSettings( pScheme );
 	
 	SetPos( 30, 30);
-	SetSize( ScreenWidth() - 30, 200 );
+	SetSize( ScreenWidth() - 30, 500 );
  	//SetPaintBackgroundType (2); // Rounded corner box
  	//SetPaintBackgroundEnabled(true);
 	//SetBgColor( Color( 0, 0, 255, 255 ) );
@@ -202,7 +213,19 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 		m_pEventBars[i]->SetPaintBackgroundType(2);
 		m_pEventBars[i]->SetBgColor(bgColorTransparent);
 		m_pEventBars[i]->SetZPos(-1);
+
+		m_pPlayers[i]->SetBounds((GetWide() / 2 - EVENT_WIDTH / 2 - PLAYER_WIDTH) + i * (PLAYER_WIDTH + EVENT_WIDTH), 0, PLAYER_WIDTH, PLAYER_HEIGHT);
+		m_pPlayers[i]->SetContentAlignment(Label::a_north);
+		m_pPlayers[i]->SetFont(pScheme->GetFont("IOSEvent"));
+		m_pPlayers[i]->SetFgColor(fgColor);
+		m_pPlayers[i]->SetVisible(false);
 	}
+
+	m_pEvent->SetBounds(GetWide() / 2 - EVENT_WIDTH / 2, 0, EVENT_WIDTH, EVENT_HEIGHT);
+	m_pEvent->SetContentAlignment(Label::a_north);
+	m_pEvent->SetFont(pScheme->GetFont("IOSEvent"));
+	m_pEvent->SetFgColor(fgColor);
+	m_pEvent->SetVisible(false);
 }
 
 //-----------------------------------------------------------------------------
@@ -378,6 +401,9 @@ void CHudScorebar::MsgFunc_MatchEvent(bf_read &msg)
 
 	Event_t e = { pEventBox, pEventType, pEventText, gpGlobals->curtime };
 	m_vEventLists[teamIndex].AddToTail(e);
+
+	m_pEvent->SetText(g_szMatchEventNames[eventType]);
+	m_pPlayers[teamIndex]->SetText(playerName);
 
 	//FLASHWINFO flashInfo;
  //   flashInfo.cbSize = sizeof(FLASHWINFO);
