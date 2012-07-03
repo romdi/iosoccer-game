@@ -53,7 +53,7 @@ LINK_ENTITY_TO_CLASS(ios_keeperbot, CKeeperBot);
 void CKeeperBot::BotThink()
 {
 	// Prevent bot from running all the way back to his goal on penalties
-	if (SDKGameRules()->State_Get() != MATCH_PENALTIES || (GetFlags() & FL_NO_Y_MOVEMENT))
+	if (SDKGameRules()->State_Get() != MATCH_PENALTIES || (GetTeam()->m_vPlayerSpawns[0] - GetLocalOrigin()).Length2D() < 1000)
 		BotAdjustPos();
 }
 

@@ -189,6 +189,7 @@ public:
 	inline ball_state_t State_Get( void ) { return m_eBallState; }
 
 	CSDKPlayer		*GetCurrentPlayer() { return m_pPl; }
+	CSDKPlayer		*GetCurrentOtherPlayer() { return m_pOtherPl; }
 
 	void			SetCreator(CSDKPlayer *pCreator);
 	void			EnablePlayerCollisions(bool enable);
@@ -235,7 +236,7 @@ private:
 	bool			DoHeader();
 	void			SetBallSpin();
 	float			GetPitchModifier();
-	float			GetPowershotModifier();
+	float			GetPowershotStrength(int minStrength, int maxStrength);
 	void			UpdateCarrier();
 	void			Kicked(body_part_t bodyPart);
 	void			Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart);
