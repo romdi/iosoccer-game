@@ -187,7 +187,7 @@ void CTeamMenu::PerformLayout()
 		//m_pTeamNames[i]->SetZPos(1);
 
 		m_pSpectateButton->SetBounds(GetWide() - SPECBUTTON_WIDTH - SPECBUTTON_MARGIN, GetTall() - SPECBUTTON_HEIGHT - SPECBUTTON_MARGIN, SPECBUTTON_WIDTH, SPECBUTTON_HEIGHT);
-		m_pSpectateButton->SetCommand(VarArgs("jointeam %d 1", TEAM_SPECTATOR));
+		m_pSpectateButton->SetCommand(VarArgs("jointeam %d 0", TEAM_SPECTATOR));
 		m_pSpectateButton->AddActionSignalTarget(this);
 		m_pSpectateButton->SetDefaultColor(Color(0, 0, 0, 255), Color(200, 200, 200, 255));
 		m_pSpectateButton->SetArmedColor(Color(50, 50, 50, 255), Color(150, 150, 150, 255));

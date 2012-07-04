@@ -56,12 +56,14 @@ extern ConVar
 	mp_shield_corner_radius,
 	mp_shield_kickoff_radius,
 	mp_shield_border,
+	mp_shield_liberal_positioning,
 	mp_field_border,
 	mp_offside,
 	mp_joindelay,
 	mp_maxplayers,
 	mp_weather,
-	mp_teamlist;
+	mp_teamlist,
+	mp_powershot_fixed_strength;
 
 extern ConVar
 	r_winddir,

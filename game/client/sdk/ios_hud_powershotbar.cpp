@@ -17,6 +17,7 @@
 #include <igameresources.h>
 #include "c_baseplayer.h"
 #include "in_buttons.h"
+#include "sdk_gamerules.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -30,7 +31,7 @@ static void OnPowershotStrengthChange(IConVar *var, const char *pOldValue, float
 }
  
 ConVar cl_powershot_strength("cl_powershot_strength", "50", 0, "Powershot Strength (0-100)", true, 0, true, 100, OnPowershotStrengthChange );
-ConVar cl_powershot_fixed_strength("cl_powershot_fixed_strength", "50", FCVAR_ARCHIVE, "Powershot Fixed Strength (0-100)", true, 0, true, 100, OnPowershotStrengthChange );
+//ConVar cl_powershot_fixed_strength("cl_powershot_fixed_strength", "50", FCVAR_ARCHIVE, "Powershot Fixed Strength (0-100)", true, 0, true, 100, OnPowershotStrengthChange );
 
 //extern ConVar cl_powershot_strength;
 
@@ -80,6 +81,7 @@ protected:
 	Panel *m_pStaminaPanel;
 	Panel *m_pStaminaIndicator;
 	Panel *m_pPowershotIndicator;
+	Panel *m_pFixedPowershotIndicator;
 	Panel *m_pSpinIndicators[2];
 	float m_flOldStamina;
 	float m_flNextUpdate;
@@ -106,6 +108,7 @@ CHudPowershotBar::CHudPowershotBar( const char *pElementName ) : CHudElement( pE
 
 	m_pStaminaPanel = new Panel(this, "StaminaPanel");
 	m_pStaminaIndicator = new Panel(m_pStaminaPanel, "StaminaIndicator");
+	m_pFixedPowershotIndicator = new Panel(m_pStaminaPanel, "FixedPowershotIndicator");
 	m_pPowershotIndicator = new Panel(m_pStaminaPanel, "PowershotIndicator");
 	for (int i = 0; i < 2; i++)
 		m_pSpinIndicators[i] = new Panel(this, "");
@@ -122,8 +125,9 @@ CHudPowershotBar::CHudPowershotBar( const char *pElementName ) : CHudElement( pE
 #define BAR_MARGIN 30
 #define BAR_PADDING 2
 #define PS_INDICATOR_HEIGHT 9
-#define SPIN_MARGIN 5
-#define SPIN_HEIGHT 10
+#define FIXED_PS_INDICATOR_HEIGHT 3
+#define SPIN_MARGIN 7
+#define SPIN_HEIGHT 9
 
 void CHudPowershotBar::ApplySchemeSettings( IScheme *scheme )
 {
@@ -145,11 +149,15 @@ void CHudPowershotBar::ApplySchemeSettings( IScheme *scheme )
 	m_pPowershotIndicator->SetBgColor(Color(255, 255, 255, 255));
 	m_pPowershotIndicator->SetBounds(BAR_PADDING, BAR_HEIGHT / 2 - PS_INDICATOR_HEIGHT / 2, BAR_WIDTH - 2 * BAR_PADDING, PS_INDICATOR_HEIGHT);
 
+ 	m_pFixedPowershotIndicator->SetPaintBackgroundEnabled(true);
+	m_pFixedPowershotIndicator->SetBgColor(Color(0, 0, 0, 255));
+	m_pFixedPowershotIndicator->SetBounds(BAR_PADDING, BAR_HEIGHT / 2 - FIXED_PS_INDICATOR_HEIGHT / 2, BAR_WIDTH - 2 * BAR_PADDING, FIXED_PS_INDICATOR_HEIGHT);
+
 	for (int i = 0; i < 2; i++)
 	{
 		m_pSpinIndicators[i]->SetPaintBackgroundEnabled(true);
-		m_pSpinIndicators[i]->SetBgColor(Color(0, 0, 255, 255));
-		m_pSpinIndicators[i]->SetBounds(SPIN_MARGIN, i * (SPIN_HEIGHT + BAR_HEIGHT), BAR_WIDTH - 2 * SPIN_MARGIN, SPIN_HEIGHT);
+		m_pSpinIndicators[i]->SetBgColor(Color(255, 0, 0, 255));
+		m_pSpinIndicators[i]->SetBounds(SPIN_MARGIN, SPIN_HEIGHT + BAR_PADDING + i * (BAR_HEIGHT - 2 * BAR_PADDING - SPIN_HEIGHT), BAR_WIDTH - 2 * SPIN_MARGIN, SPIN_HEIGHT);
 		m_pSpinIndicators[i]->SetVisible(false);
 	}
 }
@@ -242,11 +250,16 @@ void CHudPowershotBar::Paint()
 	if (pPlayer->GetFlags() & FL_REMOTECONTROLLED)
 		bgColor = Color(255, 255, 255, 255);
 	else
-		bgColor = Color(255 * (1 - relStamina), 255 * relStamina, 0, 255);
+	{
+		//bgColor = Color(255 * (1 - relStamina), 255 * relStamina, 0, 255);
+		bgColor = Color(0, 255, 0, 255);
+	}
 
 	m_pStaminaIndicator->SetBgColor(bgColor);
 
 	m_pPowershotIndicator->SetY(BAR_PADDING + m_pPowershotIndicator->GetTall() + (1 - cl_powershot_strength.GetInt() / 100.0f) * (BAR_HEIGHT - 2 * BAR_PADDING - 3 * m_pPowershotIndicator->GetTall()));
+
+	m_pFixedPowershotIndicator->SetY(BAR_PADDING + m_pPowershotIndicator->GetTall() + (1 - mp_powershot_fixed_strength.GetInt() / 100.0f) * (BAR_HEIGHT - 2 * BAR_PADDING - 3 * m_pFixedPowershotIndicator->GetTall()));
 
 	m_pSpinIndicators[0]->SetVisible(pPlayer->m_nButtons & IN_TOPSPIN);
 	m_pSpinIndicators[1]->SetVisible(pPlayer->m_nButtons & IN_BACKSPIN);

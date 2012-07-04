@@ -45,8 +45,10 @@ enum body_part_t
 
 enum foul_type_t
 {
-	FOUL_NONE = -1,
-	FOUL_NORMAL = 0,
+	FOUL_NONE = 0,
+	FOUL_NORMAL_NO_CARD,
+	FOUL_NORMAL_YELLOW_CARD,
+	FOUL_NORMAL_RED_CARD,
 	FOUL_OFFSIDE,
 	FOUL_DOUBLETOUCH,
 	FOUL_TIMEWASTING
@@ -192,7 +194,9 @@ public:
 	CSDKPlayer		*GetCurrentOtherPlayer() { return m_pOtherPl; }
 
 	void			SetCreator(CSDKPlayer *pCreator);
+	CSDKPlayer		*GetHoldingPlayer() { return m_pHoldingPlayer; }
 	void			EnablePlayerCollisions(bool enable);
+	void			RemoveFromPlayerHands(CSDKPlayer *pPl);
 
 private:
 
@@ -285,6 +289,7 @@ private:
 	MatchEventPlayerInfo m_MatchEventPlayerInfo;
 
 	CHandle<CSDKPlayer> m_pCreator;
+	CHandle<CSDKPlayer> m_pHoldingPlayer;
 
 	float			m_flNextShot;
 };

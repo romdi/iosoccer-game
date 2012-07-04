@@ -244,6 +244,7 @@ CSDKPlayer::CSDKPlayer()
 	m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
 	m_nInPenBoxOfTeam = TEAM_INVALID;
 	m_ePenaltyState = PENALTY_NONE;
+	m_pHoldingBall = NULL;
 }
 
 
@@ -433,6 +434,10 @@ void CSDKPlayer::ChangeTeamPos(int team, int pos, bool instantly /*= false*/)
 				m_flNextJoin = gpGlobals->curtime + mp_joindelay.GetFloat();
 
 			ChangeTeam(TEAM_SPECTATOR);
+		}
+		else
+		{
+			m_nTeamToJoin = TEAM_INVALID;
 		}
 	}
 	else
@@ -1028,7 +1033,8 @@ void CSDKPlayer::SetPosInsideShield(Vector pos, bool holdAtTargetPos)
 	case SHIELD_GOALKICK:
 	case SHIELD_CORNER:
 	case SHIELD_FREEKICK:
-		GetTargetPos(GetLocalOrigin(), m_vTargetPos.GetForModify());
+		if (mp_shield_liberal_positioning.GetBool())
+			GetTargetPos(GetLocalOrigin(), m_vTargetPos.GetForModify());
 		break;
 	}
 
@@ -1307,13 +1313,9 @@ void CSDKPlayer::ResetFlags()
 		RemoveSolidFlags(FSOLID_NOT_SOLID);
 	}
 
-	if (GetTeamPosition() == 1)
+	if (GetTeamPosition() == 1 && m_nBody == MODEL_KEEPER_AND_BALL)
 	{
-		if (m_nBody == MODEL_KEEPER_AND_BALL)
-		{
-			m_nBody = MODEL_KEEPER;
-			DoServerAnimationEvent(PLAYERANIMEVENT_CARRY_END);
-		}
+		m_nBody = MODEL_KEEPER;
 	}
 }
 

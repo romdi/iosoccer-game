@@ -990,7 +990,7 @@ ConCommand sv_restart( "sv_restart", CC_SV_Restart, "Restart game", 0 );
 
 void CSDKGameRules::StartPenalties()
 {
-	SetLeftSideTeam(m_nFirstHalfLeftSideTeam);
+	//SetLeftSideTeam(g_IOSRand.RandomInt(TEAM_A, TEAM_B));
 	GetBall()->ResetMatch();
 	State_Transition(MATCH_PENALTIES);
 }
@@ -1043,7 +1043,7 @@ ConVar mp_weather("mp_weather", "0", FCVAR_NOTIFY|FCVAR_REPLICATED, "Weather (0 
 
 ConVar mp_showstatetransitions( "mp_showstatetransitions", "1", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Show game state transitions." );
 
-ConVar mp_timelimit_match( "mp_timelimit_match", "10", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_ARCHIVE, "match duration in minutes without breaks (90 is real time)" );
+ConVar mp_timelimit_match( "mp_timelimit_match", "10", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_ARCHIVE, "match duration in minutes without breaks (90 is real time)", true, 1, true, 90 );
 ConVar mp_timelimit_warmup( "mp_timelimit_warmup", "0.5", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_ARCHIVE, "time before match start" );
 ConVar mp_timelimit_cooldown( "mp_timelimit_cooldown", "0.5", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_ARCHIVE, "time after match end" );
 ConVar mp_timelimit_halftime( "mp_timelimit_halftime", "0.5", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_ARCHIVE, "half time duration" );
@@ -1059,11 +1059,14 @@ ConVar mp_shield_freekick_radius("mp_shield_freekick_radius", "360", FCVAR_NOTIF
 ConVar mp_shield_corner_radius("mp_shield_corner_radius", "360", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_ARCHIVE);
 ConVar mp_shield_kickoff_radius("mp_shield_kickoff_radius", "360", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_ARCHIVE);
 ConVar mp_shield_border("mp_shield_border", "20", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_ARCHIVE);
+ConVar mp_shield_liberal_positioning("mp_shield_liberal_positioning", "0", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_ARCHIVE);
 
 ConVar mp_field_border("mp_field_border", "150", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_ARCHIVE);
 
 ConVar mp_offside("mp_offside", "1", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_ARCHIVE);
 ConVar mp_joindelay("mp_joindelay", "3", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_ARCHIVE);
+
+ConVar mp_powershot_fixed_strength("mp_powershot_fixed_strength", "60", FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_ARCHIVE);
 
 static void OnMaxPlayersChange(IConVar *var, const char *pOldValue, float flOldValue)
 {
@@ -1130,13 +1133,18 @@ void CSDKGameRules::State_Think()
 {
 	if ( m_pCurStateInfo && m_pCurStateInfo->pfnThink )
 	{
+		CalcBallZone();
+
 		if (m_pCurStateInfo->m_MinDurationConVar == NULL)
 			m_flStateTimeLeft = 0.0f;
 		else
+		{
 			m_flStateTimeLeft = (m_flStateEnterTime + m_pCurStateInfo->m_MinDurationConVar->GetFloat() * 60 / m_pCurStateInfo->m_flMinDurationDivisor) - gpGlobals->curtime;
-		
-		CalcBallZone();
-	
+
+			if (!IsIntermissionState())
+				m_flStateTimeLeft += m_flInjuryTime + (m_nAnnouncedInjuryTime + abs(m_nBallZone) < 50 ? 0 : 10) * 60 / (90.0f / mp_timelimit_match.GetFloat());
+		}
+
 		(this->*m_pCurStateInfo->pfnThink)();
 	}
 }
@@ -1205,7 +1213,7 @@ void CSDKGameRules::State_FIRST_HALF_Think()
 	{
 		m_nAnnouncedInjuryTime = g_IOSRand.RandomInt(1, 4);
 	}
-	else if (m_flStateTimeLeft + m_flInjuryTime + (m_nAnnouncedInjuryTime + abs(m_nBallZone) < 50 ? 0 : 3) / (90.0f / mp_timelimit_match.GetFloat()) <= 0)
+	else if (m_flStateTimeLeft <= 0)
 	{
 		State_Transition(MATCH_HALFTIME);
 	}
@@ -1236,7 +1244,7 @@ void CSDKGameRules::State_SECOND_HALF_Think()
 	{
 		m_nAnnouncedInjuryTime = g_IOSRand.RandomInt(1, 4);
 	}
-	else if (m_flStateTimeLeft + m_flInjuryTime + (m_nAnnouncedInjuryTime + abs(m_nBallZone) < 50 ? 0 : 3) / (90.0f / mp_timelimit_match.GetFloat()) <= 0)
+	else if (m_flStateTimeLeft <= 0)
 	{
 		if (mp_extratime.GetBool() && GetGlobalTeam(TEAM_A)->GetGoals() == GetGlobalTeam(TEAM_B)->GetGoals())
 			State_Transition(MATCH_EXTRATIME_INTERMISSION);
@@ -1274,7 +1282,7 @@ void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Think()
 	{
 		m_nAnnouncedInjuryTime = g_IOSRand.RandomInt(1, 4);
 	}
-	else if (m_flStateTimeLeft + m_flInjuryTime + (m_nAnnouncedInjuryTime + abs(m_nBallZone) < 50 ? 0 : 3) / (90.0f / mp_timelimit_match.GetFloat()) <= 0)
+	else if (m_flStateTimeLeft <= 0)
 	{
 		State_Transition(MATCH_EXTRATIME_HALFTIME);
 	}
@@ -1307,7 +1315,7 @@ void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Think()
 	{
 		m_nAnnouncedInjuryTime = g_IOSRand.RandomInt(1, 4);
 	}
-	else if (m_flStateTimeLeft + m_flInjuryTime + (m_nAnnouncedInjuryTime + abs(m_nBallZone) < 50 ? 0 : 3) / (90.0f / mp_timelimit_match.GetFloat()) <= 0)
+	else if (m_flStateTimeLeft <= 0)
 	{
 		if (mp_penalties.GetBool() && GetGlobalTeam(TEAM_A)->GetGoals() == GetGlobalTeam(TEAM_B)->GetGoals())
 			State_Transition(MATCH_PENALTIES_INTERMISSION);
@@ -1334,13 +1342,13 @@ void CSDKGameRules::State_PENALTIES_Enter()
 {
 	m_flNextPenalty = -1;
 	m_nPenaltyTakingTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
-	SetLeftSideTeam(GetGlobalTeam(m_nPenaltyTakingTeam)->GetOppTeamNumber());
+	SetLeftSideTeam(g_IOSRand.RandomInt(TEAM_A, TEAM_B));
 	GetBall()->SetPenaltyState(PENALTY_NONE);
 }
 
 void CSDKGameRules::State_PENALTIES_Think()
 {
-	if (m_flStateTimeLeft + m_flInjuryTime <= 0)
+	if (m_flStateTimeLeft <= 0)
 	{
 		State_Transition(MATCH_COOLDOWN);
 		return;
@@ -1356,8 +1364,9 @@ void CSDKGameRules::State_PENALTIES_Think()
 		{
 			if (GetBall()->GetPenaltyState() == PENALTY_KICKED)
 			{
+				GetBall()->State_Transition(BALL_NORMAL);
 				m_nPenaltyTakingTeam = GetGlobalTeam(m_nPenaltyTakingTeam)->GetOppTeamNumber();
-				SetLeftSideTeam(GetGlobalTeam(m_nPenaltyTakingTeam)->GetOppTeamNumber());
+				SetLeftSideTeam(GetGlobalTeam(GetLeftSideTeam())->GetOppTeamNumber());
 			}
 
 			GetBall()->SetPenaltyState(PENALTY_NONE);

@@ -384,12 +384,14 @@ public:
 	CBall				*GetPlayerBall() { return m_pPlayerBall; }
 	void				ChangeTeamPos(int team, int pos, bool instantly = false);
 
-	void CheckBallShield(const Vector &oldPos, Vector &newPos, const Vector &oldVel, Vector &newVel, const QAngle &oldAng, QAngle &newAng);
-	void MoveToTargetPos(Vector &pos, Vector &vel, QAngle &ang);
+	void				CheckBallShield(const Vector &oldPos, Vector &newPos, const Vector &oldVel, Vector &newVel, const QAngle &oldAng, QAngle &newAng);
+	void				MoveToTargetPos(Vector &pos, Vector &vel, QAngle &ang);
 
 	bool				IsNormalshooting();
 	bool				IsPowershooting();
 	bool				IsShooting();
+
+	CHandle<CBall> m_pHoldingBall;
 
 protected:
 
