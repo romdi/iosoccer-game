@@ -37,10 +37,12 @@ public:
 	const CSteamID *m_SteamID;
 	int m_nYellowCards;
 	int m_nRedCards;
-	float m_flNextJoin;
+	float m_flRemainingCardBanTime;
+
+	CPlayerPersistentData(float remainingCardBanTime) : m_flRemainingCardBanTime(remainingCardBanTime) {}
 
 //	CPlayerPersistentData(const CSteamID *steamID);
-	static void RetrievePlayerData(CSDKPlayer *pPl);
+	static void LoadPlayerData(CSDKPlayer *pPl);
 	static void SavePlayerData(CSDKPlayer *pPl);
 	static CUtlVector<CPlayerPersistentData *> m_PlayerPersistentData;
 };

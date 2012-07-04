@@ -1336,7 +1336,7 @@ bool CSDKPlayer::IsShooting()
 
 CUtlVector<CPlayerPersistentData *> CPlayerPersistentData::m_PlayerPersistentData;
 
-void CPlayerPersistentData::RetrievePlayerData(CSDKPlayer *pPl)
+void CPlayerPersistentData::LoadPlayerData(CSDKPlayer *pPl)
 {
 	const CSteamID *steamID = engine->GetClientSteamID(pPl->edict());
 
@@ -1345,9 +1345,11 @@ void CPlayerPersistentData::RetrievePlayerData(CSDKPlayer *pPl)
 		if (m_PlayerPersistentData[i]->m_SteamID != steamID)
 			continue;
 
-		pPl->m_YellowCards = m_PlayerPersistentData[i]->m_nYellowCards;
-		pPl->m_RedCards = m_PlayerPersistentData[i]->m_nRedCards;
-		pPl->m_flNextJoin = m_PlayerPersistentData[i]->m_flNextJoin;
+		//pPl->m_YellowCards = m_PlayerPersistentData[i]->m_nYellowCards;
+		//pPl->m_RedCards = m_PlayerPersistentData[i]->m_nRedCards;
+		if (m_PlayerPersistentData[i]->m_flRemainingCardBanTime > 0)
+			pPl->m_flNextJoin = gpGlobals->curtime + m_PlayerPersistentData[i]->m_flRemainingCardBanTime;
+
 		break;
 	}
 }
@@ -1368,12 +1370,12 @@ void CPlayerPersistentData::SavePlayerData(CSDKPlayer *pPl)
 
 	if (!data)
 	{
-		data = new CPlayerPersistentData;
+		data = new CPlayerPersistentData(0);
 		m_PlayerPersistentData.AddToTail(data);
 	}
 
 	data->m_SteamID = engine->GetClientSteamID(pPl->edict());
-	data->m_nYellowCards = pPl->m_YellowCards;
-	data->m_nRedCards = pPl->m_RedCards;
-	data->m_flNextJoin = pPl->m_flNextJoin;
+	//data->m_nYellowCards = pPl->m_YellowCards;
+	//data->m_nRedCards = pPl->m_RedCards;
+	data->m_flRemainingCardBanTime = max(0, pPl->m_flNextJoin - gpGlobals->curtime);
 }

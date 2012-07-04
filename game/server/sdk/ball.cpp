@@ -335,8 +335,8 @@ bool CBall::CreateVPhysics()
 
 void CBall::VPhysicsUpdate(IPhysicsObject *pPhysics)
 {
-	if (!SDKGameRules()->IsIntermissionState())
-		CReplayManager::GetInstance()->CheckReplay();
+	//if (!SDKGameRules()->IsIntermissionState())
+	//	CReplayManager::GetInstance()->CheckReplay();
 
 	bool ignoreTriggers = m_bIgnoreTriggers;
 
@@ -598,12 +598,6 @@ void CBall::State_Think()
 		State_Enter(nextState);
 	}
 
-	//// FIXME: Temporary hack to avoid touching and triggering between states
-	//if (m_eNextState != BALL_NOSTATE && m_flStateLeaveTime > gpGlobals->curtime)
-	//{
-	//	return;
-	//}
-
 	if (m_pCurStateInfo && m_pCurStateInfo->m_eBallState != BALL_NORMAL && m_eNextState == BALL_NOSTATE && m_flStateTimelimit != -1 && gpGlobals->curtime >= m_flStateTimelimit)
 	{
 		if (CSDKPlayer::IsOnField(m_pPl))
@@ -656,7 +650,7 @@ void CBall::State_NORMAL_Think()
 	for (int ignoredPlayerBits = 0;;)
 	{
 		if (SDKGameRules()->State_Get() == MATCH_PENALTIES && m_ePenaltyState == PENALTY_KICKED)
-			m_pPl = FindNearestPlayer(m_nFoulingTeam, FL_POS_KEEPER);
+			m_pPl = FindNearestPlayer(m_nFoulingTeam, FL_POS_KEEPER, true);
 		else
 			m_pPl = FindNearestPlayer(TEAM_INVALID, FL_POS_ANY, true, ignoredPlayerBits);
 
@@ -1035,7 +1029,7 @@ void CBall::State_FREEKICK_Think()
 
 		if (!CSDKPlayer::IsOnField(m_pPl))
 		{
-			m_pPl = FindNearestPlayer(GetGlobalTeam(m_nFoulingTeam)->GetOppTeamNumber());
+			m_pPl = FindNearestPlayer(GetGlobalTeam(m_nFoulingTeam)->GetOppTeamNumber(), FL_POS_ANY);
 
 			if (!m_pPl)
 				return State_Transition(BALL_NORMAL);
@@ -1187,7 +1181,7 @@ void CBall::State_KEEPERHANDS_Think()
 			return State_Transition(BALL_NORMAL);
 		}
 
-		if (!SDKGameRules()->IsIntermissionState() && SDKGameRules()->State_Get() != MATCH_PENALTIES)
+		if (!SDKGameRules()->IsIntermissionState())
 		{
 			SDKGameRules()->EnableShield(SHIELD_KEEPERHANDS, m_pPl->GetTeamNumber());
 			UpdatePossession(m_pPl);
@@ -1214,9 +1208,6 @@ void CBall::State_KEEPERHANDS_Think()
 
 	if (!SDKGameRules()->IsIntermissionState() && SDKGameRules()->State_Get() != MATCH_PENALTIES)
 	{
-		if (!m_pPl->m_bIsAtTargetPos)
-			return;
-
 		if (m_flStateTimelimit == -1)
 			m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit.GetFloat();
 	}
@@ -1234,7 +1225,6 @@ void CBall::State_KEEPERHANDS_Think()
 
 	if (m_pPl->m_bShotButtonsReleased && m_pPl->IsShooting() && m_pPl->m_flNextShot <= gpGlobals->curtime)
 	{
-		m_Touches.RemoveAll();
 		if (m_pPl->IsPowershooting())
 		{
 			SetVel(m_vPlForward * GetPowershotStrength(sv_ball_powershot_minstrength.GetInt(), sv_ball_powershot_maxstrength.GetInt()) * GetPitchModifier());
@@ -1246,6 +1236,7 @@ void CBall::State_KEEPERHANDS_Think()
 			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KEEPER_HANDS_THROW);
 		}
 
+		m_Touches.RemoveAll();
 		Kicked(BODY_HANDS);
 		MarkOffsidePlayers();
 		RemoveFromPlayerHands(m_pPl);
@@ -1463,7 +1454,7 @@ bool CBall::CheckKeeperCatch()
 
 	if (!SDKGameRules()->IsIntermissionState() && SDKGameRules()->State_Get() != MATCH_PENALTIES)
 	{
-		if (LastPl(true) == m_pPl && (LastInfo(true)->m_eBallState != BALL_NORMAL || LastInfo(true)->m_eBodyPart == BODY_HANDS))
+		if (LastPl(true) == m_pPl && !LastPl(true, m_pPl))
 			return false;
 
 		BallTouchInfo *pInfo = LastInfo(true, m_pPl);
@@ -1761,7 +1752,7 @@ void CBall::UpdateCarrier()
 
 void CBall::MarkOffsidePlayers()
 {
-	if (SDKGameRules()->IsIntermissionState() || IgnoreTriggers())
+	if (SDKGameRules()->IsIntermissionState() || IgnoreTriggers() || SDKGameRules()->State_Get() == MATCH_PENALTIES)
 		return;
 
 	m_vOffsidePos = m_vPos;
@@ -1865,7 +1856,7 @@ void CBall::Kicked(body_part_t bodyPart)
 
 void CBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart)
 {
-	if (SDKGameRules()->IsIntermissionState() || m_bIgnoreTriggers)
+	if (SDKGameRules()->IsIntermissionState() || m_bIgnoreTriggers || SDKGameRules()->State_Get() == MATCH_PENALTIES)
 		return;
 
 	//DevMsg("Touched %0.2f\n", gpGlobals->curtime);

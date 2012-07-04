@@ -603,6 +603,15 @@ void CSDKGameRules::Think()
 
 	if ( g_fGameOver )   // someone else quit the game already
 	{
+		for (int i = 1; i <= gpGlobals->maxClients; i++)
+		{
+			CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+			if (!pPl)
+				continue;
+
+			CPlayerPersistentData::SavePlayerData(pPl);
+		}
+
 		ChangeLevel(); // intermission is over
 		return;
 	}
@@ -958,8 +967,8 @@ int CSDKGameRules::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarge
 //-----------------------------------------------------------------------------
 void CSDKGameRules::ClientDisconnected( edict_t *pClient )
 {
-	//CSDKPlayer *pPl = (CSDKPlayer *)CBaseEntity::Instance(pClient);
-	//CPlayerPersistentData::SavePlayerData(pPl);
+	CSDKPlayer *pPl = (CSDKPlayer *)CBaseEntity::Instance(pClient);
+	CPlayerPersistentData::SavePlayerData(pPl);
 
 	BaseClass::ClientDisconnected( pClient );
 }

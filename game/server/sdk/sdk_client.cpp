@@ -43,7 +43,7 @@ void FinishClientPutInServer( CSDKPlayer *pPlayer )
 {
 	pPlayer->InitialSpawn();
 
-	//CPlayerPersistentData::RetrievePlayerData(pPlayer);
+	CPlayerPersistentData::LoadPlayerData(pPlayer);
 
 	char sName[128];
 	Q_strncpy( sName, pPlayer->GetPlayerName(), sizeof( sName ) );
