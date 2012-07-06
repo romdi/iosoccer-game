@@ -85,8 +85,8 @@ void DrawOffsideLine(IMaterial *pMaterial, float posY, Vector &color)
 	// Draw it.
 	pRenderContext->Bind( pMaterial );
 
-	Vector mins = Vector(SDKGameRules()->m_vFieldMin.GetX() - 500, posY - 2, SDKGameRules()->m_vKickOff.GetZ());
-	Vector maxs = Vector(SDKGameRules()->m_vFieldMax.GetX() + 500, posY + 2, SDKGameRules()->m_vKickOff.GetZ() + 4);
+	Vector mins = Vector(SDKGameRules()->m_vFieldMin.GetX() - 500, posY - 1, SDKGameRules()->m_vKickOff.GetZ());
+	Vector maxs = Vector(SDKGameRules()->m_vFieldMax.GetX() + 500, posY + 1, SDKGameRules()->m_vKickOff.GetZ() + 2);
 
 	DrawBoxSide(1, 2, 0, mins[1], mins[2], maxs[1], maxs[2], mins[0], false, color);
 	DrawBoxSide(1, 2, 0, mins[1], mins[2], maxs[1], maxs[2], maxs[0], true, color);

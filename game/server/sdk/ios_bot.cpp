@@ -159,20 +159,20 @@ void CBot::FieldBotJoinTeam()
 		ChangeTeam(TEAM_SPECTATOR);
 	else
 	{
-		int startPos = g_IOSRand.RandomInt(0, 10);
-		int pos = startPos;
+		int startPosIndex = g_IOSRand.RandomInt(0, 10);
+		int posIndex = startPosIndex;
 		while (true)
 		{
-			if (TeamPosFree(team, pos, false))
+			if (TeamPosFree(team, posIndex, false))
 			{
-				ChangeTeamPos(team, pos, true);
+				ChangeTeamPos(team, posIndex, true);
 				//g_CurBotNumber += 1;
 				break;
 			}
-			pos += 1;
-			if (pos == 12)
-				pos = 2;
-			if (pos == startPos)
+			posIndex += 1;
+			if (posIndex == 12)
+				posIndex = 2;
+			if (posIndex == startPosIndex)
 				break;
 		}
 	}
@@ -228,7 +228,7 @@ void Bot_RunAll( void )
 				}
 				else if (!CSDKPlayer::IsOnField(pPl) && pPl->GetTeamToJoin() != TEAM_A && pPl->GetTeamToJoin() != TEAM_B)
 				{
-					if (!pPl->TeamPosFree(team, keeperPosIndex, true))
+					if (!pPl->TeamPosFree(team, keeperPosIndex, false))
 					{
 						char kickcmd[512];
 						Q_snprintf(kickcmd, sizeof(kickcmd), "kickid %i Position already taken\n", pPl->GetUserID());

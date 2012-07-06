@@ -280,7 +280,11 @@ public:
 protected:
 	float m_flStateTimeLeft;
 	float m_flNextPenalty;
+	int m_nPenaltyTakingStartTeam;
 	int m_nPenaltyTakingTeam;
+	int m_nPenaltyScores[2];
+	int m_nPenaltyScoreBits[2];
+	int m_nPenaltyRound;
 
 	CSDKGameRulesStateInfo		*m_pCurStateInfo;			// Per-state data 
 	float						m_flStateTransitionTime;	// Timer for round states

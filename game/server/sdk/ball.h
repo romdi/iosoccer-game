@@ -40,7 +40,8 @@ enum body_part_t
 	BODY_HIP,
 	BODY_CHEST,
 	BODY_HEAD,
-	BODY_HANDS
+	BODY_HANDS,
+	BODY_BOUNCE
 };
 
 enum foul_type_t
@@ -157,8 +158,7 @@ public:
 
 	bool			IsAsleep(void) { return	false; }
 	void			Spawn(void);
-	void			BallThink( void	);
-	void			BallTouch( CBaseEntity *pOther );
+	void			Think( void	);
 	void			VPhysicsCollision( int index, gamevcollisionevent_t	*pEvent	);
 	void			VPhysicsUpdate(IPhysicsObject *pPhysics);
 	bool			CreateVPhysics();
@@ -238,9 +238,9 @@ private:
 	bool			DoVolleyShot();
 	bool			DoChestDrop();
 	bool			DoHeader();
-	void			SetBallSpin();
-	float			GetPitchModifier();
-	float			GetPowershotStrength(int minStrength, int maxStrength);
+	void			SetSpin(float multiplier = 1.0f);
+	float			GetPitchMultiplier();
+	float			GetPowershotStrength(float multiplier, int minStrength, int maxStrength);
 	void			UpdateCarrier();
 	void			Kicked(body_part_t bodyPart);
 	void			Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart);
@@ -258,7 +258,7 @@ private:
 	CHandle<CSDKPlayer>	m_pOtherPl;
 
 	QAngle			m_aPlAng;
-	Vector			m_vPlVel, m_vPlPos, m_vPlForward, m_vPlForward2D, m_vPlRight, m_vPlUp;
+	Vector			m_vPlVel, m_vPlVel2D, m_vPlPos, m_vPlForward, m_vPlForward2D, m_vPlRight, m_vPlUp;
 	int				m_nPlTeam;
 	int				m_nPlPos;
 

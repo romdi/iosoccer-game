@@ -37,13 +37,12 @@ public:
 	const CSteamID *m_SteamID;
 	int m_nYellowCards;
 	int m_nRedCards;
-	float m_flRemainingCardBanTime;
-
-	CPlayerPersistentData(float remainingCardBanTime) : m_flRemainingCardBanTime(remainingCardBanTime) {}
+	float m_flNextJoin;
 
 //	CPlayerPersistentData(const CSteamID *steamID);
 	static void LoadPlayerData(CSDKPlayer *pPl);
 	static void SavePlayerData(CSDKPlayer *pPl);
+	static void RemoveAllPlayerData();
 	static CUtlVector<CPlayerPersistentData *> m_PlayerPersistentData;
 };
 
@@ -271,7 +270,7 @@ public:
 
 	void				ChoosePlayerSkin(void);
 	void				ChooseKeeperSkin(void);
-	bool				TeamPosFree(int team, int pos, bool kickBotKeeper);
+	bool				TeamPosFree(int team, int posIndex, bool ignoreBots);
 
 	int					m_TeamPos;
 	
@@ -384,7 +383,7 @@ public:
 	float				m_flPlayerAnimEventStart;
 	void				SetPlayerBall(CBall *pPlayerBall) { m_pPlayerBall = pPlayerBall; }
 	CBall				*GetPlayerBall() { return m_pPlayerBall; }
-	void				ChangeTeamPos(int team, int pos, bool instantly = false);
+	bool				ChangeTeamPos(int team, int posIndex, bool instantly = false);
 
 	void				CheckBallShield(const Vector &oldPos, Vector &newPos, const Vector &oldVel, Vector &newVel, const QAngle &oldAng, QAngle &newAng);
 	void				MoveToTargetPos(Vector &pos, Vector &vel, QAngle &ang);

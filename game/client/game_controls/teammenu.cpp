@@ -397,9 +397,26 @@ void CTeamMenu::OnThink()
 		posTaken[team - TEAM_A][pos] = true;
 		PosPanel_t *pPos = m_pPosPanels[team - TEAM_A][pos];
 		if (gr->GetTeamToJoin(i) != TEAM_INVALID)
-			pPos->pPlayerName->SetText(VarArgs("%s [%d]", gr->GetPlayerName(i), (int)(gr->GetNextJoin(i) - gpGlobals->curtime)));
+			pPos->pPlayerName->SetText(VarArgs("%s [%d]", gr->GetPlayerName(i), max(0, (int)(gr->GetNextJoin(i) - gpGlobals->curtime))));
 		else
-			pPos->pPlayerName->SetText(gr->GetPlayerName(i));
+		{
+			bool spotReserved = false;
+
+			for (int j = 1; j <= gpGlobals->maxClients; j++)
+			{
+				if (j == i || !gr->IsConnected(j))
+					continue;
+
+				if (gr->GetTeamToJoin(j) == gr->GetTeam(i) && gr->GetTeamPosIndex(j) == gr->GetTeamPosIndex(i))
+				{
+					spotReserved = true;
+					break;
+				}
+			}
+
+			if (!spotReserved)
+				pPos->pPlayerName->SetText(gr->GetPlayerName(i));
+		}
 		pPos->pPlayerName->SetFgColor(gr->GetTeamColor(team));
 		pPos->pPlayerName->SetCursor(gr->IsFakePlayer(i) ? dc_hand : dc_arrow);
 		pPos->pPlayerName->SetEnabled(gr->IsFakePlayer(i));

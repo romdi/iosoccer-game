@@ -112,6 +112,8 @@ void CSettingsMenu::PerformLayout()
 	m_pCountryNameList->SetFgColor(Color(0, 0, 0, 255));
 	m_pCountryNameList->SetBgColor(Color(255, 255, 255, 255));
 
+	m_pCountryNameList->RemoveAll();
+
 	for (int i = 0; i < COUNTRY_NAMES_COUNT; i++)
 	{
 		KeyValues *kv = new KeyValues("UserData", "index", i);

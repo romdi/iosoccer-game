@@ -130,7 +130,7 @@ const char *g_szMatchEventNames[32] =
 	NULL
 };
 
-ConVar mp_walkspeed("mp_walkspeed", "140", FCVAR_ARCHIVE | FCVAR_REPLICATED | FCVAR_NOTIFY);
-ConVar mp_runspeed("mp_runspeed", "280", FCVAR_ARCHIVE | FCVAR_REPLICATED | FCVAR_NOTIFY);
-ConVar mp_sprintspeed("mp_sprintspeed", "380", FCVAR_ARCHIVE | FCVAR_REPLICATED | FCVAR_NOTIFY);
-ConVar mp_remotecontrolledspeed("mp_remotecontrolledspeed", "380", FCVAR_ARCHIVE | FCVAR_REPLICATED | FCVAR_NOTIFY);
+ConVar mp_walkspeed("mp_walkspeed", "140", FCVAR_REPLICATED | FCVAR_NOTIFY);
+ConVar mp_runspeed("mp_runspeed", "280", FCVAR_REPLICATED | FCVAR_NOTIFY);
+ConVar mp_sprintspeed("mp_sprintspeed", "380", FCVAR_REPLICATED | FCVAR_NOTIFY);
+ConVar mp_remotecontrolledspeed("mp_remotecontrolledspeed", "380", FCVAR_REPLICATED | FCVAR_NOTIFY);

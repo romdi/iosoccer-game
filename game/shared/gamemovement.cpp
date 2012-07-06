@@ -15,6 +15,7 @@
 #include "coordsize.h"
 #include "rumble_shared.h"
 #include "sdk_shareddefs.h"
+#include "sdk_gamerules.h"
 
 #if defined(HL2_DLL) || defined(HL2_CLIENT_DLL)
 	#include "hl_movedata.h"
@@ -1850,23 +1851,23 @@ bool CGameMovement::CheckJumpButton( void )
 	{
 		MoveHelper()->StartSound( mv->GetAbsOrigin(), "Player.DiveKeeper" );
 
-		if (mv->m_nButtons & IN_MOVELEFT)
+		if ((mv->m_nButtons & IN_MOVELEFT) && (mv->m_nButtons & IN_SPEED))
 		{
 			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_LEFT;
 			//mv->m_flSideMove = 2 * -mp_sprintspeed.GetInt();
 			pPl->AddFlag(FL_FREECAM);
 		}
-		else if (mv->m_nButtons & IN_MOVERIGHT)
+		else if ((mv->m_nButtons & IN_MOVERIGHT) && (mv->m_nButtons & IN_SPEED))
 		{
 			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_RIGHT;
 			pPl->AddFlag(FL_FREECAM);
 		}
-		else if (mv->m_nButtons & IN_FORWARD)
+		else if ((mv->m_nButtons & IN_FORWARD) && (mv->m_nButtons & IN_SPEED))
 		{
 			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_FORWARD;
 			pPl->AddFlag(FL_FREECAM);
 		}
-		else if (mv->m_nButtons & IN_BACK)
+		else if ((mv->m_nButtons & IN_BACK) && (mv->m_nButtons & IN_SPEED))
 		{
 			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD;
 			pPl->AddFlag(FL_FREECAM);

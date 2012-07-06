@@ -263,12 +263,28 @@ CSDKPlayer *CSDKPlayer::CreatePlayer( const char *className, edict_t *ed )
 
 void CSDKPlayer::PreThink(void)
 {
+	if (m_nTeamToJoin != TEAM_INVALID && m_flNextJoin <= gpGlobals->curtime)
+	{
+		if (!TeamPosFree(m_nTeamToJoin, GetTeamPosIndex(), false))
+		{
+			for (int i = 1; i <= gpGlobals->maxClients; i++)	
+			{
+				CSDKPlayer *pPl = (CSDKPlayer*)UTIL_PlayerByIndex(i);
+
+				if (!pPl || pPl->GetTeamNumber() != m_nTeamToJoin || pPl->GetTeamPosIndex() != GetTeamPosIndex())
+					continue;
+
+				char kickcmd[512];
+				Q_snprintf(kickcmd, sizeof(kickcmd), "kickid %i Human player taking the position\n", pPl->GetUserID());
+				engine->ServerCommand(kickcmd);
+			}
+		}
+		ChangeTeam(m_nTeamToJoin);
+	}
+
 	State_PreThink();
 
 	//UpdateSprint();
-
-	if (m_nTeamToJoin != TEAM_INVALID && m_flNextJoin <= gpGlobals->curtime)
-		ChangeTeam(m_nTeamToJoin);
 
 	BaseClass::PreThink();
 }
@@ -413,16 +429,16 @@ void CSDKPlayer::Spawn()
 	//UseClientSideAnimation();
 }
 
-void CSDKPlayer::ChangeTeamPos(int team, int pos, bool instantly /*= false*/)
+bool CSDKPlayer::ChangeTeamPos(int team, int posIndex, bool instantly /*= false*/)
 {
 	if (team != TEAM_SPECTATOR && team != TEAM_A && team != TEAM_B)
-		return;
+		return false;
 
-	if (pos < 0 || pos > 10)
-		return;
+	if (posIndex < 0 || posIndex > 10)
+		return false;
 
-	if (!IsValidPosition(pos))
-		return;
+	if (!IsValidPosition(posIndex))
+		return false;
 	
 	if (team == TEAM_SPECTATOR)
 	{		
@@ -430,7 +446,7 @@ void CSDKPlayer::ChangeTeamPos(int team, int pos, bool instantly /*= false*/)
 		{
 			if (instantly)
 				m_flNextJoin = gpGlobals->curtime;
-			else if (m_flNextJoin <= gpGlobals->curtime)
+			else if (m_flNextJoin < gpGlobals->curtime)
 				m_flNextJoin = gpGlobals->curtime + mp_joindelay.GetFloat();
 
 			ChangeTeam(TEAM_SPECTATOR);
@@ -442,31 +458,33 @@ void CSDKPlayer::ChangeTeamPos(int team, int pos, bool instantly /*= false*/)
 	}
 	else
 	{
-		if (TeamPosFree(team, pos, true))
+		if (!TeamPosFree(team, posIndex, true))
+			return false;
+
+		if (GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B)
 		{
-			if (GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B)
-			{
-				if (instantly)
-					m_flNextJoin = gpGlobals->curtime;
-				else if (m_flNextJoin <= gpGlobals->curtime)
-					m_flNextJoin = gpGlobals->curtime + mp_joindelay.GetFloat();
+			if (instantly)
+				m_flNextJoin = gpGlobals->curtime;
+			else if (m_flNextJoin < gpGlobals->curtime)
+				m_flNextJoin = gpGlobals->curtime + mp_joindelay.GetFloat();
 
-				ChangeTeam(TEAM_SPECTATOR);
-			}
-
-			m_nTeamToJoin = team;
-			m_TeamPos = pos;
-
-			if (GetTeamPosition() > 1)
-			{
-				ChoosePlayerSkin();				
-			}
-			else
-			{
-				ChooseKeeperSkin();
-			}
+			ChangeTeam(TEAM_SPECTATOR);
 		}
+
+		m_nTeamToJoin = team;
+		m_TeamPos = posIndex;
+
+		if (GetTeamPosition() > 1)
+		{
+			ChoosePlayerSkin();				
+		}
+		else
+		{
+			ChooseKeeperSkin();
+		}	
 	}
+
+	return true;
 }
 
 //-----------------------------------------------------------------------------
@@ -891,44 +909,29 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 	return BaseClass::ClientCommand (args);
 }
 
-
-/////////////////////////////////////////
-//check if this IOS team position is free
-//
-bool CSDKPlayer::TeamPosFree(int team, int pos, bool kickBotKeeper)
+bool CSDKPlayer::TeamPosFree(int team, int posIndex, bool ignoreBots)
 {
-	//stop keeper from being picked unless mp_keepers is 0 
-	//(otherwise you can pick keeper just before bots spawn)
-
-	if (!IsValidPosition(pos))
+	if (!IsValidPosition(posIndex))
 		return false;
 
-	if (g_Positions[mp_maxplayers.GetInt() - 1][pos][POS_NUMBER] == 1)
+	if (g_Positions[mp_maxplayers.GetInt() - 1][posIndex][POS_NUMBER] == 1)
 	{
-		if ((!IsBot() && !humankeepers.GetBool()) || (IsBot() && !kickBotKeeper))
+		if (!IsBot() && !humankeepers.GetBool())
 			return false;
 	}
 
-	//normal check
 	for (int i = 1; i <= gpGlobals->maxClients; i++)	
 	{
 		CSDKPlayer *pPl = (CSDKPlayer*)UTIL_PlayerByIndex(i);
 
-		//if (!CSDKPlayer::IsOnField(pPl))
 		if (!pPl)
 			continue;
 
-		if (pPl->GetTeamPosIndex() == pos && (pPl->GetTeamNumber() == team || pPl->m_nTeamToJoin == team))
+		if (pPl->GetTeamPosIndex() == posIndex && (pPl->GetTeamNumber() == team || pPl->m_nTeamToJoin == team))
 		{
-			if (IsBot())
+			if (IsBot() || !pPl->IsBot() || !ignoreBots)
 				return false;
 
-			if (!pPl->IsBot() || !kickBotKeeper)
-				return false;
-
-			char kickcmd[512];
-			Q_snprintf(kickcmd, sizeof(kickcmd), "kickid %i Human player taking the position\n", pPl->GetUserID());
-			engine->ServerCommand(kickcmd);
 			return true;
 		}
 	}
@@ -1347,8 +1350,7 @@ void CPlayerPersistentData::LoadPlayerData(CSDKPlayer *pPl)
 
 		//pPl->m_YellowCards = m_PlayerPersistentData[i]->m_nYellowCards;
 		//pPl->m_RedCards = m_PlayerPersistentData[i]->m_nRedCards;
-		if (m_PlayerPersistentData[i]->m_flRemainingCardBanTime > 0)
-			pPl->m_flNextJoin = gpGlobals->curtime + m_PlayerPersistentData[i]->m_flRemainingCardBanTime;
+		pPl->m_flNextJoin = m_PlayerPersistentData[i]->m_flNextJoin;
 
 		break;
 	}
@@ -1370,12 +1372,17 @@ void CPlayerPersistentData::SavePlayerData(CSDKPlayer *pPl)
 
 	if (!data)
 	{
-		data = new CPlayerPersistentData(0);
+		data = new CPlayerPersistentData;
 		m_PlayerPersistentData.AddToTail(data);
 	}
 
 	data->m_SteamID = engine->GetClientSteamID(pPl->edict());
 	//data->m_nYellowCards = pPl->m_YellowCards;
 	//data->m_nRedCards = pPl->m_RedCards;
-	data->m_flRemainingCardBanTime = max(0, pPl->m_flNextJoin - gpGlobals->curtime);
+	data->m_flNextJoin = pPl->m_flNextJoin;
+}
+
+void CPlayerPersistentData::RemoveAllPlayerData()
+{
+	m_PlayerPersistentData.RemoveAll();
 }
