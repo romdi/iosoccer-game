@@ -119,7 +119,7 @@ void CReplayManager::StartReplay()
 	m_bDoReplay = true;
 
 	GetBall()->VPhysicsGetObject()->EnableMotion(true);
-	GetBall()->SetIgnoreTriggers(true);
+	//GetBall()->SetIgnoreTriggers(true);
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
@@ -134,7 +134,7 @@ void CReplayManager::StartReplay()
 void CReplayManager::StopReplay()
 {
 	m_bDoReplay = false;
-	GetBall()->SetIgnoreTriggers(false);
+	//GetBall()->SetIgnoreTriggers(false);
 	engine->ServerCommand("host_timescale 1\n");
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++)

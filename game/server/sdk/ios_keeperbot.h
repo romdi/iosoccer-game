@@ -23,7 +23,6 @@ public:
 	void BotCenter();
 	void BotAdjustPos();
 	CSDKPlayer *FindClosestPlayerToBall();
-	CSDKPlayer *FindClosestPlayerToSelf(bool teammatesOnly);
 private:
 	float m_flBotNextShot;
 };

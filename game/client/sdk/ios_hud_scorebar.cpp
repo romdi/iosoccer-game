@@ -411,7 +411,7 @@ void CHudScorebar::MsgFunc_MatchEvent(bf_read &msg)
 		flashInfo.cbSize = sizeof(FLASHWINFO);
 		flashInfo.hwnd = FindWindow(NULL, "IOS Source Dev");
 		flashInfo.dwFlags = FLASHW_TRAY | FLASHW_TIMERNOFG;
-		flashInfo.uCount = 10;
+		flashInfo.uCount = 3;
 		flashInfo.dwTimeout = 0;
 		FlashWindowEx(&flashInfo);
 		//SetWindowText(FindWindow(NULL, "IOS Source Dev"), "LIVE - IOS Source Dev");

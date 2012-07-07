@@ -167,10 +167,10 @@ public:
 	void			TriggerGoalLine(int team);
 	void			TriggerSideline();
 	void			TriggerPenaltyBox(int team);
-	bool			IgnoreTriggers() { return m_bIgnoreTriggers; }
-	void			SetIgnoreTriggers(bool ignoreTriggers) { m_bIgnoreTriggers = ignoreTriggers; }
+	bool			IsSettingNewPos() { return m_bSetNewPos; }
+	bool			HasQueuedState() { return m_bHasQueuedState; }
 
-	void			State_Transition( ball_state_t newState, float delay = 0.0f );
+	void			State_Transition(ball_state_t newState, float delay = 0.0f, bool cancelQueuedState = false);
 
 	void			ResetMatch();
 
@@ -212,7 +212,7 @@ private:
 
 	void State_PreThink();
 	void State_PostThink();
-	void State_Enter(ball_state_t newState);	// Initialize the new state.
+	void State_Enter(ball_state_t newState, bool cancelQueuedState);	// Initialize the new state.
 	void State_Think();										// Update the current state.
 	static CBallStateInfo* State_LookupInfo(ball_state_t state);	// Find the state info for the specified state.
 	ball_state_t	m_eBallState;
@@ -244,6 +244,7 @@ private:
 	void			UpdateCarrier();
 	void			Kicked(body_part_t bodyPart);
 	void			Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart);
+	void			RemoveAllTouches();
 	BallTouchInfo	*LastInfo(bool wasShooting, CSDKPlayer *pSkipPl = NULL);
 	CSDKPlayer		*LastPl(bool wasShooting, CSDKPlayer *pSkipPl = NULL);
 	int				LastTeam(bool wasShooting, CSDKPlayer *pSkipPl = NULL);
@@ -275,7 +276,7 @@ private:
 	int				m_nTeam;				  //team the ball can be kicked	by (during a corner	etc) (0=any)
 	int				m_nInPenBoxOfTeam;	 //-1 =	not	in box,	0,1	= teams	box
 
-	bool			m_bIgnoreTriggers;
+	bool			m_bHasQueuedState;
 	bool			m_bSetNewPos;
 	
 	CHandle<CSDKPlayer>	m_pPossessingPl;

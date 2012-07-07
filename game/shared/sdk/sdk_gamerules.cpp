@@ -1202,7 +1202,7 @@ void CSDKGameRules::State_INIT_Think()
 void CSDKGameRules::State_WARMUP_Enter()
 {
 	GetBall()->ResetMatch();
-	GetBall()->State_Transition(BALL_NORMAL);
+	GetBall()->State_Transition(BALL_NORMAL, 0, true);
 }
 
 void CSDKGameRules::State_WARMUP_Think()
@@ -1217,7 +1217,7 @@ void CSDKGameRules::State_FIRST_HALF_Enter()
 	SetLeftSideTeam(m_nFirstHalfLeftSideTeam);
 	m_nFirstHalfKickOffTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
 	SetKickOffTeam(m_nFirstHalfKickOffTeam);
-	GetBall()->State_Transition(BALL_KICKOFF);
+	GetBall()->State_Transition(BALL_KICKOFF, 0, true);
 }
 
 void CSDKGameRules::State_FIRST_HALF_Think()
@@ -1248,7 +1248,7 @@ void CSDKGameRules::State_SECOND_HALF_Enter()
 {
 	SetLeftSideTeam(GetGlobalTeam(m_nFirstHalfLeftSideTeam)->GetOppTeamNumber());
 	SetKickOffTeam(GetGlobalTeam(m_nFirstHalfKickOffTeam)->GetOppTeamNumber());
-	GetBall()->State_Transition(BALL_KICKOFF);
+	GetBall()->State_Transition(BALL_KICKOFF, 0, true);
 }
 
 void CSDKGameRules::State_SECOND_HALF_Think()
@@ -1286,7 +1286,7 @@ void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Enter()
 {
 	SetLeftSideTeam(m_nFirstHalfLeftSideTeam);
 	SetKickOffTeam(m_nFirstHalfKickOffTeam);
-	GetBall()->State_Transition(BALL_KICKOFF);
+	GetBall()->State_Transition(BALL_KICKOFF, 0, true);
 }
 
 void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Think()
@@ -1319,7 +1319,7 @@ void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Enter()
 {
 	SetLeftSideTeam(GetGlobalTeam(m_nFirstHalfLeftSideTeam)->GetOppTeamNumber());
 	SetKickOffTeam(GetGlobalTeam(m_nFirstHalfKickOffTeam)->GetOppTeamNumber());
-	GetBall()->State_Transition(BALL_KICKOFF);
+	GetBall()->State_Transition(BALL_KICKOFF, 0, true);
 }
 
 void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Think()
@@ -1383,7 +1383,7 @@ void CSDKGameRules::State_PENALTIES_Think()
 		{
 			if (GetBall()->GetPenaltyState() == PENALTY_KICKED)
 			{
-				GetBall()->State_Transition(BALL_NORMAL);
+				GetBall()->State_Transition(BALL_NORMAL, 0, true);
 
 				if (GetGlobalTeam(m_nPenaltyTakingTeam)->GetGoals() > m_nPenaltyScores[m_nPenaltyTakingTeam - TEAM_A])
 				{
@@ -1452,7 +1452,7 @@ void CSDKGameRules::State_PENALTIES_Think()
 			{
 				GetBall()->SetPenaltyTaker(pPenTaker);
 				GetBall()->SetPenaltyState(PENALTY_ASSIGNED);
-				GetBall()->State_Transition(BALL_PENALTY);
+				GetBall()->State_Transition(BALL_PENALTY, 0, true);
 				m_flNextPenalty = -1;
 				return;
 			}

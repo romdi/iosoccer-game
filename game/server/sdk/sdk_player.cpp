@@ -1329,12 +1329,48 @@ bool CSDKPlayer::IsNormalshooting()
 
 bool CSDKPlayer::IsPowershooting()
 {
-	return (m_nButtons & IN_ATTACK2) != 0 || (m_nButtons & IN_ALT1) != 0;
+	return (m_nButtons & (IN_ATTACK2 | IN_ALT1)) != 0;
+}
+
+bool CSDKPlayer::IsAutoPassing()
+{
+	return (m_nButtons & IN_ALT2) != 0;
 }
 
 bool CSDKPlayer::IsShooting()
 {
-	return IsNormalshooting() || IsPowershooting();
+	return IsNormalshooting() || IsPowershooting() || IsAutoPassing();
+}
+
+CSDKPlayer *CSDKPlayer::FindClosestPlayerToSelf(bool teammatesOnly, bool forwardOnly /*= false*/)
+{
+	float shortestDist = FLT_MAX;
+	CSDKPlayer *pClosest = NULL;
+
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+		if (!CSDKPlayer::IsOnField(pPl) || pPl == this)
+			continue;
+
+		if (teammatesOnly && pPl->GetTeamNumber() != GetTeamNumber())
+			continue;
+
+		Vector dir = pPl->GetLocalOrigin() - GetLocalOrigin();
+
+		if (forwardOnly && Sign(dir.y) != GetTeam()->m_nForward)
+			continue;
+
+		float dist = dir.Length2D();
+
+		if (dist < shortestDist)
+		{
+			shortestDist = dist;
+			pClosest = pPl;
+		}
+	}
+
+	return pClosest;
 }
 
 CUtlVector<CPlayerPersistentData *> CPlayerPersistentData::m_PlayerPersistentData;

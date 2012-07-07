@@ -35,9 +35,11 @@ ConVar sv_ball_touchradius( "sv_ball_touchradius", "60", FCVAR_NOTIFY );
 ConVar sv_ball_slidesidereach( "sv_ball_slidesidereach", "60", FCVAR_NOTIFY );
 ConVar sv_ball_slideforwardreach( "sv_ball_slideforwardreach", "100", FCVAR_NOTIFY );
 ConVar sv_ball_slidemultiplier("sv_ball_slidemultiplier", "3.0", FCVAR_NOTIFY); 
+ConVar sv_ball_slidesidemultiplier("sv_ball_slidesidemultiplier", "0.66", FCVAR_NOTIFY); 
 ConVar sv_ball_keepertouchradius( "sv_ball_keepertouchradius", "60", FCVAR_NOTIFY );
 ConVar sv_ball_keepershortsidereach( "sv_ball_keepershortsidereach", "60", FCVAR_NOTIFY );
 ConVar sv_ball_keeperlongsidereach( "sv_ball_keeperlongsidereach", "120", FCVAR_NOTIFY );
+ConVar sv_ball_keeperpunchupstrength("sv_ball_keeperpunchupstrength", "500", FCVAR_NOTIFY);
 ConVar sv_ball_shotdelay_normal("sv_ball_shotdelay_normal", "0.25", FCVAR_NOTIFY);
 ConVar sv_ball_shotdelay_setpiece("sv_ball_shotdelay_setpiece", "0.5", FCVAR_NOTIFY);
 ConVar sv_ball_shotdelay_global("sv_ball_shotdelay_global", "0.25", FCVAR_NOTIFY);
@@ -52,6 +54,7 @@ ConVar sv_ball_keeperpickupangle("sv_ball_keeperpickupangle", "45", FCVAR_NOTIFY
 ConVar sv_ball_normalshot_strength("sv_ball_normalshot_strength", "650", FCVAR_NOTIFY);
 ConVar sv_ball_powershot_minstrength("sv_ball_powershot_minstrength", "600", FCVAR_NOTIFY);
 ConVar sv_ball_powershot_maxstrength("sv_ball_powershot_maxstrength", "1800", FCVAR_NOTIFY);
+ConVar sv_ball_autopass_multiplier("sv_ball_autopass_multiplier", "0.8", FCVAR_NOTIFY);
 ConVar sv_ball_volleyshot_spinmultiplier("sv_ball_volleyshot_spinmultiplier", "1.25", FCVAR_NOTIFY);
 ConVar sv_ball_doubletouchfouls("sv_ball_doubletouchfouls", "1", FCVAR_NOTIFY);
 ConVar sv_ball_timelimit("sv_ball_timelimit", "10", FCVAR_NOTIFY);
@@ -198,7 +201,6 @@ CBall::CBall()
 	m_eNextState = BALL_NOSTATE;
 	m_flStateLeaveTime = gpGlobals->curtime;
 	m_flStateTimelimit = -1;
-	m_bIgnoreTriggers = false;
 	m_eFoulType = FOUL_NONE;
 	m_pPossessingPl = NULL;
 	m_nPossessingTeam = TEAM_INVALID;
@@ -206,6 +208,7 @@ CBall::CBall()
 	m_pPl = NULL;
 	m_nPlTeam = TEAM_INVALID;
 	m_bSetNewPos = false;
+	m_bHasQueuedState = false;
 	m_ePenaltyState = PENALTY_NONE;
 	m_pCreator = NULL;
 	m_pHoldingPlayer = NULL;
@@ -340,13 +343,7 @@ void CBall::VPhysicsUpdate(IPhysicsObject *pPhysics)
 	//if (!SDKGameRules()->IsIntermissionState())
 	//	CReplayManager::GetInstance()->CheckReplay();
 
-	bool ignoreTriggers = m_bIgnoreTriggers;
-
-	if (m_bSetNewPos)
-	{
-		m_bIgnoreTriggers = true;
-	}
-	else
+	if (!m_bSetNewPos)
 	{
 		Vector vel, worldAngImp;
 		AngularImpulse angImp;
@@ -363,10 +360,7 @@ void CBall::VPhysicsUpdate(IPhysicsObject *pPhysics)
 	BaseClass::VPhysicsUpdate(pPhysics);
 
 	if (m_bSetNewPos)
-	{
-		m_bIgnoreTriggers = ignoreTriggers;
 		m_bSetNewPos = false;
-	}
 }
 
 
@@ -520,22 +514,28 @@ void CBall::SetRot(const AngularImpulse &rot)
 
 ConVar mp_showballstatetransitions( "mp_showballstatetransitions", "1", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Show ball state transitions." );
 
-void CBall::State_Transition( ball_state_t newState, float delay /*= 0.0f*/ )
+void CBall::State_Transition(ball_state_t newState, float delay /*= 0.0f*/, bool cancelQueuedState /*= false*/)
 {
 	if (delay == 0)
 	{
-		State_Enter(newState);
+		State_Enter(newState, cancelQueuedState);
 	}
 	else
 	{
 		m_eNextState = newState;
 		m_flStateLeaveTime = gpGlobals->curtime + delay;
-		m_bIgnoreTriggers = true;
+		m_bHasQueuedState = true;
 	}
 }
 
-void CBall::State_Enter( ball_state_t newState )
+void CBall::State_Enter(ball_state_t newState, bool cancelQueuedState)
 {
+	if (cancelQueuedState)
+	{
+		m_eNextState = BALL_NOSTATE;
+		m_bHasQueuedState = false;
+	}
+
 	m_eBallState = newState;
 	m_pCurStateInfo = State_LookupInfo( newState );
 	m_flStateEnterTime = gpGlobals->curtime;
@@ -543,7 +543,7 @@ void CBall::State_Enter( ball_state_t newState )
 
 	m_pPl = NULL;
 	m_pOtherPl = NULL;
-	m_bIgnoreTriggers = false;
+	//m_bIgnoreTriggers = false;
 	SDKGameRules()->DisableShield();
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
@@ -595,9 +595,7 @@ void CBall::State_Think()
 
 	if (m_eNextState != BALL_NOSTATE && m_flStateLeaveTime <= gpGlobals->curtime)
 	{
-		ball_state_t nextState = m_eNextState;
-		m_eNextState = BALL_NOSTATE;
-		State_Enter(nextState);
+		State_Enter(m_eNextState, true);
 	}
 
 	if (m_pCurStateInfo && m_pCurStateInfo->m_eBallState != BALL_NORMAL && m_eNextState == BALL_NOSTATE && m_flStateTimelimit != -1 && gpGlobals->curtime >= m_flStateTimelimit)
@@ -746,7 +744,7 @@ void CBall::State_KICKOFF_Think()
 
 	if (m_pPl->m_bShotButtonsReleased && m_pPl->IsShooting())
 	{
-		m_Touches.RemoveAll();
+		RemoveAllTouches();
 		SetVel(m_vPlForward2D * 200);
 		Kicked(BODY_FEET);
 		m_pPl->RemoveFlag(FL_ATCONTROLS);
@@ -818,7 +816,7 @@ void CBall::State_THROWIN_Think()
 		}
 
 		SetSpin(0);
-		m_Touches.RemoveAll();
+		RemoveAllTouches();
 		Kicked(BODY_HANDS);
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_THROW);
 		EnablePlayerCollisions(true);
@@ -866,7 +864,7 @@ void CBall::State_GOALKICK_Think()
 
 	if (m_pPl->m_bShotButtonsReleased && m_pPl->IsShooting() && (m_vPos - m_vPlPos).Length2D() <= sv_ball_touchradius.GetFloat())
 	{
-		m_Touches.RemoveAll();
+		RemoveAllTouches();
 		DoGroundShot();
 		MarkOffsidePlayers();
 		State_Transition(BALL_NORMAL);
@@ -918,7 +916,7 @@ void CBall::State_CORNER_Think()
 
 	if (m_pPl->m_bShotButtonsReleased && m_pPl->IsShooting() && (m_vPos - m_vPlPos).Length2D() <= sv_ball_touchradius.GetFloat())
 	{
-		m_Touches.RemoveAll();
+		RemoveAllTouches();
 		DoGroundShot();
 		State_Transition(BALL_NORMAL);
 	}
@@ -928,7 +926,7 @@ void CBall::State_GOAL_Enter()
 {
 	UnmarkOffsidePlayers();
 	UpdatePossession(NULL);
-	m_bIgnoreTriggers = true;
+	//m_bIgnoreTriggers = true;
 	SDKGameRules()->SetKickOffTeam(m_nTeam);
 	int scoringTeam;
 
@@ -1066,7 +1064,7 @@ void CBall::State_FREEKICK_Think()
 	if (m_pPl->m_bShotButtonsReleased && m_pPl->IsShooting() && (m_vPos - m_vPlPos).Length2D() <= sv_ball_touchradius.GetFloat())
 	{
 		SetOffsideLinesEnabled(false);
-		m_Touches.RemoveAll();
+		RemoveAllTouches();
 		DoGroundShot();
 		MarkOffsidePlayers();
 		State_Transition(BALL_NORMAL);
@@ -1167,7 +1165,7 @@ void CBall::State_PENALTY_Think()
 
 	if (m_pPl->m_bShotButtonsReleased && m_pPl->IsShooting() && (m_vPos - m_vPlPos).Length2D() <= sv_ball_touchradius.GetFloat())
 	{
-		m_Touches.RemoveAll();
+		RemoveAllTouches();
 		m_ePenaltyState = PENALTY_KICKED;
 		m_pPl->m_ePenaltyState = PENALTY_KICKED;
 		m_pOtherPl->RemoveFlag(FL_NO_Y_MOVEMENT);
@@ -1249,7 +1247,7 @@ void CBall::State_KEEPERHANDS_Think()
 			SetSpin(0);
 		}
 
-		m_Touches.RemoveAll();
+		RemoveAllTouches();
 		Kicked(BODY_HANDS);
 		MarkOffsidePlayers();
 		RemoveFromPlayerHands(m_pPl);
@@ -1421,20 +1419,23 @@ bool CBall::DoSlideAction()
 	if (!canShootBall)
 		return false;
 
-	if (!SDKGameRules()->IsIntermissionState() && !m_bIgnoreTriggers && CheckFoul(canShootBall))
-		return true;
+	if (!SDKGameRules()->IsIntermissionState() && !m_bHasQueuedState)
+	{
+		if (CheckFoul(canShootBall))
+			return true;
+	}
 
 	Vector ballVel = m_vPlVel2D + m_vPlForward2D * sv_ball_slidemultiplier.GetFloat();
 
 	if (m_pPl->m_nButtons & IN_MOVELEFT)
 	{
 		VectorYawRotate(ballVel, 45, ballVel);
-		ballVel /= 2;
+		ballVel *= sv_ball_slidesidemultiplier.GetFloat();
 	}
 	else if (m_pPl->m_nButtons & IN_MOVERIGHT)
 	{
 		VectorYawRotate(ballVel, -45, ballVel);
-		ballVel /= 2;
+		ballVel *= sv_ball_slidesidemultiplier.GetFloat();
 	}
 
 	SetSpin(0);
@@ -1504,7 +1505,7 @@ bool CBall::CheckKeeperCatch()
 
 		if (m_pPl->m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD)
 		{
-			SetVel(Vector(ballVel.x, ballVel.y, max(ballVel.z, sv_ball_normalshot_strength.GetFloat() * 0.75f)));
+			SetVel(Vector(ballVel.x, ballVel.y, max(ballVel.z, sv_ball_keeperpunchupstrength.GetInt())));
 		}
 		else
 			SetVel(m_vPlForward * ballVel.Length2D() * 0.75f);
@@ -1530,6 +1531,8 @@ float CBall::GetPowershotStrength(float multiplier, int minStrength, int maxStre
 	
 	if (m_pPl->m_nButtons & IN_ALT1)
 		powershotStrength = m_pPl->m_nPowershotStrength;
+	else if (m_pPl->m_nButtons & IN_ALT2)
+		powershotStrength = 100;
 	else
 		powershotStrength = mp_powershot_fixed_strength.GetInt();
 
@@ -1545,50 +1548,73 @@ float CBall::GetPowershotStrength(float multiplier, int minStrength, int maxStre
 
 bool CBall::DoGroundShot()
 {
-	float shotStrength;
-
-	if (m_pPl->IsPowershooting())
+	if (m_pPl->IsAutoPassing())
 	{
-		shotStrength = GetPowershotStrength(GetPitchMultiplier(), sv_ball_powershot_minstrength.GetInt(), sv_ball_powershot_maxstrength.GetInt());
+		CSDKPlayer *pPl = m_pPl->FindClosestPlayerToSelf(true, true);
+		if (!pPl)
+			pPl = m_pPl->FindClosestPlayerToSelf(true, false);
+		if (!pPl)
+			return false;
+
+		Vector dir = pPl->GetLocalOrigin() - m_vPlPos;
+		float length = dir.Length2D();
+		QAngle ang;
+		VectorAngles(dir, ang);
+		ang[PITCH] = -30;
+		AngleVectors(ang, &dir);
+		SetVel(dir * GetPowershotStrength(sv_ball_autopass_multiplier.GetFloat(), 0, length));
+		SetSpin(0);
+		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_PASS);
+		EmitSound("Ball.kicknormal");
 	}
 	else
 	{
-		shotStrength = sv_ball_normalshot_strength.GetFloat() * GetPitchMultiplier();		//do normal kick instead
-	}
+		float shotStrength;
 
-	Vector dirToBall = m_vPos - m_vPlPos;
-	Vector localDirToBall;
-	VectorIRotate(dirToBall, m_pPl->EntityToWorldTransform(), localDirToBall);
-
-	QAngle shotAngle = m_aPlAng;
-	shotAngle[PITCH] = min(-5, m_aPlAng[PITCH]);
-
-	Vector shotDir;
-	AngleVectors(shotAngle, &shotDir);
-
-	SetVel(shotDir * max(shotStrength, sv_ball_minshotstrength.GetInt()));
-
-	if (m_vVel.Length() > 600)
-	{
-		PlayerAnimEvent_t anim = PLAYERANIMEVENT_NONE;
-		EmitSound("Ball.kickhard");
-
-		if (m_vVel.Length() > 800)
-			anim = PLAYERANIMEVENT_KICK;
+		if (m_pPl->IsPowershooting())
+		{
+			shotStrength = GetPowershotStrength(GetPitchMultiplier(), sv_ball_powershot_minstrength.GetInt(), sv_ball_powershot_maxstrength.GetInt());
+		}
 		else
-			anim = PLAYERANIMEVENT_PASS;
+		{
+			shotStrength = sv_ball_normalshot_strength.GetFloat() * GetPitchMultiplier();		//do normal kick instead
+		}
 
-		m_pPl->DoServerAnimationEvent(anim);
+		Vector dirToBall = m_vPos - m_vPlPos;
+		Vector localDirToBall;
+		VectorIRotate(dirToBall, m_pPl->EntityToWorldTransform(), localDirToBall);
+
+		QAngle shotAngle = m_aPlAng;
+		shotAngle[PITCH] = min(-5, m_aPlAng[PITCH]);
+
+		Vector shotDir;
+		AngleVectors(shotAngle, &shotDir);
+
+		SetVel(shotDir * max(shotStrength, sv_ball_minshotstrength.GetInt()));
+
+		if (m_vVel.Length() > 600)
+		{
+			PlayerAnimEvent_t anim = PLAYERANIMEVENT_NONE;
+			EmitSound("Ball.kickhard");
+
+			//if (m_vVel.Length() > 800)
+			anim = PLAYERANIMEVENT_KICK;
+			//else
+			//	anim = PLAYERANIMEVENT_PASS;
+
+			m_pPl->DoServerAnimationEvent(anim);
+		}
+		else
+		{
+			if (localDirToBall.x < 0 && m_aPlAng[PITCH] <= -45)
+				m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEELKICK);
+
+			EmitSound("Ball.touch");
+		}
+
+		SetSpin();
 	}
-	else
-	{
-		if (localDirToBall.x < 0 && m_aPlAng[PITCH] <= -45)
-			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEELKICK);
 
-		EmitSound("Ball.touch");
-	}
-
-	SetSpin();
 	Kicked(BODY_FEET);
 
 	return true;
@@ -1691,7 +1717,7 @@ void CBall::TriggerGoal(int team)
 		{
 			GetGlobalTeam(m_nFoulingTeam)->GetOppTeam()->AddGoal();
 			SendMatchEvent(MATCH_EVENT_GOAL, m_pFouledPl);
-			m_bIgnoreTriggers = true;
+			m_bHasQueuedState = true;
 		}
 
 		return;
@@ -1703,7 +1729,7 @@ void CBall::TriggerGoal(int team)
 
 void CBall::TriggerGoalLine(int team)
 {
-	DevMsg("Trigger goal line\n");
+	//DevMsg("Trigger goal line\n");
 	if (SDKGameRules()->State_Get() == MATCH_PENALTIES)
 		return;
 
@@ -1762,7 +1788,7 @@ void CBall::UpdateCarrier()
 
 void CBall::MarkOffsidePlayers()
 {
-	if (SDKGameRules()->IsIntermissionState() || IgnoreTriggers() || SDKGameRules()->State_Get() == MATCH_PENALTIES)
+	if (SDKGameRules()->IsIntermissionState() || m_bHasQueuedState || SDKGameRules()->State_Get() == MATCH_PENALTIES)
 		return;
 
 	m_vOffsidePos = m_vPos;
@@ -1873,7 +1899,7 @@ void CBall::Kicked(body_part_t bodyPart)
 
 void CBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart)
 {
-	if (SDKGameRules()->IsIntermissionState() || m_bIgnoreTriggers || SDKGameRules()->State_Get() == MATCH_PENALTIES)
+	if (SDKGameRules()->IsIntermissionState() || m_bHasQueuedState || SDKGameRules()->State_Get() == MATCH_PENALTIES)
 		return;
 
 	//DevMsg("Touched %0.2f\n", gpGlobals->curtime);
@@ -1907,6 +1933,12 @@ void CBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart)
 		SetOffsideLinePositions(pPl->GetOffsideBallPos().y, pPl->GetOffsidePos().y, pPl->GetOffsideLastOppPlayerPos().y);
 		State_Transition(BALL_FREEKICK, sv_ball_statetransitiondelay.GetFloat());
 	}
+}
+
+void CBall::RemoveAllTouches()
+{
+	if (!m_bHasQueuedState)
+		m_Touches.RemoveAll();
 }
 
 BallTouchInfo *CBall::LastInfo(bool wasShooting, CSDKPlayer *pSkipPl /*= NULL*/)
@@ -2003,12 +2035,13 @@ void CBall::ResetMatch()
 	CreateVPhysics();
 	m_pPl = NULL;
 	m_pOtherPl = NULL;
-	m_Touches.RemoveAll();
+	RemoveAllTouches();
 	m_ePenaltyState = PENALTY_NONE;
 	SetOffsideLinesEnabled(false);
 	SDKGameRules()->DisableShield();
 	UnmarkOffsidePlayers();
-	m_bIgnoreTriggers = false;
+	m_bSetNewPos = false;
+	m_bHasQueuedState = false;
 	RemoveEffects(EF_NODRAW);
 	EnablePlayerCollisions(true);
 	m_pPhys->EnableMotion(true);

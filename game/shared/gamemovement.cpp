@@ -780,8 +780,7 @@ void CGameMovement::ReduceTimers( void )
 		pPl->m_Shared.ResetSprintPenalty();
 	}
 
-	// Can only sprint in forward direction.
-	bool bSprinting = ( (mv->m_nButtons & IN_SPEED) && ( mv->m_nButtons & IN_FORWARD ) );
+	bool bSprinting = ( !pPl->GetGroundEntity() || (mv->m_nButtons & IN_SPEED) && ( mv->m_nButtons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT) ) );
 
 	// If we're holding the sprint key and also actually moving, remove some stamina
 	Vector vel = pPl->GetAbsVelocity();
@@ -2696,8 +2695,13 @@ void CGameMovement::SetPlayerSpeed()
 
 	float stamina = pPl->m_Shared.GetStamina();
 
-	float flMaxSpeed;	
-	if ( ( mv->m_nButtons & IN_SPEED ) && ( stamina > 0 ) && ( mv->m_nButtons & IN_FORWARD ) )
+	float flMaxSpeed;
+
+	if (pPl->GetFlags() & FL_REMOTECONTROLLED)
+	{
+		flMaxSpeed = mp_remotecontrolledspeed.GetInt();
+	}
+	else if ( ( mv->m_nButtons & IN_SPEED ) && ( stamina > 0 ) && ( mv->m_nButtons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT) ) )
 	{
 		flMaxSpeed = mp_sprintspeed.GetInt();	//sprinting
 	}

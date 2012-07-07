@@ -69,7 +69,7 @@ public:
 
 	void BallStartTouch(CBall *pBall)
 	{
-		if (pBall->IgnoreTriggers() || SDKGameRules()->IsIntermissionState())
+		if (pBall->IsSettingNewPos() || pBall->HasQueuedState() || SDKGameRules()->IsIntermissionState())
 			return;
 
 		int team = m_nTeam == 1 ? SDKGameRules()->GetRightSideTeam() : SDKGameRules()->GetLeftSideTeam();
@@ -94,7 +94,7 @@ public:
 
 	void BallStartTouch(CBall *pBall)
 	{
-		if (pBall->IgnoreTriggers() || SDKGameRules()->IsIntermissionState())
+		if (pBall->IsSettingNewPos() || pBall->HasQueuedState() || SDKGameRules()->IsIntermissionState())
 			return;
 
 		int team = m_nTeam == 1 ? SDKGameRules()->GetLeftSideTeam() : SDKGameRules()->GetRightSideTeam();
@@ -119,7 +119,7 @@ public:
 
 	void BallStartTouch(CBall *pBall)
 	{
-		if (pBall->IgnoreTriggers() || SDKGameRules()->IsIntermissionState())
+		if (pBall->IsSettingNewPos() || pBall->HasQueuedState() || SDKGameRules()->IsIntermissionState())
 			return;
 
 		pBall->TriggerSideline();

@@ -239,29 +239,3 @@ CSDKPlayer *CKeeperBot::FindClosestPlayerToBall()
 
 	return pClosest;
 }
-
-CSDKPlayer *CKeeperBot::FindClosestPlayerToSelf(bool teammatesOnly)
-{
-	float shortestDist = FLT_MAX;
-	CSDKPlayer *pClosest = NULL;
-
-	for (int i = 1; i <= gpGlobals->maxClients; i++)
-	{
-		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
-		if (!CSDKPlayer::IsOnField(pPl) || pPl == this)
-			continue;
-
-		if (teammatesOnly && pPl->GetTeamNumber() != GetTeamNumber())
-			continue;
-
-		float dist = (pPl->GetLocalOrigin() - GetLocalOrigin()).Length2D();
-
-		if (dist < shortestDist)
-		{
-			shortestDist = dist;
-			pClosest = pPl;
-		}
-	}
-
-	return pClosest;
-}

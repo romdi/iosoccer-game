@@ -390,7 +390,9 @@ public:
 
 	bool				IsNormalshooting();
 	bool				IsPowershooting();
+	bool				IsAutoPassing();
 	bool				IsShooting();
+	CSDKPlayer			*FindClosestPlayerToSelf(bool teammatesOnly, bool forwardOnly = false);
 
 	CHandle<CBall> m_pHoldingBall;
 
