@@ -849,7 +849,7 @@ void CSDKPlayer::State_ACTIVE_Enter()
 
 void CSDKPlayer::State_ACTIVE_PreThink()
 {
-	if (!(m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1))))
+	if (!(m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1 | IN_ALT2))))
 		m_bShotButtonsReleased = true;
 }
 
@@ -1047,7 +1047,7 @@ void CSDKPlayer::SetPosInsideShield(Vector pos, bool holdAtTargetPos)
 		if (m_bHoldAtTargetPos)
 			AddFlag(FL_ATCONTROLS);
 
-		if (m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1)))
+		if (m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1 | IN_ALT2)))
 			m_bShotButtonsReleased = false;
 	}
 	else
@@ -1097,7 +1097,7 @@ void CSDKPlayer::SetPosOutsideShield(bool holdAtTargetPos)
 
 void CSDKPlayer::GetTargetPos(const Vector &pos, Vector &targetPos)
 {
-	float border = (GetFlags() & FL_SHIELD_KEEP_IN) ? -mp_shield_border.GetInt() : mp_shield_border.GetInt();
+	float border = (GetFlags() & FL_SHIELD_KEEP_IN) ? 0 : 2 * mp_shield_border.GetInt();
 
 	if (SDKGameRules()->m_nShieldType == SHIELD_GOALKICK || 
 		SDKGameRules()->m_nShieldType == SHIELD_PENALTY ||
@@ -1109,9 +1109,9 @@ void CSDKPlayer::GetTargetPos(const Vector &pos, Vector &targetPos)
 		if (GetFlags() & FL_SHIELD_KEEP_OUT || SDKGameRules()->m_nShieldType == SHIELD_PENALTY)
 		{
 			if (SDKGameRules()->m_vKickOff.GetY() > min.y)
-				min.y -= 200;
+				min.y -= 500;
 			else
-				max.y += 200;
+				max.y += 500;
 		}
 
 		bool isInsideBox = pos.x > min.x && pos.y > min.y && pos.x < max.x && pos.y < max.y; 
@@ -1254,7 +1254,7 @@ Vector CSDKPlayer::GetSpawnPos(bool findSafePos)
 	float xDist = halfField.x / 5;
 	float yDist = halfField.y / 5;
 	float xPos = g_Positions[mp_maxplayers.GetInt() - 1][GetTeamPosIndex()][POS_XPOS] * xDist + xDist;
-	float yPos = g_Positions[mp_maxplayers.GetInt() - 1][GetTeamPosIndex()][POS_YPOS] * yDist + max(mp_shield_freekick_radius.GetInt() + mp_shield_border.GetInt(), yDist);
+	float yPos = g_Positions[mp_maxplayers.GetInt() - 1][GetTeamPosIndex()][POS_YPOS] * yDist + max(mp_shield_freekick_radius.GetInt() + 2 * mp_shield_border.GetInt(), yDist);
 
 	Vector spawnPos;
 	if (GetTeam()->m_nForward == 1)
@@ -1308,8 +1308,9 @@ int CSDKPlayer::GetTeamPosition()
 void CSDKPlayer::ResetFlags()
 {
 	m_bIsAtTargetPos = false;
-	RemoveFlag(FL_REMOTECONTROLLED | FL_FREECAM | FL_CELEB | FL_NO_X_MOVEMENT | FL_NO_Y_MOVEMENT | FL_ATCONTROLS | FL_FROZEN);
+	RemoveFlag(FL_SHIELD_KEEP_IN | FL_SHIELD_KEEP_OUT | FL_REMOTECONTROLLED | FL_FREECAM | FL_CELEB | FL_NO_X_MOVEMENT | FL_NO_Y_MOVEMENT | FL_ATCONTROLS | FL_FROZEN);
 	DoServerAnimationEvent(PLAYERANIMEVENT_CANCEL);
+	m_pHoldingBall = NULL;
 
 	if (GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B)
 	{
@@ -1421,4 +1422,13 @@ void CPlayerPersistentData::SavePlayerData(CSDKPlayer *pPl)
 void CPlayerPersistentData::RemoveAllPlayerData()
 {
 	m_PlayerPersistentData.RemoveAll();
+
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+		if (!pPl)
+			continue;
+
+		pPl->m_flNextJoin = gpGlobals->curtime;
+	}
 }

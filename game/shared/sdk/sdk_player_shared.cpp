@@ -222,7 +222,7 @@ void CSDKPlayer::MoveToTargetPos(Vector &pos, Vector &vel, QAngle &ang)
 				AddFlag(FL_ATCONTROLS);
 
 #ifdef GAME_DLL
-			if (m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1)))
+			if (m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1 | IN_ALT2)))
 				m_bShotButtonsReleased = false;
 #endif
 
@@ -237,7 +237,7 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 
 	if (SDKGameRules()->m_nShieldType != SHIELD_NONE)
 	{
-		float border = (GetFlags() & FL_SHIELD_KEEP_IN) ? -mp_shield_border.GetInt() : mp_shield_border.GetInt();
+		float border = (GetFlags() & FL_SHIELD_KEEP_IN) ? 0 : 2 * mp_shield_border.GetInt();
 
 		if (SDKGameRules()->m_nShieldType == SHIELD_GOALKICK || 
 			SDKGameRules()->m_nShieldType == SHIELD_PENALTY ||
@@ -249,9 +249,9 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 			if (GetFlags() & FL_SHIELD_KEEP_OUT || SDKGameRules()->m_nShieldType == SHIELD_PENALTY)
 			{
 				if (SDKGameRules()->m_vKickOff.GetY() > min.y)
-					min.y -= 200;
+					min.y -= 500;
 				else
-					max.y += 200;
+					max.y += 500;
 			}
 
 			bool isInsideBox = newPos.x > min.x && newPos.y > min.y && newPos.x < max.x && newPos.y < max.y; 

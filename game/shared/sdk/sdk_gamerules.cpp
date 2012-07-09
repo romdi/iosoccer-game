@@ -748,7 +748,7 @@ void CSDKGameRules::ChooseTeamNames(bool clubTeams, bool countryTeams, bool real
 
 		Msg("color distance: %f\n", ColorDistance(m_TeamKitInfoDatabase[teamHome]->m_PrimaryKitColor, m_TeamKitInfoDatabase[teamAway]->m_PrimaryKitColor));
 
-		mp_teamlist.SetValue(UTIL_VarArgs("%s;%s", m_TeamKitInfoDatabase[teamHome]->m_szKitName, m_TeamKitInfoDatabase[teamAway]->m_szKitName));
+		mp_teamlist.SetValue(UTIL_VarArgs("%s,%s", m_TeamKitInfoDatabase[teamHome]->m_szKitName, m_TeamKitInfoDatabase[teamAway]->m_szKitName));
 		IOS_LogPrintf("Setting random teams: %s against %s\n", m_TeamKitInfoDatabase[teamHome]->m_szKitName, m_TeamKitInfoDatabase[teamAway]->m_szKitName);
 		GetGlobalTeam(TEAM_A)->SetKitName(m_TeamKitInfoDatabase[teamHome]->m_szKitName);
 		GetGlobalTeam(TEAM_B)->SetKitName(m_TeamKitInfoDatabase[teamAway]->m_szKitName);
@@ -1536,8 +1536,8 @@ void OnTeamlistChange(IConVar *var, const char *pOldValue, float flOldValue)
 		char teamlist[256];
 		Q_strncpy(teamlist, ((ConVar*)var)->GetString(), sizeof(teamlist));
 
-		char *home = strtok(teamlist, ",");
-		char *away = strtok(NULL, ",");
+		char *home = strtok(teamlist, " ,;");
+		char *away = strtok(NULL, " ,;");
 		if (home == NULL || away == NULL)
 			Msg( "Format: mp_teamlist \"<home team>,<away team>\"\n" );
 		else

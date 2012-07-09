@@ -213,6 +213,7 @@ CBall::CBall()
 	m_pCreator = NULL;
 	m_pHoldingPlayer = NULL;
 	m_flNextShot = gpGlobals->curtime;
+	m_nInPenBoxOfTeam = TEAM_INVALID;
 }
 
 CBall::~CBall()
@@ -342,6 +343,12 @@ void CBall::VPhysicsUpdate(IPhysicsObject *pPhysics)
 {
 	//if (!SDKGameRules()->IsIntermissionState())
 	//	CReplayManager::GetInstance()->CheckReplay();
+
+	if (m_eBallState == BALL_KEEPERHANDS && CSDKPlayer::IsOnField(m_pPl))
+	{
+		SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + BODY_CHEST_START) + m_vPlForward2D * 2 * VEC_HULL_MAX.x);
+		m_bSetNewPos = false;
+	}
 
 	if (!m_bSetNewPos)
 	{
@@ -492,6 +499,7 @@ void CBall::SetPos(const Vector &pos)
 	m_vVel = vec3_origin;
 	m_vRot = vec3_origin;
 	m_pPhys->EnableMotion(true);
+	m_pPhys->Wake();
 	m_pPhys->SetVelocityInstantaneous(&vec3_origin, &vec3_origin);
 	m_pPhys->SetPosition(m_vPos, m_aAng, true);
 	m_pPhys->EnableMotion(false);
@@ -502,6 +510,7 @@ void CBall::SetVel(const Vector &vel)
 {
 	m_vVel = vel;
 	m_pPhys->EnableMotion(true);
+	m_pPhys->Wake();
 	m_pPhys->SetVelocity(&m_vVel, &m_vRot);
 }
 
@@ -509,6 +518,7 @@ void CBall::SetRot(const AngularImpulse &rot)
 {
 	m_vRot = rot;
 	m_pPhys->EnableMotion(true);
+	m_pPhys->Wake();
 	m_pPhys->SetVelocity(&m_vVel, &m_vRot);
 }
 
@@ -598,7 +608,7 @@ void CBall::State_Think()
 		State_Enter(m_eNextState, true);
 	}
 
-	if (m_pCurStateInfo && m_pCurStateInfo->m_eBallState != BALL_NORMAL && m_eNextState == BALL_NOSTATE && m_flStateTimelimit != -1 && gpGlobals->curtime >= m_flStateTimelimit)
+	if (m_pCurStateInfo && m_eBallState != BALL_NORMAL && m_eNextState == BALL_NOSTATE && m_flStateTimelimit != -1 && gpGlobals->curtime >= m_flStateTimelimit)
 	{
 		if (CSDKPlayer::IsOnField(m_pPl))
 		{
@@ -638,8 +648,10 @@ CBallStateInfo* CBall::State_LookupInfo( ball_state_t state )
 
 void CBall::State_NORMAL_Enter()
 {
-	//m_pPhys->EnableMotion(true);
-	//EnablePlayerCollisions(true);
+	m_pPhys->EnableMotion(true);
+	EnablePlayerCollisions(true);
+	RemoveEffects(EF_NODRAW);
+	m_pPhys->Wake();
 	//m_bIgnoreTriggers = false;
 	//SDKGameRules()->DisableShield();
 	SDKGameRules()->EndInjuryTime();
@@ -1190,32 +1202,34 @@ void CBall::State_KEEPERHANDS_Think()
 			return State_Transition(BALL_NORMAL);
 		}
 
-		if (!SDKGameRules()->IsIntermissionState())
+		if (!SDKGameRules()->IsIntermissionState() && !m_bHasQueuedState)
 		{
 			SDKGameRules()->EnableShield(SHIELD_KEEPERHANDS, m_pPl->GetTeamNumber());
 			UpdatePossession(m_pPl);
 			//m_pPl->m_bIsAtTargetPos = true;
-			m_pPl->SetPosInsideShield(vec3_invalid, false);
+			//m_pPl->SetPosInsideShield(vec3_invalid, false);
+			m_pPl->m_bIsAtTargetPos = true;
 			PlayersAtTargetPos(false);
 		}
-		else
-		{
-			if (m_pPl->m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1)))
+
+		if (m_pPl->m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1 | IN_ALT2)))
 				m_pPl->m_bShotButtonsReleased = false;
-		}
 
 		m_pHoldingPlayer = m_pPl;
 		m_pPl->m_pHoldingBall = this;
 		m_pPl->m_nBody = MODEL_KEEPER_AND_BALL;
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_CARRY);
 		m_pPl->m_nSkin = m_pPl->m_nBaseSkin + m_nSkin;
-		SetEffects(EF_NODRAW);
+		//SetEffects(EF_NODRAW);
 		EnablePlayerCollisions(false);
 		m_flStateTimelimit = -1;
-		//Touched(m_pPl, true, BODY_HANDS);
+		Touched(m_pPl, true, BODY_HANDS);
+		//SetParent(m_pPl);
+		//SetLocalOrigin(m_pPl->GetLocalOrigin() + Vector(0, 0, 200));
+		//SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + BODY_CHEST_START) + m_vPlForward2D * 2 * VEC_HULL_MAX.x * 2);
 	}
 
-	if (!SDKGameRules()->IsIntermissionState() && SDKGameRules()->State_Get() != MATCH_PENALTIES)
+	if (!SDKGameRules()->IsIntermissionState() && !m_bHasQueuedState && SDKGameRules()->State_Get() != MATCH_PENALTIES)
 	{
 		if (m_flStateTimelimit == -1)
 			m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit.GetFloat();
@@ -1223,14 +1237,16 @@ void CBall::State_KEEPERHANDS_Think()
 
 	UpdateCarrier();
 
-	SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + BODY_CHEST_END) + m_vPlForward2D * 2 * VEC_HULL_MAX.x);
+	//SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + BODY_CHEST_START) + m_vPlForward2D * 2 * VEC_HULL_MAX.x);
 
-	//if (m_nInPenBoxOfTeam != m_pPl->GetTeamNumber())
-	//{
-	//	Kicked(BODY_HANDS);
-	//	MarkOffsidePlayers();
-	//	return State_Transition(BALL_NORMAL);
-	//}
+	if (m_nInPenBoxOfTeam != m_pPl->GetTeamNumber())
+	{
+		RemoveAllTouches();
+		Kicked(BODY_HANDS);
+		MarkOffsidePlayers();
+		RemoveFromPlayerHands(m_pPl);
+		return State_Transition(BALL_NORMAL);
+	}
 
 	if (m_pPl->m_bShotButtonsReleased && m_pPl->IsShooting() && m_pPl->m_flNextShot <= gpGlobals->curtime)
 	{
@@ -1543,7 +1559,7 @@ float CBall::GetPowershotStrength(float multiplier, int minStrength, int maxStre
 
 	m_pPl->m_Shared.SetStamina(m_pPl->m_Shared.GetStamina() - multiplier * powershotStrength);
 
-	return multiplier * (minStrength + (maxStrength - minStrength) * (powershotStrength / 100.0f));
+	return max(sv_ball_minshotstrength.GetInt(), multiplier * (minStrength + (maxStrength - minStrength) * (powershotStrength / 100.0f)));
 }
 
 bool CBall::DoGroundShot()
@@ -1712,7 +1728,7 @@ void CBall::Think( void	)
 void CBall::TriggerGoal(int team)
 {
 	if (SDKGameRules()->State_Get() == MATCH_PENALTIES)
-	{ 
+	{
 		if (team == m_nFoulingTeam)
 		{
 			GetGlobalTeam(m_nFoulingTeam)->GetOppTeam()->AddGoal();
@@ -1751,7 +1767,7 @@ void CBall::TriggerSideline()
 
 	Vector ballPos;
 	m_pPhys->GetPosition(&ballPos, NULL);
-	CBaseEntity *pThrowIn = gEntList.FindEntityByClassnameNearest("info_throw_in", ballPos, 9999);
+	CBaseEntity *pThrowIn = gEntList.FindEntityByClassnameNearest("info_throw_in", ballPos, 1000);
 	if (!pThrowIn)
 		return;
 
@@ -2045,6 +2061,8 @@ void CBall::ResetMatch()
 	RemoveEffects(EF_NODRAW);
 	EnablePlayerCollisions(true);
 	m_pPhys->EnableMotion(true);
+	m_pPhys->Wake();
+	m_pHoldingPlayer = NULL;
 
 	GetGlobalTeam(TEAM_A)->ResetStats();
 	GetGlobalTeam(TEAM_B)->ResetStats();
@@ -2073,7 +2091,7 @@ void CBall::SetCreator(CSDKPlayer *pCreator)
 
 void CBall::EnablePlayerCollisions(bool enable)
 {
-	SetCollisionGroup(enable ? COLLISION_GROUP_PUSHAWAY : COLLISION_GROUP_DEBRIS);
+	SetCollisionGroup(enable ? COLLISION_GROUP_SOLID_BALL : COLLISION_GROUP_NONSOLID_BALL);
 }
 
 void CBall::RemoveFromPlayerHands(CSDKPlayer *pPl)
@@ -2084,4 +2102,5 @@ void CBall::RemoveFromPlayerHands(CSDKPlayer *pPl)
 	pPl->DoServerAnimationEvent(PLAYERANIMEVENT_CARRY_END);
 	RemoveEffects(EF_NODRAW);
 	EnablePlayerCollisions(true);
+	m_pPhys->Wake();
 }
