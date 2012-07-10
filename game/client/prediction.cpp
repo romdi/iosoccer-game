@@ -230,9 +230,8 @@ void CPrediction::ShutdownPredictables( void )
 	if ( ( release_count > 0 ) || 
 		 ( shutdown_count > 0 ) )
 	{
-		Msg( "Shutdown %i predictable entities and %i client-created entities\n",
-			shutdown_count,
-			release_count );
+		// TODO: Find better solution for remote controlling than setting cl_predict to 0 and suppressing this message
+		//Msg( "Shutdown %i predictable entities and %i client-created entities\n", shutdown_count, release_count );
 	}
 
 	// All gone now...
@@ -261,8 +260,8 @@ void CPrediction::ReinitPredictables( void )
 		e->CheckInitPredictable( "ReinitPredictables" );
 	}
 
-	Msg( "Reinitialized %i predictable entities\n",
-		predictables->GetPredictableCount() );
+	// TODO: Find better solution for remote controlling than setting cl_predict to 0 and suppressing this message
+	//Msg( "Reinitialized %i predictable entities\n",	predictables->GetPredictableCount() );
 #endif
 }
 

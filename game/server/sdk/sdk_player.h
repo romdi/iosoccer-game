@@ -357,9 +357,11 @@ public:
 	void				SetOffsideBallPos(Vector pos);
 	Vector				GetOffsideBallPos();
 	
-	void				SetPosInsideShield(Vector pos, bool holdAtTargetPos);
+	void				SetPosInsideShield(const Vector &pos, bool holdAtTargetPos);
 	void				SetPosOutsideShield(bool holdAtTargetPos);
+	void				SetPosOutsideBall();
 	void				GetTargetPos(const Vector &pos, Vector &targetPos);
+	void				ActivateRemoteControlling(const Vector &targetPos);
 
 	Vector				GetSpawnPos(bool findSafePos);
 
@@ -392,9 +394,11 @@ public:
 	bool				IsPowershooting();
 	bool				IsAutoPassing();
 	bool				IsShooting();
-	CSDKPlayer			*FindClosestPlayerToSelf(bool teammatesOnly, bool forwardOnly = false);
+	CSDKPlayer			*FindClosestPlayerToSelf(bool teammatesOnly, bool forwardOnly = false, float maxYawAngle = 360);
 
-	CHandle<CBall> m_pHoldingBall;
+	CHandle<CBall>		m_pHoldingBall;
+
+	float				m_flLastReadyTime;
 
 protected:
 

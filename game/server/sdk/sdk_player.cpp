@@ -429,6 +429,8 @@ void CSDKPlayer::Spawn()
 	//UseClientSideAnimation();
 }
 
+#include "client.h"
+
 bool CSDKPlayer::ChangeTeamPos(int team, int posIndex, bool instantly /*= false*/)
 {
 	if (team != TEAM_SPECTATOR && team != TEAM_A && team != TEAM_B)
@@ -481,7 +483,7 @@ bool CSDKPlayer::ChangeTeamPos(int team, int posIndex, bool instantly /*= false*
 		else
 		{
 			ChooseKeeperSkin();
-		}	
+		}
 	}
 
 	return true;
@@ -1016,10 +1018,10 @@ const Vector CSDKPlayer::GetVisualLocalOrigin()
 	return origin;
 }
 
-void CSDKPlayer::SetPosInsideShield(Vector pos, bool holdAtTargetPos)
+void CSDKPlayer::SetPosInsideShield(const Vector &pos, bool holdAtTargetPos)
 {
 	RemoveFlag(FL_SHIELD_KEEP_OUT);
-	AddFlag(FL_SHIELD_KEEP_IN);
+	//AddFlag(FL_SHIELD_KEEP_IN);
 	m_vTargetPos = pos;
 	m_bHoldAtTargetPos = holdAtTargetPos;
 	//SetMoveType(MOVETYPE_NOCLIP);
@@ -1027,6 +1029,8 @@ void CSDKPlayer::SetPosInsideShield(Vector pos, bool holdAtTargetPos)
 	switch (SDKGameRules()->m_nShieldType)
 	{
 	case SHIELD_KICKOFF:
+		AddFlag(FL_SHIELD_KEEP_IN);
+		break;
 	case SHIELD_THROWIN:
 	case SHIELD_PENALTY:
 		break;
@@ -1036,8 +1040,11 @@ void CSDKPlayer::SetPosInsideShield(Vector pos, bool holdAtTargetPos)
 	case SHIELD_GOALKICK:
 	case SHIELD_CORNER:
 	case SHIELD_FREEKICK:
-		if (mp_shield_liberal_positioning.GetBool())
+		if (mp_shield_liberal_taker_positioning.GetBool())
+		{
 			GetTargetPos(GetLocalOrigin(), m_vTargetPos.GetForModify());
+			SetPosOutsideBall();
+		}
 		break;
 	}
 
@@ -1052,11 +1059,7 @@ void CSDKPlayer::SetPosInsideShield(Vector pos, bool holdAtTargetPos)
 	}
 	else
 	{
-		m_bIsAtTargetPos = false;
-		RemoveFlag(FL_FREECAM);
-		DoServerAnimationEvent(PLAYERANIMEVENT_CANCEL);
-		AddFlag(FL_REMOTECONTROLLED);
-		AddSolidFlags(FSOLID_NOT_SOLID);
+		ActivateRemoteControlling(m_vTargetPos);
 	}
 }
 
@@ -1087,12 +1090,43 @@ void CSDKPlayer::SetPosOutsideShield(bool holdAtTargetPos)
 	}
 	else
 	{
-		m_bIsAtTargetPos = false;
-		RemoveFlag(FL_FREECAM);
-		DoServerAnimationEvent(PLAYERANIMEVENT_CANCEL);
-		AddFlag(FL_REMOTECONTROLLED);
-		AddSolidFlags(FSOLID_NOT_SOLID);
+		ActivateRemoteControlling(m_vTargetPos);
 	};
+}
+
+void CSDKPlayer::SetPosOutsideBall()
+{
+	RemoveFlag(FL_SHIELD_KEEP_IN | FL_SHIELD_KEEP_OUT);
+
+	Vector ballPos = GetBall()->GetPos();
+
+	Vector ballPlayerDir = GetLocalOrigin() - ballPos;
+
+	if (ballPlayerDir.Length2D() >= 3 * VEC_HULL_MAX.x)
+	{
+		m_bIsAtTargetPos = true;
+	}
+	else
+	{
+		Vector moveDir = SDKGameRules()->m_vKickOff - ballPos;
+		if (moveDir.Length2D() == 0)
+		{
+			moveDir = Vector(0, -GetTeam()->m_nForward, 0);
+		}
+		moveDir.NormalizeInPlace();
+		moveDir *= 3 * VEC_HULL_MAX.x;
+		ActivateRemoteControlling(moveDir);
+	}
+}
+
+void CSDKPlayer::ActivateRemoteControlling(const Vector &targetPos)
+{
+	m_vTargetPos = targetPos;
+	m_bIsAtTargetPos = false;
+	RemoveFlag(FL_FREECAM);
+	DoServerAnimationEvent(PLAYERANIMEVENT_CANCEL);
+	AddFlag(FL_REMOTECONTROLLED);
+	AddSolidFlags(FSOLID_NOT_SOLID);
 }
 
 void CSDKPlayer::GetTargetPos(const Vector &pos, Vector &targetPos)
@@ -1311,6 +1345,7 @@ void CSDKPlayer::ResetFlags()
 	RemoveFlag(FL_SHIELD_KEEP_IN | FL_SHIELD_KEEP_OUT | FL_REMOTECONTROLLED | FL_FREECAM | FL_CELEB | FL_NO_X_MOVEMENT | FL_NO_Y_MOVEMENT | FL_ATCONTROLS | FL_FROZEN);
 	DoServerAnimationEvent(PLAYERANIMEVENT_CANCEL);
 	m_pHoldingBall = NULL;
+	m_flLastReadyTime = -1;
 
 	if (GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B)
 	{
@@ -1343,7 +1378,7 @@ bool CSDKPlayer::IsShooting()
 	return IsNormalshooting() || IsPowershooting() || IsAutoPassing();
 }
 
-CSDKPlayer *CSDKPlayer::FindClosestPlayerToSelf(bool teammatesOnly, bool forwardOnly /*= false*/)
+CSDKPlayer *CSDKPlayer::FindClosestPlayerToSelf(bool teammatesOnly, bool forwardOnly /*= false*/, float maxYawAngle /*= 360*/)
 {
 	float shortestDist = FLT_MAX;
 	CSDKPlayer *pClosest = NULL;
@@ -1358,8 +1393,12 @@ CSDKPlayer *CSDKPlayer::FindClosestPlayerToSelf(bool teammatesOnly, bool forward
 			continue;
 
 		Vector dir = pPl->GetLocalOrigin() - GetLocalOrigin();
+		dir.z = 0;
 
 		if (forwardOnly && Sign(dir.y) != GetTeam()->m_nForward)
+			continue;
+
+		if (maxYawAngle < 360 && abs(RAD2DEG(acos(EyeDirection2D().Dot(dir)))) > maxYawAngle / 2)
 			continue;
 
 		float dist = dir.Length2D();

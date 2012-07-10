@@ -238,7 +238,6 @@ void CHudScorebar::Init( void )
 
 const char *g_szStateNames[32] =
 {
-	"IN",
 	"WU",
 	"H1",
 	"H1",
@@ -253,8 +252,7 @@ const char *g_szStateNames[32] =
 	"ETH2",
 	"PSB",
 	"PS",
-	"CD",
-	"End"
+	"CD"
 };
 
 //-----------------------------------------------------------------------------

@@ -241,7 +241,9 @@ void C_Team::SetKitName(const char *pKitName)
 	}
 	else
 	{
-		DownloadTeamKit(pKitName);
+		m_pTeamKitInfo = m_TeamKitInfoDatabase[0];
+		Q_strncpy(m_szKitName, m_pTeamKitInfo->m_szKitName, MAX_KITNAME_LENGTH);
+		DownloadTeamKit(pKitName, GetTeamNumber());
 		//materials->ReloadTextures();
 	}
 }

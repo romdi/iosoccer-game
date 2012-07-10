@@ -56,7 +56,8 @@ extern ConVar
 	mp_shield_corner_radius,
 	mp_shield_kickoff_radius,
 	mp_shield_border,
-	mp_shield_liberal_positioning,
+	mp_shield_liberal_taker_positioning,
+	mp_shield_liberal_teammates_positioning,
 	mp_field_border,
 	mp_offside,
 	mp_joindelay,
@@ -96,8 +97,7 @@ extern ConVar
 
 enum match_state_t
 {
-	MATCH_INIT = 0,
-	MATCH_WARMUP,
+	MATCH_WARMUP = 0,
 	MATCH_FIRST_HALF,
 	MATCH_FIRST_HALF_INJURY_TIME,
 	MATCH_HALFTIME,
@@ -111,8 +111,7 @@ enum match_state_t
 	MATCH_EXTRATIME_SECOND_HALF_INJURY_TIME,
 	MATCH_PENALTIES_INTERMISSION,
 	MATCH_PENALTIES,
-	MATCH_COOLDOWN,
-	MATCH_END
+	MATCH_COOLDOWN
 };
 
 enum ball_shield_type_t
@@ -296,9 +295,6 @@ protected:
 	static CSDKGameRulesStateInfo* State_LookupInfo(match_state_t state);	// Find the state info for the specified state.
 
 	// State Functions
-	void State_INIT_Enter();
-	void State_INIT_Think();
-
 	void State_WARMUP_Enter();
 	void State_WARMUP_Think();
 
@@ -332,9 +328,6 @@ protected:
 	void State_COOLDOWN_Enter();
 	void State_COOLDOWN_Think();
 
-	void State_END_Enter();
-	void State_END_Think();
-
 	int m_nFirstHalfKickOffTeam;
 	int m_nKickOffTeam;
 	int m_nFirstHalfLeftSideTeam;
@@ -342,6 +335,9 @@ protected:
 	CPrecipitation *m_pPrecip;
 
 	void CalcBallZone();
+
+	void CheckChatText(CBasePlayer *pPlayer, char *text);
+	void CheckChatForReadySignal(CSDKPlayer *pPlayer, char *text);
 
 public:
 
@@ -397,7 +393,7 @@ bool IsValidPosition(int posIndex);
 int GetKeeperPosIndex();
 
 #ifdef CLIENT_DLL
-void DownloadTeamKit(const char *pKitName);
+void DownloadTeamKit(const char *pKitName, int teamNumber);
 #endif
 
 #endif // SDK_GAMERULES_H

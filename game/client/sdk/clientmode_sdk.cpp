@@ -32,6 +32,7 @@
 #include "weapon_sdkbase.h"
 #include "c_sdk_player.h"
 #include "c_weapon__stubs.h"		//Tony; add stubs
+#include "ios_teamkit_parse.h"
 
 class CHudChat;
 
@@ -83,6 +84,8 @@ void CSDKModeManager::Init()
 
 void CSDKModeManager::LevelInit( const char *newmap )
 {
+	CTeamKitInfo::FindTeamKits();
+
 	g_pClientMode->LevelInit( newmap );
 	// HACK: the detail sway convars are archive, and default to 0.  Existing CS:S players thus have no detail
 	// prop sway.  We'll force them to DoD's default values for now.

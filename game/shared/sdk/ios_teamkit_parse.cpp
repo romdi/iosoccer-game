@@ -159,8 +159,18 @@ void CTeamKitInfo::FindTeamKits()
 	const char *pFilename = filesystem->FindFirstEx(filefilter, "MOD", &findHandle);
 	while (pFilename)
 	{
-		TEAMKIT_FILE_INFO_HANDLE hTeamKitInfo;
-		ReadTeamKitDataFromFileForSlot(filesystem, pFilename, &hTeamKitInfo);
+		if (Q_strcmp(pFilename, ".") != 0 && Q_strcmp(pFilename, "..") != 0)
+		{
+			char fullFilename[128];
+			Q_snprintf(fullFilename, sizeof(fullFilename), "%s/%s", KITSCRIPT_PATH, pFilename);
+
+			if (filesystem->IsDirectory(fullFilename, "MOD"))
+			{
+				TEAMKIT_FILE_INFO_HANDLE hTeamKitInfo;
+				ReadTeamKitDataFromFileForSlot(filesystem, pFilename, &hTeamKitInfo);
+			}
+		}
+
 		pFilename = filesystem->FindNext(findHandle);
 	}
 

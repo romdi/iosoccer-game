@@ -192,7 +192,7 @@ public:
 
 	CSDKPlayer		*GetCurrentPlayer() { return m_pPl; }
 	CSDKPlayer		*GetCurrentOtherPlayer() { return m_pOtherPl; }
-
+	Vector			const &GetPos() { return m_vPos; }
 	void			SetCreator(CSDKPlayer *pCreator);
 	CSDKPlayer		*GetHoldingPlayer() { return m_pHoldingPlayer; }
 	void			EnablePlayerCollisions(bool enable);
@@ -238,11 +238,11 @@ private:
 	bool			DoVolleyShot();
 	bool			DoChestDrop();
 	bool			DoHeader();
-	void			SetSpin(float multiplier = 1.0f);
+	void			SetSpin(float multiplier);
 	float			GetPitchMultiplier();
 	float			GetPowershotStrength(float multiplier, int minStrength, int maxStrength);
 	void			UpdateCarrier();
-	void			Kicked(body_part_t bodyPart);
+	void			Kicked(body_part_t bodyPart, float spin);
 	void			Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart);
 	void			RemoveAllTouches();
 	BallTouchInfo	*LastInfo(bool wasShooting, CSDKPlayer *pSkipPl = NULL);

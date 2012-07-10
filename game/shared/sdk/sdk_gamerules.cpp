@@ -443,7 +443,6 @@ CSDKGameRules::CSDKGameRules()
 	g_IOSRand.SetSeed(Plat_FloatTime() * 1000);
 
 	m_pCurStateInfo = NULL;
-
 	m_nShieldType = SHIELD_NONE;
 	m_vShieldPos = vec3_invalid;
 	m_flStateTimeLeft = 0;
@@ -462,7 +461,7 @@ CSDKGameRules::CSDKGameRules()
 }
 void CSDKGameRules::ServerActivate()
 {
-	CPlayerPersistentData::RemoveAllPlayerData();
+	//CPlayerPersistentData::RemoveAllPlayerData();
 
 	CTeamKitInfo::FindTeamKits();
 
@@ -533,7 +532,7 @@ void CSDKGameRules::ServerActivate()
 	//	pCrossbar->SetRenderColorA(75);
 	//}
 
-	State_Transition(MATCH_INIT);
+	State_Transition(MATCH_WARMUP);
 }
 
 //-----------------------------------------------------------------------------
@@ -971,7 +970,6 @@ void CSDKGameRules::ClientDisconnected( edict_t *pClient )
 
 void CSDKGameRules::RestartMatch()
 {
-	CPlayerPersistentData::RemoveAllPlayerData();
 	State_Transition(MATCH_WARMUP);
 }
 
@@ -1060,7 +1058,8 @@ ConVar mp_shield_freekick_radius("mp_shield_freekick_radius", "360", FCVAR_NOTIF
 ConVar mp_shield_corner_radius("mp_shield_corner_radius", "360", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar mp_shield_kickoff_radius("mp_shield_kickoff_radius", "360", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar mp_shield_border("mp_shield_border", "20", FCVAR_NOTIFY|FCVAR_REPLICATED);
-ConVar mp_shield_liberal_positioning("mp_shield_liberal_positioning", "0", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar mp_shield_liberal_taker_positioning("mp_shield_liberal_taker_positioning", "0", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar mp_shield_liberal_teammates_positioning("mp_shield_liberal_teammates_positioning", "0", FCVAR_NOTIFY|FCVAR_REPLICATED);
 
 ConVar mp_field_border("mp_field_border", "150", FCVAR_NOTIFY|FCVAR_REPLICATED);
 
@@ -1068,6 +1067,9 @@ ConVar mp_offside("mp_offside", "1", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar mp_joindelay("mp_joindelay", "3", FCVAR_NOTIFY|FCVAR_REPLICATED);
 
 ConVar mp_powershot_fixed_strength("mp_powershot_fixed_strength", "60", FCVAR_NOTIFY|FCVAR_REPLICATED);
+
+ConVar mp_chat_signal_ready("mp_chat_signal_ready", "/ready", FCVAR_NOTIFY);
+ConVar mp_chat_signal_ready_timeout("mp_chat_signal_ready_timeout", "10", FCVAR_NOTIFY);
 
 static void OnMaxPlayersChange(IConVar *var, const char *pOldValue, float flOldValue)
 {
@@ -1166,7 +1168,6 @@ CSDKGameRulesStateInfo* CSDKGameRules::State_LookupInfo( match_state_t state )
 {
 	static CSDKGameRulesStateInfo gameRulesStateInfos[] =
 	{
-		{ MATCH_INIT,						"MATCH_INIT",						&CSDKGameRules::State_INIT_Enter,					NULL, &CSDKGameRules::State_INIT_Think,						NULL, 1	},
 		{ MATCH_WARMUP,						"MATCH_WARMUP",						&CSDKGameRules::State_WARMUP_Enter,					NULL, &CSDKGameRules::State_WARMUP_Think,					&mp_timelimit_warmup, 1	},
 		{ MATCH_FIRST_HALF,					"MATCH_FIRST_HALF",					&CSDKGameRules::State_FIRST_HALF_Enter,				NULL, &CSDKGameRules::State_FIRST_HALF_Think,				&mp_timelimit_match, 2 },
 		{ MATCH_HALFTIME,					"MATCH_HALFTIME",					&CSDKGameRules::State_HALFTIME_Enter,				NULL, &CSDKGameRules::State_HALFTIME_Think,					&mp_timelimit_halftime, 1 },
@@ -1178,7 +1179,6 @@ CSDKGameRulesStateInfo* CSDKGameRules::State_LookupInfo( match_state_t state )
 		{ MATCH_PENALTIES_INTERMISSION,		"MATCH_PENALTIES_INTERMISSION",		&CSDKGameRules::State_PENALTIES_INTERMISSION_Enter, NULL, &CSDKGameRules::State_PENALTIES_INTERMISSION_Think,	&mp_timelimit_penalties_intermission, 1 },
 		{ MATCH_PENALTIES,					"MATCH_PENALTIES",					&CSDKGameRules::State_PENALTIES_Enter,				NULL, &CSDKGameRules::State_PENALTIES_Think,				&mp_timelimit_penalties, 1 },
 		{ MATCH_COOLDOWN,					"MATCH_COOLDOWN",					&CSDKGameRules::State_COOLDOWN_Enter,				NULL, &CSDKGameRules::State_COOLDOWN_Think,					&mp_timelimit_cooldown, 1 },
-		{ MATCH_END,						"MATCH_END",						&CSDKGameRules::State_END_Enter,					NULL, &CSDKGameRules::State_END_Think,						NULL, 1},
 	};
 
 	for ( int i=0; i < ARRAYSIZE( gameRulesStateInfos ); i++ )
@@ -1188,15 +1188,6 @@ CSDKGameRulesStateInfo* CSDKGameRules::State_LookupInfo( match_state_t state )
 	}
 
 	return NULL;
-}
-
-void CSDKGameRules::State_INIT_Enter()
-{
-}
-
-void CSDKGameRules::State_INIT_Think()
-{
-	State_Transition(MATCH_WARMUP);
 }
 
 void CSDKGameRules::State_WARMUP_Enter()
@@ -1225,6 +1216,7 @@ void CSDKGameRules::State_FIRST_HALF_Think()
 	if ((45 * 60 - GetMatchDisplayTimeSeconds()) <= 60 && m_nAnnouncedInjuryTime == 0)
 	{
 		m_nAnnouncedInjuryTime = g_IOSRand.RandomInt(1, 4);
+		return;
 	}
 	else if (m_flStateTimeLeft <= 0 && GetBall()->State_Get() == BALL_NORMAL)
 	{
@@ -1256,6 +1248,7 @@ void CSDKGameRules::State_SECOND_HALF_Think()
 	if ((90 * 60 - GetMatchDisplayTimeSeconds()) <= 60 && m_nAnnouncedInjuryTime == 0)
 	{
 		m_nAnnouncedInjuryTime = g_IOSRand.RandomInt(1, 4);
+		return;
 	}
 	else if (m_flStateTimeLeft <= 0 && GetBall()->State_Get() == BALL_NORMAL)
 	{
@@ -1279,6 +1272,7 @@ void CSDKGameRules::State_EXTRATIME_INTERMISSION_Think()
 	if (m_flStateTimeLeft <= 0)
 	{
 		State_Transition(MATCH_EXTRATIME_FIRST_HALF);
+		return;
 	}
 }
 
@@ -1294,6 +1288,7 @@ void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Think()
 	if ((105 * 60 - GetMatchDisplayTimeSeconds()) <= 60 && m_nAnnouncedInjuryTime == 0)
 	{
 		m_nAnnouncedInjuryTime = g_IOSRand.RandomInt(1, 4);
+		return;
 	}
 	else if (m_flStateTimeLeft <= 0 && GetBall()->State_Get() == BALL_NORMAL)
 	{
@@ -1327,6 +1322,7 @@ void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Think()
 	if ((120 * 60 - GetMatchDisplayTimeSeconds()) <= 60 && m_nAnnouncedInjuryTime == 0)
 	{
 		m_nAnnouncedInjuryTime = g_IOSRand.RandomInt(1, 4);
+		return;
 	}
 	else if (m_flStateTimeLeft <= 0 && GetBall()->State_Get() == BALL_NORMAL)
 	{
@@ -1512,17 +1508,8 @@ void CSDKGameRules::State_COOLDOWN_Think()
 {
 	if (m_flStateTimeLeft <= 0)
 	{
-		State_Transition(MATCH_END);
+		GoToIntermission();
 	}
-}
-
-void CSDKGameRules::State_END_Enter()
-{
-	GoToIntermission();
-}
-
-void CSDKGameRules::State_END_Think()
-{
 }
 
 #endif
@@ -1742,16 +1729,20 @@ int CSDKGameRules::GetMatchDisplayTimeSeconds()
 
 	switch ( SDKGameRules()->State_Get() )
 	{
-	case MATCH_EXTRATIME_SECOND_HALF: case MATCH_EXTRATIME_SECOND_HALF_INJURY_TIME:
+	case MATCH_EXTRATIME_SECOND_HALF:
+	case MATCH_EXTRATIME_SECOND_HALF_INJURY_TIME:
 		nTime = (int)(flTime * (90.0f / mp_timelimit_match.GetFloat())) + (90 + 15) * 60;
 		break;
-	case MATCH_EXTRATIME_FIRST_HALF: case MATCH_EXTRATIME_FIRST_HALF_INJURY_TIME:
+	case MATCH_EXTRATIME_FIRST_HALF:
+	case MATCH_EXTRATIME_FIRST_HALF_INJURY_TIME:
 		nTime = (int)(flTime * (90.0f / mp_timelimit_match.GetFloat())) + 90 * 60;
 		break;
-	case MATCH_SECOND_HALF: case MATCH_SECOND_HALF_INJURY_TIME:
+	case MATCH_SECOND_HALF:
+	case MATCH_SECOND_HALF_INJURY_TIME:
 		nTime = (int)(flTime * (90.0f / mp_timelimit_match.GetFloat())) + 45 * 60;
 		break;
-	case MATCH_FIRST_HALF: case MATCH_FIRST_HALF_INJURY_TIME:
+	case MATCH_FIRST_HALF:
+	case MATCH_FIRST_HALF_INJURY_TIME:
 		nTime = (int)(flTime * (90.0f / mp_timelimit_match.GetFloat()));
 		break;
 	case MATCH_WARMUP:
@@ -1784,6 +1775,43 @@ int CSDKGameRules::GetMatchDisplayTimeSeconds()
 }
 
 #ifdef GAME_DLL
+
+void CSDKGameRules::CheckChatText(CBasePlayer *pPlayer, char *pText)
+{
+	CSDKPlayer *pPl = ToSDKPlayer(pPlayer);
+	CheckChatForReadySignal( pPl, pText );
+
+	BaseClass::CheckChatText( pPlayer, pText );
+}
+
+void CSDKGameRules::CheckChatForReadySignal(CSDKPlayer *pPlayer, char *pText)
+{
+	if (Q_stricmp(pText, mp_chat_signal_ready.GetString()) != 0)
+		return;
+
+	pPlayer->m_flLastReadyTime = gpGlobals->curtime;
+
+	bool allReady = true;
+
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+		if (!CSDKPlayer::IsOnField(pPl) || pPl->IsBot())
+			continue;
+
+		if (pPl->m_flLastReadyTime == -1 || pPl->m_flLastReadyTime + mp_chat_signal_ready_timeout.GetInt() <= gpGlobals->curtime)
+		{
+			allReady = false;
+			break;
+		}
+	}
+
+	if (allReady)
+	{
+		mp_timelimit_warmup.SetValue(0.083f);
+		State_Transition(MATCH_WARMUP);
+	}
+}
 
 void IOS_LogPrintf( char *fmt, ... )
 {
@@ -1849,6 +1877,7 @@ static ConCommand reloadtextures("reloadtextures", CC_ReloadTextures);
 struct curl_t
 {
 	char kitName[32];
+	int teamNumber;
 	//CUtlBuffer buf;
 	FileHandle_t fh;
 };
@@ -1898,16 +1927,24 @@ unsigned DoCurl( void *params )
 		filesystem->Close(vars->fh);
 	}
 
+	materials->ReloadTextures();
+
+	if (vars->teamNumber == TEAM_A || vars->teamNumber == TEAM_B)
+	{
+		GetGlobalTeam(vars->teamNumber)->SetKitName(vars->kitName);
+	}
+
 	// clean up the memory
 	delete vars;
-	materials->ReloadTextures();
+
 	return 0;
 }
 
-void DownloadTeamKit(const char *pKitName)
+void DownloadTeamKit(const char *pKitName, int teamNumber)
 {
 	curl_t* vars = new curl_t;
 	Q_strncpy(vars->kitName, pKitName, sizeof(vars->kitName));
+	vars->teamNumber = teamNumber;
 	CreateSimpleThread( DoCurl, vars );
 }
 
@@ -1919,7 +1956,7 @@ void CC_CL_Curl(const CCommand &args)
 		return;
 	}
 
-	DownloadTeamKit(args[1]);
+	DownloadTeamKit(args[1], TEAM_INVALID);
 }
 
 static ConCommand cl_curl("cl_curl", CC_CL_Curl);
