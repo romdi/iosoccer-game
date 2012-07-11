@@ -1392,14 +1392,14 @@ CSDKPlayer *CSDKPlayer::FindClosestPlayerToSelf(bool teammatesOnly, bool forward
 
 		Vector dir = pPl->GetLocalOrigin() - GetLocalOrigin();
 		dir.z = 0;
+		float dist = dir.Length2D();
+		dir.NormalizeInPlace();
 
 		if (forwardOnly && Sign(dir.y) != GetTeam()->m_nForward)
 			continue;
 
 		if (maxYawAngle < 360 && abs(RAD2DEG(acos(EyeDirection2D().Dot(dir)))) > maxYawAngle / 2)
 			continue;
-
-		float dist = dir.Length2D();
 
 		if (dist < shortestDist)
 		{

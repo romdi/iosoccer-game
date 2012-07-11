@@ -837,7 +837,9 @@ void CBall::State_THROWIN_Think()
 
 void CBall::State_THROWIN_Leave(ball_state_t newState)
 {
-	m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_THROW);
+	if (CSDKPlayer::IsOnField(m_pPl))
+		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_THROW);
+
 	EnablePlayerCollisions(true);
 }
 
@@ -1578,8 +1580,6 @@ float CBall::GetPowershotStrength(float multiplier, int minStrength, int maxStre
 	
 	if (m_pPl->m_nButtons & IN_ALT1)
 		powershotStrength = m_pPl->m_nPowershotStrength;
-	else if (m_pPl->m_nButtons & IN_ALT2)
-		powershotStrength = 100;
 	else
 		powershotStrength = mp_powershot_fixed_strength.GetInt();
 
@@ -1599,9 +1599,9 @@ bool CBall::DoGroundShot()
 
 	if (m_pPl->IsAutoPassing())
 	{
-		CSDKPlayer *pPl = m_pPl->FindClosestPlayerToSelf(true, true);
+		CSDKPlayer *pPl = m_pPl->FindClosestPlayerToSelf(true, true, 180);
 		if (!pPl)
-			pPl = m_pPl->FindClosestPlayerToSelf(true, false);
+			pPl = m_pPl->FindClosestPlayerToSelf(true, false, 180);
 		if (!pPl)
 			return false;
 
@@ -1611,9 +1611,13 @@ bool CBall::DoGroundShot()
 		VectorAngles(dir, ang);
 		ang[PITCH] = -30;
 		AngleVectors(ang, &dir);
-		float shotStrength = length * sv_ball_autopass_multiplier.GetFloat();
-		float multiplier = (shotStrength - sv_ball_autopass_minstrength.GetInt()) / (sv_ball_autopass_maxstrength.GetInt() - sv_ball_autopass_minstrength.GetInt());
-		SetVel(dir * GetPowershotStrength(clamp(multiplier, 0.0f, 1.0f), sv_ball_autopass_minstrength.GetInt(), sv_ball_autopass_maxstrength.GetInt()));
+
+		float shotStrength = clamp(length * sv_ball_autopass_multiplier.GetFloat(), sv_ball_autopass_minstrength.GetInt(), sv_ball_autopass_maxstrength.GetInt());
+		float staminaUsage = min(m_pPl->m_Shared.GetStamina(), shotStrength * 100 / sv_ball_autopass_maxstrength.GetInt());
+		shotStrength = max(sv_ball_minshotstrength.GetInt(), staminaUsage / 100.0f * sv_ball_autopass_maxstrength.GetInt());
+		m_pPl->m_Shared.SetStamina(m_pPl->m_Shared.GetStamina() - staminaUsage);
+
+		SetVel(dir * shotStrength);
 		spin = 0;
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_PASS);
 		EmitSound("Ball.kicknormal");
@@ -2124,12 +2128,17 @@ void CBall::EnablePlayerCollisions(bool enable)
 
 void CBall::RemoveFromPlayerHands(CSDKPlayer *pPl)
 {
+	if (CSDKPlayer::IsOnField(pPl))
+	{
+		pPl->m_pHoldingBall = NULL;
+		pPl->m_nBody = MODEL_KEEPER;
+		pPl->DoServerAnimationEvent(PLAYERANIMEVENT_CARRY_END);
+	}
+
 	m_pHoldingPlayer = NULL;
-	pPl->m_pHoldingBall = NULL;
-	pPl->m_nBody = MODEL_KEEPER;
-	pPl->DoServerAnimationEvent(PLAYERANIMEVENT_CARRY_END);
 	RemoveEffects(EF_NODRAW);
 	EnablePlayerCollisions(true);
+	m_pPhys->EnableMotion(true);
 	m_pPhys->Wake();
 }
 
