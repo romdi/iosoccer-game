@@ -91,15 +91,15 @@ CBasePlayer *BotPutInServer( bool bFrozen, int keeper )
 	//pick name
 	if (keeper==1)
 	{
-		Q_snprintf( botname, sizeof( botname ), "KEEPER1");
+		Q_snprintf( botname, sizeof( botname ), "[BOT]Keeper1");
 	}
 	else if (keeper==2)
 	{
-		Q_snprintf( botname, sizeof( botname ), "KEEPER2");
+		Q_snprintf( botname, sizeof( botname ), "[BOT]Keeper2");
 	}
 	else
 	{
-		Q_snprintf( botname, sizeof( botname ), "Arthur");
+		Q_snprintf( botname, sizeof( botname ), "[BOT]Arthur");
 	}
 
 	// This trick lets us create a CBot for this client instead of the CSDKPlayer
@@ -125,6 +125,7 @@ CBasePlayer *BotPutInServer( bool bFrozen, int keeper )
 
 	pPlayer->ClearFlags();
 	pPlayer->AddFlag( FL_CLIENT | FL_FAKECLIENT );
+	pPlayer->m_nPlayerType = keeper;
 
 	if ( bFrozen )
 		pPlayer->AddEFlags( EFL_BOT_FROZEN );
@@ -216,9 +217,9 @@ void Bot_RunAll( void )
 
 		if (pPl->IsBot())
 		{
-			if (!Q_strncmp(pPl->GetPlayerName(), "KEEPER", 6))
+			if (((CBot *)pPl)->m_nPlayerType != 0)
 			{
-				int team = !Q_strcmp(pPl->GetPlayerName(), "KEEPER1") ? TEAM_A : TEAM_B;
+				int team = ((CBot *)pPl)->m_nPlayerType == 1 ? TEAM_A : TEAM_B;
 
 				if (!botkeepers.GetBool())
 				{
@@ -381,8 +382,8 @@ void CBot::BotFrame()
 		else
 		{
 			m_pBall = GetNearestBall(GetLocalOrigin());
-			m_pBall->VPhysicsGetObject()->GetPosition(&m_vBallPos, &m_aBallAng);
-			m_pBall->VPhysicsGetObject()->GetVelocity(&m_vBallVel, &m_vBallAngImp);
+			m_vBallPos = m_pBall->GetPos();
+			m_vBallVel = m_pBall->GetVel();
 
 			m_vBallDir2D = m_vBallVel;
 			m_vBallDir2D.z = 0;

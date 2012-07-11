@@ -41,12 +41,11 @@ public:
 	Vector			m_vBallPos;
 	Vector			m_vBallVel;
 	Vector			m_vBallDir2D;
-	AngularImpulse	m_vBallAngImp;
-	QAngle			m_aBallAng;
 
 	Vector			m_vDirToBall;
 	Vector			m_vLocalDirToBall;
 	float			m_flAngToBallVel;
+	int			m_nPlayerType;
 
 	void BotFrame();
 	virtual void BotThink();

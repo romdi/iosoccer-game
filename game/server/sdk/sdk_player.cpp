@@ -563,6 +563,8 @@ void CSDKPlayer::ChangeTeam( int iTeamNum )
 		if (iOldTeam != TEAM_A && iOldTeam != TEAM_B)
 			State_Transition( STATE_ACTIVE );
 	}
+
+	DevMsg("teamposindex: %d\n", GetTeamPosIndex());
 }
 
 void CSDKPlayer::InitialSpawn( void )
@@ -1042,8 +1044,11 @@ void CSDKPlayer::SetPosInsideShield(const Vector &pos, bool holdAtTargetPos)
 	case SHIELD_FREEKICK:
 		if (mp_shield_liberal_taker_positioning.GetBool())
 		{
+			//m_vTargetPos = GetLocalOrigin();
+			AddFlag(FL_SHIELD_KEEP_IN);
 			GetTargetPos(GetLocalOrigin(), m_vTargetPos.GetForModify());
-			SetPosOutsideBall();
+			RemoveFlag(FL_SHIELD_KEEP_IN);
+			SetPosOutsideBall(m_vTargetPos);
 		}
 		break;
 	}
@@ -1094,13 +1099,13 @@ void CSDKPlayer::SetPosOutsideShield(bool holdAtTargetPos)
 	};
 }
 
-void CSDKPlayer::SetPosOutsideBall()
+void CSDKPlayer::SetPosOutsideBall(const Vector &playerPos)
 {
 	RemoveFlag(FL_SHIELD_KEEP_IN | FL_SHIELD_KEEP_OUT);
 
 	Vector ballPos = GetBall()->GetPos();
 
-	Vector ballPlayerDir = GetLocalOrigin() - ballPos;
+	Vector ballPlayerDir = playerPos - ballPos;
 
 	if (ballPlayerDir.Length2D() >= 3 * VEC_HULL_MAX.x)
 	{
@@ -1108,14 +1113,9 @@ void CSDKPlayer::SetPosOutsideBall()
 	}
 	else
 	{
-		Vector moveDir = SDKGameRules()->m_vKickOff - ballPos;
-		if (moveDir.Length2D() == 0)
-		{
-			moveDir = Vector(0, -GetTeam()->m_nForward, 0);
-		}
-		moveDir.NormalizeInPlace();
-		moveDir *= 3 * VEC_HULL_MAX.x;
-		ActivateRemoteControlling(moveDir);
+		Vector moveDir = Vector(0, -GetTeam()->m_nForward, 0);
+		moveDir *= 4 * VEC_HULL_MAX.x;
+		ActivateRemoteControlling(ballPos + moveDir);
 	}
 }
 

@@ -73,6 +73,14 @@ void ClientPutInServer( edict_t *pEdict, const char *playername )
 	CSDKPlayer *pPlayer = CSDKPlayer::CreatePlayer( "player", pEdict );
 	pPlayer->SetPlayerName( playername );
 	//pPlayer->m_JoinTime = gpGlobals->curtime; //ios
+
+	const char *pszClientVersion = engine->GetClientConVarValue( pPlayer->entindex(), "clientversion" );
+	if (!pPlayer->IsBot() && Q_strcmp(pszClientVersion, "10.07.12/19h") != 0)
+	{
+		char kickcmd[512];
+		Q_snprintf(kickcmd, sizeof(kickcmd), "kickid %i Your client.dll is too old. Please download the latest version.\n", pPlayer->GetUserID());
+		engine->ServerCommand(kickcmd);
+	}
 }
 
 

@@ -334,8 +334,6 @@ protected:
 	int m_nLeftSideTeam;
 	CPrecipitation *m_pPrecip;
 
-	void CalcBallZone();
-
 	void CheckChatText(CBasePlayer *pPlayer, char *text);
 	void CheckChatForReadySignal(CSDKPlayer *pPlayer, char *text);
 
@@ -352,6 +350,8 @@ public:
 	void EnableShield(int type, int dir, const Vector &pos = vec3_origin);
 	void DisableShield();
 	void SetWeather(PrecipitationType_t type);
+
+	bool ClientConnected(edict_t *pEntity, const char *pszName, const char *pszAddress, char *reject, int maxrejectlen);
 
 #endif
 

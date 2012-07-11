@@ -1148,7 +1148,8 @@ void CSDKGameRules::State_Think()
 {
 	if ( m_pCurStateInfo && m_pCurStateInfo->pfnThink )
 	{
-		CalcBallZone();
+		if (GetBall())
+			m_nBallZone = GetBall()->CalcFieldZone();
 
 		if (m_pCurStateInfo->m_MinDurationConVar == NULL)
 			m_flStateTimeLeft = 0.0f;
@@ -1575,6 +1576,14 @@ void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 	// recound stuff
 	RecountTeams(); */
 
+	//const char *pszClientVersion = engine->GetClientConVarValue( pPlayer->entindex(), "clientversion" );
+	//if (!pPlayer->IsBot() && Q_strcmp(pszClientVersion, "10.07.12/19h") != 0)
+	//{
+	//	char kickcmd[512];
+	//	Q_snprintf(kickcmd, sizeof(kickcmd), "kickid %i Your client.dll is too old. Please download the latest version.\n", pPlayer->GetUserID());
+	//	engine->ServerCommand(kickcmd);
+	//}
+
 	const char *pszClubName = engine->GetClientConVarValue( pPlayer->entindex(), "clubname" );
 	((CSDKPlayer *)pPlayer)->SetClubName(pszClubName);
 
@@ -1675,18 +1684,6 @@ void CSDKGameRules::EndInjuryTime()
 		m_flInjuryTime += gpGlobals->curtime - m_flInjuryTimeStart;
 		m_flInjuryTimeStart = -1;
 	}
-}
-
-void CSDKGameRules::CalcBallZone()
-{
-	if (!GetBall())
-		return;
-
-	Vector pos;
-	GetBall()->VPhysicsGetObject()->GetPosition(&pos, NULL);
-	float fieldLength = m_vFieldMax.GetY() - m_vFieldMin.GetY();
-	float dist = pos.y - m_vKickOff.GetY();
-	m_nBallZone = clamp(dist * 100 / (fieldLength / 2), -100, 100);
 }
 
 #endif
@@ -1813,6 +1810,11 @@ void CSDKGameRules::CheckChatForReadySignal(CSDKPlayer *pPlayer, char *pText)
 	}
 }
 
+bool CSDKGameRules::ClientConnected(edict_t *pEntity, const char *pszName, const char *pszAddress, char *reject, int maxrejectlen)
+{
+	return BaseClass::ClientConnected(pEntity, pszName, pszAddress, reject, maxrejectlen);
+}
+
 void IOS_LogPrintf( char *fmt, ... )
 {
 	va_list		argptr;
@@ -1927,12 +1929,12 @@ unsigned DoCurl( void *params )
 		filesystem->Close(vars->fh);
 	}
 
-	materials->ReloadTextures();
+	/*materials->ReloadTextures();
 
 	if (vars->teamNumber == TEAM_A || vars->teamNumber == TEAM_B)
 	{
 		GetGlobalTeam(vars->teamNumber)->SetKitName(vars->kitName);
-	}
+	}*/
 
 	// clean up the memory
 	delete vars;

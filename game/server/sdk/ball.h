@@ -107,6 +107,7 @@ struct CBallStateInfo
 
 	void (CBall::*pfnEnterState)();	// Init and deinit the state.
 	void (CBall::*pfnThink)();	// Do a PreThink() in this state.
+	void (CBall::*pfnLeaveState)(ball_state_t newState);	// Do a PreThink() in this state.
 };
 
 struct BallTouchInfo
@@ -192,28 +193,32 @@ public:
 
 	CSDKPlayer		*GetCurrentPlayer() { return m_pPl; }
 	CSDKPlayer		*GetCurrentOtherPlayer() { return m_pOtherPl; }
-	Vector			const &GetPos() { return m_vPos; }
 	void			SetCreator(CSDKPlayer *pCreator);
 	CSDKPlayer		*GetHoldingPlayer() { return m_pHoldingPlayer; }
 	void			EnablePlayerCollisions(bool enable);
 	void			RemoveFromPlayerHands(CSDKPlayer *pPl);
+	Vector			GetPos();
+	Vector			GetVel();
+	AngularImpulse	GetRot();
+	float			CalcFieldZone();
 
 private:
 
-	void State_NORMAL_Enter();		void State_NORMAL_Think();
-	void State_KICKOFF_Enter();		void State_KICKOFF_Think();
-	void State_THROWIN_Enter();		void State_THROWIN_Think();
-	void State_GOALKICK_Enter();	void State_GOALKICK_Think();
-	void State_CORNER_Enter();		void State_CORNER_Think();
-	void State_GOAL_Enter();		void State_GOAL_Think();
-	void State_FREEKICK_Enter();	void State_FREEKICK_Think();
-	void State_PENALTY_Enter();		void State_PENALTY_Think();
-	void State_KEEPERHANDS_Enter();		void State_KEEPERHANDS_Think();
+	void State_NORMAL_Enter();			void State_NORMAL_Think();			void State_NORMAL_Leave(ball_state_t newState);
+	void State_KICKOFF_Enter();			void State_KICKOFF_Think();			void State_KICKOFF_Leave(ball_state_t newState);
+	void State_THROWIN_Enter();			void State_THROWIN_Think();			void State_THROWIN_Leave(ball_state_t newState);
+	void State_GOALKICK_Enter();		void State_GOALKICK_Think();		void State_GOALKICK_Leave(ball_state_t newState);
+	void State_CORNER_Enter();			void State_CORNER_Think();			void State_CORNER_Leave(ball_state_t newState);
+	void State_GOAL_Enter();			void State_GOAL_Think();			void State_GOAL_Leave(ball_state_t newState);
+	void State_FREEKICK_Enter();		void State_FREEKICK_Think();		void State_FREEKICK_Leave(ball_state_t newState);
+	void State_PENALTY_Enter();			void State_PENALTY_Think();			void State_PENALTY_Leave(ball_state_t newState);
+	void State_KEEPERHANDS_Enter();		void State_KEEPERHANDS_Think();		void State_KEEPERHANDS_Leave(ball_state_t newState);
 
 	void State_PreThink();
 	void State_PostThink();
 	void State_Enter(ball_state_t newState, bool cancelQueuedState);	// Initialize the new state.
 	void State_Think();										// Update the current state.
+	void State_Leave(ball_state_t newState);
 	static CBallStateInfo* State_LookupInfo(ball_state_t state);	// Find the state info for the specified state.
 	ball_state_t	m_eBallState;
 	ball_state_t	m_eNextState;
@@ -278,6 +283,8 @@ private:
 
 	bool			m_bHasQueuedState;
 	bool			m_bSetNewPos;
+	bool			m_bSetNewVel;
+	bool			m_bSetNewRot;
 	
 	CHandle<CSDKPlayer>	m_pPossessingPl;
 	int				m_nPossessingTeam;
@@ -292,7 +299,7 @@ private:
 	CHandle<CSDKPlayer> m_pCreator;
 	CHandle<CSDKPlayer> m_pHoldingPlayer;
 
-	float			m_flNextShot;
+	float			m_flGlobalNextShot;
 };
 
 #endif
