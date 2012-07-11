@@ -358,7 +358,7 @@ public:
 	Vector				GetOffsideBallPos();
 	
 	void				SetPosInsideShield(const Vector &pos, bool holdAtTargetPos);
-	void				SetPosOutsideShield(bool holdAtTargetPos);
+	void				SetPosOutsideShield();
 	void				SetPosOutsideBall(const Vector &playerPos);
 	void				GetTargetPos(const Vector &pos, Vector &targetPos);
 	void				ActivateRemoteControlling(const Vector &targetPos);

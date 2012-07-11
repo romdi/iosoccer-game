@@ -563,8 +563,6 @@ void CSDKPlayer::ChangeTeam( int iTeamNum )
 		if (iOldTeam != TEAM_A && iOldTeam != TEAM_B)
 			State_Transition( STATE_ACTIVE );
 	}
-
-	DevMsg("teamposindex: %d\n", GetTeamPosIndex());
 }
 
 void CSDKPlayer::InitialSpawn( void )
@@ -1068,11 +1066,11 @@ void CSDKPlayer::SetPosInsideShield(const Vector &pos, bool holdAtTargetPos)
 	}
 }
 
-void CSDKPlayer::SetPosOutsideShield(bool holdAtTargetPos)
+void CSDKPlayer::SetPosOutsideShield()
 {
 	RemoveFlag(FL_SHIELD_KEEP_IN);
 	AddFlag(FL_SHIELD_KEEP_OUT);
-	m_bHoldAtTargetPos = holdAtTargetPos;
+	m_bHoldAtTargetPos = false;
 	m_bIsAtTargetPos = false;
 	m_vTargetPos = vec3_invalid;
 

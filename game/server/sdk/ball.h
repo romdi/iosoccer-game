@@ -232,7 +232,7 @@ private:
 	void			SetOffsideLinePositions(float ballPosY, float offsidePlayerPosY, float lastOppPlayerPosY);
 	void			SetOffsideLinesEnabled(bool enable);
 
-	bool			PlayersAtTargetPos(bool holdAtTargetPos);
+	bool			PlayersAtTargetPos();
 	bool			CheckFoul(bool canShootBall);
 	void			TriggerFoul(foul_type_t type, Vector pos, CSDKPlayer *pFoulingPl, CSDKPlayer *pFouledPl = NULL);
 	CSDKPlayer		*FindNearestPlayer(int team = TEAM_INVALID, int posFlags = FL_POS_FIELD, bool checkIfShooting = false, int ignoredPlayerBits = 0);

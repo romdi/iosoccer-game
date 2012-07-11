@@ -38,6 +38,8 @@ extern CBaseEntity *FindPickerEntity( CBasePlayer *pPlayer );
 
 extern bool			g_fGameOver;
 
+ConVar sv_required_client_version("sv_required_client_version", g_szRequiredClientVersion);
+ConVar sv_required_client_version_kick_message("sv_required_client_version_kick_message", "OLD CLIENT.DLL -> DOWNLOAD NEWEST!");
 
 void FinishClientPutInServer( CSDKPlayer *pPlayer )
 {
@@ -60,6 +62,7 @@ void FinishClientPutInServer( CSDKPlayer *pPlayer )
 	UTIL_ClientPrintAll( HUD_PRINTNOTIFY, "#Game_connected", sName[0] != 0 ? sName : "<unconnected>" );
 }
 
+
 /*
 ===========
 ClientPutInServer
@@ -73,12 +76,12 @@ void ClientPutInServer( edict_t *pEdict, const char *playername )
 	CSDKPlayer *pPlayer = CSDKPlayer::CreatePlayer( "player", pEdict );
 	pPlayer->SetPlayerName( playername );
 	//pPlayer->m_JoinTime = gpGlobals->curtime; //ios
-
+	
 	const char *pszClientVersion = engine->GetClientConVarValue( pPlayer->entindex(), "clientversion" );
-	if (!pPlayer->IsBot() && Q_strcmp(pszClientVersion, "10.07.12/19h") != 0)
+	if (!pPlayer->IsBot() && Q_strcmp(pszClientVersion, sv_required_client_version.GetString()) != 0)
 	{
 		char kickcmd[512];
-		Q_snprintf(kickcmd, sizeof(kickcmd), "kickid %i Your client.dll is too old. Please download the latest version.\n", pPlayer->GetUserID());
+		Q_snprintf(kickcmd, sizeof(kickcmd), "kickid %i %s\n", pPlayer->GetUserID(), sv_required_client_version_kick_message.GetString());
 		engine->ServerCommand(kickcmd);
 	}
 }
@@ -90,6 +93,7 @@ void ClientActive( edict_t *pEdict, bool bLoadGame )
 	Assert( !bLoadGame );
 
 	CSDKPlayer *pPlayer = ToSDKPlayer( CBaseEntity::Instance( pEdict ) );
+
 	FinishClientPutInServer( pPlayer );
 }
 

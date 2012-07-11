@@ -558,21 +558,6 @@ void CBall::State_Enter(ball_state_t newState, bool cancelQueuedState)
 
 	m_pPl = NULL;
 	m_pOtherPl = NULL;
-	//m_bIgnoreTriggers = false;
-	SDKGameRules()->DisableShield();
-
-	for (int i = 1; i <= gpGlobals->maxClients; i++)
-	{
-		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
-		if (!CSDKPlayer::IsOnField(pPl))
-			continue;
-
-		if (newState != BALL_KEEPERHANDS && pPl->GetTeamPosition() == 1 && pPl->m_pHoldingBall == this)
-		{	
-			RemoveFromPlayerHands(pPl);
-			break;
-		}
-	}
 
 	if (newState != BALL_NORMAL)
 	{
@@ -605,6 +590,8 @@ void CBall::State_Enter(ball_state_t newState, bool cancelQueuedState)
 
 void CBall::State_Leave(ball_state_t newState)
 {
+	SDKGameRules()->DisableShield();
+
 	if ( m_pCurStateInfo && m_pCurStateInfo->pfnLeaveState )
 	{
 		(this->*m_pCurStateInfo->pfnLeaveState)(newState);
@@ -664,7 +651,6 @@ void CBall::State_NORMAL_Enter()
 {
 	m_pPhys->EnableMotion(true);
 	EnablePlayerCollisions(true);
-	RemoveEffects(EF_NODRAW);
 	m_pPhys->Wake();
 	SDKGameRules()->EndInjuryTime();
 }
@@ -697,6 +683,7 @@ void CBall::State_NORMAL_Think()
 
 void CBall::State_NORMAL_Leave(ball_state_t newState)
 {
+	UnmarkOffsidePlayers();
 }
 
 void CBall::State_KICKOFF_Enter()
@@ -726,7 +713,7 @@ void CBall::State_KICKOFF_Think()
 		if (!m_pPl)
 		{
 			SDKGameRules()->EnableShield(SHIELD_KICKOFF, GetGlobalTeam(TEAM_A)->GetTeamNumber(), SDKGameRules()->m_vKickOff);
-			if (!PlayersAtTargetPos(false))
+			if (!PlayersAtTargetPos())
 				return;
 
 			return State_Transition(BALL_NORMAL);
@@ -738,7 +725,6 @@ void CBall::State_KICKOFF_Think()
 		m_flStateTimelimit = -1;
 		EmitSound("Ball.whistle");
 		SendMatchEvent(MATCH_EVENT_KICKOFF);
-		//PlayersAtTargetPos(false);
 	}
 
 	if (!CSDKPlayer::IsOnField(m_pOtherPl) || m_pOtherPl == m_pPl)
@@ -748,7 +734,7 @@ void CBall::State_KICKOFF_Think()
 			m_pOtherPl->SetPosInsideShield(Vector(m_vPos.x + m_pPl->GetTeam()->m_nRight * 100, m_vPos.y, SDKGameRules()->m_vKickOff.GetZ()), true);
 	}
 
-	if (!PlayersAtTargetPos(false))
+	if (!PlayersAtTargetPos())
 		return;
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++) 
@@ -788,7 +774,6 @@ void CBall::State_KICKOFF_Leave(ball_state_t newState)
 
 void CBall::State_THROWIN_Enter()
 {
-	UnmarkOffsidePlayers();
 	EnablePlayerCollisions(false);
 	SetPos(Vector(m_vTriggerTouchPos.x + 0 * Sign(SDKGameRules()->m_vKickOff.GetX() - m_vTriggerTouchPos.x), m_vTriggerTouchPos.y, SDKGameRules()->m_vKickOff.GetZ()));
 }
@@ -807,11 +792,8 @@ void CBall::State_THROWIN_Think()
 		m_flStateTimelimit = -1;
 		SendMatchEvent(MATCH_EVENT_THROWIN);
 		EmitSound("Ball.whistle");
-		PlayersAtTargetPos(false);
+		PlayersAtTargetPos();
 	}
-
-	//if (!PlayersAtTargetPos(false))
-	//	return;
 
 	if (!m_pPl->m_bIsAtTargetPos)
 		return;
@@ -849,14 +831,14 @@ void CBall::State_THROWIN_Think()
 
 		RemoveAllTouches();
 		Kicked(BODY_HANDS, 0);
-		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_THROW);
-		EnablePlayerCollisions(true);
 		State_Transition(BALL_NORMAL);
 	}
 }
 
 void CBall::State_THROWIN_Leave(ball_state_t newState)
 {
+	m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_THROW);
+	EnablePlayerCollisions(true);
 }
 
 void CBall::State_GOALKICK_Enter()
@@ -886,7 +868,7 @@ void CBall::State_GOALKICK_Think()
 		m_flStateTimelimit = -1;
 		SendMatchEvent(MATCH_EVENT_GOALKICK);
 		EmitSound("Ball.whistle");
-		PlayersAtTargetPos(false);
+		PlayersAtTargetPos();
 	}
 
 	if (!m_pPl->m_bIsAtTargetPos)
@@ -912,8 +894,6 @@ void CBall::State_GOALKICK_Leave(ball_state_t newState)
 
 void CBall::State_CORNER_Enter()
 {
-	UnmarkOffsidePlayers();
-
 	Vector ballPos;
 	CTeam *pTeam = GetGlobalTeam(LastTeam(false));
 
@@ -939,11 +919,8 @@ void CBall::State_CORNER_Think()
 		m_flStateTimelimit = -1;
 		SendMatchEvent(MATCH_EVENT_CORNER);
 		EmitSound("Ball.whistle");
-		PlayersAtTargetPos(false);
+		PlayersAtTargetPos();
 	}
-
-	//if (!PlayersAtTargetPos(false))
-	//	return;
 
 	if (!m_pPl->m_bIsAtTargetPos)
 		return;
@@ -967,9 +944,7 @@ void CBall::State_CORNER_Leave(ball_state_t newState)
 
 void CBall::State_GOAL_Enter()
 {
-	UnmarkOffsidePlayers();
 	UpdatePossession(NULL);
-	//m_bIgnoreTriggers = true;
 	SDKGameRules()->SetKickOffTeam(m_nTeam);
 	int scoringTeam;
 
@@ -1021,6 +996,15 @@ void CBall::State_GOAL_Think()
 
 void CBall::State_GOAL_Leave(ball_state_t newState)
 {
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+
+		if (!pPl)
+			continue;
+
+		pPl->RemoveFlag(FL_CELEB);
+	}
 }
 
 void CBall::State_FREEKICK_Enter()
@@ -1084,10 +1068,7 @@ void CBall::State_FREEKICK_Think()
 			m_pPl = FindNearestPlayer(GetGlobalTeam(m_nFoulingTeam)->GetOppTeamNumber(), FL_POS_FIELD);
 
 		if (!m_pPl)
-		{
-			SetOffsideLinesEnabled(false);
 			return State_Transition(BALL_NORMAL);
-		}
 
 		SDKGameRules()->EnableShield(SHIELD_FREEKICK, m_pPl->GetOppTeamNumber(), m_vPos);
 		m_pPl->SetPosInsideShield(Vector(m_vPos.x, m_vPos.y - 100 * m_pPl->GetTeam()->m_nForward, SDKGameRules()->m_vKickOff.GetZ()), false);
@@ -1095,7 +1076,7 @@ void CBall::State_FREEKICK_Think()
 		m_flStateTimelimit = -1;
 		SendMatchEvent(MATCH_EVENT_FREEKICK);
 		EmitSound("Ball.whistle");
-		PlayersAtTargetPos(false);
+		PlayersAtTargetPos();
 	}
 
 	if (!m_pPl->m_bIsAtTargetPos)
@@ -1118,7 +1099,6 @@ void CBall::State_FREEKICK_Think()
 
 	if (m_pPl->m_bShotButtonsReleased && m_pPl->IsShooting() && (m_vPos - m_vPlPos).Length2D() <= sv_ball_touchradius.GetFloat())
 	{
-		SetOffsideLinesEnabled(false);
 		RemoveAllTouches();
 		DoGroundShot();
 		MarkOffsidePlayers();
@@ -1128,12 +1108,11 @@ void CBall::State_FREEKICK_Think()
 
 void CBall::State_FREEKICK_Leave(ball_state_t newState)
 {
+	SetOffsideLinesEnabled(false);
 }
 
 void CBall::State_PENALTY_Enter()
 {
-	UnmarkOffsidePlayers();
-
 	if (SDKGameRules()->State_Get() == MATCH_PENALTIES)
 	{
 		SetPos(GetGlobalTeam(m_nFoulingTeam)->m_vPenalty);
@@ -1205,7 +1184,7 @@ void CBall::State_PENALTY_Think()
 		m_pOtherPl->SetPosInsideShield(m_pOtherPl->GetTeam()->m_vPlayerSpawns[0], true);
 	}
 
-	if (!PlayersAtTargetPos(false))
+	if (!PlayersAtTargetPos())
 		return;
 
 	if (m_pPl->GetFlags() & FL_ATCONTROLS)
@@ -1256,7 +1235,7 @@ void CBall::State_KEEPERHANDS_Think()
 			SDKGameRules()->EnableShield(SHIELD_KEEPERHANDS, m_pPl->GetTeamNumber());
 			UpdatePossession(m_pPl);
 			m_pPl->m_bIsAtTargetPos = true;
-			PlayersAtTargetPos(false);
+			PlayersAtTargetPos();
 		}
 
 		if (m_pPl->m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1 | IN_ALT2)))
@@ -1288,7 +1267,6 @@ void CBall::State_KEEPERHANDS_Think()
 		RemoveAllTouches();
 		Kicked(BODY_HANDS, 0);
 		MarkOffsidePlayers();
-		RemoveFromPlayerHands(m_pPl);
 		return State_Transition(BALL_NORMAL);
 	}
 
@@ -1312,7 +1290,6 @@ void CBall::State_KEEPERHANDS_Think()
 		RemoveAllTouches();
 		Kicked(BODY_HANDS, spin);
 		MarkOffsidePlayers();
-		RemoveFromPlayerHands(m_pPl);
 
 		return State_Transition(BALL_NORMAL);
 	}
@@ -1320,9 +1297,10 @@ void CBall::State_KEEPERHANDS_Think()
 
 void CBall::State_KEEPERHANDS_Leave(ball_state_t newState)
 {
+	RemoveFromPlayerHands(m_pPl);
 }
 
-bool CBall::PlayersAtTargetPos(bool holdAtTargetPos)
+bool CBall::PlayersAtTargetPos()
 {
 	bool playersAtTarget = true;
 
@@ -1340,7 +1318,7 @@ bool CBall::PlayersAtTargetPos(bool holdAtTargetPos)
 				if (mp_shield_liberal_teammates_positioning.GetBool() && m_eBallState != BALL_KICKOFF && m_eBallState != BALL_PENALTY && pPl->GetTeamNumber() == m_pPl->GetTeamNumber())
 					pPl->SetPosOutsideBall(pPl->GetLocalOrigin());
 				else
-					pPl->SetPosOutsideShield(holdAtTargetPos);
+					pPl->SetPosOutsideShield();
 			}
 
 			if (!pPl->m_bIsAtTargetPos)

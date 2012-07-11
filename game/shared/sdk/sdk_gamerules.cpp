@@ -1542,48 +1542,6 @@ ConVar mp_teamrotation("mp_teamrotation", "brazil,germany,italy,scotland,barcelo
 
 void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 {
-	/* TODO: handle skin, model & team changes 
-
-  	char text[1024];
-
-	// skin/color/model changes
-	int iTeam = Q_atoi( engine->GetClientConVarValue( pPlayer->entindex(), "cl_team" ) );
-	int iClass = Q_atoi( engine->GetClientConVarValue( pPlayer->entindex(), "cl_class" ) );
-
-	if ( defaultteam.GetBool() )
-	{
-		// int clientIndex = pPlayer->entindex();
-
-		// engine->SetClientKeyValue( clientIndex, "model", pPlayer->TeamName() );
-		// engine->SetClientKeyValue( clientIndex, "team", pPlayer->TeamName() );
-		UTIL_SayText( "Not allowed to change teams in this game!\n", pPlayer );
-		return;
-	}
-
-	if ( defaultteam.GetFloat() || !IsValidTeam( mdls ) )
-	{
-		// int clientIndex = pPlayer->entindex();
-
-		// engine->SetClientKeyValue( clientIndex, "model", pPlayer->TeamName() );
-		Q_snprintf( text,sizeof(text), "Can't change team to \'%s\'\n", mdls );
-		UTIL_SayText( text, pPlayer );
-		Q_snprintf( text,sizeof(text), "Server limits teams to \'%s\'\n", m_szTeamList );
-		UTIL_SayText( text, pPlayer );
-		return;
-	}
-
-	ChangePlayerTeam( pPlayer, mdls, true, true );
-	// recound stuff
-	RecountTeams(); */
-
-	//const char *pszClientVersion = engine->GetClientConVarValue( pPlayer->entindex(), "clientversion" );
-	//if (!pPlayer->IsBot() && Q_strcmp(pszClientVersion, "10.07.12/19h") != 0)
-	//{
-	//	char kickcmd[512];
-	//	Q_snprintf(kickcmd, sizeof(kickcmd), "kickid %i Your client.dll is too old. Please download the latest version.\n", pPlayer->GetUserID());
-	//	engine->ServerCommand(kickcmd);
-	//}
-
 	const char *pszClubName = engine->GetClientConVarValue( pPlayer->entindex(), "clubname" );
 	((CSDKPlayer *)pPlayer)->SetClubName(pszClubName);
 

@@ -33,7 +33,7 @@ ConVar cl_ragdoll_physics_enable( "cl_ragdoll_physics_enable", "1", 0, "Enable/d
  
 ConVar clubname("clubname", "Team Arthur", FCVAR_USERINFO | FCVAR_ARCHIVE, "The name of your club");//, OnClubNameChange);
 ConVar countryname("countryname", "", FCVAR_USERINFO | FCVAR_ARCHIVE, "The name of your country");//, OnClubNameChange);
-ConVar clientversion("clientversion", "10.07.12/19h", FCVAR_CLIENTDLL | FCVAR_HIDDEN, "");
+ConVar clientversion("clientversion", g_szRequiredClientVersion, FCVAR_USERINFO | FCVAR_HIDDEN, "");
 
 // -------------------------------------------------------------------------------- //
 // Player animation event. Sent to the client when a player fires, jumps, reloads, etc..
