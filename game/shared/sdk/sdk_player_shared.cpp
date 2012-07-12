@@ -37,7 +37,7 @@
 	#include "team.h"
 #endif
 
-const char *g_szRequiredClientVersion = "10.07.12/19h";
+const char *g_szRequiredClientVersion = "12.07.12/0h";
 
 ConVar sv_showimpacts("sv_showimpacts", "0", FCVAR_REPLICATED, "Shows client (red) and server (blue) bullet impact point" );
 
@@ -113,11 +113,11 @@ void CSDKPlayerShared::SetSprinting( bool bSprinting )
 		StartSprinting();
 
 		// only one penalty per key press
-		if ( m_bGaveSprintPenalty == false )
-		{
-			m_flStamina -= INITIAL_SPRINT_STAMINA_PENALTY;
-			m_bGaveSprintPenalty = true;
-		}
+		//if ( m_bGaveSprintPenalty == false )
+		//{
+		//	m_flStamina -= INITIAL_SPRINT_STAMINA_PENALTY;
+		//	m_bGaveSprintPenalty = true;
+		//}
 		//ios always apply this penalty as we're predicting m_bSprinting
 		m_flStamina -= INITIAL_SPRINT_STAMINA_PENALTY;
 	}

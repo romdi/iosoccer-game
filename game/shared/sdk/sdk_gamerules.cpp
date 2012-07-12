@@ -322,15 +322,15 @@ static CSDKViewVectors g_SDKViewVectors(
 	//Vector(-16, -16, 0 ),		//VEC_HULL_MIN
 	//Vector( 16,  16,  72 ),		//VEC_HULL_MAX
 	
-	Vector(-10, -10, 0 ),		//VEC_HULL_MIN
-	Vector( 10,  10,  72 ),		//VEC_HULL_MAX
+	Vector(-13, -13, 0 ),		//VEC_HULL_MIN
+	Vector( 13,  13,  72 ),		//VEC_HULL_MAX
 													
 	Vector(-16, -16, 0 ),		//VEC_DUCK_HULL_MIN
 	Vector( 16,  16, 45 ),		//VEC_DUCK_HULL_MAX
 	Vector( 0, 0, 34 ),			//VEC_DUCK_VIEW
 													
-	Vector(-10, -10, -10 ),		//VEC_OBS_HULL_MIN
-	Vector( 10,  10,  10 ),		//VEC_OBS_HULL_MAX
+	Vector(-13, -13, -13 ),		//VEC_OBS_HULL_MIN
+	Vector( 13,  13,  13 ),		//VEC_OBS_HULL_MAX
 													
 	Vector( 0, 0, 14 )			//VEC_DEAD_VIEWHEIGHT
 #if defined ( SDK_USE_PRONE )			

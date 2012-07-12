@@ -35,13 +35,13 @@ enum ball_state_t
 
 enum body_part_t
 {
-	BODY_NONE = 0,
-	BODY_FEET,
-	BODY_HIP,
-	BODY_CHEST,
-	BODY_HEAD,
-	BODY_HANDS,
-	BODY_BOUNCE
+	BODY_PART_NONE = 0,
+	BODY_PART_FEET,
+	BODY_PART_HIP,
+	BODY_PART_CHEST,
+	BODY_PART_HEAD,
+	BODY_PART_HANDS,
+	BODY_PART_UNKNOWN
 };
 
 enum foul_type_t
@@ -64,16 +64,7 @@ enum penalty_state_t
 	PENALTY_ABORTED_NO_KEEPER,
 };
 
-#define BODY_FEET_START		0
-#define BODY_FEET_END		15
-#define BODY_HIP_START		15
-#define BODY_HIP_END		40
-#define BODY_CHEST_START	40
-#define BODY_CHEST_END		60
-#define BODY_HEAD_START		60
-#define BODY_HEAD_END		80
-
-#define PITCH_LIMIT			89
+#define PITCH_LIMIT						89
 
 #define FL_POS_KEEPER					1
 #define FL_POS_DEFENDER					2
@@ -264,7 +255,7 @@ private:
 	CHandle<CSDKPlayer>	m_pOtherPl;
 
 	QAngle			m_aPlAng;
-	Vector			m_vPlVel, m_vPlVel2D, m_vPlPos, m_vPlForward, m_vPlForward2D, m_vPlRight, m_vPlUp;
+	Vector			m_vPlVel, m_vPlVel2D, m_vPlForwardVel2D, m_vPlPos, m_vPlForward, m_vPlForward2D, m_vPlRight, m_vPlUp;
 	int				m_nPlTeam;
 	int				m_nPlPos;
 

@@ -181,7 +181,7 @@ void CKeeperBot::BotAdjustPos()
 		{
 			modifier = 0.01f;
 		}
-		else if (ballDistToGoal < 1000 && m_vDirToBall.z < BODY_HEAD_END && m_vBallVel.Length2D() < 300 && m_vBallVel.z < 100)
+		else if (ballDistToGoal < 1000 && m_vDirToBall.z < 80 && m_vBallVel.Length2D() < 300 && m_vBallVel.z < 100)
 		{
 			if ((pClosest == this || ballDistToGoal < 750))
 				modifier = 0.99f;

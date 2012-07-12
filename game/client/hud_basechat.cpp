@@ -677,6 +677,7 @@ void CBaseHudChat::ApplySchemeSettings( vgui::IScheme *pScheme )
 	SetBgColor( Color ( cColor.r(), cColor.g(), cColor.b(), CHAT_HISTORY_ALPHA ) );
 
 	GetChatHistory()->SetVerticalScrollbar( false );
+	SetPos(10, 150);
 }
 
 void CBaseHudChat::Reset( void )

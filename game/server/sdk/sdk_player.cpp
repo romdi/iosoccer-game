@@ -1021,7 +1021,7 @@ const Vector CSDKPlayer::GetVisualLocalOrigin()
 void CSDKPlayer::SetPosInsideShield(const Vector &pos, bool holdAtTargetPos)
 {
 	RemoveFlag(FL_SHIELD_KEEP_OUT);
-	//AddFlag(FL_SHIELD_KEEP_IN);
+	AddFlag(FL_SHIELD_KEEP_IN);
 	m_vTargetPos = pos;
 	m_bHoldAtTargetPos = holdAtTargetPos;
 	//SetMoveType(MOVETYPE_NOCLIP);
@@ -1029,13 +1029,9 @@ void CSDKPlayer::SetPosInsideShield(const Vector &pos, bool holdAtTargetPos)
 	switch (SDKGameRules()->m_nShieldType)
 	{
 	case SHIELD_KICKOFF:
-		AddFlag(FL_SHIELD_KEEP_IN);
 		break;
 	case SHIELD_THROWIN:
 	case SHIELD_PENALTY:
-		break;
-	case SHIELD_KEEPERHANDS:
-		m_vTargetPos = GetLocalOrigin();
 		break;
 	case SHIELD_GOALKICK:
 	case SHIELD_CORNER:
@@ -1043,9 +1039,9 @@ void CSDKPlayer::SetPosInsideShield(const Vector &pos, bool holdAtTargetPos)
 		if (mp_shield_liberal_taker_positioning.GetBool())
 		{
 			//m_vTargetPos = GetLocalOrigin();
-			AddFlag(FL_SHIELD_KEEP_IN);
+			//AddFlag(FL_SHIELD_KEEP_IN);
 			GetTargetPos(GetLocalOrigin(), m_vTargetPos.GetForModify());
-			RemoveFlag(FL_SHIELD_KEEP_IN);
+			//RemoveFlag(FL_SHIELD_KEEP_IN);
 			SetPosOutsideBall(m_vTargetPos);
 		}
 		break;

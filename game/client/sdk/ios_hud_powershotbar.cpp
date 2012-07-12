@@ -133,7 +133,7 @@ void CHudPowershotBar::ApplySchemeSettings( IScheme *scheme )
 {
 	BaseClass::ApplySchemeSettings(scheme);
 
-	SetBounds(ScreenWidth() - BAR_WIDTH - BAR_MARGIN, ScreenHeight() - BAR_HEIGHT - BAR_MARGIN - 2 * SPIN_HEIGHT, BAR_WIDTH, BAR_HEIGHT + 2 * SPIN_HEIGHT + BAR_MARGIN);
+	SetBounds(BAR_MARGIN, ScreenHeight() - BAR_HEIGHT - BAR_MARGIN - 2 * SPIN_HEIGHT, BAR_WIDTH, BAR_HEIGHT + 2 * SPIN_HEIGHT + BAR_MARGIN);
 
 	m_pStaminaPanel->SetPaintBackgroundType(2); // Rounded corner box
  	m_pStaminaPanel->SetPaintBackgroundEnabled(true);

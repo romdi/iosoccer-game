@@ -26,7 +26,7 @@
 
 using namespace vgui;
 
-#define COUNTRY_NAMES_COUNT 283
+#define COUNTRY_NAMES_COUNT 282
 
 extern char g_szCountryNames[COUNTRY_NAMES_COUNT][64];
 
