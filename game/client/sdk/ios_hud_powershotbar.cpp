@@ -100,11 +100,10 @@ using namespace vgui;
 //-----------------------------------------------------------------------------
 CHudPowershotBar::CHudPowershotBar( const char *pElementName ) : CHudElement( pElementName ), BaseClass( NULL, "HudPowershotBar" )
 {
+	SetHiddenBits(HIDEHUD_POWERSHOTBAR);
+
 	vgui::Panel *pParent = g_pClientMode->GetViewport();
 	SetParent( pParent );
-
-	SetHiddenBits(HIDEHUD_PLAYERDEAD);
-	//SetHiddenBits( HIDEHUD_HEALTH | HIDEHUD_PLAYERDEAD | HIDEHUD_NEEDSUIT );
 
 	m_pStaminaPanel = new Panel(this, "StaminaPanel");
 	m_pStaminaIndicator = new Panel(m_pStaminaPanel, "StaminaIndicator");
@@ -185,10 +184,11 @@ void CHudPowershotBar::Reset( void )
 //-----------------------------------------------------------------------------
 bool CHudPowershotBar::ShouldDraw()
 {
-	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
-	if ( !pPlayer )
+	if (!CHudElement::ShouldDraw())
 		return false;
-	if ( pPlayer->State_Get() != STATE_ACTIVE )
+
+	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
+	if (!pPlayer || pPlayer->GetTeamNumber() != TEAM_A && pPlayer->GetTeamNumber() != TEAM_B)
 		return false;
 
 	return true;

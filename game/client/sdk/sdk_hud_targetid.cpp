@@ -60,13 +60,12 @@ using namespace vgui;
 CSDKTargetId::CSDKTargetId( const char *pElementName ) :
 	CHudElement( pElementName ), BaseClass( NULL, "TargetID" )
 {
+	SetHiddenBits(HIDEHUD_PLAYERNAMES);
+
 	vgui::Panel *pParent = g_pClientMode->GetViewport();
 	SetParent( pParent );
 
 	m_hFont = g_hFontTrebuchet24;
-
-	//SetHiddenBits( HIDEHUD_MISCSTATUS );
-	SetHiddenBits(HIDEHUD_PLAYERDEAD);
 }
 
 //-----------------------------------------------------------------------------

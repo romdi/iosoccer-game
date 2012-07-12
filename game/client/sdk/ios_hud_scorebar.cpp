@@ -112,7 +112,8 @@ DECLARE_HUD_MESSAGE(CHudScorebar, MatchEvent);
 //-----------------------------------------------------------------------------
 CHudScorebar::CHudScorebar( const char *pElementName ) : BaseClass(NULL, "HudScorebar"), CHudElement( pElementName )
 {
-	//SetHiddenBits(HIDEHUD_PLAYERDEAD);
+	SetHiddenBits(HIDEHUD_SCOREBAR);
+
 	vgui::Panel *pParent = g_pClientMode->GetViewport();
 	SetParent( pParent );
 

@@ -508,6 +508,8 @@ void CSDKPlayer::ChangeTeam( int iTeamNum )
 	if (iTeamNum == iOldTeam)
 		return;
 
+	ResetFlags();
+
 	// Immediately tell all clients that he's changing team. This has to be done
 	// first, so that all user messages that follow as a result of the team change
 	// come after this one, allowing the client to be prepared for them.
@@ -539,7 +541,7 @@ void CSDKPlayer::ChangeTeam( int iTeamNum )
 	g_pPlayerResource->UpdatePlayerData();
 
 	//ResetStats();
-	ResetFlags();
+	//ResetFlags();
 
 	// update client state 
 	if ( iTeamNum == TEAM_UNASSIGNED )
