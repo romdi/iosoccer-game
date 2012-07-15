@@ -61,8 +61,11 @@ CSDKScoreboard::~CSDKScoreboard()
 //-----------------------------------------------------------------------------
 void CSDKScoreboard::PaintBackground()
 {
-	m_pPlayerList->SetBgColor( Color(0, 0, 0, 0) );
-	m_pPlayerList->SetBorder(NULL);
+	for (int i = 0; i < 2; i++)
+	{
+		m_pPlayerList[i]->SetBgColor( Color(0, 0, 0, 0) );
+		m_pPlayerList[i]->SetBorder(NULL);
+	}
 
 	int wide, tall;
 	GetSize( wide, tall );
@@ -101,8 +104,11 @@ void CSDKScoreboard::ApplySchemeSettings( vgui::IScheme *pScheme )
 //-----------------------------------------------------------------------------
 void CSDKScoreboard::InitScoreboardSections()
 {
-	m_pPlayerList->SetBgColor( Color(0, 0, 0, 0) );
-	m_pPlayerList->SetBorder(NULL);
+	for (int i = 0; i < 2; i++)
+	{
+		m_pPlayerList[i]->SetBgColor( Color(0, 0, 0, 0) );
+		m_pPlayerList[i]->SetBorder(NULL);
+	}
 
 	// fill out the structure of the scoreboard
 	AddHeader();
@@ -138,7 +144,7 @@ void CSDKScoreboard::UpdateTeamInfo()
 	}
 
 	// update the team sections in the scoreboard
-	for ( int i = TEAM_SPECTATOR; i < TEAM_MAXCOUNT; i++ )
+	for ( int i = TEAM_A; i <= TEAM_B; i++ )
 	{
 		wchar_t *teamName = NULL;
 		int sectionID = 0;
@@ -191,20 +197,20 @@ void CSDKScoreboard::UpdateTeamInfo()
 				// update stats
 				wchar_t val[6];
 				swprintf(val, L"%d", team->Get_Goals());
-				m_pPlayerList->ModifyColumn(sectionID, "frags", val);
+				m_pPlayerList[sectionID]->ModifyColumn(sectionID, "frags", val);
 				if (team->Get_Ping() < 1)
 				{
-					m_pPlayerList->ModifyColumn(sectionID, "ping", L"");
+					m_pPlayerList[sectionID]->ModifyColumn(sectionID, "ping", L"");
 				}
 				else
 				{
 					swprintf(val, L"%d", team->Get_Ping());
-					m_pPlayerList->ModifyColumn(sectionID, "ping", val);
+					m_pPlayerList[sectionID]->ModifyColumn(sectionID, "ping", val);
 				}
 
 			}
 		
-			m_pPlayerList->ModifyColumn(sectionID, "name", string1);
+			m_pPlayerList[sectionID]->ModifyColumn(sectionID, "name", string1);
 		}
 	}
 }
@@ -214,19 +220,22 @@ void CSDKScoreboard::UpdateTeamInfo()
 //-----------------------------------------------------------------------------
 void CSDKScoreboard::AddHeader()
 {
+	for (int i = 0; i < 2; i++)
+	{
 	// add the top header
-	m_pPlayerList->AddSection(0, "");
-	m_pPlayerList->SetSectionAlwaysVisible(0);
+	m_pPlayerList[i]->AddSection(0, "");
+	m_pPlayerList[i]->SetSectionAlwaysVisible(0);
 	HFont hFallbackFont = scheme()->GetIScheme( GetScheme() )->GetFont( "ClassMenuDefaultVerySmall", false );
 
-	m_pPlayerList->AddColumnToSection(0, "avatar", "", SectionedListPanel::COLUMN_IMAGE | SectionedListPanel::COLUMN_CENTER, m_iAvatarWidth );
-	m_pPlayerList->AddColumnToSection(0, "name", "", 0, scheme()->GetProportionalScaledValueEx( GetScheme(), NAME_WIDTH ), hFallbackFont );
+	m_pPlayerList[i]->AddColumnToSection(0, "avatar", "", SectionedListPanel::COLUMN_IMAGE | SectionedListPanel::COLUMN_CENTER, m_iAvatarWidth );
+	m_pPlayerList[i]->AddColumnToSection(0, "name", "", 0, scheme()->GetProportionalScaledValueEx( GetScheme(), NAME_WIDTH ), hFallbackFont );
 #if defined ( SDK_USE_PLAYERCLASSES )
-	m_pPlayerList->AddColumnToSection(0, "class", "", 0, scheme()->GetProportionalScaledValueEx( GetScheme(), SCORE_WIDTH ), hFallbackFont );
+	m_pPlayerList[i]->AddColumnToSection(0, "class", "", 0, scheme()->GetProportionalScaledValueEx( GetScheme(), SCORE_WIDTH ), hFallbackFont );
 #endif
-	m_pPlayerList->AddColumnToSection(0, "frags", "#PlayerScore", 0 | SectionedListPanel::COLUMN_RIGHT, scheme()->GetProportionalScaledValueEx( GetScheme(), SCORE_WIDTH ) );
-	m_pPlayerList->AddColumnToSection(0, "deaths", "#PlayerDeath", 0 | SectionedListPanel::COLUMN_RIGHT, scheme()->GetProportionalScaledValueEx( GetScheme(), DEATH_WIDTH ) );
-	m_pPlayerList->AddColumnToSection(0, "ping", "#PlayerPing", 0 | SectionedListPanel::COLUMN_RIGHT, scheme()->GetProportionalScaledValueEx( GetScheme(), PING_WIDTH ) );
+	m_pPlayerList[i]->AddColumnToSection(0, "frags", "#PlayerScore", 0 | SectionedListPanel::COLUMN_RIGHT, scheme()->GetProportionalScaledValueEx( GetScheme(), SCORE_WIDTH ) );
+	m_pPlayerList[i]->AddColumnToSection(0, "deaths", "#PlayerDeath", 0 | SectionedListPanel::COLUMN_RIGHT, scheme()->GetProportionalScaledValueEx( GetScheme(), DEATH_WIDTH ) );
+	m_pPlayerList[i]->AddColumnToSection(0, "ping", "#PlayerPing", 0 | SectionedListPanel::COLUMN_RIGHT, scheme()->GetProportionalScaledValueEx( GetScheme(), PING_WIDTH ) );
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -234,43 +243,45 @@ void CSDKScoreboard::AddHeader()
 //-----------------------------------------------------------------------------
 int CSDKScoreboard::AddSection(int teamType, int teamNumber)
 {
+	for (int i = 0; i < 2; i++)
+	{
 	HFont hFallbackFont = scheme()->GetIScheme( GetScheme() )->GetFont( "ClassMenuDefaultVerySmall", false );
-
 	int sectionID = GetSectionFromTeamNumber( teamNumber );
 	if ( teamType == TYPE_TEAM )
 	{
- 		m_pPlayerList->AddSection(sectionID, "", StaticPlayerSortFunc);
+ 		m_pPlayerList[i]->AddSection(sectionID, "", StaticPlayerSortFunc);
 
 		// setup the columns
-		m_pPlayerList->AddColumnToSection(sectionID, "avatar", "", SectionedListPanel::COLUMN_IMAGE | SectionedListPanel::COLUMN_CENTER, m_iAvatarWidth );
-		m_pPlayerList->AddColumnToSection(sectionID, "name", "", 0, scheme()->GetProportionalScaledValueEx( GetScheme(), NAME_WIDTH ), hFallbackFont );
+		m_pPlayerList[i]->AddColumnToSection(sectionID, "avatar", "", SectionedListPanel::COLUMN_IMAGE | SectionedListPanel::COLUMN_CENTER, m_iAvatarWidth );
+		m_pPlayerList[i]->AddColumnToSection(sectionID, "name", "", 0, scheme()->GetProportionalScaledValueEx( GetScheme(), NAME_WIDTH ), hFallbackFont );
 #if defined ( SDK_USE_PLAYERCLASSES )
-		m_pPlayerList->AddColumnToSection(sectionID, "class", "", 0, scheme()->GetProportionalScaledValueEx( GetScheme(), SCORE_WIDTH ), hFallbackFont );
+		m_pPlayerList[i]->AddColumnToSection(sectionID, "class", "", 0, scheme()->GetProportionalScaledValueEx( GetScheme(), SCORE_WIDTH ), hFallbackFont );
 #endif
-		m_pPlayerList->AddColumnToSection(sectionID, "frags", "", SectionedListPanel::COLUMN_RIGHT, scheme()->GetProportionalScaledValueEx( GetScheme(), SCORE_WIDTH ) );
-		m_pPlayerList->AddColumnToSection(sectionID, "deaths", "", SectionedListPanel::COLUMN_RIGHT, scheme()->GetProportionalScaledValueEx( GetScheme(), DEATH_WIDTH ) );
-		m_pPlayerList->AddColumnToSection(sectionID, "ping", "", SectionedListPanel::COLUMN_RIGHT, scheme()->GetProportionalScaledValueEx( GetScheme(), PING_WIDTH ) );
+		m_pPlayerList[i]->AddColumnToSection(sectionID, "frags", "", SectionedListPanel::COLUMN_RIGHT, scheme()->GetProportionalScaledValueEx( GetScheme(), SCORE_WIDTH ) );
+		m_pPlayerList[i]->AddColumnToSection(sectionID, "deaths", "", SectionedListPanel::COLUMN_RIGHT, scheme()->GetProportionalScaledValueEx( GetScheme(), DEATH_WIDTH ) );
+		m_pPlayerList[i]->AddColumnToSection(sectionID, "ping", "", SectionedListPanel::COLUMN_RIGHT, scheme()->GetProportionalScaledValueEx( GetScheme(), PING_WIDTH ) );
 
 		// set the section to have the team color
 		if ( teamNumber )
 		{
 			if ( SDKGameResources() )
-					m_pPlayerList->SetSectionFgColor(sectionID,  SDKGameResources()->GetTeamColor(teamNumber));
+					m_pPlayerList[i]->SetSectionFgColor(sectionID,  SDKGameResources()->GetTeamColor(teamNumber));
 		}
 
 		//Tony; don't make unassigned always visible when using teams.
 #if defined ( SDK_USE_TEAMS )
 		if ( teamNumber != TEAM_UNASSIGNED )
-			m_pPlayerList->SetSectionAlwaysVisible(sectionID);
+			m_pPlayerList[i]->SetSectionAlwaysVisible(sectionID);
 #else
-			m_pPlayerList->SetSectionAlwaysVisible(sectionID);
+			m_pPlayerList[i]->SetSectionAlwaysVisible(sectionID);
 #endif
 	}
 	else if ( teamType == TYPE_SPECTATORS )
 	{
-		m_pPlayerList->AddSection(sectionID, "");
-		m_pPlayerList->AddColumnToSection(sectionID, "avatar", "", SectionedListPanel::COLUMN_IMAGE | SectionedListPanel::COLUMN_CENTER, m_iAvatarWidth );
-		m_pPlayerList->AddColumnToSection(sectionID, "name", "#SDK_Team_Spectators", 0, scheme()->GetProportionalScaledValueEx( GetScheme(), NAME_WIDTH ), hFallbackFont );
+		m_pPlayerList[i]->AddSection(sectionID, "");
+		m_pPlayerList[i]->AddColumnToSection(sectionID, "avatar", "", SectionedListPanel::COLUMN_IMAGE | SectionedListPanel::COLUMN_CENTER, m_iAvatarWidth );
+		m_pPlayerList[i]->AddColumnToSection(sectionID, "name", "#SDK_Team_Spectators", 0, scheme()->GetProportionalScaledValueEx( GetScheme(), NAME_WIDTH ), hFallbackFont );
+	}
 	}
 
 	return 0;
@@ -280,12 +291,10 @@ int CSDKScoreboard::GetSectionFromTeamNumber( int teamNumber )
 {
 	switch ( teamNumber )
 	{
-#if defined ( SDK_USE_TEAMS )
-	case SDK_TEAM_BLUE:
-		return SCORESECTION_TEAM1;
-	case SDK_TEAM_RED:
-		return SCORESECTION_TEAM2;
-#endif
+	case TEAM_A:
+		return 0;
+	case TEAM_B:
+		return 1;
 	case TEAM_SPECTATOR:
 		return SCORESECTION_SPECTATOR;
 	default:
@@ -363,18 +372,19 @@ void CSDKScoreboard::UpdatePlayerInfo()
 				kv->SetInt("ping", sdkPR->GetPing( i ));
 			}
 
-			int itemID = FindItemIDForPlayerIndex( i );
+			int side = -1;
+			int itemID = FindItemIDForPlayerIndex( i, side );
   			int sectionID = GetSectionFromTeamNumber( sdkPR->GetTeam( i ) );
 						
 			if (itemID == -1)
 			{
 				// add a new row
-				itemID = m_pPlayerList->AddItem( sectionID, kv );
+				itemID = m_pPlayerList[sectionID]->AddItem( sectionID, kv );
 			}
 			else
 			{
 				// modify the current row
-				m_pPlayerList->ModifyItem( itemID, sectionID, kv );
+				m_pPlayerList[sectionID]->ModifyItem( itemID, sectionID, kv );
 			}
 
 			if ( i == pPlayer->entindex() )
@@ -383,24 +393,25 @@ void CSDKScoreboard::UpdatePlayerInfo()
 			}
 
 			// set the row color based on the players team
-			m_pPlayerList->SetItemFgColor( itemID, sdkPR->GetTeamColor( sdkPR->GetTeam( i ) ) );
+			m_pPlayerList[sectionID]->SetItemFgColor( itemID, sdkPR->GetTeamColor( sdkPR->GetTeam( i ) ) );
 
 			kv->deleteThis();
 		}
 		else
 		{
 			// remove the player
-			int itemID = FindItemIDForPlayerIndex( i );
+			int side = -1;
+			int itemID = FindItemIDForPlayerIndex( i, side );
 			if (itemID != -1)
 			{
-				m_pPlayerList->RemoveItem(itemID);
+				//m_pPlayerList->RemoveItem(itemID);
 			}
 		}
 	}
 
 	if ( selectedRow != -1 )
 	{
-		m_pPlayerList->SetSelectedItem(selectedRow);
+		//m_pPlayerList->SetSelectedItem(selectedRow);
 	}
 
 	

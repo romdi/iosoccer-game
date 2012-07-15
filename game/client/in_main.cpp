@@ -542,17 +542,19 @@ void IN_ActionMenuDown( const CCommand &args )
 	KeyDown( &in_actionmenu, args[1] );
 	if ( gViewPortInterface )
 	{
-		gViewPortInterface->ShowPanel(PANEL_ACTION, true);
+		//gViewPortInterface->ShowPanel(PANEL_SCOREBOARD, true);
+		bool show = !gViewPortInterface->FindPanelByName(PANEL_SCOREBOARD)->IsVisible();
+		gViewPortInterface->ShowPanel(PANEL_SCOREBOARD, show);
 	}
 }
 
 void IN_ActionMenuUp( const CCommand &args )
 {
 	KeyUp( &in_actionmenu, args[1] );
-	if ( gViewPortInterface )
-	{
-		gViewPortInterface->ShowPanel( PANEL_ACTION, false );
-	}
+	//if ( gViewPortInterface )
+	//{
+	//	gViewPortInterface->ShowPanel( PANEL_SCOREBOARD, false );
+	//}
 }
 
 /*

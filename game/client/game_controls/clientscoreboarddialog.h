@@ -28,6 +28,8 @@
 #define TYPE_BLANK			4
 */
 
+using namespace vgui;
+
 //-----------------------------------------------------------------------------
 // Purpose: Game ScoreBoard
 //-----------------------------------------------------------------------------
@@ -39,7 +41,7 @@ private:
 protected:
 // column widths at 640
 	//ios enum { NAME_WIDTH = 160, SCORE_WIDTH = 60, DEATH_WIDTH = 60, PING_WIDTH = 80, VOICE_WIDTH = 0, FRIENDS_WIDTH = 0 };
-	enum { NAME_WIDTH = 160, SCORE_WIDTH = 60, DEATH_WIDTH = 60, PING_WIDTH = 80, VOICE_WIDTH = 0, FRIENDS_WIDTH = 0, SMALL_WIDTH = 35, VSMALL_WIDTH = 20};
+	enum { NAME_WIDTH = 100, SCORE_WIDTH = 60, DEATH_WIDTH = 60, PING_WIDTH = 80, VOICE_WIDTH = 0, FRIENDS_WIDTH = 0, SMALL_WIDTH = 35, VSMALL_WIDTH = 20};
 	// total = 340
 
 public:
@@ -54,7 +56,7 @@ public:
 	virtual bool HasInputElements( void ) { return true; }
 	virtual void ShowPanel( bool bShow );
 
-	virtual bool ShowAvatars() { return IsPC(); }
+	virtual bool ShowAvatars() { return false; /*IsPC();*/ }
 
 	// both vgui::Frame and IViewPortPanel define these, so explicitly define them here as passthroughs to vgui
 	vgui::VPANEL GetVPanel( void ) { return BaseClass::GetVPanel(); }
@@ -88,11 +90,11 @@ protected:
 	virtual void PostApplySchemeSettings( vgui::IScheme *pScheme );
 
 	// finds the player in the scoreboard
-	int FindItemIDForPlayerIndex(int playerIndex);
+	int FindItemIDForPlayerIndex(int playerIndex, int &side);
 
 	int m_iNumTeams;
 
-	vgui::SectionedListPanel *m_pPlayerList;
+	vgui::SectionedListPanel *m_pPlayerList[2];
 	int				m_iSectionId; // the current section we are entering into
 
 	int s_VoiceImage[5];
@@ -109,26 +111,32 @@ protected:
 	int							m_iImageAvatars[MAX_PLAYERS+1];
 	CUtlMap<int,int>			m_mapAvatarsToImageList;
 
-	CPanelAnimationVar( int, m_iAvatarWidth, "avatar_width", "34" );		// Avatar width doesn't scale with resolution
+	//CPanelAnimationVar( int, m_iAvatarWidth, "avatar_width", "34" );		// Avatar width doesn't scale with resolution
+	//CPanelAnimationVarAliasType( int, m_iAvatarWidth, "avatar_width", "34", "proportional_int" );
 	CPanelAnimationVarAliasType( int, m_iNameWidth, "name_width", "136", "proportional_int" );
 	CPanelAnimationVarAliasType( int, m_iClassWidth, "class_width", "35", "proportional_int" );
 	CPanelAnimationVarAliasType( int, m_nGoalsWidth, "score_width", "35", "proportional_int" );
 	CPanelAnimationVarAliasType( int, m_iDeathWidth, "death_width", "35", "proportional_int" );
 	CPanelAnimationVarAliasType( int, m_iPingWidth, "ping_width", "23", "proportional_int" );
 
+	int m_iAvatarWidth;
+
 private:
 	int			m_iPlayerIndexSymbol;
 	int			m_iDesiredHeight;
 	IViewPort	*m_pViewPort;
 	ButtonCode_t m_nCloseKey;
-
+	Panel		*m_pExtraInfoPanel;
+	Label		*m_pSpectatorNames;
+	Panel		*m_pMainPanels[2];
+	SectionedListPanel *m_pExtraInfoList;
+	IScheme *m_pScheme;
 
 	// methods
 	void FillScoreBoard();
 
 		//IOS scoreboard
 private:
-    int iTeamSections[TEAMS_COUNT];     //store off the section id's of each team
     int numPlayersOnTeam[TEAMS_COUNT];  //store the player counts
     int teamLatency[TEAMS_COUNT];       //i suppose we could just make a single struct for all this info ;)
 	int m_TeamRedCard[TEAMS_COUNT];
