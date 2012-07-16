@@ -93,9 +93,9 @@ CSDKPlayerAnimState *CreateSDKPlayerAnimState( CSDKPlayer *pPlayer );
 #define GRENADESEQUENCE_LAYER	(RELOADSEQUENCE_LAYER + 1)
 #define NUM_LAYERS_WANTED		(GRENADESEQUENCE_LAYER + 1)
 
-#define ANIM_TOPSPEED_WALK			100
-#define ANIM_TOPSPEED_RUN			280			//ios - was 250 in sdk
+#define ANIM_TOPSPEED_WALK			150
+#define ANIM_TOPSPEED_RUN			250			//ios - was 250 in sdk
 #define ANIM_TOPSPEED_RUN_CROUCH	85
-#define ANIM_TOPSPEED_SPRINT		280 + 90	//ios sprint - without this anim didnt work?!
+#define ANIM_TOPSPEED_SPRINT		350	//ios sprint - without this anim didnt work?!
 
 #endif // SDK_PLAYERANIMSTATE_H

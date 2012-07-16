@@ -20,6 +20,7 @@ struct LayerRecord
 	float m_cycle;
 	float m_weight;
 	int m_order;
+	float m_playbackrate;
 
 	LayerRecord()
 	{
@@ -27,6 +28,7 @@ struct LayerRecord
 		m_cycle = 0;
 		m_weight = 0;
 		m_order = 0;
+		m_playbackrate = 0;
 	}
 
 	LayerRecord( const LayerRecord& src )
@@ -35,6 +37,7 @@ struct LayerRecord
 		m_cycle = src.m_cycle;
 		m_weight = src.m_weight;
 		m_order = src.m_order;
+		m_playbackrate = src.m_playbackrate;
 	}
 };
 
@@ -48,6 +51,8 @@ struct PlayerSnapshot
 	int						m_masterSequence;
 	float					m_masterCycle;
 	float					m_flSimulationTime;
+	float					m_flMoveX;
+	float					m_flMoveY;
 	PlayerSnapshot(CSDKPlayer *pPl, Vector pos, QAngle ang, Vector vel) : pPl(pPl), pos(pos), ang(ang), vel(vel) {}
 };
 
@@ -58,24 +63,33 @@ struct Snapshot
 	PlayerSnapshot *pPlayerSnapshot[32];
 };
 
-class CReplayManager
+class CReplayManager : public CBaseEntity
 {
-private:
-	static CReplayManager	*m_pInstance;
-	CReplayManager();
-
-	CUtlVector<Snapshot>	m_Snapshots;
-	bool					m_bDoReplay;
-	int						m_nSnapshotIndex;
-
 public:
-	static CReplayManager *GetInstance();
+	DECLARE_CLASS(CReplayManager, CBaseEntity);
+	DECLARE_DATADESC();
+	CReplayManager();
 	void CheckReplay();
 	void TakeSnapshot();
 	void StartReplay();
 	void StopReplay();
 	void RestoreSnapshot();
 	bool IsReplaying() { return m_bDoReplay; }
+	void Think();
+	void Spawn();
+private:
+	CUtlVector<Snapshot>	m_Snapshots;
+	bool					m_bDoReplay;
+	int						m_nSnapshotIndex;
+	CPhysicsProp			*m_pBall;
+	CBaseAnimatingOverlay	*m_pPlayers[32];
 };
+
+extern CReplayManager *g_pReplayManager;
+
+inline CReplayManager *ReplayManager()
+{
+	return static_cast<CReplayManager *>(g_pReplayManager);
+}
 
 #endif

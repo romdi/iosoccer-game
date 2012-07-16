@@ -33,8 +33,8 @@ extern void Bot_RunAll( void );
 	#include "sdk_player.h"		//ios
 	#include "game.h"			//ios
 	#include "ios_mapentities.h"
-
 	#include "movehelper_server.h"
+	#include "ios_replaymanager.h"
 #endif
 
 
@@ -462,6 +462,10 @@ CSDKGameRules::CSDKGameRules()
 void CSDKGameRules::ServerActivate()
 {
 	//CPlayerPersistentData::RemoveAllPlayerData();
+
+	CReplayManager *pReplayManager = dynamic_cast<CReplayManager *>(CreateEntityByName("replay_manager"));
+	if (pReplayManager)
+		pReplayManager->Spawn();
 
 	CTeamKitInfo::FindTeamKits();
 

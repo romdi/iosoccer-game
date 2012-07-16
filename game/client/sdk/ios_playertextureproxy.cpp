@@ -80,8 +80,20 @@ void CPlayerTextureProxy::OnBind( C_BaseEntity *pEnt )
 	if ( !m_pBaseTextureVar )
 		return;
 
-	const char *team = GameResources()->GetTeamKitName(GameResources()->GetTeam(pEnt->index));
-	int pos = GameResources()->GetTeamPosition(pEnt->index);
+	const char *team;
+	int pos;
+
+	C_SDKPlayer *pPl = dynamic_cast<C_SDKPlayer *>(pEnt);
+	if (pPl)
+	{
+		team = GameResources()->GetTeamKitName(GameResources()->GetTeam(pEnt->index));
+		pos = GameResources()->GetTeamPosition(pEnt->index);
+	}
+	else
+	{
+		team = "germany";
+		pos = 9;
+	}
 
 	char texture[128];
 
