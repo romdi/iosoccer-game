@@ -250,7 +250,7 @@ private:
 	IPhysicsObject	*m_pPhys;
 	float			m_flPhysRadius;
 	Vector			m_vTriggerTouchPos;
-	
+
 	CHandle<CSDKPlayer>	m_pPl;				  // Current player for state
 	CHandle<CSDKPlayer>	m_pOtherPl;
 

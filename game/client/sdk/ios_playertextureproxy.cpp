@@ -9,6 +9,7 @@
 #include "c_team.h"
 #include "sdk_gamerules.h"
 #include "c_playerresource.h"
+#include "c_ios_replaymanager.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -91,8 +92,14 @@ void CPlayerTextureProxy::OnBind( C_BaseEntity *pEnt )
 	}
 	else
 	{
-		team = "germany";
-		pos = 9;
+		C_ReplayPlayer *pReplayPlayer = dynamic_cast<C_ReplayPlayer *>(pEnt);
+		if (pReplayPlayer)
+		{
+			team = GameResources()->GetTeamKitName(pReplayPlayer->m_nTeamNumber);
+			pos = pReplayPlayer->m_nTeamPosition;
+		}
+		else
+			return;
 	}
 
 	char texture[128];

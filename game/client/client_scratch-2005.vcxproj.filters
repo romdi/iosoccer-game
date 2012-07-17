@@ -1443,6 +1443,9 @@
     <ClCompile Include="game_controls\ios_actionmenu.cpp">
       <Filter>Source Files\game_controls</Filter>
     </ClCompile>
+    <ClCompile Include="sdk\c_ios_replaymanager.cpp">
+      <Filter>Source Files\SDK</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="achievement_notification_panel.h">
@@ -3232,6 +3235,9 @@
     </ClInclude>
     <ClInclude Include="game_controls\ios_actionmenu.h">
       <Filter>game_controls Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\c_ios_replaymanager.h">
+      <Filter>Source Files\SDK</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

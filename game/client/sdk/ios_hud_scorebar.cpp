@@ -219,14 +219,14 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 		m_pPlayers[i]->SetContentAlignment(Label::a_north);
 		m_pPlayers[i]->SetFont(pScheme->GetFont("IOSEvent"));
 		m_pPlayers[i]->SetFgColor(fgColor);
-		m_pPlayers[i]->SetVisible(false);
+		//m_pPlayers[i]->SetVisible(false);
 	}
 
 	m_pEvent->SetBounds(GetWide() / 2 - EVENT_WIDTH / 2, 0, EVENT_WIDTH, EVENT_HEIGHT);
 	m_pEvent->SetContentAlignment(Label::a_north);
 	m_pEvent->SetFont(pScheme->GetFont("IOSEvent"));
 	m_pEvent->SetFgColor(fgColor);
-	m_pEvent->SetVisible(false);
+	//m_pEvent->SetVisible(false);
 }
 
 //-----------------------------------------------------------------------------

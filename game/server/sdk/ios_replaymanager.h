@@ -6,12 +6,11 @@
 
 struct BallSnapshot
 {
-	Vector pos;
-	QAngle ang;
-	Vector vel;
-	AngularImpulse rot;
-
-	BallSnapshot(Vector pos, QAngle ang, Vector vel, AngularImpulse rot) : pos(pos), ang(ang), vel(vel), rot(rot) {}
+	Vector			pos;
+	QAngle			ang;
+	Vector			vel;
+	AngularImpulse	rot;
+	int				skin;
 };
 
 struct LayerRecord
@@ -43,24 +42,63 @@ struct LayerRecord
 
 struct PlayerSnapshot
 {
-	CSDKPlayer *pPl;
-	Vector pos;
-	QAngle ang;
-	Vector vel;
-	LayerRecord				m_layerRecords[CBaseAnimatingOverlay::MAX_OVERLAYS];
-	int						m_masterSequence;
-	float					m_masterCycle;
-	float					m_flSimulationTime;
-	float					m_flMoveX;
-	float					m_flMoveY;
-	PlayerSnapshot(CSDKPlayer *pPl, Vector pos, QAngle ang, Vector vel) : pPl(pPl), pos(pos), ang(ang), vel(vel) {}
+	CSDKPlayer		*pPl;
+	Vector			pos;
+	QAngle			ang;
+	Vector			vel;
+	CAnimationLayer m_animLayers[CBaseAnimatingOverlay::MAX_OVERLAYS];
+	//LayerRecord		m_layerRecords[CBaseAnimatingOverlay::MAX_OVERLAYS];
+	int				m_masterSequence;
+	float			m_masterCycle;
+	float			m_flSimulationTime;
+	float			m_flMoveX;
+	float			m_flMoveY;
+	int				m_nTeamNumber;
+	int				m_nTeamPosition;
+	int				m_nSkin;
+	int				m_nBody;
 };
 
 struct Snapshot
 {
 	float snaptime;
 	BallSnapshot *pBallSnapshot;
-	PlayerSnapshot *pPlayerSnapshot[32];
+	PlayerSnapshot *pPlayerSnapshot[22];
+};
+
+
+class CReplayBall : public CPhysicsProp
+{
+public:
+	DECLARE_CLASS( CReplayBall, CPhysicsProp );
+
+	typedef CPhysicsProp BaseClass;
+	CReplayBall();
+
+
+	bool CreateVPhysics( void );
+	void Spawn( void );
+	virtual void Precache();
+	DECLARE_DATADESC();
+};
+
+
+class CReplayPlayer : public CBaseAnimatingOverlay
+{
+public:
+	DECLARE_CLASS( CReplayPlayer, CBaseAnimatingOverlay );
+	DECLARE_SERVERCLASS();
+	DECLARE_DATADESC();
+
+	typedef CBaseAnimatingOverlay BaseClass;
+	CReplayPlayer();
+
+	void Spawn( void );
+	virtual void Precache();
+	void Think();
+
+	CNetworkVar(int, m_nTeamNumber);
+	CNetworkVar(int, m_nTeamPosition);
 };
 
 class CReplayManager : public CBaseEntity
@@ -71,18 +109,21 @@ public:
 	CReplayManager();
 	void CheckReplay();
 	void TakeSnapshot();
-	void StartReplay();
+	void StartReplay(int numberOfRuns);
 	void StopReplay();
 	void RestoreSnapshot();
 	bool IsReplaying() { return m_bDoReplay; }
 	void Think();
 	void Spawn();
+
 private:
 	CUtlVector<Snapshot>	m_Snapshots;
 	bool					m_bDoReplay;
 	int						m_nSnapshotIndex;
-	CPhysicsProp			*m_pBall;
-	CBaseAnimatingOverlay	*m_pPlayers[32];
+	CReplayBall				*m_pBall;
+	CReplayPlayer			*m_pPlayers[32];
+	int						m_nReplayRunCount;
+	int						m_nMaxReplayRuns;
 };
 
 extern CReplayManager *g_pReplayManager;

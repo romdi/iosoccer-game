@@ -100,6 +100,7 @@
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <CompileAs>CompileAsCpp</CompileAs>
       <ErrorReporting>Prompt</ErrorReporting>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -610,6 +611,7 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
       </PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="sdk\c_ball.cpp" />
+    <ClCompile Include="sdk\c_ios_replaymanager.cpp" />
     <ClCompile Include="sdk\c_ios_tvcamera.cpp" />
     <ClCompile Include="sdk\ios_crowdtextureproxy.cpp" />
     <ClCompile Include="sdk\ios_hud_powershotbar.cpp" />
@@ -856,6 +858,7 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClInclude Include="..\shared\playerclass_info_parse.h" />
     <ClInclude Include="..\shared\point_bonusmaps_accessor.h" />
     <ClInclude Include="sdk\c_ball.h" />
+    <ClInclude Include="sdk\c_ios_replaymanager.h" />
     <ClInclude Include="sdk\c_ios_tvcamera.h" />
     <ClInclude Include="vgui_avatarimage.h" />
     <ClInclude Include="viewdebug.h" />

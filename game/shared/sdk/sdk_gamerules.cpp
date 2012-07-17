@@ -463,7 +463,7 @@ void CSDKGameRules::ServerActivate()
 {
 	//CPlayerPersistentData::RemoveAllPlayerData();
 
-	CReplayManager *pReplayManager = dynamic_cast<CReplayManager *>(CreateEntityByName("replay_manager"));
+	CReplayManager *pReplayManager = dynamic_cast<CReplayManager *>(CreateEntityByName("replaymanager"));
 	if (pReplayManager)
 		pReplayManager->Spawn();
 

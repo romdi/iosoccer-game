@@ -476,9 +476,9 @@ Activity CSDKPlayerAnimState::CalcMainActivity()
 			return ACT_IOS_JUMPCELEB;							//cartwheel celeb
 		//else if (pPlayer->m_nBody > 0)
 		else if (pPlayer->m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_JUMP)
-			return ACT_LEAP;									//keepers jump
+			return ACT_IDLE;//FIXME: Buggy jump animation: ACT_LEAP;									//keepers jump
 		else
-			return ACT_HOP;										//normal jump
+			return ACT_IDLE;//FIXME: Buggy jump animation: ACT_HOP;										//normal jump
 	}
 	else
 	{

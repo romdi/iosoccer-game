@@ -21,6 +21,7 @@
 #include "sdk_shareddefs.h"
 #include "ios_replaymanager.h"
 #include "movevars_shared.h"
+#include "ios_replaymanager.h"
 
 
 ConVar sv_ball_mass( "sv_ball_mass", "1", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
@@ -938,6 +939,10 @@ void CBall::State_CORNER_Leave(ball_state_t newState)
 
 void CBall::State_GOAL_Enter()
 {
+	CReplayManager *pReplayManager = dynamic_cast<CReplayManager *>(gEntList.FindEntityByClassname(NULL, "replaymanager"));
+	if (pReplayManager)
+		pReplayManager->StartReplay(2);
+
 	UpdatePossession(NULL);
 	SDKGameRules()->SetKickOffTeam(m_nTeam);
 	int scoringTeam;
@@ -990,6 +995,10 @@ void CBall::State_GOAL_Think()
 
 void CBall::State_GOAL_Leave(ball_state_t newState)
 {
+	CReplayManager *pReplayManager = dynamic_cast<CReplayManager *>(gEntList.FindEntityByClassname(NULL, "replaymanager"));
+	if (pReplayManager)
+		pReplayManager->StopReplay();
+
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
 		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));

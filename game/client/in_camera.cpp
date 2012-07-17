@@ -129,20 +129,20 @@ void CInput::CAM_Think( void )
 			camOffset[ DIST ] = adjDist;
 		}
 
-		if (cam_fade.GetBool())
-		{
-			if (localPlayer->GetRenderMode() != kRenderTransColor)
-				localPlayer->SetRenderMode( kRenderTransColor );
+		//if (cam_fade.GetBool())
+		//{
+		//	if (localPlayer->GetRenderMode() != kRenderTransColor)
+		//		localPlayer->SetRenderMode( kRenderTransColor );
 
-			float playerAlpha = ( ( m_vecCameraOffset[ DIST ] - cam_fadeenddist.GetFloat() ) * ( 100 / ( cam_fadestartdist.GetFloat()  -  cam_fadeenddist.GetFloat() ) )  );
-			localPlayer->SetRenderColorA(clamp(playerAlpha * 2.55, 0, 255));
-		}
-		else
-		{
-			//localPlayer->SetRenderColorA(255);
-			if (localPlayer->GetRenderMode() != kRenderNormal)
-				localPlayer->SetRenderMode( kRenderNormal );
-		}
+		//	float playerAlpha = ( ( m_vecCameraOffset[ DIST ] - cam_fadeenddist.GetFloat() ) * ( 100 / ( cam_fadestartdist.GetFloat()  -  cam_fadeenddist.GetFloat() ) )  );
+		//	localPlayer->SetRenderColorA(clamp(playerAlpha * 2.55, 0, 255));
+		//}
+		//else
+		//{
+		//	//localPlayer->SetRenderColorA(255);
+		//	if (localPlayer->GetRenderMode() != kRenderNormal)
+		//		localPlayer->SetRenderMode( kRenderNormal );
+		//}
 	}
 	if ( cam_showangles.GetInt() )
 	{
