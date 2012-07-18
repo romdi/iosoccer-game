@@ -25,6 +25,7 @@
 #include "clientmode_shared.h"
 #include "c_baseplayer.h"
 #include "c_team.h"
+#include "c_ball.h"
 
 #include "sdk_gamerules.h"
 
@@ -56,6 +57,7 @@ public:
 	void Init( void );
 	void DoEventSlide();
 	void MsgFunc_MatchEvent(bf_read &msg);
+	void MsgFunc_NeutralMatchEvent(bf_read &msg);
 
 protected:
 	virtual void Paint( void );
@@ -76,10 +78,12 @@ private:
 	CUtlVector<Event_t> m_vEventLists[2];
 	Label *m_pPlayers[2];
 	Label *m_pEvent;
+	char m_szCurrentPlayer[MAX_PLAYER_NAME_LENGTH];
 };
 
 DECLARE_HUDELEMENT( CHudScorebar );
 DECLARE_HUD_MESSAGE(CHudScorebar, MatchEvent);
+DECLARE_HUD_MESSAGE(CHudScorebar, NeutralMatchEvent);
 
 #define	HEIGHT_MARGIN			3
 #define HEIGHT_TIMEBAR			35
@@ -136,6 +140,8 @@ CHudScorebar::CHudScorebar( const char *pElementName ) : BaseClass(NULL, "HudSco
 	}
 
 	m_pEvent = new Label(this, "", "");
+
+	m_szCurrentPlayer[0] = 0;
 }
 
 void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
@@ -218,14 +224,14 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 		m_pPlayers[i]->SetBounds((GetWide() / 2 - EVENT_WIDTH / 2 - PLAYER_WIDTH) + i * (PLAYER_WIDTH + EVENT_WIDTH), 0, PLAYER_WIDTH, PLAYER_HEIGHT);
 		m_pPlayers[i]->SetContentAlignment(Label::a_north);
 		m_pPlayers[i]->SetFont(pScheme->GetFont("IOSEvent"));
-		m_pPlayers[i]->SetFgColor(fgColor);
+		m_pPlayers[i]->SetFgColor(Color(255, 255, 255, 255));
 		//m_pPlayers[i]->SetVisible(false);
 	}
 
 	m_pEvent->SetBounds(GetWide() / 2 - EVENT_WIDTH / 2, 0, EVENT_WIDTH, EVENT_HEIGHT);
 	m_pEvent->SetContentAlignment(Label::a_north);
 	m_pEvent->SetFont(pScheme->GetFont("IOSEvent"));
-	m_pEvent->SetFgColor(fgColor);
+	m_pEvent->SetFgColor(Color(255, 255, 255, 255));
 	//m_pEvent->SetVisible(false);
 }
 
@@ -235,6 +241,7 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 void CHudScorebar::Init( void )
 {
 	HOOK_HUD_MESSAGE(CHudScorebar, MatchEvent);
+	HOOK_HUD_MESSAGE(CHudScorebar, NeutralMatchEvent);
 }
 
 const char *g_szStateNames[32] =
@@ -281,6 +288,25 @@ void CHudScorebar::Paint( void )
 		m_pTeamColors[team - TEAM_A][0]->SetBgColor(GetGlobalTeam(team)->Get_PrimaryKitColor());
 		m_pTeamColors[team - TEAM_A][1]->SetBgColor(GetGlobalTeam(team)->Get_SecondaryKitColor());
 		m_pScores[team - TEAM_A]->SetText(VarArgs("%d", GetGlobalTeam(team)->Get_Goals()));
+	}
+
+	C_Ball *pBall = GetBall();
+	if (pBall)
+	{
+		if (SDKGameRules()->IsIntermissionState())
+		{
+			m_pPlayers[0]->SetText("");
+			m_pPlayers[1]->SetText("");
+			m_szCurrentPlayer[0] = 0;
+		}
+		else if (pBall->m_pPl)
+		{
+			Q_strncpy(m_szCurrentPlayer, GameResources()->GetPlayerName(pBall->m_pPl->entindex()), sizeof(m_szCurrentPlayer));
+			int index = GameResources()->GetTeam(pBall->m_pPl->entindex()) - TEAM_A;
+
+			m_pPlayers[index]->SetText(m_szCurrentPlayer);
+			m_pPlayers[1 - index]->SetText("");
+		}
 	}
 
 	DoEventSlide();
@@ -371,6 +397,10 @@ void CHudScorebar::MsgFunc_MatchEvent(bf_read &msg)
 
 	IGameResources *gr = GameResources();
 	match_event_t eventType = (match_event_t)msg.ReadByte();
+
+	m_pEvent->SetText(g_szMatchEventNames[eventType]);
+	//m_pPlayers[teamIndex]->SetText(playerName);
+
 	char playerName[MAX_PLAYER_NAME_LENGTH]; 
 	msg.ReadString(playerName, sizeof(playerName));
 	int teamIndex = msg.ReadByte() - TEAM_A;
@@ -401,9 +431,6 @@ void CHudScorebar::MsgFunc_MatchEvent(bf_read &msg)
 	Event_t e = { pEventBox, pEventType, pEventText, gpGlobals->curtime };
 	m_vEventLists[teamIndex].AddToTail(e);
 
-	m_pEvent->SetText(g_szMatchEventNames[eventType]);
-	m_pPlayers[teamIndex]->SetText(playerName);
-
 	if (eventType == MATCH_EVENT_KICKOFF)
 	{
 		FLASHWINFO flashInfo;
@@ -415,4 +442,10 @@ void CHudScorebar::MsgFunc_MatchEvent(bf_read &msg)
 		FlashWindowEx(&flashInfo);
 		//SetWindowText(FindWindow(NULL, "IOS Source Dev"), "LIVE - IOS Source Dev");
 	}
+}
+
+void CHudScorebar::MsgFunc_NeutralMatchEvent(bf_read &msg)
+{
+	match_event_t eventType = (match_event_t)msg.ReadByte();
+	m_pEvent->SetText(g_szMatchEventNames[eventType]);
 }

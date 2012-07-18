@@ -8,6 +8,7 @@
 #include "c_physicsprop.h"
 #include "props_shared.h"
 #include "c_props.h"
+#include "c_sdk_player.h"
 
 class C_Ball;
 
@@ -48,6 +49,7 @@ public:
 	float m_flOffsideLineLastOppPlayerPosY;
 	bool m_bOffsideLinesEnabled;
 	IMaterial *m_pOffsideLineMaterial;
+	CHandle<C_SDKPlayer> m_pPl;
 };
 
 extern C_Ball *GetBall();

@@ -463,10 +463,6 @@ void CSDKGameRules::ServerActivate()
 {
 	//CPlayerPersistentData::RemoveAllPlayerData();
 
-	CReplayManager *pReplayManager = dynamic_cast<CReplayManager *>(CreateEntityByName("replaymanager"));
-	if (pReplayManager)
-		pReplayManager->Spawn();
-
 	CTeamKitInfo::FindTeamKits();
 
 	InitTeams();
@@ -776,6 +772,19 @@ void CSDKGameRules::CreateStandardEntities()
 #endif
 		CBaseEntity::Create( "sdk_gamerules", vec3_origin, vec3_angle );
 	Assert( pEnt );
+
+	CReplayManager *pReplayManager = dynamic_cast<CReplayManager *>(CreateEntityByName("replaymanager"));
+	if (pReplayManager)
+		pReplayManager->Spawn();
+}
+
+void CSDKGameRules::LevelShutdown()
+{
+	if (g_pReplayManager)
+	{
+		UTIL_Remove(g_pReplayManager);
+		g_pReplayManager = NULL;
+	}
 }
 
 #endif
@@ -1231,6 +1240,7 @@ void CSDKGameRules::State_FIRST_HALF_Think()
 
 void CSDKGameRules::State_HALFTIME_Enter()
 {
+	GetBall()->SendNeutralMatchEvent(MATCH_EVENT_FINAL_WHISTLE);
 	GetBall()->EmitSound("Ball.whistle");
 	GetBall()->EmitSound("Ball.cheer");
 }
@@ -1268,6 +1278,7 @@ void CSDKGameRules::State_SECOND_HALF_Think()
 
 void CSDKGameRules::State_EXTRATIME_INTERMISSION_Enter()
 {
+	GetBall()->SendNeutralMatchEvent(MATCH_EVENT_FINAL_WHISTLE);
 	GetBall()->EmitSound("Ball.whistle");
 	GetBall()->EmitSound("Ball.cheer");
 }
@@ -1303,6 +1314,7 @@ void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Think()
 
 void CSDKGameRules::State_EXTRATIME_HALFTIME_Enter()
 {
+	GetBall()->SendNeutralMatchEvent(MATCH_EVENT_FINAL_WHISTLE);
 	GetBall()->EmitSound("Ball.whistle");
 	GetBall()->EmitSound("Ball.cheer");
 }
@@ -1340,6 +1352,7 @@ void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Think()
 
 void CSDKGameRules::State_PENALTIES_INTERMISSION_Enter()
 {
+	GetBall()->SendNeutralMatchEvent(MATCH_EVENT_FINAL_WHISTLE);
 	GetBall()->EmitSound("Ball.whistle");
 	GetBall()->EmitSound("Ball.cheer");
 }

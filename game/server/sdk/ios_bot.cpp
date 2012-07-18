@@ -91,15 +91,15 @@ CBasePlayer *BotPutInServer( bool bFrozen, int keeper )
 	//pick name
 	if (keeper==1)
 	{
-		Q_snprintf( botname, sizeof( botname ), "[BOT]Keeper1");
+		Q_snprintf( botname, sizeof( botname ), "Keeper1");
 	}
 	else if (keeper==2)
 	{
-		Q_snprintf( botname, sizeof( botname ), "[BOT]Keeper2");
+		Q_snprintf( botname, sizeof( botname ), "Keeper2");
 	}
 	else
 	{
-		Q_snprintf( botname, sizeof( botname ), "[BOT]Arthur");
+		Q_snprintf( botname, sizeof( botname ), "Arthur");
 	}
 
 	// This trick lets us create a CBot for this client instead of the CSDKPlayer

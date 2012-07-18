@@ -110,7 +110,7 @@ const char *WeaponIDToAlias( int id )
 
 const char *g_szMatchEventNames[32] =
 {
-	"NONE",
+	"",
 	"GOAL",
 	"OWNGOAL",
 	"FREEKICK",

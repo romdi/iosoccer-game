@@ -84,6 +84,8 @@ ConVar sv_ball_bodypos_hip_start("sv_ball_bodypos_hip_start", "15", FCVAR_NOTIFY
 ConVar sv_ball_bodypos_chest_start("sv_ball_bodypos_chest_start", "40", FCVAR_NOTIFY);
 ConVar sv_ball_bodypos_head_start("sv_ball_bodypos_head_start", "60", FCVAR_NOTIFY);
 ConVar sv_ball_bodypos_head_end("sv_ball_bodypos_head_end", "80", FCVAR_NOTIFY);
+ConVar sv_ball_yellowcardprobability_forward("sv_ball_yellowcardprobability_forward", "33", FCVAR_NOTIFY);
+ConVar sv_ball_yellowcardprobability_backward("sv_ball_yellowcardprobability_backward", "66", FCVAR_NOTIFY);
 
 
 CBall *CreateBall(const Vector &pos, CSDKPlayer *pCreator)
@@ -182,7 +184,8 @@ IMPLEMENT_SERVERCLASS_ST( CBall, DT_Ball )
 	SendPropFloat(SENDINFO(m_flOffsideLineBallPosY), 0, SPROP_COORD),
 	SendPropFloat(SENDINFO(m_flOffsideLineOffsidePlayerPosY), 0, SPROP_COORD),
 	SendPropFloat(SENDINFO(m_flOffsideLineLastOppPlayerPosY), 0, SPROP_COORD),
-	SendPropBool(SENDINFO(m_bOffsideLinesEnabled))
+	SendPropBool(SENDINFO(m_bOffsideLinesEnabled)),
+	SendPropEHandle(SENDINFO(m_pPl)),
 	//ios1.1
     //SendPropVector(SENDINFO(m_vecOrigin), -1, SPROP_NOSCALE|SPROP_CHANGES_OFTEN, 0.0f, HIGH_DEFAULT, SendProxy_Origin ),
 END_SEND_TABLE()
@@ -445,6 +448,14 @@ void CBall::SendMatchEvent(match_event_t matchEvent, const char *szPlayerName, i
 	MessageEnd();
 }
 
+void CBall::SendNeutralMatchEvent(match_event_t matchEvent)
+{
+	CReliableBroadcastRecipientFilter filter;
+	UserMessageBegin(filter, "NeutralMatchEvent");
+		WRITE_BYTE(matchEvent);
+	MessageEnd();
+}
+
 CSDKPlayer *CBall::FindNearestPlayer(int team /*= TEAM_INVALID*/, int posFlags /*= FL_POS_FIELD*/, bool checkIfShooting /*= false*/, int ignoredPlayerBits /*= 0*/)
 {
 	CSDKPlayer *pNearest = NULL;
@@ -646,6 +657,7 @@ void CBall::State_NORMAL_Enter()
 	EnablePlayerCollisions(true);
 	m_pPhys->Wake();
 	SDKGameRules()->EndInjuryTime();
+	SendNeutralMatchEvent(MATCH_EVENT_NONE);
 }
 
 void CBall::State_NORMAL_Think()
@@ -839,7 +851,7 @@ void CBall::State_THROWIN_Leave(ball_state_t newState)
 void CBall::State_GOALKICK_Enter()
 {
 	Vector ballPos;
-	if ((m_vTriggerTouchPos - SDKGameRules()->m_vKickOff).x > 0)
+	if (m_vTriggerTouchPos.x - SDKGameRules()->m_vKickOff.GetX() > 0)
 		ballPos = GetGlobalTeam(LastOppTeam(false))->m_vGoalkickLeft;
 	else
 		ballPos = GetGlobalTeam(LastOppTeam(false))->m_vGoalkickRight;
@@ -941,7 +953,7 @@ void CBall::State_GOAL_Enter()
 {
 	CReplayManager *pReplayManager = dynamic_cast<CReplayManager *>(gEntList.FindEntityByClassname(NULL, "replaymanager"));
 	if (pReplayManager)
-		pReplayManager->StartReplay(2);
+		pReplayManager->StartReplay(2, 3);
 
 	UpdatePossession(NULL);
 	SDKGameRules()->SetKickOffTeam(m_nTeam);
@@ -1374,22 +1386,28 @@ bool CBall::CheckFoul(bool canShootBall)
 
 		int teammatesCloserToGoalCount = 0;
 
-		for (int j = 1; j <= gpGlobals->maxClients; j++) 
+		bool isCloseToOwnGoal = CalcFieldZone() * m_pPl->GetTeam()->m_nForward < -50;
+
+		if (isCloseToOwnGoal)
 		{
-			CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(j));
+			for (int j = 1; j <= gpGlobals->maxClients; j++) 
+			{
+				CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(j));
 
-			if (!CSDKPlayer::IsOnField(pPl) || pPl == m_pPl || pPl->GetTeamNumber() != m_nPlTeam || pPl->GetTeamPosition() == 1)
-				continue;
+				if (!CSDKPlayer::IsOnField(pPl) || pPl == m_pPl || pPl->GetTeamNumber() != m_nPlTeam || pPl->GetTeamPosition() == 1)
+					continue;
 
-			if (Sign(m_vPlPos.y - pPl->GetLocalOrigin().y) == m_pPl->GetTeam()->m_nForward)
-				teammatesCloserToGoalCount += 1;
+				if ((m_pPl->GetTeam()->m_vPlayerSpawns[0] - pPl->GetLocalOrigin()).Length2DSqr() < (m_pPl->GetTeam()->m_vPlayerSpawns[0] - m_vPlPos).Length2DSqr())
+					teammatesCloserToGoalCount += 1;
+			}
 		}
 
 		foul_type_t foulType;
 
-		if (teammatesCloserToGoalCount == 0)
+		if (isCloseToOwnGoal && teammatesCloserToGoalCount == 0)
 			foulType = FOUL_NORMAL_RED_CARD;
-		else if (anim == PLAYERANIMEVENT_TACKLED_BACKWARD)
+		else if (anim == PLAYERANIMEVENT_TACKLED_FORWARD && g_IOSRand.RandomInt(1, 100) <= sv_ball_yellowcardprobability_forward.GetInt() ||
+				 anim == PLAYERANIMEVENT_TACKLED_BACKWARD && g_IOSRand.RandomInt(1, 100) <= sv_ball_yellowcardprobability_backward.GetInt())
 			foulType = FOUL_NORMAL_YELLOW_CARD;
 		else
 			foulType = FOUL_NORMAL_NO_CARD;
@@ -1770,6 +1788,12 @@ void CBall::TriggerGoal(int team)
 			m_bHasQueuedState = true;
 		}
 
+		return;
+	}
+
+	if (LastInfo(true) && LastInfo(true)->m_eBallState == BALL_THROWIN && !LastPl(false, LastPl(true)))
+	{
+		TriggerGoalLine(team);
 		return;
 	}
 

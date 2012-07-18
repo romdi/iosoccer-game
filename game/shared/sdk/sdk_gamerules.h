@@ -230,6 +230,8 @@ public:
 
 	void CreateStandardEntities( void );
 
+	virtual void LevelShutdown( void );
+
 	virtual const char *GetChatPrefix( bool bTeamOnly, CBasePlayer *pPlayer );
 	virtual const char *GetChatFormat( bool bTeamOnly, CBasePlayer *pPlayer );
 	virtual const char *GetChatLocation( bool bTeamOnly, CBasePlayer *pPlayer );

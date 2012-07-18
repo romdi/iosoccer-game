@@ -148,6 +148,8 @@ public:
 	void			SendMatchEvent(match_event_t matchEvent, MatchEventPlayerInfo *pMatchEventPlayerInfo);
 	void			SendMatchEvent(match_event_t matchEvent, const char *szPlayerName, int playerTeam, int playerUserID, const char *szPlayerNetworkIDString);
 
+	void			SendNeutralMatchEvent(match_event_t matchEvent);
+
 	bool			IsAsleep(void) { return	false; }
 	void			Spawn(void);
 	void			Think( void	);
@@ -192,6 +194,8 @@ public:
 	Vector			GetVel();
 	AngularImpulse	GetRot();
 	float			CalcFieldZone();
+
+	CNetworkHandle(CSDKPlayer, m_pPl);				  // Current player for state
 
 private:
 
@@ -251,7 +255,6 @@ private:
 	float			m_flPhysRadius;
 	Vector			m_vTriggerTouchPos;
 
-	CHandle<CSDKPlayer>	m_pPl;				  // Current player for state
 	CHandle<CSDKPlayer>	m_pOtherPl;
 
 	QAngle			m_aPlAng;

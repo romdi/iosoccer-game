@@ -14,19 +14,8 @@
 #include <vgui_controls/EditablePanel.h>
 #include <game/client/iviewport.h>
 #include "gameeventlistener.h"
-
-#define TYPE_UNASSIGNED		0	// NOTEAM must be zero :)
-#define TYPE_TEAM			1	// a section for a single team	
-#define TYPE_SPECTATORS		2	// a section for a spectator group
-#define TYPE_BLANK			3
-
-/* original sdk
-#define TYPE_NOTEAM			0	// NOTEAM must be zero :)
-#define TYPE_TEAM			1	// a section for a single team	
-#define TYPE_PLAYERS		2
-#define TYPE_SPECTATORS		3	// a section for a spectator group
-#define TYPE_BLANK			4
-*/
+#include "vgui_bitmapbutton.h"
+#include "settingsmenu.h"
 
 using namespace vgui;
 
@@ -43,6 +32,7 @@ protected:
 	//ios enum { NAME_WIDTH = 160, SCORE_WIDTH = 60, DEATH_WIDTH = 60, PING_WIDTH = 80, VOICE_WIDTH = 0, FRIENDS_WIDTH = 0 };
 	enum { NAME_WIDTH = 100, SCORE_WIDTH = 60, DEATH_WIDTH = 60, PING_WIDTH = 80, VOICE_WIDTH = 0, FRIENDS_WIDTH = 0, SMALL_WIDTH = 35, VSMALL_WIDTH = 20};
 	// total = 340
+	enum { SPEC_FONT_COUNT = 4 };
 
 public:
 	CClientScoreBoardDialog( IViewPort *pViewPort );
@@ -79,7 +69,6 @@ protected:
 	virtual void OnThink();
 	virtual void AddHeader(); // add the start header of the scoreboard
 	//virtual void AddSection(int teamType, int teamNumber); // add a new section header for a team
-	virtual int AddSection(int teamType, int teamNumber); // add a new section header for a team //ios scoreboard
 	virtual int GetAdditionalHeight() { return 0; }
 
 	// sorts players within a section
@@ -87,10 +76,10 @@ protected:
 
 	virtual void ApplySchemeSettings(vgui::IScheme *pScheme);
 
-	virtual void PostApplySchemeSettings( vgui::IScheme *pScheme );
-
 	// finds the player in the scoreboard
 	int FindItemIDForPlayerIndex(int playerIndex, int &side);
+
+	MESSAGE_FUNC_PARAMS(OnItemSelected, "ItemSelected", data);
 
 	int m_iNumTeams;
 
@@ -104,6 +93,8 @@ protected:
 
 	void MoveLabelToFront(const char *textEntryName);
 	void MoveToCenterOfScreen();
+
+	void OnCommand(char const *cmd);
 	
 	vgui::ImagePanel *m_pImagePanel; //ios
 
@@ -128,29 +119,20 @@ private:
 	ButtonCode_t m_nCloseKey;
 	Panel		*m_pExtraInfoPanel;
 	Label		*m_pSpectatorNames;
-	Panel		*m_pMainPanels[2];
-	SectionedListPanel *m_pExtraInfoList;
+	SectionedListPanel *m_pPlayerStats;
+	Panel		*m_pFormations[2];
+	CBitmapButton *m_pFormationButtons[2][11];
+	Button		*m_pSpectateButton;
+	Button		*m_pSettingsButton;
+	CSettingsMenu *m_pSettingsPanel;
+	Panel		*m_pSideSeparators[2];
+	Panel		*m_pSpectatorContainer;
+	HFont		m_pSpectatorFontList[SPEC_FONT_COUNT];
+
 	IScheme *m_pScheme;
 
 	// methods
 	void FillScoreBoard();
-
-		//IOS scoreboard
-private:
-    int numPlayersOnTeam[TEAMS_COUNT];  //store the player counts
-    int teamLatency[TEAMS_COUNT];       //i suppose we could just make a single struct for all this info ;)
-	int m_TeamRedCard[TEAMS_COUNT];
-	int m_TeamYellowCard[TEAMS_COUNT];
-	int m_TeamFouls[TEAMS_COUNT];
-	int m_TeamAssists[TEAMS_COUNT];
-	int m_TeamPossession[TEAMS_COUNT];
-	int m_TeamPasses[TEAMS_COUNT];
-	int m_TeamFreeKicks[TEAMS_COUNT];
-	int m_TeamPenalties[TEAMS_COUNT];
-	int m_TeamCorners[TEAMS_COUNT];
-	int m_TeamThrowIns[TEAMS_COUNT];
-	int m_TeamKeeperSaves[TEAMS_COUNT];
-	int m_TeamGoalKicks[TEAMS_COUNT];
 };
 
 

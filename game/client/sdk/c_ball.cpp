@@ -14,6 +14,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_Ball, DT_Ball, CBall )
 	RecvPropFloat(RECVINFO(m_flOffsideLineOffsidePlayerPosY)),
 	RecvPropFloat(RECVINFO(m_flOffsideLineLastOppPlayerPosY)),
 	RecvPropInt(RECVINFO(m_bOffsideLinesEnabled)),
+	RecvPropEHandle(RECVINFO(m_pPl)),
 END_RECV_TABLE()
 
 C_Ball *g_pBall = NULL;

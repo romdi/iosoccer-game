@@ -569,6 +569,18 @@ public:
 		}
 	}
 
+	virtual void OnCursorEntered()
+	{
+		if (m_pListPanel->IsMouseEnterSelection())
+			m_pListPanel->SetSelectedItem(this);
+	}
+
+	virtual void OnCursorExited()
+	{
+		if (m_pListPanel->IsMouseEnterSelection())
+			m_pListPanel->ClearSelection();
+	}
+
 	virtual void OnMousePressed(MouseCode code)
 	{
 		if (code == MOUSE_LEFT)
@@ -709,6 +721,7 @@ SectionedListPanel::SectionedListPanel(vgui::Panel *parent, const char *name) : 
 	m_iEditModeColumn = 0;
 	m_bSortNeeded = false;
 	m_bVerticalScrollbarEnabled = true;
+	m_bMouseEnterSelection = false;
 	m_iLineSpacing = 20;
 
 	m_pImageList = NULL;
@@ -1412,6 +1425,21 @@ void SectionedListPanel::MoveSelectionUp( void )
 	int newItemID = m_SortedItems[i - 1]->GetID();
 	SetSelectedItem(m_Items[newItemID]);
 	ScrollToItem(newItemID);
+}
+
+void SectionedListPanel::EnableMouseEnterSelection(bool enable)
+{
+	m_bMouseEnterSelection = enable;
+}
+
+bool SectionedListPanel::IsMouseEnterSelection()
+{
+	return m_bMouseEnterSelection;
+}
+
+void SectionedListPanel::SetLineSpacing(int spacing)
+{
+	m_iLineSpacing = spacing;
 }
 
 //-----------------------------------------------------------------------------

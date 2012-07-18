@@ -165,6 +165,11 @@ public:
 	void MoveSelectionDown( void );
 	void MoveSelectionUp( void );
 
+	void EnableMouseEnterSelection(bool enable);
+	bool IsMouseEnterSelection();
+
+	void SetLineSpacing(int spacing);
+
 protected:
 	virtual void PerformLayout();
 	virtual void ApplySchemeSettings(IScheme *pScheme);
@@ -227,6 +232,7 @@ private:
 	bool m_bDeleteImageListWhenDone;
 	bool m_bSortNeeded;
 	bool m_bVerticalScrollbarEnabled;
+	bool m_bMouseEnterSelection;
 
 	CPanelAnimationVar( bool, m_bShowColumns, "show_columns", "false" );
 };

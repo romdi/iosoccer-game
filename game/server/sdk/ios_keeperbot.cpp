@@ -215,6 +215,7 @@ void CKeeperBot::BotAdjustPos()
 	}
 
 	m_cmd.viewangles = ang;
+	m_cmd.buttons |= IN_SPEED;
 }
 
 CSDKPlayer *CKeeperBot::FindClosestPlayerToBall()

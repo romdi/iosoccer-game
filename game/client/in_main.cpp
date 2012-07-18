@@ -522,30 +522,29 @@ void IN_ScoreDown( const CCommand &args )
 	KeyDown( &in_score, args[1] );
 	if ( gViewPortInterface )
 	{
-		bool show = !gViewPortInterface->FindPanelByName(PANEL_MATCH)->IsVisible();
-		gViewPortInterface->ShowPanel(PANEL_MATCH, show);
+		gViewPortInterface->ShowPanel(PANEL_SCOREBOARD, true);
 	}
 }
 
 void IN_ScoreUp( const CCommand &args )
 {
 	KeyUp( &in_score, args[1] );
-	//if ( gViewPortInterface )
-	//{
-	//	gViewPortInterface->ShowPanel( PANEL_TEAM, false );
-	//	GetClientVoiceMgr()->StopSquelchMode();
-	//}
+	if ( gViewPortInterface )
+	{
+		gViewPortInterface->ShowPanel( PANEL_SCOREBOARD, false );
+		GetClientVoiceMgr()->StopSquelchMode();
+	}
 }
 
 void IN_ActionMenuDown( const CCommand &args )
 {
 	KeyDown( &in_actionmenu, args[1] );
-	if ( gViewPortInterface )
-	{
-		//gViewPortInterface->ShowPanel(PANEL_SCOREBOARD, true);
-		bool show = !gViewPortInterface->FindPanelByName(PANEL_SCOREBOARD)->IsVisible();
-		gViewPortInterface->ShowPanel(PANEL_SCOREBOARD, show);
-	}
+	//if ( gViewPortInterface )
+	//{
+	//	//gViewPortInterface->ShowPanel(PANEL_SCOREBOARD, true);
+	//	bool show = !gViewPortInterface->FindPanelByName(PANEL_SCOREBOARD)->IsVisible();
+	//	gViewPortInterface->ShowPanel(PANEL_SCOREBOARD, show);
+	//}
 }
 
 void IN_ActionMenuUp( const CCommand &args )

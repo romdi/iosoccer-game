@@ -109,7 +109,7 @@ public:
 	CReplayManager();
 	void CheckReplay();
 	void TakeSnapshot();
-	void StartReplay(int numberOfRuns);
+	void StartReplay(int numberOfRuns, float startDelay);
 	void StopReplay();
 	void RestoreSnapshot();
 	bool IsReplaying() { return m_bDoReplay; }
@@ -124,6 +124,7 @@ private:
 	CReplayPlayer			*m_pPlayers[32];
 	int						m_nReplayRunCount;
 	int						m_nMaxReplayRuns;
+	float					m_flStartTime;
 };
 
 extern CReplayManager *g_pReplayManager;

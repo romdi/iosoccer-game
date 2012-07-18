@@ -1284,9 +1284,6 @@
     <ClCompile Include="sdk\vgui\sdk_classmenu.cpp">
       <Filter>Source Files\SDK\GUI</Filter>
     </ClCompile>
-    <ClCompile Include="sdk\sdk_scoreboard.cpp">
-      <Filter>Source Files\SDK\GUI</Filter>
-    </ClCompile>
     <ClCompile Include="sdk\vgui\sdk_teammenu.cpp">
       <Filter>Source Files\SDK\GUI</Filter>
     </ClCompile>
@@ -1518,9 +1515,6 @@
       <Filter>Source Files\SDK\GUI</Filter>
     </ClInclude>
     <ClInclude Include="sdk\vgui\sdk_classmenu.h">
-      <Filter>Source Files\SDK\GUI</Filter>
-    </ClInclude>
-    <ClInclude Include="sdk\sdk_scoreboard.h">
       <Filter>Source Files\SDK\GUI</Filter>
     </ClInclude>
     <ClInclude Include="sdk\vgui\sdk_teammenu.h">

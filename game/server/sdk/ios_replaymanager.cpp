@@ -112,7 +112,7 @@ void cc_StartReplay(const CCommand &args)
 	if (args.ArgC() > 1)
 		engine->ServerCommand(UTIL_VarArgs("host_timescale %f\n", (float)atof(args[1])));
 
-	ReplayManager()->StartReplay(1);
+	ReplayManager()->StartReplay(1, 0);
 }
 
 static ConCommand start_replay("start_replay", cc_StartReplay);
@@ -172,15 +172,16 @@ void CReplayManager::Think()
 
 void CReplayManager::CheckReplay()
 {
-	if (m_bDoReplay)
+	if (m_bDoReplay && gpGlobals->curtime >= m_flStartTime)
 		RestoreSnapshot();
-	else if (sv_replay_duration.GetInt() > 0)
+	else if (!m_bDoReplay && sv_replay_duration.GetInt() > 0)
 		TakeSnapshot();
 }
 
-void CReplayManager::StartReplay(int numberOfRuns)
+void CReplayManager::StartReplay(int numberOfRuns, float startDelay)
 {
 	m_nMaxReplayRuns = numberOfRuns;
+	m_flStartTime = gpGlobals->curtime + startDelay;
 	m_nSnapshotIndex = 0;
 	m_nReplayRunCount = 0;
 	m_bDoReplay = true;
@@ -373,7 +374,7 @@ void CReplayManager::RestoreSnapshot()
 		m_pBall = NULL;
 	}
 
-	for (int i = 0; i < 1; i++)
+	for (int i = 0; i < 22; i++)
 	{
 		PlayerSnapshot *pPlSnap = pSnap->pPlayerSnapshot[i];
 		if (!pPlSnap)
@@ -415,10 +416,9 @@ void CReplayManager::RestoreSnapshot()
 		{
 			int count = pPl->GetNumAnimOverlays();
 			int layerCount = 8;//pPl->GetNumAnimOverlays();
-			if (count != layerCount)
-				pPl->SetNumAnimOverlays(layerCount);
+			pPl->SetNumAnimOverlays(layerCount);
 
-			for( int layerIndex = 5; layerIndex < 6; ++layerIndex )
+			for( int layerIndex = 0; layerIndex < layerCount; ++layerIndex )
 			{
 				CAnimationLayer *currentLayer = pPl->GetAnimOverlay(layerIndex);
 				if(!currentLayer)

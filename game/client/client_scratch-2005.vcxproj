@@ -793,7 +793,6 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClCompile Include="..\shared\sdk\sdk_usermessages.cpp" />
     <ClCompile Include="sdk\sdk_backgroundpanel.cpp" />
     <ClCompile Include="sdk\vgui\sdk_classmenu.cpp" />
-    <ClCompile Include="sdk\sdk_scoreboard.cpp" />
     <ClCompile Include="sdk\vgui\sdk_teammenu.cpp" />
     <ClCompile Include="sdk\vgui\sdk_textwindow.cpp" />
     <ClCompile Include="sdk\vgui\sdkviewport.cpp" />
@@ -869,7 +868,6 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClInclude Include="..\shared\sdk\sdk_shareddefs.h" />
     <ClInclude Include="sdk\sdk_backgroundpanel.h" />
     <ClInclude Include="sdk\vgui\sdk_classmenu.h" />
-    <ClInclude Include="sdk\sdk_scoreboard.h" />
     <ClInclude Include="sdk\vgui\sdk_teammenu.h" />
     <ClInclude Include="sdk\vgui\sdk_textwindow.h" />
     <ClInclude Include="sdk\vgui\sdkviewport.h" />

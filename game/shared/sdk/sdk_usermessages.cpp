@@ -51,5 +51,7 @@ void RegisterUserMessages()
 	usermessages->Register( "GameMessage", -1 );
 
 	usermessages->Register("MatchEvent", -1);
+
+	usermessages->Register("NeutralMatchEvent", -1);
 }
 
