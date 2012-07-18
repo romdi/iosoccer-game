@@ -1171,7 +1171,7 @@ void CSDKGameRules::State_Think()
 			m_flStateTimeLeft = (m_flStateEnterTime + m_pCurStateInfo->m_MinDurationConVar->GetFloat() * 60 / m_pCurStateInfo->m_flMinDurationDivisor) - gpGlobals->curtime;
 
 			if (!IsIntermissionState())
-				m_flStateTimeLeft += m_flInjuryTime + (m_nAnnouncedInjuryTime + abs(m_nBallZone) < 50 ? 0 : 5) * 60 / (90.0f / mp_timelimit_match.GetFloat());
+				m_flStateTimeLeft += m_flInjuryTime + min(5, m_nAnnouncedInjuryTime + (abs(m_nBallZone) < 50 ? 0 : 5)) * 60 / (90.0f / mp_timelimit_match.GetFloat());
 		}
 
 		(this->*m_pCurStateInfo->pfnThink)();

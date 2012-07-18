@@ -345,6 +345,7 @@ bool CBall::CreateVPhysics()
 	SetPhysicsMode(PHYSICS_MULTIPLAYER_SOLID);
 	//SetPhysicsMode(PHYSICS_MULTIPLAYER_AUTODETECT);
 	EnablePlayerCollisions(true);
+	m_pPhys->SetBuoyancyRatio(0.5f);
 	m_pPhys->Wake();
 
 	return true;
@@ -2050,7 +2051,7 @@ void CBall::UpdatePossession(CSDKPlayer *pNewPossessor)
 	{
 		float duration = gpGlobals->curtime - m_flPossessionStart;
 		CTeam *pPossessingTeam = GetGlobalTeam(m_nPossessingTeam);
-		CTeam *pOtherTeam = GetGlobalTeam(m_nPossessingTeam == TEAM_A ? TEAM_B : TEAM_A);
+		CTeam *pOtherTeam = pPossessingTeam->GetOppTeam();
 		pPossessingTeam->m_flPossessionTime += duration;
 		float total = max(1, pPossessingTeam->m_flPossessionTime + pOtherTeam->m_flPossessionTime);
 		pPossessingTeam->m_nPossession = 100 * pPossessingTeam->m_flPossessionTime / total;		
