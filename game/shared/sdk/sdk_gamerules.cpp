@@ -1230,7 +1230,6 @@ void CSDKGameRules::State_FIRST_HALF_Think()
 	if ((45 * 60 - GetMatchDisplayTimeSeconds()) <= 60 && m_nAnnouncedInjuryTime == 0)
 	{
 		m_nAnnouncedInjuryTime = g_IOSRand.RandomInt(1, 4);
-		return;
 	}
 	else if (m_flStateTimeLeft <= 0 && GetBall()->State_Get() == BALL_NORMAL)
 	{
@@ -1240,6 +1239,7 @@ void CSDKGameRules::State_FIRST_HALF_Think()
 
 void CSDKGameRules::State_HALFTIME_Enter()
 {
+	GetBall()->State_Transition(BALL_NORMAL, 0, true);
 	GetBall()->SendNeutralMatchEvent(MATCH_EVENT_FINAL_WHISTLE);
 	GetBall()->EmitSound("Ball.whistle");
 	GetBall()->EmitSound("Ball.cheer");
@@ -1263,7 +1263,6 @@ void CSDKGameRules::State_SECOND_HALF_Think()
 	if ((90 * 60 - GetMatchDisplayTimeSeconds()) <= 60 && m_nAnnouncedInjuryTime == 0)
 	{
 		m_nAnnouncedInjuryTime = g_IOSRand.RandomInt(1, 4);
-		return;
 	}
 	else if (m_flStateTimeLeft <= 0 && GetBall()->State_Get() == BALL_NORMAL)
 	{
@@ -1278,6 +1277,7 @@ void CSDKGameRules::State_SECOND_HALF_Think()
 
 void CSDKGameRules::State_EXTRATIME_INTERMISSION_Enter()
 {
+	GetBall()->State_Transition(BALL_NORMAL, 0, true);
 	GetBall()->SendNeutralMatchEvent(MATCH_EVENT_FINAL_WHISTLE);
 	GetBall()->EmitSound("Ball.whistle");
 	GetBall()->EmitSound("Ball.cheer");
@@ -1288,7 +1288,6 @@ void CSDKGameRules::State_EXTRATIME_INTERMISSION_Think()
 	if (m_flStateTimeLeft <= 0)
 	{
 		State_Transition(MATCH_EXTRATIME_FIRST_HALF);
-		return;
 	}
 }
 
@@ -1304,7 +1303,6 @@ void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Think()
 	if ((105 * 60 - GetMatchDisplayTimeSeconds()) <= 60 && m_nAnnouncedInjuryTime == 0)
 	{
 		m_nAnnouncedInjuryTime = g_IOSRand.RandomInt(1, 4);
-		return;
 	}
 	else if (m_flStateTimeLeft <= 0 && GetBall()->State_Get() == BALL_NORMAL)
 	{
@@ -1314,6 +1312,7 @@ void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Think()
 
 void CSDKGameRules::State_EXTRATIME_HALFTIME_Enter()
 {
+	GetBall()->State_Transition(BALL_NORMAL, 0, true);
 	GetBall()->SendNeutralMatchEvent(MATCH_EVENT_FINAL_WHISTLE);
 	GetBall()->EmitSound("Ball.whistle");
 	GetBall()->EmitSound("Ball.cheer");
@@ -1339,7 +1338,6 @@ void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Think()
 	if ((120 * 60 - GetMatchDisplayTimeSeconds()) <= 60 && m_nAnnouncedInjuryTime == 0)
 	{
 		m_nAnnouncedInjuryTime = g_IOSRand.RandomInt(1, 4);
-		return;
 	}
 	else if (m_flStateTimeLeft <= 0 && GetBall()->State_Get() == BALL_NORMAL)
 	{
@@ -1352,6 +1350,7 @@ void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Think()
 
 void CSDKGameRules::State_PENALTIES_INTERMISSION_Enter()
 {
+	GetBall()->State_Transition(BALL_NORMAL, 0, true);
 	GetBall()->SendNeutralMatchEvent(MATCH_EVENT_FINAL_WHISTLE);
 	GetBall()->EmitSound("Ball.whistle");
 	GetBall()->EmitSound("Ball.cheer");
@@ -1588,9 +1587,21 @@ void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 
 void CSDKGameRules::EnableShield(int type, int dir, const Vector &pos /*= vec3_origin*/)
 {
+	DisableShield();
+
 	m_nShieldType = type;
 	m_nShieldDir = dir;
 	m_vShieldPos = Vector(pos.x, pos.y, SDKGameRules()->m_vKickOff.GetZ());
+
+	for (int i = 1; i <= gpGlobals->maxClients; i++) 
+	{
+		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+
+		if (!CSDKPlayer::IsOnField(pPl))
+			continue;
+
+		pPl->m_bIsAtTargetPos = false;
+	}
 }
 
 void CSDKGameRules::DisableShield()

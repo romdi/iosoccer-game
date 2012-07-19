@@ -194,6 +194,7 @@ public:
 	Vector			GetVel();
 	AngularImpulse	GetRot();
 	float			CalcFieldZone();
+	void			UpdatePossession(CSDKPlayer *pNewPossessor);
 
 	CNetworkHandle(CSDKPlayer, m_pPl);				  // Current player for state
 
@@ -249,7 +250,6 @@ private:
 	CSDKPlayer		*LastPl(bool wasShooting, CSDKPlayer *pSkipPl = NULL);
 	int				LastTeam(bool wasShooting, CSDKPlayer *pSkipPl = NULL);
 	int				LastOppTeam(bool wasShooting, CSDKPlayer *pSkipPl = NULL);
-	void			UpdatePossession(CSDKPlayer *pNewPossessor);
 
 	IPhysicsObject	*m_pPhys;
 	float			m_flPhysRadius;

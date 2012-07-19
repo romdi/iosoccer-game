@@ -1069,7 +1069,6 @@ void CSDKPlayer::SetPosOutsideShield()
 	RemoveFlag(FL_SHIELD_KEEP_IN);
 	AddFlag(FL_SHIELD_KEEP_OUT);
 	m_bHoldAtTargetPos = false;
-	m_bIsAtTargetPos = false;
 	m_vTargetPos = vec3_invalid;
 
 	switch (SDKGameRules()->m_nShieldType)
