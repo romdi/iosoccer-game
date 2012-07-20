@@ -91,8 +91,8 @@ void CSDKPlayerAnimState::InitSDKAnimState( CSDKPlayer *pPlayer )
 //-----------------------------------------------------------------------------
 void CSDKPlayerAnimState::ClearAnimationState( void )
 {
-	m_bFiring = false;
-	m_bReloading = false;
+	m_bIsPrimaryActionSequenceActive = false;
+	m_bIsSecondaryActionSequenceActive = false;
 	ClearAnimationLayers();
 	BaseClass::ClearAnimationState();
 }
@@ -219,43 +219,29 @@ void CSDKPlayerAnimState::ComputePoseParam_MoveYaw( CStudioHdr *pStudioHdr )
 
 	// Set the 9-way blend movement pose parameters.
 	GetBasePlayer()->SetPoseParameter( pStudioHdr, m_PoseParameterData.m_iMoveX, vecCurrentMoveYaw.x );
-	//ios GetBasePlayer()->SetPoseParameter( pStudioHdr, m_PoseParameterData.m_iMoveY, -vecCurrentMoveYaw.y ); //Tony; flip it
 	GetBasePlayer()->SetPoseParameter( pStudioHdr, m_PoseParameterData.m_iMoveY, vecCurrentMoveYaw.y );
 	m_DebugAnimData.m_vecMoveYaw = vecCurrentMoveYaw;
 }
 
-void CSDKPlayerAnimState::ComputeFireSequence( CStudioHdr *pStudioHdr )
+void CSDKPlayerAnimState::ComputePrimaryActionSequence( CStudioHdr *pStudioHdr )
 {
-//#ifdef CLIENT_DLL
-	if (m_iFireSequence > -1)
-		UpdateLayerSequenceGeneric( pStudioHdr, FIRESEQUENCE_LAYER, m_bFiring, m_flFireCycle, m_iFireSequence, false );
-//#else
-	// Server doesn't bother with different fire sequences.
-//#endif
+	if (m_iPrimaryActionSequence > -1)
+		UpdateLayerSequenceGeneric( pStudioHdr, PRIMARYACTIONSEQUENCE_LAYER, m_bIsPrimaryActionSequenceActive, m_flPrimaryActionSequenceCycle, m_iPrimaryActionSequence, false );
 }
 
-void CSDKPlayerAnimState::ComputeReloadSequence( CStudioHdr *pStudioHdr )
+void CSDKPlayerAnimState::ComputeSecondaryActionSequence( CStudioHdr *pStudioHdr )
 {
-//#ifdef CLIENT_DLL
-
 	//Keeper Carry layer
-	if (m_iReloadSequence > -1)
-		UpdateLayerSequenceGeneric( pStudioHdr, RELOADSEQUENCE_LAYER, m_bReloading, m_flReloadCycle, m_iReloadSequence, m_bCarryHold);
-
-	//Run Celeb layer
-	//UpdateLayerSequenceGeneric( pStudioHdr, RELOADSEQUENCE_LAYER, m_bCeleb, m_flCelebCycle, m_iCelebSequence, m_bCelebHold);
-//#else
-	// Server doesn't bother with different fire sequences.
-//#endif
+	if (m_iSecondaryActionSequence > -1)
+		UpdateLayerSequenceGeneric( pStudioHdr, SECONDARYACTIONSEQUENCE_LAYER, m_bIsSecondaryActionSequenceActive, m_flSecondaryActionSequenceCycle, m_iSecondaryActionSequence, m_bCarryHold);
 }
 
-int CSDKPlayerAnimState::CalcReloadLayerSequence()
+int CSDKPlayerAnimState::CalcSecondaryActionSequence()
 {
-	int iReloadSequence = GetBasePlayer()->LookupSequence( "CarryBall" );
-	return iReloadSequence;
+	return GetBasePlayer()->LookupSequence("CarryBall");
 }
 
-int CSDKPlayerAnimState::CalcFireLayerSequence(PlayerAnimEvent_t event)
+int CSDKPlayerAnimState::CalcPrimaryActionSequence(PlayerAnimEvent_t event)
 {
 	switch (event)
 	{
@@ -382,9 +368,9 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 	case PLAYERANIMEVENT_KEEPER_HANDS_KICK:
 	case PLAYERANIMEVENT_KEEPER_HANDS_PUNCH:
 		{
-			m_flFireCycle = 0;
-			m_iFireSequence = CalcFireLayerSequence( event );
-			m_bFiring = m_iFireSequence != -1;
+			m_flPrimaryActionSequenceCycle = 0;
+			m_iPrimaryActionSequence = CalcPrimaryActionSequence( event );
+			m_bIsPrimaryActionSequenceActive = m_iPrimaryActionSequence != -1;
 			break;
 		}
 	case PLAYERANIMEVENT_JUMP:
@@ -402,22 +388,22 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 
 	case PLAYERANIMEVENT_CARRY:
 		{
-			m_iReloadSequence = CalcReloadLayerSequence();			//add keeper carry as layer
-			if ( m_iReloadSequence != -1 )
+			m_iSecondaryActionSequence = CalcSecondaryActionSequence();			//add keeper carry as layer
+			if ( m_iSecondaryActionSequence != -1 )
 			{
-				m_bReloading = true;
-				m_flReloadCycle = 0;
+				m_bIsSecondaryActionSequenceActive = true;
+				m_flSecondaryActionSequenceCycle = 0;
 				m_bCarryHold = true;
 			}
 			break;
 		}
 	case PLAYERANIMEVENT_CARRY_END:
 		{
-			m_iReloadSequence = CalcReloadLayerSequence();
-			if ( m_iReloadSequence != -1 )
+			m_iSecondaryActionSequence = CalcSecondaryActionSequence();
+			if ( m_iSecondaryActionSequence != -1 )
 			{
-				m_bReloading = true;
-				m_flReloadCycle = 1.1f;
+				m_bIsSecondaryActionSequenceActive = true;
+				m_flSecondaryActionSequenceCycle = 1.1f;
 				m_bCarryHold = false;
 			}
 			break;
@@ -517,8 +503,8 @@ void CSDKPlayerAnimState::ComputeSequences( CStudioHdr *pStudioHdr )
 	// The groundspeed interpolator uses the main sequence info.
 	UpdateInterpolators();		
 	//ios ComputeGestureSequence( pStudioHdr );
-	ComputeFireSequence(pStudioHdr);
-	ComputeReloadSequence( pStudioHdr );
+	ComputePrimaryActionSequence(pStudioHdr);
+	ComputeSecondaryActionSequence( pStudioHdr );
 }
 
 float CSDKPlayerAnimState::GetCurrentMaxGroundSpeed()

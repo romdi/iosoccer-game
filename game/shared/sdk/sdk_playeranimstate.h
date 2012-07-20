@@ -70,27 +70,27 @@ private:
 	void ComputeSequences( CStudioHdr *pStudioHdr );
 	void ComputeIosSequence(CStudioHdr *pStudioHdr);
 	void UpdateLayerSequenceGeneric( CStudioHdr *pStudioHdr, int iLayer, bool &bEnabled, float &flCurCycle, int &iSequence, bool bWaitAtEnd );
-	int CalcFireLayerSequence(PlayerAnimEvent_t event);
-	void ComputeFireSequence(CStudioHdr *pStudioHdr);
-	void ComputeReloadSequence( CStudioHdr *pStudioHdr );
-	int CalcReloadLayerSequence();
+	int CalcPrimaryActionSequence(PlayerAnimEvent_t event);
+	void ComputePrimaryActionSequence(CStudioHdr *pStudioHdr);
+	void ComputeSecondaryActionSequence( CStudioHdr *pStudioHdr );
+	int CalcSecondaryActionSequence();
 	int CalcSequenceIndex( const char *pBaseName, ... );
 	void ClearAnimationLayers();
 
-	bool m_bFiring;						// If this is on, then it'll continue the fire animation in the fire layer
+	bool m_bIsPrimaryActionSequenceActive;						// If this is on, then it'll continue the fire animation in the fire layer
 										// until it completes.
-	int m_iFireSequence;				// (For any sequences in the fire layer, including grenade throw).
-	float m_flFireCycle;
-	bool m_bReloading;
-	float m_flReloadCycle;
-	int m_iReloadSequence;
+	int m_iPrimaryActionSequence;				// (For any sequences in the fire layer, including grenade throw).
+	float m_flPrimaryActionSequenceCycle;
+	bool m_bIsSecondaryActionSequenceActive;
+	float m_flSecondaryActionSequenceCycle;
+	int m_iSecondaryActionSequence;
 };
 
 CSDKPlayerAnimState *CreateSDKPlayerAnimState( CSDKPlayer *pPlayer );
 
-#define FIRESEQUENCE_LAYER		0
-#define RELOADSEQUENCE_LAYER	(FIRESEQUENCE_LAYER + 1)
-#define NUM_LAYERS_WANTED		(RELOADSEQUENCE_LAYER + 1)
+#define PRIMARYACTIONSEQUENCE_LAYER		0
+#define SECONDARYACTIONSEQUENCE_LAYER	(PRIMARYACTIONSEQUENCE_LAYER + 1)
+#define NUM_LAYERS_WANTED		(SECONDARYACTIONSEQUENCE_LAYER + 1)
 
 #define ANIM_TOPSPEED_WALK			150
 #define ANIM_TOPSPEED_RUN			250			//ios - was 250 in sdk

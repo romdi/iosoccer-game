@@ -264,7 +264,6 @@ protected:
 	void ResetGroundSpeed( void );
 	float GetInterpolatedGroundSpeed( void );
 
-	void ComputeFireSequence();
 	void ComputeDeployedSequence();
 
 	bool ShouldUpdateAnimState();

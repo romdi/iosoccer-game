@@ -1106,13 +1106,6 @@ void CMultiPlayerAnimState::UpdateInterpolators()
 
 //-----------------------------------------------------------------------------
 // Purpose: 
-//-----------------------------------------------------------------------------
-void CMultiPlayerAnimState::ComputeFireSequence( void )
-{
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
 // Input  : *pStudioHdr - 
 //-----------------------------------------------------------------------------
 void CMultiPlayerAnimState::ComputeGestureSequence( CStudioHdr *pStudioHdr )
