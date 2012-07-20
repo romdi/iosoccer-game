@@ -78,7 +78,16 @@ private:
 	CUtlVector<Event_t> m_vEventLists[2];
 	Label *m_pPlayers[2];
 	Label *m_pEvent;
-	char m_szCurrentPlayer[MAX_PLAYER_NAME_LENGTH];
+	char  m_szCurrentPlayer[MAX_PLAYER_NAME_LENGTH];
+	int	  m_nCurrentPlayerIndex;
+	Panel *m_pNewMainBar;
+	Panel *m_pNewCenterBar;
+	Label *m_pNewTeamNames[2];
+	Label *m_pNewTeamGoals[2];
+	Label *m_pNewState;
+	Label *m_pNewTime;
+
+	float m_flNextPlayerUpdate;
 };
 
 DECLARE_HUDELEMENT( CHudScorebar );
@@ -106,10 +115,16 @@ DECLARE_HUD_MESSAGE(CHudScorebar, NeutralMatchEvent);
 #define WIDTH_TEAMBAR			(HPADDING + WIDTH_TEAM + WIDTH_MARGIN + WIDTH_TEAMCOLOR + WIDTH_MARGIN + WIDTH_SCORE + HPADDING)
 #define WIDTH_TIMEBAR			(HPADDING + WIDTH_MATCHSTATE + WIDTH_MARGIN + WIDTH_TIME + HPADDING)
 
-#define PLAYER_WIDTH			300
+#define PLAYER_WIDTH			150
 #define PLAYER_HEIGHT			200
-#define EVENT_WIDTH				300
+#define EVENT_WIDTH				250
 #define EVENT_HEIGHT			200
+
+enum { MAINBAR_WIDTH = 480, MAINBAR_HEIGHT = 40, MAINBAR_MARGIN = 15 };
+enum { TEAMNAME_WIDTH = 150, TEAMNAME_MARGIN = 5 };
+enum { TEAMGOAL_WIDTH = 20, TEAMGOAL_MARGIN = 5 };
+enum { TIME_WIDTH = 120, TIME_MARGIN = 5 };
+enum { STATE_WIDTH = 120, STATE_MARGIN = 5 };
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -127,6 +142,9 @@ CHudScorebar::CHudScorebar( const char *pElementName ) : BaseClass(NULL, "HudSco
 	m_pInjuryTimeBar = new Panel(this, "");
 	m_pInjuryTime = new Label(m_pInjuryTimeBar, "", "");
 
+	m_pNewMainBar = new Panel(this, "");
+	m_pNewCenterBar = new Panel(this, "");
+
 	for (int i = 0; i < 2; i++)
 	{
 		m_pTeamBars[i] = new Panel(this, VarArgs("TeamPanel%d", i + 1));
@@ -137,22 +155,64 @@ CHudScorebar::CHudScorebar( const char *pElementName ) : BaseClass(NULL, "HudSco
 		m_pEventBars[i] = new Label(this, VarArgs("ScoreLabel%d", i), "");
 
 		m_pPlayers[i] = new Label(this, "", "");
+
+		m_pNewTeamNames[i] = new Label(m_pNewMainBar, "", "");
+		m_pNewTeamGoals[i] = new Label(m_pNewMainBar, "", "");
 	}
 
 	m_pEvent = new Label(this, "", "");
 
+	m_pNewState = new Label(m_pNewCenterBar, "", "");
+	m_pNewTime = new Label(m_pNewCenterBar, "", "");
+
 	m_szCurrentPlayer[0] = 0;
+	m_flNextPlayerUpdate = gpGlobals->curtime;
 }
 
 void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 {
 	BaseClass::ApplySchemeSettings( pScheme );
 	
-	SetPos( 30, 30);
-	SetSize( ScreenWidth() - 30, 500 );
+	SetBounds(0, 0, ScreenWidth(), 500);
  	//SetPaintBackgroundType (2); // Rounded corner box
  	//SetPaintBackgroundEnabled(true);
 	//SetBgColor( Color( 0, 0, 255, 255 ) );
+
+	Color white(255, 255, 255, 255);
+	Color black(0, 0, 0, 255);
+
+	m_pNewMainBar->SetBounds(GetWide() / 2 - MAINBAR_WIDTH / 2, MAINBAR_MARGIN, MAINBAR_WIDTH, MAINBAR_HEIGHT);
+	m_pNewMainBar->SetBgColor(black);
+	m_pNewMainBar->SetPaintBackgroundType(2);
+
+	m_pNewCenterBar->SetBounds(GetWide() / 2 - STATE_WIDTH / 2, MAINBAR_MARGIN - 5, STATE_WIDTH, MAINBAR_HEIGHT + 10);
+	m_pNewCenterBar->SetBgColor(black);
+	m_pNewCenterBar->SetPaintBackgroundType(2);
+
+	m_pNewState->SetBounds(m_pNewCenterBar->GetWide() / 2 - STATE_WIDTH / 2, 0, STATE_WIDTH, (MAINBAR_HEIGHT + 10) / 2);
+	m_pNewState->SetFgColor(white);
+	m_pNewState->SetContentAlignment(Label::a_center);
+	m_pNewState->SetFont(pScheme->GetFont("IOSScorebarSmall"));
+
+	m_pNewTime->SetBounds(m_pNewCenterBar->GetWide() / 2 - TIME_WIDTH / 2, (MAINBAR_HEIGHT + 10) / 2, TIME_WIDTH, (MAINBAR_HEIGHT + 10) / 2);
+	m_pNewTime->SetFgColor(white);
+	m_pNewTime->SetContentAlignment(Label::a_center);
+	m_pNewTime->SetFont(pScheme->GetFont("IOSScorebarMedium"));
+	//m_pNewTime->SetBgColor(black);
+	//m_pNewTime->SetPaintBackgroundType(2);
+
+	for (int i = 0; i < 2; i++)
+	{
+		m_pNewTeamNames[i]->SetBounds(i * (MAINBAR_WIDTH - TEAMNAME_WIDTH), 0, TEAMNAME_WIDTH, MAINBAR_HEIGHT);
+		m_pNewTeamNames[i]->SetFgColor(white);
+		m_pNewTeamNames[i]->SetContentAlignment(Label::a_center);
+		m_pNewTeamNames[i]->SetFont(pScheme->GetFont("IOSScorebar"));
+
+		m_pNewTeamGoals[i]->SetBounds(TEAMNAME_WIDTH + i * (MAINBAR_WIDTH - TEAMGOAL_WIDTH - 2 * TEAMNAME_WIDTH), 0, TEAMGOAL_WIDTH, MAINBAR_HEIGHT);
+		m_pNewTeamGoals[i]->SetFgColor(white);
+		m_pNewTeamGoals[i]->SetContentAlignment(Label::a_center);
+		m_pNewTeamGoals[i]->SetFont(pScheme->GetFont("IOSScorebar"));
+	}
 
 	Color fgColor = Color(220, 220, 220, 255);
 	Color bgColor = Color(35, 30, 40, 255);
@@ -221,14 +281,14 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 		m_pEventBars[i]->SetBgColor(bgColorTransparent);
 		m_pEventBars[i]->SetZPos(-1);
 
-		m_pPlayers[i]->SetBounds((GetWide() / 2 - EVENT_WIDTH / 2 - PLAYER_WIDTH) + i * (PLAYER_WIDTH + EVENT_WIDTH), 0, PLAYER_WIDTH, PLAYER_HEIGHT);
+		m_pPlayers[i]->SetBounds((GetWide() / 2 - EVENT_WIDTH / 2 - PLAYER_WIDTH) + i * (PLAYER_WIDTH + EVENT_WIDTH), MAINBAR_MARGIN + MAINBAR_HEIGHT + 10, PLAYER_WIDTH, PLAYER_HEIGHT);
 		m_pPlayers[i]->SetContentAlignment(Label::a_north);
-		m_pPlayers[i]->SetFont(pScheme->GetFont("IOSEvent"));
+		m_pPlayers[i]->SetFont(pScheme->GetFont("IOSEventPlayer"));
 		m_pPlayers[i]->SetFgColor(Color(255, 255, 255, 255));
 		//m_pPlayers[i]->SetVisible(false);
 	}
 
-	m_pEvent->SetBounds(GetWide() / 2 - EVENT_WIDTH / 2, 0, EVENT_WIDTH, EVENT_HEIGHT);
+	m_pEvent->SetBounds(GetWide() / 2 - EVENT_WIDTH / 2, MAINBAR_MARGIN + MAINBAR_HEIGHT + 10, EVENT_WIDTH, EVENT_HEIGHT);
 	m_pEvent->SetContentAlignment(Label::a_north);
 	m_pEvent->SetFont(pScheme->GetFont("IOSEvent"));
 	m_pEvent->SetFgColor(Color(255, 255, 255, 255));
@@ -263,6 +323,25 @@ const char *g_szStateNames[32] =
 	"CD"
 };
 
+const char *g_szLongStateNames[32] =
+{
+	"WARMUP",
+	"FIRST HALF",
+	"FIRST HALF",
+	"HALF TIME",
+	"SECOND HALF",
+	"SECOND HALF",
+	"EX BREAK",
+	"EX FIRST HALF",
+	"EX FIRST HALF",
+	"EX HALF TIME",
+	"EX SECOND HALF",
+	"EX SECOND HALF",
+	"PEN BREAK",
+	"PENALTIES",
+	"COOLDOWN"
+};
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -272,7 +351,9 @@ void CHudScorebar::Paint( void )
 	nTime = abs(nTime);
 
 	m_pMatchState->SetText(g_szStateNames[SDKGameRules()->State_Get()]);
+	m_pNewState->SetText(g_szLongStateNames[SDKGameRules()->State_Get()]);
 	m_pTime->SetText(VarArgs("% 3d:%02d", nTime / 60, nTime % 60));
+	m_pNewTime->SetText(VarArgs("%d:%02d", nTime / 60, nTime % 60));
 
 	if (SDKGameRules()->m_nAnnouncedInjuryTime > 0)
 	{
@@ -285,9 +366,11 @@ void CHudScorebar::Paint( void )
 	for (int team = TEAM_A; team <= TEAM_B; team++)
 	{
 		m_pTeams[team - TEAM_A]->SetText(GetGlobalTeam(team)->Get_ShortTeamName());
+		m_pNewTeamNames[team - TEAM_A]->SetText(GetGlobalTeam(team)->Get_ShortTeamName());
 		m_pTeamColors[team - TEAM_A][0]->SetBgColor(GetGlobalTeam(team)->Get_PrimaryKitColor());
 		m_pTeamColors[team - TEAM_A][1]->SetBgColor(GetGlobalTeam(team)->Get_SecondaryKitColor());
 		m_pScores[team - TEAM_A]->SetText(VarArgs("%d", GetGlobalTeam(team)->Get_Goals()));
+		m_pNewTeamGoals[team - TEAM_A]->SetText(VarArgs("%d", GetGlobalTeam(team)->Get_Goals()));
 	}
 
 	C_Ball *pBall = GetBall();
@@ -299,13 +382,20 @@ void CHudScorebar::Paint( void )
 			m_pPlayers[1]->SetText("");
 			m_szCurrentPlayer[0] = 0;
 		}
-		else if (pBall->m_pPl)
+		else if (pBall->m_pPl || Q_strlen(m_szCurrentPlayer) > 0)
 		{
-			Q_strncpy(m_szCurrentPlayer, GameResources()->GetPlayerName(pBall->m_pPl->entindex()), sizeof(m_szCurrentPlayer));
-			int index = GameResources()->GetTeam(pBall->m_pPl->entindex()) - TEAM_A;
+			if (pBall->m_pPl)
+			{
+				Q_strncpy(m_szCurrentPlayer, GameResources()->GetPlayerName(pBall->m_pPl->entindex()), sizeof(m_szCurrentPlayer));
+				m_nCurrentPlayerIndex = GameResources()->GetTeam(pBall->m_pPl->entindex()) - TEAM_A;
+			}
 
-			m_pPlayers[index]->SetText(m_szCurrentPlayer);
-			m_pPlayers[1 - index]->SetText("");
+			if (gpGlobals->curtime >= m_flNextPlayerUpdate)
+			{
+				m_pPlayers[m_nCurrentPlayerIndex]->SetText(m_szCurrentPlayer);
+				m_pPlayers[1 - m_nCurrentPlayerIndex]->SetText("");
+				m_flNextPlayerUpdate = gpGlobals->curtime + 1.0f;
+			}
 		}
 	}
 

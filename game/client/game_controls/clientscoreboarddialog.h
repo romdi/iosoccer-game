@@ -117,6 +117,7 @@ private:
 	int			m_iDesiredHeight;
 	IViewPort	*m_pViewPort;
 	ButtonCode_t m_nCloseKey;
+	Panel		*m_pMainPanel;
 	Panel		*m_pExtraInfoPanel;
 	Label		*m_pSpectatorNames;
 	SectionedListPanel *m_pPlayerStats;
@@ -128,6 +129,9 @@ private:
 	Panel		*m_pSideSeparators[2];
 	Panel		*m_pSpectatorContainer;
 	HFont		m_pSpectatorFontList[SPEC_FONT_COUNT];
+	ImagePanel	*m_pTeamCrests[2];
+	Label		*m_pPlayerCount[2];
+	Label		*m_pPossession[2];
 
 	IScheme *m_pScheme;
 
