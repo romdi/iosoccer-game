@@ -254,6 +254,7 @@ void CReplayManager::TakeSnapshot()
 
 	GetBall()->VPhysicsGetObject()->GetPosition(&pBallSnap->pos, &pBallSnap->ang);
 	GetBall()->VPhysicsGetObject()->GetVelocity(&pBallSnap->vel, &pBallSnap->rot);
+	pBallSnap->skin = GetBall()->m_nSkin;
 
 	snap.pBallSnapshot = pBallSnap;
 

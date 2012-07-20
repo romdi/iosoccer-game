@@ -120,7 +120,7 @@ private:
 	Panel		*m_pMainPanel;
 	Panel		*m_pExtraInfoPanel;
 	Label		*m_pSpectatorNames;
-	SectionedListPanel *m_pPlayerStats;
+	SectionedListPanel *m_pPlayerStats[2];
 	Panel		*m_pFormations[2];
 	CBitmapButton *m_pFormationButtons[2][11];
 	Button		*m_pSpectateButton;

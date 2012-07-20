@@ -318,7 +318,7 @@ void CHudScorebar::Paint( void )
 		{
 			C_Team *pTeam = GetGlobalTeam(TEAM_A + i);
 			m_pExtensionBar[i]->SetVisible(true);
-			m_pExtensionText[i]->SetText(VarArgs("%d pl. - %d%% poss.", pTeam->GetNumPlayers(), pTeam->Get_Possession()));
+			m_pExtensionText[i]->SetText(VarArgs("%d pl.   %d%% poss.", pTeam->GetNumPlayers(), pTeam->Get_Possession()));
 			m_pTeamCrestPanels[i]->SetVisible(GameResources()->HasTeamCrest(i + TEAM_A));
 		}
 	}

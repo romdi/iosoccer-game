@@ -1582,9 +1582,12 @@ void SectionedListPanel::SetSelectedItem(CItemButton *item)
 	if (m_hSelectedItem.Get() == item)
 		return;
 
+	int oldItemID = -1;
+
 	// deselect the current item
 	if (m_hSelectedItem.Get())
 	{
+		oldItemID = m_hSelectedItem.Get()->GetID();
 		m_hSelectedItem->SetSelected(false);
 	}
 
@@ -1596,7 +1599,7 @@ void SectionedListPanel::SetSelectedItem(CItemButton *item)
 	}
 
 	Repaint();
-	PostActionSignal(new KeyValues("ItemSelected", "itemID", m_hSelectedItem.Get() ? m_hSelectedItem->GetID() : -1));
+	PostActionSignal(new KeyValues("ItemSelected", "oldItemID", oldItemID, "itemID", m_hSelectedItem.Get() ? m_hSelectedItem->GetID() : -1));
 }
 
 //-----------------------------------------------------------------------------

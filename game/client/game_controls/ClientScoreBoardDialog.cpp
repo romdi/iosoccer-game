@@ -48,7 +48,7 @@ bool AvatarIndexLessFunc( const int &lhs, const int &rhs )
 	return lhs < rhs; 
 }
 
-#define EXTRAINFO_HEIGHT		330
+#define EXTRAINFO_HEIGHT		280
 #define EXTRAINFO_MARGIN		5
 #define FORMATION_BUTTON_WIDTH	85
 #define FORMATION_BUTTON_HEIGHT	50
@@ -62,13 +62,14 @@ bool AvatarIndexLessFunc( const int &lhs, const int &rhs )
 
 enum { PANEL_TOPMARGIN = 70, PANEL_MARGIN = 5, PANEL_WIDTH = (1024 - 2 * PANEL_MARGIN), PANEL_HEIGHT = (768 - PANEL_TOPMARGIN - PANEL_MARGIN) };
 enum { TEAMCREST_SIZE = 48, TEAMCREST_VMARGIN = 7, TEAMCREST_HOFFSET = 240, TEAMCREST_VOFFSET = 10 };
+enum { FORMATION_HPADDING = (FORMATION_BUTTON_WIDTH / 2 + 40), FORMATION_VPADDING = (FORMATION_BUTTON_HEIGHT / 2 + 15) };
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
 CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : EditablePanel( NULL, PANEL_SCOREBOARD )
 {
-	m_iPlayerIndexSymbol = KeyValuesSystem()->GetSymbolForString("playerIndex");
+	m_iPlayerIndexSymbol = KeyValuesSystem()->GetSymbolForString("playerindex");
 	m_nCloseKey = BUTTON_CODE_INVALID;
 
 	//memset(s_VoiceImage, 0x0, sizeof( s_VoiceImage ));
@@ -100,6 +101,10 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Editabl
 		m_pSideSeparators[i] = new Panel(m_pMainPanel);
 
 		m_pTeamCrests[i] = new ImagePanel(this, "");
+
+		m_pPlayerStats[i] = new SectionedListPanel(m_pExtraInfoPanel, "");
+		m_pPlayerStats[i]->SetVerticalScrollbar(false);
+		m_pPlayerStats[i]->SetVisible(false);
 
 		for (int j = 0; j < 11; j++)
 		{
@@ -135,10 +140,6 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Editabl
 	m_pSettingsButton = new Button(m_pSpectatorContainer, "m_pSettingsButton", "Settings");
 	m_pSettingsButton->SetCommand("settings");
 	m_pSettingsButton->AddActionSignalTarget(this);
-
-	m_pPlayerStats = new SectionedListPanel(m_pExtraInfoPanel, "");
-	m_pPlayerStats->SetVerticalScrollbar(false);
-	m_pPlayerStats->SetVisible(false);
 
 	m_pSettingsPanel = new CSettingsMenu(m_pExtraInfoPanel, "");
 	m_pSettingsPanel->SetVisible(false);
@@ -209,10 +210,10 @@ void CClientScoreBoardDialog::Reset()
 		// clear
 		m_pPlayerList[i]->DeleteAllItems();
 		m_pPlayerList[i]->RemoveAllSections();
+	
+		m_pPlayerStats[i]->DeleteAllItems();
+		m_pPlayerStats[i]->RemoveAllSections();
 	}
-
-	m_pPlayerStats->DeleteAllItems();
-	m_pPlayerStats->RemoveAllSections();
 
 	m_iSectionId = 0;
 	m_fNextUpdateTime = 0;
@@ -253,9 +254,6 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 
 	m_pExtraInfoPanel->SetBounds(EXTRAINFO_MARGIN, m_pMainPanel->GetTall() - EXTRAINFO_HEIGHT - EXTRAINFO_MARGIN, m_pMainPanel->GetWide() - 2 * EXTRAINFO_MARGIN, EXTRAINFO_HEIGHT);
 	//m_pExtraInfoPanel->SetBgColor(Color(0, 0, 0, 200));
-
-	m_pPlayerStats->SetBounds(0, 0, m_pPlayerStats->GetParent()->GetWide(), m_pPlayerStats->GetParent()->GetTall());
-	m_pPlayerStats->SetPaintBorderEnabled(false);
 
 	m_pSpectatorContainer->SetBounds(0, m_pMainPanel->GetTall() - EXTRAINFO_HEIGHT - SPECLIST_HEIGHT - SPECLIST_MARGIN, m_pMainPanel->GetWide(), SPECLIST_HEIGHT);
 	m_pSpectatorContainer->SetBgColor(Color(0, 0, 0, 150));
@@ -300,6 +298,9 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 		m_pPlayerList[i]->SetPaintBorderEnabled(false);
 
 		m_pSideSeparators[i]->SetBgColor(Color(0, 0, 0, 150));
+
+		m_pPlayerStats[i]->SetBounds(i * (m_pPlayerStats[i]->GetParent()->GetWide() / 2), 0, m_pPlayerStats[i]->GetParent()->GetWide() / 2, m_pPlayerStats[i]->GetParent()->GetTall());
+		m_pPlayerStats[i]->SetPaintBorderEnabled(false);
 
 		for (int j = 0; j < 11; j++)
 		{
@@ -429,13 +430,15 @@ void CClientScoreBoardDialog::Update( void )
 
 	if (!m_pSettingsPanel->IsVisible())
 	{
+		bool isShowingPlayerStats = false;
+
 		for (int i = 0; i < 2; i++)
 		{
 			int itemID = m_pPlayerList[i]->GetSelectedItem();
 
 			if (itemID > -1)
 			{
-				int index = m_pPlayerList[i]->GetItemData(itemID)->GetInt("playerIndex");
+				int index = m_pPlayerList[i]->GetItemData(itemID)->GetInt("playerindex");
 
 				//KeyValues *playerData = new KeyValues("data");
 				//GetPlayerScoreInfo(index, playerData);
@@ -443,7 +446,7 @@ void CClientScoreBoardDialog::Update( void )
 
 				wchar_t wszPlayerName[MAX_PLAYER_NAME_LENGTH];
 				g_pVGuiLocalize->ConvertANSIToUnicode(gr->GetPlayerName(index), wszPlayerName, sizeof(wszPlayerName));
-				m_pPlayerStats->ModifyColumn(0, "NameColumn0", wszPlayerName);
+				m_pPlayerStats[i]->ModifyColumn(0, "NameColumn0", wszPlayerName);
 
 				KeyValues *pData = new KeyValues("data");
 
@@ -455,10 +458,8 @@ void CClientScoreBoardDialog::Update( void )
 				pData->SetInt("ValueColumn2", gr->GetPing(index));
 				pData->SetString("NameColumn3", "Possession:");
 				pData->SetString("ValueColumn3", VarArgs("%d%%", gr->GetPossession(index)));
-				pData->SetString("NameColumn4", "Distance:");
-				pData->SetString("ValueColumn4", VarArgs("%d m", gr->GetDistanceCovered(index)));
 
-				m_pPlayerStats->ModifyItem(0, 0, pData);
+				m_pPlayerStats[i]->ModifyItem(0, 0, pData);
 				pData->Clear();
 
 				pData->SetString("NameColumn0", "Fouls:");
@@ -470,7 +471,7 @@ void CClientScoreBoardDialog::Update( void )
 				pData->SetString("NameColumn3", "Offsides:");
 				pData->SetInt("ValueColumn3", gr->GetOffsides(index));
 
-				m_pPlayerStats->ModifyItem(1, 0, pData);
+				m_pPlayerStats[i]->ModifyItem(1, 0, pData);
 				pData->Clear();
 
 				pData->SetString("NameColumn0", "Penalties:");
@@ -482,22 +483,25 @@ void CClientScoreBoardDialog::Update( void )
 				pData->SetString("NameColumn3", "Corner kicks:");
 				pData->SetInt("ValueColumn3", gr->GetCorners(index));
 
-				m_pPlayerStats->ModifyItem(2, 0, pData);
+				m_pPlayerStats[i]->ModifyItem(2, 0, pData);
+				pData->Clear();
+
+				pData->SetString("NameColumn0", "Distance:");
+				pData->SetString("ValueColumn0", VarArgs("%d m", gr->GetDistanceCovered(index)));
+
+				m_pPlayerStats[i]->ModifyItem(3, 0, pData);
 
 				pData->deleteThis();
+
+				isShowingPlayerStats = true;
 			}
 
-			m_pPlayerStats->SetVisible(itemID > -1);
-			m_pSideSeparators[1]->SetVisible(itemID <= -1);
-
-			for (int j = 0; j < 2; j++)
-			{
-				m_pFormations[j]->SetVisible(itemID <= -1);
-			}
-
-			if (itemID > -1)
-				break;
+			m_pPlayerStats[i]->SetVisible(itemID > -1);
+			m_pSideSeparators[1]->SetVisible(true);
 		}
+
+		m_pFormations[0]->SetVisible(!isShowingPlayerStats);
+		m_pFormations[1]->SetVisible(!isShowingPlayerStats);
 	}
 
 	m_fNextUpdateTime = gpGlobals->curtime + 0.25f; 
@@ -721,10 +725,10 @@ void CClientScoreBoardDialog::UpdatePlayerInfo()
 			m_pFormationButtons[i][j]->SetVisible(true);
 			m_pFormationButtons[i][j]->SetText(g_szPosNames[(int)g_Positions[mp_maxplayers.GetInt() - 1][j][POS_NAME]]);
 
-			float xDist = m_pFormations[i]->GetWide() / 5;
-			float yDist = m_pFormations[i]->GetTall() / 5;
-			float xPos = g_Positions[mp_maxplayers.GetInt() - 1][j][POS_XPOS] * xDist + xDist - m_pFormationButtons[i][j]->GetWide() / 2;
-			float yPos = g_Positions[mp_maxplayers.GetInt() - 1][j][POS_YPOS] * yDist + yDist - m_pFormationButtons[i][j]->GetTall() / 2;
+			float xDist = (m_pFormations[i]->GetWide() - 2 * FORMATION_HPADDING) / 3;
+			float yDist = (m_pFormations[i]->GetTall() - 2 * FORMATION_VPADDING) / 3;
+			float xPos = FORMATION_HPADDING + g_Positions[mp_maxplayers.GetInt() - 1][j][POS_XPOS] * xDist - m_pFormationButtons[i][j]->GetWide() / 2;
+			float yPos = FORMATION_VPADDING + g_Positions[mp_maxplayers.GetInt() - 1][j][POS_YPOS] * yDist - m_pFormationButtons[i][j]->GetTall() / 2;
 			m_pFormationButtons[i][j]->SetPos(xPos, yPos);
 
 			if (isPosTaken[i][j])
@@ -771,34 +775,36 @@ void CClientScoreBoardDialog::AddHeader()
 		m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "ping",			"Ping", 0, 50);
 		//m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "voice",		"Voice", SectionedListPanel::COLUMN_IMAGE, scheme()->GetProportionalScaledValue(VOICE_WIDTH) );
 		//m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "tracker", "#PlayerTracker", SectionedListPanel::COLUMN_IMAGE, scheme()->GetProportionalScaledValueEx( GetScheme(),FRIENDS_WIDTH) );
+
+		m_iSectionId = 0;
+
+		m_pPlayerStats[i]->AddSection(m_iSectionId, "");
+		m_pPlayerStats[i]->SetSectionAlwaysVisible(0);
+		m_pPlayerStats[i]->SetFontSection(m_iSectionId, m_pScheme->GetFont("StatsPlayerName"));
+		m_pPlayerStats[i]->SetLineSpacing(30);
+		const int nameWidth = 110;
+		const int valueWidth = 65;
+		m_pPlayerStats[i]->SetSectionDividerColor(m_iSectionId, Color(255, 255, 255, 255));
+		m_pPlayerStats[i]->AddColumnToSection(m_iSectionId, "NameColumn0", "", 0, nameWidth);
+		m_pPlayerStats[i]->AddColumnToSection(m_iSectionId, "ValueColumn0", "", 0, valueWidth);
+		m_pPlayerStats[i]->AddColumnToSection(m_iSectionId, "NameColumn1", "", 0, nameWidth);
+		m_pPlayerStats[i]->AddColumnToSection(m_iSectionId, "ValueColumn1", "", 0, valueWidth);
+		m_pPlayerStats[i]->AddColumnToSection(m_iSectionId, "NameColumn2", "", 0, nameWidth);
+		m_pPlayerStats[i]->AddColumnToSection(m_iSectionId, "ValueColumn2", "", 0, valueWidth);
+		m_pPlayerStats[i]->AddColumnToSection(m_iSectionId, "NameColumn3", "", 0, nameWidth);
+		m_pPlayerStats[i]->AddColumnToSection(m_iSectionId, "ValueColumn3", "", 0, valueWidth);
+
+		KeyValues *pData = new KeyValues("data");
+		m_pPlayerStats[i]->AddItem(0, pData);
+		m_pPlayerStats[i]->SetItemFont(0, m_pScheme->GetFont("IOSTeamMenuNormal"));
+		m_pPlayerStats[i]->AddItem(0, pData);
+		m_pPlayerStats[i]->SetItemFont(1, m_pScheme->GetFont("IOSTeamMenuNormal"));
+		m_pPlayerStats[i]->AddItem(0, pData);
+		m_pPlayerStats[i]->SetItemFont(2, m_pScheme->GetFont("IOSTeamMenuNormal"));
+		m_pPlayerStats[i]->AddItem(0, pData);
+		m_pPlayerStats[i]->SetItemFont(3, m_pScheme->GetFont("IOSTeamMenuNormal"));
+		pData->deleteThis();
 	}
-
-	m_iSectionId = 0;
-
-	m_pPlayerStats->AddSection(m_iSectionId, "");
-	m_pPlayerStats->SetSectionAlwaysVisible(0);
-	m_pPlayerStats->SetFontSection(m_iSectionId, m_pScheme->GetFont("StatsPlayerName"));
-	m_pPlayerStats->SetLineSpacing(30);
-	m_pPlayerStats->SetSectionDividerColor(m_iSectionId, Color(255, 255, 255, 255));
-	m_pPlayerStats->AddColumnToSection(m_iSectionId, "NameColumn0", "", 0, 125);
-	m_pPlayerStats->AddColumnToSection(m_iSectionId, "ValueColumn0", "", 0, 75);
-	m_pPlayerStats->AddColumnToSection(m_iSectionId, "NameColumn1", "", 0, 125);
-	m_pPlayerStats->AddColumnToSection(m_iSectionId, "ValueColumn1", "", 0, 75);
-	m_pPlayerStats->AddColumnToSection(m_iSectionId, "NameColumn2", "", 0, 125);
-	m_pPlayerStats->AddColumnToSection(m_iSectionId, "ValueColumn2", "", 0, 75);
-	m_pPlayerStats->AddColumnToSection(m_iSectionId, "NameColumn3", "", 0, 125);
-	m_pPlayerStats->AddColumnToSection(m_iSectionId, "ValueColumn3", "", 0, 75);
-	m_pPlayerStats->AddColumnToSection(m_iSectionId, "NameColumn4", "", 0, 125);
-	m_pPlayerStats->AddColumnToSection(m_iSectionId, "ValueColumn4", "", 0, 75);
-
-	KeyValues *pData = new KeyValues("data");
-	m_pPlayerStats->AddItem(0, pData);
-	m_pPlayerStats->SetItemFont(0, m_pScheme->GetFont("IOSTeamMenuNormal"));
-	m_pPlayerStats->AddItem(0, pData);
-	m_pPlayerStats->SetItemFont(1, m_pScheme->GetFont("IOSTeamMenuNormal"));
-	m_pPlayerStats->AddItem(0, pData);
-	m_pPlayerStats->SetItemFont(2, m_pScheme->GetFont("IOSTeamMenuNormal"));
-	pData->deleteThis();
 }
 
 //-----------------------------------------------------------------------------
@@ -856,7 +862,7 @@ bool CClientScoreBoardDialog::GetPlayerScoreInfo(int playerIndex, KeyValues *kv)
 	kv->SetString("saves", GET_STAT_TEXT(gr->GetKeeperSaves(playerIndex)));
 	kv->SetString("goalkicks", GET_STAT_TEXT(gr->GetGoalKicks(playerIndex)));
 	kv->SetInt("posindex", gr->GetTeamPosIndex(playerIndex));
-	kv->SetInt("playerIndex", playerIndex);
+	kv->SetInt("playerindex", playerIndex);
 	//kv->SetString("country", gr->GetCountryName(playerIndex));
 	kv->SetString("posname", g_szPosNames[(int)g_Positions[mp_maxplayers.GetInt() - 1][gr->GetTeamPosIndex(playerIndex)][POS_NAME]]);
 	kv->SetString("name", gr->GetPlayerName( playerIndex ) );
@@ -1026,6 +1032,41 @@ void CClientScoreBoardDialog::OnCommand( char const *cmd )
 
 void CClientScoreBoardDialog::OnItemSelected(KeyValues *data)
 {
-	if (!m_pSettingsPanel->IsVisible())
-		Update();
+	//if (m_pSettingsPanel->IsVisible())
+	//	return;
+
+	SectionedListPanel *pCurPanel = (SectionedListPanel *)data->GetPtr("panel");
+	SectionedListPanel *pOtherPanel = (pCurPanel == m_pPlayerList[0] ? m_pPlayerList[1] : m_pPlayerList[0]);
+	int itemID = data->GetInt("itemID");
+	int oldItemID = data->GetInt("oldItemID");
+	bool select = true;
+
+	if (itemID == -1)
+	{
+		itemID = oldItemID;
+		select = false;
+	}
+
+	if (itemID != -1)
+	{
+		int posindex = pCurPanel->GetItemData(itemID)->GetInt("posindex");
+
+		for (int i = 0; i <= pOtherPanel->GetHighestItemID(); i++)
+		{
+			if (pOtherPanel->IsItemIDValid(i) && pOtherPanel->GetItemData(i)->GetInt("posindex") == posindex)
+			{
+				if (select)
+					pOtherPanel->SetSelectedItem(i);
+				else
+				{
+					if (pOtherPanel->GetSelectedItem() == i)
+						pOtherPanel->ClearSelection();
+				}
+
+				break;
+			}
+		}
+	}
+
+	Update();
 }
