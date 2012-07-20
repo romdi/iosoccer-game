@@ -1499,6 +1499,14 @@ void CGameMovement::FullWalkMove( )
 	mv->SetAbsOrigin(newPos);
 	mv->m_vecVelocity = newVel;
 	mv->m_vecAbsViewAngles = newAng;
+
+#ifdef GAME_DLL
+	if (!SDKGameRules()->IsIntermissionState())
+	{
+		ToSDKPlayer(player)->m_flDistanceCovered += (newPos - oldPos).Length2D() * 2.54f / 100;
+		ToSDKPlayer(player)->m_DistanceCovered = (int)ToSDKPlayer(player)->m_flDistanceCovered;
+	}
+#endif
 }
 
 void CGameMovement::MoveToTargetPos()

@@ -66,6 +66,7 @@ public : // IGameResources intreface
 	virtual int		GetGoals( int index );
 	virtual int		GetAssists( int index );
 	virtual int		GetPossession( int index );
+	virtual int		GetDistanceCovered( int index );
 	virtual int		GetPasses( int index );
 	virtual int		GetFreeKicks( int index );
 	virtual int		GetPenalties( int index );
@@ -106,6 +107,7 @@ protected:
 	int		m_Goals[MAX_PLAYERS+1];
 	int		m_Assists[MAX_PLAYERS+1];
 	int		m_Possession[MAX_PLAYERS+1];
+	int		m_DistanceCovered[MAX_PLAYERS+1];
 	int		m_Passes[MAX_PLAYERS+1];
 	int		m_FreeKicks[MAX_PLAYERS+1];
 	int		m_Penalties[MAX_PLAYERS+1];

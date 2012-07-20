@@ -1271,6 +1271,8 @@ void CSDKPlayer::ResetStats()
 	m_GoalKicks = 0;
 	m_Possession = 0;
 	m_flPossessionTime = 0.0f;
+	m_DistanceCovered = 0;
+	m_flDistanceCovered = 0.0f;
 	m_bIsOffside = false;
 	m_ePenaltyState = PENALTY_NONE;
 }

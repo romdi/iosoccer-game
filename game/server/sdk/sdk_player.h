@@ -277,6 +277,7 @@ public:
 	float				m_flNextShot;
 
 	float				m_flPossessionTime;
+	float				m_flDistanceCovered;
 
 	//stats
 	int					m_RedCards;
@@ -286,6 +287,7 @@ public:
 	int					m_Goals;
 	int					m_Assists;
 	int					m_Possession;
+	int					m_DistanceCovered;
 	int					m_Passes;
 	int					m_FreeKicks;
 	int					m_Penalties;
@@ -301,6 +303,7 @@ public:
 	int					GetGoals(void) { return m_Goals; }
 	int					GetAssists(void) { return m_Assists; }
 	int					GetPossession(void) { return m_Possession; }
+	int					GetDistanceCovered(void) { return m_DistanceCovered; }
 	int					GetPasses(void) { return m_Passes; }
 	int					GetFreeKicks(void) { return m_FreeKicks; }
 	int					GetPenalties(void) { return m_Penalties; }

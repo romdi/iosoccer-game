@@ -54,6 +54,7 @@ public:
 	virtual int		GetGoals( int index ) = 0;
 	virtual int		GetAssists( int index ) = 0;
 	virtual int		GetPossession( int index ) = 0;
+	virtual int		GetDistanceCovered( int index ) = 0;
 	virtual int		GetPasses( int index ) = 0;
 	virtual int		GetFreeKicks( int index ) = 0;
 	virtual int		GetPenalties( int index ) = 0;
