@@ -5,7 +5,6 @@
 //=============================================================================//
 
 #include "cbase.h"
-#include "base_playeranimstate.h"
 #include "tier0/vprof.h"
 #include "animation.h"
 #include "studio.h"
@@ -13,7 +12,6 @@
 #include "utldict.h"
 
 #include "sdk_playeranimstate.h"
-#include "base_playeranimstate.h"
 #include "datacache/imdlcache.h"
 
 #ifdef CLIENT_DLL

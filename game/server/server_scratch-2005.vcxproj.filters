@@ -249,9 +249,6 @@
     <ClCompile Include="..\shared\animation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\shared\base_playeranimstate.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="base_transmit_proxy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -2310,9 +2307,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\ammodef.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shared\base_playeranimstate.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="base_transmit_proxy.h">

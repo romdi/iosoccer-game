@@ -93,9 +93,6 @@
     <ClCompile Include="..\shared\animation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\shared\base_playeranimstate.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\shared\baseachievement.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -2847,9 +2844,6 @@
       <Filter>Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\apparent_velocity_helper.h">
-      <Filter>Game Shared Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shared\base_playeranimstate.h">
       <Filter>Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\cstrike\basecsgrenade_projectile.h">

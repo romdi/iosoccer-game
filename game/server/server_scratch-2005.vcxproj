@@ -290,7 +290,6 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "d:\games\steam\
     <ClCompile Include="ai_waypoint.cpp" />
     <ClCompile Include="..\shared\ammodef.cpp" />
     <ClCompile Include="..\shared\animation.cpp" />
-    <ClCompile Include="..\shared\base_playeranimstate.cpp" />
     <ClCompile Include="base_transmit_proxy.cpp" />
     <ClCompile Include="..\shared\baseachievement.cpp" />
     <ClCompile Include="baseanimating.cpp" />
@@ -1123,7 +1122,6 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "d:\games\steam\
     <ClInclude Include="..\shared\multiplayer\multiplayer_animstate.h" />
     <ClInclude Include="..\..\public\mathlib\amd3dx.h" />
     <ClInclude Include="..\shared\ammodef.h" />
-    <ClInclude Include="..\shared\base_playeranimstate.h" />
     <ClInclude Include="base_transmit_proxy.h" />
     <ClInclude Include="..\..\public\basehandle.h" />
     <ClInclude Include="basetempentity.h" />
