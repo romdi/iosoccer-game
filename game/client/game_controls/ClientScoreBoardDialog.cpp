@@ -50,8 +50,6 @@ bool AvatarIndexLessFunc( const int &lhs, const int &rhs )
 
 #define EXTRAINFO_HEIGHT		280
 #define EXTRAINFO_MARGIN		5
-#define FORMATION_BUTTON_WIDTH	85
-#define FORMATION_BUTTON_HEIGHT	50
 #define SPECLIST_HEIGHT			40
 #define SPECLIST_MARGIN			5
 #define SPECBUTTON_WIDTH		90
@@ -62,7 +60,6 @@ bool AvatarIndexLessFunc( const int &lhs, const int &rhs )
 
 enum { PANEL_TOPMARGIN = 70, PANEL_MARGIN = 5, PANEL_WIDTH = (1024 - 2 * PANEL_MARGIN), PANEL_HEIGHT = (768 - PANEL_TOPMARGIN - PANEL_MARGIN) };
 enum { TEAMCREST_SIZE = 48, TEAMCREST_VMARGIN = 7, TEAMCREST_HOFFSET = 240, TEAMCREST_VOFFSET = 10 };
-enum { FORMATION_HPADDING = (FORMATION_BUTTON_WIDTH / 2 + 40), FORMATION_VPADDING = (FORMATION_BUTTON_HEIGHT / 2 + 15) };
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -86,6 +83,15 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Editabl
 
 	m_pExtraInfoPanel = new Panel(m_pMainPanel);
 
+	m_pPlayerStats = new CStatsMenu(m_pExtraInfoPanel, "");
+	m_pPlayerStats->SetVisible(false);
+
+	m_pSettingsPanel = new CSettingsMenu(m_pExtraInfoPanel, "");
+	m_pSettingsPanel->SetVisible(false);
+
+	m_pFormation = new CFormationMenu(m_pExtraInfoPanel, "");
+	m_pFormation->AddActionSignalTarget(this);
+
 	for (int i = 0; i < 2; i++)
 	{
 		m_pPlayerList[i] = new SectionedListPanel(m_pMainPanel, "PlayerList");
@@ -96,22 +102,9 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Editabl
 		m_pPlayerList[i]->AddActionSignalTarget(this);
 		m_pPlayerList[i]->EnableMouseEnterSelection(true);
 
-		m_pFormations[i] = new Panel(m_pExtraInfoPanel);
-
 		m_pSideSeparators[i] = new Panel(m_pMainPanel);
 
 		m_pTeamCrests[i] = new ImagePanel(this, "");
-
-		m_pPlayerStats[i] = new SectionedListPanel(m_pExtraInfoPanel, "");
-		m_pPlayerStats[i]->SetVerticalScrollbar(false);
-		m_pPlayerStats[i]->SetVisible(false);
-
-		for (int j = 0; j < 11; j++)
-		{
-			m_pFormationButtons[i][j] = new CBitmapButton(m_pFormations[i], "", "JOIN");
-			m_pFormationButtons[i][j]->SetCommand(VarArgs("jointeam %d %d", i + TEAM_A, j));
-			m_pFormationButtons[i][j]->AddActionSignalTarget(this);
-		}
 	}
 
 	m_HLTVSpectators = 0;
@@ -140,9 +133,6 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Editabl
 	m_pSettingsButton = new Button(m_pSpectatorContainer, "m_pSettingsButton", "Settings");
 	m_pSettingsButton->SetCommand("settings");
 	m_pSettingsButton->AddActionSignalTarget(this);
-
-	m_pSettingsPanel = new CSettingsMenu(m_pExtraInfoPanel, "");
-	m_pSettingsPanel->SetVisible(false);
 
 	MakePopup();
 }
@@ -210,10 +200,9 @@ void CClientScoreBoardDialog::Reset()
 		// clear
 		m_pPlayerList[i]->DeleteAllItems();
 		m_pPlayerList[i]->RemoveAllSections();
-	
-		m_pPlayerStats[i]->DeleteAllItems();
-		m_pPlayerStats[i]->RemoveAllSections();
 	}
+
+	m_pPlayerStats->Reset();
 
 	m_iSectionId = 0;
 	m_fNextUpdateTime = 0;
@@ -255,6 +244,12 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 	m_pExtraInfoPanel->SetBounds(EXTRAINFO_MARGIN, m_pMainPanel->GetTall() - EXTRAINFO_HEIGHT - EXTRAINFO_MARGIN, m_pMainPanel->GetWide() - 2 * EXTRAINFO_MARGIN, EXTRAINFO_HEIGHT);
 	//m_pExtraInfoPanel->SetBgColor(Color(0, 0, 0, 200));
 
+	m_pPlayerStats->SetBounds(0, 0, m_pPlayerStats->GetParent()->GetWide(), m_pPlayerStats->GetParent()->GetTall());
+	m_pPlayerStats->PerformLayout();
+
+	m_pFormation->SetBounds(0, 0, m_pExtraInfoPanel->GetWide(), m_pExtraInfoPanel->GetTall());
+	m_pFormation->PerformLayout();
+
 	m_pSpectatorContainer->SetBounds(0, m_pMainPanel->GetTall() - EXTRAINFO_HEIGHT - SPECLIST_HEIGHT - SPECLIST_MARGIN, m_pMainPanel->GetWide(), SPECLIST_HEIGHT);
 	m_pSpectatorContainer->SetBgColor(Color(0, 0, 0, 150));
 
@@ -287,9 +282,6 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 
 	for (int i = 0; i < 2; i++)
 	{
-		m_pFormations[i]->SetBounds(i * (m_pFormations[i]->GetParent()->GetWide() / 2), 0, m_pFormations[i]->GetParent()->GetWide() / 2, m_pFormations[i]->GetParent()->GetTall());
-		//m_pFormations[i]->SetBgColor(Color(0, 0, 0, 240));
-
 		//m_pTeamCrests[i]->SetBounds(GetWide() / 2 - TEAMCREST_SIZE / 2 + (i == 0 ? -1 : 1) * TEAMCREST_HOFFSET, TEAMCREST_VOFFSET, TEAMCREST_SIZE, TEAMCREST_SIZE);
 		//m_pTeamCrests[i]->SetShouldScaleImage(true);
 		//m_pTeamCrests[i]->SetImage(i == 0 ? "hometeamcrest" : "awayteamcrest");
@@ -298,31 +290,6 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 		m_pPlayerList[i]->SetPaintBorderEnabled(false);
 
 		m_pSideSeparators[i]->SetBgColor(Color(0, 0, 0, 150));
-
-		m_pPlayerStats[i]->SetBounds(i * (m_pPlayerStats[i]->GetParent()->GetWide() / 2), 0, m_pPlayerStats[i]->GetParent()->GetWide() / 2, m_pPlayerStats[i]->GetParent()->GetTall());
-		m_pPlayerStats[i]->SetPaintBorderEnabled(false);
-
-		for (int j = 0; j < 11; j++)
-		{
-			m_pFormationButtons[i][j]->SetBounds(0, 0, FORMATION_BUTTON_WIDTH, FORMATION_BUTTON_HEIGHT);
-			m_pFormationButtons[i][j]->SetContentAlignment(Label::a_center);
-			m_pFormationButtons[i][j]->SetFont(m_pScheme->GetFont("IOSTeamMenuBig"));
-			color32 enabled = { 255, 255, 255, 255 };
-			color32 mouseover = { 150, 150, 150, 255 };
-			color32 pressed = { 255, 255, 255, 255 };
-			color32 disabled = { 75, 75, 75, 255 };
-			Color black(0, 0, 0, 255);
-			m_pFormationButtons[i][j]->SetImage(CBitmapButton::BUTTON_ENABLED, "vgui/shirt", enabled);
-			m_pFormationButtons[i][j]->SetImage(CBitmapButton::BUTTON_ENABLED_MOUSE_OVER, "vgui/shirt", mouseover);
-			m_pFormationButtons[i][j]->SetImage(CBitmapButton::BUTTON_PRESSED, "vgui/shirt", pressed);
-			m_pFormationButtons[i][j]->SetImage(CBitmapButton::BUTTON_DISABLED, "vgui/shirt", disabled);
-			m_pFormationButtons[i][j]->SetDefaultColor(black, black);
-			m_pFormationButtons[i][j]->SetArmedColor(black, black);
-			m_pFormationButtons[i][j]->SetDepressedColor(black, black);
-			m_pFormationButtons[i][j]->SetDisabledFgColor1(Color(0, 0, 0, 0));
-			m_pFormationButtons[i][j]->SetDisabledFgColor2(black);
-			m_pFormationButtons[i][j]->SetPaintBorderEnabled(false);
-		}
 	}
 
 	m_pSideSeparators[0]->SetBounds(m_pMainPanel->GetWide() / 2 - SIDESEPARATOR_WIDTH / 2, SIDESEPARATOR_MARGIN, SIDESEPARATOR_WIDTH, m_pSpectatorContainer->GetY() - 2 * SIDESEPARATOR_MARGIN);
@@ -430,79 +397,27 @@ void CClientScoreBoardDialog::Update( void )
 
 	if (!m_pSettingsPanel->IsVisible())
 	{
-		bool isShowingPlayerStats = false;
+		bool showPlayerStats = false;
+		int playerIndices[2] = { 0, 0 };
 
 		for (int i = 0; i < 2; i++)
 		{
 			int itemID = m_pPlayerList[i]->GetSelectedItem();
-
-			if (itemID > -1)
+			if (itemID != -1)
 			{
-				int index = m_pPlayerList[i]->GetItemData(itemID)->GetInt("playerindex");
-
-				//KeyValues *playerData = new KeyValues("data");
-				//GetPlayerScoreInfo(index, playerData);
-				//playerData->deleteThis();
-
-				wchar_t wszPlayerName[MAX_PLAYER_NAME_LENGTH];
-				g_pVGuiLocalize->ConvertANSIToUnicode(gr->GetPlayerName(index), wszPlayerName, sizeof(wszPlayerName));
-				m_pPlayerStats[i]->ModifyColumn(0, "NameColumn0", wszPlayerName);
-
-				KeyValues *pData = new KeyValues("data");
-
-				pData->SetString("NameColumn0", "Goals:");
-				pData->SetInt("ValueColumn0", gr->GetGoals(index));
-				pData->SetString("NameColumn1", "Assists:");
-				pData->SetInt("ValueColumn1", gr->GetAssists(index));
-				pData->SetString("NameColumn2", "Ping:");
-				pData->SetInt("ValueColumn2", gr->GetPing(index));
-				pData->SetString("NameColumn3", "Possession:");
-				pData->SetString("ValueColumn3", VarArgs("%d%%", gr->GetPossession(index)));
-
-				m_pPlayerStats[i]->ModifyItem(0, 0, pData);
-				pData->Clear();
-
-				pData->SetString("NameColumn0", "Fouls:");
-				pData->SetInt("ValueColumn0", gr->GetFouls(index));
-				pData->SetString("NameColumn1", "Yellows:");
-				pData->SetInt("ValueColumn1", gr->GetYellowCards(index));
-				pData->SetString("NameColumn2", "Reds:");
-				pData->SetInt("ValueColumn2", gr->GetRedCards(index));
-				pData->SetString("NameColumn3", "Offsides:");
-				pData->SetInt("ValueColumn3", gr->GetOffsides(index));
-
-				m_pPlayerStats[i]->ModifyItem(1, 0, pData);
-				pData->Clear();
-
-				pData->SetString("NameColumn0", "Penalties:");
-				pData->SetInt("ValueColumn0", gr->GetPenalties(index));	
-				pData->SetString("NameColumn1", "Goal kicks:");
-				pData->SetInt("ValueColumn1", gr->GetGoalKicks(index));
-				pData->SetString("NameColumn2", "Free kicks:");
-				pData->SetInt("ValueColumn2", gr->GetFreeKicks(index));
-				pData->SetString("NameColumn3", "Corner kicks:");
-				pData->SetInt("ValueColumn3", gr->GetCorners(index));
-
-				m_pPlayerStats[i]->ModifyItem(2, 0, pData);
-				pData->Clear();
-
-				pData->SetString("NameColumn0", "Distance:");
-				pData->SetString("ValueColumn0", VarArgs("%d m", gr->GetDistanceCovered(index)));
-
-				m_pPlayerStats[i]->ModifyItem(3, 0, pData);
-
-				pData->deleteThis();
-
-				isShowingPlayerStats = true;
+				playerIndices[i] = m_pPlayerList[i]->GetItemData(itemID)->GetInt("playerindex");
+				showPlayerStats = true;
 			}
-
-			m_pPlayerStats[i]->SetVisible(itemID > -1);
-			m_pSideSeparators[1]->SetVisible(true);
 		}
 
-		m_pFormations[0]->SetVisible(!isShowingPlayerStats);
-		m_pFormations[1]->SetVisible(!isShowingPlayerStats);
+		if (showPlayerStats)
+			m_pPlayerStats->Update(playerIndices);
+
+		m_pPlayerStats->SetVisible(showPlayerStats);
+		m_pFormation->SetVisible(!showPlayerStats);
 	}
+
+	m_pFormation->Update();
 
 	m_fNextUpdateTime = gpGlobals->curtime + 0.25f; 
 }
@@ -638,48 +553,6 @@ void CClientScoreBoardDialog::UpdatePlayerInfo()
 			int teamIndex = team - TEAM_A;
 
 			isPosTaken[teamIndex][gr->GetTeamPosIndex(i)] = true;
-
-			CBitmapButton *pButton = m_pFormationButtons[teamIndex][gr->GetTeamPosIndex(i)];
-
-			if (gr->GetTeamToJoin(i) != TEAM_INVALID)
-			{
-				//pButton->SetText(VarArgs("%s [%d]", gr->GetPlayerName(i), max(0, (int)(gr->GetNextJoin(i) - gpGlobals->curtime))));
-			}
-			else
-			{
-				bool spotReserved = false;
-
-				for (int j = 1; j <= gpGlobals->maxClients; j++)
-				{
-					if (j == i || !gr->IsConnected(j))
-						continue;
-
-					if (gr->GetTeamToJoin(j) == gr->GetTeam(i) && gr->GetTeamPosIndex(j) == gr->GetTeamPosIndex(i))
-					{
-						spotReserved = true;
-						break;
-					}
-				}
-
-				if (!spotReserved)
-					;//pButton->SetText(gr->GetPlayerName(i));
-			}
-
-			//pButton->SetFgColor(gr->GetTeamColor(teamIndex));
-			pButton->SetCursor(gr->IsFakePlayer(i) ? dc_hand : dc_arrow);
-			pButton->SetEnabled(gr->IsFakePlayer(i));
-			color32 disabled = { 75, 75, 75, 255 };
-			pButton->SetImage(CBitmapButton::BUTTON_ENABLED, "vgui/shirt", disabled);
-			//Color black(0, 0, 0, 255);
-			//pButton->SetDefaultColor(black, black);
-			//pButton->SetArmedColor(black, black);
-			//pButton->SetDepressedColor(black, black);
-			//pButton->SetDefaultColor(black, lighter);
-			//pButton->SetArmedColor(black, white);
-			//pButton->SetDepressedColor(black, lighter);
-			//pButton->SetDisabledFgColor1(black);
-			//pButton->SetDisabledFgColor2(black);
-			//pButton->SetFont(m_pScheme->GetFont("IOSTeamMenuNormal"));
 		}
 		else
 		{
@@ -711,40 +584,6 @@ void CClientScoreBoardDialog::UpdatePlayerInfo()
 		if (width <= m_pSpectatorNames->GetWide())
 			break;
 	}
-
-	for (int i = 0; i < 2; i++)
-	{
-		for (int j = 0; j < 11; j++)
-		{
-			if (!IsValidPosition(j))
-			{
-				m_pFormationButtons[i][j]->SetVisible(false);
-				continue;
-			}
-
-			m_pFormationButtons[i][j]->SetVisible(true);
-			m_pFormationButtons[i][j]->SetText(g_szPosNames[(int)g_Positions[mp_maxplayers.GetInt() - 1][j][POS_NAME]]);
-
-			float xDist = (m_pFormations[i]->GetWide() - 2 * FORMATION_HPADDING) / 3;
-			float yDist = (m_pFormations[i]->GetTall() - 2 * FORMATION_VPADDING) / 3;
-			float xPos = FORMATION_HPADDING + g_Positions[mp_maxplayers.GetInt() - 1][j][POS_XPOS] * xDist - m_pFormationButtons[i][j]->GetWide() / 2;
-			float yPos = FORMATION_VPADDING + g_Positions[mp_maxplayers.GetInt() - 1][j][POS_YPOS] * yDist - m_pFormationButtons[i][j]->GetTall() / 2;
-			m_pFormationButtons[i][j]->SetPos(xPos, yPos);
-
-			if (isPosTaken[i][j])
-				continue;
-
-			//m_pFormationButtons[i][j]->SetText("JOIN");
-			m_pFormationButtons[i][j]->SetCursor(dc_hand);
-			m_pFormationButtons[i][j]->SetEnabled(true);
-			color32 enabled = { 255, 255, 255, 255 };
-			m_pFormationButtons[i][j]->SetImage(CBitmapButton::BUTTON_ENABLED, "vgui/shirt", enabled);
-			//m_pFormationButtons[i][j]->SetFgColor(gr->GetTeamColor(TEAM_UNASSIGNED));
-			//m_pFormationButtons[i][j]->SetDefaultColor(black, darker);
-			//m_pFormationButtons[i][j]->SetArmedColor(black, dark);
-			//m_pFormationButtons[i][j]->SetDepressedColor(black, darker);
-		}
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -775,35 +614,6 @@ void CClientScoreBoardDialog::AddHeader()
 		m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "ping",			"Ping", 0, 50);
 		//m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "voice",		"Voice", SectionedListPanel::COLUMN_IMAGE, scheme()->GetProportionalScaledValue(VOICE_WIDTH) );
 		//m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "tracker", "#PlayerTracker", SectionedListPanel::COLUMN_IMAGE, scheme()->GetProportionalScaledValueEx( GetScheme(),FRIENDS_WIDTH) );
-
-		m_iSectionId = 0;
-
-		m_pPlayerStats[i]->AddSection(m_iSectionId, "");
-		m_pPlayerStats[i]->SetSectionAlwaysVisible(0);
-		m_pPlayerStats[i]->SetFontSection(m_iSectionId, m_pScheme->GetFont("StatsPlayerName"));
-		m_pPlayerStats[i]->SetLineSpacing(30);
-		const int nameWidth = 110;
-		const int valueWidth = 65;
-		m_pPlayerStats[i]->SetSectionDividerColor(m_iSectionId, Color(255, 255, 255, 255));
-		m_pPlayerStats[i]->AddColumnToSection(m_iSectionId, "NameColumn0", "", 0, nameWidth);
-		m_pPlayerStats[i]->AddColumnToSection(m_iSectionId, "ValueColumn0", "", 0, valueWidth);
-		m_pPlayerStats[i]->AddColumnToSection(m_iSectionId, "NameColumn1", "", 0, nameWidth);
-		m_pPlayerStats[i]->AddColumnToSection(m_iSectionId, "ValueColumn1", "", 0, valueWidth);
-		m_pPlayerStats[i]->AddColumnToSection(m_iSectionId, "NameColumn2", "", 0, nameWidth);
-		m_pPlayerStats[i]->AddColumnToSection(m_iSectionId, "ValueColumn2", "", 0, valueWidth);
-		m_pPlayerStats[i]->AddColumnToSection(m_iSectionId, "NameColumn3", "", 0, nameWidth);
-		m_pPlayerStats[i]->AddColumnToSection(m_iSectionId, "ValueColumn3", "", 0, valueWidth);
-
-		KeyValues *pData = new KeyValues("data");
-		m_pPlayerStats[i]->AddItem(0, pData);
-		m_pPlayerStats[i]->SetItemFont(0, m_pScheme->GetFont("IOSTeamMenuNormal"));
-		m_pPlayerStats[i]->AddItem(0, pData);
-		m_pPlayerStats[i]->SetItemFont(1, m_pScheme->GetFont("IOSTeamMenuNormal"));
-		m_pPlayerStats[i]->AddItem(0, pData);
-		m_pPlayerStats[i]->SetItemFont(2, m_pScheme->GetFont("IOSTeamMenuNormal"));
-		m_pPlayerStats[i]->AddItem(0, pData);
-		m_pPlayerStats[i]->SetItemFont(3, m_pScheme->GetFont("IOSTeamMenuNormal"));
-		pData->deleteThis();
 	}
 }
 
@@ -1020,11 +830,8 @@ void CClientScoreBoardDialog::OnCommand( char const *cmd )
 		bool isVisible = m_pSettingsPanel->IsVisible();
 		m_pSettingsPanel->SetVisible(!isVisible);
 		m_pSideSeparators[1]->SetVisible(isVisible);
-
-		for (int i = 0; i < 2; i++)
-		{
-			m_pFormations[i]->SetVisible(isVisible);
-		}
+		m_pPlayerStats->SetVisible(!isVisible);
+		m_pFormation->SetVisible(isVisible);
 	}
 	else
 		BaseClass::OnCommand(cmd);

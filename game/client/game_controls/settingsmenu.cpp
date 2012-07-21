@@ -85,12 +85,6 @@ void CSettingsMenu::PerformLayout()
 
 	m_flNextUpdateTime = gpGlobals->curtime;
 
-	SetBgColor(Color(0, 0, 0, 245));
-	SetPaintBackgroundEnabled(true);
-	SetPaintBackgroundType(2);
-	SetMouseInputEnabled( true );
-	SetKeyBoardInputEnabled( true );
-
 	m_pPlayerNameLabel->SetBounds(0, 0, LABEL_WIDTH, TEXT_HEIGHT);
 	m_pPlayerNameText->SetBounds(LABEL_WIDTH, 0, INPUT_WIDTH, TEXT_HEIGHT);
 	//m_pNameText->SetEditable(true);

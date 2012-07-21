@@ -46,36 +46,15 @@
 
 using namespace vgui;
 
-#define VALUE_WIDTH 100
-#define NAME_WIDTH 300
-#define ROW_HEIGHT 50
-#define ROW_MARGIN 5
-
-char g_szStatNames[STAT_COUNT][32] =
-{
-	"PLAYERS", "GOALS", "POSSESSION", "PING"
-};
-
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
 CStatsMenu::CStatsMenu(Panel *parent, const char *name) : Panel(parent, name)
 {
-	for (int i = 0; i < STAT_COUNT; i++)
-	{
-		StatRow_t *pStat = new StatRow_t;
-		pStat->pPanel = new Panel(this, "");
-		pStat->pName = new Label(pStat->pPanel, "", g_szStatNames[i]);
-		pStat->pTeams[0] = new Label(pStat->pPanel, "", "0");
-		pStat->pTeams[1] = new Label(pStat->pPanel, "", "0");
-		m_pStatRows[i] = pStat;
-	}
-
 	for (int i = 0; i < 2; i++)
 	{
-		m_pStatTargets[i] = new ComboBox(this, "", 11, false);
-		m_pStatTargets[i]->SetOpenDirection(Menu::DOWN);
-		m_pStatTargets[i]->SetText("");
+		m_pPlayerStats[i] = new SectionedListPanel(this, "");
+		m_pPlayerStats[i]->SetVerticalScrollbar(false);
 	}
 
 	m_flNextUpdateTime = gpGlobals->curtime;
@@ -88,47 +67,58 @@ void CStatsMenu::ApplySchemeSettings(IScheme *pScheme)
 	m_pScheme = pScheme;
 }
 
+void CStatsMenu::Reset()
+{
+	for (int i = 0; i < 2; i++)
+	{
+		m_pPlayerStats[i]->DeleteAllItems();
+		m_pPlayerStats[i]->RemoveAllSections();
+
+		int m_iSectionId = 0;
+
+		m_pPlayerStats[i]->AddSection(m_iSectionId, "");
+		m_pPlayerStats[i]->SetSectionAlwaysVisible(0);
+		m_pPlayerStats[i]->SetFontSection(m_iSectionId, m_pScheme->GetFont("StatsPlayerName"));
+		m_pPlayerStats[i]->SetLineSpacing(30);
+		const int nameWidth = 110;
+		const int valueWidth = 65;
+		m_pPlayerStats[i]->SetSectionDividerColor(m_iSectionId, Color(255, 255, 255, 255));
+		m_pPlayerStats[i]->AddColumnToSection(m_iSectionId, "NameColumn0", "", 0, nameWidth);
+		m_pPlayerStats[i]->AddColumnToSection(m_iSectionId, "ValueColumn0", "", 0, valueWidth);
+		m_pPlayerStats[i]->AddColumnToSection(m_iSectionId, "NameColumn1", "", 0, nameWidth);
+		m_pPlayerStats[i]->AddColumnToSection(m_iSectionId, "ValueColumn1", "", 0, valueWidth);
+		m_pPlayerStats[i]->AddColumnToSection(m_iSectionId, "NameColumn2", "", 0, nameWidth);
+		m_pPlayerStats[i]->AddColumnToSection(m_iSectionId, "ValueColumn2", "", 0, valueWidth);
+		m_pPlayerStats[i]->AddColumnToSection(m_iSectionId, "NameColumn3", "", 0, nameWidth);
+		m_pPlayerStats[i]->AddColumnToSection(m_iSectionId, "ValueColumn3", "", 0, valueWidth);
+
+		HFont font = m_pScheme->GetFont("IOSTeamMenuNormal");
+		KeyValues *pData = new KeyValues("data");
+		m_pPlayerStats[i]->AddItem(0, pData);
+		m_pPlayerStats[i]->SetItemFont(0, font);
+		m_pPlayerStats[i]->AddItem(0, pData);
+		m_pPlayerStats[i]->SetItemFont(1, font);
+		m_pPlayerStats[i]->AddItem(0, pData);
+		m_pPlayerStats[i]->SetItemFont(2, font);
+		m_pPlayerStats[i]->AddItem(0, pData);
+		m_pPlayerStats[i]->SetItemFont(3, font);
+		m_pPlayerStats[i]->AddItem(0, pData);
+		m_pPlayerStats[i]->SetItemFont(4, font);
+		pData->deleteThis();
+	}
+}
+
 void CStatsMenu::PerformLayout()
 {
 	BaseClass::PerformLayout();
 
-	m_flNextUpdateTime = gpGlobals->curtime;
-
-	SetBgColor(Color(0, 0, 0, 245));
-	SetPaintBackgroundEnabled(true);
-	SetPaintBackgroundType(2);
-
 	for (int i = 0; i < 2; i++)
 	{
-		m_pStatTargets[i]->SetBounds(i * (GetWide() / 2), 0, GetWide() / 2, ROW_HEIGHT);
-		m_pStatTargets[i]->GetMenu()->MakeReadyForUse();
-		m_pStatTargets[i]->GetMenu()->SetFgColor(Color(0, 0, 0, 255));
-		m_pStatTargets[i]->GetMenu()->SetBgColor(Color(255, 255, 255, 255));
-		m_pStatTargets[i]->SetFgColor(Color(0, 0, 0, 255));
-		m_pStatTargets[i]->SetBgColor(Color(255, 255, 255, 255));
-		m_pStatTargets[i]->GetMenu()->SetFont(m_pScheme->GetFont("IOSTeamMenuNormal"));
-		m_pStatTargets[i]->GetMenu()->AddActionSignalTarget(this);
-		m_pStatTargets[i]->AddActionSignalTarget(this);
+		m_pPlayerStats[i]->SetBounds(i * (GetWide() / 2), 0, GetWide() / 2, GetTall());
+		m_pPlayerStats[i]->SetPaintBorderEnabled(false);
 	}
 
-	for (int i = 0; i < STAT_COUNT; i++)
-	{
-		StatRow_t *pStat = m_pStatRows[i];
-
-		pStat->pPanel->SetBounds(0, (i + 1) * (ROW_HEIGHT + ROW_MARGIN), GetWide(), ROW_HEIGHT);
-
-		pStat->pTeams[0]->SetBounds(0, 0, VALUE_WIDTH, ROW_HEIGHT);
-		pStat->pTeams[0]->SetFont(m_pScheme->GetFont("IOSTeamMenuBig"));
-		pStat->pTeams[0]->SetContentAlignment(Label::a_west);
-
-		pStat->pName->SetBounds(VALUE_WIDTH, 0, NAME_WIDTH, ROW_HEIGHT);
-		pStat->pName->SetFont(m_pScheme->GetFont("IOSTeamMenuBig"));
-		pStat->pName->SetContentAlignment(Label::a_center);
-
-		pStat->pTeams[1]->SetBounds(VALUE_WIDTH + NAME_WIDTH, 0, VALUE_WIDTH, ROW_HEIGHT);
-		pStat->pTeams[1]->SetFont(m_pScheme->GetFont("IOSTeamMenuBig"));
-		pStat->pTeams[1]->SetContentAlignment(Label::a_east);
-	}
+	m_flNextUpdateTime = gpGlobals->curtime;
 }
 
 //-----------------------------------------------------------------------------
@@ -146,29 +136,73 @@ void CStatsMenu::OnThink()
 	if (m_flNextUpdateTime > gpGlobals->curtime)
 		return;
 
-	//C_Team *pTeams[2] = { GetGlobalTeam(TEAM_A), GetGlobalTeam(TEAM_B) };
+	m_flNextUpdateTime = gpGlobals->curtime + 1.0f;
+}
+
+void CStatsMenu::Update(int *playerIndices)
+{
 	IGameResources *gr = GameResources();
+	if (!gr)
+		return;
 
 	for (int i = 0; i < 2; i++)
 	{
-		//m_pStatRows[STAT_PLAYERS]->pTeams[i]->SetText(VarArgs("%d", pTeams[i]->Get_Number_Players()));
-		//m_pStatRows[STAT_GOALS]->pTeams[i]->SetText(VarArgs("%d", pTeams[i]->Get_Goals()));
-		//m_pStatRows[STAT_POSSESSION]->pTeams[i]->SetText(VarArgs("%d", pTeams[i]->Get_Possession()));
+		if (playerIndices[i] == 0)
+			continue;
 
-		m_pStatTargets[i]->DeleteAllItems();
+		wchar_t wszPlayerName[MAX_PLAYER_NAME_LENGTH];
+		g_pVGuiLocalize->ConvertANSIToUnicode(gr->GetPlayerName(playerIndices[i]), wszPlayerName, sizeof(wszPlayerName));
+		m_pPlayerStats[i]->ModifyColumn(0, "NameColumn0", wszPlayerName);
 
-		for (int j = 1; j <= gpGlobals->maxClients; j++)
-		{
-			if (!(gr->IsConnected(j) && (gr->GetTeam(j) == TEAM_A || gr->GetTeam(j) == TEAM_B)))
-				continue;
+		KeyValues *pData = new KeyValues("data");
 
-			KeyValues *kv = new KeyValues("UserData", "index", j);
-			m_pStatTargets[i]->AddItem(gr->GetPlayerName(j), kv);
-			kv->deleteThis();
-		}
+		pData->SetString("NameColumn0", "Goals:");
+		pData->SetInt("ValueColumn0", gr->GetGoals(playerIndices[i]));
+		pData->SetString("NameColumn1", "Assists:");
+		pData->SetInt("ValueColumn1", gr->GetAssists(playerIndices[i]));
+		pData->SetString("NameColumn2", "Ping:");
+		pData->SetInt("ValueColumn2", gr->GetPing(playerIndices[i]));
+
+		m_pPlayerStats[i]->ModifyItem(0, 0, pData);
+		pData->Clear();
+
+		pData->SetString("NameColumn0", "Fouls:");
+		pData->SetInt("ValueColumn0", gr->GetFouls(playerIndices[i]));
+		pData->SetString("NameColumn1", "Yellows:");
+		pData->SetInt("ValueColumn1", gr->GetYellowCards(playerIndices[i]));
+		pData->SetString("NameColumn2", "Reds:");
+		pData->SetInt("ValueColumn2", gr->GetRedCards(playerIndices[i]));
+
+		m_pPlayerStats[i]->ModifyItem(1, 0, pData);
+		pData->Clear();
+
+		pData->SetString("NameColumn0", "Penalties:");
+		pData->SetInt("ValueColumn0", gr->GetPenalties(playerIndices[i]));	
+		pData->SetString("NameColumn1", "Goal kicks:");
+		pData->SetInt("ValueColumn1", gr->GetGoalKicks(playerIndices[i]));
+		pData->SetString("NameColumn2", "Free kicks:");
+		pData->SetInt("ValueColumn2", gr->GetFreeKicks(playerIndices[i]));
+
+		m_pPlayerStats[i]->ModifyItem(2, 0, pData);
+		pData->Clear();
+
+		pData->SetString("NameColumn0", "Distance:");
+		pData->SetString("ValueColumn0", VarArgs("%d m", gr->GetDistanceCovered(playerIndices[i])));
+		pData->SetString("NameColumn1", "Possession:");
+		pData->SetString("ValueColumn1", VarArgs("%d%%", gr->GetPossession(playerIndices[i])));
+		pData->SetString("NameColumn2", "Offsides:");
+		pData->SetInt("ValueColumn2", gr->GetOffsides(playerIndices[i]));
+
+		m_pPlayerStats[i]->ModifyItem(3, 0, pData);
+		pData->Clear();
+
+		pData->SetString("NameColumn0", "Corners:");
+		pData->SetInt("ValueColumn0", gr->GetCorners(playerIndices[i]));
+
+		m_pPlayerStats[i]->ModifyItem(4, 0, pData);
+
+		pData->deleteThis();
 	}
-
-	m_flNextUpdateTime = gpGlobals->curtime + 1.0f;
 }
 
 //-----------------------------------------------------------------------------
@@ -183,25 +217,4 @@ void CStatsMenu::OnCommand( char const *cmd )
 
 void CStatsMenu::OnTextChanged(KeyValues *data)
 {
-	Panel *panel = reinterpret_cast<vgui::Panel *>( data->GetPtr("panel") );
-	vgui::ComboBox *box = dynamic_cast<vgui::ComboBox *>( panel );
-	IGameResources *gr = GameResources();
-
-	if (box == m_pStatTargets[0] || box == m_pStatTargets[1])
-	{
-		KeyValues *kv = box->GetActiveItemUserData();
-		if ( kv && gr )
-		{
-			int index = kv->GetInt("index");
-			if (!(gr->IsConnected(index) && (gr->GetTeam(index) == TEAM_A || gr->GetTeam(index) == TEAM_B)))
-				return;
-
-			int side = box == m_pStatTargets[0] ? 0 : 1;
-			IGameResources *gr = GameResources();
-
-			m_pStatRows[STAT_PLAYERS]->pTeams[side]->SetText(g_szPosNames[(int)g_Positions[mp_maxplayers.GetInt() - 1][gr->GetTeamPosIndex(index)][POS_NAME]]);
-			m_pStatRows[STAT_GOALS]->pTeams[side]->SetText(VarArgs("%d", gr->GetGoals(index)));
-			m_pStatRows[STAT_POSSESSION]->pTeams[side]->SetText(VarArgs("%d", gr->GetPossession(index)));
-		}
-	}
 }

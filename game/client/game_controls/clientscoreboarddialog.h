@@ -16,6 +16,8 @@
 #include "gameeventlistener.h"
 #include "vgui_bitmapbutton.h"
 #include "settingsmenu.h"
+#include "statsmenu.h"
+#include "formationmenu.h"
 
 using namespace vgui;
 
@@ -120,9 +122,7 @@ private:
 	Panel		*m_pMainPanel;
 	Panel		*m_pExtraInfoPanel;
 	Label		*m_pSpectatorNames;
-	SectionedListPanel *m_pPlayerStats[2];
-	Panel		*m_pFormations[2];
-	CBitmapButton *m_pFormationButtons[2][11];
+	CFormationMenu	*m_pFormation;
 	Button		*m_pSpectateButton;
 	Button		*m_pSettingsButton;
 	CSettingsMenu *m_pSettingsPanel;
@@ -132,6 +132,7 @@ private:
 	ImagePanel	*m_pTeamCrests[2];
 	Label		*m_pPlayerCount[2];
 	Label		*m_pPossession[2];
+	CStatsMenu	*m_pPlayerStats;
 
 	IScheme *m_pScheme;
 

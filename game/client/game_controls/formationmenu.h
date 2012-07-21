@@ -5,8 +5,8 @@
 // $NoKeywords: $
 //=============================================================================//
 
-#ifndef STATSMENU_H
-#define STATSMENU_H
+#ifndef FORMATIONMENU_H
+#define FORMATIONMENU_H
 #ifdef _WIN32
 #pragma once
 #endif
@@ -30,18 +30,18 @@ using namespace vgui;
 //-----------------------------------------------------------------------------
 // Purpose: Displays the team menu
 //-----------------------------------------------------------------------------
-class CStatsMenu : public Panel
+class CFormationMenu : public Panel
 {
 private:
 	//DECLARE_CLASS_SIMPLE( CTeamMenu, vgui::Frame );
-	DECLARE_CLASS_SIMPLE( CStatsMenu, Panel );
+	DECLARE_CLASS_SIMPLE( CFormationMenu, Panel );
 	MESSAGE_FUNC_PARAMS( OnTextChanged, "TextChanged", data );
 
 	IScheme *m_pScheme;
 
 public:
-	CStatsMenu(Panel *parent, const char *name);
-	virtual ~CStatsMenu();
+	CFormationMenu(Panel *parent, const char *name);
+	virtual ~CFormationMenu();
 
 	virtual const char *GetName( void ) { return PANEL_TEAM; }
 	virtual void OnThink();
@@ -49,7 +49,7 @@ public:
 	virtual void PerformLayout();
 	virtual void OnCommand( char const *cmd );
 	void Reset();
-	void Update(int *playerIndices);
+	void Update();
 
 	float m_flNextUpdateTime;
 	
@@ -58,7 +58,8 @@ protected:
 	// VGUI2 overrides
 	virtual void ApplySchemeSettings(vgui::IScheme *pScheme);
 
-	SectionedListPanel *m_pPlayerStats[2];
+	Panel		*m_pFormations[2];
+	CBitmapButton *m_pFormationButtons[2][11];
 };
 
 
