@@ -812,7 +812,6 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "d:\games\steam\
     <ClCompile Include="..\shared\sdk\sdk_playeranimstate.cpp" />
     <ClCompile Include="..\shared\sdk\sdk_playerclass_info_parse.cpp" />
     <ClCompile Include="sdk\sdk_playermove.cpp" />
-    <ClCompile Include="..\shared\multiplayer\multiplayer_animstate.cpp" />
     <ClCompile Include="playerinfomanager.cpp" />
     <ClCompile Include="entity_tools_server.cpp" />
     <ClCompile Include="toolframework_server.cpp" />
@@ -1119,7 +1118,6 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "d:\games\steam\
     <ClInclude Include="sdk\sdk_player_resource.h" />
     <ClInclude Include="..\shared\sdk\sdk_playeranimstate.h" />
     <ClInclude Include="..\shared\sdk\sdk_playerclass_info_parse.h" />
-    <ClInclude Include="..\shared\multiplayer\multiplayer_animstate.h" />
     <ClInclude Include="..\..\public\mathlib\amd3dx.h" />
     <ClInclude Include="..\shared\ammodef.h" />
     <ClInclude Include="base_transmit_proxy.h" />

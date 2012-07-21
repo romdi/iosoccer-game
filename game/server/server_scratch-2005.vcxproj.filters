@@ -1383,9 +1383,6 @@
     <ClCompile Include="sdk\sdk_playermove.cpp">
       <Filter>Source Files\SDK\Player</Filter>
     </ClCompile>
-    <ClCompile Include="..\shared\multiplayer\multiplayer_animstate.cpp">
-      <Filter>Source Files\Multiplayer</Filter>
-    </ClCompile>
     <ClCompile Include="playerinfomanager.cpp">
       <Filter>Source Files\PluginInterface</Filter>
     </ClCompile>
@@ -2299,9 +2296,6 @@
     </ClInclude>
     <ClInclude Include="..\shared\sdk\sdk_playerclass_info_parse.h">
       <Filter>Source Files\SDK\Player</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shared\multiplayer\multiplayer_animstate.h">
-      <Filter>Source Files\Multiplayer</Filter>
     </ClInclude>
     <ClInclude Include="..\..\public\mathlib\amd3dx.h">
       <Filter>Header Files</Filter>

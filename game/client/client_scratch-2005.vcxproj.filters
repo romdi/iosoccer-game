@@ -1386,9 +1386,6 @@
     <ClCompile Include="..\shared\sdk\sdk_playerclass_info_parse.cpp">
       <Filter>Source Files\SDK\Player</Filter>
     </ClCompile>
-    <ClCompile Include="..\shared\Multiplayer\multiplayer_animstate.cpp">
-      <Filter>Source Files\Multiplayer</Filter>
-    </ClCompile>
     <ClCompile Include="mp3player.cpp">
       <Filter>MP3</Filter>
     </ClCompile>
@@ -1567,9 +1564,6 @@
     </ClInclude>
     <ClInclude Include="..\shared\sdk\sdk_playerclass_info_parse.h">
       <Filter>Source Files\SDK\Player</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shared\Multiplayer\multiplayer_animstate.h">
-      <Filter>Source Files\Multiplayer</Filter>
     </ClInclude>
     <ClInclude Include="mp3player.h">
       <Filter>MP3</Filter>

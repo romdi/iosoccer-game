@@ -827,7 +827,6 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClCompile Include="..\shared\sdk\sdk_player_shared.cpp" />
     <ClCompile Include="..\shared\sdk\sdk_playeranimstate.cpp" />
     <ClCompile Include="..\shared\sdk\sdk_playerclass_info_parse.cpp" />
-    <ClCompile Include="..\shared\Multiplayer\multiplayer_animstate.cpp" />
     <ClCompile Include="mp3player.cpp" />
     <ClCompile Include="..\..\public\tools\bonelist.cpp" />
     <ClCompile Include="entity_client_tools.cpp" />
@@ -885,7 +884,6 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClInclude Include="sdk\c_sdk_player_resource.h" />
     <ClInclude Include="..\shared\sdk\sdk_playeranimstate.h" />
     <ClInclude Include="..\shared\sdk\sdk_playerclass_info_parse.h" />
-    <ClInclude Include="..\shared\Multiplayer\multiplayer_animstate.h" />
     <ClInclude Include="mp3player.h" />
     <ClInclude Include="..\..\public\tools\bonelist.h" />
     <ClInclude Include="toolframework_client.h" />
