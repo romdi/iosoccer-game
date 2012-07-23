@@ -20,8 +20,6 @@
 #include "sdk_player.h"
 #endif
 
-ConVar mp_slammoveyaw( "mp_slammoveyaw", "0", FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY, "Force movement yaw along an animation path." );
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : *pPlayer - 
@@ -31,15 +29,8 @@ CSDKPlayerAnimState* CreateSDKPlayerAnimState( CSDKPlayer *pPlayer )
 {
 	MDLCACHE_CRITICAL_SECTION();
 
-	// Setup the movement data.
-	MultiPlayerMovementData_t movementData;
-	movementData.m_flBodyYawRate = 720.0f;
-	movementData.m_flRunSpeed = mp_runspeed.GetInt();
-	movementData.m_flWalkSpeed = mp_walkspeed.GetInt();
-	movementData.m_flSprintSpeed = -1.0f;
-
 	// Create animation state for this player.
-	CSDKPlayerAnimState *pRet = new CSDKPlayerAnimState( pPlayer, movementData );
+	CSDKPlayerAnimState *pRet = new CSDKPlayerAnimState( pPlayer );
 
 	// Specific SDK player initialization.
 	//pRet->InitSDKAnimState( pPlayer );
@@ -65,9 +56,9 @@ CSDKPlayerAnimState::CSDKPlayerAnimState()
 // Input  : *pPlayer - 
 //			&movementData - 
 //-----------------------------------------------------------------------------
-CSDKPlayerAnimState::CSDKPlayerAnimState( CBasePlayer *pPlayer, MultiPlayerMovementData_t &movementData )
+CSDKPlayerAnimState::CSDKPlayerAnimState( CBasePlayer *pPlayer )
 {
-	m_pSDKPlayer = NULL;
+	m_pSDKPlayer = ToSDKPlayer(pPlayer);
 
 	// Pose parameters.
 	m_bPoseParameterInit = false;
@@ -107,8 +98,6 @@ CSDKPlayerAnimState::CSDKPlayerAnimState( CBasePlayer *pPlayer, MultiPlayerMovem
 
 	m_bForceAimYaw = true; //ios false;
 
-	Init( pPlayer, movementData );
-
 	//InitGestureSlots();
 }
 
@@ -118,18 +107,6 @@ CSDKPlayerAnimState::CSDKPlayerAnimState( CBasePlayer *pPlayer, MultiPlayerMovem
 //-----------------------------------------------------------------------------
 CSDKPlayerAnimState::~CSDKPlayerAnimState()
 {
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Initialize Team Fortress specific animation state.
-// Input  : *pPlayer - 
-//-----------------------------------------------------------------------------
-void CSDKPlayerAnimState::Init( CBasePlayer *pPlayer, MultiPlayerMovementData_t &movementData )
-{
-	m_pSDKPlayer = ToSDKPlayer(pPlayer);
-
-	// Copy the movement data.
-	memcpy( &m_MovementData, &movementData, sizeof( MultiPlayerMovementData_t ) );
 }
 
 //-----------------------------------------------------------------------------
@@ -474,11 +451,11 @@ Activity CSDKPlayerAnimState::CalcMainActivity()
 	{
 		if ( flOuterSpeed > MOVING_MINIMUM_SPEED )
 		{
-			if ( flOuterSpeed > 350.0f )
+			if ( flOuterSpeed > (mp_runspeed.GetInt() + mp_sprintspeed.GetInt()) / 2.0f )
 			{
 				idealActivity = ACT_SPRINT;
 			}
-			else if ( flOuterSpeed > ARBITRARY_RUN_SPEED )
+			else if ( flOuterSpeed > (mp_walkspeed.GetInt() + mp_runspeed.GetInt()) / 2.0f )
 			{
 				if (pPlayer->GetFlags() & FL_CELEB)		//now on layer
 					idealActivity = ACT_IOS_RUNCELEB;
@@ -517,17 +494,15 @@ float CSDKPlayerAnimState::GetCurrentMaxGroundSpeed()
 {
 	Activity currentActivity = 	GetBasePlayer()->GetSequenceActivity( GetBasePlayer()->GetSequence() );
 	if ( currentActivity == ACT_WALK || currentActivity == ACT_IDLE )
-		return ANIM_TOPSPEED_WALK;
+		return mp_runspeed.GetInt();
 	else if ( currentActivity == ACT_RUN )
-		return ANIM_TOPSPEED_RUN;
+		return mp_runspeed.GetInt();
 	else if ( currentActivity == ACT_SPRINT )			//IOS
-		return ANIM_TOPSPEED_SPRINT;
+		return mp_sprintspeed.GetInt();
 	else if ( currentActivity == ACT_IOS_CARRY )		//IOS
-		return ANIM_TOPSPEED_RUN;
+		return mp_runspeed.GetInt();
 	else if ( currentActivity == ACT_IOS_RUNCELEB )		//IOS
-		return ANIM_TOPSPEED_RUN;
-	else if ( currentActivity == ACT_RUN_CROUCH )
-		return ANIM_TOPSPEED_RUN_CROUCH;
+		return mp_runspeed.GetInt();
 	else
 		return 0;
 }
@@ -636,10 +611,6 @@ void CSDKPlayerAnimState::ComputePoseParam_MoveYaw( CStudioHdr *pStudioHdr )
 	Vector2D vecCurrentMoveYaw( 0.0f, 0.0f );
 	if ( bIsMoving )
 	{
-		if ( mp_slammoveyaw.GetBool() )
-		{
-			flYaw = SnapYawTo( flYaw );
-		}
 		vecCurrentMoveYaw.x = cos( DEG2RAD( flYaw ) ) * flPlaybackRate;
 		vecCurrentMoveYaw.y = -sin( DEG2RAD( flYaw ) ) * flPlaybackRate;
 	}
@@ -756,7 +727,7 @@ void CSDKPlayerAnimState::ComputePoseParam_AimYaw( CStudioHdr *pStudioHdr )
 		}
 		else
 		{
-			ConvergeYawAngles( m_flGoalFeetYaw, /*DOD_BODYYAW_RATE*/720.0f, gpGlobals->frametime, m_flCurrentFeetYaw );
+			ConvergeYawAngles( m_flGoalFeetYaw, /*DOD_BODYYAW_RATE*/3600.0f, gpGlobals->frametime, m_flCurrentFeetYaw );
 			m_flLastAimTurnTime = gpGlobals->curtime;
 		}
 	}

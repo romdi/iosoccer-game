@@ -670,7 +670,7 @@ void C_SDKPlayer::LocalPlayerRespawn( void )
 	m_bUnProneToDuck = false;
 #endif
 
-	InitSpeeds(); //Tony; initialize player speeds.
+		InitSpeeds(); //Tony; initialize player speeds.
 }
 
 void C_SDKPlayer::OnDataChanged( DataUpdateType_t type )

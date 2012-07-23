@@ -68,8 +68,9 @@ public:
 	float m_flLastViewAnimationTime;
 
 	//Tony; player speeds; at spawn server and client update both of these based on class (if any)
-	float m_flRunSpeed;
-	float m_flSprintSpeed;
+	//float m_flWalkSpeed;
+	//float m_flRunSpeed;
+	//float m_flSprintSpeed;
 
 private:
 

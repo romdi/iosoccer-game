@@ -170,10 +170,11 @@ void CSDKPlayerShared::ComputeWorldSpaceSurroundingBox( Vector *pVecWorldMins, V
 
 void CSDKPlayer::InitSpeeds()
 {
-	m_Shared.m_flRunSpeed = mp_runspeed.GetInt();
-	m_Shared.m_flSprintSpeed = mp_sprintspeed.GetInt();
+	//m_Shared.m_flWalkSpeed = mp_walkspeed.GetInt();
+	//m_Shared.m_flRunSpeed = mp_runspeed.GetInt();
+	//m_Shared.m_flSprintSpeed = mp_sprintspeed.GetInt();
 	// Set the absolute max to sprint speed
-	SetMaxSpeed( m_Shared.m_flRunSpeed ); 
+	//SetMaxSpeed( m_Shared.m_flRunSpeed ); 
 	return;
 }
 

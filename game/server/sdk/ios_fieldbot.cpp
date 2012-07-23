@@ -115,7 +115,7 @@ void CFieldBot::BotRunToBall()
 	if (pClosest == this)
 	{
 		VectorAngles(m_vDirToBall, m_cmd.viewangles);
-		m_cmd.forwardmove = clamp(m_oldcmd.forwardmove + g_IOSRand.RandomFloat(-200, 200) * gpGlobals->frametime * 2, m_Shared.m_flRunSpeed, m_Shared.m_flSprintSpeed);
+		m_cmd.forwardmove = clamp(m_oldcmd.forwardmove + g_IOSRand.RandomFloat(-200, 200) * gpGlobals->frametime * 2, mp_runspeed.GetInt(), mp_sprintspeed.GetInt());
 	}
 	else
 	{

@@ -21,7 +21,6 @@ class CSDKPlayer;
 #endif
 
 #define MOVING_MINIMUM_SPEED 0.5f
-#define ARBITRARY_RUN_SPEED		175.0f
 
 enum PlayerAnimEvent_t
 {
@@ -127,15 +126,6 @@ struct DebugPlayerAnimData_t
 	}
 };
 
-struct MultiPlayerMovementData_t
-{
-	// Set speeds to -1 if they are not used.
-	float		m_flWalkSpeed;
-	float		m_flRunSpeed;
-	float		m_flSprintSpeed;	
-	float		m_flBodyYawRate;
-};
-
 // ------------------------------------------------------------------------------------------------ //
 // CPlayerAnimState declaration.
 // ------------------------------------------------------------------------------------------------ //
@@ -146,7 +136,7 @@ public:
 	DECLARE_CLASS_NOBASE(CSDKPlayerAnimState);
 
 	CSDKPlayerAnimState();
-	CSDKPlayerAnimState( CBasePlayer *pPlayer, MultiPlayerMovementData_t &movementData );
+	CSDKPlayerAnimState( CBasePlayer *pPlayer );
 	~CSDKPlayerAnimState();
 
 	CSDKPlayer *GetSDKPlayer( void )							{ return m_pSDKPlayer; }
@@ -167,9 +157,6 @@ public:
 	const QAngle& GetRenderAngles();
 	void OnNewModel( void );
 
-	void Init( CBasePlayer *pPlayer, MultiPlayerMovementData_t &movementData );
-
-
 #ifdef CLIENT_DLL
 	float m_flLastGroundSpeedUpdateTime;
 	CInterpolatedVar<float> m_iv_flMaxGroundSpeed;
@@ -177,7 +164,6 @@ public:
 
 private:
 
-	MultiPlayerMovementData_t	m_MovementData;
 	float m_flMaxGroundSpeed;
 	CSDKPlayer   *m_pSDKPlayer;
 	bool		m_bInAirWalk;
