@@ -39,6 +39,7 @@ public:
 	virtual char	*Get_ShortTeamName( void );
 	virtual char	*Get_FullTeamName( void );
 	virtual char	*Get_KitName( void );
+	virtual Color	&Get_HudKitColor( void );
 	virtual Color	&Get_PrimaryKitColor( void );
 	virtual Color	&Get_SecondaryKitColor( void );
 	virtual int		Get_Goals( void );

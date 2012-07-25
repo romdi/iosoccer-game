@@ -37,6 +37,7 @@ public : // IGameResources intreface
 	virtual const char *GetShortTeamName( int index );
 	virtual const char *GetFullTeamName( int index );
 	virtual const char *GetTeamKitName( int index );
+	virtual Color &GetHudTeamKitColor(int index);
 	virtual Color &GetPrimaryTeamKitColor(int index);
 	virtual Color &GetSecondaryTeamKitColor(int index);
 	virtual const Color&GetTeamColor( int index );

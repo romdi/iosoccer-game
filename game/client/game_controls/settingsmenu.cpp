@@ -91,9 +91,11 @@ void CSettingsMenu::PerformLayout()
 	//m_pNameText->SetEnabled(true);
 	m_pPlayerNameText->AddActionSignalTarget( this );
 	m_pPlayerNameText->SendNewLine(true); // with the txtEntry Type you need to set it to pass the return key as a message
+	m_pPlayerNameText->SetFgColor(Color(0, 0, 0, 255));
 
 	m_pClubNameLabel->SetBounds(0, TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
 	m_pClubNameText->SetBounds(LABEL_WIDTH, TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
+	m_pClubNameText->SetFgColor(Color(0, 0, 0, 255));
 
 	m_pCountryNameLabel->SetBounds(0, 2 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
 	m_pCountryNameList->SetBounds(LABEL_WIDTH, 2 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
@@ -105,15 +107,8 @@ void CSettingsMenu::PerformLayout()
 	m_pCountryNameList->SetSelectionBgColor(Color(255, 255, 0, 255));
 	m_pCountryNameList->SetFgColor(Color(0, 0, 0, 255));
 	m_pCountryNameList->SetBgColor(Color(255, 255, 255, 255));
-
-	m_pCountryNameList->RemoveAll();
-
-	for (int i = 0; i < COUNTRY_NAMES_COUNT; i++)
-	{
-		KeyValues *kv = new KeyValues("UserData", "index", i);
-		m_pCountryNameList->AddItem(g_szCountryNames[i], kv);
-		kv->deleteThis();
-	}
+	m_pCountryNameList->SetDisabledBgColor(Color(255, 255, 255, 255));
+	m_pCountryNameList->SetSelectionTextColor(Color(0, 0, 0, 255));
 
 	m_pSaveButton->SetBounds(LABEL_WIDTH, 4 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
 	m_pSaveButton->SetCommand("save_settings");
@@ -124,13 +119,6 @@ void CSettingsMenu::PerformLayout()
 	m_pSaveButton->SetCursor(dc_hand);
 	m_pSaveButton->SetFont(m_pScheme->GetFont("IOSTeamMenuNormal"));
 	m_pSaveButton->SetContentAlignment(Label::a_center);
-
-	C_SDKPlayer *pLocal = C_SDKPlayer::GetLocalSDKPlayer();
-
-	if (!pLocal)
-		return;
-
-	m_pPlayerNameText->SetText(pLocal->GetPlayerName());
 }
 
 //-----------------------------------------------------------------------------
@@ -150,7 +138,22 @@ void CSettingsMenu::OnThink()
 	if (m_flNextUpdateTime > gpGlobals->curtime)
 		return;
 
-	m_flNextUpdateTime = gpGlobals->curtime + 1.0f;
+	//Update();
+
+	m_flNextUpdateTime = gpGlobals->curtime + 0.25f;
+}
+
+void CSettingsMenu::Update()
+{
+	C_SDKPlayer *pLocal = C_SDKPlayer::GetLocalSDKPlayer();
+	if (!pLocal)
+		return;
+
+	int index = pLocal->entindex();
+
+	m_pPlayerNameText->SetText(GameResources()->GetPlayerName(index));
+	m_pCountryNameList->SetText(GameResources()->GetCountryName(index));
+	m_pClubNameText->SetText(GameResources()->GetClubName(index));
 }
 
 //-----------------------------------------------------------------------------
@@ -185,5 +188,17 @@ void CSettingsMenu::NewLineMessage(KeyValues* data)
 	// We have caught the message, now we can handle it. I would simply repost it to the OnCommand function 
 	// Post the message to our command handler
 		this->OnCommand("save_settings");
+	}
+}
+
+void CSettingsMenu::Reset()
+{
+	m_pCountryNameList->RemoveAll();
+
+	for (int i = 0; i < COUNTRY_NAMES_COUNT; i++)
+	{
+		KeyValues *kv = new KeyValues("UserData", "index", i);
+		m_pCountryNameList->AddItem(g_szCountryNames[i], kv);
+		kv->deleteThis();
 	}
 }

@@ -42,7 +42,8 @@ Color g_ColorRed( 255, 63.75, 63.75, 255 );
 Color g_ColorGreen( 153, 255, 153, 255 );
 Color g_ColorDarkGreen( 64, 255, 64, 255 );
 Color g_ColorYellow( 255, 178.5, 0.0, 255 );
-Color g_ColorGrey( 204, 204, 204, 255 );
+Color g_ColorGray( 204, 204, 204, 255 );
+Color g_ColorDarkGray( 144, 144, 120, 255 );
 Color g_ColorWhite( 255, 255, 255, 255 );
 
 //--------------------------------------------------------------------------------------------------------
@@ -1299,7 +1300,7 @@ Color CBaseHudChat::GetClientColor( int clientIndex )
 	}
 	else if( g_PR )
 	{
-		return g_ColorGrey;
+		return g_ColorDarkGray;
 	}
 
 	return g_ColorYellow;

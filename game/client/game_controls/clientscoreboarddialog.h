@@ -36,6 +36,8 @@ protected:
 	// total = 340
 	enum { SPEC_FONT_COUNT = 4 };
 
+	enum tab_t { TAB_FORMATION = 0, TAB_STATS, TAB_SETTINGS, TAB_COUNT };
+
 public:
 	CClientScoreBoardDialog( IViewPort *pViewPort );
 	~CClientScoreBoardDialog();
@@ -72,6 +74,8 @@ protected:
 	virtual void AddHeader(); // add the start header of the scoreboard
 	//virtual void AddSection(int teamType, int teamNumber); // add a new section header for a team
 	virtual int GetAdditionalHeight() { return 0; }
+
+	void ShowTabPanel(tab_t tabName); 
 
 	// sorts players within a section
 	static bool StaticPlayerSortFunc(vgui::SectionedListPanel *list, int itemID1, int itemID2);
@@ -122,17 +126,15 @@ private:
 	Panel		*m_pMainPanel;
 	Panel		*m_pExtraInfoPanel;
 	Label		*m_pSpectatorNames;
-	CFormationMenu	*m_pFormation;
 	Button		*m_pSpectateButton;
 	Button		*m_pSettingsButton;
-	CSettingsMenu *m_pSettingsPanel;
 	Panel		*m_pSideSeparators[2];
 	Panel		*m_pSpectatorContainer;
 	HFont		m_pSpectatorFontList[SPEC_FONT_COUNT];
 	ImagePanel	*m_pTeamCrests[2];
 	Label		*m_pPlayerCount[2];
 	Label		*m_pPossession[2];
-	CStatsMenu	*m_pPlayerStats;
+	Panel		*m_pTabPanels[TAB_COUNT];
 
 	IScheme *m_pScheme;
 

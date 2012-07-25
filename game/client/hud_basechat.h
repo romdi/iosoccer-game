@@ -43,7 +43,8 @@ extern Color g_ColorRed;
 extern Color g_ColorGreen;
 extern Color g_ColorDarkGreen;
 extern Color g_ColorYellow;
-extern Color g_ColorGrey;
+extern Color g_ColorGray;
+extern Color g_ColorDarkGray;
 extern Color g_ColorWhite;
 
 extern ConVar cl_showtextmsg;

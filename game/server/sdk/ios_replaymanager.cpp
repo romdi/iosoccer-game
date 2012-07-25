@@ -392,6 +392,7 @@ void CReplayManager::RestoreSnapshot()
 			//m_pPlayers[i]->SetRenderColorA(150);
 			m_pPlayers[i]->Spawn();
 			//m_pPlayers[i]->UseClientSideAnimation();
+			m_pPlayers[i]->SetNumAnimOverlays(NUM_LAYERS_WANTED);
 		}
 
 		CReplayPlayer *pPl = m_pPlayers[i];
@@ -408,24 +409,33 @@ void CReplayManager::RestoreSnapshot()
 		pPl->SetPoseParameter(pPl->GetModelPtr(), 4, pPlSnap->m_flMoveX);
 		pPl->SetPoseParameter(pPl->GetModelPtr(), 3, pPlSnap->m_flMoveY);
 
-		pPl->ResetSequence(pPlSnap->m_masterSequence);
+		pPl->SetSequence(pPlSnap->m_masterSequence);
 		pPl->SetCycle(pPlSnap->m_masterCycle);
-		//pPl->SetSimulationTime(pPlSnap->m_flSimulationTime);
-		//pPl->SetPlaybackRate(1);
+		pPl->SetSimulationTime(pPlSnap->m_flSimulationTime);
+		pPl->SetPlaybackRate(1);
 
 		//if (m_nSnapshotIndex % 20 == 0)
 		{
-			int count = pPl->GetNumAnimOverlays();
-			int layerCount = 8;//pPl->GetNumAnimOverlays();
-			pPl->SetNumAnimOverlays(layerCount);
+			//int count = pPl->GetNumAnimOverlays();
+			//int layerCount = 1;//pPl->GetNumAnimOverlays();
+			//pPl->SetNumAnimOverlays(layerCount);
 
-			for( int layerIndex = 0; layerIndex < layerCount; ++layerIndex )
+			for( int layerIndex = 0; layerIndex < NUM_LAYERS_WANTED; ++layerIndex )
 			{
 				CAnimationLayer *currentLayer = pPl->GetAnimOverlay(layerIndex);
 				if(!currentLayer)
 					continue;
 
+				//currentLayer->m_flCycle = 0.5f;
+				//currentLayer->m_nSequence = 8;
+				//currentLayer->m_flPlaybackRate = 1.0;
+				//currentLayer->m_flWeight = 1.0f;
+				//currentLayer->m_nOrder = layerIndex;
+
+				//pPl->StudioFrameAdvanceManual( gpGlobals->frametime );
+				//pPl->DispatchAnimEvents(pPl);
 				CopyAnimationLayer(currentLayer, &pPlSnap->m_animLayers[layerIndex]);
+				//currentLayer->StudioFrameAdvance(gpGlobals->frametime, pPl);
 			}
 		}
 	}

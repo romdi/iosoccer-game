@@ -130,8 +130,88 @@ CTeamKitInfo::CTeamKitInfo()
 	m_szKitName[0] = 0;
 	m_szShortTeamName[0] = 0;
 	m_szFullTeamName[0] = 0;
+	m_HudKitColor = Color(0, 0, 0, 0);
 	m_PrimaryKitColor = Color(0, 0, 0, 0);
 	m_SecondaryKitColor = Color(0, 0, 0, 0);;
+}
+
+struct RGB
+{
+	int R;
+	int G;
+	int B;
+};
+
+struct HSL
+{
+	double H;
+	double S;
+	double L;
+};
+
+void RGBtoHSL(const RGB &rgb, HSL &hsl)
+{
+	double R = ( rgb.R / 255.0 );                     //RGB from 0 to 255
+	double G = ( rgb.G / 255.0 );
+	double B = ( rgb.B / 255.0 );
+
+	double minVal = min(min(R, G), B);    //Min. value of RGB
+	double maxVal = max(max(R, G), B);    //Max. value of RGB
+	double deltaMax = maxVal - minVal;             //Delta RGB value
+
+	double L = ( maxVal + minVal ) / 2;
+	double H;
+	double S;
+	if ( deltaMax == 0 )                     //This is a gray, no chroma...
+	{
+		H = 0;                                //HSL results from 0 to 1
+		S = 0;
+	}
+	else                                    //Chromatic data...
+	{
+		if ( L < 0.5 ) S = deltaMax / ( maxVal + minVal );
+		else           S = deltaMax / ( 2 - maxVal - minVal );
+
+		double deltaR = ( ( ( maxVal - R ) / 6 ) + ( deltaMax / 2 ) ) / deltaMax;
+		double deltaG = ( ( ( maxVal - G ) / 6 ) + ( deltaMax / 2 ) ) / deltaMax;
+		double deltaB = ( ( ( maxVal - B ) / 6 ) + ( deltaMax / 2 ) ) / deltaMax;
+
+		if      ( R == maxVal ) H = deltaB - deltaG;
+		else if ( G == maxVal ) H = ( 1 / 3.0 ) + deltaR - deltaB;
+		else if ( B == maxVal ) H = ( 2 / 3.0 ) + deltaG - deltaR;
+
+		if ( H < 0 ) H += 1;
+		if ( H > 1 ) H -= 1;
+	}
+
+	hsl.H = H * 360;
+	hsl.S = S * 100;
+	hsl.L = L * 100;
+}
+
+enum colors_t { BLACKS, WHITES, GRAYS, REDS, YELLOWS, GREENS, CYANS, BLUES, MAGENTAS, COLOR_COUNT };
+char colorNames[COLOR_COUNT][16] = { "BLACKS", "WHITES", "GRAYS", "REDS", "YELLOWS", "GREENS", "CYANS", "BLUES", "MAGENTAS" };
+int substituteColors[COLOR_COUNT][3] = { { 148, 140, 117 }, { 254, 249, 240 }, { 216, 216, 192 }, { 228, 86, 53 }, { 251, 184, 41 }, { 195, 255, 104 }, { 108, 223, 234 }, { 161, 190, 230 }, { 254, 67, 101 } };
+
+colors_t classify(const HSL &hsl)
+{
+	double hue = hsl.H;
+	double sat = hsl.S;
+	double lgt = hsl.L;
+
+    if (lgt < 20)  return BLACKS;
+    if (lgt > 80)  return WHITES;
+
+    if (sat < 25) return GRAYS;
+
+    if (hue < 30)   return REDS;
+    if (hue < 90)   return YELLOWS;
+    if (hue < 150)  return GREENS;
+    if (hue < 210)  return CYANS;
+    if (hue < 270)  return BLUES;
+    if (hue < 330)  return MAGENTAS;
+	
+	return REDS; // (hue >= 330)
 }
 
 void CTeamKitInfo::Parse( KeyValues *pKeyValuesData, const char *szWeaponName )
@@ -149,6 +229,13 @@ void CTeamKitInfo::Parse( KeyValues *pKeyValuesData, const char *szWeaponName )
 	m_PrimaryKitColor = Color(c.r(), c.g(), c.b(), 255);
 	c = pKeyValuesData->GetColor("secondarykitcolor");
 	m_SecondaryKitColor = Color(c.r(), c.g(), c.b(), 255);
+
+	RGB primaryRgb = { m_PrimaryKitColor.r(), m_PrimaryKitColor.g(), m_PrimaryKitColor.b() };
+	RGB secondaryRgb = { m_SecondaryKitColor.r(), m_SecondaryKitColor.g(), m_SecondaryKitColor.b() };
+	HSL primaryHsl, secondaryHsl;
+	RGBtoHSL(primaryRgb, primaryHsl);
+	colors_t color = classify(primaryHsl);
+	m_HudKitColor = Color(substituteColors[color][0], substituteColors[color][1], substituteColors[color][2], 255);
 }
 
 void CTeamKitInfo::FindTeamKits()

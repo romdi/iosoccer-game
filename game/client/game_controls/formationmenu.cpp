@@ -86,6 +86,7 @@ void CFormationMenu::PerformLayout()
 
 	for (int i = 0; i < 2; i++)
 	{
+		C_Team *pTeam = GetGlobalTeam(TEAM_A + i);
 		m_pFormations[i]->SetBounds(i * (GetWide() / 2), 0, GetWide() / 2, GetTall());
 
 		for (int j = 0; j < 11; j++)
@@ -97,11 +98,11 @@ void CFormationMenu::PerformLayout()
 			color32 mouseover = { 150, 150, 150, 255 };
 			color32 pressed = { 255, 255, 255, 255 };
 			color32 disabled = { 75, 75, 75, 255 };
-			Color black(0, 0, 0, 255);
 			m_pFormationButtons[i][j]->SetImage(CBitmapButton::BUTTON_ENABLED, "vgui/shirt", enabled);
 			m_pFormationButtons[i][j]->SetImage(CBitmapButton::BUTTON_ENABLED_MOUSE_OVER, "vgui/shirt", mouseover);
 			m_pFormationButtons[i][j]->SetImage(CBitmapButton::BUTTON_PRESSED, "vgui/shirt", pressed);
 			m_pFormationButtons[i][j]->SetImage(CBitmapButton::BUTTON_DISABLED, "vgui/shirt", disabled);
+			Color black(0, 0, 0, 255);
 			m_pFormationButtons[i][j]->SetDefaultColor(black, black);
 			m_pFormationButtons[i][j]->SetArmedColor(black, black);
 			m_pFormationButtons[i][j]->SetDepressedColor(black, black);
@@ -140,16 +141,16 @@ void CFormationMenu::Update()
 
 	int playerIndexAtPos[2][11] = {};
 
-		for (int i = 1; i <= gpGlobals->maxClients; i++)
-		{
-			if (!gr->IsConnected(i))
-				continue;
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		if (!gr->IsConnected(i))
+			continue;
 
-			int team = (gr->GetTeamToJoin(i) == TEAM_A || gr->GetTeamToJoin(i) == TEAM_B ? gr->GetTeamToJoin(i) : gr->GetTeam(i));
+		int team = (gr->GetTeamToJoin(i) == TEAM_A || gr->GetTeamToJoin(i) == TEAM_B ? gr->GetTeamToJoin(i) : gr->GetTeam(i));
 
-			if (team == TEAM_A || team == TEAM_B)
-				playerIndexAtPos[team - TEAM_A][gr->GetTeamPosIndex(i)] = i;
-		}
+		if (team == TEAM_A || team == TEAM_B)
+			playerIndexAtPos[team - TEAM_A][gr->GetTeamPosIndex(i)] = i;
+	}
 
 	for (int i = 0; i < 2; i++)
 	{
@@ -209,6 +210,9 @@ void CFormationMenu::Update()
 			m_pFormationButtons[i][j]->SetImage(CBitmapButton::BUTTON_ENABLED, "vgui/shirt", color);
 			m_pFormationButtons[i][j]->SetCursor(cursor);
 			m_pFormationButtons[i][j]->SetEnabled(enable);
+			Color teamColor = GetGlobalTeam(TEAM_A + i)->Get_HudKitColor();
+			color32 enabled = { teamColor.r(), teamColor.g(), teamColor.b(), 255 };
+			m_pFormationButtons[i][j]->SetImage(CBitmapButton::BUTTON_ENABLED, "vgui/shirt", enabled);
 		}
 	}
 }

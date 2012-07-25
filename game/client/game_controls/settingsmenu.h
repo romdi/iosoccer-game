@@ -51,6 +51,8 @@ public:
 	virtual bool HasInputElements( void ) { return true; }
 	virtual void PerformLayout();
 	virtual void OnCommand( char const *cmd );
+	void Reset();
+	void Update();
 
 	float m_flNextUpdateTime;
 	

@@ -83,27 +83,19 @@ void CStatsMenu::Reset()
 		const int nameWidth = 110;
 		const int valueWidth = 65;
 		m_pPlayerStats[i]->SetSectionDividerColor(m_iSectionId, Color(255, 255, 255, 255));
-		m_pPlayerStats[i]->AddColumnToSection(m_iSectionId, "NameColumn0", "", 0, nameWidth);
-		m_pPlayerStats[i]->AddColumnToSection(m_iSectionId, "ValueColumn0", "", 0, valueWidth);
-		m_pPlayerStats[i]->AddColumnToSection(m_iSectionId, "NameColumn1", "", 0, nameWidth);
-		m_pPlayerStats[i]->AddColumnToSection(m_iSectionId, "ValueColumn1", "", 0, valueWidth);
-		m_pPlayerStats[i]->AddColumnToSection(m_iSectionId, "NameColumn2", "", 0, nameWidth);
-		m_pPlayerStats[i]->AddColumnToSection(m_iSectionId, "ValueColumn2", "", 0, valueWidth);
-		m_pPlayerStats[i]->AddColumnToSection(m_iSectionId, "NameColumn3", "", 0, nameWidth);
-		m_pPlayerStats[i]->AddColumnToSection(m_iSectionId, "ValueColumn3", "", 0, valueWidth);
+		for (int j = 0; j < 3; j++)
+		{
+			m_pPlayerStats[i]->AddColumnToSection(m_iSectionId, VarArgs("NameColumn%d", j), "", SectionedListPanel::COLUMN_RIGHT, nameWidth);
+			m_pPlayerStats[i]->AddColumnToSection(m_iSectionId, VarArgs("ValueColumn%d", j), "", 0, valueWidth);
+		}
 
 		HFont font = m_pScheme->GetFont("IOSTeamMenuNormal");
 		KeyValues *pData = new KeyValues("data");
-		m_pPlayerStats[i]->AddItem(0, pData);
-		m_pPlayerStats[i]->SetItemFont(0, font);
-		m_pPlayerStats[i]->AddItem(0, pData);
-		m_pPlayerStats[i]->SetItemFont(1, font);
-		m_pPlayerStats[i]->AddItem(0, pData);
-		m_pPlayerStats[i]->SetItemFont(2, font);
-		m_pPlayerStats[i]->AddItem(0, pData);
-		m_pPlayerStats[i]->SetItemFont(3, font);
-		m_pPlayerStats[i]->AddItem(0, pData);
-		m_pPlayerStats[i]->SetItemFont(4, font);
+		for (int j = 0; j < 5; j++)
+		{
+			m_pPlayerStats[i]->AddItem(j, pData);
+			m_pPlayerStats[i]->SetItemFont(j, font);
+		}
 		pData->deleteThis();
 	}
 }
@@ -117,8 +109,6 @@ void CStatsMenu::PerformLayout()
 		m_pPlayerStats[i]->SetBounds(i * (GetWide() / 2), 0, GetWide() / 2, GetTall());
 		m_pPlayerStats[i]->SetPaintBorderEnabled(false);
 	}
-
-	m_flNextUpdateTime = gpGlobals->curtime;
 }
 
 //-----------------------------------------------------------------------------
@@ -148,11 +138,23 @@ void CStatsMenu::Update(int *playerIndices)
 	for (int i = 0; i < 2; i++)
 	{
 		if (playerIndices[i] == 0)
+		{
+			m_pPlayerStats[i]->SetVisible(false);
 			continue;
+		}
 
-		wchar_t wszPlayerName[MAX_PLAYER_NAME_LENGTH];
-		g_pVGuiLocalize->ConvertANSIToUnicode(gr->GetPlayerName(playerIndices[i]), wszPlayerName, sizeof(wszPlayerName));
-		m_pPlayerStats[i]->ModifyColumn(0, "NameColumn0", wszPlayerName);
+		m_pPlayerStats[i]->SetVisible(true);
+		m_pPlayerStats[i]->SetSectionFgColor(0, GetGlobalTeam(TEAM_A + i)->Get_HudKitColor());
+		m_pPlayerStats[i]->SetFgColor(GetGlobalTeam(TEAM_A + i)->Get_HudKitColor());
+		//m_pPlayerStats[i]->SetSectionDividerColor(0, Color(255, 255, 255, 255));
+
+		wchar_t wszText[MAX_PLAYER_NAME_LENGTH];
+		g_pVGuiLocalize->ConvertANSIToUnicode(gr->GetPlayerName(playerIndices[i]), wszText, sizeof(wszText));
+		m_pPlayerStats[i]->ModifyColumn(0, "NameColumn0", wszText);
+		g_pVGuiLocalize->ConvertANSIToUnicode(g_szPosNames[(int)g_Positions[mp_maxplayers.GetInt() - 1][gr->GetTeamPosIndex(playerIndices[i])][POS_NAME]], wszText, sizeof(wszText));
+		m_pPlayerStats[i]->ModifyColumn(0, "NameColumn1", wszText);
+		g_pVGuiLocalize->ConvertANSIToUnicode(gr->GetCountryName(playerIndices[i]), wszText, sizeof(wszText));
+		m_pPlayerStats[i]->ModifyColumn(0, "NameColumn2", wszText);
 
 		KeyValues *pData = new KeyValues("data");
 
@@ -164,6 +166,7 @@ void CStatsMenu::Update(int *playerIndices)
 		pData->SetInt("ValueColumn2", gr->GetPing(playerIndices[i]));
 
 		m_pPlayerStats[i]->ModifyItem(0, 0, pData);
+		m_pPlayerStats[i]->SetItemFgColor(0, GetGlobalTeam(TEAM_A + i)->Get_HudKitColor());
 		pData->Clear();
 
 		pData->SetString("NameColumn0", "Fouls:");
@@ -174,6 +177,7 @@ void CStatsMenu::Update(int *playerIndices)
 		pData->SetInt("ValueColumn2", gr->GetRedCards(playerIndices[i]));
 
 		m_pPlayerStats[i]->ModifyItem(1, 0, pData);
+		m_pPlayerStats[i]->SetItemFgColor(1, GetGlobalTeam(TEAM_A + i)->Get_HudKitColor());
 		pData->Clear();
 
 		pData->SetString("NameColumn0", "Penalties:");
@@ -184,6 +188,7 @@ void CStatsMenu::Update(int *playerIndices)
 		pData->SetInt("ValueColumn2", gr->GetFreeKicks(playerIndices[i]));
 
 		m_pPlayerStats[i]->ModifyItem(2, 0, pData);
+		m_pPlayerStats[i]->SetItemFgColor(2, GetGlobalTeam(TEAM_A + i)->Get_HudKitColor());
 		pData->Clear();
 
 		pData->SetString("NameColumn0", "Distance:");
@@ -194,12 +199,14 @@ void CStatsMenu::Update(int *playerIndices)
 		pData->SetInt("ValueColumn2", gr->GetOffsides(playerIndices[i]));
 
 		m_pPlayerStats[i]->ModifyItem(3, 0, pData);
+		m_pPlayerStats[i]->SetItemFgColor(3, GetGlobalTeam(TEAM_A + i)->Get_HudKitColor());
 		pData->Clear();
 
 		pData->SetString("NameColumn0", "Corners:");
 		pData->SetInt("ValueColumn0", gr->GetCorners(playerIndices[i]));
 
 		m_pPlayerStats[i]->ModifyItem(4, 0, pData);
+		m_pPlayerStats[i]->SetItemFgColor(4, GetGlobalTeam(TEAM_A + i)->Get_HudKitColor());
 
 		pData->deleteThis();
 	}

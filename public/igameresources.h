@@ -25,6 +25,7 @@ public:
 	virtual const char		*GetShortTeamName( int index ) = 0;
 	virtual const char		*GetFullTeamName( int index ) = 0;
 	virtual const char		*GetTeamKitName( int index ) = 0;
+	virtual Color			&GetHudTeamKitColor(int index) = 0;
 	virtual Color			&GetPrimaryTeamKitColor(int index) = 0;
 	virtual Color			&GetSecondaryTeamKitColor(int index) = 0;
 	virtual int				GetTeamGoals( int index ) = 0;

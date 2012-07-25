@@ -83,14 +83,10 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Editabl
 
 	m_pExtraInfoPanel = new Panel(m_pMainPanel);
 
-	m_pPlayerStats = new CStatsMenu(m_pExtraInfoPanel, "");
-	m_pPlayerStats->SetVisible(false);
-
-	m_pSettingsPanel = new CSettingsMenu(m_pExtraInfoPanel, "");
-	m_pSettingsPanel->SetVisible(false);
-
-	m_pFormation = new CFormationMenu(m_pExtraInfoPanel, "");
-	m_pFormation->AddActionSignalTarget(this);
+	m_pTabPanels[TAB_STATS] = new CStatsMenu(m_pExtraInfoPanel, "");
+	m_pTabPanels[TAB_SETTINGS] = new CSettingsMenu(m_pExtraInfoPanel, "");
+	m_pTabPanels[TAB_FORMATION] = new CFormationMenu(m_pExtraInfoPanel, "");
+	ShowTabPanel(TAB_FORMATION);
 
 	for (int i = 0; i < 2; i++)
 	{
@@ -103,6 +99,7 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Editabl
 		m_pPlayerList[i]->EnableMouseEnterSelection(true);
 
 		m_pSideSeparators[i] = new Panel(m_pMainPanel);
+		m_pSideSeparators[i]->SetVisible(false);
 
 		m_pTeamCrests[i] = new ImagePanel(this, "");
 	}
@@ -202,7 +199,9 @@ void CClientScoreBoardDialog::Reset()
 		m_pPlayerList[i]->RemoveAllSections();
 	}
 
-	m_pPlayerStats->Reset();
+	dynamic_cast<CStatsMenu *>(m_pTabPanels[TAB_STATS])->Reset();
+	dynamic_cast<CSettingsMenu *>(m_pTabPanels[TAB_SETTINGS])->Reset();
+	dynamic_cast<CFormationMenu *>(m_pTabPanels[TAB_FORMATION])->Reset();
 
 	m_iSectionId = 0;
 	m_fNextUpdateTime = 0;
@@ -232,6 +231,8 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 	m_pMainPanel->SetPaintBackgroundType(2);
 	m_pMainPanel->SetBgColor(Color(0, 0, 0, 240));
 	m_pMainPanel->SetBounds(GetWide() / 2 - PANEL_WIDTH / 2, PANEL_TOPMARGIN, PANEL_WIDTH, PANEL_HEIGHT);
+	m_pMainPanel->SetPaintBorderEnabled(true);
+	m_pMainPanel->SetBorder(m_pScheme->GetBorder("BrightBorder"));
 
 	if ( m_pImageList )
 		delete m_pImageList;
@@ -244,11 +245,14 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 	m_pExtraInfoPanel->SetBounds(EXTRAINFO_MARGIN, m_pMainPanel->GetTall() - EXTRAINFO_HEIGHT - EXTRAINFO_MARGIN, m_pMainPanel->GetWide() - 2 * EXTRAINFO_MARGIN, EXTRAINFO_HEIGHT);
 	//m_pExtraInfoPanel->SetBgColor(Color(0, 0, 0, 200));
 
-	m_pPlayerStats->SetBounds(0, 0, m_pPlayerStats->GetParent()->GetWide(), m_pPlayerStats->GetParent()->GetTall());
-	m_pPlayerStats->PerformLayout();
+	m_pTabPanels[TAB_STATS]->SetBounds(0, 0, m_pTabPanels[TAB_STATS]->GetParent()->GetWide(), m_pTabPanels[TAB_STATS]->GetParent()->GetTall());
+	m_pTabPanels[TAB_STATS]->PerformLayout();
 
-	m_pFormation->SetBounds(0, 0, m_pExtraInfoPanel->GetWide(), m_pExtraInfoPanel->GetTall());
-	m_pFormation->PerformLayout();
+	m_pTabPanels[TAB_FORMATION]->SetBounds(0, 0, m_pExtraInfoPanel->GetWide(), m_pExtraInfoPanel->GetTall());
+	m_pTabPanels[TAB_FORMATION]->PerformLayout();
+
+	m_pTabPanels[TAB_SETTINGS]->SetBounds(0, 0, m_pExtraInfoPanel->GetWide(), m_pExtraInfoPanel->GetTall());
+	m_pTabPanels[TAB_SETTINGS]->PerformLayout();
 
 	m_pSpectatorContainer->SetBounds(0, m_pMainPanel->GetTall() - EXTRAINFO_HEIGHT - SPECLIST_HEIGHT - SPECLIST_MARGIN, m_pMainPanel->GetWide(), SPECLIST_HEIGHT);
 	m_pSpectatorContainer->SetBgColor(Color(0, 0, 0, 150));
@@ -278,8 +282,6 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 	m_pSettingsButton->SetFont(m_pScheme->GetFont("IOSTeamMenuNormal"));
 	m_pSettingsButton->SetContentAlignment(Label::a_center);
 
-	m_pSettingsPanel->SetBounds(0, 0, m_pSettingsPanel->GetParent()->GetWide(), m_pSettingsPanel->GetParent()->GetTall());
-
 	for (int i = 0; i < 2; i++)
 	{
 		//m_pTeamCrests[i]->SetBounds(GetWide() / 2 - TEAMCREST_SIZE / 2 + (i == 0 ? -1 : 1) * TEAMCREST_HOFFSET, TEAMCREST_VOFFSET, TEAMCREST_SIZE, TEAMCREST_SIZE);
@@ -304,6 +306,8 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 			m_pPlayerList[i]->SetVisible( true );
 		}
 	}
+
+	Reset();
 }
 
 //-----------------------------------------------------------------------------
@@ -328,7 +332,7 @@ void CClientScoreBoardDialog::ShowPanel(bool bShow)
 
 	if ( bShow )
 	{
-		Reset();
+		//Reset();
 		Update();
 		SetVisible( true );
 		MoveToFront();
@@ -392,10 +396,15 @@ void CClientScoreBoardDialog::Update( void )
 
 	for (int i = 0; i < 2; i++)
 	{
-		m_pTeamCrests[i]->SetVisible(gr->HasTeamCrest(i + TEAM_A));
+		m_pTeamCrests[i]->SetVisible(gr->HasTeamCrest(TEAM_A + i));
+		m_pPlayerList[i]->SetFgColor(GetGlobalTeam(TEAM_A + i)->Get_HudKitColor());
+		m_pPlayerList[i]->SetSectionFgColor(0, GetGlobalTeam(TEAM_A + i)->Get_HudKitColor());
+		m_pPlayerList[i]->Repaint();
 	}
 
-	if (!m_pSettingsPanel->IsVisible())
+	if (m_pTabPanels[TAB_SETTINGS]->IsVisible())
+		;//dynamic_cast<CSettingsMenu *>(m_pTabPanels[TAB_SETTINGS])->Update();
+	else
 	{
 		bool showPlayerStats = false;
 		int playerIndices[2] = { 0, 0 };
@@ -411,13 +420,16 @@ void CClientScoreBoardDialog::Update( void )
 		}
 
 		if (showPlayerStats)
-			m_pPlayerStats->Update(playerIndices);
-
-		m_pPlayerStats->SetVisible(showPlayerStats);
-		m_pFormation->SetVisible(!showPlayerStats);
+		{
+			dynamic_cast<CStatsMenu *>(m_pTabPanels[TAB_STATS])->Update(playerIndices);
+			ShowTabPanel(TAB_STATS);
+		}
+		else
+		{
+			dynamic_cast<CFormationMenu *>(m_pTabPanels[TAB_FORMATION])->Update();
+			ShowTabPanel(TAB_FORMATION);
+		}
 	}
-
-	m_pFormation->Update();
 
 	m_fNextUpdateTime = gpGlobals->curtime + 0.25f; 
 }
@@ -827,11 +839,17 @@ void CClientScoreBoardDialog::OnCommand( char const *cmd )
 	}
 	else if (!stricmp(cmd, "settings"))
 	{
-		bool isVisible = m_pSettingsPanel->IsVisible();
-		m_pSettingsPanel->SetVisible(!isVisible);
-		m_pSideSeparators[1]->SetVisible(isVisible);
-		m_pPlayerStats->SetVisible(!isVisible);
-		m_pFormation->SetVisible(isVisible);
+		if (m_pTabPanels[TAB_SETTINGS]->IsVisible())
+		{
+			ShowTabPanel(TAB_FORMATION);
+			SetKeyBoardInputEnabled(false);
+		}
+		else
+		{
+			ShowTabPanel(TAB_SETTINGS);
+			dynamic_cast<CSettingsMenu *>(m_pTabPanels[TAB_SETTINGS])->Update();
+			SetKeyBoardInputEnabled(true);
+		}
 	}
 	else
 		BaseClass::OnCommand(cmd);
@@ -839,7 +857,7 @@ void CClientScoreBoardDialog::OnCommand( char const *cmd )
 
 void CClientScoreBoardDialog::OnItemSelected(KeyValues *data)
 {
-	//if (m_pSettingsPanel->IsVisible())
+	//if (m_pTabPanels[TAB_SETTINGS]->IsVisible())
 	//	return;
 
 	SectionedListPanel *pCurPanel = (SectionedListPanel *)data->GetPtr("panel");
@@ -876,4 +894,12 @@ void CClientScoreBoardDialog::OnItemSelected(KeyValues *data)
 	}
 
 	Update();
+}
+
+void CClientScoreBoardDialog::ShowTabPanel(tab_t tabName)
+{
+	for (int i = 0; i < TAB_COUNT; i++)
+	{
+		m_pTabPanels[i]->SetVisible(i == tabName);
+	}
 }

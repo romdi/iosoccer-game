@@ -169,6 +169,11 @@ char *C_Team::Get_KitName( void )
 	return m_szKitName;
 }
 
+Color &C_Team::Get_HudKitColor()
+{
+	return m_pTeamKitInfo->m_HudKitColor;
+}
+
 Color &C_Team::Get_PrimaryKitColor()
 {
 	return m_pTeamKitInfo->m_PrimaryKitColor;

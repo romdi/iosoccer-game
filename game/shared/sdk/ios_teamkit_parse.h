@@ -48,6 +48,7 @@ public:
 	char		m_szKitName[MAX_KITNAME_LENGTH];
 	char		m_szShortTeamName[MAX_SHORTTEAMNAME_LENGTH];
 	char		m_szFullTeamName[MAX_FULLTEAMNAME_LENGTH];
+	Color		m_HudKitColor;
 	Color		m_PrimaryKitColor;
 	Color		m_SecondaryKitColor;
 };

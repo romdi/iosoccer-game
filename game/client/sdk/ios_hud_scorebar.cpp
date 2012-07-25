@@ -238,8 +238,8 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 
 	for (int i = 0; i < 2; i++)
 	{		
-		m_pTeamColors[i][0]->SetBounds(TEAMCOLOR_HMARGIN + i * (MAINBAR_WIDTH - 2 * TEAMCOLOR_WIDTH - 2 * TEAMCOLOR_HMARGIN), TEAMCOLOR_VMARGIN, TEAMCOLOR_WIDTH, MAINBAR_HEIGHT - 2 * TEAMCOLOR_VMARGIN);
-		m_pTeamColors[i][1]->SetBounds(TEAMCOLOR_HMARGIN + TEAMCOLOR_WIDTH + i * (MAINBAR_WIDTH - 2 * TEAMCOLOR_WIDTH - 2 * TEAMCOLOR_HMARGIN), TEAMCOLOR_VMARGIN, TEAMCOLOR_WIDTH, MAINBAR_HEIGHT - 2 * TEAMCOLOR_VMARGIN);
+		m_pTeamColors[i][0]->SetBounds(TEAMCOLOR_HMARGIN + i * (MAINBAR_WIDTH - TEAMCOLOR_WIDTH - 2 * TEAMCOLOR_HMARGIN), TEAMCOLOR_VMARGIN, TEAMCOLOR_WIDTH, MAINBAR_HEIGHT - 2 * TEAMCOLOR_VMARGIN);
+		m_pTeamColors[i][1]->SetBounds(TEAMCOLOR_HMARGIN + TEAMCOLOR_WIDTH + i * (MAINBAR_WIDTH - 3 * TEAMCOLOR_WIDTH - 2 * TEAMCOLOR_HMARGIN), TEAMCOLOR_VMARGIN, TEAMCOLOR_WIDTH, MAINBAR_HEIGHT - 2 * TEAMCOLOR_VMARGIN);
 
 		m_pEventBars[i]->SetBounds(WIDTH_TEAMBAR - WIDTH_OVERLAP, i * (HEIGHT_TEAMBAR + HEIGHT_MARGIN), 0, HEIGHT_TEAMBAR);
 		m_pEventBars[i]->SetPaintBackgroundType(2);
@@ -314,11 +314,16 @@ void CHudScorebar::Paint( void )
 {
 	if (gViewPortInterface->FindPanelByName(PANEL_SCOREBOARD)->IsVisible())
 	{
+		//wchar_t text[64];
+		//_snwprintf(text, ARRAYSIZE(text), L"%d pl.  •   %d%% poss.", GetGlobalTeam(TEAM_A)->GetNumPlayers(), GetGlobalTeam(TEAM_A)->Get_Possession());
+		//m_pExtensionText[0]->SetText(text);
+		m_pExtensionText[0]->SetText(VarArgs("%d pl.     %d%% poss.", GetGlobalTeam(TEAM_A)->GetNumPlayers(), GetGlobalTeam(TEAM_A)->Get_Possession()));
+		m_pExtensionText[1]->SetText(VarArgs("%d%% poss.     %d pl.", GetGlobalTeam(TEAM_B)->Get_Possession(), GetGlobalTeam(TEAM_B)->GetNumPlayers()));
+
 		for (int i = 0; i < 2; i++)
 		{
-			C_Team *pTeam = GetGlobalTeam(TEAM_A + i);
+			m_pExtensionText[i]->SetFgColor(GetGlobalTeam(TEAM_A + i)->Get_HudKitColor());
 			m_pExtensionBar[i]->SetVisible(true);
-			m_pExtensionText[i]->SetText(VarArgs("%d pl.   %d%% poss.", pTeam->GetNumPlayers(), pTeam->Get_Possession()));
 			m_pTeamCrestPanels[i]->SetVisible(GameResources()->HasTeamCrest(i + TEAM_A));
 		}
 	}
@@ -342,6 +347,7 @@ void CHudScorebar::Paint( void )
 	for (int team = TEAM_A; team <= TEAM_B; team++)
 	{
 		m_pNewTeamNames[team - TEAM_A]->SetText(GetGlobalTeam(team)->Get_ShortTeamName());
+		m_pNewTeamNames[team - TEAM_A]->SetFgColor(GetGlobalTeam(team)->Get_HudKitColor());
 		m_pTeamColors[team - TEAM_A][0]->SetBgColor(GetGlobalTeam(team)->Get_PrimaryKitColor());
 		m_pTeamColors[team - TEAM_A][1]->SetBgColor(GetGlobalTeam(team)->Get_SecondaryKitColor());
 		m_pNewTeamGoals[team - TEAM_A]->SetText(VarArgs("%d", GetGlobalTeam(team)->Get_Goals()));
@@ -367,6 +373,7 @@ void CHudScorebar::Paint( void )
 			if (gpGlobals->curtime >= m_flNextPlayerUpdate)
 			{
 				m_pPlayers[m_nCurrentPlayerIndex]->SetText(m_szCurrentPlayer);
+				m_pPlayers[m_nCurrentPlayerIndex]->SetFgColor(GetGlobalTeam(TEAM_A + m_nCurrentPlayerIndex)->Get_HudKitColor());
 				m_pPlayers[1 - m_nCurrentPlayerIndex]->SetText("");
 				m_flNextPlayerUpdate = gpGlobals->curtime + 1.0f;
 			}

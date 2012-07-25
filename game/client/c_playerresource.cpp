@@ -9,6 +9,7 @@
 #include "c_team.h"
 #include "gamestringpool.h"
 #include "sdk_gamerules.h"
+#include "hud_basechat.h"
 
 #ifdef HL2MP
 #include "hl2mp_gamerules.h"
@@ -307,6 +308,20 @@ const char * C_PlayerResource::GetTeamKitName(int index)
 	return team->Get_KitName();
 }
 
+Color &C_PlayerResource::GetHudTeamKitColor(int index)
+{
+	C_Team *team = GetGlobalTeam( index );
+
+	if ( !team )
+	{
+		Assert( false );
+		static Color color;
+		return color;
+	}
+
+	return team->Get_HudKitColor();
+}
+
 Color &C_PlayerResource::GetPrimaryTeamKitColor(int index)
 {
 	C_Team *team = GetGlobalTeam( index );
@@ -455,9 +470,9 @@ const Color &C_PlayerResource::GetTeamColor(int index )
 	else
 	{
 		if (index == TEAM_A || index == TEAM_B)
-			return GetPrimaryTeamKitColor(index);
+			return GetHudTeamKitColor(index);
 		else
-			return m_Colors[index];
+			return g_ColorGray;
 	}
 }
 
