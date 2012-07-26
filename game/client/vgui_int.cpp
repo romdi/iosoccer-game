@@ -23,6 +23,9 @@
 #include <KeyValues.h>
 #include "FileSystem.h"
 #include "matsys_controls/matsyscontrols.h"
+
+//#include "game_controls/ircclient.h"
+
 //Tony; so we can load localization at initialize
 #include <vgui/ILocalize.h>
 #include <tier3/tier3.h>
@@ -187,6 +190,9 @@ void VGui_CreateGlobalPanels( void )
 	// Create mp3 player off of tool parent panel
 	MP3Player_Create( toolParent );
 #endif
+
+	//CTestPanel *testPanel = new CTestPanel(enginevgui->GetPanel(PANEL_GAMEUIDLL));
+	//g_pTestPanel = testPanel;
 }
 
 void VGui_Shutdown()
@@ -207,6 +213,9 @@ void VGui_Shutdown()
 	messagechars->Destroy();
 	loadingdisc->Destroy();
 	internalCenterPrint->Destroy();
+
+	//g_pTestPanel->SetParent((vgui::Panel *)NULL);
+	//delete g_pTestPanel;
 
 	if ( g_pClientMode )
 	{
