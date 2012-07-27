@@ -71,10 +71,12 @@ private:
 	Label *m_pEvent;
 	char  m_szCurrentPlayer[MAX_PLAYER_NAME_LENGTH];
 	int	  m_nCurrentPlayerIndex;
-	Panel *m_pNewMainBar;
-	Panel *m_pNewCenterBar;
-	Label *m_pNewTeamNames[2];
-	Label *m_pNewTeamGoals[2];
+	Panel *m_pMainBar;
+	Panel *m_pMainBarBG;
+	Panel *m_pCenterBar;
+	Panel *m_pCenterBarBG;
+	Label *m_pTeamNames[2];
+	Label *m_pTeamGoals[2];
 	Label *m_pNewState;
 	Label *m_pNewTime;
 
@@ -126,6 +128,7 @@ enum { TOPEXTENSION_WIDTH = 278, TOPEXTENSION_HEIGHT = MAINBAR_HEIGHT, TOPEXTENS
 enum { TEAMCREST_SIZE = 70, TEAMCREST_HOFFSET = 482/*265*/, TEAMCREST_VOFFSET = 0, TEAMCREST_PADDING = 5 };
 enum { TEAMCOLOR_WIDTH = 5, TEAMCOLOR_HEIGHT = MAINBAR_HEIGHT - 10, TEAMCOLOR_HMARGIN = 5, TEAMCOLOR_VMARGIN = (MAINBAR_HEIGHT - TEAMCOLOR_HEIGHT) / 2 };
 enum { CENTERBAR_OFFSET = 5 };
+enum { BAR_BORDER = 2 };
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -137,19 +140,23 @@ CHudScorebar::CHudScorebar( const char *pElementName ) : BaseClass(NULL, "HudSco
 	vgui::Panel *pParent = g_pClientMode->GetViewport();
 	SetParent( pParent );
 
-	m_pNewMainBar = new Panel(this, "");
-	m_pNewCenterBar = new Panel(this, "");
+	m_pMainBarBG = new Panel(this, "");
+	m_pMainBarBG->SetVisible(false);
+	m_pCenterBarBG = new Panel(this, "");
+	m_pCenterBarBG->SetVisible(false);
+	m_pMainBar = new Panel(this, "");
+	m_pCenterBar = new Panel(this, "");
 
 	for (int i = 0; i < 2; i++)
 	{
-		m_pTeamColors[i][0] = new Panel(m_pNewMainBar, VarArgs("TeamColor%d", i));
-		m_pTeamColors[i][1] = new Panel(m_pNewMainBar, VarArgs("TeamColor%d", i));
+		m_pTeamColors[i][0] = new Panel(m_pMainBar, VarArgs("TeamColor%d", i));
+		m_pTeamColors[i][1] = new Panel(m_pMainBar, VarArgs("TeamColor%d", i));
 		m_pEventBars[i] = new Label(this, VarArgs("ScoreLabel%d", i), "");
 
 		m_pPlayers[i] = new Label(this, "", "");
 
-		m_pNewTeamNames[i] = new Label(m_pNewMainBar, "", "");
-		m_pNewTeamGoals[i] = new Label(m_pNewMainBar, "", "");
+		m_pTeamNames[i] = new Label(m_pMainBar, "", "");
+		m_pTeamGoals[i] = new Label(m_pMainBar, "", "");
 
 		m_pExtensionBar[i] = new Panel(this, "");
 		m_pExtensionText[i] = new Label(m_pExtensionBar[i], "", "");
@@ -159,8 +166,8 @@ CHudScorebar::CHudScorebar( const char *pElementName ) : BaseClass(NULL, "HudSco
 
 	m_pEvent = new Label(this, "", "");
 
-	m_pNewState = new Label(m_pNewCenterBar, "", "");
-	m_pNewTime = new Label(m_pNewCenterBar, "", "");
+	m_pNewState = new Label(m_pCenterBar, "", "");
+	m_pNewTime = new Label(m_pCenterBar, "", "");
 
 	m_szCurrentPlayer[0] = 0;
 	m_flNextPlayerUpdate = gpGlobals->curtime;
@@ -178,22 +185,30 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 	Color white(255, 255, 255, 255);
 	Color black(0, 0, 0, 255);
 
-	m_pNewMainBar->SetBounds(GetWide() / 2 - MAINBAR_WIDTH / 2, MAINBAR_MARGIN, MAINBAR_WIDTH, MAINBAR_HEIGHT);
-	m_pNewMainBar->SetBgColor(black);
-	m_pNewMainBar->SetPaintBackgroundType(2);
-	m_pNewMainBar->SetZPos(2);
+	m_pMainBarBG->SetBounds(GetWide() / 2 - MAINBAR_WIDTH / 2 - BAR_BORDER, MAINBAR_MARGIN - BAR_BORDER, MAINBAR_WIDTH + 2 * BAR_BORDER, MAINBAR_HEIGHT + 2 * BAR_BORDER);
+	m_pMainBarBG->SetBgColor(white);
+	m_pMainBarBG->SetPaintBackgroundType(2);
 
-	m_pNewCenterBar->SetBounds(GetWide() / 2 - STATE_WIDTH / 2, MAINBAR_MARGIN - CENTERBAR_OFFSET, STATE_WIDTH, MAINBAR_HEIGHT + 2 *CENTERBAR_OFFSET);
-	m_pNewCenterBar->SetBgColor(black);
-	m_pNewCenterBar->SetPaintBackgroundType(2);
-	m_pNewCenterBar->SetZPos(3);
+	m_pCenterBarBG->SetBounds(GetWide() / 2 - STATE_WIDTH / 2 - BAR_BORDER, MAINBAR_MARGIN - CENTERBAR_OFFSET - BAR_BORDER, STATE_WIDTH + 2 * BAR_BORDER, MAINBAR_HEIGHT + 2 * CENTERBAR_OFFSET + 2 * BAR_BORDER);
+	m_pCenterBarBG->SetBgColor(white);
+	m_pCenterBarBG->SetPaintBackgroundType(2);
 
-	m_pNewState->SetBounds(m_pNewCenterBar->GetWide() / 2 - STATE_WIDTH / 2, 0, STATE_WIDTH, (MAINBAR_HEIGHT + 2 * CENTERBAR_OFFSET) / 2);
+	m_pMainBar->SetBounds(GetWide() / 2 - MAINBAR_WIDTH / 2, MAINBAR_MARGIN, MAINBAR_WIDTH, MAINBAR_HEIGHT);
+	m_pMainBar->SetBgColor(black);
+	m_pMainBar->SetPaintBackgroundType(2);
+	m_pMainBar->SetZPos(2);
+
+	m_pCenterBar->SetBounds(GetWide() / 2 - STATE_WIDTH / 2, MAINBAR_MARGIN - CENTERBAR_OFFSET, STATE_WIDTH, MAINBAR_HEIGHT + 2 * CENTERBAR_OFFSET);
+	m_pCenterBar->SetBgColor(black);
+	m_pCenterBar->SetPaintBackgroundType(2);
+	m_pCenterBar->SetZPos(3);
+
+	m_pNewState->SetBounds(m_pCenterBar->GetWide() / 2 - STATE_WIDTH / 2, 0, STATE_WIDTH, (MAINBAR_HEIGHT + 2 * CENTERBAR_OFFSET) / 2);
 	m_pNewState->SetFgColor(white);
 	m_pNewState->SetContentAlignment(Label::a_center);
 	m_pNewState->SetFont(pScheme->GetFont("IOSScorebarSmall"));
 
-	m_pNewTime->SetBounds(m_pNewCenterBar->GetWide() / 2 - TIME_WIDTH / 2, (MAINBAR_HEIGHT + 10) / 2, TIME_WIDTH, (MAINBAR_HEIGHT + 10) / 2);
+	m_pNewTime->SetBounds(m_pCenterBar->GetWide() / 2 - TIME_WIDTH / 2, (MAINBAR_HEIGHT + 10) / 2, TIME_WIDTH, (MAINBAR_HEIGHT + 10) / 2);
 	m_pNewTime->SetFgColor(white);
 	m_pNewTime->SetContentAlignment(Label::a_center);
 	m_pNewTime->SetFont(pScheme->GetFont("IOSScorebarMedium"));
@@ -202,15 +217,15 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 
 	for (int i = 0; i < 2; i++)
 	{
-		m_pNewTeamNames[i]->SetBounds(i * (MAINBAR_WIDTH - TEAMNAME_WIDTH), 0, TEAMNAME_WIDTH, MAINBAR_HEIGHT);
-		m_pNewTeamNames[i]->SetFgColor(white);
-		m_pNewTeamNames[i]->SetContentAlignment(Label::a_center);
-		m_pNewTeamNames[i]->SetFont(pScheme->GetFont("IOSScorebar"));
+		m_pTeamNames[i]->SetBounds(i * (MAINBAR_WIDTH - TEAMNAME_WIDTH), 0, TEAMNAME_WIDTH, MAINBAR_HEIGHT);
+		m_pTeamNames[i]->SetFgColor(white);
+		m_pTeamNames[i]->SetContentAlignment(Label::a_center);
+		m_pTeamNames[i]->SetFont(pScheme->GetFont("IOSScorebar"));
 
-		m_pNewTeamGoals[i]->SetBounds(TEAMNAME_WIDTH + i * (MAINBAR_WIDTH - TEAMGOAL_WIDTH - 2 * TEAMNAME_WIDTH), 0, TEAMGOAL_WIDTH, MAINBAR_HEIGHT);
-		m_pNewTeamGoals[i]->SetFgColor(white);
-		m_pNewTeamGoals[i]->SetContentAlignment(Label::a_center);
-		m_pNewTeamGoals[i]->SetFont(pScheme->GetFont("IOSScorebar"));
+		m_pTeamGoals[i]->SetBounds(TEAMNAME_WIDTH + i * (MAINBAR_WIDTH - TEAMGOAL_WIDTH - 2 * TEAMNAME_WIDTH), 0, TEAMGOAL_WIDTH, MAINBAR_HEIGHT);
+		m_pTeamGoals[i]->SetFgColor(white);
+		m_pTeamGoals[i]->SetContentAlignment(Label::a_center);
+		m_pTeamGoals[i]->SetFont(pScheme->GetFont("IOSScorebar"));
 
 		m_pExtensionBar[i]->SetBounds(GetWide() / 2 - TOPEXTENSION_WIDTH / 2 + (i == 0 ? -1 : 1) * (MAINBAR_WIDTH / 2 + TOPEXTENSION_WIDTH / 2 - TOPEXTENSION_MARGIN), MAINBAR_MARGIN, TOPEXTENSION_WIDTH, TOPEXTENSION_HEIGHT);
 		m_pExtensionBar[i]->SetBgColor(black);
@@ -346,11 +361,11 @@ void CHudScorebar::Paint( void )
 
 	for (int team = TEAM_A; team <= TEAM_B; team++)
 	{
-		m_pNewTeamNames[team - TEAM_A]->SetText(GetGlobalTeam(team)->Get_ShortTeamName());
-		m_pNewTeamNames[team - TEAM_A]->SetFgColor(GetGlobalTeam(team)->Get_HudKitColor());
+		m_pTeamNames[team - TEAM_A]->SetText(GetGlobalTeam(team)->Get_ShortTeamName());
+		m_pTeamNames[team - TEAM_A]->SetFgColor(GetGlobalTeam(team)->Get_HudKitColor());
 		m_pTeamColors[team - TEAM_A][0]->SetBgColor(GetGlobalTeam(team)->Get_PrimaryKitColor());
 		m_pTeamColors[team - TEAM_A][1]->SetBgColor(GetGlobalTeam(team)->Get_SecondaryKitColor());
-		m_pNewTeamGoals[team - TEAM_A]->SetText(VarArgs("%d", GetGlobalTeam(team)->Get_Goals()));
+		m_pTeamGoals[team - TEAM_A]->SetText(VarArgs("%d", GetGlobalTeam(team)->Get_Goals()));
 	}
 
 	C_Ball *pBall = GetBall();

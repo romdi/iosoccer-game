@@ -74,14 +74,9 @@ ConVar r_snow_alpha( "r_snow_alpha", "1", FCVAR_REPLICATED );
 ConVar r_snow_alphapow( "r_snow_alphapow", "0.8", FCVAR_REPLICATED );
 ConVar r_snow_initialramp( "r_snow_initialramp", "1.0", FCVAR_REPLICATED );
 
-const char g_szPosNames[21][5] =
+const char g_szPosNames[POS_NAME_COUNT][5] =
 {
-	"GK", "SWP", "LB", "RB", "CB", "LCB", "RCB", "LWB", "RWB", "LM", "RM", "DM", "CM", "AM", "LF", "RF", "CF", "ST", "SS", "LW", "RW"
-};
-
-enum g_PosNames_t
-{
-	GK = 0, SWP, LB, RB, CB, LCB, RCB, LWB, RWB, LM, RM, DM, CM, AM, LF, RF, CF, ST, SS, LW, RW
+	"GK", "SWP", "LB", "RB", "CB", "LCB", "RCB", "LWB", "RWB", "LM", "RM", "DM", "CM", "AM", "LF", "RF", "CF", "ST", "SS", "LW", "RW", "LCM", "RCM"
 };
 
 #define HIDDEN { -1, -1, -1, -1 }
@@ -145,7 +140,7 @@ const float g_Positions[11][11][4] =
 	},
 	{//9
 					{ 0.5f, 0, LW, 11 }, { 2.5f, 0, RW, 9 },
-			{ 0.5f, 1, LM, 11 }, { 1.5f, 0.5f, CM, 10 }, { 2.5f, 1, RM, 7 },
+			{ 0.5f, 1, LCM, 11 }, { 1.5f, 0.5f, CM, 10 }, { 2.5f, 1, RCM, 7 },
 			{ 0.5f, 2, LB, 2 }, { 1.5f, 2, CB, 3 }, { 2.5f, 2, RB, 4 },
 								{ 1.5f, 3, GK, 1 },
 
@@ -153,7 +148,7 @@ const float g_Positions[11][11][4] =
 	},
 	{//10
 			{ 0.5f, 0, LW, 11 }, { 1.5f, 0, CF, 10 }, { 2.5f, 0, RW, 9 },
-			{ 0.5f, 1, LM, 8 }, { 1.5f, 1, CM, 6 }, { 2.5f, 1, RM, 7 },
+			{ 0.5f, 1, LCM, 8 }, { 1.5f, 1, CM, 6 }, { 2.5f, 1, RCM, 7 },
 			{ 0.5f, 2, LB, 2 }, { 1.5f, 2, CB, 3 }, { 2.5f, 2, RB, 4 },
 								{ 1.5f, 3, GK, 1 },
 
@@ -161,7 +156,7 @@ const float g_Positions[11][11][4] =
 	},
 	{//11
 			{ 0.5f, 0, LW, 11 }, { 1.5f, 0, CF, 10 }, { 2.5f, 0, RW, 9 },
-			{ 0.5f, 1, LM, 8 }, { 1.5f, 1, CM, 6 }, { 2.5f, 1, RM, 7 },
+			{ 0.5f, 1, LCM, 8 }, { 1.5f, 1, CM, 6 }, { 2.5f, 1, RCM, 7 },
 		{ 0, 2, LB, 2 }, { 1, 2, LCB, 3 }, { 2, 2, RCB, 4 }, { 3, 2, RB, 5 },
 								{ 1.5f, 3, GK, 1 }
 	}

@@ -231,7 +231,7 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 	m_pMainPanel->SetPaintBackgroundType(2);
 	m_pMainPanel->SetBgColor(Color(0, 0, 0, 240));
 	m_pMainPanel->SetBounds(GetWide() / 2 - PANEL_WIDTH / 2, PANEL_TOPMARGIN, PANEL_WIDTH, PANEL_HEIGHT);
-	m_pMainPanel->SetPaintBorderEnabled(true);
+	m_pMainPanel->SetPaintBorderEnabled(false);
 	m_pMainPanel->SetBorder(m_pScheme->GetBorder("BrightBorder"));
 
 	if ( m_pImageList )
@@ -543,15 +543,20 @@ void CClientScoreBoardDialog::UpdatePlayerInfo()
 				int teamIndex = team - TEAM_A;
 				int sectionID = 0;//iTeamSections[playerTeam]; //omega; make sure it goes into the proper section
 
+				if (itemID != -1)
+				{
+					if (side == teamIndex)
+						m_pPlayerList[side]->ModifyItem( itemID, sectionID, playerData );
+					else
+					{
+						m_pPlayerList[side]->RemoveItem(itemID);
+						itemID = -1;
+					}
+				}
+
 				if (itemID == -1)
 				{
-					// add a new row
 					itemID = m_pPlayerList[teamIndex]->AddItem( sectionID, playerData );
-				}
-				else
-				{
-					// modify the current row
-					m_pPlayerList[side]->ModifyItem( itemID, sectionID, playerData );
 				}
 
 				// set the row color based on the players team

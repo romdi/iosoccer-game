@@ -1424,56 +1424,63 @@ void CGameMovement::FullWalkMove( )
 	Vector oldVel = mv->m_vecVelocity;
 	QAngle oldAng = mv->m_vecAbsViewAngles;
 
-	StartGravity();
+	bool hasPlayerAnimEvent = CheckPlayerAnimEvent();
 
-	if (!CheckPlayerAnimEvent())
+	if (hasPlayerAnimEvent)
 	{
+		TryPlayerMove();
+	}
+	else
+	{
+		StartGravity();
+
 		if (mv->m_nButtons & IN_JUMP)
+		{
 			CheckJumpButton();
+		}
 		else
 			mv->m_nOldButtons &= ~IN_JUMP;
 
 		if (mv->m_nButtons & IN_DUCK)
 		{
-			if (CheckSlideButton())
-				CheckPlayerAnimEvent();
+			CheckSlideButton();
 		}
 		else
 			mv->m_nOldButtons &= ~IN_DUCK;
-	}
 
-	// Fricion is handled before we add in any base velocity. That way, if we are on a conveyor, 
-	//  we don't slow when standing still, relative to the conveyor.
-	if (player->GetGroundEntity() != NULL)
-	{
-		mv->m_vecVelocity[2] = 0.0;
-		Friction();
-	}
+		// Fricion is handled before we add in any base velocity. That way, if we are on a conveyor, 
+		//  we don't slow when standing still, relative to the conveyor.
+		if (player->GetGroundEntity() != NULL)
+		{
+			mv->m_vecVelocity[2] = 0.0;
+			Friction();
+		}
 
-	// Make sure velocity is valid.
-	CheckVelocity();
+		// Make sure velocity is valid.
+		CheckVelocity();
 
-	if (player->GetGroundEntity() != NULL)
-	{
-		WalkMove();
-	}
-	else
-	{
-		AirMove();  // Take into account movement when in air.
-	}
+		if (player->GetGroundEntity() != NULL)
+		{
+			WalkMove();
+		}
+		else
+		{
+			AirMove();  // Take into account movement when in air.
+		}
 
-	// Set final flags.
-	CategorizePosition();
+		// Set final flags.
+		CategorizePosition();
 
-	// Make sure velocity is valid.
-	CheckVelocity();
+		// Make sure velocity is valid.
+		CheckVelocity();
 
-	FinishGravity();
+		FinishGravity();
 
-	// If we are on ground, no downward velocity.
-	if ( player->GetGroundEntity() != NULL )
-	{
-		mv->m_vecVelocity[2] = 0;
+		// If we are on ground, no downward velocity.
+		if ( player->GetGroundEntity() != NULL )
+		{
+			mv->m_vecVelocity[2] = 0;
+		}
 	}
 
 	Vector newPos = mv->GetAbsOrigin();
@@ -1528,35 +1535,31 @@ void CGameMovement::MoveToTargetPos()
 bool CGameMovement::CheckPlayerAnimEvent()
 {
 	float timePassed = gpGlobals->curtime - ToSDKPlayer(player)->m_flPlayerAnimEventStart;
+	Vector forward, right, up;
+	AngleVectors(mv->m_vecViewAngles, &forward, &right, &up);
+	Vector forward2D = forward;
+	forward2D.z = 0;
+	forward2D.NormalizeInPlace();
 
 	switch (ToSDKPlayer(player)->m_ePlayerAnimEvent)
 	{
 	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT:
-		{
-			mv->m_flForwardMove = 0;
-			mv->m_flSideMove = -mp_sprintspeed.GetInt() * max(0, (1 - timePassed / 1.0f));
-			mv->m_flUpMove = 0;
-			break;
-		}
 	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT:
 		{
-			mv->m_flForwardMove = 0;
-			mv->m_flSideMove = mp_sprintspeed.GetInt() * max(0, (1 - timePassed / 1.0f));
-			mv->m_flUpMove = 0;
+			mv->m_vecVelocity = right * mv->m_flSideMove;
+			mv->m_vecVelocity.z = abs(mv->m_flSideMove) * 0.75f;
 			break;
 		}
 	case PLAYERANIMEVENT_KEEPER_DIVE_FORWARD:
 		{
-			mv->m_flForwardMove = mp_sprintspeed.GetInt() * max(0, (1 - timePassed / 1.0f));
-			mv->m_flSideMove = 0;
-			mv->m_flUpMove = 0;
+			mv->m_vecVelocity = forward2D * mv->m_flForwardMove;
+			mv->m_vecVelocity.z = 0;
 			break;
 		}
 	case PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD:
 		{
-			mv->m_flForwardMove = -mp_sprintspeed.GetInt() * max(0, (1 - timePassed / 1.0f));
-			mv->m_flSideMove = 0;
-			mv->m_flUpMove = 0;
+			mv->m_vecVelocity = forward2D * mv->m_flForwardMove;
+			mv->m_vecVelocity.z = abs(mv->m_flForwardMove) * 0.75f;
 			break;
 		}
 	case PLAYERANIMEVENT_KEEPER_HANDS_THROW:
@@ -1566,32 +1569,24 @@ bool CGameMovement::CheckPlayerAnimEvent()
 		}
 	case PLAYERANIMEVENT_SLIDE:
 		{
-			mv->m_flForwardMove = mp_sprintspeed.GetInt() * max(0, (1 - timePassed / 1.0f));
-			mv->m_flSideMove = 0;
-			mv->m_flUpMove = 0;
+			mv->m_vecVelocity = forward2D * mp_sprintspeed.GetInt() * max(0, (1 - timePassed / 1.0f));
 			break;
 		}
 	case PLAYERANIMEVENT_TACKLED_FORWARD:
 	case PLAYERANIMEVENT_TACKLED_BACKWARD:
 		{
-			mv->m_flForwardMove = 0;
-			mv->m_flSideMove = 0;
-			mv->m_flUpMove = 0;
+			mv->m_vecVelocity = vec3_origin;
 			break;
 		}
 	case PLAYERANIMEVENT_THROWIN:
 	case PLAYERANIMEVENT_THROW:
 		{
-			mv->m_flForwardMove = 0;
-			mv->m_flSideMove = 0;
-			mv->m_flUpMove = 0;
+			mv->m_vecVelocity = vec3_origin;
 			break;
 		}
 	case PLAYERANIMEVENT_DIVINGHEADER:
 		{
-			mv->m_flForwardMove = mp_sprintspeed.GetInt() * max(0, (1 - timePassed / 1.0f));
-			mv->m_flSideMove = 0;
-			mv->m_flUpMove = 0;
+			mv->m_vecVelocity = forward2D * mp_sprintspeed.GetInt() * max(0, (1 - timePassed / 1.0f));
 			break;
 		}
 	default:
@@ -1599,6 +1594,8 @@ bool CGameMovement::CheckPlayerAnimEvent()
 			return false;
 		}
 	}
+
+	mv->m_vecVelocity.z -= sv_gravity.GetFloat() * timePassed;
 
 	return true;
 }
@@ -1858,23 +1855,23 @@ bool CGameMovement::CheckJumpButton( void )
 	{
 		MoveHelper()->StartSound( mv->GetAbsOrigin(), "Player.DiveKeeper" );
 
-		if ((mv->m_nButtons & IN_MOVELEFT) && (mv->m_nButtons & IN_SPEED))
+		if ((mv->m_nButtons & IN_MOVELEFT) && !(mv->m_nButtons & IN_WALK))
 		{
 			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_LEFT;
 			//mv->m_flSideMove = 2 * -mp_sprintspeed.GetInt();
 			pPl->AddFlag(FL_FREECAM);
 		}
-		else if ((mv->m_nButtons & IN_MOVERIGHT) && (mv->m_nButtons & IN_SPEED))
+		else if ((mv->m_nButtons & IN_MOVERIGHT) && !(mv->m_nButtons & IN_WALK))
 		{
 			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_RIGHT;
 			pPl->AddFlag(FL_FREECAM);
 		}
-		else if ((mv->m_nButtons & IN_FORWARD) && (mv->m_nButtons & IN_SPEED))
+		else if ((mv->m_nButtons & IN_FORWARD) && !(mv->m_nButtons & IN_WALK))
 		{
 			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_FORWARD;
 			pPl->AddFlag(FL_FREECAM);
 		}
-		else if ((mv->m_nButtons & IN_BACK) && (mv->m_nButtons & IN_SPEED))
+		else if ((mv->m_nButtons & IN_BACK) && !(mv->m_nButtons & IN_WALK))
 		{
 			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD;
 			pPl->AddFlag(FL_FREECAM);

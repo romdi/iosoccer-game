@@ -87,6 +87,7 @@ ConVar sv_ball_bodypos_hip_start("sv_ball_bodypos_hip_start", "15", FCVAR_NOTIFY
 ConVar sv_ball_bodypos_chest_start("sv_ball_bodypos_chest_start", "40", FCVAR_NOTIFY);
 ConVar sv_ball_bodypos_head_start("sv_ball_bodypos_head_start", "60", FCVAR_NOTIFY);
 ConVar sv_ball_bodypos_head_end("sv_ball_bodypos_head_end", "80", FCVAR_NOTIFY);
+ConVar sv_ball_foulprobability("sv_ball_foulprobability", "50", FCVAR_NOTIFY);
 ConVar sv_ball_yellowcardprobability_forward("sv_ball_yellowcardprobability_forward", "33", FCVAR_NOTIFY);
 ConVar sv_ball_yellowcardprobability_backward("sv_ball_yellowcardprobability_backward", "66", FCVAR_NOTIFY);
 
@@ -518,10 +519,17 @@ void CBall::SetPos(const Vector &pos)
 
 void CBall::SetVel(const Vector &vel)
 {
-	if (gpGlobals->curtime < m_flGlobalNextShot)
-		m_vVel += vel;
-	else
+	if (gpGlobals->curtime >= m_flGlobalNextShot)
+	{
 		m_vVel = vel;
+	}
+	else
+	{
+		Vector newVel = m_vVel + vel;
+		float newLength = newVel.Length();
+		newVel.NormalizeInPlace();
+		m_vVel = newVel * min(newLength, max(m_vVel.Length(), vel.Length()));
+	}
 
 	float length = m_vVel.Length();
 	m_vVel.NormalizeInPlace();
@@ -1057,7 +1065,7 @@ void CBall::State_FREEKICK_Think()
 {
 	if (!CSDKPlayer::IsOnField(m_pPl))
 	{
-		if (abs(m_vPos.y - GetGlobalTeam(m_nFoulingTeam)->GetOppTeam()->m_vPlayerSpawns[0].y) <= 1000)
+		if ((m_vPos - GetGlobalTeam(m_nFoulingTeam)->GetOppTeam()->m_vPlayerSpawns[0]).Length2D() <= 1000)
 			m_pPl = FindNearestPlayer(GetGlobalTeam(m_nFoulingTeam)->GetOppTeamNumber(), FL_POS_KEEPER);
 		else
 			m_pPl = m_pFouledPl;
@@ -1263,6 +1271,7 @@ void CBall::State_KEEPERHANDS_Think()
 	if (m_nInPenBoxOfTeam != m_pPl->GetTeamNumber())
 	{
 		RemoveAllTouches();
+		SetVel(Vector(0, m_pPl->GetTeam()->m_nForward, 0) * sv_ball_minshotstrength.GetInt());
 		Kicked(BODY_PART_HANDS, 0);
 		MarkOffsidePlayers();
 		return State_Transition(BALL_NORMAL);
@@ -1358,6 +1367,11 @@ bool CBall::CheckFoul(bool canShootBall)
 			continue;
 
 		if (/*canShootBall && */distToPl >= (m_vPos - m_vPlPos).Length2D())
+			continue;
+
+		// It's a foul
+
+		if (g_IOSRand.RandomInt(1, 100) > sv_ball_foulprobability.GetInt())
 			continue;
 
 		PlayerAnimEvent_t anim = RAD2DEG(acos(m_vPlForward2D.Dot(pPl->EyeDirection2D()))) <= 90 ? PLAYERANIMEVENT_TACKLED_BACKWARD : PLAYERANIMEVENT_TACKLED_FORWARD;
@@ -1561,7 +1575,7 @@ bool CBall::CheckKeeperCatch()
 			return false;
 	}
 
-	if (m_vVel.Length2D() > sv_ball_keepercatchspeed.GetInt())
+	if (gpGlobals->curtime < m_flGlobalNextShot/*m_vVel.Length2D() > sv_ball_keepercatchspeed.GetInt()*/)
 	{
 		if (m_pPl->m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD)
 		{

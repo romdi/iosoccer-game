@@ -387,7 +387,12 @@ enum
 	POS_NUMBER
 };
 
-extern const char g_szPosNames[21][5];
+enum g_PosNames_t
+{
+	GK = 0, SWP, LB, RB, CB, LCB, RCB, LWB, RWB, LM, RM, DM, CM, AM, LF, RF, CF, ST, SS, LW, RW, LCM, RCM, POS_NAME_COUNT
+};
+
+extern const char g_szPosNames[POS_NAME_COUNT][5];
 
 extern const float g_Positions[11][11][4];
 

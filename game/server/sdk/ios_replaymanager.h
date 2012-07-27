@@ -11,6 +11,7 @@ struct BallSnapshot
 	Vector			vel;
 	AngularImpulse	rot;
 	int				skin;
+	int				effects;
 };
 
 struct LayerRecord

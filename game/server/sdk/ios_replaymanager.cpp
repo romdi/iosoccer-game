@@ -255,6 +255,7 @@ void CReplayManager::TakeSnapshot()
 	GetBall()->VPhysicsGetObject()->GetPosition(&pBallSnap->pos, &pBallSnap->ang);
 	GetBall()->VPhysicsGetObject()->GetVelocity(&pBallSnap->vel, &pBallSnap->rot);
 	pBallSnap->skin = GetBall()->m_nSkin;
+	pBallSnap->effects = GetBall()->GetEffects();
 
 	snap.pBallSnapshot = pBallSnap;
 
@@ -365,6 +366,7 @@ void CReplayManager::RestoreSnapshot()
 			m_pBall->Spawn();
 		}
 
+		m_pBall->SetEffects(pBallSnap->effects);
 		m_pBall->m_nSkin = pBallSnap->skin;
 		m_pBall->VPhysicsGetObject()->SetPosition(pBallSnap->pos, pBallSnap->ang, false);
 		m_pBall->VPhysicsGetObject()->SetVelocity(&pBallSnap->vel, &pBallSnap->rot);
