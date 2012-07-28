@@ -1,51 +1,53 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
-//
-// Purpose: 
-//
-// $NoKeywords: $
-//=============================================================================//
-
 #include "cbase.h"
-#include <cdll_client_int.h>
+#include "iosoptions.h"
+#include "ienginevgui.h"
 
-#include "settingsmenu.h"
+class CIOSOptionsMenu : public IIOSOptionsMenu
+{
+private:
+	CIOSOptionsPanel *m_pIOSOptionsPanel;
+	vgui::VPANEL m_hParent;
+ 
+public:
+	CIOSOptionsMenu( void )
+	{
+		m_pIOSOptionsPanel = NULL;
+	}
+ 
+	void Create( vgui::VPANEL parent )
+	{
+		// Create immediately
+		m_pIOSOptionsPanel = new CIOSOptionsPanel(parent);
+	}
+ 
+	void Destroy( void )
+	{
+		if ( m_pIOSOptionsPanel )
+		{
+			m_pIOSOptionsPanel->SetParent( (vgui::Panel *)NULL );
+			delete m_pIOSOptionsPanel;
+		}
+	}
+	CIOSOptionsPanel *GetPanel()
+	{
+		return m_pIOSOptionsPanel;
+	}
+};
 
-#include <vgui/IScheme.h>
-#include <vgui/ILocalize.h>
-#include <vgui/ISurface.h>
-#include <KeyValues.h>
-#include <vgui_controls/ImageList.h>
-#include <FileSystem.h>
+static CIOSOptionsMenu g_IOSOptionsMenu;
+IIOSOptionsMenu *iosOptionsMenu = (IIOSOptionsMenu *)&g_IOSOptionsMenu;
 
-#include <vgui_controls/RichText.h>
-#include <vgui_controls/Label.h>
-#include <vgui_controls/Button.h>
-#include <vgui_controls/HTML.h>
-#include <vgui_controls/TextEntry.h>
+void CC_IOSOptionsMenu(const CCommand &args)
+{
+	if (!iosOptionsMenu->GetPanel()->IsVisible())
+		iosOptionsMenu->GetPanel()->Activate();
+	else
+		iosOptionsMenu->GetPanel()->Close();
+}
 
-#include "IGameUIFuncs.h" // for key bindings
-#include <igameresources.h>
+ConCommand iosoptionsmenu("iosoptionsmenu", CC_IOSOptionsMenu);
 
-#include "vgui_bitmapbutton.h"	//ios
 
-#include <game/client/iviewport.h>
-#include <stdlib.h> // MAX_PATH define
-#include <stdio.h>
-#include "byteswap.h"
-
-#include "c_ball.h"
-#include "c_team.h"
-#include "sdk_backgroundpanel.h"
-#include "sdk_gamerules.h"
-#include "c_sdk_player.h"
-#include "steam/steam_api.h"
-
-#include "materialsystem/itexture.h"
-
-// memdbgon must be the last include file in a .cpp file!!!
-#include "tier0/memdbgon.h"
-
-using namespace vgui;
 
 #define LABEL_WIDTH 150
 #define INPUT_WIDTH 300
@@ -53,38 +55,54 @@ using namespace vgui;
 
 char g_szCountryNames[COUNTRY_NAMES_COUNT][64] = { "Afghanistan", "African Union", "Aland", "Albania", "Alderney", "Algeria", "American Samoa", "Andorra", "Angola", "Anguilla", "Antarctica", "Antigua & Barbuda", "Arab League", "Argentina", "Armenia", "Aruba", "ASEAN", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Basque Country", "Belarus", "Belgium", "Belize", "Benin", "Bermuda", "Bhutan", "Bolivia", "Bosnia & Herzegovina", "Botswana", "Bouvet", "Brazil", "British Indian Ocean Territory", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cambodja", "Cameroon", "Canada", "Cape Verde", "CARICOM", "Catalonia", "Cayman Islands", "Central African Republic", "Chad", "Chile", "China", "Christmas", "CIS", "Cocos (Keeling)", "Colombia", "Commonwealth", "Comoros", "Congo-Brazzaville", "Congo-Kinshasa(Zaire)", "Cook Islands", "Costa Rica", "Cote d'Ivoire", "Croatia", "Cuba", "Curacao", "Cyprus", "Czech Republic", "Denmark", "Djibouti", "Dominica", "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "England", "Equatorial Guinea", "Eritrea", "Estonia", "Ethiopia", "European Union", "Falkland (Malvinas)", "FAO", "Faroes", "Fiji", "Finland", "France", "French Southern and Antarctic Lands", "French-Guiana", "Gabon", "Galicia", "Gambia", "Georgia", "Germany", "Ghana", "Gibraltar", "Greece", "Greenland", "Grenada", "Guadeloupe", "Guam", "Guatemala", "Guernsey", "Guinea-Bissau", "Guinea", "Guyana", "Haiti", "Heard Island and McDonald", "Honduras", "Hong Kong", "Hungary", "IAEA", "Iceland", "IHO", "India", "Indonezia", "Iran", "Iraq", "Ireland", "Islamic Conference", "Isle of Man", "Israel", "Italy", "Jamaica", "Japan", "Jersey", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kosovo", "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenshein", "Lithuania", "Luxembourg", "Macao", "Macedonia", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Martinique", "Mauritania", "Mauritius", "Mayotte", "Mexico", "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Montserrat", "Morocco", "Mozambique", "Myanmar(Burma)", "Namibia", "NATO", "Nauru", "Nepal", "Netherlands Antilles", "Netherlands", "New Caledonia", "New Zealand", "Nicaragua", "Niger", "Nigeria", "Niue", "Norfolk", "North Korea", "Northern Cyprus", "Northern Ireland", "Northern Mariana", "Norway", "OAS", "OECD", "Olimpic Movement", "Oman", "OPEC", "Pakistan", "Palau", "Palestine", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Pitcairn", "Poland", "Portugal", "Puerto Rico", "Qatar", "Red Cross", "Reunion", "Romania", "Russian Federation", "Rwanda", "Saint Barthelemy", "Saint Helena", "Saint Lucia", "Saint Martin", "Saint Pierre and Miquelon", "Samoa", "San Marino", "Sao Tome & Principe", "Saudi Arabia", "Scotland", "Senegal", "Serbia(Yugoslavia)", "Seychelles", "Sierra Leone", "Singapore", "Sint-Maarten", "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "Somaliland", "South Africa", "South Georgia and South Sandwich", "South Korea", "Southern-Sudan", "Spain", "Sri Lanka", "St Kitts & Nevis", "St Vincent & the Grenadines", "Sudan", "Suriname", "Svalbard and Jan Mayen", "Swaziland", "Sweden", "Switzerland", "Syria", "Tahiti(French Polinesia)", "Taiwan", "Tajikistan", "Tanzania", "Thailand", "Timor-Leste", "Togo", "Tokelau", "Tonga", "Trinidad & Tobago", "Tristan-da-Cunha", "Tunisia", "Turkey", "Turkmenistan", "Turks and Caicos Islands", "Tuvalu", "Uganda", "Ukraine", "UNESCO", "UNICEF", "United Arab Emirates", "United Kingdom(Great Britain)", "United Nations", "United States Minor Outlying", "United States of America(USA)", "Uruguay", "Uzbekistan", "Vanutau", "Vatican City", "Venezuela", "Viet Nam", "Virgin Islands British", "Virgin Islands US", "Wales", "Wallis and Futuna", "Western Sahara", "WHO", "WTO", "Yemen", "Zambia", "Zimbabwe" };
 
-//-----------------------------------------------------------------------------
-// Purpose: Constructor
-//-----------------------------------------------------------------------------
-CSettingsMenu::CSettingsMenu(Panel *parent, const char *name) : Panel(parent, name)
+enum { PADDING = 10, TOP_PADDING = 20 };
+enum { BUTTON_WIDTH = 100, BUTTON_HEIGHT = 30, BUTTON_MARGIN = 5 };
+
+CIOSOptionsPanel::CIOSOptionsPanel(VPANEL parent) : BaseClass(NULL, "IOSOptionsPanel")
 {
 	SetScheme("ClientScheme");
 
-	m_pPlayerNameLabel = new Label(this, "", "Player Name:");
-	m_pPlayerNameText = new TextEntry(this, "");
-	m_pClubNameLabel = new Label(this, "", "Club Name:");
-	m_pClubNameText = new TextEntry(this, "");
-	m_pCountryNameLabel = new Label(this, "", "Country Name:");
-	m_pCountryNameList = new ComboBox(this, "", COUNTRY_NAMES_COUNT, false);
+	m_pContent = new Panel(this, "");
+	m_pPlayerNameLabel = new Label(m_pContent, "", "Player Name:");
+	m_pPlayerNameText = new TextEntry(m_pContent, "");
+	m_pClubNameLabel = new Label(m_pContent, "", "Club Name:");
+	m_pClubNameText = new TextEntry(m_pContent, "");
+	m_pCountryNameLabel = new Label(m_pContent, "", "Country Name:");
+	m_pCountryNameList = new ComboBox(m_pContent, "", COUNTRY_NAMES_COUNT, false);
 	m_pCountryNameList->SetOpenDirection(Menu::DOWN);
 
-	m_pSaveButton = new Button(this, "", "Save Settings");
+	m_pOKButton = new Button(m_pContent, "", "OK");
+	m_pCancelButton = new Button(m_pContent, "", "Cancel");
+	m_pSaveButton = new Button(m_pContent, "", "Apply");
 
-	m_flNextUpdateTime = gpGlobals->curtime;
+	m_pCountryNameList->RemoveAll();
+
+	for (int i = 0; i < COUNTRY_NAMES_COUNT; i++)
+	{
+		KeyValues *kv = new KeyValues("UserData", "index", i);
+		m_pCountryNameList->AddItem(g_szCountryNames[i], kv);
+		kv->deleteThis();
+	}
 }
 
-void CSettingsMenu::ApplySchemeSettings(IScheme *pScheme)
+CIOSOptionsPanel::~CIOSOptionsPanel()
 {
-	BaseClass::ApplySchemeSettings(pScheme);
+}
 
+void CIOSOptionsPanel::ApplySchemeSettings( IScheme *pScheme )
+{
 	m_pScheme = pScheme;
-}
+	BaseClass::ApplySchemeSettings( pScheme );
 
-void CSettingsMenu::PerformLayout()
-{
-	BaseClass::PerformLayout();
+	SetTitle("PLAYER SETTINGS", false);
+	SetProportional(false);
+	SetSizeable(false);
+	SetBounds(0, 0, 500, 200);
+	SetBgColor(Color(0, 0, 0, 255));
+	SetPaintBackgroundEnabled(true);
+	MoveToCenterOfScreen();
 
-	m_flNextUpdateTime = gpGlobals->curtime;
+	m_pContent->SetBounds(PADDING, PADDING + TOP_PADDING, GetWide() - 2 * PADDING, GetTall() - 2 * PADDING - TOP_PADDING);
 
 	m_pPlayerNameLabel->SetBounds(0, 0, LABEL_WIDTH, TEXT_HEIGHT);
 	m_pPlayerNameText->SetBounds(LABEL_WIDTH, 0, INPUT_WIDTH, TEXT_HEIGHT);
@@ -111,7 +129,15 @@ void CSettingsMenu::PerformLayout()
 	m_pCountryNameList->SetDisabledBgColor(Color(255, 255, 255, 255));
 	m_pCountryNameList->SetSelectionTextColor(Color(0, 0, 0, 255));
 
-	m_pSaveButton->SetBounds(LABEL_WIDTH, 4 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
+	m_pOKButton->SetBounds(m_pContent->GetWide() - 3 * BUTTON_WIDTH - 2 * BUTTON_MARGIN, m_pContent->GetTall() - BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT);
+	m_pOKButton->SetCommand("save_and_close");
+	m_pOKButton->AddActionSignalTarget(this);
+
+	m_pCancelButton->SetBounds(m_pContent->GetWide() - 2 * BUTTON_WIDTH - BUTTON_MARGIN, m_pContent->GetTall() - BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT);
+	m_pCancelButton->SetCommand("close");
+	m_pCancelButton->AddActionSignalTarget(this);
+
+	m_pSaveButton->SetBounds(m_pContent->GetWide() - BUTTON_WIDTH, m_pContent->GetTall() - BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT);
 	m_pSaveButton->SetCommand("save_settings");
 	m_pSaveButton->AddActionSignalTarget(this);
 	m_pSaveButton->SetDefaultColor(Color(0, 0, 0, 255), Color(200, 200, 200, 255));
@@ -122,41 +148,22 @@ void CSettingsMenu::PerformLayout()
 	m_pSaveButton->SetContentAlignment(Label::a_center);
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: Destructor
-//-----------------------------------------------------------------------------
-CSettingsMenu::~CSettingsMenu()
+void CIOSOptionsPanel::PerformLayout()
 {
+	BaseClass::PerformLayout();
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: updates the UI with a new map name and map html page, and sets up the team buttons
-//-----------------------------------------------------------------------------
-void CSettingsMenu::OnThink()
+void CIOSOptionsPanel::OnThink()
 {
-	//RequestFocus();
+	BaseClass::OnThink();
 
-	if (m_flNextUpdateTime > gpGlobals->curtime)
-		return;
-
-	//Update();
-
-	m_flNextUpdateTime = gpGlobals->curtime + 0.25f;
+	//SetTall((int)(gpGlobals->curtime * 100) % 100);
+	//m_pSettingsPanel->Update();
 }
 
-void CSettingsMenu::Update()
+void CIOSOptionsPanel::OnCommand(const char *cmd)
 {
-	m_pPlayerNameText->SetText(g_pCVar->FindVar("playername")->GetString());
-	m_pCountryNameList->SetText(g_pCVar->FindVar("countryname")->GetString());
-	m_pClubNameText->SetText(g_pCVar->FindVar("clubname")->GetString());
-}
-
-//-----------------------------------------------------------------------------
-// IOS Added
-//-----------------------------------------------------------------------------
-void CSettingsMenu::OnCommand( char const *cmd )
-{
-	if (!strcmp(cmd, "save_settings"))
+	if (!stricmp(cmd, "save_settings") || !stricmp(cmd, "save_and_close"))
 	{
 		char text[64];
 		m_pPlayerNameText->GetText(text, sizeof(text));
@@ -164,36 +171,23 @@ void CSettingsMenu::OnCommand( char const *cmd )
 		m_pClubNameText->GetText(text, sizeof(text));
 		engine->ClientCmd(VarArgs("clubname \"%s\"", text));
 		KeyValues *kv = m_pCountryNameList->GetActiveItemUserData();
-		//kv->GetInt("index")
 		engine->ClientCmd(VarArgs("countryname \"%s\"", g_szCountryNames[kv->GetInt("index")]));
+
+		if (!stricmp(cmd, "save_and_close"))
+			Close();
 	}
-
-	BaseClass::OnCommand(cmd);
-
-	m_flNextUpdateTime = gpGlobals->curtime;
+	else if (!stricmp(cmd, "close"))
+	{
+		Close();
+	}
+	else
+		BaseClass::OnCommand(cmd);
 }
 
-void CSettingsMenu::NewLineMessage(KeyValues* data)
+void CIOSOptionsPanel::Activate()
 {
-	// when the txtEntry box posts an action signal it only sets the name
-	// so it is wise to check whether that specific txtEntry is indeed in focus
-	// Is the Text Entry box in focus?
-	if (m_pPlayerNameText->HasFocus())
-	{
-	// We have caught the message, now we can handle it. I would simply repost it to the OnCommand function 
-	// Post the message to our command handler
-		this->OnCommand("save_settings");
-	}
-}
-
-void CSettingsMenu::Reset()
-{
-	m_pCountryNameList->RemoveAll();
-
-	for (int i = 0; i < COUNTRY_NAMES_COUNT; i++)
-	{
-		KeyValues *kv = new KeyValues("UserData", "index", i);
-		m_pCountryNameList->AddItem(g_szCountryNames[i], kv);
-		kv->deleteThis();
-	}
+	BaseClass::Activate();
+	m_pPlayerNameText->SetText(g_pCVar->FindVar("playername")->GetString());
+	m_pCountryNameList->SetText(g_pCVar->FindVar("countryname")->GetString());
+	m_pClubNameText->SetText(g_pCVar->FindVar("clubname")->GetString());
 }

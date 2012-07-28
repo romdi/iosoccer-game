@@ -6900,6 +6900,8 @@ void CBasePlayer::SetPlayerName( const char *name )
 		Assert( strlen(name) > 0 );
 
 		Q_strncpy( m_szNetname, name, sizeof(m_szNetname) );
+
+		engine->ClientCommand(edict(), UTIL_VarArgs("setinfo name \"%s\"", name));
 	}
 }
 

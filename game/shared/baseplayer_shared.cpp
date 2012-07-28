@@ -958,6 +958,7 @@ void CBasePlayer::CalcPlayerView( Vector& eyeOrigin, QAngle& eyeAngles, float& f
 	Vector vSmoothOffset;
 	GetPredictionErrorSmoothingVector( vSmoothOffset );
 	eyeOrigin += vSmoothOffset;
+	//SetLocalOrigin(GetLocalOrigin() + vSmoothOffset);
 	m_flObserverChaseDistance = 0.0;
 #endif
 

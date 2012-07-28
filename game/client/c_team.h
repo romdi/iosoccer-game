@@ -32,6 +32,8 @@ public:
 
 	// Data Handling
 	virtual int		GetTeamNumber( void ) const;
+	virtual int		GetOppTeamNumber( void ) const;
+	C_Team			*GetOppTeam( void ) const;
 	virtual bool	Get_IsClubTeam( void );
 	virtual bool	Get_IsRealTeam( void );
 	virtual bool	Get_HasTeamCrest( void );
@@ -79,13 +81,13 @@ public:
 	int		m_iPing;
 	int		m_iPacketloss;
 
-	Vector	m_vCornerLeft;
-	Vector	m_vCornerRight;
-	Vector	m_vGoalkickLeft;
-	Vector	m_vGoalkickRight;
-	Vector	m_vPenalty;
-	Vector	m_vPenBoxMin;
-	Vector	m_vPenBoxMax;
+	CNetworkVector(m_vCornerLeft);
+	CNetworkVector(m_vCornerRight);
+	CNetworkVector(m_vGoalkickLeft);
+	CNetworkVector(m_vGoalkickRight);
+	CNetworkVector(m_vPenalty);
+	CNetworkVector(m_vPenBoxMin);
+	CNetworkVector(m_vPenBoxMax);
 	int		m_nForward;
 	int		m_nRight;
 };

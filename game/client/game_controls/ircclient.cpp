@@ -1,14 +1,14 @@
 #include "cbase.h"
 #include "ircclient.h"
 
-void CC_OpenIOSSettings(const CCommand &args)
+void CC_IRCMenu(const CCommand &args)
 {
 	//IViewPortPanel *pPanel = gViewPortInterface->FindPanelByName("TestPanel");
 	//pPanel->ShowPanel(!pPanel->IsVisible());
 	g_pTestPanel->SetVisible(!g_pTestPanel->IsVisible());
 }
 
-ConCommand OpenIOSSettings("open_ios_settings", CC_OpenIOSSettings);
+ConCommand ircmenu("ircmenu", CC_IRCMenu);
 
 CTestPanel::CTestPanel(vgui::VPANEL parent) : BaseClass(NULL, "TestPanel")
 {

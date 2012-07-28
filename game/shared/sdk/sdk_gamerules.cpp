@@ -233,7 +233,7 @@ BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 	RecvPropTime( RECVINFO( m_flInjuryTime) ),// 0, RecvProxy_MatchState ),
 
 	RecvPropInt(RECVINFO(m_nShieldType)),
-	RecvPropInt(RECVINFO(m_nShieldDir)),
+	RecvPropInt(RECVINFO(m_nShieldTeam)),
 	RecvPropVector(RECVINFO(m_vShieldPos)),
 
 	RecvPropVector(RECVINFO(m_vFieldMin)),
@@ -251,7 +251,7 @@ BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 	SendPropTime( SENDINFO( m_flInjuryTime )),
 
 	SendPropInt(SENDINFO(m_nShieldType)),
-	SendPropInt(SENDINFO(m_nShieldDir)),
+	SendPropInt(SENDINFO(m_nShieldTeam)),
 	SendPropVector(SENDINFO(m_vShieldPos), -1, SPROP_COORD),
 
 	SendPropVector(SENDINFO(m_vFieldMin), -1, SPROP_COORD),
@@ -1066,6 +1066,7 @@ ConVar mp_shield_freekick_radius("mp_shield_freekick_radius", "360", FCVAR_NOTIF
 ConVar mp_shield_corner_radius("mp_shield_corner_radius", "360", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar mp_shield_kickoff_radius("mp_shield_kickoff_radius", "360", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar mp_shield_border("mp_shield_border", "20", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar mp_shield_block_6yardbox("mp_shield_block_6yardbox", "1", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar mp_shield_liberal_taker_positioning("mp_shield_liberal_taker_positioning", "0", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar mp_shield_liberal_teammates_positioning("mp_shield_liberal_teammates_positioning", "0", FCVAR_NOTIFY|FCVAR_REPLICATED);
 
@@ -1559,13 +1560,13 @@ void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 	const char *pszCountryName = engine->GetClientConVarValue( pPlayer->entindex(), "countryname" );
 	((CSDKPlayer *)pPlayer)->SetCountryName(pszCountryName);
 
-	const char *pszName = engine->GetClientConVarValue( pPlayer->entindex(), "name" );
+	const char *pszName = engine->GetClientConVarValue( pPlayer->entindex(), "playername" );
 
 	const char *pszOldName = pPlayer->GetPlayerName();
 
 	// msg everyone if someone changes their name,  and it isn't the first time (changing no name to current name)
 	// Note, not using FStrEq so that this is case sensitive
-	if ( pszOldName[0] != 0 && Q_strcmp( pszOldName, pszName ) )
+	if ( pszOldName[0] != 0 && Q_strlen(pszName) != 0 && Q_strcmp( pszOldName, pszName ) )
 	{
 		IGameEvent * event = gameeventmanager->CreateEvent( "player_changename" );
 		if ( event )
@@ -1580,12 +1581,12 @@ void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 	}
 }
 
-void CSDKGameRules::EnableShield(int type, int dir, const Vector &pos /*= vec3_origin*/)
+void CSDKGameRules::EnableShield(int type, int team, const Vector &pos /*= vec3_origin*/)
 {
 	DisableShield();
 
 	m_nShieldType = type;
-	m_nShieldDir = dir;
+	m_nShieldTeam = team;
 	m_vShieldPos = Vector(pos.x, pos.y, SDKGameRules()->m_vKickOff.GetZ());
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++) 

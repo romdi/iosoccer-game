@@ -77,14 +77,13 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Editabl
 	SetProportional(false);
 
 	// set the scheme before any child control is created
-	//SetScheme("ClientScheme");
+	SetScheme("ClientScheme");
 
 	m_pMainPanel = new Panel(this);
 
 	m_pExtraInfoPanel = new Panel(m_pMainPanel);
 
 	m_pTabPanels[TAB_STATS] = new CStatsMenu(m_pExtraInfoPanel, "");
-	m_pTabPanels[TAB_SETTINGS] = new CSettingsMenu(m_pExtraInfoPanel, "");
 	m_pTabPanels[TAB_FORMATION] = new CFormationMenu(m_pExtraInfoPanel, "");
 	ShowTabPanel(TAB_FORMATION);
 
@@ -126,10 +125,6 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Editabl
 	m_pSpectateButton = new Button(m_pSpectatorContainer, "SpectateButton", "Spectate");
 	m_pSpectateButton->SetCommand(VarArgs("jointeam %d 0", TEAM_SPECTATOR));
 	m_pSpectateButton->AddActionSignalTarget(this);
-
-	m_pSettingsButton = new Button(m_pSpectatorContainer, "m_pSettingsButton", "Settings");
-	m_pSettingsButton->SetCommand("settings");
-	m_pSettingsButton->AddActionSignalTarget(this);
 
 	MakePopup();
 }
@@ -200,7 +195,6 @@ void CClientScoreBoardDialog::Reset()
 	}
 
 	dynamic_cast<CStatsMenu *>(m_pTabPanels[TAB_STATS])->Reset();
-	dynamic_cast<CSettingsMenu *>(m_pTabPanels[TAB_SETTINGS])->Reset();
 	dynamic_cast<CFormationMenu *>(m_pTabPanels[TAB_FORMATION])->Reset();
 
 	m_iSectionId = 0;
@@ -251,9 +245,6 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 	m_pTabPanels[TAB_FORMATION]->SetBounds(0, 0, m_pExtraInfoPanel->GetWide(), m_pExtraInfoPanel->GetTall());
 	m_pTabPanels[TAB_FORMATION]->PerformLayout();
 
-	m_pTabPanels[TAB_SETTINGS]->SetBounds(0, 0, m_pExtraInfoPanel->GetWide(), m_pExtraInfoPanel->GetTall());
-	m_pTabPanels[TAB_SETTINGS]->PerformLayout();
-
 	m_pSpectatorContainer->SetBounds(0, m_pMainPanel->GetTall() - EXTRAINFO_HEIGHT - SPECLIST_HEIGHT - SPECLIST_MARGIN, m_pMainPanel->GetWide(), SPECLIST_HEIGHT);
 	m_pSpectatorContainer->SetBgColor(Color(0, 0, 0, 150));
 
@@ -262,25 +253,17 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 	m_pSpectatorFontList[2] = m_pScheme->GetFont("SpectatorListSmaller");
 	m_pSpectatorFontList[3] = m_pScheme->GetFont("SpectatorListSmallest");
 
-	m_pSpectatorNames->SetBounds(SPECLIST_MARGIN, 0, m_pSpectatorNames->GetParent()->GetWide() - SPECLIST_MARGIN - 2 * (SPECBUTTON_WIDTH + SPECBUTTON_MARGIN), m_pSpectatorNames->GetParent()->GetTall());
+	m_pSpectatorNames->SetBounds(SPECLIST_MARGIN, 0, m_pSpectatorNames->GetParent()->GetWide() - SPECLIST_MARGIN - (SPECBUTTON_WIDTH + SPECBUTTON_MARGIN), m_pSpectatorNames->GetParent()->GetTall());
 	m_pSpectatorNames->SetFgColor(Color(255, 255, 255, 255));
 	m_pSpectatorNames->SetFont(m_pSpectatorFontList[0]);
 
-	m_pSpectateButton->SetBounds(m_pSpectateButton->GetParent()->GetWide() - 2 * (SPECBUTTON_WIDTH + SPECBUTTON_MARGIN), SPECBUTTON_MARGIN, SPECBUTTON_WIDTH, SPECLIST_HEIGHT - 2 * SPECBUTTON_MARGIN);
+	m_pSpectateButton->SetBounds(m_pSpectateButton->GetParent()->GetWide() - (SPECBUTTON_WIDTH + SPECBUTTON_MARGIN), SPECBUTTON_MARGIN, SPECBUTTON_WIDTH, SPECLIST_HEIGHT - 2 * SPECBUTTON_MARGIN);
 	m_pSpectateButton->SetDefaultColor(Color(0, 0, 0, 255), Color(200, 200, 200, 255));
 	m_pSpectateButton->SetArmedColor(Color(50, 50, 50, 255), Color(150, 150, 150, 255));
 	m_pSpectateButton->SetDepressedColor(Color(100, 100, 100, 255), Color(200, 200, 200, 255));
 	m_pSpectateButton->SetCursor(dc_hand);
 	m_pSpectateButton->SetFont(m_pScheme->GetFont("IOSTeamMenuNormal"));
 	m_pSpectateButton->SetContentAlignment(Label::a_center);
-
-	m_pSettingsButton->SetBounds(m_pSettingsButton->GetParent()->GetWide() - SPECBUTTON_WIDTH - SPECBUTTON_MARGIN, SPECBUTTON_MARGIN, SPECBUTTON_WIDTH, SPECLIST_HEIGHT - 2 * SPECBUTTON_MARGIN);
-	m_pSettingsButton->SetDefaultColor(Color(0, 0, 0, 255), Color(200, 200, 200, 255));
-	m_pSettingsButton->SetArmedColor(Color(50, 50, 50, 255), Color(150, 150, 150, 255));
-	m_pSettingsButton->SetDepressedColor(Color(100, 100, 100, 255), Color(200, 200, 200, 255));
-	m_pSettingsButton->SetCursor(dc_hand);
-	m_pSettingsButton->SetFont(m_pScheme->GetFont("IOSTeamMenuNormal"));
-	m_pSettingsButton->SetContentAlignment(Label::a_center);
 
 	for (int i = 0; i < 2; i++)
 	{
@@ -402,33 +385,28 @@ void CClientScoreBoardDialog::Update( void )
 		m_pPlayerList[i]->Repaint();
 	}
 
-	if (m_pTabPanels[TAB_SETTINGS]->IsVisible())
-		;//dynamic_cast<CSettingsMenu *>(m_pTabPanels[TAB_SETTINGS])->Update();
+	bool showPlayerStats = false;
+	int playerIndices[2] = { 0, 0 };
+
+	for (int i = 0; i < 2; i++)
+	{
+		int itemID = m_pPlayerList[i]->GetSelectedItem();
+		if (itemID != -1)
+		{
+			playerIndices[i] = m_pPlayerList[i]->GetItemData(itemID)->GetInt("playerindex");
+			showPlayerStats = true;
+		}
+	}
+
+	if (showPlayerStats)
+	{
+		dynamic_cast<CStatsMenu *>(m_pTabPanels[TAB_STATS])->Update(playerIndices);
+		ShowTabPanel(TAB_STATS);
+	}
 	else
 	{
-		bool showPlayerStats = false;
-		int playerIndices[2] = { 0, 0 };
-
-		for (int i = 0; i < 2; i++)
-		{
-			int itemID = m_pPlayerList[i]->GetSelectedItem();
-			if (itemID != -1)
-			{
-				playerIndices[i] = m_pPlayerList[i]->GetItemData(itemID)->GetInt("playerindex");
-				showPlayerStats = true;
-			}
-		}
-
-		if (showPlayerStats)
-		{
-			dynamic_cast<CStatsMenu *>(m_pTabPanels[TAB_STATS])->Update(playerIndices);
-			ShowTabPanel(TAB_STATS);
-		}
-		else
-		{
-			dynamic_cast<CFormationMenu *>(m_pTabPanels[TAB_FORMATION])->Update();
-			ShowTabPanel(TAB_FORMATION);
-		}
+		dynamic_cast<CFormationMenu *>(m_pTabPanels[TAB_FORMATION])->Update();
+		ShowTabPanel(TAB_FORMATION);
 	}
 
 	m_fNextUpdateTime = gpGlobals->curtime + 0.25f; 
@@ -841,20 +819,6 @@ void CClientScoreBoardDialog::OnCommand( char const *cmd )
 	if (!strnicmp(cmd, "jointeam", 8))
 	{
 		engine->ClientCmd(cmd);
-	}
-	else if (!stricmp(cmd, "settings"))
-	{
-		if (m_pTabPanels[TAB_SETTINGS]->IsVisible())
-		{
-			ShowTabPanel(TAB_FORMATION);
-			SetKeyBoardInputEnabled(false);
-		}
-		else
-		{
-			ShowTabPanel(TAB_SETTINGS);
-			dynamic_cast<CSettingsMenu *>(m_pTabPanels[TAB_SETTINGS])->Update();
-			SetKeyBoardInputEnabled(true);
-		}
 	}
 	else
 		BaseClass::OnCommand(cmd);

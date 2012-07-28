@@ -25,6 +25,7 @@
 #include "matsys_controls/matsyscontrols.h"
 
 //#include "game_controls/ircclient.h"
+#include "game_controls/iosoptions.h"
 
 //Tony; so we can load localization at initialize
 #include <vgui/ILocalize.h>
@@ -173,6 +174,8 @@ void VGui_CreateGlobalPanels( void )
 #if defined( TRACK_BLOCKING_IO )
 	VPANEL gameDLLPanel = enginevgui->GetPanel( PANEL_GAMEDLL );
 #endif
+	VPANEL GameUiDll = enginevgui->GetPanel( PANEL_GAMEUIDLL);
+
 	// Part of game
 	internalCenterPrint->Create( gameToolParent );
 	loadingdisc->Create( gameToolParent );
@@ -193,6 +196,8 @@ void VGui_CreateGlobalPanels( void )
 
 	//CTestPanel *testPanel = new CTestPanel(enginevgui->GetPanel(PANEL_GAMEUIDLL));
 	//g_pTestPanel = testPanel;
+
+	iosOptionsMenu->Create(GameUiDll);
 }
 
 void VGui_Shutdown()
@@ -216,6 +221,8 @@ void VGui_Shutdown()
 
 	//g_pTestPanel->SetParent((vgui::Panel *)NULL);
 	//delete g_pTestPanel;
+
+	iosOptionsMenu->Destroy();
 
 	if ( g_pClientMode )
 	{

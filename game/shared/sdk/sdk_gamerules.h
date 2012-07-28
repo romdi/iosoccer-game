@@ -56,6 +56,7 @@ extern ConVar
 	mp_shield_corner_radius,
 	mp_shield_kickoff_radius,
 	mp_shield_border,
+	mp_shield_block_6yardbox,
 	mp_shield_liberal_taker_positioning,
 	mp_shield_liberal_teammates_positioning,
 	mp_field_border,
@@ -349,7 +350,7 @@ public:
 	void StartInjuryTime();
 	void EndInjuryTime();
 	void ClientSettingsChanged( CBasePlayer *pPlayer );
-	void EnableShield(int type, int dir, const Vector &pos = vec3_origin);
+	void EnableShield(int type, int team, const Vector &pos = vec3_origin);
 	void DisableShield();
 	void SetWeather(PrecipitationType_t type);
 
@@ -364,7 +365,7 @@ public:
 	int GetMatchDisplayTimeSeconds();
 
 	CNetworkVar(int, m_nShieldType);
-	CNetworkVar(int, m_nShieldDir);
+	CNetworkVar(int, m_nShieldTeam);
 	CNetworkVector(m_vShieldPos);
 	CNetworkVar(float, m_flInjuryTimeStart);
 	CNetworkVar(int, m_nBallZone);

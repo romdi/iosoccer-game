@@ -90,7 +90,7 @@ protected:
 	// Stored in individual arrays so they can be sent down via datatables
 	string_t	m_szName[MAX_PLAYERS+1];
 	char	m_szClubNames[MAX_PLAYERS+1][32];
-	char	m_szCountryNames[MAX_PLAYERS+1][32];
+	char	m_szCountryNames[MAX_PLAYERS+1][64];
 	int		m_iPing[MAX_PLAYERS+1];
 	int		m_nGoals[MAX_PLAYERS+1];
 	int		m_iDeaths[MAX_PLAYERS+1];

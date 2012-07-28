@@ -1132,8 +1132,9 @@ void CSDKPlayer::GetTargetPos(const Vector &pos, Vector &targetPos)
 		SDKGameRules()->m_nShieldType == SHIELD_PENALTY ||
 		SDKGameRules()->m_nShieldType == SHIELD_KEEPERHANDS)
 	{
-		Vector min = GetGlobalTeam(SDKGameRules()->m_nShieldDir)->m_vPenBoxMin - border;
-		Vector max = GetGlobalTeam(SDKGameRules()->m_nShieldDir)->m_vPenBoxMax + border;
+		int side = (SDKGameRules()->m_nShieldType == SHIELD_PENALTY ? GetGlobalTeam(SDKGameRules()->m_nShieldTeam)->GetOppTeamNumber() : SDKGameRules()->m_nShieldTeam);
+		Vector min = GetGlobalTeam(side)->m_vPenBoxMin - border;
+		Vector max = GetGlobalTeam(side)->m_vPenBoxMax + border;
 
 		if (GetFlags() & FL_SHIELD_KEEP_OUT || SDKGameRules()->m_nShieldType == SHIELD_PENALTY)
 		{
@@ -1148,7 +1149,7 @@ void CSDKPlayer::GetTargetPos(const Vector &pos, Vector &targetPos)
 		if ((GetFlags() & FL_SHIELD_KEEP_OUT) && isInsideBox)
 		{
 			targetPos = Vector(pos.x, pos.y, SDKGameRules()->m_vKickOff.GetZ());
-			targetPos.y = GetGlobalTeam(SDKGameRules()->m_nShieldDir)->m_nForward == 1 ? max.y : min.y;
+			targetPos.y = GetGlobalTeam(side)->m_nForward == 1 ? max.y : min.y;
 
 			/*if (entindex() % 2 == 0)
 				targetPos.x -= (entindex() - 1) * (VEC_HULL_MAX.x * 2);
@@ -1179,11 +1180,11 @@ void CSDKPlayer::GetTargetPos(const Vector &pos, Vector &targetPos)
 
 			if (SDKGameRules()->m_nShieldType == SHIELD_PENALTY)
 			{
-				moveDir = GetGlobalTeam(SDKGameRules()->m_nShieldDir)->GetOppTeam()->m_vPenalty - SDKGameRules()->m_vShieldPos;
+				moveDir = GetGlobalTeam(SDKGameRules()->m_nShieldTeam)->m_vPenalty - SDKGameRules()->m_vShieldPos;
 			}
 			else
 			{
-				moveDir = GetGlobalTeam(SDKGameRules()->m_nShieldDir)->m_vPenalty - SDKGameRules()->m_vShieldPos;
+				moveDir = GetGlobalTeam(SDKGameRules()->m_nShieldTeam)->GetOppTeam()->m_vPenalty - SDKGameRules()->m_vShieldPos;
 			}
 
 			moveDir.z = 0;
@@ -1202,6 +1203,35 @@ void CSDKPlayer::GetTargetPos(const Vector &pos, Vector &targetPos)
 		{
 			if (dir.Length2D() <= radius)
 				targetPos = pos;
+		}
+
+		if (SDKGameRules()->m_nShieldType == SHIELD_FREEKICK && mp_shield_block_6yardbox.GetBool())
+		{
+			if (GetTeamPosition() != 1 || GetTeamNumber() != GetGlobalTeam(SDKGameRules()->m_nShieldTeam)->GetOppTeamNumber())
+			{
+				int side = GetGlobalTeam(SDKGameRules()->m_nShieldTeam)->GetOppTeamNumber();
+				int boxLength = abs(GetGlobalTeam(side)->m_vPenBoxMax.GetY() - GetGlobalTeam(side)->m_vPenBoxMin.GetY()) / 3.0f;
+				Vector min = GetGlobalTeam(side)->m_vPenBoxMin + Vector(boxLength * 2, 0, 0);
+				Vector max = GetGlobalTeam(side)->m_vPenBoxMax - Vector(boxLength * 2, 0, 0);
+				if (GetGlobalTeam(side)->m_nForward == 1)
+				{
+					max.y -= boxLength * 2;
+					min.y -= 500;
+				}
+				else
+				{
+					min.y += boxLength * 2;
+					max.y += 500;
+				}
+
+				bool isInsideBox = pos.x > min.x && pos.y > min.y && pos.x < max.x && pos.y < max.y; 
+
+				if (isInsideBox)
+				{
+					targetPos = Vector(pos.x, pos.y, SDKGameRules()->m_vKickOff.GetZ());
+					targetPos.y = GetGlobalTeam(side)->m_nForward == 1 ? max.y : min.y;
+				}
+			}
 		}
 	}
 

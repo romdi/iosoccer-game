@@ -30,6 +30,7 @@
 	#include "prediction.h"
 	#include "clientmode_sdk.h"
 	#include "vgui_controls/AnimationController.h"
+	#include "igameresources.h"
 
 	#define CRecipientFilter C_RecipientFilter
 #else
@@ -247,8 +248,9 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 			SDKGameRules()->m_nShieldType == SHIELD_PENALTY ||
 			SDKGameRules()->m_nShieldType == SHIELD_KEEPERHANDS)
 		{
-			Vector min = GetGlobalTeam(SDKGameRules()->m_nShieldDir)->m_vPenBoxMin - border;
-			Vector max = GetGlobalTeam(SDKGameRules()->m_nShieldDir)->m_vPenBoxMax + border;
+			int side = (SDKGameRules()->m_nShieldType == SHIELD_PENALTY ? GetGlobalTeam(SDKGameRules()->m_nShieldTeam)->GetOppTeamNumber() : SDKGameRules()->m_nShieldTeam);
+			Vector min = GetGlobalTeam(side)->m_vPenBoxMin - border;
+			Vector max = GetGlobalTeam(side)->m_vPenBoxMax + border;
 
 			if (GetFlags() & FL_SHIELD_KEEP_OUT || SDKGameRules()->m_nShieldType == SHIELD_PENALTY)
 			{
@@ -321,6 +323,51 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 				{
 					newPos.y = yBorder;
 					stopPlayer = true;
+				}
+			}
+
+			if (SDKGameRules()->m_nShieldType == SHIELD_FREEKICK && mp_shield_block_6yardbox.GetBool())
+			{
+				int teamPos;
+				#ifdef CLIENT_DLL
+					teamPos = GameResources()->GetTeamPosition(entindex());
+				#else
+					teamPos = GetTeamPosition();
+				#endif
+				if (teamPos != 1 || GetTeamNumber() != GetGlobalTeam(SDKGameRules()->m_nShieldTeam)->GetOppTeamNumber())
+				{
+					int side = GetGlobalTeam(SDKGameRules()->m_nShieldTeam)->GetOppTeamNumber();
+					int boxLength = abs(GetGlobalTeam(side)->m_vPenBoxMax.GetY() - GetGlobalTeam(side)->m_vPenBoxMin.GetY()) / 3.0f;
+					Vector min = GetGlobalTeam(side)->m_vPenBoxMin + Vector(boxLength * 2, 0, 0) - border;
+					Vector max = GetGlobalTeam(side)->m_vPenBoxMax - Vector(boxLength * 2, 0, 0) + border;
+					if (GetGlobalTeam(side)->m_nForward == 1)
+					{
+						max.y -= boxLength * 2;
+						min.y -= 500;
+					}
+					else
+					{
+						min.y += boxLength * 2;
+						max.y += 500;
+					}
+
+					bool isInsideBox = newPos.x > min.x && newPos.y > min.y && newPos.x < max.x && newPos.y < max.y; 
+					Vector boxCenter = (min + max) / 2;
+
+					if (isInsideBox)
+					{
+						if (newPos.x > min.x && oldPos.x <= min.x && newPos.x < boxCenter.x)
+							newPos.x = min.x;
+						else if (newPos.x < max.x && oldPos.x >= max.x && newPos.x > boxCenter.x)
+							newPos.x = max.x;
+
+						if (newPos.y > min.y && oldPos.y <= min.y && newPos.y < boxCenter.y)
+							newPos.y = min.y;
+						else if (newPos.y < max.y && oldPos.y >= max.y && newPos.y > boxCenter.y)
+							newPos.y = max.y;
+
+						stopPlayer = true;
+					}
 				}
 			}
 		}

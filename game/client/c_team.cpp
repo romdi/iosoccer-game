@@ -128,6 +128,22 @@ int	C_Team::GetTeamNumber( void ) const
 	return m_iTeamNum;
 }
 
+int C_Team::GetOppTeamNumber( void ) const
+{
+	if (m_iTeamNum != TEAM_A && m_iTeamNum != TEAM_B)
+		return m_iTeamNum;
+
+	return m_iTeamNum == TEAM_A ? TEAM_B : TEAM_A;
+}
+
+C_Team *C_Team::GetOppTeam( void ) const
+{
+	if (m_iTeamNum != TEAM_A && m_iTeamNum != TEAM_B)
+		return GetGlobalTeam(m_iTeamNum);
+
+	return m_iTeamNum == TEAM_A ? GetGlobalTeam(TEAM_B) : GetGlobalTeam(TEAM_A);
+}
+
 bool C_Team::Get_IsClubTeam( void )
 {
 	return m_pTeamKitInfo->m_bIsClubTeam;

@@ -209,6 +209,8 @@ void CStatsMenu::Update(int *playerIndices)
 		m_pPlayerStats[i]->SetItemFgColor(4, GetGlobalTeam(TEAM_A + i)->Get_HudKitColor());
 
 		pData->deleteThis();
+
+		m_pPlayerStats[i]->InvalidateLayout();
 	}
 }
 

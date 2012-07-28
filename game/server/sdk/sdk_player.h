@@ -343,7 +343,7 @@ public:
 	char				m_szClubName[32];
 	bool				m_bClubNameChanged;
 
-	char				m_szCountryName[32];
+	char				m_szCountryName[64];
 	bool				m_bCountryNameChanged;
 
 	Vector				EyeDirection2D();

@@ -36,7 +36,7 @@ protected:
 	// total = 340
 	enum { SPEC_FONT_COUNT = 4 };
 
-	enum tab_t { TAB_FORMATION = 0, TAB_STATS, TAB_SETTINGS, TAB_COUNT };
+	enum tab_t { TAB_FORMATION = 0, TAB_STATS, TAB_COUNT };
 
 public:
 	CClientScoreBoardDialog( IViewPort *pViewPort );
@@ -127,7 +127,6 @@ private:
 	Panel		*m_pExtraInfoPanel;
 	Label		*m_pSpectatorNames;
 	Button		*m_pSpectateButton;
-	Button		*m_pSettingsButton;
 	Panel		*m_pSideSeparators[2];
 	Panel		*m_pSpectatorContainer;
 	HFont		m_pSpectatorFontList[SPEC_FONT_COUNT];
