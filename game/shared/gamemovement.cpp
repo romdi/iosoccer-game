@@ -600,6 +600,8 @@ void DrawDispCollPlane( CBaseTrace *pTrace )
 CGameMovement::CGameMovement( void )
 {
 	mv = NULL;
+
+	memset( m_flStuckCheckTime, 0, sizeof(m_flStuckCheckTime) );
 }
 
 //-----------------------------------------------------------------------------
@@ -2342,6 +2344,251 @@ int CGameMovement::ClipVelocity( Vector& in, Vector& normal, Vector& out, float 
 	return blocked;
 }
 
+
+#define CHECKSTUCK_MINTIME 0.05  // Don't check again too quickly.
+
+#if !defined(_STATIC_LINKED) || defined(CLIENT_DLL)
+Vector rgv3tStuckTable[54];
+#else
+extern Vector rgv3tStuckTable[54];
+#endif
+
+#if !defined(_STATIC_LINKED) || defined(CLIENT_DLL)
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CreateStuckTable( void )
+{
+	float x, y, z;
+	int idx;
+	int i;
+	float zi[3];
+	static int firsttime = 1;
+
+	if ( !firsttime )
+		return;
+
+	firsttime = 0;
+
+	memset(rgv3tStuckTable, 0, sizeof(rgv3tStuckTable));
+
+	idx = 0;
+	// Little Moves.
+	x = y = 0;
+	// Z moves
+	for (z = -0.125 ; z <= 0.125 ; z += 0.125)
+	{
+		rgv3tStuckTable[idx][0] = x;
+		rgv3tStuckTable[idx][1] = y;
+		rgv3tStuckTable[idx][2] = z;
+		idx++;
+	}
+	x = z = 0;
+	// Y moves
+	for (y = -0.125 ; y <= 0.125 ; y += 0.125)
+	{
+		rgv3tStuckTable[idx][0] = x;
+		rgv3tStuckTable[idx][1] = y;
+		rgv3tStuckTable[idx][2] = z;
+		idx++;
+	}
+	y = z = 0;
+	// X moves
+	for (x = -0.125 ; x <= 0.125 ; x += 0.125)
+	{
+		rgv3tStuckTable[idx][0] = x;
+		rgv3tStuckTable[idx][1] = y;
+		rgv3tStuckTable[idx][2] = z;
+		idx++;
+	}
+
+	// Remaining multi axis nudges.
+	for ( x = - 0.125; x <= 0.125; x += 0.250 )
+	{
+		for ( y = - 0.125; y <= 0.125; y += 0.250 )
+		{
+			for ( z = - 0.125; z <= 0.125; z += 0.250 )
+			{
+				rgv3tStuckTable[idx][0] = x;
+				rgv3tStuckTable[idx][1] = y;
+				rgv3tStuckTable[idx][2] = z;
+				idx++;
+			}
+		}
+	}
+
+	// Big Moves.
+	x = y = 0;
+	zi[0] = 0.0f;
+	zi[1] = 1.0f;
+	zi[2] = 6.0f;
+
+	for (i = 0; i < 3; i++)
+	{
+		// Z moves
+		z = zi[i];
+		rgv3tStuckTable[idx][0] = x;
+		rgv3tStuckTable[idx][1] = y;
+		rgv3tStuckTable[idx][2] = z;
+		idx++;
+	}
+
+	x = z = 0;
+
+	// Y moves
+	for (y = -2.0f ; y <= 2.0f ; y += 2.0)
+	{
+		rgv3tStuckTable[idx][0] = x;
+		rgv3tStuckTable[idx][1] = y;
+		rgv3tStuckTable[idx][2] = z;
+		idx++;
+	}
+	y = z = 0;
+	// X moves
+	for (x = -2.0f ; x <= 2.0f ; x += 2.0f)
+	{
+		rgv3tStuckTable[idx][0] = x;
+		rgv3tStuckTable[idx][1] = y;
+		rgv3tStuckTable[idx][2] = z;
+		idx++;
+	}
+
+	// Remaining multi axis nudges.
+	for (i = 0 ; i < 3; i++)
+	{
+		z = zi[i];
+		
+		for (x = -2.0f ; x <= 2.0f ; x += 2.0f)
+		{
+			for (y = -2.0f ; y <= 2.0f ; y += 2.0)
+			{
+				rgv3tStuckTable[idx][0] = x;
+				rgv3tStuckTable[idx][1] = y;
+				rgv3tStuckTable[idx][2] = z;
+				idx++;
+			}
+		}
+	}
+	Assert( idx < sizeof(rgv3tStuckTable)/sizeof(rgv3tStuckTable[0]));
+}
+#else
+extern void CreateStuckTable( void );
+#endif
+
+int GetRandomStuckOffsets( CBasePlayer *pPlayer, Vector& offset)
+{
+ // Last time we did a full
+	int idx;
+	idx = pPlayer->m_StuckLast++;
+
+	VectorCopy(rgv3tStuckTable[idx % 54], offset);
+
+	return (idx % 54);
+}
+
+void ResetStuckOffsets( CBasePlayer *pPlayer )
+{
+	pPlayer->m_StuckLast = 0;
+}
+
+int CGameMovement::CheckStuck( void )
+{
+	Vector base;
+	Vector offset;
+	Vector test;
+	EntityHandle_t hitent;
+	int idx;
+	float fTime;
+	trace_t traceresult;
+
+	CreateStuckTable();
+
+	hitent = TestPlayerPosition( mv->GetAbsOrigin(), COLLISION_GROUP_PLAYER_MOVEMENT, traceresult );
+	if ( hitent == INVALID_ENTITY_HANDLE )
+	{
+		ResetStuckOffsets( player );
+		return 0;
+	}
+
+	// Deal with stuckness...
+#ifndef _LINUX
+	if ( developer.GetBool() )
+	{
+		bool isServer = player->IsServer();
+		engine->Con_NPrintf( isServer, "%s stuck on object %i/%s", 
+			isServer ? "server" : "client",
+			hitent.GetEntryIndex(), MoveHelper()->GetName(hitent) );
+	}
+#endif
+
+	VectorCopy( mv->GetAbsOrigin(), base );
+
+	// 
+	// Deal with precision error in network.
+	// 
+	// World or BSP model
+	if ( !player->IsServer() )
+	{
+		if ( MoveHelper()->IsWorldEntity( hitent ) )
+		{
+			int nReps = 0;
+			ResetStuckOffsets( player );
+			do 
+			{
+				GetRandomStuckOffsets( player, offset );
+				VectorAdd( base, offset, test );
+				
+				if ( TestPlayerPosition( test, COLLISION_GROUP_PLAYER_MOVEMENT, traceresult ) == INVALID_ENTITY_HANDLE )
+				{
+					ResetStuckOffsets( player );
+					mv->SetAbsOrigin( test );
+					return 0;
+				}
+				nReps++;
+			} while (nReps < 54);
+		}
+	}
+
+	// Only an issue on the client.
+	idx = player->IsServer() ? 0 : 1;
+
+	fTime = engine->Time();
+	// Too soon?
+	if ( m_flStuckCheckTime[ player->entindex() ][ idx ] >=  fTime - CHECKSTUCK_MINTIME )
+	{
+		return 1;
+	}
+	m_flStuckCheckTime[ player->entindex() ][ idx ] = fTime;
+
+	MoveHelper( )->AddToTouched( traceresult, mv->m_vecVelocity );
+	GetRandomStuckOffsets( player, offset );
+	VectorAdd( base, offset, test );
+
+	if ( TestPlayerPosition( test, COLLISION_GROUP_PLAYER_MOVEMENT, traceresult ) == INVALID_ENTITY_HANDLE)
+	{
+		ResetStuckOffsets( player );
+		mv->SetAbsOrigin( test );
+		return 0;
+	}
+
+	return 1;
+}
+
+CBaseHandle CGameMovement::TestPlayerPosition( const Vector& pos, int collisionGroup, trace_t& pm )
+{
+	Ray_t ray;
+	ray.Init( pos, pos, GetPlayerMins(), GetPlayerMaxs() );
+	UTIL_TraceRay( ray, PlayerSolidMask(), mv->m_nPlayerHandle.Get(), collisionGroup, &pm );
+	if ( (pm.contents & PlayerSolidMask()) && pm.m_pEnt )
+	{
+		return pm.m_pEnt->GetRefEHandle();
+	}
+	else
+	{	
+		return INVALID_EHANDLE_INDEX;
+	}
+}
+
 void CGameMovement::SetGroundEntity( trace_t *pm )
 {
 	CBaseEntity *newGround = pm ? pm->m_pEnt : NULL;
@@ -2569,6 +2816,27 @@ void CGameMovement::PlayerMove( void )
 	ReduceTimers();
 
 	AngleVectors (mv->m_vecViewAngles, &m_vecForward, &m_vecRight, &m_vecUp );  // Determine movement angles
+
+	// Always try and unstick us unless we are using a couple of the movement modes
+	if ( player->GetMoveType() != MOVETYPE_NOCLIP && 
+		 player->GetMoveType() != MOVETYPE_NONE && 		 
+		 player->GetMoveType() != MOVETYPE_ISOMETRIC && 
+		 player->GetMoveType() != MOVETYPE_OBSERVER && 
+		 (player->GetTeamNumber() == TEAM_A || player->GetTeamNumber() == TEAM_B) &&
+		 !(player->GetFlags() & FL_REMOTECONTROLLED))
+	{
+		//Vector pos = mv->GetAbsOrigin();
+		//ToSDKPlayer(player)->FindSafePos(pos);
+		//mv->SetAbsOrigin(pos);
+		//if ( CheckInterval( STUCK ) )
+		//{
+		//	if ( CheckStuck() )
+		//	{
+		//		// Can't move, we're stuck
+		//		return;  
+		//	}
+		//}
+	}
 
 	// Now that we are "unstuck", see where we are (player->GetWaterLevel() and type, player->GetGroundEntity()).
 	if ( player->GetMoveType() != MOVETYPE_WALK ||

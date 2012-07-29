@@ -77,7 +77,7 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Editabl
 	SetProportional(false);
 
 	// set the scheme before any child control is created
-	SetScheme("ClientScheme");
+	//SetScheme("ClientScheme");
 
 	m_pMainPanel = new Panel(this);
 
@@ -226,7 +226,7 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 	m_pMainPanel->SetBgColor(Color(0, 0, 0, 240));
 	m_pMainPanel->SetBounds(GetWide() / 2 - PANEL_WIDTH / 2, PANEL_TOPMARGIN, PANEL_WIDTH, PANEL_HEIGHT);
 	m_pMainPanel->SetPaintBorderEnabled(false);
-	m_pMainPanel->SetBorder(m_pScheme->GetBorder("BrightBorder"));
+	//m_pMainPanel->SetBorder(m_pScheme->GetBorder("BrightBorder"));
 
 	if ( m_pImageList )
 		delete m_pImageList;
@@ -375,6 +375,14 @@ void CClientScoreBoardDialog::Update( void )
 	if (!gr)
 		return;
 
+	int item1 = m_pPlayerList[0]->GetSelectedItem();
+	int item2 = m_pPlayerList[1]->GetSelectedItem();
+
+	if (m_pPlayerList[0]->GetFgColor() != GetGlobalTeam(TEAM_A)->Get_HudKitColor() || m_pPlayerList[1]->GetFgColor() != GetGlobalTeam(TEAM_B)->Get_HudKitColor())
+	{
+		Reset();
+	}
+
 	FillScoreBoard();
 
 	for (int i = 0; i < 2; i++)
@@ -382,8 +390,11 @@ void CClientScoreBoardDialog::Update( void )
 		m_pTeamCrests[i]->SetVisible(gr->HasTeamCrest(TEAM_A + i));
 		m_pPlayerList[i]->SetFgColor(GetGlobalTeam(TEAM_A + i)->Get_HudKitColor());
 		m_pPlayerList[i]->SetSectionFgColor(0, GetGlobalTeam(TEAM_A + i)->Get_HudKitColor());
-		m_pPlayerList[i]->Repaint();
+		//m_pPlayerList[i]->Repaint();
 	}
+
+	m_pPlayerList[0]->SetSelectedItem(item1);
+	m_pPlayerList[1]->SetSelectedItem(item2);
 
 	bool showPlayerStats = false;
 	int playerIndices[2] = { 0, 0 };
@@ -476,7 +487,12 @@ void CClientScoreBoardDialog::UpdatePlayerInfo()
 		{
 			if (gr->GetTeam(i) != TEAM_A && gr->GetTeam(i) != TEAM_B)
 			{
-				Q_strncat(spectatorNames, VarArgs("%s %s", (spectatorCount == 0 ? "" : ","), gr->GetPlayerName(i)), sizeof(spectatorNames));
+				char playerName[MAX_PLAYER_NAME_LENGTH + 16];
+				Q_strncpy(playerName, gr->GetPlayerName(i), sizeof(playerName));
+				int nextJoin = max(0, (int)(gr->GetNextJoin(i) - gpGlobals->curtime));
+				if (nextJoin > 0)
+					Q_strncat(playerName, VarArgs(" [%d]", nextJoin), sizeof(playerName));
+				Q_strncat(spectatorNames, VarArgs("%s %s", (spectatorCount == 0 ? "" : ","), playerName), sizeof(spectatorNames));
 				spectatorCount += 1;
 
 				// remove the player
@@ -594,7 +610,9 @@ void CClientScoreBoardDialog::AddHeader()
 		m_pPlayerList[i]->SetSectionAlwaysVisible(m_iSectionId);
 		m_pPlayerList[i]->SetFontSection(m_iSectionId, m_pScheme->GetFont("IOSTeamMenuSmall"));
 		m_pPlayerList[i]->SetLineSpacing(30);
-		m_pPlayerList[i]->SetSectionDividerColor(m_iSectionId, Color(255, 255, 255, 255));
+		m_pPlayerList[i]->SetFgColor(Color(0, 0, 0, 255));
+		m_pPlayerList[i]->SetSectionFgColor(0, Color(0, 0, 0, 255));
+		//m_pPlayerList[i]->SetSectionDividerColor(m_iSectionId, Color(255, 255, 255, 255));
 		m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "posname",		"Pos.", 0, 50 );
 		m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "country",		"Nat.", SectionedListPanel::COLUMN_IMAGE, 50 );
 		m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "club",			"Club", 0,  50);

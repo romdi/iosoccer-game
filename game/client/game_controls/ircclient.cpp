@@ -5,7 +5,7 @@ void CC_IRCMenu(const CCommand &args)
 {
 	//IViewPortPanel *pPanel = gViewPortInterface->FindPanelByName("TestPanel");
 	//pPanel->ShowPanel(!pPanel->IsVisible());
-	g_pTestPanel->SetVisible(!g_pTestPanel->IsVisible());
+	//g_pTestPanel->SetVisible(!g_pTestPanel->IsVisible());
 }
 
 ConCommand ircmenu("ircmenu", CC_IRCMenu);

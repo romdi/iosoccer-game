@@ -116,7 +116,7 @@ DECLARE_HUD_MESSAGE(CHudScorebar, NeutralMatchEvent);
 
 #define PLAYER_WIDTH			150
 #define PLAYER_HEIGHT			200
-#define EVENT_WIDTH				250
+#define EVENT_WIDTH				200
 #define EVENT_HEIGHT			200
 
 enum { MAINBAR_WIDTH = 480, MAINBAR_HEIGHT = 40, MAINBAR_MARGIN = 15 };
@@ -214,6 +214,12 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 	m_pNewTime->SetFont(pScheme->GetFont("IOSScorebarMedium"));
 	//m_pNewTime->SetBgColor(black);
 	//m_pNewTime->SetPaintBackgroundType(2);
+	
+	m_pEvent->SetBounds(GetWide() / 2 - MAINBAR_WIDTH / 2, MAINBAR_MARGIN + MAINBAR_HEIGHT + 10, MAINBAR_WIDTH, EVENT_HEIGHT);
+	m_pEvent->SetContentAlignment(Label::a_north);
+	m_pEvent->SetFont(pScheme->GetFont("IOSEvent"));
+	m_pEvent->SetFgColor(Color(255, 255, 255, 255));
+	//m_pEvent->SetVisible(false);
 
 	for (int i = 0; i < 2; i++)
 	{
@@ -256,23 +262,17 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 		m_pTeamColors[i][0]->SetBounds(TEAMCOLOR_HMARGIN + i * (MAINBAR_WIDTH - TEAMCOLOR_WIDTH - 2 * TEAMCOLOR_HMARGIN), TEAMCOLOR_VMARGIN, TEAMCOLOR_WIDTH, MAINBAR_HEIGHT - 2 * TEAMCOLOR_VMARGIN);
 		m_pTeamColors[i][1]->SetBounds(TEAMCOLOR_HMARGIN + TEAMCOLOR_WIDTH + i * (MAINBAR_WIDTH - 3 * TEAMCOLOR_WIDTH - 2 * TEAMCOLOR_HMARGIN), TEAMCOLOR_VMARGIN, TEAMCOLOR_WIDTH, MAINBAR_HEIGHT - 2 * TEAMCOLOR_VMARGIN);
 
-		m_pEventBars[i]->SetBounds(WIDTH_TEAMBAR - WIDTH_OVERLAP, i * (HEIGHT_TEAMBAR + HEIGHT_MARGIN), 0, HEIGHT_TEAMBAR);
+		m_pEventBars[i]->SetBounds(0, i * (HEIGHT_TEAMBAR + HEIGHT_MARGIN), 0, HEIGHT_TEAMBAR);
 		m_pEventBars[i]->SetPaintBackgroundType(2);
 		m_pEventBars[i]->SetBgColor(bgColorTransparent);
 		m_pEventBars[i]->SetZPos(-1);
 
-		m_pPlayers[i]->SetBounds((GetWide() / 2 - EVENT_WIDTH / 2 - PLAYER_WIDTH) + i * (PLAYER_WIDTH + EVENT_WIDTH), MAINBAR_MARGIN + MAINBAR_HEIGHT + 10, PLAYER_WIDTH, PLAYER_HEIGHT);
-		m_pPlayers[i]->SetContentAlignment(Label::a_north);
+		m_pPlayers[i]->SetBounds(GetWide() / 2 - MAINBAR_WIDTH / 2, MAINBAR_MARGIN + MAINBAR_HEIGHT + 10, MAINBAR_WIDTH, PLAYER_HEIGHT);
+		m_pPlayers[i]->SetContentAlignment(i == 0 ? Label::a_northwest : Label::a_northeast);
 		m_pPlayers[i]->SetFont(pScheme->GetFont("IOSEventPlayer"));
 		m_pPlayers[i]->SetFgColor(Color(255, 255, 255, 255));
 		//m_pPlayers[i]->SetVisible(false);
 	}
-
-	m_pEvent->SetBounds(GetWide() / 2 - EVENT_WIDTH / 2, MAINBAR_MARGIN + MAINBAR_HEIGHT + 10, EVENT_WIDTH, EVENT_HEIGHT);
-	m_pEvent->SetContentAlignment(Label::a_north);
-	m_pEvent->SetFont(pScheme->GetFont("IOSEvent"));
-	m_pEvent->SetFgColor(Color(255, 255, 255, 255));
-	//m_pEvent->SetVisible(false);
 }
 
 //-----------------------------------------------------------------------------

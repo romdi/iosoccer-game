@@ -91,7 +91,7 @@ CSpectatorMenu::CSpectatorMenu( IViewPort *pViewPort ) : Frame( NULL, PANEL_SPEC
 	SetSizeable( false );
 	SetProportional(true);
 
-	SetScheme("ClientScheme");
+	//SetScheme("ClientScheme");
 
 	m_pPlayerList = new ComboBox(this, "playercombo", 10 , false);
 	HFont hFallbackFont = scheme()->GetIScheme( GetScheme() )->GetFont( "DefaultVerySmallFallBack", false );
@@ -394,7 +394,7 @@ CSpectatorGUI::CSpectatorGUI(IViewPort *pViewPort) : EditablePanel( NULL, PANEL_
 	SetProportional(true);
 
 	// load the new scheme early!!
-	SetScheme("ClientScheme");
+	//SetScheme("ClientScheme");
 	SetMouseInputEnabled( false );
 	SetKeyBoardInputEnabled( false );
 

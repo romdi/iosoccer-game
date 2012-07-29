@@ -38,7 +38,7 @@
 	#include "team.h"
 #endif
 
-const char *g_szRequiredClientVersion = "12.07.12/0h";
+const char *g_szRequiredClientVersion = "29.07.12/0h";
 
 ConVar sv_showimpacts("sv_showimpacts", "0", FCVAR_REPLICATED, "Shows client (red) and server (blue) bullet impact point" );
 
@@ -410,4 +410,39 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 		newVel.y = (newPos - oldPos).y * 35;
 		//newPos = pos;
 	}
+}
+
+void CSDKPlayer::FindSafePos(Vector &startPos)
+{
+	bool hasSafePos = false;
+	int maxCheckDist = VEC_HULL_MAX.x * 10;
+
+	for (int x = 0; x < maxCheckDist; x++)
+	{
+		for (int y = 0; y < maxCheckDist * 10; y++)
+		{
+			for (int sign = -1; sign <= 1; sign += 2)
+			{
+				Vector checkPos = startPos + Vector(x, y, 0);
+				trace_t	trace;
+				UTIL_TraceHull(checkPos, checkPos, VEC_HULL_MIN, VEC_HULL_MAX, MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &trace);
+
+				if (!trace.startsolid)
+				{
+					hasSafePos = true;
+					startPos = checkPos;
+					break;
+				}
+			}
+
+			if (hasSafePos)
+				break;
+		}
+
+		if (hasSafePos)
+			break;
+	}
+
+	if (!hasSafePos)
+		startPos.z += VEC_HULL_MAX.z * 2;
 }

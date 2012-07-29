@@ -1821,7 +1821,7 @@ void CC_Bench(const CCommand &args)
 
 	if (args.ArgC() < 2)
 	{
-		Msg("Bench Whom?\n");
+		Msg("Bench whom?\n");
 		return;
 	}
 
@@ -1838,6 +1838,32 @@ void CC_Bench(const CCommand &args)
 
 static ConCommand bench("bench", CC_Bench);
 static ConCommand benchid("benchid", CC_Bench);
+
+void CC_BenchAll(const CCommand &args)
+{
+	if (!UTIL_IsCommandIssuedByServerAdmin())
+        return;
+
+	if (args.ArgC() < 2)
+	{
+		Msg("Usage: \"benchall <0-2>\". 0: All players, 1: Home team players, 2: Away team players\n");
+		return;
+	}
+
+	int team = atoi(args[1]);
+
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+		if (!CSDKPlayer::IsOnField(pPl) || pPl->IsBot())
+			continue;
+
+		if (team == 0 || (pPl->GetTeamNumber() - TEAM_A + 1) == team)
+			pPl->ChangeTeamPos(TEAM_SPECTATOR, 0, true);
+	}
+}
+
+static ConCommand benchall("benchall", CC_BenchAll);
 
 #endif
 

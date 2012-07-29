@@ -60,8 +60,9 @@ enum { BUTTON_WIDTH = 100, BUTTON_HEIGHT = 30, BUTTON_MARGIN = 5 };
 
 CIOSOptionsPanel::CIOSOptionsPanel(VPANEL parent) : BaseClass(NULL, "IOSOptionsPanel")
 {
-	SetScheme("ClientScheme");
+	//SetScheme("ClientScheme");
 
+	SetParent(parent);
 	m_pContent = new Panel(this, "");
 	m_pPlayerNameLabel = new Label(m_pContent, "", "Player Name:");
 	m_pPlayerNameText = new TextEntry(m_pContent, "");
@@ -110,24 +111,24 @@ void CIOSOptionsPanel::ApplySchemeSettings( IScheme *pScheme )
 	//m_pNameText->SetEnabled(true);
 	m_pPlayerNameText->AddActionSignalTarget( this );
 	m_pPlayerNameText->SendNewLine(true); // with the txtEntry Type you need to set it to pass the return key as a message
-	m_pPlayerNameText->SetFgColor(Color(0, 0, 0, 255));
+	//m_pPlayerNameText->SetFgColor(Color(0, 0, 0, 255));
 
 	m_pClubNameLabel->SetBounds(0, TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
 	m_pClubNameText->SetBounds(LABEL_WIDTH, TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
-	m_pClubNameText->SetFgColor(Color(0, 0, 0, 255));
+	//m_pClubNameText->SetFgColor(Color(0, 0, 0, 255));
 
 	m_pCountryNameLabel->SetBounds(0, 2 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
 	m_pCountryNameList->SetBounds(LABEL_WIDTH, 2 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
 	//m_pCountryNameList->GetMenu()->AddActionSignalTarget(this);
 	m_pCountryNameList->GetMenu()->MakeReadyForUse();
-	m_pCountryNameList->GetMenu()->SetFgColor(Color(0, 0, 0, 255));
-	m_pCountryNameList->GetMenu()->SetBgColor(Color(255, 255, 255, 255));
-	m_pCountryNameList->SetSelectionUnfocusedBgColor(Color(255, 0, 0, 255));
-	m_pCountryNameList->SetSelectionBgColor(Color(255, 255, 0, 255));
-	m_pCountryNameList->SetFgColor(Color(0, 0, 0, 255));
-	m_pCountryNameList->SetBgColor(Color(255, 255, 255, 255));
-	m_pCountryNameList->SetDisabledBgColor(Color(255, 255, 255, 255));
-	m_pCountryNameList->SetSelectionTextColor(Color(0, 0, 0, 255));
+	//m_pCountryNameList->GetMenu()->SetFgColor(Color(0, 0, 0, 255));
+	//m_pCountryNameList->GetMenu()->SetBgColor(Color(255, 255, 255, 255));
+	//m_pCountryNameList->SetSelectionUnfocusedBgColor(Color(255, 0, 0, 255));
+	//m_pCountryNameList->SetSelectionBgColor(Color(255, 255, 0, 255));
+	//m_pCountryNameList->SetFgColor(Color(0, 0, 0, 255));
+	//m_pCountryNameList->SetBgColor(Color(255, 255, 255, 255));
+	//m_pCountryNameList->SetDisabledBgColor(Color(255, 255, 255, 255));
+	//m_pCountryNameList->SetSelectionTextColor(Color(0, 0, 0, 255));
 
 	m_pOKButton->SetBounds(m_pContent->GetWide() - 3 * BUTTON_WIDTH - 2 * BUTTON_MARGIN, m_pContent->GetTall() - BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT);
 	m_pOKButton->SetCommand("save_and_close");
@@ -140,12 +141,12 @@ void CIOSOptionsPanel::ApplySchemeSettings( IScheme *pScheme )
 	m_pSaveButton->SetBounds(m_pContent->GetWide() - BUTTON_WIDTH, m_pContent->GetTall() - BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT);
 	m_pSaveButton->SetCommand("save_settings");
 	m_pSaveButton->AddActionSignalTarget(this);
-	m_pSaveButton->SetDefaultColor(Color(0, 0, 0, 255), Color(200, 200, 200, 255));
-	m_pSaveButton->SetArmedColor(Color(50, 50, 50, 255), Color(150, 150, 150, 255));
-	m_pSaveButton->SetDepressedColor(Color(100, 100, 100, 255), Color(200, 200, 200, 255));
-	m_pSaveButton->SetCursor(dc_hand);
-	m_pSaveButton->SetFont(m_pScheme->GetFont("IOSTeamMenuNormal"));
-	m_pSaveButton->SetContentAlignment(Label::a_center);
+	//m_pSaveButton->SetDefaultColor(Color(0, 0, 0, 255), Color(200, 200, 200, 255));
+	//m_pSaveButton->SetArmedColor(Color(50, 50, 50, 255), Color(150, 150, 150, 255));
+	//m_pSaveButton->SetDepressedColor(Color(100, 100, 100, 255), Color(200, 200, 200, 255));
+	//m_pSaveButton->SetCursor(dc_hand);
+	//m_pSaveButton->SetFont(m_pScheme->GetFont("IOSTeamMenuNormal"));
+	//m_pSaveButton->SetContentAlignment(Label::a_center);
 }
 
 void CIOSOptionsPanel::PerformLayout()
@@ -167,11 +168,11 @@ void CIOSOptionsPanel::OnCommand(const char *cmd)
 	{
 		char text[64];
 		m_pPlayerNameText->GetText(text, sizeof(text));
-		engine->ClientCmd(VarArgs("playername \"%s\"", text));
+		g_pCVar->FindVar("playername")->SetValue(text);
 		m_pClubNameText->GetText(text, sizeof(text));
-		engine->ClientCmd(VarArgs("clubname \"%s\"", text));
-		KeyValues *kv = m_pCountryNameList->GetActiveItemUserData();
-		engine->ClientCmd(VarArgs("countryname \"%s\"", g_szCountryNames[kv->GetInt("index")]));
+		g_pCVar->FindVar("clubname")->SetValue(text);
+		m_pCountryNameList->GetText(text, sizeof(text));
+		g_pCVar->FindVar("countryname")->SetValue(text);
 
 		if (!stricmp(cmd, "save_and_close"))
 			Close();
@@ -187,6 +188,10 @@ void CIOSOptionsPanel::OnCommand(const char *cmd)
 void CIOSOptionsPanel::Activate()
 {
 	BaseClass::Activate();
+
+	if (Q_strlen(g_pCVar->FindVar("playername")->GetString()) == 0)
+		g_pCVar->FindVar("playername")->SetValue(g_pCVar->FindVar("name")->GetString());
+
 	m_pPlayerNameText->SetText(g_pCVar->FindVar("playername")->GetString());
 	m_pCountryNameList->SetText(g_pCVar->FindVar("countryname")->GetString());
 	m_pClubNameText->SetText(g_pCVar->FindVar("clubname")->GetString());

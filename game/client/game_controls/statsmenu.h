@@ -49,6 +49,7 @@ public:
 	virtual void PerformLayout();
 	virtual void OnCommand( char const *cmd );
 	void Reset();
+	void Reset(int team);
 	void Update(int *playerIndices);
 
 	float m_flNextUpdateTime;

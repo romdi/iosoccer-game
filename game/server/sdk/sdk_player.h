@@ -316,6 +316,8 @@ public:
 	int					GetTeamToJoin(void) { return m_nTeamToJoin; }
 	int					GetNextJoin(void) { return m_flNextJoin; }
 
+	void				FindSafePos(Vector &startPos);
+
 	void				ResetFlags();
 
 	char				*GetClubName() { return m_szClubName; }

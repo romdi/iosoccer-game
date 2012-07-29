@@ -35,6 +35,10 @@ public:
 	virtual void PostDataUpdate( DataUpdateType_t updateType );
 	virtual void OnDataChanged( DataUpdateType_t updateType );
 
+	void LookAtBall();
+
+	void FindSafePos(Vector &startPos);
+
 	// Player avoidance
 	bool ShouldCollide( int collisionGroup, int contentsMask ) const;
 	void AvoidPlayers( CUserCmd *pCmd );

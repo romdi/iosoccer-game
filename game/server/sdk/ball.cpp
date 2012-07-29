@@ -68,6 +68,7 @@ ConVar sv_ball_timelimit("sv_ball_timelimit", "10", FCVAR_NOTIFY);
 ConVar sv_ball_statetransitiondelay("sv_ball_statetransitiondelay", "1.0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
 ConVar sv_ball_goalcelebduration("sv_ball_goalcelebduration", "5.0", FCVAR_NOTIFY);
 ConVar sv_ball_thinkinterval("sv_ball_thinkinterval", "0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
+ConVar sv_ball_throwin_normalstrength("sv_ball_throwin_normalstrength", "350", FCVAR_NOTIFY);
 ConVar sv_ball_throwin_minstrength("sv_ball_throwin_minstrength", "250", FCVAR_NOTIFY);
 ConVar sv_ball_throwin_maxstrength("sv_ball_throwin_maxstrength", "750", FCVAR_NOTIFY); 
 ConVar sv_ball_chestdrop_strength("sv_ball_chestdrop_strength", "250", FCVAR_NOTIFY); 
@@ -820,7 +821,7 @@ void CBall::State_THROWIN_Think()
 
 		if (m_pPl->IsNormalshooting())
 		{
-			SetVel(dir * sv_ball_throwin_minstrength.GetInt());
+			SetVel(dir * sv_ball_throwin_normalstrength.GetInt());
 		}
 		else
 		{

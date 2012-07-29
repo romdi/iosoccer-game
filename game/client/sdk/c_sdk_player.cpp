@@ -22,6 +22,7 @@
 #include "bone_setup.h"
 #include "cl_animevent.h"
 #include "sdk_gamerules.h"
+#include "c_ball.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 ConVar cl_ragdoll_physics_enable( "cl_ragdoll_physics_enable", "1", 0, "Enable/disable ragdoll physics." );
@@ -588,7 +589,52 @@ void C_SDKPlayer::UpdateClientSideAnimation()
 {
 	m_PlayerAnimState->Update( EyeAngles()[YAW], EyeAngles()[PITCH] );
 	BaseClass::UpdateClientSideAnimation();
+
+	LookAtBall();
 }
+
+void C_SDKPlayer::LookAtBall(void)
+{
+	C_Ball *pBall = GetBall();
+
+	if (!pBall)
+		return;
+
+	float yaw, pitch;
+
+	Vector ballPos = pBall->GetLocalOrigin();
+	Vector dirToBall = ballPos - Vector(GetLocalOrigin().x, GetLocalOrigin().y, GetLocalOrigin().z + VEC_VIEW.z);
+
+	//float controllers[MAXSTUDIOBONECTRLS];
+	//GetBoneControllers(controllers);
+	//float curyaw = controllers[2] * 180;
+	//float curpitch = controllers[3] * 180;
+
+	//if (dirToBall.Length2D() <= 60)
+	//{
+	//	//yaw = (curyaw > 0 ? max(0, curyaw - 1 * gpGlobals->frametime) : min(0, curyaw + 1 * gpGlobals->frametime));
+	//	//pitch = (curpitch > 0 ? max(0, curpitch - 1 * gpGlobals->frametime) : min(0, curpitch + 1 * gpGlobals->frametime));
+	//	yaw = 0;
+	//	pitch = 0;
+	//}
+	//else
+	{
+		QAngle angToBall;
+		VectorAngles(dirToBall, angToBall );
+
+		yaw = angToBall[YAW] - GetLocalAngles()[YAW];
+		pitch = angToBall[PITCH];
+	}
+
+	if (yaw > 180) yaw -= 360;
+	if (yaw < -180) yaw += 360;
+	if (pitch > 180) pitch -= 360;
+	if (pitch < -180) pitch += 360;
+
+	SetBoneController(2, yaw);
+	SetBoneController(3, pitch);
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------

@@ -135,6 +135,11 @@ protected:
 	// See if the player has a bogus velocity value.
 	void			CheckVelocity( void );
 
+	int				CheckStuck( void );
+
+	// Traces the player bbox as it is swept from start to end
+	virtual CBaseHandle		TestPlayerPosition( const Vector& pos, int collisionGroup, trace_t& pm );
+
 	// Does not change the entities velocity at all
 	void			PushEntity( Vector& push, trace_t *pTrace );
 
@@ -162,6 +167,8 @@ protected:
 	virtual void	StepMove( Vector &vecDestination, trace_t &trace );
 
 protected:
+
+	float			m_flStuckCheckTime[MAX_PLAYERS+1][2]; // Last time we did a full test
 
 	// Performs the collision resolution for fliers.
 	void			PerformFlyCollisionResolution( trace_t &pm, Vector &move );

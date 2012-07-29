@@ -71,33 +71,38 @@ void CStatsMenu::Reset()
 {
 	for (int i = 0; i < 2; i++)
 	{
-		m_pPlayerStats[i]->DeleteAllItems();
-		m_pPlayerStats[i]->RemoveAllSections();
-
-		int m_iSectionId = 0;
-
-		m_pPlayerStats[i]->AddSection(m_iSectionId, "");
-		m_pPlayerStats[i]->SetSectionAlwaysVisible(0);
-		m_pPlayerStats[i]->SetFontSection(m_iSectionId, m_pScheme->GetFont("StatsPlayerName"));
-		m_pPlayerStats[i]->SetLineSpacing(30);
-		const int nameWidth = 110;
-		const int valueWidth = 65;
-		m_pPlayerStats[i]->SetSectionDividerColor(m_iSectionId, Color(255, 255, 255, 255));
-		for (int j = 0; j < 3; j++)
-		{
-			m_pPlayerStats[i]->AddColumnToSection(m_iSectionId, VarArgs("NameColumn%d", j), "", SectionedListPanel::COLUMN_RIGHT, nameWidth);
-			m_pPlayerStats[i]->AddColumnToSection(m_iSectionId, VarArgs("ValueColumn%d", j), "", 0, valueWidth);
-		}
-
-		HFont font = m_pScheme->GetFont("IOSTeamMenuNormal");
-		KeyValues *pData = new KeyValues("data");
-		for (int j = 0; j < 5; j++)
-		{
-			m_pPlayerStats[i]->AddItem(j, pData);
-			m_pPlayerStats[i]->SetItemFont(j, font);
-		}
-		pData->deleteThis();
+		Reset(i);
 	}
+}
+
+void CStatsMenu::Reset(int side)
+{
+	m_pPlayerStats[side]->RemoveAll();
+	m_pPlayerStats[side]->RemoveAllSections();
+
+	m_pPlayerStats[side]->AddSection(0, "");
+	m_pPlayerStats[side]->SetSectionAlwaysVisible(0);
+	m_pPlayerStats[side]->SetFontSection(0, m_pScheme->GetFont("StatsPlayerName"));
+	m_pPlayerStats[side]->SetLineSpacing(30);
+	m_pPlayerStats[side]->SetFgColor(Color(0, 0, 0, 255));
+	m_pPlayerStats[side]->SetSectionFgColor(0, Color(0, 0, 0, 255));
+	const int nameWidth = 110;
+	const int valueWidth = 60;
+	//m_pPlayerStats[side]->SetSectionDividerColor(0, Color(255, 255, 255, 255));
+	for (int j = 0; j < 3; j++)
+	{
+		m_pPlayerStats[side]->AddColumnToSection(0, VarArgs("NameColumn%d", j), "", 0/*SectionedListPanel::COLUMN_RIGHT*/, nameWidth);
+		m_pPlayerStats[side]->AddColumnToSection(0, VarArgs("ValueColumn%d", j), "", 0, valueWidth);
+	}
+
+	HFont font = m_pScheme->GetFont("IOSTeamMenuNormal");
+	KeyValues *pData = new KeyValues("data");
+	for (int j = 0; j < 5; j++)
+	{
+		m_pPlayerStats[side]->AddItem(j, pData);
+		m_pPlayerStats[side]->SetItemFont(j, font);
+	}
+	pData->deleteThis();
 }
 
 void CStatsMenu::PerformLayout()
@@ -144,7 +149,10 @@ void CStatsMenu::Update(int *playerIndices)
 		}
 
 		m_pPlayerStats[i]->SetVisible(true);
+		//if (m_pPlayerStats[i]->GetFgColor() != GetGlobalTeam(TEAM_A + i)->Get_HudKitColor())
+		//	Reset(i);
 		m_pPlayerStats[i]->SetSectionFgColor(0, GetGlobalTeam(TEAM_A + i)->Get_HudKitColor());
+		//m_pPlayerStats[i]->Repaint();
 		m_pPlayerStats[i]->SetFgColor(GetGlobalTeam(TEAM_A + i)->Get_HudKitColor());
 		//m_pPlayerStats[i]->SetSectionDividerColor(0, Color(255, 255, 255, 255));
 
@@ -210,7 +218,7 @@ void CStatsMenu::Update(int *playerIndices)
 
 		pData->deleteThis();
 
-		m_pPlayerStats[i]->InvalidateLayout();
+		//m_pPlayerStats[i]->InvalidateLayout();
 	}
 }
 
