@@ -224,10 +224,31 @@ enum match_event_t
 	MATCH_EVENT_REDCARD,
 	MATCH_EVENT_ASSIST,
 	MATCH_EVENT_DOUBLETOUCH,
+	MATCH_EVENT_HALFTIME,
 	NUM_MATCH_EVENTS
 };
 
-extern const char *g_szMatchEventNames[32];
-
+static const char *g_szMatchEventNames[32] =
+{
+	"",
+	"GOAL",
+	"OWN GOAL",
+	"FREE KICK",
+	"GOAL KICK",
+	"KICK-OFF",
+	"CORNER KICK",
+	"THROW-IN",
+	"FOUL",
+	"PENALTY",
+	"PLAY ON",
+	"FINAL WHISTLE",
+	"OFFSIDE",
+	"YELLOW CARD",
+	"RED CARD",
+	"ASSIST",
+	"DOUBLE TOUCH",
+	"HALF-TIME",
+	NULL
+};
 
 #endif // SDK_SHAREDDEFS_H

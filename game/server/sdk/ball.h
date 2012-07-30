@@ -173,9 +173,9 @@ public:
 	CNetworkVar(float, m_flOffsideLineLastOppPlayerPosY);
 	CNetworkVar(bool, m_bOffsideLinesEnabled);
 	
-	void			SetPos(const Vector &pos);
-	void			SetVel(const Vector &vel);
-	void			SetRot(const AngularImpulse &rot = NULL);
+	void			SetPos(Vector pos);
+	void			SetVel(Vector vel, float spin, body_part_t bodyPart);
+	void			SetRot(AngularImpulse rot = NULL);
 
 	void			SetPenaltyState(penalty_state_t penaltyState) { m_ePenaltyState = penaltyState; }
 	penalty_state_t	GetPenaltyState() { return m_ePenaltyState; }
@@ -196,7 +196,8 @@ public:
 	float			CalcFieldZone();
 	void			UpdatePossession(CSDKPlayer *pNewPossessor);
 
-	CNetworkHandle(CSDKPlayer, m_pPl);				  // Current player for state
+	CNetworkHandle(CSDKPlayer, m_pPl);
+	CNetworkHandle(CSDKPlayer, m_pCreator);
 
 private:
 
@@ -243,7 +244,7 @@ private:
 	float			GetPitchMultiplier();
 	float			GetPowershotStrength(float multiplier, int minStrength, int maxStrength);
 	void			UpdateCarrier();
-	void			Kicked(body_part_t bodyPart, float spin);
+	void			Kicked(body_part_t bodyPart);
 	void			Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart);
 	void			RemoveAllTouches();
 	BallTouchInfo	*LastInfo(bool wasShooting, CSDKPlayer *pSkipPl = NULL);
@@ -290,7 +291,6 @@ private:
 
 	MatchEventPlayerInfo m_MatchEventPlayerInfo;
 
-	CHandle<CSDKPlayer> m_pCreator;
 	CHandle<CSDKPlayer> m_pHoldingPlayer;
 
 	float			m_flGlobalNextShot;

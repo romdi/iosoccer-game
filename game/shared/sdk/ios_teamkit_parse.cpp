@@ -191,7 +191,7 @@ void RGBtoHSL(const RGB &rgb, HSL &hsl)
 
 enum colors_t { BLACKS, WHITES, GRAYS, REDS, YELLOWS, GREENS, CYANS, BLUES, MAGENTAS, COLOR_COUNT };
 char colorNames[COLOR_COUNT][16] = { "BLACKS", "WHITES", "GRAYS", "REDS", "YELLOWS", "GREENS", "CYANS", "BLUES", "MAGENTAS" };
-int substituteColors[COLOR_COUNT][3] = { { 148, 140, 117 }, { 254, 249, 240 }, { 216, 216, 192 }, { 228, 86, 53 }, { 251, 184, 41 }, { 195, 255, 104 }, { 108, 223, 234 }, { 161, 190, 230 }, { 254, 67, 101 } };
+int substituteColors[COLOR_COUNT][3] = { { 148, 140, 117 }, { 254, 249, 240 }, { 216, 216, 192 }, { 253, 170, 159 }, { 251, 184, 41 }, { 195, 255, 104 }, { 108, 223, 234 }, { 161, 190, 230 }, { 254, 67, 101 } };
 
 colors_t classify(const HSL &hsl)
 {

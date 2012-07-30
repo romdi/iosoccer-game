@@ -66,8 +66,9 @@ CIOSOptionsPanel::CIOSOptionsPanel(VPANEL parent) : BaseClass(NULL, "IOSOptionsP
 	m_pContent = new Panel(this, "");
 	m_pPlayerNameLabel = new Label(m_pContent, "", "Player Name:");
 	m_pPlayerNameText = new TextEntry(m_pContent, "");
-	m_pClubNameLabel = new Label(m_pContent, "", "Club Name:");
+	m_pClubNameLabel = new Label(m_pContent, "", "IOS Club Initials:");
 	m_pClubNameText = new TextEntry(m_pContent, "");
+	m_pClubNameText->SetMaximumCharCount(4);
 	m_pCountryNameLabel = new Label(m_pContent, "", "Country Name:");
 	m_pCountryNameList = new ComboBox(m_pContent, "", COUNTRY_NAMES_COUNT, false);
 	m_pCountryNameList->SetOpenDirection(Menu::DOWN);

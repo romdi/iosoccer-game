@@ -34,8 +34,8 @@ bool CReplayBall::CreateVPhysics()
 
 void CReplayBall::Precache()
 {
- SetModel( BALL_MODEL );
- BaseClass::Precache();
+	SetModel( BALL_MODEL );
+	BaseClass::Precache();
 }
 
 CReplayBall::CReplayBall()
@@ -45,12 +45,12 @@ CReplayBall::CReplayBall()
 
 void CReplayBall::Spawn( void )
 {
-Precache();
-SetModelName( MAKE_STRING( BALL_MODEL ) );
-CreateVPhysics();
-//SetSolid(SOLID_NONE);
-SetSimulatedEveryTick( true );
-SetAnimatedEveryTick( true );
+	Precache();
+	SetModelName( MAKE_STRING( BALL_MODEL ) );
+	CreateVPhysics();
+	//SetSolid(SOLID_NONE);
+	SetSimulatedEveryTick( true );
+	SetAnimatedEveryTick( true );
 }
 
 
@@ -101,7 +101,7 @@ void CReplayPlayer::Think()
 	DispatchAnimEvents(this);
 }
 
-static ConVar sv_replay_duration("sv_replay_duration", "10");
+static ConVar sv_replay_duration("sv_replay_duration", "6");
 static ConVar sv_replays("sv_replays", "1");
 
 void cc_StartReplay(const CCommand &args)
@@ -130,6 +130,10 @@ static ConCommand stop_replay("stop_replay", cc_StopReplay);
 
 LINK_ENTITY_TO_CLASS(replaymanager, CReplayManager);
 
+IMPLEMENT_SERVERCLASS_ST(CReplayManager, DT_ReplayManager)
+	SendPropBool(SENDINFO(m_bIsReplaying)),
+END_SEND_TABLE()
+
 BEGIN_DATADESC( CReplayManager )
 	DEFINE_THINKFUNC( Think ),
 END_DATADESC()
@@ -143,10 +147,18 @@ CReplayManager::CReplayManager()
 
 	m_bDoReplay = false;
 	m_pBall = NULL;
+
 	for (int i = 0; i < 22; i++)
 	{
 		m_pPlayers[i] = NULL;
 	}
+
+	m_bIsReplaying = false;
+}
+
+CReplayManager::~CReplayManager()
+{
+	g_pReplayManager = NULL;
 }
 
 void CReplayManager::Spawn()
@@ -193,32 +205,41 @@ void CReplayManager::StopReplay()
 		return;
 
 	m_bDoReplay = false;
+	m_bIsReplaying = false;
 	engine->ServerCommand("host_timescale 1\n");
 
-	UTIL_Remove(m_pBall);
-	m_pBall = NULL;
+	if (m_pBall)
+	{
+		UTIL_Remove(m_pBall);
+		m_pBall = NULL;
+	}
 
 	for (int i = 0; i < 22; i++)
 	{
-		UTIL_Remove(m_pPlayers[i]);
-		m_pPlayers[i] = NULL;
+		if (m_pPlayers[i])
+		{
+			UTIL_Remove(m_pPlayers[i]);
+			m_pPlayers[i] = NULL;
+		}
 	}
 
 	CBall *pRealBall = GetBall();
 	if (pRealBall)
 	{
-		pRealBall->SetRenderMode(kRenderNormal);
-		pRealBall->SetRenderColorA(255);
+		//pRealBall->SetRenderMode(kRenderNormal);
+		//pRealBall->SetRenderColorA(255);
+		pRealBall->RemoveEffects(EF_NODRAW);
 	}
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
 		CSDKPlayer *pRealPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
-		if (!pRealPl)
+		if (!CSDKPlayer::IsOnField(pRealPl))
 			continue;
 
-		pRealPl->SetRenderMode(kRenderNormal);
-		pRealPl->SetRenderColorA(255);
+		//pRealPl->SetRenderMode(kRenderNormal);
+		//pRealPl->SetRenderColorA(255);
+		pRealPl->RemoveEffects(EF_NODRAW);
 	}
 }
 
@@ -316,6 +337,8 @@ void CReplayManager::TakeSnapshot()
 
 void CReplayManager::RestoreSnapshot()
 {
+	m_bIsReplaying = true;
+
 	if (m_nSnapshotIndex >= m_Snapshots.Count())
 	{
 		m_nReplayRunCount += 1;
@@ -338,8 +361,9 @@ void CReplayManager::RestoreSnapshot()
 	CBall *pRealBall = GetBall();
 	if (pRealBall)
 	{
-		pRealBall->SetRenderMode(kRenderTransColor);
-		pRealBall->SetRenderColorA(50);
+		//pRealBall->SetRenderMode(kRenderTransColor);
+		//pRealBall->SetRenderColorA(50);
+		pRealBall->AddEffects(EF_NODRAW);
 	}
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
@@ -348,8 +372,9 @@ void CReplayManager::RestoreSnapshot()
 		if (!CSDKPlayer::IsOnField(pRealPl))
 			continue;
 
-		pRealPl->SetRenderMode(kRenderTransColor);
-		pRealPl->SetRenderColorA(50);
+		//pRealPl->SetRenderMode(kRenderTransColor);
+		//pRealPl->SetRenderColorA(50);
+		pRealPl->AddEffects(EF_NODRAW);
 	}
 
 	Snapshot *pSnap = &m_Snapshots[m_nSnapshotIndex];

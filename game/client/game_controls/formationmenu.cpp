@@ -94,7 +94,7 @@ void CFormationMenu::PerformLayout()
 			m_pFormationButtons[i][j]->SetBounds(0, 0, FORMATION_BUTTON_WIDTH, FORMATION_BUTTON_HEIGHT);
 			m_pFormationButtons[i][j]->SetContentAlignment(Label::a_center);
 			m_pFormationButtons[i][j]->SetFont(m_pScheme->GetFont("IOSTeamMenuBig"));
-			color32 enabled = { 255, 255, 255, 255 };
+			color32 enabled = { 150, 150, 150, 150 };
 			color32 mouseover = { 150, 150, 150, 255 };
 			color32 pressed = { 255, 255, 255, 255 };
 			color32 disabled = { 75, 75, 75, 255 };
@@ -174,6 +174,8 @@ void CFormationMenu::Update()
 			color32 color;
 			int cursor;
 			bool enable;
+			bool isTakenByBot;
+			bool isFree;
 
 			if (playerIndexAtPos[i][j] == 0)
 			{
@@ -181,6 +183,8 @@ void CFormationMenu::Update()
 				color = enabled;
 				cursor = dc_hand;
 				enable = true;
+				isTakenByBot = false;
+				isFree = true;
 			}
 			else
 			{
@@ -190,6 +194,8 @@ void CFormationMenu::Update()
 				color = gr->IsFakePlayer(playerIndexAtPos[i][j]) ? bot : human;
 				cursor = gr->IsFakePlayer(playerIndexAtPos[i][j]) ? dc_hand : dc_arrow;
 				enable = gr->IsFakePlayer(playerIndexAtPos[i][j]);
+				isTakenByBot = gr->IsFakePlayer(playerIndexAtPos[i][j]);
+				isFree = false;
 				//m_pFormationButtons[i][j]->SetFgColor(gr->GetTeamColor(TEAM_UNASSIGNED));
 				//m_pFormationButtons[i][j]->SetDefaultColor(black, darker);
 				//m_pFormationButtons[i][j]->SetArmedColor(black, dark);
@@ -207,12 +213,15 @@ void CFormationMenu::Update()
 				//pButton->SetFont(m_pScheme->GetFont("IOSTeamMenuNormal"));
 			}
 
-			m_pFormationButtons[i][j]->SetImage(CBitmapButton::BUTTON_ENABLED, "vgui/shirt", color);
+			//m_pFormationButtons[i][j]->SetImage(CBitmapButton::BUTTON_ENABLED, "vgui/shirt", color);
 			m_pFormationButtons[i][j]->SetCursor(cursor);
-			m_pFormationButtons[i][j]->SetEnabled(enable);
+			//m_pFormationButtons[i][j]->SetEnabled(enable);
+			m_pFormationButtons[i][j]->SetCommand((isFree || isTakenByBot) ? VarArgs("jointeam %d %d", i + TEAM_A, j) : "");
 			Color teamColor = GetGlobalTeam(TEAM_A + i)->Get_HudKitColor();
-			color32 enabled = { teamColor.r(), teamColor.g(), teamColor.b(), 255 };
-			m_pFormationButtons[i][j]->SetImage(CBitmapButton::BUTTON_ENABLED, "vgui/shirt", enabled);
+			color32 normal = { teamColor.r(), teamColor.g(), teamColor.b(), isFree ? 10 : 255 };
+			color32 hover = { teamColor.r(), teamColor.g(), teamColor.b(), (isFree || isTakenByBot) ? 255 : 255 };
+			m_pFormationButtons[i][j]->SetImage(CBitmapButton::BUTTON_ENABLED, "vgui/shirt", normal);
+			m_pFormationButtons[i][j]->SetImage(CBitmapButton::BUTTON_ENABLED_MOUSE_OVER, "vgui/shirt", hover);
 		}
 	}
 }

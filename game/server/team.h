@@ -74,6 +74,8 @@ public:
 	CNetworkVar( int, m_iTeamNum );
 	CNetworkVar( int, m_nGoals );
 	CNetworkVar( int, m_nPossession );
+	CNetworkVar( int, m_nPenaltyGoals );
+	CNetworkVar( int, m_nPenaltyGoalBits );
 	int		m_iDeaths;
 
 	// Spawnpoints

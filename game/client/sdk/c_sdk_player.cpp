@@ -618,6 +618,12 @@ void C_SDKPlayer::LookAtBall(void)
 	//	pitch = 0;
 	//}
 	//else
+	if (SDKGameRules()->IsIntermissionState())
+	{
+		yaw = 0;
+		pitch = 0;
+	}
+	else
 	{
 		QAngle angToBall;
 		VectorAngles(dirToBall, angToBall );

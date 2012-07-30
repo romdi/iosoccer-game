@@ -21,7 +21,7 @@ public:
 	DECLARE_CLASS( C_Ball, C_PhysicsProp );
 
 	C_Ball();
-	~C_Ball() {}
+	~C_Ball();
 
 	virtual int GetMultiplayerPhysicsMode()
 	{
@@ -50,6 +50,7 @@ public:
 	bool m_bOffsideLinesEnabled;
 	IMaterial *m_pOffsideLineMaterial;
 	CHandle<C_SDKPlayer> m_pPl;
+	CHandle<C_SDKPlayer> m_pCreator;
 };
 
 extern C_Ball *GetBall();

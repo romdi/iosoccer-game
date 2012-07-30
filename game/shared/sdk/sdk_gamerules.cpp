@@ -240,6 +240,9 @@ BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 	RecvPropVector(RECVINFO(m_vFieldMax)),
 	RecvPropVector(RECVINFO(m_vKickOff)),
 
+	RecvPropInt(RECVINFO(m_nPenaltyRound)),
+	RecvPropInt(RECVINFO(m_nPenaltyTakingStartTeam)),
+
 	RecvPropInt(RECVINFO(m_nBallZone)),
 #else
 	SendPropTime( SENDINFO( m_flStateEnterTime )),
@@ -257,6 +260,9 @@ BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 	SendPropVector(SENDINFO(m_vFieldMin), -1, SPROP_COORD),
 	SendPropVector(SENDINFO(m_vFieldMax), -1, SPROP_COORD),
 	SendPropVector(SENDINFO(m_vKickOff), -1, SPROP_COORD),
+
+	SendPropInt(SENDINFO(m_nPenaltyRound)),
+	SendPropInt(SENDINFO(m_nPenaltyTakingStartTeam)),
 
 	SendPropInt(SENDINFO(m_nBallZone)),
 #endif
@@ -887,7 +893,7 @@ CAmmoDef* GetAmmoDef()
 const char *CSDKGameRules::GetChatPrefix( bool bTeamOnly, CBasePlayer *pPlayer )
 {
 	if (!pPlayer)
-		return NULL;
+		return "";
 
 	if (bTeamOnly)
 		return "(TEAM)";
@@ -897,34 +903,25 @@ const char *CSDKGameRules::GetChatPrefix( bool bTeamOnly, CBasePlayer *pPlayer )
 
 const char *CSDKGameRules::GetChatFormat( bool bTeamOnly, CBasePlayer *pPlayer )
 {
-	if ( !pPlayer )  // dedicated server output
-		return NULL;
-
 	const char *pszFormat = NULL;
 
-	if ( bTeamOnly )
+	if ( !pPlayer )  // dedicated server output
+	{
+		pszFormat = "SDK_Chat_StadiumAnnouncer";
+	}
+	else if ( bTeamOnly )
 	{
 		if ( pPlayer->GetTeamNumber() == TEAM_SPECTATOR )
 			pszFormat = "SDK_Chat_Spec";
 		else
-		{
-			if (pPlayer->m_lifeState != LIFE_ALIVE )
-				pszFormat = "SDK_Chat_Team_Dead";
-			else
-				pszFormat = "SDK_Chat_Team_Loc";
-		}
+			pszFormat = "SDK_Chat_Team_Loc";
 	}
 	else
 	{
 		if ( pPlayer->GetTeamNumber() == TEAM_SPECTATOR)
 			pszFormat = "SDK_Chat_AllSpec";
 		else
-		{
-			if (pPlayer->m_lifeState != LIFE_ALIVE )
-				pszFormat = "SDK_Chat_All_Dead";
-			else
-				pszFormat = "SDK_Chat_All_Loc";
-		}
+			pszFormat = "SDK_Chat_All_Loc";
 	}
 
 	return pszFormat;
@@ -933,7 +930,7 @@ const char *CSDKGameRules::GetChatFormat( bool bTeamOnly, CBasePlayer *pPlayer )
 const char *CSDKGameRules::GetChatLocation( bool bTeamOnly, CBasePlayer *pPlayer )
 {
 	if (!pPlayer)
-		return NULL;
+		return "";
 
 	return g_szPosNames[(int)g_Positions[mp_maxplayers.GetInt() - 1][ToSDKPlayer(pPlayer)->GetTeamPosIndex()][POS_NAME]];
 }
@@ -1236,7 +1233,7 @@ void CSDKGameRules::State_FIRST_HALF_Think()
 void CSDKGameRules::State_HALFTIME_Enter()
 {
 	GetBall()->State_Transition(BALL_NORMAL, 0, true);
-	GetBall()->SendNeutralMatchEvent(MATCH_EVENT_FINAL_WHISTLE);
+	GetBall()->SendNeutralMatchEvent(MATCH_EVENT_HALFTIME);
 	GetBall()->EmitSound("Ball.whistle");
 	GetBall()->EmitSound("Ball.cheer");
 }
@@ -1309,7 +1306,7 @@ void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Think()
 void CSDKGameRules::State_EXTRATIME_HALFTIME_Enter()
 {
 	GetBall()->State_Transition(BALL_NORMAL, 0, true);
-	GetBall()->SendNeutralMatchEvent(MATCH_EVENT_FINAL_WHISTLE);
+	GetBall()->SendNeutralMatchEvent(MATCH_EVENT_HALFTIME);
 	GetBall()->EmitSound("Ball.whistle");
 	GetBall()->EmitSound("Ball.cheer");
 }
@@ -1363,10 +1360,10 @@ void CSDKGameRules::State_PENALTIES_INTERMISSION_Think()
 void CSDKGameRules::State_PENALTIES_Enter()
 {
 	m_nPenaltyRound = 0;
-	m_nPenaltyScores[0] = GetGlobalTeam(TEAM_A)->GetGoals();
-	m_nPenaltyScores[1] = GetGlobalTeam(TEAM_B)->GetGoals();
-	m_nPenaltyScoreBits[0] = 0;
-	m_nPenaltyScoreBits[1] = 0;
+	GetGlobalTeam(TEAM_A)->m_nPenaltyGoals = 0;
+	GetGlobalTeam(TEAM_B)->m_nPenaltyGoals = 0;
+	GetGlobalTeam(TEAM_A)->m_nPenaltyGoalBits = 0;
+	GetGlobalTeam(TEAM_B)->m_nPenaltyGoalBits = 0;
 	m_flNextPenalty = -1;
 	m_nPenaltyTakingStartTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
 	m_nPenaltyTakingTeam = m_nPenaltyTakingStartTeam;
@@ -1394,18 +1391,17 @@ void CSDKGameRules::State_PENALTIES_Think()
 			{
 				GetBall()->State_Transition(BALL_NORMAL, 0, true);
 
-				if (GetGlobalTeam(m_nPenaltyTakingTeam)->GetGoals() > m_nPenaltyScores[m_nPenaltyTakingTeam - TEAM_A])
+				if (GetGlobalTeam(m_nPenaltyTakingTeam)->GetGoals() > GetGlobalTeam(m_nPenaltyTakingTeam)->m_nPenaltyGoals)
 				{
-					m_nPenaltyScores[m_nPenaltyTakingTeam - TEAM_A] += 1;
-					m_nPenaltyScoreBits[m_nPenaltyTakingTeam - TEAM_A] |= (1 << m_nPenaltyRound);
-					DevMsg("Score bits: %d %d\n", m_nPenaltyTakingTeam, m_nPenaltyScoreBits[m_nPenaltyTakingTeam - TEAM_A]);
+					GetGlobalTeam(m_nPenaltyTakingTeam)->m_nPenaltyGoals += 1;
+					GetGlobalTeam(m_nPenaltyTakingTeam)->m_nPenaltyGoalBits |= (1 << (m_nPenaltyRound / 2));
 				}
+					
+				m_nPenaltyRound += 1;
 
 				if (m_nPenaltyTakingTeam != m_nPenaltyTakingStartTeam)
 				{
-					m_nPenaltyRound += 1;
-
-					if (m_nPenaltyRound >= 5)
+					if (m_nPenaltyRound >= 10)
 					{
 						if (GetGlobalTeam(TEAM_A)->GetGoals() != GetGlobalTeam(TEAM_B)->GetGoals())
 						{
@@ -1485,6 +1481,11 @@ void CSDKGameRules::State_PENALTIES_Think()
 
 void CSDKGameRules::State_COOLDOWN_Enter()
 {
+	GetBall()->State_Transition(BALL_NORMAL, 0, true);
+	GetBall()->SendNeutralMatchEvent(MATCH_EVENT_FINAL_WHISTLE);
+	GetBall()->EmitSound("Ball.whistle");
+	GetBall()->EmitSound("Ball.cheer");
+
 	//who won?
 	int winners = 0;
 	int scoreA = GetGlobalTeam( TEAM_A )->GetGoals();

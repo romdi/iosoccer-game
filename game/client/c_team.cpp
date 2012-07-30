@@ -38,6 +38,8 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_Team, DT_Team, CTeam)
 	RecvPropInt( RECVINFO(m_iTeamNum)),
 	RecvPropInt( RECVINFO(m_nGoals)),
 	RecvPropInt( RECVINFO(m_nPossession) ),
+	RecvPropInt( RECVINFO(m_nPenaltyGoals) ),
+	RecvPropInt( RECVINFO(m_nPenaltyGoalBits) ),
 	RecvPropString( RECVINFO(m_szKitName), 0, RecvProxy_KitName),
 
 	RecvPropVector(RECVINFO(m_vCornerLeft)),

@@ -1548,19 +1548,19 @@ bool CGameMovement::CheckPlayerAnimEvent()
 	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT:
 	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT:
 		{
-			mv->m_vecVelocity = right * mv->m_flSideMove;
+			mv->m_vecVelocity = forward2D * mv->m_flForwardMove + right * mv->m_flSideMove;
 			mv->m_vecVelocity.z = abs(mv->m_flSideMove) * 0.75f;
 			break;
 		}
 	case PLAYERANIMEVENT_KEEPER_DIVE_FORWARD:
 		{
-			mv->m_vecVelocity = forward2D * mv->m_flForwardMove;
+			mv->m_vecVelocity = forward2D * mv->m_flForwardMove + right * mv->m_flSideMove;
 			mv->m_vecVelocity.z = 0;
 			break;
 		}
 	case PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD:
 		{
-			mv->m_vecVelocity = forward2D * mv->m_flForwardMove;
+			mv->m_vecVelocity = forward2D * mv->m_flForwardMove + right * mv->m_flSideMove;
 			mv->m_vecVelocity.z = abs(mv->m_flForwardMove) * 0.75f;
 			break;
 		}

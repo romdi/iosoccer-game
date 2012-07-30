@@ -59,7 +59,7 @@ public:
 	void MsgFunc_NeutralMatchEvent(bf_read &msg);
 
 protected:
-	virtual void Paint( void );
+	virtual void OnThink( void );
 	virtual void ApplySchemeSettings( vgui::IScheme *scheme );
 
 private:
@@ -79,6 +79,8 @@ private:
 	Label *m_pTeamGoals[2];
 	Label *m_pNewState;
 	Label *m_pNewTime;
+	Panel *m_pPenaltyPanels[2];
+	Panel *m_pPenalties[2][5];
 
 	Panel		*m_pExtensionBar[2];
 	Label		*m_pExtensionText[2];
@@ -114,14 +116,12 @@ DECLARE_HUD_MESSAGE(CHudScorebar, NeutralMatchEvent);
 #define WIDTH_TEAMBAR			(HPADDING + WIDTH_TEAM + WIDTH_MARGIN + WIDTH_TEAMCOLOR + WIDTH_MARGIN + WIDTH_SCORE + HPADDING)
 #define WIDTH_TIMEBAR			(HPADDING + WIDTH_MATCHSTATE + WIDTH_MARGIN + WIDTH_TIME + HPADDING)
 
-#define PLAYER_WIDTH			150
-#define PLAYER_HEIGHT			200
 #define EVENT_WIDTH				200
 #define EVENT_HEIGHT			200
 
 enum { MAINBAR_WIDTH = 480, MAINBAR_HEIGHT = 40, MAINBAR_MARGIN = 15 };
-enum { TEAMNAME_WIDTH = 150, TEAMNAME_MARGIN = 5 };
-enum { TEAMGOAL_WIDTH = 20, TEAMGOAL_MARGIN = 5 };
+enum { TEAMNAME_WIDTH = 175, TEAMNAME_MARGIN = 5 };
+enum { TEAMGOAL_WIDTH = 30, TEAMGOAL_MARGIN = 10 };
 enum { TIME_WIDTH = 120, TIME_MARGIN = 5 };
 enum { STATE_WIDTH = 120, STATE_MARGIN = 5 };
 enum { TOPEXTENSION_WIDTH = 278, TOPEXTENSION_HEIGHT = MAINBAR_HEIGHT, TOPEXTENSION_MARGIN = 10, TOPEXTENSION_TEXTMARGIN = 5 };
@@ -129,6 +129,8 @@ enum { TEAMCREST_SIZE = 70, TEAMCREST_HOFFSET = 482/*265*/, TEAMCREST_VOFFSET = 
 enum { TEAMCOLOR_WIDTH = 5, TEAMCOLOR_HEIGHT = MAINBAR_HEIGHT - 10, TEAMCOLOR_HMARGIN = 5, TEAMCOLOR_VMARGIN = (MAINBAR_HEIGHT - TEAMCOLOR_HEIGHT) / 2 };
 enum { CENTERBAR_OFFSET = 5 };
 enum { BAR_BORDER = 2 };
+enum { PLAYERNAME_MARGIN = 5, PLAYERNAME_OFFSET = 50, PLAYERNAME_WIDTH = 150, PLAYERNAME_HEIGHT = 40 };
+enum { PENALTYPANEL_HEIGHT = 30, PENALTYPANEL_PADDING = 5 };
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -162,6 +164,13 @@ CHudScorebar::CHudScorebar( const char *pElementName ) : BaseClass(NULL, "HudSco
 		m_pExtensionText[i] = new Label(m_pExtensionBar[i], "", "");
 		m_pTeamCrestPanels[i] = new Panel(this, "");
 		m_pTeamCrests[i] = new ImagePanel(m_pTeamCrestPanels[i], "");
+
+		m_pPenaltyPanels[i] = new Panel(this, "");
+
+		for (int j = 0; j < 5; j++)
+		{
+			m_pPenalties[i][j] = new Panel(m_pPenaltyPanels[i], "");
+		}
 	}
 
 	m_pEvent = new Label(this, "", "");
@@ -221,6 +230,10 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 	m_pEvent->SetFgColor(Color(255, 255, 255, 255));
 	//m_pEvent->SetVisible(false);
 
+	Color fgColor = Color(220, 220, 220, 255);
+	Color bgColor = Color(35, 30, 40, 255);
+	Color bgColorTransparent = Color(30, 30, 40, 200);
+
 	for (int i = 0; i < 2; i++)
 	{
 		m_pTeamNames[i]->SetBounds(i * (MAINBAR_WIDTH - TEAMNAME_WIDTH), 0, TEAMNAME_WIDTH, MAINBAR_HEIGHT);
@@ -228,9 +241,9 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 		m_pTeamNames[i]->SetContentAlignment(Label::a_center);
 		m_pTeamNames[i]->SetFont(pScheme->GetFont("IOSScorebar"));
 
-		m_pTeamGoals[i]->SetBounds(TEAMNAME_WIDTH + i * (MAINBAR_WIDTH - TEAMGOAL_WIDTH - 2 * TEAMNAME_WIDTH), 0, TEAMGOAL_WIDTH, MAINBAR_HEIGHT);
+		m_pTeamGoals[i]->SetBounds(MAINBAR_WIDTH / 2 - STATE_WIDTH / 2 - TEAMGOAL_WIDTH - TEAMGOAL_MARGIN + i * (2 * TEAMGOAL_MARGIN + TEAMGOAL_WIDTH + STATE_WIDTH), 0, TEAMGOAL_WIDTH, MAINBAR_HEIGHT);
 		m_pTeamGoals[i]->SetFgColor(white);
-		m_pTeamGoals[i]->SetContentAlignment(Label::a_center);
+		m_pTeamGoals[i]->SetContentAlignment(i == 0 ? Label::a_east : Label::a_west);
 		m_pTeamGoals[i]->SetFont(pScheme->GetFont("IOSScorebar"));
 
 		m_pExtensionBar[i]->SetBounds(GetWide() / 2 - TOPEXTENSION_WIDTH / 2 + (i == 0 ? -1 : 1) * (MAINBAR_WIDTH / 2 + TOPEXTENSION_WIDTH / 2 - TOPEXTENSION_MARGIN), MAINBAR_MARGIN, TOPEXTENSION_WIDTH, TOPEXTENSION_HEIGHT);
@@ -251,14 +264,7 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 		m_pTeamCrests[i]->SetBounds(TEAMCREST_PADDING, TEAMCREST_PADDING, TEAMCREST_SIZE - 2 * TEAMCREST_PADDING, TEAMCREST_SIZE - 2 * TEAMCREST_PADDING);
 		m_pTeamCrests[i]->SetShouldScaleImage(true);
 		m_pTeamCrests[i]->SetImage(i == 0 ? "hometeamcrest" : "awayteamcrest");
-	}
-
-	Color fgColor = Color(220, 220, 220, 255);
-	Color bgColor = Color(35, 30, 40, 255);
-	Color bgColorTransparent = Color(30, 30, 40, 200);
-
-	for (int i = 0; i < 2; i++)
-	{		
+			
 		m_pTeamColors[i][0]->SetBounds(TEAMCOLOR_HMARGIN + i * (MAINBAR_WIDTH - TEAMCOLOR_WIDTH - 2 * TEAMCOLOR_HMARGIN), TEAMCOLOR_VMARGIN, TEAMCOLOR_WIDTH, MAINBAR_HEIGHT - 2 * TEAMCOLOR_VMARGIN);
 		m_pTeamColors[i][1]->SetBounds(TEAMCOLOR_HMARGIN + TEAMCOLOR_WIDTH + i * (MAINBAR_WIDTH - 3 * TEAMCOLOR_WIDTH - 2 * TEAMCOLOR_HMARGIN), TEAMCOLOR_VMARGIN, TEAMCOLOR_WIDTH, MAINBAR_HEIGHT - 2 * TEAMCOLOR_VMARGIN);
 
@@ -267,11 +273,20 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 		m_pEventBars[i]->SetBgColor(bgColorTransparent);
 		m_pEventBars[i]->SetZPos(-1);
 
-		m_pPlayers[i]->SetBounds(GetWide() / 2 - MAINBAR_WIDTH / 2, MAINBAR_MARGIN + MAINBAR_HEIGHT + 10, MAINBAR_WIDTH, PLAYER_HEIGHT);
-		m_pPlayers[i]->SetContentAlignment(i == 0 ? Label::a_northwest : Label::a_northeast);
+		m_pPlayers[i]->SetBounds(m_pMainBar->GetX() + m_pTeamNames[i]->GetX(), MAINBAR_MARGIN + MAINBAR_HEIGHT + 5, m_pTeamNames[i]->GetWide(), PLAYERNAME_HEIGHT);
+		m_pPlayers[i]->SetContentAlignment(Label::a_north);
 		m_pPlayers[i]->SetFont(pScheme->GetFont("IOSEventPlayer"));
 		m_pPlayers[i]->SetFgColor(Color(255, 255, 255, 255));
+		//m_pPlayers[i]->SetTextInset(5, 0);
 		//m_pPlayers[i]->SetVisible(false);
+
+		m_pPenaltyPanels[i]->SetBounds(m_pMainBar->GetX() + m_pTeamNames[i]->GetX(), MAINBAR_MARGIN + MAINBAR_HEIGHT + PLAYERNAME_HEIGHT, m_pTeamNames[i]->GetWide(), PENALTYPANEL_HEIGHT);
+		m_pPenaltyPanels[i]->SetBgColor(Color(0, 0, 0, 255));
+
+		for (int j = 0; j < 5; j++)
+		{
+			m_pPenalties[i][j]->SetBounds(j * (m_pPenaltyPanels[i]->GetWide() / 5) + PENALTYPANEL_PADDING, PENALTYPANEL_PADDING, m_pPenaltyPanels[i]->GetWide() / 5 - 2 * PENALTYPANEL_PADDING, PENALTYPANEL_HEIGHT - 2 * PENALTYPANEL_PADDING);
+		}
 	}
 }
 
@@ -325,8 +340,43 @@ const char *g_szLongStateNames[32] =
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CHudScorebar::Paint( void )
+void CHudScorebar::OnThink( void )
 {
+	if (SDKGameRules()->State_Get() == MATCH_PENALTIES)
+	{
+		int round = SDKGameRules()->m_nPenaltyRound % 10;
+		for (int i = 0; i < 2; i++)
+		{
+			for (int j = 0; j < 5; j++)
+			{
+				//Color color = (i % 3 == 0 ? Color(255, 0, 0, 255) : (i % 3 == 1 ? Color(0, 255, 0, 255) : Color(100, 100, 100, 255)));
+				Color color;
+				if (j > round / 2
+					|| TEAM_A + i == SDKGameRules()->m_nPenaltyTakingStartTeam && round - j * 2 == 0
+					|| TEAM_A + i != SDKGameRules()->m_nPenaltyTakingStartTeam && round - j * 2 <= 1)
+				{
+					color = Color(100, 100, 100, 255);
+				}
+				else
+				{
+					if ((GetGlobalTeam(TEAM_A + i)->m_nPenaltyGoalBits & (1 << (SDKGameRules()->m_nPenaltyRound / 10 * 5 + j))) != 0)
+						color = Color(0, 255, 0, 255);
+					else
+						color = Color(255, 0, 0, 255);
+				}
+				m_pPenalties[i][j]->SetBgColor(color);
+			}
+			m_pPenaltyPanels[i]->SetVisible(true);
+		}
+	}
+	else
+	{
+		for (int i = 0; i < 2; i++)
+		{
+			m_pPenaltyPanels[i]->SetVisible(false);
+		}
+	}
+
 	if (gViewPortInterface->FindPanelByName(PANEL_SCOREBOARD)->IsVisible())
 	{
 		//wchar_t text[64];

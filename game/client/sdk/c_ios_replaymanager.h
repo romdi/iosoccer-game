@@ -13,4 +13,18 @@ public:
 	int m_nTeamPosition;
 };
 
+class C_ReplayManager : public CBaseEntity
+{
+public:
+	DECLARE_CLASS(C_ReplayManager, CBaseEntity);
+	DECLARE_CLIENTCLASS();
+
+	C_ReplayManager();
+	~C_ReplayManager();
+	bool IsReplaying();
+	bool m_bIsReplaying;
+};
+
+extern C_ReplayManager *GetReplayManager();
+
 #endif

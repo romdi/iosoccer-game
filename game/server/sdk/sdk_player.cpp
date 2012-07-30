@@ -1345,6 +1345,7 @@ void CSDKPlayer::ResetFlags()
 	if (GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B)
 	{
 		RemoveSolidFlags(FSOLID_NOT_SOLID);
+		RemoveEffects(EF_NODRAW);
 	}
 
 	if (GetTeamPosition() == 1 && m_nBody == MODEL_KEEPER_AND_BALL)

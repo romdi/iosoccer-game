@@ -76,6 +76,8 @@ public:
 	char	m_szKitName[MAX_KITNAME_LENGTH];
 	int		m_nGoals;
 	int		m_nPossession;
+	int		m_nPenaltyGoals;
+	int		m_nPenaltyGoalBits;
 
 	// Data for the scoreboard
 	int		m_iPing;

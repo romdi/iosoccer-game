@@ -105,8 +105,8 @@ void Host_Say( edict_t *pEdict, const CCommand &args, bool teamonly )
 	CBasePlayer *client;
 	int		j;
 	char	*p;
-	char	text[256];
 	char    szTemp[256];
+	char	text[256];
 	const char *cpSay = "say";
 	const char *cpSayTeam = "say_team";
 	const char *pcmd = args[0];
@@ -184,35 +184,6 @@ void Host_Say( edict_t *pEdict, const CCommand &args, bool teamonly )
 	}
 
 	const char *pszPlayerName = pPlayer ? pPlayer->GetPlayerName() : "Stadium Announcer";
-
-	if ( pszPrefix && strlen( pszPrefix ) > 0 )
-	{
-		if ( pszLocation && strlen( pszLocation ) )
-		{
-			Q_snprintf( text, sizeof(text), "%s %s @ %s: ", pszPrefix, pszPlayerName, pszLocation );
-		}
-		else
-		{
-			if (pPlayer)
-				Q_snprintf( text, sizeof(text), "%s [%s] %s: ", pszPrefix, SDKGameRules()->GetChatLocation(false, pPlayer), pszPlayerName );
-			else
-				Q_snprintf( text, sizeof(text), "%s %s: ", pszPrefix, pszPlayerName );
-		}
-	}
-	else
-	{
-		if (pPlayer)
-			Q_snprintf( text, sizeof(text), "[%s] %s: ", SDKGameRules()->GetChatLocation(false, pPlayer), pszPlayerName );
-		else
-			Q_snprintf( text, sizeof(text), "%s: ", pszPlayerName );
-	}
-
-	j = sizeof(text) - 2 - strlen(text);  // -2 for /n and null terminator
-	if ( (int)strlen(p) > j )
-		p[j] = 0;
-
-	Q_strncat( text, p, sizeof( text ), COPY_ALL_CHARACTERS );
-	Q_strncat( text, "\n", sizeof( text ), COPY_ALL_CHARACTERS );
  
 	// loop through all players
 	// Start with the first player.
@@ -244,14 +215,7 @@ void Host_Say( edict_t *pEdict, const CCommand &args, bool teamonly )
 		CSingleUserRecipientFilter user( client );
 		user.MakeReliable();
 
-		if ( pszFormat )
-		{
-			UTIL_SayText2Filter( user, pPlayer, true, pszFormat, pszPlayerName, p, pszLocation );
-		}
-		else
-		{
-			UTIL_SayTextFilter( user, text, pPlayer, true );
-		}
+		UTIL_SayText2Filter( user, pPlayer, true, pszFormat, pszPlayerName, p, pszLocation );
 	}
 
 	if ( pPlayer )
@@ -260,20 +224,24 @@ void Host_Say( edict_t *pEdict, const CCommand &args, bool teamonly )
 		CSingleUserRecipientFilter user( pPlayer );
 		user.MakeReliable();
 
-		if ( pszFormat )
-		{
-			UTIL_SayText2Filter( user, pPlayer, true, pszFormat, pszPlayerName, p, pszLocation );
-		}
-		else
-		{
-			UTIL_SayTextFilter( user, text, pPlayer, true );
-		}
+		UTIL_SayText2Filter( user, pPlayer, true, pszFormat, pszPlayerName, p, pszLocation );
 	}
 
 	// echo to server console
 	// Adrian: Only do this if we're running a dedicated server since we already print to console on the client.
 	if ( engine->IsDedicatedServer() )
-		 Msg( "%s", text );
+	{
+		Q_snprintf( text, sizeof(text), "%s: ", pszPlayerName );
+
+		j = sizeof(text) - 2 - strlen(text);  // -2 for /n and null terminator
+		if ( (int)strlen(p) > j )
+			p[j] = 0;
+
+		Q_strncat( text, p, sizeof( text ), COPY_ALL_CHARACTERS );
+		Q_strncat( text, "\n", sizeof( text ), COPY_ALL_CHARACTERS );
+
+		Msg( "%s", text );
+	}
 
 	Assert( p );
 

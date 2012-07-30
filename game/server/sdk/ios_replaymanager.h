@@ -106,8 +106,11 @@ class CReplayManager : public CBaseEntity
 {
 public:
 	DECLARE_CLASS(CReplayManager, CBaseEntity);
+	DECLARE_SERVERCLASS();
 	DECLARE_DATADESC();
+
 	CReplayManager();
+	~CReplayManager();
 	void CheckReplay();
 	void TakeSnapshot();
 	void StartReplay(int numberOfRuns, float startDelay);
@@ -116,6 +119,8 @@ public:
 	bool IsReplaying() { return m_bDoReplay; }
 	void Think();
 	void Spawn();
+
+	CNetworkVar(bool, m_bIsReplaying);
 
 private:
 	CUtlVector<Snapshot>	m_Snapshots;

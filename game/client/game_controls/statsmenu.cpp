@@ -86,8 +86,8 @@ void CStatsMenu::Reset(int side)
 	m_pPlayerStats[side]->SetLineSpacing(30);
 	m_pPlayerStats[side]->SetFgColor(Color(0, 0, 0, 255));
 	m_pPlayerStats[side]->SetSectionFgColor(0, Color(0, 0, 0, 255));
-	const int nameWidth = 110;
-	const int valueWidth = 60;
+	const int nameWidth = 95;
+	const int valueWidth = 85;
 	//m_pPlayerStats[side]->SetSectionDividerColor(0, Color(255, 255, 255, 255));
 	for (int j = 0; j < 3; j++)
 	{
@@ -95,7 +95,7 @@ void CStatsMenu::Reset(int side)
 		m_pPlayerStats[side]->AddColumnToSection(0, VarArgs("ValueColumn%d", j), "", 0, valueWidth);
 	}
 
-	HFont font = m_pScheme->GetFont("IOSTeamMenuNormal");
+	HFont font = m_pScheme->GetFont("StatsPlayerNameSmall");
 	KeyValues *pData = new KeyValues("data");
 	for (int j = 0; j < 5; j++)
 	{
@@ -200,7 +200,7 @@ void CStatsMenu::Update(int *playerIndices)
 		pData->Clear();
 
 		pData->SetString("NameColumn0", "Distance:");
-		pData->SetString("ValueColumn0", VarArgs("%d m", gr->GetDistanceCovered(playerIndices[i])));
+		pData->SetString("ValueColumn0", VarArgs("%0.2f km", gr->GetDistanceCovered(playerIndices[i]) / 1000.0f));
 		pData->SetString("NameColumn1", "Possession:");
 		pData->SetString("ValueColumn1", VarArgs("%d%%", gr->GetPossession(playerIndices[i])));
 		pData->SetString("NameColumn2", "Offsides:");

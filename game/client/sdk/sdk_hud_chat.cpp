@@ -193,7 +193,7 @@ Color CHudChat::GetTextColorForClient( TextColor colorNum, int clientIndex )
 		break;
 
 	case COLOR_LOCATION:
-		c = g_ColorDarkGreen;
+		c = (clientIndex == 0 ? g_ColorWhite : g_ColorDarkGreen);
 		break;
 
 	case COLOR_ACHIEVEMENT:

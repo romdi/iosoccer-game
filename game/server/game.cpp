@@ -40,9 +40,9 @@ ConVar	flashlight( "mp_flashlight","0", FCVAR_REPLICATED|FCVAR_NOTIFY );
 ConVar	aimcrosshair( "mp_autocrosshair","1", FCVAR_REPLICATED|FCVAR_NOTIFY );
 ConVar	decalfrequency( "decalfrequency","30", FCVAR_REPLICATED|FCVAR_NOTIFY );			//IOS increased from 10
 ////ConVar	teamlist( "mp_teamlist","ENGLAND BRAZIL", FCVAR_REPLICATED|FCVAR_NOTIFY );		//IOS
-ConVar	scoretag( "mp_scoretag","  IOSS ", FCVAR_REPLICATED|FCVAR_NOTIFY );				//IOS
+//ConVar	scoretag( "mp_scoretag","  IOSS ", FCVAR_REPLICATED|FCVAR_NOTIFY );				//IOS
 //ConVar	slidetackle( "mp_slidetackle","25", FCVAR_REPLICATED|FCVAR_NOTIFY );				//IOS
-ConVar	redcardtime( "mp_redcardtime","10", FCVAR_REPLICATED|FCVAR_NOTIFY );				//IOS
+//ConVar	redcardtime( "mp_redcardtime","10", FCVAR_REPLICATED|FCVAR_NOTIFY );				//IOS
 ////ConVar	offside( "mp_offside","1", FCVAR_REPLICATED|FCVAR_NOTIFY );						//IOS
 ConVar	autobalance( "mp_autobalance", "1", FCVAR_REPLICATED|FCVAR_NOTIFY, "autobalance teams after a goal. blocks joining unbalanced teams" );
 ConVar	humankeepers( "mp_humankeepers","1", FCVAR_REPLICATED|FCVAR_NOTIFY );						//IOS

@@ -89,7 +89,7 @@ protected:
 	// Data for each player that's propagated to all clients
 	// Stored in individual arrays so they can be sent down via datatables
 	string_t	m_szName[MAX_PLAYERS+1];
-	char	m_szClubNames[MAX_PLAYERS+1][32];
+	char	m_szClubNames[MAX_PLAYERS+1][5];
 	char	m_szCountryNames[MAX_PLAYERS+1][64];
 	int		m_iPing[MAX_PLAYERS+1];
 	int		m_nGoals[MAX_PLAYERS+1];

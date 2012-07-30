@@ -108,28 +108,6 @@ const char *WeaponIDToAlias( int id )
 	return s_WeaponAliasInfo[id];
 }
 
-const char *g_szMatchEventNames[32] =
-{
-	"",
-	"GOAL",
-	"OWN GOAL",
-	"FREE KICK",
-	"GOAL KICK",
-	"KICK-OFF",
-	"CORNER KICK",
-	"THROW-IN",
-	"FOUL",
-	"PENALTY",
-	"PLAY ON",
-	"FINAL WHISTLE",
-	"OFFSIDE",
-	"YELLOW CARD",
-	"RED CARD",
-	"ASSIST",
-	"DOUBLE TOUCH",
-	NULL
-};
-
 ConVar mp_walkspeed("mp_walkspeed", "140", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_runspeed("mp_runspeed", "280", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_sprintspeed("mp_sprintspeed", "380", FCVAR_REPLICATED | FCVAR_NOTIFY);

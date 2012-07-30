@@ -39,7 +39,7 @@ static void OnIncreasePowershotStrength(const CCommand &args)
 {
 	if (args.ArgC() < 2)
 	{
-		Msg("Usage: increase_powershot_strength <1-4>\n");
+		Msg("Usage: increase_powershot_strength <1-100>\n");
 		return;
 	}
  
@@ -52,7 +52,7 @@ static void OnDecreasePowershotStrength(const CCommand &args)
 {
 	if (args.ArgC() < 2)
 	{
-		Msg("Usage: decrease_powershot_strength <1-4>\n");
+		Msg("Usage: decrease_powershot_strength <1-100>\n");
 		return;
 	}
  
@@ -121,7 +121,8 @@ CHudPowershotBar::CHudPowershotBar( const char *pElementName ) : CHudElement( pE
 
 #define BAR_WIDTH 40
 #define BAR_HEIGHT 200
-#define BAR_MARGIN 30
+#define BAR_BOTTOMMARGIN 30
+#define BAR_RIGHTMARGIN 250
 #define BAR_PADDING 2
 #define PS_INDICATOR_HEIGHT 9
 #define FIXED_PS_INDICATOR_HEIGHT 3
@@ -132,7 +133,7 @@ void CHudPowershotBar::ApplySchemeSettings( IScheme *scheme )
 {
 	BaseClass::ApplySchemeSettings(scheme);
 
-	SetBounds(ScreenWidth() - BAR_WIDTH - BAR_MARGIN, ScreenHeight() - BAR_HEIGHT - BAR_MARGIN - 2 * SPIN_HEIGHT, BAR_WIDTH, BAR_HEIGHT + 2 * SPIN_HEIGHT + BAR_MARGIN);
+	SetBounds(ScreenWidth() - BAR_WIDTH - BAR_RIGHTMARGIN, ScreenHeight() - BAR_HEIGHT - BAR_BOTTOMMARGIN - 2 * SPIN_HEIGHT, BAR_WIDTH, BAR_HEIGHT + 2 * SPIN_HEIGHT + BAR_BOTTOMMARGIN);
 
 	m_pStaminaPanel->SetPaintBackgroundType(2); // Rounded corner box
  	m_pStaminaPanel->SetPaintBackgroundEnabled(true);

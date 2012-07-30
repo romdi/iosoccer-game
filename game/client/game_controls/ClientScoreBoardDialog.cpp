@@ -375,8 +375,11 @@ void CClientScoreBoardDialog::Update( void )
 	if (!gr)
 		return;
 
-	int item1 = m_pPlayerList[0]->GetSelectedItem();
-	int item2 = m_pPlayerList[1]->GetSelectedItem();
+	int selectedItems[2] = {};
+	for (int i = 0; i < 2; i++)
+	{
+		selectedItems[i] = m_pPlayerList[i]->GetSelectedItem();
+	}
 
 	if (m_pPlayerList[0]->GetFgColor() != GetGlobalTeam(TEAM_A)->Get_HudKitColor() || m_pPlayerList[1]->GetFgColor() != GetGlobalTeam(TEAM_B)->Get_HudKitColor())
 	{
@@ -393,15 +396,22 @@ void CClientScoreBoardDialog::Update( void )
 		//m_pPlayerList[i]->Repaint();
 	}
 
-	m_pPlayerList[0]->SetSelectedItem(item1);
-	m_pPlayerList[1]->SetSelectedItem(item2);
-
 	bool showPlayerStats = false;
 	int playerIndices[2] = { 0, 0 };
 
 	for (int i = 0; i < 2; i++)
 	{
-		int itemID = m_pPlayerList[i]->GetSelectedItem();
+		int itemID;
+
+		if (m_pPlayerList[i]->IsItemIDValid(selectedItems[i]))
+			itemID = selectedItems[i];
+		else if (m_pPlayerList[i]->IsItemIDValid(m_pPlayerList[i]->GetSelectedItem()))
+			itemID = m_pPlayerList[i]->GetSelectedItem();
+		else
+			itemID = -1;
+
+		m_pPlayerList[i]->SetSelectedItem(itemID);
+
 		if (itemID != -1)
 		{
 			playerIndices[i] = m_pPlayerList[i]->GetItemData(itemID)->GetInt("playerindex");
@@ -621,9 +631,9 @@ void CClientScoreBoardDialog::AddHeader()
 			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "avatar",		"", SectionedListPanel::COLUMN_IMAGE, 50 );
 		}
 		m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "name",			"Name", 0, 150);
-		m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goals",			"Goals", 0, 50);
-		m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "assists",		"Assists", 0, 50);
-		m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "possession",		"Poss.", 0, 50);
+		m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goals",			"Goals", 0, 45);
+		m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "assists",		"Assists", 0, 45);
+		m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "possession",		"Poss.", 0, 55);
 		m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "ping",			"Ping", 0, 50);
 		//m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "voice",		"Voice", SectionedListPanel::COLUMN_IMAGE, scheme()->GetProportionalScaledValue(VOICE_WIDTH) );
 		//m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "tracker", "#PlayerTracker", SectionedListPanel::COLUMN_IMAGE, scheme()->GetProportionalScaledValueEx( GetScheme(),FRIENDS_WIDTH) );

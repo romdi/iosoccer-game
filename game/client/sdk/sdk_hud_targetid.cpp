@@ -13,6 +13,7 @@
 #include "iclientmode.h"
 #include "vgui/ILocalize.h"
 #include "sdk_gamerules.h"
+#include "c_ios_replaymanager.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -100,6 +101,11 @@ void CSDKTargetId::VidInit()
 void CSDKTargetId::Paint()
 {
 	if (hud_names_visible.GetInt() == 0)
+		return;
+
+	C_ReplayManager *pReplayManager = GetReplayManager();
+
+	if (pReplayManager && pReplayManager->IsReplaying())
 		return;
 
 	C_SDKPlayer *pLocal = C_SDKPlayer::GetLocalSDKPlayer();

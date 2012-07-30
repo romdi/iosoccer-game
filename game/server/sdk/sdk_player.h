@@ -342,7 +342,7 @@ public:
 
 	//int					m_BallInPenaltyBox;	 //-1 =	not	in box,	0,1	= teams	box
 
-	char				m_szClubName[32];
+	char				m_szClubName[5];
 	bool				m_bClubNameChanged;
 
 	char				m_szCountryName[64];
