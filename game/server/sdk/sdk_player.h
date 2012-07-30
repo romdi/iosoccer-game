@@ -409,7 +409,7 @@ protected:
 
 	bool				m_bIsOffside;
 	Vector				m_vOffsidePos;
-	CBall				*m_pPlayerBall;
+	CHandle<CBall>		m_pPlayerBall;
 	Vector				m_vOffsideLastOppPlayerPos;
 	Vector				m_vOffsideBallPos;
 };

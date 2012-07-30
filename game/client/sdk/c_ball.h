@@ -51,6 +51,7 @@ public:
 	IMaterial *m_pOffsideLineMaterial;
 	CHandle<C_SDKPlayer> m_pPl;
 	CHandle<C_SDKPlayer> m_pCreator;
+	bool m_bIsPlayerBall;
 };
 
 extern C_Ball *GetBall();

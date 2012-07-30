@@ -104,11 +104,12 @@ ConVar sv_ball_deflectionmultiplier("sv_ball_deflectionmultiplier", "0.66", FCVA
 
 CBall *CreateBall(const Vector &pos, CSDKPlayer *pCreator)
 {
-	CBall *pBall = static_cast<CBall*>(CreateEntityByName("football"));
-	pBall->SetAbsOrigin(pos);
+	CBall *pBall = static_cast<CBall *>(CreateEntityByName("football"));
 	pBall->SetCreator(pCreator);
+	pBall->SetAbsOrigin(pos);
 	pBall->Spawn();
 	pBall->SetPos(pos);
+
 	return pBall;
 }
 
@@ -201,6 +202,7 @@ IMPLEMENT_SERVERCLASS_ST( CBall, DT_Ball )
 	SendPropBool(SENDINFO(m_bOffsideLinesEnabled)),
 	SendPropEHandle(SENDINFO(m_pPl)),
 	SendPropEHandle(SENDINFO(m_pCreator)),
+	SendPropBool(SENDINFO(m_bIsPlayerBall)),
 	//ios1.1
     //SendPropVector(SENDINFO(m_vecOrigin), -1, SPROP_NOSCALE|SPROP_CHANGES_OFTEN, 0.0f, HIGH_DEFAULT, SendProxy_Origin ),
 END_SEND_TABLE()
@@ -238,6 +240,7 @@ CBall::CBall()
 	m_bHasQueuedState = false;
 	m_ePenaltyState = PENALTY_NONE;
 	m_pCreator = NULL;
+	m_bIsPlayerBall = false;
 	m_pHoldingPlayer = NULL;
 	m_flGlobalNextShot = gpGlobals->curtime;
 	m_nInPenBoxOfTeam = TEAM_INVALID;
@@ -245,11 +248,11 @@ CBall::CBall()
 
 CBall::~CBall()
 {
-	if (!m_pCreator)
+	if (!m_bIsPlayerBall)
 		g_pBall = NULL;
 }
 
-void CBall::RemovePlayerBalls()
+void CBall::RemoveAllPlayerBalls()
 {
 	CBall *pBall = NULL;
 
@@ -259,23 +262,22 @@ void CBall::RemovePlayerBalls()
 		if (!pBall)
 			break;
 
-		if (pBall != this)
-		{
-			if (pBall->GetHoldingPlayer())
-				pBall->RemoveFromPlayerHands(pBall->GetHoldingPlayer());
-
-			UTIL_Remove(pBall);
-		}
-	}
-
-	for (int i = 1; i <= gpGlobals->maxClients; i++)
-	{
-		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
-		if (!pPl)
+		if (pBall == this)
 			continue;
 
-		pPl->SetPlayerBall(NULL);
+		pBall->RemovePlayerBall();
 	}
+}
+
+void CBall::RemovePlayerBall()
+{
+	if (GetHoldingPlayer())
+		RemoveFromPlayerHands(GetHoldingPlayer());
+
+	if (GetCreator())
+		GetCreator()->SetPlayerBall(NULL);
+
+	UTIL_Remove(this);
 }
 
 //==========================================================
@@ -284,7 +286,7 @@ void CBall::RemovePlayerBalls()
 //==========================================================
 void CBall::Spawn (void)
 {
-	if (!m_pCreator)
+	if (!g_pBall && !m_bIsPlayerBall)
 		g_pBall = this;
 
 	//RomD: Don't fade the ball
@@ -1617,7 +1619,7 @@ bool CBall::CheckKeeperCatch()
 			vel = Vector(m_vVel.x, m_vVel.y, max(m_vVel.z, sv_ball_keeperpunchupstrength.GetInt()));
 		}
 		else
-			vel = m_vPlForward * sv_ball_keeperdeflectionmultiplier.GetFloat() * m_vVel.Length2D();
+			vel = m_vPlForward * m_vVel.Length2D() * sv_ball_keeperdeflectionmultiplier.GetFloat();
 
 		SetVel(vel, 0, BODY_PART_HANDS);
 	}
@@ -2291,11 +2293,6 @@ void CBall::SetPenaltyTaker(CSDKPlayer *pPl)
 {
 	m_pFouledPl = pPl;
 	m_nFoulingTeam = pPl->GetOppTeamNumber();
-}
-
-void CBall::SetCreator(CSDKPlayer *pCreator)
-{
-	m_pCreator = pCreator;
 }
 
 void CBall::EnablePlayerCollisions(bool enable)

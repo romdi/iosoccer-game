@@ -127,15 +127,20 @@ class CBall	: public CPhysicsProp, public IMultiplayerPhysics
 {
 public:
 	DECLARE_CLASS( CBall, CPhysicsProp );
-	CNetworkVar( int, m_iPhysicsMode );	// One of the PHYSICS_MULTIPLAYER_ defines.	
-	CNetworkVar( float,	m_fMass	);
 	DECLARE_SERVERCLASS();
 	DECLARE_DATADESC();
 
 	CBall();//	{ m_iPhysicsMode = PHYSICS_MULTIPLAYER_AUTODETECT; }
 	~CBall();
 
-	void		RemovePlayerBalls();
+	CNetworkVar( int, m_iPhysicsMode );	// One of the PHYSICS_MULTIPLAYER_ defines.	
+	CNetworkVar( float,	m_fMass	);
+	CNetworkHandle(CSDKPlayer, m_pPl);
+	CNetworkHandle(CSDKPlayer, m_pCreator);
+	CNetworkVar(bool, m_bIsPlayerBall);
+
+	void			RemoveAllPlayerBalls();
+	void			RemovePlayerBall();
 
 	void			SetPhysicsMode(int iMode)	{ m_iPhysicsMode = iMode; }
 	int				GetPhysicsMode(void) { return m_iPhysicsMode; }
@@ -186,7 +191,8 @@ public:
 
 	CSDKPlayer		*GetCurrentPlayer() { return m_pPl; }
 	CSDKPlayer		*GetCurrentOtherPlayer() { return m_pOtherPl; }
-	void			SetCreator(CSDKPlayer *pCreator);
+	CSDKPlayer		*GetCreator() { return m_pCreator; }
+	void			SetCreator(CSDKPlayer *pCreator) { m_pCreator = pCreator; m_bIsPlayerBall = (pCreator != NULL); }
 	CSDKPlayer		*GetHoldingPlayer() { return m_pHoldingPlayer; }
 	void			EnablePlayerCollisions(bool enable);
 	void			RemoveFromPlayerHands(CSDKPlayer *pPl);
@@ -195,9 +201,6 @@ public:
 	AngularImpulse	GetRot();
 	float			CalcFieldZone();
 	void			UpdatePossession(CSDKPlayer *pNewPossessor);
-
-	CNetworkHandle(CSDKPlayer, m_pPl);
-	CNetworkHandle(CSDKPlayer, m_pCreator);
 
 private:
 

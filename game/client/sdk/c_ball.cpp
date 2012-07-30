@@ -16,6 +16,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_Ball, DT_Ball, CBall )
 	RecvPropInt(RECVINFO(m_bOffsideLinesEnabled)),
 	RecvPropEHandle(RECVINFO(m_pPl)),
 	RecvPropEHandle(RECVINFO(m_pCreator)),
+	RecvPropBool(RECVINFO(m_bIsPlayerBall)),
 END_RECV_TABLE()
 
 C_Ball *g_pBall = NULL;
@@ -32,11 +33,12 @@ C_Ball::C_Ball()
 	m_pOffsideLineMaterial = materials->FindMaterial( "pitch/offside_line", TEXTURE_GROUP_CLIENT_EFFECTS );
 	m_pPl = NULL;
 	m_pCreator = NULL;
+	m_bIsPlayerBall = false;
 }
 
 C_Ball::~C_Ball()
 {
-	if (!m_pCreator)
+	if (!m_bIsPlayerBall)
 		g_pBall = NULL;
 }
 
@@ -44,7 +46,7 @@ void C_Ball::OnDataChanged(DataUpdateType_t updateType)
 {
 	BaseClass::OnDataChanged( updateType );
 
-	if (!g_pBall && !m_pCreator)
+	if (!g_pBall && !m_bIsPlayerBall)
 		g_pBall = this;
 
 	return;

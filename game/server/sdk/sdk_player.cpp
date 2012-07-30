@@ -1342,6 +1342,9 @@ void CSDKPlayer::ResetFlags()
 	m_pHoldingBall = NULL;
 	m_flLastReadyTime = -1;
 
+	if (GetPlayerBall())
+		GetPlayerBall()->RemovePlayerBall();
+
 	if (GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B)
 	{
 		RemoveSolidFlags(FSOLID_NOT_SOLID);

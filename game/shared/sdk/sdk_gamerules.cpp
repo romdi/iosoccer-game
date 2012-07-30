@@ -965,6 +965,9 @@ void CSDKGameRules::ClientDisconnected( edict_t *pClient )
 	CSDKPlayer *pPl = (CSDKPlayer *)CBaseEntity::Instance(pClient);
 	CPlayerPersistentData::SavePlayerData(pPl);
 
+	if (pPl->GetPlayerBall())
+		pPl->GetPlayerBall()->RemovePlayerBall();
+
 	BaseClass::ClientDisconnected( pClient );
 }
 #endif
@@ -1131,7 +1134,7 @@ void CSDKGameRules::State_Enter( match_state_t newState )
 	if (IsIntermissionState())
 		GetBall()->State_Transition(BALL_NORMAL);
 	else
-		GetBall()->RemovePlayerBalls();
+		GetBall()->RemoveAllPlayerBalls();
 
 	// Initialize the new state.
 	if ( m_pCurStateInfo && m_pCurStateInfo->pfnEnterState )
