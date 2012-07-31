@@ -225,6 +225,7 @@ REGISTER_GAMERULES_CLASS( CSDKGameRules );
 BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 #if defined ( CLIENT_DLL )
 	RecvPropTime( RECVINFO( m_flStateEnterTime ) ),
+	RecvPropTime( RECVINFO( m_flMatchStartTime ) ),
 	//RecvPropFloat( RECVINFO( m_fStart) ),
 	//RecvPropInt( RECVINFO( m_iDuration) ),
 	RecvPropInt( RECVINFO( m_eMatchState) ),// 0, RecvProxy_MatchState ),
@@ -244,8 +245,14 @@ BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 	RecvPropInt(RECVINFO(m_nPenaltyTakingStartTeam)),
 
 	RecvPropInt(RECVINFO(m_nBallZone)),
+
+	RecvPropFloat(RECVINFO(m_flOffsideLineBallPosY)),
+	RecvPropFloat(RECVINFO(m_flOffsideLineOffsidePlayerPosY)),
+	RecvPropFloat(RECVINFO(m_flOffsideLineLastOppPlayerPosY)),
+	RecvPropInt(RECVINFO(m_bOffsideLinesEnabled)),
 #else
 	SendPropTime( SENDINFO( m_flStateEnterTime )),
+	SendPropTime( SENDINFO( m_flMatchStartTime )),
 	//SendPropFloat( SENDINFO( m_fStart) ),
 	//SendPropInt( SENDINFO( m_iDuration) ),
 	SendPropInt( SENDINFO( m_eMatchState )),
@@ -265,6 +272,11 @@ BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 	SendPropInt(SENDINFO(m_nPenaltyTakingStartTeam)),
 
 	SendPropInt(SENDINFO(m_nBallZone)),
+
+	SendPropFloat(SENDINFO(m_flOffsideLineBallPosY), 0, SPROP_COORD),
+	SendPropFloat(SENDINFO(m_flOffsideLineOffsidePlayerPosY), 0, SPROP_COORD),
+	SendPropFloat(SENDINFO(m_flOffsideLineLastOppPlayerPosY), 0, SPROP_COORD),
+	SendPropBool(SENDINFO(m_bOffsideLinesEnabled)),
 #endif
 END_NETWORK_TABLE()
 
@@ -349,6 +361,35 @@ const CViewVectors* CSDKGameRules::GetViewVectors() const
 const CSDKViewVectors *CSDKGameRules::GetSDKViewVectors() const
 {
 	return &g_SDKViewVectors;
+}
+
+CSDKGameRules::CSDKGameRules()
+{
+	g_IOSRand.SetSeed(Plat_FloatTime() * 1000);
+
+#ifdef GAME_DLL
+	m_pCurStateInfo = NULL;
+	m_nShieldType = SHIELD_NONE;
+	m_vShieldPos = vec3_invalid;
+	m_flStateTimeLeft = 0;
+	m_flNextPenalty = gpGlobals->curtime;
+	m_nPenaltyTakingTeam = TEAM_A;
+	m_flInjuryTime = 0;
+	m_flInjuryTimeStart = -1;
+	m_pPrecip = NULL;
+	m_nFirstHalfLeftSideTeam = TEAM_A;
+	m_nLeftSideTeam = TEAM_A;
+	m_nFirstHalfKickOffTeam = TEAM_A;
+	m_nKickOffTeam = TEAM_A;
+	m_bOffsideLinesEnabled = false;
+	m_flOffsideLineBallPosY = 0;
+	m_flOffsideLineOffsidePlayerPosY = 0;
+	m_flOffsideLineLastOppPlayerPosY = 0;
+	m_flMatchStartTime = gpGlobals->curtime;
+#else
+	PrecacheMaterial("pitch/offside_line");
+	m_pOffsideLineMaterial = materials->FindMaterial( "pitch/offside_line", TEXTURE_GROUP_CLIENT_EFFECTS );
+#endif
 }
 
 #ifdef CLIENT_DLL
@@ -439,27 +480,8 @@ void InitBodyQue()
 // CSDKGameRules implementation.
 // --------------------------------------------------------------------------------------------------- //
 
-CSDKGameRules::CSDKGameRules()
-{
-	g_IOSRand.SetSeed(Plat_FloatTime() * 1000);
 
-	m_pCurStateInfo = NULL;
-	m_nShieldType = SHIELD_NONE;
-	m_vShieldPos = vec3_invalid;
-	m_flStateTimeLeft = 0;
-	m_flNextPenalty = gpGlobals->curtime;
-	m_nPenaltyTakingTeam = TEAM_A;
-	m_flInjuryTime = 0;
-	m_flInjuryTimeStart = -1;
-	m_pPrecip = NULL;
-	m_nFirstHalfLeftSideTeam = TEAM_A;
-	m_nLeftSideTeam = TEAM_A;
-	m_nFirstHalfKickOffTeam = TEAM_A;
-	m_nKickOffTeam = TEAM_A;
 
-	//ios m_bLevelInitialized = false;
-	//m_flMatchStartTime = 0;
-}
 void CSDKGameRules::ServerActivate()
 {
 	//CPlayerPersistentData::RemoveAllPlayerData();
@@ -1202,6 +1224,7 @@ CSDKGameRulesStateInfo* CSDKGameRules::State_LookupInfo( match_state_t state )
 
 void CSDKGameRules::State_WARMUP_Enter()
 {
+	m_flMatchStartTime = gpGlobals->curtime;
 	GetBall()->ResetMatch();
 	GetBall()->State_Transition(BALL_NORMAL, 0, true);
 }
@@ -1757,7 +1780,27 @@ int CSDKGameRules::GetMatchDisplayTimeSeconds()
 	return nTime;
 }
 
+ConVar mp_daytime_enabled("mp_daytime_enabled", "1", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_daytime_start("mp_daytime_start", "12", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_daytime_speed("mp_daytime_speed", "200", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_daytime_transition("mp_daytime_transition", "1.5", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_daytime_sunrise("mp_daytime_sunrise", "8", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_daytime_sunset("mp_daytime_sunset", "20", FCVAR_NOTIFY | FCVAR_REPLICATED);
+
 #ifdef GAME_DLL
+
+void CSDKGameRules::SetOffsideLinePositions(float ballPosY, float offsidePlayerPosY, float lastOppPlayerPosY)
+{
+	m_flOffsideLineBallPosY = ballPosY;
+	m_flOffsideLineOffsidePlayerPosY = offsidePlayerPosY;
+	m_flOffsideLineLastOppPlayerPosY = lastOppPlayerPosY;
+	m_bOffsideLinesEnabled = true;
+}
+
+void CSDKGameRules::SetOffsideLinesEnabled(bool enable)
+{
+	m_bOffsideLinesEnabled = enable;
+}
 
 void CSDKGameRules::CheckChatText(CBasePlayer *pPlayer, char *pText)
 {
@@ -1869,13 +1912,134 @@ void CC_BenchAll(const CCommand &args)
 
 static ConCommand benchall("benchall", CC_BenchAll);
 
-#endif
 
+#else
 
+void SetupVec(Vector& v, int dim1, int dim2, int fixedDim, float dim1Val, float dim2Val, float fixedDimVal)
+{
+	v[dim1] = dim1Val;
+	v[dim2] = dim2Val;
+	v[fixedDim] = fixedDimVal;
+}
 
+void DrawBoxSide(int dim1, int dim2, int fixedDim, float minX, float minY, float maxX, float maxY, float fixedDimVal, bool bFlip, Vector &color)
+{
+	Vector v;
 
+	CMatRenderContextPtr pRenderContext( materials );
+	IMesh *pMesh = pRenderContext->GetDynamicMesh();
 
-#ifdef CLIENT_DLL
+	CMeshBuilder builder;
+	builder.Begin(pMesh, MATERIAL_TRIANGLE_STRIP, 2);
+
+	SetupVec(v, dim1, dim2, fixedDim, minX, maxY, fixedDimVal);
+	builder.Position3fv(v.Base());
+	builder.Color3fv(color.Base());
+	builder.AdvanceVertex();
+
+	SetupVec(v, dim1, dim2, fixedDim, bFlip ? maxX : minX, bFlip ? maxY : minY, fixedDimVal);
+	builder.Position3fv(v.Base());
+	builder.Color3fv(color.Base());
+	builder.AdvanceVertex();
+
+	SetupVec(v, dim1, dim2, fixedDim, bFlip ? minX : maxX, bFlip ? minY : maxY, fixedDimVal);
+	builder.Position3fv(v.Base());
+	builder.Color3fv(color.Base());
+	builder.AdvanceVertex();
+
+	SetupVec(v, dim1, dim2, fixedDim, maxX, minY, fixedDimVal);
+	builder.Position3fv(v.Base());
+	builder.Color3fv(color.Base());
+	builder.AdvanceVertex();
+
+	builder.End();
+	pMesh->Draw();
+}
+
+void DrawOffsideLine(IMaterial *pMaterial, float posY, Vector &color)
+{
+	CMatRenderContextPtr pRenderContext( materials );
+	// Draw it.
+	pRenderContext->Bind( pMaterial );
+
+	Vector mins = Vector(SDKGameRules()->m_vFieldMin.GetX() - 500, posY - 1, SDKGameRules()->m_vKickOff.GetZ());
+	Vector maxs = Vector(SDKGameRules()->m_vFieldMax.GetX() + 500, posY + 1, SDKGameRules()->m_vKickOff.GetZ() + 2);
+
+	DrawBoxSide(1, 2, 0, mins[1], mins[2], maxs[1], maxs[2], mins[0], false, color);
+	DrawBoxSide(1, 2, 0, mins[1], mins[2], maxs[1], maxs[2], maxs[0], true, color);
+
+	DrawBoxSide(0, 2, 1, mins[0], mins[2], maxs[0], maxs[2], mins[1], true, color);
+	DrawBoxSide(0, 2, 1, mins[0], mins[2], maxs[0], maxs[2], maxs[1], false, color);
+
+	DrawBoxSide(0, 1, 2, mins[0], mins[1], maxs[0], maxs[1], mins[2], false, color);
+	DrawBoxSide(0, 1, 2, mins[0], mins[1], maxs[0], maxs[1], maxs[2], true, color);
+}
+
+void CSDKGameRules::DrawOffsideLines()
+{
+	if (m_bOffsideLinesEnabled)
+	{
+		DrawOffsideLine(m_pOffsideLineMaterial, m_flOffsideLineBallPosY, Vector(0, 0, 1));
+		DrawOffsideLine(m_pOffsideLineMaterial, m_flOffsideLineLastOppPlayerPosY, Vector(0, 1, 0));
+		DrawOffsideLine(m_pOffsideLineMaterial, m_flOffsideLineOffsidePlayerPosY, Vector(1, 0, 0));
+		//DrawOffsideLine(m_pOffsideLineMaterial, m_flOffsideLinePlayerY);
+	}
+}
+
+void CSDKGameRules::DrawSkyboxOverlay()
+{
+	if (!mp_daytime_enabled.GetBool())
+		return;
+
+	Vector vFinalRight = Vector(1, 0, 0);
+	Vector vFinalForward = Vector(0, 1, 0);
+	float m_flSpellPreviewRadius = 4000;
+	Vector vFinalOrigin = SDKGameRules()->m_vKickOff;
+	//vFinalOrigin.y += m_flSpellPreviewRadius;
+	vFinalOrigin.z += 1000;
+	float dayTime = fmodf(mp_daytime_start.GetFloat() + ((gpGlobals->curtime - m_flMatchStartTime) / 60.0f / 60.0f) * mp_daytime_speed.GetFloat(), 24.0f);
+	float alpha;
+
+	if (dayTime > mp_daytime_sunrise.GetFloat() && dayTime < mp_daytime_sunset.GetFloat())
+		alpha = 0; // day
+	else if (dayTime >= mp_daytime_sunset.GetFloat() && dayTime <= mp_daytime_sunset.GetFloat() + mp_daytime_transition.GetFloat())
+		alpha = (dayTime - mp_daytime_sunset.GetFloat()) / mp_daytime_transition.GetFloat(); // sunset
+	else if (dayTime >= mp_daytime_sunrise.GetFloat() - mp_daytime_transition.GetFloat() && dayTime <= mp_daytime_sunrise.GetFloat())
+		alpha = 1 - (dayTime - (mp_daytime_sunrise.GetFloat() - mp_daytime_transition.GetFloat())) / mp_daytime_transition.GetFloat(); // sunrise
+	else
+		alpha = 1; // night
+
+	CMatRenderContextPtr pRenderContext( materials );
+	IMaterial *pPreviewMaterial = materials->FindMaterial( "pitch/offside_line", TEXTURE_GROUP_CLIENT_EFFECTS );
+	//IMaterial *pPreviewMaterial = materials->FindMaterial( "debug/debugspritewireframe", TEXTURE_GROUP_OTHER );
+	pRenderContext->Bind( pPreviewMaterial );
+	IMesh *pMesh = pRenderContext->GetDynamicMesh();
+	CMeshBuilder meshBuilder;
+	meshBuilder.Begin( pMesh, MATERIAL_QUADS, 1 );
+
+	meshBuilder.Color4f( 0.0, 0.0, 0.0, alpha );
+	meshBuilder.TexCoord2f( 0,0,1 );
+	meshBuilder.Position3fv( (vFinalOrigin + (vFinalRight * m_flSpellPreviewRadius) + (vFinalForward * m_flSpellPreviewRadius)).Base() );
+	meshBuilder.AdvanceVertex();
+
+	meshBuilder.Color4f( 0.0, 0.0, 0.0, alpha );
+	meshBuilder.TexCoord2f( 0,1,1 );
+	meshBuilder.Position3fv( (vFinalOrigin + (vFinalRight * -m_flSpellPreviewRadius) + (vFinalForward * m_flSpellPreviewRadius)).Base() );
+	meshBuilder.AdvanceVertex();
+
+	meshBuilder.Color4f( 0.0, 0.0, 0.0, alpha );
+	meshBuilder.TexCoord2f( 0,1,0 );
+	meshBuilder.Position3fv( (vFinalOrigin + (vFinalRight * -m_flSpellPreviewRadius) + (vFinalForward * -m_flSpellPreviewRadius)).Base() );
+	meshBuilder.AdvanceVertex();
+
+	meshBuilder.Color4f( 0.0, 0.0, 0.0, alpha );
+	meshBuilder.TexCoord2f( 0,0,0 );
+	meshBuilder.Position3fv( (vFinalOrigin + (vFinalRight * m_flSpellPreviewRadius) + (vFinalForward * -m_flSpellPreviewRadius)).Base() );
+	meshBuilder.AdvanceVertex();
+
+	meshBuilder.End();
+	pMesh->Draw();
+}
 
 void CC_ReloadTextures(const CCommand &args)
 {

@@ -40,15 +40,9 @@ public:
 	}
 
 	void OnDataChanged(DataUpdateType_t updateType);
-	int DrawModel(int flags);
 
 	int m_iPhysicsMode;	// One of the PHYSICS_MULTIPLAYER_ defines.	
 	float m_fMass;
-	float m_flOffsideLineBallPosY;
-	float m_flOffsideLineOffsidePlayerPosY;
-	float m_flOffsideLineLastOppPlayerPosY;
-	bool m_bOffsideLinesEnabled;
-	IMaterial *m_pOffsideLineMaterial;
 	CHandle<C_SDKPlayer> m_pPl;
 	CHandle<C_SDKPlayer> m_pCreator;
 	bool m_bIsPlayerBall;

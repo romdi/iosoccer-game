@@ -209,6 +209,8 @@ public:
 	//Tony; define a default encryption key.
 	virtual const unsigned char *GetEncryptionKey( void ) { return (unsigned char *)"a1b2c3d4"; }
 
+	CSDKGameRules();
+
 #ifdef CLIENT_DLL
 
 	DECLARE_CLIENTCLASS_NOBASE(); // This makes datatables able to access our private vars.
@@ -218,7 +220,7 @@ public:
 
 	DECLARE_SERVERCLASS_NOBASE(); // This makes datatables able to access our private vars.
 	
-	CSDKGameRules();
+
 	virtual ~CSDKGameRules();
 	virtual const char *GetGameDescription( void ) { return SDK_GAME_DESCRIPTION; } 
 	virtual bool ClientCommand( CBaseEntity *pEdict, const CCommand &args );
@@ -276,6 +278,7 @@ public:
 	void StartRoundtimer(int iDuration);
 	inline match_state_t State_Get( void ) { return m_eMatchState; }
 	CNetworkVar(float, m_flStateEnterTime);
+	CNetworkVar(float, m_flMatchStartTime);
 
 	void RestartMatch();
 	void StartPenalties();
@@ -355,6 +358,18 @@ public:
 
 	bool ClientConnected(edict_t *pEntity, const char *pszName, const char *pszAddress, char *reject, int maxrejectlen);
 
+	void SetOffsideLinePositions(float ballPosY, float offsidePlayerPosY, float lastOppPlayerPosY);
+	void SetOffsideLinesEnabled(bool enable);
+
+#else
+
+public:
+	void DrawOffsideLines();
+	void DrawSkyboxOverlay();
+
+private:
+	IMaterial *m_pOffsideLineMaterial;
+
 #endif
 
 public:
@@ -368,6 +383,11 @@ public:
 	CNetworkVector(m_vShieldPos);
 	CNetworkVar(float, m_flInjuryTimeStart);
 	CNetworkVar(int, m_nBallZone);
+
+	CNetworkVar(float, m_flOffsideLineBallPosY);
+	CNetworkVar(float, m_flOffsideLineOffsidePlayerPosY);
+	CNetworkVar(float, m_flOffsideLineLastOppPlayerPosY);
+	CNetworkVar(bool, m_bOffsideLinesEnabled);
 };
 
 //-----------------------------------------------------------------------------

@@ -172,11 +172,6 @@ public:
 	void			State_Transition(ball_state_t newState, float delay = 0.0f, bool cancelQueuedState = false);
 
 	void			ResetMatch();
-
-	CNetworkVar(float, m_flOffsideLineBallPosY);
-	CNetworkVar(float, m_flOffsideLineOffsidePlayerPosY);
-	CNetworkVar(float, m_flOffsideLineLastOppPlayerPosY);
-	CNetworkVar(bool, m_bOffsideLinesEnabled);
 	
 	void			SetPos(Vector pos);
 	void			SetVel(Vector vel, float spin, body_part_t bodyPart);
@@ -229,8 +224,6 @@ private:
 
 	void			MarkOffsidePlayers();
 	void			UnmarkOffsidePlayers();
-	void			SetOffsideLinePositions(float ballPosY, float offsidePlayerPosY, float lastOppPlayerPosY);
-	void			SetOffsideLinesEnabled(bool enable);
 
 	bool			PlayersAtTargetPos();
 	bool			CheckFoul();
@@ -297,6 +290,7 @@ private:
 	CHandle<CSDKPlayer> m_pHoldingPlayer;
 
 	float			m_flGlobalNextShot;
+	float			m_flShotStart;
 };
 
 #endif

@@ -196,10 +196,6 @@ END_DATADESC()
 IMPLEMENT_SERVERCLASS_ST( CBall, DT_Ball )
 	SendPropInt( SENDINFO( m_iPhysicsMode ), 2,	SPROP_UNSIGNED ),
 	SendPropFloat( SENDINFO( m_fMass ),	0, SPROP_NOSCALE ),
-	SendPropFloat(SENDINFO(m_flOffsideLineBallPosY), 0, SPROP_COORD),
-	SendPropFloat(SENDINFO(m_flOffsideLineOffsidePlayerPosY), 0, SPROP_COORD),
-	SendPropFloat(SENDINFO(m_flOffsideLineLastOppPlayerPosY), 0, SPROP_COORD),
-	SendPropBool(SENDINFO(m_bOffsideLinesEnabled)),
 	SendPropEHandle(SENDINFO(m_pPl)),
 	SendPropEHandle(SENDINFO(m_pCreator)),
 	SendPropBool(SENDINFO(m_bIsPlayerBall)),
@@ -243,6 +239,7 @@ CBall::CBall()
 	m_bIsPlayerBall = false;
 	m_pHoldingPlayer = NULL;
 	m_flGlobalNextShot = gpGlobals->curtime;
+	m_flShotStart = -1;
 	m_nInPenBoxOfTeam = TEAM_INVALID;
 }
 
@@ -1072,7 +1069,7 @@ void CBall::State_FREEKICK_Enter()
 		break;
 	case FOUL_OFFSIDE:
 		matchEvent = MATCH_EVENT_OFFSIDE;
-		SetOffsideLinesEnabled(true);
+		SDKGameRules()->SetOffsideLinesEnabled(true);
 		break;
 	default:
 		matchEvent = MATCH_EVENT_NONE;
@@ -1154,7 +1151,7 @@ void CBall::State_FREEKICK_Think()
 
 void CBall::State_FREEKICK_Leave(ball_state_t newState)
 {
-	SetOffsideLinesEnabled(false);
+	SDKGameRules()->SetOffsideLinesEnabled(false);
 }
 
 void CBall::State_PENALTY_Enter()
@@ -2064,7 +2061,7 @@ void CBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart)
 	{
 		pPl->m_Offsides += 1;
 		TriggerFoul(FOUL_OFFSIDE, pPl->GetOffsidePos(), pPl);
-		SetOffsideLinePositions(pPl->GetOffsideBallPos().y, pPl->GetOffsidePos().y, pPl->GetOffsideLastOppPlayerPos().y);
+		SDKGameRules()->SetOffsideLinePositions(pPl->GetOffsideBallPos().y, pPl->GetOffsidePos().y, pPl->GetOffsideLastOppPlayerPos().y);
 		State_Transition(BALL_FREEKICK, sv_ball_statetransitiondelay.GetFloat());
 	}
 }
@@ -2232,19 +2229,6 @@ void CBall::UpdatePossession(CSDKPlayer *pNewPossessor)
 	}
 }
 
-void CBall::SetOffsideLinePositions(float ballPosY, float offsidePlayerPosY, float lastOppPlayerPosY)
-{
-	m_flOffsideLineBallPosY = ballPosY;
-	m_flOffsideLineOffsidePlayerPosY = offsidePlayerPosY;
-	m_flOffsideLineLastOppPlayerPosY = lastOppPlayerPosY;
-	m_bOffsideLinesEnabled = true;
-}
-
-void CBall::SetOffsideLinesEnabled(bool enable)
-{
-	m_bOffsideLinesEnabled = enable;
-}
-
 int CBall::UpdateTransmitState()
 {
 	return SetTransmitState( FL_EDICT_ALWAYS );
@@ -2257,7 +2241,7 @@ void CBall::ResetMatch()
 	m_pOtherPl = NULL;
 	RemoveAllTouches();
 	m_ePenaltyState = PENALTY_NONE;
-	SetOffsideLinesEnabled(false);
+	SDKGameRules()->SetOffsideLinesEnabled(false);
 	SDKGameRules()->DisableShield();
 	UnmarkOffsidePlayers();
 	m_bSetNewPos = false;

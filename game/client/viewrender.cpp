@@ -48,6 +48,7 @@
 #include "keyvalues.h"
 #include "renderparm.h"
 #include "con_nprint.h"
+#include "sdk_gamerules.h"
 
 #ifdef PORTAL
 //#include "C_Portal_Player.h"
@@ -1961,10 +1962,14 @@ void CViewRender::RenderView( const CViewSetup &view, int nClearFlags, int whatT
 		// Draw an overlay to make it even harder to see inside smoke particle systems.
 		DrawSmokeFogOverlay();
 
+		SDKGameRules()->DrawOffsideLines();
+
+		SDKGameRules()->DrawSkyboxOverlay();
+
 		// Overlay screen fade on entire screen
-		IMaterial* pMaterial = blend ? m_ModulateSingleColor : m_TranslucentSingleColor;
-		render->ViewDrawFade( color, pMaterial );
-		PerformScreenOverlay( view.x, view.y, view.width, view.height );
+		//IMaterial* pMaterial = blend ? m_ModulateSingleColor : m_TranslucentSingleColor;
+		//render->ViewDrawFade( color, pMaterial );
+		//PerformScreenOverlay( view.x, view.y, view.width, view.height );
 
 		// Prevent sound stutter if going slow
 		engine->Sound_ExtraUpdate();	
