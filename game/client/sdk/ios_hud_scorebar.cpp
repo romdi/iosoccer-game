@@ -254,7 +254,7 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 		m_pExtensionText[i]->SetBounds(TOPEXTENSION_TEXTMARGIN, 0, TOPEXTENSION_WIDTH - 2 * TOPEXTENSION_TEXTMARGIN, TOPEXTENSION_HEIGHT);
 		m_pExtensionText[i]->SetFgColor(white);
 		m_pExtensionText[i]->SetContentAlignment(Label::a_center);
-		m_pExtensionText[i]->SetFont(pScheme->GetFont("IOSScorebarMedium"));
+		m_pExtensionText[i]->SetFont(pScheme->GetFont("IOSScorebarExtraInfo"));
 
 		m_pTeamCrestPanels[i]->SetBounds(GetWide() / 2 - TEAMCREST_SIZE / 2 + (i == 0 ? -1 : 1) * TEAMCREST_HOFFSET, TEAMCREST_VOFFSET, TEAMCREST_SIZE, TEAMCREST_SIZE);
 		m_pTeamCrestPanels[i]->SetZPos(3);

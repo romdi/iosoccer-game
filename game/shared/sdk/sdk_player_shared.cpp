@@ -152,9 +152,6 @@ void CSDKPlayerShared::SetJumping( bool bJumping )
 
 void CSDKPlayerShared::SetStamina( float flStamina )
 {
-	if (SDKGameRules()->IsIntermissionState() && !mp_stamina_drain_during_intermissions.GetBool())
-		flStamina = 100;
-
 	m_flStamina = clamp( flStamina, 0, 100 );
 }
 

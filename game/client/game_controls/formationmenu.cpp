@@ -176,6 +176,7 @@ void CFormationMenu::Update()
 			bool enable;
 			bool isTakenByBot;
 			bool isFree;
+			HFont font;
 
 			if (playerIndexAtPos[i][j] == 0)
 			{
@@ -185,10 +186,10 @@ void CFormationMenu::Update()
 				enable = true;
 				isTakenByBot = false;
 				isFree = true;
+				font = m_pScheme->GetFont("IOSTeamMenuBig");
 			}
 			else
 			{
-				//m_pFormationButtons[i][j]->SetText("JOIN");
 				color32 human = { 255, 255, 255, 255 };
 				color32 bot = { 75, 75, 75, 255 };
 				color = gr->IsFakePlayer(playerIndexAtPos[i][j]) ? bot : human;
@@ -196,26 +197,11 @@ void CFormationMenu::Update()
 				enable = gr->IsFakePlayer(playerIndexAtPos[i][j]);
 				isTakenByBot = gr->IsFakePlayer(playerIndexAtPos[i][j]);
 				isFree = false;
-				//m_pFormationButtons[i][j]->SetFgColor(gr->GetTeamColor(TEAM_UNASSIGNED));
-				//m_pFormationButtons[i][j]->SetDefaultColor(black, darker);
-				//m_pFormationButtons[i][j]->SetArmedColor(black, dark);
-				//m_pFormationButtons[i][j]->SetDepressedColor(black, darker);
-				//pButton->SetFgColor(gr->GetTeamColor(teamIndex));
-				//Color black(0, 0, 0, 255);
-				//pButton->SetDefaultColor(black, black);
-				//pButton->SetArmedColor(black, black);
-				//pButton->SetDepressedColor(black, black);
-				//pButton->SetDefaultColor(black, lighter);
-				//pButton->SetArmedColor(black, white);
-				//pButton->SetDepressedColor(black, lighter);
-				//pButton->SetDisabledFgColor1(black);
-				//pButton->SetDisabledFgColor2(black);
-				//pButton->SetFont(m_pScheme->GetFont("IOSTeamMenuNormal"));
+				font = m_pScheme->GetFont("IOSTeamMenuBig");
 			}
 
-			//m_pFormationButtons[i][j]->SetImage(CBitmapButton::BUTTON_ENABLED, "vgui/shirt", color);
+			m_pFormationButtons[i][j]->SetFont(font);
 			m_pFormationButtons[i][j]->SetCursor(cursor);
-			//m_pFormationButtons[i][j]->SetEnabled(enable);
 			m_pFormationButtons[i][j]->SetCommand((isFree || isTakenByBot) ? VarArgs("jointeam %d %d", i + TEAM_A, j) : "");
 			Color teamColor = GetGlobalTeam(TEAM_A + i)->Get_HudKitColor();
 			color32 normal = { teamColor.r(), teamColor.g(), teamColor.b(), isFree ? 10 : 255 };

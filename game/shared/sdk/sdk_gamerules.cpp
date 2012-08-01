@@ -1991,12 +1991,6 @@ void CSDKGameRules::DrawSkyboxOverlay()
 	if (!mp_daytime_enabled.GetBool())
 		return;
 
-	Vector vFinalRight = Vector(1, 0, 0);
-	Vector vFinalForward = Vector(0, 1, 0);
-	float m_flSpellPreviewRadius = 4000;
-	Vector vFinalOrigin = SDKGameRules()->m_vKickOff;
-	//vFinalOrigin.y += m_flSpellPreviewRadius;
-	vFinalOrigin.z += 1000;
 	float dayTime = fmodf(mp_daytime_start.GetFloat() + ((gpGlobals->curtime - m_flMatchStartTime) / 60.0f / 60.0f) * mp_daytime_speed.GetFloat(), 24.0f);
 	float alpha;
 
@@ -2009,33 +2003,85 @@ void CSDKGameRules::DrawSkyboxOverlay()
 	else
 		alpha = 1; // night
 
+	alpha = pow(alpha, 0.5f);
+	alpha = clamp(alpha, 0, 0.997f);
+
 	CMatRenderContextPtr pRenderContext( materials );
 	IMaterial *pPreviewMaterial = materials->FindMaterial( "pitch/offside_line", TEXTURE_GROUP_CLIENT_EFFECTS );
 	//IMaterial *pPreviewMaterial = materials->FindMaterial( "debug/debugspritewireframe", TEXTURE_GROUP_OTHER );
 	pRenderContext->Bind( pPreviewMaterial );
 	IMesh *pMesh = pRenderContext->GetDynamicMesh();
 	CMeshBuilder meshBuilder;
-	meshBuilder.Begin( pMesh, MATERIAL_QUADS, 1 );
+	meshBuilder.Begin( pMesh, MATERIAL_QUADS, 4 );
 
-	meshBuilder.Color4f( 0.0, 0.0, 0.0, alpha );
-	meshBuilder.TexCoord2f( 0,0,1 );
-	meshBuilder.Position3fv( (vFinalOrigin + (vFinalRight * m_flSpellPreviewRadius) + (vFinalForward * m_flSpellPreviewRadius)).Base() );
-	meshBuilder.AdvanceVertex();
+	Vector right;
+	Vector forward;
+	Vector pos;
+	float forwardLength;
+	float rightLength;
 
-	meshBuilder.Color4f( 0.0, 0.0, 0.0, alpha );
-	meshBuilder.TexCoord2f( 0,1,1 );
-	meshBuilder.Position3fv( (vFinalOrigin + (vFinalRight * -m_flSpellPreviewRadius) + (vFinalForward * m_flSpellPreviewRadius)).Base() );
-	meshBuilder.AdvanceVertex();
+	for (int i = 0; i < 4; i++)
+	{
+		switch (i)
+		{
+		case 0:
+			{
+				forward = Vector(0, 1, 0);
+				right = Vector(1, 0, 0);
+				pos = SDKGameRules()->m_vKickOff + Vector(0, 0, 1000);
+				forwardLength = 4000;
+				rightLength = 4000;
+				break;
+			}
+		case 1:
+			{
+				forward = Vector(0, 0, 1);
+				right = Vector(-1, 0, 0);
+				pos = SDKGameRules()->m_vKickOff + Vector(0, 4000, 0);
+				forwardLength = 1000;
+				rightLength = 4000;
+				break;
+			}
+		case 2:
+			{
+				forward = Vector(0, 0, 1);
+				right = Vector(0, 1, 0);
+				pos = SDKGameRules()->m_vKickOff + Vector(4000, 2000, 0);
+				forwardLength = 1000;
+				rightLength = 2000;
+				break;
+			}
+		case 3:
+			{
+				forward = Vector(0, 0, 1);
+				right = Vector(0, -1, 0);
+				pos = SDKGameRules()->m_vKickOff + Vector(-4000, 2000, 0);
+				forwardLength = 1000;
+				rightLength = 2000;
+				break;
+			}
+		}
 
-	meshBuilder.Color4f( 0.0, 0.0, 0.0, alpha );
-	meshBuilder.TexCoord2f( 0,1,0 );
-	meshBuilder.Position3fv( (vFinalOrigin + (vFinalRight * -m_flSpellPreviewRadius) + (vFinalForward * -m_flSpellPreviewRadius)).Base() );
-	meshBuilder.AdvanceVertex();
+		meshBuilder.Color4f( 0.0, 0.0, 0.0, alpha );
+		meshBuilder.TexCoord2f( 0,0,1 );
+		meshBuilder.Position3fv( (pos + (right * rightLength) + (forward * forwardLength)).Base() );
+		meshBuilder.AdvanceVertex();
 
-	meshBuilder.Color4f( 0.0, 0.0, 0.0, alpha );
-	meshBuilder.TexCoord2f( 0,0,0 );
-	meshBuilder.Position3fv( (vFinalOrigin + (vFinalRight * m_flSpellPreviewRadius) + (vFinalForward * -m_flSpellPreviewRadius)).Base() );
-	meshBuilder.AdvanceVertex();
+		meshBuilder.Color4f( 0.0, 0.0, 0.0, alpha );
+		meshBuilder.TexCoord2f( 0,1,1 );
+		meshBuilder.Position3fv( (pos + (right * -rightLength) + (forward * forwardLength)).Base() );
+		meshBuilder.AdvanceVertex();
+
+		meshBuilder.Color4f( 0.0, 0.0, 0.0, alpha );
+		meshBuilder.TexCoord2f( 0,1,0 );
+		meshBuilder.Position3fv( (pos + (right * -rightLength) + (forward * -forwardLength)).Base() );
+		meshBuilder.AdvanceVertex();
+
+		meshBuilder.Color4f( 0.0, 0.0, 0.0, alpha );
+		meshBuilder.TexCoord2f( 0,0,0 );
+		meshBuilder.Position3fv( (pos + (right * rightLength) + (forward * -forwardLength)).Base() );
+		meshBuilder.AdvanceVertex();
+	}
 
 	meshBuilder.End();
 	pMesh->Draw();
