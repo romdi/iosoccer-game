@@ -133,6 +133,15 @@ extern ConVar mp_walkspeed;
 extern ConVar mp_runspeed;
 extern ConVar mp_sprintspeed;
 extern ConVar mp_remotecontrolledspeed;
+extern ConVar mp_keeperdiveduration;
+extern ConVar mp_keeperdivespeed_xy;
+extern ConVar mp_keeperdivespeed_z;
+extern ConVar mp_keepersprintdivecoeff_xy;
+extern ConVar mp_keepersprintdivecoeff_z;
+extern ConVar mp_slideduration;
+extern ConVar mp_slidespeed;
+extern ConVar mp_divingheaderduration;
+extern ConVar mp_divingheaderspeed;
 
 //--------------------------------------------------------------------------------------------------------
 //
@@ -249,6 +258,21 @@ static const char *g_szMatchEventNames[32] =
 	"DOUBLE TOUCH",
 	"HALF-TIME",
 	NULL
+};
+
+enum ball_state_t
+{
+	BALL_NOSTATE = 0,
+	BALL_NORMAL,
+	BALL_GOAL,
+	BALL_CORNER,
+	BALL_GOALKICK,
+	BALL_THROWIN,
+	BALL_FOUL,
+	BALL_KICKOFF,
+	BALL_PENALTY,
+	BALL_FREEKICK,
+	BALL_KEEPERHANDS
 };
 
 #endif // SDK_SHAREDDEFS_H

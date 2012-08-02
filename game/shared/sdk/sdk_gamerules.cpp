@@ -1091,7 +1091,7 @@ ConVar mp_shield_border("mp_shield_border", "20", FCVAR_NOTIFY|FCVAR_REPLICATED)
 ConVar mp_shield_block_6yardbox("mp_shield_block_6yardbox", "1", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar mp_shield_liberal_taker_positioning("mp_shield_liberal_taker_positioning", "0", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar mp_shield_liberal_teammates_positioning("mp_shield_liberal_teammates_positioning", "0", FCVAR_NOTIFY|FCVAR_REPLICATED);
-
+ConVar mp_shield_block_opponent_half("mp_shield_block_opponent_half", "1", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar mp_field_border("mp_field_border", "150", FCVAR_NOTIFY|FCVAR_REPLICATED);
 
 ConVar mp_offside("mp_offside", "1", FCVAR_NOTIFY|FCVAR_REPLICATED);
@@ -1259,7 +1259,7 @@ void CSDKGameRules::State_FIRST_HALF_Think()
 void CSDKGameRules::State_HALFTIME_Enter()
 {
 	GetBall()->State_Transition(BALL_NORMAL, 0, true);
-	GetBall()->SendNeutralMatchEvent(MATCH_EVENT_HALFTIME);
+	GetBall()->SetMatchEvent(MATCH_EVENT_HALFTIME);
 	GetBall()->EmitSound("Ball.whistle");
 	GetBall()->EmitSound("Ball.cheer");
 }
@@ -1297,7 +1297,7 @@ void CSDKGameRules::State_SECOND_HALF_Think()
 void CSDKGameRules::State_EXTRATIME_INTERMISSION_Enter()
 {
 	GetBall()->State_Transition(BALL_NORMAL, 0, true);
-	GetBall()->SendNeutralMatchEvent(MATCH_EVENT_FINAL_WHISTLE);
+	GetBall()->SetMatchEvent(MATCH_EVENT_FINAL_WHISTLE);
 	GetBall()->EmitSound("Ball.whistle");
 	GetBall()->EmitSound("Ball.cheer");
 }
@@ -1332,7 +1332,7 @@ void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Think()
 void CSDKGameRules::State_EXTRATIME_HALFTIME_Enter()
 {
 	GetBall()->State_Transition(BALL_NORMAL, 0, true);
-	GetBall()->SendNeutralMatchEvent(MATCH_EVENT_HALFTIME);
+	GetBall()->SetMatchEvent(MATCH_EVENT_HALFTIME);
 	GetBall()->EmitSound("Ball.whistle");
 	GetBall()->EmitSound("Ball.cheer");
 }
@@ -1370,7 +1370,7 @@ void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Think()
 void CSDKGameRules::State_PENALTIES_INTERMISSION_Enter()
 {
 	GetBall()->State_Transition(BALL_NORMAL, 0, true);
-	GetBall()->SendNeutralMatchEvent(MATCH_EVENT_FINAL_WHISTLE);
+	GetBall()->SetMatchEvent(MATCH_EVENT_FINAL_WHISTLE);
 	GetBall()->EmitSound("Ball.whistle");
 	GetBall()->EmitSound("Ball.cheer");
 }
@@ -1508,7 +1508,7 @@ void CSDKGameRules::State_PENALTIES_Think()
 void CSDKGameRules::State_COOLDOWN_Enter()
 {
 	GetBall()->State_Transition(BALL_NORMAL, 0, true);
-	GetBall()->SendNeutralMatchEvent(MATCH_EVENT_FINAL_WHISTLE);
+	GetBall()->SetMatchEvent(MATCH_EVENT_FINAL_WHISTLE);
 	GetBall()->EmitSound("Ball.whistle");
 	GetBall()->EmitSound("Ball.cheer");
 

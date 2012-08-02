@@ -38,7 +38,7 @@
 	#include "team.h"
 #endif
 
-const char *g_szRequiredClientVersion = "29.07.12/15h";
+const char *g_szRequiredClientVersion = "02.08.12/3h";
 
 ConVar sv_showimpacts("sv_showimpacts", "0", FCVAR_REPLICATED, "Shows client (red) and server (blue) bullet impact point" );
 
@@ -236,10 +236,10 @@ void CSDKPlayer::MoveToTargetPos(Vector &pos, Vector &vel, QAngle &ang)
 void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vector &oldVel, Vector &newVel, const QAngle &oldAng, QAngle &newAng)
 {
 	bool stopPlayer = false;
+	const float border = (GetFlags() & FL_SHIELD_KEEP_IN) ? 0 : 2 * mp_shield_border.GetInt();
 
 	if (SDKGameRules()->m_nShieldType != SHIELD_NONE)
 	{
-		float border = (GetFlags() & FL_SHIELD_KEEP_IN) ? 0 : 2 * mp_shield_border.GetInt();
 
 		if (SDKGameRules()->m_nShieldType == SHIELD_GOALKICK || 
 			SDKGameRules()->m_nShieldType == SHIELD_PENALTY ||
@@ -370,7 +370,25 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 		}
 	}
 
-	if (!SDKGameRules()->IsIntermissionState())
+	if (SDKGameRules()->IsIntermissionState())
+	{
+		if (mp_shield_block_opponent_half.GetBool())
+		{
+			int forward;
+			#ifdef CLIENT_DLL
+				forward = GetPlayersTeam(this)->m_nForward;
+			#else
+				forward = GetTeam()->m_nForward;
+			#endif
+			float yBorder = SDKGameRules()->m_vKickOff.GetY() - abs(border) * forward;
+			if (Sign(newPos.y - yBorder) == forward)
+			{
+				newPos.y = yBorder;
+				stopPlayer = true;
+			}
+		}
+	}
+	else
 	{
 		float border = mp_field_border.GetInt();
 		Vector min = SDKGameRules()->m_vFieldMin - border;

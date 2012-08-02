@@ -59,6 +59,7 @@ extern ConVar
 	mp_shield_block_6yardbox,
 	mp_shield_liberal_taker_positioning,
 	mp_shield_liberal_teammates_positioning,
+	mp_shield_block_opponent_half,
 	mp_field_border,
 	mp_offside,
 	mp_joindelay,

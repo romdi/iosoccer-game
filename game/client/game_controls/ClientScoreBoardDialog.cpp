@@ -623,9 +623,9 @@ void CClientScoreBoardDialog::AddHeader()
 		m_pPlayerList[i]->SetFgColor(Color(0, 0, 0, 255));
 		m_pPlayerList[i]->SetSectionFgColor(0, Color(0, 0, 0, 255));
 		//m_pPlayerList[i]->SetSectionDividerColor(m_iSectionId, Color(255, 255, 255, 255));
-		m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "posname",		"Pos.", SectionedListPanel::COLUMN_CENTER, 55 );
-		m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "country",		"Nat.", SectionedListPanel::COLUMN_CENTER | SectionedListPanel::COLUMN_IMAGE, 50 );
-		m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "club",			"Club", SectionedListPanel::COLUMN_CENTER,  65);
+		m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "posname",		"Pos.", 0, 55 );
+		m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "country",		"Nat.", SectionedListPanel::COLUMN_IMAGE, 50 );
+		m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "club",			"Club", 0,  65);
 		if ( ShowAvatars() )
 		{
 			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "avatar",		"", SectionedListPanel::COLUMN_IMAGE, 50 );

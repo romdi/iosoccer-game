@@ -6,32 +6,8 @@
 #include "props.h"
 #include "sdk_player.h"
 #include "in_buttons.h"
-#include "beam_shared.h"
-
 
 #define	BALL_MODEL	 "models/w_fb.mdl"
-
-#define	BALL_ELSEWHERE	0
-#define	BALL_NEAR_FEET	1
-#define	BALL_NEAR_HEAD	2
-
-#define	MAX_OFFS		16
-#define	MAX_ASSIST		10
-
-enum ball_state_t
-{
-	BALL_NOSTATE = 0,
-	BALL_NORMAL,
-	BALL_GOAL,
-	BALL_CORNER,
-	BALL_GOALKICK,
-	BALL_THROWIN,
-	BALL_FOUL,
-	BALL_KICKOFF,
-	BALL_PENALTY,
-	BALL_FREEKICK,
-	BALL_KEEPERHANDS
-};
 
 enum body_part_t
 {
@@ -138,6 +114,13 @@ public:
 	CNetworkHandle(CSDKPlayer, m_pPl);
 	CNetworkHandle(CSDKPlayer, m_pCreator);
 	CNetworkVar(bool, m_bIsPlayerBall);
+	CNetworkVar(ball_state_t, m_eBallState);
+	CNetworkVar(match_event_t, m_eMatchEvent);
+	CNetworkVar(match_event_t, m_eMatchSubEvent);
+	CNetworkHandle(CSDKPlayer, m_pMatchEventPlayer);
+	CNetworkVar(int, m_nMatchEventTeam);
+	CNetworkHandle(CSDKPlayer, m_pMatchSubEventPlayer);
+	CNetworkVar(int, m_nMatchSubEventTeam);
 
 	void			RemoveAllPlayerBalls();
 	void			RemovePlayerBall();
@@ -149,11 +132,8 @@ public:
 	int				ObjectCaps(void)	{  return BaseClass::ObjectCaps() |	FCAP_CONTINUOUS_USE; }
 	int				UpdateTransmitState();
 
-	void			SendMatchEvent(match_event_t matchEvent, CSDKPlayer *pPlayer = NULL);
-	void			SendMatchEvent(match_event_t matchEvent, MatchEventPlayerInfo *pMatchEventPlayerInfo);
-	void			SendMatchEvent(match_event_t matchEvent, const char *szPlayerName, int playerTeam, int playerUserID, const char *szPlayerNetworkIDString);
-
-	void			SendNeutralMatchEvent(match_event_t matchEvent);
+	void			SetMatchEvent(match_event_t matchEvent, CSDKPlayer *pPlayer = NULL);
+	void			SetMatchSubEvent(match_event_t matchEvent, CSDKPlayer *pPlayer = NULL);
 
 	bool			IsAsleep(void) { return	false; }
 	void			Spawn(void);
@@ -174,7 +154,7 @@ public:
 	void			ResetMatch();
 	
 	void			SetPos(Vector pos);
-	void			SetVel(Vector vel, float spinCoeff, body_part_t bodyPart, bool isDeflection = false);
+	void			SetVel(Vector vel, float spinCoeff, body_part_t bodyPart, bool isDeflection, bool markOffsidePlayers);
 	void			SetRot(AngularImpulse rot = NULL);
 
 	void			SetPenaltyState(penalty_state_t penaltyState) { m_ePenaltyState = penaltyState; }
@@ -182,7 +162,7 @@ public:
 
 	void			SetPenaltyTaker(CSDKPlayer *pPl);
 
-	inline ball_state_t State_Get( void ) { return m_eBallState; }
+	inline ball_state_t State_Get( void ) { return m_pCurStateInfo->m_eBallState; }
 
 	CSDKPlayer		*GetCurrentPlayer() { return m_pPl; }
 	CSDKPlayer		*GetCurrentOtherPlayer() { return m_pOtherPl; }
@@ -215,7 +195,6 @@ private:
 	void State_Think();										// Update the current state.
 	void State_Leave(ball_state_t newState);
 	static CBallStateInfo* State_LookupInfo(ball_state_t state);	// Find the state info for the specified state.
-	ball_state_t	m_eBallState;
 	ball_state_t	m_eNextState;
 	float			m_flStateEnterTime;
 	float			m_flStateLeaveTime;
@@ -240,7 +219,7 @@ private:
 	float			GetPitchCoeff();
 	float			GetPowershotStrength(float coeff, int minStrength, int maxStrength);
 	void			UpdateCarrier();
-	void			Kicked(body_part_t bodyPart, bool isDeflection = false);
+	void			Kicked(body_part_t bodyPart, bool isDeflection);
 	void			Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart);
 	void			RemoveAllTouches();
 	BallTouchInfo	*LastInfo(bool wasShooting, CSDKPlayer *pSkipPl = NULL);

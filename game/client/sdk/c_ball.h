@@ -45,7 +45,14 @@ public:
 	float m_fMass;
 	CHandle<C_SDKPlayer> m_pPl;
 	CHandle<C_SDKPlayer> m_pCreator;
+	CHandle<C_SDKPlayer> m_pMatchEventPlayer;
+	int m_nMatchEventTeam;
+	CHandle<C_SDKPlayer> m_pMatchSubEventPlayer;
+	int m_nMatchSubEventTeam;
 	bool m_bIsPlayerBall;
+	match_event_t m_eMatchEvent;
+	match_event_t m_eMatchSubEvent;
+	ball_state_t m_eBallState;
 };
 
 extern C_Ball *GetBall();

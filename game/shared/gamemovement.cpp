@@ -1542,26 +1542,34 @@ bool CGameMovement::CheckPlayerAnimEvent()
 	Vector forward2D = forward;
 	forward2D.z = 0;
 	forward2D.NormalizeInPlace();
+	bool isSprinting = ((mv->m_nButtons & IN_SPEED) != 0);
 
 	switch (ToSDKPlayer(player)->m_ePlayerAnimEvent)
 	{
 	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT:
+		{
+			//mv->m_vecVelocity = forward2D * mv->m_flForwardMove + right * mv->m_flSideMove;
+			mv->m_vecVelocity = -right * mp_keeperdivespeed_xy.GetInt() * (isSprinting ? mp_keepersprintdivecoeff_xy.GetFloat() : 1) * max(0, (1 - pow(timePassed / mp_keeperdiveduration.GetFloat(), 2)));
+			mv->m_vecVelocity.z = mp_keeperdivespeed_z.GetInt() * (isSprinting ? mp_keepersprintdivecoeff_z.GetFloat() : 1);
+			break;
+		}
 	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT:
 		{
-			mv->m_vecVelocity = forward2D * mv->m_flForwardMove + right * mv->m_flSideMove;
-			mv->m_vecVelocity.z = abs(mv->m_flSideMove) * 0.75f;
+			//mv->m_vecVelocity = forward2D * mv->m_flForwardMove + right * mv->m_flSideMove;
+			mv->m_vecVelocity = right * mp_keeperdivespeed_xy.GetInt() * (isSprinting ? mp_keepersprintdivecoeff_xy.GetFloat() : 1) * max(0, (1 - pow(timePassed / mp_keeperdiveduration.GetFloat(), 2)));
+			mv->m_vecVelocity.z = mp_keeperdivespeed_z.GetInt() * (isSprinting ? mp_keepersprintdivecoeff_z.GetFloat() : 1);
 			break;
 		}
 	case PLAYERANIMEVENT_KEEPER_DIVE_FORWARD:
 		{
-			mv->m_vecVelocity = forward2D * mv->m_flForwardMove + right * mv->m_flSideMove;
+			mv->m_vecVelocity = forward2D * mp_keeperdivespeed_xy.GetInt() * (isSprinting ? mp_keepersprintdivecoeff_xy.GetFloat() : 1) * max(0, (1 - pow(timePassed / mp_keeperdiveduration.GetFloat(), 2)));
 			mv->m_vecVelocity.z = 0;
 			break;
 		}
 	case PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD:
 		{
-			mv->m_vecVelocity = forward2D * mv->m_flForwardMove + right * mv->m_flSideMove;
-			mv->m_vecVelocity.z = abs(mv->m_flForwardMove) * 0.75f;
+			mv->m_vecVelocity = -forward2D * mp_keeperdivespeed_xy.GetInt() * (isSprinting ? mp_keepersprintdivecoeff_xy.GetFloat() : 1) * max(0, (1 - pow(timePassed / mp_keeperdiveduration.GetFloat(), 2)));
+			mv->m_vecVelocity.z = mp_keeperdivespeed_z.GetInt() * (isSprinting ? mp_keepersprintdivecoeff_z.GetFloat() : 1);
 			break;
 		}
 	case PLAYERANIMEVENT_KEEPER_HANDS_THROW:
@@ -1571,7 +1579,7 @@ bool CGameMovement::CheckPlayerAnimEvent()
 		}
 	case PLAYERANIMEVENT_SLIDE:
 		{
-			mv->m_vecVelocity = forward2D * mp_sprintspeed.GetInt() * max(0, (1 - timePassed / 1.0f));
+			mv->m_vecVelocity = forward2D * mp_slidespeed.GetInt() * max(0, (1 - pow(timePassed / mp_slideduration.GetFloat(), 2)));
 			break;
 		}
 	case PLAYERANIMEVENT_TACKLED_FORWARD:
@@ -1588,7 +1596,7 @@ bool CGameMovement::CheckPlayerAnimEvent()
 		}
 	case PLAYERANIMEVENT_DIVINGHEADER:
 		{
-			mv->m_vecVelocity = forward2D * mp_sprintspeed.GetInt() * max(0, (1 - timePassed / 1.0f));
+			mv->m_vecVelocity = forward2D * mp_divingheaderspeed.GetInt() * max(0, (1 - pow(timePassed / mp_divingheaderduration.GetFloat(), 2)));
 			break;
 		}
 	default:
