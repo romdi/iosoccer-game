@@ -237,6 +237,9 @@ bool CWorldLights::GetBrightestLightSource(const Vector &vecPosition, Vector &ve
 			// Act like we didn't find any valid worldlights, so the shadow
 			// manager uses the default shadow direction instead (should be the
 			// sun direction)
+
+			delete[] pvs;
+
 			return false;
 		}
  
@@ -287,6 +290,8 @@ bool CWorldLights::GetBrightestLightSource(const Vector &vecPosition, Vector &ve
 		//engine->Con_NPrintf(i, "%d: set (%.2f)", i, vecIntensity.Length());
 	}
  
+	delete[] pvs;
+
 	//engine->Con_NPrintf(m_nWorldLights, "result: %d", !vecLightBrightness.IsZero());
 	return !vecLightBrightness.IsZero();
 }
