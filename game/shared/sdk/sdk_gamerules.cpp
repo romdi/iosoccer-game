@@ -1194,17 +1194,17 @@ CSDKGameRulesStateInfo* CSDKGameRules::State_LookupInfo( match_state_t state )
 {
 	static CSDKGameRulesStateInfo gameRulesStateInfos[] =
 	{
-		{ MATCH_WARMUP,						"MATCH_WARMUP",						&CSDKGameRules::State_WARMUP_Enter,					NULL, &CSDKGameRules::State_WARMUP_Think,					&mp_timelimit_warmup, 1	},
-		{ MATCH_FIRST_HALF,					"MATCH_FIRST_HALF",					&CSDKGameRules::State_FIRST_HALF_Enter,				NULL, &CSDKGameRules::State_FIRST_HALF_Think,				&mp_timelimit_match, 2 },
-		{ MATCH_HALFTIME,					"MATCH_HALFTIME",					&CSDKGameRules::State_HALFTIME_Enter,				NULL, &CSDKGameRules::State_HALFTIME_Think,					&mp_timelimit_halftime, 1 },
-		{ MATCH_SECOND_HALF,				"MATCH_SECOND_HALF",				&CSDKGameRules::State_SECOND_HALF_Enter,			NULL, &CSDKGameRules::State_SECOND_HALF_Think,				&mp_timelimit_match, 2 },
-		{ MATCH_EXTRATIME_INTERMISSION,		"MATCH_EXTRATIME_INTERMISSION",		&CSDKGameRules::State_EXTRATIME_INTERMISSION_Enter, NULL, &CSDKGameRules::State_EXTRATIME_INTERMISSION_Think,	&mp_timelimit_extratime_intermission, 1	},
-		{ MATCH_EXTRATIME_FIRST_HALF,		"MATCH_EXTRATIME_FIRST_HALF",		&CSDKGameRules::State_EXTRATIME_FIRST_HALF_Enter,	NULL, &CSDKGameRules::State_EXTRATIME_FIRST_HALF_Think,		&mp_timelimit_match, 6 },
-		{ MATCH_EXTRATIME_HALFTIME,			"MATCH_EXTRATIME_HALFTIME",			&CSDKGameRules::State_EXTRATIME_HALFTIME_Enter,		NULL, &CSDKGameRules::State_EXTRATIME_HALFTIME_Think,		&mp_timelimit_extratime_halftime, 1 },
-		{ MATCH_EXTRATIME_SECOND_HALF,		"MATCH_EXTRATIME_SECOND_HALF",		&CSDKGameRules::State_EXTRATIME_SECOND_HALF_Enter,	NULL, &CSDKGameRules::State_EXTRATIME_SECOND_HALF_Think,	&mp_timelimit_match, 6 },
-		{ MATCH_PENALTIES_INTERMISSION,		"MATCH_PENALTIES_INTERMISSION",		&CSDKGameRules::State_PENALTIES_INTERMISSION_Enter, NULL, &CSDKGameRules::State_PENALTIES_INTERMISSION_Think,	&mp_timelimit_penalties_intermission, 1 },
-		{ MATCH_PENALTIES,					"MATCH_PENALTIES",					&CSDKGameRules::State_PENALTIES_Enter,				NULL, &CSDKGameRules::State_PENALTIES_Think,				&mp_timelimit_penalties, 1 },
-		{ MATCH_COOLDOWN,					"MATCH_COOLDOWN",					&CSDKGameRules::State_COOLDOWN_Enter,				NULL, &CSDKGameRules::State_COOLDOWN_Think,					&mp_timelimit_cooldown, 1 },
+		{ MATCH_WARMUP,						"MATCH_WARMUP",						&CSDKGameRules::State_WARMUP_Enter,					&CSDKGameRules::State_WARMUP_Think,					&CSDKGameRules::State_WARMUP_Leave,					&mp_timelimit_warmup, 1	},
+		{ MATCH_FIRST_HALF,					"MATCH_FIRST_HALF",					&CSDKGameRules::State_FIRST_HALF_Enter,				&CSDKGameRules::State_FIRST_HALF_Think,				&CSDKGameRules::State_FIRST_HALF_Leave,				&mp_timelimit_match, 2 },
+		{ MATCH_HALFTIME,					"MATCH_HALFTIME",					&CSDKGameRules::State_HALFTIME_Enter,				&CSDKGameRules::State_HALFTIME_Think,				&CSDKGameRules::State_HALFTIME_Leave,				&mp_timelimit_halftime, 1 },
+		{ MATCH_SECOND_HALF,				"MATCH_SECOND_HALF",				&CSDKGameRules::State_SECOND_HALF_Enter,			&CSDKGameRules::State_SECOND_HALF_Think,			&CSDKGameRules::State_SECOND_HALF_Leave,			&mp_timelimit_match, 2 },
+		{ MATCH_EXTRATIME_INTERMISSION,		"MATCH_EXTRATIME_INTERMISSION",		&CSDKGameRules::State_EXTRATIME_INTERMISSION_Enter, &CSDKGameRules::State_EXTRATIME_INTERMISSION_Think,	&CSDKGameRules::State_EXTRATIME_INTERMISSION_Leave,	&mp_timelimit_extratime_intermission, 1	},
+		{ MATCH_EXTRATIME_FIRST_HALF,		"MATCH_EXTRATIME_FIRST_HALF",		&CSDKGameRules::State_EXTRATIME_FIRST_HALF_Enter,	&CSDKGameRules::State_EXTRATIME_FIRST_HALF_Think,	&CSDKGameRules::State_EXTRATIME_FIRST_HALF_Leave,	&mp_timelimit_match, 6 },
+		{ MATCH_EXTRATIME_HALFTIME,			"MATCH_EXTRATIME_HALFTIME",			&CSDKGameRules::State_EXTRATIME_HALFTIME_Enter,		&CSDKGameRules::State_EXTRATIME_HALFTIME_Think,		&CSDKGameRules::State_EXTRATIME_HALFTIME_Leave,		&mp_timelimit_extratime_halftime, 1 },
+		{ MATCH_EXTRATIME_SECOND_HALF,		"MATCH_EXTRATIME_SECOND_HALF",		&CSDKGameRules::State_EXTRATIME_SECOND_HALF_Enter,	&CSDKGameRules::State_EXTRATIME_SECOND_HALF_Think,	&CSDKGameRules::State_EXTRATIME_SECOND_HALF_Leave,	&mp_timelimit_match, 6 },
+		{ MATCH_PENALTIES_INTERMISSION,		"MATCH_PENALTIES_INTERMISSION",		&CSDKGameRules::State_PENALTIES_INTERMISSION_Enter, &CSDKGameRules::State_PENALTIES_INTERMISSION_Think,	&CSDKGameRules::State_PENALTIES_INTERMISSION_Leave,	&mp_timelimit_penalties_intermission, 1 },
+		{ MATCH_PENALTIES,					"MATCH_PENALTIES",					&CSDKGameRules::State_PENALTIES_Enter,				&CSDKGameRules::State_PENALTIES_Think,				&CSDKGameRules::State_PENALTIES_Leave,				&mp_timelimit_penalties, 1 },
+		{ MATCH_COOLDOWN,					"MATCH_COOLDOWN",					&CSDKGameRules::State_COOLDOWN_Enter,				&CSDKGameRules::State_COOLDOWN_Think,				&CSDKGameRules::State_COOLDOWN_Leave,				&mp_timelimit_cooldown, 1 },
 	};
 
 	for ( int i=0; i < ARRAYSIZE( gameRulesStateInfos ); i++ )
@@ -1229,6 +1229,10 @@ void CSDKGameRules::State_WARMUP_Think()
 		State_Transition(MATCH_FIRST_HALF);
 }
 
+void CSDKGameRules::State_WARMUP_Leave()
+{
+}
+
 void CSDKGameRules::State_FIRST_HALF_Enter()
 {
 	m_nFirstHalfLeftSideTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
@@ -1250,18 +1254,26 @@ void CSDKGameRules::State_FIRST_HALF_Think()
 	}
 }
 
-void CSDKGameRules::State_HALFTIME_Enter()
+void CSDKGameRules::State_FIRST_HALF_Leave()
 {
-	GetBall()->State_Transition(BALL_NORMAL, 0, true);
 	GetBall()->SetMatchEvent(MATCH_EVENT_HALFTIME);
 	GetBall()->EmitSound("Ball.whistle");
 	GetBall()->EmitSound("Ball.cheer");
+}
+
+void CSDKGameRules::State_HALFTIME_Enter()
+{
+	GetBall()->State_Transition(BALL_NORMAL, 0, true);
 }
 
 void CSDKGameRules::State_HALFTIME_Think()
 {
 	if (m_flStateTimeLeft <= 0)
 		State_Transition(MATCH_SECOND_HALF);
+}
+
+void CSDKGameRules::State_HALFTIME_Leave()
+{
 }
 
 void CSDKGameRules::State_SECOND_HALF_Enter()
@@ -1288,12 +1300,16 @@ void CSDKGameRules::State_SECOND_HALF_Think()
 	}
 }
 
-void CSDKGameRules::State_EXTRATIME_INTERMISSION_Enter()
+void CSDKGameRules::State_SECOND_HALF_Leave()
 {
-	GetBall()->State_Transition(BALL_NORMAL, 0, true);
 	GetBall()->SetMatchEvent(MATCH_EVENT_FINAL_WHISTLE);
 	GetBall()->EmitSound("Ball.whistle");
 	GetBall()->EmitSound("Ball.cheer");
+}
+
+void CSDKGameRules::State_EXTRATIME_INTERMISSION_Enter()
+{
+	GetBall()->State_Transition(BALL_NORMAL, 0, true);
 }
 
 void CSDKGameRules::State_EXTRATIME_INTERMISSION_Think()
@@ -1302,6 +1318,10 @@ void CSDKGameRules::State_EXTRATIME_INTERMISSION_Think()
 	{
 		State_Transition(MATCH_EXTRATIME_FIRST_HALF);
 	}
+}
+
+void CSDKGameRules::State_EXTRATIME_INTERMISSION_Leave()
+{
 }
 
 void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Enter()
@@ -1323,12 +1343,16 @@ void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Think()
 	}
 }
 
-void CSDKGameRules::State_EXTRATIME_HALFTIME_Enter()
+void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Leave()
 {
-	GetBall()->State_Transition(BALL_NORMAL, 0, true);
 	GetBall()->SetMatchEvent(MATCH_EVENT_HALFTIME);
 	GetBall()->EmitSound("Ball.whistle");
 	GetBall()->EmitSound("Ball.cheer");
+}
+
+void CSDKGameRules::State_EXTRATIME_HALFTIME_Enter()
+{
+	GetBall()->State_Transition(BALL_NORMAL, 0, true);
 }
 
 void CSDKGameRules::State_EXTRATIME_HALFTIME_Think()
@@ -1337,6 +1361,10 @@ void CSDKGameRules::State_EXTRATIME_HALFTIME_Think()
 	{
 		State_Transition(MATCH_EXTRATIME_SECOND_HALF);
 	}
+}
+
+void CSDKGameRules::State_EXTRATIME_HALFTIME_Leave()
+{
 }
 
 void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Enter()
@@ -1361,12 +1389,16 @@ void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Think()
 	}
 }
 
-void CSDKGameRules::State_PENALTIES_INTERMISSION_Enter()
+void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Leave()
 {
-	GetBall()->State_Transition(BALL_NORMAL, 0, true);
 	GetBall()->SetMatchEvent(MATCH_EVENT_FINAL_WHISTLE);
 	GetBall()->EmitSound("Ball.whistle");
 	GetBall()->EmitSound("Ball.cheer");
+}
+
+void CSDKGameRules::State_PENALTIES_INTERMISSION_Enter()
+{
+	GetBall()->State_Transition(BALL_NORMAL, 0, true);
 }
 
 void CSDKGameRules::State_PENALTIES_INTERMISSION_Think()
@@ -1375,6 +1407,10 @@ void CSDKGameRules::State_PENALTIES_INTERMISSION_Think()
 	{
 		State_Transition(MATCH_PENALTIES);
 	}
+}
+
+void CSDKGameRules::State_PENALTIES_INTERMISSION_Leave()
+{
 }
 
 void CSDKGameRules::State_PENALTIES_Enter()
@@ -1511,12 +1547,16 @@ void CSDKGameRules::State_PENALTIES_Think()
 	}
 }
 
-void CSDKGameRules::State_COOLDOWN_Enter()
+void CSDKGameRules::State_PENALTIES_Leave()
 {
-	GetBall()->State_Transition(BALL_NORMAL, 0, true);
 	GetBall()->SetMatchEvent(MATCH_EVENT_FINAL_WHISTLE);
 	GetBall()->EmitSound("Ball.whistle");
 	GetBall()->EmitSound("Ball.cheer");
+}
+
+void CSDKGameRules::State_COOLDOWN_Enter()
+{
+	GetBall()->State_Transition(BALL_NORMAL, 0, true);
 
 	//who won?
 	int winners = 0;
@@ -1556,6 +1596,10 @@ void CSDKGameRules::State_COOLDOWN_Think()
 	{
 		GoToIntermission();
 	}
+}
+
+void CSDKGameRules::State_COOLDOWN_Leave()
+{
 }
 
 #endif

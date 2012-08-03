@@ -44,7 +44,6 @@ public : // IGameResources intreface
 
 	// Player data access
 	virtual bool	IsConnected( int index );
-	virtual bool	IsAlive( int index );
 	virtual bool	IsFakePlayer( int index );
 	virtual bool	IsLocalPlayer( int index  );
 	virtual bool	IsHLTV(int index);
@@ -54,10 +53,7 @@ public : // IGameResources intreface
 	virtual const char *GetCountryName( int index );
 	virtual int		GetPing( int index );
 //	virtual int		GetPacketloss( int index );
-	virtual int		GetPlayerScore( int index );
-	virtual int		GetDeaths( int index );
 	virtual int		GetTeam( int index );
-	virtual int		GetHealth( int index );
 
 	//ios
 	virtual int		GetRedCards( int index );
@@ -93,13 +89,8 @@ protected:
 	char	m_szClubNames[MAX_PLAYERS+1][5];
 	char	m_szCountryNames[MAX_PLAYERS+1][64];
 	int		m_iPing[MAX_PLAYERS+1];
-	int		m_nGoals[MAX_PLAYERS+1];
-	int		m_iDeaths[MAX_PLAYERS+1];
 	bool	m_bConnected[MAX_PLAYERS+1];
 	int		m_iTeam[MAX_PLAYERS+1];
-	bool	m_bAlive[MAX_PLAYERS+1];
-	int		m_iHealth[MAX_PLAYERS+1];
-	Color	m_Colors[MAX_TEAMS];
 	
 	//ios
 	int		m_RedCards[MAX_PLAYERS+1];

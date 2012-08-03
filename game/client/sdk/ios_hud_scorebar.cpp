@@ -71,8 +71,6 @@ private:
 	Label *m_pSubPlayers[2];
 	Label *m_pEvent;
 	Label *m_pSubEvent;
-	char  m_szCurrentPlayer[MAX_PLAYER_NAME_LENGTH];
-	int	  m_nCurrentPlayerTeamIndex;
 	Panel *m_pMainBar;
 	Panel *m_pMainBarBG;
 	Panel *m_pCenterBar;
@@ -117,12 +115,12 @@ DECLARE_HUDELEMENT( CHudScorebar );
 #define WIDTH_TEAMBAR			(HPADDING + WIDTH_TEAM + WIDTH_MARGIN + WIDTH_TEAMCOLOR + WIDTH_MARGIN + WIDTH_SCORE + HPADDING)
 #define WIDTH_TIMEBAR			(HPADDING + WIDTH_MATCHSTATE + WIDTH_MARGIN + WIDTH_TIME + HPADDING)
 
-enum { MAINBAR_WIDTH = 480, MAINBAR_HEIGHT = 40, MAINBAR_MARGIN = 15 };
-enum { TEAMNAME_WIDTH = 175, TEAMNAME_MARGIN = 5 };
-enum { TEAMGOAL_WIDTH = 30, TEAMGOAL_MARGIN = 10 };
-enum { TIME_WIDTH = 120, TIME_MARGIN = 5, INJURY_TIME_WIDTH = 20, INJURY_TIME_MARGIN = 5 };
-enum { STATE_WIDTH = 120, STATE_MARGIN = 5 };
-enum { TOPEXTENSION_WIDTH = 278, TOPEXTENSION_HEIGHT = MAINBAR_HEIGHT, TOPEXTENSION_MARGIN = 10, TOPEXTENSION_TEXTMARGIN = 5, TOPEXTENSION_TEXTOFFSET = 20 };
+enum { MAINBAR_WIDTH = 540, MAINBAR_HEIGHT = 40, MAINBAR_MARGIN = 15 };
+enum { TEAMNAME_WIDTH = 145, TEAMNAME_MARGIN = 105 };
+enum { TEAMGOAL_WIDTH = 30, TEAMGOAL_MARGIN = 15 };
+enum { TIME_WIDTH = 120, TIME_MARGIN = 5, INJURY_TIME_WIDTH = 20, INJURY_TIME_MARGIN = 10 };
+enum { STATE_WIDTH = 140, STATE_MARGIN = 5 };
+enum { TOPEXTENSION_WIDTH = 248, TOPEXTENSION_HEIGHT = MAINBAR_HEIGHT, TOPEXTENSION_MARGIN = 10, TOPEXTENSION_TEXTMARGIN = 5, TOPEXTENSION_TEXTOFFSET = 20 };
 enum { TEAMCREST_SIZE = 70, TEAMCREST_HOFFSET = 482/*265*/, TEAMCREST_VOFFSET = 0, TEAMCREST_PADDING = 5 };
 enum { TEAMCOLOR_WIDTH = 5, TEAMCOLOR_HEIGHT = MAINBAR_HEIGHT - 10, TEAMCOLOR_HMARGIN = 5, TEAMCOLOR_VMARGIN = (MAINBAR_HEIGHT - TEAMCOLOR_HEIGHT) / 2 };
 enum { CENTERBAR_OFFSET = 5 };
@@ -180,7 +178,6 @@ CHudScorebar::CHudScorebar( const char *pElementName ) : BaseClass(NULL, "HudSco
 	m_pNewTime = new Label(m_pCenterBar, "", "");
 	m_pInjuryTime = new Label(m_pCenterBar, "", "");
 
-	m_szCurrentPlayer[0] = 0;
 	m_flNextPlayerUpdate = gpGlobals->curtime;
 }
 
@@ -246,7 +243,7 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 
 	for (int i = 0; i < 2; i++)
 	{
-		m_pTeamNames[i]->SetBounds(i * (MAINBAR_WIDTH - TEAMNAME_WIDTH), 0, TEAMNAME_WIDTH, MAINBAR_HEIGHT);
+		m_pTeamNames[i]->SetBounds(MAINBAR_WIDTH / 2 - TEAMNAME_WIDTH / 2 + (i == 0 ? -1 : 1) * (TEAMNAME_WIDTH / 2 + TEAMNAME_MARGIN), 0, TEAMNAME_WIDTH, MAINBAR_HEIGHT);
 		m_pTeamNames[i]->SetFgColor(white);
 		m_pTeamNames[i]->SetContentAlignment(Label::a_center);
 		m_pTeamNames[i]->SetFont(pScheme->GetFont("IOSScorebar"));
@@ -312,42 +309,23 @@ void CHudScorebar::Init( void )
 {
 }
 
-const char *g_szStateNames[32] =
-{
-	"WU",
-	"H1",
-	"H1",
-	"HT",
-	"H2",
-	"H2",
-	"ETB",
-	"ETH1",
-	"ETH1",
-	"ETHT",
-	"ETH2",
-	"ETH2",
-	"PSB",
-	"PS",
-	"CD"
-};
-
 const char *g_szLongStateNames[32] =
 {
-	"WARMUP",
+	"WARM-UP",
 	"FIRST HALF",
 	"FIRST HALF",
-	"HALF TIME",
+	"HALF-TIME",
 	"SECOND HALF",
 	"SECOND HALF",
-	"EX BREAK",
-	"EX FIRST HALF",
-	"EX FIRST HALF",
-	"EX HALF TIME",
-	"EX SECOND HALF",
-	"EX SECOND HALF",
-	"PEN BREAK",
+	"ET BREAK",
+	"ET FIRST HALF",
+	"ET FIRST HALF",
+	"ET HALF-TIME",
+	"ET SECOND HALF",
+	"ET SECOND HALF",
+	"PENALTIES BREAK",
 	"PENALTIES",
-	"COOLDOWN"
+	"COOL-DOWN"
 };
 
 //-----------------------------------------------------------------------------
@@ -391,15 +369,11 @@ void CHudScorebar::OnThink( void )
 
 	if (gViewPortInterface->FindPanelByName(PANEL_SCOREBOARD)->IsVisible())
 	{
-		//wchar_t text[64];
-		//_snwprintf(text, ARRAYSIZE(text), L"%d pl.  •   %d%% poss.", GetGlobalTeam(TEAM_A)->GetNumPlayers(), GetGlobalTeam(TEAM_A)->Get_Possession());
-		//m_pExtensionText[0]->SetText(text);
-		//m_pExtensionText[0]->SetText(VarArgs("%d pl.     %d%% poss.", GetGlobalTeam(TEAM_A)->GetNumPlayers(), GetGlobalTeam(TEAM_A)->Get_Possession()));
-		//m_pExtensionText[1]->SetText(VarArgs("%d%% poss.     %d pl.", GetGlobalTeam(TEAM_B)->Get_Possession(), GetGlobalTeam(TEAM_B)->GetNumPlayers()));
-
 		for (int i = 0; i < 2; i++)
 		{
-			m_pExtensionText[i]->SetText(VarArgs("%d pl.     %d%% poss.", GetGlobalTeam(TEAM_A + i)->GetNumPlayers(), GetGlobalTeam(TEAM_A + i)->Get_Possession()));
+			wchar_t text[64];
+			_snwprintf(text, ARRAYSIZE(text), L"%d pl.   •   %d%% poss.", GetGlobalTeam(TEAM_A + i)->GetNumPlayers(), GetGlobalTeam(TEAM_A + i)->Get_Possession());
+			m_pExtensionText[i]->SetText(text);
 			m_pExtensionText[i]->SetFgColor(GetGlobalTeam(TEAM_A + i)->Get_HudKitColor());
 			m_pExtensionBar[i]->SetVisible(true);
 			m_pTeamCrestPanels[i]->SetVisible(GameResources()->HasTeamCrest(TEAM_A + i));
@@ -440,38 +414,25 @@ void CHudScorebar::OnThink( void )
 			m_pPlayers[1]->SetText("");
 			m_pSubPlayers[0]->SetText("");
 			m_pSubPlayers[1]->SetText("");
-			m_szCurrentPlayer[0] = 0;
+			m_pEvent->SetText(g_szMatchEventNames[pBall->m_eMatchEvent]);
+			m_pEvent->SetFgColor(Color(255, 255, 255, 255));
+			m_pSubEvent->SetText("");
+			m_flNextPlayerUpdate = gpGlobals->curtime;
 		}
 		else
 		{
 			m_pEvent->SetText(g_szMatchEventNames[pBall->m_eMatchEvent]);
 			m_pSubEvent->SetText(g_szMatchEventNames[pBall->m_eMatchSubEvent]);
-			//m_pEvent->SetFgColor(Color(255, 255, 255, 255));
 
-			if (pBall->m_eBallState == BALL_NORMAL)
+			if (pBall->m_eBallState != BALL_NORMAL)
 			{
-				if (pBall->m_pPl || Q_strlen(m_szCurrentPlayer) > 0)
-				{
-					if (pBall->m_pPl)
-					{
-						Q_strncpy(m_szCurrentPlayer, GameResources()->GetPlayerName(pBall->m_pPl->entindex()), sizeof(m_szCurrentPlayer));
-						m_nCurrentPlayerTeamIndex = clamp(GameResources()->GetTeam(pBall->m_pPl->entindex()) - TEAM_A, 0, 1); //FIXME: fix properly
-					}
-
-					if (gpGlobals->curtime >= m_flNextPlayerUpdate)
-					{
-						m_pPlayers[m_nCurrentPlayerTeamIndex]->SetText(m_szCurrentPlayer);
-						m_pPlayers[m_nCurrentPlayerTeamIndex]->SetFgColor(GetGlobalTeam(TEAM_A + m_nCurrentPlayerTeamIndex)->Get_HudKitColor());
-						m_pPlayers[1 - m_nCurrentPlayerTeamIndex]->SetText("");
-						m_flNextPlayerUpdate = gpGlobals->curtime + 1.0f;
-					}
-				}
-
-				m_pSubPlayers[0]->SetText("");
-				m_pSubPlayers[1]->SetText("");
+				m_flNextPlayerUpdate = gpGlobals->curtime;
 			}
-			else
+
+			if (gpGlobals->curtime >= m_flNextPlayerUpdate)
 			{
+				m_flNextPlayerUpdate = gpGlobals->curtime + 0.5f;
+
 				if (pBall->m_pMatchEventPlayer)
 				{
 					int teamIndex = clamp(pBall->m_nMatchEventTeam - TEAM_A, 0, 1);
@@ -480,7 +441,12 @@ void CHudScorebar::OnThink( void )
 					m_pPlayers[1 - teamIndex]->SetText("");
 					m_pEvent->SetFgColor(GetGlobalTeam(TEAM_A + teamIndex)->Get_HudKitColor());
 				}
-				
+				else
+				{
+					m_pPlayers[0]->SetText("");
+					m_pPlayers[1]->SetText("");
+				}
+
 				if (pBall->m_pMatchSubEventPlayer)
 				{
 					int teamIndex = clamp(pBall->m_nMatchSubEventTeam - TEAM_A, 0, 1);

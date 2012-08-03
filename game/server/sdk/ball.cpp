@@ -38,8 +38,10 @@ ConVar sv_ball_backspin_coeff( "sv_ball_backspin_coeff", "0.75", FCVAR_NOTIFY );
 ConVar sv_ball_curve("sv_ball_curve", "150", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
 ConVar sv_ball_touchradius( "sv_ball_touchradius", "60", FCVAR_NOTIFY );
 ConVar sv_ball_deflectionradius( "sv_ball_deflectionradius", "40", FCVAR_NOTIFY );
-ConVar sv_ball_slidesidereach( "sv_ball_slidesidereach", "60", FCVAR_NOTIFY );
-ConVar sv_ball_slideforwardreach( "sv_ball_slideforwardreach", "90", FCVAR_NOTIFY );
+ConVar sv_ball_slidesidereach_ball( "sv_ball_slidesidereach_ball", "60", FCVAR_NOTIFY );
+ConVar sv_ball_slideforwardreach_ball( "sv_ball_slideforwardreach_ball", "90", FCVAR_NOTIFY );
+ConVar sv_ball_slidesidereach_foul( "sv_ball_slidesidereach_foul", "40", FCVAR_NOTIFY );
+ConVar sv_ball_slideforwardreach_foul( "sv_ball_slideforwardreach_foul", "60", FCVAR_NOTIFY );
 ConVar sv_ball_slidecoeff("sv_ball_slidecoeff", "3.0", FCVAR_NOTIFY); 
 ConVar sv_ball_slidesidecoeff("sv_ball_slidesidecoeff", "0.66", FCVAR_NOTIFY); 
 ConVar sv_ball_keepertouchradius( "sv_ball_keepertouchradius", "60", FCVAR_NOTIFY );
@@ -201,7 +203,6 @@ END_DATADESC()
 IMPLEMENT_SERVERCLASS_ST( CBall, DT_Ball )
 	SendPropInt( SENDINFO( m_iPhysicsMode ), 2,	SPROP_UNSIGNED ),
 	SendPropFloat( SENDINFO( m_fMass ),	0, SPROP_NOSCALE ),
-	SendPropEHandle(SENDINFO(m_pPl)),
 	SendPropEHandle(SENDINFO(m_pCreator)),
 	SendPropEHandle(SENDINFO(m_pMatchEventPlayer)),
 	SendPropInt(SENDINFO(m_nMatchEventTeam)),
@@ -465,6 +466,9 @@ void CBall::VPhysicsCollision( int index, gamevcollisionevent_t	*pEvent	)
 
 void CBall::SetMatchEvent(match_event_t matchEvent, CSDKPlayer *pPlayer)
 {
+	if (SDKGameRules()->IsIntermissionState() || m_bHasQueuedState)
+		return;
+
 	if (!pPlayer)
 		pPlayer = m_pPl;
 
@@ -482,6 +486,9 @@ void CBall::SetMatchEvent(match_event_t matchEvent, CSDKPlayer *pPlayer)
 
 void CBall::SetMatchSubEvent(match_event_t matchEvent, CSDKPlayer *pPlayer)
 {
+	if (SDKGameRules()->IsIntermissionState() || m_bHasQueuedState)
+		return;
+
 	if (!pPlayer)
 		pPlayer = m_pPl;
 
@@ -718,9 +725,17 @@ void CBall::State_NORMAL_Think()
 		UpdateCarrier();
 
 		if (DoBodyPartAction())
-			break;
+		{
+			if (CSDKPlayer::IsOnField(m_pPl))
+			{
+				m_pMatchEventPlayer = m_pPl;
+				m_nMatchEventTeam = m_pPl->GetTeamNumber();
+			}
 
-		if (SDKGameRules()->State_Get() == MATCH_PENALTIES && m_ePenaltyState == PENALTY_KICKED)
+			break;
+		}
+
+		if (SDKGameRules()->State_Get() == MATCH_PENALTIES)
 			break;
 
 		ignoredPlayerBits |= (1 << (m_pPl->entindex() - 1));
@@ -997,6 +1012,12 @@ void CBall::State_GOAL_Enter()
 	if (m_nTeam == LastTeam(true))
 	{
 		scoringTeam = LastOppTeam(true);
+
+		if (LastPl(true))
+		{
+			LastPl(true)->m_OwnGoals += 1;
+		}
+
 		SetMatchEvent(MATCH_EVENT_OWNGOAL, LastPl(true));	
 	}
 	else
@@ -1405,7 +1426,7 @@ bool CBall::CheckFoul()
 		dirToPl.z = 0;
 		dirToPl.NormalizeInPlace();
 		//if (RAD2DEG(acos(m_vPlForward2D.Dot(dirToPl))) > sv_ball_slideangle.GetFloat())
-		if (localDirToPl.x < 0 || localDirToPl.x > sv_ball_slideforwardreach.GetInt() || abs(localDirToPl.y) > sv_ball_slidesidereach.GetInt())		
+		if (localDirToPl.x < 0 || localDirToPl.x > sv_ball_slideforwardreach_foul.GetInt() || abs(localDirToPl.y) > sv_ball_slidesidereach_foul.GetInt())		
 			continue;
 
 		if (/*canShootBall && */distToPl >= (m_vPos - m_vPlPos).Length2D())
@@ -1496,9 +1517,11 @@ bool CBall::DoBodyPartAction()
 			dir.NormalizeInPlace();
 			Vector vel = sv_ball_deflectioncoeff.GetFloat() * (m_vVel - 2 * DotProduct(m_vVel, dir) * dir);
 			SetVel(vel, -1, BODY_PART_UNKNOWN, true, false);
+
+			return true;
 		}
 
-		return true;
+		return false;
 	}
 
 	if (zDist >= sv_ball_bodypos_feet_start.GetFloat() && zDist < sv_ball_bodypos_hip_start.GetFloat() && xyDist <= sv_ball_touchradius.GetInt())
@@ -1531,8 +1554,8 @@ bool CBall::DoSlideAction()
 	bool canShootBall = zDist < sv_ball_bodypos_hip_start.GetFloat()
 		&& zDist >= sv_ball_bodypos_feet_start.GetFloat()
 		&& localDirToBall.x >= 0
-		&& localDirToBall.x <= sv_ball_slideforwardreach.GetFloat()
-		&& abs(localDirToBall.y) <= sv_ball_slidesidereach.GetFloat();
+		&& localDirToBall.x <= sv_ball_slideforwardreach_ball.GetFloat()
+		&& abs(localDirToBall.y) <= sv_ball_slidesidereach_ball.GetFloat();
 
 	if (!canShootBall)
 		return false;
@@ -1625,10 +1648,12 @@ bool CBall::CheckKeeperCatch()
 			return false;
 	}
 
-	Vector vel;
+	SetMatchEvent(MATCH_EVENT_KEEPERSAVE);
 
 	if (gpGlobals->curtime < m_flGlobalNextShot/*m_vVel.Length2D() > sv_ball_keepercatchspeed.GetInt()*/)
 	{
+		Vector vel;
+
 		if (m_pPl->m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD)
 		{
 			vel = Vector(m_vVel.x, m_vVel.y, max(m_vVel.z, sv_ball_keeperpunchupstrength.GetInt()));

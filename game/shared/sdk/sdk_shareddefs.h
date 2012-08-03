@@ -234,6 +234,7 @@ enum match_event_t
 	MATCH_EVENT_ASSIST,
 	MATCH_EVENT_DOUBLETOUCH,
 	MATCH_EVENT_HALFTIME,
+	MATCH_EVENT_KEEPERSAVE,
 	NUM_MATCH_EVENTS
 };
 
@@ -257,6 +258,7 @@ static const char *g_szMatchEventNames[32] =
 	"ASSIST",
 	"DOUBLE TOUCH",
 	"HALF-TIME",
+	"SAVE",
 	NULL
 };
 

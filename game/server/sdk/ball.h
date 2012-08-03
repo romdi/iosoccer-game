@@ -113,7 +113,6 @@ public:
 
 	CNetworkVar( int, m_iPhysicsMode );	// One of the PHYSICS_MULTIPLAYER_ defines.	
 	CNetworkVar( float,	m_fMass	);
-	CNetworkHandle(CSDKPlayer, m_pPl);
 	CNetworkHandle(CSDKPlayer, m_pCreator);
 	CNetworkVar(bool, m_bIsPlayerBall);
 	CNetworkVar(ball_state_t, m_eBallState);
@@ -154,7 +153,7 @@ public:
 	void			State_Transition(ball_state_t newState, float delay = 0.0f, bool cancelQueuedState = false);
 
 	void			ResetMatch();
-	
+
 	void			SetPos(Vector pos);
 	void			SetVel(Vector vel, float spinCoeff, body_part_t bodyPart, bool isDeflection, bool markOffsidePlayers);
 	void			SetRot(AngularImpulse rot = NULL);
@@ -233,6 +232,7 @@ private:
 	float			m_flPhysRadius;
 	Vector			m_vTriggerTouchPos;
 
+	CHandle<CSDKPlayer>	m_pPl;
 	CHandle<CSDKPlayer>	m_pOtherPl;
 
 	QAngle			m_aPlAng;

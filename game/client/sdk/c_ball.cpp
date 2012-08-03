@@ -10,7 +10,6 @@ LINK_ENTITY_TO_CLASS(football, C_Ball);
 IMPLEMENT_CLIENTCLASS_DT( C_Ball, DT_Ball, CBall )
 	RecvPropInt( RECVINFO( m_iPhysicsMode ) ),
 	RecvPropFloat( RECVINFO( m_fMass ) ),
-	RecvPropEHandle(RECVINFO(m_pPl)),
 	RecvPropEHandle(RECVINFO(m_pCreator)),
 	RecvPropEHandle(RECVINFO(m_pMatchEventPlayer)),
 	RecvPropInt(RECVINFO(m_nMatchEventTeam)),
@@ -31,7 +30,6 @@ C_Ball *GetBall()
 
 C_Ball::C_Ball()
 {
-	m_pPl = NULL;
 	m_pCreator = NULL;
 	m_bIsPlayerBall = false;
 }

@@ -13,28 +13,24 @@ LINK_ENTITY_TO_CLASS( replayball, CReplayBall );
 
 bool CReplayBall::CreateVPhysics()
 {
- // Create the object in the physics system
-	IPhysicsObject *pPhysicsObject = VPhysicsInitNormal( SOLID_BBOX, FSOLID_NOT_SOLID,false );
+	// Create the object in the physics system
+	IPhysicsObject *pPhysicsObject = VPhysicsInitNormal(SOLID_BBOX, FSOLID_NOT_SOLID, false);
 
+	// Make sure I get touch called for static geometry
+	if ( pPhysicsObject )
+	{
+		//int flags = pPhysicsObject->GetCallbackFlags();
+		//flags |= CALLBACK_GLOBAL_TOUCH_STATIC;
 
- // Make sure I get touch called for static geometry
- if ( pPhysicsObject )
- {
+		//pPhysicsObject->SetCallbackFlags(flags);
+	}
 
-  //int flags = pPhysicsObject->GetCallbackFlags();
-  //flags |= CALLBACK_GLOBAL_TOUCH_STATIC;
-
-  //pPhysicsObject->SetCallbackFlags(flags);
-
- }
-
-
- return true;
+	return true;
 }
 
 void CReplayBall::Precache()
 {
-	SetModel( BALL_MODEL );
+	SetModel(BALL_MODEL);
 	BaseClass::Precache();
 }
 
@@ -46,11 +42,11 @@ CReplayBall::CReplayBall()
 void CReplayBall::Spawn( void )
 {
 	Precache();
-	SetModelName( MAKE_STRING( BALL_MODEL ) );
+	SetModelName(MAKE_STRING(BALL_MODEL));
 	CreateVPhysics();
 	//SetSolid(SOLID_NONE);
-	SetSimulatedEveryTick( true );
-	SetAnimatedEveryTick( true );
+	SetSimulatedEveryTick(true);
+	SetAnimatedEveryTick(true);
 }
 
 
@@ -67,7 +63,7 @@ END_SEND_TABLE()
 
 void CReplayPlayer::Precache()
 {
-	SetModel( SDK_PLAYER_MODEL );
+	SetModel(SDK_PLAYER_MODEL);
 	BaseClass::Precache();
 }
 
@@ -108,9 +104,6 @@ void cc_StartReplay(const CCommand &args)
 {
 	if (!UTIL_IsCommandIssuedByServerAdmin())
         return;
-
-	if (args.ArgC() > 1)
-		engine->ServerCommand(UTIL_VarArgs("host_timescale %f\n", (float)atof(args[1])));
 
 	ReplayManager()->StartReplay(1, 0);
 }
@@ -206,7 +199,6 @@ void CReplayManager::StopReplay()
 
 	m_bDoReplay = false;
 	m_bIsReplaying = false;
-	engine->ServerCommand("host_timescale 1\n");
 
 	if (m_pBall)
 	{

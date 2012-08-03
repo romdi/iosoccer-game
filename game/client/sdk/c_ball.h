@@ -43,7 +43,6 @@ public:
 
 	int m_iPhysicsMode;	// One of the PHYSICS_MULTIPLAYER_ defines.	
 	float m_fMass;
-	CHandle<C_SDKPlayer> m_pPl;
 	CHandle<C_SDKPlayer> m_pCreator;
 	CHandle<C_SDKPlayer> m_pMatchEventPlayer;
 	int m_nMatchEventTeam;

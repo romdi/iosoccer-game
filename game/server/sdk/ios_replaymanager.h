@@ -127,7 +127,7 @@ private:
 	bool					m_bDoReplay;
 	int						m_nSnapshotIndex;
 	CReplayBall				*m_pBall;
-	CReplayPlayer			*m_pPlayers[32];
+	CReplayPlayer			*m_pPlayers[22];
 	int						m_nReplayRunCount;
 	int						m_nMaxReplayRuns;
 	float					m_flStartTime;

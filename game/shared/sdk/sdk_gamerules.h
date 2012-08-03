@@ -137,8 +137,8 @@ public:
 	const char				*m_pStateName;
 
 	void (CSDKGameRules::*pfnEnterState)();	// Init and deinit the state.
-	void (CSDKGameRules::*pfnLeaveState)();
 	void (CSDKGameRules::*pfnThink)();	// Do a PreThink() in this state.
+	void (CSDKGameRules::*pfnLeaveState)();
 
 	ConVar					*m_MinDurationConVar;
 	float					m_flMinDurationDivisor;
@@ -301,36 +301,47 @@ protected:
 	// State Functions
 	void State_WARMUP_Enter();
 	void State_WARMUP_Think();
+	void State_WARMUP_Leave();
 
 	void State_FIRST_HALF_Enter();
 	void State_FIRST_HALF_Think();
+	void State_FIRST_HALF_Leave();
 
 	void State_HALFTIME_Enter();
 	void State_HALFTIME_Think();
+	void State_HALFTIME_Leave();
 
 	void State_SECOND_HALF_Enter();
 	void State_SECOND_HALF_Think();
+	void State_SECOND_HALF_Leave();
 
 	void State_EXTRATIME_INTERMISSION_Enter();
 	void State_EXTRATIME_INTERMISSION_Think();
+	void State_EXTRATIME_INTERMISSION_Leave();
 
 	void State_EXTRATIME_FIRST_HALF_Enter();
 	void State_EXTRATIME_FIRST_HALF_Think();
+	void State_EXTRATIME_FIRST_HALF_Leave();
 
 	void State_EXTRATIME_HALFTIME_Enter();
 	void State_EXTRATIME_HALFTIME_Think();
+	void State_EXTRATIME_HALFTIME_Leave();
 
 	void State_EXTRATIME_SECOND_HALF_Enter();
 	void State_EXTRATIME_SECOND_HALF_Think();
+	void State_EXTRATIME_SECOND_HALF_Leave();
 
 	void State_PENALTIES_INTERMISSION_Enter();
 	void State_PENALTIES_INTERMISSION_Think();
+	void State_PENALTIES_INTERMISSION_Leave();
 
 	void State_PENALTIES_Enter();
 	void State_PENALTIES_Think();
+	void State_PENALTIES_Leave();
 
 	void State_COOLDOWN_Enter();
 	void State_COOLDOWN_Think();
+	void State_COOLDOWN_Leave();
 
 	int m_nFirstHalfKickOffTeam;
 	int m_nKickOffTeam;

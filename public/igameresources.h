@@ -33,19 +33,15 @@ public:
 
 	// Player data access
 	virtual bool	IsConnected( int index ) = 0;
-	virtual bool	IsAlive( int index ) = 0;
 	virtual bool	IsFakePlayer( int index ) = 0;
 	virtual bool	IsLocalPlayer( int index ) = 0;
 
 	virtual const char *GetPlayerName( int index ) = 0;
 	virtual const char *GetClubName( int index ) = 0;
 	virtual const char *GetCountryName( int index ) = 0;
-	virtual int		GetPlayerScore( int index ) = 0;
 	virtual int		GetPing( int index ) = 0;
 //	virtual int		GetPacketloss( int index ) = 0;
-	virtual int		GetDeaths( int index ) = 0;
 	virtual int		GetTeam( int index ) = 0;
-	virtual int		GetHealth( int index ) = 0;
 
 	//ios
 	virtual int		GetRedCards( int index ) = 0;

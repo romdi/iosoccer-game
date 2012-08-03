@@ -23,12 +23,8 @@ const float PLAYER_RESOURCE_THINK_INTERVAL = 0.2f;
 
 IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_PlayerResource, DT_PlayerResource, CPlayerResource)
 	RecvPropArray3( RECVINFO_ARRAY(m_iPing), RecvPropInt( RECVINFO(m_iPing[0]))),
-	RecvPropArray3( RECVINFO_ARRAY(m_nGoals), RecvPropInt( RECVINFO(m_nGoals[0]))),
-//	RecvPropArray3( RECVINFO_ARRAY(m_iDeaths), RecvPropInt( RECVINFO(m_iDeaths[0]))),		//iosremoved to save bandwidth
 	RecvPropArray3( RECVINFO_ARRAY(m_bConnected), RecvPropInt( RECVINFO(m_bConnected[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_iTeam), RecvPropInt( RECVINFO(m_iTeam[0]))),
-//	RecvPropArray3( RECVINFO_ARRAY(m_bAlive), RecvPropInt( RECVINFO(m_bAlive[0]))),	//iosremoved to save bandwidth
-//	RecvPropArray3( RECVINFO_ARRAY(m_iHealth), RecvPropInt( RECVINFO(m_iHealth[0]))),	//iosremoved to save bandwidth
 
 	//ios
 	RecvPropArray3( RECVINFO_ARRAY(m_RedCards), RecvPropInt( RECVINFO(m_RedCards[0]))),
@@ -53,21 +49,14 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_PlayerResource, DT_PlayerResource, CPlayerReso
 
 	RecvPropArray3( RECVINFO_ARRAY(m_szClubNames), RecvPropString( RECVINFO(m_szClubNames[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_szCountryNames), RecvPropString( RECVINFO(m_szCountryNames[0]))),
-	//RecvPropArray( RecvPropString( RECVINFO( m_szClubName[0]) ), m_szClubName ),
-
 END_RECV_TABLE()
 
 BEGIN_PREDICTION_DATA( C_PlayerResource )
 
 	DEFINE_PRED_ARRAY( m_szName, FIELD_STRING, MAX_PLAYERS+1, FTYPEDESC_PRIVATE ),
-	//DEFINE_PRED_ARRAY( m_szClubName, FIELD_STRING, MAX_PLAYERS+1, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_ARRAY( m_iPing, FIELD_INTEGER, MAX_PLAYERS+1, FTYPEDESC_PRIVATE ),
-	DEFINE_PRED_ARRAY( m_nGoals, FIELD_INTEGER, MAX_PLAYERS+1, FTYPEDESC_PRIVATE ),
-	DEFINE_PRED_ARRAY( m_iDeaths, FIELD_INTEGER, MAX_PLAYERS+1, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_ARRAY( m_bConnected, FIELD_BOOLEAN, MAX_PLAYERS+1, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_ARRAY( m_iTeam, FIELD_INTEGER, MAX_PLAYERS+1, FTYPEDESC_PRIVATE ),
-	DEFINE_PRED_ARRAY( m_bAlive, FIELD_BOOLEAN, MAX_PLAYERS+1, FTYPEDESC_PRIVATE ),
-	DEFINE_PRED_ARRAY( m_iHealth, FIELD_INTEGER, MAX_PLAYERS+1, FTYPEDESC_PRIVATE ),
 
 END_PREDICTION_DATA()	
 
@@ -82,12 +71,8 @@ C_PlayerResource::C_PlayerResource()
 {
 	memset( m_iPing, 0, sizeof( m_iPing ) );
 //	memset( m_iPacketloss, 0, sizeof( m_iPacketloss ) );
-	memset( m_nGoals, 0, sizeof( m_nGoals ) );
-	memset( m_iDeaths, 0, sizeof( m_iDeaths ) );
 	memset( m_bConnected, 0, sizeof( m_bConnected ) );
 	memset( m_iTeam, 0, sizeof( m_iTeam ) );
-	memset( m_bAlive, 0, sizeof( m_bAlive ) );
-	memset( m_iHealth, 0, sizeof( m_iHealth ) );
 
 	//ios
 	memset( m_RedCards, 0, sizeof( m_RedCards ) );
@@ -111,11 +96,6 @@ C_PlayerResource::C_PlayerResource()
 
 	memset( m_szClubNames, 0, sizeof( m_szClubNames ) );
 	memset( m_szCountryNames, 0, sizeof( m_szCountryNames ) );
-
-	m_Colors[TEAM_A] = COLOR_BLUE;
-	m_Colors[TEAM_B] = COLOR_RED;
-	m_Colors[TEAM_UNASSIGNED] = COLOR_WHITE;
-	m_Colors[TEAM_SPECTATOR] = COLOR_WHITE;
 
 	g_PR = this;
 }
@@ -218,11 +198,6 @@ const char *C_PlayerResource::GetCountryName( int iIndex )
 		return PLAYER_UNCONNECTED_NAME;
 
 	return m_szCountryNames[iIndex];
-}
-
-bool C_PlayerResource::IsAlive(int iIndex )
-{
-	return m_bAlive[iIndex];
 }
 
 int C_PlayerResource::GetTeam(int iIndex )
@@ -426,39 +401,6 @@ int	C_PlayerResource::GetPacketloss( int iIndex )
 
 	return m_iPacketloss[iIndex];
 }*/
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-int	C_PlayerResource::GetPlayerScore( int iIndex )
-{
-	if ( !IsConnected( iIndex ) )
-		return 0;
-
-	return m_nGoals[iIndex];
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-int	C_PlayerResource::GetDeaths( int iIndex )
-{
-	if ( !IsConnected( iIndex ) )
-		return 0;
-
-	return m_iDeaths[iIndex];
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-int	C_PlayerResource::GetHealth( int iIndex )
-{
-	if ( !IsConnected( iIndex ) )
-		return 0;
-
-	return m_iHealth[iIndex];
-}
 
 const Color &C_PlayerResource::GetTeamColor(int index )
 {

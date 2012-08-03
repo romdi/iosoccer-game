@@ -24,12 +24,8 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CPlayerResource, DT_PlayerResource)
 //	SendPropArray( SendPropString( SENDINFO(m_szName[0]) ), SENDARRAYINFO(m_szName) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_iPing), SendPropInt( SENDINFO_ARRAY(m_iPing), 10, SPROP_UNSIGNED ) ),
 //	SendPropArray( SendPropInt( SENDINFO_ARRAY(m_iPacketloss), 7, SPROP_UNSIGNED ), m_iPacketloss ),
-	SendPropArray3( SENDINFO_ARRAY3(m_nGoals), SendPropInt( SENDINFO_ARRAY(m_nGoals), 12 ) ),
-//	SendPropArray3( SENDINFO_ARRAY3(m_iDeaths), SendPropInt( SENDINFO_ARRAY(m_iDeaths), 12 ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_bConnected), SendPropInt( SENDINFO_ARRAY(m_bConnected), 1, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_iTeam), SendPropInt( SENDINFO_ARRAY(m_iTeam), 4 ) ),
-//	SendPropArray3( SENDINFO_ARRAY3(m_bAlive), SendPropInt( SENDINFO_ARRAY(m_bAlive), 1, SPROP_UNSIGNED ) ),
-//	SendPropArray3( SENDINFO_ARRAY3(m_iHealth), SendPropInt( SENDINFO_ARRAY(m_iHealth), 10, SPROP_UNSIGNED ) ),
 	
 	//ios
 	SendPropArray3( SENDINFO_ARRAY3(m_RedCards), SendPropInt( SENDINFO_ARRAY(m_RedCards), 5, SPROP_UNSIGNED ) ),
@@ -88,11 +84,8 @@ void CPlayerResource::Spawn( void )
 	for ( int i=0; i < MAX_PLAYERS+1; i++ )
 	{
 		m_iPing.Set( i, 0 );
-		m_nGoals.Set( i, 0 );
-//		m_iDeaths.Set( i, 0 );
 		m_bConnected.Set( i, 0 );
 		m_iTeam.Set( i, 0 );
-//		m_bAlive.Set( i, 0 );
 
 		//ios
 		m_RedCards.Set( i, 0 );
@@ -156,12 +149,8 @@ void CPlayerResource::UpdatePlayerData( void )
 		
 		if ( pPlayer && pPlayer->IsConnected() )
 		{
-			m_nGoals.Set( i, pPlayer->FragCount() );
-//			m_iDeaths.Set( i, pPlayer->DeathCount() );
 			m_bConnected.Set( i, 1 );
 			m_iTeam.Set( i, pPlayer->GetTeamNumber() );
-//			m_bAlive.Set( i, pPlayer->IsAlive()?1:0 );
-//			m_iHealth.Set(i, max( 0, pPlayer->GetHealth() ) );
 
 			CSDKPlayer	*SDKPlayer = ToSDKPlayer(pPlayer);
 			if (SDKPlayer)
