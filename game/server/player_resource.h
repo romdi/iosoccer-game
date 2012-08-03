@@ -38,11 +38,12 @@ protected:
 //	CNetworkArray( int, m_iHealth, MAX_PLAYERS+1 );
 
 	//ios
-	CNetworkArray( int, m_RedCard, MAX_PLAYERS+1 );
-	CNetworkArray( int, m_YellowCard, MAX_PLAYERS+1 );
+	CNetworkArray( int, m_RedCards, MAX_PLAYERS+1 );
+	CNetworkArray( int, m_YellowCards, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_Fouls, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_Offsides, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_Goals, MAX_PLAYERS+1 );
+	CNetworkArray( int, m_OwnGoals, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_Assists, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_Possession, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_DistanceCovered, MAX_PLAYERS+1 );

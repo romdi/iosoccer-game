@@ -65,6 +65,7 @@ public : // IGameResources intreface
 	virtual int		GetFouls( int index );
 	virtual int		GetOffsides( int index );
 	virtual int		GetGoals( int index );
+	virtual int		GetOwnGoals( int index );
 	virtual int		GetAssists( int index );
 	virtual int		GetPossession( int index );
 	virtual int		GetDistanceCovered( int index );
@@ -101,11 +102,12 @@ protected:
 	Color	m_Colors[MAX_TEAMS];
 	
 	//ios
-	int		m_RedCard[MAX_PLAYERS+1];
-	int		m_YellowCard[MAX_PLAYERS+1];
+	int		m_RedCards[MAX_PLAYERS+1];
+	int		m_YellowCards[MAX_PLAYERS+1];
 	int		m_Fouls[MAX_PLAYERS+1];
 	int		m_Offsides[MAX_PLAYERS+1];
 	int		m_Goals[MAX_PLAYERS+1];
+	int		m_OwnGoals[MAX_PLAYERS+1];
 	int		m_Assists[MAX_PLAYERS+1];
 	int		m_Possession[MAX_PLAYERS+1];
 	int		m_DistanceCovered[MAX_PLAYERS+1];

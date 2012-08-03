@@ -1291,6 +1291,7 @@ void CSDKPlayer::ResetStats()
 	m_Fouls = 0;
 	m_Offsides = 0;
 	m_Goals = 0;
+	m_OwnGoals = 0;
 	m_Assists = 0;
 	m_Passes = 0;
 	m_FreeKicks = 0;

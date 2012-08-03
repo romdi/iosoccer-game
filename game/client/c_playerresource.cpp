@@ -31,11 +31,12 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_PlayerResource, DT_PlayerResource, CPlayerReso
 //	RecvPropArray3( RECVINFO_ARRAY(m_iHealth), RecvPropInt( RECVINFO(m_iHealth[0]))),	//iosremoved to save bandwidth
 
 	//ios
-	RecvPropArray3( RECVINFO_ARRAY(m_RedCard), RecvPropInt( RECVINFO(m_RedCard[0]))),
-	RecvPropArray3( RECVINFO_ARRAY(m_YellowCard), RecvPropInt( RECVINFO(m_YellowCard[0]))),
+	RecvPropArray3( RECVINFO_ARRAY(m_RedCards), RecvPropInt( RECVINFO(m_RedCards[0]))),
+	RecvPropArray3( RECVINFO_ARRAY(m_YellowCards), RecvPropInt( RECVINFO(m_YellowCards[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_Fouls), RecvPropInt( RECVINFO(m_Fouls[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_Offsides), RecvPropInt( RECVINFO(m_Offsides[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_Goals), RecvPropInt( RECVINFO(m_Goals[0]))),
+	RecvPropArray3( RECVINFO_ARRAY(m_OwnGoals), RecvPropInt( RECVINFO(m_OwnGoals[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_Assists), RecvPropInt( RECVINFO(m_Assists[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_Possession), RecvPropInt( RECVINFO(m_Possession[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_DistanceCovered), RecvPropInt( RECVINFO(m_DistanceCovered[0]))),
@@ -89,8 +90,8 @@ C_PlayerResource::C_PlayerResource()
 	memset( m_iHealth, 0, sizeof( m_iHealth ) );
 
 	//ios
-	memset( m_RedCard, 0, sizeof( m_RedCard ) );
-	memset( m_YellowCard, 0, sizeof( m_YellowCard ) );
+	memset( m_RedCards, 0, sizeof( m_RedCards ) );
+	memset( m_YellowCards, 0, sizeof( m_YellowCards ) );
 	memset( m_Fouls, 0, sizeof( m_Fouls ) );
 	memset( m_Offsides, 0, sizeof( m_Offsides ) );
 	memset( m_Goals, 0, sizeof( m_Goals ) );
@@ -493,14 +494,14 @@ int	C_PlayerResource::GetRedCards( int iIndex )
 	if ( !IsConnected( iIndex ) )
 		return 0;
 
-	return m_RedCard[iIndex];
+	return m_RedCards[iIndex];
 }
 int	C_PlayerResource::GetYellowCards( int iIndex )
 {
 	if ( !IsConnected( iIndex ) )
 		return 0;
 
-	return m_YellowCard[iIndex];
+	return m_YellowCards[iIndex];
 }
 int	C_PlayerResource::GetFouls( int iIndex )
 {
@@ -522,6 +523,13 @@ int	C_PlayerResource::GetGoals( int iIndex )
 		return 0;
 
 	return m_Goals[iIndex];
+}
+int	C_PlayerResource::GetOwnGoals( int iIndex )
+{
+	if ( !IsConnected( iIndex ) )
+		return 0;
+
+	return m_OwnGoals[iIndex];
 }
 int	C_PlayerResource::GetAssists( int iIndex )
 {

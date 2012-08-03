@@ -285,6 +285,7 @@ public:
 	int					m_Fouls;
 	int					m_Offsides;
 	int					m_Goals;
+	int					m_OwnGoals;
 	int					m_Assists;
 	int					m_Possession;
 	int					m_DistanceCovered;
@@ -301,6 +302,7 @@ public:
 	int					GetFouls(void) { return m_Fouls; }
 	int					GetOffsides(void) { return m_Offsides; }
 	int					GetGoals(void) { return m_Goals; }
+	int					GetOwnGoals(void) { return m_OwnGoals; }
 	int					GetAssists(void) { return m_Assists; }
 	int					GetPossession(void) { return m_Possession; }
 	int					GetDistanceCovered(void) { return m_DistanceCovered; }

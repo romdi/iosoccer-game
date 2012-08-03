@@ -212,6 +212,8 @@ void CStatsMenu::Update(int *playerIndices)
 
 		pData->SetString("NameColumn0", "Corners:");
 		pData->SetInt("ValueColumn0", gr->GetCorners(playerIndices[i]));
+		pData->SetString("NameColumn1", "Own goals:");
+		pData->SetInt("ValueColumn1", gr->GetOwnGoals(playerIndices[i]));
 
 		m_pPlayerStats[i]->ModifyItem(4, 0, pData);
 		m_pPlayerStats[i]->SetItemFgColor(4, GetGlobalTeam(TEAM_A + i)->Get_HudKitColor());
