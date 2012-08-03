@@ -446,7 +446,11 @@ void CBall::VPhysicsCollision( int index, gamevcollisionevent_t	*pEvent	)
 		if (flSpeed > 900.0f)
 			pPl->EmitSound ("Player.Oomph");
 
-		if (m_pCurStateInfo->m_eBallState == BALL_NORMAL)
+		if (SDKGameRules()->State_Get() == MATCH_PENALTIES && m_ePenaltyState == PENALTY_KICKED && pPl != m_pPl)
+		{
+			m_ePenaltyState = PENALTY_SAVED;
+		}
+		else if (m_pCurStateInfo->m_eBallState == BALL_NORMAL)
 		{
 			Touched(pPl, false, BODY_PART_UNKNOWN);
 		}
@@ -698,8 +702,13 @@ void CBall::State_NORMAL_Think()
 {
 	for (int ignoredPlayerBits = 0;;)
 	{
-		if (SDKGameRules()->State_Get() == MATCH_PENALTIES && m_ePenaltyState == PENALTY_KICKED)
-			m_pPl = FindNearestPlayer(m_nFoulingTeam, FL_POS_KEEPER, true);
+		if (SDKGameRules()->State_Get() == MATCH_PENALTIES)
+		{
+			if (m_ePenaltyState == PENALTY_KICKED)
+				m_pPl = FindNearestPlayer(m_nFoulingTeam, FL_POS_KEEPER, true);
+			else
+				m_pPl = NULL;
+		}
 		else
 			m_pPl = FindNearestPlayer(TEAM_INVALID, FL_POS_ANY, true, ignoredPlayerBits);
 
@@ -1859,8 +1868,9 @@ void CBall::TriggerGoal(int team)
 {
 	if (SDKGameRules()->State_Get() == MATCH_PENALTIES)
 	{
-		if (team == m_nFoulingTeam)
+		if (m_ePenaltyState == PENALTY_KICKED && team == m_nFoulingTeam)
 		{
+			m_ePenaltyState = PENALTY_SCORED;
 			GetGlobalTeam(m_nFoulingTeam)->GetOppTeam()->AddGoal();
 			SetMatchEvent(MATCH_EVENT_GOAL, m_pFouledPl);
 			m_bHasQueuedState = true;

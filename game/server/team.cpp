@@ -44,6 +44,7 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CTeam, DT_Team)
 	SendPropInt( SENDINFO(m_nPossession), 0 ),
 	SendPropInt( SENDINFO(m_nPenaltyGoals), 0 ),
 	SendPropInt( SENDINFO(m_nPenaltyGoalBits), 0 ),
+	SendPropInt( SENDINFO(m_nPenaltyRound)),
 	SendPropString( SENDINFO( m_szKitName ) ),
 
 	SendPropVector(SENDINFO(m_vCornerLeft), -1, SPROP_COORD),

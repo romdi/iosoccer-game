@@ -241,9 +241,6 @@ BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 	RecvPropVector(RECVINFO(m_vFieldMax)),
 	RecvPropVector(RECVINFO(m_vKickOff)),
 
-	RecvPropInt(RECVINFO(m_nPenaltyRound)),
-	RecvPropInt(RECVINFO(m_nPenaltyTakingStartTeam)),
-
 	RecvPropInt(RECVINFO(m_nBallZone)),
 
 	RecvPropFloat(RECVINFO(m_flOffsideLineBallPosY)),
@@ -267,9 +264,6 @@ BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 	SendPropVector(SENDINFO(m_vFieldMin), -1, SPROP_COORD),
 	SendPropVector(SENDINFO(m_vFieldMax), -1, SPROP_COORD),
 	SendPropVector(SENDINFO(m_vKickOff), -1, SPROP_COORD),
-
-	SendPropInt(SENDINFO(m_nPenaltyRound)),
-	SendPropInt(SENDINFO(m_nPenaltyTakingStartTeam)),
 
 	SendPropInt(SENDINFO(m_nBallZone)),
 
@@ -1078,7 +1072,7 @@ ConVar mp_timelimit_cooldown( "mp_timelimit_cooldown", "0.5", FCVAR_NOTIFY|FCVAR
 ConVar mp_timelimit_halftime( "mp_timelimit_halftime", "0.5", FCVAR_NOTIFY|FCVAR_REPLICATED, "half time duration" );
 ConVar mp_timelimit_extratime_halftime( "mp_timelimit_extratime_halftime", "0.5", FCVAR_NOTIFY|FCVAR_REPLICATED, "extra time halftime duration" );
 ConVar mp_timelimit_extratime_intermission( "mp_timelimit_extratime_intermission", "0.5", FCVAR_NOTIFY|FCVAR_REPLICATED, "time before extra time start" );
-ConVar mp_timelimit_penalties( "mp_timelimit_penalties", "1", FCVAR_NOTIFY|FCVAR_REPLICATED, "limit for penalties duration" );
+ConVar mp_timelimit_penalties( "mp_timelimit_penalties", "3", FCVAR_NOTIFY|FCVAR_REPLICATED, "limit for penalties duration" );
 ConVar mp_timelimit_penalties_intermission( "mp_timelimit_penalties_intermission", "0.5", FCVAR_NOTIFY|FCVAR_REPLICATED, "time before penalties start" );
 ConVar mp_extratime( "mp_extratime", "1", FCVAR_NOTIFY|FCVAR_REPLICATED );
 ConVar mp_penalties( "mp_penalties", "1", FCVAR_NOTIFY|FCVAR_REPLICATED );
@@ -1385,11 +1379,13 @@ void CSDKGameRules::State_PENALTIES_INTERMISSION_Think()
 
 void CSDKGameRules::State_PENALTIES_Enter()
 {
-	m_nPenaltyRound = 0;
-	GetGlobalTeam(TEAM_A)->m_nPenaltyGoals = 0;
-	GetGlobalTeam(TEAM_B)->m_nPenaltyGoals = 0;
-	GetGlobalTeam(TEAM_A)->m_nPenaltyGoalBits = 0;
-	GetGlobalTeam(TEAM_B)->m_nPenaltyGoalBits = 0;
+	for (int i = 0; i < 2; i++)
+	{
+		GetGlobalTeam(TEAM_A + i)->m_nPenaltyGoals = 0;
+		GetGlobalTeam(TEAM_A + i)->m_nPenaltyGoalBits = 0;
+		GetGlobalTeam(TEAM_A + i)->m_nPenaltyRound = 0;
+	}
+
 	m_flNextPenalty = -1;
 	m_nPenaltyTakingStartTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
 	m_nPenaltyTakingTeam = m_nPenaltyTakingStartTeam;
@@ -1405,7 +1401,10 @@ void CSDKGameRules::State_PENALTIES_Think()
 		return;
 	}
 
-	if (GetBall()->GetPenaltyState() == PENALTY_KICKED || GetBall()->GetPenaltyState() == PENALTY_ABORTED_NO_KEEPER)
+	if (GetBall()->GetPenaltyState() == PENALTY_KICKED
+		|| GetBall()->GetPenaltyState() == PENALTY_SCORED
+		|| GetBall()->GetPenaltyState() == PENALTY_SAVED
+		|| GetBall()->GetPenaltyState() == PENALTY_ABORTED_NO_KEEPER)
 	{
 		if (m_flNextPenalty == -1)
 		{
@@ -1413,28 +1412,35 @@ void CSDKGameRules::State_PENALTIES_Think()
 		}
 		else if (m_flNextPenalty <= gpGlobals->curtime)
 		{
-			if (GetBall()->GetPenaltyState() == PENALTY_KICKED)
+			if (GetBall()->GetPenaltyState() == PENALTY_KICKED
+				|| GetBall()->GetPenaltyState() == PENALTY_SCORED
+				|| GetBall()->GetPenaltyState() == PENALTY_SAVED)
 			{
 				GetBall()->State_Transition(BALL_NORMAL, 0, true);
 
-				if (GetGlobalTeam(m_nPenaltyTakingTeam)->GetGoals() > GetGlobalTeam(m_nPenaltyTakingTeam)->m_nPenaltyGoals)
+				if (GetBall()->GetPenaltyState() == PENALTY_SCORED)
 				{
 					GetGlobalTeam(m_nPenaltyTakingTeam)->m_nPenaltyGoals += 1;
-					GetGlobalTeam(m_nPenaltyTakingTeam)->m_nPenaltyGoalBits |= (1 << (m_nPenaltyRound / 2));
+					GetGlobalTeam(m_nPenaltyTakingTeam)->m_nPenaltyGoalBits |= (1 << GetGlobalTeam(m_nPenaltyTakingTeam)->m_nPenaltyRound);
 				}
-					
-				m_nPenaltyRound += 1;
+				
+				GetGlobalTeam(m_nPenaltyTakingTeam)->m_nPenaltyRound += 1;
 
-				if (m_nPenaltyTakingTeam != m_nPenaltyTakingStartTeam)
+				if (m_nPenaltyTakingTeam != m_nPenaltyTakingStartTeam && GetGlobalTeam(m_nPenaltyTakingTeam)->m_nPenaltyRound >= 5)
 				{
-					if (m_nPenaltyRound >= 10)
+					if (GetGlobalTeam(TEAM_A)->GetGoals() != GetGlobalTeam(TEAM_B)->GetGoals())
 					{
-						if (GetGlobalTeam(TEAM_A)->GetGoals() != GetGlobalTeam(TEAM_B)->GetGoals())
-						{
-							State_Transition(MATCH_COOLDOWN);
-							return;
-						}
+						State_Transition(MATCH_COOLDOWN);
+						return;
 					}
+				}
+
+				int goalDiff = GetGlobalTeam(m_nPenaltyTakingTeam)->m_nPenaltyGoals - GetGlobalTeam(m_nPenaltyTakingTeam)->GetOppTeam()->m_nPenaltyGoals;
+
+				if (goalDiff != 0 && (-goalDiff > 5 - GetGlobalTeam(m_nPenaltyTakingTeam)->m_nPenaltyRound || goalDiff > 5 - GetGlobalTeam(m_nPenaltyTakingTeam)->GetOppTeam()->m_nPenaltyRound))
+				{
+					State_Transition(MATCH_COOLDOWN);
+					return;
 				}
 
 				m_nPenaltyTakingTeam = GetGlobalTeam(m_nPenaltyTakingTeam)->GetOppTeamNumber();
@@ -1493,7 +1499,7 @@ void CSDKGameRules::State_PENALTIES_Think()
 				{
 					CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
 
-					if (!CSDKPlayer::IsOnField(pPl))
+					if (!CSDKPlayer::IsOnField(pPl) || pPl->GetTeamNumber() != m_nPenaltyTakingTeam)
 						continue;
 
 					pPl->m_ePenaltyState = PENALTY_NONE;

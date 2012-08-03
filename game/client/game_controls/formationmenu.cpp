@@ -86,7 +86,6 @@ void CFormationMenu::PerformLayout()
 
 	for (int i = 0; i < 2; i++)
 	{
-		C_Team *pTeam = GetGlobalTeam(TEAM_A + i);
 		m_pFormations[i]->SetBounds(i * (GetWide() / 2), 0, GetWide() / 2, GetTall());
 
 		for (int j = 0; j < 11; j++)

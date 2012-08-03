@@ -78,6 +78,7 @@ public:
 	int		m_nPossession;
 	int		m_nPenaltyGoals;
 	int		m_nPenaltyGoalBits;
+	int		m_nPenaltyRound;
 
 	// Data for the scoreboard
 	int		m_iPing;

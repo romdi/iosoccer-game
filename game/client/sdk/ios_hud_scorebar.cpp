@@ -355,27 +355,23 @@ const char *g_szLongStateNames[32] =
 //-----------------------------------------------------------------------------
 void CHudScorebar::OnThink( void )
 {
-	if (!SDKGameRules())
+	if (!SDKGameRules() || !GetGlobalTeam(TEAM_A) || !GetGlobalTeam(TEAM_B))
 		return;
 
 	if (SDKGameRules()->State_Get() == MATCH_PENALTIES)
 	{
-		int round = SDKGameRules()->m_nPenaltyRound % 10;
 		for (int i = 0; i < 2; i++)
 		{
+			int relativeRound = GetGlobalTeam(TEAM_A + i)->m_nPenaltyRound == 0 ? -1 : (GetGlobalTeam(TEAM_A + i)->m_nPenaltyRound - 1) % 5;
+			int fullRounds = max(0, GetGlobalTeam(TEAM_A + i)->m_nPenaltyRound - 1) / 5;
 			for (int j = 0; j < 5; j++)
 			{
-				//Color color = (i % 3 == 0 ? Color(255, 0, 0, 255) : (i % 3 == 1 ? Color(0, 255, 0, 255) : Color(100, 100, 100, 255)));
 				Color color;
-				if (j > round / 2
-					|| TEAM_A + i == SDKGameRules()->m_nPenaltyTakingStartTeam && round - j * 2 == 0
-					|| TEAM_A + i != SDKGameRules()->m_nPenaltyTakingStartTeam && round - j * 2 <= 1)
-				{
+				if (j > relativeRound)
 					color = Color(100, 100, 100, 255);
-				}
 				else
 				{
-					if ((GetGlobalTeam(TEAM_A + i)->m_nPenaltyGoalBits & (1 << (SDKGameRules()->m_nPenaltyRound / 10 * 5 + j))) != 0)
+					if ((GetGlobalTeam(TEAM_A + i)->m_nPenaltyGoalBits & (1 << (j + fullRounds * 5))) != 0)
 						color = Color(0, 255, 0, 255);
 					else
 						color = Color(255, 0, 0, 255);
@@ -403,10 +399,10 @@ void CHudScorebar::OnThink( void )
 
 		for (int i = 0; i < 2; i++)
 		{
-			m_pExtensionText[i]->SetText(VarArgs("%d pl.     %d%% poss.", GetGlobalTeam(TEAM_A)->GetNumPlayers(), GetGlobalTeam(TEAM_A)->Get_Possession()));
+			m_pExtensionText[i]->SetText(VarArgs("%d pl.     %d%% poss.", GetGlobalTeam(TEAM_A + i)->GetNumPlayers(), GetGlobalTeam(TEAM_A + i)->Get_Possession()));
 			m_pExtensionText[i]->SetFgColor(GetGlobalTeam(TEAM_A + i)->Get_HudKitColor());
 			m_pExtensionBar[i]->SetVisible(true);
-			m_pTeamCrestPanels[i]->SetVisible(GameResources()->HasTeamCrest(i + TEAM_A));
+			m_pTeamCrestPanels[i]->SetVisible(GameResources()->HasTeamCrest(TEAM_A + i));
 		}
 	}
 	else
