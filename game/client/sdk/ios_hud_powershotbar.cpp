@@ -125,7 +125,7 @@ CHudPowershotBar::CHudPowershotBar( const char *pElementName ) : CHudElement( pE
 
 #define BAR_WIDTH 40
 #define BAR_HEIGHT 200
-#define BAR_VMARGIN 30
+#define BAR_VMARGIN 15
 #define BAR_HMARGIN 250
 #define BAR_PADDING 2
 #define PS_INDICATOR_HEIGHT 9
@@ -167,7 +167,7 @@ void CHudPowershotBar::ApplySchemeSettings( IScheme *scheme )
 	for (int i = 0; i < 2; i++)
 	{
 		m_pSpinIndicators[i]->SetPaintBackgroundEnabled(true);
-		m_pSpinIndicators[i]->SetBgColor(Color(255, 0, 0, 255));
+		m_pSpinIndicators[i]->SetBgColor(Color(255, 255, 255, 255));
 		m_pSpinIndicators[i]->SetBounds(BAR_HMARGIN + SPIN_MARGIN, SPIN_HEIGHT + BAR_PADDING + i * (BAR_HEIGHT - 2 * BAR_PADDING - SPIN_HEIGHT), BAR_WIDTH - 2 * SPIN_MARGIN, SPIN_HEIGHT);
 		m_pSpinIndicators[i]->SetVisible(false);
 	}
@@ -220,6 +220,16 @@ void CHudPowershotBar::OnThink( void )
 	//}
 }
 
+float GetShotFraction(float duration)
+{
+	float extra = (duration - mp_chargedshot_increaseduration.GetFloat());
+	if (extra <= 0)
+		return duration / mp_chargedshot_increaseduration.GetFloat();
+	else
+		return 1 - min(extra / mp_chargedshot_decreaseduration.GetFloat(), 1);
+	//return 1 - (abs(fmodf(duration, 2 * mp_chargedshot_increaseduration.GetFloat()) - mp_chargedshot_increaseduration.GetFloat()) * 1.0f / mp_chargedshot_increaseduration.GetFloat());
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: draws the stamina bar
 //-----------------------------------------------------------------------------
@@ -266,15 +276,34 @@ void CHudPowershotBar::Paint()
 		bgColor = Color(255, 255, 255, 255);
 	else
 	{
-		//bgColor = Color(255 * (1 - relStamina), 255 * relStamina, 0, 255);
-		bgColor = Color(0, 255, 0, 255);
+		bgColor = Color(255 * (1 - relStamina), 255 * relStamina, 0, 255);
+		//bgColor = Color(0, 255, 0, 255);
 	}
 
 	m_pStaminaIndicator->SetBgColor(bgColor);
 
-	m_pPowershotIndicatorBack->SetY(m_pStaminaPanel->GetY() + BAR_PADDING + m_pPowershotIndicatorBack->GetTall() + (1 - cl_powershot_strength.GetInt() / 100.0f) * (BAR_HEIGHT - 2 * BAR_PADDING - 3 * m_pPowershotIndicatorBack->GetTall()));
+	float shotStrength;
+
+	if (pPlayer->m_bDoChargedShot || pPlayer->m_bIsShotCharging)
+	{
+		float currentTime = pPlayer->GetFinalPredictedTime();
+		currentTime -= TICK_INTERVAL;
+		currentTime += (gpGlobals->interpolation_amount * TICK_INTERVAL);
+
+		float duration = (pPlayer->m_bIsShotCharging ? currentTime - pPlayer->m_flShotChargingStart : pPlayer->m_flShotChargingDuration);
+		float totalTime = currentTime - pPlayer->m_flShotChargingStart;
+		float activeTime = min(duration, mp_chargedshot_increaseduration.GetFloat());
+		float extra = totalTime - activeTime;
+		shotStrength = max(0, activeTime / mp_chargedshot_increaseduration.GetFloat() - min(extra, mp_chargedshot_decreaseduration.GetFloat()) / mp_chargedshot_decreaseduration.GetFloat());
+
+		m_pPowershotIndicatorBack->SetY(m_pStaminaPanel->GetY() + BAR_PADDING + m_pPowershotIndicatorBack->GetTall() + (1 - shotStrength) * (BAR_HEIGHT - 2 * BAR_PADDING - 3 * m_pPowershotIndicatorBack->GetTall()));
+		m_pPowershotIndicatorBack->SetVisible(true);
+	}
+	else
+		m_pPowershotIndicatorBack->SetVisible(false);
 
 	m_pFixedPowershotIndicator->SetY(BAR_PADDING + m_pPowershotIndicator->GetTall() + (1 - mp_powershot_fixed_strength.GetInt() / 100.0f) * (BAR_HEIGHT - 2 * BAR_PADDING - 3 * m_pFixedPowershotIndicator->GetTall()));
+	m_pFixedPowershotIndicator->SetVisible(false);
 
 	m_pSpinIndicators[0]->SetVisible(pPlayer->m_nButtons & IN_TOPSPIN);
 	m_pSpinIndicators[1]->SetVisible(pPlayer->m_nButtons & IN_BACKSPIN);

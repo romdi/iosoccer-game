@@ -22,6 +22,7 @@
 
 #include "decals.h"
 #include "util_shared.h"
+#include "in_buttons.h"
 
 #ifdef CLIENT_DLL
 	
@@ -38,7 +39,7 @@
 	#include "team.h"
 #endif
 
-const char *g_szRequiredClientVersion = "03.08.12/23h";
+const char *g_szRequiredClientVersion = "04.08.12/15h";
 
 ConVar sv_showimpacts("sv_showimpacts", "0", FCVAR_REPLICATED, "Shows client (red) and server (blue) bullet impact point" );
 
@@ -460,4 +461,32 @@ void CSDKPlayer::FindSafePos(Vector &startPos)
 
 	if (!hasSafePos)
 		startPos.z += VEC_HULL_MAX.z * 2;
+}
+
+void CSDKPlayer::CheckShotCharging()
+{
+	if ((m_nButtons & IN_ATTACK) != 0 && m_bDoChargedShot)
+	{
+		m_bDoChargedShot = false;
+	}
+	else if ((m_nButtons & IN_ATTACK2) != 0 && !m_bIsShotCharging)
+	{
+		m_bDoChargedShot = false;
+		m_bIsShotCharging = true;
+		m_flShotChargingStart = gpGlobals->curtime;
+	}
+	else if (m_bIsShotCharging)
+	{
+		if ((m_nButtons & IN_ATTACK2) != 0)
+		{
+			//m_flShotChargingDuration = gpGlobals->curtime - m_flShotChargingStart;
+			//float fraction = m_flShotChargingDuration / mp_chargedshot_increaseduration.GetFloat();
+		}
+		else
+		{
+			m_bIsShotCharging = false;
+			m_flShotChargingDuration = gpGlobals->curtime - m_flShotChargingStart;
+			m_bDoChargedShot = true;
+		}
+	}
 }

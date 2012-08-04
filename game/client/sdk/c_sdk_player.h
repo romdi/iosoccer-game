@@ -52,7 +52,16 @@ public:
 
 // Called by shared code.
 public:
-	SDKPlayerState State_Get() const;
+	virtual void				PreThink( void );
+
+	SDKPlayerState		State_Get() const;
+
+	void				CheckShotCharging();
+
+	bool				m_bIsShotCharging;
+	float				m_bDoChargedShot;
+	float				m_flShotChargingStart;
+	float				m_flShotChargingDuration;
 	
 	void DoAnimationEvent(PlayerAnimEvent_t event);
 	virtual bool ShouldDraw();

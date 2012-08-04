@@ -1331,3 +1331,11 @@ int C_SDKPlayer::DrawModel( int flags )
 
 	return retVal;
 }
+
+void C_SDKPlayer::PreThink()
+{
+	BaseClass::PreThink();
+
+	if (prediction->IsFirstTimePredicted())
+		CheckShotCharging();
+}

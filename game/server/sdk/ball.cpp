@@ -1302,6 +1302,7 @@ void CBall::State_KEEPERHANDS_Think()
 		if (!SDKGameRules()->IsIntermissionState() && !m_bHasQueuedState)
 		{
 			SDKGameRules()->EnableShield(SHIELD_KEEPERHANDS, m_pPl->GetTeamNumber());
+			//m_pPl->SetPosInsideShield(m_pPl->GetLocalOrigin(), false);
 			m_pPl->m_bIsAtTargetPos = true;
 			PlayersAtTargetPos();
 		}
@@ -1678,21 +1679,26 @@ float CBall::GetPitchCoeff()
 
 float CBall::GetPowershotStrength(float coeff, int minStrength, int maxStrength)
 {
-	int powershotStrength;
-	
-	if (m_pPl->m_nButtons & IN_ALT1)
-		powershotStrength = m_pPl->m_nPowershotStrength;
-	else
-		powershotStrength = mp_powershot_fixed_strength.GetInt();
+	//float powershotStrength = 1 - (abs(fmodf(gpGlobals->curtime - m_pPl->m_flShotChargingStart, 2 * mp_chargedshot_increaseduration.GetFloat()) - mp_chargedshot_increaseduration.GetFloat()) * 1.0f / mp_chargedshot_increaseduration.GetFloat());
+	float duration = (m_pPl->m_bIsShotCharging ? gpGlobals->curtime - m_pPl->m_flShotChargingStart : m_pPl->m_flShotChargingDuration);
+	float totalTime = gpGlobals->curtime - m_pPl->m_flShotChargingStart;
+	float activeTime = min(duration, mp_chargedshot_increaseduration.GetFloat());
+	float extra = totalTime - activeTime;
+	float shotStrength = max(0, activeTime / mp_chargedshot_increaseduration.GetFloat() - min(extra, mp_chargedshot_decreaseduration.GetFloat()) / mp_chargedshot_decreaseduration.GetFloat());
 
-	if (State_Get() == BALL_PENALTY)
-		powershotStrength = min(powershotStrength, mp_powershot_fixed_strength.GetInt());
+	//if (m_pPl->m_nButtons & IN_ALT1)
+	//	powershotStrength = m_pPl->m_nPowershotStrength;
+	//else
+	//	powershotStrength = mp_powershot_fixed_strength.GetInt();
 
-	powershotStrength = min(powershotStrength, m_pPl->m_Shared.GetStamina());
+	//if (State_Get() == BALL_PENALTY)
+	//	powershotStrength = min(powershotStrength, mp_powershot_fixed_strength.GetInt());
 
-	m_pPl->m_Shared.SetStamina(m_pPl->m_Shared.GetStamina() - coeff * powershotStrength);
+	//powershotStrength = min(powershotStrength, m_pPl->m_Shared.GetStamina());
 
-	return max(sv_ball_minshotstrength.GetInt(), coeff * (minStrength + (maxStrength - minStrength) * (powershotStrength / 100.0f)));
+	//m_pPl->m_Shared.SetStamina(m_pPl->m_Shared.GetStamina() - coeff * powershotStrength);
+
+	return max(sv_ball_minshotstrength.GetInt(), coeff * (minStrength + (maxStrength - minStrength) * shotStrength));
 }
 
 bool CBall::DoGroundShot()
@@ -1766,6 +1772,8 @@ bool CBall::DoGroundShot()
 		{
 			if (localDirToBall.x < 0 && m_aPlAng[PITCH] <= -45)
 				m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEELKICK);
+			else
+				m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_NONE);
 
 			EmitSound("Ball.touch");
 		}
@@ -1807,6 +1815,8 @@ bool CBall::DoVolleyShot()
 		EmitSound("Ball.kickhard");
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_VOLLEY);
 	}
+	else
+		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_NONE);
 
 	SetVel(vel, sv_ball_volleyshot_spincoeff.GetFloat(), BODY_PART_FEET, false, true);
 

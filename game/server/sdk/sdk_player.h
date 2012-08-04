@@ -383,6 +383,12 @@ public:
 	void				ResetStats();
 
 	bool				m_bShotButtonsReleased;
+	bool				m_bIsShotCharging;
+	float				m_bDoChargedShot;
+	float				m_flShotChargingStart;
+	float				m_flShotChargingDuration;
+
+	void				CheckShotCharging();
 
 	float				m_flNextJoin;
 	int					m_nTeamToJoin;

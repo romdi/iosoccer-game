@@ -855,6 +855,8 @@ void CSDKPlayer::State_ACTIVE_PreThink()
 {
 	if (!(m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1 | IN_ALT2))))
 		m_bShotButtonsReleased = true;
+
+	CheckShotCharging();
 }
 
 int CSDKPlayer::GetPlayerStance()
@@ -1365,7 +1367,7 @@ bool CSDKPlayer::IsNormalshooting()
 
 bool CSDKPlayer::IsPowershooting()
 {
-	return (m_nButtons & (IN_ATTACK2 | IN_ALT1)) != 0;
+	return m_bDoChargedShot;
 }
 
 bool CSDKPlayer::IsAutoPassing()
