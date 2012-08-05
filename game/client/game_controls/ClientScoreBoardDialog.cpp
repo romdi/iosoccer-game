@@ -319,6 +319,7 @@ void CClientScoreBoardDialog::ShowPanel(bool bShow)
 		Update();
 		SetVisible( true );
 		MoveToFront();
+		RequestFocus();
 		SetKeyBoardInputEnabled(false);
 		SetMouseInputEnabled(true);
 	}

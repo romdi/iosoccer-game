@@ -1548,27 +1548,29 @@ bool CGameMovement::CheckPlayerAnimEvent()
 	{
 	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT:
 		{
-			//mv->m_vecVelocity = forward2D * mv->m_flForwardMove + right * mv->m_flSideMove;
-			mv->m_vecVelocity = -right * mp_keeperdivespeed_xy.GetInt() * (isSprinting ? mp_keepersprintdivecoeff_xy.GetFloat() : 1) * max(0, (1 - pow(timePassed / mp_keeperdiveduration.GetFloat(), 2)));
+			mv->m_vecVelocity = forward2D * mv->m_flForwardMove + right * mv->m_flSideMove;
+			//mv->m_vecVelocity = -right * mp_keeperdivespeed_xy.GetInt() * (isSprinting ? mp_keepersprintdivecoeff_xy.GetFloat() : 1) * max(0, (1 - pow(timePassed / mp_keeperdiveduration.GetFloat(), 2)));
 			mv->m_vecVelocity.z = mp_keeperdivespeed_z.GetInt() * (isSprinting ? mp_keepersprintdivecoeff_z.GetFloat() : 1);
 			break;
 		}
 	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT:
 		{
-			//mv->m_vecVelocity = forward2D * mv->m_flForwardMove + right * mv->m_flSideMove;
-			mv->m_vecVelocity = right * mp_keeperdivespeed_xy.GetInt() * (isSprinting ? mp_keepersprintdivecoeff_xy.GetFloat() : 1) * max(0, (1 - pow(timePassed / mp_keeperdiveduration.GetFloat(), 2)));
+			mv->m_vecVelocity = forward2D * mv->m_flForwardMove + right * mv->m_flSideMove;
+			//mv->m_vecVelocity = right * mp_keeperdivespeed_xy.GetInt() * (isSprinting ? mp_keepersprintdivecoeff_xy.GetFloat() : 1) * max(0, (1 - pow(timePassed / mp_keeperdiveduration.GetFloat(), 2)));
 			mv->m_vecVelocity.z = mp_keeperdivespeed_z.GetInt() * (isSprinting ? mp_keepersprintdivecoeff_z.GetFloat() : 1);
 			break;
 		}
 	case PLAYERANIMEVENT_KEEPER_DIVE_FORWARD:
 		{
-			mv->m_vecVelocity = forward2D * mp_keeperdivespeed_xy.GetInt() * (isSprinting ? mp_keepersprintdivecoeff_xy.GetFloat() : 1) * max(0, (1 - pow(timePassed / mp_keeperdiveduration.GetFloat(), 2)));
+			mv->m_vecVelocity = forward2D * mv->m_flForwardMove + right * mv->m_flSideMove;
+			//mv->m_vecVelocity = forward2D * mp_keeperdivespeed_xy.GetInt() * (isSprinting ? mp_keepersprintdivecoeff_xy.GetFloat() : 1) * max(0, (1 - pow(timePassed / mp_keeperdiveduration.GetFloat(), 2)));
 			mv->m_vecVelocity.z = 0;
 			break;
 		}
 	case PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD:
 		{
-			mv->m_vecVelocity = -forward2D * mp_keeperdivespeed_xy.GetInt() * (isSprinting ? mp_keepersprintdivecoeff_xy.GetFloat() : 1) * max(0, (1 - pow(timePassed / mp_keeperdiveduration.GetFloat(), 2)));
+			mv->m_vecVelocity = forward2D * mv->m_flForwardMove + right * mv->m_flSideMove;
+			//mv->m_vecVelocity = -forward2D * mp_keeperdivespeed_xy.GetInt() * (isSprinting ? mp_keepersprintdivecoeff_xy.GetFloat() : 1) * max(0, (1 - pow(timePassed / mp_keeperdiveduration.GetFloat(), 2)));
 			mv->m_vecVelocity.z = mp_keeperdivespeed_z.GetInt() * (isSprinting ? mp_keepersprintdivecoeff_z.GetFloat() : 1);
 			break;
 		}

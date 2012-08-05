@@ -76,7 +76,7 @@ ConVar r_snow_initialramp( "r_snow_initialramp", "1.0", FCVAR_REPLICATED );
 
 const char g_szPosNames[POS_NAME_COUNT][5] =
 {
-	"GK", "SWP", "LB", "RB", "CB", "LCB", "RCB", "LWB", "RWB", "LM", "RM", "DM", "CM", "AM", "LF", "RF", "CF", "ST", "SS", "LW", "RW", "LCM", "RCM"
+	"GK", "SWP", "LB", "RB", "CB", "LCB", "RCB", "LWB", "RWB", "LM", "RM", "DM", "CM", "AM", "LCM", "RCM", "LF", "RF", "CF", "ST", "SS", "LW", "RW"
 };
 
 #define HIDDEN { -1, -1, -1, -1 }

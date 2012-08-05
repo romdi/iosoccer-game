@@ -519,8 +519,25 @@ CSDKPlayer *CBall::FindNearestPlayer(int team /*= TEAM_INVALID*/, int posFlags /
 		if (ignoredPlayerBits & (1 << (pPlayer->entindex() - 1)))
 			continue;
 
-		if (!(posFlags & FL_POS_ANY) && ((posFlags & FL_POS_KEEPER) && pPlayer->GetTeamPosition() != 1 || (posFlags & FL_POS_FIELD) && pPlayer->GetTeamPosition() == 1))
-			continue;
+		if (!(posFlags & FL_POS_ANY))
+		{
+			int posName = (int)g_Positions[mp_maxplayers.GetInt() - 1][pPlayer->GetTeamPosIndex()][POS_NAME];
+
+			if ((posFlags == FL_POS_FIELD) && !((1 << posName) & (g_nPosDefense + g_nPosMidfield + g_nPosAttack)))
+				continue;
+
+			if ((posFlags == FL_POS_KEEPER) && !((1 << posName) & g_nPosKeeper))
+				continue;
+
+			if ((posFlags == FL_POS_DEFENDER) && !((1 << posName) & g_nPosDefense))
+				continue;
+
+			if ((posFlags == FL_POS_MIDFIELDER) && !((1 << posName) & g_nPosMidfield))
+				continue;
+
+			if ((posFlags == FL_POS_ATTACKER) && !((1 << posName) & g_nPosAttack))
+				continue;
+		}
 
 		if (team != TEAM_INVALID && pPlayer->GetTeamNumber() != team)
 			continue;
@@ -768,7 +785,12 @@ void CBall::State_KICKOFF_Think()
 {
 	if (!CSDKPlayer::IsOnField(m_pPl))
 	{
-		m_pPl = FindNearestPlayer(SDKGameRules()->GetKickOffTeam());
+		m_pPl = FindNearestPlayer(SDKGameRules()->GetKickOffTeam(), FL_POS_ATTACKER);
+		if (!m_pPl)
+			m_pPl = FindNearestPlayer(SDKGameRules()->GetKickOffTeam(), FL_POS_MIDFIELDER);
+		if (!m_pPl)
+			m_pPl = FindNearestPlayer(SDKGameRules()->GetKickOffTeam(), FL_POS_DEFENDER);
+
 		if (!m_pPl)
 			m_pPl = FindNearestPlayer(GetGlobalTeam(SDKGameRules()->GetKickOffTeam())->GetOppTeamNumber());
 		if (!m_pPl)
@@ -789,7 +811,12 @@ void CBall::State_KICKOFF_Think()
 
 	if (!CSDKPlayer::IsOnField(m_pOtherPl) || m_pOtherPl == m_pPl)
 	{
-		m_pOtherPl = FindNearestPlayer(m_pPl->GetTeamNumber(), FL_POS_FIELD, false, (1 << (m_pPl->entindex() - 1)));
+		m_pOtherPl = FindNearestPlayer(m_pPl->GetTeamNumber(), FL_POS_ATTACKER, false, (1 << (m_pPl->entindex() - 1)));
+		if (!m_pOtherPl)
+			m_pOtherPl = FindNearestPlayer(m_pPl->GetTeamNumber(), FL_POS_MIDFIELDER, false, (1 << (m_pPl->entindex() - 1)));
+		if (!m_pOtherPl)
+			m_pOtherPl = FindNearestPlayer(m_pPl->GetTeamNumber(), FL_POS_DEFENDER, false, (1 << (m_pPl->entindex() - 1)));
+
 		if (m_pOtherPl)
 			m_pOtherPl->SetPosInsideShield(Vector(m_vPos.x + m_pPl->GetTeam()->m_nRight * 100, m_vPos.y, SDKGameRules()->m_vKickOff.GetZ()), true);
 	}
@@ -1679,26 +1706,20 @@ float CBall::GetPitchCoeff()
 
 float CBall::GetPowershotStrength(float coeff, int minStrength, int maxStrength)
 {
-	//float powershotStrength = 1 - (abs(fmodf(gpGlobals->curtime - m_pPl->m_flShotChargingStart, 2 * mp_chargedshot_increaseduration.GetFloat()) - mp_chargedshot_increaseduration.GetFloat()) * 1.0f / mp_chargedshot_increaseduration.GetFloat());
-	float duration = (m_pPl->m_bIsShotCharging ? gpGlobals->curtime - m_pPl->m_flShotChargingStart : m_pPl->m_flShotChargingDuration);
-	float totalTime = gpGlobals->curtime - m_pPl->m_flShotChargingStart;
-	float activeTime = min(duration, mp_chargedshot_increaseduration.GetFloat());
-	float extra = totalTime - activeTime;
-	float shotStrength = max(0, activeTime / mp_chargedshot_increaseduration.GetFloat() - min(extra, mp_chargedshot_decreaseduration.GetFloat()) / mp_chargedshot_decreaseduration.GetFloat());
+	float powershotStrength;
+	if (m_pPl->m_nButtons & IN_ALT1)
+		powershotStrength = m_pPl->m_nPowershotStrength;
+	else
+		powershotStrength = mp_powershot_fixed_strength.GetInt();
 
-	//if (m_pPl->m_nButtons & IN_ALT1)
-	//	powershotStrength = m_pPl->m_nPowershotStrength;
-	//else
-	//	powershotStrength = mp_powershot_fixed_strength.GetInt();
+	if (State_Get() == BALL_PENALTY)
+		powershotStrength = min(powershotStrength, mp_powershot_fixed_strength.GetInt());
 
-	//if (State_Get() == BALL_PENALTY)
-	//	powershotStrength = min(powershotStrength, mp_powershot_fixed_strength.GetInt());
+	powershotStrength = min(powershotStrength, m_pPl->m_Shared.GetStamina());
 
-	//powershotStrength = min(powershotStrength, m_pPl->m_Shared.GetStamina());
+	m_pPl->m_Shared.SetStamina(m_pPl->m_Shared.GetStamina() - coeff * powershotStrength);
 
-	//m_pPl->m_Shared.SetStamina(m_pPl->m_Shared.GetStamina() - coeff * powershotStrength);
-
-	return max(sv_ball_minshotstrength.GetInt(), coeff * (minStrength + (maxStrength - minStrength) * shotStrength));
+	return max(sv_ball_minshotstrength.GetInt(), coeff * (minStrength + (maxStrength - minStrength) * (powershotStrength / 100.0f)));
 }
 
 bool CBall::DoGroundShot()

@@ -12,6 +12,8 @@ ConCommand ircmenu("ircmenu", CC_IRCMenu);
 
 CTestPanel::CTestPanel(vgui::VPANEL parent) : BaseClass(NULL, "TestPanel")
 {
+	SetScheme("SourceScheme");
+
 	SetVisible(false);
 	pConnect = new vgui::Button(this, "", "Connect");
 	pConnect->SetCommand("connect");

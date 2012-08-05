@@ -60,7 +60,7 @@ enum { BUTTON_WIDTH = 100, BUTTON_HEIGHT = 30, BUTTON_MARGIN = 5 };
 
 CIOSOptionsPanel::CIOSOptionsPanel(VPANEL parent) : BaseClass(NULL, "IOSOptionsPanel")
 {
-	//SetScheme("ClientScheme");
+	SetScheme("SourceScheme");
 
 	SetParent(parent);
 	m_pContent = new Panel(this, "");

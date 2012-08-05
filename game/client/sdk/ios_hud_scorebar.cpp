@@ -121,7 +121,7 @@ enum { TEAMGOAL_WIDTH = 30, TEAMGOAL_MARGIN = 15 };
 enum { TIME_WIDTH = 120, TIME_MARGIN = 5, INJURY_TIME_WIDTH = 20, INJURY_TIME_MARGIN = 10 };
 enum { STATE_WIDTH = 140, STATE_MARGIN = 5 };
 enum { TOPEXTENSION_WIDTH = 248, TOPEXTENSION_HEIGHT = MAINBAR_HEIGHT, TOPEXTENSION_MARGIN = 10, TOPEXTENSION_TEXTMARGIN = 5, TOPEXTENSION_TEXTOFFSET = 20 };
-enum { TEAMCREST_SIZE = 70, TEAMCREST_HOFFSET = 482/*265*/, TEAMCREST_VOFFSET = 0, TEAMCREST_PADDING = 5 };
+enum { TEAMCREST_SIZE = 70, TEAMCREST_HOFFSET = 477, TEAMCREST_VOFFSET = 0, TEAMCREST_PADDING = 5 };
 enum { TEAMCOLOR_WIDTH = 5, TEAMCOLOR_HEIGHT = MAINBAR_HEIGHT - 10, TEAMCOLOR_HMARGIN = 5, TEAMCOLOR_VMARGIN = (MAINBAR_HEIGHT - TEAMCOLOR_HEIGHT) / 2 };
 enum { CENTERBAR_OFFSET = 5 };
 enum { BAR_BORDER = 2 };
@@ -372,7 +372,8 @@ void CHudScorebar::OnThink( void )
 		for (int i = 0; i < 2; i++)
 		{
 			wchar_t text[64];
-			_snwprintf(text, ARRAYSIZE(text), L"%d pl.   •   %d%% poss.", GetGlobalTeam(TEAM_A + i)->GetNumPlayers(), GetGlobalTeam(TEAM_A + i)->Get_Possession());
+			//_snwprintf(text, ARRAYSIZE(text), L"%d pl.   •   %d%% poss.", GetGlobalTeam(TEAM_A + i)->GetNumPlayers(), GetGlobalTeam(TEAM_A + i)->Get_Possession());
+			_snwprintf(text, ARRAYSIZE(text), L"%d pl.   %d%% poss.", GetGlobalTeam(TEAM_A + i)->GetNumPlayers(), GetGlobalTeam(TEAM_A + i)->Get_Possession());
 			m_pExtensionText[i]->SetText(text);
 			m_pExtensionText[i]->SetFgColor(GetGlobalTeam(TEAM_A + i)->Get_HudKitColor());
 			m_pExtensionBar[i]->SetVisible(true);

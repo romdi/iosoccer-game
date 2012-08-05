@@ -326,14 +326,10 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 	switch( event )
 	{
 	case PLAYERANIMEVENT_NONE:
-		GetSDKPlayer()->m_bDoChargedShot = false;
-		GetSDKPlayer()->m_bIsShotCharging = false;
 		break;
 	case PLAYERANIMEVENT_CANCEL:
 		{
 			ClearAnimationState();
-			GetSDKPlayer()->m_bDoChargedShot = false;
-			GetSDKPlayer()->m_bIsShotCharging = false;
 			break;
 		}
 	case PLAYERANIMEVENT_KICK:			//ios
@@ -360,15 +356,6 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 			m_flPrimaryActionSequenceCycle = 0;
 			m_iPrimaryActionSequence = CalcPrimaryActionSequence( event );
 			m_bIsPrimaryActionSequenceActive = m_iPrimaryActionSequence != -1;
-			GetSDKPlayer()->m_bDoChargedShot = false;
-			GetSDKPlayer()->m_bIsShotCharging = false;
-			#ifdef CLIENT_DLL
-				if (GetSDKPlayer() == C_SDKPlayer::GetLocalSDKPlayer())
-				{
-					engine->ClientCmd("-topspin");
-					engine->ClientCmd("-backspin");
-				}
-			#endif
 			break;
 		}
 	case PLAYERANIMEVENT_JUMP:

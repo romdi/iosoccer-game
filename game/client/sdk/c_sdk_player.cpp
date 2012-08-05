@@ -1335,7 +1335,4 @@ int C_SDKPlayer::DrawModel( int flags )
 void C_SDKPlayer::PreThink()
 {
 	BaseClass::PreThink();
-
-	if (prediction->IsFirstTimePredicted())
-		CheckShotCharging();
 }

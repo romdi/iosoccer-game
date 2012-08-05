@@ -86,6 +86,7 @@ protected:
 	Panel *m_pPowershotIndicatorBack;
 	Panel *m_pFixedPowershotIndicator;
 	Panel *m_pSpinIndicators[2];
+	Panel *m_pSpinIndicatorsBack[2];
 	float m_flOldStamina;
 	float m_flNextUpdate;
 	bool m_bIsChargingShot;
@@ -113,8 +114,13 @@ CHudPowershotBar::CHudPowershotBar( const char *pElementName ) : CHudElement( pE
 	m_pFixedPowershotIndicator = new Panel(m_pStaminaPanel, "FixedPowershotIndicator");
 	m_pPowershotIndicatorBack = new Panel(this, "PowershotIndicator");
 	m_pPowershotIndicator = new Panel(m_pPowershotIndicatorBack, "PowershotIndicator");
+
 	for (int i = 0; i < 2; i++)
-		m_pSpinIndicators[i] = new Panel(this, "");
+	{
+		m_pSpinIndicatorsBack[i] = new Panel(this, "");
+		m_pSpinIndicators[i] = new Panel(m_pSpinIndicatorsBack[i], "");
+	}
+
 	m_flOldStamina = 100;
 	m_flNextUpdate = gpGlobals->curtime;
 	m_bIsChargingShot = false;
@@ -134,6 +140,7 @@ CHudPowershotBar::CHudPowershotBar( const char *pElementName ) : CHudElement( pE
 #define FIXED_PS_INDICATOR_HEIGHT 3
 #define SPIN_MARGIN 7
 #define SPIN_HEIGHT 9
+#define	SPIN_BORDER 2
 
 void CHudPowershotBar::ApplySchemeSettings( IScheme *scheme )
 {
@@ -158,7 +165,6 @@ void CHudPowershotBar::ApplySchemeSettings( IScheme *scheme )
  	m_pPowershotIndicator->SetPaintBackgroundEnabled(true);
 	m_pPowershotIndicator->SetBgColor(Color(255, 255, 255, 255));
 	m_pPowershotIndicator->SetBounds(PS_INDICATOR_BORDER, PS_INDICATOR_BORDER, m_pPowershotIndicatorBack->GetWide() - 2 * PS_INDICATOR_BORDER, m_pPowershotIndicatorBack->GetTall() - 2 * PS_INDICATOR_BORDER);
-	m_pPowershotIndicator->SetZPos(1);
 
  	m_pFixedPowershotIndicator->SetPaintBackgroundEnabled(true);
 	m_pFixedPowershotIndicator->SetBgColor(Color(0, 0, 0, 255));
@@ -166,10 +172,14 @@ void CHudPowershotBar::ApplySchemeSettings( IScheme *scheme )
 
 	for (int i = 0; i < 2; i++)
 	{
+		m_pSpinIndicatorsBack[i]->SetPaintBackgroundEnabled(true);
+		m_pSpinIndicatorsBack[i]->SetBgColor(Color(0, 0, 0, 255));
+		m_pSpinIndicatorsBack[i]->SetBounds(BAR_HMARGIN + SPIN_MARGIN, SPIN_HEIGHT + BAR_PADDING - SPIN_BORDER + i * (BAR_HEIGHT - 2 * BAR_PADDING - SPIN_HEIGHT + 2 * SPIN_BORDER), BAR_WIDTH - 2 * SPIN_MARGIN, SPIN_HEIGHT);
+		m_pSpinIndicatorsBack[i]->SetVisible(false);
+
 		m_pSpinIndicators[i]->SetPaintBackgroundEnabled(true);
-		m_pSpinIndicators[i]->SetBgColor(Color(255, 255, 255, 255));
-		m_pSpinIndicators[i]->SetBounds(BAR_HMARGIN + SPIN_MARGIN, SPIN_HEIGHT + BAR_PADDING + i * (BAR_HEIGHT - 2 * BAR_PADDING - SPIN_HEIGHT), BAR_WIDTH - 2 * SPIN_MARGIN, SPIN_HEIGHT);
-		m_pSpinIndicators[i]->SetVisible(false);
+		m_pSpinIndicators[i]->SetBgColor(Color(1, 210, 255, 255));
+		m_pSpinIndicators[i]->SetBounds(SPIN_BORDER, SPIN_BORDER, m_pSpinIndicatorsBack[i]->GetWide() - 2 * SPIN_BORDER, m_pSpinIndicatorsBack[i]->GetTall() - 2 * SPIN_BORDER);
 	}
 }
 
@@ -220,16 +230,6 @@ void CHudPowershotBar::OnThink( void )
 	//}
 }
 
-float GetShotFraction(float duration)
-{
-	float extra = (duration - mp_chargedshot_increaseduration.GetFloat());
-	if (extra <= 0)
-		return duration / mp_chargedshot_increaseduration.GetFloat();
-	else
-		return 1 - min(extra / mp_chargedshot_decreaseduration.GetFloat(), 1);
-	//return 1 - (abs(fmodf(duration, 2 * mp_chargedshot_increaseduration.GetFloat()) - mp_chargedshot_increaseduration.GetFloat()) * 1.0f / mp_chargedshot_increaseduration.GetFloat());
-}
-
 //-----------------------------------------------------------------------------
 // Purpose: draws the stamina bar
 //-----------------------------------------------------------------------------
@@ -239,29 +239,6 @@ void CHudPowershotBar::Paint()
 
 	if ( !pPlayer )
 		return;
-
-	//if (pPlayer->m_nButtons & IN_RELOAD)
-	//{
-	//	if (m_bIsChargingShot)
-	//	{
-	//		float power = (gpGlobals->curtime - m_flChargingStartTime) / cl_chargedshot_duration.GetFloat();
-	//		cl_powershot_strength.SetValue(power * 100);
-	//	}
-	//	else
-	//	{
-	//		cl_powershot_strength.SetValue(0);
-	//		m_nChargingStartPower = 0;
-	//		m_bIsChargingShot = true;
-	//		m_flChargingStartTime = gpGlobals->curtime;
-	//	}
-	//}
-	//else
-	//{
-	//	if (m_bIsChargingShot)
-	//	{
-	//		m_bIsChargingShot = false;
-	//	}
-	//}
 
 	float stamina = pPlayer->m_Shared.GetStamina();
 	float relStamina = stamina / 100.0f;
@@ -282,29 +259,10 @@ void CHudPowershotBar::Paint()
 
 	m_pStaminaIndicator->SetBgColor(bgColor);
 
-	float shotStrength;
-
-	if (pPlayer->m_bDoChargedShot || pPlayer->m_bIsShotCharging)
-	{
-		float currentTime = pPlayer->GetFinalPredictedTime();
-		currentTime -= TICK_INTERVAL;
-		currentTime += (gpGlobals->interpolation_amount * TICK_INTERVAL);
-
-		float duration = (pPlayer->m_bIsShotCharging ? currentTime - pPlayer->m_flShotChargingStart : pPlayer->m_flShotChargingDuration);
-		float totalTime = currentTime - pPlayer->m_flShotChargingStart;
-		float activeTime = min(duration, mp_chargedshot_increaseduration.GetFloat());
-		float extra = totalTime - activeTime;
-		shotStrength = max(0, activeTime / mp_chargedshot_increaseduration.GetFloat() - min(extra, mp_chargedshot_decreaseduration.GetFloat()) / mp_chargedshot_decreaseduration.GetFloat());
-
-		m_pPowershotIndicatorBack->SetY(m_pStaminaPanel->GetY() + BAR_PADDING + m_pPowershotIndicatorBack->GetTall() + (1 - shotStrength) * (BAR_HEIGHT - 2 * BAR_PADDING - 3 * m_pPowershotIndicatorBack->GetTall()));
-		m_pPowershotIndicatorBack->SetVisible(true);
-	}
-	else
-		m_pPowershotIndicatorBack->SetVisible(false);
+	m_pPowershotIndicatorBack->SetY(m_pStaminaPanel->GetY() + BAR_PADDING + m_pPowershotIndicatorBack->GetTall() + (1 - cl_powershot_strength.GetInt() / 100.0f) * (BAR_HEIGHT - 2 * BAR_PADDING - 3 * m_pPowershotIndicatorBack->GetTall()));
 
 	m_pFixedPowershotIndicator->SetY(BAR_PADDING + m_pPowershotIndicator->GetTall() + (1 - mp_powershot_fixed_strength.GetInt() / 100.0f) * (BAR_HEIGHT - 2 * BAR_PADDING - 3 * m_pFixedPowershotIndicator->GetTall()));
-	m_pFixedPowershotIndicator->SetVisible(false);
 
-	m_pSpinIndicators[0]->SetVisible(pPlayer->m_nButtons & IN_TOPSPIN);
-	m_pSpinIndicators[1]->SetVisible(pPlayer->m_nButtons & IN_BACKSPIN);
+	m_pSpinIndicatorsBack[0]->SetVisible(pPlayer->m_nButtons & IN_TOPSPIN);
+	m_pSpinIndicatorsBack[1]->SetVisible(pPlayer->m_nButtons & IN_BACKSPIN);
 }

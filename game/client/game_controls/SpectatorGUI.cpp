@@ -80,6 +80,8 @@ private:
 //-----------------------------------------------------------------------------
 CSpectatorMenu::CSpectatorMenu( IViewPort *pViewPort ) : Frame( NULL, PANEL_SPECMENU )
 {
+	SetScheme("SourceScheme");
+
 	m_iDuckKey = BUTTON_CODE_INVALID;
 		
 	m_pViewPort = pViewPort;
@@ -90,8 +92,6 @@ CSpectatorMenu::CSpectatorMenu( IViewPort *pViewPort ) : Frame( NULL, PANEL_SPEC
 	SetMoveable( false );
 	SetSizeable( false );
 	SetProportional(true);
-
-	//SetScheme("ClientScheme");
 
 	m_pPlayerList = new ComboBox(this, "playercombo", 10 , false);
 	HFont hFallbackFont = scheme()->GetIScheme( GetScheme() )->GetFont( "DefaultVerySmallFallBack", false );
