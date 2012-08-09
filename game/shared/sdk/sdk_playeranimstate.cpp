@@ -208,14 +208,14 @@ void CSDKPlayerAnimState::Update( float eyeYaw, float eyePitch )
 
 void CSDKPlayerAnimState::ComputePrimaryActionSequence( CStudioHdr *pStudioHdr )
 {
-	if (m_iPrimaryActionSequence > -1)
+	if (m_bIsPrimaryActionSequenceActive)
 		UpdateLayerSequenceGeneric( pStudioHdr, PRIMARYACTIONSEQUENCE_LAYER, m_bIsPrimaryActionSequenceActive, m_flPrimaryActionSequenceCycle, m_iPrimaryActionSequence, false );
 }
 
 void CSDKPlayerAnimState::ComputeSecondaryActionSequence( CStudioHdr *pStudioHdr )
 {
 	//Keeper Carry layer
-	if (m_iSecondaryActionSequence > -1)
+	if (m_bIsSecondaryActionSequenceActive)
 		UpdateLayerSequenceGeneric( pStudioHdr, SECONDARYACTIONSEQUENCE_LAYER, m_bIsSecondaryActionSequenceActive, m_flSecondaryActionSequenceCycle, m_iSecondaryActionSequence, m_bCarryHold);
 }
 
@@ -320,9 +320,6 @@ void CSDKPlayerAnimState::UpdateLayerSequenceGeneric( CStudioHdr *pStudioHdr, in
 //-----------------------------------------------------------------------------
 void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 {
-	GetSDKPlayer()->m_ePlayerAnimEvent = event;
-	GetSDKPlayer()->m_flPlayerAnimEventStart = gpGlobals->curtime;
-
 	switch( event )
 	{
 	case PLAYERANIMEVENT_NONE:
@@ -332,7 +329,7 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 			ClearAnimationState();
 			break;
 		}
-	case PLAYERANIMEVENT_KICK:			//ios
+	case PLAYERANIMEVENT_KICK:
 	case PLAYERANIMEVENT_PASS:
 	case PLAYERANIMEVENT_PASS_STATIONARY:
 	case PLAYERANIMEVENT_VOLLEY:
@@ -370,7 +367,6 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 			}
 			break;
 		}
-
 	case PLAYERANIMEVENT_CARRY:
 		{
 			m_iSecondaryActionSequence = CalcSecondaryActionSequence();			//add keeper carry as layer
@@ -394,6 +390,9 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 			break;
 		}
 	}
+
+	GetSDKPlayer()->m_ePlayerAnimEvent = event;
+	GetSDKPlayer()->m_flPlayerAnimEventStart = gpGlobals->curtime;
 }
 
 bool CSDKPlayerAnimState::HandleJumping( Activity &idealActivity )

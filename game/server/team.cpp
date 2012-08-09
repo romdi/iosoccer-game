@@ -45,7 +45,7 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CTeam, DT_Team)
 	SendPropInt( SENDINFO(m_nPenaltyGoals), 0 ),
 	SendPropInt( SENDINFO(m_nPenaltyGoalBits), 0 ),
 	SendPropInt( SENDINFO(m_nPenaltyRound)),
-	SendPropString( SENDINFO( m_szKitName ) ),
+	SendPropString( SENDINFO( m_szServerKitName ) ),
 
 	SendPropVector(SENDINFO(m_vCornerLeft), -1, SPROP_COORD),
 	SendPropVector(SENDINFO(m_vCornerRight), -1, SPROP_COORD),
@@ -93,7 +93,7 @@ int GetNumberOfTeams( void )
 //-----------------------------------------------------------------------------
 CTeam::CTeam( void )
 {
-	memset( m_szKitName.GetForModify(), 0, sizeof(m_szKitName) );
+	memset( m_szServerKitName.GetForModify(), 0, sizeof(m_szServerKitName) );
 	ResetStats();
 }
 
@@ -137,7 +137,7 @@ bool CTeam::ShouldTransmitToPlayer( CBasePlayer* pRecipient, CBaseEntity* pEntit
 //-----------------------------------------------------------------------------
 void CTeam::Init( const char *pName, int iNumber )
 {
-	Q_strncpy( m_szKitName.GetForModify(), pName, MAX_TEAM_NAME_LENGTH );
+	SetKitName(pName);
 	m_iTeamNum = iNumber;
 }
 
@@ -169,7 +169,7 @@ void CTeam::SetTeamNumber(int teamNum)
 
 void CTeam::SetKitName(const char *pName)
 {
-	Q_strncpy( m_szKitName.GetForModify(), pName, MAX_TEAM_NAME_LENGTH );
+	Q_strncpy( m_szServerKitName.GetForModify(), pName, MAX_TEAM_NAME_LENGTH );
 }
 
 //-----------------------------------------------------------------------------
@@ -177,7 +177,7 @@ void CTeam::SetKitName(const char *pName)
 //-----------------------------------------------------------------------------
 const char *CTeam::GetKitName( void )
 {
-	return m_szKitName;
+	return m_szServerKitName;
 }
 
 //-----------------------------------------------------------------------------

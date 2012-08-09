@@ -1548,21 +1548,24 @@ bool CGameMovement::CheckPlayerAnimEvent()
 	{
 	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT:
 		{
-			mv->m_vecVelocity = forward2D * mv->m_flForwardMove + right * mv->m_flSideMove;
+			mv->m_vecVelocity = forward2D * mv->m_flForwardMove * (isSprinting ? mp_keepersprintdivecoeff_shortside.GetFloat() : mp_keeperdivecoeff_shortside.GetFloat()) + right * mv->m_flSideMove * (isSprinting ? mp_keepersprintdivecoeff_longside.GetFloat() : mp_keeperdivecoeff_longside.GetFloat());
+			mv->m_vecVelocity *= max(0, (1 - pow(timePassed / mp_keeperdiveduration.GetFloat(), 2)));
 			//mv->m_vecVelocity = -right * mp_keeperdivespeed_xy.GetInt() * (isSprinting ? mp_keepersprintdivecoeff_xy.GetFloat() : 1) * max(0, (1 - pow(timePassed / mp_keeperdiveduration.GetFloat(), 2)));
-			mv->m_vecVelocity.z = mp_keeperdivespeed_z.GetInt() * (isSprinting ? mp_keepersprintdivecoeff_z.GetFloat() : 1);
+			mv->m_vecVelocity.z = mp_keeperdivespeed_z.GetInt() * (isSprinting ? mp_keepersprintdivecoeff_z.GetFloat() : mp_keeperdivecoeff_z.GetFloat());
 			break;
 		}
 	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT:
 		{
-			mv->m_vecVelocity = forward2D * mv->m_flForwardMove + right * mv->m_flSideMove;
+			mv->m_vecVelocity = forward2D * mv->m_flForwardMove * (isSprinting ? mp_keepersprintdivecoeff_shortside.GetFloat() : mp_keeperdivecoeff_shortside.GetFloat()) + right * mv->m_flSideMove * (isSprinting ? mp_keepersprintdivecoeff_longside.GetFloat() : mp_keeperdivecoeff_longside.GetFloat());
+			mv->m_vecVelocity *= max(0, (1 - pow(timePassed / mp_keeperdiveduration.GetFloat(), 2)));
 			//mv->m_vecVelocity = right * mp_keeperdivespeed_xy.GetInt() * (isSprinting ? mp_keepersprintdivecoeff_xy.GetFloat() : 1) * max(0, (1 - pow(timePassed / mp_keeperdiveduration.GetFloat(), 2)));
-			mv->m_vecVelocity.z = mp_keeperdivespeed_z.GetInt() * (isSprinting ? mp_keepersprintdivecoeff_z.GetFloat() : 1);
+			mv->m_vecVelocity.z = mp_keeperdivespeed_z.GetInt() * (isSprinting ? mp_keepersprintdivecoeff_z.GetFloat() : mp_keeperdivecoeff_z.GetFloat());
 			break;
 		}
 	case PLAYERANIMEVENT_KEEPER_DIVE_FORWARD:
 		{
-			mv->m_vecVelocity = forward2D * mv->m_flForwardMove + right * mv->m_flSideMove;
+			mv->m_vecVelocity = forward2D * mv->m_flForwardMove * (isSprinting ? mp_keepersprintdivecoeff_longside.GetFloat() : mp_keeperdivecoeff_longside.GetFloat()) + right * mv->m_flSideMove * (isSprinting ? mp_keepersprintdivecoeff_shortside.GetFloat() : mp_keeperdivecoeff_shortside.GetFloat());
+			mv->m_vecVelocity *= max(0, (1 - pow(timePassed / mp_keeperdiveduration.GetFloat(), 2)));
 			//mv->m_vecVelocity = forward2D * mp_keeperdivespeed_xy.GetInt() * (isSprinting ? mp_keepersprintdivecoeff_xy.GetFloat() : 1) * max(0, (1 - pow(timePassed / mp_keeperdiveduration.GetFloat(), 2)));
 			mv->m_vecVelocity.z = 0;
 			break;
@@ -1571,7 +1574,7 @@ bool CGameMovement::CheckPlayerAnimEvent()
 		{
 			mv->m_vecVelocity = forward2D * mv->m_flForwardMove + right * mv->m_flSideMove;
 			//mv->m_vecVelocity = -forward2D * mp_keeperdivespeed_xy.GetInt() * (isSprinting ? mp_keepersprintdivecoeff_xy.GetFloat() : 1) * max(0, (1 - pow(timePassed / mp_keeperdiveduration.GetFloat(), 2)));
-			mv->m_vecVelocity.z = mp_keeperdivespeed_z.GetInt() * (isSprinting ? mp_keepersprintdivecoeff_z.GetFloat() : 1);
+			mv->m_vecVelocity.z = mp_keeperdivespeed_z.GetInt() * (isSprinting ? mp_keepersprintdivecoeff_z.GetFloat() : mp_keeperdivecoeff_z.GetFloat());
 			break;
 		}
 	case PLAYERANIMEVENT_KEEPER_HANDS_THROW:
@@ -1600,6 +1603,10 @@ bool CGameMovement::CheckPlayerAnimEvent()
 		{
 			mv->m_vecVelocity = forward2D * mp_divingheaderspeed.GetInt() * max(0, (1 - pow(timePassed / mp_divingheaderduration.GetFloat(), 2)));
 			break;
+		}
+	case PLAYERANIMEVENT_KICK:
+		{
+			return false;
 		}
 	default:
 		{
@@ -1883,11 +1890,11 @@ bool CGameMovement::CheckJumpButton( void )
 			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_FORWARD;
 			pPl->AddFlag(FL_FREECAM);
 		}
-		else if ((mv->m_nButtons & IN_BACK) && !(mv->m_nButtons & IN_WALK))
-		{
-			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD;
-			pPl->AddFlag(FL_FREECAM);
-		}
+		//else if ((mv->m_nButtons & IN_BACK) && !(mv->m_nButtons & IN_WALK))
+		//{
+		//	animEvent = PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD;
+		//	pPl->AddFlag(FL_FREECAM);
+		//}
 		else
 		{
 			animEvent = PLAYERANIMEVENT_KEEPER_JUMP;

@@ -70,7 +70,7 @@ public:
 	CUtlVector< CBasePlayer * >		m_aPlayers;
 
 	// Data
-	CNetworkString( m_szKitName, MAX_TEAM_NAME_LENGTH );
+	CNetworkString( m_szServerKitName, MAX_TEAM_NAME_LENGTH );
 	CNetworkVar( int, m_iTeamNum );
 	CNetworkVar( int, m_nGoals );
 	CNetworkVar( int, m_nPossession );

@@ -41,7 +41,7 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_Team, DT_Team, CTeam)
 	RecvPropInt( RECVINFO(m_nPenaltyGoals) ),
 	RecvPropInt( RECVINFO(m_nPenaltyGoalBits) ),
 	RecvPropInt( RECVINFO(m_nPenaltyRound) ),
-	RecvPropString( RECVINFO(m_szKitName), 0, RecvProxy_KitName),
+	RecvPropString( RECVINFO(m_szServerKitName), 0, RecvProxy_KitName),
 
 	RecvPropVector(RECVINFO(m_vCornerLeft)),
 	RecvPropVector(RECVINFO(m_vCornerRight)),
@@ -64,7 +64,7 @@ END_RECV_TABLE()
 
 BEGIN_PREDICTION_DATA( C_Team )
 	DEFINE_PRED_FIELD( m_iTeamNum, FIELD_INTEGER, FTYPEDESC_PRIVATE ),
-	DEFINE_PRED_ARRAY( m_szKitName, FIELD_CHARACTER, MAX_TEAM_NAME_LENGTH, FTYPEDESC_PRIVATE ),
+	DEFINE_PRED_ARRAY( m_szServerKitName, FIELD_CHARACTER, MAX_TEAM_NAME_LENGTH, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_FIELD( m_nGoals, FIELD_INTEGER, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_FIELD( m_iPing, FIELD_INTEGER, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_FIELD( m_iPacketloss, FIELD_INTEGER, FTYPEDESC_PRIVATE ),
@@ -81,15 +81,20 @@ CUtlVector< C_Team * > g_Teams;
 //-----------------------------------------------------------------------------
 C_Team::C_Team()
 {
+	m_bKitDownloadFinished = false;
+
 	m_nGoals = 0;
 	m_nPossession = 0;
-	memset( m_szKitName, 0, sizeof(m_szKitName) );
+	m_szKitName[0] = 0;
+	m_szServerKitName[0] = 0;
+	m_szDownloadKitName[0] = 0;
 
 	m_iPing = 0;
 	m_iPacketloss = 0;
 
 	// Add myself to the global list of team entities
 	g_Teams.AddToTail( this );
+
 }
 
 //-----------------------------------------------------------------------------
@@ -98,6 +103,13 @@ C_Team::C_Team()
 C_Team::~C_Team()
 {
 	g_Teams.FindAndRemove( this );
+}
+
+void C_Team::Spawn()
+{
+	BaseClass::Spawn();
+
+	SetNextClientThink(CLIENT_THINK_ALWAYS);
 }
 
 
@@ -249,26 +261,137 @@ bool C_Team::ContainsPlayer( int iPlayerIndex )
 
 void C_Team::ClientThink()
 {
+	if (m_bKitDownloadFinished)
+	{
+		m_bKitDownloadFinished = false;
+		materials->ReloadTextures();
+		TEAMKIT_FILE_INFO_HANDLE hKitHandle;
+		if (ReadTeamKitDataFromFileForSlot(filesystem, m_szDownloadKitName, &hKitHandle))
+		{
+			Q_strncpy(m_szKitName, m_szDownloadKitName, MAX_KITNAME_LENGTH);
+			m_pTeamKitInfo = GetTeamKitInfoFromHandle(hKitHandle);
+		}
+	}
 }
+
+
+void CC_ReloadTextures(const CCommand &args)
+{
+	materials->ReloadTextures();
+}
+
+static ConCommand reloadtextures("reloadtextures", CC_ReloadTextures);
+
+#include "curl/curl.h"
+#include "Filesystem.h"
+#include "utlbuffer.h"
+  
+struct curl_t
+{
+	char kitName[32];
+	int teamNumber;
+	//CUtlBuffer buf;
+	FileHandle_t fh;
+};
+
+// Called when curl receives data from the server
+static size_t rcvData(void *ptr, size_t size, size_t nmemb, curl_t* vars)
+{
+	//Msg((char*)ptr); // up to 989 characters each time
+	//CUtlBuffer buf(0, 0, CUtlBuffer::TEXT_BUFFER);
+	//vars->buf.Put(ptr, nmemb);
+	filesystem->Write(ptr, nmemb, vars->fh);
+	//filesystem->WriteFile(VarArgs("materials/models/player_new/foobar/%s", vars->filename), "MOD", buf);
+	return size * nmemb;
+}
+
+ConVar cl_download_url("cl_download_url", "http://downloads.iosoccer.co.uk/teamkits/");
+
+#define KITFILECOUNT 15
+
+unsigned DoCurl( void *params )
+{
+	curl_t* vars = (curl_t*) params; // always use a struct!
+
+	DevMsg("Downloading %s kit...\n", vars->kitName);
+
+	const char *textures[KITFILECOUNT] = { "kitdata.txt", "2.vtf", "3.vtf", "4.vtf", "5.vtf", "6.vtf", "7.vtf", "8.vtf", "9.vtf", "10.vtf", "11.vtf", "gksocks.vtf", "keeper.vtf", "socks.vtf", "teamcrest.vtf" };
+
+	for (int i = 0; i < KITFILECOUNT; i++)
+	{
+		//filesystem->RemoveFile(filename);
+		//filesystem->RemoveFile(VarArgs("materials/models/player/teams/%s", vars->kitName));
+		filesystem->CreateDirHierarchy(VarArgs("materials/models/player/teams/%s", vars->kitName));
+		const char *filename = VarArgs("materials/models/player/teams/%s/%s", vars->kitName, textures[i]);
+		vars->fh = filesystem->Open(filename, "a+b", "MOD");
+
+		if (!vars->fh)
+			continue;
+
+		CURL *curl;
+		curl = curl_easy_init();
+		//struct curl_slist *headers=NULL;
+		//headers = curl_slist_append(headers, "ACCEPT_ENCODING: gzip");
+		//curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+		curl_easy_setopt(curl, CURLOPT_URL, VarArgs("%s/%s/%s", cl_download_url.GetString(), vars->kitName, textures[i]));
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, rcvData);
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, vars);
+		//curl_easy_setopt(curl, CURLOPT_ENCODING, "gzip");
+		curl_easy_perform(curl);
+		curl_easy_cleanup(curl);
+
+		filesystem->Close(vars->fh);
+	}
+
+	DevMsg("Downloaded %s kit\n", vars->kitName);
+
+	//Q_strncpy(GetGlobalTeam(vars->teamNumber)->m_szDownloadKitName, vars->kitName, sizeof(GetGlobalTeam(vars->teamNumber)->m_szDownloadKitName));
+	GetGlobalTeam(vars->teamNumber)->m_bKitDownloadFinished = true;
+
+	// clean up the memory
+	delete vars;
+
+	return 0;
+}
+
+void C_Team::DownloadTeamKit(const char *pKitName, int teamNumber)
+{
+	curl_t* vars = new curl_t;
+	Q_strncpy(vars->kitName, pKitName, sizeof(vars->kitName));
+	vars->teamNumber = teamNumber;
+	CreateSimpleThread( DoCurl, vars );
+}
+
 
 void C_Team::SetKitName(const char *pKitName)
 {
-	Q_strncpy(m_szKitName, pKitName, MAX_KITNAME_LENGTH);
-	if (!Q_strcmp(pKitName, "Unassigned") || !Q_strcmp(pKitName, "Spectator"))
+	//if (!Q_strcmp(pKitName, "Unassigned") || !Q_strcmp(pKitName, "Spectator"))
+	//	return;
+
+	Q_strncpy(m_szServerKitName, pKitName, MAX_KITNAME_LENGTH);
+
+	if (GetTeamNumber() == TEAM_INVALID || GetTeamNumber() == TEAM_UNASSIGNED || GetTeamNumber() == TEAM_SPECTATOR)
+	{
+		Q_strncpy(m_szKitName, m_szServerKitName, MAX_KITNAME_LENGTH);
+		return;
+	}
+
+	if (!Q_stricmp(m_szServerKitName, m_szKitName) || !Q_stricmp(m_szServerKitName, m_szDownloadKitName))
 		return;
 
 	TEAMKIT_FILE_INFO_HANDLE hKitHandle;
-	if (ReadTeamKitDataFromFileForSlot(filesystem, pKitName, &hKitHandle))
+	if (ReadTeamKitDataFromFileForSlot(filesystem, m_szServerKitName, &hKitHandle))
 	{
-		//Q_strncpy(m_szKitName, pKitName, MAX_KITNAME_LENGTH);
+		Q_strncpy(m_szKitName, m_szServerKitName, MAX_KITNAME_LENGTH);
 		m_pTeamKitInfo = GetTeamKitInfoFromHandle(hKitHandle);
 	}
 	else
 	{
-		m_pTeamKitInfo = m_TeamKitInfoDatabase[0];
+		DevMsg("%s kit not found\n", m_szServerKitName);
+		m_pTeamKitInfo = m_TeamKitInfoDatabase[GetTeamNumber() - TEAM_A];
 		Q_strncpy(m_szKitName, m_pTeamKitInfo->m_szKitName, MAX_KITNAME_LENGTH);
+		Q_strncpy(m_szDownloadKitName, m_szServerKitName, MAX_KITNAME_LENGTH);
 		DownloadTeamKit(pKitName, GetTeamNumber());
-		//materials->ReloadTextures();
 	}
 }
 

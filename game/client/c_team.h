@@ -29,7 +29,7 @@ public:
 	virtual			~C_Team();
 
 	virtual void	PreDataUpdate( DataUpdateType_t updateType );
-
+	virtual void	Spawn();
 	// Data Handling
 	virtual int		GetTeamNumber( void ) const;
 	virtual int		GetOppTeamNumber( void ) const;
@@ -60,6 +60,7 @@ public:
 	void	RemoveAllPlayers();
 
 	void	SetKitName(const char *pKitName);
+	void	DownloadTeamKit(const char *pKitName, int teamNumber);
 
 // IClientThinkable overrides.
 public:
@@ -69,11 +70,15 @@ public:
 
 public:
 
+	bool	m_bKitDownloadFinished;
+	char	m_szDownloadKitName[MAX_KITNAME_LENGTH];
+
 	// Data received from the server
 	CUtlVector< int > m_aPlayers;
 	CTeamKitInfo *m_pTeamKitInfo;
 	int		m_iTeamNum;
 	char	m_szKitName[MAX_KITNAME_LENGTH];
+	char	m_szServerKitName[MAX_KITNAME_LENGTH];
 	int		m_nGoals;
 	int		m_nPossession;
 	int		m_nPenaltyGoals;
