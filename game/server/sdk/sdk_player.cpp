@@ -249,6 +249,8 @@ CSDKPlayer::CSDKPlayer()
 	m_nInPenBoxOfTeam = TEAM_INVALID;
 	m_ePenaltyState = PENALTY_NONE;
 	m_pHoldingBall = NULL;
+
+	m_bIsShotButtonRight = true;
 }
 
 
@@ -857,7 +859,7 @@ void CSDKPlayer::State_ACTIVE_Enter()
 
 void CSDKPlayer::State_ACTIVE_PreThink()
 {
-	if (!(m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1 | IN_ALT2))))
+	if (!ShotButtonsPressed())
 		m_bShotButtonsReleased = true;
 }
 
@@ -1059,7 +1061,7 @@ void CSDKPlayer::SetPosInsideShield(const Vector &pos, bool holdAtTargetPos)
 		if (m_bHoldAtTargetPos)
 			AddFlag(FL_ATCONTROLS);
 
-		if (m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1 | IN_ALT2)))
+		if (ShotButtonsPressed())
 			m_bShotButtonsReleased = false;
 	}
 	else
@@ -1369,7 +1371,7 @@ bool CSDKPlayer::IsNormalshooting()
 
 bool CSDKPlayer::IsPowershooting()
 {
-	return (m_nButtons & (IN_ATTACK2/* | IN_ALT1*/)) != 0;
+	return (m_nButtons & (IsShotButtonRight() ? IN_ATTACK2 : IN_ATTACK)) != 0;
 }
 
 bool CSDKPlayer::IsAutoPassing()
@@ -1380,6 +1382,11 @@ bool CSDKPlayer::IsAutoPassing()
 bool CSDKPlayer::IsShooting()
 {
 	return IsNormalshooting() || IsPowershooting() || IsAutoPassing();
+}
+
+bool CSDKPlayer::ShotButtonsPressed()
+{
+	return (m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1 | IN_ALT2)));
 }
 
 CSDKPlayer *CSDKPlayer::FindClosestPlayerToSelf(bool teammatesOnly, bool forwardOnly /*= false*/, float maxYawAngle /*= 360*/)

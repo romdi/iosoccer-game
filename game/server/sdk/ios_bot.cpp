@@ -422,7 +422,7 @@ void CBot::BotFrame()
 			SetLocalAngles(m_cmd.viewangles);
 			SnapEyeAngles(m_cmd.viewangles);
 
-			if (!m_bShotButtonsReleased && m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1 | IN_ALT2)))
+			if (!m_bShotButtonsReleased && !ShotButtonsPressed())
 				m_cmd.buttons &= ~(IN_ATTACK | (IN_ATTACK2 | IN_ALT1 | IN_ALT2));
 		}
 	}

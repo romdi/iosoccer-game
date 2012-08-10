@@ -5,7 +5,9 @@
 #include <vgui_controls/Frame.h>
 #include <game/client/iviewport.h>
 #include <vgui_controls/Button.h>
-#include "settingsmenu.h"
+#include <vgui_controls/RadioButton.h>
+#include <vgui_controls/TextEntry.h>
+#include <vgui_controls/ComboBox.h>
 
 using namespace vgui;
  
@@ -38,7 +40,10 @@ protected:
 	Button *m_pOKButton;
 	Button *m_pSaveButton;
 	Button *m_pCancelButton;
-	RadioButton *m_pShotButtonSide;
+	Panel *m_pShotButtonPanel;
+	Label *m_pShotButtonLabel;
+	RadioButton *m_pShotButtonLeft;
+	RadioButton *m_pShotButtonRight;
 };
 
 class IIOSOptionsMenu

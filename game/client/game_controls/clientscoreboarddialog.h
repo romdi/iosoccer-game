@@ -15,7 +15,6 @@
 #include <game/client/iviewport.h>
 #include "gameeventlistener.h"
 #include "vgui_bitmapbutton.h"
-#include "settingsmenu.h"
 #include "statsmenu.h"
 #include "formationmenu.h"
 

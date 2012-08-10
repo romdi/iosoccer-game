@@ -434,8 +434,6 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClCompile Include="game_controls\iosoptions.cpp" />
     <ClCompile Include="game_controls\ios_actionmenu.cpp" />
     <ClCompile Include="game_controls\ircclient.cpp" />
-    <ClCompile Include="game_controls\matchmenu.cpp" />
-    <ClCompile Include="game_controls\settingsmenu.cpp" />
     <ClCompile Include="game_controls\statsmenu.cpp" />
     <ClCompile Include="geiger.cpp" />
     <ClCompile Include="glow_overlay.cpp" />
@@ -852,8 +850,6 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClInclude Include="game_controls\iosoptions.h" />
     <ClInclude Include="game_controls\ios_actionmenu.h" />
     <ClInclude Include="game_controls\ircclient.h" />
-    <ClInclude Include="game_controls\matchmenu.h" />
-    <ClInclude Include="game_controls\settingsmenu.h" />
     <ClInclude Include="game_controls\statsmenu.h" />
     <ClInclude Include="hud_basedeathnotice.h" />
     <ClInclude Include="..\shared\particle_parse.h" />

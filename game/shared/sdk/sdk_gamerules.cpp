@@ -1637,6 +1637,8 @@ void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 	const char *pszCountryName = engine->GetClientConVarValue( pPlayer->entindex(), "countryname" );
 	((CSDKPlayer *)pPlayer)->SetCountryName(pszCountryName);
 
+	((CSDKPlayer *)pPlayer)->SetShotButtonRight(!Q_strcmp(engine->GetClientConVarValue(pPlayer->entindex(), "shotbutton"), "left") == false);
+
 	const char *pszName = engine->GetClientConVarValue( pPlayer->entindex(), "playername" );
 
 	const char *pszOldName = pPlayer->GetPlayerName();

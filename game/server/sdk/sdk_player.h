@@ -328,6 +328,11 @@ public:
 	char				*GetCountryName() { return m_szCountryName; }
 	void				SetCountryName(const char *name) { Q_strncpy(m_szCountryName, name, sizeof(m_szCountryName)); m_bCountryNameChanged = true; } 
 
+	bool				IsShotButtonRight() { return m_bIsShotButtonRight; }
+	void				SetShotButtonRight(bool isRight) { m_bIsShotButtonRight = isRight; }
+
+	bool				ShotButtonsPressed();
+
 	float				m_TackleTime;
 	bool				m_bTackleDone;
 	bool				m_bSlideKick;
@@ -349,6 +354,8 @@ public:
 
 	char				m_szCountryName[64];
 	bool				m_bCountryNameChanged;
+
+	bool				m_bIsShotButtonRight;
 
 	Vector				EyeDirection2D();
 	Vector				EyeDirection3D();

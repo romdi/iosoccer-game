@@ -225,7 +225,7 @@ void CSDKPlayer::MoveToTargetPos(Vector &pos, Vector &vel, QAngle &ang)
 				AddFlag(FL_ATCONTROLS);
 
 #ifdef GAME_DLL
-			if (m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1 | IN_ALT2)))
+			if (ShotButtonsPressed())
 				m_bShotButtonsReleased = false;
 #endif
 

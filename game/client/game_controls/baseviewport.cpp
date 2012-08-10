@@ -35,7 +35,6 @@
 #include "clientscoreboarddialog.h"
 #include "spectatorgui.h"
 #include "teammenu.h"
-#include "matchmenu.h"
 #include "ios_actionmenu.h"
 #include "classmenu.h"				//IOS
 #include "vguitextwindow.h"
@@ -266,10 +265,6 @@ IViewPortPanel* CBaseViewport::CreatePanelByName(const char *szPanelName)
 	//{
 	//	newpanel = new CTeamMenu( this );
 	//}
-	else if ( Q_strcmp(PANEL_MATCH, szPanelName) == 0 )
-	{
-		newpanel = new CMatchMenu( this );
-	}
 	else if ( Q_strcmp(PANEL_ACTION, szPanelName) == 0 )
 	{
 		newpanel = new CActionMenu( this );

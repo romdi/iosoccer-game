@@ -1340,8 +1340,8 @@ void CBall::State_KEEPERHANDS_Think()
 			PlayersAtTargetPos();
 		}
 
-		if (m_pPl->m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1 | IN_ALT2)))
-				m_pPl->m_bShotButtonsReleased = false;
+		if (m_pPl->ShotButtonsPressed())
+			m_pPl->m_bShotButtonsReleased = false;
 
 		m_pHoldingPlayer = m_pPl;
 		m_pPl->m_pHoldingBall = this;

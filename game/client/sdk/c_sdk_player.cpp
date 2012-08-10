@@ -33,8 +33,10 @@ ConVar cl_ragdoll_physics_enable( "cl_ragdoll_physics_enable", "1", 0, "Enable/d
 #endif
  
 ConVar playername("playername", "", FCVAR_USERINFO | FCVAR_ARCHIVE, "Your name");
-ConVar clubname("clubname", "Team Arthur", FCVAR_USERINFO | FCVAR_ARCHIVE, "The name of your club");//, OnClubNameChange);
-ConVar countryname("countryname", "", FCVAR_USERINFO | FCVAR_ARCHIVE, "The name of your country");//, OnClubNameChange);
+ConVar clubname("clubname", "Team Arthur", FCVAR_USERINFO | FCVAR_ARCHIVE, "The name of your club");
+ConVar countryname("countryname", "", FCVAR_USERINFO | FCVAR_ARCHIVE, "The name of your country");
+ConVar shotbutton("shotbutton", "right", FCVAR_USERINFO | FCVAR_ARCHIVE, "The mouse shot button (left/right)");
+
 ConVar clientversion("clientversion", g_szRequiredClientVersion, FCVAR_USERINFO | FCVAR_HIDDEN, "");
 
 // -------------------------------------------------------------------------------- //
