@@ -88,7 +88,7 @@ void CPlayerTextureProxy::OnBind( C_BaseEntity *pEnt )
 	if (pPl)
 	{
 		team = GameResources()->GetTeamKitName(GameResources()->GetTeam(pEnt->index));
-		pos = GameResources()->GetTeamPosition(pEnt->index);
+		pos = GameResources()->GetTeamPosNum(pEnt->index);
 	}
 	else
 	{
@@ -96,7 +96,7 @@ void CPlayerTextureProxy::OnBind( C_BaseEntity *pEnt )
 		if (pReplayPlayer)
 		{
 			team = GameResources()->GetTeamKitName(pReplayPlayer->m_nTeamNumber);
-			pos = pReplayPlayer->m_nTeamPosition;
+			pos = pReplayPlayer->m_nTeamPosNum;
 		}
 		else
 			return;

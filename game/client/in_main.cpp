@@ -119,7 +119,6 @@ static	kbutton_t	in_reload;
 static	kbutton_t	in_alt1;
 static	kbutton_t	in_alt2;
 static	kbutton_t	in_score;
-static	kbutton_t	in_actionmenu;
 static	kbutton_t	in_break;
 static	kbutton_t	in_zoom;
 static  kbutton_t   in_grenade1;
@@ -534,26 +533,6 @@ void IN_ScoreUp( const CCommand &args )
 		gViewPortInterface->ShowPanel( PANEL_SCOREBOARD, false );
 		GetClientVoiceMgr()->StopSquelchMode();
 	}
-}
-
-void IN_ActionMenuDown( const CCommand &args )
-{
-	KeyDown( &in_actionmenu, args[1] );
-	//if ( gViewPortInterface )
-	//{
-	//	//gViewPortInterface->ShowPanel(PANEL_SCOREBOARD, true);
-	//	bool show = !gViewPortInterface->FindPanelByName(PANEL_SCOREBOARD)->IsVisible();
-	//	gViewPortInterface->ShowPanel(PANEL_SCOREBOARD, show);
-	//}
-}
-
-void IN_ActionMenuUp( const CCommand &args )
-{
-	KeyUp( &in_actionmenu, args[1] );
-	//if ( gViewPortInterface )
-	//{
-	//	gViewPortInterface->ShowPanel( PANEL_SCOREBOARD, false );
-	//}
 }
 
 /*
@@ -1491,8 +1470,6 @@ static ConCommand startscore("+score", IN_ScoreDown);
 static ConCommand endscore("-score", IN_ScoreUp);
 static ConCommand startshowscores("+showscores", IN_ScoreDown);
 static ConCommand endshowscores("-showscores", IN_ScoreUp);
-static ConCommand startshowactionmenu("+showactionmenu", IN_ActionMenuDown);
-static ConCommand endshowactionmenu("-showactionmenu", IN_ActionMenuUp);
 static ConCommand startgraph("+graph", IN_GraphDown);
 static ConCommand endgraph("-graph", IN_GraphUp);
 static ConCommand startbreak("+break",IN_BreakDown);

@@ -244,7 +244,6 @@ CBall::CBall()
 	m_pPl = NULL;
 	m_pMatchEventPlayer = NULL;
 	m_pMatchSubEventPlayer = NULL;
-	m_nPlTeam = TEAM_INVALID;
 	m_bSetNewPos = false;
 	m_bSetNewVel = false;
 	m_bSetNewRot = false;
@@ -478,6 +477,7 @@ void CBall::SetMatchEvent(match_event_t matchEvent, CSDKPlayer *pPlayer)
 		IOS_LogPrintf( "\"%s<%d><%s><%s>\" triggered \"%s\"\n", pPlayer->GetPlayerName(), pPlayer->GetUserID(), pPlayer->GetNetworkIDString(), pPlayer->GetTeam()->GetKitName(), g_szMatchEventNames[matchEvent]);
 	}
 
+	m_eMatchSubEvent = MATCH_EVENT_NONE;
 	m_eMatchEvent = matchEvent;
 	m_pMatchEventPlayer = pPlayer;
 
@@ -522,7 +522,7 @@ CSDKPlayer *CBall::FindNearestPlayer(int team /*= TEAM_INVALID*/, int posFlags /
 
 		if (!(posFlags & FL_POS_ANY))
 		{
-			int posName = (int)g_Positions[mp_maxplayers.GetInt() - 1][pPlayer->GetTeamPosIndex()][POS_NAME];
+			int posName = (int)g_Positions[mp_maxplayers.GetInt() - 1][pPlayer->GetTeamPosIndex()][POS_TYPE];
 
 			if ((posFlags == FL_POS_FIELD) && !((1 << posName) & (g_nPosDefense + g_nPosMidfield + g_nPosAttack)))
 				continue;
@@ -724,8 +724,8 @@ void CBall::State_NORMAL_Enter()
 	EnablePlayerCollisions(true);
 	m_pPhys->Wake();
 	SDKGameRules()->EndInjuryTime();
-	SetMatchEvent(MATCH_EVENT_NONE);
-	SetMatchSubEvent(MATCH_EVENT_NONE);
+	//SetMatchEvent(MATCH_EVENT_NONE);
+	//SetMatchSubEvent(MATCH_EVENT_NONE);
 }
 
 void CBall::State_NORMAL_Think()
@@ -753,6 +753,9 @@ void CBall::State_NORMAL_Think()
 			{
 				m_pMatchEventPlayer = m_pPl;
 				m_nMatchEventTeam = m_pPl->GetTeamNumber();
+				m_eMatchEvent = MATCH_EVENT_NONE;
+				m_eMatchSubEvent = MATCH_EVENT_NONE;
+				m_pMatchSubEventPlayer = NULL;
 			}
 
 			break;
@@ -1035,9 +1038,8 @@ void CBall::State_CORNER_Leave(ball_state_t newState)
 
 void CBall::State_GOAL_Enter()
 {
-	CReplayManager *pReplayManager = dynamic_cast<CReplayManager *>(gEntList.FindEntityByClassname(NULL, "replaymanager"));
-	if (pReplayManager)
-		pReplayManager->StartReplay(sv_ball_goalreplay_count.GetInt(), sv_ball_goalreplay_delay.GetFloat());
+	if (ReplayManager())
+		ReplayManager()->StartReplay(sv_ball_goalreplay_count.GetInt(), sv_ball_goalreplay_delay.GetFloat());
 
 	SDKGameRules()->SetKickOffTeam(m_nTeam);
 	int scoringTeam;
@@ -1096,9 +1098,8 @@ void CBall::State_GOAL_Think()
 
 void CBall::State_GOAL_Leave(ball_state_t newState)
 {
-	CReplayManager *pReplayManager = dynamic_cast<CReplayManager *>(gEntList.FindEntityByClassname(NULL, "replaymanager"));
-	if (pReplayManager)
-		pReplayManager->StopReplay();
+	if (ReplayManager())
+		ReplayManager()->StopReplay();
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
@@ -1169,7 +1170,7 @@ void CBall::State_FREEKICK_Think()
 		else
 			m_pPl = m_pFouledPl;
 
-		if (!CSDKPlayer::IsOnField(m_pPl) || m_pPl->GetTeamPosition() == 1 && m_pPl->IsBot())
+		if (!CSDKPlayer::IsOnField(m_pPl) || m_pPl->GetTeamPosType() == GK && m_pPl->IsBot())
 			m_pPl = FindNearestPlayer(GetGlobalTeam(m_nFoulingTeam)->GetOppTeamNumber(), FL_POS_FIELD);
 
 		if (!m_pPl)
@@ -1442,7 +1443,7 @@ bool CBall::CheckFoul()
 		if (!CSDKPlayer::IsOnField(pPl))
 			continue;
 
-		if (pPl == m_pPl || pPl->GetTeamNumber() == m_nPlTeam)
+		if (pPl == m_pPl || pPl->GetTeamNumber() == m_pPl->GetTeamNumber())
 			continue;
 
 		Vector plPos = pPl->GetLocalOrigin();
@@ -1485,7 +1486,7 @@ bool CBall::CheckFoul()
 			{
 				CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(j));
 
-				if (!CSDKPlayer::IsOnField(pPl) || pPl == m_pPl || pPl->GetTeamNumber() != m_nPlTeam || pPl->GetTeamPosition() == 1)
+				if (!CSDKPlayer::IsOnField(pPl) || pPl == m_pPl || pPl->GetTeamNumber() != m_pPl->GetTeamNumber() || pPl->GetTeamPosType() == GK)
 					continue;
 
 				if ((m_pPl->GetTeam()->m_vPlayerSpawns[0] - pPl->GetLocalOrigin()).Length2DSqr() < (m_pPl->GetTeam()->m_vPlayerSpawns[0] - m_vPlPos).Length2DSqr())
@@ -1505,7 +1506,7 @@ bool CBall::CheckFoul()
 
 		TriggerFoul(foulType, pPl->GetLocalOrigin(), m_pPl, pPl);
 
-		if (pPl->m_nInPenBoxOfTeam == m_nPlTeam)
+		if (pPl->m_nInPenBoxOfTeam == m_pPl->GetTeamNumber())
 			State_Transition(BALL_PENALTY, sv_ball_statetransitiondelay.GetFloat());
 		else
 			State_Transition(BALL_FREEKICK, sv_ball_statetransitiondelay.GetFloat());
@@ -1533,7 +1534,7 @@ bool CBall::DoBodyPartAction()
 	float zDist = dirToBall.z;
 	float xyDist = dirToBall.Length2D();
 
-	if (m_pPl->GetTeamPosition() == 1 && m_nInPenBoxOfTeam == m_pPl->GetTeamNumber() && !m_pPl->m_pHoldingBall)
+	if (m_pPl->GetTeamPosType() == GK && m_nInPenBoxOfTeam == m_pPl->GetTeamNumber() && !m_pPl->m_pHoldingBall)
 	{
 		if (CheckKeeperCatch())
 			return true;
@@ -2004,13 +2005,6 @@ void CBall::UpdateCarrier()
 		m_vPlForward2D.z = 0;
 		m_vPlForward2D.NormalizeInPlace();
 		m_vPlForwardVel2D = m_vPlForward2D * max(0, (m_vPlVel2D.x * m_vPlForward2D.x + m_vPlVel2D.y * m_vPlForward2D.y));
-		m_nPlTeam = m_pPl->GetTeamNumber();
-		m_nPlPos = m_pPl->GetTeamPosition();
-	}
-	else
-	{
-		m_nPlTeam = TEAM_INVALID;
-		m_nPlPos = 0;
 	}
 }
 
@@ -2377,7 +2371,7 @@ void CBall::EnablePlayerCollisions(bool enable)
 
 void CBall::RemoveFromPlayerHands(CSDKPlayer *pPl)
 {
-	if (CSDKPlayer::IsOnField(pPl) && pPl->GetTeamPosition() == 1)
+	if (CSDKPlayer::IsOnField(pPl) && pPl->GetTeamPosType() == GK)
 	{
 		pPl->m_pHoldingBall = NULL;
 		pPl->m_nBody = MODEL_KEEPER;

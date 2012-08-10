@@ -159,7 +159,7 @@ void CStatsMenu::Update(int *playerIndices)
 		wchar_t wszText[MAX_PLAYER_NAME_LENGTH];
 		g_pVGuiLocalize->ConvertANSIToUnicode(gr->GetPlayerName(playerIndices[i]), wszText, sizeof(wszText));
 		m_pPlayerStats[i]->ModifyColumn(0, "NameColumn0", wszText);
-		g_pVGuiLocalize->ConvertANSIToUnicode(g_szPosNames[(int)g_Positions[mp_maxplayers.GetInt() - 1][gr->GetTeamPosIndex(playerIndices[i])][POS_NAME]], wszText, sizeof(wszText));
+		g_pVGuiLocalize->ConvertANSIToUnicode(g_szPosNames[(int)g_Positions[mp_maxplayers.GetInt() - 1][gr->GetTeamPosIndex(playerIndices[i])][POS_TYPE]], wszText, sizeof(wszText));
 		m_pPlayerStats[i]->ModifyColumn(0, "NameColumn1", wszText);
 		g_pVGuiLocalize->ConvertANSIToUnicode(gr->GetCountryName(playerIndices[i]), wszText, sizeof(wszText));
 		m_pPlayerStats[i]->ModifyColumn(0, "NameColumn2", wszText);

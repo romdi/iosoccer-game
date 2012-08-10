@@ -171,7 +171,7 @@ int GetKeeperPosIndex()
 {
 	for (int posIndex = 0; posIndex < 11; posIndex++)
 	{
-		if (g_Positions[mp_maxplayers.GetInt() - 1][posIndex][POS_NAME] == GK)
+		if (g_Positions[mp_maxplayers.GetInt() - 1][posIndex][POS_TYPE] == GK)
 			return posIndex;
 	}
 	return 0;
@@ -948,7 +948,7 @@ const char *CSDKGameRules::GetChatLocation( bool bTeamOnly, CBasePlayer *pPlayer
 	if (!pPlayer)
 		return "";
 
-	return g_szPosNames[(int)g_Positions[mp_maxplayers.GetInt() - 1][ToSDKPlayer(pPlayer)->GetTeamPosIndex()][POS_NAME]];
+	return g_szPosNames[(int)g_Positions[mp_maxplayers.GetInt() - 1][ToSDKPlayer(pPlayer)->GetTeamPosIndex()][POS_TYPE]];
 }
 
 #endif
@@ -1010,6 +1010,21 @@ void CC_SV_Restart(const CCommand &args)
 
 ConCommand sv_restart( "sv_restart", CC_SV_Restart, "Restart game", 0 );
 
+void CSDKGameRules::WakeUpAllPlayers()
+{
+	IGameEvent* pEvent = gameeventmanager->CreateEvent("wakeupcall");
+	gameeventmanager->FireEvent(pEvent);
+}
+
+void CC_SV_WakeUpCall(const CCommand &args)
+{
+	if (!UTIL_IsCommandIssuedByServerAdmin())
+        return;
+
+	SDKGameRules()->WakeUpAllPlayers();
+}
+
+ConCommand sv_wakeupcall("sv_wakeupcall", CC_SV_WakeUpCall, "Wake up all players", 0);
 
 void CSDKGameRules::StartPenalties()
 {
@@ -1095,6 +1110,8 @@ ConVar mp_powershot_fixed_strength("mp_powershot_fixed_strength", "60", FCVAR_NO
 
 ConVar mp_chat_signal_ready("mp_chat_signal_ready", "/ready", FCVAR_NOTIFY);
 ConVar mp_chat_signal_ready_timeout("mp_chat_signal_ready_timeout", "10", FCVAR_NOTIFY);
+
+ConVar mp_custom_shirt_numbers("mp_custom_shirt_numbers", "0", FCVAR_NOTIFY);
 
 static void OnMaxPlayersChange(IConVar *var, const char *pOldValue, float flOldValue)
 {
@@ -1240,6 +1257,7 @@ void CSDKGameRules::State_FIRST_HALF_Enter()
 	m_nFirstHalfKickOffTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
 	SetKickOffTeam(m_nFirstHalfKickOffTeam);
 	GetBall()->State_Transition(BALL_KICKOFF, 0, true);
+	WakeUpAllPlayers();
 }
 
 void CSDKGameRules::State_FIRST_HALF_Think()
@@ -1514,7 +1532,7 @@ void CSDKGameRules::State_PENALTIES_Think()
 				if (!CSDKPlayer::IsOnField(pPl))
 					continue;
 
-				if (pPl->GetTeamNumber() != m_nPenaltyTakingTeam || pPl->m_ePenaltyState == PENALTY_KICKED || pPl->GetTeamPosition() == 1 && pPl->IsBot())
+				if (pPl->GetTeamNumber() != m_nPenaltyTakingTeam || pPl->m_ePenaltyState == PENALTY_KICKED || pPl->GetTeamPosType() == GK && pPl->IsBot())
 					continue;
 
 				pPenTaker = pPl;
@@ -1636,6 +1654,8 @@ void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 
 	const char *pszCountryName = engine->GetClientConVarValue( pPlayer->entindex(), "countryname" );
 	((CSDKPlayer *)pPlayer)->SetCountryName(pszCountryName);
+
+	((CSDKPlayer *)pPlayer)->SetPreferredTeamPosNum(atoi(engine->GetClientConVarValue(pPlayer->entindex(), "preferredshirtnumber")));
 
 	((CSDKPlayer *)pPlayer)->SetShotButtonRight(!Q_strcmp(engine->GetClientConVarValue(pPlayer->entindex(), "shotbutton"), "left") == false);
 

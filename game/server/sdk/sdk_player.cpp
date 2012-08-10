@@ -171,6 +171,7 @@ IMPLEMENT_SERVERCLASS_ST( CSDKPlayer, DT_SDKPlayer )
 	SendPropEHandle( SENDINFO( m_hRagdoll ) ),
 
 	SendPropInt( SENDINFO( m_iPlayerState ), Q_log2( NUM_PLAYER_STATES )+1, SPROP_UNSIGNED ),
+	SendPropTime( SENDINFO( m_flStateEnterTime )),
 
 	SendPropBool( SENDINFO( m_bSpawnInterpCounter ) ),
 END_SEND_TABLE()
@@ -242,7 +243,8 @@ CSDKPlayer::CSDKPlayer()
 	m_bShotButtonsReleased = true;
 	m_nTeamToJoin = TEAM_INVALID;
 	m_flNextJoin = gpGlobals->curtime;
-	m_TeamPos = 0;
+	m_nTeamPosIndex = 0;
+	m_nPreferredTeamPosNum = 2;
 	m_pPlayerBall = NULL;
 	m_Shared.m_flPlayerAnimEventStart = gpGlobals->curtime;
 	m_Shared.m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
@@ -480,15 +482,15 @@ bool CSDKPlayer::ChangeTeamPos(int team, int posIndex, bool instantly /*= false*
 		}
 
 		m_nTeamToJoin = team;
-		m_TeamPos = posIndex;
+		m_nTeamPosIndex = posIndex;
 
-		if (GetTeamPosition() > 1)
+		if (GetTeamPosType() == GK)
 		{
-			ChoosePlayerSkin();				
+			ChooseKeeperSkin();
 		}
 		else
 		{
-			ChooseKeeperSkin();
+			ChoosePlayerSkin();				
 		}
 	}
 
@@ -544,8 +546,6 @@ void CSDKPlayer::ChangeTeam( int iTeamNum )
 
 	SetTeamNumber(iTeamNum);
 
-	g_pPlayerResource->UpdatePlayerData();
-
 	//ResetStats();
 	//ResetFlags();
 
@@ -568,9 +568,68 @@ void CSDKPlayer::ChangeTeam( int iTeamNum )
 		// transmit changes for player position right away
 		//g_pPlayerResource->UpdatePlayerData();
 
+		m_nTeamPosNum = FindUnfilledTeamPosNum();
+
 		if (iOldTeam != TEAM_A && iOldTeam != TEAM_B)
 			State_Transition( STATE_ACTIVE );
 	}
+
+	g_pPlayerResource->UpdatePlayerData();
+}
+
+bool isUnfilledNum(int nums[], int num)
+{
+	if (num == 0 || num == 1)
+		return false;
+
+	for (int i = 0; i < 10; i++)
+	{
+		if (nums[i] == num)
+			return false;
+	}
+
+	return true;
+}
+
+int CSDKPlayer::FindUnfilledTeamPosNum()
+{
+	if (!mp_custom_shirt_numbers.GetBool())
+		return (int)g_Positions[mp_maxplayers.GetInt() - 1][GetTeamPosIndex()][POS_NUMBER];
+
+	if (GetTeamPosType() == GK)
+		return 1;
+
+	int teamPosNums[10] = { 0 };
+
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+		if (!CSDKPlayer::IsOnField(pPl) || pPl == this || pPl->GetTeam() != GetTeam() || pPl->GetTeamPosType() == GK)
+			continue;
+
+		teamPosNums[pPl->GetTeamPosIndex()] = pPl->GetTeamPosNum();
+	}
+
+	int teamPosNum = m_nPreferredTeamPosNum;
+
+	if (!isUnfilledNum(teamPosNums, teamPosNum))
+	{
+		teamPosNum = (int)g_Positions[mp_maxplayers.GetInt() - 1][GetTeamPosIndex()][POS_NUMBER];
+
+		if (!isUnfilledNum(teamPosNums, teamPosNum))
+		{
+			for (int i = 2; i <= 11; i++)
+			{
+				if (isUnfilledNum(teamPosNums, i))
+				{
+					teamPosNum = i;
+					break;
+				}
+			}
+		}
+	}
+
+	return teamPosNum;
 }
 
 void CSDKPlayer::InitialSpawn( void )
@@ -644,6 +703,7 @@ void CSDKPlayer::State_Transition( SDKPlayerState newState )
 void CSDKPlayer::State_Enter( SDKPlayerState newState )
 {
 	m_iPlayerState = newState;
+	m_flStateEnterTime = gpGlobals->curtime;
 	m_pCurStateInfo = State_LookupInfo( newState );
 
 	if ( SDK_ShowStateTransitions.GetInt() == -1 || SDK_ShowStateTransitions.GetInt() == entindex() )
@@ -684,7 +744,6 @@ CSDKPlayerStateInfo* CSDKPlayer::State_LookupInfo( SDKPlayerState state )
 	static CSDKPlayerStateInfo playerStateInfos[] =
 	{
 		{ STATE_ACTIVE,			"STATE_ACTIVE",			&CSDKPlayer::State_ACTIVE_Enter, NULL, &CSDKPlayer::State_ACTIVE_PreThink },
-		{ STATE_WELCOME,		"STATE_WELCOME",		&CSDKPlayer::State_WELCOME_Enter, NULL, &CSDKPlayer::State_WELCOME_PreThink },
 #if defined ( SDK_USE_TEAMS )
 		{ STATE_PICKINGTEAM,	"STATE_PICKINGTEAM",	&CSDKPlayer::State_PICKINGTEAM_Enter, NULL,	&CSDKPlayer::State_WELCOME_PreThink },
 #endif
@@ -715,13 +774,6 @@ void CSDKPlayer::PhysObjectWake()
 	IPhysicsObject *pObj = VPhysicsGetObject();
 	if ( pObj )
 		pObj->Wake();
-}
-void CSDKPlayer::State_WELCOME_Enter()
-{
-}
-
-void CSDKPlayer::State_WELCOME_PreThink()
-{
 }
 
 void CSDKPlayer::State_OBSERVER_MODE_Enter()
@@ -957,7 +1009,7 @@ static const int NUM_BALL_TYPES = 6;
 //
 void CSDKPlayer::ChoosePlayerSkin(void)
 {
-	m_nSkin = GetTeamPosition() - 2 + (g_IOSRand.RandomInt(0, NUM_PLAYER_FACES - 1) * 10);		//player skin
+	m_nSkin = GetTeamPosNum() - 2 + (g_IOSRand.RandomInt(0, NUM_PLAYER_FACES - 1) * 10);		//player skin
 	m_nBody = MODEL_PLAYER;
 }
 
@@ -1080,7 +1132,7 @@ void CSDKPlayer::SetPosOutsideShield()
 	switch (SDKGameRules()->m_nShieldType)
 	{
 	case SHIELD_KICKOFF:
-		//m_vTargetPos = GetTeamPosition() == 1 ? GetTeam()->m_vPenalty : GetTeam()->m_vPlayerSpawns[GetTeamPosition() - 1];
+		//m_vTargetPos = GetTeamPosNum() == 1 ? GetTeam()->m_vPenalty : GetTeam()->m_vPlayerSpawns[GetTeamPosNum() - 1];
 		m_vTargetPos = GetSpawnPos(false);
 		break;
 	default:
@@ -1213,7 +1265,7 @@ void CSDKPlayer::GetTargetPos(const Vector &pos, Vector &targetPos)
 
 		if (SDKGameRules()->m_nShieldType == SHIELD_FREEKICK && mp_shield_block_6yardbox.GetBool())
 		{
-			if (GetTeamPosition() != 1 || GetTeamNumber() != GetGlobalTeam(SDKGameRules()->m_nShieldTeam)->GetOppTeamNumber())
+			if (GetTeamPosType() != GK || GetTeamNumber() != GetGlobalTeam(SDKGameRules()->m_nShieldTeam)->GetOppTeamNumber())
 			{
 				int side = GetGlobalTeam(SDKGameRules()->m_nShieldTeam)->GetOppTeamNumber();
 				int boxLength = abs(GetGlobalTeam(side)->m_vPenBoxMax.GetY() - GetGlobalTeam(side)->m_vPenBoxMin.GetY()) / 3.0f;
@@ -1316,7 +1368,7 @@ void CSDKPlayer::ResetStats()
 
 Vector CSDKPlayer::GetSpawnPos(bool findSafePos)
 {
-	//Vector spawnPos = pPlayer->GetTeam()->m_vPlayerSpawns[ToSDKPlayer(pPlayer)->GetTeamPosition() - 1];
+	//Vector spawnPos = pPlayer->GetTeam()->m_vPlayerSpawns[ToSDKPlayer(pPlayer)->GetTeamPosNum() - 1];
 	Vector halfField = (SDKGameRules()->m_vFieldMax - SDKGameRules()->m_vFieldMin);
 	halfField.y /= 2;
 	float xDist = halfField.x / 5;
@@ -1336,9 +1388,14 @@ Vector CSDKPlayer::GetSpawnPos(bool findSafePos)
 	return spawnPos;
 }
 
-int CSDKPlayer::GetTeamPosition()
+int CSDKPlayer::GetTeamPosNum()
 {
-	return (int)g_Positions[mp_maxplayers.GetInt() - 1][GetTeamPosIndex()][POS_NUMBER];
+	return m_nTeamPosNum;
+}
+
+int CSDKPlayer::GetTeamPosType()
+{
+	return (int)g_Positions[mp_maxplayers.GetInt() - 1][GetTeamPosIndex()][POS_TYPE];
 }
 
 void CSDKPlayer::ResetFlags()
@@ -1358,7 +1415,7 @@ void CSDKPlayer::ResetFlags()
 		RemoveEffects(EF_NODRAW);
 	}
 
-	if (GetTeamPosition() == 1 && m_nBody == MODEL_KEEPER_AND_BALL)
+	if (GetTeamPosType() == GK && m_nBody == MODEL_KEEPER_AND_BALL)
 	{
 		m_nBody = MODEL_KEEPER;
 	}
@@ -1386,7 +1443,7 @@ bool CSDKPlayer::IsShooting()
 
 bool CSDKPlayer::ShotButtonsPressed()
 {
-	return (m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1 | IN_ALT2)));
+	return (m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1 | IN_ALT2))) != 0;
 }
 
 CSDKPlayer *CSDKPlayer::FindClosestPlayerToSelf(bool teammatesOnly, bool forwardOnly /*= false*/, float maxYawAngle /*= 360*/)

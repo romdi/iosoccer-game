@@ -151,6 +151,9 @@ public: // Public Variables
 	int GetArmorValue() { return m_ArmorValue; }
 
 	void ApplyBoneMatrixTransform(matrix3x4_t& transform);
+
+	CNetworkVar(float, m_flStateEnterTime);
+
 private:
 	void UpdateSoundEvents();
 

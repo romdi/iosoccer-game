@@ -23,6 +23,7 @@
 #include "cl_animevent.h"
 #include "sdk_gamerules.h"
 #include "c_ball.h"
+#include "igameresources.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 ConVar cl_ragdoll_physics_enable( "cl_ragdoll_physics_enable", "1", 0, "Enable/disable ragdoll physics." );
@@ -36,6 +37,7 @@ ConVar playername("playername", "", FCVAR_USERINFO | FCVAR_ARCHIVE, "Your name")
 ConVar clubname("clubname", "Team Arthur", FCVAR_USERINFO | FCVAR_ARCHIVE, "The name of your club");
 ConVar countryname("countryname", "", FCVAR_USERINFO | FCVAR_ARCHIVE, "The name of your country");
 ConVar shotbutton("shotbutton", "right", FCVAR_USERINFO | FCVAR_ARCHIVE, "The mouse shot button (left/right)");
+ConVar preferredshirtnumber("preferredshirtnumber", "", FCVAR_USERINFO | FCVAR_ARCHIVE, "Your preferred shirt number");
 
 ConVar clientversion("clientversion", g_szRequiredClientVersion, FCVAR_USERINFO | FCVAR_HIDDEN, "");
 
@@ -143,6 +145,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_SDKPlayer, DT_SDKPlayer, CSDKPlayer )
 	RecvPropEHandle( RECVINFO( m_hRagdoll ) ),
 
 	RecvPropInt( RECVINFO( m_iPlayerState ) ),
+	RecvPropTime( RECVINFO( m_flStateEnterTime ) ),
 
 	RecvPropBool( RECVINFO( m_bSpawnInterpCounter ) ),
 END_RECV_TABLE()
@@ -822,8 +825,6 @@ bool C_SDKPlayer::ShouldDraw( void )
 	if( GetTeamNumber() == TEAM_SPECTATOR )
 		return false;
 
-	if ( State_Get() == STATE_WELCOME )
-		return false;
 #if defined ( SDK_USE_TEAMS )
 	if ( State_Get() == STATE_PICKINGTEAM )
 		return false;
@@ -1229,8 +1230,6 @@ void C_SDKPlayer::UpdateSoundEvents()
 		}
 	}
 }
-
-
 
 //IOS Added from HLCoders:
 ShadowType_t C_SDKPlayer::ShadowCastType( void )

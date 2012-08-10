@@ -162,9 +162,10 @@ void CBot::FieldBotJoinTeam()
 	{
 		int startPosIndex = g_IOSRand.RandomInt(0, 10);
 		int posIndex = startPosIndex;
+		int keeperPosIndex = GetKeeperPosIndex();
 		while (true)
 		{
-			if (TeamPosFree(team, posIndex, false))
+			if (posIndex != keeperPosIndex && TeamPosFree(team, posIndex, false))
 			{
 				ChangeTeamPos(team, posIndex, true);
 				//g_CurBotNumber += 1;
@@ -172,7 +173,7 @@ void CBot::FieldBotJoinTeam()
 			}
 			posIndex += 1;
 			if (posIndex == 12)
-				posIndex = 2;
+				posIndex = 0;
 			if (posIndex == startPosIndex)
 				break;
 		}
@@ -255,7 +256,7 @@ void Bot_RunAll( void )
 		else
 		{
 			int team = CSDKPlayer::IsOnField(pPl) ? pPl->GetTeamNumber() : pPl->GetTeamToJoin();
-			if ((team == TEAM_A || team == TEAM_B) && pPl->GetTeamPosition() == 1)
+			if ((team == TEAM_A || team == TEAM_B) && pPl->GetTeamPosType() == GK)
 				keeperSpotTaken[team - TEAM_A] = true;
 		}
 	}
@@ -422,7 +423,7 @@ void CBot::BotFrame()
 			SetLocalAngles(m_cmd.viewangles);
 			SnapEyeAngles(m_cmd.viewangles);
 
-			if (!m_bShotButtonsReleased && !ShotButtonsPressed())
+			if (!m_bShotButtonsReleased && ShotButtonsPressed())
 				m_cmd.buttons &= ~(IN_ATTACK | (IN_ATTACK2 | IN_ALT1 | IN_ALT2));
 		}
 	}

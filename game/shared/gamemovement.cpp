@@ -1863,10 +1863,10 @@ bool CGameMovement::CheckJumpButton( void )
 	bool isKeeper;
 	int team;
 #ifdef CLIENT_DLL
-	isKeeper = GameResources()->GetTeamPosition(pPl->index) == 1;
+	isKeeper = GameResources()->GetTeamPosType(pPl->index) == GK;
 	team = GameResources()->GetTeam(pPl->index);
 #else
-	isKeeper = pPl->GetTeamPosition() == 1;
+	isKeeper = pPl->GetTeamPosType() == GK;
 	team = pPl->GetTeamNumber();
 #endif
 

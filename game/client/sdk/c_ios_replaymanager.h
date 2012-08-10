@@ -10,7 +10,7 @@ public:
 	DECLARE_CLIENTCLASS();
 
 	int m_nTeamNumber;
-	int m_nTeamPosition;
+	int m_nTeamPosNum;
 };
 
 class C_ReplayManager : public CBaseEntity

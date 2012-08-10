@@ -66,7 +66,8 @@ extern ConVar
 	mp_maxplayers,
 	mp_weather,
 	mp_teamlist,
-	mp_powershot_fixed_strength;
+	mp_powershot_fixed_strength,
+	mp_custom_shirt_numbers;
 
 extern ConVar
 	r_winddir,
@@ -279,6 +280,7 @@ public:
 	CNetworkVar(float, m_flMatchStartTime);
 
 	void RestartMatch();
+	void WakeUpAllPlayers();
 	void StartPenalties();
 
 #ifdef GAME_DLL
@@ -413,7 +415,7 @@ enum
 {
 	POS_XPOS = 0,
 	POS_YPOS,
-	POS_NAME,
+	POS_TYPE,
 	POS_NUMBER
 };
 

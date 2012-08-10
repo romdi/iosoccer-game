@@ -3,7 +3,7 @@
 
 IMPLEMENT_CLIENTCLASS_DT(C_ReplayPlayer, DT_ReplayPlayer, CReplayPlayer)
 	RecvPropInt(RECVINFO(m_nTeamNumber)),
-	RecvPropInt(RECVINFO(m_nTeamPosition)),
+	RecvPropInt(RECVINFO(m_nTeamPosNum)),
 END_RECV_TABLE()
 
 IMPLEMENT_CLIENTCLASS_DT(C_ReplayManager, DT_ReplayManager, CReplayManager)

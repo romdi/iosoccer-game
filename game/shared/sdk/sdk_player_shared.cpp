@@ -326,13 +326,13 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 
 			if (SDKGameRules()->m_nShieldType == SHIELD_FREEKICK && mp_shield_block_6yardbox.GetBool())
 			{
-				int teamPos;
+				int teamPosType;
 				#ifdef CLIENT_DLL
-					teamPos = GameResources()->GetTeamPosition(entindex());
+					teamPosType = GameResources()->GetTeamPosType(entindex());
 				#else
-					teamPos = GetTeamPosition();
+					teamPosType = GetTeamPosType();
 				#endif
-				if (teamPos != 1 || GetTeamNumber() != GetGlobalTeam(SDKGameRules()->m_nShieldTeam)->GetOppTeamNumber())
+				if (teamPosType != GK || GetTeamNumber() != GetGlobalTeam(SDKGameRules()->m_nShieldTeam)->GetOppTeamNumber())
 				{
 					int side = GetGlobalTeam(SDKGameRules()->m_nShieldTeam)->GetOppTeamNumber();
 					int boxLength = abs(GetGlobalTeam(side)->m_vPenBoxMax.GetY() - GetGlobalTeam(side)->m_vPenBoxMin.GetY()) / 3.0f;

@@ -44,7 +44,8 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CPlayerResource, DT_PlayerResource)
 	SendPropArray3( SENDINFO_ARRAY3(m_ThrowIns), SendPropInt( SENDINFO_ARRAY(m_ThrowIns), 5, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_KeeperSaves), SendPropInt( SENDINFO_ARRAY(m_KeeperSaves), 8, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_GoalKicks), SendPropInt( SENDINFO_ARRAY(m_GoalKicks), 5, SPROP_UNSIGNED ) ),
-	SendPropArray3( SENDINFO_ARRAY3(m_TeamPosition), SendPropInt( SENDINFO_ARRAY(m_TeamPosition), 5 ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_TeamPosIndex), SendPropInt( SENDINFO_ARRAY(m_TeamPosIndex), 5 ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_TeamPosNum), SendPropInt( SENDINFO_ARRAY(m_TeamPosNum), 5 ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_NextJoin), SendPropFloat( SENDINFO_ARRAY(m_NextJoin), -1, SPROP_NOSCALE ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_TeamToJoin), SendPropInt( SENDINFO_ARRAY(m_TeamToJoin), 5 ) ),
 
@@ -104,7 +105,8 @@ void CPlayerResource::Spawn( void )
 		m_ThrowIns.Set( i, 0 );
 		m_KeeperSaves.Set( i, 0 );
 		m_GoalKicks.Set( i, 0 );
-		m_TeamPosition.Set( i, 0 );
+		m_TeamPosIndex.Set( i, 0 );
+		m_TeamPosNum.Set( i, 0 );
 		m_NextJoin.Set( i, 0 );
 		m_TeamToJoin.Set( i, 0 );
 
@@ -171,7 +173,8 @@ void CPlayerResource::UpdatePlayerData( void )
 				m_ThrowIns.Set(i, max( 0, SDKPlayer->GetThrowIns() ) );
 				m_KeeperSaves.Set(i, max( 0, SDKPlayer->GetKeeperSaves() ) );
 				m_GoalKicks.Set(i, max( 0, SDKPlayer->GetGoalKicks() ) );
-				m_TeamPosition.Set(i, SDKPlayer->GetTeamPosIndex() );
+				m_TeamPosIndex.Set(i, SDKPlayer->GetTeamPosIndex() );
+				m_TeamPosNum.Set(i, SDKPlayer->GetTeamPosNum() );
 				m_TeamToJoin.Set(i, SDKPlayer->GetTeamToJoin() );
 				m_NextJoin.Set(i, SDKPlayer->GetNextJoin() );
 

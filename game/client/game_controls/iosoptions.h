@@ -44,6 +44,8 @@ protected:
 	Label *m_pShotButtonLabel;
 	RadioButton *m_pShotButtonLeft;
 	RadioButton *m_pShotButtonRight;
+	Label *m_pPreferredShirtNumberLabel;
+	ComboBox *m_pPreferredShirtNumberList;
 };
 
 class IIOSOptionsMenu

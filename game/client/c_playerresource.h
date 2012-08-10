@@ -72,7 +72,8 @@ public : // IGameResources intreface
 	virtual int		GetThrowIns( int index );
 	virtual int		GetKeeperSaves( int index );
 	virtual int		GetGoalKicks( int index );
-	virtual int		GetTeamPosition( int iIndex );
+	virtual int		GetTeamPosNum( int iIndex );
+	virtual int		GetTeamPosType( int iIndex );
 	virtual int		GetTeamPosIndex( int iIndex );
 	virtual int		GetTeamToJoin( int iIndex );
 	virtual float	GetNextJoin( int iIndex );
@@ -86,8 +87,8 @@ protected:
 	// Data for each player that's propagated to all clients
 	// Stored in individual arrays so they can be sent down via datatables
 	string_t	m_szName[MAX_PLAYERS+1];
-	char	m_szClubNames[MAX_PLAYERS+1][5];
-	char	m_szCountryNames[MAX_PLAYERS+1][64];
+	char	m_szClubNames[MAX_PLAYERS+1][MAX_CLUBNAME_LENGTH];
+	char	m_szCountryNames[MAX_PLAYERS+1][MAX_COUNTRYNAME_LENGTH];
 	int		m_iPing[MAX_PLAYERS+1];
 	bool	m_bConnected[MAX_PLAYERS+1];
 	int		m_iTeam[MAX_PLAYERS+1];
@@ -109,7 +110,8 @@ protected:
 	int		m_ThrowIns[MAX_PLAYERS+1];
 	int		m_KeeperSaves[MAX_PLAYERS+1];
 	int		m_GoalKicks[MAX_PLAYERS+1];
-	int		m_TeamPosition[MAX_PLAYERS+1];
+	int		m_TeamPosIndex[MAX_PLAYERS+1];
+	int		m_TeamPosNum[MAX_PLAYERS+1];
 
 	int		m_TeamToJoin[MAX_PLAYERS+1];
 	float	m_NextJoin[MAX_PLAYERS+1];

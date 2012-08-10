@@ -57,6 +57,7 @@ class CHudScorebar : public CHudElement, public vgui::Panel
 public:
 	CHudScorebar( const char *pElementName );
 	void Init( void );
+	void FireGameEvent( IGameEvent *event );
 
 protected:
 	virtual void OnThink( void );
@@ -88,6 +89,8 @@ private:
 
 	Panel	*m_pTeamCrestPanels[2];
 	ImagePanel	*m_pTeamCrests[2];
+
+	Label		*m_pHelpText;
 
 	float m_flNextPlayerUpdate;
 };
@@ -128,6 +131,7 @@ enum { BAR_BORDER = 2 };
 enum { PLAYERNAME_MARGIN = 5, PLAYERNAME_OFFSET = 50, PLAYERNAME_WIDTH = 150 };
 enum { PENALTYPANEL_HEIGHT = 30, PENALTYPANEL_PADDING = 5, PENALTYPANEL_TOPMARGIN = 10 };
 enum { EVENT_WIDTH = 200, EVENT_HEIGHT = 35, SUBEVENT_WIDTH = 200, SUBEVENT_HEIGHT = 35 };
+enum { HELPTEXT_HEIGHT = 40, HELPTEXT_BOTTOMMARGIN = 15 };
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -178,6 +182,8 @@ CHudScorebar::CHudScorebar( const char *pElementName ) : BaseClass(NULL, "HudSco
 	m_pNewTime = new Label(m_pCenterBar, "", "");
 	m_pInjuryTime = new Label(m_pCenterBar, "", "");
 
+	m_pHelpText = new Label(this, "", "");
+
 	m_flNextPlayerUpdate = gpGlobals->curtime;
 }
 
@@ -185,7 +191,7 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 {
 	BaseClass::ApplySchemeSettings( pScheme );
 	
-	SetBounds(0, 0, ScreenWidth(), 700);
+	SetBounds(0, 0, ScreenWidth(), ScreenHeight());
  	//SetPaintBackgroundType (2); // Rounded corner box
  	//SetPaintBackgroundEnabled(true);
 	//SetBgColor( Color( 0, 0, 255, 255 ) );
@@ -236,6 +242,11 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 	m_pSubEvent->SetContentAlignment(Label::a_center);
 	m_pSubEvent->SetFont(pScheme->GetFont("IOSSubEvent"));
 	m_pSubEvent->SetFgColor(Color(255, 255, 255, 255));
+
+	m_pHelpText->SetBounds(0, GetTall() - HELPTEXT_HEIGHT - HELPTEXT_BOTTOMMARGIN, GetWide(), HELPTEXT_HEIGHT);
+	m_pHelpText->SetContentAlignment(Label::a_south);
+	m_pHelpText->SetFont(pScheme->GetFont("IOSHelpText"));
+	m_pHelpText->SetFgColor(Color(255, 255, 255, 255));
 
 	Color fgColor = Color(220, 220, 220, 255);
 	Color bgColor = Color(35, 30, 40, 255);
@@ -307,6 +318,7 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 //-----------------------------------------------------------------------------
 void CHudScorebar::Init( void )
 {
+	ListenForGameEvent("wakeupcall");
 }
 
 const char *g_szLongStateNames[32] =
@@ -333,8 +345,25 @@ const char *g_szLongStateNames[32] =
 //-----------------------------------------------------------------------------
 void CHudScorebar::OnThink( void )
 {
-	if (!SDKGameRules() || !GetGlobalTeam(TEAM_A) || !GetGlobalTeam(TEAM_B))
+	C_SDKPlayer *pLocal = C_SDKPlayer::GetLocalSDKPlayer();
+
+	if (!SDKGameRules() || !GetGlobalTeam(TEAM_A) || !GetGlobalTeam(TEAM_B) || !pLocal)
 		return;
+
+	if (pLocal->State_Get() == STATE_OBSERVER_MODE)
+	{
+		if (gpGlobals->curtime - 10 <= pLocal->m_flStateEnterTime)
+			m_pHelpText->SetText("Press [TAB] to show scoreboard. Click faded shirt icon to join.");
+		else
+			m_pHelpText->SetText("");
+	}
+	else if (pLocal->State_Get() == STATE_ACTIVE)
+	{
+		if (gpGlobals->curtime - 10 <= pLocal->m_flStateEnterTime)
+			m_pHelpText->SetText("Press [RMB] to dribble. Use [MOUSE WHEEL] to set shot strength. [ESC]->\"Player Settings\" to change.");
+		else
+			m_pHelpText->SetText("");
+	}
 
 	if (SDKGameRules()->State_Get() == MATCH_PENALTIES)
 	{
@@ -464,4 +493,22 @@ void CHudScorebar::OnThink( void )
 			}
 		}
 	}
+}
+
+void CHudScorebar::FireGameEvent(IGameEvent *event)
+{
+	if (!g_PR)
+		return;
+
+	if (Q_strcmp(event->GetName(), "wakeupcall"))
+		return;
+
+	FLASHWINFO flashInfo;
+	flashInfo.cbSize = sizeof(FLASHWINFO);
+	flashInfo.hwnd = FindWindow(NULL, "IOS Source Dev");
+	flashInfo.dwFlags = FLASHW_TRAY | FLASHW_TIMERNOFG;
+	flashInfo.uCount = 3;
+	flashInfo.dwTimeout = 0;
+	FlashWindowEx(&flashInfo);
+	//SetWindowText(FindWindow(NULL, "IOS Source Dev"), "LIVE - IOS Source Dev");
 }

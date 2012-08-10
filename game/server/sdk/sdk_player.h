@@ -177,10 +177,6 @@ private:
 	void State_Leave();								// Cleanup the previous state.
 	void State_PreThink();							// Update the current state.
 
-	// Specific state handler functions.
-	void State_WELCOME_Enter();
-	void State_WELCOME_PreThink();
-
 	void State_PICKINGTEAM_Enter();
 	void State_PICKINGCLASS_Enter();
 
@@ -193,9 +189,6 @@ private:
 	void State_OBSERVER_MODE_Leave();
 	void State_OBSERVER_MODE_PreThink();
 
-	void State_DEATH_ANIM_Enter();
-	void State_DEATH_ANIM_PreThink();
-
 	// Find the state info for the specified state.
 	static CSDKPlayerStateInfo* State_LookupInfo( SDKPlayerState state );
 
@@ -203,6 +196,7 @@ private:
 	// Each state has a well-defined set of parameters that go with it (ie: observer is movetype_noclip, non-solid,
 	// invisible, etc).
 	CNetworkVar( SDKPlayerState, m_iPlayerState );
+	CNetworkVar(float, m_flStateEnterTime);
 
 	CSDKPlayerStateInfo *m_pCurStateInfo;			// This can be NULL if no state info is defined for m_iPlayerState.
 	bool HandleCommand_JoinTeam( int iTeam );
@@ -272,7 +266,9 @@ public:
 	void				ChooseKeeperSkin(void);
 	bool				TeamPosFree(int team, int posIndex, bool ignoreBots);
 
-	int					m_TeamPos;
+	int					m_nTeamPosIndex;
+	int					m_nTeamPosNum;
+	int					m_nPreferredTeamPosNum;
 	
 	float				m_flNextShot;
 
@@ -313,10 +309,14 @@ public:
 	int					GetThrowIns(void) { return m_ThrowIns; }
 	int					GetKeeperSaves(void) { return m_KeeperSaves; }
 	int					GetGoalKicks(void) { return m_GoalKicks; }
-	int					GetTeamPosition(void);
-	int					GetTeamPosIndex(void) { return m_TeamPos; }
+	int					GetTeamPosNum(void);
+	int					GetTeamPosType(void);
+	int					GetTeamPosIndex(void) { return m_nTeamPosIndex; }
 	int					GetTeamToJoin(void) { return m_nTeamToJoin; }
 	int					GetNextJoin(void) { return m_flNextJoin; }
+
+	void				SetPreferredTeamPosNum(int num) { m_nPreferredTeamPosNum = clamp(num, 0, 11); }
+	int					FindUnfilledTeamPosNum();
 
 	void				FindSafePos(Vector &startPos);
 
@@ -349,10 +349,10 @@ public:
 
 	//int					m_BallInPenaltyBox;	 //-1 =	not	in box,	0,1	= teams	box
 
-	char				m_szClubName[5];
+	char				m_szClubName[MAX_CLUBNAME_LENGTH];
 	bool				m_bClubNameChanged;
 
-	char				m_szCountryName[64];
+	char				m_szCountryName[MAX_COUNTRYNAME_LENGTH];
 	bool				m_bCountryNameChanged;
 
 	bool				m_bIsShotButtonRight;

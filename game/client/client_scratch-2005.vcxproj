@@ -432,7 +432,6 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClCompile Include="..\shared\gamevars_shared.cpp" />
     <ClCompile Include="game_controls\formationmenu.cpp" />
     <ClCompile Include="game_controls\iosoptions.cpp" />
-    <ClCompile Include="game_controls\ios_actionmenu.cpp" />
     <ClCompile Include="game_controls\ircclient.cpp" />
     <ClCompile Include="game_controls\statsmenu.cpp" />
     <ClCompile Include="geiger.cpp" />
@@ -781,7 +780,6 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClCompile Include="game_controls\intromenu.cpp" />
     <ClCompile Include="game_controls\NavProgress.cpp" />
     <ClCompile Include="game_controls\SpectatorGUI.cpp" />
-    <ClCompile Include="game_controls\teammenu.cpp" />
     <ClCompile Include="game_controls\vguitextwindow.cpp" />
     <ClCompile Include="sdk\c_sdk_env_sparkler.cpp" />
     <ClCompile Include="sdk\c_te_firebullets.cpp" />
@@ -793,7 +791,6 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClCompile Include="..\shared\sdk\sdk_usermessages.cpp" />
     <ClCompile Include="sdk\sdk_backgroundpanel.cpp" />
     <ClCompile Include="sdk\vgui\sdk_classmenu.cpp" />
-    <ClCompile Include="sdk\vgui\sdk_teammenu.cpp" />
     <ClCompile Include="sdk\vgui\sdk_textwindow.cpp" />
     <ClCompile Include="sdk\vgui\sdkviewport.cpp" />
     <ClCompile Include="sdk\vgui\vgui_rootpanel_sdk.cpp" />
@@ -848,7 +845,6 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClInclude Include="..\shared\GameStats.h" />
     <ClInclude Include="game_controls\formationmenu.h" />
     <ClInclude Include="game_controls\iosoptions.h" />
-    <ClInclude Include="game_controls\ios_actionmenu.h" />
     <ClInclude Include="game_controls\ircclient.h" />
     <ClInclude Include="game_controls\statsmenu.h" />
     <ClInclude Include="hud_basedeathnotice.h" />
@@ -868,7 +864,6 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClInclude Include="..\shared\sdk\sdk_shareddefs.h" />
     <ClInclude Include="sdk\sdk_backgroundpanel.h" />
     <ClInclude Include="sdk\vgui\sdk_classmenu.h" />
-    <ClInclude Include="sdk\vgui\sdk_teammenu.h" />
     <ClInclude Include="sdk\vgui\sdk_textwindow.h" />
     <ClInclude Include="sdk\vgui\sdkviewport.h" />
     <ClInclude Include="sdk\vgui\vgui_rootpanel_sdk.h" />
@@ -1427,7 +1422,6 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClInclude Include="game_controls\mouseoverhtmlbutton.h" />
     <ClInclude Include="game_controls\mouseoverpanelbutton.h" />
     <ClInclude Include="game_controls\spectatorgui.h" />
-    <ClInclude Include="game_controls\teammenu.h" />
     <ClInclude Include="game_controls\vguitextwindow.h" />
     <ClInclude Include="worldlight.h" />
   </ItemGroup>

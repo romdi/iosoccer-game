@@ -51,7 +51,7 @@ void CFieldBot::BotShootBall()
 		if (isGoalShot)
 		{
 			if (ownDistToGoal > 1000)
-				m_cmd.buttons |= IN_ATTACK;
+				m_cmd.buttons |= (IN_ATTACK2 | IN_ATTACK);
 			else
 			{
 				m_cmd.buttons |= (IN_ATTACK2 | IN_ATTACK);
@@ -135,7 +135,7 @@ void CFieldBot::BotRunToBall()
 		//
 		//if (!m_bIsOffside && Sign(m_vDirToBall.y) == GetTeam()->m_nForward)
 		//	m_cmd.forwardmove = mp_runspeed.GetInt();
-		//else if (Sign(pos.y - GetTeam()->m_vPlayerSpawns[GetTeamPosition() - 1].y) == GetTeam()->m_nForward)
+		//else if (Sign(pos.y - GetTeam()->m_vPlayerSpawns[GetTeamPosNum() - 1].y) == GetTeam()->m_nForward)
 		//	m_cmd.forwardmove = -mp_runspeed.GetInt();
 	}
 }

@@ -129,7 +129,7 @@ void CSDKTargetId::Paint()
 		wchar_t wszPlayerText[MAX_PLAYER_NAME_LENGTH + 10];
 
 		g_pVGuiLocalize->ConvertANSIToUnicode(pPl->GetPlayerName(), wszPlayerName, sizeof(wszPlayerName));
-		//g_pVGuiLocalize->ConvertANSIToUnicode(g_szPosNames[GameResources()->GetTeamPosition(i) - 1], wszPosName, sizeof(wszPosName));
+		//g_pVGuiLocalize->ConvertANSIToUnicode(g_szPosNames[GameResources()->GetTeamPosNum(i) - 1], wszPosName, sizeof(wszPosName));
 
 		//_snwprintf( wszPlayerText, ARRAYSIZE(wszPlayerText) - 1, L"%s %s", wszPosName, wszPlayerName);
 		_snwprintf( wszPlayerText, ARRAYSIZE(wszPlayerText) - 1, L"%s", wszPlayerName);

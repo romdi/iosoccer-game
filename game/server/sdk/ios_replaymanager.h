@@ -55,7 +55,7 @@ struct PlayerSnapshot
 	float			m_flMoveX;
 	float			m_flMoveY;
 	int				m_nTeamNumber;
-	int				m_nTeamPosition;
+	int				m_nTeamPosNum;
 	int				m_nSkin;
 	int				m_nBody;
 };
@@ -64,7 +64,7 @@ struct Snapshot
 {
 	float snaptime;
 	BallSnapshot *pBallSnapshot;
-	PlayerSnapshot *pPlayerSnapshot[22];
+	PlayerSnapshot *pPlayerSnapshot[2][11];
 };
 
 
@@ -99,7 +99,7 @@ public:
 	void Think();
 
 	CNetworkVar(int, m_nTeamNumber);
-	CNetworkVar(int, m_nTeamPosition);
+	CNetworkVar(int, m_nTeamPosNum);
 };
 
 class CReplayManager : public CBaseEntity
@@ -127,7 +127,7 @@ private:
 	bool					m_bDoReplay;
 	int						m_nSnapshotIndex;
 	CReplayBall				*m_pBall;
-	CReplayPlayer			*m_pPlayers[22];
+	CReplayPlayer			*m_pPlayers[2][11];
 	int						m_nReplayRunCount;
 	int						m_nMaxReplayRuns;
 	float					m_flStartTime;

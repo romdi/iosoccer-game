@@ -626,14 +626,14 @@ void CClientScoreBoardDialog::AddHeader()
 		//m_pPlayerList[i]->SetSectionDividerColor(m_iSectionId, Color(255, 255, 255, 255));
 		m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "posname",		"Pos.", 0, 55 );
 		m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "country",		"Nat.", SectionedListPanel::COLUMN_IMAGE, 50 );
-		m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "club",			"Club", 0,  65);
+		m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "club",			"Club", 0,  75);
 		if ( ShowAvatars() )
 		{
 			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "avatar",		"", SectionedListPanel::COLUMN_IMAGE, 50 );
 		}
 		m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "name",			"Name", 0, 180);
-		m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goals",			"Goals", 0, 50);
-		m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "assists",		"Assists", 0, 50);
+		m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goals",			"Goals", 0, 45);
+		m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "assists",		"Assists", 0, 45);
 		//m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "possession",		"Poss.", 0, 55);
 		m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "ping",			"Ping", 0, 55);
 		//m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "voice",		"Voice", SectionedListPanel::COLUMN_IMAGE, scheme()->GetProportionalScaledValue(VOICE_WIDTH) );
@@ -698,7 +698,7 @@ bool CClientScoreBoardDialog::GetPlayerScoreInfo(int playerIndex, KeyValues *kv)
 	kv->SetInt("posindex", gr->GetTeamPosIndex(playerIndex));
 	kv->SetInt("playerindex", playerIndex);
 	//kv->SetString("country", gr->GetCountryName(playerIndex));
-	kv->SetString("posname", g_szPosNames[(int)g_Positions[mp_maxplayers.GetInt() - 1][gr->GetTeamPosIndex(playerIndex)][POS_NAME]]);
+	kv->SetString("posname", g_szPosNames[(int)g_Positions[mp_maxplayers.GetInt() - 1][gr->GetTeamPosIndex(playerIndex)][POS_TYPE]]);
 	kv->SetString("name", gr->GetPlayerName( playerIndex ) );
 	kv->SetString("club", gr->GetClubName(playerIndex));
 	kv->SetInt("voice",  s_VoiceImage[GetClientVoiceMgr()->GetSpeakerStatus( playerIndex - 1) ]); 

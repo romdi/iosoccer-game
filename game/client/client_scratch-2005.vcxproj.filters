@@ -1245,9 +1245,6 @@
     <ClCompile Include="game_controls\SpectatorGUI.cpp">
       <Filter>Source Files\game_controls</Filter>
     </ClCompile>
-    <ClCompile Include="game_controls\teammenu.cpp">
-      <Filter>Source Files\game_controls</Filter>
-    </ClCompile>
     <ClCompile Include="game_controls\vguitextwindow.cpp">
       <Filter>Source Files\game_controls</Filter>
     </ClCompile>
@@ -1279,9 +1276,6 @@
       <Filter>Source Files\SDK\GUI</Filter>
     </ClCompile>
     <ClCompile Include="sdk\vgui\sdk_classmenu.cpp">
-      <Filter>Source Files\SDK\GUI</Filter>
-    </ClCompile>
-    <ClCompile Include="sdk\vgui\sdk_teammenu.cpp">
       <Filter>Source Files\SDK\GUI</Filter>
     </ClCompile>
     <ClCompile Include="sdk\vgui\sdk_textwindow.cpp">
@@ -1425,9 +1419,6 @@
     <ClCompile Include="worldlight.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="game_controls\ios_actionmenu.cpp">
-      <Filter>Source Files\game_controls</Filter>
-    </ClCompile>
     <ClCompile Include="sdk\c_ios_replaymanager.cpp">
       <Filter>Source Files\SDK</Filter>
     </ClCompile>
@@ -1512,9 +1503,6 @@
       <Filter>Source Files\SDK\GUI</Filter>
     </ClInclude>
     <ClInclude Include="sdk\vgui\sdk_classmenu.h">
-      <Filter>Source Files\SDK\GUI</Filter>
-    </ClInclude>
-    <ClInclude Include="sdk\vgui\sdk_teammenu.h">
       <Filter>Source Files\SDK\GUI</Filter>
     </ClInclude>
     <ClInclude Include="sdk\vgui\sdk_textwindow.h">
@@ -3191,9 +3179,6 @@
     <ClInclude Include="game_controls\spectatorgui.h">
       <Filter>game_controls Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="game_controls\teammenu.h">
-      <Filter>game_controls Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="game_controls\vguitextwindow.h">
       <Filter>game_controls Header Files</Filter>
     </ClInclude>
@@ -3211,9 +3196,6 @@
     </ClInclude>
     <ClInclude Include="worldlight.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="game_controls\ios_actionmenu.h">
-      <Filter>game_controls Header Files</Filter>
     </ClInclude>
     <ClInclude Include="sdk\c_ios_replaymanager.h">
       <Filter>Source Files\SDK</Filter>

@@ -184,12 +184,7 @@ enum SDKPlayerState
 	// You can't move though if CSGameRules()->IsFreezePeriod() returns true.
 	// This state can jump to a bunch of other states like STATE_PICKINGCLASS or STATE_DEATH_ANIM.
 	STATE_ACTIVE=0,
-	
-	// This is the state you're in when you first enter the server.
-	// It's switching between intro cameras every few seconds, and there's a level info 
-	// screen up.
-	STATE_WELCOME,			// Show the level intro screen.
-	
+
 	// During these states, you can either be a new player waiting to join, or
 	// you can be a live player in the game who wants to change teams.
 	// Either way, you can't move while choosing team or class (or while any menu is up).
@@ -200,7 +195,6 @@ enum SDKPlayerState
 	STATE_PICKINGCLASS,			// Choosing class.
 #endif
 	
-	STATE_DEATH_ANIM,			// Playing death anim, waiting for that to finish.
 	STATE_OBSERVER_MODE,		// Noclipping around, watching players, etc.
 
 	NUM_PLAYER_STATES
@@ -279,5 +273,8 @@ enum ball_state_t
 	BALL_FREEKICK,
 	BALL_KEEPERHANDS
 };
+
+#define MAX_CLUBNAME_LENGTH			6
+#define MAX_COUNTRYNAME_LENGTH		64
 
 #endif // SDK_SHAREDDEFS_H

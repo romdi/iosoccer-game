@@ -58,7 +58,7 @@ LINK_ENTITY_TO_CLASS( replayplayer, CReplayPlayer );
 
 IMPLEMENT_SERVERCLASS_ST(CReplayPlayer, DT_ReplayPlayer)
 	SendPropInt(SENDINFO(m_nTeamNumber)),
-	SendPropInt(SENDINFO(m_nTeamPosition)),
+	SendPropInt(SENDINFO(m_nTeamPosNum)),
 END_SEND_TABLE()
 
 void CReplayPlayer::Precache()
@@ -141,9 +141,12 @@ CReplayManager::CReplayManager()
 	m_bDoReplay = false;
 	m_pBall = NULL;
 
-	for (int i = 0; i < 22; i++)
+	for (int i = 0; i < 2; i++)
 	{
-		m_pPlayers[i] = NULL;
+		for (int j = 0; j < 11; j++)
+		{
+			m_pPlayers[i][j] = NULL;
+		}
 	}
 
 	m_bIsReplaying = false;
@@ -151,6 +154,39 @@ CReplayManager::CReplayManager()
 
 CReplayManager::~CReplayManager()
 {
+	if (m_pBall)
+	{
+		UTIL_Remove(m_pBall);
+		m_pBall = NULL;
+	}
+
+	for (int i = 0; i < 2; i++)
+	{
+		for (int j = 0; j < 11; j++)
+		{
+			if (m_pPlayers[i][j])
+			{
+				UTIL_Remove(m_pPlayers[i][j]);
+				m_pPlayers[i][j] = NULL;
+			}
+		}
+	}
+
+	while (m_Snapshots.Count() > 0)
+	{
+		delete m_Snapshots[0].pBallSnapshot;
+
+		for (int i = 0; i < 2; i++)
+		{
+			for (int j = 0; j < 11; j++)
+			{
+				delete m_Snapshots[0].pPlayerSnapshot[i][j];
+			}
+		}
+
+		m_Snapshots.Remove(0);
+	}
+
 	g_pReplayManager = NULL;
 }
 
@@ -206,12 +242,15 @@ void CReplayManager::StopReplay()
 		m_pBall = NULL;
 	}
 
-	for (int i = 0; i < 22; i++)
+	for (int i = 0; i < 2; i++)
 	{
-		if (m_pPlayers[i])
+		for (int j = 0; j < 11; j++)
 		{
-			UTIL_Remove(m_pPlayers[i]);
-			m_pPlayers[i] = NULL;
+			if (m_pPlayers[i][j])
+			{
+				UTIL_Remove(m_pPlayers[i][j]);
+				m_pPlayers[i][j] = NULL;
+			}
 		}
 	}
 
@@ -272,9 +311,12 @@ void CReplayManager::TakeSnapshot()
 
 	snap.pBallSnapshot = pBallSnap;
 
-	for (int i = 0; i < 22; i++)
+	for (int i = 0; i < 2; i++)
 	{
-		snap.pPlayerSnapshot[i] = NULL;
+		for (int j = 0; j < 11; j++)
+		{
+			snap.pPlayerSnapshot[i][j] = NULL;
+		}
 	}
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
@@ -307,11 +349,11 @@ void CReplayManager::TakeSnapshot()
 		pPlSnap->m_flMoveY = pPl->GetPoseParameter(3);
 
 		pPlSnap->m_nTeamNumber = pPl->GetTeamNumber();
-		pPlSnap->m_nTeamPosition = pPl->GetTeamPosition();
+		pPlSnap->m_nTeamPosNum = pPl->GetTeamPosNum();
 		pPlSnap->m_nSkin = pPl->m_nSkin;
 		pPlSnap->m_nBody = pPl->m_nBody;
 
-		snap.pPlayerSnapshot[pPl->GetTeamPosition() - 1 + (pPl->GetTeamNumber() == TEAM_A ? 0 : 11)] = pPlSnap;
+		snap.pPlayerSnapshot[pPl->GetTeamNumber() - TEAM_A][pPl->GetTeamPosIndex()] = pPlSnap;
 	}
 
 	m_Snapshots.AddToTail(snap);
@@ -319,18 +361,21 @@ void CReplayManager::TakeSnapshot()
 	while (m_Snapshots[0].snaptime < gpGlobals->curtime - sv_replay_duration.GetInt())
 	{
 		delete m_Snapshots[0].pBallSnapshot;
-		for (int i = 0; i < 22; i++)
+
+		for (int i = 0; i < 2; i++)
 		{
-			delete m_Snapshots[0].pPlayerSnapshot[i];
+			for (int j = 0; j < 11; j++)
+			{
+				delete m_Snapshots[0].pPlayerSnapshot[i][j];
+			}
 		}
+
 		m_Snapshots.Remove(0);
 	}
 }
 
 void CReplayManager::RestoreSnapshot()
 {
-	m_bIsReplaying = true;
-
 	if (m_nSnapshotIndex >= m_Snapshots.Count())
 	{
 		m_nReplayRunCount += 1;
@@ -349,6 +394,8 @@ void CReplayManager::RestoreSnapshot()
 		StopReplay();
 		return;
 	}
+
+	m_bIsReplaying = true;
 
 	CBall *pRealBall = GetBall();
 	if (pRealBall)
@@ -394,67 +441,70 @@ void CReplayManager::RestoreSnapshot()
 		m_pBall = NULL;
 	}
 
-	for (int i = 0; i < 22; i++)
+	for (int i = 0; i < 2; i++)
 	{
-		PlayerSnapshot *pPlSnap = pSnap->pPlayerSnapshot[i];
-		if (!pPlSnap)
+		for (int j = 0; j < 11; j++)
 		{
-			UTIL_Remove(m_pPlayers[i]);
-			m_pPlayers[i] = NULL;
-			continue;
-		}
-
-		if (!m_pPlayers[i])
-		{
-			m_pPlayers[i] = (CReplayPlayer *)CreateEntityByName("replayplayer");
-			//m_pPlayers[i]->SetRenderMode(kRenderTransColor);
-			//m_pPlayers[i]->SetRenderColorA(150);
-			m_pPlayers[i]->Spawn();
-			//m_pPlayers[i]->UseClientSideAnimation();
-			m_pPlayers[i]->SetNumAnimOverlays(NUM_LAYERS_WANTED);
-		}
-
-		CReplayPlayer *pPl = m_pPlayers[i];
-
-		pPl->SetLocalOrigin(pPlSnap->pos);
-		pPl->SetLocalVelocity(pPlSnap->vel);
-		pPl->SetLocalAngles(pPlSnap->ang);
-		//pPl->SnapEyeAngles(pPlSnap->ang);
-		pPl->m_nTeamNumber = pPlSnap->m_nTeamNumber;
-		pPl->m_nTeamPosition = pPlSnap->m_nTeamPosition;
-		pPl->m_nSkin = pPlSnap->m_nSkin;
-		pPl->m_nBody = pPlSnap->m_nBody;
-
-		pPl->SetPoseParameter(pPl->GetModelPtr(), 4, pPlSnap->m_flMoveX);
-		pPl->SetPoseParameter(pPl->GetModelPtr(), 3, pPlSnap->m_flMoveY);
-
-		pPl->SetSequence(pPlSnap->m_masterSequence);
-		pPl->SetCycle(pPlSnap->m_masterCycle);
-		pPl->SetSimulationTime(pPlSnap->m_flSimulationTime);
-		pPl->SetPlaybackRate(1);
-
-		//if (m_nSnapshotIndex % 20 == 0)
-		{
-			//int count = pPl->GetNumAnimOverlays();
-			//int layerCount = 1;//pPl->GetNumAnimOverlays();
-			//pPl->SetNumAnimOverlays(layerCount);
-
-			for( int layerIndex = 0; layerIndex < NUM_LAYERS_WANTED; ++layerIndex )
+			PlayerSnapshot *pPlSnap = pSnap->pPlayerSnapshot[i][j];
+			if (!pPlSnap)
 			{
-				CAnimationLayer *currentLayer = pPl->GetAnimOverlay(layerIndex);
-				if(!currentLayer)
-					continue;
+				UTIL_Remove(m_pPlayers[i][j]);
+				m_pPlayers[i][j] = NULL;
+				continue;
+			}
 
-				//currentLayer->m_flCycle = 0.5f;
-				//currentLayer->m_nSequence = 8;
-				//currentLayer->m_flPlaybackRate = 1.0;
-				//currentLayer->m_flWeight = 1.0f;
-				//currentLayer->m_nOrder = layerIndex;
+			if (!m_pPlayers[i][j])
+			{
+				m_pPlayers[i][j] = (CReplayPlayer *)CreateEntityByName("replayplayer");
+				//m_pPlayers[i]->SetRenderMode(kRenderTransColor);
+				//m_pPlayers[i]->SetRenderColorA(150);
+				m_pPlayers[i][j]->Spawn();
+				//m_pPlayers[i]->UseClientSideAnimation();
+				m_pPlayers[i][j]->SetNumAnimOverlays(NUM_LAYERS_WANTED);
+			}
 
-				//pPl->StudioFrameAdvanceManual( gpGlobals->frametime );
-				//pPl->DispatchAnimEvents(pPl);
-				CopyAnimationLayer(currentLayer, &pPlSnap->m_animLayers[layerIndex]);
-				//currentLayer->StudioFrameAdvance(gpGlobals->frametime, pPl);
+			CReplayPlayer *pPl = m_pPlayers[i][j];
+
+			pPl->SetLocalOrigin(pPlSnap->pos);
+			pPl->SetLocalVelocity(pPlSnap->vel);
+			pPl->SetLocalAngles(pPlSnap->ang);
+			//pPl->SnapEyeAngles(pPlSnap->ang);
+			pPl->m_nTeamNumber = pPlSnap->m_nTeamNumber;
+			pPl->m_nTeamPosNum = pPlSnap->m_nTeamPosNum;
+			pPl->m_nSkin = pPlSnap->m_nSkin;
+			pPl->m_nBody = pPlSnap->m_nBody;
+
+			pPl->SetPoseParameter(pPl->GetModelPtr(), 4, pPlSnap->m_flMoveX);
+			pPl->SetPoseParameter(pPl->GetModelPtr(), 3, pPlSnap->m_flMoveY);
+
+			pPl->SetSequence(pPlSnap->m_masterSequence);
+			pPl->SetCycle(pPlSnap->m_masterCycle);
+			pPl->SetSimulationTime(pPlSnap->m_flSimulationTime);
+			pPl->SetPlaybackRate(1);
+
+			//if (m_nSnapshotIndex % 20 == 0)
+			{
+				//int count = pPl->GetNumAnimOverlays();
+				//int layerCount = 1;//pPl->GetNumAnimOverlays();
+				//pPl->SetNumAnimOverlays(layerCount);
+
+				for( int layerIndex = 0; layerIndex < NUM_LAYERS_WANTED; ++layerIndex )
+				{
+					CAnimationLayer *currentLayer = pPl->GetAnimOverlay(layerIndex);
+					if(!currentLayer)
+						continue;
+
+					//currentLayer->m_flCycle = 0.5f;
+					//currentLayer->m_nSequence = 8;
+					//currentLayer->m_flPlaybackRate = 1.0;
+					//currentLayer->m_flWeight = 1.0f;
+					//currentLayer->m_nOrder = layerIndex;
+
+					//pPl->StudioFrameAdvanceManual( gpGlobals->frametime );
+					//pPl->DispatchAnimEvents(pPl);
+					CopyAnimationLayer(currentLayer, &pPlSnap->m_animLayers[layerIndex]);
+					//currentLayer->StudioFrameAdvance(gpGlobals->frametime, pPl);
+				}
 			}
 		}
 	}

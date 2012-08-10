@@ -34,8 +34,6 @@
 // sub dialogs
 #include "clientscoreboarddialog.h"
 #include "spectatorgui.h"
-#include "teammenu.h"
-#include "ios_actionmenu.h"
 #include "classmenu.h"				//IOS
 #include "vguitextwindow.h"
 #include "IGameUIFuncs.h"
@@ -265,10 +263,6 @@ IViewPortPanel* CBaseViewport::CreatePanelByName(const char *szPanelName)
 	//{
 	//	newpanel = new CTeamMenu( this );
 	//}
-	else if ( Q_strcmp(PANEL_ACTION, szPanelName) == 0 )
-	{
-		newpanel = new CActionMenu( this );
-	}
 	//else if ( Q_strcmp(PANEL_CLASS, szPanelName) == 0 )			//IOS added ffs
 	//{
 	//	newpanel = new CClassMenu( this );

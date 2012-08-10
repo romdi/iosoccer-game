@@ -237,8 +237,6 @@ private:
 
 	QAngle			m_aPlAng;
 	Vector			m_vPlVel, m_vPlVel2D, m_vPlForwardVel2D, m_vPlPos, m_vPlForward, m_vPlForward2D, m_vPlRight, m_vPlUp;
-	int				m_nPlTeam;
-	int				m_nPlPos;
 
 	CHandle<CSDKPlayer>	m_pFouledPl;
 	CHandle<CSDKPlayer>	m_pFoulingPl;
