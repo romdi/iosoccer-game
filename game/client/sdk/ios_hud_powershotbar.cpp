@@ -156,8 +156,8 @@ void CHudPowershotBar::ApplySchemeSettings( IScheme *scheme )
 	m_pStaminaIndicator->SetPaintBackgroundType(2); // Rounded corner box
  	m_pStaminaIndicator->SetPaintBackgroundEnabled(true);
 	m_pStaminaIndicator->SetBgColor(Color(0, 255, 0, 255) );
-	m_pStaminaIndicator->SetBounds(BAR_PADDING, BAR_PADDING, BAR_WIDTH - 2 * BAR_PADDING, BAR_HEIGHT - 2 * BAR_PADDING);
-	
+	m_pStaminaIndicator->SetBounds(BAR_PADDING, BAR_PADDING, BAR_WIDTH - 2 * BAR_PADDING, (BAR_HEIGHT - 2 * BAR_PADDING) / 2);
+
  	m_pPowershotIndicatorBack->SetPaintBackgroundEnabled(true);
 	m_pPowershotIndicatorBack->SetBgColor(Color(0, 0, 0, 255));
 	m_pPowershotIndicatorBack->SetBounds(GetWide() / 2 - BAR_WIDTH / 2 - PS_INDICATOR_OFFSET, GetTall() / 2 - PS_INDICATOR_HEIGHT / 2, BAR_WIDTH + 2 * PS_INDICATOR_OFFSET, PS_INDICATOR_HEIGHT);
@@ -243,9 +243,9 @@ void CHudPowershotBar::Paint()
 	float stamina = pPlayer->m_Shared.GetStamina();
 	float relStamina = stamina / 100.0f;
 
-	int height = m_pStaminaPanel->GetTall() * relStamina - 2 * BAR_PADDING;
+	int height = (m_pStaminaPanel->GetTall() - 2 * BAR_PADDING) * (1 - mp_powershot_fixed_strength.GetInt() / 100.0f) * relStamina;
 	m_pStaminaIndicator->SetTall(height);
-	m_pStaminaIndicator->SetY(m_pStaminaPanel->GetTall() - BAR_PADDING - height);
+	m_pStaminaIndicator->SetY(BAR_PADDING + (m_pStaminaPanel->GetTall() - 2 * BAR_PADDING) * (1 - mp_powershot_fixed_strength.GetInt() / 100.0f) - height);
 
 	Color bgColor;
 
@@ -262,6 +262,7 @@ void CHudPowershotBar::Paint()
 	m_pPowershotIndicatorBack->SetY(m_pStaminaPanel->GetY() + BAR_PADDING + m_pPowershotIndicatorBack->GetTall() + (1 - cl_powershot_strength.GetInt() / 100.0f) * (BAR_HEIGHT - 2 * BAR_PADDING - 3 * m_pPowershotIndicatorBack->GetTall()));
 
 	m_pFixedPowershotIndicator->SetY(BAR_PADDING + m_pPowershotIndicator->GetTall() + (1 - mp_powershot_fixed_strength.GetInt() / 100.0f) * (BAR_HEIGHT - 2 * BAR_PADDING - 3 * m_pFixedPowershotIndicator->GetTall()));
+	m_pFixedPowershotIndicator->SetVisible(false);
 
 	m_pSpinIndicatorsBack[0]->SetVisible(pPlayer->m_nButtons & IN_TOPSPIN);
 	m_pSpinIndicatorsBack[1]->SetVisible(pPlayer->m_nButtons & IN_BACKSPIN);

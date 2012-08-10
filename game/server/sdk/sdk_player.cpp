@@ -112,6 +112,10 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 #if defined ( SDK_USE_SPRINTING )
 	SendPropBool( SENDINFO( m_bIsSprinting ) ),
 #endif
+
+	//SendPropInt( SENDINFO( m_ePlayerAnimEvent ) ),
+	//SendPropTime( SENDINFO( m_flPlayerAnimEventStart ) ),
+
 	SendPropDataTable( "sdksharedlocaldata", 0, &REFERENCE_SEND_TABLE(DT_SDKSharedLocalPlayerExclusive), SendProxy_SendLocalDataTable ),
 END_SEND_TABLE()
 extern void SendProxy_Origin( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID );
@@ -240,8 +244,8 @@ CSDKPlayer::CSDKPlayer()
 	m_flNextJoin = gpGlobals->curtime;
 	m_TeamPos = 0;
 	m_pPlayerBall = NULL;
-	m_flPlayerAnimEventStart = gpGlobals->curtime;
-	m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
+	m_Shared.m_flPlayerAnimEventStart = gpGlobals->curtime;
+	m_Shared.m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
 	m_nInPenBoxOfTeam = TEAM_INVALID;
 	m_ePenaltyState = PENALTY_NONE;
 	m_pHoldingBall = NULL;
@@ -1360,12 +1364,12 @@ void CSDKPlayer::ResetFlags()
 
 bool CSDKPlayer::IsNormalshooting()
 {
-	return (m_nButtons & IN_ATTACK) != 0 && !IsPowershooting();
+	return false;//(m_nButtons & IN_ATTACK) != 0 && !IsPowershooting();
 }
 
 bool CSDKPlayer::IsPowershooting()
 {
-	return (m_nButtons & (IN_ATTACK2 | IN_ALT1)) != 0;
+	return (m_nButtons & (IN_ATTACK2/* | IN_ALT1*/)) != 0;
 }
 
 bool CSDKPlayer::IsAutoPassing()

@@ -388,8 +388,6 @@ public:
 	int					m_nTeamToJoin;
 
 	int					m_ePenaltyState;
-	PlayerAnimEvent_t	m_ePlayerAnimEvent;
-	float				m_flPlayerAnimEventStart;
 	void				SetPlayerBall(CBall *pPlayerBall) { m_pPlayerBall = pPlayerBall; }
 	CBall				*GetPlayerBall() { return m_pPlayerBall; }
 	bool				ChangeTeamPos(int team, int posIndex, bool instantly = false);

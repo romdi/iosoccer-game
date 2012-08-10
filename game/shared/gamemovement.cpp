@@ -1536,7 +1536,7 @@ void CGameMovement::MoveToTargetPos()
 
 bool CGameMovement::CheckPlayerAnimEvent()
 {
-	float timePassed = gpGlobals->curtime - ToSDKPlayer(player)->m_flPlayerAnimEventStart;
+	float timePassed = gpGlobals->curtime - ToSDKPlayer(player)->m_Shared.m_flPlayerAnimEventStart;
 	Vector forward, right, up;
 	AngleVectors(mv->m_vecViewAngles, &forward, &right, &up);
 	Vector forward2D = forward;
@@ -1544,7 +1544,7 @@ bool CGameMovement::CheckPlayerAnimEvent()
 	forward2D.NormalizeInPlace();
 	bool isSprinting = ((mv->m_nButtons & IN_SPEED) != 0);
 
-	switch (ToSDKPlayer(player)->m_ePlayerAnimEvent)
+	switch (ToSDKPlayer(player)->m_Shared.m_ePlayerAnimEvent)
 	{
 	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT:
 		{

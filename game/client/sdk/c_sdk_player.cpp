@@ -103,6 +103,10 @@ BEGIN_RECV_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 #if defined( SDK_USE_SPRINTING )
 	RecvPropBool( RECVINFO( m_bIsSprinting ) ),
 #endif
+
+	//RecvPropInt( RECVINFO( m_ePlayerAnimEvent ) ),
+	//RecvPropTime( RECVINFO( m_flPlayerAnimEventStart ) ),
+
 	RecvPropDataTable( "sdksharedlocaldata", 0, 0, &REFERENCE_RECV_TABLE(DT_SDKSharedLocalPlayerExclusive) ),
 END_RECV_TABLE()
 
@@ -156,6 +160,10 @@ BEGIN_PREDICTION_DATA_NO_BASE( CSDKPlayerShared )
 #if defined( SDK_USE_SPRINTING )
 	DEFINE_PRED_FIELD( m_bIsSprinting, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 #endif
+
+	//DEFINE_PRED_FIELD( m_ePlayerAnimEvent, FIELD_INTEGER, FTYPEDESC_INSENDTABLE | FTYPEDESC_NOERRORCHECK ),
+	//DEFINE_PRED_FIELD( m_flPlayerAnimEventStart, FIELD_FLOAT, FTYPEDESC_INSENDTABLE | FTYPEDESC_NOERRORCHECK ),
+
 END_PREDICTION_DATA()
 
 BEGIN_PREDICTION_DATA( C_SDKPlayer )
@@ -545,8 +553,8 @@ C_SDKPlayer::C_SDKPlayer() :
 	AddVar( &m_angEyeAngles, &m_iv_angEyeAngles, LATCH_SIMULATION_VAR );
 
 	m_fNextThinkPushAway = 0.0f;
-	m_flPlayerAnimEventStart = gpGlobals->curtime;
-	m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
+	m_Shared.m_flPlayerAnimEventStart = gpGlobals->curtime;
+	m_Shared.m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
 }
 
 

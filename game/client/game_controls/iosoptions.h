@@ -38,6 +38,7 @@ protected:
 	Button *m_pOKButton;
 	Button *m_pSaveButton;
 	Button *m_pCancelButton;
+	RadioButton *m_pShotButtonSide;
 };
 
 class IIOSOptionsMenu

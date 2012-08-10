@@ -81,6 +81,7 @@ ConVar sv_ball_throwin_normalstrength("sv_ball_throwin_normalstrength", "350", F
 ConVar sv_ball_throwin_minstrength("sv_ball_throwin_minstrength", "250", FCVAR_NOTIFY);
 ConVar sv_ball_throwin_maxstrength("sv_ball_throwin_maxstrength", "750", FCVAR_NOTIFY); 
 ConVar sv_ball_chestdrop_strength("sv_ball_chestdrop_strength", "250", FCVAR_NOTIFY); 
+ConVar sv_ball_chestdrop_angle("sv_ball_chestdrop_angle", "45", FCVAR_NOTIFY); 
 ConVar sv_ball_powerdivingheader_minstrength("sv_ball_powerdivingheader_minstrength", "350", FCVAR_NOTIFY); 
 ConVar sv_ball_powerdivingheader_maxstrength("sv_ball_powerdivingheader_maxstrength", "700", FCVAR_NOTIFY); 
 ConVar sv_ball_normalheader_strength("sv_ball_normalheader_strength", "250", FCVAR_NOTIFY); 
@@ -575,13 +576,18 @@ void CBall::SetPos(Vector pos)
 	m_bSetNewPos = true;
 }
 
-void CBall::SetVel(Vector vel, float spinCoeff, body_part_t bodyPart, bool isDeflection, bool markOffsidePlayers)
+void CBall::SetVel(Vector vel, float spinCoeff, body_part_t bodyPart, bool isDeflection, bool markOffsidePlayers, bool checkMinShotStrength)
 {
 	m_vVel = vel;
 
 	float length = m_vVel.Length();
 	m_vVel.NormalizeInPlace();
-	m_vVel *= clamp(length, sv_ball_minshotstrength.GetInt(), sv_ball_powershot_maxstrength.GetInt());
+
+	if (checkMinShotStrength)
+		length = max(length, sv_ball_minshotstrength.GetInt());
+
+	length = min(length, sv_ball_powershot_maxstrength.GetInt());
+	m_vVel *= length;
 	m_pPhys->EnableMotion(true);
 	m_pPhys->Wake();
 	m_pPhys->SetVelocity(&m_vVel, &m_vRot);
@@ -846,7 +852,7 @@ void CBall::State_KICKOFF_Think()
 	if (m_pPl->m_bShotButtonsReleased && m_pPl->IsShooting())
 	{
 		RemoveAllTouches();
-		SetVel(m_vPlForward2D * 200, 0, BODY_PART_FEET, false, false);
+		SetVel(m_vPlForward2D * 200, 0, BODY_PART_FEET, false, false, false);
 		m_pPl->RemoveFlag(FL_ATCONTROLS);
 		if (m_pOtherPl)
 			m_pOtherPl->RemoveFlag(FL_ATCONTROLS);
@@ -916,7 +922,7 @@ void CBall::State_THROWIN_Think()
 		}
 
 		RemoveAllTouches();
-		SetVel(vel, 0, BODY_PART_HANDS, false, false);
+		SetVel(vel, 0, BODY_PART_HANDS, false, false, false);
 		State_Transition(BALL_NORMAL);
 	}
 }
@@ -1365,7 +1371,7 @@ void CBall::State_KEEPERHANDS_Think()
 	if (m_nInPenBoxOfTeam != m_pPl->GetTeamNumber())
 	{
 		RemoveAllTouches();
-		SetVel(m_vPlForward2D * sv_ball_minshotstrength.GetInt(), 0, BODY_PART_HANDS, false, true);
+		SetVel(m_vPlForward2D * sv_ball_minshotstrength.GetInt(), 0, BODY_PART_HANDS, false, true, true);
 		return State_Transition(BALL_NORMAL);
 	}
 
@@ -1387,7 +1393,7 @@ void CBall::State_KEEPERHANDS_Think()
 		}
 
 		RemoveAllTouches();
-		SetVel(vel, spin, BODY_PART_HANDS, false, true);
+		SetVel(vel, spin, BODY_PART_HANDS, false, true, true);
 
 		return State_Transition(BALL_NORMAL);
 	}
@@ -1533,7 +1539,7 @@ bool CBall::DoBodyPartAction()
 			return true;
 	}
 
-	if (m_pPl->m_ePlayerAnimEvent == PLAYERANIMEVENT_SLIDE)
+	if (m_pPl->m_Shared.m_ePlayerAnimEvent == PLAYERANIMEVENT_SLIDE)
 		return DoSlideAction();
 
 	if (gpGlobals->curtime < m_flGlobalNextShot)
@@ -1544,7 +1550,7 @@ bool CBall::DoBodyPartAction()
 			dir.z = 0;
 			dir.NormalizeInPlace();
 			Vector vel = sv_ball_deflectioncoeff.GetFloat() * (m_vVel - 2 * DotProduct(m_vVel, dir) * dir);
-			SetVel(vel, -1, BODY_PART_UNKNOWN, true, false);
+			SetVel(vel, -1, BODY_PART_UNKNOWN, true, false, false);
 
 			return true;
 		}
@@ -1607,7 +1613,7 @@ bool CBall::DoSlideAction()
 		ballVel *= sv_ball_slidesidecoeff.GetFloat();
 	}
 
-	SetVel(ballVel, 0, BODY_PART_FEET, false, true);
+	SetVel(ballVel, 0, BODY_PART_FEET, false, true, false);
 
 	return true;
 }
@@ -1622,7 +1628,7 @@ bool CBall::CheckKeeperCatch()
 
 	bool canCatch;
 
-	switch (m_pPl->m_ePlayerAnimEvent)
+	switch (m_pPl->m_Shared.m_ePlayerAnimEvent)
 	{
 	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT:
 		canCatch = (zDist < sv_ball_bodypos_chest_start.GetInt()
@@ -1682,14 +1688,14 @@ bool CBall::CheckKeeperCatch()
 	{
 		Vector vel;
 
-		if (m_pPl->m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD)
+		if (m_pPl->m_Shared.m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD)
 		{
 			vel = Vector(m_vVel.x, m_vVel.y, max(m_vVel.z, sv_ball_keeperpunchupstrength.GetInt()));
 		}
 		else
 			vel = m_vPlForward * m_vVel.Length2D() * sv_ball_keeperdeflectioncoeff.GetFloat();
 
-		SetVel(vel, -1, BODY_PART_HANDS, true, true);
+		SetVel(vel, -1, BODY_PART_HANDS, true, true, false);
 	}
 	else
 		State_Transition(BALL_KEEPERHANDS);
@@ -1707,17 +1713,20 @@ float CBall::GetPitchCoeff()
 float CBall::GetPowershotStrength(float coeff, int minStrength, int maxStrength)
 {
 	float powershotStrength;
-	if (m_pPl->m_nButtons & IN_ALT1)
+	//if (m_pPl->m_nButtons & IN_ALT1)
 		powershotStrength = m_pPl->m_nPowershotStrength;
-	else
-		powershotStrength = mp_powershot_fixed_strength.GetInt();
+	//else
+	//	powershotStrength = mp_powershot_fixed_strength.GetInt();
 
 	if (State_Get() == BALL_PENALTY)
 		powershotStrength = min(powershotStrength, mp_powershot_fixed_strength.GetInt());
 
-	powershotStrength = min(powershotStrength, m_pPl->m_Shared.GetStamina());
-
-	m_pPl->m_Shared.SetStamina(m_pPl->m_Shared.GetStamina() - coeff * powershotStrength);
+	if (powershotStrength > mp_powershot_fixed_strength.GetInt())
+	{
+		int staminaToTake = min(RemapValClamped(powershotStrength, mp_powershot_fixed_strength.GetInt(), 100, 0, 100), m_pPl->m_Shared.GetStamina());
+		powershotStrength = RemapValClamped(staminaToTake, 0, 100, mp_powershot_fixed_strength.GetInt(), 100);
+		m_pPl->m_Shared.SetStamina(m_pPl->m_Shared.GetStamina() - coeff * staminaToTake);
+	}
 
 	return max(sv_ball_minshotstrength.GetInt(), coeff * (minStrength + (maxStrength - minStrength) * (powershotStrength / 100.0f)));
 }
@@ -1802,7 +1811,7 @@ bool CBall::DoGroundShot()
 		spin = 1;
 	}
 
-	SetVel(vel, spin, BODY_PART_FEET, false, true);
+	SetVel(vel, spin, BODY_PART_FEET, false, true, true);
 
 	return true;
 }
@@ -1839,14 +1848,17 @@ bool CBall::DoVolleyShot()
 	else
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_NONE);
 
-	SetVel(vel, sv_ball_volleyshot_spincoeff.GetFloat(), BODY_PART_FEET, false, true);
+	SetVel(vel, sv_ball_volleyshot_spincoeff.GetFloat(), BODY_PART_FEET, false, true, true);
 
 	return true;
 }
 
 bool CBall::DoChestDrop()
 {
-	SetVel(m_vPlForwardVel2D + m_vPlForward2D * sv_ball_chestdrop_strength.GetInt(), 0, BODY_PART_CHEST, false, true);
+	QAngle ang = QAngle(sv_ball_chestdrop_angle.GetInt(), m_aPlAng[YAW], 0);
+	Vector dir;
+	AngleVectors(ang, &dir);
+	SetVel(dir * sv_ball_chestdrop_strength.GetInt(), 0, BODY_PART_CHEST, false, true, false);
 	//EmitSound("Ball.kicknormal");
 
 	return true;
@@ -1876,7 +1888,7 @@ bool CBall::DoHeader()
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEADER_STATIONARY);
 	}
 
-	SetVel(vel, 0, BODY_PART_HEAD, false, true);
+	SetVel(vel, 0, BODY_PART_HEAD, false, true, true);
 
 	return true;
 }

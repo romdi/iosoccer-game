@@ -85,6 +85,8 @@ CIOSOptionsPanel::CIOSOptionsPanel(VPANEL parent) : BaseClass(NULL, "IOSOptionsP
 		m_pCountryNameList->AddItem(g_szCountryNames[i], kv);
 		kv->deleteThis();
 	}
+
+	m_pShotButtonSide;
 }
 
 CIOSOptionsPanel::~CIOSOptionsPanel()

@@ -297,7 +297,7 @@ void CSDKPlayerAnimState::UpdateLayerSequenceGeneric( CStudioHdr *pStudioHdr, in
 			// Not firing anymore.
 			bEnabled = false;
 			iSequence = 0;
-			GetSDKPlayer()->m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
+			GetSDKPlayer()->m_Shared.m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
 			GetSDKPlayer()->RemoveFlag(FL_FREECAM);
 			return;
 		}
@@ -314,6 +314,9 @@ void CSDKPlayerAnimState::UpdateLayerSequenceGeneric( CStudioHdr *pStudioHdr, in
 	pLayer->m_nOrder = iLayer;
 }
 
+extern ConVar cl_powershot_strength;
+extern ConVar mp_powershot_fixed_strength;
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : event - 
@@ -323,9 +326,15 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 	switch( event )
 	{
 	case PLAYERANIMEVENT_NONE:
+	#ifdef CLIENT_DLL
+		cl_powershot_strength.SetValue(mp_powershot_fixed_strength.GetInt());
+	#endif
 		break;
 	case PLAYERANIMEVENT_CANCEL:
 		{
+			#ifdef CLIENT_DLL
+				cl_powershot_strength.SetValue(mp_powershot_fixed_strength.GetInt());
+			#endif
 			ClearAnimationState();
 			break;
 		}
@@ -350,6 +359,9 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 	case PLAYERANIMEVENT_KEEPER_HANDS_KICK:
 	case PLAYERANIMEVENT_KEEPER_HANDS_PUNCH:
 		{
+			#ifdef CLIENT_DLL
+				cl_powershot_strength.SetValue(mp_powershot_fixed_strength.GetInt());
+			#endif
 			m_flPrimaryActionSequenceCycle = 0;
 			m_iPrimaryActionSequence = CalcPrimaryActionSequence( event );
 			m_bIsPrimaryActionSequenceActive = m_iPrimaryActionSequence != -1;
@@ -391,8 +403,8 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 		}
 	}
 
-	GetSDKPlayer()->m_ePlayerAnimEvent = event;
-	GetSDKPlayer()->m_flPlayerAnimEventStart = gpGlobals->curtime;
+	GetSDKPlayer()->m_Shared.m_ePlayerAnimEvent = event;
+	GetSDKPlayer()->m_Shared.m_flPlayerAnimEventStart = gpGlobals->curtime;
 }
 
 bool CSDKPlayerAnimState::HandleJumping( Activity &idealActivity )
@@ -412,7 +424,7 @@ bool CSDKPlayerAnimState::HandleJumping( Activity &idealActivity )
 			if ( GetBasePlayer()->GetFlags() & FL_ONGROUND )
 			{
 				m_bJumping = false;
-				GetSDKPlayer()->m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
+				GetSDKPlayer()->m_Shared.m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
 				RestartMainSequence();	// Reset the animation.
 			}
 		}
@@ -443,7 +455,7 @@ Activity CSDKPlayerAnimState::CalcMainActivity()
 		if (pPlayer->GetFlags() & FL_CELEB)
 			return ACT_IOS_JUMPCELEB;							//cartwheel celeb
 		//else if (pPlayer->m_nBody > 0)
-		else if (pPlayer->m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_JUMP)
+		else if (pPlayer->m_Shared.m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_JUMP)
 			return ACT_IDLE;//FIXME: Buggy jump animation: ACT_LEAP;									//keepers jump
 		else
 			return ACT_IDLE;//FIXME: Buggy jump animation: ACT_HOP;										//normal jump

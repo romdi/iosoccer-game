@@ -173,9 +173,6 @@ private:
 
 public:
 
-	float				m_flPlayerAnimEventStart;
-	PlayerAnimEvent_t	m_ePlayerAnimEvent;
-
 	CNetworkVector(m_vTargetPos);
 	CNetworkVar(bool, m_bIsAtTargetPos);
 	CNetworkVar(bool, m_bHoldAtTargetPos);

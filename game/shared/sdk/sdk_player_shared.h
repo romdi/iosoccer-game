@@ -71,6 +71,8 @@ public:
 	//float m_flWalkSpeed;
 	//float m_flRunSpeed;
 	//float m_flSprintSpeed;
+	CNetworkVar(PlayerAnimEvent_t, m_ePlayerAnimEvent);
+	CNetworkVar(float, m_flPlayerAnimEventStart);
 
 private:
 
