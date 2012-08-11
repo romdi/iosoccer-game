@@ -146,12 +146,12 @@ void CBaseSDKGrenade::SecondaryAttack()
 		return;
 
 	//See if we're ducking
-	if ( pPlayer->GetFlags() & FL_DUCKING )
-	{
-		//Send the weapon animation
-		SendWeaponAnim( ACT_VM_SECONDARYATTACK );
-	}
-	else
+	//if ( pPlayer->GetFlags() & FL_DUCKING )
+	//{
+	//	//Send the weapon animation
+	//	SendWeaponAnim( ACT_VM_SECONDARYATTACK );
+	//}
+	//else
 	{
 		//Send the weapon animation
 		SendWeaponAnim( ACT_VM_HAULBACK );

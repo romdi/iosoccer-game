@@ -1088,11 +1088,11 @@ void CBasePlayer::SetAnimation( PLAYER_ANIM playerAnim )
 	
 	if (idealActivity == ACT_RANGE_ATTACK1)
 	{
-		if ( GetFlags() & FL_DUCKING )	// crouching
-		{
-			Q_strncpy( szAnim, "crouch_shoot_" ,sizeof(szAnim));
-		}
-		else
+		//if ( GetFlags() & FL_DUCKING )	// crouching
+		//{
+		//	Q_strncpy( szAnim, "crouch_shoot_" ,sizeof(szAnim));
+		//}
+		//else
 		{
 			Q_strncpy( szAnim, "ref_shoot_" ,sizeof(szAnim));
 		}
@@ -1119,11 +1119,11 @@ void CBasePlayer::SetAnimation( PLAYER_ANIM playerAnim )
 	{
 		if (GetActivity() != ACT_RANGE_ATTACK1 || IsActivityFinished())
 		{
-			if ( GetFlags() & FL_DUCKING )	// crouching
-			{
-				Q_strncpy( szAnim, "crouch_aim_" ,sizeof(szAnim));
-			}
-			else
+			//if ( GetFlags() & FL_DUCKING )	// crouching
+			//{
+			//	Q_strncpy( szAnim, "crouch_aim_" ,sizeof(szAnim));
+			//}
+			//else
 			{
 				Q_strncpy( szAnim, "ref_aim_" ,sizeof(szAnim));
 			}
@@ -1411,7 +1411,7 @@ bool CBasePlayer::StartObserverMode(int mode)
 
 	SetGroundEntity( (CBaseEntity *)NULL );
 	
-	RemoveFlag( FL_DUCKING );
+	//RemoveFlag( FL_DUCKING );
 	
     AddSolidFlags( FSOLID_NOT_SOLID );
 
@@ -1577,7 +1577,7 @@ void CBasePlayer::CheckObserverSettings()
 
 		if ( target && m_iObserverMode == OBS_MODE_IN_EYE )
 		{
-			int flagMask =	FL_ONGROUND | FL_DUCKING ;
+			int flagMask =	FL_ONGROUND/* | FL_DUCKING */;
 
 			int flags = target->GetFlags() & flagMask;
 
@@ -3499,13 +3499,13 @@ void CBasePlayer::PostThink()
 		{
 			// set correct collision bounds (may have changed in player movement code)
 			VPROF_SCOPE_BEGIN( "CBasePlayer::PostThink-Bounds" );
-			if ( GetFlags() & FL_DUCKING )
+			//if ( GetFlags() & FL_DUCKING )
+			//{
+			//	SetCollisionBounds( VEC_DUCK_HULL_MIN, VEC_DUCK_HULL_MAX );
+			//}
+			//else
 			{
-				SetCollisionBounds( VEC_DUCK_HULL_MIN, VEC_DUCK_HULL_MAX );
-			}
-			else
-			{
-				SetCollisionBounds( VEC_HULL_MIN, VEC_HULL_MAX );
+				SetCollisionBounds( GetPlayerMins(), GetPlayerMaxs() );
 			}
 			VPROF_SCOPE_END();
 
@@ -3648,7 +3648,11 @@ void CBasePlayer::PostThinkVPhysics( void )
 	{
 		collisionState = VPHYS_NOCLIP;
 	}
-	else if ( GetFlags() & FL_DUCKING )
+	//else if ( GetFlags() & FL_DUCKING )
+	//{
+	//	collisionState = VPHYS_CROUCH;
+	//}
+	else if ( GetFlags() & (FL_SLIDING | FL_KEEPER_SIDEWAYS_DIVING) )
 	{
 		collisionState = VPHYS_CROUCH;
 	}
@@ -4088,14 +4092,14 @@ int CBasePlayer::Restore( IRestore &restore )
 	// clear this - it will get reset by touching the trigger again
 	m_afPhysicsFlags &= ~PFLAG_VPHYSICS_MOTIONCONTROLLER;
 
-	if ( GetFlags() & FL_DUCKING ) 
-	{
-		// Use the crouch HACK
-		FixPlayerCrouchStuck( this );
-		UTIL_SetSize(this, VEC_DUCK_HULL_MIN, VEC_DUCK_HULL_MAX);
-		m_Local.m_bDucked = true;
-	}
-	else
+	//if ( GetFlags() & FL_DUCKING ) 
+	//{
+	//	// Use the crouch HACK
+	//	FixPlayerCrouchStuck( this );
+	//	UTIL_SetSize(this, VEC_DUCK_HULL_MIN, VEC_DUCK_HULL_MAX);
+	//	m_Local.m_bDucked = true;
+	//}
+	//else
 	{
 		m_Local.m_bDucked = false;
 		UTIL_SetSize(this, VEC_HULL_MIN, VEC_HULL_MAX);
@@ -6198,11 +6202,11 @@ void CBasePlayer::SetupVPhysicsShadow( const Vector &vecAbsOrigin, const Vector 
 	UpdatePhysicsShadowToPosition( vecAbsOrigin );
 
 	// init state
-	if ( GetFlags() & FL_DUCKING )
-	{
-		SetVCollisionState( vecAbsOrigin, vecAbsVelocity, VPHYS_CROUCH );
-	}
-	else
+	//if ( GetFlags() & FL_DUCKING )
+	//{
+	//	SetVCollisionState( vecAbsOrigin, vecAbsVelocity, VPHYS_CROUCH );
+	//}
+	//else
 	{
 		SetVCollisionState( vecAbsOrigin, vecAbsVelocity, VPHYS_WALK );
 	}
@@ -6456,7 +6460,8 @@ void CBasePlayer::InitVCollision( const Vector &vecAbsOrigin, const Vector &vecA
 		return;
 	
 	CPhysCollide *pModel = PhysCreateBbox( VEC_HULL_MIN, VEC_HULL_MAX );
-	CPhysCollide *pCrouchModel = PhysCreateBbox( VEC_DUCK_HULL_MIN, VEC_DUCK_HULL_MAX );
+	//CPhysCollide *pCrouchModel = PhysCreateBbox( VEC_DUCK_HULL_MIN, VEC_DUCK_HULL_MAX );
+	CPhysCollide *pCrouchModel = PhysCreateBbox( VEC_SLIDE_HULL_MIN, VEC_SLIDE_HULL_MAX );
 
 	SetupVPhysicsShadow( vecAbsOrigin, vecAbsVelocity, pModel, "player_stand", pCrouchModel, "player_crouch" );
 }

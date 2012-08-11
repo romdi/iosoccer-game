@@ -2594,7 +2594,7 @@ int CGameMovement::CheckStuck( void )
 CBaseHandle CGameMovement::TestPlayerPosition( const Vector& pos, int collisionGroup, trace_t& pm )
 {
 	Ray_t ray;
-	ray.Init( pos, pos, GetPlayerMins(), GetPlayerMaxs() );
+	ray.Init( pos, pos, player->GetPlayerMins(), player->GetPlayerMaxs() );
 	UTIL_TraceRay( ray, PlayerSolidMask(), mv->m_nPlayerHandle.Get(), collisionGroup, &pm );
 	if ( (pm.contents & PlayerSolidMask()) && pm.m_pEnt )
 	{
@@ -2788,7 +2788,7 @@ void CGameMovement::CategorizePosition( void )
 		if ( !pm.m_pEnt || pm.plane.normal[2] < 0.7 )
 		{
 			// Test four sub-boxes, to see if any of them would have found shallower slope we could actually stand on
-			TracePlayerBBoxForGround( bumpOrigin, point, GetPlayerMins(), GetPlayerMaxs(), mv->m_nPlayerHandle.Get(), MASK_PLAYERSOLID, COLLISION_GROUP_PLAYER_MOVEMENT, pm );
+			TracePlayerBBoxForGround( bumpOrigin, point, player->GetPlayerMins(), player->GetPlayerMaxs(), mv->m_nPlayerHandle.Get(), MASK_PLAYERSOLID, COLLISION_GROUP_PLAYER_MOVEMENT, pm );
 			if ( !pm.m_pEnt || pm.plane.normal[2] < 0.7 )
 			{
 				SetGroundEntity( NULL );

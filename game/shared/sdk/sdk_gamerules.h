@@ -159,6 +159,12 @@ public:
 		Vector vView,
 		Vector vHullMin,
 		Vector vHullMax,
+		Vector vKeeperSidewaysDiveView,
+		Vector vKeeperSidewaysDiveHullMin,
+		Vector vKeeperSidewaysDiveHullMax,
+		Vector vSlideView,
+		Vector vSlideHullMin,
+		Vector vSlideHullMax,
 		Vector vDuckHullMin,
 		Vector vDuckHullMax,
 		Vector vDuckView,
@@ -187,6 +193,12 @@ public:
 		m_vProneHullMax = vProneHullMax;
 		m_vProneView = vProneView;
 #endif 
+		m_vKeeperSidewaysDiveView = vKeeperSidewaysDiveView;
+		m_vKeeperSidewaysDiveHullMin = vKeeperSidewaysDiveHullMin;
+		m_vKeeperSidewaysDiveHullMax = vKeeperSidewaysDiveHullMax;
+		m_vSlideView = vSlideView;
+		m_vSlideHullMin = vSlideHullMin;
+		m_vSlideHullMax = vSlideHullMax;
 	}
 #if defined ( SDK_USE_PRONE )
 	Vector m_vProneHullMin;

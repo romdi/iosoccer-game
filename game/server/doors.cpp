@@ -308,7 +308,7 @@ void CBaseDoor::Spawn()
 			// will get fixed up by vphysics
 			// NOTE: We could decouple this as a separate behavior, but managing player collisions is already complex enough.
 			// NOTE: This is necessary to prevent the player from blocking the wrecked train car in ep2_outland_01
-			AddFlag( FL_UNBLOCKABLE_BY_PLAYER );
+			//AddFlag( FL_UNBLOCKABLE_BY_PLAYER );
 		}
 		if ( m_bIgnoreDebris )
 		{

@@ -1136,10 +1136,10 @@ void C_SDKPlayer::AvoidPlayers( CUserCmd *pCmd )
 	float flMaxPlayerSpeed = MaxSpeed();
 	float flCropFraction = 1.33333333f;
 
-	if ( ( GetFlags() & FL_DUCKING ) && ( GetGroundEntity() != NULL ) )
-	{	
-		flMaxPlayerSpeed *= flCropFraction;
-	}	
+	//if ( ( GetFlags() & FL_DUCKING ) && ( GetGroundEntity() != NULL ) )
+	//{	
+	//	flMaxPlayerSpeed *= flCropFraction;
+	//}	
 
 	float flMaxPlayerSpeedSqr = flMaxPlayerSpeed * flMaxPlayerSpeed;
 

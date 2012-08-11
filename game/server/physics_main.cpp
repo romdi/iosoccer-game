@@ -797,7 +797,7 @@ CBaseEntity *CPhysicsPushedEntities::PerformRotatePush( CBaseEntity *pRoot, floa
 {
 	VPROF("CPhysicsPushedEntities::PerformRotatePush");
 
-	m_bIsUnblockableByPlayer = (pRoot->GetFlags() & FL_UNBLOCKABLE_BY_PLAYER) ? true : false;
+	m_bIsUnblockableByPlayer = false;//(pRoot->GetFlags() & FL_UNBLOCKABLE_BY_PLAYER) ? true : false;
 	// Build a list of this entity + all its children because we're going to try to move them all
 	// This will also make sure each entity is linked in the appropriate place
 	// with correct absboxes
@@ -857,7 +857,7 @@ CBaseEntity *CPhysicsPushedEntities::PerformLinearPush( CBaseEntity *pRoot, floa
 
 	m_flMoveTime = movetime;
 
-	m_bIsUnblockableByPlayer = (pRoot->GetFlags() & FL_UNBLOCKABLE_BY_PLAYER) ? true : false;
+	m_bIsUnblockableByPlayer = false;//(pRoot->GetFlags() & FL_UNBLOCKABLE_BY_PLAYER) ? true : false;
 	// Build a list of this entity + all its children because we're going to try to move them all
 	// This will also make sure each entity is linked in the appropriate place
 	// with correct absboxes

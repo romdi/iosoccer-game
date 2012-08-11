@@ -1160,14 +1160,14 @@ void CSDKPlayer::SetPosOutsideBall(const Vector &playerPos)
 
 	Vector ballPlayerDir = playerPos - ballPos;
 
-	if (ballPlayerDir.Length2D() >= 3 * VEC_HULL_MAX.x)
+	if (ballPlayerDir.Length2D() >= 1.5f * (GetPlayerMaxs().x - GetPlayerMins().x))
 	{
 		m_bIsAtTargetPos = true;
 	}
 	else
 	{
 		Vector moveDir = Vector(0, -GetTeam()->m_nForward, 0);
-		moveDir *= 4 * VEC_HULL_MAX.x;
+		moveDir *= 2 * (GetPlayerMaxs().x - GetPlayerMins().x);
 		ActivateRemoteControlling(ballPos + moveDir);
 	}
 }

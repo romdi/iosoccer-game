@@ -128,10 +128,10 @@ void C_HLTVCamera::CalcChaseCamView( Vector& eyeOrigin, QAngle& eyeAngles, float
 	{
 		targetOrigin1 += VEC_DEAD_VIEWHEIGHT;
 	}
-	else if ( target1->GetFlags() & FL_DUCKING )
-	{
-		targetOrigin1 += VEC_DUCK_VIEW;
-	}
+	//else if ( target1->GetFlags() & FL_DUCKING )
+	//{
+	//	targetOrigin1 += VEC_DUCK_VIEW;
+	//}
 	else
 	{
 		targetOrigin1 += VEC_VIEW;
@@ -156,10 +156,10 @@ void C_HLTVCamera::CalcChaseCamView( Vector& eyeOrigin, QAngle& eyeAngles, float
 			{
 				targetOrigin2 += VEC_DEAD_VIEWHEIGHT;
 			}
-			else if ( target2->GetFlags() & FL_DUCKING )
-			{
-				targetOrigin2 += VEC_DUCK_VIEW;
-			}
+			//else if ( target2->GetFlags() & FL_DUCKING )
+			//{
+			//	targetOrigin2 += VEC_DUCK_VIEW;
+			//}
 			else
 			{
 				targetOrigin2 += VEC_VIEW;
@@ -315,11 +315,11 @@ void C_HLTVCamera::CalcInEyeCamView( Vector& eyeOrigin, QAngle& eyeAngles, float
 	m_vCamOrigin = pPlayer->GetAbsOrigin();
 	m_flFOV = pPlayer->GetFOV();
 
-	if ( pPlayer->GetFlags() & FL_DUCKING )
-	{
-		m_vCamOrigin += VEC_DUCK_VIEW;
-	}
-	else
+	//if ( pPlayer->GetFlags() & FL_DUCKING )
+	//{
+	//	m_vCamOrigin += VEC_DUCK_VIEW;
+	//}
+	//else
 	{
 		m_vCamOrigin += VEC_VIEW;
 	}

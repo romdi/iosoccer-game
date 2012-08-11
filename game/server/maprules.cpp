@@ -479,10 +479,10 @@ void CGamePlayerZone::InputCountPlayersInZone( inputdata_t &inputdata )
 			Hull_t		hullType;
 
 			hullType = HULL_HUMAN;
-			if ( pPlayer->GetFlags() & FL_DUCKING )
-			{
-				hullType = HULL_SMALL_CENTERED;
-			}
+			//if ( pPlayer->GetFlags() & FL_DUCKING )
+			//{
+			//	hullType = HULL_SMALL_CENTERED;
+			//}
 
 			UTIL_TraceModel( pPlayer->GetAbsOrigin(), pPlayer->GetAbsOrigin(), NAI_Hull::Mins(hullType), 
 				NAI_Hull::Maxs(hullType), this, COLLISION_GROUP_NONE, &trace );

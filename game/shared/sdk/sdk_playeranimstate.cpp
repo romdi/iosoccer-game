@@ -298,7 +298,7 @@ void CSDKPlayerAnimState::UpdateLayerSequenceGeneric( CStudioHdr *pStudioHdr, in
 			bEnabled = false;
 			iSequence = 0;
 			GetSDKPlayer()->m_Shared.m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
-			GetSDKPlayer()->RemoveFlag(FL_FREECAM);
+			GetSDKPlayer()->RemoveFlag(FL_FREECAM | FL_SLIDING | FL_KEEPER_SIDEWAYS_DIVING);
 			return;
 		}
 	}
@@ -405,6 +405,20 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 
 	GetSDKPlayer()->m_Shared.m_ePlayerAnimEvent = event;
 	GetSDKPlayer()->m_Shared.m_flPlayerAnimEventStart = gpGlobals->curtime;
+	GetSDKPlayer()->RemoveFlag(FL_KEEPER_SIDEWAYS_DIVING | FL_SLIDING);
+
+	switch(event)
+	{
+	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT:
+	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT:
+		GetSDKPlayer()->AddFlag(FL_KEEPER_SIDEWAYS_DIVING);
+		break;
+	case PLAYERANIMEVENT_KEEPER_DIVE_FORWARD:
+	case PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD:
+	case PLAYERANIMEVENT_SLIDE:
+		GetSDKPlayer()->AddFlag(FL_SLIDING);
+		break;
+	}
 }
 
 bool CSDKPlayerAnimState::HandleJumping( Activity &idealActivity )

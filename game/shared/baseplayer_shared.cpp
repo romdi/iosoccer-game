@@ -1122,9 +1122,9 @@ void CBasePlayer::SharedSpawn()
 	MDLCACHE_CRITICAL_SECTION();
 	SetSequence( SelectWeightedSequence( ACT_IDLE ) );
 
-	if ( GetFlags() & FL_DUCKING ) 
-		SetCollisionBounds( VEC_DUCK_HULL_MIN, VEC_DUCK_HULL_MAX );
-	else
+	//if ( GetFlags() & FL_DUCKING ) 
+	//	SetCollisionBounds( VEC_DUCK_HULL_MIN, VEC_DUCK_HULL_MAX );
+	//else
 		SetCollisionBounds( VEC_HULL_MIN, VEC_HULL_MAX );
 
 	// dont let uninitialized value here hurt the player

@@ -85,7 +85,7 @@ void CFieldBot::BotShootBall()
 		m_cmd.viewangles[PITCH] = -30 + 30 * (1 - m_cmd.powershot_strength / 100.0f);
 	}
 
-	if (m_vDirToBall.z > VEC_HULL_MAX.z + 10)
+	if (m_vDirToBall.z > GetPlayerMaxs().z + 10)
 		m_cmd.buttons |= IN_JUMP;
 }
 

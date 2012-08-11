@@ -331,13 +331,24 @@ static CSDKViewVectors g_SDKViewVectors(
 	
 	Vector(-13, -13, 0 ),		//VEC_HULL_MIN
 	Vector( 13,  13,  72 ),		//VEC_HULL_MAX
+
+	Vector( 0, 0, 58 ),		
+	Vector(-13, -13, 0 ),	
+	Vector( 13,  13,  36 ),
+
+	Vector( 0, 0, 58 ),		
+	Vector(-13, -13, 0 ),	
+	Vector( 13,  13,  36 ),	
 													
 	Vector(-16, -16, 0 ),		//VEC_DUCK_HULL_MIN
 	Vector( 16,  16, 45 ),		//VEC_DUCK_HULL_MAX
 	Vector( 0, 0, 34 ),			//VEC_DUCK_VIEW
 													
-	Vector(-13, -13, -13 ),		//VEC_OBS_HULL_MIN
-	Vector( 13,  13,  13 ),		//VEC_OBS_HULL_MAX
+	//Vector(-13, -13, -13 ),		//VEC_OBS_HULL_MIN
+	//Vector( 13,  13,  13 ),		//VEC_OBS_HULL_MAX
+
+	Vector(-13, -13, 0 ),		//VEC_OBS_HULL_MIN
+	Vector( 13,  13,  58 ),		//VEC_OBS_HULL_MAX
 													
 	Vector( 0, 0, 14 )			//VEC_DEAD_VIEWHEIGHT
 #if defined ( SDK_USE_PRONE )			

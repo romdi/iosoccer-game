@@ -3117,7 +3117,7 @@ void CBaseEntity::OnRestore()
 	{
 		m_nRenderFX = kRenderFxNone;
 		AddEffects( EF_NODRAW );
-		RemoveFlag( FL_DISSOLVING | FL_ONFIRE );
+		RemoveFlag( /*FL_DISSOLVING |*/ FL_ONFIRE );
 	}
 
 	if ( m_pParent )

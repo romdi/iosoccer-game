@@ -170,6 +170,9 @@ public:
 
 	virtual bool	ModeWantsSpectatorGUI( int iMode ) { return ( iMode != OBS_MODE_DEATHCAM && iMode != OBS_MODE_FREEZECAM ); }
 
+	virtual const Vector	GetPlayerMins( void ) const; // uses local player
+	virtual const Vector	GetPlayerMaxs( void ) const; // uses local player
+
 private:
 	//ios bool SelectSpawnSpot( const char *pEntClassName, CBaseEntity* &pSpot );
 
@@ -223,9 +226,6 @@ private:
 	void			SetupVisibility( CBaseEntity *pViewEntity, unsigned char *pvs, int pvssize );
 
 	virtual void	SharedSpawn();
-
-	virtual const Vector	GetPlayerMins( void ) const; // uses local player
-	virtual const Vector	GetPlayerMaxs( void ) const; // uses local player
 
 private:
 	// Last usercmd we shot a bullet on.

@@ -1223,8 +1223,8 @@ Vector C_BasePlayer::GetChaseCamViewOffset( CBaseEntity *target )
 	
 	if ( player && player->IsAlive() )
 	{
-		if( player->GetFlags() & FL_DUCKING )
-			return VEC_DUCK_VIEW;
+		//if( player->GetFlags() & FL_DUCKING )
+		//	return VEC_DUCK_VIEW;
 
 		return VEC_VIEW;
 	}
@@ -1433,11 +1433,11 @@ void C_BasePlayer::CalcInEyeCamView(Vector& eyeOrigin, QAngle& eyeAngles, float&
 
 	if( engine->IsHLTV() )
 	{
-		if ( target->GetFlags() & FL_DUCKING )
-		{
-			eyeOrigin += VEC_DUCK_VIEW;
-		}
-		else
+		//if ( target->GetFlags() & FL_DUCKING )
+		//{
+		//	eyeOrigin += VEC_DUCK_VIEW;
+		//}
+		//else
 		{
 			eyeOrigin += VEC_VIEW;
 		}

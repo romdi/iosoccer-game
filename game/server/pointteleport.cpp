@@ -132,7 +132,7 @@ void CPointTeleport::InputTeleport( inputdata_t &inputdata )
 		if ( pPlayer != NULL )
 		{
 			pPlayer->m_nButtons |= IN_DUCK;
-			pPlayer->AddFlag( FL_DUCKING );
+			//pPlayer->AddFlag( FL_DUCKING );
 			pPlayer->m_Local.m_bDucked = true;
 			pPlayer->m_Local.m_bDucking = true;
 			pPlayer->m_Local.m_flDucktime = 0.0f;

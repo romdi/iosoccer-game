@@ -3405,7 +3405,7 @@ bool CBaseAnimating::Dissolve( const char *pMaterialName, float flStartTime, boo
 	{
 		SetEffectEntity( pDissolve );
 
-		AddFlag( FL_DISSOLVING );
+		//AddFlag( FL_DISSOLVING );
 		m_flDissolveStartTime = flStartTime;
 		pDissolve->SetDissolverOrigin( vDissolverOrigin );
 		pDissolve->SetMagnitude( iMagnitude );

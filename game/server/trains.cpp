@@ -2629,7 +2629,7 @@ void CFuncTrackTrain::Spawn( void )
 
 	if ( HasSpawnFlags( SF_TRACKTRAIN_UNBLOCKABLE_BY_PLAYER ) )
 	{
-		AddFlag( FL_UNBLOCKABLE_BY_PLAYER );
+		//AddFlag( FL_UNBLOCKABLE_BY_PLAYER );
 	}
 	if ( m_spawnflags & SF_TRACKTRAIN_PASSABLE )
 	{

@@ -313,11 +313,11 @@ void C_ClientRagdoll::OnRestore( void )
 		return;
 	}
 
-	if ( GetFlags() & FL_DISSOLVING )
+	/*if ( GetFlags() & FL_DISSOLVING )
 	{
 		DissolveEffect( this, m_flEffectTime );
 	}
-	else if ( GetFlags() & FL_ONFIRE )
+	else */if ( GetFlags() & FL_ONFIRE )
 	{
 		C_EntityFlame *pFireChild = dynamic_cast<C_EntityFlame *>( GetEffectEntity() );
 		C_EntityFlame *pNewFireChild = FireEffect( this, pFireChild, m_flScaleEnd, m_flScaleTimeStart, m_flScaleTimeEnd );

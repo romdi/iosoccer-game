@@ -1078,7 +1078,7 @@ C_EntityDissolve *DissolveEffect( C_BaseAnimating *pTarget, float flTime )
 
 	if ( pDissolve != NULL )
 	{
-		pTarget->AddFlag( FL_DISSOLVING );
+		//pTarget->AddFlag( FL_DISSOLVING );
 		pDissolve->SetParent( pTarget );
 		pDissolve->OnDataChanged( DATA_UPDATE_CREATED );
 		pDissolve->SetAbsOrigin( pTarget->GetAbsOrigin() );
@@ -1224,7 +1224,7 @@ void CBaseAnimating::TransferDissolveFrom( CBaseAnimating *pAnim )
 	CEntityDissolve *pDissolve = CEntityDissolve::Create( this, pAnim );
 	if (pDissolve)
 	{
-		AddFlag( FL_DISSOLVING );
+		//AddFlag( FL_DISSOLVING );
 		m_flDissolveStartTime = pAnim->m_flDissolveStartTime;
 
 		CEntityDissolve *pDissolveFrom = dynamic_cast < CEntityDissolve * > (pAnim->GetEffectEntity());

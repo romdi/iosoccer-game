@@ -299,7 +299,7 @@ public:
 
 	// Dissolve, returns true if the ragdoll has been created
 	bool Dissolve( const char *pMaterialName, float flStartTime, bool bNPCOnly = true, int nDissolveType = 0, Vector vDissolverOrigin = vec3_origin, int iMagnitude = 0 );
-	bool IsDissolving() { return ( (GetFlags() & FL_DISSOLVING) != 0 ); }
+	bool IsDissolving() { return false;/*( (GetFlags() & FL_DISSOLVING) != 0 );*/ }
 	void TransferDissolveFrom( CBaseAnimating *pAnim );
 
 	// animation needs

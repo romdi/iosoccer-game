@@ -98,8 +98,8 @@ ConVar sv_ball_bodypos_feet_start("sv_ball_bodypos_feet_start", "-10", FCVAR_NOT
 ConVar sv_ball_bodypos_hip_start("sv_ball_bodypos_hip_start", "15", FCVAR_NOTIFY);
 ConVar sv_ball_bodypos_chest_start("sv_ball_bodypos_chest_start", "40", FCVAR_NOTIFY);
 ConVar sv_ball_bodypos_head_start("sv_ball_bodypos_head_start", "60", FCVAR_NOTIFY);
-ConVar sv_ball_bodypos_head_end("sv_ball_bodypos_head_end", "80", FCVAR_NOTIFY);
-ConVar sv_ball_bodypos_keeperarms_end("sv_ball_bodypos_keeperarms_end", "90", FCVAR_NOTIFY);
+ConVar sv_ball_bodypos_head_end("sv_ball_bodypos_head_end", "85", FCVAR_NOTIFY);
+ConVar sv_ball_bodypos_keeperarms_end("sv_ball_bodypos_keeperarms_end", "95", FCVAR_NOTIFY);
 ConVar sv_ball_foulprobability("sv_ball_foulprobability", "50", FCVAR_NOTIFY);
 ConVar sv_ball_yellowcardprobability_forward("sv_ball_yellowcardprobability_forward", "33", FCVAR_NOTIFY);
 ConVar sv_ball_yellowcardprobability_backward("sv_ball_yellowcardprobability_backward", "66", FCVAR_NOTIFY);
@@ -894,7 +894,7 @@ void CBall::State_THROWIN_Think()
 
 	if (m_pPl->GetFlags() & FL_ATCONTROLS)
 	{
-		SetPos(Vector(m_vTriggerTouchPos.x, m_vTriggerTouchPos.y, SDKGameRules()->m_vKickOff.GetZ() + VEC_HULL_MAX.z + 2));
+		SetPos(Vector(m_vTriggerTouchPos.x, m_vTriggerTouchPos.y, SDKGameRules()->m_vKickOff.GetZ() + m_pPl->GetPlayerMaxs().z + 2));
 		m_pPl->RemoveFlag(FL_ATCONTROLS);
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_THROWIN);
 	}
@@ -1363,7 +1363,7 @@ void CBall::State_KEEPERHANDS_Think()
 
 	UpdateCarrier();
 
-	SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_chest_start.GetFloat()) + m_vPlForward2D * 2 * VEC_HULL_MAX.x);
+	SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_chest_start.GetFloat()) + m_vPlForward2D * (m_pPl->GetPlayerMaxs().x - m_pPl->GetPlayerMins().x));
 
 	// Don't ignore triggers when setting the new ball position
 	m_bSetNewPos = false;
@@ -1536,8 +1536,7 @@ bool CBall::DoBodyPartAction()
 
 	if (m_pPl->GetTeamPosType() == GK && m_nInPenBoxOfTeam == m_pPl->GetTeamNumber() && !m_pPl->m_pHoldingBall)
 	{
-		if (CheckKeeperCatch())
-			return true;
+		return CheckKeeperCatch();
 	}
 
 	if (m_pPl->m_Shared.m_ePlayerAnimEvent == PLAYERANIMEVENT_SLIDE)
@@ -1646,10 +1645,10 @@ bool CBall::CheckKeeperCatch()
 			&& localDirToBall.y >= -sv_ball_keeperlongsidereach.GetInt());
 		break;
 	case PLAYERANIMEVENT_KEEPER_DIVE_FORWARD:
-		canCatch = (zDist < sv_ball_bodypos_hip_start.GetInt()
+		canCatch = (zDist < sv_ball_bodypos_chest_start.GetInt()
 			&& zDist >= sv_ball_bodypos_feet_start.GetInt()
-			&& localDirToBall.x >= 0
-			&& localDirToBall.x <= sv_ball_keeperlongsidereach.GetInt() + sv_ball_keeperlongsidereach_opposite.GetInt()
+			&& localDirToBall.x >= sv_ball_keeperlongsidereach_opposite.GetInt()
+			&& localDirToBall.x <= sv_ball_keeperlongsidereach.GetInt()
 			&& abs(localDirToBall.y) <= sv_ball_keepershortsidereach.GetInt());
 		break;
 	case PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD:

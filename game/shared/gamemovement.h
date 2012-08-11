@@ -91,8 +91,8 @@ protected:
 	// Implement this if you want to know when the player collides during OnPlayerMove
 	virtual void	OnTryPlayerMoveCollision( trace_t &tr ) {}
 
-	virtual const Vector&	GetPlayerMins( void ) const { return VEC_HULL_MIN; }; // uses local player
-	virtual const Vector&	GetPlayerMaxs( void ) const { return VEC_HULL_MAX; }; // uses local player
+	//virtual const Vector&	GetPlayerMins( void ) const { return VEC_SLIDE_HULL_MIN;/* player->GetPlayerMins();*/ }; // uses local player
+	//virtual const Vector&	GetPlayerMaxs( void ) const { return VEC_SLIDE_HULL_MAX;/* player->GetPlayerMaxs();*/ }; // uses local player
 
 	typedef enum
 	{
@@ -201,7 +201,7 @@ inline void CGameMovement::TracePlayerBBox( const Vector& start, const Vector& e
 	VPROF( "CGameMovement::TracePlayerBBox" );
 
 	Ray_t ray;
-	ray.Init( start, end, GetPlayerMins(), GetPlayerMaxs() );
+	ray.Init( start, end, player->GetPlayerMins(), player->GetPlayerMaxs() );
 	UTIL_TraceRay( ray, fMask, mv->m_nPlayerHandle.Get(), collisionGroup, &pm );
 }
 

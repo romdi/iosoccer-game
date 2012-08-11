@@ -76,8 +76,25 @@ bool CSDKPlayer::IsSprinting( void )
 //-----------------------------------------------------------------------------
 const Vector CSDKPlayer::GetPlayerMins( void ) const
 {
-
-	return VEC_HULL_MIN;
+	if ( IsObserver() )
+	{
+		return VEC_OBS_HULL_MIN;	
+	}
+	else
+	{
+		if (GetFlags() & FL_KEEPER_SIDEWAYS_DIVING)
+		{
+			return VEC_KEEPER_SIDEWAYS_DIVE_HULL_MIN;
+		}
+		else if (GetFlags() & FL_SLIDING)
+		{
+			return VEC_SLIDE_HULL_MIN;
+		}
+		else
+		{
+			return VEC_HULL_MIN;
+		}
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -87,7 +104,25 @@ const Vector CSDKPlayer::GetPlayerMins( void ) const
 //-----------------------------------------------------------------------------
 const Vector CSDKPlayer::GetPlayerMaxs( void ) const
 {	
-	return VEC_HULL_MAX;
+	if ( IsObserver() )
+	{
+		return VEC_OBS_HULL_MAX;	
+	}
+	else
+	{
+		if (GetFlags() & FL_KEEPER_SIDEWAYS_DIVING)
+		{
+			return VEC_KEEPER_SIDEWAYS_DIVE_HULL_MAX;
+		}
+		else if (GetFlags() & FL_SLIDING)
+		{
+			return VEC_SLIDE_HULL_MAX;
+		}
+		else
+		{
+			return VEC_HULL_MAX;
+		}
+	}
 }
 
 
@@ -209,11 +244,11 @@ void CSDKPlayer::MoveToTargetPos(Vector &pos, Vector &vel, QAngle &ang)
 		pos = m_vTargetPos;
 
 		trace_t	trace;
-		UTIL_TraceHull(pos, pos, VEC_HULL_MIN, VEC_HULL_MAX, MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &trace);
+		UTIL_TraceHull(pos, pos, GetPlayerMins(), GetPlayerMaxs(), MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &trace);
 
 		if (trace.startsolid)
 		{
-			m_vTargetPos = pos + dir * VEC_HULL_MAX.x * 2;
+			m_vTargetPos = pos + dir * (GetPlayerMaxs().x - GetPlayerMins().x);
 		}
 		else
 		{
@@ -415,7 +450,7 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 	{
 		//newVel = oldVel;
 		trace_t	trace;
-		UTIL_TraceHull(newPos, newPos, VEC_HULL_MIN, VEC_HULL_MAX, MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &trace);
+		UTIL_TraceHull(newPos, newPos, GetPlayerMins(), GetPlayerMaxs(), MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &trace);
 
 		if (trace.startsolid)
 		{
@@ -431,7 +466,7 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 void CSDKPlayer::FindSafePos(Vector &startPos)
 {
 	bool hasSafePos = false;
-	int maxCheckDist = VEC_HULL_MAX.x * 10;
+	int maxCheckDist = (GetPlayerMaxs().x - GetPlayerMins().x) * 5;
 
 	for (int x = 0; x < maxCheckDist; x++)
 	{
@@ -441,7 +476,7 @@ void CSDKPlayer::FindSafePos(Vector &startPos)
 			{
 				Vector checkPos = startPos + Vector(x, y, 0);
 				trace_t	trace;
-				UTIL_TraceHull(checkPos, checkPos, VEC_HULL_MIN, VEC_HULL_MAX, MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &trace);
+				UTIL_TraceHull(checkPos, checkPos, GetPlayerMins(), GetPlayerMaxs(), MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &trace);
 
 				if (!trace.startsolid)
 				{
@@ -460,5 +495,5 @@ void CSDKPlayer::FindSafePos(Vector &startPos)
 	}
 
 	if (!hasSafePos)
-		startPos.z += VEC_HULL_MAX.z * 2;
+		startPos.z += GetPlayerMaxs().z * 2;
 }
