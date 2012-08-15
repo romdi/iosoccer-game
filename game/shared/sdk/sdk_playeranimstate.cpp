@@ -327,13 +327,15 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 	{
 	case PLAYERANIMEVENT_NONE:
 	#ifdef CLIENT_DLL
-		cl_powershot_strength.SetValue(mp_powershot_fixed_strength.GetInt());
+		if (GetSDKPlayer() == C_SDKPlayer::GetLocalSDKPlayer())
+			cl_powershot_strength.SetValue(mp_powershot_fixed_strength.GetInt());
 	#endif
 		break;
 	case PLAYERANIMEVENT_CANCEL:
 		{
 			#ifdef CLIENT_DLL
-				cl_powershot_strength.SetValue(mp_powershot_fixed_strength.GetInt());
+				if (GetSDKPlayer() == C_SDKPlayer::GetLocalSDKPlayer())
+					cl_powershot_strength.SetValue(mp_powershot_fixed_strength.GetInt());
 			#endif
 			ClearAnimationState();
 			break;
@@ -360,7 +362,8 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 	case PLAYERANIMEVENT_KEEPER_HANDS_PUNCH:
 		{
 			#ifdef CLIENT_DLL
-				cl_powershot_strength.SetValue(mp_powershot_fixed_strength.GetInt());
+				if (GetSDKPlayer() == C_SDKPlayer::GetLocalSDKPlayer())
+					cl_powershot_strength.SetValue(mp_powershot_fixed_strength.GetInt());
 			#endif
 			m_flPrimaryActionSequenceCycle = 0;
 			m_iPrimaryActionSequence = CalcPrimaryActionSequence( event );
