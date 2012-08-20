@@ -100,6 +100,8 @@ public:
 
 	CNetworkVar(int, m_nTeamNumber);
 	CNetworkVar(int, m_nTeamPosNum);
+
+	CAnimationLayer m_AnimLayers[2];
 };
 
 class CReplayManager : public CBaseEntity

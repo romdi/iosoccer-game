@@ -412,6 +412,9 @@ public:
 
 	float				m_flLastReadyTime;
 
+	Vector				m_vPreReplayPos;
+	QAngle				m_aPreReplayAngles;
+
 protected:
 
 	bool				m_bIsOffside;
@@ -419,6 +422,8 @@ protected:
 	CHandle<CBall>		m_pPlayerBall;
 	Vector				m_vOffsideLastOppPlayerPos;
 	Vector				m_vOffsideBallPos;
+
+	int					m_nMotmChoiceIds[2];
 };
 
 

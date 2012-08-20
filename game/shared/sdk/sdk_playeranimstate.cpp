@@ -131,6 +131,9 @@ void CSDKPlayerAnimState::ClearAnimationLayers()
 	for ( int i=0; i < GetBasePlayer()->GetNumAnimOverlays(); i++ )
 	{
 		GetBasePlayer()->GetAnimOverlay( i )->SetOrder( CBaseAnimatingOverlay::MAX_OVERLAYS );
+#ifndef CLIENT_DLL
+		GetBasePlayer()->GetAnimOverlay( i )->m_fFlags = 0;
+#endif
 	}
 }
 
@@ -278,7 +281,6 @@ int CSDKPlayerAnimState::CalcSequenceIndex( const char *pBaseName, ... )
 	return iSequence;
 }
 
-
 void CSDKPlayerAnimState::UpdateLayerSequenceGeneric( CStudioHdr *pStudioHdr, int iLayer, bool &bEnabled, float &flCurCycle, int &iSequence, bool bWaitAtEnd )
 {
 	if ( !bEnabled )
@@ -294,12 +296,36 @@ void CSDKPlayerAnimState::UpdateLayerSequenceGeneric( CStudioHdr *pStudioHdr, in
 		}
 		else
 		{
-			// Not firing anymore.
-			bEnabled = false;
-			iSequence = 0;
-			GetSDKPlayer()->m_Shared.m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
-			GetSDKPlayer()->RemoveFlag(FL_FREECAM | FL_SLIDING | FL_KEEPER_SIDEWAYS_DIVING);
-			return;
+			GetSDKPlayer()->RemoveFlag(FL_FREECAM);
+
+			bool canResetHull = true;
+
+			if (GetSDKPlayer()->GetFlags() & (FL_SLIDING | FL_KEEPER_SIDEWAYS_DIVING))
+			{
+				Vector pos = GetSDKPlayer()->GetLocalOrigin();
+				trace_t	trace;
+				UTIL_TraceHull(pos, pos, VEC_HULL_MIN, VEC_HULL_MAX, MASK_PLAYERSOLID, GetSDKPlayer(), COLLISION_GROUP_PLAYER, &trace);
+
+				if (trace.startsolid)
+				{
+					canResetHull = false;
+				}
+			}
+
+			if (canResetHull)
+			{
+				// Not firing anymore.
+				bEnabled = false;
+				iSequence = 0;
+				GetSDKPlayer()->m_Shared.m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
+				GetSDKPlayer()->RemoveFlag(FL_SLIDING | FL_KEEPER_SIDEWAYS_DIVING);
+				return;
+			}
+			else
+			{
+				flCurCycle = 1;
+
+			}
 		}
 	}
 
@@ -312,6 +338,9 @@ void CSDKPlayerAnimState::UpdateLayerSequenceGeneric( CStudioHdr *pStudioHdr, in
 	pLayer->m_flPlaybackRate = 1.0;
 	pLayer->m_flWeight = 1.0f;
 	pLayer->m_nOrder = iLayer;
+#ifndef CLIENT_DLL
+	pLayer->m_fFlags |= ANIM_LAYER_ACTIVE;
+#endif
 }
 
 extern ConVar cl_powershot_strength;
@@ -326,17 +355,10 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 	switch( event )
 	{
 	case PLAYERANIMEVENT_NONE:
-	#ifdef CLIENT_DLL
-		if (GetSDKPlayer() == C_SDKPlayer::GetLocalSDKPlayer())
-			cl_powershot_strength.SetValue(mp_powershot_fixed_strength.GetInt());
-	#endif
 		break;
 	case PLAYERANIMEVENT_CANCEL:
 		{
-			#ifdef CLIENT_DLL
-				if (GetSDKPlayer() == C_SDKPlayer::GetLocalSDKPlayer())
-					cl_powershot_strength.SetValue(mp_powershot_fixed_strength.GetInt());
-			#endif
+			GetSDKPlayer()->RemoveFlag(FL_FREECAM | FL_KEEPER_SIDEWAYS_DIVING | FL_SLIDING);
 			ClearAnimationState();
 			break;
 		}
@@ -361,10 +383,6 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 	case PLAYERANIMEVENT_KEEPER_HANDS_KICK:
 	case PLAYERANIMEVENT_KEEPER_HANDS_PUNCH:
 		{
-			#ifdef CLIENT_DLL
-				if (GetSDKPlayer() == C_SDKPlayer::GetLocalSDKPlayer())
-					cl_powershot_strength.SetValue(mp_powershot_fixed_strength.GetInt());
-			#endif
 			m_flPrimaryActionSequenceCycle = 0;
 			m_iPrimaryActionSequence = CalcPrimaryActionSequence( event );
 			m_bIsPrimaryActionSequenceActive = m_iPrimaryActionSequence != -1;

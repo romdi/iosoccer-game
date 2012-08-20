@@ -44,4 +44,8 @@
 #define PANEL_STATUS			"status"		//ios
 #define PANEL_MAINSTATUS		"mainstatus"	//ios
 
+#define PANEL_MOTMVOTING "motmvoting"
+
+#define PANEL_POSTMATCHSTATS "postmatchstats"
+
 #endif // VIEWPORT_PANEL_NAMES_H

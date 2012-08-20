@@ -35,6 +35,8 @@
 #include "clientscoreboarddialog.h"
 #include "spectatorgui.h"
 #include "classmenu.h"				//IOS
+#include "motmvotingmenu.h"
+#include "postmatchstatsmenu.h"
 #include "vguitextwindow.h"
 #include "IGameUIFuncs.h"
 #include "hud.h"
@@ -223,6 +225,8 @@ void CBaseViewport::CreateDefaultPanels( void )
 	//AddNewPanel( CreatePanelByName( PANEL_CLASS ), "PANEL_CLASS" );		//ios uncommented this
 	AddNewPanel( CreatePanelByName( PANEL_STATUS ), "PANEL_STATUS" );		//ios added this
 	AddNewPanel( CreatePanelByName( PANEL_MAINSTATUS ), "PANEL_MAINSTATUS" );	//ios added this
+	AddNewPanel( CreatePanelByName( PANEL_MOTMVOTING ), "PANEL_MOTMVOTING" );	//ios added this
+	AddNewPanel( CreatePanelByName( PANEL_POSTMATCHSTATS ), "PANEL_POSTMATCHSTATS" );	//ios added this
 #endif
 }
 
@@ -278,6 +282,14 @@ IViewPortPanel* CBaseViewport::CreatePanelByName(const char *szPanelName)
 	else if ( Q_strcmp(PANEL_NAV_PROGRESS, szPanelName) == 0 )
 	{
 		newpanel = new CNavProgress( this );
+	}
+	else if ( Q_strcmp(PANEL_MOTMVOTING, szPanelName) == 0 )
+	{
+		newpanel = new CMotmVotingMenu( this );
+	}
+	else if ( Q_strcmp(PANEL_POSTMATCHSTATS, szPanelName) == 0 )
+	{
+		newpanel = new CPostMatchStatsMenu( this );
 	}
 #endif
 

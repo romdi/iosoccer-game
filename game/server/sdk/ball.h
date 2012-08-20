@@ -218,7 +218,8 @@ private:
 	bool			DoHeader();
 	void			SetSpin(float coeff);
 	float			GetPitchCoeff();
-	float			GetPowershotStrength(float coeff, int minStrength, int maxStrength);
+	float			GetNormalshotStrength(float coeff, int normalStrength, int sprintStrength);
+	float			GetPowershotStrength(float coeff, int normalStrength, int sprintStrength);
 	void			UpdateCarrier();
 	void			Kicked(body_part_t bodyPart, bool isDeflection);
 	void			Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart);

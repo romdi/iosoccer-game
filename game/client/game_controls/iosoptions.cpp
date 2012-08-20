@@ -89,6 +89,7 @@ CIOSOptionsPanel::CIOSOptionsPanel(VPANEL parent) : BaseClass(NULL, "IOSOptionsP
 	}
 
 	m_pShotButtonPanel = new Panel(m_pContent);
+	m_pShotButtonPanel->SetVisible(false);
 	m_pShotButtonLabel = new Label(m_pShotButtonPanel, "", "Shot Button:");
 	m_pShotButtonLeft = new RadioButton(m_pShotButtonPanel, "", "Left Mouse Button");
 	m_pShotButtonRight = new RadioButton(m_pShotButtonPanel, "", "Right Mouse Button");

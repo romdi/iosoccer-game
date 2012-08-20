@@ -433,6 +433,8 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClCompile Include="game_controls\formationmenu.cpp" />
     <ClCompile Include="game_controls\iosoptions.cpp" />
     <ClCompile Include="game_controls\ircclient.cpp" />
+    <ClCompile Include="game_controls\motmvotingmenu.cpp" />
+    <ClCompile Include="game_controls\postmatchstatsmenu.cpp" />
     <ClCompile Include="game_controls\statsmenu.cpp" />
     <ClCompile Include="geiger.cpp" />
     <ClCompile Include="glow_overlay.cpp" />
@@ -846,6 +848,8 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClInclude Include="game_controls\formationmenu.h" />
     <ClInclude Include="game_controls\iosoptions.h" />
     <ClInclude Include="game_controls\ircclient.h" />
+    <ClInclude Include="game_controls\motmvotingmenu.h" />
+    <ClInclude Include="game_controls\postmatchstatsmenu.h" />
     <ClInclude Include="game_controls\statsmenu.h" />
     <ClInclude Include="hud_basedeathnotice.h" />
     <ClInclude Include="..\shared\particle_parse.h" />

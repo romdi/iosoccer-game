@@ -360,7 +360,7 @@ void CHudScorebar::OnThink( void )
 	else if (pLocal->State_Get() == STATE_ACTIVE)
 	{
 		if (gpGlobals->curtime - 10 <= pLocal->m_flStateEnterTime)
-			m_pHelpText->SetText("Press [RMB] to dribble. Use [MOUSE WHEEL] to set shot strength. [ESC]->\"Player Settings\" to change.");
+			m_pHelpText->SetText("[LMB] / [RMB] to shoot. Hold [SHIFT] to increase shot strength.");
 		else
 			m_pHelpText->SetText("");
 	}

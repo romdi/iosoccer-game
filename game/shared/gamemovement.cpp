@@ -1543,38 +1543,56 @@ bool CGameMovement::CheckPlayerAnimEvent()
 	forward2D.z = 0;
 	forward2D.NormalizeInPlace();
 	bool isSprinting = ((mv->m_nButtons & IN_SPEED) != 0);
+	const float stuckRescueTimeLimit = 4;
 
 	switch (ToSDKPlayer(player)->m_Shared.m_ePlayerAnimEvent)
 	{
 	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT:
 		{
-			mv->m_vecVelocity = forward2D * mv->m_flForwardMove * (isSprinting ? mp_keepersprintdivecoeff_shortside.GetFloat() : mp_keeperdivecoeff_shortside.GetFloat()) + right * mv->m_flSideMove * (isSprinting ? mp_keepersprintdivecoeff_longside.GetFloat() : mp_keeperdivecoeff_longside.GetFloat());
-			mv->m_vecVelocity *= max(0, (1 - pow(timePassed / mp_keeperdiveduration.GetFloat(), 2)));
-			//mv->m_vecVelocity = -right * mp_keeperdivespeed_xy.GetInt() * (isSprinting ? mp_keepersprintdivecoeff_xy.GetFloat() : 1) * max(0, (1 - pow(timePassed / mp_keeperdiveduration.GetFloat(), 2)));
-			mv->m_vecVelocity.z = mp_keeperdivespeed_z.GetInt() * (isSprinting ? mp_keepersprintdivecoeff_z.GetFloat() : mp_keeperdivecoeff_z.GetFloat());
+			if (timePassed <= stuckRescueTimeLimit)
+			{
+				mv->m_vecVelocity = forward2D * mv->m_flForwardMove * (isSprinting ? mp_keepersprintdivecoeff_shortside.GetFloat() : mp_keeperdivecoeff_shortside.GetFloat()) + right * mv->m_flSideMove * (isSprinting ? mp_keepersprintdivecoeff_longside.GetFloat() : mp_keeperdivecoeff_longside.GetFloat());
+				mv->m_vecVelocity *= max(0, (1 - pow(timePassed / mp_keeperdiveduration.GetFloat(), 2)));
+				mv->m_vecVelocity.z = mp_keeperdivespeed_z.GetInt() * (isSprinting ? mp_keepersprintdivecoeff_z.GetFloat() : mp_keeperdivecoeff_z.GetFloat());
+			}
+			else
+				mv->m_vecVelocity = forward * mv->m_flForwardMove + right * mv->m_flSideMove;
 			break;
 		}
 	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT:
 		{
-			mv->m_vecVelocity = forward2D * mv->m_flForwardMove * (isSprinting ? mp_keepersprintdivecoeff_shortside.GetFloat() : mp_keeperdivecoeff_shortside.GetFloat()) + right * mv->m_flSideMove * (isSprinting ? mp_keepersprintdivecoeff_longside.GetFloat() : mp_keeperdivecoeff_longside.GetFloat());
-			mv->m_vecVelocity *= max(0, (1 - pow(timePassed / mp_keeperdiveduration.GetFloat(), 2)));
-			//mv->m_vecVelocity = right * mp_keeperdivespeed_xy.GetInt() * (isSprinting ? mp_keepersprintdivecoeff_xy.GetFloat() : 1) * max(0, (1 - pow(timePassed / mp_keeperdiveduration.GetFloat(), 2)));
-			mv->m_vecVelocity.z = mp_keeperdivespeed_z.GetInt() * (isSprinting ? mp_keepersprintdivecoeff_z.GetFloat() : mp_keeperdivecoeff_z.GetFloat());
+			if (timePassed <= stuckRescueTimeLimit)
+			{
+				mv->m_vecVelocity = forward2D * mv->m_flForwardMove * (isSprinting ? mp_keepersprintdivecoeff_shortside.GetFloat() : mp_keeperdivecoeff_shortside.GetFloat()) + right * mv->m_flSideMove * (isSprinting ? mp_keepersprintdivecoeff_longside.GetFloat() : mp_keeperdivecoeff_longside.GetFloat());
+				mv->m_vecVelocity *= max(0, (1 - pow(timePassed / mp_keeperdiveduration.GetFloat(), 2)));
+				mv->m_vecVelocity.z = mp_keeperdivespeed_z.GetInt() * (isSprinting ? mp_keepersprintdivecoeff_z.GetFloat() : mp_keeperdivecoeff_z.GetFloat());
+			}
+			else
+				mv->m_vecVelocity = forward * mv->m_flForwardMove + right * mv->m_flSideMove;
 			break;
 		}
 	case PLAYERANIMEVENT_KEEPER_DIVE_FORWARD:
 		{
-			mv->m_vecVelocity = forward2D * mv->m_flForwardMove * (isSprinting ? mp_keepersprintdivecoeff_longside.GetFloat() : mp_keeperdivecoeff_longside.GetFloat()) + right * mv->m_flSideMove * (isSprinting ? mp_keepersprintdivecoeff_shortside.GetFloat() : mp_keeperdivecoeff_shortside.GetFloat());
-			mv->m_vecVelocity *= max(0, (1 - pow(timePassed / mp_keeperdiveduration.GetFloat(), 2)));
-			//mv->m_vecVelocity = forward2D * mp_keeperdivespeed_xy.GetInt() * (isSprinting ? mp_keepersprintdivecoeff_xy.GetFloat() : 1) * max(0, (1 - pow(timePassed / mp_keeperdiveduration.GetFloat(), 2)));
-			mv->m_vecVelocity.z = 0;
+			if (timePassed <= stuckRescueTimeLimit)
+			{
+				mv->m_vecVelocity = forward2D * mv->m_flForwardMove * (isSprinting ? mp_keepersprintdivecoeff_longside.GetFloat() : mp_keeperdivecoeff_longside.GetFloat()) + right * mv->m_flSideMove * (isSprinting ? mp_keepersprintdivecoeff_shortside.GetFloat() : mp_keeperdivecoeff_shortside.GetFloat());
+				mv->m_vecVelocity *= max(0, (1 - pow(timePassed / mp_keeperdiveduration.GetFloat(), 2)));
+				mv->m_vecVelocity.z = 0;
+			}
+			else
+				mv->m_vecVelocity = forward * mv->m_flForwardMove + right * mv->m_flSideMove;
 			break;
 		}
 	case PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD:
 		{
-			mv->m_vecVelocity = forward2D * mv->m_flForwardMove + right * mv->m_flSideMove;
-			//mv->m_vecVelocity = -forward2D * mp_keeperdivespeed_xy.GetInt() * (isSprinting ? mp_keepersprintdivecoeff_xy.GetFloat() : 1) * max(0, (1 - pow(timePassed / mp_keeperdiveduration.GetFloat(), 2)));
-			mv->m_vecVelocity.z = mp_keeperdivespeed_z.GetInt() * (isSprinting ? mp_keepersprintdivecoeff_z.GetFloat() : mp_keeperdivecoeff_z.GetFloat());
+			if (timePassed <= stuckRescueTimeLimit)
+			{
+				mv->m_vecVelocity = forward2D * mv->m_flForwardMove * (isSprinting ? mp_keepersprintdivecoeff_longside.GetFloat() : mp_keeperdivecoeff_longside.GetFloat()) + right * mv->m_flSideMove * (isSprinting ? mp_keepersprintdivecoeff_shortside.GetFloat() : mp_keeperdivecoeff_shortside.GetFloat());
+				mv->m_vecVelocity *= max(0, (1 - pow(timePassed / mp_keeperdiveduration.GetFloat(), 2)));
+				mv->m_vecVelocity.z = mp_keeperdivespeed_z.GetInt() * (isSprinting ? mp_keepersprintdivecoeff_z.GetFloat() : mp_keeperdivecoeff_z.GetFloat());
+			}
+			else
+				mv->m_vecVelocity = forward * mv->m_flForwardMove + right * mv->m_flSideMove;
 			break;
 		}
 	case PLAYERANIMEVENT_KEEPER_HANDS_THROW:
@@ -1584,7 +1602,10 @@ bool CGameMovement::CheckPlayerAnimEvent()
 		}
 	case PLAYERANIMEVENT_SLIDE:
 		{
-			mv->m_vecVelocity = forward2D * mp_slidespeed.GetInt() * max(0, (1 - pow(timePassed / mp_slideduration.GetFloat(), 2)));
+			if (timePassed <= stuckRescueTimeLimit)
+				mv->m_vecVelocity = forward2D * mp_slidespeed.GetInt() * max(0, (1 - pow(timePassed / mp_slideduration.GetFloat(), 2)));
+			else
+				mv->m_vecVelocity = forward * mv->m_flForwardMove + right * mv->m_flSideMove;
 			break;
 		}
 	case PLAYERANIMEVENT_TACKLED_FORWARD:
@@ -1601,7 +1622,10 @@ bool CGameMovement::CheckPlayerAnimEvent()
 		}
 	case PLAYERANIMEVENT_DIVINGHEADER:
 		{
-			mv->m_vecVelocity = forward2D * mp_divingheaderspeed.GetInt() * max(0, (1 - pow(timePassed / mp_divingheaderduration.GetFloat(), 2)));
+			if (timePassed <= stuckRescueTimeLimit)
+				mv->m_vecVelocity = forward2D * mp_divingheaderspeed.GetInt() * max(0, (1 - pow(timePassed / mp_divingheaderduration.GetFloat(), 2)));
+			else
+				mv->m_vecVelocity = forward * mv->m_flForwardMove + right * mv->m_flSideMove;
 			break;
 		}
 	case PLAYERANIMEVENT_KICK:
@@ -1885,16 +1909,16 @@ bool CGameMovement::CheckJumpButton( void )
 			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_RIGHT;
 			pPl->AddFlag(FL_FREECAM);
 		}
-		else if ((mv->m_nButtons & IN_FORWARD) && !(mv->m_nButtons & IN_WALK))
+		else if ((mv->m_nButtons & IN_FORWARD) && !(mv->m_nButtons & IN_WALK) && (mv->m_nButtons & IN_SPEED))
 		{
 			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_FORWARD;
 			pPl->AddFlag(FL_FREECAM);
 		}
-		//else if ((mv->m_nButtons & IN_BACK) && !(mv->m_nButtons & IN_WALK))
-		//{
-		//	animEvent = PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD;
-		//	pPl->AddFlag(FL_FREECAM);
-		//}
+		else if ((mv->m_nButtons & IN_BACK) && !(mv->m_nButtons & IN_WALK) && (mv->m_nButtons & IN_SPEED))
+		{
+			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD;
+			pPl->AddFlag(FL_FREECAM);
+		}
 		else
 		{
 			animEvent = PLAYERANIMEVENT_KEEPER_JUMP;
@@ -2845,14 +2869,14 @@ void CGameMovement::PlayerMove( void )
 		//Vector pos = mv->GetAbsOrigin();
 		//ToSDKPlayer(player)->FindSafePos(pos);
 		//mv->SetAbsOrigin(pos);
-		//if ( CheckInterval( STUCK ) )
-		//{
-		//	if ( CheckStuck() )
-		//	{
-		//		// Can't move, we're stuck
-		//		return;  
-		//	}
-		//}
+		if ( CheckInterval( STUCK ) )
+		{
+			if ( CheckStuck() )
+			{
+				// Can't move, we're stuck
+				return;  
+			}
+		}
 	}
 
 	// Now that we are "unstuck", see where we are (player->GetWaterLevel() and type, player->GetGroundEntity()).

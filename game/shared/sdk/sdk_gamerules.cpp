@@ -1185,8 +1185,6 @@ void CSDKGameRules::State_Enter( match_state_t newState )
 	{
 		(this->*m_pCurStateInfo->pfnEnterState)();
 	}
-
-
 }
 
 void CSDKGameRules::State_Leave()
@@ -1269,6 +1267,14 @@ void CSDKGameRules::State_FIRST_HALF_Enter()
 	SetKickOffTeam(m_nFirstHalfKickOffTeam);
 	GetBall()->State_Transition(BALL_KICKOFF, 0, true);
 	WakeUpAllPlayers();
+	//for (int i = 1; i <= gpGlobals->maxClients; i++)
+	//{
+	//	CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+	//	if (!CSDKPlayer::IsOnField(pPl))
+	//		continue;
+
+	//	pPl->ShowViewPortPanel(PANEL_MOTMVOTING);
+	//}
 }
 
 void CSDKGameRules::State_FIRST_HALF_Think()
@@ -1491,21 +1497,23 @@ void CSDKGameRules::State_PENALTIES_Think()
 				
 				GetGlobalTeam(m_nPenaltyTakingTeam)->m_nPenaltyRound += 1;
 
-				if (m_nPenaltyTakingTeam != m_nPenaltyTakingStartTeam && GetGlobalTeam(m_nPenaltyTakingTeam)->m_nPenaltyRound >= 5)
+				if (GetGlobalTeam(m_nPenaltyTakingTeam)->m_nPenaltyRound <= 5)
 				{
-					if (GetGlobalTeam(TEAM_A)->GetGoals() != GetGlobalTeam(TEAM_B)->GetGoals())
+					int goalDiff = GetGlobalTeam(m_nPenaltyTakingTeam)->m_nPenaltyGoals - GetGlobalTeam(m_nPenaltyTakingTeam)->GetOppTeam()->m_nPenaltyGoals;
+
+					if (goalDiff != 0 && (goalDiff > 5 - GetGlobalTeam(m_nPenaltyTakingTeam)->GetOppTeam()->m_nPenaltyRound || -goalDiff > 5 - GetGlobalTeam(m_nPenaltyTakingTeam)->m_nPenaltyRound))
 					{
 						State_Transition(MATCH_COOLDOWN);
 						return;
 					}
 				}
-
-				int goalDiff = GetGlobalTeam(m_nPenaltyTakingTeam)->m_nPenaltyGoals - GetGlobalTeam(m_nPenaltyTakingTeam)->GetOppTeam()->m_nPenaltyGoals;
-
-				if (goalDiff != 0 && (-goalDiff > 5 - GetGlobalTeam(m_nPenaltyTakingTeam)->m_nPenaltyRound || goalDiff > 5 - GetGlobalTeam(m_nPenaltyTakingTeam)->GetOppTeam()->m_nPenaltyRound))
+				else
 				{
-					State_Transition(MATCH_COOLDOWN);
-					return;
+					if (m_nPenaltyTakingTeam != m_nPenaltyTakingStartTeam && GetGlobalTeam(TEAM_A)->GetGoals() != GetGlobalTeam(TEAM_B)->GetGoals())
+					{
+						State_Transition(MATCH_COOLDOWN);
+						return;
+					}
 				}
 
 				m_nPenaltyTakingTeam = GetGlobalTeam(m_nPenaltyTakingTeam)->GetOppTeamNumber();

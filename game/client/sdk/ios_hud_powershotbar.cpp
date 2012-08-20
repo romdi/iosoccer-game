@@ -178,7 +178,8 @@ void CHudPowershotBar::ApplySchemeSettings( IScheme *scheme )
 		m_pSpinIndicatorsBack[i]->SetVisible(false);
 
 		m_pSpinIndicators[i]->SetPaintBackgroundEnabled(true);
-		m_pSpinIndicators[i]->SetBgColor(Color(1, 210, 255, 255));
+		//m_pSpinIndicators[i]->SetBgColor(Color(1, 210, 255, 255));
+		m_pSpinIndicators[i]->SetBgColor(Color(255, 255, 255, 255));
 		m_pSpinIndicators[i]->SetBounds(SPIN_BORDER, SPIN_BORDER, m_pSpinIndicatorsBack[i]->GetWide() - 2 * SPIN_BORDER, m_pSpinIndicatorsBack[i]->GetTall() - 2 * SPIN_BORDER);
 	}
 }
@@ -243,9 +244,12 @@ void CHudPowershotBar::Paint()
 	float stamina = pPlayer->m_Shared.GetStamina();
 	float relStamina = stamina / 100.0f;
 
-	int height = (m_pStaminaPanel->GetTall() - 2 * BAR_PADDING) * (1 - mp_powershot_fixed_strength.GetInt() / 100.0f) * relStamina;
-	m_pStaminaIndicator->SetTall(height);
-	m_pStaminaIndicator->SetY(BAR_PADDING + (m_pStaminaPanel->GetTall() - 2 * BAR_PADDING) * (1 - mp_powershot_fixed_strength.GetInt() / 100.0f) - height);
+	//int height = (m_pStaminaPanel->GetTall() - 2 * BAR_PADDING) * (1 - mp_powershot_fixed_strength.GetInt() / 100.0f) * relStamina;
+	//m_pStaminaIndicator->SetTall(height);
+	//m_pStaminaIndicator->SetY(BAR_PADDING + (m_pStaminaPanel->GetTall() - 2 * BAR_PADDING) * (1 - mp_powershot_fixed_strength.GetInt() / 100.0f) - height);
+
+	m_pStaminaIndicator->SetTall((m_pStaminaPanel->GetTall() - 2 * BAR_PADDING) * relStamina);
+	m_pStaminaIndicator->SetY(BAR_PADDING + (m_pStaminaPanel->GetTall() - 2 * BAR_PADDING) - m_pStaminaIndicator->GetTall());
 
 	Color bgColor;
 
@@ -260,9 +264,10 @@ void CHudPowershotBar::Paint()
 	m_pStaminaIndicator->SetBgColor(bgColor);
 
 	m_pPowershotIndicatorBack->SetY(m_pStaminaPanel->GetY() + BAR_PADDING + m_pPowershotIndicatorBack->GetTall() + (1 - cl_powershot_strength.GetInt() / 100.0f) * (BAR_HEIGHT - 2 * BAR_PADDING - 3 * m_pPowershotIndicatorBack->GetTall()));
+	m_pPowershotIndicatorBack->SetVisible(false);
 
-	m_pFixedPowershotIndicator->SetY(BAR_PADDING + m_pPowershotIndicator->GetTall() + (1 - mp_powershot_fixed_strength.GetInt() / 100.0f) * (BAR_HEIGHT - 2 * BAR_PADDING - 3 * m_pFixedPowershotIndicator->GetTall()));
-	m_pFixedPowershotIndicator->SetVisible(false);
+	m_pFixedPowershotIndicator->SetY(BAR_PADDING + m_pPowershotIndicator->GetTall() + 0.5f * (BAR_HEIGHT - 2 * BAR_PADDING - 3 * m_pFixedPowershotIndicator->GetTall()));
+	//m_pFixedPowershotIndicator->SetVisible(false);
 
 	m_pSpinIndicatorsBack[0]->SetVisible(pPlayer->m_nButtons & IN_TOPSPIN);
 	m_pSpinIndicatorsBack[1]->SetVisible(pPlayer->m_nButtons & IN_BACKSPIN);

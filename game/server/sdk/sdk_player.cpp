@@ -121,7 +121,7 @@ END_SEND_TABLE()
 extern void SendProxy_Origin( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID );
 
 BEGIN_SEND_TABLE_NOBASE( CSDKPlayer, DT_SDKLocalPlayerExclusive )
-	SendPropInt( SENDINFO( m_iShotsFired ), 8, SPROP_UNSIGNED ),
+	//SendPropInt( SENDINFO( m_iShotsFired ), 8, SPROP_UNSIGNED ),
 	// send a hi-res origin to the local player for use in prediction
 	//new ios1.1 we need this for free roaming mode - do not remove!
     SendPropVector(SENDINFO(m_vecOrigin), -1, SPROP_NOSCALE|SPROP_CHANGES_OFTEN, 0.0f, HIGH_DEFAULT, SendProxy_Origin ),
@@ -904,6 +904,9 @@ void CSDKPlayer::State_ACTIVE_Enter()
 	m_Local.m_vecPunchAngleVel = vec3_angle;
 	SnapEyeAngles(ang);
 
+	m_vPreReplayPos = GetLocalOrigin();
+	m_aPreReplayAngles = GetLocalAngles();
+
 	//Tony; call spawn again now -- remember; when we add respawn timers etc, to just put them into the spawn queue, and let the queue respawn them.
 	//Spawn();
 	//RemoveEffects(EF_NODRAW); //ios hack - player spawns invisible sometimes
@@ -953,17 +956,36 @@ void CSDKPlayer::SetAnimation( PLAYER_ANIM playerAnim )
 
 bool CSDKPlayer::ClientCommand( const CCommand &args )
 {
-	const char *pcmd = args[0];
-
-	if ( FStrEq( pcmd, "jointeam" ) ) 
+	if (!Q_stricmp(args[0], "jointeam")) 
 	{
-		if ( args.ArgC() < 3)
+		if (args.ArgC() < 3)
 		{
-			Warning( "Player sent bad jointeam syntax\n" );
+			Warning("Player sent bad jointeam syntax\n");
 			return false;	//go away
 		}
 
 		ChangeTeamPos(atoi(args[1]), atoi(args[2]));
+
+		return true;
+	}
+	else if (!Q_stricmp(args[0], "motmvote"))
+	{
+		if (args.ArgC() < 3)
+		{
+			Warning("Need player ids\n");
+			return false;
+		}
+
+		CSDKPlayer *pPl = NULL;
+		pPl = ToSDKPlayer(UTIL_PlayerByIndex(atoi(args[1])));
+		if (!pPl)
+			return false;
+		pPl = ToSDKPlayer(UTIL_PlayerByIndex(atoi(args[2])));
+		if (!pPl)
+			return false;
+
+		m_nMotmChoiceIds[0] = atoi(args[0]);
+		m_nMotmChoiceIds[1] = atoi(args[1]);
 
 		return true;
 	}
@@ -1176,7 +1198,6 @@ void CSDKPlayer::ActivateRemoteControlling(const Vector &targetPos)
 {
 	m_vTargetPos = targetPos;
 	m_bIsAtTargetPos = false;
-	RemoveFlag(FL_FREECAM);
 	DoServerAnimationEvent(PLAYERANIMEVENT_CANCEL);
 	AddFlag(FL_REMOTECONTROLLED);
 	AddSolidFlags(FSOLID_NOT_SOLID);
@@ -1423,12 +1444,12 @@ void CSDKPlayer::ResetFlags()
 
 bool CSDKPlayer::IsNormalshooting()
 {
-	return false;//(m_nButtons & IN_ATTACK) != 0 && !IsPowershooting();
+	return (m_nButtons & IN_ATTACK) != 0 && !IsPowershooting();
 }
 
 bool CSDKPlayer::IsPowershooting()
 {
-	return (m_nButtons & (IsShotButtonRight() ? IN_ATTACK2 : IN_ATTACK)) != 0;
+	return (m_nButtons & (IN_ATTACK2/* | IN_ALT1*/)) != 0;
 }
 
 bool CSDKPlayer::IsAutoPassing()

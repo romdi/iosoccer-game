@@ -23,7 +23,7 @@ void MPForceCameraCallback( IConVar *var, const char *pOldString, float flOldVal
 // some shared cvars used by game rules
 ConVar mp_forcecamera( 
 	"mp_forcecamera", 
-	"1", 
+	"0", 
 	FCVAR_REPLICATED,
 	"Restricts spectator modes for dead players"
 #ifdef GAME_DLL

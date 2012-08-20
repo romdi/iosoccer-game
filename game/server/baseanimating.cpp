@@ -1167,7 +1167,9 @@ void CBaseAnimating::HandleAnimEvent( animevent_t *pEvent )
 	}
 	else
 	{
-		DevWarning( 1, "Unhandled animation event %d for %s\n", pEvent->event, GetClassname() );
+		//FIXME: Register the ios diving event properly instead
+		if (pEvent->event != 2001)
+			DevWarning( 1, "Unhandled animation event %d for %s\n", pEvent->event, GetClassname() );
 	}
 }
 
