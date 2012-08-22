@@ -46,6 +46,7 @@ private:
 	Panel *m_pTeamPanels[2];
 	RadioButton *m_pPlayerNames[2][11];
 	Button *m_pVote;
+	Panel *m_pMainPanel;
 };
 
 #endif

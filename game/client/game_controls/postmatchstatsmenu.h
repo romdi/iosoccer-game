@@ -7,6 +7,7 @@
 #include <game/client/iviewport.h>
 #include <igameresources.h>
 #include <vgui_controls/RadioButton.h>
+#include "GameEventListener.h"
 
 // Non RES-File Control Tutorial
 #include <vgui_controls/Button.h>
@@ -36,13 +37,15 @@ enum match_stats_t
 	LONGEST_DISTANCE_COVERED,
 	SHORTEST_DISTANCE_COVERED,
 	HIGHEST_POSSESSION,
+	PLAYERS_CHOICE_MOTM,
+	EXPERTS_CHOICE_MOTM,
 	MATCH_STATS_COUNT
 };
 
 //CMyPanel class: Tutorial example class
-class CPostMatchStatsMenu : public vgui::Frame, public IViewPortPanel
+class CPostMatchStatsMenu : public Frame, public IViewPortPanel, public CGameEventListener
 {
-	DECLARE_CLASS_SIMPLE(CPostMatchStatsMenu, vgui::Frame); 
+	DECLARE_CLASS_SIMPLE(CPostMatchStatsMenu, Frame); 
 	//CMyPanel : This Class / vgui::Frame : BaseClass
 
 	CPostMatchStatsMenu(IViewPort *pViewPort); 	// Constructor
@@ -65,6 +68,8 @@ public:
 	virtual bool IsVisible() { return BaseClass::IsVisible(); }  // true if panel is visible
 	virtual void SetParent( vgui::VPANEL parent ) { BaseClass::SetParent(parent); }
 	void OnCommand(const char *cmd);
+	void FireGameEvent(IGameEvent *event);
+
 private:
 	//Other used VGUI control Elements:
 
@@ -73,6 +78,10 @@ private:
 	Button *m_pClose;
 	IViewPort *m_pViewPort;
 	Panel *m_pMainPanel;
+	int m_nPlayersChoiceMotm[2];
+	int m_nPlayersChoiceMotmPercentage[2];
+	int m_nExpertsChoiceMotm[2];
+	int m_nExpertsChoiceMotmPercentage[2];
 };
 
 #endif

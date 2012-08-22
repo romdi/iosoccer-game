@@ -9,28 +9,37 @@ enum { PANEL_WIDTH = 500, PANEL_HEIGHT = 600 };
 enum { NAME_HEIGHT = 30, NAME_VMARGIN = 5 };
 enum { VOTE_WIDTH = 100, VOTE_HEIGHT = 30 };
 
+void ShowMotmVoting()
+{
+	gViewPortInterface->ShowPanel(PANEL_MOTMVOTING, true);
+}
+
+ConCommand showmotmvoting("showmotmvoting", ShowMotmVoting);
+
 CMotmVotingMenu::CMotmVotingMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_MOTMVOTING)
 {
-	SetScheme("SourceScheme");
+	SetScheme("ClientScheme");
 
 	SetKeyBoardInputEnabled( true );
 	SetMouseInputEnabled( true );
 
 	SetProportional( false );
-	SetTitleBarVisible( true );
+	SetTitleBarVisible( false );
 	SetMinimizeButtonVisible( false );
 	SetMaximizeButtonVisible( false );
 	SetCloseButtonVisible( false );
 	SetSizeable( false );
 	SetMoveable( false );
 	SetVisible( false );
-	SetTitle("Select your Man Of The Match", false);
+	SetTitle("", false);
 
-	m_pVote = new Button(this, "", "Vote", this, "vote");
+	m_pMainPanel = new Panel(this);
+
+	m_pVote = new Button(m_pMainPanel, "", "Vote", this, "vote");
 
 	for (int i = 0; i < 2; i++)
 	{
-		m_pTeamPanels[i] = new Panel(this);
+		m_pTeamPanels[i] = new Panel(m_pMainPanel);
 
 		for (int j = 0; j < 11; j++)
 		{
@@ -38,11 +47,22 @@ CMotmVotingMenu::CMotmVotingMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_MOTMV
 			m_pPlayerNames[i][j]->SetVisible(false);
 		}
 	}
+
+	MakePopup();
 }
 
 void CMotmVotingMenu::ApplySchemeSettings(IScheme *pScheme)
 {
 	BaseClass::ApplySchemeSettings(pScheme);
+
+	SetBounds(0, 0, ScreenWidth(), ScreenHeight());
+	SetPaintBackgroundEnabled(false);
+
+	m_pMainPanel->SetBounds(GetWide() / 2 - PANEL_WIDTH / 2, GetTall() / 2 - PANEL_HEIGHT / 2, PANEL_WIDTH, PANEL_HEIGHT);
+	m_pMainPanel->SetBgColor(Color(0, 0, 0, 240));
+	m_pMainPanel->SetPaintBackgroundType(2);
+
+	m_pVote->SetBounds(PANEL_WIDTH - VOTE_WIDTH, PANEL_HEIGHT - VOTE_HEIGHT, VOTE_WIDTH, VOTE_HEIGHT);
 }
 
 void CMotmVotingMenu::Update()
@@ -74,13 +94,9 @@ void CMotmVotingMenu::Reset()
 	if (!g_PR)
 		return;
 
-	SetBounds(0, 0, PANEL_WIDTH, PANEL_HEIGHT);
-
-	m_pVote->SetBounds(0, GetTall() - VOTE_HEIGHT, VOTE_WIDTH, VOTE_HEIGHT);
-
 	for (int i = 0; i < 2; i++)
 	{
-		m_pTeamPanels[i]->SetBounds(i * (GetWide() / 2), 0, GetWide() / 2, GetTall() - VOTE_HEIGHT);
+		m_pTeamPanels[i]->SetBounds(i * (PANEL_WIDTH / 2), 0, PANEL_WIDTH / 2, PANEL_HEIGHT - VOTE_HEIGHT);
 
 		for (int j = 0; j < 11; j++)
 		{
@@ -96,17 +112,15 @@ void CMotmVotingMenu::Reset()
 		}
 	}
 
-	MoveToCenterOfScreen();
-
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
 		if (!g_PR->IsConnected(i) || g_PR->GetTeam(i) != TEAM_A && g_PR->GetTeam(i) != TEAM_B)
 			continue;
 
 		RadioButton *pRadio = m_pPlayerNames[g_PR->GetTeam(i) - TEAM_A][g_PR->GetTeamPosIndex(i)];
-		pRadio->SetText(VarArgs("%s - %s", g_szPosNames[g_PR->GetTeamPosType(i)], g_PR->GetPlayerName(i)));
+		pRadio->SetText(VarArgs("[%s] %s", g_szPosNames[g_PR->GetTeamPosType(i)], g_PR->GetPlayerName(i)));
 		pRadio->SetCommand(VarArgs("%d", i));
-		pRadio->SetEnabled(true);
+		pRadio->SetEnabled(i != GetLocalPlayerIndex());
 	}
 }
 
@@ -128,7 +142,7 @@ void CMotmVotingMenu::OnCommand(const char *cmd)
 			}
 		}
 		engine->ClientCmd(VarArgs("motmvote %d %d", selectedPlayerIds[0], selectedPlayerIds[1]));
-		Close();
+		ShowPanel(false);
 	}
 	else
 		BaseClass::OnCommand(cmd);

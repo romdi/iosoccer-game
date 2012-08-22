@@ -335,7 +335,8 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 			float radius = SDKGameRules()->GetShieldRadius() + border;
 			Vector dir = newPos - SDKGameRules()->m_vShieldPos;
 
-			if (GetFlags() & FL_SHIELD_KEEP_OUT && dir.Length2D() < radius || GetFlags() & FL_SHIELD_KEEP_IN && dir.Length2D() > radius)
+			if ((GetFlags() & FL_SHIELD_KEEP_OUT && dir.Length2D() < radius || GetFlags() & FL_SHIELD_KEEP_IN && dir.Length2D() > radius)
+				&& (!SDKGameRules()->IsIntermissionState() || mp_shield_block_opponent_half.GetBool()))
 			{
 				dir.z = 0;
 				dir.NormalizeInPlace();
@@ -343,7 +344,8 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 				stopPlayer = true;
 			}
 
-			if (SDKGameRules()->m_nShieldType == SHIELD_KICKOFF && GetFlags() & FL_SHIELD_KEEP_OUT)
+			if (SDKGameRules()->m_nShieldType == SHIELD_KICKOFF && (GetFlags() & FL_SHIELD_KEEP_OUT)
+				&& (!SDKGameRules()->IsIntermissionState() || mp_shield_block_opponent_half.GetBool()))
 			{
 				int forward;
 				#ifdef CLIENT_DLL
@@ -408,21 +410,21 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 
 	if (SDKGameRules()->IsIntermissionState())
 	{
-		if (mp_shield_block_opponent_half.GetBool())
-		{
-			int forward;
-			#ifdef CLIENT_DLL
-				forward = GetPlayersTeam(this)->m_nForward;
-			#else
-				forward = GetTeam()->m_nForward;
-			#endif
-			float yBorder = SDKGameRules()->m_vKickOff.GetY() - abs(border) * forward;
-			if (Sign(newPos.y - yBorder) == forward)
-			{
-				newPos.y = yBorder;
-				stopPlayer = true;
-			}
-		}
+		//if (mp_shield_block_opponent_half.GetBool() && SDKGameRules()->m_nShieldType != SHIELD_KICKOFF)
+		//{
+		//	int forward;
+		//	#ifdef CLIENT_DLL
+		//		forward = GetPlayersTeam(this)->m_nForward;
+		//	#else
+		//		forward = GetTeam()->m_nForward;
+		//	#endif
+		//	float yBorder = SDKGameRules()->m_vKickOff.GetY() - abs(border) * forward;
+		//	if (Sign(newPos.y - yBorder) == forward)
+		//	{
+		//		newPos.y = yBorder;
+		//		stopPlayer = true;
+		//	}
+		//}
 	}
 	else
 	{

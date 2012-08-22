@@ -127,8 +127,8 @@ void CReplayPlayer::Think()
 	DispatchAnimEvents(this);
 }
 
-static ConVar sv_replay_duration("sv_replay_duration", "6");
-static ConVar sv_replays("sv_replays", "1");
+static ConVar sv_replay_duration("sv_replay_duration", "6", FCVAR_NOTIFY);
+static ConVar sv_replays("sv_replays", "1", FCVAR_NOTIFY);
 
 void cc_StartReplay(const CCommand &args)
 {

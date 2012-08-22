@@ -117,7 +117,7 @@ ConVar sv_ball_yellowcardprobability_backward("sv_ball_yellowcardprobability_bac
 ConVar sv_ball_goalreplay_count("sv_ball_goalreplay_count", "2", FCVAR_NOTIFY);
 ConVar sv_ball_goalreplay_delay("sv_ball_goalreplay_delay", "3", FCVAR_NOTIFY);
 ConVar sv_ball_deflectioncoeff("sv_ball_deflectioncoeff", "0.75", FCVAR_NOTIFY);
-
+ConVar sv_ball_update_physics("sv_ball_update_physics", "0", FCVAR_NOTIFY);
 
 CBall *CreateBall(const Vector &pos, CSDKPlayer *pCreator)
 {
@@ -149,6 +149,9 @@ void CC_CreatePlayerBall(const CCommand &args)
 			pPl->GetPlayerBall()->RemoveFromPlayerHands(pPl->GetPlayerBall()->GetHoldingPlayer());
 			pPl->GetPlayerBall()->State_Transition(BALL_NORMAL);
 		}
+
+		if (sv_ball_update_physics.GetBool())
+			pPl->GetPlayerBall()->CreateVPhysics();
 
 		pPl->GetPlayerBall()->SetPos(pos);
 	}
@@ -672,7 +675,8 @@ void CBall::State_Enter(ball_state_t newState, bool cancelQueuedState)
 
 void CBall::State_Leave(ball_state_t newState)
 {
-	SDKGameRules()->DisableShield();
+	if (!m_bIsPlayerBall)
+		SDKGameRules()->DisableShield();
 
 	if ( m_pCurStateInfo && m_pCurStateInfo->pfnLeaveState )
 	{
@@ -709,6 +713,7 @@ CBallStateInfo* CBall::State_LookupInfo( ball_state_t state )
 {
 	static CBallStateInfo ballStateInfos[] =
 	{
+		{ BALL_STATIC,		"BALL_STATIC",		&CBall::State_STATIC_Enter,			&CBall::State_STATIC_Think,			&CBall::State_STATIC_Leave },
 		{ BALL_NORMAL,		"BALL_NORMAL",		&CBall::State_NORMAL_Enter,			&CBall::State_NORMAL_Think,			&CBall::State_NORMAL_Leave },
 		{ BALL_KICKOFF,		"BALL_KICKOFF",		&CBall::State_KICKOFF_Enter,		&CBall::State_KICKOFF_Think,		&CBall::State_KICKOFF_Leave },
 		{ BALL_THROWIN,		"BALL_THROWIN",		&CBall::State_THROWIN_Enter,		&CBall::State_THROWIN_Think,		&CBall::State_THROWIN_Leave },
@@ -727,6 +732,20 @@ CBallStateInfo* CBall::State_LookupInfo( ball_state_t state )
 	}
 
 	return NULL;
+}
+
+void CBall::State_STATIC_Enter()
+{
+	SDKGameRules()->EndInjuryTime();
+}
+
+void CBall::State_STATIC_Think()
+{
+}
+
+void CBall::State_STATIC_Leave(ball_state_t newState)
+{
+	SDKGameRules()->StartInjuryTime();
 }
 
 void CBall::State_NORMAL_Enter()

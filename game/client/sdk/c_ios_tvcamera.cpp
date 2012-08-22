@@ -58,24 +58,26 @@ void C_TVCamera::GetPositionAndAngle(Vector &pos, QAngle &ang)
 	if (!pTarget)
 		return;
 
-	m_BallPos.AddToTail(pTarget->GetLocalOrigin());
+	Vector ballPos = pTarget->GetLocalOrigin();
 
-	while (m_BallPos.Count() > posCount)
-		m_BallPos.Remove(0);
+	//m_BallPos.AddToTail(pTarget->GetLocalOrigin());
 
-	Vector ballPos;
-	if (m_BallPos.Count() < posCount)
-	{
-		ballPos = m_BallPos[0];
-	}
-	else
-	{
-		ballPos = vec3_origin;
-		for (int i = 0; i < posCount; i++)
-		{
-			ballPos += m_BallPos[i] / posCount;
-		}
-	}
+	//while (m_BallPos.Count() > posCount)
+	//	m_BallPos.Remove(0);
+
+	//Vector ballPos;
+	//if (m_BallPos.Count() < posCount)
+	//{
+	//	ballPos = m_BallPos[0];
+	//}
+	//else
+	//{
+	//	ballPos = vec3_origin;
+	//	for (int i = 0; i < posCount; i++)
+	//	{
+	//		ballPos += m_BallPos[i] / posCount;
+	//	}
+	//}
 
 	switch (camType)
 	{

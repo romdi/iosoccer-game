@@ -262,6 +262,7 @@ static const char *g_szMatchEventNames[32] =
 enum ball_state_t
 {
 	BALL_NOSTATE = 0,
+	BALL_STATIC,
 	BALL_NORMAL,
 	BALL_GOAL,
 	BALL_CORNER,

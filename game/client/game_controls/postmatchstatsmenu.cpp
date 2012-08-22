@@ -20,7 +20,7 @@ ConCommand showpostmatchstats("showpostmatchstats", ShowPostMatchStats);
 
 CPostMatchStatsMenu::CPostMatchStatsMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_POSTMATCHSTATS)
 {
-	//SetScheme("SourceScheme");
+	SetScheme("ClientScheme");
 
 	m_pViewPort = pViewPort;
 
@@ -43,8 +43,20 @@ CPostMatchStatsMenu::CPostMatchStatsMenu(IViewPort *pViewPort) : Frame(NULL, PAN
 	m_pMatchStats[LONGEST_DISTANCE_COVERED] = new MatchStat(m_pMainPanel, "Longest Distance Covered");
 	m_pMatchStats[SHORTEST_DISTANCE_COVERED] = new MatchStat(m_pMainPanel, "Shortest Distance Covered");
 	m_pMatchStats[HIGHEST_POSSESSION] = new MatchStat(m_pMainPanel, "Highest Ball Possession");
+	m_pMatchStats[PLAYERS_CHOICE_MOTM] = new MatchStat(m_pMainPanel, "Players' Choice MOTM");
+	m_pMatchStats[EXPERTS_CHOICE_MOTM] = new MatchStat(m_pMainPanel, "Experts' Choice MOTM");
 
-	m_pClose = new Button(this, "", "Close", this, "close");
+	m_pClose = new Button(m_pMainPanel, "", "Close", this, "close");
+
+	ListenForGameEvent("motmvotingresult");
+
+	for (int i = 0; i < 2; i++)
+	{
+		m_nPlayersChoiceMotm[i] = 0;
+		m_nPlayersChoiceMotmPercentage[i] = 0;
+		m_nExpertsChoiceMotm[i] = 0;
+		m_nExpertsChoiceMotmPercentage[i] = 0;
+	}
 
 	MakePopup();
 }
@@ -56,7 +68,7 @@ void CPostMatchStatsMenu::ApplySchemeSettings(IScheme *pScheme)
 	SetBounds(0, 0, ScreenWidth(), ScreenHeight());
 	SetPaintBackgroundEnabled(false);
 
-	m_pMainPanel->SetBounds(0, 0, PANEL_WIDTH, PANEL_HEIGHT);
+	m_pMainPanel->SetBounds(GetWide() / 2 - PANEL_WIDTH / 2, GetTall() / 2 - PANEL_HEIGHT / 2, PANEL_WIDTH, PANEL_HEIGHT);
 	m_pMainPanel->SetBgColor(Color(0, 0, 0, 240));
 	m_pMainPanel->SetPaintBackgroundType(2);
 
@@ -106,8 +118,6 @@ void CPostMatchStatsMenu::Reset()
 {
 	if (!g_PR)
 		return;
-
-	SetBounds(0, 0, PANEL_WIDTH, PANEL_HEIGHT);
 
 	int shortestDist[2] = { INT_MAX, INT_MAX };
 	int longestDist[2] = { -INT_MAX, -INT_MAX };
@@ -160,15 +170,29 @@ void CPostMatchStatsMenu::Reset()
 			m_pMatchStats[LONGEST_DISTANCE_COVERED]->pPlayers[i]->SetText(g_PR->GetPlayerName(longestDistPlayer[i]));
 			m_pMatchStats[LONGEST_DISTANCE_COVERED]->pValues[i]->SetText(VarArgs("(%0.2f km)", longestDist[i] / 1000.0f));
 		}
+
 		if (shortestDistPlayer[i] != 0)
 		{
 			m_pMatchStats[SHORTEST_DISTANCE_COVERED]->pPlayers[i]->SetText(g_PR->GetPlayerName(shortestDistPlayer[i]));
 			m_pMatchStats[SHORTEST_DISTANCE_COVERED]->pValues[i]->SetText(VarArgs("(%0.2f km)", shortestDist[i] / 1000.0f));
 		}
+
 		if (highestPossessionPlayer[i] != 0)
 		{
 			m_pMatchStats[HIGHEST_POSSESSION]->pPlayers[i]->SetText(g_PR->GetPlayerName(highestPossessionPlayer[i]));
 			m_pMatchStats[HIGHEST_POSSESSION]->pValues[i]->SetText(VarArgs("(%d%%)", highestPossession[i]));
+		}
+
+		if (m_nPlayersChoiceMotm[i] != 0)
+		{
+			m_pMatchStats[PLAYERS_CHOICE_MOTM]->pPlayers[i]->SetText(g_PR->GetPlayerName(m_nPlayersChoiceMotm[i]));
+			m_pMatchStats[PLAYERS_CHOICE_MOTM]->pValues[i]->SetText(VarArgs("(%d%%)", m_nPlayersChoiceMotmPercentage[i]));
+		}
+
+		if (m_nExpertsChoiceMotm[i] != 0)
+		{
+			m_pMatchStats[EXPERTS_CHOICE_MOTM]->pPlayers[i]->SetText(g_PR->GetPlayerName(m_nExpertsChoiceMotm[i]));
+			m_pMatchStats[EXPERTS_CHOICE_MOTM]->pValues[i]->SetText(VarArgs("(%d%%)", m_nExpertsChoiceMotmPercentage[i]));
 		}
 	}
 
@@ -179,8 +203,24 @@ void CPostMatchStatsMenu::OnCommand(const char *cmd)
 {
 	if (!Q_strcmp(cmd, "close"))
 	{
-		Close();
+		ShowPanel(false);
 	}
 	else
 		BaseClass::OnCommand(cmd);
+}
+
+void CPostMatchStatsMenu::FireGameEvent(IGameEvent *event)
+{
+	if (!g_PR)
+		return;
+
+	if (Q_strcmp(event->GetName(), "motmvotingresult"))
+		return;
+
+	m_nPlayersChoiceMotm[0] = event->GetInt("hometeamplayerschoicemotmplayer");
+	m_nPlayersChoiceMotmPercentage[0] = event->GetInt("hometeamplayerschoicemotmplayerpercentage");
+	m_nPlayersChoiceMotm[1] = event->GetInt("awayteamexpertschoicemotm");
+	m_nPlayersChoiceMotmPercentage[1] = event->GetInt("awayteamexpertschoicemotmpercentage");
+
+	ShowPanel(true);
 }

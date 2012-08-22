@@ -366,6 +366,9 @@ protected:
 	void CheckChatText(CBasePlayer *pPlayer, char *text);
 	void CheckChatForReadySignal(CSDKPlayer *pPlayer, char *text);
 
+	bool m_bMotmVotingPanelShown;
+	bool m_bPostMatchStatsPanelShown;
+
 public:
 
 	void SetLeftSideTeam(int team);

@@ -1175,9 +1175,7 @@ void CSDKGameRules::State_Enter( match_state_t newState )
 		pPl->m_Shared.SetStamina(100);
 	}
 
-	if (IsIntermissionState())
-		GetBall()->State_Transition(BALL_NORMAL);
-	else
+	if (!IsIntermissionState())
 		GetBall()->RemoveAllPlayerBalls();
 
 	// Initialize the new state.
@@ -1246,7 +1244,23 @@ void CSDKGameRules::State_WARMUP_Enter()
 {
 	m_flMatchStartTime = gpGlobals->curtime;
 	GetBall()->ResetMatch();
-	GetBall()->State_Transition(BALL_NORMAL, 0, true);
+	GetBall()->State_Transition(BALL_STATIC, 0, true);
+	GetBall()->SetPos(m_vKickOff);
+
+	m_nFirstHalfLeftSideTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
+	SetLeftSideTeam(m_nFirstHalfLeftSideTeam);
+	m_nFirstHalfKickOffTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
+	SetKickOffTeam(m_nFirstHalfKickOffTeam);
+
+	EnableShield(SHIELD_KICKOFF, TEAM_A, SDKGameRules()->m_vKickOff);
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+		if (!CSDKPlayer::IsOnField(pPl))
+			continue;
+
+		pPl->SetPosOutsideShield();
+	}
 }
 
 void CSDKGameRules::State_WARMUP_Think()
@@ -1261,20 +1275,8 @@ void CSDKGameRules::State_WARMUP_Leave()
 
 void CSDKGameRules::State_FIRST_HALF_Enter()
 {
-	m_nFirstHalfLeftSideTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
-	SetLeftSideTeam(m_nFirstHalfLeftSideTeam);
-	m_nFirstHalfKickOffTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
-	SetKickOffTeam(m_nFirstHalfKickOffTeam);
 	GetBall()->State_Transition(BALL_KICKOFF, 0, true);
 	WakeUpAllPlayers();
-	//for (int i = 1; i <= gpGlobals->maxClients; i++)
-	//{
-	//	CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
-	//	if (!CSDKPlayer::IsOnField(pPl))
-	//		continue;
-
-	//	pPl->ShowViewPortPanel(PANEL_MOTMVOTING);
-	//}
 }
 
 void CSDKGameRules::State_FIRST_HALF_Think()
@@ -1294,19 +1296,25 @@ void CSDKGameRules::State_FIRST_HALF_Leave()
 	GetBall()->SetMatchEvent(MATCH_EVENT_HALFTIME);
 	GetBall()->EmitSound("Ball.whistle");
 	GetBall()->EmitSound("Ball.cheer");
-	//for (int i = 1; i <= gpGlobals->maxClients; i++)
-	//{
-	//	CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
-	//	if (!CSDKPlayer::IsOnField(pPl))
-	//		continue;
-
-	//	pPl->ShowViewPortPanel(PANEL_POSTMATCHSTATS);
-	//}
 }
 
 void CSDKGameRules::State_HALFTIME_Enter()
 {
-	GetBall()->State_Transition(BALL_NORMAL, 0, true);
+	GetBall()->State_Transition(BALL_STATIC, 0, true);
+	GetBall()->SetPos(m_vKickOff);
+
+	SetLeftSideTeam(GetGlobalTeam(m_nFirstHalfLeftSideTeam)->GetOppTeamNumber());
+	SetKickOffTeam(GetGlobalTeam(m_nFirstHalfKickOffTeam)->GetOppTeamNumber());
+
+	EnableShield(SHIELD_KICKOFF, TEAM_A, SDKGameRules()->m_vKickOff);
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+		if (!CSDKPlayer::IsOnField(pPl))
+			continue;
+
+		pPl->SetPosOutsideShield();
+	}
 }
 
 void CSDKGameRules::State_HALFTIME_Think()
@@ -1321,8 +1329,6 @@ void CSDKGameRules::State_HALFTIME_Leave()
 
 void CSDKGameRules::State_SECOND_HALF_Enter()
 {
-	SetLeftSideTeam(GetGlobalTeam(m_nFirstHalfLeftSideTeam)->GetOppTeamNumber());
-	SetKickOffTeam(GetGlobalTeam(m_nFirstHalfKickOffTeam)->GetOppTeamNumber());
 	GetBall()->State_Transition(BALL_KICKOFF, 0, true);
 }
 
@@ -1352,7 +1358,21 @@ void CSDKGameRules::State_SECOND_HALF_Leave()
 
 void CSDKGameRules::State_EXTRATIME_INTERMISSION_Enter()
 {
-	GetBall()->State_Transition(BALL_NORMAL, 0, true);
+	GetBall()->State_Transition(BALL_STATIC, 0, true);
+	GetBall()->SetPos(m_vKickOff);
+
+	SetLeftSideTeam(m_nFirstHalfLeftSideTeam);
+	SetKickOffTeam(m_nFirstHalfKickOffTeam);
+
+	EnableShield(SHIELD_KICKOFF, TEAM_A, SDKGameRules()->m_vKickOff);
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+		if (!CSDKPlayer::IsOnField(pPl))
+			continue;
+
+		pPl->SetPosOutsideShield();
+	}
 }
 
 void CSDKGameRules::State_EXTRATIME_INTERMISSION_Think()
@@ -1369,8 +1389,6 @@ void CSDKGameRules::State_EXTRATIME_INTERMISSION_Leave()
 
 void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Enter()
 {
-	SetLeftSideTeam(m_nFirstHalfLeftSideTeam);
-	SetKickOffTeam(m_nFirstHalfKickOffTeam);
 	GetBall()->State_Transition(BALL_KICKOFF, 0, true);
 }
 
@@ -1395,7 +1413,21 @@ void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Leave()
 
 void CSDKGameRules::State_EXTRATIME_HALFTIME_Enter()
 {
-	GetBall()->State_Transition(BALL_NORMAL, 0, true);
+	GetBall()->State_Transition(BALL_STATIC, 0, true);
+	GetBall()->SetPos(m_vKickOff);
+
+	SetLeftSideTeam(GetGlobalTeam(m_nFirstHalfLeftSideTeam)->GetOppTeamNumber());
+	SetKickOffTeam(GetGlobalTeam(m_nFirstHalfKickOffTeam)->GetOppTeamNumber());
+
+	EnableShield(SHIELD_KICKOFF, TEAM_A, SDKGameRules()->m_vKickOff);
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+		if (!CSDKPlayer::IsOnField(pPl))
+			continue;
+
+		pPl->SetPosOutsideShield();
+	}
 }
 
 void CSDKGameRules::State_EXTRATIME_HALFTIME_Think()
@@ -1412,8 +1444,6 @@ void CSDKGameRules::State_EXTRATIME_HALFTIME_Leave()
 
 void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Enter()
 {
-	SetLeftSideTeam(GetGlobalTeam(m_nFirstHalfLeftSideTeam)->GetOppTeamNumber());
-	SetKickOffTeam(GetGlobalTeam(m_nFirstHalfKickOffTeam)->GetOppTeamNumber());
 	GetBall()->State_Transition(BALL_KICKOFF, 0, true);
 }
 
@@ -1441,7 +1471,18 @@ void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Leave()
 
 void CSDKGameRules::State_PENALTIES_INTERMISSION_Enter()
 {
-	GetBall()->State_Transition(BALL_NORMAL, 0, true);
+	GetBall()->State_Transition(BALL_STATIC, 0, true);
+	GetBall()->SetPos(m_vKickOff);
+
+	EnableShield(SHIELD_KICKOFF, TEAM_A, SDKGameRules()->m_vKickOff);
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+		if (!CSDKPlayer::IsOnField(pPl))
+			continue;
+
+		pPl->SetPosOutsideShield();
+	}
 }
 
 void CSDKGameRules::State_PENALTIES_INTERMISSION_Think()
@@ -1601,7 +1642,18 @@ void CSDKGameRules::State_PENALTIES_Leave()
 
 void CSDKGameRules::State_COOLDOWN_Enter()
 {
-	GetBall()->State_Transition(BALL_NORMAL, 0, true);
+	GetBall()->State_Transition(BALL_STATIC, 0, true);
+	GetBall()->SetPos(m_vKickOff);
+
+	EnableShield(SHIELD_KICKOFF, TEAM_A, SDKGameRules()->m_vKickOff);
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+		if (!CSDKPlayer::IsOnField(pPl))
+			continue;
+
+		pPl->SetPosOutsideShield();
+	}
 
 	//who won?
 	int winners = 0;
@@ -1633,6 +1685,9 @@ void CSDKGameRules::State_COOLDOWN_Enter()
 		//freezes the players
 		//pPlayer->AddFlag (FL_ATCONTROLS);
 	}
+
+	m_bMotmVotingPanelShown = false;
+	m_bPostMatchStatsPanelShown = false;
 }
 
 void CSDKGameRules::State_COOLDOWN_Think()
@@ -1640,6 +1695,82 @@ void CSDKGameRules::State_COOLDOWN_Think()
 	if (m_flStateTimeLeft <= 0)
 	{
 		GoToIntermission();
+		return;
+	}
+
+	if (gpGlobals->curtime >= m_flStateEnterTime + 3 && !m_bMotmVotingPanelShown)
+	{
+		for (int i = 1; i <= gpGlobals->maxClients; i++)
+		{
+			CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+			if (!CSDKPlayer::IsOnField(pPl))
+				continue;
+
+			pPl->ShowViewPortPanel(PANEL_MOTMVOTING);
+		}
+
+		m_bMotmVotingPanelShown = true;
+
+		return;
+	}
+
+	if (gpGlobals->curtime >= m_flStateEnterTime + 13 && !m_bPostMatchStatsPanelShown)
+	{
+		int playerVotes[2][MAX_PLAYERS] = {};
+		int motmVotes[2] = { 0, 0 };
+		int playersOnField[2] = { 0, 0 };
+
+		int mostGoals[2] = {};
+		int mostGoalsPlayers[2] = {};
+
+		for (int i = 1; i <= gpGlobals->maxClients; i++)
+		{
+			CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+			if (!CSDKPlayer::IsOnField(pPl))
+				continue;
+
+			for (int j = 0; j < 2; j++)
+			{
+				if (pPl->m_nMotmChoiceIds[j] > 0)
+					playerVotes[j][pPl->m_nMotmChoiceIds[j] - 1] += 1;
+			}
+
+			playersOnField[pPl->GetTeamNumber() - TEAM_A] += 1;
+
+			if (pPl->GetGoals() > mostGoals[pPl->GetTeamNumber() - TEAM_A])
+			{
+				mostGoals[pPl->GetTeamNumber() - TEAM_A] = pPl->GetGoals();
+				mostGoalsPlayers[pPl->GetTeamNumber() - TEAM_A] = i;
+			}
+		}
+
+		int mostVotesCount[2] = { 0, 0 };
+		int mostVotesPlayer[2] = { 0, 0 };
+
+		for (int i = 0; i < 2; i++)
+		{
+			for (int j = 0; j < MAX_PLAYERS; j++)
+			{
+				if (playerVotes[i][j] > mostVotesCount[i])
+				{
+					mostVotesCount[i] = playerVotes[i][j];
+					mostVotesPlayer[i] = j + 1;
+				}
+			}
+		}
+
+		IGameEvent *pEvent = gameeventmanager->CreateEvent("motmvotingresult");
+		pEvent->SetInt("hometeamplayerschoicemotmplayer", mostVotesPlayer[0]);
+		pEvent->SetInt("hometeamplayerschoicemotmpercentage", mostVotesCount[0] * 100 / playersOnField[0]);
+		pEvent->SetInt("awayteamplayerschoicemotmplayer", mostVotesPlayer[1]);
+		pEvent->SetInt("awayteamplayerschoicemotmpercentage", mostVotesCount[1] * 100 / playersOnField[1]);
+		pEvent->SetInt("hometeamexpertschoicemotmplayer", mostGoalsPlayers[0]);
+		pEvent->SetInt("hometeamexpertschoicemotmpercentage", 100);
+		pEvent->SetInt("awayteamexpertschoicemotmplayer", mostGoalsPlayers[1]);
+		pEvent->SetInt("awayteamexpertschoicemotmpercentage", 100);
+		gameeventmanager->FireEvent(pEvent);
+
+		m_bPostMatchStatsPanelShown = true;
 	}
 }
 

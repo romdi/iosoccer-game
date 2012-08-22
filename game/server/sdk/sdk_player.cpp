@@ -910,6 +910,9 @@ void CSDKPlayer::State_ACTIVE_Enter()
 	//Tony; call spawn again now -- remember; when we add respawn timers etc, to just put them into the spawn queue, and let the queue respawn them.
 	//Spawn();
 	//RemoveEffects(EF_NODRAW); //ios hack - player spawns invisible sometimes
+
+	if (SDKGameRules()->m_nShieldType != SHIELD_NONE)
+		SetPosOutsideShield();
 }
 
 void CSDKPlayer::State_ACTIVE_PreThink()
@@ -984,8 +987,8 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 		if (!pPl)
 			return false;
 
-		m_nMotmChoiceIds[0] = atoi(args[0]);
-		m_nMotmChoiceIds[1] = atoi(args[1]);
+		m_nMotmChoiceIds[0] = atoi(args[1]);
+		m_nMotmChoiceIds[1] = atoi(args[2]);
 
 		return true;
 	}
@@ -1385,6 +1388,8 @@ void CSDKPlayer::ResetStats()
 	m_flDistanceCovered = 0.0f;
 	m_bIsOffside = false;
 	m_ePenaltyState = PENALTY_NONE;
+	m_nMotmChoiceIds[0] = 0;
+	m_nMotmChoiceIds[1] = 0;
 }
 
 Vector CSDKPlayer::GetSpawnPos(bool findSafePos)

@@ -33,6 +33,7 @@
 #include "c_playerresource.h"
 #include <vgui/ILocalize.h>
 #include "sdk_gamerules.h"
+#include "c_ios_replaymanager.h"
 #if defined( _X360 )
 #include "xbox/xbox_console.h"
 #endif
@@ -481,6 +482,7 @@ int	ClientModeShared::KeyInput( int down, ButtonCode_t keynum, const char *pszCu
 	// if ingame spectator mode, let spectator input intercept key event here
 	if( pPlayer &&
 		( pPlayer->GetObserverMode() > OBS_MODE_DEATHCAM ) &&
+		!(GetReplayManager() && GetReplayManager()->IsReplaying()) && //TODO: Remove once it works properly in replay mode
 		!HandleSpectatorKeyInput( down, keynum, pszCurrentBinding ) )
 	{
 		return 0;

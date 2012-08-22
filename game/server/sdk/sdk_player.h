@@ -415,6 +415,8 @@ public:
 	Vector				m_vPreReplayPos;
 	QAngle				m_aPreReplayAngles;
 
+	int					m_nMotmChoiceIds[2];
+
 protected:
 
 	bool				m_bIsOffside;
@@ -423,7 +425,6 @@ protected:
 	Vector				m_vOffsideLastOppPlayerPos;
 	Vector				m_vOffsideBallPos;
 
-	int					m_nMotmChoiceIds[2];
 };
 
 
