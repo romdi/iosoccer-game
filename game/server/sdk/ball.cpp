@@ -33,8 +33,8 @@ ConVar sv_ball_inertia( "sv_ball_inertia", "1", FCVAR_NOTIFY | FCVAR_DEVELOPMENT
 ConVar sv_ball_drag_enabled("sv_ball_drag_enabled", "1", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
 ConVar sv_ball_spin( "sv_ball_spin", "300", FCVAR_NOTIFY );
 ConVar sv_ball_defaultspin( "sv_ball_defaultspin", "10000", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
-ConVar sv_ball_topspin_coeff( "sv_ball_topspin_coeff", "0.75", FCVAR_NOTIFY );
-ConVar sv_ball_backspin_coeff( "sv_ball_backspin_coeff", "0.75", FCVAR_NOTIFY );
+ConVar sv_ball_topspin_coeff( "sv_ball_topspin_coeff", "0.66", FCVAR_NOTIFY );
+ConVar sv_ball_backspin_coeff( "sv_ball_backspin_coeff", "0.66", FCVAR_NOTIFY );
 ConVar sv_ball_curve("sv_ball_curve", "150", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
 ConVar sv_ball_touchradius( "sv_ball_touchradius", "60", FCVAR_NOTIFY );
 ConVar sv_ball_deflectionradius( "sv_ball_deflectionradius", "40", FCVAR_NOTIFY );
@@ -841,6 +841,11 @@ void CBall::State_KICKOFF_Think()
 			m_pOtherPl->SetPosInsideShield(Vector(m_vPos.x + m_pPl->GetTeam()->m_nRight * 100, m_vPos.y, SDKGameRules()->m_vKickOff.GetZ()), true);
 	}
 
+	if (m_pPl->m_bIsAtTargetPos && !m_pPl->m_bShotButtonsReleased && !m_pPl->ShotButtonsPressed())
+	{
+		m_pPl->m_bShotButtonsReleased = true;
+	}
+
 	if (!PlayersAtTargetPos())
 		return;
 
@@ -866,7 +871,7 @@ void CBall::State_KICKOFF_Think()
 	if (m_pPl->m_bShotButtonsReleased && m_pPl->IsShooting())
 	{
 		RemoveAllTouches();
-		SetVel(m_vPlForward2D * 200, 0, BODY_PART_FEET, false, false, false);
+		SetVel(m_vPlForward2D * 250, 0, BODY_PART_FEET, false, false, false);
 		m_pPl->RemoveFlag(FL_ATCONTROLS);
 		if (m_pOtherPl)
 			m_pOtherPl->RemoveFlag(FL_ATCONTROLS);
@@ -1050,7 +1055,7 @@ void CBall::State_CORNER_Leave(ball_state_t newState)
 void CBall::State_GOAL_Enter()
 {
 	if (ReplayManager())
-		ReplayManager()->StartReplay(sv_ball_goalreplay_count.GetInt(), sv_ball_goalreplay_delay.GetFloat());
+		ReplayManager()->StartReplay(sv_ball_goalreplay_count.GetInt(), sv_ball_goalreplay_delay.GetFloat(), GetGlobalTeam(m_nTeam)->m_vPlayerSpawns[0].y < GetGlobalTeam(m_nTeam)->GetOppTeam()->m_vPlayerSpawns[0].y);
 
 	SDKGameRules()->SetKickOffTeam(m_nTeam);
 	int scoringTeam;
@@ -1547,7 +1552,8 @@ bool CBall::DoBodyPartAction()
 
 	if (m_pPl->GetTeamPosType() == GK && m_nInPenBoxOfTeam == m_pPl->GetTeamNumber() && !m_pPl->m_pHoldingBall)
 	{
-		return CheckKeeperCatch();
+		if (CheckKeeperCatch())
+			return true;
 	}
 
 	if (m_pPl->m_Shared.m_ePlayerAnimEvent == PLAYERANIMEVENT_SLIDE)

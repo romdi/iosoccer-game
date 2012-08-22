@@ -18,6 +18,7 @@ private:
 	Vector m_vNewDir;
 	Vector m_vOldBallPos;
 	float m_flLerpTime;
+	CUtlVector<Vector> m_BallPos;
 
 public:
 	static C_TVCamera *GetInstance();

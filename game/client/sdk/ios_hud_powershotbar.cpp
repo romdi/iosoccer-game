@@ -18,6 +18,7 @@
 #include "c_baseplayer.h"
 #include "in_buttons.h"
 #include "sdk_gamerules.h"
+#include "c_ios_replaymanager.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -212,6 +213,9 @@ bool CHudPowershotBar::ShouldDraw()
 
 	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
 	if (!pPlayer || pPlayer->GetTeamNumber() != TEAM_A && pPlayer->GetTeamNumber() != TEAM_B)
+		return false;
+
+	if (GetReplayManager() && GetReplayManager()->m_bIsReplaying)
 		return false;
 
 	return true;

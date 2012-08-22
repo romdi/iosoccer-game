@@ -1294,6 +1294,14 @@ void CSDKGameRules::State_FIRST_HALF_Leave()
 	GetBall()->SetMatchEvent(MATCH_EVENT_HALFTIME);
 	GetBall()->EmitSound("Ball.whistle");
 	GetBall()->EmitSound("Ball.cheer");
+	//for (int i = 1; i <= gpGlobals->maxClients; i++)
+	//{
+	//	CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+	//	if (!CSDKPlayer::IsOnField(pPl))
+	//		continue;
+
+	//	pPl->ShowViewPortPanel(PANEL_POSTMATCHSTATS);
+	//}
 }
 
 void CSDKGameRules::State_HALFTIME_Enter()
@@ -1993,7 +2001,7 @@ void CC_BenchAll(const CCommand &args)
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
 		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
-		if (!CSDKPlayer::IsOnField(pPl) || pPl->IsBot())
+		if (!CSDKPlayer::IsOnField(pPl)/* || pPl->IsBot()*/)
 			continue;
 
 		if (team == 0 || (pPl->GetTeamNumber() - TEAM_A + 1) == team)

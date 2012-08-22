@@ -72,15 +72,15 @@ class CReplayBall : public CPhysicsProp
 {
 public:
 	DECLARE_CLASS( CReplayBall, CPhysicsProp );
+	DECLARE_SERVERCLASS();
+	DECLARE_DATADESC();
 
 	typedef CPhysicsProp BaseClass;
 	CReplayBall();
 
-
 	bool CreateVPhysics( void );
 	void Spawn( void );
 	virtual void Precache();
-	DECLARE_DATADESC();
 };
 
 
@@ -115,7 +115,7 @@ public:
 	~CReplayManager();
 	void CheckReplay();
 	void TakeSnapshot();
-	void StartReplay(int numberOfRuns, float startDelay);
+	void StartReplay(int numberOfRuns, float startDelay, bool atMinGoalPos);
 	void StopReplay();
 	void RestoreSnapshot();
 	bool IsReplaying() { return m_bDoReplay; }
@@ -123,6 +123,13 @@ public:
 	void Spawn();
 
 	CNetworkVar(bool, m_bIsReplaying);
+	CNetworkVar(int, m_nReplayRunIndex);
+	CNetworkVar(bool, m_bAtMinGoalPos);
+
+	int UpdateTransmitState()	// always send to all clients
+	{
+		return SetTransmitState( FL_EDICT_ALWAYS );
+	}
 
 private:
 	CUtlVector<Snapshot>	m_Snapshots;
@@ -130,7 +137,6 @@ private:
 	int						m_nSnapshotIndex;
 	CReplayBall				*m_pBall;
 	CReplayPlayer			*m_pPlayers[2][11];
-	int						m_nReplayRunCount;
 	int						m_nMaxReplayRuns;
 	float					m_flStartTime;
 };

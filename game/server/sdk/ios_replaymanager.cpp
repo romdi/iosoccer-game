@@ -29,10 +29,12 @@ void CopyAnimationLayer(CAnimationLayer *dst, const CAnimationLayer *src)
 }
 
 BEGIN_DATADESC( CReplayBall )
-
 END_DATADESC()
 
 LINK_ENTITY_TO_CLASS( replayball, CReplayBall );
+
+IMPLEMENT_SERVERCLASS_ST(CReplayBall, DT_ReplayBall)
+END_SEND_TABLE()
 
 bool CReplayBall::CreateVPhysics()
 {
@@ -116,13 +118,13 @@ void CReplayPlayer::Think()
 	//SetSimulationTime( gpGlobals->curtime );
 	
 	//AddGestureSequence(m_AnimLayers[0].m_nSequence);
-	CopyAnimationLayer(GetAnimOverlay(0), &m_AnimLayers[0]);
+	//CopyAnimationLayer(GetAnimOverlay(0), &m_AnimLayers[0]);
 	//AddGestureSequence(m_AnimLayers[1].m_nSequence);
-	CopyAnimationLayer(GetAnimOverlay(1), &m_AnimLayers[1]);
+	//CopyAnimationLayer(GetAnimOverlay(1), &m_AnimLayers[1]);
 
 	//SetAnimatedEveryTick( true );
 	StudioFrameAdvance();
-	//DispatchAnimEvents(this);
+	DispatchAnimEvents(this);
 }
 
 static ConVar sv_replay_duration("sv_replay_duration", "6");
@@ -133,7 +135,7 @@ void cc_StartReplay(const CCommand &args)
 	if (!UTIL_IsCommandIssuedByServerAdmin())
         return;
 
-	ReplayManager()->StartReplay(1, 0);
+	ReplayManager()->StartReplay(1, 0, true);
 }
 
 static ConCommand start_replay("start_replay", cc_StartReplay);
@@ -153,6 +155,8 @@ LINK_ENTITY_TO_CLASS(replaymanager, CReplayManager);
 
 IMPLEMENT_SERVERCLASS_ST(CReplayManager, DT_ReplayManager)
 	SendPropBool(SENDINFO(m_bIsReplaying)),
+	SendPropInt(SENDINFO(m_nReplayRunIndex)),
+	SendPropBool(SENDINFO(m_bAtMinGoalPos)),
 END_SEND_TABLE()
 
 BEGIN_DATADESC( CReplayManager )
@@ -247,17 +251,24 @@ void CReplayManager::CheckReplay()
 		TakeSnapshot();
 }
 
-void CReplayManager::StartReplay(int numberOfRuns, float startDelay)
+void CReplayManager::StartReplay(int numberOfRuns, float startDelay, bool atMinGoalPos)
 {
+	if (!sv_replays.GetBool())
+		return;
+
 	m_nMaxReplayRuns = numberOfRuns;
 	m_flStartTime = gpGlobals->curtime + startDelay;
 	m_nSnapshotIndex = 0;
-	m_nReplayRunCount = 0;
+	m_nReplayRunIndex = 0;
 	m_bDoReplay = true;
+	m_bAtMinGoalPos = atMinGoalPos;
 }
 
 void CReplayManager::StopReplay()
 {
+	if (!sv_replays.GetBool())
+		return;
+
 	if (!m_bDoReplay)
 		return;
 
@@ -298,14 +309,15 @@ void CReplayManager::StopReplay()
 
 		//pRealPl->SetRenderMode(kRenderNormal);
 		//pRealPl->SetRenderColorA(255);
+		pRealPl->StopObserverMode();
 		pRealPl->SetLocalVelocity(vec3_origin);
 		pRealPl->SetLocalOrigin(pRealPl->m_vPreReplayPos);
 		pRealPl->SetLocalAngles(pRealPl->m_aPreReplayAngles);
 		pRealPl->RemoveEffects(EF_NODRAW);
-		pRealPl->RemoveEFlags(EFL_NOCLIP_ACTIVE);
+		//pRealPl->RemoveEFlags(EFL_NOCLIP_ACTIVE);
 		pRealPl->SetMoveType(MOVETYPE_WALK);
 		pRealPl->RemoveSolidFlags(FSOLID_NOT_SOLID);
-		//pRealPl->StopObserverMode();
+		pRealPl->SetViewOffset(VEC_VIEW);
 	}
 }
 
@@ -390,10 +402,11 @@ void CReplayManager::RestoreSnapshot()
 {
 	if (m_nSnapshotIndex >= m_Snapshots.Count())
 	{
-		m_nReplayRunCount += 1;
-
-		if (m_nReplayRunCount < m_nMaxReplayRuns)
+		if (m_nReplayRunIndex < m_nMaxReplayRuns - 1)
+		{
+			m_nReplayRunIndex += 1;
 			m_nSnapshotIndex = 0;
+		}
 		else
 		{
 			StopReplay();
@@ -431,11 +444,11 @@ void CReplayManager::RestoreSnapshot()
 			pRealPl->m_aPreReplayAngles = pRealPl->GetLocalAngles();
 			pRealPl->AddEffects(EF_NODRAW);
 			pRealPl->DoServerAnimationEvent(PLAYERANIMEVENT_CANCEL);
-			pRealPl->SetMoveType(MOVETYPE_NOCLIP);
-			pRealPl->AddEFlags(EFL_NOCLIP_ACTIVE);
+			//pRealPl->SetMoveType(MOVETYPE_NOCLIP);
+			//pRealPl->AddEFlags(EFL_NOCLIP_ACTIVE);
 			pRealPl->AddSolidFlags(FSOLID_NOT_SOLID);
 			//if (pRealPl->GetMoveType() != MOVETYPE_OBSERVER)
-			//	pRealPl->SetObserverMode(OBS_MODE_ROAMING);
+			pRealPl->SetObserverMode(OBS_MODE_TVCAM);
 		}
 	}
 
@@ -505,8 +518,8 @@ void CReplayManager::RestoreSnapshot()
 			pPl->SetSimulationTime(pPlSnap->m_flSimulationTime);
 			pPl->SetPlaybackRate(1);
 
-			CopyAnimationLayer(&pPl->m_AnimLayers[0], &pPlSnap->m_animLayers[0]);
-			CopyAnimationLayer(&pPl->m_AnimLayers[1], &pPlSnap->m_animLayers[1]);
+			//CopyAnimationLayer(&pPl->m_AnimLayers[0], &pPlSnap->m_animLayers[0]);
+			//CopyAnimationLayer(&pPl->m_AnimLayers[1], &pPlSnap->m_animLayers[1]);
 
 			//if (m_nSnapshotIndex % 20 == 0)
 			{
@@ -528,7 +541,7 @@ void CReplayManager::RestoreSnapshot()
 
 					//pPl->StudioFrameAdvanceManual( gpGlobals->frametime );
 					//pPl->DispatchAnimEvents(pPl);
-					//CopyAnimationLayer(currentLayer, &pPlSnap->m_animLayers[layerIndex]);
+					CopyAnimationLayer(currentLayer, &pPlSnap->m_animLayers[layerIndex]);
 					//currentLayer->m_fFlags |= ANIM_LAYER_ACTIVE;
 					//currentLayer->MarkActive();
 					//currentLayer->StudioFrameAdvance(gpGlobals->frametime, pPl);

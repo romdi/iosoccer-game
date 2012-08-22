@@ -1444,15 +1444,15 @@ bool CBasePlayer::SetObserverMode(int mode )
 
 
 	// check mp_forcecamera settings for dead players
-	if ( mode > OBS_MODE_FIXED && GetTeamNumber() > TEAM_SPECTATOR )
-	{
-		switch ( mp_forcecamera.GetInt() )
-		{
-			case OBS_ALLOW_ALL	:	break;	// no restrictions
-			case OBS_ALLOW_TEAM :	mode = OBS_MODE_IN_EYE;	break;
-			case OBS_ALLOW_NONE :	mode = OBS_MODE_FIXED; break;	// don't allow anything
-		}
-	}
+	//if ( mode > OBS_MODE_FIXED && GetTeamNumber() > TEAM_SPECTATOR )
+	//{
+	//	switch ( mp_forcecamera.GetInt() )
+	//	{
+	//		case OBS_ALLOW_ALL	:	break;	// no restrictions
+	//		case OBS_ALLOW_TEAM :	mode = OBS_MODE_IN_EYE;	break;
+	//		case OBS_ALLOW_NONE :	mode = OBS_MODE_FIXED; break;	// don't allow anything
+	//	}
+	//}
 
 	if ( m_iObserverMode > OBS_MODE_DEATHCAM )
 	{
