@@ -5,9 +5,9 @@
 
 using namespace vgui;
 
-enum { PANEL_WIDTH = 500, PANEL_HEIGHT = 600 };
-enum { NAME_HEIGHT = 30, NAME_VMARGIN = 5 };
-enum { VOTE_WIDTH = 100, VOTE_HEIGHT = 30 };
+enum { PANEL_WIDTH = 500, PANEL_HEIGHT = 500 };
+enum { NAME_HEIGHT = 25, NAME_VMARGIN = 5 };
+enum { VOTE_WIDTH = 100, VOTE_HEIGHT = 25, VOTE_MARGIN = 5 };
 
 void ShowMotmVoting()
 {
@@ -62,7 +62,7 @@ void CMotmVotingMenu::ApplySchemeSettings(IScheme *pScheme)
 	m_pMainPanel->SetBgColor(Color(0, 0, 0, 240));
 	m_pMainPanel->SetPaintBackgroundType(2);
 
-	m_pVote->SetBounds(PANEL_WIDTH - VOTE_WIDTH, PANEL_HEIGHT - VOTE_HEIGHT, VOTE_WIDTH, VOTE_HEIGHT);
+	m_pVote->SetBounds(PANEL_WIDTH - VOTE_WIDTH - VOTE_MARGIN, PANEL_HEIGHT - VOTE_HEIGHT - VOTE_MARGIN, VOTE_WIDTH, VOTE_HEIGHT);
 }
 
 void CMotmVotingMenu::Update()
@@ -112,6 +112,8 @@ void CMotmVotingMenu::Reset()
 		}
 	}
 
+	bool selectedSet[2] = {};
+
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
 		if (!g_PR->IsConnected(i) || g_PR->GetTeam(i) != TEAM_A && g_PR->GetTeam(i) != TEAM_B)
@@ -121,6 +123,12 @@ void CMotmVotingMenu::Reset()
 		pRadio->SetText(VarArgs("[%s] %s", g_szPosNames[g_PR->GetTeamPosType(i)], g_PR->GetPlayerName(i)));
 		pRadio->SetCommand(VarArgs("%d", i));
 		pRadio->SetEnabled(i != GetLocalPlayerIndex());
+
+		if (pRadio->IsEnabled() && !selectedSet[g_PR->GetTeam(i) - TEAM_A])
+		{
+			pRadio->SetSelected(true);
+			selectedSet[g_PR->GetTeam(i) - TEAM_A] = true;
+		}
 	}
 }
 

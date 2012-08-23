@@ -432,12 +432,14 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 	{
 	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT:
 	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT:
-		GetSDKPlayer()->AddFlag(FL_KEEPER_SIDEWAYS_DIVING);
+		//TODO: Uncomment once the getting stuck problem is fixed
+		//GetSDKPlayer()->AddFlag(FL_KEEPER_SIDEWAYS_DIVING);
 		break;
 	case PLAYERANIMEVENT_KEEPER_DIVE_FORWARD:
 	case PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD:
 	case PLAYERANIMEVENT_SLIDE:
-		GetSDKPlayer()->AddFlag(FL_SLIDING);
+		//TODO: Uncomment once the getting stuck problem is fixed
+		//GetSDKPlayer()->AddFlag(FL_SLIDING);
 		break;
 	}
 }

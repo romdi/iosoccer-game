@@ -9,7 +9,7 @@ enum { PANEL_WIDTH = 500, PANEL_HEIGHT = 600 };
 enum { NAME_HEIGHT = 30, NAME_VMARGIN = 5 };
 enum { VOTE_WIDTH = 100, VOTE_HEIGHT = 30 };
 enum { STAT_WIDTH = 400, STAT_HEIGHT = 100, STAT_VMARGIN = 5, STAT_TEXT_WIDTH = 100, STAT_TEXT_HEIGHT = 30 };
-enum { CLOSE_WIDTH = 50, CLOSE_HEIGHT = 30 };
+enum { CLOSE_WIDTH = 50, CLOSE_HEIGHT = 30, CLOSE_MARGIN = 5 };
 
 void ShowPostMatchStats()
 {
@@ -87,7 +87,7 @@ void CPostMatchStatsMenu::ApplySchemeSettings(IScheme *pScheme)
 		}
 	}
 
-	m_pClose->SetBounds(PANEL_WIDTH - CLOSE_WIDTH, PANEL_HEIGHT - CLOSE_HEIGHT, CLOSE_WIDTH, CLOSE_HEIGHT);
+	m_pClose->SetBounds(PANEL_WIDTH - CLOSE_WIDTH - CLOSE_MARGIN, PANEL_HEIGHT - CLOSE_HEIGHT - CLOSE_MARGIN, CLOSE_WIDTH, CLOSE_HEIGHT);
 }
 
 void CPostMatchStatsMenu::Update()
@@ -101,6 +101,7 @@ void CPostMatchStatsMenu::ShowPanel(bool state)
 
 	if (state)
 	{
+		gViewPortInterface->ShowPanel(PANEL_MOTMVOTING, false);
 		Reset();
 		Activate();
 		SetMouseInputEnabled( true );

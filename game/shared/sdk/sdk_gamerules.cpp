@@ -1761,9 +1761,9 @@ void CSDKGameRules::State_COOLDOWN_Think()
 
 		IGameEvent *pEvent = gameeventmanager->CreateEvent("motmvotingresult");
 		pEvent->SetInt("hometeamplayerschoicemotmplayer", mostVotesPlayer[0]);
-		pEvent->SetInt("hometeamplayerschoicemotmpercentage", mostVotesCount[0] * 100 / playersOnField[0]);
+		pEvent->SetInt("hometeamplayerschoicemotmpercentage", mostVotesCount[0] * 100 / max(1, playersOnField[0]));
 		pEvent->SetInt("awayteamplayerschoicemotmplayer", mostVotesPlayer[1]);
-		pEvent->SetInt("awayteamplayerschoicemotmpercentage", mostVotesCount[1] * 100 / playersOnField[1]);
+		pEvent->SetInt("awayteamplayerschoicemotmpercentage", mostVotesCount[1] * 100 / max(1, playersOnField[1]));
 		pEvent->SetInt("hometeamexpertschoicemotmplayer", mostGoalsPlayers[0]);
 		pEvent->SetInt("hometeamexpertschoicemotmpercentage", 100);
 		pEvent->SetInt("awayteamexpertschoicemotmplayer", mostGoalsPlayers[1]);
