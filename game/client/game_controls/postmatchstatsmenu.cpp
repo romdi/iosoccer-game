@@ -16,7 +16,7 @@ void ShowPostMatchStats()
 	gViewPortInterface->ShowPanel(PANEL_POSTMATCHSTATS, true);
 }
 
-ConCommand showpostmatchstats("showpostmatchstats", ShowPostMatchStats);
+//ConCommand showpostmatchstats("showpostmatchstats", ShowPostMatchStats);
 
 CPostMatchStatsMenu::CPostMatchStatsMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_POSTMATCHSTATS)
 {
@@ -219,9 +219,14 @@ void CPostMatchStatsMenu::FireGameEvent(IGameEvent *event)
 		return;
 
 	m_nPlayersChoiceMotm[0] = event->GetInt("hometeamplayerschoicemotmplayer");
-	m_nPlayersChoiceMotmPercentage[0] = event->GetInt("hometeamplayerschoicemotmplayerpercentage");
-	m_nPlayersChoiceMotm[1] = event->GetInt("awayteamexpertschoicemotm");
-	m_nPlayersChoiceMotmPercentage[1] = event->GetInt("awayteamexpertschoicemotmpercentage");
+	m_nPlayersChoiceMotmPercentage[0] = event->GetInt("hometeamplayerschoicemotmpercentage");
+	m_nPlayersChoiceMotm[1] = event->GetInt("awayteamplayerschoicemotmplayer");
+	m_nPlayersChoiceMotmPercentage[1] = event->GetInt("awayteamplayerschoicemotmpercentage");
+
+	m_nExpertsChoiceMotm[0] = event->GetInt("hometeamexpertschoicemotmplayer");
+	m_nExpertsChoiceMotmPercentage[0] = event->GetInt("hometeamexpertschoicemotmpercentage");
+	m_nExpertsChoiceMotm[1] = event->GetInt("awayteamexpertschoicemotmplayer");
+	m_nExpertsChoiceMotmPercentage[1] = event->GetInt("awayteamexpertschoicemotmpercentage");
 
 	ShowPanel(true);
 }

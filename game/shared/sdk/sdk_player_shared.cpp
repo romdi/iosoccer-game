@@ -39,7 +39,7 @@
 	#include "team.h"
 #endif
 
-const char *g_szRequiredClientVersion = "20.08.12/18h";
+const char *g_szRequiredClientVersion = "25.08.12/6h";
 
 ConVar sv_showimpacts("sv_showimpacts", "0", FCVAR_REPLICATED, "Shows client (red) and server (blue) bullet impact point" );
 
@@ -272,7 +272,7 @@ void CSDKPlayer::MoveToTargetPos(Vector &pos, Vector &vel, QAngle &ang)
 void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vector &oldVel, Vector &newVel, const QAngle &oldAng, QAngle &newAng)
 {
 	bool stopPlayer = false;
-	const float border = (GetFlags() & FL_SHIELD_KEEP_IN) ? 0 : 2 * mp_shield_border.GetInt();
+	const float border = (GetFlags() & FL_SHIELD_KEEP_IN) ? -mp_shield_border.GetInt() : mp_shield_border.GetInt();
 
 	if (SDKGameRules()->m_nShieldType != SHIELD_NONE)
 	{
@@ -498,4 +498,45 @@ void CSDKPlayer::FindSafePos(Vector &startPos)
 
 	if (!hasSafePos)
 		startPos.z += GetPlayerMaxs().z * 2;
+}
+
+void CSDKPlayer::CheckShotCharging()
+{
+	if ((m_nButtons & IN_ATTACK) != 0 && m_bDoChargedShot)
+	{
+		m_bDoChargedShot = false;
+	}
+	else if ((m_nButtons & IN_ATTACK2) != 0 && !m_bIsShotCharging)
+	{
+		m_bDoChargedShot = false;
+		m_bIsShotCharging = true;
+		m_flShotChargingStart = gpGlobals->curtime;
+	}
+	else if (m_bIsShotCharging)
+	{
+		if ((m_nButtons & IN_ATTACK2) != 0)
+		{
+			//m_flShotChargingDuration = gpGlobals->curtime - m_flShotChargingStart;
+			//float fraction = m_flShotChargingDuration / mp_chargedshot_increaseduration.GetFloat();
+		}
+		else
+		{
+			m_bIsShotCharging = false;
+			m_flShotChargingDuration = gpGlobals->curtime - m_flShotChargingStart;
+			m_bDoChargedShot = true;
+		}
+	}
+}
+
+void CSDKPlayer::ResetShotCharging()
+{
+	m_bDoChargedShot = false;
+	m_bIsShotCharging = false;
+	#ifdef CLIENT_DLL
+	if (this == C_SDKPlayer::GetLocalSDKPlayer() && mp_reset_spin_toggles_on_shot.GetBool())
+	{
+		engine->ClientCmd("-topspin");
+		engine->ClientCmd("-backspin");
+	}
+	#endif	
 }

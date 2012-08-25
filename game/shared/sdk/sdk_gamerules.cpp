@@ -1124,6 +1124,8 @@ ConVar mp_chat_signal_ready_timeout("mp_chat_signal_ready_timeout", "10", FCVAR_
 
 ConVar mp_custom_shirt_numbers("mp_custom_shirt_numbers", "0", FCVAR_NOTIFY);
 
+ConVar mp_reset_spin_toggles_on_shot("mp_reset_spin_toggles_on_shot", "0", FCVAR_NOTIFY | FCVAR_REPLICATED);
+
 static void OnMaxPlayersChange(IConVar *var, const char *pOldValue, float flOldValue)
 {
 #ifdef GAME_DLL
@@ -1717,7 +1719,6 @@ void CSDKGameRules::State_COOLDOWN_Think()
 	if (gpGlobals->curtime >= m_flStateEnterTime + 13 && !m_bPostMatchStatsPanelShown)
 	{
 		int playerVotes[2][MAX_PLAYERS] = {};
-		int motmVotes[2] = { 0, 0 };
 		int playersOnField[2] = { 0, 0 };
 
 		int mostGoals[2] = {};
@@ -1910,13 +1911,13 @@ CBaseEntity *CSDKGameRules::GetPlayerSpawnSpot( CBasePlayer *pPlayer )
 	return NULL;
 }
 
-void CSDKGameRules::StartInjuryTime()
+void CSDKGameRules::StartMeteringInjuryTime()
 {
-	EndInjuryTime();
+	StopMeteringInjuryTime();
 	m_flInjuryTimeStart = gpGlobals->curtime;
 }
 
-void CSDKGameRules::EndInjuryTime()
+void CSDKGameRules::StopMeteringInjuryTime()
 {
 	if (m_flInjuryTimeStart != -1)
 	{

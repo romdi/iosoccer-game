@@ -124,3 +124,5 @@ ConVar mp_slideduration("mp_slideduration", "1", FCVAR_REPLICATED | FCVAR_NOTIFY
 ConVar mp_slidespeed("mp_slidespeed", "400", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_divingheaderduration("mp_divingheaderduration", "1", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_divingheaderspeed("mp_divingheaderspeed", "400", FCVAR_REPLICATED | FCVAR_NOTIFY);
+ConVar mp_chargedshot_increaseduration("mp_chargedshot_increaseduration", "1.0", FCVAR_REPLICATED | FCVAR_NOTIFY);
+ConVar mp_chargedshot_decreaseduration("mp_chargedshot_decreaseduration", "5.0", FCVAR_REPLICATED | FCVAR_NOTIFY);

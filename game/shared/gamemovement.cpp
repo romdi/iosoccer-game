@@ -1426,6 +1426,27 @@ void CGameMovement::FullWalkMove( )
 	Vector oldVel = mv->m_vecVelocity;
 	QAngle oldAng = mv->m_vecAbsViewAngles;
 
+	ToSDKPlayer(player)->m_nKeeperCatchInPenBoxOfTeam = TEAM_INVALID;
+	ToSDKPlayer(player)->m_nInPenBoxOfTeam = TEAM_INVALID;
+
+	for (int team = TEAM_A; team <= TEAM_B; team++)
+	{
+		Vector min = GetGlobalTeam(team)->m_vPenBoxMin;
+		Vector max = GetGlobalTeam(team)->m_vPenBoxMax;
+
+		if (oldPos.x > min.x && oldPos.y > min.y && oldPos.x < max.x && oldPos.y < max.y)
+		{
+			ToSDKPlayer(player)->m_nInPenBoxOfTeam = team;
+
+			if (oldPos.x > min.x + mp_shield_border.GetInt() && oldPos.y > min.y + mp_shield_border.GetInt()
+				&& oldPos.x < max.x - mp_shield_border.GetInt() && oldPos.y < max.y - mp_shield_border.GetInt())
+			{
+				ToSDKPlayer(player)->m_nKeeperCatchInPenBoxOfTeam = team;
+			}
+			break;
+		}
+	}
+
 	bool hasPlayerAnimEvent = CheckPlayerAnimEvent();
 
 	if (hasPlayerAnimEvent)
@@ -1894,7 +1915,7 @@ bool CGameMovement::CheckJumpButton( void )
 	team = pPl->GetTeamNumber();
 #endif
 
-	if (isKeeper && pPl->m_nInPenBoxOfTeam == team)
+	if (isKeeper && pPl->m_nKeeperCatchInPenBoxOfTeam == team)
 	{
 		MoveHelper()->StartSound( mv->GetAbsOrigin(), "Player.DiveKeeper" );
 

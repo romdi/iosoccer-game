@@ -55,6 +55,14 @@ public:
 	virtual void				PreThink( void );
 
 	SDKPlayerState		State_Get() const;
+
+	void				CheckShotCharging();
+	void				ResetShotCharging();
+
+	bool				m_bIsShotCharging;
+	float				m_bDoChargedShot;
+	float				m_flShotChargingStart;
+	float				m_flShotChargingDuration;
 	
 	void DoAnimationEvent(PlayerAnimEvent_t event);
 	virtual bool ShouldDraw();
@@ -180,6 +188,7 @@ public:
 	CNetworkVar(bool, m_bIsAtTargetPos);
 	CNetworkVar(bool, m_bHoldAtTargetPos);
 
+	CNetworkVar(int, m_nKeeperCatchInPenBoxOfTeam);
 	CNetworkVar(int, m_nInPenBoxOfTeam);
 
 	void CheckBallShield(const Vector &oldPos, Vector &newPos, const Vector &oldVel, Vector &newVel, const QAngle &oldAng, QAngle &newAng);

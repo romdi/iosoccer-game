@@ -122,6 +122,7 @@ BEGIN_RECV_TABLE_NOBASE( C_SDKPlayer, DT_SDKLocalPlayerExclusive )
 	RecvPropFloat( RECVINFO( m_angEyeAngles[0] ) ),
 //	RecvPropFloat( RECVINFO( m_angEyeAngles[1] ) ),
 //ios	RecvPropInt( RECVINFO( m_ArmorValue ) ),
+	RecvPropInt(RECVINFO(m_nKeeperCatchInPenBoxOfTeam)),
 	RecvPropInt(RECVINFO(m_nInPenBoxOfTeam)),
 	RecvPropVector(RECVINFO(m_vTargetPos)),
 	RecvPropBool(RECVINFO(m_bIsAtTargetPos)),
@@ -178,6 +179,8 @@ BEGIN_PREDICTION_DATA( C_SDKPlayer )
 	//DEFINE_PRED_FIELD( m_nSequence, FIELD_INTEGER, FTYPEDESC_OVERRIDE | FTYPEDESC_PRIVATE | FTYPEDESC_NOERRORCHECK ),	
 	//DEFINE_PRED_FIELD( m_nNewSequenceParity, FIELD_INTEGER, FTYPEDESC_OVERRIDE | FTYPEDESC_PRIVATE | FTYPEDESC_NOERRORCHECK ),
 	//DEFINE_PRED_FIELD( m_nResetEventsParity, FIELD_INTEGER, FTYPEDESC_OVERRIDE | FTYPEDESC_PRIVATE | FTYPEDESC_NOERRORCHECK ),
+	DEFINE_PRED_FIELD(m_nKeeperCatchInPenBoxOfTeam, FIELD_INTEGER, FTYPEDESC_INSENDTABLE),
+	DEFINE_PRED_FIELD(m_nInPenBoxOfTeam, FIELD_INTEGER, FTYPEDESC_INSENDTABLE),
 END_PREDICTION_DATA()
 
 LINK_ENTITY_TO_CLASS( player, C_SDKPlayer );
@@ -1344,4 +1347,7 @@ int C_SDKPlayer::DrawModel( int flags )
 void C_SDKPlayer::PreThink()
 {
 	BaseClass::PreThink();
+
+	if (prediction->IsFirstTimePredicted())
+		CheckShotCharging();
 }

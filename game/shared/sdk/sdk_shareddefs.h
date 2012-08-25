@@ -145,6 +145,8 @@ extern ConVar mp_slideduration;
 extern ConVar mp_slidespeed;
 extern ConVar mp_divingheaderduration;
 extern ConVar mp_divingheaderspeed;
+extern ConVar mp_chargedshot_increaseduration;
+extern ConVar mp_chargedshot_decreaseduration;
 
 //--------------------------------------------------------------------------------------------------------
 //

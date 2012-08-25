@@ -324,7 +324,6 @@ void CSDKPlayerAnimState::UpdateLayerSequenceGeneric( CStudioHdr *pStudioHdr, in
 			else
 			{
 				flCurCycle = 1;
-
 			}
 		}
 	}
@@ -345,6 +344,7 @@ void CSDKPlayerAnimState::UpdateLayerSequenceGeneric( CStudioHdr *pStudioHdr, in
 
 extern ConVar cl_powershot_strength;
 extern ConVar mp_powershot_fixed_strength;
+extern ConVar mp_reset_spin_toggles_on_shot;
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -352,12 +352,21 @@ extern ConVar mp_powershot_fixed_strength;
 //-----------------------------------------------------------------------------
 void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 {
-	switch( event )
+	switch(event)
 	{
+	case PLAYERANIMEVENT_BLANK:
+		{
+			GetSDKPlayer()->ResetShotCharging();
+			return; // This is a dummy event, so don't do anything and return early
+		}
 	case PLAYERANIMEVENT_NONE:
-		break;
+		{
+			GetSDKPlayer()->ResetShotCharging();
+			break;
+		}
 	case PLAYERANIMEVENT_CANCEL:
 		{
+			GetSDKPlayer()->ResetShotCharging();
 			GetSDKPlayer()->RemoveFlag(FL_FREECAM | FL_KEEPER_SIDEWAYS_DIVING | FL_SLIDING);
 			ClearAnimationState();
 			break;
@@ -371,8 +380,11 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 	case PLAYERANIMEVENT_HEADER_STATIONARY:
 	case PLAYERANIMEVENT_THROWIN:
 	case PLAYERANIMEVENT_THROW:
-	case PLAYERANIMEVENT_SLIDE:
 	case PLAYERANIMEVENT_DIVINGHEADER:
+		{
+			GetSDKPlayer()->ResetShotCharging();
+		}
+	case PLAYERANIMEVENT_SLIDE:
 	case PLAYERANIMEVENT_TACKLED_FORWARD:
 	case PLAYERANIMEVENT_TACKLED_BACKWARD:
 	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT:

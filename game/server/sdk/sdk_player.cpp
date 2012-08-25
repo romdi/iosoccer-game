@@ -130,6 +130,7 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayer, DT_SDKLocalPlayerExclusive )
 //	SendPropAngle( SENDINFO_VECTORELEM(m_angEyeAngles, 1), 10, SPROP_CHANGES_OFTEN ),
 
 //ios	SendPropInt( SENDINFO( m_ArmorValue ), 8, SPROP_UNSIGNED ),
+	SendPropInt(SENDINFO(m_nKeeperCatchInPenBoxOfTeam)),
 	SendPropInt(SENDINFO(m_nInPenBoxOfTeam)),
 	SendPropVector(SENDINFO(m_vTargetPos), -1, SPROP_NOSCALE),
 	SendPropBool(SENDINFO(m_bIsAtTargetPos)),
@@ -248,6 +249,7 @@ CSDKPlayer::CSDKPlayer()
 	m_pPlayerBall = NULL;
 	m_Shared.m_flPlayerAnimEventStart = gpGlobals->curtime;
 	m_Shared.m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
+	m_nKeeperCatchInPenBoxOfTeam = TEAM_INVALID;
 	m_nInPenBoxOfTeam = TEAM_INVALID;
 	m_ePenaltyState = PENALTY_NONE;
 	m_pHoldingBall = NULL;
@@ -919,6 +921,8 @@ void CSDKPlayer::State_ACTIVE_PreThink()
 {
 	if (!ShotButtonsPressed())
 		m_bShotButtonsReleased = true;
+
+	CheckShotCharging();
 }
 
 int CSDKPlayer::GetPlayerStance()
@@ -1208,7 +1212,7 @@ void CSDKPlayer::ActivateRemoteControlling(const Vector &targetPos)
 
 void CSDKPlayer::GetTargetPos(const Vector &pos, Vector &targetPos)
 {
-	float border = (GetFlags() & FL_SHIELD_KEEP_IN) ? 0 : 2 * mp_shield_border.GetInt();
+	float border = (GetFlags() & FL_SHIELD_KEEP_IN) ? -mp_shield_border.GetInt() : mp_shield_border.GetInt();
 
 	if (SDKGameRules()->m_nShieldType == SHIELD_GOALKICK || 
 		SDKGameRules()->m_nShieldType == SHIELD_PENALTY ||
@@ -1454,12 +1458,12 @@ bool CSDKPlayer::IsNormalshooting()
 
 bool CSDKPlayer::IsPowershooting()
 {
-	return (m_nButtons & (IN_ATTACK2/* | IN_ALT1*/)) != 0;
+	return m_bDoChargedShot;
 }
 
 bool CSDKPlayer::IsAutoPassing()
 {
-	return (m_nButtons & IN_ALT2) != 0;
+	return false; //(m_nButtons & IN_ALT2) != 0;
 }
 
 bool CSDKPlayer::IsShooting()

@@ -383,6 +383,7 @@ public:
 	CNetworkVar(bool, m_bIsAtTargetPos);
 	CNetworkVar(bool, m_bHoldAtTargetPos);
 
+	CNetworkVar(int, m_nKeeperCatchInPenBoxOfTeam);
 	CNetworkVar(int, m_nInPenBoxOfTeam);
 
 	static bool			IsOnField(CSDKPlayer *pPl);
@@ -390,6 +391,14 @@ public:
 	void				ResetStats();
 
 	bool				m_bShotButtonsReleased;
+
+	bool				m_bIsShotCharging;
+	float				m_bDoChargedShot;
+	float				m_flShotChargingStart;
+	float				m_flShotChargingDuration;
+
+	void				CheckShotCharging();
+	void				ResetShotCharging();
 
 	float				m_flNextJoin;
 	int					m_nTeamToJoin;

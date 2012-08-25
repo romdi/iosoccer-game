@@ -122,27 +122,33 @@ void CInput::CAM_Think( void )
 			origin.z += cam_height.GetInt();
 
 			Vector camForward;
-			AngleVectors( QAngle(camOffset.x, camOffset.y, camOffset.z),
-				&camForward, NULL, NULL ); // get the forward vector
+			AngleVectors( QAngle(camOffset.x, camOffset.y, camOffset.z), &camForward, NULL, NULL ); // get the forward vector
 
-			adjDist = camOffset[PITCH] >= 0 ? idealAngles[DIST] : min((VEC_VIEW.z + cam_height.GetInt() - 5) / cos(DEG2RAD(camOffset[PITCH] + 90)), idealAngles[DIST]);
+			if (camOffset[PITCH] >= 0)
+				adjDist = idealAngles[DIST];
+			else
+			{
+				float coeff = clamp(cos(DEG2RAD(camOffset[PITCH] + 90)), 0.001f, 1.0f);
+				adjDist = min((VEC_VIEW.z + cam_height.GetInt() - 5) / coeff, idealAngles[DIST]);
+			}
+
 			camOffset[ DIST ] = adjDist;
 		}
 
-		//if (cam_fade.GetBool())
-		//{
-		//	if (localPlayer->GetRenderMode() != kRenderTransColor)
-		//		localPlayer->SetRenderMode( kRenderTransColor );
+		if (cam_fade.GetBool())
+		{
+			if (localPlayer->GetRenderMode() != kRenderTransColor)
+				localPlayer->SetRenderMode( kRenderTransColor );
 
-		//	float playerAlpha = ( ( m_vecCameraOffset[ DIST ] - cam_fadeenddist.GetFloat() ) * ( 100 / ( cam_fadestartdist.GetFloat()  -  cam_fadeenddist.GetFloat() ) )  );
-		//	localPlayer->SetRenderColorA(clamp(playerAlpha * 2.55, 0, 255));
-		//}
-		//else
-		//{
-		//	//localPlayer->SetRenderColorA(255);
-		//	if (localPlayer->GetRenderMode() != kRenderNormal)
-		//		localPlayer->SetRenderMode( kRenderNormal );
-		//}
+			float playerAlpha = ( ( m_vecCameraOffset[ DIST ] - cam_fadeenddist.GetFloat() ) * ( 100 / ( cam_fadestartdist.GetFloat()  -  cam_fadeenddist.GetFloat() ) )  );
+			localPlayer->SetRenderColorA(clamp(playerAlpha * 2.55, 0, 255));
+		}
+		else
+		{
+			//localPlayer->SetRenderColorA(255);
+			if (localPlayer->GetRenderMode() != kRenderNormal)
+				localPlayer->SetRenderMode( kRenderNormal );
+		}
 	}
 	if ( cam_showangles.GetInt() )
 	{

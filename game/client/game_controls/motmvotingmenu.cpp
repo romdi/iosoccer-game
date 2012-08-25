@@ -5,16 +5,17 @@
 
 using namespace vgui;
 
-enum { PANEL_WIDTH = 500, PANEL_HEIGHT = 500 };
+enum { PANEL_WIDTH = 500, PANEL_HEIGHT = 600 };
 enum { NAME_HEIGHT = 25, NAME_VMARGIN = 5 };
 enum { VOTE_WIDTH = 100, VOTE_HEIGHT = 25, VOTE_MARGIN = 5 };
+enum { TITLE_WIDTH = PANEL_WIDTH, TITLE_HEIGHT = 25, TITLE_TOPMARGIN = 5, TITLE_BOTTOMMARGIN = 15 };
 
 void ShowMotmVoting()
 {
 	gViewPortInterface->ShowPanel(PANEL_MOTMVOTING, true);
 }
 
-ConCommand showmotmvoting("showmotmvoting", ShowMotmVoting);
+//ConCommand showmotmvoting("showmotmvoting", ShowMotmVoting);
 
 CMotmVotingMenu::CMotmVotingMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_MOTMVOTING)
 {
@@ -34,6 +35,8 @@ CMotmVotingMenu::CMotmVotingMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_MOTMV
 	SetTitle("", false);
 
 	m_pMainPanel = new Panel(this);
+
+	m_pTitle = new Label(m_pMainPanel, "", "Vote For Your Men Of The Match");
 
 	m_pVote = new Button(m_pMainPanel, "", "Vote", this, "vote");
 
@@ -62,7 +65,15 @@ void CMotmVotingMenu::ApplySchemeSettings(IScheme *pScheme)
 	m_pMainPanel->SetBgColor(Color(0, 0, 0, 240));
 	m_pMainPanel->SetPaintBackgroundType(2);
 
+	m_pTitle->SetBounds(PANEL_WIDTH / 2 - TITLE_WIDTH / 2, TITLE_TOPMARGIN, TITLE_WIDTH, TITLE_HEIGHT);
+	m_pTitle->SetContentAlignment(Label::Alignment::a_center);
+
 	m_pVote->SetBounds(PANEL_WIDTH - VOTE_WIDTH - VOTE_MARGIN, PANEL_HEIGHT - VOTE_HEIGHT - VOTE_MARGIN, VOTE_WIDTH, VOTE_HEIGHT);
+
+	for (int i = 0; i < 2; i++)
+	{
+		m_pTeamPanels[i]->SetBounds(i * (PANEL_WIDTH / 2), TITLE_TOPMARGIN + TITLE_HEIGHT + TITLE_BOTTOMMARGIN, PANEL_WIDTH / 2, PANEL_HEIGHT - TITLE_TOPMARGIN - TITLE_HEIGHT - TITLE_BOTTOMMARGIN - VOTE_HEIGHT - 2 * VOTE_MARGIN);
+	}
 }
 
 void CMotmVotingMenu::Update()
@@ -96,8 +107,6 @@ void CMotmVotingMenu::Reset()
 
 	for (int i = 0; i < 2; i++)
 	{
-		m_pTeamPanels[i]->SetBounds(i * (PANEL_WIDTH / 2), 0, PANEL_WIDTH / 2, PANEL_HEIGHT - VOTE_HEIGHT);
-
 		for (int j = 0; j < 11; j++)
 		{
 			m_pPlayerNames[i][j]->SetBounds(0, j * (NAME_HEIGHT + NAME_VMARGIN), m_pTeamPanels[i]->GetWide(), NAME_HEIGHT);

@@ -179,8 +179,8 @@ void CHudPowershotBar::ApplySchemeSettings( IScheme *scheme )
 		m_pSpinIndicatorsBack[i]->SetVisible(false);
 
 		m_pSpinIndicators[i]->SetPaintBackgroundEnabled(true);
-		//m_pSpinIndicators[i]->SetBgColor(Color(1, 210, 255, 255));
-		m_pSpinIndicators[i]->SetBgColor(Color(255, 255, 255, 255));
+		m_pSpinIndicators[i]->SetBgColor(Color(1, 210, 255, 255));
+		//m_pSpinIndicators[i]->SetBgColor(Color(255, 255, 255, 255));
 		m_pSpinIndicators[i]->SetBounds(SPIN_BORDER, SPIN_BORDER, m_pSpinIndicatorsBack[i]->GetWide() - 2 * SPIN_BORDER, m_pSpinIndicatorsBack[i]->GetTall() - 2 * SPIN_BORDER);
 	}
 }
@@ -271,8 +271,28 @@ void CHudPowershotBar::Paint()
 	m_pPowershotIndicatorBack->SetVisible(false);
 
 	m_pFixedPowershotIndicator->SetY(BAR_PADDING + m_pPowershotIndicator->GetTall() + 0.5f * (BAR_HEIGHT - 2 * BAR_PADDING - 3 * m_pFixedPowershotIndicator->GetTall()));
-	//m_pFixedPowershotIndicator->SetVisible(false);
+	m_pFixedPowershotIndicator->SetVisible(false);
 
 	m_pSpinIndicatorsBack[0]->SetVisible(pPlayer->m_nButtons & IN_TOPSPIN);
 	m_pSpinIndicatorsBack[1]->SetVisible(pPlayer->m_nButtons & IN_BACKSPIN);
+
+	float shotStrength;
+
+	if (pPlayer->m_bDoChargedShot || pPlayer->m_bIsShotCharging)
+	{
+		float currentTime = pPlayer->GetFinalPredictedTime();
+		currentTime -= TICK_INTERVAL;
+		currentTime += (gpGlobals->interpolation_amount * TICK_INTERVAL);
+
+		float duration = (pPlayer->m_bIsShotCharging ? currentTime - pPlayer->m_flShotChargingStart : pPlayer->m_flShotChargingDuration);
+		float totalTime = currentTime - pPlayer->m_flShotChargingStart;
+		float activeTime = min(duration, mp_chargedshot_increaseduration.GetFloat());
+		float extra = totalTime - activeTime;
+		shotStrength = max(0, activeTime / mp_chargedshot_increaseduration.GetFloat() - min(extra, mp_chargedshot_decreaseduration.GetFloat()) / mp_chargedshot_decreaseduration.GetFloat());
+
+		m_pPowershotIndicatorBack->SetY(m_pStaminaPanel->GetY() + BAR_PADDING + m_pPowershotIndicatorBack->GetTall() + (1 - shotStrength) * (BAR_HEIGHT - 2 * BAR_PADDING - 3 * m_pPowershotIndicatorBack->GetTall()));
+		m_pPowershotIndicatorBack->SetVisible(true);
+	}
+	else
+		m_pPowershotIndicatorBack->SetVisible(false);
 }
