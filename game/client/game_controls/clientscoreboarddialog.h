@@ -20,6 +20,67 @@
 
 using namespace vgui;
 
+enum stats_t
+{
+	CORNERS,
+	DISTANCECOVERED,
+	FOULS,
+	FOULSSUFFERED,
+	FREEKICKS,
+	GOALSCONCEDED,
+	OFFSIDES,
+	OWNGOALS,
+	PASSES,
+	PASSESCOMPLETED,
+	POSSESSION,
+	REDCARDS,
+	KEEPERSAVES,
+	SHOTS,
+	SHOTSONGOAL,
+	YELLOWCARDS,
+	STAT_COUNT,
+};
+
+static const char g_szStatNames[STAT_COUNT][32] =
+{
+	"Corners",
+	"Distance",
+	"Fouls",
+	"Fouls suffered",
+	"Free kicks",
+	"Goals conceded",
+	"Offsides",
+	"Own goals",
+	"Passes",
+	"Passes completed",
+	"Possession",
+	"Reds",
+	"Saves",
+	"Shots",
+	"Shots on goal",
+	"Yellows",
+};
+
+static const char g_szStatIdentifiers[STAT_COUNT][32] =
+{
+	"corners",
+	"distancecovered",
+	"fouls",
+	"foulssuffered",
+	"freekicks",
+	"goalsconceded",
+	"offsides",
+	"owngoals",
+	"passes",
+	"passescompleted",
+	"possession",
+	"redcards",
+	"keepersaves",
+	"shots",
+	"shotsongoal",
+	"yellowcards",
+};
+
 //-----------------------------------------------------------------------------
 // Purpose: Game ScoreBoard
 //-----------------------------------------------------------------------------
@@ -63,6 +124,8 @@ public:
 			
 protected:
 	MESSAGE_FUNC_INT( OnPollHideCode, "PollHideCode", code );
+	MESSAGE_FUNC_PTR( OnCursorEntered, "OnCursorEntered", panel );
+	MESSAGE_FUNC_PTR( OnCursorExited, "OnCursorExited", panel );
 
 	// functions to override
 	virtual bool GetPlayerScoreInfo(int playerIndex, KeyValues *outPlayerInfo);
@@ -126,13 +189,17 @@ private:
 	Panel		*m_pExtraInfoPanel;
 	Label		*m_pSpectatorNames;
 	Button		*m_pSpectateButton;
-	Panel		*m_pSideSeparators[2];
 	Panel		*m_pSpectatorContainer;
 	HFont		m_pSpectatorFontList[SPEC_FONT_COUNT];
 	ImagePanel	*m_pTeamCrests[2];
 	Label		*m_pPlayerCount[2];
 	Label		*m_pPossession[2];
 	Panel		*m_pTabPanels[TAB_COUNT];
+	Panel		*m_pStatButtonOuterContainer;
+	Panel		*m_pStatButtonInnerContainer;
+	Button		*m_pStatButtons[STAT_COUNT];
+
+	int			m_nCurStat;
 
 	IScheme *m_pScheme;
 

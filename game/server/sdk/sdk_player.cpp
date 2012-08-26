@@ -130,7 +130,6 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayer, DT_SDKLocalPlayerExclusive )
 //	SendPropAngle( SENDINFO_VECTORELEM(m_angEyeAngles, 1), 10, SPROP_CHANGES_OFTEN ),
 
 //ios	SendPropInt( SENDINFO( m_ArmorValue ), 8, SPROP_UNSIGNED ),
-	SendPropInt(SENDINFO(m_nKeeperCatchInPenBoxOfTeam)),
 	SendPropInt(SENDINFO(m_nInPenBoxOfTeam)),
 	SendPropVector(SENDINFO(m_vTargetPos), -1, SPROP_NOSCALE),
 	SendPropBool(SENDINFO(m_bIsAtTargetPos)),
@@ -249,7 +248,6 @@ CSDKPlayer::CSDKPlayer()
 	m_pPlayerBall = NULL;
 	m_Shared.m_flPlayerAnimEventStart = gpGlobals->curtime;
 	m_Shared.m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
-	m_nKeeperCatchInPenBoxOfTeam = TEAM_INVALID;
 	m_nInPenBoxOfTeam = TEAM_INVALID;
 	m_ePenaltyState = PENALTY_NONE;
 	m_pHoldingBall = NULL;
@@ -1375,6 +1373,11 @@ void CSDKPlayer::ResetStats()
 	m_RedCards = 0;
 	m_YellowCards = 0;
 	m_Fouls = 0;
+	m_FoulsSuffered = 0;
+	m_GoalsConceded = 0;
+	m_Shots = 0;
+	m_ShotsOnGoal = 0;
+	m_PassesCompleted = 0;
 	m_Offsides = 0;
 	m_Goals = 0;
 	m_OwnGoals = 0;
@@ -1458,7 +1461,7 @@ bool CSDKPlayer::IsNormalshooting()
 
 bool CSDKPlayer::IsPowershooting()
 {
-	return m_bDoChargedShot;
+	return (m_bDoChargedShot || (m_nButtons & IN_ALT1));
 }
 
 bool CSDKPlayer::IsAutoPassing()

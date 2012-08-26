@@ -169,13 +169,13 @@ void CPostMatchStatsMenu::Reset()
 		if (longestDistPlayer[i] != 0)
 		{
 			m_pMatchStats[LONGEST_DISTANCE_COVERED]->pPlayers[i]->SetText(g_PR->GetPlayerName(longestDistPlayer[i]));
-			m_pMatchStats[LONGEST_DISTANCE_COVERED]->pValues[i]->SetText(VarArgs("(%0.2f km)", longestDist[i] / 1000.0f));
+			m_pMatchStats[LONGEST_DISTANCE_COVERED]->pValues[i]->SetText(VarArgs("(%0.1f km)", longestDist[i] / 1000.0f));
 		}
 
 		if (shortestDistPlayer[i] != 0)
 		{
 			m_pMatchStats[SHORTEST_DISTANCE_COVERED]->pPlayers[i]->SetText(g_PR->GetPlayerName(shortestDistPlayer[i]));
-			m_pMatchStats[SHORTEST_DISTANCE_COVERED]->pValues[i]->SetText(VarArgs("(%0.2f km)", shortestDist[i] / 1000.0f));
+			m_pMatchStats[SHORTEST_DISTANCE_COVERED]->pValues[i]->SetText(VarArgs("(%0.1f km)", shortestDist[i] / 1000.0f));
 		}
 
 		if (highestPossessionPlayer[i] != 0)

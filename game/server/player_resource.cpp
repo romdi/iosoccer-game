@@ -31,6 +31,11 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CPlayerResource, DT_PlayerResource)
 	SendPropArray3( SENDINFO_ARRAY3(m_RedCards), SendPropInt( SENDINFO_ARRAY(m_RedCards), 5, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_YellowCards), SendPropInt( SENDINFO_ARRAY(m_YellowCards), 5, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_Fouls), SendPropInt( SENDINFO_ARRAY(m_Fouls), 5, SPROP_UNSIGNED ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_FoulsSuffered), SendPropInt( SENDINFO_ARRAY(m_FoulsSuffered), 5, SPROP_UNSIGNED ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_GoalsConceded), SendPropInt( SENDINFO_ARRAY(m_GoalsConceded), 5, SPROP_UNSIGNED ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_Shots), SendPropInt( SENDINFO_ARRAY(m_Shots), 5, SPROP_UNSIGNED ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_ShotsOnGoal), SendPropInt( SENDINFO_ARRAY(m_ShotsOnGoal), 5, SPROP_UNSIGNED ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_PassesCompleted), SendPropInt( SENDINFO_ARRAY(m_PassesCompleted), 5, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_Offsides), SendPropInt( SENDINFO_ARRAY(m_Offsides), 5, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_Goals), SendPropInt( SENDINFO_ARRAY(m_Goals), 5, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_OwnGoals), SendPropInt( SENDINFO_ARRAY(m_OwnGoals), 5, SPROP_UNSIGNED ) ),
@@ -92,6 +97,11 @@ void CPlayerResource::Spawn( void )
 		m_RedCards.Set( i, 0 );
 		m_YellowCards.Set( i, 0 );
 		m_Fouls.Set( i, 0 );
+		m_FoulsSuffered.Set( i, 0 );
+		m_GoalsConceded.Set( i, 0 );
+		m_Shots.Set( i, 0 );
+		m_ShotsOnGoal.Set( i, 0 );
+		m_PassesCompleted.Set( i, 0 );
 		m_Offsides.Set( i, 0 );
 		m_Goals.Set( i, 0 );
 		m_OwnGoals.Set( i, 0 );
@@ -160,6 +170,11 @@ void CPlayerResource::UpdatePlayerData( void )
 				m_RedCards.Set(i, max( 0, SDKPlayer->GetRedCards() ) );
 				m_YellowCards.Set(i, max( 0, SDKPlayer->GetYellowCards() ) );
 				m_Fouls.Set(i, max( 0, SDKPlayer->GetFouls() ) );
+				m_FoulsSuffered.Set(i, max( 0, SDKPlayer->GetFoulsSuffered() ) );
+				m_GoalsConceded.Set(i, max( 0, SDKPlayer->GetGoalsConceded() ) );
+				m_Shots.Set(i, max( 0, SDKPlayer->GetShots() ) );
+				m_ShotsOnGoal.Set(i, max( 0, SDKPlayer->GetShotsOnGoal() ) );
+				m_PassesCompleted.Set(i, max( 0, SDKPlayer->GetPassesCompleted() ) );
 				m_Offsides.Set(i, max( 0, SDKPlayer->GetOffsides() ) );
 				m_Goals.Set(i, max( 0, SDKPlayer->GetGoals() ) );
 				m_OwnGoals.Set(i, max( 0, SDKPlayer->GetOwnGoals() ) );

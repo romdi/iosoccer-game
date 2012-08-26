@@ -317,8 +317,11 @@ void CSDKPlayerAnimState::UpdateLayerSequenceGeneric( CStudioHdr *pStudioHdr, in
 				// Not firing anymore.
 				bEnabled = false;
 				iSequence = 0;
-				GetSDKPlayer()->m_Shared.m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
-				GetSDKPlayer()->RemoveFlag(FL_SLIDING | FL_KEEPER_SIDEWAYS_DIVING);
+				if (iLayer == PRIMARYACTIONSEQUENCE_LAYER)
+				{
+					GetSDKPlayer()->m_Shared.m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
+					GetSDKPlayer()->RemoveFlag(FL_SLIDING | FL_KEEPER_SIDEWAYS_DIVING);
+				}
 				return;
 			}
 			else
@@ -436,8 +439,12 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 		}
 	}
 
-	GetSDKPlayer()->m_Shared.m_ePlayerAnimEvent = event;
-	GetSDKPlayer()->m_Shared.m_flPlayerAnimEventStart = gpGlobals->curtime;
+	if (event != PLAYERANIMEVENT_CARRY && event != PLAYERANIMEVENT_CARRY_END)
+	{
+		GetSDKPlayer()->m_Shared.m_ePlayerAnimEvent = event;
+		GetSDKPlayer()->m_Shared.m_flPlayerAnimEventStart = gpGlobals->curtime;
+	}
+
 	GetSDKPlayer()->RemoveFlag(FL_KEEPER_SIDEWAYS_DIVING | FL_SLIDING);
 
 	switch(event)

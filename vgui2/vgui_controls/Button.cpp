@@ -837,6 +837,11 @@ void Button::OnCursorEntered()
 	{
 		SetArmed(true);
 	}
+
+	KeyValues *kv = new KeyValues("OnCursorEntered");
+	kv->SetPtr("panel", this);
+
+	PostActionSignal(kv);
 }
 
 //-----------------------------------------------------------------------------
@@ -848,6 +853,11 @@ void Button::OnCursorExited()
 	{
 		SetArmed(false);
 	}
+
+	KeyValues *kv = new KeyValues("OnCursorExited");
+	kv->SetPtr("panel", this);
+
+	PostActionSignal(kv);
 }
 
 //-----------------------------------------------------------------------------

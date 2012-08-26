@@ -279,6 +279,11 @@ public:
 	int					m_RedCards;
 	int					m_YellowCards;
 	int					m_Fouls;
+	int					m_FoulsSuffered;
+	int					m_GoalsConceded;
+	int					m_Shots;
+	int					m_ShotsOnGoal;
+	int					m_PassesCompleted;
 	int					m_Offsides;
 	int					m_Goals;
 	int					m_OwnGoals;
@@ -296,6 +301,11 @@ public:
 	int					GetRedCards(void) { return m_RedCards; }
 	int					GetYellowCards(void) { return m_YellowCards; }
 	int					GetFouls(void) { return m_Fouls; }
+	int					GetFoulsSuffered(void) { return m_FoulsSuffered; }
+	int					GetGoalsConceded(void) { return m_GoalsConceded; }
+	int					GetShots(void) { return m_Shots; }
+	int					GetShotsOnGoal(void) { return m_ShotsOnGoal; }
+	int					GetPassesCompleted(void) { return m_PassesCompleted; }
 	int					GetOffsides(void) { return m_Offsides; }
 	int					GetGoals(void) { return m_Goals; }
 	int					GetOwnGoals(void) { return m_OwnGoals; }
@@ -383,7 +393,6 @@ public:
 	CNetworkVar(bool, m_bIsAtTargetPos);
 	CNetworkVar(bool, m_bHoldAtTargetPos);
 
-	CNetworkVar(int, m_nKeeperCatchInPenBoxOfTeam);
 	CNetworkVar(int, m_nInPenBoxOfTeam);
 
 	static bool			IsOnField(CSDKPlayer *pPl);

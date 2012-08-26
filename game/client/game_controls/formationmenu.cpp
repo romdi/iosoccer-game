@@ -47,7 +47,7 @@
 using namespace vgui;
 
 enum { FORMATION_BUTTON_WIDTH = 85, FORMATION_BUTTON_HEIGHT = 50 };
-enum { FORMATION_HPADDING = (FORMATION_BUTTON_WIDTH / 2 + 40), FORMATION_VPADDING = (FORMATION_BUTTON_HEIGHT / 2 + 15) };
+enum { FORMATION_HPADDING = (FORMATION_BUTTON_WIDTH / 2 + 60), FORMATION_VPADDING = (FORMATION_BUTTON_HEIGHT / 2 + 5) };
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor

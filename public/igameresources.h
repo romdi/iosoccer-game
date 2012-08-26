@@ -47,6 +47,11 @@ public:
 	virtual int		GetRedCards( int index ) = 0;
 	virtual int		GetYellowCards( int index ) = 0;
 	virtual int		GetFouls( int index ) = 0;
+	virtual int		GetFoulsSuffered( int index ) = 0;
+	virtual int		GetGoalsConceded( int index ) = 0;
+	virtual int		GetShots( int index ) = 0;
+	virtual int		GetShotsOnGoal( int index ) = 0;
+	virtual int		GetPassesCompleted( int index ) = 0;
 	virtual int		GetOffsides( int index ) = 0;
 	virtual int		GetGoals( int index ) = 0;
 	virtual int		GetOwnGoals( int index ) = 0;

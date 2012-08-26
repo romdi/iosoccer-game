@@ -86,6 +86,8 @@ struct BallTouchInfo
 	bool			m_bIsShot;
 	body_part_t		m_eBodyPart;
 	ball_state_t	m_eBallState;
+	float			m_flBallSpeed;
+	float			m_flDistToGoal;
 };
 
 struct MatchEventPlayerInfo

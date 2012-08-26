@@ -51,11 +51,8 @@ using namespace vgui;
 //-----------------------------------------------------------------------------
 CStatsMenu::CStatsMenu(Panel *parent, const char *name) : Panel(parent, name)
 {
-	for (int i = 0; i < 2; i++)
-	{
-		m_pPlayerStats[i] = new SectionedListPanel(this, "");
-		m_pPlayerStats[i]->SetVerticalScrollbar(false);
-	}
+	m_pPlayerStats = new SectionedListPanel(this, "");
+	m_pPlayerStats->SetVerticalScrollbar(false);
 
 	m_flNextUpdateTime = gpGlobals->curtime;
 }
@@ -69,38 +66,31 @@ void CStatsMenu::ApplySchemeSettings(IScheme *pScheme)
 
 void CStatsMenu::Reset()
 {
-	for (int i = 0; i < 2; i++)
-	{
-		Reset(i);
-	}
-}
+	//m_pPlayerStats->RemoveAll();
+	m_pPlayerStats->DeleteAllItems();
+	m_pPlayerStats->RemoveAllSections();
 
-void CStatsMenu::Reset(int side)
-{
-	m_pPlayerStats[side]->RemoveAll();
-	m_pPlayerStats[side]->RemoveAllSections();
-
-	m_pPlayerStats[side]->AddSection(0, "");
-	m_pPlayerStats[side]->SetSectionAlwaysVisible(0);
-	m_pPlayerStats[side]->SetFontSection(0, m_pScheme->GetFont("StatsPlayerName"));
-	m_pPlayerStats[side]->SetLineSpacing(30);
-	m_pPlayerStats[side]->SetFgColor(Color(0, 0, 0, 255));
-	m_pPlayerStats[side]->SetSectionFgColor(0, Color(0, 0, 0, 255));
-	const int nameWidth = 95;
-	const int valueWidth = 85;
+	m_pPlayerStats->AddSection(0, "");
+	m_pPlayerStats->SetSectionAlwaysVisible(0);
+	m_pPlayerStats->SetFontSection(0, m_pScheme->GetFont("StatsPlayerName"));
+	m_pPlayerStats->SetLineSpacing(30);
+	m_pPlayerStats->SetFgColor(Color(0, 0, 0, 255));
+	m_pPlayerStats->SetSectionFgColor(0, Color(0, 0, 0, 255));
+	const int nameWidth = 140;
+	const int valueWidth = 105;
 	//m_pPlayerStats[side]->SetSectionDividerColor(0, Color(255, 255, 255, 255));
-	for (int j = 0; j < 3; j++)
+	for (int j = 0; j < 4; j++)
 	{
-		m_pPlayerStats[side]->AddColumnToSection(0, VarArgs("NameColumn%d", j), "", 0/*SectionedListPanel::COLUMN_RIGHT*/, nameWidth);
-		m_pPlayerStats[side]->AddColumnToSection(0, VarArgs("ValueColumn%d", j), "", 0, valueWidth);
+		m_pPlayerStats->AddColumnToSection(0, VarArgs("NameColumn%d", j), "", 0/*SectionedListPanel::COLUMN_RIGHT*/, nameWidth);
+		m_pPlayerStats->AddColumnToSection(0, VarArgs("ValueColumn%d", j), "", j == 4 ? SectionedListPanel::HEADER_IMAGE : 0, valueWidth);
 	}
 
 	HFont font = m_pScheme->GetFont("StatsPlayerNameSmall");
 	KeyValues *pData = new KeyValues("data");
-	for (int j = 0; j < 5; j++)
+	for (int j = 0; j < 6; j++)
 	{
-		m_pPlayerStats[side]->AddItem(j, pData);
-		m_pPlayerStats[side]->SetItemFont(j, font);
+		m_pPlayerStats->AddItem(j, pData);
+		m_pPlayerStats->SetItemFont(j, font);
 	}
 	pData->deleteThis();
 }
@@ -109,11 +99,8 @@ void CStatsMenu::PerformLayout()
 {
 	BaseClass::PerformLayout();
 
-	for (int i = 0; i < 2; i++)
-	{
-		m_pPlayerStats[i]->SetBounds(i * (GetWide() / 2), 0, GetWide() / 2, GetTall());
-		m_pPlayerStats[i]->SetPaintBorderEnabled(false);
-	}
+	m_pPlayerStats->SetBounds(0, 0, GetWide(), GetTall());
+	m_pPlayerStats->SetPaintBorderEnabled(false);
 }
 
 //-----------------------------------------------------------------------------
@@ -134,94 +121,129 @@ void CStatsMenu::OnThink()
 	m_flNextUpdateTime = gpGlobals->curtime + 1.0f;
 }
 
-void CStatsMenu::Update(int *playerIndices)
+void CStatsMenu::Update(int playerIndex)
 {
 	IGameResources *gr = GameResources();
 	if (!gr)
 		return;
 
-	for (int i = 0; i < 2; i++)
+	C_Team *pTeam = GetGlobalTeam(gr->GetTeam(playerIndex));
+
+	Reset();
+
+	m_pPlayerStats->SetFgColor(pTeam->Get_HudKitColor());
+	m_pPlayerStats->SetSectionFgColor(0, pTeam->Get_HudKitColor());
+	m_pPlayerStats->SetVisible(true);
+	//m_pPlayerStats->Repaint();
+	//m_pPlayerStats->SetSectionDividerColor(0, Color(255, 255, 255, 255));
+
+	//if (m_pPlayerStats->GetFgColor() != pTeam->Get_HudKitColor())
+
+	KeyValues *pData = new KeyValues("data");
+
+	wchar_t wszText[64];
+	g_pVGuiLocalize->ConvertANSIToUnicode(gr->GetPlayerName(playerIndex), wszText, sizeof(wszText));
+	m_pPlayerStats->ModifyColumn(0, "NameColumn0", wszText);
+
+	_swprintf(wszText, L"");
+
+	if (steamapicontext->SteamFriends() && steamapicontext->SteamUtils())
 	{
-		if (playerIndices[i] == 0)
+		player_info_t pi;
+		if (engine->GetPlayerInfo(playerIndex, &pi))
 		{
-			m_pPlayerStats[i]->SetVisible(false);
-			continue;
+			if (pi.friendsID)
+			{
+				CSteamID steamIDForPlayer(pi.friendsID, 1, steamapicontext->SteamUtils()->GetConnectedUniverse(), k_EAccountTypeIndividual);
+				g_pVGuiLocalize->ConvertANSIToUnicode(steamapicontext->SteamFriends()->GetFriendPersonaName(steamIDForPlayer), wszText, sizeof(wszText));
+			}
 		}
-
-		m_pPlayerStats[i]->SetVisible(true);
-		//if (m_pPlayerStats[i]->GetFgColor() != GetGlobalTeam(TEAM_A + i)->Get_HudKitColor())
-		//	Reset(i);
-		m_pPlayerStats[i]->SetSectionFgColor(0, GetGlobalTeam(TEAM_A + i)->Get_HudKitColor());
-		//m_pPlayerStats[i]->Repaint();
-		m_pPlayerStats[i]->SetFgColor(GetGlobalTeam(TEAM_A + i)->Get_HudKitColor());
-		//m_pPlayerStats[i]->SetSectionDividerColor(0, Color(255, 255, 255, 255));
-
-		wchar_t wszText[MAX_PLAYER_NAME_LENGTH];
-		g_pVGuiLocalize->ConvertANSIToUnicode(gr->GetPlayerName(playerIndices[i]), wszText, sizeof(wszText));
-		m_pPlayerStats[i]->ModifyColumn(0, "NameColumn0", wszText);
-		g_pVGuiLocalize->ConvertANSIToUnicode(g_szPosNames[(int)g_Positions[mp_maxplayers.GetInt() - 1][gr->GetTeamPosIndex(playerIndices[i])][POS_TYPE]], wszText, sizeof(wszText));
-		m_pPlayerStats[i]->ModifyColumn(0, "NameColumn1", wszText);
-		g_pVGuiLocalize->ConvertANSIToUnicode(gr->GetCountryName(playerIndices[i]), wszText, sizeof(wszText));
-		m_pPlayerStats[i]->ModifyColumn(0, "NameColumn2", wszText);
-
-		KeyValues *pData = new KeyValues("data");
-
-		pData->SetString("NameColumn0", "Goals:");
-		pData->SetInt("ValueColumn0", gr->GetGoals(playerIndices[i]));
-		pData->SetString("NameColumn1", "Assists:");
-		pData->SetInt("ValueColumn1", gr->GetAssists(playerIndices[i]));
-		pData->SetString("NameColumn2", "Ping:");
-		pData->SetInt("ValueColumn2", gr->GetPing(playerIndices[i]));
-
-		m_pPlayerStats[i]->ModifyItem(0, 0, pData);
-		m_pPlayerStats[i]->SetItemFgColor(0, GetGlobalTeam(TEAM_A + i)->Get_HudKitColor());
-		pData->Clear();
-
-		pData->SetString("NameColumn0", "Fouls:");
-		pData->SetInt("ValueColumn0", gr->GetFouls(playerIndices[i]));
-		pData->SetString("NameColumn1", "Yellows:");
-		pData->SetInt("ValueColumn1", gr->GetYellowCards(playerIndices[i]));
-		pData->SetString("NameColumn2", "Reds:");
-		pData->SetInt("ValueColumn2", gr->GetRedCards(playerIndices[i]));
-
-		m_pPlayerStats[i]->ModifyItem(1, 0, pData);
-		m_pPlayerStats[i]->SetItemFgColor(1, GetGlobalTeam(TEAM_A + i)->Get_HudKitColor());
-		pData->Clear();
-
-		pData->SetString("NameColumn0", "Penalties:");
-		pData->SetInt("ValueColumn0", gr->GetPenalties(playerIndices[i]));	
-		pData->SetString("NameColumn1", "Goal kicks:");
-		pData->SetInt("ValueColumn1", gr->GetGoalKicks(playerIndices[i]));
-		pData->SetString("NameColumn2", "Free kicks:");
-		pData->SetInt("ValueColumn2", gr->GetFreeKicks(playerIndices[i]));
-
-		m_pPlayerStats[i]->ModifyItem(2, 0, pData);
-		m_pPlayerStats[i]->SetItemFgColor(2, GetGlobalTeam(TEAM_A + i)->Get_HudKitColor());
-		pData->Clear();
-
-		pData->SetString("NameColumn0", "Distance:");
-		pData->SetString("ValueColumn0", VarArgs("%0.2f km", gr->GetDistanceCovered(playerIndices[i]) / 1000.0f));
-		pData->SetString("NameColumn1", "Possession:");
-		pData->SetString("ValueColumn1", VarArgs("%d%%", gr->GetPossession(playerIndices[i])));
-		pData->SetString("NameColumn2", "Offsides:");
-		pData->SetInt("ValueColumn2", gr->GetOffsides(playerIndices[i]));
-
-		m_pPlayerStats[i]->ModifyItem(3, 0, pData);
-		m_pPlayerStats[i]->SetItemFgColor(3, GetGlobalTeam(TEAM_A + i)->Get_HudKitColor());
-		pData->Clear();
-
-		pData->SetString("NameColumn0", "Corners:");
-		pData->SetInt("ValueColumn0", gr->GetCorners(playerIndices[i]));
-		pData->SetString("NameColumn1", "Own goals:");
-		pData->SetInt("ValueColumn1", gr->GetOwnGoals(playerIndices[i]));
-
-		m_pPlayerStats[i]->ModifyItem(4, 0, pData);
-		m_pPlayerStats[i]->SetItemFgColor(4, GetGlobalTeam(TEAM_A + i)->Get_HudKitColor());
-
-		pData->deleteThis();
-
-		//m_pPlayerStats[i]->InvalidateLayout();
 	}
+
+	m_pPlayerStats->ModifyColumn(0, "NameColumn1", wszText);
+
+	//g_pVGuiLocalize->ConvertANSIToUnicode(g_szPosNames[(int)g_Positions[mp_maxplayers.GetInt() - 1][gr->GetTeamPosIndex(playerIndex)][POS_TYPE]], wszText, sizeof(wszText));
+	//m_pPlayerStats->ModifyColumn(0, "NameColumn2", wszText);
+	g_pVGuiLocalize->ConvertANSIToUnicode(gr->GetCountryName(playerIndex), wszText, sizeof(wszText));
+	m_pPlayerStats->ModifyColumn(0, "NameColumn2", wszText);
+
+	//UpdatePlayerAvatar(playerIndex, pData);
+
+	//m_pPlayerStats->ModifyColumn(0, "NameColumn3, "
+
+	pData->SetString("NameColumn0", "Goals:");
+	pData->SetInt("ValueColumn0", gr->GetGoals(playerIndex));
+	pData->SetString("NameColumn1", "Assists:");
+	pData->SetInt("ValueColumn1", gr->GetAssists(playerIndex));
+	pData->SetString("NameColumn2", "Ping:");
+	pData->SetInt("ValueColumn2", gr->GetPing(playerIndex));
+	pData->SetString("NameColumn3", "Fouls suffered:");
+	pData->SetInt("ValueColumn3", gr->GetFoulsSuffered(playerIndex));
+
+	m_pPlayerStats->ModifyItem(0, 0, pData);
+	m_pPlayerStats->SetItemFgColor(0, pTeam->Get_HudKitColor());
+	pData->Clear();
+
+	pData->SetString("NameColumn0", "Fouls:");
+	pData->SetInt("ValueColumn0", gr->GetFouls(playerIndex));
+	pData->SetString("NameColumn1", "Yellows:");
+	pData->SetInt("ValueColumn1", gr->GetYellowCards(playerIndex));
+	pData->SetString("NameColumn2", "Reds:");
+	pData->SetInt("ValueColumn2", gr->GetRedCards(playerIndex));
+	pData->SetString("NameColumn3", "Goals conceded:");
+	pData->SetInt("ValueColumn3", gr->GetGoalsConceded(playerIndex));
+
+	m_pPlayerStats->ModifyItem(1, 0, pData);
+	m_pPlayerStats->SetItemFgColor(1, pTeam->Get_HudKitColor());
+	pData->Clear();
+
+	pData->SetString("NameColumn0", "Penalties:");
+	pData->SetInt("ValueColumn0", gr->GetPenalties(playerIndex));	
+	pData->SetString("NameColumn1", "Goal kicks:");
+	pData->SetInt("ValueColumn1", gr->GetGoalKicks(playerIndex));
+	pData->SetString("NameColumn2", "Free kicks:");
+	pData->SetInt("ValueColumn2", gr->GetFreeKicks(playerIndex));
+	pData->SetString("NameColumn3", "Passes:");
+	pData->SetInt("ValueColumn3", gr->GetPasses(playerIndex));
+
+	m_pPlayerStats->ModifyItem(2, 0, pData);
+	m_pPlayerStats->SetItemFgColor(2, pTeam->Get_HudKitColor());
+	pData->Clear();
+
+	pData->SetString("NameColumn0", "Distance:");
+	pData->SetString("ValueColumn0", VarArgs("%0.1f km", gr->GetDistanceCovered(playerIndex) / 1000.0f));
+	pData->SetString("NameColumn1", "Possession:");
+	pData->SetString("ValueColumn1", VarArgs("%d%%", gr->GetPossession(playerIndex)));
+	pData->SetString("NameColumn2", "Offsides:");
+	pData->SetInt("ValueColumn2", gr->GetOffsides(playerIndex));
+	pData->SetString("NameColumn3", "Passes completed:");
+	pData->SetInt("ValueColumn3", gr->GetPassesCompleted(playerIndex));
+
+	m_pPlayerStats->ModifyItem(3, 0, pData);
+	m_pPlayerStats->SetItemFgColor(3, pTeam->Get_HudKitColor());
+	pData->Clear();
+
+	pData->SetString("NameColumn0", "Corners:");
+	pData->SetInt("ValueColumn0", gr->GetCorners(playerIndex));	
+	pData->SetString("NameColumn1", "Own goals:");
+	pData->SetInt("ValueColumn1", gr->GetOwnGoals(playerIndex));
+	pData->SetString("NameColumn2", "Saves:");
+	pData->SetInt("ValueColumn2", gr->GetKeeperSaves(playerIndex));
+	pData->SetString("NameColumn3", "Shots:");
+	pData->SetInt("ValueColumn3", gr->GetShots(playerIndex));
+
+	m_pPlayerStats->ModifyItem(4, 0, pData);
+	m_pPlayerStats->SetItemFgColor(4, pTeam->Get_HudKitColor());
+	pData->Clear();
+
+	pData->SetString("NameColumn0", "Shots on goal:");
+	pData->SetInt("ValueColumn0", gr->GetShotsOnGoal(playerIndex));
+
+	m_pPlayerStats->ModifyItem(5, 0, pData);
+	m_pPlayerStats->SetItemFgColor(5, pTeam->Get_HudKitColor());
+	pData->Clear();
+
+	pData->deleteThis();
 }
 
 //-----------------------------------------------------------------------------
@@ -236,4 +258,49 @@ void CStatsMenu::OnCommand( char const *cmd )
 
 void CStatsMenu::OnTextChanged(KeyValues *data)
 {
+}
+
+void CStatsMenu::UpdatePlayerAvatar(int playerIndex, KeyValues *kv)
+{
+	//// Update their avatar
+	//if ( kv && ShowAvatars() && steamapicontext->SteamFriends() && steamapicontext->SteamUtils() )
+	//{
+	//	player_info_t pi;
+	//	if ( engine->GetPlayerInfo( playerIndex, &pi ) )
+	//	{
+	//		if ( pi.friendsID )
+	//		{
+	//			CSteamID steamIDForPlayer( pi.friendsID, 1, steamapicontext->SteamUtils()->GetConnectedUniverse(), k_EAccountTypeIndividual );
+
+	//			// See if the avatar's changed
+	//			int iAvatar = steamapicontext->SteamFriends()->GetFriendAvatar( steamIDForPlayer );
+	//			if ( m_iImageAvatars[playerIndex] != iAvatar )
+	//			{
+	//				m_iImageAvatars[playerIndex] = iAvatar;
+
+	//				// Now see if we already have that avatar in our list
+	//				int iIndex = m_mapAvatarsToImageList.Find( iAvatar );
+	//				if ( iIndex == m_mapAvatarsToImageList.InvalidIndex() )
+	//				{
+	//					CAvatarImage *pImage = new CAvatarImage();
+	//					pImage->SetAvatarSteamID( steamIDForPlayer );
+	//					pImage->SetAvatarSize( 32, 32 );	// Deliberately non scaling
+	//					int iImageIndex = m_pImageList->AddImage( pImage );
+
+	//					m_mapAvatarsToImageList.Insert( iAvatar, iImageIndex );
+	//				}
+	//			}
+
+	//			int iIndex = m_mapAvatarsToImageList.Find( iAvatar );
+
+	//			if ( iIndex != m_mapAvatarsToImageList.InvalidIndex() )
+	//			{
+	//				kv->SetInt( "avatar", m_mapAvatarsToImageList[iIndex] );
+
+	//				CAvatarImage *pAvIm = (CAvatarImage *)m_pImageList->GetImage( m_mapAvatarsToImageList[iIndex] );
+	//				pAvIm->UpdateFriendStatus();
+	//			}
+	//		}
+	//	}
+	//}
 }

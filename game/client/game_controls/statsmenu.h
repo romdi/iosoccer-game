@@ -49,8 +49,7 @@ public:
 	virtual void PerformLayout();
 	virtual void OnCommand( char const *cmd );
 	void Reset();
-	void Reset(int team);
-	void Update(int *playerIndices);
+	void Update(int playerIndex);
 
 	float m_flNextUpdateTime;
 	
@@ -58,8 +57,9 @@ protected:
 	
 	// VGUI2 overrides
 	virtual void ApplySchemeSettings(vgui::IScheme *pScheme);
+	void UpdatePlayerAvatar(int playerIndex, KeyValues *kv);
 
-	SectionedListPanel *m_pPlayerStats[2];
+	SectionedListPanel *m_pPlayerStats;
 };
 
 

@@ -30,6 +30,11 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_PlayerResource, DT_PlayerResource, CPlayerReso
 	RecvPropArray3( RECVINFO_ARRAY(m_RedCards), RecvPropInt( RECVINFO(m_RedCards[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_YellowCards), RecvPropInt( RECVINFO(m_YellowCards[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_Fouls), RecvPropInt( RECVINFO(m_Fouls[0]))),
+	RecvPropArray3( RECVINFO_ARRAY(m_FoulsSuffered), RecvPropInt( RECVINFO(m_FoulsSuffered[0]))),
+	RecvPropArray3( RECVINFO_ARRAY(m_GoalsConceded), RecvPropInt( RECVINFO(m_GoalsConceded[0]))),
+	RecvPropArray3( RECVINFO_ARRAY(m_Shots), RecvPropInt( RECVINFO(m_Shots[0]))),
+	RecvPropArray3( RECVINFO_ARRAY(m_ShotsOnGoal), RecvPropInt( RECVINFO(m_ShotsOnGoal[0]))),
+	RecvPropArray3( RECVINFO_ARRAY(m_PassesCompleted), RecvPropInt( RECVINFO(m_PassesCompleted[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_Offsides), RecvPropInt( RECVINFO(m_Offsides[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_Goals), RecvPropInt( RECVINFO(m_Goals[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_OwnGoals), RecvPropInt( RECVINFO(m_OwnGoals[0]))),
@@ -79,6 +84,11 @@ C_PlayerResource::C_PlayerResource()
 	memset( m_RedCards, 0, sizeof( m_RedCards ) );
 	memset( m_YellowCards, 0, sizeof( m_YellowCards ) );
 	memset( m_Fouls, 0, sizeof( m_Fouls ) );
+	memset( m_FoulsSuffered, 0, sizeof( m_FoulsSuffered ) );
+	memset( m_GoalsConceded, 0, sizeof( m_GoalsConceded ) );
+	memset( m_Shots, 0, sizeof( m_Shots ) );
+	memset( m_ShotsOnGoal, 0, sizeof( m_ShotsOnGoal ) );
+	memset( m_PassesCompleted, 0, sizeof( m_PassesCompleted ) );
 	memset( m_Offsides, 0, sizeof( m_Offsides ) );
 	memset( m_Goals, 0, sizeof( m_Goals ) );
 	memset( m_Assists, 0, sizeof( m_Assists ) );
@@ -453,6 +463,41 @@ int	C_PlayerResource::GetFouls( int iIndex )
 		return 0;
 
 	return m_Fouls[iIndex];
+}
+int	C_PlayerResource::GetFoulsSuffered( int iIndex )
+{
+	if ( !IsConnected( iIndex ) )
+		return 0;
+
+	return m_FoulsSuffered[iIndex];
+}
+int	C_PlayerResource::GetGoalsConceded( int iIndex )
+{
+	if ( !IsConnected( iIndex ) )
+		return 0;
+
+	return m_GoalsConceded[iIndex];
+}
+int	C_PlayerResource::GetShots( int iIndex )
+{
+	if ( !IsConnected( iIndex ) )
+		return 0;
+
+	return m_Shots[iIndex];
+}
+int	C_PlayerResource::GetShotsOnGoal( int iIndex )
+{
+	if ( !IsConnected( iIndex ) )
+		return 0;
+
+	return m_ShotsOnGoal[iIndex];
+}
+int	C_PlayerResource::GetPassesCompleted( int iIndex )
+{
+	if ( !IsConnected( iIndex ) )
+		return 0;
+
+	return m_PassesCompleted[iIndex];
 }
 int	C_PlayerResource::GetOffsides( int iIndex )
 {
