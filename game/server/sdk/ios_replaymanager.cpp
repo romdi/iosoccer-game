@@ -124,7 +124,7 @@ void CReplayPlayer::Think()
 
 	//SetAnimatedEveryTick( true );
 	StudioFrameAdvance();
-	DispatchAnimEvents(this);
+	//DispatchAnimEvents(this);
 }
 
 static ConVar sv_replay_duration("sv_replay_duration", "6", FCVAR_NOTIFY);

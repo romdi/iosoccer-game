@@ -384,6 +384,9 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 	case PLAYERANIMEVENT_THROWIN:
 	case PLAYERANIMEVENT_THROW:
 	case PLAYERANIMEVENT_DIVINGHEADER:
+	case PLAYERANIMEVENT_KEEPER_HANDS_THROW:
+	case PLAYERANIMEVENT_KEEPER_HANDS_KICK:
+	case PLAYERANIMEVENT_KEEPER_HANDS_PUNCH:
 		{
 			GetSDKPlayer()->ResetShotCharging();
 		}
@@ -394,9 +397,6 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT:
 	case PLAYERANIMEVENT_KEEPER_DIVE_FORWARD:
 	case PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD:
-	case PLAYERANIMEVENT_KEEPER_HANDS_THROW:
-	case PLAYERANIMEVENT_KEEPER_HANDS_KICK:
-	case PLAYERANIMEVENT_KEEPER_HANDS_PUNCH:
 		{
 			m_flPrimaryActionSequenceCycle = 0;
 			m_iPrimaryActionSequence = CalcPrimaryActionSequence( event );

@@ -30,19 +30,11 @@
 
 class CKeeperBot;
 
-#define KEEPER_DEFAULT     0
-#define KEEPER_MOVEFORSAVE 1
-#define KEEPER_CLOSESAVE   2
-#define KEEPER_CLOSEBALL   3
-
-#define FRONTPOST_ANGLE   75
-#define FRONTPOST_DIST    90 
-
-#define WALKSPD   100
-#define RUNSPD    100//280	//320 //220   //was220
-#define SAVESPD   100//280	//320 //260   //320
-
 LINK_ENTITY_TO_CLASS(ios_keeperbot, CKeeperBot);
+
+#define KEEPER_CLOSE_COEFF 0.999f
+#define KEEPER_MID_COEFF 0.20f
+#define KEEPER_FAR_COEFF 0.001f
 
 ///////////////////////////////////////////////////
 // BotKeeperThink
@@ -66,7 +58,7 @@ void CKeeperBot::BotCenter()
 
 void CKeeperBot::BotAdjustPos()
 {
-	float modifier = 0.25f;
+	float modifier = KEEPER_MID_COEFF;
 	QAngle ang = m_oldcmd.viewangles;
 	Vector target = GetTeam()->m_vPlayerSpawns[0];
 
@@ -78,20 +70,15 @@ void CKeeperBot::BotAdjustPos()
 		target.x = clamp(m_vBallPos.x + xDist, GetTeam()->m_vPlayerSpawns[0].x - 150, GetTeam()->m_vPlayerSpawns[0].x + 150);
 	}
 
-	if (m_pBall->State_Get() == BALL_KEEPERHANDS && GetBall()->GetCurrentPlayer() == this)
+	if (m_pBall->State_Get() == BALL_KEEPERHANDS && m_pBall->GetCurrentPlayer() == this)
 	{
-		if (!m_bShotButtonsReleased)
+		if (ShotButtonsReleased())
 		{
-			m_bShotButtonsReleased = true;
-			m_flBotNextShot = gpGlobals->curtime + 1;
-		}
-		else if (gpGlobals->curtime >= m_flBotNextShot)
-		{
-			modifier = 0.99f;
-			m_cmd.buttons |= (IN_ATTACK2 | IN_ATTACK);
-			CSDKPlayer *pPl = FindClosestPlayerToSelf(true);
-			if (!pPl)
-				pPl = FindClosestPlayerToSelf(false);
+			modifier = KEEPER_CLOSE_COEFF;
+			//m_cmd.buttons |= (IN_ATTACK2 | IN_ATTACK);
+			CSDKPlayer *pPl = FindClosestPlayerToSelf(true, true);
+			if (!pPl && SDKGameRules()->IsIntermissionState())
+				pPl = FindClosestPlayerToSelf(false, true);
 
 			if (pPl)
 			{
@@ -118,7 +105,7 @@ void CKeeperBot::BotAdjustPos()
 
 		if (ballDistToGoal < 750 && m_vDirToBall.Length2D() < 200 && m_vDirToBall.z < 200)
 		{
-			modifier = 0.99f;// max(0.15f, 1 - ballDistToGoal / 750);
+			modifier = KEEPER_CLOSE_COEFF;// max(0.15f, 1 - ballDistToGoal / 750);
 			m_cmd.powershot_strength = 50;
 			VectorAngles(Vector(0, GetTeam()->m_nForward, 0), ang);
 			bool diving = false;
@@ -129,33 +116,33 @@ void CKeeperBot::BotAdjustPos()
 				{
 					m_cmd.buttons |= IN_JUMP;
 					m_cmd.buttons |= Sign(m_vDirToBall.x) == GetTeam()->m_nRight ? IN_MOVERIGHT : IN_MOVELEFT;
-					m_cmd.buttons |= (IN_ATTACK2 | IN_ATTACK);
+					//m_cmd.buttons |= (IN_ATTACK2 | IN_ATTACK);
 					diving = true;
 				}
 				else if (m_vDirToBall.z > 100 && m_vDirToBall.z < 150 && m_vDirToBall.Length2D() < 100)
 				{
 					m_cmd.buttons |= IN_JUMP;
-					m_cmd.buttons |= (IN_ATTACK2 | IN_ATTACK);
+					//m_cmd.buttons |= (IN_ATTACK2 | IN_ATTACK);
 					diving = true;
 				}
 				else if (abs(m_vDirToBall.y) > 50 && abs(m_vDirToBall.y) < 200 && m_vDirToBall.z < 100 && abs(m_vDirToBall.x) < 50 && m_vBallVel.Length() < 200 && pClosest != this)
 				{
 					m_cmd.buttons |= IN_JUMP;
 					m_cmd.buttons |= Sign(m_vLocalDirToBall.x) == GetTeam()->m_nForward ? IN_FORWARD : IN_BACK;
-					m_cmd.buttons |= (IN_ATTACK2 | IN_ATTACK);
+					//m_cmd.buttons |= (IN_ATTACK2 | IN_ATTACK);
 					diving = true;
 				}
 			}
 
 			if (!diving)
 			{
-				if (m_vDirToBall.Length2D() < 50)
+				if (m_vDirToBall.Length2D() < 60)
 				{
-					modifier = 0.99f;
-					m_cmd.buttons |= (IN_ATTACK2 | IN_ATTACK);
-					CSDKPlayer *pPl = FindClosestPlayerToSelf(true);
-					if (!pPl)
-						pPl = FindClosestPlayerToSelf(false);
+					modifier = KEEPER_CLOSE_COEFF;
+					//m_cmd.buttons |= (IN_ATTACK2 | IN_ATTACK);
+					CSDKPlayer *pPl = FindClosestPlayerToSelf(true, true);
+					if (!pPl && SDKGameRules()->IsIntermissionState())
+						pPl = FindClosestPlayerToSelf(false, true);
 
 					if (pPl)
 					{
@@ -174,24 +161,29 @@ void CKeeperBot::BotAdjustPos()
 					}
 				}
 				else
-					modifier = 0.99f;
+					modifier = KEEPER_CLOSE_COEFF;
 			}
 		}
 		else if (ballDistToGoal < 1250 && m_flAngToBallVel < 60 && m_vBallVel.Length2D() > 300 && (m_vBallVel.z > 100 || m_vDirToBall.z > 100))
 		{
-			modifier = 0.01f;
+			modifier = KEEPER_FAR_COEFF;
 		}
 		else if (ballDistToGoal < 1000 && m_vDirToBall.z < 80 && m_vBallVel.Length2D() < 300 && m_vBallVel.z < 100)
 		{
 			if ((pClosest == this || ballDistToGoal < 750))
-				modifier = 0.99f;
+				modifier = KEEPER_CLOSE_COEFF;
 			else
-				modifier = 0.25f;
+				modifier = KEEPER_MID_COEFF;
 		}
 		else
 		{
-			modifier = 0.25f;
+			modifier = KEEPER_MID_COEFF;
 		}
+
+		m_cmd.viewangles = ang;
+		m_LastAngles = m_cmd.viewangles;
+		SetLocalAngles(m_cmd.viewangles);
+		SnapEyeAngles(ang);
 
 		Vector targetPosDir = target + modifier * (m_vBallPos - target) - GetLocalOrigin();
 		targetPosDir.z = 0;
@@ -208,14 +200,29 @@ void CKeeperBot::BotAdjustPos()
 		//	speed = mp_sprintspeed.GetInt();
 		//float speed = clamp(dist - 10, 0, mp_runspeed.GetInt());
 		float speed = 0;
+
 		if (dist > 20)
 			speed = clamp(3 * dist, 0, mp_sprintspeed.GetInt());
+
+		if (speed > mp_runspeed.GetInt())
+			m_cmd.buttons |= IN_SPEED;
+
 		m_cmd.forwardmove = localDir.x * speed;
 		m_cmd.sidemove = -localDir.y * speed;
+
+		if (m_cmd.forwardmove > 0)
+			m_cmd.buttons |= IN_FORWARD;
+		else if (m_cmd.forwardmove < 0)
+			m_cmd.buttons |= IN_BACK;
+
+		if (m_cmd.sidemove > 0)
+			m_cmd.buttons |= IN_RIGHT;
+		else if (m_cmd.sidemove < 0)
+			m_cmd.buttons |= IN_MOVELEFT;
 	}
 
 	m_cmd.viewangles = ang;
-	m_cmd.buttons |= IN_SPEED;
+	m_cmd.buttons |= IN_ALT1;
 }
 
 CSDKPlayer *CKeeperBot::FindClosestPlayerToBall()

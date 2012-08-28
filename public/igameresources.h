@@ -52,6 +52,7 @@ public:
 	virtual int		GetShots( int index ) = 0;
 	virtual int		GetShotsOnGoal( int index ) = 0;
 	virtual int		GetPassesCompleted( int index ) = 0;
+	virtual int		GetInterceptions( int index ) = 0;
 	virtual int		GetOffsides( int index ) = 0;
 	virtual int		GetGoals( int index ) = 0;
 	virtual int		GetOwnGoals( int index ) = 0;

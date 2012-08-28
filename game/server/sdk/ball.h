@@ -86,8 +86,8 @@ struct BallTouchInfo
 	bool			m_bIsShot;
 	body_part_t		m_eBodyPart;
 	ball_state_t	m_eBallState;
-	float			m_flBallSpeed;
-	float			m_flDistToGoal;
+	Vector			m_vBallPos;
+	Vector			m_vBallVel;
 };
 
 struct MatchEventPlayerInfo
@@ -221,8 +221,9 @@ private:
 	bool			DoHeader();
 	void			SetSpin(float coeff);
 	float			GetPitchCoeff();
-	float			GetNormalshotStrength(float coeff, int normalStrength, int sprintStrength);
-	float			GetPowershotStrength(float coeff, int normalStrength, int sprintStrength);
+	float			GetNormalshotStrength(float coeff, int strength);
+	float			GetPowershotStrength(float coeff, int strength);
+	float			GetChargedshotStrength(float coeff, int minStrength, int maxStrength);
 	void			UpdateCarrier();
 	void			Kicked(body_part_t bodyPart, bool isDeflection);
 	void			Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart);

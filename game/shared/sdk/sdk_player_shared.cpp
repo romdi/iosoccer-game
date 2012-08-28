@@ -39,7 +39,7 @@
 	#include "team.h"
 #endif
 
-const char *g_szRequiredClientVersion = "27.08.12/1h";
+const char *g_szRequiredClientVersion = "28.08.12/1h";
 
 ConVar sv_showimpacts("sv_showimpacts", "0", FCVAR_REPLICATED, "Shows client (red) and server (blue) bullet impact point" );
 
@@ -259,10 +259,10 @@ void CSDKPlayer::MoveToTargetPos(Vector &pos, Vector &vel, QAngle &ang)
 			if (m_bHoldAtTargetPos)
 				AddFlag(FL_ATCONTROLS);
 
-#ifdef GAME_DLL
-			if (ShotButtonsPressed())
-				m_bShotButtonsReleased = false;
-#endif
+//#ifdef GAME_DLL
+//			if (ShotButtonsPressed())
+//				m_bShotButtonsReleased = false;
+//#endif
 
 			vel = vec3_origin;
 		}

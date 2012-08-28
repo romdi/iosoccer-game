@@ -50,9 +50,9 @@ bool AvatarIndexLessFunc( const int &lhs, const int &rhs )
 	return lhs < rhs; 
 }
 
-enum { PANEL_TOPMARGIN = 70, PANEL_MARGIN = 5, PANEL_WIDTH = (1024 - 2 * PANEL_MARGIN), PANEL_HEIGHT = (768 - PANEL_TOPMARGIN - PANEL_MARGIN) };
+enum { PANEL_TOPMARGIN = 70, PANEL_MARGIN = 5, PANEL_WIDTH = (1024 - 2 * PANEL_MARGIN), PANEL_HEIGHT = (720 - PANEL_TOPMARGIN - PANEL_MARGIN) };
 enum { TEAMCREST_SIZE = 48, TEAMCREST_VMARGIN = 7, TEAMCREST_HOFFSET = 240, TEAMCREST_VOFFSET = 10 };
-enum { PLAYERLIST_HEIGHT = 360, PLAYERLIST_BOTTOMMARGIN = 10 };
+enum { PLAYERLIST_HEIGHT = 310, PLAYERLIST_BOTTOMMARGIN = 10 };
 enum { STATBUTTON_CONTAINER_HEIGHT = 25, STATBUTTONCONTAINER_BOTTOMMARGIN = 10, STATBUTTON_WIDTH = 120, STATBUTTON_HEIGHT = 25, STATBUTTON_MARGIN = 0 };
 enum { EXTRAINFO_HEIGHT = 240, EXTRAINFO_MARGIN = 5, EXTRAINFO_BOTTOMMARGIN = 10 };
 enum { SPECLIST_HEIGHT = 30, SPECLIST_MARGIN = 5, SPECBUTTON_WIDTH = 90, SPECBUTTON_HEIGHT = 30, SPECBUTTON_MARGIN = 5 };
@@ -287,7 +287,7 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 	//m_pSpectateButton->SetArmedColor(Color(50, 50, 50, 255), Color(150, 150, 150, 255));
 	//m_pSpectateButton->SetDepressedColor(Color(100, 100, 100, 255), Color(200, 200, 200, 255));
 	//m_pSpectateButton->SetCursor(dc_hand);
-	//m_pSpectateButton->SetFont(m_pScheme->GetFont("IOSTeamMenuNormal"));
+	m_pSpectateButton->SetFont(m_pScheme->GetFont("SpectatorListNormal"));
 	m_pSpectateButton->SetContentAlignment(Label::a_center);
 
 	for (int i = 0; i < 2; i++)
@@ -341,7 +341,7 @@ void CClientScoreBoardDialog::ShowPanel(bool bShow)
 		RequestFocus();
 		SetKeyBoardInputEnabled(false);
 		SetMouseInputEnabled(true);
-		input()->SetCursorPos(ScreenWidth() / 2, m_pMainPanel->GetY() + m_pStatButtonOuterContainer->GetY() - 30);
+		input()->SetCursorPos(ScreenWidth() / 2, m_pMainPanel->GetY() + m_pExtraInfoPanel->GetY() + 10);
 	}
 	else
 	{
@@ -626,7 +626,7 @@ void CClientScoreBoardDialog::AddHeader()
 		m_pPlayerList[i]->AddSection(m_iSectionId, "", StaticPlayerSortFunc);
 		m_pPlayerList[i]->SetSectionAlwaysVisible(m_iSectionId);
 		m_pPlayerList[i]->SetFontSection(m_iSectionId, m_pScheme->GetFont("IOSTeamMenuSmall"));
-		m_pPlayerList[i]->SetLineSpacing(30);
+		m_pPlayerList[i]->SetLineSpacing(25);
 		m_pPlayerList[i]->SetFgColor(Color(0, 0, 0, 255));
 		m_pPlayerList[i]->SetSectionFgColor(0, Color(0, 0, 0, 255));
 		//m_pPlayerList[i]->SetSectionDividerColor(m_iSectionId, Color(255, 255, 255, 255));
@@ -713,7 +713,8 @@ bool CClientScoreBoardDialog::GetPlayerScoreInfo(int playerIndex, KeyValues *kv)
 	kv->SetString("throws", GET_STAT_TEXT(gr->GetThrowIns(playerIndex)));
 	kv->SetString("saves", GET_STAT_TEXT(gr->GetKeeperSaves(playerIndex)));
 	kv->SetString("goalkicks", GET_STAT_TEXT(gr->GetGoalKicks(playerIndex)));
-	kv->SetString("passescompleted", GET_STAT_TEXT(gr->GetPassesCompleted(playerIndex)));
+	kv->SetString("passescompleted", VarArgs("%d%%", gr->GetPassesCompleted(playerIndex) * 100 / max(1, gr->GetPasses(playerIndex))));
+	kv->SetString("interceptions", GET_STAT_TEXT(gr->GetInterceptions(playerIndex)));
 	kv->SetString("goalsconceded", GET_STAT_TEXT(gr->GetGoalsConceded(playerIndex)));
 	kv->SetString("shots", GET_STAT_TEXT(gr->GetShots(playerIndex)));
 	kv->SetString("shotsongoal", GET_STAT_TEXT(gr->GetShotsOnGoal(playerIndex)));

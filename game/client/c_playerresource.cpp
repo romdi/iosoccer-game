@@ -35,6 +35,7 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_PlayerResource, DT_PlayerResource, CPlayerReso
 	RecvPropArray3( RECVINFO_ARRAY(m_Shots), RecvPropInt( RECVINFO(m_Shots[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_ShotsOnGoal), RecvPropInt( RECVINFO(m_ShotsOnGoal[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_PassesCompleted), RecvPropInt( RECVINFO(m_PassesCompleted[0]))),
+	RecvPropArray3( RECVINFO_ARRAY(m_Interceptions), RecvPropInt( RECVINFO(m_Interceptions[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_Offsides), RecvPropInt( RECVINFO(m_Offsides[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_Goals), RecvPropInt( RECVINFO(m_Goals[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_OwnGoals), RecvPropInt( RECVINFO(m_OwnGoals[0]))),
@@ -89,6 +90,7 @@ C_PlayerResource::C_PlayerResource()
 	memset( m_Shots, 0, sizeof( m_Shots ) );
 	memset( m_ShotsOnGoal, 0, sizeof( m_ShotsOnGoal ) );
 	memset( m_PassesCompleted, 0, sizeof( m_PassesCompleted ) );
+	memset( m_Interceptions, 0, sizeof( m_Interceptions ) );
 	memset( m_Offsides, 0, sizeof( m_Offsides ) );
 	memset( m_Goals, 0, sizeof( m_Goals ) );
 	memset( m_Assists, 0, sizeof( m_Assists ) );
@@ -498,6 +500,13 @@ int	C_PlayerResource::GetPassesCompleted( int iIndex )
 		return 0;
 
 	return m_PassesCompleted[iIndex];
+}
+int	C_PlayerResource::GetInterceptions( int iIndex )
+{
+	if ( !IsConnected( iIndex ) )
+		return 0;
+
+	return m_Interceptions[iIndex];
 }
 int	C_PlayerResource::GetOffsides( int iIndex )
 {

@@ -422,9 +422,6 @@ void CBot::BotFrame()
 			m_LastAngles = m_cmd.viewangles;
 			SetLocalAngles(m_cmd.viewangles);
 			SnapEyeAngles(m_cmd.viewangles);
-
-			if (!m_bShotButtonsReleased && ShotButtonsPressed())
-				m_cmd.buttons &= ~(IN_ATTACK | (IN_ATTACK2 | IN_ALT1 | IN_ALT2));
 		}
 	}
 
@@ -446,4 +443,15 @@ void CBot::PhysicsSimulate()
 
 	// Since this isn't called for bots.. call it here
 	UpdateVPhysicsPosition(m_vNewVPhysicsPosition, m_vNewVPhysicsVelocity, gpGlobals->frametime);
+}
+
+bool CBot::ShotButtonsReleased()
+{
+	return (gpGlobals->curtime >= m_flBotNextShot);
+}
+
+void CBot::SetShotButtonsReleased(bool released)
+{
+	if (!released)
+		m_flBotNextShot = gpGlobals->curtime + 1;
 }

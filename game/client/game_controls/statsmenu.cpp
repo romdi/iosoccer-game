@@ -217,7 +217,7 @@ void CStatsMenu::Update(int playerIndex)
 	pData->SetString("NameColumn2", "Offsides:");
 	pData->SetInt("ValueColumn2", gr->GetOffsides(playerIndex));
 	pData->SetString("NameColumn3", "Passes completed:");
-	pData->SetInt("ValueColumn3", gr->GetPassesCompleted(playerIndex));
+	pData->SetString("ValueColumn3", VarArgs("%d%%", gr->GetPassesCompleted(playerIndex) * 100 / max(1, gr->GetPasses(playerIndex))));
 
 	m_pPlayerStats->ModifyItem(3, 0, pData);
 	m_pPlayerStats->SetItemFgColor(3, pTeam->Get_HudKitColor());
@@ -238,6 +238,8 @@ void CStatsMenu::Update(int playerIndex)
 
 	pData->SetString("NameColumn0", "Shots on goal:");
 	pData->SetInt("ValueColumn0", gr->GetShotsOnGoal(playerIndex));
+	pData->SetString("NameColumn1", "Interceptions:");
+	pData->SetInt("ValueColumn1", gr->GetInterceptions(playerIndex));
 
 	m_pPlayerStats->ModifyItem(5, 0, pData);
 	m_pPlayerStats->SetItemFgColor(5, pTeam->Get_HudKitColor());

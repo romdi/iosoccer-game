@@ -240,7 +240,7 @@ CSDKPlayer::CSDKPlayer()
 	m_angEyeAngles.Init();
 
 	m_pCurStateInfo = NULL;	// no state yet
-	m_bShotButtonsReleased = true;
+	m_bShotButtonsReleased = false;
 	m_nTeamToJoin = TEAM_INVALID;
 	m_flNextJoin = gpGlobals->curtime;
 	m_nTeamPosIndex = 0;
@@ -918,7 +918,7 @@ void CSDKPlayer::State_ACTIVE_Enter()
 void CSDKPlayer::State_ACTIVE_PreThink()
 {
 	if (!ShotButtonsPressed())
-		m_bShotButtonsReleased = true;
+		SetShotButtonsReleased(true);
 
 	CheckShotCharging();
 }
@@ -1140,8 +1140,8 @@ void CSDKPlayer::SetPosInsideShield(const Vector &pos, bool holdAtTargetPos)
 		if (m_bHoldAtTargetPos)
 			AddFlag(FL_ATCONTROLS);
 
-		if (ShotButtonsPressed())
-			m_bShotButtonsReleased = false;
+		//if (ShotButtonsPressed())
+		//	m_bShotButtonsReleased = false;
 	}
 	else
 	{
@@ -1378,6 +1378,7 @@ void CSDKPlayer::ResetStats()
 	m_Shots = 0;
 	m_ShotsOnGoal = 0;
 	m_PassesCompleted = 0;
+	m_Interceptions = 0;
 	m_Offsides = 0;
 	m_Goals = 0;
 	m_OwnGoals = 0;
@@ -1456,12 +1457,17 @@ void CSDKPlayer::ResetFlags()
 
 bool CSDKPlayer::IsNormalshooting()
 {
-	return (m_nButtons & IN_ATTACK) != 0 && !IsPowershooting();
+	return (m_nButtons & IN_ATTACK) && !IsPowershooting() && !IsChargedshooting();
 }
 
 bool CSDKPlayer::IsPowershooting()
 {
-	return (m_bDoChargedShot || (m_nButtons & IN_ALT1));
+	return (m_nButtons & IN_ALT1);
+}
+
+bool CSDKPlayer::IsChargedshooting()
+{
+	return m_bDoChargedShot && !IsPowershooting();
 }
 
 bool CSDKPlayer::IsAutoPassing()
@@ -1471,12 +1477,22 @@ bool CSDKPlayer::IsAutoPassing()
 
 bool CSDKPlayer::IsShooting()
 {
-	return IsNormalshooting() || IsPowershooting() || IsAutoPassing();
+	return IsNormalshooting() || IsPowershooting() || IsChargedshooting() || IsAutoPassing();
 }
 
 bool CSDKPlayer::ShotButtonsPressed()
 {
-	return (m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1 | IN_ALT2))) != 0;
+	return (m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1 | IN_ALT2)));
+}
+
+bool CSDKPlayer::ShotButtonsReleased()
+{
+	return m_bShotButtonsReleased;
+}
+
+void CSDKPlayer::SetShotButtonsReleased(bool released)
+{
+	m_bShotButtonsReleased = released;
 }
 
 CSDKPlayer *CSDKPlayer::FindClosestPlayerToSelf(bool teammatesOnly, bool forwardOnly /*= false*/, float maxYawAngle /*= 360*/)

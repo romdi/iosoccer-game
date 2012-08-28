@@ -66,29 +66,35 @@ ConVar sv_ball_shotwalkcoeff("sv_ball_shotwalkcoeff", "0.5", FCVAR_NOTIFY);
 ConVar sv_ball_keepercatchspeed("sv_ball_keepercatchspeed", "500", FCVAR_NOTIFY);
 ConVar sv_ball_keeperpickupangle("sv_ball_keeperpickupangle", "45", FCVAR_NOTIFY);
 
-ConVar sv_ball_normalshot_normalstrength("sv_ball_normalshot_normalstrength", "700", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
-ConVar sv_ball_normalshot_sprintstrength("sv_ball_normalshot_sprintstrength", "1000", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
-ConVar sv_ball_powershot_normalstrength("sv_ball_powershot_normalstrength", "1100", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
-ConVar sv_ball_powershot_sprintstrength("sv_ball_powershot_sprintstrength", "1600", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
+ConVar sv_ball_normalshot_strength("sv_ball_normalshot_strength", "700", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
+ConVar sv_ball_powershot_strength("sv_ball_powershot_strength", "700", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
+ConVar sv_ball_chargedshot_minstrength("sv_ball_chargedshot_minstrength", "1100", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
+ConVar sv_ball_chargedshot_maxstrength("sv_ball_chargedshot_maxstrength", "1600", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
 
-ConVar sv_ball_normalthrow_normalstrength("sv_ball_normalthrow_normalstrength", "250", FCVAR_NOTIFY);
-ConVar sv_ball_normalthrow_sprintstrength("sv_ball_normalthrow_sprintstrength", "500", FCVAR_NOTIFY);
-ConVar sv_ball_powerthrow_normalstrength("sv_ball_powerthrow_normalstrength", "750", FCVAR_NOTIFY);
-ConVar sv_ball_powerthrow_sprintstrength("sv_ball_powerthrow_sprintstrength", "1000", FCVAR_NOTIFY);
+ConVar sv_ball_normalthrow_strength("sv_ball_normalthrow_strength", "250", FCVAR_NOTIFY);
+ConVar sv_ball_powerthrow_strength("sv_ball_powerthrow_strength", "500", FCVAR_NOTIFY);
+ConVar sv_ball_chargedthrow_minstrength("sv_ball_chargedthrow_minstrength", "750", FCVAR_NOTIFY);
+ConVar sv_ball_chargedthrow_maxstrength("sv_ball_chargedthrow_maxstrength", "1000", FCVAR_NOTIFY);
 
-ConVar sv_ball_normalheader_normalstrength("sv_ball_normalheader_normalstrength", "500", FCVAR_NOTIFY); 
-ConVar sv_ball_normalheader_sprintstrength("sv_ball_normalheader_sprintstrength", "700", FCVAR_NOTIFY); 
-ConVar sv_ball_powerheader_normalstrength("sv_ball_powerheader_normalstrength", "900", FCVAR_NOTIFY); 
-ConVar sv_ball_powerheader_sprintstrength("sv_ball_powerheader_sprintstrength", "1100", FCVAR_NOTIFY); 
-ConVar sv_ball_powerdivingheader_normalstrength("sv_ball_powerdivingheader_normalstrength", "1100", FCVAR_NOTIFY); 
-ConVar sv_ball_powerdivingheader_sprintstrength("sv_ball_powerdivingheader_sprintstrength", "1300", FCVAR_NOTIFY);
+ConVar sv_ball_normalheader_strength("sv_ball_normalheader_strength", "500", FCVAR_NOTIFY); 
+ConVar sv_ball_powerheader_strength("sv_ball_powerheader_strength", "700", FCVAR_NOTIFY); 
+ConVar sv_ball_chargedheader_minstrength("sv_ball_chargedheader_minstrength", "900", FCVAR_NOTIFY); 
+ConVar sv_ball_chargedheader_maxstrength("sv_ball_chargedheader_maxstrength", "1100", FCVAR_NOTIFY); 
 
-ConVar sv_ball_normalslide_normalstrength("sv_ball_normalslide_normalstrength", "500", FCVAR_NOTIFY); 
-ConVar sv_ball_normalslide_sprintstrength("sv_ball_normalslide_sprintstrength", "700", FCVAR_NOTIFY); 
-ConVar sv_ball_powerslide_normalstrength("sv_ball_powerslide_normalstrength", "900", FCVAR_NOTIFY); 
-ConVar sv_ball_powerslide_sprintstrength("sv_ball_powerslide_sprintstrength", "1100", FCVAR_NOTIFY);
+ConVar sv_ball_powerdivingheader_strength("sv_ball_powerdivingheader_strength", "1100", FCVAR_NOTIFY); 
+ConVar sv_ball_chargeddivingheader_minstrength("sv_ball_chargeddivingheader_minstrength", "1100", FCVAR_NOTIFY); 
+ConVar sv_ball_chargeddivingheader_maxstrength("sv_ball_chargeddivingheader_maxstrength", "1300", FCVAR_NOTIFY);
 
-ConVar sv_ball_groundshot_minangle("sv_ball_groundshot_minangle", "-7", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
+ConVar sv_ball_normalslide_strength("sv_ball_normalslide_strength", "500", FCVAR_NOTIFY); 
+ConVar sv_ball_powerslide_strength("sv_ball_powerslide_strength", "700", FCVAR_NOTIFY); 
+ConVar sv_ball_chargedslide_minstrength("sv_ball_chargedslide_minstrength", "900", FCVAR_NOTIFY); 
+ConVar sv_ball_chargedslide_maxstrength("sv_ball_chargedslide_maxstrength", "1100", FCVAR_NOTIFY);
+
+ConVar sv_ball_penaltyshot_maxstrength("sv_ball_penaltyshot_maxstrength", "900", FCVAR_NOTIFY);
+
+ConVar sv_ball_groundshot_minangle("sv_ball_groundshot_minangle", "-10", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
+ConVar sv_ball_volleyshot_minangle("sv_ball_volleyshot_minangle", "0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
+ConVar sv_ball_throwin_minangle("sv_ball_volleyshot_minangle", "-5", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
 ConVar sv_ball_autopass_minstrength("sv_ball_autopass_minstrength", "300", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
 ConVar sv_ball_autopass_maxstrength("sv_ball_autopass_maxstrength", "1600", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
 ConVar sv_ball_autopass_coeff("sv_ball_autopass_coeff", "1", FCVAR_NOTIFY);
@@ -120,6 +126,9 @@ ConVar sv_ball_goalreplay_count("sv_ball_goalreplay_count", "2", FCVAR_NOTIFY);
 ConVar sv_ball_goalreplay_delay("sv_ball_goalreplay_delay", "3", FCVAR_NOTIFY);
 ConVar sv_ball_deflectioncoeff("sv_ball_deflectioncoeff", "0.75", FCVAR_NOTIFY);
 ConVar sv_ball_update_physics("sv_ball_update_physics", "0", FCVAR_NOTIFY);
+
+ConVar sv_ball_stats_pass_dist("sv_ball_stats_pass_dist", "300", FCVAR_NOTIFY);
+
 
 CBall *CreateBall(const Vector &pos, CSDKPlayer *pCreator)
 {
@@ -602,7 +611,7 @@ void CBall::SetVel(Vector vel, float spinCoeff, body_part_t bodyPart, bool isDef
 	if (checkMinShotStrength)
 		length = max(length, sv_ball_minshotstrength.GetInt());
 
-	length = min(length, sv_ball_powershot_sprintstrength.GetInt());
+	length = min(length, sv_ball_chargedshot_maxstrength.GetInt());
 	m_vVel *= length;
 	m_pPhys->EnableMotion(true);
 	m_pPhys->Wake();
@@ -865,11 +874,6 @@ void CBall::State_KICKOFF_Think()
 			m_pOtherPl->SetPosInsideShield(Vector(m_vPos.x + m_pPl->GetTeam()->m_nRight * 100, m_vPos.y, SDKGameRules()->m_vKickOff.GetZ()), true);
 	}
 
-	if (m_pPl->m_bIsAtTargetPos && !m_pPl->m_bShotButtonsReleased && !m_pPl->ShotButtonsPressed())
-	{
-		m_pPl->m_bShotButtonsReleased = true;
-	}
-
 	if (!PlayersAtTargetPos())
 		return;
 
@@ -888,11 +892,14 @@ void CBall::State_KICKOFF_Think()
 	}
 
 	if (m_flStateTimelimit == -1)
+	{
 		m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit.GetFloat();
+		m_pPl->SetShotButtonsReleased(false);
+	}
 
 	UpdateCarrier();
 
-	if (m_pPl->m_bShotButtonsReleased && m_pPl->IsShooting())
+	if (m_pPl->ShotButtonsReleased() && m_pPl->IsShooting())
 	{
 		RemoveAllTouches();
 		SetVel(m_vPlForward2D * 250, 0, BODY_PART_FEET, false, false, false);
@@ -933,40 +940,36 @@ void CBall::State_THROWIN_Think()
 	if (!m_pPl->m_bIsAtTargetPos)
 		return;
 
-	if (m_pPl->GetFlags() & FL_ATCONTROLS)
+	if (m_flStateTimelimit == -1)
 	{
+		m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit.GetFloat();
 		SetPos(Vector(m_vTriggerTouchPos.x, m_vTriggerTouchPos.y, SDKGameRules()->m_vKickOff.GetZ() + m_pPl->GetPlayerMaxs().z + 2));
 		m_pPl->RemoveFlag(FL_ATCONTROLS);
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_THROWIN);
+		m_pPl->SetShotButtonsReleased(false);
 	}
-
-	if (m_flStateTimelimit == -1)
-		m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit.GetFloat();
 
 	UpdateCarrier();
 
-	if (m_pPl->m_bShotButtonsReleased && m_pPl->IsShooting())
+	if (m_pPl->ShotButtonsReleased() && m_pPl->IsShooting())
 	{
 		QAngle ang = m_pPl->EyeAngles();
 
-		if (ang[PITCH] > -5) //20
-			ang[PITCH] = -5;
+		ang[PITCH] = min(sv_ball_throwin_minangle.GetFloat(), m_aPlAng[PITCH]);
 
 		Vector dir;
 		AngleVectors(ang, &dir);
 		Vector vel;
 
 		if (m_pPl->IsNormalshooting())
-		{
-			vel = dir * GetNormalshotStrength(GetPitchCoeff(), sv_ball_normalthrow_normalstrength.GetInt(), sv_ball_normalthrow_sprintstrength.GetInt());
-		}
+			vel = dir * GetNormalshotStrength(GetPitchCoeff(), sv_ball_normalthrow_strength.GetInt());
+		else if (m_pPl->IsPowershooting())
+			vel = dir * GetPowershotStrength(GetPitchCoeff(), sv_ball_powershot_strength.GetInt());
 		else
-		{
-			vel = dir * GetPowershotStrength(GetPitchCoeff(), sv_ball_powerthrow_normalstrength.GetInt(), sv_ball_powerthrow_sprintstrength.GetInt());
-		}
+			vel = dir * GetChargedshotStrength(GetPitchCoeff(), sv_ball_chargedthrow_minstrength.GetInt(), sv_ball_chargedthrow_maxstrength.GetInt());
 
 		RemoveAllTouches();
-		SetVel(vel, 0, BODY_PART_HANDS, false, false, false);
+		SetVel(vel, 0, BODY_PART_HANDS, false, false, true);
 		State_Transition(BALL_NORMAL);
 	}
 }
@@ -1012,11 +1015,14 @@ void CBall::State_GOALKICK_Think()
 		return;
 
 	if (m_flStateTimelimit == -1)
+	{
 		m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit.GetFloat();
+		m_pPl->SetShotButtonsReleased(false);
+	}
 
 	UpdateCarrier();
 
-	if (m_pPl->m_bShotButtonsReleased && m_pPl->IsShooting() && (m_vPos - m_vPlPos).Length2D() <= sv_ball_touchradius.GetFloat())
+	if (m_pPl->ShotButtonsReleased() && m_pPl->IsShooting() && (m_vPos - m_vPlPos).Length2D() <= sv_ball_touchradius.GetFloat())
 	{
 		RemoveAllTouches();
 		DoGroundShot();
@@ -1061,11 +1067,14 @@ void CBall::State_CORNER_Think()
 		return;
 
 	if (m_flStateTimelimit == -1)
+	{
 		m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit.GetFloat();
+		m_pPl->SetShotButtonsReleased(false);
+	}
 
 	UpdateCarrier();
 
-	if (m_pPl->m_bShotButtonsReleased && m_pPl->IsShooting() && (m_vPos - m_vPlPos).Length2D() <= sv_ball_touchradius.GetFloat())
+	if (m_pPl->ShotButtonsReleased() && m_pPl->IsShooting() && (m_vPos - m_vPlPos).Length2D() <= sv_ball_touchradius.GetFloat())
 	{
 		RemoveAllTouches();
 		DoGroundShot();
@@ -1079,9 +1088,6 @@ void CBall::State_CORNER_Leave(ball_state_t newState)
 
 void CBall::State_GOAL_Enter()
 {
-	if (ReplayManager())
-		ReplayManager()->StartReplay(sv_ball_goalreplay_count.GetInt(), sv_ball_goalreplay_delay.GetFloat(), GetGlobalTeam(m_nTeam)->m_vPlayerSpawns[0].y < GetGlobalTeam(m_nTeam)->GetOppTeam()->m_vPlayerSpawns[0].y);
-
 	SDKGameRules()->SetKickOffTeam(m_nTeam);
 	int scoringTeam;
 
@@ -1135,6 +1141,9 @@ void CBall::State_GOAL_Enter()
 
 	EmitSound("Ball.whistle");
 	State_Transition(BALL_KICKOFF, sv_ball_goalcelebduration.GetFloat());
+
+	if (ReplayManager())
+		ReplayManager()->StartReplay(sv_ball_goalreplay_count.GetInt(), sv_ball_goalreplay_delay.GetFloat(), GetGlobalTeam(m_nTeam)->m_vPlayerSpawns[0].y < GetGlobalTeam(m_nTeam)->GetOppTeam()->m_vPlayerSpawns[0].y);
 }
 
 void CBall::State_GOAL_Think()
@@ -1248,11 +1257,13 @@ void CBall::State_FREEKICK_Think()
 				fieldZone = 100 - fieldZone;
 			m_pPl->m_Shared.SetStamina(min(m_pPl->m_Shared.GetStamina(), fieldZone));
 		}
+
+		m_pPl->SetShotButtonsReleased(false);
 	}
 
 	UpdateCarrier();
 
-	if (m_pPl->m_bShotButtonsReleased && m_pPl->IsShooting() && (m_vPos - m_vPlPos).Length2D() <= sv_ball_touchradius.GetFloat())
+	if (m_pPl->ShotButtonsReleased() && m_pPl->IsShooting() && (m_vPos - m_vPlPos).Length2D() <= sv_ball_touchradius.GetFloat())
 	{
 		RemoveAllTouches();
 		DoGroundShot();
@@ -1337,21 +1348,18 @@ void CBall::State_PENALTY_Think()
 	if (!PlayersAtTargetPos())
 		return;
 
-	if (m_pPl->GetFlags() & FL_ATCONTROLS)
-		m_pPl->RemoveFlag(FL_ATCONTROLS);
-
-	if (m_pOtherPl->GetFlags() & FL_ATCONTROLS)
+	if (m_flStateTimelimit == -1)
 	{
+		m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit.GetFloat();
+		m_pPl->RemoveFlag(FL_ATCONTROLS);
 		m_pOtherPl->RemoveFlag(FL_ATCONTROLS);
 		m_pOtherPl->AddFlag(FL_NO_Y_MOVEMENT);
+		m_pPl->SetShotButtonsReleased(false);
 	}
-
-	if (m_flStateTimelimit == -1)
-		m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit.GetFloat();
 
 	UpdateCarrier();
 
-	if (m_pPl->m_bShotButtonsReleased && m_pPl->IsShooting() && (m_vPos - m_vPlPos).Length2D() <= sv_ball_touchradius.GetFloat())
+	if (m_pPl->ShotButtonsReleased() && m_pPl->IsShooting() && (m_vPos - m_vPlPos).Length2D() <= sv_ball_touchradius.GetFloat())
 	{
 		RemoveAllTouches();
 		m_ePenaltyState = PENALTY_KICKED;
@@ -1388,8 +1396,7 @@ void CBall::State_KEEPERHANDS_Think()
 			PlayersAtTargetPos();
 		}
 
-		if (m_pPl->ShotButtonsPressed())
-			m_pPl->m_bShotButtonsReleased = false;
+		m_pPl->SetShotButtonsReleased(false);
 
 		m_pHoldingPlayer = m_pPl;
 		m_pPl->m_pHoldingBall = this;
@@ -1405,7 +1412,9 @@ void CBall::State_KEEPERHANDS_Think()
 	if (!SDKGameRules()->IsIntermissionState() && !m_bHasQueuedState && SDKGameRules()->State_Get() != MATCH_PENALTIES)
 	{
 		if (m_flStateTimelimit == -1)
+		{
 			m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit.GetFloat();
+		}
 	}
 
 	UpdateCarrier();
@@ -1429,21 +1438,25 @@ void CBall::State_KEEPERHANDS_Think()
 
 	Vector vel;
 
-	if (m_pPl->m_bShotButtonsReleased && m_pPl->IsShooting() && m_pPl->m_flNextShot <= gpGlobals->curtime)
+	if (m_pPl->ShotButtonsReleased() && m_pPl->IsShooting() && m_pPl->m_flNextShot <= gpGlobals->curtime)
 	{
 		float spin;
 
-		if (m_pPl->IsPowershooting())
+		if (m_pPl->IsNormalshooting())
 		{
-			vel = m_vPlForward * GetPowershotStrength(GetPitchCoeff(), sv_ball_powershot_normalstrength.GetInt(), sv_ball_powershot_sprintstrength.GetInt());
-			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KEEPER_HANDS_KICK);
-			spin = sv_ball_volleyshot_spincoeff.GetFloat();
+			vel = m_vPlForward * GetNormalshotStrength(GetPitchCoeff(), sv_ball_normalshot_strength.GetInt());
+			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KEEPER_HANDS_THROW);
+			spin = 0;
 		}
 		else
 		{
-			vel = m_vPlForward * GetNormalshotStrength(GetPitchCoeff(), sv_ball_normalshot_normalstrength.GetInt(), sv_ball_normalshot_sprintstrength.GetInt());
-			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KEEPER_HANDS_THROW);
-			spin = 0;
+			if (m_pPl->IsPowershooting())
+				vel = m_vPlForward * GetPowershotStrength(GetPitchCoeff(), sv_ball_powershot_strength.GetInt());
+			else
+				vel = m_vPlForward * GetChargedshotStrength(GetPitchCoeff(), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
+
+			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KEEPER_HANDS_KICK);
+			spin = sv_ball_volleyshot_spincoeff.GetFloat();
 		}
 
 		RemoveAllTouches();
@@ -1656,10 +1669,12 @@ bool CBall::DoSlideAction()
 
 	float shotStrength;
 
-	if (m_pPl->IsPowershooting())
-		shotStrength = GetPowershotStrength(1.0f, sv_ball_powerslide_normalstrength.GetInt(), sv_ball_powerslide_sprintstrength.GetInt());
+	if (m_pPl->IsNormalshooting())
+		shotStrength = GetNormalshotStrength(1.0f, sv_ball_normalslide_strength.GetInt());
+	else if (m_pPl->IsPowershooting())
+		shotStrength = GetPowershotStrength(1.0f, sv_ball_powerslide_strength.GetInt());
 	else
-		shotStrength = GetNormalshotStrength(1.0f, sv_ball_normalslide_normalstrength.GetInt(), sv_ball_normalslide_sprintstrength.GetInt());
+		shotStrength = GetChargedshotStrength(1.0f, sv_ball_chargedslide_minstrength.GetInt(), sv_ball_chargedslide_maxstrength.GetInt());
 
 	Vector ballVel = m_vPlForward2D * shotStrength;
 
@@ -1792,29 +1807,32 @@ float CBall::GetPitchCoeff()
 	return ((m_pPl->m_nButtons & IN_WALK) ? sv_ball_shotwalkcoeff.GetFloat() : 1) * (sv_ball_fixedpitchcoeff.GetFloat() + (pow(cos((m_aPlAng[PITCH] - sv_ball_bestshotangle.GetInt()) / (PITCH_LIMIT - sv_ball_bestshotangle.GetInt()) * M_PI / 2), (double)sv_ball_pitch_exponent.GetFloat()) * (1 - sv_ball_fixedpitchcoeff.GetFloat())));
 }
 
-float CBall::GetNormalshotStrength(float coeff, int normalStrength, int sprintStrength)
+float CBall::GetNormalshotStrength(float coeff, int strength)
 {
-	return (coeff * normalStrength);
+	return (coeff * strength);
 }
 
-float CBall::GetPowershotStrength(float coeff, int normalStrength, int sprintStrength)
+float CBall::GetPowershotStrength(float coeff, int strength)
 {
+	if (State_Get() == BALL_PENALTY)
+		strength = sv_ball_penaltyshot_maxstrength.GetInt();
+
+	return coeff * strength;
+}
+
+float CBall::GetChargedshotStrength(float coeff, int minStrength, int maxStrength)
+{
+	if (State_Get() == BALL_PENALTY)
+		minStrength = maxStrength = sv_ball_penaltyshot_maxstrength.GetInt();
+
 	float duration = (m_pPl->m_bIsShotCharging ? gpGlobals->curtime - m_pPl->m_flShotChargingStart : m_pPl->m_flShotChargingDuration);
 	float totalTime = gpGlobals->curtime - m_pPl->m_flShotChargingStart;
 	float activeTime = min(duration, mp_chargedshot_increaseduration.GetFloat());
 	float extra = totalTime - activeTime;
 	float shotStrengthCoeff = max(0, activeTime / mp_chargedshot_increaseduration.GetFloat() - min(extra, mp_chargedshot_decreaseduration.GetFloat()) / mp_chargedshot_decreaseduration.GetFloat());
+	float shotStrength = minStrength + (maxStrength - minStrength) * shotStrengthCoeff;
 
-	if ((m_pPl->m_nButtons & IN_ALT1) || State_Get() == BALL_PENALTY)
-	{
-		shotStrengthCoeff = 0;
-	}
-
-	float ballVel = max(sv_ball_minshotstrength.GetInt(), coeff * (normalStrength + (sprintStrength - normalStrength) * shotStrengthCoeff));
-
-	//DevMsg("%0.2f ballVel: %0.2f\n", gpGlobals->curtime, ballVel);
-
-	return ballVel;
+	return coeff * shotStrength;
 }
 
 bool CBall::DoGroundShot()
@@ -1861,16 +1879,14 @@ bool CBall::DoGroundShot()
 
 		float shotStrength;
 
-		if (m_pPl->IsPowershooting())
-		{
-			shotStrength = GetPowershotStrength(GetPitchCoeff(), sv_ball_powershot_normalstrength.GetInt(), sv_ball_powershot_sprintstrength.GetInt());
-		}
+		if (m_pPl->IsNormalshooting())
+			shotStrength = GetNormalshotStrength(GetPitchCoeff(), sv_ball_normalshot_strength.GetInt());
+		else if (m_pPl->IsPowershooting())
+			shotStrength = GetPowershotStrength(GetPitchCoeff(), sv_ball_powershot_strength.GetInt());
 		else
-		{
-			shotStrength = GetNormalshotStrength(GetPitchCoeff(), sv_ball_normalshot_normalstrength.GetInt(), sv_ball_normalshot_sprintstrength.GetInt());
-		}
+			shotStrength = GetChargedshotStrength(GetPitchCoeff(), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
 
-		vel = shotDir * max(shotStrength, sv_ball_minshotstrength.GetInt());
+		vel = shotDir * shotStrength;
 
 		if (vel.Length() > 700)
 		{
@@ -1909,17 +1925,15 @@ bool CBall::DoVolleyShot()
 
 	float shotStrength;
 
-	if (m_pPl->IsPowershooting())
-	{
-		shotStrength = GetPowershotStrength(GetPitchCoeff(), sv_ball_powershot_normalstrength.GetInt(), sv_ball_powershot_sprintstrength.GetInt());
-	}
+	if (m_pPl->IsNormalshooting())
+		shotStrength = GetNormalshotStrength(GetPitchCoeff(), sv_ball_normalshot_strength.GetInt());
+	else if (m_pPl->IsPowershooting())
+		shotStrength = GetPowershotStrength(GetPitchCoeff(), sv_ball_powershot_strength.GetInt());
 	else
-	{
-		shotStrength = GetNormalshotStrength(GetPitchCoeff(), sv_ball_normalshot_normalstrength.GetInt(), sv_ball_normalshot_sprintstrength.GetInt());
-	}
-	
+		shotStrength = GetChargedshotStrength(GetPitchCoeff(), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
+
 	QAngle shotAngle = m_aPlAng;
-	shotAngle[PITCH] = min(-10, m_aPlAng[PITCH]);
+	shotAngle[PITCH] = min(sv_ball_volleyshot_minangle.GetFloat(), m_aPlAng[PITCH]);
 
 	Vector shotDir;
 	AngleVectors(shotAngle, &shotDir);
@@ -1956,24 +1970,32 @@ bool CBall::DoHeader()
 {
 	Vector vel;
 
-	if (m_pPl->IsPowershooting() && m_vPlForwardVel2D.Length2D() >= mp_walkspeed.GetInt() && m_nInPenBoxOfTeam == m_pPl->GetOppTeamNumber() && (m_pPl->m_nButtons & IN_SPEED) && m_pPl->GetGroundEntity())
+	if (m_pPl->IsNormalshooting())
 	{
-		vel = m_vPlForward2D * GetPowershotStrength(1.0f, sv_ball_powerdivingheader_normalstrength.GetInt(), sv_ball_powerdivingheader_sprintstrength.GetInt());
+		vel = m_vPlForward * GetNormalshotStrength(GetPitchCoeff(), sv_ball_normalheader_strength.GetInt());
+		EmitSound("Ball.kicknormal");
+		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEADER_STATIONARY);
+	}
+	else if (m_vPlForwardVel2D.Length2D() >= mp_walkspeed.GetInt() && m_nInPenBoxOfTeam == m_pPl->GetOppTeamNumber() && (m_pPl->m_nButtons & IN_SPEED) && m_pPl->GetGroundEntity())
+	{
+		if (m_pPl->IsPowershooting())
+			vel = m_vPlForward2D * GetPowershotStrength(1.0f, sv_ball_powerdivingheader_strength.GetInt());
+		else
+			vel = m_vPlForward2D * GetChargedshotStrength(1.0f, sv_ball_chargeddivingheader_minstrength.GetInt(), sv_ball_chargeddivingheader_maxstrength.GetInt());
+
 		EmitSound("Ball.kickhard");
 		m_pPl->AddFlag(FL_FREECAM);
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_DIVINGHEADER);
 	}
-	else if (m_pPl->IsPowershooting())
-	{
-		vel = m_vPlForward * GetPowershotStrength(GetPitchCoeff(), sv_ball_powerheader_normalstrength.GetInt(), sv_ball_powerheader_sprintstrength.GetInt());
-		EmitSound("Ball.kickhard");
-		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEADER);
-	}
 	else
 	{
-		vel = m_vPlForward * GetNormalshotStrength(GetPitchCoeff(), sv_ball_normalheader_normalstrength.GetInt(), sv_ball_normalheader_sprintstrength.GetInt());
-		EmitSound("Ball.kicknormal");
-		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEADER_STATIONARY);
+		if (m_pPl->IsPowershooting())
+			vel = m_vPlForward * GetPowershotStrength(GetPitchCoeff(), sv_ball_powerheader_strength.GetInt());
+		else
+			vel = m_vPlForward * GetChargedshotStrength(GetPitchCoeff(), sv_ball_chargedheader_minstrength.GetInt(), sv_ball_chargedheader_maxstrength.GetInt());
+
+		EmitSound("Ball.kickhard");
+		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEADER);
 	}
 
 	SetVel(vel, 0, BODY_PART_HEAD, false, true, true);
@@ -2214,40 +2236,29 @@ void CBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart)
 	if (SDKGameRules()->IsIntermissionState() || m_bHasQueuedState || SDKGameRules()->State_Get() == MATCH_PENALTIES)
 		return;
 
-	if (m_Touches.Count() > 0 && m_Touches.Tail().m_pPl == pPl && m_Touches.Tail().m_nTeam == pPl->GetTeamNumber())
+	if (m_Touches.Count() > 0 && m_Touches.Tail().m_pPl == pPl && m_Touches.Tail().m_nTeam == pPl->GetTeamNumber()
+		&& sv_ball_doubletouchfouls.GetBool() && State_Get() == BALL_NORMAL && m_Touches.Tail().m_eBallState != BALL_NORMAL
+		&& m_Touches.Tail().m_eBallState != BALL_KEEPERHANDS && pPl->GetTeam()->GetNumPlayers() > 2)
 	{
-		if (sv_ball_doubletouchfouls.GetBool() && m_Touches.Tail().m_eBallState != BALL_NORMAL && m_Touches.Tail().m_eBallState != BALL_KEEPERHANDS && pPl->GetTeam()->GetNumPlayers() >= 3)
-		{
-			TriggerFoul(FOUL_DOUBLETOUCH, pPl->GetLocalOrigin(), pPl);
-			State_Transition(BALL_FREEKICK, sv_ball_statetransitiondelay.GetFloat());
-			return;
-		}
-		else
-		{
-			m_Touches.Tail().m_bIsShot = isShot;
-			m_Touches.Tail().m_eBodyPart = bodyPart;
-			m_Touches.Tail().m_eBallState = m_pCurStateInfo->m_eBallState;
-			m_Touches.Tail().m_flBallSpeed = m_vVel.Length2D();
-			m_Touches.Tail().m_flDistToGoal = (pPl->GetTeam()->GetOppTeam()->m_vPlayerSpawns[0] - m_vPos).Length2D();
-		}
+		TriggerFoul(FOUL_DOUBLETOUCH, pPl->GetLocalOrigin(), pPl);
+		State_Transition(BALL_FREEKICK, sv_ball_statetransitiondelay.GetFloat());
+		return;
 	}
 	else
 	{
 		BallTouchInfo *pInfo = LastInfo(true);
-		if (pInfo && CSDKPlayer::IsOnField(pInfo->m_pPl) && pInfo->m_flBallSpeed > sv_ball_normalshot_normalstrength.GetInt())
+		if (pInfo && CSDKPlayer::IsOnField(pInfo->m_pPl) && (m_vPos - pInfo->m_vBallPos).Length2D() > sv_ball_stats_pass_dist.GetInt())
 		{ 
 			pInfo->m_pPl->m_Passes += 1;
 
 			if (pInfo->m_nTeam == pPl->GetTeamNumber())
-			{
 				pInfo->m_pPl->m_PassesCompleted += 1;
-			}
+			else
+				pPl->m_Interceptions += 1;
 		}
 
-		float ballSpeed = m_vVel.Length2D();
-		float distToGoal = (pPl->GetTeam()->GetOppTeam()->m_vPlayerSpawns[0] - m_vPos).Length2D();
 		UpdatePossession(pPl);
-		BallTouchInfo info = { pPl, pPl->GetTeamNumber(), isShot, bodyPart, m_pCurStateInfo->m_eBallState, ballSpeed, distToGoal };
+		BallTouchInfo info = { pPl, pPl->GetTeamNumber(), isShot, bodyPart, State_Get(), m_vPos, m_vVel };
 		m_Touches.AddToTail(info);
 	}
 	

@@ -284,6 +284,7 @@ public:
 	int					m_Shots;
 	int					m_ShotsOnGoal;
 	int					m_PassesCompleted;
+	int					m_Interceptions;
 	int					m_Offsides;
 	int					m_Goals;
 	int					m_OwnGoals;
@@ -306,6 +307,7 @@ public:
 	int					GetShots(void) { return m_Shots; }
 	int					GetShotsOnGoal(void) { return m_ShotsOnGoal; }
 	int					GetPassesCompleted(void) { return m_PassesCompleted; }
+	int					GetInterceptions(void) { return m_Interceptions; }
 	int					GetOffsides(void) { return m_Offsides; }
 	int					GetGoals(void) { return m_Goals; }
 	int					GetOwnGoals(void) { return m_OwnGoals; }
@@ -342,6 +344,9 @@ public:
 	void				SetShotButtonRight(bool isRight) { m_bIsShotButtonRight = isRight; }
 
 	bool				ShotButtonsPressed();
+
+	virtual bool		ShotButtonsReleased();
+	virtual void		SetShotButtonsReleased(bool released);
 
 	float				m_TackleTime;
 	bool				m_bTackleDone;
@@ -399,8 +404,6 @@ public:
 
 	void				ResetStats();
 
-	bool				m_bShotButtonsReleased;
-
 	bool				m_bIsShotCharging;
 	float				m_bDoChargedShot;
 	float				m_flShotChargingStart;
@@ -422,6 +425,7 @@ public:
 
 	bool				IsNormalshooting();
 	bool				IsPowershooting();
+	bool				IsChargedshooting();
 	bool				IsAutoPassing();
 	bool				IsShooting();
 	CSDKPlayer			*FindClosestPlayerToSelf(bool teammatesOnly, bool forwardOnly = false, float maxYawAngle = 360);
@@ -442,6 +446,8 @@ protected:
 	CHandle<CBall>		m_pPlayerBall;
 	Vector				m_vOffsideLastOppPlayerPos;
 	Vector				m_vOffsideBallPos;
+
+	bool				m_bShotButtonsReleased;
 
 };
 

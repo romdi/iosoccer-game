@@ -45,7 +45,7 @@ public:
 	Vector			m_vDirToBall;
 	Vector			m_vLocalDirToBall;
 	float			m_flAngToBallVel;
-	int			m_nPlayerType;
+	int				m_nPlayerType;
 
 	void BotFrame();
 	virtual void BotThink();
@@ -54,6 +54,12 @@ public:
 	void FieldBotJoinTeam();
 
 	virtual void PhysicsSimulate();
+
+	virtual bool		ShotButtonsReleased();
+	virtual void		SetShotButtonsReleased(bool released);
+
+protected:
+	float m_flBotNextShot;
 };
 
 // If iTeam or iClass is -1, then a team or class is randomly chosen.
