@@ -1113,6 +1113,7 @@ ConVar mp_shield_liberal_taker_positioning("mp_shield_liberal_taker_positioning"
 ConVar mp_shield_liberal_teammates_positioning("mp_shield_liberal_teammates_positioning", "0", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar mp_shield_block_opponent_half("mp_shield_block_opponent_half", "1", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar mp_field_border("mp_field_border", "150", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar mp_field_border_enabled("mp_field_border_enabled", "1", FCVAR_NOTIFY|FCVAR_REPLICATED);
 
 ConVar mp_offside("mp_offside", "1", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar mp_joindelay("mp_joindelay", "3", FCVAR_NOTIFY|FCVAR_REPLICATED);
@@ -1526,7 +1527,8 @@ void CSDKGameRules::State_PENALTIES_Think()
 	if (GetBall()->GetPenaltyState() == PENALTY_KICKED
 		|| GetBall()->GetPenaltyState() == PENALTY_SCORED
 		|| GetBall()->GetPenaltyState() == PENALTY_SAVED
-		|| GetBall()->GetPenaltyState() == PENALTY_ABORTED_NO_KEEPER)
+		|| GetBall()->GetPenaltyState() == PENALTY_ABORTED_NO_KEEPER
+		|| GetBall()->GetPenaltyState() == PENALTY_ABORTED_ILLEGAL_MOVE)
 	{
 		if (m_flNextPenalty == -1)
 		{
@@ -1536,7 +1538,8 @@ void CSDKGameRules::State_PENALTIES_Think()
 		{
 			if (GetBall()->GetPenaltyState() == PENALTY_KICKED
 				|| GetBall()->GetPenaltyState() == PENALTY_SCORED
-				|| GetBall()->GetPenaltyState() == PENALTY_SAVED)
+				|| GetBall()->GetPenaltyState() == PENALTY_SAVED
+				|| GetBall()->GetPenaltyState() == PENALTY_ABORTED_ILLEGAL_MOVE)
 			{
 				GetBall()->State_Transition(BALL_NORMAL, 0, true);
 
@@ -1759,16 +1762,16 @@ void CSDKGameRules::State_COOLDOWN_Think()
 				}
 			}
 		}
-
+		
 		IGameEvent *pEvent = gameeventmanager->CreateEvent("motmvotingresult");
-		pEvent->SetInt("hometeamplayerschoicemotmplayer", mostVotesPlayer[0]);
-		pEvent->SetInt("hometeamplayerschoicemotmpercentage", mostVotesCount[0] * 100 / max(1, playersOnField[0]));
-		pEvent->SetInt("awayteamplayerschoicemotmplayer", mostVotesPlayer[1]);
-		pEvent->SetInt("awayteamplayerschoicemotmpercentage", mostVotesCount[1] * 100 / max(1, playersOnField[1]));
-		pEvent->SetInt("hometeamexpertschoicemotmplayer", mostGoalsPlayers[0]);
-		pEvent->SetInt("hometeamexpertschoicemotmpercentage", 100);
-		pEvent->SetInt("awayteamexpertschoicemotmplayer", mostGoalsPlayers[1]);
-		pEvent->SetInt("awayteamexpertschoicemotmpercentage", 100);
+		pEvent->SetInt("playerschoice_player0", mostVotesPlayer[0]);
+		pEvent->SetInt("playerschoice_percentage0", mostVotesCount[0] * 100 / max(1, playersOnField[0]));
+		pEvent->SetInt("playerschoice_player1", mostVotesPlayer[1]);
+		pEvent->SetInt("playerschoice_percentage1", mostVotesCount[1] * 100 / max(1, playersOnField[1]));
+		pEvent->SetInt("expertschoice_player0", mostGoalsPlayers[0]);
+		pEvent->SetInt("expertschoice_percentage0", 100);
+		pEvent->SetInt("expertschoice_player1", mostGoalsPlayers[1]);
+		pEvent->SetInt("expertschoice_percentage1", 100);
 		gameeventmanager->FireEvent(pEvent);
 
 		m_bPostMatchStatsPanelShown = true;
@@ -1811,8 +1814,7 @@ void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 	const char *pszClubName = engine->GetClientConVarValue( pPlayer->entindex(), "clubname" );
 	((CSDKPlayer *)pPlayer)->SetClubName(pszClubName);
 
-	const char *pszCountryName = engine->GetClientConVarValue( pPlayer->entindex(), "countryname" );
-	((CSDKPlayer *)pPlayer)->SetCountryName(pszCountryName);
+	((CSDKPlayer *)pPlayer)->SetCountryName(clamp(atoi(engine->GetClientConVarValue(pPlayer->entindex(), "ipcountryname")), 0, COUNTRY_NAMES_COUNT - 1));
 
 	((CSDKPlayer *)pPlayer)->SetPreferredTeamPosNum(atoi(engine->GetClientConVarValue(pPlayer->entindex(), "preferredshirtnumber")));
 

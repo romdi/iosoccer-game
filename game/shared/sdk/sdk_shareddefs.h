@@ -129,24 +129,34 @@ enum sdkteams_e
 
 extern char pszTeamNames[4][32];
 
-extern ConVar mp_walkspeed;
-extern ConVar mp_runspeed;
-extern ConVar mp_sprintspeed;
-extern ConVar mp_remotecontrolledspeed;
-extern ConVar mp_keeperdiveduration;
-extern ConVar mp_keeperdivespeed_z;
-extern ConVar mp_keeperdivecoeff_longside;
-extern ConVar mp_keeperdivecoeff_shortside;
-extern ConVar mp_keeperdivecoeff_z;
-extern ConVar mp_keepersprintdivecoeff_longside;
-extern ConVar mp_keepersprintdivecoeff_shortside;
-extern ConVar mp_keepersprintdivecoeff_z;
-extern ConVar mp_slideduration;
-extern ConVar mp_slidespeed;
-extern ConVar mp_divingheaderduration;
-extern ConVar mp_divingheaderspeed;
-extern ConVar mp_chargedshot_increaseduration;
-extern ConVar mp_chargedshot_decreaseduration;
+extern ConVar
+	mp_walkspeed,
+	mp_runspeed,
+	mp_sprintspeed,
+	mp_remotecontrolledspeed,
+	mp_keepersidewarddive_move_duration,
+	mp_keepersidewarddive_idle_duration,
+	mp_keeperbackwarddive_move_duration,
+	mp_keeperbackwarddive_idle_duration,
+	mp_keeperforwarddive_move_duration,
+	mp_keeperforwarddive_idle_duration,
+	mp_keeperdivespeed_z,
+	mp_keeperdivecoeff_longside,
+	mp_keeperdivecoeff_shortside,
+	mp_keeperdivecoeff_z,
+	mp_keepersprintdivecoeff_longside,
+	mp_keepersprintdivecoeff_shortside,
+	mp_keepersprintdivecoeff_z,
+	mp_slide_move_duration,
+	mp_slide_idle_duration,
+	mp_slidespeed,
+	mp_divingheader_move_duration,
+	mp_divingheader_idle_duration,
+	mp_divingheaderspeed,
+	mp_chargedshot_increaseduration,
+	mp_chargedshot_decreaseduration,
+	mp_throwinthrow_idle_duration,
+	mp_tackled_idle_duration;
 
 //--------------------------------------------------------------------------------------------------------
 //
@@ -279,5 +289,10 @@ enum ball_state_t
 
 #define MAX_CLUBNAME_LENGTH			6
 #define MAX_COUNTRYNAME_LENGTH		64
+
+#define COUNTRY_NAMES_COUNT 194
+
+static const char g_szCountryNames[COUNTRY_NAMES_COUNT][64] = { "", "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cambodia", "Cameroon", "Canada", "Cape Verde", "Central African Republic", "Chad", "Chile", "China", "Colombia", "Comoros", "Congo", "Cook Islands", "Costa Rica", "Cote d'Ivoire", "Croatia", "Cuba", "Cyprus", "Czech Republic", "Democratic Republic of Congo", "Denmark", "Djibouti", "Dominica", "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Greenland", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", "Macedonia", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Moldova", "Monaco", "Mongolia", "Montenegro", "Mozambique", "Myanmar", "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea", "Norway", "Oman", "Pakistan", "Palau", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Romania", "Russia", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Korea", "South Sudan", "Spain", "Sri Lanka", "Sudan", "Suriname", "Swaziland", "Sweden", "Switzerland", "Syria", "Tajikistan", "Tanzania", "Thailand", "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States", "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City", "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe" };
+static const char g_szCountryISOCodes[COUNTRY_NAMES_COUNT][3] = { "", "AF", "AL", "DZ", "AD", "AO", "AG", "AR", "AM", "AU", "AT", "AZ", "BS", "BH", "BD", "BB", "BY", "BE", "BZ", "BJ", "BT", "BO", "BA", "BW", "BR", "BN", "BG", "BF", "BI", "KH", "CM", "CA", "CV", "CF", "TD", "CL", "CN", "CO", "KM", "CG", "CK", "CR", "CI", "HR", "CU", "CY", "CZ", "CD", "DK", "DJ", "DM", "DO", "EC", "EG", "SV", "GQ", "ER", "EE", "ET", "FJ", "FI", "FR", "GA", "GM", "GE", "DE", "GH", "GR", "GL", "GD", "GT", "GN", "GW", "GY", "HT", "HN", "HU", "IS", "IN", "ID", "IR", "IQ", "IE", "IL", "IT", "JM", "JP", "JO", "KZ", "KE", "KI", "KW", "KG", "LA", "LV", "LB", "LS", "LR", "LY", "LI", "LT", "LU", "MK", "MG", "MW", "MY", "MV", "ML", "MT", "MH", "MR", "MU", "MX", "MD", "MC", "MN", "ME", "MZ", "MM", "NA", "NR", "NP", "NL", "NZ", "NI", "NE", "NG", "KP", "NO", "OM", "PK", "PW", "PA", "PG", "PY", "PE", "PH", "PL", "PT", "QA", "RO", "RU", "RW", "KN", "LC", "VC", "WS", "SM", "ST", "SA", "SN", "RS", "SC", "SL", "SG", "SK", "SI", "SB", "SO", "ZA", "KR", "SS", "ES", "LK", "SD", "SR", "SZ", "SE", "CH", "SY", "TJ", "TZ", "TH", "TL", "TG", "TO", "TT", "TR", "TM", "TV", "UG", "UA", "AE", "GB", "US", "UY", "UZ", "VU", "VA", "VE", "VN", "YE", "ZM", "ZW" };
 
 #endif // SDK_SHAREDDEFS_H

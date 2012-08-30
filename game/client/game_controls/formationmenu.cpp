@@ -47,7 +47,7 @@
 using namespace vgui;
 
 enum { FORMATION_BUTTON_WIDTH = 85, FORMATION_BUTTON_HEIGHT = 50 };
-enum { FORMATION_HPADDING = (FORMATION_BUTTON_WIDTH / 2 + 60), FORMATION_VPADDING = (FORMATION_BUTTON_HEIGHT / 2 + 5) };
+enum { FORMATION_HPADDING = (FORMATION_BUTTON_WIDTH / 2 + 70), FORMATION_VPADDING = (FORMATION_BUTTON_HEIGHT / 2 + 5), FORMATION_CENTERPADDING = 35 };
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -167,6 +167,7 @@ void CFormationMenu::Update()
 			float xDist = (m_pFormations[i]->GetWide() - 2 * FORMATION_HPADDING) / 3;
 			float yDist = (m_pFormations[i]->GetTall() - 2 * FORMATION_VPADDING) / 3;
 			float xPos = FORMATION_HPADDING + g_Positions[mp_maxplayers.GetInt() - 1][j][POS_XPOS] * xDist - m_pFormationButtons[i][j]->GetWide() / 2;
+			xPos += (i == 0 ? -1 : 1) * FORMATION_CENTERPADDING;
 			float yPos = FORMATION_VPADDING + g_Positions[mp_maxplayers.GetInt() - 1][j][POS_YPOS] * yDist - m_pFormationButtons[i][j]->GetTall() / 2;
 			m_pFormationButtons[i][j]->SetPos(xPos, yPos);
 

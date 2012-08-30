@@ -41,26 +41,6 @@ enum stats_t
 	STAT_COUNT,
 };
 
-static const char g_szStatNames[STAT_COUNT][32] =
-{
-	"Corners",
-	"Distance",
-	"Fouls",
-	"Fouls suffered",
-	"Free kicks",
-	"Interceptions",
-	"Offsides",
-	"Own goals",
-	"Passes",
-	"Passes completed",
-	"Possession",
-	"Reds",
-	"Saves",
-	"Shots",
-	"Shots on goal",
-	"Yellows",
-};
-
 static const char g_szStatIdentifiers[STAT_COUNT][32] =
 {
 	"corners",
@@ -81,6 +61,52 @@ static const char g_szStatIdentifiers[STAT_COUNT][32] =
 	"yellowcards",
 };
 
+static const char g_szStatNames[STAT_COUNT][32] =
+{
+	"Corners",
+	"Distance",
+	"Fouls",
+	"Fouls suffered",
+	"Free kicks",
+	"Interceptions",
+	"Offsides",
+	"Own goals",
+	"Passes",
+	"Passes completed",
+	"Possession",
+	"Reds",
+	"Saves",
+	"Shots",
+	"Shots on goal",
+	"Yellows",
+};
+
+enum stat_categories_t
+{
+	DEFAULT_STATS = -1,
+	GENERAL = 0,
+	TACKLINGS,
+	SET_PIECES,
+	KEEPER,
+	OFFENSE,
+	STAT_CATEGORY_COUNT,
+};
+
+static const char g_szStatCategoryNames[STAT_CATEGORY_COUNT][32] =
+{
+	"General",
+	"Tacklings",
+	"Set pieces",
+	"Keeper",
+	"Offense",
+};
+
+struct SpecInfo
+{
+	int playerIndex;
+	char playerName[MAX_PLAYER_NAME_LENGTH];
+};
+
 //-----------------------------------------------------------------------------
 // Purpose: Game ScoreBoard
 //-----------------------------------------------------------------------------
@@ -95,8 +121,6 @@ protected:
 	enum { NAME_WIDTH = 100, SCORE_WIDTH = 60, DEATH_WIDTH = 60, PING_WIDTH = 80, VOICE_WIDTH = 0, FRIENDS_WIDTH = 0, SMALL_WIDTH = 35, VSMALL_WIDTH = 20};
 	// total = 340
 	enum { SPEC_FONT_COUNT = 4 };
-
-	enum tab_t { TAB_FORMATION = 0, TAB_STATS, TAB_COUNT };
 
 public:
 	CClientScoreBoardDialog( IViewPort *pViewPort );
@@ -128,16 +152,15 @@ protected:
 	MESSAGE_FUNC_PTR( OnCursorExited, "OnCursorExited", panel );
 
 	// functions to override
-	virtual bool GetPlayerScoreInfo(int playerIndex, KeyValues *outPlayerInfo);
+	virtual bool GetPlayerInfo(int playerIndex, KeyValues *kv);
+	virtual bool GetTeamInfo(int team, KeyValues *kv);
 	virtual void InitScoreboardSections();
 	virtual void UpdateTeamInfo();
 	virtual void UpdatePlayerInfo();
 	virtual void OnThink();
 	virtual void AddHeader(); // add the start header of the scoreboard
 	//virtual void AddSection(int teamType, int teamNumber); // add a new section header for a team
-	virtual int GetAdditionalHeight() { return 0; }
-
-	void ShowTabPanel(tab_t tabName); 
+	virtual int GetAdditionalHeight() { return 0; } 
 
 	// sorts players within a section
 	static bool StaticPlayerSortFunc(vgui::SectionedListPanel *list, int itemID1, int itemID2);
@@ -187,24 +210,34 @@ private:
 	ButtonCode_t m_nCloseKey;
 	Panel		*m_pMainPanel;
 	Panel		*m_pExtraInfoPanel;
-	Label		*m_pSpectatorNames;
+	Label		*m_pSpectatorText;
+	Panel		*m_pSpectatorNames;
 	Button		*m_pSpectateButton;
 	Panel		*m_pSpectatorContainer;
 	HFont		m_pSpectatorFontList[SPEC_FONT_COUNT];
 	ImagePanel	*m_pTeamCrests[2];
 	Label		*m_pPlayerCount[2];
 	Label		*m_pPossession[2];
-	Panel		*m_pTabPanels[TAB_COUNT];
 	Panel		*m_pStatButtonOuterContainer;
 	Panel		*m_pStatButtonInnerContainer;
+	Label		*m_pStatText;
 	Button		*m_pStatButtons[STAT_COUNT];
+	Panel		*m_pPlayerListDivider;
+
+	CStatsMenu	*m_pStatsMenu;
+	CFormationMenu	*m_pFormationMenu;
+
+	Label		*m_pSpecInfo;
+
+	CUtlVector<SpecInfo> m_SpecList;
 
 	int			m_nCurStat;
+	int			m_nCurSpecIndex;
+	Button		*m_pCurSpecButton;
+
+	int			m_nSelectedPlayerIndex;
 
 	IScheme *m_pScheme;
-
-	// methods
-	void FillScoreBoard();
 };
 
 

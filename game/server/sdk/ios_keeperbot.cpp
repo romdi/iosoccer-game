@@ -136,7 +136,7 @@ void CKeeperBot::BotAdjustPos()
 
 			if (!diving)
 			{
-				if (m_vDirToBall.Length2D() < 60)
+				if (m_vDirToBall.Length2D() < 50)
 				{
 					modifier = KEEPER_CLOSE_COEFF;
 					//m_cmd.buttons |= (IN_ATTACK2 | IN_ATTACK);
@@ -170,10 +170,10 @@ void CKeeperBot::BotAdjustPos()
 		}
 		else if (ballDistToGoal < 1000 && m_vDirToBall.z < 80 && m_vBallVel.Length2D() < 300 && m_vBallVel.z < 100)
 		{
-			if ((pClosest == this || ballDistToGoal < 750))
+			if (pClosest == this)
 				modifier = KEEPER_CLOSE_COEFF;
 			else
-				modifier = KEEPER_MID_COEFF;
+				modifier = max(KEEPER_FAR_COEFF, 1 - pow(min(1, ballDistToGoal / 750.0f), 2));
 		}
 		else
 		{
@@ -201,8 +201,8 @@ void CKeeperBot::BotAdjustPos()
 		//float speed = clamp(dist - 10, 0, mp_runspeed.GetInt());
 		float speed = 0;
 
-		if (dist > 20)
-			speed = clamp(3 * dist, 0, mp_sprintspeed.GetInt());
+		if (dist > 30)
+			speed = clamp(5 * dist, 0, mp_sprintspeed.GetInt());
 
 		if (speed > mp_runspeed.GetInt())
 			m_cmd.buttons |= IN_SPEED;

@@ -112,7 +112,13 @@ ConVar mp_walkspeed("mp_walkspeed", "150", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_runspeed("mp_runspeed", "250", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_sprintspeed("mp_sprintspeed", "350", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_remotecontrolledspeed("mp_remotecontrolledspeed", "500", FCVAR_REPLICATED | FCVAR_NOTIFY);
-ConVar mp_keeperdiveduration("mp_keeperdiveduration", "1", FCVAR_REPLICATED | FCVAR_NOTIFY);
+
+ConVar mp_keepersidewarddive_move_duration("mp_keepersidewarddive_move_duration", "1", FCVAR_REPLICATED | FCVAR_NOTIFY);
+ConVar mp_keepersidewarddive_idle_duration("mp_keepersidewarddive_idle_duration", "1", FCVAR_REPLICATED | FCVAR_NOTIFY);
+ConVar mp_keeperforwarddive_move_duration("mp_keeperforwarddive_move_duration", "1", FCVAR_REPLICATED | FCVAR_NOTIFY);
+ConVar mp_keeperforwarddive_idle_duration("mp_keeperforwarddive_idle_duration", "1", FCVAR_REPLICATED | FCVAR_NOTIFY);
+ConVar mp_keeperbackwarddive_move_duration("mp_keeperbackwarddive_move_duration", "1", FCVAR_REPLICATED | FCVAR_NOTIFY);
+ConVar mp_keeperbackwarddive_idle_duration("mp_keeperbackwarddive_idle_duration", "1", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_keeperdivespeed_z("mp_keeperdivespeed_z", "250", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_keepersprintdivecoeff_longside("mp_keepersprintdivecoeff_longside", "1.75", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_keepersprintdivecoeff_shortside("mp_keepersprintdivecoeff_shortside", "1", FCVAR_REPLICATED | FCVAR_NOTIFY);
@@ -120,9 +126,18 @@ ConVar mp_keepersprintdivecoeff_z("mp_keepersprintdivecoeff_z", "1.75", FCVAR_RE
 ConVar mp_keeperdivecoeff_longside("mp_keeperdivecoeff_longside", "1.5", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_keeperdivecoeff_shortside("mp_keeperdivecoeff_shortside", "0.75", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_keeperdivecoeff_z("mp_keeperdivecoeff_z", "1.5", FCVAR_REPLICATED | FCVAR_NOTIFY);
-ConVar mp_slideduration("mp_slideduration", "1", FCVAR_REPLICATED | FCVAR_NOTIFY);
+
+ConVar mp_slide_move_duration("mp_slide_move_duration", "1", FCVAR_REPLICATED | FCVAR_NOTIFY);
+ConVar mp_slide_idle_duration("mp_slide_idle_duration", "1", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_slidespeed("mp_slidespeed", "400", FCVAR_REPLICATED | FCVAR_NOTIFY);
-ConVar mp_divingheaderduration("mp_divingheaderduration", "1", FCVAR_REPLICATED | FCVAR_NOTIFY);
+
+ConVar mp_divingheader_move_duration("mp_divingheader_move_duration", "1", FCVAR_REPLICATED | FCVAR_NOTIFY);
+ConVar mp_divingheader_idle_duration("mp_divingheader_idle_duration", "1", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_divingheaderspeed("mp_divingheaderspeed", "400", FCVAR_REPLICATED | FCVAR_NOTIFY);
+
 ConVar mp_chargedshot_increaseduration("mp_chargedshot_increaseduration", "1.0", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_chargedshot_decreaseduration("mp_chargedshot_decreaseduration", "5.0", FCVAR_REPLICATED | FCVAR_NOTIFY);
+
+ConVar mp_throwinthrow_idle_duration("mp_throwinthrow_idle_duration", "1.0", FCVAR_REPLICATED | FCVAR_NOTIFY);
+
+ConVar mp_tackled_idle_duration("mp_tackled_idle_duration", "1.0", FCVAR_REPLICATED | FCVAR_NOTIFY);

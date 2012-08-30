@@ -10,6 +10,7 @@
 #include "gamestringpool.h"
 #include "sdk_gamerules.h"
 #include "hud_basechat.h"
+#include "steam/steam_api.h"
 
 #ifdef HL2MP
 #include "hl2mp_gamerules.h"
@@ -55,7 +56,7 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_PlayerResource, DT_PlayerResource, CPlayerReso
 	RecvPropArray3( RECVINFO_ARRAY(m_NextJoin), RecvPropFloat( RECVINFO(m_NextJoin[0]))),
 
 	RecvPropArray3( RECVINFO_ARRAY(m_szClubNames), RecvPropString( RECVINFO(m_szClubNames[0]))),
-	RecvPropArray3( RECVINFO_ARRAY(m_szCountryNames), RecvPropString( RECVINFO(m_szCountryNames[0]))),
+	RecvPropArray3( RECVINFO_ARRAY(m_CountryNames), RecvPropInt( RECVINFO(m_CountryNames[0]))),
 END_RECV_TABLE()
 
 BEGIN_PREDICTION_DATA( C_PlayerResource )
@@ -109,7 +110,7 @@ C_PlayerResource::C_PlayerResource()
 	memset( m_NextJoin, 0, sizeof( m_NextJoin ) );
 
 	memset( m_szClubNames, 0, sizeof( m_szClubNames ) );
-	memset( m_szCountryNames, 0, sizeof( m_szCountryNames ) );
+	memset( m_CountryNames, 0, sizeof( m_CountryNames ) );
 
 	g_PR = this;
 }
@@ -186,6 +187,33 @@ const char *C_PlayerResource::GetPlayerName( int iIndex )
 	return m_szName[iIndex];
 }
 
+const char *C_PlayerResource::GetSteamName( int iIndex )
+{
+	if ( iIndex < 1 || iIndex > MAX_PLAYERS )
+	{
+		Assert( false );
+		return "ERRORNAME";
+	}
+
+	if ( !IsConnected( iIndex ) )
+		return PLAYER_UNCONNECTED_NAME;
+
+	if (steamapicontext->SteamFriends() && steamapicontext->SteamUtils())
+	{
+		player_info_t pi;
+		if (engine->GetPlayerInfo(iIndex, &pi))
+		{
+			if (pi.friendsID)
+			{
+				CSteamID steamIDForPlayer(pi.friendsID, 1, steamapicontext->SteamUtils()->GetConnectedUniverse(), k_EAccountTypeIndividual);
+				return steamapicontext->SteamFriends()->GetFriendPersonaName(steamIDForPlayer);
+			}
+		}
+	}
+
+	return "";
+}
+
 const char *C_PlayerResource::GetClubName( int iIndex )
 {
 	if ( iIndex < 1 || iIndex > MAX_PLAYERS )
@@ -200,18 +228,18 @@ const char *C_PlayerResource::GetClubName( int iIndex )
 	return m_szClubNames[iIndex];
 }
 
-const char *C_PlayerResource::GetCountryName( int iIndex )
+int C_PlayerResource::GetCountryName( int iIndex )
 {
 	if ( iIndex < 1 || iIndex > MAX_PLAYERS )
 	{
 		Assert( false );
-		return "ERRORNAME";
+		return 0;
 	}
 	
 	if ( !IsConnected( iIndex ) )
-		return PLAYER_UNCONNECTED_NAME;
+		return 0;
 
-	return m_szCountryNames[iIndex];
+	return m_CountryNames[iIndex];
 }
 
 int C_PlayerResource::GetTeam(int iIndex )

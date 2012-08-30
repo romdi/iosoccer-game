@@ -49,7 +49,7 @@ public:
 	virtual void PerformLayout();
 	virtual void OnCommand( char const *cmd );
 	void Reset();
-	void Update(int playerIndex);
+	void Update(int playerIndex, KeyValues *kv);
 
 	float m_flNextUpdateTime;
 	

@@ -1426,9 +1426,7 @@ void CGameMovement::FullWalkMove( )
 	Vector oldVel = mv->m_vecVelocity;
 	QAngle oldAng = mv->m_vecAbsViewAngles;
 
-	bool hasPlayerAnimEvent = CheckPlayerAnimEvent();
-
-	if (hasPlayerAnimEvent)
+	if (CheckPlayerAnimEvent())
 	{
 		TryPlayerMove();
 	}
@@ -1536,7 +1534,8 @@ void CGameMovement::MoveToTargetPos()
 
 bool CGameMovement::CheckPlayerAnimEvent()
 {
-	float timePassed = gpGlobals->curtime - ToSDKPlayer(player)->m_Shared.m_flPlayerAnimEventStart;
+	CSDKPlayer *pPl = ToSDKPlayer(player);
+	float timePassed = gpGlobals->curtime - pPl->m_Shared.GetAnimEventStart();
 	Vector forward, right, up;
 	AngleVectors(mv->m_vecViewAngles, &forward, &right, &up);
 	Vector forward2D = forward;
@@ -1545,14 +1544,19 @@ bool CGameMovement::CheckPlayerAnimEvent()
 	bool isSprinting = ((mv->m_nButtons & IN_SPEED) != 0);
 	const float stuckRescueTimeLimit = 4;
 
-	switch (ToSDKPlayer(player)->m_Shared.m_ePlayerAnimEvent)
+	switch (pPl->m_Shared.GetAnimEvent())
 	{
 	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT:
 		{
+			if (timePassed >= mp_keepersidewarddive_move_duration.GetFloat() + mp_keepersidewarddive_idle_duration.GetFloat())
+			{
+				pPl->m_Shared.ResetAnimEvent();
+				return false;
+			}
 			if (timePassed <= stuckRescueTimeLimit)
 			{
 				mv->m_vecVelocity = forward2D * mv->m_flForwardMove * (isSprinting ? mp_keepersprintdivecoeff_shortside.GetFloat() : mp_keeperdivecoeff_shortside.GetFloat()) + right * mv->m_flSideMove * (isSprinting ? mp_keepersprintdivecoeff_longside.GetFloat() : mp_keeperdivecoeff_longside.GetFloat());
-				mv->m_vecVelocity *= max(0, (1 - pow(timePassed / mp_keeperdiveduration.GetFloat(), 2)));
+				mv->m_vecVelocity *= max(0, (1 - pow(timePassed / mp_keepersidewarddive_move_duration.GetFloat(), 2)));
 				mv->m_vecVelocity.z = mp_keeperdivespeed_z.GetInt() * (isSprinting ? mp_keepersprintdivecoeff_z.GetFloat() : mp_keeperdivecoeff_z.GetFloat());
 			}
 			else
@@ -1561,10 +1565,16 @@ bool CGameMovement::CheckPlayerAnimEvent()
 		}
 	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT:
 		{
+			if (timePassed >= mp_keepersidewarddive_move_duration.GetFloat() + mp_keepersidewarddive_idle_duration.GetFloat())
+			{
+				pPl->m_Shared.ResetAnimEvent();
+				return false;
+			}
+
 			if (timePassed <= stuckRescueTimeLimit)
 			{
 				mv->m_vecVelocity = forward2D * mv->m_flForwardMove * (isSprinting ? mp_keepersprintdivecoeff_shortside.GetFloat() : mp_keeperdivecoeff_shortside.GetFloat()) + right * mv->m_flSideMove * (isSprinting ? mp_keepersprintdivecoeff_longside.GetFloat() : mp_keeperdivecoeff_longside.GetFloat());
-				mv->m_vecVelocity *= max(0, (1 - pow(timePassed / mp_keeperdiveduration.GetFloat(), 2)));
+				mv->m_vecVelocity *= max(0, (1 - pow(timePassed / mp_keepersidewarddive_move_duration.GetFloat(), 2)));
 				mv->m_vecVelocity.z = mp_keeperdivespeed_z.GetInt() * (isSprinting ? mp_keepersprintdivecoeff_z.GetFloat() : mp_keeperdivecoeff_z.GetFloat());
 			}
 			else
@@ -1573,10 +1583,16 @@ bool CGameMovement::CheckPlayerAnimEvent()
 		}
 	case PLAYERANIMEVENT_KEEPER_DIVE_FORWARD:
 		{
+			if (timePassed >= mp_keeperforwarddive_move_duration.GetFloat() + mp_keeperforwarddive_idle_duration.GetFloat())
+			{
+				pPl->m_Shared.ResetAnimEvent();
+				return false;
+			}
+
 			if (timePassed <= stuckRescueTimeLimit)
 			{
 				mv->m_vecVelocity = forward2D * mv->m_flForwardMove * (isSprinting ? mp_keepersprintdivecoeff_longside.GetFloat() : mp_keeperdivecoeff_longside.GetFloat()) + right * mv->m_flSideMove * (isSprinting ? mp_keepersprintdivecoeff_shortside.GetFloat() : mp_keeperdivecoeff_shortside.GetFloat());
-				mv->m_vecVelocity *= max(0, (1 - pow(timePassed / mp_keeperdiveduration.GetFloat(), 2)));
+				mv->m_vecVelocity *= max(0, (1 - pow(timePassed / mp_keeperforwarddive_move_duration.GetFloat(), 2)));
 				mv->m_vecVelocity.z = 0;
 			}
 			else
@@ -1585,10 +1601,16 @@ bool CGameMovement::CheckPlayerAnimEvent()
 		}
 	case PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD:
 		{
+			if (timePassed >= mp_keeperbackwarddive_move_duration.GetFloat() + mp_keeperbackwarddive_idle_duration.GetFloat())
+			{
+				pPl->m_Shared.ResetAnimEvent();
+				return false;
+			}
+
 			if (timePassed <= stuckRescueTimeLimit)
 			{
 				mv->m_vecVelocity = forward2D * mv->m_flForwardMove * (isSprinting ? mp_keepersprintdivecoeff_longside.GetFloat() : mp_keeperdivecoeff_longside.GetFloat()) + right * mv->m_flSideMove * (isSprinting ? mp_keepersprintdivecoeff_shortside.GetFloat() : mp_keeperdivecoeff_shortside.GetFloat());
-				mv->m_vecVelocity *= max(0, (1 - pow(timePassed / mp_keeperdiveduration.GetFloat(), 2)));
+				mv->m_vecVelocity *= max(0, (1 - pow(timePassed / mp_keeperbackwarddive_move_duration.GetFloat(), 2)));
 				mv->m_vecVelocity.z = mp_keeperdivespeed_z.GetInt() * (isSprinting ? mp_keepersprintdivecoeff_z.GetFloat() : mp_keeperdivecoeff_z.GetFloat());
 			}
 			else
@@ -1598,12 +1620,18 @@ bool CGameMovement::CheckPlayerAnimEvent()
 	case PLAYERANIMEVENT_KEEPER_HANDS_THROW:
 	case PLAYERANIMEVENT_KEEPER_HANDS_KICK:
 		{
-			break;
+			return false;
 		}
 	case PLAYERANIMEVENT_SLIDE:
 		{
+			if (timePassed >= mp_slide_move_duration.GetFloat() + mp_slide_idle_duration.GetFloat())
+			{
+				pPl->m_Shared.ResetAnimEvent();
+				return false;
+			}
+
 			if (timePassed <= stuckRescueTimeLimit)
-				mv->m_vecVelocity = forward2D * mp_slidespeed.GetInt() * max(0, (1 - pow(timePassed / mp_slideduration.GetFloat(), 2)));
+				mv->m_vecVelocity = forward2D * mp_slidespeed.GetInt() * max(0, (1 - pow(timePassed / mp_slide_move_duration.GetFloat(), 2)));
 			else
 				mv->m_vecVelocity = forward * mv->m_flForwardMove + right * mv->m_flSideMove;
 			break;
@@ -1611,19 +1639,40 @@ bool CGameMovement::CheckPlayerAnimEvent()
 	case PLAYERANIMEVENT_TACKLED_FORWARD:
 	case PLAYERANIMEVENT_TACKLED_BACKWARD:
 		{
+			if (timePassed >= mp_tackled_idle_duration.GetFloat())
+			{
+				pPl->m_Shared.ResetAnimEvent();
+				return false;
+			}
+
 			mv->m_vecVelocity = vec3_origin;
 			break;
 		}
 	case PLAYERANIMEVENT_THROWIN:
+		{
+			break;
+		}
 	case PLAYERANIMEVENT_THROW:
 		{
+			if (timePassed >= mp_throwinthrow_idle_duration.GetFloat())
+			{
+				pPl->m_Shared.ResetAnimEvent();
+				return false;
+			}
+
 			mv->m_vecVelocity = vec3_origin;
 			break;
 		}
 	case PLAYERANIMEVENT_DIVINGHEADER:
 		{
+			if (timePassed >= mp_divingheader_move_duration.GetFloat() + mp_divingheader_idle_duration.GetFloat())
+			{
+				pPl->m_Shared.ResetAnimEvent();
+				return false;
+			}
+
 			if (timePassed <= stuckRescueTimeLimit)
-				mv->m_vecVelocity = forward2D * mp_divingheaderspeed.GetInt() * max(0, (1 - pow(timePassed / mp_divingheaderduration.GetFloat(), 2)));
+				mv->m_vecVelocity = forward2D * mp_divingheaderspeed.GetInt() * max(0, (1 - pow(timePassed / mp_divingheader_move_duration.GetFloat(), 2)));
 			else
 				mv->m_vecVelocity = forward * mv->m_flForwardMove + right * mv->m_flSideMove;
 			break;
@@ -1848,7 +1897,7 @@ bool CGameMovement::CheckJumpButton( void )
 {
 	CSDKPlayer *pPl = ToSDKPlayer(player);
 
-	if (gpGlobals->curtime < player->m_flNextJump)
+	if (gpGlobals->curtime < pPl->m_Shared.m_flNextJump)
 	{
 		mv->m_nOldButtons |= IN_JUMP;
 		return false;
@@ -1927,6 +1976,8 @@ bool CGameMovement::CheckJumpButton( void )
 
 	pPl->DoAnimationEvent(animEvent);
 
+	pPl->m_Shared.SetAnimEvent(animEvent);
+
 	mv->m_vecVelocity.z = sqrt(2 * sv_gravity.GetFloat() * mp_jump_height.GetInt());
 
 	FinishGravity();
@@ -1941,7 +1992,7 @@ bool CGameMovement::CheckJumpButton( void )
 
 	pPl->m_Shared.SetStamina(pPl->m_Shared.GetStamina() - mp_stamina_drain_jumping.GetInt());
 
-	player->m_flNextJump = gpGlobals->curtime + mp_jump_delay.GetFloat();
+	pPl->m_Shared.m_flNextJump = gpGlobals->curtime + mp_jump_delay.GetFloat();
 
 	return true;
 }
@@ -1962,7 +2013,7 @@ bool CGameMovement::CheckSlideButton()
 		return false;
 	}
 
-	if (gpGlobals->curtime < player->m_flNextSlide)
+	if (gpGlobals->curtime < pPl->m_Shared.m_flNextSlide)
 	{
 		mv->m_nOldButtons |= IN_DUCK;
 		return false;
@@ -1977,6 +2028,8 @@ bool CGameMovement::CheckSlideButton()
 
 	pPl->DoAnimationEvent(animEvent);
 
+	pPl->m_Shared.SetAnimEvent(animEvent);
+
 	//FinishGravity();
 
 	//mv->m_flMaxSpeed = pPl->m_Shared.m_flRunSpeed / 2;
@@ -1985,7 +2038,7 @@ bool CGameMovement::CheckSlideButton()
 
 	pPl->m_Shared.SetStamina(pPl->m_Shared.GetStamina() - mp_stamina_drain_sliding.GetInt());
 
-	player->m_flNextSlide = gpGlobals->curtime + mp_slide_delay.GetFloat();
+	pPl->m_Shared.m_flNextSlide = gpGlobals->curtime + mp_slide_delay.GetFloat();
 
 	return true;
 }

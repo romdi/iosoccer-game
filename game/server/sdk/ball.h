@@ -40,6 +40,7 @@ enum penalty_state_t
 	PENALTY_SAVED,
 	PENALTY_ABORTED_NO_TAKER,
 	PENALTY_ABORTED_NO_KEEPER,
+	PENALTY_ABORTED_ILLEGAL_MOVE
 };
 
 #define PITCH_LIMIT						89
@@ -275,6 +276,8 @@ private:
 
 	float			m_flGlobalNextShot;
 	float			m_flShotStart;
+
+	bool			m_bPenaltyTakerStartedMoving;
 };
 
 #endif

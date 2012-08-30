@@ -25,38 +25,38 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CPlayerResource, DT_PlayerResource)
 	SendPropArray3( SENDINFO_ARRAY3(m_iPing), SendPropInt( SENDINFO_ARRAY(m_iPing), 10, SPROP_UNSIGNED ) ),
 //	SendPropArray( SendPropInt( SENDINFO_ARRAY(m_iPacketloss), 7, SPROP_UNSIGNED ), m_iPacketloss ),
 	SendPropArray3( SENDINFO_ARRAY3(m_bConnected), SendPropInt( SENDINFO_ARRAY(m_bConnected), 1, SPROP_UNSIGNED ) ),
-	SendPropArray3( SENDINFO_ARRAY3(m_iTeam), SendPropInt( SENDINFO_ARRAY(m_iTeam), 4 ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_iTeam), SendPropInt( SENDINFO_ARRAY(m_iTeam), 3 ) ),
 	
 	//ios
-	SendPropArray3( SENDINFO_ARRAY3(m_RedCards), SendPropInt( SENDINFO_ARRAY(m_RedCards), 5, SPROP_UNSIGNED ) ),
-	SendPropArray3( SENDINFO_ARRAY3(m_YellowCards), SendPropInt( SENDINFO_ARRAY(m_YellowCards), 5, SPROP_UNSIGNED ) ),
-	SendPropArray3( SENDINFO_ARRAY3(m_Fouls), SendPropInt( SENDINFO_ARRAY(m_Fouls), 5, SPROP_UNSIGNED ) ),
-	SendPropArray3( SENDINFO_ARRAY3(m_FoulsSuffered), SendPropInt( SENDINFO_ARRAY(m_FoulsSuffered), 5, SPROP_UNSIGNED ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_RedCards), SendPropInt( SENDINFO_ARRAY(m_RedCards), 4, SPROP_UNSIGNED ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_YellowCards), SendPropInt( SENDINFO_ARRAY(m_YellowCards), 4, SPROP_UNSIGNED ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_Fouls), SendPropInt( SENDINFO_ARRAY(m_Fouls), 6, SPROP_UNSIGNED ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_FoulsSuffered), SendPropInt( SENDINFO_ARRAY(m_FoulsSuffered), 6, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_GoalsConceded), SendPropInt( SENDINFO_ARRAY(m_GoalsConceded), 5, SPROP_UNSIGNED ) ),
-	SendPropArray3( SENDINFO_ARRAY3(m_Shots), SendPropInt( SENDINFO_ARRAY(m_Shots), 5, SPROP_UNSIGNED ) ),
-	SendPropArray3( SENDINFO_ARRAY3(m_ShotsOnGoal), SendPropInt( SENDINFO_ARRAY(m_ShotsOnGoal), 5, SPROP_UNSIGNED ) ),
-	SendPropArray3( SENDINFO_ARRAY3(m_PassesCompleted), SendPropInt( SENDINFO_ARRAY(m_PassesCompleted), 5, SPROP_UNSIGNED ) ),
-	SendPropArray3( SENDINFO_ARRAY3(m_Interceptions), SendPropInt( SENDINFO_ARRAY(m_Interceptions), 5, SPROP_UNSIGNED ) ),
-	SendPropArray3( SENDINFO_ARRAY3(m_Offsides), SendPropInt( SENDINFO_ARRAY(m_Offsides), 5, SPROP_UNSIGNED ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_Shots), SendPropInt( SENDINFO_ARRAY(m_Shots), 6, SPROP_UNSIGNED ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_ShotsOnGoal), SendPropInt( SENDINFO_ARRAY(m_ShotsOnGoal), 6, SPROP_UNSIGNED ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_PassesCompleted), SendPropInt( SENDINFO_ARRAY(m_PassesCompleted), 8, SPROP_UNSIGNED ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_Interceptions), SendPropInt( SENDINFO_ARRAY(m_Interceptions), 8, SPROP_UNSIGNED ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_Offsides), SendPropInt( SENDINFO_ARRAY(m_Offsides), 6, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_Goals), SendPropInt( SENDINFO_ARRAY(m_Goals), 5, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_OwnGoals), SendPropInt( SENDINFO_ARRAY(m_OwnGoals), 5, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_Assists), SendPropInt( SENDINFO_ARRAY(m_Assists), 5, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_Possession), SendPropInt( SENDINFO_ARRAY(m_Possession), 7, SPROP_UNSIGNED ) ),
-	SendPropArray3( SENDINFO_ARRAY3(m_DistanceCovered), SendPropInt( SENDINFO_ARRAY(m_DistanceCovered), -1, SPROP_UNSIGNED ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_DistanceCovered), SendPropInt( SENDINFO_ARRAY(m_DistanceCovered), 15, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_Passes), SendPropInt( SENDINFO_ARRAY(m_Passes), 8, SPROP_UNSIGNED ) ),
-	SendPropArray3( SENDINFO_ARRAY3(m_FreeKicks), SendPropInt( SENDINFO_ARRAY(m_FreeKicks), 5, SPROP_UNSIGNED ) ),
-	SendPropArray3( SENDINFO_ARRAY3(m_Penalties), SendPropInt( SENDINFO_ARRAY(m_Penalties), 5, SPROP_UNSIGNED ) ),
-	SendPropArray3( SENDINFO_ARRAY3(m_Corners), SendPropInt( SENDINFO_ARRAY(m_Corners), 5, SPROP_UNSIGNED ) ),
-	SendPropArray3( SENDINFO_ARRAY3(m_ThrowIns), SendPropInt( SENDINFO_ARRAY(m_ThrowIns), 5, SPROP_UNSIGNED ) ),
-	SendPropArray3( SENDINFO_ARRAY3(m_KeeperSaves), SendPropInt( SENDINFO_ARRAY(m_KeeperSaves), 8, SPROP_UNSIGNED ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_FreeKicks), SendPropInt( SENDINFO_ARRAY(m_FreeKicks), 6, SPROP_UNSIGNED ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_Penalties), SendPropInt( SENDINFO_ARRAY(m_Penalties), 6, SPROP_UNSIGNED ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_Corners), SendPropInt( SENDINFO_ARRAY(m_Corners), 6, SPROP_UNSIGNED ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_ThrowIns), SendPropInt( SENDINFO_ARRAY(m_ThrowIns), 6, SPROP_UNSIGNED ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_KeeperSaves), SendPropInt( SENDINFO_ARRAY(m_KeeperSaves), 6, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_GoalKicks), SendPropInt( SENDINFO_ARRAY(m_GoalKicks), 5, SPROP_UNSIGNED ) ),
-	SendPropArray3( SENDINFO_ARRAY3(m_TeamPosIndex), SendPropInt( SENDINFO_ARRAY(m_TeamPosIndex), 5 ) ),
-	SendPropArray3( SENDINFO_ARRAY3(m_TeamPosNum), SendPropInt( SENDINFO_ARRAY(m_TeamPosNum), 5 ) ),
-	SendPropArray3( SENDINFO_ARRAY3(m_NextJoin), SendPropFloat( SENDINFO_ARRAY(m_NextJoin), -1, SPROP_NOSCALE ) ),
-	SendPropArray3( SENDINFO_ARRAY3(m_TeamToJoin), SendPropInt( SENDINFO_ARRAY(m_TeamToJoin), 5 ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_TeamPosIndex), SendPropInt( SENDINFO_ARRAY(m_TeamPosIndex), 4, SPROP_UNSIGNED  ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_TeamPosNum), SendPropInt( SENDINFO_ARRAY(m_TeamPosNum), 5, SPROP_UNSIGNED  ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_NextJoin), SendPropFloat( SENDINFO_ARRAY(m_NextJoin) ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_TeamToJoin), SendPropInt( SENDINFO_ARRAY(m_TeamToJoin), 3 ) ),
 
 	SendPropArray3( SENDINFO_ARRAY3(m_szClubNames), SendPropString( SENDINFO_ARRAY(m_szClubNames), 0, SendProxy_String_tToStringPR ) ),
-	SendPropArray3( SENDINFO_ARRAY3(m_szCountryNames), SendPropString( SENDINFO_ARRAY(m_szCountryNames), 0, SendProxy_String_tToStringPR ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_CountryNames), SendPropInt( SENDINFO_ARRAY(m_CountryNames), 8, SPROP_UNSIGNED ) ),
 	//SendPropArray( SendPropString( SENDINFO_ARRAY( m_szClubName ), 0, SendProxy_String_tToString ), m_szClubName ),
 	
 END_SEND_TABLE()
@@ -123,7 +123,7 @@ void CPlayerResource::Spawn( void )
 		m_TeamToJoin.Set( i, 0 );
 
 		m_szClubNames.Set( i, MAKE_STRING("") );
-		m_szCountryNames.Set( i, MAKE_STRING("") );
+		m_CountryNames.Set( i, 0 );
 	}
 
 	SetThink( &CPlayerResource::ResourceThink );
@@ -205,14 +205,7 @@ void CPlayerResource::UpdatePlayerData( void )
 					SDKPlayer->m_bClubNameChanged = false;
 				}
 
-				m_szCountryNames.Set(i, MAKE_STRING(SDKPlayer->GetCountryName()));
-
-				// RomD: Enforce client update, since the value changes without notice
-				if (SDKPlayer->m_bCountryNameChanged)
-				{
-					m_szCountryNames.GetForModify(i);
-					SDKPlayer->m_bCountryNameChanged = false;
-				}
+				m_CountryNames.Set(i, SDKPlayer->GetCountryName());
 			}
 
 			// Don't update ping / packetloss everytime

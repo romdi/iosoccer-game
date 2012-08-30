@@ -169,13 +169,13 @@ void CPostMatchStatsMenu::Reset()
 		if (longestDistPlayer[i] != 0)
 		{
 			m_pMatchStats[LONGEST_DISTANCE_COVERED]->pPlayers[i]->SetText(g_PR->GetPlayerName(longestDistPlayer[i]));
-			m_pMatchStats[LONGEST_DISTANCE_COVERED]->pValues[i]->SetText(VarArgs("(%0.1f km)", longestDist[i] / 1000.0f));
+			m_pMatchStats[LONGEST_DISTANCE_COVERED]->pValues[i]->SetText(VarArgs("(%.1f km)", longestDist[i] / 1000.0f));
 		}
 
 		if (shortestDistPlayer[i] != 0)
 		{
 			m_pMatchStats[SHORTEST_DISTANCE_COVERED]->pPlayers[i]->SetText(g_PR->GetPlayerName(shortestDistPlayer[i]));
-			m_pMatchStats[SHORTEST_DISTANCE_COVERED]->pValues[i]->SetText(VarArgs("(%0.1f km)", shortestDist[i] / 1000.0f));
+			m_pMatchStats[SHORTEST_DISTANCE_COVERED]->pValues[i]->SetText(VarArgs("(%.1f km)", shortestDist[i] / 1000.0f));
 		}
 
 		if (highestPossessionPlayer[i] != 0)
@@ -218,15 +218,15 @@ void CPostMatchStatsMenu::FireGameEvent(IGameEvent *event)
 	if (Q_strcmp(event->GetName(), "motmvotingresult"))
 		return;
 
-	m_nPlayersChoiceMotm[0] = event->GetInt("hometeamplayerschoicemotmplayer");
-	m_nPlayersChoiceMotmPercentage[0] = event->GetInt("hometeamplayerschoicemotmpercentage");
-	m_nPlayersChoiceMotm[1] = event->GetInt("awayteamplayerschoicemotmplayer");
-	m_nPlayersChoiceMotmPercentage[1] = event->GetInt("awayteamplayerschoicemotmpercentage");
+	m_nPlayersChoiceMotm[0] = event->GetInt("playerschoice_player0");
+	m_nPlayersChoiceMotmPercentage[0] = event->GetInt("playerschoice_percentage0");
+	m_nPlayersChoiceMotm[1] = event->GetInt("playerschoice_player1");
+	m_nPlayersChoiceMotmPercentage[1] = event->GetInt("playerschoice_percentage1");
 
-	m_nExpertsChoiceMotm[0] = event->GetInt("hometeamexpertschoicemotmplayer");
-	m_nExpertsChoiceMotmPercentage[0] = event->GetInt("hometeamexpertschoicemotmpercentage");
-	m_nExpertsChoiceMotm[1] = event->GetInt("awayteamexpertschoicemotmplayer");
-	m_nExpertsChoiceMotmPercentage[1] = event->GetInt("awayteamexpertschoicemotmpercentage");
+	m_nExpertsChoiceMotm[0] = event->GetInt("expertschoice_player0");
+	m_nExpertsChoiceMotmPercentage[0] = event->GetInt("expertschoice_percentage0");
+	m_nExpertsChoiceMotm[1] = event->GetInt("expertschoice_player1");
+	m_nExpertsChoiceMotmPercentage[1] = event->GetInt("expertschoice_percentage1");
 
 	ShowPanel(true);
 }

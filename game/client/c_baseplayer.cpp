@@ -116,31 +116,31 @@ BEGIN_RECV_TABLE_NOBASE( CPlayerLocalData, DT_Local )
 	
 	RecvPropFloat(RECVINFO(m_flFOVRate)),
 	
-	RecvPropInt		(RECVINFO(m_bDucked)),
-	RecvPropInt		(RECVINFO(m_bDucking)),
-	RecvPropInt		(RECVINFO(m_bInDuckJump)),
-	RecvPropFloat	(RECVINFO(m_flDucktime)),
-	RecvPropFloat	(RECVINFO(m_flDuckJumpTime)),
+	//RecvPropInt		(RECVINFO(m_bDucked)),
+	//RecvPropInt		(RECVINFO(m_bDucking)),
+	//RecvPropInt		(RECVINFO(m_bInDuckJump)),
+	//RecvPropFloat	(RECVINFO(m_flDucktime)),
+	//RecvPropFloat	(RECVINFO(m_flDuckJumpTime)),
 	RecvPropFloat	(RECVINFO(m_flJumpTime)),
 	RecvPropFloat	(RECVINFO(m_flFallVelocity)),
 
-#if PREDICTION_ERROR_CHECK_LEVEL > 1 
-	RecvPropFloat	(RECVINFO_NAME( m_vecPunchAngle.m_Value[0], m_vecPunchAngle[0])),
-	RecvPropFloat	(RECVINFO_NAME( m_vecPunchAngle.m_Value[1], m_vecPunchAngle[1])),
-	RecvPropFloat	(RECVINFO_NAME( m_vecPunchAngle.m_Value[2], m_vecPunchAngle[2] )),
-	RecvPropFloat	(RECVINFO_NAME( m_vecPunchAngleVel.m_Value[0], m_vecPunchAngleVel[0] )),
-	RecvPropFloat	(RECVINFO_NAME( m_vecPunchAngleVel.m_Value[1], m_vecPunchAngleVel[1] )),
-	RecvPropFloat	(RECVINFO_NAME( m_vecPunchAngleVel.m_Value[2], m_vecPunchAngleVel[2] )),
-#else
-	RecvPropVector	(RECVINFO(m_vecPunchAngle)),
-	RecvPropVector	(RECVINFO(m_vecPunchAngleVel)),
-#endif
+//#if PREDICTION_ERROR_CHECK_LEVEL > 1 
+//	RecvPropFloat	(RECVINFO_NAME( m_vecPunchAngle.m_Value[0], m_vecPunchAngle[0])),
+//	RecvPropFloat	(RECVINFO_NAME( m_vecPunchAngle.m_Value[1], m_vecPunchAngle[1])),
+//	RecvPropFloat	(RECVINFO_NAME( m_vecPunchAngle.m_Value[2], m_vecPunchAngle[2] )),
+//	RecvPropFloat	(RECVINFO_NAME( m_vecPunchAngleVel.m_Value[0], m_vecPunchAngleVel[0] )),
+//	RecvPropFloat	(RECVINFO_NAME( m_vecPunchAngleVel.m_Value[1], m_vecPunchAngleVel[1] )),
+//	RecvPropFloat	(RECVINFO_NAME( m_vecPunchAngleVel.m_Value[2], m_vecPunchAngleVel[2] )),
+//#else
+//	RecvPropVector	(RECVINFO(m_vecPunchAngle)),
+//	RecvPropVector	(RECVINFO(m_vecPunchAngleVel)),
+//#endif
 
-	RecvPropInt		(RECVINFO(m_bDrawViewmodel)),
-	RecvPropInt		(RECVINFO(m_bWearingSuit)),
-	RecvPropBool	(RECVINFO(m_bPoisoned)),
-	RecvPropFloat	(RECVINFO(m_flStepSize)),
-	RecvPropInt		(RECVINFO(m_bAllowAutoMovement)),
+	//RecvPropInt		(RECVINFO(m_bDrawViewmodel)),
+	//RecvPropInt		(RECVINFO(m_bWearingSuit)),
+	//RecvPropBool	(RECVINFO(m_bPoisoned)),
+	//RecvPropFloat	(RECVINFO(m_flStepSize)),
+	//RecvPropInt		(RECVINFO(m_bAllowAutoMovement)),
 
 	// 3d skybox data
 	RecvPropInt(RECVINFO(m_skybox3d.scale)),
@@ -195,14 +195,14 @@ END_RECV_TABLE()
 		RecvPropFloat		( RECVINFO(m_vecViewOffset[2]) ),
 		RecvPropFloat		( RECVINFO(m_flFriction) ),
 
-		RecvPropArray3		( RECVINFO_ARRAY(m_iAmmo), RecvPropInt( RECVINFO(m_iAmmo[0])) ),
+		//RecvPropArray3		( RECVINFO_ARRAY(m_iAmmo), RecvPropInt( RECVINFO(m_iAmmo[0])) ),
 		
 		RecvPropInt			( RECVINFO(m_fOnTarget) ),
 
 		RecvPropInt			( RECVINFO( m_nTickBase ) ),
 		RecvPropInt			( RECVINFO( m_nNextThinkTick ) ),
 
-		RecvPropEHandle		( RECVINFO( m_hLastWeapon ) ),
+		//RecvPropEHandle		( RECVINFO( m_hLastWeapon ) ),
 		RecvPropEHandle		( RECVINFO( m_hGroundEntity ) ),
 
  		RecvPropFloat		( RECVINFO(m_vecVelocity[0]), 0, RecvProxy_LocalVelocityX ),
@@ -219,7 +219,7 @@ END_RECV_TABLE()
 
 		RecvPropFloat		( RECVINFO( m_flDeathTime )),
 
-		RecvPropInt			( RECVINFO( m_nWaterLevel ) ),
+		//RecvPropInt			( RECVINFO( m_nWaterLevel ) ),
 		RecvPropFloat		( RECVINFO( m_flLaggedMovementValue )),
 
 	END_RECV_TABLE()
@@ -239,16 +239,16 @@ END_RECV_TABLE()
 		RecvPropInt		(RECVINFO(m_iFOVStart)),
 		RecvPropFloat	(RECVINFO(m_flFOVTime)),
 		RecvPropInt		(RECVINFO(m_iDefaultFOV)),
-		RecvPropEHandle (RECVINFO(m_hZoomOwner)),
+		//RecvPropEHandle (RECVINFO(m_hZoomOwner)),
 
-		RecvPropEHandle( RECVINFO(m_hVehicle) ),
+		//RecvPropEHandle( RECVINFO(m_hVehicle) ),
 		RecvPropEHandle( RECVINFO(m_hUseEntity) ),
 
-		RecvPropInt		(RECVINFO(m_iHealth)),
+		//RecvPropInt		(RECVINFO(m_iHealth)),
 		RecvPropInt		(RECVINFO(m_lifeState)),
 
-		RecvPropInt		(RECVINFO(m_iBonusProgress)),
-		RecvPropInt		(RECVINFO(m_iBonusChallenge)),
+		//RecvPropInt		(RECVINFO(m_iBonusProgress)),
+		//RecvPropInt		(RECVINFO(m_iBonusChallenge)),
 
 		RecvPropFloat	(RECVINFO(m_flMaxspeed)),
 		RecvPropInt		(RECVINFO(m_fFlags)),
@@ -283,28 +283,28 @@ BEGIN_PREDICTION_DATA_NO_BASE( CPlayerLocalData )
 	DEFINE_FIELD( m_nStepside, FIELD_INTEGER ),
 
 	DEFINE_PRED_FIELD( m_iHideHUD, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
-#if PREDICTION_ERROR_CHECK_LEVEL > 1
-	DEFINE_PRED_FIELD( m_vecPunchAngle, FIELD_VECTOR, FTYPEDESC_INSENDTABLE ),
-	DEFINE_PRED_FIELD( m_vecPunchAngleVel, FIELD_VECTOR, FTYPEDESC_INSENDTABLE ),
-#else
-	DEFINE_PRED_FIELD_TOL( m_vecPunchAngle, FIELD_VECTOR, FTYPEDESC_INSENDTABLE, 0.125f ),
-	DEFINE_PRED_FIELD_TOL( m_vecPunchAngleVel, FIELD_VECTOR, FTYPEDESC_INSENDTABLE, 0.125f ),
-#endif
-	DEFINE_PRED_FIELD( m_bDrawViewmodel, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
-	DEFINE_PRED_FIELD( m_bWearingSuit, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
-	DEFINE_PRED_FIELD( m_bPoisoned, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
-	DEFINE_PRED_FIELD( m_bAllowAutoMovement, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
+//#if PREDICTION_ERROR_CHECK_LEVEL > 1
+//	DEFINE_PRED_FIELD( m_vecPunchAngle, FIELD_VECTOR, FTYPEDESC_INSENDTABLE ),
+//	DEFINE_PRED_FIELD( m_vecPunchAngleVel, FIELD_VECTOR, FTYPEDESC_INSENDTABLE ),
+//#else
+//	DEFINE_PRED_FIELD_TOL( m_vecPunchAngle, FIELD_VECTOR, FTYPEDESC_INSENDTABLE, 0.125f ),
+//	DEFINE_PRED_FIELD_TOL( m_vecPunchAngleVel, FIELD_VECTOR, FTYPEDESC_INSENDTABLE, 0.125f ),
+//#endif
+//	DEFINE_PRED_FIELD( m_bDrawViewmodel, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
+	//DEFINE_PRED_FIELD( m_bWearingSuit, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
+	//DEFINE_PRED_FIELD( m_bPoisoned, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
+	//DEFINE_PRED_FIELD( m_bAllowAutoMovement, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 
-	DEFINE_PRED_FIELD( m_bDucked, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
-	DEFINE_PRED_FIELD( m_bDucking, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
-	DEFINE_PRED_FIELD( m_bInDuckJump, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
-	DEFINE_PRED_FIELD( m_flDucktime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
-	DEFINE_PRED_FIELD( m_flDuckJumpTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
+	//DEFINE_PRED_FIELD( m_bDucked, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
+	//DEFINE_PRED_FIELD( m_bDucking, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
+	//DEFINE_PRED_FIELD( m_bInDuckJump, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
+	//DEFINE_PRED_FIELD( m_flDucktime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
+	//DEFINE_PRED_FIELD( m_flDuckJumpTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flJumpTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD_TOL( m_flFallVelocity, FIELD_FLOAT, FTYPEDESC_INSENDTABLE, 0.5f ),
 //	DEFINE_PRED_FIELD( m_nOldButtons, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
 	DEFINE_FIELD( m_nOldButtons, FIELD_INTEGER ),
-	DEFINE_PRED_FIELD( m_flStepSize, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
+	//DEFINE_PRED_FIELD( m_flStepSize, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 	DEFINE_FIELD( m_flFOVRate, FIELD_FLOAT ),
 
 END_PREDICTION_DATA()	
@@ -315,28 +315,28 @@ BEGIN_PREDICTION_DATA( C_BasePlayer )
 	DEFINE_PRED_TYPEDESCRIPTION( pl, CPlayerState ),
 
 	DEFINE_PRED_FIELD( m_iFOV, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
-	DEFINE_PRED_FIELD( m_hZoomOwner, FIELD_EHANDLE, FTYPEDESC_INSENDTABLE ),
+	//DEFINE_PRED_FIELD( m_hZoomOwner, FIELD_EHANDLE, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flFOVTime, FIELD_FLOAT, 0 ),
 	DEFINE_PRED_FIELD( m_iFOVStart, FIELD_INTEGER, 0 ),
 
-	DEFINE_PRED_FIELD( m_hVehicle, FIELD_EHANDLE, FTYPEDESC_INSENDTABLE ),
+	//DEFINE_PRED_FIELD( m_hVehicle, FIELD_EHANDLE, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD_TOL( m_flMaxspeed, FIELD_FLOAT, FTYPEDESC_INSENDTABLE, 0.5f ),
-	DEFINE_PRED_FIELD( m_iHealth, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
-	DEFINE_PRED_FIELD( m_iBonusProgress, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
-	DEFINE_PRED_FIELD( m_iBonusChallenge, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
+	//DEFINE_PRED_FIELD( m_iHealth, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
+	//DEFINE_PRED_FIELD( m_iBonusProgress, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
+	//DEFINE_PRED_FIELD( m_iBonusChallenge, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_fOnTarget, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_nNextThinkTick, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_lifeState, FIELD_CHARACTER, FTYPEDESC_INSENDTABLE ),
-	DEFINE_PRED_FIELD( m_nWaterLevel, FIELD_CHARACTER, FTYPEDESC_INSENDTABLE ),
+	//DEFINE_PRED_FIELD( m_nWaterLevel, FIELD_CHARACTER, FTYPEDESC_INSENDTABLE ),
 	
 	DEFINE_PRED_FIELD_TOL( m_vecBaseVelocity, FIELD_VECTOR, FTYPEDESC_INSENDTABLE, 0.05 ),
 
 	DEFINE_FIELD( m_nButtons, FIELD_INTEGER ),
-	DEFINE_FIELD( m_flWaterJumpTime, FIELD_FLOAT ),
+	//DEFINE_FIELD( m_flWaterJumpTime, FIELD_FLOAT ),
 	DEFINE_FIELD( m_nImpulse, FIELD_INTEGER ),
 	DEFINE_FIELD( m_flStepSoundTime, FIELD_FLOAT ),
-	DEFINE_FIELD( m_flSwimSoundTime, FIELD_FLOAT ),
-	DEFINE_FIELD( m_vecLadderNormal, FIELD_VECTOR ),
+	//DEFINE_FIELD( m_flSwimSoundTime, FIELD_FLOAT ),
+	//DEFINE_FIELD( m_vecLadderNormal, FIELD_VECTOR ),
 	DEFINE_FIELD( m_flPhysics, FIELD_INTEGER ),
 	DEFINE_AUTO_ARRAY( m_szAnimExtension, FIELD_CHARACTER ),
 	DEFINE_FIELD( m_afButtonLast, FIELD_INTEGER ),
@@ -350,13 +350,13 @@ BEGIN_PREDICTION_DATA( C_BasePlayer )
 	// DEFINE_FIELD( m_pModelLight, dlight_t* ),
 	// DEFINE_FIELD( m_pEnvironmentLight, dlight_t* ),
 	// DEFINE_FIELD( m_pBrightLight, dlight_t* ),
-	DEFINE_PRED_FIELD( m_hLastWeapon, FIELD_EHANDLE, FTYPEDESC_INSENDTABLE ),
+	//DEFINE_PRED_FIELD( m_hLastWeapon, FIELD_EHANDLE, FTYPEDESC_INSENDTABLE ),
 
 	DEFINE_PRED_FIELD( m_nTickBase, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
 
 	DEFINE_PRED_FIELD( m_hGroundEntity, FIELD_EHANDLE, FTYPEDESC_INSENDTABLE ),
 
-	DEFINE_PRED_ARRAY( m_hViewModel, FIELD_EHANDLE, MAX_VIEWMODELS, FTYPEDESC_INSENDTABLE ),
+	//DEFINE_PRED_ARRAY( m_hViewModel, FIELD_EHANDLE, MAX_VIEWMODELS, FTYPEDESC_INSENDTABLE ),
 
 	DEFINE_FIELD( m_surfaceFriction, FIELD_FLOAT ),
 
@@ -433,9 +433,6 @@ void C_BasePlayer::Spawn( void )
 	SetEffects( effects );
 
 	m_iFOV	= 0;	// init field of view.
-
-	m_flNextJump = gpGlobals->curtime; //ios
-	m_flNextSlide = gpGlobals->curtime; //ios
 
 	//SetModel(SDK_PLAYER_MODEL);
 

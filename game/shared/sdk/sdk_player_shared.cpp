@@ -39,7 +39,7 @@
 	#include "team.h"
 #endif
 
-const char *g_szRequiredClientVersion = "28.08.12/1h";
+const char *g_szRequiredClientVersion = "28.08.12/6h";
 
 ConVar sv_showimpacts("sv_showimpacts", "0", FCVAR_REPLICATED, "Shows client (red) and server (blue) bullet impact point" );
 
@@ -189,6 +189,28 @@ void CSDKPlayerShared::SetJumping( bool bJumping )
 void CSDKPlayerShared::SetStamina( float flStamina )
 {
 	m_flStamina = clamp( flStamina, 0, 100 );
+}
+
+void CSDKPlayerShared::SetAnimEvent(PlayerAnimEvent_t animEvent)
+{
+	m_ePlayerAnimEvent = animEvent;
+	m_flPlayerAnimEventStart = gpGlobals->curtime;
+}
+
+void CSDKPlayerShared::ResetAnimEvent()
+{
+	m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
+	m_pOuter->RemoveFlag(FL_FREECAM);
+}
+
+PlayerAnimEvent_t CSDKPlayerShared::GetAnimEvent()
+{
+	return m_ePlayerAnimEvent;
+}
+
+float CSDKPlayerShared::GetAnimEventStart()
+{
+	return m_flPlayerAnimEventStart;
 }
 
 void CSDKPlayerShared::ComputeWorldSpaceSurroundingBox( Vector *pVecWorldMins, Vector *pVecWorldMaxs )
@@ -408,25 +430,7 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 		}
 	}
 
-	if (SDKGameRules()->IsIntermissionState())
-	{
-		//if (mp_shield_block_opponent_half.GetBool() && SDKGameRules()->m_nShieldType != SHIELD_KICKOFF)
-		//{
-		//	int forward;
-		//	#ifdef CLIENT_DLL
-		//		forward = GetPlayersTeam(this)->m_nForward;
-		//	#else
-		//		forward = GetTeam()->m_nForward;
-		//	#endif
-		//	float yBorder = SDKGameRules()->m_vKickOff.GetY() - abs(border) * forward;
-		//	if (Sign(newPos.y - yBorder) == forward)
-		//	{
-		//		newPos.y = yBorder;
-		//		stopPlayer = true;
-		//	}
-		//}
-	}
-	else
+	if (!SDKGameRules()->IsIntermissionState() && mp_field_border_enabled.GetBool())
 	{
 		float border = mp_field_border.GetInt();
 		Vector min = SDKGameRules()->m_vFieldMin - border;
@@ -502,36 +506,40 @@ void CSDKPlayer::FindSafePos(Vector &startPos)
 
 void CSDKPlayer::CheckShotCharging()
 {
-	if ((m_nButtons & IN_ATTACK) != 0 && m_bDoChargedShot)
+	if ((m_nButtons & IN_ATTACK))
 	{
-		m_bDoChargedShot = false;
+		if (m_Shared.m_bDoChargedShot)
+			m_Shared.m_bDoChargedShot = false;
+
+		if (m_Shared.m_bIsShotCharging)
+			m_Shared.m_bIsShotCharging = false;
 	}
-	else if ((m_nButtons & IN_ATTACK2) != 0 && !m_bIsShotCharging)
+	else if ((m_nButtons & IN_ATTACK2) && !m_Shared.m_bIsShotCharging)
 	{
-		m_bDoChargedShot = false;
-		m_bIsShotCharging = true;
-		m_flShotChargingStart = gpGlobals->curtime;
+		m_Shared.m_bDoChargedShot = false;
+		m_Shared.m_bIsShotCharging = true;
+		m_Shared.m_flShotChargingStart = gpGlobals->curtime;
 	}
-	else if (m_bIsShotCharging)
+	else if (m_Shared.m_bIsShotCharging)
 	{
-		if ((m_nButtons & IN_ATTACK2) != 0)
+		if ((m_nButtons & IN_ATTACK2))
 		{
 			//m_flShotChargingDuration = gpGlobals->curtime - m_flShotChargingStart;
 			//float fraction = m_flShotChargingDuration / mp_chargedshot_increaseduration.GetFloat();
 		}
 		else
 		{
-			m_bIsShotCharging = false;
-			m_flShotChargingDuration = gpGlobals->curtime - m_flShotChargingStart;
-			m_bDoChargedShot = true;
+			m_Shared.m_bIsShotCharging = false;
+			m_Shared.m_flShotChargingDuration = gpGlobals->curtime - m_Shared.m_flShotChargingStart;
+			m_Shared.m_bDoChargedShot = true;
 		}
 	}
 }
 
 void CSDKPlayer::ResetShotCharging()
 {
-	m_bDoChargedShot = false;
-	m_bIsShotCharging = false;
+	m_Shared.m_bDoChargedShot = false;
+	m_Shared.m_bIsShotCharging = false;
 	#ifdef CLIENT_DLL
 	if (this == C_SDKPlayer::GetLocalSDKPlayer() && mp_reset_spin_toggles_on_shot.GetBool())
 	{
@@ -539,4 +547,94 @@ void CSDKPlayer::ResetShotCharging()
 		engine->ClientCmd("-backspin");
 	}
 	#endif	
+}
+
+void CSDKPlayerShared::DoAnimationEvent(PlayerAnimEvent_t event)
+{
+	switch(event)
+	{
+	case PLAYERANIMEVENT_BLANK:
+		{
+			m_pOuter->ResetShotCharging();
+			return; // This is a dummy event, so don't do anything and return early
+		}
+	case PLAYERANIMEVENT_NONE:
+		{
+			m_pOuter->ResetShotCharging();
+			break;
+		}
+	case PLAYERANIMEVENT_CANCEL:
+		{
+			m_pOuter->ResetShotCharging();
+			m_pOuter->RemoveFlag(FL_FREECAM | FL_KEEPER_SIDEWAYS_DIVING | FL_SLIDING);
+			//m_pOuter->m_PlayerAnimState->ClearAnimationState();
+			break;
+		}
+	case PLAYERANIMEVENT_KICK:
+	case PLAYERANIMEVENT_PASS:
+	case PLAYERANIMEVENT_PASS_STATIONARY:
+	case PLAYERANIMEVENT_VOLLEY:
+	case PLAYERANIMEVENT_HEELKICK:
+	case PLAYERANIMEVENT_HEADER:
+	case PLAYERANIMEVENT_HEADER_STATIONARY:
+	case PLAYERANIMEVENT_THROWIN:
+	case PLAYERANIMEVENT_THROW:
+	case PLAYERANIMEVENT_DIVINGHEADER:
+	case PLAYERANIMEVENT_KEEPER_HANDS_THROW:
+	case PLAYERANIMEVENT_KEEPER_HANDS_KICK:
+	case PLAYERANIMEVENT_KEEPER_HANDS_PUNCH:
+		{
+			m_pOuter->ResetShotCharging();
+		}
+	case PLAYERANIMEVENT_SLIDE:
+	case PLAYERANIMEVENT_TACKLED_FORWARD:
+	case PLAYERANIMEVENT_TACKLED_BACKWARD:
+	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT:
+	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT:
+	case PLAYERANIMEVENT_KEEPER_DIVE_FORWARD:
+	case PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD:
+		{
+		/*	m_flPrimaryActionSequenceCycle = 0;
+			m_iPrimaryActionSequence = CalcPrimaryActionSequence( event );
+			m_bIsPrimaryActionSequenceActive = m_iPrimaryActionSequence != -1;*/
+			break;
+		}
+	case PLAYERANIMEVENT_JUMP:
+	case PLAYERANIMEVENT_KEEPER_JUMP:
+		{
+			//// Play the jump animation.
+			//if (!m_bJumping)
+			//{
+			//	m_bJumping = true;
+			//	m_bFirstJumpFrame = true;
+			//	m_flJumpStartTime = gpGlobals->curtime;
+			//}
+			break;
+		}
+	case PLAYERANIMEVENT_CARRY:
+		{
+			//m_iSecondaryActionSequence = CalcSecondaryActionSequence();			//add keeper carry as layer
+			//if ( m_iSecondaryActionSequence != -1 )
+			//{
+			//	m_bIsSecondaryActionSequenceActive = true;
+			//	m_flSecondaryActionSequenceCycle = 0;
+			//	m_bCarryHold = true;
+			//}
+			break;
+		}
+	case PLAYERANIMEVENT_CARRY_END:
+		{
+			//GetSDKPlayer()->RemoveFlag(FL_FREECAM);
+			//m_iSecondaryActionSequence = CalcSecondaryActionSequence();
+			//if ( m_iSecondaryActionSequence != -1 )
+			//{
+			//	m_bIsSecondaryActionSequenceActive = true;
+			//	m_flSecondaryActionSequenceCycle = 1.1f;
+			//	m_bCarryHold = false;
+			//}
+			break;
+		}
+	}
+
+	m_pOuter->m_Shared.SetAnimEvent(event);
 }

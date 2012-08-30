@@ -867,6 +867,24 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 
 	C_BaseAnimating::InitBoneSetupThreadPool();
 
+	int countryIndex = 0;
+
+	if (steamapicontext->SteamUtils())
+	{
+		const char *ipCountry = steamapicontext->SteamUtils()->GetIPCountry();
+
+		for (int i = 0; i < COUNTRY_NAMES_COUNT; i++)
+		{
+			if (!Q_strcmp(g_szCountryISOCodes[i], ipCountry))
+			{
+				countryIndex = i;
+				break;
+			}
+		}
+	}
+
+	engine->ClientCmd(VarArgs("ipcountryname %d", countryIndex)); 
+
 	return true;
 }
 

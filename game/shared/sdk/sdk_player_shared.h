@@ -59,23 +59,40 @@ public:
 	void	StartSprinting( void );
 	void	StopSprinting( void );
 
+	void	SetAnimEvent(PlayerAnimEvent_t animEvent);
+	void	ResetAnimEvent();
+	PlayerAnimEvent_t GetAnimEvent();
+	float	GetAnimEventStart();
+
 	void ResetSprintPenalty( void );
 
 	void ComputeWorldSpaceSurroundingBox( Vector *pVecWorldMins, Vector *pVecWorldMaxs );
 	
-	bool m_bJumping;
-
 	float m_flLastViewAnimationTime;
+
+	void DoAnimationEvent(PlayerAnimEvent_t event);
 
 	//Tony; player speeds; at spawn server and client update both of these based on class (if any)
 	//float m_flWalkSpeed;
 	//float m_flRunSpeed;
 	//float m_flSprintSpeed;
-	CNetworkVar(PlayerAnimEvent_t, m_ePlayerAnimEvent);
-	CNetworkVar(float, m_flPlayerAnimEventStart);
 
+
+	CNetworkVar(bool, m_bIsShotCharging);
+	CNetworkVar(bool, m_bDoChargedShot);
+	CNetworkVar(float, m_flShotChargingStart);
+	CNetworkVar(float, m_flShotChargingDuration);
+
+	CNetworkVar(bool, m_bJumping);
+	CNetworkVar(bool, m_bFirstJumpFrame);
+	CNetworkVar(float, m_flJumpStartTime);
+
+	CNetworkVar(float, m_flNextJump);
+	CNetworkVar(float, m_flNextSlide);
 private:
 
+	CNetworkVar(PlayerAnimEvent_t, m_ePlayerAnimEvent);
+	CNetworkVar(float, m_flPlayerAnimEventStart);
 	CNetworkVar( bool, m_bIsSprinting );
 	bool m_bGaveSprintPenalty;
 	CNetworkVar( float, m_flStamina );

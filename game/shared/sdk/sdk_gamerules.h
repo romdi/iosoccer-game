@@ -61,6 +61,7 @@ extern ConVar
 	mp_shield_liberal_teammates_positioning,
 	mp_shield_block_opponent_half,
 	mp_field_border,
+	mp_field_border_enabled,
 	mp_offside,
 	mp_joindelay,
 	mp_maxplayers,

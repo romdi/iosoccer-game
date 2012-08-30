@@ -337,8 +337,8 @@ public:
 	char				*GetClubName() { return m_szClubName; }
 	void				SetClubName(const char *name) { Q_strncpy(m_szClubName, name, sizeof(m_szClubName)); m_bClubNameChanged = true; } 
 
-	char				*GetCountryName() { return m_szCountryName; }
-	void				SetCountryName(const char *name) { Q_strncpy(m_szCountryName, name, sizeof(m_szCountryName)); m_bCountryNameChanged = true; } 
+	int					GetCountryName() { return m_nCountryName; }
+	void				SetCountryName(int name) { m_nCountryName = name; } 
 
 	bool				IsShotButtonRight() { return m_bIsShotButtonRight; }
 	void				SetShotButtonRight(bool isRight) { m_bIsShotButtonRight = isRight; }
@@ -367,8 +367,7 @@ public:
 	char				m_szClubName[MAX_CLUBNAME_LENGTH];
 	bool				m_bClubNameChanged;
 
-	char				m_szCountryName[MAX_COUNTRYNAME_LENGTH];
-	bool				m_bCountryNameChanged;
+	int					m_nCountryName;
 
 	bool				m_bIsShotButtonRight;
 
@@ -403,11 +402,6 @@ public:
 	static bool			IsOnField(CSDKPlayer *pPl);
 
 	void				ResetStats();
-
-	bool				m_bIsShotCharging;
-	float				m_bDoChargedShot;
-	float				m_flShotChargingStart;
-	float				m_flShotChargingDuration;
 
 	void				CheckShotCharging();
 	void				ResetShotCharging();

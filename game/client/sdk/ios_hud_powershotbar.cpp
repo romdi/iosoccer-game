@@ -278,14 +278,14 @@ void CHudPowershotBar::Paint()
 
 	float shotStrength;
 
-	if (pPlayer->m_bDoChargedShot || pPlayer->m_bIsShotCharging)
+	if (pPlayer->m_Shared.m_bDoChargedShot || pPlayer->m_Shared.m_bIsShotCharging)
 	{
 		float currentTime = pPlayer->GetFinalPredictedTime();
 		currentTime -= TICK_INTERVAL;
 		currentTime += (gpGlobals->interpolation_amount * TICK_INTERVAL);
 
-		float duration = (pPlayer->m_bIsShotCharging ? currentTime - pPlayer->m_flShotChargingStart : pPlayer->m_flShotChargingDuration);
-		float totalTime = currentTime - pPlayer->m_flShotChargingStart;
+		float duration = (pPlayer->m_Shared.m_bIsShotCharging ? currentTime - pPlayer->m_Shared.m_flShotChargingStart : pPlayer->m_Shared.m_flShotChargingDuration);
+		float totalTime = currentTime - pPlayer->m_Shared.m_flShotChargingStart;
 		float activeTime = min(duration, mp_chargedshot_increaseduration.GetFloat());
 		float extra = totalTime - activeTime;
 		shotStrength = max(0, activeTime / mp_chargedshot_increaseduration.GetFloat() - min(extra, mp_chargedshot_decreaseduration.GetFloat()) / mp_chargedshot_decreaseduration.GetFloat());

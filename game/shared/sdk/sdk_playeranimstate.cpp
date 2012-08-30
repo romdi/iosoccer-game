@@ -296,7 +296,7 @@ void CSDKPlayerAnimState::UpdateLayerSequenceGeneric( CStudioHdr *pStudioHdr, in
 		}
 		else
 		{
-			GetSDKPlayer()->RemoveFlag(FL_FREECAM);
+			//GetSDKPlayer()->RemoveFlag(FL_FREECAM);
 
 			bool canResetHull = true;
 
@@ -319,8 +319,8 @@ void CSDKPlayerAnimState::UpdateLayerSequenceGeneric( CStudioHdr *pStudioHdr, in
 				iSequence = 0;
 				if (iLayer == PRIMARYACTIONSEQUENCE_LAYER)
 				{
-					GetSDKPlayer()->m_Shared.m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
-					GetSDKPlayer()->RemoveFlag(FL_SLIDING | FL_KEEPER_SIDEWAYS_DIVING);
+					//GetSDKPlayer()->m_Shared.m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
+					//GetSDKPlayer()->RemoveFlag(FL_SLIDING | FL_KEEPER_SIDEWAYS_DIVING);
 				}
 				return;
 			}
@@ -428,6 +428,7 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 		}
 	case PLAYERANIMEVENT_CARRY_END:
 		{
+			GetSDKPlayer()->RemoveFlag(FL_FREECAM);
 			m_iSecondaryActionSequence = CalcSecondaryActionSequence();
 			if ( m_iSecondaryActionSequence != -1 )
 			{
@@ -439,28 +440,27 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 		}
 	}
 
-	if (event != PLAYERANIMEVENT_CARRY && event != PLAYERANIMEVENT_CARRY_END)
+	//if (event != PLAYERANIMEVENT_CARRY && event != PLAYERANIMEVENT_CARRY_END)
 	{
-		GetSDKPlayer()->m_Shared.m_ePlayerAnimEvent = event;
-		GetSDKPlayer()->m_Shared.m_flPlayerAnimEventStart = gpGlobals->curtime;
+		//GetSDKPlayer()->m_Shared.SetAnimEvent(event);
 	}
 
-	GetSDKPlayer()->RemoveFlag(FL_KEEPER_SIDEWAYS_DIVING | FL_SLIDING);
+	//GetSDKPlayer()->RemoveFlag(FL_KEEPER_SIDEWAYS_DIVING | FL_SLIDING);
 
-	switch(event)
-	{
-	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT:
-	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT:
-		//TODO: Uncomment once the getting stuck problem is fixed
-		//GetSDKPlayer()->AddFlag(FL_KEEPER_SIDEWAYS_DIVING);
-		break;
-	case PLAYERANIMEVENT_KEEPER_DIVE_FORWARD:
-	case PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD:
-	case PLAYERANIMEVENT_SLIDE:
-		//TODO: Uncomment once the getting stuck problem is fixed
-		//GetSDKPlayer()->AddFlag(FL_SLIDING);
-		break;
-	}
+	//switch(event)
+	//{
+	//case PLAYERANIMEVENT_KEEPER_DIVE_LEFT:
+	//case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT:
+	//	//TODO: Uncomment once the getting stuck problem is fixed
+	//	//GetSDKPlayer()->AddFlag(FL_KEEPER_SIDEWAYS_DIVING);
+	//	break;
+	//case PLAYERANIMEVENT_KEEPER_DIVE_FORWARD:
+	//case PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD:
+	//case PLAYERANIMEVENT_SLIDE:
+	//	//TODO: Uncomment once the getting stuck problem is fixed
+	//	//GetSDKPlayer()->AddFlag(FL_SLIDING);
+	//	break;
+	//}
 }
 
 bool CSDKPlayerAnimState::HandleJumping( Activity &idealActivity )
@@ -480,7 +480,7 @@ bool CSDKPlayerAnimState::HandleJumping( Activity &idealActivity )
 			if ( GetBasePlayer()->GetFlags() & FL_ONGROUND )
 			{
 				m_bJumping = false;
-				GetSDKPlayer()->m_Shared.m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
+				//GetSDKPlayer()->m_Shared.m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
 				RestartMainSequence();	// Reset the animation.
 			}
 		}
@@ -506,12 +506,15 @@ Activity CSDKPlayerAnimState::CalcMainActivity()
 
 	Activity idealActivity = ACT_IDLE;
 
+	if (pPlayer->m_Shared.m_bIsShotCharging)
+		return ACT_IOS_RUNCELEB;
+
 	if ( HandleJumping(idealActivity) )
 	{
 		if (pPlayer->GetFlags() & FL_CELEB)
 			return ACT_IOS_JUMPCELEB;							//cartwheel celeb
 		//else if (pPlayer->m_nBody > 0)
-		else if (pPlayer->m_Shared.m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_JUMP)
+		else if (pPlayer->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_JUMP)
 			return ACT_IDLE;//FIXME: Buggy jump animation: ACT_LEAP;									//keepers jump
 		else
 			return ACT_IDLE;//FIXME: Buggy jump animation: ACT_HOP;										//normal jump

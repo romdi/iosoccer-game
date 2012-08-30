@@ -49,8 +49,9 @@ public : // IGameResources intreface
 	virtual bool	IsHLTV(int index);
 
 	virtual const char *GetPlayerName( int index );
+	virtual const char *GetSteamName( int index );
 	virtual const char *GetClubName( int index );
-	virtual const char *GetCountryName( int index );
+	virtual int		GetCountryName( int index );
 	virtual int		GetPing( int index );
 //	virtual int		GetPacketloss( int index );
 	virtual int		GetTeam( int index );
@@ -94,7 +95,7 @@ protected:
 	// Stored in individual arrays so they can be sent down via datatables
 	string_t	m_szName[MAX_PLAYERS+1];
 	char	m_szClubNames[MAX_PLAYERS+1][MAX_CLUBNAME_LENGTH];
-	char	m_szCountryNames[MAX_PLAYERS+1][MAX_COUNTRYNAME_LENGTH];
+	int		m_CountryNames[MAX_PLAYERS+1];
 	int		m_iPing[MAX_PLAYERS+1];
 	bool	m_bConnected[MAX_PLAYERS+1];
 	int		m_iTeam[MAX_PLAYERS+1];

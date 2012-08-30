@@ -992,8 +992,6 @@ private:
 	float					m_flSwimSoundTime;
 	Vector					m_vecLadderNormal;
 
-	float					m_flNextJump;
-
 	float					m_flFlashTime;
 	int						m_nDrownDmgRate;		// Drowning damage in points per second without air.
 
@@ -1009,7 +1007,6 @@ public:
 	float					m_flSideMove;
 	int						m_nNumCrateHudHints;
 
-	float					m_flNextSlide;
 private:
 
 	// Used in test code to teleport the player to random locations in the map.

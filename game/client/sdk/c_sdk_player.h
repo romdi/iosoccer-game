@@ -31,6 +31,7 @@ public:
 	static C_SDKPlayer* GetLocalSDKPlayer();
 
 	virtual const QAngle& GetRenderAngles();
+	virtual void Spawn();
 	virtual void UpdateClientSideAnimation();
 	virtual void PostDataUpdate( DataUpdateType_t updateType );
 	virtual void OnDataChanged( DataUpdateType_t updateType );
@@ -58,11 +59,6 @@ public:
 
 	void				CheckShotCharging();
 	void				ResetShotCharging();
-
-	bool				m_bIsShotCharging;
-	float				m_bDoChargedShot;
-	float				m_flShotChargingStart;
-	float				m_flShotChargingDuration;
 	
 	void DoAnimationEvent(PlayerAnimEvent_t event);
 	virtual bool ShouldDraw();

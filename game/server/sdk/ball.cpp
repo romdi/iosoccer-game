@@ -94,7 +94,8 @@ ConVar sv_ball_penaltyshot_maxstrength("sv_ball_penaltyshot_maxstrength", "900",
 
 ConVar sv_ball_groundshot_minangle("sv_ball_groundshot_minangle", "-10", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
 ConVar sv_ball_volleyshot_minangle("sv_ball_volleyshot_minangle", "0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
-ConVar sv_ball_throwin_minangle("sv_ball_volleyshot_minangle", "-5", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
+ConVar sv_ball_throwin_minangle("sv_ball_throwin_minangle", "-5", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
+ConVar sv_ball_throwin_minstrength("sv_ball_throwin_minstrength", "100", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
 ConVar sv_ball_autopass_minstrength("sv_ball_autopass_minstrength", "300", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
 ConVar sv_ball_autopass_maxstrength("sv_ball_autopass_maxstrength", "1600", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
 ConVar sv_ball_autopass_coeff("sv_ball_autopass_coeff", "1", FCVAR_NOTIFY);
@@ -710,7 +711,7 @@ void CBall::State_Think()
 	{
 		if (CSDKPlayer::IsOnField(m_pPl))
 		{
-			m_pPl->ChangeTeam(TEAM_SPECTATOR);
+			m_pPl->ChangeTeamPos(TEAM_SPECTATOR, 0, true);
 		}
 	}
 
@@ -959,17 +960,20 @@ void CBall::State_THROWIN_Think()
 
 		Vector dir;
 		AngleVectors(ang, &dir);
-		Vector vel;
+		float strength;
 
 		if (m_pPl->IsNormalshooting())
-			vel = dir * GetNormalshotStrength(GetPitchCoeff(), sv_ball_normalthrow_strength.GetInt());
+			strength = GetNormalshotStrength(GetPitchCoeff(), sv_ball_normalthrow_strength.GetInt());
 		else if (m_pPl->IsPowershooting())
-			vel = dir * GetPowershotStrength(GetPitchCoeff(), sv_ball_powershot_strength.GetInt());
+			strength = GetPowershotStrength(GetPitchCoeff(), sv_ball_powerthrow_strength.GetInt());
 		else
-			vel = dir * GetChargedshotStrength(GetPitchCoeff(), sv_ball_chargedthrow_minstrength.GetInt(), sv_ball_chargedthrow_maxstrength.GetInt());
+			strength = GetChargedshotStrength(GetPitchCoeff(), sv_ball_chargedthrow_minstrength.GetInt(), sv_ball_chargedthrow_maxstrength.GetInt());
 
+		Vector vel = dir * max(strength, sv_ball_throwin_minstrength.GetInt());
+
+		m_pPl->m_ThrowIns += 1;
 		RemoveAllTouches();
-		SetVel(vel, 0, BODY_PART_HANDS, false, false, true);
+		SetVel(vel, 0, BODY_PART_HANDS, false, false, false);
 		State_Transition(BALL_NORMAL);
 	}
 }
@@ -1024,6 +1028,7 @@ void CBall::State_GOALKICK_Think()
 
 	if (m_pPl->ShotButtonsReleased() && m_pPl->IsShooting() && (m_vPos - m_vPlPos).Length2D() <= sv_ball_touchradius.GetFloat())
 	{
+		m_pPl->m_GoalKicks += 1;
 		RemoveAllTouches();
 		DoGroundShot();
 		State_Transition(BALL_NORMAL);
@@ -1076,6 +1081,7 @@ void CBall::State_CORNER_Think()
 
 	if (m_pPl->ShotButtonsReleased() && m_pPl->IsShooting() && (m_vPos - m_vPlPos).Length2D() <= sv_ball_touchradius.GetFloat())
 	{
+		m_pPl->m_Corners += 1;
 		RemoveAllTouches();
 		DoGroundShot();
 		State_Transition(BALL_NORMAL);
@@ -1265,6 +1271,7 @@ void CBall::State_FREEKICK_Think()
 
 	if (m_pPl->ShotButtonsReleased() && m_pPl->IsShooting() && (m_vPos - m_vPlPos).Length2D() <= sv_ball_touchradius.GetFloat())
 	{
+		m_pPl->m_FreeKicks += 1;
 		RemoveAllTouches();
 		DoGroundShot();
 		State_Transition(BALL_NORMAL);
@@ -1289,6 +1296,8 @@ void CBall::State_PENALTY_Enter()
 		if (m_pFoulingPl)
 			SetMatchSubEvent(MATCH_EVENT_FOUL, m_pFoulingPl);
 	}
+
+	m_bPenaltyTakerStartedMoving = false;
 }
 
 void CBall::State_PENALTY_Think()
@@ -1338,7 +1347,6 @@ void CBall::State_PENALTY_Think()
 			m_pOtherPl = FindNearestPlayer(m_nInPenBoxOfTeam, FL_POS_KEEPER);
 			if (!m_pOtherPl)
 				return State_Transition(BALL_NORMAL);
-
 		}
 
 		Vector pos = m_pOtherPl->GetTeam()->m_vPlayerSpawns[0]; // + Vector(0, m_pOtherPl->GetTeam()->m_nForward * (mp_shield_border.GetInt() + 2), 0);
@@ -1352,19 +1360,41 @@ void CBall::State_PENALTY_Think()
 	{
 		m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit.GetFloat();
 		m_pPl->RemoveFlag(FL_ATCONTROLS);
+		m_pPl->AddFlag(FL_NO_X_MOVEMENT);
+		//m_pPl->SetShotButtonsReleased(false);
 		m_pOtherPl->RemoveFlag(FL_ATCONTROLS);
 		m_pOtherPl->AddFlag(FL_NO_Y_MOVEMENT);
-		m_pPl->SetShotButtonsReleased(false);
 	}
 
 	UpdateCarrier();
 
+	if (m_bPenaltyTakerStartedMoving && (m_vPlVel.y == 0 || Sign(m_vPlVel.y) != m_pPl->GetTeam()->m_nForward))
+	{
+		if (SDKGameRules()->State_Get() == MATCH_PENALTIES)
+		{
+			m_ePenaltyState = PENALTY_ABORTED_ILLEGAL_MOVE;
+			State_Transition(BALL_NORMAL);
+		}
+		else
+		{
+			TriggerFoul(FOUL_DOUBLETOUCH, m_vPos, m_pPl);
+			State_Transition(BALL_FREEKICK, sv_ball_statetransitiondelay.GetFloat());
+		}
+
+		return;
+	}
+
+	if (!m_bPenaltyTakerStartedMoving && m_vPlVel.y != 0 && Sign(m_vPlVel.y) == m_pPl->GetTeam()->m_nForward)
+	{
+		m_bPenaltyTakerStartedMoving = true;
+	}
+
 	if (m_pPl->ShotButtonsReleased() && m_pPl->IsShooting() && (m_vPos - m_vPlPos).Length2D() <= sv_ball_touchradius.GetFloat())
 	{
+		m_pPl->m_Penalties += 1;
 		RemoveAllTouches();
 		m_ePenaltyState = PENALTY_KICKED;
 		m_pPl->m_ePenaltyState = PENALTY_KICKED;
-		m_pOtherPl->RemoveFlag(FL_NO_Y_MOVEMENT);
 		DoGroundShot();
 		State_Transition(BALL_NORMAL);
 	}
@@ -1372,6 +1402,15 @@ void CBall::State_PENALTY_Think()
 
 void CBall::State_PENALTY_Leave(ball_state_t newState)
 {
+	if (CSDKPlayer::IsOnField(m_pPl))
+	{
+		m_pPl->RemoveFlag(FL_NO_X_MOVEMENT);
+	}
+
+	if (CSDKPlayer::IsOnField(m_pOtherPl))
+	{
+		m_pOtherPl->RemoveFlag(FL_NO_Y_MOVEMENT);
+	}
 }
 
 void CBall::State_KEEPERHANDS_Enter()
@@ -1388,7 +1427,7 @@ void CBall::State_KEEPERHANDS_Think()
 			return State_Transition(BALL_NORMAL);
 		}
 
-		if (!SDKGameRules()->IsIntermissionState() && !m_bHasQueuedState)
+		if (!SDKGameRules()->IsIntermissionState() && !m_bHasQueuedState && SDKGameRules()->State_Get() != MATCH_PENALTIES)
 		{
 			SDKGameRules()->EnableShield(SHIELD_KEEPERHANDS, m_pPl->GetTeamNumber());
 			//m_pPl->SetPosInsideShield(m_pPl->GetLocalOrigin(), false);
@@ -1606,7 +1645,7 @@ bool CBall::DoBodyPartAction()
 			return true;
 	}
 
-	if (m_pPl->m_Shared.m_ePlayerAnimEvent == PLAYERANIMEVENT_SLIDE)
+	if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_SLIDE)
 		return DoSlideAction();
 
 	if (gpGlobals->curtime < m_flGlobalNextShot)
@@ -1704,7 +1743,7 @@ bool CBall::CheckKeeperCatch()
 
 	bool canCatch;
 
-	switch (m_pPl->m_Shared.m_ePlayerAnimEvent)
+	switch (m_pPl->m_Shared.GetAnimEvent())
 	{
 	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT:
 		canCatch = (zDist < sv_ball_bodypos_chest_start.GetInt()
@@ -1774,7 +1813,7 @@ bool CBall::CheckKeeperCatch()
 	{
 		Vector vel;
 
-		if (m_pPl->m_Shared.m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD)
+		if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD)
 		{
 			//vel = Vector(m_vVel.x, m_vVel.y, max(m_vVel.z, sv_ball_keeperpunchupstrength.GetInt()));
 			vel = -m_vPlForward2D * m_vVel.Length2D() * sv_ball_keeperdeflectioncoeff.GetFloat();
@@ -1825,8 +1864,8 @@ float CBall::GetChargedshotStrength(float coeff, int minStrength, int maxStrengt
 	if (State_Get() == BALL_PENALTY)
 		minStrength = maxStrength = sv_ball_penaltyshot_maxstrength.GetInt();
 
-	float duration = (m_pPl->m_bIsShotCharging ? gpGlobals->curtime - m_pPl->m_flShotChargingStart : m_pPl->m_flShotChargingDuration);
-	float totalTime = gpGlobals->curtime - m_pPl->m_flShotChargingStart;
+	float duration = (m_pPl->m_Shared.m_bIsShotCharging ? gpGlobals->curtime - m_pPl->m_Shared.m_flShotChargingStart : m_pPl->m_Shared.m_flShotChargingDuration);
+	float totalTime = gpGlobals->curtime - m_pPl->m_Shared.m_flShotChargingStart;
 	float activeTime = min(duration, mp_chargedshot_increaseduration.GetFloat());
 	float extra = totalTime - activeTime;
 	float shotStrengthCoeff = max(0, activeTime / mp_chargedshot_increaseduration.GetFloat() - min(extra, mp_chargedshot_decreaseduration.GetFloat()) / mp_chargedshot_decreaseduration.GetFloat());

@@ -3873,9 +3873,6 @@ void CBasePlayer::Spawn( void )
 
 	m_afPhysicsFlags	= 0;
 
-	m_flNextJump = gpGlobals->curtime; //ios
-	m_flNextSlide = gpGlobals->curtime; //ios
-
 	SetFOV( this, 0 );
 
 	m_flNextDecalTime	= 0;// let this player decal as soon as he spawns.
@@ -6100,14 +6097,14 @@ void SendProxy_CropFlagsToPlayerFlagBitsLength( const SendProp *pProp, const voi
 
 		SendPropFloat		( SENDINFO(m_flFriction),		8,	SPROP_ROUNDDOWN,	0.0f,	4.0f),
 
-		SendPropArray3		( SENDINFO_ARRAY3(m_iAmmo), SendPropInt( SENDINFO_ARRAY(m_iAmmo), 10, SPROP_UNSIGNED ) ),
+		//SendPropArray3		( SENDINFO_ARRAY3(m_iAmmo), SendPropInt( SENDINFO_ARRAY(m_iAmmo), 10, SPROP_UNSIGNED ) ),
 			
 		SendPropInt			( SENDINFO( m_fOnTarget ), 2, SPROP_UNSIGNED ),
 
 		SendPropInt			( SENDINFO( m_nTickBase ), -1, SPROP_CHANGES_OFTEN ),
 		SendPropInt			( SENDINFO( m_nNextThinkTick ) ),
 
-		SendPropEHandle		( SENDINFO( m_hLastWeapon ) ),
+		//SendPropEHandle		( SENDINFO( m_hLastWeapon ) ),
 		SendPropEHandle		( SENDINFO( m_hGroundEntity ), SPROP_CHANGES_OFTEN ),
 
 		SendPropFloat		( SENDINFO_VECTORELEM(m_vecVelocity, 0), 32, SPROP_NOSCALE|SPROP_CHANGES_OFTEN ),
@@ -6128,7 +6125,7 @@ void SendProxy_CropFlagsToPlayerFlagBitsLength( const SendProp *pProp, const voi
 
 		SendPropFloat		( SENDINFO( m_flDeathTime ), 0, SPROP_NOSCALE ),
 
-		SendPropInt			( SENDINFO( m_nWaterLevel ), 2, SPROP_UNSIGNED ),
+		//SendPropInt			( SENDINFO( m_nWaterLevel ), 2, SPROP_UNSIGNED ),
 		SendPropFloat		( SENDINFO( m_flLaggedMovementValue ), 0, SPROP_NOSCALE ),
 
 	END_SEND_TABLE()
@@ -6142,12 +6139,12 @@ void SendProxy_CropFlagsToPlayerFlagBitsLength( const SendProp *pProp, const voi
 
 		SendPropDataTable(SENDINFO_DT(pl), &REFERENCE_SEND_TABLE(DT_PlayerState), SendProxy_DataTableToDataTable),
 
-		SendPropEHandle(SENDINFO(m_hVehicle)),
+		//SendPropEHandle(SENDINFO(m_hVehicle)),
 		SendPropEHandle(SENDINFO(m_hUseEntity)),
-		SendPropInt		(SENDINFO(m_iHealth), 10 ),
+		//SendPropInt		(SENDINFO(m_iHealth), 10 ),
 		SendPropInt		(SENDINFO(m_lifeState), 3, SPROP_UNSIGNED ),
-		SendPropInt		(SENDINFO(m_iBonusProgress), 15 ),
-		SendPropInt		(SENDINFO(m_iBonusChallenge), 4 ),
+		//SendPropInt		(SENDINFO(m_iBonusProgress), 15 ),
+		//SendPropInt		(SENDINFO(m_iBonusChallenge), 4 ),
 		SendPropFloat	(SENDINFO(m_flMaxspeed), 12, SPROP_ROUNDDOWN, 0.0f, 2048.0f ),  // CL
 		SendPropInt		(SENDINFO(m_fFlags), PLAYER_FLAG_BITS, SPROP_UNSIGNED|SPROP_CHANGES_OFTEN, SendProxy_CropFlagsToPlayerFlagBitsLength ),
 		SendPropInt		(SENDINFO(m_iObserverMode), 3, SPROP_UNSIGNED ),
@@ -6156,8 +6153,8 @@ void SendProxy_CropFlagsToPlayerFlagBitsLength( const SendProp *pProp, const voi
 		SendPropInt		(SENDINFO(m_iFOVStart), 8, SPROP_UNSIGNED ),
 		SendPropFloat	(SENDINFO(m_flFOVTime) ),
 		SendPropInt		(SENDINFO(m_iDefaultFOV), 8, SPROP_UNSIGNED ),
-		SendPropEHandle	(SENDINFO(m_hZoomOwner) ),
-		SendPropArray	( SendPropEHandle( SENDINFO_ARRAY( m_hViewModel ) ), m_hViewModel ),
+		//SendPropEHandle	(SENDINFO(m_hZoomOwner) ),
+		//SendPropArray	( SendPropEHandle( SENDINFO_ARRAY( m_hViewModel ) ), m_hViewModel ),
 		SendPropString	(SENDINFO(m_szLastPlaceName) ),
 		SendPropInt		( SENDINFO( m_ubEFNoInterpParity ), NOINTERP_PARITY_MAX_BITS, SPROP_UNSIGNED ),
 

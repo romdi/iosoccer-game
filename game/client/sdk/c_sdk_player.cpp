@@ -35,7 +35,7 @@ ConVar cl_ragdoll_physics_enable( "cl_ragdoll_physics_enable", "1", 0, "Enable/d
  
 ConVar playername("playername", "", FCVAR_USERINFO | FCVAR_ARCHIVE, "Your name");
 ConVar clubname("clubname", "Team Arthur", FCVAR_USERINFO | FCVAR_ARCHIVE, "The name of your club");
-ConVar countryname("countryname", "", FCVAR_USERINFO | FCVAR_ARCHIVE, "The name of your country");
+ConVar countryname("ipcountryname", "", FCVAR_USERINFO | FCVAR_ARCHIVE | FCVAR_HIDDEN, "The name of your country");
 ConVar shotbutton("shotbutton", "right", FCVAR_USERINFO | FCVAR_ARCHIVE, "The mouse shot button (left/right)");
 ConVar preferredshirtnumber("preferredshirtnumber", "", FCVAR_USERINFO | FCVAR_ARCHIVE, "Your preferred shirt number");
 
@@ -108,8 +108,20 @@ BEGIN_RECV_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	RecvPropBool( RECVINFO( m_bIsSprinting ) ),
 #endif
 
-	//RecvPropInt( RECVINFO( m_ePlayerAnimEvent ) ),
-	//RecvPropTime( RECVINFO( m_flPlayerAnimEventStart ) ),
+	RecvPropTime( RECVINFO( m_flNextJump ) ),
+	RecvPropTime( RECVINFO( m_flNextSlide ) ),
+
+	RecvPropBool( RECVINFO( m_bJumping ) ),
+	RecvPropBool( RECVINFO( m_bFirstJumpFrame ) ),
+	RecvPropTime( RECVINFO( m_flJumpStartTime ) ),
+
+	RecvPropBool( RECVINFO( m_bIsShotCharging ) ),
+	RecvPropBool( RECVINFO( m_bDoChargedShot ) ),
+	RecvPropTime( RECVINFO( m_flShotChargingStart ) ),
+	RecvPropTime( RECVINFO( m_flShotChargingDuration ) ),
+
+	RecvPropInt( RECVINFO( m_ePlayerAnimEvent ) ),
+	RecvPropTime( RECVINFO( m_flPlayerAnimEventStart ) ),
 
 	RecvPropDataTable( "sdksharedlocaldata", 0, 0, &REFERENCE_RECV_TABLE(DT_SDKSharedLocalPlayerExclusive) ),
 END_RECV_TABLE()
@@ -166,8 +178,20 @@ BEGIN_PREDICTION_DATA_NO_BASE( CSDKPlayerShared )
 	DEFINE_PRED_FIELD( m_bIsSprinting, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 #endif
 
-	//DEFINE_PRED_FIELD( m_ePlayerAnimEvent, FIELD_INTEGER, FTYPEDESC_INSENDTABLE | FTYPEDESC_NOERRORCHECK ),
-	//DEFINE_PRED_FIELD( m_flPlayerAnimEventStart, FIELD_FLOAT, FTYPEDESC_INSENDTABLE | FTYPEDESC_NOERRORCHECK ),
+	DEFINE_PRED_FIELD( m_flNextJump, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_flNextSlide, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
+
+	DEFINE_PRED_FIELD( m_bJumping, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_bFirstJumpFrame, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_flJumpStartTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
+
+	DEFINE_PRED_FIELD( m_bIsShotCharging, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_bDoChargedShot, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_flShotChargingStart, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_flShotChargingDuration, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
+
+	DEFINE_PRED_FIELD( m_ePlayerAnimEvent, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_flPlayerAnimEventStart, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 
 END_PREDICTION_DATA()
 
@@ -598,6 +622,13 @@ const QAngle& C_SDKPlayer::GetRenderAngles()
 	}
 }
 
+void C_SDKPlayer::Spawn()
+{
+	BaseClass::Spawn();
+
+	m_Shared.m_flNextJump = gpGlobals->curtime;
+	m_Shared.m_flNextSlide = gpGlobals->curtime;
+}
 
 void C_SDKPlayer::UpdateClientSideAnimation()
 {
@@ -815,6 +846,7 @@ void C_SDKPlayer::DoAnimationEvent(PlayerAnimEvent_t event)
 
 	MDLCACHE_CRITICAL_SECTION();
 	m_PlayerAnimState->DoAnimationEvent(event);
+	//m_Shared.DoAnimationEvent(event);
 }
 
 bool C_SDKPlayer::ShouldDraw( void )
@@ -1346,6 +1378,6 @@ void C_SDKPlayer::PreThink()
 {
 	BaseClass::PreThink();
 
-	if (prediction->IsFirstTimePredicted())
+	//if (prediction->IsFirstTimePredicted())
 		CheckShotCharging();
 }

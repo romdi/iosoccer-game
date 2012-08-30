@@ -354,10 +354,11 @@ public:
 						{
 							// 0 is always the blank image
 							if (imageIndex > 0)
-							{
 								image = m_pListPanel->m_pImageList->GetImage(imageIndex);
-								SetImageAtIndex(i, image, 0);
-							}
+							else
+								image = NULL;
+
+							SetImageAtIndex(i, image, 0);
 						}
 						else
 						{

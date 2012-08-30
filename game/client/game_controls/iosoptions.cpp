@@ -47,16 +47,11 @@ void CC_IOSOptionsMenu(const CCommand &args)
 
 ConCommand iosoptionsmenu("iosoptionsmenu", CC_IOSOptionsMenu);
 
-
-
 #define LABEL_WIDTH 150
 #define INPUT_WIDTH 300
 #define TEXT_HEIGHT 30
 
-#define COUNTRY_NAMES_COUNT 283
 #define SHIRT_NUMBER_COUNT 11
-
-char g_szCountryNames[COUNTRY_NAMES_COUNT][64] = { "Afghanistan", "African Union", "Aland", "Albania", "Alderney", "Algeria", "American Samoa", "Andorra", "Angola", "Anguilla", "Antarctica", "Antigua & Barbuda", "Arab League", "Argentina", "Armenia", "Aruba", "ASEAN", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Basque Country", "Belarus", "Belgium", "Belize", "Benin", "Bermuda", "Bhutan", "Bolivia", "Bosnia & Herzegovina", "Botswana", "Bouvet", "Brazil", "British Indian Ocean Territory", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cambodja", "Cameroon", "Canada", "Cape Verde", "CARICOM", "Catalonia", "Cayman Islands", "Central African Republic", "Chad", "Chile", "China", "Christmas", "CIS", "Cocos (Keeling)", "Colombia", "Commonwealth", "Comoros", "Congo-Brazzaville", "Congo-Kinshasa(Zaire)", "Cook Islands", "Costa Rica", "Cote d'Ivoire", "Croatia", "Cuba", "Curacao", "Cyprus", "Czech Republic", "Denmark", "Djibouti", "Dominica", "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "England", "Equatorial Guinea", "Eritrea", "Estonia", "Ethiopia", "European Union", "Falkland (Malvinas)", "FAO", "Faroes", "Fiji", "Finland", "France", "French Southern and Antarctic Lands", "French-Guiana", "Gabon", "Galicia", "Gambia", "Georgia", "Germany", "Ghana", "Gibraltar", "Greece", "Greenland", "Grenada", "Guadeloupe", "Guam", "Guatemala", "Guernsey", "Guinea-Bissau", "Guinea", "Guyana", "Haiti", "Heard Island and McDonald", "Honduras", "Hong Kong", "Hungary", "IAEA", "Iceland", "IHO", "India", "Indonezia", "Iran", "Iraq", "Ireland", "Islamic Conference", "Isle of Man", "Israel", "Italy", "Jamaica", "Japan", "Jersey", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kosovo", "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenshein", "Lithuania", "Luxembourg", "Macao", "Macedonia", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Martinique", "Mauritania", "Mauritius", "Mayotte", "Mexico", "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Montserrat", "Morocco", "Mozambique", "Myanmar(Burma)", "Namibia", "NATO", "Nauru", "Nepal", "Netherlands Antilles", "Netherlands", "New Caledonia", "New Zealand", "Nicaragua", "Niger", "Nigeria", "Niue", "Norfolk", "North Korea", "Northern Cyprus", "Northern Ireland", "Northern Mariana", "Norway", "OAS", "OECD", "Olimpic Movement", "Oman", "OPEC", "Pakistan", "Palau", "Palestine", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Pitcairn", "Poland", "Portugal", "Puerto Rico", "Qatar", "Red Cross", "Reunion", "Romania", "Russian Federation", "Rwanda", "Saint Barthelemy", "Saint Helena", "Saint Lucia", "Saint Martin", "Saint Pierre and Miquelon", "Samoa", "San Marino", "Sao Tome & Principe", "Saudi Arabia", "Scotland", "Senegal", "Serbia(Yugoslavia)", "Seychelles", "Sierra Leone", "Singapore", "Sint-Maarten", "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "Somaliland", "South Africa", "South Georgia and South Sandwich", "South Korea", "Southern-Sudan", "Spain", "Sri Lanka", "St Kitts & Nevis", "St Vincent & the Grenadines", "Sudan", "Suriname", "Svalbard and Jan Mayen", "Swaziland", "Sweden", "Switzerland", "Syria", "Tahiti(French Polinesia)", "Taiwan", "Tajikistan", "Tanzania", "Thailand", "Timor-Leste", "Togo", "Tokelau", "Tonga", "Trinidad & Tobago", "Tristan-da-Cunha", "Tunisia", "Turkey", "Turkmenistan", "Turks and Caicos Islands", "Tuvalu", "Uganda", "Ukraine", "UNESCO", "UNICEF", "United Arab Emirates", "United Kingdom(Great Britain)", "United Nations", "United States Minor Outlying", "United States of America(USA)", "Uruguay", "Uzbekistan", "Vanutau", "Vatican City", "Venezuela", "Viet Nam", "Virgin Islands British", "Virgin Islands US", "Wales", "Wallis and Futuna", "Western Sahara", "WHO", "WTO", "Yemen", "Zambia", "Zimbabwe" };
 
 enum { PADDING = 15, TOP_PADDING = 15 };
 enum { BUTTON_WIDTH = 100, BUTTON_HEIGHT = 30, BUTTON_MARGIN = 5 };
@@ -143,9 +138,11 @@ void CIOSOptionsPanel::ApplySchemeSettings( IScheme *pScheme )
 	//m_pClubNameText->SetFgColor(Color(0, 0, 0, 255));
 
 	m_pCountryNameLabel->SetBounds(0, 2 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pCountryNameLabel->SetVisible(false);
 	m_pCountryNameList->SetBounds(LABEL_WIDTH, 2 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
 	//m_pCountryNameList->GetMenu()->AddActionSignalTarget(this);
 	m_pCountryNameList->GetMenu()->MakeReadyForUse();
+	m_pCountryNameList->SetVisible(false);
 	//m_pCountryNameList->GetMenu()->SetFgColor(Color(0, 0, 0, 255));
 	//m_pCountryNameList->GetMenu()->SetBgColor(Color(255, 255, 255, 255));
 	//m_pCountryNameList->SetSelectionUnfocusedBgColor(Color(255, 0, 0, 255));
@@ -206,7 +203,7 @@ void CIOSOptionsPanel::OnCommand(const char *cmd)
 		m_pClubNameText->GetText(text, sizeof(text));
 		g_pCVar->FindVar("clubname")->SetValue(text);
 		m_pCountryNameList->GetText(text, sizeof(text));
-		g_pCVar->FindVar("countryname")->SetValue(text);
+		g_pCVar->FindVar("ipcountryname")->SetValue(text);
 		m_pPreferredShirtNumberList->GetText(text, sizeof(text));
 		g_pCVar->FindVar("preferredshirtnumber")->SetValue(atoi(text));
 
@@ -231,7 +228,7 @@ void CIOSOptionsPanel::Activate()
 		g_pCVar->FindVar("playername")->SetValue(g_pCVar->FindVar("name")->GetString());
 
 	m_pPlayerNameText->SetText(g_pCVar->FindVar("playername")->GetString());
-	m_pCountryNameList->SetText(g_pCVar->FindVar("countryname")->GetString());
+	m_pCountryNameList->SetText(g_pCVar->FindVar("ipcountryname")->GetString());
 	m_pClubNameText->SetText(g_pCVar->FindVar("clubname")->GetString());
 	int shirtNum = g_pCVar->FindVar("preferredshirtnumber")->GetInt();
 	m_pPreferredShirtNumberList->SetText(shirtNum == 0 ? "None" : VarArgs("%d", clamp(shirtNum, 2, 11)));

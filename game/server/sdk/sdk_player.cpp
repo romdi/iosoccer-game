@@ -113,8 +113,19 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	SendPropBool( SENDINFO( m_bIsSprinting ) ),
 #endif
 
-	//SendPropInt( SENDINFO( m_ePlayerAnimEvent ) ),
-	//SendPropTime( SENDINFO( m_flPlayerAnimEventStart ) ),
+	SendPropTime( SENDINFO( m_flNextJump ) ),
+	SendPropTime( SENDINFO( m_flNextSlide) ),
+
+	SendPropBool( SENDINFO( m_bJumping ) ),
+	SendPropBool( SENDINFO( m_bFirstJumpFrame ) ),
+	SendPropTime( SENDINFO( m_flJumpStartTime ) ),
+
+	SendPropBool( SENDINFO( m_bIsShotCharging ) ),
+	SendPropBool( SENDINFO( m_bDoChargedShot ) ),
+	SendPropTime( SENDINFO( m_flShotChargingStart ) ),
+	SendPropTime( SENDINFO( m_flShotChargingDuration ) ),
+	SendPropInt( SENDINFO( m_ePlayerAnimEvent ) ),
+	SendPropTime( SENDINFO( m_flPlayerAnimEventStart ) ),
 
 	SendPropDataTable( "sdksharedlocaldata", 0, &REFERENCE_SEND_TABLE(DT_SDKSharedLocalPlayerExclusive), SendProxy_SendLocalDataTable ),
 END_SEND_TABLE()
@@ -434,6 +445,9 @@ void CSDKPlayer::Spawn()
 {
 	BaseClass::Spawn();
 
+	m_Shared.m_flNextJump = gpGlobals->curtime;
+	m_Shared.m_flNextSlide = gpGlobals->curtime;
+
 	//UseClientSideAnimation();
 }
 
@@ -648,12 +662,14 @@ void CSDKPlayer::InitialSpawn( void )
 void CSDKPlayer::DoServerAnimationEvent(PlayerAnimEvent_t event)
 {
 	m_PlayerAnimState->DoAnimationEvent( event );
+	//m_Shared.DoAnimationEvent( event );
 	TE_PlayerAnimEvent( this, event, true );	// Send to any clients who can see this guy.
 }
 
 void CSDKPlayer::DoAnimationEvent(PlayerAnimEvent_t event)
 {
 	m_PlayerAnimState->DoAnimationEvent( event );
+	//m_Shared.DoAnimationEvent( event );
 	TE_PlayerAnimEvent( this, event, false );	// Send to any clients who can see this guy.
 }
 
@@ -1467,7 +1483,7 @@ bool CSDKPlayer::IsPowershooting()
 
 bool CSDKPlayer::IsChargedshooting()
 {
-	return m_bDoChargedShot && !IsPowershooting();
+	return m_Shared.m_bDoChargedShot && !IsPowershooting();
 }
 
 bool CSDKPlayer::IsAutoPassing()

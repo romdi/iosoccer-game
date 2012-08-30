@@ -37,8 +37,9 @@ public:
 	virtual bool	IsLocalPlayer( int index ) = 0;
 
 	virtual const char *GetPlayerName( int index ) = 0;
+	virtual const char *GetSteamName( int index ) = 0;
 	virtual const char *GetClubName( int index ) = 0;
-	virtual const char *GetCountryName( int index ) = 0;
+	virtual int		GetCountryName( int index ) = 0;
 	virtual int		GetPing( int index ) = 0;
 //	virtual int		GetPacketloss( int index ) = 0;
 	virtual int		GetTeam( int index ) = 0;
