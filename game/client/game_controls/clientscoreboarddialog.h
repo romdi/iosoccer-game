@@ -223,6 +223,7 @@ private:
 	Label		*m_pStatText;
 	Button		*m_pStatButtons[STAT_COUNT];
 	Panel		*m_pPlayerListDivider;
+	Button		*m_pJoinRandom;
 
 	CStatsMenu	*m_pStatsMenu;
 	CFormationMenu	*m_pFormationMenu;

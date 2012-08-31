@@ -129,11 +129,11 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Editabl
 
 	m_pSpectatorText = new Label(m_pSpectatorContainer, "", "");
 
-	m_pSpectateButton = new Button(m_pSpectatorContainer, "SpectateButton", "Spectate");
-	m_pSpectateButton->SetCommand(VarArgs("jointeam %d 0", TEAM_SPECTATOR));
-	m_pSpectateButton->AddActionSignalTarget(this);
+	m_pSpectateButton = new Button(m_pStatButtonInnerContainer, "SpectateButton", "Spectate", this, VarArgs("jointeam %d 0", TEAM_SPECTATOR));
 
 	m_pSpecInfo = new Label(m_pMainPanel, "", "");
+
+	m_pJoinRandom = new Button(m_pStatButtonInnerContainer, "JoinRandom", "Auto-Join", this, VarArgs("jointeam %d -1", TEAM_INVALID));
 
 	m_nCurStat = DEFAULT_STATS;
 	m_nCurSpecIndex = 0;
@@ -264,15 +264,15 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 	m_pStatButtonOuterContainer->SetZPos(1);
 	//m_pStatButtonOuterContainer->SetBgColor(Color(0, 0, 0, 150));
 
-	m_pStatButtonInnerContainer->SetBounds(0, m_pStatButtonOuterContainer->GetTall() / 2 - (STATBUTTON_HEIGHT + STAT_CATEGORY_COUNT * STATBUTTON_HEIGHT) / 2, STATBUTTON_WIDTH + 2 * STATBUTTON_HMARGIN, STATBUTTON_HEIGHT + STAT_CATEGORY_COUNT * STATBUTTON_HEIGHT);
+	m_pStatButtonInnerContainer->SetBounds(0, m_pStatButtonOuterContainer->GetTall() / 2 - (4 * STATBUTTON_HEIGHT + STAT_CATEGORY_COUNT * STATBUTTON_HEIGHT) / 2, STATBUTTON_WIDTH + 2 * STATBUTTON_HMARGIN, 4 * STATBUTTON_HEIGHT + STAT_CATEGORY_COUNT * STATBUTTON_HEIGHT);
 
-	m_pStatText->SetBounds(0, 0, m_pStatButtonInnerContainer->GetWide(), STATBUTTON_HEIGHT);
+	m_pStatText->SetBounds(STATBUTTON_HMARGIN, 3 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
 	m_pStatText->SetFont(m_pScheme->GetFont("StatButton"));
 	m_pStatText->SetContentAlignment(Label::a_center);
 
 	for (int i = 0; i < STAT_CATEGORY_COUNT; i++)
 	{
-		m_pStatButtons[i]->SetBounds(STATBUTTON_HMARGIN, STATBUTTON_HEIGHT + i * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
+		m_pStatButtons[i]->SetBounds(STATBUTTON_HMARGIN, 4 * STATBUTTON_HEIGHT + i * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
 		m_pStatButtons[i]->SetFont(m_pScheme->GetFont("StatButton"));
 		m_pStatButtons[i]->SetContentAlignment(Label::a_center);
 	}
@@ -286,17 +286,13 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 	m_pSpectatorFontList[2] = m_pScheme->GetFont("SpectatorListSmaller");
 	m_pSpectatorFontList[3] = m_pScheme->GetFont("SpectatorListSmallest");
 
-	m_pSpectatorNames->SetBounds(SPECLIST_PADDING + SPECTEXT_WIDTH, 0, m_pSpectatorContainer->GetWide() - (SPECBUTTON_WIDTH + 2 * SPECBUTTON_HMARGIN) - (SPECLIST_PADDING + SPECTEXT_WIDTH), SPECLIST_HEIGHT);
+	m_pSpectatorNames->SetBounds(SPECLIST_PADDING + SPECTEXT_WIDTH, 0, m_pSpectatorContainer->GetWide() - (SPECLIST_PADDING + SPECTEXT_WIDTH), SPECLIST_HEIGHT);
 	
 	m_pSpectatorText->SetBounds(SPECLIST_PADDING, 0, SPECTEXT_WIDTH, SPECLIST_HEIGHT);
 	m_pSpectatorText->SetFont(m_pScheme->GetFont("SpectatorListNormal"));
 
-	m_pSpectateButton->SetBounds(m_pSpectateButton->GetParent()->GetWide() - (SPECBUTTON_WIDTH + SPECBUTTON_HMARGIN), SPECBUTTON_VMARGIN, SPECBUTTON_WIDTH, SPECLIST_HEIGHT - 2 * SPECBUTTON_VMARGIN);
-	//m_pSpectateButton->SetDefaultColor(Color(0, 0, 0, 255), Color(200, 200, 200, 255));
-	//m_pSpectateButton->SetArmedColor(Color(50, 50, 50, 255), Color(150, 150, 150, 255));
-	//m_pSpectateButton->SetDepressedColor(Color(100, 100, 100, 255), Color(200, 200, 200, 255));
-	//m_pSpectateButton->SetCursor(dc_hand);
-	m_pSpectateButton->SetFont(m_pScheme->GetFont("SpectatorListNormal"));
+	m_pSpectateButton->SetBounds(STATBUTTON_HMARGIN, 0, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
+	m_pSpectateButton->SetFont(m_pScheme->GetFont("StatButton"));
 	m_pSpectateButton->SetContentAlignment(Label::a_center);
 
 	m_pSpecInfo->SetBounds(0, m_pSpectatorContainer->GetY() - SPECLIST_HEIGHT, m_pMainPanel->GetWide(), SPECLIST_HEIGHT);
@@ -309,6 +305,10 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 	m_pPlayerListDivider->SetBounds(m_pMainPanel->GetWide() / 2 - PLAYERLISTDIVIDER_WIDTH / 2, 0, PLAYERLISTDIVIDER_WIDTH, PLAYERLIST_HEIGHT + PLAYERLIST_BOTTOMMARGIN);
 	m_pPlayerListDivider->SetBgColor(Color(0, 0, 0, 150));
 	m_pPlayerListDivider->SetVisible(false);
+
+	m_pJoinRandom->SetBounds(STATBUTTON_HMARGIN, STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
+	m_pJoinRandom->SetFont(m_pScheme->GetFont("StatButton"));
+	m_pJoinRandom->SetContentAlignment(Label::a_center);
 
 	for (int i = 0; i < 2; i++)
 	{
@@ -470,6 +470,9 @@ void CClientScoreBoardDialog::Update( void )
 //-----------------------------------------------------------------------------
 void CClientScoreBoardDialog::UpdateTeamInfo()
 {
+	if (!GameResources())
+		return;
+
 	for (int i = 0; i < 2; i++)
 	{
 		KeyValues *kv = new KeyValues("data");
@@ -480,6 +483,9 @@ void CClientScoreBoardDialog::UpdateTeamInfo()
 			m_pStatsMenu->Update(m_nSelectedPlayerIndex, kv);
 
 		kv->deleteThis();
+
+		m_pPlayerList[i]->SetItemFgColor(0, GameResources()->GetTeamColor(i + TEAM_A));
+		m_pPlayerList[i]->SetItemFont(0, m_pScheme->GetFont("IOSTeamMenuNormalBold"));
 	}
 }
 
@@ -758,47 +764,50 @@ void CClientScoreBoardDialog::AddHeader()
 		//	m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "avatar",		"", SectionedListPanel::COLUMN_IMAGE, 50 );
 		//}
 		m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "name",			"Name", 0, 180);
+
+		int defaultFlags = 0;
+
 		switch (m_nCurStat)
 		{
 		case DEFAULT_STATS:
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "country",			"Nat.", SectionedListPanel::COLUMN_IMAGE, 50);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "club",				"Club", 0, 75);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goals",				"Goals", 0, 45);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "assists",			"Assists", 0, 45);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "ping",				"Ping", 0, 55);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "country",			"Nat.", defaultFlags | SectionedListPanel::COLUMN_IMAGE, 50);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "club",				"Club", defaultFlags, 75);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goals",				"Goals", defaultFlags, 45);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "assists",			"Assists", defaultFlags, 45);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "ping",				"Ping", defaultFlags, 55);
 			break;
 		case GENERAL:
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "possession",		"Possession", 0, 45);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "distancecovered",	"Distance covered", 0, 45);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "passes",			"Passes", 0, 45);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "passescompleted",	"Passes completed", 0, 45);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "interceptions",		"Interceptions", 0, 45);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "possession",		"Poss.", defaultFlags, 45);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "distancecovered",	"Distance", defaultFlags, 60);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "passes",			"Passes", defaultFlags, 45);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "passescompleted",	"~ completed", defaultFlags, 45);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "interceptions",		"Intercep.", defaultFlags, 45);
 			break;
 		case TACKLINGS:
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "fouls",				"Fouls", 0, 45);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "foulssuffered",		"Fouls suffered", 0, 45);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "redcards",			"Red cards", 0, 45);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "yellowcards",		"Yellow cards", 0, 45);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "fouls",				"Fouls", defaultFlags, 45);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "foulssuffered",		"~ suffered", defaultFlags, 45);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "redcards",			"Reds", defaultFlags, 45);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "yellowcards",		"Yellows", defaultFlags, 45);
 			break;
 		case SET_PIECES:
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "freekicks",			"Free kicks", 0, 45);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "penalties",			"Penalties", 0, 45);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "throwins",			"Throw-ins", 0, 45);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "corners",			"Corners", 0, 45);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goalkicks",			"Goal kicks", 0, 45);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "freekicks",			"Free kicks", defaultFlags, 45);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "penalties",			"Penalties", defaultFlags, 45);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "throwins",			"Throw-ins", defaultFlags, 45);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "corners",			"Corners", defaultFlags, 45);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goalkicks",			"Goal kicks", defaultFlags, 45);
 			break;
 		case KEEPER:
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "saves",				"Saves", 0, 45);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goalkicks",			"Goal kicks", 0, 45);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "owngoals",			"Own goals", 0, 45);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goalsconceded",		"Goals conceded", 0, 45);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "saves",				"Saves", defaultFlags, 45);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goalkicks",			"Goal kicks", defaultFlags, 45);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "owngoals",			"Own goals", defaultFlags, 45);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goalsconceded",		"Goals conc.", defaultFlags, 45);
 			break;
 		case OFFENSE:
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goals",				"Goals", 0, 45);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "assists",			"Assists", 0, 45);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "shots",				"Shots", 0, 45);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "shotsongoal",		"Shots on goal", 0, 45);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "offsides",			"Offsides", 0, 45);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goals",				"Goals", defaultFlags, 45);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "assists",			"Assists", defaultFlags, 45);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "shots",				"Shots", defaultFlags, 45);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "shotsongoal",		"~ on goal", defaultFlags, 45);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "offsides",			"Offsides", defaultFlags, 45);
 			break;
 		default:
 			//m_pPlayerList[i]->AddColumnToSection(m_iSectionId, g_szStatIdentifiers[m_nCurStat], g_szStatNames[m_nCurStat], 0, 90);
@@ -808,7 +817,7 @@ void CClientScoreBoardDialog::AddHeader()
 		//m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "voice",		"Voice", SectionedListPanel::COLUMN_IMAGE, scheme()->GetProportionalScaledValue(VOICE_WIDTH) );
 		//m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "tracker", "#PlayerTracker", SectionedListPanel::COLUMN_IMAGE, scheme()->GetProportionalScaledValueEx( GetScheme(),FRIENDS_WIDTH) );
 		KeyValues *kv = new KeyValues("data");
-		kv->SetInt("playerindex", 0);
+		kv->SetInt("playerindex", i - 1);
 		m_pPlayerList[i]->AddItem(0, kv);
 		kv->deleteThis();
 	}
@@ -957,6 +966,9 @@ bool CClientScoreBoardDialog::GetTeamInfo(int team, KeyValues *kv)
 	float distSum = 0;
 	int passSum = 0;
 	int passCompletedSum = 0;
+	int offsides = 0;
+	int corners = 0;
+	int goalkicks = 0;
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
@@ -984,6 +996,9 @@ bool CClientScoreBoardDialog::GetTeamInfo(int team, KeyValues *kv)
 		distSum += gr->GetDistanceCovered(i) / 1000.0f;
 		passSum += gr->GetPasses(i);
 		passCompletedSum += gr->GetPassesCompleted(i) * 100 / max(1, gr->GetPasses(i));
+		offsides += gr->GetOffsides(i);
+		corners += gr->GetCorners(i);
+		goalkicks += gr->GetGoalKicks(i);
 	}
 
 	if (!isTeamSameClub)
@@ -1012,6 +1027,9 @@ bool CClientScoreBoardDialog::GetTeamInfo(int team, KeyValues *kv)
 	kv->SetString("passes", GET_STAT_TEXT(passSum / max(1, pTeam->GetNumPlayers())));
 	kv->SetString("passescompleted", GET_STAT_FTEXT(passCompletedSum / max(1, pTeam->GetNumPlayers()), "%d%%"));
 	kv->SetString("distancecovered", GET_STAT_FTEXT(distSum / max(1, pTeam->GetNumPlayers()), "%.1f km"));
+	kv->SetString("offsides", GET_STAT_TEXT(offsides));
+	kv->SetString("corners", GET_STAT_TEXT(corners));
+	kv->SetString("goalkicks", GET_STAT_TEXT(goalkicks));
 
 	return true;
 }

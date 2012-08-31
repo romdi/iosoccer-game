@@ -985,7 +985,28 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 			return false;	//go away
 		}
 
-		ChangeTeamPos(atoi(args[1]), atoi(args[2]));
+		int team = atoi(args[1]);
+		int posIndex = atoi(args[2]);
+
+		if (posIndex == -1 || team == TEAM_INVALID)
+		{
+			int checkTeam = GetGlobalTeam(TEAM_A)->GetNumPlayers() <= GetGlobalTeam(TEAM_B)->GetNumPlayers() ? TEAM_A : TEAM_B;
+
+			for (int i = 0; i < mp_maxplayers.GetInt(); i++)
+			{
+				if (TeamPosFree(checkTeam, i, false))
+				{
+					team = checkTeam;
+					posIndex = i;
+					break;
+				}
+			}
+		}
+
+		if (posIndex == -1 || team == TEAM_INVALID)
+			return false;
+
+		ChangeTeamPos(team, posIndex);
 
 		return true;
 	}
