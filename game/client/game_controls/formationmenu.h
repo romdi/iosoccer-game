@@ -58,8 +58,12 @@ protected:
 	// VGUI2 overrides
 	virtual void ApplySchemeSettings(vgui::IScheme *pScheme);
 
+	MESSAGE_FUNC_PTR( OnCursorEntered, "OnCursorEntered", panel );
+	MESSAGE_FUNC_PTR( OnCursorExited, "OnCursorExited", panel );
+
 	Panel		*m_pFormations[2];
 	CBitmapButton *m_pFormationButtons[2][11];
+	Label		*m_pTooltip;
 };
 
 

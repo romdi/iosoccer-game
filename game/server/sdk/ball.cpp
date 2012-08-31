@@ -1185,6 +1185,8 @@ void CBall::State_FREEKICK_Enter()
 	case FOUL_NORMAL_YELLOW_CARD:
 	case FOUL_NORMAL_RED_CARD:
 		matchEvent = MATCH_EVENT_FOUL;
+		if (CSDKPlayer::IsOnField(m_pFoulingPl))
+			m_pFoulingPl->m_Fouls += 1;
 		break;
 	case FOUL_DOUBLETOUCH:
 		matchEvent = MATCH_EVENT_DOUBLETOUCH;
@@ -1199,7 +1201,6 @@ void CBall::State_FREEKICK_Enter()
 
 	if (CSDKPlayer::IsOnField(m_pFoulingPl))
 	{
-		m_pFoulingPl->m_Fouls += 1;
 		SetMatchSubEvent(matchEvent, m_pFoulingPl);
 
 		if (m_eFoulType == FOUL_NORMAL_YELLOW_CARD)

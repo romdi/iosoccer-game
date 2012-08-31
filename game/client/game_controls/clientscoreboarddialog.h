@@ -145,6 +145,8 @@ public:
 	virtual void FireGameEvent( IGameEvent *event);
 
 	virtual void UpdatePlayerAvatar( int playerIndex, KeyValues *kv );
+
+	void SetHighlightedPlayer(int playerIndex);
 			
 protected:
 	MESSAGE_FUNC_INT( OnPollHideCode, "PollHideCode", code );
@@ -154,7 +156,6 @@ protected:
 	// functions to override
 	virtual bool GetPlayerInfo(int playerIndex, KeyValues *kv);
 	virtual bool GetTeamInfo(int team, KeyValues *kv);
-	virtual void InitScoreboardSections();
 	virtual void UpdateTeamInfo();
 	virtual void UpdatePlayerInfo();
 	virtual void OnThink();
@@ -237,6 +238,8 @@ private:
 	Button		*m_pCurSpecButton;
 
 	int			m_nSelectedPlayerIndex;
+
+	bool		m_bIsStatsMenuEnabled;
 
 	IScheme *m_pScheme;
 };

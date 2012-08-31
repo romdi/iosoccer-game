@@ -38,6 +38,7 @@
 #include "sdk_gamerules.h"
 #include "c_sdk_player.h"
 #include "steam/steam_api.h"
+#include "clientscoreboarddialog.h"
 
 #include "materialsystem/itexture.h"
 
@@ -47,7 +48,7 @@
 using namespace vgui;
 
 enum { FORMATION_BUTTON_WIDTH = 85, FORMATION_BUTTON_HEIGHT = 50 };
-enum { FORMATION_HPADDING = (FORMATION_BUTTON_WIDTH / 2 + 70), FORMATION_VPADDING = (FORMATION_BUTTON_HEIGHT / 2 + 5), FORMATION_CENTERPADDING = 35 };
+enum { FORMATION_HPADDING = (FORMATION_BUTTON_WIDTH / 2 + 70), FORMATION_VPADDING = (FORMATION_BUTTON_HEIGHT / 2 + 20), FORMATION_CENTERPADDING = 35 };
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -65,6 +66,9 @@ CFormationMenu::CFormationMenu(Panel *parent, const char *name) : Panel(parent, 
 			m_pFormationButtons[i][j]->AddActionSignalTarget(this);
 		}
 	}
+
+	m_pTooltip = new Label(this, "", "JOIN");
+	m_pTooltip->SetVisible(false);
 
 	m_flNextUpdateTime = gpGlobals->curtime;
 }
@@ -87,6 +91,7 @@ void CFormationMenu::PerformLayout()
 	for (int i = 0; i < 2; i++)
 	{
 		m_pFormations[i]->SetBounds(i * (GetWide() / 2), 0, GetWide() / 2, GetTall());
+		//m_pFormations[i]->SetBgColor(Color(255, 0, 0, 255));
 
 		for (int j = 0; j < 11; j++)
 		{
@@ -94,22 +99,29 @@ void CFormationMenu::PerformLayout()
 			m_pFormationButtons[i][j]->SetContentAlignment(Label::a_center);
 			m_pFormationButtons[i][j]->SetFont(m_pScheme->GetFont("IOSTeamMenuBig"));
 			color32 enabled = { 150, 150, 150, 150 };
-			color32 mouseover = { 150, 150, 150, 255 };
-			color32 pressed = { 255, 255, 255, 255 };
-			color32 disabled = { 75, 75, 75, 255 };
+			color32 mouseover = { 150, 150, 150, 240 };
+			color32 pressed = { 255, 255, 255, 240 };
+			color32 disabled = { 75, 75, 75, 240 };
 			m_pFormationButtons[i][j]->SetImage(CBitmapButton::BUTTON_ENABLED, "vgui/shirt", enabled);
 			m_pFormationButtons[i][j]->SetImage(CBitmapButton::BUTTON_ENABLED_MOUSE_OVER, "vgui/shirt", mouseover);
 			m_pFormationButtons[i][j]->SetImage(CBitmapButton::BUTTON_PRESSED, "vgui/shirt", pressed);
 			m_pFormationButtons[i][j]->SetImage(CBitmapButton::BUTTON_DISABLED, "vgui/shirt", disabled);
-			Color black(0, 0, 0, 255);
+			Color black(0, 0, 0, 240);
 			m_pFormationButtons[i][j]->SetDefaultColor(black, black);
 			m_pFormationButtons[i][j]->SetArmedColor(black, black);
 			m_pFormationButtons[i][j]->SetDepressedColor(black, black);
 			m_pFormationButtons[i][j]->SetDisabledFgColor1(Color(0, 0, 0, 0));
 			m_pFormationButtons[i][j]->SetDisabledFgColor2(black);
 			m_pFormationButtons[i][j]->SetPaintBorderEnabled(false);
+			m_pFormationButtons[i][j]->SetName(VarArgs("%d", 0));
 		}
 	}
+
+	m_pTooltip->SetSize(100, 30);
+	m_pTooltip->SetZPos(10);
+	m_pTooltip->SetContentAlignment(Label::a_north);
+	m_pTooltip->SetFont(m_pScheme->GetFont("Tooltip"));
+	//m_pTooltip->SetBgColor(Color(0, 255, 0, 255));
 
 	m_flNextUpdateTime = gpGlobals->curtime;
 }
@@ -171,7 +183,6 @@ void CFormationMenu::Update()
 			float yPos = FORMATION_VPADDING + g_Positions[mp_maxplayers.GetInt() - 1][j][POS_YPOS] * yDist - m_pFormationButtons[i][j]->GetTall() / 2;
 			m_pFormationButtons[i][j]->SetPos(xPos, yPos);
 
-			color32 color;
 			int cursor;
 			bool enable;
 			bool isTakenByBot;
@@ -180,8 +191,6 @@ void CFormationMenu::Update()
 
 			if (playerIndexAtPos[i][j] == 0)
 			{
-				color32 enabled = { 255, 255, 255, 255 }; 
-				color = enabled;
 				cursor = dc_hand;
 				enable = true;
 				isTakenByBot = false;
@@ -190,9 +199,6 @@ void CFormationMenu::Update()
 			}
 			else
 			{
-				color32 human = { 255, 255, 255, 255 };
-				color32 bot = { 75, 75, 75, 255 };
-				color = gr->IsFakePlayer(playerIndexAtPos[i][j]) ? bot : human;
 				cursor = gr->IsFakePlayer(playerIndexAtPos[i][j]) ? dc_hand : dc_arrow;
 				enable = gr->IsFakePlayer(playerIndexAtPos[i][j]);
 				isTakenByBot = gr->IsFakePlayer(playerIndexAtPos[i][j]);
@@ -202,12 +208,17 @@ void CFormationMenu::Update()
 
 			m_pFormationButtons[i][j]->SetFont(font);
 			m_pFormationButtons[i][j]->SetCursor(cursor);
-			m_pFormationButtons[i][j]->SetCommand((isFree || isTakenByBot) ? VarArgs("jointeam %d %d", i + TEAM_A, j) : "");
+			KeyValues *kv = new KeyValues("Command");
+			kv->SetString("command", (isFree || isTakenByBot) ? VarArgs("jointeam %d %d", i + TEAM_A, j) : "");
+			kv->SetInt("playerindex", playerIndexAtPos[i][j]);
+			m_pFormationButtons[i][j]->SetCommand(kv);
+			//kv->deleteThis();
 			Color teamColor = GetGlobalTeam(TEAM_A + i)->Get_HudKitColor();
-			color32 normal = { teamColor.r(), teamColor.g(), teamColor.b(), isFree ? 10 : 255 };
-			color32 hover = { teamColor.r(), teamColor.g(), teamColor.b(), (isFree || isTakenByBot) ? 255 : 255 };
+			color32 normal = { teamColor.r(), teamColor.g(), teamColor.b(), isFree ? 10 : 240 };
+			color32 hover = { teamColor.r(), teamColor.g(), teamColor.b(), (isFree || isTakenByBot) ? 240 : 240 };
 			m_pFormationButtons[i][j]->SetImage(CBitmapButton::BUTTON_ENABLED, "vgui/shirt", normal);
 			m_pFormationButtons[i][j]->SetImage(CBitmapButton::BUTTON_ENABLED_MOUSE_OVER, "vgui/shirt", hover);
+			//m_pFormationButtons[i][j]->SetName(VarArgs("%d", playerIndexAtPos[i][j]));
 		}
 	}
 }
@@ -229,4 +240,28 @@ void CFormationMenu::OnCommand( char const *cmd )
 
 void CFormationMenu::OnTextChanged(KeyValues *data)
 {
+}
+
+void CFormationMenu::OnCursorEntered(Panel *panel)
+{
+	char *msg = "FREE";
+	Button *pButton = ((Button *)panel);
+	int playerIndex = pButton->GetCommand()->GetInt("playerindex");
+	if (playerIndex > 0)
+	{
+		((CClientScoreBoardDialog *)gViewPortInterface->FindPanelByName(PANEL_SCOREBOARD))->SetHighlightedPlayer(playerIndex);
+		if (!GameResources()->IsFakePlayer(playerIndex))
+			msg = "TAKEN";
+	}
+
+	m_pTooltip->SetText(msg);
+	m_pTooltip->SetParent(pButton->GetParent());
+	m_pTooltip->SetBounds(pButton->GetX() + pButton->GetWide() / 2 - 100 / 2, pButton->GetY() + pButton->GetTall(), 100, 30);
+	m_pTooltip->SetVisible(true);
+}
+
+void CFormationMenu::OnCursorExited(Panel *panel)
+{
+	((CClientScoreBoardDialog *)gViewPortInterface->FindPanelByName(PANEL_SCOREBOARD))->SetHighlightedPlayer(0);
+	m_pTooltip->SetVisible(false);
 }

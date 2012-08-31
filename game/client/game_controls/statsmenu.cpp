@@ -75,8 +75,8 @@ void CStatsMenu::Reset()
 	m_pPlayerStats->SetSectionAlwaysVisible(0);
 	m_pPlayerStats->SetFontSection(0, m_pScheme->GetFont("StatsPlayerName"));
 	m_pPlayerStats->SetLineSpacing(30);
-	m_pPlayerStats->SetFgColor(Color(0, 0, 0, 255));
-	m_pPlayerStats->SetSectionFgColor(0, Color(0, 0, 0, 255));
+	m_pPlayerStats->SetFgColor(Color(255, 255, 255, 255));
+	m_pPlayerStats->SetSectionFgColor(0, Color(255, 255, 255, 255));
 	const int nameWidth = 140;
 	const int valueWidth = 105;
 	//m_pPlayerStats[side]->SetSectionDividerColor(0, Color(255, 255, 255, 255));
@@ -169,84 +169,10 @@ void CStatsMenu::Update(int playerIndex, KeyValues *kv)
 		if ((i % 4 == 3 || i == STAT_COUNT - 1))
 		{
 			m_pPlayerStats->ModifyItem(i / 4, 0, pData);
-			m_pPlayerStats->SetItemFgColor(i / 4, pTeam->Get_HudKitColor());
+			//m_pPlayerStats->SetItemFgColor(i / 4, pTeam->Get_HudKitColor());
 			pData->Clear();
 		}
 	}
-
-	//pData->SetString("NameColumn0", "Goals:");
-	//pData->SetInt("ValueColumn0", gr->GetGoals(playerIndex));
-	//pData->SetString("NameColumn1", "Assists:");
-	//pData->SetInt("ValueColumn1", gr->GetAssists(playerIndex));
-	//pData->SetString("NameColumn2", "Ping:");
-	//pData->SetInt("ValueColumn2", gr->GetPing(playerIndex));
-	//pData->SetString("NameColumn3", "Fouls suffered:");
-	//pData->SetInt("ValueColumn3", gr->GetFoulsSuffered(playerIndex));
-
-	//m_pPlayerStats->ModifyItem(0, 0, pData);
-	//m_pPlayerStats->SetItemFgColor(0, pTeam->Get_HudKitColor());
-	//pData->Clear();
-
-	//pData->SetString("NameColumn0", "Fouls:");
-	//pData->SetInt("ValueColumn0", gr->GetFouls(playerIndex));
-	//pData->SetString("NameColumn1", "Yellows:");
-	//pData->SetInt("ValueColumn1", gr->GetYellowCards(playerIndex));
-	//pData->SetString("NameColumn2", "Reds:");
-	//pData->SetInt("ValueColumn2", kv->GetString("redcards");
-	//pData->SetString("NameColumn3", "Goals conceded:");
-	//pData->SetInt("ValueColumn3", gr->GetGoalsConceded(playerIndex));
-
-	//m_pPlayerStats->ModifyItem(1, 0, pData);
-	//m_pPlayerStats->SetItemFgColor(1, pTeam->Get_HudKitColor());
-	//pData->Clear();
-
-	//pData->SetString("NameColumn0", "Penalties:");
-	//pData->SetInt("ValueColumn0", gr->GetPenalties(playerIndex));	
-	//pData->SetString("NameColumn1", "Goal kicks:");
-	//pData->SetInt("ValueColumn1", gr->GetGoalKicks(playerIndex));
-	//pData->SetString("NameColumn2", "Free kicks:");
-	//pData->SetInt("ValueColumn2", gr->GetFreeKicks(playerIndex));
-	//pData->SetString("NameColumn3", "Passes:");
-	//pData->SetInt("ValueColumn3", gr->GetPasses(playerIndex));
-
-	//m_pPlayerStats->ModifyItem(2, 0, pData);
-	//m_pPlayerStats->SetItemFgColor(2, pTeam->Get_HudKitColor());
-	//pData->Clear();
-
-	//pData->SetString("NameColumn0", "Distance:");
-	//pData->SetString("ValueColumn0", VarArgs("%.1f km", gr->GetDistanceCovered(playerIndex) / 1000.0f));
-	//pData->SetString("NameColumn1", "Possession:");
-	//pData->SetString("ValueColumn1", VarArgs("%d%%", gr->GetPossession(playerIndex)));
-	//pData->SetString("NameColumn2", "Offsides:");
-	//pData->SetInt("ValueColumn2", gr->GetOffsides(playerIndex));
-	//pData->SetString("NameColumn3", "Passes completed:");
-	//pData->SetString("ValueColumn3", VarArgs("%d%%", gr->GetPassesCompleted(playerIndex) * 100 / max(1, gr->GetPasses(playerIndex))));
-
-	//m_pPlayerStats->ModifyItem(3, 0, pData);
-	//m_pPlayerStats->SetItemFgColor(3, pTeam->Get_HudKitColor());
-	//pData->Clear();
-
-	//pData->SetString("NameColumn0", "Corners:");
-	//pData->SetInt("ValueColumn0", gr->GetCorners(playerIndex));	
-	//pData->SetString("NameColumn1", "Own goals:");
-	//pData->SetInt("ValueColumn1", gr->GetOwnGoals(playerIndex));
-	//pData->SetString("NameColumn2", "Saves:");
-	//pData->SetInt("ValueColumn2", gr->GetKeeperSaves(playerIndex));
-	//pData->SetString("NameColumn3", "Shots:");
-	//pData->SetInt("ValueColumn3", gr->GetShots(playerIndex));
-
-	//m_pPlayerStats->ModifyItem(4, 0, pData);
-	//m_pPlayerStats->SetItemFgColor(4, pTeam->Get_HudKitColor());
-	//pData->Clear();
-
-	//pData->SetString("NameColumn0", "Shots on goal:");
-	//pData->SetInt("ValueColumn0", gr->GetShotsOnGoal(playerIndex));
-	//pData->SetString("NameColumn1", "Interceptions:");
-	//pData->SetInt("ValueColumn1", gr->GetInterceptions(playerIndex));
-
-	//m_pPlayerStats->ModifyItem(5, 0, pData);
-	//m_pPlayerStats->SetItemFgColor(5, pTeam->Get_HudKitColor());
-	//pData->Clear();
 
 	pData->deleteThis();
 }

@@ -1203,15 +1203,19 @@ void Panel::PaintBackground()
 			}
 			break;
 		case 2:
+		case 3:
+		case 4:
+		case 5:
+		case 6:
 			{
 				DrawBox( 0, 0, wide, tall, col, 1.0f );
 			}
 			break;
-		case 3:
-			{
-				DrawBoxFade( 0, 0, wide, tall, col, 1.0f, 255, 0, true );
-			}
-			break;
+		//case 3:
+		//	{
+		//		DrawBoxFade( 0, 0, wide, tall, col, 1.0f, 255, 0, true );
+		//	}
+		//	break;
 		}
 	}
 }
@@ -3345,7 +3349,7 @@ void Panel::SetPaintBackgroundEnabled(bool state)
 void Panel::SetPaintBackgroundType( int type )
 {
 	// HACK only 0 through 2 supported for now
-	m_nPaintBackgroundType = clamp( type, 0, 2 );
+	m_nPaintBackgroundType = clamp( type, 0, 6 );
 }
 
 void Panel::SetPaintEnabled(bool state)
@@ -5478,15 +5482,41 @@ void Panel::DrawBox(int x, int y, int wide, int tall, Color color, float normali
 	}
 	surface()->DrawFilledRect(x + cornerWide, y + tall - cornerTall, x + wide - cornerWide, y + tall);
 
+	int bt = m_nPaintBackgroundType;
+
 	// draw the corners
-	surface()->DrawSetTexture(m_nBgTextureId1);
-	surface()->DrawTexturedRect(x, y, x + cornerWide, y + cornerTall);
-	surface()->DrawSetTexture(m_nBgTextureId2);
-	surface()->DrawTexturedRect(x + wide - cornerWide, y, x + wide, y + cornerTall);
-	surface()->DrawSetTexture(m_nBgTextureId3);
-	surface()->DrawTexturedRect(x + wide - cornerWide, y + tall - cornerTall, x + wide, y + tall);
-	surface()->DrawSetTexture(m_nBgTextureId4);
-	surface()->DrawTexturedRect(x + 0, y + tall - cornerTall, x + cornerWide, y + tall);
+
+	if (bt == 2 || bt == 3 || bt == 6)
+	{
+		surface()->DrawSetTexture(m_nBgTextureId1);
+		surface()->DrawTexturedRect(x, y, x + cornerWide, y + cornerTall);
+	}
+	else
+		surface()->DrawFilledRect(x, y, x + cornerWide, y + cornerTall);
+
+	if (bt == 2 || bt == 3 || bt == 4)
+	{
+		surface()->DrawSetTexture(m_nBgTextureId2);
+		surface()->DrawTexturedRect(x + wide - cornerWide, y, x + wide, y + cornerTall);
+	}
+	else
+		surface()->DrawFilledRect(x + wide - cornerWide, y, x + wide, y + cornerTall);
+
+	if (bt == 2 || bt == 4 || bt == 5)
+	{
+		surface()->DrawSetTexture(m_nBgTextureId3);
+		surface()->DrawTexturedRect(x + wide - cornerWide, y + tall - cornerTall, x + wide, y + tall);
+	}
+	else
+		surface()->DrawFilledRect(x + wide - cornerWide, y + tall - cornerTall, x + wide, y + tall);
+
+	if (bt == 2 || bt == 5 || bt == 6)
+	{
+		surface()->DrawSetTexture(m_nBgTextureId4);
+		surface()->DrawTexturedRect(x + 0, y + tall - cornerTall, x + cornerWide, y + tall);
+	}
+	else
+		surface()->DrawFilledRect(x + 0, y + tall - cornerTall, x + cornerWide, y + tall);
 }
 
 void Panel::DrawBoxFade(int x, int y, int wide, int tall, Color color, float normalizedAlpha, unsigned int alpha0, unsigned int alpha1, bool bHorizontal, bool hollow /*=false*/ )
