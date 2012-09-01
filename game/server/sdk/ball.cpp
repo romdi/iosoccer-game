@@ -60,8 +60,10 @@ ConVar sv_ball_dynamicshotdelay_minshotstrength("sv_ball_dynamicshotdelay_minsho
 ConVar sv_ball_dynamicshotdelay_maxshotstrength("sv_ball_dynamicshotdelay_maxshotstrength", "1600", FCVAR_NOTIFY);
 ConVar sv_ball_dynamicbounce_enabled("sv_ball_dynamicbouncedelay_enabled", "1", FCVAR_NOTIFY);
 ConVar sv_ball_bestshotangle("sv_ball_bestshotangle", "-30", FCVAR_NOTIFY);
-ConVar sv_ball_pitch_exponent("sv_ball_pitch_exponent", "2", FCVAR_NOTIFY);
-ConVar sv_ball_fixedpitchcoeff("sv_ball_fixedpitchcoeff", "0.15", FCVAR_NOTIFY);
+ConVar sv_ball_higherpitch_exponent("sv_ball_higherpitch_exponent", "2", FCVAR_NOTIFY);
+ConVar sv_ball_lowerpitch_exponent("sv_ball_lowerpitch_exponent", "3", FCVAR_NOTIFY);
+ConVar sv_ball_fixedhigherpitchcoeff("sv_ball_fixedhigherpitchcoeff", "0.15", FCVAR_NOTIFY);
+ConVar sv_ball_fixedlowerpitchcoeff("sv_ball_fixedlowerpitchcoeff", "0.0", FCVAR_NOTIFY);
 ConVar sv_ball_shotwalkcoeff("sv_ball_shotwalkcoeff", "0.5", FCVAR_NOTIFY);
 ConVar sv_ball_keepercatchspeed("sv_ball_keepercatchspeed", "500", FCVAR_NOTIFY);
 ConVar sv_ball_keeperpickupangle("sv_ball_keeperpickupangle", "45", FCVAR_NOTIFY);
@@ -1844,7 +1846,7 @@ float CBall::GetPitchCoeff()
 {
 	//return pow(cos((m_aPlAng[PITCH] - sv_ball_bestshotangle.GetInt()) / (PITCH_LIMIT - sv_ball_bestshotangle.GetInt()) * M_PI / 2), 2);
 	// plot 0.5 + (cos(x/89 * pi/2) * 0.5), x=-89..89
-	return ((m_pPl->m_nButtons & IN_WALK) ? sv_ball_shotwalkcoeff.GetFloat() : 1) * (sv_ball_fixedpitchcoeff.GetFloat() + (pow(cos((m_aPlAng[PITCH] - sv_ball_bestshotangle.GetInt()) / (PITCH_LIMIT - sv_ball_bestshotangle.GetInt()) * M_PI / 2), (double)sv_ball_pitch_exponent.GetFloat()) * (1 - sv_ball_fixedpitchcoeff.GetFloat())));
+	return ((m_pPl->m_nButtons & IN_WALK) ? sv_ball_shotwalkcoeff.GetFloat() : 1) * ((m_aPlAng[PITCH] >= sv_ball_bestshotangle.GetInt() ? sv_ball_fixedhigherpitchcoeff.GetFloat() : sv_ball_fixedlowerpitchcoeff.GetFloat()) + (pow(cos((m_aPlAng[PITCH] - sv_ball_bestshotangle.GetInt()) / (PITCH_LIMIT - sv_ball_bestshotangle.GetInt()) * M_PI / 2), (double)(m_aPlAng[PITCH] >= sv_ball_bestshotangle.GetInt() ? sv_ball_higherpitch_exponent.GetFloat() : sv_ball_lowerpitch_exponent.GetFloat())) * (1 - (m_aPlAng[PITCH] >= sv_ball_bestshotangle.GetInt() ? sv_ball_fixedhigherpitchcoeff.GetFloat() : sv_ball_fixedlowerpitchcoeff.GetFloat()))));
 }
 
 float CBall::GetNormalshotStrength(float coeff, int strength)

@@ -244,14 +244,14 @@ void CFormationMenu::OnTextChanged(KeyValues *data)
 
 void CFormationMenu::OnCursorEntered(Panel *panel)
 {
-	char *msg = "FREE";
+	char *msg = "JOIN";
 	Button *pButton = ((Button *)panel);
 	int playerIndex = pButton->GetCommand()->GetInt("playerindex");
 	if (playerIndex > 0)
 	{
 		((CClientScoreBoardDialog *)gViewPortInterface->FindPanelByName(PANEL_SCOREBOARD))->SetHighlightedPlayer(playerIndex);
 		if (!GameResources()->IsFakePlayer(playerIndex))
-			msg = "TAKEN";
+			msg = "";
 	}
 
 	m_pTooltip->SetText(msg);
