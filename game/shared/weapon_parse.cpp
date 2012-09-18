@@ -121,6 +121,8 @@ static FileWeaponInfo_t gNullWeaponInfo;
 //-----------------------------------------------------------------------------
 FileWeaponInfo_t *GetFileWeaponInfoFromHandle( WEAPON_FILE_INFO_HANDLE handle )
 {
+	return &gNullWeaponInfo;
+
 	if ( handle < 0 || handle >= m_WeaponInfoDatabase.Count() )
 	{
 		return &gNullWeaponInfo;
@@ -161,6 +163,8 @@ void ResetFileWeaponInfoDatabase( void )
 
 void PrecacheFileWeaponInfoDatabase( IFileSystem *filesystem, const unsigned char *pICEKey )
 {
+	return;
+
 	if ( m_WeaponInfoDatabase.Count() )
 		return;
 
@@ -194,6 +198,8 @@ void PrecacheFileWeaponInfoDatabase( IFileSystem *filesystem, const unsigned cha
 
 KeyValues* ReadEncryptedKVFile( IFileSystem *filesystem, const char *szFilenameWithoutExtension, const unsigned char *pICEKey )
 {
+	return NULL;
+
 	Assert( strchr( szFilenameWithoutExtension, '.' ) == NULL );
 	char szFullName[512];
 
@@ -268,6 +274,8 @@ KeyValues* ReadEncryptedKVFile( IFileSystem *filesystem, const char *szFilenameW
 
 bool ReadWeaponDataFromFileForSlot( IFileSystem* filesystem, const char *szWeaponName, WEAPON_FILE_INFO_HANDLE *phandle, const unsigned char *pICEKey )
 {
+	return false;
+
 	if ( !phandle )
 	{
 		Assert( 0 );

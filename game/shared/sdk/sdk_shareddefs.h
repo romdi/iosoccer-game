@@ -156,7 +156,8 @@ extern ConVar
 	mp_chargedshot_increaseduration,
 	mp_chargedshot_decreaseduration,
 	mp_throwinthrow_idle_duration,
-	mp_tackled_idle_duration;
+	mp_tackled_idle_duration,
+	mp_charging_animation_enabled;
 
 //--------------------------------------------------------------------------------------------------------
 //

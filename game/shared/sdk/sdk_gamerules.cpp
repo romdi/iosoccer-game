@@ -1793,8 +1793,8 @@ void OnTeamlistChange(IConVar *var, const char *pOldValue, float flOldValue)
 		char teamlist[256];
 		Q_strncpy(teamlist, ((ConVar*)var)->GetString(), sizeof(teamlist));
 
-		char *home = strtok(teamlist, " ,;");
-		char *away = strtok(NULL, " ,;");
+		char *home = strlwr(strtok(teamlist, " ,;"));
+		char *away = strlwr(strtok(NULL, " ,;"));
 		if (home == NULL || away == NULL)
 			Msg( "Format: mp_teamlist \"<home team>,<away team>\"\n" );
 		else

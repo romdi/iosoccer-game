@@ -663,7 +663,7 @@ void CClientScoreBoardDialog::UpdatePlayerInfo()
 			pPl->SetFgColor(Color(255, 255, 255, 255));
 			pPl->SetFont(m_pSpectatorFontList[1]);
 			pPl->SetContentAlignment(Label::a_center);
-			//pPl->SetPaintBackgroundEnabled(false);
+			pPl->SetPaintBackgroundEnabled(false);
 			pPl->SetPaintBorderEnabled(false);
 			int width, height;
 			pPl->GetTextImage()->GetContentSize(width, height);
@@ -716,7 +716,7 @@ void CClientScoreBoardDialog::AddHeader()
 		//}
 		m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "name",			"Name", 0, 180);
 
-		int defaultFlags = 0;
+		int defaultFlags = SectionedListPanel::COLUMN_CENTER;
 
 		// Max width = 270
 
@@ -731,27 +731,27 @@ void CClientScoreBoardDialog::AddHeader()
 			break;
 		case GENERAL:
 			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "possession",		"Poss.", defaultFlags, 45);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "distancecovered",	"Distance", defaultFlags, 60);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "distancecovered",	"Distance", defaultFlags, 70);
 			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "passes",			"Passes", defaultFlags, 45);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "passescompleted",	"~ completed", defaultFlags, 60);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "interceptions",		"Intercep.", defaultFlags, 60);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "passescompleted",	"~ compl.", defaultFlags, 55);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "interceptions",		"Interc.", defaultFlags, 55);
 			break;
 		case TACKLINGS:
 			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "fouls",				"Fouls", defaultFlags, 60);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "foulssuffered",		"~ suffered", defaultFlags, 60);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "foulssuffered",		"~ suff.", defaultFlags, 60);
 			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "redcards",			"Reds", defaultFlags, 60);
 			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "yellowcards",		"Yellows", defaultFlags, 60);
 			break;
 		case SET_PIECES:
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "freekicks",			"Free kicks", defaultFlags, 45);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "penalties",			"Penalties", defaultFlags, 45);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "freekicks",			"Free k.", defaultFlags, 45);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "penalties",			"Pens", defaultFlags, 45);
 			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "throwins",			"Throw-ins", defaultFlags, 45);
 			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "corners",			"Corners", defaultFlags, 45);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goalkicks",			"Goal kicks", defaultFlags, 45);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goalkicks",			"Goal k.", defaultFlags, 45);
 			break;
 		case KEEPER:
 			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "saves",				"Saves", defaultFlags, 45);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goalkicks",			"Goal kicks", defaultFlags, 45);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goalkicks",			"Goal k.", defaultFlags, 45);
 			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "owngoals",			"Own goals", defaultFlags, 45);
 			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goalsconceded",		"Goals conc.", defaultFlags, 45);
 			break;

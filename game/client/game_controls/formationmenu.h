@@ -43,7 +43,7 @@ public:
 	CFormationMenu(Panel *parent, const char *name);
 	virtual ~CFormationMenu();
 
-	virtual const char *GetName( void ) { return PANEL_TEAM; }
+	virtual const char *GetName( void ) { return PANEL_FORMATION; }
 	virtual void OnThink();
 	virtual bool HasInputElements( void ) { return true; }
 	virtual void PerformLayout();

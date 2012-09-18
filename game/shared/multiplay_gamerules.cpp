@@ -271,11 +271,6 @@ bool CMultiplayRules::Init()
 
 	// override some values for multiplay.
 
-		// suitcharger
-#ifndef TF_DLL
-		ConVarRef suitcharger( "sk_suitcharger" );
-		suitcharger.SetValue( 30 );
-#endif
 	}
 
 

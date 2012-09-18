@@ -141,3 +141,5 @@ ConVar mp_chargedshot_decreaseduration("mp_chargedshot_decreaseduration", "5.0",
 ConVar mp_throwinthrow_idle_duration("mp_throwinthrow_idle_duration", "1.0", FCVAR_REPLICATED | FCVAR_NOTIFY);
 
 ConVar mp_tackled_idle_duration("mp_tackled_idle_duration", "1.0", FCVAR_REPLICATED | FCVAR_NOTIFY);
+
+ConVar mp_charging_animation_enabled("mp_charging_animation_enabled", "0", FCVAR_REPLICATED | FCVAR_NOTIFY);

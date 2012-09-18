@@ -48,4 +48,7 @@
 
 #define PANEL_POSTMATCHSTATS "postmatchstats"
 
+#define PANEL_STATS "stats"
+#define PANEL_FORMATION "formation"
+
 #endif // VIEWPORT_PANEL_NAMES_H

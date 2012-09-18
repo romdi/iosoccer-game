@@ -493,6 +493,8 @@ private:
 
 	bool			m_bTakeFreezeFrame;
 	float			m_flFreezeFrameUntil;
+
+	void PerformPostProcessEffects( int x, int y, int width, int height );
 };
 
 #endif // VIEWRENDER_H

@@ -147,6 +147,8 @@ static ConVar mat_clipz( "mat_clipz", "1" );
 static ConVar r_screenfademinsize( "r_screenfademinsize", "0" );
 static ConVar r_screenfademaxsize( "r_screenfademaxsize", "0" );
 
+ConVar post_sepia("post_sepia", "0", 0, "Enable/Disable Sepia shader");
+
 static ConVar cl_drawmonitors( "cl_drawmonitors", "1" );
 static ConVar r_eyewaterepsilon( "r_eyewaterepsilon", "7.0f", FCVAR_CHEAT );
 
@@ -1967,9 +1969,9 @@ void CViewRender::RenderView( const CViewSetup &view, int nClearFlags, int whatT
 		SDKGameRules()->DrawSkyboxOverlay();
 
 		// Overlay screen fade on entire screen
-		//IMaterial* pMaterial = blend ? m_ModulateSingleColor : m_TranslucentSingleColor;
-		//render->ViewDrawFade( color, pMaterial );
-		//PerformScreenOverlay( view.x, view.y, view.width, view.height );
+		IMaterial* pMaterial = blend ? m_ModulateSingleColor : m_TranslucentSingleColor;
+		render->ViewDrawFade( color, pMaterial );
+		PerformScreenOverlay( view.x, view.y, view.width, view.height );
 
 		// Prevent sound stutter if going slow
 		engine->Sound_ExtraUpdate();	
@@ -2102,6 +2104,25 @@ void CViewRender::RenderView( const CViewSetup &view, int nClearFlags, int whatT
 
 	render->PopView( GetFrustum() );
 	g_WorldListCache.Flush();
+
+	PerformPostProcessEffects( view.x, view.y, view.width, view.height );
+}
+
+void CViewRender::PerformPostProcessEffects( int x, int y, int width, int height ) 
+{ 
+	if ( (post_sepia.GetInt() == 0) ) //no active effects, bail out 
+		return; 
+
+	IMaterial *pSepiaMat = materials->FindMaterial( "shaders/post_sepia", TEXTURE_GROUP_CLIENT_EFFECTS, true ); 
+
+	if ( g_pMaterialSystemHardwareConfig->GetDXSupportLevel() >= 80 ) 
+	{ 
+
+		if ( (post_sepia.GetInt() == 1) && pSepiaMat ) 
+		{ 
+			DrawScreenEffectMaterial( pSepiaMat, x, y, width, height ); 
+		} 
+	} 
 }
 
 //-----------------------------------------------------------------------------

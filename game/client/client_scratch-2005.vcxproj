@@ -445,7 +445,6 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClCompile Include="hud.cpp" />
     <ClCompile Include="hud_animationinfo.cpp" />
     <ClCompile Include="hud_basechat.cpp" />
-    <ClCompile Include="hud_basedeathnotice.cpp" />
     <ClCompile Include="hud_basetimer.cpp" />
     <ClCompile Include="hud_bitmapnumericdisplay.cpp" />
     <ClCompile Include="hud_closecaption.cpp" />
@@ -464,7 +463,6 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClCompile Include="hud_redraw.cpp" />
     <ClCompile Include="hud_vehicle.cpp" />
     <ClCompile Include="hud_voicestatus.cpp" />
-    <ClCompile Include="hud_weapon.cpp" />
     <ClCompile Include="..\shared\igamesystem.cpp" />
     <ClCompile Include="in_camera.cpp" />
     <ClCompile Include="in_joystick.cpp" />
@@ -796,9 +794,6 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClCompile Include="sdk\vgui\sdk_textwindow.cpp" />
     <ClCompile Include="sdk\vgui\sdkviewport.cpp" />
     <ClCompile Include="sdk\vgui\vgui_rootpanel_sdk.cpp" />
-    <ClCompile Include="sdk\hud_sdkdeathnotice.cpp" />
-    <ClCompile Include="sdk\sdk_hud_ammo.cpp" />
-    <ClCompile Include="sdk\sdk_hud_armor.cpp" />
     <ClCompile Include="sdk\sdk_hud_chat.cpp" />
     <ClCompile Include="sdk\sdk_hud_damage.cpp" />
     <ClCompile Include="sdk\sdk_hud_health.cpp" />
@@ -851,7 +846,6 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClInclude Include="game_controls\motmvotingmenu.h" />
     <ClInclude Include="game_controls\postmatchstatsmenu.h" />
     <ClInclude Include="game_controls\statsmenu.h" />
-    <ClInclude Include="hud_basedeathnotice.h" />
     <ClInclude Include="..\shared\particle_parse.h" />
     <ClInclude Include="..\shared\particle_property.h" />
     <ClInclude Include="..\shared\playerclass_info_parse.h" />

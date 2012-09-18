@@ -1371,7 +1371,8 @@ void CBall::State_PENALTY_Think()
 
 	UpdateCarrier();
 
-	if (m_bPenaltyTakerStartedMoving && (m_vPlVel.y == 0 || Sign(m_vPlVel.y) != m_pPl->GetTeam()->m_nForward))
+	//if (m_bPenaltyTakerStartedMoving && (m_vPlVel.y == 0 || Sign(m_vPlVel.y) != m_pPl->GetTeam()->m_nForward))
+	if ((m_vPlVel.y == 0 || Sign(m_vPlVel.y) != m_pPl->GetTeam()->m_nForward) && (m_vPos - m_vPlPos).Length2D() < 100)
 	{
 		if (SDKGameRules()->State_Get() == MATCH_PENALTIES)
 		{
@@ -1387,10 +1388,10 @@ void CBall::State_PENALTY_Think()
 		return;
 	}
 
-	if (!m_bPenaltyTakerStartedMoving && m_vPlVel.y != 0 && Sign(m_vPlVel.y) == m_pPl->GetTeam()->m_nForward)
-	{
-		m_bPenaltyTakerStartedMoving = true;
-	}
+	//if (!m_bPenaltyTakerStartedMoving && m_vPlVel.y != 0 && Sign(m_vPlVel.y) == m_pPl->GetTeam()->m_nForward)
+	//{
+	//	m_bPenaltyTakerStartedMoving = true;
+	//}
 
 	if (m_pPl->ShotButtonsReleased() && m_pPl->IsShooting() && (m_vPos - m_vPlPos).Length2D() <= sv_ball_touchradius.GetFloat())
 	{

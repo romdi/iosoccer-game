@@ -564,9 +564,6 @@
     <ClCompile Include="hud_basechat.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="hud_basedeathnotice.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="hud_basetimer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -604,9 +601,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="hud_voicestatus.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="hud_weapon.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\igamesystem.cpp">
@@ -1287,15 +1281,6 @@
     <ClCompile Include="sdk\vgui\vgui_rootpanel_sdk.cpp">
       <Filter>Source Files\SDK\GUI</Filter>
     </ClCompile>
-    <ClCompile Include="sdk\hud_sdkdeathnotice.cpp">
-      <Filter>Source Files\SDK\Hud Elements</Filter>
-    </ClCompile>
-    <ClCompile Include="sdk\sdk_hud_ammo.cpp">
-      <Filter>Source Files\SDK\Hud Elements</Filter>
-    </ClCompile>
-    <ClCompile Include="sdk\sdk_hud_armor.cpp">
-      <Filter>Source Files\SDK\Hud Elements</Filter>
-    </ClCompile>
     <ClCompile Include="sdk\sdk_hud_chat.cpp">
       <Filter>Source Files\SDK\Hud Elements</Filter>
     </ClCompile>
@@ -1467,9 +1452,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\GameStats.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="hud_basedeathnotice.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\particle_parse.h">

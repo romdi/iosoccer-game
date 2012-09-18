@@ -506,7 +506,7 @@ Activity CSDKPlayerAnimState::CalcMainActivity()
 
 	Activity idealActivity = ACT_IDLE;
 
-	if (pPlayer->m_Shared.m_bIsShotCharging)
+	if (pPlayer->m_Shared.m_bIsShotCharging && mp_charging_animation_enabled.GetBool())
 		return ACT_IOS_RUNCELEB;
 
 	if ( HandleJumping(idealActivity) )
