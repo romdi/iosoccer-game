@@ -8,6 +8,7 @@
 #include <igameresources.h>
 #include <vgui_controls/RadioButton.h>
 #include "GameEventListener.h"
+#include <vgui_controls/ComboBox.h>
 
 // Non RES-File Control Tutorial
 #include <vgui_controls/Button.h>
@@ -76,12 +77,14 @@ private:
 	// Our Code Defined Control
 	MatchStat *m_pMatchStats[MATCH_STATS_COUNT];
 	Button *m_pClose;
+	Button *m_pVote;
 	IViewPort *m_pViewPort;
 	Panel *m_pMainPanel;
 	int m_nPlayersChoiceMotm[2];
 	int m_nPlayersChoiceMotmPercentage[2];
 	int m_nExpertsChoiceMotm[2];
 	int m_nExpertsChoiceMotmPercentage[2];
+	ComboBox *m_pPlayersChoiceMotm[2];
 };
 
 #endif

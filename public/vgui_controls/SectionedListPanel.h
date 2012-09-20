@@ -48,6 +48,7 @@ public:
 	// modifies section info
 	virtual void SetSectionFgColor(int sectionID, Color color);
 	virtual void SetSectionDividerColor( int sectionID, Color color);
+	virtual void SetItemDividerColor(int itemID, Color color);
 	// forces a section to always be visible
 	virtual void SetSectionAlwaysVisible(int sectionID, bool visible = true);
 
@@ -59,6 +60,9 @@ public:
 		COLUMN_BRIGHT	= 0x04,		// set if the column text should be the bright color
 		COLUMN_CENTER	= 0x08,		// set to center the text/image in the column
 		COLUMN_RIGHT	= 0x10,		// set to right-align the text in the column
+		HEADER_BRIGHT	= 0x20,		// set if the column text should be the bright color
+		HEADER_CENTER	= 0x40,		// set to center the text/image in the column
+		HEADER_RIGHT	= 0x80,		// set to right-align the text in the column
 	};
 	virtual bool AddColumnToSection(int sectionID, const char *columnName, const char *columnText, int columnFlags, int width, HFont fallbackFont = INVALID_FONT );
 	virtual bool AddColumnToSection(int sectionID, const char *columnName, const wchar_t *columnText, int columnFlags, int width, HFont fallbackFont = INVALID_FONT );

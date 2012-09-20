@@ -288,7 +288,9 @@ void CHudPowershotBar::Paint()
 		float totalTime = currentTime - pPlayer->m_Shared.m_flShotChargingStart;
 		float activeTime = min(duration, mp_chargedshot_increaseduration.GetFloat());
 		float extra = totalTime - activeTime;
-		shotStrength = max(0, activeTime / mp_chargedshot_increaseduration.GetFloat() - min(extra, mp_chargedshot_decreaseduration.GetFloat()) / mp_chargedshot_decreaseduration.GetFloat());
+		float increaseFraction = clamp(activeTime / mp_chargedshot_increaseduration.GetFloat(), 0, 1);
+		float decreaseFraction = clamp(extra / mp_chargedshot_decreaseduration.GetFloat(), 0, 1);
+		shotStrength = clamp(pow(increaseFraction, 1 / 2.0f) - pow(decreaseFraction, 1 / 2.0f), 0, 1);
 
 		m_pPowershotIndicatorBack->SetY(m_pStaminaPanel->GetY() + BAR_PADDING + m_pPowershotIndicatorBack->GetTall() + (1 - shotStrength) * (BAR_HEIGHT - 2 * BAR_PADDING - 3 * m_pPowershotIndicatorBack->GetTall()));
 		m_pPowershotIndicatorBack->SetVisible(true);

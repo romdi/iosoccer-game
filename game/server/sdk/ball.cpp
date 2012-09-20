@@ -1872,7 +1872,9 @@ float CBall::GetChargedshotStrength(float coeff, int minStrength, int maxStrengt
 	float totalTime = gpGlobals->curtime - m_pPl->m_Shared.m_flShotChargingStart;
 	float activeTime = min(duration, mp_chargedshot_increaseduration.GetFloat());
 	float extra = totalTime - activeTime;
-	float shotStrengthCoeff = max(0, activeTime / mp_chargedshot_increaseduration.GetFloat() - min(extra, mp_chargedshot_decreaseduration.GetFloat()) / mp_chargedshot_decreaseduration.GetFloat());
+	float increaseFraction = clamp(activeTime / mp_chargedshot_increaseduration.GetFloat(), 0, 1);
+	float decreaseFraction = clamp(extra / mp_chargedshot_decreaseduration.GetFloat(), 0, 1);
+	float shotStrengthCoeff = clamp(pow(increaseFraction, 1 / 2.0f) - pow(decreaseFraction, 1 / 2.0f), 0, 1);
 	float shotStrength = minStrength + (maxStrength - minStrength) * shotStrengthCoeff;
 
 	return coeff * shotStrength;

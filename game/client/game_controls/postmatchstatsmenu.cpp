@@ -7,16 +7,17 @@ using namespace vgui;
 
 enum { PANEL_WIDTH = 500, PANEL_HEIGHT = 600 };
 enum { NAME_HEIGHT = 30, NAME_VMARGIN = 5 };
-enum { VOTE_WIDTH = 100, VOTE_HEIGHT = 30 };
 enum { STAT_WIDTH = 400, STAT_HEIGHT = 100, STAT_VMARGIN = 5, STAT_TEXT_WIDTH = 100, STAT_TEXT_HEIGHT = 30 };
 enum { CLOSE_WIDTH = 50, CLOSE_HEIGHT = 30, CLOSE_MARGIN = 5 };
+enum { CHOICE_WIDTH = 150, CHOICE_HEIGHT = 30, CHOICE_MARGIN = 5 };
+enum { VOTE_WIDTH = 50, VOTE_MARGIN = 5 };
 
 void ShowPostMatchStats()
 {
 	gViewPortInterface->ShowPanel(PANEL_POSTMATCHSTATS, true);
 }
 
-//ConCommand showpostmatchstats("showpostmatchstats", ShowPostMatchStats);
+ConCommand showpostmatchstats("showpostmatchstats", ShowPostMatchStats);
 
 CPostMatchStatsMenu::CPostMatchStatsMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_POSTMATCHSTATS)
 {
@@ -56,7 +57,10 @@ CPostMatchStatsMenu::CPostMatchStatsMenu(IViewPort *pViewPort) : Frame(NULL, PAN
 		m_nPlayersChoiceMotmPercentage[i] = 0;
 		m_nExpertsChoiceMotm[i] = 0;
 		m_nExpertsChoiceMotmPercentage[i] = 0;
+		m_pPlayersChoiceMotm[i] = new ComboBox(m_pMainPanel, "", 0, false);
 	}
+
+	m_pVote = new Button(m_pMainPanel, "", "Vote", this, "vote");
 
 	MakePopup();
 }
@@ -87,7 +91,15 @@ void CPostMatchStatsMenu::ApplySchemeSettings(IScheme *pScheme)
 		}
 	}
 
+	for (int i = 0; i < 2; i++)
+	{
+		int choiceWidth = (PANEL_WIDTH - 4 * VOTE_MARGIN - VOTE_WIDTH) / 2;
+		m_pPlayersChoiceMotm[i]->SetBounds(i == 0 ? VOTE_MARGIN : 2 * VOTE_MARGIN + choiceWidth, PANEL_HEIGHT - CLOSE_HEIGHT - CLOSE_MARGIN - CHOICE_HEIGHT - CHOICE_MARGIN, choiceWidth, CHOICE_HEIGHT);
+	}
+
 	m_pClose->SetBounds(PANEL_WIDTH - CLOSE_WIDTH - CLOSE_MARGIN, PANEL_HEIGHT - CLOSE_HEIGHT - CLOSE_MARGIN, CLOSE_WIDTH, CLOSE_HEIGHT);
+
+	m_pVote->SetBounds(PANEL_WIDTH - VOTE_WIDTH - VOTE_MARGIN, PANEL_HEIGHT - CLOSE_HEIGHT - CLOSE_MARGIN - CHOICE_HEIGHT - CHOICE_MARGIN, VOTE_WIDTH, CHOICE_HEIGHT);
 }
 
 void CPostMatchStatsMenu::Update()
@@ -197,6 +209,43 @@ void CPostMatchStatsMenu::Reset()
 		}
 	}
 
+	for (int i = 0; i < 2; i++)
+	{
+		m_pPlayersChoiceMotm[i]->RemoveAll();
+	}
+
+	if (C_BasePlayer::GetLocalPlayer()->GetTeamNumber() != TEAM_A && C_BasePlayer::GetLocalPlayer()->GetTeamNumber() != TEAM_B)
+	{
+		for (int i = 0; i < 2; i++)
+		{
+			m_pPlayersChoiceMotm[i]->SetVisible(false);
+			m_pVote->SetVisible(false);
+		}
+	}
+	else
+	{
+		for (int i = 1; i <= gpGlobals->maxClients; i++)
+		{
+			if (!g_PR->IsConnected(i) || g_PR->GetTeam(i) != TEAM_A && g_PR->GetTeam(i) != TEAM_B || i == GetLocalPlayerIndex())
+				continue;
+
+			KeyValues *kv = new KeyValues("UserData", "index", i);
+			m_pPlayersChoiceMotm[g_PR->GetTeam(i) - TEAM_A]->AddItem(VarArgs("[%s] %s", g_szPosNames[g_PR->GetTeamPosType(i)], g_PR->GetPlayerName(i)), kv);
+			kv->deleteThis();
+		}
+
+		for (int i = 0; i < 2; i++)
+		{
+			m_pPlayersChoiceMotm[i]->ActivateItemByRow(0);
+			m_pPlayersChoiceMotm[i]->SetVisible(true);
+			m_pPlayersChoiceMotm[i]->SetEnabled(true);
+			m_pVote->SetEnabled(true);
+		}
+
+		m_pVote->SetVisible(true);
+		m_pVote->SetEnabled(true);
+	}
+
 	MoveToCenterOfScreen();
 }
 
@@ -205,6 +254,13 @@ void CPostMatchStatsMenu::OnCommand(const char *cmd)
 	if (!Q_strcmp(cmd, "close"))
 	{
 		ShowPanel(false);
+	} 
+	else if (!Q_strcmp(cmd, "vote"))
+	{
+		engine->ClientCmd(VarArgs("motmvote %d %d", m_pPlayersChoiceMotm[0]->GetActiveItemUserData()->GetInt("index"), m_pPlayersChoiceMotm[1]->GetActiveItemUserData()->GetInt("index")));
+		m_pPlayersChoiceMotm[0]->SetEnabled(false);
+		m_pPlayersChoiceMotm[1]->SetEnabled(false);
+		m_pVote->SetEnabled(false);
 	}
 	else
 		BaseClass::OnCommand(cmd);
@@ -228,5 +284,6 @@ void CPostMatchStatsMenu::FireGameEvent(IGameEvent *event)
 	m_nExpertsChoiceMotm[1] = event->GetInt("expertschoice_player1");
 	m_nExpertsChoiceMotmPercentage[1] = event->GetInt("expertschoice_percentage1");
 
-	ShowPanel(true);
+	//ShowPanel(true);
+	Reset();
 }

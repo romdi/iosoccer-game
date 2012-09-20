@@ -155,12 +155,12 @@ public:
 	void PlayerStartTouch(CSDKPlayer *pPl)
 	{
 		int team = m_nTeam == 1 ? SDKGameRules()->GetLeftSideTeam() : SDKGameRules()->GetRightSideTeam();
-		pPl->m_nInPenBoxOfTeam = team;
+		//pPl->m_nInPenBoxOfTeam = team;
 	};
 
 	void PlayerEndTouch(CSDKPlayer *pPl)
 	{
-		pPl->m_nInPenBoxOfTeam = TEAM_INVALID;
+		//pPl->m_nInPenBoxOfTeam = TEAM_INVALID;
 	};
 };
 

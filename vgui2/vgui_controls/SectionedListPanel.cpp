@@ -160,7 +160,7 @@ public:
 				contentWide = wide;
 
 				// see if we can draw over the next few column headers (if we're left-aligned)
-				if (!(columnFlags & SectionedListPanel::COLUMN_RIGHT))
+				if (!(columnFlags & SectionedListPanel::HEADER_RIGHT))
 				{
 					for (int j = i + 1; j < colCount; j++)
 					{
@@ -183,7 +183,12 @@ public:
 					wide = maxWidth;
 				}
 
-				if (columnFlags & SectionedListPanel::COLUMN_RIGHT)
+				if (columnFlags & SectionedListPanel::HEADER_CENTER)
+				{
+					int offSet = (wide / 2) - (contentWide / 2);
+					SetImageBounds(i, xpos + offSet, wide - offSet - COLUMN_DATA_GAP);
+				}
+				else if (columnFlags & SectionedListPanel::HEADER_RIGHT)
 				{
 					SetImageBounds(i, xpos + wide - contentWide, contentWide - COLUMN_DATA_GAP);
 				}
@@ -296,6 +301,11 @@ public:
 	KeyValues *GetData()
 	{
 		return m_pData;
+	}
+
+	void SetDividerColor(Color col )
+	{
+		m_ItemDividerColor = col;
 	}
 
 	virtual void PerformLayout()
@@ -435,25 +445,27 @@ public:
 					wide = imageWide;
 				}
 
-				if (i == 0 && !(columnFlags & SectionedListPanel::COLUMN_IMAGE))
-				{
-					// first column has an extra indent
-					SetImageBounds(i, xpos + COLUMN_DATA_INDENT, wide - (COLUMN_DATA_INDENT + COLUMN_DATA_GAP));
-				}
-				else
+				int indent = 0; //(i == 0 && !(columnFlags & SectionedListPanel::COLUMN_IMAGE)) ? COLUMN_DATA_INDENT : 0;
+
+				//if (i == 0 && !(columnFlags & SectionedListPanel::COLUMN_IMAGE))
+				//{
+				//	// first column has an extra indent
+				//	SetImageBounds(i, xpos + COLUMN_DATA_INDENT, wide - (COLUMN_DATA_INDENT + COLUMN_DATA_GAP));
+				//}
+				//else
 				{
 					if (columnFlags & SectionedListPanel::COLUMN_CENTER)
 					{
 						int offSet = (wide / 2) - (imageWide / 2);
-						SetImageBounds(i, xpos + offSet, wide - offSet - COLUMN_DATA_GAP);
+						SetImageBounds(i, xpos + offSet + indent, wide - offSet - (COLUMN_DATA_GAP + indent));
 					}
 					else if (columnFlags & SectionedListPanel::COLUMN_RIGHT)
 					{
-						SetImageBounds(i, xpos + wide - imageWide, wide - COLUMN_DATA_GAP);
+						SetImageBounds(i, xpos + wide - imageWide + indent, wide - (COLUMN_DATA_GAP + indent));
 					}
 					else
 					{
-						SetImageBounds(i, xpos, wide - COLUMN_DATA_GAP);
+						SetImageBounds(i, xpos + indent, wide - (COLUMN_DATA_GAP + indent));
 					}
 				}
 				xpos += wide;
@@ -476,6 +488,8 @@ public:
 
 		m_BgColor = GetSchemeColor("SectionedListPanel.BgColor", GetBgColor(), pScheme);
 		m_SelectionBG2Color = GetSchemeColor("SectionedListPanel.OutOfFocusSelectedBgColor", pScheme);
+
+		m_ItemDividerColor = Color(0, 0, 0, 0);
 
 		ClearImages();
 	}
@@ -509,11 +523,18 @@ public:
 	{
 		BaseClass::Paint();
 
+		int x, y, wide, tall;
+		GetBounds(x, y, wide, tall);
+
+		y = (tall - 2);	// draw the line under the panel
+
+		surface()->DrawSetColor(m_ItemDividerColor);
+		surface()->DrawFilledRect(1, y, GetWide() - 2, y + 1);
+
 		if ( !m_bShowColumns )
 			return;
 
 		// Debugging code to show column widths
-		int wide, tall;
 		GetSize(wide, tall);
 		surface()->DrawSetColor( 255,255,255,255 );
 		surface()->DrawOutlinedRect(0, 0, wide, tall);
@@ -701,6 +722,8 @@ private:
 	Color m_ArmedBgColor;
 	Color m_SelectionBG2Color;
 	CUtlVector<vgui::TextImage *> m_TextImages;
+
+	Color m_ItemDividerColor;
 
 	bool m_bSelected;
 	bool m_bOverrideColors;
@@ -1203,6 +1226,16 @@ void SectionedListPanel::SetSectionDividerColor( int sectionID, Color color)
 
 	m_Sections[sectionID].m_pHeader->SetDividerColor(color);
 }
+
+void SectionedListPanel::SetItemDividerColor(int itemID, Color color)
+{
+	Assert( m_Items.IsValidIndex(itemID) );
+	if ( !m_Items.IsValidIndex(itemID) )
+		return;
+
+	m_Items[itemID]->SetDividerColor(color);
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: forces a section to always be visible
 //-----------------------------------------------------------------------------

@@ -49,7 +49,7 @@ static ConVar cam_ideallag( "cam_ideallag", "4.0", FCVAR_ARCHIVE, "Amount of lag
 static ConVar cam_idealdelta( "cam_idealdelta", "4.0", FCVAR_ARCHIVE, "Controls the speed when matching offset to ideal angles in thirdperson view" );
 ConVar cam_idealyaw( "cam_idealyaw", "0", FCVAR_ARCHIVE );	 // thirdperson yaw
 ConVar cam_idealpitch( "cam_idealpitch", "0", FCVAR_ARCHIVE );	 // thirperson pitch
-static ConVar cam_idealdist( "cam_idealdist", "150", FCVAR_ARCHIVE );	 // thirdperson distance
+static ConVar cam_dist( "cam_dist", "150", FCVAR_ARCHIVE, "", true, 0, true, 175 );	 // thirdperson distance
 static ConVar cam_collision( "cam_collision", "1", FCVAR_ARCHIVE, "When in thirdperson and cam_collision is set to 1, an attempt is made to keep the camera from passing though walls." );
 static ConVar cam_showangles( "cam_showangles", "0", FCVAR_CHEAT, "When in thirdperson, print viewangles/idealangles/cameraoffsets to the console." );
 static ConVar c_maxpitch( "c_maxpitch", "90", FCVAR_ARCHIVE );
@@ -89,7 +89,7 @@ void CInput::CAM_Think( void )
 	
 	idealAngles[ PITCH ] = cam_idealpitch.GetFloat();
 	idealAngles[ YAW ]   = cam_idealyaw.GetFloat();
-	idealAngles[ DIST ]  = cam_idealdist.GetFloat();
+	idealAngles[ DIST ]  = cam_dist.GetFloat();
 
 	VectorCopy( m_vecCameraOffset, camOffset );
 
@@ -109,7 +109,7 @@ void CInput::CAM_Think( void )
 
 		camOffset[ YAW ] = cam_idealyaw.GetFloat() + viewangles[ YAW ];
 		camOffset[ PITCH ] = cam_idealpitch.GetFloat() + viewangles[ PITCH ];
-		camOffset[ DIST ] = cam_idealdist.GetFloat();
+		camOffset[ DIST ] = cam_dist.GetFloat();
 
 		// move the camera closer to the player if it hit something
 		if ( cam_collision.GetInt() )
@@ -153,7 +153,7 @@ void CInput::CAM_Think( void )
 	if ( cam_showangles.GetInt() )
 	{
 		engine->Con_NPrintf( 4, "Pitch: %6.1f   Yaw: %6.1f %38s", viewangles[ PITCH ], viewangles[ YAW ], "view angles" );
-		engine->Con_NPrintf( 6, "Pitch: %6.1f   Yaw: %6.1f   Dist: %6.1f %19s", cam_idealpitch.GetFloat(), cam_idealyaw.GetFloat(), cam_idealdist.GetFloat(), "ideal angles" );
+		engine->Con_NPrintf( 6, "Pitch: %6.1f   Yaw: %6.1f   Dist: %6.1f %19s", cam_idealpitch.GetFloat(), cam_idealyaw.GetFloat(), cam_dist.GetFloat(), "ideal angles" );
 		engine->Con_NPrintf( 8, "Pitch: %6.1f   Yaw: %6.1f   Dist: %6.1f %16s", m_vecCameraOffset[ PITCH ], m_vecCameraOffset[ YAW ], m_vecCameraOffset[ DIST ], "camera offset" );
 	}
 

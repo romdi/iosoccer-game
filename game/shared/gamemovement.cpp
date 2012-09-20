@@ -1507,6 +1507,22 @@ void CGameMovement::FullWalkMove( )
 	mv->m_vecVelocity = newVel;
 	mv->m_vecAbsViewAngles = newAng;
 
+	ToSDKPlayer(player)->m_nInPenBoxOfTeam = TEAM_INVALID;
+
+	for (int team = TEAM_A; team <= TEAM_B; team++)
+	{
+		float halfBounds = (player->GetPlayerMaxs().x - player->GetPlayerMins().x) / 2;
+
+		if (mv->GetAbsOrigin().x + halfBounds >= GetGlobalTeam(team)->m_vPenBoxMin.GetX()
+			&& mv->GetAbsOrigin().y + halfBounds >= GetGlobalTeam(team)->m_vPenBoxMin.GetY()
+			&& mv->GetAbsOrigin().x - halfBounds <= GetGlobalTeam(team)->m_vPenBoxMax.GetX()
+			&& mv->GetAbsOrigin().y - halfBounds <= GetGlobalTeam(team)->m_vPenBoxMax.GetY())
+		{
+			ToSDKPlayer(player)->m_nInPenBoxOfTeam = team;
+			break;
+		}
+	}
+
 #ifdef GAME_DLL
 	if (!SDKGameRules()->IsIntermissionState() && GetBall()->State_Get() == BALL_NORMAL)
 	{

@@ -77,13 +77,13 @@ void CStatsMenu::Reset()
 	m_pPlayerStats->SetLineSpacing(30);
 	m_pPlayerStats->SetFgColor(Color(255, 255, 255, 255));
 	m_pPlayerStats->SetSectionFgColor(0, Color(255, 255, 255, 255));
-	const int nameWidth = 140;
-	const int valueWidth = 105;
+	const int nameWidth = 145;
+	const int valueWidth = 110;
 	//m_pPlayerStats[side]->SetSectionDividerColor(0, Color(255, 255, 255, 255));
 	for (int j = 0; j < 4; j++)
 	{
-		m_pPlayerStats->AddColumnToSection(0, VarArgs("NameColumn%d", j), "", 0/*SectionedListPanel::COLUMN_RIGHT*/, nameWidth);
-		m_pPlayerStats->AddColumnToSection(0, VarArgs("ValueColumn%d", j), "", j == 4 ? SectionedListPanel::HEADER_IMAGE : 0, valueWidth);
+		m_pPlayerStats->AddColumnToSection(0, VarArgs("NameColumn%d", j), "", 0, nameWidth);
+		m_pPlayerStats->AddColumnToSection(0, VarArgs("ValueColumn%d", j), "", 0, valueWidth);
 	}
 
 	HFont font = m_pScheme->GetFont("StatsPlayerNameSmall");
@@ -145,15 +145,18 @@ void CStatsMenu::Update(int playerIndex, KeyValues *kv)
 	KeyValues *pData = new KeyValues("data");
 
 	wchar_t wszText[64];
-	g_pVGuiLocalize->ConvertANSIToUnicode(isPlayer ? gr->GetPlayerName(playerIndex) : pTeam->Get_ShortTeamName(), wszText, sizeof(wszText));
+	g_pVGuiLocalize->ConvertANSIToUnicode(isPlayer ? VarArgs("%s", gr->GetPlayerName(playerIndex)) : pTeam->Get_ShortTeamName(), wszText, sizeof(wszText));
 	m_pPlayerStats->ModifyColumn(0, "NameColumn0", wszText);
-	g_pVGuiLocalize->ConvertANSIToUnicode(isPlayer ? gr->GetSteamName(playerIndex) : "", wszText, sizeof(wszText));
+	g_pVGuiLocalize->ConvertANSIToUnicode(isPlayer ? VarArgs("%s", gr->GetSteamName(playerIndex)) : "", wszText, sizeof(wszText));
 	m_pPlayerStats->ModifyColumn(0, "NameColumn1", wszText);
 
 	//g_pVGuiLocalize->ConvertANSIToUnicode(g_szPosNames[(int)g_Positions[mp_maxplayers.GetInt() - 1][gr->GetTeamPosIndex(playerIndex)][POS_TYPE]], wszText, sizeof(wszText));
 	//m_pPlayerStats->ModifyColumn(0, "NameColumn2", wszText);
-	g_pVGuiLocalize->ConvertANSIToUnicode(isPlayer ? g_szCountryNames[gr->GetCountryName(playerIndex)] : "", wszText, sizeof(wszText));
+	g_pVGuiLocalize->ConvertANSIToUnicode(isPlayer ? VarArgs("%s", g_szCountryNames[gr->GetCountryName(playerIndex)]) : "", wszText, sizeof(wszText));
 	m_pPlayerStats->ModifyColumn(0, "NameColumn2", wszText);
+
+	g_pVGuiLocalize->ConvertANSIToUnicode(isPlayer ? VarArgs("%s", gr->GetClubName(playerIndex)) : "", wszText, sizeof(wszText));
+	m_pPlayerStats->ModifyColumn(0, "NameColumn3", wszText);
 
 	//UpdatePlayerAvatar(playerIndex, pData);
 

@@ -1703,79 +1703,93 @@ void CSDKGameRules::State_COOLDOWN_Think()
 		return;
 	}
 
-	if (gpGlobals->curtime >= m_flStateEnterTime + 3 && !m_bMotmVotingPanelShown)
+	//if (gpGlobals->curtime >= m_flStateEnterTime + 3 && !m_bMotmVotingPanelShown)
+	//{
+	//	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	//	{
+	//		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+	//		if (!CSDKPlayer::IsOnField(pPl))
+	//			continue;
+
+	//		pPl->ShowViewPortPanel(PANEL_MOTMVOTING);
+	//	}
+
+	//	m_bMotmVotingPanelShown = true;
+
+	//	return;
+	//}
+
+	if (gpGlobals->curtime >= m_flStateEnterTime + 3 && !m_bPostMatchStatsPanelShown)
 	{
 		for (int i = 1; i <= gpGlobals->maxClients; i++)
 		{
 			CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
-			if (!CSDKPlayer::IsOnField(pPl))
+			if (!pPl)
 				continue;
 
-			pPl->ShowViewPortPanel(PANEL_MOTMVOTING);
+			pPl->ShowViewPortPanel(PANEL_POSTMATCHSTATS);
 		}
-
-		m_bMotmVotingPanelShown = true;
-
-		return;
-	}
-
-	if (gpGlobals->curtime >= m_flStateEnterTime + 13 && !m_bPostMatchStatsPanelShown)
-	{
-		int playerVotes[2][MAX_PLAYERS] = {};
-		int playersOnField[2] = { 0, 0 };
-
-		int mostGoals[2] = {};
-		int mostGoalsPlayers[2] = {};
-
-		for (int i = 1; i <= gpGlobals->maxClients; i++)
-		{
-			CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
-			if (!CSDKPlayer::IsOnField(pPl))
-				continue;
-
-			for (int j = 0; j < 2; j++)
-			{
-				if (pPl->m_nMotmChoiceIds[j] > 0)
-					playerVotes[j][pPl->m_nMotmChoiceIds[j] - 1] += 1;
-			}
-
-			playersOnField[pPl->GetTeamNumber() - TEAM_A] += 1;
-
-			if (pPl->GetGoals() > mostGoals[pPl->GetTeamNumber() - TEAM_A])
-			{
-				mostGoals[pPl->GetTeamNumber() - TEAM_A] = pPl->GetGoals();
-				mostGoalsPlayers[pPl->GetTeamNumber() - TEAM_A] = i;
-			}
-		}
-
-		int mostVotesCount[2] = { 0, 0 };
-		int mostVotesPlayer[2] = { 0, 0 };
-
-		for (int i = 0; i < 2; i++)
-		{
-			for (int j = 0; j < MAX_PLAYERS; j++)
-			{
-				if (playerVotes[i][j] > mostVotesCount[i])
-				{
-					mostVotesCount[i] = playerVotes[i][j];
-					mostVotesPlayer[i] = j + 1;
-				}
-			}
-		}
-		
-		IGameEvent *pEvent = gameeventmanager->CreateEvent("motmvotingresult");
-		pEvent->SetInt("playerschoice_player0", mostVotesPlayer[0]);
-		pEvent->SetInt("playerschoice_percentage0", mostVotesCount[0] * 100 / max(1, playersOnField[0]));
-		pEvent->SetInt("playerschoice_player1", mostVotesPlayer[1]);
-		pEvent->SetInt("playerschoice_percentage1", mostVotesCount[1] * 100 / max(1, playersOnField[1]));
-		pEvent->SetInt("expertschoice_player0", mostGoalsPlayers[0]);
-		pEvent->SetInt("expertschoice_percentage0", 100);
-		pEvent->SetInt("expertschoice_player1", mostGoalsPlayers[1]);
-		pEvent->SetInt("expertschoice_percentage1", 100);
-		gameeventmanager->FireEvent(pEvent);
 
 		m_bPostMatchStatsPanelShown = true;
 	}
+
+	//if (m_bPostMatchStatsPanelShown)
+	//{
+	//	int playerVotes[2][MAX_PLAYERS] = {};
+	//	int playersOnField[2] = { 0, 0 };
+
+	//	int mostGoals[2] = {};
+	//	int mostGoalsPlayers[2] = {};
+
+	//	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	//	{
+	//		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+	//		if (!CSDKPlayer::IsOnField(pPl))
+	//			continue;
+
+	//		for (int j = 0; j < 2; j++)
+	//		{
+	//			if (pPl->m_nMotmChoiceIds[j] > 0)
+	//				playerVotes[j][pPl->m_nMotmChoiceIds[j] - 1] += 1;
+	//		}
+
+	//		playersOnField[pPl->GetTeamNumber() - TEAM_A] += 1;
+
+	//		if (pPl->GetGoals() > mostGoals[pPl->GetTeamNumber() - TEAM_A])
+	//		{
+	//			mostGoals[pPl->GetTeamNumber() - TEAM_A] = pPl->GetGoals();
+	//			mostGoalsPlayers[pPl->GetTeamNumber() - TEAM_A] = i;
+	//		}
+	//	}
+
+	//	int mostVotesCount[2] = { 0, 0 };
+	//	int mostVotesPlayer[2] = { 0, 0 };
+
+	//	for (int i = 0; i < 2; i++)
+	//	{
+	//		for (int j = 0; j < MAX_PLAYERS; j++)
+	//		{
+	//			if (playerVotes[i][j] > mostVotesCount[i])
+	//			{
+	//				mostVotesCount[i] = playerVotes[i][j];
+	//				mostVotesPlayer[i] = j + 1;
+	//			}
+	//		}
+	//	}
+	//	
+	//	IGameEvent *pEvent = gameeventmanager->CreateEvent("motmvotingresult");
+	//	pEvent->SetInt("playerschoice_player0", mostVotesPlayer[0]);
+	//	pEvent->SetInt("playerschoice_percentage0", mostVotesCount[0] * 100 / max(1, playersOnField[0]));
+	//	pEvent->SetInt("playerschoice_player1", mostVotesPlayer[1]);
+	//	pEvent->SetInt("playerschoice_percentage1", mostVotesCount[1] * 100 / max(1, playersOnField[1]));
+	//	pEvent->SetInt("expertschoice_player0", mostGoalsPlayers[0]);
+	//	pEvent->SetInt("expertschoice_percentage0", 100);
+	//	pEvent->SetInt("expertschoice_player1", mostGoalsPlayers[1]);
+	//	pEvent->SetInt("expertschoice_percentage1", 100);
+	//	gameeventmanager->FireEvent(pEvent);
+
+	//	m_bPostMatchStatsPanelShown = true;
+	//}
 }
 
 void CSDKGameRules::State_COOLDOWN_Leave()

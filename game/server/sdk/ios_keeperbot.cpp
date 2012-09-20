@@ -103,7 +103,7 @@ void CKeeperBot::BotAdjustPos()
 		float ballDistToGoal = (m_vBallPos - GetTeam()->m_vPlayerSpawns[0]).Length2D();
 		CSDKPlayer *pClosest = FindClosestPlayerToBall();
 
-		if (ballDistToGoal < 750 && m_vDirToBall.Length2D() < 200 && m_vDirToBall.z < 200)
+		if (ballDistToGoal < 750 && m_vDirToBall.Length2D() < 200 && m_vDirToBall.z < 200 && (m_vDirToBall.z < 80 || m_vBallVel.z <= 0))
 		{
 			modifier = KEEPER_CLOSE_COEFF;// max(0.15f, 1 - ballDistToGoal / 750);
 			m_cmd.powershot_strength = 50;

@@ -163,6 +163,8 @@ protected:
 	//virtual void AddSection(int teamType, int teamNumber); // add a new section header for a team
 	virtual int GetAdditionalHeight() { return 0; } 
 
+	void Paint();
+
 	// sorts players within a section
 	static bool StaticPlayerSortFunc(vgui::SectionedListPanel *list, int itemID1, int itemID2);
 

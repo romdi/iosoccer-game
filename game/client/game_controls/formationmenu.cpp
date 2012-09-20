@@ -211,6 +211,7 @@ void CFormationMenu::Update()
 			KeyValues *kv = new KeyValues("Command");
 			kv->SetString("command", (isFree || isTakenByBot) ? VarArgs("jointeam %d %d", i + TEAM_A, j) : "");
 			kv->SetInt("playerindex", playerIndexAtPos[i][j]);
+			kv->SetInt("team", i + TEAM_A);
 			m_pFormationButtons[i][j]->SetCommand(kv);
 			//kv->deleteThis();
 			Color teamColor = GetGlobalTeam(TEAM_A + i)->Get_HudKitColor();
@@ -257,6 +258,7 @@ void CFormationMenu::OnCursorEntered(Panel *panel)
 	m_pTooltip->SetText(msg);
 	m_pTooltip->SetParent(pButton->GetParent());
 	m_pTooltip->SetBounds(pButton->GetX() + pButton->GetWide() / 2 - 100 / 2, pButton->GetY() + pButton->GetTall(), 100, 30);
+	m_pTooltip->SetFgColor(GetGlobalTeam(pButton->GetCommand()->GetInt("team"))->Get_HudKitColor());
 	m_pTooltip->SetVisible(true);
 }
 
