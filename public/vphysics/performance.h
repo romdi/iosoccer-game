@@ -10,7 +10,7 @@
 #pragma once
 #endif
 
-const float DEFAULT_MIN_FRICTION_MASS = 1.0f;
+const float DEFAULT_MIN_FRICTION_MASS = 10.0f;
 const float DEFAULT_MAX_FRICTION_MASS = 2500.0f;
 struct physics_performanceparams_t
 {
@@ -27,8 +27,8 @@ struct physics_performanceparams_t
 	{
 		maxCollisionsPerObjectPerTimestep = 6;
 		maxCollisionChecksPerTimestep = 250;
-		maxVelocity = 20000.0f;
-		maxAngularVelocity = 360.0f * 100.0f;
+		maxVelocity = 2000.0f;
+		maxAngularVelocity = 360.0f * 10.0f;
 		lookAheadTimeObjectsVsWorld = 1.0f;
 		lookAheadTimeObjectsVsObject = 0.5f;
 		minFrictionMass = DEFAULT_MIN_FRICTION_MASS;

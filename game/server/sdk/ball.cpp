@@ -1790,15 +1790,26 @@ bool CBall::CheckKeeperCatch()
 
 	if (!SDKGameRules()->IsIntermissionState() && SDKGameRules()->State_Get() != MATCH_PENALTIES)
 	{
+		// Don't catch again after ball was in hands
 		if (LastPl(true) == m_pPl && !LastPl(true, m_pPl))
 			return false;
 
-		BallTouchInfo *pInfo = LastInfo(true, m_pPl);
+		BallTouchInfo *pInfo = LastInfo(false, m_pPl);
 		if (!pInfo)
 			return false;
 
-		if (pInfo->m_nTeam == m_pPl->GetTeamNumber() && pInfo->m_eBodyPart != BODY_PART_HEAD && pInfo->m_eBodyPart != BODY_PART_CHEST)
-			return false;
+		// Can always catch balls touched or shot by opponents. Only check teammate touches and shots.
+		if (pInfo->m_nTeam == m_pPl->GetTeamNumber())
+		{
+			if (pInfo->m_bIsShot && pInfo->m_eBodyPart != BODY_PART_HEAD && pInfo->m_eBodyPart != BODY_PART_CHEST)
+				return false;
+
+			BallTouchInfo *pShotInfo = LastInfo(true, m_pPl);
+
+			if (!pInfo->m_bIsShot && pShotInfo && pShotInfo->m_nTeam == m_pPl->GetTeamNumber()
+				&& pShotInfo->m_eBodyPart != BODY_PART_HEAD && pShotInfo->m_eBodyPart != BODY_PART_CHEST)
+				return false;
+		}
 	}
 
 	if (!SDKGameRules()->IsIntermissionState() && !m_bHasQueuedState && LastTeam(true) != m_pPl->GetTeamNumber())
@@ -2184,10 +2195,10 @@ void CBall::MarkOffsidePlayers()
 	{
 		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
 
-		if (CSDKPlayer::IsOnField(pPl))
+		if (pPl)
 			pPl->SetOffside(false);
 
-		if (!CSDKPlayer::IsOnField(pPl) || pPl == m_pPl || pPl->GetTeamNumber() != LastTeam(true))
+		if (!CSDKPlayer::IsOnField(pPl) || pPl == m_pPl || pPl->GetTeamNumber() != m_pPl->GetTeamNumber())
 			continue;
 
 		Vector pos = pPl->GetLocalOrigin();
@@ -2197,25 +2208,28 @@ void CBall::MarkOffsidePlayers()
 		if (Sign((pos - SDKGameRules()->m_vKickOff).y) != forward)
 			continue;
 
-		// Closer to goal than the ball?
-		if (Sign((pos - m_vPos).y) != forward)
+		// Player closer to goal than the ball?
+		if (Sign(pos.y - m_vPos.y) != forward)
 			continue;
 
 		int oppPlayerCount = 0;
 		int nearerPlayerCount = 0;
 		CSDKPlayer *pLastPl = NULL;
 		float shortestDist = FLT_MAX;
-		// Count players who are nearer to goal
+
+		// Count opponent players who are nearer to the goal
 		for (int j = 1; j <= gpGlobals->maxClients; j++)
 		{
 			CSDKPlayer *pOpp = ToSDKPlayer(UTIL_PlayerByIndex(j));
-			if (!(pOpp && pOpp->GetTeamNumber() == pPl->GetOppTeamNumber()))
+			if (!CSDKPlayer::IsOnField(pOpp) || pOpp->GetTeamNumber() == pPl->GetTeamNumber())
 				continue;
 
 			oppPlayerCount += 1;
 
 			if (Sign(pOpp->GetLocalOrigin().y - pos.y) == forward)
+			{
 				nearerPlayerCount += 1;
+			}
 			else
 			{
 				float dist = abs(pos.y - pOpp->GetLocalOrigin().y);
