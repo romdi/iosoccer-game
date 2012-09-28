@@ -104,7 +104,8 @@ ConVar sv_ball_autopass_coeff("sv_ball_autopass_coeff", "1", FCVAR_NOTIFY);
 ConVar sv_ball_volleyshot_spincoeff("sv_ball_volleyshot_spincoeff", "1.25", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
 ConVar sv_ball_doubletouchfouls("sv_ball_doubletouchfouls", "1", FCVAR_NOTIFY);
 ConVar sv_ball_timelimit("sv_ball_timelimit", "10", FCVAR_NOTIFY);
-ConVar sv_ball_statetransitiondelay("sv_ball_statetransitiondelay", "1.0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
+ConVar sv_ball_statetransitiondelay("sv_ball_statetransitiondelay", "2.0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
+ConVar sv_ball_statetransitionmessagedelay("sv_ball_statetransitionmessagedelay", "1.0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
 ConVar sv_ball_goalcelebduration("sv_ball_goalcelebduration", "5.0", FCVAR_NOTIFY);
 ConVar sv_ball_thinkinterval("sv_ball_thinkinterval", "0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
 ConVar sv_ball_chestdrop_strength("sv_ball_chestdrop_strength", "200", FCVAR_NOTIFY); 
@@ -492,28 +493,31 @@ void CBall::VPhysicsCollision( int index, gamevcollisionevent_t	*pEvent	)
 	BaseClass::VPhysicsCollision( index, pEvent );
 }
 
-void CBall::SetMatchEvent(match_event_t matchEvent, CSDKPlayer *pPlayer)
+void CBall::SetMatchEvent(match_event_t matchEvent, CSDKPlayer *pPlayer /*= NULL*/, int team /*= TEAM_INVALID*/)
 {
 	if (SDKGameRules()->IsIntermissionState() || m_bHasQueuedState)
 		return;
 
-	if (!pPlayer)
+	if (!pPlayer && team == TEAM_INVALID)
 		pPlayer = m_pPl;
 
-	if (pPlayer)
+	if (pPlayer && matchEvent != MATCH_EVENT_NONE)
 	{
 		IOS_LogPrintf( "\"%s<%d><%s><%s>\" triggered \"%s\"\n", pPlayer->GetPlayerName(), pPlayer->GetUserID(), pPlayer->GetNetworkIDString(), pPlayer->GetTeam()->GetKitName(), g_szMatchEventNames[matchEvent]);
 	}
 
 	m_eMatchSubEvent = MATCH_EVENT_NONE;
+	m_pMatchSubEventPlayer = NULL;
 	m_eMatchEvent = matchEvent;
 	m_pMatchEventPlayer = pPlayer;
 
-	if (pPlayer)
+	if (team != TEAM_INVALID)
+		m_nMatchEventTeam = team;
+	else if (pPlayer)
 		m_nMatchEventTeam = pPlayer->GetTeamNumber();
 }
 
-void CBall::SetMatchSubEvent(match_event_t matchEvent, CSDKPlayer *pPlayer)
+void CBall::SetMatchSubEvent(match_event_t matchEvent, CSDKPlayer *pPlayer /*= NULL*/, int team /*= TEAM_INVALID*/)
 {
 	if (SDKGameRules()->IsIntermissionState() || m_bHasQueuedState)
 		return;
@@ -529,7 +533,9 @@ void CBall::SetMatchSubEvent(match_event_t matchEvent, CSDKPlayer *pPlayer)
 	m_eMatchSubEvent = matchEvent;
 	m_pMatchSubEventPlayer = pPlayer;
 
-	if (pPlayer)
+	if (team != TEAM_INVALID)
+		m_nMatchEventTeam = team;
+	else if (pPlayer)
 		m_nMatchSubEventTeam = pPlayer->GetTeamNumber();
 }
 
@@ -668,6 +674,7 @@ void CBall::State_Enter(ball_state_t newState, bool cancelQueuedState)
 	m_pCurStateInfo = State_LookupInfo( newState );
 	m_flStateEnterTime = gpGlobals->curtime;
 	m_flStateTimelimit = -1;
+	m_bNextStateMessageSet = false;
 
 	m_pPl = NULL;
 	m_pOtherPl = NULL;
@@ -703,10 +710,36 @@ void CBall::State_Think()
 	m_pPhys->GetPosition(&m_vPos, &m_aAng);
 	m_pPhys->GetVelocity(&m_vVel, &m_vRot);
 
-	if (m_eNextState != BALL_NOSTATE && m_flStateLeaveTime <= gpGlobals->curtime)
+	if (m_eNextState != BALL_NOSTATE)
 	{
-		State_Leave(m_eNextState);
-		State_Enter(m_eNextState, true);
+		if (gpGlobals->curtime >= m_flStateLeaveTime)
+		{
+			State_Leave(m_eNextState);
+			State_Enter(m_eNextState, true);
+		}
+		//else if (!m_bNextStateMessageSet && gpGlobals->curtime >= m_flStateLeaveTime - (sv_ball_statetransitiondelay.GetFloat() - sv_ball_statetransitionmessagedelay.GetFloat()))
+		//{
+		//	switch (m_eNextState)
+		//	{
+		//	case BALL_FREEKICK:
+		//		{
+		//			match_event_t matchEvent = MATCH_EVENT_NONE;
+		//			if (m_eFoulType == FOUL_OFFSIDE)
+		//				matchEvent = MATCH_EVENT_OFFSIDE;
+		//			else if (m_eFoulType == FOUL_DOUBLETOUCH)
+		//				matchEvent = MATCH_EVENT_DOUBLETOUCH;
+		//			else
+		//				matchEvent = MATCH_EVENT_FOUL;
+
+		//			SetMatchEvent(matchEvent, NULL, GetGlobalTeam(m_nFoulingTeam)->GetOppTeamNumber());
+		//		}
+		//		break;
+		//	case BALL_THROWIN:
+		//		SetMatchEvent(MATCH_EVENT_THROWIN, NULL, 
+		//		break;
+		//	}
+		//	m_bNextStateMessageSet = true;
+		//}
 	}
 
 	if (m_pCurStateInfo && m_pCurStateInfo->m_eBallState != BALL_NORMAL && m_eNextState == BALL_NOSTATE && m_flStateTimelimit != -1 && gpGlobals->curtime >= m_flStateTimelimit)
@@ -746,6 +779,21 @@ CBallStateInfo* CBall::State_LookupInfo( ball_state_t state )
 	}
 
 	return NULL;
+}
+
+void CBall::FindStatePlayer(ball_state_t ballState /*= BALL_NOSTATE*/)
+{
+	if (ballState == BALL_NOSTATE)
+		ballState = State_Get();
+
+	switch (ballState)
+	{
+	case BALL_THROWIN:
+		FindNearestPlayer(LastOppTeam(false));
+		break;
+	case BALL_GOALKICK:
+		break;
+	}
 }
 
 void CBall::State_STATIC_Enter()
@@ -794,15 +842,12 @@ void CBall::State_NORMAL_Think()
 
 		if (DoBodyPartAction())
 		{
-			if (CSDKPlayer::IsOnField(m_pPl))
-			{
-				m_pMatchEventPlayer = m_pPl;
-				m_nMatchEventTeam = m_pPl->GetTeamNumber();
-				m_eMatchEvent = MATCH_EVENT_NONE;
-				m_eMatchSubEvent = MATCH_EVENT_NONE;
-				m_pMatchSubEventPlayer = NULL;
-			}
-
+			SetMatchEvent(MATCH_EVENT_NONE);
+			//m_pMatchEventPlayer = m_pPl;
+			//m_nMatchEventTeam = m_pPl->GetTeamNumber();
+			//m_eMatchEvent = MATCH_EVENT_NONE;
+			//m_eMatchSubEvent = MATCH_EVENT_NONE;
+			//m_pMatchSubEventPlayer = NULL;
 			break;
 		}
 
@@ -1883,9 +1928,10 @@ float CBall::GetChargedshotStrength(float coeff, int minStrength, int maxStrengt
 	float totalTime = gpGlobals->curtime - m_pPl->m_Shared.m_flShotChargingStart;
 	float activeTime = min(duration, mp_chargedshot_increaseduration.GetFloat());
 	float extra = totalTime - activeTime;
-	float increaseFraction = clamp(activeTime / mp_chargedshot_increaseduration.GetFloat(), 0, 1);
-	float decreaseFraction = clamp(extra / mp_chargedshot_decreaseduration.GetFloat(), 0, 1);
-	float shotStrengthCoeff = clamp(pow(increaseFraction, 1 / 2.0f) - pow(decreaseFraction, 1 / 2.0f), 0, 1);
+	float increaseFraction = clamp(pow(activeTime / mp_chargedshot_increaseduration.GetFloat(), mp_chargedshot_increaseexponent.GetFloat()), 0, 1);
+	float decTime = (pow(1 - increaseFraction, 1.0f / mp_chargedshot_decreaseexponent.GetFloat())) * mp_chargedshot_decreaseduration.GetFloat();
+	float decreaseFraction = clamp((decTime + extra) / mp_chargedshot_decreaseduration.GetFloat(), 0, 1);
+	float shotStrengthCoeff = 1 - pow(decreaseFraction, mp_chargedshot_decreaseexponent.GetFloat());
 	float shotStrength = minStrength + (maxStrength - minStrength) * shotStrengthCoeff;
 
 	return coeff * shotStrength;

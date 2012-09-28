@@ -39,7 +39,7 @@
 	#include "team.h"
 #endif
 
-const char *g_szRequiredClientVersion = "28.08.12/6h";
+const char *g_szRequiredClientVersion = "28.09.12/23h";
 
 ConVar sv_showimpacts("sv_showimpacts", "0", FCVAR_REPLICATED, "Shows client (red) and server (blue) bullet impact point" );
 
@@ -200,7 +200,7 @@ void CSDKPlayerShared::SetAnimEvent(PlayerAnimEvent_t animEvent)
 void CSDKPlayerShared::ResetAnimEvent()
 {
 	m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
-	m_pOuter->RemoveFlag(FL_FREECAM);
+	GetSDKPlayer()->RemoveFlag(FL_FREECAM);
 }
 
 PlayerAnimEvent_t CSDKPlayerShared::GetAnimEvent()
@@ -215,7 +215,7 @@ float CSDKPlayerShared::GetAnimEventStart()
 
 void CSDKPlayerShared::ComputeWorldSpaceSurroundingBox( Vector *pVecWorldMins, Vector *pVecWorldMaxs )
 {
-	Vector org = m_pOuter->GetAbsOrigin();
+	Vector org = GetSDKPlayer()->GetAbsOrigin();
 
 	static Vector vecMin(-32, -32, 0 );
 	static Vector vecMax(32, 32, 72 );
@@ -547,94 +547,4 @@ void CSDKPlayer::ResetShotCharging()
 		engine->ClientCmd("-backspin");
 	}
 	#endif	
-}
-
-void CSDKPlayerShared::DoAnimationEvent(PlayerAnimEvent_t event)
-{
-	switch(event)
-	{
-	case PLAYERANIMEVENT_BLANK:
-		{
-			m_pOuter->ResetShotCharging();
-			return; // This is a dummy event, so don't do anything and return early
-		}
-	case PLAYERANIMEVENT_NONE:
-		{
-			m_pOuter->ResetShotCharging();
-			break;
-		}
-	case PLAYERANIMEVENT_CANCEL:
-		{
-			m_pOuter->ResetShotCharging();
-			m_pOuter->RemoveFlag(FL_FREECAM | FL_KEEPER_SIDEWAYS_DIVING | FL_SLIDING);
-			//m_pOuter->m_PlayerAnimState->ClearAnimationState();
-			break;
-		}
-	case PLAYERANIMEVENT_KICK:
-	case PLAYERANIMEVENT_PASS:
-	case PLAYERANIMEVENT_PASS_STATIONARY:
-	case PLAYERANIMEVENT_VOLLEY:
-	case PLAYERANIMEVENT_HEELKICK:
-	case PLAYERANIMEVENT_HEADER:
-	case PLAYERANIMEVENT_HEADER_STATIONARY:
-	case PLAYERANIMEVENT_THROWIN:
-	case PLAYERANIMEVENT_THROW:
-	case PLAYERANIMEVENT_DIVINGHEADER:
-	case PLAYERANIMEVENT_KEEPER_HANDS_THROW:
-	case PLAYERANIMEVENT_KEEPER_HANDS_KICK:
-	case PLAYERANIMEVENT_KEEPER_HANDS_PUNCH:
-		{
-			m_pOuter->ResetShotCharging();
-		}
-	case PLAYERANIMEVENT_SLIDE:
-	case PLAYERANIMEVENT_TACKLED_FORWARD:
-	case PLAYERANIMEVENT_TACKLED_BACKWARD:
-	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT:
-	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT:
-	case PLAYERANIMEVENT_KEEPER_DIVE_FORWARD:
-	case PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD:
-		{
-		/*	m_flPrimaryActionSequenceCycle = 0;
-			m_iPrimaryActionSequence = CalcPrimaryActionSequence( event );
-			m_bIsPrimaryActionSequenceActive = m_iPrimaryActionSequence != -1;*/
-			break;
-		}
-	case PLAYERANIMEVENT_JUMP:
-	case PLAYERANIMEVENT_KEEPER_JUMP:
-		{
-			//// Play the jump animation.
-			//if (!m_bJumping)
-			//{
-			//	m_bJumping = true;
-			//	m_bFirstJumpFrame = true;
-			//	m_flJumpStartTime = gpGlobals->curtime;
-			//}
-			break;
-		}
-	case PLAYERANIMEVENT_CARRY:
-		{
-			//m_iSecondaryActionSequence = CalcSecondaryActionSequence();			//add keeper carry as layer
-			//if ( m_iSecondaryActionSequence != -1 )
-			//{
-			//	m_bIsSecondaryActionSequenceActive = true;
-			//	m_flSecondaryActionSequenceCycle = 0;
-			//	m_bCarryHold = true;
-			//}
-			break;
-		}
-	case PLAYERANIMEVENT_CARRY_END:
-		{
-			//GetSDKPlayer()->RemoveFlag(FL_FREECAM);
-			//m_iSecondaryActionSequence = CalcSecondaryActionSequence();
-			//if ( m_iSecondaryActionSequence != -1 )
-			//{
-			//	m_bIsSecondaryActionSequenceActive = true;
-			//	m_flSecondaryActionSequenceCycle = 1.1f;
-			//	m_bCarryHold = false;
-			//}
-			break;
-		}
-	}
-
-	m_pOuter->m_Shared.SetAnimEvent(event);
 }

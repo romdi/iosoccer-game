@@ -1719,19 +1719,19 @@ void CSDKGameRules::State_COOLDOWN_Think()
 	//	return;
 	//}
 
-	if (gpGlobals->curtime >= m_flStateEnterTime + 3 && !m_bPostMatchStatsPanelShown)
-	{
-		for (int i = 1; i <= gpGlobals->maxClients; i++)
-		{
-			CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
-			if (!pPl)
-				continue;
+	////if (gpGlobals->curtime >= m_flStateEnterTime + 3 && !m_bPostMatchStatsPanelShown)
+	////{
+	////	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	////	{
+	////		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+	////		if (!pPl)
+	////			continue;
 
-			pPl->ShowViewPortPanel(PANEL_POSTMATCHSTATS);
-		}
+	////		pPl->ShowViewPortPanel(PANEL_POSTMATCHSTATS);
+	////	}
 
-		m_bPostMatchStatsPanelShown = true;
-	}
+	////	m_bPostMatchStatsPanelShown = true;
+	////}
 
 	//if (m_bPostMatchStatsPanelShown)
 	//{

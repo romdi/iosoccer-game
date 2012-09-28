@@ -136,8 +136,8 @@ public:
 	int				ObjectCaps(void)	{  return BaseClass::ObjectCaps() |	FCAP_CONTINUOUS_USE; }
 	int				UpdateTransmitState();
 
-	void			SetMatchEvent(match_event_t matchEvent, CSDKPlayer *pPlayer = NULL);
-	void			SetMatchSubEvent(match_event_t matchEvent, CSDKPlayer *pPlayer = NULL);
+	void			SetMatchEvent(match_event_t matchEvent, CSDKPlayer *pPlayer = NULL, int team = TEAM_INVALID);
+	void			SetMatchSubEvent(match_event_t matchEvent, CSDKPlayer *pPlayer = NULL, int team = TEAM_INVALID);
 
 	bool			IsAsleep(void) { return	false; }
 	void			Spawn(void);
@@ -200,10 +200,14 @@ private:
 	void State_Think();										// Update the current state.
 	void State_Leave(ball_state_t newState);
 	static CBallStateInfo* State_LookupInfo(ball_state_t state);	// Find the state info for the specified state.
+
+	void			FindStatePlayer(ball_state_t ballState = BALL_NOSTATE);
+
 	ball_state_t	m_eNextState;
 	float			m_flStateEnterTime;
 	float			m_flStateLeaveTime;
 	float			m_flStateTimelimit;
+	bool			m_bNextStateMessageSet;
 	CBallStateInfo	*m_pCurStateInfo;
 
 	void			MarkOffsidePlayers();

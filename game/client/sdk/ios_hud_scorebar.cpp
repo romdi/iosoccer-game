@@ -94,6 +94,8 @@ private:
 	Label		*m_pHelpText;
 
 	float m_flNextPlayerUpdate;
+	float m_flImportantEventStart;
+	match_event_t m_eCurMatchEvent;
 };
 
 DECLARE_HUDELEMENT( CHudScorebar );
@@ -187,6 +189,8 @@ CHudScorebar::CHudScorebar( const char *pElementName ) : BaseClass(NULL, "HudSco
 	m_pHelpText = new Label(this, "", "");
 
 	m_flNextPlayerUpdate = gpGlobals->curtime;
+	m_flImportantEventStart = -1;
+	m_eCurMatchEvent = MATCH_EVENT_NONE;
 }
 
 void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
@@ -229,18 +233,18 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 	m_pInjuryTime->SetContentAlignment(Label::a_center);
 	m_pInjuryTime->SetFont(pScheme->GetFont("IOSScorebarMedium"));
 	
-	m_pEvent->SetBounds(GetWide() / 2 - MAINBAR_WIDTH / 2, MAINBAR_MARGIN + MAINBAR_HEIGHT + CENTERBAR_OFFSET + EVENT_MARGIN, MAINBAR_WIDTH, EVENT_HEIGHT);
+	m_pEvent->SetBounds(GetWide() / 2 - CENTERBAR_WIDTH / 2, MAINBAR_MARGIN + MAINBAR_HEIGHT + CENTERBAR_OFFSET + EVENT_MARGIN, CENTERBAR_WIDTH, EVENT_HEIGHT);
 	m_pEvent->SetContentAlignment(Label::a_center);
 	m_pEvent->SetFont(pScheme->GetFont("IOSEvent"));
 	m_pEvent->SetFgColor(Color(255, 255, 255, 255));
 	//m_pEvent->SetVisible(false);
 
-	m_pSubEvent->SetBounds(GetWide() / 2 - MAINBAR_WIDTH / 2, MAINBAR_MARGIN + MAINBAR_HEIGHT + CENTERBAR_OFFSET + EVENT_MARGIN + EVENT_HEIGHT, MAINBAR_WIDTH, SUBEVENT_HEIGHT);
+	m_pSubEvent->SetBounds(GetWide() / 2 - CENTERBAR_WIDTH / 2, MAINBAR_MARGIN + MAINBAR_HEIGHT + CENTERBAR_OFFSET + EVENT_MARGIN + EVENT_HEIGHT, CENTERBAR_WIDTH, SUBEVENT_HEIGHT);
 	m_pSubEvent->SetContentAlignment(Label::a_center);
 	m_pSubEvent->SetFont(pScheme->GetFont("IOSSubEvent"));
 	m_pSubEvent->SetFgColor(Color(255, 255, 255, 255));
 
-	m_pImportantEvent->SetBounds(GetWide() / 2 - MAINBAR_WIDTH / 2, GetTall() / 2 - IMPORTANTEVENT_HEIGHT / 2, MAINBAR_WIDTH, IMPORTANTEVENT_HEIGHT);
+	m_pImportantEvent->SetBounds(0, GetTall() / 2 - IMPORTANTEVENT_HEIGHT / 2, GetWide(), IMPORTANTEVENT_HEIGHT);
 	m_pImportantEvent->SetContentAlignment(Label::a_center);
 	m_pImportantEvent->SetFont(pScheme->GetFont("IOSImportantEvent"));
 	m_pImportantEvent->SetFgColor(Color(255, 255, 255, 255));
@@ -289,6 +293,7 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 		m_pTeamCrests[i]->SetBounds(TEAMCREST_PADDING, TEAMCREST_PADDING, TEAMCREST_SIZE - 2 * TEAMCREST_PADDING, TEAMCREST_SIZE - 2 * TEAMCREST_PADDING);
 		m_pTeamCrests[i]->SetShouldScaleImage(true);
 		m_pTeamCrests[i]->SetImage(i == 0 ? "hometeamcrest" : "awayteamcrest");
+		//m_pTeamCrests[i]->SetDrawColor(Color(255, 255, 255, 150));
 			
 		m_pTeamColors[i][0]->SetBounds(i == 0 ? TEAMCOLOR_HMARGIN : MAINBAR_WIDTH - TEAMCOLOR_HMARGIN - 2 * TEAMCOLOR_WIDTH, TEAMCOLOR_VMARGIN, TEAMCOLOR_WIDTH, MAINBAR_HEIGHT - 2 * TEAMCOLOR_VMARGIN);
 		m_pTeamColors[i][1]->SetBounds(i == 0 ? TEAMCOLOR_HMARGIN + TEAMCOLOR_WIDTH : MAINBAR_WIDTH - TEAMCOLOR_HMARGIN - TEAMCOLOR_WIDTH, TEAMCOLOR_VMARGIN, TEAMCOLOR_WIDTH, MAINBAR_HEIGHT - 2 * TEAMCOLOR_VMARGIN);
@@ -457,16 +462,32 @@ void CHudScorebar::OnThink( void )
 			m_pEvent->SetText(g_szMatchEventNames[pBall->m_eMatchEvent]);
 			m_pSubEvent->SetText(g_szMatchEventNames[pBall->m_eMatchSubEvent]);
 
-			switch (pBall->m_eMatchEvent)
+			if (pBall->m_eMatchEvent != m_eCurMatchEvent)
 			{
-			case MATCH_EVENT_GOAL:
-			case MATCH_EVENT_HALFTIME:
-			case MATCH_EVENT_FINAL_WHISTLE:
-				m_pImportantEvent->SetText(g_szMatchEventNames[pBall->m_eMatchEvent]);
-				break;
-			default:
-				m_pImportantEvent->SetText("");
-				break;
+				switch (pBall->m_eMatchEvent)
+				{
+				case MATCH_EVENT_GOAL:
+				case MATCH_EVENT_HALFTIME:
+				case MATCH_EVENT_FINAL_WHISTLE:
+					m_eCurMatchEvent = pBall->m_eMatchEvent;
+					m_flImportantEventStart = gpGlobals->curtime;
+					m_pImportantEvent->SetText(g_szMatchEventNames[pBall->m_eMatchEvent]);
+					break;
+				default:
+					m_flImportantEventStart = -1;
+					m_pImportantEvent->SetText("");
+					break;
+				}
+
+				m_eCurMatchEvent = pBall->m_eMatchEvent;
+			}
+			else
+			{
+				if (m_eCurMatchEvent != MATCH_EVENT_NONE && m_flImportantEventStart != -1 && gpGlobals->curtime >= m_flImportantEventStart + 3)
+				{
+					m_flImportantEventStart = -1;
+					m_pImportantEvent->SetText("");
+				}
 			}
 
 			if (pBall->m_eBallState != BALL_NORMAL)

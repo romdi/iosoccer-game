@@ -211,15 +211,13 @@ void CSDKPlayerAnimState::Update( float eyeYaw, float eyePitch )
 
 void CSDKPlayerAnimState::ComputePrimaryActionSequence( CStudioHdr *pStudioHdr )
 {
-	if (m_bIsPrimaryActionSequenceActive)
-		UpdateLayerSequenceGeneric( pStudioHdr, PRIMARYACTIONSEQUENCE_LAYER, m_bIsPrimaryActionSequenceActive, m_flPrimaryActionSequenceCycle, m_iPrimaryActionSequence, false );
+	UpdateLayerSequenceGeneric( pStudioHdr, PRIMARYACTIONSEQUENCE_LAYER, m_bIsPrimaryActionSequenceActive, m_flPrimaryActionSequenceCycle, m_iPrimaryActionSequence, false );
 }
 
 void CSDKPlayerAnimState::ComputeSecondaryActionSequence( CStudioHdr *pStudioHdr )
 {
 	//Keeper Carry layer
-	if (m_bIsSecondaryActionSequenceActive)
-		UpdateLayerSequenceGeneric( pStudioHdr, SECONDARYACTIONSEQUENCE_LAYER, m_bIsSecondaryActionSequenceActive, m_flSecondaryActionSequenceCycle, m_iSecondaryActionSequence, m_bCarryHold);
+	UpdateLayerSequenceGeneric( pStudioHdr, SECONDARYACTIONSEQUENCE_LAYER, m_bIsSecondaryActionSequenceActive, m_flSecondaryActionSequenceCycle, m_iSecondaryActionSequence, m_bCarryHold);
 }
 
 int CSDKPlayerAnimState::CalcSecondaryActionSequence()
@@ -300,7 +298,7 @@ void CSDKPlayerAnimState::UpdateLayerSequenceGeneric( CStudioHdr *pStudioHdr, in
 
 			bool canResetHull = true;
 
-			if (GetSDKPlayer()->GetFlags() & (FL_SLIDING | FL_KEEPER_SIDEWAYS_DIVING))
+			/*if (GetSDKPlayer()->GetFlags() & (FL_SLIDING | FL_KEEPER_SIDEWAYS_DIVING))
 			{
 				Vector pos = GetSDKPlayer()->GetLocalOrigin();
 				trace_t	trace;
@@ -310,7 +308,7 @@ void CSDKPlayerAnimState::UpdateLayerSequenceGeneric( CStudioHdr *pStudioHdr, in
 				{
 					canResetHull = false;
 				}
-			}
+			}*/
 
 			if (canResetHull)
 			{
@@ -461,6 +459,8 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 	//	//GetSDKPlayer()->AddFlag(FL_SLIDING);
 	//	break;
 	//}
+
+	GetSDKPlayer()->m_Shared.SetAnimEvent(event);
 }
 
 bool CSDKPlayerAnimState::HandleJumping( Activity &idealActivity )

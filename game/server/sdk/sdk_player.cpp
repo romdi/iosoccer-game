@@ -662,14 +662,14 @@ void CSDKPlayer::InitialSpawn( void )
 void CSDKPlayer::DoServerAnimationEvent(PlayerAnimEvent_t event)
 {
 	m_PlayerAnimState->DoAnimationEvent( event );
-	m_Shared.DoAnimationEvent( event );
+	//m_Shared.DoAnimationEvent( event );
 	TE_PlayerAnimEvent( this, event, true );	// Send to any clients who can see this guy.
 }
 
 void CSDKPlayer::DoAnimationEvent(PlayerAnimEvent_t event)
 {
 	m_PlayerAnimState->DoAnimationEvent( event );
-	m_Shared.DoAnimationEvent( event );
+	//m_Shared.DoAnimationEvent( event );
 	TE_PlayerAnimEvent( this, event, false );	// Send to any clients who can see this guy.
 }
 

@@ -40,6 +40,8 @@ public:
 	CSDKPlayerShared();
 	~CSDKPlayerShared();
 
+	OuterClass *GetSDKPlayer() { return m_pOuter; }
+
 	void	SetStamina( float stamina );
 	float	GetStamina( void ) { return m_flStamina; }
 
@@ -69,8 +71,6 @@ public:
 	void ComputeWorldSpaceSurroundingBox( Vector *pVecWorldMins, Vector *pVecWorldMaxs );
 	
 	float m_flLastViewAnimationTime;
-
-	void DoAnimationEvent(PlayerAnimEvent_t event);
 
 	//Tony; player speeds; at spawn server and client update both of these based on class (if any)
 	//float m_flWalkSpeed;
