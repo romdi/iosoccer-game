@@ -2259,54 +2259,76 @@ void CSDKGameRules::DrawSkyboxOverlay()
 	pRenderContext->Bind( pPreviewMaterial );
 	IMesh *pMesh = pRenderContext->GetDynamicMesh();
 	CMeshBuilder meshBuilder;
-	meshBuilder.Begin( pMesh, MATERIAL_QUADS, 4 );
+	meshBuilder.Begin( pMesh, MATERIAL_QUADS, 6 );
 
 	Vector right;
 	Vector forward;
 	Vector pos;
 	float forwardLength;
 	float rightLength;
+	const float length = 5000;
+	const float width = 3000;
+	const float height = 1000;
+	const float heightOffset = height - 200;
 
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < 6; i++)
 	{
 		switch (i)
 		{
-		case 0:
+		case 0: // Top
 			{
 				forward = Vector(0, 1, 0);
 				right = Vector(1, 0, 0);
-				pos = SDKGameRules()->m_vKickOff + Vector(0, 0, 1000);
-				forwardLength = 4000;
-				rightLength = 4000;
-				break;
+				pos = SDKGameRules()->m_vKickOff + Vector(0, 0, height + heightOffset);
+				forwardLength = length;
+				rightLength = width;
 			}
-		case 1:
+			break;
+		case 1: // Front
 			{
 				forward = Vector(0, 0, 1);
 				right = Vector(-1, 0, 0);
-				pos = SDKGameRules()->m_vKickOff + Vector(0, 4000, 0);
-				forwardLength = 1000;
-				rightLength = 4000;
-				break;
+				pos = SDKGameRules()->m_vKickOff + Vector(0, length, heightOffset);
+				forwardLength = height;
+				rightLength = width;
 			}
-		case 2:
+			break;
+		case 2: // Right
 			{
 				forward = Vector(0, 0, 1);
 				right = Vector(0, 1, 0);
-				pos = SDKGameRules()->m_vKickOff + Vector(4000, 2000, 0);
-				forwardLength = 1000;
-				rightLength = 2000;
-				break;
+				pos = SDKGameRules()->m_vKickOff + Vector(width, 0, heightOffset);
+				forwardLength = height;
+				rightLength = length;
 			}
-		case 3:
+			break;
+		case 3: // Left
 			{
 				forward = Vector(0, 0, 1);
 				right = Vector(0, -1, 0);
-				pos = SDKGameRules()->m_vKickOff + Vector(-4000, 2000, 0);
-				forwardLength = 1000;
-				rightLength = 2000;
-				break;
+				pos = SDKGameRules()->m_vKickOff + Vector(-width, 0, heightOffset);
+				forwardLength = height;
+				rightLength = length;
 			}
+			break;
+		case 4: // Back
+			{
+				forward = Vector(0, 0, 1);
+				right = Vector(1, 0, 0);
+				pos = SDKGameRules()->m_vKickOff + Vector(0, -length, heightOffset);
+				forwardLength = height;
+				rightLength = width;
+			}
+			break;
+		case 5: // Bottom
+			{
+				forward = Vector(0, 1, 0);
+				right = Vector(-1, 0, 0);
+				pos = SDKGameRules()->m_vKickOff + Vector(0, 0, -height + heightOffset);
+				forwardLength = length;
+				rightLength = width;
+			}
+			break;
 		}
 
 		meshBuilder.Color4f( 0.0, 0.0, 0.0, alpha );

@@ -74,8 +74,9 @@ void ClientPutInServer( edict_t *pEdict, const char *playername )
 {
 	// Allocate a CBaseTFPlayer for pev, and call spawn
 	CSDKPlayer *pPlayer = CSDKPlayer::CreatePlayer( "player", pEdict );
-	const char *pszPlayerName = engine->GetClientConVarValue(pPlayer->entindex(), "playername");
-	pPlayer->SetPlayerName(Q_strlen(pszPlayerName) == 0 ? playername : pszPlayerName);
+	//const char *pszPlayerName = engine->GetClientConVarValue(pPlayer->entindex(), "playername");
+	//pPlayer->SetPlayerName(Q_strlen(pszPlayerName) == 0 ? playername : pszPlayerName);
+	pPlayer->SetPlayerName(playername);
 	//pPlayer->m_JoinTime = gpGlobals->curtime; //ios
 	
 	const char *pszClientVersion = engine->GetClientConVarValue( pPlayer->entindex(), "clientversion" );

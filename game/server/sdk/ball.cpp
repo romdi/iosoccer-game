@@ -33,8 +33,8 @@ ConVar sv_ball_inertia( "sv_ball_inertia", "1", FCVAR_NOTIFY | FCVAR_DEVELOPMENT
 ConVar sv_ball_drag_enabled("sv_ball_drag_enabled", "1", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
 ConVar sv_ball_spin( "sv_ball_spin", "300", FCVAR_NOTIFY );
 ConVar sv_ball_defaultspin( "sv_ball_defaultspin", "10000", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
-ConVar sv_ball_topspin_coeff( "sv_ball_topspin_coeff", "0.66", FCVAR_NOTIFY );
-ConVar sv_ball_backspin_coeff( "sv_ball_backspin_coeff", "0.66", FCVAR_NOTIFY );
+ConVar sv_ball_topspin_coeff( "sv_ball_topspin_coeff", "1.0", FCVAR_NOTIFY );
+ConVar sv_ball_backspin_coeff( "sv_ball_backspin_coeff", "1.0", FCVAR_NOTIFY );
 ConVar sv_ball_curve("sv_ball_curve", "150", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
 ConVar sv_ball_touchradius( "sv_ball_touchradius", "60", FCVAR_NOTIFY );
 ConVar sv_ball_deflectionradius( "sv_ball_deflectionradius", "40", FCVAR_NOTIFY );
@@ -59,11 +59,26 @@ ConVar sv_ball_dynamicshotdelay_maxdelay("sv_ball_dynamicshotdelay_maxdelay", "1
 ConVar sv_ball_dynamicshotdelay_minshotstrength("sv_ball_dynamicshotdelay_minshotstrength", "100", FCVAR_NOTIFY);
 ConVar sv_ball_dynamicshotdelay_maxshotstrength("sv_ball_dynamicshotdelay_maxshotstrength", "1600", FCVAR_NOTIFY);
 ConVar sv_ball_dynamicbounce_enabled("sv_ball_dynamicbouncedelay_enabled", "1", FCVAR_NOTIFY);
+
 ConVar sv_ball_bestshotangle("sv_ball_bestshotangle", "-30", FCVAR_NOTIFY);
-ConVar sv_ball_higherpitch_exponent("sv_ball_higherpitch_exponent", "2", FCVAR_NOTIFY);
-ConVar sv_ball_lowerpitch_exponent("sv_ball_lowerpitch_exponent", "3", FCVAR_NOTIFY);
-ConVar sv_ball_fixedhigherpitchcoeff("sv_ball_fixedhigherpitchcoeff", "0.15", FCVAR_NOTIFY);
-ConVar sv_ball_fixedlowerpitchcoeff("sv_ball_fixedlowerpitchcoeff", "0.0", FCVAR_NOTIFY);
+
+ConVar sv_ball_pitchdown_exponent("sv_ball_pitchdown_exponent", "3", FCVAR_NOTIFY);
+ConVar sv_ball_fixedpitchdowncoeff("sv_ball_fixedpitchdowncoeff", "0.15", FCVAR_NOTIFY);
+ConVar sv_ball_pitchup_exponent("sv_ball_pitchup_exponent", "3", FCVAR_NOTIFY);
+ConVar sv_ball_fixedpitchupcoeff("sv_ball_fixedpitchupcoeff", "0.0", FCVAR_NOTIFY);
+
+ConVar sv_ball_bestbackspinangle("sv_ball_bestbackspinangle", "-55", FCVAR_NOTIFY);
+ConVar sv_ball_pitchdownbackspin_exponent("sv_ball_pitchdownbackspin_exponent", "4", FCVAR_NOTIFY);
+ConVar sv_ball_fixedpitchdownbackspincoeff("sv_ball_fixedpitchdownbackspincoeff", "0.1", FCVAR_NOTIFY);
+ConVar sv_ball_pitchupbackspin_exponent("sv_ball_pitchupbackspin_exponent", "2", FCVAR_NOTIFY);
+ConVar sv_ball_fixedpitchupbackspincoeff("sv_ball_fixedpitchupbackspincoeff", "0.1", FCVAR_NOTIFY);
+
+ConVar sv_ball_besttopspinangle("sv_ball_besttopspinangle", "-15", FCVAR_NOTIFY);
+ConVar sv_ball_pitchdowntopspin_exponent("sv_ball_pitchdowntopspin_exponent", "2", FCVAR_NOTIFY);
+ConVar sv_ball_fixedpitchdowntopspincoeff("sv_ball_fixedpitchdowntopspincoeff", "0.1", FCVAR_NOTIFY);
+ConVar sv_ball_pitchuptopspin_exponent("sv_ball_pitchuptopspin_exponent", "4", FCVAR_NOTIFY);
+ConVar sv_ball_fixedpitchuptopspincoeff("sv_ball_fixedpitchuptopspincoeff", "0.1", FCVAR_NOTIFY);
+
 ConVar sv_ball_shotwalkcoeff("sv_ball_shotwalkcoeff", "0.5", FCVAR_NOTIFY);
 ConVar sv_ball_keepercatchspeed("sv_ball_keepercatchspeed", "500", FCVAR_NOTIFY);
 ConVar sv_ball_keeperpickupangle("sv_ball_keeperpickupangle", "45", FCVAR_NOTIFY);
@@ -93,6 +108,8 @@ ConVar sv_ball_chargedslide_minstrength("sv_ball_chargedslide_minstrength", "900
 ConVar sv_ball_chargedslide_maxstrength("sv_ball_chargedslide_maxstrength", "1100", FCVAR_NOTIFY);
 
 ConVar sv_ball_penaltyshot_maxstrength("sv_ball_penaltyshot_maxstrength", "900", FCVAR_NOTIFY);
+
+ConVar sv_ball_keepershot_minangle("sv_ball_keepershot_minangle", "-5", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
 
 ConVar sv_ball_groundshot_minangle("sv_ball_groundshot_minangle", "-10", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
 ConVar sv_ball_volleyshot_minangle("sv_ball_volleyshot_minangle", "0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
@@ -1538,10 +1555,15 @@ void CBall::State_KEEPERHANDS_Think()
 		}
 		else
 		{
+			QAngle ang = m_pPl->EyeAngles();
+			ang[PITCH] = min(sv_ball_keepershot_minangle.GetFloat(), m_aPlAng[PITCH]);
+			Vector dir;
+			AngleVectors(ang, &dir);
+
 			if (m_pPl->IsPowershooting())
-				vel = m_vPlForward * GetPowershotStrength(GetPitchCoeff(), sv_ball_powershot_strength.GetInt());
+				vel = dir * GetPowershotStrength(GetPitchCoeff(), sv_ball_powershot_strength.GetInt());
 			else
-				vel = m_vPlForward * GetChargedshotStrength(GetPitchCoeff(), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
+				vel = dir * GetChargedshotStrength(GetPitchCoeff(), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
 
 			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KEEPER_HANDS_KICK);
 			spin = sv_ball_volleyshot_spincoeff.GetFloat();
@@ -1903,7 +1925,31 @@ float CBall::GetPitchCoeff()
 {
 	//return pow(cos((m_aPlAng[PITCH] - sv_ball_bestshotangle.GetInt()) / (PITCH_LIMIT - sv_ball_bestshotangle.GetInt()) * M_PI / 2), 2);
 	// plot 0.5 + (cos(x/89 * pi/2) * 0.5), x=-89..89
-	return ((m_pPl->m_nButtons & IN_WALK) ? sv_ball_shotwalkcoeff.GetFloat() : 1) * ((m_aPlAng[PITCH] >= sv_ball_bestshotangle.GetInt() ? sv_ball_fixedhigherpitchcoeff.GetFloat() : sv_ball_fixedlowerpitchcoeff.GetFloat()) + (pow(cos((m_aPlAng[PITCH] - sv_ball_bestshotangle.GetInt()) / (PITCH_LIMIT - sv_ball_bestshotangle.GetInt()) * M_PI / 2), (double)(m_aPlAng[PITCH] >= sv_ball_bestshotangle.GetInt() ? sv_ball_higherpitch_exponent.GetFloat() : sv_ball_lowerpitch_exponent.GetFloat())) * (1 - (m_aPlAng[PITCH] >= sv_ball_bestshotangle.GetInt() ? sv_ball_fixedhigherpitchcoeff.GetFloat() : sv_ball_fixedlowerpitchcoeff.GetFloat()))));
+
+	float bestAng = sv_ball_bestshotangle.GetInt();
+	float downCoeff = sv_ball_fixedpitchdowncoeff.GetFloat();
+	float upCoeff = sv_ball_fixedpitchupcoeff.GetFloat();
+	double downExp = sv_ball_pitchdown_exponent.GetFloat();
+	double upExp = sv_ball_pitchup_exponent.GetFloat();
+	float pitch = m_aPlAng[PITCH];
+
+	float coeff;
+
+	if (pitch >= sv_ball_bestshotangle.GetInt())
+	{
+		coeff = downCoeff + (1 - downCoeff) * pow(cos((pitch - bestAng) / (PITCH_LIMIT - bestAng) * M_PI / 2), downExp);
+	}
+	else
+	{
+		coeff = upCoeff + (1 - upCoeff) * pow(cos((pitch - bestAng) / (PITCH_LIMIT - bestAng) * M_PI / 2), upExp);
+	}
+
+	if (m_pPl->m_nButtons & IN_WALK)
+		coeff *= sv_ball_shotwalkcoeff.GetFloat();
+
+	//DevMsg("coeff: %.2f\n", coeff);
+
+	return coeff;
 }
 
 float CBall::GetNormalshotStrength(float coeff, int strength)
@@ -2115,9 +2161,49 @@ void CBall::SetSpin(float coeff)
 		rot += Vector(0, 0, -1);
 
 	if (m_pPl->m_nButtons & IN_TOPSPIN)
-		rot += -m_vPlRight * sv_ball_topspin_coeff.GetFloat();
+	{
+		float bestAng = sv_ball_besttopspinangle.GetInt();
+		float downCoeff = sv_ball_fixedpitchdowntopspincoeff.GetFloat();
+		float upCoeff = sv_ball_fixedpitchuptopspincoeff.GetFloat();
+		double downExp = sv_ball_pitchdowntopspin_exponent.GetFloat();
+		double upExp = sv_ball_pitchuptopspin_exponent.GetFloat();
+		float pitch = m_aPlAng[PITCH];
+
+		float coeff;
+
+		if (pitch >= bestAng)
+		{
+			coeff = downCoeff + (1 - downCoeff) * pow(cos((pitch - bestAng) / (PITCH_LIMIT - bestAng) * M_PI / 2), downExp);
+		}
+		else
+		{
+			coeff = upCoeff + (1 - upCoeff) * pow(cos((pitch - bestAng) / (PITCH_LIMIT - bestAng) * M_PI / 2), upExp);
+		}
+
+		rot += -m_vPlRight * coeff * sv_ball_topspin_coeff.GetFloat();
+	}
 	else if (m_pPl->m_nButtons & IN_BACKSPIN)
-		rot += m_vPlRight * sv_ball_backspin_coeff.GetFloat();
+	{
+		float bestAng = sv_ball_bestbackspinangle.GetInt();
+		float downCoeff = sv_ball_fixedpitchdownbackspincoeff.GetFloat();
+		float upCoeff = sv_ball_fixedpitchupbackspincoeff.GetFloat();
+		double downExp = sv_ball_pitchdownbackspin_exponent.GetFloat();
+		double upExp = sv_ball_pitchupbackspin_exponent.GetFloat();
+		float pitch = m_aPlAng[PITCH];
+
+		float coeff;
+
+		if (pitch >= bestAng)
+		{
+			coeff = downCoeff + (1 - downCoeff) * pow(cos((pitch - bestAng) / (PITCH_LIMIT - bestAng) * M_PI / 2), downExp);
+		}
+		else
+		{
+			coeff = upCoeff + (1 - upCoeff) * pow(cos((pitch - bestAng) / (PITCH_LIMIT - bestAng) * M_PI / 2), upExp);
+		}
+
+		rot += m_vPlRight * coeff * sv_ball_backspin_coeff.GetFloat();
+	}
 
 	if (rot.z != 0)
 		rot.NormalizeInPlace();

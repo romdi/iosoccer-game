@@ -438,9 +438,9 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 		}
 	}
 
-	//if (event != PLAYERANIMEVENT_CARRY && event != PLAYERANIMEVENT_CARRY_END)
+	if (event != PLAYERANIMEVENT_CARRY && event != PLAYERANIMEVENT_CARRY_END)
 	{
-		//GetSDKPlayer()->m_Shared.SetAnimEvent(event);
+		GetSDKPlayer()->m_Shared.SetAnimEvent(event);
 	}
 
 	//GetSDKPlayer()->RemoveFlag(FL_KEEPER_SIDEWAYS_DIVING | FL_SLIDING);
@@ -460,7 +460,7 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 	//	break;
 	//}
 
-	GetSDKPlayer()->m_Shared.SetAnimEvent(event);
+	//GetSDKPlayer()->m_Shared.SetAnimEvent(event);
 }
 
 bool CSDKPlayerAnimState::HandleJumping( Activity &idealActivity )
