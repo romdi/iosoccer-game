@@ -644,11 +644,15 @@ void CClientScoreBoardDialog::UpdatePlayerInfo()
 		Button *pPl = (Button *)m_pSpectatorNames->GetChild(i);
 
 		char text[32];
-		Q_snprintf(text, sizeof(text), "%.7s%s ", specList[i].playerName, (i < specList.Count() - 1 ? ", " : ""));
+		Q_snprintf(text, sizeof(text), "%.7s", specList[i].playerName);
+
 		int nextJoin = max(0, (int)(gr->GetNextJoin(specList[i].playerIndex) - gpGlobals->curtime));
 
 		if (nextJoin > 0)
 			Q_strncat(text, VarArgs(" [%d]", nextJoin), sizeof(text));
+
+		if (i < specList.Count() - 1)
+			Q_strncat(text, ", ", sizeof(text));
 
 		pPl->SetText(text);
 		pPl->SetCommand(VarArgs("specindex:%d", specList[i]));
