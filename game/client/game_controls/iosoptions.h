@@ -46,6 +46,10 @@ protected:
 	RadioButton *m_pShotButtonRight;
 	Label *m_pPreferredShirtNumberLabel;
 	ComboBox *m_pPreferredShirtNumberList;
+	Label *m_pInterpDurationLabel;
+	ComboBox *m_pInterpDurationList;
+	Label *m_pSmoothDurationLabel;
+	ComboBox *m_pSmoothDurationList;
 };
 
 class IIOSOptionsMenu

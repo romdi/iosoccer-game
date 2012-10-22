@@ -197,11 +197,11 @@ void CSDKPlayerShared::SetAnimEvent(PlayerAnimEvent_t animEvent)
 	m_flPlayerAnimEventStart = gpGlobals->curtime;
 }
 
-void CSDKPlayerShared::ResetAnimEvent()
-{
-	m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
-	GetSDKPlayer()->RemoveFlag(FL_FREECAM);
-}
+//void CSDKPlayerShared::ResetAnimEvent()
+//{
+//	m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
+//	GetSDKPlayer()->RemoveFlag(FL_FREECAM);
+//}
 
 PlayerAnimEvent_t CSDKPlayerShared::GetAnimEvent()
 {

@@ -118,6 +118,7 @@ public:
 	void StartReplay(int numberOfRuns, float startDelay, bool atMinGoalPos);
 	void StopReplay();
 	void RestoreSnapshot();
+	void SaveReplay();
 	bool IsReplaying() { return m_bDoReplay; }
 	void Think();
 	void Spawn();
@@ -133,6 +134,7 @@ public:
 
 private:
 	CUtlVector<Snapshot>	m_Snapshots;
+	CUtlVector<CUtlVector<Snapshot>> m_Replays;
 	bool					m_bDoReplay;
 	int						m_nSnapshotIndex;
 	CReplayBall				*m_pBall;

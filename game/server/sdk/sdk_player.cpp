@@ -1084,6 +1084,11 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 
 		return true;
 	}
+	else if (Q_stricmp(args[0], "becomecaptain"))
+	{
+
+		return true;
+	}
 
 	return BaseClass::ClientCommand (args);
 }

@@ -62,7 +62,7 @@ public:
 	void	StopSprinting( void );
 
 	void	SetAnimEvent(PlayerAnimEvent_t animEvent);
-	void	ResetAnimEvent();
+	//void	ResetAnimEvent();
 	PlayerAnimEvent_t GetAnimEvent();
 	float	GetAnimEventStart();
 

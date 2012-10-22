@@ -56,6 +56,13 @@ ConCommand iosoptionsmenu("iosoptionsmenu", CC_IOSOptionsMenu);
 enum { PADDING = 15, TOP_PADDING = 15 };
 enum { BUTTON_WIDTH = 100, BUTTON_HEIGHT = 30, BUTTON_MARGIN = 5 };
 
+#define INTERP_VALUES 5
+const int interpValues[INTERP_VALUES] = { 1, 2, 3, 4, 5 };
+const char *interpTexts[INTERP_VALUES] = { "Very Short (cl_interp_ratio 1)", "Short (cl_interp_ratio 2)", "Medium (cl_interp_ratio 3)", "Long (cl_interp_ratio 4)", "Very Long (cl_interp_ratio 5)" };
+#define SMOOTH_VALUES 5
+const int smoothValues[SMOOTH_VALUES] = { 1, 5, 10, 25, 50 };
+const char *smoothTexts[SMOOTH_VALUES] = { "Very Short (cl_smoothtime 0.01)", "Short (cl_smoothtime 0.05)", "Medium (cl_smoothtime 0.1)", "Long (cl_smoothtime 0.25)", "Very Long (cl_smoothtime 0.5)" };
+
 CIOSOptionsPanel::CIOSOptionsPanel(VPANEL parent) : BaseClass(NULL, "IOSOptionsPanel")
 {
 	SetScheme("SourceScheme");
@@ -91,17 +98,38 @@ CIOSOptionsPanel::CIOSOptionsPanel(VPANEL parent) : BaseClass(NULL, "IOSOptionsP
 
 	m_pPreferredShirtNumberLabel = new Label(m_pContent, "", "Preferred Shirt Number:");
 	m_pPreferredShirtNumberList = new ComboBox(m_pContent, "", SHIRT_NUMBER_COUNT, false);
-
 	m_pPreferredShirtNumberList->RemoveAll();
 
-	KeyValues *kv = new KeyValues("UserData", "index", 0);
+	m_pInterpDurationLabel = new Label(m_pContent, "", "Interpolation Duration:");
+	m_pInterpDurationList = new ComboBox(m_pContent, "", 0, false);
+
+	m_pSmoothDurationLabel = new Label(m_pContent, "", "Smoothing Duration:");
+	m_pSmoothDurationList = new ComboBox(m_pContent, "", 0, false);
+
+	KeyValues *kv;
+
+	kv = new KeyValues("UserData", "index", 0);
 	m_pPreferredShirtNumberList->AddItem("None", kv);
 	kv->deleteThis();
 
 	for (int i = 1; i < SHIRT_NUMBER_COUNT; i++)
 	{
-		KeyValues *kv = new KeyValues("UserData", "index", i);
+		kv = new KeyValues("UserData", "index", i);
 		m_pPreferredShirtNumberList->AddItem(VarArgs("%d", i + 1), kv);
+		kv->deleteThis();
+	}
+
+	for (int i = 0; i < INTERP_VALUES; i++)
+	{
+		kv = new KeyValues("UserData", "value", interpValues[i]);
+		m_pInterpDurationList->AddItem(interpTexts[i], kv);
+		kv->deleteThis();
+	}
+
+	for (int i = 0; i < SMOOTH_VALUES; i++)
+	{
+		kv = new KeyValues("UserData", "value", smoothValues[i]);
+		m_pInterpDurationList->AddItem(smoothTexts[i], kv);
 		kv->deleteThis();
 	}
 }
@@ -156,6 +184,12 @@ void CIOSOptionsPanel::ApplySchemeSettings( IScheme *pScheme )
 	m_pPreferredShirtNumberList->SetBounds(LABEL_WIDTH, 3 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
 	m_pPreferredShirtNumberList->GetMenu()->MakeReadyForUse();
 
+	m_pInterpDurationLabel->SetBounds(0, 4 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pInterpDurationList->SetBounds(LABEL_WIDTH, 4 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
+
+	m_pSmoothDurationLabel->SetBounds(0, 5 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pSmoothDurationList->SetBounds(LABEL_WIDTH, 5 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
+
 	m_pShotButtonPanel->SetBounds(0, 4 * TEXT_HEIGHT, m_pContent->GetWide(), TEXT_HEIGHT);
 	m_pShotButtonLabel->SetBounds(0, 0, LABEL_WIDTH, TEXT_HEIGHT);
 	m_pShotButtonLeft->SetBounds(LABEL_WIDTH, 0, LABEL_WIDTH, TEXT_HEIGHT);
@@ -209,6 +243,9 @@ void CIOSOptionsPanel::OnCommand(const char *cmd)
 
 		g_pCVar->FindVar("shotbutton")->SetValue(m_pShotButtonLeft->IsSelected() ? "left" : "right");
 
+		g_pCVar->FindVar("cl_interp_ratio")->SetValue(atoi(m_pInterpDurationList->GetActiveItemUserData()->GetString("value")));
+		g_pCVar->FindVar("cl_smoothtime")->SetValue(atoi(m_pSmoothDurationList->GetActiveItemUserData()->GetString("value")) / 100.0f);
+
 		if (!stricmp(cmd, "save_and_close"))
 			Close();
 	}
@@ -232,6 +269,28 @@ void CIOSOptionsPanel::Activate()
 	m_pClubNameText->SetText(g_pCVar->FindVar("clubname")->GetString());
 	int shirtNum = g_pCVar->FindVar("preferredshirtnumber")->GetInt();
 	m_pPreferredShirtNumberList->SetText(shirtNum == 0 ? "None" : VarArgs("%d", clamp(shirtNum, 2, 11)));
+
+	m_pInterpDurationList->ActivateItemByRow(0);
+
+	for (int i = 0; i < INTERP_VALUES; i++)
+	{
+		if (interpValues[i] == (int)g_pCVar->FindVar("cl_interp_ratio")->GetFloat())
+		{
+			m_pInterpDurationList->ActivateItemByRow(i);
+			break;
+		}
+	}
+
+	m_pSmoothDurationList->ActivateItemByRow(0);
+
+	for (int i = 0; i < SMOOTH_VALUES; i++)
+	{
+		if (smoothValues[i] == (int)g_pCVar->FindVar("cl_smoothtime")->GetFloat())
+		{
+			m_pSmoothDurationList->ActivateItemByRow(i);
+			break;
+		}
+	}
 
 	if (!Q_strcmp(g_pCVar->FindVar("shotbutton")->GetString(), "left"))
 		m_pShotButtonLeft->SetSelected(true);

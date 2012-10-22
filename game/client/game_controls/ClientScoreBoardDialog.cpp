@@ -135,6 +135,10 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Editabl
 
 	m_pJoinRandom = new Button(m_pStatButtonInnerContainer, "JoinRandom", "Auto-Join", this, VarArgs("jointeam %d -1", TEAM_INVALID));
 
+	m_pBecomeCaptain = new Button(m_pStatButtonInnerContainer, "BecomeCaptain", "Become Captain", this, "becomecaptain");
+
+	m_pFormationList = new ComboBox(m_pStatButtonInnerContainer, "", 0, false);
+
 	m_nCurStat = DEFAULT_STATS;
 	m_nCurSpecIndex = 0;
 	m_pCurSpecButton = NULL;
@@ -276,6 +280,17 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 	m_pJoinRandom->SetContentAlignment(Label::a_center);
 	m_pJoinRandom->SetPaintBorderEnabled(false);
 	m_pJoinRandom->SetCursor(dc_hand);
+
+	m_pBecomeCaptain->SetBounds(STATBUTTON_HMARGIN, 2 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
+	m_pBecomeCaptain->SetFont(m_pScheme->GetFont("StatButton"));
+	m_pBecomeCaptain->SetContentAlignment(Label::a_center);
+	m_pBecomeCaptain->SetPaintBorderEnabled(false);
+	m_pBecomeCaptain->SetCursor(dc_hand);
+
+	m_pFormationList->SetBounds(STATBUTTON_HMARGIN, 4 * STATBUTTON_HEIGHT + STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
+	m_pFormationList->SetFont(m_pScheme->GetFont("StatButton"));
+	//m_pFormationList->SetPaintBorderEnabled(false);
+	m_pFormationList->SetVisible(false);
 
 	for (int i = 0; i < STAT_CATEGORY_COUNT; i++)
 	{
@@ -463,6 +478,20 @@ void CClientScoreBoardDialog::Update( void )
 		//m_pPlayerList[i]->SetFgColor(GetGlobalTeam(TEAM_A + i)->Get_HudKitColor());
 		//m_pPlayerList[i]->SetSectionFgColor(0, GetGlobalTeam(TEAM_A + i)->Get_HudKitColor());
 		//m_pPlayerList[i]->Repaint();
+	}
+
+	if (m_pFormationList->IsVisible())
+	{
+		m_pFormationList->RemoveAll();
+		KeyValues *kv = new KeyValues("UserData", "index", 0);
+		m_pFormationList->AddItem("4-3-3", kv);
+		kv->deleteThis();
+		kv = new KeyValues("UserData", "index", 1);
+		m_pFormationList->AddItem("3-5-2", kv);
+		kv->deleteThis();
+		kv = new KeyValues("UserData", "index", 2);
+		m_pFormationList->AddItem("5-3-2", kv);
+		kv->deleteThis();
 	}
 
 	m_fNextUpdateTime = gpGlobals->curtime + 0.25f; 
@@ -721,10 +750,11 @@ void CClientScoreBoardDialog::AddHeader()
 		{
 		case DEFAULT_STATS:
 			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "country",			"Nat.", defaultFlags | SectionedListPanel::COLUMN_IMAGE, 45);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "club",				"Club", defaultFlags, 70);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goals",				"Goals", defaultFlags, 45);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "assists",			"Assists", defaultFlags, 45);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "ping",				"Ping", defaultFlags, 55);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "club",				"Club", defaultFlags, 60);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goals",				"Goals", defaultFlags, 35);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "assists",			"Assists", defaultFlags, 35);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "rating",			"Rating", defaultFlags, 35);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "ping",				"Ping", defaultFlags, 50);
 			break;
 		case GENERAL:
 			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "possession",		"Poss.", defaultFlags, 45);
@@ -803,6 +833,31 @@ bool CClientScoreBoardDialog::StaticPlayerSortFunc(vgui::SectionedListPanel *lis
 	return itemID1 < itemID2;
 }
 
+// prints the float into dst, returns the number
+// of chars in the manner of snprintf. A truncated
+// output due to size limit is not altered.
+// A \0 is always appended. 
+int prettify(float f, char *dst, int max) {
+  int c = Q_snprintf(dst, max, "%.1f", f);
+
+  if(c > max) {
+    return c;
+  }
+
+  // position prior to '\0'
+  c--;
+
+  while(dst[c] == '0') {
+    c--;
+    if(dst[c] == '.') {
+      c--;
+      break;
+    }
+  }
+  dst[c + 1] = '\0';  
+  return c + 1;
+}
+
 #define GET_STAT_FTEXT(val, format) (VarArgs(format, val))
 #define GET_STAT_TEXT(val) (GET_STAT_FTEXT(val, "%d"))
 
@@ -846,6 +901,9 @@ bool CClientScoreBoardDialog::GetPlayerInfo(int playerIndex, KeyValues *kv)
 	kv->SetString("name", gr->GetPlayerName( playerIndex ) );
 	kv->SetString("steamname", gr->GetSteamName( playerIndex ) );
 	kv->SetString("club", gr->GetClubName(playerIndex));
+	char rating[4];
+	prettify(gr->GetPassesCompleted(playerIndex) * 10.0f / max(1, gr->GetPasses(playerIndex)), rating, 4);
+	kv->SetString("rating", rating);
 	kv->SetInt("voice",  s_VoiceImage[GetClientVoiceMgr()->GetSpeakerStatus( playerIndex - 1) ]); 
 
 	if (gr->GetPing( playerIndex ) < 1)
@@ -938,6 +996,7 @@ bool CClientScoreBoardDialog::GetTeamInfo(int team, KeyValues *kv)
 	int saves = 0;
 	int owngoals = 0;
 	int goalsconceded = 0;
+	float ratings = 0;
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
@@ -972,6 +1031,7 @@ bool CClientScoreBoardDialog::GetTeamInfo(int team, KeyValues *kv)
 			passSum += gr->GetPasses(i);
 			passCompletedSum += gr->GetPassesCompleted(i) * 100 / max(1, gr->GetPasses(i));
 			passCompletedPlayerCount += 1;
+			ratings += gr->GetPassesCompleted(i) * 10 / max(1, gr->GetPasses(i));
 		}
 
 		if (gr->GetShots(i) > 0)
@@ -1043,6 +1103,9 @@ bool CClientScoreBoardDialog::GetTeamInfo(int team, KeyValues *kv)
 	kv->SetString("saves", GET_STAT_TEXT(saves));
 	kv->SetString("owngoals", GET_STAT_TEXT(owngoals));
 	kv->SetString("goalsconceded", GET_STAT_TEXT(goalsconceded));
+	char rating[4];
+	prettify(ratings / max(1, passCompletedPlayerCount), rating, 4);
+	kv->SetString("rating", rating);
 
 	return true;
 }
@@ -1174,6 +1237,17 @@ void CClientScoreBoardDialog::OnCommand( char const *cmd )
 			m_pCurSpecButton = NULL;
 
 		Update();
+	}
+	else if (!Q_stricmp(cmd, "becomecaptain"))
+	{
+		for (int i = 0; i < STAT_CATEGORY_COUNT; i++)
+		{
+			m_pStatButtons[i]->SetVisible(false);
+		}
+
+		m_pFormationList->SetVisible(true);
+
+		engine->ClientCmd(cmd);
 	}
 	else
 		BaseClass::OnCommand(cmd);

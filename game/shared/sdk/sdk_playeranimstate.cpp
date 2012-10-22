@@ -363,12 +363,13 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 	case PLAYERANIMEVENT_NONE:
 		{
 			GetSDKPlayer()->ResetShotCharging();
+			//GetSDKPlayer()->RemoveFlag(FL_FREECAM | FL_KEEPER_SIDEWAYS_DIVING | FL_SLIDING);
 			break;
 		}
 	case PLAYERANIMEVENT_CANCEL:
 		{
 			GetSDKPlayer()->ResetShotCharging();
-			GetSDKPlayer()->RemoveFlag(FL_FREECAM | FL_KEEPER_SIDEWAYS_DIVING | FL_SLIDING);
+			//GetSDKPlayer()->RemoveFlag(FL_FREECAM | FL_KEEPER_SIDEWAYS_DIVING | FL_SLIDING);
 			ClearAnimationState();
 			break;
 		}
@@ -381,10 +382,10 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 	case PLAYERANIMEVENT_HEADER_STATIONARY:
 	case PLAYERANIMEVENT_THROWIN:
 	case PLAYERANIMEVENT_THROW:
-	case PLAYERANIMEVENT_DIVINGHEADER:
 	case PLAYERANIMEVENT_KEEPER_HANDS_THROW:
 	case PLAYERANIMEVENT_KEEPER_HANDS_KICK:
 	case PLAYERANIMEVENT_KEEPER_HANDS_PUNCH:
+	case PLAYERANIMEVENT_DIVINGHEADER:
 		{
 			GetSDKPlayer()->ResetShotCharging();
 		}
@@ -426,7 +427,7 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 		}
 	case PLAYERANIMEVENT_CARRY_END:
 		{
-			GetSDKPlayer()->RemoveFlag(FL_FREECAM);
+			//GetSDKPlayer()->RemoveFlag(FL_FREECAM);
 			m_iSecondaryActionSequence = CalcSecondaryActionSequence();
 			if ( m_iSecondaryActionSequence != -1 )
 			{
@@ -436,6 +437,25 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 			}
 			break;
 		}
+	}
+
+	switch (event)
+	{
+	case PLAYERANIMEVENT_DIVINGHEADER:
+	case PLAYERANIMEVENT_SLIDE:
+	case PLAYERANIMEVENT_TACKLED_FORWARD:
+	case PLAYERANIMEVENT_TACKLED_BACKWARD:
+	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT:
+	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT:
+	case PLAYERANIMEVENT_KEEPER_DIVE_FORWARD:
+	case PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD:
+		GetSDKPlayer()->AddFlag(FL_FREECAM);
+		break;
+	case PLAYERANIMEVENT_CARRY:
+		break;
+	default:
+		GetSDKPlayer()->RemoveFlag(FL_FREECAM);
+		break;
 	}
 
 	if (event != PLAYERANIMEVENT_CARRY && event != PLAYERANIMEVENT_CARRY_END)

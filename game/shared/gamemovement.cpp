@@ -1566,7 +1566,7 @@ bool CGameMovement::CheckPlayerAnimEvent()
 		{
 			if (timePassed >= mp_keepersidewarddive_move_duration.GetFloat() + mp_keepersidewarddive_idle_duration.GetFloat())
 			{
-				pPl->m_Shared.ResetAnimEvent();
+				pPl->DoAnimationEvent(PLAYERANIMEVENT_NONE);
 				return false;
 			}
 			if (timePassed <= stuckRescueTimeLimit)
@@ -1583,7 +1583,7 @@ bool CGameMovement::CheckPlayerAnimEvent()
 		{
 			if (timePassed >= mp_keepersidewarddive_move_duration.GetFloat() + mp_keepersidewarddive_idle_duration.GetFloat())
 			{
-				pPl->m_Shared.ResetAnimEvent();
+				pPl->DoAnimationEvent(PLAYERANIMEVENT_NONE);
 				return false;
 			}
 
@@ -1601,7 +1601,7 @@ bool CGameMovement::CheckPlayerAnimEvent()
 		{
 			if (timePassed >= mp_keeperforwarddive_move_duration.GetFloat() + mp_keeperforwarddive_idle_duration.GetFloat())
 			{
-				pPl->m_Shared.ResetAnimEvent();
+				pPl->DoAnimationEvent(PLAYERANIMEVENT_NONE);
 				return false;
 			}
 
@@ -1619,7 +1619,7 @@ bool CGameMovement::CheckPlayerAnimEvent()
 		{
 			if (timePassed >= mp_keeperbackwarddive_move_duration.GetFloat() + mp_keeperbackwarddive_idle_duration.GetFloat())
 			{
-				pPl->m_Shared.ResetAnimEvent();
+				pPl->DoAnimationEvent(PLAYERANIMEVENT_NONE);
 				return false;
 			}
 
@@ -1642,9 +1642,24 @@ bool CGameMovement::CheckPlayerAnimEvent()
 		{
 			if (timePassed >= mp_slide_move_duration.GetFloat() + mp_slide_idle_duration.GetFloat())
 			{
-				pPl->m_Shared.ResetAnimEvent();
+				pPl->DoAnimationEvent(PLAYERANIMEVENT_NONE);
 				return false;
 			}
+
+			//if (mv->m_nButtons & IN_MOVERIGHT)
+			//{
+			//	//Vector forward, right, up;
+			//	//AngleVectors(mv->m_vecAbsViewAngles, &forward, &right, &up);
+			//	VectorYawRotate(forward2D, -45, forward2D);
+			//	VectorAngles(forward2D, mv->m_vecViewAngles);
+			//}
+			//else if (mv->m_nButtons & IN_MOVELEFT)
+			//{
+			//	//Vector forward, right, up;
+			//	//AngleVectors(mv->m_vecAbsViewAngles, &forward, &right, &up);
+			//	VectorYawRotate(forward2D, 45, forward2D);
+			//	VectorAngles(forward2D, mv->m_vecViewAngles);
+			//}
 
 			if (timePassed <= stuckRescueTimeLimit)
 				mv->m_vecVelocity = forward2D * mp_slidespeed.GetInt() * max(0, (1 - pow(timePassed / mp_slide_move_duration.GetFloat(), 2)));
@@ -1657,7 +1672,7 @@ bool CGameMovement::CheckPlayerAnimEvent()
 		{
 			if (timePassed >= mp_tackled_idle_duration.GetFloat())
 			{
-				pPl->m_Shared.ResetAnimEvent();
+				pPl->DoAnimationEvent(PLAYERANIMEVENT_NONE);
 				return false;
 			}
 
@@ -1672,7 +1687,7 @@ bool CGameMovement::CheckPlayerAnimEvent()
 		{
 			if (timePassed >= mp_throwinthrow_idle_duration.GetFloat())
 			{
-				pPl->m_Shared.ResetAnimEvent();
+				pPl->DoAnimationEvent(PLAYERANIMEVENT_NONE);
 				return false;
 			}
 
@@ -1683,7 +1698,7 @@ bool CGameMovement::CheckPlayerAnimEvent()
 		{
 			if (timePassed >= mp_divingheader_move_duration.GetFloat() + mp_divingheader_idle_duration.GetFloat())
 			{
-				pPl->m_Shared.ResetAnimEvent();
+				pPl->DoAnimationEvent(PLAYERANIMEVENT_NONE);
 				return false;
 			}
 
@@ -1967,22 +1982,18 @@ bool CGameMovement::CheckJumpButton( void )
 		{
 			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_LEFT;
 			//mv->m_flSideMove = 2 * -mp_sprintspeed.GetInt();
-			pPl->AddFlag(FL_FREECAM);
 		}
 		else if ((mv->m_nButtons & IN_MOVERIGHT) && !(mv->m_nButtons & IN_WALK))
 		{
 			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_RIGHT;
-			pPl->AddFlag(FL_FREECAM);
 		}
 		else if ((mv->m_nButtons & IN_FORWARD) && !(mv->m_nButtons & IN_WALK) && (mv->m_nButtons & IN_SPEED))
 		{
 			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_FORWARD;
-			pPl->AddFlag(FL_FREECAM);
 		}
 		else if ((mv->m_nButtons & IN_BACK) && !(mv->m_nButtons & IN_WALK) && (mv->m_nButtons & IN_SPEED))
 		{
 			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD;
-			pPl->AddFlag(FL_FREECAM);
 		}
 		else
 		{
@@ -1992,7 +2003,7 @@ bool CGameMovement::CheckJumpButton( void )
 
 	pPl->DoAnimationEvent(animEvent);
 
-	pPl->m_Shared.SetAnimEvent(animEvent);
+	//pPl->m_Shared.SetAnimEvent(animEvent);
 
 	mv->m_vecVelocity.z = sqrt(2 * sv_gravity.GetFloat() * mp_jump_height.GetInt());
 
@@ -2040,11 +2051,11 @@ bool CGameMovement::CheckSlideButton()
 
 	PlayerAnimEvent_t animEvent = PLAYERANIMEVENT_SLIDE;
 
-	pPl->AddFlag(FL_FREECAM);
-
 	pPl->DoAnimationEvent(animEvent);
 
-	pPl->m_Shared.SetAnimEvent(animEvent);
+	//pPl->AddFlag(FL_FREECAM);
+
+	//pPl->m_Shared.SetAnimEvent(animEvent);
 
 	//FinishGravity();
 

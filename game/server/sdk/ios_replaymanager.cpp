@@ -262,6 +262,10 @@ void CReplayManager::StartReplay(int numberOfRuns, float startDelay, bool atMinG
 	m_nReplayRunIndex = 0;
 	m_bDoReplay = true;
 	m_bAtMinGoalPos = atMinGoalPos;
+	if (m_Replays.Count() > 0)
+		m_Snapshots = m_Replays[0];
+	else
+		SaveReplay();
 }
 
 void CReplayManager::StopReplay()
@@ -553,4 +557,13 @@ void CReplayManager::RestoreSnapshot()
 	}
 
 	m_nSnapshotIndex += 1;
+}
+
+void CReplayManager::SaveReplay()
+{
+	//CUtlVector<Snapshot> snapShots;
+	//snapShots.CopyArray(m_Snapshots.Base(), m_Snapshots.Count());
+	//m_Replays.SetCount(1);
+	//m_Replays[0] = snapShots;
+	//m_Replays.AddToTail(snapShots);
 }

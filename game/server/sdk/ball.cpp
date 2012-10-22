@@ -1710,11 +1710,48 @@ bool CBall::DoBodyPartAction()
 	float zDist = dirToBall.z;
 	float xyDist = dirToBall.Length2D();
 
+	bool canCatch = false;
+
 	if (m_pPl->GetTeamPosType() == GK && m_nInPenBoxOfTeam == m_pPl->GetTeamNumber() && !m_pPl->m_pHoldingBall && m_pPl->m_nInPenBoxOfTeam == m_pPl->GetTeamNumber())
 	{
-		if (CheckKeeperCatch())
-			return true;
+		if (!SDKGameRules()->IsIntermissionState() && SDKGameRules()->State_Get() != MATCH_PENALTIES)
+		{
+			// Can catch if either another player shot the ball last or before me. Excludes Goal kicks, free kicks and shots from hand, since touches get deleted there.
+			if (LastPl(true) != m_pPl || LastPl(true, m_pPl))
+			{
+				BallTouchInfo *pInfo = LastInfo(false, m_pPl);
+
+				if (pInfo)
+				{
+					// Can always catch balls touched or shot by opponents. Only check teammate touches and shots.
+					if (pInfo->m_nTeam == m_pPl->GetTeamNumber())
+					{
+						if (!pInfo->m_bIsShot || pInfo->m_eBodyPart == BODY_PART_HEAD || pInfo->m_eBodyPart == BODY_PART_CHEST)
+						{
+							BallTouchInfo *pShotInfo = LastInfo(true, m_pPl);
+
+							if (pInfo->m_bIsShot || !pShotInfo || pShotInfo->m_nTeam != m_pPl->GetTeamNumber()
+								|| pShotInfo->m_eBodyPart == BODY_PART_HEAD || pShotInfo->m_eBodyPart == BODY_PART_CHEST)
+							{
+								canCatch = true;
+							}
+						}
+					}
+					else
+					{
+						canCatch = true;
+					}
+				}
+			}
+		}
+		else
+		{
+			canCatch = true;
+		}
 	}
+
+	if (canCatch)
+		return CheckKeeperCatch();
 
 	if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_SLIDE)
 		return DoSlideAction();
@@ -1786,18 +1823,21 @@ bool CBall::DoSlideAction()
 	else
 		shotStrength = GetChargedshotStrength(1.0f, sv_ball_chargedslide_minstrength.GetInt(), sv_ball_chargedslide_maxstrength.GetInt());
 
-	Vector ballVel = m_vPlForward2D * shotStrength;
+	Vector forward;
+	AngleVectors(QAngle(-15, m_aPlAng[YAW], 0), &forward, NULL, NULL);
 
-	if (m_pPl->m_nButtons & IN_MOVELEFT)
-	{
-		VectorYawRotate(ballVel, 45, ballVel);
-		ballVel *= sv_ball_slidesidespeedcoeff.GetFloat();
-	}
-	else if (m_pPl->m_nButtons & IN_MOVERIGHT)
-	{
-		VectorYawRotate(ballVel, -45, ballVel);
-		ballVel *= sv_ball_slidesidespeedcoeff.GetFloat();
-	}
+	Vector ballVel = forward * shotStrength;
+
+	//if (m_pPl->m_nButtons & IN_MOVELEFT)
+	//{
+	//	VectorYawRotate(ballVel, 45, ballVel);
+	//	ballVel *= sv_ball_slidesidespeedcoeff.GetFloat();
+	//}
+	//else if (m_pPl->m_nButtons & IN_MOVERIGHT)
+	//{
+	//	VectorYawRotate(ballVel, -45, ballVel);
+	//	ballVel *= sv_ball_slidesidespeedcoeff.GetFloat();
+	//}
 
 	SetVel(ballVel, 0, BODY_PART_FEET, false, true, false);
 	m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
@@ -1855,29 +1895,29 @@ bool CBall::CheckKeeperCatch()
 	if (!canCatch)
 		return false;
 
-	if (!SDKGameRules()->IsIntermissionState() && SDKGameRules()->State_Get() != MATCH_PENALTIES)
-	{
-		// Don't catch again after ball was in hands
-		if (LastPl(true) == m_pPl && !LastPl(true, m_pPl))
-			return false;
+	//if (!SDKGameRules()->IsIntermissionState() && SDKGameRules()->State_Get() != MATCH_PENALTIES)
+	//{
+	//	// Don't catch again after ball was in hands
+	//	if (LastPl(true) == m_pPl && !LastPl(true, m_pPl))
+	//		return false;
 
-		BallTouchInfo *pInfo = LastInfo(false, m_pPl);
-		if (!pInfo)
-			return false;
+	//	BallTouchInfo *pInfo = LastInfo(false, m_pPl);
+	//	if (!pInfo)
+	//		return false;
 
-		// Can always catch balls touched or shot by opponents. Only check teammate touches and shots.
-		if (pInfo->m_nTeam == m_pPl->GetTeamNumber())
-		{
-			if (pInfo->m_bIsShot && pInfo->m_eBodyPart != BODY_PART_HEAD && pInfo->m_eBodyPart != BODY_PART_CHEST)
-				return false;
+	//	// Can always catch balls touched or shot by opponents. Only check teammate touches and shots.
+	//	if (pInfo->m_nTeam == m_pPl->GetTeamNumber())
+	//	{
+	//		if (pInfo->m_bIsShot && pInfo->m_eBodyPart != BODY_PART_HEAD && pInfo->m_eBodyPart != BODY_PART_CHEST)
+	//			return false;
 
-			BallTouchInfo *pShotInfo = LastInfo(true, m_pPl);
+	//		BallTouchInfo *pShotInfo = LastInfo(true, m_pPl);
 
-			if (!pInfo->m_bIsShot && pShotInfo && pShotInfo->m_nTeam == m_pPl->GetTeamNumber()
-				&& pShotInfo->m_eBodyPart != BODY_PART_HEAD && pShotInfo->m_eBodyPart != BODY_PART_CHEST)
-				return false;
-		}
-	}
+	//		if (!pInfo->m_bIsShot && pShotInfo && pShotInfo->m_nTeam == m_pPl->GetTeamNumber()
+	//			&& pShotInfo->m_eBodyPart != BODY_PART_HEAD && pShotInfo->m_eBodyPart != BODY_PART_CHEST)
+	//			return false;
+	//	}
+	//}
 
 	if (!SDKGameRules()->IsIntermissionState() && !m_bHasQueuedState && LastTeam(true) != m_pPl->GetTeamNumber())
 	{
@@ -2126,13 +2166,16 @@ bool CBall::DoHeader()
 	}
 	else if (m_vPlForwardVel2D.Length2D() >= mp_walkspeed.GetInt() && m_nInPenBoxOfTeam == m_pPl->GetOppTeamNumber() && (m_pPl->m_nButtons & IN_SPEED) && m_pPl->GetGroundEntity())
 	{
+		Vector forward;
+		AngleVectors(QAngle(-5, m_aPlAng[YAW], 0), &forward, NULL, NULL);
+
 		if (m_pPl->IsPowershooting())
-			vel = m_vPlForward2D * GetPowershotStrength(1.0f, sv_ball_powerdivingheader_strength.GetInt());
+			vel = forward * GetPowershotStrength(1.0f, sv_ball_powerdivingheader_strength.GetInt());
 		else
-			vel = m_vPlForward2D * GetChargedshotStrength(1.0f, sv_ball_chargeddivingheader_minstrength.GetInt(), sv_ball_chargeddivingheader_maxstrength.GetInt());
+			vel = forward * GetChargedshotStrength(1.0f, sv_ball_chargeddivingheader_minstrength.GetInt(), sv_ball_chargeddivingheader_maxstrength.GetInt());
 
 		EmitSound("Ball.kickhard");
-		m_pPl->AddFlag(FL_FREECAM);
+		//m_pPl->AddFlag(FL_FREECAM);
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_DIVINGHEADER);
 	}
 	else
