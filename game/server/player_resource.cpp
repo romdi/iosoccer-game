@@ -53,6 +53,7 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CPlayerResource, DT_PlayerResource)
 	SendPropArray3( SENDINFO_ARRAY3(m_TeamPosIndex), SendPropInt( SENDINFO_ARRAY(m_TeamPosIndex), 4, SPROP_UNSIGNED  ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_TeamPosNum), SendPropInt( SENDINFO_ARRAY(m_TeamPosNum), 5, SPROP_UNSIGNED  ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_NextJoin), SendPropFloat( SENDINFO_ARRAY(m_NextJoin) ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_IsCardBanned), SendPropBool( SENDINFO_ARRAY(m_IsCardBanned) ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_TeamToJoin), SendPropInt( SENDINFO_ARRAY(m_TeamToJoin), 3 ) ),
 
 	SendPropArray3( SENDINFO_ARRAY3(m_szClubNames), SendPropString( SENDINFO_ARRAY(m_szClubNames), 0, SendProxy_String_tToStringPR ) ),
@@ -120,6 +121,7 @@ void CPlayerResource::Spawn( void )
 		m_TeamPosIndex.Set( i, 0 );
 		m_TeamPosNum.Set( i, 0 );
 		m_NextJoin.Set( i, 0 );
+		m_IsCardBanned.Set( i, 0 );
 		m_TeamToJoin.Set( i, 0 );
 
 		m_szClubNames.Set( i, MAKE_STRING("") );
@@ -195,6 +197,7 @@ void CPlayerResource::UpdatePlayerData( void )
 				m_TeamPosNum.Set(i, SDKPlayer->GetTeamPosNum() );
 				m_TeamToJoin.Set(i, SDKPlayer->GetTeamToJoin() );
 				m_NextJoin.Set(i, SDKPlayer->GetNextJoin() );
+				m_IsCardBanned.Set(i, SDKPlayer->IsCardBanned() );
 
 				m_szClubNames.Set(i, MAKE_STRING(SDKPlayer->GetClubName()));
 

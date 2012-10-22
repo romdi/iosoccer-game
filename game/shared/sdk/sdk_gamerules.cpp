@@ -1256,6 +1256,7 @@ void CSDKGameRules::State_WARMUP_Enter()
 	SetKickOffTeam(m_nFirstHalfKickOffTeam);
 
 	EnableShield(SHIELD_KICKOFF, TEAM_A, SDKGameRules()->m_vKickOff);
+
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
 		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
@@ -1937,8 +1938,21 @@ void CSDKGameRules::StopMeteringInjuryTime()
 {
 	if (m_flInjuryTimeStart != -1)
 	{
-		m_flInjuryTime += gpGlobals->curtime - m_flInjuryTimeStart;
+		float timePassed = gpGlobals->curtime - m_flInjuryTimeStart;
+		m_flInjuryTime += timePassed;
 		m_flInjuryTimeStart = -1;
+
+		for (int i = 1; i <= gpGlobals->maxClients; i++)
+		{
+			CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+			if (!pPl)
+				continue;
+
+			if (pPl->IsCardBanned() && pPl->m_flNextJoin > gpGlobals->curtime)
+			{
+				pPl->m_flNextJoin += timePassed;
+			}
+		}
 	}
 }
 

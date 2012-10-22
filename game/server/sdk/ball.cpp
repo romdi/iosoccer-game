@@ -1280,6 +1280,7 @@ void CBall::State_FREEKICK_Enter()
 
 			float banDuration = (m_eFoulType == FOUL_NORMAL_YELLOW_CARD ? sv_ball_player_yellow_red_card_duration.GetFloat() : sv_ball_player_red_card_duration.GetFloat()) * 60 / (90.0f / mp_timelimit_match.GetFloat());
 
+			m_pFoulingPl->m_bIsCardBanned = true;
 			m_pFoulingPl->m_flNextJoin = gpGlobals->curtime + banDuration;
 			m_pFoulingPl->ChangeTeam(TEAM_SPECTATOR);
 		}

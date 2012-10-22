@@ -54,6 +54,7 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_PlayerResource, DT_PlayerResource, CPlayerReso
 	RecvPropArray3( RECVINFO_ARRAY(m_TeamPosNum), RecvPropInt( RECVINFO(m_TeamPosNum[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_TeamToJoin), RecvPropInt( RECVINFO(m_TeamToJoin[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_NextJoin), RecvPropFloat( RECVINFO(m_NextJoin[0]))),
+	RecvPropArray3( RECVINFO_ARRAY(m_IsCardBanned), RecvPropBool( RECVINFO(m_IsCardBanned[0]))),
 
 	RecvPropArray3( RECVINFO_ARRAY(m_szClubNames), RecvPropString( RECVINFO(m_szClubNames[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_CountryNames), RecvPropInt( RECVINFO(m_CountryNames[0]))),
@@ -108,6 +109,7 @@ C_PlayerResource::C_PlayerResource()
 	memset( m_TeamPosNum, 0, sizeof( m_TeamPosNum ) );
 	memset( m_TeamToJoin, 0, sizeof( m_TeamToJoin ) );
 	memset( m_NextJoin, 0, sizeof( m_NextJoin ) );
+	memset( m_IsCardBanned, 0, sizeof( m_IsCardBanned ) );
 
 	memset( m_szClubNames, 0, sizeof( m_szClubNames ) );
 	memset( m_CountryNames, 0, sizeof( m_CountryNames ) );
@@ -665,4 +667,12 @@ float C_PlayerResource::GetNextJoin( int iIndex )
 		return false;
 	else
 		return m_NextJoin[iIndex];
+}
+
+bool C_PlayerResource::IsCardBanned( int iIndex )
+{
+	if ( iIndex < 1 || iIndex > MAX_PLAYERS )
+		return false;
+	else
+		return m_IsCardBanned[iIndex];
 }

@@ -34,10 +34,11 @@ class CBall;
 class CPlayerPersistentData
 {
 public:
-	const CSteamID *m_SteamID;
-	int m_nYellowCards;
-	int m_nRedCards;
-	float m_flNextJoin;
+	const	CSteamID *m_SteamID;
+	int		m_nYellowCards;
+	int		m_nRedCards;
+	float	m_flNextJoin;
+	bool	m_bIsCardBanned;
 
 //	CPlayerPersistentData(const CSteamID *steamID);
 	static void LoadPlayerData(CSDKPlayer *pPl);
@@ -326,6 +327,7 @@ public:
 	int					GetTeamPosIndex(void) { return m_nTeamPosIndex; }
 	int					GetTeamToJoin(void) { return m_nTeamToJoin; }
 	int					GetNextJoin(void) { return m_flNextJoin; }
+	bool				IsCardBanned(void) { return m_bIsCardBanned; }
 
 	void				SetPreferredTeamPosNum(int num) { m_nPreferredTeamPosNum = clamp(num, 0, 11); }
 	int					FindUnfilledTeamPosNum();
@@ -407,6 +409,7 @@ public:
 	void				ResetShotCharging();
 
 	float				m_flNextJoin;
+	bool				m_bIsCardBanned;
 	int					m_nTeamToJoin;
 
 	int					m_ePenaltyState;

@@ -72,6 +72,7 @@ public:
 	virtual int		GetTeamPosIndex( int iIndex ) = 0;
 	virtual int		GetTeamToJoin( int iIndex ) = 0;
 	virtual float	GetNextJoin( int iIndex ) = 0;
+	virtual bool	IsCardBanned( int iIndex ) = 0;
 };
 
 extern IGameResources *GameResources( void ); // singelton accessor

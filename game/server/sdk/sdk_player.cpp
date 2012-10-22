@@ -254,6 +254,7 @@ CSDKPlayer::CSDKPlayer()
 	m_bShotButtonsReleased = false;
 	m_nTeamToJoin = TEAM_INVALID;
 	m_flNextJoin = gpGlobals->curtime;
+	m_bIsCardBanned = false;
 	m_nTeamPosIndex = 0;
 	m_nPreferredTeamPosNum = 2;
 	m_pPlayerBall = NULL;
@@ -1639,6 +1640,7 @@ void CPlayerPersistentData::LoadPlayerData(CSDKPlayer *pPl)
 		//pPl->m_YellowCards = m_PlayerPersistentData[i]->m_nYellowCards;
 		//pPl->m_RedCards = m_PlayerPersistentData[i]->m_nRedCards;
 		pPl->m_flNextJoin = m_PlayerPersistentData[i]->m_flNextJoin;
+		pPl->m_bIsCardBanned = m_PlayerPersistentData[i]->m_bIsCardBanned;
 
 		break;
 	}
@@ -1668,6 +1670,7 @@ void CPlayerPersistentData::SavePlayerData(CSDKPlayer *pPl)
 	//data->m_nYellowCards = pPl->m_YellowCards;
 	//data->m_nRedCards = pPl->m_RedCards;
 	data->m_flNextJoin = pPl->m_flNextJoin;
+	data->m_bIsCardBanned = pPl->IsCardBanned();
 }
 
 void CPlayerPersistentData::RemoveAllPlayerData()
@@ -1681,5 +1684,6 @@ void CPlayerPersistentData::RemoveAllPlayerData()
 			continue;
 
 		pPl->m_flNextJoin = gpGlobals->curtime;
+		pPl->m_bIsCardBanned = false;
 	}
 }

@@ -59,6 +59,7 @@ protected:
 	CNetworkArray( int, m_TeamPosIndex, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_TeamPosNum, MAX_PLAYERS+1 );
 	CNetworkArray( float, m_NextJoin, MAX_PLAYERS+1 );
+	CNetworkArray( bool, m_IsCardBanned, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_TeamToJoin, MAX_PLAYERS+1 );
 	
 	CNetworkArray( string_t, m_szClubNames, MAX_PLAYERS+1 );
