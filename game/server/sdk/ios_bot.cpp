@@ -183,6 +183,9 @@ void CBot::FieldBotJoinTeam()
 // Handler for the "bot" command.
 CON_COMMAND_F( bot_add, "Add a bot.", FCVAR_CHEAT )
 {
+	if ( !UTIL_IsCommandIssuedByServerAdmin() )
+        return;
+
 	// Look at -count.
 	int count = args.FindArgInt( "-count", 1 );
 	count = clamp( count, 1, 16 );
