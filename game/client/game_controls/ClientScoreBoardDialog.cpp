@@ -700,7 +700,7 @@ void CClientScoreBoardDialog::UpdatePlayerInfo()
 		totalWidth += width;
 	}
 
-	if (m_nCurSpecIndex > 0 && m_pCurSpecButton && gr->IsConnected(m_nCurSpecIndex))
+	if (m_nCurSpecIndex > 0 && m_pCurSpecButton && gr->IsConnected(m_nCurSpecIndex) && gr->GetTeam(m_nCurSpecIndex) == TEAM_SPECTATOR)
 	{
 		m_pSpecInfo->SetText(VarArgs("%s | %s | %s | %s | %d ms", gr->GetPlayerName(m_nCurSpecIndex), gr->GetSteamName(m_nCurSpecIndex), g_szCountryNames[gr->GetCountryName(m_nCurSpecIndex)], gr->GetClubName(m_nCurSpecIndex), gr->GetPing(m_nCurSpecIndex)));
 		int width, height;
@@ -714,8 +714,6 @@ void CClientScoreBoardDialog::UpdatePlayerInfo()
 	}
 	else
 		m_pSpecInfo->SetVisible(false);
-
-	
 }
 
 //-----------------------------------------------------------------------------
