@@ -129,7 +129,7 @@ CIOSOptionsPanel::CIOSOptionsPanel(VPANEL parent) : BaseClass(NULL, "IOSOptionsP
 	for (int i = 0; i < SMOOTH_VALUES; i++)
 	{
 		kv = new KeyValues("UserData", "value", smoothValues[i]);
-		m_pInterpDurationList->AddItem(smoothTexts[i], kv);
+		m_pSmoothDurationList->AddItem(smoothTexts[i], kv);
 		kv->deleteThis();
 	}
 }
@@ -180,15 +180,15 @@ void CIOSOptionsPanel::ApplySchemeSettings( IScheme *pScheme )
 	//m_pCountryNameList->SetDisabledBgColor(Color(255, 255, 255, 255));
 	//m_pCountryNameList->SetSelectionTextColor(Color(0, 0, 0, 255));
 
-	m_pPreferredShirtNumberLabel->SetBounds(0, 3 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pPreferredShirtNumberList->SetBounds(LABEL_WIDTH, 3 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
+	m_pPreferredShirtNumberLabel->SetBounds(0, 2 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pPreferredShirtNumberList->SetBounds(LABEL_WIDTH, 2 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
 	m_pPreferredShirtNumberList->GetMenu()->MakeReadyForUse();
 
-	m_pInterpDurationLabel->SetBounds(0, 4 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pInterpDurationList->SetBounds(LABEL_WIDTH, 4 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
+	m_pInterpDurationLabel->SetBounds(0, 3 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pInterpDurationList->SetBounds(LABEL_WIDTH, 3 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
 
-	m_pSmoothDurationLabel->SetBounds(0, 5 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pSmoothDurationList->SetBounds(LABEL_WIDTH, 5 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
+	m_pSmoothDurationLabel->SetBounds(0, 4 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pSmoothDurationList->SetBounds(LABEL_WIDTH, 4 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
 
 	m_pShotButtonPanel->SetBounds(0, 4 * TEXT_HEIGHT, m_pContent->GetWide(), TEXT_HEIGHT);
 	m_pShotButtonLabel->SetBounds(0, 0, LABEL_WIDTH, TEXT_HEIGHT);
@@ -285,7 +285,7 @@ void CIOSOptionsPanel::Activate()
 
 	for (int i = 0; i < SMOOTH_VALUES; i++)
 	{
-		if (smoothValues[i] == (int)g_pCVar->FindVar("cl_smoothtime")->GetFloat())
+		if (smoothValues[i] == (int)(g_pCVar->FindVar("cl_smoothtime")->GetFloat() * 100))
 		{
 			m_pSmoothDurationList->ActivateItemByRow(i);
 			break;
