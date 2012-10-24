@@ -1826,7 +1826,8 @@ ConVar mp_teamrotation("mp_teamrotation", "brazil,germany,italy,scotland,barcelo
 
 void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 {
-	const char *pszClubName = engine->GetClientConVarValue( pPlayer->entindex(), "clubname" );
+	char pszClubName[MAX_CLUBNAME_LENGTH];
+	Q_strncpy(pszClubName, engine->GetClientConVarValue( pPlayer->entindex(), "clubname" ), MAX_CLUBNAME_LENGTH);
 	((CSDKPlayer *)pPlayer)->SetClubName(pszClubName);
 
 	((CSDKPlayer *)pPlayer)->SetCountryName(clamp(atoi(engine->GetClientConVarValue(pPlayer->entindex(), "ipcountryname")), 0, COUNTRY_NAMES_COUNT - 1));
@@ -1835,7 +1836,8 @@ void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 
 	((CSDKPlayer *)pPlayer)->SetShotButtonRight(!Q_strcmp(engine->GetClientConVarValue(pPlayer->entindex(), "shotbutton"), "left") == false);
 
-	const char *pszName = engine->GetClientConVarValue( pPlayer->entindex(), "playername" );
+	char pszName[MAX_PLAYER_NAME_LENGTH];
+	Q_strncpy(pszName, engine->GetClientConVarValue( pPlayer->entindex(), "playername" ), MAX_PLAYER_NAME_LENGTH);
 
 	const char *pszOldName = pPlayer->GetPlayerName();
 

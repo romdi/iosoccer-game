@@ -71,6 +71,7 @@ CIOSOptionsPanel::CIOSOptionsPanel(VPANEL parent) : BaseClass(NULL, "IOSOptionsP
 	m_pContent = new Panel(this, "");
 	m_pPlayerNameLabel = new Label(m_pContent, "", "Player Name:");
 	m_pPlayerNameText = new TextEntry(m_pContent, "");
+	m_pPlayerNameText->SetMaximumCharCount(MAX_PLAYER_NAME_LENGTH - 1);
 	m_pClubNameLabel = new Label(m_pContent, "", "IOS Club Initials:");
 	m_pClubNameText = new TextEntry(m_pContent, "");
 	m_pClubNameText->SetMaximumCharCount(MAX_CLUBNAME_LENGTH - 1);
