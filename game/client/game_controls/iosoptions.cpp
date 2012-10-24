@@ -246,6 +246,8 @@ void CIOSOptionsPanel::OnCommand(const char *cmd)
 		g_pCVar->FindVar("cl_interp_ratio")->SetValue(atoi(m_pInterpDurationList->GetActiveItemUserData()->GetString("value")));
 		g_pCVar->FindVar("cl_smoothtime")->SetValue(atoi(m_pSmoothDurationList->GetActiveItemUserData()->GetString("value")) / 100.0f);
 
+		engine->ClientCmd("host_writeconfig\n");
+
 		if (!stricmp(cmd, "save_and_close"))
 			Close();
 	}
