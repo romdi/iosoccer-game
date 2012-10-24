@@ -353,6 +353,8 @@ extern ConVar mp_reset_spin_toggles_on_shot;
 //-----------------------------------------------------------------------------
 void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 {
+	bool resetShotCharging = false;
+
 	switch(event)
 	{
 	case PLAYERANIMEVENT_BLANK:
@@ -362,13 +364,13 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 		}
 	case PLAYERANIMEVENT_NONE:
 		{
-			GetSDKPlayer()->ResetShotCharging();
+			resetShotCharging = true;
 			//GetSDKPlayer()->RemoveFlag(FL_FREECAM | FL_KEEPER_SIDEWAYS_DIVING | FL_SLIDING);
 			break;
 		}
 	case PLAYERANIMEVENT_CANCEL:
 		{
-			GetSDKPlayer()->ResetShotCharging();
+			resetShotCharging = true;
 			//GetSDKPlayer()->RemoveFlag(FL_FREECAM | FL_KEEPER_SIDEWAYS_DIVING | FL_SLIDING);
 			ClearAnimationState();
 			break;
@@ -387,7 +389,7 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 	case PLAYERANIMEVENT_KEEPER_HANDS_PUNCH:
 	case PLAYERANIMEVENT_DIVINGHEADER:
 		{
-			GetSDKPlayer()->ResetShotCharging();
+			resetShotCharging = true;
 		}
 	case PLAYERANIMEVENT_SLIDE:
 	case PLAYERANIMEVENT_TACKLED_FORWARD:
@@ -397,6 +399,12 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 	case PLAYERANIMEVENT_KEEPER_DIVE_FORWARD:
 	case PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD:
 		{
+			// HACKHACK: Side effects?
+			if (GetSDKPlayer()->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_SLIDE)
+			{
+				return;
+			}
+
 			m_flPrimaryActionSequenceCycle = 0;
 			m_iPrimaryActionSequence = CalcPrimaryActionSequence( event );
 			m_bIsPrimaryActionSequenceActive = m_iPrimaryActionSequence != -1;
@@ -438,6 +446,9 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 			break;
 		}
 	}
+
+	if (resetShotCharging)
+		GetSDKPlayer()->ResetShotCharging();
 
 	switch (event)
 	{
