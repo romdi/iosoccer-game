@@ -2849,6 +2849,17 @@ void CServerGameClients::GetBugReportInfo( char *buf, int buflen )
 //-----------------------------------------------------------------------------
 void CServerGameClients::NetworkIDValidated( const char *pszUserName, const char *pszNetworkID )
 {
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer *pPlayer = ToSDKPlayer(UTIL_PlayerByName(pszUserName));
+
+		if (!pPlayer)
+			continue;
+
+		pPlayer->SetData(CPlayerPersistentData::GetData(pPlayer));
+
+		break;
+	}
 }
 
 

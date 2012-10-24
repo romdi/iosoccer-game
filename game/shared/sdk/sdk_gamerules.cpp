@@ -489,7 +489,7 @@ void InitBodyQue()
 
 void CSDKGameRules::ServerActivate()
 {
-	//CPlayerPersistentData::RemoveAllPlayerData();
+	CPlayerPersistentData::RemoveAllPlayerData();
 
 	CTeamKitInfo::FindTeamKits();
 
@@ -990,7 +990,7 @@ int CSDKGameRules::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarge
 void CSDKGameRules::ClientDisconnected( edict_t *pClient )
 {
 	CSDKPlayer *pPl = (CSDKPlayer *)CBaseEntity::Instance(pClient);
-	CPlayerPersistentData::SavePlayerData(pPl);
+	//CPlayerPersistentData::SavePlayerData(pPl);
 
 	if (pPl->GetPlayerBall())
 		pPl->GetPlayerBall()->RemovePlayerBall();
@@ -1948,9 +1948,9 @@ void CSDKGameRules::StopMeteringInjuryTime()
 			if (!pPl)
 				continue;
 
-			if (pPl->IsCardBanned() && pPl->m_flNextJoin > gpGlobals->curtime)
+			if (pPl->IsCardBanned() && pPl->GetNextJoin() > gpGlobals->curtime)
 			{
-				pPl->m_flNextJoin += timePassed;
+				pPl->SetNextJoin(pPl->GetNextJoin() + timePassed);
 			}
 		}
 	}

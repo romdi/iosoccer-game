@@ -43,9 +43,11 @@ ConVar sv_required_client_version_kick_message("sv_required_client_version_kick_
 
 void FinishClientPutInServer( CSDKPlayer *pPlayer )
 {
+	pPlayer->SetData(CPlayerPersistentData::GetData(pPlayer));
+
 	pPlayer->InitialSpawn();
 
-	CPlayerPersistentData::LoadPlayerData(pPlayer);
+	//CPlayerPersistentData::LoadPlayerData(pPlayer);
 
 	char sName[128];
 	Q_strncpy( sName, pPlayer->GetPlayerName(), sizeof( sName ) );

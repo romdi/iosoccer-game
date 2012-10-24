@@ -253,8 +253,8 @@ CSDKPlayer::CSDKPlayer()
 	m_pCurStateInfo = NULL;	// no state yet
 	m_bShotButtonsReleased = false;
 	m_nTeamToJoin = TEAM_INVALID;
-	m_flNextJoin = gpGlobals->curtime;
-	m_bIsCardBanned = false;
+	//m_flNextJoin = gpGlobals->curtime;
+	//m_bIsCardBanned = false;
 	m_nTeamPosIndex = 0;
 	m_nPreferredTeamPosNum = 2;
 	m_pPlayerBall = NULL;
@@ -265,6 +265,8 @@ CSDKPlayer::CSDKPlayer()
 	m_pHoldingBall = NULL;
 
 	m_bIsShotButtonRight = true;
+
+	m_pData = NULL;
 }
 
 
@@ -283,7 +285,7 @@ CSDKPlayer *CSDKPlayer::CreatePlayer( const char *className, edict_t *ed )
 
 void CSDKPlayer::PreThink(void)
 {
-	if (m_nTeamToJoin != TEAM_INVALID && m_flNextJoin <= gpGlobals->curtime)
+	if (m_nTeamToJoin != TEAM_INVALID && GetNextJoin() <= gpGlobals->curtime)
 	{
 		if (!TeamPosFree(m_nTeamToJoin, GetTeamPosIndex(), false))
 		{
@@ -470,9 +472,9 @@ bool CSDKPlayer::ChangeTeamPos(int team, int posIndex, bool instantly /*= false*
 		if (GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B)
 		{
 			if (instantly)
-				m_flNextJoin = gpGlobals->curtime;
-			else if (m_flNextJoin < gpGlobals->curtime)
-				m_flNextJoin = gpGlobals->curtime + mp_joindelay.GetFloat();
+				SetNextJoin(gpGlobals->curtime);
+			else if (GetNextJoin() < gpGlobals->curtime)
+				SetNextJoin(gpGlobals->curtime + mp_joindelay.GetFloat());
 
 			ChangeTeam(TEAM_SPECTATOR);
 		}
@@ -489,9 +491,9 @@ bool CSDKPlayer::ChangeTeamPos(int team, int posIndex, bool instantly /*= false*
 		if (GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B)
 		{
 			if (instantly)
-				m_flNextJoin = gpGlobals->curtime;
-			else if (m_flNextJoin < gpGlobals->curtime)
-				m_flNextJoin = gpGlobals->curtime + mp_joindelay.GetFloat();
+				SetNextJoin(gpGlobals->curtime);
+			else if (GetNextJoin() < gpGlobals->curtime)
+				SetNextJoin(gpGlobals->curtime + mp_joindelay.GetFloat());
 
 			ChangeTeam(TEAM_SPECTATOR);
 		}
@@ -1466,34 +1468,12 @@ Vector CSDKPlayer::GetOffsideBallPos()
 
 void CSDKPlayer::ResetStats()
 {
-	m_RedCards = 0;
-	m_YellowCards = 0;
-	m_Fouls = 0;
-	m_FoulsSuffered = 0;
-	m_GoalsConceded = 0;
-	m_Shots = 0;
-	m_ShotsOnGoal = 0;
-	m_PassesCompleted = 0;
-	m_Interceptions = 0;
-	m_Offsides = 0;
-	m_Goals = 0;
-	m_OwnGoals = 0;
-	m_Assists = 0;
-	m_Passes = 0;
-	m_FreeKicks = 0;
-	m_Penalties = 0;
-	m_Corners = 0;
-	m_ThrowIns = 0;
-	m_KeeperSaves = 0;
-	m_GoalKicks = 0;
-	m_Possession = 0;
-	m_flPossessionTime = 0.0f;
-	m_DistanceCovered = 0;
-	m_flDistanceCovered = 0.0f;
 	m_bIsOffside = false;
 	m_ePenaltyState = PENALTY_NONE;
 	m_nMotmChoiceIds[0] = 0;
 	m_nMotmChoiceIds[1] = 0;
+
+	GetData()->ResetData();
 }
 
 Vector CSDKPlayer::GetSpawnPos(bool findSafePos)
@@ -1628,27 +1608,10 @@ CSDKPlayer *CSDKPlayer::FindClosestPlayerToSelf(bool teammatesOnly, bool forward
 
 CUtlVector<CPlayerPersistentData *> CPlayerPersistentData::m_PlayerPersistentData;
 
-void CPlayerPersistentData::LoadPlayerData(CSDKPlayer *pPl)
+CPlayerPersistentData *CPlayerPersistentData::GetData(CSDKPlayer *pPl)
 {
 	const CSteamID *steamID = engine->GetClientSteamID(pPl->edict());
-
-	for (int i = 0; i < m_PlayerPersistentData.Count(); i++)
-	{
-		if (m_PlayerPersistentData[i]->m_SteamID != steamID)
-			continue;
-
-		//pPl->m_YellowCards = m_PlayerPersistentData[i]->m_nYellowCards;
-		//pPl->m_RedCards = m_PlayerPersistentData[i]->m_nRedCards;
-		pPl->m_flNextJoin = m_PlayerPersistentData[i]->m_flNextJoin;
-		pPl->m_bIsCardBanned = m_PlayerPersistentData[i]->m_bIsCardBanned;
-
-		break;
-	}
-}
-
-void CPlayerPersistentData::SavePlayerData(CSDKPlayer *pPl)
-{
-	const CSteamID *steamID = engine->GetClientSteamID(pPl->edict());
+	const char* sid = engine->GetPlayerNetworkIDString(pPl->edict());
 	CPlayerPersistentData *data = NULL;
 
 	for (int i = 0; i < m_PlayerPersistentData.Count(); i++)
@@ -1663,27 +1626,45 @@ void CPlayerPersistentData::SavePlayerData(CSDKPlayer *pPl)
 	if (!data)
 	{
 		data = new CPlayerPersistentData;
+		data->m_SteamID = engine->GetClientSteamID(pPl->edict());
+		data->ResetData();
 		m_PlayerPersistentData.AddToTail(data);
 	}
 
-	data->m_SteamID = engine->GetClientSteamID(pPl->edict());
-	//data->m_nYellowCards = pPl->m_YellowCards;
-	//data->m_nRedCards = pPl->m_RedCards;
-	data->m_flNextJoin = pPl->m_flNextJoin;
-	data->m_bIsCardBanned = pPl->IsCardBanned();
+	return data;
 }
 
 void CPlayerPersistentData::RemoveAllPlayerData()
 {
 	m_PlayerPersistentData.RemoveAll();
+}
 
-	for (int i = 1; i <= gpGlobals->maxClients; i++)
-	{
-		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
-		if (!pPl)
-			continue;
-
-		pPl->m_flNextJoin = gpGlobals->curtime;
-		pPl->m_bIsCardBanned = false;
-	}
+void CPlayerPersistentData::ResetData()
+{
+	m_nRedCards = 0;
+	m_nYellowCards = 0;
+	m_nFouls = 0;
+	m_nFoulsSuffered = 0;
+	m_nGoalsConceded = 0;
+	m_nShots = 0;
+	m_nShotsOnGoal = 0;
+	m_nPassesCompleted = 0;
+	m_nInterceptions = 0;
+	m_nOffsides = 0;
+	m_nGoals = 0;
+	m_nOwnGoals = 0;
+	m_nAssists = 0;
+	m_nPasses = 0;
+	m_nFreeKicks = 0;
+	m_nPenalties = 0;
+	m_nCorners = 0;
+	m_nThrowIns = 0;
+	m_nKeeperSaves = 0;
+	m_nGoalKicks = 0;
+	m_nPossession = 0;
+	m_flPossessionTime = 0.0f;
+	m_nDistanceCovered = 0;
+	m_flExactDistanceCovered = 0.0f;
+	m_bIsCardBanned = false;
+	m_flNextJoin = gpGlobals->curtime;
 }

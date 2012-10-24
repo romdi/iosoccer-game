@@ -1526,8 +1526,8 @@ void CGameMovement::FullWalkMove( )
 #ifdef GAME_DLL
 	if (!SDKGameRules()->IsIntermissionState() && GetBall()->State_Get() == BALL_NORMAL)
 	{
-		ToSDKPlayer(player)->m_flDistanceCovered += (newPos - oldPos).Length2D() * 2.54f / 100;
-		ToSDKPlayer(player)->m_DistanceCovered = (int)ToSDKPlayer(player)->m_flDistanceCovered;
+		ToSDKPlayer(player)->SetExactDistanceCovered((newPos - oldPos).Length2D() * 2.54f / 100);
+		ToSDKPlayer(player)->SetDistanceCovered((int)ToSDKPlayer(player)->GetExactDistanceCovered());
 	}
 #endif
 }
