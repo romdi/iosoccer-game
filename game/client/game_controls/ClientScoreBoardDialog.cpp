@@ -136,6 +136,7 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Editabl
 	m_pJoinRandom = new Button(m_pStatButtonInnerContainer, "JoinRandom", "Auto-Join", this, VarArgs("jointeam %d -1", TEAM_INVALID));
 
 	m_pBecomeCaptain = new Button(m_pStatButtonInnerContainer, "BecomeCaptain", "Become Captain", this, "becomecaptain");
+	m_pBecomeCaptain->SetVisible(false);
 
 	m_pFormationList = new ComboBox(m_pStatButtonInnerContainer, "", 0, false);
 
@@ -517,6 +518,15 @@ void CClientScoreBoardDialog::UpdateTeamInfo()
 		kv->deleteThis();
 
 		m_pPlayerList[i]->SetItemFgColor(0, GameResources()->GetTeamColor(i + TEAM_A));
+
+		for (int j = 0; j <= m_pPlayerList[i]->GetHighestItemID(); j++)
+		{
+			if (m_pPlayerList[i]->IsItemIDValid(j))
+			{
+				m_pPlayerList[i]->SetItemDividerColor(j, Color(0, 0, 0, 0));
+			}
+		}
+
 		m_pPlayerList[i]->SetItemDividerColor(0, GameResources()->GetTeamColor(i + TEAM_A));
 	}
 }
