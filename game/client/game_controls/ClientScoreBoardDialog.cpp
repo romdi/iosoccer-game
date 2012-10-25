@@ -1090,9 +1090,9 @@ bool CClientScoreBoardDialog::GetTeamInfo(int team, KeyValues *kv)
 	kv->SetString("club", teamClub);
 	kv->SetString("ping", GET_STAT_TEXT(pingSum / max(1, pingPlayers)));
 	kv->SetString("possession", GET_STAT_FTEXT(pTeam->Get_Possession(), "%d%%"));
-	kv->SetString("passes", GET_STAT_TEXT(passSum / max(1, pTeam->GetNumPlayers())));
+	kv->SetString("passes", GET_STAT_TEXT(passSum));
 	kv->SetString("passescompleted", GET_STAT_FTEXT(passCompletedSum / max(1, passCompletedPlayerCount), "%d%%"));
-	kv->SetString("distancecovered", GET_STAT_FTEXT(distSum / max(1, pTeam->GetNumPlayers()), "%.1f km"));
+	kv->SetString("distancecovered", GET_STAT_FTEXT(distSum, "%.1f km"));
 	kv->SetString("offsides", GET_STAT_TEXT(offsides));
 	kv->SetString("corners", GET_STAT_TEXT(corners));
 	kv->SetString("goalkicks", GET_STAT_TEXT(goalkicks));
@@ -1103,7 +1103,7 @@ bool CClientScoreBoardDialog::GetTeamInfo(int team, KeyValues *kv)
 	kv->SetString("freekicks", GET_STAT_TEXT(freekicks));
 	kv->SetString("goals", GET_STAT_TEXT(goals));
 	kv->SetString("assists", GET_STAT_TEXT(assists));
-	kv->SetString("interceptions", GET_STAT_TEXT(interceptions / max(1, pTeam->GetNumPlayers())));
+	kv->SetString("interceptions", GET_STAT_TEXT(interceptions));
 	kv->SetString("redcards", GET_STAT_TEXT(redcards));
 	kv->SetString("yellowcards", GET_STAT_TEXT(yellowcards));
 	kv->SetString("penalties", GET_STAT_TEXT(penalties));
