@@ -141,7 +141,7 @@ public:
 
 	void (CSDKGameRules::*pfnEnterState)();	// Init and deinit the state.
 	void (CSDKGameRules::*pfnThink)();	// Do a PreThink() in this state.
-	void (CSDKGameRules::*pfnLeaveState)();
+	void (CSDKGameRules::*pfnLeaveState)(match_state_t newState);
 
 	ConVar					*m_MinDurationConVar;
 	float					m_flMinDurationDivisor;
@@ -310,54 +310,54 @@ protected:
 	// State machine handling
 	void State_Transition( match_state_t newState );
 	void State_Enter(match_state_t newState);	// Initialize the new state.
-	void State_Leave();										// Cleanup the previous state.
-	void State_Think();										// Update the current state.
+	void State_Leave(match_state_t newState);	// Cleanup the previous state.
+	void State_Think();							// Update the current state.
 	static CSDKGameRulesStateInfo* State_LookupInfo(match_state_t state);	// Find the state info for the specified state.
 
 	// State Functions
 	void State_WARMUP_Enter();
 	void State_WARMUP_Think();
-	void State_WARMUP_Leave();
+	void State_WARMUP_Leave(match_state_t newState);
 
 	void State_FIRST_HALF_Enter();
 	void State_FIRST_HALF_Think();
-	void State_FIRST_HALF_Leave();
+	void State_FIRST_HALF_Leave(match_state_t newState);
 
 	void State_HALFTIME_Enter();
 	void State_HALFTIME_Think();
-	void State_HALFTIME_Leave();
+	void State_HALFTIME_Leave(match_state_t newState);
 
 	void State_SECOND_HALF_Enter();
 	void State_SECOND_HALF_Think();
-	void State_SECOND_HALF_Leave();
+	void State_SECOND_HALF_Leave(match_state_t newState);
 
 	void State_EXTRATIME_INTERMISSION_Enter();
 	void State_EXTRATIME_INTERMISSION_Think();
-	void State_EXTRATIME_INTERMISSION_Leave();
+	void State_EXTRATIME_INTERMISSION_Leave(match_state_t newState);
 
 	void State_EXTRATIME_FIRST_HALF_Enter();
 	void State_EXTRATIME_FIRST_HALF_Think();
-	void State_EXTRATIME_FIRST_HALF_Leave();
+	void State_EXTRATIME_FIRST_HALF_Leave(match_state_t newState);
 
 	void State_EXTRATIME_HALFTIME_Enter();
 	void State_EXTRATIME_HALFTIME_Think();
-	void State_EXTRATIME_HALFTIME_Leave();
+	void State_EXTRATIME_HALFTIME_Leave(match_state_t newState);
 
 	void State_EXTRATIME_SECOND_HALF_Enter();
 	void State_EXTRATIME_SECOND_HALF_Think();
-	void State_EXTRATIME_SECOND_HALF_Leave();
+	void State_EXTRATIME_SECOND_HALF_Leave(match_state_t newState);
 
 	void State_PENALTIES_INTERMISSION_Enter();
 	void State_PENALTIES_INTERMISSION_Think();
-	void State_PENALTIES_INTERMISSION_Leave();
+	void State_PENALTIES_INTERMISSION_Leave(match_state_t newState);
 
 	void State_PENALTIES_Enter();
 	void State_PENALTIES_Think();
-	void State_PENALTIES_Leave();
+	void State_PENALTIES_Leave(match_state_t newState);
 
 	void State_COOLDOWN_Enter();
 	void State_COOLDOWN_Think();
-	void State_COOLDOWN_Leave();
+	void State_COOLDOWN_Leave(match_state_t newState);
 
 	int m_nFirstHalfKickOffTeam;
 	int m_nKickOffTeam;

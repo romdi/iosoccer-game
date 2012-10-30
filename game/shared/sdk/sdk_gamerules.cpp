@@ -1147,7 +1147,7 @@ ConVar mp_maxplayers("mp_maxplayers", "6", FCVAR_NOTIFY|FCVAR_REPLICATED, "Maxim
 
 void CSDKGameRules::State_Transition( match_state_t newState )
 {
-	State_Leave();
+	State_Leave(newState);
 	State_Enter( newState );
 }
 
@@ -1188,11 +1188,11 @@ void CSDKGameRules::State_Enter( match_state_t newState )
 	}
 }
 
-void CSDKGameRules::State_Leave()
+void CSDKGameRules::State_Leave(match_state_t newState)
 {
 	if ( m_pCurStateInfo && m_pCurStateInfo->pfnLeaveState )
 	{
-		(this->*m_pCurStateInfo->pfnLeaveState)();
+		(this->*m_pCurStateInfo->pfnLeaveState)(newState);
 	}
 }
 
@@ -1245,6 +1245,8 @@ CSDKGameRulesStateInfo* CSDKGameRules::State_LookupInfo( match_state_t state )
 
 void CSDKGameRules::State_WARMUP_Enter()
 {
+	GetBall()->SetMatchEvent(MATCH_EVENT_WARMUP, TEAM_INVALID, true);
+
 	m_flMatchStartTime = gpGlobals->curtime;
 	GetBall()->ResetMatch();
 	GetBall()->State_Transition(BALL_STATIC, 0, true);
@@ -1273,7 +1275,7 @@ void CSDKGameRules::State_WARMUP_Think()
 		State_Transition(MATCH_FIRST_HALF);
 }
 
-void CSDKGameRules::State_WARMUP_Leave()
+void CSDKGameRules::State_WARMUP_Leave(match_state_t newState)
 {
 }
 
@@ -1295,15 +1297,16 @@ void CSDKGameRules::State_FIRST_HALF_Think()
 	}
 }
 
-void CSDKGameRules::State_FIRST_HALF_Leave()
+void CSDKGameRules::State_FIRST_HALF_Leave(match_state_t newState)
 {
-	GetBall()->SetMatchEvent(MATCH_EVENT_HALFTIME);
 	GetBall()->EmitSound("Ball.whistle");
 	GetBall()->EmitSound("Ball.cheer");
 }
 
 void CSDKGameRules::State_HALFTIME_Enter()
 {
+	GetBall()->SetMatchEvent(MATCH_EVENT_HALFTIME, TEAM_INVALID, true);
+
 	GetBall()->State_Transition(BALL_STATIC, 0, true);
 	GetBall()->SetPos(m_vKickOff);
 
@@ -1327,7 +1330,7 @@ void CSDKGameRules::State_HALFTIME_Think()
 		State_Transition(MATCH_SECOND_HALF);
 }
 
-void CSDKGameRules::State_HALFTIME_Leave()
+void CSDKGameRules::State_HALFTIME_Leave(match_state_t newState)
 {
 }
 
@@ -1353,15 +1356,16 @@ void CSDKGameRules::State_SECOND_HALF_Think()
 	}
 }
 
-void CSDKGameRules::State_SECOND_HALF_Leave()
+void CSDKGameRules::State_SECOND_HALF_Leave(match_state_t newState)
 {
-	GetBall()->SetMatchEvent(MATCH_EVENT_FINAL_WHISTLE);
 	GetBall()->EmitSound("Ball.whistle");
 	GetBall()->EmitSound("Ball.cheer");
 }
 
 void CSDKGameRules::State_EXTRATIME_INTERMISSION_Enter()
 {
+	GetBall()->SetMatchEvent(MATCH_EVENT_EXTRATIME, TEAM_INVALID, true);
+
 	GetBall()->State_Transition(BALL_STATIC, 0, true);
 	GetBall()->SetPos(m_vKickOff);
 
@@ -1387,7 +1391,7 @@ void CSDKGameRules::State_EXTRATIME_INTERMISSION_Think()
 	}
 }
 
-void CSDKGameRules::State_EXTRATIME_INTERMISSION_Leave()
+void CSDKGameRules::State_EXTRATIME_INTERMISSION_Leave(match_state_t newState)
 {
 }
 
@@ -1408,15 +1412,16 @@ void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Think()
 	}
 }
 
-void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Leave()
+void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Leave(match_state_t newState)
 {
-	GetBall()->SetMatchEvent(MATCH_EVENT_HALFTIME);
 	GetBall()->EmitSound("Ball.whistle");
 	GetBall()->EmitSound("Ball.cheer");
 }
 
 void CSDKGameRules::State_EXTRATIME_HALFTIME_Enter()
 {
+	GetBall()->SetMatchEvent(MATCH_EVENT_HALFTIME, TEAM_INVALID, true);
+
 	GetBall()->State_Transition(BALL_STATIC, 0, true);
 	GetBall()->SetPos(m_vKickOff);
 
@@ -1442,7 +1447,7 @@ void CSDKGameRules::State_EXTRATIME_HALFTIME_Think()
 	}
 }
 
-void CSDKGameRules::State_EXTRATIME_HALFTIME_Leave()
+void CSDKGameRules::State_EXTRATIME_HALFTIME_Leave(match_state_t newState)
 {
 }
 
@@ -1466,15 +1471,16 @@ void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Think()
 	}
 }
 
-void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Leave()
+void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Leave(match_state_t newState)
 {
-	GetBall()->SetMatchEvent(MATCH_EVENT_FINAL_WHISTLE);
 	GetBall()->EmitSound("Ball.whistle");
 	GetBall()->EmitSound("Ball.cheer");
 }
 
 void CSDKGameRules::State_PENALTIES_INTERMISSION_Enter()
 {
+	GetBall()->SetMatchEvent(MATCH_EVENT_PENALTIES, TEAM_INVALID, true);
+
 	GetBall()->State_Transition(BALL_STATIC, 0, true);
 	GetBall()->SetPos(m_vKickOff);
 
@@ -1497,7 +1503,7 @@ void CSDKGameRules::State_PENALTIES_INTERMISSION_Think()
 	}
 }
 
-void CSDKGameRules::State_PENALTIES_INTERMISSION_Leave()
+void CSDKGameRules::State_PENALTIES_INTERMISSION_Leave(match_state_t newState)
 {
 }
 
@@ -1639,15 +1645,16 @@ void CSDKGameRules::State_PENALTIES_Think()
 	}
 }
 
-void CSDKGameRules::State_PENALTIES_Leave()
+void CSDKGameRules::State_PENALTIES_Leave(match_state_t newState)
 {
-	GetBall()->SetMatchEvent(MATCH_EVENT_FINAL_WHISTLE);
 	GetBall()->EmitSound("Ball.whistle");
 	GetBall()->EmitSound("Ball.cheer");
 }
 
 void CSDKGameRules::State_COOLDOWN_Enter()
 {
+	GetBall()->SetMatchEvent(MATCH_EVENT_FINAL_WHISTLE, TEAM_INVALID, true);
+
 	GetBall()->State_Transition(BALL_STATIC, 0, true);
 	GetBall()->SetPos(m_vKickOff);
 
@@ -1793,7 +1800,7 @@ void CSDKGameRules::State_COOLDOWN_Think()
 	//}
 }
 
-void CSDKGameRules::State_COOLDOWN_Leave()
+void CSDKGameRules::State_COOLDOWN_Leave(match_state_t newState)
 {
 }
 

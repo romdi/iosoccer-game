@@ -113,7 +113,7 @@ void CSDKTargetId::Paint()
 	if (!pLocal)
 		return;
 
-	for (int i = 0; i <= gpGlobals->maxClients; i++)
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
 		C_SDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
 

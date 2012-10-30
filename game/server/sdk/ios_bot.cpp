@@ -31,6 +31,7 @@ ConVar bot_changeclass( "bot_changeclass", "0", 0, "Force all bots to change to 
 static ConVar bot_mimic( "bot_mimic", "0", 0, "Bot uses usercmd of player by index." );
 static ConVar bot_mimic_yaw_offset( "bot_mimic_yaw_offset", "0", 0, "Offsets the bot yaw." );
 ConVar bot_frozen( "bot_frozen", "0", 0, "Don't do anything." );
+//ConVar bot_reaction_time( "bot_reaction_time", "500", 0, "Reaction time in milliseconds" );
 
 ConVar bot_sendcmd( "bot_sendcmd", "", 0, "Forces bots to send the specified command." );
 
@@ -427,6 +428,12 @@ void CBot::BotFrame()
 			SnapEyeAngles(m_cmd.viewangles);
 		}
 	}
+
+	//BotHistory history = { m_cmd, m_oldcmd };
+	//m_BotHistory.AddToTail(history);
+	//
+	//m_cmd = m_BotHistory[0].m_cmd;
+	//m_oldcmd = m_BotHistory[0].m_oldcmd;
 
 	// Fix up the m_fEffects flags
 	PostClientMessagesSent();

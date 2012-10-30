@@ -233,13 +233,13 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 	m_pInjuryTime->SetContentAlignment(Label::a_center);
 	m_pInjuryTime->SetFont(pScheme->GetFont("IOSScorebarMedium"));
 	
-	m_pEvent->SetBounds(GetWide() / 2 - CENTERBAR_WIDTH / 2, MAINBAR_MARGIN + MAINBAR_HEIGHT + CENTERBAR_OFFSET + EVENT_MARGIN, CENTERBAR_WIDTH, EVENT_HEIGHT);
+	m_pEvent->SetBounds(GetWide() / 2 - EVENT_WIDTH / 2, MAINBAR_MARGIN + MAINBAR_HEIGHT + CENTERBAR_OFFSET + EVENT_MARGIN, EVENT_WIDTH, EVENT_HEIGHT);
 	m_pEvent->SetContentAlignment(Label::a_center);
 	m_pEvent->SetFont(pScheme->GetFont("IOSEvent"));
 	m_pEvent->SetFgColor(Color(255, 255, 255, 255));
 	//m_pEvent->SetVisible(false);
 
-	m_pSubEvent->SetBounds(GetWide() / 2 - CENTERBAR_WIDTH / 2, MAINBAR_MARGIN + MAINBAR_HEIGHT + CENTERBAR_OFFSET + EVENT_MARGIN + EVENT_HEIGHT, CENTERBAR_WIDTH, SUBEVENT_HEIGHT);
+	m_pSubEvent->SetBounds(GetWide() / 2 - EVENT_WIDTH / 2, MAINBAR_MARGIN + MAINBAR_HEIGHT + CENTERBAR_OFFSET + EVENT_MARGIN + EVENT_HEIGHT, EVENT_WIDTH, SUBEVENT_HEIGHT);
 	m_pSubEvent->SetContentAlignment(Label::a_center);
 	m_pSubEvent->SetFont(pScheme->GetFont("IOSSubEvent"));
 	m_pSubEvent->SetFgColor(Color(255, 255, 255, 255));
@@ -326,6 +326,7 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 void CHudScorebar::Init( void )
 {
 	ListenForGameEvent("wakeupcall");
+	ListenForGameEvent("throw_in");
 }
 
 const char *g_szLongStateNames[32] =
@@ -460,13 +461,19 @@ void CHudScorebar::OnThink( void )
 		else
 		{
 			m_pEvent->SetText(g_szMatchEventNames[pBall->m_eMatchEvent]);
+			int eventTeamIndex = clamp(pBall->m_nMatchEventTeam - TEAM_A, 0, 1);
+			m_pEvent->SetFgColor(GetGlobalTeam(TEAM_A + eventTeamIndex)->Get_HudKitColor());
+
 			m_pSubEvent->SetText(g_szMatchEventNames[pBall->m_eMatchSubEvent]);
+			int subEventTeamIndex = clamp(pBall->m_nMatchSubEventTeam - TEAM_A, 0, 1);
+			m_pSubEvent->SetFgColor(GetGlobalTeam(TEAM_A + subEventTeamIndex)->Get_HudKitColor());
 
 			if (pBall->m_eMatchEvent != m_eCurMatchEvent)
 			{
 				switch (pBall->m_eMatchEvent)
 				{
 				case MATCH_EVENT_GOAL:
+				case MATCH_EVENT_OWNGOAL:
 				case MATCH_EVENT_HALFTIME:
 				case MATCH_EVENT_FINAL_WHISTLE:
 					m_eCurMatchEvent = pBall->m_eMatchEvent;
@@ -483,7 +490,7 @@ void CHudScorebar::OnThink( void )
 			}
 			else
 			{
-				if (m_eCurMatchEvent != MATCH_EVENT_NONE && m_flImportantEventStart != -1 && gpGlobals->curtime >= m_flImportantEventStart + 3)
+				if (m_eCurMatchEvent != MATCH_EVENT_NONE && m_flImportantEventStart != -1 && gpGlobals->curtime >= m_flImportantEventStart + 1)
 				{
 					m_flImportantEventStart = -1;
 					m_pImportantEvent->SetText("");
@@ -501,11 +508,9 @@ void CHudScorebar::OnThink( void )
 
 				if (pBall->m_pMatchEventPlayer)
 				{
-					int teamIndex = clamp(pBall->m_nMatchEventTeam - TEAM_A, 0, 1);
-					m_pPlayers[teamIndex]->SetText(pBall->m_pMatchEventPlayer->GetPlayerName());
-					m_pPlayers[teamIndex]->SetFgColor(GetGlobalTeam(TEAM_A + teamIndex)->Get_HudKitColor());
-					m_pPlayers[1 - teamIndex]->SetText("");
-					m_pEvent->SetFgColor(GetGlobalTeam(TEAM_A + teamIndex)->Get_HudKitColor());
+					m_pPlayers[eventTeamIndex]->SetText(pBall->m_pMatchEventPlayer->GetPlayerName());
+					m_pPlayers[eventTeamIndex]->SetFgColor(GetGlobalTeam(TEAM_A + eventTeamIndex)->Get_HudKitColor());
+					m_pPlayers[1 - eventTeamIndex]->SetText("");
 				}
 				else
 				{
@@ -515,11 +520,9 @@ void CHudScorebar::OnThink( void )
 
 				if (pBall->m_pMatchSubEventPlayer)
 				{
-					int teamIndex = clamp(pBall->m_nMatchSubEventTeam - TEAM_A, 0, 1);
-					m_pSubPlayers[teamIndex]->SetText(pBall->m_pMatchSubEventPlayer->GetPlayerName());
-					m_pSubPlayers[teamIndex]->SetFgColor(GetGlobalTeam(TEAM_A + teamIndex)->Get_HudKitColor());
-					m_pSubPlayers[1 - teamIndex]->SetText("");
-					m_pSubEvent->SetFgColor(GetGlobalTeam(TEAM_A + teamIndex)->Get_HudKitColor());
+					m_pSubPlayers[subEventTeamIndex]->SetText(pBall->m_pMatchSubEventPlayer->GetPlayerName());
+					m_pSubPlayers[subEventTeamIndex]->SetFgColor(GetGlobalTeam(TEAM_A + subEventTeamIndex)->Get_HudKitColor());
+					m_pSubPlayers[1 - subEventTeamIndex]->SetText("");
 				}
 				else
 				{
@@ -536,17 +539,20 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 	if (!g_PR)
 		return;
 
-	if (Q_strcmp(event->GetName(), "wakeupcall"))
-		return;
-
-	FLASHWINFO flashInfo;
-	flashInfo.cbSize = sizeof(FLASHWINFO);
-	flashInfo.hwnd = FindWindow(NULL, "IOS Source Dev");
-	flashInfo.dwFlags = FLASHW_TRAY | FLASHW_TIMERNOFG;
-	flashInfo.uCount = 3;
-	flashInfo.dwTimeout = 0;
-	FlashWindowEx(&flashInfo);
-	//SetWindowText(FindWindow(NULL, "IOS Source Dev"), "LIVE - IOS Source Dev");
+	if (!Q_strcmp(event->GetName(), "wakeupcall"))
+	{
+		FLASHWINFO flashInfo;
+		flashInfo.cbSize = sizeof(FLASHWINFO);
+		flashInfo.hwnd = FindWindow(NULL, "IOS Source Dev");
+		flashInfo.dwFlags = FLASHW_TRAY | FLASHW_TIMERNOFG;
+		flashInfo.uCount = 3;
+		flashInfo.dwTimeout = 0;
+		FlashWindowEx(&flashInfo);
+		//SetWindowText(FindWindow(NULL, "IOS Source Dev"), "LIVE - IOS Source Dev");
+	}
+	else if (!Q_strcmp(event->GetName(), "throw_in"))
+	{
+	}
 }
 
 void CHudScorebar::PaintBackground()

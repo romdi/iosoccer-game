@@ -85,7 +85,7 @@ enum stat_categories_t
 {
 	DEFAULT_STATS = -1,
 	GENERAL = 0,
-	TACKLINGS,
+	TACKLES,
 	SET_PIECES,
 	KEEPER,
 	OFFENSE,
@@ -95,7 +95,7 @@ enum stat_categories_t
 static const char g_szStatCategoryNames[STAT_CATEGORY_COUNT][32] =
 {
 	"General",
-	"Tacklings",
+	"Tackles",
 	"Set pieces",
 	"Keeper",
 	"Offense",

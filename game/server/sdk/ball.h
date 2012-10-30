@@ -136,8 +136,10 @@ public:
 	int				ObjectCaps(void)	{  return BaseClass::ObjectCaps() |	FCAP_CONTINUOUS_USE; }
 	int				UpdateTransmitState();
 
-	void			SetMatchEvent(match_event_t matchEvent, CSDKPlayer *pPlayer = NULL, int team = TEAM_INVALID);
-	void			SetMatchSubEvent(match_event_t matchEvent, CSDKPlayer *pPlayer = NULL, int team = TEAM_INVALID);
+	void			SetMatchEvent(match_event_t matchEvent, int team, bool forceUpdate);
+	void			SetMatchEventPlayer(CSDKPlayer *pPlayer);
+	void			SetMatchSubEvent(match_event_t matchEvent, int team, bool forceUpdate);
+	void			SetMatchSubEventPlayer(CSDKPlayer *pPlayer);
 
 	bool			IsAsleep(void) { return	false; }
 	void			Spawn(void);

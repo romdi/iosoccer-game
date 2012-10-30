@@ -15,6 +15,12 @@
 #include "ios_mapentities.h"
 #include "ball.h"
 
+struct BotHistory
+{
+	CUserCmd m_cmd;
+	CUserCmd m_oldcmd;
+};
+
 // This is our bot class.
 class CBot : public CSDKPlayer
 {
@@ -57,6 +63,8 @@ public:
 
 	virtual bool		ShotButtonsReleased();
 	virtual void		SetShotButtonsReleased(bool released);
+
+	CUtlVector<BotHistory> m_BotHistory;
 
 protected:
 	float m_flBotNextShot;

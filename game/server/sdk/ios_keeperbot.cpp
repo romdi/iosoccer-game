@@ -36,6 +36,8 @@ LINK_ENTITY_TO_CLASS(ios_keeperbot, CKeeperBot);
 #define KEEPER_MID_COEFF 0.20f
 #define KEEPER_FAR_COEFF 0.001f
 
+ConVar mp_botkeeperskill( "mp_botkeeperskill", "50", 0, "Bot keeper skill <0-100>" );
+
 ///////////////////////////////////////////////////
 // BotKeeperThink
 //
@@ -202,7 +204,7 @@ void CKeeperBot::BotAdjustPos()
 		float speed = 0;
 
 		if (dist > 30)
-			speed = clamp(5 * dist, 0, mp_sprintspeed.GetInt());
+			speed = clamp(5 * dist, 0, mp_sprintspeed.GetInt() * (mp_botkeeperskill.GetInt() / 100.0f));
 
 		if (speed > mp_runspeed.GetInt())
 			m_cmd.buttons |= IN_SPEED;

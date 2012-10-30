@@ -5,7 +5,7 @@
 #include "convar.h"
 #include "c_ios_replaymanager.h"
 
-enum cam_type_t { CAM_SIDELINE, CAM_BEHIND_GOAL };
+enum cam_type_t { CAM_SIDELINE, CAM_BEHIND_GOAL, CAM_TOPDOWN };
 
 ConVar cl_tvcam_angle("cl_tvcam_angle", "10", FCVAR_ARCHIVE);
 ConVar cl_tvcam_dist("cl_tvcam_dist", "10", FCVAR_ARCHIVE);
@@ -42,7 +42,13 @@ void C_TVCamera::GetPositionAndAngle(Vector &pos, QAngle &ang)
 	if (GetReplayManager() && GetReplayManager()->IsReplaying())
 	{
 		pTarget = GetReplayBall();
-		camType = GetReplayManager()->m_nReplayRunIndex == 0 ? CAM_SIDELINE : CAM_BEHIND_GOAL;
+		switch (GetReplayManager()->m_nReplayRunIndex)
+		{
+		case 0: camType = CAM_SIDELINE; break;
+		case 1: camType = CAM_BEHIND_GOAL; break;
+		case 2: camType = CAM_TOPDOWN; break;
+		default: camType = CAM_SIDELINE; break;
+		}
 		atMinGoalPos = GetReplayManager()->m_bAtMinGoalPos;
 	}
 	else
@@ -90,19 +96,32 @@ void C_TVCamera::GetPositionAndAngle(Vector &pos, QAngle &ang)
 			newPos = ballPos - newDir * 900;
 			pos = newPos;
 			VectorAngles(newDir, ang);
-			break;
 		}
+		break;
 	case CAM_BEHIND_GOAL:
 		{
 			float yPos = atMinGoalPos ? SDKGameRules()->m_vFieldMin.GetY() : SDKGameRules()->m_vFieldMax.GetY();
 			Vector goalCenter = Vector((SDKGameRules()->m_vFieldMin.GetX() + SDKGameRules()->m_vFieldMax.GetX()) / 2.0f, yPos, SDKGameRules()->m_vKickOff.GetZ());
-			Vector newPos = goalCenter + Vector(0, 200 * (atMinGoalPos ? -1 : 1), 250);
+			Vector newPos = goalCenter + Vector(0, 300 * (atMinGoalPos ? -1 : 1), 300);
 			Vector newDir = ballPos - newPos;
 			newDir.NormalizeInPlace();
 			//newPos = ballPos - newDir * 400;
 			pos = newPos;
 			VectorAngles(newDir, ang);
-			break;
 		}
+		break;
+	case CAM_TOPDOWN:
+		{
+			Vector newPos = ballPos;
+			newPos.z = SDKGameRules()->m_vKickOff.GetZ() + 600;
+			Vector newDir = Vector(0, (atMinGoalPos ? -1 : 1) * 0.0000001, -1);
+			//QAngle ang = QAngle(89, (atMinGoalPos ? -1 : 1) * -180, 0);
+			//Vector newDir;
+			//AngleVectors(ang, &newDir);
+			newDir.NormalizeInPlace();
+			pos = newPos;
+			VectorAngles(newDir, ang);
+		}
+		break;
 	}
 }
