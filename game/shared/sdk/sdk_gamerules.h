@@ -293,7 +293,7 @@ public:
 	CNetworkVar(float, m_flStateEnterTime);
 	CNetworkVar(float, m_flMatchStartTime);
 
-	void RestartMatch();
+	void RestartMatch(bool setRandomSides);
 	void WakeUpAllPlayers();
 	void StartPenalties();
 

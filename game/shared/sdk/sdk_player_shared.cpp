@@ -298,7 +298,6 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 
 	if (SDKGameRules()->m_nShieldType != SHIELD_NONE)
 	{
-
 		if (SDKGameRules()->m_nShieldType == SHIELD_GOALKICK || 
 			SDKGameRules()->m_nShieldType == SHIELD_PENALTY ||
 			SDKGameRules()->m_nShieldType == SHIELD_KEEPERHANDS)
@@ -320,17 +319,57 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 
 			if (GetFlags() & FL_SHIELD_KEEP_OUT && isInsideBox)
 			{
-				if (newPos.x > min.x && oldPos.x <= min.x && newPos.x < boxCenter.x)
-					newPos.x = min.x;
-				else if (newPos.x < max.x && oldPos.x >= max.x && newPos.x > boxCenter.x)
-					newPos.x = max.x;
+				bool oldPosInBox = true;
+				//if (SDKGameRules()->m_nShieldType == SHIELD_KEEPERHANDS)
+				//{
+				//	Vector goalCenter = (GetGlobalTeam(SDKGameRules()->m_nShieldTeam)->m_vCornerLeft + GetGlobalTeam(SDKGameRules()->m_nShieldTeam)->m_vCornerRight) / 2; 
+				//	if ((goalCenter - newPos).Length2DSqr() < (goalCenter - oldPos).Length2DSqr())
+				//	{
+				//		newPos = oldPos;
+				//		stopPlayer = true;
+				//	}
+				//}
+				//else
+				{
 
-				if (newPos.y > min.y && oldPos.y <= min.y && newPos.y < boxCenter.y)
-					newPos.y = min.y;
-				else if (newPos.y < max.y && oldPos.y >= max.y && newPos.y > boxCenter.y)
-					newPos.y = max.y;
+					if (newPos.x > min.x && oldPos.x <= min.x && newPos.x < boxCenter.x)
+					{
+						newPos.x = min.x;
+						oldPosInBox = false; 
+					}
+					else if (newPos.x < max.x && oldPos.x >= max.x && newPos.x > boxCenter.x)
+					{
+						newPos.x = max.x;
+						oldPosInBox = false; 
+					}
 
-				stopPlayer = true;
+					if (newPos.y > min.y && oldPos.y <= min.y && newPos.y < boxCenter.y)
+					{
+						newPos.y = min.y;
+						oldPosInBox = false; 
+					}
+					else if (newPos.y < max.y && oldPos.y >= max.y && newPos.y > boxCenter.y)
+					{
+						newPos.y = max.y;
+						oldPosInBox = false; 
+					}
+
+					stopPlayer = true;
+				}
+
+				if (SDKGameRules()->m_nShieldType == SHIELD_KEEPERHANDS && oldPosInBox)
+				{
+					Vector goalCenter = (GetGlobalTeam(SDKGameRules()->m_nShieldTeam)->m_vCornerLeft + GetGlobalTeam(SDKGameRules()->m_nShieldTeam)->m_vCornerRight) / 2;
+					goalCenter.y -= Sign(GetGlobalTeam(SDKGameRules()->m_nShieldTeam)->m_nForward) * 500;
+
+					if ((goalCenter - newPos).Length2DSqr() < (goalCenter - oldPos).Length2DSqr())
+					{
+						newPos = oldPos;
+						stopPlayer = true;
+					}
+					else
+						stopPlayer = false;
+				}
 			}
 			else if (GetFlags() & FL_SHIELD_KEEP_IN && !isInsideBox)
 			{
@@ -463,8 +502,8 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 			newPos = oldPos;
 		}
 
-		newVel.x = (newPos - oldPos).x * 35;
-		newVel.y = (newPos - oldPos).y * 35;
+		newVel.x = (newPos - oldPos).x * 50;
+		newVel.y = (newPos - oldPos).y * 50;
 		//newPos = pos;
 	}
 }

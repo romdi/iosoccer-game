@@ -540,6 +540,7 @@ void CBall::SetMatchEvent(match_event_t matchEvent, int team, bool forceUpdate)
 void CBall::SetMatchEventPlayer(CSDKPlayer *pPlayer)
 {
 	m_pMatchEventPlayer = pPlayer;
+	m_nMatchEventTeam = pPlayer->GetTeamNumber();
 }
 
 void CBall::SetMatchSubEvent(match_event_t matchEvent, int team, bool forceUpdate)
@@ -901,7 +902,8 @@ void CBall::State_NORMAL_Think()
 
 		if (DoBodyPartAction())
 		{
-			SetMatchEvent(MATCH_EVENT_NONE, TEAM_INVALID, false);
+			SetMatchEvent(MATCH_EVENT_NONE, m_pPl->GetTeamNumber(), false);
+			SetMatchEventPlayer(m_pPl);
 			//m_pMatchEventPlayer = m_pPl;
 			//m_nMatchEventTeam = m_pPl->GetTeamNumber();
 			//m_eMatchEvent = MATCH_EVENT_NONE;
@@ -966,6 +968,7 @@ void CBall::State_KICKOFF_Think()
 		m_pPl->SetPosInsideShield(Vector(m_vPos.x - m_pPl->GetTeam()->m_nRight * 30, m_vPos.y, SDKGameRules()->m_vKickOff.GetZ()), true);
 		m_flStateTimelimit = -1;
 		EmitSound("Ball.whistle");
+		SetMatchEvent(MATCH_EVENT_KICKOFF, m_pPl->GetTeamNumber(), false);
 		SetMatchEventPlayer(m_pPl);
 	}
 
@@ -1135,7 +1138,7 @@ void CBall::State_GOALKICK_Think()
 	{
 		m_pPl->SetGoalKicks(m_pPl->GetGoalKicks() + 1);
 		RemoveAllTouches();
-		DoGroundShot();
+		DoGroundShot(false);
 		State_Transition(BALL_NORMAL);
 	}
 }
@@ -1188,7 +1191,7 @@ void CBall::State_CORNER_Think()
 	{
 		m_pPl->SetCorners(m_pPl->GetCorners() + 1);
 		RemoveAllTouches();
-		DoGroundShot();
+		DoGroundShot(false);
 		State_Transition(BALL_NORMAL);
 	}
 }
@@ -1377,7 +1380,7 @@ void CBall::State_FREEKICK_Think()
 	{
 		m_pPl->SetFreeKicks(m_pPl->GetFreeKicks() + 1);
 		RemoveAllTouches();
-		DoGroundShot();
+		DoGroundShot(true);
 		State_Transition(BALL_NORMAL);
 	}
 }
@@ -1464,30 +1467,31 @@ void CBall::State_PENALTY_Think()
 	{
 		m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit.GetFloat();
 		m_pPl->RemoveFlag(FL_ATCONTROLS);
-		m_pPl->AddFlag(FL_NO_X_MOVEMENT);
+		//m_pPl->AddFlag(FL_NO_X_MOVEMENT);
 		//m_pPl->SetShotButtonsReleased(false);
 		m_pOtherPl->RemoveFlag(FL_ATCONTROLS);
-		m_pOtherPl->AddFlag(FL_NO_Y_MOVEMENT);
+		//m_pOtherPl->AddFlag(FL_NO_Y_MOVEMENT);
+		m_pOtherPl->AddFlag(FL_ATCONTROLS);
 	}
 
 	UpdateCarrier();
 
 	//if (m_bPenaltyTakerStartedMoving && (m_vPlVel.y == 0 || Sign(m_vPlVel.y) != m_pPl->GetTeam()->m_nForward))
-	if ((m_vPlVel.y == 0 || Sign(m_vPlVel.y) != m_pPl->GetTeam()->m_nForward) && (m_vPos - m_vPlPos).Length2D() < 100)
-	{
-		if (SDKGameRules()->State_Get() == MATCH_PENALTIES)
-		{
-			m_ePenaltyState = PENALTY_ABORTED_ILLEGAL_MOVE;
-			State_Transition(BALL_NORMAL);
-		}
-		else
-		{
-			TriggerFoul(FOUL_DOUBLETOUCH, m_vPos, m_pPl);
-			State_Transition(BALL_FREEKICK, sv_ball_statetransitiondelay.GetFloat());
-		}
+	//if ((m_vPlVel.y == 0 || Sign(m_vPlVel.y) != m_pPl->GetTeam()->m_nForward) && (m_vPos - m_vPlPos).Length2D() < 100)
+	//{
+	//	if (SDKGameRules()->State_Get() == MATCH_PENALTIES)
+	//	{
+	//		m_ePenaltyState = PENALTY_ABORTED_ILLEGAL_MOVE;
+	//		State_Transition(BALL_NORMAL);
+	//	}
+	//	else
+	//	{
+	//		TriggerFoul(FOUL_DOUBLETOUCH, m_vPos, m_pPl);
+	//		State_Transition(BALL_FREEKICK, sv_ball_statetransitiondelay.GetFloat());
+	//	}
 
-		return;
-	}
+	//	return;
+	//}
 
 	//if (!m_bPenaltyTakerStartedMoving && m_vPlVel.y != 0 && Sign(m_vPlVel.y) == m_pPl->GetTeam()->m_nForward)
 	//{
@@ -1500,7 +1504,7 @@ void CBall::State_PENALTY_Think()
 		RemoveAllTouches();
 		m_ePenaltyState = PENALTY_KICKED;
 		m_pPl->m_ePenaltyState = PENALTY_KICKED;
-		DoGroundShot();
+		DoGroundShot(false);
 		State_Transition(BALL_NORMAL);
 	}
 }
@@ -1509,12 +1513,13 @@ void CBall::State_PENALTY_Leave(ball_state_t newState)
 {
 	if (CSDKPlayer::IsOnField(m_pPl))
 	{
-		m_pPl->RemoveFlag(FL_NO_X_MOVEMENT);
+		//m_pPl->RemoveFlag(FL_NO_X_MOVEMENT);
 	}
 
 	if (CSDKPlayer::IsOnField(m_pOtherPl))
 	{
-		m_pOtherPl->RemoveFlag(FL_NO_Y_MOVEMENT);
+		//m_pOtherPl->RemoveFlag(FL_NO_Y_MOVEMENT);
+		m_pOtherPl->RemoveFlag(FL_ATCONTROLS);
 	}
 }
 
@@ -1548,6 +1553,7 @@ void CBall::State_KEEPERHANDS_Think()
 		EnablePlayerCollisions(false);
 		m_flStateTimelimit = -1;
 		Touched(m_pPl, true, BODY_PART_HANDS);
+		PlayersAtTargetPos();
 	}
 
 	//if (!PlayersAtTargetPos())
@@ -1634,7 +1640,7 @@ bool CBall::PlayersAtTargetPos()
 {
 	bool playersAtTarget = true;
 
-	for (int i = 1; i <= gpGlobals->maxClients; i++) 
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
 		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
 
@@ -1822,7 +1828,7 @@ bool CBall::DoBodyPartAction()
 	}
 
 	if (zDist >= sv_ball_bodypos_feet_start.GetFloat() && zDist < sv_ball_bodypos_hip_start.GetFloat() && xyDist <= sv_ball_touchradius.GetInt())
-		return DoGroundShot();
+		return DoGroundShot(true);
 
 	if (zDist >= sv_ball_bodypos_hip_start.GetFloat() && zDist < sv_ball_bodypos_chest_start.GetFloat() && xyDist <= sv_ball_touchradius.GetInt())
 	{
@@ -2079,7 +2085,7 @@ float CBall::GetChargedshotStrength(float coeff, int minStrength, int maxStrengt
 	return coeff * shotStrength;
 }
 
-bool CBall::DoGroundShot()
+bool CBall::DoGroundShot(bool markOffsidePlayers)
 {
 	float spin;
 	Vector vel;
@@ -2157,7 +2163,7 @@ bool CBall::DoGroundShot()
 		spin = 1;
 	}
 
-	SetVel(vel, spin, BODY_PART_FEET, false, true, true);
+	SetVel(vel, spin, BODY_PART_FEET, false, markOffsidePlayers, true);
 
 	return true;
 }

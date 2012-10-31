@@ -5,7 +5,7 @@
 #include "convar.h"
 #include "c_ios_replaymanager.h"
 
-enum cam_type_t { CAM_SIDELINE, CAM_BEHIND_GOAL, CAM_TOPDOWN };
+enum cam_type_t { CAM_SIDELINE, CAM_BEHIND_GOAL, CAM_TOPDOWN, CAM_GOAL_CORNER, CAM_FLY_FOLLOW };
 
 ConVar cl_tvcam_angle("cl_tvcam_angle", "10", FCVAR_ARCHIVE);
 ConVar cl_tvcam_dist("cl_tvcam_dist", "10", FCVAR_ARCHIVE);
@@ -45,8 +45,10 @@ void C_TVCamera::GetPositionAndAngle(Vector &pos, QAngle &ang)
 		switch (GetReplayManager()->m_nReplayRunIndex)
 		{
 		case 0: camType = CAM_SIDELINE; break;
-		case 1: camType = CAM_BEHIND_GOAL; break;
-		case 2: camType = CAM_TOPDOWN; break;
+		case 1: camType = CAM_FLY_FOLLOW; break;
+		case 2: camType = CAM_GOAL_CORNER; break;
+		case 3: camType = CAM_TOPDOWN; break;
+		case 4: camType = CAM_BEHIND_GOAL; break;
 		default: camType = CAM_SIDELINE; break;
 		}
 		atMinGoalPos = GetReplayManager()->m_bAtMinGoalPos;
@@ -93,7 +95,7 @@ void C_TVCamera::GetPositionAndAngle(Vector &pos, QAngle &ang)
 			newPos.y = clamp(newPos.y, SDKGameRules()->m_vFieldMin.GetY() + 900, SDKGameRules()->m_vFieldMax.GetY() - 900);
 			Vector newDir = ballPos - newPos;
 			newDir.NormalizeInPlace();
-			newPos = ballPos - newDir * 900;
+			newPos = ballPos - newDir * 800;
 			pos = newPos;
 			VectorAngles(newDir, ang);
 		}
@@ -112,15 +114,36 @@ void C_TVCamera::GetPositionAndAngle(Vector &pos, QAngle &ang)
 		break;
 	case CAM_TOPDOWN:
 		{
-			Vector newPos = ballPos;
-			newPos.z = SDKGameRules()->m_vKickOff.GetZ() + 600;
+			Vector newPos = Vector(ballPos.x, ballPos.y, SDKGameRules()->m_vKickOff.GetZ() + 600) + (atMinGoalPos ? 1 : -1) * 600;
 			Vector newDir = Vector(0, (atMinGoalPos ? -1 : 1) * 0.0000001, -1);
-			//QAngle ang = QAngle(89, (atMinGoalPos ? -1 : 1) * -180, 0);
-			//Vector newDir;
-			//AngleVectors(ang, &newDir);
 			newDir.NormalizeInPlace();
 			pos = newPos;
 			VectorAngles(newDir, ang);
+		}
+		break;
+	case CAM_FLY_FOLLOW:
+		{
+			Vector newPos = Vector(ballPos.x, ballPos.y + (atMinGoalPos ? 1 : -1) * 550, SDKGameRules()->m_vKickOff.GetZ() + 250);
+			Vector newDir = Vector(0, (atMinGoalPos ? -1 : 1) * 1.75f, -1);
+			newDir.NormalizeInPlace();
+			pos = newPos;
+			VectorAngles(newDir, ang);
+		}
+		break;
+	case CAM_GOAL_CORNER:
+		{
+			// setpos -139.917419 2082.051514 -140.906738;setang 13.860826 -57.723770 0.000000
+			// setpos 139.729691 -2086.090820 -149.303741;setang 13.397299 125.494232 0.000000
+			Vector newPos = Vector(-139.917419, 2082.051514, -140.906738);
+			QAngle newAng = QAngle(13.860826, -57.723770, 0.000000);
+			if (atMinGoalPos)
+			{
+				newPos.x = SDKGameRules()->m_vKickOff.GetX() + (SDKGameRules()->m_vKickOff.GetX() - newPos.x);
+				newPos.y = SDKGameRules()->m_vKickOff.GetY() + (SDKGameRules()->m_vKickOff.GetY() - newPos.y);
+				newAng[YAW] += 180;
+			}
+			pos = newPos;
+			ang = newAng;
 		}
 		break;
 	}

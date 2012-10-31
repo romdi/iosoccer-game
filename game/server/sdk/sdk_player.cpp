@@ -1265,6 +1265,9 @@ void CSDKPlayer::SetPosOutsideShield()
 		//m_vTargetPos = GetTeamPosNum() == 1 ? GetTeam()->m_vPenalty : GetTeam()->m_vPlayerSpawns[GetTeamPosNum() - 1];
 		m_vTargetPos = GetSpawnPos(false);
 		break;
+	case SHIELD_KEEPERHANDS:
+		return;
+		break;
 	default:
 		GetTargetPos(GetLocalOrigin(), m_vTargetPos.GetForModify());
 		break;

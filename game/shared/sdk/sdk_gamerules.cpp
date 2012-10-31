@@ -560,6 +560,9 @@ void CSDKGameRules::ServerActivate()
 	//	pCrossbar->SetRenderColorA(75);
 	//}
 
+	m_nFirstHalfLeftSideTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
+	m_nFirstHalfKickOffTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
+
 	State_Transition(MATCH_WARMUP);
 }
 
@@ -997,16 +1000,22 @@ void CSDKGameRules::ClientDisconnected( edict_t *pClient )
 
 	BaseClass::ClientDisconnected( pClient );
 }
+
+void CSDKGameRules::RestartMatch(bool setRandomSides)
+{
+	if (setRandomSides)
+	{
+		m_nFirstHalfLeftSideTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
+		m_nFirstHalfKickOffTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
+	}
+
+	SDKGameRules()->State_Transition(MATCH_WARMUP);
+}
+
 #endif
 
 
-
 #ifndef CLIENT_DLL
-
-void CSDKGameRules::RestartMatch()
-{
-	State_Transition(MATCH_WARMUP);
-}
 
 void CC_SV_Restart(const CCommand &args)
 {
@@ -1016,7 +1025,14 @@ void CC_SV_Restart(const CCommand &args)
 	if (args.ArgC() > 1)
 		mp_timelimit_warmup.SetValue((float)atof(args[1]));
 
-	SDKGameRules()->RestartMatch();
+	bool setRandomSides;
+
+	if (args.ArgC() > 2)
+		setRandomSides = atoi(args[2]);
+	else
+		setRandomSides = false;
+
+	SDKGameRules()->RestartMatch(setRandomSides);
 }
 
 ConCommand sv_restart( "sv_restart", CC_SV_Restart, "Restart game", 0 );
@@ -1252,9 +1268,7 @@ void CSDKGameRules::State_WARMUP_Enter()
 	GetBall()->State_Transition(BALL_STATIC, 0, true);
 	GetBall()->SetPos(m_vKickOff);
 
-	m_nFirstHalfLeftSideTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
 	SetLeftSideTeam(m_nFirstHalfLeftSideTeam);
-	m_nFirstHalfKickOffTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
 	SetKickOffTeam(m_nFirstHalfKickOffTeam);
 
 	EnableShield(SHIELD_KICKOFF, TEAM_A, SDKGameRules()->m_vKickOff);
@@ -1291,7 +1305,7 @@ void CSDKGameRules::State_FIRST_HALF_Think()
 	{
 		m_nAnnouncedInjuryTime = g_IOSRand.RandomInt(1, 4);
 	}
-	else if (m_flStateTimeLeft <= 0 && GetBall()->State_Get() == BALL_NORMAL)
+	else if (m_flStateTimeLeft <= 0 && GetBall()->State_Get() == BALL_NORMAL && !GetBall()->HasQueuedState())
 	{
 		State_Transition(MATCH_HALFTIME);
 	}
@@ -1345,7 +1359,7 @@ void CSDKGameRules::State_SECOND_HALF_Think()
 	{
 		m_nAnnouncedInjuryTime = g_IOSRand.RandomInt(1, 4);
 	}
-	else if (m_flStateTimeLeft <= 0 && GetBall()->State_Get() == BALL_NORMAL)
+	else if (m_flStateTimeLeft <= 0 && GetBall()->State_Get() == BALL_NORMAL && !GetBall()->HasQueuedState())
 	{
 		if (mp_extratime.GetBool() && GetGlobalTeam(TEAM_A)->GetGoals() == GetGlobalTeam(TEAM_B)->GetGoals())
 			State_Transition(MATCH_EXTRATIME_INTERMISSION);
@@ -1406,7 +1420,7 @@ void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Think()
 	{
 		m_nAnnouncedInjuryTime = g_IOSRand.RandomInt(1, 4);
 	}
-	else if (m_flStateTimeLeft <= 0 && GetBall()->State_Get() == BALL_NORMAL)
+	else if (m_flStateTimeLeft <= 0 && GetBall()->State_Get() == BALL_NORMAL && !GetBall()->HasQueuedState())
 	{
 		State_Transition(MATCH_EXTRATIME_HALFTIME);
 	}
@@ -1462,7 +1476,7 @@ void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Think()
 	{
 		m_nAnnouncedInjuryTime = g_IOSRand.RandomInt(1, 4);
 	}
-	else if (m_flStateTimeLeft <= 0 && GetBall()->State_Get() == BALL_NORMAL)
+	else if (m_flStateTimeLeft <= 0 && GetBall()->State_Get() == BALL_NORMAL && !GetBall()->HasQueuedState())
 	{
 		if (mp_penalties.GetBool() && GetGlobalTeam(TEAM_A)->GetGoals() == GetGlobalTeam(TEAM_B)->GetGoals())
 			State_Transition(MATCH_PENALTIES_INTERMISSION);
@@ -2064,7 +2078,7 @@ void CSDKGameRules::SetOffsideLinePositions(float ballPosY, float offsidePlayerP
 	m_flOffsideLineBallPosY = ballPosY;
 	m_flOffsideLineOffsidePlayerPosY = offsidePlayerPosY;
 	m_flOffsideLineLastOppPlayerPosY = lastOppPlayerPosY;
-	m_bOffsideLinesEnabled = true;
+	//m_bOffsideLinesEnabled = true;
 }
 
 void CSDKGameRules::SetOffsideLinesEnabled(bool enable)
