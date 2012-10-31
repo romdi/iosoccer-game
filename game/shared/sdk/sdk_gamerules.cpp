@@ -1236,7 +1236,10 @@ void CSDKGameRules::State_Think()
 			m_flStateTimeLeft = (m_flStateEnterTime + m_pCurStateInfo->m_MinDurationConVar->GetFloat() * 60 / m_pCurStateInfo->m_flMinDurationDivisor) - gpGlobals->curtime;
 
 			if (!IsIntermissionState())
-				m_flStateTimeLeft += m_flInjuryTime + min(5, m_nAnnouncedInjuryTime + (abs(m_nBallZone) < 50 ? 0 : 5)) * 60 / (90.0f / mp_timelimit_match.GetFloat());
+			{
+				int additionalTime = m_nAnnouncedInjuryTime + (abs(m_nBallZone) < 50 ? 0 : 30);
+				m_flStateTimeLeft += m_flInjuryTime + additionalTime * 60 / (90.0f / mp_timelimit_match.GetFloat());
+			}
 		}
 
 		(this->*m_pCurStateInfo->pfnThink)();
@@ -2031,19 +2034,19 @@ int CSDKGameRules::GetMatchDisplayTimeSeconds()
 	{
 	case MATCH_EXTRATIME_SECOND_HALF:
 	case MATCH_EXTRATIME_SECOND_HALF_INJURY_TIME:
-		nTime = (int)(flTime * (90.0f / mp_timelimit_match.GetFloat())) + (90 + 15) * 60;
+		nTime = min(120 * 60, (int)(flTime * (90.0f / mp_timelimit_match.GetFloat())) + (90 + 15) * 60);
 		break;
 	case MATCH_EXTRATIME_FIRST_HALF:
 	case MATCH_EXTRATIME_FIRST_HALF_INJURY_TIME:
-		nTime = (int)(flTime * (90.0f / mp_timelimit_match.GetFloat())) + 90 * 60;
+		nTime = min(105 * 60, (int)(flTime * (90.0f / mp_timelimit_match.GetFloat())) + 90 * 60);
 		break;
 	case MATCH_SECOND_HALF:
 	case MATCH_SECOND_HALF_INJURY_TIME:
-		nTime = (int)(flTime * (90.0f / mp_timelimit_match.GetFloat())) + 45 * 60;
+		nTime = min(90 * 60, (int)(flTime * (90.0f / mp_timelimit_match.GetFloat())) + 45 * 60);
 		break;
 	case MATCH_FIRST_HALF:
 	case MATCH_FIRST_HALF_INJURY_TIME:
-		nTime = (int)(flTime * (90.0f / mp_timelimit_match.GetFloat()));
+		nTime = min(45 * 60, (int)(flTime * (90.0f / mp_timelimit_match.GetFloat())));
 		break;
 	case MATCH_WARMUP:
 		nTime = (int)(flTime - mp_timelimit_warmup.GetFloat() * 60);
