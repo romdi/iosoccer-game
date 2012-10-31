@@ -685,10 +685,10 @@ void CClientScoreBoardDialog::UpdatePlayerInfo()
 		char text[32];
 		Q_snprintf(text, sizeof(text), "%.7s", specList[i].playerName);
 
-		int nextJoin = max(0, (int)(gr->GetNextJoin(specList[i].playerIndex) - gpGlobals->curtime));
+		int nextJoin = gr->GetNextJoin(specList[i].playerIndex);
 
-		if (nextJoin > 0)
-			Q_strncat(text, VarArgs(" [%d]", nextJoin), sizeof(text));
+		if (nextJoin > SDKGameRules()->GetMatchDisplayTimeSeconds())
+			Q_strncat(text, VarArgs(" [%d:%02d]", nextJoin / 60, nextJoin % 60), sizeof(text));
 
 		if (i < specList.Count() - 1)
 			Q_strncat(text, ", ", sizeof(text));
@@ -697,7 +697,7 @@ void CClientScoreBoardDialog::UpdatePlayerInfo()
 		pPl->SetCommand(VarArgs("specindex:%d", specList[i]));
 		pPl->AddActionSignalTarget(this);
 		pPl->SetBounds(totalWidth, 0, SPECNAME_WIDTH, SPECLIST_HEIGHT);
-		pPl->SetFgColor(Color(255, 255, 255, 255));
+		pPl->SetDefaultColor(gr->IsCardBanned(specList[i].playerIndex) ? Color(255, 153, 153, 255) : Color(255, 255, 255, 255), Color(0, 0, 0, 0));
 		pPl->SetFont(m_pSpectatorFontList[1]);
 		pPl->SetContentAlignment(Label::a_center);
 		pPl->SetPaintBackgroundEnabled(false);

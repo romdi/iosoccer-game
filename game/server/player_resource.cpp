@@ -52,7 +52,7 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CPlayerResource, DT_PlayerResource)
 	SendPropArray3( SENDINFO_ARRAY3(m_GoalKicks), SendPropInt( SENDINFO_ARRAY(m_GoalKicks), 5, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_TeamPosIndex), SendPropInt( SENDINFO_ARRAY(m_TeamPosIndex), 4, SPROP_UNSIGNED  ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_TeamPosNum), SendPropInt( SENDINFO_ARRAY(m_TeamPosNum), 5, SPROP_UNSIGNED  ) ),
-	SendPropArray3( SENDINFO_ARRAY3(m_NextJoin), SendPropFloat( SENDINFO_ARRAY(m_NextJoin) ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_NextJoin), SendPropInt( SENDINFO_ARRAY(m_NextJoin) ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_IsCardBanned), SendPropBool( SENDINFO_ARRAY(m_IsCardBanned) ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_TeamToJoin), SendPropInt( SENDINFO_ARRAY(m_TeamToJoin), 3 ) ),
 

@@ -1978,17 +1978,17 @@ void CSDKGameRules::StopMeteringInjuryTime()
 		m_flInjuryTime += timePassed;
 		m_flInjuryTimeStart = -1;
 
-		for (int i = 1; i <= gpGlobals->maxClients; i++)
-		{
-			CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
-			if (!pPl)
-				continue;
+		//for (int i = 1; i <= gpGlobals->maxClients; i++)
+		//{
+		//	CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+		//	if (!pPl)
+		//		continue;
 
-			if (pPl->IsCardBanned() && pPl->GetNextJoin() > gpGlobals->curtime)
-			{
-				pPl->SetNextJoin(pPl->GetNextJoin() + timePassed);
-			}
-		}
+		//	if (pPl->IsCardBanned() && pPl->GetNextJoin() > gpGlobals->curtime)
+		//	{
+		//		pPl->SetNextJoin(pPl->GetNextJoin() + timePassed);
+		//	}
+		//}
 	}
 }
 

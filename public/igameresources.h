@@ -71,7 +71,7 @@ public:
 	virtual int		GetTeamPosType( int iIndex ) = 0;
 	virtual int		GetTeamPosIndex( int iIndex ) = 0;
 	virtual int		GetTeamToJoin( int iIndex ) = 0;
-	virtual float	GetNextJoin( int iIndex ) = 0;
+	virtual int		GetNextJoin( int iIndex ) = 0;
 	virtual bool	IsCardBanned( int iIndex ) = 0;
 };
 

@@ -53,7 +53,7 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_PlayerResource, DT_PlayerResource, CPlayerReso
 	RecvPropArray3( RECVINFO_ARRAY(m_TeamPosIndex), RecvPropInt( RECVINFO(m_TeamPosIndex[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_TeamPosNum), RecvPropInt( RECVINFO(m_TeamPosNum[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_TeamToJoin), RecvPropInt( RECVINFO(m_TeamToJoin[0]))),
-	RecvPropArray3( RECVINFO_ARRAY(m_NextJoin), RecvPropFloat( RECVINFO(m_NextJoin[0]))),
+	RecvPropArray3( RECVINFO_ARRAY(m_NextJoin), RecvPropInt( RECVINFO(m_NextJoin[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_IsCardBanned), RecvPropBool( RECVINFO(m_IsCardBanned[0]))),
 
 	RecvPropArray3( RECVINFO_ARRAY(m_szClubNames), RecvPropString( RECVINFO(m_szClubNames[0]))),
@@ -661,7 +661,7 @@ int C_PlayerResource::GetTeamToJoin( int iIndex )
 		return m_TeamToJoin[iIndex];
 }
 
-float C_PlayerResource::GetNextJoin( int iIndex )
+int C_PlayerResource::GetNextJoin( int iIndex )
 {
 	if ( iIndex < 1 || iIndex > MAX_PLAYERS )
 		return false;

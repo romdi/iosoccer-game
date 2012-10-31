@@ -285,7 +285,23 @@ CSDKPlayer *CSDKPlayer::CreatePlayer( const char *className, edict_t *ed )
 
 void CSDKPlayer::PreThink(void)
 {
-	if (m_nTeamToJoin != TEAM_INVALID && GetNextJoin() <= gpGlobals->curtime)
+	if (!SDKGameRules()->IsIntermissionState()
+		&& IsCardBanned()
+		&& (GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B)
+		&& SDKGameRules()->GetMatchDisplayTimeSeconds() < GetNextJoin())
+	{
+		int team = GetTeamNumber();
+		int posIndex = GetTeamPosIndex();
+		ChangeTeam(TEAM_SPECTATOR);
+		ChangeTeamPos(team, posIndex, true);
+	}
+
+	if (!SDKGameRules()->IsIntermissionState() && IsCardBanned() && SDKGameRules()->GetMatchDisplayTimeSeconds() >= GetNextJoin())
+	{
+		SetCardBanned(false);
+	}
+
+	if (m_nTeamToJoin != TEAM_INVALID && (SDKGameRules()->IsIntermissionState() || SDKGameRules()->GetMatchDisplayTimeSeconds() >= GetNextJoin()))
 	{
 		if (!TeamPosFree(m_nTeamToJoin, GetTeamPosIndex(), false))
 		{
@@ -472,9 +488,9 @@ bool CSDKPlayer::ChangeTeamPos(int team, int posIndex, bool instantly /*= false*
 		if (GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B)
 		{
 			if (instantly)
-				SetNextJoin(gpGlobals->curtime);
-			else if (GetNextJoin() < gpGlobals->curtime)
-				SetNextJoin(gpGlobals->curtime + mp_joindelay.GetFloat());
+				SetNextJoin(SDKGameRules()->GetMatchDisplayTimeSeconds());
+			else if (GetNextJoin() < SDKGameRules()->GetMatchDisplayTimeSeconds())
+				SetNextJoin(SDKGameRules()->GetMatchDisplayTimeSeconds() + mp_joindelay.GetFloat() * (90.0f / mp_timelimit_match.GetFloat()));
 
 			ChangeTeam(TEAM_SPECTATOR);
 		}
@@ -491,9 +507,9 @@ bool CSDKPlayer::ChangeTeamPos(int team, int posIndex, bool instantly /*= false*
 		if (GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B)
 		{
 			if (instantly)
-				SetNextJoin(gpGlobals->curtime);
-			else if (GetNextJoin() < gpGlobals->curtime)
-				SetNextJoin(gpGlobals->curtime + mp_joindelay.GetFloat());
+				SetNextJoin(SDKGameRules()->GetMatchDisplayTimeSeconds());
+			else if (GetNextJoin() < SDKGameRules()->GetMatchDisplayTimeSeconds())
+				SetNextJoin(SDKGameRules()->GetMatchDisplayTimeSeconds() + mp_joindelay.GetFloat() * (90.0f / mp_timelimit_match.GetFloat()));
 
 			ChangeTeam(TEAM_SPECTATOR);
 		}
@@ -987,6 +1003,9 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 			Warning("Player sent bad jointeam syntax\n");
 			return false;	//go away
 		}
+
+		if (IsCardBanned())
+			return false;
 
 		int team = atoi(args[1]);
 		int posIndex = atoi(args[2]);
@@ -1674,5 +1693,5 @@ void CPlayerPersistentData::ResetData()
 	m_nDistanceCovered = 0;
 	m_flExactDistanceCovered = 0.0f;
 	m_bIsCardBanned = false;
-	m_flNextJoin = gpGlobals->curtime;
+	m_flNextJoin = SDKGameRules()->GetMatchDisplayTimeSeconds();
 }

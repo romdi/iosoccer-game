@@ -137,9 +137,9 @@ public:
 	int				UpdateTransmitState();
 
 	void			SetMatchEvent(match_event_t matchEvent, int team, bool forceUpdate);
-	void			SetMatchEventPlayer(CSDKPlayer *pPlayer);
+	void			SetMatchEventPlayer(CSDKPlayer *pPlayer, bool forceUpdate);
 	void			SetMatchSubEvent(match_event_t matchEvent, int team, bool forceUpdate);
-	void			SetMatchSubEventPlayer(CSDKPlayer *pPlayer);
+	void			SetMatchSubEventPlayer(CSDKPlayer *pPlayer, bool forceUpdate);
 
 	bool			IsAsleep(void) { return	false; }
 	void			Spawn(void);
