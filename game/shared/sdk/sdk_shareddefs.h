@@ -273,7 +273,7 @@ static const char *g_szMatchEventNames[32] =
 	"WARM-UP",
 	"OFFSIDE",
 	"YELLOW CARD",
-	"YELLOW / RED",
+	"YELLOW && RED",
 	"RED CARD",
 	"ASSIST",
 	"DOUBLE TOUCH",

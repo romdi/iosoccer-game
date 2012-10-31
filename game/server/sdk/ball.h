@@ -208,6 +208,7 @@ private:
 	ball_state_t	m_eNextState;
 	float			m_flStateEnterTime;
 	float			m_flStateLeaveTime;
+	float			m_flStateActivationDelay;
 	float			m_flStateTimelimit;
 	bool			m_bNextStateMessageSet;
 	CBallStateInfo	*m_pCurStateInfo;
