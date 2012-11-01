@@ -216,6 +216,7 @@ private:
 	void			MarkOffsidePlayers();
 	void			UnmarkOffsidePlayers();
 
+	void			HandleFoul();
 	bool			PlayersAtTargetPos();
 	bool			CheckFoul();
 	void			TriggerFoul(foul_type_t type, Vector pos, CSDKPlayer *pFoulingPl, CSDKPlayer *pFouledPl = NULL);

@@ -36,7 +36,7 @@ LINK_ENTITY_TO_CLASS(ios_keeperbot, CKeeperBot);
 #define KEEPER_MID_COEFF 0.20f
 #define KEEPER_FAR_COEFF 0.001f
 
-ConVar mp_botkeeperskill( "mp_botkeeperskill", "50", 0, "Bot keeper skill <0-100>" );
+ConVar mp_botkeeperskill( "mp_botkeeperskill", "50", FCVAR_NOTIFY, "Bot keeper skill <0-100>" );
 
 ///////////////////////////////////////////////////
 // BotKeeperThink
