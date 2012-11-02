@@ -487,6 +487,7 @@ void CHudScorebar::OnThink( void )
 				}
 
 				m_eCurMatchEvent = pBall->m_eMatchEvent;
+				m_flNextPlayerUpdate = gpGlobals->curtime;
 			}
 			else
 			{

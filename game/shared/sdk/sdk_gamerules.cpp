@@ -1657,6 +1657,7 @@ void CSDKGameRules::State_PENALTIES_Think()
 
 			if (pPenTaker)
 			{
+				GetBall()->SetMatchEvent(MATCH_EVENT_PENALTY, m_nPenaltyTakingTeam, false);
 				GetBall()->SetPenaltyTaker(pPenTaker);
 				GetBall()->SetPenaltyState(PENALTY_ASSIGNED);
 				GetBall()->State_Transition(BALL_PENALTY, 0, true);

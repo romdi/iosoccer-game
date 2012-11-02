@@ -757,7 +757,7 @@ void CBall::State_Think()
 			case BALL_THROWIN: SetMatchEvent(MATCH_EVENT_THROWIN, LastOppTeam(false), true); break;
 			case BALL_GOALKICK: SetMatchEvent(MATCH_EVENT_GOALKICK, LastOppTeam(false), true); break;
 			case BALL_CORNER: SetMatchEvent(MATCH_EVENT_CORNER, LastOppTeam(false), true); break;
-			case BALL_KICKOFF: SetMatchEvent(MATCH_EVENT_KICKOFF, SDKGameRules()->GetKickOffTeam(), true); break;
+			//case BALL_KICKOFF: SetMatchEvent(MATCH_EVENT_KICKOFF, SDKGameRules()->GetKickOffTeam(), true); break;
 			case BALL_GOAL:
 				if (m_nTeam == LastTeam(true))
 					SetMatchEvent(MATCH_EVENT_OWNGOAL, LastTeam(true), true);
@@ -893,6 +893,9 @@ void CBall::State_NORMAL_Enter()
 
 void CBall::State_NORMAL_Think()
 {
+	if (m_eNextState == BALL_GOAL)
+		return;
+
 	for (int ignoredPlayerBits = 0;;)
 	{
 		if (SDKGameRules()->State_Get() == MATCH_PENALTIES)
@@ -912,7 +915,7 @@ void CBall::State_NORMAL_Think()
 
 		if (DoBodyPartAction())
 		{
-			if (m_pPl)
+			if (m_pPl && LastInfo(false)->m_eBodyPart != BODY_PART_HANDS)
 			{
 				SetMatchEvent(MATCH_EVENT_NONE, m_pPl->GetTeamNumber(), false);
 				SetMatchEventPlayer(m_pPl, false);
@@ -943,6 +946,8 @@ void CBall::State_NORMAL_Leave(ball_state_t newState)
 
 void CBall::State_KICKOFF_Enter()
 {
+	SetMatchEvent(MATCH_EVENT_KICKOFF, SDKGameRules()->GetKickOffTeam(), true);
+
 	for (int i = 1; i <= gpGlobals->maxClients; i++) 
 	{
 		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
@@ -1244,6 +1249,7 @@ void CBall::State_GOAL_Enter()
 			if (pAssister && pAssister->GetTeam() == pScorer->GetTeam())
 			{
 				pAssister->SetAssists(pAssister->GetAssists() + 1);
+				SetMatchSubEvent(MATCH_EVENT_ASSIST, pAssister->GetTeamNumber(), true);
 				SetMatchSubEventPlayer(pAssister, false);
 			}
 		}
@@ -1499,6 +1505,9 @@ void CBall::State_KEEPERHANDS_Enter()
 
 void CBall::State_KEEPERHANDS_Think()
 {
+	if (m_eNextState == BALL_GOAL)
+		return;
+
 	if (!CSDKPlayer::IsOnField(m_pPl))
 	{
 		m_pPl = FindNearestPlayer(m_nInPenBoxOfTeam, FL_POS_KEEPER);
