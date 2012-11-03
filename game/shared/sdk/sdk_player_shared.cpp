@@ -364,7 +364,8 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 
 					if ((goalCenter - newPos).Length2DSqr() < (goalCenter - oldPos).Length2DSqr())
 					{
-						newPos = oldPos;
+						newPos.x = oldPos.x;
+						newPos.y = oldPos.y;
 						stopPlayer = true;
 					}
 					else

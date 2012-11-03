@@ -490,6 +490,8 @@ public:
 
 	int					m_nMotmChoiceIds[2];
 
+	float				m_flLastShotOnGoal;
+
 protected:
 
 	bool				m_bIsOffside;

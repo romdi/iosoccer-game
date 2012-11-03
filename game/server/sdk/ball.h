@@ -121,10 +121,13 @@ public:
 	CNetworkVar(ball_state_t, m_eBallState);
 	CNetworkVar(match_event_t, m_eMatchEvent);
 	CNetworkVar(match_event_t, m_eMatchSubEvent);
+	CNetworkVar(match_event_t, m_eMatchSubSubEvent);
 	CNetworkHandle(CSDKPlayer, m_pMatchEventPlayer);
 	CNetworkVar(int, m_nMatchEventTeam);
 	CNetworkHandle(CSDKPlayer, m_pMatchSubEventPlayer);
 	CNetworkVar(int, m_nMatchSubEventTeam);
+	CNetworkHandle(CSDKPlayer, m_pMatchSubSubEventPlayer);
+	CNetworkVar(int, m_nMatchSubSubEventTeam);
 
 	void			RemoveAllPlayerBalls();
 	void			RemovePlayerBall();
@@ -140,6 +143,8 @@ public:
 	void			SetMatchEventPlayer(CSDKPlayer *pPlayer, bool forceUpdate);
 	void			SetMatchSubEvent(match_event_t matchEvent, int team, bool forceUpdate);
 	void			SetMatchSubEventPlayer(CSDKPlayer *pPlayer, bool forceUpdate);
+	void			SetMatchSubSubEvent(match_event_t matchEvent, int team, bool forceUpdate);
+	void			SetMatchSubSubEventPlayer(CSDKPlayer *pPlayer, bool forceUpdate);
 
 	bool			IsAsleep(void) { return	false; }
 	void			Spawn(void);
@@ -237,10 +242,10 @@ private:
 	void			Kicked(body_part_t bodyPart, bool isDeflection);
 	void			Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart);
 	void			RemoveAllTouches();
-	BallTouchInfo	*LastInfo(bool wasShooting, CSDKPlayer *pSkipPl = NULL);
-	CSDKPlayer		*LastPl(bool wasShooting, CSDKPlayer *pSkipPl = NULL);
-	int				LastTeam(bool wasShooting, CSDKPlayer *pSkipPl = NULL);
-	int				LastOppTeam(bool wasShooting, CSDKPlayer *pSkipPl = NULL);
+	BallTouchInfo	*LastInfo(bool wasShooting, CSDKPlayer *pSkipPl = NULL, CSDKPlayer *pSkipPl2 = NULL);
+	CSDKPlayer		*LastPl(bool wasShooting, CSDKPlayer *pSkipPl = NULL, CSDKPlayer *pSkipPl2 = NULL);
+	int				LastTeam(bool wasShooting, CSDKPlayer *pSkipPl = NULL, CSDKPlayer *pSkipPl2 = NULL);
+	int				LastOppTeam(bool wasShooting, CSDKPlayer *pSkipPl = NULL, CSDKPlayer *pSkipPl2 = NULL);
 
 	IPhysicsObject	*m_pPhys;
 	float			m_flPhysRadius;

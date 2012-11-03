@@ -942,6 +942,8 @@ void CSDKPlayer::State_ACTIVE_Enter()
 	m_vPreReplayPos = GetLocalOrigin();
 	m_aPreReplayAngles = GetLocalAngles();
 
+	m_flLastShotOnGoal = -1;
+
 	//Tony; call spawn again now -- remember; when we add respawn timers etc, to just put them into the spawn queue, and let the queue respawn them.
 	//Spawn();
 	//RemoveEffects(EF_NODRAW); //ios hack - player spawns invisible sometimes
@@ -1542,6 +1544,7 @@ void CSDKPlayer::ResetFlags()
 	DoServerAnimationEvent(PLAYERANIMEVENT_CANCEL);
 	m_pHoldingBall = NULL;
 	m_flLastReadyTime = -1;
+	m_flLastShotOnGoal = -1;
 
 	if (GetPlayerBall())
 		GetPlayerBall()->RemovePlayerBall();

@@ -266,9 +266,12 @@ IMPLEMENT_SERVERCLASS_ST( CBall, DT_Ball )
 	SendPropInt(SENDINFO(m_nMatchEventTeam)),
 	SendPropEHandle(SENDINFO(m_pMatchSubEventPlayer)),
 	SendPropInt(SENDINFO(m_nMatchSubEventTeam)),
+	SendPropEHandle(SENDINFO(m_pMatchSubSubEventPlayer)),
+	SendPropInt(SENDINFO(m_nMatchSubSubEventTeam)),
 	SendPropBool(SENDINFO(m_bIsPlayerBall)),
 	SendPropInt(SENDINFO(m_eMatchEvent)),
 	SendPropInt(SENDINFO(m_eMatchSubEvent)),
+	SendPropInt(SENDINFO(m_eMatchSubSubEvent)),
 	SendPropInt(SENDINFO(m_eBallState)),
 	//ios1.1
     //SendPropVector(SENDINFO(m_vecOrigin), -1, SPROP_NOSCALE|SPROP_CHANGES_OFTEN, 0.0f, HIGH_DEFAULT, SendProxy_Origin ),
@@ -302,6 +305,7 @@ CBall::CBall()
 	m_pPl = NULL;
 	m_pMatchEventPlayer = NULL;
 	m_pMatchSubEventPlayer = NULL;
+	m_pMatchSubSubEventPlayer = NULL;
 	m_bSetNewPos = false;
 	m_bSetNewVel = false;
 	m_bSetNewRot = false;
@@ -315,6 +319,7 @@ CBall::CBall()
 	m_nInPenBoxOfTeam = TEAM_INVALID;
 	m_eMatchEvent = MATCH_EVENT_NONE;
 	m_eMatchSubEvent = MATCH_EVENT_NONE;
+	m_eMatchSubSubEvent = MATCH_EVENT_NONE;
 }
 
 CBall::~CBall()
@@ -477,6 +482,16 @@ void CBall::VPhysicsCollision( int index, gamevcollisionevent_t	*pEvent	)
 	//IOS goal post hacks!!
 	if (surfaceProps == 81 && flSpeed > 300.0f)
 	{
+		CSDKPlayer *pLastPl = LastPl(true);
+		if (pLastPl
+			&& (pLastPl->GetOppTeam()->m_vPlayerSpawns[0] - m_vPos).Length2DSqr() < (pLastPl->GetTeam()->m_vPlayerSpawns[0] - m_vPos).Length2DSqr()
+			&& gpGlobals->curtime >= pLastPl->m_flLastShotOnGoal + 1)
+		{
+			pLastPl->SetShots(pLastPl->GetShots() + 1);
+			pLastPl->SetShotsOnGoal(pLastPl->GetShotsOnGoal() + 1);
+			pLastPl->m_flLastShotOnGoal = gpGlobals->curtime;
+		}
+
 		EmitSound("Ball.post");
 	}
 	else
@@ -534,6 +549,8 @@ void CBall::SetMatchEvent(match_event_t matchEvent, int team, bool forceUpdate)
 
 	m_eMatchSubEvent = MATCH_EVENT_NONE;
 	m_pMatchSubEventPlayer = NULL;
+	m_eMatchSubSubEvent = MATCH_EVENT_NONE;
+	m_pMatchSubSubEventPlayer = NULL;
 	m_eMatchEvent = matchEvent;
 	m_pMatchEventPlayer = NULL;
 	m_nMatchEventTeam = team;
@@ -570,6 +587,25 @@ void CBall::SetMatchSubEventPlayer(CSDKPlayer *pPlayer, bool forceUpdate)
 
 	m_pMatchSubEventPlayer = pPlayer;
 	m_nMatchSubEventTeam = pPlayer->GetTeamNumber();
+}
+
+void CBall::SetMatchSubSubEvent(match_event_t matchEvent, int team, bool forceUpdate)
+{
+	if (!forceUpdate && (SDKGameRules()->IsIntermissionState() || m_bHasQueuedState))
+		return;
+
+	m_eMatchSubSubEvent = matchEvent;
+	m_pMatchSubSubEventPlayer = NULL;
+	m_nMatchSubSubEventTeam = team;
+}
+
+void CBall::SetMatchSubSubEventPlayer(CSDKPlayer *pPlayer, bool forceUpdate)
+{
+	if (!forceUpdate && (SDKGameRules()->IsIntermissionState() || m_bHasQueuedState))
+		return;
+
+	m_pMatchSubSubEventPlayer = pPlayer;
+	m_nMatchSubSubEventTeam = pPlayer->GetTeamNumber();
 }
 
 CSDKPlayer *CBall::FindNearestPlayer(int team /*= TEAM_INVALID*/, int posFlags /*= FL_POS_FIELD*/, bool checkIfShooting /*= false*/, int ignoredPlayerBits /*= 0*/)
@@ -1251,6 +1287,15 @@ void CBall::State_GOAL_Enter()
 				pAssister->SetAssists(pAssister->GetAssists() + 1);
 				SetMatchSubEvent(MATCH_EVENT_ASSIST, pAssister->GetTeamNumber(), true);
 				SetMatchSubEventPlayer(pAssister, false);
+
+				CSDKPlayer *pAssister2 = LastPl(true, pScorer, pAssister);
+
+				if (pAssister2 && pAssister2->GetTeam() == pScorer->GetTeam())
+				{
+					pAssister2->SetAssists(pAssister2->GetAssists() + 1);
+					SetMatchSubSubEvent(MATCH_EVENT_ASSIST, pAssister2->GetTeamNumber(), true);
+					SetMatchSubSubEventPlayer(pAssister2, false);
+				}
 			}
 		}
 	}
@@ -1998,10 +2043,11 @@ bool CBall::CheckKeeperCatch()
 	if (!SDKGameRules()->IsIntermissionState() && !m_bHasQueuedState && LastTeam(true) != m_pPl->GetTeamNumber())
 	{
 		m_pPl->SetKeeperSaves(m_pPl->GetKeeperSaves() + 1);
-		if (LastPl(true))
+		if (LastPl(true) && gpGlobals->curtime >= LastPl(true)->m_flLastShotOnGoal + 1)
 		{
 			LastPl(true)->SetShots(LastPl(true)->GetShots() + 1);
 			LastPl(true)->SetShotsOnGoal(LastPl(true)->GetShotsOnGoal() + 1);
+			LastPl(true)->m_flLastShotOnGoal = gpGlobals->curtime;
 		}
 	}
 
@@ -2375,10 +2421,11 @@ void CBall::TriggerGoal(int team)
 		return;
 	}
 
-	if (LastTeam(true) != team && LastPl(true))
+	if (LastTeam(true) != team && LastPl(true) && gpGlobals->curtime >= LastPl(true)->m_flLastShotOnGoal + 1)
 	{
 		LastPl(true)->SetShots(LastPl(true)->GetShots() + 1);
 		LastPl(true)->SetShotsOnGoal(LastPl(true)->GetShotsOnGoal() + 1);
+		LastPl(true)->m_flLastShotOnGoal = gpGlobals->curtime;
 	}
 
 	m_nTeam = team;
@@ -2600,11 +2647,14 @@ void CBall::RemoveAllTouches()
 		m_Touches.RemoveAll();
 }
 
-BallTouchInfo *CBall::LastInfo(bool wasShooting, CSDKPlayer *pSkipPl /*= NULL*/)
+BallTouchInfo *CBall::LastInfo(bool wasShooting, CSDKPlayer *pSkipPl /*= NULL*/, CSDKPlayer *pSkipPl2 /*= NULL*/)
 {
 	for (int i = m_Touches.Count() - 1; i >= 0; i--)
 	{
 		if (pSkipPl && m_Touches[i].m_pPl == pSkipPl)
+			continue;
+
+		if (pSkipPl2 && m_Touches[i].m_pPl == pSkipPl2)
 			continue;
 
 		if (!wasShooting || m_Touches[i].m_bIsShot)
@@ -2614,24 +2664,24 @@ BallTouchInfo *CBall::LastInfo(bool wasShooting, CSDKPlayer *pSkipPl /*= NULL*/)
 	return NULL;
 }
 
-CSDKPlayer *CBall::LastPl(bool wasShooting, CSDKPlayer *pSkipPl /*= NULL*/)
+CSDKPlayer *CBall::LastPl(bool wasShooting, CSDKPlayer *pSkipPl /*= NULL*/, CSDKPlayer *pSkipPl2 /*= NULL*/)
 {
-	BallTouchInfo *info = LastInfo(wasShooting, pSkipPl);
+	BallTouchInfo *info = LastInfo(wasShooting, pSkipPl, pSkipPl2);
 	if (info && CSDKPlayer::IsOnField(info->m_pPl))
 		return info->m_pPl;
 	
 	return NULL;
 }
 
-int CBall::LastTeam(bool wasShooting, CSDKPlayer *pSkipPl /*= NULL*/)
+int CBall::LastTeam(bool wasShooting, CSDKPlayer *pSkipPl /*= NULL*/, CSDKPlayer *pSkipPl2 /*= NULL*/)
 {
-	BallTouchInfo *info = LastInfo(wasShooting, pSkipPl);
+	BallTouchInfo *info = LastInfo(wasShooting, pSkipPl, pSkipPl2);
 	return info ? info->m_nTeam : TEAM_INVALID;
 }
 
-int CBall::LastOppTeam(bool wasShooting, CSDKPlayer *pSkipPl /*= NULL*/)
+int CBall::LastOppTeam(bool wasShooting, CSDKPlayer *pSkipPl /*= NULL*/, CSDKPlayer *pSkipPl2 /*= NULL*/)
 {
-	BallTouchInfo *info = LastInfo(wasShooting, pSkipPl);
+	BallTouchInfo *info = LastInfo(wasShooting, pSkipPl, pSkipPl2);
 	return info ? (info->m_nTeam == TEAM_A ? TEAM_B : TEAM_A) : TEAM_INVALID;
 }
 
@@ -2769,8 +2819,10 @@ void CBall::ResetMatch()
 	m_pOtherPl = NULL;
 	m_pMatchEventPlayer = NULL;
 	m_pMatchSubEventPlayer = NULL;
+	m_pMatchSubSubEventPlayer = NULL;
 	m_eMatchEvent = MATCH_EVENT_NONE;
 	m_eMatchSubEvent = MATCH_EVENT_NONE;
+	m_eMatchSubSubEvent = MATCH_EVENT_NONE;
 	RemoveAllTouches();
 	m_ePenaltyState = PENALTY_NONE;
 	SDKGameRules()->SetOffsideLinesEnabled(false);

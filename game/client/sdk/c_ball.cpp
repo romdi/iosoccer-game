@@ -14,10 +14,13 @@ IMPLEMENT_CLIENTCLASS_DT( C_Ball, DT_Ball, CBall )
 	RecvPropEHandle(RECVINFO(m_pMatchEventPlayer)),
 	RecvPropInt(RECVINFO(m_nMatchEventTeam)),
 	RecvPropEHandle(RECVINFO(m_pMatchSubEventPlayer)),
+	RecvPropEHandle(RECVINFO(m_pMatchSubSubEventPlayer)),
 	RecvPropInt(RECVINFO(m_nMatchSubEventTeam)),
+	RecvPropInt(RECVINFO(m_nMatchSubSubEventTeam)),
 	RecvPropBool(RECVINFO(m_bIsPlayerBall)),
 	RecvPropInt(RECVINFO(m_eMatchEvent)),
 	RecvPropInt(RECVINFO(m_eMatchSubEvent)),
+	RecvPropInt(RECVINFO(m_eMatchSubSubEvent)),
 	RecvPropInt(RECVINFO(m_eBallState)),
 END_RECV_TABLE()
 

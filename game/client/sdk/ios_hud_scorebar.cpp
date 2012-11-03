@@ -70,8 +70,10 @@ private:
 	CUtlVector<Event_t> m_vEventLists[2];
 	Label *m_pPlayers[2];
 	Label *m_pSubPlayers[2];
+	Label *m_pSubSubPlayers[2];
 	Label *m_pEvent;
 	Label *m_pSubEvent;
+	Label *m_pSubSubEvent;
 	Label *m_pImportantEvent;
 	Panel *m_pMainBars[2];
 	Panel *m_pMainBarBG;
@@ -161,6 +163,7 @@ CHudScorebar::CHudScorebar( const char *pElementName ) : BaseClass(NULL, "HudSco
 
 		m_pPlayers[i] = new Label(this, "", "");
 		m_pSubPlayers[i] = new Label(this, "", "");
+		m_pSubSubPlayers[i] = new Label(this, "", "");
 
 		m_pTeamNames[i] = new Label(m_pMainBars[i], "", "");
 		m_pTeamGoals[i] = new Label(m_pMainBars[i], "", "");
@@ -180,6 +183,7 @@ CHudScorebar::CHudScorebar( const char *pElementName ) : BaseClass(NULL, "HudSco
 
 	m_pEvent = new Label(this, "", "");
 	m_pSubEvent = new Label(this, "", "");
+	m_pSubSubEvent = new Label(this, "", "");
 	m_pImportantEvent = new Label(this, "", "");
 
 	m_pState = new Label(m_pCenterBar, "", "");
@@ -243,6 +247,11 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 	m_pSubEvent->SetContentAlignment(Label::a_center);
 	m_pSubEvent->SetFont(pScheme->GetFont("IOSSubEvent"));
 	m_pSubEvent->SetFgColor(Color(255, 255, 255, 255));
+
+	m_pSubSubEvent->SetBounds(GetWide() / 2 - EVENT_WIDTH / 2, MAINBAR_MARGIN + MAINBAR_HEIGHT + CENTERBAR_OFFSET + EVENT_MARGIN + 2 * EVENT_HEIGHT, EVENT_WIDTH, SUBEVENT_HEIGHT);
+	m_pSubSubEvent->SetContentAlignment(Label::a_center);
+	m_pSubSubEvent->SetFont(pScheme->GetFont("IOSSubEvent"));
+	m_pSubSubEvent->SetFgColor(Color(255, 255, 255, 255));
 
 	m_pImportantEvent->SetBounds(0, GetTall() / 2 - IMPORTANTEVENT_HEIGHT / 2, GetWide(), IMPORTANTEVENT_HEIGHT);
 	m_pImportantEvent->SetContentAlignment(Label::a_center);
@@ -309,6 +318,11 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 		m_pSubPlayers[i]->SetContentAlignment(Label::a_center);
 		m_pSubPlayers[i]->SetFont(pScheme->GetFont("IOSSubEventPlayer"));
 		m_pSubPlayers[i]->SetFgColor(Color(255, 255, 255, 255));
+
+		m_pSubSubPlayers[i]->SetBounds(m_pMainBars[i]->GetX(), MAINBAR_MARGIN + MAINBAR_HEIGHT + CENTERBAR_OFFSET + EVENT_MARGIN + 2 * EVENT_HEIGHT, MAINBAR_WIDTH, SUBEVENT_HEIGHT);
+		m_pSubSubPlayers[i]->SetContentAlignment(Label::a_center);
+		m_pSubSubPlayers[i]->SetFont(pScheme->GetFont("IOSSubEventPlayer"));
+		m_pSubSubPlayers[i]->SetFgColor(Color(255, 255, 255, 255));
 
 		m_pPenaltyPanels[i]->SetBounds(m_pMainBars[i]->GetX() + m_pTeamNames[i]->GetX(), MAINBAR_MARGIN + MAINBAR_HEIGHT + CENTERBAR_OFFSET + EVENT_MARGIN + EVENT_HEIGHT + PENALTYPANEL_TOPMARGIN, m_pTeamNames[i]->GetWide(), PENALTYPANEL_HEIGHT);
 		m_pPenaltyPanels[i]->SetBgColor(Color(0, 0, 0, 255));
@@ -468,6 +482,10 @@ void CHudScorebar::OnThink( void )
 			int subEventTeamIndex = clamp(pBall->m_nMatchSubEventTeam - TEAM_A, 0, 1);
 			m_pSubEvent->SetFgColor(GetGlobalTeam(TEAM_A + subEventTeamIndex)->Get_HudKitColor());
 
+			m_pSubSubEvent->SetText(g_szMatchEventNames[pBall->m_eMatchSubSubEvent]);
+			int subSubEventTeamIndex = clamp(pBall->m_nMatchSubSubEventTeam - TEAM_A, 0, 1);
+			m_pSubSubEvent->SetFgColor(GetGlobalTeam(TEAM_A + subSubEventTeamIndex)->Get_HudKitColor());
+
 			if (pBall->m_eMatchEvent != m_eCurMatchEvent)
 			{
 				switch (pBall->m_eMatchEvent)
@@ -529,6 +547,18 @@ void CHudScorebar::OnThink( void )
 				{
 					m_pSubPlayers[0]->SetText("");
 					m_pSubPlayers[1]->SetText("");
+				}
+
+				if (pBall->m_pMatchSubSubEventPlayer)
+				{
+					m_pSubSubPlayers[subSubEventTeamIndex]->SetText(pBall->m_pMatchSubSubEventPlayer->GetPlayerName());
+					m_pSubSubPlayers[subSubEventTeamIndex]->SetFgColor(GetGlobalTeam(TEAM_A + subSubEventTeamIndex)->Get_HudKitColor());
+					m_pSubSubPlayers[1 - subSubEventTeamIndex]->SetText("");
+				}
+				else
+				{
+					m_pSubSubPlayers[0]->SetText("");
+					m_pSubSubPlayers[1]->SetText("");
 				}
 			}
 		}
