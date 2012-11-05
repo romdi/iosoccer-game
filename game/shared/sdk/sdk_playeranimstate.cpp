@@ -400,10 +400,10 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 	case PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD:
 		{
 			// HACKHACK: Side effects?
-			if (GetSDKPlayer()->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_SLIDE)
-			{
-				return;
-			}
+			//if (GetSDKPlayer()->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_SLIDE)
+			//{
+			//	return;
+			//}
 
 			m_flPrimaryActionSequenceCycle = 0;
 			m_iPrimaryActionSequence = CalcPrimaryActionSequence( event );

@@ -15,6 +15,7 @@
 #include "utlvector.h"
 #include "client_thinklist.h"
 #include "ios_teamkit_parse.h"
+#include "c_sdk_player.h"
 
 class C_BasePlayer;
 
@@ -48,6 +49,8 @@ public:
 	virtual int		Get_Ping( void );
 
 	virtual int		Get_Possession();
+
+	virtual C_SDKPlayer	*Get_Captain();
 
 	// Player Handling
 	virtual int		Get_Number_Players( void );
@@ -84,6 +87,7 @@ public:
 	int		m_nPenaltyGoals;
 	int		m_nPenaltyGoalBits;
 	int		m_nPenaltyRound;
+	CHandle<C_SDKPlayer> m_pCaptain;
 
 	// Data for the scoreboard
 	int		m_iPing;

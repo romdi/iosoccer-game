@@ -13,6 +13,7 @@
 
 #include "shareddefs.h"
 #include "utlvector.h"
+#include "sdk_player.h"
 
 class CBasePlayer;
 class CTeamSpawnPoint;
@@ -56,6 +57,9 @@ public:
 	virtual void RemovePlayer( CBasePlayer *pPlayer );
 	virtual int  GetNumPlayers( void );
 	virtual CBasePlayer *GetPlayer( int iIndex );
+	virtual void SetCaptain(CSDKPlayer *pCaptain) { m_pCaptain = pCaptain; }
+	virtual CSDKPlayer *GetCaptain() { return m_pCaptain; }
+	virtual void FindNewCaptain();
 
 	//-----------------------------------------------------------------------------
 	// Scoring
@@ -77,6 +81,7 @@ public:
 	CNetworkVar( int, m_nPenaltyGoals );
 	CNetworkVar( int, m_nPenaltyGoalBits );
 	CNetworkVar( int, m_nPenaltyRound );
+	CNetworkHandle( CSDKPlayer, m_pCaptain );
 	int		m_iDeaths;
 
 	// Spawnpoints

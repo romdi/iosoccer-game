@@ -161,6 +161,8 @@ ConVar sv_ball_update_physics("sv_ball_update_physics", "0", FCVAR_NOTIFY);
 
 ConVar sv_ball_stats_pass_dist("sv_ball_stats_pass_dist", "300", FCVAR_NOTIFY);
 
+ConVar sv_ball_velocity_coeff("sv_ball_velocity_coeff", "1.0", FCVAR_NOTIFY);
+
 
 CBall *CreateBall(const Vector &pos, CSDKPlayer *pCreator)
 {
@@ -182,6 +184,9 @@ void CC_CreatePlayerBall(const CCommand &args)
 	if (!CSDKPlayer::IsOnField(pPl))
 		return;
 
+	if (pPl->GetFlags() & FL_REMOTECONTROLLED)
+		return;
+
 	Vector pos = pPl->GetLocalOrigin() + VEC_VIEW + pPl->EyeDirection3D() * 150;
 	pos.z = max(pos.z, SDKGameRules()->m_vKickOff.GetZ());
 
@@ -189,7 +194,7 @@ void CC_CreatePlayerBall(const CCommand &args)
 	{
 		if (pPl->GetPlayerBall()->GetHoldingPlayer())
 		{
-			pPl->GetPlayerBall()->RemoveFromPlayerHands(pPl->GetPlayerBall()->GetHoldingPlayer());
+			//pPl->GetPlayerBall()->RemoveFromPlayerHands(pPl->GetPlayerBall()->GetHoldingPlayer());
 			pPl->GetPlayerBall()->State_Transition(BALL_NORMAL);
 		}
 
@@ -554,6 +559,7 @@ void CBall::SetMatchEvent(match_event_t matchEvent, int team, bool forceUpdate)
 	m_eMatchEvent = matchEvent;
 	m_pMatchEventPlayer = NULL;
 	m_nMatchEventTeam = team;
+	m_flLastMatchEventSetTime = gpGlobals->curtime;
 }
 
 void CBall::SetMatchEventPlayer(CSDKPlayer *pPlayer, bool forceUpdate)
@@ -681,7 +687,7 @@ void CBall::SetPos(Vector pos)
 
 void CBall::SetVel(Vector vel, float spinCoeff, body_part_t bodyPart, bool isDeflection, bool markOffsidePlayers, bool checkMinShotStrength)
 {
-	m_vVel = vel;
+	m_vVel = vel * sv_ball_velocity_coeff.GetFloat();
 
 	float length = m_vVel.Length();
 	m_vVel.NormalizeInPlace();
@@ -763,7 +769,7 @@ void CBall::State_Enter(ball_state_t newState, bool cancelQueuedState)
 		(this->*m_pCurStateInfo->pfnEnterState)();
 	}
 
-	State_Think();
+	//State_Think();
 }
 
 void CBall::State_Leave(ball_state_t newState)
@@ -951,10 +957,16 @@ void CBall::State_NORMAL_Think()
 
 		if (DoBodyPartAction())
 		{
-			if (m_pPl && LastInfo(false)->m_eBodyPart != BODY_PART_HANDS)
+			if (m_pPl && (!LastInfo(false) || LastInfo(false)->m_eBodyPart != BODY_PART_HANDS))
 			{
-				SetMatchEvent(MATCH_EVENT_NONE, m_pPl->GetTeamNumber(), false);
-				SetMatchEventPlayer(m_pPl, false);
+				if ((m_eMatchEvent != MATCH_EVENT_PASS
+					&& m_eMatchEvent != MATCH_EVENT_INTERCEPTION
+					&& m_eMatchEvent != MATCH_EVENT_KEEPERSAVE)
+					|| gpGlobals->curtime >= m_flLastMatchEventSetTime + 0.5f)
+				{
+					SetMatchEvent(MATCH_EVENT_DRIBBLE, m_pPl->GetTeamNumber(), false);
+					SetMatchEventPlayer(m_pPl, false);
+				}
 			}
 			//m_pMatchEventPlayer = m_pPl;
 			//m_nMatchEventTeam = m_pPl->GetTeamNumber();
@@ -2051,8 +2063,8 @@ bool CBall::CheckKeeperCatch()
 		}
 	}
 
-	SetMatchEvent(MATCH_EVENT_KEEPERSAVE, m_pPl->GetTeamNumber(), false);
-	SetMatchEventPlayer(m_pPl, false);
+	//SetMatchEvent(MATCH_EVENT_KEEPERSAVE, m_pPl->GetTeamNumber(), false);
+	//SetMatchEventPlayer(m_pPl, false);
 
 	if (gpGlobals->curtime < m_flGlobalNextShot || m_bHasQueuedState)
 	{
@@ -2078,11 +2090,12 @@ bool CBall::CheckKeeperCatch()
 			vel = dir * m_vVel.Length2D() * sv_ball_keeperdeflectioncoeff.GetFloat();
 		}
 
-		SetVel(vel, -1, BODY_PART_HANDS, true, true, false);
+		SetVel(vel, -1, BODY_PART_HANDS, false, true, false);
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
 	}
 	else
 	{
+		SetVel(vec3_origin, -1, BODY_PART_HANDS, true, false, false);
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);		
 		State_Transition(BALL_KEEPERHANDS);
 	}
@@ -2315,7 +2328,7 @@ bool CBall::DoHeader()
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEADER);
 	}
 
-	SetVel(vel, 0, BODY_PART_HEAD, false, true, true);
+	SetVel(m_vPlForwardVel2D + vel, 0, BODY_PART_HEAD, false, true, true);
 
 	return true;
 }
@@ -2617,20 +2630,39 @@ void CBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart)
 	else
 	{
 		BallTouchInfo *pInfo = LastInfo(true);
-		if (pInfo && CSDKPlayer::IsOnField(pInfo->m_pPl) && (m_vPos - pInfo->m_vBallPos).Length2D() > sv_ball_stats_pass_dist.GetInt())
+		if (pInfo && CSDKPlayer::IsOnField(pInfo->m_pPl) && pInfo->m_pPl != pPl && (m_vPos - pInfo->m_vBallPos).Length2D() > sv_ball_stats_pass_dist.GetInt())
 		{ 
 			pInfo->m_pPl->SetPasses(pInfo->m_pPl->GetPasses() + 1);
 
 			if (pInfo->m_nTeam == pPl->GetTeamNumber())
+			{
 				pInfo->m_pPl->SetPassesCompleted(pInfo->m_pPl->GetPassesCompleted() + 1);
+				SetMatchEvent(MATCH_EVENT_PASS, m_pPl->GetTeamNumber(), false);
+				SetMatchEventPlayer(m_pPl, false);
+			}
 			else
-				pPl->SetInterceptions(pPl->GetInterceptions() + 1);
+			{
+				if (pPl->GetTeamPosType() == GK && bodyPart == BODY_PART_HANDS)
+				{
+					pPl->SetKeeperSaves(pPl->GetKeeperSaves() + 1);
+					SetMatchEvent(MATCH_EVENT_KEEPERSAVE, m_pPl->GetTeamNumber(), false);
+
+				}
+				else
+				{
+					pPl->SetInterceptions(pPl->GetInterceptions() + 1);
+					SetMatchEvent(MATCH_EVENT_INTERCEPTION, m_pPl->GetTeamNumber(), false);
+				}
+				SetMatchEventPlayer(m_pPl, false);
+			}
 		}
 
 		UpdatePossession(pPl);
 		BallTouchInfo info = { pPl, pPl->GetTeamNumber(), isShot, bodyPart, State_Get(), m_vPos, m_vVel };
 		m_Touches.AddToTail(info);
 	}
+
+	//DevMsg("touches: %d\n", m_Touches.Count());
 	
 	if (pPl->IsOffside())
 	{
@@ -2840,6 +2872,7 @@ void CBall::ResetMatch()
 	m_pPossessingPl = NULL;
 	m_nPossessingTeam = TEAM_INVALID;
 	m_flPossessionStart = -1;
+	m_flLastMatchEventSetTime = -1;
 
 	GetGlobalTeam(TEAM_A)->ResetStats();
 	GetGlobalTeam(TEAM_B)->ResetStats();

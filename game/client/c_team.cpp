@@ -52,6 +52,7 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_Team, DT_Team, CTeam)
 	RecvPropVector(RECVINFO(m_vPenBoxMax)),
 	RecvPropInt(RECVINFO(m_nForward)),
 	RecvPropInt(RECVINFO(m_nRight)),
+	RecvPropEHandle(RECVINFO(m_pCaptain)),
 	
 	RecvPropArray2( 
 		RecvProxyArrayLength_PlayerArray,
@@ -234,6 +235,11 @@ int C_Team::Get_Ping( void )
 int C_Team::Get_Possession()
 {
 	return m_nPossession;
+}
+
+C_SDKPlayer *C_Team::Get_Captain()
+{
+	return m_pCaptain;
 }
 
 //-----------------------------------------------------------------------------

@@ -440,7 +440,7 @@ void CHudScorebar::OnThink( void )
 	//	}
 	//}
 
-	int nTime = SDKGameRules()->GetMatchDisplayTimeSeconds();
+	int nTime = SDKGameRules()->GetMatchDisplayTimeSeconds(true);
 	nTime = abs(nTime);
 
 	m_pState->SetText(g_szLongStateNames[SDKGameRules()->State_Get()]);
@@ -488,19 +488,35 @@ void CHudScorebar::OnThink( void )
 
 			if (pBall->m_eMatchEvent != m_eCurMatchEvent)
 			{
+				//switch (pBall->m_eMatchEvent)
+				//{
+				//case MATCH_EVENT_GOAL:
+				//case MATCH_EVENT_OWNGOAL:
+				//case MATCH_EVENT_HALFTIME:
+				//case MATCH_EVENT_FINAL_WHISTLE:
+				//	m_eCurMatchEvent = pBall->m_eMatchEvent;
+				//	m_flImportantEventStart = gpGlobals->curtime;
+				//	m_pImportantEvent->SetText(g_szMatchEventNames[pBall->m_eMatchEvent]);
+				//	break;
+				//default:
+				//	m_flImportantEventStart = -1;
+				//	m_pImportantEvent->SetText("");
+				//	break;
+				//}
+
 				switch (pBall->m_eMatchEvent)
 				{
-				case MATCH_EVENT_GOAL:
-				case MATCH_EVENT_OWNGOAL:
-				case MATCH_EVENT_HALFTIME:
-				case MATCH_EVENT_FINAL_WHISTLE:
+				case MATCH_EVENT_DRIBBLE:
+				case MATCH_EVENT_PASS:
+				case MATCH_EVENT_INTERCEPTION:
+				case MATCH_EVENT_KEEPERSAVE:
+					m_flImportantEventStart = -1;
+					m_pImportantEvent->SetText("");
+					break;
+				default:
 					m_eCurMatchEvent = pBall->m_eMatchEvent;
 					m_flImportantEventStart = gpGlobals->curtime;
 					m_pImportantEvent->SetText(g_szMatchEventNames[pBall->m_eMatchEvent]);
-					break;
-				default:
-					m_flImportantEventStart = -1;
-					m_pImportantEvent->SetText("");
 					break;
 				}
 
@@ -509,7 +525,7 @@ void CHudScorebar::OnThink( void )
 			}
 			else
 			{
-				if (m_eCurMatchEvent != MATCH_EVENT_NONE && m_flImportantEventStart != -1 && gpGlobals->curtime >= m_flImportantEventStart + 1)
+				if (m_eCurMatchEvent != MATCH_EVENT_NONE && m_flImportantEventStart != -1 && gpGlobals->curtime >= m_flImportantEventStart + 0.5f)
 				{
 					m_flImportantEventStart = -1;
 					m_pImportantEvent->SetText("");

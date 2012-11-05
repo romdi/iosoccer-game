@@ -49,7 +49,6 @@ extern ConVar
 	mp_timelimit_halftime, 
 	mp_timelimit_warmup,
 	mp_timelimit_penalties_intermission,
-	mp_timelimit_penalties,
 	mp_timelimit_cooldown,
 	mp_shield_throwin_radius,
 	mp_shield_freekick_radius,
@@ -407,7 +406,7 @@ public:
 
 	bool IsIntermissionState();
 	int GetShieldRadius();
-	int GetMatchDisplayTimeSeconds();
+	int GetMatchDisplayTimeSeconds(bool clamped = false);
 
 	CNetworkVar(int, m_nShieldType);
 	CNetworkVar(int, m_nShieldTeam);

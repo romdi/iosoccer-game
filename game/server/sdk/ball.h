@@ -291,6 +291,8 @@ private:
 	float			m_flShotStart;
 
 	bool			m_bPenaltyTakerStartedMoving;
+
+	float			m_flLastMatchEventSetTime;
 };
 
 #endif

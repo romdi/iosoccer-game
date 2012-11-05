@@ -56,6 +56,7 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CTeam, DT_Team)
 	SendPropVector(SENDINFO(m_vPenBoxMax), -1, SPROP_COORD),
 	SendPropInt(SENDINFO(m_nForward)),
 	SendPropInt(SENDINFO(m_nRight)),
+	SendPropEHandle(SENDINFO(m_pCaptain)),
 
 	SendPropArray2( 
 		SendProxyArrayLength_PlayerArray,
@@ -95,6 +96,7 @@ CTeam::CTeam( void )
 {
 	memset( m_szServerKitName.GetForModify(), 0, sizeof(m_szServerKitName) );
 	ResetStats();
+	SetCaptain(NULL);
 }
 
 //-----------------------------------------------------------------------------
@@ -110,6 +112,7 @@ CTeam::~CTeam( void )
 //-----------------------------------------------------------------------------
 void CTeam::Think( void )
 {
+	DevMsg("foo\n");
 }
 
 //-----------------------------------------------------------------------------
@@ -309,4 +312,26 @@ void CTeam::ResetStats()
 	m_flPossessionTime = 0;
 	m_nPossession = 0;
 	m_nGoals = 0;
+}
+
+void CTeam::FindNewCaptain()
+{
+	if (GetTeamNumber() != TEAM_A && GetTeamNumber() != TEAM_B)
+		return;
+
+	SetCaptain(NULL);
+
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+
+		if (!CSDKPlayer::IsOnField(pPl) || pPl->GetTeam() != this)
+			continue;
+
+		if (pPl->GetTeamPosType() == GK)
+		{
+			SetCaptain(pPl);
+			break;
+		}
+	}
 }

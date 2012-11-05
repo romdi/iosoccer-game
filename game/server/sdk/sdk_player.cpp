@@ -253,6 +253,7 @@ CSDKPlayer::CSDKPlayer()
 	m_pCurStateInfo = NULL;	// no state yet
 	m_bShotButtonsReleased = false;
 	m_nTeamToJoin = TEAM_INVALID;
+	m_nTeamPosIndexToJoin = 0;
 	//m_flNextJoin = gpGlobals->curtime;
 	//m_bIsCardBanned = false;
 	m_nTeamPosIndex = 0;
@@ -606,6 +607,14 @@ void CSDKPlayer::ChangeTeam( int iTeamNum )
 		if (iOldTeam != TEAM_A && iOldTeam != TEAM_B)
 			State_Transition( STATE_ACTIVE );
 	}
+
+	//if (GetTeamNumber() == TEAM_SPECTATOR && GetTeam()->GetCaptain() == this)
+	//	GetGlobalTeam(iOldTeam)->FindNewCaptain();
+	//else if ((GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B) && GetTeamPosType() == GK)
+	//	GetTeam()->FindNewCaptain();
+
+	GetGlobalTeam(TEAM_A)->FindNewCaptain();
+	GetGlobalTeam(TEAM_B)->FindNewCaptain();
 
 	g_pPlayerResource->UpdatePlayerData();
 }
@@ -1115,6 +1124,13 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 	}
 	else if (!Q_stricmp(args[0], "rotatepos"))
 	{
+		if (args.ArgC() < 3)
+		{
+			Warning("need team and pos index\n");
+			return false;
+		}
+
+
 
 		return true;
 	}
@@ -1634,6 +1650,16 @@ CSDKPlayer *CSDKPlayer::FindClosestPlayerToSelf(bool teammatesOnly, bool forward
 	}
 
 	return pClosest;
+}
+
+ConVar mp_chat_captain_only("mp_chat_captain_only", "0", FCVAR_NOTIFY);
+
+bool CSDKPlayer::CanSpeak(bool isTeamOnly)
+{
+	if (!SDKGameRules()->IsIntermissionState() && !isTeamOnly && mp_chat_captain_only.GetBool() && GetTeam()->GetCaptain() != this)
+		return false;
+
+	return true;
 }
 
 CUtlVector<CPlayerPersistentData *> CPlayerPersistentData::m_PlayerPersistentData;

@@ -1017,6 +1017,8 @@ void CSDKGameRules::ClientDisconnected( edict_t *pClient )
 	if (pPl->GetPlayerBall())
 		pPl->GetPlayerBall()->RemovePlayerBall();
 
+	pPl->GetTeam()->FindNewCaptain();
+
 	BaseClass::ClientDisconnected( pClient );
 }
 
@@ -1133,7 +1135,6 @@ ConVar mp_timelimit_cooldown( "mp_timelimit_cooldown", "0.5", FCVAR_NOTIFY|FCVAR
 ConVar mp_timelimit_halftime( "mp_timelimit_halftime", "0.5", FCVAR_NOTIFY|FCVAR_REPLICATED, "half time duration" );
 ConVar mp_timelimit_extratime_halftime( "mp_timelimit_extratime_halftime", "0.5", FCVAR_NOTIFY|FCVAR_REPLICATED, "extra time halftime duration" );
 ConVar mp_timelimit_extratime_intermission( "mp_timelimit_extratime_intermission", "0.5", FCVAR_NOTIFY|FCVAR_REPLICATED, "time before extra time start" );
-ConVar mp_timelimit_penalties( "mp_timelimit_penalties", "3", FCVAR_NOTIFY|FCVAR_REPLICATED, "limit for penalties duration" );
 ConVar mp_timelimit_penalties_intermission( "mp_timelimit_penalties_intermission", "0.5", FCVAR_NOTIFY|FCVAR_REPLICATED, "time before penalties start" );
 ConVar mp_extratime( "mp_extratime", "1", FCVAR_NOTIFY|FCVAR_REPLICATED );
 ConVar mp_penalties( "mp_penalties", "1", FCVAR_NOTIFY|FCVAR_REPLICATED );
@@ -1268,7 +1269,7 @@ CSDKGameRulesStateInfo* CSDKGameRules::State_LookupInfo( match_state_t state )
 		{ MATCH_EXTRATIME_HALFTIME,			"MATCH_EXTRATIME_HALFTIME",			&CSDKGameRules::State_EXTRATIME_HALFTIME_Enter,		&CSDKGameRules::State_EXTRATIME_HALFTIME_Think,		&CSDKGameRules::State_EXTRATIME_HALFTIME_Leave,		&mp_timelimit_extratime_halftime, 1 },
 		{ MATCH_EXTRATIME_SECOND_HALF,		"MATCH_EXTRATIME_SECOND_HALF",		&CSDKGameRules::State_EXTRATIME_SECOND_HALF_Enter,	&CSDKGameRules::State_EXTRATIME_SECOND_HALF_Think,	&CSDKGameRules::State_EXTRATIME_SECOND_HALF_Leave,	&mp_timelimit_match, 6 },
 		{ MATCH_PENALTIES_INTERMISSION,		"MATCH_PENALTIES_INTERMISSION",		&CSDKGameRules::State_PENALTIES_INTERMISSION_Enter, &CSDKGameRules::State_PENALTIES_INTERMISSION_Think,	&CSDKGameRules::State_PENALTIES_INTERMISSION_Leave,	&mp_timelimit_penalties_intermission, 1 },
-		{ MATCH_PENALTIES,					"MATCH_PENALTIES",					&CSDKGameRules::State_PENALTIES_Enter,				&CSDKGameRules::State_PENALTIES_Think,				&CSDKGameRules::State_PENALTIES_Leave,				&mp_timelimit_penalties, 1 },
+		{ MATCH_PENALTIES,					"MATCH_PENALTIES",					&CSDKGameRules::State_PENALTIES_Enter,				&CSDKGameRules::State_PENALTIES_Think,				&CSDKGameRules::State_PENALTIES_Leave,				&mp_timelimit_match, 3 },
 		{ MATCH_COOLDOWN,					"MATCH_COOLDOWN",					&CSDKGameRules::State_COOLDOWN_Enter,				&CSDKGameRules::State_COOLDOWN_Think,				&CSDKGameRules::State_COOLDOWN_Leave,				&mp_timelimit_cooldown, 1 },
 	};
 
@@ -2033,7 +2034,7 @@ int CSDKGameRules::GetShieldRadius()
 	}
 }
 
-int CSDKGameRules::GetMatchDisplayTimeSeconds()
+int CSDKGameRules::GetMatchDisplayTimeSeconds(bool clamped /*= false*/)
 {
 	float flTime = gpGlobals->curtime - SDKGameRules()->m_flStateEnterTime - SDKGameRules()->m_flInjuryTime;
 	if (SDKGameRules()->m_flInjuryTimeStart != -1)
@@ -2042,21 +2043,34 @@ int CSDKGameRules::GetMatchDisplayTimeSeconds()
 
 	switch ( SDKGameRules()->State_Get() )
 	{
+	case MATCH_PENALTIES:
+		nTime = (int)(flTime * (90.0f / mp_timelimit_match.GetFloat())) + (90 + 30) * 60;
+		if (clamped)
+			nTime = min(150 * 60, nTime);
+		break;
 	case MATCH_EXTRATIME_SECOND_HALF:
 	case MATCH_EXTRATIME_SECOND_HALF_INJURY_TIME:
-		nTime = min(120 * 60, (int)(flTime * (90.0f / mp_timelimit_match.GetFloat())) + (90 + 15) * 60);
+		nTime = (int)(flTime * (90.0f / mp_timelimit_match.GetFloat())) + (90 + 15) * 60;
+		if (clamped)
+			nTime = min(120 * 60, nTime);
 		break;
 	case MATCH_EXTRATIME_FIRST_HALF:
 	case MATCH_EXTRATIME_FIRST_HALF_INJURY_TIME:
-		nTime = min(105 * 60, (int)(flTime * (90.0f / mp_timelimit_match.GetFloat())) + 90 * 60);
+		nTime = (int)(flTime * (90.0f / mp_timelimit_match.GetFloat())) + 90 * 60;
+		if (clamped)
+			nTime = min(105 * 60, nTime);
 		break;
 	case MATCH_SECOND_HALF:
 	case MATCH_SECOND_HALF_INJURY_TIME:
-		nTime = min(90 * 60, (int)(flTime * (90.0f / mp_timelimit_match.GetFloat())) + 45 * 60);
+		nTime = (int)(flTime * (90.0f / mp_timelimit_match.GetFloat())) + 45 * 60;
+		if (clamped)
+			nTime = min(90 * 60, nTime);
 		break;
 	case MATCH_FIRST_HALF:
 	case MATCH_FIRST_HALF_INJURY_TIME:
-		nTime = min(45 * 60, (int)(flTime * (90.0f / mp_timelimit_match.GetFloat())));
+		nTime = (int)(flTime * (90.0f / mp_timelimit_match.GetFloat()));
+		if (clamped)
+			nTime = min(45 * 60, nTime);
 		break;
 	case MATCH_WARMUP:
 		nTime = (int)(flTime - mp_timelimit_warmup.GetFloat() * 60);
@@ -2072,9 +2086,6 @@ int CSDKGameRules::GetMatchDisplayTimeSeconds()
 		break;
 	case MATCH_PENALTIES_INTERMISSION:
 		nTime = (int)(flTime - mp_timelimit_penalties_intermission.GetFloat() * 60);
-		break;
-	case MATCH_PENALTIES:
-		nTime = (int)(flTime - mp_timelimit_penalties.GetFloat() * 60);
 		break;
 	case MATCH_COOLDOWN:
 		nTime = (int)(flTime - mp_timelimit_cooldown.GetFloat() * 60);

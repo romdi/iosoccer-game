@@ -198,6 +198,8 @@ public:
 	virtual const Vector	GetPlayerMins( void ) const; // uses local player
 	virtual const Vector	GetPlayerMaxs( void ) const; // uses local player
 
+	virtual bool		CanSpeak(bool isTeamOnly);
+
 private:
 	//ios bool SelectSpawnSpot( const char *pEntClassName, CBaseEntity* &pSpot );
 
@@ -465,6 +467,7 @@ public:
 	void				ResetShotCharging();
 
 	int					m_nTeamToJoin;
+	int					m_nTeamPosIndexToJoin;
 
 	int					m_ePenaltyState;
 	void				SetPlayerBall(CBall *pPlayerBall) { m_pPlayerBall = pPlayerBall; }

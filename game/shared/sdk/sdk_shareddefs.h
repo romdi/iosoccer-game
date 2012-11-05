@@ -251,10 +251,13 @@ enum match_event_t
 	MATCH_EVENT_DOUBLETOUCH,
 	MATCH_EVENT_HALFTIME,
 	MATCH_EVENT_KEEPERSAVE,
+	MATCH_EVENT_DRIBBLE,
+	MATCH_EVENT_PASS,
+	MATCH_EVENT_INTERCEPTION,
 	NUM_MATCH_EVENTS
 };
 
-static const char *g_szMatchEventNames[32] =
+static const char g_szMatchEventNames[NUM_MATCH_EVENTS][32] =
 {
 	"",
 	"GOAL",
@@ -279,7 +282,9 @@ static const char *g_szMatchEventNames[32] =
 	"DOUBLE TOUCH",
 	"HALF-TIME",
 	"SAVE",
-	NULL
+	"DRIBBLE",
+	"PASS",
+	"INTERCEPTION"
 };
 
 enum ball_state_t

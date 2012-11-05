@@ -55,7 +55,7 @@ enum { TEAMCREST_SIZE = 48, TEAMCREST_VMARGIN = 7, TEAMCREST_HOFFSET = 240, TEAM
 enum { PLAYERLIST_HEIGHT = 330, PLAYERLIST_BOTTOMMARGIN = 10, PLAYERLISTDIVIDER_WIDTH = 8 };
 enum { STATBUTTON_WIDTH = 120, STATBUTTON_HEIGHT = 30, STATBUTTON_HMARGIN = 5, STATBUTTON_VMARGIN = 30 };
 enum { EXTRAINFO_HEIGHT = 275, EXTRAINFO_MARGIN = 5 };
-enum { SPECLIST_HEIGHT = 30, SPECLIST_PADDING = 5, SPECNAME_WIDTH = 100, SPECTEXT_WIDTH = 100, SPECTEXT_MARGIN = 5, SPECBUTTON_WIDTH = 90, SPECBUTTON_HMARGIN = 5, SPECBUTTON_VMARGIN = 3 };
+enum { SPECLIST_HEIGHT = 30, SPECLIST_PADDING = 5, SPECNAME_WIDTH = 100, SPECTEXT_WIDTH = 70, SPECTEXT_MARGIN = 5, SPECBUTTON_WIDTH = 90, SPECBUTTON_HMARGIN = 5, SPECBUTTON_VMARGIN = 3 };
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -138,6 +138,9 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Editabl
 	m_pBecomeCaptain = new Button(m_pStatButtonInnerContainer, "BecomeCaptain", "Become Captain", this, "becomecaptain");
 	m_pBecomeCaptain->SetVisible(false);
 
+	m_pToggleMenu = new Button(m_pStatButtonInnerContainer, "ToggleMenu", "Captain Menu", this, "togglemenu");
+	m_pToggleMenu->SetVisible(false);
+
 	m_pFormationList = new ComboBox(m_pStatButtonInnerContainer, "", 0, false);
 
 	m_nCurStat = DEFAULT_STATS;
@@ -147,6 +150,8 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Editabl
 	m_nSelectedPlayerIndex = -2;
 
 	m_bIsStatsMenuEnabled = true;
+
+	m_bShowCaptainMenu = false;
 
 	MakePopup();
 }
@@ -288,6 +293,12 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 	m_pBecomeCaptain->SetPaintBorderEnabled(false);
 	m_pBecomeCaptain->SetCursor(dc_hand);
 
+	m_pToggleMenu->SetBounds(STATBUTTON_HMARGIN, 2 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
+	m_pToggleMenu->SetFont(m_pScheme->GetFont("StatButton"));
+	m_pToggleMenu->SetContentAlignment(Label::a_center);
+	m_pToggleMenu->SetPaintBorderEnabled(false);
+	m_pToggleMenu->SetCursor(dc_hand);
+
 	m_pFormationList->SetBounds(STATBUTTON_HMARGIN, 4 * STATBUTTON_HEIGHT + STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
 	m_pFormationList->SetFont(m_pScheme->GetFont("StatButton"));
 	//m_pFormationList->SetPaintBorderEnabled(false);
@@ -310,7 +321,7 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 	m_pSpectatorFontList[2] = m_pScheme->GetFont("SpectatorListSmaller");
 	m_pSpectatorFontList[3] = m_pScheme->GetFont("SpectatorListSmallest");
 
-	m_pSpectatorNames->SetBounds(SPECLIST_PADDING + SPECTEXT_WIDTH + SPECTEXT_MARGIN, 0, m_pSpectatorContainer->GetWide() - (SPECLIST_PADDING + SPECTEXT_WIDTH), SPECLIST_HEIGHT);
+	m_pSpectatorNames->SetBounds(SPECLIST_PADDING + SPECTEXT_WIDTH + SPECTEXT_MARGIN, 0, m_pSpectatorContainer->GetWide() - (SPECLIST_PADDING + SPECTEXT_WIDTH + SPECTEXT_MARGIN), SPECLIST_HEIGHT);
 	
 	m_pSpectatorText->SetBounds(SPECLIST_PADDING, 0, SPECTEXT_WIDTH, SPECLIST_HEIGHT);
 	m_pSpectatorText->SetFont(m_pScheme->GetFont("SpectatorListNormal"));
@@ -495,6 +506,19 @@ void CClientScoreBoardDialog::Update( void )
 		kv->deleteThis();
 	}
 
+	C_SDKPlayer *pLocal = C_SDKPlayer::GetLocalSDKPlayer();
+
+	if (pLocal->GetTeam()->Get_Captain() == pLocal && !m_pToggleMenu->IsVisible())
+	{
+		m_pToggleMenu->SetVisible(true);
+	}
+	else if (pLocal->GetTeam()->Get_Captain() != pLocal && m_pToggleMenu->IsVisible())
+	{
+		m_bShowCaptainMenu = false;
+		ToggleMenu();
+		m_pToggleMenu->SetVisible(false);
+	}
+
 	m_fNextUpdateTime = gpGlobals->curtime + 0.25f; 
 }
 
@@ -655,9 +679,9 @@ void CClientScoreBoardDialog::UpdatePlayerInfo()
 	char spectatorText[1024];
 
 	if (specList.Count() == 0)
-		Q_strncpy(spectatorText, "No spectators", sizeof(spectatorText));
+		Q_strncpy(spectatorText, "No specs", sizeof(spectatorText));
 	else
-		Q_snprintf(spectatorText, sizeof(spectatorText), "%d %s:", specList.Count(), (specList.Count() == 1 ? "spectator" : "spectators"));
+		Q_snprintf(spectatorText, sizeof(spectatorText), "%d %s:", specList.Count(), (specList.Count() == 1 ? "spec" : "specs"));
 
 	m_pSpectatorText->SetText(spectatorText);
 
@@ -676,39 +700,48 @@ void CClientScoreBoardDialog::UpdatePlayerInfo()
 
 	m_SpecList.CopyArray(specList.Base(), specList.Count());
 
+	int maxNameLength = MAX_PLAYER_NAME_LENGTH;
 	int totalWidth = 0;
 
-	for (int i = 0; i < specList.Count(); i++)
+	do
 	{
-		Button *pPl = (Button *)m_pSpectatorNames->GetChild(i);
+		totalWidth = 0;
 
-		char text[32];
-		Q_snprintf(text, sizeof(text), "%.7s", specList[i].playerName);
+		for (int i = 0; i < specList.Count(); i++)
+		{
+			Button *pPl = (Button *)m_pSpectatorNames->GetChild(i);
 
-		int nextJoin = gr->GetNextJoin(specList[i].playerIndex);
+			char text[MAX_PLAYER_NAME_LENGTH + 16];
+			Q_snprintf(text, sizeof(text), VarArgs("%%.%ds", clamp(maxNameLength, 1, MAX_PLAYER_NAME_LENGTH)), specList[i].playerName);
 
-		if (nextJoin > SDKGameRules()->GetMatchDisplayTimeSeconds())
-			Q_strncat(text, VarArgs(" [%d:%02d]", nextJoin / 60, nextJoin % 60), sizeof(text));
+			int nextJoin = gr->GetNextJoin(specList[i].playerIndex);
 
-		if (i < specList.Count() - 1)
-			Q_strncat(text, ", ", sizeof(text));
+			if (!SDKGameRules()->IsIntermissionState() && nextJoin > SDKGameRules()->GetMatchDisplayTimeSeconds())
+				Q_strncat(text, VarArgs(" [%d:%02d]", nextJoin / 60, nextJoin % 60), sizeof(text));
 
-		pPl->SetText(text);
-		pPl->SetCommand(VarArgs("specindex:%d", specList[i]));
-		pPl->AddActionSignalTarget(this);
-		pPl->SetBounds(totalWidth, 0, SPECNAME_WIDTH, SPECLIST_HEIGHT);
-		pPl->SetDefaultColor(gr->IsCardBanned(specList[i].playerIndex) ? Color(255, 153, 153, 255) : Color(255, 255, 255, 255), Color(0, 0, 0, 0));
-		pPl->SetFont(m_pSpectatorFontList[1]);
-		pPl->SetContentAlignment(Label::a_center);
-		pPl->SetPaintBackgroundEnabled(false);
-		pPl->SetPaintBorderEnabled(false);
+			if (i < specList.Count() - 1)
+				Q_strncat(text, ", ", sizeof(text));
 
-		int width, height;
-		pPl->GetTextImage()->GetContentSize(width, height);
-		width += 5;
-		pPl->SetWide(width);
-		totalWidth += width;
-	}
+			pPl->SetText(text);
+			pPl->SetCommand(VarArgs("specindex:%d", specList[i]));
+			pPl->AddActionSignalTarget(this);
+			pPl->SetBounds(totalWidth, 0, SPECNAME_WIDTH, SPECLIST_HEIGHT);
+			pPl->SetDefaultColor(gr->IsCardBanned(specList[i].playerIndex) ? Color(255, 153, 153, 255) : Color(255, 255, 255, 255), Color(0, 0, 0, 0));
+			pPl->SetFont(m_pSpectatorFontList[1]);
+			pPl->SetContentAlignment(Label::a_center);
+			pPl->SetPaintBackgroundEnabled(false);
+			pPl->SetPaintBorderEnabled(false);
+
+			int width, height;
+			pPl->GetTextImage()->GetContentSize(width, height);
+			width += 5;
+			pPl->SetWide(width);
+			totalWidth += width;
+		}
+
+		maxNameLength -= 1;
+
+	} while (totalWidth > m_pSpectatorNames->GetWide());
 
 	if (m_nCurSpecIndex > 0 && m_pCurSpecButton && gr->IsConnected(m_nCurSpecIndex) && gr->GetTeam(m_nCurSpecIndex) == TEAM_SPECTATOR)
 	{
@@ -905,7 +938,14 @@ bool CClientScoreBoardDialog::GetPlayerInfo(int playerIndex, KeyValues *kv)
 	kv->SetInt("posindex", gr->GetTeamPosIndex(playerIndex));
 	kv->SetInt("playerindex", playerIndex);
 	//kv->SetString("country", gr->GetCountryName(playerIndex));
-	kv->SetString("posname", g_szPosNames[(int)g_Positions[mp_maxplayers.GetInt() - 1][gr->GetTeamPosIndex(playerIndex)][POS_TYPE]]);
+
+	char *posNameFormat;
+	if (GetGlobalTeam(gr->GetTeam(playerIndex))->Get_Captain()->entindex() == playerIndex)
+		posNameFormat = "(%s)";
+	else
+		posNameFormat = "%s";
+	kv->SetString("posname", VarArgs(posNameFormat, g_szPosNames[(int)g_Positions[mp_maxplayers.GetInt() - 1][gr->GetTeamPosIndex(playerIndex)][POS_TYPE]]));
+
 	kv->SetString("name", gr->GetPlayerName( playerIndex ) );
 	kv->SetString("steamname", gr->GetSteamName( playerIndex ) );
 	kv->SetString("club", gr->GetClubName(playerIndex));
@@ -1257,8 +1297,26 @@ void CClientScoreBoardDialog::OnCommand( char const *cmd )
 
 		engine->ClientCmd(cmd);
 	}
+	else if (!Q_stricmp(cmd, "togglemenu"))
+	{
+		m_bShowCaptainMenu = !m_bShowCaptainMenu;
+		ToggleMenu();
+	}
 	else
 		BaseClass::OnCommand(cmd);
+}
+
+void CClientScoreBoardDialog::ToggleMenu()
+{
+	m_pToggleMenu->SetText(m_bShowCaptainMenu ? "Stats Menu" : "Captain Menu");
+
+	for (int i = 0; i < STAT_CATEGORY_COUNT; i++)
+	{
+		m_pStatButtons[i]->SetVisible(!m_bShowCaptainMenu);
+	}
+
+	m_pFormationList->SetVisible(m_bShowCaptainMenu);
+	m_pStatText->SetText(m_bShowCaptainMenu ? "Captain" : "Statistics");
 }
 
 void CClientScoreBoardDialog::OnItemSelected(KeyValues *data)

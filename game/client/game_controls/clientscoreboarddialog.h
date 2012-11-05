@@ -136,6 +136,8 @@ public:
 
 	virtual bool ShowAvatars() { return false; }
 
+	void ToggleMenu();
+
 	// both vgui::Frame and IViewPortPanel define these, so explicitly define them here as passthroughs to vgui
 	vgui::VPANEL GetVPanel( void ) { return BaseClass::GetVPanel(); }
   	virtual bool IsVisible() { return BaseClass::IsVisible(); }
@@ -228,6 +230,7 @@ private:
 	Panel		*m_pPlayerListDivider;
 	Button		*m_pJoinRandom;
 	Button		*m_pBecomeCaptain;
+	Button		*m_pToggleMenu;
 	ComboBox	*m_pFormationList;
 
 	CStatsMenu	*m_pStatsMenu;
@@ -244,6 +247,8 @@ private:
 	int			m_nSelectedPlayerIndex;
 
 	bool		m_bIsStatsMenuEnabled;
+
+	bool		m_bShowCaptainMenu;
 
 	IScheme *m_pScheme;
 };

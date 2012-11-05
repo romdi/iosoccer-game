@@ -1530,7 +1530,7 @@ void CGameMovement::FullWalkMove( )
 		ToSDKPlayer(player)->SetDistanceCovered((int)ToSDKPlayer(player)->GetExactDistanceCovered());
 	}
 #endif
-			}
+}
 
 void CGameMovement::MoveToTargetPos()
 {

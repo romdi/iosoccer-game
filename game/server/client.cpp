@@ -157,7 +157,7 @@ void Host_Say( edict_t *pEdict, const CCommand &args, bool teamonly )
 
 	if ( pEdict )
 	{
-		if ( !pPlayer->CanSpeak() )
+		if ( !pPlayer->CanSpeak(teamonly) )
 			return;
 
 		// See if the player wants to modify of check the text

@@ -199,8 +199,8 @@ void CFormationMenu::Update()
 			}
 			else
 			{
-				cursor = gr->IsFakePlayer(playerIndexAtPos[i][j]) ? dc_hand : dc_arrow;
-				enable = gr->IsFakePlayer(playerIndexAtPos[i][j]);
+				cursor = (playerIndexAtPos[i][j] == GetLocalPlayerIndex() ? dc_arrow : dc_hand);
+				enable = (playerIndexAtPos[i][j] != GetLocalPlayerIndex());//gr->IsFakePlayer(playerIndexAtPos[i][j]);
 				isTakenByBot = gr->IsFakePlayer(playerIndexAtPos[i][j]);
 				isFree = false;
 				font = m_pScheme->GetFont("IOSTeamMenuBig");
@@ -209,7 +209,7 @@ void CFormationMenu::Update()
 			m_pFormationButtons[i][j]->SetFont(font);
 			m_pFormationButtons[i][j]->SetCursor(cursor);
 			KeyValues *kv = new KeyValues("Command");
-			kv->SetString("command", (isFree || isTakenByBot) ? VarArgs("jointeam %d %d", i + TEAM_A, j) : "");
+			kv->SetString("command", (enable ? VarArgs("jointeam %d %d", i + TEAM_A, j) : ""));
 			kv->SetInt("playerindex", playerIndexAtPos[i][j]);
 			kv->SetInt("team", i + TEAM_A);
 			m_pFormationButtons[i][j]->SetCommand(kv);
@@ -217,8 +217,10 @@ void CFormationMenu::Update()
 			Color teamColor = GetGlobalTeam(TEAM_A + i)->Get_HudKitColor();
 			color32 normal = { teamColor.r(), teamColor.g(), teamColor.b(), isFree ? 10 : 240 };
 			color32 hover = { teamColor.r(), teamColor.g(), teamColor.b(), (isFree || isTakenByBot) ? 240 : 240 };
+			color32 pressed = { 255, 255, 255, 240 };
 			m_pFormationButtons[i][j]->SetImage(CBitmapButton::BUTTON_ENABLED, "vgui/shirt", normal);
 			m_pFormationButtons[i][j]->SetImage(CBitmapButton::BUTTON_ENABLED_MOUSE_OVER, "vgui/shirt", hover);
+			m_pFormationButtons[i][j]->SetImage(CBitmapButton::BUTTON_PRESSED, "vgui/shirt", (enable ? pressed : normal));
 			//m_pFormationButtons[i][j]->SetName(VarArgs("%d", playerIndexAtPos[i][j]));
 		}
 	}
@@ -251,8 +253,10 @@ void CFormationMenu::OnCursorEntered(Panel *panel)
 	if (playerIndex > 0)
 	{
 		((CClientScoreBoardDialog *)gViewPortInterface->FindPanelByName(PANEL_SCOREBOARD))->SetHighlightedPlayer(playerIndex);
-		if (!GameResources()->IsFakePlayer(playerIndex))
-			msg = "";
+		if (playerIndex == GetLocalPlayerIndex())
+			msg = "YOU";
+		else if (GameResources()->GetTeamPosIndex(playerIndex) != GetKeeperPosIndex())
+			msg = "ROTATE";
 	}
 
 	m_pTooltip->SetText(msg);
