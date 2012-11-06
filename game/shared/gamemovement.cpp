@@ -784,28 +784,38 @@ void CGameMovement::ReduceTimers( void )
 
 	bool bSprinting = ( !pPl->GetGroundEntity() || (mv->m_nButtons & IN_SPEED) && ( mv->m_nButtons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT) ) );
 
+	float fieldLength = SDKGameRules()->m_vFieldMax.GetY() - SDKGameRules()->m_vFieldMin.GetY();
+	float dist = pPl->GetLocalOrigin().y - SDKGameRules()->m_vKickOff.GetY();
+	float fieldZone = (clamp(dist * 100 / (fieldLength / 2), -100, 100) + 100) / 2;
+	if (pPl->GetTeam()->m_nForward == -1)
+		fieldZone = 100 - fieldZone;
+
 	// If we're holding the sprint key and also actually moving, remove some stamina
 	Vector vel = pPl->GetAbsVelocity();
 	if ( bSprinting && fl2DVelocitySquared > 10000 ) //speed > 100
 	{
-		flStamina -= mp_stamina_drain_sprinting.GetInt() * gpGlobals->frametime;
+		float coeff = 1 + (mp_stamina_variable_drain_enabled.GetBool() ? (fieldZone / 100) * mp_stamina_variable_drain_coeff.GetFloat() : 1);
+
+		flStamina -= mp_stamina_drain_sprinting.GetInt() * gpGlobals->frametime * coeff;
 
 		pPl->m_Shared.SetStamina( flStamina );
 	}
 	else
 	{
+		float coeff = 1 + (mp_stamina_variable_replenish_enabled.GetBool() ? ((100 - fieldZone) / 100) * mp_stamina_variable_replenish_coeff.GetFloat() : 1);
+
 		//gain some back		
 		if ( fl2DVelocitySquared <= 0 )
 		{
-			flStamina += mp_stamina_replenish_standing.GetInt() * gpGlobals->frametime;
+			flStamina += mp_stamina_replenish_standing.GetInt() * gpGlobals->frametime * coeff;
 		}
 		else if (mv->m_nButtons & IN_WALK)
 		{
-			flStamina += mp_stamina_replenish_walking.GetInt() * gpGlobals->frametime;
+			flStamina += mp_stamina_replenish_walking.GetInt() * gpGlobals->frametime * coeff;
 		}
 		else
 		{
-			flStamina += mp_stamina_replenish_running.GetInt() * gpGlobals->frametime;
+			flStamina += mp_stamina_replenish_running.GetInt() * gpGlobals->frametime * coeff;
 		}
 
 		pPl->m_Shared.SetStamina( flStamina );	

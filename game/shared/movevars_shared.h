@@ -44,6 +44,10 @@ extern ConVar mp_stamina_drain_sprinting; //ios
 extern ConVar mp_stamina_replenish_standing; //ios
 extern ConVar mp_stamina_replenish_walking; //ios
 extern ConVar mp_stamina_replenish_running; //ios
+extern ConVar mp_stamina_variable_drain_enabled;
+extern ConVar mp_stamina_variable_drain_coeff;
+extern ConVar mp_stamina_variable_replenish_enabled;
+extern ConVar mp_stamina_variable_replenish_coeff;
 
 // Vehicle convars
 extern ConVar r_VehicleViewDampen;
