@@ -128,7 +128,10 @@ ConVar sv_ball_autopass_maxstrength("sv_ball_autopass_maxstrength", "1600", FCVA
 ConVar sv_ball_autopass_coeff("sv_ball_autopass_coeff", "1", FCVAR_NOTIFY);
 ConVar sv_ball_volleyshot_spincoeff("sv_ball_volleyshot_spincoeff", "1.25", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
 ConVar sv_ball_doubletouchfouls("sv_ball_doubletouchfouls", "1", FCVAR_NOTIFY);
-ConVar sv_ball_timelimit("sv_ball_timelimit", "10", FCVAR_NOTIFY);
+
+ConVar sv_ball_timelimit_setpiece("sv_ball_timelimit_setpiece", "15", FCVAR_NOTIFY);
+ConVar sv_ball_timelimit_remotecontrolled("sv_ball_timelimit_remotecontrolled", "15", FCVAR_NOTIFY);
+
 ConVar sv_ball_statetransition_activationdelay_normal("sv_ball_statetransition_activationdelay_normal", "1.0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
 ConVar sv_ball_statetransition_activationdelay_long("sv_ball_statetransition_activationdelay_long", "2.0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
 ConVar sv_ball_statetransition_messagedelay("sv_ball_statetransition_messagedelay", "1.0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
@@ -1069,7 +1072,7 @@ void CBall::State_KICKOFF_Think()
 
 	if (m_flStateTimelimit == -1)
 	{
-		m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit.GetFloat();
+		m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit_setpiece.GetFloat();
 		m_pPl->SetShotButtonsReleased(false);
 	}
 
@@ -1117,7 +1120,7 @@ void CBall::State_THROWIN_Think()
 
 	if (m_flStateTimelimit == -1)
 	{
-		m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit.GetFloat();
+		m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit_setpiece.GetFloat();
 		SetPos(Vector(m_vTriggerTouchPos.x, m_vTriggerTouchPos.y, SDKGameRules()->m_vKickOff.GetZ() + m_pPl->GetPlayerMaxs().z + 2));
 		m_pPl->RemoveFlag(FL_ATCONTROLS);
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_THROWIN);
@@ -1193,7 +1196,7 @@ void CBall::State_GOALKICK_Think()
 
 	if (m_flStateTimelimit == -1)
 	{
-		m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit.GetFloat();
+		m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit_setpiece.GetFloat();
 		m_pPl->RemoveFlag(FL_ATCONTROLS);
 		m_pPl->SetShotButtonsReleased(false);
 	}
@@ -1246,7 +1249,7 @@ void CBall::State_CORNER_Think()
 
 	if (m_flStateTimelimit == -1)
 	{
-		m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit.GetFloat();
+		m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit_setpiece.GetFloat();
 		m_pPl->RemoveFlag(FL_ATCONTROLS);
 		m_pPl->SetShotButtonsReleased(false);
 	}
@@ -1391,7 +1394,7 @@ void CBall::State_FREEKICK_Think()
 
 	if (m_flStateTimelimit == -1)
 	{
-		m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit.GetFloat();
+		m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit_setpiece.GetFloat();
 
 		if (sv_ball_reset_stamina_on_freekicks.GetBool())
 		{
@@ -1498,7 +1501,7 @@ void CBall::State_PENALTY_Think()
 
 	if (m_flStateTimelimit == -1)
 	{
-		m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit.GetFloat();
+		m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit_setpiece.GetFloat();
 		m_pPl->RemoveFlag(FL_ATCONTROLS);
 		//m_pPl->AddFlag(FL_NO_X_MOVEMENT);
 		//m_pPl->SetShotButtonsReleased(false);
@@ -1558,6 +1561,7 @@ void CBall::State_PENALTY_Leave(ball_state_t newState)
 
 void CBall::State_KEEPERHANDS_Enter()
 {
+	SetPos(m_vPos);
 }
 
 void CBall::State_KEEPERHANDS_Think()
@@ -1608,7 +1612,7 @@ void CBall::State_KEEPERHANDS_Think()
 	{
 		if (m_flStateTimelimit == -1)
 		{
-			m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit.GetFloat();
+			m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit_setpiece.GetFloat();
 			//m_pPl->RemoveFlag(FL_ATCONTROLS);
 		}
 	}
@@ -1694,7 +1698,17 @@ bool CBall::PlayersAtTargetPos()
 			}
 
 			if (!pPl->m_bIsAtTargetPos)
-				playersAtTarget = false;
+			{
+				if (pPl->m_flRemoteControlledStartTime == -1)
+				{
+					pPl->m_flRemoteControlledStartTime = gpGlobals->curtime;
+					playersAtTarget = false;
+				}
+				else if (gpGlobals->curtime >= pPl->m_flRemoteControlledStartTime + sv_ball_timelimit_remotecontrolled.GetFloat())
+					pPl->ChangeTeamPos(TEAM_SPECTATOR, 0, true);
+				else
+					playersAtTarget = false;
+			}
 		}
 	}
 
@@ -2637,24 +2651,23 @@ void CBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart)
 			if (pInfo->m_nTeam == pPl->GetTeamNumber())
 			{
 				pInfo->m_pPl->SetPassesCompleted(pInfo->m_pPl->GetPassesCompleted() + 1);
-				SetMatchEvent(MATCH_EVENT_PASS, m_pPl->GetTeamNumber(), false);
-				SetMatchEventPlayer(m_pPl, false);
+				SetMatchEvent(MATCH_EVENT_PASS, pPl->GetTeamNumber(), false);
 			}
 			else
 			{
 				if (pPl->GetTeamPosType() == GK && bodyPart == BODY_PART_HANDS)
 				{
 					pPl->SetKeeperSaves(pPl->GetKeeperSaves() + 1);
-					SetMatchEvent(MATCH_EVENT_KEEPERSAVE, m_pPl->GetTeamNumber(), false);
-
+					SetMatchEvent(MATCH_EVENT_KEEPERSAVE, pPl->GetTeamNumber(), false);
 				}
 				else
 				{
 					pPl->SetInterceptions(pPl->GetInterceptions() + 1);
-					SetMatchEvent(MATCH_EVENT_INTERCEPTION, m_pPl->GetTeamNumber(), false);
+					SetMatchEvent(MATCH_EVENT_INTERCEPTION, pPl->GetTeamNumber(), false);
 				}
-				SetMatchEventPlayer(m_pPl, false);
 			}
+
+			SetMatchEventPlayer(pPl, false);
 		}
 
 		UpdatePossession(pPl);
@@ -2886,6 +2899,8 @@ void CBall::ResetMatch()
 		pPl->ResetFlags();
 		pPl->ResetStats();
 	}
+
+	CPlayerPersistentData::RemoveAllPlayerData();
 }
 
 void CBall::SetPenaltyTaker(CSDKPlayer *pPl)

@@ -50,7 +50,13 @@ public:
 
 	virtual int		Get_Possession();
 
-	virtual C_SDKPlayer	*Get_Captain();
+	virtual C_SDKPlayer	*Get_Captain() { return m_pCaptain; }
+	virtual C_SDKPlayer	*Get_FreekickTaker() { return m_pFreekickTaker; }
+	virtual C_SDKPlayer	*Get_PenaltyTaker() { return m_pPenaltyTaker; }
+	virtual C_SDKPlayer	*Get_CornerTaker() { return m_pCornerTaker; }
+	virtual C_SDKPlayer	*Get_ThrowinTaker() { return m_pThrowinTaker; }
+
+	virtual int		Get_TimeoutsLeft() { return m_nTimeoutsLeft; }
 
 	// Player Handling
 	virtual int		Get_Number_Players( void );
@@ -87,7 +93,13 @@ public:
 	int		m_nPenaltyGoals;
 	int		m_nPenaltyGoalBits;
 	int		m_nPenaltyRound;
+	int		m_nTimeoutsLeft;
+
 	CHandle<C_SDKPlayer> m_pCaptain;
+	CHandle<C_SDKPlayer> m_pFreekickTaker;
+	CHandle<C_SDKPlayer> m_pPenaltyTaker;
+	CHandle<C_SDKPlayer> m_pCornerTaker;
+	CHandle<C_SDKPlayer> m_pThrowinTaker;
 
 	// Data for the scoreboard
 	int		m_iPing;

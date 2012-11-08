@@ -35,8 +35,8 @@ ConVar cl_ragdoll_physics_enable( "cl_ragdoll_physics_enable", "1", 0, "Enable/d
  
 ConVar playername("playername", "", FCVAR_USERINFO | FCVAR_ARCHIVE, "Your name");
 ConVar clubname("clubname", "Team Arthur", FCVAR_USERINFO | FCVAR_ARCHIVE, "The name of your club");
-ConVar countryname("ipcountryname", "", FCVAR_USERINFO | FCVAR_ARCHIVE | FCVAR_HIDDEN, "The name of your country");
-ConVar shotbutton("shotbutton", "right", FCVAR_USERINFO | FCVAR_ARCHIVE, "The mouse shot button (left/right)");
+ConVar geoipcountryindex("geoipcountryindex", "0", FCVAR_USERINFO | FCVAR_ARCHIVE | FCVAR_HIDDEN, "The name of your country");
+ConVar fallbackcountryindex("fallbackcountryindex", "0", FCVAR_USERINFO | FCVAR_ARCHIVE, "The name of your country");
 ConVar preferredshirtnumber("preferredshirtnumber", "", FCVAR_USERINFO | FCVAR_ARCHIVE, "Your preferred shirt number");
 
 ConVar clientversion("clientversion", g_szRequiredClientVersion, FCVAR_USERINFO | FCVAR_HIDDEN, "");

@@ -253,7 +253,6 @@ CSDKPlayer::CSDKPlayer()
 	m_pCurStateInfo = NULL;	// no state yet
 	m_bShotButtonsReleased = false;
 	m_nTeamToJoin = TEAM_INVALID;
-	m_nTeamPosIndexToJoin = 0;
 	//m_flNextJoin = gpGlobals->curtime;
 	//m_bIsCardBanned = false;
 	m_nTeamPosIndex = 0;
@@ -264,8 +263,6 @@ CSDKPlayer::CSDKPlayer()
 	m_nInPenBoxOfTeam = TEAM_INVALID;
 	m_ePenaltyState = PENALTY_NONE;
 	m_pHoldingBall = NULL;
-
-	m_bIsShotButtonRight = true;
 
 	m_pData = NULL;
 }
@@ -318,7 +315,16 @@ void CSDKPlayer::PreThink(void)
 				engine->ServerCommand(kickcmd);
 			}
 		}
+
 		ChangeTeam(m_nTeamToJoin);
+	}
+
+	if (m_nRotationTeam != TEAM_INVALID && (SDKGameRules()->IsIntermissionState() || SDKGameRules()->GetMatchDisplayTimeSeconds() >= GetNextJoin()))
+	{
+		if (TeamPosFree(m_nRotationTeam, m_nRotationTeamPosIndex, false))
+		{
+			ChangeTeamPos(m_nRotationTeam, m_nRotationTeamPosIndex, true);
+		}
 	}
 
 	State_PreThink();
@@ -342,8 +348,6 @@ void CSDKPlayer::PostThink()
 	m_PlayerAnimState->Update( m_angEyeAngles[YAW], m_angEyeAngles[PITCH] );
 	
 	//LookAtBall();
-
-	//IOSSPlayerCollision();
 
 	//m_BallInPenaltyBox = -1;
 }
@@ -399,45 +403,6 @@ void CSDKPlayer::LookAtBall(void)
 	// FIXME: Head pitch movement is jerky
 	//SetBoneController(3, pitch);
 }
-
-#define IOSSCOLDIST (36.0f * 36.0f)
-
-void CSDKPlayer::IOSSPlayerCollision(void)
-{
-	static int start = 1;
-	static int end = gpGlobals->maxClients;
-
-	Vector posUs = GetAbsOrigin();
-	Vector posThem;
-	Vector diff;
-	Vector norm;
-
-	for (int i = start; i <= end; i++) 
-	{
-		CSDKPlayer *pPlayer = (CSDKPlayer *)UTIL_PlayerByIndex (i);
-
-		if ( !pPlayer )
-			continue;
-
-		if (pPlayer==this)
-			continue;
-
-		posThem = pPlayer->GetAbsOrigin();
-
-		diff = posUs - posThem;
-		diff.z = 0.0f;
-
-		norm = diff;
-		norm.NormalizeInPlace();
-
-		if (diff.Length2DSqr() < IOSSCOLDIST)
-		{
-			posUs += norm * 1.0f;
-			SetAbsOrigin(posUs);
-		}
-	}
-}
-
 
 void CSDKPlayer::Precache()
 {
@@ -1130,7 +1095,29 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 			return false;
 		}
 
+		if (IsCardBanned())
+			return false;
 
+		int team = atoi(args[1]);
+		int posIndex = atoi(args[2]);
+
+		if (posIndex == -1 || team == TEAM_INVALID)
+			return false;
+
+		m_nRotationTeam = team;
+		m_nRotationTeamPosIndex = posIndex;
+
+		return true;
+	}
+	else if (!Q_stricmp(args[0], "requesttimeout"))
+	{
+		if (this != GetTeam()->GetCaptain())
+			return false;
+
+		if (GetTeam()->GetTimeoutsLeft() > 0)
+			GetTeam()->SetTimeoutsLeft(GetTeam()->GetTimeoutsLeft() - 1);
+		else
+			return false;
 
 		return true;
 	}
@@ -1517,8 +1504,10 @@ void CSDKPlayer::ResetStats()
 	m_ePenaltyState = PENALTY_NONE;
 	m_nMotmChoiceIds[0] = 0;
 	m_nMotmChoiceIds[1] = 0;
-
-	GetData()->ResetData();
+	m_flRemoteControlledStartTime = -1;
+	m_nRotationTeam = TEAM_INVALID;
+	m_nRotationTeamPosIndex = 0;
+	//GetData()->ResetData();
 }
 
 Vector CSDKPlayer::GetSpawnPos(bool findSafePos)
@@ -1561,6 +1550,8 @@ void CSDKPlayer::ResetFlags()
 	m_pHoldingBall = NULL;
 	m_flLastReadyTime = -1;
 	m_flLastShotOnGoal = -1;
+	m_bIsAway = true;
+	m_flLastMoveTime = -1;
 
 	if (GetPlayerBall())
 		GetPlayerBall()->RemovePlayerBall();
@@ -1662,6 +1653,25 @@ bool CSDKPlayer::CanSpeak(bool isTeamOnly)
 	return true;
 }
 
+void CSDKPlayer::SetAway(bool isAway)
+{
+	if (!isAway)
+	{
+		m_flLastMoveTime = gpGlobals->curtime;
+		m_bIsAway = false;
+	}
+	else if (m_flLastMoveTime != -1 && gpGlobals->curtime >= m_flLastMoveTime + 10)
+	{
+		m_bIsAway = true;
+		ChangeTeamPos(TEAM_SPECTATOR, 0, true);
+	}
+}
+
+bool CSDKPlayer::IsAway()
+{
+	return m_bIsAway;
+}
+
 CUtlVector<CPlayerPersistentData *> CPlayerPersistentData::m_PlayerPersistentData;
 
 CPlayerPersistentData *CPlayerPersistentData::GetData(CSDKPlayer *pPl)
@@ -1722,5 +1732,5 @@ void CPlayerPersistentData::ResetData()
 	m_nDistanceCovered = 0;
 	m_flExactDistanceCovered = 0.0f;
 	m_bIsCardBanned = false;
-	m_flNextJoin = SDKGameRules()->GetMatchDisplayTimeSeconds();
+	m_flNextJoin = max(0, SDKGameRules()->GetMatchDisplayTimeSeconds());
 }

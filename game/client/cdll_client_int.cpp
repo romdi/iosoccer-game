@@ -883,7 +883,7 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 		}
 	}
 
-	engine->ClientCmd(VarArgs("ipcountryname %d", countryIndex)); 
+	engine->ClientCmd(VarArgs("geoipcountryindex %d", countryIndex)); 
 
 	return true;
 }

@@ -797,7 +797,7 @@ void CGameMovement::ReduceTimers( void )
 		float coeff = 1 + (mp_stamina_variable_drain_enabled.GetBool() ? (fieldZone / 100) * mp_stamina_variable_drain_coeff.GetFloat() : 1);
 
 		flStamina -= mp_stamina_drain_sprinting.GetInt() * gpGlobals->frametime * coeff;
-
+		//DevMsg("Remove stamina %.2f\n", flStamina);
 		pPl->m_Shared.SetStamina( flStamina );
 	}
 	else
@@ -1539,6 +1539,16 @@ void CGameMovement::FullWalkMove( )
 		ToSDKPlayer(player)->SetExactDistanceCovered(ToSDKPlayer(player)->GetExactDistanceCovered() + (newPos - oldPos).Length2D() * 2.54f / 100);
 		ToSDKPlayer(player)->SetDistanceCovered((int)ToSDKPlayer(player)->GetExactDistanceCovered());
 	}
+
+	if (SDKGameRules()->State_Get() == MATCH_WARMUP
+		&& GetGlobalTeam(TEAM_A)->GetNumPlayers() == mp_maxplayers.GetInt()
+		&& GetGlobalTeam(TEAM_B)->GetNumPlayers() == mp_maxplayers.GetInt())
+	{
+		if (newPos != oldPos || newAng != oldAng || newVel != oldVel)
+			ToSDKPlayer(player)->SetAway(false);
+		else
+			ToSDKPlayer(player)->SetAway(true);
+	}
 #endif
 }
 
@@ -2001,10 +2011,10 @@ bool CGameMovement::CheckJumpButton( void )
 		{
 			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_FORWARD;
 		}
-		else if ((mv->m_nButtons & IN_BACK) && !(mv->m_nButtons & IN_WALK) && (mv->m_nButtons & IN_SPEED))
-		{
-			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD;
-		}
+		//else if ((mv->m_nButtons & IN_BACK) && !(mv->m_nButtons & IN_WALK) && (mv->m_nButtons & IN_SPEED))
+		//{
+		//	animEvent = PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD;
+		//}
 		else
 		{
 			animEvent = PLAYERANIMEVENT_KEEPER_JUMP;

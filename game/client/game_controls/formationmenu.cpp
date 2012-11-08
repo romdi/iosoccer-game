@@ -47,8 +47,8 @@
 
 using namespace vgui;
 
-enum { FORMATION_BUTTON_WIDTH = 85, FORMATION_BUTTON_HEIGHT = 50 };
-enum { FORMATION_HPADDING = (FORMATION_BUTTON_WIDTH / 2 + 70), FORMATION_VPADDING = (FORMATION_BUTTON_HEIGHT / 2 + 20), FORMATION_CENTERPADDING = 35 };
+enum { FORMATION_BUTTON_WIDTH = 85, FORMATION_BUTTON_HEIGHT = 60 };
+enum { FORMATION_HPADDING = (FORMATION_BUTTON_WIDTH / 2 + 72), FORMATION_VPADDING = (FORMATION_BUTTON_HEIGHT / 2 + 20), FORMATION_CENTERPADDING = 35 };
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -97,6 +97,7 @@ void CFormationMenu::PerformLayout()
 		{
 			m_pFormationButtons[i][j]->SetBounds(0, 0, FORMATION_BUTTON_WIDTH, FORMATION_BUTTON_HEIGHT);
 			m_pFormationButtons[i][j]->SetContentAlignment(Label::a_center);
+			//m_pFormationButtons[i][j]->SetTextInset(0, -20);
 			m_pFormationButtons[i][j]->SetFont(m_pScheme->GetFont("IOSTeamMenuBig"));
 			color32 enabled = { 150, 150, 150, 150 };
 			color32 mouseover = { 150, 150, 150, 240 };
@@ -174,7 +175,7 @@ void CFormationMenu::Update()
 			}
 
 			m_pFormationButtons[i][j]->SetVisible(true);
-			m_pFormationButtons[i][j]->SetText(g_szPosNames[(int)g_Positions[mp_maxplayers.GetInt() - 1][j][POS_TYPE]]);
+			m_pFormationButtons[i][j]->SetText(VarArgs("%s\n\nTEST", g_szPosNames[(int)g_Positions[mp_maxplayers.GetInt() - 1][j][POS_TYPE]]));
 
 			float xDist = (m_pFormations[i]->GetWide() - 2 * FORMATION_HPADDING) / 3;
 			float yDist = (m_pFormations[i]->GetTall() - 2 * FORMATION_VPADDING) / 3;
@@ -209,7 +210,16 @@ void CFormationMenu::Update()
 			m_pFormationButtons[i][j]->SetFont(font);
 			m_pFormationButtons[i][j]->SetCursor(cursor);
 			KeyValues *kv = new KeyValues("Command");
-			kv->SetString("command", (enable ? VarArgs("jointeam %d %d", i + TEAM_A, j) : ""));
+
+			char *cmd;
+			if (playerIndexAtPos[i][j] == GetLocalPlayerIndex())
+				cmd = "";
+			else if (isFree || (isTakenByBot && gr->GetTeamPosType(playerIndexAtPos[i][j]) == GK))
+				cmd = VarArgs("jointeam %d %d", i + TEAM_A, j);
+			else
+				cmd = VarArgs("rotatepos %d %d", i + TEAM_A, j);
+
+			kv->SetString("command", cmd);
 			kv->SetInt("playerindex", playerIndexAtPos[i][j]);
 			kv->SetInt("team", i + TEAM_A);
 			m_pFormationButtons[i][j]->SetCommand(kv);
@@ -235,6 +245,10 @@ void CFormationMenu::OnCommand( char const *cmd )
 	{
 		engine->ClientCmd(cmd);
 	}
+	else if (!strnicmp(cmd, "rotatepos", 9))
+	{
+		engine->ClientCmd(cmd);
+	}
 	else
 		BaseClass::OnCommand(cmd);
 
@@ -256,13 +270,14 @@ void CFormationMenu::OnCursorEntered(Panel *panel)
 		if (playerIndex == GetLocalPlayerIndex())
 			msg = "YOU";
 		else if (GameResources()->GetTeamPosIndex(playerIndex) != GetKeeperPosIndex())
-			msg = "ROTATE";
+			msg = "SWAP";
 	}
 
 	m_pTooltip->SetText(msg);
 	m_pTooltip->SetParent(pButton->GetParent());
-	m_pTooltip->SetBounds(pButton->GetX() + pButton->GetWide() / 2 - 100 / 2, pButton->GetY() + pButton->GetTall(), 100, 30);
-	m_pTooltip->SetFgColor(GetGlobalTeam(pButton->GetCommand()->GetInt("team"))->Get_HudKitColor());
+	m_pTooltip->SetBounds(pButton->GetX() + pButton->GetWide() / 2 - 100 / 2, pButton->GetY() + pButton->GetTall() - 20, 100, 30);
+	//m_pTooltip->SetFgColor(GetGlobalTeam(pButton->GetCommand()->GetInt("team"))->Get_HudKitColor());
+	m_pTooltip->SetFgColor(Color(0, 0, 0, 240));
 	m_pTooltip->SetVisible(true);
 }
 

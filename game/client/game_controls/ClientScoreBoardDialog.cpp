@@ -143,6 +143,8 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Editabl
 
 	m_pFormationList = new ComboBox(m_pStatButtonInnerContainer, "", 0, false);
 
+	m_pRequestTimeout = new Button(m_pStatButtonInnerContainer, "", "Timeout", this, "requesttimeout");
+
 	m_nCurStat = DEFAULT_STATS;
 	m_nCurSpecIndex = 0;
 	m_pCurSpecButton = NULL;
@@ -299,10 +301,17 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 	m_pToggleMenu->SetPaintBorderEnabled(false);
 	m_pToggleMenu->SetCursor(dc_hand);
 
-	m_pFormationList->SetBounds(STATBUTTON_HMARGIN, 4 * STATBUTTON_HEIGHT + STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
+	m_pFormationList->SetBounds(STATBUTTON_HMARGIN, 4 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
 	m_pFormationList->SetFont(m_pScheme->GetFont("StatButton"));
 	//m_pFormationList->SetPaintBorderEnabled(false);
 	m_pFormationList->SetVisible(false);
+
+	m_pRequestTimeout->SetBounds(STATBUTTON_HMARGIN, 5 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
+	m_pRequestTimeout->SetFont(m_pScheme->GetFont("StatButton"));
+	m_pRequestTimeout->SetContentAlignment(Label::a_center);
+	m_pRequestTimeout->SetPaintBorderEnabled(false);
+	m_pRequestTimeout->SetCursor(dc_hand);
+	m_pRequestTimeout->SetVisible(false);
 
 	for (int i = 0; i < STAT_CATEGORY_COUNT; i++)
 	{
@@ -517,6 +526,11 @@ void CClientScoreBoardDialog::Update( void )
 		m_bShowCaptainMenu = false;
 		ToggleMenu();
 		m_pToggleMenu->SetVisible(false);
+	}
+
+	if (m_bShowCaptainMenu)
+	{
+		m_pRequestTimeout->SetText(VarArgs("Timeout (%d left)", pLocal->GetTeam()->Get_TimeoutsLeft()));
 	}
 
 	m_fNextUpdateTime = gpGlobals->curtime + 0.25f; 
@@ -778,12 +792,12 @@ void CClientScoreBoardDialog::AddHeader()
 		int defaultFlags = SectionedListPanel::HEADER_CENTER | SectionedListPanel::COLUMN_CENTER;
 
 		//m_pPlayerList[i]->SetSectionDividerColor(m_iSectionId, Color(255, 255, 255, 255));
-		m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "posname",		"Pos.", defaultFlags, 55 );
+		m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "posname",		"Pos.", defaultFlags, 60 );
 		//if ( ShowAvatars() )
 		//{
 		//	m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "avatar",		"", SectionedListPanel::COLUMN_IMAGE, 50 );
 		//}
-		m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "name",			"Name", 0, 180);
+		m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "name",			"Name", 0, 175);
 
 		// Max width = 270
 
@@ -940,7 +954,7 @@ bool CClientScoreBoardDialog::GetPlayerInfo(int playerIndex, KeyValues *kv)
 	//kv->SetString("country", gr->GetCountryName(playerIndex));
 
 	char *posNameFormat;
-	if (GetGlobalTeam(gr->GetTeam(playerIndex))->Get_Captain()->entindex() == playerIndex)
+	if (GetGlobalTeam(gr->GetTeam(playerIndex))->Get_Captain() && GetGlobalTeam(gr->GetTeam(playerIndex))->Get_Captain()->entindex() == playerIndex)
 		posNameFormat = "(%s)";
 	else
 		posNameFormat = "%s";
@@ -949,8 +963,9 @@ bool CClientScoreBoardDialog::GetPlayerInfo(int playerIndex, KeyValues *kv)
 	kv->SetString("name", gr->GetPlayerName( playerIndex ) );
 	kv->SetString("steamname", gr->GetSteamName( playerIndex ) );
 	kv->SetString("club", gr->GetClubName(playerIndex));
-	char rating[4];
-	prettify(gr->GetPassesCompleted(playerIndex) * 10.0f / max(1, gr->GetPasses(playerIndex)), rating, 4);
+	char *rating = VarArgs("%.1f", (gr->GetPassesCompleted(playerIndex) * 10.0f / max(1, gr->GetPasses(playerIndex))));
+	if (!Q_strcmp(rating, "10.0"))
+		rating[2] = 0;
 	kv->SetString("rating", rating);
 	kv->SetInt("voice",  s_VoiceImage[GetClientVoiceMgr()->GetSpeakerStatus( playerIndex - 1) ]); 
 
@@ -1120,9 +1135,9 @@ bool CClientScoreBoardDialog::GetTeamInfo(int team, KeyValues *kv)
 	if (teamCountry > 0)
 	{
 		IImage *countryFlag = scheme()->GetImage(VarArgs("country_flags/%s", g_szCountryISOCodes[teamCountry]), false);
-		countryFlag->SetSize(26, 26);
+		countryFlag->SetSize(25, 25);
 		imageIndex = m_pImageList->AddImage(countryFlag);
-		m_pImageList->GetImage(imageIndex)->SetPos(10, 10);
+		//m_pImageList->GetImage(imageIndex)->SetPos(10, 10);
 	}
 	else
 		imageIndex = 0;
@@ -1151,8 +1166,9 @@ bool CClientScoreBoardDialog::GetTeamInfo(int team, KeyValues *kv)
 	kv->SetString("saves", GET_STAT_TEXT(saves));
 	kv->SetString("owngoals", GET_STAT_TEXT(owngoals));
 	kv->SetString("goalsconceded", GET_STAT_TEXT(goalsconceded));
-	char rating[4];
-	prettify(ratings / max(1, passCompletedPlayerCount), rating, 4);
+	char *rating = VarArgs("%.1f", (ratings / max(1, passCompletedPlayerCount)));
+	if (!Q_strcmp(rating, "10.0"))
+		rating[2] = 0;
 	kv->SetString("rating", rating);
 
 	return true;
@@ -1302,6 +1318,10 @@ void CClientScoreBoardDialog::OnCommand( char const *cmd )
 		m_bShowCaptainMenu = !m_bShowCaptainMenu;
 		ToggleMenu();
 	}
+	else if (!Q_stricmp(cmd, "requesttimeout"))
+	{
+		engine->ClientCmd(cmd);
+	}
 	else
 		BaseClass::OnCommand(cmd);
 }
@@ -1316,6 +1336,7 @@ void CClientScoreBoardDialog::ToggleMenu()
 	}
 
 	m_pFormationList->SetVisible(m_bShowCaptainMenu);
+	m_pRequestTimeout->SetVisible(m_bShowCaptainMenu);
 	m_pStatText->SetText(m_bShowCaptainMenu ? "Captain" : "Statistics");
 }
 

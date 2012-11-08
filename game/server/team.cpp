@@ -45,6 +45,7 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CTeam, DT_Team)
 	SendPropInt( SENDINFO(m_nPenaltyGoals), 0 ),
 	SendPropInt( SENDINFO(m_nPenaltyGoalBits), 0 ),
 	SendPropInt( SENDINFO(m_nPenaltyRound)),
+	SendPropInt( SENDINFO(m_nTimeoutsLeft)),
 	SendPropString( SENDINFO( m_szServerKitName ) ),
 
 	SendPropVector(SENDINFO(m_vCornerLeft), -1, SPROP_COORD),
@@ -57,6 +58,10 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CTeam, DT_Team)
 	SendPropInt(SENDINFO(m_nForward)),
 	SendPropInt(SENDINFO(m_nRight)),
 	SendPropEHandle(SENDINFO(m_pCaptain)),
+	SendPropEHandle(SENDINFO(m_pFreekickTaker)),
+	SendPropEHandle(SENDINFO(m_pPenaltyTaker)),
+	SendPropEHandle(SENDINFO(m_pCornerTaker)),
+	SendPropEHandle(SENDINFO(m_pThrowinTaker)),
 
 	SendPropArray2( 
 		SendProxyArrayLength_PlayerArray,
@@ -97,6 +102,11 @@ CTeam::CTeam( void )
 	memset( m_szServerKitName.GetForModify(), 0, sizeof(m_szServerKitName) );
 	ResetStats();
 	SetCaptain(NULL);
+	SetFreekickTaker(NULL);
+	SetPenaltyTaker(NULL);
+	SetCornerTaker(NULL);
+	SetThrowinTaker(NULL);
+	m_nTimeoutsLeft = 3;
 }
 
 //-----------------------------------------------------------------------------

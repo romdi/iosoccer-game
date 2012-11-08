@@ -58,7 +58,13 @@ public:
 	virtual int  GetNumPlayers( void );
 	virtual CBasePlayer *GetPlayer( int iIndex );
 	virtual void SetCaptain(CSDKPlayer *pCaptain) { m_pCaptain = pCaptain; }
+	virtual void SetFreekickTaker(CSDKPlayer *pFreekickTaker) { m_pFreekickTaker = pFreekickTaker; }
+	virtual void SetPenaltyTaker(CSDKPlayer *pPenaltyTaker) { m_pPenaltyTaker = pPenaltyTaker; }
+	virtual void SetCornerTaker(CSDKPlayer *pCornerTaker) { m_pCornerTaker = pCornerTaker; }
+	virtual void SetThrowinTaker(CSDKPlayer *pThrowinTaker) { m_pThrowinTaker = pThrowinTaker; }
+	virtual void SetTimeoutsLeft(int amount) { m_nTimeoutsLeft = amount; }
 	virtual CSDKPlayer *GetCaptain() { return m_pCaptain; }
+	virtual int GetTimeoutsLeft() { return m_nTimeoutsLeft; }
 	virtual void FindNewCaptain();
 
 	//-----------------------------------------------------------------------------
@@ -81,7 +87,14 @@ public:
 	CNetworkVar( int, m_nPenaltyGoals );
 	CNetworkVar( int, m_nPenaltyGoalBits );
 	CNetworkVar( int, m_nPenaltyRound );
+	CNetworkVar( int, m_nTimeoutsLeft );
+
 	CNetworkHandle( CSDKPlayer, m_pCaptain );
+	CNetworkHandle( CSDKPlayer, m_pFreekickTaker );
+	CNetworkHandle( CSDKPlayer, m_pPenaltyTaker );
+	CNetworkHandle( CSDKPlayer, m_pCornerTaker );
+	CNetworkHandle( CSDKPlayer, m_pThrowinTaker );
+
 	int		m_iDeaths;
 
 	// Spawnpoints

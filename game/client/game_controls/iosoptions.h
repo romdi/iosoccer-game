@@ -40,10 +40,6 @@ protected:
 	Button *m_pOKButton;
 	Button *m_pSaveButton;
 	Button *m_pCancelButton;
-	Panel *m_pShotButtonPanel;
-	Label *m_pShotButtonLabel;
-	RadioButton *m_pShotButtonLeft;
-	RadioButton *m_pShotButtonRight;
 	Label *m_pPreferredShirtNumberLabel;
 	ComboBox *m_pPreferredShirtNumberList;
 	Label *m_pInterpDurationLabel;

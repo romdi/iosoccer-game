@@ -221,6 +221,8 @@ void CHudVoiceStatus::VidInit( void )
 
 void CHudVoiceStatus::OnThink( void )
 {
+	return;
+
 	//Tony; don't update if local player aint here!
 	C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
 	if (!player)

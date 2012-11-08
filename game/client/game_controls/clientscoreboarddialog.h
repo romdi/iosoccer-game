@@ -232,6 +232,7 @@ private:
 	Button		*m_pBecomeCaptain;
 	Button		*m_pToggleMenu;
 	ComboBox	*m_pFormationList;
+	Button		*m_pRequestTimeout;
 
 	CStatsMenu	*m_pStatsMenu;
 	CFormationMenu	*m_pFormationMenu;

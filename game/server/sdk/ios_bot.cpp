@@ -54,7 +54,6 @@ public:
 		{
 			//init bot?
 			pPlayer->SetPlayerName( playername );
-			pPlayer->m_JoinTime = gpGlobals->curtime;
 			Q_memset( &pPlayer->m_cmd, 0, sizeof( pPlayer->m_cmd ) );
 		}
 
@@ -70,7 +69,6 @@ public:
 		{
 			//init bot?
 			pPlayer->SetPlayerName( playername );
-			pPlayer->m_JoinTime = gpGlobals->curtime;
 			//pPlayer->m_fMissTime = 0.0f;
 			//pPlayer->m_fNextDive = 0.0f;
 			Q_memset( &pPlayer->m_cmd, 0, sizeof( pPlayer->m_cmd ) );

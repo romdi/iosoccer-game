@@ -400,25 +400,16 @@ public:
 	int					GetCountryName() { return m_nCountryName; }
 	void				SetCountryName(int name) { m_nCountryName = name; } 
 
-	bool				IsShotButtonRight() { return m_bIsShotButtonRight; }
-	void				SetShotButtonRight(bool isRight) { m_bIsShotButtonRight = isRight; }
-
 	bool				ShotButtonsPressed();
 
 	virtual bool		ShotButtonsReleased();
 	virtual void		SetShotButtonsReleased(bool released);
 
-	float				m_TackleTime;
-	bool				m_bTackleDone;
-	bool				m_bSlideKick;
-
 	int					m_nBaseSkin;					//keeper skin before ball offset added
 
 	void				LookAtBall(void);
 
-	float				m_JoinTime;
-
-	void				IOSSPlayerCollision(void);
+	float				m_flRemoteControlledStartTime;
 
 	virtual void		VPhysicsCollision( int index, gamevcollisionevent_t *pEvent );
 
@@ -428,8 +419,6 @@ public:
 	bool				m_bClubNameChanged;
 
 	int					m_nCountryName;
-
-	bool				m_bIsShotButtonRight;
 
 	Vector				EyeDirection2D();
 	Vector				EyeDirection3D();
@@ -453,6 +442,9 @@ public:
 
 	Vector				GetSpawnPos(bool findSafePos);
 
+	void				SetAway(bool isAway);
+	bool				IsAway();
+
 	CNetworkVector(m_vTargetPos);
 	CNetworkVar(bool, m_bIsAtTargetPos);
 	CNetworkVar(bool, m_bHoldAtTargetPos);
@@ -467,7 +459,9 @@ public:
 	void				ResetShotCharging();
 
 	int					m_nTeamToJoin;
-	int					m_nTeamPosIndexToJoin;
+
+	int					m_nRotationTeam;
+	int					m_nRotationTeamPosIndex;
 
 	int					m_ePenaltyState;
 	void				SetPlayerBall(CBall *pPlayerBall) { m_pPlayerBall = pPlayerBall; }
@@ -495,8 +489,11 @@ public:
 
 	float				m_flLastShotOnGoal;
 
+
 protected:
 
+	bool				m_bIsAway;
+	float				m_flLastMoveTime;
 	bool				m_bIsOffside;
 	Vector				m_vOffsidePos;
 	CHandle<CBall>		m_pPlayerBall;

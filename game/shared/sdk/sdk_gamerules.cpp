@@ -76,7 +76,10 @@ ConVar r_snow_initialramp( "r_snow_initialramp", "1.0", FCVAR_REPLICATED );
 
 const char g_szPosNames[POS_NAME_COUNT][5] =
 {
-	"GK", "SWP", "LB", "RB", "CB", "LCB", "RCB", "LWB", "RWB", "LM", "RM", "DM", "CM", "AM", "LCM", "RCM", "LF", "RF", "CF", "ST", "SS", "LW", "RW"
+	"GK",
+	"SWP", "LB", "RB", "CB", "LCB", "RCB", "LWB", "RWB",
+	"LM", "RM", "DM", "CM", "AM", "LCM", "RCM", "CDM", "CAM",
+	"LF", "RF", "CF", "ST", "SS", "LW", "RW"
 };
 
 #define HIDDEN { -1, -1, -1, -1 }
@@ -123,8 +126,8 @@ const float g_Positions[11][11][4] =
 		HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN
 	},
 	{//7
-								{ 1.5f, 0, CF, 10 },
-			{ 0.5f, 1, LM, 8 }, { 1.5f, 1.5f, CM, 6 }, { 2.5f, 1, RM, 7 },
+								{ 1.5f, 0.5f, CAM, 10 },
+			{ 0.5f, 0, LW, 8 }, { 1.5f, 1.75f, CDM, 6 }, { 2.5f, 0, RW, 7 },
 						{ 0.5f, 2, LB, 2 }, { 2.5f, 2, RB, 3 },
 								{ 1.5f, 3, GK, 1 },
 
@@ -1062,6 +1065,7 @@ void CSDKGameRules::WakeUpAllPlayers()
 {
 	IGameEvent* pEvent = gameeventmanager->CreateEvent("wakeupcall");
 	gameeventmanager->FireEvent(pEvent);
+	UTIL_ClientPrintAll(HUD_PRINTTALK, "#game_wakeupcall");
 }
 
 void CC_SV_WakeUpCall(const CCommand &args)
@@ -1070,6 +1074,7 @@ void CC_SV_WakeUpCall(const CCommand &args)
         return;
 
 	SDKGameRules()->WakeUpAllPlayers();
+	UTIL_ClientPrintAll(HUD_PRINTCENTER, "Move if you're awake!");
 }
 
 ConCommand sv_wakeupcall("sv_wakeupcall", CC_SV_WakeUpCall, "Wake up all players", 0);
@@ -1310,6 +1315,32 @@ void CSDKGameRules::State_WARMUP_Think()
 {
 	if (m_flStateTimeLeft <= 0.0f)
 		State_Transition(MATCH_FIRST_HALF);
+	else
+	{
+		if (GetGlobalTeam(TEAM_A)->GetNumPlayers() == mp_maxplayers.GetInt() && GetGlobalTeam(TEAM_B)->GetNumPlayers() == mp_maxplayers.GetInt())
+		{
+			bool someoneIsAway = false;
+
+			for (int i = 1; i <= gpGlobals->maxClients; i++)
+			{
+				CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+				if (!CSDKPlayer::IsOnField(pPl))
+					continue;
+				
+				if (pPl->IsAway())
+				{
+					someoneIsAway = true;
+					break;
+				}
+			}
+
+			if (!someoneIsAway)
+			{
+				State_Transition(MATCH_FIRST_HALF);
+				UTIL_ClientPrintAll(HUD_PRINTCENTER, "#game_match_start");
+			}
+		}
+	}
 }
 
 void CSDKGameRules::State_WARMUP_Leave(match_state_t newState)
@@ -1875,11 +1906,21 @@ void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 	Q_strncpy(pszClubName, engine->GetClientConVarValue( pPlayer->entindex(), "clubname" ), MAX_CLUBNAME_LENGTH);
 	((CSDKPlayer *)pPlayer)->SetClubName(pszClubName);
 
-	((CSDKPlayer *)pPlayer)->SetCountryName(clamp(atoi(engine->GetClientConVarValue(pPlayer->entindex(), "ipcountryname")), 0, COUNTRY_NAMES_COUNT - 1));
+	int countryIndex = atoi(engine->GetClientConVarValue(pPlayer->entindex(), "geoipcountryindex"));
+
+	if (countryIndex <= 0 || countryIndex >= COUNTRY_NAMES_COUNT - 1)
+	{
+		countryIndex = atoi(engine->GetClientConVarValue(pPlayer->entindex(), "fallbackcountryindex"));
+
+		if (countryIndex <= 0 || countryIndex >= COUNTRY_NAMES_COUNT - 1)
+		{
+			countryIndex = 0;
+		}
+	}
+
+	((CSDKPlayer *)pPlayer)->SetCountryName(countryIndex);
 
 	((CSDKPlayer *)pPlayer)->SetPreferredTeamPosNum(atoi(engine->GetClientConVarValue(pPlayer->entindex(), "preferredshirtnumber")));
-
-	((CSDKPlayer *)pPlayer)->SetShotButtonRight(!Q_strcmp(engine->GetClientConVarValue(pPlayer->entindex(), "shotbutton"), "left") == false);
 
 	char pszName[MAX_PLAYER_NAME_LENGTH];
 	Q_strncpy(pszName, engine->GetClientConVarValue( pPlayer->entindex(), "playername" ), MAX_PLAYER_NAME_LENGTH);
@@ -1919,6 +1960,7 @@ void CSDKGameRules::EnableShield(int type, int team, const Vector &pos /*= vec3_
 			continue;
 
 		pPl->m_bIsAtTargetPos = false;
+		pPl->m_flRemoteControlledStartTime = -1;
 	}
 }
 
@@ -1936,6 +1978,7 @@ void CSDKGameRules::DisableShield()
 		pPl->RemoveFlag(FL_REMOTECONTROLLED | FL_SHIELD_KEEP_IN | FL_SHIELD_KEEP_OUT);
 		pPl->RemoveSolidFlags(FSOLID_NOT_SOLID);
 		pPl->m_bIsAtTargetPos = true;
+		pPl->m_flRemoteControlledStartTime = -1;
 	}
 }
 
@@ -2199,6 +2242,7 @@ void CC_Bench(const CCommand &args)
 	}
 	
 	pPl->ChangeTeamPos(TEAM_SPECTATOR, 0, true);
+	UTIL_ClientPrintAll(HUD_PRINTTALK, "#game_player_benched", pPl->GetPlayerName());
 }
 
 static ConCommand bench("bench", CC_Bench);
@@ -2224,7 +2268,10 @@ void CC_BenchAll(const CCommand &args)
 			continue;
 
 		if (team == 0 || (pPl->GetTeamNumber() - TEAM_A + 1) == team)
+		{
 			pPl->ChangeTeamPos(TEAM_SPECTATOR, 0, true);
+			UTIL_ClientPrintAll(HUD_PRINTTALK, "#game_player_benched", pPl->GetPlayerName());
+		}
 	}
 }
 

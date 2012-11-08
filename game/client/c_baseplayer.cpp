@@ -588,7 +588,7 @@ const char * C_BasePlayer::GetPlayerName()
 //-----------------------------------------------------------------------------
 bool C_BasePlayer::IsPlayerDead()
 {
-	return pl.deadflag == true;
+	return (GetTeamNumber() != TEAM_A && GetTeamNumber() != TEAM_B);
 }
 
 //-----------------------------------------------------------------------------

@@ -41,6 +41,7 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_Team, DT_Team, CTeam)
 	RecvPropInt( RECVINFO(m_nPenaltyGoals) ),
 	RecvPropInt( RECVINFO(m_nPenaltyGoalBits) ),
 	RecvPropInt( RECVINFO(m_nPenaltyRound) ),
+	RecvPropInt( RECVINFO(m_nTimeoutsLeft) ),
 	RecvPropString( RECVINFO(m_szServerKitName), 0, RecvProxy_KitName),
 
 	RecvPropVector(RECVINFO(m_vCornerLeft)),
@@ -53,6 +54,10 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_Team, DT_Team, CTeam)
 	RecvPropInt(RECVINFO(m_nForward)),
 	RecvPropInt(RECVINFO(m_nRight)),
 	RecvPropEHandle(RECVINFO(m_pCaptain)),
+	RecvPropEHandle(RECVINFO(m_pFreekickTaker)),
+	RecvPropEHandle(RECVINFO(m_pPenaltyTaker)),
+	RecvPropEHandle(RECVINFO(m_pCornerTaker)),
+	RecvPropEHandle(RECVINFO(m_pThrowinTaker)),
 	
 	RecvPropArray2( 
 		RecvProxyArrayLength_PlayerArray,
@@ -235,11 +240,6 @@ int C_Team::Get_Ping( void )
 int C_Team::Get_Possession()
 {
 	return m_nPossession;
-}
-
-C_SDKPlayer *C_Team::Get_Captain()
-{
-	return m_pCaptain;
 }
 
 //-----------------------------------------------------------------------------

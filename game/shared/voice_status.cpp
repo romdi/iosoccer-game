@@ -183,7 +183,7 @@ void CVoiceStatus::Frame(double frametime)
 }
 
 
-float g_flHeadOffset = 35;
+float g_flHeadOffset = 55;
 float g_flHeadIconSize = 8;
 
 

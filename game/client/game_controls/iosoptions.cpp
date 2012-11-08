@@ -75,7 +75,7 @@ CIOSOptionsPanel::CIOSOptionsPanel(VPANEL parent) : BaseClass(NULL, "IOSOptionsP
 	m_pClubNameLabel = new Label(m_pContent, "", "IOS Club Initials:");
 	m_pClubNameText = new TextEntry(m_pContent, "");
 	m_pClubNameText->SetMaximumCharCount(MAX_CLUBNAME_LENGTH - 1);
-	m_pCountryNameLabel = new Label(m_pContent, "", "Country Name:");
+	m_pCountryNameLabel = new Label(m_pContent, "", "Country Fallback Name:");
 	m_pCountryNameList = new ComboBox(m_pContent, "", COUNTRY_NAMES_COUNT, false);
 
 	m_pOKButton = new Button(m_pContent, "", "OK");
@@ -91,12 +91,6 @@ CIOSOptionsPanel::CIOSOptionsPanel(VPANEL parent) : BaseClass(NULL, "IOSOptionsP
 		kv->deleteThis();
 	}
 
-	m_pShotButtonPanel = new Panel(m_pContent);
-	m_pShotButtonPanel->SetVisible(false);
-	m_pShotButtonLabel = new Label(m_pShotButtonPanel, "", "Shot Button:");
-	m_pShotButtonLeft = new RadioButton(m_pShotButtonPanel, "", "Left Mouse Button");
-	m_pShotButtonRight = new RadioButton(m_pShotButtonPanel, "", "Right Mouse Button");
-
 	m_pPreferredShirtNumberLabel = new Label(m_pContent, "", "Preferred Shirt Number:");
 	m_pPreferredShirtNumberList = new ComboBox(m_pContent, "", SHIRT_NUMBER_COUNT, false);
 	m_pPreferredShirtNumberList->RemoveAll();
@@ -110,7 +104,7 @@ CIOSOptionsPanel::CIOSOptionsPanel(VPANEL parent) : BaseClass(NULL, "IOSOptionsP
 	KeyValues *kv;
 
 	kv = new KeyValues("UserData", "index", 0);
-	m_pPreferredShirtNumberList->AddItem("None", kv);
+	m_pPreferredShirtNumberList->AddItem("<None>", kv);
 	kv->deleteThis();
 
 	for (int i = 1; i < SHIRT_NUMBER_COUNT; i++)
@@ -147,7 +141,7 @@ void CIOSOptionsPanel::ApplySchemeSettings( IScheme *pScheme )
 	SetTitle("PLAYER SETTINGS", false);
 	SetProportional(false);
 	SetSizeable(false);
-	SetBounds(0, 0, 480, 250);
+	SetBounds(0, 0, 480, 300);
 	SetBgColor(Color(0, 0, 0, 255));
 	SetPaintBackgroundEnabled(true);
 	MoveToCenterOfScreen();
@@ -167,11 +161,11 @@ void CIOSOptionsPanel::ApplySchemeSettings( IScheme *pScheme )
 	//m_pClubNameText->SetFgColor(Color(0, 0, 0, 255));
 
 	m_pCountryNameLabel->SetBounds(0, 2 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pCountryNameLabel->SetVisible(false);
+	//m_pCountryNameLabel->SetVisible(false);
 	m_pCountryNameList->SetBounds(LABEL_WIDTH, 2 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
 	//m_pCountryNameList->GetMenu()->AddActionSignalTarget(this);
 	m_pCountryNameList->GetMenu()->MakeReadyForUse();
-	m_pCountryNameList->SetVisible(false);
+	//m_pCountryNameList->SetVisible(false);
 	//m_pCountryNameList->GetMenu()->SetFgColor(Color(0, 0, 0, 255));
 	//m_pCountryNameList->GetMenu()->SetBgColor(Color(255, 255, 255, 255));
 	//m_pCountryNameList->SetSelectionUnfocusedBgColor(Color(255, 0, 0, 255));
@@ -181,20 +175,15 @@ void CIOSOptionsPanel::ApplySchemeSettings( IScheme *pScheme )
 	//m_pCountryNameList->SetDisabledBgColor(Color(255, 255, 255, 255));
 	//m_pCountryNameList->SetSelectionTextColor(Color(0, 0, 0, 255));
 
-	m_pPreferredShirtNumberLabel->SetBounds(0, 2 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pPreferredShirtNumberList->SetBounds(LABEL_WIDTH, 2 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
+	m_pPreferredShirtNumberLabel->SetBounds(0, 3 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pPreferredShirtNumberList->SetBounds(LABEL_WIDTH, 3 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
 	m_pPreferredShirtNumberList->GetMenu()->MakeReadyForUse();
 
-	m_pInterpDurationLabel->SetBounds(0, 3 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pInterpDurationList->SetBounds(LABEL_WIDTH, 3 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
+	m_pInterpDurationLabel->SetBounds(0, 4 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pInterpDurationList->SetBounds(LABEL_WIDTH, 4 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
 
-	m_pSmoothDurationLabel->SetBounds(0, 4 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pSmoothDurationList->SetBounds(LABEL_WIDTH, 4 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
-
-	m_pShotButtonPanel->SetBounds(0, 4 * TEXT_HEIGHT, m_pContent->GetWide(), TEXT_HEIGHT);
-	m_pShotButtonLabel->SetBounds(0, 0, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pShotButtonLeft->SetBounds(LABEL_WIDTH, 0, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pShotButtonRight->SetBounds(2 * LABEL_WIDTH, 0, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pSmoothDurationLabel->SetBounds(0, 5 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pSmoothDurationList->SetBounds(LABEL_WIDTH, 5 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
 
 	m_pOKButton->SetBounds(m_pContent->GetWide() - 3 * BUTTON_WIDTH - 2 * BUTTON_MARGIN, m_pContent->GetTall() - BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT);
 	m_pOKButton->SetCommand("save_and_close");
@@ -237,12 +226,9 @@ void CIOSOptionsPanel::OnCommand(const char *cmd)
 		g_pCVar->FindVar("playername")->SetValue(text);
 		m_pClubNameText->GetText(text, sizeof(text));
 		g_pCVar->FindVar("clubname")->SetValue(text);
-		m_pCountryNameList->GetText(text, sizeof(text));
-		g_pCVar->FindVar("ipcountryname")->SetValue(text);
+		g_pCVar->FindVar("fallbackcountryindex")->SetValue(m_pCountryNameList->GetActiveItemUserData()->GetInt("index"));
 		m_pPreferredShirtNumberList->GetText(text, sizeof(text));
 		g_pCVar->FindVar("preferredshirtnumber")->SetValue(atoi(text));
-
-		g_pCVar->FindVar("shotbutton")->SetValue(m_pShotButtonLeft->IsSelected() ? "left" : "right");
 
 		g_pCVar->FindVar("cl_interp_ratio")->SetValue(atoi(m_pInterpDurationList->GetActiveItemUserData()->GetString("value")));
 		g_pCVar->FindVar("cl_smoothtime")->SetValue(atoi(m_pSmoothDurationList->GetActiveItemUserData()->GetString("value")) / 100.0f);
@@ -268,10 +254,10 @@ void CIOSOptionsPanel::Activate()
 		g_pCVar->FindVar("playername")->SetValue(g_pCVar->FindVar("name")->GetString());
 
 	m_pPlayerNameText->SetText(g_pCVar->FindVar("playername")->GetString());
-	m_pCountryNameList->SetText(g_pCVar->FindVar("ipcountryname")->GetString());
+	m_pCountryNameList->SetText(g_szCountryNames[clamp(g_pCVar->FindVar("fallbackcountryindex")->GetInt(), 0, COUNTRY_NAMES_COUNT)]);
 	m_pClubNameText->SetText(g_pCVar->FindVar("clubname")->GetString());
 	int shirtNum = g_pCVar->FindVar("preferredshirtnumber")->GetInt();
-	m_pPreferredShirtNumberList->SetText(shirtNum == 0 ? "None" : VarArgs("%d", clamp(shirtNum, 2, 11)));
+	m_pPreferredShirtNumberList->SetText(shirtNum == 0 ? "<None>" : VarArgs("%d", clamp(shirtNum, 2, 11)));
 
 	m_pInterpDurationList->ActivateItemByRow(0);
 
@@ -294,9 +280,4 @@ void CIOSOptionsPanel::Activate()
 			break;
 		}
 	}
-
-	if (!Q_strcmp(g_pCVar->FindVar("shotbutton")->GetString(), "left"))
-		m_pShotButtonLeft->SetSelected(true);
-	else
-		m_pShotButtonRight->SetSelected(true);
 }

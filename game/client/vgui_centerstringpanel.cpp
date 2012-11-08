@@ -20,12 +20,7 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-
-#ifdef TF_CLIENT_DLL
-static ConVar		scr_centertime( "scr_centertime", "5" );
-#else
-static ConVar		scr_centertime( "scr_centertime", "2" );
-#endif
+static ConVar		cl_centermessagetime( "cl_centermessagetime", "5" );
 
 //-----------------------------------------------------------------------------
 // Purpose: Implements Center String printing
@@ -69,6 +64,8 @@ private:
 CCenterStringLabel::CCenterStringLabel( vgui::VPANEL parent ) : 
 	BaseClass( NULL, "CCenterStringLabel", " " )
 {
+	SetScheme("ClientScheme");
+
 	SetParent( parent );
 	ComputeSize();
 	SetVisible( false );
@@ -123,7 +120,7 @@ void CCenterStringLabel::ApplySchemeSettings(vgui::IScheme *pScheme)
 	BaseClass::ApplySchemeSettings(pScheme);
 
 	// Use a large font
-	m_hFont = pScheme->GetFont( "Trebuchet24" );
+	m_hFont = pScheme->GetFont( "IOSCenterMessage" );
 	assert( m_hFont );
 	SetFont( m_hFont );
 
@@ -154,7 +151,7 @@ void CCenterStringLabel::Print( char *text )
 {
 	SetText( text );
 	
-	m_flCentertimeOff = scr_centertime.GetFloat() + gpGlobals->curtime;
+	m_flCentertimeOff = cl_centermessagetime.GetFloat() + gpGlobals->curtime;
 }
 
 //-----------------------------------------------------------------------------
@@ -164,7 +161,7 @@ void CCenterStringLabel::Print( wchar_t *text )
 {
 	SetText( text );
 	
-	m_flCentertimeOff = scr_centertime.GetFloat() + gpGlobals->curtime;
+	m_flCentertimeOff = cl_centermessagetime.GetFloat() + gpGlobals->curtime;
 }
 
 //-----------------------------------------------------------------------------

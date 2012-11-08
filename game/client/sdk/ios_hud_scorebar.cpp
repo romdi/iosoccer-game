@@ -133,7 +133,7 @@ enum { TEAMCREST_SIZE = 70, TEAMCREST_HOFFSET = (2 * TEAMCOLOR_HMARGIN + 2 * TEA
 enum { CENTERBAR_WIDTH = 140, CENTERBAR_OFFSET = 5 };
 enum { BAR_BORDER = 2 };
 enum { PLAYERNAME_MARGIN = 5, PLAYERNAME_OFFSET = 50, PLAYERNAME_WIDTH = 150 };
-enum { PENALTYPANEL_HEIGHT = 30, PENALTYPANEL_PADDING = 5, PENALTYPANEL_TOPMARGIN = 10 };
+enum { PENALTYPANEL_HEIGHT = 20, PENALTYPANEL_PADDING = 2, PENALTYPANEL_TOPMARGIN = 10 };
 enum { TEAMNAME_WIDTH = (MAINBAR_WIDTH - 2 * TEAMGOAL_MARGIN - TEAMGOAL_WIDTH - 2 * TEAMCOLOR_HMARGIN - 2 * TEAMCOLOR_WIDTH - TEAMCREST_SIZE - TEAMCREST_PADDING), TEAMNAME_MARGIN = 10 };
 enum { EVENT_MARGIN = 5, EVENT_WIDTH = 200, EVENT_HEIGHT = 35, SUBEVENT_WIDTH = 200, SUBEVENT_HEIGHT = 35, IMPORTANTEVENT_HEIGHT = 100 };
 enum { HELPTEXT_HEIGHT = 40, HELPTEXT_BOTTOMMARGIN = 15 };
@@ -253,7 +253,7 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 	m_pSubSubEvent->SetFont(pScheme->GetFont("IOSSubEvent"));
 	m_pSubSubEvent->SetFgColor(Color(255, 255, 255, 255));
 
-	m_pImportantEvent->SetBounds(0, GetTall() / 2 - IMPORTANTEVENT_HEIGHT / 2, GetWide(), IMPORTANTEVENT_HEIGHT);
+	m_pImportantEvent->SetBounds(0, GetTall() * 0.33f - IMPORTANTEVENT_HEIGHT / 2, GetWide(), IMPORTANTEVENT_HEIGHT);
 	m_pImportantEvent->SetContentAlignment(Label::a_center);
 	m_pImportantEvent->SetFont(pScheme->GetFont("IOSImportantEvent"));
 	m_pImportantEvent->SetFgColor(Color(255, 255, 255, 255));
@@ -323,13 +323,16 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 		m_pSubSubPlayers[i]->SetContentAlignment(Label::a_center);
 		m_pSubSubPlayers[i]->SetFont(pScheme->GetFont("IOSSubEventPlayer"));
 		m_pSubSubPlayers[i]->SetFgColor(Color(255, 255, 255, 255));
+		
+		int fieldWidth = (MAINBAR_WIDTH - 6 * PENALTYPANEL_PADDING) / 5;
+		int panelWidth = PENALTYPANEL_PADDING + 5 * (fieldWidth + PENALTYPANEL_PADDING);
 
-		m_pPenaltyPanels[i]->SetBounds(m_pMainBars[i]->GetX() + m_pTeamNames[i]->GetX(), MAINBAR_MARGIN + MAINBAR_HEIGHT + CENTERBAR_OFFSET + EVENT_MARGIN + EVENT_HEIGHT + PENALTYPANEL_TOPMARGIN, m_pTeamNames[i]->GetWide(), PENALTYPANEL_HEIGHT);
+		m_pPenaltyPanels[i]->SetBounds(m_pMainBars[i]->GetX(), MAINBAR_MARGIN + MAINBAR_HEIGHT + CENTERBAR_OFFSET + EVENT_MARGIN + EVENT_HEIGHT + PENALTYPANEL_TOPMARGIN, panelWidth, PENALTYPANEL_HEIGHT);
 		m_pPenaltyPanels[i]->SetBgColor(Color(0, 0, 0, 255));
 
 		for (int j = 0; j < 5; j++)
 		{
-			m_pPenalties[i][j]->SetBounds(j * (m_pPenaltyPanels[i]->GetWide() / 5) + PENALTYPANEL_PADDING, PENALTYPANEL_PADDING, m_pPenaltyPanels[i]->GetWide() / 5 - 2 * PENALTYPANEL_PADDING, PENALTYPANEL_HEIGHT - 2 * PENALTYPANEL_PADDING);
+			m_pPenalties[i][j]->SetBounds(PENALTYPANEL_PADDING + j * (fieldWidth + PENALTYPANEL_PADDING), PENALTYPANEL_PADDING, fieldWidth, PENALTYPANEL_HEIGHT - 2 * PENALTYPANEL_PADDING);
 		}
 	}
 }
