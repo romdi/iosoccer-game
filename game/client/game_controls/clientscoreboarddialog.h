@@ -147,6 +147,7 @@ public:
 	virtual void FireGameEvent( IGameEvent *event);
 
 	virtual void UpdatePlayerAvatar( int playerIndex, KeyValues *kv );
+	virtual int GetCountryFlagImageIndex(int countryIndex);
 
 	void SetHighlightedPlayer(int playerIndex);
 			
@@ -197,6 +198,9 @@ protected:
 	vgui::ImageList				*m_pImageList;
 	int							m_iImageAvatars[MAX_PLAYERS+1];
 	CUtlMap<int,int>			m_mapAvatarsToImageList;
+
+	int							m_iCountryFlags[MAX_PLAYERS+1];
+	CUtlMap<int,int>			m_mapCountryFlagsToImageList;
 
 	//CPanelAnimationVar( int, m_iAvatarWidth, "avatar_width", "34" );		// Avatar width doesn't scale with resolution
 	//CPanelAnimationVarAliasType( int, m_iAvatarWidth, "avatar_width", "34", "proportional_int" );

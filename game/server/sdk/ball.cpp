@@ -756,6 +756,7 @@ void CBall::State_Enter(ball_state_t newState, bool cancelQueuedState)
 
 	m_eBallState = newState;
 	m_pCurStateInfo = State_LookupInfo( newState );
+
 	m_flStateEnterTime = gpGlobals->curtime;
 	m_flStateTimelimit = -1;
 	m_bNextStateMessageSet = false;

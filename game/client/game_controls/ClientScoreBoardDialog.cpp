@@ -50,6 +50,11 @@ bool AvatarIndexLessFunc( const int &lhs, const int &rhs )
 	return lhs < rhs; 
 }
 
+bool CountryFlagIndexLessFunc( const int &lhs, const int &rhs )	
+{ 
+	return lhs < rhs; 
+}
+
 enum { PANEL_TOPMARGIN = 70, PANEL_MARGIN = 5, PANEL_WIDTH = (1024 - 2 * PANEL_MARGIN), PANEL_HEIGHT = (720 - PANEL_TOPMARGIN - PANEL_MARGIN) };
 enum { TEAMCREST_SIZE = 48, TEAMCREST_VMARGIN = 7, TEAMCREST_HOFFSET = 240, TEAMCREST_VOFFSET = 10 };
 enum { PLAYERLIST_HEIGHT = 330, PLAYERLIST_BOTTOMMARGIN = 10, PLAYERLISTDIVIDER_WIDTH = 8 };
@@ -112,6 +117,10 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Editabl
 	m_mapAvatarsToImageList.SetLessFunc( AvatarIndexLessFunc );
 	m_mapAvatarsToImageList.RemoveAll();
 	memset( &m_iImageAvatars, 0, sizeof(int) * (MAX_PLAYERS+1) );
+
+	m_mapCountryFlagsToImageList.SetLessFunc( CountryFlagIndexLessFunc );
+	m_mapCountryFlagsToImageList.RemoveAll();
+	memset( &m_iCountryFlags, 0, sizeof(int) * (MAX_PLAYERS+1) );
 
 	m_pStatButtonOuterContainer = new Panel(m_pMainPanel);
 	m_pStatButtonInnerContainer = new Panel(m_pStatButtonOuterContainer);
@@ -258,6 +267,9 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 	m_mapAvatarsToImageList.RemoveAll();
 	memset( &m_iImageAvatars, 0, sizeof(int) * (MAX_PLAYERS+1) );
 
+	m_mapCountryFlagsToImageList.RemoveAll();
+	memset( &m_iCountryFlags, 0, sizeof(int) * (MAX_PLAYERS+1) );
+
 	m_pExtraInfoPanel->SetBounds(EXTRAINFO_MARGIN, PLAYERLIST_HEIGHT + PLAYERLIST_BOTTOMMARGIN + SPECLIST_HEIGHT, m_pMainPanel->GetWide() - 2 * EXTRAINFO_MARGIN, EXTRAINFO_HEIGHT);
 	//m_pExtraInfoPanel->SetBgColor(Color(0, 0, 0, 200));
 
@@ -398,6 +410,7 @@ void CClientScoreBoardDialog::ShowPanel(bool bShow)
 		SetKeyBoardInputEnabled(false);
 		SetMouseInputEnabled(true);
 		input()->SetCursorPos(ScreenWidth() / 2, m_pMainPanel->GetY() + m_pExtraInfoPanel->GetY() - 60);
+		SetHighlightedPlayer(0);
 	}
 	else
 	{
@@ -996,19 +1009,7 @@ bool CClientScoreBoardDialog::GetPlayerInfo(int playerIndex, KeyValues *kv)
 	//	}
 	//}
 
-	int imageIndex;
-
-	if (gr->GetCountryName(playerIndex) > 0)
-	{
-		IImage *countryFlag = scheme()->GetImage(VarArgs("country_flags/%s", g_szCountryISOCodes[gr->GetCountryName(playerIndex)]), false);
-		countryFlag->SetSize(25, 25);
-		imageIndex = m_pImageList->AddImage(countryFlag);
-		//m_pImageList->GetImage(imageIndex)->SetPos(10, 10);
-	}
-	else
-		imageIndex = 0;
-
-	kv->SetInt("country", imageIndex);
+	kv->SetInt("country", GetCountryFlagImageIndex(gr->GetCountryName(playerIndex)));
 
 	const char *oldName = kv->GetString("name","");
 	char newName[MAX_PLAYER_NAME_LENGTH];
@@ -1131,17 +1132,7 @@ bool CClientScoreBoardDialog::GetTeamInfo(int team, KeyValues *kv)
 	kv->SetInt("playerindex", teamIndex - 1);
 	kv->SetInt("posname", pTeam->GetNumPlayers());
 	kv->SetString("name", pTeam->Get_ShortTeamName());
-	int imageIndex;
-	if (teamCountry > 0)
-	{
-		IImage *countryFlag = scheme()->GetImage(VarArgs("country_flags/%s", g_szCountryISOCodes[teamCountry]), false);
-		countryFlag->SetSize(25, 25);
-		imageIndex = m_pImageList->AddImage(countryFlag);
-		//m_pImageList->GetImage(imageIndex)->SetPos(10, 10);
-	}
-	else
-		imageIndex = 0;
-	kv->SetInt("country", imageIndex);
+	kv->SetInt("country", GetCountryFlagImageIndex(teamCountry));
 	kv->SetString("club", teamClub);
 	kv->SetString("ping", GET_STAT_TEXT(pingSum / max(1, pingPlayers)));
 	kv->SetString("possession", GET_STAT_FTEXT(pTeam->Get_Possession(), "%d%%"));
@@ -1220,6 +1211,30 @@ void CClientScoreBoardDialog::UpdatePlayerAvatar( int playerIndex, KeyValues *kv
 			}
 		}
 	}
+}
+
+int CClientScoreBoardDialog::GetCountryFlagImageIndex(int countryIndex)
+{
+	int imageIndex;
+
+	if (countryIndex > 0)
+	{
+		int listIndex = m_mapCountryFlagsToImageList.Find(countryIndex);
+
+		if (m_mapCountryFlagsToImageList.IsValidIndex(listIndex))
+			imageIndex = m_mapCountryFlagsToImageList[listIndex];
+		else
+		{
+			IImage *countryFlag = scheme()->GetImage(VarArgs("country_flags/%s", g_szCountryISOCodes[countryIndex]), false);
+			countryFlag->SetSize(25, 25);
+			imageIndex = m_pImageList->AddImage(countryFlag);
+			m_mapCountryFlagsToImageList.Insert(countryIndex, imageIndex);
+		}
+	}
+	else
+		imageIndex = 0;
+
+	return imageIndex;
 }
 
 //-----------------------------------------------------------------------------

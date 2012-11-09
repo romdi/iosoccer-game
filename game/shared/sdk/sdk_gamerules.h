@@ -290,6 +290,8 @@ public:
 	void StartRoundtimer(int iDuration);
 	inline match_state_t State_Get( void ) { return m_eMatchState; }
 	CNetworkVar(float, m_flStateEnterTime);
+	float	m_flAdjustedStateEnterTime;
+	bool	m_bUseAdjustedStateEnterTime;
 	CNetworkVar(float, m_flMatchStartTime);
 
 	void RestartMatch(bool setRandomSides);
@@ -406,6 +408,7 @@ public:
 
 	bool IsIntermissionState();
 	int GetShieldRadius();
+	void SetMatchDisplayTimeSeconds(int seconds);
 	int GetMatchDisplayTimeSeconds(bool clamped = false);
 
 	CNetworkVar(int, m_nShieldType);

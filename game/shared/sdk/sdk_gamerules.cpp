@@ -397,6 +397,8 @@ CSDKGameRules::CSDKGameRules()
 	m_flOffsideLineLastOppPlayerPosY = 0;
 	m_flMatchStartTime = gpGlobals->curtime;
 	m_flLastMasterServerPingTime = -FLT_MAX;
+	m_bUseAdjustedStateEnterTime = false;
+	m_flAdjustedStateEnterTime = -FLT_MAX;
 #else
 	PrecacheMaterial("pitch/offside_line");
 	m_pOffsideLineMaterial = materials->FindMaterial( "pitch/offside_line", TEXTURE_GROUP_CLIENT_EFFECTS );
@@ -1043,6 +1045,63 @@ void CSDKGameRules::RestartMatch(bool setRandomSides)
 
 #ifndef CLIENT_DLL
 
+void CC_SV_MatchMinute(const CCommand &args)
+{
+	if (!UTIL_IsCommandIssuedByServerAdmin())
+        return;
+
+	if (args.ArgC() < 2)
+		return;
+
+	SDKGameRules()->SetMatchDisplayTimeSeconds(atoi(args[1]) * 60);
+}
+
+ConCommand sv_matchminute( "sv_matchminute", CC_SV_MatchMinute, "Set match minute", 0 );
+
+void CC_SV_MatchGoalsHome(const CCommand &args)
+{
+	if (!UTIL_IsCommandIssuedByServerAdmin())
+        return;
+
+	if (args.ArgC() < 2)
+		return;
+
+	GetGlobalTeam(TEAM_A)->SetGoals(atoi(args[1]));
+}
+
+ConCommand sv_matchgoalshome( "sv_matchgoalshome", CC_SV_MatchGoalsHome, "", 0 );
+
+void CC_SV_MatchGoalsAway(const CCommand &args)
+{
+	if (!UTIL_IsCommandIssuedByServerAdmin())
+        return;
+
+	if (args.ArgC() < 2)
+		return;
+
+	GetGlobalTeam(TEAM_B)->SetGoals(atoi(args[1]));
+}
+
+ConCommand sv_matchgoalsaway( "sv_matchgoalsaway", CC_SV_MatchGoalsAway, "", 0 );
+
+void CC_SV_ResumeMatch(const CCommand &args)
+{
+	if (!UTIL_IsCommandIssuedByServerAdmin())
+        return;
+
+	if (args.ArgC() < 4)
+	{
+		Msg("Usage: sv_resumematch <goals home team> <goals away team> <match minute>\nExample: sv_resumematch 3 2 67\n");
+		return;
+	}
+
+	GetGlobalTeam(TEAM_A)->SetGoals(atoi(args[1]));
+	GetGlobalTeam(TEAM_B)->SetGoals(atoi(args[2]));
+	SDKGameRules()->SetMatchDisplayTimeSeconds(atoi(args[3]) * 60);
+}
+
+ConCommand sv_resumematch( "sv_resumematch", CC_SV_ResumeMatch, "", 0 );
+
 void CC_SV_Restart(const CCommand &args)
 {
 	if ( !UTIL_IsCommandIssuedByServerAdmin() )
@@ -1198,7 +1257,15 @@ void CSDKGameRules::State_Enter( match_state_t newState )
 {
 	m_eMatchState = newState;
 	m_pCurStateInfo = State_LookupInfo( newState );
-	m_flStateEnterTime = gpGlobals->curtime;
+
+	if (m_bUseAdjustedStateEnterTime)
+	{
+		m_flStateEnterTime = m_flAdjustedStateEnterTime;
+		m_bUseAdjustedStateEnterTime = false;
+	}
+	else
+		m_flStateEnterTime = gpGlobals->curtime;
+
 	m_flInjuryTime = 0.0f;
 	m_flInjuryTimeStart = -1;
 	m_nAnnouncedInjuryTime = 0;
@@ -2151,6 +2218,46 @@ ConVar mp_daytime_sunrise("mp_daytime_sunrise", "8", FCVAR_NOTIFY | FCVAR_REPLIC
 ConVar mp_daytime_sunset("mp_daytime_sunset", "20", FCVAR_NOTIFY | FCVAR_REPLICATED);
 
 #ifdef GAME_DLL
+
+void CSDKGameRules::SetMatchDisplayTimeSeconds(int seconds)
+{
+	m_bUseAdjustedStateEnterTime = true;
+	float minute = seconds / 60.0f;
+	match_state_t matchState;
+
+	if (minute >= 120)
+	{
+		m_flAdjustedStateEnterTime = gpGlobals->curtime - ((seconds - 120 * 60) / (90.0f / mp_timelimit_match.GetInt()));
+		matchState = MATCH_PENALTIES;
+	}
+	else if (minute >= 105)
+	{
+		m_flAdjustedStateEnterTime = gpGlobals->curtime - ((seconds - 105 * 60) / (90.0f / mp_timelimit_match.GetInt()));
+		matchState = MATCH_EXTRATIME_SECOND_HALF;
+	}
+	else if (minute >= 90)
+	{
+		m_flAdjustedStateEnterTime = gpGlobals->curtime - ((seconds - 90 * 60) / (90.0f / mp_timelimit_match.GetInt()));
+		matchState = MATCH_EXTRATIME_FIRST_HALF;
+	}
+	else if (minute >= 45)
+	{
+		m_flAdjustedStateEnterTime = gpGlobals->curtime - ((seconds - 45 * 60) / (90.0f / mp_timelimit_match.GetInt()));
+		matchState = MATCH_SECOND_HALF;
+	}
+	else
+	{
+		m_flAdjustedStateEnterTime = gpGlobals->curtime - ((seconds - 0 * 60) / (90.0f / mp_timelimit_match.GetInt()));
+		matchState = MATCH_FIRST_HALF;
+	}
+
+	GetBall()->ResetMatch();
+	m_flMatchStartTime = gpGlobals->curtime - (seconds / (90.0f / mp_timelimit_match.GetInt()));
+	GetBall()->State_Transition(BALL_STATIC, 0, true);
+	SetLeftSideTeam(m_nFirstHalfLeftSideTeam);
+	SetKickOffTeam(m_nFirstHalfKickOffTeam);
+	State_Transition(matchState);
+}
 
 void CSDKGameRules::SetOffsideLinePositions(float ballPosY, float offsidePlayerPosY, float lastOppPlayerPosY)
 {

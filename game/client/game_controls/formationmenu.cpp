@@ -275,7 +275,7 @@ void CFormationMenu::OnCursorEntered(Panel *panel)
 	{
 		m_pFormationButtons[pButton->GetCommand()->GetInt("team") - TEAM_A][pButton->GetCommand()->GetInt("posindex")]->SetArmed(true);
 		m_pTooltip->SetVisible(true);
-		DevMsg("%.2f: enter tooltip\n", gpGlobals->curtime);
+		//DevMsg("%.2f: enter tooltip\n", gpGlobals->curtime);
 	}
 	else
 	{
@@ -305,7 +305,7 @@ void CFormationMenu::OnCursorEntered(Panel *panel)
 		kv->SetInt("team", pButton->GetCommand()->GetInt("team"));
 		m_pTooltip->SetCommand(kv);
 		m_pTooltip->SetVisible(true);
-		DevMsg("%.2f: enter button\n", gpGlobals->curtime);
+		//DevMsg("%.2f: enter button\n", gpGlobals->curtime);
 	}
 }
 
@@ -318,11 +318,11 @@ void CFormationMenu::OnCursorExited(Panel *panel)
 		m_pFormationButtons[pButton->GetCommand()->GetInt("team") - TEAM_A][pButton->GetCommand()->GetInt("posindex")]->SetArmed(false);
 		m_pTooltip->SetVisible(false);
 		((CClientScoreBoardDialog *)gViewPortInterface->FindPanelByName(PANEL_SCOREBOARD))->SetHighlightedPlayer(0);
-		DevMsg("%.2f: exit tooltip\n", gpGlobals->curtime);
+		//DevMsg("%.2f: exit tooltip\n", gpGlobals->curtime);
 	}
 	else
 	{
-		DevMsg("%.2f: exit button\n", gpGlobals->curtime);
+		//DevMsg("%.2f: exit button\n", gpGlobals->curtime);
 		pButton->SetArmed(false);
 	}
 }

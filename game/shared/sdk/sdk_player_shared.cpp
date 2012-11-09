@@ -39,7 +39,7 @@
 	#include "team.h"
 #endif
 
-const char *g_szRequiredClientVersion = "31.10.12/17h";
+const char *g_szRequiredClientVersion = "09.11.12/19h";
 
 ConVar sv_showimpacts("sv_showimpacts", "0", FCVAR_REPLICATED, "Shows client (red) and server (blue) bullet impact point" );
 

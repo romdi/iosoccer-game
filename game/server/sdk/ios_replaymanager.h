@@ -67,6 +67,10 @@ struct Snapshot
 	PlayerSnapshot *pPlayerSnapshot[2][11];
 };
 
+struct Replay
+{
+	CUtlVector<Snapshot> m_Snapshots;
+};
 
 class CReplayBall : public CPhysicsProp
 {
@@ -134,7 +138,7 @@ public:
 
 private:
 	CUtlVector<Snapshot>	m_Snapshots;
-	CUtlVector<CUtlVector<Snapshot>> m_Replays;
+	CUtlVector<Replay>		m_Replays;
 	bool					m_bDoReplay;
 	int						m_nSnapshotIndex;
 	CReplayBall				*m_pBall;
