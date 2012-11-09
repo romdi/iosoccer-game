@@ -18,6 +18,7 @@
 #include "c_playerresource.h"
 #include "voice_common.h"
 #include <igameresources.h>
+#include "c_sdk_player.h"
 
 #include "vgui_avatarimage.h"
 
@@ -136,6 +137,8 @@ private:
 
 	Color	m_clrIcon;
 
+	HFont	m_hFont;
+
 	CUtlLinkedList< int > m_SpeakingList;
 	
 	CPanelAnimationVar( vgui::HFont, m_NameFont, "Default", "Default" );
@@ -198,6 +201,10 @@ void CHudVoiceStatus::ApplySchemeSettings(vgui::IScheme *pScheme)
 #endif
 
 	SetPaintBackgroundEnabled( false );
+
+	m_hFont = pScheme->GetFont("IOSPlayerName");
+
+	SetBounds(0, 0, ScreenWidth(), ScreenHeight());
 }
 void CHudVoiceStatus::PostApplySchemeSettings( vgui::IScheme *pScheme )
 {
@@ -221,8 +228,6 @@ void CHudVoiceStatus::VidInit( void )
 
 void CHudVoiceStatus::OnThink( void )
 {
-	return;
-
 	//Tony; don't update if local player aint here!
 	C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
 	if (!player)
@@ -300,148 +305,31 @@ bool CHudVoiceStatus::ShouldDraw()
 
 void CHudVoiceStatus::Paint()
 {
-	int x, y, w, h;
-	GetBounds( x, y, w, h );
-
-	// Heights to draw the current voice item at
-	int xpos = 0;
-	int ypos = h - item_tall;
-
-
-	int i;
-	int length = m_SpeakingList.Count();
-
-	int iFontHeight = 0;
-
-	if( length > 0 )
-	{
-		surface()->DrawSetTextFont( m_NameFont );
-		surface()->DrawSetTextColor( Color(255,255,255,255) );
-		iFontHeight = surface()->GetFontTall( m_NameFont );
-	}
-
-	if ( !sv_alltalk )
-		sv_alltalk = cvar->FindVar( "sv_alltalk" );
-
 	//draw everyone in the list!
-	for( i = m_SpeakingList.Head(); i != m_SpeakingList.InvalidIndex(); i = m_SpeakingList.Next(i) )
+	for(int i = m_SpeakingList.Head(); i != m_SpeakingList.InvalidIndex(); i = m_SpeakingList.Next(i) )
 	{
-		int playerIndex = m_SpeakingList.Element(i);
-		bool bIsAlive = g_PR->IsConnected(playerIndex) && (g_PR->GetTeam(playerIndex) == TEAM_A || g_PR->GetTeam(playerIndex) == TEAM_B);
+		C_SDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(m_SpeakingList.Element(i)));
 
-		Color c = g_PR->GetTeamColor( g_PR ? g_PR->GetTeam(playerIndex) : TEAM_UNASSIGNED );
+		wchar_t wszPlayerName[MAX_PLAYER_NAME_LENGTH];
+		wchar_t wszPlayerText[MAX_PLAYER_NAME_LENGTH + 16];
 
-		c[3] = 128;
-	
-		const char *pName = g_PR ? g_PR->GetPlayerName(playerIndex) : "unknown";
-		wchar_t szconverted[ 64 ];
+		g_pVGuiLocalize->ConvertANSIToUnicode(pPl->GetPlayerName(), wszPlayerName, sizeof(wszPlayerName));
+		_snwprintf( wszPlayerText, ARRAYSIZE(wszPlayerText) - 1, L"Talking: %s", wszPlayerName);
+		wszPlayerText[ ARRAYSIZE(wszPlayerText)-1 ] = '\0';	
 
-		// Add the location, if any
-		bool usedLocation = false;
-		if ( sv_alltalk && !sv_alltalk->GetBool() )
-		{
-			C_BasePlayer *pPlayer = UTIL_PlayerByIndex( playerIndex );
-			if ( pPlayer )
-			{
-				const char *asciiLocation = pPlayer->GetLastKnownPlaceName();
-				if ( asciiLocation && *asciiLocation )
-				{
-					const wchar_t *unicodeLocation = g_pVGuiLocalize->Find( asciiLocation );
-					if ( unicodeLocation && *unicodeLocation )
-					{
-						wchar_t *formatStr = g_pVGuiLocalize->Find( "#Voice_UseLocation" );
-						if ( formatStr )
-						{
-							wchar_t unicodeName[ 64 ];
-							g_pVGuiLocalize->ConvertANSIToUnicode( pName, unicodeName, sizeof( unicodeName ) );
+		int wide, tall;
+		int xPos, yPos;
+		int zOffset = 120;
 
-							g_pVGuiLocalize->ConstructString( szconverted, sizeof( szconverted ),
-								formatStr, 2, unicodeName, unicodeLocation );
+		vgui::surface()->GetTextSize(m_hFont, wszPlayerText, wide, tall);
 
-							usedLocation = true;
-						}
-					}
-				}
-			}
-		}
+		Color c = GameResources()->GetTeamColor(pPl->GetTeamNumber());
+		c = Color(c.r(), c.g(), c.b(), 255);
 
-		if ( !usedLocation )
-		{
-			g_pVGuiLocalize->ConvertANSIToUnicode( pName, szconverted, sizeof(szconverted)  );
-		}
+		surface()->DrawSetTextFont(m_hFont);
+		surface()->DrawSetTextColor(c);
 
-		// Draw the item background
-		surface()->DrawSetColor( c );
-		surface()->DrawFilledRect( xpos, ypos, xpos + item_wide, ypos + item_tall );
-	
-		int iDeathIconWidth = 0;
-
-		if ( bIsAlive == false && m_iDeadImageID != -1 )
-		{
-			Vertex_t vert[4];	
-			float uv1 = 0.0f;
-			float uv2 = 1.0f;
-
-			// Draw the dead material
-			surface()->DrawSetTexture( m_iDeadImageID );
-
-			vert[0].Init( Vector2D( xpos, ypos ), Vector2D( uv1, uv1 ) );
-			vert[1].Init( Vector2D( xpos + icon_wide, ypos ), Vector2D( uv2, uv1 ) );
-			vert[2].Init( Vector2D( xpos + icon_wide, ypos + icon_tall ), Vector2D( uv2, uv2 ) );				
-			vert[3].Init( Vector2D( xpos, ypos + icon_tall ), Vector2D( uv1, uv2 ) );
-
-			surface()->DrawSetColor( Color(255,255,255,255) );
-
-			surface()->DrawTexturedPolygon( 4, vert );
-
-			iDeathIconWidth = icon_wide;
-		}
-		// Draw the voice icon
-		int imageIndex = m_iPlayerAvatar[playerIndex];
-		if (m_pImageList->IsValidIndex(imageIndex))
-		{
-			// 0 is always the blank image
-			if (imageIndex > 0)
-			{
-				IImage *image = m_pImageList->GetImage(imageIndex);
-				if (image)
-				{
-					image->SetPos( xpos + icon_xpos + iDeathIconWidth, ypos + icon_ypos );
-					image->SetSize(icon_wide, icon_tall);
-					image->Paint();
-				}
-			}
-		}
-
-		
-
-		// Draw the player's name
-		surface()->DrawSetTextPos( xpos + text_xpos + iDeathIconWidth, ypos + ( item_tall / 2 ) - ( iFontHeight / 2 ) );
-
-		int iTextSpace = item_wide - text_xpos;
-
-		// write as much of the name as will fit, truncate the rest and add ellipses
-		int iNameLength = wcslen(szconverted);
-		const wchar_t *pszconverted = szconverted;
-		int iTextWidthCounter = 0;
-		for( int j=0;j<iNameLength;j++ )
-		{
-			iTextWidthCounter += surface()->GetCharacterWidth( m_NameFont, pszconverted[j] );
-
-			if( iTextWidthCounter > iTextSpace )
-			{	
-				if( j > 3 )
-				{
-					szconverted[j-2] = '.';
-					szconverted[j-1] = '.';
-					szconverted[j] = '\0';
-				}
-				break;
-			}
-		}
-
-		surface()->DrawPrintText( szconverted, wcslen(szconverted) );
-			
-		ypos -= ( item_spacing + item_tall );
+		surface()->DrawSetTextPos(20, 20 + i * tall);
+		surface()->DrawPrintText(wszPlayerText, wcslen(wszPlayerText));
 	}
 }

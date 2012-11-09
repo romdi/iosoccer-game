@@ -147,7 +147,8 @@ int CVoiceStatus::Init(
 	g_pInternalVoiceStatus = this;
 
 
-	m_pHeadLabelMaterial = materials->FindMaterial( "voice/icntlk_pl", TEXTURE_GROUP_VGUI );
+	//m_pHeadLabelMaterial = materials->FindMaterial( "voice/icntlk_pl", TEXTURE_GROUP_VGUI );
+	m_pHeadLabelMaterial = materials->FindMaterial( "vgui/voice", TEXTURE_GROUP_VGUI );
 	m_pHeadLabelMaterial->IncrementReferenceCount();
 
 	m_bInSquelchMode = false;
@@ -183,7 +184,7 @@ void CVoiceStatus::Frame(double frametime)
 }
 
 
-float g_flHeadOffset = 55;
+float g_flHeadOffset = 45;
 float g_flHeadIconSize = 8;
 
 
@@ -244,29 +245,29 @@ void CVoiceStatus::DrawHeadLabels()
 
 		float flSize = g_flHeadIconSize;
 
-		pRenderContext->Bind( pPlayer->GetHeadLabelMaterial() );
+		pRenderContext->Bind( m_pHeadLabelMaterial );
 		IMesh *pMesh = pRenderContext->GetDynamicMesh();
 		CMeshBuilder meshBuilder;
 		meshBuilder.Begin( pMesh, MATERIAL_QUADS, 1 );
 
 		meshBuilder.Color3f( 1.0, 1.0, 1.0 );
 		meshBuilder.TexCoord2f( 0,0,0 );
-		meshBuilder.Position3fv( (vOrigin + (vRight * -flSize) + (vUp * flSize)).Base() );
+		meshBuilder.Position3fv( (vOrigin + (vRight * 2 * -flSize) + (vUp * flSize)).Base() );
 		meshBuilder.AdvanceVertex();
 
 		meshBuilder.Color3f( 1.0, 1.0, 1.0 );
 		meshBuilder.TexCoord2f( 0,1,0 );
-		meshBuilder.Position3fv( (vOrigin + (vRight * flSize) + (vUp * flSize)).Base() );
+		meshBuilder.Position3fv( (vOrigin + (vRight * 2 * flSize) + (vUp * flSize)).Base() );
 		meshBuilder.AdvanceVertex();
 
 		meshBuilder.Color3f( 1.0, 1.0, 1.0 );
 		meshBuilder.TexCoord2f( 0,1,1 );
-		meshBuilder.Position3fv( (vOrigin + (vRight * flSize) + (vUp * -flSize)).Base() );
+		meshBuilder.Position3fv( (vOrigin + (vRight * 2 * flSize) + (vUp * -flSize)).Base() );
 		meshBuilder.AdvanceVertex();
 
 		meshBuilder.Color3f( 1.0, 1.0, 1.0 );
 		meshBuilder.TexCoord2f( 0,0,1 );
-		meshBuilder.Position3fv( (vOrigin + (vRight * -flSize) + (vUp * -flSize)).Base() );
+		meshBuilder.Position3fv( (vOrigin + (vRight * 2 * -flSize) + (vUp * -flSize)).Base() );
 		meshBuilder.AdvanceVertex();
 		meshBuilder.End();
 		pMesh->Draw();

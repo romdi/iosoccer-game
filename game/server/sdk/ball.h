@@ -223,6 +223,7 @@ private:
 
 	void			HandleFoul();
 	bool			PlayersAtTargetPos();
+	bool			CanTouchBallXY();
 	bool			CheckFoul();
 	void			TriggerFoul(foul_type_t type, Vector pos, CSDKPlayer *pFoulingPl, CSDKPlayer *pFouledPl = NULL);
 	CSDKPlayer		*FindNearestPlayer(int team = TEAM_INVALID, int posFlags = FL_POS_FIELD, bool checkIfShooting = false, int ignoredPlayerBits = 0);
@@ -255,7 +256,7 @@ private:
 	CHandle<CSDKPlayer>	m_pOtherPl;
 
 	QAngle			m_aPlAng;
-	Vector			m_vPlVel, m_vPlVel2D, m_vPlForwardVel2D, m_vPlPos, m_vPlForward, m_vPlForward2D, m_vPlRight, m_vPlUp;
+	Vector			m_vPlVel, m_vPlVel2D, m_vPlForwardVel2D, m_vPlPos, m_vPlForward, m_vPlForward2D, m_vPlRight, m_vPlUp, m_vPlDirToBall, m_vPlLocalDirToBall;
 
 	CHandle<CSDKPlayer>	m_pFouledPl;
 	CHandle<CSDKPlayer>	m_pFoulingPl;

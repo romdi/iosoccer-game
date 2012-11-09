@@ -14,6 +14,8 @@
 #include "vgui/ILocalize.h"
 #include "sdk_gamerules.h"
 #include "c_ios_replaymanager.h"
+#include "voice_status.h"
+#include "view.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -46,6 +48,7 @@ public:
 	virtual void	ApplySchemeSettings( vgui::IScheme *scheme );
 	virtual void	Paint( void );
 	void VidInit( void );
+	void Doit();
 
 private:
 	vgui::HFont		m_hFont;
@@ -117,10 +120,7 @@ void CSDKTargetId::Paint()
 	{
 		C_SDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
 
-		if (!pPl || pPl == pLocal)
-			continue;
-
-		if (pPl->IsDormant())
+		if (!pPl || pPl->IsDormant() || pPl == pLocal)
 			continue;
 
 		const char *printFormatString = NULL;
@@ -151,8 +151,9 @@ void CSDKTargetId::Paint()
 		//surface()->DrawSetColor(c);
 		//surface()->DrawLine(xPos, yStartPos, xPos, yEndPos);
 		surface()->DrawSetTextFont(m_hFont);
-		surface()->DrawSetTextPos(xPos - wide / 2, yPos - tall);
 		surface()->DrawSetTextColor(c);
+
+		surface()->DrawSetTextPos(xPos - wide / 2, yPos - tall);
 		surface()->DrawPrintText(wszPlayerText, wcslen(wszPlayerText));
 	}
 }

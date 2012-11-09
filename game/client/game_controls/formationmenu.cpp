@@ -47,8 +47,8 @@
 
 using namespace vgui;
 
-enum { FORMATION_BUTTON_WIDTH = 85, FORMATION_BUTTON_HEIGHT = 60 };
-enum { FORMATION_HPADDING = (FORMATION_BUTTON_WIDTH / 2 + 72), FORMATION_VPADDING = (FORMATION_BUTTON_HEIGHT / 2 + 20), FORMATION_CENTERPADDING = 35 };
+enum { FORMATION_BUTTON_WIDTH = 90, FORMATION_BUTTON_HEIGHT = 55 };
+enum { FORMATION_HPADDING = (FORMATION_BUTTON_WIDTH / 2 + 40), FORMATION_VPADDING = (FORMATION_BUTTON_HEIGHT / 2 + 10), FORMATION_CENTERPADDING = 35 };
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -67,7 +67,7 @@ CFormationMenu::CFormationMenu(Panel *parent, const char *name) : Panel(parent, 
 		}
 	}
 
-	m_pTooltip = new Label(this, "", "JOIN");
+	m_pTooltip = new Button(this, "", "JOIN", this, "tooltip");
 	m_pTooltip->SetVisible(false);
 
 	m_flNextUpdateTime = gpGlobals->curtime;
@@ -88,6 +88,8 @@ void CFormationMenu::PerformLayout()
 {
 	BaseClass::PerformLayout();
 
+	Color black(0, 0, 0, 240);
+
 	for (int i = 0; i < 2; i++)
 	{
 		m_pFormations[i]->SetBounds(i * (GetWide() / 2), 0, GetWide() / 2, GetTall());
@@ -97,7 +99,7 @@ void CFormationMenu::PerformLayout()
 		{
 			m_pFormationButtons[i][j]->SetBounds(0, 0, FORMATION_BUTTON_WIDTH, FORMATION_BUTTON_HEIGHT);
 			m_pFormationButtons[i][j]->SetContentAlignment(Label::a_center);
-			//m_pFormationButtons[i][j]->SetTextInset(0, -20);
+			m_pFormationButtons[i][j]->SetTextInset(0, -10);
 			m_pFormationButtons[i][j]->SetFont(m_pScheme->GetFont("IOSTeamMenuBig"));
 			color32 enabled = { 150, 150, 150, 150 };
 			color32 mouseover = { 150, 150, 150, 240 };
@@ -107,7 +109,6 @@ void CFormationMenu::PerformLayout()
 			m_pFormationButtons[i][j]->SetImage(CBitmapButton::BUTTON_ENABLED_MOUSE_OVER, "vgui/shirt", mouseover);
 			m_pFormationButtons[i][j]->SetImage(CBitmapButton::BUTTON_PRESSED, "vgui/shirt", pressed);
 			m_pFormationButtons[i][j]->SetImage(CBitmapButton::BUTTON_DISABLED, "vgui/shirt", disabled);
-			Color black(0, 0, 0, 240);
 			m_pFormationButtons[i][j]->SetDefaultColor(black, black);
 			m_pFormationButtons[i][j]->SetArmedColor(black, black);
 			m_pFormationButtons[i][j]->SetDepressedColor(black, black);
@@ -120,8 +121,15 @@ void CFormationMenu::PerformLayout()
 
 	m_pTooltip->SetSize(100, 30);
 	m_pTooltip->SetZPos(10);
-	m_pTooltip->SetContentAlignment(Label::a_north);
+	m_pTooltip->SetTextInset(0, -5);
+	m_pTooltip->SetContentAlignment(Label::a_south);
 	m_pTooltip->SetFont(m_pScheme->GetFont("Tooltip"));
+	m_pTooltip->SetPaintBackgroundEnabled(false);
+	m_pTooltip->SetPaintBorderEnabled(false);
+	m_pTooltip->SetCursor(dc_hand);
+	m_pTooltip->SetDefaultColor(black, black);
+	m_pTooltip->SetArmedColor(black, black);
+	m_pTooltip->SetDepressedColor(black, black);
 	//m_pTooltip->SetBgColor(Color(0, 255, 0, 255));
 
 	m_flNextUpdateTime = gpGlobals->curtime;
@@ -175,7 +183,7 @@ void CFormationMenu::Update()
 			}
 
 			m_pFormationButtons[i][j]->SetVisible(true);
-			m_pFormationButtons[i][j]->SetText(VarArgs("%s\n\nTEST", g_szPosNames[(int)g_Positions[mp_maxplayers.GetInt() - 1][j][POS_TYPE]]));
+			m_pFormationButtons[i][j]->SetText(VarArgs("%s", g_szPosNames[(int)g_Positions[mp_maxplayers.GetInt() - 1][j][POS_TYPE]]));
 
 			float xDist = (m_pFormations[i]->GetWide() - 2 * FORMATION_HPADDING) / 3;
 			float yDist = (m_pFormations[i]->GetTall() - 2 * FORMATION_VPADDING) / 3;
@@ -221,9 +229,9 @@ void CFormationMenu::Update()
 
 			kv->SetString("command", cmd);
 			kv->SetInt("playerindex", playerIndexAtPos[i][j]);
+			kv->SetInt("posindex", j);
 			kv->SetInt("team", i + TEAM_A);
 			m_pFormationButtons[i][j]->SetCommand(kv);
-			//kv->deleteThis();
 			Color teamColor = GetGlobalTeam(TEAM_A + i)->Get_HudKitColor();
 			color32 normal = { teamColor.r(), teamColor.g(), teamColor.b(), isFree ? 10 : 240 };
 			color32 hover = { teamColor.r(), teamColor.g(), teamColor.b(), (isFree || isTakenByBot) ? 240 : 240 };
@@ -261,28 +269,60 @@ void CFormationMenu::OnTextChanged(KeyValues *data)
 
 void CFormationMenu::OnCursorEntered(Panel *panel)
 {
-	char *msg = "JOIN";
 	Button *pButton = ((Button *)panel);
-	int playerIndex = pButton->GetCommand()->GetInt("playerindex");
-	if (playerIndex > 0)
-	{
-		((CClientScoreBoardDialog *)gViewPortInterface->FindPanelByName(PANEL_SCOREBOARD))->SetHighlightedPlayer(playerIndex);
-		if (playerIndex == GetLocalPlayerIndex())
-			msg = "YOU";
-		else if (GameResources()->GetTeamPosIndex(playerIndex) != GetKeeperPosIndex())
-			msg = "SWAP";
-	}
 
-	m_pTooltip->SetText(msg);
-	m_pTooltip->SetParent(pButton->GetParent());
-	m_pTooltip->SetBounds(pButton->GetX() + pButton->GetWide() / 2 - 100 / 2, pButton->GetY() + pButton->GetTall() - 20, 100, 30);
-	//m_pTooltip->SetFgColor(GetGlobalTeam(pButton->GetCommand()->GetInt("team"))->Get_HudKitColor());
-	m_pTooltip->SetFgColor(Color(0, 0, 0, 240));
-	m_pTooltip->SetVisible(true);
+	if (!Q_strcmp(pButton->GetCommand()->GetString("type"), "tooltip"))
+	{
+		m_pFormationButtons[pButton->GetCommand()->GetInt("team") - TEAM_A][pButton->GetCommand()->GetInt("posindex")]->SetArmed(true);
+		m_pTooltip->SetVisible(true);
+		DevMsg("%.2f: enter tooltip\n", gpGlobals->curtime);
+	}
+	else
+	{
+		int playerIndex = pButton->GetCommand()->GetInt("playerindex");
+
+		char *msg = "JOIN";
+
+		if (playerIndex > 0)
+		{
+			((CClientScoreBoardDialog *)gViewPortInterface->FindPanelByName(PANEL_SCOREBOARD))->SetHighlightedPlayer(playerIndex);
+			if (playerIndex == GetLocalPlayerIndex())
+				msg = "YOU";
+			else if (GameResources()->GetTeamPosIndex(playerIndex) != GetKeeperPosIndex())
+				msg = "SWAP";
+		}
+
+		m_pTooltip->SetText(msg);
+		m_pTooltip->SetParent(pButton->GetParent());
+		//m_pTooltip->SetBounds(pButton->GetX() + pButton->GetWide() / 2 - 100 / 2, pButton->GetY() + pButton->GetTall() - 20, 100, 30);
+		m_pTooltip->SetBounds(pButton->GetX() - 1, pButton->GetY() - 1, pButton->GetWide() + 2, pButton->GetTall() + 2);
+		//m_pTooltip->SetFgColor(GetGlobalTeam(pButton->GetCommand()->GetInt("team"))->Get_HudKitColor());
+		//m_pTooltip->SetFgColor(Color(0, 0, 0, 240));
+		KeyValues *kv = new KeyValues("Command");
+		kv->SetString("command", pButton->GetCommand()->GetString("command"));
+		kv->SetString("type", "tooltip");
+		kv->SetInt("posindex", pButton->GetCommand()->GetInt("posindex"));
+		kv->SetInt("team", pButton->GetCommand()->GetInt("team"));
+		m_pTooltip->SetCommand(kv);
+		m_pTooltip->SetVisible(true);
+		DevMsg("%.2f: enter button\n", gpGlobals->curtime);
+	}
 }
 
 void CFormationMenu::OnCursorExited(Panel *panel)
 {
-	((CClientScoreBoardDialog *)gViewPortInterface->FindPanelByName(PANEL_SCOREBOARD))->SetHighlightedPlayer(0);
-	m_pTooltip->SetVisible(false);
+	Button *pButton = ((Button *)panel);
+
+	if (!Q_strcmp(pButton->GetCommand()->GetString("type"), "tooltip"))
+	{
+		m_pFormationButtons[pButton->GetCommand()->GetInt("team") - TEAM_A][pButton->GetCommand()->GetInt("posindex")]->SetArmed(false);
+		m_pTooltip->SetVisible(false);
+		((CClientScoreBoardDialog *)gViewPortInterface->FindPanelByName(PANEL_SCOREBOARD))->SetHighlightedPlayer(0);
+		DevMsg("%.2f: exit tooltip\n", gpGlobals->curtime);
+	}
+	else
+	{
+		DevMsg("%.2f: exit button\n", gpGlobals->curtime);
+		pButton->SetArmed(false);
+	}
 }

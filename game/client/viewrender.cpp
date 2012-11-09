@@ -1964,6 +1964,8 @@ void CViewRender::RenderView( const CViewSetup &view, int nClearFlags, int whatT
 		// Draw an overlay to make it even harder to see inside smoke particle systems.
 		DrawSmokeFogOverlay();
 
+		SDKGameRules()->DrawFieldTeamCrests();
+
 		SDKGameRules()->DrawOffsideLines();
 
 		SDKGameRules()->DrawSkyboxOverlay();

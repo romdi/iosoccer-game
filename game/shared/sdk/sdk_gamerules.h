@@ -363,7 +363,6 @@ protected:
 	int m_nFirstHalfKickOffTeam;
 	int m_nKickOffTeam;
 	int m_nFirstHalfLeftSideTeam;
-	int m_nLeftSideTeam;
 	CPrecipitation *m_pPrecip;
 
 	void CheckChatText(CBasePlayer *pPlayer, char *text);
@@ -394,6 +393,7 @@ public:
 #else
 
 public:
+	void DrawFieldTeamCrests();
 	void DrawOffsideLines();
 	void DrawSkyboxOverlay();
 
@@ -413,6 +413,7 @@ public:
 	CNetworkVector(m_vShieldPos);
 	CNetworkVar(float, m_flInjuryTimeStart);
 	CNetworkVar(int, m_nBallZone);
+	CNetworkVar(int, m_nLeftSideTeam);
 
 	CNetworkVar(float, m_flOffsideLineBallPosY);
 	CNetworkVar(float, m_flOffsideLineOffsidePlayerPosY);

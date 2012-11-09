@@ -245,6 +245,7 @@ BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 	RecvPropVector(RECVINFO(m_vKickOff)),
 
 	RecvPropInt(RECVINFO(m_nBallZone)),
+	RecvPropInt(RECVINFO(m_nLeftSideTeam)),
 
 	RecvPropFloat(RECVINFO(m_flOffsideLineBallPosY)),
 	RecvPropFloat(RECVINFO(m_flOffsideLineOffsidePlayerPosY)),
@@ -269,6 +270,7 @@ BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 	SendPropVector(SENDINFO(m_vKickOff), -1, SPROP_COORD),
 
 	SendPropInt(SENDINFO(m_nBallZone)),
+	SendPropInt(SENDINFO(m_nLeftSideTeam)),
 
 	SendPropFloat(SENDINFO(m_flOffsideLineBallPosY), 0, SPROP_COORD),
 	SendPropFloat(SENDINFO(m_flOffsideLineOffsidePlayerPosY), 0, SPROP_COORD),
@@ -2338,6 +2340,65 @@ void DrawOffsideLine(IMaterial *pMaterial, float posY, Vector &color)
 
 	DrawBoxSide(0, 1, 2, mins[0], mins[1], maxs[0], maxs[1], mins[2], false, color);
 	DrawBoxSide(0, 1, 2, mins[0], mins[1], maxs[0], maxs[1], maxs[2], true, color);
+}
+
+void CSDKGameRules::DrawFieldTeamCrests()
+{
+	if (!IsIntermissionState())
+		return;
+
+	for (int i = 0; i < 2; i++)
+	{
+		int sign;
+		char *material;
+
+		if (i == 0)
+		{
+			sign = m_nLeftSideTeam == TEAM_A ? 1 : -1;
+			material = "vgui/hometeamcrest";
+		}
+		else
+		{
+			sign = m_nLeftSideTeam == TEAM_A ? -1 : 1;
+			material = "vgui/awayteamcrest";
+		}
+
+		Vector vFinalRight = Vector(1, 0, 0);
+		Vector vFinalForward = Vector(0, 1, 0);
+		float size = 150;
+		Vector vFinalOrigin = SDKGameRules()->m_vKickOff;
+		vFinalOrigin.y += sign * (40 + size);
+
+		CMatRenderContextPtr pRenderContext( materials );
+		IMaterial *pPreviewMaterial = materials->FindMaterial( material, TEXTURE_GROUP_CLIENT_EFFECTS );
+		//IMaterial *pPreviewMaterial = materials->FindMaterial( "debug/debugspritewireframe", TEXTURE_GROUP_OTHER );
+		pRenderContext->Bind( pPreviewMaterial );
+		IMesh *pMesh = pRenderContext->GetDynamicMesh();
+		CMeshBuilder meshBuilder;
+		meshBuilder.Begin( pMesh, MATERIAL_QUADS, 1 );
+
+		meshBuilder.Color3f( 1.0, 1.0, 1.0 );
+		meshBuilder.TexCoord2f( 0,0,0 );
+		meshBuilder.Position3fv( (vFinalOrigin + (vFinalRight * sign * size) + (vFinalForward * sign * -size)).Base() );
+		meshBuilder.AdvanceVertex();
+
+		meshBuilder.Color3f( 1.0, 1.0, 1.0 );
+		meshBuilder.TexCoord2f( 0,1,0 );
+		meshBuilder.Position3fv( (vFinalOrigin + (vFinalRight * sign * -size) + (vFinalForward * sign * -size)).Base() );
+		meshBuilder.AdvanceVertex();
+
+		meshBuilder.Color3f( 1.0, 1.0, 1.0 );
+		meshBuilder.TexCoord2f( 0,1,1 );
+		meshBuilder.Position3fv( (vFinalOrigin + (vFinalRight * sign * -size) + (vFinalForward * sign * size)).Base() );
+		meshBuilder.AdvanceVertex();
+
+		meshBuilder.Color3f( 1.0, 1.0, 1.0 );
+		meshBuilder.TexCoord2f( 0,0,1 );
+		meshBuilder.Position3fv( (vFinalOrigin + (vFinalRight * sign * size) + (vFinalForward * sign * size)).Base() );
+		meshBuilder.AdvanceVertex();
+		meshBuilder.End();
+		pMesh->Draw();
+	}
 }
 
 void CSDKGameRules::DrawOffsideLines()
