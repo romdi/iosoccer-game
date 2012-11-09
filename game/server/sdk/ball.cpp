@@ -53,12 +53,19 @@ ConVar sv_ball_slidezend("sv_ball_slidezend", "40", FCVAR_NOTIFY);
 ConVar sv_ball_keeper_standing_forwardreach( "sv_ball_keeper_standing_forwardreach", "60", FCVAR_NOTIFY );
 ConVar sv_ball_keeper_standing_backreach( "sv_ball_keeper_standing_backreach", "50", FCVAR_NOTIFY );
 ConVar sv_ball_keeper_standing_sidereach( "sv_ball_keeper_standing_sidereach", "50", FCVAR_NOTIFY );
-ConVar sv_ball_keepershortsidereach( "sv_ball_keepershortsidereach", "60", FCVAR_NOTIFY );
-ConVar sv_ball_keeperlongsidereach( "sv_ball_keeperlongsidereach", "50", FCVAR_NOTIFY );
-ConVar sv_ball_keeperlongsidereach_opposite( "sv_ball_keeperlongsidereach_opposite", "40", FCVAR_NOTIFY );
-ConVar sv_ball_keeperdivezstart( "sv_ball_keeperdivezstart", "-50", FCVAR_NOTIFY );
-ConVar sv_ball_keeperdivezend( "sv_ball_keeperdivezend", "70", FCVAR_NOTIFY );
-ConVar sv_ball_keeperdivelowzend( "sv_ball_keeperdivelowzend", "40", FCVAR_NOTIFY );
+
+ConVar sv_ball_keeper_forwarddive_shortsidereach( "sv_ball_keeper_forwarddive_shortsidereach", "50", FCVAR_NOTIFY );
+ConVar sv_ball_keeper_forwarddive_longsidereach( "sv_ball_keeper_forwarddive_longsidereach", "130", FCVAR_NOTIFY );
+ConVar sv_ball_keeper_forwarddive_longsidereach_opposite( "sv_ball_keeper_forwarddive_longsidereach_opposite", "40", FCVAR_NOTIFY );
+ConVar sv_ball_keeper_forwarddive_zstart( "sv_ball_keeper_forwarddive_zstart", "-50", FCVAR_NOTIFY );
+ConVar sv_ball_keeper_forwarddive_zend( "sv_ball_keeper_forwarddive_zend", "40", FCVAR_NOTIFY );
+
+ConVar sv_ball_keeper_sidedive_shortsidereach( "sv_ball_keeper_sidedive_shortsidereach", "50", FCVAR_NOTIFY );
+ConVar sv_ball_keeper_sidedive_longsidereach( "sv_ball_keeper_sidedive_longsidereach", "70", FCVAR_NOTIFY );
+ConVar sv_ball_keeper_sidedive_longsidereach_opposite( "sv_ball_keeper_sidedive_longsidereach_opposite", "50", FCVAR_NOTIFY );
+ConVar sv_ball_keeper_sidedive_zstart( "sv_ball_keeper_sidedive_zstart", "-50", FCVAR_NOTIFY );
+ConVar sv_ball_keeper_sidedive_zend( "sv_ball_keeper_sidedive_zend", "70", FCVAR_NOTIFY );
+
 ConVar sv_ball_keeperpunchupstrength("sv_ball_keeperpunchupstrength", "500", FCVAR_NOTIFY);
 ConVar sv_ball_keeperdeflectioncoeff("sv_ball_keeperdeflectioncoeff", "1.66", FCVAR_NOTIFY);
 
@@ -1636,8 +1643,24 @@ void CBall::State_KEEPERHANDS_Think()
 	if (m_vPos.x < min.x || m_vPos.y < min.y || m_vPos.x > max.x || m_vPos.y > max.y)
 	{
 		RemoveAllTouches();
+
+		Vector dir = m_vPlForward2D;
+
+		if (m_pPl->GetTeam()->m_nForward == 1 && m_vPos.y < min.y)
+		{
+			dir = Vector(0, 1, 0);
+			SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_chest_start.GetFloat()) + dir * 18);
+			m_bSetNewPos = false;
+		}
+		else if (m_pPl->GetTeam()->m_nForward == -1 && m_vPos.y > max.y)
+		{
+			dir = Vector(0, -1, 0);
+			SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_chest_start.GetFloat()) + dir * 18);
+			m_bSetNewPos = false;
+		}
+
 		//SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_chest_start.GetFloat()) + forward * ((m_pPl->GetPlayerMaxs().x - m_pPl->GetPlayerMins().x) / 2 + m_flPhysRadius + 10));
-		SetVel(m_vPlForward2D * sv_ball_minshotstrength.GetInt(), 0, BODY_PART_HANDS, false, true, true);
+		SetVel(dir * sv_ball_minshotstrength.GetInt(), 0, BODY_PART_HANDS, false, true, true);
 
 		return State_Transition(BALL_NORMAL);
 	}
@@ -1646,34 +1669,41 @@ void CBall::State_KEEPERHANDS_Think()
 
 	if (m_pPl->ShotButtonsReleased() && m_pPl->IsShooting() && m_pPl->m_flNextShot <= gpGlobals->curtime)
 	{
-		float spin;
+		//Vector hull = Vector(1, 1, 1) * m_flPhysRadius;
+		//trace_t tr;
+		//UTIL_TraceHull(m_vPos, m_vPos, -hull, hull, MASK_SOLID, m_pPl, COLLISION_GROUP_NONE, &tr);
 
-		if (m_pPl->IsNormalshooting())
+		//if (!tr.startsolid)
 		{
-			vel = m_vPlForward * GetNormalshotStrength(GetPitchCoeff(), sv_ball_normalshot_strength.GetInt());
-			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KEEPER_HANDS_THROW);
-			spin = 0;
-		}
-		else
-		{
-			QAngle ang = m_pPl->EyeAngles();
-			ang[PITCH] = min(sv_ball_keepershot_minangle.GetFloat(), m_aPlAng[PITCH]);
-			Vector dir;
-			AngleVectors(ang, &dir);
+			float spin;
 
-			if (m_pPl->IsPowershooting())
-				vel = dir * GetPowershotStrength(GetPitchCoeff(), sv_ball_powershot_strength.GetInt());
+			if (m_pPl->IsNormalshooting())
+			{
+				vel = m_vPlForward * GetNormalshotStrength(GetPitchCoeff(), sv_ball_normalshot_strength.GetInt());
+				m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KEEPER_HANDS_THROW);
+				spin = 0;
+			}
 			else
-				vel = dir * GetChargedshotStrength(GetPitchCoeff(), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
+			{
+				QAngle ang = m_pPl->EyeAngles();
+				ang[PITCH] = min(sv_ball_keepershot_minangle.GetFloat(), m_aPlAng[PITCH]);
+				Vector dir;
+				AngleVectors(ang, &dir);
 
-			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KEEPER_HANDS_KICK);
-			spin = sv_ball_volleyshot_spincoeff.GetFloat();
+				if (m_pPl->IsPowershooting())
+					vel = dir * GetPowershotStrength(GetPitchCoeff(), sv_ball_powershot_strength.GetInt());
+				else
+					vel = dir * GetChargedshotStrength(GetPitchCoeff(), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
+
+				m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KEEPER_HANDS_KICK);
+				spin = sv_ball_volleyshot_spincoeff.GetFloat();
+			}
+
+			RemoveAllTouches();
+			SetVel(vel, spin, BODY_PART_HANDS, false, true, true);
+
+			return State_Transition(BALL_NORMAL);
 		}
-
-		RemoveAllTouches();
-		SetVel(vel, spin, BODY_PART_HANDS, false, true, true);
-
-		return State_Transition(BALL_NORMAL);
 	}
 }
 
@@ -2025,33 +2055,33 @@ bool CBall::CheckKeeperCatch()
 	switch (m_pPl->m_Shared.GetAnimEvent())
 	{
 	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT:
-		canCatch = (zDist < sv_ball_keeperdivezend.GetInt()
-			&& zDist >= sv_ball_keeperdivezstart.GetInt()
-			&& abs(localDirToBall.x) <= sv_ball_keepershortsidereach.GetInt()
-			&& localDirToBall.y >= -sv_ball_keeperlongsidereach_opposite.GetInt()
-			&& localDirToBall.y <= sv_ball_keeperlongsidereach.GetInt());
+		canCatch = (zDist < sv_ball_keeper_sidedive_zend.GetInt()
+			&& zDist >= sv_ball_keeper_sidedive_zstart.GetInt()
+			&& abs(localDirToBall.x) <= sv_ball_keeper_sidedive_shortsidereach.GetInt()
+			&& localDirToBall.y >= -sv_ball_keeper_sidedive_longsidereach_opposite.GetInt()
+			&& localDirToBall.y <= sv_ball_keeper_sidedive_longsidereach.GetInt());
 		break;
 	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT:
-		canCatch = (zDist < sv_ball_keeperdivezend.GetInt()
-			&& zDist >= sv_ball_keeperdivezstart.GetInt()
-			&& abs(localDirToBall.x) <= sv_ball_keepershortsidereach.GetInt()
-			&& localDirToBall.y <= sv_ball_keeperlongsidereach_opposite.GetInt()
-			&& localDirToBall.y >= -sv_ball_keeperlongsidereach.GetInt());
+		canCatch = (zDist < sv_ball_keeper_sidedive_zend.GetInt()
+			&& zDist >= sv_ball_keeper_sidedive_zstart.GetInt()
+			&& abs(localDirToBall.x) <= sv_ball_keeper_sidedive_shortsidereach.GetInt()
+			&& localDirToBall.y <= sv_ball_keeper_sidedive_longsidereach_opposite.GetInt()
+			&& localDirToBall.y >= -sv_ball_keeper_sidedive_longsidereach.GetInt());
 		break;
 	case PLAYERANIMEVENT_KEEPER_DIVE_FORWARD:
-		canCatch = (zDist < sv_ball_keeperdivelowzend.GetInt()
-			&& zDist >= sv_ball_keeperdivezstart.GetInt()
-			&& localDirToBall.x >= sv_ball_keeperlongsidereach_opposite.GetInt()
-			&& localDirToBall.x <= sv_ball_keeperlongsidereach.GetInt()
-			&& abs(localDirToBall.y) <= sv_ball_keepershortsidereach.GetInt());
+		canCatch = (zDist < sv_ball_keeper_forwarddive_zend.GetInt()
+			&& zDist >= sv_ball_keeper_forwarddive_zstart.GetInt()
+			&& localDirToBall.x >= -sv_ball_keeper_forwarddive_longsidereach_opposite.GetInt()
+			&& localDirToBall.x <= sv_ball_keeper_forwarddive_longsidereach.GetInt()
+			&& abs(localDirToBall.y) <= sv_ball_keeper_forwarddive_shortsidereach.GetInt());
 		break;
-	case PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD:
-		canCatch = (zDist < sv_ball_bodypos_keeperarms_end.GetInt()
-			&& zDist >= sv_ball_keeperdivezstart.GetInt()
-			&& localDirToBall.x <= 0
-			&& localDirToBall.x >= -sv_ball_keeperlongsidereach.GetInt() - sv_ball_keeperlongsidereach_opposite.GetInt()
-			&& abs(localDirToBall.y) <= sv_ball_keepershortsidereach.GetInt());
-		break;
+	//case PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD:
+	//	canCatch = (zDist < sv_ball_bodypos_keeperarms_end.GetInt()
+	//		&& zDist >= sv_ball_keeperdivezstart.GetInt()
+	//		&& localDirToBall.x <= 0
+	//		&& localDirToBall.x >= -sv_ball_keeperlongsidereach.GetInt() - sv_ball_keeperlongsidereach_opposite.GetInt()
+	//		&& abs(localDirToBall.y) <= sv_ball_keepershortsidereach.GetInt());
+	//	break;
 	case PLAYERANIMEVENT_KEEPER_JUMP:
 	default:
 		canCatch = (zDist < sv_ball_bodypos_keeperarms_end.GetInt()

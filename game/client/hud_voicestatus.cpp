@@ -235,48 +235,52 @@ void CHudVoiceStatus::OnThink( void )
 
 	for( int i=1;i<=gpGlobals->maxClients;i++ )
 	{
-		bool bTalking = GetClientVoiceMgr()->IsPlayerSpeaking(i);
+		bool bTalking;
+		if (i == GetLocalPlayerIndex())
+			bTalking = GetClientVoiceMgr()->IsLocalPlayerSpeaking();
+		else
+			bTalking = GetClientVoiceMgr()->IsPlayerSpeaking(i);
 		
 		//Tony; update avatars.
-		if ( steamapicontext->SteamFriends() && steamapicontext->SteamUtils() )
-		{
-			player_info_t pi;
-			if ( engine->GetPlayerInfo( i, &pi ) )
-			{
-				if ( pi.friendsID )
-				{
-					CSteamID steamIDForPlayer( pi.friendsID, 1, steamapicontext->SteamUtils()->GetConnectedUniverse(), k_EAccountTypeIndividual );
+		//if ( steamapicontext->SteamFriends() && steamapicontext->SteamUtils() )
+		//{
+		//	player_info_t pi;
+		//	if ( engine->GetPlayerInfo( i, &pi ) )
+		//	{
+		//		if ( pi.friendsID )
+		//		{
+		//			CSteamID steamIDForPlayer( pi.friendsID, 1, steamapicontext->SteamUtils()->GetConnectedUniverse(), k_EAccountTypeIndividual );
 
-					// See if the avatar's changed
-					int iAvatar = steamapicontext->SteamFriends()->GetFriendAvatar( steamIDForPlayer );
-					if ( m_iImageAvatars[i] != iAvatar )
-					{
-						m_iImageAvatars[i] = iAvatar;
+		//			// See if the avatar's changed
+		//			int iAvatar = steamapicontext->SteamFriends()->GetFriendAvatar( steamIDForPlayer );
+		//			if ( m_iImageAvatars[i] != iAvatar )
+		//			{
+		//				m_iImageAvatars[i] = iAvatar;
 
-						// Now see if we already have that avatar in our list
-						int iIndex = m_mapAvatarsToImageList.Find( iAvatar );
-						if ( iIndex == m_mapAvatarsToImageList.InvalidIndex() )
-						{
-							CAvatarImage *pImage = new CAvatarImage();
-							pImage->SetAvatarSteamID( steamIDForPlayer );
-							pImage->SetSize( 32, 32 );	// Deliberately non scaling
-							int iImageIndex = m_pImageList->AddImage( pImage );
+		//				// Now see if we already have that avatar in our list
+		//				int iIndex = m_mapAvatarsToImageList.Find( iAvatar );
+		//				if ( iIndex == m_mapAvatarsToImageList.InvalidIndex() )
+		//				{
+		//					CAvatarImage *pImage = new CAvatarImage();
+		//					pImage->SetAvatarSteamID( steamIDForPlayer );
+		//					pImage->SetSize( 32, 32 );	// Deliberately non scaling
+		//					int iImageIndex = m_pImageList->AddImage( pImage );
 
-							m_mapAvatarsToImageList.Insert( iAvatar, iImageIndex );
-						}
-					}
+		//					m_mapAvatarsToImageList.Insert( iAvatar, iImageIndex );
+		//				}
+		//			}
 
-					int iIndex = m_mapAvatarsToImageList.Find( iAvatar );
+		//			int iIndex = m_mapAvatarsToImageList.Find( iAvatar );
 
-					m_iPlayerAvatar[i] = -1; //Default it.
-					if ( iIndex != m_mapAvatarsToImageList.InvalidIndex() )
-					{
-						//Tony; copy the avatar over.
-						m_iPlayerAvatar[i] = m_mapAvatarsToImageList[iIndex];
-					}
-				}
-			}
-		}
+		//			m_iPlayerAvatar[i] = -1; //Default it.
+		//			if ( iIndex != m_mapAvatarsToImageList.InvalidIndex() )
+		//			{
+		//				//Tony; copy the avatar over.
+		//				m_iPlayerAvatar[i] = m_mapAvatarsToImageList[iIndex];
+		//			}
+		//		}
+		//	}
+		//}
 
 		// if they are in the list and not talking, remove them
 		if( !bTalking )
@@ -305,25 +309,26 @@ bool CHudVoiceStatus::ShouldDraw()
 
 void CHudVoiceStatus::Paint()
 {
+	if (!g_PR)
+		return;
+
 	//draw everyone in the list!
 	for(int i = m_SpeakingList.Head(); i != m_SpeakingList.InvalidIndex(); i = m_SpeakingList.Next(i) )
 	{
-		C_SDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(m_SpeakingList.Element(i)));
+		int playerIndex = m_SpeakingList.Element(i);
 
-		wchar_t wszPlayerName[MAX_PLAYER_NAME_LENGTH];
-		wchar_t wszPlayerText[MAX_PLAYER_NAME_LENGTH + 16];
+		wchar_t wszPlayerName[64];
+		wchar_t wszPlayerText[128];
 
-		g_pVGuiLocalize->ConvertANSIToUnicode(pPl->GetPlayerName(), wszPlayerName, sizeof(wszPlayerName));
-		_snwprintf( wszPlayerText, ARRAYSIZE(wszPlayerText) - 1, L"Talking: %s", wszPlayerName);
+		g_pVGuiLocalize->ConvertANSIToUnicode(g_PR->GetPlayerName(playerIndex), wszPlayerName, sizeof(wszPlayerName));
+		_snwprintf( wszPlayerText, ARRAYSIZE(wszPlayerText) - 1, L"Speaking: %s", wszPlayerName);
 		wszPlayerText[ ARRAYSIZE(wszPlayerText)-1 ] = '\0';	
 
 		int wide, tall;
-		int xPos, yPos;
-		int zOffset = 120;
 
 		vgui::surface()->GetTextSize(m_hFont, wszPlayerText, wide, tall);
 
-		Color c = GameResources()->GetTeamColor(pPl->GetTeamNumber());
+		Color c = g_PR->GetTeamColor(g_PR->GetTeam(playerIndex));
 		c = Color(c.r(), c.g(), c.b(), 255);
 
 		surface()->DrawSetTextFont(m_hFont);

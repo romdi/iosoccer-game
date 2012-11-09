@@ -5,7 +5,7 @@
 #include "convar.h"
 #include "c_ios_replaymanager.h"
 
-enum cam_type_t { CAM_SIDELINE, CAM_BEHIND_GOAL, CAM_TOPDOWN, CAM_GOAL_CORNER, CAM_FLY_FOLLOW };
+enum cam_type_t { CAM_SIDELINE, CAM_BEHIND_GOAL, CAM_TOPDOWN, CAM_GOAL_CORNER, CAM_FLY_FOLLOW, CAM_GOAL_LINE };
 
 ConVar cl_tvcam_angle("cl_tvcam_angle", "10", FCVAR_ARCHIVE);
 ConVar cl_tvcam_dist("cl_tvcam_dist", "10", FCVAR_ARCHIVE);
@@ -46,9 +46,10 @@ void C_TVCamera::GetPositionAndAngle(Vector &pos, QAngle &ang)
 		{
 		case 0: camType = CAM_SIDELINE; break;
 		case 1: camType = CAM_FLY_FOLLOW; break;
-		case 2: camType = CAM_GOAL_CORNER; break;
-		case 3: camType = CAM_TOPDOWN; break;
-		case 4: camType = CAM_BEHIND_GOAL; break;
+		case 2: camType = CAM_GOAL_LINE; break;
+		case 3: camType = CAM_GOAL_CORNER; break;
+		case 4: camType = CAM_TOPDOWN; break;
+		case 5: camType = CAM_BEHIND_GOAL; break;
 		default: camType = CAM_SIDELINE; break;
 		}
 		atMinGoalPos = GetReplayManager()->m_bAtMinGoalPos;
@@ -142,6 +143,17 @@ void C_TVCamera::GetPositionAndAngle(Vector &pos, QAngle &ang)
 				newPos.y = SDKGameRules()->m_vKickOff.GetY() + (SDKGameRules()->m_vKickOff.GetY() - newPos.y);
 				newAng[YAW] += 180;
 			}
+			pos = newPos;
+			ang = newAng;
+		}
+		break;
+	case CAM_GOAL_LINE:
+		{
+			Vector center = Vector(SDKGameRules()->m_vKickOff.GetX(), (atMinGoalPos ? SDKGameRules()->m_vFieldMin.GetY() : SDKGameRules()->m_vFieldMax.GetY()), SDKGameRules()->m_vKickOff.GetZ() + 58);
+			Vector newPos = center;
+			newPos.x -= 350;
+			QAngle newAng;
+			VectorAngles(center - newPos, newAng);
 			pos = newPos;
 			ang = newAng;
 		}

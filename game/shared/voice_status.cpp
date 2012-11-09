@@ -211,7 +211,7 @@ void CVoiceStatus::DrawHeadLabels()
 
 	for(int i=0; i < VOICE_MAX_PLAYERS; i++)
 	{
-		if ( !m_VoicePlayers[i] )
+		if ( !m_VoicePlayers[i] && (i + 1 != GetLocalPlayerIndex() || !IsLocalPlayerSpeaking()) )
 			continue;
 		
 		IClientNetworkable *pClient = cl_entitylist->GetClientEntity( i+1 );

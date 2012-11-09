@@ -1095,9 +1095,9 @@ void CC_SV_ResumeMatch(const CCommand &args)
 		return;
 	}
 
+	SDKGameRules()->SetMatchDisplayTimeSeconds(atoi(args[3]) * 60);
 	GetGlobalTeam(TEAM_A)->SetGoals(atoi(args[1]));
 	GetGlobalTeam(TEAM_B)->SetGoals(atoi(args[2]));
-	SDKGameRules()->SetMatchDisplayTimeSeconds(atoi(args[3]) * 60);
 }
 
 ConCommand sv_resumematch( "sv_resumematch", CC_SV_ResumeMatch, "", 0 );

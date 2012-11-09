@@ -794,7 +794,7 @@ void CGameMovement::ReduceTimers( void )
 	Vector vel = pPl->GetAbsVelocity();
 	if ( bSprinting && fl2DVelocitySquared > 10000 ) //speed > 100
 	{
-		float coeff = 1 + (mp_stamina_variable_drain_enabled.GetBool() ? (fieldZone / 100) * mp_stamina_variable_drain_coeff.GetFloat() : 1);
+		float coeff = 1 + (mp_stamina_variable_drain_enabled.GetBool() ? (fieldZone / 100) * mp_stamina_variable_drain_coeff.GetFloat() : 0);
 
 		flStamina -= mp_stamina_drain_sprinting.GetInt() * gpGlobals->frametime * coeff;
 		//DevMsg("Remove stamina %.2f\n", flStamina);
@@ -802,7 +802,7 @@ void CGameMovement::ReduceTimers( void )
 	}
 	else
 	{
-		float coeff = 1 + (mp_stamina_variable_replenish_enabled.GetBool() ? ((100 - fieldZone) / 100) * mp_stamina_variable_replenish_coeff.GetFloat() : 1);
+		float coeff = 1 + (mp_stamina_variable_replenish_enabled.GetBool() ? ((100 - fieldZone) / 100) * mp_stamina_variable_replenish_coeff.GetFloat() : 0);
 
 		//gain some back		
 		if ( fl2DVelocitySquared <= 0 )

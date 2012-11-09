@@ -469,9 +469,12 @@ void CHudScorebar::OnThink( void )
 			m_pPlayers[1]->SetText("");
 			m_pSubPlayers[0]->SetText("");
 			m_pSubPlayers[1]->SetText("");
+			m_pSubSubPlayers[0]->SetText("");
+			m_pSubSubPlayers[1]->SetText("");
 			m_pEvent->SetText(g_szMatchEventNames[pBall->m_eMatchEvent]);
 			m_pEvent->SetFgColor(Color(255, 255, 255, 255));
 			m_pSubEvent->SetText("");
+			m_pSubSubEvent->SetText("");
 			m_pImportantEvent->SetText("");
 			m_flNextPlayerUpdate = gpGlobals->curtime;
 		}
