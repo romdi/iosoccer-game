@@ -295,7 +295,7 @@ public:
 	CNetworkVar(float, m_flMatchStartTime);
 
 	void RestartMatch(bool setRandomSides);
-	void WakeUpAllPlayers();
+	int WakeUpAwayPlayers();
 	void StartPenalties();
 
 #ifdef GAME_DLL
@@ -307,6 +307,7 @@ protected:
 	float m_flNextPenalty;
 	int m_nPenaltyTakingTeam;
 	int m_nPenaltyTakingStartTeam;
+	float m_flLastAwayCheckTime;
 
 	CSDKGameRulesStateInfo		*m_pCurStateInfo;			// Per-state data 
 	float						m_flStateTransitionTime;	// Timer for round states

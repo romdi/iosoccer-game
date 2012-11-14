@@ -1645,7 +1645,8 @@ bool CSDKPlayer::CanSpeak(bool isTeamOnly)
 	return true;
 }
 
-ConVar sv_ball_timelimit_warmup("sv_ball_timelimit_warmup", "30", FCVAR_NOTIFY);
+ConVar sv_awaytime_warmup("sv_awaytime_warmup", "10", FCVAR_NOTIFY);
+ConVar sv_awaytime_warmup_autospec("sv_awaytime_warmup_autospec", "60", FCVAR_NOTIFY);
 
 void CSDKPlayer::SetAway(bool isAway)
 {
@@ -1654,10 +1655,14 @@ void CSDKPlayer::SetAway(bool isAway)
 		m_flLastMoveTime = gpGlobals->curtime;
 		m_bIsAway = false;
 	}
-	else if (m_flLastMoveTime != -1 && gpGlobals->curtime >= m_flLastMoveTime + sv_ball_timelimit_warmup.GetFloat())
+	else if (m_flLastMoveTime != -1 && gpGlobals->curtime >= m_flLastMoveTime + sv_awaytime_warmup.GetFloat())
 	{
 		m_bIsAway = true;
-		ChangeTeamPos(TEAM_SPECTATOR, 0, true);
+
+		if (gpGlobals->curtime >= m_flLastMoveTime + sv_awaytime_warmup_autospec.GetFloat())
+		{
+			ChangeTeamPos(TEAM_SPECTATOR, 0, true);
+		}
 	}
 }
 

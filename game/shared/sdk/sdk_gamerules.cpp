@@ -382,6 +382,7 @@ CSDKGameRules::CSDKGameRules()
 	m_nShieldType = SHIELD_NONE;
 	m_vShieldPos = vec3_invalid;
 	m_flStateTimeLeft = 0;
+	m_flLastAwayCheckTime = gpGlobals->curtime;
 	m_flNextPenalty = gpGlobals->curtime;
 	m_nPenaltyTakingTeam = TEAM_A;
 	m_flInjuryTime = 0;
@@ -1122,11 +1123,39 @@ void CC_SV_Restart(const CCommand &args)
 
 ConCommand sv_restart( "sv_restart", CC_SV_Restart, "Restart game", 0 );
 
-void CSDKGameRules::WakeUpAllPlayers()
+int CSDKGameRules::WakeUpAwayPlayers()
 {
-	IGameEvent* pEvent = gameeventmanager->CreateEvent("wakeupcall");
-	gameeventmanager->FireEvent(pEvent);
-	UTIL_ClientPrintAll(HUD_PRINTTALK, "#game_wakeupcall");
+	int awayPlayerCount = 0;
+	char wakeUpString[2048] = "Auto-starting match when the following players start moving: ";
+
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+		if (!CSDKPlayer::IsOnField(pPl))
+			continue;
+
+		if (pPl->IsAway())
+		{
+			awayPlayerCount += 1;
+
+			if (awayPlayerCount > 1)
+				Q_strcat(wakeUpString, ", ", sizeof(wakeUpString));
+
+			Q_strcat(wakeUpString, pPl->GetPlayerName(), sizeof(wakeUpString));
+		}
+	}
+
+	if (awayPlayerCount > 0)
+	{
+		IGameEvent* pEvent = gameeventmanager->CreateEvent("wakeupcall");
+		gameeventmanager->FireEvent(pEvent);
+	}
+	else
+		Q_strncpy(wakeUpString, "All players are awake", sizeof(wakeUpString));
+
+	UTIL_ClientPrintAll(HUD_PRINTTALK, wakeUpString);
+
+	return awayPlayerCount;
 }
 
 void CC_SV_WakeUpCall(const CCommand &args)
@@ -1134,11 +1163,13 @@ void CC_SV_WakeUpCall(const CCommand &args)
 	if (!UTIL_IsCommandIssuedByServerAdmin())
         return;
 
-	SDKGameRules()->WakeUpAllPlayers();
-	UTIL_ClientPrintAll(HUD_PRINTCENTER, "Move if you're awake!");
+	SDKGameRules()->WakeUpAwayPlayers();
+	UTIL_ClientPrintAll(HUD_PRINTCENTER, "Please move if you're here!");
 }
 
 ConCommand sv_wakeupcall("sv_wakeupcall", CC_SV_WakeUpCall, "Wake up all players", 0);
+
+ConVar sv_wakeupcall_interval("sv_wakeupcall_interval", "10", FCVAR_NOTIFY);
 
 void CSDKGameRules::StartPenalties()
 {
@@ -1378,6 +1409,8 @@ void CSDKGameRules::State_WARMUP_Enter()
 
 		pPl->SetPosOutsideShield();
 	}
+
+	m_flLastAwayCheckTime = gpGlobals->curtime;
 }
 
 void CSDKGameRules::State_WARMUP_Think()
@@ -1388,25 +1421,16 @@ void CSDKGameRules::State_WARMUP_Think()
 	{
 		if (GetGlobalTeam(TEAM_A)->GetNumPlayers() == mp_maxplayers.GetInt() && GetGlobalTeam(TEAM_B)->GetNumPlayers() == mp_maxplayers.GetInt())
 		{
-			bool someoneIsAway = false;
-
-			for (int i = 1; i <= gpGlobals->maxClients; i++)
+			if (gpGlobals->curtime >= m_flLastAwayCheckTime + sv_wakeupcall_interval.GetFloat())
 			{
-				CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
-				if (!CSDKPlayer::IsOnField(pPl))
-					continue;
-				
-				if (pPl->IsAway())
+				int awayPlayerCount = WakeUpAwayPlayers();
+
+				if (awayPlayerCount == 0)
 				{
-					someoneIsAway = true;
-					break;
+					State_Transition(MATCH_FIRST_HALF);
 				}
-			}
 
-			if (!someoneIsAway)
-			{
-				State_Transition(MATCH_FIRST_HALF);
-				UTIL_ClientPrintAll(HUD_PRINTCENTER, "#game_match_start");
+				m_flLastAwayCheckTime = gpGlobals->curtime;
 			}
 		}
 	}
@@ -1419,7 +1443,8 @@ void CSDKGameRules::State_WARMUP_Leave(match_state_t newState)
 void CSDKGameRules::State_FIRST_HALF_Enter()
 {
 	GetBall()->State_Transition(BALL_KICKOFF, 0, true);
-	WakeUpAllPlayers();
+	//WakeUpAwayPlayers();
+	UTIL_ClientPrintAll(HUD_PRINTCENTER, "#game_match_start");
 }
 
 void CSDKGameRules::State_FIRST_HALF_Think()
