@@ -124,7 +124,7 @@ void C_TVCamera::GetPositionAndAngle(Vector &pos, QAngle &ang)
 		break;
 	case CAM_FLY_FOLLOW:
 		{
-			Vector newPos = Vector(ballPos.x, ballPos.y + (atMinGoalPos ? 1 : -1) * 550, SDKGameRules()->m_vKickOff.GetZ() + 250);
+			Vector newPos = Vector(ballPos.x, ballPos.y + (atMinGoalPos ? 1 : -1) * 500, SDKGameRules()->m_vKickOff.GetZ() + 225);
 			Vector newDir = Vector(0, (atMinGoalPos ? -1 : 1) * 1.75f, -1);
 			newDir.NormalizeInPlace();
 			pos = newPos;
@@ -149,9 +149,10 @@ void C_TVCamera::GetPositionAndAngle(Vector &pos, QAngle &ang)
 		break;
 	case CAM_GOAL_LINE:
 		{
-			Vector center = Vector(SDKGameRules()->m_vKickOff.GetX(), (atMinGoalPos ? SDKGameRules()->m_vFieldMin.GetY() : SDKGameRules()->m_vFieldMax.GetY()), SDKGameRules()->m_vKickOff.GetZ() + 58);
+			Vector center = Vector(SDKGameRules()->m_vKickOff.GetX(), (atMinGoalPos ? SDKGameRules()->m_vFieldMin.GetY() + 5 : SDKGameRules()->m_vFieldMax.GetY() - 5), SDKGameRules()->m_vKickOff.GetZ());
 			Vector newPos = center;
 			newPos.x -= 350;
+			newPos.z += 200;
 			QAngle newAng;
 			VectorAngles(center - newPos, newAng);
 			pos = newPos;

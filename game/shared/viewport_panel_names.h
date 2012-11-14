@@ -50,5 +50,6 @@
 
 #define PANEL_STATS "stats"
 #define PANEL_FORMATION "formation"
+#define PANEL_MATCHEVENTS "matchevents"
 
 #endif // VIEWPORT_PANEL_NAMES_H

@@ -501,7 +501,7 @@ void CSDKGameRules::ServerActivate()
 {
 	m_flLastMasterServerPingTime = gpGlobals->curtime - sv_master_legacy_mode_hack_interval.GetFloat() * 60;
 
-	CPlayerPersistentData::RemoveAllPlayerData();
+	CPlayerPersistentData::ReallocateAllPlayerData();
 
 	CTeamKitInfo::FindTeamKits();
 
@@ -1451,6 +1451,7 @@ void CSDKGameRules::State_HALFTIME_Enter()
 	SetKickOffTeam(GetGlobalTeam(m_nFirstHalfKickOffTeam)->GetOppTeamNumber());
 
 	EnableShield(SHIELD_KICKOFF, TEAM_A, SDKGameRules()->m_vKickOff);
+
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
 		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
@@ -1459,6 +1460,9 @@ void CSDKGameRules::State_HALFTIME_Enter()
 
 		pPl->SetPosOutsideShield();
 	}
+
+	if (ReplayManager())
+		ReplayManager()->StartHighlights();
 }
 
 void CSDKGameRules::State_HALFTIME_Think()
@@ -1469,6 +1473,8 @@ void CSDKGameRules::State_HALFTIME_Think()
 
 void CSDKGameRules::State_HALFTIME_Leave(match_state_t newState)
 {
+	if (ReplayManager())
+		ReplayManager()->StopHighlights();
 }
 
 void CSDKGameRules::State_SECOND_HALF_Enter()
@@ -1518,6 +1524,9 @@ void CSDKGameRules::State_EXTRATIME_INTERMISSION_Enter()
 
 		pPl->SetPosOutsideShield();
 	}
+
+	if (ReplayManager())
+		ReplayManager()->StartHighlights();
 }
 
 void CSDKGameRules::State_EXTRATIME_INTERMISSION_Think()
@@ -1530,6 +1539,8 @@ void CSDKGameRules::State_EXTRATIME_INTERMISSION_Think()
 
 void CSDKGameRules::State_EXTRATIME_INTERMISSION_Leave(match_state_t newState)
 {
+	if (ReplayManager())
+		ReplayManager()->StopHighlights();
 }
 
 void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Enter()
@@ -1566,6 +1577,7 @@ void CSDKGameRules::State_EXTRATIME_HALFTIME_Enter()
 	SetKickOffTeam(GetGlobalTeam(m_nFirstHalfKickOffTeam)->GetOppTeamNumber());
 
 	EnableShield(SHIELD_KICKOFF, TEAM_A, SDKGameRules()->m_vKickOff);
+
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
 		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
@@ -1574,6 +1586,9 @@ void CSDKGameRules::State_EXTRATIME_HALFTIME_Enter()
 
 		pPl->SetPosOutsideShield();
 	}
+
+	if (ReplayManager())
+		ReplayManager()->StartHighlights();
 }
 
 void CSDKGameRules::State_EXTRATIME_HALFTIME_Think()
@@ -1586,6 +1601,8 @@ void CSDKGameRules::State_EXTRATIME_HALFTIME_Think()
 
 void CSDKGameRules::State_EXTRATIME_HALFTIME_Leave(match_state_t newState)
 {
+	if (ReplayManager())
+		ReplayManager()->StopHighlights();
 }
 
 void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Enter()
@@ -1622,6 +1639,7 @@ void CSDKGameRules::State_PENALTIES_INTERMISSION_Enter()
 	GetBall()->SetPos(m_vKickOff);
 
 	EnableShield(SHIELD_KICKOFF, TEAM_A, SDKGameRules()->m_vKickOff);
+
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
 		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
@@ -1630,6 +1648,9 @@ void CSDKGameRules::State_PENALTIES_INTERMISSION_Enter()
 
 		pPl->SetPosOutsideShield();
 	}
+
+	if (ReplayManager())
+		ReplayManager()->StartHighlights();
 }
 
 void CSDKGameRules::State_PENALTIES_INTERMISSION_Think()
@@ -1642,6 +1663,8 @@ void CSDKGameRules::State_PENALTIES_INTERMISSION_Think()
 
 void CSDKGameRules::State_PENALTIES_INTERMISSION_Leave(match_state_t newState)
 {
+	if (ReplayManager())
+		ReplayManager()->StopHighlights();
 }
 
 void CSDKGameRules::State_PENALTIES_Enter()
@@ -1839,6 +1862,9 @@ void CSDKGameRules::State_COOLDOWN_Enter()
 
 	m_bMotmVotingPanelShown = false;
 	m_bPostMatchStatsPanelShown = false;
+
+	if (ReplayManager())
+		ReplayManager()->StartHighlights();
 }
 
 void CSDKGameRules::State_COOLDOWN_Think()
@@ -1940,6 +1966,8 @@ void CSDKGameRules::State_COOLDOWN_Think()
 
 void CSDKGameRules::State_COOLDOWN_Leave(match_state_t newState)
 {
+	if (ReplayManager())
+		ReplayManager()->StopHighlights();
 }
 
 #endif

@@ -43,7 +43,7 @@ struct LayerRecord
 
 struct PlayerSnapshot
 {
-	CSDKPlayer		*pPl;
+	//CSDKPlayer		*pPl;
 	Vector			pos;
 	QAngle			ang;
 	Vector			vel;
@@ -65,11 +65,27 @@ struct Snapshot
 	float snaptime;
 	BallSnapshot *pBallSnapshot;
 	PlayerSnapshot *pPlayerSnapshot[2][11];
+
+	~Snapshot()
+	{
+		delete pBallSnapshot;
+
+		for (int i = 0; i < 2; i++)
+		{
+			for (int j = 0; j < 11; j++)
+			{
+				delete pPlayerSnapshot[i][j];
+			}
+		}
+	}
+
 };
 
 struct Replay
 {
-	CUtlVector<Snapshot> m_Snapshots;
+	CUtlVector<Snapshot *> m_Snapshots;
+	int m_nMatchSeconds;
+	bool m_bAtMinGoalPos;
 };
 
 class CReplayBall : public CPhysicsProp
@@ -126,6 +142,8 @@ public:
 	bool IsReplaying() { return m_bDoReplay; }
 	void Think();
 	void Spawn();
+	void StartHighlights();
+	void StopHighlights();
 
 	CNetworkVar(bool, m_bIsReplaying);
 	CNetworkVar(int, m_nReplayRunIndex);
@@ -137,14 +155,17 @@ public:
 	}
 
 private:
-	CUtlVector<Snapshot>	m_Snapshots;
-	CUtlVector<Replay>		m_Replays;
+	CUtlVector<Snapshot *>	m_Snapshots;
+	CUtlVector<Replay *>	m_Replays;
 	bool					m_bDoReplay;
 	int						m_nSnapshotIndex;
+	int						m_nReplayIndex;
+	int						m_nHighlightReplayIndex;
 	CReplayBall				*m_pBall;
 	CReplayPlayer			*m_pPlayers[2][11];
 	int						m_nMaxReplayRuns;
 	float					m_flStartTime;
+	bool					m_bIsHighlightReplay;
 };
 
 extern CReplayManager *g_pReplayManager;

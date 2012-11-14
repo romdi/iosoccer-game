@@ -63,8 +63,8 @@ public:
 	float	m_flExactDistanceCovered;
 
 //	CPlayerPersistentData(const CSteamID *steamID);
-	static void RemoveAllPlayerData();
-	static CPlayerPersistentData *GetData(CSDKPlayer *pPl);
+	static void ReallocateAllPlayerData();
+	static void AllocateData(CSDKPlayer *pPl);
 	static CUtlVector<CPlayerPersistentData *> m_PlayerPersistentData;
 	void ResetData();
 };

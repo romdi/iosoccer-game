@@ -280,7 +280,7 @@ private:
 	int				m_nPossessingTeam;
 	float			m_flPossessionStart;
 
-	CUtlVector<BallTouchInfo> m_Touches;
+	CUtlVector<BallTouchInfo *> m_Touches;
 
 	penalty_state_t m_ePenaltyState;
 

@@ -17,6 +17,7 @@
 #include "vgui_bitmapbutton.h"
 #include "statsmenu.h"
 #include "formationmenu.h"
+#include "matcheventmenu.h"
 
 using namespace vgui;
 
@@ -106,6 +107,8 @@ struct SpecInfo
 	int playerIndex;
 	char playerName[MAX_PLAYER_NAME_LENGTH];
 };
+
+enum panel_types_t { STATS_MENU, FORMATION_MENU_NORMAL, FORMATION_MENU_HIGHLIGHT, MATCHEVENT_MENU };
 
 //-----------------------------------------------------------------------------
 // Purpose: Game ScoreBoard
@@ -233,6 +236,7 @@ private:
 	Button		*m_pStatButtons[STAT_COUNT];
 	Panel		*m_pPlayerListDivider;
 	Button		*m_pJoinRandom;
+	Button		*m_pMatchEvents;
 	Button		*m_pBecomeCaptain;
 	Button		*m_pToggleMenu;
 	ComboBox	*m_pFormationList;
@@ -240,6 +244,7 @@ private:
 
 	CStatsMenu	*m_pStatsMenu;
 	CFormationMenu	*m_pFormationMenu;
+	CMatchEventMenu	*m_pMatchEventMenu;
 
 	Label		*m_pSpecInfo;
 
@@ -251,9 +256,12 @@ private:
 
 	int			m_nSelectedPlayerIndex;
 
-	bool		m_bIsStatsMenuEnabled;
+	panel_types_t m_eActivePanelType;
 
 	bool		m_bShowCaptainMenu;
+
+	int			m_nCursorPosX;
+	int			m_nCursorPosY;
 
 	IScheme *m_pScheme;
 };

@@ -89,6 +89,8 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Editabl
 	m_pStatsMenu = new CStatsMenu(m_pExtraInfoPanel, "");
 	m_pStatsMenu->SetVisible(false);
 	m_pFormationMenu = new CFormationMenu(m_pExtraInfoPanel, "");
+	m_pMatchEventMenu = new CMatchEventMenu(m_pExtraInfoPanel, "");
+	m_pMatchEventMenu->SetVisible(false);
 
 	for (int i = 0; i < 2; i++)
 	{
@@ -144,6 +146,8 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Editabl
 
 	m_pJoinRandom = new Button(m_pStatButtonInnerContainer, "JoinRandom", "Auto-Join", this, VarArgs("jointeam %d -1", TEAM_INVALID));
 
+	m_pMatchEvents = new Button(m_pStatButtonInnerContainer, "MatchEvents", "Match Events", this, "showmatchevents");
+
 	m_pBecomeCaptain = new Button(m_pStatButtonInnerContainer, "BecomeCaptain", "Become Captain", this, "becomecaptain");
 	m_pBecomeCaptain->SetVisible(false);
 
@@ -160,7 +164,7 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Editabl
 
 	m_nSelectedPlayerIndex = -2;
 
-	m_bIsStatsMenuEnabled = true;
+	m_eActivePanelType = FORMATION_MENU_NORMAL;
 
 	m_bShowCaptainMenu = false;
 
@@ -234,6 +238,7 @@ void CClientScoreBoardDialog::Reset()
 
 	m_pStatsMenu->Reset();
 	m_pFormationMenu->Reset();
+	m_pMatchEventMenu->Reset();
 
 	m_iSectionId = 0;
 	m_fNextUpdateTime = 0;
@@ -279,6 +284,9 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 	m_pFormationMenu->SetBounds(0, 0, m_pExtraInfoPanel->GetWide(), m_pExtraInfoPanel->GetTall());
 	m_pFormationMenu->PerformLayout();
 
+	m_pMatchEventMenu->SetBounds(0, 0, m_pExtraInfoPanel->GetWide(), m_pExtraInfoPanel->GetTall());
+	m_pMatchEventMenu->PerformLayout();
+
 	m_pStatButtonOuterContainer->SetBounds(m_pMainPanel->GetWide() / 2 - (STATBUTTON_WIDTH + 2 * STATBUTTON_HMARGIN) / 2, m_pExtraInfoPanel->GetY(), STATBUTTON_WIDTH + 2 * STATBUTTON_HMARGIN, m_pMainPanel->GetTall() - m_pExtraInfoPanel->GetY());
 	m_pStatButtonOuterContainer->SetZPos(1);
 	//m_pStatButtonOuterContainer->SetBgColor(Color(0, 0, 0, 150));
@@ -294,12 +302,20 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 	m_pSpectateButton->SetContentAlignment(Label::a_center);
 	m_pSpectateButton->SetPaintBorderEnabled(false);
 	m_pSpectateButton->SetCursor(dc_hand);
+	m_pSpectateButton->SetVisible(false);
 
-	m_pJoinRandom->SetBounds(STATBUTTON_HMARGIN, STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
+	m_pJoinRandom->SetBounds(STATBUTTON_HMARGIN, 0, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
 	m_pJoinRandom->SetFont(m_pScheme->GetFont("StatButton"));
 	m_pJoinRandom->SetContentAlignment(Label::a_center);
 	m_pJoinRandom->SetPaintBorderEnabled(false);
 	m_pJoinRandom->SetCursor(dc_hand);
+	//m_pJoinRandom->SetVisible(false);
+
+	m_pMatchEvents->SetBounds(STATBUTTON_HMARGIN, STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
+	m_pMatchEvents->SetFont(m_pScheme->GetFont("StatButton"));
+	m_pMatchEvents->SetContentAlignment(Label::a_center);
+	m_pMatchEvents->SetPaintBorderEnabled(false);
+	m_pMatchEvents->SetVisible(false);
 
 	m_pBecomeCaptain->SetBounds(STATBUTTON_HMARGIN, 2 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
 	m_pBecomeCaptain->SetFont(m_pScheme->GetFont("StatButton"));
@@ -377,6 +393,8 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 		}
 	}
 
+	input()->SetCursorPos(ScreenWidth() / 2, m_pMainPanel->GetY() + m_pExtraInfoPanel->GetY() - 60);
+
 	Reset();
 }
 
@@ -409,11 +427,12 @@ void CClientScoreBoardDialog::ShowPanel(bool bShow)
 		RequestFocus();
 		SetKeyBoardInputEnabled(false);
 		SetMouseInputEnabled(true);
-		input()->SetCursorPos(ScreenWidth() / 2, m_pMainPanel->GetY() + m_pExtraInfoPanel->GetY() - 60);
+		input()->SetCursorPos(m_nCursorPosX, m_nCursorPosY);
 		SetHighlightedPlayer(0);
 	}
 	else
 	{
+		input()->GetCursorPosition(m_nCursorPosX, m_nCursorPosY);
 		BaseClass::SetVisible( false );
 		SetMouseInputEnabled( false );
 		SetKeyBoardInputEnabled( false );
@@ -470,10 +489,10 @@ void CClientScoreBoardDialog::Update( void )
 	//	Reset();
 	//}
 
-	bool showFormationMenu = true;
-
-	if (m_bIsStatsMenuEnabled)
+	if (m_eActivePanelType == STATS_MENU)
 	{
+		bool showStatsMenu = false;
+
 		for (int i = 0; i < 2; i++)
 		{
 			int itemID = m_pPlayerList[i]->GetSelectedItem();
@@ -481,26 +500,39 @@ void CClientScoreBoardDialog::Update( void )
 			if (m_pPlayerList[i]->IsItemIDValid(itemID))
 			{
 				m_nSelectedPlayerIndex = m_pPlayerList[i]->GetItemData(itemID)->GetInt("playerindex");
-				showFormationMenu = false;
+				
+				m_pFormationMenu->SetVisible(false);
+				m_pStatsMenu->SetVisible(true);
+				m_pStatButtonOuterContainer->SetVisible(false);
+				m_pMatchEventMenu->SetVisible(false);
+				showStatsMenu = true;
+
 				break;
 			}
 			else
 				m_nSelectedPlayerIndex = -2;
 		}
-	}
 
-	if (showFormationMenu)
+		if (!showStatsMenu)
+			m_eActivePanelType = FORMATION_MENU_NORMAL;
+	}
+	
+	if (m_eActivePanelType == MATCHEVENT_MENU)
+	{
+		m_pFormationMenu->SetVisible(false);
+		m_pStatsMenu->SetVisible(false);
+		m_pMatchEventMenu->Update();
+		m_pMatchEventMenu->SetVisible(true);
+		m_pStatButtonOuterContainer->SetVisible(true);
+	}
+	
+	if (m_eActivePanelType == FORMATION_MENU_NORMAL || m_eActivePanelType == FORMATION_MENU_HIGHLIGHT)
 	{
 		m_pFormationMenu->Update();
 		m_pFormationMenu->SetVisible(true);
 		m_pStatsMenu->SetVisible(false);
 		m_pStatButtonOuterContainer->SetVisible(true);
-	}
-	else
-	{
-		m_pFormationMenu->SetVisible(false);
-		m_pStatsMenu->SetVisible(true);
-		m_pStatButtonOuterContainer->SetVisible(false);
+		m_pMatchEventMenu->SetVisible(false);
 	}
 
 	UpdatePlayerInfo();
@@ -545,6 +577,11 @@ void CClientScoreBoardDialog::Update( void )
 	{
 		m_pRequestTimeout->SetText(VarArgs("Timeout (%d left)", pLocal->GetTeam()->Get_TimeoutsLeft()));
 	}
+
+	bool isOnField = (pLocal->GetTeamNumber() == TEAM_A || pLocal->GetTeamNumber() == TEAM_B);
+
+	m_pSpectateButton->SetVisible(isOnField);
+	m_pJoinRandom->SetVisible(!isOnField);
 
 	m_fNextUpdateTime = gpGlobals->curtime + 0.25f; 
 }
@@ -845,7 +882,7 @@ void CClientScoreBoardDialog::AddHeader()
 			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goalkicks",			"Goal kicks", defaultFlags, 52);
 			break;
 		case KEEPER:
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "saves",				"Saves", defaultFlags, 65);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "keepersaves",		"Saves", defaultFlags, 65);
 			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goalkicks",			"Goal kicks", defaultFlags, 65);
 			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "owngoals",			"Own goals", defaultFlags, 65);
 			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goalsconceded",		"Goals conc.", defaultFlags, 65);
@@ -955,7 +992,6 @@ bool CClientScoreBoardDialog::GetPlayerInfo(int playerIndex, KeyValues *kv)
 	kv->SetString("penalties", GET_STAT_TEXT(gr->GetPenalties(playerIndex)));
 	kv->SetString("corners", GET_STAT_TEXT(gr->GetCorners(playerIndex)));
 	kv->SetString("throwins", GET_STAT_TEXT(gr->GetThrowIns(playerIndex)));
-	kv->SetString("saves", GET_STAT_TEXT(gr->GetKeeperSaves(playerIndex)));
 	kv->SetString("goalkicks", GET_STAT_TEXT(gr->GetGoalKicks(playerIndex)));
 	kv->SetString("passescompleted", GET_STAT_FTEXT(gr->GetPassesCompleted(playerIndex) * 100 / max(1, gr->GetPasses(playerIndex)), "%d%%"));
 	kv->SetString("interceptions", GET_STAT_TEXT(gr->GetInterceptions(playerIndex)));
@@ -1154,7 +1190,7 @@ bool CClientScoreBoardDialog::GetTeamInfo(int team, KeyValues *kv)
 	kv->SetString("yellowcards", GET_STAT_TEXT(yellowcards));
 	kv->SetString("penalties", GET_STAT_TEXT(penalties));
 	kv->SetString("throwins", GET_STAT_TEXT(throwins));
-	kv->SetString("saves", GET_STAT_TEXT(saves));
+	kv->SetString("keepersaves", GET_STAT_TEXT(saves));
 	kv->SetString("owngoals", GET_STAT_TEXT(owngoals));
 	kv->SetString("goalsconceded", GET_STAT_TEXT(goalsconceded));
 	char *rating = VarArgs("%.1f", (ratings / max(1, passCompletedPlayerCount)));
@@ -1293,6 +1329,10 @@ void CClientScoreBoardDialog::OnCommand( char const *cmd )
 	else if (!Q_strnicmp(cmd, "stat:", 5))
 	{
 		m_nCurStat = atoi(&cmd[5]);
+		if (m_nCurStat != -1)
+			m_eActivePanelType = MATCHEVENT_MENU;
+		else
+			m_eActivePanelType = FORMATION_MENU_NORMAL;
 		Reset();
 		Update();
 	}
@@ -1336,6 +1376,16 @@ void CClientScoreBoardDialog::OnCommand( char const *cmd )
 	else if (!Q_stricmp(cmd, "requesttimeout"))
 	{
 		engine->ClientCmd(cmd);
+	}
+	else if (!Q_stricmp(cmd, "showmatchevents"))
+	{
+		m_eActivePanelType = MATCHEVENT_MENU;
+		Update();
+	}
+	else if (!Q_stricmp(cmd, "hidematchevents"))
+	{		
+		m_eActivePanelType = FORMATION_MENU_NORMAL;
+		Update();
 	}
 	else
 		BaseClass::OnCommand(cmd);
@@ -1393,6 +1443,9 @@ void CClientScoreBoardDialog::OnItemSelected(KeyValues *data)
 	//	}
 	//}
 
+	if (m_eActivePanelType != FORMATION_MENU_HIGHLIGHT)
+		m_eActivePanelType = STATS_MENU;
+
 	Update();
 }
 
@@ -1404,6 +1457,10 @@ void CClientScoreBoardDialog::OnCursorEntered(Panel *panel)
 		OnCommand(cmd);
 	}
 	else if (!Q_strnicmp(cmd, "specindex:", 10))
+	{
+		OnCommand(cmd);
+	}
+	else if (!Q_strnicmp(cmd, "showmatchevents", 10))
 	{
 		OnCommand(cmd);
 	}
@@ -1420,6 +1477,10 @@ void CClientScoreBoardDialog::OnCursorExited(Panel *panel)
 	{
 		OnCommand("specindex:0");
 	}
+	else if (!Q_strnicmp(cmd, "showmatchevents", 10))
+	{
+		OnCommand("hidematchevents");
+	}
 }
 
 void CClientScoreBoardDialog::SetHighlightedPlayer(int playerIndex)
@@ -1432,20 +1493,18 @@ void CClientScoreBoardDialog::SetHighlightedPlayer(int playerIndex)
 
 	if (itemID > -1)
 	{
-		m_bIsStatsMenuEnabled = false;
+		m_eActivePanelType = FORMATION_MENU_HIGHLIGHT;
 		m_pPlayerList[side]->SetSelectedItem(itemID);
 	}
 	else
 	{
 		m_pPlayerList[0]->ClearSelection();
 		m_pPlayerList[1]->ClearSelection();
-		m_bIsStatsMenuEnabled = true;
+		m_eActivePanelType = FORMATION_MENU_NORMAL;
 	}
 }
 
 void CClientScoreBoardDialog::Paint()
 {
 	BaseClass::Paint();
-
-	
 }

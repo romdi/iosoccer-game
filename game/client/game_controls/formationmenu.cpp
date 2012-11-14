@@ -222,10 +222,8 @@ void CFormationMenu::Update()
 			char *cmd;
 			if (playerIndexAtPos[i][j] == GetLocalPlayerIndex())
 				cmd = "";
-			else if (isFree || (isTakenByBot && gr->GetTeamPosType(playerIndexAtPos[i][j]) == GK))
-				cmd = VarArgs("jointeam %d %d", i + TEAM_A, j);
 			else
-				cmd = VarArgs("rotatepos %d %d", i + TEAM_A, j);
+				cmd = VarArgs("jointeam %d %d", i + TEAM_A, j);
 
 			kv->SetString("command", cmd);
 			kv->SetInt("playerindex", playerIndexAtPos[i][j]);
@@ -250,10 +248,6 @@ void CFormationMenu::Update()
 void CFormationMenu::OnCommand( char const *cmd )
 {
 	if (!strnicmp(cmd, "jointeam", 8))
-	{
-		engine->ClientCmd(cmd);
-	}
-	else if (!strnicmp(cmd, "rotatepos", 9))
 	{
 		engine->ClientCmd(cmd);
 	}
@@ -288,7 +282,7 @@ void CFormationMenu::OnCursorEntered(Panel *panel)
 			((CClientScoreBoardDialog *)gViewPortInterface->FindPanelByName(PANEL_SCOREBOARD))->SetHighlightedPlayer(playerIndex);
 			if (playerIndex == GetLocalPlayerIndex())
 				msg = "YOU";
-			else if (GameResources()->GetTeamPosIndex(playerIndex) != GetKeeperPosIndex())
+			else //if (GameResources()->GetTeamPosIndex(playerIndex) != GetKeeperPosIndex())
 				msg = "SWAP";
 		}
 

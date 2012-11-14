@@ -450,7 +450,10 @@ bool CSDKPlayer::ChangeTeamPos(int team, int posIndex, bool instantly /*= false*
 		return false;
 	
 	if (team == TEAM_SPECTATOR)
-	{		
+	{	
+		m_nRotationTeam = TEAM_INVALID;
+		m_nRotationTeamPosIndex = 0;
+
 		if (GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B)
 		{
 			if (instantly)
@@ -560,6 +563,8 @@ void CSDKPlayer::ChangeTeam( int iTeamNum )
 	else // active player
 	{
 		m_nTeamToJoin = TEAM_INVALID;
+		m_nRotationTeam = TEAM_INVALID;
+		m_nRotationTeamPosIndex = 0;
 
 		if( iOldTeam == TEAM_SPECTATOR )
 			SetMoveType( MOVETYPE_NONE );
@@ -986,6 +991,7 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 		int team = atoi(args[1]);
 		int posIndex = atoi(args[2]);
 
+		// Find team and pos for auto-join
 		if (posIndex == -1 || team == TEAM_INVALID)
 		{
 			int checkTeam = GetGlobalTeam(TEAM_A)->GetNumPlayers() <= GetGlobalTeam(TEAM_B)->GetNumPlayers() ? TEAM_A : TEAM_B;
@@ -1004,7 +1010,15 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 		if (posIndex == -1 || team == TEAM_INVALID)
 			return false;
 
-		ChangeTeamPos(team, posIndex);
+		if (TeamPosFree(team, posIndex, false))
+		{
+			ChangeTeamPos(team, posIndex);
+		}
+		else
+		{
+			m_nRotationTeam = team;
+			m_nRotationTeamPosIndex = posIndex;
+		}
 
 		return true;
 	}
@@ -1084,28 +1098,6 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 	}
 	else if (!Q_stricmp(args[0], "becomecaptain"))
 	{
-
-		return true;
-	}
-	else if (!Q_stricmp(args[0], "rotatepos"))
-	{
-		if (args.ArgC() < 3)
-		{
-			Warning("need team and pos index\n");
-			return false;
-		}
-
-		if (IsCardBanned())
-			return false;
-
-		int team = atoi(args[1]);
-		int posIndex = atoi(args[2]);
-
-		if (posIndex == -1 || team == TEAM_INVALID)
-			return false;
-
-		m_nRotationTeam = team;
-		m_nRotationTeamPosIndex = posIndex;
 
 		return true;
 	}
@@ -1676,7 +1668,7 @@ bool CSDKPlayer::IsAway()
 
 CUtlVector<CPlayerPersistentData *> CPlayerPersistentData::m_PlayerPersistentData;
 
-CPlayerPersistentData *CPlayerPersistentData::GetData(CSDKPlayer *pPl)
+void CPlayerPersistentData::AllocateData(CSDKPlayer *pPl)
 {
 	const CSteamID *steamID = engine->GetClientSteamID(pPl->edict());
 	const char* sid = engine->GetPlayerNetworkIDString(pPl->edict());
@@ -1699,12 +1691,21 @@ CPlayerPersistentData *CPlayerPersistentData::GetData(CSDKPlayer *pPl)
 		m_PlayerPersistentData.AddToTail(data);
 	}
 
-	return data;
+	pPl->SetData(data);
 }
 
-void CPlayerPersistentData::RemoveAllPlayerData()
+void CPlayerPersistentData::ReallocateAllPlayerData()
 {
-	m_PlayerPersistentData.RemoveAll();
+	m_PlayerPersistentData.PurgeAndDeleteElements();
+
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+		if (!pPl)
+			continue;
+
+		AllocateData(pPl);
+	}
 }
 
 void CPlayerPersistentData::ResetData()

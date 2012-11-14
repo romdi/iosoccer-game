@@ -29,6 +29,7 @@
 #include "tier0/dbg.h"
 #include "cdll_int.h"
 #include <vgui/IPanel.h>
+#include "c_ios_replaymanager.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -205,6 +206,9 @@ void CVoiceStatus::DrawHeadLabels()
 		return;
 
 	if( !m_pHeadLabelMaterial )
+		return;
+
+	if (GetReplayManager() && GetReplayManager()->m_bIsReplaying)
 		return;
 
 	CMatRenderContextPtr pRenderContext( materials );

@@ -129,6 +129,7 @@ void CReplayPlayer::Think()
 
 static ConVar sv_replay_duration("sv_replay_duration", "6", FCVAR_NOTIFY);
 static ConVar sv_replays("sv_replays", "1", FCVAR_NOTIFY);
+static ConVar sv_highlights("sv_highlights", "1", FCVAR_NOTIFY);
 
 void cc_StartReplay(const CCommand &args)
 {
@@ -182,6 +183,8 @@ CReplayManager::CReplayManager()
 	}
 
 	m_bIsReplaying = false;
+	m_bIsHighlightReplay = false;
+	m_nHighlightReplayIndex = 0;
 }
 
 CReplayManager::~CReplayManager()
@@ -189,7 +192,6 @@ CReplayManager::~CReplayManager()
 	if (m_pBall)
 	{
 		UTIL_Remove(m_pBall);
-		m_pBall = NULL;
 	}
 
 	for (int i = 0; i < 2; i++)
@@ -199,25 +201,11 @@ CReplayManager::~CReplayManager()
 			if (m_pPlayers[i][j])
 			{
 				UTIL_Remove(m_pPlayers[i][j]);
-				m_pPlayers[i][j] = NULL;
 			}
 		}
 	}
 
-	while (m_Snapshots.Count() > 0)
-	{
-		delete m_Snapshots[0].pBallSnapshot;
-
-		for (int i = 0; i < 2; i++)
-		{
-			for (int j = 0; j < 11; j++)
-			{
-				delete m_Snapshots[0].pPlayerSnapshot[i][j];
-			}
-		}
-
-		m_Snapshots.Remove(0);
-	}
+	m_Snapshots.PurgeAndDeleteElements();
 
 	g_pReplayManager = NULL;
 }
@@ -247,7 +235,7 @@ void CReplayManager::CheckReplay()
 {
 	if (m_bDoReplay && gpGlobals->curtime >= m_flStartTime)
 		RestoreSnapshot();
-	else if (!m_bDoReplay && sv_replay_duration.GetInt() > 0)
+	else if (!m_bDoReplay && sv_replay_duration.GetInt() > 0 && !SDKGameRules()->IsIntermissionState())
 		TakeSnapshot();
 }
 
@@ -262,10 +250,8 @@ void CReplayManager::StartReplay(int numberOfRuns, float startDelay, bool atMinG
 	m_nReplayRunIndex = 0;
 	m_bDoReplay = true;
 	m_bAtMinGoalPos = atMinGoalPos;
-	if (m_Replays.Count() > 0)
-		m_Snapshots = m_Replays[0].m_Snapshots;
-	else
-		SaveReplay();
+	SaveReplay();
+	m_nReplayIndex = m_Replays.Count() - 1;
 }
 
 void CReplayManager::StopReplay()
@@ -327,8 +313,8 @@ void CReplayManager::StopReplay()
 
 void CReplayManager::TakeSnapshot()
 {
-	Snapshot snap;
-	snap.snaptime = gpGlobals->curtime;
+	Snapshot *pSnap = new Snapshot;
+	pSnap->snaptime = gpGlobals->curtime;
 
 	BallSnapshot *pBallSnap = new BallSnapshot;
 
@@ -337,13 +323,13 @@ void CReplayManager::TakeSnapshot()
 	pBallSnap->skin = GetBall()->m_nSkin;
 	pBallSnap->effects = GetBall()->GetEffects();
 
-	snap.pBallSnapshot = pBallSnap;
+	pSnap->pBallSnapshot = pBallSnap;
 
 	for (int i = 0; i < 2; i++)
 	{
 		for (int j = 0; j < 11; j++)
 		{
-			snap.pPlayerSnapshot[i][j] = NULL;
+			pSnap->pPlayerSnapshot[i][j] = NULL;
 		}
 	}
 
@@ -381,22 +367,24 @@ void CReplayManager::TakeSnapshot()
 		pPlSnap->m_nSkin = pPl->m_nSkin;
 		pPlSnap->m_nBody = pPl->m_nBody;
 
-		snap.pPlayerSnapshot[pPl->GetTeamNumber() - TEAM_A][pPl->GetTeamPosIndex()] = pPlSnap;
+		pSnap->pPlayerSnapshot[pPl->GetTeamNumber() - TEAM_A][pPl->GetTeamPosIndex()] = pPlSnap;
 	}
 
-	m_Snapshots.AddToTail(snap);
+	m_Snapshots.AddToTail(pSnap);
 	
-	while (m_Snapshots[0].snaptime < gpGlobals->curtime - sv_replay_duration.GetInt())
+	while (m_Snapshots[0]->snaptime < gpGlobals->curtime - sv_replay_duration.GetInt())
 	{
-		delete m_Snapshots[0].pBallSnapshot;
+		//delete m_Snapshots[0]->pBallSnapshot;
 
-		for (int i = 0; i < 2; i++)
-		{
-			for (int j = 0; j < 11; j++)
-			{
-				delete m_Snapshots[0].pPlayerSnapshot[i][j];
-			}
-		}
+		//for (int i = 0; i < 2; i++)
+		//{
+		//	for (int j = 0; j < 11; j++)
+		//	{
+		//		delete m_Snapshots[0]->pPlayerSnapshot[i][j];
+		//	}
+		//}
+
+		delete m_Snapshots[0];
 
 		m_Snapshots.Remove(0);
 	}
@@ -404,7 +392,11 @@ void CReplayManager::TakeSnapshot()
 
 void CReplayManager::RestoreSnapshot()
 {
-	if (m_nSnapshotIndex >= m_Snapshots.Count())
+	Replay *pReplay = m_Replays[m_nReplayIndex];
+
+	m_bAtMinGoalPos = pReplay->m_bAtMinGoalPos;
+
+	if (m_nSnapshotIndex >= pReplay->m_Snapshots.Count())
 	{
 		if (m_nReplayRunIndex < m_nMaxReplayRuns - 1)
 		{
@@ -413,16 +405,25 @@ void CReplayManager::RestoreSnapshot()
 		}
 		else
 		{
-			StopReplay();
+			if (m_bIsHighlightReplay && m_nReplayIndex < m_Replays.Count() - 1)
+			{
+				m_nReplayRunIndex = 0;
+				m_nSnapshotIndex = 0;
+				m_nReplayIndex += 1;
+			}
+			else
+			{
+				StopReplay();
+			}
 			return;
 		}
 	}
 
-	if (m_Snapshots.Count() == 0)
-	{
-		StopReplay();
-		return;
-	}
+	//if (pReplay->m_Snapshots.Count() == 0)
+	//{
+	//	StopReplay();
+	//	return;
+	//}
 
 	m_bIsReplaying = true;
 
@@ -456,7 +457,7 @@ void CReplayManager::RestoreSnapshot()
 		}
 	}
 
-	Snapshot *pSnap = &m_Snapshots[m_nSnapshotIndex];
+	Snapshot *pSnap = pReplay->m_Snapshots[m_nSnapshotIndex];
 
 	BallSnapshot *pBallSnap = pSnap->pBallSnapshot;
 
@@ -565,5 +566,40 @@ void CReplayManager::SaveReplay()
 	//replay.m_Snapshots.CopyArray(m_Snapshots.Base(), m_Snapshots.Count());
 	//m_Replays.SetCount(1);
 	//m_Replays[0] = replay;
-	//m_Replays.AddToTail(replay);
+	Replay *pReplay = new Replay;
+	pReplay->m_Snapshots = m_Snapshots;
+	pReplay->m_nMatchSeconds = SDKGameRules()->GetMatchDisplayTimeSeconds();
+	pReplay->m_bAtMinGoalPos = m_bAtMinGoalPos;
+	//for (int i = 0; i < pReplay->m_Snapshots.Count(); i++)
+	//{
+	//	pReplay->m_Snapshots[i]->isHighlight = true;
+	//}
+
+	m_Replays.AddToTail(pReplay);
+
+	m_Snapshots.RemoveAll();
+}
+
+void CReplayManager::StartHighlights()
+{
+	if (!sv_replays.GetBool() || !sv_highlights.GetBool() || m_nHighlightReplayIndex > m_Replays.Count() - 1)
+		return;
+
+	m_bIsHighlightReplay = true;
+	m_nReplayIndex = m_nHighlightReplayIndex;
+	m_nMaxReplayRuns = 3;
+	m_flStartTime = gpGlobals->curtime + 3;
+	m_nSnapshotIndex = 0;
+	m_nReplayRunIndex = 0;
+	m_bDoReplay = true;
+}
+
+void CReplayManager::StopHighlights()
+{
+	if (!sv_replays.GetBool() || !sv_highlights.GetBool() || !m_bDoReplay)
+		return;
+
+	m_nHighlightReplayIndex = m_nReplayIndex;
+	m_bIsHighlightReplay = false;
+	StopReplay();
 }

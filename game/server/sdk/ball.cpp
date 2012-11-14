@@ -2395,7 +2395,7 @@ bool CBall::DoHeader()
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEADER);
 	}
 
-	SetVel(m_vPlForwardVel2D + vel, 0, BODY_PART_HEAD, false, true, true);
+	SetVel(m_vPlForwardVel2D + vel, -1, BODY_PART_HEAD, false, true, true);
 
 	return true;
 }
@@ -2688,9 +2688,9 @@ void CBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart)
 	if (SDKGameRules()->IsIntermissionState() || m_bHasQueuedState || SDKGameRules()->State_Get() == MATCH_PENALTIES)
 		return;
 
-	if (m_Touches.Count() > 0 && m_Touches.Tail().m_pPl == pPl && m_Touches.Tail().m_nTeam == pPl->GetTeamNumber()
-		&& sv_ball_doubletouchfouls.GetBool() && State_Get() == BALL_NORMAL && m_Touches.Tail().m_eBallState != BALL_NORMAL
-		&& m_Touches.Tail().m_eBallState != BALL_KEEPERHANDS && pPl->GetTeam()->GetNumPlayers() > 2 && pPl->GetOppTeam()->GetNumPlayers() > 2)
+	if (m_Touches.Count() > 0 && m_Touches.Tail()->m_pPl == pPl && m_Touches.Tail()->m_nTeam == pPl->GetTeamNumber()
+		&& sv_ball_doubletouchfouls.GetBool() && State_Get() == BALL_NORMAL && m_Touches.Tail()->m_eBallState != BALL_NORMAL
+		&& m_Touches.Tail()->m_eBallState != BALL_KEEPERHANDS && pPl->GetTeam()->GetNumPlayers() > 2 && pPl->GetOppTeam()->GetNumPlayers() > 2)
 	{
 		TriggerFoul(FOUL_DOUBLETOUCH, pPl->GetLocalOrigin(), pPl);
 		State_Transition(BALL_FREEKICK, sv_ball_statetransition_activationdelay_long.GetFloat());
@@ -2726,7 +2726,14 @@ void CBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart)
 		}
 
 		UpdatePossession(pPl);
-		BallTouchInfo info = { pPl, pPl->GetTeamNumber(), isShot, bodyPart, State_Get(), m_vPos, m_vVel };
+		BallTouchInfo *info = new BallTouchInfo;
+		info->m_pPl = pPl;
+		info->m_nTeam = pPl->GetTeamNumber();
+		info->m_bIsShot = isShot;
+		info->m_eBodyPart = bodyPart;
+		info->m_eBallState = State_Get();
+		info->m_vBallPos = m_vPos;
+		info->m_vBallPos = m_vVel;
 		m_Touches.AddToTail(info);
 	}
 
@@ -2744,21 +2751,21 @@ void CBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart)
 void CBall::RemoveAllTouches()
 {
 	if (!m_bHasQueuedState)
-		m_Touches.RemoveAll();
+		m_Touches.PurgeAndDeleteElements();
 }
 
 BallTouchInfo *CBall::LastInfo(bool wasShooting, CSDKPlayer *pSkipPl /*= NULL*/, CSDKPlayer *pSkipPl2 /*= NULL*/)
 {
 	for (int i = m_Touches.Count() - 1; i >= 0; i--)
 	{
-		if (pSkipPl && m_Touches[i].m_pPl == pSkipPl)
+		if (pSkipPl && m_Touches[i]->m_pPl == pSkipPl)
 			continue;
 
-		if (pSkipPl2 && m_Touches[i].m_pPl == pSkipPl2)
+		if (pSkipPl2 && m_Touches[i]->m_pPl == pSkipPl2)
 			continue;
 
-		if (!wasShooting || m_Touches[i].m_bIsShot)
-			return &m_Touches[i];
+		if (!wasShooting || m_Touches[i]->m_bIsShot)
+			return m_Touches[i];
 	}
 
 	return NULL;
@@ -2955,7 +2962,7 @@ void CBall::ResetMatch()
 		pPl->ResetStats();
 	}
 
-	CPlayerPersistentData::RemoveAllPlayerData();
+	CPlayerPersistentData::ReallocateAllPlayerData();
 }
 
 void CBall::SetPenaltyTaker(CSDKPlayer *pPl)
