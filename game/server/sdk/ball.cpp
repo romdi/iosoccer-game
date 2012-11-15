@@ -874,7 +874,7 @@ void CBall::State_Think()
 	{
 		if (CSDKPlayer::IsOnField(m_pPl))
 		{
-			m_pPl->ChangeTeamPos(TEAM_SPECTATOR, 0, true);
+			m_pPl->ChangeTeam(TEAM_SPECTATOR);
 		}
 	}
 
@@ -1741,7 +1741,7 @@ bool CBall::PlayersAtTargetPos()
 					playersAtTarget = false;
 				}
 				else if (gpGlobals->curtime >= pPl->m_flRemoteControlledStartTime + sv_ball_timelimit_remotecontrolled.GetFloat())
-					pPl->ChangeTeamPos(TEAM_SPECTATOR, 0, true);
+					pPl->ChangeTeam(TEAM_SPECTATOR);
 				else
 					playersAtTarget = false;
 			}

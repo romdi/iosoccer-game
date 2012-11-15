@@ -52,3 +52,11 @@ void C_Ball::OnDataChanged(DataUpdateType_t updateType)
 
 	return;
 }
+
+bool C_Ball::ShouldInterpolate()
+{
+	if (this == GetBall())
+		return true;
+	else
+		return BaseClass::ShouldInterpolate();
+}

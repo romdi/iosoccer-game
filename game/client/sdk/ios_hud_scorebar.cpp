@@ -545,7 +545,7 @@ void CHudScorebar::OnThink( void )
 
 			if (gpGlobals->curtime >= m_flNextPlayerUpdate)
 			{
-				m_flNextPlayerUpdate = gpGlobals->curtime + 0.5f;
+				m_flNextPlayerUpdate = gpGlobals->curtime;// + 0.5f;
 
 				if (pBall->m_pMatchEventPlayer)
 				{

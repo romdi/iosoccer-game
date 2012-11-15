@@ -1269,7 +1269,7 @@ static void OnMaxPlayersChange(IConVar *var, const char *pOldValue, float flOldV
 		if (!pPl)
 			continue;
 
-		pPl->ChangeTeamPos(TEAM_SPECTATOR, 0, true);
+		pPl->ChangeTeam(TEAM_SPECTATOR);
 	}
 #endif
 }
@@ -2021,9 +2021,16 @@ void OnTeamlistChange(IConVar *var, const char *pOldValue, float flOldValue)
 ConVar mp_teamlist("mp_teamlist", "england,brazil", FCVAR_REPLICATED|FCVAR_NOTIFY, "Set team names", &OnTeamlistChange);
 ConVar mp_teamrotation("mp_teamrotation", "brazil,germany,italy,scotland,barcelona,bayern,liverpool,milan,palmeiras", 0, "Set available teams");
 
+ConVar mp_clientsettingschangeinterval("mp_clientsettingschangeinterval", "5", FCVAR_REPLICATED|FCVAR_NOTIFY, "");
+
 
 void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 {
+	if (gpGlobals->curtime < ToSDKPlayer(pPlayer)->m_flNextClientSettingsChangeTime)
+		return;
+
+	ToSDKPlayer(pPlayer)->m_flNextClientSettingsChangeTime = gpGlobals->curtime + mp_clientsettingschangeinterval.GetFloat();
+
 	char pszClubName[MAX_CLUBNAME_LENGTH];
 	Q_strncpy(pszClubName, engine->GetClientConVarValue( pPlayer->entindex(), "clubname" ), MAX_CLUBNAME_LENGTH);
 	((CSDKPlayer *)pPlayer)->SetClubName(pszClubName);
@@ -2403,7 +2410,7 @@ void CC_Bench(const CCommand &args)
 		return;
 	}
 	
-	pPl->ChangeTeamPos(TEAM_SPECTATOR, 0, true);
+	pPl->ChangeTeam(TEAM_SPECTATOR);
 	UTIL_ClientPrintAll(HUD_PRINTTALK, "#game_player_benched", pPl->GetPlayerName());
 }
 
@@ -2431,7 +2438,7 @@ void CC_BenchAll(const CCommand &args)
 
 		if (team == 0 || (pPl->GetTeamNumber() - TEAM_A + 1) == team)
 		{
-			pPl->ChangeTeamPos(TEAM_SPECTATOR, 0, true);
+			pPl->ChangeTeam(TEAM_SPECTATOR);
 			UTIL_ClientPrintAll(HUD_PRINTTALK, "#game_player_benched", pPl->GetPlayerName());
 		}
 	}

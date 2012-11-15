@@ -83,6 +83,7 @@ public : // IGameResources intreface
 	virtual int		GetTeamPosType( int iIndex );
 	virtual int		GetTeamPosIndex( int iIndex );
 	virtual int		GetTeamToJoin( int iIndex );
+	virtual int		GetTeamPosIndexToJoin( int iIndex );
 	virtual int		GetNextJoin( int iIndex );
 	virtual bool	IsCardBanned( int iIndex );
 
@@ -128,6 +129,7 @@ protected:
 	int		m_TeamPosNum[MAX_PLAYERS+1];
 
 	int		m_TeamToJoin[MAX_PLAYERS+1];
+	int		m_TeamPosIndexToJoin[MAX_PLAYERS+1];
 	int		m_NextJoin[MAX_PLAYERS+1];
 	bool	m_IsCardBanned[MAX_PLAYERS+1];
 };

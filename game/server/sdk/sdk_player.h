@@ -291,7 +291,7 @@ public:
 
 	void				ChoosePlayerSkin(void);
 	void				ChooseKeeperSkin(void);
-	bool				TeamPosFree(int team, int posIndex, bool ignoreBots);
+	bool				IsTeamPosFree(int team, int posIndex, bool ignoreBots, CSDKPlayer **pPlayerOnPos);
 
 	int					m_nTeamPosIndex;
 	int					m_nTeamPosNum;
@@ -387,6 +387,9 @@ public:
 	int					GetTeamPosIndex(void) { return m_nTeamPosIndex; }
 
 	int					GetTeamToJoin(void) { return m_nTeamToJoin; }
+
+	int					GetTeamPosIndexToJoin(void) { return m_nTeamPosIndexToJoin; }
+
 	void				SetPreferredTeamPosNum(int num) { m_nPreferredTeamPosNum = clamp(num, 0, 11); }
 	int					FindUnfilledTeamPosNum();
 
@@ -448,6 +451,7 @@ public:
 	CNetworkVector(m_vTargetPos);
 	CNetworkVar(bool, m_bIsAtTargetPos);
 	CNetworkVar(bool, m_bHoldAtTargetPos);
+	CNetworkVar(float, m_flNextClientSettingsChangeTime);
 
 	CNetworkVar(int, m_nInPenBoxOfTeam);
 
@@ -459,9 +463,7 @@ public:
 	void				ResetShotCharging();
 
 	int					m_nTeamToJoin;
-
-	int					m_nRotationTeam;
-	int					m_nRotationTeamPosIndex;
+	int					m_nTeamPosIndexToJoin;
 
 	int					m_ePenaltyState;
 	void				SetPlayerBall(CBall *pPlayerBall) { m_pPlayerBall = pPlayerBall; }

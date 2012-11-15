@@ -1,6 +1,7 @@
 #include "cbase.h"
 #include "iosoptions.h"
 #include "ienginevgui.h"
+#include "c_sdk_player.h"
 
 class CIOSOptionsMenu : public IIOSOptionsMenu
 {
@@ -54,7 +55,7 @@ ConCommand iosoptionsmenu("iosoptionsmenu", CC_IOSOptionsMenu);
 #define SHIRT_NUMBER_COUNT 11
 
 enum { PADDING = 15, TOP_PADDING = 15 };
-enum { BUTTON_WIDTH = 100, BUTTON_HEIGHT = 30, BUTTON_MARGIN = 5 };
+enum { BUTTON_WIDTH = 110, BUTTON_HEIGHT = 30, BUTTON_MARGIN = 5 };
 
 #define INTERP_VALUES 5
 const int interpValues[INTERP_VALUES] = { 1, 2, 3, 4, 5 };
@@ -215,6 +216,26 @@ void CIOSOptionsPanel::OnThink()
 
 	//SetTall((int)(gpGlobals->curtime * 100) % 100);
 	//m_pSettingsPanel->Update();
+
+	C_SDKPlayer *pLocal = C_SDKPlayer::GetLocalSDKPlayer();
+
+	if (pLocal)
+	{
+		if (gpGlobals->curtime < pLocal->m_flNextClientSettingsChangeTime)
+		{
+			char *text = VarArgs("Wait %d seconds", (int)(pLocal->m_flNextClientSettingsChangeTime - gpGlobals->curtime));
+			m_pOKButton->SetText(text);
+			m_pOKButton->SetEnabled(false);
+			m_pSaveButton->SetText(text);
+			m_pSaveButton->SetEnabled(false);
+			return;
+		}
+	}
+
+	m_pOKButton->SetText("OK");
+	m_pOKButton->SetEnabled(true);
+	m_pSaveButton->SetText("Apply");
+	m_pSaveButton->SetEnabled(true);
 }
 
 void CIOSOptionsPanel::OnCommand(const char *cmd)

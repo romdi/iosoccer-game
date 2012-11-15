@@ -138,6 +138,7 @@ BEGIN_RECV_TABLE_NOBASE( C_SDKPlayer, DT_SDKLocalPlayerExclusive )
 	RecvPropVector(RECVINFO(m_vTargetPos)),
 	RecvPropBool(RECVINFO(m_bIsAtTargetPos)),
 	RecvPropBool(RECVINFO(m_bHoldAtTargetPos)),
+	RecvPropTime( RECVINFO( m_flNextClientSettingsChangeTime ) ),
 END_RECV_TABLE()
 
 BEGIN_RECV_TABLE_NOBASE( C_SDKPlayer, DT_SDKNonLocalPlayerExclusive )

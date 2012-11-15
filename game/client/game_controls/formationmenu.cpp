@@ -166,10 +166,17 @@ void CFormationMenu::Update()
 		if (!gr->IsConnected(i))
 			continue;
 
-		int team = (gr->GetTeamToJoin(i) == TEAM_A || gr->GetTeamToJoin(i) == TEAM_B ? gr->GetTeamToJoin(i) : gr->GetTeam(i));
-
-		if (team == TEAM_A || team == TEAM_B)
-			playerIndexAtPos[team - TEAM_A][gr->GetTeamPosIndex(i)] = i;
+		if (gr->GetTeam(i) == TEAM_A || gr->GetTeam(i) == TEAM_B)
+		{
+			playerIndexAtPos[gr->GetTeam(i) - TEAM_A][gr->GetTeamPosIndex(i)] = i;
+		}
+		else if (gr->GetTeamToJoin(i) == TEAM_A || gr->GetTeamToJoin(i) == TEAM_B)
+		{
+			if (playerIndexAtPos[gr->GetTeamToJoin(i) - TEAM_A][gr->GetTeamPosIndexToJoin(i)] == 0)
+			{
+				playerIndexAtPos[gr->GetTeamToJoin(i) - TEAM_A][gr->GetTeamPosIndexToJoin(i)] = i;
+			}
+		}
 	}
 
 	for (int i = 0; i < 2; i++)

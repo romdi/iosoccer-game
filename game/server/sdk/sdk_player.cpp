@@ -145,6 +145,7 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayer, DT_SDKLocalPlayerExclusive )
 	SendPropVector(SENDINFO(m_vTargetPos), -1, SPROP_NOSCALE),
 	SendPropBool(SENDINFO(m_bIsAtTargetPos)),
 	SendPropBool(SENDINFO(m_bHoldAtTargetPos)),
+	SendPropTime( SENDINFO( m_flNextClientSettingsChangeTime ) ),
 END_SEND_TABLE()
 
 BEGIN_SEND_TABLE_NOBASE( CSDKPlayer, DT_SDKNonLocalPlayerExclusive )
@@ -253,6 +254,7 @@ CSDKPlayer::CSDKPlayer()
 	m_pCurStateInfo = NULL;	// no state yet
 	m_bShotButtonsReleased = false;
 	m_nTeamToJoin = TEAM_INVALID;
+	m_nTeamPosIndexToJoin = 0;
 	//m_flNextJoin = gpGlobals->curtime;
 	//m_bIsCardBanned = false;
 	m_nTeamPosIndex = 0;
@@ -263,6 +265,7 @@ CSDKPlayer::CSDKPlayer()
 	m_nInPenBoxOfTeam = TEAM_INVALID;
 	m_ePenaltyState = PENALTY_NONE;
 	m_pHoldingBall = NULL;
+	m_flNextClientSettingsChangeTime = gpGlobals->curtime;
 
 	m_pData = NULL;
 }
@@ -288,10 +291,10 @@ void CSDKPlayer::PreThink(void)
 		&& (GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B)
 		&& SDKGameRules()->GetMatchDisplayTimeSeconds() < GetNextJoin())
 	{
-		int team = GetTeamNumber();
-		int posIndex = GetTeamPosIndex();
+		//int team = GetTeamNumber();
+		//int posIndex = GetTeamPosIndex();
 		ChangeTeam(TEAM_SPECTATOR);
-		ChangeTeamPos(team, posIndex, true);
+		//ChangeTeamPos(team, posIndex, true);
 	}
 
 	if (!SDKGameRules()->IsIntermissionState() && IsCardBanned() && SDKGameRules()->GetMatchDisplayTimeSeconds() >= GetNextJoin())
@@ -301,31 +304,41 @@ void CSDKPlayer::PreThink(void)
 
 	if (m_nTeamToJoin != TEAM_INVALID && (SDKGameRules()->IsIntermissionState() || SDKGameRules()->GetMatchDisplayTimeSeconds() >= GetNextJoin()))
 	{
-		if (!TeamPosFree(m_nTeamToJoin, GetTeamPosIndex(), false))
+		bool canJoin = true;
+
+		CSDKPlayer *pPl = NULL;
+
+		if (!IsTeamPosFree(m_nTeamToJoin, m_nTeamPosIndexToJoin, false, &pPl))
 		{
-			for (int i = 1; i <= gpGlobals->maxClients; i++)	
+			if (pPl && pPl->IsBot())
 			{
-				CSDKPlayer *pPl = (CSDKPlayer*)UTIL_PlayerByIndex(i);
-
-				if (!pPl || pPl->GetTeamNumber() != m_nTeamToJoin || pPl->GetTeamPosIndex() != GetTeamPosIndex())
-					continue;
-
 				char kickcmd[512];
 				Q_snprintf(kickcmd, sizeof(kickcmd), "kickid %i Human player taking the position\n", pPl->GetUserID());
 				engine->ServerCommand(kickcmd);
+				canJoin = true;
 			}
+			else
+				canJoin = false;
 		}
 
-		ChangeTeam(m_nTeamToJoin);
-	}
-
-	if (m_nRotationTeam != TEAM_INVALID && (SDKGameRules()->IsIntermissionState() || SDKGameRules()->GetMatchDisplayTimeSeconds() >= GetNextJoin()))
-	{
-		if (TeamPosFree(m_nRotationTeam, m_nRotationTeamPosIndex, false))
+		if (canJoin)
 		{
-			ChangeTeamPos(m_nRotationTeam, m_nRotationTeamPosIndex, true);
+			int teamToJoin = m_nTeamToJoin;
+			if (GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B)
+				ChangeTeam(TEAM_SPECTATOR);
+			m_nTeamToJoin = teamToJoin;
+			m_nTeamPosIndex = m_nTeamPosIndexToJoin;
+			ChangeTeam(m_nTeamToJoin);
 		}
 	}
+
+	//if (m_nRotationTeam != TEAM_INVALID && (SDKGameRules()->IsIntermissionState() || SDKGameRules()->GetMatchDisplayTimeSeconds() >= GetNextJoin()))
+	//{
+	//	if (TeamPosFree(m_nRotationTeam, m_nRotationTeamPosIndex, false))
+	//	{
+	//		ChangeTeamPos(m_nRotationTeam, m_nRotationTeamPosIndex, true);
+	//	}
+	//}
 
 	State_PreThink();
 
@@ -438,62 +451,36 @@ void CSDKPlayer::Spawn()
 
 #include "client.h"
 
-bool CSDKPlayer::ChangeTeamPos(int team, int posIndex, bool instantly /*= false*/)
+bool CSDKPlayer::ChangeTeamPos(int wishTeam, int wishPosIndex, bool instantly /*= false*/)
 {
-	if (team != TEAM_SPECTATOR && team != TEAM_A && team != TEAM_B)
+	if (wishTeam != TEAM_SPECTATOR && wishTeam != TEAM_A && wishTeam != TEAM_B)
 		return false;
 
-	if (posIndex < 0 || posIndex > 10)
+	if (wishPosIndex < 0 || wishPosIndex > 10)
 		return false;
 
-	if (!IsValidPosition(posIndex))
+	if (!IsValidPosition(wishPosIndex))
 		return false;
-	
-	if (team == TEAM_SPECTATOR)
-	{	
-		m_nRotationTeam = TEAM_INVALID;
-		m_nRotationTeamPosIndex = 0;
 
-		if (GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B)
-		{
-			if (instantly)
-				SetNextJoin(SDKGameRules()->GetMatchDisplayTimeSeconds());
-			else if (GetNextJoin() < SDKGameRules()->GetMatchDisplayTimeSeconds())
-				SetNextJoin(SDKGameRules()->GetMatchDisplayTimeSeconds() + mp_joindelay.GetFloat() * (90.0f / mp_timelimit_match.GetFloat()));
+	int oldTeam = GetTeamNumber();
 
-			ChangeTeam(TEAM_SPECTATOR);
-		}
-		else
-		{
-			m_nTeamToJoin = TEAM_INVALID;
-		}
-	}
-	else
+	CSDKPlayer *pPl = NULL;
+
+	if (IsTeamPosFree(wishTeam, wishPosIndex, false, &pPl))
+		ChangeTeam(TEAM_SPECTATOR);
+
+	if (oldTeam == TEAM_A || oldTeam == TEAM_B)
 	{
-		if (!TeamPosFree(team, posIndex, true))
-			return false;
-
-		if (GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B)
-		{
-			if (instantly)
-				SetNextJoin(SDKGameRules()->GetMatchDisplayTimeSeconds());
-			else if (GetNextJoin() < SDKGameRules()->GetMatchDisplayTimeSeconds())
-				SetNextJoin(SDKGameRules()->GetMatchDisplayTimeSeconds() + mp_joindelay.GetFloat() * (90.0f / mp_timelimit_match.GetFloat()));
-
-			ChangeTeam(TEAM_SPECTATOR);
-		}
-
-		m_nTeamToJoin = team;
-		m_nTeamPosIndex = posIndex;
-
-		if (GetTeamPosType() == GK)
-		{
-			ChooseKeeperSkin();
-		}
-		else
-		{
-			ChoosePlayerSkin();				
-		}
+		if (instantly)
+			SetNextJoin(SDKGameRules()->GetMatchDisplayTimeSeconds());
+		if (GetNextJoin() < SDKGameRules()->GetMatchDisplayTimeSeconds())
+			SetNextJoin(SDKGameRules()->GetMatchDisplayTimeSeconds() + mp_joindelay.GetFloat() * (90.0f / mp_timelimit_match.GetFloat()));
+	}
+	
+	if (wishTeam != TEAM_SPECTATOR)
+	{
+		m_nTeamToJoin = wishTeam;
+		m_nTeamPosIndexToJoin = wishPosIndex;
 	}
 
 	return true;
@@ -551,6 +538,8 @@ void CSDKPlayer::ChangeTeam( int iTeamNum )
 	//ResetStats();
 	//ResetFlags();
 
+	m_nTeamToJoin = TEAM_INVALID;
+
 	// update client state 
 	if ( iTeamNum == TEAM_UNASSIGNED )
 	{
@@ -562,9 +551,8 @@ void CSDKPlayer::ChangeTeam( int iTeamNum )
 	}
 	else // active player
 	{
-		m_nTeamToJoin = TEAM_INVALID;
-		m_nRotationTeam = TEAM_INVALID;
-		m_nRotationTeamPosIndex = 0;
+		//m_nRotationTeam = TEAM_INVALID;
+		//m_nRotationTeamPosIndex = 0;
 
 		if( iOldTeam == TEAM_SPECTATOR )
 			SetMoveType( MOVETYPE_NONE );
@@ -573,6 +561,11 @@ void CSDKPlayer::ChangeTeam( int iTeamNum )
 		//g_pPlayerResource->UpdatePlayerData();
 
 		m_nTeamPosNum = FindUnfilledTeamPosNum();
+
+		if (GetTeamPosType() == GK)
+			ChooseKeeperSkin();
+		else
+			ChoosePlayerSkin();				
 
 		if (iOldTeam != TEAM_A && iOldTeam != TEAM_B)
 			State_Transition( STATE_ACTIVE );
@@ -998,7 +991,9 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 
 			for (int i = 0; i < mp_maxplayers.GetInt(); i++)
 			{
-				if (TeamPosFree(checkTeam, i, false))
+				CSDKPlayer *pPl = NULL;
+
+				if (IsTeamPosFree(checkTeam, i, false, &pPl))
 				{
 					team = checkTeam;
 					posIndex = i;
@@ -1010,17 +1005,16 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 		if (posIndex == -1 || team == TEAM_INVALID)
 			return false;
 
-		if (TeamPosFree(team, posIndex, false))
+		if (team == GetTeamNumber() && posIndex == GetTeamPosIndex())
+			return false;
+
+		if (team == m_nTeamToJoin && posIndex == m_nTeamPosIndexToJoin)
 		{
-			ChangeTeamPos(team, posIndex);
-		}
-		else
-		{
-			m_nRotationTeam = team;
-			m_nRotationTeamPosIndex = posIndex;
+			m_nTeamToJoin = TEAM_INVALID;
+			return false;
 		}
 
-		return true;
+		return ChangeTeamPos(team, posIndex);
 	}
 	else if (!Q_stricmp(args[0], "motmvote"))
 	{
@@ -1117,12 +1111,12 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 	return BaseClass::ClientCommand (args);
 }
 
-bool CSDKPlayer::TeamPosFree(int team, int posIndex, bool ignoreBots)
+bool CSDKPlayer::IsTeamPosFree(int team, int posIndex, bool ignoreBots, CSDKPlayer **pPlayerOnPos)
 {
 	if (!IsValidPosition(posIndex))
 		return false;
 
-	if (g_Positions[mp_maxplayers.GetInt() - 1][posIndex][POS_NUMBER] == 1)
+	if (g_Positions[mp_maxplayers.GetInt() - 1][posIndex][POS_TYPE] == GK)
 	{
 		if (!IsBot() && !humankeepers.GetBool())
 			return false;
@@ -1132,13 +1126,16 @@ bool CSDKPlayer::TeamPosFree(int team, int posIndex, bool ignoreBots)
 	{
 		CSDKPlayer *pPl = (CSDKPlayer*)UTIL_PlayerByIndex(i);
 
-		if (!pPl)
+		if (!pPl || pPl == this)
 			continue;
 
-		if (pPl->GetTeamPosIndex() == posIndex && (pPl->GetTeamNumber() == team || pPl->m_nTeamToJoin == team))
+		if (pPl->GetTeamNumber() == team && pPl->GetTeamPosIndex() == posIndex || pPl->GetTeamToJoin() == team && pPl->GetTeamPosIndexToJoin() == posIndex)
 		{
 			if (IsBot() || !pPl->IsBot() || !ignoreBots)
+			{
+				*pPlayerOnPos = pPl;
 				return false;
+			}
 
 			return true;
 		}
@@ -1497,8 +1494,6 @@ void CSDKPlayer::ResetStats()
 	m_nMotmChoiceIds[0] = 0;
 	m_nMotmChoiceIds[1] = 0;
 	m_flRemoteControlledStartTime = -1;
-	m_nRotationTeam = TEAM_INVALID;
-	m_nRotationTeamPosIndex = 0;
 	//GetData()->ResetData();
 }
 
@@ -1661,7 +1656,7 @@ void CSDKPlayer::SetAway(bool isAway)
 
 		if (gpGlobals->curtime >= m_flLastMoveTime + sv_awaytime_warmup_autospec.GetFloat())
 		{
-			ChangeTeamPos(TEAM_SPECTATOR, 0, true);
+			ChangeTeam(TEAM_SPECTATOR);
 		}
 	}
 }

@@ -39,6 +39,8 @@ public:
 		return false;
 	}
 
+	virtual bool ShouldInterpolate();
+
 	void OnDataChanged(DataUpdateType_t updateType);
 
 	int m_iPhysicsMode;	// One of the PHYSICS_MULTIPLAYER_ defines.	

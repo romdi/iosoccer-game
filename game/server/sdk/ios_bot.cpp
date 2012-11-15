@@ -164,7 +164,9 @@ void CBot::FieldBotJoinTeam()
 		int keeperPosIndex = GetKeeperPosIndex();
 		while (true)
 		{
-			if (posIndex != keeperPosIndex && TeamPosFree(team, posIndex, false))
+			CSDKPlayer *pPl = NULL;
+
+			if (posIndex != keeperPosIndex && IsTeamPosFree(team, posIndex, false, &pPl))
 			{
 				ChangeTeamPos(team, posIndex, true);
 				//g_CurBotNumber += 1;
@@ -232,7 +234,9 @@ void Bot_RunAll( void )
 				}
 				else if (!CSDKPlayer::IsOnField(pPl) && pPl->GetTeamToJoin() != TEAM_A && pPl->GetTeamToJoin() != TEAM_B)
 				{
-					if (!pPl->TeamPosFree(team, keeperPosIndex, false))
+					CSDKPlayer *pPl = NULL;
+
+					if (!pPl->IsTeamPosFree(team, keeperPosIndex, false, &pPl))
 					{
 						char kickcmd[512];
 						Q_snprintf(kickcmd, sizeof(kickcmd), "kickid %i Position already taken\n", pPl->GetUserID());

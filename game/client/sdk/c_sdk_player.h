@@ -183,6 +183,7 @@ public:
 	CNetworkVector(m_vTargetPos);
 	CNetworkVar(bool, m_bIsAtTargetPos);
 	CNetworkVar(bool, m_bHoldAtTargetPos);
+	CNetworkVar(float, m_flNextClientSettingsChangeTime);
 
 	CNetworkVar(int, m_nInPenBoxOfTeam);
 
