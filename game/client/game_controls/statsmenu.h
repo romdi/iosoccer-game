@@ -59,7 +59,7 @@ protected:
 	virtual void ApplySchemeSettings(vgui::IScheme *pScheme);
 	void UpdatePlayerAvatar(int playerIndex, KeyValues *kv);
 
-	SectionedListPanel *m_pPlayerStats;
+	SectionedListPanel *m_pPlayerStats[3];
 };
 
 

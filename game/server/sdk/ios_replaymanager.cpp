@@ -189,6 +189,12 @@ CReplayManager::CReplayManager()
 
 CReplayManager::~CReplayManager()
 {
+	CleanUp();
+	g_pReplayManager = NULL;
+}
+
+void CReplayManager::CleanUp()
+{
 	if (m_pBall)
 	{
 		UTIL_Remove(m_pBall);
@@ -206,8 +212,7 @@ CReplayManager::~CReplayManager()
 	}
 
 	m_Snapshots.PurgeAndDeleteElements();
-
-	g_pReplayManager = NULL;
+	m_Replays.PurgeAndDeleteElements();
 }
 
 void CReplayManager::Spawn()

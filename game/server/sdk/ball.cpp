@@ -2963,6 +2963,9 @@ void CBall::ResetMatch()
 	}
 
 	CPlayerPersistentData::ReallocateAllPlayerData();
+
+	if (ReplayManager())
+		ReplayManager()->CleanUp();
 }
 
 void CBall::SetPenaltyTaker(CSDKPlayer *pPl)

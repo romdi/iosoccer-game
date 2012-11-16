@@ -854,7 +854,7 @@ void CClientScoreBoardDialog::AddHeader()
 		switch (m_nCurStat)
 		{
 		case DEFAULT_STATS:
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "country",			"Nat.", defaultFlags | SectionedListPanel::COLUMN_IMAGE, 45);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "countryindex",			"Loc.", defaultFlags | SectionedListPanel::COLUMN_IMAGE, 45);
 			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "club",				"Club", defaultFlags, 60);
 			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goals",				"Goals", defaultFlags, 35);
 			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "assists",			"Assists", defaultFlags, 35);
@@ -1000,7 +1000,6 @@ bool CClientScoreBoardDialog::GetPlayerInfo(int playerIndex, KeyValues *kv)
 	kv->SetString("shotsongoal", GET_STAT_FTEXT(gr->GetShotsOnGoal(playerIndex) * 100 / max(1, gr->GetShots(playerIndex)), "%d%%"));
 	kv->SetInt("posindex", gr->GetTeamPosIndex(playerIndex));
 	kv->SetInt("playerindex", playerIndex);
-	//kv->SetString("country", gr->GetCountryName(playerIndex));
 
 	char *posNameFormat;
 	if (GetGlobalTeam(gr->GetTeam(playerIndex))->Get_Captain() && GetGlobalTeam(gr->GetTeam(playerIndex))->Get_Captain()->entindex() == playerIndex)
@@ -1045,7 +1044,8 @@ bool CClientScoreBoardDialog::GetPlayerInfo(int playerIndex, KeyValues *kv)
 	//	}
 	//}
 
-	kv->SetInt("country", GetCountryFlagImageIndex(gr->GetCountryName(playerIndex)));
+	kv->SetInt("countryindex", GetCountryFlagImageIndex(gr->GetCountryName(playerIndex)));
+	kv->SetString("countryname", g_szCountryNames[gr->GetCountryName(playerIndex)]);
 
 	const char *oldName = kv->GetString("name","");
 	char newName[MAX_PLAYER_NAME_LENGTH];
@@ -1168,7 +1168,7 @@ bool CClientScoreBoardDialog::GetTeamInfo(int team, KeyValues *kv)
 	kv->SetInt("playerindex", teamIndex - 1);
 	kv->SetInt("posname", pTeam->GetNumPlayers());
 	kv->SetString("name", pTeam->Get_ShortTeamName());
-	kv->SetInt("country", GetCountryFlagImageIndex(teamCountry));
+	kv->SetInt("countryindex", GetCountryFlagImageIndex(teamCountry));
 	kv->SetString("club", teamClub);
 	kv->SetString("ping", GET_STAT_TEXT(pingSum / max(1, pingPlayers)));
 	kv->SetString("possession", GET_STAT_FTEXT(pTeam->Get_Possession(), "%d%%"));

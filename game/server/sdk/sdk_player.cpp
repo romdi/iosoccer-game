@@ -306,15 +306,20 @@ void CSDKPlayer::PreThink(void)
 	{
 		bool canJoin = true;
 
-		CSDKPlayer *pPl = NULL;
+		CSDKPlayer *pSwapPartner = NULL;
 
-		if (!IsTeamPosFree(m_nTeamToJoin, m_nTeamPosIndexToJoin, false, &pPl))
+		if (!IsTeamPosFree(m_nTeamToJoin, m_nTeamPosIndexToJoin, false, &pSwapPartner))
 		{
-			if (pPl && pPl->IsBot())
+			if (pSwapPartner && pSwapPartner->IsBot())
 			{
 				char kickcmd[512];
-				Q_snprintf(kickcmd, sizeof(kickcmd), "kickid %i Human player taking the position\n", pPl->GetUserID());
+				Q_snprintf(kickcmd, sizeof(kickcmd), "kickid %i Human player taking the position\n", pSwapPartner->GetUserID());
 				engine->ServerCommand(kickcmd);
+				pSwapPartner = NULL;
+				canJoin = true;
+			}
+			else if (pSwapPartner && pSwapPartner->GetTeamToJoin() == GetTeamNumber() && pSwapPartner->GetTeamPosIndexToJoin() == GetTeamPosIndex())
+			{
 				canJoin = true;
 			}
 			else
@@ -326,6 +331,17 @@ void CSDKPlayer::PreThink(void)
 			int teamToJoin = m_nTeamToJoin;
 			if (GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B)
 				ChangeTeam(TEAM_SPECTATOR);
+
+			if (pSwapPartner)
+			{
+				int partnerTeamToJoin = pSwapPartner->GetTeamToJoin();
+				if (pSwapPartner->GetTeamNumber() == TEAM_A || pSwapPartner->GetTeamNumber() == TEAM_B)
+					pSwapPartner->ChangeTeam(TEAM_SPECTATOR);
+				pSwapPartner->m_nTeamToJoin = partnerTeamToJoin;
+				pSwapPartner->m_nTeamPosIndex = pSwapPartner->m_nTeamPosIndexToJoin;
+				pSwapPartner->ChangeTeam(m_nTeamToJoin);			
+			}
+
 			m_nTeamToJoin = teamToJoin;
 			m_nTeamPosIndex = m_nTeamPosIndexToJoin;
 			ChangeTeam(m_nTeamToJoin);

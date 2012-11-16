@@ -144,6 +144,7 @@ public:
 	void Spawn();
 	void StartHighlights();
 	void StopHighlights();
+	void CleanUp();
 
 	CNetworkVar(bool, m_bIsReplaying);
 	CNetworkVar(int, m_nReplayRunIndex);
