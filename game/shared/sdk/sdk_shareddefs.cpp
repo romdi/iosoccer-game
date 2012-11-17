@@ -126,6 +126,9 @@ ConVar mp_keepersprintdivecoeff_z("mp_keepersprintdivecoeff_z", "1.75", FCVAR_RE
 ConVar mp_keeperdivecoeff_longside("mp_keeperdivecoeff_longside", "1.5", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_keeperdivecoeff_shortside("mp_keeperdivecoeff_shortside", "0.75", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_keeperdivecoeff_z("mp_keeperdivecoeff_z", "1.5", FCVAR_REPLICATED | FCVAR_NOTIFY);
+ConVar mp_keeperdiveviewcoeff_enabled("mp_keeperdiveviewcoeff_enabled", "1", FCVAR_REPLICATED | FCVAR_NOTIFY);
+ConVar mp_keeperdiveviewcoeff_pitchdownangle("mp_keeperdiveviewcoeff_pitchdownangle", "45", FCVAR_REPLICATED | FCVAR_NOTIFY);
+ConVar mp_keeperdiveviewcoeff_pitchupangle("mp_keeperdiveviewcoeff_pitchupangle", "-15", FCVAR_REPLICATED | FCVAR_NOTIFY);
 
 ConVar mp_slide_move_duration("mp_slide_move_duration", "1", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_slide_idle_duration("mp_slide_idle_duration", "0.6", FCVAR_REPLICATED | FCVAR_NOTIFY);

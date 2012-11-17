@@ -64,7 +64,9 @@ public:
 	void	SetAnimEvent(PlayerAnimEvent_t animEvent);
 	//void	ResetAnimEvent();
 	PlayerAnimEvent_t GetAnimEvent();
-	float	GetAnimEventStart();
+	float	GetAnimEventStartTime();
+	QAngle GetAnimEventStartAngle();
+	void SetAnimEventStartAngle(QAngle ang);
 
 	void ResetSprintPenalty( void );
 
@@ -92,7 +94,8 @@ public:
 private:
 
 	CNetworkVar(PlayerAnimEvent_t, m_ePlayerAnimEvent);
-	CNetworkVar(float, m_flPlayerAnimEventStart);
+	CNetworkVar(float, m_flPlayerAnimEventStartTime);
+	CNetworkVector(m_aPlayerAnimEventStartAngle);
 	CNetworkVar( bool, m_bIsSprinting );
 	bool m_bGaveSprintPenalty;
 	CNetworkVar( float, m_flStamina );

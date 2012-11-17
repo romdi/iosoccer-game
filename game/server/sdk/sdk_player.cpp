@@ -125,7 +125,8 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	SendPropTime( SENDINFO( m_flShotChargingStart ) ),
 	SendPropTime( SENDINFO( m_flShotChargingDuration ) ),
 	SendPropInt( SENDINFO( m_ePlayerAnimEvent ) ),
-	SendPropTime( SENDINFO( m_flPlayerAnimEventStart ) ),
+	SendPropTime( SENDINFO( m_flPlayerAnimEventStartTime ) ),
+	SendPropVector( SENDINFO( m_aPlayerAnimEventStartAngle ) ),
 
 	SendPropDataTable( "sdksharedlocaldata", 0, &REFERENCE_SEND_TABLE(DT_SDKSharedLocalPlayerExclusive), SendProxy_SendLocalDataTable ),
 END_SEND_TABLE()
@@ -260,8 +261,9 @@ CSDKPlayer::CSDKPlayer()
 	m_nTeamPosIndex = 0;
 	m_nPreferredTeamPosNum = 2;
 	m_pPlayerBall = NULL;
-	m_Shared.m_flPlayerAnimEventStart = gpGlobals->curtime;
+	m_Shared.m_flPlayerAnimEventStartTime = gpGlobals->curtime;
 	m_Shared.m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
+	m_Shared.m_aPlayerAnimEventStartAngle = vec3_origin;
 	m_nInPenBoxOfTeam = TEAM_INVALID;
 	m_ePenaltyState = PENALTY_NONE;
 	m_pHoldingBall = NULL;

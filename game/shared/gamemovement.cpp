@@ -1571,7 +1571,7 @@ void CGameMovement::MoveToTargetPos()
 bool CGameMovement::CheckPlayerAnimEvent()
 {
 	CSDKPlayer *pPl = ToSDKPlayer(player);
-	float timePassed = gpGlobals->curtime - pPl->m_Shared.GetAnimEventStart();
+	float timePassed = gpGlobals->curtime - pPl->m_Shared.GetAnimEventStartTime();
 	Vector forward, right, up;
 	AngleVectors(mv->m_vecViewAngles, &forward, &right, &up);
 	Vector forward2D = forward;
@@ -1594,6 +1594,8 @@ bool CGameMovement::CheckPlayerAnimEvent()
 				mv->m_vecVelocity = forward2D * mv->m_flForwardMove * (isSprinting ? mp_keepersprintdivecoeff_shortside.GetFloat() : mp_keeperdivecoeff_shortside.GetFloat()) + right * mv->m_flSideMove * (isSprinting ? mp_keepersprintdivecoeff_longside.GetFloat() : mp_keeperdivecoeff_longside.GetFloat());
 				mv->m_vecVelocity *= max(0, (1 - pow(timePassed / mp_keepersidewarddive_move_duration.GetFloat(), 2)));
 				mv->m_vecVelocity.z = mp_keeperdivespeed_z.GetInt() * (isSprinting ? mp_keepersprintdivecoeff_z.GetFloat() : mp_keeperdivecoeff_z.GetFloat());
+				if (mp_keeperdiveviewcoeff_enabled.GetBool())
+					mv->m_vecVelocity.z *= 1 - RemapValClamped(pPl->m_Shared.GetAnimEventStartAngle()[PITCH], mp_keeperdiveviewcoeff_pitchupangle.GetFloat(), mp_keeperdiveviewcoeff_pitchdownangle.GetFloat(), 0.0f, 1.0f);
 			}
 			else
 				mv->m_vecVelocity = forward * mv->m_flForwardMove + right * mv->m_flSideMove;
@@ -1612,6 +1614,8 @@ bool CGameMovement::CheckPlayerAnimEvent()
 				mv->m_vecVelocity = forward2D * mv->m_flForwardMove * (isSprinting ? mp_keepersprintdivecoeff_shortside.GetFloat() : mp_keeperdivecoeff_shortside.GetFloat()) + right * mv->m_flSideMove * (isSprinting ? mp_keepersprintdivecoeff_longside.GetFloat() : mp_keeperdivecoeff_longside.GetFloat());
 				mv->m_vecVelocity *= max(0, (1 - pow(timePassed / mp_keepersidewarddive_move_duration.GetFloat(), 2)));
 				mv->m_vecVelocity.z = mp_keeperdivespeed_z.GetInt() * (isSprinting ? mp_keepersprintdivecoeff_z.GetFloat() : mp_keeperdivecoeff_z.GetFloat());
+				if (mp_keeperdiveviewcoeff_enabled.GetBool())
+					mv->m_vecVelocity.z *= 1 - RemapValClamped(pPl->m_Shared.GetAnimEventStartAngle()[PITCH], mp_keeperdiveviewcoeff_pitchupangle.GetFloat(), mp_keeperdiveviewcoeff_pitchdownangle.GetFloat(), 0.0f, 1.0f);
 			}
 			else
 				mv->m_vecVelocity = forward * mv->m_flForwardMove + right * mv->m_flSideMove;
@@ -2020,6 +2024,8 @@ bool CGameMovement::CheckJumpButton( void )
 			animEvent = PLAYERANIMEVENT_KEEPER_JUMP;
 		}
 	}
+
+	pPl->m_Shared.SetAnimEventStartAngle(mv->m_vecAbsViewAngles);
 
 	pPl->DoAnimationEvent(animEvent);
 

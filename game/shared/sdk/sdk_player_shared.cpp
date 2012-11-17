@@ -39,7 +39,7 @@
 	#include "team.h"
 #endif
 
-const char *g_szRequiredClientVersion = "09.11.12/22h";
+const char *g_szRequiredClientVersion = "17.11.12/0h";
 
 ConVar sv_showimpacts("sv_showimpacts", "0", FCVAR_REPLICATED, "Shows client (red) and server (blue) bullet impact point" );
 
@@ -194,7 +194,7 @@ void CSDKPlayerShared::SetStamina( float flStamina )
 void CSDKPlayerShared::SetAnimEvent(PlayerAnimEvent_t animEvent)
 {
 	m_ePlayerAnimEvent = animEvent;
-	m_flPlayerAnimEventStart = gpGlobals->curtime;
+	m_flPlayerAnimEventStartTime = gpGlobals->curtime;
 }
 
 //void CSDKPlayerShared::ResetAnimEvent()
@@ -208,9 +208,19 @@ PlayerAnimEvent_t CSDKPlayerShared::GetAnimEvent()
 	return m_ePlayerAnimEvent;
 }
 
-float CSDKPlayerShared::GetAnimEventStart()
+float CSDKPlayerShared::GetAnimEventStartTime()
 {
-	return m_flPlayerAnimEventStart;
+	return m_flPlayerAnimEventStartTime;
+}
+
+QAngle CSDKPlayerShared::GetAnimEventStartAngle()
+{
+	return QAngle(m_aPlayerAnimEventStartAngle.GetX(), m_aPlayerAnimEventStartAngle.GetY(), m_aPlayerAnimEventStartAngle.GetZ());
+}
+
+void CSDKPlayerShared::SetAnimEventStartAngle(QAngle ang)
+{
+	m_aPlayerAnimEventStartAngle = Vector(ang[PITCH], ang[YAW], ang[ROLL]);
 }
 
 void CSDKPlayerShared::ComputeWorldSpaceSurroundingBox( Vector *pVecWorldMins, Vector *pVecWorldMaxs )
