@@ -471,7 +471,7 @@ void CSDKPlayer::Spawn()
 
 bool CSDKPlayer::ChangeTeamPos(int wishTeam, int wishPosIndex, bool instantly /*= false*/)
 {
-	if (wishTeam != TEAM_SPECTATOR && wishTeam != TEAM_A && wishTeam != TEAM_B)
+	if (wishTeam != TEAM_A && wishTeam != TEAM_B)
 		return false;
 
 	if (wishPosIndex < 0 || wishPosIndex > 10)
@@ -495,11 +495,8 @@ bool CSDKPlayer::ChangeTeamPos(int wishTeam, int wishPosIndex, bool instantly /*
 			SetNextJoin(SDKGameRules()->GetMatchDisplayTimeSeconds() + mp_joindelay.GetFloat() * (90.0f / mp_timelimit_match.GetFloat()));
 	}
 	
-	if (wishTeam != TEAM_SPECTATOR)
-	{
-		m_nTeamToJoin = wishTeam;
-		m_nTeamPosIndexToJoin = wishPosIndex;
-	}
+	m_nTeamToJoin = wishTeam;
+	m_nTeamPosIndexToJoin = wishPosIndex;
 
 	return true;
 }
@@ -1033,6 +1030,15 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 		}
 
 		return ChangeTeamPos(team, posIndex);
+	}
+	else if (!Q_stricmp(args[0], "spectate"))
+	{
+		if (GetTeamNumber() == TEAM_SPECTATOR)
+			return false;
+
+		ChangeTeam(TEAM_SPECTATOR);
+
+		return true;
 	}
 	else if (!Q_stricmp(args[0], "motmvote"))
 	{

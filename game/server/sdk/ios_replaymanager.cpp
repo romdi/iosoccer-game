@@ -294,6 +294,7 @@ void CReplayManager::StopReplay()
 		//pRealBall->SetRenderMode(kRenderNormal);
 		//pRealBall->SetRenderColorA(255);
 		pRealBall->RemoveEffects(EF_NODRAW);
+		pRealBall->RemoveSolidFlags(FSOLID_NOT_SOLID);
 	}
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
@@ -313,6 +314,12 @@ void CReplayManager::StopReplay()
 		pRealPl->SetMoveType(MOVETYPE_WALK);
 		pRealPl->RemoveSolidFlags(FSOLID_NOT_SOLID);
 		pRealPl->SetViewOffset(VEC_VIEW);
+
+		if (pRealPl->GetPlayerBall())
+		{
+			pRealPl->GetPlayerBall()->RemoveEffects(EF_NODRAW);
+			pRealPl->GetPlayerBall()->RemoveSolidFlags(FSOLID_NOT_SOLID);
+		}
 	}
 }
 
@@ -433,11 +440,12 @@ void CReplayManager::RestoreSnapshot()
 	m_bIsReplaying = true;
 
 	CBall *pRealBall = GetBall();
-	if (pRealBall)
+	if (pRealBall && !(pRealBall->GetEffects() & EF_NODRAW))
 	{
 		//pRealBall->SetRenderMode(kRenderTransColor);
 		//pRealBall->SetRenderColorA(50);
 		pRealBall->AddEffects(EF_NODRAW);
+		pRealBall->AddSolidFlags(FSOLID_NOT_SOLID);
 	}
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
@@ -459,6 +467,12 @@ void CReplayManager::RestoreSnapshot()
 			pRealPl->AddSolidFlags(FSOLID_NOT_SOLID);
 			//if (pRealPl->GetMoveType() != MOVETYPE_OBSERVER)
 			pRealPl->SetObserverMode(OBS_MODE_TVCAM);
+		}
+
+		if (pRealPl->GetPlayerBall() && !(pRealPl->GetPlayerBall()->GetEffects() & EF_NODRAW))
+		{
+			pRealPl->GetPlayerBall()->AddEffects(EF_NODRAW);
+			pRealPl->GetPlayerBall()->AddSolidFlags(FSOLID_NOT_SOLID);
 		}
 	}
 

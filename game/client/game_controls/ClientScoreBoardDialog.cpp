@@ -140,7 +140,7 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Editabl
 
 	m_pSpectatorText = new Label(m_pSpectatorContainer, "", "");
 
-	m_pSpectateButton = new Button(m_pStatButtonInnerContainer, "SpectateButton", "Spectate", this, VarArgs("jointeam %d 0", TEAM_SPECTATOR));
+	m_pSpectateButton = new Button(m_pStatButtonInnerContainer, "SpectateButton", "Spectate", this, "spectate");
 
 	m_pSpecInfo = new Label(m_pMainPanel, "", "");
 

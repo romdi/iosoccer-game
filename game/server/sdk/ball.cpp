@@ -2733,7 +2733,7 @@ void CBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart)
 		info->m_eBodyPart = bodyPart;
 		info->m_eBallState = State_Get();
 		info->m_vBallPos = m_vPos;
-		info->m_vBallPos = m_vVel;
+		info->m_vBallVel = m_vVel;
 		m_Touches.AddToTail(info);
 	}
 
