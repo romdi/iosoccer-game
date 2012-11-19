@@ -127,6 +127,7 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	SendPropInt( SENDINFO( m_ePlayerAnimEvent ) ),
 	SendPropTime( SENDINFO( m_flPlayerAnimEventStartTime ) ),
 	SendPropVector( SENDINFO( m_aPlayerAnimEventStartAngle ) ),
+	SendPropInt( SENDINFO( m_nPlayerAnimEventStartButtons ) ),
 
 	SendPropDataTable( "sdksharedlocaldata", 0, &REFERENCE_SEND_TABLE(DT_SDKSharedLocalPlayerExclusive), SendProxy_SendLocalDataTable ),
 END_SEND_TABLE()
@@ -264,6 +265,7 @@ CSDKPlayer::CSDKPlayer()
 	m_Shared.m_flPlayerAnimEventStartTime = gpGlobals->curtime;
 	m_Shared.m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
 	m_Shared.m_aPlayerAnimEventStartAngle = vec3_origin;
+	m_Shared.m_nPlayerAnimEventStartButtons = 0;
 	m_nInPenBoxOfTeam = TEAM_INVALID;
 	m_ePenaltyState = PENALTY_NONE;
 	m_pHoldingBall = NULL;
@@ -554,6 +556,7 @@ void CSDKPlayer::ChangeTeam( int iTeamNum )
 	//ResetFlags();
 
 	m_nTeamToJoin = TEAM_INVALID;
+	m_nTeamPosIndexToJoin = 0;
 
 	// update client state 
 	if ( iTeamNum == TEAM_UNASSIGNED )

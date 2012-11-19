@@ -223,6 +223,16 @@ void CSDKPlayerShared::SetAnimEventStartAngle(QAngle ang)
 	m_aPlayerAnimEventStartAngle = Vector(ang[PITCH], ang[YAW], ang[ROLL]);
 }
 
+int CSDKPlayerShared::GetAnimEventStartButtons()
+{
+	return m_nPlayerAnimEventStartButtons;
+}
+
+void CSDKPlayerShared::SetAnimEventStartButtons(int buttons)
+{
+	m_nPlayerAnimEventStartButtons = buttons;
+}
+
 void CSDKPlayerShared::ComputeWorldSpaceSurroundingBox( Vector *pVecWorldMins, Vector *pVecWorldMaxs )
 {
 	Vector org = GetSDKPlayer()->GetAbsOrigin();

@@ -36,6 +36,11 @@ int SendProxyArrayLength_PlayerArray( const void *pStruct, int objectID )
 	return pTeam->m_aPlayers.Count();
 }
 
+void SendProxy_String_tToStringT( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID )
+{
+	string_t *pString = (string_t*)pData;
+	pOut->m_pString = (char*)STRING( *pString );
+}
 
 // Datatable
 IMPLEMENT_SERVERCLASS_ST_NOBASE(CTeam, DT_Team)
@@ -69,7 +74,11 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CTeam, DT_Team)
 		MAX_PLAYERS, 
 		0, 
 		"player_array"
-		)
+		),
+
+	SendPropArray3( SENDINFO_ARRAY3(m_szMatchEventPlayers), SendPropString( SENDINFO_ARRAY(m_szMatchEventPlayers), 0, SendProxy_String_tToStringT ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_eMatchEventTypes), SendPropInt( SENDINFO_ARRAY(m_eMatchEventTypes), 8, SPROP_UNSIGNED ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_nMatchEventSeconds), SendPropInt( SENDINFO_ARRAY(m_nMatchEventSeconds), 13, SPROP_UNSIGNED ) ),
 END_SEND_TABLE()
 
 LINK_ENTITY_TO_CLASS( team_manager, CTeam );
@@ -107,6 +116,16 @@ CTeam::CTeam( void )
 	SetCornerTaker(NULL);
 	SetThrowinTaker(NULL);
 	m_nTimeoutsLeft = 3;
+
+	for (int i = 0; i < MAX_MATCH_EVENTS; i++)
+	{
+		memset(m_szMatchEventPlayersMemory, 0, sizeof(m_szMatchEventPlayersMemory));
+		m_szMatchEventPlayers.Set(i, MAKE_STRING(""));
+		m_eMatchEventTypes.Set(i, 0);
+		m_nMatchEventSeconds.Set(i, 0);
+	}
+
+	m_nMatchEventIndex = 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -344,4 +363,13 @@ void CTeam::FindNewCaptain()
 			break;
 		}
 	}
+}
+
+void CTeam::AddMatchEvent(int seconds, match_event_t event, const char *player)
+{
+	m_nMatchEventSeconds.Set(m_nMatchEventIndex, seconds);
+	m_eMatchEventTypes.Set(m_nMatchEventIndex, event);
+	Q_strncpy(m_szMatchEventPlayersMemory[m_nMatchEventIndex], player, MAX_MATCH_EVENT_PLAYER_NAME_LENGTH);
+	m_szMatchEventPlayers.Set(m_nMatchEventIndex, MAKE_STRING(m_szMatchEventPlayersMemory[m_nMatchEventIndex]));
+	m_nMatchEventIndex += 1;
 }

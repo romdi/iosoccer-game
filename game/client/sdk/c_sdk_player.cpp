@@ -123,6 +123,7 @@ BEGIN_RECV_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	RecvPropInt( RECVINFO( m_ePlayerAnimEvent ) ),
 	RecvPropTime( RECVINFO( m_flPlayerAnimEventStartTime ) ),
 	RecvPropVector( RECVINFO( m_aPlayerAnimEventStartAngle ) ),
+	RecvPropInt( RECVINFO( m_nPlayerAnimEventStartButtons ) ),
 
 	RecvPropDataTable( "sdksharedlocaldata", 0, 0, &REFERENCE_RECV_TABLE(DT_SDKSharedLocalPlayerExclusive) ),
 END_RECV_TABLE()
@@ -195,6 +196,7 @@ BEGIN_PREDICTION_DATA_NO_BASE( CSDKPlayerShared )
 	DEFINE_PRED_FIELD( m_ePlayerAnimEvent, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flPlayerAnimEventStartTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_aPlayerAnimEventStartAngle, FIELD_VECTOR, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_nPlayerAnimEventStartButtons, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
 
 END_PREDICTION_DATA()
 
@@ -589,6 +591,7 @@ C_SDKPlayer::C_SDKPlayer() :
 	m_Shared.m_flPlayerAnimEventStartTime = gpGlobals->curtime;
 	m_Shared.m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
 	m_Shared.m_aPlayerAnimEventStartAngle = vec3_origin;
+	m_Shared.m_nPlayerAnimEventStartButtons = 0;
 }
 
 

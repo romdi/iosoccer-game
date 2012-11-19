@@ -35,6 +35,7 @@ ConVar sv_ball_spin( "sv_ball_spin", "300", FCVAR_NOTIFY );
 ConVar sv_ball_defaultspin( "sv_ball_defaultspin", "10000", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
 ConVar sv_ball_topspin_coeff( "sv_ball_topspin_coeff", "1.0", FCVAR_NOTIFY );
 ConVar sv_ball_backspin_coeff( "sv_ball_backspin_coeff", "1.0", FCVAR_NOTIFY );
+ConVar sv_ball_jump_topspin_enabled("sv_ball_jump_topspin_enabled", "1", FCVAR_NOTIFY );
 ConVar sv_ball_curve("sv_ball_curve", "150", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
 ConVar sv_ball_deflectionradius( "sv_ball_deflectionradius", "40", FCVAR_NOTIFY );
 
@@ -174,7 +175,8 @@ ConVar sv_ball_goalreplay_delay("sv_ball_goalreplay_delay", "3", FCVAR_NOTIFY);
 ConVar sv_ball_deflectioncoeff("sv_ball_deflectioncoeff", "0.75", FCVAR_NOTIFY);
 ConVar sv_ball_update_physics("sv_ball_update_physics", "0", FCVAR_NOTIFY);
 
-ConVar sv_ball_stats_pass_dist("sv_ball_stats_pass_dist", "300", FCVAR_NOTIFY);
+ConVar sv_ball_stats_pass_mindist("sv_ball_stats_pass_mindist", "300", FCVAR_NOTIFY);
+ConVar sv_ball_stats_assist_maxtime("sv_ball_stats_assist_maxtime", "5", FCVAR_NOTIFY);
 
 ConVar sv_ball_velocity_coeff("sv_ball_velocity_coeff", "1.0", FCVAR_NOTIFY);
 
@@ -1291,10 +1293,15 @@ void CBall::State_GOAL_Enter()
 	{
 		scoringTeam = LastOppTeam(true);
 
+		char matchEventPlayerNames[MAX_MATCH_EVENT_PLAYER_NAME_LENGTH] = {};
+
 		if (LastPl(true))
 		{
 			LastPl(true)->SetOwnGoals(LastPl(true)->GetOwnGoals() + 1);
+			Q_strncpy(matchEventPlayerNames, LastPl(true)->GetPlayerName(), MAX_PLAYER_NAME_LENGTH);
 		}
+
+		GetGlobalTeam(scoringTeam)->GetOppTeam()->AddMatchEvent(SDKGameRules()->GetMatchDisplayTimeSeconds(), MATCH_EVENT_OWNGOAL, matchEventPlayerNames);
 
 		SetMatchEventPlayer(LastPl(true), false);	
 	}
@@ -1302,30 +1309,39 @@ void CBall::State_GOAL_Enter()
 	{
 		scoringTeam = LastTeam(true);
 
+		char matchEventPlayerNames[MAX_MATCH_EVENT_PLAYER_NAME_LENGTH] = {};
+
 		CSDKPlayer *pScorer = LastPl(true);
 		if (pScorer)
 		{
 			pScorer->SetGoals(pScorer->GetGoals() + 1);
 			SetMatchEventPlayer(LastPl(true), false);
+			Q_strcat(matchEventPlayerNames, pScorer->GetPlayerName(), sizeof(matchEventPlayerNames));
 
 			CSDKPlayer *pAssister = LastPl(true, pScorer);
 
-			if (pAssister && pAssister->GetTeam() == pScorer->GetTeam())
+			if (pAssister && pAssister->GetTeam() == pScorer->GetTeam() && gpGlobals->curtime - LastInfo(true, pScorer)->m_flTime <= sv_ball_stats_assist_maxtime.GetFloat())
 			{
 				pAssister->SetAssists(pAssister->GetAssists() + 1);
 				SetMatchSubEvent(MATCH_EVENT_ASSIST, pAssister->GetTeamNumber(), true);
 				SetMatchSubEventPlayer(pAssister, false);
+				Q_strcat(matchEventPlayerNames, UTIL_VarArgs(" (%s", pAssister->GetPlayerName()), sizeof(matchEventPlayerNames));
 
 				CSDKPlayer *pAssister2 = LastPl(true, pScorer, pAssister);
 
-				if (pAssister2 && pAssister2->GetTeam() == pScorer->GetTeam())
+				if (pAssister2 && pAssister2->GetTeam() == pScorer->GetTeam() && gpGlobals->curtime - LastInfo(true, pScorer, pAssister)->m_flTime <= sv_ball_stats_assist_maxtime.GetFloat())
 				{
 					pAssister2->SetAssists(pAssister2->GetAssists() + 1);
 					SetMatchSubSubEvent(MATCH_EVENT_ASSIST, pAssister2->GetTeamNumber(), true);
 					SetMatchSubSubEventPlayer(pAssister2, false);
+					Q_strcat(matchEventPlayerNames, UTIL_VarArgs(", %s", pAssister2->GetPlayerName()), sizeof(matchEventPlayerNames));
 				}
+
+				Q_strcat(matchEventPlayerNames, ")", sizeof(matchEventPlayerNames));
 			}
 		}
+
+		GetGlobalTeam(scoringTeam)->AddMatchEvent(SDKGameRules()->GetMatchDisplayTimeSeconds(), MATCH_EVENT_GOAL, matchEventPlayerNames);
 	}
 
 	GetGlobalTeam(scoringTeam)->AddGoal();
@@ -1871,11 +1887,15 @@ void CBall::HandleFoul()
 		if (m_eFoulType == FOUL_NORMAL_YELLOW_CARD)
 		{
 			m_pFoulingPl->SetYellowCards(m_pFoulingPl->GetYellowCards() + 1);
+
+			if (m_pFoulingPl->GetYellowCards() % 2 != 0)
+				m_pFoulingPl->GetTeam()->AddMatchEvent(SDKGameRules()->GetMatchDisplayTimeSeconds(), MATCH_EVENT_YELLOWCARD, m_pFoulingPl->GetPlayerName());
 		}
 
 		if (m_eFoulType == FOUL_NORMAL_YELLOW_CARD && m_pFoulingPl->GetYellowCards() % 2 == 0 || m_eFoulType == FOUL_NORMAL_RED_CARD)
 		{
 			m_pFoulingPl->SetRedCards(m_pFoulingPl->GetRedCards() + 1);
+			m_pFoulingPl->GetTeam()->AddMatchEvent(SDKGameRules()->GetMatchDisplayTimeSeconds(), m_eFoulType == FOUL_NORMAL_YELLOW_CARD ? MATCH_EVENT_YELLOWREDCARD : MATCH_EVENT_REDCARD, m_pFoulingPl->GetPlayerName());
 
 			int banDuration = 60 * (m_eFoulType == FOUL_NORMAL_YELLOW_CARD ? sv_ball_player_yellow_red_card_duration.GetFloat() : sv_ball_player_red_card_duration.GetFloat());
 
@@ -2402,74 +2422,37 @@ bool CBall::DoHeader()
 
 void CBall::SetSpin(float coeff)
 {
-	Vector rot(0, 0, 0);
+	Vector sideRot(0, 0, 0);
 
 	if (m_pPl->m_nButtons & IN_MOVELEFT) 
-		rot += Vector(0, 0, 1);
+		sideRot = Vector(0, 0, 1);
 	else if (m_pPl->m_nButtons & IN_MOVERIGHT) 
-		rot += Vector(0, 0, -1);
+		sideRot = Vector(0, 0, -1);
 
-	if (m_pPl->m_nButtons & IN_TOPSPIN)
+	float sideSpin = m_vVel.Length() * sv_ball_spin.GetInt() * coeff / 100.0f;
+
+	Vector backTopRot(0, 0, 0);
+
+	float backTopSpin = m_vVel.Length() * sv_ball_spin.GetInt() * coeff / 100.0f;
+
+	if (!sv_ball_jump_topspin_enabled.GetBool() || m_pPl->GetGroundEntity())
 	{
-		float bestAng = sv_ball_besttopspinangle.GetInt();
-		float downCoeff = sv_ball_fixedpitchdowntopspincoeff.GetFloat();
-		float upCoeff = sv_ball_fixedpitchuptopspincoeff.GetFloat();
-		double downExp = sv_ball_pitchdowntopspin_exponent.GetFloat();
-		double upExp = sv_ball_pitchuptopspin_exponent.GetFloat();
-		float pitch = m_aPlAng[PITCH];
-
-		float coeff;
-
-		if (pitch >= bestAng)
-		{
-			coeff = downCoeff + (1 - downCoeff) * pow(cos((pitch - bestAng) / (PITCH_LIMIT - bestAng) * M_PI / 2), downExp);
-		}
-		else
-		{
-			coeff = upCoeff + (1 - upCoeff) * pow(cos((pitch - bestAng) / (PITCH_LIMIT - bestAng) * M_PI / 2), upExp);
-		}
-
-		rot += -m_vPlRight * coeff * sv_ball_topspin_coeff.GetFloat();
+		backTopRot = m_vPlRight;
+		backTopSpin *= sv_ball_backspin_coeff.GetFloat();
 	}
-	else if (m_pPl->m_nButtons & IN_BACKSPIN)
+	else if (sv_ball_jump_topspin_enabled.GetBool() && !m_pPl->GetGroundEntity())
 	{
-		float bestAng = sv_ball_bestbackspinangle.GetInt();
-		float downCoeff = sv_ball_fixedpitchdownbackspincoeff.GetFloat();
-		float upCoeff = sv_ball_fixedpitchupbackspincoeff.GetFloat();
-		double downExp = sv_ball_pitchdownbackspin_exponent.GetFloat();
-		double upExp = sv_ball_pitchupbackspin_exponent.GetFloat();
-		float pitch = m_aPlAng[PITCH];
-
-		float coeff;
-
-		if (pitch >= bestAng)
-		{
-			coeff = downCoeff + (1 - downCoeff) * pow(cos((pitch - bestAng) / (PITCH_LIMIT - bestAng) * M_PI / 2), downExp);
-		}
-		else
-		{
-			coeff = upCoeff + (1 - upCoeff) * pow(cos((pitch - bestAng) / (PITCH_LIMIT - bestAng) * M_PI / 2), upExp);
-		}
-
-		rot += m_vPlRight * coeff * sv_ball_backspin_coeff.GetFloat();
+		backTopRot = -m_vPlRight;
+		backTopSpin *= sv_ball_topspin_coeff.GetFloat();
 	}
-
-	if (rot.z != 0)
-		rot.NormalizeInPlace();
-	//float spin = min(1, m_vVel.Length() / sv_ball_maxspin.GetInt()) * sv_ball_spin.GetFloat();
-	float spin = m_vVel.Length() * sv_ball_spin.GetInt() * coeff / 100.0f;
 
 	AngularImpulse randRot = AngularImpulse(0, 0, 0);
-	//if (rot.Length() == 0)
+	for (int i = 0; i < 3; i++)
 	{
-		for (int i = 0; i < 3; i++)
-		{
-			randRot[i] = sv_ball_defaultspin.GetInt() / 100.0f * (g_IOSRand.RandomInt(0, 1) == 1 ? 1 : -1);
-			//randRot[i] = m_vVel.Length() * g_IOSRand.RandomFloat(-sv_ball_defaultspin.GetInt(), sv_ball_defaultspin.GetInt()) / 100.0f;
-		}
+		randRot[i] = sv_ball_defaultspin.GetInt() / 100.0f * (g_IOSRand.RandomInt(0, 1) == 1 ? 1 : -1);
 	}
 
-	SetRot(WorldToLocalRotation(SetupMatrixAngles(m_aAng), rot, spin) + randRot);
+	SetRot(WorldToLocalRotation(SetupMatrixAngles(m_aAng), sideRot, sideSpin) + WorldToLocalRotation(SetupMatrixAngles(m_aAng), backTopRot, backTopSpin) + randRot);
 }
 
 void CBall::Think( void	)
@@ -2699,7 +2682,7 @@ void CBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart)
 	else
 	{
 		BallTouchInfo *pInfo = LastInfo(true);
-		if (pInfo && CSDKPlayer::IsOnField(pInfo->m_pPl) && pInfo->m_pPl != pPl && (m_vPos - pInfo->m_vBallPos).Length2D() > sv_ball_stats_pass_dist.GetInt())
+		if (pInfo && CSDKPlayer::IsOnField(pInfo->m_pPl) && pInfo->m_pPl != pPl && (m_vPos - pInfo->m_vBallPos).Length2D() >= sv_ball_stats_pass_mindist.GetInt())
 		{ 
 			pInfo->m_pPl->SetPasses(pInfo->m_pPl->GetPasses() + 1);
 
@@ -2734,6 +2717,7 @@ void CBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart)
 		info->m_eBallState = State_Get();
 		info->m_vBallPos = m_vPos;
 		info->m_vBallVel = m_vVel;
+		info->m_flTime = gpGlobals->curtime;
 		m_Touches.AddToTail(info);
 	}
 

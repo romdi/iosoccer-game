@@ -17,6 +17,9 @@
 #include "ios_teamkit_parse.h"
 #include "c_sdk_player.h"
 
+#define MAX_MATCH_EVENTS 16
+#define MAX_MATCH_EVENT_PLAYER_NAME_LENGTH 64
+
 class C_BasePlayer;
 
 class C_Team : public C_BaseEntity
@@ -114,6 +117,10 @@ public:
 	CNetworkVector(m_vPenBoxMax);
 	int		m_nForward;
 	int		m_nRight;
+
+	char m_szMatchEventPlayers[MAX_MATCH_EVENTS][MAX_MATCH_EVENT_PLAYER_NAME_LENGTH];
+	int m_eMatchEventTypes[MAX_MATCH_EVENTS];
+	int m_nMatchEventSeconds[MAX_MATCH_EVENTS];
 };
 
 

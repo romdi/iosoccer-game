@@ -15,6 +15,9 @@
 #include "utlvector.h"
 #include "sdk_player.h"
 
+#define MAX_MATCH_EVENTS 16
+#define MAX_MATCH_EVENT_PLAYER_NAME_LENGTH 64
+
 class CBasePlayer;
 class CTeamSpawnPoint;
 
@@ -66,6 +69,7 @@ public:
 	virtual CSDKPlayer *GetCaptain() { return m_pCaptain; }
 	virtual int GetTimeoutsLeft() { return m_nTimeoutsLeft; }
 	virtual void FindNewCaptain();
+	virtual void AddMatchEvent(int seconds, match_event_t event, const char *player);
 
 	//-----------------------------------------------------------------------------
 	// Scoring
@@ -117,6 +121,12 @@ public:
 	Vector GetSpotPos(const char *name);
 	void InitFieldSpots(int team);
 	void ResetStats();
+
+	char m_szMatchEventPlayersMemory[MAX_MATCH_EVENTS][MAX_MATCH_EVENT_PLAYER_NAME_LENGTH];
+	CNetworkArray( string_t, m_szMatchEventPlayers, MAX_MATCH_EVENTS );
+	CNetworkArray(int, m_eMatchEventTypes, MAX_MATCH_EVENTS);
+	CNetworkArray(int, m_nMatchEventSeconds, MAX_MATCH_EVENTS);
+	int m_nMatchEventIndex;
 };
 
 extern CUtlVector< CTeam * > g_Teams;

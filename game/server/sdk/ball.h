@@ -89,6 +89,7 @@ struct BallTouchInfo
 	ball_state_t	m_eBallState;
 	Vector			m_vBallPos;
 	Vector			m_vBallVel;
+	float			m_flTime;
 };
 
 struct MatchEventPlayerInfo

@@ -65,7 +65,11 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_Team, DT_Team, CTeam)
 		MAX_PLAYERS, 
 		0, 
 		"player_array"
-		)
+		),
+
+	RecvPropArray3( RECVINFO_ARRAY(m_szMatchEventPlayers), RecvPropString( RECVINFO(m_szMatchEventPlayers[0]))),
+	RecvPropArray3( RECVINFO_ARRAY(m_eMatchEventTypes), RecvPropInt( RECVINFO(m_eMatchEventTypes[0]))),
+	RecvPropArray3( RECVINFO_ARRAY(m_nMatchEventSeconds), RecvPropInt( RECVINFO(m_nMatchEventSeconds[0]))),
 END_RECV_TABLE()
 
 BEGIN_PREDICTION_DATA( C_Team )
@@ -97,6 +101,13 @@ C_Team::C_Team()
 
 	m_iPing = 0;
 	m_iPacketloss = 0;
+
+	for (int i = 0; i < MAX_MATCH_EVENTS; i++)
+	{
+		memset(m_szMatchEventPlayers, 0, sizeof(m_szMatchEventPlayers));
+		memset(m_eMatchEventTypes, 0, sizeof(m_eMatchEventTypes));
+		memset(m_nMatchEventSeconds, 0, sizeof(m_nMatchEventSeconds));
+	}
 
 	// Add myself to the global list of team entities
 	g_Teams.AddToTail( this );

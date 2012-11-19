@@ -2026,6 +2026,7 @@ bool CGameMovement::CheckJumpButton( void )
 	}
 
 	pPl->m_Shared.SetAnimEventStartAngle(mv->m_vecAbsViewAngles);
+	pPl->m_Shared.SetAnimEventStartButtons(mv->m_nButtons);
 
 	pPl->DoAnimationEvent(animEvent);
 

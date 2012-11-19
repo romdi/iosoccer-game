@@ -273,8 +273,8 @@ void CHudPowershotBar::Paint()
 	m_pFixedPowershotIndicator->SetY(BAR_PADDING + m_pPowershotIndicator->GetTall() + 0.5f * (BAR_HEIGHT - 2 * BAR_PADDING - 3 * m_pFixedPowershotIndicator->GetTall()));
 	m_pFixedPowershotIndicator->SetVisible(false);
 
-	m_pSpinIndicatorsBack[0]->SetVisible(pPlayer->m_nButtons & IN_TOPSPIN);
-	m_pSpinIndicatorsBack[1]->SetVisible(pPlayer->m_nButtons & IN_BACKSPIN);
+	m_pSpinIndicatorsBack[0]->SetVisible(false);
+	m_pSpinIndicatorsBack[1]->SetVisible(false);
 
 	float shotStrength;
 
