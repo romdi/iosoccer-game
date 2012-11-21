@@ -77,7 +77,7 @@ void CMatchEventMenu::Reset()
 		m_pMatchEvents[i]->AddSection(0, "");
 		m_pMatchEvents[i]->SetSectionAlwaysVisible(0);
 		m_pMatchEvents[i]->SetFontSection(0, m_pScheme->GetFont("IOSTeamMenuNormal"));
-		m_pMatchEvents[i]->SetLineSpacing(30);
+		//m_pMatchEvents[i]->SetLineSpacing(20);
 		m_pMatchEvents[i]->SetFgColor(Color(255, 255, 255, 255));
 		m_pMatchEvents[i]->SetSectionFgColor(0, Color(255, 255, 255, 255));
 		m_pMatchEvents[i]->AddColumnToSection(0, "minute", "Minute", SectionedListPanel::HEADER_CENTER | SectionedListPanel::COLUMN_CENTER, 70);
@@ -130,6 +130,8 @@ void CMatchEventMenu::Update()
 		m_pMatchEvents[i]->SetSectionFgColor(0, gr->GetTeamColor(TEAM_A + i));
 		//m_pMatchEvents[i]->SetVisible(true);
 
+		HFont font = m_pScheme->GetFont("StatsPlayerNameSmall");
+
 		for (int j = 0; j < MAX_MATCH_EVENTS; j++)
 		{
 			C_Team *pTeam = GetGlobalTeam(TEAM_A + i);
@@ -137,13 +139,12 @@ void CMatchEventMenu::Update()
 			if (pTeam->m_eMatchEventTypes[j] == MATCH_EVENT_NONE)
 				continue;
 
-			//HFont font = m_pScheme->GetFont("StatsPlayerNameSmall");
 			KeyValues *pData = new KeyValues("data");
 			pData->SetString("minute", VarArgs("%d:%02d", pTeam->m_nMatchEventSeconds[j] / 60, pTeam->m_nMatchEventSeconds[j] % 60));
 			pData->SetString("event", g_szMatchEventNames[pTeam->m_eMatchEventTypes[j]]);
 			pData->SetString("player", pTeam->m_szMatchEventPlayers[j]);
 			m_pMatchEvents[i]->AddItem(0, pData);
-			//m_pMatchEvents[i]->SetItemFont(j, font);
+			m_pMatchEvents[i]->SetItemFont(j, font);
 			pData->deleteThis();
 		}
 	}

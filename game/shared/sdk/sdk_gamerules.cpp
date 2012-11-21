@@ -1269,6 +1269,8 @@ static void OnMaxPlayersChange(IConVar *var, const char *pOldValue, float flOldV
 		if (!pPl)
 			continue;
 
+		pPl->m_nTeamPosIndex = 0;
+		pPl->m_nTeamPosIndexToJoin = 0;
 		pPl->ChangeTeam(TEAM_SPECTATOR);
 	}
 #endif

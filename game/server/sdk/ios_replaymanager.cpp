@@ -606,7 +606,7 @@ void CReplayManager::StartHighlights()
 
 	m_bIsHighlightReplay = true;
 	m_nReplayIndex = m_nHighlightReplayIndex;
-	m_nMaxReplayRuns = 3;
+	m_nMaxReplayRuns = 2;
 	m_flStartTime = gpGlobals->curtime + 3;
 	m_nSnapshotIndex = 0;
 	m_nReplayRunIndex = 0;

@@ -116,16 +116,6 @@ CTeam::CTeam( void )
 	SetCornerTaker(NULL);
 	SetThrowinTaker(NULL);
 	m_nTimeoutsLeft = 3;
-
-	for (int i = 0; i < MAX_MATCH_EVENTS; i++)
-	{
-		memset(m_szMatchEventPlayersMemory, 0, sizeof(m_szMatchEventPlayersMemory));
-		m_szMatchEventPlayers.Set(i, MAKE_STRING(""));
-		m_eMatchEventTypes.Set(i, 0);
-		m_nMatchEventSeconds.Set(i, 0);
-	}
-
-	m_nMatchEventIndex = 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -341,6 +331,16 @@ void CTeam::ResetStats()
 	m_flPossessionTime = 0;
 	m_nPossession = 0;
 	m_nGoals = 0;
+
+	m_nMatchEventIndex = 0;
+
+	for (int i = 0; i < MAX_MATCH_EVENTS; i++)
+	{
+		memset(m_szMatchEventPlayersMemory, 0, sizeof(m_szMatchEventPlayersMemory));
+		m_szMatchEventPlayers.Set(i, MAKE_STRING(""));
+		m_eMatchEventTypes.Set(i, 0);
+		m_nMatchEventSeconds.Set(i, 0);
+	}
 }
 
 void CTeam::FindNewCaptain()
@@ -371,5 +371,5 @@ void CTeam::AddMatchEvent(int seconds, match_event_t event, const char *player)
 	m_eMatchEventTypes.Set(m_nMatchEventIndex, event);
 	Q_strncpy(m_szMatchEventPlayersMemory[m_nMatchEventIndex], player, MAX_MATCH_EVENT_PLAYER_NAME_LENGTH);
 	m_szMatchEventPlayers.Set(m_nMatchEventIndex, MAKE_STRING(m_szMatchEventPlayersMemory[m_nMatchEventIndex]));
-	m_nMatchEventIndex += 1;
+	m_nMatchEventIndex = min(m_nMatchEventIndex + 1, MAX_MATCH_EVENTS - 1);
 }

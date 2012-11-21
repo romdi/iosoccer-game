@@ -90,7 +90,7 @@ public:
 		y = (tall - 2);	// draw the line under the panel
 
 		surface()->DrawSetColor(m_SectionDividerColor);
-		surface()->DrawFilledRect(1, y, GetWide() - 2, y + 1);
+		surface()->DrawFilledRect(5, y, GetWide() - 5, y + 1);
 	}
 
 	void SetColor(Color col)
@@ -516,7 +516,7 @@ public:
 		{
 			surface()->DrawSetColor(GetBgColor());
 		}
-		surface()->DrawFilledRect(0, 0, wide, tall);
+		surface()->DrawFilledRect(5, 0, wide - 5, tall);
 	}
 
 	virtual void Paint()
@@ -529,7 +529,7 @@ public:
 		y = (tall - 2);	// draw the line under the panel
 
 		surface()->DrawSetColor(m_ItemDividerColor);
-		surface()->DrawFilledRect(1, y, GetWide() - 2, y + 1);
+		surface()->DrawFilledRect(5, y, GetWide() - 5, y + 1);
 
 		if ( !m_bShowColumns )
 			return;
@@ -856,7 +856,8 @@ void SectionedListPanel::PerformLayout()
 void SectionedListPanel::LayoutPanels(int &contentTall)
 {
 	int tall = GetSectionTall();
-	int x = 5, wide = GetWide() - 10;
+	//int x = 5, wide = GetWide() - 10;
+	int x = 0, wide = GetWide() - 0;
 	int y = 5;
 	
 	if (m_pScrollBar->IsVisible())

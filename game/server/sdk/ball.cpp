@@ -1301,7 +1301,7 @@ void CBall::State_GOAL_Enter()
 			Q_strncpy(matchEventPlayerNames, LastPl(true)->GetPlayerName(), MAX_PLAYER_NAME_LENGTH);
 		}
 
-		GetGlobalTeam(scoringTeam)->GetOppTeam()->AddMatchEvent(SDKGameRules()->GetMatchDisplayTimeSeconds(), MATCH_EVENT_OWNGOAL, matchEventPlayerNames);
+		GetGlobalTeam(scoringTeam)->AddMatchEvent(SDKGameRules()->GetMatchDisplayTimeSeconds(), MATCH_EVENT_OWNGOAL, matchEventPlayerNames);
 
 		SetMatchEventPlayer(LastPl(true), false);	
 	}
@@ -1591,6 +1591,8 @@ void CBall::State_PENALTY_Leave(ball_state_t newState)
 void CBall::State_KEEPERHANDS_Enter()
 {
 	SetPos(m_vPos);
+	// Don't ignore triggers when setting the new ball position
+	m_bSetNewPos = false;
 }
 
 void CBall::State_KEEPERHANDS_Think()
@@ -1660,23 +1662,33 @@ void CBall::State_KEEPERHANDS_Think()
 	{
 		RemoveAllTouches();
 
-		Vector dir = m_vPlForward2D;
+		Vector dir;
+		float vel;
 
 		if (m_pPl->GetTeam()->m_nForward == 1 && m_vPos.y < min.y)
 		{
-			dir = Vector(0, 1, 0);
+			dir = Vector(g_IOSRand.RandomFloat(0, 0.5f), 1, g_IOSRand.RandomFloat(0.5f, 1));
+			dir.NormalizeInPlace();
 			SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_chest_start.GetFloat()) + dir * 18);
 			m_bSetNewPos = false;
+			vel = g_IOSRand.RandomFloat(400, 600);
 		}
 		else if (m_pPl->GetTeam()->m_nForward == -1 && m_vPos.y > max.y)
 		{
-			dir = Vector(0, -1, 0);
+			dir = Vector(g_IOSRand.RandomFloat(0, 0.5f), -1, g_IOSRand.RandomFloat(0.5f, 1));
+			dir.NormalizeInPlace();
 			SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_chest_start.GetFloat()) + dir * 18);
 			m_bSetNewPos = false;
+			vel = g_IOSRand.RandomFloat(400, 600);
+		}
+		else
+		{
+			dir = m_vPlForward2D;
+			vel = 300;
 		}
 
 		//SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_chest_start.GetFloat()) + forward * ((m_pPl->GetPlayerMaxs().x - m_pPl->GetPlayerMins().x) / 2 + m_flPhysRadius + 10));
-		SetVel(dir * sv_ball_minshotstrength.GetInt(), 0, BODY_PART_HANDS, false, true, true);
+		SetVel(dir * vel, 0, BODY_PART_HANDS, false, true, true);
 
 		return State_Transition(BALL_NORMAL);
 	}
@@ -1904,7 +1916,7 @@ void CBall::HandleFoul()
 			int team = m_pFoulingPl->GetTeamNumber();
 			int posIndex = m_pFoulingPl->GetTeamPosIndex();
 			m_pFoulingPl->ChangeTeam(TEAM_SPECTATOR);
-			m_pFoulingPl->ChangeTeamPos(team, posIndex, true);
+			m_pFoulingPl->ChangeTeamPos(team, posIndex, false);
 		}
 	}
 
@@ -2114,30 +2126,6 @@ bool CBall::CheckKeeperCatch()
 
 	if (!canCatch)
 		return false;
-
-	//if (!SDKGameRules()->IsIntermissionState() && SDKGameRules()->State_Get() != MATCH_PENALTIES)
-	//{
-	//	// Don't catch again after ball was in hands
-	//	if (LastPl(true) == m_pPl && !LastPl(true, m_pPl))
-	//		return false;
-
-	//	BallTouchInfo *pInfo = LastInfo(false, m_pPl);
-	//	if (!pInfo)
-	//		return false;
-
-	//	// Can always catch balls touched or shot by opponents. Only check teammate touches and shots.
-	//	if (pInfo->m_nTeam == m_pPl->GetTeamNumber())
-	//	{
-	//		if (pInfo->m_bIsShot && pInfo->m_eBodyPart != BODY_PART_HEAD && pInfo->m_eBodyPart != BODY_PART_CHEST)
-	//			return false;
-
-	//		BallTouchInfo *pShotInfo = LastInfo(true, m_pPl);
-
-	//		if (!pInfo->m_bIsShot && pShotInfo && pShotInfo->m_nTeam == m_pPl->GetTeamNumber()
-	//			&& pShotInfo->m_eBodyPart != BODY_PART_HEAD && pShotInfo->m_eBodyPart != BODY_PART_CHEST)
-	//			return false;
-	//	}
-	//}
 
 	if (!SDKGameRules()->IsIntermissionState() && !m_bHasQueuedState && LastTeam(true) != m_pPl->GetTeamNumber())
 	{
@@ -2415,7 +2403,7 @@ bool CBall::DoHeader()
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEADER);
 	}
 
-	SetVel(m_vPlForwardVel2D + vel, -1, BODY_PART_HEAD, false, true, true);
+	SetVel(m_vPlForwardVel2D + vel, 0, BODY_PART_HEAD, false, true, true);
 
 	return true;
 }

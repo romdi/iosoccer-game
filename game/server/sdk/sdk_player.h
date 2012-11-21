@@ -468,7 +468,7 @@ public:
 	int					m_ePenaltyState;
 	void				SetPlayerBall(CBall *pPlayerBall) { m_pPlayerBall = pPlayerBall; }
 	CBall				*GetPlayerBall() { return m_pPlayerBall; }
-	bool				ChangeTeamPos(int team, int posIndex, bool instantly = false);
+	bool				ChangeTeamPos(int team, int posIndex, bool setJoinDelay);
 
 	void				CheckBallShield(const Vector &oldPos, Vector &newPos, const Vector &oldVel, Vector &newVel, const QAngle &oldAng, QAngle &newAng);
 	void				MoveToTargetPos(Vector &pos, Vector &vel, QAngle &ang);

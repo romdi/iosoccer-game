@@ -63,7 +63,7 @@ protected:
 
 	Panel		*m_pFormations[2];
 	CBitmapButton *m_pFormationButtons[2][11];
-	Button		*m_pTooltip;
+	Label		*m_pToolTips[2][11];
 };
 
 

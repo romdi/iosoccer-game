@@ -219,6 +219,12 @@ char *C_Team::Get_KitName( void )
 
 Color &C_Team::Get_HudKitColor()
 {
+	if (GetTeamNumber() == TEAM_SPECTATOR)
+	{
+		static Color white = Color(255, 255, 255, 255);
+		return white;
+	}
+	
 	return m_pTeamKitInfo->m_HudKitColor;
 }
 

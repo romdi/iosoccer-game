@@ -471,9 +471,9 @@ void CSDKPlayer::Spawn()
 
 #include "client.h"
 
-bool CSDKPlayer::ChangeTeamPos(int wishTeam, int wishPosIndex, bool instantly /*= false*/)
+bool CSDKPlayer::ChangeTeamPos(int wishTeam, int wishPosIndex, bool setJoinDelay)
 {
-	if (wishTeam != TEAM_A && wishTeam != TEAM_B)
+	if (wishTeam != TEAM_A && wishTeam != TEAM_B && wishTeam != TEAM_SPECTATOR)
 		return false;
 
 	if (wishPosIndex < 0 || wishPosIndex > 10)
@@ -486,19 +486,22 @@ bool CSDKPlayer::ChangeTeamPos(int wishTeam, int wishPosIndex, bool instantly /*
 
 	CSDKPlayer *pPl = NULL;
 
-	if (IsTeamPosFree(wishTeam, wishPosIndex, false, &pPl))
+	if (wishTeam == TEAM_SPECTATOR || IsTeamPosFree(wishTeam, wishPosIndex, false, &pPl))
 		ChangeTeam(TEAM_SPECTATOR);
 
 	if (oldTeam == TEAM_A || oldTeam == TEAM_B)
 	{
-		if (instantly)
-			SetNextJoin(SDKGameRules()->GetMatchDisplayTimeSeconds());
-		if (GetNextJoin() < SDKGameRules()->GetMatchDisplayTimeSeconds())
+		if (setJoinDelay)
 			SetNextJoin(SDKGameRules()->GetMatchDisplayTimeSeconds() + mp_joindelay.GetFloat() * (90.0f / mp_timelimit_match.GetFloat()));
+		if (GetNextJoin() < SDKGameRules()->GetMatchDisplayTimeSeconds())
+			SetNextJoin(SDKGameRules()->GetMatchDisplayTimeSeconds());
 	}
 	
-	m_nTeamToJoin = wishTeam;
-	m_nTeamPosIndexToJoin = wishPosIndex;
+	if (wishTeam != TEAM_SPECTATOR)
+	{
+		m_nTeamToJoin = wishTeam;
+		m_nTeamPosIndexToJoin = wishPosIndex;
+	}
 
 	return true;
 }
@@ -556,7 +559,6 @@ void CSDKPlayer::ChangeTeam( int iTeamNum )
 	//ResetFlags();
 
 	m_nTeamToJoin = TEAM_INVALID;
-	m_nTeamPosIndexToJoin = 0;
 
 	// update client state 
 	if ( iTeamNum == TEAM_UNASSIGNED )
@@ -1032,14 +1034,14 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 			return false;
 		}
 
-		return ChangeTeamPos(team, posIndex);
+		return ChangeTeamPos(team, posIndex, true);
 	}
 	else if (!Q_stricmp(args[0], "spectate"))
 	{
 		if (GetTeamNumber() == TEAM_SPECTATOR)
 			return false;
 
-		ChangeTeam(TEAM_SPECTATOR);
+		ChangeTeamPos(TEAM_SPECTATOR, 0, true);
 
 		return true;
 	}

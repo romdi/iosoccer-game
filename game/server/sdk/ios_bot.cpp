@@ -168,7 +168,7 @@ void CBot::FieldBotJoinTeam()
 
 			if (posIndex != keeperPosIndex && IsTeamPosFree(team, posIndex, false, &pPl))
 			{
-				ChangeTeamPos(team, posIndex, true);
+				ChangeTeamPos(team, posIndex, false);
 				//g_CurBotNumber += 1;
 				break;
 			}
@@ -234,9 +234,9 @@ void Bot_RunAll( void )
 				}
 				else if (!CSDKPlayer::IsOnField(pPl) && pPl->GetTeamToJoin() != TEAM_A && pPl->GetTeamToJoin() != TEAM_B)
 				{
-					CSDKPlayer *pPl = NULL;
+					CSDKPlayer *pSpotTaker = NULL;
 
-					if (!pPl->IsTeamPosFree(team, keeperPosIndex, false, &pPl))
+					if (!pPl->IsTeamPosFree(team, keeperPosIndex, false, &pSpotTaker))
 					{
 						char kickcmd[512];
 						Q_snprintf(kickcmd, sizeof(kickcmd), "kickid %i Position already taken\n", pPl->GetUserID());
@@ -244,7 +244,7 @@ void Bot_RunAll( void )
 					}
 					else
 					{
-						pPl->ChangeTeamPos(team, keeperPosIndex, true);
+						pPl->ChangeTeamPos(team, keeperPosIndex, false);
 						keeperSpotTaken[team - TEAM_A] = true;
 					}
 				}
@@ -272,7 +272,7 @@ void Bot_RunAll( void )
 		if (!keeperSpotTaken[i] && botkeepers.GetBool())
 		{
 			CSDKPlayer *pPl = ToSDKPlayer(BotPutInServer(false, i + 1));
-			pPl->ChangeTeamPos(i == 0 ? TEAM_A : TEAM_B, keeperPosIndex, true);
+			pPl->ChangeTeamPos(i == 0 ? TEAM_A : TEAM_B, keeperPosIndex, false);
 		}
 	}
 
