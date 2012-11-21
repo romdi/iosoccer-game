@@ -39,9 +39,7 @@ ConVar sv_ball_jump_topspin_enabled("sv_ball_jump_topspin_enabled", "1", FCVAR_N
 ConVar sv_ball_curve("sv_ball_curve", "150", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
 ConVar sv_ball_deflectionradius( "sv_ball_deflectionradius", "40", FCVAR_NOTIFY );
 
-ConVar sv_ball_standing_forwardreach( "sv_ball_standing_forwardreach", "60", FCVAR_NOTIFY );
-ConVar sv_ball_standing_backreach( "sv_ball_standing_backreach", "50", FCVAR_NOTIFY );
-ConVar sv_ball_standing_sidereach( "sv_ball_standing_sidereach", "50", FCVAR_NOTIFY );
+ConVar sv_ball_standing_reach( "sv_ball_standing_reach", "60", FCVAR_NOTIFY );
 
 ConVar sv_ball_slidesidereach_ball( "sv_ball_slidesidereach_ball", "60", FCVAR_NOTIFY );
 ConVar sv_ball_slideforwardreach_ball( "sv_ball_slideforwardreach_ball", "90", FCVAR_NOTIFY );
@@ -51,9 +49,7 @@ ConVar sv_ball_slidesidespeedcoeff("sv_ball_slidesidespeedcoeff", "0.66", FCVAR_
 ConVar sv_ball_slidezstart("sv_ball_slidezstart", "-50", FCVAR_NOTIFY); 
 ConVar sv_ball_slidezend("sv_ball_slidezend", "40", FCVAR_NOTIFY); 
 
-ConVar sv_ball_keeper_standing_forwardreach( "sv_ball_keeper_standing_forwardreach", "60", FCVAR_NOTIFY );
-ConVar sv_ball_keeper_standing_backreach( "sv_ball_keeper_standing_backreach", "50", FCVAR_NOTIFY );
-ConVar sv_ball_keeper_standing_sidereach( "sv_ball_keeper_standing_sidereach", "50", FCVAR_NOTIFY );
+ConVar sv_ball_keeper_standing_reach( "sv_ball_keeper_standing_reach", "60", FCVAR_NOTIFY );
 
 ConVar sv_ball_keeper_forwarddive_shortsidereach( "sv_ball_keeper_forwarddive_shortsidereach", "50", FCVAR_NOTIFY );
 ConVar sv_ball_keeper_forwarddive_longsidereach( "sv_ball_keeper_forwarddive_longsidereach", "130", FCVAR_NOTIFY );
@@ -1309,37 +1305,44 @@ void CBall::State_GOAL_Enter()
 	{
 		scoringTeam = LastTeam(true);
 
-		char matchEventPlayerNames[MAX_MATCH_EVENT_PLAYER_NAME_LENGTH] = {};
+		CSDKPlayer *pScorer = NULL;
+		CSDKPlayer *pAssister = NULL;
+		CSDKPlayer *pAssister2 = NULL;
 
-		CSDKPlayer *pScorer = LastPl(true);
+		pScorer = LastPl(true);
+
 		if (pScorer)
 		{
 			pScorer->SetGoals(pScorer->GetGoals() + 1);
 			SetMatchEventPlayer(LastPl(true), false);
-			Q_strcat(matchEventPlayerNames, pScorer->GetPlayerName(), sizeof(matchEventPlayerNames));
 
-			CSDKPlayer *pAssister = LastPl(true, pScorer);
+			pAssister = LastPl(true, pScorer);
 
 			if (pAssister && pAssister->GetTeam() == pScorer->GetTeam() && gpGlobals->curtime - LastInfo(true, pScorer)->m_flTime <= sv_ball_stats_assist_maxtime.GetFloat())
 			{
 				pAssister->SetAssists(pAssister->GetAssists() + 1);
 				SetMatchSubEvent(MATCH_EVENT_ASSIST, pAssister->GetTeamNumber(), true);
 				SetMatchSubEventPlayer(pAssister, false);
-				Q_strcat(matchEventPlayerNames, UTIL_VarArgs(" (%s", pAssister->GetPlayerName()), sizeof(matchEventPlayerNames));
 
-				CSDKPlayer *pAssister2 = LastPl(true, pScorer, pAssister);
+				pAssister2 = LastPl(true, pScorer, pAssister);
 
 				if (pAssister2 && pAssister2->GetTeam() == pScorer->GetTeam() && gpGlobals->curtime - LastInfo(true, pScorer, pAssister)->m_flTime <= sv_ball_stats_assist_maxtime.GetFloat())
 				{
 					pAssister2->SetAssists(pAssister2->GetAssists() + 1);
 					SetMatchSubSubEvent(MATCH_EVENT_ASSIST, pAssister2->GetTeamNumber(), true);
 					SetMatchSubSubEventPlayer(pAssister2, false);
-					Q_strcat(matchEventPlayerNames, UTIL_VarArgs(", %s", pAssister2->GetPlayerName()), sizeof(matchEventPlayerNames));
 				}
-
-				Q_strcat(matchEventPlayerNames, ")", sizeof(matchEventPlayerNames));
 			}
 		}
+
+		char matchEventPlayerNames[MAX_MATCH_EVENT_PLAYER_NAME_LENGTH] = {};
+
+		if (pScorer && !pAssister && !pAssister2)
+			Q_strncpy(matchEventPlayerNames, UTIL_VarArgs("%s", pScorer->GetPlayerName()), MAX_MATCH_EVENT_PLAYER_NAME_LENGTH);
+		else if (pScorer && pAssister && !pAssister2)
+			Q_strncpy(matchEventPlayerNames, UTIL_VarArgs("%.14s (%.14s)", pScorer->GetPlayerName(), pAssister->GetPlayerName()), MAX_MATCH_EVENT_PLAYER_NAME_LENGTH);
+		else if (pScorer && pAssister && pAssister2)
+			Q_strncpy(matchEventPlayerNames, UTIL_VarArgs("%.8s (%.8, %.8)", pScorer->GetPlayerName(), pAssister->GetPlayerName(), pAssister2->GetPlayerName()), MAX_MATCH_EVENT_PLAYER_NAME_LENGTH);
 
 		GetGlobalTeam(scoringTeam)->AddMatchEvent(SDKGameRules()->GetMatchDisplayTimeSeconds(), MATCH_EVENT_GOAL, matchEventPlayerNames);
 	}
@@ -1667,7 +1670,7 @@ void CBall::State_KEEPERHANDS_Think()
 
 		if (m_pPl->GetTeam()->m_nForward == 1 && m_vPos.y < min.y)
 		{
-			dir = Vector(g_IOSRand.RandomFloat(0, 0.5f), 1, g_IOSRand.RandomFloat(0.5f, 1));
+			dir = Vector(g_IOSRand.RandomFloat(-0.5f, 0.5f), 1, g_IOSRand.RandomFloat(1.0f, 1.5f));
 			dir.NormalizeInPlace();
 			SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_chest_start.GetFloat()) + dir * 18);
 			m_bSetNewPos = false;
@@ -1675,7 +1678,7 @@ void CBall::State_KEEPERHANDS_Think()
 		}
 		else if (m_pPl->GetTeam()->m_nForward == -1 && m_vPos.y > max.y)
 		{
-			dir = Vector(g_IOSRand.RandomFloat(0, 0.5f), -1, g_IOSRand.RandomFloat(0.5f, 1));
+			dir = Vector(g_IOSRand.RandomFloat(-0.5f, 0.5f), -1, g_IOSRand.RandomFloat(1.0f, 1.5f));
 			dir.NormalizeInPlace();
 			SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_chest_start.GetFloat()) + dir * 18);
 			m_bSetNewPos = false;
@@ -1781,9 +1784,7 @@ bool CBall::PlayersAtTargetPos()
 
 bool CBall::CanTouchBallXY()
 {
-	return (m_vPlLocalDirToBall.x <= sv_ball_standing_forwardreach.GetInt()
-		&& m_vPlLocalDirToBall.x >= -sv_ball_standing_backreach.GetInt()
-		&& abs(m_vPlLocalDirToBall.y) <= sv_ball_standing_sidereach.GetInt());
+	return ((m_vPlDirToBall).Length2D() <= sv_ball_standing_reach.GetInt());
 }
 
 bool CBall::CheckFoul()
@@ -1998,9 +1999,7 @@ bool CBall::DoBodyPartAction()
 
 	if (zDist >= sv_ball_bodypos_feet_start.GetFloat()
 		&& zDist < sv_ball_bodypos_hip_start.GetFloat()
-		&& localDirToBall.x <= sv_ball_standing_forwardreach.GetInt()
-		&& localDirToBall.x >= -sv_ball_standing_backreach.GetInt()
-		&& abs(localDirToBall.y) <= sv_ball_standing_sidereach.GetInt())
+		&& CanTouchBallXY())
 	{
 		return DoGroundShot(true);
 	}
@@ -2058,16 +2057,16 @@ bool CBall::DoSlideAction()
 
 	Vector ballVel = forward * shotStrength;
 
-	//if (m_pPl->m_nButtons & IN_MOVELEFT)
-	//{
-	//	VectorYawRotate(ballVel, 45, ballVel);
-	//	ballVel *= sv_ball_slidesidespeedcoeff.GetFloat();
-	//}
-	//else if (m_pPl->m_nButtons & IN_MOVERIGHT)
-	//{
-	//	VectorYawRotate(ballVel, -45, ballVel);
-	//	ballVel *= sv_ball_slidesidespeedcoeff.GetFloat();
-	//}
+	if (m_pPl->m_nButtons & IN_MOVELEFT)
+	{
+		VectorYawRotate(ballVel, 45, ballVel);
+		ballVel *= sv_ball_slidesidespeedcoeff.GetFloat();
+	}
+	else if (m_pPl->m_nButtons & IN_MOVERIGHT)
+	{
+		VectorYawRotate(ballVel, -45, ballVel);
+		ballVel *= sv_ball_slidesidespeedcoeff.GetFloat();
+	}
 
 	SetVel(ballVel, 0, BODY_PART_FEET, false, true, false);
 	m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
@@ -2118,9 +2117,7 @@ bool CBall::CheckKeeperCatch()
 	default:
 		canCatch = (zDist < sv_ball_bodypos_keeperarms_end.GetInt()
 			&& zDist >= sv_ball_bodypos_feet_start.GetInt()
-			&& localDirToBall.x <= sv_ball_keeper_standing_forwardreach.GetInt()
-			&& localDirToBall.x >= -sv_ball_keeper_standing_backreach.GetInt()
-			&& abs(localDirToBall.y) <= sv_ball_keeper_standing_sidereach.GetInt());
+			&& xyDist <= sv_ball_keeper_standing_reach.GetInt());
 		break;
 	}
 

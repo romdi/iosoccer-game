@@ -252,9 +252,6 @@ void CHudPowershotBar::Paint()
 	//m_pStaminaIndicator->SetTall(height);
 	//m_pStaminaIndicator->SetY(BAR_PADDING + (m_pStaminaPanel->GetTall() - 2 * BAR_PADDING) * (1 - mp_powershot_fixed_strength.GetInt() / 100.0f) - height);
 
-	m_pStaminaIndicator->SetTall((m_pStaminaPanel->GetTall() - 2 * BAR_PADDING) * relStamina);
-	m_pStaminaIndicator->SetY(BAR_PADDING + (m_pStaminaPanel->GetTall() - 2 * BAR_PADDING) - m_pStaminaIndicator->GetTall());
-
 	Color bgColor;
 
 	if (pPlayer->GetFlags() & FL_REMOTECONTROLLED)
@@ -265,7 +262,6 @@ void CHudPowershotBar::Paint()
 		//bgColor = Color(0, 255, 0, 255);
 	}
 
-	m_pStaminaIndicator->SetBgColor(bgColor);
 
 	m_pPowershotIndicatorBack->SetY(m_pStaminaPanel->GetY() + BAR_PADDING + m_pPowershotIndicatorBack->GetTall() + (1 - cl_powershot_strength.GetInt() / 100.0f) * (BAR_HEIGHT - 2 * BAR_PADDING - 3 * m_pPowershotIndicatorBack->GetTall()));
 	m_pPowershotIndicatorBack->SetVisible(false);
@@ -293,9 +289,20 @@ void CHudPowershotBar::Paint()
 		float decreaseFraction = clamp((decTime + extra) / mp_chargedshot_decreaseduration.GetFloat(), 0, 1);
 		shotStrength = 1 - pow(decreaseFraction, mp_chargedshot_decreaseexponent.GetFloat());
 
+		// Flash
+		if (shotStrength > 0.95f)
+		{
+			relStamina = 1;
+			bgColor = Color(255, 255, 255, 255);
+		}
+
 		m_pPowershotIndicatorBack->SetY(m_pStaminaPanel->GetY() + BAR_PADDING + m_pPowershotIndicatorBack->GetTall() + (1 - shotStrength) * (BAR_HEIGHT - 2 * BAR_PADDING - 3 * m_pPowershotIndicatorBack->GetTall()));
 		m_pPowershotIndicatorBack->SetVisible(true);
 	}
 	else
 		m_pPowershotIndicatorBack->SetVisible(false);
+
+	m_pStaminaIndicator->SetTall((m_pStaminaPanel->GetTall() - 2 * BAR_PADDING) * relStamina);
+	m_pStaminaIndicator->SetY(BAR_PADDING + (m_pStaminaPanel->GetTall() - 2 * BAR_PADDING) - m_pStaminaIndicator->GetTall());
+	m_pStaminaIndicator->SetBgColor(bgColor);
 }

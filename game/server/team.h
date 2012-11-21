@@ -16,7 +16,7 @@
 #include "sdk_player.h"
 
 #define MAX_MATCH_EVENTS 16
-#define MAX_MATCH_EVENT_PLAYER_NAME_LENGTH 64
+#define MAX_MATCH_EVENT_PLAYER_NAME_LENGTH 32
 
 class CBasePlayer;
 class CTeamSpawnPoint;

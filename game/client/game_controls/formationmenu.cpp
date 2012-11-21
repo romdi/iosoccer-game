@@ -161,7 +161,7 @@ void CFormationMenu::Update()
 		return;
 
 	int playerIndexAtPos[2][11] = {};
-	//int statusAtPos[2][11] = {};
+	bool swapperAtPos[2][11] = {};
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
@@ -182,6 +182,12 @@ void CFormationMenu::Update()
 			if (playerIndexAtPos[gr->GetTeamToJoin(i) - TEAM_A][gr->GetTeamPosIndexToJoin(i)] == 0)
 			{
 				playerIndexAtPos[gr->GetTeamToJoin(i) - TEAM_A][gr->GetTeamPosIndexToJoin(i)] = i;
+			}
+			
+			if (gr->GetTeamToJoin(i) == gr->GetTeam(GetLocalPlayerIndex()) && gr->GetTeamPosIndexToJoin(i) == gr->GetTeamPosIndex(GetLocalPlayerIndex()))
+			{
+				if (gr->GetTeam(i) != TEAM_SPECTATOR)
+					swapperAtPos[gr->GetTeam(i) - TEAM_A][gr->GetTeamPosIndex(i)] = true;
 			}
 		}
 	}
@@ -235,19 +241,15 @@ void CFormationMenu::Update()
 
 			KeyValues *kv = new KeyValues("Command");
 
-			char *cmd;
-			if (playerIndexAtPos[i][j] == GetLocalPlayerIndex())
-				cmd = "";
-			else
-				cmd = VarArgs("jointeam %d %d", i + TEAM_A, j);
+			char *cmd = VarArgs("jointeam %d %d", i + TEAM_A, j);
 
 			Color teamColor = GetGlobalTeam(TEAM_A + i)->Get_HudKitColor();
 			color32 normal = { teamColor.r(), teamColor.g(), teamColor.b(), isFree ? 10 : 240 };
 			color32 hover = { teamColor.r(), teamColor.g(), teamColor.b(), (isFree || isTakenByBot) ? 240 : 240 };
-			color32 pressed = { 255, 255, 255, 240 };
+			color32 pressed = { teamColor.r(), teamColor.g(), teamColor.b(), 10 };
 			m_pFormationButtons[i][j]->SetImage(CBitmapButton::BUTTON_ENABLED, "vgui/shirt", normal);
 			m_pFormationButtons[i][j]->SetImage(CBitmapButton::BUTTON_ENABLED_MOUSE_OVER, "vgui/shirt", hover);
-			m_pFormationButtons[i][j]->SetImage(CBitmapButton::BUTTON_PRESSED, "vgui/shirt", (enable ? pressed : pressed));
+			m_pFormationButtons[i][j]->SetImage(CBitmapButton::BUTTON_PRESSED, "vgui/shirt", pressed);
 			//m_pFormationButtons[i][j]->SetName(VarArgs("%d", playerIndexAtPos[i][j]));
 
 			m_pToolTips[i][j]->SetBounds(m_pFormationButtons[i][j]->GetX() + m_pFormationButtons[i][j]->GetWide() / 2 - TOOLTIP_WIDTH / 2, m_pFormationButtons[i][j]->GetY() + m_pFormationButtons[i][j]->GetTall(), TOOLTIP_WIDTH, TOOLTIP_HEIGHT);
@@ -287,10 +289,15 @@ void CFormationMenu::Update()
 			}
 			else
 			{
-				if (playerIndexAtPos[i][j] == GetLocalPlayerIndex() && gr->GetTeamToJoin(GetLocalPlayerIndex()) != TEAM_INVALID)
-					msg = "JOINING";
-				else if (gr->GetTeamToJoin(GetLocalPlayerIndex()) == i && gr->GetTeamPosIndexToJoin(GetLocalPlayerIndex()) == j)
-					msg = "SWAPPING";
+				if (gr->GetTeamToJoin(GetLocalPlayerIndex()) - TEAM_A == i && gr->GetTeamPosIndexToJoin(GetLocalPlayerIndex()) == j)
+				{
+					if (playerIndexAtPos[i][j] == GetLocalPlayerIndex())
+						msg = "JOINING";
+					else
+						msg = "SWAPPING";
+				}
+				else if (swapperAtPos[i][j])
+					msg = "SWAPPER";
 				else
 					msg = "";
 			}
