@@ -1342,7 +1342,7 @@ void CBall::State_GOAL_Enter()
 		else if (pScorer && pAssister && !pAssister2)
 			Q_strncpy(matchEventPlayerNames, UTIL_VarArgs("%.14s (%.14s)", pScorer->GetPlayerName(), pAssister->GetPlayerName()), MAX_MATCH_EVENT_PLAYER_NAME_LENGTH);
 		else if (pScorer && pAssister && pAssister2)
-			Q_strncpy(matchEventPlayerNames, UTIL_VarArgs("%.8s (%.8, %.8)", pScorer->GetPlayerName(), pAssister->GetPlayerName(), pAssister2->GetPlayerName()), MAX_MATCH_EVENT_PLAYER_NAME_LENGTH);
+			Q_strncpy(matchEventPlayerNames, UTIL_VarArgs("%.8s (%.8s, %.8s)", pScorer->GetPlayerName(), pAssister->GetPlayerName(), pAssister2->GetPlayerName()), MAX_MATCH_EVENT_PLAYER_NAME_LENGTH);
 
 		GetGlobalTeam(scoringTeam)->AddMatchEvent(SDKGameRules()->GetMatchDisplayTimeSeconds(), MATCH_EVENT_GOAL, matchEventPlayerNames);
 	}
