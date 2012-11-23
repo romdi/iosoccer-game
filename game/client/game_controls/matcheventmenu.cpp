@@ -140,7 +140,21 @@ void CMatchEventMenu::Update()
 				continue;
 
 			KeyValues *pData = new KeyValues("data");
-			pData->SetString("minute", VarArgs("%d:%02d", pTeam->m_nMatchEventSeconds[j] / 60, pTeam->m_nMatchEventSeconds[j] % 60));
+			int minute = ceil(pTeam->m_nMatchEventSeconds[j] / 60.0f);
+			char *time;
+
+			if (pTeam->m_eMatchEventMatchStates[j] == MATCH_FIRST_HALF && minute > 45)
+				time = VarArgs("%d'+%d", 45, min(4, minute - 45));
+			else if (pTeam->m_eMatchEventMatchStates[j] == MATCH_SECOND_HALF && minute > 90)
+				time = VarArgs("%d'+%d", 90, min(4, minute - 90));
+			else if (pTeam->m_eMatchEventMatchStates[j] == MATCH_EXTRATIME_FIRST_HALF && minute > 105)
+				time = VarArgs("%d'+%d", 105, min(4, minute - 105));
+			else if (pTeam->m_eMatchEventMatchStates[j] == MATCH_EXTRATIME_SECOND_HALF && minute > 120)
+				time = VarArgs("%d'+%d", 120, min(4, minute - 120));
+			else
+				time = VarArgs("%d'", minute);
+
+			pData->SetString("minute", time);
 			pData->SetString("event", g_szMatchEventNames[pTeam->m_eMatchEventTypes[j]]);
 			pData->SetString("player", pTeam->m_szMatchEventPlayers[j]);
 			m_pMatchEvents[i]->AddItem(0, pData);

@@ -69,6 +69,7 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_Team, DT_Team, CTeam)
 
 	RecvPropArray3( RECVINFO_ARRAY(m_szMatchEventPlayers), RecvPropString( RECVINFO(m_szMatchEventPlayers[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_eMatchEventTypes), RecvPropInt( RECVINFO(m_eMatchEventTypes[0]))),
+	RecvPropArray3( RECVINFO_ARRAY(m_eMatchEventMatchStates), RecvPropInt( RECVINFO(m_eMatchEventMatchStates[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_nMatchEventSeconds), RecvPropInt( RECVINFO(m_nMatchEventSeconds[0]))),
 END_RECV_TABLE()
 
@@ -106,6 +107,7 @@ C_Team::C_Team()
 	{
 		memset(m_szMatchEventPlayers, 0, sizeof(m_szMatchEventPlayers));
 		memset(m_eMatchEventTypes, 0, sizeof(m_eMatchEventTypes));
+		memset(m_eMatchEventMatchStates, 0, sizeof(m_eMatchEventMatchStates));
 		memset(m_nMatchEventSeconds, 0, sizeof(m_nMatchEventSeconds));
 	}
 

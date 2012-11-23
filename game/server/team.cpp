@@ -77,7 +77,8 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CTeam, DT_Team)
 		),
 
 	SendPropArray3( SENDINFO_ARRAY3(m_szMatchEventPlayers), SendPropString( SENDINFO_ARRAY(m_szMatchEventPlayers), 0, SendProxy_String_tToStringT ) ),
-	SendPropArray3( SENDINFO_ARRAY3(m_eMatchEventTypes), SendPropInt( SENDINFO_ARRAY(m_eMatchEventTypes), 8, SPROP_UNSIGNED ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_eMatchEventTypes), SendPropInt( SENDINFO_ARRAY(m_eMatchEventTypes), 5, SPROP_UNSIGNED ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_eMatchEventMatchStates), SendPropInt( SENDINFO_ARRAY(m_eMatchEventMatchStates), 4, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_nMatchEventSeconds), SendPropInt( SENDINFO_ARRAY(m_nMatchEventSeconds), 13, SPROP_UNSIGNED ) ),
 END_SEND_TABLE()
 
@@ -339,6 +340,7 @@ void CTeam::ResetStats()
 		memset(m_szMatchEventPlayersMemory, 0, sizeof(m_szMatchEventPlayersMemory));
 		m_szMatchEventPlayers.Set(i, MAKE_STRING(""));
 		m_eMatchEventTypes.Set(i, 0);
+		m_eMatchEventMatchStates.Set(i, 0);
 		m_nMatchEventSeconds.Set(i, 0);
 	}
 }
@@ -365,10 +367,11 @@ void CTeam::FindNewCaptain()
 	}
 }
 
-void CTeam::AddMatchEvent(int seconds, match_event_t event, const char *player)
+void CTeam::AddMatchEvent(match_state_t matchState, int seconds, match_event_t event, const char *player)
 {
 	m_nMatchEventSeconds.Set(m_nMatchEventIndex, seconds);
 	m_eMatchEventTypes.Set(m_nMatchEventIndex, event);
+	m_eMatchEventMatchStates.Set(m_nMatchEventIndex, matchState);
 	Q_strncpy(m_szMatchEventPlayersMemory[m_nMatchEventIndex], player, MAX_MATCH_EVENT_PLAYER_NAME_LENGTH);
 	m_szMatchEventPlayers.Set(m_nMatchEventIndex, MAKE_STRING(m_szMatchEventPlayersMemory[m_nMatchEventIndex]));
 	m_nMatchEventIndex = min(m_nMatchEventIndex + 1, MAX_MATCH_EVENTS - 1);

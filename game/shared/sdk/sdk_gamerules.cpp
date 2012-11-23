@@ -2223,25 +2223,21 @@ int CSDKGameRules::GetMatchDisplayTimeSeconds(bool clamped /*= false*/)
 			nTime = min(150 * 60, nTime);
 		break;
 	case MATCH_EXTRATIME_SECOND_HALF:
-	case MATCH_EXTRATIME_SECOND_HALF_INJURY_TIME:
 		nTime = (int)(flTime * (90.0f / mp_timelimit_match.GetFloat())) + (90 + 15) * 60;
 		if (clamped)
 			nTime = min(120 * 60, nTime);
 		break;
 	case MATCH_EXTRATIME_FIRST_HALF:
-	case MATCH_EXTRATIME_FIRST_HALF_INJURY_TIME:
 		nTime = (int)(flTime * (90.0f / mp_timelimit_match.GetFloat())) + 90 * 60;
 		if (clamped)
 			nTime = min(105 * 60, nTime);
 		break;
 	case MATCH_SECOND_HALF:
-	case MATCH_SECOND_HALF_INJURY_TIME:
 		nTime = (int)(flTime * (90.0f / mp_timelimit_match.GetFloat())) + 45 * 60;
 		if (clamped)
 			nTime = min(90 * 60, nTime);
 		break;
 	case MATCH_FIRST_HALF:
-	case MATCH_FIRST_HALF_INJURY_TIME:
 		nTime = (int)(flTime * (90.0f / mp_timelimit_match.GetFloat()));
 		if (clamped)
 			nTime = min(45 * 60, nTime);

@@ -1297,7 +1297,7 @@ void CBall::State_GOAL_Enter()
 			Q_strncpy(matchEventPlayerNames, LastPl(true)->GetPlayerName(), MAX_PLAYER_NAME_LENGTH);
 		}
 
-		GetGlobalTeam(scoringTeam)->AddMatchEvent(SDKGameRules()->GetMatchDisplayTimeSeconds(), MATCH_EVENT_OWNGOAL, matchEventPlayerNames);
+		GetGlobalTeam(scoringTeam)->AddMatchEvent(SDKGameRules()->State_Get(), SDKGameRules()->GetMatchDisplayTimeSeconds(), MATCH_EVENT_OWNGOAL, matchEventPlayerNames);
 
 		SetMatchEventPlayer(LastPl(true), false);	
 	}
@@ -1344,7 +1344,7 @@ void CBall::State_GOAL_Enter()
 		else if (pScorer && pAssister && pAssister2)
 			Q_strncpy(matchEventPlayerNames, UTIL_VarArgs("%.8s (%.8s, %.8s)", pScorer->GetPlayerName(), pAssister->GetPlayerName(), pAssister2->GetPlayerName()), MAX_MATCH_EVENT_PLAYER_NAME_LENGTH);
 
-		GetGlobalTeam(scoringTeam)->AddMatchEvent(SDKGameRules()->GetMatchDisplayTimeSeconds(), MATCH_EVENT_GOAL, matchEventPlayerNames);
+		GetGlobalTeam(scoringTeam)->AddMatchEvent(SDKGameRules()->State_Get(), SDKGameRules()->GetMatchDisplayTimeSeconds(), MATCH_EVENT_GOAL, matchEventPlayerNames);
 	}
 
 	GetGlobalTeam(scoringTeam)->AddGoal();
@@ -1902,13 +1902,13 @@ void CBall::HandleFoul()
 			m_pFoulingPl->SetYellowCards(m_pFoulingPl->GetYellowCards() + 1);
 
 			if (m_pFoulingPl->GetYellowCards() % 2 != 0)
-				m_pFoulingPl->GetTeam()->AddMatchEvent(SDKGameRules()->GetMatchDisplayTimeSeconds(), MATCH_EVENT_YELLOWCARD, m_pFoulingPl->GetPlayerName());
+				m_pFoulingPl->GetTeam()->AddMatchEvent(SDKGameRules()->State_Get(), SDKGameRules()->GetMatchDisplayTimeSeconds(), MATCH_EVENT_YELLOWCARD, m_pFoulingPl->GetPlayerName());
 		}
 
 		if (m_eFoulType == FOUL_NORMAL_YELLOW_CARD && m_pFoulingPl->GetYellowCards() % 2 == 0 || m_eFoulType == FOUL_NORMAL_RED_CARD)
 		{
 			m_pFoulingPl->SetRedCards(m_pFoulingPl->GetRedCards() + 1);
-			m_pFoulingPl->GetTeam()->AddMatchEvent(SDKGameRules()->GetMatchDisplayTimeSeconds(), m_eFoulType == FOUL_NORMAL_YELLOW_CARD ? MATCH_EVENT_YELLOWREDCARD : MATCH_EVENT_REDCARD, m_pFoulingPl->GetPlayerName());
+			m_pFoulingPl->GetTeam()->AddMatchEvent(SDKGameRules()->State_Get(), SDKGameRules()->GetMatchDisplayTimeSeconds(), m_eFoulType == FOUL_NORMAL_YELLOW_CARD ? MATCH_EVENT_YELLOWREDCARD : MATCH_EVENT_REDCARD, m_pFoulingPl->GetPlayerName());
 
 			int banDuration = 60 * (m_eFoulType == FOUL_NORMAL_YELLOW_CARD ? sv_ball_player_yellow_red_card_duration.GetFloat() : sv_ball_player_red_card_duration.GetFloat());
 

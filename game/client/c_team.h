@@ -120,6 +120,7 @@ public:
 
 	char m_szMatchEventPlayers[MAX_MATCH_EVENTS][MAX_MATCH_EVENT_PLAYER_NAME_LENGTH];
 	int m_eMatchEventTypes[MAX_MATCH_EVENTS];
+	int m_eMatchEventMatchStates[MAX_MATCH_EVENTS];
 	int m_nMatchEventSeconds[MAX_MATCH_EVENTS];
 };
 
