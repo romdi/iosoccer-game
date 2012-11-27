@@ -1365,10 +1365,24 @@ void CBall::State_GOAL_Enter()
 	}
 
 	EmitSound("Ball.whistle");
-	State_Transition(BALL_KICKOFF, sv_ball_goalcelebduration.GetFloat());
+	
+	float delay = sv_ball_goalcelebduration.GetFloat();
+
+	if (sv_replays.GetBool())
+	{
+		delay += sv_replay_duration1.GetFloat();
+
+		if (sv_replay_count.GetInt() >= 2)
+			delay += sv_replay_duration2.GetFloat();
+
+		if (sv_replay_count.GetInt() >= 3)
+			delay += sv_replay_duration3.GetFloat();
+	}
+
+	State_Transition(BALL_KICKOFF, delay);
 
 	if (ReplayManager())
-		ReplayManager()->StartReplay(sv_ball_goalreplay_count.GetInt(), sv_ball_goalreplay_delay.GetFloat(), GetGlobalTeam(m_nTeam)->m_vPlayerSpawns[0].y < GetGlobalTeam(m_nTeam)->GetOppTeam()->m_vPlayerSpawns[0].y);
+		ReplayManager()->StartReplay(sv_replay_count.GetInt(), sv_ball_goalcelebduration.GetInt(), GetGlobalTeam(m_nTeam)->m_vPlayerSpawns[0].y < GetGlobalTeam(m_nTeam)->GetOppTeam()->m_vPlayerSpawns[0].y);
 }
 
 void CBall::State_GOAL_Think()
@@ -1916,7 +1930,22 @@ void CBall::HandleFoul()
 			m_pFoulingPl->SetNextJoin(SDKGameRules()->GetMatchDisplayTimeSeconds() + banDuration);
 			int team = m_pFoulingPl->GetTeamNumber();
 			int posIndex = m_pFoulingPl->GetTeamPosIndex();
+			int posType = m_pFoulingPl->GetTeamPosType();
 			m_pFoulingPl->ChangeTeam(TEAM_SPECTATOR);
+
+			if (posType == GK)
+			{
+				for (int i = 1; i <= gpGlobals->maxClients; i++)
+				{
+					CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+					if (!CSDKPlayer::IsOnField(pPl) || pPl == m_pFoulingPl || pPl->GetTeamNumber() != team)
+						continue;
+
+					pPl->ChangeTeamPos(team, posIndex, false);
+					break;
+				}
+			}
+
 			m_pFoulingPl->ChangeTeamPos(team, posIndex, false);
 		}
 	}

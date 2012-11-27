@@ -38,6 +38,13 @@
 
 #ifdef GAME_DLL
 void IOS_LogPrintf(char *fmt, ...);
+extern ConVar
+	sv_replays,
+	sv_replay_count,
+	sv_replay_duration1,
+	sv_replay_duration2,
+	sv_replay_duration3,
+	sv_highlights;
 #endif
 
 extern CUniformRandomStream g_IOSRand;
@@ -304,6 +311,8 @@ protected:
 	int m_nPenaltyTakingTeam;
 	int m_nPenaltyTakingStartTeam;
 	float m_flLastAwayCheckTime;
+
+	CUtlVector<int> m_PlayerRotationMinutes;
 
 	CSDKGameRulesStateInfo		*m_pCurStateInfo;			// Per-state data 
 	float						m_flStateTransitionTime;	// Timer for round states

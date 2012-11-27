@@ -1603,9 +1603,9 @@ bool CGameMovement::CheckPlayerAnimEvent()
 				isSprinting = pPl->m_Shared.GetAnimEventStartButtons() & IN_SPEED;
 
 				mv->m_vecVelocity = vec3_origin;
-				if (mv->m_nButtons & IN_FORWARD || mv->m_nButtons & IN_BACK)
+				if ((mv->m_nButtons & IN_FORWARD) || (mv->m_nButtons & IN_BACK))
 					mv->m_vecVelocity += forward2D * Sign(mv->m_flForwardMove) * (isSprinting ? mp_keepersprintdivespeed_shortside.GetInt() : mp_keeperdivespeed_shortside.GetInt());
-				if (mv->m_nButtons & IN_MOVELEFT || mv->m_nButtons & IN_MOVERIGHT)
+				if ((mv->m_nButtons & IN_MOVELEFT) != (mv->m_nButtons & IN_MOVERIGHT))
 					mv->m_vecVelocity += right * Sign(mv->m_flSideMove) * (isSprinting ? mp_keepersprintdivespeed_longside.GetFloat() : mp_keeperdivespeed_longside.GetFloat());
 
 				mv->m_vecVelocity *= max(0, (1 - pow(timePassed / mp_keepersidewarddive_move_duration.GetFloat(), 2)));

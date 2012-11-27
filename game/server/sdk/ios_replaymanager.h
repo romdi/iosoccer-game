@@ -86,6 +86,11 @@ struct Replay
 	CUtlVector<Snapshot *> m_Snapshots;
 	int m_nMatchSeconds;
 	bool m_bAtMinGoalPos;
+
+	~Replay()
+	{
+		m_Snapshots.PurgeAndDeleteElements();
+	}
 };
 
 class CReplayBall : public CPhysicsProp
@@ -145,6 +150,7 @@ public:
 	void StartHighlights();
 	void StopHighlights();
 	void CleanUp();
+	void CalcSnapshotIndexRange();
 
 	CNetworkVar(bool, m_bIsReplaying);
 	CNetworkVar(int, m_nReplayRunIndex);
@@ -159,7 +165,9 @@ private:
 	CUtlVector<Snapshot *>	m_Snapshots;
 	CUtlVector<Replay *>	m_Replays;
 	bool					m_bDoReplay;
-	int						m_nSnapshotIndex;
+	int						m_nSnapshotCurIndex;
+	int						m_nSnapshotStartIndex;
+	int						m_nSnapshotEndIndex;
 	int						m_nReplayIndex;
 	int						m_nHighlightReplayIndex;
 	CReplayBall				*m_pBall;
@@ -167,6 +175,7 @@ private:
 	int						m_nMaxReplayRuns;
 	float					m_flStartTime;
 	bool					m_bIsHighlightReplay;
+	float					m_flRunDuration;
 };
 
 extern CReplayManager *g_pReplayManager;

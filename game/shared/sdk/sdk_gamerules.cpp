@@ -1260,6 +1260,13 @@ ConVar mp_custom_shirt_numbers("mp_custom_shirt_numbers", "0", FCVAR_NOTIFY);
 
 ConVar mp_reset_spin_toggles_on_shot("mp_reset_spin_toggles_on_shot", "0", FCVAR_NOTIFY | FCVAR_REPLICATED);
 
+ConVar sv_replays("sv_replays", "1", FCVAR_NOTIFY);
+ConVar sv_replay_count("sv_replay_count", "2", FCVAR_NOTIFY);
+ConVar sv_replay_duration1("sv_replay_duration1", "6", FCVAR_NOTIFY);
+ConVar sv_replay_duration2("sv_replay_duration2", "4", FCVAR_NOTIFY);
+ConVar sv_replay_duration3("sv_replay_duration3", "4", FCVAR_NOTIFY);
+ConVar sv_highlights("sv_highlights", "1", FCVAR_NOTIFY);
+
 static void OnMaxPlayersChange(IConVar *var, const char *pOldValue, float flOldValue)
 {
 #ifdef GAME_DLL
@@ -1279,6 +1286,9 @@ static void OnMaxPlayersChange(IConVar *var, const char *pOldValue, float flOldV
 ConVar mp_maxplayers("mp_maxplayers", "6", FCVAR_NOTIFY|FCVAR_REPLICATED, "Maximum number of players per team <1-11>", true, 1, true, 11, OnMaxPlayersChange);
 
 #ifdef GAME_DLL
+
+ConVar sv_playerrotation_enabled("sv_playerrotation_enabled", "0", FCVAR_NOTIFY);
+ConVar sv_playerrotation_minutes("sv_playerrotation_minutes", "30,60", FCVAR_NOTIFY);
 
 void CSDKGameRules::State_Transition( match_state_t newState )
 {
@@ -1356,6 +1366,20 @@ void CSDKGameRules::State_Think()
 			{
 				int additionalTime = m_nAnnouncedInjuryTime + (abs(m_nBallZone) < 50 ? 0 : 30);
 				m_flStateTimeLeft += m_flInjuryTime + additionalTime * 60 / (90.0f / mp_timelimit_match.GetFloat());
+
+				if (sv_playerrotation_enabled.GetBool() && m_PlayerRotationMinutes.Count() > 0 && GetMatchDisplayTimeSeconds(true) / 60 >= m_PlayerRotationMinutes.Head())
+				{
+					for (int i = 1; i <= gpGlobals->curtime; i++)
+					{
+						CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+						if (!CSDKPlayer::IsOnField(pPl))
+							continue;
+
+						pPl->ChangeTeamPos(pPl->GetTeamNumber(), (pPl->GetTeamPosIndex() + 1) % mp_maxplayers.GetInt(), false);
+					}
+
+					m_PlayerRotationMinutes.Remove(0);
+				}
 			}
 		}
 
@@ -1413,6 +1437,21 @@ void CSDKGameRules::State_WARMUP_Enter()
 	}
 
 	m_flLastAwayCheckTime = gpGlobals->curtime;
+
+	m_PlayerRotationMinutes.RemoveAll();
+
+	if (sv_playerrotation_enabled.GetBool())
+	{
+		char minutes[128];
+		Q_strncpy(minutes, sv_playerrotation_minutes.GetString(), sizeof(minutes));
+
+		char *pch = strtok(minutes, " ,;");
+		while (pch)
+		{
+			m_PlayerRotationMinutes.AddToTail(atoi(pch));
+			pch = strtok(NULL, " ,;");
+		}
+	}
 }
 
 void CSDKGameRules::State_WARMUP_Think()

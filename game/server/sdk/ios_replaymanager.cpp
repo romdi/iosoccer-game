@@ -4,6 +4,7 @@
 #include "sdk_gamerules.h"
 #include "convar.h"
 #include "sdk_playeranimstate.h"
+#include "team.h"
 
 void CopyAnimationLayer(CAnimationLayer *dst, const CAnimationLayer *src)
 {
@@ -127,10 +128,6 @@ void CReplayPlayer::Think()
 	//DispatchAnimEvents(this);
 }
 
-static ConVar sv_replay_duration("sv_replay_duration", "6", FCVAR_NOTIFY);
-static ConVar sv_replays("sv_replays", "1", FCVAR_NOTIFY);
-static ConVar sv_highlights("sv_highlights", "1", FCVAR_NOTIFY);
-
 void cc_StartReplay(const CCommand &args)
 {
 	if (!UTIL_IsCommandIssuedByServerAdmin())
@@ -185,6 +182,7 @@ CReplayManager::CReplayManager()
 	m_bIsReplaying = false;
 	m_bIsHighlightReplay = false;
 	m_nHighlightReplayIndex = 0;
+	m_flRunDuration = 0;
 }
 
 CReplayManager::~CReplayManager()
@@ -213,6 +211,7 @@ void CReplayManager::CleanUp()
 
 	m_Snapshots.PurgeAndDeleteElements();
 	m_Replays.PurgeAndDeleteElements();
+	m_nHighlightReplayIndex = 0;
 }
 
 void CReplayManager::Spawn()
@@ -240,7 +239,7 @@ void CReplayManager::CheckReplay()
 {
 	if (m_bDoReplay && gpGlobals->curtime >= m_flStartTime)
 		RestoreSnapshot();
-	else if (!m_bDoReplay && sv_replay_duration.GetInt() > 0 && !SDKGameRules()->IsIntermissionState())
+	else if (!m_bDoReplay && !SDKGameRules()->IsIntermissionState())
 		TakeSnapshot();
 }
 
@@ -251,12 +250,12 @@ void CReplayManager::StartReplay(int numberOfRuns, float startDelay, bool atMinG
 
 	m_nMaxReplayRuns = numberOfRuns;
 	m_flStartTime = gpGlobals->curtime + startDelay;
-	m_nSnapshotIndex = 0;
 	m_nReplayRunIndex = 0;
 	m_bDoReplay = true;
 	m_bAtMinGoalPos = atMinGoalPos;
 	SaveReplay();
 	m_nReplayIndex = m_Replays.Count() - 1;
+	CalcSnapshotIndexRange();
 }
 
 void CReplayManager::StopReplay()
@@ -306,9 +305,13 @@ void CReplayManager::StopReplay()
 		//pRealPl->SetRenderMode(kRenderNormal);
 		//pRealPl->SetRenderColorA(255);
 		pRealPl->StopObserverMode();
+		pRealPl->SetLocalOrigin(pRealPl->GetSpawnPos(true));
+		QAngle ang;
+		VectorAngles(Vector(0, pRealPl->GetTeam()->m_nForward, 0), ang);
+		pRealPl->SetLocalAngles(ang);
 		pRealPl->SetLocalVelocity(vec3_origin);
-		pRealPl->SetLocalOrigin(pRealPl->m_vPreReplayPos);
-		pRealPl->SetLocalAngles(pRealPl->m_aPreReplayAngles);
+		//pRealPl->SetLocalOrigin(pRealPl->m_vPreReplayPos);
+		//pRealPl->SetLocalAngles(pRealPl->m_aPreReplayAngles);
 		pRealPl->RemoveEffects(EF_NODRAW);
 		//pRealPl->RemoveEFlags(EFL_NOCLIP_ACTIVE);
 		pRealPl->SetMoveType(MOVETYPE_WALK);
@@ -384,7 +387,7 @@ void CReplayManager::TakeSnapshot()
 
 	m_Snapshots.AddToTail(pSnap);
 	
-	while (m_Snapshots[0]->snaptime < gpGlobals->curtime - sv_replay_duration.GetInt())
+	while (m_Snapshots[0]->snaptime < gpGlobals->curtime - max(max(sv_replay_duration1.GetFloat(), sv_replay_duration2.GetFloat()), sv_replay_duration3.GetFloat()))
 	{
 		//delete m_Snapshots[0]->pBallSnapshot;
 
@@ -406,30 +409,31 @@ void CReplayManager::RestoreSnapshot()
 {
 	Replay *pReplay = m_Replays[m_nReplayIndex];
 
-	m_bAtMinGoalPos = pReplay->m_bAtMinGoalPos;
-
-	if (m_nSnapshotIndex >= pReplay->m_Snapshots.Count())
+	if (m_nSnapshotCurIndex >= m_nSnapshotEndIndex)
 	{
 		if (m_nReplayRunIndex < m_nMaxReplayRuns - 1)
 		{
 			m_nReplayRunIndex += 1;
-			m_nSnapshotIndex = 0;
+			CalcSnapshotIndexRange();
 		}
 		else
 		{
 			if (m_bIsHighlightReplay && m_nReplayIndex < m_Replays.Count() - 1)
 			{
 				m_nReplayRunIndex = 0;
-				m_nSnapshotIndex = 0;
 				m_nReplayIndex += 1;
+				CalcSnapshotIndexRange();
 			}
 			else
 			{
 				StopReplay();
 			}
+
 			return;
 		}
 	}
+
+	m_bAtMinGoalPos = pReplay->m_bAtMinGoalPos;
 
 	//if (pReplay->m_Snapshots.Count() == 0)
 	//{
@@ -476,7 +480,7 @@ void CReplayManager::RestoreSnapshot()
 		}
 	}
 
-	Snapshot *pSnap = pReplay->m_Snapshots[m_nSnapshotIndex];
+	Snapshot *pSnap = pReplay->m_Snapshots[m_nSnapshotCurIndex];
 
 	BallSnapshot *pBallSnap = pSnap->pBallSnapshot;
 
@@ -576,7 +580,7 @@ void CReplayManager::RestoreSnapshot()
 		}
 	}
 
-	m_nSnapshotIndex += 1;
+	m_nSnapshotCurIndex += 1;
 }
 
 void CReplayManager::SaveReplay()
@@ -608,9 +612,9 @@ void CReplayManager::StartHighlights()
 	m_nReplayIndex = m_nHighlightReplayIndex;
 	m_nMaxReplayRuns = 2;
 	m_flStartTime = gpGlobals->curtime + 3;
-	m_nSnapshotIndex = 0;
 	m_nReplayRunIndex = 0;
 	m_bDoReplay = true;
+	CalcSnapshotIndexRange();
 }
 
 void CReplayManager::StopHighlights()
@@ -621,4 +625,30 @@ void CReplayManager::StopHighlights()
 	m_nHighlightReplayIndex = m_nReplayIndex;
 	m_bIsHighlightReplay = false;
 	StopReplay();
+}
+
+void CReplayManager::CalcSnapshotIndexRange()
+{
+	if (m_nReplayRunIndex == 0)
+		m_flRunDuration = sv_replay_duration1.GetFloat();
+	else if (m_nReplayRunIndex == 1)
+		m_flRunDuration = sv_replay_duration2.GetFloat();
+	else if (m_nReplayRunIndex == 2)
+		m_flRunDuration = sv_replay_duration3.GetFloat();
+
+	Replay *pReplay = m_Replays[m_nReplayIndex];
+	float endTime = pReplay->m_Snapshots.Tail()->snaptime;
+	m_nSnapshotEndIndex = pReplay->m_Snapshots.Count() - 1;
+	m_nSnapshotStartIndex = 0;
+
+	for (int i = pReplay->m_Snapshots.Count() - 1; i >= 0; i--)
+	{
+		if (pReplay->m_Snapshots[i]->snaptime < endTime - m_flRunDuration)
+		{
+			m_nSnapshotStartIndex = i + 1;
+			break;
+		}
+	}
+
+	m_nSnapshotCurIndex = m_nSnapshotStartIndex;
 }
