@@ -48,8 +48,9 @@
 using namespace vgui;
 
 enum { FORMATION_BUTTON_WIDTH = 90, FORMATION_BUTTON_HEIGHT = 55 };
-enum { FORMATION_HPADDING = (FORMATION_BUTTON_WIDTH / 2 + 40), FORMATION_VPADDING = (FORMATION_BUTTON_HEIGHT / 2 + 16), FORMATION_CENTERPADDING = 35 };
+enum { FORMATION_HPADDING = (FORMATION_BUTTON_WIDTH / 2 + 40), FORMATION_VPADDING = (FORMATION_BUTTON_HEIGHT / 2 + 20), FORMATION_CENTERPADDING = 35 };
 enum { TOOLTIP_WIDTH = 100, TOOLTIP_HEIGHT = 20 };
+enum { TICK_WIDTH = 25, TICK_HEIGHT = 20 };
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -71,7 +72,17 @@ CFormationMenu::CFormationMenu(Panel *parent, const char *name) : Panel(parent, 
 		}
 	}
 
+	for (int i = 0; i < 11; i++)
+	{
+		m_pCaptainTicks[i] = new Button(m_pFormations[0], "", "CP", this, VarArgs("setcaptain %d", i));
+		m_pFreekickTakerTicks[i] = new Button(m_pFormations[0], "", "FK", this, VarArgs("setfreekicktaker %d", i));
+		m_pPenaltyTakerTicks[i] = new Button(m_pFormations[0], "", "PK", this, VarArgs("setpenaltytaker %d", i));
+		m_pCornerTakerTicks[i] = new Button(m_pFormations[0], "", "CK", this, VarArgs("setcornertaker %d", i));
+		m_pThrowinTakerTicks[i] = new Button(m_pFormations[0], "", "TI", this, VarArgs("setthrowintaker %d", i));
+	}
+
 	m_flNextUpdateTime = gpGlobals->curtime;
+	m_bShowCaptainMenu = false;
 }
 
 void CFormationMenu::ApplySchemeSettings(IScheme *pScheme)
@@ -128,9 +139,32 @@ void CFormationMenu::PerformLayout()
 		}
 	}
 
-	for (int i = 0; i < 2; i++)
+	for (int i = 0; i < 11; i++)
 	{
+		m_pCaptainTicks[i]->SetZPos(100);
+		m_pCaptainTicks[i]->SetCursor(dc_hand);
+		m_pCaptainTicks[i]->SetVisible(false);
+		m_pCaptainTicks[i]->SetContentAlignment(Label::a_center);
 
+		m_pFreekickTakerTicks[i]->SetZPos(100);
+		m_pFreekickTakerTicks[i]->SetCursor(dc_hand);
+		m_pFreekickTakerTicks[i]->SetVisible(false);
+		m_pFreekickTakerTicks[i]->SetContentAlignment(Label::a_center);
+
+		m_pPenaltyTakerTicks[i]->SetZPos(100);
+		m_pPenaltyTakerTicks[i]->SetCursor(dc_hand);
+		m_pPenaltyTakerTicks[i]->SetVisible(false);
+		m_pPenaltyTakerTicks[i]->SetContentAlignment(Label::a_center);
+
+		m_pCornerTakerTicks[i]->SetZPos(100);
+		m_pCornerTakerTicks[i]->SetCursor(dc_hand);
+		m_pCornerTakerTicks[i]->SetVisible(false);
+		m_pCornerTakerTicks[i]->SetContentAlignment(Label::a_center);
+
+		m_pThrowinTakerTicks[i]->SetZPos(100);
+		m_pThrowinTakerTicks[i]->SetCursor(dc_hand);
+		m_pThrowinTakerTicks[i]->SetVisible(false);
+		m_pThrowinTakerTicks[i]->SetContentAlignment(Label::a_center);
 	}
 
 	m_flNextUpdateTime = gpGlobals->curtime;
@@ -154,11 +188,13 @@ void CFormationMenu::OnThink()
 	m_flNextUpdateTime = gpGlobals->curtime + 1.0f;
 }
 
-void CFormationMenu::Update()
+void CFormationMenu::Update(bool showCaptainMenu)
 {
 	IGameResources *gr = GameResources();
 	if (!gr)
 		return;
+
+	m_bShowCaptainMenu = showCaptainMenu;
 
 	int playerIndexAtPos[2][11] = {};
 	bool swapperAtPos[2][11] = {};
@@ -199,11 +235,68 @@ void CFormationMenu::Update()
 			if (!IsValidPosition(j))
 			{
 				m_pFormationButtons[i][j]->SetVisible(false);
+				m_pToolTips[i][j]->SetVisible(false);
+				m_pCaptainTicks[j]->SetVisible(false);
+				m_pFreekickTakerTicks[j]->SetVisible(false);
+				m_pPenaltyTakerTicks[j]->SetVisible(false);
 				continue;
 			}
 
+			Color teamColor = GetGlobalTeam(TEAM_A + i)->Get_HudKitColor();
+			color32 taken = { teamColor.r(), teamColor.g(), teamColor.b(), 240 };
+			color32 free = { teamColor.r(), teamColor.g(), teamColor.b(), 10 };
+			color32 hover = { teamColor.r(), teamColor.g(), teamColor.b(), 240 };
+			color32 pressed = { teamColor.r(), teamColor.g(), teamColor.b(), 10 };
+
 			m_pFormationButtons[i][j]->SetVisible(true);
 			m_pFormationButtons[i][j]->SetText(VarArgs("%s", g_szPosNames[(int)g_Positions[mp_maxplayers.GetInt() - 1][j][POS_TYPE]]));
+
+			m_pToolTips[i][j]->SetVisible(true);
+
+			if (m_bShowCaptainMenu && gr->GetTeam(GetLocalPlayerIndex()) == TEAM_A + i)
+			{
+				m_pCaptainTicks[j]->SetParent(m_pFormations[i]);
+				m_pCaptainTicks[j]->SetVisible(true);
+				m_pCaptainTicks[j]->SetBounds(m_pFormationButtons[i][j]->GetX() + 2 * TICK_WIDTH, m_pFormationButtons[i][j]->GetY() + m_pFormationButtons[i][j]->GetTall(), TICK_WIDTH, TICK_HEIGHT);
+				if (GetGlobalTeam(TEAM_A + i)->Get_CaptainPosIndex() == j)
+				{
+					m_pCaptainTicks[j]->SetDefaultColor(Color(0, 0, 0, 255), Color(taken.r, taken.g, taken.b, taken.a));
+				}
+				else
+				{
+					m_pCaptainTicks[j]->SetDefaultColor(Color(255, 255, 255, 255), Color(free.r, free.g, free.b, 0));
+				}
+
+				m_pFreekickTakerTicks[j]->SetParent(m_pFormations[i]);
+				m_pFreekickTakerTicks[j]->SetVisible(true);
+				m_pFreekickTakerTicks[j]->SetBounds(m_pFormationButtons[i][j]->GetX(), m_pFormationButtons[i][j]->GetY() + m_pFormationButtons[i][j]->GetTall(), TICK_WIDTH, TICK_HEIGHT);
+				if (GetGlobalTeam(TEAM_A + i)->Get_FreekickTakerPosIndex() == j)
+				{
+					m_pFreekickTakerTicks[j]->SetDefaultColor(Color(0, 0, 0, 255), Color(taken.r, taken.g, taken.b, taken.a));
+				}
+				else
+				{
+					m_pFreekickTakerTicks[j]->SetDefaultColor(Color(255, 255, 255, 255), Color(free.r, free.g, free.b, 0));
+				}
+
+				m_pPenaltyTakerTicks[j]->SetParent(m_pFormations[i]);
+				m_pPenaltyTakerTicks[j]->SetVisible(true);
+				m_pPenaltyTakerTicks[j]->SetBounds(m_pFormationButtons[i][j]->GetX() + TICK_WIDTH, m_pFormationButtons[i][j]->GetY() + m_pFormationButtons[i][j]->GetTall(), TICK_WIDTH, TICK_HEIGHT);
+				if (GetGlobalTeam(TEAM_A + i)->Get_PenaltyTakerPosIndex() == j)
+				{
+					m_pPenaltyTakerTicks[j]->SetDefaultColor(Color(0, 0, 0, 255), Color(taken.r, taken.g, taken.b, taken.a));
+				}
+				else
+				{
+					m_pPenaltyTakerTicks[j]->SetDefaultColor(Color(255, 255, 255, 255), Color(free.r, free.g, free.b, 0));
+				}
+			}
+			else
+			{
+				m_pCaptainTicks[j]->SetVisible(false);
+				m_pFreekickTakerTicks[j]->SetVisible(false);
+				m_pPenaltyTakerTicks[j]->SetVisible(false);
+			}
 
 			float xDist = (m_pFormations[i]->GetWide() - 2 * FORMATION_HPADDING) / 3;
 			float yDist = (m_pFormations[i]->GetTall() - 2 * FORMATION_VPADDING) / 3;
@@ -212,43 +305,17 @@ void CFormationMenu::Update()
 			float yPos = FORMATION_VPADDING + g_Positions[mp_maxplayers.GetInt() - 1][j][POS_YPOS] * yDist - m_pFormationButtons[i][j]->GetTall() / 2;
 			m_pFormationButtons[i][j]->SetPos(xPos, yPos);
 
-			int cursor;
-			bool enable;
-			bool isTakenByBot;
-			bool isFree;
-			HFont font;
+			bool isFree = (playerIndexAtPos[i][j] == 0);
 
-			if (playerIndexAtPos[i][j] == 0)
-			{
-				cursor = dc_hand;
-				enable = true;
-				isTakenByBot = false;
-				isFree = true;
-				font = m_pScheme->GetFont("IOSTeamMenuBig");
-			}
-			else
-			{
-				cursor = (playerIndexAtPos[i][j] == GetLocalPlayerIndex() ? dc_hand : dc_hand);
-				enable = (playerIndexAtPos[i][j] != GetLocalPlayerIndex());//gr->IsFakePlayer(playerIndexAtPos[i][j]);
-				isTakenByBot = gr->IsFakePlayer(playerIndexAtPos[i][j]);
-				isFree = false;
-				font = m_pScheme->GetFont("IOSTeamMenuBig");
-			}
-
-			m_pFormationButtons[i][j]->SetFont(font);
-			m_pFormationButtons[i][j]->SetCursor(cursor);
-
+			m_pFormationButtons[i][j]->SetFont(m_pScheme->GetFont("IOSTeamMenuBig"));
+			m_pFormationButtons[i][j]->SetCursor(m_bShowCaptainMenu ? dc_arrow : dc_hand);
 
 			KeyValues *kv = new KeyValues("Command");
 
 			char *cmd = VarArgs("jointeam %d %d", i + TEAM_A, j);
 
-			Color teamColor = GetGlobalTeam(TEAM_A + i)->Get_HudKitColor();
-			color32 normal = { teamColor.r(), teamColor.g(), teamColor.b(), isFree ? 10 : 240 };
-			color32 hover = { teamColor.r(), teamColor.g(), teamColor.b(), (isFree || isTakenByBot) ? 240 : 240 };
-			color32 pressed = { teamColor.r(), teamColor.g(), teamColor.b(), 10 };
-			m_pFormationButtons[i][j]->SetImage(CBitmapButton::BUTTON_ENABLED, "vgui/shirt", normal);
-			m_pFormationButtons[i][j]->SetImage(CBitmapButton::BUTTON_ENABLED_MOUSE_OVER, "vgui/shirt", hover);
+			m_pFormationButtons[i][j]->SetImage(CBitmapButton::BUTTON_ENABLED, "vgui/shirt", isFree ? free : taken);
+			m_pFormationButtons[i][j]->SetImage(CBitmapButton::BUTTON_ENABLED_MOUSE_OVER, "vgui/shirt", m_bShowCaptainMenu ? (isFree ? free : taken) : hover);
 			m_pFormationButtons[i][j]->SetImage(CBitmapButton::BUTTON_PRESSED, "vgui/shirt", pressed);
 			//m_pFormationButtons[i][j]->SetName(VarArgs("%d", playerIndexAtPos[i][j]));
 
@@ -314,7 +381,14 @@ void CFormationMenu::Update()
 //-----------------------------------------------------------------------------
 void CFormationMenu::OnCommand( char const *cmd )
 {
-	if (!strnicmp(cmd, "jointeam", 8))
+	if (!Q_strnicmp(cmd, "jointeam", 8))
+	{
+		if (m_bShowCaptainMenu)
+			return;
+
+		engine->ClientCmd(cmd);
+	}
+	else if (!Q_strnicmp(cmd, "set", 3))
 	{
 		engine->ClientCmd(cmd);
 	}
@@ -330,6 +404,9 @@ void CFormationMenu::OnTextChanged(KeyValues *data)
 
 void CFormationMenu::OnCursorEntered(Panel *panel)
 {
+	if (m_bShowCaptainMenu)
+		return;
+
 	KeyValues *old = ((Button *)panel)->GetCommand();
 	((CClientScoreBoardDialog *)gViewPortInterface->FindPanelByName(PANEL_SCOREBOARD))->SetHighlightedPlayer(old->GetInt("playerindex"));
 	//KeyValues *kv = ((Button *)panel)->GetCommand();
@@ -344,11 +421,14 @@ void CFormationMenu::OnCursorEntered(Panel *panel)
 	kv->SetInt("selected", 1);
 	((Button *)panel)->SetCommand(kv);
 
-	Update();
+	Update(m_bShowCaptainMenu);
 }
 
 void CFormationMenu::OnCursorExited(Panel *panel)
 {
+	if (m_bShowCaptainMenu)
+		return;
+
 	KeyValues *old = ((Button *)panel)->GetCommand();
 	((CClientScoreBoardDialog *)gViewPortInterface->FindPanelByName(PANEL_SCOREBOARD))->SetHighlightedPlayer(0);
 	KeyValues *kv = new KeyValues("Command");
@@ -360,5 +440,5 @@ void CFormationMenu::OnCursorExited(Panel *panel)
 	kv->SetInt("selected", 0);
 	((Button *)panel)->SetCommand(kv);
 
-	Update();
+	Update(m_bShowCaptainMenu);
 }

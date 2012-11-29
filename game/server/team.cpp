@@ -62,11 +62,11 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CTeam, DT_Team)
 	SendPropVector(SENDINFO(m_vPenBoxMax), -1, SPROP_COORD),
 	SendPropInt(SENDINFO(m_nForward)),
 	SendPropInt(SENDINFO(m_nRight)),
-	SendPropEHandle(SENDINFO(m_pCaptain)),
-	SendPropEHandle(SENDINFO(m_pFreekickTaker)),
-	SendPropEHandle(SENDINFO(m_pPenaltyTaker)),
-	SendPropEHandle(SENDINFO(m_pCornerTaker)),
-	SendPropEHandle(SENDINFO(m_pThrowinTaker)),
+	SendPropInt(SENDINFO(m_nCaptainPosIndex), 4, SPROP_UNSIGNED),
+	SendPropInt(SENDINFO(m_nFreekickTakerPosIndex), 4, SPROP_UNSIGNED),
+	SendPropInt(SENDINFO(m_nPenaltyTakerPosIndex), 4, SPROP_UNSIGNED),
+	SendPropInt(SENDINFO(m_nCornerTakerPosIndex), 4, SPROP_UNSIGNED),
+	SendPropInt(SENDINFO(m_nThrowinTakerPosIndex), 4, SPROP_UNSIGNED),
 
 	SendPropArray2( 
 		SendProxyArrayLength_PlayerArray,
@@ -111,11 +111,7 @@ CTeam::CTeam( void )
 {
 	memset( m_szServerKitName.GetForModify(), 0, sizeof(m_szServerKitName) );
 	ResetStats();
-	SetCaptain(NULL);
-	SetFreekickTaker(NULL);
-	SetPenaltyTaker(NULL);
-	SetCornerTaker(NULL);
-	SetThrowinTaker(NULL);
+	UpdatePosIndices(true);
 	m_nTimeoutsLeft = 3;
 }
 
@@ -216,6 +212,7 @@ void CTeam::UpdateClientData( CBasePlayer *pPlayer )
 void CTeam::AddPlayer( CBasePlayer *pPlayer )
 {
 	m_aPlayers.AddToTail( pPlayer );
+	m_PosIndexPlayerIndices[ToSDKPlayer(pPlayer)->GetTeamPosIndex()] = m_aPlayers.Count() - 1;
 	NetworkStateChanged();
 }
 
@@ -224,8 +221,51 @@ void CTeam::AddPlayer( CBasePlayer *pPlayer )
 //-----------------------------------------------------------------------------
 void CTeam::RemovePlayer( CBasePlayer *pPlayer )
 {
+	//for (int i = 0; i < 11; i++)
+	//{
+	//	if (m_PosIndexPlayerIndices[i] != -1)
+	//	{
+	//		if (m_aPlayers[m_PosIndexPlayerIndices[i]] == pPlayer)
+	//		{
+	//			m_PosIndexPlayerIndices[i] = -1;
+	//			break;
+	//		}
+	//	}
+	//}
+
 	m_aPlayers.FindAndRemove( pPlayer );
+
+	UpdatePosIndices(false);
+
 	NetworkStateChanged();
+}
+
+void CTeam::UpdatePosIndices(bool reset)
+{
+	for (int i = 0; i < 11; i++)
+		m_PosIndexPlayerIndices[i] = -1;
+
+	for (int i = 0; i < m_aPlayers.Count(); i++)
+	{
+		m_PosIndexPlayerIndices[ToSDKPlayer(m_aPlayers[i])->GetTeamPosIndex()] = i;
+	}
+
+	if (reset)
+	{
+		m_nCaptainPosIndex = mp_maxplayers.GetInt() - 1;
+		m_nFreekickTakerPosIndex = 0;
+		m_nPenaltyTakerPosIndex = 0;
+		m_nCornerTakerPosIndex = 0;
+		m_nThrowinTakerPosIndex = 0;
+
+		UnblockAllPos();
+	}
+
+	m_nCaptainPosIndex = clamp(m_nCaptainPosIndex, 0, mp_maxplayers.GetInt() - 1);
+	m_nFreekickTakerPosIndex = clamp(m_nFreekickTakerPosIndex, 0, mp_maxplayers.GetInt() - 1);
+	m_nPenaltyTakerPosIndex = clamp(m_nPenaltyTakerPosIndex, 0, mp_maxplayers.GetInt() - 1);
+	m_nCornerTakerPosIndex = clamp(m_nCornerTakerPosIndex, 0, mp_maxplayers.GetInt() - 1);
+	m_nThrowinTakerPosIndex = clamp(m_nThrowinTakerPosIndex, 0, mp_maxplayers.GetInt() - 1);
 }
 
 //-----------------------------------------------------------------------------
@@ -243,6 +283,30 @@ CBasePlayer *CTeam::GetPlayer( int iIndex )
 {
 	Assert( iIndex >= 0 && iIndex < m_aPlayers.Size() );
 	return m_aPlayers[ iIndex ];
+}
+
+CSDKPlayer *CTeam::GetPlayerByPosIndex(int posIndex)
+{
+	if (m_PosIndexPlayerIndices[posIndex] == -1)
+		return NULL;
+	else
+		return ToSDKPlayer(m_aPlayers[m_PosIndexPlayerIndices[posIndex]]);
+}
+
+int CTeam::GetPosNextJoinSeconds(int posIndex)
+{
+	return m_PosNextJoinSeconds[posIndex];
+}
+
+void CTeam::SetPosNextJoinSeconds(int posIndex, int seconds)
+{
+	m_PosNextJoinSeconds[posIndex] = seconds;
+}
+
+void CTeam::UnblockAllPos()
+{
+	for (int i = 0; i < 11; i++)
+		m_PosNextJoinSeconds[i] = 0;
 }
 
 //------------------------------------------------------------------------------------------------------------------
@@ -343,6 +407,8 @@ void CTeam::ResetStats()
 		m_eMatchEventMatchStates.Set(i, 0);
 		m_nMatchEventSeconds.Set(i, 0);
 	}
+
+	UnblockAllPos();
 }
 
 void CTeam::FindNewCaptain()
@@ -350,7 +416,7 @@ void CTeam::FindNewCaptain()
 	if (GetTeamNumber() != TEAM_A && GetTeamNumber() != TEAM_B)
 		return;
 
-	SetCaptain(NULL);
+	SetCaptainPosIndex(0);
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
@@ -361,7 +427,7 @@ void CTeam::FindNewCaptain()
 
 		if (pPl->GetTeamPosType() == GK)
 		{
-			SetCaptain(pPl);
+			SetCaptainPosIndex(pPl->GetTeamPosIndex());
 			break;
 		}
 	}

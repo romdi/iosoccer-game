@@ -1025,7 +1025,7 @@ void CSDKGameRules::ClientDisconnected( edict_t *pClient )
 	if (pPl->GetPlayerBall())
 		pPl->GetPlayerBall()->RemovePlayerBall();
 
-	pPl->GetTeam()->FindNewCaptain();
+	//pPl->GetTeam()->FindNewCaptain();
 
 	BaseClass::ClientDisconnected( pClient );
 }
@@ -1279,6 +1279,12 @@ static void OnMaxPlayersChange(IConVar *var, const char *pOldValue, float flOldV
 		pPl->m_nTeamPosIndex = 0;
 		pPl->m_nTeamPosIndexToJoin = 0;
 		pPl->ChangeTeam(TEAM_SPECTATOR);
+	}
+
+	for (int i = 0; i < 2; i++)
+	{
+		if (GetGlobalTeam(TEAM_A + i))
+			GetGlobalTeam(TEAM_A + i)->UpdatePosIndices(true);
 	}
 #endif
 }

@@ -53,11 +53,11 @@ public:
 
 	virtual int		Get_Possession();
 
-	virtual C_SDKPlayer	*Get_Captain() { return m_pCaptain; }
-	virtual C_SDKPlayer	*Get_FreekickTaker() { return m_pFreekickTaker; }
-	virtual C_SDKPlayer	*Get_PenaltyTaker() { return m_pPenaltyTaker; }
-	virtual C_SDKPlayer	*Get_CornerTaker() { return m_pCornerTaker; }
-	virtual C_SDKPlayer	*Get_ThrowinTaker() { return m_pThrowinTaker; }
+	virtual int	Get_CaptainPosIndex() { return m_nCaptainPosIndex; }
+	virtual int	Get_FreekickTakerPosIndex() { return m_nFreekickTakerPosIndex; }
+	virtual int	Get_PenaltyTakerPosIndex() { return m_nPenaltyTakerPosIndex; }
+	virtual int	Get_CornerTakerPosIndex() { return m_nCornerTakerPosIndex; }
+	virtual int	Get_ThrowinTakerPosIndex() { return m_nThrowinTakerPosIndex; }
 
 	virtual int		Get_TimeoutsLeft() { return m_nTimeoutsLeft; }
 
@@ -98,11 +98,11 @@ public:
 	int		m_nPenaltyRound;
 	int		m_nTimeoutsLeft;
 
-	CHandle<C_SDKPlayer> m_pCaptain;
-	CHandle<C_SDKPlayer> m_pFreekickTaker;
-	CHandle<C_SDKPlayer> m_pPenaltyTaker;
-	CHandle<C_SDKPlayer> m_pCornerTaker;
-	CHandle<C_SDKPlayer> m_pThrowinTaker;
+	int m_nCaptainPosIndex;
+	int m_nFreekickTakerPosIndex;
+	int m_nPenaltyTakerPosIndex;
+	int m_nCornerTakerPosIndex;
+	int m_nThrowinTakerPosIndex;
 
 	// Data for the scoreboard
 	int		m_iPing;

@@ -1419,6 +1419,8 @@ void CBall::State_FREEKICK_Think()
 	{
 		if ((m_vPos - GetGlobalTeam(m_nFoulingTeam)->GetOppTeam()->m_vPlayerSpawns[0]).Length2D() <= 1000)
 			m_pPl = FindNearestPlayer(GetGlobalTeam(m_nFoulingTeam)->GetOppTeamNumber(), FL_POS_KEEPER);
+		else if ((m_vPos - GetGlobalTeam(m_nFoulingTeam)->m_vPlayerSpawns[0]).Length2D() <= 1000)
+			m_pPl = GetGlobalTeam(m_nFoulingTeam)->GetOppTeam()->GetFreekickTaker();
 		else
 			m_pPl = m_pFouledPl;
 
@@ -1493,10 +1495,9 @@ void CBall::State_PENALTY_Think()
 {
 	if (!CSDKPlayer::IsOnField(m_pPl))
 	{
-		m_pPl = m_pFouledPl;
-
 		if (SDKGameRules()->State_Get() == MATCH_PENALTIES)
 		{
+			m_pPl = m_pFouledPl;
 			if (!CSDKPlayer::IsOnField(m_pPl))
 			{
 				m_ePenaltyState = PENALTY_ABORTED_NO_TAKER;
@@ -1505,12 +1506,11 @@ void CBall::State_PENALTY_Think()
 		}
 		else
 		{
-			if (!CSDKPlayer::IsOnField(m_pPl))
-			{
+			m_pPl = GetGlobalTeam(m_nFoulingTeam)->GetOppTeam()->GetPenaltyTaker();
+			if (!m_pPl)
 				m_pPl = FindNearestPlayer(GetGlobalTeam(m_nFoulingTeam)->GetOppTeamNumber());
-				if (!m_pPl)
-					return State_Transition(BALL_NORMAL);
-			}
+			if (!m_pPl)
+				return State_Transition(BALL_NORMAL);
 		}
 
 		SDKGameRules()->EnableShield(SHIELD_PENALTY, GetGlobalTeam(m_nFoulingTeam)->GetOppTeamNumber(), GetGlobalTeam(m_nFoulingTeam)->m_vPenalty);
@@ -1945,8 +1945,10 @@ void CBall::HandleFoul()
 					break;
 				}
 			}
+			else
+				GetGlobalTeam(team)->SetPosNextJoinSeconds(posIndex, SDKGameRules()->GetMatchDisplayTimeSeconds() + banDuration);
 
-			m_pFoulingPl->ChangeTeamPos(team, posIndex, false);
+			//m_pFoulingPl->ChangeTeamPos(team, posIndex, false);
 		}
 	}
 

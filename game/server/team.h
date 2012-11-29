@@ -60,13 +60,20 @@ public:
 	virtual void RemovePlayer( CBasePlayer *pPlayer );
 	virtual int  GetNumPlayers( void );
 	virtual CBasePlayer *GetPlayer( int iIndex );
-	virtual void SetCaptain(CSDKPlayer *pCaptain) { m_pCaptain = pCaptain; }
-	virtual void SetFreekickTaker(CSDKPlayer *pFreekickTaker) { m_pFreekickTaker = pFreekickTaker; }
-	virtual void SetPenaltyTaker(CSDKPlayer *pPenaltyTaker) { m_pPenaltyTaker = pPenaltyTaker; }
-	virtual void SetCornerTaker(CSDKPlayer *pCornerTaker) { m_pCornerTaker = pCornerTaker; }
-	virtual void SetThrowinTaker(CSDKPlayer *pThrowinTaker) { m_pThrowinTaker = pThrowinTaker; }
+	CSDKPlayer *GetPlayerByPosIndex(int posIndex);
+	int GetPosNextJoinSeconds(int posIndex);
+	void SetPosNextJoinSeconds(int posIndex, int seconds);
+	void UnblockAllPos();
+	void UpdatePosIndices(bool reset);
+	virtual void SetCaptainPosIndex(int posIndex) { m_nCaptainPosIndex = clamp(posIndex, 0, mp_maxplayers.GetInt() - 1); }
+	virtual void SetFreekickTakerPosIndex(int posIndex) { m_nFreekickTakerPosIndex = clamp(posIndex, 0, mp_maxplayers.GetInt() - 1); }
+	virtual void SetPenaltyTakerPosIndex(int posIndex) { m_nPenaltyTakerPosIndex = clamp(posIndex, 0, mp_maxplayers.GetInt() - 1); }
+	virtual void SetCornerTakerPosIndex(int posIndex) { m_nCornerTakerPosIndex = clamp(posIndex, 0, mp_maxplayers.GetInt() - 1); }
+	virtual void SetThrowinTakerPosIndex(int posIndex) { m_nThrowinTakerPosIndex = clamp(posIndex, 0, mp_maxplayers.GetInt() - 1); }
 	virtual void SetTimeoutsLeft(int amount) { m_nTimeoutsLeft = amount; }
-	virtual CSDKPlayer *GetCaptain() { return m_pCaptain; }
+	virtual CSDKPlayer *GetCaptain() { return GetPlayerByPosIndex(m_nCaptainPosIndex); }
+	virtual CSDKPlayer *GetFreekickTaker() { return GetPlayerByPosIndex(m_nFreekickTakerPosIndex); }
+	virtual CSDKPlayer *GetPenaltyTaker() { return GetPlayerByPosIndex(m_nPenaltyTakerPosIndex); }
 	virtual int GetTimeoutsLeft() { return m_nTimeoutsLeft; }
 	virtual void FindNewCaptain();
 	virtual void AddMatchEvent(match_state_t matchState, int seconds, match_event_t event, const char *player);
@@ -82,6 +89,8 @@ public:
 
 public:
 	CUtlVector< CBasePlayer * >		m_aPlayers;
+	int m_PosIndexPlayerIndices[11];
+	int m_PosNextJoinSeconds[11];
 
 	// Data
 	CNetworkString( m_szServerKitName, MAX_TEAM_NAME_LENGTH );
@@ -93,11 +102,11 @@ public:
 	CNetworkVar( int, m_nPenaltyRound );
 	CNetworkVar( int, m_nTimeoutsLeft );
 
-	CNetworkHandle( CSDKPlayer, m_pCaptain );
-	CNetworkHandle( CSDKPlayer, m_pFreekickTaker );
-	CNetworkHandle( CSDKPlayer, m_pPenaltyTaker );
-	CNetworkHandle( CSDKPlayer, m_pCornerTaker );
-	CNetworkHandle( CSDKPlayer, m_pThrowinTaker );
+	CNetworkVar( int, m_nCaptainPosIndex );
+	CNetworkVar( int, m_nFreekickTakerPosIndex );
+	CNetworkVar( int, m_nPenaltyTakerPosIndex );
+	CNetworkVar( int, m_nCornerTakerPosIndex );
+	CNetworkVar( int, m_nThrowinTakerPosIndex );
 
 	int		m_iDeaths;
 

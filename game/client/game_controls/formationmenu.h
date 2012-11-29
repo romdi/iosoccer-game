@@ -49,7 +49,7 @@ public:
 	virtual void PerformLayout();
 	virtual void OnCommand( char const *cmd );
 	void Reset();
-	void Update();
+	void Update(bool showCaptainMenu);
 
 	float m_flNextUpdateTime;
 	
@@ -64,6 +64,12 @@ protected:
 	Panel		*m_pFormations[2];
 	CBitmapButton *m_pFormationButtons[2][11];
 	Label		*m_pToolTips[2][11];
+	Button		*m_pCaptainTicks[11];
+	Button		*m_pFreekickTakerTicks[11];
+	Button		*m_pPenaltyTakerTicks[11];
+	Button		*m_pCornerTakerTicks[11];
+	Button		*m_pThrowinTakerTicks[11];
+	bool		m_bShowCaptainMenu;
 };
 
 

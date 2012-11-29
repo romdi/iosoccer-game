@@ -53,11 +53,11 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_Team, DT_Team, CTeam)
 	RecvPropVector(RECVINFO(m_vPenBoxMax)),
 	RecvPropInt(RECVINFO(m_nForward)),
 	RecvPropInt(RECVINFO(m_nRight)),
-	RecvPropEHandle(RECVINFO(m_pCaptain)),
-	RecvPropEHandle(RECVINFO(m_pFreekickTaker)),
-	RecvPropEHandle(RECVINFO(m_pPenaltyTaker)),
-	RecvPropEHandle(RECVINFO(m_pCornerTaker)),
-	RecvPropEHandle(RECVINFO(m_pThrowinTaker)),
+	RecvPropInt(RECVINFO(m_nCaptainPosIndex)),
+	RecvPropInt(RECVINFO(m_nFreekickTakerPosIndex)),
+	RecvPropInt(RECVINFO(m_nPenaltyTakerPosIndex)),
+	RecvPropInt(RECVINFO(m_nCornerTakerPosIndex)),
+	RecvPropInt(RECVINFO(m_nThrowinTakerPosIndex)),
 	
 	RecvPropArray2( 
 		RecvProxyArrayLength_PlayerArray,

@@ -148,11 +148,8 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Editabl
 
 	m_pMatchEvents = new Button(m_pStatButtonInnerContainer, "MatchEvents", "Match Events", this, "showmatchevents");
 
-	m_pBecomeCaptain = new Button(m_pStatButtonInnerContainer, "BecomeCaptain", "Become Captain", this, "becomecaptain");
-	m_pBecomeCaptain->SetVisible(false);
-
-	m_pToggleMenu = new Button(m_pStatButtonInnerContainer, "ToggleMenu", "Captain Menu", this, "togglemenu");
-	m_pToggleMenu->SetVisible(false);
+	m_pToggleCaptainMenu = new Button(m_pStatButtonInnerContainer, "ToggleMenu", "Captain Menu", this, "togglemenu");
+	m_pToggleCaptainMenu->SetVisible(false);
 
 	m_pFormationList = new ComboBox(m_pStatButtonInnerContainer, "", 0, false);
 
@@ -291,9 +288,9 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 	m_pStatButtonOuterContainer->SetZPos(1);
 	//m_pStatButtonOuterContainer->SetBgColor(Color(0, 0, 0, 150));
 
-	m_pStatButtonInnerContainer->SetBounds(0, 0, STATBUTTON_WIDTH + 2 * STATBUTTON_HMARGIN, 4 * STATBUTTON_HEIGHT + STAT_CATEGORY_COUNT * STATBUTTON_HEIGHT);
+	m_pStatButtonInnerContainer->SetBounds(0, 0, STATBUTTON_WIDTH + 2 * STATBUTTON_HMARGIN, 6 * STATBUTTON_HEIGHT + STAT_CATEGORY_COUNT * STATBUTTON_HEIGHT);
 
-	m_pStatText->SetBounds(STATBUTTON_HMARGIN, 3 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
+	m_pStatText->SetBounds(STATBUTTON_HMARGIN, 5 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
 	m_pStatText->SetFont(m_pScheme->GetFont("StatButton"));
 	m_pStatText->SetContentAlignment(Label::a_center);
 
@@ -311,30 +308,24 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 	m_pJoinRandom->SetCursor(dc_hand);
 	//m_pJoinRandom->SetVisible(false);
 
-	m_pMatchEvents->SetBounds(STATBUTTON_HMARGIN, STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
+	m_pMatchEvents->SetBounds(STATBUTTON_HMARGIN, 2 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
 	m_pMatchEvents->SetFont(m_pScheme->GetFont("StatButton"));
 	m_pMatchEvents->SetContentAlignment(Label::a_center);
 	m_pMatchEvents->SetPaintBorderEnabled(false);
-	m_pMatchEvents->SetVisible(false);
+	//m_pMatchEvents->SetVisible(false);
 
-	m_pBecomeCaptain->SetBounds(STATBUTTON_HMARGIN, 2 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
-	m_pBecomeCaptain->SetFont(m_pScheme->GetFont("StatButton"));
-	m_pBecomeCaptain->SetContentAlignment(Label::a_center);
-	m_pBecomeCaptain->SetPaintBorderEnabled(false);
-	m_pBecomeCaptain->SetCursor(dc_hand);
+	m_pToggleCaptainMenu->SetBounds(STATBUTTON_HMARGIN, 4 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
+	m_pToggleCaptainMenu->SetFont(m_pScheme->GetFont("StatButton"));
+	m_pToggleCaptainMenu->SetContentAlignment(Label::a_center);
+	m_pToggleCaptainMenu->SetPaintBorderEnabled(false);
+	m_pToggleCaptainMenu->SetCursor(dc_hand);
 
-	m_pToggleMenu->SetBounds(STATBUTTON_HMARGIN, 2 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
-	m_pToggleMenu->SetFont(m_pScheme->GetFont("StatButton"));
-	m_pToggleMenu->SetContentAlignment(Label::a_center);
-	m_pToggleMenu->SetPaintBorderEnabled(false);
-	m_pToggleMenu->SetCursor(dc_hand);
-
-	m_pFormationList->SetBounds(STATBUTTON_HMARGIN, 4 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
+	m_pFormationList->SetBounds(STATBUTTON_HMARGIN, 6 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
 	m_pFormationList->SetFont(m_pScheme->GetFont("StatButton"));
 	//m_pFormationList->SetPaintBorderEnabled(false);
 	m_pFormationList->SetVisible(false);
 
-	m_pRequestTimeout->SetBounds(STATBUTTON_HMARGIN, 5 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
+	m_pRequestTimeout->SetBounds(STATBUTTON_HMARGIN, 7 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
 	m_pRequestTimeout->SetFont(m_pScheme->GetFont("StatButton"));
 	m_pRequestTimeout->SetContentAlignment(Label::a_center);
 	m_pRequestTimeout->SetPaintBorderEnabled(false);
@@ -343,7 +334,7 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 
 	for (int i = 0; i < STAT_CATEGORY_COUNT; i++)
 	{
-		m_pStatButtons[i]->SetBounds(STATBUTTON_HMARGIN, 4 * STATBUTTON_HEIGHT + i * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
+		m_pStatButtons[i]->SetBounds(STATBUTTON_HMARGIN, 6 * STATBUTTON_HEIGHT + i * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
 		m_pStatButtons[i]->SetFont(m_pScheme->GetFont("StatButton"));
 		m_pStatButtons[i]->SetContentAlignment(Label::a_center);
 		m_pStatButtons[i]->SetPaintBorderEnabled(false);
@@ -517,7 +508,7 @@ void CClientScoreBoardDialog::Update( void )
 	
 	if (m_eActivePanelType == FORMATION_MENU_NORMAL || m_eActivePanelType == FORMATION_MENU_HIGHLIGHT)
 	{
-		m_pFormationMenu->Update();
+		m_pFormationMenu->Update(m_bShowCaptainMenu);
 		m_pFormationMenu->SetVisible(true);
 		m_pStatsMenu->SetVisible(false);
 		m_pStatButtonOuterContainer->SetVisible(true);
@@ -551,15 +542,20 @@ void CClientScoreBoardDialog::Update( void )
 
 	C_SDKPlayer *pLocal = C_SDKPlayer::GetLocalSDKPlayer();
 
-	if (pLocal->GetTeam()->Get_Captain() == pLocal && !m_pToggleMenu->IsVisible())
+	if ((pLocal->GetTeamNumber() == TEAM_A || pLocal->GetTeamNumber() == TEAM_B)
+		&& pLocal->GetTeam()->Get_CaptainPosIndex() == gr->GetTeamPosIndex(GetLocalPlayerIndex()))
 	{
-		m_pToggleMenu->SetVisible(true);
+		if (!m_pToggleCaptainMenu->IsVisible())
+			m_pToggleCaptainMenu->SetVisible(true);
 	}
-	else if (pLocal->GetTeam()->Get_Captain() != pLocal && m_pToggleMenu->IsVisible())
+	else
 	{
-		m_bShowCaptainMenu = false;
-		ToggleMenu();
-		m_pToggleMenu->SetVisible(false);
+		if (m_pToggleCaptainMenu->IsVisible())
+		{
+			m_bShowCaptainMenu = false;
+			ToggleMenu();
+			m_pToggleCaptainMenu->SetVisible(false);
+		}
 	}
 
 	if (m_bShowCaptainMenu)
@@ -997,7 +993,7 @@ bool CClientScoreBoardDialog::GetPlayerInfo(int playerIndex, KeyValues *kv)
 	else
 	{
 		char *posNameFormat;
-		if (GetGlobalTeam(gr->GetTeam(playerIndex))->Get_Captain() && GetGlobalTeam(gr->GetTeam(playerIndex))->Get_Captain()->entindex() == playerIndex)
+		if (GetGlobalTeam(gr->GetTeam(playerIndex))->Get_CaptainPosIndex() == gr->GetTeamPosIndex(playerIndex))
 			posNameFormat = "(%s)";
 		else
 			posNameFormat = "%s";
@@ -1329,9 +1325,9 @@ void CClientScoreBoardDialog::OnCommand( char const *cmd )
 	else if (!Q_strnicmp(cmd, "stat:", 5))
 	{
 		m_nCurStat = atoi(&cmd[5]);
-		if (m_nCurStat != -1)
-			m_eActivePanelType = MATCHEVENT_MENU;
-		else
+		//if (m_nCurStat != -1)
+		//	m_eActivePanelType = MATCHEVENT_MENU;
+		//else
 			m_eActivePanelType = FORMATION_MENU_NORMAL;
 		Reset();
 		Update();
@@ -1400,7 +1396,7 @@ void CClientScoreBoardDialog::OnCommand( char const *cmd )
 
 void CClientScoreBoardDialog::ToggleMenu()
 {
-	m_pToggleMenu->SetText(m_bShowCaptainMenu ? "Stats Menu" : "Captain Menu");
+	m_pToggleCaptainMenu->SetText(m_bShowCaptainMenu ? "Stats Menu" : "Captain Menu");
 
 	for (int i = 0; i < STAT_CATEGORY_COUNT; i++)
 	{

@@ -237,8 +237,7 @@ private:
 	Panel		*m_pPlayerListDivider;
 	Button		*m_pJoinRandom;
 	Button		*m_pMatchEvents;
-	Button		*m_pBecomeCaptain;
-	Button		*m_pToggleMenu;
+	Button		*m_pToggleCaptainMenu;
 	ComboBox	*m_pFormationList;
 	Button		*m_pRequestTimeout;
 

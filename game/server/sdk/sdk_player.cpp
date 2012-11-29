@@ -291,14 +291,11 @@ CSDKPlayer *CSDKPlayer::CreatePlayer( const char *className, edict_t *ed )
 void CSDKPlayer::PreThink(void)
 {
 	if (!SDKGameRules()->IsIntermissionState()
-		&& IsCardBanned()
 		&& (GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B)
-		&& SDKGameRules()->GetMatchDisplayTimeSeconds() < GetNextJoin())
+		&& (IsCardBanned() && SDKGameRules()->GetMatchDisplayTimeSeconds() < GetNextJoin()
+		|| (m_nTeamToJoin == TEAM_A || m_nTeamToJoin == TEAM_B) && GetGlobalTeam(m_nTeamToJoin)->GetPosNextJoinSeconds(m_nTeamPosIndexToJoin) > SDKGameRules()->GetMatchDisplayTimeSeconds()))
 	{
-		//int team = GetTeamNumber();
-		//int posIndex = GetTeamPosIndex();
 		ChangeTeam(TEAM_SPECTATOR);
-		//ChangeTeamPos(team, posIndex, true);
 	}
 
 	if (!SDKGameRules()->IsIntermissionState() && IsCardBanned() && SDKGameRules()->GetMatchDisplayTimeSeconds() >= GetNextJoin())
@@ -306,7 +303,10 @@ void CSDKPlayer::PreThink(void)
 		SetCardBanned(false);
 	}
 
-	if (m_nTeamToJoin != TEAM_INVALID && (SDKGameRules()->IsIntermissionState() || SDKGameRules()->GetMatchDisplayTimeSeconds() >= GetNextJoin()))
+	if (m_nTeamToJoin != TEAM_INVALID
+		&& (SDKGameRules()->IsIntermissionState()
+			|| SDKGameRules()->GetMatchDisplayTimeSeconds() >= GetNextJoin()
+			&& GetGlobalTeam(m_nTeamToJoin)->GetPosNextJoinSeconds(m_nTeamPosIndexToJoin) <= SDKGameRules()->GetMatchDisplayTimeSeconds()))
 	{
 		bool canJoin = true;
 
@@ -323,9 +323,7 @@ void CSDKPlayer::PreThink(void)
 				canJoin = true;
 			}
 			else if (pSwapPartner && pSwapPartner->GetTeamToJoin() == GetTeamNumber() && pSwapPartner->GetTeamPosIndexToJoin() == GetTeamPosIndex())
-			{
 				canJoin = true;
-			}
 			else
 				canJoin = false;
 		}
@@ -596,8 +594,8 @@ void CSDKPlayer::ChangeTeam( int iTeamNum )
 	//else if ((GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B) && GetTeamPosType() == GK)
 	//	GetTeam()->FindNewCaptain();
 
-	GetGlobalTeam(TEAM_A)->FindNewCaptain();
-	GetGlobalTeam(TEAM_B)->FindNewCaptain();
+	//GetGlobalTeam(TEAM_A)->FindNewCaptain();
+	//GetGlobalTeam(TEAM_B)->FindNewCaptain();
 
 	g_pPlayerResource->UpdatePlayerData();
 }
@@ -998,11 +996,17 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 			return false;	//go away
 		}
 
+		int team = atoi(args[1]);
+		int posIndex = atoi(args[2]);
+
 		if (IsCardBanned())
 			return false;
 
-		int team = atoi(args[1]);
-		int posIndex = atoi(args[2]);
+		if (team == m_nTeamToJoin && posIndex == m_nTeamPosIndexToJoin)
+		{
+			m_nTeamToJoin = TEAM_INVALID;
+			return false;
+		}
 
 		// Find team and pos for auto-join
 		if (posIndex == -1 || team == TEAM_INVALID)
@@ -1027,12 +1031,6 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 
 		if (team == GetTeamNumber() && posIndex == GetTeamPosIndex())
 			return false;
-
-		if (team == m_nTeamToJoin && posIndex == m_nTeamPosIndexToJoin)
-		{
-			m_nTeamToJoin = TEAM_INVALID;
-			return false;
-		}
 
 		return ChangeTeamPos(team, posIndex, true);
 	}
@@ -1136,6 +1134,30 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 
 		return true;
 	}
+	else if (!Q_stricmp(args[0], "setcaptain"))
+	{
+		if (this != GetTeam()->GetCaptain())
+			return false;
+
+		GetTeam()->SetCaptainPosIndex(atoi(args[1]));
+		return true;
+	}
+	else if (!Q_stricmp(args[0], "setfreekicktaker"))
+	{
+		if (this != GetTeam()->GetCaptain())
+			return false;
+
+		GetTeam()->SetFreekickTakerPosIndex(atoi(args[1]));
+		return true;
+	}
+	else if (!Q_stricmp(args[0], "setpenaltytaker"))
+	{
+		if (this != GetTeam()->GetCaptain())
+			return false;
+
+		GetTeam()->SetPenaltyTakerPosIndex(atoi(args[1]));
+		return true;
+	}
 
 	return BaseClass::ClientCommand (args);
 }
@@ -1144,6 +1166,9 @@ bool CSDKPlayer::IsTeamPosFree(int team, int posIndex, bool ignoreBots, CSDKPlay
 {
 	if (!IsValidPosition(posIndex))
 		return false;
+
+	//if (GetGlobalTeam(team)->GetPosNextJoinSeconds(posIndex) > SDKGameRules()->GetMatchDisplayTimeSeconds())
+	//	return false;
 
 	if (g_Positions[mp_maxplayers.GetInt() - 1][posIndex][POS_TYPE] == GK)
 	{
