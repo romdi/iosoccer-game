@@ -165,11 +165,6 @@ const float g_Positions[11][11][4] =
 	}
 };
 
-bool IsValidPosition(int posIndex)
-{
-	return g_Positions[mp_maxplayers.GetInt() - 1][posIndex][POS_NUMBER] != -1;
-}
-
 int GetKeeperPosIndex()
 {
 	for (int posIndex = 0; posIndex < 11; posIndex++)
@@ -1381,7 +1376,10 @@ void CSDKGameRules::State_Think()
 						if (!CSDKPlayer::IsOnField(pPl))
 							continue;
 
-						pPl->ChangeTeamPos(pPl->GetTeamNumber(), (pPl->GetTeamPosIndex() + 1) % mp_maxplayers.GetInt(), false);
+						int team = pPl->GetTeamNumber();
+						int posIndex = pPl->GetTeamPosIndex();
+						pPl->ChangeTeam(TEAM_SPECTATOR);
+						pPl->ChangeTeamPos(team, (posIndex + 1) % mp_maxplayers.GetInt(), false);
 					}
 
 					m_PlayerRotationMinutes.Remove(0);

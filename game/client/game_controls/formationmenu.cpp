@@ -145,26 +145,31 @@ void CFormationMenu::PerformLayout()
 		m_pCaptainTicks[i]->SetCursor(dc_hand);
 		m_pCaptainTicks[i]->SetVisible(false);
 		m_pCaptainTicks[i]->SetContentAlignment(Label::a_center);
+		m_pCaptainTicks[i]->SetFont(m_pScheme->GetFont("Tooltip"));
 
 		m_pFreekickTakerTicks[i]->SetZPos(100);
 		m_pFreekickTakerTicks[i]->SetCursor(dc_hand);
 		m_pFreekickTakerTicks[i]->SetVisible(false);
 		m_pFreekickTakerTicks[i]->SetContentAlignment(Label::a_center);
+		m_pFreekickTakerTicks[i]->SetFont(m_pScheme->GetFont("Tooltip"));
 
 		m_pPenaltyTakerTicks[i]->SetZPos(100);
 		m_pPenaltyTakerTicks[i]->SetCursor(dc_hand);
 		m_pPenaltyTakerTicks[i]->SetVisible(false);
 		m_pPenaltyTakerTicks[i]->SetContentAlignment(Label::a_center);
+		m_pPenaltyTakerTicks[i]->SetFont(m_pScheme->GetFont("Tooltip"));
 
 		m_pCornerTakerTicks[i]->SetZPos(100);
 		m_pCornerTakerTicks[i]->SetCursor(dc_hand);
 		m_pCornerTakerTicks[i]->SetVisible(false);
 		m_pCornerTakerTicks[i]->SetContentAlignment(Label::a_center);
+		m_pCornerTakerTicks[i]->SetFont(m_pScheme->GetFont("Tooltip"));
 
 		m_pThrowinTakerTicks[i]->SetZPos(100);
 		m_pThrowinTakerTicks[i]->SetCursor(dc_hand);
 		m_pThrowinTakerTicks[i]->SetVisible(false);
 		m_pThrowinTakerTicks[i]->SetContentAlignment(Label::a_center);
+		m_pThrowinTakerTicks[i]->SetFont(m_pScheme->GetFont("Tooltip"));
 	}
 
 	m_flNextUpdateTime = gpGlobals->curtime;
@@ -232,7 +237,7 @@ void CFormationMenu::Update(bool showCaptainMenu)
 	{
 		for (int j = 0; j < 11; j++)
 		{
-			if (!IsValidPosition(j))
+			if (j > mp_maxplayers.GetInt() - 1)
 			{
 				m_pFormationButtons[i][j]->SetVisible(false);
 				m_pToolTips[i][j]->SetVisible(false);
@@ -291,7 +296,7 @@ void CFormationMenu::Update(bool showCaptainMenu)
 					m_pPenaltyTakerTicks[j]->SetDefaultColor(Color(255, 255, 255, 255), Color(free.r, free.g, free.b, 0));
 				}
 			}
-			else
+			else if (!m_bShowCaptainMenu)
 			{
 				m_pCaptainTicks[j]->SetVisible(false);
 				m_pFreekickTakerTicks[j]->SetVisible(false);

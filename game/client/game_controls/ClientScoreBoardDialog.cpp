@@ -1375,6 +1375,7 @@ void CClientScoreBoardDialog::OnCommand( char const *cmd )
 	{
 		m_bShowCaptainMenu = !m_bShowCaptainMenu;
 		ToggleMenu();
+		Update();
 	}
 	else if (!Q_stricmp(cmd, "requesttimeout"))
 	{

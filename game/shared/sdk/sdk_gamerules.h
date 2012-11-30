@@ -465,7 +465,6 @@ extern const char g_szPosNames[POS_NAME_COUNT][5];
 
 extern const float g_Positions[11][11][4];
 
-bool IsValidPosition(int posIndex);
 int GetKeeperPosIndex();
 
 #endif // SDK_GAMERULES_H

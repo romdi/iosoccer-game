@@ -474,10 +474,7 @@ bool CSDKPlayer::ChangeTeamPos(int wishTeam, int wishPosIndex, bool setJoinDelay
 	if (wishTeam != TEAM_A && wishTeam != TEAM_B && wishTeam != TEAM_SPECTATOR)
 		return false;
 
-	if (wishPosIndex < 0 || wishPosIndex > 10)
-		return false;
-
-	if (!IsValidPosition(wishPosIndex))
+	if (wishPosIndex < 0 || wishPosIndex > mp_maxplayers.GetInt() - 1)
 		return false;
 
 	int oldTeam = GetTeamNumber();
@@ -1164,7 +1161,7 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 
 bool CSDKPlayer::IsTeamPosFree(int team, int posIndex, bool ignoreBots, CSDKPlayer **pPlayerOnPos)
 {
-	if (!IsValidPosition(posIndex))
+	if (posIndex < 0 || posIndex > mp_maxplayers.GetInt() - 1)
 		return false;
 
 	//if (GetGlobalTeam(team)->GetPosNextJoinSeconds(posIndex) > SDKGameRules()->GetMatchDisplayTimeSeconds())
