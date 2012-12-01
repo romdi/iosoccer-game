@@ -31,12 +31,15 @@ ConVar sv_ball_rotinertialimit( "sv_ball_rotinertialimit", "1", FCVAR_NOTIFY | F
 ConVar sv_ball_dragcoeff( "sv_ball_dragcoeff", "1", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
 ConVar sv_ball_inertia( "sv_ball_inertia", "1", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
 ConVar sv_ball_drag_enabled("sv_ball_drag_enabled", "1", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
+
 ConVar sv_ball_spin( "sv_ball_spin", "300", FCVAR_NOTIFY );
 ConVar sv_ball_defaultspin( "sv_ball_defaultspin", "10000", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
 ConVar sv_ball_topspin_coeff( "sv_ball_topspin_coeff", "1.0", FCVAR_NOTIFY );
 ConVar sv_ball_backspin_coeff( "sv_ball_backspin_coeff", "1.0", FCVAR_NOTIFY );
 ConVar sv_ball_jump_topspin_enabled("sv_ball_jump_topspin_enabled", "1", FCVAR_NOTIFY );
 ConVar sv_ball_curve("sv_ball_curve", "150", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
+ConVar sv_ball_invertsidecurve("sv_ball_invertsidecurve", "0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
+
 ConVar sv_ball_deflectionradius( "sv_ball_deflectionradius", "40", FCVAR_NOTIFY );
 
 ConVar sv_ball_standing_reach( "sv_ball_standing_reach", "60", FCVAR_NOTIFY );
@@ -2445,9 +2448,9 @@ void CBall::SetSpin(float coeff)
 	Vector sideRot(0, 0, 0);
 
 	if (m_pPl->m_nButtons & IN_MOVELEFT) 
-		sideRot = Vector(0, 0, 1);
+		sideRot = Vector(0, 0, sv_ball_invertsidecurve.GetBool() ? -1 : 1);
 	else if (m_pPl->m_nButtons & IN_MOVERIGHT) 
-		sideRot = Vector(0, 0, -1);
+		sideRot = Vector(0, 0, sv_ball_invertsidecurve.GetBool() ? 1 : -1);
 
 	float sideSpin = m_vVel.Length() * sv_ball_spin.GetInt() * coeff / 100.0f;
 
