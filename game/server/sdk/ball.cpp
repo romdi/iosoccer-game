@@ -1332,7 +1332,11 @@ void CBall::State_GOAL_Enter()
 					SetMatchSubSubEvent(MATCH_EVENT_ASSIST, pAssister2->GetTeamNumber(), true);
 					SetMatchSubSubEventPlayer(pAssister2, false);
 				}
+				else
+					pAssister2 = NULL;
 			}
+			else
+				pAssister = NULL;
 		}
 
 		char matchEventPlayerNames[MAX_MATCH_EVENT_PLAYER_NAME_LENGTH] = {};
@@ -1641,7 +1645,7 @@ void CBall::State_KEEPERHANDS_Think()
 		SetEffects(EF_NODRAW);
 		EnablePlayerCollisions(false);
 		m_flStateTimelimit = -1;
-		Touched(m_pPl, true, BODY_PART_HANDS);
+		//Touched(m_pPl, true, BODY_PART_HANDS);
 		PlayersAtTargetPos();
 	}
 
@@ -2155,16 +2159,16 @@ bool CBall::CheckKeeperCatch()
 	if (!canCatch)
 		return false;
 
-	if (!SDKGameRules()->IsIntermissionState() && !m_bHasQueuedState && LastTeam(true) != m_pPl->GetTeamNumber())
-	{
-		m_pPl->SetKeeperSaves(m_pPl->GetKeeperSaves() + 1);
-		if (LastPl(true) && gpGlobals->curtime >= LastPl(true)->m_flLastShotOnGoal + 1)
-		{
-			LastPl(true)->SetShots(LastPl(true)->GetShots() + 1);
-			LastPl(true)->SetShotsOnGoal(LastPl(true)->GetShotsOnGoal() + 1);
-			LastPl(true)->m_flLastShotOnGoal = gpGlobals->curtime;
-		}
-	}
+	//if (!SDKGameRules()->IsIntermissionState() && !m_bHasQueuedState && LastTeam(true) != m_pPl->GetTeamNumber())
+	//{
+	//	m_pPl->SetKeeperSaves(m_pPl->GetKeeperSaves() + 1);
+	//	if (LastPl(true) && gpGlobals->curtime >= LastPl(true)->m_flLastShotOnGoal + 1)
+	//	{
+	//		LastPl(true)->SetShots(LastPl(true)->GetShots() + 1);
+	//		LastPl(true)->SetShotsOnGoal(LastPl(true)->GetShotsOnGoal() + 1);
+	//		LastPl(true)->m_flLastShotOnGoal = gpGlobals->curtime;
+	//	}
+	//}
 
 	//SetMatchEvent(MATCH_EVENT_KEEPERSAVE, m_pPl->GetTeamNumber(), false);
 	//SetMatchEventPlayer(m_pPl, false);
@@ -2711,6 +2715,14 @@ void CBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart)
 			{
 				if (pPl->GetTeamPosType() == GK && bodyPart == BODY_PART_HANDS)
 				{
+					CSDKPlayer *pLastPl = LastPl(true);
+					if (pLastPl && gpGlobals->curtime >= pLastPl->m_flLastShotOnGoal + 1)
+					{
+						pLastPl->SetShots(pLastPl->GetShots() + 1);
+						pLastPl->SetShotsOnGoal(pLastPl->GetShotsOnGoal() + 1);
+						pLastPl->m_flLastShotOnGoal = gpGlobals->curtime;
+					}
+
 					pPl->SetKeeperSaves(pPl->GetKeeperSaves() + 1);
 					SetMatchEvent(MATCH_EVENT_KEEPERSAVE, pPl->GetTeamNumber(), false);
 				}
