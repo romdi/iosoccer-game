@@ -117,8 +117,8 @@ extern ConVar_ServerBounded *m_pitch;
 extern ConVar l_pitchspeed;
 extern ConVar cl_sidespeed;
 extern ConVar cl_yawspeed;
-extern ConVar cl_pitchdown;
-extern ConVar cl_pitchup;
+extern ConVar mp_pitchdown;
+extern ConVar mp_pitchup;
 extern ConVar cl_pitchspeed;
 
 extern ConVar cam_idealpitch;
@@ -857,7 +857,7 @@ void CInput::JoyStickMove( float frametime, CUserCmd *cmd )
 	}
 
 	// Bound pitch
-	viewangles[PITCH] = clamp( viewangles[ PITCH ], -cl_pitchup.GetFloat(), cl_pitchdown.GetFloat() );
+	viewangles[PITCH] = clamp( viewangles[ PITCH ], -mp_pitchup.GetFloat(), mp_pitchdown.GetFloat() );
 
 	engine->SetViewAngles( viewangles );
 }

@@ -43,8 +43,7 @@
 #endif //#ifdef PORTAL
 
 extern ConVar lookstrafe;
-extern ConVar cl_pitchdown;
-extern ConVar cl_pitchup;
+extern ConVar mp_pitchdown;
 extern const ConVar *sv_cheats;
 
 class ConVar_m_pitch : public ConVar_ServerBounded
@@ -99,6 +98,9 @@ static ConVar m_mousespeed( "m_mousespeed", "1", FCVAR_ARCHIVE, "Windows mouse s
 ConVar cl_mouselook( "cl_mouselook", "1", FCVAR_ARCHIVE | FCVAR_NOT_CONNECTED, "Set to 1 to use mouse for look, 0 for keyboard look. Cannot be set while connected to a server." );
 
 ConVar cl_mouseenable( "cl_mouseenable", "1" );
+
+extern ConVar mp_pitchup;
+extern ConVar mp_pitchdown;
 
 // From other modules...
 void GetVGUICursorPos( int& x, int& y );
@@ -453,13 +455,13 @@ void CInput::ApplyMouse( QAngle& viewangles, CUserCmd *cmd, float mouse_x, float
 			}
 
 			// Check pitch bounds
-			if (viewangles[PITCH] > cl_pitchdown.GetFloat())
+			if (viewangles[PITCH] > mp_pitchdown.GetFloat())
 			{
-				viewangles[PITCH] = cl_pitchdown.GetFloat();
+				viewangles[PITCH] = mp_pitchdown.GetFloat();
 			}
-			if (viewangles[PITCH] < -cl_pitchup.GetFloat())
+			if (viewangles[PITCH] < -mp_pitchup.GetFloat())
 			{
-				viewangles[PITCH] = -cl_pitchup.GetFloat();
+				viewangles[PITCH] = -mp_pitchup.GetFloat();
 			}
 		}
 	}
