@@ -178,6 +178,7 @@ ConVar sv_ball_stats_pass_mindist("sv_ball_stats_pass_mindist", "300", FCVAR_NOT
 ConVar sv_ball_stats_assist_maxtime("sv_ball_stats_assist_maxtime", "5", FCVAR_NOTIFY);
 
 ConVar sv_ball_velocity_coeff("sv_ball_velocity_coeff", "1.0", FCVAR_NOTIFY);
+ConVar sv_ball_limitlowshots("sv_ball_limitlowshots", "1", FCVAR_NOTIFY);
 
 
 CBall *CreateBall(const Vector &pos, CSDKPlayer *pCreator)
@@ -1154,11 +1155,11 @@ void CBall::State_THROWIN_Think()
 		float strength;
 
 		if (m_pPl->IsNormalshooting())
-			strength = GetNormalshotStrength(GetPitchCoeff(), sv_ball_normalthrow_strength.GetInt());
+			strength = GetNormalshotStrength(GetPitchCoeff(true), sv_ball_normalthrow_strength.GetInt());
 		else if (m_pPl->IsPowershooting())
-			strength = GetPowershotStrength(GetPitchCoeff(), sv_ball_powerthrow_strength.GetInt());
+			strength = GetPowershotStrength(GetPitchCoeff(false), sv_ball_powerthrow_strength.GetInt());
 		else
-			strength = GetChargedshotStrength(GetPitchCoeff(), sv_ball_chargedthrow_minstrength.GetInt(), sv_ball_chargedthrow_maxstrength.GetInt());
+			strength = GetChargedshotStrength(GetPitchCoeff(false), sv_ball_chargedthrow_minstrength.GetInt(), sv_ball_chargedthrow_maxstrength.GetInt());
 
 		Vector vel = dir * max(strength, sv_ball_throwin_minstrength.GetInt());
 
@@ -1731,7 +1732,7 @@ void CBall::State_KEEPERHANDS_Think()
 
 			if (m_pPl->IsNormalshooting())
 			{
-				vel = m_vPlForward * GetNormalshotStrength(GetPitchCoeff(), sv_ball_normalshot_strength.GetInt());
+				vel = m_vPlForward * GetNormalshotStrength(GetPitchCoeff(true), sv_ball_normalshot_strength.GetInt());
 				m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KEEPER_HANDS_THROW);
 				spin = 0;
 			}
@@ -1743,9 +1744,9 @@ void CBall::State_KEEPERHANDS_Think()
 				AngleVectors(ang, &dir);
 
 				if (m_pPl->IsPowershooting())
-					vel = dir * GetPowershotStrength(GetPitchCoeff(), sv_ball_powershot_strength.GetInt());
+					vel = dir * GetPowershotStrength(GetPitchCoeff(false), sv_ball_powershot_strength.GetInt());
 				else
-					vel = dir * GetChargedshotStrength(GetPitchCoeff(), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
+					vel = dir * GetChargedshotStrength(GetPitchCoeff(false), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
 
 				m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KEEPER_HANDS_KICK);
 				spin = sv_ball_volleyshot_spincoeff.GetFloat();
@@ -2213,7 +2214,7 @@ bool CBall::CheckKeeperCatch()
 	return true;
 }
 
-float CBall::GetPitchCoeff()
+float CBall::GetPitchCoeff(bool limitLowShots)
 {
 	//return pow(cos((m_aPlAng[PITCH] - sv_ball_bestshotangle.GetInt()) / (PITCH_LIMIT - sv_ball_bestshotangle.GetInt()) * M_PI / 2), 2);
 	// plot 0.5 + (cos(x/89 * pi/2) * 0.5), x=-89..89
@@ -2227,13 +2228,16 @@ float CBall::GetPitchCoeff()
 
 	float coeff;
 
-	if (pitch >= sv_ball_bestshotangle.GetInt())
+	if (pitch <= sv_ball_bestshotangle.GetInt())
 	{
-		coeff = downCoeff + (1 - downCoeff) * pow(cos((pitch - bestAng) / (PITCH_LIMIT - bestAng) * M_PI / 2), downExp);
+		coeff = upCoeff + (1 - upCoeff) * pow(cos((pitch - bestAng) / (PITCH_LIMIT - bestAng) * M_PI / 2), upExp);
 	}
 	else
 	{
-		coeff = upCoeff + (1 - upCoeff) * pow(cos((pitch - bestAng) / (PITCH_LIMIT - bestAng) * M_PI / 2), upExp);
+		 if (!sv_ball_limitlowshots.GetBool() && !limitLowShots)
+			 pitch = sv_ball_bestshotangle.GetInt();
+
+		coeff = downCoeff + (1 - downCoeff) * pow(cos((pitch - bestAng) / (PITCH_LIMIT - bestAng) * M_PI / 2), downExp);
 	}
 
 	if (m_pPl->m_nButtons & IN_WALK)
@@ -2320,11 +2324,11 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 		float shotStrength;
 
 		if (m_pPl->IsNormalshooting())
-			shotStrength = GetNormalshotStrength(GetPitchCoeff(), sv_ball_normalshot_strength.GetInt());
+			shotStrength = GetNormalshotStrength(GetPitchCoeff(true), sv_ball_normalshot_strength.GetInt());
 		else if (m_pPl->IsPowershooting())
-			shotStrength = GetPowershotStrength(GetPitchCoeff(), sv_ball_powershot_strength.GetInt());
+			shotStrength = GetPowershotStrength(GetPitchCoeff(false), sv_ball_powershot_strength.GetInt());
 		else
-			shotStrength = GetChargedshotStrength(GetPitchCoeff(), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
+			shotStrength = GetChargedshotStrength(GetPitchCoeff(false), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
 
 		vel = shotDir * shotStrength;
 
@@ -2366,11 +2370,11 @@ bool CBall::DoVolleyShot()
 	float shotStrength;
 
 	if (m_pPl->IsNormalshooting())
-		shotStrength = GetNormalshotStrength(GetPitchCoeff(), sv_ball_normalshot_strength.GetInt());
+		shotStrength = GetNormalshotStrength(GetPitchCoeff(true), sv_ball_normalshot_strength.GetInt());
 	else if (m_pPl->IsPowershooting())
-		shotStrength = GetPowershotStrength(GetPitchCoeff(), sv_ball_powershot_strength.GetInt());
+		shotStrength = GetPowershotStrength(GetPitchCoeff(false), sv_ball_powershot_strength.GetInt());
 	else
-		shotStrength = GetChargedshotStrength(GetPitchCoeff(), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
+		shotStrength = GetChargedshotStrength(GetPitchCoeff(false), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
 
 	QAngle shotAngle = m_aPlAng;
 	shotAngle[PITCH] = min(sv_ball_volleyshot_minangle.GetFloat(), m_aPlAng[PITCH]);
@@ -2409,7 +2413,7 @@ bool CBall::DoHeader()
 
 	if (m_pPl->IsNormalshooting())
 	{
-		vel = m_vPlForward * GetNormalshotStrength(GetPitchCoeff(), sv_ball_normalheader_strength.GetInt());
+		vel = m_vPlForward * GetNormalshotStrength(GetPitchCoeff(true), sv_ball_normalheader_strength.GetInt());
 		EmitSound("Ball.kicknormal");
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEADER_STATIONARY);
 	}
@@ -2430,9 +2434,9 @@ bool CBall::DoHeader()
 	else
 	{
 		if (m_pPl->IsPowershooting())
-			vel = m_vPlForward * GetPowershotStrength(GetPitchCoeff(), sv_ball_powerheader_strength.GetInt());
+			vel = m_vPlForward * GetPowershotStrength(GetPitchCoeff(false), sv_ball_powerheader_strength.GetInt());
 		else
-			vel = m_vPlForward * GetChargedshotStrength(GetPitchCoeff(), sv_ball_chargedheader_minstrength.GetInt(), sv_ball_chargedheader_maxstrength.GetInt());
+			vel = m_vPlForward * GetChargedshotStrength(GetPitchCoeff(false), sv_ball_chargedheader_minstrength.GetInt(), sv_ball_chargedheader_maxstrength.GetInt());
 
 		EmitSound("Ball.kickhard");
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEADER);
