@@ -44,6 +44,10 @@
 
 extern ConVar lookstrafe;
 extern ConVar mp_pitchdown;
+extern ConVar cl_pitchdown;
+extern ConVar mp_pitchup;
+extern ConVar cl_pitchup;
+extern ConVar legacyverticallook;
 extern const ConVar *sv_cheats;
 
 class ConVar_m_pitch : public ConVar_ServerBounded
@@ -455,13 +459,13 @@ void CInput::ApplyMouse( QAngle& viewangles, CUserCmd *cmd, float mouse_x, float
 			}
 
 			// Check pitch bounds
-			if (viewangles[PITCH] > mp_pitchdown.GetFloat())
+			if ( viewangles[PITCH] > (legacyverticallook.GetBool() ? cl_pitchdown.GetFloat() : mp_pitchdown.GetFloat()) )
 			{
-				viewangles[PITCH] = mp_pitchdown.GetFloat();
+				viewangles[PITCH] = (legacyverticallook.GetBool() ? cl_pitchdown.GetFloat() : mp_pitchdown.GetFloat());
 			}
-			if (viewangles[PITCH] < -mp_pitchup.GetFloat())
+			if ( viewangles[PITCH] < (legacyverticallook.GetBool() ? -cl_pitchup.GetFloat() : -mp_pitchup.GetFloat()) )
 			{
-				viewangles[PITCH] = -mp_pitchup.GetFloat();
+				viewangles[PITCH] = (legacyverticallook.GetBool() ? -cl_pitchup.GetFloat() : -mp_pitchup.GetFloat());
 			}
 		}
 	}

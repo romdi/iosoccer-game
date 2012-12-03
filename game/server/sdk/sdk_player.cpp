@@ -270,6 +270,7 @@ CSDKPlayer::CSDKPlayer()
 	m_ePenaltyState = PENALTY_NONE;
 	m_pHoldingBall = NULL;
 	m_flNextClientSettingsChangeTime = gpGlobals->curtime;
+	m_bLegacySideCurl = false;
 
 	m_pData = NULL;
 }

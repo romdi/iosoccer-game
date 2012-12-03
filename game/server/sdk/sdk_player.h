@@ -402,6 +402,8 @@ public:
 
 	int					GetCountryName() { return m_nCountryName; }
 	void				SetCountryName(int name) { m_nCountryName = name; } 
+	bool				IsLegacySideCurl() { return m_bLegacySideCurl; } 
+	void				SetLegacySideCurl(bool enable) { m_bLegacySideCurl = enable; } 
 
 	bool				ShotButtonsPressed();
 
@@ -422,6 +424,8 @@ public:
 	bool				m_bClubNameChanged;
 
 	int					m_nCountryName;
+
+	bool				m_bLegacySideCurl;
 
 	Vector				EyeDirection2D();
 	Vector				EyeDirection3D();

@@ -2071,20 +2071,22 @@ ConVar mp_clientsettingschangeinterval("mp_clientsettingschangeinterval", "5", F
 
 void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 {
-	if (gpGlobals->curtime < ToSDKPlayer(pPlayer)->m_flNextClientSettingsChangeTime)
+	CSDKPlayer *pPl = ToSDKPlayer(pPlayer);
+
+	if (gpGlobals->curtime < pPl->m_flNextClientSettingsChangeTime || pPl->GetTeamNumber() == TEAM_A || pPl->GetTeamNumber() == TEAM_B)
 		return;
 
-	ToSDKPlayer(pPlayer)->m_flNextClientSettingsChangeTime = gpGlobals->curtime + mp_clientsettingschangeinterval.GetFloat();
+	pPl->m_flNextClientSettingsChangeTime = gpGlobals->curtime + mp_clientsettingschangeinterval.GetFloat();
 
 	char pszClubName[MAX_CLUBNAME_LENGTH];
-	Q_strncpy(pszClubName, engine->GetClientConVarValue( pPlayer->entindex(), "clubname" ), MAX_CLUBNAME_LENGTH);
-	((CSDKPlayer *)pPlayer)->SetClubName(pszClubName);
+	Q_strncpy(pszClubName, engine->GetClientConVarValue( pPl->entindex(), "clubname" ), MAX_CLUBNAME_LENGTH);
+	pPl->SetClubName(pszClubName);
 
-	int countryIndex = atoi(engine->GetClientConVarValue(pPlayer->entindex(), "geoipcountryindex"));
+	int countryIndex = atoi(engine->GetClientConVarValue(pPl->entindex(), "geoipcountryindex"));
 
 	if (countryIndex <= 0 || countryIndex >= COUNTRY_NAMES_COUNT - 1)
 	{
-		countryIndex = atoi(engine->GetClientConVarValue(pPlayer->entindex(), "fallbackcountryindex"));
+		countryIndex = atoi(engine->GetClientConVarValue(pPl->entindex(), "fallbackcountryindex"));
 
 		if (countryIndex <= 0 || countryIndex >= COUNTRY_NAMES_COUNT - 1)
 		{
@@ -2092,14 +2094,16 @@ void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 		}
 	}
 
-	((CSDKPlayer *)pPlayer)->SetCountryName(countryIndex);
+	pPl->SetLegacySideCurl(atoi(engine->GetClientConVarValue(pPl->entindex(), "legacysidecurl")));
 
-	((CSDKPlayer *)pPlayer)->SetPreferredTeamPosNum(atoi(engine->GetClientConVarValue(pPlayer->entindex(), "preferredshirtnumber")));
+	pPl->SetCountryName(countryIndex);
+
+	pPl->SetPreferredTeamPosNum(atoi(engine->GetClientConVarValue(pPl->entindex(), "preferredshirtnumber")));
 
 	char pszName[MAX_PLAYER_NAME_LENGTH];
-	Q_strncpy(pszName, engine->GetClientConVarValue( pPlayer->entindex(), "playername" ), MAX_PLAYER_NAME_LENGTH);
+	Q_strncpy(pszName, engine->GetClientConVarValue( pPl->entindex(), "playername" ), MAX_PLAYER_NAME_LENGTH);
 
-	const char *pszOldName = pPlayer->GetPlayerName();
+	const char *pszOldName = pPl->GetPlayerName();
 
 	// msg everyone if someone changes their name,  and it isn't the first time (changing no name to current name)
 	// Note, not using FStrEq so that this is case sensitive
@@ -2108,13 +2112,13 @@ void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 		IGameEvent * event = gameeventmanager->CreateEvent( "player_changename" );
 		if ( event )
 		{
-			event->SetInt( "userid", pPlayer->GetUserID() );
+			event->SetInt( "userid", pPl->GetUserID() );
 			event->SetString( "oldname", pszOldName );
 			event->SetString( "newname", pszName );
 			gameeventmanager->FireEvent( event );
 		}
 		
-		pPlayer->SetPlayerName( pszName );
+		pPl->SetPlayerName( pszName );
 	}
 }
 

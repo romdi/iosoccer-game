@@ -2,6 +2,7 @@
 #include "iosoptions.h"
 #include "ienginevgui.h"
 #include "c_sdk_player.h"
+#include "c_playerresource.h"
 
 class CIOSOptionsMenu : public IIOSOptionsMenu
 {
@@ -54,8 +55,9 @@ ConCommand iosoptionsmenu("iosoptionsmenu", CC_IOSOptionsMenu);
 
 #define SHIRT_NUMBER_COUNT 11
 
+enum { PANEL_TOPMARGIN = 70, PANEL_MARGIN = 5, PANEL_WIDTH = (1024 - 2 * PANEL_MARGIN), PANEL_HEIGHT = (720 - 2 * PANEL_MARGIN) };
 enum { PADDING = 15, TOP_PADDING = 15 };
-enum { BUTTON_WIDTH = 110, BUTTON_HEIGHT = 30, BUTTON_MARGIN = 5 };
+enum { BUTTON_WIDTH = 80, BUTTON_HEIGHT = 30, BUTTON_MARGIN = 5 };
 
 #define INTERP_VALUES 5
 const int interpValues[INTERP_VALUES] = { 1, 2, 3, 4, 5 };
@@ -79,9 +81,14 @@ CIOSOptionsPanel::CIOSOptionsPanel(VPANEL parent) : BaseClass(NULL, "IOSOptionsP
 	m_pCountryNameLabel = new Label(m_pContent, "", "Country Fallback Name:");
 	m_pCountryNameList = new ComboBox(m_pContent, "", COUNTRY_NAMES_COUNT, false);
 
+	m_pLegacySideCurl = new CheckButton(m_pContent, "", "Legacy Side Curl");
+	m_pLegacyVerticalLook = new CheckButton(m_pContent, "", "Legacy Vertical Look");
+
 	m_pOKButton = new Button(m_pContent, "", "OK");
 	m_pCancelButton = new Button(m_pContent, "", "Cancel");
 	m_pSaveButton = new Button(m_pContent, "", "Apply");
+
+	m_pChangeInfoText = new Label(m_pContent, "", "Go spectator mode to change");
 
 	m_pCountryNameList->RemoveAll();
 
@@ -142,7 +149,7 @@ void CIOSOptionsPanel::ApplySchemeSettings( IScheme *pScheme )
 	SetTitle("PLAYER SETTINGS", false);
 	SetProportional(false);
 	SetSizeable(false);
-	SetBounds(0, 0, 480, 300);
+	SetBounds(0, 0, 480, 380);
 	SetBgColor(Color(0, 0, 0, 255));
 	SetPaintBackgroundEnabled(true);
 	MoveToCenterOfScreen();
@@ -151,30 +158,15 @@ void CIOSOptionsPanel::ApplySchemeSettings( IScheme *pScheme )
 
 	m_pPlayerNameLabel->SetBounds(0, 0, LABEL_WIDTH, TEXT_HEIGHT);
 	m_pPlayerNameText->SetBounds(LABEL_WIDTH, 0, INPUT_WIDTH, TEXT_HEIGHT);
-	//m_pNameText->SetEditable(true);
-	//m_pNameText->SetEnabled(true);
 	m_pPlayerNameText->AddActionSignalTarget( this );
 	m_pPlayerNameText->SendNewLine(true); // with the txtEntry Type you need to set it to pass the return key as a message
-	//m_pPlayerNameText->SetFgColor(Color(0, 0, 0, 255));
 
 	m_pClubNameLabel->SetBounds(0, TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
 	m_pClubNameText->SetBounds(LABEL_WIDTH, TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
-	//m_pClubNameText->SetFgColor(Color(0, 0, 0, 255));
 
 	m_pCountryNameLabel->SetBounds(0, 2 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
-	//m_pCountryNameLabel->SetVisible(false);
 	m_pCountryNameList->SetBounds(LABEL_WIDTH, 2 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
-	//m_pCountryNameList->GetMenu()->AddActionSignalTarget(this);
 	m_pCountryNameList->GetMenu()->MakeReadyForUse();
-	//m_pCountryNameList->SetVisible(false);
-	//m_pCountryNameList->GetMenu()->SetFgColor(Color(0, 0, 0, 255));
-	//m_pCountryNameList->GetMenu()->SetBgColor(Color(255, 255, 255, 255));
-	//m_pCountryNameList->SetSelectionUnfocusedBgColor(Color(255, 0, 0, 255));
-	//m_pCountryNameList->SetSelectionBgColor(Color(255, 255, 0, 255));
-	//m_pCountryNameList->SetFgColor(Color(0, 0, 0, 255));
-	//m_pCountryNameList->SetBgColor(Color(255, 255, 255, 255));
-	//m_pCountryNameList->SetDisabledBgColor(Color(255, 255, 255, 255));
-	//m_pCountryNameList->SetSelectionTextColor(Color(0, 0, 0, 255));
 
 	m_pPreferredShirtNumberLabel->SetBounds(0, 3 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
 	m_pPreferredShirtNumberList->SetBounds(LABEL_WIDTH, 3 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
@@ -185,6 +177,9 @@ void CIOSOptionsPanel::ApplySchemeSettings( IScheme *pScheme )
 
 	m_pSmoothDurationLabel->SetBounds(0, 5 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
 	m_pSmoothDurationList->SetBounds(LABEL_WIDTH, 5 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
+
+	m_pLegacySideCurl->SetBounds(0, 6 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
+	m_pLegacyVerticalLook->SetBounds(0, 7 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
 
 	m_pOKButton->SetBounds(m_pContent->GetWide() - 3 * BUTTON_WIDTH - 2 * BUTTON_MARGIN, m_pContent->GetTall() - BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT);
 	m_pOKButton->SetCommand("save_and_close");
@@ -197,12 +192,9 @@ void CIOSOptionsPanel::ApplySchemeSettings( IScheme *pScheme )
 	m_pSaveButton->SetBounds(m_pContent->GetWide() - BUTTON_WIDTH, m_pContent->GetTall() - BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT);
 	m_pSaveButton->SetCommand("save_settings");
 	m_pSaveButton->AddActionSignalTarget(this);
-	//m_pSaveButton->SetDefaultColor(Color(0, 0, 0, 255), Color(200, 200, 200, 255));
-	//m_pSaveButton->SetArmedColor(Color(50, 50, 50, 255), Color(150, 150, 150, 255));
-	//m_pSaveButton->SetDepressedColor(Color(100, 100, 100, 255), Color(200, 200, 200, 255));
-	//m_pSaveButton->SetCursor(dc_hand);
-	//m_pSaveButton->SetFont(m_pScheme->GetFont("IOSTeamMenuNormal"));
-	//m_pSaveButton->SetContentAlignment(Label::a_center);
+
+	m_pChangeInfoText->SetBounds(0, m_pContent->GetTall() - BUTTON_HEIGHT, m_pContent->GetWide() - 3 * BUTTON_WIDTH, BUTTON_HEIGHT); 
+	m_pChangeInfoText->SetFgColor(Color(255, 153, 153, 255));
 }
 
 void CIOSOptionsPanel::PerformLayout()
@@ -223,19 +215,33 @@ void CIOSOptionsPanel::OnThink()
 	{
 		if (gpGlobals->curtime < pLocal->m_flNextClientSettingsChangeTime)
 		{
-			char *text = VarArgs("Wait %d seconds", (int)(pLocal->m_flNextClientSettingsChangeTime - gpGlobals->curtime));
-			m_pOKButton->SetText(text);
+			//char *text = VarArgs("Wait %d seconds", (int)(pLocal->m_flNextClientSettingsChangeTime - gpGlobals->curtime));
+			//m_pOKButton->SetText(text);
 			m_pOKButton->SetEnabled(false);
-			m_pSaveButton->SetText(text);
+			//m_pSaveButton->SetText(text);
 			m_pSaveButton->SetEnabled(false);
+			m_pChangeInfoText->SetVisible(true);
+			m_pChangeInfoText->SetText(VarArgs("Wait %d seconds to change", (int)(pLocal->m_flNextClientSettingsChangeTime - gpGlobals->curtime)));
+			return;
+		}
+		else if (GetLocalPlayerTeam() == TEAM_A || GetLocalPlayerTeam() == TEAM_B)
+		{
+			//char *text = VarArgs("Go spec first", (int)(pLocal->m_flNextClientSettingsChangeTime - gpGlobals->curtime));
+			//m_pOKButton->SetText(text);
+			m_pOKButton->SetEnabled(false);
+			//m_pSaveButton->SetText(text);
+			m_pSaveButton->SetEnabled(false);
+			m_pChangeInfoText->SetVisible(true);
+			m_pChangeInfoText->SetText("Go spectator mode to change");
 			return;
 		}
 	}
 
-	m_pOKButton->SetText("OK");
+	//m_pOKButton->SetText("OK");
 	m_pOKButton->SetEnabled(true);
-	m_pSaveButton->SetText("Apply");
+	//m_pSaveButton->SetText("Apply");
 	m_pSaveButton->SetEnabled(true);
+	m_pChangeInfoText->SetVisible(false);
 }
 
 void CIOSOptionsPanel::OnCommand(const char *cmd)
@@ -253,6 +259,9 @@ void CIOSOptionsPanel::OnCommand(const char *cmd)
 
 		g_pCVar->FindVar("cl_interp_ratio")->SetValue(atoi(m_pInterpDurationList->GetActiveItemUserData()->GetString("value")));
 		g_pCVar->FindVar("cl_smoothtime")->SetValue(atoi(m_pSmoothDurationList->GetActiveItemUserData()->GetString("value")) / 100.0f);
+
+		g_pCVar->FindVar("legacysidecurl")->SetValue(m_pLegacySideCurl->IsSelected() ? 1 : 0);
+		g_pCVar->FindVar("legacyverticallook")->SetValue(m_pLegacyVerticalLook->IsSelected() ? 1 : 0);
 
 		engine->ClientCmd("host_writeconfig\n");
 
@@ -301,4 +310,7 @@ void CIOSOptionsPanel::Activate()
 			break;
 		}
 	}
+
+	m_pLegacySideCurl->SetSelected(g_pCVar->FindVar("legacysidecurl")->GetBool());
+	m_pLegacyVerticalLook->SetSelected(g_pCVar->FindVar("legacyverticallook")->GetBool());
 }

@@ -38,7 +38,6 @@ ConVar sv_ball_topspin_coeff( "sv_ball_topspin_coeff", "1.0", FCVAR_NOTIFY );
 ConVar sv_ball_backspin_coeff( "sv_ball_backspin_coeff", "1.0", FCVAR_NOTIFY );
 ConVar sv_ball_jump_topspin_enabled("sv_ball_jump_topspin_enabled", "1", FCVAR_NOTIFY );
 ConVar sv_ball_curve("sv_ball_curve", "150", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
-ConVar sv_ball_invertsidecurve("sv_ball_invertsidecurve", "0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
 
 ConVar sv_ball_deflectionradius( "sv_ball_deflectionradius", "40", FCVAR_NOTIFY );
 
@@ -1146,7 +1145,7 @@ void CBall::State_THROWIN_Think()
 
 	if (m_pPl->ShotButtonsReleased() && m_pPl->IsShooting())
 	{
-		QAngle ang = m_pPl->EyeAngles();
+		QAngle ang = m_aPlAng;
 
 		ang[PITCH] = min(sv_ball_throwin_minangle.GetFloat(), m_aPlAng[PITCH]);
 
@@ -1738,7 +1737,7 @@ void CBall::State_KEEPERHANDS_Think()
 			}
 			else
 			{
-				QAngle ang = m_pPl->EyeAngles();
+				QAngle ang = m_aPlAng;
 				ang[PITCH] = min(sv_ball_keepershot_minangle.GetFloat(), m_aPlAng[PITCH]);
 				Vector dir;
 				AngleVectors(ang, &dir);
@@ -2417,7 +2416,9 @@ bool CBall::DoHeader()
 		EmitSound("Ball.kicknormal");
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEADER_STATIONARY);
 	}
-	else if (m_vPlForwardVel2D.Length2D() >= mp_walkspeed.GetInt() && m_nInPenBoxOfTeam == m_pPl->GetOppTeamNumber() && (m_pPl->m_nButtons & IN_SPEED) && m_pPl->GetGroundEntity())
+	else if (m_vPlForwardVel2D.Length2D() >= mp_walkspeed.GetInt()
+		&& (m_nInPenBoxOfTeam == m_pPl->GetTeamNumber() || m_nInPenBoxOfTeam == m_pPl->GetOppTeamNumber())
+		&& (m_pPl->m_nButtons & IN_SPEED) && m_pPl->GetGroundEntity())
 	{
 		Vector forward;
 		AngleVectors(QAngle(-5, m_aPlAng[YAW], 0), &forward, NULL, NULL);
@@ -2442,19 +2443,19 @@ bool CBall::DoHeader()
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEADER);
 	}
 
-	SetVel(m_vPlForwardVel2D + vel, 0, BODY_PART_HEAD, false, true, true);
+	SetVel(m_vPlForwardVel2D + vel, 1, BODY_PART_HEAD, false, true, true);
 
 	return true;
 }
 
 void CBall::SetSpin(float coeff)
-{
+{	
 	Vector sideRot(0, 0, 0);
 
 	if (m_pPl->m_nButtons & IN_MOVELEFT) 
-		sideRot = Vector(0, 0, sv_ball_invertsidecurve.GetBool() ? -1 : 1);
+		sideRot = Vector(0, 0, m_pPl->IsLegacySideCurl() ? 1 : -1);
 	else if (m_pPl->m_nButtons & IN_MOVERIGHT) 
-		sideRot = Vector(0, 0, sv_ball_invertsidecurve.GetBool() ? 1 : -1);
+		sideRot = Vector(0, 0, m_pPl->IsLegacySideCurl() ? -1 : 1);
 
 	float sideSpin = m_vVel.Length() * sv_ball_spin.GetInt() * coeff / 100.0f;
 
@@ -2577,6 +2578,7 @@ void CBall::UpdateCarrier()
 		m_vPlVel = m_pPl->GetLocalVelocity();
 		m_vPlVel2D = Vector(m_vPlVel.x, m_vPlVel.y, 0);
 		m_aPlAng = m_pPl->EyeAngles();
+		m_aPlAng[PITCH] = clamp(m_aPlAng[PITCH], -mp_pitchup.GetFloat(), mp_pitchdown.GetFloat());
 		AngleVectors(m_aPlAng, &m_vPlForward, &m_vPlRight, &m_vPlUp);
 		m_vPlForward2D = m_vPlForward;
 		m_vPlForward2D.z = 0;

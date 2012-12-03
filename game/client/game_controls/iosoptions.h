@@ -6,6 +6,7 @@
 #include <game/client/iviewport.h>
 #include <vgui_controls/Button.h>
 #include <vgui_controls/RadioButton.h>
+#include <vgui_controls/CheckButton.h>
 #include <vgui_controls/TextEntry.h>
 #include <vgui_controls/ComboBox.h>
 
@@ -46,6 +47,9 @@ protected:
 	ComboBox *m_pInterpDurationList;
 	Label *m_pSmoothDurationLabel;
 	ComboBox *m_pSmoothDurationList;
+	CheckButton *m_pLegacySideCurl;
+	CheckButton *m_pLegacyVerticalLook;
+	Label *m_pChangeInfoText;
 };
 
 class IIOSOptionsMenu

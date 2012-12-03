@@ -47,6 +47,8 @@ static int in_cancel = 0;
 ConVar cl_anglespeedkey( "cl_anglespeedkey", "0.67", 0 );
 ConVar cl_yawspeed( "cl_yawspeed", "210", 0 );
 ConVar cl_pitchspeed( "cl_pitchspeed", "225", 0 );
+ConVar cl_pitchdown( "cl_pitchdown", "89", 0 );
+ConVar cl_pitchup( "cl_pitchup", "89", 0 );
 ConVar cl_sidespeed( "cl_sidespeed", "450", FCVAR_CHEAT );
 ConVar cl_upspeed( "cl_upspeed", "320", FCVAR_CHEAT );
 ConVar cl_forwardspeed( "cl_forwardspeed", "450", FCVAR_CHEAT );
@@ -58,8 +60,11 @@ ConVar in_joystick( "joystick","0", FCVAR_ARCHIVE );
 extern ConVar cl_powershot_strength;
 extern ConVar cl_powershot_fixed_strength;
 
-extern ConVar mp_pitchup;
 extern ConVar mp_pitchdown;
+extern ConVar cl_pitchdown;
+extern ConVar mp_pitchup;
+extern ConVar cl_pitchup;
+extern ConVar legacyverticallook;
 
 ConVar thirdperson_platformer( "thirdperson_platformer", "0", 0, "Player will aim in the direction they are moving." );
 ConVar thirdperson_screenspace( "thirdperson_screenspace", "0", 0, "Movement will be relative to the camera, eg: left means screen-left" );
@@ -726,13 +731,13 @@ ClampAngles
 */
 void CInput::ClampAngles( QAngle& viewangles )
 {
-	if ( viewangles[PITCH] > mp_pitchdown.GetFloat() )
+	if ( viewangles[PITCH] > (legacyverticallook.GetBool() ? cl_pitchdown.GetFloat() : mp_pitchdown.GetFloat()) )
 	{
-		viewangles[PITCH] = mp_pitchdown.GetFloat();
+		viewangles[PITCH] = (legacyverticallook.GetBool() ? cl_pitchdown.GetFloat() : mp_pitchdown.GetFloat());
 	}
-	if ( viewangles[PITCH] < -mp_pitchup.GetFloat() )
+	if ( viewangles[PITCH] < (legacyverticallook.GetBool() ? -cl_pitchup.GetFloat() : -mp_pitchup.GetFloat()) )
 	{
-		viewangles[PITCH] = -mp_pitchup.GetFloat();
+		viewangles[PITCH] = (legacyverticallook.GetBool() ? -cl_pitchup.GetFloat() : -mp_pitchup.GetFloat());
 	}
 
 #ifndef PORTAL	// Don't constrain Roll in Portal because the player can be upside down! -Jeep
