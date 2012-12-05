@@ -459,13 +459,13 @@ void CInput::ApplyMouse( QAngle& viewangles, CUserCmd *cmd, float mouse_x, float
 			}
 
 			// Check pitch bounds
-			if ( viewangles[PITCH] > (legacyverticallook.GetBool() ? cl_pitchdown.GetFloat() : mp_pitchdown.GetFloat()) )
+			if ( viewangles[PITCH] > (legacyverticallook.GetBool() || in_zoom.state & 1 ? cl_pitchdown.GetFloat() : mp_pitchdown.GetFloat()) )
 			{
-				viewangles[PITCH] = (legacyverticallook.GetBool() ? cl_pitchdown.GetFloat() : mp_pitchdown.GetFloat());
+				viewangles[PITCH] = (legacyverticallook.GetBool() || in_zoom.state & 1 ? cl_pitchdown.GetFloat() : mp_pitchdown.GetFloat());
 			}
-			if ( viewangles[PITCH] < (legacyverticallook.GetBool() ? -cl_pitchup.GetFloat() : -mp_pitchup.GetFloat()) )
+			if ( viewangles[PITCH] < (legacyverticallook.GetBool() || in_zoom.state & 1 ? -cl_pitchup.GetFloat() : -mp_pitchup.GetFloat()) )
 			{
-				viewangles[PITCH] = (legacyverticallook.GetBool() ? -cl_pitchup.GetFloat() : -mp_pitchup.GetFloat());
+				viewangles[PITCH] = (legacyverticallook.GetBool() || in_zoom.state & 1 ? -cl_pitchup.GetFloat() : -mp_pitchup.GetFloat());
 			}
 		}
 	}

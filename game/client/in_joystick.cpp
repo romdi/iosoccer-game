@@ -860,7 +860,7 @@ void CInput::JoyStickMove( float frametime, CUserCmd *cmd )
 	}
 
 	// Bound pitch
-	viewangles[PITCH] = clamp( viewangles[ PITCH ], (legacyverticallook.GetBool() ? -cl_pitchup.GetFloat() : -mp_pitchup.GetFloat()), (legacyverticallook.GetBool() ? cl_pitchdown.GetFloat() : mp_pitchdown.GetFloat()) );
+	viewangles[PITCH] = clamp( viewangles[ PITCH ], (legacyverticallook.GetBool() || in_zoom.state & 1 ? -cl_pitchup.GetFloat() : -mp_pitchup.GetFloat()), (legacyverticallook.GetBool() || in_zoom.state & 1 ? cl_pitchdown.GetFloat() : mp_pitchdown.GetFloat()) );
 
 	engine->SetViewAngles( viewangles );
 }

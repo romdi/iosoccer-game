@@ -8,6 +8,7 @@
 #include "filesystem.h"
 #include "viewangleanim.h"
 #include "KeyValues.h"
+#include "input.h"
 
 #include "tier0/memdbgon.h"
 
@@ -381,7 +382,7 @@ void CViewAngleAnimation::SetAngles( QAngle vecCalculatedAngles )
 		vecViewAngle[ROLL] = vecCalculatedAngles[ROLL];
 
 	// clamp pitch
-	vecViewAngle[PITCH] = clamp( vecViewAngle[PITCH], (legacyverticallook.GetBool() ? -cl_pitchup.GetFloat() : -mp_pitchup.GetFloat()), (legacyverticallook.GetBool() ? cl_pitchdown.GetFloat() : mp_pitchdown.GetFloat()) );
+	vecViewAngle[PITCH] = clamp( vecViewAngle[PITCH], (legacyverticallook.GetBool() || in_zoom.state & 1 ? -cl_pitchup.GetFloat() : -mp_pitchup.GetFloat()), (legacyverticallook.GetBool() || in_zoom.state & 1 ? cl_pitchdown.GetFloat() : mp_pitchdown.GetFloat()) );
 
 	engine->SetViewAngles( vecViewAngle );
 }

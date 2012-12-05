@@ -257,6 +257,8 @@ ConVar cam_height("cam_height", "25", FCVAR_ARCHIVE, "Z offset in thirdperson mo
 ConVar cam_alt("cam_alt", "0", FCVAR_ARCHIVE, "Alternative thirdperson mode");
 ConVar cam_alt_dist("cam_alt_dist", "100", FCVAR_ARCHIVE, "Camera distance in alternative thirdperson mode");
 
+#include "in_buttons.h"
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : *pSetup - 
@@ -290,44 +292,44 @@ void ClientModeShared::OverrideView( CViewSetup *pSetup )
 
 		Vector oldOrigin = pSetup->origin;
 
-		if (cam_alt.GetBool())
+		if (pPlayer->m_nButtons & IN_ZOOM)
 		{
-			Vector xyForward = Vector(camForward.x, camForward.y, 0);
-			xyForward.NormalizeInPlace();
-			VectorMA( pSetup->origin, -cam_alt_dist.GetInt(), xyForward, pSetup->origin );		
+			pSetup->origin = SDKGameRules()->m_vKickOff;
+			pSetup->origin.z += 500;
+			pSetup->origin.y += pPlayer->GetTeam()->m_nForward * ((SDKGameRules()->m_vFieldMax.GetY() - SDKGameRules()->m_vFieldMin.GetY()) * (1.0f / 8.0f));
+			pSetup->angles = camAngles;
 		}
 		else
 		{
-			VectorMA( pSetup->origin, -cam_ofs[ ROLL ], camForward, pSetup->origin );
-		}
+			if (cam_alt.GetBool())
+			{
+				Vector xyForward = Vector(camForward.x, camForward.y, 0);
+				xyForward.NormalizeInPlace();
+				VectorMA( pSetup->origin, -cam_alt_dist.GetInt(), xyForward, pSetup->origin );		
+			}
+			else
+			{
+				VectorMA( pSetup->origin, -cam_ofs[ ROLL ], camForward, pSetup->origin );
+			}
 
-		//ios
-		if (cam_firstperson.GetBool())
-		{
-			Vector firstpersonOffset = camForward;
-			firstpersonOffset.z = 0;
-			VectorNormalize(firstpersonOffset);
-			firstpersonOffset *= cam_firstperson_xy.GetFloat();
-			firstpersonOffset.z = cam_firstperson_z.GetFloat();
-			pSetup->origin += firstpersonOffset;
-		}
-		else
-		{
-			pSetup->origin.z += cam_height.GetInt();
-		}
+			//ios
+			if (cam_firstperson.GetBool())
+			{
+				Vector firstpersonOffset = camForward;
+				firstpersonOffset.z = 0;
+				VectorNormalize(firstpersonOffset);
+				firstpersonOffset *= cam_firstperson_xy.GetFloat();
+				firstpersonOffset.z = cam_firstperson_z.GetFloat();
+				pSetup->origin += firstpersonOffset;
+			}
+			else
+			{
+				pSetup->origin.z += cam_height.GetInt();
+			}
 
-		//if (cam_offset_xy.GetInt() > 0)
-		//{
-		//	VectorMA( pSetup->origin, cam_offset_xy.GetInt(), camRight, pSetup->origin );
-		//	//camAngles[YAW] -= cam_offset_xy.GetInt();
-		//	Vector newDir = oldOrigin - pSetup->origin;
-		//	newDir.NormalizeInPlace();
-		//	float angle = RAD2DEG(acos(DotProduct2D(newDir.AsVector2D(), camForward.AsVector2D())));
-		//	camAngles[YAW] += angle;
-		//}
-
-		// Override angles from third person camera
-		VectorCopy( camAngles, pSetup->angles );
+			// Override angles from third person camera
+			VectorCopy( camAngles, pSetup->angles );
+		}
 	}
 }
 

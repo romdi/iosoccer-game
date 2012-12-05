@@ -108,6 +108,7 @@ kbutton_t	in_moveright;
 // Display the netgraph
 kbutton_t	in_graph;  
 kbutton_t	in_joyspeed;		// auto-speed key from the joystick (only works for player movement, not vehicles)
+kbutton_t	in_zoom;
 
 static	kbutton_t	in_klook;
 static	kbutton_t	in_left;
@@ -126,7 +127,6 @@ static	kbutton_t	in_alt1;
 static	kbutton_t	in_alt2;
 static	kbutton_t	in_score;
 static	kbutton_t	in_break;
-static	kbutton_t	in_zoom;
 static  kbutton_t   in_grenade1;
 static  kbutton_t   in_grenade2;
 static	kbutton_t	in_topspin;
@@ -731,13 +731,13 @@ ClampAngles
 */
 void CInput::ClampAngles( QAngle& viewangles )
 {
-	if ( viewangles[PITCH] > (legacyverticallook.GetBool() ? cl_pitchdown.GetFloat() : mp_pitchdown.GetFloat()) )
+	if ( viewangles[PITCH] > (legacyverticallook.GetBool() || in_zoom.state & 1 ? cl_pitchdown.GetFloat() : mp_pitchdown.GetFloat()) )
 	{
-		viewangles[PITCH] = (legacyverticallook.GetBool() ? cl_pitchdown.GetFloat() : mp_pitchdown.GetFloat());
+		viewangles[PITCH] = (legacyverticallook.GetBool() || in_zoom.state & 1 ? cl_pitchdown.GetFloat() : mp_pitchdown.GetFloat());
 	}
-	if ( viewangles[PITCH] < (legacyverticallook.GetBool() ? -cl_pitchup.GetFloat() : -mp_pitchup.GetFloat()) )
+	if ( viewangles[PITCH] < (legacyverticallook.GetBool() || in_zoom.state & 1 ? -cl_pitchup.GetFloat() : -mp_pitchup.GetFloat()) )
 	{
-		viewangles[PITCH] = (legacyverticallook.GetBool() ? -cl_pitchup.GetFloat() : -mp_pitchup.GetFloat());
+		viewangles[PITCH] = (legacyverticallook.GetBool() || in_zoom.state & 1 ? -cl_pitchup.GetFloat() : -mp_pitchup.GetFloat());
 	}
 
 #ifndef PORTAL	// Don't constrain Roll in Portal because the player can be upside down! -Jeep

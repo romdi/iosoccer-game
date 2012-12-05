@@ -234,6 +234,7 @@ extern kbutton_t in_moveright;
 extern kbutton_t in_forward;
 extern kbutton_t in_back;
 extern kbutton_t in_joyspeed;
+extern kbutton_t in_zoom;
 
 extern class ConVar in_joystick;
 extern class ConVar joy_autosprint;
