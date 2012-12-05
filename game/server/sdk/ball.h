@@ -235,8 +235,8 @@ private:
 	bool			DoVolleyShot();
 	bool			DoChestDrop();
 	bool			DoHeader();
-	void			SetSpin(float coeff);
-	float			GetPitchCoeff(bool limitLowShots);
+	void			SetSpin(float coeff, bool applyTopspin);
+	float			GetPitchCoeff(bool isNormalShot);
 	float			GetNormalshotStrength(float coeff, int strength);
 	float			GetPowershotStrength(float coeff, int strength);
 	float			GetChargedshotStrength(float coeff, int minStrength, int maxStrength);

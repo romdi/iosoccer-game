@@ -81,8 +81,10 @@ ConVar sv_ball_dynamicbounce_enabled("sv_ball_dynamicbouncedelay_enabled", "1", 
 
 ConVar sv_ball_bestshotangle("sv_ball_bestshotangle", "-30", FCVAR_NOTIFY);
 
-ConVar sv_ball_pitchdown_exponent("sv_ball_pitchdown_exponent", "3", FCVAR_NOTIFY);
-ConVar sv_ball_fixedpitchdowncoeff("sv_ball_fixedpitchdowncoeff", "0.15", FCVAR_NOTIFY);
+ConVar sv_ball_pitchdown_exponent_normalshot("sv_ball_pitchdown_exponent_normalshot", "3", FCVAR_NOTIFY);
+ConVar sv_ball_fixedpitchdowncoeff_normalshot("sv_ball_fixedpitchdowncoeff_normalshot", "0.15", FCVAR_NOTIFY);
+ConVar sv_ball_pitchdown_exponent_nonnormalshot("sv_ball_pitchdown_exponent_nonnormalshot", "2", FCVAR_NOTIFY);
+ConVar sv_ball_fixedpitchdowncoeff_nonnormalshot("sv_ball_fixedpitchdowncoeff_nonnormalshot", "0.24", FCVAR_NOTIFY);
 ConVar sv_ball_pitchup_exponent("sv_ball_pitchup_exponent", "3", FCVAR_NOTIFY);
 ConVar sv_ball_fixedpitchupcoeff("sv_ball_fixedpitchupcoeff", "0.0", FCVAR_NOTIFY);
 
@@ -177,7 +179,6 @@ ConVar sv_ball_stats_pass_mindist("sv_ball_stats_pass_mindist", "300", FCVAR_NOT
 ConVar sv_ball_stats_assist_maxtime("sv_ball_stats_assist_maxtime", "5", FCVAR_NOTIFY);
 
 ConVar sv_ball_velocity_coeff("sv_ball_velocity_coeff", "1.0", FCVAR_NOTIFY);
-ConVar sv_ball_limitlowshots("sv_ball_limitlowshots", "1", FCVAR_NOTIFY);
 
 
 CBall *CreateBall(const Vector &pos, CSDKPlayer *pCreator)
@@ -719,7 +720,7 @@ void CBall::SetVel(Vector vel, float spinCoeff, body_part_t bodyPart, bool isDef
 	m_bSetNewVel = true;
 
 	if (spinCoeff != -1)
-		SetSpin(spinCoeff);
+		SetSpin(spinCoeff, (bodyPart != BODY_PART_HEAD));
 
 	Kicked(bodyPart, isDeflection);
 	
@@ -1347,7 +1348,7 @@ void CBall::State_GOAL_Enter()
 		if (pScorer && !pAssister && !pAssister2)
 			Q_strncpy(matchEventPlayerNames, UTIL_VarArgs("%s", pScorer->GetPlayerName()), MAX_MATCH_EVENT_PLAYER_NAME_LENGTH);
 		else if (pScorer && pAssister && !pAssister2)
-			Q_strncpy(matchEventPlayerNames, UTIL_VarArgs("%.14s (%.14s)", pScorer->GetPlayerName(), pAssister->GetPlayerName()), MAX_MATCH_EVENT_PLAYER_NAME_LENGTH);
+			Q_strncpy(matchEventPlayerNames, UTIL_VarArgs("%.13s (%.13s)", pScorer->GetPlayerName(), pAssister->GetPlayerName()), MAX_MATCH_EVENT_PLAYER_NAME_LENGTH);
 		else if (pScorer && pAssister && pAssister2)
 			Q_strncpy(matchEventPlayerNames, UTIL_VarArgs("%.8s (%.8s, %.8s)", pScorer->GetPlayerName(), pAssister->GetPlayerName(), pAssister2->GetPlayerName()), MAX_MATCH_EVENT_PLAYER_NAME_LENGTH);
 
@@ -1388,8 +1389,7 @@ void CBall::State_GOAL_Enter()
 
 	State_Transition(BALL_KICKOFF, delay);
 
-	if (ReplayManager())
-		ReplayManager()->StartReplay(sv_replay_count.GetInt(), sv_ball_goalcelebduration.GetInt(), GetGlobalTeam(m_nTeam)->m_vPlayerSpawns[0].y < GetGlobalTeam(m_nTeam)->GetOppTeam()->m_vPlayerSpawns[0].y);
+	ReplayManager()->StartReplay(sv_replay_count.GetInt(), sv_ball_goalcelebduration.GetInt(), GetGlobalTeam(m_nTeam)->m_vPlayerSpawns[0].y < GetGlobalTeam(m_nTeam)->GetOppTeam()->m_vPlayerSpawns[0].y);
 }
 
 void CBall::State_GOAL_Think()
@@ -1398,8 +1398,7 @@ void CBall::State_GOAL_Think()
 
 void CBall::State_GOAL_Leave(ball_state_t newState)
 {
-	if (ReplayManager())
-		ReplayManager()->StopReplay();
+	ReplayManager()->StopReplay();
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
@@ -2213,30 +2212,36 @@ bool CBall::CheckKeeperCatch()
 	return true;
 }
 
-float CBall::GetPitchCoeff(bool limitLowShots)
+float CBall::GetPitchCoeff(bool isNormalShot)
 {
 	//return pow(cos((m_aPlAng[PITCH] - sv_ball_bestshotangle.GetInt()) / (PITCH_LIMIT - sv_ball_bestshotangle.GetInt()) * M_PI / 2), 2);
 	// plot 0.5 + (cos(x/89 * pi/2) * 0.5), x=-89..89
 
 	float bestAng = sv_ball_bestshotangle.GetInt();
-	float downCoeff = sv_ball_fixedpitchdowncoeff.GetFloat();
-	float upCoeff = sv_ball_fixedpitchupcoeff.GetFloat();
-	double downExp = sv_ball_pitchdown_exponent.GetFloat();
-	double upExp = sv_ball_pitchup_exponent.GetFloat();
 	float pitch = m_aPlAng[PITCH];
 
 	float coeff;
 
 	if (pitch <= sv_ball_bestshotangle.GetInt())
 	{
+		float upCoeff = sv_ball_fixedpitchupcoeff.GetFloat();
+		double upExp = sv_ball_pitchup_exponent.GetFloat();
 		coeff = upCoeff + (1 - upCoeff) * pow(cos((pitch - bestAng) / (PITCH_LIMIT - bestAng) * M_PI / 2), upExp);
 	}
 	else
 	{
-		 if (!sv_ball_limitlowshots.GetBool() && !limitLowShots)
-			 pitch = sv_ball_bestshotangle.GetInt();
-
-		coeff = downCoeff + (1 - downCoeff) * pow(cos((pitch - bestAng) / (PITCH_LIMIT - bestAng) * M_PI / 2), downExp);
+		if (isNormalShot)
+		{
+			float downCoeff = sv_ball_fixedpitchdowncoeff_normalshot.GetFloat();
+			double downExp = sv_ball_pitchdown_exponent_normalshot.GetFloat();
+			coeff = downCoeff + (1 - downCoeff) * pow(cos((pitch - bestAng) / (PITCH_LIMIT - bestAng) * M_PI / 2), downExp);		
+		}
+		else
+		{
+			float downCoeff = sv_ball_fixedpitchdowncoeff_nonnormalshot.GetFloat();
+			double downExp = sv_ball_pitchdown_exponent_nonnormalshot.GetFloat();
+			coeff = downCoeff + (1 - downCoeff) * pow(cos((pitch - bestAng) / (PITCH_LIMIT - bestAng) * M_PI / 2), downExp);		
+		}
 	}
 
 	if (m_pPl->m_nButtons & IN_WALK)
@@ -2448,7 +2453,7 @@ bool CBall::DoHeader()
 	return true;
 }
 
-void CBall::SetSpin(float coeff)
+void CBall::SetSpin(float coeff, bool applyTopspin)
 {	
 	Vector sideRot(0, 0, 0);
 
@@ -2463,7 +2468,7 @@ void CBall::SetSpin(float coeff)
 
 	float backTopSpin = m_vVel.Length() * sv_ball_spin.GetInt() * coeff / 100.0f;
 
-	if (!sv_ball_jump_topspin_enabled.GetBool() || m_pPl->GetGroundEntity())
+	if (!sv_ball_jump_topspin_enabled.GetBool() || m_pPl->GetGroundEntity() || !applyTopspin)
 	{
 		backTopRot = m_vPlRight;
 		backTopSpin *= sv_ball_backspin_coeff.GetFloat();
