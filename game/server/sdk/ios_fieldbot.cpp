@@ -51,15 +51,15 @@ void CFieldBot::BotShootBall()
 		if (isGoalShot)
 		{
 			if (ownDistToGoal > 1000)
-				m_cmd.buttons |= (IN_ATTACK2 | IN_ATTACK);
+				m_cmd.buttons |= IN_ALT1;
 			else
 			{
-				m_cmd.buttons |= (IN_ATTACK2 | IN_ATTACK);
+				m_cmd.buttons |= IN_ALT1;
 			}
 		}
 		else
 		{
-			m_cmd.buttons |= (IN_ATTACK2 | IN_ATTACK);
+			m_cmd.buttons |= IN_ALT1;
 		}
 
 		VectorAngles(shotDir, m_cmd.viewangles);
@@ -80,7 +80,7 @@ void CFieldBot::BotShootBall()
 		}
 
 		VectorAngles(shotDir, m_cmd.viewangles);
-		m_cmd.buttons |= (IN_ATTACK2 | IN_ATTACK);
+		m_cmd.buttons |= IN_ALT1;
 		m_cmd.powershot_strength = 100 * g_IOSRand.RandomFloat(0, 1);
 		m_cmd.viewangles[PITCH] = -30 + 30 * (1 - m_cmd.powershot_strength / 100.0f);
 	}

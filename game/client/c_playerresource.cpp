@@ -337,8 +337,7 @@ Color &C_PlayerResource::GetHudTeamKitColor(int index)
 	if ( !team )
 	{
 		Assert( false );
-		static Color color;
-		return color;
+		return g_ColorGray;
 	}
 
 	return team->Get_HudKitColor();
@@ -453,8 +452,7 @@ const Color &C_PlayerResource::GetTeamColor(int index )
 	if ( index < 0 || index >= MAX_TEAMS )
 	{
 		Assert( false );
-		static Color blah;
-		return blah;
+		return g_ColorGray;
 	}
 	else
 	{

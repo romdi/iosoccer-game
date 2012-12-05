@@ -123,37 +123,24 @@ void CSDKTargetId::Paint()
 		if (!pPl || pPl->IsDormant() || pPl == pLocal)
 			continue;
 
-		const char *printFormatString = NULL;
 		wchar_t wszPlayerName[MAX_PLAYER_NAME_LENGTH];
-		wchar_t wszPosName[10];
-		wchar_t wszPlayerText[MAX_PLAYER_NAME_LENGTH + 10];
-
-		g_pVGuiLocalize->ConvertANSIToUnicode(pPl->GetPlayerName(), wszPlayerName, sizeof(wszPlayerName));
-		//g_pVGuiLocalize->ConvertANSIToUnicode(g_szPosNames[GameResources()->GetTeamPosNum(i) - 1], wszPosName, sizeof(wszPosName));
-
-		//_snwprintf( wszPlayerText, ARRAYSIZE(wszPlayerText) - 1, L"%s %s", wszPosName, wszPlayerName);
-		_snwprintf( wszPlayerText, ARRAYSIZE(wszPlayerText) - 1, L"%s", wszPlayerName);
-		wszPlayerText[ ARRAYSIZE(wszPlayerText)-1 ] = '\0';
+		g_pVGuiLocalize->ConvertANSIToUnicode(UTIL_SafeName(pPl->GetPlayerName()), wszPlayerName, sizeof(wszPlayerName));
 
 		int wide, tall;
-		int xPos, yPos;
-		int zOffset = 120;
-
-		vgui::surface()->GetTextSize(m_hFont, wszPlayerText, wide, tall);
+		vgui::surface()->GetTextSize(m_hFont, wszPlayerName, wide, tall);
 
 		Color c = GameResources()->GetTeamColor(pPl->GetTeamNumber());
 		c = Color(c.r(), c.g(), c.b(), 255);
 
 		Vector pos = pPl->GetLocalOrigin();
 		pos.z += VEC_HULL_MAX.z + hud_names_offset.GetInt();
+
+		int xPos, yPos;
 		GetVectorInScreenSpace(pos, xPos, yPos);
 
-		//surface()->DrawSetColor(c);
-		//surface()->DrawLine(xPos, yStartPos, xPos, yEndPos);
 		surface()->DrawSetTextFont(m_hFont);
 		surface()->DrawSetTextColor(c);
-
 		surface()->DrawSetTextPos(xPos - wide / 2, yPos - tall);
-		surface()->DrawPrintText(wszPlayerText, wcslen(wszPlayerText));
+		surface()->DrawPrintText(wszPlayerName, wcslen(wszPlayerName));
 	}
 }

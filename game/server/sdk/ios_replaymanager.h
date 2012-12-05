@@ -144,7 +144,7 @@ public:
 	void StopReplay();
 	void RestoreSnapshot();
 	void SaveReplay();
-	bool IsReplaying() { return m_bDoReplay; }
+	bool IsReplaying() { return m_bIsReplaying; }
 	void Think();
 	void Spawn();
 	void StartHighlights();
