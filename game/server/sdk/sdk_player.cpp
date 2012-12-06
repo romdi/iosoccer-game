@@ -1030,6 +1030,9 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 		if (team == GetTeamNumber() && posIndex == GetTeamPosIndex())
 			return false;
 
+		if (!SDKGameRules()->IsIntermissionState() && GetGlobalTeam(team)->GetPosNextJoinSeconds(posIndex) > SDKGameRules()->GetMatchDisplayTimeSeconds())
+			return false;
+
 		return ChangeTeamPos(team, posIndex, true);
 	}
 	else if (!Q_stricmp(args[0], "spectate"))
@@ -1607,19 +1610,19 @@ void CSDKPlayer::ResetFlags()
 	}
 }
 
-bool CSDKPlayer::IsNormalshooting()
+bool CSDKPlayer::IsNormalshooting(bool noShotOnCancel /*= false*/)
 {
-	return (m_nButtons & IN_ATTACK) && !IsPowershooting() && !IsChargedshooting() && !(m_nButtons & IN_ATTACK2);
+	return (m_nButtons & IN_ATTACK) && !IsPowershooting() && (!noShotOnCancel || !(m_nButtons & IN_ATTACK2));
 }
 
-bool CSDKPlayer::IsPowershooting()
+bool CSDKPlayer::IsPowershooting(bool noShotOnCancel /*= false*/)
 {
-	return (m_nButtons & IN_ALT1);
+	return (m_nButtons & IN_ALT1) && (!noShotOnCancel || !(m_nButtons & IN_ATTACK2));
 }
 
 bool CSDKPlayer::IsChargedshooting()
 {
-	return m_Shared.m_bDoChargedShot && !IsPowershooting();
+	return m_Shared.m_bDoChargedShot;
 }
 
 bool CSDKPlayer::IsAutoPassing()

@@ -1154,12 +1154,14 @@ void CBall::State_THROWIN_Think()
 		AngleVectors(ang, &dir);
 		float strength;
 
-		if (m_pPl->IsNormalshooting())
+		if (m_pPl->IsNormalshooting(true))
 			strength = GetNormalshotStrength(GetPitchCoeff(true), sv_ball_normalthrow_strength.GetInt());
-		else if (m_pPl->IsPowershooting())
+		else if (m_pPl->IsPowershooting(true))
 			strength = GetPowershotStrength(GetPitchCoeff(false), sv_ball_powerthrow_strength.GetInt());
-		else
+		else if (m_pPl->IsChargedshooting())
 			strength = GetChargedshotStrength(GetPitchCoeff(false), sv_ball_chargedthrow_minstrength.GetInt(), sv_ball_chargedthrow_maxstrength.GetInt());
+		else
+			return;
 
 		Vector vel = dir * max(strength, sv_ball_throwin_minstrength.GetInt());
 
@@ -1728,7 +1730,7 @@ void CBall::State_KEEPERHANDS_Think()
 		{
 			float spin;
 
-			if (m_pPl->IsNormalshooting())
+			if (m_pPl->IsNormalshooting(true))
 			{
 				vel = m_vPlForward * GetNormalshotStrength(GetPitchCoeff(true), sv_ball_normalshot_strength.GetInt());
 				m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KEEPER_HANDS_THROW);
@@ -1741,10 +1743,12 @@ void CBall::State_KEEPERHANDS_Think()
 				Vector dir;
 				AngleVectors(ang, &dir);
 
-				if (m_pPl->IsPowershooting())
+				if (m_pPl->IsPowershooting(true))
 					vel = dir * GetPowershotStrength(GetPitchCoeff(false), sv_ball_powershot_strength.GetInt());
-				else
+				else if (m_pPl->IsChargedshooting())
 					vel = dir * GetChargedshotStrength(GetPitchCoeff(false), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
+				else
+					return;
 
 				m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KEEPER_HANDS_KICK);
 				spin = sv_ball_volleyshot_spincoeff.GetFloat();
