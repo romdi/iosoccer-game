@@ -34,6 +34,7 @@
 #include <vgui/ILocalize.h>
 #include "sdk_gamerules.h"
 #include "c_ios_replaymanager.h"
+#include "c_ball.h"
 #if defined( _X360 )
 #include "xbox/xbox_console.h"
 #endif
@@ -292,7 +293,10 @@ void ClientModeShared::OverrideView( CViewSetup *pSetup )
 
 		Vector oldOrigin = pSetup->origin;
 
-		if (pPlayer->m_nButtons & IN_ZOOM)
+		if ((pPlayer->m_nButtons & IN_ZOOM)
+			&& (pPlayer->GetTeamNumber() == TEAM_A || pPlayer->GetTeamNumber() == TEAM_B)
+			&& g_PR->GetTeamPosType(GetLocalPlayerIndex()) == GK
+			&& GetBall() && Sign(GetBall()->GetLocalOrigin().y - SDKGameRules()->m_vKickOff.GetY()) == pPlayer->GetTeam()->m_nForward)
 		{
 			pSetup->origin = SDKGameRules()->m_vKickOff;
 			pSetup->origin.z += 500;

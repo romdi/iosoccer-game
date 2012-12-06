@@ -223,10 +223,25 @@ void CC_CreatePlayerBall(const CCommand &args)
 	else
 		pPl->SetPlayerBall(CreateBall(pos, pPl));
 
+	pPl->GetPlayerBall()->SaveBallCannonSettings();
+	pPl->GetPlayerBall()->SetBallCannonMode(false);
+
 	pPl->m_Shared.SetStamina(100);
 }
 
 static ConCommand createplayerball("createplayerball", CC_CreatePlayerBall);
+
+void CC_ShootPlayerBall(const CCommand &args)
+{
+	CSDKPlayer *pPl = ToSDKPlayer(UTIL_GetCommandClient());
+	if (!CSDKPlayer::IsOnField(pPl) || !pPl->GetPlayerBall())
+		return;
+
+	pPl->GetPlayerBall()->SetBallCannonMode(true);
+	pPl->GetPlayerBall()->RestoreBallCannonSettings();
+}
+
+static ConCommand shootplayerball("shootplayerball", CC_ShootPlayerBall);
 
 CBall *g_pBall = NULL;
 
@@ -720,7 +735,14 @@ void CBall::SetVel(Vector vel, float spinCoeff, body_part_t bodyPart, bool isDef
 	m_bSetNewVel = true;
 
 	if (spinCoeff != -1)
-		SetSpin(spinCoeff, (bodyPart != BODY_PART_HEAD));
+	{
+		SetRot(CalcSpin(spinCoeff, (bodyPart != BODY_PART_HEAD)));
+	}
+
+	if (m_bIsPlayerBall && !m_bIsBallCannonMode)
+	{
+		SaveBallCannonSettings();
+	}
 
 	Kicked(bodyPart, isDeflection);
 	
@@ -2457,7 +2479,7 @@ bool CBall::DoHeader()
 	return true;
 }
 
-void CBall::SetSpin(float coeff, bool applyTopspin)
+AngularImpulse CBall::CalcSpin(float coeff, bool applyTopspin)
 {	
 	Vector sideRot(0, 0, 0);
 
@@ -2489,7 +2511,7 @@ void CBall::SetSpin(float coeff, bool applyTopspin)
 		randRot[i] = sv_ball_defaultspin.GetInt() / 100.0f * (g_IOSRand.RandomInt(0, 1) == 1 ? 1 : -1);
 	}
 
-	SetRot(WorldToLocalRotation(SetupMatrixAngles(m_aAng), sideRot, sideSpin) + WorldToLocalRotation(SetupMatrixAngles(m_aAng), backTopRot, backTopSpin) + randRot);
+	return (WorldToLocalRotation(SetupMatrixAngles(m_aAng), sideRot, sideSpin) + WorldToLocalRotation(SetupMatrixAngles(m_aAng), backTopRot, backTopSpin) + randRot);
 }
 
 void CBall::Think( void	)
@@ -3067,4 +3089,17 @@ float CBall::CalcFieldZone()
 	float fieldLength = SDKGameRules()->m_vFieldMax.GetY() - SDKGameRules()->m_vFieldMin.GetY();
 	float dist = pos.y - SDKGameRules()->m_vKickOff.GetY();
 	return clamp(dist * 100 / (fieldLength / 2), -100, 100);
+}
+
+void CBall::SaveBallCannonSettings()
+{
+	m_pPhys->GetPosition(&m_vBallCannonPos, &m_aBallCannonAng);
+	m_pPhys->GetVelocity(&m_vBallCannonVel, &m_vBallCannonRot);
+}
+
+void CBall::RestoreBallCannonSettings()
+{
+	State_Transition(BALL_NORMAL);
+	m_pPhys->SetPosition(m_vBallCannonPos, m_aBallCannonAng, true);
+	m_pPhys->SetVelocityInstantaneous(&m_vBallCannonVel, &m_vBallCannonRot);
 }

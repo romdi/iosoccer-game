@@ -97,7 +97,7 @@ static const char g_szStatCategoryNames[STAT_CATEGORY_COUNT][32] =
 {
 	"General",
 	"Tackles",
-	"Set pieces",
+	"Set Pieces",
 	"Keeper",
 	"Offense",
 };

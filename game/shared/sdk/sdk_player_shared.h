@@ -13,8 +13,6 @@
 #include "networkvar.h"
 #include "weapon_sdkbase.h"
 
-extern const char *g_szRequiredClientVersion;
-
 #ifdef CLIENT_DLL
 class C_SDKPlayer;
 #else

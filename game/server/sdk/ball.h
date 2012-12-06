@@ -188,6 +188,9 @@ public:
 	AngularImpulse	GetRot();
 	float			CalcFieldZone();
 	void			UpdatePossession(CSDKPlayer *pNewPossessor);
+	void			SaveBallCannonSettings();
+	void			RestoreBallCannonSettings();
+	void			SetBallCannonMode(bool state) { m_bIsBallCannonMode = state; }
 
 private:
 
@@ -235,7 +238,7 @@ private:
 	bool			DoVolleyShot();
 	bool			DoChestDrop();
 	bool			DoHeader();
-	void			SetSpin(float coeff, bool applyTopspin);
+	AngularImpulse	CalcSpin(float coeff, bool applyTopspin);
 	float			GetPitchCoeff(bool isNormalShot);
 	float			GetNormalshotStrength(float coeff, int strength);
 	float			GetPowershotStrength(float coeff, int strength);
@@ -295,6 +298,12 @@ private:
 	bool			m_bPenaltyTakerStartedMoving;
 
 	float			m_flLastMatchEventSetTime;
+
+	bool			m_bIsBallCannonMode;
+	Vector			m_vBallCannonPos;
+	Vector			m_vBallCannonVel;
+	QAngle			m_aBallCannonAng;
+	AngularImpulse	m_vBallCannonRot;
 };
 
 #endif

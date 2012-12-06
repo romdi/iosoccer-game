@@ -25,6 +25,8 @@
 #include "c_ball.h"
 #include "igameresources.h"
 
+#include "ios_requiredclientversion.h"
+
 // memdbgon must be the last include file in a .cpp file!!!
 ConVar cl_ragdoll_physics_enable( "cl_ragdoll_physics_enable", "1", 0, "Enable/disable ragdoll physics." );
 #include "tier0/memdbgon.h"

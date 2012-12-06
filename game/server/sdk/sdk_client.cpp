@@ -30,6 +30,8 @@
 #include "tier0/vprof.h"
 #include "ios_bot.h"
 
+#include "ios_requiredclientversion.h"
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 

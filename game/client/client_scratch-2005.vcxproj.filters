@@ -3209,6 +3209,9 @@
     <ClInclude Include="game_controls\matcheventmenu.h">
       <Filter>game_controls Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\shared\sdk\ios_requiredclientversion.h">
+      <Filter>Source Files\SDK</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\..\lib\public\bitmap.lib">

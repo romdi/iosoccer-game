@@ -830,6 +830,7 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClCompile Include="worldlight.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\shared\sdk\ios_requiredclientversion.h" />
     <ClInclude Include="..\shared\sdk\ios_teamkit_parse.h" />
     <ClInclude Include="achievement_notification_panel.h" />
     <ClInclude Include="..\shared\achievement_saverestore.h" />
