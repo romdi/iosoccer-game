@@ -224,8 +224,6 @@ void CC_CreatePlayerBall(const CCommand &args)
 		pPl->SetPlayerBall(CreateBall(pos, pPl));
 
 	pPl->GetPlayerBall()->SaveBallCannonSettings();
-	pPl->GetPlayerBall()->SetBallCannonMode(false);
-
 	pPl->m_Shared.SetStamina(100);
 }
 
@@ -237,8 +235,8 @@ void CC_ShootPlayerBall(const CCommand &args)
 	if (!CSDKPlayer::IsOnField(pPl) || !pPl->GetPlayerBall())
 		return;
 
-	pPl->GetPlayerBall()->SetBallCannonMode(true);
 	pPl->GetPlayerBall()->RestoreBallCannonSettings();
+	pPl->m_Shared.SetStamina(100);
 }
 
 static ConCommand shootplayerball("shootplayerball", CC_ShootPlayerBall);
@@ -491,16 +489,25 @@ bool CBall::CreateVPhysics()
 
 void CBall::VPhysicsUpdate(IPhysicsObject *pPhysics)
 {
-	Vector vel, worldAngImp;
-	AngularImpulse angImp;
-	m_pPhys->GetVelocity(&vel, &angImp);
-	VectorRotate(angImp, EntityToWorldTransform(), worldAngImp);
-	Vector magnusDir = worldAngImp.Cross(vel);
+	if (m_bIsBallCannonMode && m_bRestoreBallCannonSettings)
+	{
+		m_pPhys->SetPosition(m_vBallCannonPos, m_aBallCannonAng, true);
+		m_pPhys->SetVelocity(&m_vBallCannonVel, &m_vBallCannonRot);
+		m_bRestoreBallCannonSettings = false;
+	}
+	else
+	{
+		Vector vel, worldAngImp;
+		AngularImpulse angImp;
+		m_pPhys->GetVelocity(&vel, &angImp);
+		VectorRotate(angImp, EntityToWorldTransform(), worldAngImp);
+		Vector magnusDir = worldAngImp.Cross(vel);
 
-	if (vel.Length() > 0)
-		vel += magnusDir * 1e-6 * sv_ball_curve.GetFloat() * gpGlobals->frametime;
+		if (vel.Length() > 0)
+			vel += magnusDir * 1e-6 * sv_ball_curve.GetFloat() * gpGlobals->frametime;
 
-	VPhysicsGetObject()->SetVelocity(&vel, &angImp);
+		VPhysicsGetObject()->SetVelocity(&vel, &angImp);
+	}
 
 	BaseClass::VPhysicsUpdate(pPhysics);
 
@@ -739,7 +746,7 @@ void CBall::SetVel(Vector vel, float spinCoeff, body_part_t bodyPart, bool isDef
 		SetRot(CalcSpin(spinCoeff, (bodyPart != BODY_PART_HEAD)));
 	}
 
-	if (m_bIsPlayerBall && !m_bIsBallCannonMode)
+	if (m_bIsPlayerBall && !m_bIsBallCannonMode && m_pPl == GetCreator())
 	{
 		SaveBallCannonSettings();
 	}
@@ -3059,6 +3066,18 @@ Vector CBall::GetPos()
 	}
 }
 
+QAngle CBall::GetAng()
+{
+	if (m_bSetNewPos)
+		return m_aAng;
+	else
+	{
+		QAngle ang;
+		m_pPhys->GetPosition(NULL, &ang);
+		return ang;
+	}
+}
+
 Vector CBall::GetVel()
 {
 	if (m_bSetNewVel)
@@ -3093,13 +3112,21 @@ float CBall::CalcFieldZone()
 
 void CBall::SaveBallCannonSettings()
 {
-	m_pPhys->GetPosition(&m_vBallCannonPos, &m_aBallCannonAng);
-	m_pPhys->GetVelocity(&m_vBallCannonVel, &m_vBallCannonRot);
+	m_vBallCannonPos = GetPos();
+	m_aBallCannonAng = GetAng();
+	m_vBallCannonVel = GetVel();
+	m_vBallCannonRot = GetRot();
+	m_bIsBallCannonMode = false;
+	//m_pPhys->GetPosition(&m_vBallCannonPos, &m_aBallCannonAng);
+	//m_pPhys->GetVelocity(&m_vBallCannonVel, &m_vBallCannonRot);
 }
 
 void CBall::RestoreBallCannonSettings()
 {
 	State_Transition(BALL_NORMAL);
-	m_pPhys->SetPosition(m_vBallCannonPos, m_aBallCannonAng, true);
-	m_pPhys->SetVelocityInstantaneous(&m_vBallCannonVel, &m_vBallCannonRot);
+	m_bRestoreBallCannonSettings = true;
+	m_bIsBallCannonMode = true;
+	//m_pPhys->SetVelocityInstantaneous(&vec3_origin, &vec3_origin);
+	//m_pPhys->SetPosition(m_vBallCannonPos, m_aBallCannonAng, true);
+	//m_pPhys->SetVelocity(&m_vBallCannonVel, &m_vBallCannonRot);
 }

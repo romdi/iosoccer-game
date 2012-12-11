@@ -184,13 +184,13 @@ public:
 	void			EnablePlayerCollisions(bool enable);
 	void			RemoveFromPlayerHands(CSDKPlayer *pPl);
 	Vector			GetPos();
+	QAngle			GetAng();
 	Vector			GetVel();
 	AngularImpulse	GetRot();
 	float			CalcFieldZone();
 	void			UpdatePossession(CSDKPlayer *pNewPossessor);
 	void			SaveBallCannonSettings();
 	void			RestoreBallCannonSettings();
-	void			SetBallCannonMode(bool state) { m_bIsBallCannonMode = state; }
 
 private:
 
@@ -300,6 +300,7 @@ private:
 	float			m_flLastMatchEventSetTime;
 
 	bool			m_bIsBallCannonMode;
+	bool			m_bRestoreBallCannonSettings;
 	Vector			m_vBallCannonPos;
 	Vector			m_vBallCannonVel;
 	QAngle			m_aBallCannonAng;
