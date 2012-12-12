@@ -42,6 +42,8 @@ ConVar sv_ball_curve("sv_ball_curve", "150", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONL
 ConVar sv_ball_deflectionradius( "sv_ball_deflectionradius", "40", FCVAR_NOTIFY );
 
 ConVar sv_ball_standing_reach( "sv_ball_standing_reach", "60", FCVAR_NOTIFY );
+ConVar sv_ball_standing_cone( "sv_ball_standing_cone", "360", FCVAR_NOTIFY );
+ConVar sv_ball_standing_shift( "sv_ball_standing_shift", "0", FCVAR_NOTIFY );
 
 ConVar sv_ball_slidesidereach_ball( "sv_ball_slidesidereach_ball", "60", FCVAR_NOTIFY );
 ConVar sv_ball_slideforwardreach_ball( "sv_ball_slideforwardreach_ball", "90", FCVAR_NOTIFY );
@@ -1837,7 +1839,16 @@ bool CBall::PlayersAtTargetPos()
 
 bool CBall::CanTouchBallXY()
 {
-	return ((m_vPlDirToBall).Length2D() <= sv_ball_standing_reach.GetInt());
+	if ((m_vPos - (m_vPlPos + m_vPlForward2D * sv_ball_standing_shift.GetFloat())).Length2DSqr() <= pow(sv_ball_standing_reach.GetFloat(), 2))
+	{
+		Vector dirToBall = m_vPlDirToBall;
+		dirToBall.NormalizeInPlace();
+
+		if (RAD2DEG(acos(m_vPlForward2D.Dot(dirToBall))) <= sv_ball_standing_cone.GetFloat() / 2)
+			return true;
+	}
+
+	return false;
 }
 
 bool CBall::CheckFoul()
