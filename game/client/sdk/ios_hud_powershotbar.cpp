@@ -85,9 +85,6 @@ protected:
 	Panel *m_pStaminaIndicator;
 	Panel *m_pPowershotIndicator;
 	Panel *m_pPowershotIndicatorBack;
-	Panel *m_pFixedPowershotIndicator;
-	Panel *m_pSpinIndicators[2];
-	Panel *m_pSpinIndicatorsBack[2];
 	float m_flOldStamina;
 	float m_flNextUpdate;
 	bool m_bIsChargingShot;
@@ -112,16 +109,8 @@ CHudPowershotBar::CHudPowershotBar( const char *pElementName ) : CHudElement( pE
 
 	m_pStaminaPanel = new Panel(this, "StaminaPanel");
 	m_pStaminaIndicator = new Panel(m_pStaminaPanel, "StaminaIndicator");
-	m_pFixedPowershotIndicator = new Panel(m_pStaminaPanel, "FixedPowershotIndicator");
 	m_pPowershotIndicatorBack = new Panel(this, "PowershotIndicator");
 	m_pPowershotIndicator = new Panel(m_pPowershotIndicatorBack, "PowershotIndicator");
-
-	for (int i = 0; i < 2; i++)
-	{
-		m_pSpinIndicatorsBack[i] = new Panel(this, "");
-		m_pSpinIndicators[i] = new Panel(m_pSpinIndicatorsBack[i], "");
-	}
-
 	m_flOldStamina = 100;
 	m_flNextUpdate = gpGlobals->curtime;
 	m_bIsChargingShot = false;
@@ -166,23 +155,6 @@ void CHudPowershotBar::ApplySchemeSettings( IScheme *scheme )
  	m_pPowershotIndicator->SetPaintBackgroundEnabled(true);
 	m_pPowershotIndicator->SetBgColor(Color(255, 255, 255, 255));
 	m_pPowershotIndicator->SetBounds(PS_INDICATOR_BORDER, PS_INDICATOR_BORDER, m_pPowershotIndicatorBack->GetWide() - 2 * PS_INDICATOR_BORDER, m_pPowershotIndicatorBack->GetTall() - 2 * PS_INDICATOR_BORDER);
-
- 	m_pFixedPowershotIndicator->SetPaintBackgroundEnabled(true);
-	m_pFixedPowershotIndicator->SetBgColor(Color(0, 0, 0, 255));
-	m_pFixedPowershotIndicator->SetBounds(BAR_PADDING, BAR_HEIGHT / 2 - FIXED_PS_INDICATOR_HEIGHT / 2, BAR_WIDTH - 2 * BAR_PADDING, FIXED_PS_INDICATOR_HEIGHT);
-
-	for (int i = 0; i < 2; i++)
-	{
-		m_pSpinIndicatorsBack[i]->SetPaintBackgroundEnabled(true);
-		m_pSpinIndicatorsBack[i]->SetBgColor(Color(0, 0, 0, 255));
-		m_pSpinIndicatorsBack[i]->SetBounds(BAR_HMARGIN + SPIN_MARGIN, SPIN_HEIGHT + BAR_PADDING - SPIN_BORDER + i * (BAR_HEIGHT - 2 * BAR_PADDING - SPIN_HEIGHT + 2 * SPIN_BORDER), BAR_WIDTH - 2 * SPIN_MARGIN, SPIN_HEIGHT);
-		m_pSpinIndicatorsBack[i]->SetVisible(false);
-
-		m_pSpinIndicators[i]->SetPaintBackgroundEnabled(true);
-		m_pSpinIndicators[i]->SetBgColor(Color(1, 210, 255, 255));
-		//m_pSpinIndicators[i]->SetBgColor(Color(255, 255, 255, 255));
-		m_pSpinIndicators[i]->SetBounds(SPIN_BORDER, SPIN_BORDER, m_pSpinIndicatorsBack[i]->GetWide() - 2 * SPIN_BORDER, m_pSpinIndicatorsBack[i]->GetTall() - 2 * SPIN_BORDER);
-	}
 }
 
 
@@ -215,7 +187,7 @@ bool CHudPowershotBar::ShouldDraw()
 	if (!pPlayer || pPlayer->GetTeamNumber() != TEAM_A && pPlayer->GetTeamNumber() != TEAM_B)
 		return false;
 
-	if (GetReplayManager() && GetReplayManager()->m_bIsReplaying)
+	if (GetReplayManager() && GetReplayManager()->IsReplaying())
 		return false;
 
 	return true;
@@ -227,12 +199,6 @@ bool CHudPowershotBar::ShouldDraw()
 void CHudPowershotBar::OnThink( void )
 {
 	BaseClass::OnThink();
-
-	//if (m_flNextUpdate <= gpGlobals->curtime)
-	//{
-	//	m_flOldStamina = 
-	//	m_flNextUpdate = gpGlobals->curtime + 1.0f;
-	//}
 }
 
 //-----------------------------------------------------------------------------
@@ -248,29 +214,14 @@ void CHudPowershotBar::Paint()
 	float stamina = pPlayer->m_Shared.GetStamina();
 	float relStamina = stamina / 100.0f;
 
-	//int height = (m_pStaminaPanel->GetTall() - 2 * BAR_PADDING) * (1 - mp_powershot_fixed_strength.GetInt() / 100.0f) * relStamina;
-	//m_pStaminaIndicator->SetTall(height);
-	//m_pStaminaIndicator->SetY(BAR_PADDING + (m_pStaminaPanel->GetTall() - 2 * BAR_PADDING) * (1 - mp_powershot_fixed_strength.GetInt() / 100.0f) - height);
-
 	Color bgColor;
 
 	if (pPlayer->GetFlags() & FL_REMOTECONTROLLED)
 		bgColor = Color(255, 255, 255, 255);
 	else
-	{
 		bgColor = Color(255 * (1 - relStamina), 255 * relStamina, 0, 255);
-		//bgColor = Color(0, 255, 0, 255);
-	}
-
 
 	m_pPowershotIndicatorBack->SetY(m_pStaminaPanel->GetY() + BAR_PADDING + m_pPowershotIndicatorBack->GetTall() + (1 - cl_powershot_strength.GetInt() / 100.0f) * (BAR_HEIGHT - 2 * BAR_PADDING - 3 * m_pPowershotIndicatorBack->GetTall()));
-	m_pPowershotIndicatorBack->SetVisible(false);
-
-	m_pFixedPowershotIndicator->SetY(BAR_PADDING + m_pPowershotIndicator->GetTall() + 0.5f * (BAR_HEIGHT - 2 * BAR_PADDING - 3 * m_pFixedPowershotIndicator->GetTall()));
-	m_pFixedPowershotIndicator->SetVisible(false);
-
-	m_pSpinIndicatorsBack[0]->SetVisible(false);
-	m_pSpinIndicatorsBack[1]->SetVisible(false);
 
 	float shotStrength;
 
