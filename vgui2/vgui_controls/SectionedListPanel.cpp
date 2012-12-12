@@ -69,6 +69,14 @@ public:
 		ClearImages();
 	}
 
+	~CSectionHeader()
+	{
+		for (int i = 0; i < GetImageCount(); i++)
+		{
+			delete GetImageAtIndex(i);
+		}
+	}
+
 	void ApplySchemeSettings(IScheme *pScheme)
 	{
 		BaseClass::ApplySchemeSettings(pScheme);
