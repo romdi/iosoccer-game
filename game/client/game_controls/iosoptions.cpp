@@ -49,7 +49,7 @@ void CC_IOSOptionsMenu(const CCommand &args)
 
 ConCommand iosoptionsmenu("iosoptionsmenu", CC_IOSOptionsMenu);
 
-#define LABEL_WIDTH 150
+#define LABEL_WIDTH 180
 #define INPUT_WIDTH 300
 #define TEXT_HEIGHT 30
 
@@ -58,6 +58,7 @@ ConCommand iosoptionsmenu("iosoptionsmenu", CC_IOSOptionsMenu);
 enum { PANEL_TOPMARGIN = 70, PANEL_MARGIN = 5, PANEL_WIDTH = (1024 - 2 * PANEL_MARGIN), PANEL_HEIGHT = (720 - 2 * PANEL_MARGIN) };
 enum { PADDING = 15, TOP_PADDING = 15 };
 enum { BUTTON_WIDTH = 80, BUTTON_HEIGHT = 30, BUTTON_MARGIN = 5 };
+enum { INFOBUTTON_WIDTH = 30, INFOBUTTON_MARGIN = 5 };
 
 #define INTERP_VALUES 5
 const int interpValues[INTERP_VALUES] = { 1, 2, 3, 4, 5 };
@@ -105,9 +106,15 @@ CIOSOptionsPanel::CIOSOptionsPanel(VPANEL parent) : BaseClass(NULL, "IOSOptionsP
 
 	m_pInterpDurationLabel = new Label(m_pContent, "", "Interpolation Duration:");
 	m_pInterpDurationList = new ComboBox(m_pContent, "", 0, false);
+	m_pInterpDurationInfoButton = new Button(m_pContent, "", "?");
+	m_pInterpDurationInfoButton->GetTooltip()->SetText("The shorter the interpolation duration, the quicker your client will display updated player and ball positions received from the server.\nIf you notice that other players and the ball don't move smoothly, it could mean that too many packets are lost on the way between you and the server.\nTry increasing the interpolation duration until the game is smooth again.");
+	m_pInterpDurationInfoButton->GetTooltip()->SetTooltipDelay(0);
 
 	m_pSmoothDurationLabel = new Label(m_pContent, "", "Smoothing Duration:");
 	m_pSmoothDurationList = new ComboBox(m_pContent, "", 0, false);
+	m_pSmoothDurationInfoButton = new Button(m_pContent, "", "?");
+	m_pSmoothDurationInfoButton->GetTooltip()->SetText("The shorter the smoothing duration, the quicker your client will set your local player to the correct position, should your client have incorrectly predicted your own position.\nTo make the game feel more reponsive, your client immediately performs certain actions like moving around and jumping, instead of waiting for the server to give confirmation for them.\nSometimes, when other players or the ball is close to you, the predictions of the client will be wrong and your local player can't actually move to the position he just went to during the prediction.\nThe smoothing duration is the time your client spends moving your own player to the correct position as received from the server.");
+	m_pSmoothDurationInfoButton->GetTooltip()->SetTooltipDelay(0);
 
 	KeyValues *kv;
 
@@ -135,6 +142,24 @@ CIOSOptionsPanel::CIOSOptionsPanel(VPANEL parent) : BaseClass(NULL, "IOSOptionsP
 		m_pSmoothDurationList->AddItem(smoothTexts[i], kv);
 		kv->deleteThis();
 	}
+
+	m_pRateLabel = new Label(m_pContent, "", "Rate (rate):");
+	m_pRateText = new TextEntry(m_pContent, "");
+	m_pRateInfoButton = new Button(m_pContent, "", "?");
+	m_pRateInfoButton->GetTooltip()->SetText("'Rate' sets the maximum bandwidth available for receiving packets from the server.\nIf 'net_graph 3' shows choke, increase the rate until the choke value shows 0.\nIf you can't increase 'Rate' any further due to a slow connection, consider lowering 'Update Rate' and 'Command Rate'.");
+	m_pRateInfoButton->GetTooltip()->SetTooltipDelay(0);
+
+	m_pUpdaterateLabel = new Label(m_pContent, "", "Update Rate (cl_updaterate):");
+	m_pUpdaterateText = new TextEntry(m_pContent, "");
+	m_pUpdaterateInfoButton = new Button(m_pContent, "", "?");
+	m_pUpdaterateInfoButton->GetTooltip()->SetText("'Update Rate' sets the number of updates per second you want to receive from the server.\nThe maximum value is the current server tickrate, which is usually 66 or 100.\nThe higher 'Update Rate' the more download bandwidth will be used.");
+	m_pUpdaterateInfoButton->GetTooltip()->SetTooltipDelay(0);
+
+	m_pCommandrateLabel = new Label(m_pContent, "", "Command Rate (cl_cmdrate):");
+	m_pCommandrateText = new TextEntry(m_pContent, "");
+	m_pCommandrateInfoButton = new Button(m_pContent, "", "?");
+	m_pCommandrateInfoButton->GetTooltip()->SetText("'Command Rate' sets the number of input updates per second you want to send to the server.\nThe maximum value is the current server tickrate, which is usually 66 or 100.\nThe higher 'Command Rate' the more upload bandwidth will be used.");
+	m_pCommandrateInfoButton->GetTooltip()->SetTooltipDelay(0);
 }
 
 CIOSOptionsPanel::~CIOSOptionsPanel()
@@ -149,7 +174,7 @@ void CIOSOptionsPanel::ApplySchemeSettings( IScheme *pScheme )
 	SetTitle("PLAYER SETTINGS", false);
 	SetProportional(false);
 	SetSizeable(false);
-	SetBounds(0, 0, 480, 380);
+	SetBounds(0, 0, 550, 450);
 	SetBgColor(Color(0, 0, 0, 255));
 	SetPaintBackgroundEnabled(true);
 	MoveToCenterOfScreen();
@@ -174,12 +199,32 @@ void CIOSOptionsPanel::ApplySchemeSettings( IScheme *pScheme )
 
 	m_pInterpDurationLabel->SetBounds(0, 4 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
 	m_pInterpDurationList->SetBounds(LABEL_WIDTH, 4 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
+	m_pInterpDurationInfoButton->SetBounds(LABEL_WIDTH + INPUT_WIDTH + INFOBUTTON_MARGIN, 4 * TEXT_HEIGHT, INFOBUTTON_WIDTH, TEXT_HEIGHT);
+	m_pInterpDurationInfoButton->SetContentAlignment(Label::a_center);
 
 	m_pSmoothDurationLabel->SetBounds(0, 5 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
 	m_pSmoothDurationList->SetBounds(LABEL_WIDTH, 5 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
+	m_pSmoothDurationInfoButton->SetBounds(LABEL_WIDTH + INPUT_WIDTH + INFOBUTTON_MARGIN, 5 * TEXT_HEIGHT, INFOBUTTON_WIDTH, TEXT_HEIGHT);
+	m_pSmoothDurationInfoButton->SetContentAlignment(Label::a_center);
 
 	m_pLegacySideCurl->SetBounds(0, 6 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
+
 	m_pLegacyVerticalLook->SetBounds(0, 7 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
+
+	m_pRateLabel->SetBounds(0, 8 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pRateText->SetBounds(LABEL_WIDTH, 8 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
+	m_pRateInfoButton->SetBounds(LABEL_WIDTH + INPUT_WIDTH + INFOBUTTON_MARGIN, 8 * TEXT_HEIGHT, INFOBUTTON_WIDTH, TEXT_HEIGHT);
+	m_pRateInfoButton->SetContentAlignment(Label::a_center);
+
+	m_pUpdaterateLabel->SetBounds(0, 9 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pUpdaterateText->SetBounds(LABEL_WIDTH, 9 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
+	m_pUpdaterateInfoButton->SetBounds(LABEL_WIDTH + INPUT_WIDTH + INFOBUTTON_MARGIN, 9 * TEXT_HEIGHT, INFOBUTTON_WIDTH, TEXT_HEIGHT);
+	m_pUpdaterateInfoButton->SetContentAlignment(Label::a_center);
+
+	m_pCommandrateLabel->SetBounds(0, 10 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pCommandrateText->SetBounds(LABEL_WIDTH, 10 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
+	m_pCommandrateInfoButton->SetBounds(LABEL_WIDTH + INPUT_WIDTH + INFOBUTTON_MARGIN, 10 * TEXT_HEIGHT, INFOBUTTON_WIDTH, TEXT_HEIGHT);
+	m_pCommandrateInfoButton->SetContentAlignment(Label::a_center);
 
 	m_pOKButton->SetBounds(m_pContent->GetWide() - 3 * BUTTON_WIDTH - 2 * BUTTON_MARGIN, m_pContent->GetTall() - BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT);
 	m_pOKButton->SetCommand("save_and_close");
@@ -263,6 +308,13 @@ void CIOSOptionsPanel::OnCommand(const char *cmd)
 		g_pCVar->FindVar("legacysidecurl")->SetValue(m_pLegacySideCurl->IsSelected() ? 1 : 0);
 		g_pCVar->FindVar("legacyverticallook")->SetValue(m_pLegacyVerticalLook->IsSelected() ? 1 : 0);
 
+		m_pRateText->GetText(text, sizeof(text));
+		g_pCVar->FindVar("rate")->SetValue(atoi(text));
+		m_pUpdaterateText->GetText(text, sizeof(text));
+		g_pCVar->FindVar("cl_updaterate")->SetValue(atoi(text));
+		m_pCommandrateText->GetText(text, sizeof(text));
+		g_pCVar->FindVar("cl_cmdrate")->SetValue(atoi(text));
+
 		engine->ClientCmd("host_writeconfig\n");
 
 		if (!stricmp(cmd, "save_and_close"))
@@ -313,4 +365,8 @@ void CIOSOptionsPanel::Activate()
 
 	m_pLegacySideCurl->SetSelected(g_pCVar->FindVar("legacysidecurl")->GetBool());
 	m_pLegacyVerticalLook->SetSelected(g_pCVar->FindVar("legacyverticallook")->GetBool());
+
+	m_pRateText->SetText(g_pCVar->FindVar("rate")->GetString());
+	m_pUpdaterateText->SetText(g_pCVar->FindVar("cl_updaterate")->GetString());
+	m_pCommandrateText->SetText(g_pCVar->FindVar("cl_cmdrate")->GetString());
 }

@@ -9,6 +9,7 @@
 #include <vgui_controls/CheckButton.h>
 #include <vgui_controls/TextEntry.h>
 #include <vgui_controls/ComboBox.h>
+#include <vgui_controls/tooltip.h>
 
 using namespace vgui;
  
@@ -45,11 +46,25 @@ protected:
 	ComboBox *m_pPreferredShirtNumberList;
 	Label *m_pInterpDurationLabel;
 	ComboBox *m_pInterpDurationList;
+	Button *m_pInterpDurationInfoButton;
 	Label *m_pSmoothDurationLabel;
 	ComboBox *m_pSmoothDurationList;
+	Button *m_pSmoothDurationInfoButton;
 	CheckButton *m_pLegacySideCurl;
 	CheckButton *m_pLegacyVerticalLook;
 	Label *m_pChangeInfoText;
+
+	Label *m_pRateLabel;
+	TextEntry *m_pRateText;
+	Button *m_pRateInfoButton;
+
+	Label *m_pUpdaterateLabel;
+	TextEntry *m_pUpdaterateText;
+	Button *m_pUpdaterateInfoButton;
+
+	Label *m_pCommandrateLabel;
+	TextEntry *m_pCommandrateText;
+	Button *m_pCommandrateInfoButton;
 };
 
 class IIOSOptionsMenu
