@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+ï»¿//========= Copyright Â© 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -417,35 +417,21 @@ void CHudScorebar::OnThink( void )
 		}
 	}
 
-	//if (gViewPortInterface->FindPanelByName(PANEL_SCOREBOARD)->IsVisible())
-	//{
-	//	for (int i = 0; i < 2; i++)
-	//	{
-	//		wchar_t text[64];
-	//		//_snwprintf(text, ARRAYSIZE(text), L"%d pl.   •   %d%% poss.", GetGlobalTeam(TEAM_A + i)->GetNumPlayers(), GetGlobalTeam(TEAM_A + i)->Get_Possession());
-	//		_snwprintf(text, ARRAYSIZE(text), L"%d pl.   %d%% poss.", GetGlobalTeam(TEAM_A + i)->GetNumPlayers(), GetGlobalTeam(TEAM_A + i)->Get_Possession());
-	//		m_pExtensionText[i]->SetText(text);
-	//		m_pExtensionText[i]->SetFgColor(GetGlobalTeam(TEAM_A + i)->Get_HudKitColor());
-	//		m_pExtensionBar[i]->SetVisible(true);
-	//		m_pTeamCrestPanels[i]->SetVisible(GameResources()->HasTeamCrest(TEAM_A + i));
-	//	}
-	//}
-	//else
-	//{
-	//	for (int i = 0; i < 2; i++)
-	//	{
-	//		m_pExtensionBar[i]->SetVisible(false);
-	//		m_pTeamCrestPanels[i]->SetVisible(false);
-	//	}
-	//}
-
-	int nTime = SDKGameRules()->GetMatchDisplayTimeSeconds(true);
-	nTime = abs(nTime);
-
 	m_pState->SetText(g_szLongStateNames[SDKGameRules()->State_Get()]);
 	char *szInjuryTime = (SDKGameRules()->m_nAnnouncedInjuryTime > 0) ? VarArgs("+%d", SDKGameRules()->m_nAnnouncedInjuryTime) : "";
 	m_pInjuryTime->SetText(szInjuryTime);
-	m_pTime->SetText(VarArgs("%d:%02d", nTime / 60, nTime % 60));
+
+	int nTime = SDKGameRules()->GetMatchDisplayTimeSeconds(true);
+
+	if (nTime == -1)
+	{
+		m_pTime->SetText(L"âˆž");
+	}
+	else
+	{
+		nTime = abs(nTime);
+		m_pTime->SetText(VarArgs("%d:%02d", nTime / 60, nTime % 60));
+	}
 
 	for (int team = TEAM_A; team <= TEAM_B; team++)
 	{

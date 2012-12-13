@@ -1360,33 +1360,31 @@ void CSDKGameRules::State_Think()
 		if (GetBall())
 			m_nBallZone = GetBall()->CalcFieldZone();
 
-		if (m_pCurStateInfo->m_MinDurationConVar == NULL)
-			m_flStateTimeLeft = 0.0f;
+		if (m_pCurStateInfo->m_eMatchState == MATCH_WARMUP && mp_timelimit_warmup.GetFloat() < 0)
+			m_flStateTimeLeft = 1.0f;
 		else
-		{
 			m_flStateTimeLeft = (m_flStateEnterTime + m_pCurStateInfo->m_MinDurationConVar->GetFloat() * 60 / m_pCurStateInfo->m_flMinDurationDivisor) - gpGlobals->curtime;
 
-			if (!IsIntermissionState())
+		if (!IsIntermissionState())
+		{
+			int additionalTime = m_nAnnouncedInjuryTime + (abs(m_nBallZone) < 50 ? 0 : 30);
+			m_flStateTimeLeft += m_flInjuryTime + additionalTime * 60 / (90.0f / mp_timelimit_match.GetFloat());
+
+			if (sv_playerrotation_enabled.GetBool() && m_PlayerRotationMinutes.Count() > 0 && GetMatchDisplayTimeSeconds(true) / 60 >= m_PlayerRotationMinutes.Head())
 			{
-				int additionalTime = m_nAnnouncedInjuryTime + (abs(m_nBallZone) < 50 ? 0 : 30);
-				m_flStateTimeLeft += m_flInjuryTime + additionalTime * 60 / (90.0f / mp_timelimit_match.GetFloat());
-
-				if (sv_playerrotation_enabled.GetBool() && m_PlayerRotationMinutes.Count() > 0 && GetMatchDisplayTimeSeconds(true) / 60 >= m_PlayerRotationMinutes.Head())
+				for (int i = 1; i <= gpGlobals->curtime; i++)
 				{
-					for (int i = 1; i <= gpGlobals->curtime; i++)
-					{
-						CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
-						if (!CSDKPlayer::IsOnField(pPl))
-							continue;
+					CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+					if (!CSDKPlayer::IsOnField(pPl))
+						continue;
 
-						int team = pPl->GetTeamNumber();
-						int posIndex = pPl->GetTeamPosIndex();
-						pPl->ChangeTeam(TEAM_SPECTATOR);
-						pPl->ChangeTeamPos(team, (posIndex + 1) % mp_maxplayers.GetInt(), false);
-					}
-
-					m_PlayerRotationMinutes.Remove(0);
+					int team = pPl->GetTeamNumber();
+					int posIndex = pPl->GetTeamPosIndex();
+					pPl->ChangeTeam(TEAM_SPECTATOR);
+					pPl->ChangeTeamPos(team, (posIndex + 1) % mp_maxplayers.GetInt(), false);
 				}
+
+				m_PlayerRotationMinutes.Remove(0);
 			}
 		}
 
@@ -2294,7 +2292,10 @@ int CSDKGameRules::GetMatchDisplayTimeSeconds(bool clamped /*= false*/)
 			nTime = min(45 * 60, nTime);
 		break;
 	case MATCH_WARMUP:
-		nTime = (int)(flTime - mp_timelimit_warmup.GetFloat() * 60);
+		if (mp_timelimit_warmup.GetFloat() < 0)
+			nTime = -1;
+		else
+			nTime = (int)(flTime - mp_timelimit_warmup.GetFloat() * 60);
 		break;
 	case MATCH_HALFTIME:
 		nTime = (int)(flTime - mp_timelimit_halftime.GetFloat() * 60);
