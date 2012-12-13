@@ -273,18 +273,13 @@ void CSDKPlayer::MoveToTargetPos(Vector &pos, Vector &vel, QAngle &ang)
 
 	float wishDist = mp_remotecontrolledspeed.GetInt() * gpGlobals->frametime;
 	vel = dir * mp_remotecontrolledspeed.GetInt();
+	pos = pos + vel * gpGlobals->frametime;
+	pos.z = SDKGameRules()->m_vKickOff.GetZ();
 
-	if (wishDist < distToTarget)
+	if (wishDist >= distToTarget)
 	{
-		pos = pos + vel * gpGlobals->frametime;
-		pos.z = SDKGameRules()->m_vKickOff.GetZ();
-	}
-	else
-	{
-		pos = m_vTargetPos;
-
 		trace_t	trace;
-		UTIL_TraceHull(pos, pos, GetPlayerMins(), GetPlayerMaxs(), MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &trace);
+		UTIL_TraceHull(m_vTargetPos, m_vTargetPos, GetPlayerMins(), GetPlayerMaxs(), MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &trace);
 
 		if (trace.startsolid)
 		{
@@ -305,6 +300,7 @@ void CSDKPlayer::MoveToTargetPos(Vector &pos, Vector &vel, QAngle &ang)
 //				m_bShotButtonsReleased = false;
 //#endif
 
+			pos = m_vTargetPos;
 			vel = vec3_origin;
 		}
 	}
