@@ -26,6 +26,7 @@
 #include "cdll_util.h"
 #include "tier1/convar_serverbounded.h"
 #include "in_buttons.h"
+#include "in_main.h"
 
 #if defined( _X360 )
 #include "xbox/xbox_win32stubs.h"
@@ -51,33 +52,6 @@ extern ConVar cl_pitchup;
 extern ConVar legacyverticallook;
 extern const ConVar *sv_cheats;
 
-class ConVar_m_pitch : public ConVar_ServerBounded
-{
-public:
-	ConVar_m_pitch() : 
-		ConVar_ServerBounded( "m_pitch","0.022", FCVAR_ARCHIVE, "Mouse pitch factor." )
-	{
-	}
-	
-	virtual float GetFloat() const
-	{
-		if ( !sv_cheats )
-			sv_cheats = cvar->FindVar( "sv_cheats" );
-
-		// If sv_cheats is on then it can be anything.
-		float flBaseValue = GetBaseFloatValue();
-		if ( !sv_cheats || sv_cheats->GetBool() )
-			return flBaseValue;
-
-		// If sv_cheats is off than it can only be 0.022 or -0.022 (if they've reversed the mouse in the options).		
-		if ( flBaseValue > 0 )
-			return 0.022f;
-		else
-			return -0.022f;
-	}
-} cvar_m_pitch;
-ConVar_ServerBounded *m_pitch = &cvar_m_pitch;
-
 extern ConVar cam_idealyaw;
 extern ConVar cam_idealpitch;
 extern ConVar thirdperson_platformer;
@@ -86,6 +60,7 @@ static ConVar m_filter( "m_filter","0", FCVAR_ARCHIVE, "Mouse filtering (set thi
 ConVar sensitivity( "sensitivity","3", FCVAR_ARCHIVE, "Mouse sensitivity.", true, 0.0001f, false, 10000000 );
 
 static ConVar m_side( "m_side","0.8", FCVAR_ARCHIVE, "Mouse side factor." );
+ConVar m_pitch( "m_pitch","0.022", FCVAR_ARCHIVE, "Mouse pitch factor." );
 static ConVar m_yaw( "m_yaw","0.022", FCVAR_ARCHIVE, "Mouse yaw factor." );
 static ConVar m_forward( "m_forward","1", FCVAR_ARCHIVE, "Mouse forward factor." );
 
@@ -375,7 +350,7 @@ void CInput::ScaleMouse( float *x, float *y )
 		if ( m_customaccel.GetInt() == 2 )
 		{ 
 			*x *= m_yaw.GetFloat(); 
-			*y *= m_pitch->GetFloat(); 
+			*y *= m_pitch.GetFloat(); 
 		} 
 	}
 	else
@@ -447,7 +422,7 @@ void CInput::ApplyMouse( QAngle& viewangles, CUserCmd *cmd, float mouse_x, float
 				if ( mouse_y )
 				{
 					// use the mouse to orbit the camera around the player, and update the idealAngle
-					m_vecCameraOffset[ PITCH ] += m_pitch->GetFloat() * mouse_y;
+					m_vecCameraOffset[ PITCH ] += m_pitch.GetFloat() * mouse_y;
 					cam_idealpitch.SetValue( m_vecCameraOffset[ PITCH ] - viewangles[ PITCH ] );
 
 					// why doesn't this work??? CInput::AdjustYaw is why
@@ -456,17 +431,17 @@ void CInput::ApplyMouse( QAngle& viewangles, CUserCmd *cmd, float mouse_x, float
 			}
 			else
 			{
-				viewangles[PITCH] += m_pitch->GetFloat() * mouse_y;
+				viewangles[PITCH] += m_pitch.GetFloat() * mouse_y;
 			}
 
 			// Check pitch bounds
-			if ( viewangles[PITCH] > (legacyverticallook.GetBool() || in_zoom.state & 1 ? cl_pitchdown.GetFloat() : mp_pitchdown.GetFloat()) )
+			if ( viewangles[PITCH] > GetPitchdown() )
 			{
-				viewangles[PITCH] = (legacyverticallook.GetBool() || in_zoom.state & 1 ? cl_pitchdown.GetFloat() : mp_pitchdown.GetFloat());
+				viewangles[PITCH] = GetPitchdown();
 			}
-			if ( viewangles[PITCH] < (legacyverticallook.GetBool() || in_zoom.state & 1 ? -cl_pitchup.GetFloat() : -mp_pitchup.GetFloat()) )
+			if ( viewangles[PITCH] < -GetPitchup() )
 			{
-				viewangles[PITCH] = (legacyverticallook.GetBool() || in_zoom.state & 1 ? -cl_pitchup.GetFloat() : -mp_pitchup.GetFloat());
+				viewangles[PITCH] = -GetPitchup();
 			}
 		}
 	}

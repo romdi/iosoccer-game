@@ -18,4 +18,7 @@
 extern kbutton_t in_commandermousemove;
 extern kbutton_t in_ducktoggle;
 
+extern float GetPitchup();
+extern float GetPitchdown();
+
 #endif // IN_MAIN_H

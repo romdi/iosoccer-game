@@ -61,9 +61,7 @@ static ConVar c_mindistance( "c_mindistance",   "30", FCVAR_ARCHIVE );
 static ConVar c_orthowidth( "c_orthowidth",   "100", FCVAR_ARCHIVE );
 static ConVar c_orthoheight( "c_orthoheight",   "100", FCVAR_ARCHIVE );
 
-static ConVar cam_fadestartdist( "cam_fadestartdist", "100", FCVAR_ARCHIVE);
-static ConVar cam_fadeenddist( "cam_fadeenddist", "50", FCVAR_ARCHIVE);
-static ConVar cam_fade( "cam_fade", "0", FCVAR_ARCHIVE);
+static ConVar cl_player_opacity( "cl_player_opacity", "1.0", FCVAR_ARCHIVE);
 
 static kbutton_t cam_pitchup, cam_pitchdown, cam_yawleft, cam_yawright;
 static kbutton_t cam_in, cam_out; // -- "cam_move" is unused
@@ -135,13 +133,12 @@ void CInput::CAM_Think( void )
 			camOffset[ DIST ] = adjDist;
 		}
 
-		if (cam_fade.GetBool())
+		if (cl_player_opacity.GetFloat() < 1)
 		{
 			if (localPlayer->GetRenderMode() != kRenderTransColor)
 				localPlayer->SetRenderMode( kRenderTransColor );
 
-			float playerAlpha = ( ( m_vecCameraOffset[ DIST ] - cam_fadeenddist.GetFloat() ) * ( 100 / ( cam_fadestartdist.GetFloat()  -  cam_fadeenddist.GetFloat() ) )  );
-			localPlayer->SetRenderColorA(clamp(playerAlpha * 2.55, 0, 255));
+			localPlayer->SetRenderColorA(clamp(cl_player_opacity.GetFloat() * 255, 0, 255));
 		}
 		else
 		{

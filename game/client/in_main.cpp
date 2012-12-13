@@ -21,6 +21,7 @@
 #include "hltvcamera.h"
 #include <ctype.h> // isalnum()
 #include <voice_status.h>
+#include "c_baseplayer.h"
 
 extern ConVar in_joystick;
 extern ConVar cam_idealpitch;
@@ -64,6 +65,7 @@ extern ConVar mp_pitchdown;
 extern ConVar cl_pitchdown;
 extern ConVar mp_pitchup;
 extern ConVar cl_pitchup;
+extern ConVar mp_client_pitch;
 extern ConVar legacyverticallook;
 
 ConVar thirdperson_platformer( "thirdperson_platformer", "0", 0, "Player will aim in the direction they are moving." );
@@ -74,6 +76,24 @@ static ConVar cl_lagcomp_errorcheck( "cl_lagcomp_errorcheck", "0", 0, "Player in
 
 extern ConVar cl_mouselook;
 #define UsingMouselook() cl_mouselook.GetBool()
+
+float GetPitchup()
+{
+	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
+	if (pPlayer && (pPlayer->GetTeamNumber() == TEAM_A || pPlayer->GetTeamNumber() == TEAM_B) && !(in_zoom.state & 1) && (!legacyverticallook.GetBool() || !mp_client_pitch.GetBool()))
+		return mp_pitchup.GetFloat();
+	else
+		return cl_pitchup.GetFloat();
+}
+
+float GetPitchdown()
+{
+	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
+	if (pPlayer && (pPlayer->GetTeamNumber() == TEAM_A || pPlayer->GetTeamNumber() == TEAM_B) && !(in_zoom.state & 1) && (!legacyverticallook.GetBool() || !mp_client_pitch.GetBool()))
+		return mp_pitchdown.GetFloat();
+	else
+		return cl_pitchdown.GetFloat();
+}
 
 /*
 ===============================================================================
@@ -731,13 +751,13 @@ ClampAngles
 */
 void CInput::ClampAngles( QAngle& viewangles )
 {
-	if ( viewangles[PITCH] > (legacyverticallook.GetBool() || in_zoom.state & 1 ? cl_pitchdown.GetFloat() : mp_pitchdown.GetFloat()) )
+	if ( viewangles[PITCH] > GetPitchdown() )
 	{
-		viewangles[PITCH] = (legacyverticallook.GetBool() || in_zoom.state & 1 ? cl_pitchdown.GetFloat() : mp_pitchdown.GetFloat());
+		viewangles[PITCH] = GetPitchdown();
 	}
-	if ( viewangles[PITCH] < (legacyverticallook.GetBool() || in_zoom.state & 1 ? -cl_pitchup.GetFloat() : -mp_pitchup.GetFloat()) )
+	if ( viewangles[PITCH] < -GetPitchup() )
 	{
-		viewangles[PITCH] = (legacyverticallook.GetBool() || in_zoom.state & 1 ? -cl_pitchup.GetFloat() : -mp_pitchup.GetFloat());
+		viewangles[PITCH] = -GetPitchup();
 	}
 
 #ifndef PORTAL	// Don't constrain Roll in Portal because the player can be upside down! -Jeep

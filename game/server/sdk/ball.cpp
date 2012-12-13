@@ -182,6 +182,7 @@ ConVar sv_ball_stats_assist_maxtime("sv_ball_stats_assist_maxtime", "5", FCVAR_N
 
 ConVar sv_ball_velocity_coeff("sv_ball_velocity_coeff", "1.0", FCVAR_NOTIFY);
 
+extern ConVar mp_client_sidecurl;
 
 CBall *CreateBall(const Vector &pos, CSDKPlayer *pCreator)
 {
@@ -1839,9 +1840,10 @@ bool CBall::PlayersAtTargetPos()
 
 bool CBall::CanTouchBallXY()
 {
-	if ((m_vPos - (m_vPlPos + m_vPlForward2D * sv_ball_standing_shift.GetFloat())).Length2DSqr() <= pow(sv_ball_standing_reach.GetFloat(), 2))
+	Vector circleCenter = m_vPlPos + m_vPlForward2D * sv_ball_standing_shift.GetFloat();
+	Vector dirToBall = m_vPos - circleCenter;
+	if (dirToBall.Length2DSqr() <= pow(sv_ball_standing_reach.GetFloat(), 2))
 	{
-		Vector dirToBall = m_vPlDirToBall;
 		dirToBall.NormalizeInPlace();
 
 		if (RAD2DEG(acos(m_vPlForward2D.Dot(dirToBall))) <= sv_ball_standing_cone.GetFloat() / 2)
@@ -2270,7 +2272,7 @@ float CBall::GetPitchCoeff(bool isNormalShot)
 	{
 		float upCoeff = sv_ball_fixedpitchupcoeff.GetFloat();
 		double upExp = sv_ball_pitchup_exponent.GetFloat();
-		coeff = upCoeff + (1 - upCoeff) * pow(cos((pitch - bestAng) / (PITCH_LIMIT - bestAng) * M_PI / 2), upExp);
+		coeff = upCoeff + (1 - upCoeff) * pow(cos((pitch - bestAng) / (mp_pitchup_remap.GetFloat() - bestAng) * M_PI / 2), upExp);
 	}
 	else
 	{
@@ -2278,13 +2280,13 @@ float CBall::GetPitchCoeff(bool isNormalShot)
 		{
 			float downCoeff = sv_ball_fixedpitchdowncoeff_normalshot.GetFloat();
 			double downExp = sv_ball_pitchdown_exponent_normalshot.GetFloat();
-			coeff = downCoeff + (1 - downCoeff) * pow(cos((pitch - bestAng) / (PITCH_LIMIT - bestAng) * M_PI / 2), downExp);		
+			coeff = downCoeff + (1 - downCoeff) * pow(cos((pitch - bestAng) / (mp_pitchdown_remap.GetFloat() - bestAng) * M_PI / 2), downExp);		
 		}
 		else
 		{
 			float downCoeff = sv_ball_fixedpitchdowncoeff_nonnormalshot.GetFloat();
 			double downExp = sv_ball_pitchdown_exponent_nonnormalshot.GetFloat();
-			coeff = downCoeff + (1 - downCoeff) * pow(cos((pitch - bestAng) / (PITCH_LIMIT - bestAng) * M_PI / 2), downExp);		
+			coeff = downCoeff + (1 - downCoeff) * pow(cos((pitch - bestAng) / (mp_pitchdown_remap.GetFloat() - bestAng) * M_PI / 2), downExp);		
 		}
 	}
 
@@ -2502,9 +2504,9 @@ AngularImpulse CBall::CalcSpin(float coeff, bool applyTopspin)
 	Vector sideRot(0, 0, 0);
 
 	if (m_pPl->m_nButtons & IN_MOVELEFT) 
-		sideRot = Vector(0, 0, m_pPl->IsLegacySideCurl() ? 1 : -1);
+		sideRot = Vector(0, 0, (m_pPl->IsLegacySideCurl() && mp_client_sidecurl.GetBool()) ? 1 : -1);
 	else if (m_pPl->m_nButtons & IN_MOVERIGHT) 
-		sideRot = Vector(0, 0, m_pPl->IsLegacySideCurl() ? -1 : 1);
+		sideRot = Vector(0, 0, (m_pPl->IsLegacySideCurl() && mp_client_sidecurl.GetBool()) ? -1 : 1);
 
 	float sideSpin = m_vVel.Length() * sv_ball_spin.GetInt() * coeff / 100.0f;
 
@@ -2627,7 +2629,7 @@ void CBall::UpdateCarrier()
 		m_vPlVel = m_pPl->GetLocalVelocity();
 		m_vPlVel2D = Vector(m_vPlVel.x, m_vPlVel.y, 0);
 		m_aPlAng = m_pPl->EyeAngles();
-		m_aPlAng[PITCH] = clamp(m_aPlAng[PITCH], -mp_pitchup.GetFloat(), mp_pitchdown.GetFloat());
+		m_aPlAng[PITCH] = RemapValClamped(m_aPlAng[PITCH], -mp_pitchup.GetFloat(), mp_pitchdown.GetFloat(), -mp_pitchup_remap.GetFloat(), mp_pitchdown_remap.GetFloat());
 		AngleVectors(m_aPlAng, &m_vPlForward, &m_vPlRight, &m_vPlUp);
 		m_vPlForward2D = m_vPlForward;
 		m_vPlForward2D.z = 0;

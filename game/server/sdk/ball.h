@@ -43,8 +43,6 @@ enum penalty_state_t
 	PENALTY_ABORTED_ILLEGAL_MOVE
 };
 
-#define PITCH_LIMIT						89
-
 #define FL_POS_KEEPER					1
 #define FL_POS_DEFENDER					2
 #define FL_POS_MIDFIELDER				4
