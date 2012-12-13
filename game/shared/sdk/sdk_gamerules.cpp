@@ -852,6 +852,9 @@ bool CSDKGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 		swap(collisionGroup0,collisionGroup1);
 	}
 
+	if (collisionGroup0 == COLLISION_GROUP_NONSOLID_PLAYER || collisionGroup1 == COLLISION_GROUP_NONSOLID_PLAYER)
+		return false;
+
 	if ( (collisionGroup0 == COLLISION_GROUP_PLAYER || collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT) &&
 		collisionGroup1 == COLLISION_GROUP_PUSHAWAY )
 	{
@@ -2154,7 +2157,8 @@ void CSDKGameRules::DisableShield()
 			continue;
 
 		pPl->RemoveFlag(FL_REMOTECONTROLLED | FL_SHIELD_KEEP_IN | FL_SHIELD_KEEP_OUT);
-		pPl->RemoveSolidFlags(FSOLID_NOT_SOLID);
+		//pPl->RemoveSolidFlags(FSOLID_NOT_SOLID);
+		pPl->SetCollisionGroup(COLLISION_GROUP_PLAYER);
 		pPl->m_bIsAtTargetPos = true;
 		pPl->m_flRemoteControlledStartTime = -1;
 	}

@@ -932,10 +932,6 @@ void CSDKPlayer::State_ACTIVE_Enter()
 
 	m_flLastShotOnGoal = -1;
 
-	//Tony; call spawn again now -- remember; when we add respawn timers etc, to just put them into the spawn queue, and let the queue respawn them.
-	//Spawn();
-	//RemoveEffects(EF_NODRAW); //ios hack - player spawns invisible sometimes
-
 	if (SDKGameRules()->m_nShieldType != SHIELD_NONE)
 		SetPosOutsideShield();
 }
@@ -1379,7 +1375,8 @@ void CSDKPlayer::ActivateRemoteControlling(const Vector &targetPos)
 	m_bIsAtTargetPos = false;
 	DoServerAnimationEvent(PLAYERANIMEVENT_CANCEL);
 	AddFlag(FL_REMOTECONTROLLED);
-	AddSolidFlags(FSOLID_NOT_SOLID);
+	//AddSolidFlags(FSOLID_NOT_SOLID);
+	SetCollisionGroup(COLLISION_GROUP_NONSOLID_PLAYER);
 }
 
 void CSDKPlayer::GetTargetPos(const Vector &pos, Vector &targetPos)
@@ -1600,7 +1597,8 @@ void CSDKPlayer::ResetFlags()
 
 	if (GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B)
 	{
-		RemoveSolidFlags(FSOLID_NOT_SOLID);
+		//RemoveSolidFlags(FSOLID_NOT_SOLID);
+		SetCollisionGroup(COLLISION_GROUP_PLAYER);
 		RemoveEffects(EF_NODRAW);
 	}
 

@@ -294,7 +294,8 @@ void CSDKPlayer::MoveToTargetPos(Vector &pos, Vector &vel, QAngle &ang)
 		{
 			m_bIsAtTargetPos = true;
 			RemoveFlag(FL_REMOTECONTROLLED);
-			RemoveSolidFlags(FSOLID_NOT_SOLID);
+			//RemoveSolidFlags(FSOLID_NOT_SOLID);
+			SetCollisionGroup(COLLISION_GROUP_PLAYER);
 
 			if (m_bHoldAtTargetPos)
 				AddFlag(FL_ATCONTROLS);
