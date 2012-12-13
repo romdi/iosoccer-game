@@ -2292,10 +2292,7 @@ int CSDKGameRules::GetMatchDisplayTimeSeconds(bool clamped /*= false*/)
 			nTime = min(45 * 60, nTime);
 		break;
 	case MATCH_WARMUP:
-		if (mp_timelimit_warmup.GetFloat() < 0)
-			nTime = -1;
-		else
-			nTime = (int)(flTime - mp_timelimit_warmup.GetFloat() * 60);
+		nTime = (int)(flTime - mp_timelimit_warmup.GetFloat() * 60);
 		break;
 	case MATCH_HALFTIME:
 		nTime = (int)(flTime - mp_timelimit_halftime.GetFloat() * 60);

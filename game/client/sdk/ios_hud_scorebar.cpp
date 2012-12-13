@@ -421,16 +421,14 @@ void CHudScorebar::OnThink( void )
 	char *szInjuryTime = (SDKGameRules()->m_nAnnouncedInjuryTime > 0) ? VarArgs("+%d", SDKGameRules()->m_nAnnouncedInjuryTime) : "";
 	m_pInjuryTime->SetText(szInjuryTime);
 
-	int nTime = SDKGameRules()->GetMatchDisplayTimeSeconds(true);
-
-	if (nTime == -1)
+	if (SDKGameRules()->State_Get() == MATCH_WARMUP && mp_timelimit_warmup.GetFloat() < 0)
 	{
 		m_pTime->SetText(L"∞");
 	}
 	else
 	{
-		nTime = abs(nTime);
-		m_pTime->SetText(VarArgs("%d:%02d", nTime / 60, nTime % 60));
+		int time = abs(SDKGameRules()->GetMatchDisplayTimeSeconds(true));
+		m_pTime->SetText(VarArgs("%d:%02d", time / 60, time % 60));
 	}
 
 	for (int team = TEAM_A; team <= TEAM_B; team++)
