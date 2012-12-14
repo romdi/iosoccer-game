@@ -503,7 +503,6 @@ public:
 
 	float				m_flLastShotOnGoal;
 
-
 protected:
 
 	bool				m_bIsAway;

@@ -88,6 +88,7 @@ public : // IGameResources intreface
 	virtual int		GetTeamPosIndexToJoin( int iIndex );
 	virtual int		GetNextJoin( int iIndex );
 	virtual bool	IsCardBanned( int iIndex );
+	virtual bool	IsAway( int iIndex );
 
 	virtual void ClientThink();
 	virtual	void	OnDataChanged(DataUpdateType_t updateType);
@@ -136,6 +137,7 @@ protected:
 	int		m_TeamPosIndexToJoin[MAX_PLAYERS+1];
 	int		m_NextJoin[MAX_PLAYERS+1];
 	bool	m_IsCardBanned[MAX_PLAYERS+1];
+	bool	m_IsAway[MAX_PLAYERS+1];
 };
 
 extern C_PlayerResource *g_PR;
