@@ -1541,7 +1541,7 @@ void CGameMovement::FullWalkMove( )
 	}
 
 #ifdef GAME_DLL
-	if (!SDKGameRules()->IsIntermissionState() && GetBall()->State_Get() == BALL_NORMAL && newPos != oldPos)
+	if (!SDKGameRules()->IsIntermissionState() && GetBall()->State_Get() == BALL_NORMAL && !GetBall()->HasQueuedState() && newPos != oldPos)
 	{
 		ToSDKPlayer(player)->SetExactDistanceCovered(ToSDKPlayer(player)->GetExactDistanceCovered() + (newPos - oldPos).Length2D() * 2.54f / 100);
 		ToSDKPlayer(player)->SetDistanceCovered((int)ToSDKPlayer(player)->GetExactDistanceCovered());
@@ -2059,23 +2059,15 @@ bool CGameMovement::CheckSlideButton()
 	if (mv->m_nOldButtons & IN_DUCK)
 		return false;
 
-	PlayerAnimEvent_t animEvent = PLAYERANIMEVENT_SLIDE;
-
-	pPl->DoAnimationEvent(animEvent);
-
-	//pPl->AddFlag(FL_FREECAM);
-
-	//pPl->m_Shared.SetAnimEvent(animEvent);
-
-	//FinishGravity();
-
-	//mv->m_flMaxSpeed = pPl->m_Shared.m_flRunSpeed / 2;
-
+	pPl->DoAnimationEvent(PLAYERANIMEVENT_SLIDE);
 	mv->m_nOldButtons |= IN_DUCK;
-
 	pPl->m_Shared.SetStamina(pPl->m_Shared.GetStamina() - mp_stamina_drain_sliding.GetInt());
-
 	pPl->m_Shared.m_flNextSlide = gpGlobals->curtime + mp_slide_delay.GetFloat();
+
+#ifdef GAME_DLL
+	if (!SDKGameRules()->IsIntermissionState() && GetBall()->State_Get() == BALL_NORMAL && !GetBall()->HasQueuedState())
+		pPl->SetSlidingTackles(pPl->GetSlidingTackles() + 1);
+#endif
 
 	return true;
 }

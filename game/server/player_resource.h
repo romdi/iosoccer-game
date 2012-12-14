@@ -38,6 +38,8 @@ protected:
 	CNetworkArray( int, m_YellowCards, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_Fouls, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_FoulsSuffered, MAX_PLAYERS+1 );
+	CNetworkArray( int, m_SlidingTackles, MAX_PLAYERS+1 );
+	CNetworkArray( int, m_SlidingTacklesCompleted, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_GoalsConceded, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_Shots, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_ShotsOnGoal, MAX_PLAYERS+1 );

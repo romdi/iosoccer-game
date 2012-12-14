@@ -32,6 +32,8 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_PlayerResource, DT_PlayerResource, CPlayerReso
 	RecvPropArray3( RECVINFO_ARRAY(m_YellowCards), RecvPropInt( RECVINFO(m_YellowCards[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_Fouls), RecvPropInt( RECVINFO(m_Fouls[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_FoulsSuffered), RecvPropInt( RECVINFO(m_FoulsSuffered[0]))),
+	RecvPropArray3( RECVINFO_ARRAY(m_SlidingTackles), RecvPropInt( RECVINFO(m_SlidingTackles[0]))),
+	RecvPropArray3( RECVINFO_ARRAY(m_SlidingTacklesCompleted), RecvPropInt( RECVINFO(m_SlidingTacklesCompleted[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_GoalsConceded), RecvPropInt( RECVINFO(m_GoalsConceded[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_Shots), RecvPropInt( RECVINFO(m_Shots[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_ShotsOnGoal), RecvPropInt( RECVINFO(m_ShotsOnGoal[0]))),
@@ -93,6 +95,8 @@ C_PlayerResource::C_PlayerResource()
 	memset( m_Shots, 0, sizeof( m_Shots ) );
 	memset( m_ShotsOnGoal, 0, sizeof( m_ShotsOnGoal ) );
 	memset( m_PassesCompleted, 0, sizeof( m_PassesCompleted ) );
+	memset( m_SlidingTackles, 0, sizeof( m_SlidingTackles ) );
+	memset( m_SlidingTacklesCompleted, 0, sizeof( m_SlidingTacklesCompleted ) );
 	memset( m_Interceptions, 0, sizeof( m_Interceptions ) );
 	memset( m_Offsides, 0, sizeof( m_Offsides ) );
 	memset( m_Goals, 0, sizeof( m_Goals ) );
@@ -502,6 +506,20 @@ int	C_PlayerResource::GetFoulsSuffered( int iIndex )
 		return 0;
 
 	return m_FoulsSuffered[iIndex];
+}
+int	C_PlayerResource::GetSlidingTackles( int iIndex )
+{
+	if ( !IsConnected( iIndex ) )
+		return 0;
+
+	return m_SlidingTackles[iIndex];
+}
+int	C_PlayerResource::GetSlidingTacklesCompleted( int iIndex )
+{
+	if ( !IsConnected( iIndex ) )
+		return 0;
+
+	return m_SlidingTacklesCompleted[iIndex];
 }
 int	C_PlayerResource::GetGoalsConceded( int iIndex )
 {

@@ -1767,6 +1767,8 @@ void CPlayerPersistentData::ResetData()
 	m_nYellowCards = 0;
 	m_nFouls = 0;
 	m_nFoulsSuffered = 0;
+	m_nSlidingTackles = 0;
+	m_nSlidingTacklesCompleted = 0;
 	m_nGoalsConceded = 0;
 	m_nShots = 0;
 	m_nShotsOnGoal = 0;

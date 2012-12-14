@@ -839,45 +839,47 @@ void CClientScoreBoardDialog::AddHeader()
 		switch (m_nCurStat)
 		{
 		case DEFAULT_STATS:
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "countryindex",			"Loc.", defaultFlags | SectionedListPanel::COLUMN_IMAGE, 45);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "club",				"Club", defaultFlags, 60);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goals",				"Goals", defaultFlags, 35);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "assists",			"Assists", defaultFlags, 35);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "rating",			"Rating", defaultFlags, 35);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "ping",				"Ping", defaultFlags, 50);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "countryindex",				"Loc.",			defaultFlags | SectionedListPanel::COLUMN_IMAGE, 45);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "club",						"Club",			defaultFlags, 60);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goals",						"Goals",		defaultFlags, 35);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "assists",					"Assists",		defaultFlags, 35);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "rating",					"Rating",		defaultFlags, 35);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "ping",						"Ping",			defaultFlags, 50);
 			break;
 		case GENERAL:
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "possession",		"Poss.", defaultFlags, 45);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "distancecovered",	"Distance", defaultFlags, 70);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "passes",			"Passes", defaultFlags, 45);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "passescompleted",	"~ compl.", defaultFlags, 55);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "interceptions",		"Interc.", defaultFlags, 45);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "possession",				"Poss.",		defaultFlags, 45);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "distancecovered",			"Distance",		defaultFlags, 70);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "passes",					"Passes",		defaultFlags, 45);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "passescompleted",			"~ compl.",		defaultFlags, 55);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "interceptions",				"Interc.",		defaultFlags, 45);
 			break;
 		case TACKLES:
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "fouls",				"Fouls", defaultFlags, 65);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "foulssuffered",		"~ suffered", defaultFlags, 65);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "redcards",			"Reds", defaultFlags, 65);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "yellowcards",		"Yellows", defaultFlags, 65);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "slidingtackles",			"Tackles",		defaultFlags, 43);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "slidingtacklescompleted",	"~ compl.",		defaultFlags, 43);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "fouls",						"Fouls",		defaultFlags, 43);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "foulssuffered",				"~ suffered",	defaultFlags, 43);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "yellowcards",				"Yellows",		defaultFlags, 43);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "redcards",					"Reds",			defaultFlags, 43);
 			break;
 		case SET_PIECES:
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "freekicks",			"Free kicks", defaultFlags, 52);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "penalties",			"Penalties", defaultFlags, 52);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "throwins",			"Throw-ins", defaultFlags, 52);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "corners",			"Corners", defaultFlags, 52);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goalkicks",			"Goal kicks", defaultFlags, 52);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "freekicks",					"Free kicks",	defaultFlags, 52);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "penalties",					"Penalties",	defaultFlags, 52);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "throwins",					"Throw-ins",	defaultFlags, 52);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "corners",					"Corners",		defaultFlags, 52);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goalkicks",					"Goal kicks",	defaultFlags, 52);
 			break;
 		case KEEPER:
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "keepersaves",		"Saves", defaultFlags, 65);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goalkicks",			"Goal kicks", defaultFlags, 65);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "owngoals",			"Own goals", defaultFlags, 65);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goalsconceded",		"Goals conc.", defaultFlags, 65);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "keepersaves",				"Saves",		defaultFlags, 65);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goalkicks",					"Goal kicks",	defaultFlags, 65);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "owngoals",					"Own goals",	defaultFlags, 65);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goalsconceded",				"Goals conc.",	defaultFlags, 65);
 			break;
 		case OFFENSE:
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goals",				"Goals", defaultFlags, 52);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "assists",			"Assists", defaultFlags, 52);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "shots",				"Shots", defaultFlags, 52);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "shotsongoal",		"~ on goal", defaultFlags, 52);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "offsides",			"Offsides", defaultFlags, 52);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goals",						"Goals",		defaultFlags, 52);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "assists",					"Assists",		defaultFlags, 52);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "shots",						"Shots",		defaultFlags, 52);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "shotsongoal",				"~ on goal",	defaultFlags, 52);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "offsides",					"Offsides",		defaultFlags, 52);
 			break;
 		default:
 			//m_pPlayerList[i]->AddColumnToSection(m_iSectionId, g_szStatIdentifiers[m_nCurStat], g_szStatNames[m_nCurStat], 0, 90);
@@ -972,6 +974,8 @@ bool CClientScoreBoardDialog::GetPlayerInfo(int playerIndex, KeyValues *kv)
 	kv->SetString("yellowcards", GET_STAT_TEXT(gr->GetYellowCards(playerIndex)));
 	kv->SetString("fouls", GET_STAT_TEXT(gr->GetFouls(playerIndex)));
 	kv->SetString("foulssuffered", GET_STAT_TEXT(gr->GetFoulsSuffered(playerIndex)));
+	kv->SetString("slidingtackles", GET_STAT_TEXT(gr->GetSlidingTackles(playerIndex)));
+	kv->SetString("slidingtacklescompleted", GET_STAT_FTEXT(gr->GetSlidingTacklesCompleted(playerIndex) * 100 / max(1, gr->GetSlidingTackles(playerIndex)), "%d%%"));
 	kv->SetString("passes", GET_STAT_TEXT(gr->GetPasses(playerIndex)));
 	kv->SetString("freekicks", GET_STAT_TEXT(gr->GetFreeKicks(playerIndex)));
 	kv->SetString("penalties", GET_STAT_TEXT(gr->GetPenalties(playerIndex)));
@@ -1077,6 +1081,9 @@ bool CClientScoreBoardDialog::GetTeamInfo(int team, KeyValues *kv)
 	int shotsOnGoalPlayerCount = 0;
 	int fouls = 0;
 	int foulsSuffered = 0;
+	int slidingTackles = 0;
+	int slidingTacklesCompletedSum = 0;
+	int slidingTacklesCompletedPlayerCount = 0;
 	int freekicks = 0;
 	int goals = 0;
 	int assists = 0;
@@ -1121,16 +1128,23 @@ bool CClientScoreBoardDialog::GetTeamInfo(int team, KeyValues *kv)
 		if (gr->GetPasses(i) > 0)
 		{
 			passSum += gr->GetPasses(i);
-			passCompletedSum += gr->GetPassesCompleted(i) * 100 / max(1, gr->GetPasses(i));
+			passCompletedSum += gr->GetPassesCompleted(i) * 100 / gr->GetPasses(i);
 			passCompletedPlayerCount += 1;
-			ratings += gr->GetPassesCompleted(i) * 10 / max(1, gr->GetPasses(i));
+			ratings += gr->GetPassesCompleted(i) * 10 / gr->GetPasses(i);
 		}
 
 		if (gr->GetShots(i) > 0)
 		{
 			shots += gr->GetShots(i);
-			shotsOnGoal += gr->GetShotsOnGoal(i) * 100 / max(1, gr->GetShots(i));
+			shotsOnGoal += gr->GetShotsOnGoal(i) * 100 / gr->GetShots(i);
 			shotsOnGoalPlayerCount += 1;
+		}
+
+		if (gr->GetSlidingTackles(i) > 0)
+		{
+			slidingTackles += gr->GetSlidingTackles(i);
+			slidingTacklesCompletedSum += gr->GetSlidingTacklesCompleted(i) * 100 / gr->GetSlidingTackles(i);
+			slidingTacklesCompletedPlayerCount += 1;
 		}
 
 		offsides += gr->GetOffsides(i);
@@ -1174,6 +1188,8 @@ bool CClientScoreBoardDialog::GetTeamInfo(int team, KeyValues *kv)
 	kv->SetString("shotsongoal", GET_STAT_FTEXT(shotsOnGoal / max(1, shotsOnGoalPlayerCount), "%d%%"));
 	kv->SetString("fouls", GET_STAT_TEXT(fouls));
 	kv->SetString("foulssuffered", GET_STAT_TEXT(fouls));
+	kv->SetString("slidingtackles", GET_STAT_TEXT(slidingTackles));
+	kv->SetString("slidingtacklescompleted", GET_STAT_FTEXT(slidingTacklesCompletedSum / max(1, slidingTacklesCompletedPlayerCount), "%d%%"));
 	kv->SetString("freekicks", GET_STAT_TEXT(freekicks));
 	kv->SetString("goals", GET_STAT_TEXT(goals));
 	kv->SetString("assists", GET_STAT_TEXT(assists));

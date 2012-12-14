@@ -2120,6 +2120,8 @@ bool CBall::DoSlideAction()
 	if (!canShootBall)
 		return false;
 
+	//m_pPl->SetSlidingTackles(m_pPl->GetSlidingTackles() + 1);
+
 	if (!SDKGameRules()->IsIntermissionState() && !m_bHasQueuedState)
 	{
 		if (CheckFoul())
@@ -2152,7 +2154,10 @@ bool CBall::DoSlideAction()
 	}
 
 	SetVel(ballVel, 0, BODY_PART_FEET, false, true, false);
-	m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
+
+	if (!SDKGameRules()->IsIntermissionState() && State_Get() == BALL_NORMAL && !HasQueuedState())
+		m_pPl->SetSlidingTacklesCompleted(m_pPl->GetSlidingTacklesCompleted() + 1);
+
 	return true;
 }
 

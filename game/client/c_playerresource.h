@@ -61,6 +61,8 @@ public : // IGameResources intreface
 	virtual int		GetYellowCards( int index );
 	virtual int		GetFouls( int index );
 	virtual int		GetFoulsSuffered( int index );
+	virtual int		GetSlidingTackles( int index );
+	virtual int		GetSlidingTacklesCompleted( int index );
 	virtual int		GetGoalsConceded( int index );
 	virtual int		GetShots( int index );
 	virtual int		GetShotsOnGoal( int index );
@@ -107,6 +109,8 @@ protected:
 	int		m_YellowCards[MAX_PLAYERS+1];
 	int		m_Fouls[MAX_PLAYERS+1];
 	int		m_FoulsSuffered[MAX_PLAYERS+1];
+	int		m_SlidingTackles[MAX_PLAYERS+1];
+	int		m_SlidingTacklesCompleted[MAX_PLAYERS+1];
 	int		m_GoalsConceded[MAX_PLAYERS+1];
 	int		m_Shots[MAX_PLAYERS+1];
 	int		m_ShotsOnGoal[MAX_PLAYERS+1];

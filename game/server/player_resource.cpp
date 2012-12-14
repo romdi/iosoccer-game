@@ -32,6 +32,8 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CPlayerResource, DT_PlayerResource)
 	SendPropArray3( SENDINFO_ARRAY3(m_YellowCards), SendPropInt( SENDINFO_ARRAY(m_YellowCards), 4, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_Fouls), SendPropInt( SENDINFO_ARRAY(m_Fouls), 6, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_FoulsSuffered), SendPropInt( SENDINFO_ARRAY(m_FoulsSuffered), 6, SPROP_UNSIGNED ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_SlidingTackles), SendPropInt( SENDINFO_ARRAY(m_SlidingTackles), 8, SPROP_UNSIGNED ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_SlidingTacklesCompleted), SendPropInt( SENDINFO_ARRAY(m_SlidingTacklesCompleted), 8, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_GoalsConceded), SendPropInt( SENDINFO_ARRAY(m_GoalsConceded), 5, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_Shots), SendPropInt( SENDINFO_ARRAY(m_Shots), 6, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_ShotsOnGoal), SendPropInt( SENDINFO_ARRAY(m_ShotsOnGoal), 6, SPROP_UNSIGNED ) ),
@@ -101,6 +103,8 @@ void CPlayerResource::Spawn( void )
 		m_YellowCards.Set( i, 0 );
 		m_Fouls.Set( i, 0 );
 		m_FoulsSuffered.Set( i, 0 );
+		m_SlidingTackles.Set( i, 0 );
+		m_SlidingTacklesCompleted.Set( i, 0 );
 		m_GoalsConceded.Set( i, 0 );
 		m_Shots.Set( i, 0 );
 		m_ShotsOnGoal.Set( i, 0 );
@@ -177,6 +181,8 @@ void CPlayerResource::UpdatePlayerData( void )
 				m_YellowCards.Set(i, max( 0, SDKPlayer->GetYellowCards() ) );
 				m_Fouls.Set(i, max( 0, SDKPlayer->GetFouls() ) );
 				m_FoulsSuffered.Set(i, max( 0, SDKPlayer->GetFoulsSuffered() ) );
+				m_SlidingTackles.Set(i, max( 0, SDKPlayer->GetSlidingTackles() ) );
+				m_SlidingTacklesCompleted.Set(i, max( 0, SDKPlayer->GetSlidingTacklesCompleted() ) );
 				m_GoalsConceded.Set(i, max( 0, SDKPlayer->GetGoalsConceded() ) );
 				m_Shots.Set(i, max( 0, SDKPlayer->GetShots() ) );
 				m_ShotsOnGoal.Set(i, max( 0, SDKPlayer->GetShotsOnGoal() ) );

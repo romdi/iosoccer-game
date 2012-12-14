@@ -41,6 +41,8 @@ public:
 	int		m_nYellowCards;
 	int		m_nFouls;
 	int		m_nFoulsSuffered;
+	int		m_nSlidingTackles;
+	int		m_nSlidingTacklesCompleted;
 	int		m_nGoalsConceded;
 	int		m_nShots;
 	int		m_nShotsOnGoal;
@@ -313,6 +315,12 @@ public:
 
 	int					GetFoulsSuffered(void) { return GetData()->m_nFoulsSuffered; }
 	void				SetFoulsSuffered(int amount) { GetData()->m_nFoulsSuffered = amount; }
+
+	int					GetSlidingTackles(void) { return GetData()->m_nSlidingTackles; }
+	void				SetSlidingTackles(int amount) { GetData()->m_nSlidingTackles = amount; }
+
+	int					GetSlidingTacklesCompleted(void) { return GetData()->m_nSlidingTacklesCompleted; }
+	void				SetSlidingTacklesCompleted(int amount) { GetData()->m_nSlidingTacklesCompleted = amount; }
 
 	int					GetGoalsConceded(void) { return GetData()->m_nGoalsConceded; }
 	void				SetGoalsConceded(int amount) { GetData()->m_nGoalsConceded = amount; }
