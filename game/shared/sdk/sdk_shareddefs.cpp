@@ -150,3 +150,5 @@ ConVar mp_throwinthrow_idle_duration("mp_throwinthrow_idle_duration", "1.0", FCV
 ConVar mp_tackled_idle_duration("mp_tackled_idle_duration", "1.0", FCVAR_REPLICATED | FCVAR_NOTIFY);
 
 ConVar mp_charging_animation_enabled("mp_charging_animation_enabled", "0", FCVAR_REPLICATED | FCVAR_NOTIFY);
+
+ConVar mp_majorevent_messageduration("mp_majorevent_messageduration", "0.75", FCVAR_REPLICATED | FCVAR_NOTIFY);

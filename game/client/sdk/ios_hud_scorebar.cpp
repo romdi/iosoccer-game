@@ -102,27 +102,6 @@ private:
 
 DECLARE_HUDELEMENT( CHudScorebar );
 
-#define	HEIGHT_MARGIN			3
-#define HEIGHT_TIMEBAR			35
-#define HEIGHT_TEAMBAR			35
-#define HPADDING				5
-#define VPADDING				3
-
-#define WIDTH_MARGIN			5
-#define WIDTH_OVERLAP			20
-#define WIDTH_EVENTTYPE			150
-#define WIDTH_EVENTTEXT			100
-#define WIDTH_TEAM				115
-#define WIDTH_SCORE				30
-//#define WIDTH_TIMEBAR			150
-#define WIDTH_MATCHSTATE		40
-#define WIDTH_TIME				70
-#define WIDTH_TEAMCOLOR			5
-#define WIDTH_INJURYTIME		30
-
-#define WIDTH_TEAMBAR			(HPADDING + WIDTH_TEAM + WIDTH_MARGIN + WIDTH_TEAMCOLOR + WIDTH_MARGIN + WIDTH_SCORE + HPADDING)
-#define WIDTH_TIMEBAR			(HPADDING + WIDTH_MATCHSTATE + WIDTH_MARGIN + WIDTH_TIME + HPADDING)
-
 enum { MAINBAR_WIDTH = 270, MAINBAR_HEIGHT = 40, MAINBAR_MARGIN = 15 };
 enum { TEAMGOAL_WIDTH = 30, TEAMGOAL_MARGIN = 10 };
 enum { TIME_WIDTH = 120, TIME_MARGIN = 5, INJURY_TIME_WIDTH = 20, INJURY_TIME_MARGIN = 10 };
@@ -137,6 +116,9 @@ enum { PENALTYPANEL_HEIGHT = 20, PENALTYPANEL_PADDING = 2, PENALTYPANEL_TOPMARGI
 enum { TEAMNAME_WIDTH = (MAINBAR_WIDTH - 2 * TEAMGOAL_MARGIN - TEAMGOAL_WIDTH - 2 * TEAMCOLOR_HMARGIN - 2 * TEAMCOLOR_WIDTH - TEAMCREST_SIZE - TEAMCREST_PADDING), TEAMNAME_MARGIN = 10 };
 enum { EVENT_MARGIN = 5, EVENT_WIDTH = 200, EVENT_HEIGHT = 35, SUBEVENT_WIDTH = 200, SUBEVENT_HEIGHT = 35, IMPORTANTEVENT_HEIGHT = 100 };
 enum { HELPTEXT_HEIGHT = 40, HELPTEXT_BOTTOMMARGIN = 15 };
+
+ConVar hud_minor_events_visible("hud_minor_events_visible", "1", FCVAR_USERINFO | FCVAR_ARCHIVE, "");
+ConVar hud_minor_eventplayernames_visible("hud_minor_eventplayernames_visible", "1", FCVAR_USERINFO | FCVAR_ARCHIVE, "");
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -460,62 +442,60 @@ void CHudScorebar::OnThink( void )
 		}
 		else
 		{
-			m_pEvent->SetText(g_szMatchEventNames[pBall->m_eMatchEvent]);
+			bool showEvent = true;
+			bool showPlayers = true;
+
 			int eventTeamIndex = clamp(pBall->m_nMatchEventTeam - TEAM_A, 0, 1);
-			m_pEvent->SetFgColor(GetGlobalTeam(TEAM_A + eventTeamIndex)->Get_HudKitColor());
-
-			m_pSubEvent->SetText(g_szMatchEventNames[pBall->m_eMatchSubEvent]);
 			int subEventTeamIndex = clamp(pBall->m_nMatchSubEventTeam - TEAM_A, 0, 1);
-			m_pSubEvent->SetFgColor(GetGlobalTeam(TEAM_A + subEventTeamIndex)->Get_HudKitColor());
-
-			m_pSubSubEvent->SetText(g_szMatchEventNames[pBall->m_eMatchSubSubEvent]);
 			int subSubEventTeamIndex = clamp(pBall->m_nMatchSubSubEventTeam - TEAM_A, 0, 1);
-			m_pSubSubEvent->SetFgColor(GetGlobalTeam(TEAM_A + subSubEventTeamIndex)->Get_HudKitColor());
 
-			if (pBall->m_eMatchEvent != m_eCurMatchEvent)
+			switch (pBall->m_eMatchEvent)
 			{
-				//switch (pBall->m_eMatchEvent)
-				//{
-				//case MATCH_EVENT_GOAL:
-				//case MATCH_EVENT_OWNGOAL:
-				//case MATCH_EVENT_HALFTIME:
-				//case MATCH_EVENT_FINAL_WHISTLE:
-				//	m_eCurMatchEvent = pBall->m_eMatchEvent;
-				//	m_flImportantEventStart = gpGlobals->curtime;
-				//	m_pImportantEvent->SetText(g_szMatchEventNames[pBall->m_eMatchEvent]);
-				//	break;
-				//default:
-				//	m_flImportantEventStart = -1;
-				//	m_pImportantEvent->SetText("");
-				//	break;
-				//}
-
-				switch (pBall->m_eMatchEvent)
+			case MATCH_EVENT_DRIBBLE:
+			case MATCH_EVENT_PASS:
+			case MATCH_EVENT_INTERCEPTION:
+			case MATCH_EVENT_KEEPERSAVE:
+				m_flImportantEventStart = -1;
+				m_pImportantEvent->SetText("");
+				if (!hud_minor_events_visible.GetBool())
+					showEvent = false;
+				if (!hud_minor_eventplayernames_visible.GetBool())
+					showPlayers = false;
+				break;
+			default:
+				if (pBall->m_eMatchEvent != m_eCurMatchEvent)
 				{
-				case MATCH_EVENT_DRIBBLE:
-				case MATCH_EVENT_PASS:
-				case MATCH_EVENT_INTERCEPTION:
-				case MATCH_EVENT_KEEPERSAVE:
-					m_flImportantEventStart = -1;
-					m_pImportantEvent->SetText("");
-					break;
-				default:
-					m_eCurMatchEvent = pBall->m_eMatchEvent;
 					m_flImportantEventStart = gpGlobals->curtime;
 					m_pImportantEvent->SetText(g_szMatchEventNames[pBall->m_eMatchEvent]);
-					break;
 				}
+				break;
+			}
 
-				m_eCurMatchEvent = pBall->m_eMatchEvent;
-				m_flNextPlayerUpdate = gpGlobals->curtime;
+			if (pBall->m_eMatchEvent != MATCH_EVENT_NONE && m_flImportantEventStart != -1 && gpGlobals->curtime >= m_flImportantEventStart + mp_majorevent_messageduration.GetFloat())
+			{
+				m_flImportantEventStart = -1;
+				m_pImportantEvent->SetText("");
+			}
+
+			m_eCurMatchEvent = pBall->m_eMatchEvent;
+			m_flNextPlayerUpdate = gpGlobals->curtime;
+
+			if (showEvent)
+			{
+				m_pEvent->SetText(g_szMatchEventNames[pBall->m_eMatchEvent]);
+				m_pEvent->SetFgColor(GetGlobalTeam(TEAM_A + eventTeamIndex)->Get_HudKitColor());
+
+				m_pSubEvent->SetText(g_szMatchEventNames[pBall->m_eMatchSubEvent]);
+				m_pSubEvent->SetFgColor(GetGlobalTeam(TEAM_A + subEventTeamIndex)->Get_HudKitColor());
+
+				m_pSubSubEvent->SetText(g_szMatchEventNames[pBall->m_eMatchSubSubEvent]);
+				m_pSubSubEvent->SetFgColor(GetGlobalTeam(TEAM_A + subSubEventTeamIndex)->Get_HudKitColor());
 			}
 			else
 			{
-				if (m_eCurMatchEvent != MATCH_EVENT_NONE && m_flImportantEventStart != -1 && gpGlobals->curtime >= m_flImportantEventStart + 0.5f)
-				{
-					m_flImportantEventStart = -1;
-					m_pImportantEvent->SetText("");
-				}
+				m_pEvent->SetText("");
+				m_pSubEvent->SetText("");
+				m_pSubSubEvent->SetText("");
 			}
 
 			if (pBall->m_eBallState != BALL_NORMAL)
@@ -527,7 +507,7 @@ void CHudScorebar::OnThink( void )
 			{
 				m_flNextPlayerUpdate = gpGlobals->curtime;// + 0.5f;
 
-				if (pBall->m_pMatchEventPlayer)
+				if (pBall->m_pMatchEventPlayer && showPlayers)
 				{
 					m_pPlayers[eventTeamIndex]->SetText(pBall->m_pMatchEventPlayer->GetPlayerName());
 					m_pPlayers[eventTeamIndex]->SetFgColor(GetGlobalTeam(TEAM_A + eventTeamIndex)->Get_HudKitColor());
@@ -539,7 +519,7 @@ void CHudScorebar::OnThink( void )
 					m_pPlayers[1]->SetText("");
 				}
 
-				if (pBall->m_pMatchSubEventPlayer)
+				if (pBall->m_pMatchSubEventPlayer && showPlayers)
 				{
 					m_pSubPlayers[subEventTeamIndex]->SetText(pBall->m_pMatchSubEventPlayer->GetPlayerName());
 					m_pSubPlayers[subEventTeamIndex]->SetFgColor(GetGlobalTeam(TEAM_A + subEventTeamIndex)->Get_HudKitColor());
@@ -551,7 +531,7 @@ void CHudScorebar::OnThink( void )
 					m_pSubPlayers[1]->SetText("");
 				}
 
-				if (pBall->m_pMatchSubSubEventPlayer)
+				if (pBall->m_pMatchSubSubEventPlayer && showPlayers)
 				{
 					m_pSubSubPlayers[subSubEventTeamIndex]->SetText(pBall->m_pMatchSubSubEventPlayer->GetPlayerName());
 					m_pSubSubPlayers[subSubEventTeamIndex]->SetFgColor(GetGlobalTeam(TEAM_A + subSubEventTeamIndex)->Get_HudKitColor());

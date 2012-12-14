@@ -160,6 +160,9 @@ CIOSOptionsPanel::CIOSOptionsPanel(VPANEL parent) : BaseClass(NULL, "IOSOptionsP
 	m_pCommandrateInfoButton = new Button(m_pContent, "", "?");
 	m_pCommandrateInfoButton->GetTooltip()->SetText("'Command Rate' sets the number of input updates per second you want to send to the server.\nThe maximum value is the current server tickrate, which is usually 66 or 100.\nThe higher 'Command Rate' the more upload bandwidth will be used.");
 	m_pCommandrateInfoButton->GetTooltip()->SetTooltipDelay(0);
+
+	m_pHudMatchEventTick = new CheckButton(m_pContent, "", "Show minor match events (dribblings, passes, etc.)");
+	m_pHudMatchNamesTick = new CheckButton(m_pContent, "", "Show player names for minor match events");
 }
 
 CIOSOptionsPanel::~CIOSOptionsPanel()
@@ -174,7 +177,7 @@ void CIOSOptionsPanel::ApplySchemeSettings( IScheme *pScheme )
 	SetTitle("PLAYER SETTINGS", false);
 	SetProportional(false);
 	SetSizeable(false);
-	SetBounds(0, 0, 550, 450);
+	SetBounds(0, 0, 550, 500);
 	SetBgColor(Color(0, 0, 0, 255));
 	SetPaintBackgroundEnabled(true);
 	MoveToCenterOfScreen();
@@ -207,23 +210,25 @@ void CIOSOptionsPanel::ApplySchemeSettings( IScheme *pScheme )
 	m_pSmoothDurationInfoButton->SetBounds(LABEL_WIDTH + INPUT_WIDTH + INFOBUTTON_MARGIN, 5 * TEXT_HEIGHT, INFOBUTTON_WIDTH, TEXT_HEIGHT);
 	m_pSmoothDurationInfoButton->SetContentAlignment(Label::a_center);
 
-	m_pLegacySideCurl->SetBounds(0, 6 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
+	m_pLegacySideCurl->SetBounds(0, 6 * TEXT_HEIGHT, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
+	m_pLegacyVerticalLook->SetBounds(0, 7 * TEXT_HEIGHT, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
 
-	m_pLegacyVerticalLook->SetBounds(0, 7 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
+	m_pHudMatchEventTick->SetBounds(0, 8 * TEXT_HEIGHT, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
+	m_pHudMatchNamesTick->SetBounds(0, 9 * TEXT_HEIGHT, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
 
-	m_pRateLabel->SetBounds(0, 8 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pRateText->SetBounds(LABEL_WIDTH, 8 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
-	m_pRateInfoButton->SetBounds(LABEL_WIDTH + INPUT_WIDTH + INFOBUTTON_MARGIN, 8 * TEXT_HEIGHT, INFOBUTTON_WIDTH, TEXT_HEIGHT);
+	m_pRateLabel->SetBounds(0, 10 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pRateText->SetBounds(LABEL_WIDTH, 10 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
+	m_pRateInfoButton->SetBounds(LABEL_WIDTH + INPUT_WIDTH + INFOBUTTON_MARGIN, 10 * TEXT_HEIGHT, INFOBUTTON_WIDTH, TEXT_HEIGHT);
 	m_pRateInfoButton->SetContentAlignment(Label::a_center);
 
-	m_pUpdaterateLabel->SetBounds(0, 9 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pUpdaterateText->SetBounds(LABEL_WIDTH, 9 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
-	m_pUpdaterateInfoButton->SetBounds(LABEL_WIDTH + INPUT_WIDTH + INFOBUTTON_MARGIN, 9 * TEXT_HEIGHT, INFOBUTTON_WIDTH, TEXT_HEIGHT);
+	m_pUpdaterateLabel->SetBounds(0, 11 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pUpdaterateText->SetBounds(LABEL_WIDTH, 11 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
+	m_pUpdaterateInfoButton->SetBounds(LABEL_WIDTH + INPUT_WIDTH + INFOBUTTON_MARGIN, 11 * TEXT_HEIGHT, INFOBUTTON_WIDTH, TEXT_HEIGHT);
 	m_pUpdaterateInfoButton->SetContentAlignment(Label::a_center);
 
-	m_pCommandrateLabel->SetBounds(0, 10 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pCommandrateText->SetBounds(LABEL_WIDTH, 10 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
-	m_pCommandrateInfoButton->SetBounds(LABEL_WIDTH + INPUT_WIDTH + INFOBUTTON_MARGIN, 10 * TEXT_HEIGHT, INFOBUTTON_WIDTH, TEXT_HEIGHT);
+	m_pCommandrateLabel->SetBounds(0, 12 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pCommandrateText->SetBounds(LABEL_WIDTH, 12 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
+	m_pCommandrateInfoButton->SetBounds(LABEL_WIDTH + INPUT_WIDTH + INFOBUTTON_MARGIN, 12 * TEXT_HEIGHT, INFOBUTTON_WIDTH, TEXT_HEIGHT);
 	m_pCommandrateInfoButton->SetContentAlignment(Label::a_center);
 
 	m_pOKButton->SetBounds(m_pContent->GetWide() - 3 * BUTTON_WIDTH - 2 * BUTTON_MARGIN, m_pContent->GetTall() - BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT);
@@ -308,6 +313,9 @@ void CIOSOptionsPanel::OnCommand(const char *cmd)
 		g_pCVar->FindVar("legacysidecurl")->SetValue(m_pLegacySideCurl->IsSelected() ? 1 : 0);
 		g_pCVar->FindVar("legacyverticallook")->SetValue(m_pLegacyVerticalLook->IsSelected() ? 1 : 0);
 
+		g_pCVar->FindVar("hud_minor_events_visible")->SetValue(m_pHudMatchEventTick->IsSelected() ? 1 : 0);
+		g_pCVar->FindVar("hud_minor_eventplayernames_visible")->SetValue(m_pHudMatchNamesTick->IsSelected() ? 1 : 0);
+
 		m_pRateText->GetText(text, sizeof(text));
 		g_pCVar->FindVar("rate")->SetValue(atoi(text));
 		m_pUpdaterateText->GetText(text, sizeof(text));
@@ -365,6 +373,9 @@ void CIOSOptionsPanel::Activate()
 
 	m_pLegacySideCurl->SetSelected(g_pCVar->FindVar("legacysidecurl")->GetBool());
 	m_pLegacyVerticalLook->SetSelected(g_pCVar->FindVar("legacyverticallook")->GetBool());
+
+	m_pHudMatchEventTick->SetSelected(g_pCVar->FindVar("hud_minor_events_visible")->GetBool());
+	m_pHudMatchNamesTick->SetSelected(g_pCVar->FindVar("hud_minor_eventplayernames_visible")->GetBool());
 
 	m_pRateText->SetText(g_pCVar->FindVar("rate")->GetString());
 	m_pUpdaterateText->SetText(g_pCVar->FindVar("cl_updaterate")->GetString());

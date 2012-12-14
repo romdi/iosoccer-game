@@ -65,6 +65,9 @@ protected:
 	Label *m_pCommandrateLabel;
 	TextEntry *m_pCommandrateText;
 	Button *m_pCommandrateInfoButton;
+
+	CheckButton *m_pHudMatchEventTick;
+	CheckButton *m_pHudMatchNamesTick;
 };
 
 class IIOSOptionsMenu
