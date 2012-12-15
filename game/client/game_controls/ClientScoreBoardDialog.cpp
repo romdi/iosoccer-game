@@ -475,11 +475,6 @@ void CClientScoreBoardDialog::Update( void )
 	if (!gr)
 		return;
 
-	//if (m_pPlayerList[0]->GetFgColor() != GetGlobalTeam(TEAM_A)->Get_HudKitColor() || m_pPlayerList[1]->GetFgColor() != GetGlobalTeam(TEAM_B)->Get_HudKitColor())
-	//{
-	//	Reset();
-	//}
-
 	if (m_eActivePanelType == STATS_MENU)
 	{
 		if (m_nSelectedPlayerIndex > 0 && !gr->IsConnected(m_nSelectedPlayerIndex))
@@ -519,12 +514,7 @@ void CClientScoreBoardDialog::Update( void )
 	UpdateTeamInfo();
 
 	for (int i = 0; i < 2; i++)
-	{
 		m_pTeamCrests[i]->SetVisible(gr->HasTeamCrest(TEAM_A + i));
-		//m_pPlayerList[i]->SetFgColor(GetGlobalTeam(TEAM_A + i)->Get_HudKitColor());
-		//m_pPlayerList[i]->SetSectionFgColor(0, GetGlobalTeam(TEAM_A + i)->Get_HudKitColor());
-		//m_pPlayerList[i]->Repaint();
-	}
 
 	if (m_pFormationList->IsVisible())
 	{
@@ -1187,7 +1177,7 @@ bool CClientScoreBoardDialog::GetTeamInfo(int team, KeyValues *kv)
 	kv->SetString("shots", GET_STAT_TEXT(shots));
 	kv->SetString("shotsongoal", GET_STAT_FTEXT(shotsOnGoal / max(1, shotsOnGoalPlayerCount), "%d%%"));
 	kv->SetString("fouls", GET_STAT_TEXT(fouls));
-	kv->SetString("foulssuffered", GET_STAT_TEXT(fouls));
+	kv->SetString("foulssuffered", GET_STAT_TEXT(foulsSuffered));
 	kv->SetString("slidingtackles", GET_STAT_TEXT(slidingTackles));
 	kv->SetString("slidingtacklescompleted", GET_STAT_FTEXT(slidingTacklesCompletedSum / max(1, slidingTacklesCompletedPlayerCount), "%d%%"));
 	kv->SetString("freekicks", GET_STAT_TEXT(freekicks));
@@ -1341,10 +1331,7 @@ void CClientScoreBoardDialog::OnCommand( char const *cmd )
 	else if (!Q_strnicmp(cmd, "stat:", 5))
 	{
 		m_nCurStat = atoi(&cmd[5]);
-		//if (m_nCurStat != -1)
-		//	m_eActivePanelType = MATCHEVENT_MENU;
-		//else
-			m_eActivePanelType = FORMATION_MENU_NORMAL;
+		m_eActivePanelType = FORMATION_MENU_NORMAL;
 		Reset();
 		Update();
 	}
@@ -1356,23 +1343,6 @@ void CClientScoreBoardDialog::OnCommand( char const *cmd )
 			m_eActivePanelType = FORMATION_MENU_NORMAL;
 		else
 			m_eActivePanelType = STATS_MENU;
-
-		//m_nCurSpecIndex = atoi(&cmd[10]);
-
-		//if (m_nCurSpecIndex > 0)
-		//{
-		//	for (int i = 0; i < m_pSpectatorNames->GetChildCount(); i++)
-		//	{
-		//		Button *pPl = (Button *)m_pSpectatorNames->GetChild(i);
-		//		if (!Q_strcmp(pPl->GetCommand()->GetString("command"), cmd))
-		//		{
-		//			m_pCurSpecButton = pPl;
-		//			break;
-		//		}
-		//	}
-		//}
-		//else
-		//	m_pCurSpecButton = NULL;
 
 		Update();
 	}
