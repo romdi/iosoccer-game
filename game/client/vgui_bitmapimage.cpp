@@ -41,7 +41,11 @@ BitmapImage::BitmapImage( vgui::VPANEL parent, const char *filename )
 bool BitmapImage::Init( vgui::VPANEL pParent, const char *pFileName )
 {
 	UsePanelRenderSize( pParent );
-	m_nTextureId = vgui::surface()->CreateNewTextureID();
+	int id = vgui::surface()->DrawGetTextureId(pFileName);
+	if (id > -1)
+		m_nTextureId = id;
+	else
+		m_nTextureId = vgui::surface()->CreateNewTextureID();
 	vgui::surface()->DrawSetTextureFile( m_nTextureId, pFileName , true, true);
 	GetSize( m_Size[0], m_Size[1] );
 	return true;
