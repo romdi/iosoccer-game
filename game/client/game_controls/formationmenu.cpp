@@ -48,7 +48,7 @@
 using namespace vgui;
 
 enum { FORMATION_BUTTON_WIDTH = 90, FORMATION_BUTTON_HEIGHT = 55 };
-enum { FORMATION_HPADDING = (FORMATION_BUTTON_WIDTH / 2 + 40), FORMATION_VPADDING = (FORMATION_BUTTON_HEIGHT / 2 + 20), FORMATION_CENTERPADDING = 35 };
+enum { FORMATION_HPADDING = (FORMATION_BUTTON_WIDTH / 2 + 40), FORMATION_VTOPPADDING = (FORMATION_BUTTON_HEIGHT / 2 + 0), FORMATION_VBOTTOMPADDING = (FORMATION_BUTTON_HEIGHT / 2 + 22), FORMATION_CENTERPADDING = 35 };
 enum { TOOLTIP_WIDTH = 100, TOOLTIP_HEIGHT = 20 };
 enum { TICK_WIDTH = 25, TICK_HEIGHT = 20 };
 
@@ -304,10 +304,10 @@ void CFormationMenu::Update(bool showCaptainMenu)
 			}
 
 			float xDist = (m_pFormations[i]->GetWide() - 2 * FORMATION_HPADDING) / 3;
-			float yDist = (m_pFormations[i]->GetTall() - 2 * FORMATION_VPADDING) / 3;
+			float yDist = (m_pFormations[i]->GetTall() - FORMATION_VTOPPADDING - FORMATION_VBOTTOMPADDING) / 3;
 			float xPos = FORMATION_HPADDING + g_Positions[mp_maxplayers.GetInt() - 1][j][POS_XPOS] * xDist - m_pFormationButtons[i][j]->GetWide() / 2;
 			xPos += (i == 0 ? -1 : 1) * FORMATION_CENTERPADDING;
-			float yPos = FORMATION_VPADDING + g_Positions[mp_maxplayers.GetInt() - 1][j][POS_YPOS] * yDist - m_pFormationButtons[i][j]->GetTall() / 2;
+			float yPos = FORMATION_VTOPPADDING + g_Positions[mp_maxplayers.GetInt() - 1][j][POS_YPOS] * yDist - m_pFormationButtons[i][j]->GetTall() / 2;
 			m_pFormationButtons[i][j]->SetPos(xPos, yPos);
 
 			bool isFree = (playerIndexAtPos[i][j] == 0);
@@ -324,7 +324,7 @@ void CFormationMenu::Update(bool showCaptainMenu)
 			m_pFormationButtons[i][j]->SetImage(CBitmapButton::BUTTON_PRESSED, "vgui/shirt", pressed);
 			//m_pFormationButtons[i][j]->SetName(VarArgs("%d", playerIndexAtPos[i][j]));
 
-			m_pToolTips[i][j]->SetBounds(m_pFormationButtons[i][j]->GetX() + m_pFormationButtons[i][j]->GetWide() / 2 - TOOLTIP_WIDTH / 2, m_pFormationButtons[i][j]->GetY() + m_pFormationButtons[i][j]->GetTall(), TOOLTIP_WIDTH, TOOLTIP_HEIGHT);
+			m_pToolTips[i][j]->SetBounds(m_pFormationButtons[i][j]->GetX() + m_pFormationButtons[i][j]->GetWide() / 2 - TOOLTIP_WIDTH / 2, m_pFormationButtons[i][j]->GetY() + m_pFormationButtons[i][j]->GetTall() - 3, TOOLTIP_WIDTH, TOOLTIP_HEIGHT);
 			m_pToolTips[i][j]->SetFgColor(teamColor);
 
 			KeyValues *old = m_pFormationButtons[i][j]->GetCommand();

@@ -343,7 +343,6 @@ void CSDKPlayerAnimState::UpdateLayerSequenceGeneric( CStudioHdr *pStudioHdr, in
 #endif
 }
 
-extern ConVar cl_powershot_strength;
 extern ConVar mp_powershot_fixed_strength;
 extern ConVar mp_reset_spin_toggles_on_shot;
 

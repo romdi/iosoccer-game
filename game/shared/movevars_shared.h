@@ -51,8 +51,10 @@ extern ConVar mp_stamina_variable_replenish_coeff;
 
 extern ConVar mp_pitchup;
 extern ConVar mp_pitchup_remap;
+extern ConVar mp_pitchup_max;
 extern ConVar mp_pitchdown;
 extern ConVar mp_pitchdown_remap;
+extern ConVar mp_pitchdown_max;
 
 // Vehicle convars
 extern ConVar r_VehicleViewDampen;

@@ -58,9 +58,6 @@ ConVar lookspring( "lookspring", "0", FCVAR_ARCHIVE );
 ConVar lookstrafe( "lookstrafe", "0", FCVAR_ARCHIVE );
 ConVar in_joystick( "joystick","0", FCVAR_ARCHIVE );
 
-extern ConVar cl_powershot_strength;
-extern ConVar cl_powershot_fixed_strength;
-
 extern ConVar mp_pitchdown;
 extern ConVar cl_pitchdown;
 extern ConVar mp_pitchup;
@@ -1113,7 +1110,7 @@ void CInput::CreateMove ( int sequence_number, float input_sample_frametime, boo
 	//}
 	//else
 	//{
-		cmd->powershot_strength = clamp(cl_powershot_strength.GetInt(), 0, 100);
+		cmd->powershot_strength = 0;
 	//}
 
 	// Using joystick?

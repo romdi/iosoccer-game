@@ -57,10 +57,11 @@ bool CountryFlagIndexLessFunc( const int &lhs, const int &rhs )
 
 enum { PANEL_TOPMARGIN = 70, PANEL_MARGIN = 5, PANEL_WIDTH = (1024 - 2 * PANEL_MARGIN), PANEL_HEIGHT = (720 - 2 * PANEL_MARGIN) };
 enum { TEAMCREST_SIZE = 48, TEAMCREST_VMARGIN = 7, TEAMCREST_HOFFSET = 240, TEAMCREST_VOFFSET = 10 };
-enum { PLAYERLIST_HEIGHT = 330, PLAYERLIST_BOTTOMMARGIN = 10, PLAYERLISTDIVIDER_WIDTH = 8 };
+enum { PLAYERLIST_HEIGHT = 360, PLAYERLIST_BOTTOMMARGIN = 10, PLAYERLISTDIVIDER_WIDTH = 8 };
 enum { STATBUTTON_WIDTH = 120, STATBUTTON_HEIGHT = 30, STATBUTTON_HMARGIN = 5, STATBUTTON_VMARGIN = 5 };
-enum { EXTRAINFO_HEIGHT = 330, EXTRAINFO_MARGIN = 5 };
+enum { EXTRAINFO_HEIGHT = 305, EXTRAINFO_MARGIN = 5 };
 enum { SPECLIST_HEIGHT = 30, SPECLIST_PADDING = 5, SPECNAME_WIDTH = 100, SPECTEXT_WIDTH = 70, SPECTEXT_MARGIN = 5, SPECBUTTON_WIDTH = 90, SPECBUTTON_HMARGIN = 5, SPECBUTTON_VMARGIN = 3 };
+enum { SERVERINFO_HEIGHT = 30, SERVERINFO_MARGIN = 5, SERVERINFOLINE_HEIGHT = 2	, SERVERINFOLINE_MARGIN = 5 };
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -143,6 +144,9 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Editabl
 	m_pSpectateButton = new Button(m_pStatButtonInnerContainer, "SpectateButton", "Spectate", this, "spectate");
 
 	m_pSpecInfo = new Label(m_pMainPanel, "", "");
+
+	m_pServerInfo = new Label(m_pMainPanel, "", "");
+	m_pServerInfoLine = new Panel(m_pMainPanel, "");
 
 	m_pJoinRandom = new Button(m_pStatButtonInnerContainer, "JoinRandom", "Auto-Join", this, VarArgs("jointeam %d -1", TEAM_INVALID));
 
@@ -254,7 +258,7 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 
 	SetBounds(0, 0, ScreenWidth(), ScreenHeight());
 
-	m_pMainPanel->SetPaintBackgroundType(2);
+	//m_pMainPanel->SetPaintBackgroundType(2);
 	m_pMainPanel->SetBgColor(Color(0, 0, 0, 240));
 	//m_pMainPanel->SetBounds(GetWide() / 2 - PANEL_WIDTH / 2, PANEL_TOPMARGIN, PANEL_WIDTH, PANEL_HEIGHT);
 	m_pMainPanel->SetBounds(GetWide() / 2 - PANEL_WIDTH / 2, GetTall() / 2 - PANEL_HEIGHT / 2, PANEL_WIDTH, PANEL_HEIGHT);
@@ -290,10 +294,6 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 
 	m_pStatButtonInnerContainer->SetBounds(0, 0, STATBUTTON_WIDTH + 2 * STATBUTTON_HMARGIN, 6 * STATBUTTON_HEIGHT + STAT_CATEGORY_COUNT * STATBUTTON_HEIGHT);
 
-	m_pStatText->SetBounds(STATBUTTON_HMARGIN, 5 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
-	m_pStatText->SetFont(m_pScheme->GetFont("StatButton"));
-	m_pStatText->SetContentAlignment(Label::a_center);
-
 	m_pSpectateButton->SetBounds(STATBUTTON_HMARGIN, 0, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
 	m_pSpectateButton->SetFont(m_pScheme->GetFont("StatButton"));
 	m_pSpectateButton->SetContentAlignment(Label::a_center);
@@ -308,24 +308,28 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 	m_pJoinRandom->SetCursor(dc_hand);
 	//m_pJoinRandom->SetVisible(false);
 
-	m_pMatchEvents->SetBounds(STATBUTTON_HMARGIN, 2 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
+	m_pMatchEvents->SetBounds(STATBUTTON_HMARGIN, 1 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
 	m_pMatchEvents->SetFont(m_pScheme->GetFont("StatButton"));
 	m_pMatchEvents->SetContentAlignment(Label::a_center);
 	m_pMatchEvents->SetPaintBorderEnabled(false);
 	//m_pMatchEvents->SetVisible(false);
 
-	m_pToggleCaptainMenu->SetBounds(STATBUTTON_HMARGIN, 4 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
+	m_pToggleCaptainMenu->SetBounds(STATBUTTON_HMARGIN, 3 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
 	m_pToggleCaptainMenu->SetFont(m_pScheme->GetFont("StatButton"));
 	m_pToggleCaptainMenu->SetContentAlignment(Label::a_center);
 	m_pToggleCaptainMenu->SetPaintBorderEnabled(false);
 	m_pToggleCaptainMenu->SetCursor(dc_hand);
 
-	m_pFormationList->SetBounds(STATBUTTON_HMARGIN, 6 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
+	m_pStatText->SetBounds(STATBUTTON_HMARGIN, 4 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
+	m_pStatText->SetFont(m_pScheme->GetFont("StatButton"));
+	m_pStatText->SetContentAlignment(Label::a_center);
+
+	m_pFormationList->SetBounds(STATBUTTON_HMARGIN, 5 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
 	m_pFormationList->SetFont(m_pScheme->GetFont("StatButton"));
 	//m_pFormationList->SetPaintBorderEnabled(false);
 	m_pFormationList->SetVisible(false);
 
-	m_pRequestTimeout->SetBounds(STATBUTTON_HMARGIN, 7 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
+	m_pRequestTimeout->SetBounds(STATBUTTON_HMARGIN, 6 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
 	m_pRequestTimeout->SetFont(m_pScheme->GetFont("StatButton"));
 	m_pRequestTimeout->SetContentAlignment(Label::a_center);
 	m_pRequestTimeout->SetPaintBorderEnabled(false);
@@ -334,7 +338,7 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 
 	for (int i = 0; i < STAT_CATEGORY_COUNT; i++)
 	{
-		m_pStatButtons[i]->SetBounds(STATBUTTON_HMARGIN, 6 * STATBUTTON_HEIGHT + i * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
+		m_pStatButtons[i]->SetBounds(STATBUTTON_HMARGIN, 5 * STATBUTTON_HEIGHT + i * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
 		m_pStatButtons[i]->SetFont(m_pScheme->GetFont("StatButton"));
 		m_pStatButtons[i]->SetContentAlignment(Label::a_center);
 		m_pStatButtons[i]->SetPaintBorderEnabled(false);
@@ -361,6 +365,16 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 	m_pSpecInfo->SetContentAlignment(Label::a_center);
 	m_pSpecInfo->SetVisible(false);
 
+	m_pServerInfo->SetBounds(0, 0, m_pMainPanel->GetWide(), SERVERINFO_HEIGHT);
+	m_pServerInfo->SetFont(m_pScheme->GetFont("IOSTeamMenuNormal"));
+	m_pServerInfo->SetContentAlignment(Label::a_center);
+	m_pServerInfo->SetFgColor(Color(200, 200, 200, 255));
+	m_pServerInfo->SetBgColor(Color(0, 0, 0, 150));
+
+	m_pServerInfoLine->SetBounds(SERVERINFOLINE_MARGIN, SERVERINFO_HEIGHT, m_pMainPanel->GetWide() - 2 * SERVERINFOLINE_MARGIN, SERVERINFOLINE_HEIGHT);
+	m_pServerInfoLine->SetBgColor(Color(200, 200, 200, 255));
+	m_pServerInfoLine->SetVisible(false);
+
 	m_pPlayerListDivider->SetBounds(m_pMainPanel->GetWide() / 2 - PLAYERLISTDIVIDER_WIDTH / 2, 0, PLAYERLISTDIVIDER_WIDTH, PLAYERLIST_HEIGHT + PLAYERLIST_BOTTOMMARGIN);
 	m_pPlayerListDivider->SetBgColor(Color(0, 0, 0, 150));
 	m_pPlayerListDivider->SetVisible(false);
@@ -371,7 +385,7 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 		//m_pTeamCrests[i]->SetShouldScaleImage(true);
 		//m_pTeamCrests[i]->SetImage(i == 0 ? "hometeamcrest" : "awayteamcrest");
 
-		m_pPlayerList[i]->SetBounds(i * (m_pMainPanel->GetWide() / 2), 0, m_pMainPanel->GetWide() / 2, PLAYERLIST_HEIGHT);
+		m_pPlayerList[i]->SetBounds(i * (m_pMainPanel->GetWide() / 2), SERVERINFO_HEIGHT, m_pMainPanel->GetWide() / 2, PLAYERLIST_HEIGHT);
 		m_pPlayerList[i]->SetPaintBorderEnabled(false);
 	}
 
@@ -474,6 +488,8 @@ void CClientScoreBoardDialog::Update( void )
 	IGameResources *gr = GameResources();
 	if (!gr)
 		return;
+
+	m_pServerInfo->SetText(mp_serverinfo.GetString());
 
 	if (m_eActivePanelType == STATS_MENU)
 	{

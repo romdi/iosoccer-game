@@ -1587,7 +1587,6 @@ void CSDKPlayer::ResetFlags()
 	RemoveFlag(FL_SHIELD_KEEP_IN | FL_SHIELD_KEEP_OUT | FL_REMOTECONTROLLED | FL_FREECAM | FL_CELEB | FL_NO_X_MOVEMENT | FL_NO_Y_MOVEMENT | FL_ATCONTROLS | FL_FROZEN);
 	DoServerAnimationEvent(PLAYERANIMEVENT_CANCEL);
 	m_pHoldingBall = NULL;
-	m_flLastReadyTime = -1;
 	m_flLastShotOnGoal = -1;
 	m_bIsAway = true;
 	m_flLastMoveTime = -1;

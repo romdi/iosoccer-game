@@ -246,6 +246,9 @@ private:
 	CMatchEventMenu	*m_pMatchEventMenu;
 
 	Label		*m_pSpecInfo;
+	
+	Label		*m_pServerInfo;
+	Panel		*m_pServerInfoLine;
 
 	CUtlVector<SpecInfo> m_SpecList;
 

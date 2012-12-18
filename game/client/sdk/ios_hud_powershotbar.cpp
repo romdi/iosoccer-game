@@ -23,55 +23,12 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-//#if defined ( SDK_USE_STAMINA ) || defined ( SDK_USE_SPRINTING )
-
-static void OnPowershotStrengthChange(IConVar *var, const char *pOldValue, float flOldValue)
+class CHudChargedshotBar : public CHudElement, public vgui::Panel
 {
-	//engine->ServerCmd(VarArgs("powershot_strength %d", ((ConVar*)var)->GetInt()));
-	//C_BasePlayer::GetLocalPlayer();
-}
- 
-ConVar cl_powershot_strength("cl_powershot_strength", "50", 0, "Powershot Strength (0-100)", true, 0, true, 100, OnPowershotStrengthChange );
-//ConVar cl_powershot_fixed_strength("cl_powershot_fixed_strength", "50", FCVAR_ARCHIVE, "Powershot Fixed Strength (0-100)", true, 0, true, 100, OnPowershotStrengthChange );
-
-//extern ConVar cl_powershot_strength;
-
-static void OnIncreasePowershotStrength(const CCommand &args)
-{
-	if (args.ArgC() < 2)
-	{
-		Msg("Usage: increase_powershot_strength <1-100>\n");
-		return;
-	}
- 
-	cl_powershot_strength.SetValue(cl_powershot_strength.GetInt() + atoi(args.Arg(1)));
-}
-
-ConCommand increase_powershot_strength("increase_powershot_strength", OnIncreasePowershotStrength, "Increase Powershot Strength By Value");
-
-static void OnDecreasePowershotStrength(const CCommand &args)
-{
-	if (args.ArgC() < 2)
-	{
-		Msg("Usage: decrease_powershot_strength <1-100>\n");
-		return;
-	}
- 
-	cl_powershot_strength.SetValue(cl_powershot_strength.GetInt() - atoi(args.Arg(1)));
-}
-
-ConCommand decrease_powershot_strength("decrease_powershot_strength", OnDecreasePowershotStrength, "Decrease Powershot Strength By Value");
-
-ConVar cl_chargedshot_duration("cl_chargedshot_duration", "0.5", FCVAR_ARCHIVE);
-
-
-
-class CHudPowershotBar : public CHudElement, public vgui::Panel
-{
-	DECLARE_CLASS_SIMPLE( CHudPowershotBar, vgui::Panel );
+	DECLARE_CLASS_SIMPLE( CHudChargedshotBar, vgui::Panel );
 
 public:
-	CHudPowershotBar( const char *pElementName );
+	CHudChargedshotBar( const char *pElementName );
 	virtual void	Init( void );
 	virtual void	Reset( void );
 	virtual void	OnThink( void );
@@ -81,94 +38,55 @@ protected:
 	virtual void	ApplySchemeSettings( vgui::IScheme *scheme );
 	virtual void	Paint();
 
-	Panel *m_pStaminaPanel;
-	Panel *m_pStaminaIndicator;
-	Panel *m_pPowershotIndicator;
-	Panel *m_pPowershotIndicatorBack;
-	float m_flOldStamina;
 	float m_flNextUpdate;
-	bool m_bIsChargingShot;
-	bool m_bIsHoldingShot;
-	float m_flChargingStartTime;
-	int m_nChargingStartPower;
 };
 
-DECLARE_HUDELEMENT( CHudPowershotBar );
+DECLARE_HUDELEMENT( CHudChargedshotBar );
 
 using namespace vgui;
+
+#define BAR_WIDTH 40
+#define BAR_HEIGHT 200
+#define BAR_VMARGIN 15
+#define BAR_HMARGIN 250
+#define BAR_HPADDING 2
+#define BAR_VPADDING 2
+#define PS_INDICATOR_HEIGHT 9
+#define PS_INDICATOR_OFFSET 9
+#define PS_INDICATOR_BORDER 2
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
-CHudPowershotBar::CHudPowershotBar( const char *pElementName ) : CHudElement( pElementName ), BaseClass( NULL, "HudPowershotBar" )
+CHudChargedshotBar::CHudChargedshotBar( const char *pElementName ) : CHudElement( pElementName ), BaseClass( NULL, "HudChargedshotBar" )
 {
 	SetHiddenBits(HIDEHUD_POWERSHOTBAR);
 
 	vgui::Panel *pParent = g_pClientMode->GetViewport();
 	SetParent( pParent );
 
-	m_pStaminaPanel = new Panel(this, "StaminaPanel");
-	m_pStaminaIndicator = new Panel(m_pStaminaPanel, "StaminaIndicator");
-	m_pPowershotIndicatorBack = new Panel(this, "PowershotIndicator");
-	m_pPowershotIndicator = new Panel(m_pPowershotIndicatorBack, "PowershotIndicator");
-	m_flOldStamina = 100;
 	m_flNextUpdate = gpGlobals->curtime;
-	m_bIsChargingShot = false;
-	m_bIsHoldingShot = false;
-	m_flChargingStartTime = gpGlobals->curtime;
-	m_nChargingStartPower = 0;
 }
 
-#define BAR_WIDTH 40
-#define BAR_HEIGHT 200
-#define BAR_VMARGIN 15
-#define BAR_HMARGIN 250
-#define BAR_PADDING 2
-#define PS_INDICATOR_HEIGHT 9
-#define PS_INDICATOR_OFFSET 9
-#define PS_INDICATOR_BORDER 2
-#define FIXED_PS_INDICATOR_HEIGHT 3
-#define SPIN_MARGIN 7
-#define SPIN_HEIGHT 9
-#define	SPIN_BORDER 2
-
-void CHudPowershotBar::ApplySchemeSettings( IScheme *scheme )
+void CHudChargedshotBar::ApplySchemeSettings( IScheme *scheme )
 {
 	BaseClass::ApplySchemeSettings(scheme);
 
 	SetBounds(ScreenWidth() - BAR_WIDTH - 2 * BAR_HMARGIN, ScreenHeight() - BAR_HEIGHT - 2 * BAR_VMARGIN, BAR_WIDTH + 2 * BAR_HMARGIN, BAR_HEIGHT + 2 * BAR_VMARGIN);
-
-	m_pStaminaPanel->SetPaintBackgroundType(2); // Rounded corner box
- 	m_pStaminaPanel->SetPaintBackgroundEnabled(true);
-	m_pStaminaPanel->SetBgColor(Color(0, 0, 0, 255));
-	m_pStaminaPanel->SetBounds(BAR_HMARGIN, SPIN_HEIGHT, BAR_WIDTH, BAR_HEIGHT);
-
-	m_pStaminaIndicator->SetPaintBackgroundType(2); // Rounded corner box
- 	m_pStaminaIndicator->SetPaintBackgroundEnabled(true);
-	m_pStaminaIndicator->SetBgColor(Color(0, 255, 0, 255) );
-	m_pStaminaIndicator->SetBounds(BAR_PADDING, BAR_PADDING, BAR_WIDTH - 2 * BAR_PADDING, (BAR_HEIGHT - 2 * BAR_PADDING) / 2);
-
- 	m_pPowershotIndicatorBack->SetPaintBackgroundEnabled(true);
-	m_pPowershotIndicatorBack->SetBgColor(Color(0, 0, 0, 255));
-	m_pPowershotIndicatorBack->SetBounds(GetWide() / 2 - BAR_WIDTH / 2 - PS_INDICATOR_OFFSET, GetTall() / 2 - PS_INDICATOR_HEIGHT / 2, BAR_WIDTH + 2 * PS_INDICATOR_OFFSET, PS_INDICATOR_HEIGHT);
-
- 	m_pPowershotIndicator->SetPaintBackgroundEnabled(true);
-	m_pPowershotIndicator->SetBgColor(Color(255, 255, 255, 255));
-	m_pPowershotIndicator->SetBounds(PS_INDICATOR_BORDER, PS_INDICATOR_BORDER, m_pPowershotIndicatorBack->GetWide() - 2 * PS_INDICATOR_BORDER, m_pPowershotIndicatorBack->GetTall() - 2 * PS_INDICATOR_BORDER);
 }
 
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CHudPowershotBar::Init( void )
+void CHudChargedshotBar::Init( void )
 {
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CHudPowershotBar::Reset( void )
+void CHudChargedshotBar::Reset( void )
 {
 	Init();
 }
@@ -178,7 +96,7 @@ void CHudPowershotBar::Reset( void )
 // costly traversal.  Called per frame, return true if thinking and 
 // painting need to occur.
 //-----------------------------------------------------------------------------
-bool CHudPowershotBar::ShouldDraw()
+bool CHudChargedshotBar::ShouldDraw()
 {
 	if (!CHudElement::ShouldDraw())
 		return false;
@@ -196,7 +114,7 @@ bool CHudPowershotBar::ShouldDraw()
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CHudPowershotBar::OnThink( void )
+void CHudChargedshotBar::OnThink( void )
 {
 	BaseClass::OnThink();
 }
@@ -204,7 +122,7 @@ void CHudPowershotBar::OnThink( void )
 //-----------------------------------------------------------------------------
 // Purpose: draws the stamina bar
 //-----------------------------------------------------------------------------
-void CHudPowershotBar::Paint()
+void CHudChargedshotBar::Paint()
 {
 	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
 
@@ -221,9 +139,9 @@ void CHudPowershotBar::Paint()
 	else
 		bgColor = Color(255 * (1 - relStamina), 255 * relStamina, 0, 255);
 
-	m_pPowershotIndicatorBack->SetY(m_pStaminaPanel->GetY() + BAR_PADDING + m_pPowershotIndicatorBack->GetTall() + (1 - cl_powershot_strength.GetInt() / 100.0f) * (BAR_HEIGHT - 2 * BAR_PADDING - 3 * m_pPowershotIndicatorBack->GetTall()));
-
 	float shotStrength;
+
+	bool drawChargedshotIndicator = false;
 
 	if (pPlayer->m_Shared.m_bDoChargedShot || pPlayer->m_Shared.m_bIsShotCharging)
 	{
@@ -247,13 +165,48 @@ void CHudPowershotBar::Paint()
 			bgColor = Color(255, 255, 255, 255);
 		}
 
-		m_pPowershotIndicatorBack->SetY(m_pStaminaPanel->GetY() + BAR_PADDING + m_pPowershotIndicatorBack->GetTall() + (1 - shotStrength) * (BAR_HEIGHT - 2 * BAR_PADDING - 3 * m_pPowershotIndicatorBack->GetTall()));
-		m_pPowershotIndicatorBack->SetVisible(true);
+		drawChargedshotIndicator = true;
 	}
-	else
-		m_pPowershotIndicatorBack->SetVisible(false);
 
-	m_pStaminaIndicator->SetTall((m_pStaminaPanel->GetTall() - 2 * BAR_PADDING) * relStamina);
-	m_pStaminaIndicator->SetY(BAR_PADDING + (m_pStaminaPanel->GetTall() - 2 * BAR_PADDING) - m_pStaminaIndicator->GetTall());
-	m_pStaminaIndicator->SetBgColor(bgColor);
+	// Draw stamina bar back
+	surface()->DrawSetColor(0, 0, 0, 255);
+	surface()->DrawFilledRect(BAR_HMARGIN, BAR_VMARGIN, BAR_HMARGIN + BAR_WIDTH, BAR_VMARGIN + BAR_HEIGHT);
+
+	// Draw stamina bar front
+	surface()->DrawSetColor(bgColor);
+	surface()->DrawFilledRect(
+		BAR_HMARGIN + BAR_HPADDING,
+		BAR_VMARGIN + BAR_VPADDING + (1 - relStamina) * (BAR_HEIGHT - 2 * BAR_VPADDING),
+		BAR_HMARGIN + BAR_WIDTH - BAR_HPADDING,
+		BAR_VMARGIN + BAR_VPADDING + BAR_HEIGHT - 2 * BAR_VPADDING);
+
+	const int partCount = 4;
+	int vMargin = BAR_HEIGHT / partCount;
+
+	surface()->DrawSetColor(0, 0, 0, 255);
+
+	for (int i = 1; i < partCount; i++)
+	{
+		surface()->DrawFilledRect(BAR_HMARGIN, BAR_VMARGIN + i * vMargin, BAR_HMARGIN + BAR_WIDTH, BAR_VMARGIN + i * vMargin + 1);
+	}
+
+	if (drawChargedshotIndicator)
+	{
+		// Draw chargedshot indicator back
+		surface()->DrawSetColor(0, 0, 0, 255);
+		surface()->DrawFilledRect(
+			BAR_HMARGIN - PS_INDICATOR_OFFSET,
+			BAR_VMARGIN + (1 - shotStrength) * (BAR_HEIGHT - PS_INDICATOR_HEIGHT),
+			BAR_HMARGIN + BAR_WIDTH + PS_INDICATOR_OFFSET,
+			BAR_VMARGIN + (1 - shotStrength) * (BAR_HEIGHT - PS_INDICATOR_HEIGHT) + PS_INDICATOR_HEIGHT);
+
+		// Draw chargedshot indicator front
+		surface()->DrawSetColor(255, 255, 255, 255);
+		surface()->DrawFilledRect(
+			BAR_HMARGIN - PS_INDICATOR_OFFSET + PS_INDICATOR_BORDER,
+			BAR_VMARGIN + (1 - shotStrength) * (BAR_HEIGHT - PS_INDICATOR_HEIGHT) + PS_INDICATOR_BORDER,
+			BAR_HMARGIN + BAR_WIDTH + PS_INDICATOR_OFFSET - PS_INDICATOR_BORDER,
+			BAR_VMARGIN + (1 - shotStrength) * (BAR_HEIGHT - PS_INDICATOR_HEIGHT) + PS_INDICATOR_HEIGHT - PS_INDICATOR_BORDER);
+
+	}
 }

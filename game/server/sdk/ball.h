@@ -291,6 +291,7 @@ private:
 	CHandle<CSDKPlayer> m_pHoldingPlayer;
 
 	float			m_flGlobalNextShot;
+	float			m_flGlobalNextKeeperCatch;
 	float			m_flShotStart;
 
 	bool			m_bPenaltyTakerStartedMoving;

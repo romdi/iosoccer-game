@@ -494,8 +494,6 @@ public:
 
 	CHandle<CBall>		m_pHoldingBall;
 
-	float				m_flLastReadyTime;
-
 	Vector				m_vPreReplayPos;
 	QAngle				m_aPreReplayAngles;
 

@@ -49,34 +49,6 @@ extern ConVar
 
 extern CUniformRandomStream g_IOSRand;
 
-extern ConVar 
-	mp_timelimit_match, 
-	mp_timelimit_extratime_halftime, 
-	mp_timelimit_extratime_intermission,
-	mp_timelimit_halftime, 
-	mp_timelimit_warmup,
-	mp_timelimit_penalties_intermission,
-	mp_timelimit_cooldown,
-	mp_shield_throwin_radius,
-	mp_shield_freekick_radius,
-	mp_shield_corner_radius,
-	mp_shield_kickoff_radius,
-	mp_shield_border,
-	mp_shield_block_6yardbox,
-	mp_shield_liberal_taker_positioning,
-	mp_shield_liberal_teammates_positioning,
-	mp_shield_block_opponent_half,
-	mp_field_border,
-	mp_field_border_enabled,
-	mp_offside,
-	mp_joindelay,
-	mp_maxplayers,
-	mp_weather,
-	mp_teamlist,
-	mp_powershot_fixed_strength,
-	mp_custom_shirt_numbers,
-	mp_reset_spin_toggles_on_shot;
-
 extern ConVar
 	r_winddir,
 	r_windspeed,
@@ -374,7 +346,6 @@ protected:
 	CPrecipitation *m_pPrecip;
 
 	void CheckChatText(CBasePlayer *pPlayer, char *text);
-	void CheckChatForReadySignal(CSDKPlayer *pPlayer, char *text);
 
 	bool m_bMotmVotingPanelShown;
 	bool m_bPostMatchStatsPanelShown;

@@ -68,8 +68,10 @@ ConVar  mp_stamina_variable_replenish_coeff	("mp_stamina_variable_replenish_coef
 
 ConVar  mp_pitchup("mp_pitchup", "65", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar  mp_pitchup_remap("mp_pitchup_remap", "89", FCVAR_NOTIFY);
+ConVar  mp_pitchup_max("mp_pitchup_max", "89", FCVAR_NOTIFY);
 ConVar  mp_pitchdown("mp_pitchdown", "55", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar  mp_pitchdown_remap("mp_pitchdown_remap", "89", FCVAR_NOTIFY);
+ConVar  mp_pitchdown_max("mp_pitchdown_max", "89", FCVAR_NOTIFY);
 ConVar  mp_client_pitch("mp_client_pitch", "1", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar  mp_client_sidecurl("mp_client_sidecurl", "1", FCVAR_NOTIFY);
 

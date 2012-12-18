@@ -74,6 +74,7 @@ ConVar sv_ball_shotdelay_normal("sv_ball_shotdelay_normal", "0.25", FCVAR_NOTIFY
 ConVar sv_ball_shotdelay_setpiece("sv_ball_shotdelay_setpiece", "0.5", FCVAR_NOTIFY);
 ConVar sv_ball_shotdelay_global("sv_ball_shotdelay_global", "0.25", FCVAR_NOTIFY);
 ConVar sv_ball_shotdelay_global_coeff("sv_ball_shotdelay_global_coeff", "0.75", FCVAR_NOTIFY);
+ConVar sv_ball_keepercatchdelay_global_coeff("sv_ball_keepercatchdelay_global_coeff", "0.85", FCVAR_NOTIFY);
 ConVar sv_ball_dynamicshotdelay_enabled("sv_ball_dynamicshotdelay_enabled", "1", FCVAR_NOTIFY);
 ConVar sv_ball_dynamicshotdelay_mindelay("sv_ball_dynamicshotdelay_mindelay", "0.05", FCVAR_NOTIFY);
 ConVar sv_ball_dynamicshotdelay_maxdelay("sv_ball_dynamicshotdelay_maxdelay", "1.0", FCVAR_NOTIFY);
@@ -353,6 +354,7 @@ CBall::CBall()
 	m_bIsPlayerBall = false;
 	m_pHoldingPlayer = NULL;
 	m_flGlobalNextShot = gpGlobals->curtime;
+	m_flGlobalNextKeeperCatch = gpGlobals->curtime;
 	m_flShotStart = -1;
 	m_nInPenBoxOfTeam = TEAM_INVALID;
 	m_eMatchEvent = MATCH_EVENT_NONE;
@@ -1457,9 +1459,9 @@ void CBall::State_FREEKICK_Think()
 {
 	if (!CSDKPlayer::IsOnField(m_pPl))
 	{
-		if ((m_vPos - GetGlobalTeam(m_nFoulingTeam)->GetOppTeam()->m_vPlayerSpawns[0]).Length2D() <= 1000)
+		if ((m_vPos - GetGlobalTeam(m_nFoulingTeam)->GetOppTeam()->m_vPlayerSpawns[0]).Length2D() <= 900)
 			m_pPl = FindNearestPlayer(GetGlobalTeam(m_nFoulingTeam)->GetOppTeamNumber(), FL_POS_KEEPER);
-		else if ((m_vPos - GetGlobalTeam(m_nFoulingTeam)->m_vPlayerSpawns[0]).Length2D() <= 1000)
+		else if ((m_vPos - GetGlobalTeam(m_nFoulingTeam)->m_vPlayerSpawns[0]).Length2D() <= 1100)
 			m_pPl = GetGlobalTeam(m_nFoulingTeam)->GetOppTeam()->GetFreekickTaker();
 		else
 			m_pPl = m_pFouledPl;
@@ -2226,7 +2228,7 @@ bool CBall::CheckKeeperCatch()
 	//SetMatchEvent(MATCH_EVENT_KEEPERSAVE, m_pPl->GetTeamNumber(), false);
 	//SetMatchEventPlayer(m_pPl, false);
 
-	if (gpGlobals->curtime < m_flGlobalNextShot || m_bHasQueuedState)
+	if (gpGlobals->curtime < m_flGlobalNextKeeperCatch || m_bHasQueuedState)
 	{
 		Vector vel;
 
@@ -2277,7 +2279,7 @@ float CBall::GetPitchCoeff(bool isNormalShot)
 	{
 		float upCoeff = sv_ball_fixedpitchupcoeff.GetFloat();
 		double upExp = sv_ball_pitchup_exponent.GetFloat();
-		coeff = upCoeff + (1 - upCoeff) * pow(cos((pitch - bestAng) / (mp_pitchup_remap.GetFloat() - bestAng) * M_PI / 2), upExp);
+		coeff = upCoeff + (1 - upCoeff) * pow(cos((pitch - bestAng) / (mp_pitchup_max.GetFloat() - bestAng) * M_PI / 2), upExp);
 	}
 	else
 	{
@@ -2285,13 +2287,13 @@ float CBall::GetPitchCoeff(bool isNormalShot)
 		{
 			float downCoeff = sv_ball_fixedpitchdowncoeff_normalshot.GetFloat();
 			double downExp = sv_ball_pitchdown_exponent_normalshot.GetFloat();
-			coeff = downCoeff + (1 - downCoeff) * pow(cos((pitch - bestAng) / (mp_pitchdown_remap.GetFloat() - bestAng) * M_PI / 2), downExp);		
+			coeff = downCoeff + (1 - downCoeff) * pow(cos((pitch - bestAng) / (mp_pitchdown_max.GetFloat() - bestAng) * M_PI / 2), downExp);		
 		}
 		else
 		{
 			float downCoeff = sv_ball_fixedpitchdowncoeff_nonnormalshot.GetFloat();
 			double downExp = sv_ball_pitchdown_exponent_nonnormalshot.GetFloat();
-			coeff = downCoeff + (1 - downCoeff) * pow(cos((pitch - bestAng) / (mp_pitchdown_remap.GetFloat() - bestAng) * M_PI / 2), downExp);		
+			coeff = downCoeff + (1 - downCoeff) * pow(cos((pitch - bestAng) / (mp_pitchdown_max.GetFloat() - bestAng) * M_PI / 2), downExp);		
 		}
 	}
 
@@ -2747,7 +2749,8 @@ void CBall::Kicked(body_part_t bodyPart, bool isDeflection)
 	}
 	
 	m_pPl->m_flNextShot = gpGlobals->curtime + delay;
-	m_flGlobalNextShot = gpGlobals->curtime + dynamicDelay * sv_ball_shotdelay_global_coeff.GetFloat(); //gpGlobals->curtime + sv_ball_shotdelay_global.GetFloat();
+	m_flGlobalNextShot = gpGlobals->curtime + dynamicDelay * sv_ball_shotdelay_global_coeff.GetFloat();
+	m_flGlobalNextKeeperCatch = gpGlobals->curtime + dynamicDelay * sv_ball_keepercatchdelay_global_coeff.GetFloat();
 	Touched(m_pPl, !isDeflection, bodyPart);
 }
 
