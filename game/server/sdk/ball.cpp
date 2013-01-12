@@ -848,7 +848,14 @@ void CBall::State_Think()
 
 			switch (m_eNextState)
 			{
-			case BALL_THROWIN: SetMatchEvent(MATCH_EVENT_THROWIN, LastOppTeam(false), true); break;
+			case BALL_THROWIN:
+				{
+					SetMatchEvent(MATCH_EVENT_THROWIN, LastOppTeam(false), true);
+					IGameEvent* pEvent = gameeventmanager->CreateEvent("throw_in");
+					pEvent->SetInt("team", LastOppTeam(false));
+					gameeventmanager->FireEvent(pEvent);
+				}
+				break;
 			case BALL_GOALKICK: SetMatchEvent(MATCH_EVENT_GOALKICK, LastOppTeam(false), true); break;
 			case BALL_CORNER: SetMatchEvent(MATCH_EVENT_CORNER, LastOppTeam(false), true); break;
 			//case BALL_KICKOFF: SetMatchEvent(MATCH_EVENT_KICKOFF, SDKGameRules()->GetKickOffTeam(), true); break;
@@ -862,9 +869,9 @@ void CBall::State_Think()
 			case BALL_PENALTY:
 				{
 					if (m_eNextState == BALL_FREEKICK)
-						SetMatchEvent(MATCH_EVENT_FREEKICK, GetGlobalTeam(m_nFoulingTeam)->GetOppTeamNumber(), true);
+						SetMatchEvent(MATCH_EVENT_FREEKICK, GetGlobalTeam(m_nFouledTeam)->GetTeamNumber(), true);
 					else
-						SetMatchEvent(MATCH_EVENT_PENALTY, GetGlobalTeam(m_nFoulingTeam)->GetOppTeamNumber(), true);
+						SetMatchEvent(MATCH_EVENT_PENALTY, GetGlobalTeam(m_nFouledTeam)->GetTeamNumber(), true);
 
 					match_event_t matchSubEvent;
 
@@ -1460,14 +1467,14 @@ void CBall::State_FREEKICK_Think()
 	if (!CSDKPlayer::IsOnField(m_pPl))
 	{
 		if ((m_vPos - GetGlobalTeam(m_nFoulingTeam)->GetOppTeam()->m_vPlayerSpawns[0]).Length2D() <= 900)
-			m_pPl = FindNearestPlayer(GetGlobalTeam(m_nFoulingTeam)->GetOppTeamNumber(), FL_POS_KEEPER);
+			m_pPl = FindNearestPlayer(GetGlobalTeam(m_nFouledTeam)->GetTeamNumber(), FL_POS_KEEPER);
 		else if ((m_vPos - GetGlobalTeam(m_nFoulingTeam)->m_vPlayerSpawns[0]).Length2D() <= 1100)
-			m_pPl = GetGlobalTeam(m_nFoulingTeam)->GetOppTeam()->GetFreekickTaker();
+			m_pPl = GetGlobalTeam(m_nFouledTeam)->GetTeam()->GetFreekickTaker();
 		else
 			m_pPl = m_pFouledPl;
 
 		if (!CSDKPlayer::IsOnField(m_pPl) || m_pPl->GetTeamPosType() == GK && m_pPl->IsBot())
-			m_pPl = FindNearestPlayer(GetGlobalTeam(m_nFoulingTeam)->GetOppTeamNumber(), FL_POS_FIELD);
+			m_pPl = FindNearestPlayer(GetGlobalTeam(m_nFouledTeam)->GetTeamNumber(), FL_POS_FIELD);
 
 		if (!m_pPl)
 			return State_Transition(BALL_NORMAL);
@@ -1548,14 +1555,14 @@ void CBall::State_PENALTY_Think()
 		}
 		else
 		{
-			m_pPl = GetGlobalTeam(m_nFoulingTeam)->GetOppTeam()->GetPenaltyTaker();
+			m_pPl = GetGlobalTeam(m_nFouledTeam)->GetTeam()->GetPenaltyTaker();
 			if (!m_pPl)
-				m_pPl = FindNearestPlayer(GetGlobalTeam(m_nFoulingTeam)->GetOppTeamNumber());
+				m_pPl = FindNearestPlayer(GetGlobalTeam(m_nFouledTeam)->GetTeamNumber());
 			if (!m_pPl)
 				return State_Transition(BALL_NORMAL);
 		}
 
-		SDKGameRules()->EnableShield(SHIELD_PENALTY, GetGlobalTeam(m_nFoulingTeam)->GetOppTeamNumber(), GetGlobalTeam(m_nFoulingTeam)->m_vPenalty);
+		SDKGameRules()->EnableShield(SHIELD_PENALTY, GetGlobalTeam(m_nFouledTeam)->GetTeamNumber(), GetGlobalTeam(m_nFoulingTeam)->m_vPenalty);
 		m_pPl->SetPosInsideShield(Vector(m_vPos.x, m_vPos.y - 150 * m_pPl->GetTeam()->m_nForward, SDKGameRules()->m_vKickOff.GetZ()), true);
 		m_flStateTimelimit = -1;
 		SetMatchEventPlayer(m_pPl, false);
@@ -1944,6 +1951,7 @@ void CBall::TriggerFoul(foul_type_t type, Vector pos, CSDKPlayer *pFoulingPl, CS
 	m_pFoulingPl = pFoulingPl;
 	m_pFouledPl = pFouledPl;
 	m_nFoulingTeam = pFoulingPl->GetTeamNumber();
+	m_nFouledTeam = pFoulingPl->GetOppTeamNumber();
 	m_vFoulPos.x = clamp(pos.x, SDKGameRules()->m_vFieldMin.GetX() + 2 * m_flPhysRadius, SDKGameRules()->m_vFieldMax.GetX() - 2 * m_flPhysRadius);
 	m_vFoulPos.y = clamp(pos.y, SDKGameRules()->m_vFieldMin.GetY() + 2 * m_flPhysRadius, SDKGameRules()->m_vFieldMax.GetY() - 2 * m_flPhysRadius);
 	m_vFoulPos.z = SDKGameRules()->m_vKickOff.GetZ();
@@ -2555,7 +2563,7 @@ void CBall::TriggerGoal(int team)
 		if (m_ePenaltyState == PENALTY_KICKED && team == m_nFoulingTeam)
 		{
 			m_ePenaltyState = PENALTY_SCORED;
-			GetGlobalTeam(m_nFoulingTeam)->GetOppTeam()->AddGoal();
+			GetGlobalTeam(m_nFouledTeam)->AddGoal();
 			SetMatchEvent(MATCH_EVENT_GOAL, m_pFouledPl->GetTeamNumber(), false);
 			SetMatchEventPlayer(m_pFouledPl, false);
 			m_bHasQueuedState = true;
@@ -2761,40 +2769,54 @@ void CBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart)
 
 	if (m_Touches.Count() > 0 && m_Touches.Tail()->m_pPl == pPl && m_Touches.Tail()->m_nTeam == pPl->GetTeamNumber()
 		&& sv_ball_doubletouchfouls.GetBool() && State_Get() == BALL_NORMAL && m_Touches.Tail()->m_eBallState != BALL_NORMAL
-		&& m_Touches.Tail()->m_eBallState != BALL_KEEPERHANDS && pPl->GetTeam()->GetNumPlayers() > 2 && pPl->GetOppTeam()->GetNumPlayers() > 2)
+		&& m_Touches.Tail()->m_eBallState != BALL_KEEPERHANDS && pPl->GetTeam()->GetNumPlayers() > 2 && pPl->GetOppTeam()->GetNumPlayers() > 2) // Double touch foul
 	{
-		TriggerFoul(FOUL_DOUBLETOUCH, pPl->GetLocalOrigin(), pPl);
+		m_nDoubleTouchFoulCount += 1;
+
+		if (m_nDoubleTouchFoulCount < 2 && m_Touches.Tail()->m_eBallState == BALL_FREEKICK)
+		{
+			TriggerFoul(FOUL_DOUBLETOUCH, m_Touches.Tail()->m_vBallPos, pPl);
+			m_nFouledTeam = pPl->GetTeamNumber();
+		}
+		else
+			TriggerFoul(FOUL_DOUBLETOUCH, pPl->GetLocalOrigin(), pPl);
+
 		State_Transition(BALL_FREEKICK, sv_ball_statetransition_activationdelay_long.GetFloat());
+
 		return;
 	}
-	else
+	else // Regular touch
 	{
+		if (State_Get() != BALL_FREEKICK)
+			m_nDoubleTouchFoulCount = 0;
+
 		BallTouchInfo *pInfo = LastInfo(true);
-		if (pInfo && CSDKPlayer::IsOnField(pInfo->m_pPl) && pInfo->m_pPl != pPl && (m_vPos - pInfo->m_vBallPos).Length2D() >= sv_ball_stats_pass_mindist.GetInt())
+
+		if (pInfo && CSDKPlayer::IsOnField(pInfo->m_pPl) && pInfo->m_pPl != pPl)
 		{ 
-			pInfo->m_pPl->SetPasses(pInfo->m_pPl->GetPasses() + 1);
+			if (pInfo->m_nTeam != pPl->GetTeamNumber() && pPl->GetTeamPosType() == GK && bodyPart == BODY_PART_HANDS) // Shot on goal
+			{
+				CSDKPlayer *pLastPl = LastPl(true);
 
-			if (pInfo->m_nTeam == pPl->GetTeamNumber())
-			{
-				pInfo->m_pPl->SetPassesCompleted(pInfo->m_pPl->GetPassesCompleted() + 1);
-				SetMatchEvent(MATCH_EVENT_PASS, pPl->GetTeamNumber(), false);
-			}
-			else
-			{
-				if (pPl->GetTeamPosType() == GK && bodyPart == BODY_PART_HANDS)
+				if (pLastPl && gpGlobals->curtime >= pLastPl->m_flLastShotOnGoal + 1) // Prevent multiple counts in a short succession
 				{
-					CSDKPlayer *pLastPl = LastPl(true);
-					if (pLastPl && gpGlobals->curtime >= pLastPl->m_flLastShotOnGoal + 1)
-					{
-						pLastPl->SetShots(pLastPl->GetShots() + 1);
-						pLastPl->SetShotsOnGoal(pLastPl->GetShotsOnGoal() + 1);
-						pLastPl->m_flLastShotOnGoal = gpGlobals->curtime;
-					}
-
+					pLastPl->SetShots(pLastPl->GetShots() + 1);
+					pLastPl->SetShotsOnGoal(pLastPl->GetShotsOnGoal() + 1);
+					pLastPl->m_flLastShotOnGoal = gpGlobals->curtime;
 					pPl->SetKeeperSaves(pPl->GetKeeperSaves() + 1);
 					SetMatchEvent(MATCH_EVENT_KEEPERSAVE, pPl->GetTeamNumber(), false);
 				}
-				else
+			}
+			else if ((m_vPos - pInfo->m_vBallPos).Length2DSqr() >= pow(sv_ball_stats_pass_mindist.GetInt(), 2.0f)) // Pass or interception
+			{
+				pInfo->m_pPl->SetPasses(pInfo->m_pPl->GetPasses() + 1);
+
+				if (pInfo->m_nTeam == pPl->GetTeamNumber()) // Pass to teammate
+				{
+					pInfo->m_pPl->SetPassesCompleted(pInfo->m_pPl->GetPassesCompleted() + 1);
+					SetMatchEvent(MATCH_EVENT_PASS, pPl->GetTeamNumber(), false);
+				}
+				else // Intercepted by opponent
 				{
 					pPl->SetInterceptions(pPl->GetInterceptions() + 1);
 					SetMatchEvent(MATCH_EVENT_INTERCEPTION, pPl->GetTeamNumber(), false);
@@ -3028,6 +3050,7 @@ void CBall::ResetMatch()
 	m_nPossessingTeam = TEAM_INVALID;
 	m_flPossessionStart = -1;
 	m_flLastMatchEventSetTime = -1;
+	m_nDoubleTouchFoulCount = 0;
 
 	GetGlobalTeam(TEAM_A)->ResetStats();
 	GetGlobalTeam(TEAM_B)->ResetStats();
@@ -3051,6 +3074,7 @@ void CBall::ResetMatch()
 void CBall::SetPenaltyTaker(CSDKPlayer *pPl)
 {
 	m_pFouledPl = pPl;
+	m_nFouledTeam = pPl->GetTeamNumber();
 	m_nFoulingTeam = pPl->GetOppTeamNumber();
 }
 

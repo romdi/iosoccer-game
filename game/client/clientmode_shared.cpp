@@ -817,7 +817,8 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 			C_Team *pTeam = GetGlobalTeam( team );
 			if ( pTeam )
 			{
-				g_pVGuiLocalize->ConvertANSIToUnicode( pTeam->Get_ShortTeamName(), wszTeam, sizeof(wszTeam) );
+				//g_pVGuiLocalize->ConvertANSIToUnicode( pTeam->Get_ShortTeamName(), wszTeam, sizeof(wszTeam) );
+				g_pVGuiLocalize->ConvertANSIToUnicode( pTeam->GetTeamNumber() == TEAM_A ? "the HOME team" : "the AWAY team", wszTeam, sizeof(wszTeam) );
 			}
 			else
 			{

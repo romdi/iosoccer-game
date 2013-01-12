@@ -1238,24 +1238,7 @@ bool CClientScoreBoardDialog::GetTeamInfo(int team, KeyValues *kv)
 	if (!isTeamSameCountry || teamCountry == -1)
 		teamCountry = 0;
 
-	if (mp_teamnames.GetString()[0] == 0)
-	{
-		kv->SetString("name", pTeam->Get_ShortTeamName());
-	}
-	else
-	{
-		char teamnames[64];
-		Q_strncpy(teamnames, mp_teamnames.GetString(), sizeof(teamnames));
-
-		char *home = strtok(teamnames, ",;");
-		char *away = strtok(NULL, ",;");
-
-		if (team == TEAM_A)
-			kv->SetString("name", home);
-		else
-			kv->SetString("name", away);
-	}
-
+	kv->SetString("name", pTeam->Get_ShortTeamName());
 	kv->SetInt("playerindex", teamIndex - 2);
 	kv->SetInt("posname", pTeam->GetNumPlayers());
 	kv->SetInt("countryindex", GetCountryFlagImageIndex(teamCountry));

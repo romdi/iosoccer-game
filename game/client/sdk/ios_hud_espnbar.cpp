@@ -62,6 +62,7 @@ protected:
 	virtual void OnThink( void );
 	virtual void Paint( void );
 	virtual void ApplySchemeSettings( vgui::IScheme *scheme );
+	void FireGameEvent(IGameEvent *event);
 
 private:
 
@@ -172,6 +173,7 @@ void CHudESPNBar::ApplySchemeSettings( IScheme *pScheme )
 //-----------------------------------------------------------------------------
 void CHudESPNBar::Init( void )
 {
+	ListenForGameEvent("throw_in");
 }
 
 char *g_szLongStateNames[32] =
@@ -223,15 +225,21 @@ void CHudESPNBar::OnThink( void )
 
 	if (GetBall())
 	{
-		if (GetBall()->m_eMatchEvent != m_eCurMatchEvent)
+		switch (GetBall()->m_eMatchEvent)
 		{
-			if (GetBall()->m_eMatchEvent == MATCH_EVENT_GOAL)
+		case MATCH_EVENT_DRIBBLE:
+		case MATCH_EVENT_PASS:
+		case MATCH_EVENT_INTERCEPTION:
+		case MATCH_EVENT_KEEPERSAVE:
+			break;
+		default:
+			if (GetBall()->m_eMatchEvent != m_eCurMatchEvent)
 			{
 				m_flNotificationStart = gpGlobals->curtime;
-				m_pNotification->SetText("GOAL");
+				m_pNotification->SetText(g_szMatchEventNames[GetBall()->m_eMatchEvent]);
 			}
-
 			m_eCurMatchEvent = GetBall()->m_eMatchEvent;
+			break;
 		}
 	}
 }
@@ -261,5 +269,14 @@ void CHudESPNBar::Paint( void )
 
 			m_pNotification->SetY((1 - pow(fraction, 2)) * PANEL_HEIGHT);
 		}	
+	}
+}
+
+void CHudESPNBar::FireGameEvent(IGameEvent *event)
+{
+	if (!Q_strcmp(event->GetName(), "throw_in"))
+	{
+		//m_flNotificationStart = gpGlobals->curtime;
+		//m_pNotification->SetText("THROW-IN");
 	}
 }

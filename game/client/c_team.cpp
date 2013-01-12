@@ -43,6 +43,8 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_Team, DT_Team, CTeam)
 	RecvPropInt( RECVINFO(m_nPenaltyRound) ),
 	RecvPropInt( RECVINFO(m_nTimeoutsLeft) ),
 	RecvPropString( RECVINFO(m_szServerKitName), 0, RecvProxy_KitName),
+	RecvPropString( RECVINFO(m_szTeamCode) ),
+	RecvPropString( RECVINFO(m_szShortTeamName) ),
 
 	RecvPropVector(RECVINFO(m_vCornerLeft)),
 	RecvPropVector(RECVINFO(m_vCornerRight)),
@@ -99,6 +101,9 @@ C_Team::C_Team()
 	m_szKitName[0] = 0;
 	m_szServerKitName[0] = 0;
 	m_szDownloadKitName[0] = 0;
+
+	m_szTeamCode[0] = 0;
+	m_szShortTeamName[0] = 0;
 
 	m_iPing = 0;
 	m_iPacketloss = 0;
@@ -195,7 +200,10 @@ bool C_Team::Get_HasTeamCrest( void )
 
 char *C_Team::Get_TeamCode( void )
 {
-	return m_pTeamKitInfo->m_szTeamCode;
+	if (m_szTeamCode[0] != 0)
+		return m_szTeamCode;
+	else
+		return m_pTeamKitInfo->m_szTeamCode;
 }
 
 char *C_Team::Get_FullTeamName( void )
@@ -209,7 +217,12 @@ char *C_Team::Get_FullTeamName( void )
 char *C_Team::Get_ShortTeamName( void )
 {
 	if (m_iTeamNum == TEAM_A || m_iTeamNum == TEAM_B)
-		return m_pTeamKitInfo->m_szShortTeamName;
+	{
+		if (m_szShortTeamName[0] != 0)
+			return m_szShortTeamName;
+		else
+			return m_pTeamKitInfo->m_szShortTeamName;
+	}
 	else
 		return m_szKitName;
 }

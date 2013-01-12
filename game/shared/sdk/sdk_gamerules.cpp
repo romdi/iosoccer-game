@@ -2005,7 +2005,85 @@ void CSDKGameRules::State_COOLDOWN_Leave(match_state_t newState)
 
 #endif
 
-ConVar mp_teamnames("mp_teamnames", "", FCVAR_REPLICATED|FCVAR_NOTIFY, "Set team names");
+void OnTeamnamesChange(IConVar *var, const char *pOldValue, float flOldValue)
+{
+	#ifdef GAME_DLL
+		if (SDKGameRules())
+		{
+			char val[256];
+			Q_strncpy(val, ((ConVar*)var)->GetString(), sizeof(val));
+
+			if (val[0] == 0)
+				return;
+
+			char teamstrings[2][128] = {};
+			char *result = NULL;
+
+			result = strtok(val, ",");
+
+			if (result != NULL)
+				Q_strncpy(teamstrings[0], result, sizeof(teamstrings[0]));
+
+			if (teamstrings[0][0] != 0)
+			{
+				result = strtok(NULL, ",");
+
+				if (result != NULL)
+					Q_strncpy(teamstrings[1], result, sizeof(teamstrings[1]));
+			}
+
+			if (teamstrings[0][0] != 0 && teamstrings[1][0] != 0)
+			{
+				char codes[2][16] = {};
+				char names[2][64] = {};
+
+				result = strtok(teamstrings[0], ":");
+
+				if (result != NULL)
+					Q_strncpy(codes[0], result, sizeof(codes[0]));
+
+				if (codes[0][0] != 0)
+				{
+					result = strtok(NULL, ":");
+
+					if (result != NULL)
+						Q_strncpy(names[0], result, sizeof(names[0]));
+
+					if (names[0][0] != 0)
+					{
+						result = strtok(teamstrings[1], ":");
+
+						if (result != NULL)
+							Q_strncpy(codes[1], result, sizeof(codes[1]));
+
+						if (codes[1][0] != 0)
+						{
+							result = strtok(NULL, ":");
+
+							if (result != NULL)
+								Q_strncpy(names[1], result, sizeof(names[1]));
+
+							if (names[1][0] != 0)
+							{
+								GetGlobalTeam(TEAM_A)->SetTeamCode(codes[0]);
+								GetGlobalTeam(TEAM_A)->SetShortTeamName(names[0]);
+
+								GetGlobalTeam(TEAM_B)->SetTeamCode(codes[1]);
+								GetGlobalTeam(TEAM_B)->SetShortTeamName(names[1]);
+
+								return;
+							}
+						}
+					}
+				}
+			}
+
+			Msg("Error: Wrong format\n");
+		}
+	#endif
+}
+
+ConVar mp_teamnames("mp_teamnames", "", FCVAR_REPLICATED|FCVAR_NOTIFY, "Override team names. Example: mp_teamnames \"FCB:FC Barcelona,RMA:Real Madrid\"", &OnTeamnamesChange);
 
 #ifdef GAME_DLL
 
@@ -2016,12 +2094,20 @@ void OnTeamlistChange(IConVar *var, const char *pOldValue, float flOldValue)
 		char teamlist[256];
 		Q_strncpy(teamlist, ((ConVar*)var)->GetString(), sizeof(teamlist));
 
-		char *home = strlwr(strtok(teamlist, " ,;"));
-		char *away = strlwr(strtok(NULL, " ,;"));
+		char *home = NULL;
+		char *away = NULL;
+
+		home = strtok(teamlist, " ,;");
+
+		if (home != NULL)
+			away = strtok(NULL, " ,;");
+
 		if (home == NULL || away == NULL)
 			Msg( "Format: mp_teamlist \"<home team>,<away team>\"\n" );
 		else
 		{
+			home = strlwr(home);
+			away = strlwr(away);
 			IOS_LogPrintf("Setting new teams: %s against %s\n", home, away);
 			GetGlobalTeam(TEAM_A)->SetKitName(home);
 			GetGlobalTeam(TEAM_B)->SetKitName(away);

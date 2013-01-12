@@ -52,6 +52,8 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CTeam, DT_Team)
 	SendPropInt( SENDINFO(m_nPenaltyRound)),
 	SendPropInt( SENDINFO(m_nTimeoutsLeft)),
 	SendPropString( SENDINFO( m_szServerKitName ) ),
+	SendPropString( SENDINFO( m_szTeamCode ) ),
+	SendPropString( SENDINFO( m_szShortTeamName ) ),
 
 	SendPropVector(SENDINFO(m_vCornerLeft), -1, SPROP_COORD),
 	SendPropVector(SENDINFO(m_vCornerRight), -1, SPROP_COORD),
@@ -110,6 +112,8 @@ int GetNumberOfTeams( void )
 CTeam::CTeam( void )
 {
 	memset( m_szServerKitName.GetForModify(), 0, sizeof(m_szServerKitName) );
+	memset( m_szTeamCode.GetForModify(), 0, sizeof(m_szTeamCode) );
+	memset( m_szShortTeamName.GetForModify(), 0, sizeof(m_szShortTeamName) );
 	ResetStats();
 	UpdatePosIndices(true);
 	m_nTimeoutsLeft = 3;
@@ -190,6 +194,17 @@ void CTeam::SetKitName(const char *pName)
 {
 	Q_strncpy( m_szServerKitName.GetForModify(), pName, MAX_TEAM_NAME_LENGTH );
 }
+
+void CTeam::SetTeamCode(const char *pCode)
+{
+	Q_strncpy( m_szTeamCode.GetForModify(), pCode, MAX_TEAMCODE_LENGTH );
+}
+
+void CTeam::SetShortTeamName(const char *pName)
+{
+	Q_strncpy( m_szShortTeamName.GetForModify(), pName, MAX_SHORTTEAMNAME_LENGTH );
+}
+
 
 //-----------------------------------------------------------------------------
 // Purpose: Get the team's name

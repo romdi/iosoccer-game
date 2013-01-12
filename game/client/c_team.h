@@ -91,6 +91,8 @@ public:
 	int		m_iTeamNum;
 	char	m_szKitName[MAX_KITNAME_LENGTH];
 	char	m_szServerKitName[MAX_KITNAME_LENGTH];
+	char	m_szTeamCode[MAX_TEAMCODE_LENGTH];
+	char	m_szShortTeamName[MAX_SHORTTEAMNAME_LENGTH];
 	int		m_nGoals;
 	int		m_nPossession;
 	int		m_nPenaltyGoals;

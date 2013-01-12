@@ -14,6 +14,7 @@
 #include "shareddefs.h"
 #include "utlvector.h"
 #include "sdk_player.h"
+#include "ios_teamkit_parse.h"
 
 #define MAX_MATCH_EVENTS 16
 #define MAX_MATCH_EVENT_PLAYER_NAME_LENGTH 32
@@ -45,6 +46,8 @@ public:
 	CTeam			*GetOppTeam( void ) const;
 	virtual void	SetTeamNumber(int teamNum);
 	void			SetKitName(const char *pName);
+	void			SetTeamCode(const char *pCode);
+	void			SetShortTeamName(const char *pName);
 
 	//-----------------------------------------------------------------------------
 	// Data Handling
@@ -94,6 +97,8 @@ public:
 
 	// Data
 	CNetworkString( m_szServerKitName, MAX_TEAM_NAME_LENGTH );
+	CNetworkString( m_szTeamCode, MAX_TEAMCODE_LENGTH );
+	CNetworkString( m_szShortTeamName, MAX_SHORTTEAMNAME_LENGTH );
 	CNetworkVar( int, m_iTeamNum );
 	CNetworkVar( int, m_nGoals );
 	CNetworkVar( int, m_nPossession );
