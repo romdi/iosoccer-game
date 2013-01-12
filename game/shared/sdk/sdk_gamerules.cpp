@@ -1898,6 +1898,8 @@ void CSDKGameRules::State_COOLDOWN_Enter()
 
 	if (ReplayManager())
 		ReplayManager()->StartHighlights();
+
+	CPlayerPersistentData::ConvertAllPlayerDataToJson();
 }
 
 void CSDKGameRules::State_COOLDOWN_Think()

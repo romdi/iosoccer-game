@@ -1762,6 +1762,7 @@ void CPlayerPersistentData::ReallocateAllPlayerData()
 }
 
 #include "Filesystem.h"
+#include <time.h>
 
 void CPlayerPersistentData::ConvertAllPlayerDataToJson()
 {
@@ -1796,7 +1797,18 @@ void CPlayerPersistentData::ConvertAllPlayerDataToJson()
 
 	Q_strcat(json, "]}", jsonSize);
 
-	FileHandle_t fh = filesystem->Open("matchdata.json", "w", "MOD");
+	filesystem->CreateDirHierarchy("statistics", "MOD");
+
+	time_t rawtime;
+	struct tm *timeinfo;
+	char filename[128];
+
+	time (&rawtime);
+	timeinfo = localtime(&rawtime);
+
+	strftime(filename, sizeof(filename), "statistics\\matchdata_%Y.%m.%d_%Hh.%Mm.%Ss.json", timeinfo);
+
+	FileHandle_t fh = filesystem->Open(filename, "w", "MOD");
  
 	if (fh)
 	{
@@ -1807,7 +1819,7 @@ void CPlayerPersistentData::ConvertAllPlayerDataToJson()
 	delete[] json;
 }
 
-void CC_SV_SaveGameData(const CCommand &args)
+void CC_SV_SaveMatchData(const CCommand &args)
 {
 	if (!UTIL_IsCommandIssuedByServerAdmin())
         return;
@@ -1815,7 +1827,7 @@ void CC_SV_SaveGameData(const CCommand &args)
 	CPlayerPersistentData::ConvertAllPlayerDataToJson();
 }
 
-ConCommand sv_savegamedata("sv_savegamedata", CC_SV_SaveGameData, "", 0);
+ConCommand sv_savematchdata("sv_savematchdata", CC_SV_SaveMatchData, "", 0);
 
 void CPlayerPersistentData::ResetData()
 {

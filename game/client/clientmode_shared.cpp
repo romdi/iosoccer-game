@@ -818,7 +818,7 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 			if ( pTeam )
 			{
 				//g_pVGuiLocalize->ConvertANSIToUnicode( pTeam->Get_ShortTeamName(), wszTeam, sizeof(wszTeam) );
-				g_pVGuiLocalize->ConvertANSIToUnicode( pTeam->GetTeamNumber() == TEAM_A ? "the HOME team" : "the AWAY team", wszTeam, sizeof(wszTeam) );
+				g_pVGuiLocalize->ConvertANSIToUnicode( (pTeam->GetTeamNumber() == TEAM_A ? "the HOME team" : "the AWAY team"), wszTeam, sizeof(wszTeam) );
 			}
 			else
 			{
@@ -846,7 +846,8 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 						if (oldteam == TEAM_A || oldteam == TEAM_B)
 						{
 							wchar_t wszOldTeam[64];
-							g_pVGuiLocalize->ConvertANSIToUnicode( GetGlobalTeam(oldteam)->Get_ShortTeamName(), wszOldTeam, sizeof(wszOldTeam) );
+							//g_pVGuiLocalize->ConvertANSIToUnicode( GetGlobalTeam(oldteam)->Get_ShortTeamName(), wszOldTeam, sizeof(wszOldTeam) );
+							g_pVGuiLocalize->ConvertANSIToUnicode( (pTeam->GetTeamNumber() == TEAM_A ? "HOME team" : "AWAY team"), wszOldTeam, sizeof(wszOldTeam) );		
 							g_pVGuiLocalize->ConstructString( wszLocalized, sizeof( wszLocalized ), g_pVGuiLocalize->Find( "#game_player_left_team" ), 3, wszPlayerName, wszOldTeam, wszTeamPos );
 						}
 						else
