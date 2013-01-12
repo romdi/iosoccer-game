@@ -61,7 +61,10 @@ enum { PLAYERLIST_HEIGHT = 360, PLAYERLIST_BOTTOMMARGIN = 10, PLAYERLISTDIVIDER_
 enum { STATBUTTON_WIDTH = 120, STATBUTTON_HEIGHT = 30, STATBUTTON_HMARGIN = 5, STATBUTTON_VMARGIN = 5 };
 enum { EXTRAINFO_HEIGHT = 305, EXTRAINFO_MARGIN = 5 };
 enum { SPECLIST_HEIGHT = 30, SPECLIST_PADDING = 5, SPECNAME_WIDTH = 100, SPECTEXT_WIDTH = 70, SPECTEXT_MARGIN = 5, SPECBUTTON_WIDTH = 90, SPECBUTTON_HMARGIN = 5, SPECBUTTON_VMARGIN = 3 };
-enum { SERVERINFO_HEIGHT = 30, SERVERINFO_MARGIN = 5, SERVERINFOLINE_HEIGHT = 2	, SERVERINFOLINE_MARGIN = 5 };
+enum { TOPBAR_HEIGHT = 30 };
+//enum { MATCHSTATE_WIDTH = 100 };
+enum { SERVERINFO_WIDTH = 320, SERVERINFOLINE_HEIGHT = 2, SERVERINFOLINE_MARGIN = 5 };
+enum { MATCHINFO_WIDTH = 320 };
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -145,8 +148,14 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Editabl
 
 	m_pSpecInfo = new Label(m_pMainPanel, "", "");
 
+	m_pTopBar = new Panel(m_pMainPanel, "");
+
 	m_pServerInfo = new Label(m_pMainPanel, "", "");
 	m_pServerInfoLine = new Panel(m_pMainPanel, "");
+
+	m_pMatchInfo = new Label(m_pMainPanel, "", "");
+
+	m_pMatchState = new Label(m_pMainPanel, "", "");
 
 	m_pJoinRandom = new Button(m_pStatButtonInnerContainer, "JoinRandom", "Auto-Join", this, VarArgs("jointeam %d -1", TEAM_INVALID));
 
@@ -170,6 +179,8 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Editabl
 	m_bShowCaptainMenu = false;
 
 	MakePopup();
+
+	white = Color(230, 230, 230, 255);
 }
 
 //-----------------------------------------------------------------------------
@@ -365,13 +376,30 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 	m_pSpecInfo->SetContentAlignment(Label::a_center);
 	m_pSpecInfo->SetVisible(false);
 
-	m_pServerInfo->SetBounds(0, 0, m_pMainPanel->GetWide(), SERVERINFO_HEIGHT);
-	m_pServerInfo->SetFont(m_pScheme->GetFont("IOSTeamMenuNormal"));
-	m_pServerInfo->SetContentAlignment(Label::a_center);
-	m_pServerInfo->SetFgColor(Color(200, 200, 200, 255));
-	m_pServerInfo->SetBgColor(Color(0, 0, 0, 150));
+	m_pTopBar->SetBounds(0, 0, m_pMainPanel->GetWide(), TOPBAR_HEIGHT);
+	m_pTopBar->SetBgColor(Color(0, 0, 0, 150));
 
-	m_pServerInfoLine->SetBounds(SERVERINFOLINE_MARGIN, SERVERINFO_HEIGHT, m_pMainPanel->GetWide() - 2 * SERVERINFOLINE_MARGIN, SERVERINFOLINE_HEIGHT);
+	m_pServerInfo->SetBounds(0, 0, SERVERINFO_WIDTH, TOPBAR_HEIGHT);
+	m_pServerInfo->SetFont(m_pScheme->GetFont("IOSTeamMenuNormal"));
+	m_pServerInfo->SetContentAlignment(Label::a_west);
+	m_pServerInfo->SetFgColor(Color(200, 200, 200, 255));
+	//m_pServerInfo->SetBgColor(Color(0, 0, 0, 150));
+	m_pServerInfo->SetTextInset(5, 0);
+
+	m_pMatchInfo->SetBounds(m_pMainPanel->GetWide() - MATCHINFO_WIDTH, 0, MATCHINFO_WIDTH, TOPBAR_HEIGHT);
+	m_pMatchInfo->SetFont(m_pScheme->GetFont("IOSTeamMenuNormal"));
+	m_pMatchInfo->SetContentAlignment(Label::a_east);
+	m_pMatchInfo->SetFgColor(Color(200, 200, 200, 255));
+	//m_pMatchInfo->SetBgColor(Color(0, 0, 0, 150));
+	m_pMatchInfo->SetTextInset(5, 0);
+
+	m_pMatchState->SetBounds(SERVERINFO_WIDTH, 0, m_pMainPanel->GetWide() - SERVERINFO_WIDTH - MATCHINFO_WIDTH, TOPBAR_HEIGHT);
+	m_pMatchState->SetFont(m_pScheme->GetFont("IOSTeamMenuNormal"));
+	m_pMatchState->SetContentAlignment(Label::a_center);
+	m_pMatchState->SetFgColor(Color(200, 200, 200, 255));
+	//m_pMatchState->SetBgColor(Color(0, 0, 0, 150));
+
+	m_pServerInfoLine->SetBounds(SERVERINFOLINE_MARGIN, TOPBAR_HEIGHT, m_pMainPanel->GetWide() - 2 * SERVERINFOLINE_MARGIN, SERVERINFOLINE_HEIGHT);
 	m_pServerInfoLine->SetBgColor(Color(200, 200, 200, 255));
 	m_pServerInfoLine->SetVisible(false);
 
@@ -385,7 +413,7 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 		//m_pTeamCrests[i]->SetShouldScaleImage(true);
 		//m_pTeamCrests[i]->SetImage(i == 0 ? "hometeamcrest" : "awayteamcrest");
 
-		m_pPlayerList[i]->SetBounds(i * (m_pMainPanel->GetWide() / 2), SERVERINFO_HEIGHT, m_pMainPanel->GetWide() / 2, PLAYERLIST_HEIGHT);
+		m_pPlayerList[i]->SetBounds(i * (m_pMainPanel->GetWide() / 2), TOPBAR_HEIGHT, m_pMainPanel->GetWide() / 2, PLAYERLIST_HEIGHT);
 		m_pPlayerList[i]->SetPaintBorderEnabled(false);
 	}
 
@@ -480,6 +508,21 @@ bool CClientScoreBoardDialog::NeedsUpdate( void )
 	return (m_fNextUpdateTime < gpGlobals->curtime);	
 }
 
+char *g_szStateNames[32] =
+{
+	"WARM-UP",
+	"FIRST HALF",
+	"HALF-TIME",
+	"SECOND HALF",
+	"ET BREAK",
+	"ET FIRST HALF",
+	"ET HALF-TIME",
+	"ET SECOND HALF",
+	"PENALTIES BREAK",
+	"PENALTIES",
+	"COOL-DOWN"
+};
+
 //-----------------------------------------------------------------------------
 // Purpose: Recalculate the internal scoreboard data
 //-----------------------------------------------------------------------------
@@ -490,6 +533,8 @@ void CClientScoreBoardDialog::Update( void )
 		return;
 
 	m_pServerInfo->SetText(mp_serverinfo.GetString());
+	m_pMatchInfo->SetText(mp_matchinfo.GetString());
+	m_pMatchState->SetText(g_szStateNames[SDKGameRules()->State_Get()]);
 
 	if (m_eActivePanelType == STATS_MENU)
 	{
@@ -596,7 +641,7 @@ void CClientScoreBoardDialog::UpdateTeamInfo()
 
 		kv->deleteThis();
 
-		m_pPlayerList[i]->SetItemFgColor(0, GameResources()->GetTeamColor(i + TEAM_A));
+		m_pPlayerList[i]->SetItemFgColor(0, white);
 
 		for (int j = 0; j <= m_pPlayerList[i]->GetHighestItemID(); j++)
 		{
@@ -606,7 +651,7 @@ void CClientScoreBoardDialog::UpdateTeamInfo()
 			}
 		}
 
-		m_pPlayerList[i]->SetItemDividerColor(0, GameResources()->GetTeamColor(i + TEAM_A));
+		m_pPlayerList[i]->SetItemDividerColor(0, white);
 	}
 }
 
@@ -629,7 +674,6 @@ void CClientScoreBoardDialog::UpdatePlayerInfo()
 	Color dark = Color(125, 125, 125, 255);
 	Color light = Color(175, 175, 175, 255);
 	Color lighter = Color(225, 225, 225, 255);
-	Color white = Color(255, 255, 255, 255);
 
 	//m_SpecNames.RemoveAll();
 
@@ -702,8 +746,22 @@ void CClientScoreBoardDialog::UpdatePlayerInfo()
 					itemID = m_pPlayerList[teamIndex]->AddItem( sectionID, playerData );
 				}
 
+				Color col;
+
+				if (i == GetLocalPlayerIndex())
+				{
+					if (gr->GetYellowCards(i) % 2 == 1)
+						col = Color(200, 255, 100, 255);
+					else
+						col = Color(150, 255, 150, 255);
+				}
+				else if (gr->GetYellowCards(i) % 2 == 1)
+					col = Color(255, 255, 150, 255);
+				else
+					col = white;
+
 				// set the row color based on the players team
-				m_pPlayerList[teamIndex]->SetItemFgColor( itemID, gr->GetTeamColor( team ) );
+				m_pPlayerList[teamIndex]->SetItemFgColor(itemID, col);
 				m_pPlayerList[teamIndex]->SetItemFont( itemID, m_pScheme->GetFont("IOSTeamMenuNormal"));
 
 				if (i == m_nSelectedPlayerIndex)
@@ -779,7 +837,7 @@ void CClientScoreBoardDialog::UpdatePlayerInfo()
 			pPl->SetCommand(VarArgs("specindex:%d", specList[i]));
 			pPl->AddActionSignalTarget(this);
 			pPl->SetBounds(totalWidth, 0, SPECNAME_WIDTH, SPECLIST_HEIGHT);
-			Color defaultColor = gr->IsCardBanned(specList[i].playerIndex) ? Color(255, 153, 153, 255) : Color(255, 255, 255, 255);
+			Color defaultColor = gr->IsCardBanned(specList[i].playerIndex) ? Color(255, 153, 153, 255) : white;
 			pPl->SetDefaultColor(defaultColor, Color(0, 0, 0, 0));
 			pPl->SetArmedColor(defaultColor, Color(75, 75, 75, 150));
 			pPl->SetFont(m_pSpectatorFontList[1]);
@@ -827,8 +885,8 @@ void CClientScoreBoardDialog::AddHeader()
 		m_pPlayerList[i]->SetSectionAlwaysVisible(m_iSectionId);
 		m_pPlayerList[i]->SetFontSection(m_iSectionId, m_pScheme->GetFont("IOSTeamMenuSmall"));
 		m_pPlayerList[i]->SetLineSpacing(25);
-		m_pPlayerList[i]->SetFgColor(Color(255, 255, 255, 255));
-		m_pPlayerList[i]->SetSectionFgColor(0, Color(255, 255, 255, 255));
+		m_pPlayerList[i]->SetFgColor(white);
+		m_pPlayerList[i]->SetSectionFgColor(0, white);
 
 		int defaultFlags = SectionedListPanel::HEADER_CENTER | SectionedListPanel::COLUMN_CENTER;
 
@@ -956,7 +1014,7 @@ int prettify(float f, char *dst, int max) {
   return c + 1;
 }
 
-#define GET_STAT_FTEXT(val, format) (VarArgs(format, val))
+#define GET_STAT_FTEXT(val, format) (val == 0 ? "" : VarArgs(format, val))
 #define GET_STAT_TEXT(val) (GET_STAT_FTEXT(val, "%d"))
 
 //-----------------------------------------------------------------------------
@@ -966,7 +1024,7 @@ bool CClientScoreBoardDialog::GetPlayerInfo(int playerIndex, KeyValues *kv)
 {
 	IGameResources *gr = GameResources();
 
-	if (!gr )
+	if (!gr)
 		return false;
 
 	kv->SetString("goals", GET_STAT_TEXT(gr->GetGoals(playerIndex)));
@@ -1059,6 +1117,9 @@ bool CClientScoreBoardDialog::GetPlayerInfo(int playerIndex, KeyValues *kv)
 
 	return true;
 }
+
+#define GET_TSTAT_FTEXT(val, format) (VarArgs(format, val))
+#define GET_TSTAT_TEXT(val) (GET_TSTAT_FTEXT(val, "%d"))
 
 bool CClientScoreBoardDialog::GetTeamInfo(int team, KeyValues *kv)
 {
@@ -1177,36 +1238,53 @@ bool CClientScoreBoardDialog::GetTeamInfo(int team, KeyValues *kv)
 	if (!isTeamSameCountry || teamCountry == -1)
 		teamCountry = 0;
 
+	if (mp_teamnames.GetString()[0] == 0)
+	{
+		kv->SetString("name", pTeam->Get_ShortTeamName());
+	}
+	else
+	{
+		char teamnames[64];
+		Q_strncpy(teamnames, mp_teamnames.GetString(), sizeof(teamnames));
+
+		char *home = strtok(teamnames, ",;");
+		char *away = strtok(NULL, ",;");
+
+		if (team == TEAM_A)
+			kv->SetString("name", home);
+		else
+			kv->SetString("name", away);
+	}
+
 	kv->SetInt("playerindex", teamIndex - 2);
 	kv->SetInt("posname", pTeam->GetNumPlayers());
-	kv->SetString("name", pTeam->Get_ShortTeamName());
 	kv->SetInt("countryindex", GetCountryFlagImageIndex(teamCountry));
 	kv->SetString("club", teamClub);
-	kv->SetString("ping", GET_STAT_TEXT(pingSum / max(1, pingPlayers)));
-	kv->SetString("possession", GET_STAT_FTEXT(pTeam->Get_Possession(), "%d%%"));
-	kv->SetString("passes", GET_STAT_TEXT(passSum));
-	kv->SetString("passescompleted", GET_STAT_FTEXT(passCompletedSum / max(1, passCompletedPlayerCount), "%d%%"));
-	kv->SetString("distancecovered", GET_STAT_FTEXT(distSum, "%.1f km"));
-	kv->SetString("offsides", GET_STAT_TEXT(offsides));
-	kv->SetString("corners", GET_STAT_TEXT(corners));
-	kv->SetString("goalkicks", GET_STAT_TEXT(goalkicks));
-	kv->SetString("shots", GET_STAT_TEXT(shots));
-	kv->SetString("shotsongoal", GET_STAT_FTEXT(shotsOnGoal / max(1, shotsOnGoalPlayerCount), "%d%%"));
-	kv->SetString("fouls", GET_STAT_TEXT(fouls));
-	kv->SetString("foulssuffered", GET_STAT_TEXT(foulsSuffered));
-	kv->SetString("slidingtackles", GET_STAT_TEXT(slidingTackles));
-	kv->SetString("slidingtacklescompleted", GET_STAT_FTEXT(slidingTacklesCompletedSum / max(1, slidingTacklesCompletedPlayerCount), "%d%%"));
-	kv->SetString("freekicks", GET_STAT_TEXT(freekicks));
-	kv->SetString("goals", GET_STAT_TEXT(goals));
-	kv->SetString("assists", GET_STAT_TEXT(assists));
-	kv->SetString("interceptions", GET_STAT_TEXT(interceptions));
-	kv->SetString("redcards", GET_STAT_TEXT(redcards));
-	kv->SetString("yellowcards", GET_STAT_TEXT(yellowcards));
-	kv->SetString("penalties", GET_STAT_TEXT(penalties));
-	kv->SetString("throwins", GET_STAT_TEXT(throwins));
-	kv->SetString("keepersaves", GET_STAT_TEXT(saves));
-	kv->SetString("owngoals", GET_STAT_TEXT(owngoals));
-	kv->SetString("goalsconceded", GET_STAT_TEXT(goalsconceded));
+	kv->SetString("ping", GET_TSTAT_TEXT(pingSum / max(1, pingPlayers)));
+	kv->SetString("possession", GET_TSTAT_FTEXT(pTeam->Get_Possession(), "%d%%"));
+	kv->SetString("passes", GET_TSTAT_TEXT(passSum));
+	kv->SetString("passescompleted", GET_TSTAT_FTEXT(passCompletedSum / max(1, passCompletedPlayerCount), "%d%%"));
+	kv->SetString("distancecovered", GET_TSTAT_FTEXT(distSum, "%.1f km"));
+	kv->SetString("offsides", GET_TSTAT_TEXT(offsides));
+	kv->SetString("corners", GET_TSTAT_TEXT(corners));
+	kv->SetString("goalkicks", GET_TSTAT_TEXT(goalkicks));
+	kv->SetString("shots", GET_TSTAT_TEXT(shots));
+	kv->SetString("shotsongoal", GET_TSTAT_FTEXT(shotsOnGoal / max(1, shotsOnGoalPlayerCount), "%d%%"));
+	kv->SetString("fouls", GET_TSTAT_TEXT(fouls));
+	kv->SetString("foulssuffered", GET_TSTAT_TEXT(foulsSuffered));
+	kv->SetString("slidingtackles", GET_TSTAT_TEXT(slidingTackles));
+	kv->SetString("slidingtacklescompleted", GET_TSTAT_FTEXT(slidingTacklesCompletedSum / max(1, slidingTacklesCompletedPlayerCount), "%d%%"));
+	kv->SetString("freekicks", GET_TSTAT_TEXT(freekicks));
+	kv->SetString("goals", GET_TSTAT_TEXT(goals));
+	kv->SetString("assists", GET_TSTAT_TEXT(assists));
+	kv->SetString("interceptions", GET_TSTAT_TEXT(interceptions));
+	kv->SetString("redcards", GET_TSTAT_TEXT(redcards));
+	kv->SetString("yellowcards", GET_TSTAT_TEXT(yellowcards));
+	kv->SetString("penalties", GET_TSTAT_TEXT(penalties));
+	kv->SetString("throwins", GET_TSTAT_TEXT(throwins));
+	kv->SetString("keepersaves", GET_TSTAT_TEXT(saves));
+	kv->SetString("owngoals", GET_TSTAT_TEXT(owngoals));
+	kv->SetString("goalsconceded", GET_TSTAT_TEXT(goalsconceded));
 	char *rating = VarArgs("%.1f", (ratings / max(1, passCompletedPlayerCount)));
 	if (!Q_strcmp(rating, "10.0"))
 		rating[2] = 0;
@@ -1277,6 +1355,7 @@ int CClientScoreBoardDialog::GetCountryFlagImageIndex(int countryIndex)
 		{
 			IImage *countryFlag = scheme()->GetImage(VarArgs("country_flags/%s", g_szCountryISOCodes[countryIndex]), false);
 			countryFlag->SetSize(25, 25);
+			countryFlag->SetColor(Color(255, 255, 255, 200));
 			imageIndex = m_pImageList->AddImage(countryFlag);
 			m_mapCountryFlagsToImageList.Insert(countryIndex, imageIndex);
 		}
@@ -1418,12 +1497,18 @@ void CClientScoreBoardDialog::OnItemSelected(KeyValues *data)
 
 	int itemId = data->GetInt("itemID");
 
-	Panel *pan = (Panel *)data->GetPtr("panel");
-
 	if (itemId == -1)
 		m_nSelectedPlayerIndex = 0;
 	else
-		m_nSelectedPlayerIndex = ((SectionedListPanel *)data->GetPtr("panel"))->GetItemData(itemId)->GetInt("playerindex");
+	{
+		SectionedListPanel *pPanel = (SectionedListPanel *)data->GetPtr("panel");
+		if (pPanel)
+		{
+			KeyValues *kv = pPanel->GetItemData(itemId);
+			if (kv)
+				m_nSelectedPlayerIndex = kv->GetInt("playerindex");
+		}
+	}
 
 	if (m_nSelectedPlayerIndex == 0)
 		m_eActivePanelType = FORMATION_MENU_NORMAL;

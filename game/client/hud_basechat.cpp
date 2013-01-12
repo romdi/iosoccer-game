@@ -37,14 +37,16 @@ ConVar cl_showtextmsg( "cl_showtextmsg", "1", 0, "Enable/disable text messages p
 ConVar cl_chatfilters( "cl_chatfilters", "31", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Stores the chat filter settings " );
 
 
-Color g_ColorBlue( 153, 204, 255, 255 );
-Color g_ColorRed( 255, 63.75, 63.75, 255 );
+//Color g_ColorBlue( 153, 204, 255, 255 );
+Color g_ColorBlue( 161, 190, 230 );
+//Color g_ColorRed( 255, 63.75, 63.75, 255 );
+Color g_ColorRed(255, 153, 153, 255);
 Color g_ColorGreen( 153, 255, 153, 255 );
 Color g_ColorDarkGreen( 64, 255, 64, 255 );
 Color g_ColorYellow( 255, 178.5, 0.0, 255 );
 Color g_ColorGray( 204, 204, 204, 255 );
 Color g_ColorDarkGray( 144, 144, 120, 255 );
-Color g_ColorWhite( 255, 255, 255, 255 );
+Color g_ColorWhite( 230, 230, 230, 255 );
 
 //--------------------------------------------------------------------------------------------------------
 /**

@@ -175,12 +175,17 @@ void Host_Say( edict_t *pEdict, const CCommand &args, bool teamonly )
 
 	const char *pszFormat = NULL;
 	const char *pszPrefix = NULL;
-	const char *pszLocation = NULL;
+	char pszLocation[8];
+
 	if ( g_pGameRules )
 	{
 		pszFormat = g_pGameRules->GetChatFormat( teamonly, pPlayer );
 		pszPrefix = g_pGameRules->GetChatPrefix( teamonly, pPlayer );	
-		pszLocation = g_pGameRules->GetChatLocation( teamonly, pPlayer );
+
+		if (pPlayer && pPlayer->GetTeam() && pPlayer->GetTeam()->GetCaptain() == pPlayer)
+			Q_snprintf(pszLocation, sizeof(pszLocation), "(%s)", g_pGameRules->GetChatLocation( teamonly, pPlayer ));
+		else
+			Q_snprintf(pszLocation, sizeof(pszLocation), "%s", g_pGameRules->GetChatLocation( teamonly, pPlayer ));
 	}
 
 	const char *pszPlayerName = pPlayer ? pPlayer->GetPlayerName() : "Stadium Announcer";
@@ -224,7 +229,7 @@ void Host_Say( edict_t *pEdict, const CCommand &args, bool teamonly )
 		CSingleUserRecipientFilter user( pPlayer );
 		user.MakeReliable();
 
-		UTIL_SayText2Filter( user, pPlayer, true, pszFormat, pszPlayerName, p, pszLocation );
+		UTIL_SayText2Filter( user, pPlayer, true, pszFormat, pszPlayerName, p, pszLocation, pszPrefix );
 	}
 
 	// echo to server console

@@ -1994,10 +1994,10 @@ bool CGameMovement::CheckJumpButton( void )
 		{
 			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_RIGHT;
 		}
-		else if ((mv->m_nButtons & IN_FORWARD) && !(mv->m_nButtons & IN_WALK) && (mv->m_nButtons & IN_SPEED))
-		{
-			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_FORWARD;
-		}
+		//else if ((mv->m_nButtons & IN_FORWARD) && !(mv->m_nButtons & IN_WALK) && (mv->m_nButtons & IN_SPEED))
+		//{
+		//	animEvent = PLAYERANIMEVENT_KEEPER_DIVE_FORWARD;
+		//}
 		//else if ((mv->m_nButtons & IN_BACK) && !(mv->m_nButtons & IN_WALK) && (mv->m_nButtons & IN_SPEED))
 		//{
 		//	animEvent = PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD;
@@ -2059,15 +2059,41 @@ bool CGameMovement::CheckSlideButton()
 	if (mv->m_nOldButtons & IN_DUCK)
 		return false;
 
-	pPl->DoAnimationEvent(PLAYERANIMEVENT_SLIDE);
-	mv->m_nOldButtons |= IN_DUCK;
-	pPl->m_Shared.SetStamina(pPl->m_Shared.GetStamina() - mp_stamina_drain_sliding.GetInt());
-	pPl->m_Shared.m_flNextSlide = gpGlobals->curtime + mp_slide_delay.GetFloat();
+	PlayerAnimEvent_t animEvent = PLAYERANIMEVENT_SLIDE;
 
-#ifdef GAME_DLL
-	if (!SDKGameRules()->IsIntermissionState() && GetBall()->State_Get() == BALL_NORMAL && !GetBall()->HasQueuedState())
-		pPl->SetSlidingTackles(pPl->GetSlidingTackles() + 1);
-#endif
+	bool isKeeper;
+	int team;
+	#ifdef CLIENT_DLL
+		isKeeper = GameResources()->GetTeamPosType(pPl->index) == GK;
+		team = GameResources()->GetTeam(pPl->index);
+	#else
+		isKeeper = pPl->GetTeamPosType() == GK;
+		team = pPl->GetTeamNumber();
+	#endif
+
+	if (isKeeper && pPl->m_nInPenBoxOfTeam == team)
+	{
+		MoveHelper()->StartSound( mv->GetAbsOrigin(), "Player.DiveKeeper" );
+		animEvent = PLAYERANIMEVENT_KEEPER_DIVE_FORWARD;
+	}
+
+	pPl->m_Shared.SetAnimEventStartAngle(mv->m_vecAbsViewAngles);
+	pPl->m_Shared.SetAnimEventStartButtons(mv->m_nButtons);
+
+	pPl->DoAnimationEvent(animEvent);
+
+	mv->m_nOldButtons |= IN_DUCK;
+
+	if (animEvent == PLAYERANIMEVENT_SLIDE)
+	{
+		pPl->m_Shared.SetStamina(pPl->m_Shared.GetStamina() - mp_stamina_drain_sliding.GetInt());
+		pPl->m_Shared.m_flNextSlide = gpGlobals->curtime + mp_slide_delay.GetFloat();
+
+		#ifdef GAME_DLL
+			if (!SDKGameRules()->IsIntermissionState() && GetBall()->State_Get() == BALL_NORMAL && !GetBall()->HasQueuedState())
+				pPl->SetSlidingTackles(pPl->GetSlidingTackles() + 1);
+		#endif
+	}
 
 	return true;
 }

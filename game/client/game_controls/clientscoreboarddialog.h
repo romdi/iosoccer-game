@@ -247,8 +247,11 @@ private:
 
 	Label		*m_pSpecInfo;
 	
+	Panel		*m_pTopBar;
 	Label		*m_pServerInfo;
 	Panel		*m_pServerInfoLine;
+	Label		*m_pMatchInfo;
+	Label		*m_pMatchState;
 
 	CUtlVector<SpecInfo> m_SpecList;
 
@@ -266,6 +269,8 @@ private:
 	int			m_nCursorPosY;
 
 	IScheme *m_pScheme;
+
+	Color		white;
 };
 
 

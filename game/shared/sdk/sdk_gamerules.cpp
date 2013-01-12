@@ -954,7 +954,14 @@ const char *CSDKGameRules::GetChatPrefix( bool bTeamOnly, CBasePlayer *pPlayer )
 	if (bTeamOnly)
 		return "(TEAM)";
 	else
-		return "";
+	{
+		if (pPlayer->GetTeamNumber() == TEAM_A)
+			return "HOME";
+		else if (pPlayer->GetTeamNumber() == TEAM_B)
+			return "AWAY";
+		else
+			return "SPEC";
+	}
 }
 
 const char *CSDKGameRules::GetChatFormat( bool bTeamOnly, CBasePlayer *pPlayer )
@@ -1998,6 +2005,8 @@ void CSDKGameRules::State_COOLDOWN_Leave(match_state_t newState)
 
 #endif
 
+ConVar mp_teamnames("mp_teamnames", "", FCVAR_REPLICATED|FCVAR_NOTIFY, "Set team names");
+
 #ifdef GAME_DLL
 
 void OnTeamlistChange(IConVar *var, const char *pOldValue, float flOldValue)
@@ -2019,7 +2028,9 @@ void OnTeamlistChange(IConVar *var, const char *pOldValue, float flOldValue)
 		}
 	}
 }
+
 ConVar mp_teamlist("mp_teamlist", "england,brazil", FCVAR_REPLICATED|FCVAR_NOTIFY, "Set team names", &OnTeamlistChange);
+
 ConVar mp_teamrotation("mp_teamrotation", "brazil,germany,italy,scotland,barcelona,bayern,liverpool,milan,palmeiras", 0, "Set available teams");
 
 ConVar mp_clientsettingschangeinterval("mp_clientsettingschangeinterval", "5", FCVAR_REPLICATED|FCVAR_NOTIFY, "");

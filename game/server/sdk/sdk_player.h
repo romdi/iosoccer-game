@@ -35,6 +35,7 @@ class CPlayerPersistentData
 {
 public:
 	const	CSteamID *m_SteamID;
+	char	m_szSteamID[32];
 	float	m_flNextJoin;
 	bool	m_bIsCardBanned;
 	int		m_nRedCards;
@@ -66,6 +67,7 @@ public:
 
 //	CPlayerPersistentData(const CSteamID *steamID);
 	static void ReallocateAllPlayerData();
+	static void ConvertAllPlayerDataToJson();
 	static void AllocateData(CSDKPlayer *pPl);
 	static CUtlVector<CPlayerPersistentData *> m_PlayerPersistentData;
 	void ResetData();

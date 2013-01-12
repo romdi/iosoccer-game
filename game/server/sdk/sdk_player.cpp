@@ -487,9 +487,9 @@ bool CSDKPlayer::ChangeTeamPos(int wishTeam, int wishPosIndex, bool setJoinDelay
 
 	if (oldTeam == TEAM_A || oldTeam == TEAM_B)
 	{
-		if (setJoinDelay)
+		if (setJoinDelay && !SDKGameRules()->IsIntermissionState())
 			SetNextJoin(SDKGameRules()->GetMatchDisplayTimeSeconds() + mp_joindelay.GetFloat() * (90.0f / mp_timelimit_match.GetFloat()));
-		if (GetNextJoin() < SDKGameRules()->GetMatchDisplayTimeSeconds())
+		else
 			SetNextJoin(SDKGameRules()->GetMatchDisplayTimeSeconds());
 	}
 	
@@ -1723,7 +1723,7 @@ CUtlVector<CPlayerPersistentData *> CPlayerPersistentData::m_PlayerPersistentDat
 void CPlayerPersistentData::AllocateData(CSDKPlayer *pPl)
 {
 	const CSteamID *steamID = engine->GetClientSteamID(pPl->edict());
-	const char* sid = engine->GetPlayerNetworkIDString(pPl->edict());
+	const char *sid = engine->GetPlayerNetworkIDString(pPl->edict());
 	CPlayerPersistentData *data = NULL;
 
 	for (int i = 0; i < m_PlayerPersistentData.Count(); i++)
@@ -1739,6 +1739,7 @@ void CPlayerPersistentData::AllocateData(CSDKPlayer *pPl)
 	{
 		data = new CPlayerPersistentData;
 		data->m_SteamID = engine->GetClientSteamID(pPl->edict());
+		Q_strncpy(data->m_szSteamID, engine->GetPlayerNetworkIDString(pPl->edict()), 32);
 		data->ResetData();
 		m_PlayerPersistentData.AddToTail(data);
 	}
@@ -1759,6 +1760,62 @@ void CPlayerPersistentData::ReallocateAllPlayerData()
 		AllocateData(pPl);
 	}
 }
+
+#include "Filesystem.h"
+
+void CPlayerPersistentData::ConvertAllPlayerDataToJson()
+{
+	const int jsonSize = 20480;
+	char *json = new char[jsonSize];
+	json[0] = 0;
+
+	Q_strcat(json, "{", jsonSize);
+
+	for (int team = TEAM_A; team <= TEAM_B; team++)
+	{
+		if (team == TEAM_B)
+			Q_strcat(json, ",", jsonSize);
+
+		Q_strcat(json, UTIL_VarArgs("\"%s\":{\"goals\":%d,\"possession\":%d}", (team == TEAM_A ? "homeTeam" : "awayTeam"), GetGlobalTeam(team)->GetGoals(), GetGlobalTeam(team)->m_nPossession), jsonSize);
+	}
+
+	Q_strcat(json, ",\"players\":[", jsonSize);
+
+	for (int i = 0; i < m_PlayerPersistentData.Count(); i++)
+	{
+		CPlayerPersistentData *pData = m_PlayerPersistentData[i];
+
+		if (i > 0)
+			Q_strcat(json, ",", jsonSize);
+
+		Q_strcat(json, UTIL_VarArgs(
+			"{\"steamId\":\"%s\",\"redCards\":%d,\"yellowCards\":%d,\"fouls\":%d,\"foulsSuffered\":%d,\"slidingTackles\":%d,\"slidingTacklesCompleted\":%d,\"goalsConceded\":%d,\"shots\":%d,\"shotsOnGoal\":%d,\"passesCompleted\":%d,\"interceptions\":%d,\"offsides\":%d,\"goals\":%d,\"ownGoals\":%d,\"assists\":%d,\"passes\":%d,\"freeKicks\":%d,\"penalties\":%d,\"corners\":%d,\"throwIns\":%d,\"keeperSaves\":%d,\"goalKicks\":%d,\"possession\":%d,\"distanceCovered\":%d}",
+			pData->m_szSteamID, pData->m_nRedCards, pData->m_nYellowCards, pData->m_nFouls, pData->m_nFoulsSuffered, pData->m_nSlidingTackles, pData->m_nSlidingTacklesCompleted, pData->m_nGoalsConceded, pData->m_nShots, pData->m_nShotsOnGoal, pData->m_nPassesCompleted, pData->m_nInterceptions, pData->m_nOffsides, pData->m_nGoals, pData->m_nOwnGoals, pData->m_nAssists, pData->m_nPasses, pData->m_nFreeKicks, pData->m_nPenalties, pData->m_nCorners, pData->m_nThrowIns, pData->m_nKeeperSaves, pData->m_nGoalKicks, pData->m_nPossession, pData->m_nDistanceCovered
+			), jsonSize);
+	}
+
+	Q_strcat(json, "]}", jsonSize);
+
+	FileHandle_t fh = filesystem->Open("matchdata.json", "w", "MOD");
+ 
+	if (fh)
+	{
+		filesystem->Write(json, Q_strlen(json), fh);  
+		filesystem->Close(fh);
+	}
+
+	delete[] json;
+}
+
+void CC_SV_SaveGameData(const CCommand &args)
+{
+	if (!UTIL_IsCommandIssuedByServerAdmin())
+        return;
+
+	CPlayerPersistentData::ConvertAllPlayerDataToJson();
+}
+
+ConCommand sv_savegamedata("sv_savegamedata", CC_SV_SaveGameData, "", 0);
 
 void CPlayerPersistentData::ResetData()
 {
