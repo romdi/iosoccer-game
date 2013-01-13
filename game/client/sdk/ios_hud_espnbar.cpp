@@ -68,7 +68,7 @@ private:
 
 	Panel *m_pOuterPanel;
 	Panel *m_pMainPanel;
-	ImagePanel *m_pLogo;
+	Label *m_pLogo;
 	Label *m_pTime;
 	Label *m_pTeamNames[2];
 	Label *m_pTeamGoals[2];
@@ -99,7 +99,7 @@ CHudESPNBar::CHudESPNBar( const char *pElementName ) : BaseClass(NULL, "HudScore
 
 	m_pOuterPanel = new Panel(this, "");
 	m_pMainPanel = new Panel(m_pOuterPanel, "");
-	m_pLogo = new ImagePanel(m_pMainPanel, "");
+	m_pLogo = new Label(m_pMainPanel, "", "");
 	m_pTime = new Label(m_pMainPanel, "", "");
 
 	for (int i = 0; i < 2; i++)
@@ -127,20 +127,24 @@ void CHudESPNBar::ApplySchemeSettings( IScheme *pScheme )
 	SetBounds(PANEL_MARGIN, PANEL_MARGIN, PANEL_WIDTH, PANEL_HEIGHT + 200);
 
 	m_pOuterPanel->SetBounds(0, 0, PANEL_WIDTH, PANEL_HEIGHT);
-	m_pOuterPanel->SetBgColor(Color(120, 120, 120, 255));
+	m_pOuterPanel->SetBgColor(Color(0, 0, 0, 100));
 	m_pOuterPanel->SetZPos(1);
 
 	m_pMainPanel->SetBounds(PANEL_PADDING, PANEL_PADDING, PANEL_WIDTH - 2 * PANEL_PADDING, PANEL_HEIGHT - 2 * PANEL_PADDING);
 
 	m_pLogo->SetBounds(0, 0, LOGO_WIDTH, LOGO_HEIGHT);
-	m_pLogo->SetBgColor(Color(200, 200, 200, 255));
+	m_pLogo->SetFgColor(Color(0, 0, 0, 255));
+	m_pLogo->SetBgColor(Color(255, 255, 255, 255));
+	m_pLogo->SetContentAlignment(Label::a_center);
+	m_pLogo->SetFont(pScheme->GetFont("IOSScorebarMedium"));
+	m_pLogo->SetText("IOS");
 
 	for (int i = 0; i < 2; i++)
 	{
 		m_pTeamNames[i]->SetBounds(LOGO_WIDTH + (i == 0 ? 0 : TEAM_NAME_WIDTH + 2 * TEAM_GOAL_WIDTH), 0, TEAM_NAME_WIDTH, TEAM_NAME_HEIGHT);
 		m_pTeamNames[i]->SetFont(pScheme->GetFont("IOSScorebarMedium"));
 		m_pTeamNames[i]->SetFgColor(white);
-		m_pTeamNames[i]->SetBgColor(Color(50, 50, 50, 255));
+		m_pTeamNames[i]->SetBgColor(Color(75, 75, 75, 255));
 		m_pTeamNames[i]->SetContentAlignment(Label::a_center);
 
 		for (int j = 0; j < 2; j++)
@@ -163,8 +167,9 @@ void CHudESPNBar::ApplySchemeSettings( IScheme *pScheme )
 	m_pTime->SetContentAlignment(Label::a_center);
 
 	m_pNotification->SetBounds(0, 0, PANEL_WIDTH, PANEL_HEIGHT);
+	m_pNotification->SetFgColor(Color(255, 255, 255, 200));
 	m_pNotification->SetBgColor(Color(0, 0, 0, 200));
-	m_pNotification->SetTextInset(5, 5);
+	m_pNotification->SetTextInset(5, 0);
 	m_pNotification->SetFont(pScheme->GetFont("IOSScorebarMedium"));
 }
 
@@ -211,7 +216,7 @@ void CHudESPNBar::OnThink( void )
 	else
 	{
 		int time = abs(SDKGameRules()->GetMatchDisplayTimeSeconds(true));
-		m_pTime->SetText(VarArgs("%d:%02d", time / 60, time % 60));
+		m_pTime->SetText(VarArgs("%d:%02d%", time / 60, time % 60));
 	}
 
 	for (int team = TEAM_A; team <= TEAM_B; team++)
@@ -238,28 +243,36 @@ void CHudESPNBar::OnThink( void )
 				m_flNotificationStart = gpGlobals->curtime;
 				m_pNotification->SetText(g_szMatchEventNames[GetBall()->m_eMatchEvent]);
 			}
-			m_eCurMatchEvent = GetBall()->m_eMatchEvent;
 			break;
 		}
+
+		m_eCurMatchEvent = GetBall()->m_eMatchEvent;
 	}
 }
 
 void CHudESPNBar::Paint( void )
 {
+	const float slideDownDuration = 0.5f;
+	const float stayDuration = 3.0f;
+	const float slideUpDuration = 0.5f;
+
+	const float slideDownExp = 2.0f;
+	const float slideUpExp = 2.0f;
+
 	if (m_flNotificationStart != -1)
 	{
-		if (gpGlobals->curtime - m_flNotificationStart <= 2.0f)
+		if (gpGlobals->curtime - m_flNotificationStart <= slideDownDuration)
 		{
-			float fraction = (gpGlobals->curtime - m_flNotificationStart) / 2.0f;
-			m_pNotification->SetY((1 - pow(1 - fraction, 2)) * PANEL_HEIGHT);
+			float fraction = (gpGlobals->curtime - m_flNotificationStart) / slideDownDuration;
+			m_pNotification->SetY((1 - pow(1 - fraction, slideDownExp)) * PANEL_HEIGHT);
 		}
-		else if (gpGlobals->curtime - m_flNotificationStart <= 2.0f + 3.0f)
+		else if (gpGlobals->curtime - m_flNotificationStart <= slideDownDuration + stayDuration)
 		{
 			m_pNotification->SetY(PANEL_HEIGHT);
 		}
 		else
 		{
-			float fraction = (gpGlobals->curtime - (m_flNotificationStart + 2.0f + 3.0f)) / 2.0f;
+			float fraction = (gpGlobals->curtime - (m_flNotificationStart + slideDownDuration + stayDuration)) / slideUpDuration;
 
 			if (fraction >= 1)
 			{
@@ -267,7 +280,7 @@ void CHudESPNBar::Paint( void )
 				m_flNotificationStart = -1;
 			}
 
-			m_pNotification->SetY((1 - pow(fraction, 2)) * PANEL_HEIGHT);
+			m_pNotification->SetY((1 - pow(fraction, slideUpExp)) * PANEL_HEIGHT);
 		}	
 	}
 }

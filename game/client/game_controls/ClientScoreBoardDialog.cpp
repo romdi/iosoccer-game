@@ -180,7 +180,7 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Editabl
 
 	MakePopup();
 
-	white = Color(230, 230, 230, 255);
+	white = Color(255, 255, 255, 255);
 }
 
 //-----------------------------------------------------------------------------
@@ -382,25 +382,25 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 	m_pServerInfo->SetBounds(0, 0, SERVERINFO_WIDTH, TOPBAR_HEIGHT);
 	m_pServerInfo->SetFont(m_pScheme->GetFont("IOSTeamMenuNormal"));
 	m_pServerInfo->SetContentAlignment(Label::a_west);
-	m_pServerInfo->SetFgColor(Color(200, 200, 200, 255));
+	m_pServerInfo->SetFgColor(Color(255, 255, 255, 255));
 	//m_pServerInfo->SetBgColor(Color(0, 0, 0, 150));
 	m_pServerInfo->SetTextInset(5, 0);
 
 	m_pMatchInfo->SetBounds(m_pMainPanel->GetWide() - MATCHINFO_WIDTH, 0, MATCHINFO_WIDTH, TOPBAR_HEIGHT);
 	m_pMatchInfo->SetFont(m_pScheme->GetFont("IOSTeamMenuNormal"));
 	m_pMatchInfo->SetContentAlignment(Label::a_east);
-	m_pMatchInfo->SetFgColor(Color(200, 200, 200, 255));
+	m_pMatchInfo->SetFgColor(Color(255, 255, 255, 255));
 	//m_pMatchInfo->SetBgColor(Color(0, 0, 0, 150));
 	m_pMatchInfo->SetTextInset(5, 0);
 
 	m_pMatchState->SetBounds(SERVERINFO_WIDTH, 0, m_pMainPanel->GetWide() - SERVERINFO_WIDTH - MATCHINFO_WIDTH, TOPBAR_HEIGHT);
 	m_pMatchState->SetFont(m_pScheme->GetFont("IOSTeamMenuNormal"));
 	m_pMatchState->SetContentAlignment(Label::a_center);
-	m_pMatchState->SetFgColor(Color(200, 200, 200, 255));
+	m_pMatchState->SetFgColor(Color(255, 255, 255, 255));
 	//m_pMatchState->SetBgColor(Color(0, 0, 0, 150));
 
 	m_pServerInfoLine->SetBounds(SERVERINFOLINE_MARGIN, TOPBAR_HEIGHT, m_pMainPanel->GetWide() - 2 * SERVERINFOLINE_MARGIN, SERVERINFOLINE_HEIGHT);
-	m_pServerInfoLine->SetBgColor(Color(200, 200, 200, 255));
+	m_pServerInfoLine->SetBgColor(Color(255, 255, 255, 255));
 	m_pServerInfoLine->SetVisible(false);
 
 	m_pPlayerListDivider->SetBounds(m_pMainPanel->GetWide() / 2 - PLAYERLISTDIVIDER_WIDTH / 2, 0, PLAYERLISTDIVIDER_WIDTH, PLAYERLIST_HEIGHT + PLAYERLIST_BOTTOMMARGIN);

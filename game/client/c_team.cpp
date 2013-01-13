@@ -200,10 +200,15 @@ bool C_Team::Get_HasTeamCrest( void )
 
 char *C_Team::Get_TeamCode( void )
 {
-	if (m_szTeamCode[0] != 0)
-		return m_szTeamCode;
+	if (m_iTeamNum == TEAM_A || m_iTeamNum == TEAM_B)
+	{
+		if (m_szTeamCode[0] != 0)
+			return m_szTeamCode;
+		else
+			return m_pTeamKitInfo->m_szTeamCode;
+	}
 	else
-		return m_pTeamKitInfo->m_szTeamCode;
+		return "";
 }
 
 char *C_Team::Get_FullTeamName( void )
@@ -246,7 +251,7 @@ Color &C_Team::Get_HudKitColor()
 	//}
 	//else
 	{
-		static Color col = Color(230, 230, 230, 230);
+		static Color col = Color(255, 255, 255, 255);
 		return col;
 	}
 

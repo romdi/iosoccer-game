@@ -207,7 +207,7 @@ void CPlayerResource::UpdatePlayerData( void )
 				m_TeamPosNum.Set(i, SDKPlayer->GetTeamPosNum() );
 				m_TeamToJoin.Set(i, SDKPlayer->GetTeamToJoin() );
 				m_TeamPosIndexToJoin.Set(i, SDKPlayer->GetTeamPosIndexToJoin() );
-				m_NextJoin.Set(i, SDKPlayer->GetNextJoin() );
+				m_NextJoin.Set(i, SDKPlayer->GetNextCardJoin() );
 				m_IsCardBanned.Set(i, SDKPlayer->IsCardBanned() );
 				m_IsAway.Set(i, SDKPlayer->IsAway() );
 

@@ -247,8 +247,25 @@ void CFormationMenu::Update(bool showCaptainMenu)
 				continue;
 			}
 
+			color32 taken = { 255, 255, 255, 240 };
+
+			if (playerIndexAtPos[i][j] == GetLocalPlayerIndex())
+			{
+				if (gr->GetYellowCards(playerIndexAtPos[i][j]) % 2 == 1)
+				{
+					taken.r = 200; taken.g = 255; taken.b = 100;
+				}
+				else
+				{
+					taken.r = 150; taken.g = 255; taken.b = 150;
+				}
+			}
+			else if (playerIndexAtPos[i][j] > 0 && gr->GetYellowCards(playerIndexAtPos[i][j]) % 2 == 1)
+			{
+				taken.r = 255; taken.g = 255; taken.b = 150;
+			}
+
 			Color teamColor = GetGlobalTeam(TEAM_A + i)->Get_HudKitColor();
-			color32 taken = { teamColor.r(), teamColor.g(), teamColor.b(), 240 };
 			color32 free = { teamColor.r(), teamColor.g(), teamColor.b(), 10 };
 			color32 hover = { teamColor.r(), teamColor.g(), teamColor.b(), 240 };
 			color32 pressed = { teamColor.r(), teamColor.g(), teamColor.b(), 10 };

@@ -10,13 +10,7 @@ private:
 	C_TVCamera();
 
 	float m_flNextUpdate;
-	Vector m_vOldPos;
-	Vector m_vPos;
-	Vector m_vNewPos;
-	Vector m_vOldDir;
-	Vector m_vDir;
-	Vector m_vNewDir;
-	Vector m_vOldBallPos;
+	Vector m_vOldTargetPos;
 	float m_flLerpTime;
 	CUtlVector<Vector> m_BallPos;
 

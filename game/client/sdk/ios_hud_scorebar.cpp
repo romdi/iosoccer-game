@@ -348,6 +348,12 @@ const char *g_szLongStateNames[32] =
 //-----------------------------------------------------------------------------
 void CHudScorebar::OnThink( void )
 {
+	m_pMainBars[0]->SetVisible(false);
+	m_pMainBars[1]->SetVisible(false);
+	m_pTeamCrestPanels[0]->SetVisible(false);
+	m_pTeamCrestPanels[1]->SetVisible(false);
+	m_pCenterBar->SetVisible(false);
+
 	C_SDKPlayer *pLocal = C_SDKPlayer::GetLocalSDKPlayer();
 
 	if (!SDKGameRules() || !GetGlobalTeam(TEAM_A) || !GetGlobalTeam(TEAM_B) || !pLocal)
@@ -457,9 +463,9 @@ void CHudScorebar::OnThink( void )
 			case MATCH_EVENT_KEEPERSAVE:
 				m_flImportantEventStart = -1;
 				m_pImportantEvent->SetText("");
-				if (!hud_minor_events_visible.GetBool())
+				//if (!hud_minor_events_visible.GetBool())
 					showEvent = false;
-				if (!hud_minor_eventplayernames_visible.GetBool())
+				//if (!hud_minor_eventplayernames_visible.GetBool())
 					showPlayers = false;
 				break;
 			default:

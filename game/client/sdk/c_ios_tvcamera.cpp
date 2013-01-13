@@ -7,11 +7,6 @@
 
 enum cam_type_t { CAM_SIDELINE, CAM_BEHIND_GOAL, CAM_TOPDOWN, CAM_GOAL_CORNER, CAM_FLY_FOLLOW, CAM_GOAL_LINE };
 
-ConVar cl_tvcam_angle("cl_tvcam_angle", "10", FCVAR_ARCHIVE);
-ConVar cl_tvcam_dist("cl_tvcam_dist", "10", FCVAR_ARCHIVE);
-ConVar cl_tvcam_posspeed("cl_tvcam_posspeed", "10", FCVAR_ARCHIVE);
-ConVar cl_tvcam_angspeed("cl_tvcam_angspeed", "10", FCVAR_ARCHIVE);
-
 C_TVCamera *C_TVCamera::m_pInstance = NULL;
 
 C_TVCamera *C_TVCamera::GetInstance()
@@ -25,9 +20,7 @@ C_TVCamera *C_TVCamera::GetInstance()
 C_TVCamera::C_TVCamera()
 {
 	m_flNextUpdate = gpGlobals->curtime;
-	m_vPos = m_vOldPos = m_vNewPos = vec3_invalid;
-	m_vDir = m_vOldDir = m_vOldDir = vec3_invalid;
-	m_vOldBallPos = vec3_invalid;
+	m_vOldTargetPos = vec3_invalid;
 	m_flLerpTime = 0;
 }
 
@@ -67,36 +60,27 @@ void C_TVCamera::GetPositionAndAngle(Vector &pos, QAngle &ang)
 	if (!pTarget)
 		return;
 
-	Vector ballPos = pTarget->GetLocalOrigin();
+	Vector targetPos = pTarget->GetLocalOrigin();
+	targetPos.x = clamp(targetPos.x, SDKGameRules()->m_vFieldMin.GetX() + 400, SDKGameRules()->m_vFieldMax.GetX() - 700);
+	Vector targetDir = pTarget->GetLocalVelocity();
 
-	//m_BallPos.AddToTail(pTarget->GetLocalOrigin());
+	if (m_vOldTargetPos == vec3_invalid)
+		m_vOldTargetPos = targetPos;
 
-	//while (m_BallPos.Count() > posCount)
-	//	m_BallPos.Remove(0);
-
-	//Vector ballPos;
-	//if (m_BallPos.Count() < posCount)
-	//{
-	//	ballPos = m_BallPos[0];
-	//}
-	//else
-	//{
-	//	ballPos = vec3_origin;
-	//	for (int i = 0; i < posCount; i++)
-	//	{
-	//		ballPos += m_BallPos[i] / posCount;
-	//	}
-	//}
+	Vector changeDir = targetPos - m_vOldTargetPos;
+	float length = changeDir.Length();
+	changeDir.NormalizeInPlace();
+	targetPos = m_vOldTargetPos + changeDir * length / 100.0f;
 
 	switch (camType)
 	{
 	case CAM_SIDELINE:
 		{
-			Vector newPos = Vector(SDKGameRules()->m_vFieldMin.GetX() - 500, ballPos.y, SDKGameRules()->m_vKickOff.GetZ() + 800);
-			newPos.y = clamp(newPos.y, SDKGameRules()->m_vFieldMin.GetY() + 900, SDKGameRules()->m_vFieldMax.GetY() - 900);
-			Vector newDir = ballPos - newPos;
+			Vector newPos = Vector(SDKGameRules()->m_vFieldMin.GetX() - 800, targetPos.y, SDKGameRules()->m_vKickOff.GetZ() + 1400);
+			newPos.y = clamp(newPos.y, SDKGameRules()->m_vFieldMin.GetY() + 1300, SDKGameRules()->m_vFieldMax.GetY() - 1300);
+			Vector newDir = targetPos - newPos;
 			newDir.NormalizeInPlace();
-			newPos = ballPos - newDir * 800;
+			newPos = targetPos - newDir * 750;
 			pos = newPos;
 			VectorAngles(newDir, ang);
 		}
@@ -106,16 +90,15 @@ void C_TVCamera::GetPositionAndAngle(Vector &pos, QAngle &ang)
 			float yPos = atMinGoalPos ? SDKGameRules()->m_vFieldMin.GetY() : SDKGameRules()->m_vFieldMax.GetY();
 			Vector goalCenter = Vector((SDKGameRules()->m_vFieldMin.GetX() + SDKGameRules()->m_vFieldMax.GetX()) / 2.0f, yPos, SDKGameRules()->m_vKickOff.GetZ());
 			Vector newPos = goalCenter + Vector(0, 300 * (atMinGoalPos ? -1 : 1), 300);
-			Vector newDir = ballPos - newPos;
+			Vector newDir = targetPos - newPos;
 			newDir.NormalizeInPlace();
-			//newPos = ballPos - newDir * 400;
 			pos = newPos;
 			VectorAngles(newDir, ang);
 		}
 		break;
 	case CAM_TOPDOWN:
 		{
-			Vector newPos = Vector(ballPos.x, ballPos.y, SDKGameRules()->m_vKickOff.GetZ() + 600) + (atMinGoalPos ? 1 : -1) * 600;
+			Vector newPos = Vector(targetPos.x, targetPos.y, SDKGameRules()->m_vKickOff.GetZ() + 600) + (atMinGoalPos ? 1 : -1) * 600;
 			Vector newDir = Vector(0, (atMinGoalPos ? -1 : 1) * 0.0000001, -1);
 			newDir.NormalizeInPlace();
 			pos = newPos;
@@ -124,7 +107,7 @@ void C_TVCamera::GetPositionAndAngle(Vector &pos, QAngle &ang)
 		break;
 	case CAM_FLY_FOLLOW:
 		{
-			Vector newPos = Vector(ballPos.x, ballPos.y + (atMinGoalPos ? 1 : -1) * 500, SDKGameRules()->m_vKickOff.GetZ() + 225);
+			Vector newPos = Vector(targetPos.x, targetPos.y + (atMinGoalPos ? 1 : -1) * 500, SDKGameRules()->m_vKickOff.GetZ() + 225);
 			Vector newDir = Vector(0, (atMinGoalPos ? -1 : 1) * 1.75f, -1);
 			newDir.NormalizeInPlace();
 			pos = newPos;
@@ -160,4 +143,6 @@ void C_TVCamera::GetPositionAndAngle(Vector &pos, QAngle &ang)
 		}
 		break;
 	}
+
+	m_vOldTargetPos = targetPos;
 }

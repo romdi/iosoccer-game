@@ -851,9 +851,9 @@ void CBall::State_Think()
 			case BALL_THROWIN:
 				{
 					SetMatchEvent(MATCH_EVENT_THROWIN, LastOppTeam(false), true);
-					IGameEvent* pEvent = gameeventmanager->CreateEvent("throw_in");
-					pEvent->SetInt("team", LastOppTeam(false));
-					gameeventmanager->FireEvent(pEvent);
+					//IGameEvent* pEvent = gameeventmanager->CreateEvent("throw_in");
+					//pEvent->SetInt("team", LastOppTeam(false));
+					//gameeventmanager->FireEvent(pEvent);
 				}
 				break;
 			case BALL_GOALKICK: SetMatchEvent(MATCH_EVENT_GOALKICK, LastOppTeam(false), true); break;
@@ -1989,7 +1989,7 @@ void CBall::HandleFoul()
 			int banDuration = 60 * (m_eFoulType == FOUL_NORMAL_YELLOW_CARD ? sv_ball_player_yellow_red_card_duration.GetFloat() : sv_ball_player_red_card_duration.GetFloat());
 
 			m_pFoulingPl->SetCardBanned(true);
-			m_pFoulingPl->SetNextJoin(SDKGameRules()->GetMatchDisplayTimeSeconds() + banDuration);
+			m_pFoulingPl->SetNextCardJoin(SDKGameRules()->GetMatchDisplayTimeSeconds() + banDuration);
 			int team = m_pFoulingPl->GetTeamNumber();
 			int posIndex = m_pFoulingPl->GetTeamPosIndex();
 			int posType = m_pFoulingPl->GetTeamPosType();

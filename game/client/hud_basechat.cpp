@@ -46,7 +46,7 @@ Color g_ColorDarkGreen( 64, 255, 64, 255 );
 Color g_ColorYellow( 255, 178.5, 0.0, 255 );
 Color g_ColorGray( 204, 204, 204, 255 );
 Color g_ColorDarkGray( 144, 144, 120, 255 );
-Color g_ColorWhite( 230, 230, 230, 255 );
+Color g_ColorWhite( 255, 255, 255, 255 );
 
 //--------------------------------------------------------------------------------------------------------
 /**
@@ -762,6 +762,7 @@ int CBaseHudChat::GetFilterForString( const char *pString )
 	return CHAT_FILTER_NONE;
 }
 
+#include "c_team.h"
 
 //-----------------------------------------------------------------------------
 // Purpose: Reads in a player's Chat text from the server
@@ -784,6 +785,11 @@ void CBaseHudChat::MsgFunc_SayText2( bf_read &msg )
 	ReadChatTextString ( msg, szBuf[2], sizeof( szBuf[2] ) );		// chat text
 	ReadLocalizedString( msg, szBuf[3], sizeof( szBuf[3] ), true );
 	ReadLocalizedString( msg, szBuf[4], sizeof( szBuf[4] ), true );
+
+	if (!Q_wcscmp(szBuf[4], L"HOME"))
+		g_pVGuiLocalize->ConvertANSIToUnicode(GetGlobalTeam(TEAM_A)->Get_TeamCode(), szBuf[4], sizeof(szBuf[4]));
+	else if (!Q_wcscmp(szBuf[4], L"AWAY"))
+		g_pVGuiLocalize->ConvertANSIToUnicode(GetGlobalTeam(TEAM_B)->Get_TeamCode(), szBuf[4], sizeof(szBuf[4]));
 
 	g_pVGuiLocalize->ConstructString( szBuf[5], sizeof( szBuf[5] ), msg_text, 4, szBuf[1], szBuf[2], szBuf[3], szBuf[4] );
 

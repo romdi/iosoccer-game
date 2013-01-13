@@ -36,7 +36,7 @@ class CPlayerPersistentData
 public:
 	const	CSteamID *m_SteamID;
 	char	m_szSteamID[32];
-	float	m_flNextJoin;
+	int		m_nNextCardJoin;
 	bool	m_bIsCardBanned;
 	int		m_nRedCards;
 	int		m_nYellowCards;
@@ -384,11 +384,14 @@ public:
 	int					GetGoalKicks(void) { return GetData()->m_nGoalKicks; }
 	void				SetGoalKicks(int amount) { GetData()->m_nGoalKicks = amount; }
 
-	float				GetNextJoin(void) { return GetData()->m_flNextJoin; }
-	void				SetNextJoin(float time) { GetData()->m_flNextJoin = time; }
+	int					GetNextCardJoin(void) { return GetData()->m_nNextCardJoin; }
+	void				SetNextCardJoin(int seconds) { GetData()->m_nNextCardJoin = seconds; }
 
 	bool				IsCardBanned(void) { return GetData()->m_bIsCardBanned; }
 	void				SetCardBanned(bool state) { GetData()->m_bIsCardBanned = state; }
+
+	float				GetNextJoin() { return m_flNextJoin; }
+	void				SetNextJoin(float time) { m_flNextJoin = time; }
 
 	int					GetTeamPosNum(void);
 
@@ -515,6 +518,7 @@ protected:
 
 	bool				m_bShotButtonsReleased;
 
+	float				m_flNextJoin;
 };
 
 

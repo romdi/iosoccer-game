@@ -293,20 +293,21 @@ void CSDKPlayer::PreThink(void)
 {
 	if (!SDKGameRules()->IsIntermissionState()
 		&& (GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B)
-		&& (IsCardBanned() && SDKGameRules()->GetMatchDisplayTimeSeconds() < GetNextJoin()
+		&& (IsCardBanned() && SDKGameRules()->GetMatchDisplayTimeSeconds() < GetNextCardJoin()
 		|| (m_nTeamToJoin == TEAM_A || m_nTeamToJoin == TEAM_B) && GetGlobalTeam(m_nTeamToJoin)->GetPosNextJoinSeconds(m_nTeamPosIndexToJoin) > SDKGameRules()->GetMatchDisplayTimeSeconds()))
 	{
 		ChangeTeam(TEAM_SPECTATOR);
 	}
 
-	if (!SDKGameRules()->IsIntermissionState() && IsCardBanned() && SDKGameRules()->GetMatchDisplayTimeSeconds() >= GetNextJoin())
+	if (!SDKGameRules()->IsIntermissionState() && IsCardBanned() && SDKGameRules()->GetMatchDisplayTimeSeconds() >= GetNextCardJoin())
 	{
 		SetCardBanned(false);
 	}
 
 	if (m_nTeamToJoin != TEAM_INVALID
-		&& (SDKGameRules()->IsIntermissionState()
-			|| SDKGameRules()->GetMatchDisplayTimeSeconds() >= GetNextJoin()
+		&& gpGlobals->curtime >= GetNextJoin()
+		&& (SDKGameRules()->IsIntermissionState()	
+			|| SDKGameRules()->GetMatchDisplayTimeSeconds() >= GetNextCardJoin()
 			&& GetGlobalTeam(m_nTeamToJoin)->GetPosNextJoinSeconds(m_nTeamPosIndexToJoin) <= SDKGameRules()->GetMatchDisplayTimeSeconds()))
 	{
 		bool canJoin = true;
@@ -487,10 +488,10 @@ bool CSDKPlayer::ChangeTeamPos(int wishTeam, int wishPosIndex, bool setJoinDelay
 
 	if (oldTeam == TEAM_A || oldTeam == TEAM_B)
 	{
-		if (setJoinDelay && !SDKGameRules()->IsIntermissionState())
-			SetNextJoin(SDKGameRules()->GetMatchDisplayTimeSeconds() + mp_joindelay.GetFloat() * (90.0f / mp_timelimit_match.GetFloat()));
+		if (setJoinDelay)
+			SetNextJoin(gpGlobals->curtime + mp_joindelay.GetFloat());
 		else
-			SetNextJoin(SDKGameRules()->GetMatchDisplayTimeSeconds());
+			SetNextJoin(gpGlobals->curtime);
 	}
 	
 	if (wishTeam != TEAM_SPECTATOR)
@@ -1590,6 +1591,7 @@ void CSDKPlayer::ResetFlags()
 	m_flLastShotOnGoal = -1;
 	m_bIsAway = true;
 	m_flLastMoveTime = -1;
+	m_flNextJoin = gpGlobals->curtime;
 
 	if (GetPlayerBall())
 		GetPlayerBall()->RemovePlayerBall();
@@ -1858,5 +1860,5 @@ void CPlayerPersistentData::ResetData()
 	m_nDistanceCovered = 0;
 	m_flExactDistanceCovered = 0.0f;
 	m_bIsCardBanned = false;
-	m_flNextJoin = max(0, SDKGameRules()->GetMatchDisplayTimeSeconds());
+	m_nNextCardJoin = max(0, SDKGameRules()->GetMatchDisplayTimeSeconds());
 }
