@@ -183,19 +183,31 @@ void CSpectatorMenu::OnTextChanged(KeyValues *data)
 		if ( kv && GameResources() )
 		{
 			const char *player = kv->GetString("player");
-			int currentPlayerNum = GetSpectatorTarget();
+
+			int playernum;
+
+			if (engine->IsHLTV())
+			{
+				if (HLTVCamera()->GetPrimaryTarget())
+					playernum = HLTVCamera()->GetPrimaryTarget()->entindex();
+				else
+					playernum = 0;
+			}
+			else
+				playernum = GetSpectatorTarget();
+
 			bool update = false;
 
 			if (!Q_stricmp(player, "ball"))
 			{
-				if (currentPlayerNum < gpGlobals->maxClients)
+				if (playernum <= gpGlobals->maxClients)
 					update = true;
 			}
 			else
 			{
-				if (currentPlayerNum >= 1 && currentPlayerNum <= gpGlobals->maxClients)
+				if (playernum >= 1 && playernum <= gpGlobals->maxClients)
 				{
-					const char *currentPlayerName = GameResources()->GetPlayerName( currentPlayerNum );
+					const char *currentPlayerName = GameResources()->GetPlayerName( playernum );
 					update = Q_strcmp(currentPlayerName, player) != 0;
 				}
 				else
@@ -203,7 +215,12 @@ void CSpectatorMenu::OnTextChanged(KeyValues *data)
 			}
 
 			if (update)
-				engine->ClientCmd( VarArgs("spec_player %d", atoi(kv->GetString("index"))) );
+			{
+				if (engine->IsHLTV())
+					HLTVCamera()->SetPrimaryTarget(kv->GetInt("index"));
+				else
+					engine->ClientCmd( VarArgs("spec_player %d", kv->GetInt("index")) );
+			}
 		}
 	}
 }
@@ -235,7 +252,18 @@ void CSpectatorMenu::FireGameEvent( IGameEvent * event )
 			return;
 
 		// make sure the player combo box is up to date
-		int playernum = GetSpectatorTarget();
+		int playernum;
+
+		if (engine->IsHLTV())
+		{
+			if (HLTVCamera()->GetPrimaryTarget())
+				playernum = HLTVCamera()->GetPrimaryTarget()->entindex();
+			else
+				playernum = 0;
+		}
+		else
+			playernum = GetSpectatorTarget();
+
 		if ( playernum < 1 || playernum > gpGlobals->maxClients )
 		{
 			m_pPlayerList->ActivateItemByRow(0);
@@ -355,7 +383,18 @@ void CSpectatorMenu::Update( void )
 	}
 
 	// make sure the player combo box is up to date
-	int playernum = GetSpectatorTarget();
+	int playernum;
+
+	if (engine->IsHLTV())
+	{
+		if (HLTVCamera()->GetPrimaryTarget())
+			playernum = HLTVCamera()->GetPrimaryTarget()->entindex();
+		else
+			playernum = 0;
+	}
+	else
+		playernum = GetSpectatorTarget();
+
 	if (playernum >= 1 && playernum <= gpGlobals->maxClients)
 	{
 		const char *selectedPlayerName = gr->GetPlayerName( playernum );

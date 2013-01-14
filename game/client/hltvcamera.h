@@ -43,12 +43,13 @@ public:
 	const char* GetTitleText() { return m_szTitleText; }
 	int  GetNumSpectators() { return m_nNumSpectators; }
 			
+	void CalcRoamingView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov);
+
 protected:
 
 	void CalcChaseCamView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
 	void CalcFixedView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
 	void CalcInEyeCamView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
-	void CalcRoamingView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov);
 
 	void SmoothCameraAngle( QAngle& targetAngle );
 	void SetCameraAngle( QAngle& targetAngle );

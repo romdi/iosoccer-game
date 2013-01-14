@@ -17,6 +17,7 @@
 #include "vguicenterprint.h"
 #include "game/client/iviewport.h"
 #include <KeyValues.h>
+#include "c_ball.h"
 
 #ifdef CSTRIKE_DLL
 	#include "c_cs_player.h"
@@ -581,14 +582,22 @@ void C_HLTVCamera::SetPrimaryTarget( int nEntity )
 
 	m_flLastDistance = m_flDistance;
 	m_flLastAngleUpdateTime = -1;
+
+	IGameEvent *event = gameeventmanager->CreateEvent( "spec_target_updated" );
+	if ( event )
+	{
+		gameeventmanager->FireEventClientSide( event );
+	}
 }
 
 void C_HLTVCamera::SpecNextPlayer( bool bInverse )
 {
-	int start = 1;
+	int start = 0;
 
 	if ( m_iTraget1 > 0 && m_iTraget1 <= gpGlobals->maxClients )
 		start = m_iTraget1;
+	else if (GetBall() && m_iTraget1 == GetBall()->entindex())
+		start = 0;
 
 	int index = start;
 
@@ -601,27 +610,38 @@ void C_HLTVCamera::SpecNextPlayer( bool bInverse )
 			index++;
 
 		// check bounds
-		if ( index < 1 )
+		if ( index < 0 )
+		{
 			index = gpGlobals->maxClients;
+		}
 		else if ( index > gpGlobals->maxClients )
-			index = 1;
+		{
+			index = 0;
+		}
 
 		if ( index == start )
 			break; // couldn't find a new valid player
 
-		C_BasePlayer *pPlayer =	UTIL_PlayerByIndex( index );
+		if (index > 0 && index <= gpGlobals->maxClients)
+		{
+			C_BasePlayer *pPlayer =	UTIL_PlayerByIndex( index );
 
-		if ( !pPlayer )
-			continue;
+			if ( !pPlayer )
+				continue;
 
-		// only follow living players 
-		if ( pPlayer->IsObserver() )
-			continue;
+			// only follow living players 
+			if ( pPlayer->IsObserver() )
+				continue;
+		}
 
 		break; // found a new player
 	}
 
-	SetPrimaryTarget( index );
+	if (index == 0 && GetBall())
+		index = GetBall()->entindex();
+
+	if (index != 0)
+		SetPrimaryTarget( index );
 
 	// turn off auto director once user tried to change view settings
 	SetAutoDirector( false );

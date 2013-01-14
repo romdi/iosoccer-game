@@ -17,6 +17,7 @@
 	#include "c_basedoor.h"
 	#include "c_world.h"
 	#include "view.h"
+	#include "hltvcamera.h"
 
 	#define CRecipientFilter C_RecipientFilter
 
@@ -976,7 +977,11 @@ void CBasePlayer::CalcObserverView( Vector& eyeOrigin, QAngle& eyeAngles, float&
 									break;
 
 		case OBS_MODE_ROAMING	:	// just copy current position without view offset
-		case OBS_MODE_FIXED		:	CalcRoamingView( eyeOrigin, eyeAngles, fov );
+		case OBS_MODE_FIXED		:	
+			if (engine->IsHLTV())
+				HLTVCamera()->CalcRoamingView( eyeOrigin, eyeAngles, fov );
+			else
+				CalcRoamingView( eyeOrigin, eyeAngles, fov );
 									break;
 
 		case OBS_MODE_IN_EYE	:	CalcChaseCamView( eyeOrigin, eyeAngles, fov ); //CalcInEyeCamView( eyeOrigin, eyeAngles, fov );

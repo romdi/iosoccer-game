@@ -82,13 +82,16 @@ void ClientPutInServer( edict_t *pEdict, const char *playername )
 	//pPlayer->SetPlayerName(Q_strlen(pszPlayerName) == 0 ? playername : pszPlayerName);
 	pPlayer->SetPlayerName(playername);
 	//pPlayer->m_JoinTime = gpGlobals->curtime; //ios
-	
-	const char *pszClientVersion = engine->GetClientConVarValue( pPlayer->entindex(), "clientversion" );
-	if (!pPlayer->IsBot() && Q_strcmp(pszClientVersion, sv_required_client_version.GetString()) != 0)
+
+	if (Q_strcmp(engine->GetPlayerNetworkIDString(pEdict), "BOT"))
 	{
-		char kickcmd[512];
-		Q_snprintf(kickcmd, sizeof(kickcmd), "kickid %i %s\n", pPlayer->GetUserID(), sv_required_client_version_kick_message.GetString());
-		engine->ServerCommand(kickcmd);
+		const char *pszClientVersion = engine->GetClientConVarValue( pPlayer->entindex(), "clientversion" );
+		if (!pPlayer->IsBot() && Q_strcmp(pszClientVersion, sv_required_client_version.GetString()) != 0)
+		{
+			char kickcmd[512];
+			Q_snprintf(kickcmd, sizeof(kickcmd), "kickid %i %s\n", pPlayer->GetUserID(), sv_required_client_version_kick_message.GetString());
+			engine->ServerCommand(kickcmd);
+		}
 	}
 }
 

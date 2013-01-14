@@ -205,10 +205,10 @@ void CBaseViewport::OnScreenSizeChanged(int iOldWide, int iOldTall)
 	// hide all panels when reconnecting 
 	ShowPanel( PANEL_ALL, false );
 
-	if ( engine->IsHLTV() )
-	{
-		ShowPanel( PANEL_SPECGUI, true );
-	}
+	//if ( engine->IsHLTV() )
+	//{
+	//	ShowPanel( PANEL_SPECGUI, true );
+	//}
 }
 
 void CBaseViewport::CreateDefaultPanels( void )
@@ -650,10 +650,10 @@ void CBaseViewport::FireGameEvent( IGameEvent * event)
 		// hide all panels when reconnecting 
 		ShowPanel( PANEL_ALL, false );
 
-		if ( engine->IsHLTV() )
-		{
-			ShowPanel( PANEL_SPECGUI, true );
-		}
+		//if ( engine->IsHLTV() )
+		//{
+		//	ShowPanel( PANEL_SPECGUI, true );
+		//}
 	}
 }
 

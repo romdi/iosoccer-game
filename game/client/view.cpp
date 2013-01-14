@@ -557,11 +557,11 @@ void CViewRender::SetUpView()
 
 	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
 
-	if ( engine->IsHLTV() )
-	{
-		HLTVCamera()->CalcView( m_View.origin, m_View.angles, m_View.fov );
-	}
-	else
+	//if ( engine->IsHLTV() )
+	//{
+	//	HLTVCamera()->CalcView( m_View.origin, m_View.angles, m_View.fov );
+	//}
+	//else
 	{
 		// FIXME: Are there multiple views? If so, then what?
 		// FIXME: What happens when there's no player?

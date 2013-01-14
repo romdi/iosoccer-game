@@ -1428,18 +1428,18 @@ void C_BasePlayer::CalcInEyeCamView(Vector& eyeOrigin, QAngle& eyeAngles, float&
 	// Apply punch angle
 	VectorAdd( eyeAngles, GetPunchAngle(), eyeAngles );
 
-	if( engine->IsHLTV() )
-	{
-		//if ( target->GetFlags() & FL_DUCKING )
-		//{
-		//	eyeOrigin += VEC_DUCK_VIEW;
-		//}
-		//else
-		{
-			eyeOrigin += VEC_VIEW;
-		}
-	}
-	else
+	//if( engine->IsHLTV() )
+	//{
+	//	//if ( target->GetFlags() & FL_DUCKING )
+	//	//{
+	//	//	eyeOrigin += VEC_DUCK_VIEW;
+	//	//}
+	//	//else
+	//	{
+	//		eyeOrigin += VEC_VIEW;
+	//	}
+	//}
+	//else
 	{
 		Vector offset = m_vecViewOffset;
 #ifdef HL2MP
