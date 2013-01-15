@@ -290,7 +290,31 @@ CSDKPlayer *CSDKPlayer::CreatePlayer( const char *className, edict_t *ed )
 }
 
 void CSDKPlayer::PreThink(void)
-{
+{	
+	// Check if player is away
+	if (SDKGameRules()->State_Get() == MATCH_WARMUP
+		&& GetGlobalTeam(TEAM_A)->GetNumPlayers() == mp_maxplayers.GetInt()
+		&& GetGlobalTeam(TEAM_B)->GetNumPlayers() == mp_maxplayers.GetInt())
+	{
+		bool isActive = (m_nButtons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT | IN_JUMP | IN_DUCK));
+
+		if (isActive)
+		{
+			m_flLastMoveTime = gpGlobals->curtime;
+			m_bIsAway = false;
+		}
+		else if (gpGlobals->curtime >= m_flLastMoveTime + sv_awaytime_warmup.GetFloat())
+		{
+			m_bIsAway = true;
+
+			if (gpGlobals->curtime >= m_flLastMoveTime + sv_awaytime_warmup_autospec.GetFloat())
+			{
+				ChangeTeam(TEAM_SPECTATOR);
+				UTIL_ClientPrintAll(HUD_PRINTTALK, "#game_player_benched_away", GetPlayerName());
+			}
+		}
+	}
+
 	// Remove the player if he's in a team but card banned or in a blocked position
 	if (!SDKGameRules()->IsIntermissionState()
 		&& (GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B)
@@ -937,6 +961,8 @@ void CSDKPlayer::State_ACTIVE_Enter()
 	m_aPreReplayAngles = GetLocalAngles();
 
 	m_flLastShotOnGoal = -1;
+	m_flLastMoveTime = gpGlobals->curtime;
+	m_bIsAway = false;
 
 	if (SDKGameRules()->m_nShieldType != SHIELD_NONE)
 		SetPosOutsideShield();
@@ -1586,7 +1612,7 @@ void CSDKPlayer::ResetFlags()
 	m_pHoldingBall = NULL;
 	m_flLastShotOnGoal = -1;
 	m_bIsAway = true;
-	m_flLastMoveTime = -1;
+	m_flLastMoveTime = gpGlobals->curtime;
 	m_flNextJoin = gpGlobals->curtime;
 	m_bIsOffside = false;
 	m_ePenaltyState = PENALTY_NONE;
@@ -1693,32 +1719,6 @@ bool CSDKPlayer::CanSpeak(bool isTeamOnly)
 		return false;
 
 	return true;
-}
-
-ConVar sv_awaytime_warmup("sv_awaytime_warmup", "10", FCVAR_NOTIFY);
-ConVar sv_awaytime_warmup_autospec("sv_awaytime_warmup_autospec", "60", FCVAR_NOTIFY);
-
-void CSDKPlayer::SetAway(bool isAway)
-{
-	if (!isAway)
-	{
-		m_flLastMoveTime = gpGlobals->curtime;
-		m_bIsAway = false;
-	}
-	else if (m_flLastMoveTime != -1 && gpGlobals->curtime >= m_flLastMoveTime + sv_awaytime_warmup.GetFloat())
-	{
-		m_bIsAway = true;
-
-		if (gpGlobals->curtime >= m_flLastMoveTime + sv_awaytime_warmup_autospec.GetFloat())
-		{
-			ChangeTeam(TEAM_SPECTATOR);
-		}
-	}
-}
-
-bool CSDKPlayer::IsAway()
-{
-	return m_bIsAway;
 }
 
 CUtlVector<CPlayerPersistentData *> CPlayerPersistentData::m_PlayerPersistentData;

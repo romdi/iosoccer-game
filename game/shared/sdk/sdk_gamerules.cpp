@@ -951,17 +951,12 @@ const char *CSDKGameRules::GetChatPrefix( bool bTeamOnly, CBasePlayer *pPlayer )
 	if (!pPlayer)
 		return "";
 
-	if (bTeamOnly)
-		return "(TEAM)";
+	if (pPlayer->GetTeamNumber() == TEAM_A)
+		return "HOME";
+	else if (pPlayer->GetTeamNumber() == TEAM_B)
+		return "AWAY";
 	else
-	{
-		if (pPlayer->GetTeamNumber() == TEAM_A)
-			return "HOME";
-		else if (pPlayer->GetTeamNumber() == TEAM_B)
-			return "AWAY";
-		else
-			return "SPEC";
-	}
+		return "SPEC";
 }
 
 const char *CSDKGameRules::GetChatFormat( bool bTeamOnly, CBasePlayer *pPlayer )
@@ -1250,6 +1245,9 @@ static void OnMaxPlayersChange(IConVar *var, const char *pOldValue, float flOldV
 }
 
 ConVar mp_maxplayers("mp_maxplayers", "6", FCVAR_NOTIFY|FCVAR_REPLICATED, "Maximum number of players per team <1-11>", true, 1, true, 11, OnMaxPlayersChange);
+ConVar sv_autostartmatch("sv_autostartmatch", "1", FCVAR_NOTIFY|FCVAR_REPLICATED, "");
+ConVar sv_awaytime_warmup("sv_awaytime_warmup", "30", FCVAR_NOTIFY);
+ConVar sv_awaytime_warmup_autospec("sv_awaytime_warmup_autospec", "180", FCVAR_NOTIFY);
 
 #ifdef GAME_DLL
 
@@ -1427,7 +1425,9 @@ void CSDKGameRules::State_WARMUP_Think()
 		State_Transition(MATCH_FIRST_HALF);
 	else
 	{
-		if (GetGlobalTeam(TEAM_A)->GetNumPlayers() == mp_maxplayers.GetInt() && GetGlobalTeam(TEAM_B)->GetNumPlayers() == mp_maxplayers.GetInt())
+		if (sv_autostartmatch.GetBool()
+			&& GetGlobalTeam(TEAM_A)->GetNumPlayers() == mp_maxplayers.GetInt()
+			&& GetGlobalTeam(TEAM_B)->GetNumPlayers() == mp_maxplayers.GetInt())
 		{
 			if (gpGlobals->curtime >= m_flLastAwayCheckTime + sv_wakeupcall_interval.GetFloat())
 			{
@@ -1452,7 +1452,7 @@ void CSDKGameRules::State_FIRST_HALF_Enter()
 {
 	GetBall()->State_Transition(BALL_KICKOFF, 0, true);
 	//WakeUpAwayPlayers();
-	UTIL_ClientPrintAll(HUD_PRINTCENTER, "#game_match_start");
+	UTIL_ClientPrintAll(HUD_PRINTTALK, "#game_match_start");
 }
 
 void CSDKGameRules::State_FIRST_HALF_Think()

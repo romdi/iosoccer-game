@@ -458,8 +458,7 @@ public:
 
 	Vector				GetSpawnPos(bool findSafePos);
 
-	void				SetAway(bool isAway);
-	bool				IsAway();
+	bool				IsAway() { return m_bIsAway; }
 
 	CNetworkVector(m_vTargetPos);
 	CNetworkVar(bool, m_bIsAtTargetPos);

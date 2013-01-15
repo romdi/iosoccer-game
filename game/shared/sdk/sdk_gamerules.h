@@ -44,7 +44,10 @@ extern ConVar
 	sv_replay_duration1,
 	sv_replay_duration2,
 	sv_replay_duration3,
-	sv_highlights;
+	sv_highlights,
+	sv_awaytime_warmup,
+	sv_awaytime_warmup_autospec,
+	sv_autostartmatch;
 #endif
 
 extern CUniformRandomStream g_IOSRand;

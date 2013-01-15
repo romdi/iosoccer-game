@@ -1546,16 +1546,6 @@ void CGameMovement::FullWalkMove( )
 		ToSDKPlayer(player)->SetExactDistanceCovered(ToSDKPlayer(player)->GetExactDistanceCovered() + (newPos - oldPos).Length2D() * 2.54f / 100);
 		ToSDKPlayer(player)->SetDistanceCovered((int)ToSDKPlayer(player)->GetExactDistanceCovered());
 	}
-
-	if (SDKGameRules()->State_Get() == MATCH_WARMUP
-		&& GetGlobalTeam(TEAM_A)->GetNumPlayers() == mp_maxplayers.GetInt()
-		&& GetGlobalTeam(TEAM_B)->GetNumPlayers() == mp_maxplayers.GetInt())
-	{
-		if (newPos != oldPos || newAng != oldAng || newVel != oldVel)
-			ToSDKPlayer(player)->SetAway(false);
-		else
-			ToSDKPlayer(player)->SetAway(true);
-	}
 #endif
 }
 
