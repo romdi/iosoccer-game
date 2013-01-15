@@ -40,7 +40,8 @@ public : // IGameResources intreface
 	virtual Color &GetHudTeamKitColor(int index);
 	virtual Color &GetPrimaryTeamKitColor(int index);
 	virtual Color &GetSecondaryTeamKitColor(int index);
-	virtual const Color&GetTeamColor( int index );
+	virtual const Color &GetTeamColor( int index );
+	virtual const Color &GetPlayerColor( int index );
 
 	// Player data access
 	virtual bool	IsConnected( int index );
@@ -86,8 +87,7 @@ public : // IGameResources intreface
 	virtual int		GetTeamPosIndex( int iIndex );
 	virtual int		GetTeamToJoin( int iIndex );
 	virtual int		GetTeamPosIndexToJoin( int iIndex );
-	virtual int		GetNextJoin( int iIndex );
-	virtual bool	IsCardBanned( int iIndex );
+	virtual int		GetNextCardJoin( int iIndex );
 	virtual bool	IsAway( int iIndex );
 
 	virtual void ClientThink();
@@ -135,8 +135,7 @@ protected:
 
 	int		m_TeamToJoin[MAX_PLAYERS+1];
 	int		m_TeamPosIndexToJoin[MAX_PLAYERS+1];
-	int		m_NextJoin[MAX_PLAYERS+1];
-	bool	m_IsCardBanned[MAX_PLAYERS+1];
+	int		m_NextCardJoin[MAX_PLAYERS+1];
 	bool	m_IsAway[MAX_PLAYERS+1];
 };
 

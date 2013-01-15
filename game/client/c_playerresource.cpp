@@ -56,8 +56,7 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_PlayerResource, DT_PlayerResource, CPlayerReso
 	RecvPropArray3( RECVINFO_ARRAY(m_TeamPosNum), RecvPropInt( RECVINFO(m_TeamPosNum[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_TeamToJoin), RecvPropInt( RECVINFO(m_TeamToJoin[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_TeamPosIndexToJoin), RecvPropInt( RECVINFO(m_TeamPosIndexToJoin[0]))),
-	RecvPropArray3( RECVINFO_ARRAY(m_NextJoin), RecvPropInt( RECVINFO(m_NextJoin[0]))),
-	RecvPropArray3( RECVINFO_ARRAY(m_IsCardBanned), RecvPropBool( RECVINFO(m_IsCardBanned[0]))),
+	RecvPropArray3( RECVINFO_ARRAY(m_NextCardJoin), RecvPropInt( RECVINFO(m_NextCardJoin[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_IsAway), RecvPropBool( RECVINFO(m_IsAway[0]))),
 
 	RecvPropArray3( RECVINFO_ARRAY(m_szClubNames), RecvPropString( RECVINFO(m_szClubNames[0]))),
@@ -115,8 +114,7 @@ C_PlayerResource::C_PlayerResource()
 	memset( m_TeamPosNum, 0, sizeof( m_TeamPosNum ) );
 	memset( m_TeamToJoin, 0, sizeof( m_TeamToJoin ) );
 	memset( m_TeamPosIndexToJoin, 0, sizeof( m_TeamPosIndexToJoin ) );
-	memset( m_NextJoin, 0, sizeof( m_NextJoin ) );
-	memset( m_IsCardBanned, 0, sizeof( m_IsCardBanned ) );
+	memset( m_NextCardJoin, 0, sizeof( m_NextCardJoin ) );
 	memset( m_IsAway, 0, sizeof( m_IsAway ) );
 
 	memset( m_szClubNames, 0, sizeof( m_szClubNames ) );
@@ -469,6 +467,20 @@ const Color &C_PlayerResource::GetTeamColor(int index )
 	}
 }
 
+const Color &C_PlayerResource::GetPlayerColor(int index )
+{
+	if ( !IsConnected( index ) )
+		return g_ColorWhite;
+
+	if (SDKGameRules()->GetMatchDisplayTimeSeconds(false, true) < GetNextCardJoin(index))
+		return g_ColorRed;
+
+	if (GetYellowCards(index) % 2 == 1)
+		return g_ColorYellow;
+
+	return g_ColorWhite;
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -689,20 +701,12 @@ int C_PlayerResource::GetTeamPosIndexToJoin( int iIndex )
 		return m_TeamPosIndexToJoin[iIndex];
 }
 
-int C_PlayerResource::GetNextJoin( int iIndex )
+int C_PlayerResource::GetNextCardJoin( int iIndex )
 {
 	if ( iIndex < 1 || iIndex > MAX_PLAYERS )
 		return false;
 	else
-		return m_NextJoin[iIndex];
-}
-
-bool C_PlayerResource::IsCardBanned( int iIndex )
-{
-	if ( iIndex < 1 || iIndex > MAX_PLAYERS )
-		return false;
-	else
-		return m_IsCardBanned[iIndex];
+		return m_NextCardJoin[iIndex];
 }
 
 bool C_PlayerResource::IsAway( int iIndex )

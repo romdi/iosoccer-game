@@ -36,18 +36,6 @@ ConVar hud_saytext_time( "hud_saytext_time", "12", 0 );
 ConVar cl_showtextmsg( "cl_showtextmsg", "1", 0, "Enable/disable text messages printing on the screen." );
 ConVar cl_chatfilters( "cl_chatfilters", "31", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Stores the chat filter settings " );
 
-
-//Color g_ColorBlue( 153, 204, 255, 255 );
-Color g_ColorBlue( 161, 190, 230 );
-//Color g_ColorRed( 255, 63.75, 63.75, 255 );
-Color g_ColorRed(255, 153, 153, 255);
-Color g_ColorGreen( 153, 255, 153, 255 );
-Color g_ColorDarkGreen( 64, 255, 64, 255 );
-Color g_ColorYellow( 255, 178.5, 0.0, 255 );
-Color g_ColorGray( 204, 204, 204, 255 );
-Color g_ColorDarkGray( 144, 144, 120, 255 );
-Color g_ColorWhite( 255, 255, 255, 255 );
-
 //--------------------------------------------------------------------------------------------------------
 /**
 * Simple utility function to allocate memory and duplicate a wide string
@@ -1269,7 +1257,7 @@ Color CBaseHudChat::GetTextColorForClient( TextColor colorNum, int clientIndex )
 	break;
 
 	case COLOR_LOCATION:
-		c = g_ColorDarkGreen;
+		c = g_ColorGreen;
 		break;
 
 	case COLOR_ACHIEVEMENT:
@@ -1304,11 +1292,11 @@ Color CBaseHudChat::GetClientColor( int clientIndex )
 {
 	if ( clientIndex == 0 ) // console msg
 	{
-		return g_ColorGreen;
+		return g_ColorGray;
 	}
 	else if( g_PR )
 	{
-		return g_ColorDarkGray;
+		return g_ColorGray;
 	}
 
 	return g_ColorYellow;

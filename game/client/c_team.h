@@ -124,6 +124,8 @@ public:
 	int m_eMatchEventTypes[MAX_MATCH_EVENTS];
 	int m_eMatchEventMatchStates[MAX_MATCH_EVENTS];
 	int m_nMatchEventSeconds[MAX_MATCH_EVENTS];
+
+	int m_PosNextJoinSeconds[11];
 };
 
 

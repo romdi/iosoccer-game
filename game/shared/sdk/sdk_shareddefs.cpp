@@ -152,3 +152,11 @@ ConVar mp_tackled_idle_duration("mp_tackled_idle_duration", "1.0", FCVAR_REPLICA
 ConVar mp_charging_animation_enabled("mp_charging_animation_enabled", "0", FCVAR_REPLICATED | FCVAR_NOTIFY);
 
 ConVar mp_majorevent_messageduration("mp_majorevent_messageduration", "0.75", FCVAR_REPLICATED | FCVAR_NOTIFY);
+
+// basic team colors
+Color g_ColorRed(255, 153, 153, 255);
+Color g_ColorBlue(161, 190, 230, 255);
+Color g_ColorYellow(255, 255, 150, 255);
+Color g_ColorGreen(150, 255, 150, 255);
+Color g_ColorGray(204, 204, 204, 255);
+Color g_ColorWhite(255, 255, 255, 255);

@@ -220,7 +220,7 @@ void Host_Say( edict_t *pEdict, const CCommand &args, bool teamonly )
 		CSingleUserRecipientFilter user( client );
 		user.MakeReliable();
 
-		UTIL_SayText2Filter( user, pPlayer, true, pszFormat, pszPlayerName, p, pszLocation );
+		UTIL_SayText2Filter( user, pPlayer, true, pszFormat, pszPlayerName, p, pszLocation, pszPrefix );
 	}
 
 	if ( pPlayer )

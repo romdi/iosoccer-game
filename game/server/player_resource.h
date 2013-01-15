@@ -60,8 +60,7 @@ protected:
 	CNetworkArray( int, m_GoalKicks, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_TeamPosIndex, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_TeamPosNum, MAX_PLAYERS+1 );
-	CNetworkArray( int, m_NextJoin, MAX_PLAYERS+1 );
-	CNetworkArray( bool, m_IsCardBanned, MAX_PLAYERS+1 );
+	CNetworkArray( int, m_NextCardJoin, MAX_PLAYERS+1 );
 	CNetworkArray( bool, m_IsAway, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_TeamToJoin, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_TeamPosIndexToJoin, MAX_PLAYERS+1 );

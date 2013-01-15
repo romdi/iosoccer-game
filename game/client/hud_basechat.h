@@ -38,15 +38,6 @@ namespace vgui
 #define CHAT_HISTORY_IDLE_FADE_TIME 2.5f
 #define CHAT_HISTORY_ALPHA 127
 
-extern Color g_ColorBlue;
-extern Color g_ColorRed;
-extern Color g_ColorGreen;
-extern Color g_ColorDarkGreen;
-extern Color g_ColorYellow;
-extern Color g_ColorGray;
-extern Color g_ColorDarkGray;
-extern Color g_ColorWhite;
-
 extern ConVar cl_showtextmsg;
 
 enum ChatFilters

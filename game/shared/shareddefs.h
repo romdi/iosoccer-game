@@ -475,14 +475,6 @@ typedef enum
 	USE_POWERSHOT_KICK = 8
 } USE_TYPE;
 
-// basic team colors
-#define COLOR_RED		Color(255, 64, 64, 255)
-#define COLOR_BLUE		Color(153, 204, 255, 255)
-#define COLOR_YELLOW	Color(255, 178, 0, 255)
-#define COLOR_GREEN		Color(153, 255, 153, 255)
-#define COLOR_GREY		Color(204, 204, 204, 255)
-#define COLOR_WHITE		Color(255, 255, 255, 255)	//ios
-
 // All NPCs need this data
 enum
 {

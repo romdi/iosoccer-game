@@ -30,6 +30,7 @@ public:
 	virtual Color			&GetSecondaryTeamKitColor(int index) = 0;
 	virtual int				GetTeamGoals( int index ) = 0;
 	virtual const Color&	GetTeamColor( int index ) = 0;
+	virtual const Color&	GetPlayerColor( int index ) = 0;
 
 	// Player data access
 	virtual bool	IsConnected( int index ) = 0;
@@ -74,8 +75,7 @@ public:
 	virtual int		GetTeamPosIndex( int iIndex ) = 0;
 	virtual int		GetTeamToJoin( int iIndex ) = 0;
 	virtual int		GetTeamPosIndexToJoin( int iIndex ) = 0;
-	virtual int		GetNextJoin( int iIndex ) = 0;
-	virtual bool	IsCardBanned( int iIndex ) = 0;
+	virtual int		GetNextCardJoin( int iIndex ) = 0;
 	virtual bool	IsAway( int iIndex ) = 0;
 };
 

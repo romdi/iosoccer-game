@@ -152,7 +152,7 @@ Color CHudChat::GetClientColor( int clientIndex )
 
 	if ( clientIndex == 0 ) // console msg
 	{
-		return g_ColorDarkGray;
+		return g_ColorGray;
 	}
 	else if( g_PR )
 	{
@@ -160,12 +160,12 @@ Color CHudChat::GetClientColor( int clientIndex )
 
 		C_SDK_PlayerResource *sdk_PR = dynamic_cast<C_SDK_PlayerResource *>(g_PR);
 		if ( !sdk_PR )
-			return g_ColorDarkGray;
+			return g_ColorGray;
 
 		return sdk_PR->GetTeamColor( iTeam );
 	}
 
-	return g_ColorDarkGray;
+	return g_ColorGray;
 }
 //-----------------------------------------------------------------------------
 // Purpose: 

@@ -247,28 +247,21 @@ void CFormationMenu::Update(bool showCaptainMenu)
 				continue;
 			}
 
-			color32 taken = { 255, 255, 255, 240 };
+			bool posBlocked = SDKGameRules()->GetMatchDisplayTimeSeconds(false, true) < GetGlobalTeam(TEAM_A + i)->m_PosNextJoinSeconds[j];
 
-			if (playerIndexAtPos[i][j] == GetLocalPlayerIndex())
-			{
-				if (gr->GetYellowCards(playerIndexAtPos[i][j]) % 2 == 1)
-				{
-					taken.r = 200; taken.g = 255; taken.b = 100;
-				}
-				else
-				{
-					taken.r = 150; taken.g = 255; taken.b = 150;
-				}
-			}
-			else if (playerIndexAtPos[i][j] > 0 && gr->GetYellowCards(playerIndexAtPos[i][j]) % 2 == 1)
-			{
-				taken.r = 255; taken.g = 255; taken.b = 150;
-			}
+			Color c;
 
-			Color teamColor = GetGlobalTeam(TEAM_A + i)->Get_HudKitColor();
-			color32 free = { teamColor.r(), teamColor.g(), teamColor.b(), 10 };
-			color32 hover = { teamColor.r(), teamColor.g(), teamColor.b(), 240 };
-			color32 pressed = { teamColor.r(), teamColor.g(), teamColor.b(), 10 };
+			if (posBlocked)
+				c = g_ColorRed;
+			else if (playerIndexAtPos[i][j] > 0)
+				c = gr->GetPlayerColor(playerIndexAtPos[i][j]);
+			else
+				c = g_ColorWhite;
+
+			color32 taken = { c.r(), c.g(), c.b(), 240 };
+			color32 free = { c.r(), c.g(), c.b(), 10 };
+			color32 hover = { c.r(), c.g(), c.b(), 240 };
+			color32 pressed = { c.r(), c.g(), c.b(), 10 };
 
 			m_pFormationButtons[i][j]->SetVisible(true);
 			m_pFormationButtons[i][j]->SetText(VarArgs("%s", g_szPosNames[(int)g_Positions[mp_maxplayers.GetInt() - 1][j][POS_TYPE]]));
@@ -342,7 +335,7 @@ void CFormationMenu::Update(bool showCaptainMenu)
 			//m_pFormationButtons[i][j]->SetName(VarArgs("%d", playerIndexAtPos[i][j]));
 
 			m_pToolTips[i][j]->SetBounds(m_pFormationButtons[i][j]->GetX() + m_pFormationButtons[i][j]->GetWide() / 2 - TOOLTIP_WIDTH / 2, m_pFormationButtons[i][j]->GetY() + m_pFormationButtons[i][j]->GetTall() - 3, TOOLTIP_WIDTH, TOOLTIP_HEIGHT);
-			m_pToolTips[i][j]->SetFgColor(teamColor);
+			m_pToolTips[i][j]->SetFgColor(c);
 
 			KeyValues *old = m_pFormationButtons[i][j]->GetCommand();
 			kv->SetString("command", cmd);

@@ -62,6 +62,7 @@ void C_TVCamera::GetPositionAndAngle(Vector &pos, QAngle &ang)
 
 	Vector targetPos = pTarget->GetLocalOrigin();
 	targetPos.x = clamp(targetPos.x, SDKGameRules()->m_vFieldMin.GetX() + 400, SDKGameRules()->m_vFieldMax.GetX() - 700);
+	targetPos.z = SDKGameRules()->m_vKickOff.GetZ();
 	Vector targetDir = pTarget->GetLocalVelocity();
 
 	if (m_vOldTargetPos == vec3_invalid)
@@ -70,7 +71,7 @@ void C_TVCamera::GetPositionAndAngle(Vector &pos, QAngle &ang)
 	Vector changeDir = targetPos - m_vOldTargetPos;
 	float length = changeDir.Length();
 	changeDir.NormalizeInPlace();
-	targetPos = m_vOldTargetPos + changeDir * length / 100.0f;
+	targetPos = m_vOldTargetPos + changeDir * pow(length / mp_tvcam_speedcoeff.GetFloat(), mp_tvcam_speedexponent.GetFloat());
 
 	switch (camType)
 	{

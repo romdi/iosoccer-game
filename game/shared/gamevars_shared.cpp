@@ -97,3 +97,6 @@ ConVar mp_reset_spin_toggles_on_shot("mp_reset_spin_toggles_on_shot", "0", FCVAR
 ConVar mp_serverinfo("mp_serverinfo", "IOS Server - Enjoy your stay", FCVAR_NOTIFY | FCVAR_REPLICATED);
 
 ConVar mp_matchinfo("mp_matchinfo", "Public Match", FCVAR_NOTIFY | FCVAR_REPLICATED);
+
+ConVar mp_tvcam_speedcoeff("mp_tvcam_speedcoeff", "250", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_tvcam_speedexponent("mp_tvcam_speedexponent", "2", FCVAR_NOTIFY | FCVAR_REPLICATED);

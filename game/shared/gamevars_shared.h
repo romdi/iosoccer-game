@@ -50,6 +50,8 @@ extern ConVar
 	mp_custom_shirt_numbers,
 	mp_reset_spin_toggles_on_shot,
 	mp_serverinfo,
-	mp_matchinfo;
+	mp_matchinfo,
+	mp_tvcam_speedcoeff,
+	mp_tvcam_speedexponent;
 
 #endif // CS_GAMEVARS_SHARED_H

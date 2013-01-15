@@ -291,24 +291,29 @@ CSDKPlayer *CSDKPlayer::CreatePlayer( const char *className, edict_t *ed )
 
 void CSDKPlayer::PreThink(void)
 {
+	// Remove the player if he's in a team but card banned or in a blocked position
 	if (!SDKGameRules()->IsIntermissionState()
 		&& (GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B)
-		&& (IsCardBanned() && SDKGameRules()->GetMatchDisplayTimeSeconds() < GetNextCardJoin()
-		|| (m_nTeamToJoin == TEAM_A || m_nTeamToJoin == TEAM_B) && GetGlobalTeam(m_nTeamToJoin)->GetPosNextJoinSeconds(m_nTeamPosIndexToJoin) > SDKGameRules()->GetMatchDisplayTimeSeconds()))
+		&& (SDKGameRules()->GetMatchDisplayTimeSeconds() < GetNextCardJoin()
+		|| SDKGameRules()->GetMatchDisplayTimeSeconds() < GetTeam()->GetPosNextJoinSeconds(GetTeamPosIndex())))
 	{
 		ChangeTeam(TEAM_SPECTATOR);
 	}
 
-	if (!SDKGameRules()->IsIntermissionState() && IsCardBanned() && SDKGameRules()->GetMatchDisplayTimeSeconds() >= GetNextCardJoin())
+	// Prevent the player from reserving a position if he's card banned or if the position is blocked
+	if (!SDKGameRules()->IsIntermissionState()
+		&& (GetTeamToJoin() == TEAM_A || GetTeamToJoin() == TEAM_B)
+		&& (SDKGameRules()->GetMatchDisplayTimeSeconds() < GetNextCardJoin()
+		|| SDKGameRules()->GetMatchDisplayTimeSeconds() < GetGlobalTeam(GetTeamToJoin())->GetPosNextJoinSeconds(GetTeamPosIndexToJoin())))
 	{
-		SetCardBanned(false);
+		m_nTeamToJoin = TEAM_INVALID;
 	}
 
 	if (m_nTeamToJoin != TEAM_INVALID
 		&& gpGlobals->curtime >= GetNextJoin()
 		&& (SDKGameRules()->IsIntermissionState()	
 			|| SDKGameRules()->GetMatchDisplayTimeSeconds() >= GetNextCardJoin()
-			&& GetGlobalTeam(m_nTeamToJoin)->GetPosNextJoinSeconds(m_nTeamPosIndexToJoin) <= SDKGameRules()->GetMatchDisplayTimeSeconds()))
+			&& SDKGameRules()->GetMatchDisplayTimeSeconds() >= GetGlobalTeam(m_nTeamToJoin)->GetPosNextJoinSeconds(m_nTeamPosIndexToJoin)))
 	{
 		bool canJoin = true;
 
@@ -994,7 +999,7 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 		int team = atoi(args[1]);
 		int posIndex = atoi(args[2]);
 
-		if (IsCardBanned())
+		if (!SDKGameRules()->IsIntermissionState() && SDKGameRules()->GetMatchDisplayTimeSeconds() < GetNextCardJoin())
 			return false;
 
 		if (team == m_nTeamToJoin && posIndex == m_nTeamPosIndexToJoin)
@@ -1027,7 +1032,7 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 		if (team == GetTeamNumber() && posIndex == GetTeamPosIndex())
 			return false;
 
-		if (!SDKGameRules()->IsIntermissionState() && GetGlobalTeam(team)->GetPosNextJoinSeconds(posIndex) > SDKGameRules()->GetMatchDisplayTimeSeconds())
+		if (!SDKGameRules()->IsIntermissionState() && SDKGameRules()->GetMatchDisplayTimeSeconds() < GetGlobalTeam(team)->GetPosNextJoinSeconds(posIndex))
 			return false;
 
 		return ChangeTeamPos(team, posIndex, true);
@@ -1467,8 +1472,9 @@ void CSDKPlayer::GetTargetPos(const Vector &pos, Vector &targetPos)
 			{
 				int side = GetGlobalTeam(SDKGameRules()->m_nShieldTeam)->GetOppTeamNumber();
 				int boxLength = abs(GetGlobalTeam(side)->m_vPenBoxMax.GetY() - GetGlobalTeam(side)->m_vPenBoxMin.GetY()) / 3.0f;
-				Vector min = GetGlobalTeam(side)->m_vPenBoxMin + Vector(boxLength * 2, 0, 0);
-				Vector max = GetGlobalTeam(side)->m_vPenBoxMax - Vector(boxLength * 2, 0, 0);
+				Vector min = GetGlobalTeam(side)->m_vPenBoxMin + Vector(boxLength * 2, 0, 0) - border;
+				Vector max = GetGlobalTeam(side)->m_vPenBoxMax - Vector(boxLength * 2, 0, 0) + border;
+
 				if (GetGlobalTeam(side)->m_nForward == 1)
 				{
 					max.y -= boxLength * 2;
@@ -1540,16 +1546,6 @@ Vector CSDKPlayer::GetOffsideBallPos()
 	return m_vOffsideBallPos;
 }
 
-void CSDKPlayer::ResetStats()
-{
-	m_bIsOffside = false;
-	m_ePenaltyState = PENALTY_NONE;
-	m_nMotmChoiceIds[0] = 0;
-	m_nMotmChoiceIds[1] = 0;
-	m_flRemoteControlledStartTime = -1;
-	//GetData()->ResetData();
-}
-
 Vector CSDKPlayer::GetSpawnPos(bool findSafePos)
 {
 	//Vector spawnPos = pPlayer->GetTeam()->m_vPlayerSpawns[ToSDKPlayer(pPlayer)->GetTeamPosNum() - 1];
@@ -1592,6 +1588,11 @@ void CSDKPlayer::ResetFlags()
 	m_bIsAway = true;
 	m_flLastMoveTime = -1;
 	m_flNextJoin = gpGlobals->curtime;
+	m_bIsOffside = false;
+	m_ePenaltyState = PENALTY_NONE;
+	m_nMotmChoiceIds[0] = 0;
+	m_nMotmChoiceIds[1] = 0;
+	m_flRemoteControlledStartTime = -1;
 
 	if (GetPlayerBall())
 		GetPlayerBall()->RemovePlayerBall();
@@ -1776,10 +1777,35 @@ void CPlayerPersistentData::ConvertAllPlayerDataToJson()
 
 	for (int team = TEAM_A; team <= TEAM_B; team++)
 	{
+		CTeam *pTeam = GetGlobalTeam(team);
+
 		if (team == TEAM_B)
 			Q_strcat(json, ",", jsonSize);
 
-		Q_strcat(json, UTIL_VarArgs("\"%s\":{\"goals\":%d,\"possession\":%d}", (team == TEAM_A ? "homeTeam" : "awayTeam"), GetGlobalTeam(team)->GetGoals(), GetGlobalTeam(team)->m_nPossession), jsonSize);
+		Q_strcat(json, UTIL_VarArgs("\"%s\":{\"goals\":%d,\"possession\":%d,\"matchEvents\":[", (team == TEAM_A ? "homeTeam" : "awayTeam"), GetGlobalTeam(team)->GetGoals(), GetGlobalTeam(team)->m_nPossession), jsonSize);
+		
+		for (int i = 0; i < GetGlobalTeam(team)->m_nMatchEventIndex; i++)
+		{
+			int minute = ceil(pTeam->m_nMatchEventSeconds[i] / 60.0f);
+			char time[16];
+
+			if (pTeam->m_eMatchEventMatchStates[i] == MATCH_FIRST_HALF && minute > 45)
+				Q_snprintf(time, sizeof(time), "%d'+%d", 45, min(4, minute - 45));
+			else if (pTeam->m_eMatchEventMatchStates[i] == MATCH_SECOND_HALF && minute > 90)
+				Q_snprintf(time, sizeof(time), "%d'+%d", 90, min(4, minute - 90));
+			else if (pTeam->m_eMatchEventMatchStates[i] == MATCH_EXTRATIME_FIRST_HALF && minute > 105)
+				Q_snprintf(time, sizeof(time), "%d'+%d", 105, min(4, minute - 105));
+			else if (pTeam->m_eMatchEventMatchStates[i] == MATCH_EXTRATIME_SECOND_HALF && minute > 120)
+				Q_snprintf(time, sizeof(time), "%d'+%d", 120, min(4, minute - 120));
+			else
+				Q_snprintf(time, sizeof(time), "%d'", minute);
+
+			if (i > 0)
+				Q_strcat(json, ",", jsonSize);
+
+			Q_strcat(json, UTIL_VarArgs("{\"minute\":\"%s\",\"event\":\"%s\",\"player\":\"%s\"}", time, g_szMatchEventNames[pTeam->m_eMatchEventTypes[i]], pTeam->m_szMatchEventPlayers[i]), jsonSize);
+		}
+		Q_strcat(json, "]}", jsonSize);
 	}
 
 	Q_strcat(json, ",\"players\":[", jsonSize);
@@ -1792,7 +1818,7 @@ void CPlayerPersistentData::ConvertAllPlayerDataToJson()
 			Q_strcat(json, ",", jsonSize);
 
 		Q_strcat(json, UTIL_VarArgs(
-			"{\"steamId\":\"%s\",\"redCards\":%d,\"yellowCards\":%d,\"fouls\":%d,\"foulsSuffered\":%d,\"slidingTackles\":%d,\"slidingTacklesCompleted\":%d,\"goalsConceded\":%d,\"shots\":%d,\"shotsOnGoal\":%d,\"passesCompleted\":%d,\"interceptions\":%d,\"offsides\":%d,\"goals\":%d,\"ownGoals\":%d,\"assists\":%d,\"passes\":%d,\"freeKicks\":%d,\"penalties\":%d,\"corners\":%d,\"throwIns\":%d,\"keeperSaves\":%d,\"goalKicks\":%d,\"possession\":%d,\"distanceCovered\":%d}",
+			"{\"steamId\":\"%s\",\"redCards\":%d,\"yellowCards\":%d,\"fouls\":%d,\"foulsSuffered\":%d,\"slidingTackles\":%d,\"slidingTacklesCompleted\":%d,\"goalsConceded\":%d,\"shots\":%d,\"shotsOnGoal\":%d,\"passesCompleted\":%d,\"interceptions\":%d,\"offsides\":%d,\"goals\":%d,\"ownGoals\":%d,\"assists\":%d,\"passes\":%d,\"freeKicks\":%d,\"penalties\":%d,\"corners\":%d,\"throwIns\":%d,\"keeperSaves\":%d,\"goalKicks\":%d,\"possession\":%d,\"distanceCovered\":\"%d\"}",
 			pData->m_szSteamID, pData->m_nRedCards, pData->m_nYellowCards, pData->m_nFouls, pData->m_nFoulsSuffered, pData->m_nSlidingTackles, pData->m_nSlidingTacklesCompleted, pData->m_nGoalsConceded, pData->m_nShots, pData->m_nShotsOnGoal, pData->m_nPassesCompleted, pData->m_nInterceptions, pData->m_nOffsides, pData->m_nGoals, pData->m_nOwnGoals, pData->m_nAssists, pData->m_nPasses, pData->m_nFreeKicks, pData->m_nPenalties, pData->m_nCorners, pData->m_nThrowIns, pData->m_nKeeperSaves, pData->m_nGoalKicks, pData->m_nPossession, pData->m_nDistanceCovered
 			), jsonSize);
 	}
@@ -1859,6 +1885,5 @@ void CPlayerPersistentData::ResetData()
 	m_flPossessionTime = 0.0f;
 	m_nDistanceCovered = 0;
 	m_flExactDistanceCovered = 0.0f;
-	m_bIsCardBanned = false;
-	m_nNextCardJoin = max(0, SDKGameRules()->GetMatchDisplayTimeSeconds());
+	m_nNextCardJoin = 0;
 }

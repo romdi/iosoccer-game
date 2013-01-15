@@ -179,8 +179,6 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Editabl
 	m_bShowCaptainMenu = false;
 
 	MakePopup();
-
-	white = Color(255, 255, 255, 255);
 }
 
 //-----------------------------------------------------------------------------
@@ -641,7 +639,7 @@ void CClientScoreBoardDialog::UpdateTeamInfo()
 
 		kv->deleteThis();
 
-		m_pPlayerList[i]->SetItemFgColor(0, white);
+		m_pPlayerList[i]->SetItemFgColor(0, g_ColorWhite);
 
 		for (int j = 0; j <= m_pPlayerList[i]->GetHighestItemID(); j++)
 		{
@@ -651,7 +649,7 @@ void CClientScoreBoardDialog::UpdateTeamInfo()
 			}
 		}
 
-		m_pPlayerList[i]->SetItemDividerColor(0, white);
+		m_pPlayerList[i]->SetItemDividerColor(0, g_ColorWhite);
 	}
 }
 
@@ -746,22 +744,8 @@ void CClientScoreBoardDialog::UpdatePlayerInfo()
 					itemID = m_pPlayerList[teamIndex]->AddItem( sectionID, playerData );
 				}
 
-				Color col;
-
-				if (i == GetLocalPlayerIndex())
-				{
-					if (gr->GetYellowCards(i) % 2 == 1)
-						col = Color(200, 255, 100, 255);
-					else
-						col = Color(150, 255, 150, 255);
-				}
-				else if (gr->GetYellowCards(i) % 2 == 1)
-					col = Color(255, 255, 150, 255);
-				else
-					col = white;
-
 				// set the row color based on the players team
-				m_pPlayerList[teamIndex]->SetItemFgColor(itemID, col);
+				m_pPlayerList[teamIndex]->SetItemFgColor(itemID, gr->GetPlayerColor(i));
 				m_pPlayerList[teamIndex]->SetItemFont( itemID, m_pScheme->GetFont("IOSTeamMenuNormal"));
 
 				if (i == m_nSelectedPlayerIndex)
@@ -825,10 +809,10 @@ void CClientScoreBoardDialog::UpdatePlayerInfo()
 			char text[MAX_PLAYER_NAME_LENGTH + 16];
 			Q_snprintf(text, sizeof(text), VarArgs("%%.%ds", clamp(maxNameLength, 1, MAX_PLAYER_NAME_LENGTH)), specList[i].playerName);
 
-			int nextJoin = gr->GetNextJoin(specList[i].playerIndex);
+			int nextCardJoin = gr->GetNextCardJoin(specList[i].playerIndex);
 
-			if (!SDKGameRules()->IsIntermissionState() && nextJoin > SDKGameRules()->GetMatchDisplayTimeSeconds())
-				Q_strncat(text, VarArgs(" [%d:%02d]", nextJoin / 60, nextJoin % 60), sizeof(text));
+			if (SDKGameRules()->GetMatchDisplayTimeSeconds(false, true) < nextCardJoin)
+				Q_strncat(text, VarArgs(" [%d:%02d]", nextCardJoin / 60, nextCardJoin % 60), sizeof(text));
 
 			if (i < specList.Count() - 1)
 				Q_strncat(text, ", ", sizeof(text));
@@ -837,9 +821,8 @@ void CClientScoreBoardDialog::UpdatePlayerInfo()
 			pPl->SetCommand(VarArgs("specindex:%d", specList[i]));
 			pPl->AddActionSignalTarget(this);
 			pPl->SetBounds(totalWidth, 0, SPECNAME_WIDTH, SPECLIST_HEIGHT);
-			Color defaultColor = gr->IsCardBanned(specList[i].playerIndex) ? Color(255, 153, 153, 255) : white;
-			pPl->SetDefaultColor(defaultColor, Color(0, 0, 0, 0));
-			pPl->SetArmedColor(defaultColor, Color(75, 75, 75, 150));
+			pPl->SetDefaultColor(gr->GetPlayerColor(specList[i].playerIndex), Color(0, 0, 0, 0));
+			pPl->SetArmedColor(gr->GetPlayerColor(specList[i].playerIndex), Color(75, 75, 75, 150));
 			pPl->SetFont(m_pSpectatorFontList[1]);
 			pPl->SetContentAlignment(Label::a_center);
 			//pPl->SetPaintBackgroundEnabled(false);
@@ -885,8 +868,8 @@ void CClientScoreBoardDialog::AddHeader()
 		m_pPlayerList[i]->SetSectionAlwaysVisible(m_iSectionId);
 		m_pPlayerList[i]->SetFontSection(m_iSectionId, m_pScheme->GetFont("IOSTeamMenuSmall"));
 		m_pPlayerList[i]->SetLineSpacing(25);
-		m_pPlayerList[i]->SetFgColor(white);
-		m_pPlayerList[i]->SetSectionFgColor(0, white);
+		m_pPlayerList[i]->SetFgColor(g_ColorWhite);
+		m_pPlayerList[i]->SetSectionFgColor(0, g_ColorWhite);
 
 		int defaultFlags = SectionedListPanel::HEADER_CENTER | SectionedListPanel::COLUMN_CENTER;
 

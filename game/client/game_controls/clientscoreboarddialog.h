@@ -269,8 +269,6 @@ private:
 	int			m_nCursorPosY;
 
 	IScheme *m_pScheme;
-
-	Color		white;
 };
 
 

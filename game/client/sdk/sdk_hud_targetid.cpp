@@ -129,8 +129,7 @@ void CSDKTargetId::Paint()
 		int wide, tall;
 		vgui::surface()->GetTextSize(m_hFont, wszPlayerName, wide, tall);
 
-		Color c = GameResources()->GetTeamColor(pPl->GetTeamNumber());
-		c = Color(c.r(), c.g(), c.b(), 255);
+		Color c = GameResources()->GetPlayerColor(i);
 
 		Vector pos = pPl->GetLocalOrigin();
 		pos.z += VEC_HULL_MAX.z + hud_names_offset.GetInt();

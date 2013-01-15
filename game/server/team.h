@@ -93,7 +93,6 @@ public:
 public:
 	CUtlVector< CBasePlayer * >		m_aPlayers;
 	int m_PosIndexPlayerIndices[11];
-	int m_PosNextJoinSeconds[11];
 
 	// Data
 	CNetworkString( m_szServerKitName, MAX_TEAM_NAME_LENGTH );
@@ -142,6 +141,9 @@ public:
 	CNetworkArray(int, m_eMatchEventMatchStates, MAX_MATCH_EVENTS);
 	CNetworkArray(int, m_nMatchEventSeconds, MAX_MATCH_EVENTS);
 	int m_nMatchEventIndex;
+
+	CNetworkArray(int, m_PosNextJoinSeconds, 11);
+
 };
 
 extern CUtlVector< CTeam * > g_Teams;

@@ -37,7 +37,6 @@ public:
 	const	CSteamID *m_SteamID;
 	char	m_szSteamID[32];
 	int		m_nNextCardJoin;
-	bool	m_bIsCardBanned;
 	int		m_nRedCards;
 	int		m_nYellowCards;
 	int		m_nFouls;
@@ -387,9 +386,6 @@ public:
 	int					GetNextCardJoin(void) { return GetData()->m_nNextCardJoin; }
 	void				SetNextCardJoin(int seconds) { GetData()->m_nNextCardJoin = seconds; }
 
-	bool				IsCardBanned(void) { return GetData()->m_bIsCardBanned; }
-	void				SetCardBanned(bool state) { GetData()->m_bIsCardBanned = state; }
-
 	float				GetNextJoin() { return m_flNextJoin; }
 	void				SetNextJoin(float time) { m_flNextJoin = time; }
 
@@ -473,8 +469,6 @@ public:
 	CNetworkVar(int, m_nInPenBoxOfTeam);
 
 	static bool			IsOnField(CSDKPlayer *pPl);
-
-	void				ResetStats();
 
 	void				CheckShotCharging();
 	void				ResetShotCharging();

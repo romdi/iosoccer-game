@@ -1988,7 +1988,6 @@ void CBall::HandleFoul()
 
 			int banDuration = 60 * (m_eFoulType == FOUL_NORMAL_YELLOW_CARD ? sv_ball_player_yellow_red_card_duration.GetFloat() : sv_ball_player_red_card_duration.GetFloat());
 
-			m_pFoulingPl->SetCardBanned(true);
 			m_pFoulingPl->SetNextCardJoin(SDKGameRules()->GetMatchDisplayTimeSeconds() + banDuration);
 			int team = m_pFoulingPl->GetTeamNumber();
 			int posIndex = m_pFoulingPl->GetTeamPosIndex();
@@ -3062,7 +3061,6 @@ void CBall::ResetMatch()
 			continue;
 
 		pPl->ResetFlags();
-		pPl->ResetStats();
 	}
 
 	CPlayerPersistentData::ReallocateAllPlayerData();
