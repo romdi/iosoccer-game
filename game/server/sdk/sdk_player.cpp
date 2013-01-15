@@ -261,6 +261,7 @@ CSDKPlayer::CSDKPlayer()
 	//m_bIsCardBanned = false;
 	m_nTeamPosIndex = 0;
 	m_nPreferredTeamPosNum = 2;
+	m_nPreferredSkin = -1;
 	m_pPlayerBall = NULL;
 	m_Shared.m_flPlayerAnimEventStartTime = gpGlobals->curtime;
 	m_Shared.m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
@@ -1226,16 +1227,14 @@ bool CSDKPlayer::IsTeamPosFree(int team, int posIndex, bool ignoreBots, CSDKPlay
 	return true;
 }
 
-static const int NUM_PLAYER_FACES = 6;
-static const int NUM_BALL_TYPES = 6;
-
 ////////////////////////////////////////////////
 // player skins are 0-9 (blocks of 10)
 // (shirtpos-2) is always 0-9
 //
 void CSDKPlayer::ChoosePlayerSkin(void)
 {
-	m_nSkin = GetTeamPosNum() - 2 + (g_IOSRand.RandomInt(0, NUM_PLAYER_FACES - 1) * 10);		//player skin
+	int preferred = (m_nPreferredSkin == -1 ? g_IOSRand.RandomInt(0, NUM_PLAYER_FACES - 1) : m_nPreferredSkin);
+	m_nSkin = GetTeamPosNum() - 2 + (preferred * 10);		//player skin
 	m_nBody = MODEL_PLAYER;
 }
 
@@ -1248,7 +1247,8 @@ void CSDKPlayer::ChoosePlayerSkin(void)
 //
 void CSDKPlayer::ChooseKeeperSkin(void)
 {
-	m_nSkin = NUM_PLAYER_FACES*10 + (g_IOSRand.RandomInt(0,NUM_PLAYER_FACES-1) * NUM_BALL_TYPES);
+	int preferred = (m_nPreferredSkin == -1 ? g_IOSRand.RandomInt(0, NUM_PLAYER_FACES - 1) : m_nPreferredSkin);
+	m_nSkin = NUM_PLAYER_FACES*10 + (preferred * NUM_BALL_TYPES);
 	m_nBaseSkin = m_nSkin;
 	m_nBody = MODEL_KEEPER;
 }

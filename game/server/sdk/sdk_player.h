@@ -29,6 +29,9 @@ const int MODEL_KEEPER_AND_BALL	= 2;
 #define SPRINT_RECHARGE_TIME  12.0f    //IOS time before sprint re-charges
 #define SPRINT_SPEED          90.0f    //IOS sprint increase in speed
 
+#define NUM_PLAYER_FACES 6
+#define NUM_BALL_TYPES 6
+
 class CBall;
 
 class CPlayerPersistentData
@@ -299,6 +302,7 @@ public:
 	int					m_nTeamPosIndex;
 	int					m_nTeamPosNum;
 	int					m_nPreferredTeamPosNum;
+	int					m_nPreferredSkin;
 	
 	float				m_flNextShot;
 
@@ -401,6 +405,8 @@ public:
 
 	void				SetPreferredTeamPosNum(int num) { m_nPreferredTeamPosNum = clamp(num, 0, 11); }
 	int					FindUnfilledTeamPosNum();
+
+	void				SetPreferredSkin(int num) { m_nPreferredSkin = clamp(num, -1, NUM_PLAYER_FACES - 1); }
 
 	void				FindSafePos(Vector &startPos);
 

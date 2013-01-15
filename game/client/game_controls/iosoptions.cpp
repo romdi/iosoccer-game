@@ -93,9 +93,15 @@ CIOSOptionsPanel::CIOSOptionsPanel(VPANEL parent) : BaseClass(NULL, "IOSOptionsP
 
 	m_pCountryNameList->RemoveAll();
 
-	for (int i = 0; i < COUNTRY_NAMES_COUNT; i++)
+	KeyValues *kv = NULL;
+
+	kv = new KeyValues("UserData", "index", 0);
+	m_pCountryNameList->AddItem("<None>", kv);
+	kv->deleteThis();
+
+	for (int i = 1; i < COUNTRY_NAMES_COUNT; i++)
 	{
-		KeyValues *kv = new KeyValues("UserData", "index", i);
+		kv = new KeyValues("UserData", "index", i);
 		m_pCountryNameList->AddItem(g_szCountryNames[i], kv);
 		kv->deleteThis();
 	}
@@ -115,8 +121,6 @@ CIOSOptionsPanel::CIOSOptionsPanel(VPANEL parent) : BaseClass(NULL, "IOSOptionsP
 	m_pSmoothDurationInfoButton = new Button(m_pContent, "", "?");
 	m_pSmoothDurationInfoButton->GetTooltip()->SetText("The shorter the smoothing duration, the quicker your client will set your local player to the correct position, should your client have incorrectly predicted your own position.\nTo make the game feel more reponsive, your client immediately performs certain actions like moving around and jumping, instead of waiting for the server to give confirmation for them.\nSometimes, when other players or the ball is close to you, the predictions of the client will be wrong and your local player can't actually move to the position he just went to during the prediction.\nThe smoothing duration is the time your client spends moving your own player to the correct position as received from the server.");
 	m_pSmoothDurationInfoButton->GetTooltip()->SetTooltipDelay(0);
-
-	KeyValues *kv;
 
 	kv = new KeyValues("UserData", "index", 0);
 	m_pPreferredShirtNumberList->AddItem("<None>", kv);
@@ -161,8 +165,36 @@ CIOSOptionsPanel::CIOSOptionsPanel(VPANEL parent) : BaseClass(NULL, "IOSOptionsP
 	m_pCommandrateInfoButton->GetTooltip()->SetText("'Command Rate' sets the number of input updates per second you want to send to the server.\nThe maximum value is the current server tickrate, which is usually 66 or 100.\nThe higher 'Command Rate' the more upload bandwidth will be used.");
 	m_pCommandrateInfoButton->GetTooltip()->SetTooltipDelay(0);
 
-	m_pHudMatchEventTick = new CheckButton(m_pContent, "", "Show minor match events (dribblings, passes, etc.)");
-	m_pHudMatchNamesTick = new CheckButton(m_pContent, "", "Show player names for minor match events");
+	m_pSkinIndexLabel = new Label(m_pContent, "", "Player model skin:");
+	m_pSkinIndexList = new ComboBox(m_pContent, "", 0, false);
+
+	kv = new KeyValues("UserData", "value", -1);
+	m_pSkinIndexList->AddItem("<Random>", kv);
+	kv->deleteThis();
+
+	kv = new KeyValues("UserData", "value", 0);
+	m_pSkinIndexList->AddItem("Dark skin", kv);
+	kv->deleteThis();
+
+	kv = new KeyValues("UserData", "value", 1);
+	m_pSkinIndexList->AddItem("Blond hair", kv);
+	kv->deleteThis();
+
+	kv = new KeyValues("UserData", "value", 2);
+	m_pSkinIndexList->AddItem("Brown hair", kv);
+	kv->deleteThis();
+
+	kv = new KeyValues("UserData", "value", 3);
+	m_pSkinIndexList->AddItem("Black hair", kv);
+	kv->deleteThis();
+
+	kv = new KeyValues("UserData", "value", 4);
+	m_pSkinIndexList->AddItem("Black hair with beard", kv);
+	kv->deleteThis();
+
+	kv = new KeyValues("UserData", "value", 5);
+	m_pSkinIndexList->AddItem("Darkish skin", kv);
+	kv->deleteThis();
 }
 
 CIOSOptionsPanel::~CIOSOptionsPanel()
@@ -213,8 +245,8 @@ void CIOSOptionsPanel::ApplySchemeSettings( IScheme *pScheme )
 	m_pLegacySideCurl->SetBounds(0, 6 * TEXT_HEIGHT, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
 	m_pLegacyVerticalLook->SetBounds(0, 7 * TEXT_HEIGHT, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
 
-	m_pHudMatchEventTick->SetBounds(0, 8 * TEXT_HEIGHT, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
-	m_pHudMatchNamesTick->SetBounds(0, 9 * TEXT_HEIGHT, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
+	m_pSkinIndexLabel->SetBounds(0, 8 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pSkinIndexList->SetBounds(LABEL_WIDTH, 8 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
 
 	m_pRateLabel->SetBounds(0, 10 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
 	m_pRateText->SetBounds(LABEL_WIDTH, 10 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
@@ -313,8 +345,7 @@ void CIOSOptionsPanel::OnCommand(const char *cmd)
 		g_pCVar->FindVar("legacysidecurl")->SetValue(m_pLegacySideCurl->IsSelected() ? 1 : 0);
 		g_pCVar->FindVar("legacyverticallook")->SetValue(m_pLegacyVerticalLook->IsSelected() ? 1 : 0);
 
-		g_pCVar->FindVar("hud_minor_events_visible")->SetValue(m_pHudMatchEventTick->IsSelected() ? 1 : 0);
-		g_pCVar->FindVar("hud_minor_eventplayernames_visible")->SetValue(m_pHudMatchNamesTick->IsSelected() ? 1 : 0);
+		g_pCVar->FindVar("modelskinindex")->SetValue(m_pSkinIndexList->GetActiveItemUserData()->GetInt("value"));
 
 		m_pRateText->GetText(text, sizeof(text));
 		g_pCVar->FindVar("rate")->SetValue(atoi(text));
@@ -344,7 +375,7 @@ void CIOSOptionsPanel::Activate()
 		g_pCVar->FindVar("playername")->SetValue(g_pCVar->FindVar("name")->GetString());
 
 	m_pPlayerNameText->SetText(g_pCVar->FindVar("playername")->GetString());
-	m_pCountryNameList->SetText(g_szCountryNames[clamp(g_pCVar->FindVar("fallbackcountryindex")->GetInt(), 0, COUNTRY_NAMES_COUNT)]);
+	m_pCountryNameList->ActivateItemByRow(g_pCVar->FindVar("fallbackcountryindex")->GetInt());
 	m_pClubNameText->SetText(g_pCVar->FindVar("clubname")->GetString());
 	int shirtNum = g_pCVar->FindVar("preferredshirtnumber")->GetInt();
 	m_pPreferredShirtNumberList->SetText(shirtNum == 0 ? "<None>" : VarArgs("%d", clamp(shirtNum, 2, 11)));
@@ -374,8 +405,7 @@ void CIOSOptionsPanel::Activate()
 	m_pLegacySideCurl->SetSelected(g_pCVar->FindVar("legacysidecurl")->GetBool());
 	m_pLegacyVerticalLook->SetSelected(g_pCVar->FindVar("legacyverticallook")->GetBool());
 
-	m_pHudMatchEventTick->SetSelected(g_pCVar->FindVar("hud_minor_events_visible")->GetBool());
-	m_pHudMatchNamesTick->SetSelected(g_pCVar->FindVar("hud_minor_eventplayernames_visible")->GetBool());
+	m_pSkinIndexList->ActivateItemByRow(clamp(g_pCVar->FindVar("modelskinindex")->GetInt(), -1, 5) + 1);
 
 	m_pRateText->SetText(g_pCVar->FindVar("rate")->GetString());
 	m_pUpdaterateText->SetText(g_pCVar->FindVar("cl_updaterate")->GetString());

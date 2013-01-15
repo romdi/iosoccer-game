@@ -66,8 +66,8 @@ protected:
 	TextEntry *m_pCommandrateText;
 	Button *m_pCommandrateInfoButton;
 
-	CheckButton *m_pHudMatchEventTick;
-	CheckButton *m_pHudMatchNamesTick;
+	Label *m_pSkinIndexLabel;
+	ComboBox *m_pSkinIndexList;
 };
 
 class IIOSOptionsMenu
