@@ -3,6 +3,7 @@
 #include "ienginevgui.h"
 #include "c_sdk_player.h"
 #include "c_playerresource.h"
+#include "sdk_gamerules.h"
 
 class CIOSOptionsMenu : public IIOSOptionsMenu
 {
@@ -306,7 +307,7 @@ void CIOSOptionsPanel::OnThink()
 			m_pChangeInfoText->SetText(VarArgs("Wait %d seconds to change", (int)(pLocal->m_flNextClientSettingsChangeTime - gpGlobals->curtime)));
 			return;
 		}
-		else if (GetLocalPlayerTeam() == TEAM_A || GetLocalPlayerTeam() == TEAM_B)
+		else if (!SDKGameRules()->IsIntermissionState() && (GetLocalPlayerTeam() == TEAM_A || GetLocalPlayerTeam() == TEAM_B))
 		{
 			//char *text = VarArgs("Go spec first", (int)(pLocal->m_flNextClientSettingsChangeTime - gpGlobals->curtime));
 			//m_pOKButton->SetText(text);

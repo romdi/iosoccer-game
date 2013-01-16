@@ -406,7 +406,8 @@ public:
 	void				SetPreferredTeamPosNum(int num) { m_nPreferredTeamPosNum = clamp(num, 0, 11); }
 	int					FindUnfilledTeamPosNum();
 
-	void				SetPreferredSkin(int num) { m_nPreferredSkin = clamp(num, -1, NUM_PLAYER_FACES - 1); }
+	int					GetPreferredSkin() { return m_nPreferredSkin; }
+	void				SetPreferredSkin(int num);
 
 	void				FindSafePos(Vector &startPos);
 

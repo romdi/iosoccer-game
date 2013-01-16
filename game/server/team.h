@@ -74,10 +74,12 @@ public:
 	virtual void SetCornerTakerPosIndex(int posIndex) { m_nCornerTakerPosIndex = clamp(posIndex, 0, mp_maxplayers.GetInt() - 1); }
 	virtual void SetThrowinTakerPosIndex(int posIndex) { m_nThrowinTakerPosIndex = clamp(posIndex, 0, mp_maxplayers.GetInt() - 1); }
 	virtual void SetTimeoutsLeft(int amount) { m_nTimeoutsLeft = amount; }
+	virtual int GetTimeoutsLeft() { return m_nTimeoutsLeft; }
+	virtual void SetWantsTimeout(bool state) { m_bWantsTimeout = state; }
+	virtual bool WantsTimeout() { return m_bWantsTimeout; }
 	virtual CSDKPlayer *GetCaptain() { return GetPlayerByPosIndex(m_nCaptainPosIndex); }
 	virtual CSDKPlayer *GetFreekickTaker() { return GetPlayerByPosIndex(m_nFreekickTakerPosIndex); }
 	virtual CSDKPlayer *GetPenaltyTaker() { return GetPlayerByPosIndex(m_nPenaltyTakerPosIndex); }
-	virtual int GetTimeoutsLeft() { return m_nTimeoutsLeft; }
 	virtual void FindNewCaptain();
 	virtual void AddMatchEvent(match_state_t matchState, int seconds, match_event_t event, const char *player);
 
@@ -144,6 +146,7 @@ public:
 
 	CNetworkArray(int, m_PosNextJoinSeconds, 11);
 
+	bool m_bWantsTimeout;
 };
 
 extern CUtlVector< CTeam * > g_Teams;

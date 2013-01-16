@@ -247,6 +247,8 @@ BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 	RecvPropFloat(RECVINFO(m_flOffsideLineOffsidePlayerPosY)),
 	RecvPropFloat(RECVINFO(m_flOffsideLineLastOppPlayerPosY)),
 	RecvPropInt(RECVINFO(m_bOffsideLinesEnabled)),
+
+	RecvPropTime(RECVINFO(m_flTimeoutEnd)),
 #else
 	SendPropTime( SENDINFO( m_flStateEnterTime )),
 	SendPropTime( SENDINFO( m_flMatchStartTime )),
@@ -272,6 +274,8 @@ BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 	SendPropFloat(SENDINFO(m_flOffsideLineOffsidePlayerPosY), 0, SPROP_COORD),
 	SendPropFloat(SENDINFO(m_flOffsideLineLastOppPlayerPosY), 0, SPROP_COORD),
 	SendPropBool(SENDINFO(m_bOffsideLinesEnabled)),
+
+	SendPropTime(SENDINFO(m_flTimeoutEnd)),
 #endif
 END_NETWORK_TABLE()
 
@@ -396,6 +400,7 @@ CSDKGameRules::CSDKGameRules()
 	m_flLastMasterServerPingTime = -FLT_MAX;
 	m_bUseAdjustedStateEnterTime = false;
 	m_flAdjustedStateEnterTime = -FLT_MAX;
+	m_flTimeoutEnd = -1;
 #else
 	PrecacheMaterial("pitch/offside_line");
 	m_pOffsideLineMaterial = materials->FindMaterial( "pitch/offside_line", TEXTURE_GROUP_CLIENT_EFFECTS );
@@ -2040,7 +2045,7 @@ void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 {
 	CSDKPlayer *pPl = ToSDKPlayer(pPlayer);
 
-	if (gpGlobals->curtime < pPl->m_flNextClientSettingsChangeTime || pPl->GetTeamNumber() == TEAM_A || pPl->GetTeamNumber() == TEAM_B)
+	if (gpGlobals->curtime < pPl->m_flNextClientSettingsChangeTime || (!IsIntermissionState() && (pPl->GetTeamNumber() == TEAM_A || pPl->GetTeamNumber() == TEAM_B)))
 		return;
 
 	pPl->m_flNextClientSettingsChangeTime = gpGlobals->curtime + mp_clientsettingschangeinterval.GetFloat();
@@ -2067,7 +2072,9 @@ void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 
 	pPl->SetPreferredTeamPosNum(atoi(engine->GetClientConVarValue(pPl->entindex(), "preferredshirtnumber")));
 
-	pPl->SetPreferredSkin(atoi(engine->GetClientConVarValue(pPl->entindex(), "modelskinindex")));
+	int preferredSkin = atoi(engine->GetClientConVarValue(pPl->entindex(), "modelskinindex"));
+	if (preferredSkin != pPl->GetPreferredSkin())
+		pPl->SetPreferredSkin(preferredSkin);
 
 	char pszName[MAX_PLAYER_NAME_LENGTH];
 	Q_strncpy(pszName, engine->GetClientConVarValue( pPl->entindex(), "playername" ), MAX_PLAYER_NAME_LENGTH);

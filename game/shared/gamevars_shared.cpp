@@ -100,3 +100,6 @@ ConVar mp_matchinfo("mp_matchinfo", "Public Match", FCVAR_NOTIFY | FCVAR_REPLICA
 
 ConVar mp_tvcam_speedcoeff("mp_tvcam_speedcoeff", "250", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar mp_tvcam_speedexponent("mp_tvcam_speedexponent", "2", FCVAR_NOTIFY | FCVAR_REPLICATED);
+
+ConVar mp_timeout_count("mp_timeout_count", "3", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_timeout_duration("mp_timeout_duration", "60", FCVAR_NOTIFY | FCVAR_REPLICATED);

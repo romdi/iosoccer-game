@@ -840,82 +840,113 @@ void CBall::State_Think()
 	m_pPhys->GetPosition(&m_vPos, &m_aAng);
 	m_pPhys->GetVelocity(&m_vVel, &m_vRot);
 
-	if (m_eNextState != BALL_NOSTATE)
+	if (!m_bIsPlayerBall)
 	{
-		if (!m_bNextStateMessageSet && gpGlobals->curtime >= m_flStateLeaveTime - m_flStateActivationDelay)
+		if (m_eNextState != BALL_NOSTATE)
 		{
-			m_bNextStateMessageSet = true;
-
-			switch (m_eNextState)
+			if (!m_bNextStateMessageSet && gpGlobals->curtime >= m_flStateLeaveTime - m_flStateActivationDelay)
 			{
-			case BALL_THROWIN:
-				{
-					SetMatchEvent(MATCH_EVENT_THROWIN, LastOppTeam(false), true);
-					//IGameEvent* pEvent = gameeventmanager->CreateEvent("throw_in");
-					//pEvent->SetInt("team", LastOppTeam(false));
-					//gameeventmanager->FireEvent(pEvent);
-				}
-				break;
-			case BALL_GOALKICK: SetMatchEvent(MATCH_EVENT_GOALKICK, LastOppTeam(false), true); break;
-			case BALL_CORNER: SetMatchEvent(MATCH_EVENT_CORNER, LastOppTeam(false), true); break;
-			//case BALL_KICKOFF: SetMatchEvent(MATCH_EVENT_KICKOFF, SDKGameRules()->GetKickOffTeam(), true); break;
-			case BALL_GOAL:
-				if (m_nTeam == LastTeam(true))
-					SetMatchEvent(MATCH_EVENT_OWNGOAL, LastTeam(true), true);
-				else
-					SetMatchEvent(MATCH_EVENT_GOAL, LastTeam(true), true);
-				break;
-			case BALL_FREEKICK:
-			case BALL_PENALTY:
-				{
-					if (m_eNextState == BALL_FREEKICK)
-						SetMatchEvent(MATCH_EVENT_FREEKICK, GetGlobalTeam(m_nFouledTeam)->GetTeamNumber(), true);
-					else
-						SetMatchEvent(MATCH_EVENT_PENALTY, GetGlobalTeam(m_nFouledTeam)->GetTeamNumber(), true);
+				m_bNextStateMessageSet = true;
 
-					match_event_t matchSubEvent;
-
-					switch (m_eFoulType)
+				switch (m_eNextState)
+				{
+				case BALL_THROWIN:
 					{
-					case FOUL_NORMAL_NO_CARD:
-						matchSubEvent = MATCH_EVENT_FOUL;
-						break;
-					case FOUL_NORMAL_YELLOW_CARD:
-						if (m_pFoulingPl->GetYellowCards() % 2 != 0)
-							matchSubEvent = MATCH_EVENT_YELLOWREDCARD;
-						else
-							matchSubEvent = MATCH_EVENT_YELLOWCARD;
-						break;
-					case FOUL_NORMAL_RED_CARD:
-						matchSubEvent = MATCH_EVENT_REDCARD;
-						break;
-					case FOUL_OFFSIDE:
-						matchSubEvent = MATCH_EVENT_OFFSIDE;
-						SDKGameRules()->SetOffsideLinesEnabled(true);
-						break;
-					case FOUL_DOUBLETOUCH:
-						matchSubEvent = MATCH_EVENT_DOUBLETOUCH;
-						break;
-					default:
-						matchSubEvent = MATCH_EVENT_FOUL;
-						break;
+						SetMatchEvent(MATCH_EVENT_THROWIN, LastOppTeam(false), true);
+						//IGameEvent* pEvent = gameeventmanager->CreateEvent("throw_in");
+						//pEvent->SetInt("team", LastOppTeam(false));
+						//gameeventmanager->FireEvent(pEvent);
 					}
+					break;
+				case BALL_GOALKICK: SetMatchEvent(MATCH_EVENT_GOALKICK, LastOppTeam(false), true); break;
+				case BALL_CORNER: SetMatchEvent(MATCH_EVENT_CORNER, LastOppTeam(false), true); break;
+				//case BALL_KICKOFF: SetMatchEvent(MATCH_EVENT_KICKOFF, SDKGameRules()->GetKickOffTeam(), true); break;
+				case BALL_GOAL:
+					if (m_nTeam == LastTeam(true))
+						SetMatchEvent(MATCH_EVENT_OWNGOAL, LastTeam(true), true);
+					else
+						SetMatchEvent(MATCH_EVENT_GOAL, LastTeam(true), true);
+					break;
+				case BALL_FREEKICK:
+				case BALL_PENALTY:
+					{
+						if (m_eNextState == BALL_FREEKICK)
+							SetMatchEvent(MATCH_EVENT_FREEKICK, GetGlobalTeam(m_nFouledTeam)->GetTeamNumber(), true);
+						else
+							SetMatchEvent(MATCH_EVENT_PENALTY, GetGlobalTeam(m_nFouledTeam)->GetTeamNumber(), true);
 
-					SetMatchSubEvent(matchSubEvent, m_nFoulingTeam, true);
+						match_event_t matchSubEvent;
+
+						switch (m_eFoulType)
+						{
+						case FOUL_NORMAL_NO_CARD:
+							matchSubEvent = MATCH_EVENT_FOUL;
+							break;
+						case FOUL_NORMAL_YELLOW_CARD:
+							if (m_pFoulingPl->GetYellowCards() % 2 != 0)
+								matchSubEvent = MATCH_EVENT_YELLOWREDCARD;
+							else
+								matchSubEvent = MATCH_EVENT_YELLOWCARD;
+							break;
+						case FOUL_NORMAL_RED_CARD:
+							matchSubEvent = MATCH_EVENT_REDCARD;
+							break;
+						case FOUL_OFFSIDE:
+							matchSubEvent = MATCH_EVENT_OFFSIDE;
+							SDKGameRules()->SetOffsideLinesEnabled(true);
+							break;
+						case FOUL_DOUBLETOUCH:
+							matchSubEvent = MATCH_EVENT_DOUBLETOUCH;
+							break;
+						default:
+							matchSubEvent = MATCH_EVENT_FOUL;
+							break;
+						}
+
+						SetMatchSubEvent(matchSubEvent, m_nFoulingTeam, true);
+					}
+					break;
 				}
-				break;
+			}
+			else if (gpGlobals->curtime >= m_flStateLeaveTime)
+			{
+				State_Leave(m_eNextState);
+				State_Enter(m_eNextState, true);
 			}
 		}
-		else if (gpGlobals->curtime >= m_flStateLeaveTime)
-		{
-			State_Leave(m_eNextState);
-			State_Enter(m_eNextState, true);
-		}
-	}
 
-	if (m_pCurStateInfo && m_pCurStateInfo->m_eBallState != BALL_NORMAL && m_eNextState == BALL_NOSTATE && m_flStateTimelimit != -1 && gpGlobals->curtime >= m_flStateTimelimit)
-	{
-		if (CSDKPlayer::IsOnField(m_pPl))
+		if (State_Get() != BALL_NORMAL && State_Get() != BALL_KEEPERHANDS)
+		{
+			if (GetGlobalTeam(TEAM_A)->WantsTimeout() || GetGlobalTeam(TEAM_B)->WantsTimeout())
+			{
+				int timeoutTeam;
+
+				if (GetGlobalTeam(TEAM_A)->WantsTimeout())
+				{
+					timeoutTeam = TEAM_A;
+					GetGlobalTeam(TEAM_A)->SetWantsTimeout(false);
+				}
+
+				if (GetGlobalTeam(TEAM_B)->WantsTimeout())
+				{
+					timeoutTeam = TEAM_B;
+					GetGlobalTeam(TEAM_B)->SetWantsTimeout(false);
+				}
+
+				SetMatchEvent(MATCH_EVENT_TIMEOUT, timeoutTeam, true);
+				SDKGameRules()->SetTimeoutEnd(gpGlobals->curtime + mp_timeout_duration.GetFloat());
+			}
+		}
+
+		if (gpGlobals->curtime < SDKGameRules()->GetTimeoutEnd())
+			return;
+
+		if (m_pCurStateInfo
+			&& State_Get() != BALL_NORMAL
+			&& m_eNextState == BALL_NOSTATE
+			&& CSDKPlayer::IsOnField(m_pPl)
+			&& m_flStateTimelimit != -1
+			&& gpGlobals->curtime >= m_flStateTimelimit)
 		{
 			m_pPl->ChangeTeam(TEAM_SPECTATOR);
 		}
@@ -3050,6 +3081,7 @@ void CBall::ResetMatch()
 	m_flPossessionStart = -1;
 	m_flLastMatchEventSetTime = -1;
 	m_nDoubleTouchFoulCount = 0;
+	SDKGameRules()->SetTimeoutEnd(-1);
 
 	GetGlobalTeam(TEAM_A)->ResetStats();
 	GetGlobalTeam(TEAM_B)->ResetStats();

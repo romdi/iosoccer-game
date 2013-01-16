@@ -52,6 +52,8 @@ extern ConVar
 	mp_serverinfo,
 	mp_matchinfo,
 	mp_tvcam_speedcoeff,
-	mp_tvcam_speedexponent;
+	mp_tvcam_speedexponent,
+	mp_timeout_count,
+	mp_timeout_duration;
 
 #endif // CS_GAMEVARS_SHARED_H

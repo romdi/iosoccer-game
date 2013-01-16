@@ -74,8 +74,10 @@ private:
 	Label *m_pTeamGoals[2];
 	Panel *m_pTeamColors[2][2];
 	Label *m_pNotification;
+	Label *m_pInjuryTime;
 	match_event_t m_eCurMatchEvent;
 	float m_flNotificationStart;
+	float m_flInjuryTimeStart;
 };
 
 DECLARE_HUDELEMENT( CHudESPNBar );
@@ -86,6 +88,7 @@ enum { TEAM_COLOR_WIDTH = 35, TEAM_COLOR_HEIGHT = 3 };
 enum { TEAM_NAME_WIDTH = 70, TEAM_NAME_HEIGHT= 25 };
 enum { TEAM_GOAL_WIDTH = 30, TEAM_GOAL_HEIGHT= 25 };
 enum { TIME_WIDTH = 70, TIME_HEIGHT= 25 };
+enum { INJURYTIME_WIDTH = 35 };
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -113,8 +116,10 @@ CHudESPNBar::CHudESPNBar( const char *pElementName ) : BaseClass(NULL, "HudScore
 	}
 
 	m_pNotification = new Label(this, "", "");
+	m_pInjuryTime = new Label(this, "", "");
 	m_eCurMatchEvent = MATCH_EVENT_NONE;
 	m_flNotificationStart = -1;
+	m_flInjuryTimeStart = -1;
 }
 
 void CHudESPNBar::ApplySchemeSettings( IScheme *pScheme )
@@ -124,7 +129,7 @@ void CHudESPNBar::ApplySchemeSettings( IScheme *pScheme )
 	Color white(255, 255, 255, 255);
 	Color black(0, 0, 0, 255);
 
-	SetBounds(PANEL_MARGIN, PANEL_MARGIN, PANEL_WIDTH, PANEL_HEIGHT + 200);
+	SetBounds(PANEL_MARGIN, PANEL_MARGIN, PANEL_WIDTH + 100, PANEL_HEIGHT + 200);
 
 	m_pOuterPanel->SetBounds(0, 0, PANEL_WIDTH, PANEL_HEIGHT);
 	m_pOuterPanel->SetBgColor(Color(0, 0, 0, 100));
@@ -167,10 +172,16 @@ void CHudESPNBar::ApplySchemeSettings( IScheme *pScheme )
 	m_pTime->SetContentAlignment(Label::a_center);
 
 	m_pNotification->SetBounds(0, 0, PANEL_WIDTH, PANEL_HEIGHT);
-	m_pNotification->SetFgColor(Color(255, 255, 255, 200));
+	m_pNotification->SetFgColor(Color(255, 255, 255, 255));
 	m_pNotification->SetBgColor(Color(0, 0, 0, 200));
 	m_pNotification->SetTextInset(5, 0);
 	m_pNotification->SetFont(pScheme->GetFont("IOSScorebarMedium"));
+
+	m_pInjuryTime->SetBounds(PANEL_WIDTH - INJURYTIME_WIDTH, 0, INJURYTIME_WIDTH, PANEL_HEIGHT);
+	m_pInjuryTime->SetFgColor(Color(255, 255, 255, 255));
+	m_pInjuryTime->SetBgColor(Color(0, 0, 0, 200));
+	m_pInjuryTime->SetTextInset(5, 0);
+	m_pInjuryTime->SetFont(pScheme->GetFont("IOSScorebarMedium"));
 }
 
 //-----------------------------------------------------------------------------
@@ -216,8 +227,16 @@ void CHudESPNBar::OnThink( void )
 	else
 	{
 		int time = abs(SDKGameRules()->GetMatchDisplayTimeSeconds(true));
-		m_pTime->SetText(VarArgs("%d:%02d%", time / 60, time % 60));
+		m_pTime->SetText(VarArgs("%d:%02d", time / 60, time % 60));
 	}
+
+	if (SDKGameRules()->m_nAnnouncedInjuryTime > 0 && m_flInjuryTimeStart == -1)
+	{
+		m_flInjuryTimeStart = gpGlobals->curtime;
+		m_pInjuryTime->SetText(VarArgs("+%d", SDKGameRules()->m_nAnnouncedInjuryTime));
+	}
+	else if (SDKGameRules()->m_nAnnouncedInjuryTime == 0 && m_flInjuryTimeStart != -1)
+		m_flInjuryTimeStart = -1;
 
 	for (int team = TEAM_A; team <= TEAM_B; team++)
 	{
@@ -247,6 +266,16 @@ void CHudESPNBar::OnThink( void )
 		}
 
 		m_eCurMatchEvent = GetBall()->m_eMatchEvent;
+
+		if (GetBall()->m_eMatchEvent == MATCH_EVENT_TIMEOUT && m_flNotificationStart != -1)
+		{
+			int time = m_flNotificationStart + mp_timeout_duration.GetFloat() - gpGlobals->curtime;
+
+			if (time < 0)
+				m_flNotificationStart = -1;
+			else
+				m_pNotification->SetText(VarArgs("TIMEOUT   %d:%02d", time / 60, time % 60));
+		}
 	}
 }
 
@@ -272,17 +301,37 @@ void CHudESPNBar::Paint( void )
 		}
 		else
 		{
-			float fraction = (gpGlobals->curtime - (m_flNotificationStart + slideDownDuration + stayDuration)) / slideUpDuration;
-
-			if (fraction >= 1)
+			if (GetBall()->m_eMatchEvent != MATCH_EVENT_TIMEOUT)
 			{
-				fraction = 1;
-				m_flNotificationStart = -1;
-			}
+				float fraction = (gpGlobals->curtime - (m_flNotificationStart + slideDownDuration + stayDuration)) / slideUpDuration;
 
-			m_pNotification->SetY((1 - pow(fraction, slideUpExp)) * PANEL_HEIGHT);
+				if (fraction >= 1)
+				{
+					fraction = 1;
+					m_flNotificationStart = -1;
+				}
+
+				m_pNotification->SetY((1 - pow(fraction, slideUpExp)) * PANEL_HEIGHT);
+			}
 		}	
 	}
+	else
+		m_pNotification->SetY(0);
+
+	if (m_flInjuryTimeStart != -1)
+	{
+		if (gpGlobals->curtime - m_flInjuryTimeStart <= slideDownDuration)
+		{
+			float fraction = (gpGlobals->curtime - m_flInjuryTimeStart) / slideDownDuration;
+			m_pInjuryTime->SetX(PANEL_WIDTH - INJURYTIME_WIDTH + (1 - pow(1 - fraction, slideDownExp)) * INJURYTIME_WIDTH);
+		}
+		else
+		{
+			m_pInjuryTime->SetX(PANEL_WIDTH);
+		}
+	}
+	else
+		m_pInjuryTime->SetX(PANEL_WIDTH - INJURYTIME_WIDTH);
 }
 
 void CHudESPNBar::FireGameEvent(IGameEvent *event)

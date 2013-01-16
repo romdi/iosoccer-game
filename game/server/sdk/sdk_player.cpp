@@ -1162,6 +1162,8 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 		else
 			return false;
 
+		GetTeam()->SetWantsTimeout(true);
+
 		return true;
 	}
 	else if (!Q_stricmp(args[0], "setcaptain"))
@@ -1227,6 +1229,27 @@ bool CSDKPlayer::IsTeamPosFree(int team, int posIndex, bool ignoreBots, CSDKPlay
 	return true;
 }
 
+void CSDKPlayer::SetPreferredSkin(int num)
+{
+	m_nPreferredSkin = clamp(num, -1, NUM_PLAYER_FACES - 1);
+
+	if (GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B)
+	{
+		if (GetTeamPosType() == GK)
+		{
+			if (m_nBody == MODEL_KEEPER_AND_BALL)
+			{
+				int ballSkin = m_nSkin - m_nBaseSkin;
+				ChooseKeeperSkin();
+				m_nBody = MODEL_KEEPER_AND_BALL;
+				m_nSkin = m_nBaseSkin + ballSkin;
+			}
+		}
+		else
+			ChoosePlayerSkin();
+	}
+}
+
 ////////////////////////////////////////////////
 // player skins are 0-9 (blocks of 10)
 // (shirtpos-2) is always 0-9
@@ -1248,7 +1271,7 @@ void CSDKPlayer::ChoosePlayerSkin(void)
 void CSDKPlayer::ChooseKeeperSkin(void)
 {
 	int preferred = (m_nPreferredSkin == -1 ? g_IOSRand.RandomInt(0, NUM_PLAYER_FACES - 1) : m_nPreferredSkin);
-	m_nSkin = NUM_PLAYER_FACES*10 + (preferred * NUM_BALL_TYPES);
+	m_nSkin = NUM_PLAYER_FACES * 10 + (preferred * NUM_BALL_TYPES);
 	m_nBaseSkin = m_nSkin;
 	m_nBody = MODEL_KEEPER;
 }

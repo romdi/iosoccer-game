@@ -118,7 +118,8 @@ CTeam::CTeam( void )
 	memset( m_szShortTeamName.GetForModify(), 0, sizeof(m_szShortTeamName) );
 	ResetStats();
 	UpdatePosIndices(true);
-	m_nTimeoutsLeft = 3;
+	m_nTimeoutsLeft = mp_timeout_count.GetInt();
+	m_bWantsTimeout = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -413,8 +414,9 @@ void CTeam::ResetStats()
 	m_flPossessionTime = 0;
 	m_nPossession = 0;
 	m_nGoals = 0;
-
 	m_nMatchEventIndex = 0;
+	m_bWantsTimeout = false;
+	m_nTimeoutsLeft = mp_timeout_count.GetInt();
 
 	for (int i = 0; i < MAX_MATCH_EVENTS; i++)
 	{

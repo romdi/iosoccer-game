@@ -372,6 +372,9 @@ public:
 	void SetOffsideLinePositions(float ballPosY, float offsidePlayerPosY, float lastOppPlayerPosY);
 	void SetOffsideLinesEnabled(bool enable);
 
+	float GetTimeoutEnd() { return m_flTimeoutEnd; }
+	void SetTimeoutEnd(float time) { m_flTimeoutEnd = time; }
+
 #else
 
 public:
@@ -402,6 +405,8 @@ public:
 	CNetworkVar(float, m_flOffsideLineOffsidePlayerPosY);
 	CNetworkVar(float, m_flOffsideLineLastOppPlayerPosY);
 	CNetworkVar(bool, m_bOffsideLinesEnabled);
+
+	CNetworkVar(float, m_flTimeoutEnd);
 };
 
 //-----------------------------------------------------------------------------
