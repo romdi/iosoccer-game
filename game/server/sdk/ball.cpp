@@ -1762,21 +1762,13 @@ void CBall::State_KEEPERHANDS_Think()
 		Vector dir;
 		float vel;
 
-		if (m_pPl->GetTeam()->m_nForward == 1 && m_vPos.y < min.y)
+		if (m_pPl->GetTeam()->m_nForward == 1 && m_vPos.y < min.y || m_pPl->GetTeam()->m_nForward == -1 && m_vPos.y > max.y)
 		{
-			dir = Vector(g_IOSRand.RandomFloat(-0.5f, 0.5f), 1, g_IOSRand.RandomFloat(1.0f, 1.5f));
+			dir = Vector(Sign(m_vPos.x - SDKGameRules()->m_vKickOff.GetX()) * g_IOSRand.RandomFloat(0.75f, 1.25f), m_pPl->GetTeam()->m_nForward, g_IOSRand.RandomFloat(1.0f, 1.25f));
 			dir.NormalizeInPlace();
 			SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_chest_start.GetFloat()) + dir * 18);
 			m_bSetNewPos = false;
-			vel = g_IOSRand.RandomFloat(400, 600);
-		}
-		else if (m_pPl->GetTeam()->m_nForward == -1 && m_vPos.y > max.y)
-		{
-			dir = Vector(g_IOSRand.RandomFloat(-0.5f, 0.5f), -1, g_IOSRand.RandomFloat(1.0f, 1.5f));
-			dir.NormalizeInPlace();
-			SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_chest_start.GetFloat()) + dir * 18);
-			m_bSetNewPos = false;
-			vel = g_IOSRand.RandomFloat(400, 600);
+			vel = g_IOSRand.RandomFloat(700, 800);
 		}
 		else
 		{
@@ -1964,6 +1956,22 @@ bool CBall::CheckFoul()
 			foulType = FOUL_NORMAL_NO_CARD;
 
 		TriggerFoul(foulType, pPl->GetLocalOrigin(), m_pPl, pPl);
+		m_pFoulingPl->SetFouls(m_pFoulingPl->GetFouls() + 1);
+		m_pFouledPl->SetFoulsSuffered(m_pFouledPl->GetFoulsSuffered() + 1);
+
+		if (m_eFoulType == FOUL_NORMAL_YELLOW_CARD)
+			m_pFoulingPl->SetYellowCards(m_pFoulingPl->GetYellowCards() + 1);
+
+		if (m_eFoulType == FOUL_NORMAL_YELLOW_CARD && m_pFoulingPl->GetYellowCards() % 2 == 0 || m_eFoulType == FOUL_NORMAL_RED_CARD)
+		{
+			m_pFoulingPl->SetRedCards(m_pFoulingPl->GetRedCards() + 1);
+			int banDuration = 60 * (m_eFoulType == FOUL_NORMAL_YELLOW_CARD ? sv_ball_player_yellow_red_card_duration.GetFloat() : sv_ball_player_red_card_duration.GetFloat());
+			int nextJoin = SDKGameRules()->GetMatchDisplayTimeSeconds(true) + banDuration;
+			m_pFoulingPl->SetNextCardJoin(nextJoin);
+
+			if (m_pFoulingPl->GetTeamPosType() != GK)
+				m_pFoulingPl->GetTeam()->SetPosNextJoinSeconds(m_pFoulingPl->GetTeamPosIndex(), nextJoin);
+		}
 
 		if (pPl->m_nInPenBoxOfTeam == m_pPl->GetTeamNumber())
 			State_Transition(BALL_PENALTY, sv_ball_statetransition_activationdelay_long.GetFloat());
@@ -1990,36 +1998,20 @@ void CBall::TriggerFoul(foul_type_t type, Vector pos, CSDKPlayer *pFoulingPl, CS
 
 void CBall::HandleFoul()
 {
-	switch (m_eFoulType)
-	{
-	case FOUL_NORMAL_NO_CARD:
-	case FOUL_NORMAL_YELLOW_CARD:
-	case FOUL_NORMAL_RED_CARD:
-		if (CSDKPlayer::IsOnField(m_pFoulingPl))
-			m_pFoulingPl->SetFouls(m_pFoulingPl->GetFouls() + 1);
-		break;
-	}
-
 	if (CSDKPlayer::IsOnField(m_pFoulingPl))
 	{
 		SetMatchSubEventPlayer(m_pFoulingPl, false);
 
 		if (m_eFoulType == FOUL_NORMAL_YELLOW_CARD)
 		{
-			m_pFoulingPl->SetYellowCards(m_pFoulingPl->GetYellowCards() + 1);
-
 			if (m_pFoulingPl->GetYellowCards() % 2 != 0)
 				m_pFoulingPl->GetTeam()->AddMatchEvent(SDKGameRules()->State_Get(), SDKGameRules()->GetMatchDisplayTimeSeconds(), MATCH_EVENT_YELLOWCARD, m_pFoulingPl->GetPlayerName());
 		}
 
 		if (m_eFoulType == FOUL_NORMAL_YELLOW_CARD && m_pFoulingPl->GetYellowCards() % 2 == 0 || m_eFoulType == FOUL_NORMAL_RED_CARD)
 		{
-			m_pFoulingPl->SetRedCards(m_pFoulingPl->GetRedCards() + 1);
 			m_pFoulingPl->GetTeam()->AddMatchEvent(SDKGameRules()->State_Get(), SDKGameRules()->GetMatchDisplayTimeSeconds(), m_eFoulType == FOUL_NORMAL_YELLOW_CARD ? MATCH_EVENT_YELLOWREDCARD : MATCH_EVENT_REDCARD, m_pFoulingPl->GetPlayerName());
 
-			int banDuration = 60 * (m_eFoulType == FOUL_NORMAL_YELLOW_CARD ? sv_ball_player_yellow_red_card_duration.GetFloat() : sv_ball_player_red_card_duration.GetFloat());
-
-			m_pFoulingPl->SetNextCardJoin(SDKGameRules()->GetMatchDisplayTimeSeconds() + banDuration);
 			int team = m_pFoulingPl->GetTeamNumber();
 			int posIndex = m_pFoulingPl->GetTeamPosIndex();
 			int posType = m_pFoulingPl->GetTeamPosType();
@@ -2037,16 +2029,7 @@ void CBall::HandleFoul()
 					break;
 				}
 			}
-			else
-				GetGlobalTeam(team)->SetPosNextJoinSeconds(posIndex, SDKGameRules()->GetMatchDisplayTimeSeconds() + banDuration);
-
-			//m_pFoulingPl->ChangeTeamPos(team, posIndex, false);
 		}
-	}
-
-	if (CSDKPlayer::IsOnField(m_pFouledPl))
-	{
-		m_pFouledPl->SetFoulsSuffered(m_pFouledPl->GetFoulsSuffered() + 1);
 	}
 }
 
@@ -2266,7 +2249,7 @@ bool CBall::CheckKeeperCatch()
 	//SetMatchEvent(MATCH_EVENT_KEEPERSAVE, m_pPl->GetTeamNumber(), false);
 	//SetMatchEventPlayer(m_pPl, false);
 
-	if (gpGlobals->curtime < m_flGlobalNextKeeperCatch || m_bHasQueuedState)
+	if (m_bHasQueuedState || (gpGlobals->curtime < m_flGlobalNextKeeperCatch && LastInfo(true)->m_eBallState != BALL_PENALTY)) // Punch ball away
 	{
 		Vector vel;
 
@@ -2293,7 +2276,7 @@ bool CBall::CheckKeeperCatch()
 		SetVel(vel, -1, BODY_PART_HANDS, false, true, false);
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
 	}
-	else
+	else // Catch ball
 	{
 		SetVel(vec3_origin, -1, BODY_PART_HANDS, true, false, false);
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);		

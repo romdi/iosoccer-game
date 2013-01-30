@@ -890,7 +890,7 @@ void CClientScoreBoardDialog::AddHeader()
 			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "club",						"Club",			defaultFlags, 60);
 			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goals",						"Goals",		defaultFlags, 35);
 			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "assists",					"Assists",		defaultFlags, 35);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "rating",					"Rating",		defaultFlags, 35);
+			//m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "rating",					"Rating",		defaultFlags, 35);
 			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "ping",						"Ping",			defaultFlags, 50);
 			break;
 		case GENERAL:
@@ -1016,7 +1016,7 @@ bool CClientScoreBoardDialog::GetPlayerInfo(int playerIndex, KeyValues *kv)
 	kv->SetString("offsides", GET_STAT_TEXT(gr->GetOffsides(playerIndex)));
 	kv->SetString("keepersaves", GET_STAT_TEXT(gr->GetKeeperSaves(playerIndex)));
 	kv->SetString("possession", GET_STAT_FTEXT(gr->GetPossession(playerIndex), "%d%%"));
-	kv->SetString("distancecovered", GET_STAT_FTEXT(gr->GetDistanceCovered(playerIndex) / 1000.0f, "%.1f km"));
+	kv->SetString("distancecovered", GET_STAT_FTEXT(gr->GetDistanceCovered(playerIndex) / 10.0f, "%.1f km"));
 	kv->SetString("redcards", GET_STAT_TEXT(gr->GetRedCards(playerIndex)));
 	kv->SetString("yellowcards", GET_STAT_TEXT(gr->GetYellowCards(playerIndex)));
 	kv->SetString("fouls", GET_STAT_TEXT(gr->GetFouls(playerIndex)));
@@ -1173,7 +1173,7 @@ bool CClientScoreBoardDialog::GetTeamInfo(int team, KeyValues *kv)
 		if (gr->GetCountryName(i) != teamCountry)
 			isTeamSameCountry = false;
 
-		distSum += gr->GetDistanceCovered(i) / 1000.0f;
+		distSum += gr->GetDistanceCovered(i) / 10.0f;
 
 		if (gr->GetPasses(i) > 0)
 		{

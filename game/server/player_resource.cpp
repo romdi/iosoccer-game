@@ -44,7 +44,7 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CPlayerResource, DT_PlayerResource)
 	SendPropArray3( SENDINFO_ARRAY3(m_OwnGoals), SendPropInt( SENDINFO_ARRAY(m_OwnGoals), 5, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_Assists), SendPropInt( SENDINFO_ARRAY(m_Assists), 5, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_Possession), SendPropInt( SENDINFO_ARRAY(m_Possession), 7, SPROP_UNSIGNED ) ),
-	SendPropArray3( SENDINFO_ARRAY3(m_DistanceCovered), SendPropInt( SENDINFO_ARRAY(m_DistanceCovered), 15, SPROP_UNSIGNED ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_DistanceCovered), SendPropInt( SENDINFO_ARRAY(m_DistanceCovered), 5, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_Passes), SendPropInt( SENDINFO_ARRAY(m_Passes), 8, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_FreeKicks), SendPropInt( SENDINFO_ARRAY(m_FreeKicks), 6, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_Penalties), SendPropInt( SENDINFO_ARRAY(m_Penalties), 6, SPROP_UNSIGNED ) ),
@@ -177,36 +177,13 @@ void CPlayerResource::UpdatePlayerData( void )
 			CSDKPlayer	*SDKPlayer = ToSDKPlayer(pPlayer);
 			if (SDKPlayer)
 			{
-				m_RedCards.Set(i, max( 0, SDKPlayer->GetRedCards() ) );
-				m_YellowCards.Set(i, max( 0, SDKPlayer->GetYellowCards() ) );
-				m_Fouls.Set(i, max( 0, SDKPlayer->GetFouls() ) );
-				m_FoulsSuffered.Set(i, max( 0, SDKPlayer->GetFoulsSuffered() ) );
-				m_SlidingTackles.Set(i, max( 0, SDKPlayer->GetSlidingTackles() ) );
-				m_SlidingTacklesCompleted.Set(i, max( 0, SDKPlayer->GetSlidingTacklesCompleted() ) );
-				m_GoalsConceded.Set(i, max( 0, SDKPlayer->GetGoalsConceded() ) );
-				m_Shots.Set(i, max( 0, SDKPlayer->GetShots() ) );
-				m_ShotsOnGoal.Set(i, max( 0, SDKPlayer->GetShotsOnGoal() ) );
-				m_PassesCompleted.Set(i, max( 0, SDKPlayer->GetPassesCompleted() ) );
-				m_Interceptions.Set(i, max( 0, SDKPlayer->GetInterceptions() ) );
-				m_Offsides.Set(i, max( 0, SDKPlayer->GetOffsides() ) );
-				m_Goals.Set(i, max( 0, SDKPlayer->GetGoals() ) );
-				m_OwnGoals.Set(i, max( 0, SDKPlayer->GetOwnGoals() ) );
-				m_Assists.Set(i, max( 0, SDKPlayer->GetAssists() ) );
-				m_Possession.Set(i, max( 0, SDKPlayer->GetPossession() ) );
-				m_DistanceCovered.Set(i, max( 0, SDKPlayer->GetDistanceCovered() ) );
-				m_Passes.Set(i, max( 0, SDKPlayer->GetPasses() ) );
-				m_FreeKicks.Set(i, max( 0, SDKPlayer->GetFreeKicks() ) );
-				m_Penalties.Set(i, max( 0, SDKPlayer->GetPenalties() ) );
-				m_Corners.Set(i, max( 0, SDKPlayer->GetCorners() ) );
-				m_ThrowIns.Set(i, max( 0, SDKPlayer->GetThrowIns() ) );
-				m_KeeperSaves.Set(i, max( 0, SDKPlayer->GetKeeperSaves() ) );
-				m_GoalKicks.Set(i, max( 0, SDKPlayer->GetGoalKicks() ) );
 				m_TeamPosIndex.Set(i, SDKPlayer->GetTeamPosIndex() );
 				m_TeamPosNum.Set(i, SDKPlayer->GetTeamPosNum() );
 				m_TeamToJoin.Set(i, SDKPlayer->GetTeamToJoin() );
 				m_TeamPosIndexToJoin.Set(i, SDKPlayer->GetTeamPosIndexToJoin() );
 				m_NextCardJoin.Set(i, SDKPlayer->GetNextCardJoin() );
 				m_IsAway.Set(i, SDKPlayer->IsAway() );
+				m_CountryNames.Set(i, SDKPlayer->GetCountryName());
 
 				m_szClubNames.Set(i, MAKE_STRING(SDKPlayer->GetClubName()));
 
@@ -216,8 +193,6 @@ void CPlayerResource::UpdatePlayerData( void )
 					m_szClubNames.GetForModify(i);
 					SDKPlayer->m_bClubNameChanged = false;
 				}
-
-				m_CountryNames.Set(i, SDKPlayer->GetCountryName());
 			}
 
 			// Don't update ping / packetloss everytime
@@ -234,6 +209,35 @@ void CPlayerResource::UpdatePlayerData( void )
 				
 				m_iPing.Set( i, ping );
 				// m_iPacketloss.Set( i, packetloss );
+
+				CSDKPlayer	*SDKPlayer = ToSDKPlayer(pPlayer);
+				if (SDKPlayer)
+				{
+					m_RedCards.Set(i, max( 0, SDKPlayer->GetRedCards() ) );
+					m_YellowCards.Set(i, max( 0, SDKPlayer->GetYellowCards() ) );
+					m_Fouls.Set(i, max( 0, SDKPlayer->GetFouls() ) );
+					m_FoulsSuffered.Set(i, max( 0, SDKPlayer->GetFoulsSuffered() ) );
+					m_SlidingTackles.Set(i, max( 0, SDKPlayer->GetSlidingTackles() ) );
+					m_SlidingTacklesCompleted.Set(i, max( 0, SDKPlayer->GetSlidingTacklesCompleted() ) );
+					m_GoalsConceded.Set(i, max( 0, SDKPlayer->GetGoalsConceded() ) );
+					m_Shots.Set(i, max( 0, SDKPlayer->GetShots() ) );
+					m_ShotsOnGoal.Set(i, max( 0, SDKPlayer->GetShotsOnGoal() ) );
+					m_PassesCompleted.Set(i, max( 0, SDKPlayer->GetPassesCompleted() ) );
+					m_Interceptions.Set(i, max( 0, SDKPlayer->GetInterceptions() ) );
+					m_Offsides.Set(i, max( 0, SDKPlayer->GetOffsides() ) );
+					m_Goals.Set(i, max( 0, SDKPlayer->GetGoals() ) );
+					m_OwnGoals.Set(i, max( 0, SDKPlayer->GetOwnGoals() ) );
+					m_Assists.Set(i, max( 0, SDKPlayer->GetAssists() ) );
+					m_Possession.Set(i, max( 0, SDKPlayer->GetPossession() ) );
+					m_DistanceCovered.Set(i, max( 0, SDKPlayer->GetDistanceCovered() ) );
+					m_Passes.Set(i, max( 0, SDKPlayer->GetPasses() ) );
+					m_FreeKicks.Set(i, max( 0, SDKPlayer->GetFreeKicks() ) );
+					m_Penalties.Set(i, max( 0, SDKPlayer->GetPenalties() ) );
+					m_Corners.Set(i, max( 0, SDKPlayer->GetCorners() ) );
+					m_ThrowIns.Set(i, max( 0, SDKPlayer->GetThrowIns() ) );
+					m_KeeperSaves.Set(i, max( 0, SDKPlayer->GetKeeperSaves() ) );
+					m_GoalKicks.Set(i, max( 0, SDKPlayer->GetGoalKicks() ) );
+				}
 			}
 		}
 		else

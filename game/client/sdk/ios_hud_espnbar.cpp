@@ -34,6 +34,9 @@
 #include "ehandle.h"
 #include "c_sdk_player.h"
 #include <Windows.h>
+#include "iclientmode.h"
+#include "vgui_controls/AnimationController.h"
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -50,9 +53,9 @@ struct Event_t
 //-----------------------------------------------------------------------------
 // Purpose: Displays suit power (armor) on hud
 //-----------------------------------------------------------------------------
-class CHudESPNBar : public CHudElement, public vgui::Panel
+class CHudESPNBar : public CHudElement, public vgui::EditablePanel
 {
-	DECLARE_CLASS_SIMPLE( CHudESPNBar, vgui::Panel );
+	DECLARE_CLASS_SIMPLE( CHudESPNBar, vgui::EditablePanel );
 
 public:
 	CHudESPNBar( const char *pElementName );
@@ -73,6 +76,7 @@ private:
 	Label *m_pTeamNames[2];
 	Label *m_pTeamGoals[2];
 	Panel *m_pTeamColors[2][2];
+	Panel *m_pNotificationPanel;
 	Label *m_pNotification;
 	Label *m_pInjuryTime;
 	match_event_t m_eCurMatchEvent;
@@ -90,6 +94,12 @@ enum { TEAM_GOAL_WIDTH = 30, TEAM_GOAL_HEIGHT= 25 };
 enum { TIME_WIDTH = 70, TIME_HEIGHT= 25 };
 enum { INJURYTIME_WIDTH = 35 };
 
+void CC_ReloadScorebar(const CCommand &args)
+{
+}
+
+static ConCommand reloadscorebar("reloadscorebar", CC_ReloadScorebar);
+
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
@@ -100,23 +110,44 @@ CHudESPNBar::CHudESPNBar( const char *pElementName ) : BaseClass(NULL, "HudScore
 	vgui::Panel *pParent = g_pClientMode->GetViewport();
 	SetParent( pParent );
 
+	SetProportional(false);
+
+	LoadControlSettings("resource/ui/scorebars/default.res");
+
 	m_pOuterPanel = new Panel(this, "");
 	m_pMainPanel = new Panel(m_pOuterPanel, "");
-	m_pLogo = new Label(m_pMainPanel, "", "");
-	m_pTime = new Label(m_pMainPanel, "", "");
+	//m_pLogo = new Label(m_pMainPanel, "", "");
+	m_pLogo = dynamic_cast<Label *>(FindChildByName("Logo", true));
+	//m_pTime = new Label(m_pMainPanel, "Time", "");
+	m_pTime = dynamic_cast<Label *>(FindChildByName("Time", true));
 
-	for (int i = 0; i < 2; i++)
-	{
-		m_pTeamColors[i][0] = new Panel(m_pMainPanel, VarArgs("TeamColor%d", i));
-		m_pTeamColors[i][1] = new Panel(m_pMainPanel, VarArgs("TeamColor%d", i));
+	m_pTeamColors[0][0] = dynamic_cast<Panel *>(FindChildByName("HomeTeamFirstColor", true));
+	m_pTeamColors[0][1] = dynamic_cast<Panel *>(FindChildByName("HomeTeamSecondColor", true));
 
-		m_pTeamNames[i] = new Label(m_pMainPanel, "", "");
+	m_pTeamColors[1][0] = dynamic_cast<Panel *>(FindChildByName("AwayTeamFirstColor", true));
+	m_pTeamColors[1][1] = dynamic_cast<Panel *>(FindChildByName("AwayTeamSecondColor", true));
 
-		m_pTeamGoals[i] = new Label(m_pMainPanel, "", "");
-	}
+	m_pTeamNames[0] = dynamic_cast<Label *>(FindChildByName("HomeTeamName", true));
+	m_pTeamNames[1] = dynamic_cast<Label *>(FindChildByName("AwayTeamName", true));
 
-	m_pNotification = new Label(this, "", "");
-	m_pInjuryTime = new Label(this, "", "");
+	m_pTeamGoals[0] = dynamic_cast<Label *>(FindChildByName("HomeTeamGoals", true));
+	m_pTeamGoals[1] = dynamic_cast<Label *>(FindChildByName("AwayTeamGoals", true));
+
+	m_pNotificationPanel = dynamic_cast<Panel *>(FindChildByName("NotificationPanel", true));
+
+	m_pInjuryTime = dynamic_cast<Label *>(FindChildByName("InjuryTime", true));
+
+	//for (int i = 0; i < 2; i++)
+	//{
+	//	m_pTeamColors[i][0] = new Panel(m_pMainPanel, VarArgs("TeamColor%d", i));
+	//	m_pTeamColors[i][1] = new Panel(m_pMainPanel, VarArgs("TeamColor%d", i));
+
+	//	m_pTeamNames[i] = new Label(m_pMainPanel, "", "");
+
+	//	m_pTeamGoals[i] = new Label(m_pMainPanel, "", "");
+	//}
+
+	m_pNotification = new Label(m_pNotificationPanel, "", "");
 	m_eCurMatchEvent = MATCH_EVENT_NONE;
 	m_flNotificationStart = -1;
 	m_flInjuryTimeStart = -1;
@@ -125,11 +156,17 @@ CHudESPNBar::CHudESPNBar( const char *pElementName ) : BaseClass(NULL, "HudScore
 void CHudESPNBar::ApplySchemeSettings( IScheme *pScheme )
 {
 	BaseClass::ApplySchemeSettings( pScheme );
+
+	return;
 	
 	Color white(255, 255, 255, 255);
 	Color black(0, 0, 0, 255);
 
-	SetBounds(PANEL_MARGIN, PANEL_MARGIN, PANEL_WIDTH + 100, PANEL_HEIGHT + 200);
+	//SetBounds(PANEL_MARGIN, PANEL_MARGIN, PANEL_WIDTH + 100, PANEL_HEIGHT + 200);
+	//SetPaintBackgroundEnabled(false);
+	//SetCloseButtonVisible(false);
+	//SetKeyBoardInputEnabled(false);
+	//SetMouseInputEnabled(false);
 
 	m_pOuterPanel->SetBounds(0, 0, PANEL_WIDTH, PANEL_HEIGHT);
 	m_pOuterPanel->SetBgColor(Color(0, 0, 0, 100));
@@ -137,12 +174,12 @@ void CHudESPNBar::ApplySchemeSettings( IScheme *pScheme )
 
 	m_pMainPanel->SetBounds(PANEL_PADDING, PANEL_PADDING, PANEL_WIDTH - 2 * PANEL_PADDING, PANEL_HEIGHT - 2 * PANEL_PADDING);
 
-	m_pLogo->SetBounds(0, 0, LOGO_WIDTH, LOGO_HEIGHT);
-	m_pLogo->SetFgColor(Color(0, 0, 0, 255));
-	m_pLogo->SetBgColor(Color(255, 255, 255, 255));
-	m_pLogo->SetContentAlignment(Label::a_center);
-	m_pLogo->SetFont(pScheme->GetFont("IOSScorebarMedium"));
-	m_pLogo->SetText("IOS");
+	//m_pLogo->SetBounds(0, 0, LOGO_WIDTH, LOGO_HEIGHT);
+	//m_pLogo->SetFgColor(Color(0, 0, 0, 255));
+	//m_pLogo->SetBgColor(Color(255, 255, 255, 255));
+	//m_pLogo->SetContentAlignment(Label::a_center);
+	//m_pLogo->SetFont(pScheme->GetFont("IOSScorebarMedium"));
+	//m_pLogo->SetText("IOS");
 
 	for (int i = 0; i < 2; i++)
 	{
@@ -165,11 +202,11 @@ void CHudESPNBar::ApplySchemeSettings( IScheme *pScheme )
 		m_pTeamGoals[i]->SetContentAlignment(Label::a_center);
 	}
 	
-	m_pTime->SetBounds(LOGO_WIDTH + 2 * TEAM_NAME_WIDTH + 2 * TEAM_GOAL_WIDTH, 0, TIME_WIDTH, TIME_HEIGHT);
-	m_pTime->SetFont(pScheme->GetFont("IOSScorebarMedium"));
-	m_pTime->SetFgColor(black);
-	m_pTime->SetBgColor(white);
-	m_pTime->SetContentAlignment(Label::a_center);
+	//m_pTime->SetBounds(LOGO_WIDTH + 2 * TEAM_NAME_WIDTH + 2 * TEAM_GOAL_WIDTH, 0, TIME_WIDTH, TIME_HEIGHT);
+	//m_pTime->SetFont(pScheme->GetFont("IOSScorebarMedium"));
+	//m_pTime->SetFgColor(black);
+	//m_pTime->SetBgColor(white);
+	//m_pTime->SetContentAlignment(Label::a_center);
 
 	m_pNotification->SetBounds(0, 0, PANEL_WIDTH, PANEL_HEIGHT);
 	m_pNotification->SetFgColor(Color(255, 255, 255, 255));
@@ -236,7 +273,10 @@ void CHudESPNBar::OnThink( void )
 		m_pInjuryTime->SetText(VarArgs("+%d", SDKGameRules()->m_nAnnouncedInjuryTime));
 	}
 	else if (SDKGameRules()->m_nAnnouncedInjuryTime == 0 && m_flInjuryTimeStart != -1)
+	{
 		m_flInjuryTimeStart = -1;
+		m_pInjuryTime->SetText("");
+	}
 
 	for (int team = TEAM_A; team <= TEAM_B; team++)
 	{
@@ -261,6 +301,7 @@ void CHudESPNBar::OnThink( void )
 			{
 				m_flNotificationStart = gpGlobals->curtime;
 				m_pNotification->SetText(g_szMatchEventNames[GetBall()->m_eMatchEvent]);
+				g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("sfs");
 			}
 			break;
 		}

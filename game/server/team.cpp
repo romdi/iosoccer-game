@@ -188,6 +188,16 @@ CTeam *CTeam::GetOppTeam( void ) const
 	return m_iTeamNum == TEAM_A ? GetGlobalTeam(TEAM_B) : GetGlobalTeam(TEAM_A);
 }
 
+const char *CTeam::GetTeamCode( void )
+{
+	return m_szTeamCode;
+}
+
+const char *CTeam::GetShortTeamName( void )
+{
+	return m_szShortTeamName;
+}
+
 void CTeam::SetTeamNumber(int teamNum)
 {
 	m_iTeamNum = teamNum;
@@ -348,6 +358,16 @@ void CTeam::SetGoals( int goals )
 int CTeam::GetGoals( void )
 {
 	return m_nGoals;
+}
+
+void CTeam::SetPossession( int possession )
+{
+	m_nPossession = possession;
+}
+
+int CTeam::GetPossession( void )
+{
+	return m_nPossession;
 }
 
 //-----------------------------------------------------------------------------

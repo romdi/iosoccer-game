@@ -390,6 +390,7 @@ private:
 public:
 
 	bool IsIntermissionState();
+	bool IsInjuryTime();
 	int GetShieldRadius();
 	void SetMatchDisplayTimeSeconds(int seconds);
 	int GetMatchDisplayTimeSeconds(bool clamped = false, bool ignoreIntermissions = false);

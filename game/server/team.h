@@ -44,6 +44,8 @@ public:
 	virtual int		GetTeamNumber( void ) const;
 	virtual int		GetOppTeamNumber( void ) const;
 	CTeam			*GetOppTeam( void ) const;
+	virtual const char *GetTeamCode( void );
+	virtual const char *GetShortTeamName( void );
 	virtual void	SetTeamNumber(int teamNum);
 	void			SetKitName(const char *pName);
 	void			SetTeamCode(const char *pCode);
@@ -89,6 +91,8 @@ public:
 	virtual void AddGoal();
 	virtual void SetGoals( int goals );
 	virtual int  GetGoals( void );
+	virtual void SetPossession( int possession );
+	virtual int  GetPossession( void );
 
 	void AwardAchievement( int iAchievement );
 

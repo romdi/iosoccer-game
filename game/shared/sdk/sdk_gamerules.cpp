@@ -2219,6 +2219,11 @@ bool CSDKGameRules::IsIntermissionState()
 	}
 }
 
+bool CSDKGameRules::IsInjuryTime()
+{
+	return (m_nAnnouncedInjuryTime > 0);
+}
+
 int CSDKGameRules::GetShieldRadius()
 {
 	switch (m_nShieldType)
@@ -2307,6 +2312,8 @@ int CSDKGameRules::GetMatchDisplayTimeSeconds(bool clamped /*= false*/, bool ign
 				minute = 120;
 			else if (mp_penalties.GetBool())
 				minute = 120;
+			else
+				minute = 90;
 
 			nTime = minute * 60;
 		}

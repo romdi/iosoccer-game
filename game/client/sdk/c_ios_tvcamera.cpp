@@ -57,21 +57,33 @@ void C_TVCamera::GetPositionAndAngle(Vector &pos, QAngle &ang)
 		atMinGoalPos = true;
 	}
 
-	if (!pTarget)
-		return;
+	Vector realTargetPos;
 
-	Vector targetPos = pTarget->GetLocalOrigin();
-	targetPos.x = clamp(targetPos.x, SDKGameRules()->m_vFieldMin.GetX() + 400, SDKGameRules()->m_vFieldMax.GetX() - 700);
-	targetPos.z = SDKGameRules()->m_vKickOff.GetZ();
-	Vector targetDir = pTarget->GetLocalVelocity();
+	if (pTarget)
+		realTargetPos = pTarget->GetLocalOrigin();
+	else
+		realTargetPos = SDKGameRules()->m_vKickOff;
 
 	if (m_vOldTargetPos == vec3_invalid)
-		m_vOldTargetPos = targetPos;
+		m_vOldTargetPos = realTargetPos;
+
+	Vector targetPos = realTargetPos;
+
+	targetPos.x = clamp(targetPos.x, SDKGameRules()->m_vFieldMin.GetX() + 400, SDKGameRules()->m_vFieldMax.GetX() - 700);
+	targetPos.z = SDKGameRules()->m_vKickOff.GetZ();
+
+	realTargetPos = targetPos;
 
 	Vector changeDir = targetPos - m_vOldTargetPos;
-	float length = changeDir.Length();
+
+	//targetVel *= gpGlobals->frametime;
+	//DevMsg("pos: %.2f, vel: %.2f\n", targetPos.y, targetVel.y);
+	targetPos += changeDir * 2;
+
+	float maxLength = changeDir.Length();
 	changeDir.NormalizeInPlace();
-	targetPos = m_vOldTargetPos + changeDir * pow(length / mp_tvcam_speedcoeff.GetFloat(), mp_tvcam_speedexponent.GetFloat());
+	float length = pow(maxLength / mp_tvcam_speedcoeff.GetFloat(), mp_tvcam_speedexponent.GetFloat());
+	targetPos = m_vOldTargetPos + changeDir * min(length, maxLength);
 
 	switch (camType)
 	{
@@ -145,5 +157,5 @@ void C_TVCamera::GetPositionAndAngle(Vector &pos, QAngle &ang)
 		break;
 	}
 
-	m_vOldTargetPos = targetPos;
+	m_vOldTargetPos = realTargetPos;
 }

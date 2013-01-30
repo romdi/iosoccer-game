@@ -123,7 +123,7 @@ ConVar hud_minor_eventplayernames_visible("hud_minor_eventplayernames_visible", 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
-CHudScorebar::CHudScorebar( const char *pElementName ) : BaseClass(NULL, "HudScorebar"), CHudElement( pElementName )
+CHudScorebar::CHudScorebar( const char *pElementName ) : BaseClass(NULL, "HudScorebar2"), CHudElement( pElementName )
 {
 	SetHiddenBits(HIDEHUD_SCOREBAR);
 

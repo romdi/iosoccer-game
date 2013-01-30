@@ -293,9 +293,7 @@ CSDKPlayer *CSDKPlayer::CreatePlayer( const char *className, edict_t *ed )
 void CSDKPlayer::PreThink(void)
 {	
 	// Check if player is away
-	if (SDKGameRules()->State_Get() == MATCH_WARMUP
-		&& GetGlobalTeam(TEAM_A)->GetNumPlayers() == mp_maxplayers.GetInt()
-		&& GetGlobalTeam(TEAM_B)->GetNumPlayers() == mp_maxplayers.GetInt())
+	if (SDKGameRules()->State_Get() == MATCH_WARMUP && (GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B))
 	{
 		bool isActive = (m_nButtons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT | IN_JUMP | IN_DUCK));
 
@@ -314,6 +312,11 @@ void CSDKPlayer::PreThink(void)
 				UTIL_ClientPrintAll(HUD_PRINTTALK, "#game_player_benched_away", GetPlayerName());
 			}
 		}
+	}
+
+	if (GetNextCardJoin() != 0 && !SDKGameRules()->IsIntermissionState() && SDKGameRules()->GetMatchDisplayTimeSeconds() >= GetNextCardJoin())
+	{
+		SetNextCardJoin(0);
 	}
 
 	// Remove the player if he's in a team but card banned or in a blocked position
@@ -1237,13 +1240,11 @@ void CSDKPlayer::SetPreferredSkin(int num)
 	{
 		if (GetTeamPosType() == GK)
 		{
-			if (m_nBody == MODEL_KEEPER_AND_BALL)
-			{
-				int ballSkin = m_nSkin - m_nBaseSkin;
-				ChooseKeeperSkin();
-				m_nBody = MODEL_KEEPER_AND_BALL;
-				m_nSkin = m_nBaseSkin + ballSkin;
-			}
+			int body = m_nBody;
+			int ballSkin = m_nSkin - m_nBaseSkin;
+			ChooseKeeperSkin();
+			m_nBody = body;
+			m_nSkin = m_nBaseSkin + ballSkin;
 		}
 		else
 			ChoosePlayerSkin();
@@ -1805,7 +1806,7 @@ void CPlayerPersistentData::ConvertAllPlayerDataToJson()
 		if (team == TEAM_B)
 			Q_strcat(json, ",", jsonSize);
 
-		Q_strcat(json, UTIL_VarArgs("\"%s\":{\"goals\":%d,\"possession\":%d,\"matchEvents\":[", (team == TEAM_A ? "homeTeam" : "awayTeam"), GetGlobalTeam(team)->GetGoals(), GetGlobalTeam(team)->m_nPossession), jsonSize);
+		Q_strcat(json, UTIL_VarArgs("\"%s\":{\"name\":\"%s\",\"goals\":%d,\"possession\":%d,\"matchEvents\":[", (team == TEAM_A ? "homeTeam" : "awayTeam"), GetGlobalTeam(team)->GetShortTeamName(), GetGlobalTeam(team)->GetGoals(), GetGlobalTeam(team)->m_nPossession), jsonSize);
 		
 		for (int i = 0; i < GetGlobalTeam(team)->m_nMatchEventIndex; i++)
 		{
