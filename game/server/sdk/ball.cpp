@@ -854,21 +854,25 @@ void CBall::State_Think()
 				switch (m_eNextState)
 				{
 				case BALL_THROWIN:
-					{
-						SetMatchEvent(MATCH_EVENT_THROWIN, LastOppTeam(false), true);
-						//IGameEvent* pEvent = gameeventmanager->CreateEvent("throw_in");
-						//pEvent->SetInt("team", LastOppTeam(false));
-						//gameeventmanager->FireEvent(pEvent);
-					}
+					SetMatchEvent(MATCH_EVENT_THROWIN, LastOppTeam(false), true);
+					EmitSound("Ball.whistle");
 					break;
-				case BALL_GOALKICK: SetMatchEvent(MATCH_EVENT_GOALKICK, LastOppTeam(false), true); break;
-				case BALL_CORNER: SetMatchEvent(MATCH_EVENT_CORNER, LastOppTeam(false), true); break;
-				//case BALL_KICKOFF: SetMatchEvent(MATCH_EVENT_KICKOFF, SDKGameRules()->GetKickOffTeam(), true); break;
+				case BALL_GOALKICK:
+					SetMatchEvent(MATCH_EVENT_GOALKICK, LastOppTeam(false), true);
+					EmitSound("Ball.whistle");
+					break;
+				case BALL_CORNER:
+					SetMatchEvent(MATCH_EVENT_CORNER, LastOppTeam(false), true);
+					EmitSound("Ball.whistle");
+					break;
 				case BALL_GOAL:
 					if (m_nTeam == LastTeam(true))
 						SetMatchEvent(MATCH_EVENT_OWNGOAL, LastTeam(true), true);
 					else
 						SetMatchEvent(MATCH_EVENT_GOAL, LastTeam(true), true);
+
+					EmitSound("Ball.whistle");
+					EmitSound("Ball.cheer");
 					break;
 				case BALL_FREEKICK:
 				case BALL_PENALTY:
@@ -907,6 +911,7 @@ void CBall::State_Think()
 						}
 
 						SetMatchSubEvent(matchSubEvent, m_nFoulingTeam, true);
+						EmitSound("Ball.whistle");
 					}
 					break;
 				}
@@ -918,7 +923,7 @@ void CBall::State_Think()
 			}
 		}
 
-		if (State_Get() != BALL_NORMAL && State_Get() != BALL_KEEPERHANDS)
+		if (State_Get() == BALL_THROWIN || State_Get() == BALL_FREEKICK || State_Get() == BALL_CORNER || State_Get() == BALL_GOALKICK)
 		{
 			if (GetGlobalTeam(TEAM_A)->WantsTimeout() || GetGlobalTeam(TEAM_B)->WantsTimeout())
 			{
@@ -939,10 +944,22 @@ void CBall::State_Think()
 				SetMatchEvent(MATCH_EVENT_TIMEOUT, timeoutTeam, true);
 				SDKGameRules()->SetTimeoutEnd(gpGlobals->curtime + mp_timeout_duration.GetFloat());
 			}
-		}
 
-		if (gpGlobals->curtime < SDKGameRules()->GetTimeoutEnd())
-			return;
+			if (SDKGameRules()->GetTimeoutEnd() == -1 || gpGlobals->curtime < SDKGameRules()->GetTimeoutEnd())
+			{
+				if (m_eMatchEvent != MATCH_EVENT_TIMEOUT)
+					SetMatchEvent(MATCH_EVENT_TIMEOUT, TEAM_INVALID, true);
+
+				m_flStateTimelimit = -1;
+
+				return;
+			}
+			else if (SDKGameRules()->GetTimeoutEnd() > 0)
+			{
+				SDKGameRules()->SetTimeoutEnd(0);
+				SetMatchEvent(MATCH_EVENT_NONE, TEAM_INVALID, false);
+			}
+		}
 
 		if (m_pCurStateInfo
 			&& State_Get() != BALL_NORMAL
@@ -1171,7 +1188,7 @@ void CBall::State_KICKOFF_Think()
 	if (m_pPl->ShotButtonsReleased() && m_pPl->IsShooting())
 	{
 		RemoveAllTouches();
-		SetVel(m_vPlForward2D * 250, 0, BODY_PART_FEET, false, false, false);
+		SetVel(m_vPlForward2D * 350, 0, BODY_PART_FEET, false, false, false);
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
 		m_pPl->RemoveFlag(FL_ATCONTROLS);
 		if (m_pOtherPl)
@@ -1202,7 +1219,6 @@ void CBall::State_THROWIN_Think()
 		m_pPl->SetPosInsideShield(Vector(m_vTriggerTouchPos.x, m_vTriggerTouchPos.y, SDKGameRules()->m_vKickOff.GetZ()), true);
 		m_flStateTimelimit = -1;
 		SetMatchEventPlayer(m_pPl, false);
-		EmitSound("Ball.whistle");
 	}
 
 	if (!PlayersAtTargetPos())
@@ -1280,7 +1296,6 @@ void CBall::State_GOALKICK_Think()
 		m_pPl->SetPosInsideShield(Vector(m_vPos.x, m_vPos.y - 100 * m_pPl->GetTeam()->m_nForward, SDKGameRules()->m_vKickOff.GetZ()), true);
 		m_flStateTimelimit = -1;
 		SetMatchEventPlayer(m_pPl, false);
-		EmitSound("Ball.whistle");
 	}
 
 	if (!PlayersAtTargetPos())
@@ -1333,7 +1348,6 @@ void CBall::State_CORNER_Think()
 		m_pPl->SetPosInsideShield(Vector(m_vPos.x - 50 * Sign((SDKGameRules()->m_vKickOff - m_vPos).x), m_vPos.y - 50 * Sign((SDKGameRules()->m_vKickOff - m_vPos).y), SDKGameRules()->m_vKickOff[2]), true);
 		m_flStateTimelimit = -1;
 		SetMatchEventPlayer(m_pPl, false);
-		EmitSound("Ball.whistle");
 	}
 
 	if (!PlayersAtTargetPos())
@@ -1449,8 +1463,6 @@ void CBall::State_GOAL_Enter()
 			pPl->AddFlag(FL_CELEB);
 	}
 
-	EmitSound("Ball.whistle");
-	
 	float delay = sv_ball_goalcelebduration.GetFloat();
 
 	if (sv_replays.GetBool())
@@ -1517,7 +1529,6 @@ void CBall::State_FREEKICK_Think()
 		m_pPl->SetPosInsideShield(Vector(m_vPos.x, m_vPos.y - 100 * m_pPl->GetTeam()->m_nForward, SDKGameRules()->m_vKickOff.GetZ()), true);
 		m_flStateTimelimit = -1;
 		SetMatchEventPlayer(m_pPl, false);
-		EmitSound("Ball.whistle");
 	}
 
 	if (!PlayersAtTargetPos())
@@ -1600,7 +1611,6 @@ void CBall::State_PENALTY_Think()
 		m_pPl->SetPosInsideShield(Vector(m_vPos.x, m_vPos.y - 150 * m_pPl->GetTeam()->m_nForward, SDKGameRules()->m_vKickOff.GetZ()), true);
 		m_flStateTimelimit = -1;
 		SetMatchEventPlayer(m_pPl, false);
-		EmitSound("Ball.whistle");
 	}
 
 	if (!CSDKPlayer::IsOnField(m_pOtherPl))
@@ -3067,7 +3077,7 @@ void CBall::ResetMatch()
 	m_flPossessionStart = -1;
 	m_flLastMatchEventSetTime = -1;
 	m_nDoubleTouchFoulCount = 0;
-	SDKGameRules()->SetTimeoutEnd(-1);
+	SDKGameRules()->SetTimeoutEnd(0);
 
 	GetGlobalTeam(TEAM_A)->ResetStats();
 	GetGlobalTeam(TEAM_B)->ResetStats();

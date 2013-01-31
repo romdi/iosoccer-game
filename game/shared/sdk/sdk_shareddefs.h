@@ -258,6 +258,7 @@ enum match_event_t
 	MATCH_EVENT_PASS,
 	MATCH_EVENT_INTERCEPTION,
 	MATCH_EVENT_TIMEOUT,
+	MATCH_EVENT_TIMEOUT_PENDING,
 	NUM_MATCH_EVENTS
 };
 
@@ -289,7 +290,8 @@ static const char g_szMatchEventNames[NUM_MATCH_EVENTS][32] =
 	"DRIBBLE",
 	"PASS",
 	"INTERCEPTION",
-	"TIMEOUT"
+	"TIMEOUT",
+	"TIMEOUT PENDING"
 };
 
 enum ball_state_t

@@ -220,6 +220,7 @@ void CHudESPNBar::OnThink( void )
 	{
 		switch (GetBall()->m_eMatchEvent)
 		{
+		case MATCH_EVENT_NONE:
 		case MATCH_EVENT_DRIBBLE:
 		case MATCH_EVENT_PASS:
 		case MATCH_EVENT_INTERCEPTION:
@@ -230,21 +231,21 @@ void CHudESPNBar::OnThink( void )
 			{
 				m_flNotificationStart = gpGlobals->curtime;
 				m_pNotification->SetText(g_szMatchEventNames[GetBall()->m_eMatchEvent]);
-				//g_pClientMode->GetViewportAnimationController()->StartAnimationSequence("sfs");
 			}
 			break;
 		}
 
 		m_eCurMatchEvent = GetBall()->m_eMatchEvent;
 
-		if (GetBall()->m_eMatchEvent == MATCH_EVENT_TIMEOUT && m_flNotificationStart != -1)
+		if (m_eCurMatchEvent == MATCH_EVENT_TIMEOUT)
 		{
-			int time = m_flNotificationStart + mp_timeout_duration.GetFloat() - gpGlobals->curtime;
-
-			if (time < 0)
-				m_flNotificationStart = -1;
+			if (SDKGameRules()->GetTimeoutEnd() == -1)
+				m_pNotification->SetText(L"TIMEOUT   ∞");
 			else
+			{
+				int time = SDKGameRules()->GetTimeoutEnd() - gpGlobals->curtime;
 				m_pNotification->SetText(VarArgs("TIMEOUT   %d:%02d", time / 60, time % 60));
+			}
 		}
 	}
 }
@@ -271,7 +272,7 @@ void CHudESPNBar::Paint( void )
 		}
 		else
 		{
-			if (GetBall()->m_eMatchEvent != MATCH_EVENT_TIMEOUT)
+			if (m_eCurMatchEvent != MATCH_EVENT_TIMEOUT_PENDING && m_eCurMatchEvent != MATCH_EVENT_TIMEOUT)
 			{
 				float fraction = (gpGlobals->curtime - (m_flNotificationStart + slideDownDuration + stayDuration)) / slideUpDuration;
 

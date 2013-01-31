@@ -372,7 +372,6 @@ public:
 	void SetOffsideLinePositions(float ballPosY, float offsidePlayerPosY, float lastOppPlayerPosY);
 	void SetOffsideLinesEnabled(bool enable);
 
-	float GetTimeoutEnd() { return m_flTimeoutEnd; }
 	void SetTimeoutEnd(float time) { m_flTimeoutEnd = time; }
 
 #else
@@ -388,6 +387,8 @@ private:
 #endif
 
 public:
+
+	float GetTimeoutEnd() { return m_flTimeoutEnd; }
 
 	bool IsIntermissionState();
 	bool IsInjuryTime();

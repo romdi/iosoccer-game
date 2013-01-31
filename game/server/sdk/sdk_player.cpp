@@ -507,7 +507,7 @@ bool CSDKPlayer::ChangeTeamPos(int wishTeam, int wishPosIndex, bool setJoinDelay
 
 	CSDKPlayer *pPl = NULL;
 
-	if (wishTeam == TEAM_SPECTATOR || IsTeamPosFree(wishTeam, wishPosIndex, false, &pPl))
+	if (wishTeam == TEAM_SPECTATOR)
 		ChangeTeam(TEAM_SPECTATOR);
 
 	if (oldTeam == TEAM_A || oldTeam == TEAM_B)
@@ -1151,12 +1151,16 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 		if (this != GetTeam()->GetCaptain())
 			return false;
 
+		if (GetTeam()->WantsTimeout() || GetOppTeam()->WantsTimeout() || SDKGameRules()->GetTimeoutEnd() != 0)
+			return false;
+
 		if (GetTeam()->GetTimeoutsLeft() > 0)
 			GetTeam()->SetTimeoutsLeft(GetTeam()->GetTimeoutsLeft() - 1);
 		else
 			return false;
 
 		GetTeam()->SetWantsTimeout(true);
+		GetBall()->SetMatchEvent(MATCH_EVENT_TIMEOUT_PENDING, GetTeamNumber(), false);
 
 		return true;
 	}

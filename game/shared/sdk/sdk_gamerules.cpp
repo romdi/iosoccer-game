@@ -400,7 +400,7 @@ CSDKGameRules::CSDKGameRules()
 	m_flLastMasterServerPingTime = -FLT_MAX;
 	m_bUseAdjustedStateEnterTime = false;
 	m_flAdjustedStateEnterTime = -FLT_MAX;
-	m_flTimeoutEnd = -1;
+	m_flTimeoutEnd = 0;
 #else
 	PrecacheMaterial("pitch/offside_line");
 	m_pOffsideLineMaterial = materials->FindMaterial( "pitch/offside_line", TEXTURE_GROUP_CLIENT_EFFECTS );
@@ -1090,6 +1090,34 @@ void CC_SV_MatchGoalsAway(const CCommand &args)
 }
 
 ConCommand sv_matchgoalsaway( "sv_matchgoalsaway", CC_SV_MatchGoalsAway, "", 0 );
+
+void CC_SV_StartTimeout(const CCommand &args)
+{
+	if (!UTIL_IsCommandIssuedByServerAdmin())
+        return;
+
+	if (SDKGameRules()->IsIntermissionState() || SDKGameRules()->GetTimeoutEnd() != 0)
+		return;
+
+	SDKGameRules()->SetTimeoutEnd(-1);
+	GetBall()->SetMatchEvent(MATCH_EVENT_TIMEOUT_PENDING, TEAM_INVALID, true);
+}
+
+ConCommand sv_starttimeout( "sv_starttimeout", CC_SV_StartTimeout, "", 0 );
+
+void CC_SV_EndTimeout(const CCommand &args)
+{
+	if (!UTIL_IsCommandIssuedByServerAdmin())
+        return;
+
+	if (SDKGameRules()->IsIntermissionState() || SDKGameRules()->GetTimeoutEnd() != -1)
+		return;
+
+	SDKGameRules()->SetTimeoutEnd(0);
+	GetBall()->SetMatchEvent(MATCH_EVENT_NONE, TEAM_INVALID, false);
+}
+
+ConCommand sv_endtimeout( "sv_endtimeout", CC_SV_EndTimeout, "", 0 );
 
 void CC_SV_ResumeMatch(const CCommand &args)
 {
