@@ -923,7 +923,7 @@ void CBall::State_Think()
 			}
 		}
 
-		if (State_Get() == BALL_THROWIN || State_Get() == BALL_FREEKICK || State_Get() == BALL_CORNER || State_Get() == BALL_GOALKICK)
+		if (State_Get() == BALL_THROWIN || State_Get() == BALL_CORNER || State_Get() == BALL_GOALKICK)
 		{
 			if (GetGlobalTeam(TEAM_A)->WantsTimeout() || GetGlobalTeam(TEAM_B)->WantsTimeout())
 			{
