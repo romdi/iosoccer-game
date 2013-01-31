@@ -55,6 +55,52 @@ bool CountryFlagIndexLessFunc( const int &lhs, const int &rhs )
 	return lhs < rhs; 
 }
 
+
+void CC_Gag(const CCommand &args)
+{
+	if (args.ArgC() < 2)
+	{
+		const int listSize = 2048;
+		char list[listSize] = "\nindex: name\n";
+
+		for (int i = 1; i <= gpGlobals->maxClients; i++)
+		{
+			if (!GameResources()->IsConnected(i) || i == GetLocalPlayerIndex())
+				continue;
+
+			Q_strcat(list, VarArgs("%d: %s\n", i, GameResources()->GetPlayerName(i)), listSize);
+		}
+
+		Q_strcat(list, "Use 'gag <player index>' to gag or ungag\n\n", listSize);
+
+		Msg(list);
+
+		return;
+	}
+
+	int playerIndex = atoi(args[1]);
+
+	if (!GameResources()->IsConnected(playerIndex))
+	{
+		Msg("No player with index %d found\n", playerIndex);
+		return;
+	}
+
+	if (GetClientVoiceMgr()->IsPlayerBlocked(playerIndex))
+	{
+		GetClientVoiceMgr()->SetPlayerBlockedState(playerIndex, false);
+		Msg("Ungagged player %s\n", GameResources()->GetPlayerName(playerIndex));
+	}
+	else
+	{
+		GetClientVoiceMgr()->SetPlayerBlockedState(playerIndex, true);
+		Msg("Gagged player %s\n", GameResources()->GetPlayerName(playerIndex));
+	}
+}
+
+static ConCommand gag("gag", CC_Gag);
+
+
 enum { PANEL_TOPMARGIN = 70, PANEL_MARGIN = 5, PANEL_WIDTH = (1024 - 2 * PANEL_MARGIN), PANEL_HEIGHT = (720 - 2 * PANEL_MARGIN) };
 enum { TEAMCREST_SIZE = 48, TEAMCREST_VMARGIN = 7, TEAMCREST_HOFFSET = 240, TEAMCREST_VOFFSET = 10 };
 enum { PLAYERLIST_HEIGHT = 360, PLAYERLIST_BOTTOMMARGIN = 10, PLAYERLISTDIVIDER_WIDTH = 8 };

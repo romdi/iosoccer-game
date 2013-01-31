@@ -334,7 +334,7 @@ void CHudVoiceStatus::Paint()
 		surface()->DrawSetTextFont(m_hFont);
 		surface()->DrawSetTextColor(c);
 
-		surface()->DrawSetTextPos(20, 20 + i * tall);
+		surface()->DrawSetTextPos(20, 300 + i * tall);
 		surface()->DrawPrintText(wszPlayerText, wcslen(wszPlayerText));
 	}
 }

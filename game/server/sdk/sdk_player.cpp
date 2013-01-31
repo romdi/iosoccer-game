@@ -319,15 +319,6 @@ void CSDKPlayer::PreThink(void)
 		SetNextCardJoin(0);
 	}
 
-	// Remove the player if he's in a team but card banned or in a blocked position
-	if (!SDKGameRules()->IsIntermissionState()
-		&& (GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B)
-		&& (SDKGameRules()->GetMatchDisplayTimeSeconds() < GetNextCardJoin()
-		|| SDKGameRules()->GetMatchDisplayTimeSeconds() < GetTeam()->GetPosNextJoinSeconds(GetTeamPosIndex())))
-	{
-		ChangeTeam(TEAM_SPECTATOR);
-	}
-
 	// Prevent the player from reserving a position if he's card banned or if the position is blocked
 	if (!SDKGameRules()->IsIntermissionState()
 		&& (GetTeamToJoin() == TEAM_A || GetTeamToJoin() == TEAM_B)
@@ -1735,14 +1726,35 @@ CSDKPlayer *CSDKPlayer::FindClosestPlayerToSelf(bool teammatesOnly, bool forward
 	return pClosest;
 }
 
-ConVar mp_chat_captain_only("mp_chat_captain_only", "0", FCVAR_NOTIFY);
+ConVar mp_chat_match_captain_only("mp_chat_match_captain_only", "0", FCVAR_NOTIFY);
+ConVar mp_chat_intermissions_captain_only("mp_chat_intermissions_captain_only", "0", FCVAR_NOTIFY);
 
 bool CSDKPlayer::CanSpeak(bool isTeamOnly)
 {
-	if (!SDKGameRules()->IsIntermissionState() && !isTeamOnly && mp_chat_captain_only.GetBool() && GetTeam()->GetCaptain() != this)
+	if (isTeamOnly || GetTeam()->GetCaptain() == this)
+		return true;
+
+	if (SDKGameRules()->IsIntermissionState() && mp_chat_intermissions_captain_only.GetBool() || !SDKGameRules()->IsIntermissionState() && mp_chat_match_captain_only.GetBool())
 		return false;
 
 	return true;
+}
+
+void CSDKPlayer::SetPlayerName(const char *name)
+{
+	Assert(name);
+
+	if (name)
+	{
+		Assert(strlen(name) > 0);
+
+		Q_strncpy(m_szNetname, name, sizeof(m_szNetname));
+
+		if (GetData())
+			SetLastKnownName(m_szNetname);
+
+		engine->ClientCommand(edict(), UTIL_VarArgs("setinfo name \"%s\"", m_szNetname));
+	}
 }
 
 CUtlVector<CPlayerPersistentData *> CPlayerPersistentData::m_PlayerPersistentData;
@@ -1767,6 +1779,7 @@ void CPlayerPersistentData::AllocateData(CSDKPlayer *pPl)
 		data = new CPlayerPersistentData;
 		data->m_SteamID = engine->GetClientSteamID(pPl->edict());
 		Q_strncpy(data->m_szSteamID, engine->GetPlayerNetworkIDString(pPl->edict()), 32);
+		Q_strncpy(data->m_szName, pPl->GetPlayerName(), MAX_PLAYER_NAME_LENGTH);
 		data->ResetData();
 		m_PlayerPersistentData.AddToTail(data);
 	}
@@ -1842,8 +1855,8 @@ void CPlayerPersistentData::ConvertAllPlayerDataToJson()
 			Q_strcat(json, ",", jsonSize);
 
 		Q_strcat(json, UTIL_VarArgs(
-			"{\"steamId\":\"%s\",\"redCards\":%d,\"yellowCards\":%d,\"fouls\":%d,\"foulsSuffered\":%d,\"slidingTackles\":%d,\"slidingTacklesCompleted\":%d,\"goalsConceded\":%d,\"shots\":%d,\"shotsOnGoal\":%d,\"passesCompleted\":%d,\"interceptions\":%d,\"offsides\":%d,\"goals\":%d,\"ownGoals\":%d,\"assists\":%d,\"passes\":%d,\"freeKicks\":%d,\"penalties\":%d,\"corners\":%d,\"throwIns\":%d,\"keeperSaves\":%d,\"goalKicks\":%d,\"possession\":%d,\"distanceCovered\":\"%d\"}",
-			pData->m_szSteamID, pData->m_nRedCards, pData->m_nYellowCards, pData->m_nFouls, pData->m_nFoulsSuffered, pData->m_nSlidingTackles, pData->m_nSlidingTacklesCompleted, pData->m_nGoalsConceded, pData->m_nShots, pData->m_nShotsOnGoal, pData->m_nPassesCompleted, pData->m_nInterceptions, pData->m_nOffsides, pData->m_nGoals, pData->m_nOwnGoals, pData->m_nAssists, pData->m_nPasses, pData->m_nFreeKicks, pData->m_nPenalties, pData->m_nCorners, pData->m_nThrowIns, pData->m_nKeeperSaves, pData->m_nGoalKicks, pData->m_nPossession, pData->m_nDistanceCovered
+			"{\"steamId\":\"%s\",\"name\":\"%s\",\"redCards\":%d,\"yellowCards\":%d,\"fouls\":%d,\"foulsSuffered\":%d,\"slidingTackles\":%d,\"slidingTacklesCompleted\":\"%d%%\",\"goalsConceded\":%d,\"shots\":%d,\"shotsOnGoal\":\"%d%%\",\"passesCompleted\":\"%d%%\",\"interceptions\":%d,\"offsides\":%d,\"goals\":%d,\"ownGoals\":%d,\"assists\":%d,\"passes\":%d,\"freeKicks\":%d,\"penalties\":%d,\"corners\":%d,\"throwIns\":%d,\"keeperSaves\":%d,\"goalKicks\":%d,\"possession\":\"%d%%\",\"distanceCovered\":\"%.1f km\"}",
+			pData->m_szSteamID, pData->m_szName, pData->m_nRedCards, pData->m_nYellowCards, pData->m_nFouls, pData->m_nFoulsSuffered, pData->m_nSlidingTackles, (pData->m_nSlidingTacklesCompleted * 100 / max(1, pData->m_nSlidingTackles)), pData->m_nGoalsConceded, pData->m_nShots, (pData->m_nShotsOnGoal * 100 / max(1, pData->m_nShots)), (pData->m_nPassesCompleted * 100 / max(1, pData->m_nPasses)), pData->m_nInterceptions, pData->m_nOffsides, pData->m_nGoals, pData->m_nOwnGoals, pData->m_nAssists, pData->m_nPasses, pData->m_nFreeKicks, pData->m_nPenalties, pData->m_nCorners, pData->m_nThrowIns, pData->m_nKeeperSaves, pData->m_nGoalKicks, pData->m_nPossession, (pData->m_nDistanceCovered / 10.0f)
 			), jsonSize);
 	}
 

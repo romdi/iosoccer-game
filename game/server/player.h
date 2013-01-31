@@ -1043,10 +1043,10 @@ private:
 	friend class CPlayerMove;
 	friend class CPlayerClass;
 
+protected:
 	// Player name
 	char					m_szNetname[MAX_PLAYER_NAME_LENGTH];
 
-protected:
 	// HACK FOR TF2 Prediction
 	friend class CTFGameMovementRecon;
 	friend class CGameMovement;

@@ -39,6 +39,7 @@ class CPlayerPersistentData
 public:
 	const	CSteamID *m_SteamID;
 	char	m_szSteamID[32];
+	char	m_szName[MAX_PLAYER_NAME_LENGTH];
 	int		m_nNextCardJoin;
 	int		m_nRedCards;
 	int		m_nYellowCards;
@@ -205,6 +206,7 @@ public:
 	virtual const Vector	GetPlayerMaxs( void ) const; // uses local player
 
 	virtual bool		CanSpeak(bool isTeamOnly);
+	virtual void		SetPlayerName(const char *name);
 
 private:
 	//ios bool SelectSpawnSpot( const char *pEntClassName, CBaseEntity* &pSpot );
@@ -389,6 +391,9 @@ public:
 
 	int					GetNextCardJoin(void) { return GetData()->m_nNextCardJoin; }
 	void				SetNextCardJoin(int seconds) { GetData()->m_nNextCardJoin = seconds; }
+
+	const char			*GetLastKnownName() { return GetData()->m_szName; }
+	void				SetLastKnownName(const char *name) { Q_strncpy(GetData()->m_szName, name, MAX_PLAYER_NAME_LENGTH); }
 
 	float				GetNextJoin() { return m_flNextJoin; }
 	void				SetNextJoin(float time) { m_flNextJoin = time; }

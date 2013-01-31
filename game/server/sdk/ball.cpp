@@ -183,6 +183,9 @@ ConVar sv_ball_stats_assist_maxtime("sv_ball_stats_assist_maxtime", "5", FCVAR_N
 
 ConVar sv_ball_velocity_coeff("sv_ball_velocity_coeff", "1.0", FCVAR_NOTIFY);
 
+ConVar sv_ball_freekickdist_owngoal("sv_ball_freekickdist_owngoal", "900", FCVAR_NOTIFY);
+ConVar sv_ball_freekickdist_opponentgoal("sv_ball_freekickdist_opponentgoal", "1200", FCVAR_NOTIFY);
+
 extern ConVar mp_client_sidecurl;
 
 CBall *CreateBall(const Vector &pos, CSDKPlayer *pCreator)
@@ -871,9 +874,9 @@ void CBall::State_Think()
 				case BALL_PENALTY:
 					{
 						if (m_eNextState == BALL_FREEKICK)
-							SetMatchEvent(MATCH_EVENT_FREEKICK, GetGlobalTeam(m_nFouledTeam)->GetTeamNumber(), true);
+							SetMatchEvent(MATCH_EVENT_FREEKICK, m_nFouledTeam, true);
 						else
-							SetMatchEvent(MATCH_EVENT_PENALTY, GetGlobalTeam(m_nFouledTeam)->GetTeamNumber(), true);
+							SetMatchEvent(MATCH_EVENT_PENALTY, m_nFouledTeam, true);
 
 						match_event_t matchSubEvent;
 
@@ -883,7 +886,7 @@ void CBall::State_Think()
 							matchSubEvent = MATCH_EVENT_FOUL;
 							break;
 						case FOUL_NORMAL_YELLOW_CARD:
-							if (m_pFoulingPl->GetYellowCards() % 2 != 0)
+							if (m_pFoulingPl->GetYellowCards() % 2 == 0)
 								matchSubEvent = MATCH_EVENT_YELLOWREDCARD;
 							else
 								matchSubEvent = MATCH_EVENT_YELLOWCARD;
@@ -1497,15 +1500,15 @@ void CBall::State_FREEKICK_Think()
 {
 	if (!CSDKPlayer::IsOnField(m_pPl))
 	{
-		if ((m_vPos - GetGlobalTeam(m_nFoulingTeam)->GetOppTeam()->m_vPlayerSpawns[0]).Length2D() <= 900)
-			m_pPl = FindNearestPlayer(GetGlobalTeam(m_nFouledTeam)->GetTeamNumber(), FL_POS_KEEPER);
-		else if ((m_vPos - GetGlobalTeam(m_nFoulingTeam)->m_vPlayerSpawns[0]).Length2D() <= 1100)
-			m_pPl = GetGlobalTeam(m_nFouledTeam)->GetTeam()->GetFreekickTaker();
+		if ((m_vPos - GetGlobalTeam(m_nFouledTeam)->m_vPlayerSpawns[0]).Length2D() <= sv_ball_freekickdist_owngoal.GetInt()) // Close to own goal
+			m_pPl = FindNearestPlayer(m_nFouledTeam, FL_POS_KEEPER);
+		else if ((m_vPos - GetGlobalTeam(m_nFoulingTeam)->m_vPlayerSpawns[0]).Length2D() <= sv_ball_freekickdist_opponentgoal.GetInt()) // Close to opponent's goal
+			m_pPl = GetGlobalTeam(m_nFouledTeam)->GetFreekickTaker();
 		else
 			m_pPl = m_pFouledPl;
 
 		if (!CSDKPlayer::IsOnField(m_pPl) || m_pPl->GetTeamPosType() == GK && m_pPl->IsBot())
-			m_pPl = FindNearestPlayer(GetGlobalTeam(m_nFouledTeam)->GetTeamNumber(), FL_POS_FIELD);
+			m_pPl = FindNearestPlayer(m_nFouledTeam, FL_POS_FIELD);
 
 		if (!m_pPl)
 			return State_Transition(BALL_NORMAL);
@@ -1586,14 +1589,14 @@ void CBall::State_PENALTY_Think()
 		}
 		else
 		{
-			m_pPl = GetGlobalTeam(m_nFouledTeam)->GetTeam()->GetPenaltyTaker();
+			m_pPl = GetGlobalTeam(m_nFouledTeam)->GetPenaltyTaker();
 			if (!m_pPl)
-				m_pPl = FindNearestPlayer(GetGlobalTeam(m_nFouledTeam)->GetTeamNumber());
+				m_pPl = FindNearestPlayer(m_nFouledTeam);
 			if (!m_pPl)
 				return State_Transition(BALL_NORMAL);
 		}
 
-		SDKGameRules()->EnableShield(SHIELD_PENALTY, GetGlobalTeam(m_nFouledTeam)->GetTeamNumber(), GetGlobalTeam(m_nFoulingTeam)->m_vPenalty);
+		SDKGameRules()->EnableShield(SHIELD_PENALTY, m_nFouledTeam, GetGlobalTeam(m_nFoulingTeam)->m_vPenalty);
 		m_pPl->SetPosInsideShield(Vector(m_vPos.x, m_vPos.y - 150 * m_pPl->GetTeam()->m_nForward, SDKGameRules()->m_vKickOff.GetZ()), true);
 		m_flStateTimelimit = -1;
 		SetMatchEventPlayer(m_pPl, false);
