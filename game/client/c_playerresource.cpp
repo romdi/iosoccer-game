@@ -478,7 +478,7 @@ const Color &C_PlayerResource::GetPlayerColor(int index )
 	if (GetYellowCards(index) % 2 == 1)
 		return g_ColorYellow;
 
-	return g_ColorWhite;
+	return GetTeamColor(GetTeam(index));
 }
 
 //-----------------------------------------------------------------------------

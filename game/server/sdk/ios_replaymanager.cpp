@@ -387,20 +387,11 @@ void CReplayManager::TakeSnapshot()
 
 	m_Snapshots.AddToTail(pSnap);
 	
-	while (m_Snapshots[0]->snaptime < gpGlobals->curtime - max(max(sv_replay_duration1.GetFloat(), sv_replay_duration2.GetFloat()), sv_replay_duration3.GetFloat()))
+	float replayStartTime = gpGlobals->curtime - max(max(sv_replay_duration1.GetFloat(), sv_replay_duration2.GetFloat()), sv_replay_duration3.GetFloat());
+
+	while (m_Snapshots.Count() >= 2 && m_Snapshots[0]->snaptime < replayStartTime && m_Snapshots[1]->snaptime <= replayStartTime)
 	{
-		//delete m_Snapshots[0]->pBallSnapshot;
-
-		//for (int i = 0; i < 2; i++)
-		//{
-		//	for (int j = 0; j < 11; j++)
-		//	{
-		//		delete m_Snapshots[0]->pPlayerSnapshot[i][j];
-		//	}
-		//}
-
 		delete m_Snapshots[0];
-
 		m_Snapshots.Remove(0);
 	}
 }

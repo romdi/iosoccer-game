@@ -67,7 +67,8 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CTeam, DT_Team)
 	SendPropInt(SENDINFO(m_nCaptainPosIndex), 4, SPROP_UNSIGNED),
 	SendPropInt(SENDINFO(m_nFreekickTakerPosIndex), 4, SPROP_UNSIGNED),
 	SendPropInt(SENDINFO(m_nPenaltyTakerPosIndex), 4, SPROP_UNSIGNED),
-	SendPropInt(SENDINFO(m_nCornerTakerPosIndex), 4, SPROP_UNSIGNED),
+	SendPropInt(SENDINFO(m_nLeftCornerTakerPosIndex), 4, SPROP_UNSIGNED),
+	SendPropInt(SENDINFO(m_nRightCornerTakerPosIndex), 4, SPROP_UNSIGNED),
 	SendPropInt(SENDINFO(m_nThrowinTakerPosIndex), 4, SPROP_UNSIGNED),
 
 	SendPropArray2( 
@@ -283,7 +284,8 @@ void CTeam::UpdatePosIndices(bool reset)
 		m_nCaptainPosIndex = mp_maxplayers.GetInt() - 1;
 		m_nFreekickTakerPosIndex = 0;
 		m_nPenaltyTakerPosIndex = 0;
-		m_nCornerTakerPosIndex = 0;
+		m_nLeftCornerTakerPosIndex = 0;
+		m_nRightCornerTakerPosIndex = 0;
 		m_nThrowinTakerPosIndex = 0;
 
 		UnblockAllPos();
@@ -292,7 +294,8 @@ void CTeam::UpdatePosIndices(bool reset)
 	m_nCaptainPosIndex = clamp(m_nCaptainPosIndex, 0, mp_maxplayers.GetInt() - 1);
 	m_nFreekickTakerPosIndex = clamp(m_nFreekickTakerPosIndex, 0, mp_maxplayers.GetInt() - 1);
 	m_nPenaltyTakerPosIndex = clamp(m_nPenaltyTakerPosIndex, 0, mp_maxplayers.GetInt() - 1);
-	m_nCornerTakerPosIndex = clamp(m_nCornerTakerPosIndex, 0, mp_maxplayers.GetInt() - 1);
+	m_nLeftCornerTakerPosIndex = clamp(m_nLeftCornerTakerPosIndex, 0, mp_maxplayers.GetInt() - 1);
+	m_nRightCornerTakerPosIndex = clamp(m_nRightCornerTakerPosIndex, 0, mp_maxplayers.GetInt() - 1);
 	m_nThrowinTakerPosIndex = clamp(m_nThrowinTakerPosIndex, 0, mp_maxplayers.GetInt() - 1);
 }
 

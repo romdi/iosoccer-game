@@ -77,7 +77,8 @@ CFormationMenu::CFormationMenu(Panel *parent, const char *name) : Panel(parent, 
 		m_pCaptainTicks[i] = new Button(m_pFormations[0], "", "CP", this, VarArgs("setcaptain %d", i));
 		m_pFreekickTakerTicks[i] = new Button(m_pFormations[0], "", "FK", this, VarArgs("setfreekicktaker %d", i));
 		m_pPenaltyTakerTicks[i] = new Button(m_pFormations[0], "", "PK", this, VarArgs("setpenaltytaker %d", i));
-		m_pCornerTakerTicks[i] = new Button(m_pFormations[0], "", "CK", this, VarArgs("setcornertaker %d", i));
+		m_pLeftCornerTakerTicks[i] = new Button(m_pFormations[0], "", "LC", this, VarArgs("setleftcornertaker %d", i));
+		m_pRightCornerTakerTicks[i] = new Button(m_pFormations[0], "", "RC", this, VarArgs("setrightcornertaker %d", i));
 		m_pThrowinTakerTicks[i] = new Button(m_pFormations[0], "", "TI", this, VarArgs("setthrowintaker %d", i));
 	}
 
@@ -159,11 +160,17 @@ void CFormationMenu::PerformLayout()
 		m_pPenaltyTakerTicks[i]->SetContentAlignment(Label::a_center);
 		m_pPenaltyTakerTicks[i]->SetFont(m_pScheme->GetFont("Tooltip"));
 
-		m_pCornerTakerTicks[i]->SetZPos(100);
-		m_pCornerTakerTicks[i]->SetCursor(dc_hand);
-		m_pCornerTakerTicks[i]->SetVisible(false);
-		m_pCornerTakerTicks[i]->SetContentAlignment(Label::a_center);
-		m_pCornerTakerTicks[i]->SetFont(m_pScheme->GetFont("Tooltip"));
+		m_pLeftCornerTakerTicks[i]->SetZPos(100);
+		m_pLeftCornerTakerTicks[i]->SetCursor(dc_hand);
+		m_pLeftCornerTakerTicks[i]->SetVisible(false);
+		m_pLeftCornerTakerTicks[i]->SetContentAlignment(Label::a_center);
+		m_pLeftCornerTakerTicks[i]->SetFont(m_pScheme->GetFont("Tooltip"));
+
+		m_pRightCornerTakerTicks[i]->SetZPos(100);
+		m_pRightCornerTakerTicks[i]->SetCursor(dc_hand);
+		m_pRightCornerTakerTicks[i]->SetVisible(false);
+		m_pRightCornerTakerTicks[i]->SetContentAlignment(Label::a_center);
+		m_pRightCornerTakerTicks[i]->SetFont(m_pScheme->GetFont("Tooltip"));
 
 		m_pThrowinTakerTicks[i]->SetZPos(100);
 		m_pThrowinTakerTicks[i]->SetCursor(dc_hand);
@@ -244,6 +251,8 @@ void CFormationMenu::Update(bool showCaptainMenu)
 				m_pCaptainTicks[j]->SetVisible(false);
 				m_pFreekickTakerTicks[j]->SetVisible(false);
 				m_pPenaltyTakerTicks[j]->SetVisible(false);
+				m_pLeftCornerTakerTicks[j]->SetVisible(false);
+				m_pRightCornerTakerTicks[j]->SetVisible(false);
 				continue;
 			}
 
@@ -272,7 +281,7 @@ void CFormationMenu::Update(bool showCaptainMenu)
 			{
 				m_pCaptainTicks[j]->SetParent(m_pFormations[i]);
 				m_pCaptainTicks[j]->SetVisible(true);
-				m_pCaptainTicks[j]->SetBounds(m_pFormationButtons[i][j]->GetX() + 2 * TICK_WIDTH, m_pFormationButtons[i][j]->GetY() + m_pFormationButtons[i][j]->GetTall(), TICK_WIDTH, TICK_HEIGHT);
+				m_pCaptainTicks[j]->SetBounds(m_pFormationButtons[i][j]->GetX() + FORMATION_BUTTON_WIDTH / 2 - TICK_WIDTH / 2, m_pFormationButtons[i][j]->GetY() + m_pFormationButtons[i][j]->GetTall(), TICK_WIDTH, TICK_HEIGHT);
 				if (GetGlobalTeam(TEAM_A + i)->Get_CaptainPosIndex() == j)
 				{
 					m_pCaptainTicks[j]->SetDefaultColor(Color(0, 0, 0, 255), Color(taken.r, taken.g, taken.b, taken.a));
@@ -284,7 +293,7 @@ void CFormationMenu::Update(bool showCaptainMenu)
 
 				m_pFreekickTakerTicks[j]->SetParent(m_pFormations[i]);
 				m_pFreekickTakerTicks[j]->SetVisible(true);
-				m_pFreekickTakerTicks[j]->SetBounds(m_pFormationButtons[i][j]->GetX(), m_pFormationButtons[i][j]->GetY() + m_pFormationButtons[i][j]->GetTall(), TICK_WIDTH, TICK_HEIGHT);
+				m_pFreekickTakerTicks[j]->SetBounds(m_pFormationButtons[i][j]->GetX() - TICK_WIDTH + TICK_WIDTH * 0.75f, m_pFormationButtons[i][j]->GetY() + m_pFormationButtons[i][j]->GetTall() - TICK_WIDTH / 2, TICK_WIDTH, TICK_HEIGHT);
 				if (GetGlobalTeam(TEAM_A + i)->Get_FreekickTakerPosIndex() == j)
 				{
 					m_pFreekickTakerTicks[j]->SetDefaultColor(Color(0, 0, 0, 255), Color(taken.r, taken.g, taken.b, taken.a));
@@ -296,7 +305,7 @@ void CFormationMenu::Update(bool showCaptainMenu)
 
 				m_pPenaltyTakerTicks[j]->SetParent(m_pFormations[i]);
 				m_pPenaltyTakerTicks[j]->SetVisible(true);
-				m_pPenaltyTakerTicks[j]->SetBounds(m_pFormationButtons[i][j]->GetX() + TICK_WIDTH, m_pFormationButtons[i][j]->GetY() + m_pFormationButtons[i][j]->GetTall(), TICK_WIDTH, TICK_HEIGHT);
+				m_pPenaltyTakerTicks[j]->SetBounds(m_pFormationButtons[i][j]->GetX() + FORMATION_BUTTON_WIDTH - TICK_WIDTH * 0.75f, m_pFormationButtons[i][j]->GetY() + m_pFormationButtons[i][j]->GetTall() - TICK_WIDTH / 2, TICK_WIDTH, TICK_HEIGHT);
 				if (GetGlobalTeam(TEAM_A + i)->Get_PenaltyTakerPosIndex() == j)
 				{
 					m_pPenaltyTakerTicks[j]->SetDefaultColor(Color(0, 0, 0, 255), Color(taken.r, taken.g, taken.b, taken.a));
@@ -305,12 +314,38 @@ void CFormationMenu::Update(bool showCaptainMenu)
 				{
 					m_pPenaltyTakerTicks[j]->SetDefaultColor(Color(255, 255, 255, 255), Color(free.r, free.g, free.b, 0));
 				}
+
+				m_pLeftCornerTakerTicks[j]->SetParent(m_pFormations[i]);
+				m_pLeftCornerTakerTicks[j]->SetVisible(true);
+				m_pLeftCornerTakerTicks[j]->SetBounds(m_pFormationButtons[i][j]->GetX() - TICK_WIDTH + TICK_WIDTH * 0.75f, m_pFormationButtons[i][j]->GetY() + m_pFormationButtons[i][j]->GetTall() - TICK_WIDTH * 1.25f, TICK_WIDTH, TICK_HEIGHT);
+				if (GetGlobalTeam(TEAM_A + i)->Get_LeftCornerTakerPosIndex() == j)
+				{
+					m_pLeftCornerTakerTicks[j]->SetDefaultColor(Color(0, 0, 0, 255), Color(taken.r, taken.g, taken.b, taken.a));
+				}
+				else
+				{
+					m_pLeftCornerTakerTicks[j]->SetDefaultColor(Color(255, 255, 255, 255), Color(free.r, free.g, free.b, 0));
+				}
+
+				m_pRightCornerTakerTicks[j]->SetParent(m_pFormations[i]);
+				m_pRightCornerTakerTicks[j]->SetVisible(true);
+				m_pRightCornerTakerTicks[j]->SetBounds(m_pFormationButtons[i][j]->GetX() + FORMATION_BUTTON_WIDTH - TICK_WIDTH * 0.75f, m_pFormationButtons[i][j]->GetY() + m_pFormationButtons[i][j]->GetTall() - TICK_WIDTH * 1.25f, TICK_WIDTH, TICK_HEIGHT);
+				if (GetGlobalTeam(TEAM_A + i)->Get_RightCornerTakerPosIndex() == j)
+				{
+					m_pRightCornerTakerTicks[j]->SetDefaultColor(Color(0, 0, 0, 255), Color(taken.r, taken.g, taken.b, taken.a));
+				}
+				else
+				{
+					m_pRightCornerTakerTicks[j]->SetDefaultColor(Color(255, 255, 255, 255), Color(free.r, free.g, free.b, 0));
+				}
 			}
 			else if (!m_bShowCaptainMenu)
 			{
 				m_pCaptainTicks[j]->SetVisible(false);
 				m_pFreekickTakerTicks[j]->SetVisible(false);
 				m_pPenaltyTakerTicks[j]->SetVisible(false);
+				m_pLeftCornerTakerTicks[j]->SetVisible(false);
+				m_pRightCornerTakerTicks[j]->SetVisible(false);
 			}
 
 			float xDist = (m_pFormations[i]->GetWide() - 2 * FORMATION_HPADDING) / 3;

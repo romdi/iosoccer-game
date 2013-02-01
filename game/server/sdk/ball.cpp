@@ -186,6 +186,8 @@ ConVar sv_ball_velocity_coeff("sv_ball_velocity_coeff", "1.0", FCVAR_NOTIFY);
 ConVar sv_ball_freekickdist_owngoal("sv_ball_freekickdist_owngoal", "900", FCVAR_NOTIFY);
 ConVar sv_ball_freekickdist_opponentgoal("sv_ball_freekickdist_opponentgoal", "1200", FCVAR_NOTIFY);
 
+ConVar sv_ball_assign_setpieces("sv_ball_assign_setpieces", "1", FCVAR_NOTIFY);
+
 extern ConVar mp_client_sidecurl;
 
 CBall *CreateBall(const Vector &pos, CSDKPlayer *pCreator)
@@ -1340,7 +1342,18 @@ void CBall::State_CORNER_Think()
 {
 	if (!CSDKPlayer::IsOnField(m_pPl))
 	{
-		m_pPl = FindNearestPlayer(LastOppTeam(false));
+		if (sv_ball_assign_setpieces.GetBool())
+		{
+			if (m_vPos.x == GetGlobalTeam(LastTeam(false))->m_vCornerRight.GetX())
+				m_pPl = GetGlobalTeam(LastOppTeam(false))->GetLeftCornerTaker();
+			else
+				m_pPl = GetGlobalTeam(LastOppTeam(false))->GetRightCornerTaker();
+		}
+		else
+			m_pPl = NULL;
+		
+		if (!m_pPl)
+			m_pPl = FindNearestPlayer(LastOppTeam(false));
 		if (!m_pPl)
 			return State_Transition(BALL_NORMAL);
 
@@ -1512,9 +1525,9 @@ void CBall::State_FREEKICK_Think()
 {
 	if (!CSDKPlayer::IsOnField(m_pPl))
 	{
-		if ((m_vPos - GetGlobalTeam(m_nFouledTeam)->m_vPlayerSpawns[0]).Length2D() <= sv_ball_freekickdist_owngoal.GetInt()) // Close to own goal
+		if (sv_ball_assign_setpieces.GetBool() && (m_vPos - GetGlobalTeam(m_nFouledTeam)->m_vPlayerSpawns[0]).Length2D() <= sv_ball_freekickdist_owngoal.GetInt()) // Close to own goal
 			m_pPl = FindNearestPlayer(m_nFouledTeam, FL_POS_KEEPER);
-		else if ((m_vPos - GetGlobalTeam(m_nFoulingTeam)->m_vPlayerSpawns[0]).Length2D() <= sv_ball_freekickdist_opponentgoal.GetInt()) // Close to opponent's goal
+		else if (sv_ball_assign_setpieces.GetBool() && (m_vPos - GetGlobalTeam(m_nFoulingTeam)->m_vPlayerSpawns[0]).Length2D() <= sv_ball_freekickdist_opponentgoal.GetInt()) // Close to opponent's goal
 			m_pPl = GetGlobalTeam(m_nFouledTeam)->GetFreekickTaker();
 		else
 			m_pPl = m_pFouledPl;
@@ -1600,7 +1613,11 @@ void CBall::State_PENALTY_Think()
 		}
 		else
 		{
-			m_pPl = GetGlobalTeam(m_nFouledTeam)->GetPenaltyTaker();
+			if (sv_ball_assign_setpieces.GetBool())
+				m_pPl = GetGlobalTeam(m_nFouledTeam)->GetPenaltyTaker();
+			else
+				m_pPl = NULL;
+
 			if (!m_pPl)
 				m_pPl = FindNearestPlayer(m_nFouledTeam);
 			if (!m_pPl)
@@ -2262,7 +2279,7 @@ bool CBall::CheckKeeperCatch()
 	//SetMatchEvent(MATCH_EVENT_KEEPERSAVE, m_pPl->GetTeamNumber(), false);
 	//SetMatchEventPlayer(m_pPl, false);
 
-	if (m_bHasQueuedState || (gpGlobals->curtime < m_flGlobalNextKeeperCatch && LastInfo(true)->m_eBallState != BALL_PENALTY)) // Punch ball away
+	if (m_bHasQueuedState || (gpGlobals->curtime < m_flGlobalNextKeeperCatch && (!LastInfo(true) || LastInfo(true)->m_eBallState != BALL_PENALTY))) // Punch ball away
 	{
 		Vector vel;
 

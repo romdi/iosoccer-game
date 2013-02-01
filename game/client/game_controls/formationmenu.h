@@ -67,7 +67,8 @@ protected:
 	Button		*m_pCaptainTicks[11];
 	Button		*m_pFreekickTakerTicks[11];
 	Button		*m_pPenaltyTakerTicks[11];
-	Button		*m_pCornerTakerTicks[11];
+	Button		*m_pLeftCornerTakerTicks[11];
+	Button		*m_pRightCornerTakerTicks[11];
 	Button		*m_pThrowinTakerTicks[11];
 	bool		m_bShowCaptainMenu;
 };

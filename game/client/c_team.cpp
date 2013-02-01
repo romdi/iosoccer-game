@@ -58,7 +58,8 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_Team, DT_Team, CTeam)
 	RecvPropInt(RECVINFO(m_nCaptainPosIndex)),
 	RecvPropInt(RECVINFO(m_nFreekickTakerPosIndex)),
 	RecvPropInt(RECVINFO(m_nPenaltyTakerPosIndex)),
-	RecvPropInt(RECVINFO(m_nCornerTakerPosIndex)),
+	RecvPropInt(RECVINFO(m_nLeftCornerTakerPosIndex)),
+	RecvPropInt(RECVINFO(m_nRightCornerTakerPosIndex)),
 	RecvPropInt(RECVINFO(m_nThrowinTakerPosIndex)),
 	
 	RecvPropArray2( 
@@ -243,17 +244,17 @@ char *C_Team::Get_KitName( void )
 
 Color &C_Team::Get_HudKitColor()
 {
-	//if (GetTeamNumber() == TEAM_A)
-	//{
-	//	static Color col = Color(200, 200, 200, 255);
-	//	return col;
-	//}
-	//else if (GetTeamNumber() == TEAM_B)
-	//{
-	//	static Color col = Color(150, 150, 150, 255);
-	//	return col;
-	//}
-	//else
+	if (GetTeamNumber() == TEAM_A)
+	{
+		static Color col = Color(220, 209, 180, 255);
+		return col;
+	}
+	else if (GetTeamNumber() == TEAM_B)
+	{
+		static Color col = Color(197, 224, 220, 255);
+		return col;
+	}
+	else
 	{
 		static Color col = Color(255, 255, 255, 255);
 		return col;

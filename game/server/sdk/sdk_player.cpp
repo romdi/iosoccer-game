@@ -1188,6 +1188,22 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 		GetTeam()->SetPenaltyTakerPosIndex(atoi(args[1]));
 		return true;
 	}
+	else if (!Q_stricmp(args[0], "setleftcornertaker"))
+	{
+		if (this != GetTeam()->GetCaptain())
+			return false;
+
+		GetTeam()->SetLeftCornerTakerPosIndex(atoi(args[1]));
+		return true;
+	}
+	else if (!Q_stricmp(args[0], "setrightcornertaker"))
+	{
+		if (this != GetTeam()->GetCaptain())
+			return false;
+
+		GetTeam()->SetRightCornerTakerPosIndex(atoi(args[1]));
+		return true;
+	}
 
 	return BaseClass::ClientCommand (args);
 }
