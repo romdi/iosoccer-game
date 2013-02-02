@@ -98,8 +98,14 @@ ConVar mp_serverinfo("mp_serverinfo", "IOS Server - Enjoy your stay", FCVAR_NOTI
 
 ConVar mp_matchinfo("mp_matchinfo", "Public Match", FCVAR_NOTIFY | FCVAR_REPLICATED);
 
-ConVar mp_tvcam_speedcoeff("mp_tvcam_speedcoeff", "250", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar mp_tvcam_speedexponent("mp_tvcam_speedexponent", "2", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_tvcam_speed_coeff("mp_tvcam_speed_coeff", "500", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_tvcam_speed_exponent("mp_tvcam_speed_exponent", "2.5", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_tvcam_border_north("mp_tvcam_border_north", "500", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_tvcam_border_east("mp_tvcam_border_east", "400", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_tvcam_border_south("mp_tvcam_border_south", "300", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_tvcam_border_west("mp_tvcam_border_west", "400", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_tvcam_offset_forward("mp_tvcam_offset_forward", "400", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_tvcam_offset_north("mp_tvcam_offset_north", "400", FCVAR_NOTIFY | FCVAR_REPLICATED);
 
 ConVar mp_timeout_count("mp_timeout_count", "3", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar mp_timeout_duration("mp_timeout_duration", "60", FCVAR_NOTIFY | FCVAR_REPLICATED);

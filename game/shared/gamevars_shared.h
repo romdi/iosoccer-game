@@ -51,8 +51,14 @@ extern ConVar
 	mp_reset_spin_toggles_on_shot,
 	mp_serverinfo,
 	mp_matchinfo,
-	mp_tvcam_speedcoeff,
-	mp_tvcam_speedexponent,
+	mp_tvcam_speed_coeff,
+	mp_tvcam_speed_exponent,
+	mp_tvcam_border_north,
+	mp_tvcam_border_east,
+	mp_tvcam_border_south,
+	mp_tvcam_border_west,
+	mp_tvcam_offset_forward,
+	mp_tvcam_offset_north,
 	mp_timeout_count,
 	mp_timeout_duration;
 

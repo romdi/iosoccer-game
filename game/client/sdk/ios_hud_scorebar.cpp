@@ -34,10 +34,24 @@
 #include "ehandle.h"
 #include "c_sdk_player.h"
 #include <Windows.h>
+#include "iclientmode.h"
+#include "vgui_controls/AnimationController.h"
+#include "clientmode_shared.h"
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
 using namespace vgui;
+
+#define NOTIFICATION_COUNT 4
+enum { NOTIFICATION_HEIGHT = 25 };
+enum { CENTERFLASH_HEIGHT = 100 };
+
+const float slideDownDuration = 0.5f;
+const float slideUpDuration = 0.5f;
+
+const float slideDownExp = 2.0f;
+const float slideUpExp = 2.0f;
 
 struct Event_t
 {
@@ -50,273 +64,154 @@ struct Event_t
 //-----------------------------------------------------------------------------
 // Purpose: Displays suit power (armor) on hud
 //-----------------------------------------------------------------------------
-class CHudScorebar : public CHudElement, public vgui::Panel
+class CHudScorebar : public CHudElement, public vgui::EditablePanel
 {
-	DECLARE_CLASS_SIMPLE( CHudScorebar, vgui::Panel );
+	DECLARE_CLASS_SIMPLE( CHudScorebar, vgui::EditablePanel );
 
 public:
 	CHudScorebar( const char *pElementName );
 	void Init( void );
-	void FireGameEvent( IGameEvent *event );
+	void ReloadScheme();
 
 protected:
 	virtual void OnThink( void );
+	virtual void Paint( void );
 	virtual void ApplySchemeSettings( vgui::IScheme *scheme );
-	virtual void PaintBackground();
+	void FireGameEvent(IGameEvent *event);
+	void ApplySettings(KeyValues *inResourceData);
 
 private:
 
-	Panel *m_pTeamColors[2][2];
-	CUtlVector<Event_t> m_vEventLists[2];
-	Label *m_pPlayers[2];
-	Label *m_pSubPlayers[2];
-	Label *m_pSubSubPlayers[2];
-	Label *m_pEvent;
-	Label *m_pSubEvent;
-	Label *m_pSubSubEvent;
-	Label *m_pImportantEvent;
-	Panel *m_pMainBars[2];
-	Panel *m_pMainBarBG;
-	Panel *m_pCenterBar;
-	Panel *m_pCenterBarBG;
+	Label *m_pLogo;
+	Label *m_pTime;
 	Label *m_pTeamNames[2];
 	Label *m_pTeamGoals[2];
-	Label *m_pState;
-	Label *m_pTime;
+	Panel *m_pTeamColors[2][2];
+	Panel *m_pNotificationPanel;
+	Label *m_pNotifications[NOTIFICATION_COUNT];
 	Label *m_pInjuryTime;
-	Panel *m_pPenaltyPanels[2];
-	Panel *m_pPenalties[2][5];
-
-	Panel		*m_pExtensionBar[2];
-	Label		*m_pExtensionText[2];
-
-	Panel	*m_pTeamCrestPanels[2];
-	ImagePanel	*m_pTeamCrests[2];
-
-	Label		*m_pHelpText;
-
-	float m_flNextPlayerUpdate;
-	float m_flImportantEventStart;
+	Panel *m_pBackgroundPanel;
 	match_event_t m_eCurMatchEvent;
+	float m_flNotificationStart;
+	float m_flInjuryTimeStart;
+	int m_nCurMatchEventTeam;
+	Label *m_pCenterFlash;
+	IScheme *m_pScheme;
+	Panel *m_pMainPanel;
+	float m_flStayDuration;
 };
 
 DECLARE_HUDELEMENT( CHudScorebar );
 
-enum { MAINBAR_WIDTH = 270, MAINBAR_HEIGHT = 40, MAINBAR_MARGIN = 15 };
-enum { TEAMGOAL_WIDTH = 30, TEAMGOAL_MARGIN = 10 };
-enum { TIME_WIDTH = 120, TIME_MARGIN = 5, INJURY_TIME_WIDTH = 20, INJURY_TIME_MARGIN = 10 };
-enum { STATE_WIDTH = 140, STATE_MARGIN = 5 };
-enum { TOPEXTENSION_WIDTH = 248, TOPEXTENSION_HEIGHT = MAINBAR_HEIGHT, TOPEXTENSION_MARGIN = 10, TOPEXTENSION_TEXTMARGIN = 5, TOPEXTENSION_TEXTOFFSET = 20 };
-enum { TEAMCOLOR_WIDTH = 5, TEAMCOLOR_HEIGHT = MAINBAR_HEIGHT - 10, TEAMCOLOR_HMARGIN = 5, TEAMCOLOR_VMARGIN = (MAINBAR_HEIGHT - TEAMCOLOR_HEIGHT) / 2 };
-enum { TEAMCREST_SIZE = 70, TEAMCREST_HOFFSET = (2 * TEAMCOLOR_HMARGIN + 2 * TEAMCOLOR_WIDTH), TEAMCREST_VOFFSET = 0, TEAMCREST_PADDING = 5 };
-enum { CENTERBAR_WIDTH = 140, CENTERBAR_OFFSET = 5 };
-enum { BAR_BORDER = 2 };
-enum { PLAYERNAME_MARGIN = 5, PLAYERNAME_OFFSET = 50, PLAYERNAME_WIDTH = 150 };
-enum { PENALTYPANEL_HEIGHT = 20, PENALTYPANEL_PADDING = 2, PENALTYPANEL_TOPMARGIN = 10 };
-enum { TEAMNAME_WIDTH = (MAINBAR_WIDTH - 2 * TEAMGOAL_MARGIN - TEAMGOAL_WIDTH - 2 * TEAMCOLOR_HMARGIN - 2 * TEAMCOLOR_WIDTH - TEAMCREST_SIZE - TEAMCREST_PADDING), TEAMNAME_MARGIN = 10 };
-enum { EVENT_MARGIN = 5, EVENT_WIDTH = 200, EVENT_HEIGHT = 35, SUBEVENT_WIDTH = 200, SUBEVENT_HEIGHT = 35, IMPORTANTEVENT_HEIGHT = 100 };
-enum { HELPTEXT_HEIGHT = 40, HELPTEXT_BOTTOMMARGIN = 15 };
-
-ConVar hud_minor_events_visible("hud_minor_events_visible", "1", FCVAR_USERINFO | FCVAR_ARCHIVE, "");
-ConVar hud_minor_eventplayernames_visible("hud_minor_eventplayernames_visible", "1", FCVAR_USERINFO | FCVAR_ARCHIVE, "");
-
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
-CHudScorebar::CHudScorebar( const char *pElementName ) : BaseClass(NULL, "HudScorebar2"), CHudElement( pElementName )
+CHudScorebar::CHudScorebar( const char *pElementName ) : BaseClass(NULL, "HudScorebar"), CHudElement( pElementName )
 {
 	SetHiddenBits(HIDEHUD_SCOREBAR);
 
 	vgui::Panel *pParent = g_pClientMode->GetViewport();
 	SetParent( pParent );
 
-	m_pMainBarBG = new Panel(this, "");
-	m_pMainBarBG->SetVisible(false);
-	m_pCenterBarBG = new Panel(this, "");
-	m_pCenterBarBG->SetVisible(false);
-	m_pCenterBar = new Panel(this, "");
+	m_eCurMatchEvent = MATCH_EVENT_NONE;
+	m_flNotificationStart = -1;
+	m_flInjuryTimeStart = -1;
+	m_nCurMatchEventTeam = TEAM_UNASSIGNED;
 
-	for (int i = 0; i < 2; i++)
+	m_pMainPanel = new Panel(this, "");
+
+	for (int i = 0; i < NOTIFICATION_COUNT; i++)
 	{
-		m_pMainBars[i] = new Panel(this, "");
-
-		m_pTeamColors[i][0] = new Panel(m_pMainBars[i], VarArgs("TeamColor%d", i));
-		m_pTeamColors[i][1] = new Panel(m_pMainBars[i], VarArgs("TeamColor%d", i));
-
-		m_pPlayers[i] = new Label(this, "", "");
-		m_pSubPlayers[i] = new Label(this, "", "");
-		m_pSubSubPlayers[i] = new Label(this, "", "");
-
-		m_pTeamNames[i] = new Label(m_pMainBars[i], "", "");
-		m_pTeamGoals[i] = new Label(m_pMainBars[i], "", "");
-
-		m_pExtensionBar[i] = new Panel(this, "");
-		m_pExtensionText[i] = new Label(m_pExtensionBar[i], "", "");
-		m_pTeamCrestPanels[i] = new Panel(this, "");
-		m_pTeamCrests[i] = new ImagePanel(m_pTeamCrestPanels[i], "");
-
-		m_pPenaltyPanels[i] = new Panel(this, "");
-
-		for (int j = 0; j < 5; j++)
-		{
-			m_pPenalties[i][j] = new Panel(m_pPenaltyPanels[i], "");
-		}
+		m_pNotifications[i] = new Label(this, "", "");
 	}
 
-	m_pEvent = new Label(this, "", "");
-	m_pSubEvent = new Label(this, "", "");
-	m_pSubSubEvent = new Label(this, "", "");
-	m_pImportantEvent = new Label(this, "", "");
-
-	m_pState = new Label(m_pCenterBar, "", "");
-	m_pTime = new Label(m_pCenterBar, "", "");
-	m_pInjuryTime = new Label(m_pCenterBar, "", "");
-
-	m_pHelpText = new Label(this, "", "");
-
-	m_flNextPlayerUpdate = gpGlobals->curtime;
-	m_flImportantEventStart = -1;
-	m_eCurMatchEvent = MATCH_EVENT_NONE;
+	m_pCenterFlash = new Label(this, "", "");
+	m_flStayDuration = 2.5f;
 }
 
 void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 {
 	BaseClass::ApplySchemeSettings( pScheme );
-	
+
+	m_pScheme = pScheme;
+
+	ReloadScheme();
+}
+
+void CHudScorebar::ReloadScheme()
+{
+	SetProportional(false);
+
+	LoadControlSettings("resource/ui/scorebars/default.res");
+
 	SetBounds(0, 0, ScreenWidth(), ScreenHeight());
- 	//SetPaintBackgroundType (2); // Rounded corner box
- 	//SetPaintBackgroundEnabled(true);
-	//SetBgColor( Color( 0, 0, 255, 255 ) );
 
-	Color white(255, 255, 255, 255);
-	Color black(0, 0, 0, 240);
+	m_pMainPanel->SetBounds(30, 30, GetWide() - 30, GetTall() - 30);
 
-	//m_pMainBarBG->SetBounds(GetWide() / 2 - MAINBAR_WIDTH / 2 - BAR_BORDER, MAINBAR_MARGIN - BAR_BORDER, MAINBAR_WIDTH + 2 * BAR_BORDER, MAINBAR_HEIGHT + 2 * BAR_BORDER);
-	//m_pMainBarBG->SetBgColor(white);
-	//m_pMainBarBG->SetPaintBackgroundType(2);
+	HFont font = m_pScheme->GetFont("IOSScorebarMedium");
 
-	//m_pCenterBarBG->SetBounds(GetWide() / 2 - STATE_WIDTH / 2 - BAR_BORDER, MAINBAR_MARGIN - CENTERBAR_OFFSET - BAR_BORDER, STATE_WIDTH + 2 * BAR_BORDER, MAINBAR_HEIGHT + 2 * CENTERBAR_OFFSET + 2 * BAR_BORDER);
-	//m_pCenterBarBG->SetBgColor(white);
-	//m_pCenterBarBG->SetPaintBackgroundType(2);
+	m_pLogo = dynamic_cast<Label *>(FindChildByName("Logo", true));
+	m_pLogo->SetParent(m_pMainPanel);
+	m_pLogo->SetFont(font);
 
-	m_pCenterBar->SetBounds(GetWide() / 2 - CENTERBAR_WIDTH / 2, MAINBAR_MARGIN - CENTERBAR_OFFSET, CENTERBAR_WIDTH, MAINBAR_HEIGHT + 2 * CENTERBAR_OFFSET);
-	m_pCenterBar->SetBgColor(black);
-	m_pCenterBar->SetPaintBackgroundType(2);
-	m_pCenterBar->SetZPos(3);
+	m_pTime = dynamic_cast<Label *>(FindChildByName("Time", true));
+	m_pTime->SetParent(m_pMainPanel);
+	m_pTime->SetFont(font);
 
-	m_pState->SetBounds(m_pCenterBar->GetWide() / 2 - STATE_WIDTH / 2, 0, STATE_WIDTH, (MAINBAR_HEIGHT + 2 * CENTERBAR_OFFSET) / 2);
-	m_pState->SetFgColor(white);
-	m_pState->SetContentAlignment(Label::a_center);
-	m_pState->SetFont(pScheme->GetFont("IOSScorebarSmall"));
+	m_pTeamColors[0][0] = dynamic_cast<Panel *>(FindChildByName("HomeTeamFirstColor", true));
+	m_pTeamColors[0][0]->SetParent(m_pMainPanel);
 
-	m_pTime->SetBounds(m_pCenterBar->GetWide() / 2 - TIME_WIDTH / 2, (MAINBAR_HEIGHT + 2 * CENTERBAR_OFFSET) / 2, TIME_WIDTH, (MAINBAR_HEIGHT + 2 * CENTERBAR_OFFSET) / 2);
-	m_pTime->SetFgColor(white);
-	m_pTime->SetContentAlignment(Label::a_center);
-	m_pTime->SetFont(pScheme->GetFont("IOSScorebarMedium"));
+	m_pTeamColors[0][1] = dynamic_cast<Panel *>(FindChildByName("HomeTeamSecondColor", true));
+	m_pTeamColors[0][1]->SetParent(m_pMainPanel);
 
-	m_pInjuryTime->SetBounds(m_pCenterBar->GetWide() - INJURY_TIME_WIDTH - INJURY_TIME_MARGIN, (MAINBAR_HEIGHT + 2 * CENTERBAR_OFFSET) / 2, INJURY_TIME_WIDTH, (MAINBAR_HEIGHT + 2 * CENTERBAR_OFFSET) / 2);
-	m_pInjuryTime->SetFgColor(white);
-	m_pInjuryTime->SetContentAlignment(Label::a_center);
-	m_pInjuryTime->SetFont(pScheme->GetFont("IOSScorebarMedium"));
-	
-	m_pEvent->SetBounds(GetWide() / 2 - EVENT_WIDTH / 2, MAINBAR_MARGIN + MAINBAR_HEIGHT + CENTERBAR_OFFSET + EVENT_MARGIN, EVENT_WIDTH, EVENT_HEIGHT);
-	m_pEvent->SetContentAlignment(Label::a_center);
-	m_pEvent->SetFont(pScheme->GetFont("IOSEvent"));
-	m_pEvent->SetFgColor(Color(255, 255, 255, 255));
-	//m_pEvent->SetVisible(false);
+	m_pTeamColors[1][0] = dynamic_cast<Panel *>(FindChildByName("AwayTeamFirstColor", true));
+	m_pTeamColors[1][0]->SetParent(m_pMainPanel);
 
-	m_pSubEvent->SetBounds(GetWide() / 2 - EVENT_WIDTH / 2, MAINBAR_MARGIN + MAINBAR_HEIGHT + CENTERBAR_OFFSET + EVENT_MARGIN + EVENT_HEIGHT, EVENT_WIDTH, SUBEVENT_HEIGHT);
-	m_pSubEvent->SetContentAlignment(Label::a_center);
-	m_pSubEvent->SetFont(pScheme->GetFont("IOSSubEvent"));
-	m_pSubEvent->SetFgColor(Color(255, 255, 255, 255));
+	m_pTeamColors[1][1] = dynamic_cast<Panel *>(FindChildByName("AwayTeamSecondColor", true));
+	m_pTeamColors[1][1]->SetParent(m_pMainPanel);
 
-	m_pSubSubEvent->SetBounds(GetWide() / 2 - EVENT_WIDTH / 2, MAINBAR_MARGIN + MAINBAR_HEIGHT + CENTERBAR_OFFSET + EVENT_MARGIN + 2 * EVENT_HEIGHT, EVENT_WIDTH, SUBEVENT_HEIGHT);
-	m_pSubSubEvent->SetContentAlignment(Label::a_center);
-	m_pSubSubEvent->SetFont(pScheme->GetFont("IOSSubEvent"));
-	m_pSubSubEvent->SetFgColor(Color(255, 255, 255, 255));
+	m_pTeamNames[0] = dynamic_cast<Label *>(FindChildByName("HomeTeamName", true));
+	m_pTeamNames[0]->SetParent(m_pMainPanel);
+	m_pTeamNames[0]->SetFont(font);
 
-	m_pImportantEvent->SetBounds(0, GetTall() * 0.33f - IMPORTANTEVENT_HEIGHT / 2, GetWide(), IMPORTANTEVENT_HEIGHT);
-	m_pImportantEvent->SetContentAlignment(Label::a_center);
-	m_pImportantEvent->SetFont(pScheme->GetFont("IOSImportantEvent"));
-	m_pImportantEvent->SetFgColor(Color(255, 255, 255, 255));
+	m_pTeamNames[1] = dynamic_cast<Label *>(FindChildByName("AwayTeamName", true));
+	m_pTeamNames[1]->SetParent(m_pMainPanel);
+	m_pTeamNames[1]->SetFont(font);
 
-	m_pHelpText->SetBounds(0, GetTall() - HELPTEXT_HEIGHT - HELPTEXT_BOTTOMMARGIN, GetWide(), HELPTEXT_HEIGHT);
-	m_pHelpText->SetContentAlignment(Label::a_south);
-	m_pHelpText->SetFont(pScheme->GetFont("IOSHelpText"));
-	m_pHelpText->SetFgColor(Color(255, 255, 255, 255));
+	m_pTeamGoals[0] = dynamic_cast<Label *>(FindChildByName("HomeTeamGoals", true));
+	m_pTeamGoals[0]->SetParent(m_pMainPanel);
+	m_pTeamGoals[0]->SetFont(font);
 
-	for (int i = 0; i < 2; i++)
+	m_pTeamGoals[1] = dynamic_cast<Label *>(FindChildByName("AwayTeamGoals", true));
+	m_pTeamGoals[1]->SetParent(m_pMainPanel);
+	m_pTeamGoals[1]->SetFont(font);
+
+	m_pInjuryTime = dynamic_cast<Label *>(FindChildByName("InjuryTime", true));
+	m_pInjuryTime->SetParent(m_pMainPanel);
+	m_pInjuryTime->SetFont(font);
+
+	m_pBackgroundPanel = dynamic_cast<Panel *>(FindChildByName("BackgroundPanel", true));
+	m_pBackgroundPanel->SetParent(m_pMainPanel);
+
+	m_pNotificationPanel = dynamic_cast<Panel *>(FindChildByName("NotificationPanel", true));
+	m_pNotificationPanel->SetTall(NOTIFICATION_HEIGHT);
+	m_pNotificationPanel->SetParent(m_pMainPanel);
+
+	int x, y, w, h;
+	m_pNotificationPanel->GetBounds(x, y, w, h);
+
+	for (int i = 0; i < NOTIFICATION_COUNT; i++)
 	{
-		m_pMainBars[i]->SetBounds(GetWide() / 2 + (i == 0 ? -CENTERBAR_WIDTH / 2 - MAINBAR_WIDTH : CENTERBAR_WIDTH / 2), MAINBAR_MARGIN, MAINBAR_WIDTH, MAINBAR_HEIGHT);
-		m_pMainBars[i]->SetBgColor(black);
-		m_pMainBars[i]->SetPaintBackgroundType(i == 0 ? 6 : 4);
-		m_pMainBars[i]->SetZPos(2);
-
-		m_pTeamNames[i]->SetBounds(i == 0 ? MAINBAR_WIDTH - TEAMGOAL_MARGIN - TEAMGOAL_WIDTH - TEAMNAME_MARGIN - TEAMNAME_WIDTH : TEAMGOAL_MARGIN + TEAMGOAL_WIDTH + TEAMNAME_MARGIN, 0, TEAMNAME_WIDTH, MAINBAR_HEIGHT);
-		m_pTeamNames[i]->SetFgColor(white);
-		//m_pTeamNames[i]->SetBgColor(Color(255, 0, 0, 255));
-		m_pTeamNames[i]->SetContentAlignment(Label::a_center);
-		m_pTeamNames[i]->SetFont(pScheme->GetFont("IOSScorebar"));
-
-		m_pTeamGoals[i]->SetBounds(i == 0 ? MAINBAR_WIDTH - TEAMGOAL_MARGIN - TEAMGOAL_WIDTH : TEAMGOAL_MARGIN, 0, TEAMGOAL_WIDTH, MAINBAR_HEIGHT);
-		m_pTeamGoals[i]->SetFgColor(white);
-		//m_pTeamGoals[i]->SetBgColor(Color(0, 255, 0, 255));
-		m_pTeamGoals[i]->SetContentAlignment(Label::a_center);
-		m_pTeamGoals[i]->SetFont(pScheme->GetFont("IOSScorebarBold"));
-
-		m_pExtensionBar[i]->SetBounds(GetWide() / 2 - TOPEXTENSION_WIDTH / 2 + (i == 0 ? -1 : 1) * (MAINBAR_WIDTH / 2 + TOPEXTENSION_WIDTH / 2 - TOPEXTENSION_MARGIN), MAINBAR_MARGIN, TOPEXTENSION_WIDTH, TOPEXTENSION_HEIGHT);
-		m_pExtensionBar[i]->SetBgColor(black);
-		m_pExtensionBar[i]->SetPaintBackgroundType(2);
-		m_pExtensionBar[i]->SetZPos(1);
-		m_pExtensionBar[i]->SetVisible(false);
-
-		m_pExtensionText[i]->SetBounds(TOPEXTENSION_TEXTMARGIN + (i == 0 ? 1 : -1) * TOPEXTENSION_TEXTOFFSET, 0, TOPEXTENSION_WIDTH - 2 * TOPEXTENSION_TEXTMARGIN, TOPEXTENSION_HEIGHT);
-		m_pExtensionText[i]->SetFgColor(white);
-		m_pExtensionText[i]->SetContentAlignment(Label::a_center);
-		m_pExtensionText[i]->SetFont(pScheme->GetFont("IOSScorebarExtraInfo"));
-
-		//m_pTeamCrestPanels[i]->SetBounds(GetWide() / 2 - TEAMCREST_SIZE / 2 + (i == 0 ? -1 : 1) * TEAMCREST_HOFFSET, TEAMCREST_VOFFSET, TEAMCREST_SIZE, TEAMCREST_SIZE);
-		m_pTeamCrestPanels[i]->SetBounds(i == 0 ? m_pMainBars[i]->GetX() + TEAMCREST_HOFFSET : m_pMainBars[i]->GetX() + MAINBAR_WIDTH - TEAMCREST_HOFFSET - TEAMCREST_SIZE, TEAMCREST_VOFFSET, TEAMCREST_SIZE, TEAMCREST_SIZE);
-		m_pTeamCrestPanels[i]->SetZPos(3);
-		//m_pTeamCrestPanels[i]->SetBgColor(black);
-		//m_pTeamCrestPanels[i]->SetPaintBackgroundType(2);
-
-		m_pTeamCrests[i]->SetBounds(TEAMCREST_PADDING, TEAMCREST_PADDING, TEAMCREST_SIZE - 2 * TEAMCREST_PADDING, TEAMCREST_SIZE - 2 * TEAMCREST_PADDING);
-		m_pTeamCrests[i]->SetShouldScaleImage(true);
-		m_pTeamCrests[i]->SetImage(i == 0 ? "hometeamcrest" : "awayteamcrest");
-		//m_pTeamCrests[i]->SetDrawColor(Color(255, 255, 255, 150));
-			
-		m_pTeamColors[i][0]->SetBounds(i == 0 ? TEAMCOLOR_HMARGIN : MAINBAR_WIDTH - TEAMCOLOR_HMARGIN - 2 * TEAMCOLOR_WIDTH, TEAMCOLOR_VMARGIN, TEAMCOLOR_WIDTH, MAINBAR_HEIGHT - 2 * TEAMCOLOR_VMARGIN);
-		m_pTeamColors[i][1]->SetBounds(i == 0 ? TEAMCOLOR_HMARGIN + TEAMCOLOR_WIDTH : MAINBAR_WIDTH - TEAMCOLOR_HMARGIN - TEAMCOLOR_WIDTH, TEAMCOLOR_VMARGIN, TEAMCOLOR_WIDTH, MAINBAR_HEIGHT - 2 * TEAMCOLOR_VMARGIN);
-
-		m_pPlayers[i]->SetBounds(m_pMainBars[i]->GetX(), MAINBAR_MARGIN + MAINBAR_HEIGHT + CENTERBAR_OFFSET + EVENT_MARGIN, MAINBAR_WIDTH, EVENT_HEIGHT);
-		m_pPlayers[i]->SetContentAlignment(Label::a_center);
-		m_pPlayers[i]->SetFont(pScheme->GetFont("IOSEventPlayer"));
-		m_pPlayers[i]->SetFgColor(Color(255, 255, 255, 255));
-		//m_pPlayers[i]->SetTextInset(5, 0);
-		//m_pPlayers[i]->SetVisible(false);
-
-		m_pSubPlayers[i]->SetBounds(m_pMainBars[i]->GetX(), MAINBAR_MARGIN + MAINBAR_HEIGHT + CENTERBAR_OFFSET + EVENT_MARGIN + EVENT_HEIGHT, MAINBAR_WIDTH, SUBEVENT_HEIGHT);
-		m_pSubPlayers[i]->SetContentAlignment(Label::a_center);
-		m_pSubPlayers[i]->SetFont(pScheme->GetFont("IOSSubEventPlayer"));
-		m_pSubPlayers[i]->SetFgColor(Color(255, 255, 255, 255));
-
-		m_pSubSubPlayers[i]->SetBounds(m_pMainBars[i]->GetX(), MAINBAR_MARGIN + MAINBAR_HEIGHT + CENTERBAR_OFFSET + EVENT_MARGIN + 2 * EVENT_HEIGHT, MAINBAR_WIDTH, SUBEVENT_HEIGHT);
-		m_pSubSubPlayers[i]->SetContentAlignment(Label::a_center);
-		m_pSubSubPlayers[i]->SetFont(pScheme->GetFont("IOSSubEventPlayer"));
-		m_pSubSubPlayers[i]->SetFgColor(Color(255, 255, 255, 255));
-		
-		int fieldWidth = (MAINBAR_WIDTH - 6 * PENALTYPANEL_PADDING) / 5;
-		int panelWidth = PENALTYPANEL_PADDING + 5 * (fieldWidth + PENALTYPANEL_PADDING);
-
-		m_pPenaltyPanels[i]->SetBounds(m_pMainBars[i]->GetX(), MAINBAR_MARGIN + MAINBAR_HEIGHT + CENTERBAR_OFFSET + EVENT_MARGIN + EVENT_HEIGHT + PENALTYPANEL_TOPMARGIN, panelWidth, PENALTYPANEL_HEIGHT);
-		m_pPenaltyPanels[i]->SetBgColor(Color(0, 0, 0, 255));
-
-		for (int j = 0; j < 5; j++)
-		{
-			m_pPenalties[i][j]->SetBounds(PENALTYPANEL_PADDING + j * (fieldWidth + PENALTYPANEL_PADDING), PENALTYPANEL_PADDING, fieldWidth, PENALTYPANEL_HEIGHT - 2 * PENALTYPANEL_PADDING);
-		}
+		m_pNotifications[i]->SetParent(m_pNotificationPanel);
+		m_pNotifications[i]->SetFont(font);
+		m_pNotifications[i]->SetBounds(0, i * NOTIFICATION_HEIGHT, w, NOTIFICATION_HEIGHT);
+		m_pNotifications[i]->SetContentAlignment(Label::a_center);
 	}
+
+	m_pCenterFlash->SetBounds(0, GetTall() * 0.33f - CENTERFLASH_HEIGHT / 2, GetWide(), CENTERFLASH_HEIGHT);
+	m_pCenterFlash->SetContentAlignment(Label::a_center);
+	m_pCenterFlash->SetFont(m_pScheme->GetFont("IOSImportantEvent"));
+	m_pCenterFlash->SetFgColor(Color(255, 255, 255, 255));
 }
 
 //-----------------------------------------------------------------------------
@@ -324,90 +219,30 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 //-----------------------------------------------------------------------------
 void CHudScorebar::Init( void )
 {
-	ListenForGameEvent("wakeupcall");
-	ListenForGameEvent("throw_in");
+	ListenForGameEvent("timeout_pending");
+	ListenForGameEvent("timeout");
+	ListenForGameEvent("match_state");
+	ListenForGameEvent("set_piece");
+	ListenForGameEvent("goal");
+	ListenForGameEvent("own_goal");
+	ListenForGameEvent("foul");
+	ListenForGameEvent("penalty");
 }
 
-const char *g_szLongStateNames[32] =
+void CHudScorebar::ApplySettings( KeyValues *inResourceData )
 {
-	"WARM-UP",
-	"FIRST HALF",
-	"HALF-TIME",
-	"SECOND HALF",
-	"ET BREAK",
-	"ET FIRST HALF",
-	"ET HALF-TIME",
-	"ET SECOND HALF",
-	"PENALTIES BREAK",
-	"PENALTIES",
-	"COOL-DOWN"
-};
+	Panel::ApplySettings( inResourceData );
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 void CHudScorebar::OnThink( void )
 {
-	m_pMainBars[0]->SetVisible(false);
-	m_pMainBars[1]->SetVisible(false);
-	m_pTeamCrestPanels[0]->SetVisible(false);
-	m_pTeamCrestPanels[1]->SetVisible(false);
-	m_pCenterBar->SetVisible(false);
-
 	C_SDKPlayer *pLocal = C_SDKPlayer::GetLocalSDKPlayer();
 
 	if (!SDKGameRules() || !GetGlobalTeam(TEAM_A) || !GetGlobalTeam(TEAM_B) || !pLocal)
 		return;
-
-	if (pLocal->State_Get() == STATE_OBSERVER_MODE)
-	{
-		if (gpGlobals->curtime - 10 <= pLocal->m_flStateEnterTime)
-			m_pHelpText->SetText("Press [TAB] to show scoreboard. Click faded shirt icon to join.");
-		else
-			m_pHelpText->SetText("");
-	}
-	else if (pLocal->State_Get() == STATE_ACTIVE)
-	{
-		if (gpGlobals->curtime - 10 <= pLocal->m_flStateEnterTime)
-			m_pHelpText->SetText("[LMB] / [RMB] to shoot. Hold and release [RMB] to perform a charged shot.");
-		else
-			m_pHelpText->SetText("");
-	}
-
-	if (SDKGameRules()->State_Get() == MATCH_PENALTIES)
-	{
-		for (int i = 0; i < 2; i++)
-		{
-			int relativeRound = GetGlobalTeam(TEAM_A + i)->m_nPenaltyRound == 0 ? -1 : (GetGlobalTeam(TEAM_A + i)->m_nPenaltyRound - 1) % 5;
-			int fullRounds = max(0, GetGlobalTeam(TEAM_A + i)->m_nPenaltyRound - 1) / 5;
-			for (int j = 0; j < 5; j++)
-			{
-				Color color;
-				if (j > relativeRound)
-					color = Color(100, 100, 100, 255);
-				else
-				{
-					if ((GetGlobalTeam(TEAM_A + i)->m_nPenaltyGoalBits & (1 << (j + fullRounds * 5))) != 0)
-						color = Color(0, 255, 0, 255);
-					else
-						color = Color(255, 0, 0, 255);
-				}
-				m_pPenalties[i][j]->SetBgColor(color);
-			}
-			m_pPenaltyPanels[i]->SetVisible(true);
-		}
-	}
-	else
-	{
-		for (int i = 0; i < 2; i++)
-		{
-			m_pPenaltyPanels[i]->SetVisible(false);
-		}
-	}
-
-	m_pState->SetText(g_szLongStateNames[SDKGameRules()->State_Get()]);
-	char *szInjuryTime = (SDKGameRules()->m_nAnnouncedInjuryTime > 0) ? VarArgs("+%d", SDKGameRules()->m_nAnnouncedInjuryTime) : "";
-	m_pInjuryTime->SetText(szInjuryTime);
 
 	if (SDKGameRules()->State_Get() == MATCH_WARMUP && mp_timelimit_warmup.GetFloat() < 0)
 	{
@@ -419,162 +254,209 @@ void CHudScorebar::OnThink( void )
 		m_pTime->SetText(VarArgs("%d:%02d", time / 60, time % 60));
 	}
 
+	if (SDKGameRules()->m_nAnnouncedInjuryTime > 0 && m_flInjuryTimeStart == -1)
+	{
+		m_flInjuryTimeStart = gpGlobals->curtime;
+		m_pInjuryTime->SetText(VarArgs("+%d", SDKGameRules()->m_nAnnouncedInjuryTime));
+	}
+	else if (SDKGameRules()->m_nAnnouncedInjuryTime == 0 && m_flInjuryTimeStart != -1)
+	{
+		m_flInjuryTimeStart = -1;
+		m_pInjuryTime->SetText("");
+	}
+
 	for (int team = TEAM_A; team <= TEAM_B; team++)
 	{
-		m_pTeamNames[team - TEAM_A]->SetText(GetGlobalTeam(team)->Get_ShortTeamName());
-		m_pTeamNames[team - TEAM_A]->SetFgColor(GetGlobalTeam(team)->Get_HudKitColor());
+		m_pTeamNames[team - TEAM_A]->SetText(GetGlobalTeam(team)->Get_TeamCode());
+		m_pTeamNames[team - TEAM_A]->SetFgColor(Color(255, 255, 255, 255));
 		m_pTeamColors[team - TEAM_A][0]->SetBgColor(GetGlobalTeam(team)->Get_PrimaryKitColor());
 		m_pTeamColors[team - TEAM_A][1]->SetBgColor(GetGlobalTeam(team)->Get_SecondaryKitColor());
 		m_pTeamGoals[team - TEAM_A]->SetText(VarArgs("%d", GetGlobalTeam(team)->Get_Goals()));
 	}
 
-	C_Ball *pBall = GetBall();
-	if (pBall)
+	if (m_eCurMatchEvent == MATCH_EVENT_TIMEOUT)
 	{
-		if (SDKGameRules()->IsIntermissionState())
+		if (m_nCurMatchEventTeam == TEAM_UNASSIGNED)
+			m_pNotifications[0]->SetText(L"TIMEOUT (∞)");
+		else 
 		{
-			m_pPlayers[0]->SetText("");
-			m_pPlayers[1]->SetText("");
-			m_pSubPlayers[0]->SetText("");
-			m_pSubPlayers[1]->SetText("");
-			m_pSubSubPlayers[0]->SetText("");
-			m_pSubSubPlayers[1]->SetText("");
-			m_pEvent->SetText(g_szMatchEventNames[pBall->m_eMatchEvent]);
-			m_pEvent->SetFgColor(Color(255, 255, 255, 255));
-			m_pSubEvent->SetText("");
-			m_pSubSubEvent->SetText("");
-			m_pImportantEvent->SetText("");
-			m_flNextPlayerUpdate = gpGlobals->curtime;
+			int time = SDKGameRules()->GetTimeoutEnd() - gpGlobals->curtime;
+			m_pNotifications[0]->SetText(VarArgs("TIMEOUT: %s (%d:%02d)", g_PR->GetTeamCode(m_nCurMatchEventTeam), time / 60, time % 60));
+		}
+	}
+}
+
+void CHudScorebar::Paint( void )
+{
+	if (m_flNotificationStart != -1)
+	{
+		if (gpGlobals->curtime - m_flNotificationStart <= slideDownDuration)
+		{
+			float fraction = (gpGlobals->curtime - m_flNotificationStart) / slideDownDuration;
+			m_pNotificationPanel->SetY(m_pBackgroundPanel->GetTall() - pow(1 - fraction, slideDownExp) * m_pNotificationPanel->GetTall());
+		}
+		else if (gpGlobals->curtime - m_flNotificationStart <= slideDownDuration + m_flStayDuration)
+		{
+			m_pNotificationPanel->SetY(m_pBackgroundPanel->GetTall());
+			m_pCenterFlash->SetText("");
 		}
 		else
 		{
-			bool showEvent = true;
-			bool showPlayers = true;
+			float fraction = (gpGlobals->curtime - (m_flNotificationStart + slideDownDuration + m_flStayDuration)) / slideUpDuration;
 
-			int eventTeamIndex = clamp(pBall->m_nMatchEventTeam - TEAM_A, 0, 1);
-			int subEventTeamIndex = clamp(pBall->m_nMatchSubEventTeam - TEAM_A, 0, 1);
-			int subSubEventTeamIndex = clamp(pBall->m_nMatchSubSubEventTeam - TEAM_A, 0, 1);
-
-			switch (pBall->m_eMatchEvent)
+			if (fraction >= 1)
 			{
-			case MATCH_EVENT_DRIBBLE:
-			case MATCH_EVENT_PASS:
-			case MATCH_EVENT_INTERCEPTION:
-			case MATCH_EVENT_KEEPERSAVE:
-				m_flImportantEventStart = -1;
-				m_pImportantEvent->SetText("");
-				//if (!hud_minor_events_visible.GetBool())
-					showEvent = false;
-				//if (!hud_minor_eventplayernames_visible.GetBool())
-					showPlayers = false;
-				break;
-			default:
-				if (pBall->m_eMatchEvent != m_eCurMatchEvent)
-				{
-					m_flImportantEventStart = gpGlobals->curtime;
-					m_pImportantEvent->SetText(g_szMatchEventNames[pBall->m_eMatchEvent]);
-				}
-				break;
+				fraction = 1;
+				m_flNotificationStart = -1;
 			}
 
-			if (pBall->m_eMatchEvent != MATCH_EVENT_NONE && m_flImportantEventStart != -1 && gpGlobals->curtime >= m_flImportantEventStart + mp_majorevent_messageduration.GetFloat())
-			{
-				m_flImportantEventStart = -1;
-				m_pImportantEvent->SetText("");
-			}
+			m_pNotificationPanel->SetY(m_pBackgroundPanel->GetTall() - pow(fraction, slideUpExp) * m_pNotificationPanel->GetTall());
 
-			m_eCurMatchEvent = pBall->m_eMatchEvent;
-			m_flNextPlayerUpdate = gpGlobals->curtime;
+			m_pCenterFlash->SetText("");
+		}	
+	}
+	else
+	{
+		m_pNotificationPanel->SetY(m_pBackgroundPanel->GetTall() - m_pNotificationPanel->GetTall());
+		m_pCenterFlash->SetText("");
+	}
 
-			if (showEvent)
-			{
-				m_pEvent->SetText(g_szMatchEventNames[pBall->m_eMatchEvent]);
-				m_pEvent->SetFgColor(GetGlobalTeam(TEAM_A + eventTeamIndex)->Get_HudKitColor());
-
-				m_pSubEvent->SetText(g_szMatchEventNames[pBall->m_eMatchSubEvent]);
-				m_pSubEvent->SetFgColor(GetGlobalTeam(TEAM_A + subEventTeamIndex)->Get_HudKitColor());
-
-				m_pSubSubEvent->SetText(g_szMatchEventNames[pBall->m_eMatchSubSubEvent]);
-				m_pSubSubEvent->SetFgColor(GetGlobalTeam(TEAM_A + subSubEventTeamIndex)->Get_HudKitColor());
-			}
-			else
-			{
-				m_pEvent->SetText("");
-				m_pSubEvent->SetText("");
-				m_pSubSubEvent->SetText("");
-			}
-
-			if (pBall->m_eBallState != BALL_NORMAL)
-			{
-				m_flNextPlayerUpdate = gpGlobals->curtime;
-			}
-
-			if (gpGlobals->curtime >= m_flNextPlayerUpdate)
-			{
-				m_flNextPlayerUpdate = gpGlobals->curtime;// + 0.5f;
-
-				if (pBall->m_pMatchEventPlayer && showPlayers)
-				{
-					m_pPlayers[eventTeamIndex]->SetText(pBall->m_pMatchEventPlayer->GetPlayerName());
-					m_pPlayers[eventTeamIndex]->SetFgColor(GetGlobalTeam(TEAM_A + eventTeamIndex)->Get_HudKitColor());
-					m_pPlayers[1 - eventTeamIndex]->SetText("");
-				}
-				else
-				{
-					m_pPlayers[0]->SetText("");
-					m_pPlayers[1]->SetText("");
-				}
-
-				if (pBall->m_pMatchSubEventPlayer && showPlayers)
-				{
-					m_pSubPlayers[subEventTeamIndex]->SetText(pBall->m_pMatchSubEventPlayer->GetPlayerName());
-					m_pSubPlayers[subEventTeamIndex]->SetFgColor(GetGlobalTeam(TEAM_A + subEventTeamIndex)->Get_HudKitColor());
-					m_pSubPlayers[1 - subEventTeamIndex]->SetText("");
-				}
-				else
-				{
-					m_pSubPlayers[0]->SetText("");
-					m_pSubPlayers[1]->SetText("");
-				}
-
-				if (pBall->m_pMatchSubSubEventPlayer && showPlayers)
-				{
-					m_pSubSubPlayers[subSubEventTeamIndex]->SetText(pBall->m_pMatchSubSubEventPlayer->GetPlayerName());
-					m_pSubSubPlayers[subSubEventTeamIndex]->SetFgColor(GetGlobalTeam(TEAM_A + subSubEventTeamIndex)->Get_HudKitColor());
-					m_pSubSubPlayers[1 - subSubEventTeamIndex]->SetText("");
-				}
-				else
-				{
-					m_pSubSubPlayers[0]->SetText("");
-					m_pSubSubPlayers[1]->SetText("");
-				}
-			}
+	if (m_flInjuryTimeStart != -1)
+	{
+		if (gpGlobals->curtime - m_flInjuryTimeStart <= slideDownDuration)
+		{
+			float fraction = (gpGlobals->curtime - m_flInjuryTimeStart) / slideDownDuration;
+			m_pInjuryTime->SetX(m_pBackgroundPanel->GetWide() - m_pInjuryTime->GetWide() + (1 - pow(1 - fraction, slideDownExp)) * m_pInjuryTime->GetWide());
+		}
+		else
+		{
+			m_pInjuryTime->SetX(m_pBackgroundPanel->GetWide());
 		}
 	}
+	else
+		m_pInjuryTime->SetX(m_pBackgroundPanel->GetWide() - m_pInjuryTime->GetWide());
 }
 
 void CHudScorebar::FireGameEvent(IGameEvent *event)
 {
-	if (!g_PR)
-		return;
+	m_flNotificationStart = gpGlobals->curtime;
+	m_nCurMatchEventTeam = TEAM_UNASSIGNED;
+	m_pNotificationPanel->SetTall(NOTIFICATION_HEIGHT);
 
-	if (!Q_strcmp(event->GetName(), "wakeupcall"))
+	for (int i = 1; i < NOTIFICATION_COUNT; i++)
+		m_pNotifications[i]->SetText("");
+
+	if (!Q_strcmp(event->GetName(), "match_state"))
 	{
-		FLASHWINFO flashInfo;
-		flashInfo.cbSize = sizeof(FLASHWINFO);
-		flashInfo.hwnd = FindWindow(NULL, "IOS Source Dev");
-		flashInfo.dwFlags = FLASHW_TRAY | FLASHW_TIMERNOFG;
-		flashInfo.uCount = 3;
-		flashInfo.dwTimeout = 0;
-		FlashWindowEx(&flashInfo);
-		//SetWindowText(FindWindow(NULL, "IOS Source Dev"), "LIVE - IOS Source Dev");
+		if ((m_eCurMatchEvent == MATCH_EVENT_TIMEOUT_PENDING || m_eCurMatchEvent == MATCH_EVENT_TIMEOUT) && (match_event_t)event->GetInt("state") == MATCH_EVENT_NONE)
+		{
+			m_flStayDuration = 2.5f;
+			m_flNotificationStart = gpGlobals->curtime - slideDownDuration - m_flStayDuration;
+		}
+		else
+			m_pNotifications[0]->SetText(VarArgs("%s", g_szMatchEventNames[event->GetInt("state")]));
+
+		m_eCurMatchEvent = (match_event_t)event->GetInt("state");
+		m_flStayDuration = 2.5f;
 	}
-	else if (!Q_strcmp(event->GetName(), "throw_in"))
+	else if (!Q_strcmp(event->GetName(), "set_piece"))
 	{
+		m_pNotifications[0]->SetText(VarArgs("%s: %s", g_szMatchEventNames[event->GetInt("type")], g_PR->GetTeamCode(event->GetInt("taking_team"))));
+		m_eCurMatchEvent = (match_event_t)event->GetInt("type");
+		m_flStayDuration = 2.5f;
 	}
-}
+	else if (!Q_strcmp(event->GetName(), "goal"))
+	{
+		C_SDKPlayer *pScorer = ToSDKPlayer(USERID2PLAYER(event->GetInt("scorer_userid")));
+		C_SDKPlayer *pFirstAssister = ToSDKPlayer(USERID2PLAYER(event->GetInt("first_assister_userid")));
+		C_SDKPlayer *pSecondAssister = ToSDKPlayer(USERID2PLAYER(event->GetInt("second_assister_userid")));
 
-void CHudScorebar::PaintBackground()
-{
+		m_pNotifications[0]->SetText(VarArgs("GOAL: %s", g_PR->GetTeamCode(event->GetInt("scoring_team"))));
 
+		if (pScorer)
+		{
+			m_pNotifications[1]->SetText(VarArgs("%s", pScorer->GetPlayerName()));
+			m_pNotificationPanel->SetTall(2 * NOTIFICATION_HEIGHT);
+		}
+		if (pFirstAssister)
+		{
+			m_pNotifications[2]->SetText(VarArgs("+ %s", pFirstAssister->GetPlayerName()));
+			m_pNotificationPanel->SetTall(3 * NOTIFICATION_HEIGHT);
+		}
+		if (pSecondAssister)
+		{
+			m_pNotifications[3]->SetText(VarArgs("+ %s", pSecondAssister->GetPlayerName()));
+			m_pNotificationPanel->SetTall(4 * NOTIFICATION_HEIGHT);
+		}
+
+		m_eCurMatchEvent = MATCH_EVENT_GOAL;
+		m_flStayDuration = 1000;
+	}
+	else if (!Q_strcmp(event->GetName(), "own_goal"))
+	{
+		C_SDKPlayer *pCauser = ToSDKPlayer(USERID2PLAYER(event->GetInt("causer_userid")));
+
+		m_pNotifications[0]->SetText(VarArgs("OWN GOAL: %s", g_PR->GetTeamCode(event->GetInt("causing_team"))));
+
+		if (pCauser)
+		{
+			m_pNotifications[1]->SetText(VarArgs("%s", pCauser->GetPlayerName()));
+			m_pNotificationPanel->SetTall(2 * NOTIFICATION_HEIGHT);
+		}
+
+		m_eCurMatchEvent = MATCH_EVENT_OWNGOAL;
+		m_flStayDuration = 1000;
+	}
+	else if (!Q_strcmp(event->GetName(), "foul"))
+	{
+		C_SDKPlayer *pFoulingPl = ToSDKPlayer(USERID2PLAYER(event->GetInt("fouling_player_userid")));
+		C_SDKPlayer *pFouledPl = ToSDKPlayer(USERID2PLAYER(event->GetInt("fouled_player_userid")));
+		C_Team *pFoulingTeam = GetGlobalTeam(event->GetInt("fouling_team"));
+		match_event_t setpieceType = (match_event_t)event->GetInt("set_piece_type");
+		match_event_t foulType = (match_event_t)event->GetInt("foul_type");
+
+		char *typeText;
+
+		m_pNotifications[0]->SetText(VarArgs("%s: %s", g_szMatchEventNames[setpieceType], pFoulingTeam->GetOppTeam()->Get_TeamCode()));
+		m_pNotifications[1]->SetText(VarArgs("%s: %s", g_szMatchEventNames[foulType], (pFoulingPl ? pFoulingPl->GetPlayerName() : pFoulingTeam->Get_TeamCode())));
+		m_pNotificationPanel->SetTall(2 * NOTIFICATION_HEIGHT);
+	
+		m_eCurMatchEvent = setpieceType;
+		m_flStayDuration = 5.0f;
+	}
+	else if (!Q_strcmp(event->GetName(), "penalty"))
+	{
+		C_SDKPlayer *pTaker = ToSDKPlayer(USERID2PLAYER(event->GetInt("taking_player_userid")));
+
+		m_pNotifications[0]->SetText(VarArgs("PENALTY: %s", g_PR->GetTeamCode(event->GetInt("taking_team"))));
+
+		if (pTaker)
+		{
+			m_pNotifications[1]->SetText(VarArgs("O %s", pTaker->GetPlayerName()));
+			m_pNotificationPanel->SetTall(2 * NOTIFICATION_HEIGHT);
+		}
+
+		m_eCurMatchEvent = MATCH_EVENT_PENALTY;
+		m_flStayDuration = 5.0f;
+	}
+	else if (!Q_strcmp(event->GetName(), "timeout_pending"))
+	{
+		m_nCurMatchEventTeam = event->GetInt("requesting_team");
+		m_eCurMatchEvent = MATCH_EVENT_TIMEOUT_PENDING;
+
+		if (m_nCurMatchEventTeam == TEAM_UNASSIGNED)
+			m_pNotifications[0]->SetText("TIMEOUT PENDING");
+		else
+			m_pNotifications[0]->SetText(VarArgs("TIMEOUT PENDING: %s", g_PR->GetTeamCode(m_nCurMatchEventTeam)));
+
+		m_flStayDuration = 1000;
+	}
+	else if (!Q_strcmp(event->GetName(), "timeout"))
+	{
+		m_nCurMatchEventTeam = event->GetInt("requesting_team");
+		m_eCurMatchEvent = MATCH_EVENT_TIMEOUT;
+		m_flStayDuration = 1000;
+	}
+
+	m_pCenterFlash->SetText(g_szMatchEventNames[m_eCurMatchEvent]);
 }

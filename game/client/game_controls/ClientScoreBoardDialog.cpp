@@ -1168,18 +1168,15 @@ bool CClientScoreBoardDialog::GetTeamInfo(int team, KeyValues *kv)
 	float distSum = 0;
 	int passSum = 0;
 	int passCompletedSum = 0;
-	int passCompletedPlayerCount = 0;
 	int offsides = 0;
 	int corners = 0;
 	int goalkicks = 0;
 	int shots = 0;
 	int shotsOnGoal = 0;
-	int shotsOnGoalPlayerCount = 0;
 	int fouls = 0;
 	int foulsSuffered = 0;
 	int slidingTackles = 0;
 	int slidingTacklesCompletedSum = 0;
-	int slidingTacklesCompletedPlayerCount = 0;
 	int freekicks = 0;
 	int goals = 0;
 	int assists = 0;
@@ -1224,23 +1221,20 @@ bool CClientScoreBoardDialog::GetTeamInfo(int team, KeyValues *kv)
 		if (gr->GetPasses(i) > 0)
 		{
 			passSum += gr->GetPasses(i);
-			passCompletedSum += gr->GetPassesCompleted(i) * 100 / gr->GetPasses(i);
-			passCompletedPlayerCount += 1;
+			passCompletedSum += gr->GetPassesCompleted(i);
 			ratings += gr->GetPassesCompleted(i) * 10 / gr->GetPasses(i);
 		}
 
 		if (gr->GetShots(i) > 0)
 		{
 			shots += gr->GetShots(i);
-			shotsOnGoal += gr->GetShotsOnGoal(i) * 100 / gr->GetShots(i);
-			shotsOnGoalPlayerCount += 1;
+			shotsOnGoal += gr->GetShotsOnGoal(i);
 		}
 
 		if (gr->GetSlidingTackles(i) > 0)
 		{
 			slidingTackles += gr->GetSlidingTackles(i);
-			slidingTacklesCompletedSum += gr->GetSlidingTacklesCompleted(i) * 100 / gr->GetSlidingTackles(i);
-			slidingTacklesCompletedPlayerCount += 1;
+			slidingTacklesCompletedSum += gr->GetSlidingTacklesCompleted(i);
 		}
 
 		offsides += gr->GetOffsides(i);
@@ -1275,17 +1269,17 @@ bool CClientScoreBoardDialog::GetTeamInfo(int team, KeyValues *kv)
 	kv->SetString("ping", GET_TSTAT_TEXT(pingSum / max(1, pingPlayers)));
 	kv->SetString("possession", GET_TSTAT_FTEXT(pTeam->Get_Possession(), "%d%%"));
 	kv->SetString("passes", GET_TSTAT_TEXT(passSum));
-	kv->SetString("passescompleted", GET_TSTAT_FTEXT(passCompletedSum / max(1, passCompletedPlayerCount), "%d%%"));
+	kv->SetString("passescompleted", GET_TSTAT_FTEXT(100 * passCompletedSum / max(1, passSum), "%d%%"));
 	kv->SetString("distancecovered", GET_TSTAT_FTEXT(distSum, "%.1f km"));
 	kv->SetString("offsides", GET_TSTAT_TEXT(offsides));
 	kv->SetString("corners", GET_TSTAT_TEXT(corners));
 	kv->SetString("goalkicks", GET_TSTAT_TEXT(goalkicks));
 	kv->SetString("shots", GET_TSTAT_TEXT(shots));
-	kv->SetString("shotsongoal", GET_TSTAT_FTEXT(shotsOnGoal / max(1, shotsOnGoalPlayerCount), "%d%%"));
+	kv->SetString("shotsongoal", GET_TSTAT_FTEXT(100 * shotsOnGoal / max(1, shots), "%d%%"));
 	kv->SetString("fouls", GET_TSTAT_TEXT(fouls));
 	kv->SetString("foulssuffered", GET_TSTAT_TEXT(foulsSuffered));
 	kv->SetString("slidingtackles", GET_TSTAT_TEXT(slidingTackles));
-	kv->SetString("slidingtacklescompleted", GET_TSTAT_FTEXT(slidingTacklesCompletedSum / max(1, slidingTacklesCompletedPlayerCount), "%d%%"));
+	kv->SetString("slidingtacklescompleted", GET_TSTAT_FTEXT(100 * slidingTacklesCompletedSum / max(1, slidingTackles), "%d%%"));
 	kv->SetString("freekicks", GET_TSTAT_TEXT(freekicks));
 	kv->SetString("goals", GET_TSTAT_TEXT(goals));
 	kv->SetString("assists", GET_TSTAT_TEXT(assists));
@@ -1297,7 +1291,7 @@ bool CClientScoreBoardDialog::GetTeamInfo(int team, KeyValues *kv)
 	kv->SetString("keepersaves", GET_TSTAT_TEXT(saves));
 	kv->SetString("owngoals", GET_TSTAT_TEXT(owngoals));
 	kv->SetString("goalsconceded", GET_TSTAT_TEXT(goalsconceded));
-	char *rating = VarArgs("%.1f", (ratings / max(1, passCompletedPlayerCount)));
+	char *rating = "10";
 	if (!Q_strcmp(rating, "10.0"))
 		rating[2] = 0;
 	kv->SetString("rating", rating);

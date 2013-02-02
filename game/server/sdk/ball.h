@@ -118,15 +118,8 @@ public:
 	CNetworkHandle(CSDKPlayer, m_pCreator);
 	CNetworkVar(bool, m_bIsPlayerBall);
 	CNetworkVar(ball_state_t, m_eBallState);
-	CNetworkVar(match_event_t, m_eMatchEvent);
-	CNetworkVar(match_event_t, m_eMatchSubEvent);
-	CNetworkVar(match_event_t, m_eMatchSubSubEvent);
-	CNetworkHandle(CSDKPlayer, m_pMatchEventPlayer);
-	CNetworkVar(int, m_nMatchEventTeam);
-	CNetworkHandle(CSDKPlayer, m_pMatchSubEventPlayer);
-	CNetworkVar(int, m_nMatchSubEventTeam);
-	CNetworkHandle(CSDKPlayer, m_pMatchSubSubEventPlayer);
-	CNetworkVar(int, m_nMatchSubSubEventTeam);
+	CNetworkHandle(CSDKPlayer, m_pCurrentPlayer);
+	CNetworkVar(int, m_nCurrentTeam);
 
 	void			RemoveAllPlayerBalls();
 	void			RemovePlayerBall();
@@ -137,13 +130,6 @@ public:
 	float			GetMass(void) {	return m_fMass;	}
 	int				ObjectCaps(void)	{  return BaseClass::ObjectCaps() |	FCAP_CONTINUOUS_USE; }
 	int				UpdateTransmitState();
-
-	void			SetMatchEvent(match_event_t matchEvent, int team, bool forceUpdate);
-	void			SetMatchEventPlayer(CSDKPlayer *pPlayer, bool forceUpdate);
-	void			SetMatchSubEvent(match_event_t matchEvent, int team, bool forceUpdate);
-	void			SetMatchSubEventPlayer(CSDKPlayer *pPlayer, bool forceUpdate);
-	void			SetMatchSubSubEvent(match_event_t matchEvent, int team, bool forceUpdate);
-	void			SetMatchSubSubEventPlayer(CSDKPlayer *pPlayer, bool forceUpdate);
 
 	bool			IsAsleep(void) { return	false; }
 	void			Spawn(void);
@@ -161,7 +147,7 @@ public:
 
 	void			State_Transition(ball_state_t newState, float delay = 0.0f, bool cancelQueuedState = false);
 
-	void			ResetMatch();
+	void			Reset();
 
 	void			SetPos(Vector pos);
 	void			SetVel(Vector vel, float spinCoeff, body_part_t bodyPart, bool isDeflection, bool markOffsidePlayers, bool checkMinShotStrength);
@@ -306,6 +292,10 @@ private:
 	Vector			m_vBallCannonVel;
 	QAngle			m_aBallCannonAng;
 	AngularImpulse	m_vBallCannonRot;
+
+	CHandle<CSDKPlayer> m_pScorer;
+	CHandle<CSDKPlayer> m_pFirstAssister;
+	CHandle<CSDKPlayer> m_pSecondAssister;
 };
 
 #endif

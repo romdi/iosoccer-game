@@ -1425,9 +1425,6 @@
     <ClCompile Include="game_controls\matcheventmenu.cpp">
       <Filter>Source Files\game_controls</Filter>
     </ClCompile>
-    <ClCompile Include="sdk\ios_hud_espnbar.cpp">
-      <Filter>Source Files\SDK\Hud Elements</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="achievement_notification_panel.h">

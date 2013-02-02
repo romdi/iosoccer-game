@@ -272,7 +272,7 @@ public:
 	bool	m_bUseAdjustedStateEnterTime;
 	CNetworkVar(float, m_flMatchStartTime);
 
-	void RestartMatch(bool setRandomSides);
+	void RestartMatch(bool setRandomKickOffTeam, bool setRandomSides);
 	int WakeUpAwayPlayers();
 	void StartPenalties();
 
@@ -286,6 +286,7 @@ protected:
 	int m_nPenaltyTakingTeam;
 	int m_nPenaltyTakingStartTeam;
 	float m_flLastAwayCheckTime;
+	bool m_bAdminWantsTimeout;
 
 	CUtlVector<int> m_PlayerRotationMinutes;
 
@@ -372,7 +373,15 @@ public:
 	void SetOffsideLinePositions(float ballPosY, float offsidePlayerPosY, float lastOppPlayerPosY);
 	void SetOffsideLinesEnabled(bool enable);
 
+	void SetLastAwayCheckTime(float time) { m_flLastAwayCheckTime = time; }
+	float GetLastAwayCheckTime() { return m_flLastAwayCheckTime; }
+
+	void SetAdminWantsTimeout(bool state) { m_bAdminWantsTimeout = state; }
+	bool AdminWantsTimeout() { return m_bAdminWantsTimeout; }
+	
 	void SetTimeoutEnd(float time) { m_flTimeoutEnd = time; }
+
+	void ResetMatch();
 
 #else
 

@@ -40,6 +40,7 @@ public:
 	const	CSteamID *m_SteamID;
 	char	m_szSteamID[32];
 	char	m_szName[MAX_PLAYER_NAME_LENGTH];
+	int		m_nTeam;
 	int		m_nNextCardJoin;
 	int		m_nRedCards;
 	int		m_nYellowCards;
@@ -394,6 +395,9 @@ public:
 
 	const char			*GetLastKnownName() { return GetData()->m_szName; }
 	void				SetLastKnownName(const char *name) { Q_strncpy(GetData()->m_szName, name, MAX_PLAYER_NAME_LENGTH); }
+
+	int					GetLastKnownTeam() { return GetData()->m_nTeam; }
+	void				SetLastKnownTeam(int team) { GetData()->m_nTeam = team; }
 
 	float				GetNextJoin() { return m_flNextJoin; }
 	void				SetNextJoin(float time) { m_flNextJoin = time; }

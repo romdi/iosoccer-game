@@ -46,16 +46,9 @@ public:
 	int m_iPhysicsMode;	// One of the PHYSICS_MULTIPLAYER_ defines.	
 	float m_fMass;
 	CHandle<C_SDKPlayer> m_pCreator;
-	CHandle<C_SDKPlayer> m_pMatchEventPlayer;
-	int m_nMatchEventTeam;
-	CHandle<C_SDKPlayer> m_pMatchSubEventPlayer;
-	int m_nMatchSubEventTeam;
-	CHandle<C_SDKPlayer> m_pMatchSubSubEventPlayer;
-	int m_nMatchSubSubEventTeam;
+	CHandle<C_SDKPlayer> m_pCurrentPlayer;
+	int m_nCurrentTeam;
 	bool m_bIsPlayerBall;
-	match_event_t m_eMatchEvent;
-	match_event_t m_eMatchSubEvent;
-	match_event_t m_eMatchSubSubEvent;
 	ball_state_t m_eBallState;
 };
 

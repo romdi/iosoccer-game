@@ -401,6 +401,7 @@ CSDKGameRules::CSDKGameRules()
 	m_bUseAdjustedStateEnterTime = false;
 	m_flAdjustedStateEnterTime = -FLT_MAX;
 	m_flTimeoutEnd = 0;
+	m_bAdminWantsTimeout = false;
 #else
 	PrecacheMaterial("pitch/offside_line");
 	m_pOffsideLineMaterial = materials->FindMaterial( "pitch/offside_line", TEXTURE_GROUP_CLIENT_EFFECTS );
@@ -1036,13 +1037,13 @@ void CSDKGameRules::ClientDisconnected( edict_t *pClient )
 	BaseClass::ClientDisconnected( pClient );
 }
 
-void CSDKGameRules::RestartMatch(bool setRandomSides)
+void CSDKGameRules::RestartMatch(bool setRandomKickOffTeam, bool setRandomSides)
 {
-	if (setRandomSides)
-	{
-		m_nFirstHalfLeftSideTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
+	if (setRandomKickOffTeam)
 		m_nFirstHalfKickOffTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
-	}
+
+	if (setRandomSides)
+		m_nFirstHalfLeftSideTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
 
 	SDKGameRules()->State_Transition(MATCH_WARMUP);
 }
@@ -1099,8 +1100,11 @@ void CC_SV_StartTimeout(const CCommand &args)
 	if (SDKGameRules()->IsIntermissionState() || SDKGameRules()->GetTimeoutEnd() != 0)
 		return;
 
-	SDKGameRules()->SetTimeoutEnd(-1);
-	GetBall()->SetMatchEvent(MATCH_EVENT_TIMEOUT_PENDING, TEAM_INVALID, true);
+	SDKGameRules()->SetAdminWantsTimeout(true);
+
+	IGameEvent* pEvent = gameeventmanager->CreateEvent("timeout_pending");
+	pEvent->SetInt("requesting_team", TEAM_UNASSIGNED);
+	gameeventmanager->FireEvent(pEvent);
 }
 
 ConCommand sv_starttimeout( "sv_starttimeout", CC_SV_StartTimeout, "", 0 );
@@ -1110,11 +1114,15 @@ void CC_SV_EndTimeout(const CCommand &args)
 	if (!UTIL_IsCommandIssuedByServerAdmin())
         return;
 
-	if (SDKGameRules()->IsIntermissionState() || SDKGameRules()->GetTimeoutEnd() != -1)
+	if (SDKGameRules()->IsIntermissionState())
 		return;
 
+	SDKGameRules()->SetAdminWantsTimeout(false);
 	SDKGameRules()->SetTimeoutEnd(0);
-	GetBall()->SetMatchEvent(MATCH_EVENT_NONE, TEAM_INVALID, false);
+
+	IGameEvent* pEvent = gameeventmanager->CreateEvent("match_state");
+	pEvent->SetInt("state", MATCH_EVENT_NONE);
+	gameeventmanager->FireEvent(pEvent);
 }
 
 ConCommand sv_endtimeout( "sv_endtimeout", CC_SV_EndTimeout, "", 0 );
@@ -1145,14 +1153,21 @@ void CC_SV_Restart(const CCommand &args)
 	if (args.ArgC() > 1)
 		mp_timelimit_warmup.SetValue((float)atof(args[1]));
 
-	bool setRandomSides;
+	bool setRandomKickOffTeam;
 
 	if (args.ArgC() > 2)
-		setRandomSides = atoi(args[2]);
+		setRandomKickOffTeam = atoi(args[2]);
+	else
+		setRandomKickOffTeam = false;
+
+	bool setRandomSides;
+
+	if (args.ArgC() > 3)
+		setRandomSides = atoi(args[3]);
 	else
 		setRandomSides = false;
 
-	SDKGameRules()->RestartMatch(setRandomSides);
+	SDKGameRules()->RestartMatch(setRandomKickOffTeam, setRandomSides);
 }
 
 ConCommand sv_restart( "sv_restart", CC_SV_Restart, "Restart game", 0 );
@@ -1208,7 +1223,7 @@ ConVar sv_wakeupcall_interval("sv_wakeupcall_interval", "10", FCVAR_NOTIFY);
 void CSDKGameRules::StartPenalties()
 {
 	//SetLeftSideTeam(g_IOSRand.RandomInt(TEAM_A, TEAM_B));
-	GetBall()->ResetMatch();
+	ResetMatch();
 	State_Transition(MATCH_PENALTIES);
 }
 
@@ -1422,10 +1437,16 @@ CSDKGameRulesStateInfo* CSDKGameRules::State_LookupInfo( match_state_t state )
 
 void CSDKGameRules::State_WARMUP_Enter()
 {
-	GetBall()->SetMatchEvent(MATCH_EVENT_WARMUP, TEAM_INVALID, true);
+	IGameEvent* pEvent = gameeventmanager->CreateEvent("match_state");
+
+	if (pEvent)
+	{
+		pEvent->SetInt("state", MATCH_EVENT_WARMUP);
+		gameeventmanager->FireEvent(pEvent);
+	}
 
 	m_flMatchStartTime = gpGlobals->curtime;
-	GetBall()->ResetMatch();
+	ResetMatch();
 	GetBall()->State_Transition(BALL_STATIC, 0, true);
 	GetBall()->SetPos(m_vKickOff);
 
@@ -1441,23 +1462,6 @@ void CSDKGameRules::State_WARMUP_Enter()
 			continue;
 
 		pPl->SetPosOutsideShield();
-	}
-
-	m_flLastAwayCheckTime = gpGlobals->curtime;
-
-	m_PlayerRotationMinutes.RemoveAll();
-
-	if (sv_playerrotation_enabled.GetBool())
-	{
-		char minutes[128];
-		Q_strncpy(minutes, sv_playerrotation_minutes.GetString(), sizeof(minutes));
-
-		char *pch = strtok(minutes, " ,;");
-		while (pch)
-		{
-			m_PlayerRotationMinutes.AddToTail(atoi(pch));
-			pch = strtok(NULL, " ,;");
-		}
 	}
 }
 
@@ -1517,7 +1521,9 @@ void CSDKGameRules::State_FIRST_HALF_Leave(match_state_t newState)
 
 void CSDKGameRules::State_HALFTIME_Enter()
 {
-	GetBall()->SetMatchEvent(MATCH_EVENT_HALFTIME, TEAM_INVALID, true);
+	IGameEvent* pEvent = gameeventmanager->CreateEvent("match_state");
+	pEvent->SetInt("state", MATCH_EVENT_HALFTIME);
+	gameeventmanager->FireEvent(pEvent);
 
 	GetBall()->State_Transition(BALL_STATIC, 0, true);
 	GetBall()->SetPos(m_vKickOff);
@@ -1582,7 +1588,9 @@ void CSDKGameRules::State_SECOND_HALF_Leave(match_state_t newState)
 
 void CSDKGameRules::State_EXTRATIME_INTERMISSION_Enter()
 {
-	GetBall()->SetMatchEvent(MATCH_EVENT_EXTRATIME, TEAM_INVALID, true);
+	IGameEvent* pEvent = gameeventmanager->CreateEvent("match_state");
+	pEvent->SetInt("state", MATCH_EVENT_EXTRATIME);
+	gameeventmanager->FireEvent(pEvent);
 
 	GetBall()->State_Transition(BALL_STATIC, 0, true);
 	GetBall()->SetPos(m_vKickOff);
@@ -1643,7 +1651,9 @@ void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Leave(match_state_t newState)
 
 void CSDKGameRules::State_EXTRATIME_HALFTIME_Enter()
 {
-	GetBall()->SetMatchEvent(MATCH_EVENT_HALFTIME, TEAM_INVALID, true);
+	IGameEvent* pEvent = gameeventmanager->CreateEvent("match_state");
+	pEvent->SetInt("state", MATCH_EVENT_HALFTIME);
+	gameeventmanager->FireEvent(pEvent);
 
 	GetBall()->State_Transition(BALL_STATIC, 0, true);
 	GetBall()->SetPos(m_vKickOff);
@@ -1708,7 +1718,9 @@ void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Leave(match_state_t newState)
 
 void CSDKGameRules::State_PENALTIES_INTERMISSION_Enter()
 {
-	GetBall()->SetMatchEvent(MATCH_EVENT_PENALTIES, TEAM_INVALID, true);
+	IGameEvent* pEvent = gameeventmanager->CreateEvent("match_state");
+	pEvent->SetInt("state", MATCH_EVENT_PENALTIES);
+	gameeventmanager->FireEvent(pEvent);
 
 	GetBall()->State_Transition(BALL_STATIC, 0, true);
 	GetBall()->SetPos(m_vKickOff);
@@ -1856,7 +1868,11 @@ void CSDKGameRules::State_PENALTIES_Think()
 
 			if (pPenTaker)
 			{
-				GetBall()->SetMatchEvent(MATCH_EVENT_PENALTY, m_nPenaltyTakingTeam, false);
+				IGameEvent* pEvent = gameeventmanager->CreateEvent("penalty");
+				pEvent->SetInt("taking_team", m_nPenaltyTakingTeam);
+				pEvent->SetInt("taking_player_userid", pPenTaker->GetUserID());
+				gameeventmanager->FireEvent(pEvent);
+
 				GetBall()->SetPenaltyTaker(pPenTaker);
 				GetBall()->SetPenaltyState(PENALTY_ASSIGNED);
 				GetBall()->State_Transition(BALL_PENALTY, 0, true);
@@ -1889,7 +1905,9 @@ void CSDKGameRules::State_PENALTIES_Leave(match_state_t newState)
 
 void CSDKGameRules::State_COOLDOWN_Enter()
 {
-	GetBall()->SetMatchEvent(MATCH_EVENT_FINAL_WHISTLE, TEAM_INVALID, true);
+	IGameEvent* pEvent = gameeventmanager->CreateEvent("match_state");
+	pEvent->SetInt("state", MATCH_EVENT_FINAL_WHISTLE);
+	gameeventmanager->FireEvent(pEvent);
 
 	GetBall()->State_Transition(BALL_STATIC, 0, true);
 	GetBall()->SetPos(m_vKickOff);
@@ -2374,6 +2392,49 @@ ConVar mp_daytime_sunset("mp_daytime_sunset", "20", FCVAR_NOTIFY | FCVAR_REPLICA
 
 #ifdef GAME_DLL
 
+void CSDKGameRules::ResetMatch()
+{
+	SetOffsideLinesEnabled(false);
+	DisableShield();
+	SetTimeoutEnd(0);
+	SetLastAwayCheckTime(gpGlobals->curtime);
+	SetAdminWantsTimeout(false);
+
+	m_PlayerRotationMinutes.RemoveAll();
+
+	if (sv_playerrotation_enabled.GetBool())
+	{
+		char minutes[128];
+		Q_strncpy(minutes, sv_playerrotation_minutes.GetString(), sizeof(minutes));
+
+		char *pch = strtok(minutes, " ,;");
+		while (pch)
+		{
+			m_PlayerRotationMinutes.AddToTail(atoi(pch));
+			pch = strtok(NULL, " ,;");
+		}
+	}
+
+	GetBall()->Reset();
+
+	GetGlobalTeam(TEAM_A)->ResetStats();
+	GetGlobalTeam(TEAM_B)->ResetStats();
+
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+		if (!pPl)
+			continue;
+
+		pPl->ResetFlags();
+	}
+
+	CPlayerPersistentData::ReallocateAllPlayerData();
+
+	if (ReplayManager())
+		ReplayManager()->CleanUp();
+}
+
 void CSDKGameRules::SetMatchDisplayTimeSeconds(int seconds)
 {
 	m_bUseAdjustedStateEnterTime = true;
@@ -2406,7 +2467,7 @@ void CSDKGameRules::SetMatchDisplayTimeSeconds(int seconds)
 		matchState = MATCH_FIRST_HALF;
 	}
 
-	GetBall()->ResetMatch();
+	ResetMatch();
 	m_flMatchStartTime = gpGlobals->curtime - (seconds / (90.0f / mp_timelimit_match.GetInt()));
 	GetBall()->State_Transition(BALL_STATIC, 0, true);
 	SetLeftSideTeam(m_nFirstHalfLeftSideTeam);
@@ -2678,7 +2739,7 @@ void CSDKGameRules::DrawSkyboxOverlay()
 	float forwardLength;
 	float rightLength;
 	const float length = 5000;
-	const float width = 3000;
+	const float width = 4000;
 	const float height = 1000;
 	const float heightOffset = height - 200;
 

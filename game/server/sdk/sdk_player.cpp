@@ -576,6 +576,9 @@ void CSDKPlayer::ChangeTeam( int iTeamNum )
 
 	SetTeamNumber(iTeamNum);
 
+	if (iTeamNum == TEAM_A || iTeamNum == TEAM_B)
+		SetLastKnownTeam(iTeamNum);
+
 	//ResetStats();
 	//ResetFlags();
 
@@ -1160,7 +1163,10 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 			return false;
 
 		GetTeam()->SetWantsTimeout(true);
-		GetBall()->SetMatchEvent(MATCH_EVENT_TIMEOUT_PENDING, GetTeamNumber(), false);
+
+		IGameEvent* pEvent = gameeventmanager->CreateEvent("timeout_pending");
+		pEvent->SetInt("requesting_team", GetTeamNumber());
+		gameeventmanager->FireEvent(pEvent);
 
 		return true;
 	}
@@ -1797,10 +1803,11 @@ void CPlayerPersistentData::AllocateData(CSDKPlayer *pPl)
 	if (!data)
 	{
 		data = new CPlayerPersistentData;
+		data->ResetData();
 		data->m_SteamID = engine->GetClientSteamID(pPl->edict());
 		Q_strncpy(data->m_szSteamID, engine->GetPlayerNetworkIDString(pPl->edict()), 32);
 		Q_strncpy(data->m_szName, pPl->GetPlayerName(), MAX_PLAYER_NAME_LENGTH);
-		data->ResetData();
+		data->m_nTeam = pPl->GetTeamNumber();
 		m_PlayerPersistentData.AddToTail(data);
 	}
 
@@ -1826,7 +1833,7 @@ void CPlayerPersistentData::ReallocateAllPlayerData()
 
 void CPlayerPersistentData::ConvertAllPlayerDataToJson()
 {
-	const int jsonSize = 20480;
+	const int jsonSize = 40960;
 	char *json = new char[jsonSize];
 	json[0] = 0;
 
@@ -1839,7 +1846,47 @@ void CPlayerPersistentData::ConvertAllPlayerDataToJson()
 		if (team == TEAM_B)
 			Q_strcat(json, ",", jsonSize);
 
-		Q_strcat(json, UTIL_VarArgs("\"%s\":{\"name\":\"%s\",\"goals\":%d,\"possession\":%d,\"matchEvents\":[", (team == TEAM_A ? "homeTeam" : "awayTeam"), GetGlobalTeam(team)->GetShortTeamName(), GetGlobalTeam(team)->GetGoals(), GetGlobalTeam(team)->m_nPossession), jsonSize);
+		Q_strcat(json, UTIL_VarArgs("\"%s\":{", (team == TEAM_A ? "homeTeam" : "awayTeam")), jsonSize);
+
+		Q_strcat(json, "\"players\":[", jsonSize);
+
+		int playerCount = 0;
+
+		for (int i = 0; i < m_PlayerPersistentData.Count(); i++)
+		{
+			CPlayerPersistentData *pData = m_PlayerPersistentData[i];
+
+			if (pData->m_nTeam != team)
+				continue;
+
+			char playerName[MAX_PLAYER_NAME_LENGTH];
+
+			Q_strncpy(playerName, pData->m_szName, MAX_PLAYER_NAME_LENGTH);
+
+			char *c = playerName;
+
+			while (*c != 0)
+			{
+				if (*c == '"')
+					*c = '\'';
+
+				c++;
+			}
+			
+			if (playerCount > 0)
+				Q_strcat(json, ",", jsonSize);
+
+			Q_strcat(json, UTIL_VarArgs(
+				"{\"steamId\":\"%s\",\"name\":\"%s\",\"redCards\":%d,\"yellowCards\":%d,\"fouls\":%d,\"foulsSuffered\":%d,\"slidingTackles\":%d,\"slidingTacklesCompleted\":%d,\"goalsConceded\":%d,\"shots\":%d,\"shotsOnGoal\":%d,\"passesCompleted\":%d,\"interceptions\":%d,\"offsides\":%d,\"goals\":%d,\"ownGoals\":%d,\"assists\":%d,\"passes\":%d,\"freeKicks\":%d,\"penalties\":%d,\"corners\":%d,\"throwIns\":%d,\"keeperSaves\":%d,\"goalKicks\":%d,\"possession\":%d,\"distanceCovered\":%d}",
+				pData->m_szSteamID, playerName, pData->m_nRedCards, pData->m_nYellowCards, pData->m_nFouls, pData->m_nFoulsSuffered, pData->m_nSlidingTackles, pData->m_nSlidingTacklesCompleted, pData->m_nGoalsConceded, pData->m_nShots, pData->m_nShotsOnGoal, pData->m_nPassesCompleted, pData->m_nInterceptions, pData->m_nOffsides, pData->m_nGoals, pData->m_nOwnGoals, pData->m_nAssists, pData->m_nPasses, pData->m_nFreeKicks, pData->m_nPenalties, pData->m_nCorners, pData->m_nThrowIns, pData->m_nKeeperSaves, pData->m_nGoalKicks, pData->m_nPossession, (int)pData->m_flExactDistanceCovered
+				), jsonSize);
+
+			playerCount += 1;
+		}
+
+		Q_strcat(json, "],", jsonSize);
+
+		Q_strcat(json, UTIL_VarArgs("\"name\":\"%s\",\"goals\":%d,\"possession\":%d,\"matchEvents\":[", GetGlobalTeam(team)->GetShortTeamName(), GetGlobalTeam(team)->GetGoals(), GetGlobalTeam(team)->m_nPossession), jsonSize);
 		
 		for (int i = 0; i < GetGlobalTeam(team)->m_nMatchEventIndex; i++)
 		{
@@ -1862,25 +1909,11 @@ void CPlayerPersistentData::ConvertAllPlayerDataToJson()
 
 			Q_strcat(json, UTIL_VarArgs("{\"minute\":\"%s\",\"event\":\"%s\",\"player\":\"%s\"}", time, g_szMatchEventNames[pTeam->m_eMatchEventTypes[i]], pTeam->m_szMatchEventPlayers[i]), jsonSize);
 		}
+
 		Q_strcat(json, "]}", jsonSize);
 	}
 
-	Q_strcat(json, ",\"players\":[", jsonSize);
-
-	for (int i = 0; i < m_PlayerPersistentData.Count(); i++)
-	{
-		CPlayerPersistentData *pData = m_PlayerPersistentData[i];
-
-		if (i > 0)
-			Q_strcat(json, ",", jsonSize);
-
-		Q_strcat(json, UTIL_VarArgs(
-			"{\"steamId\":\"%s\",\"name\":\"%s\",\"redCards\":%d,\"yellowCards\":%d,\"fouls\":%d,\"foulsSuffered\":%d,\"slidingTackles\":%d,\"slidingTacklesCompleted\":\"%d%%\",\"goalsConceded\":%d,\"shots\":%d,\"shotsOnGoal\":\"%d%%\",\"passesCompleted\":\"%d%%\",\"interceptions\":%d,\"offsides\":%d,\"goals\":%d,\"ownGoals\":%d,\"assists\":%d,\"passes\":%d,\"freeKicks\":%d,\"penalties\":%d,\"corners\":%d,\"throwIns\":%d,\"keeperSaves\":%d,\"goalKicks\":%d,\"possession\":\"%d%%\",\"distanceCovered\":\"%.1f km\"}",
-			pData->m_szSteamID, pData->m_szName, pData->m_nRedCards, pData->m_nYellowCards, pData->m_nFouls, pData->m_nFoulsSuffered, pData->m_nSlidingTackles, (pData->m_nSlidingTacklesCompleted * 100 / max(1, pData->m_nSlidingTackles)), pData->m_nGoalsConceded, pData->m_nShots, (pData->m_nShotsOnGoal * 100 / max(1, pData->m_nShots)), (pData->m_nPassesCompleted * 100 / max(1, pData->m_nPasses)), pData->m_nInterceptions, pData->m_nOffsides, pData->m_nGoals, pData->m_nOwnGoals, pData->m_nAssists, pData->m_nPasses, pData->m_nFreeKicks, pData->m_nPenalties, pData->m_nCorners, pData->m_nThrowIns, pData->m_nKeeperSaves, pData->m_nGoalKicks, pData->m_nPossession, (pData->m_nDistanceCovered / 10.0f)
-			), jsonSize);
-	}
-
-	Q_strcat(json, "]}", jsonSize);
+	Q_strcat(json, "}", jsonSize);
 
 	filesystem->CreateDirHierarchy("statistics", "MOD");
 
@@ -1943,4 +1976,5 @@ void CPlayerPersistentData::ResetData()
 	m_nDistanceCovered = 0;
 	m_flExactDistanceCovered = 0.0f;
 	m_nNextCardJoin = 0;
+	m_nTeam = TEAM_UNASSIGNED;
 }
