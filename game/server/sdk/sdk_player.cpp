@@ -1877,8 +1877,8 @@ void CPlayerPersistentData::ConvertAllPlayerDataToJson()
 				Q_strcat(json, ",", jsonSize);
 
 			Q_strcat(json, UTIL_VarArgs(
-				"{\"steamId\":\"%s\",\"name\":\"%s\",\"redCards\":%d,\"yellowCards\":%d,\"fouls\":%d,\"foulsSuffered\":%d,\"slidingTackles\":%d,\"slidingTacklesCompleted\":%d,\"goalsConceded\":%d,\"shots\":%d,\"shotsOnGoal\":%d,\"passesCompleted\":%d,\"interceptions\":%d,\"offsides\":%d,\"goals\":%d,\"ownGoals\":%d,\"assists\":%d,\"passes\":%d,\"freeKicks\":%d,\"penalties\":%d,\"corners\":%d,\"throwIns\":%d,\"keeperSaves\":%d,\"goalKicks\":%d,\"possession\":%d,\"distanceCovered\":%d}",
-				pData->m_szSteamID, playerName, pData->m_nRedCards, pData->m_nYellowCards, pData->m_nFouls, pData->m_nFoulsSuffered, pData->m_nSlidingTackles, pData->m_nSlidingTacklesCompleted, pData->m_nGoalsConceded, pData->m_nShots, pData->m_nShotsOnGoal, pData->m_nPassesCompleted, pData->m_nInterceptions, pData->m_nOffsides, pData->m_nGoals, pData->m_nOwnGoals, pData->m_nAssists, pData->m_nPasses, pData->m_nFreeKicks, pData->m_nPenalties, pData->m_nCorners, pData->m_nThrowIns, pData->m_nKeeperSaves, pData->m_nGoalKicks, pData->m_nPossession, (int)pData->m_flExactDistanceCovered
+				"{\"steamIdUint64\":%llu,\"steamId\":\"%s\",\"name\":\"%s\",\"redCards\":%d,\"yellowCards\":%d,\"fouls\":%d,\"foulsSuffered\":%d,\"slidingTackles\":%d,\"slidingTacklesCompleted\":%d,\"goalsConceded\":%d,\"shots\":%d,\"shotsOnGoal\":%d,\"passesCompleted\":%d,\"interceptions\":%d,\"offsides\":%d,\"goals\":%d,\"ownGoals\":%d,\"assists\":%d,\"passes\":%d,\"freeKicks\":%d,\"penalties\":%d,\"corners\":%d,\"throwIns\":%d,\"keeperSaves\":%d,\"goalKicks\":%d,\"possession\":%d,\"distanceCovered\":%d}",
+				pData->m_SteamID->ConvertToUint64(), pData->m_szSteamID, playerName, pData->m_nRedCards, pData->m_nYellowCards, pData->m_nFouls, pData->m_nFoulsSuffered, pData->m_nSlidingTackles, pData->m_nSlidingTacklesCompleted, pData->m_nGoalsConceded, pData->m_nShots, pData->m_nShotsOnGoal, pData->m_nPassesCompleted, pData->m_nInterceptions, pData->m_nOffsides, pData->m_nGoals, pData->m_nOwnGoals, pData->m_nAssists, pData->m_nPasses, pData->m_nFreeKicks, pData->m_nPenalties, pData->m_nCorners, pData->m_nThrowIns, pData->m_nKeeperSaves, pData->m_nGoalKicks, pData->m_nPossession, (int)pData->m_flExactDistanceCovered
 				), jsonSize);
 
 			playerCount += 1;
@@ -1919,14 +1919,32 @@ void CPlayerPersistentData::ConvertAllPlayerDataToJson()
 
 	time_t rawtime;
 	struct tm *timeinfo;
-	char filename[128];
 
 	time (&rawtime);
 	timeinfo = localtime(&rawtime);
 
-	strftime(filename, sizeof(filename), "statistics\\matchdata_%Y.%m.%d_%Hh.%Mm.%Ss.json", timeinfo);
+	char teamNames[2][32];
 
-	FileHandle_t fh = filesystem->Open(filename, "w", "MOD");
+	for (int team = TEAM_A; team <= TEAM_B; team++)
+	{
+		Q_strncpy(teamNames[team - TEAM_A], (GetGlobalTeam(team)->GetTeamCode()[0] == 0 ? GetGlobalTeam(team)->GetKitName() : GetGlobalTeam(team)->GetTeamCode()), 32);
+		char *c = teamNames[team - TEAM_A];
+
+		while (*c != 0)
+		{
+			if (*c != '.' && *c != '_' && (*c < 48 || *c > 57 && *c < 65 || *c > 90 && *c < 97 || *c > 122))
+				*c = '.';
+
+			c++;
+		}
+	}
+	
+	char time[64];
+	strftime(time, sizeof(time), "%Y.%m.%d_%Hh.%Mm.%Ss", timeinfo);
+
+	FileHandle_t fh = filesystem->Open(
+		UTIL_VarArgs("statistics\\%s_%s-vs-%s_%d-%d.json", time, teamNames[0], teamNames[1], GetGlobalTeam(TEAM_A)->GetGoals(), GetGlobalTeam(TEAM_B)->GetGoals()
+		), "w", "MOD");
  
 	if (fh)
 	{
