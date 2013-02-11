@@ -794,7 +794,7 @@ void CGameMovement::ReduceTimers( void )
 	float fieldLength = SDKGameRules()->m_vFieldMax.GetY() - SDKGameRules()->m_vFieldMin.GetY();
 	float dist = pPl->GetLocalOrigin().y - SDKGameRules()->m_vKickOff.GetY();
 	float fieldZone = (clamp(dist * 100 / (fieldLength / 2), -100, 100) + 100) / 2;
-	if (pPl->GetTeam()->m_nForward == -1)
+	if ((pPl->GetTeamNumber() == TEAM_A || pPl->GetTeamNumber() == TEAM_B) && pPl->GetTeam()->m_nForward == -1)
 		fieldZone = 100 - fieldZone;
 
 	// If we're holding the sprint key and also actually moving, remove some stamina
