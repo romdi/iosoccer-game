@@ -315,6 +315,23 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 	{
 		if (SDKGameRules()->m_nShieldType == SHIELD_GOALKICK || 
 			SDKGameRules()->m_nShieldType == SHIELD_PENALTY ||
+			SDKGameRules()->m_nShieldType == SHIELD_FREEKICK ||
+			SDKGameRules()->m_nShieldType == SHIELD_CORNER)
+		{
+			const float radius = mp_shield_ball_radius.GetFloat();
+			Vector dir = newPos - SDKGameRules()->m_vShieldPos;
+
+			if (dir.Length2DSqr() < pow(radius, 2))
+			{
+				dir.z = 0;
+				dir.NormalizeInPlace();
+				newPos = SDKGameRules()->m_vShieldPos + dir * radius;
+				stopPlayer = true;
+			}
+		}
+
+		if (SDKGameRules()->m_nShieldType == SHIELD_GOALKICK || 
+			SDKGameRules()->m_nShieldType == SHIELD_PENALTY ||
 			SDKGameRules()->m_nShieldType == SHIELD_KEEPERHANDS)
 		{
 			int side = (SDKGameRules()->m_nShieldType == SHIELD_PENALTY ? GetGlobalTeam(SDKGameRules()->m_nShieldTeam)->GetOppTeamNumber() : SDKGameRules()->m_nShieldTeam);
@@ -335,42 +352,29 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 			if (GetFlags() & FL_SHIELD_KEEP_OUT && isInsideBox)
 			{
 				bool oldPosInBox = true;
-				//if (SDKGameRules()->m_nShieldType == SHIELD_KEEPERHANDS)
-				//{
-				//	Vector goalCenter = (GetGlobalTeam(SDKGameRules()->m_nShieldTeam)->m_vCornerLeft + GetGlobalTeam(SDKGameRules()->m_nShieldTeam)->m_vCornerRight) / 2; 
-				//	if ((goalCenter - newPos).Length2DSqr() < (goalCenter - oldPos).Length2DSqr())
-				//	{
-				//		newPos = oldPos;
-				//		stopPlayer = true;
-				//	}
-				//}
-				//else
+				if (newPos.x > min.x && oldPos.x <= min.x && newPos.x < boxCenter.x)
 				{
-
-					if (newPos.x > min.x && oldPos.x <= min.x && newPos.x < boxCenter.x)
-					{
-						newPos.x = min.x;
-						oldPosInBox = false; 
-					}
-					else if (newPos.x < max.x && oldPos.x >= max.x && newPos.x > boxCenter.x)
-					{
-						newPos.x = max.x;
-						oldPosInBox = false; 
-					}
-
-					if (newPos.y > min.y && oldPos.y <= min.y && newPos.y < boxCenter.y)
-					{
-						newPos.y = min.y;
-						oldPosInBox = false; 
-					}
-					else if (newPos.y < max.y && oldPos.y >= max.y && newPos.y > boxCenter.y)
-					{
-						newPos.y = max.y;
-						oldPosInBox = false; 
-					}
-
-					stopPlayer = true;
+					newPos.x = min.x;
+					oldPosInBox = false; 
 				}
+				else if (newPos.x < max.x && oldPos.x >= max.x && newPos.x > boxCenter.x)
+				{
+					newPos.x = max.x;
+					oldPosInBox = false; 
+				}
+
+				if (newPos.y > min.y && oldPos.y <= min.y && newPos.y < boxCenter.y)
+				{
+					newPos.y = min.y;
+					oldPosInBox = false; 
+				}
+				else if (newPos.y < max.y && oldPos.y >= max.y && newPos.y > boxCenter.y)
+				{
+					newPos.y = max.y;
+					oldPosInBox = false; 
+				}
+
+				stopPlayer = true;
 
 				if (SDKGameRules()->m_nShieldType == SHIELD_KEEPERHANDS && oldPosInBox)
 				{
