@@ -46,12 +46,16 @@ using namespace vgui;
 #define NOTIFICATION_COUNT 4
 enum { NOTIFICATION_HEIGHT = 25 };
 enum { CENTERFLASH_HEIGHT = 100 };
+enum { EXTRAINFO_HEIGHT = 25 };
 
 const float slideDownDuration = 0.5f;
 const float slideUpDuration = 0.5f;
-
 const float slideDownExp = 2.0f;
 const float slideUpExp = 2.0f;
+
+const float flashDuration = 0.5f;
+
+const float extraInfoFadeDuration = 0.5f;
 
 struct Event_t
 {
@@ -71,7 +75,6 @@ class CHudScorebar : public CHudElement, public vgui::EditablePanel
 public:
 	CHudScorebar( const char *pElementName );
 	void Init( void );
-	void ReloadScheme();
 
 protected:
 	virtual void OnThink( void );
@@ -99,15 +102,27 @@ private:
 	IScheme *m_pScheme;
 	Panel *m_pMainPanel;
 	float m_flStayDuration;
+	Label *m_pExtraInfo;
 };
 
 DECLARE_HUDELEMENT( CHudScorebar );
+
+static CHudScorebar *g_pHudScorebar = NULL;
+
+void CC_HudReloadScorebar(const CCommand &args)
+{
+	g_pHudScorebar->Init();
+}
+
+static ConCommand hud_reloadscorebar("hud_reloadscorebar", CC_HudReloadScorebar);
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
 CHudScorebar::CHudScorebar( const char *pElementName ) : BaseClass(NULL, "HudScorebar"), CHudElement( pElementName )
 {
+	g_pHudScorebar = this;
+
 	SetHiddenBits(HIDEHUD_SCOREBAR);
 
 	vgui::Panel *pParent = g_pClientMode->GetViewport();
@@ -126,6 +141,9 @@ CHudScorebar::CHudScorebar( const char *pElementName ) : BaseClass(NULL, "HudSco
 	}
 
 	m_pCenterFlash = new Label(this, "", "");
+
+	m_pExtraInfo = new Label(this, "", "");
+
 	m_flStayDuration = 2.5f;
 }
 
@@ -135,11 +153,6 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 
 	m_pScheme = pScheme;
 
-	ReloadScheme();
-}
-
-void CHudScorebar::ReloadScheme()
-{
 	SetProportional(false);
 
 	LoadControlSettings("resource/ui/scorebars/default.res");
@@ -196,6 +209,8 @@ void CHudScorebar::ReloadScheme()
 	m_pNotificationPanel = dynamic_cast<Panel *>(FindChildByName("NotificationPanel", true));
 	m_pNotificationPanel->SetTall(NOTIFICATION_HEIGHT);
 	m_pNotificationPanel->SetParent(m_pMainPanel);
+	m_pNotificationPanel->SetFgColor(Color(0, 0, 0, 255));
+	m_pNotificationPanel->SetBgColor(Color(255, 255, 255, 200));
 
 	int x, y, w, h;
 	m_pNotificationPanel->GetBounds(x, y, w, h);
@@ -206,12 +221,22 @@ void CHudScorebar::ReloadScheme()
 		m_pNotifications[i]->SetFont(font);
 		m_pNotifications[i]->SetBounds(0, i * NOTIFICATION_HEIGHT, w, NOTIFICATION_HEIGHT);
 		m_pNotifications[i]->SetContentAlignment(Label::a_center);
+		m_pNotifications[i]->SetFgColor(Color(0, 0, 0, 255));
 	}
 
 	m_pCenterFlash->SetBounds(0, GetTall() * 0.33f - CENTERFLASH_HEIGHT / 2, GetWide(), CENTERFLASH_HEIGHT);
 	m_pCenterFlash->SetContentAlignment(Label::a_center);
 	m_pCenterFlash->SetFont(m_pScheme->GetFont("IOSImportantEvent"));
 	m_pCenterFlash->SetFgColor(Color(255, 255, 255, 255));
+	m_pCenterFlash->SetVisible(false);
+
+	m_pExtraInfo->SetContentAlignment(Label::a_center);
+	m_pExtraInfo->SetFont(m_pScheme->GetFont("IOSScorebarMediumItalic"));
+	m_pExtraInfo->SetFgColor(Color(255, 255, 255, 255));
+	m_pExtraInfo->SetBgColor(Color(0, 0, 0, 200));
+	m_pExtraInfo->SetParent(m_pMainPanel);
+	m_pExtraInfo->SetZPos(-2);
+	m_pExtraInfo->SetVisible(false);
 }
 
 //-----------------------------------------------------------------------------
@@ -276,7 +301,7 @@ void CHudScorebar::OnThink( void )
 
 	if (m_eCurMatchEvent == MATCH_EVENT_TIMEOUT)
 	{
-		if (m_nCurMatchEventTeam == TEAM_UNASSIGNED)
+		if (SDKGameRules()->GetTimeoutEnd() == -1)
 			m_pNotifications[0]->SetText(L"TIMEOUT (∞)");
 		else 
 		{
@@ -284,21 +309,48 @@ void CHudScorebar::OnThink( void )
 			m_pNotifications[0]->SetText(VarArgs("TIMEOUT: %s (%d:%02d)", g_PR->GetTeamCode(m_nCurMatchEventTeam), time / 60, time % 60));
 		}
 	}
-}
 
-void CHudScorebar::Paint( void )
-{
 	if (m_flNotificationStart != -1)
 	{
+		float timePassed = gpGlobals->curtime - m_flNotificationStart;
+		float timeFrac = min(2, timePassed / (flashDuration / 2.0f));
+		float colorCoeff = -cos(M_PI * timeFrac) / 2 + 0.5f;
+		//m_pNotificationPanel->SetBgColor(Color(255 * colorCoeff, 255 * colorCoeff, 255 * colorCoeff, 255));
+		m_pNotificationPanel->SetBgColor(Color(255, 255, 255, 200));
+
 		if (gpGlobals->curtime - m_flNotificationStart <= slideDownDuration)
 		{
 			float fraction = (gpGlobals->curtime - m_flNotificationStart) / slideDownDuration;
 			m_pNotificationPanel->SetY(m_pBackgroundPanel->GetTall() - pow(1 - fraction, slideDownExp) * m_pNotificationPanel->GetTall());
+			m_pExtraInfo->SetY(m_pBackgroundPanel->GetTall() - m_pExtraInfo->GetTall());
 		}
 		else if (gpGlobals->curtime - m_flNotificationStart <= slideDownDuration + m_flStayDuration)
 		{
 			m_pNotificationPanel->SetY(m_pBackgroundPanel->GetTall());
 			m_pCenterFlash->SetText("");
+
+			m_pExtraInfo->SetBounds(m_pNotificationPanel->GetX(), m_pNotificationPanel->GetY() + m_pNotificationPanel->GetTall(), m_pNotificationPanel->GetWide(), EXTRAINFO_HEIGHT);
+			
+			if (timePassed - slideDownDuration <= extraInfoFadeDuration)
+				m_pExtraInfo->SetAlpha(0);
+			else if (timePassed - slideDownDuration <= 2 * extraInfoFadeDuration)
+			{
+				float extraFrac = min(1, (timePassed - slideDownDuration - extraInfoFadeDuration) / extraInfoFadeDuration);
+				float extraCoeff = pow(extraFrac, 2) * (3 - 2 * extraFrac);
+				m_pExtraInfo->SetAlpha(255 * extraCoeff);
+			}
+			else if (timePassed - slideDownDuration <= m_flStayDuration - 2 * extraInfoFadeDuration)
+			{
+				m_pExtraInfo->SetAlpha(255);
+			}
+			//else if (timePassed - slideDownDuration <= m_flStayDuration - extraInfoFadeDuration)
+			//{
+			//	float extraFrac = min(1, (m_flStayDuration - (timePassed - slideDownDuration) - extraInfoFadeDuration) / extraInfoFadeDuration);
+			//	float extraCoeff = pow(extraFrac, 2) * (3 - 2 * extraFrac);
+			//	m_pExtraInfo->SetAlpha(255 * extraCoeff);
+			//}
+			//else
+			//	m_pExtraInfo->SetAlpha(0);
 		}
 		else
 		{
@@ -310,15 +362,18 @@ void CHudScorebar::Paint( void )
 				m_flNotificationStart = -1;
 			}
 
-			m_pNotificationPanel->SetY(m_pBackgroundPanel->GetTall() - pow(fraction, slideUpExp) * m_pNotificationPanel->GetTall());
-
+			m_pNotificationPanel->SetY(m_pBackgroundPanel->GetTall() - pow(fraction, slideUpExp) * (m_pNotificationPanel->GetTall() + m_pExtraInfo->GetTall()));
 			m_pCenterFlash->SetText("");
+			m_pExtraInfo->SetY(m_pNotificationPanel->GetY() + m_pNotificationPanel->GetTall());
 		}	
 	}
 	else
 	{
 		m_pNotificationPanel->SetY(m_pBackgroundPanel->GetTall() - m_pNotificationPanel->GetTall());
 		m_pCenterFlash->SetText("");
+		//m_pNotificationPanel->SetBgColor(Color(0, 0, 0, 255));
+		//m_pExtraInfo->SetAlpha(0);
+		m_pExtraInfo->SetY(m_pBackgroundPanel->GetTall() - m_pExtraInfo->GetTall());
 	}
 
 	if (m_flInjuryTimeStart != -1)
@@ -335,6 +390,21 @@ void CHudScorebar::Paint( void )
 	}
 	else
 		m_pInjuryTime->SetX(m_pBackgroundPanel->GetWide() - m_pInjuryTime->GetWide());
+}
+
+void CHudScorebar::Paint( void )
+{
+}
+
+char *GetExtraInfoText(match_event_t matchEvent, int team)
+{
+	switch (matchEvent)
+	{
+	case MATCH_EVENT_THROWIN:
+		return VarArgs("xth throw-in for %s", GetGlobalTeam(team)->Get_ShortTeamName());
+	default:
+		return VarArgs("");
+	}
 }
 
 void CHudScorebar::FireGameEvent(IGameEvent *event)
@@ -364,6 +434,7 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 		m_pNotifications[0]->SetText(VarArgs("%s: %s", g_szMatchEventNames[event->GetInt("type")], g_PR->GetTeamCode(event->GetInt("taking_team"))));
 		m_eCurMatchEvent = (match_event_t)event->GetInt("type");
 		m_flStayDuration = 2.5f;
+		m_pExtraInfo->SetText(GetExtraInfoText(m_eCurMatchEvent, event->GetInt("taking_team")));
 	}
 	else if (!Q_strcmp(event->GetName(), "goal"))
 	{

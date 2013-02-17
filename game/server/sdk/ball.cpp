@@ -921,6 +921,7 @@ void CBall::State_Think()
 				IGameEvent* pEvent = gameeventmanager->CreateEvent("match_state");
 				pEvent->SetInt("state", MATCH_EVENT_NONE);
 				gameeventmanager->FireEvent(pEvent);
+				UTIL_ClientPrintAll(HUD_PRINTTALK, "#game_match_start");
 			}
 		}
 

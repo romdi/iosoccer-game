@@ -1118,10 +1118,10 @@ void CC_SV_EndTimeout(const CCommand &args)
 		return;
 
 	SDKGameRules()->SetAdminWantsTimeout(false);
-	SDKGameRules()->SetTimeoutEnd(0);
+	SDKGameRules()->SetTimeoutEnd(gpGlobals->curtime + 5);
 
-	IGameEvent* pEvent = gameeventmanager->CreateEvent("match_state");
-	pEvent->SetInt("state", MATCH_EVENT_NONE);
+	IGameEvent* pEvent = gameeventmanager->CreateEvent("timeout");
+	pEvent->SetInt("requesting_team", TEAM_UNASSIGNED);
 	gameeventmanager->FireEvent(pEvent);
 }
 
