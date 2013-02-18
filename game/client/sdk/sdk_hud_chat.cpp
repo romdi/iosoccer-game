@@ -6,7 +6,6 @@
 
 #include "cbase.h"
 #include "sdk_hud_chat.h"
-#include "c_sdk_player_resource.h"
 #include "hud_macros.h"
 #include "text_message.h"
 #include "vguicenterprint.h"
@@ -158,11 +157,7 @@ Color CHudChat::GetClientColor( int clientIndex )
 	{
 		int iTeam = g_PR->GetTeam( clientIndex );
 
-		C_SDK_PlayerResource *sdk_PR = dynamic_cast<C_SDK_PlayerResource *>(g_PR);
-		if ( !sdk_PR )
-			return g_ColorGray;
-
-		return sdk_PR->GetTeamColor( iTeam );
+		return g_PR->GetTeamColor( iTeam );
 	}
 
 	return g_ColorGray;

@@ -1350,9 +1350,6 @@
     <ClCompile Include="sdk\c_sdk_player.cpp">
       <Filter>Source Files\SDK\Player</Filter>
     </ClCompile>
-    <ClCompile Include="sdk\c_sdk_player_resource.cpp">
-      <Filter>Source Files\SDK\Player</Filter>
-    </ClCompile>
     <ClCompile Include="..\shared\sdk\sdk_gamemovement.cpp">
       <Filter>Source Files\SDK\Player</Filter>
     </ClCompile>
@@ -1536,9 +1533,6 @@
       <Filter>Source Files\SDK\Rules</Filter>
     </ClInclude>
     <ClInclude Include="sdk\c_sdk_player.h">
-      <Filter>Source Files\SDK\Player</Filter>
-    </ClInclude>
-    <ClInclude Include="sdk\c_sdk_player_resource.h">
       <Filter>Source Files\SDK\Player</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\sdk\sdk_playeranimstate.h">

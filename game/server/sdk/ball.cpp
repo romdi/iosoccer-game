@@ -2961,8 +2961,8 @@ void CBall::UpdatePossession(CSDKPlayer *pNewPossessor)
 			}
 		}
 
-		GetGlobalTeam(TEAM_A)->m_nPossession = 0;
-		GetGlobalTeam(TEAM_B)->m_nPossession = 0;
+		GetGlobalTeam(TEAM_A)->m_Possession = 0;
+		GetGlobalTeam(TEAM_B)->m_Possession = 0;
 
 		for (int i = 1; i <= gpGlobals->maxClients; i++)
 		{
@@ -2971,7 +2971,7 @@ void CBall::UpdatePossession(CSDKPlayer *pNewPossessor)
 			if (!CSDKPlayer::IsOnField(pPl))
 				continue;
 
-			pPl->GetTeam()->m_nPossession += pPl->GetPossession();
+			pPl->GetTeam()->m_Possession += pPl->GetPossession();
 		}
 	}
 

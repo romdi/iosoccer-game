@@ -45,8 +45,6 @@ void SendProxy_String_tToStringT( const SendProp *pProp, const void *pStruct, co
 // Datatable
 IMPLEMENT_SERVERCLASS_ST_NOBASE(CTeam, DT_Team)
 	SendPropInt( SENDINFO(m_iTeamNum), 5 ),
-	SendPropInt( SENDINFO(m_nGoals), 0 ),
-	SendPropInt( SENDINFO(m_nPossession), 0 ),
 	SendPropInt( SENDINFO(m_nPenaltyGoals), 0 ),
 	SendPropInt( SENDINFO(m_nPenaltyGoalBits), 0 ),
 	SendPropInt( SENDINFO(m_nPenaltyRound)),
@@ -85,6 +83,33 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CTeam, DT_Team)
 	SendPropArray3( SENDINFO_ARRAY3(m_nMatchEventSeconds), SendPropInt( SENDINFO_ARRAY(m_nMatchEventSeconds), 13, SPROP_UNSIGNED ) ),
 
 	SendPropArray3( SENDINFO_ARRAY3(m_PosNextJoinSeconds), SendPropInt( SENDINFO_ARRAY(m_PosNextJoinSeconds), 13, SPROP_UNSIGNED ) ),
+
+	SendPropInt(SENDINFO(m_RedCards), 4, SPROP_UNSIGNED),
+	SendPropInt(SENDINFO(m_YellowCards), 4, SPROP_UNSIGNED),
+	SendPropInt(SENDINFO(m_Fouls), 6, SPROP_UNSIGNED),
+	SendPropInt(SENDINFO(m_FoulsSuffered), 6, SPROP_UNSIGNED),
+	SendPropInt(SENDINFO(m_SlidingTackles), 8, SPROP_UNSIGNED),
+	SendPropInt(SENDINFO(m_SlidingTacklesCompleted), 8, SPROP_UNSIGNED),
+	SendPropInt(SENDINFO(m_GoalsConceded), 5, SPROP_UNSIGNED),
+	SendPropInt(SENDINFO(m_Shots), 6, SPROP_UNSIGNED),
+	SendPropInt(SENDINFO(m_ShotsOnGoal), 6, SPROP_UNSIGNED),
+	SendPropInt(SENDINFO(m_PassesCompleted), 8, SPROP_UNSIGNED),
+	SendPropInt(SENDINFO(m_Interceptions), 8, SPROP_UNSIGNED),
+	SendPropInt(SENDINFO(m_Offsides), 6, SPROP_UNSIGNED),
+	SendPropInt(SENDINFO(m_Goals), 5, SPROP_UNSIGNED),
+	SendPropInt(SENDINFO(m_OwnGoals), 5, SPROP_UNSIGNED),
+	SendPropInt(SENDINFO(m_Assists), 5, SPROP_UNSIGNED),
+	SendPropInt(SENDINFO(m_Possession), 7, SPROP_UNSIGNED),
+	SendPropInt(SENDINFO(m_DistanceCovered), 7, SPROP_UNSIGNED),
+	SendPropInt(SENDINFO(m_Passes), 8, SPROP_UNSIGNED),
+	SendPropInt(SENDINFO(m_FreeKicks), 6, SPROP_UNSIGNED),
+	SendPropInt(SENDINFO(m_Penalties), 6, SPROP_UNSIGNED),
+	SendPropInt(SENDINFO(m_Corners), 6, SPROP_UNSIGNED),
+	SendPropInt(SENDINFO(m_ThrowIns), 6, SPROP_UNSIGNED),
+	SendPropInt(SENDINFO(m_KeeperSaves), 6, SPROP_UNSIGNED),
+	SendPropInt(SENDINFO(m_GoalKicks), 5, SPROP_UNSIGNED),
+	SendPropInt(SENDINFO(m_Ping), 10, SPROP_UNSIGNED),
+	SendPropInt(SENDINFO(m_Rating), 7, SPROP_UNSIGNED),
 END_SEND_TABLE()
 
 LINK_ENTITY_TO_CLASS( team_manager, CTeam );
@@ -121,6 +146,31 @@ CTeam::CTeam( void )
 	UpdatePosIndices(true);
 	m_nTimeoutsLeft = mp_timeout_count.GetInt();
 	m_bWantsTimeout = false;
+
+	m_RedCards = 0;
+	m_YellowCards = 0;
+	m_Fouls = 0;
+	m_FoulsSuffered = 0;
+	m_SlidingTackles = 0;
+	m_SlidingTacklesCompleted = 0;
+	m_GoalsConceded = 0;
+	m_Shots = 0;
+	m_ShotsOnGoal = 0;
+	m_PassesCompleted = 0;
+	m_Interceptions = 0;
+	m_Offsides = 0;
+	m_Goals = 0;
+	m_OwnGoals = 0;
+	m_Assists = 0;
+	m_Possession = 0;
+	m_DistanceCovered = 0;
+	m_Passes = 0;
+	m_FreeKicks = 0;
+	m_Penalties = 0;
+	m_Corners = 0;
+	m_ThrowIns = 0;
+	m_KeeperSaves = 0;
+	m_GoalKicks = 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -347,12 +397,12 @@ void CTeam::UnblockAllPos()
 //-----------------------------------------------------------------------------
 void CTeam::AddGoal()
 {
-	m_nGoals += 1;
+	m_Goals += 1;
 }
 
 void CTeam::SetGoals( int goals )
 {
-	m_nGoals = goals;
+	m_Goals = goals;
 }
 
 //-----------------------------------------------------------------------------
@@ -360,17 +410,17 @@ void CTeam::SetGoals( int goals )
 //-----------------------------------------------------------------------------
 int CTeam::GetGoals( void )
 {
-	return m_nGoals;
+	return m_Goals;
 }
 
 void CTeam::SetPossession( int possession )
 {
-	m_nPossession = possession;
+	m_Possession = possession;
 }
 
 int CTeam::GetPossession( void )
 {
-	return m_nPossession;
+	return m_Possession;
 }
 
 //-----------------------------------------------------------------------------
@@ -435,8 +485,8 @@ void CTeam::InitFieldSpots(int team)
 void CTeam::ResetStats()
 {
 	m_flPossessionTime = 0;
-	m_nPossession = 0;
-	m_nGoals = 0;
+	m_Possession = 0;
+	m_Goals = 0;
 	m_nMatchEventIndex = 0;
 	m_bWantsTimeout = false;
 	m_nTimeoutsLeft = mp_timeout_count.GetInt();

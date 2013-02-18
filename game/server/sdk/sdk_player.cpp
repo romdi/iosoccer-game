@@ -1886,7 +1886,7 @@ void CPlayerPersistentData::ConvertAllPlayerDataToJson()
 
 		Q_strcat(json, "],", jsonSize);
 
-		Q_strcat(json, UTIL_VarArgs("\"name\":\"%s\",\"goals\":%d,\"possession\":%d,\"matchEvents\":[", GetGlobalTeam(team)->GetShortTeamName(), GetGlobalTeam(team)->GetGoals(), GetGlobalTeam(team)->m_nPossession), jsonSize);
+		Q_strcat(json, UTIL_VarArgs("\"name\":\"%s\",\"goals\":%d,\"possession\":%d,\"matchEvents\":[", GetGlobalTeam(team)->GetShortTeamName(), GetGlobalTeam(team)->GetGoals(), GetGlobalTeam(team)->m_Possession), jsonSize);
 		
 		for (int i = 0; i < GetGlobalTeam(team)->m_nMatchEventIndex; i++)
 		{

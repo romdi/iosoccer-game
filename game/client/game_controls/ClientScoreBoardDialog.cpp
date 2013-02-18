@@ -1158,48 +1158,16 @@ bool CClientScoreBoardDialog::GetTeamInfo(int team, KeyValues *kv)
 
 	C_Team *pTeam = GetGlobalTeam(team);
 	int teamIndex = team - TEAM_A;
-	int pingSum = 0;
-	int pingPlayers = 0;
 	bool teamClubInit = false;
 	char teamClub[32] = {};
 	bool isTeamSameClub = true;
 	int teamCountry = -1;
 	bool isTeamSameCountry = true;
-	float distSum = 0;
-	int passSum = 0;
-	int passCompletedSum = 0;
-	int offsides = 0;
-	int corners = 0;
-	int goalkicks = 0;
-	int shots = 0;
-	int shotsOnGoal = 0;
-	int fouls = 0;
-	int foulsSuffered = 0;
-	int slidingTackles = 0;
-	int slidingTacklesCompletedSum = 0;
-	int freekicks = 0;
-	int goals = 0;
-	int assists = 0;
-	int interceptions = 0;
-	int redcards = 0;
-	int yellowcards = 0;
-	int penalties = 0;
-	int throwins = 0;
-	int saves = 0;
-	int owngoals = 0;
-	int goalsconceded = 0;
-	float ratings = 0;
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
 		if (!gr->IsConnected(i) || gr->GetTeam(i) != team)
 			continue;
-
-		if (gr->GetPing(i) > 0)
-		{
-			pingSum += gr->GetPing(i);
-			pingPlayers += 1;
-		}
 
 		if (!teamClubInit)
 		{
@@ -1215,44 +1183,6 @@ bool CClientScoreBoardDialog::GetTeamInfo(int team, KeyValues *kv)
 
 		if (gr->GetCountryName(i) != teamCountry)
 			isTeamSameCountry = false;
-
-		distSum += gr->GetDistanceCovered(i) / 10.0f;
-
-		if (gr->GetPasses(i) > 0)
-		{
-			passSum += gr->GetPasses(i);
-			passCompletedSum += gr->GetPassesCompleted(i);
-			ratings += gr->GetPassesCompleted(i) * 10 / gr->GetPasses(i);
-		}
-
-		if (gr->GetShots(i) > 0)
-		{
-			shots += gr->GetShots(i);
-			shotsOnGoal += gr->GetShotsOnGoal(i);
-		}
-
-		if (gr->GetSlidingTackles(i) > 0)
-		{
-			slidingTackles += gr->GetSlidingTackles(i);
-			slidingTacklesCompletedSum += gr->GetSlidingTacklesCompleted(i);
-		}
-
-		offsides += gr->GetOffsides(i);
-		corners += gr->GetCorners(i);
-		goalkicks += gr->GetGoalKicks(i);
-		fouls += gr->GetFouls(i);
-		foulsSuffered += gr->GetFoulsSuffered(i);
-		freekicks += gr->GetFreeKicks(i);
-		goals += gr->GetGoals(i);
-		assists += gr->GetAssists(i);
-		interceptions += gr->GetInterceptions(i);
-		redcards += gr->GetRedCards(i);
-		yellowcards += gr->GetYellowCards(i);
-		penalties += gr->GetPenalties(i);
-		throwins += gr->GetThrowIns(i);
-		saves += gr->GetKeeperSaves(i);
-		owngoals += gr->GetOwnGoals(i);
-		goalsconceded += gr->GetGoalsConceded(i);
 	}
 
 	if (!isTeamSameClub)
@@ -1266,34 +1196,40 @@ bool CClientScoreBoardDialog::GetTeamInfo(int team, KeyValues *kv)
 	kv->SetInt("posname", pTeam->GetNumPlayers());
 	kv->SetInt("countryindex", GetCountryFlagImageIndex(teamCountry));
 	kv->SetString("club", teamClub);
-	kv->SetString("ping", GET_TSTAT_TEXT(pingSum / max(1, pingPlayers)));
-	kv->SetString("possession", GET_TSTAT_FTEXT(pTeam->Get_Possession(), "%d%%"));
-	kv->SetString("passes", GET_TSTAT_TEXT(passSum));
-	kv->SetString("passescompleted", GET_TSTAT_FTEXT(100 * passCompletedSum / max(1, passSum), "%d%%"));
-	kv->SetString("distancecovered", GET_TSTAT_FTEXT(distSum, "%.1f km"));
-	kv->SetString("offsides", GET_TSTAT_TEXT(offsides));
-	kv->SetString("corners", GET_TSTAT_TEXT(corners));
-	kv->SetString("goalkicks", GET_TSTAT_TEXT(goalkicks));
-	kv->SetString("shots", GET_TSTAT_TEXT(shots));
-	kv->SetString("shotsongoal", GET_TSTAT_FTEXT(100 * shotsOnGoal / max(1, shots), "%d%%"));
-	kv->SetString("fouls", GET_TSTAT_TEXT(fouls));
-	kv->SetString("foulssuffered", GET_TSTAT_TEXT(foulsSuffered));
-	kv->SetString("slidingtackles", GET_TSTAT_TEXT(slidingTackles));
-	kv->SetString("slidingtacklescompleted", GET_TSTAT_FTEXT(100 * slidingTacklesCompletedSum / max(1, slidingTackles), "%d%%"));
-	kv->SetString("freekicks", GET_TSTAT_TEXT(freekicks));
-	kv->SetString("goals", GET_TSTAT_TEXT(goals));
-	kv->SetString("assists", GET_TSTAT_TEXT(assists));
-	kv->SetString("interceptions", GET_TSTAT_TEXT(interceptions));
-	kv->SetString("redcards", GET_TSTAT_TEXT(redcards));
-	kv->SetString("yellowcards", GET_TSTAT_TEXT(yellowcards));
-	kv->SetString("penalties", GET_TSTAT_TEXT(penalties));
-	kv->SetString("throwins", GET_TSTAT_TEXT(throwins));
-	kv->SetString("keepersaves", GET_TSTAT_TEXT(saves));
-	kv->SetString("owngoals", GET_TSTAT_TEXT(owngoals));
-	kv->SetString("goalsconceded", GET_TSTAT_TEXT(goalsconceded));
-	char *rating = "10";
-	if (!Q_strcmp(rating, "10.0"))
-		rating[2] = 0;
+	kv->SetString("ping", GET_TSTAT_TEXT(pTeam->m_Ping));
+	kv->SetString("possession", GET_TSTAT_FTEXT(pTeam->m_Possession, "%d%%"));
+	kv->SetString("passes", GET_TSTAT_TEXT(pTeam->m_Passes));
+	kv->SetString("passescompleted", GET_TSTAT_FTEXT(pTeam->m_PassesCompleted, "%d%%"));
+	kv->SetString("distancecovered", GET_TSTAT_FTEXT(pTeam->m_DistanceCovered, "%.1f km"));
+	kv->SetString("offsides", GET_TSTAT_TEXT(pTeam->m_Offsides));
+	kv->SetString("corners", GET_TSTAT_TEXT(pTeam->m_Corners));
+	kv->SetString("goalkicks", GET_TSTAT_TEXT(pTeam->m_GoalKicks));
+	kv->SetString("shots", GET_TSTAT_TEXT(pTeam->m_Shots));
+	kv->SetString("shotsongoal", GET_TSTAT_FTEXT(pTeam->m_ShotsOnGoal, "%d%%"));
+	kv->SetString("fouls", GET_TSTAT_TEXT(pTeam->m_Fouls));
+	kv->SetString("foulssuffered", GET_TSTAT_TEXT(pTeam->m_FoulsSuffered));
+	kv->SetString("slidingtackles", GET_TSTAT_TEXT(pTeam->m_SlidingTackles));
+	kv->SetString("slidingtacklescompleted", GET_TSTAT_FTEXT(pTeam->m_SlidingTacklesCompleted, "%d%%"));
+	kv->SetString("freekicks", GET_TSTAT_TEXT(pTeam->m_FreeKicks));
+	kv->SetString("goals", GET_TSTAT_TEXT(pTeam->m_Goals));
+	kv->SetString("assists", GET_TSTAT_TEXT(pTeam->m_Assists));
+	kv->SetString("interceptions", GET_TSTAT_TEXT(pTeam->m_Interceptions));
+	kv->SetString("redcards", GET_TSTAT_TEXT(pTeam->m_RedCards));
+	kv->SetString("yellowcards", GET_TSTAT_TEXT(pTeam->m_YellowCards));
+	kv->SetString("penalties", GET_TSTAT_TEXT(pTeam->m_Penalties));
+	kv->SetString("throwins", GET_TSTAT_TEXT(pTeam->m_ThrowIns));
+	kv->SetString("keepersaves", GET_TSTAT_TEXT(pTeam->m_KeeperSaves));
+	kv->SetString("owngoals", GET_TSTAT_TEXT(pTeam->m_OwnGoals));
+	kv->SetString("goalsconceded", GET_TSTAT_TEXT(pTeam->m_GoalsConceded));
+
+	char rating[5];
+	if (pTeam->m_Rating == 100)
+		Q_snprintf(rating, 5, "%d", pTeam->m_Rating / 10);
+	else
+	{
+		Q_snprintf(rating, 5, "%d.%d", pTeam->m_Rating / 10, pTeam->m_Rating % 10);
+	}
+
 	kv->SetString("rating", rating);
 
 	return true;

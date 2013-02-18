@@ -94,8 +94,6 @@ public:
 	char	m_szServerKitName[MAX_KITNAME_LENGTH];
 	char	m_szTeamCode[MAX_TEAMCODE_LENGTH];
 	char	m_szShortTeamName[MAX_SHORTTEAMNAME_LENGTH];
-	int		m_nGoals;
-	int		m_nPossession;
 	int		m_nPenaltyGoals;
 	int		m_nPenaltyGoalBits;
 	int		m_nPenaltyRound;
@@ -128,6 +126,33 @@ public:
 	int m_nMatchEventSeconds[MAX_MATCH_EVENTS];
 
 	int m_PosNextJoinSeconds[11];
+
+	CNetworkVar(int, m_RedCards);
+	CNetworkVar(int, m_YellowCards);
+	CNetworkVar(int, m_Fouls);
+	CNetworkVar(int, m_FoulsSuffered);
+	CNetworkVar(int, m_SlidingTackles);
+	CNetworkVar(int, m_SlidingTacklesCompleted);
+	CNetworkVar(int, m_GoalsConceded);
+	CNetworkVar(int, m_Shots);
+	CNetworkVar(int, m_ShotsOnGoal);
+	CNetworkVar(int, m_PassesCompleted);
+	CNetworkVar(int, m_Interceptions);
+	CNetworkVar(int, m_Offsides);
+	CNetworkVar(int, m_Goals);
+	CNetworkVar(int, m_OwnGoals);
+	CNetworkVar(int, m_Assists);
+	CNetworkVar(int, m_Possession);
+	CNetworkVar(int, m_DistanceCovered);
+	CNetworkVar(int, m_Passes);
+	CNetworkVar(int, m_FreeKicks);
+	CNetworkVar(int, m_Penalties);
+	CNetworkVar(int, m_Corners);
+	CNetworkVar(int, m_ThrowIns);
+	CNetworkVar(int, m_KeeperSaves);
+	CNetworkVar(int, m_GoalKicks);
+	CNetworkVar(int, m_Ping);
+	CNetworkVar(int, m_Rating);
 };
 
 

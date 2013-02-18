@@ -8,6 +8,7 @@
 #include "player.h"
 #include "player_resource.h"
 #include "sdk_player.h"				//ios
+#include "team.h"
 #include <coordsize.h>
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -165,6 +166,33 @@ void CPlayerResource::ResourceThink( void )
 //-----------------------------------------------------------------------------
 void CPlayerResource::UpdatePlayerData( void )
 {
+	int pingSum[2] = { 0 };
+	int pingPlayers[2] = { 0 };
+	float distSum[2] = { 0 };
+	int passSum[2] = { 0 };
+	int passCompletedSum[2] = { 0 };
+	int offsides[2] = { 0 };
+	int corners[2] = { 0 };
+	int goalkicks[2] = { 0 };
+	int shots[2] = { 0 };
+	int shotsOnGoal[2] = { 0 };
+	int fouls[2] = { 0 };
+	int foulsSuffered[2] = { 0 };
+	int slidingTackles[2] = { 0 };
+	int slidingTacklesCompletedSum[2] = { 0 };
+	int freekicks[2] = { 0 };
+	int goals[2] = { 0 };
+	int assists[2] = { 0 };
+	int interceptions[2] = { 0 };
+	int redcards[2] = { 0 };
+	int yellowcards[2] = { 0 };
+	int penalties[2] = { 0 };
+	int throwins[2] = { 0 };
+	int saves[2] = { 0 };
+	int owngoals[2] = { 0 };
+	int goalsconceded[2] = { 0 };
+	int ratings[2] = { 0 };
+
 	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
 	{
 		CBasePlayer *pPlayer = (CBasePlayer*)UTIL_PlayerByIndex( i );
@@ -197,7 +225,7 @@ void CPlayerResource::UpdatePlayerData( void )
 
 			// Don't update ping / packetloss everytime
 
-			if ( !(m_nUpdateCounter%20) )
+			if (m_nUpdateCounter % 20 == 0)
 			{
 				// update ping all 20 think ticks = (20*0.1=2seconds)
 				int ping, packetloss;
@@ -210,33 +238,78 @@ void CPlayerResource::UpdatePlayerData( void )
 				m_iPing.Set( i, ping );
 				// m_iPacketloss.Set( i, packetloss );
 
-				CSDKPlayer	*SDKPlayer = ToSDKPlayer(pPlayer);
+				CSDKPlayer *pPl = ToSDKPlayer(pPlayer);
 				if (SDKPlayer)
 				{
-					m_RedCards.Set(i, max( 0, SDKPlayer->GetRedCards() ) );
-					m_YellowCards.Set(i, max( 0, SDKPlayer->GetYellowCards() ) );
-					m_Fouls.Set(i, max( 0, SDKPlayer->GetFouls() ) );
-					m_FoulsSuffered.Set(i, max( 0, SDKPlayer->GetFoulsSuffered() ) );
-					m_SlidingTackles.Set(i, max( 0, SDKPlayer->GetSlidingTackles() ) );
-					m_SlidingTacklesCompleted.Set(i, max( 0, SDKPlayer->GetSlidingTacklesCompleted() ) );
-					m_GoalsConceded.Set(i, max( 0, SDKPlayer->GetGoalsConceded() ) );
-					m_Shots.Set(i, max( 0, SDKPlayer->GetShots() ) );
-					m_ShotsOnGoal.Set(i, max( 0, SDKPlayer->GetShotsOnGoal() ) );
-					m_PassesCompleted.Set(i, max( 0, SDKPlayer->GetPassesCompleted() ) );
-					m_Interceptions.Set(i, max( 0, SDKPlayer->GetInterceptions() ) );
-					m_Offsides.Set(i, max( 0, SDKPlayer->GetOffsides() ) );
-					m_Goals.Set(i, max( 0, SDKPlayer->GetGoals() ) );
-					m_OwnGoals.Set(i, max( 0, SDKPlayer->GetOwnGoals() ) );
-					m_Assists.Set(i, max( 0, SDKPlayer->GetAssists() ) );
-					m_Possession.Set(i, max( 0, SDKPlayer->GetPossession() ) );
-					m_DistanceCovered.Set(i, max( 0, SDKPlayer->GetDistanceCovered() ) );
-					m_Passes.Set(i, max( 0, SDKPlayer->GetPasses() ) );
-					m_FreeKicks.Set(i, max( 0, SDKPlayer->GetFreeKicks() ) );
-					m_Penalties.Set(i, max( 0, SDKPlayer->GetPenalties() ) );
-					m_Corners.Set(i, max( 0, SDKPlayer->GetCorners() ) );
-					m_ThrowIns.Set(i, max( 0, SDKPlayer->GetThrowIns() ) );
-					m_KeeperSaves.Set(i, max( 0, SDKPlayer->GetKeeperSaves() ) );
-					m_GoalKicks.Set(i, max( 0, SDKPlayer->GetGoalKicks() ) );
+					int ti = pPl->GetTeamNumber() - TEAM_A;
+
+					m_RedCards.Set(i, max( 0, pPl->GetRedCards() ) );
+					m_YellowCards.Set(i, max( 0, pPl->GetYellowCards() ) );
+					m_Fouls.Set(i, max( 0, pPl->GetFouls() ) );
+					m_FoulsSuffered.Set(i, max( 0, pPl->GetFoulsSuffered() ) );
+					m_SlidingTackles.Set(i, max( 0, pPl->GetSlidingTackles() ) );
+					m_SlidingTacklesCompleted.Set(i, max( 0, pPl->GetSlidingTacklesCompleted() ) );
+					m_GoalsConceded.Set(i, max( 0, pPl->GetGoalsConceded() ) );
+					m_Shots.Set(i, max( 0, pPl->GetShots() ) );
+					m_ShotsOnGoal.Set(i, max( 0, pPl->GetShotsOnGoal() ) );
+					m_PassesCompleted.Set(i, max( 0, pPl->GetPassesCompleted() ) );
+					m_Interceptions.Set(i, max( 0, pPl->GetInterceptions() ) );
+					m_Offsides.Set(i, max( 0, pPl->GetOffsides() ) );
+					m_Goals.Set(i, max( 0, pPl->GetGoals() ) );
+					m_OwnGoals.Set(i, max( 0, pPl->GetOwnGoals() ) );
+					m_Assists.Set(i, max( 0, pPl->GetAssists() ) );
+					m_Possession.Set(i, max( 0, pPl->GetPossession() ) );
+					m_DistanceCovered.Set(i, max( 0, pPl->GetDistanceCovered() ) );
+					m_Passes.Set(i, max( 0, pPl->GetPasses() ) );
+					m_FreeKicks.Set(i, max( 0, pPl->GetFreeKicks() ) );
+					m_Penalties.Set(i, max( 0, pPl->GetPenalties() ) );
+					m_Corners.Set(i, max( 0, pPl->GetCorners() ) );
+					m_ThrowIns.Set(i, max( 0, pPl->GetThrowIns() ) );
+					m_KeeperSaves.Set(i, max( 0, pPl->GetKeeperSaves() ) );
+					m_GoalKicks.Set(i, max( 0, pPl->GetGoalKicks() ) );
+
+					if (ping > 0)
+					{
+						pingSum[ti] += ping;
+						pingPlayers[ti] += 1;
+					}
+						distSum[ti] += pPl->GetDistanceCovered() / 10.0f;
+
+						if (pPl->GetPasses() > 0)
+						{
+							passSum[ti] += pPl->GetPasses();
+							passCompletedSum[ti] += pPl->GetPassesCompleted();
+							ratings[ti] += pPl->GetPassesCompleted() * 10 / pPl->GetPasses();
+						}
+
+						if (pPl->GetShots() > 0)
+						{
+							shots[ti] += pPl->GetShots();
+							shotsOnGoal[ti] += pPl->GetShotsOnGoal();
+						}
+
+						if (pPl->GetSlidingTackles() > 0)
+						{
+							slidingTackles[ti] += pPl->GetSlidingTackles();
+							slidingTacklesCompletedSum[ti] += pPl->GetSlidingTacklesCompleted();
+						}
+
+						offsides[ti] += pPl->GetOffsides();
+						corners[ti] += pPl->GetCorners();
+						goalkicks[ti] += pPl->GetGoalKicks();
+						fouls[ti] += pPl->GetFouls();
+						foulsSuffered[ti] += pPl->GetFoulsSuffered();
+						freekicks[ti] += pPl->GetFreeKicks();
+						goals[ti] += pPl->GetGoals();
+						assists[ti] += pPl->GetAssists();
+						interceptions[ti] += pPl->GetInterceptions();
+						redcards[ti] += pPl->GetRedCards();
+						yellowcards[ti] += pPl->GetYellowCards();
+						penalties[ti] += pPl->GetPenalties();
+						throwins[ti] += pPl->GetThrowIns();
+						saves[ti] += pPl->GetKeeperSaves();
+						owngoals[ti] += pPl->GetOwnGoals();
+						goalsconceded[ti] += pPl->GetGoalsConceded();
 				}
 			}
 		}
@@ -244,5 +317,37 @@ void CPlayerResource::UpdatePlayerData( void )
 		{
 			m_bConnected.Set( i, 0 );
 		}
+	}
+
+	for (int team = TEAM_A; team <= TEAM_B; team++)
+	{
+		int ti = team - TEAM_A;
+		CTeam *pTeam = GetGlobalTeam(team);
+		pTeam->m_Ping = pingSum[ti] / max(1, pingPlayers[ti]);
+		//pTeam->m_Possession = pTeam->GetPossession();
+		pTeam->m_Passes = passSum;
+		pTeam->m_PassesCompleted = 100 * passCompletedSum[ti] / max(1, passSum[ti]);
+		pTeam->m_DistanceCovered = distSum[ti];
+		pTeam->m_Offsides = offsides[ti];
+		pTeam->m_Corners = corners[ti];
+		pTeam->m_GoalKicks = goalkicks[ti];
+		pTeam->m_Shots = shots[ti];
+		pTeam->m_ShotsOnGoal = 100 * shotsOnGoal[ti] / max(1, shots[ti]);
+		pTeam->m_Fouls = fouls[ti];
+		pTeam->m_FoulsSuffered = foulsSuffered[ti];
+		pTeam->m_SlidingTackles = slidingTackles[ti];
+		pTeam->m_SlidingTacklesCompleted = 100 * slidingTacklesCompletedSum[ti] / max(1, slidingTackles[ti]);
+		pTeam->m_FreeKicks = freekicks[ti];
+		pTeam->m_Goals = goals[ti];
+		pTeam->m_Assists = assists[ti];
+		pTeam->m_Interceptions = interceptions[ti];
+		pTeam->m_RedCards = redcards[ti];
+		pTeam->m_YellowCards = yellowcards[ti];
+		pTeam->m_Penalties = penalties[ti];
+		pTeam->m_ThrowIns = throwins[ti];
+		pTeam->m_KeeperSaves = saves[ti];
+		pTeam->m_OwnGoals = owngoals[ti];
+		pTeam->m_GoalsConceded = goalsconceded[ti];
+		pTeam->m_Rating = 100;
 	}
 }

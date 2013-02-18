@@ -824,7 +824,7 @@ void CSDKGameRules::ChooseTeamNames(bool clubTeams, bool countryTeams, bool real
 void CSDKGameRules::CreateStandardEntities()
 {
 	// Create the player resource
-	g_pPlayerResource = (CPlayerResource*)CBaseEntity::Create( "sdk_player_manager", vec3_origin, vec3_angle );
+	g_pPlayerResource = (CPlayerResource*)CBaseEntity::Create( "player_manager", vec3_origin, vec3_angle );
 
 	// Create the entity that will send our data to the client.
 #ifdef _DEBUG

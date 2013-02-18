@@ -108,8 +108,6 @@ public:
 	CNetworkString( m_szTeamCode, MAX_TEAMCODE_LENGTH );
 	CNetworkString( m_szShortTeamName, MAX_SHORTTEAMNAME_LENGTH );
 	CNetworkVar( int, m_iTeamNum );
-	CNetworkVar( int, m_nGoals );
-	CNetworkVar( int, m_nPossession );
 	CNetworkVar( int, m_nPenaltyGoals );
 	CNetworkVar( int, m_nPenaltyGoalBits );
 	CNetworkVar( int, m_nPenaltyRound );
@@ -155,6 +153,33 @@ public:
 	CNetworkArray(int, m_PosNextJoinSeconds, 11);
 
 	bool m_bWantsTimeout;
+
+	CNetworkVar(int, m_RedCards);
+	CNetworkVar(int, m_YellowCards);
+	CNetworkVar(int, m_Fouls);
+	CNetworkVar(int, m_FoulsSuffered);
+	CNetworkVar(int, m_SlidingTackles);
+	CNetworkVar(int, m_SlidingTacklesCompleted);
+	CNetworkVar(int, m_GoalsConceded);
+	CNetworkVar(int, m_Shots);
+	CNetworkVar(int, m_ShotsOnGoal);
+	CNetworkVar(int, m_PassesCompleted);
+	CNetworkVar(int, m_Interceptions);
+	CNetworkVar(int, m_Offsides);
+	CNetworkVar(int, m_Goals);
+	CNetworkVar(int, m_OwnGoals);
+	CNetworkVar(int, m_Assists);
+	CNetworkVar(int, m_Possession);
+	CNetworkVar(int, m_DistanceCovered);
+	CNetworkVar(int, m_Passes);
+	CNetworkVar(int, m_FreeKicks);
+	CNetworkVar(int, m_Penalties);
+	CNetworkVar(int, m_Corners);
+	CNetworkVar(int, m_ThrowIns);
+	CNetworkVar(int, m_KeeperSaves);
+	CNetworkVar(int, m_GoalKicks);
+	CNetworkVar(int, m_Ping);
+	CNetworkVar(int, m_Rating);
 };
 
 extern CUtlVector< CTeam * > g_Teams;

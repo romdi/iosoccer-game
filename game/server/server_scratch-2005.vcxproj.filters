@@ -1368,9 +1368,6 @@
     <ClCompile Include="sdk\sdk_player.cpp">
       <Filter>Source Files\SDK\Player</Filter>
     </ClCompile>
-    <ClCompile Include="sdk\sdk_player_resource.cpp">
-      <Filter>Source Files\SDK\Player</Filter>
-    </ClCompile>
     <ClCompile Include="..\shared\sdk\sdk_player_shared.cpp">
       <Filter>Source Files\SDK\Player</Filter>
     </ClCompile>
@@ -2286,9 +2283,6 @@
       <Filter>Source Files\SDK\Rules</Filter>
     </ClInclude>
     <ClInclude Include="sdk\sdk_player.h">
-      <Filter>Source Files\SDK\Player</Filter>
-    </ClInclude>
-    <ClInclude Include="sdk\sdk_player_resource.h">
       <Filter>Source Files\SDK\Player</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\sdk\sdk_playeranimstate.h">

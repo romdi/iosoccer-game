@@ -36,8 +36,6 @@ void RecvProxy_KitName( const CRecvProxyData *pData, void *pStruct, void *pOut )
 
 IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_Team, DT_Team, CTeam)
 	RecvPropInt( RECVINFO(m_iTeamNum)),
-	RecvPropInt( RECVINFO(m_nGoals)),
-	RecvPropInt( RECVINFO(m_nPossession) ),
 	RecvPropInt( RECVINFO(m_nPenaltyGoals) ),
 	RecvPropInt( RECVINFO(m_nPenaltyGoalBits) ),
 	RecvPropInt( RECVINFO(m_nPenaltyRound) ),
@@ -76,12 +74,38 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_Team, DT_Team, CTeam)
 	RecvPropArray3( RECVINFO_ARRAY(m_nMatchEventSeconds), RecvPropInt( RECVINFO(m_nMatchEventSeconds[0]))),
 
 	RecvPropArray3( RECVINFO_ARRAY(m_PosNextJoinSeconds), RecvPropInt( RECVINFO(m_PosNextJoinSeconds[0]))),
+
+	RecvPropInt(RECVINFO(m_RedCards)),
+	RecvPropInt(RECVINFO(m_YellowCards)),
+	RecvPropInt(RECVINFO(m_Fouls)),
+	RecvPropInt(RECVINFO(m_FoulsSuffered)),
+	RecvPropInt(RECVINFO(m_SlidingTackles)),
+	RecvPropInt(RECVINFO(m_SlidingTacklesCompleted)),
+	RecvPropInt(RECVINFO(m_GoalsConceded)),
+	RecvPropInt(RECVINFO(m_Shots)),
+	RecvPropInt(RECVINFO(m_ShotsOnGoal)),
+	RecvPropInt(RECVINFO(m_PassesCompleted)),
+	RecvPropInt(RECVINFO(m_Interceptions)),
+	RecvPropInt(RECVINFO(m_Offsides)),
+	RecvPropInt(RECVINFO(m_Goals)),
+	RecvPropInt(RECVINFO(m_OwnGoals)),
+	RecvPropInt(RECVINFO(m_Assists)),
+	RecvPropInt(RECVINFO(m_Possession)),
+	RecvPropInt(RECVINFO(m_DistanceCovered)),
+	RecvPropInt(RECVINFO(m_Passes)),
+	RecvPropInt(RECVINFO(m_FreeKicks)),
+	RecvPropInt(RECVINFO(m_Penalties)),
+	RecvPropInt(RECVINFO(m_Corners)),
+	RecvPropInt(RECVINFO(m_ThrowIns)),
+	RecvPropInt(RECVINFO(m_KeeperSaves)),
+	RecvPropInt(RECVINFO(m_GoalKicks)),
+	RecvPropInt(RECVINFO(m_Ping)),
+	RecvPropInt(RECVINFO(m_Rating)),
 END_RECV_TABLE()
 
 BEGIN_PREDICTION_DATA( C_Team )
 	DEFINE_PRED_FIELD( m_iTeamNum, FIELD_INTEGER, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_ARRAY( m_szServerKitName, FIELD_CHARACTER, MAX_TEAM_NAME_LENGTH, FTYPEDESC_PRIVATE ),
-	DEFINE_PRED_FIELD( m_nGoals, FIELD_INTEGER, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_FIELD( m_iPing, FIELD_INTEGER, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_FIELD( m_iPacketloss, FIELD_INTEGER, FTYPEDESC_PRIVATE ),
 END_PREDICTION_DATA();
@@ -99,8 +123,8 @@ C_Team::C_Team()
 {
 	m_bKitDownloadFinished = false;
 
-	m_nGoals = 0;
-	m_nPossession = 0;
+	m_Goals = 0;
+	m_Possession = 0;
 	m_szKitName[0] = 0;
 	m_szServerKitName[0] = 0;
 	m_szDownloadKitName[0] = 0;
@@ -278,7 +302,7 @@ Color &C_Team::Get_SecondaryKitColor()
 //-----------------------------------------------------------------------------
 int C_Team::Get_Goals( void )
 {
-	return m_nGoals;
+	return m_Goals;
 }
 
 //-----------------------------------------------------------------------------
@@ -291,7 +315,7 @@ int C_Team::Get_Ping( void )
 
 int C_Team::Get_Possession()
 {
-	return m_nPossession;
+	return m_Possession;
 }
 
 //-----------------------------------------------------------------------------
