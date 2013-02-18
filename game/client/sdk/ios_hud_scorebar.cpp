@@ -144,7 +144,7 @@ CHudScorebar::CHudScorebar( const char *pElementName ) : BaseClass(NULL, "HudSco
 
 	m_pExtraInfo = new Label(this, "", "");
 
-	m_flStayDuration = 2.5f;
+	m_flStayDuration = 3.0f;
 }
 
 void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
@@ -236,7 +236,7 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 	m_pExtraInfo->SetBgColor(Color(0, 0, 0, 200));
 	m_pExtraInfo->SetParent(m_pMainPanel);
 	m_pExtraInfo->SetZPos(-2);
-	m_pExtraInfo->SetVisible(false);
+	//m_pExtraInfo->SetVisible(false);
 }
 
 //-----------------------------------------------------------------------------
@@ -396,15 +396,54 @@ void CHudScorebar::Paint( void )
 {
 }
 
-char *GetExtraInfoText(match_event_t matchEvent, int team)
+char *GetPossessionText()
 {
+	return VarArgs("%d%% possession %d%%", GetGlobalTeam(TEAM_A)->m_Possession, GetGlobalTeam(TEAM_B)->m_Possession);
+}
+
+char *GetSetPieceCountText(match_event_t matchEvent, int team)
+{
+	char text[32] = { 0 };
+	int number;
+
 	switch (matchEvent)
 	{
-	case MATCH_EVENT_THROWIN:
-		return VarArgs("xth throw-in for %s", GetGlobalTeam(team)->Get_ShortTeamName());
-	default:
-		return VarArgs("");
+	case MATCH_EVENT_THROWIN: 
+		number = GetGlobalTeam(team)->m_ThrowIns + 1;
+		Q_strncpy(text, "throw-in for", 32);
+		break;
+	case MATCH_EVENT_GOALKICK: 
+		number = GetGlobalTeam(team)->m_GoalKicks + 1;
+		Q_strncpy(text, "goal kick for", 32);
+		break;
+	case MATCH_EVENT_CORNER: 
+		number = GetGlobalTeam(team)->m_Corners + 1;
+		Q_strncpy(text, "corner kick for", 32);
+		break;
+	case MATCH_EVENT_FREEKICK: 
+		number = GetGlobalTeam(team)->m_FreeKicks + 1;
+		Q_strncpy(text, "free kick for", 32);
+		break;
 	}
+
+	char ordinal[3];
+
+	if (number % 100 == 11 || number % 100 == 12 || number % 100 == 13)
+	{
+		Q_strncpy(ordinal, "th", 3);
+	}
+	else
+	{
+		switch (number % 10)
+		{
+		case 1: Q_strncpy(ordinal, "st", 3); break;
+		case 2: Q_strncpy(ordinal, "nd", 3); break;
+		case 3: Q_strncpy(ordinal, "rd", 3); break;
+		default: Q_strncpy(ordinal, "th", 3); break;
+		}
+	}
+
+	return VarArgs("%d%s %s %s", number, ordinal, text, GetGlobalTeam(team)->Get_ShortTeamName());
 }
 
 void CHudScorebar::FireGameEvent(IGameEvent *event)
@@ -412,6 +451,7 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 	m_flNotificationStart = gpGlobals->curtime;
 	m_nCurMatchEventTeam = TEAM_UNASSIGNED;
 	m_pNotificationPanel->SetTall(NOTIFICATION_HEIGHT);
+	m_pExtraInfo->SetVisible(false);
 
 	for (int i = 1; i < NOTIFICATION_COUNT; i++)
 		m_pNotifications[i]->SetText("");
@@ -420,21 +460,35 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 	{
 		if ((m_eCurMatchEvent == MATCH_EVENT_TIMEOUT_PENDING || m_eCurMatchEvent == MATCH_EVENT_TIMEOUT) && (match_event_t)event->GetInt("state") == MATCH_EVENT_NONE)
 		{
-			m_flStayDuration = 2.5f;
+			m_flStayDuration = 3.0f;
 			m_flNotificationStart = gpGlobals->curtime - slideDownDuration - m_flStayDuration;
 		}
 		else
 			m_pNotifications[0]->SetText(VarArgs("%s", g_szMatchEventNames[event->GetInt("state")]));
 
 		m_eCurMatchEvent = (match_event_t)event->GetInt("state");
-		m_flStayDuration = 2.5f;
+		m_flStayDuration = 3.0f;
 	}
 	else if (!Q_strcmp(event->GetName(), "set_piece"))
 	{
 		m_pNotifications[0]->SetText(VarArgs("%s: %s", g_szMatchEventNames[event->GetInt("type")], g_PR->GetTeamCode(event->GetInt("taking_team"))));
 		m_eCurMatchEvent = (match_event_t)event->GetInt("type");
-		m_flStayDuration = 2.5f;
-		m_pExtraInfo->SetText(GetExtraInfoText(m_eCurMatchEvent, event->GetInt("taking_team")));
+		m_flStayDuration = 3.0f;
+
+		switch ((statistic_type_t)event->GetInt("statistic_type"))
+		{
+		case STATISTIC_TEAMCOUNT:
+			m_pExtraInfo->SetText(GetSetPieceCountText(m_eCurMatchEvent, event->GetInt("taking_team")));
+			break;
+		case STATISTIC_TEAMPOSSESSION:
+			m_pExtraInfo->SetText(GetPossessionText());
+			break;
+		default:
+			m_pExtraInfo->SetText("");
+			break;
+		}
+
+		m_pExtraInfo->SetVisible(true);
 	}
 	else if (!Q_strcmp(event->GetName(), "goal"))
 	{
@@ -494,6 +548,24 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 	
 		m_eCurMatchEvent = setpieceType;
 		m_flStayDuration = 5.0f;
+
+		switch ((statistic_type_t)event->GetInt("statistic_type"))
+		{
+		case STATISTIC_DISTANCETOGOAL:
+			m_pExtraInfo->SetText(VarArgs("%dm distance to goal", event->GetInt("distance_to_goal")));
+			break;
+		case STATISTIC_TEAMCOUNT:
+			m_pExtraInfo->SetText(GetSetPieceCountText(m_eCurMatchEvent, pFoulingTeam->GetOppTeamNumber()));
+			break;
+		case STATISTIC_TEAMPOSSESSION:
+			m_pExtraInfo->SetText(GetPossessionText());
+			break;
+		default:
+			m_pExtraInfo->SetText("");
+			break;
+		}	
+
+		m_pExtraInfo->SetVisible(true);
 	}
 	else if (!Q_strcmp(event->GetName(), "penalty"))
 	{
@@ -503,7 +575,7 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 
 		if (pTaker)
 		{
-			m_pNotifications[1]->SetText(VarArgs("O %s", pTaker->GetPlayerName()));
+			m_pNotifications[1]->SetText(VarArgs("%s", pTaker->GetPlayerName()));
 			m_pNotificationPanel->SetTall(2 * NOTIFICATION_HEIGHT);
 		}
 

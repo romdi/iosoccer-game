@@ -804,6 +804,7 @@ void CBall::State_Think()
 							IGameEvent* pEvent = gameeventmanager->CreateEvent("set_piece");
 							pEvent->SetInt("type", MATCH_EVENT_THROWIN);
 							pEvent->SetInt("taking_team", LastOppTeam(false));
+							pEvent->SetInt("statistic_type", (g_IOSRand.RandomInt(0, 2) == 0 ? STATISTIC_TEAMPOSSESSION : STATISTIC_TEAMCOUNT));
 							gameeventmanager->FireEvent(pEvent);
 							EmitSound("Ball.whistle");
 						}
@@ -813,6 +814,7 @@ void CBall::State_Think()
 							IGameEvent* pEvent = gameeventmanager->CreateEvent("set_piece");
 							pEvent->SetInt("type", MATCH_EVENT_GOALKICK);
 							pEvent->SetInt("taking_team", LastOppTeam(false));
+							pEvent->SetInt("statistic_type", (g_IOSRand.RandomInt(0, 2) == 0 ? STATISTIC_TEAMPOSSESSION : STATISTIC_TEAMCOUNT));
 							gameeventmanager->FireEvent(pEvent);
 							EmitSound("Ball.whistle");
 						}
@@ -822,6 +824,7 @@ void CBall::State_Think()
 							IGameEvent* pEvent = gameeventmanager->CreateEvent("set_piece");
 							pEvent->SetInt("type", MATCH_EVENT_CORNER);
 							pEvent->SetInt("taking_team", LastOppTeam(false));
+							pEvent->SetInt("statistic_type", (g_IOSRand.RandomInt(0, 2) == 0 ? STATISTIC_TEAMPOSSESSION : STATISTIC_TEAMCOUNT));
 							gameeventmanager->FireEvent(pEvent);
 							EmitSound("Ball.whistle");
 						}
@@ -863,6 +866,18 @@ void CBall::State_Think()
 							pEvent->SetInt("fouling_team", m_nFoulingTeam);
 							pEvent->SetInt("foul_type", foulType);
 							pEvent->SetInt("set_piece_type", (m_eNextState == BALL_PENALTY ? MATCH_EVENT_PENALTY : MATCH_EVENT_FREEKICK));
+
+							float distToGoal = (m_vFoulPos - GetGlobalTeam(m_nFoulingTeam)->m_vPlayerSpawns[0]).Length2D();
+
+							statistic_type_t statType;
+
+							if (m_eNextState == BALL_FREEKICK && distToGoal <= sv_ball_freekickdist_opponentgoal.GetInt())
+								statType = STATISTIC_DISTANCETOGOAL;
+							else
+								statType = (g_IOSRand.RandomInt(0, 2) == 0 ? STATISTIC_TEAMPOSSESSION : STATISTIC_TEAMCOUNT);
+
+							pEvent->SetInt("statistic_type", statType);
+							pEvent->SetInt("distance_to_goal", distToGoal * 2.54f / 100);
 							gameeventmanager->FireEvent(pEvent);
 							EmitSound("Ball.whistle");
 						}

@@ -241,8 +241,6 @@ void CPlayerResource::UpdatePlayerData( void )
 				CSDKPlayer *pPl = ToSDKPlayer(pPlayer);
 				if (SDKPlayer)
 				{
-					int ti = pPl->GetTeamNumber() - TEAM_A;
-
 					m_RedCards.Set(i, max( 0, pPl->GetRedCards() ) );
 					m_YellowCards.Set(i, max( 0, pPl->GetYellowCards() ) );
 					m_Fouls.Set(i, max( 0, pPl->GetFouls() ) );
@@ -268,11 +266,16 @@ void CPlayerResource::UpdatePlayerData( void )
 					m_KeeperSaves.Set(i, max( 0, pPl->GetKeeperSaves() ) );
 					m_GoalKicks.Set(i, max( 0, pPl->GetGoalKicks() ) );
 
-					if (ping > 0)
+					if (pPl->GetTeamNumber() == TEAM_A || pPl->GetTeamNumber() == TEAM_B)
 					{
-						pingSum[ti] += ping;
-						pingPlayers[ti] += 1;
-					}
+						int ti = pPl->GetTeamNumber() - TEAM_A;
+
+						if (ping > 0)
+						{
+							pingSum[ti] += ping;
+							pingPlayers[ti] += 1;
+						}
+
 						distSum[ti] += pPl->GetDistanceCovered() / 10.0f;
 
 						if (pPl->GetPasses() > 0)
@@ -310,6 +313,7 @@ void CPlayerResource::UpdatePlayerData( void )
 						saves[ti] += pPl->GetKeeperSaves();
 						owngoals[ti] += pPl->GetOwnGoals();
 						goalsconceded[ti] += pPl->GetGoalsConceded();
+					}
 				}
 			}
 		}
@@ -319,35 +323,40 @@ void CPlayerResource::UpdatePlayerData( void )
 		}
 	}
 
+
 	for (int team = TEAM_A; team <= TEAM_B; team++)
 	{
 		int ti = team - TEAM_A;
 		CTeam *pTeam = GetGlobalTeam(team);
-		pTeam->m_Ping = pingSum[ti] / max(1, pingPlayers[ti]);
-		//pTeam->m_Possession = pTeam->GetPossession();
-		pTeam->m_Passes = passSum;
-		pTeam->m_PassesCompleted = 100 * passCompletedSum[ti] / max(1, passSum[ti]);
-		pTeam->m_DistanceCovered = distSum[ti];
-		pTeam->m_Offsides = offsides[ti];
-		pTeam->m_Corners = corners[ti];
-		pTeam->m_GoalKicks = goalkicks[ti];
-		pTeam->m_Shots = shots[ti];
-		pTeam->m_ShotsOnGoal = 100 * shotsOnGoal[ti] / max(1, shots[ti]);
-		pTeam->m_Fouls = fouls[ti];
-		pTeam->m_FoulsSuffered = foulsSuffered[ti];
-		pTeam->m_SlidingTackles = slidingTackles[ti];
-		pTeam->m_SlidingTacklesCompleted = 100 * slidingTacklesCompletedSum[ti] / max(1, slidingTackles[ti]);
-		pTeam->m_FreeKicks = freekicks[ti];
-		pTeam->m_Goals = goals[ti];
-		pTeam->m_Assists = assists[ti];
-		pTeam->m_Interceptions = interceptions[ti];
-		pTeam->m_RedCards = redcards[ti];
-		pTeam->m_YellowCards = yellowcards[ti];
-		pTeam->m_Penalties = penalties[ti];
-		pTeam->m_ThrowIns = throwins[ti];
-		pTeam->m_KeeperSaves = saves[ti];
-		pTeam->m_OwnGoals = owngoals[ti];
-		pTeam->m_GoalsConceded = goalsconceded[ti];
-		pTeam->m_Rating = 100;
+
+		if (m_nUpdateCounter % 20 == 0)
+		{
+			pTeam->m_Ping = pingSum[ti] / max(1, pingPlayers[ti]);
+			//pTeam->m_Possession = pTeam->GetPossession();
+			pTeam->m_Passes = passSum;
+			pTeam->m_PassesCompleted = 100 * passCompletedSum[ti] / max(1, passSum[ti]);
+			pTeam->m_DistanceCovered = distSum[ti];
+			pTeam->m_Offsides = offsides[ti];
+			pTeam->m_Corners = corners[ti];
+			pTeam->m_GoalKicks = goalkicks[ti];
+			pTeam->m_Shots = shots[ti];
+			pTeam->m_ShotsOnGoal = 100 * shotsOnGoal[ti] / max(1, shots[ti]);
+			pTeam->m_Fouls = fouls[ti];
+			pTeam->m_FoulsSuffered = foulsSuffered[ti];
+			pTeam->m_SlidingTackles = slidingTackles[ti];
+			pTeam->m_SlidingTacklesCompleted = 100 * slidingTacklesCompletedSum[ti] / max(1, slidingTackles[ti]);
+			pTeam->m_FreeKicks = freekicks[ti];
+			pTeam->m_Goals = goals[ti];
+			pTeam->m_Assists = assists[ti];
+			pTeam->m_Interceptions = interceptions[ti];
+			pTeam->m_RedCards = redcards[ti];
+			pTeam->m_YellowCards = yellowcards[ti];
+			pTeam->m_Penalties = penalties[ti];
+			pTeam->m_ThrowIns = throwins[ti];
+			pTeam->m_KeeperSaves = saves[ti];
+			pTeam->m_OwnGoals = owngoals[ti];
+			pTeam->m_GoalsConceded = goalsconceded[ti];
+			pTeam->m_Rating = 100;
+		}
 	}
 }

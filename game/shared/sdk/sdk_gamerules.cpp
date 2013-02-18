@@ -2443,32 +2443,32 @@ void CSDKGameRules::SetMatchDisplayTimeSeconds(int seconds)
 
 	if (minute >= 120)
 	{
-		m_flAdjustedStateEnterTime = gpGlobals->curtime - ((seconds - 120 * 60) / (90.0f / mp_timelimit_match.GetInt()));
+		m_flAdjustedStateEnterTime = gpGlobals->curtime - ((seconds - 120 * 60) / (90.0f / mp_timelimit_match.GetFloat()));
 		matchState = MATCH_PENALTIES;
 	}
 	else if (minute >= 105)
 	{
-		m_flAdjustedStateEnterTime = gpGlobals->curtime - ((seconds - 105 * 60) / (90.0f / mp_timelimit_match.GetInt()));
+		m_flAdjustedStateEnterTime = gpGlobals->curtime - ((seconds - 105 * 60) / (90.0f / mp_timelimit_match.GetFloat()));
 		matchState = MATCH_EXTRATIME_SECOND_HALF;
 	}
 	else if (minute >= 90)
 	{
-		m_flAdjustedStateEnterTime = gpGlobals->curtime - ((seconds - 90 * 60) / (90.0f / mp_timelimit_match.GetInt()));
+		m_flAdjustedStateEnterTime = gpGlobals->curtime - ((seconds - 90 * 60) / (90.0f / mp_timelimit_match.GetFloat()));
 		matchState = MATCH_EXTRATIME_FIRST_HALF;
 	}
 	else if (minute >= 45)
 	{
-		m_flAdjustedStateEnterTime = gpGlobals->curtime - ((seconds - 45 * 60) / (90.0f / mp_timelimit_match.GetInt()));
+		m_flAdjustedStateEnterTime = gpGlobals->curtime - ((seconds - 45 * 60) / (90.0f / mp_timelimit_match.GetFloat()));
 		matchState = MATCH_SECOND_HALF;
 	}
 	else
 	{
-		m_flAdjustedStateEnterTime = gpGlobals->curtime - ((seconds - 0 * 60) / (90.0f / mp_timelimit_match.GetInt()));
+		m_flAdjustedStateEnterTime = gpGlobals->curtime - ((seconds - 0 * 60) / (90.0f / mp_timelimit_match.GetFloat()));
 		matchState = MATCH_FIRST_HALF;
 	}
 
 	ResetMatch();
-	m_flMatchStartTime = gpGlobals->curtime - (seconds / (90.0f / mp_timelimit_match.GetInt()));
+	m_flMatchStartTime = gpGlobals->curtime - (seconds / (90.0f / mp_timelimit_match.GetFloat()));
 	GetBall()->State_Transition(BALL_STATIC, 0, true);
 	SetLeftSideTeam(m_nFirstHalfLeftSideTeam);
 	SetKickOffTeam(m_nFirstHalfKickOffTeam);
