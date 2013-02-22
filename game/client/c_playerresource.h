@@ -82,6 +82,7 @@ public : // IGameResources intreface
 	virtual int		GetThrowIns( int index );
 	virtual int		GetKeeperSaves( int index );
 	virtual int		GetGoalKicks( int index );
+	virtual int		GetRatings( int index );
 	virtual int		GetTeamPosNum( int iIndex );
 	virtual int		GetTeamPosType( int iIndex );
 	virtual int		GetTeamPosIndex( int iIndex );
@@ -130,6 +131,7 @@ protected:
 	int		m_ThrowIns[MAX_PLAYERS+1];
 	int		m_KeeperSaves[MAX_PLAYERS+1];
 	int		m_GoalKicks[MAX_PLAYERS+1];
+	int		m_Ratings[MAX_PLAYERS+1];
 	int		m_TeamPosIndex[MAX_PLAYERS+1];
 	int		m_TeamPosNum[MAX_PLAYERS+1];
 

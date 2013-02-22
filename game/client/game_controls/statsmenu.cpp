@@ -95,7 +95,7 @@ void CStatsMenu::Reset()
 			m_pPlayerStats[i]->AddColumnToSection(sectionId, "steamname",				"Steam name",	0,				2 * columnWidth);
 			m_pPlayerStats[i]->AddColumnToSection(sectionId, "countryname",				"Location",		0,				2 * columnWidth);
 			m_pPlayerStats[i]->AddColumnToSection(sectionId, "club",					"Club",			defaultFlags,	columnWidth);
-			//m_pPlayerStats[i]->AddColumnToSection(sectionId, "rating",					"Rating",		defaultFlags,	columnWidth);
+			m_pPlayerStats[i]->AddColumnToSection(sectionId, "rating",					"Rating",		defaultFlags,	columnWidth);
 			m_pPlayerStats[i]->AddColumnToSection(sectionId, "ping",					"Ping",			defaultFlags,	columnWidth);
 		}
 		else if (i == 1)

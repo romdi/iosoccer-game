@@ -52,6 +52,7 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_PlayerResource, DT_PlayerResource, CPlayerReso
 	RecvPropArray3( RECVINFO_ARRAY(m_ThrowIns), RecvPropInt( RECVINFO(m_ThrowIns[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_KeeperSaves), RecvPropInt( RECVINFO(m_KeeperSaves[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_GoalKicks), RecvPropInt( RECVINFO(m_GoalKicks[0]))),
+	RecvPropArray3( RECVINFO_ARRAY(m_Ratings), RecvPropInt( RECVINFO(m_Ratings[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_TeamPosIndex), RecvPropInt( RECVINFO(m_TeamPosIndex[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_TeamPosNum), RecvPropInt( RECVINFO(m_TeamPosNum[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_TeamToJoin), RecvPropInt( RECVINFO(m_TeamToJoin[0]))),
@@ -110,6 +111,7 @@ C_PlayerResource::C_PlayerResource()
 	memset( m_ThrowIns, 0, sizeof( m_ThrowIns ) );
 	memset( m_KeeperSaves, 0, sizeof( m_KeeperSaves ) );
 	memset( m_GoalKicks, 0, sizeof( m_GoalKicks ) );
+	memset( m_Ratings, 0, sizeof( m_Ratings ) );
 	memset( m_TeamPosIndex, 0, sizeof( m_TeamPosIndex ) );
 	memset( m_TeamPosNum, 0, sizeof( m_TeamPosNum ) );
 	memset( m_TeamToJoin, 0, sizeof( m_TeamToJoin ) );
@@ -661,6 +663,15 @@ int	C_PlayerResource::GetGoalKicks( int iIndex )
 
 	return m_GoalKicks[iIndex];
 }
+
+int	C_PlayerResource::GetRatings( int iIndex )
+{
+	if ( !IsConnected( iIndex ) )
+		return 0;
+
+	return m_Ratings[iIndex];
+}
+
 int	C_PlayerResource::GetTeamPosNum( int iIndex )
 {
 	if ( !IsConnected( iIndex ) )

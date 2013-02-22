@@ -146,31 +146,6 @@ CTeam::CTeam( void )
 	UpdatePosIndices(true);
 	m_nTimeoutsLeft = mp_timeout_count.GetInt();
 	m_bWantsTimeout = false;
-
-	m_RedCards = 0;
-	m_YellowCards = 0;
-	m_Fouls = 0;
-	m_FoulsSuffered = 0;
-	m_SlidingTackles = 0;
-	m_SlidingTacklesCompleted = 0;
-	m_GoalsConceded = 0;
-	m_Shots = 0;
-	m_ShotsOnGoal = 0;
-	m_PassesCompleted = 0;
-	m_Interceptions = 0;
-	m_Offsides = 0;
-	m_Goals = 0;
-	m_OwnGoals = 0;
-	m_Assists = 0;
-	m_Possession = 0;
-	m_DistanceCovered = 0;
-	m_Passes = 0;
-	m_FreeKicks = 0;
-	m_Penalties = 0;
-	m_Corners = 0;
-	m_ThrowIns = 0;
-	m_KeeperSaves = 0;
-	m_GoalKicks = 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -395,10 +370,10 @@ void CTeam::UnblockAllPos()
 //-----------------------------------------------------------------------------
 // Purpose: Add / Remove score for this team
 //-----------------------------------------------------------------------------
-void CTeam::AddGoal()
-{
-	m_Goals += 1;
-}
+//void CTeam::AddGoal()
+//{
+//	m_Goals += 1;
+//}
 
 void CTeam::SetGoals( int goals )
 {
@@ -484,10 +459,35 @@ void CTeam::InitFieldSpots(int team)
 
 void CTeam::ResetStats()
 {
-	m_flPossessionTime = 0;
-	m_Possession = 0;
+	m_RedCards = 0;
+	m_YellowCards = 0;
+	m_Fouls = 0;
+	m_FoulsSuffered = 0;
+	m_SlidingTackles = 0;
+	m_SlidingTacklesCompleted = 0;
+	m_GoalsConceded = 0;
+	m_Shots = 0;
+	m_ShotsOnGoal = 0;
+	m_PassesCompleted = 0;
+	m_Interceptions = 0;
+	m_Offsides = 0;
 	m_Goals = 0;
+	m_OwnGoals = 0;
+	m_Assists = 0;
+	m_Possession = 0;
+	m_DistanceCovered = 0;
+	m_Passes = 0;
+	m_FreeKicks = 0;
+	m_Penalties = 0;
+	m_Corners = 0;
+	m_ThrowIns = 0;
+	m_KeeperSaves = 0;
+	m_GoalKicks = 0;
+	m_flPossessionTime = 0;
+	m_flExactDistanceCovered = 0;
 	m_nMatchEventIndex = 0;
+	m_Rating = 0;
+	m_Ping = 0;
 	m_bWantsTimeout = false;
 	m_nTimeoutsLeft = mp_timeout_count.GetInt();
 

@@ -70,6 +70,7 @@ public:
 	virtual int		GetThrowIns( int index ) = 0;
 	virtual int		GetKeeperSaves( int index ) = 0;
 	virtual int		GetGoalKicks( int index ) = 0;
+	virtual int		GetRatings( int index ) = 0;
 	virtual int		GetTeamPosNum( int iIndex ) = 0;
 	virtual int		GetTeamPosType( int iIndex ) = 0;
 	virtual int		GetTeamPosIndex( int iIndex ) = 0;

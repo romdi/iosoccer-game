@@ -67,6 +67,7 @@ public:
 	int		m_nThrowIns;
 	int		m_nKeeperSaves;
 	int		m_nGoalKicks;
+	int		m_nRating;
 	float	m_flExactDistanceCovered;
 
 //	CPlayerPersistentData(const CSteamID *steamID);
@@ -314,81 +315,107 @@ public:
 
 	int					GetRedCards(void) { return GetData()->m_nRedCards; }
 	void				SetRedCards(int amount) { GetData()->m_nRedCards = amount; }
+	void				AddRedCard();
 
 	int					GetYellowCards(void) { return GetData()->m_nYellowCards; }
 	void				SetYellowCards(int amount) { GetData()->m_nYellowCards = amount; }
+	void				AddYellowCard();
 
 	int					GetFouls(void) { return GetData()->m_nFouls; }
 	void				SetFouls(int amount) { GetData()->m_nFouls = amount; }
+	void				AddFoul();
 
 	int					GetFoulsSuffered(void) { return GetData()->m_nFoulsSuffered; }
 	void				SetFoulsSuffered(int amount) { GetData()->m_nFoulsSuffered = amount; }
+	void				AddFoulSuffered();
 
 	int					GetSlidingTackles(void) { return GetData()->m_nSlidingTackles; }
 	void				SetSlidingTackles(int amount) { GetData()->m_nSlidingTackles = amount; }
+	void				AddSlidingTackle();
 
 	int					GetSlidingTacklesCompleted(void) { return GetData()->m_nSlidingTacklesCompleted; }
 	void				SetSlidingTacklesCompleted(int amount) { GetData()->m_nSlidingTacklesCompleted = amount; }
+	void				AddSlidingTackleCompleted();
 
 	int					GetGoalsConceded(void) { return GetData()->m_nGoalsConceded; }
 	void				SetGoalsConceded(int amount) { GetData()->m_nGoalsConceded = amount; }
+	void				AddGoalConceded();
 
 	int					GetShots(void) { return GetData()->m_nShots; }
 	void				SetShots(int amount) { GetData()->m_nShots = amount; }
+	void				AddShot();
 
 	int					GetShotsOnGoal(void) { return GetData()->m_nShotsOnGoal; }
 	void				SetShotsOnGoal(int amount) { GetData()->m_nShotsOnGoal = amount; }
+	void				AddShotOnGoal();
 
 	int					GetPassesCompleted(void) { return GetData()->m_nPassesCompleted; }
 	void				SetPassesCompleted(int amount) { GetData()->m_nPassesCompleted = amount; }
+	void				AddPassCompleted();
 
 	int					GetInterceptions(void) { return GetData()->m_nInterceptions; }
 	void				SetInterceptions(int amount) { GetData()->m_nInterceptions = amount; }
+	void				AddInterception();
 
 	int					GetOffsides(void) { return GetData()->m_nOffsides; }
 	void				SetOffsides(int amount) { GetData()->m_nOffsides = amount; }
+	void				AddOffside();
 
 	int					GetGoals(void) { return GetData()->m_nGoals; }
 	void				SetGoals(int amount) { GetData()->m_nGoals = amount; }
+	void				AddGoal();
 
 	int					GetOwnGoals(void) { return GetData()->m_nOwnGoals; }
 	void				SetOwnGoals(int amount) { GetData()->m_nOwnGoals = amount; }
+	void				AddOwnGoal();
 
 	int					GetAssists(void) { return GetData()->m_nAssists; }
 	void				SetAssists(int amount) { GetData()->m_nAssists = amount; }
+	void				AddAssist();
 
 	float				GetPossessionTime(void) { return GetData()->m_flPossessionTime; }
 	void				SetPossessionTime(float time) { GetData()->m_flPossessionTime = time; }
+	void				AddPossessionTime(float time);
 
 	int					GetPossession(void) { return GetData()->m_nPossession; }
 	void				SetPossession(int amount) { GetData()->m_nPossession = amount; }
 
 	float				GetExactDistanceCovered(void) { return GetData()->m_flExactDistanceCovered; }
 	void				SetExactDistanceCovered(float amount) { GetData()->m_flExactDistanceCovered = amount; }
+	void				AddExactDistanceCovered(float amount);
 
 	int					GetDistanceCovered(void) { return GetData()->m_nDistanceCovered; }
-	void				SetDistanceCovered(int amount) { GetData()->m_nDistanceCovered = amount; }
 
 	int					GetPasses(void) { return GetData()->m_nPasses; }
 	void				SetPasses(int amount) { GetData()->m_nPasses = amount; }
+	void				AddPass();
 
 	int					GetFreeKicks(void) { return GetData()->m_nFreeKicks; }
 	void				SetFreeKicks(int amount) { GetData()->m_nFreeKicks = amount; }
+	void				AddFreeKick();
 
 	int					GetPenalties(void) { return GetData()->m_nPenalties; }
 	void				SetPenalties(int amount) { GetData()->m_nPenalties = amount; }
+	void				AddPenalty();
 
 	int					GetCorners(void) { return GetData()->m_nCorners; }
 	void				SetCorners(int amount) { GetData()->m_nCorners = amount; }
+	void				AddCorner();
 
 	int					GetThrowIns(void) { return GetData()->m_nThrowIns; }
 	void				SetThrowIns(int amount) { GetData()->m_nThrowIns = amount; }
+	void				AddThrowIn();
 
 	int					GetKeeperSaves(void) { return GetData()->m_nKeeperSaves; }
 	void				SetKeeperSaves(int amount) { GetData()->m_nKeeperSaves = amount; }
+	void				AddKeeperSave();
 
 	int					GetGoalKicks(void) { return GetData()->m_nGoalKicks; }
 	void				SetGoalKicks(int amount) { GetData()->m_nGoalKicks = amount; }
+	void				AddGoalKick();
+
+	int					GetRating(void) { return GetData()->m_nRating; }
+	void				SetRating(int amount) { GetData()->m_nRating = amount; }
 
 	int					GetNextCardJoin(void) { return GetData()->m_nNextCardJoin; }
 	void				SetNextCardJoin(int seconds) { GetData()->m_nNextCardJoin = seconds; }
@@ -513,9 +540,11 @@ public:
 
 	int					m_nMotmChoiceIds[2];
 
-	float				m_flLastShotOnGoal;
+	float				GetLastShotOnGoal() { return m_flLastShotOnGoal; }
 
 protected:
+
+	float				m_flLastShotOnGoal;
 
 	bool				m_bIsAway;
 	float				m_flLastMoveTime;

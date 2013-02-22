@@ -145,6 +145,10 @@ CHudScorebar::CHudScorebar( const char *pElementName ) : BaseClass(NULL, "HudSco
 	m_pExtraInfo = new Label(this, "", "");
 
 	m_flStayDuration = 3.0f;
+
+	SetProportional(false);
+
+	LoadControlSettings("resource/ui/scorebars/default.res");
 }
 
 void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
@@ -153,9 +157,9 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 
 	m_pScheme = pScheme;
 
-	SetProportional(false);
+	//SetProportional(false);
 
-	LoadControlSettings("resource/ui/scorebars/default.res");
+	//LoadControlSettings("resource/ui/scorebars/default.res");
 
 	SetBounds(0, 0, ScreenWidth(), ScreenHeight());
 
@@ -401,6 +405,20 @@ char *GetPossessionText()
 	return VarArgs("%d%% possession %d%%", GetGlobalTeam(TEAM_A)->m_Possession, GetGlobalTeam(TEAM_B)->m_Possession);
 }
 
+char *GetShotsOnGoalText()
+{
+	return VarArgs("%d%% shots on goal %d%%",
+		GetGlobalTeam(TEAM_A)->m_ShotsOnGoal * 100 / max(1, GetGlobalTeam(TEAM_A)->m_Shots),
+		GetGlobalTeam(TEAM_B)->m_ShotsOnGoal * 100 / max(1, GetGlobalTeam(TEAM_B)->m_Shots));
+}
+
+char *GetPassingText()
+{
+	return VarArgs("%d%% passes completed %d%%",
+		GetGlobalTeam(TEAM_A)->m_PassesCompleted * 100 / max(1, GetGlobalTeam(TEAM_A)->m_Passes),
+		GetGlobalTeam(TEAM_B)->m_PassesCompleted * 100 / max(1, GetGlobalTeam(TEAM_B)->m_Passes));
+}
+
 char *GetSetPieceCountText(match_event_t matchEvent, int team)
 {
 	char text[32] = { 0 };
@@ -477,11 +495,17 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 
 		switch ((statistic_type_t)event->GetInt("statistic_type"))
 		{
-		case STATISTIC_TEAMCOUNT:
+		case STATISTIC_SETPIECECOUNT_TEAM:
 			m_pExtraInfo->SetText(GetSetPieceCountText(m_eCurMatchEvent, event->GetInt("taking_team")));
 			break;
-		case STATISTIC_TEAMPOSSESSION:
+		case STATISTIC_POSSESSION_TEAM:
 			m_pExtraInfo->SetText(GetPossessionText());
+			break;
+		case STATISTIC_SHOTSONGOAL_TEAM:
+			m_pExtraInfo->SetText(GetShotsOnGoalText());
+			break;
+		case STATISTIC_PASSING_TEAM:
+			m_pExtraInfo->SetText(GetPassingText());
 			break;
 		default:
 			m_pExtraInfo->SetText("");
@@ -554,10 +578,10 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 		case STATISTIC_DISTANCETOGOAL:
 			m_pExtraInfo->SetText(VarArgs("%dm distance to goal", event->GetInt("distance_to_goal")));
 			break;
-		case STATISTIC_TEAMCOUNT:
+		case STATISTIC_SETPIECECOUNT_TEAM:
 			m_pExtraInfo->SetText(GetSetPieceCountText(m_eCurMatchEvent, pFoulingTeam->GetOppTeamNumber()));
 			break;
-		case STATISTIC_TEAMPOSSESSION:
+		case STATISTIC_POSSESSION_TEAM:
 			m_pExtraInfo->SetText(GetPossessionText());
 			break;
 		default:

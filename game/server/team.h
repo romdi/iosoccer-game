@@ -91,7 +91,7 @@ public:
 	//-----------------------------------------------------------------------------
 	// Scoring
 	//-----------------------------------------------------------------------------
-	virtual void AddGoal();
+	//virtual void AddGoal();
 	virtual void SetGoals( int goals );
 	virtual int  GetGoals( void );
 	virtual void SetPossession( int possession );
@@ -126,6 +126,7 @@ public:
 	int		m_iLastSpawn;		// Index of the last spawnpoint used
 
 	float	m_flPossessionTime;
+	float	m_flExactDistanceCovered;
 
 	CNetworkVector(m_vCornerLeft);
 	CNetworkVector(m_vCornerRight);

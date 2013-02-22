@@ -1783,6 +1783,154 @@ void CSDKPlayer::SetPlayerName(const char *name)
 	}
 }
 
+void CSDKPlayer::AddRedCard()
+{
+	GetData()->m_nRedCards += 1;
+	GetTeam()->m_RedCards += 1;
+}
+
+void CSDKPlayer::AddYellowCard()
+{
+	GetData()->m_nYellowCards += 1;
+	GetTeam()->m_YellowCards += 1;
+}
+
+void CSDKPlayer::AddFoul()
+{
+	GetData()->m_nFouls += 1;
+	GetTeam()->m_Fouls += 1;
+}
+
+void CSDKPlayer::AddFoulSuffered()
+{
+	GetData()->m_nFoulsSuffered += 1;
+	GetTeam()->m_FoulsSuffered += 1;
+}
+
+void CSDKPlayer::AddSlidingTackle()
+{
+	GetData()->m_nSlidingTackles += 1;
+	GetTeam()->m_SlidingTackles += 1;
+}
+
+void CSDKPlayer::AddSlidingTackleCompleted()
+{
+	GetData()->m_nSlidingTacklesCompleted += 1;
+	GetTeam()->m_SlidingTacklesCompleted += 1;
+}
+
+void CSDKPlayer::AddGoalConceded()
+{
+	GetData()->m_nGoalsConceded += 1;
+	GetTeam()->m_GoalsConceded += 1;
+}
+
+void CSDKPlayer::AddShot()
+{
+	GetData()->m_nShots += 1;
+	GetTeam()->m_Shots += 1;
+}
+
+void CSDKPlayer::AddShotOnGoal()
+{
+	GetData()->m_nShotsOnGoal += 1;
+	m_flLastShotOnGoal = gpGlobals->curtime;
+	GetTeam()->m_ShotsOnGoal += 1;
+}
+
+void CSDKPlayer::AddPassCompleted()
+{
+	GetData()->m_nPassesCompleted += 1;
+	GetTeam()->m_PassesCompleted += 1;
+}
+
+void CSDKPlayer::AddInterception()
+{
+	GetData()->m_nInterceptions += 1;
+	GetTeam()->m_Interceptions += 1;
+}
+
+void CSDKPlayer::AddOffside()
+{
+	GetData()->m_nOffsides += 1;
+	GetTeam()->m_Offsides += 1;
+}
+
+void CSDKPlayer::AddGoal()
+{
+	GetData()->m_nGoals += 1;
+	GetTeam()->m_Goals += 1;
+}
+
+void CSDKPlayer::AddOwnGoal()
+{
+	GetData()->m_nOwnGoals += 1;
+	GetTeam()->m_OwnGoals += 1;
+	GetOppTeam()->m_Goals += 1;
+}
+
+void CSDKPlayer::AddAssist()
+{
+	GetData()->m_nAssists += 1;
+	GetTeam()->m_Assists += 1;
+}
+
+void CSDKPlayer::AddPossessionTime(float time)
+{
+	GetData()->m_flPossessionTime += time;
+	GetTeam()->m_flPossessionTime += time;
+}
+
+void CSDKPlayer::AddExactDistanceCovered(float amount)
+{
+	GetData()->m_flExactDistanceCovered += amount;
+	GetData()->m_nDistanceCovered = GetData()->m_flExactDistanceCovered * 10 / 1000;
+	GetTeam()->m_flExactDistanceCovered += amount;
+	GetTeam()->m_DistanceCovered = GetTeam()->m_flExactDistanceCovered * 10 / 1000;
+}
+
+void CSDKPlayer::AddPass()
+{
+	GetData()->m_nPasses += 1;
+	GetTeam()->m_Passes += 1;
+}
+
+void CSDKPlayer::AddFreeKick()
+{
+	GetData()->m_nFreeKicks += 1;
+	GetTeam()->m_FreeKicks += 1;
+}
+
+void CSDKPlayer::AddPenalty()
+{
+	GetData()->m_nPenalties += 1;
+	GetTeam()->m_Penalties += 1;
+}
+
+void CSDKPlayer::AddCorner()
+{
+	GetData()->m_nCorners += 1;
+	GetTeam()->m_Corners += 1;
+}
+
+void CSDKPlayer::AddThrowIn()
+{
+	GetData()->m_nThrowIns += 1;
+	GetTeam()->m_ThrowIns += 1;
+}
+
+void CSDKPlayer::AddKeeperSave()
+{
+	GetData()->m_nKeeperSaves += 1;
+	GetTeam()->m_KeeperSaves += 1;
+}
+
+void CSDKPlayer::AddGoalKick()
+{
+	GetData()->m_nGoalKicks += 1;
+	GetTeam()->m_GoalKicks += 1;
+}
+
 CUtlVector<CPlayerPersistentData *> CPlayerPersistentData::m_PlayerPersistentData;
 
 void CPlayerPersistentData::AllocateData(CSDKPlayer *pPl)
@@ -1989,6 +2137,7 @@ void CPlayerPersistentData::ResetData()
 	m_nThrowIns = 0;
 	m_nKeeperSaves = 0;
 	m_nGoalKicks = 0;
+	m_nRating = 0;
 	m_nPossession = 0;
 	m_flPossessionTime = 0.0f;
 	m_nDistanceCovered = 0;

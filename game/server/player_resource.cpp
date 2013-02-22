@@ -53,6 +53,7 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CPlayerResource, DT_PlayerResource)
 	SendPropArray3( SENDINFO_ARRAY3(m_ThrowIns), SendPropInt( SENDINFO_ARRAY(m_ThrowIns), 6, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_KeeperSaves), SendPropInt( SENDINFO_ARRAY(m_KeeperSaves), 6, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_GoalKicks), SendPropInt( SENDINFO_ARRAY(m_GoalKicks), 5, SPROP_UNSIGNED ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_Ratings), SendPropInt( SENDINFO_ARRAY(m_Ratings), 7, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_TeamPosIndex), SendPropInt( SENDINFO_ARRAY(m_TeamPosIndex), 4, SPROP_UNSIGNED  ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_TeamPosNum), SendPropInt( SENDINFO_ARRAY(m_TeamPosNum), 5, SPROP_UNSIGNED  ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_NextCardJoin), SendPropInt( SENDINFO_ARRAY(m_NextCardJoin) ) ),
@@ -124,6 +125,7 @@ void CPlayerResource::Spawn( void )
 		m_ThrowIns.Set( i, 0 );
 		m_KeeperSaves.Set( i, 0 );
 		m_GoalKicks.Set( i, 0 );
+		m_Ratings.Set( i, 0 );
 		m_TeamPosIndex.Set( i, 0 );
 		m_TeamPosNum.Set( i, 0 );
 		m_NextCardJoin.Set( i, 0 );
@@ -168,30 +170,6 @@ void CPlayerResource::UpdatePlayerData( void )
 {
 	int pingSum[2] = { 0 };
 	int pingPlayers[2] = { 0 };
-	float distSum[2] = { 0 };
-	int passSum[2] = { 0 };
-	int passCompletedSum[2] = { 0 };
-	int offsides[2] = { 0 };
-	int corners[2] = { 0 };
-	int goalkicks[2] = { 0 };
-	int shots[2] = { 0 };
-	int shotsOnGoal[2] = { 0 };
-	int fouls[2] = { 0 };
-	int foulsSuffered[2] = { 0 };
-	int slidingTackles[2] = { 0 };
-	int slidingTacklesCompletedSum[2] = { 0 };
-	int freekicks[2] = { 0 };
-	int goals[2] = { 0 };
-	int assists[2] = { 0 };
-	int interceptions[2] = { 0 };
-	int redcards[2] = { 0 };
-	int yellowcards[2] = { 0 };
-	int penalties[2] = { 0 };
-	int throwins[2] = { 0 };
-	int saves[2] = { 0 };
-	int owngoals[2] = { 0 };
-	int goalsconceded[2] = { 0 };
-	int ratings[2] = { 0 };
 
 	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
 	{
@@ -265,6 +243,8 @@ void CPlayerResource::UpdatePlayerData( void )
 					m_ThrowIns.Set(i, max( 0, pPl->GetThrowIns() ) );
 					m_KeeperSaves.Set(i, max( 0, pPl->GetKeeperSaves() ) );
 					m_GoalKicks.Set(i, max( 0, pPl->GetGoalKicks() ) );
+					//m_Ratings.Set(i, max( 0, pPl->GetRating() ) );
+					m_Ratings.Set(i, 100 );
 
 					if (pPl->GetTeamNumber() == TEAM_A || pPl->GetTeamNumber() == TEAM_B)
 					{
@@ -275,44 +255,6 @@ void CPlayerResource::UpdatePlayerData( void )
 							pingSum[ti] += ping;
 							pingPlayers[ti] += 1;
 						}
-
-						distSum[ti] += pPl->GetDistanceCovered() / 10.0f;
-
-						if (pPl->GetPasses() > 0)
-						{
-							passSum[ti] += pPl->GetPasses();
-							passCompletedSum[ti] += pPl->GetPassesCompleted();
-							ratings[ti] += pPl->GetPassesCompleted() * 10 / pPl->GetPasses();
-						}
-
-						if (pPl->GetShots() > 0)
-						{
-							shots[ti] += pPl->GetShots();
-							shotsOnGoal[ti] += pPl->GetShotsOnGoal();
-						}
-
-						if (pPl->GetSlidingTackles() > 0)
-						{
-							slidingTackles[ti] += pPl->GetSlidingTackles();
-							slidingTacklesCompletedSum[ti] += pPl->GetSlidingTacklesCompleted();
-						}
-
-						offsides[ti] += pPl->GetOffsides();
-						corners[ti] += pPl->GetCorners();
-						goalkicks[ti] += pPl->GetGoalKicks();
-						fouls[ti] += pPl->GetFouls();
-						foulsSuffered[ti] += pPl->GetFoulsSuffered();
-						freekicks[ti] += pPl->GetFreeKicks();
-						goals[ti] += pPl->GetGoals();
-						assists[ti] += pPl->GetAssists();
-						interceptions[ti] += pPl->GetInterceptions();
-						redcards[ti] += pPl->GetRedCards();
-						yellowcards[ti] += pPl->GetYellowCards();
-						penalties[ti] += pPl->GetPenalties();
-						throwins[ti] += pPl->GetThrowIns();
-						saves[ti] += pPl->GetKeeperSaves();
-						owngoals[ti] += pPl->GetOwnGoals();
-						goalsconceded[ti] += pPl->GetGoalsConceded();
 					}
 				}
 			}
@@ -332,30 +274,6 @@ void CPlayerResource::UpdatePlayerData( void )
 		if (m_nUpdateCounter % 20 == 0)
 		{
 			pTeam->m_Ping = pingSum[ti] / max(1, pingPlayers[ti]);
-			//pTeam->m_Possession = pTeam->GetPossession();
-			pTeam->m_Passes = passSum;
-			pTeam->m_PassesCompleted = 100 * passCompletedSum[ti] / max(1, passSum[ti]);
-			pTeam->m_DistanceCovered = distSum[ti];
-			pTeam->m_Offsides = offsides[ti];
-			pTeam->m_Corners = corners[ti];
-			pTeam->m_GoalKicks = goalkicks[ti];
-			pTeam->m_Shots = shots[ti];
-			pTeam->m_ShotsOnGoal = 100 * shotsOnGoal[ti] / max(1, shots[ti]);
-			pTeam->m_Fouls = fouls[ti];
-			pTeam->m_FoulsSuffered = foulsSuffered[ti];
-			pTeam->m_SlidingTackles = slidingTackles[ti];
-			pTeam->m_SlidingTacklesCompleted = 100 * slidingTacklesCompletedSum[ti] / max(1, slidingTackles[ti]);
-			pTeam->m_FreeKicks = freekicks[ti];
-			pTeam->m_Goals = goals[ti];
-			pTeam->m_Assists = assists[ti];
-			pTeam->m_Interceptions = interceptions[ti];
-			pTeam->m_RedCards = redcards[ti];
-			pTeam->m_YellowCards = yellowcards[ti];
-			pTeam->m_Penalties = penalties[ti];
-			pTeam->m_ThrowIns = throwins[ti];
-			pTeam->m_KeeperSaves = saves[ti];
-			pTeam->m_OwnGoals = owngoals[ti];
-			pTeam->m_GoalsConceded = goalsconceded[ti];
 			pTeam->m_Rating = 100;
 		}
 	}
