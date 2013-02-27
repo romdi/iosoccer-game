@@ -2080,7 +2080,7 @@ bool CGameMovement::CheckSlideButton()
 
 		#ifdef GAME_DLL
 			if (!SDKGameRules()->IsIntermissionState() && GetBall()->State_Get() == BALL_NORMAL && !GetBall()->HasQueuedState())
-				pPl->SetSlidingTackles(pPl->GetSlidingTackles() + 1);
+				pPl->AddSlidingTackle();
 		#endif
 	}
 
