@@ -1996,7 +1996,37 @@ void CPlayerPersistentData::ConvertAllPlayerDataToJson()
 
 		Q_strcat(json, UTIL_VarArgs("\"%s\":{", (team == TEAM_A ? "homeTeam" : "awayTeam")), jsonSize);
 
-		Q_strcat(json, "\"players\":[", jsonSize);
+		Q_strcat(json, UTIL_VarArgs("\"name\":\"%s\",\"redCards\":%d,\"yellowCards\":%d,\"fouls\":%d,\"foulsSuffered\":%d,\"slidingTackles\":%d,\"slidingTacklesCompleted\":%d,\"goalsConceded\":%d,\"shots\":%d,\"shotsOnGoal\":%d,\"passesCompleted\":%d,\"interceptions\":%d,\"offsides\":%d,\"goals\":%d,\"ownGoals\":%d,\"assists\":%d,\"passes\":%d,\"freeKicks\":%d,\"penalties\":%d,\"corners\":%d,\"throwIns\":%d,\"keeperSaves\":%d,\"goalKicks\":%d,\"possession\":%d,\"distanceCovered\":%d",
+			(pTeam->GetShortTeamName()[0] == 0 ? pTeam->GetKitName() : pTeam->GetShortTeamName()), pTeam->m_RedCards, pTeam->m_YellowCards, pTeam->m_Fouls, pTeam->m_FoulsSuffered, pTeam->m_SlidingTackles, pTeam->m_SlidingTacklesCompleted, pTeam->m_GoalsConceded, pTeam->m_Shots, pTeam->m_ShotsOnGoal, pTeam->m_PassesCompleted, pTeam->m_Interceptions, pTeam->m_Offsides, pTeam->m_Goals, pTeam->m_OwnGoals, pTeam->m_Assists, pTeam->m_Passes, pTeam->m_FreeKicks, pTeam->m_Penalties, pTeam->m_Corners, pTeam->m_ThrowIns, pTeam->m_KeeperSaves, pTeam->m_GoalKicks, pTeam->m_Possession, (int)pTeam->m_flExactDistanceCovered
+			), jsonSize);
+
+		Q_strcat(json, ",\"matchEvents\":[", jsonSize);
+
+		for (int i = 0; i < pTeam->m_nMatchEventIndex; i++)
+		{
+			int minute = ceil(pTeam->m_nMatchEventSeconds[i] / 60.0f);
+			char time[16];
+
+			if (pTeam->m_eMatchEventMatchStates[i] == MATCH_FIRST_HALF && minute > 45)
+				Q_snprintf(time, sizeof(time), "%d'+%d", 45, min(4, minute - 45));
+			else if (pTeam->m_eMatchEventMatchStates[i] == MATCH_SECOND_HALF && minute > 90)
+				Q_snprintf(time, sizeof(time), "%d'+%d", 90, min(4, minute - 90));
+			else if (pTeam->m_eMatchEventMatchStates[i] == MATCH_EXTRATIME_FIRST_HALF && minute > 105)
+				Q_snprintf(time, sizeof(time), "%d'+%d", 105, min(4, minute - 105));
+			else if (pTeam->m_eMatchEventMatchStates[i] == MATCH_EXTRATIME_SECOND_HALF && minute > 120)
+				Q_snprintf(time, sizeof(time), "%d'+%d", 120, min(4, minute - 120));
+			else
+				Q_snprintf(time, sizeof(time), "%d'", minute);
+
+			if (i > 0)
+				Q_strcat(json, ",", jsonSize);
+
+			Q_strcat(json, UTIL_VarArgs("{\"minute\":\"%s\",\"event\":\"%s\",\"player\":\"%s\"}", time, g_szMatchEventNames[pTeam->m_eMatchEventTypes[i]], pTeam->m_szMatchEventPlayers[i]), jsonSize);
+		}
+
+		Q_strcat(json, "]", jsonSize);
+
+		Q_strcat(json, ",\"players\":[", jsonSize);
 
 		int playerCount = 0;
 
@@ -2030,32 +2060,6 @@ void CPlayerPersistentData::ConvertAllPlayerDataToJson()
 				), jsonSize);
 
 			playerCount += 1;
-		}
-
-		Q_strcat(json, "],", jsonSize);
-
-		Q_strcat(json, UTIL_VarArgs("\"name\":\"%s\",\"goals\":%d,\"possession\":%d,\"matchEvents\":[", GetGlobalTeam(team)->GetShortTeamName(), GetGlobalTeam(team)->GetGoals(), GetGlobalTeam(team)->m_Possession), jsonSize);
-		
-		for (int i = 0; i < GetGlobalTeam(team)->m_nMatchEventIndex; i++)
-		{
-			int minute = ceil(pTeam->m_nMatchEventSeconds[i] / 60.0f);
-			char time[16];
-
-			if (pTeam->m_eMatchEventMatchStates[i] == MATCH_FIRST_HALF && minute > 45)
-				Q_snprintf(time, sizeof(time), "%d'+%d", 45, min(4, minute - 45));
-			else if (pTeam->m_eMatchEventMatchStates[i] == MATCH_SECOND_HALF && minute > 90)
-				Q_snprintf(time, sizeof(time), "%d'+%d", 90, min(4, minute - 90));
-			else if (pTeam->m_eMatchEventMatchStates[i] == MATCH_EXTRATIME_FIRST_HALF && minute > 105)
-				Q_snprintf(time, sizeof(time), "%d'+%d", 105, min(4, minute - 105));
-			else if (pTeam->m_eMatchEventMatchStates[i] == MATCH_EXTRATIME_SECOND_HALF && minute > 120)
-				Q_snprintf(time, sizeof(time), "%d'+%d", 120, min(4, minute - 120));
-			else
-				Q_snprintf(time, sizeof(time), "%d'", minute);
-
-			if (i > 0)
-				Q_strcat(json, ",", jsonSize);
-
-			Q_strcat(json, UTIL_VarArgs("{\"minute\":\"%s\",\"event\":\"%s\",\"player\":\"%s\"}", time, g_szMatchEventNames[pTeam->m_eMatchEventTypes[i]], pTeam->m_szMatchEventPlayers[i]), jsonSize);
 		}
 
 		Q_strcat(json, "]}", jsonSize);
