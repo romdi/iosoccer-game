@@ -1937,7 +1937,7 @@ bool CBall::DoBodyPartAction()
 
 	bool canCatch = false;
 
-	if (m_pPl->GetTeamPosType() == GK && m_nInPenBoxOfTeam == m_pPl->GetTeamNumber() && !m_pPl->m_pHoldingBall && m_pPl->m_nInPenBoxOfTeam == m_pPl->GetTeamNumber())
+	if (m_pPl->IsNormalshooting() && m_pPl->GetTeamPosType() == GK && m_nInPenBoxOfTeam == m_pPl->GetTeamNumber() && !m_pPl->m_pHoldingBall && m_pPl->m_nInPenBoxOfTeam == m_pPl->GetTeamNumber())
 	{
 		if (!SDKGameRules()->IsIntermissionState() && SDKGameRules()->State_Get() != MATCH_PENALTIES)
 		{
