@@ -1937,41 +1937,44 @@ bool CBall::DoBodyPartAction()
 
 	bool canCatch = false;
 
-	if (m_pPl->IsNormalshooting() && m_pPl->GetTeamPosType() == GK && m_nInPenBoxOfTeam == m_pPl->GetTeamNumber() && !m_pPl->m_pHoldingBall && m_pPl->m_nInPenBoxOfTeam == m_pPl->GetTeamNumber())
+	if (m_pPl->IsNormalshooting()
+		&& m_pPl->GetTeamPosType() == GK
+		&& m_nInPenBoxOfTeam == m_pPl->GetTeamNumber()
+		&& !m_pPl->m_pHoldingBall
+		&& m_pPl->m_nInPenBoxOfTeam == m_pPl->GetTeamNumber())
 	{
-		if (!SDKGameRules()->IsIntermissionState() && SDKGameRules()->State_Get() != MATCH_PENALTIES)
+		if (SDKGameRules()->IsIntermissionState() || SDKGameRules()->State_Get() == MATCH_PENALTIES)
 		{
-			// Can catch if either another player shot the ball last or before me. Excludes Goal kicks, free kicks and shots from hand, since touches get deleted there.
-			if (LastPl(true) != m_pPl || LastPl(true, m_pPl))
-			{
-				BallTouchInfo *pInfo = LastInfo(false, m_pPl);
-
-				if (pInfo)
-				{
-					// Can always catch balls touched or shot by opponents. Only check teammate touches and shots.
-					if (pInfo->m_nTeam == m_pPl->GetTeamNumber())
-					{
-						if (!pInfo->m_bIsShot || pInfo->m_eBodyPart == BODY_PART_HEAD || pInfo->m_eBodyPart == BODY_PART_CHEST)
-						{
-							BallTouchInfo *pShotInfo = LastInfo(true, m_pPl);
-
-							if (pInfo->m_bIsShot || !pShotInfo || pShotInfo->m_nTeam != m_pPl->GetTeamNumber()
-								|| pShotInfo->m_eBodyPart == BODY_PART_HEAD || pShotInfo->m_eBodyPart == BODY_PART_CHEST)
-							{
-								canCatch = true;
-							}
-						}
-					}
-					else
-					{
-						canCatch = true;
-					}
-				}
-			}
+			canCatch = true;
 		}
 		else
 		{
-			canCatch = true;
+			BallTouchInfo *pLastTouch = LastInfo(false, m_pPl);
+			BallTouchInfo *pLastShot = LastInfo(true, m_pPl);
+
+			if (pLastTouch && pLastShot)
+			{
+				// Can catch if opponent has touched or shot the ball
+				if (pLastTouch->m_nTeam != m_pPl->GetTeamNumber() || pLastShot->m_nTeam != m_pPl->GetTeamNumber())
+				{
+					canCatch = true;
+				}
+				else
+				{
+					if (pLastShot->m_eBodyPart == BODY_PART_HEAD || pLastShot->m_eBodyPart == BODY_PART_CHEST)
+					{
+						// Check if any opponent has touched the ball since the last set piece. Only allow back-passes with the head or chest if this is true to prevent abuse.
+						for (int i = m_Touches.Count() - 1; i >= 0; i--)
+						{
+							if (m_Touches[i]->m_nTeam != m_pPl->GetTeamNumber())
+							{
+								canCatch = true;
+								break;
+							}
+						}
+					}
+				}
+			}
 		}
 	}
 
