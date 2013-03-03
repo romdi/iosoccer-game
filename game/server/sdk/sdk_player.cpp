@@ -1132,15 +1132,18 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 		}
 		
 		IGameEvent *pEvent = gameeventmanager->CreateEvent("motmvotingresult");
-		pEvent->SetInt("playerschoice_player0", mostVotesPlayer[0]);
-		pEvent->SetInt("playerschoice_percentage0", mostVotesCount[0] * 100 / max(1, playersOnField[0]));
-		pEvent->SetInt("playerschoice_player1", mostVotesPlayer[1]);
-		pEvent->SetInt("playerschoice_percentage1", mostVotesCount[1] * 100 / max(1, playersOnField[1]));
-		pEvent->SetInt("expertschoice_player0", mostGoalsPlayers[0]);
-		pEvent->SetInt("expertschoice_percentage0", 100);
-		pEvent->SetInt("expertschoice_player1", mostGoalsPlayers[1]);
-		pEvent->SetInt("expertschoice_percentage1", 100);
-		gameeventmanager->FireEvent(pEvent);
+		if (pEvent)
+		{
+			pEvent->SetInt("playerschoice_player0", mostVotesPlayer[0]);
+			pEvent->SetInt("playerschoice_percentage0", mostVotesCount[0] * 100 / max(1, playersOnField[0]));
+			pEvent->SetInt("playerschoice_player1", mostVotesPlayer[1]);
+			pEvent->SetInt("playerschoice_percentage1", mostVotesCount[1] * 100 / max(1, playersOnField[1]));
+			pEvent->SetInt("expertschoice_player0", mostGoalsPlayers[0]);
+			pEvent->SetInt("expertschoice_percentage0", 100);
+			pEvent->SetInt("expertschoice_player1", mostGoalsPlayers[1]);
+			pEvent->SetInt("expertschoice_percentage1", 100);
+			gameeventmanager->FireEvent(pEvent);
+		}
 
 		return true;
 	}
@@ -1164,9 +1167,12 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 
 		GetTeam()->SetWantsTimeout(true);
 
-		IGameEvent* pEvent = gameeventmanager->CreateEvent("timeout_pending");
-		pEvent->SetInt("requesting_team", GetTeamNumber());
-		gameeventmanager->FireEvent(pEvent);
+		IGameEvent *pEvent = gameeventmanager->CreateEvent("timeout_pending");
+		if (pEvent)
+		{
+			pEvent->SetInt("requesting_team", GetTeamNumber());
+			gameeventmanager->FireEvent(pEvent);
+		}
 
 		return true;
 	}

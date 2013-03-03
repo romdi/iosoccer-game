@@ -776,19 +776,25 @@ void CBall::State_Think()
 				{
 					if (m_nTeam == LastTeam(true))
 					{
-						IGameEvent* pEvent = gameeventmanager->CreateEvent("own_goal");
-						pEvent->SetInt("causing_team", LastTeam(true));
-						pEvent->SetInt("causer_userid", LastPl(true) ? LastPl(true)->GetUserID() : 0);
-						gameeventmanager->FireEvent(pEvent);
+						IGameEvent *pEvent = gameeventmanager->CreateEvent("own_goal");
+						if (pEvent)
+						{
+							pEvent->SetInt("causing_team", LastTeam(true));
+							pEvent->SetInt("causer_userid", LastPl(true) ? LastPl(true)->GetUserID() : 0);
+							gameeventmanager->FireEvent(pEvent);
+						}
 					}
 					else
 					{
-						IGameEvent* pEvent = gameeventmanager->CreateEvent("goal");
-						pEvent->SetInt("scoring_team", LastTeam(true));
-						pEvent->SetInt("scorer_userid", m_pScorer ? m_pScorer->GetUserID() : 0);
-						pEvent->SetInt("first_assister_userid", m_pFirstAssister ? m_pFirstAssister->GetUserID() : 0);
-						pEvent->SetInt("second_assister_userid", m_pSecondAssister ? m_pSecondAssister->GetUserID() : 0);
-						gameeventmanager->FireEvent(pEvent);
+						IGameEvent *pEvent = gameeventmanager->CreateEvent("goal");
+						if (pEvent)
+						{
+							pEvent->SetInt("scoring_team", LastTeam(true));
+							pEvent->SetInt("scorer_userid", m_pScorer ? m_pScorer->GetUserID() : 0);
+							pEvent->SetInt("first_assister_userid", m_pFirstAssister ? m_pFirstAssister->GetUserID() : 0);
+							pEvent->SetInt("second_assister_userid", m_pSecondAssister ? m_pSecondAssister->GetUserID() : 0);
+							gameeventmanager->FireEvent(pEvent);
+						}
 					}
 
 					EmitSound("Ball.whistle");
@@ -800,46 +806,55 @@ void CBall::State_Think()
 					{
 					case BALL_THROWIN:
 						{
-							IGameEvent* pEvent = gameeventmanager->CreateEvent("set_piece");
-							pEvent->SetInt("type", MATCH_EVENT_THROWIN);
-							pEvent->SetInt("taking_team", LastOppTeam(false));
-							statistic_type_t statType;
-
-							switch (g_IOSRand.RandomInt(0, 1))
+							IGameEvent *pEvent = gameeventmanager->CreateEvent("set_piece");
+							if (pEvent)
 							{
-							case 0:
-								statType = STATISTIC_POSSESSION_TEAM;
-								break;
-							case 1:
-								statType = STATISTIC_PASSING_TEAM;
-								break;
-							default:
-								statType = STATISTIC_POSSESSION_TEAM;
-								break;
-							}
+								pEvent->SetInt("type", MATCH_EVENT_THROWIN);
+								pEvent->SetInt("taking_team", LastOppTeam(false));
+								statistic_type_t statType;
 
-							pEvent->SetInt("statistic_type", statType);
-							gameeventmanager->FireEvent(pEvent);
+								switch (g_IOSRand.RandomInt(0, 1))
+								{
+								case 0:
+									statType = STATISTIC_POSSESSION_TEAM;
+									break;
+								case 1:
+									statType = STATISTIC_PASSING_TEAM;
+									break;
+								default:
+									statType = STATISTIC_POSSESSION_TEAM;
+									break;
+								}
+
+								pEvent->SetInt("statistic_type", statType);
+								gameeventmanager->FireEvent(pEvent);
+							}
 							EmitSound("Ball.whistle");
 						}
 						break;
 					case BALL_GOALKICK:
 						{
-							IGameEvent* pEvent = gameeventmanager->CreateEvent("set_piece");
-							pEvent->SetInt("type", MATCH_EVENT_GOALKICK);
-							pEvent->SetInt("taking_team", LastOppTeam(false));
-							pEvent->SetInt("statistic_type", STATISTIC_SHOTSONGOAL_TEAM);
-							gameeventmanager->FireEvent(pEvent);
+							IGameEvent *pEvent = gameeventmanager->CreateEvent("set_piece");
+							if (pEvent)
+							{
+								pEvent->SetInt("type", MATCH_EVENT_GOALKICK);
+								pEvent->SetInt("taking_team", LastOppTeam(false));
+								pEvent->SetInt("statistic_type", STATISTIC_SHOTSONGOAL_TEAM);
+								gameeventmanager->FireEvent(pEvent);
+							}
 							EmitSound("Ball.whistle");
 						}
 						break;
 					case BALL_CORNER:
 						{
-							IGameEvent* pEvent = gameeventmanager->CreateEvent("set_piece");
-							pEvent->SetInt("type", MATCH_EVENT_CORNER);
-							pEvent->SetInt("taking_team", LastOppTeam(false));
-							pEvent->SetInt("statistic_type", STATISTIC_SETPIECECOUNT_TEAM);
-							gameeventmanager->FireEvent(pEvent);
+							IGameEvent *pEvent = gameeventmanager->CreateEvent("set_piece");
+							if (pEvent)
+							{
+								pEvent->SetInt("type", MATCH_EVENT_CORNER);
+								pEvent->SetInt("taking_team", LastOppTeam(false));
+								pEvent->SetInt("statistic_type", STATISTIC_SETPIECECOUNT_TEAM);
+								gameeventmanager->FireEvent(pEvent);
+							}
 							EmitSound("Ball.whistle");
 						}
 						break;
@@ -874,25 +889,28 @@ void CBall::State_Think()
 								break;
 							}
 
-							IGameEvent* pEvent = gameeventmanager->CreateEvent("foul");
-							pEvent->SetInt("fouling_player_userid", (m_pFoulingPl ? m_pFoulingPl->GetUserID() : 0));
-							pEvent->SetInt("fouled_player_userid", (m_pFouledPl ? m_pFouledPl->GetUserID() : 0));
-							pEvent->SetInt("fouling_team", m_nFoulingTeam);
-							pEvent->SetInt("foul_type", foulType);
-							pEvent->SetInt("set_piece_type", (m_eNextState == BALL_PENALTY ? MATCH_EVENT_PENALTY : MATCH_EVENT_FREEKICK));
+							IGameEvent *pEvent = gameeventmanager->CreateEvent("foul");
+							if (pEvent)
+							{
+								pEvent->SetInt("fouling_player_userid", (m_pFoulingPl ? m_pFoulingPl->GetUserID() : 0));
+								pEvent->SetInt("fouled_player_userid", (m_pFouledPl ? m_pFouledPl->GetUserID() : 0));
+								pEvent->SetInt("fouling_team", m_nFoulingTeam);
+								pEvent->SetInt("foul_type", foulType);
+								pEvent->SetInt("set_piece_type", (m_eNextState == BALL_PENALTY ? MATCH_EVENT_PENALTY : MATCH_EVENT_FREEKICK));
 
-							float distToGoal = (m_vFoulPos - GetGlobalTeam(m_nFoulingTeam)->m_vPlayerSpawns[0]).Length2D();
+								float distToGoal = (m_vFoulPos - GetGlobalTeam(m_nFoulingTeam)->m_vPlayerSpawns[0]).Length2D();
 
-							statistic_type_t statType;
+								statistic_type_t statType;
 
-							if (m_eNextState == BALL_FREEKICK && distToGoal <= sv_ball_freekickdist_opponentgoal.GetInt())
-								statType = STATISTIC_DISTANCETOGOAL;
-							else
-								statType = (g_IOSRand.RandomInt(0, 2) == 0 ? STATISTIC_POSSESSION_TEAM : STATISTIC_SETPIECECOUNT_TEAM);
+								if (m_eNextState == BALL_FREEKICK && distToGoal <= sv_ball_freekickdist_opponentgoal.GetInt())
+									statType = STATISTIC_DISTANCETOGOAL;
+								else
+									statType = (g_IOSRand.RandomInt(0, 2) == 0 ? STATISTIC_POSSESSION_TEAM : STATISTIC_SETPIECECOUNT_TEAM);
 
-							pEvent->SetInt("statistic_type", statType);
-							pEvent->SetInt("distance_to_goal", distToGoal * 2.54f / 100);
-							gameeventmanager->FireEvent(pEvent);
+								pEvent->SetInt("statistic_type", statType);
+								pEvent->SetInt("distance_to_goal", distToGoal * 2.54f / 100);
+								gameeventmanager->FireEvent(pEvent);
+							}
 							EmitSound("Ball.whistle");
 						}
 						break;
@@ -932,9 +950,12 @@ void CBall::State_Think()
 
 				SDKGameRules()->SetTimeoutEnd(timeoutTeam == TEAM_UNASSIGNED ? -1 : gpGlobals->curtime + mp_timeout_duration.GetFloat());
 
-				IGameEvent* pEvent = gameeventmanager->CreateEvent("timeout");
-				pEvent->SetInt("requesting_team", timeoutTeam);
-				pEvent->SetFloat("end_time", SDKGameRules()->GetTimeoutEnd());
+				IGameEvent *pEvent = gameeventmanager->CreateEvent("timeout");
+				if (pEvent)
+				{
+					pEvent->SetInt("requesting_team", timeoutTeam);
+					pEvent->SetFloat("end_time", SDKGameRules()->GetTimeoutEnd());
+				}
 				gameeventmanager->FireEvent(pEvent);
 			}
 
@@ -947,9 +968,12 @@ void CBall::State_Think()
 			{
 				SDKGameRules()->SetTimeoutEnd(0);
 
-				IGameEvent* pEvent = gameeventmanager->CreateEvent("match_state");
-				pEvent->SetInt("state", MATCH_EVENT_NONE);
-				gameeventmanager->FireEvent(pEvent);
+				IGameEvent *pEvent = gameeventmanager->CreateEvent("match_state");
+				if (pEvent)
+				{
+					pEvent->SetInt("state", MATCH_EVENT_NONE);
+					gameeventmanager->FireEvent(pEvent);
+				}
 				UTIL_ClientPrintAll(HUD_PRINTTALK, "#game_match_start");
 			}
 		}
@@ -1123,10 +1147,12 @@ void CBall::State_KICKOFF_Think()
 		m_pPl->SetPosInsideShield(Vector(m_vPos.x - m_pPl->GetTeam()->m_nRight * 30, m_vPos.y, SDKGameRules()->m_vKickOff.GetZ()), true);
 		m_flStateTimelimit = -1;
 
-		IGameEvent* pEvent = gameeventmanager->CreateEvent("match_state");
-		pEvent->SetInt("state", MATCH_EVENT_KICKOFF);
-		gameeventmanager->FireEvent(pEvent);
-
+		IGameEvent *pEvent = gameeventmanager->CreateEvent("match_state");
+		if (pEvent)
+		{
+			pEvent->SetInt("state", MATCH_EVENT_KICKOFF);
+			gameeventmanager->FireEvent(pEvent);
+		}
 		EmitSound("Ball.whistle");
 	}
 

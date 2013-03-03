@@ -1102,9 +1102,12 @@ void CC_SV_StartTimeout(const CCommand &args)
 
 	SDKGameRules()->SetAdminWantsTimeout(true);
 
-	IGameEvent* pEvent = gameeventmanager->CreateEvent("timeout_pending");
-	pEvent->SetInt("requesting_team", TEAM_UNASSIGNED);
-	gameeventmanager->FireEvent(pEvent);
+	IGameEvent *pEvent = gameeventmanager->CreateEvent("timeout_pending");
+	if (pEvent)
+	{
+		pEvent->SetInt("requesting_team", TEAM_UNASSIGNED);
+		gameeventmanager->FireEvent(pEvent);
+	}
 }
 
 ConCommand sv_starttimeout( "sv_starttimeout", CC_SV_StartTimeout, "", 0 );
@@ -1120,9 +1123,12 @@ void CC_SV_EndTimeout(const CCommand &args)
 	SDKGameRules()->SetAdminWantsTimeout(false);
 	SDKGameRules()->SetTimeoutEnd(gpGlobals->curtime + 5);
 
-	IGameEvent* pEvent = gameeventmanager->CreateEvent("timeout");
-	pEvent->SetInt("requesting_team", TEAM_UNASSIGNED);
-	gameeventmanager->FireEvent(pEvent);
+	IGameEvent *pEvent = gameeventmanager->CreateEvent("timeout");
+	if (pEvent)
+	{
+		pEvent->SetInt("requesting_team", TEAM_UNASSIGNED);
+		gameeventmanager->FireEvent(pEvent);
+	}
 }
 
 ConCommand sv_endtimeout( "sv_endtimeout", CC_SV_EndTimeout, "", 0 );
@@ -1196,8 +1202,11 @@ int CSDKGameRules::WakeUpAwayPlayers()
 
 	if (awayPlayerCount > 0)
 	{
-		IGameEvent* pEvent = gameeventmanager->CreateEvent("wakeupcall");
-		gameeventmanager->FireEvent(pEvent);
+		IGameEvent *pEvent = gameeventmanager->CreateEvent("wakeupcall");
+		if (pEvent)
+		{
+			gameeventmanager->FireEvent(pEvent);
+		}
 	}
 	else
 		Q_strncpy(wakeUpString, "All players are awake", sizeof(wakeUpString));
@@ -1437,8 +1446,7 @@ CSDKGameRulesStateInfo* CSDKGameRules::State_LookupInfo( match_state_t state )
 
 void CSDKGameRules::State_WARMUP_Enter()
 {
-	IGameEvent* pEvent = gameeventmanager->CreateEvent("match_state");
-
+	IGameEvent *pEvent = gameeventmanager->CreateEvent("match_state");
 	if (pEvent)
 	{
 		pEvent->SetInt("state", MATCH_EVENT_WARMUP);
@@ -1521,9 +1529,12 @@ void CSDKGameRules::State_FIRST_HALF_Leave(match_state_t newState)
 
 void CSDKGameRules::State_HALFTIME_Enter()
 {
-	IGameEvent* pEvent = gameeventmanager->CreateEvent("match_state");
-	pEvent->SetInt("state", MATCH_EVENT_HALFTIME);
-	gameeventmanager->FireEvent(pEvent);
+	IGameEvent *pEvent = gameeventmanager->CreateEvent("match_state");
+	if (pEvent)
+	{
+		pEvent->SetInt("state", MATCH_EVENT_HALFTIME);
+		gameeventmanager->FireEvent(pEvent);
+	}
 
 	GetBall()->State_Transition(BALL_STATIC, 0, true);
 	GetBall()->SetPos(m_vKickOff);
@@ -1588,9 +1599,12 @@ void CSDKGameRules::State_SECOND_HALF_Leave(match_state_t newState)
 
 void CSDKGameRules::State_EXTRATIME_INTERMISSION_Enter()
 {
-	IGameEvent* pEvent = gameeventmanager->CreateEvent("match_state");
-	pEvent->SetInt("state", MATCH_EVENT_EXTRATIME);
-	gameeventmanager->FireEvent(pEvent);
+	IGameEvent *pEvent = gameeventmanager->CreateEvent("match_state");
+	if (pEvent)
+	{
+		pEvent->SetInt("state", MATCH_EVENT_EXTRATIME);
+		gameeventmanager->FireEvent(pEvent);
+	}
 
 	GetBall()->State_Transition(BALL_STATIC, 0, true);
 	GetBall()->SetPos(m_vKickOff);
@@ -1651,9 +1665,12 @@ void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Leave(match_state_t newState)
 
 void CSDKGameRules::State_EXTRATIME_HALFTIME_Enter()
 {
-	IGameEvent* pEvent = gameeventmanager->CreateEvent("match_state");
-	pEvent->SetInt("state", MATCH_EVENT_HALFTIME);
-	gameeventmanager->FireEvent(pEvent);
+	IGameEvent *pEvent = gameeventmanager->CreateEvent("match_state");
+	if (pEvent)
+	{
+		pEvent->SetInt("state", MATCH_EVENT_HALFTIME);
+		gameeventmanager->FireEvent(pEvent);
+	}
 
 	GetBall()->State_Transition(BALL_STATIC, 0, true);
 	GetBall()->SetPos(m_vKickOff);
@@ -1718,9 +1735,12 @@ void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Leave(match_state_t newState)
 
 void CSDKGameRules::State_PENALTIES_INTERMISSION_Enter()
 {
-	IGameEvent* pEvent = gameeventmanager->CreateEvent("match_state");
-	pEvent->SetInt("state", MATCH_EVENT_PENALTIES);
-	gameeventmanager->FireEvent(pEvent);
+	IGameEvent *pEvent = gameeventmanager->CreateEvent("match_state");
+	if (pEvent)
+	{
+		pEvent->SetInt("state", MATCH_EVENT_PENALTIES);
+		gameeventmanager->FireEvent(pEvent);
+	}
 
 	GetBall()->State_Transition(BALL_STATIC, 0, true);
 	GetBall()->SetPos(m_vKickOff);
@@ -1868,10 +1888,13 @@ void CSDKGameRules::State_PENALTIES_Think()
 
 			if (pPenTaker)
 			{
-				IGameEvent* pEvent = gameeventmanager->CreateEvent("penalty");
-				pEvent->SetInt("taking_team", m_nPenaltyTakingTeam);
-				pEvent->SetInt("taking_player_userid", pPenTaker->GetUserID());
-				gameeventmanager->FireEvent(pEvent);
+				IGameEvent *pEvent = gameeventmanager->CreateEvent("penalty");
+				if (pEvent)
+				{
+					pEvent->SetInt("taking_team", m_nPenaltyTakingTeam);
+					pEvent->SetInt("taking_player_userid", pPenTaker->GetUserID());
+					gameeventmanager->FireEvent(pEvent);
+				}
 
 				GetBall()->SetPenaltyTaker(pPenTaker);
 				GetBall()->SetPenaltyState(PENALTY_ASSIGNED);
@@ -1905,9 +1928,12 @@ void CSDKGameRules::State_PENALTIES_Leave(match_state_t newState)
 
 void CSDKGameRules::State_COOLDOWN_Enter()
 {
-	IGameEvent* pEvent = gameeventmanager->CreateEvent("match_state");
-	pEvent->SetInt("state", MATCH_EVENT_FINAL_WHISTLE);
-	gameeventmanager->FireEvent(pEvent);
+	IGameEvent *pEvent = gameeventmanager->CreateEvent("match_state");
+	if (pEvent)
+	{
+		pEvent->SetInt("state", MATCH_EVENT_FINAL_WHISTLE);
+		gameeventmanager->FireEvent(pEvent);
+	}
 
 	GetBall()->State_Transition(BALL_STATIC, 0, true);
 	GetBall()->SetPos(m_vKickOff);
