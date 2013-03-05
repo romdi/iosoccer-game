@@ -188,7 +188,7 @@ Color CHudChat::GetTextColorForClient( TextColor colorNum, int clientIndex )
 		break;
 
 	case COLOR_LOCATION:
-		c = (clientIndex == 0 ? g_ColorGreen : GameResources()->GetPlayerColor(clientIndex));
+		c = (clientIndex == 0 ? g_ColorGreen : GameResources()->GetTeamColor(GameResources()->GetTeam(clientIndex)));
 		break;
 
 	case COLOR_ACHIEVEMENT:
