@@ -78,6 +78,7 @@ void CKeeperBot::BotAdjustPos()
 		{
 			modifier = KEEPER_CLOSE_COEFF;
 			//m_cmd.buttons |= (IN_ATTACK2 | IN_ATTACK);
+			m_cmd.buttons |= IN_ALT1;
 			CSDKPlayer *pPl = FindClosestPlayerToSelf(true, true);
 			if (!pPl && SDKGameRules()->IsIntermissionState())
 				pPl = FindClosestPlayerToSelf(false, true);
@@ -104,6 +105,7 @@ void CKeeperBot::BotAdjustPos()
 		VectorAngles(m_vDirToBall, ang);
 		float ballDistToGoal = (m_vBallPos - GetTeam()->m_vPlayerSpawns[0]).Length2D();
 		CSDKPlayer *pClosest = FindClosestPlayerToBall();
+		m_cmd.buttons |= IN_ATTACK;
 
 		if (ballDistToGoal < 750 && m_vDirToBall.Length2D() < 200 && m_vDirToBall.z < 200 && (m_vDirToBall.z < 80 || m_vBallVel.z <= 0))
 		{
@@ -224,7 +226,6 @@ void CKeeperBot::BotAdjustPos()
 	}
 
 	m_cmd.viewangles = ang;
-	m_cmd.buttons |= IN_ALT1;
 }
 
 CSDKPlayer *CKeeperBot::FindClosestPlayerToBall()
