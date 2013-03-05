@@ -2072,14 +2072,16 @@ bool CBall::DoSlideAction()
 			return true;
 	}
 
+	float coeff = clamp(m_vPlForwardVel2D.Length2D() / mp_slidespeed.GetFloat(), 0.0f, 1.0f);
+
 	float shotStrength;
 
 	if (m_pPl->IsNormalshooting())
-		shotStrength = GetNormalshotStrength(1.0f, sv_ball_normalslide_strength.GetInt());
+		shotStrength = GetNormalshotStrength(coeff, sv_ball_normalslide_strength.GetInt());
 	else if (m_pPl->IsPowershooting())
-		shotStrength = GetPowershotStrength(1.0f, sv_ball_powerslide_strength.GetInt());
+		shotStrength = GetPowershotStrength(coeff, sv_ball_powerslide_strength.GetInt());
 	else
-		shotStrength = GetChargedshotStrength(1.0f, sv_ball_chargedslide_minstrength.GetInt(), sv_ball_chargedslide_maxstrength.GetInt());
+		shotStrength = GetChargedshotStrength(coeff, sv_ball_chargedslide_minstrength.GetInt(), sv_ball_chargedslide_maxstrength.GetInt());
 
 	Vector forward;
 	AngleVectors(QAngle(-15, m_aPlAng[YAW], 0), &forward, NULL, NULL);
