@@ -1630,7 +1630,6 @@ void CBall::State_KEEPERHANDS_Think()
 		if (!SDKGameRules()->IsIntermissionState() && !m_bHasQueuedState && SDKGameRules()->State_Get() != MATCH_PENALTIES)
 		{
 			SDKGameRules()->EnableShield(SHIELD_KEEPERHANDS, m_pPl->GetTeamNumber());
-			//m_pPl->SetPosInsideShield(m_pPl->GetLocalOrigin(), true);
 			m_pPl->m_bIsAtTargetPos = true;
 		}
 
@@ -1643,27 +1642,14 @@ void CBall::State_KEEPERHANDS_Think()
 		SetEffects(EF_NODRAW);
 		EnablePlayerCollisions(false);
 		m_flStateTimelimit = -1;
-		//Touched(m_pPl, true, BODY_PART_HANDS);
 		PlayersAtTargetPos();
 	}
-
-	//if (!PlayersAtTargetPos())
-	//{
-	//	UpdateCarrier();
-	//	SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_chest_start.GetFloat()) + m_vPlForward2D * 18);
-
-	//	// Don't ignore triggers when setting the new ball position
-	//	m_bSetNewPos = false;
-
-	//	return;
-	//}
 
 	if (!SDKGameRules()->IsIntermissionState() && !m_bHasQueuedState && SDKGameRules()->State_Get() != MATCH_PENALTIES)
 	{
 		if (m_flStateTimelimit == -1)
 		{
 			m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit_setpiece.GetFloat();
-			//m_pPl->RemoveFlag(FL_ATCONTROLS);
 		}
 	}
 
@@ -1677,19 +1663,17 @@ void CBall::State_KEEPERHANDS_Think()
 	Vector min = GetGlobalTeam(m_pPl->GetTeamNumber())->m_vPenBoxMin + m_flPhysRadius;
 	Vector max = GetGlobalTeam(m_pPl->GetTeamNumber())->m_vPenBoxMax - m_flPhysRadius;
 
+	// Ball outside the penalty box
 	if (m_vPos.x < min.x || m_vPos.y < min.y || m_vPos.x > max.x || m_vPos.y > max.y)
 	{
-		RemoveAllTouches();
-
 		Vector dir;
 		float vel;
 
+		// Throw the ball towards the kick-off spot instead of where the player is looking if the ball is behind the goal line
 		if (m_pPl->GetTeam()->m_nForward == 1 && m_vPos.y < min.y || m_pPl->GetTeam()->m_nForward == -1 && m_vPos.y > max.y)
 		{
-			dir = Vector(Sign(m_vPos.x - SDKGameRules()->m_vKickOff.GetX()) * g_IOSRand.RandomFloat(0.75f, 1.25f), m_pPl->GetTeam()->m_nForward, g_IOSRand.RandomFloat(1.0f, 1.25f));
+			dir = Vector(Sign(m_vPos.x - SDKGameRules()->m_vKickOff.GetX()) * g_IOSRand.RandomFloat(1.25f, 1.25f), m_pPl->GetTeam()->m_nForward, g_IOSRand.RandomFloat(1.0f, 1.25f));
 			dir.NormalizeInPlace();
-			SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_chest_start.GetFloat()) + dir * 18);
-			m_bSetNewPos = false;
 			vel = g_IOSRand.RandomFloat(700, 800);
 		}
 		else
@@ -1698,7 +1682,9 @@ void CBall::State_KEEPERHANDS_Think()
 			vel = 300;
 		}
 
-		//SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_chest_start.GetFloat()) + forward * ((m_pPl->GetPlayerMaxs().x - m_pPl->GetPlayerMins().x) / 2 + m_flPhysRadius + 10));
+		RemoveAllTouches();
+		SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_chest_start.GetFloat()) + dir * 36);
+		m_bSetNewPos = false;
 		SetVel(dir * vel, 0, BODY_PART_HANDS, false, true, true);
 
 		return State_Transition(BALL_NORMAL);
@@ -1708,43 +1694,39 @@ void CBall::State_KEEPERHANDS_Think()
 
 	if (m_pPl->ShotButtonsReleased() && m_pPl->IsShooting() && m_pPl->m_flNextShot <= gpGlobals->curtime)
 	{
-		//Vector hull = Vector(1, 1, 1) * m_flPhysRadius;
-		//trace_t tr;
-		//UTIL_TraceHull(m_vPos, m_vPos, -hull, hull, MASK_SOLID, m_pPl, COLLISION_GROUP_NONE, &tr);
+		float spin;
 
-		//if (!tr.startsolid)
+		if (m_pPl->IsNormalshooting(true))
 		{
-			float spin;
-
-			if (m_pPl->IsNormalshooting(true))
-			{
-				vel = m_vPlForward * GetNormalshotStrength(GetPitchCoeff(true), sv_ball_normalshot_strength.GetInt());
-				m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KEEPER_HANDS_THROW);
-				spin = 0;
-			}
-			else
-			{
-				QAngle ang = m_aPlAng;
-				ang[PITCH] = min(sv_ball_keepershot_minangle.GetFloat(), m_aPlAng[PITCH]);
-				Vector dir;
-				AngleVectors(ang, &dir);
-
-				if (m_pPl->IsPowershooting(true))
-					vel = dir * GetPowershotStrength(GetPitchCoeff(false), sv_ball_powershot_strength.GetInt());
-				else if (m_pPl->IsChargedshooting())
-					vel = dir * GetChargedshotStrength(GetPitchCoeff(false), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
-				else
-					return;
-
-				m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KEEPER_HANDS_KICK);
-				spin = sv_ball_volleyshot_spincoeff.GetFloat();
-			}
-
-			RemoveAllTouches();
-			SetVel(vel, spin, BODY_PART_HANDS, false, true, true);
-
-			return State_Transition(BALL_NORMAL);
+			vel = m_vPlForward * GetNormalshotStrength(GetPitchCoeff(true), sv_ball_normalshot_strength.GetInt());
+			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KEEPER_HANDS_THROW);
+			spin = 0;
 		}
+		else
+		{
+			QAngle ang = m_aPlAng;
+			ang[PITCH] = min(sv_ball_keepershot_minangle.GetFloat(), m_aPlAng[PITCH]);
+			Vector dir;
+			AngleVectors(ang, &dir);
+
+			if (m_pPl->IsPowershooting(true))
+				vel = dir * GetPowershotStrength(GetPitchCoeff(false), sv_ball_powershot_strength.GetInt());
+			else if (m_pPl->IsChargedshooting())
+				vel = dir * GetChargedshotStrength(GetPitchCoeff(false), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
+			else
+				return;
+
+			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KEEPER_HANDS_KICK);
+			spin = sv_ball_volleyshot_spincoeff.GetFloat();
+			EmitSound("Ball.kickhard");
+		}
+
+		RemoveAllTouches();
+		SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_chest_start.GetFloat()) + m_vPlForward2D * 36);
+		m_bSetNewPos = false;
+		SetVel(vel, spin, BODY_PART_HANDS, false, true, true);
+
+		return State_Transition(BALL_NORMAL);
 	}
 }
 
