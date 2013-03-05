@@ -953,19 +953,6 @@ bool C_BasePlayer::CreateMove( float flInputSampleTime, CUserCmd *pCmd )
 		}
 	}
 
-	//if (GetFlags() & (FL_FREECAM | FL_REMOTECONTROLLED))
-	//{
-	//	//if (m_bWasFreeCam)
-	//	{
-	//		pCmd->viewangles = m_vecOldViewAngles;
-	//		engine->SetViewAngles( pCmd->viewangles );
-	//	}
-	//	//else
-	//	//	m_bWasFreeCam = true;
-	//}
-	//else
-	//	m_bWasFreeCam = false;
-
 	// If the frozen flag is set, prevent view movement (server prevents the rest of the movement)
 	if ( GetFlags() & FL_FROZEN )
 	{

@@ -549,7 +549,9 @@ void CInput::MouseMove( CUserCmd *cmd )
 	if ((pPlayer->GetFlags() & (FL_FREECAM | FL_REMOTECONTROLLED)) || (pPlayer->m_nButtons & IN_RELOAD))
 	{
 		viewangles = m_aCameraViewAngles;
-		m_bWasFreeCam = true;
+
+		if (!(pPlayer->m_nButtons & IN_RELOAD))
+			m_bWasFreeCam = true;
 	}
 	else
 	{
