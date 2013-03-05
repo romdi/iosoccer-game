@@ -13,6 +13,8 @@ private:
 	Vector m_vOldTargetPos;
 	float m_flLerpTime;
 	CUtlVector<Vector> m_BallPos;
+	float m_flLastPossessionChange;
+	int m_nLastPossessingTeam;
 
 public:
 	static C_TVCamera *GetInstance();

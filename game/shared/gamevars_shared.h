@@ -58,6 +58,7 @@ extern ConVar
 	mp_tvcam_border_south,
 	mp_tvcam_border_west,
 	mp_tvcam_offset_forward,
+	mp_tvcam_offset_forward_time,
 	mp_tvcam_offset_north,
 	mp_timeout_count,
 	mp_timeout_duration;

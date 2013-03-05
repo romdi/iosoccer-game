@@ -23,6 +23,8 @@ C_TVCamera::C_TVCamera()
 	m_flNextUpdate = gpGlobals->curtime;
 	m_vOldTargetPos = vec3_invalid;
 	m_flLerpTime = 0;
+	m_flLastPossessionChange = 0;
+	m_nLastPossessingTeam = TEAM_UNASSIGNED;
 }
 
 const int posCount = 5;
@@ -56,6 +58,12 @@ void C_TVCamera::GetPositionAndAngle(Vector &pos, QAngle &ang)
 
 		camType = CAM_SIDELINE;
 		atMinGoalPos = true;
+
+		if (GetBall() && GetBall()->m_nCurrentTeam != m_nLastPossessingTeam)
+		{
+			m_flLastPossessionChange = gpGlobals->curtime;
+			m_nLastPossessingTeam = GetBall()->m_nCurrentTeam;
+		}
 	}
 
 	if (!pTarget)
@@ -67,8 +75,8 @@ void C_TVCamera::GetPositionAndAngle(Vector &pos, QAngle &ang)
 	{
 		targetPos.x -= mp_tvcam_offset_north.GetInt();
 
-		if (GetBall() && (GetBall()->m_nCurrentTeam == TEAM_A || GetBall()->m_nCurrentTeam == TEAM_B))
-			targetPos.y += GetGlobalTeam(GetBall()->m_nCurrentTeam)->m_nForward * mp_tvcam_offset_forward.GetInt();
+		if (GetBall() && dynamic_cast<C_Ball *>(pTarget) && (GetBall()->m_nCurrentTeam == TEAM_A || GetBall()->m_nCurrentTeam == TEAM_B))
+			targetPos.y += GetGlobalTeam(GetBall()->m_nCurrentTeam)->m_nForward * mp_tvcam_offset_forward.GetInt() * pow(clamp((gpGlobals->curtime - m_flLastPossessionChange) / mp_tvcam_offset_forward_time.GetFloat(), 0.0f, 1.0f), 2.0f);
 	}
 
 	targetPos.x = clamp(targetPos.x, SDKGameRules()->m_vFieldMin.GetX() + mp_tvcam_border_south.GetInt(), SDKGameRules()->m_vFieldMax.GetX() - mp_tvcam_border_north.GetInt());

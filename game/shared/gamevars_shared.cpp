@@ -103,7 +103,8 @@ ConVar mp_tvcam_border_north("mp_tvcam_border_north", "0", FCVAR_NOTIFY | FCVAR_
 ConVar mp_tvcam_border_east("mp_tvcam_border_east", "0", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar mp_tvcam_border_south("mp_tvcam_border_south", "200", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar mp_tvcam_border_west("mp_tvcam_border_west", "0", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar mp_tvcam_offset_forward("mp_tvcam_offset_forward", "300", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_tvcam_offset_forward("mp_tvcam_offset_forward", "500", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_tvcam_offset_forward_time("mp_tvcam_offset_forward_time", "3", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar mp_tvcam_offset_north("mp_tvcam_offset_north", "300", FCVAR_NOTIFY | FCVAR_REPLICATED);
 
 ConVar mp_timeout_count("mp_timeout_count", "1", FCVAR_NOTIFY | FCVAR_REPLICATED);
