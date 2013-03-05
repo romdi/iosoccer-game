@@ -25,71 +25,71 @@
 
 
 ConVar sv_ball_mass( "sv_ball_mass", "1", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
-ConVar sv_ball_damping( "sv_ball_damping", "0.4", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
-ConVar sv_ball_rotdamping( "sv_ball_rotdamping", "0.3", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
-ConVar sv_ball_rotinertialimit( "sv_ball_rotinertialimit", "1", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
+ConVar sv_ball_damping( "sv_ball_damping", "0.01", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
+ConVar sv_ball_rotdamping( "sv_ball_rotdamping", "0.75", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
+ConVar sv_ball_rotinertialimit( "sv_ball_rotinertialimit", "1.5", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
 ConVar sv_ball_dragcoeff( "sv_ball_dragcoeff", "1", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
-ConVar sv_ball_inertia( "sv_ball_inertia", "1", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
+ConVar sv_ball_inertia( "sv_ball_inertia", "1.5", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
 ConVar sv_ball_drag_enabled("sv_ball_drag_enabled", "1", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
 
-ConVar sv_ball_spin( "sv_ball_spin", "300", FCVAR_NOTIFY );
+ConVar sv_ball_spin( "sv_ball_spin", "500", FCVAR_NOTIFY );
 ConVar sv_ball_defaultspin( "sv_ball_defaultspin", "10000", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
-ConVar sv_ball_topspin_coeff( "sv_ball_topspin_coeff", "1.0", FCVAR_NOTIFY );
-ConVar sv_ball_backspin_coeff( "sv_ball_backspin_coeff", "1.0", FCVAR_NOTIFY );
+ConVar sv_ball_topspin_coeff( "sv_ball_topspin_coeff", "0.1", FCVAR_NOTIFY );
+ConVar sv_ball_backspin_coeff( "sv_ball_backspin_coeff", "0.25", FCVAR_NOTIFY );
 ConVar sv_ball_jump_topspin_enabled("sv_ball_jump_topspin_enabled", "1", FCVAR_NOTIFY );
-ConVar sv_ball_curve("sv_ball_curve", "150", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
+ConVar sv_ball_curve("sv_ball_curve", "200", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
 
-ConVar sv_ball_deflectionradius( "sv_ball_deflectionradius", "40", FCVAR_NOTIFY );
+ConVar sv_ball_deflectionradius( "sv_ball_deflectionradius", "30", FCVAR_NOTIFY );
 
-ConVar sv_ball_standing_reach( "sv_ball_standing_reach", "60", FCVAR_NOTIFY );
+ConVar sv_ball_standing_reach( "sv_ball_standing_reach", "50", FCVAR_NOTIFY );
 ConVar sv_ball_standing_cone( "sv_ball_standing_cone", "360", FCVAR_NOTIFY );
 ConVar sv_ball_standing_shift( "sv_ball_standing_shift", "0", FCVAR_NOTIFY );
 
-ConVar sv_ball_slidesidereach_ball( "sv_ball_slidesidereach_ball", "60", FCVAR_NOTIFY );
-ConVar sv_ball_slideforwardreach_ball( "sv_ball_slideforwardreach_ball", "90", FCVAR_NOTIFY );
-ConVar sv_ball_slidesidereach_foul( "sv_ball_slidesidereach_foul", "40", FCVAR_NOTIFY );
+ConVar sv_ball_slidesidereach_ball( "sv_ball_slidesidereach_ball", "50", FCVAR_NOTIFY );
+ConVar sv_ball_slideforwardreach_ball( "sv_ball_slideforwardreach_ball", "60", FCVAR_NOTIFY );
+ConVar sv_ball_slidesidereach_foul( "sv_ball_slidesidereach_foul", "25", FCVAR_NOTIFY );
 ConVar sv_ball_slideforwardreach_foul( "sv_ball_slideforwardreach_foul", "60", FCVAR_NOTIFY );
 ConVar sv_ball_slidesidespeedcoeff("sv_ball_slidesidespeedcoeff", "0.66", FCVAR_NOTIFY); 
 ConVar sv_ball_slidezstart("sv_ball_slidezstart", "-50", FCVAR_NOTIFY); 
 ConVar sv_ball_slidezend("sv_ball_slidezend", "40", FCVAR_NOTIFY); 
 
-ConVar sv_ball_keeper_standing_reach( "sv_ball_keeper_standing_reach", "60", FCVAR_NOTIFY );
+ConVar sv_ball_keeper_standing_reach( "sv_ball_keeper_standing_reach", "50", FCVAR_NOTIFY );
 
 ConVar sv_ball_keeper_forwarddive_shortsidereach( "sv_ball_keeper_forwarddive_shortsidereach", "50", FCVAR_NOTIFY );
-ConVar sv_ball_keeper_forwarddive_longsidereach( "sv_ball_keeper_forwarddive_longsidereach", "130", FCVAR_NOTIFY );
+ConVar sv_ball_keeper_forwarddive_longsidereach( "sv_ball_keeper_forwarddive_longsidereach", "100", FCVAR_NOTIFY );
 ConVar sv_ball_keeper_forwarddive_longsidereach_opposite( "sv_ball_keeper_forwarddive_longsidereach_opposite", "40", FCVAR_NOTIFY );
 ConVar sv_ball_keeper_forwarddive_zstart( "sv_ball_keeper_forwarddive_zstart", "-50", FCVAR_NOTIFY );
 ConVar sv_ball_keeper_forwarddive_zend( "sv_ball_keeper_forwarddive_zend", "40", FCVAR_NOTIFY );
 
 ConVar sv_ball_keeper_sidedive_shortsidereach( "sv_ball_keeper_sidedive_shortsidereach", "50", FCVAR_NOTIFY );
-ConVar sv_ball_keeper_sidedive_longsidereach( "sv_ball_keeper_sidedive_longsidereach", "70", FCVAR_NOTIFY );
+ConVar sv_ball_keeper_sidedive_longsidereach( "sv_ball_keeper_sidedive_longsidereach", "60", FCVAR_NOTIFY );
 ConVar sv_ball_keeper_sidedive_longsidereach_opposite( "sv_ball_keeper_sidedive_longsidereach_opposite", "50", FCVAR_NOTIFY );
-ConVar sv_ball_keeper_sidedive_zstart( "sv_ball_keeper_sidedive_zstart", "-50", FCVAR_NOTIFY );
-ConVar sv_ball_keeper_sidedive_zend( "sv_ball_keeper_sidedive_zend", "70", FCVAR_NOTIFY );
+ConVar sv_ball_keeper_sidedive_zstart( "sv_ball_keeper_sidedive_zstart", "-20", FCVAR_NOTIFY );
+ConVar sv_ball_keeper_sidedive_zend( "sv_ball_keeper_sidedive_zend", "65", FCVAR_NOTIFY );
 
 ConVar sv_ball_keeperpunchupstrength("sv_ball_keeperpunchupstrength", "500", FCVAR_NOTIFY);
-ConVar sv_ball_keeperdeflectioncoeff("sv_ball_keeperdeflectioncoeff", "1.66", FCVAR_NOTIFY);
+ConVar sv_ball_keeperdeflectioncoeff("sv_ball_keeperdeflectioncoeff", "0.66", FCVAR_NOTIFY);
 
-ConVar sv_ball_shotdelay_normal("sv_ball_shotdelay_normal", "0.25", FCVAR_NOTIFY);
+ConVar sv_ball_shotdelay_normal("sv_ball_shotdelay_normal", "0.15", FCVAR_NOTIFY);
 ConVar sv_ball_shotdelay_setpiece("sv_ball_shotdelay_setpiece", "0.5", FCVAR_NOTIFY);
 ConVar sv_ball_shotdelay_global("sv_ball_shotdelay_global", "0.25", FCVAR_NOTIFY);
-ConVar sv_ball_shotdelay_global_coeff("sv_ball_shotdelay_global_coeff", "0.75", FCVAR_NOTIFY);
+ConVar sv_ball_shotdelay_global_coeff("sv_ball_shotdelay_global_coeff", "0.5", FCVAR_NOTIFY);
 ConVar sv_ball_keepercatchdelay_global_coeff("sv_ball_keepercatchdelay_global_coeff", "0.85", FCVAR_NOTIFY);
 ConVar sv_ball_dynamicshotdelay_enabled("sv_ball_dynamicshotdelay_enabled", "1", FCVAR_NOTIFY);
-ConVar sv_ball_dynamicshotdelay_mindelay("sv_ball_dynamicshotdelay_mindelay", "0.05", FCVAR_NOTIFY);
+ConVar sv_ball_dynamicshotdelay_mindelay("sv_ball_dynamicshotdelay_mindelay", "0.2", FCVAR_NOTIFY);
 ConVar sv_ball_dynamicshotdelay_maxdelay("sv_ball_dynamicshotdelay_maxdelay", "1.0", FCVAR_NOTIFY);
-ConVar sv_ball_dynamicshotdelay_minshotstrength("sv_ball_dynamicshotdelay_minshotstrength", "100", FCVAR_NOTIFY);
-ConVar sv_ball_dynamicshotdelay_maxshotstrength("sv_ball_dynamicshotdelay_maxshotstrength", "1600", FCVAR_NOTIFY);
+ConVar sv_ball_dynamicshotdelay_minshotstrength("sv_ball_dynamicshotdelay_minshotstrength", "400", FCVAR_NOTIFY);
+ConVar sv_ball_dynamicshotdelay_maxshotstrength("sv_ball_dynamicshotdelay_maxshotstrength", "1500", FCVAR_NOTIFY);
 ConVar sv_ball_dynamicbounce_enabled("sv_ball_dynamicbouncedelay_enabled", "1", FCVAR_NOTIFY);
 
-ConVar sv_ball_bestshotangle("sv_ball_bestshotangle", "-30", FCVAR_NOTIFY);
+ConVar sv_ball_bestshotangle("sv_ball_bestshotangle", "-20", FCVAR_NOTIFY);
 
-ConVar sv_ball_pitchdown_exponent_normalshot("sv_ball_pitchdown_exponent_normalshot", "3", FCVAR_NOTIFY);
-ConVar sv_ball_fixedpitchdowncoeff_normalshot("sv_ball_fixedpitchdowncoeff_normalshot", "0.15", FCVAR_NOTIFY);
+ConVar sv_ball_pitchdown_exponent_normalshot("sv_ball_pitchdown_exponent_normalshot", "2.5", FCVAR_NOTIFY);
+ConVar sv_ball_fixedpitchdowncoeff_normalshot("sv_ball_fixedpitchdowncoeff_normalshot", "0.35", FCVAR_NOTIFY);
 ConVar sv_ball_pitchdown_exponent_nonnormalshot("sv_ball_pitchdown_exponent_nonnormalshot", "2", FCVAR_NOTIFY);
-ConVar sv_ball_fixedpitchdowncoeff_nonnormalshot("sv_ball_fixedpitchdowncoeff_nonnormalshot", "0.24", FCVAR_NOTIFY);
+ConVar sv_ball_fixedpitchdowncoeff_nonnormalshot("sv_ball_fixedpitchdowncoeff_nonnormalshot", "0.37", FCVAR_NOTIFY);
 ConVar sv_ball_pitchup_exponent("sv_ball_pitchup_exponent", "3", FCVAR_NOTIFY);
-ConVar sv_ball_fixedpitchupcoeff("sv_ball_fixedpitchupcoeff", "0.0", FCVAR_NOTIFY);
+ConVar sv_ball_fixedpitchupcoeff("sv_ball_fixedpitchupcoeff", "0.35", FCVAR_NOTIFY);
 
 ConVar sv_ball_bestbackspinangle("sv_ball_bestbackspinangle", "-55", FCVAR_NOTIFY);
 ConVar sv_ball_pitchdownbackspin_exponent("sv_ball_pitchdownbackspin_exponent", "4", FCVAR_NOTIFY);
@@ -97,49 +97,49 @@ ConVar sv_ball_fixedpitchdownbackspincoeff("sv_ball_fixedpitchdownbackspincoeff"
 ConVar sv_ball_pitchupbackspin_exponent("sv_ball_pitchupbackspin_exponent", "2", FCVAR_NOTIFY);
 ConVar sv_ball_fixedpitchupbackspincoeff("sv_ball_fixedpitchupbackspincoeff", "0.1", FCVAR_NOTIFY);
 
-ConVar sv_ball_besttopspinangle("sv_ball_besttopspinangle", "-15", FCVAR_NOTIFY);
+ConVar sv_ball_besttopspinangle("sv_ball_besttopspinangle", "-10", FCVAR_NOTIFY);
 ConVar sv_ball_pitchdowntopspin_exponent("sv_ball_pitchdowntopspin_exponent", "2", FCVAR_NOTIFY);
 ConVar sv_ball_fixedpitchdowntopspincoeff("sv_ball_fixedpitchdowntopspincoeff", "0.1", FCVAR_NOTIFY);
 ConVar sv_ball_pitchuptopspin_exponent("sv_ball_pitchuptopspin_exponent", "4", FCVAR_NOTIFY);
 ConVar sv_ball_fixedpitchuptopspincoeff("sv_ball_fixedpitchuptopspincoeff", "0.1", FCVAR_NOTIFY);
 
 ConVar sv_ball_shotwalkcoeff("sv_ball_shotwalkcoeff", "0.5", FCVAR_NOTIFY);
-ConVar sv_ball_keepercatchspeed("sv_ball_keepercatchspeed", "500", FCVAR_NOTIFY);
-ConVar sv_ball_keeperpickupangle("sv_ball_keeperpickupangle", "45", FCVAR_NOTIFY);
+ConVar sv_ball_keepercatchspeed("sv_ball_keepercatchspeed", "1000", FCVAR_NOTIFY);
+ConVar sv_ball_keeperpickupangle("sv_ball_keeperpickupangle", "-90", FCVAR_NOTIFY);
 
-ConVar sv_ball_normalshot_strength("sv_ball_normalshot_strength", "700", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
-ConVar sv_ball_powershot_strength("sv_ball_powershot_strength", "700", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
-ConVar sv_ball_chargedshot_minstrength("sv_ball_chargedshot_minstrength", "1100", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
-ConVar sv_ball_chargedshot_maxstrength("sv_ball_chargedshot_maxstrength", "1600", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
+ConVar sv_ball_normalshot_strength("sv_ball_normalshot_strength", "900", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
+ConVar sv_ball_powershot_strength("sv_ball_powershot_strength", "1100", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
+ConVar sv_ball_chargedshot_minstrength("sv_ball_chargedshot_minstrength", "800", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
+ConVar sv_ball_chargedshot_maxstrength("sv_ball_chargedshot_maxstrength", "1500", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
 
-ConVar sv_ball_normalthrow_strength("sv_ball_normalthrow_strength", "250", FCVAR_NOTIFY);
-ConVar sv_ball_powerthrow_strength("sv_ball_powerthrow_strength", "500", FCVAR_NOTIFY);
-ConVar sv_ball_chargedthrow_minstrength("sv_ball_chargedthrow_minstrength", "750", FCVAR_NOTIFY);
-ConVar sv_ball_chargedthrow_maxstrength("sv_ball_chargedthrow_maxstrength", "1000", FCVAR_NOTIFY);
+ConVar sv_ball_normalthrow_strength("sv_ball_normalthrow_strength", "300", FCVAR_NOTIFY);
+ConVar sv_ball_powerthrow_strength("sv_ball_powerthrow_strength", "800", FCVAR_NOTIFY);
+ConVar sv_ball_chargedthrow_minstrength("sv_ball_chargedthrow_minstrength", "500", FCVAR_NOTIFY);
+ConVar sv_ball_chargedthrow_maxstrength("sv_ball_chargedthrow_maxstrength", "1100", FCVAR_NOTIFY);
 
-ConVar sv_ball_normalheader_strength("sv_ball_normalheader_strength", "500", FCVAR_NOTIFY); 
+ConVar sv_ball_normalheader_strength("sv_ball_normalheader_strength", "450", FCVAR_NOTIFY); 
 ConVar sv_ball_powerheader_strength("sv_ball_powerheader_strength", "700", FCVAR_NOTIFY); 
-ConVar sv_ball_chargedheader_minstrength("sv_ball_chargedheader_minstrength", "900", FCVAR_NOTIFY); 
-ConVar sv_ball_chargedheader_maxstrength("sv_ball_chargedheader_maxstrength", "1100", FCVAR_NOTIFY); 
+ConVar sv_ball_chargedheader_minstrength("sv_ball_chargedheader_minstrength", "500", FCVAR_NOTIFY); 
+ConVar sv_ball_chargedheader_maxstrength("sv_ball_chargedheader_maxstrength", "1000", FCVAR_NOTIFY); 
 
-ConVar sv_ball_powerdivingheader_strength("sv_ball_powerdivingheader_strength", "1100", FCVAR_NOTIFY); 
-ConVar sv_ball_chargeddivingheader_minstrength("sv_ball_chargeddivingheader_minstrength", "1100", FCVAR_NOTIFY); 
-ConVar sv_ball_chargeddivingheader_maxstrength("sv_ball_chargeddivingheader_maxstrength", "1300", FCVAR_NOTIFY);
+ConVar sv_ball_powerdivingheader_strength("sv_ball_powerdivingheader_strength", "1000", FCVAR_NOTIFY); 
+ConVar sv_ball_chargeddivingheader_minstrength("sv_ball_chargeddivingheader_minstrength", "600", FCVAR_NOTIFY); 
+ConVar sv_ball_chargeddivingheader_maxstrength("sv_ball_chargeddivingheader_maxstrength", "1200", FCVAR_NOTIFY);
 
-ConVar sv_ball_normalslide_strength("sv_ball_normalslide_strength", "500", FCVAR_NOTIFY); 
-ConVar sv_ball_powerslide_strength("sv_ball_powerslide_strength", "700", FCVAR_NOTIFY); 
-ConVar sv_ball_chargedslide_minstrength("sv_ball_chargedslide_minstrength", "900", FCVAR_NOTIFY); 
+ConVar sv_ball_normalslide_strength("sv_ball_normalslide_strength", "700", FCVAR_NOTIFY); 
+ConVar sv_ball_powerslide_strength("sv_ball_powerslide_strength", "900", FCVAR_NOTIFY); 
+ConVar sv_ball_chargedslide_minstrength("sv_ball_chargedslide_minstrength", "600", FCVAR_NOTIFY); 
 ConVar sv_ball_chargedslide_maxstrength("sv_ball_chargedslide_maxstrength", "1100", FCVAR_NOTIFY);
 
-ConVar sv_ball_penaltyshot_maxstrength("sv_ball_penaltyshot_maxstrength", "900", FCVAR_NOTIFY);
+ConVar sv_ball_penaltyshot_maxstrength("sv_ball_penaltyshot_maxstrength", "1200", FCVAR_NOTIFY);
 
 ConVar sv_ball_keepershot_minangle("sv_ball_keepershot_minangle", "-5", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
 
-ConVar sv_ball_groundshot_minangle("sv_ball_groundshot_minangle", "-10", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
+ConVar sv_ball_groundshot_minangle("sv_ball_groundshot_minangle", "-7", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
 ConVar sv_ball_volleyshot_minangle("sv_ball_volleyshot_minangle", "0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
 ConVar sv_ball_throwin_minangle("sv_ball_throwin_minangle", "-5", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
-ConVar sv_ball_throwin_minstrength("sv_ball_throwin_minstrength", "100", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
-ConVar sv_ball_autopass_minstrength("sv_ball_autopass_minstrength", "300", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
+ConVar sv_ball_throwin_minstrength("sv_ball_throwin_minstrength", "300", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
+ConVar sv_ball_autopass_minstrength("sv_ball_autopass_minstrength", "500", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
 ConVar sv_ball_autopass_maxstrength("sv_ball_autopass_maxstrength", "1600", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
 ConVar sv_ball_autopass_coeff("sv_ball_autopass_coeff", "1", FCVAR_NOTIFY);
 ConVar sv_ball_volleyshot_spincoeff("sv_ball_volleyshot_spincoeff", "1.25", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
@@ -148,43 +148,43 @@ ConVar sv_ball_doubletouchfouls("sv_ball_doubletouchfouls", "1", FCVAR_NOTIFY);
 ConVar sv_ball_timelimit_setpiece("sv_ball_timelimit_setpiece", "15", FCVAR_NOTIFY);
 ConVar sv_ball_timelimit_remotecontrolled("sv_ball_timelimit_remotecontrolled", "15", FCVAR_NOTIFY);
 
-ConVar sv_ball_statetransition_activationdelay_normal("sv_ball_statetransition_activationdelay_normal", "1.0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
-ConVar sv_ball_statetransition_activationdelay_long("sv_ball_statetransition_activationdelay_long", "2.0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
-ConVar sv_ball_statetransition_messagedelay("sv_ball_statetransition_messagedelay", "1.0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
+ConVar sv_ball_statetransition_activationdelay_normal("sv_ball_statetransition_activationdelay_normal", "0.75", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
+ConVar sv_ball_statetransition_activationdelay_long("sv_ball_statetransition_activationdelay_long", "1.5", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
+ConVar sv_ball_statetransition_messagedelay("sv_ball_statetransition_messagedelay", "0.5", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
 ConVar sv_ball_goalcelebduration("sv_ball_goalcelebduration", "5.0", FCVAR_NOTIFY);
 ConVar sv_ball_thinkinterval("sv_ball_thinkinterval", "0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
-ConVar sv_ball_chestdrop_strength("sv_ball_chestdrop_strength", "200", FCVAR_NOTIFY); 
-ConVar sv_ball_chestdrop_angle("sv_ball_chestdrop_angle", "45", FCVAR_NOTIFY); 
-ConVar sv_ball_minshotstrength("sv_ball_minshotstrength", "100", FCVAR_NOTIFY);  
+ConVar sv_ball_chestdrop_strength("sv_ball_chestdrop_strength", "100", FCVAR_NOTIFY); 
+ConVar sv_ball_chestdrop_angle("sv_ball_chestdrop_angle", "80", FCVAR_NOTIFY); 
+ConVar sv_ball_minshotstrength("sv_ball_minshotstrength", "200", FCVAR_NOTIFY);  
 ConVar sv_ball_minspeed_passive("sv_ball_minspeed_passive", "1000", FCVAR_NOTIFY); 
 ConVar sv_ball_minspeed_bounce("sv_ball_minspeed_bounce", "500", FCVAR_NOTIFY);
 ConVar sv_ball_bounce_strength("sv_ball_bounce_strength", "500", FCVAR_NOTIFY);
-ConVar sv_ball_player_yellow_red_card_duration("sv_ball_player_yellow_red_card_duration", "6", FCVAR_NOTIFY);
-ConVar sv_ball_player_red_card_duration("sv_ball_player_red_card_duration", "9", FCVAR_NOTIFY);
+ConVar sv_ball_player_yellow_red_card_duration("sv_ball_player_yellow_red_card_duration", "7.5", FCVAR_NOTIFY);
+ConVar sv_ball_player_red_card_duration("sv_ball_player_red_card_duration", "15", FCVAR_NOTIFY);
 ConVar sv_ball_reset_stamina_on_freekicks("sv_ball_reset_stamina_on_freekicks", "1", FCVAR_NOTIFY);
 
-ConVar sv_ball_bodypos_feet_start("sv_ball_bodypos_feet_start", "-10", FCVAR_NOTIFY);
+ConVar sv_ball_bodypos_feet_start("sv_ball_bodypos_feet_start", "-50", FCVAR_NOTIFY);
 ConVar sv_ball_bodypos_hip_start("sv_ball_bodypos_hip_start", "15", FCVAR_NOTIFY);
 ConVar sv_ball_bodypos_chest_start("sv_ball_bodypos_chest_start", "40", FCVAR_NOTIFY);
 ConVar sv_ball_bodypos_head_start("sv_ball_bodypos_head_start", "60", FCVAR_NOTIFY);
 ConVar sv_ball_bodypos_head_end("sv_ball_bodypos_head_end", "85", FCVAR_NOTIFY);
 ConVar sv_ball_bodypos_keeperarms_end("sv_ball_bodypos_keeperarms_end", "95", FCVAR_NOTIFY);
 
-ConVar sv_ball_foulprobability("sv_ball_foulprobability", "50", FCVAR_NOTIFY);
+ConVar sv_ball_foulprobability("sv_ball_foulprobability", "100", FCVAR_NOTIFY);
 ConVar sv_ball_yellowcardprobability_forward("sv_ball_yellowcardprobability_forward", "33", FCVAR_NOTIFY);
 ConVar sv_ball_yellowcardprobability_backward("sv_ball_yellowcardprobability_backward", "66", FCVAR_NOTIFY);
 ConVar sv_ball_goalreplay_count("sv_ball_goalreplay_count", "2", FCVAR_NOTIFY);
-ConVar sv_ball_goalreplay_delay("sv_ball_goalreplay_delay", "3", FCVAR_NOTIFY);
-ConVar sv_ball_deflectioncoeff("sv_ball_deflectioncoeff", "0.75", FCVAR_NOTIFY);
+ConVar sv_ball_goalreplay_delay("sv_ball_goalreplay_delay", "1", FCVAR_NOTIFY);
+ConVar sv_ball_deflectioncoeff("sv_ball_deflectioncoeff", "0.5", FCVAR_NOTIFY);
 ConVar sv_ball_update_physics("sv_ball_update_physics", "0", FCVAR_NOTIFY);
 
 ConVar sv_ball_stats_pass_mindist("sv_ball_stats_pass_mindist", "300", FCVAR_NOTIFY);
-ConVar sv_ball_stats_assist_maxtime("sv_ball_stats_assist_maxtime", "5", FCVAR_NOTIFY);
+ConVar sv_ball_stats_assist_maxtime("sv_ball_stats_assist_maxtime", "8", FCVAR_NOTIFY);
 
-ConVar sv_ball_velocity_coeff("sv_ball_velocity_coeff", "1.0", FCVAR_NOTIFY);
+ConVar sv_ball_velocity_coeff("sv_ball_velocity_coeff", "0.9", FCVAR_NOTIFY);
 
 ConVar sv_ball_freekickdist_owngoal("sv_ball_freekickdist_owngoal", "900", FCVAR_NOTIFY);
-ConVar sv_ball_freekickdist_opponentgoal("sv_ball_freekickdist_opponentgoal", "1200", FCVAR_NOTIFY);
+ConVar sv_ball_freekickdist_opponentgoal("sv_ball_freekickdist_opponentgoal", "1500", FCVAR_NOTIFY);
 
 ConVar sv_ball_assign_setpieces("sv_ball_assign_setpieces", "1", FCVAR_NOTIFY);
 

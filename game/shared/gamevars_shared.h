@@ -47,7 +47,6 @@ extern ConVar
 	mp_weather,
 	mp_teamlist,
 	mp_teamnames,
-	mp_powershot_fixed_strength,
 	mp_custom_shirt_numbers,
 	mp_reset_spin_toggles_on_shot,
 	mp_serverinfo,

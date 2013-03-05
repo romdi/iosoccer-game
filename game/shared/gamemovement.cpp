@@ -1915,7 +1915,7 @@ void CGameMovement::FullNoClipMove( float factor, float maxacceleration )
 	}
 }
 
-ConVar mp_jump_height("mp_jump_height", "30", FCVAR_REPLICATED | FCVAR_NOTIFY);
+ConVar mp_jump_height("mp_jump_height", "35", FCVAR_REPLICATED | FCVAR_NOTIFY);
 
 //-----------------------------------------------------------------------------
 // Purpose: 

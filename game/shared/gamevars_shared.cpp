@@ -64,9 +64,9 @@ ConVar mp_weather("mp_weather", "0", FCVAR_NOTIFY|FCVAR_REPLICATED, "Weather (0 
 ConVar mp_showstatetransitions( "mp_showstatetransitions", "1", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Show game state transitions." );
 
 ConVar mp_timelimit_match( "mp_timelimit_match", "20", FCVAR_NOTIFY|FCVAR_REPLICATED, "match duration in minutes without breaks (90 is real time)", true, 0.1f, true, 90 );
-ConVar mp_timelimit_warmup( "mp_timelimit_warmup", "0.5", FCVAR_NOTIFY|FCVAR_REPLICATED, "time before match start" );
-ConVar mp_timelimit_cooldown( "mp_timelimit_cooldown", "0.5", FCVAR_NOTIFY|FCVAR_REPLICATED, "time after match end" );
-ConVar mp_timelimit_halftime( "mp_timelimit_halftime", "0.5", FCVAR_NOTIFY|FCVAR_REPLICATED, "half time duration" );
+ConVar mp_timelimit_warmup( "mp_timelimit_warmup", "1", FCVAR_NOTIFY|FCVAR_REPLICATED, "time before match start" );
+ConVar mp_timelimit_cooldown( "mp_timelimit_cooldown", "10", FCVAR_NOTIFY|FCVAR_REPLICATED, "time after match end" );
+ConVar mp_timelimit_halftime( "mp_timelimit_halftime", "1", FCVAR_NOTIFY|FCVAR_REPLICATED, "half time duration" );
 ConVar mp_timelimit_extratime_halftime( "mp_timelimit_extratime_halftime", "0.5", FCVAR_NOTIFY|FCVAR_REPLICATED, "extra time halftime duration" );
 ConVar mp_timelimit_extratime_intermission( "mp_timelimit_extratime_intermission", "0.5", FCVAR_NOTIFY|FCVAR_REPLICATED, "time before extra time start" );
 ConVar mp_timelimit_penalties_intermission( "mp_timelimit_penalties_intermission", "0.5", FCVAR_NOTIFY|FCVAR_REPLICATED, "time before penalties start" );
@@ -87,11 +87,9 @@ ConVar mp_field_border("mp_field_border", "150", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar mp_field_border_enabled("mp_field_border_enabled", "1", FCVAR_NOTIFY|FCVAR_REPLICATED);
 
 ConVar mp_offside("mp_offside", "1", FCVAR_NOTIFY|FCVAR_REPLICATED);
-ConVar mp_joindelay("mp_joindelay", "3", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar mp_joindelay("mp_joindelay", "2", FCVAR_NOTIFY|FCVAR_REPLICATED);
 
-ConVar mp_powershot_fixed_strength("mp_powershot_fixed_strength", "60", FCVAR_NOTIFY|FCVAR_REPLICATED);
-
-ConVar mp_custom_shirt_numbers("mp_custom_shirt_numbers", "0", FCVAR_NOTIFY);
+ConVar mp_custom_shirt_numbers("mp_custom_shirt_numbers", "1", FCVAR_NOTIFY);
 
 ConVar mp_reset_spin_toggles_on_shot("mp_reset_spin_toggles_on_shot", "0", FCVAR_NOTIFY | FCVAR_REPLICATED);
 
@@ -99,14 +97,14 @@ ConVar mp_serverinfo("mp_serverinfo", "IOS Server - Enjoy your stay", FCVAR_NOTI
 
 ConVar mp_matchinfo("mp_matchinfo", "Public Match", FCVAR_NOTIFY | FCVAR_REPLICATED);
 
-ConVar mp_tvcam_speed_coeff("mp_tvcam_speed_coeff", "500", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar mp_tvcam_speed_exponent("mp_tvcam_speed_exponent", "2.5", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar mp_tvcam_border_north("mp_tvcam_border_north", "500", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar mp_tvcam_border_east("mp_tvcam_border_east", "400", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar mp_tvcam_border_south("mp_tvcam_border_south", "300", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar mp_tvcam_border_west("mp_tvcam_border_west", "400", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar mp_tvcam_offset_forward("mp_tvcam_offset_forward", "400", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar mp_tvcam_offset_north("mp_tvcam_offset_north", "400", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_tvcam_speed_coeff("mp_tvcam_speed_coeff", "400", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_tvcam_speed_exponent("mp_tvcam_speed_exponent", "4", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_tvcam_border_north("mp_tvcam_border_north", "0", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_tvcam_border_east("mp_tvcam_border_east", "0", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_tvcam_border_south("mp_tvcam_border_south", "200", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_tvcam_border_west("mp_tvcam_border_west", "0", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_tvcam_offset_forward("mp_tvcam_offset_forward", "300", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_tvcam_offset_north("mp_tvcam_offset_north", "300", FCVAR_NOTIFY | FCVAR_REPLICATED);
 
-ConVar mp_timeout_count("mp_timeout_count", "3", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar mp_timeout_duration("mp_timeout_duration", "60", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_timeout_count("mp_timeout_count", "1", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_timeout_duration("mp_timeout_duration", "30", FCVAR_NOTIFY | FCVAR_REPLICATED);

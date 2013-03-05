@@ -55,7 +55,7 @@ ConVar r_rain_height( "r_rain_height", "500", FCVAR_REPLICATED );
 ConVar r_rain_playervelmultiplier( "r_rain_playervelmultiplier", "1", FCVAR_REPLICATED );
 ConVar r_rain_sidevel( "r_rain_sidevel", "130", FCVAR_REPLICATED, "How much sideways velocity rain gets." );
 ConVar r_rain_density( "r_rain_density","0.5", FCVAR_REPLICATED);
-ConVar r_rain_width( "r_rain_width", "0.5", FCVAR_REPLICATED );
+ConVar r_rain_width( "r_rain_width", "1.5", FCVAR_REPLICATED );
 ConVar r_rain_length( "r_rain_length", "0.1f", FCVAR_REPLICATED );
 ConVar r_rain_speed( "r_rain_speed", "600.0f", FCVAR_REPLICATED );
 ConVar r_rain_alpha( "r_rain_alpha", "1", FCVAR_REPLICATED );
@@ -849,7 +849,7 @@ void CSDKGameRules::LevelShutdown()
 
 #endif
 
-ConVar mp_ball_player_collision("mp_ball_player_collision", "0", FCVAR_ARCHIVE | FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_ball_player_collision("mp_ball_player_collision", "1", FCVAR_ARCHIVE | FCVAR_NOTIFY | FCVAR_REPLICATED);
 
 bool CSDKGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 {
@@ -1301,7 +1301,7 @@ static void OnMaxPlayersChange(IConVar *var, const char *pOldValue, float flOldV
 #endif
 }
 
-ConVar mp_maxplayers("mp_maxplayers", "6", FCVAR_NOTIFY|FCVAR_REPLICATED, "Maximum number of players per team <1-11>", true, 1, true, 11, OnMaxPlayersChange);
+ConVar mp_maxplayers("mp_maxplayers", "7", FCVAR_NOTIFY|FCVAR_REPLICATED, "Maximum number of players per team <1-11>", true, 1, true, 11, OnMaxPlayersChange);
 ConVar sv_autostartmatch("sv_autostartmatch", "1", FCVAR_NOTIFY|FCVAR_REPLICATED, "");
 ConVar sv_awaytime_warmup("sv_awaytime_warmup", "30", FCVAR_NOTIFY);
 ConVar sv_awaytime_warmup_autospec("sv_awaytime_warmup_autospec", "180", FCVAR_NOTIFY);
@@ -2410,8 +2410,8 @@ int CSDKGameRules::GetMatchDisplayTimeSeconds(bool clamped /*= false*/, bool ign
 }
 
 ConVar mp_daytime_enabled("mp_daytime_enabled", "1", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar mp_daytime_start("mp_daytime_start", "12", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar mp_daytime_speed("mp_daytime_speed", "200", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_daytime_start("mp_daytime_start", "19", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_daytime_speed("mp_daytime_speed", "7", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar mp_daytime_transition("mp_daytime_transition", "1.5", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar mp_daytime_sunrise("mp_daytime_sunrise", "8", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar mp_daytime_sunset("mp_daytime_sunset", "20", FCVAR_NOTIFY | FCVAR_REPLICATED);
