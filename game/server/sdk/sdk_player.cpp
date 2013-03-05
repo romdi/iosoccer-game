@@ -1941,13 +1941,12 @@ CUtlVector<CPlayerPersistentData *> CPlayerPersistentData::m_PlayerPersistentDat
 
 void CPlayerPersistentData::AllocateData(CSDKPlayer *pPl)
 {
-	const CSteamID *steamID = engine->GetClientSteamID(pPl->edict());
-	const char *sid = engine->GetPlayerNetworkIDString(pPl->edict());
 	CPlayerPersistentData *data = NULL;
+	unsigned long long steamID = engine->GetClientSteamID(pPl->edict()) ? engine->GetClientSteamID(pPl->edict())->ConvertToUint64() : 0;
 
 	for (int i = 0; i < m_PlayerPersistentData.Count(); i++)
 	{
-		if (m_PlayerPersistentData[i]->m_SteamID != steamID)
+		if (m_PlayerPersistentData[i]->m_nSteamID != steamID)
 			continue;
 
 		data = m_PlayerPersistentData[i];
@@ -1958,7 +1957,7 @@ void CPlayerPersistentData::AllocateData(CSDKPlayer *pPl)
 	{
 		data = new CPlayerPersistentData;
 		data->ResetData();
-		data->m_SteamID = engine->GetClientSteamID(pPl->edict());
+		data->m_nSteamID = steamID;
 		Q_strncpy(data->m_szSteamID, engine->GetPlayerNetworkIDString(pPl->edict()), 32);
 		Q_strncpy(data->m_szName, pPl->GetPlayerName(), MAX_PLAYER_NAME_LENGTH);
 		data->m_nTeam = pPl->GetTeamNumber();
@@ -2062,7 +2061,7 @@ void CPlayerPersistentData::ConvertAllPlayerDataToJson()
 
 			Q_strcat(json, UTIL_VarArgs(
 				"{\"steamIdUint64\":%llu,\"steamId\":\"%s\",\"name\":\"%s\",\"redCards\":%d,\"yellowCards\":%d,\"fouls\":%d,\"foulsSuffered\":%d,\"slidingTackles\":%d,\"slidingTacklesCompleted\":%d,\"goalsConceded\":%d,\"shots\":%d,\"shotsOnGoal\":%d,\"passesCompleted\":%d,\"interceptions\":%d,\"offsides\":%d,\"goals\":%d,\"ownGoals\":%d,\"assists\":%d,\"passes\":%d,\"freeKicks\":%d,\"penalties\":%d,\"corners\":%d,\"throwIns\":%d,\"keeperSaves\":%d,\"goalKicks\":%d,\"possession\":%d,\"distanceCovered\":%d}",
-				pData->m_SteamID->ConvertToUint64(), pData->m_szSteamID, playerName, pData->m_nRedCards, pData->m_nYellowCards, pData->m_nFouls, pData->m_nFoulsSuffered, pData->m_nSlidingTackles, pData->m_nSlidingTacklesCompleted, pData->m_nGoalsConceded, pData->m_nShots, pData->m_nShotsOnGoal, pData->m_nPassesCompleted, pData->m_nInterceptions, pData->m_nOffsides, pData->m_nGoals, pData->m_nOwnGoals, pData->m_nAssists, pData->m_nPasses, pData->m_nFreeKicks, pData->m_nPenalties, pData->m_nCorners, pData->m_nThrowIns, pData->m_nKeeperSaves, pData->m_nGoalKicks, pData->m_nPossession, (int)pData->m_flExactDistanceCovered
+				pData->m_nSteamID, pData->m_szSteamID, playerName, pData->m_nRedCards, pData->m_nYellowCards, pData->m_nFouls, pData->m_nFoulsSuffered, pData->m_nSlidingTackles, pData->m_nSlidingTacklesCompleted, pData->m_nGoalsConceded, pData->m_nShots, pData->m_nShotsOnGoal, pData->m_nPassesCompleted, pData->m_nInterceptions, pData->m_nOffsides, pData->m_nGoals, pData->m_nOwnGoals, pData->m_nAssists, pData->m_nPasses, pData->m_nFreeKicks, pData->m_nPenalties, pData->m_nCorners, pData->m_nThrowIns, pData->m_nKeeperSaves, pData->m_nGoalKicks, pData->m_nPossession, (int)pData->m_flExactDistanceCovered
 				), jsonSize);
 
 			playerCount += 1;

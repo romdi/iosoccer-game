@@ -37,7 +37,7 @@ class CBall;
 class CPlayerPersistentData
 {
 public:
-	const	CSteamID *m_SteamID;
+	unsigned long long m_nSteamID;
 	char	m_szSteamID[32];
 	char	m_szName[MAX_PLAYER_NAME_LENGTH];
 	int		m_nTeam;
