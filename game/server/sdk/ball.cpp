@@ -2177,7 +2177,7 @@ bool CBall::CheckKeeperCatch()
 			vel = dir * m_vVel.Length2D() * sv_ball_keeperdeflectioncoeff.GetFloat();
 		}
 
-		SetVel(vel, -1, BODY_PART_HANDS, false, true, false);
+		SetVel(vel, -1, BODY_PART_HANDS, false, false, false);
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
 	}
 	else // Catch ball
