@@ -98,14 +98,16 @@ ConVar mp_serverinfo("mp_serverinfo", "IOS Server - Enjoy your stay", FCVAR_NOTI
 ConVar mp_matchinfo("mp_matchinfo", "Public Match", FCVAR_NOTIFY | FCVAR_REPLICATED);
 
 ConVar mp_tvcam_speed_coeff("mp_tvcam_speed_coeff", "400", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar mp_tvcam_speed_exponent("mp_tvcam_speed_exponent", "4", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar mp_tvcam_border_north("mp_tvcam_border_north", "0", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar mp_tvcam_border_east("mp_tvcam_border_east", "0", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar mp_tvcam_border_south("mp_tvcam_border_south", "200", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar mp_tvcam_border_west("mp_tvcam_border_west", "0", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar mp_tvcam_offset_forward("mp_tvcam_offset_forward", "500", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar mp_tvcam_offset_forward_time("mp_tvcam_offset_forward_time", "3", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar mp_tvcam_offset_north("mp_tvcam_offset_north", "300", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_tvcam_speed_exponent("mp_tvcam_speed_exponent", "5", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_tvcam_border_east("mp_tvcam_border_east", "400", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_tvcam_border_west("mp_tvcam_border_west", "400", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_tvcam_border_north("mp_tvcam_border_north", "400", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_tvcam_border_south("mp_tvcam_border_south", "550", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_tvcam_offset_forward("mp_tvcam_offset_forward", "550", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_tvcam_offset_forward_time("mp_tvcam_offset_forward_time", "2.5", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_tvcam_offset_north("mp_tvcam_offset_north", "350", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_tvcam_sideline_offset_height("mp_tvcam_sideline_offset_height", "550", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_tvcam_sideline_offset_north("mp_tvcam_sideline_offset_north", "400", FCVAR_NOTIFY | FCVAR_REPLICATED);
 
 ConVar mp_timeout_count("mp_timeout_count", "1", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar mp_timeout_duration("mp_timeout_duration", "30", FCVAR_NOTIFY | FCVAR_REPLICATED);
