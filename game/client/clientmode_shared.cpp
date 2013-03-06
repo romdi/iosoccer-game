@@ -520,12 +520,12 @@ int ClientModeShared::HandleSpectatorKeyInput( int down, ButtonCode_t keynum, co
 		m_pViewport->ShowPanel( PANEL_SPECMENU, true );
 		return 0; // we handled it, don't handle twice or send to server
 	}
-	else if ( down && pszCurrentBinding && Q_strcmp( pszCurrentBinding, "+attack" ) == 0 )
+	else if ( down && pszCurrentBinding && Q_strcmp( pszCurrentBinding, "+moveright" ) == 0 && GetSpectatorMode() != OBS_MODE_ROAMING)
 	{
 		engine->ClientCmd( "spec_next" );
 		return 0;
 	}
-	else if ( down && pszCurrentBinding && Q_strcmp( pszCurrentBinding, "+attack2" ) == 0 )
+	else if ( down && pszCurrentBinding && Q_strcmp( pszCurrentBinding, "+moveleft" ) == 0 && GetSpectatorMode() != OBS_MODE_ROAMING)
 	{
 		engine->ClientCmd( "spec_prev" );
 		return 0;
