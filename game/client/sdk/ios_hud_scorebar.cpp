@@ -335,15 +335,15 @@ void CHudScorebar::OnThink( void )
 
 			m_pExtraInfo->SetBounds(m_pNotificationPanel->GetX(), m_pNotificationPanel->GetY() + m_pNotificationPanel->GetTall(), m_pNotificationPanel->GetWide(), EXTRAINFO_HEIGHT);
 			
-			if (timePassed - slideDownDuration <= extraInfoFadeDuration)
+			if (timePassed - slideDownDuration <= 0)
 				m_pExtraInfo->SetAlpha(0);
-			else if (timePassed - slideDownDuration <= 2 * extraInfoFadeDuration)
+			else if (timePassed - slideDownDuration <= extraInfoFadeDuration)
 			{
-				float extraFrac = min(1, (timePassed - slideDownDuration - extraInfoFadeDuration) / extraInfoFadeDuration);
+				float extraFrac = min(1, (timePassed - slideDownDuration) / extraInfoFadeDuration);
 				float extraCoeff = pow(extraFrac, 2) * (3 - 2 * extraFrac);
 				m_pExtraInfo->SetAlpha(255 * extraCoeff);
 			}
-			else if (timePassed - slideDownDuration <= m_flStayDuration - 2 * extraInfoFadeDuration)
+			else if (timePassed - slideDownDuration <= m_flStayDuration - extraInfoFadeDuration)
 			{
 				m_pExtraInfo->SetAlpha(255);
 			}
@@ -419,6 +419,28 @@ char *GetPassingText()
 		GetGlobalTeam(TEAM_B)->m_PassesCompleted * 100 / max(1, GetGlobalTeam(TEAM_B)->m_Passes));
 }
 
+char *GetOrdinal(int number)
+{
+	static char ordinal[3];
+
+	if (number % 100 == 11 || number % 100 == 12 || number % 100 == 13)
+	{
+		Q_strncpy(ordinal, "th", 3);
+	}
+	else
+	{
+		switch (number % 10)
+		{
+		case 1: Q_strncpy(ordinal, "st", 3); break;
+		case 2: Q_strncpy(ordinal, "nd", 3); break;
+		case 3: Q_strncpy(ordinal, "rd", 3); break;
+		default: Q_strncpy(ordinal, "th", 3); break;
+		}
+	}
+
+	return ordinal;
+}
+
 char *GetSetPieceCountText(match_event_t matchEvent, int team)
 {
 	char text[32] = { 0 };
@@ -442,26 +464,17 @@ char *GetSetPieceCountText(match_event_t matchEvent, int team)
 		number = GetGlobalTeam(team)->m_FreeKicks + 1;
 		Q_strncpy(text, "free kick for", 32);
 		break;
+	case MATCH_EVENT_FOUL: 
+		number = GetGlobalTeam(team)->m_Fouls;
+		Q_strncpy(text, "foul for", 32);
+		break;
+	case MATCH_EVENT_OFFSIDE: 
+		number = GetGlobalTeam(team)->m_Offsides;
+		Q_strncpy(text, "offside for", 32);
+		break;
 	}
 
-	char ordinal[3];
-
-	if (number % 100 == 11 || number % 100 == 12 || number % 100 == 13)
-	{
-		Q_strncpy(ordinal, "th", 3);
-	}
-	else
-	{
-		switch (number % 10)
-		{
-		case 1: Q_strncpy(ordinal, "st", 3); break;
-		case 2: Q_strncpy(ordinal, "nd", 3); break;
-		case 3: Q_strncpy(ordinal, "rd", 3); break;
-		default: Q_strncpy(ordinal, "th", 3); break;
-		}
-	}
-
-	return VarArgs("%d%s %s %s", number, ordinal, text, GetGlobalTeam(team)->Get_ShortTeamName());
+	return VarArgs("%d%s %s %s", number, GetOrdinal(number), text, GetGlobalTeam(team)->Get_ShortTeamName());
 }
 
 void CHudScorebar::FireGameEvent(IGameEvent *event)
@@ -492,26 +505,28 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 		m_pNotifications[0]->SetText(VarArgs("%s: %s", g_szMatchEventNames[event->GetInt("type")], g_PR->GetTeamCode(event->GetInt("taking_team"))));
 		m_eCurMatchEvent = (match_event_t)event->GetInt("type");
 		m_flStayDuration = 3.0f;
+		char *text;
 
 		switch ((statistic_type_t)event->GetInt("statistic_type"))
 		{
 		case STATISTIC_SETPIECECOUNT_TEAM:
-			m_pExtraInfo->SetText(GetSetPieceCountText(m_eCurMatchEvent, event->GetInt("taking_team")));
+			text = GetSetPieceCountText(m_eCurMatchEvent, event->GetInt("taking_team"));
 			break;
 		case STATISTIC_POSSESSION_TEAM:
-			m_pExtraInfo->SetText(GetPossessionText());
+			text = GetPossessionText();
 			break;
 		case STATISTIC_SHOTSONGOAL_TEAM:
-			m_pExtraInfo->SetText(GetShotsOnGoalText());
+			text = GetShotsOnGoalText();
 			break;
 		case STATISTIC_PASSING_TEAM:
-			m_pExtraInfo->SetText(GetPassingText());
+			text = GetPassingText();
 			break;
 		default:
-			m_pExtraInfo->SetText("");
+			text = "";
 			break;
 		}
 
+		m_pExtraInfo->SetText(text);
 		m_pExtraInfo->SetVisible(true);
 	}
 	else if (!Q_strcmp(event->GetName(), "goal"))
@@ -540,6 +555,13 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 
 		m_eCurMatchEvent = MATCH_EVENT_GOAL;
 		m_flStayDuration = 1000;
+
+		if (pScorer)
+		{
+			int count = g_PR->GetShotsOnGoal(pScorer->entindex()) + 1;
+			m_pExtraInfo->SetText(VarArgs("%d%s shot on goal for %s", count, GetOrdinal(count), pScorer->GetPlayerName()));
+			m_pExtraInfo->SetVisible(true);
+		}
 	}
 	else if (!Q_strcmp(event->GetName(), "own_goal"))
 	{
@@ -572,23 +594,31 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 	
 		m_eCurMatchEvent = setpieceType;
 		m_flStayDuration = 5.0f;
+		char *text;
 
 		switch ((statistic_type_t)event->GetInt("statistic_type"))
 		{
 		case STATISTIC_DISTANCETOGOAL:
-			m_pExtraInfo->SetText(VarArgs("%dm distance to goal", event->GetInt("distance_to_goal")));
+			text = VarArgs("%dm distance to goal", event->GetInt("distance_to_goal"));
 			break;
 		case STATISTIC_SETPIECECOUNT_TEAM:
-			m_pExtraInfo->SetText(GetSetPieceCountText(m_eCurMatchEvent, pFoulingTeam->GetOppTeamNumber()));
+			text = GetSetPieceCountText(m_eCurMatchEvent, pFoulingTeam->GetOppTeamNumber());
+			break;
+		case STATISTIC_FOULS_TEAM:
+			text = GetSetPieceCountText(MATCH_EVENT_FOUL, pFoulingTeam->GetTeamNumber());
+			break;
+		case STATISTIC_OFFSIDES_TEAM:
+			text = GetSetPieceCountText(MATCH_EVENT_OFFSIDE, pFoulingTeam->GetTeamNumber());
 			break;
 		case STATISTIC_POSSESSION_TEAM:
-			m_pExtraInfo->SetText(GetPossessionText());
+			text = GetPossessionText();
 			break;
 		default:
-			m_pExtraInfo->SetText("");
+			text = "";
 			break;
 		}	
 
+		m_pExtraInfo->SetText(text);
 		m_pExtraInfo->SetVisible(true);
 	}
 	else if (!Q_strcmp(event->GetName(), "penalty"))

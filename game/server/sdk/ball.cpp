@@ -906,6 +906,10 @@ void CBall::State_Think()
 
 								if (m_eNextState == BALL_FREEKICK && distToGoal <= sv_ball_freekickdist_opponentgoal.GetInt())
 									statType = STATISTIC_DISTANCETOGOAL;
+								else if (m_eNextState == BALL_FREEKICK && m_eFoulType == FOUL_OFFSIDE)
+									statType = STATISTIC_OFFSIDES_TEAM;
+								else if (m_eNextState == BALL_FREEKICK)
+									statType = STATISTIC_FOULS_TEAM;
 								else
 									statType = (g_IOSRand.RandomInt(0, 2) == 0 ? STATISTIC_POSSESSION_TEAM : STATISTIC_SETPIECECOUNT_TEAM);
 
