@@ -120,6 +120,7 @@ public:
 	CNetworkVar(ball_state_t, m_eBallState);
 	CNetworkHandle(CSDKPlayer, m_pCurrentPlayer);
 	CNetworkVar(int, m_nCurrentTeam);
+	CNetworkVar(bool, m_bNonnormalshotsBlocked);
 
 	void			RemoveAllPlayerBalls();
 	void			RemovePlayerBall();

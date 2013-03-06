@@ -19,6 +19,7 @@
 #include "in_buttons.h"
 #include "sdk_gamerules.h"
 #include "c_ios_replaymanager.h"
+#include "c_ball.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -132,12 +133,23 @@ void CHudChargedshotBar::Paint()
 	float stamina = pPlayer->m_Shared.GetStamina();
 	float relStamina = stamina / 100.0f;
 
-	Color bgColor;
+	Color fgColor, bgColor;
 
 	if (pPlayer->GetFlags() & FL_REMOTECONTROLLED)
-		bgColor = Color(255, 255, 255, 255);
+	{
+		fgColor = Color(255, 255, 255, 255);
+		bgColor = Color(100, 100, 100, 255);
+	}
+	else if (GetBall() && GetBall()->m_bNonnormalshotsBlocked)
+	{
+		fgColor = Color(255, 0, 0, 255);
+		bgColor = Color(100, 0, 0, 255);
+	}
 	else
-		bgColor = Color(255 * (1 - relStamina), 255 * relStamina, 0, 255);
+	{
+		fgColor = Color(255 * (1 - relStamina), 255 * relStamina, 0, 255);
+		bgColor = Color(0, 0, 0, 255);
+	}
 
 	float shotStrength;
 
@@ -169,11 +181,11 @@ void CHudChargedshotBar::Paint()
 	}
 
 	// Draw stamina bar back
-	surface()->DrawSetColor(0, 0, 0, 255);
+	surface()->DrawSetColor(bgColor);
 	surface()->DrawFilledRect(BAR_HMARGIN, BAR_VMARGIN, BAR_HMARGIN + BAR_WIDTH, BAR_VMARGIN + BAR_HEIGHT);
 
 	// Draw stamina bar front
-	surface()->DrawSetColor(bgColor);
+	surface()->DrawSetColor(fgColor);
 	surface()->DrawFilledRect(
 		BAR_HMARGIN + BAR_HPADDING,
 		BAR_VMARGIN + BAR_VPADDING + (1 - relStamina) * (BAR_HEIGHT - 2 * BAR_VPADDING),
@@ -183,7 +195,7 @@ void CHudChargedshotBar::Paint()
 	const int partCount = 4;
 	int vMargin = BAR_HEIGHT / partCount;
 
-	surface()->DrawSetColor(0, 0, 0, 255);
+	surface()->DrawSetColor(bgColor);
 
 	for (int i = 1; i < partCount; i++)
 	{

@@ -50,6 +50,7 @@ public:
 	int m_nCurrentTeam;
 	bool m_bIsPlayerBall;
 	ball_state_t m_eBallState;
+	bool m_bNonnormalshotsBlocked;
 };
 
 extern C_Ball *GetBall();
