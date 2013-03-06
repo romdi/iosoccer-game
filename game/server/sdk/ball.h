@@ -253,7 +253,6 @@ private:
 	int				m_nFoulingTeam;
 	foul_type_t		m_eFoulType;
 	Vector			m_vFoulPos;
-	int				m_nDoubleTouchFoulCount;
 
 	Vector			m_vPos, m_vVel, m_vOffsidePos;
 	QAngle			m_aAng;

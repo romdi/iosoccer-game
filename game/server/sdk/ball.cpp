@@ -354,7 +354,6 @@ CBall::CBall()
 	m_nPossessingTeam = TEAM_INVALID;
 	m_flPossessionStart = -1;
 	m_flLastMatchEventSetTime = -1;
-	m_nDoubleTouchFoulCount = 0;
 	m_pScorer = NULL;
 	m_pFirstAssister = NULL;
 	m_pSecondAssister = NULL;
@@ -2755,25 +2754,13 @@ void CBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart)
 		&& sv_ball_doubletouchfouls.GetBool() && State_Get() == BALL_NORMAL && m_Touches.Tail()->m_eBallState != BALL_NORMAL
 		&& m_Touches.Tail()->m_eBallState != BALL_KEEPERHANDS && pPl->GetTeam()->GetNumPlayers() > 2 && pPl->GetOppTeam()->GetNumPlayers() > 2) // Double touch foul
 	{
-		m_nDoubleTouchFoulCount += 1;
-
-		if (m_nDoubleTouchFoulCount < 2 && m_Touches.Tail()->m_eBallState == BALL_FREEKICK)
-		{
-			TriggerFoul(FOUL_DOUBLETOUCH, m_Touches.Tail()->m_vBallPos, pPl);
-			m_nFouledTeam = pPl->GetTeamNumber();
-		}
-		else
-			TriggerFoul(FOUL_DOUBLETOUCH, pPl->GetLocalOrigin(), pPl);
-
+		TriggerFoul(FOUL_DOUBLETOUCH, pPl->GetLocalOrigin(), pPl);
 		State_Transition(BALL_FREEKICK, sv_ball_statetransition_activationdelay_long.GetFloat());
 
 		return;
 	}
 	else // Regular touch
 	{
-		if (State_Get() != BALL_FREEKICK)
-			m_nDoubleTouchFoulCount = 0;
-
 		BallTouchInfo *pInfo = LastInfo(true);
 
 		if (pInfo && CSDKPlayer::IsOnField(pInfo->m_pPl) && pInfo->m_pPl != pPl)
@@ -3025,7 +3012,6 @@ void CBall::Reset()
 	m_nPossessingTeam = TEAM_INVALID;
 	m_flPossessionStart = -1;
 	m_flLastMatchEventSetTime = -1;
-	m_nDoubleTouchFoulCount = 0;
 	m_pScorer = NULL;
 	m_pFirstAssister = NULL;
 	m_pSecondAssister = NULL;
