@@ -2070,6 +2070,37 @@ void CPlayerPersistentData::ConvertAllPlayerDataToJson()
 		Q_strcat(json, "]}", jsonSize);
 	}
 
+	Q_strcat(json, ",\"debug\":[", jsonSize);
+
+	for (int i = 0; i < m_PlayerPersistentData.Count(); i++)
+	{
+		CPlayerPersistentData *pData = m_PlayerPersistentData[i];
+
+		char playerName[MAX_PLAYER_NAME_LENGTH];
+
+		Q_strncpy(playerName, pData->m_szName, MAX_PLAYER_NAME_LENGTH);
+
+		char *c = playerName;
+
+		while (*c != 0)
+		{
+			if (*c == '"')
+				*c = '\'';
+
+			c++;
+		}
+
+		if (i > 0)
+			Q_strcat(json, ",", jsonSize);
+
+		Q_strcat(json, UTIL_VarArgs(
+			"{\"steamIdUint64\":%llu,\"steamId\":\"%s\",\"name\":\"%s\",\"team\":%d}",
+			pData->m_nSteamID, pData->m_szSteamID, playerName, pData->m_nTeam
+			), jsonSize);
+	}
+
+	Q_strcat(json, "]", jsonSize);
+
 	Q_strcat(json, "}", jsonSize);
 
 	filesystem->CreateDirHierarchy("statistics", "MOD");
