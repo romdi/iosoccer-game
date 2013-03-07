@@ -1919,19 +1919,18 @@ void CBall::TriggerFoul(foul_type_t type, Vector pos, CSDKPlayer *pFoulingPl, CS
 	m_vFoulPos.y = clamp(pos.y, SDKGameRules()->m_vFieldMin.GetY() + 2 * m_flPhysRadius, SDKGameRules()->m_vFieldMax.GetY() - 2 * m_flPhysRadius);
 	m_vFoulPos.z = SDKGameRules()->m_vKickOff.GetZ();
 
-	for (int team = TEAM_A; team <= TEAM_B; team++)
-	{
-		Vector min = GetGlobalTeam(team)->m_vPenBoxMin - m_flPhysRadius;
-		Vector max = GetGlobalTeam(team)->m_vPenBoxMax + m_flPhysRadius;
+	// Move the ball to the edge of the penalty box if the foul happened inside. This will probably only be relevant for double touch fouls.
 
-		// Ball inside the penalty box
-		if (m_vFoulPos.x > min.x && m_vFoulPos.x < max.x)
-		{
-			if (GetGlobalTeam(team)->m_nForward == 1 && m_vFoulPos.y < max.y)
-				m_vFoulPos.y = max.y;
-			else if (GetGlobalTeam(team)->m_nForward == -1 && m_vFoulPos.y > min.y)
-				m_vFoulPos.y = min.y;
-		}
+	Vector min = GetGlobalTeam(m_nFoulingTeam)->m_vPenBoxMin - m_flPhysRadius;
+	Vector max = GetGlobalTeam(m_nFoulingTeam)->m_vPenBoxMax + m_flPhysRadius;
+
+	// Ball inside the penalty box
+	if (m_vFoulPos.x > min.x && m_vFoulPos.x < max.x)
+	{
+		if (GetGlobalTeam(m_nFoulingTeam)->m_nForward == 1 && m_vFoulPos.y < max.y)
+			m_vFoulPos.y = max.y;
+		else if (GetGlobalTeam(m_nFoulingTeam)->m_nForward == -1 && m_vFoulPos.y > min.y)
+			m_vFoulPos.y = min.y;
 	}
 }
 
