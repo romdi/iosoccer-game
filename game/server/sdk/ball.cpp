@@ -2078,6 +2078,9 @@ bool CBall::DoBodyPartAction()
 
 bool CBall::DoSlideAction()
 {
+	if (m_vPlForwardVel2D.Length2DSqr() == 0)
+		return false;
+
 	Vector dirToBall = m_vPos - m_vPlPos;
 	float zDist = dirToBall.z;
 	Vector localDirToBall;
@@ -2125,7 +2128,7 @@ bool CBall::DoSlideAction()
 		ballVel *= sv_ball_slidesidespeedcoeff.GetFloat();
 	}
 
-	SetVel(ballVel, 0, BODY_PART_FEET, false, true, false);
+	SetVel(ballVel, 0, BODY_PART_FEET, false, true, true);
 
 	if (!SDKGameRules()->IsIntermissionState() && State_Get() == BALL_NORMAL && !HasQueuedState())
 		m_pPl->AddSlidingTackleCompleted();
