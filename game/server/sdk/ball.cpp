@@ -1500,7 +1500,10 @@ void CBall::State_FREEKICK_Think()
 		m_pPl->SetShotButtonsReleased(false);
 	}
 
-	if (gpGlobals->curtime - m_flStateEnterTime > sv_ball_nonnormalshotsblocktime_freekick.GetFloat())
+	// Remap to 0.0 - 1.0
+	float fieldFraction = (CalcFieldZone() * m_pPl->GetTeam()->m_nForward + 100) / 2.0f / 100.0f;
+
+	if (gpGlobals->curtime - m_flStateEnterTime > sv_ball_nonnormalshotsblocktime_freekick.GetFloat() * fieldFraction)
 		m_bNonnormalshotsBlocked = false;
 
 	UpdateCarrier();
