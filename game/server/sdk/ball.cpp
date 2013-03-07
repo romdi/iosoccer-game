@@ -170,9 +170,8 @@ ConVar sv_ball_bodypos_head_start("sv_ball_bodypos_head_start", "60", FCVAR_NOTI
 ConVar sv_ball_bodypos_head_end("sv_ball_bodypos_head_end", "85", FCVAR_NOTIFY);
 ConVar sv_ball_bodypos_keeperarms_end("sv_ball_bodypos_keeperarms_end", "95", FCVAR_NOTIFY);
 
-ConVar sv_ball_foulprobability("sv_ball_foulprobability", "100", FCVAR_NOTIFY);
-ConVar sv_ball_yellowcardprobability_forward("sv_ball_yellowcardprobability_forward", "33", FCVAR_NOTIFY);
-ConVar sv_ball_yellowcardprobability_backward("sv_ball_yellowcardprobability_backward", "66", FCVAR_NOTIFY);
+ConVar sv_ball_yellowcardproximity_forward("sv_ball_yellowcardproximity_forward", "0.5", FCVAR_NOTIFY);
+ConVar sv_ball_yellowcardproximity_backward("sv_ball_yellowcardproximity_backward", "0.25", FCVAR_NOTIFY);
 ConVar sv_ball_goalreplay_count("sv_ball_goalreplay_count", "2", FCVAR_NOTIFY);
 ConVar sv_ball_goalreplay_delay("sv_ball_goalreplay_delay", "1", FCVAR_NOTIFY);
 ConVar sv_ball_deflectioncoeff("sv_ball_deflectioncoeff", "0.5", FCVAR_NOTIFY);
@@ -184,7 +183,8 @@ ConVar sv_ball_stats_assist_maxtime("sv_ball_stats_assist_maxtime", "8", FCVAR_N
 ConVar sv_ball_velocity_coeff("sv_ball_velocity_coeff", "0.9", FCVAR_NOTIFY);
 
 ConVar sv_ball_freekickdist_owngoal("sv_ball_freekickdist_owngoal", "900", FCVAR_NOTIFY);
-ConVar sv_ball_freekickdist_opponentgoal("sv_ball_freekickdist_opponentgoal", "1500", FCVAR_NOTIFY);
+ConVar sv_ball_freekickdist_opponentgoal("sv_ball_freekickdist_opponentgoal", "1400", FCVAR_NOTIFY);
+ConVar sv_ball_closetogoaldist("sv_ball_closetogoaldist", "1400", FCVAR_NOTIFY);
 
 ConVar sv_ball_assign_setpieces("sv_ball_assign_setpieces", "1", FCVAR_NOTIFY);
 
@@ -1833,9 +1833,9 @@ bool CBall::CheckFoul()
 
 		Vector plPos = pPl->GetLocalOrigin();
 
-		if (plPos.x < SDKGameRules()->m_vFieldMin.GetX() || plPos.y < SDKGameRules()->m_vFieldMin.GetY() ||
-			plPos.x > SDKGameRules()->m_vFieldMax.GetX() || plPos.y > SDKGameRules()->m_vFieldMax.GetY())
-			continue;
+		//if (plPos.x < SDKGameRules()->m_vFieldMin.GetX() || plPos.y < SDKGameRules()->m_vFieldMin.GetY() ||
+		//	plPos.x > SDKGameRules()->m_vFieldMax.GetX() || plPos.y > SDKGameRules()->m_vFieldMax.GetY())
+		//	continue;
 
 		Vector dirToPl = pPl->GetLocalOrigin() - m_vPlPos;
 		float distToPl = dirToPl.Length2D();
@@ -1845,17 +1845,13 @@ bool CBall::CheckFoul()
 
 		dirToPl.z = 0;
 		dirToPl.NormalizeInPlace();
-		//if (RAD2DEG(acos(m_vPlForward2D.Dot(dirToPl))) > sv_ball_slideangle.GetFloat())
 		if (localDirToPl.x < 0 || localDirToPl.x > sv_ball_slideforwardreach_foul.GetInt() || abs(localDirToPl.y) > sv_ball_slidesidereach_foul.GetInt())		
 			continue;
 
-		if (/*canShootBall && */distToPl >= (m_vPos - m_vPlPos).Length2D())
+		if (distToPl >= (m_vPos - m_vPlPos).Length2D())
 			continue;
 
 		// It's a foul
-
-		if (g_IOSRand.RandomInt(1, 100) > sv_ball_foulprobability.GetInt())
-			continue;
 
 		PlayerAnimEvent_t anim = RAD2DEG(acos(m_vPlForward2D.Dot(pPl->EyeDirection2D()))) <= 90 ? PLAYERANIMEVENT_TACKLED_BACKWARD : PLAYERANIMEVENT_TACKLED_FORWARD;
 
@@ -1863,7 +1859,7 @@ bool CBall::CheckFoul()
 
 		int teammatesCloserToGoalCount = 0;
 
-		bool isCloseToOwnGoal = CalcFieldZone() * m_pPl->GetTeam()->m_nForward < -50;
+		bool isCloseToOwnGoal = ((m_vPos - m_pPl->GetTeam()->m_vPlayerSpawns[0]).Length2D() <= sv_ball_closetogoaldist.GetInt());
 
 		if (isCloseToOwnGoal)
 		{
@@ -1871,7 +1867,7 @@ bool CBall::CheckFoul()
 			{
 				CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(j));
 
-				if (!CSDKPlayer::IsOnField(pPl) || pPl == m_pPl || pPl->GetTeamNumber() != m_pPl->GetTeamNumber() || pPl->GetTeamPosType() == GK)
+				if (!CSDKPlayer::IsOnField(pPl) || pPl == m_pPl || pPl->GetTeamNumber() != m_pPl->GetTeamNumber())
 					continue;
 
 				if ((m_pPl->GetTeam()->m_vPlayerSpawns[0] - pPl->GetLocalOrigin()).Length2DSqr() < (m_pPl->GetTeam()->m_vPlayerSpawns[0] - m_vPlPos).Length2DSqr())
@@ -1879,12 +1875,15 @@ bool CBall::CheckFoul()
 			}
 		}
 
+
+		float proximity = clamp(1 - abs(localDirToPl.y) / sv_ball_slidesidereach_foul.GetFloat(), 0.0f, 1.0f);
+
 		foul_type_t foulType;
 
-		if (isCloseToOwnGoal && teammatesCloserToGoalCount == 0)
+		if (isCloseToOwnGoal && teammatesCloserToGoalCount <= 1)
 			foulType = FOUL_NORMAL_RED_CARD;
-		else if (anim == PLAYERANIMEVENT_TACKLED_FORWARD && g_IOSRand.RandomInt(1, 100) <= sv_ball_yellowcardprobability_forward.GetInt() ||
-				 anim == PLAYERANIMEVENT_TACKLED_BACKWARD && g_IOSRand.RandomInt(1, 100) <= sv_ball_yellowcardprobability_backward.GetInt())
+		else if (anim == PLAYERANIMEVENT_TACKLED_FORWARD && proximity >= sv_ball_yellowcardproximity_forward.GetFloat() ||
+				 anim == PLAYERANIMEVENT_TACKLED_BACKWARD && proximity >= sv_ball_yellowcardproximity_backward.GetFloat())
 			foulType = FOUL_NORMAL_YELLOW_CARD;
 		else
 			foulType = FOUL_NORMAL_NO_CARD;
