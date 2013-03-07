@@ -191,6 +191,7 @@ ConVar sv_ball_assign_setpieces("sv_ball_assign_setpieces", "1", FCVAR_NOTIFY);
 ConVar sv_ball_nonnormalshotsblocktime_freekick("sv_ball_nonnormalshotsblocktime_freekick", "4.0", FCVAR_NOTIFY);
 ConVar sv_ball_nonnormalshotsblocktime_corner("sv_ball_nonnormalshotsblocktime_corner", "4.0", FCVAR_NOTIFY);
 ConVar sv_ball_nonnormalshotsblocktime_penalty("sv_ball_nonnormalshotsblocktime_penalty", "4.0", FCVAR_NOTIFY);
+ConVar sv_ball_blockpowershot("sv_ball_blockpowershot", "1", FCVAR_NOTIFY);
 
 
 extern ConVar mp_client_sidecurl;
@@ -1387,7 +1388,9 @@ void CBall::State_CORNER_Think()
 
 	UpdateCarrier();
 
-	if (m_pPl->ShotButtonsReleased() && CanTouchBallXY() && (!m_bNonnormalshotsBlocked && m_pPl->IsShooting() || m_bNonnormalshotsBlocked && m_pPl->IsNormalshooting()))
+	if (m_pPl->ShotButtonsReleased()
+		&& CanTouchBallXY()
+		&& (!m_bNonnormalshotsBlocked && m_pPl->IsShooting() || m_bNonnormalshotsBlocked && (m_pPl->IsNormalshooting() || !sv_ball_blockpowershot.GetBool() && m_pPl->IsPowershooting())))
 	{
 		m_pPl->AddCorner();
 		RemoveAllTouches();
@@ -1508,7 +1511,9 @@ void CBall::State_FREEKICK_Think()
 
 	UpdateCarrier();
 
-	if (m_pPl->ShotButtonsReleased() && CanTouchBallXY() && (!m_bNonnormalshotsBlocked && m_pPl->IsShooting() || m_bNonnormalshotsBlocked && m_pPl->IsNormalshooting()))
+	if (m_pPl->ShotButtonsReleased()
+		&& CanTouchBallXY()
+		&& (!m_bNonnormalshotsBlocked && m_pPl->IsShooting() || m_bNonnormalshotsBlocked && (m_pPl->IsNormalshooting() || !sv_ball_blockpowershot.GetBool() && m_pPl->IsPowershooting())))
 	{
 		m_pPl->AddFreeKick();
 		RemoveAllTouches();
@@ -1609,7 +1614,9 @@ void CBall::State_PENALTY_Think()
 
 	UpdateCarrier();
 
-	if (m_pPl->ShotButtonsReleased() && CanTouchBallXY() && (!m_bNonnormalshotsBlocked && m_pPl->IsShooting() || m_bNonnormalshotsBlocked && m_pPl->IsNormalshooting()))
+	if (m_pPl->ShotButtonsReleased()
+		&& CanTouchBallXY()
+		&& (!m_bNonnormalshotsBlocked && m_pPl->IsShooting() || m_bNonnormalshotsBlocked && (m_pPl->IsNormalshooting() || !sv_ball_blockpowershot.GetBool() && m_pPl->IsPowershooting())))
 	{
 		m_pPl->AddPenalty();
 		RemoveAllTouches();
