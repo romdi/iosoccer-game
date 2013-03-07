@@ -21,6 +21,7 @@ extern void Bot_RunAll( void );
 	#include "precache_register.h"
 	#include "c_sdk_player.h"
 	#include "c_team.h"
+	#include "igameresources.h"
 
 #else
 	
@@ -2668,6 +2669,9 @@ void CSDKGameRules::DrawFieldTeamCrests()
 
 	for (int i = 0; i < 2; i++)
 	{
+		if (!GameResources()->HasTeamCrest(i + TEAM_A))
+			continue;
+
 		int sign;
 		char *material;
 
@@ -2682,15 +2686,15 @@ void CSDKGameRules::DrawFieldTeamCrests()
 			material = "vgui/awayteamcrest";
 		}
 
-		Vector vFinalRight = Vector(1, 0, 0);
-		Vector vFinalForward = Vector(0, 1, 0);
+		Vector right = Vector(1, 0, 0);
+		Vector forward = Vector(0, 1, 0);
 		float size = 150;
-		Vector vFinalOrigin = SDKGameRules()->m_vKickOff;
-		vFinalOrigin.y += sign * (40 + size);
+		Vector origin = SDKGameRules()->m_vKickOff;
+		origin.y += sign * (40 + size);
+		origin.z += 1;
 
 		CMatRenderContextPtr pRenderContext( materials );
 		IMaterial *pPreviewMaterial = materials->FindMaterial( material, TEXTURE_GROUP_CLIENT_EFFECTS );
-		//IMaterial *pPreviewMaterial = materials->FindMaterial( "debug/debugspritewireframe", TEXTURE_GROUP_OTHER );
 		pRenderContext->Bind( pPreviewMaterial );
 		IMesh *pMesh = pRenderContext->GetDynamicMesh();
 		CMeshBuilder meshBuilder;
@@ -2698,22 +2702,22 @@ void CSDKGameRules::DrawFieldTeamCrests()
 
 		meshBuilder.Color3f( 1.0, 1.0, 1.0 );
 		meshBuilder.TexCoord2f( 0,0,0 );
-		meshBuilder.Position3fv( (vFinalOrigin + (vFinalRight * sign * size) + (vFinalForward * sign * -size)).Base() );
+		meshBuilder.Position3fv( (origin + (right * sign * size) + (forward * sign * -size)).Base() );
 		meshBuilder.AdvanceVertex();
 
 		meshBuilder.Color3f( 1.0, 1.0, 1.0 );
 		meshBuilder.TexCoord2f( 0,1,0 );
-		meshBuilder.Position3fv( (vFinalOrigin + (vFinalRight * sign * -size) + (vFinalForward * sign * -size)).Base() );
+		meshBuilder.Position3fv( (origin + (right * sign * -size) + (forward * sign * -size)).Base() );
 		meshBuilder.AdvanceVertex();
 
 		meshBuilder.Color3f( 1.0, 1.0, 1.0 );
 		meshBuilder.TexCoord2f( 0,1,1 );
-		meshBuilder.Position3fv( (vFinalOrigin + (vFinalRight * sign * -size) + (vFinalForward * sign * size)).Base() );
+		meshBuilder.Position3fv( (origin + (right * sign * -size) + (forward * sign * size)).Base() );
 		meshBuilder.AdvanceVertex();
 
 		meshBuilder.Color3f( 1.0, 1.0, 1.0 );
 		meshBuilder.TexCoord2f( 0,0,1 );
-		meshBuilder.Position3fv( (vFinalOrigin + (vFinalRight * sign * size) + (vFinalForward * sign * size)).Base() );
+		meshBuilder.Position3fv( (origin + (right * sign * size) + (forward * sign * size)).Base() );
 		meshBuilder.AdvanceVertex();
 		meshBuilder.End();
 		pMesh->Draw();
