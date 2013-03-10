@@ -25,12 +25,12 @@ struct physics_performanceparams_t
 
 	void Defaults()
 	{
-		maxCollisionsPerObjectPerTimestep = 6;
-		maxCollisionChecksPerTimestep = 250;
-		maxVelocity = 2000.0f;
-		maxAngularVelocity = 360.0f * 10.0f;
-		lookAheadTimeObjectsVsWorld = 1.0f;
-		lookAheadTimeObjectsVsObject = 0.5f;
+		maxCollisionsPerObjectPerTimestep = 12;
+		maxCollisionChecksPerTimestep = 500;
+		maxVelocity = 4000.0f;
+		maxAngularVelocity = 360.0f * 20.0f;
+		lookAheadTimeObjectsVsWorld = 2.0f;
+		lookAheadTimeObjectsVsObject = 1.0f;
 		minFrictionMass = DEFAULT_MIN_FRICTION_MASS;
 		maxFrictionMass = DEFAULT_MAX_FRICTION_MASS;
 	}
