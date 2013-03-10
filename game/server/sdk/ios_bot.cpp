@@ -187,6 +187,18 @@ CON_COMMAND_F( bot_add, "Add a bot.", FCVAR_CHEAT )
 	if ( !UTIL_IsCommandIssuedByServerAdmin() )
         return;
 
+	int playerCount = 0;
+
+	// TODO: Check if there's a variable for that without iterating through it manually
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		if (UTIL_PlayerByIndex(i))
+			playerCount++;
+	}
+
+	if (playerCount == gpGlobals->maxClients)
+		return;
+
 	// Look at -count.
 	int count = args.FindArgInt( "-count", 1 );
 	count = clamp( count, 1, 16 );
