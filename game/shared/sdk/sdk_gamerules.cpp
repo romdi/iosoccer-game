@@ -2180,7 +2180,7 @@ void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 	}
 }
 
-void CSDKGameRules::EnableShield(int type, int team, const Vector &pos /*= vec3_origin*/)
+void CSDKGameRules::EnableShield(int type, int team, const Vector &pos)
 {
 	DisableShield();
 

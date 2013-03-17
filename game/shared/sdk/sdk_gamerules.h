@@ -364,7 +364,7 @@ public:
 	void StartMeteringInjuryTime();
 	void StopMeteringInjuryTime();
 	void ClientSettingsChanged( CBasePlayer *pPlayer );
-	void EnableShield(int type, int team, const Vector &pos = vec3_origin);
+	void EnableShield(int type, int team, const Vector &pos);
 	void DisableShield();
 	void SetWeather(PrecipitationType_t type);
 
