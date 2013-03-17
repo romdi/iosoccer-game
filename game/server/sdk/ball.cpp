@@ -1715,7 +1715,7 @@ void CBall::State_KEEPERHANDS_Think()
 		RemoveAllTouches();
 		SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_chest_start.GetFloat()) + dir * 36);
 		m_bSetNewPos = false;
-		SetVel(dir * vel, 0, BODY_PART_HANDS, false, true, true);
+		SetVel(dir * vel, 0, BODY_PART_KEEPERHANDS, false, true, true);
 
 		return State_Transition(BALL_NORMAL);
 	}
@@ -1754,7 +1754,7 @@ void CBall::State_KEEPERHANDS_Think()
 		RemoveAllTouches();
 		SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_chest_start.GetFloat()) + m_vPlForward2D * 36);
 		m_bSetNewPos = false;
-		SetVel(vel, spin, BODY_PART_HANDS, false, true, true);
+		SetVel(vel, spin, BODY_PART_KEEPERHANDS, false, true, true);
 
 		return State_Transition(BALL_NORMAL);
 	}
@@ -2202,12 +2202,12 @@ bool CBall::CheckKeeperCatch()
 			vel = dir * m_vVel.Length2D() * sv_ball_keeperdeflectioncoeff.GetFloat();
 		}
 
-		SetVel(vel, -1, BODY_PART_HANDS, false, false, false);
+		SetVel(vel, -1, BODY_PART_KEEPERPUNCH, false, false, false);
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
 	}
 	else // Catch ball
 	{
-		SetVel(vec3_origin, -1, BODY_PART_HANDS, true, false, false);
+		SetVel(vec3_origin, -1, BODY_PART_KEEPERCATCH, false, false, false);
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);		
 		State_Transition(BALL_KEEPERHANDS);
 	}
@@ -2791,7 +2791,7 @@ void CBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart)
 
 		if (pInfo && CSDKPlayer::IsOnField(pInfo->m_pPl) && pInfo->m_pPl != pPl)
 		{ 
-			if (pInfo->m_nTeam != pPl->GetTeamNumber() && pPl->GetTeamPosType() == GK && bodyPart == BODY_PART_HANDS) // Shot on goal
+			if (pInfo->m_nTeam != pPl->GetTeamNumber() && (bodyPart == BODY_PART_KEEPERCATCH || bodyPart == BODY_PART_KEEPERPUNCH)) // Keeper save
 			{
 				CSDKPlayer *pLastPl = LastPl(true);
 
@@ -2802,7 +2802,7 @@ void CBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart)
 					pPl->AddKeeperSave();
 				}
 			}
-			else if ((m_vPos - pInfo->m_vBallPos).Length2DSqr() >= pow(sv_ball_stats_pass_mindist.GetInt(), 2.0f)) // Pass or interception
+			else if ((m_vPos - pInfo->m_vBallPos).Length2DSqr() >= pow(sv_ball_stats_pass_mindist.GetInt(), 2.0f) && pInfo->m_eBodyPart != BODY_PART_KEEPERPUNCH) // Pass or interception
 			{
 				pInfo->m_pPl->AddPass();
 
