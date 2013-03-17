@@ -26,6 +26,7 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_PlayerResource, DT_PlayerResource, CPlayerReso
 	RecvPropArray3( RECVINFO_ARRAY(m_iPing), RecvPropInt( RECVINFO(m_iPing[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_bConnected), RecvPropInt( RECVINFO(m_bConnected[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_iTeam), RecvPropInt( RECVINFO(m_iTeam[0]))),
+	RecvPropArray3( RECVINFO_ARRAY(m_nSpecTeam), RecvPropInt( RECVINFO(m_nSpecTeam[0]))),
 
 	//ios
 	RecvPropArray3( RECVINFO_ARRAY(m_RedCards), RecvPropInt( RECVINFO(m_RedCards[0]))),
@@ -70,6 +71,7 @@ BEGIN_PREDICTION_DATA( C_PlayerResource )
 	DEFINE_PRED_ARRAY( m_iPing, FIELD_INTEGER, MAX_PLAYERS+1, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_ARRAY( m_bConnected, FIELD_BOOLEAN, MAX_PLAYERS+1, FTYPEDESC_PRIVATE ),
 	DEFINE_PRED_ARRAY( m_iTeam, FIELD_INTEGER, MAX_PLAYERS+1, FTYPEDESC_PRIVATE ),
+	DEFINE_PRED_ARRAY( m_nSpecTeam, FIELD_INTEGER, MAX_PLAYERS+1, FTYPEDESC_PRIVATE ),
 
 END_PREDICTION_DATA()	
 
@@ -86,6 +88,7 @@ C_PlayerResource::C_PlayerResource()
 //	memset( m_iPacketloss, 0, sizeof( m_iPacketloss ) );
 	memset( m_bConnected, 0, sizeof( m_bConnected ) );
 	memset( m_iTeam, 0, sizeof( m_iTeam ) );
+	memset( m_nSpecTeam, 0, sizeof( m_nSpecTeam ) );
 
 	//ios
 	memset( m_RedCards, 0, sizeof( m_RedCards ) );
@@ -266,6 +269,19 @@ int C_PlayerResource::GetTeam(int iIndex )
 	}
 }
 
+int C_PlayerResource::GetSpecTeam(int iIndex )
+{
+	if ( iIndex < 0 || iIndex > MAX_PLAYERS )
+	{
+		Assert( false );
+		return 0;
+	}
+	else
+	{
+		return m_nSpecTeam[iIndex];
+	}
+}
+
 bool C_PlayerResource::IsClubTeam(int index)
 {
 	C_Team *team = GetGlobalTeam( index );
@@ -302,6 +318,13 @@ const char * C_PlayerResource::GetTeamCode(int index)
 
 	if ( !team )
 		return "???";
+
+	if (index == TEAM_SPECTATOR || index == TEAM_UNASSIGNED || index == TEAM_INVALID)
+	{
+		static char code[5];
+		Q_strncpy(code, "SPEC", 5);
+		return code;
+	}
 
 	return team->Get_TeamCode();
 }
@@ -479,6 +502,20 @@ const Color &C_PlayerResource::GetPlayerColor(int index )
 
 	if (GetYellowCards(index) % 2 == 1)
 		return g_ColorYellow;
+
+	if (GetTeam(index) == TEAM_SPECTATOR)
+	{
+		int team;
+
+		if (GetSpecTeam(index) == 1)
+			team = TEAM_A;
+		else if (GetSpecTeam(index) == 2)
+			team = TEAM_B;
+		else
+			team = TEAM_SPECTATOR;
+
+		return GetTeamColor(team);
+	}
 
 	return GetTeamColor(GetTeam(index));
 }

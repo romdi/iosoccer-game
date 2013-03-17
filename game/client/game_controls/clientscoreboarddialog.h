@@ -224,14 +224,13 @@ private:
 	Panel		*m_pExtraInfoPanel;
 	Label		*m_pSpectatorText;
 	Panel		*m_pSpectatorNames;
-	Button		*m_pSpectateButton;
+	Button		*m_pSpectateButtons[3];
 	Panel		*m_pSpectatorContainer;
 	HFont		m_pSpectatorFontList[SPEC_FONT_COUNT];
 	ImagePanel	*m_pTeamCrests[2];
 	Label		*m_pPlayerCount[2];
 	Label		*m_pPossession[2];
-	Panel		*m_pStatButtonOuterContainer;
-	Panel		*m_pStatButtonInnerContainer;
+	Panel		*m_pStatButtonContainer;
 	Label		*m_pStatText;
 	Button		*m_pStatButtons[STAT_COUNT];
 	Panel		*m_pPlayerListDivider;

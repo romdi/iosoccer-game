@@ -32,6 +32,7 @@ protected:
 	CNetworkArray( int, m_iPing, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_bConnected, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_iTeam, MAX_PLAYERS+1 );
+	CNetworkArray( int, m_nSpecTeam, MAX_PLAYERS+1 );
 
 	//ios
 	CNetworkArray( int, m_RedCards, MAX_PLAYERS+1 );

@@ -44,6 +44,7 @@ public:
 	virtual int		GetPing( int index ) = 0;
 //	virtual int		GetPacketloss( int index ) = 0;
 	virtual int		GetTeam( int index ) = 0;
+	virtual int		GetSpecTeam( int index ) = 0;
 
 	//ios
 	virtual int		GetRedCards( int index ) = 0;

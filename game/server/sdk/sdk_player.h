@@ -445,6 +445,8 @@ public:
 	int					GetPreferredSkin() { return m_nPreferredSkin; }
 	void				SetPreferredSkin(int num);
 
+	int					GetSpecTeam() { return m_nSpecTeam; }
+
 	void				FindSafePos(Vector &startPos);
 
 	void				ResetFlags();
@@ -507,7 +509,6 @@ public:
 	CNetworkVar(bool, m_bIsAtTargetPos);
 	CNetworkVar(bool, m_bHoldAtTargetPos);
 	CNetworkVar(float, m_flNextClientSettingsChangeTime);
-
 	CNetworkVar(int, m_nInPenBoxOfTeam);
 
 	static bool			IsOnField(CSDKPlayer *pPl);
@@ -557,6 +558,8 @@ protected:
 	bool				m_bShotButtonsReleased;
 
 	float				m_flNextJoin;
+
+	int					m_nSpecTeam;
 };
 
 

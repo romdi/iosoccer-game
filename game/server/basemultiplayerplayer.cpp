@@ -122,8 +122,8 @@ bool CBaseMultiplayerPlayer::CanHearAndReadChatFrom( CBasePlayer *pPlayer )
 		return false;
 
 	// can't hear dead players if we're alive
-	if ( pPlayer->m_lifeState != LIFE_ALIVE && m_lifeState == LIFE_ALIVE )
-		return false;
+	//if ( pPlayer->m_lifeState != LIFE_ALIVE && m_lifeState == LIFE_ALIVE )
+	//	return false;
 
 	return true;
 }

@@ -56,6 +56,7 @@ public : // IGameResources intreface
 	virtual int		GetPing( int index );
 //	virtual int		GetPacketloss( int index );
 	virtual int		GetTeam( int index );
+	virtual int		GetSpecTeam( int index );
 
 	//ios
 	virtual int		GetRedCards( int index );
@@ -105,6 +106,7 @@ protected:
 	int		m_iPing[MAX_PLAYERS+1];
 	bool	m_bConnected[MAX_PLAYERS+1];
 	int		m_iTeam[MAX_PLAYERS+1];
+	int		m_nSpecTeam[MAX_PLAYERS+1];
 	
 	//ios
 	int		m_RedCards[MAX_PLAYERS+1];

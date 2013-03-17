@@ -27,6 +27,7 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CPlayerResource, DT_PlayerResource)
 //	SendPropArray( SendPropInt( SENDINFO_ARRAY(m_iPacketloss), 7, SPROP_UNSIGNED ), m_iPacketloss ),
 	SendPropArray3( SENDINFO_ARRAY3(m_bConnected), SendPropInt( SENDINFO_ARRAY(m_bConnected), 1, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_iTeam), SendPropInt( SENDINFO_ARRAY(m_iTeam), 3 ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_nSpecTeam), SendPropInt( SENDINFO_ARRAY(m_nSpecTeam), 2, SPROP_UNSIGNED ) ),
 	
 	//ios
 	SendPropArray3( SENDINFO_ARRAY3(m_RedCards), SendPropInt( SENDINFO_ARRAY(m_RedCards), 4, SPROP_UNSIGNED ) ),
@@ -99,6 +100,7 @@ void CPlayerResource::Spawn( void )
 		m_iPing.Set( i, 0 );
 		m_bConnected.Set( i, 0 );
 		m_iTeam.Set( i, 0 );
+		m_nSpecTeam.Set( i, 0 );
 
 		//ios
 		m_RedCards.Set( i, 0 );
@@ -183,6 +185,7 @@ void CPlayerResource::UpdatePlayerData( void )
 			CSDKPlayer	*SDKPlayer = ToSDKPlayer(pPlayer);
 			if (SDKPlayer)
 			{
+				m_nSpecTeam.Set( i, SDKPlayer->GetSpecTeam() );
 				m_TeamPosIndex.Set(i, SDKPlayer->GetTeamPosIndex() );
 				m_TeamPosNum.Set(i, SDKPlayer->GetTeamPosNum() );
 				m_TeamToJoin.Set(i, SDKPlayer->GetTeamToJoin() );

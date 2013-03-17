@@ -268,6 +268,7 @@ CSDKPlayer::CSDKPlayer()
 	m_Shared.m_aPlayerAnimEventStartAngle = vec3_origin;
 	m_Shared.m_nPlayerAnimEventStartButtons = 0;
 	m_nInPenBoxOfTeam = TEAM_INVALID;
+	m_nSpecTeam = 0;
 	m_ePenaltyState = PENALTY_NONE;
 	m_pHoldingBall = NULL;
 	m_flNextClientSettingsChangeTime = gpGlobals->curtime;
@@ -597,6 +598,8 @@ void CSDKPlayer::ChangeTeam( int iTeamNum )
 	{
 		//m_nRotationTeam = TEAM_INVALID;
 		//m_nRotationTeamPosIndex = 0;
+
+		m_nSpecTeam = iTeamNum - TEAM_A + 1;
 
 		if( iOldTeam == TEAM_SPECTATOR )
 			SetMoveType( MOVETYPE_NONE );
@@ -1063,8 +1066,10 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 	}
 	else if (!Q_stricmp(args[0], "spectate"))
 	{
+		m_nSpecTeam = ((args.ArgC() < 2) ? 0 : atoi(args[1]));
+
 		if (GetTeamNumber() == TEAM_SPECTATOR)
-			return false;
+			return true;
 
 		ChangeTeamPos(TEAM_SPECTATOR, 0, true);
 

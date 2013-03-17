@@ -421,18 +421,9 @@ CSDKGameRules::CSDKGameRules()
 class CVoiceGameMgrHelper : public IVoiceGameMgrHelper
 {
 public:
-	virtual bool		CanPlayerHearPlayer( CBasePlayer *pListener, CBasePlayer *pTalker, bool &bProximity )
+	virtual bool CanPlayerHearPlayer( CBasePlayer *pListener, CBasePlayer *pTalker, bool &bProximity )
 	{
-		// Dead players can only be heard by other dead team mates
-		if ( pTalker->IsAlive() == false )
-		{
-			if ( pListener->IsAlive() == false )
-				return ( pListener->InSameTeam( pTalker ) );
-
-			return false;
-		}
-
-		return ( pListener->InSameTeam( pTalker ) );
+		return SDKGameRules()->PlayerRelationship( pListener, pTalker ) == GR_TEAMMATE;
 	}
 };
 CVoiceGameMgrHelper g_VoiceGameMgrHelper;
@@ -958,32 +949,32 @@ const char *CSDKGameRules::GetChatPrefix( bool bTeamOnly, CBasePlayer *pPlayer )
 	if (!pPlayer)
 		return "";
 
-	if (pPlayer->GetTeamNumber() == TEAM_A)
+	if (pPlayer->GetTeamNumber() == TEAM_A || pPlayer->GetTeamNumber() == TEAM_SPECTATOR && ToSDKPlayer(pPlayer)->GetSpecTeam() == 1)
 		return "HOME";
-	else if (pPlayer->GetTeamNumber() == TEAM_B)
+	else if (pPlayer->GetTeamNumber() == TEAM_B || pPlayer->GetTeamNumber() == TEAM_SPECTATOR && ToSDKPlayer(pPlayer)->GetSpecTeam() == 2)
 		return "AWAY";
 	else
 		return "SPEC";
 }
 
-const char *CSDKGameRules::GetChatFormat( bool bTeamOnly, CBasePlayer *pPlayer )
+const char *CSDKGameRules::GetChatFormat(bool bTeamOnly, CBasePlayer *pPlayer)
 {
 	const char *pszFormat = NULL;
 
-	if ( !pPlayer )  // dedicated server output
+	if (!pPlayer)  // dedicated server output
 	{
 		pszFormat = "SDK_Chat_StadiumAnnouncer";
 	}
-	else if ( bTeamOnly )
+	else if (bTeamOnly)
 	{
-		if ( pPlayer->GetTeamNumber() == TEAM_SPECTATOR )
+		if (pPlayer->GetTeamNumber() == TEAM_SPECTATOR && ToSDKPlayer(pPlayer)->GetSpecTeam() == 0)
 			pszFormat = "SDK_Chat_Spec";
 		else
 			pszFormat = "SDK_Chat_Team_Loc";
 	}
 	else
 	{
-		if ( pPlayer->GetTeamNumber() == TEAM_SPECTATOR)
+		if (pPlayer->GetTeamNumber() == TEAM_SPECTATOR && ToSDKPlayer(pPlayer)->GetSpecTeam() == 0)
 			pszFormat = "SDK_Chat_AllSpec";
 		else
 			pszFormat = "SDK_Chat_All_Loc";
@@ -996,6 +987,13 @@ const char *CSDKGameRules::GetChatLocation( bool bTeamOnly, CBasePlayer *pPlayer
 {
 	if (!pPlayer)
 		return "";
+
+	if (pPlayer->GetTeamNumber() == TEAM_SPECTATOR && ToSDKPlayer(pPlayer)->GetSpecTeam() != 0)
+	{
+		static char bench[6];
+		Q_strncpy(bench, "BENCH", 6);
+		return bench;
+	}
 
 	return g_szPosNames[(int)g_Positions[mp_maxplayers.GetInt() - 1][ToSDKPlayer(pPlayer)->GetTeamPosIndex()][POS_TYPE]];
 }
@@ -1010,12 +1008,14 @@ int CSDKGameRules::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarge
 #ifndef CLIENT_DLL
 	// half life multiplay has a simple concept of Player Relationships.
 	// you are either on another player's team, or you are not.
-	if ( !pPlayer || !pTarget || !pTarget->IsPlayer() || IsTeamplay() == false )
+	if ( !pPlayer || !pTarget || !pTarget->IsPlayer())
 		return GR_NOTTEAMMATE;
 
-	if ( (*GetTeamID(pPlayer) != '\0') && (*GetTeamID(pTarget) != '\0') && !stricmp( GetTeamID(pPlayer), GetTeamID(pTarget) ) )
-		return GR_TEAMMATE;
+	if (!dynamic_cast<CSDKPlayer *>(pPlayer) || !dynamic_cast<CSDKPlayer *>(pTarget))
+		return GR_NOTTEAMMATE;
 
+	if (dynamic_cast<CSDKPlayer *>(pPlayer)->GetSpecTeam() == dynamic_cast<CSDKPlayer *>(pTarget)->GetSpecTeam())
+		return GR_TEAMMATE;
 #endif
 
 	return GR_NOTTEAMMATE;
