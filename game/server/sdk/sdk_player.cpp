@@ -961,7 +961,6 @@ void CSDKPlayer::State_ACTIVE_Enter()
 	m_vPreReplayPos = GetLocalOrigin();
 	m_aPreReplayAngles = GetLocalAngles();
 
-	m_flLastShotOnGoal = -1;
 	m_flLastMoveTime = gpGlobals->curtime;
 	m_bIsAway = false;
 
@@ -1662,7 +1661,6 @@ void CSDKPlayer::ResetFlags()
 	RemoveFlag(FL_SHIELD_KEEP_IN | FL_SHIELD_KEEP_OUT | FL_REMOTECONTROLLED | FL_FREECAM | FL_CELEB | FL_NO_X_MOVEMENT | FL_NO_Y_MOVEMENT | FL_ATCONTROLS | FL_FROZEN);
 	DoServerAnimationEvent(PLAYERANIMEVENT_CANCEL);
 	m_pHoldingBall = NULL;
-	m_flLastShotOnGoal = -1;
 	m_bIsAway = true;
 	m_flLastMoveTime = gpGlobals->curtime;
 	m_flNextJoin = gpGlobals->curtime;
@@ -1845,7 +1843,6 @@ void CSDKPlayer::AddShot()
 void CSDKPlayer::AddShotOnGoal()
 {
 	GetData()->m_nShotsOnGoal += 1;
-	m_flLastShotOnGoal = gpGlobals->curtime;
 	GetTeam()->m_ShotsOnGoal += 1;
 }
 

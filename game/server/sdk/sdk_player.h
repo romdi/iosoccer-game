@@ -541,11 +541,7 @@ public:
 
 	int					m_nMotmChoiceIds[2];
 
-	float				GetLastShotOnGoal() { return m_flLastShotOnGoal; }
-
 protected:
-
-	float				m_flLastShotOnGoal;
 
 	bool				m_bIsAway;
 	float				m_flLastMoveTime;

@@ -531,9 +531,7 @@ void CBall::VPhysicsCollision( int index, gamevcollisionevent_t	*pEvent	)
 	if (surfaceProps == 81 && flSpeed > 300.0f)
 	{
 		CSDKPlayer *pLastPl = LastPl(true);
-		if (pLastPl
-			&& (pLastPl->GetOppTeam()->m_vPlayerSpawns[0] - m_vPos).Length2DSqr() < (pLastPl->GetTeam()->m_vPlayerSpawns[0] - m_vPos).Length2DSqr()
-			&& gpGlobals->curtime >= pLastPl->GetLastShotOnGoal() + 1.0f)
+		if (pLastPl && Sign(m_vPos.y - SDKGameRules()->m_vKickOff.GetY()) == pLastPl->GetTeam()->m_nForward) // Check if it's the opponent's goal
 		{
 			pLastPl->AddShot();
 			pLastPl->AddShotOnGoal();
@@ -2518,7 +2516,7 @@ void CBall::TriggerGoal(int team)
 		return;
 	}
 
-	if (LastTeam(true) != team && LastPl(true) && gpGlobals->curtime >= LastPl(true)->GetLastShotOnGoal() + 1.0f)
+	if (LastTeam(true) != team && LastPl(true))
 	{
 		LastPl(true)->AddShot();
 		LastPl(true)->AddShotOnGoal();
@@ -2607,9 +2605,16 @@ void CBall::TriggerGoalLine(int team)
 
 	m_vTriggerTouchPos = GetPos();
 
-	if (LastTeam(true) != team && LastPl(true))
+	if (LastTeam(true) != team && LastPl(true) && m_vVel.Length2DSqr() > pow(sv_ball_normalshot_strength.GetInt(), 2.0f)) // Has to cross the line fast enough
 	{
-		LastPl(true)->AddShot();
+		float boxLength = abs(GetGlobalTeam(team)->m_vPenBoxMax.GetY() - GetGlobalTeam(team)->m_vPenBoxMin.GetY()) / 3.0f;
+		float minX = GetGlobalTeam(team)->m_vPenBoxMin.GetX() + boxLength * 2;
+		float maxX = GetGlobalTeam(team)->m_vPenBoxMax.GetX() - boxLength * 2;
+
+		if (m_vTriggerTouchPos.x >= minX && m_vTriggerTouchPos.x <= maxX) // Has to cross the goal line inside the six-yard box
+			LastPl(true)->AddShot();
+		else
+			LastPl(true)->AddPass();
 	}
 
 	if (LastTeam(false) == team)
@@ -2791,15 +2796,16 @@ void CBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart)
 
 		if (pInfo && CSDKPlayer::IsOnField(pInfo->m_pPl) && pInfo->m_pPl != pPl)
 		{ 
-			if (pInfo->m_nTeam != pPl->GetTeamNumber() && (bodyPart == BODY_PART_KEEPERCATCH || bodyPart == BODY_PART_KEEPERPUNCH)) // Keeper save
+			if (pInfo->m_nTeam != pPl->GetTeamNumber() && (bodyPart == BODY_PART_KEEPERPUNCH
+				|| bodyPart == BODY_PART_KEEPERCATCH && pInfo->m_vBallVel.Length2DSqr() > pow(sv_ball_normalshot_strength.GetInt(), 2.0f))) // Keeper save
 			{
-				CSDKPlayer *pLastPl = LastPl(true);
+				pPl->AddKeeperSave();
 
-				if (pLastPl && gpGlobals->curtime >= pLastPl->GetLastShotOnGoal() + 1.0f) // Prevent multiple counts in a short succession
+				CSDKPlayer *pLastPl = LastPl(true);
+				if (pLastPl)
 				{
 					pLastPl->AddShot();
 					pLastPl->AddShotOnGoal();
-					pPl->AddKeeperSave();
 				}
 			}
 			else if ((m_vPos - pInfo->m_vBallPos).Length2DSqr() >= pow(sv_ball_stats_pass_mindist.GetInt(), 2.0f) && pInfo->m_eBodyPart != BODY_PART_KEEPERPUNCH) // Pass or interception
