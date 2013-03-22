@@ -2900,107 +2900,63 @@ void CBall::UpdatePossession(CSDKPlayer *pNewPossessor)
 	{
 		float duration = gpGlobals->curtime - m_flPossessionStart;
 
-		//GetGlobalTeam(TEAM_A)->m_flPossessionTime = 0;
-		//GetGlobalTeam(TEAM_B)->m_flPossessionTime = 0;
-
-		//for (int i = 1; i <= gpGlobals->maxClients; i++)
-		//{
-		//	CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
-
-		//	if (!CSDKPlayer::IsOnField(pPl))
-		//		continue;
-
-		//	if (pPl == m_pPossessingPl)
-		//		pPl->AddPossessionTime(duration);
-
-		//	pPl->GetTeam()->m_flPossessionTime += pPl->GetPossessionTime();
-		//}
-
 		if (m_pPossessingPl)
 			m_pPossessingPl->AddPossessionTime(duration);
 
 		float total = GetGlobalTeam(TEAM_A)->m_flPossessionTime + GetGlobalTeam(TEAM_B)->m_flPossessionTime;
 
-		if (total == 0)
-			return;
+		GetGlobalTeam(TEAM_A)->m_Possession = floor(GetGlobalTeam(TEAM_A)->m_flPossessionTime * 100 / max(1, total) + 0.5f);
+		GetGlobalTeam(TEAM_B)->m_Possession = 100 - GetGlobalTeam(TEAM_A)->m_Possession;
 
 		int possSum = 0;
 
-		float possRemainders[22][2];
-		
-		int possCount = 0;
-
-		for (int i = 1; i <= gpGlobals->maxClients; i++)
+		struct remainder_t
 		{
-			CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+			int dataIndex;
+			float remainder;
+			remainder_t() : dataIndex(0), remainder(0) {}
+		};
 
-			if (!CSDKPlayer::IsOnField(pPl))
-				continue;
+		remainder_t *sortedRemainders = new remainder_t[CPlayerPersistentData::m_PlayerPersistentData.Count()];
 
-			float poss = 100 * pPl->GetPossessionTime() / total;
-			pPl->SetPossession((int)poss);
-			float remainder = poss - pPl->GetPossession();
+		for (int i = 0; i < CPlayerPersistentData::m_PlayerPersistentData.Count(); i++)
+		{
+			CPlayerPersistentData *pData = CPlayerPersistentData::m_PlayerPersistentData[i];
+			
+			float exactPossession = pData->m_flPossessionTime * 100 / max(1, total);
+			pData->m_nPossession = (int)exactPossession;
+			float remainder = exactPossession - pData->m_nPossession;
 
-			possSum += pPl->GetPossession();
+			possSum += pData->m_nPossession;
 
-			if (pPl->GetPossessionTime() == 0.0f)
-				continue;
-
-			for (int j = 0; j < 22; j++)
+			for (int j = 0; j <= i; j++)
 			{
-				if (j == possCount)
+				if (sortedRemainders[j].remainder <= remainder)
 				{
-				}
-				else if (possRemainders[j][0] >= remainder)
-				{
-					continue;
-				}
-				else if (possRemainders[j][0] < remainder)
-				{
-					for (int k = 22 - 1; k > j; k--)
+					for (int k = i; k > j; k--)
 					{
-						possRemainders[k][0] = possRemainders[k - 1][0];
-						possRemainders[k][1] = possRemainders[k - 1][1];
+						sortedRemainders[k] = sortedRemainders[k - 1];
 					}
-				}
 
-				possRemainders[j][0] = remainder;
-				possRemainders[j][1] = i;
-				possCount += 1;
+					sortedRemainders[j].dataIndex = i;
+					sortedRemainders[j].remainder = remainder;
+
+					break;
+				}
+			}
+		}
+
+		for (int i = 0; i < CPlayerPersistentData::m_PlayerPersistentData.Count(); i++)
+		{
+			if (possSum == 100)
 				break;
-			}
+
+			CPlayerPersistentData *pData = CPlayerPersistentData::m_PlayerPersistentData[sortedRemainders[i].dataIndex];
+			pData->m_nPossession += 1;
+			possSum += 1;
 		}
 
-		if (possCount > 0)
-		{
-			int remainder = 100 - possSum;
-
-			while (remainder > 0)
-			{
-				for (int i = 0; i < possCount; i++)
-				{
-					CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(possRemainders[i][1]));
-					pPl->SetPossession(pPl->GetPossession() + 1);
-					remainder -= 1;
-
-					if (remainder == 0)
-						break;
-				}
-			}
-		}
-
-		GetGlobalTeam(TEAM_A)->m_Possession = 0;
-		GetGlobalTeam(TEAM_B)->m_Possession = 0;
-
-		for (int i = 1; i <= gpGlobals->maxClients; i++)
-		{
-			CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
-
-			if (!CSDKPlayer::IsOnField(pPl))
-				continue;
-
-			pPl->GetTeam()->m_Possession += pPl->GetPossession();
-		}
+		delete[] sortedRemainders;
 	}
 
 	if (CSDKPlayer::IsOnField(pNewPossessor))
