@@ -214,6 +214,8 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Editabl
 
 	m_pRequestTimeout = new Button(m_pStatButtonContainer, "", "Timeout", this, "requesttimeout");
 
+	m_pToggleCaptaincy = new Button(m_pMainPanel, "", "Take Captaincy", this, "togglecaptaincy");
+
 	m_nCurStat = DEFAULT_STATS;
 	m_nCurSpecIndex = 0;
 	m_pCurSpecButton = NULL;
@@ -359,6 +361,13 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 		m_pSpectateButtons[i]->SetCursor(dc_hand);
 		//m_pSpectateButtons[i]->SetVisible(false);
 	}
+
+	m_pToggleCaptaincy->SetSize(80, STATBUTTON_HEIGHT);
+	m_pToggleCaptaincy->SetFont(m_pScheme->GetFont("StatButton"));
+	m_pToggleCaptaincy->SetContentAlignment(Label::a_center);
+	m_pToggleCaptaincy->SetPaintBorderEnabled(false);
+	m_pToggleCaptaincy->SetCursor(dc_hand);
+	m_pToggleCaptaincy->SetVisible(false);
 
 	m_pJoinRandom->SetBounds(STATBUTTON_HMARGIN, 0, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
 	m_pJoinRandom->SetFont(m_pScheme->GetFont("StatButton"));
@@ -670,10 +679,20 @@ void CClientScoreBoardDialog::Update( void )
 
 	bool isOnField = (pLocal->GetTeamNumber() == TEAM_A || pLocal->GetTeamNumber() == TEAM_B);
 
-	//for (int i = 0; i < 3; i++)
-	//	m_pSpectateButtons[i]->SetVisible(isOnField);
+	if ((GetLocalPlayerTeam() == TEAM_A || GetLocalPlayerTeam() == TEAM_B)
+		&& (GetGlobalTeam(GetLocalPlayerTeam())->Get_CaptainPosIndex() == gr->GetTeamPosIndex(GetLocalPlayerIndex())
+		|| GetGlobalTeam(GetLocalPlayerTeam())->Get_CaptainPosIndex() == 11))
+	{
+		if (GetGlobalTeam(GetLocalPlayerTeam())->Get_CaptainPosIndex() == gr->GetTeamPosIndex(GetLocalPlayerIndex()))
+			m_pToggleCaptaincy->SetText("- Captain");
+		else
+			m_pToggleCaptaincy->SetText("+ Captain");
 
-	//m_pJoinRandom->SetVisible(!isOnField);
+		m_pToggleCaptaincy->SetPos(GetLocalPlayerTeam() == TEAM_A ? 5 : m_pMainPanel->GetWide() - 85, m_pMainPanel->GetTall() - 5 - 2 * STATBUTTON_HEIGHT);
+		m_pToggleCaptaincy->SetVisible(true);
+	}
+	else
+		m_pToggleCaptaincy->SetVisible(false);
 
 	m_fNextUpdateTime = gpGlobals->curtime + 0.25f; 
 }
@@ -1436,6 +1455,10 @@ void CClientScoreBoardDialog::OnCommand( char const *cmd )
 
 		m_pFormationList->SetVisible(true);
 
+		engine->ClientCmd(cmd);
+	}
+	else if (!Q_stricmp(cmd, "togglecaptaincy"))
+	{
 		engine->ClientCmd(cmd);
 	}
 	else if (!Q_stricmp(cmd, "togglemenu"))

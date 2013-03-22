@@ -1466,12 +1466,18 @@ void CBall::State_FREEKICK_Think()
 {
 	if (!CSDKPlayer::IsOnField(m_pPl))
 	{
-		if (sv_ball_assign_setpieces.GetBool() && (m_vPos - GetGlobalTeam(m_nFouledTeam)->m_vPlayerSpawns[0]).Length2D() <= sv_ball_freekickdist_owngoal.GetInt()) // Close to own goal
+		if ((m_vPos - GetGlobalTeam(m_nFouledTeam)->m_vPlayerSpawns[0]).Length2D() <= sv_ball_freekickdist_owngoal.GetInt()) // Close to own goal
 			m_pPl = FindNearestPlayer(m_nFouledTeam, FL_POS_KEEPER);
-		else if (sv_ball_assign_setpieces.GetBool() && (m_vPos - GetGlobalTeam(m_nFoulingTeam)->m_vPlayerSpawns[0]).Length2D() <= sv_ball_freekickdist_opponentgoal.GetInt()) // Close to opponent's goal
-			m_pPl = GetGlobalTeam(m_nFouledTeam)->GetFreekickTaker();
+		else if ((m_vPos - GetGlobalTeam(m_nFoulingTeam)->m_vPlayerSpawns[0]).Length2D() <= sv_ball_freekickdist_opponentgoal.GetInt()) // Close to opponent's goal
+		{
+			if (sv_ball_assign_setpieces.GetBool())
+				m_pPl = GetGlobalTeam(m_nFouledTeam)->GetFreekickTaker();
+
+			if (!CSDKPlayer::IsOnField(m_pPl))
+				m_pPl = m_pFouledPl;
+		}
 		else
-			m_pPl = m_pFouledPl;
+			m_pPl = NULL;
 
 		if (!CSDKPlayer::IsOnField(m_pPl) || m_pPl->GetTeamPosType() == GK && m_pPl->IsBot())
 			m_pPl = FindNearestPlayer(m_nFouledTeam, FL_POS_FIELD);
@@ -1566,6 +1572,8 @@ void CBall::State_PENALTY_Think()
 				m_pPl = NULL;
 
 			if (!m_pPl)
+				m_pPl = m_pFouledPl;
+			if (!CSDKPlayer::IsOnField(m_pPl))
 				m_pPl = FindNearestPlayer(m_nFouledTeam);
 			if (!m_pPl)
 				return State_Transition(BALL_NORMAL);

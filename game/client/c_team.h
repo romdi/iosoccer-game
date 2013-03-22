@@ -58,7 +58,6 @@ public:
 	virtual int	Get_PenaltyTakerPosIndex() { return m_nPenaltyTakerPosIndex; }
 	virtual int	Get_LeftCornerTakerPosIndex() { return m_nLeftCornerTakerPosIndex; }
 	virtual int	Get_RightCornerTakerPosIndex() { return m_nRightCornerTakerPosIndex; }
-	virtual int	Get_ThrowinTakerPosIndex() { return m_nThrowinTakerPosIndex; }
 
 	virtual int		Get_TimeoutsLeft() { return m_nTimeoutsLeft; }
 
@@ -104,7 +103,6 @@ public:
 	int m_nPenaltyTakerPosIndex;
 	int m_nLeftCornerTakerPosIndex;
 	int m_nRightCornerTakerPosIndex;
-	int m_nThrowinTakerPosIndex;
 
 	// Data for the scoreboard
 	int		m_iPing;

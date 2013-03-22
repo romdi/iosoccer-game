@@ -239,6 +239,7 @@ private:
 	Button		*m_pToggleCaptainMenu;
 	ComboBox	*m_pFormationList;
 	Button		*m_pRequestTimeout;
+	Button		*m_pToggleCaptaincy;
 
 	CStatsMenu	*m_pStatsMenu;
 	CFormationMenu	*m_pFormationMenu;

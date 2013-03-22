@@ -64,12 +64,10 @@ protected:
 	Panel		*m_pFormations[2];
 	CBitmapButton *m_pFormationButtons[2][11];
 	Label		*m_pToolTips[2][11];
-	Button		*m_pCaptainTicks[11];
 	Button		*m_pFreekickTakerTicks[11];
 	Button		*m_pPenaltyTakerTicks[11];
 	Button		*m_pLeftCornerTakerTicks[11];
 	Button		*m_pRightCornerTakerTicks[11];
-	Button		*m_pThrowinTakerTicks[11];
 	bool		m_bShowCaptainMenu;
 };
 

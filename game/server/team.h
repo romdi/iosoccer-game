@@ -70,12 +70,11 @@ public:
 	void SetPosNextJoinSeconds(int posIndex, int seconds);
 	void UnblockAllPos();
 	void UpdatePosIndices(bool reset);
-	virtual void SetCaptainPosIndex(int posIndex) { m_nCaptainPosIndex = clamp(posIndex, 0, mp_maxplayers.GetInt() - 1); }
-	virtual void SetFreekickTakerPosIndex(int posIndex) { m_nFreekickTakerPosIndex = clamp(posIndex, 0, mp_maxplayers.GetInt() - 1); }
-	virtual void SetPenaltyTakerPosIndex(int posIndex) { m_nPenaltyTakerPosIndex = clamp(posIndex, 0, mp_maxplayers.GetInt() - 1); }
-	virtual void SetLeftCornerTakerPosIndex(int posIndex) { m_nLeftCornerTakerPosIndex = clamp(posIndex, 0, mp_maxplayers.GetInt() - 1); }
-	virtual void SetRightCornerTakerPosIndex(int posIndex) { m_nRightCornerTakerPosIndex = clamp(posIndex, 0, mp_maxplayers.GetInt() - 1); }
-	virtual void SetThrowinTakerPosIndex(int posIndex) { m_nThrowinTakerPosIndex = clamp(posIndex, 0, mp_maxplayers.GetInt() - 1); }
+	virtual void SetCaptainPosIndex(int posIndex) { m_nCaptainPosIndex = clamp(posIndex, 0, 11); }
+	virtual void SetFreekickTakerPosIndex(int posIndex) { m_nFreekickTakerPosIndex = clamp(posIndex, 0, 11); }
+	virtual void SetPenaltyTakerPosIndex(int posIndex) { m_nPenaltyTakerPosIndex = clamp(posIndex, 0, 11); }
+	virtual void SetLeftCornerTakerPosIndex(int posIndex) { m_nLeftCornerTakerPosIndex = clamp(posIndex, 0, 11); }
+	virtual void SetRightCornerTakerPosIndex(int posIndex) { m_nRightCornerTakerPosIndex = clamp(posIndex, 0, 11); }
 	virtual void SetTimeoutsLeft(int amount) { m_nTimeoutsLeft = amount; }
 	virtual int GetTimeoutsLeft() { return m_nTimeoutsLeft; }
 	virtual void SetWantsTimeout(bool state) { m_bWantsTimeout = state; }
@@ -118,7 +117,6 @@ public:
 	CNetworkVar( int, m_nPenaltyTakerPosIndex );
 	CNetworkVar( int, m_nLeftCornerTakerPosIndex );
 	CNetworkVar( int, m_nRightCornerTakerPosIndex );
-	CNetworkVar( int, m_nThrowinTakerPosIndex );
 
 	int		m_iDeaths;
 

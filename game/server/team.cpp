@@ -67,7 +67,6 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CTeam, DT_Team)
 	SendPropInt(SENDINFO(m_nPenaltyTakerPosIndex), 4, SPROP_UNSIGNED),
 	SendPropInt(SENDINFO(m_nLeftCornerTakerPosIndex), 4, SPROP_UNSIGNED),
 	SendPropInt(SENDINFO(m_nRightCornerTakerPosIndex), 4, SPROP_UNSIGNED),
-	SendPropInt(SENDINFO(m_nThrowinTakerPosIndex), 4, SPROP_UNSIGNED),
 
 	SendPropArray2( 
 		SendProxyArrayLength_PlayerArray,
@@ -287,6 +286,9 @@ void CTeam::RemovePlayer( CBasePlayer *pPlayer )
 	//	}
 	//}
 
+	if ((GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B) && pPlayer == GetCaptain())
+		SetCaptainPosIndex(11);
+
 	m_aPlayers.FindAndRemove( pPlayer );
 
 	UpdatePosIndices(false);
@@ -306,22 +308,13 @@ void CTeam::UpdatePosIndices(bool reset)
 
 	if (reset)
 	{
-		m_nCaptainPosIndex = mp_maxplayers.GetInt() - 1;
-		m_nFreekickTakerPosIndex = 0;
-		m_nPenaltyTakerPosIndex = 0;
-		m_nLeftCornerTakerPosIndex = 0;
-		m_nRightCornerTakerPosIndex = 0;
-		m_nThrowinTakerPosIndex = 0;
-
+		SetCaptainPosIndex(11);
+		SetFreekickTakerPosIndex(11);
+		SetPenaltyTakerPosIndex(11);
+		SetLeftCornerTakerPosIndex(11);
+		SetRightCornerTakerPosIndex(11);
 		UnblockAllPos();
 	}
-
-	m_nCaptainPosIndex = clamp(m_nCaptainPosIndex, 0, mp_maxplayers.GetInt() - 1);
-	m_nFreekickTakerPosIndex = clamp(m_nFreekickTakerPosIndex, 0, mp_maxplayers.GetInt() - 1);
-	m_nPenaltyTakerPosIndex = clamp(m_nPenaltyTakerPosIndex, 0, mp_maxplayers.GetInt() - 1);
-	m_nLeftCornerTakerPosIndex = clamp(m_nLeftCornerTakerPosIndex, 0, mp_maxplayers.GetInt() - 1);
-	m_nRightCornerTakerPosIndex = clamp(m_nRightCornerTakerPosIndex, 0, mp_maxplayers.GetInt() - 1);
-	m_nThrowinTakerPosIndex = clamp(m_nThrowinTakerPosIndex, 0, mp_maxplayers.GetInt() - 1);
 }
 
 //-----------------------------------------------------------------------------
@@ -343,7 +336,7 @@ CBasePlayer *CTeam::GetPlayer( int iIndex )
 
 CSDKPlayer *CTeam::GetPlayerByPosIndex(int posIndex)
 {
-	if (m_PosIndexPlayerIndices[posIndex] == -1)
+	if (posIndex > 10 || m_PosIndexPlayerIndices[posIndex] == -1)
 		return NULL;
 	else
 		return ToSDKPlayer(m_aPlayers[m_PosIndexPlayerIndices[posIndex]]);

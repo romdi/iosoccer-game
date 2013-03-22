@@ -58,7 +58,6 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_Team, DT_Team, CTeam)
 	RecvPropInt(RECVINFO(m_nPenaltyTakerPosIndex)),
 	RecvPropInt(RECVINFO(m_nLeftCornerTakerPosIndex)),
 	RecvPropInt(RECVINFO(m_nRightCornerTakerPosIndex)),
-	RecvPropInt(RECVINFO(m_nThrowinTakerPosIndex)),
 	
 	RecvPropArray2( 
 		RecvProxyArrayLength_PlayerArray,

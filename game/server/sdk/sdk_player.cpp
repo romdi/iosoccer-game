@@ -1180,12 +1180,16 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 
 		return true;
 	}
-	else if (!Q_stricmp(args[0], "setcaptain"))
+	else if (!Q_stricmp(args[0], "togglecaptaincy"))
 	{
-		if (this != GetTeam()->GetCaptain())
+		if (GetTeamNumber() != TEAM_A && GetTeamNumber() != TEAM_B)
 			return false;
 
-		GetTeam()->SetCaptainPosIndex(atoi(args[1]));
+		if (this == GetTeam()->GetCaptain())
+			GetTeam()->SetCaptainPosIndex(11);
+		else
+			GetTeam()->SetCaptainPosIndex(GetTeamPosIndex());
+
 		return true;
 	}
 	else if (!Q_stricmp(args[0], "setfreekicktaker"))
