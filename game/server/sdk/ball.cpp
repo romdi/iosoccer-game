@@ -359,6 +359,7 @@ CBall::CBall()
 	m_pFirstAssister = NULL;
 	m_pSecondAssister = NULL;
 	m_bNonnormalshotsBlocked = false;
+	m_bHitThePost = false;
 }
 
 CBall::~CBall()
@@ -533,8 +534,9 @@ void CBall::VPhysicsCollision( int index, gamevcollisionevent_t	*pEvent	)
 		CSDKPlayer *pLastPl = LastPl(true);
 		if (pLastPl && Sign(m_vPos.y - SDKGameRules()->m_vKickOff.GetY()) == pLastPl->GetTeam()->m_nForward) // Check if it's the opponent's goal
 		{
-			pLastPl->AddShot();
-			pLastPl->AddShotOnGoal();
+			m_bHitThePost = true;
+			//pLastPl->AddShot();
+			//pLastPl->AddShotOnGoal();
 		}
 
 		EmitSound("Ball.post");
@@ -2790,31 +2792,33 @@ void CBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart)
 
 		return;
 	}
-	else // Regular touch
-	{
-		BallTouchInfo *pInfo = LastInfo(true);
 
-		if (pInfo && CSDKPlayer::IsOnField(pInfo->m_pPl) && pInfo->m_pPl != pPl)
-		{ 
-			if (pInfo->m_nTeam != pPl->GetTeamNumber() && (bodyPart == BODY_PART_KEEPERPUNCH
-				|| bodyPart == BODY_PART_KEEPERCATCH && pInfo->m_vBallVel.Length2DSqr() > pow(sv_ball_normalshot_strength.GetInt(), 2.0f))) // Keeper save
+	// Regular touch
+	BallTouchInfo *pInfo = LastInfo(true);
+	CSDKPlayer *pLastPl = LastPl(true);
+
+	if (pInfo && CSDKPlayer::IsOnField(pLastPl) && pLastPl != pPl)
+	{ 
+		if (pInfo->m_nTeam != pPl->GetTeamNumber() && (bodyPart == BODY_PART_KEEPERPUNCH
+			|| bodyPart == BODY_PART_KEEPERCATCH && pInfo->m_vBallVel.Length2DSqr() > pow(sv_ball_normalshot_strength.GetInt(), 2.0f))) // All fast balls by an opponent which are caught or punched away by the keeper count as shots on goal
+		{
+			pPl->AddKeeperSave();
+			pLastPl->AddShot();
+			pLastPl->AddShotOnGoal();
+		}
+		else if ((m_vPos - pInfo->m_vBallPos).Length2DSqr() >= pow(sv_ball_stats_pass_mindist.GetInt(), 2.0f) && pInfo->m_eBodyPart != BODY_PART_KEEPERPUNCH) // Pass or interception
+		{
+			if (m_bHitThePost)
 			{
-				pPl->AddKeeperSave();
-
-				CSDKPlayer *pLastPl = LastPl(true);
-				if (pLastPl)
-				{
-					pLastPl->AddShot();
-					pLastPl->AddShotOnGoal();
-				}
+				pLastPl->AddShot();
 			}
-			else if ((m_vPos - pInfo->m_vBallPos).Length2DSqr() >= pow(sv_ball_stats_pass_mindist.GetInt(), 2.0f) && pInfo->m_eBodyPart != BODY_PART_KEEPERPUNCH) // Pass or interception
+			else
 			{
-				pInfo->m_pPl->AddPass();
+				pLastPl->AddPass();
 
 				if (pInfo->m_nTeam == pPl->GetTeamNumber()) // Pass to teammate
 				{
-					pInfo->m_pPl->AddPassCompleted();
+					pLastPl->AddPassCompleted();
 				}
 				else // Intercepted by opponent
 				{
@@ -2822,19 +2826,20 @@ void CBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart)
 				}
 			}
 		}
-
-		UpdatePossession(pPl);
-		BallTouchInfo *info = new BallTouchInfo;
-		info->m_pPl = pPl;
-		info->m_nTeam = pPl->GetTeamNumber();
-		info->m_bIsShot = isShot;
-		info->m_eBodyPart = bodyPart;
-		info->m_eBallState = State_Get();
-		info->m_vBallPos = m_vPos;
-		info->m_vBallVel = m_vVel;
-		info->m_flTime = gpGlobals->curtime;
-		m_Touches.AddToTail(info);
 	}
+
+	UpdatePossession(pPl);
+	BallTouchInfo *info = new BallTouchInfo;
+	info->m_pPl = pPl;
+	info->m_nTeam = pPl->GetTeamNumber();
+	info->m_bIsShot = isShot;
+	info->m_eBodyPart = bodyPart;
+	info->m_eBallState = State_Get();
+	info->m_vBallPos = m_vPos;
+	info->m_vBallVel = m_vVel;
+	info->m_flTime = gpGlobals->curtime;
+	m_Touches.AddToTail(info);
+	m_bHitThePost = false;
 
 	//DevMsg("touches: %d\n", m_Touches.Count());
 	
@@ -3004,6 +3009,7 @@ void CBall::Reset()
 	m_pFirstAssister = NULL;
 	m_pSecondAssister = NULL;
 	m_bNonnormalshotsBlocked = false;
+	m_bHitThePost = false;
 }
 
 void CBall::SetPenaltyTaker(CSDKPlayer *pPl)

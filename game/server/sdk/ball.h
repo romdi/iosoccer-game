@@ -299,6 +299,8 @@ private:
 	CHandle<CSDKPlayer> m_pScorer;
 	CHandle<CSDKPlayer> m_pFirstAssister;
 	CHandle<CSDKPlayer> m_pSecondAssister;
+
+	bool			m_bHitThePost;
 };
 
 #endif
