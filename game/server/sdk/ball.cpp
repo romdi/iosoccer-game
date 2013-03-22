@@ -2466,12 +2466,21 @@ bool CBall::DoHeader()
 
 AngularImpulse CBall::CalcSpin(float coeff, bool applyTopspin)
 {	
-	Vector sideRot(0, 0, 0);
+	Vector sideRot;
 
-	if (m_pPl->m_nButtons & IN_MOVELEFT) 
+	if ((m_pPl->m_nButtons & IN_MOVELEFT) && (m_pPl->m_nButtons & IN_MOVERIGHT)
+		|| !(m_pPl->m_nButtons & IN_MOVELEFT) && !(m_pPl->m_nButtons & IN_MOVERIGHT))
+	{
+		sideRot = Vector(0, 0, 0);
+	}
+	else if (m_pPl->m_nButtons & IN_MOVELEFT) 
+	{
 		sideRot = Vector(0, 0, (m_pPl->IsLegacySideCurl() && mp_client_sidecurl.GetBool()) ? 1 : -1);
-	else if (m_pPl->m_nButtons & IN_MOVERIGHT) 
+	}
+	else if (m_pPl->m_nButtons & IN_MOVERIGHT)
+	{
 		sideRot = Vector(0, 0, (m_pPl->IsLegacySideCurl() && mp_client_sidecurl.GetBool()) ? -1 : 1);
+	}
 
 	float sideSpin = m_vVel.Length() * sv_ball_spin.GetInt() * coeff / 100.0f;
 
