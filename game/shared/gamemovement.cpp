@@ -1593,10 +1593,19 @@ bool CGameMovement::CheckPlayerAnimEvent()
 
 				mv->m_vecVelocity = vec3_origin;
 				if ((mv->m_nButtons & IN_FORWARD) || (mv->m_nButtons & IN_BACK))
-					mv->m_vecVelocity += forward2D * Sign(mv->m_flForwardMove) * (isSprinting ? mp_keepersprintdivespeed_shortside.GetInt() : mp_keeperdivespeed_shortside.GetInt());
+					mv->m_vecVelocity += forward2D * Sign(mv->m_flForwardMove) * (isSprinting ? mp_keepersprintdivespeed_shortside.GetFloat() : mp_keeperdivespeed_shortside.GetFloat());
 				if ((mv->m_nButtons & IN_MOVELEFT) != (mv->m_nButtons & IN_MOVERIGHT))
 					mv->m_vecVelocity += right * Sign(mv->m_flSideMove) * (isSprinting ? mp_keepersprintdivespeed_longside.GetFloat() : mp_keeperdivespeed_longside.GetFloat());
 
+				mv->m_vecVelocity.z = 0;
+				float maxSpeed;
+				if (isSprinting)
+					maxSpeed = max(mp_keepersprintdivespeed_shortside.GetFloat(), mp_keepersprintdivespeed_longside.GetFloat());
+				else
+					maxSpeed = max(mp_keeperdivespeed_shortside.GetFloat(), mp_keeperdivespeed_longside.GetFloat());
+
+				float speed = mv->m_vecVelocity.NormalizeInPlace();
+				mv->m_vecVelocity *= min(speed, maxSpeed);
 				mv->m_vecVelocity *= max(0, (1 - pow(timePassed / mp_keepersidewarddive_move_duration.GetFloat(), 2)));
 				mv->m_vecVelocity.z = isSprinting ? mp_keepersprintdivespeed_z.GetInt() : mp_keeperdivespeed_z.GetInt();
 			}
@@ -1618,10 +1627,19 @@ bool CGameMovement::CheckPlayerAnimEvent()
 
 				mv->m_vecVelocity = vec3_origin;
 				if ((mv->m_nButtons & IN_FORWARD) || (mv->m_nButtons & IN_BACK))
-					mv->m_vecVelocity += forward2D * Sign(mv->m_flForwardMove) * (isSprinting ? mp_keepersprintdivespeed_longside.GetInt() : mp_keeperdivespeed_longside.GetInt());
+					mv->m_vecVelocity += forward2D * Sign(mv->m_flForwardMove) * (isSprinting ? mp_keepersprintdivespeed_longside.GetFloat() : mp_keeperdivespeed_longside.GetFloat());
 				if ((mv->m_nButtons & IN_MOVELEFT) != (mv->m_nButtons & IN_MOVERIGHT))
 					mv->m_vecVelocity += right * Sign(mv->m_flSideMove) * (isSprinting ? mp_keepersprintdivespeed_shortside.GetFloat() : mp_keeperdivespeed_shortside.GetFloat());
 
+				mv->m_vecVelocity.z = 0;
+				float maxSpeed;
+				if (isSprinting)
+					maxSpeed = max(mp_keepersprintdivespeed_shortside.GetFloat(), mp_keepersprintdivespeed_longside.GetFloat());
+				else
+					maxSpeed = max(mp_keeperdivespeed_shortside.GetFloat(), mp_keeperdivespeed_longside.GetFloat());
+
+				float speed = mv->m_vecVelocity.NormalizeInPlace();
+				mv->m_vecVelocity *= min(speed, maxSpeed);
 				mv->m_vecVelocity *= max(0, (1 - pow(timePassed / mp_keeperforwarddive_move_duration.GetFloat(), 2)));
 				mv->m_vecVelocity.z = 0;
 			}
