@@ -99,7 +99,7 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CTeam, DT_Team)
 	SendPropInt(SENDINFO(m_OwnGoals), 5, SPROP_UNSIGNED),
 	SendPropInt(SENDINFO(m_Assists), 5, SPROP_UNSIGNED),
 	SendPropInt(SENDINFO(m_Possession), 7, SPROP_UNSIGNED),
-	SendPropInt(SENDINFO(m_DistanceCovered), 7, SPROP_UNSIGNED),
+	SendPropInt(SENDINFO(m_DistanceCovered), 11, SPROP_UNSIGNED),
 	SendPropInt(SENDINFO(m_Passes), 9, SPROP_UNSIGNED),
 	SendPropInt(SENDINFO(m_FreeKicks), 6, SPROP_UNSIGNED),
 	SendPropInt(SENDINFO(m_Penalties), 6, SPROP_UNSIGNED),
