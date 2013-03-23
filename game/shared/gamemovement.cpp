@@ -1595,7 +1595,14 @@ bool CGameMovement::CheckPlayerAnimEvent()
 				if ((mv->m_nButtons & IN_FORWARD) || (mv->m_nButtons & IN_BACK))
 					mv->m_vecVelocity += forward2D * Sign(mv->m_flForwardMove) * (isSprinting ? mp_keepersprintdivespeed_shortside.GetFloat() : mp_keeperdivespeed_shortside.GetFloat());
 				if ((mv->m_nButtons & IN_MOVELEFT) != (mv->m_nButtons & IN_MOVERIGHT))
-					mv->m_vecVelocity += right * Sign(mv->m_flSideMove) * (isSprinting ? mp_keepersprintdivespeed_longside.GetFloat() : mp_keeperdivespeed_longside.GetFloat());
+				{
+					if (!mp_keeperdive_moveback.GetBool() && pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_LEFT && (mv->m_nButtons & IN_MOVERIGHT))
+						mv->m_vecVelocity = vec3_origin;
+					else if (!mp_keeperdive_moveback.GetBool() && pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT && (mv->m_nButtons & IN_MOVELEFT))
+						mv->m_vecVelocity = vec3_origin;
+					else
+						mv->m_vecVelocity += right * Sign(mv->m_flSideMove) * (isSprinting ? mp_keepersprintdivespeed_longside.GetFloat() : mp_keeperdivespeed_longside.GetFloat());
+				}
 
 				mv->m_vecVelocity.z = 0;
 				float maxSpeed;
@@ -1627,7 +1634,12 @@ bool CGameMovement::CheckPlayerAnimEvent()
 
 				mv->m_vecVelocity = vec3_origin;
 				if ((mv->m_nButtons & IN_FORWARD) || (mv->m_nButtons & IN_BACK))
-					mv->m_vecVelocity += forward2D * Sign(mv->m_flForwardMove) * (isSprinting ? mp_keepersprintdivespeed_longside.GetFloat() : mp_keeperdivespeed_longside.GetFloat());
+				{
+					if (!mp_keeperdive_moveback.GetBool() && (mv->m_nButtons & IN_BACK))
+						mv->m_vecVelocity = vec3_origin;
+					else
+						mv->m_vecVelocity += forward2D * Sign(mv->m_flForwardMove) * (isSprinting ? mp_keepersprintdivespeed_longside.GetFloat() : mp_keeperdivespeed_longside.GetFloat());
+				}
 				if ((mv->m_nButtons & IN_MOVELEFT) != (mv->m_nButtons & IN_MOVERIGHT))
 					mv->m_vecVelocity += right * Sign(mv->m_flSideMove) * (isSprinting ? mp_keepersprintdivespeed_shortside.GetFloat() : mp_keeperdivespeed_shortside.GetFloat());
 

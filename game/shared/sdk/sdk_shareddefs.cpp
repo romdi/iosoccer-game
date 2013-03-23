@@ -132,6 +132,8 @@ ConVar mp_keeperdiveviewcoeff_enabled("mp_keeperdiveviewcoeff_enabled", "0", FCV
 ConVar mp_keeperdiveviewcoeff_pitchdownangle("mp_keeperdiveviewcoeff_pitchdownangle", "45", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_keeperdiveviewcoeff_pitchupangle("mp_keeperdiveviewcoeff_pitchupangle", "-15", FCVAR_REPLICATED | FCVAR_NOTIFY);
 
+ConVar mp_keeperdive_moveback("mp_keeperdive_moveback", "1", FCVAR_REPLICATED | FCVAR_NOTIFY);
+
 ConVar mp_slide_move_duration("mp_slide_move_duration", "1", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_slide_idle_duration("mp_slide_idle_duration", "0.6", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_slidespeed("mp_slidespeed", "400", FCVAR_REPLICATED | FCVAR_NOTIFY);

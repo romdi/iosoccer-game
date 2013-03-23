@@ -149,6 +149,7 @@ extern ConVar
 	mp_keeperdiveviewcoeff_enabled,
 	mp_keeperdiveviewcoeff_pitchdownangle,
 	mp_keeperdiveviewcoeff_pitchupangle,
+	mp_keeperdive_moveback,
 	mp_slide_move_duration,
 	mp_slide_idle_duration,
 	mp_slidespeed,
