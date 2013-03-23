@@ -32,11 +32,12 @@
 	#include "clientmode_sdk.h"
 	#include "vgui_controls/AnimationController.h"
 	#include "igameresources.h"
-
+	#include "c_ball.h"
 	#define CRecipientFilter C_RecipientFilter
 #else
 	#include "sdk_player.h"
 	#include "team.h"
+	#include "ball.h"
 #endif
 
 ConVar sv_showimpacts("sv_showimpacts", "0", FCVAR_REPLICATED, "Shows client (red) and server (blue) bullet impact point" );
@@ -566,13 +567,13 @@ void CSDKPlayer::FindSafePos(Vector &startPos)
 
 void CSDKPlayer::CheckShotCharging()
 {
-	if ((m_nButtons & IN_ATTACK))
+	if ((m_nButtons & IN_ATTACK)
+		|| ((GetFlags() & (FL_FREECAM | FL_REMOTECONTROLLED)) || (m_nButtons & IN_RELOAD))
+		|| GetBall() && GetBall()->m_bNonnormalshotsBlocked
+		|| !m_bShotButtonsReleased)
 	{
-		if (m_Shared.m_bDoChargedShot)
-			m_Shared.m_bDoChargedShot = false;
-
-		if (m_Shared.m_bIsShotCharging)
-			m_Shared.m_bIsShotCharging = false;
+		m_Shared.m_bDoChargedShot = false;
+		m_Shared.m_bIsShotCharging = false;
 	}
 	else if ((m_nButtons & IN_ATTACK2) && !m_Shared.m_bIsShotCharging)
 	{
@@ -582,7 +583,7 @@ void CSDKPlayer::CheckShotCharging()
 	}
 	else if (m_Shared.m_bIsShotCharging)
 	{
-		if ((m_nButtons & IN_ATTACK2))
+		if (m_nButtons & IN_ATTACK2)
 		{
 			//m_flShotChargingDuration = gpGlobals->curtime - m_flShotChargingStart;
 			//float fraction = m_flShotChargingDuration / mp_chargedshot_increaseduration.GetFloat();
@@ -600,11 +601,4 @@ void CSDKPlayer::ResetShotCharging()
 {
 	m_Shared.m_bDoChargedShot = false;
 	m_Shared.m_bIsShotCharging = false;
-	#ifdef CLIENT_DLL
-	if (this == C_SDKPlayer::GetLocalSDKPlayer() && mp_reset_spin_toggles_on_shot.GetBool())
-	{
-		engine->ClientCmd("-topspin");
-		engine->ClientCmd("-backspin");
-	}
-	#endif	
 }

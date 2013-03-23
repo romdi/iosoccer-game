@@ -510,6 +510,7 @@ public:
 	CNetworkVar(bool, m_bHoldAtTargetPos);
 	CNetworkVar(float, m_flNextClientSettingsChangeTime);
 	CNetworkVar(int, m_nInPenBoxOfTeam);
+	CNetworkVar(bool, m_bShotButtonsReleased);
 
 	static bool			IsOnField(CSDKPlayer *pPl);
 
@@ -550,8 +551,6 @@ protected:
 	CHandle<CBall>		m_pPlayerBall;
 	Vector				m_vOffsideLastOppPlayerPos;
 	Vector				m_vOffsideBallPos;
-
-	bool				m_bShotButtonsReleased;
 
 	float				m_flNextJoin;
 

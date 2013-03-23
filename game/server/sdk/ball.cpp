@@ -1383,8 +1383,11 @@ void CBall::State_CORNER_Think()
 		m_pPl->SetShotButtonsReleased(false);
 	}
 
-	if (gpGlobals->curtime - m_flStateEnterTime > sv_ball_nonnormalshotsblocktime_corner.GetFloat())
+	if (m_bNonnormalshotsBlocked && gpGlobals->curtime - m_flStateEnterTime > sv_ball_nonnormalshotsblocktime_corner.GetFloat())
+	{
 		m_bNonnormalshotsBlocked = false;
+		m_pPl->SetShotButtonsReleased(false);
+	}
 
 	UpdateCarrier();
 
@@ -1512,8 +1515,11 @@ void CBall::State_FREEKICK_Think()
 	// Remap to 0.0 - 1.0
 	float fieldFraction = (CalcFieldZone() * m_pPl->GetTeam()->m_nForward + 100) / 2.0f / 100.0f;
 
-	if (gpGlobals->curtime - m_flStateEnterTime > sv_ball_nonnormalshotsblocktime_freekick.GetFloat() * fieldFraction)
+	if (m_bNonnormalshotsBlocked && gpGlobals->curtime - m_flStateEnterTime > sv_ball_nonnormalshotsblocktime_freekick.GetFloat() * fieldFraction)
+	{
 		m_bNonnormalshotsBlocked = false;
+		m_pPl->SetShotButtonsReleased(false);
+	}
 
 	UpdateCarrier();
 
@@ -1617,8 +1623,11 @@ void CBall::State_PENALTY_Think()
 		m_pOtherPl->AddFlag(FL_ATCONTROLS);
 	}
 
-	if (gpGlobals->curtime - m_flStateEnterTime > sv_ball_nonnormalshotsblocktime_penalty.GetFloat())
+	if (m_bNonnormalshotsBlocked && gpGlobals->curtime - m_flStateEnterTime > sv_ball_nonnormalshotsblocktime_penalty.GetFloat())
+	{
 		m_bNonnormalshotsBlocked = false;
+		m_pPl->SetShotButtonsReleased(false);
+	}
 
 	UpdateCarrier();
 
