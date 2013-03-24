@@ -202,6 +202,7 @@ void ClientModeShared::Init()
 	ListenForGameEvent( "player_specteam" );
 	ListenForGameEvent( "server_cvar" );
 	ListenForGameEvent( "player_changename" );
+	ListenForGameEvent( "player_changeclub" );
 	ListenForGameEvent( "teamplay_broadcast_audio" );
 	ListenForGameEvent( "achievement_earned" );
 
@@ -911,6 +912,34 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 
 		wchar_t wszLocalized[100];
 		g_pVGuiLocalize->ConstructString( wszLocalized, sizeof( wszLocalized ), g_pVGuiLocalize->Find( "#game_player_changed_name" ), 2, wszOldName, wszNewName );
+
+		char szLocalized[100];
+		g_pVGuiLocalize->ConvertUnicodeToANSI( wszLocalized, szLocalized, sizeof(szLocalized) );
+
+		hudChat->Printf( CHAT_FILTER_NAMECHANGE, "%s", szLocalized );
+	}
+	else if ( Q_strcmp( "player_changeclub", eventname ) == 0 )
+	{
+		if ( !hudChat )
+			return;
+
+		C_SDKPlayer *pPl = ToSDKPlayer(USERID2PLAYER(event->GetInt("userid")));
+		if (!pPl)
+			return;
+
+		const char *pszOldClub = event->GetString("oldclub")[0] == 0 ? "''" : event->GetString("oldclub");
+
+		wchar_t wszOldClub[MAX_CLUBNAME_LENGTH];
+		g_pVGuiLocalize->ConvertANSIToUnicode( pszOldClub, wszOldClub, sizeof(wszOldClub) );
+
+		wchar_t wszNewClub[MAX_CLUBNAME_LENGTH];
+		g_pVGuiLocalize->ConvertANSIToUnicode( event->GetString("newclub")[0] == 0 ? "''" : event->GetString("newclub"), wszNewClub, sizeof(wszNewClub) );
+
+		wchar_t wszPlayerName[MAX_PLAYER_NAME_LENGTH];
+		g_pVGuiLocalize->ConvertANSIToUnicode( pPl->GetPlayerName(), wszPlayerName, sizeof(wszPlayerName) );
+
+		wchar_t wszLocalized[100];
+		g_pVGuiLocalize->ConstructString( wszLocalized, sizeof( wszLocalized ), g_pVGuiLocalize->Find( "#game_player_changed_club" ), 3, wszPlayerName, wszOldClub, wszNewClub );
 
 		char szLocalized[100];
 		g_pVGuiLocalize->ConvertUnicodeToANSI( wszLocalized, szLocalized, sizeof(szLocalized) );

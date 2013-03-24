@@ -2132,10 +2132,6 @@ void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 
 	pPl->m_flNextClientSettingsChangeTime = gpGlobals->curtime + mp_clientsettingschangeinterval.GetFloat();
 
-	char pszClubName[MAX_CLUBNAME_LENGTH];
-	Q_strncpy(pszClubName, engine->GetClientConVarValue( pPl->entindex(), "clubname" ), MAX_CLUBNAME_LENGTH);
-	pPl->SetClubName(pszClubName);
-
 	int countryIndex = atoi(engine->GetClientConVarValue(pPl->entindex(), "geoipcountryindex"));
 
 	if (countryIndex <= 0 || countryIndex >= COUNTRY_NAMES_COUNT - 1)
@@ -2177,6 +2173,25 @@ void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 		}
 		
 		pPl->SetPlayerName( pszName );
+	}
+
+	char pszClubName[MAX_CLUBNAME_LENGTH];
+	Q_strncpy(pszClubName, engine->GetClientConVarValue( pPl->entindex(), "clubname" ), MAX_CLUBNAME_LENGTH);
+
+	const char *pszOldClubName = pPl->GetClubName();
+
+	if (Q_strcmp(pszOldClubName, pszClubName))
+	{
+		IGameEvent * event = gameeventmanager->CreateEvent( "player_changeclub" );
+		if ( event )
+		{
+			event->SetInt("userid", pPl->GetUserID());
+			event->SetString("oldclub", pszOldClubName);
+			event->SetString("newclub", pszClubName);
+			gameeventmanager->FireEvent(event);
+		}
+		
+		pPl->SetClubName(pszClubName);
 	}
 }
 
