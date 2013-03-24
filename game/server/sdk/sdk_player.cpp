@@ -148,6 +148,7 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayer, DT_SDKLocalPlayerExclusive )
 	SendPropBool(SENDINFO(m_bIsAtTargetPos)),
 	SendPropBool(SENDINFO(m_bHoldAtTargetPos)),
 	SendPropTime( SENDINFO( m_flNextClientSettingsChangeTime ) ),
+	SendPropTime(SENDINFO(m_flNextJoin)),
 	SendPropBool(SENDINFO(m_bShotButtonsReleased)),
 END_SEND_TABLE()
 
@@ -586,6 +587,8 @@ void CSDKPlayer::ChangeTeam( int iTeamNum )
 
 	m_nTeamToJoin = TEAM_INVALID;
 
+	m_nSpecTeam = 0;
+
 	// update client state 
 	if ( iTeamNum == TEAM_UNASSIGNED )
 	{
@@ -600,7 +603,7 @@ void CSDKPlayer::ChangeTeam( int iTeamNum )
 		//m_nRotationTeam = TEAM_INVALID;
 		//m_nRotationTeamPosIndex = 0;
 
-		m_nSpecTeam = iTeamNum - TEAM_A + 1;
+		//m_nSpecTeam = iTeamNum - TEAM_A + 1;
 
 		if( iOldTeam == TEAM_SPECTATOR )
 			SetMoveType( MOVETYPE_NONE );
@@ -1066,12 +1069,32 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 	}
 	else if (!Q_stricmp(args[0], "spectate"))
 	{
-		m_nSpecTeam = ((args.ArgC() < 2) ? 0 : atoi(args[1]));
+		if (GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B)
+		{
+			ChangeTeamPos(TEAM_SPECTATOR, 0, true);
+			return true;
+		}
 
-		if (GetTeamNumber() == TEAM_SPECTATOR)
+		int specTeam = ((args.ArgC() < 2) ? 0 : atoi(args[1]));
+
+		if (specTeam == m_nSpecTeam)
 			return true;
 
-		ChangeTeamPos(TEAM_SPECTATOR, 0, true);
+		if (gpGlobals->curtime >= GetNextJoin())
+		{
+			m_nSpecTeam = specTeam;
+			SetNextJoin(gpGlobals->curtime + mp_joindelay.GetFloat());
+
+			IGameEvent *pEvent = gameeventmanager->CreateEvent("player_specteam");
+			if (pEvent)
+			{
+				pEvent->SetInt("userid", GetUserID());
+				pEvent->SetInt("specteam", m_nSpecTeam);
+				gameeventmanager->FireEvent(pEvent);
+			}
+
+			return true;
+		}
 
 		return true;
 	}

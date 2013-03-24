@@ -679,7 +679,7 @@ void CClientScoreBoardDialog::Update( void )
 
 	bool isOnField = (pLocal->GetTeamNumber() == TEAM_A || pLocal->GetTeamNumber() == TEAM_B);
 
-	if ((GetLocalPlayerTeam() == TEAM_A || GetLocalPlayerTeam() == TEAM_B)
+	if (isOnField
 		&& (GetGlobalTeam(GetLocalPlayerTeam())->Get_CaptainPosIndex() == gr->GetTeamPosIndex(GetLocalPlayerIndex())
 		|| GetGlobalTeam(GetLocalPlayerTeam())->Get_CaptainPosIndex() == 11))
 	{
@@ -688,11 +688,15 @@ void CClientScoreBoardDialog::Update( void )
 		else
 			m_pToggleCaptaincy->SetText("+ Captain");
 
-		m_pToggleCaptaincy->SetPos(GetLocalPlayerTeam() == TEAM_A ? 5 : m_pMainPanel->GetWide() - 85, m_pMainPanel->GetTall() - 5 - 2 * STATBUTTON_HEIGHT);
+		m_pToggleCaptaincy->SetPos(GetLocalPlayerTeam() == TEAM_A ? 5 : m_pMainPanel->GetWide() - 85, m_pMainPanel->GetTall() - 5 - STATBUTTON_HEIGHT);
 		m_pToggleCaptaincy->SetVisible(true);
 	}
 	else
 		m_pToggleCaptaincy->SetVisible(false);
+
+	m_pSpectateButtons[0]->SetVisible(isOnField || gr->GetSpecTeam(GetLocalPlayerIndex()) != 0);
+	m_pSpectateButtons[1]->SetVisible(!isOnField && gr->GetSpecTeam(GetLocalPlayerIndex()) != 1);
+	m_pSpectateButtons[2]->SetVisible(!isOnField && gr->GetSpecTeam(GetLocalPlayerIndex()) != 2);
 
 	m_fNextUpdateTime = gpGlobals->curtime + 0.25f; 
 }

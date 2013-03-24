@@ -199,6 +199,7 @@ void ClientModeShared::Init()
 	ListenForGameEvent( "player_connect" );
 	ListenForGameEvent( "player_disconnect" );
 	ListenForGameEvent( "player_team" );
+	ListenForGameEvent( "player_specteam" );
 	ListenForGameEvent( "server_cvar" );
 	ListenForGameEvent( "player_changename" );
 	ListenForGameEvent( "teamplay_broadcast_audio" );
@@ -865,6 +866,33 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 			// that's me
 			pPlayer->TeamChange( team );
 		}
+	}
+	else if ( Q_strcmp( "player_specteam", eventname ) == 0 )
+	{
+		C_SDKPlayer *pPl = ToSDKPlayer(USERID2PLAYER(event->GetInt("userid")));
+		if (!pPl)
+			return;
+
+		wchar_t wszPlayerName[MAX_PLAYER_NAME_LENGTH];
+		g_pVGuiLocalize->ConvertANSIToUnicode(pPl->GetPlayerName(), wszPlayerName, sizeof(wszPlayerName));
+
+		wchar_t wszLocalized[128];
+
+		if (event->GetInt("specteam") == 0)
+		{
+			g_pVGuiLocalize->ConstructString(wszLocalized, sizeof(wszLocalized), g_pVGuiLocalize->Find("#game_player_joined_spectator"), 1, wszPlayerName);
+		}
+		else
+		{
+			wchar_t wszTeam[64];
+			g_pVGuiLocalize->ConvertANSIToUnicode( GetGlobalTeam(event->GetInt("specteam") - 1 + TEAM_A)->Get_TeamCode(), wszTeam, sizeof(wszTeam));
+			g_pVGuiLocalize->ConstructString(wszLocalized, sizeof(wszLocalized), g_pVGuiLocalize->Find("#game_player_joined_bench"), 2, wszPlayerName, wszTeam);
+		}
+
+		char szLocalized[128];
+		g_pVGuiLocalize->ConvertUnicodeToANSI( wszLocalized, szLocalized, sizeof(szLocalized) );
+
+		hudChat->Printf( CHAT_FILTER_TEAMCHANGE, "%s", szLocalized );
 	}
 	else if ( Q_strcmp( "player_changename", eventname ) == 0 )
 	{

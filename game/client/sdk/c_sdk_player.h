@@ -184,6 +184,7 @@ public:
 	CNetworkVar(bool, m_bIsAtTargetPos);
 	CNetworkVar(bool, m_bHoldAtTargetPos);
 	CNetworkVar(float, m_flNextClientSettingsChangeTime);
+	CNetworkVar(float, m_flNextJoin);
 	CNetworkVar(int, m_nInPenBoxOfTeam);
 	CNetworkVar(bool, m_bShotButtonsReleased);
 

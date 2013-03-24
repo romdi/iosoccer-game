@@ -509,6 +509,7 @@ public:
 	CNetworkVar(bool, m_bIsAtTargetPos);
 	CNetworkVar(bool, m_bHoldAtTargetPos);
 	CNetworkVar(float, m_flNextClientSettingsChangeTime);
+	CNetworkVar(float, m_flNextJoin);
 	CNetworkVar(int, m_nInPenBoxOfTeam);
 	CNetworkVar(bool, m_bShotButtonsReleased);
 
@@ -551,8 +552,6 @@ protected:
 	CHandle<CBall>		m_pPlayerBall;
 	Vector				m_vOffsideLastOppPlayerPos;
 	Vector				m_vOffsideBallPos;
-
-	float				m_flNextJoin;
 
 	int					m_nSpecTeam;
 };
