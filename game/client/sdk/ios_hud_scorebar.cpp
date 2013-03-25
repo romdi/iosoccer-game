@@ -282,6 +282,7 @@ void CHudScorebar::Init( void )
 	ListenForGameEvent("own_goal");
 	ListenForGameEvent("foul");
 	ListenForGameEvent("penalty");
+	ListenForGameEvent("wakeupcall");
 }
 
 void CHudScorebar::ApplySettings( KeyValues *inResourceData )
@@ -536,6 +537,19 @@ char *GetSetPieceCountText(match_event_t matchEvent, int team)
 
 void CHudScorebar::FireGameEvent(IGameEvent *event)
 {
+	if (!Q_strcmp(event->GetName(), "wakeupcall"))
+	{
+		FLASHWINFO flashInfo;
+		flashInfo.cbSize = sizeof(FLASHWINFO);
+		flashInfo.hwnd = FindWindow(NULL, "IOS Source Dev");
+		flashInfo.dwFlags = FLASHW_TRAY | FLASHW_TIMERNOFG;
+		flashInfo.uCount = 3;
+		flashInfo.dwTimeout = 0;
+		FlashWindowEx(&flashInfo);
+		//SetWindowText(FindWindow(NULL, "IOS Source Dev"), "LIVE - IOS Source Dev");
+		return;
+	}
+
 	m_flNotificationStart = gpGlobals->curtime;
 	m_nCurMatchEventTeam = TEAM_UNASSIGNED;
 	m_pNotificationPanel->SetTall(NOTIFICATION_HEIGHT);

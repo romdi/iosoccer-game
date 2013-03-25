@@ -1506,7 +1506,11 @@ void CSDKGameRules::State_WARMUP_Leave(match_state_t newState)
 void CSDKGameRules::State_FIRST_HALF_Enter()
 {
 	GetBall()->State_Transition(BALL_KICKOFF, 0, true);
-	//WakeUpAwayPlayers();
+
+	IGameEvent *pEvent = gameeventmanager->CreateEvent("wakeupcall");
+	if (pEvent)
+		gameeventmanager->FireEvent(pEvent);
+
 	UTIL_ClientPrintAll(HUD_PRINTTALK, "#game_match_start");
 }
 
