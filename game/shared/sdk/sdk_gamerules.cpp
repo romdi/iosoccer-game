@@ -1553,9 +1553,6 @@ void CSDKGameRules::State_HALFTIME_Enter()
 
 		pPl->SetPosOutsideShield();
 	}
-
-	if (ReplayManager())
-		ReplayManager()->StartHighlights();
 }
 
 void CSDKGameRules::State_HALFTIME_Think()
@@ -1622,9 +1619,6 @@ void CSDKGameRules::State_EXTRATIME_INTERMISSION_Enter()
 
 		pPl->SetPosOutsideShield();
 	}
-
-	if (ReplayManager())
-		ReplayManager()->StartHighlights();
 }
 
 void CSDKGameRules::State_EXTRATIME_INTERMISSION_Think()
@@ -1689,9 +1683,6 @@ void CSDKGameRules::State_EXTRATIME_HALFTIME_Enter()
 
 		pPl->SetPosOutsideShield();
 	}
-
-	if (ReplayManager())
-		ReplayManager()->StartHighlights();
 }
 
 void CSDKGameRules::State_EXTRATIME_HALFTIME_Think()
@@ -1756,9 +1747,6 @@ void CSDKGameRules::State_PENALTIES_INTERMISSION_Enter()
 
 		pPl->SetPosOutsideShield();
 	}
-
-	if (ReplayManager())
-		ReplayManager()->StartHighlights();
 }
 
 void CSDKGameRules::State_PENALTIES_INTERMISSION_Think()
@@ -1984,10 +1972,10 @@ void CSDKGameRules::State_COOLDOWN_Enter()
 	m_bMotmVotingPanelShown = false;
 	m_bPostMatchStatsPanelShown = false;
 
+	CPlayerPersistentData::ConvertAllPlayerDataToJson();
+
 	if (ReplayManager())
 		ReplayManager()->StartHighlights();
-
-	CPlayerPersistentData::ConvertAllPlayerDataToJson();
 }
 
 void CSDKGameRules::State_COOLDOWN_Think()
