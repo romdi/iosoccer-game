@@ -22,6 +22,7 @@ public:
 
 	int m_nTeamNumber;
 	int m_nTeamPosNum;
+	char m_szPlayerName[MAX_PLAYER_NAME_LENGTH];
 };
 
 class C_ReplayManager : public CBaseEntity

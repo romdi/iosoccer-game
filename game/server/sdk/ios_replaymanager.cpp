@@ -67,6 +67,7 @@ CReplayBall::CReplayBall()
 
 void CReplayBall::Spawn( void )
 {
+	SetClassname("replay_ball");
 	Precache();
 	SetModelName(MAKE_STRING(BALL_MODEL));
 	CreateVPhysics();
@@ -85,6 +86,7 @@ LINK_ENTITY_TO_CLASS( replayplayer, CReplayPlayer );
 IMPLEMENT_SERVERCLASS_ST(CReplayPlayer, DT_ReplayPlayer)
 	SendPropInt(SENDINFO(m_nTeamNumber)),
 	SendPropInt(SENDINFO(m_nTeamPosNum)),
+	SendPropString(SENDINFO(m_szPlayerName)),
 END_SEND_TABLE()
 
 void CReplayPlayer::Precache()
@@ -95,11 +97,14 @@ void CReplayPlayer::Precache()
 
 CReplayPlayer::CReplayPlayer()
 {
-
+	m_nTeamNumber = 0;
+	m_nTeamPosNum = 0;
+	m_szPlayerName.GetForModify()[0] = 0;
 }
 
 void CReplayPlayer::Spawn( void )
 {
+	SetClassname("replay_player");
 	Precache();
 	//SetModelName( MAKE_STRING( SDK_PLAYER_MODEL ) );
 	SetSolidFlags(FSOLID_NOT_SOLID);
@@ -216,6 +221,7 @@ void CReplayManager::CleanUp()
 
 void CReplayManager::Spawn()
 {
+	SetClassname("replay_manager");
 	SetSimulatedEveryTick(true);
 	SetAnimatedEveryTick(true);
 	SetThink(&CReplayManager::Think);
@@ -382,6 +388,8 @@ void CReplayManager::TakeSnapshot()
 		pPlSnap->m_nSkin = pPl->m_nSkin;
 		pPlSnap->m_nBody = pPl->m_nBody;
 
+		pPlSnap->m_pPlayerData = pPl->GetData();
+
 		pSnap->pPlayerSnapshot[pPl->GetTeamNumber() - TEAM_A][pPl->GetTeamPosIndex()] = pPlSnap;
 	}
 
@@ -526,6 +534,10 @@ void CReplayManager::RestoreSnapshot()
 			//pPl->SnapEyeAngles(pPlSnap->ang);
 			pPl->m_nTeamNumber = pPlSnap->m_nTeamNumber;
 			pPl->m_nTeamPosNum = pPlSnap->m_nTeamPosNum;
+
+			if (Q_strcmp(pPl->m_szPlayerName, pPlSnap->m_pPlayerData->m_szName))
+				Q_strncpy(pPl->m_szPlayerName.GetForModify(), pPlSnap->m_pPlayerData->m_szName, MAX_PLAYER_NAME_LENGTH);
+
 			pPl->m_nSkin = pPlSnap->m_nSkin;
 			pPl->m_nBody = pPlSnap->m_nBody;
 

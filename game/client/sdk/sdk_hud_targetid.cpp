@@ -98,6 +98,28 @@ void CSDKTargetId::VidInit()
 	CHudElement::VidInit();
 }
 
+void DrawPlayerName(HFont font, const Vector &origin, const char *playerName, int teamNumber)
+{
+	wchar_t wszPlayerName[MAX_PLAYER_NAME_LENGTH];
+	g_pVGuiLocalize->ConvertANSIToUnicode(UTIL_SafeName(playerName), wszPlayerName, sizeof(wszPlayerName));
+
+	int wide, tall;
+	vgui::surface()->GetTextSize(font, wszPlayerName, wide, tall);
+
+	Color c = GameResources()->GetTeamColor(teamNumber);
+
+	Vector pos = origin;
+	pos.z += VEC_HULL_MAX.z + hud_names_offset.GetInt();
+
+	int xPos, yPos;
+	GetVectorInScreenSpace(pos, xPos, yPos);
+
+	surface()->DrawSetTextFont(font);
+	surface()->DrawSetTextColor(c);
+	surface()->DrawSetTextPos(xPos - wide / 2, yPos - tall);
+	surface()->DrawPrintText(wszPlayerName, wcslen(wszPlayerName));
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Draw function for the element
 //-----------------------------------------------------------------------------
@@ -106,40 +128,37 @@ void CSDKTargetId::Paint()
 	if (hud_names_visible.GetInt() == 0)
 		return;
 
-	C_ReplayManager *pReplayManager = GetReplayManager();
-
-	if (pReplayManager && pReplayManager->IsReplaying())
-		return;
-
 	C_SDKPlayer *pLocal = C_SDKPlayer::GetLocalSDKPlayer();
 
 	if (!pLocal)
 		return;
 
-	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	if (GetReplayManager() && GetReplayManager()->IsReplaying())
+	{		
+		int last = ClientEntityList().GetHighestEntityIndex();
+
+		for (int i = gpGlobals->maxClients; i <= last; i++)
+		{
+			C_BaseEntity *pEnt = ClientEntityList().GetBaseEntity(i);
+			if(!pEnt || Q_strcmp(pEnt->GetClassname(), "class C_ReplayPlayer"))
+				continue;
+
+			C_ReplayPlayer *pPl = dynamic_cast<C_ReplayPlayer *>(pEnt);
+			if (!pPl)
+				continue;
+
+			DrawPlayerName(m_hFont, pPl->GetLocalOrigin(), pPl->m_szPlayerName, pPl->m_nTeamNumber);
+		}
+	}
+	else
 	{
-		C_SDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+		for (int i = 1; i <= gpGlobals->maxClients; i++)
+		{
+			C_SDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+			if (!pPl || pPl->IsDormant() || pPl == pLocal)
+				continue;
 
-		if (!pPl || pPl->IsDormant() || pPl == pLocal)
-			continue;
-
-		wchar_t wszPlayerName[MAX_PLAYER_NAME_LENGTH];
-		g_pVGuiLocalize->ConvertANSIToUnicode(UTIL_SafeName(pPl->GetPlayerName()), wszPlayerName, sizeof(wszPlayerName));
-
-		int wide, tall;
-		vgui::surface()->GetTextSize(m_hFont, wszPlayerName, wide, tall);
-
-		Color c = GameResources()->GetTeamColor(pPl->GetTeamNumber());
-
-		Vector pos = pPl->GetLocalOrigin();
-		pos.z += VEC_HULL_MAX.z + hud_names_offset.GetInt();
-
-		int xPos, yPos;
-		GetVectorInScreenSpace(pos, xPos, yPos);
-
-		surface()->DrawSetTextFont(m_hFont);
-		surface()->DrawSetTextColor(c);
-		surface()->DrawSetTextPos(xPos - wide / 2, yPos - tall);
-		surface()->DrawPrintText(wszPlayerName, wcslen(wszPlayerName));
+			DrawPlayerName(m_hFont, pPl->GetLocalOrigin(), pPl->GetPlayerName(), pPl->GetTeamNumber());
+		}
 	}
 }

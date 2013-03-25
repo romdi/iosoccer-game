@@ -24,6 +24,7 @@ C_ReplayBall::~C_ReplayBall()
 IMPLEMENT_CLIENTCLASS_DT(C_ReplayPlayer, DT_ReplayPlayer, CReplayPlayer)
 	RecvPropInt(RECVINFO(m_nTeamNumber)),
 	RecvPropInt(RECVINFO(m_nTeamPosNum)),
+	RecvPropString(RECVINFO(m_szPlayerName)),
 END_RECV_TABLE()
 
 IMPLEMENT_CLIENTCLASS_DT(C_ReplayManager, DT_ReplayManager, CReplayManager)

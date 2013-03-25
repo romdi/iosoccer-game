@@ -58,6 +58,7 @@ struct PlayerSnapshot
 	int				m_nTeamPosNum;
 	int				m_nSkin;
 	int				m_nBody;
+	const CPlayerPersistentData *m_pPlayerData;
 };
 
 struct Snapshot
@@ -125,6 +126,7 @@ public:
 
 	CNetworkVar(int, m_nTeamNumber);
 	CNetworkVar(int, m_nTeamPosNum);
+	CNetworkString(m_szPlayerName, MAX_PLACE_NAME_LENGTH);
 
 	CAnimationLayer m_AnimLayers[2];
 };
