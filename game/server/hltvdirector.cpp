@@ -250,6 +250,18 @@ const char** CHLTVDirector::GetModEvents()
 		"player_chat",
 		"round_start",
 		"round_end",
+		"timeout_pending",
+		"timeout",
+		"match_state",
+		"set_piece",
+		"goal",
+		"own_goal",
+		"foul",
+		"penalty",
+		"wakeupcall",
+		"player_changename",
+		"player_changeclub",
+		"player_specteam",
 		NULL
 	};
 
