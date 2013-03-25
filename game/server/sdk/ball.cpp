@@ -1152,6 +1152,7 @@ void CBall::State_KICKOFF_Think()
 		SDKGameRules()->EnableShield(SHIELD_KICKOFF, m_pPl->GetTeamNumber(), SDKGameRules()->m_vKickOff);
 		m_pPl->SetPosInsideShield(Vector(m_vPos.x - m_pPl->GetTeam()->m_nRight * 30, m_vPos.y, SDKGameRules()->m_vKickOff.GetZ()), true);
 		m_flStateTimelimit = -1;
+		m_bNonnormalshotsBlocked = true;
 
 		IGameEvent *pEvent = gameeventmanager->CreateEvent("match_state");
 		if (pEvent)
@@ -1195,6 +1196,7 @@ void CBall::State_KICKOFF_Think()
 	{
 		m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit_setpiece.GetFloat();
 		m_pPl->SetShotButtonsReleased(false);
+		m_bNonnormalshotsBlocked = false;
 	}
 
 	UpdateCarrier();
@@ -1213,6 +1215,7 @@ void CBall::State_KICKOFF_Think()
 
 void CBall::State_KICKOFF_Leave(ball_state_t newState)
 {
+	m_bNonnormalshotsBlocked = false;
 }
 
 void CBall::State_THROWIN_Enter()
