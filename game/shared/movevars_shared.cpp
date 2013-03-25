@@ -10,6 +10,7 @@
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
+#include "GameEventListener.h"
 
 // some cvars used by player movement system
 #if defined(HL2_DLL) || defined(HL2_CLIENT_DLL)
@@ -18,7 +19,46 @@
 #define DEFAULT_GRAVITY_STRING	"800"
 #endif
 
-ConVar	sv_gravity		( "sv_gravity",DEFAULT_GRAVITY_STRING, FCVAR_NOTIFY | FCVAR_REPLICATED, "World gravity." );
+inline void UpdatePhysicsGravity(float gravity)
+{
+	if(physenv)
+		physenv->SetGravity(Vector(0,0,-gravity));
+}
+
+static void GravityChanged_Callback( IConVar *var, const char *pOldString, float flOldValue )
+{
+#ifndef CLIENT_DLL
+	UpdatePhysicsGravity(((ConVar *)var)->GetFloat());
+	if(gpGlobals->mapname!=NULL_STRING)
+	{
+		IGameEvent *event = gameeventmanager->CreateEvent( "gravity_change" );
+		if ( event )
+		{
+			event->SetFloat( "newgravity", ((ConVar *)var)->GetFloat() );
+			gameeventmanager->FireEvent( event );
+		}
+	}
+#endif
+}
+
+#ifdef CLIENT_DLL
+class CGravityChange : public IGameEventListener2, public CAutoGameSystem
+{
+public:
+	bool Init()
+	{
+		gameeventmanager->AddListener(this,"gravity_change",false);
+		return true;
+	}
+	void FireGameEvent( IGameEvent *event )
+	{
+		UpdatePhysicsGravity(event->GetFloat("newgravity"));
+	}
+};
+static CGravityChange s_GravityChange;
+#endif
+
+ConVar sv_gravity ("sv_gravity", DEFAULT_GRAVITY_STRING, FCVAR_NOTIFY | FCVAR_REPLICATED, "World gravity.", GravityChanged_Callback);
 
 #if defined(DOD_DLL)
 ConVar	sv_stopspeed	( "sv_stopspeed","100", FCVAR_NOTIFY | FCVAR_REPLICATED, "Minimum stopping speed when on ground." );
