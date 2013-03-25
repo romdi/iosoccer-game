@@ -1820,6 +1820,7 @@ void CSDKGameRules::State_PENALTIES_Think()
 
 				if (GetBall()->GetPenaltyState() == PENALTY_SCORED)
 				{
+					GetGlobalTeam(m_nPenaltyTakingTeam)->m_Goals += 1;
 					GetGlobalTeam(m_nPenaltyTakingTeam)->m_nPenaltyGoals += 1;
 					GetGlobalTeam(m_nPenaltyTakingTeam)->m_nPenaltyGoalBits |= (1 << GetGlobalTeam(m_nPenaltyTakingTeam)->m_nPenaltyRound);
 				}

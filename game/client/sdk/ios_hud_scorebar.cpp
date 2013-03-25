@@ -47,6 +47,7 @@ using namespace vgui;
 enum { NOTIFICATION_HEIGHT = 25 };
 enum { CENTERFLASH_HEIGHT = 100 };
 enum { EXTRAINFO_HEIGHT = 25 };
+enum { PENALTYPANEL_CENTEROFFSET = 100, PENALTYCELL_WIDTH = 39, PENALTYPANEL_HEIGHT = 30, PENALTYPANEL_PADDING = 2, PENALTYPANEL_TOPMARGIN = 30 };
 
 const float slideDownDuration = 0.5f;
 const float slideUpDuration = 0.5f;
@@ -103,6 +104,8 @@ private:
 	Panel *m_pMainPanel;
 	float m_flStayDuration;
 	Label *m_pExtraInfo;
+	Panel *m_pPenaltyPanels[2];
+	Panel *m_pPenaltyCells[2][5];
 };
 
 DECLARE_HUDELEMENT( CHudScorebar );
@@ -143,6 +146,16 @@ CHudScorebar::CHudScorebar( const char *pElementName ) : BaseClass(NULL, "HudSco
 	m_pCenterFlash = new Label(this, "", "");
 
 	m_pExtraInfo = new Label(this, "", "");
+
+	for (int i = 0; i < 2; i++)
+	{
+		m_pPenaltyPanels[i] = new Panel(this, "");
+
+		for (int j = 0; j < 5; j++)
+		{
+			m_pPenaltyCells[i][j] = new Panel(m_pPenaltyPanels[i], "");
+		}
+	}
 
 	m_flStayDuration = 3.0f;
 
@@ -241,6 +254,19 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 	m_pExtraInfo->SetParent(m_pMainPanel);
 	m_pExtraInfo->SetZPos(-2);
 	//m_pExtraInfo->SetVisible(false);
+
+	int panelWidth = 5 * PENALTYCELL_WIDTH + 6 * PENALTYPANEL_PADDING;
+
+	for (int i = 0; i < 2; i++)
+	{
+		m_pPenaltyPanels[i]->SetBounds(GetWide() / 2 + (i == 0 ? - panelWidth / 2 - PENALTYPANEL_CENTEROFFSET :  PENALTYPANEL_CENTEROFFSET), PENALTYPANEL_TOPMARGIN, panelWidth, PENALTYPANEL_HEIGHT);
+		m_pPenaltyPanels[i]->SetBgColor(Color(0, 0, 0, 255));
+
+		for (int j = 0; j < 5; j++)
+		{
+			m_pPenaltyCells[i][j]->SetBounds(PENALTYPANEL_PADDING + j * (PENALTYCELL_WIDTH + PENALTYPANEL_PADDING), PENALTYPANEL_PADDING, PENALTYCELL_WIDTH, PENALTYPANEL_HEIGHT - 2 * PENALTYPANEL_PADDING);
+		}
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -394,6 +420,37 @@ void CHudScorebar::OnThink( void )
 	}
 	else
 		m_pInjuryTime->SetX(m_pBackgroundPanel->GetWide() - m_pInjuryTime->GetWide());
+
+	if (SDKGameRules()->State_Get() == MATCH_PENALTIES)
+	{
+		for (int i = 0; i < 2; i++)
+		{
+			int relativeRound = GetGlobalTeam(TEAM_A + i)->m_nPenaltyRound == 0 ? -1 : (GetGlobalTeam(TEAM_A + i)->m_nPenaltyRound - 1) % 5;
+			int fullRounds = max(0, GetGlobalTeam(TEAM_A + i)->m_nPenaltyRound - 1) / 5;
+			for (int j = 0; j < 5; j++)
+			{
+				Color color;
+				if (j > relativeRound)
+					color = Color(100, 100, 100, 255);
+				else
+				{
+					if ((GetGlobalTeam(TEAM_A + i)->m_nPenaltyGoalBits & (1 << (j + fullRounds * 5))) != 0)
+						color = Color(0, 255, 0, 255);
+					else
+						color = Color(255, 0, 0, 255);
+				}
+				m_pPenaltyCells[i][j]->SetBgColor(color);
+			}
+			m_pPenaltyPanels[i]->SetVisible(true);
+		}
+	}
+	else
+	{
+		for (int i = 0; i < 2; i++)
+		{
+			m_pPenaltyPanels[i]->SetVisible(false);
+		}
+	}
 }
 
 void CHudScorebar::Paint( void )
