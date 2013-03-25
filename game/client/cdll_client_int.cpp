@@ -929,9 +929,6 @@ void CHLClient::Shutdown( void )
 	
 	ClearKeyValuesCache();
 
-	// Fix for 'Thread "CNet Encrypt:0" failed to shut down' problem
-	SteamAPI_Shutdown();
-
 	DisconnectTier3Libraries( );
 	DisconnectTier2Libraries( );
 	ConVar_Unregister();

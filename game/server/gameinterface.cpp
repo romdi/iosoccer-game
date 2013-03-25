@@ -755,6 +755,9 @@ void CServerGameDLL::DLLShutdown( void )
 	}
 #endif
 
+	SteamClient()->ReleaseUser( GetHSteamPipe(), GetHSteamUser() );
+	SteamClient()->BReleaseSteamPipe( GetHSteamPipe() );
+
 	DisconnectTier3Libraries();
 	DisconnectTier2Libraries();
 	ConVar_Unregister();
