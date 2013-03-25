@@ -1182,7 +1182,12 @@ ConCommand sv_restart( "sv_restart", CC_SV_Restart, "Restart game", 0 );
 int CSDKGameRules::WakeUpAwayPlayers()
 {
 	int awayPlayerCount = 0;
-	char wakeUpString[2048] = "Auto-starting match when the following players start moving: ";
+	char wakeUpString[2048];
+	
+	if (State_Get() == MATCH_WARMUP)
+		Q_strncpy(wakeUpString, "Auto-starting match when the following players start moving: ", sizeof(wakeUpString));
+	else
+		Q_strncpy(wakeUpString, "Auto-continuing match when the following players start moving: ", sizeof(wakeUpString));
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
@@ -1205,9 +1210,7 @@ int CSDKGameRules::WakeUpAwayPlayers()
 	{
 		IGameEvent *pEvent = gameeventmanager->CreateEvent("wakeupcall");
 		if (pEvent)
-		{
 			gameeventmanager->FireEvent(pEvent);
-		}
 	}
 	else
 		Q_strncpy(wakeUpString, "All players are awake", sizeof(wakeUpString));
@@ -1455,48 +1458,16 @@ void CSDKGameRules::State_WARMUP_Enter()
 	}
 
 	m_flMatchStartTime = gpGlobals->curtime;
+
 	ResetMatch();
-	GetBall()->State_Transition(BALL_STATIC, 0, true);
-	GetBall()->SetPos(m_vKickOff);
 
-	SetLeftSideTeam(m_nFirstHalfLeftSideTeam);
-	SetKickOffTeam(m_nFirstHalfKickOffTeam);
-
-	EnableShield(SHIELD_KICKOFF, TEAM_A, SDKGameRules()->m_vKickOff);
-
-	for (int i = 1; i <= gpGlobals->maxClients; i++)
-	{
-		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
-		if (!CSDKPlayer::IsOnField(pPl))
-			continue;
-
-		pPl->SetPosOutsideShield();
-	}
+	ApplyIntermissionSettings(false);
 }
 
 void CSDKGameRules::State_WARMUP_Think()
 {
-	if (m_flStateTimeLeft <= 0.0f)
+	if (m_flStateTimeLeft <= 0 || CheckAutoStart())
 		State_Transition(MATCH_FIRST_HALF);
-	else
-	{
-		if (sv_autostartmatch.GetBool()
-			&& GetGlobalTeam(TEAM_A)->GetNumPlayers() == mp_maxplayers.GetInt()
-			&& GetGlobalTeam(TEAM_B)->GetNumPlayers() == mp_maxplayers.GetInt())
-		{
-			if (gpGlobals->curtime >= m_flLastAwayCheckTime + sv_wakeupcall_interval.GetFloat())
-			{
-				int awayPlayerCount = WakeUpAwayPlayers();
-
-				if (awayPlayerCount == 0)
-				{
-					State_Transition(MATCH_FIRST_HALF);
-				}
-
-				m_flLastAwayCheckTime = gpGlobals->curtime;
-			}
-		}
-	}
 }
 
 void CSDKGameRules::State_WARMUP_Leave(match_state_t newState)
@@ -1541,34 +1512,17 @@ void CSDKGameRules::State_HALFTIME_Enter()
 		gameeventmanager->FireEvent(pEvent);
 	}
 
-	GetBall()->State_Transition(BALL_STATIC, 0, true);
-	GetBall()->SetPos(m_vKickOff);
-
-	SetLeftSideTeam(GetGlobalTeam(m_nFirstHalfLeftSideTeam)->GetOppTeamNumber());
-	SetKickOffTeam(GetGlobalTeam(m_nFirstHalfKickOffTeam)->GetOppTeamNumber());
-
-	EnableShield(SHIELD_KICKOFF, TEAM_A, SDKGameRules()->m_vKickOff);
-
-	for (int i = 1; i <= gpGlobals->maxClients; i++)
-	{
-		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
-		if (!CSDKPlayer::IsOnField(pPl))
-			continue;
-
-		pPl->SetPosOutsideShield();
-	}
+	ApplyIntermissionSettings(true);
 }
 
 void CSDKGameRules::State_HALFTIME_Think()
 {
-	if (m_flStateTimeLeft <= 0)
+	if (m_flStateTimeLeft <= 0 || CheckAutoStart())
 		State_Transition(MATCH_SECOND_HALF);
 }
 
 void CSDKGameRules::State_HALFTIME_Leave(match_state_t newState)
 {
-	if (ReplayManager())
-		ReplayManager()->StopHighlights();
 }
 
 void CSDKGameRules::State_SECOND_HALF_Enter()
@@ -1608,35 +1562,17 @@ void CSDKGameRules::State_EXTRATIME_INTERMISSION_Enter()
 		gameeventmanager->FireEvent(pEvent);
 	}
 
-	GetBall()->State_Transition(BALL_STATIC, 0, true);
-	GetBall()->SetPos(m_vKickOff);
-
-	SetLeftSideTeam(m_nFirstHalfLeftSideTeam);
-	SetKickOffTeam(m_nFirstHalfKickOffTeam);
-
-	EnableShield(SHIELD_KICKOFF, TEAM_A, SDKGameRules()->m_vKickOff);
-	for (int i = 1; i <= gpGlobals->maxClients; i++)
-	{
-		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
-		if (!CSDKPlayer::IsOnField(pPl))
-			continue;
-
-		pPl->SetPosOutsideShield();
-	}
+	ApplyIntermissionSettings(false);
 }
 
 void CSDKGameRules::State_EXTRATIME_INTERMISSION_Think()
 {
-	if (m_flStateTimeLeft <= 0)
-	{
+	if (m_flStateTimeLeft <= 0 || CheckAutoStart())
 		State_Transition(MATCH_EXTRATIME_FIRST_HALF);
-	}
 }
 
 void CSDKGameRules::State_EXTRATIME_INTERMISSION_Leave(match_state_t newState)
 {
-	if (ReplayManager())
-		ReplayManager()->StopHighlights();
 }
 
 void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Enter()
@@ -1671,36 +1607,17 @@ void CSDKGameRules::State_EXTRATIME_HALFTIME_Enter()
 		gameeventmanager->FireEvent(pEvent);
 	}
 
-	GetBall()->State_Transition(BALL_STATIC, 0, true);
-	GetBall()->SetPos(m_vKickOff);
-
-	SetLeftSideTeam(GetGlobalTeam(m_nFirstHalfLeftSideTeam)->GetOppTeamNumber());
-	SetKickOffTeam(GetGlobalTeam(m_nFirstHalfKickOffTeam)->GetOppTeamNumber());
-
-	EnableShield(SHIELD_KICKOFF, TEAM_A, SDKGameRules()->m_vKickOff);
-
-	for (int i = 1; i <= gpGlobals->maxClients; i++)
-	{
-		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
-		if (!CSDKPlayer::IsOnField(pPl))
-			continue;
-
-		pPl->SetPosOutsideShield();
-	}
+	ApplyIntermissionSettings(true);
 }
 
 void CSDKGameRules::State_EXTRATIME_HALFTIME_Think()
 {
-	if (m_flStateTimeLeft <= 0)
-	{
+	if (m_flStateTimeLeft <= 0 || CheckAutoStart())
 		State_Transition(MATCH_EXTRATIME_SECOND_HALF);
-	}
 }
 
 void CSDKGameRules::State_EXTRATIME_HALFTIME_Leave(match_state_t newState)
 {
-	if (ReplayManager())
-		ReplayManager()->StopHighlights();
 }
 
 void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Enter()
@@ -1738,33 +1655,17 @@ void CSDKGameRules::State_PENALTIES_INTERMISSION_Enter()
 		gameeventmanager->FireEvent(pEvent);
 	}
 
-	GetBall()->State_Transition(BALL_STATIC, 0, true);
-	GetBall()->SetPos(m_vKickOff);
-
-	EnableShield(SHIELD_KICKOFF, TEAM_A, SDKGameRules()->m_vKickOff);
-
-	for (int i = 1; i <= gpGlobals->maxClients; i++)
-	{
-		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
-		if (!CSDKPlayer::IsOnField(pPl))
-			continue;
-
-		pPl->SetPosOutsideShield();
-	}
+	ApplyIntermissionSettings(false);
 }
 
 void CSDKGameRules::State_PENALTIES_INTERMISSION_Think()
 {
-	if (m_flStateTimeLeft <= 0)
-	{
+	if (m_flStateTimeLeft <= 0 || CheckAutoStart())
 		State_Transition(MATCH_PENALTIES);
-	}
 }
 
 void CSDKGameRules::State_PENALTIES_INTERMISSION_Leave(match_state_t newState)
 {
-	if (ReplayManager())
-		ReplayManager()->StopHighlights();
 }
 
 void CSDKGameRules::State_PENALTIES_Enter()
@@ -1929,18 +1830,7 @@ void CSDKGameRules::State_COOLDOWN_Enter()
 		gameeventmanager->FireEvent(pEvent);
 	}
 
-	GetBall()->State_Transition(BALL_STATIC, 0, true);
-	GetBall()->SetPos(m_vKickOff);
-
-	EnableShield(SHIELD_KICKOFF, TEAM_A, SDKGameRules()->m_vKickOff);
-	for (int i = 1; i <= gpGlobals->maxClients; i++)
-	{
-		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
-		if (!CSDKPlayer::IsOnField(pPl))
-			continue;
-
-		pPl->SetPosOutsideShield();
-	}
+	ApplyIntermissionSettings(false);
 
 	//who won?
 	int winners = 0;
@@ -1985,16 +1875,59 @@ void CSDKGameRules::State_COOLDOWN_Enter()
 void CSDKGameRules::State_COOLDOWN_Think()
 {
 	if (m_flStateTimeLeft <= 0)
-	{
 		GoToIntermission();
-		return;
-	}
 }
 
 void CSDKGameRules::State_COOLDOWN_Leave(match_state_t newState)
 {
 	if (ReplayManager())
 		ReplayManager()->StopHighlights();
+}
+
+void CSDKGameRules::ApplyIntermissionSettings(bool swapTeams)
+{
+	GetBall()->State_Transition(BALL_STATIC, 0, true);
+	GetBall()->SetPos(m_vKickOff);
+
+	if (swapTeams)
+	{
+		SetLeftSideTeam(GetGlobalTeam(m_nFirstHalfLeftSideTeam)->GetOppTeamNumber());
+		SetKickOffTeam(GetGlobalTeam(m_nFirstHalfKickOffTeam)->GetOppTeamNumber());
+	}
+	else
+	{
+		SetLeftSideTeam(m_nFirstHalfLeftSideTeam);
+		SetKickOffTeam(m_nFirstHalfKickOffTeam);
+	}
+
+	EnableShield(SHIELD_KICKOFF, TEAM_A, SDKGameRules()->m_vKickOff);
+
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+		if (!CSDKPlayer::IsOnField(pPl))
+			continue;
+
+		pPl->SetPosOutsideShield();
+		pPl->SetLastMoveTime(gpGlobals->curtime);
+		pPl->SetAway(true);
+	}
+
+	m_flLastAwayCheckTime = gpGlobals->curtime;
+}
+
+bool CSDKGameRules::CheckAutoStart()
+{
+	if (sv_autostartmatch.GetBool()
+		&& GetGlobalTeam(TEAM_A)->GetNumPlayers() == mp_maxplayers.GetInt()
+		&& GetGlobalTeam(TEAM_B)->GetNumPlayers() == mp_maxplayers.GetInt()
+		&& gpGlobals->curtime >= m_flLastAwayCheckTime + sv_wakeupcall_interval.GetFloat())
+	{
+		m_flLastAwayCheckTime = gpGlobals->curtime;
+		return (WakeUpAwayPlayers() == 0);
+	}
+
+	return false;
 }
 
 #endif
@@ -2432,7 +2365,7 @@ void CSDKGameRules::ResetMatch()
 	SetOffsideLinesEnabled(false);
 	DisableShield();
 	SetTimeoutEnd(0);
-	SetLastAwayCheckTime(gpGlobals->curtime);
+	m_flLastAwayCheckTime = gpGlobals->curtime;
 	SetAdminWantsTimeout(false);
 
 	m_PlayerRotationMinutes.RemoveAll();

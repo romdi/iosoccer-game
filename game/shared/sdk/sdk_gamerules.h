@@ -373,15 +373,15 @@ public:
 	void SetOffsideLinePositions(float ballPosY, float offsidePlayerPosY, float lastOppPlayerPosY);
 	void SetOffsideLinesEnabled(bool enable);
 
-	void SetLastAwayCheckTime(float time) { m_flLastAwayCheckTime = time; }
-	float GetLastAwayCheckTime() { return m_flLastAwayCheckTime; }
-
 	void SetAdminWantsTimeout(bool state) { m_bAdminWantsTimeout = state; }
 	bool AdminWantsTimeout() { return m_bAdminWantsTimeout; }
 	
 	void SetTimeoutEnd(float time) { m_flTimeoutEnd = time; }
 
 	void ResetMatch();
+
+	void ApplyIntermissionSettings(bool swapTeams);
+	bool CheckAutoStart();
 
 #else
 

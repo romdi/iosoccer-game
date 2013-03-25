@@ -296,7 +296,7 @@ CSDKPlayer *CSDKPlayer::CreatePlayer( const char *className, edict_t *ed )
 void CSDKPlayer::PreThink(void)
 {	
 	// Check if player is away
-	if (SDKGameRules()->State_Get() == MATCH_WARMUP && (GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B))
+	if (SDKGameRules()->IsIntermissionState() && (GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B))
 	{
 		bool isActive = (m_nButtons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT | IN_JUMP | IN_DUCK));
 

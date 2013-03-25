@@ -504,6 +504,9 @@ public:
 	Vector				GetSpawnPos(bool findSafePos);
 
 	bool				IsAway() { return m_bIsAway; }
+	void				SetAway(bool away) { m_bIsAway = away; }
+
+	void				SetLastMoveTime(float time) { m_flLastMoveTime = time; }
 
 	CNetworkVector(m_vTargetPos);
 	CNetworkVar(bool, m_bIsAtTargetPos);
