@@ -2224,7 +2224,7 @@ bool CBall::CheckKeeperCatch()
 	}
 	else // Catch ball
 	{
-		SetVel(vec3_origin, -1, BODY_PART_KEEPERCATCH, false, false, false);
+		SetVel(vec3_origin, 0, BODY_PART_KEEPERCATCH, false, false, false);
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);		
 		State_Transition(BALL_KEEPERHANDS);
 	}
@@ -2468,7 +2468,7 @@ bool CBall::DoHeader()
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEADER);
 	}
 
-	SetVel(m_vPlForwardVel2D + vel, 1, BODY_PART_HEAD, false, true, true);
+	SetVel(m_vPlForwardVel2D + vel, -1, BODY_PART_HEAD, false, true, true);
 
 	return true;
 }
