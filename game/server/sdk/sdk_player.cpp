@@ -129,6 +129,8 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	SendPropVector( SENDINFO( m_aPlayerAnimEventStartAngle ) ),
 	SendPropInt( SENDINFO( m_nPlayerAnimEventStartButtons ) ),
 
+	SendPropInt( SENDINFO( m_nLastPressedSingleMoveKey ) ),
+
 	SendPropDataTable( "sdksharedlocaldata", 0, &REFERENCE_SEND_TABLE(DT_SDKSharedLocalPlayerExclusive), SendProxy_SendLocalDataTable ),
 END_SEND_TABLE()
 extern void SendProxy_Origin( const SendProp *pProp, const void *pStruct, const void *pData, DVariant *pOut, int iElement, int objectID );
@@ -294,7 +296,7 @@ CSDKPlayer *CSDKPlayer::CreatePlayer( const char *className, edict_t *ed )
 }
 
 void CSDKPlayer::PreThink(void)
-{	
+{
 	// Check if player is away
 	if (SDKGameRules()->IsIntermissionState() && (GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B))
 	{
@@ -966,7 +968,7 @@ void CSDKPlayer::State_ACTIVE_Enter()
 	m_aPreReplayAngles = GetLocalAngles();
 
 	m_flLastMoveTime = gpGlobals->curtime;
-	m_bIsAway = false;
+	m_bIsAway = true;
 
 	if (SDKGameRules()->m_nShieldType != SHIELD_NONE)
 		SetPosOutsideShield();
@@ -978,6 +980,7 @@ void CSDKPlayer::State_ACTIVE_PreThink()
 		SetShotButtonsReleased(true);
 
 	CheckShotCharging();
+	CheckLastPressedSingleMoveButton();
 }
 
 int CSDKPlayer::GetPlayerStance()

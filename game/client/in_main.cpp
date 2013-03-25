@@ -21,7 +21,7 @@
 #include "hltvcamera.h"
 #include <ctype.h> // isalnum()
 #include <voice_status.h>
-#include "c_baseplayer.h"
+#include "c_sdk_player.h"
 
 extern ConVar in_joystick;
 extern ConVar cam_idealpitch;
@@ -64,6 +64,7 @@ extern ConVar mp_pitchup;
 extern ConVar cl_pitchup;
 extern ConVar mp_client_pitch;
 extern ConVar legacyverticallook;
+extern ConVar mp_sidemove_override;
 
 ConVar thirdperson_platformer( "thirdperson_platformer", "0", 0, "Player will aim in the direction they are moving." );
 ConVar thirdperson_screenspace( "thirdperson_screenspace", "0", 0, "Movement will be relative to the camera, eg: left means screen-left" );
@@ -849,8 +850,21 @@ void CInput::ComputeSideMove( CUserCmd *cmd )
 	}
 
 	// Otherwise, check strafe keys
-	cmd->sidemove += cl_sidespeed.GetFloat() * KeyState (&in_moveright);
-	cmd->sidemove -= cl_sidespeed.GetFloat() * KeyState (&in_moveleft);
+
+	C_SDKPlayer *pPlayer = ToSDKPlayer(C_BasePlayer::GetLocalPlayer());
+
+	if (pPlayer && mp_sidemove_override.GetBool())
+	{
+		if (KeyState(&in_moveright) && (!KeyState(&in_moveleft) || pPlayer->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVELEFT)) 
+			cmd->sidemove += cl_sidespeed.GetFloat();
+		else if (KeyState(&in_moveleft) && (!KeyState(&in_moveright) || pPlayer->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVERIGHT)) 
+			cmd->sidemove -= cl_sidespeed.GetFloat();
+	}
+	else
+	{
+		cmd->sidemove += cl_sidespeed.GetFloat() * KeyState (&in_moveright);
+		cmd->sidemove -= cl_sidespeed.GetFloat() * KeyState (&in_moveleft);
+	}
 }
 
 /*

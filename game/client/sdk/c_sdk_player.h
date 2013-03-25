@@ -59,6 +59,8 @@ public:
 
 	void				CheckShotCharging();
 	void				ResetShotCharging();
+
+	void				CheckLastPressedSingleMoveButton();
 	
 	void DoAnimationEvent(PlayerAnimEvent_t event);
 	virtual bool ShouldDraw();

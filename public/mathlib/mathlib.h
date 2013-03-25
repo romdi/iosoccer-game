@@ -636,6 +636,16 @@ inline float Sign( float x )
 	return (x <0.0f) ? -1.0f : 1.0f;
 }
 
+inline float ZeroSign(float x)
+{
+	if (x > 0.0f)
+		return 1.0f;
+	else if (x < 0.0f)
+		return -1.0f;
+	else
+		return 0.0f;
+}
+
 //
 // Clamps the input integer to the given array bounds.
 // Equivalent to the following, but without using any branches:

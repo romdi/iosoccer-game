@@ -92,6 +92,9 @@ public:
 
 	CNetworkVar(float, m_flNextJump);
 	CNetworkVar(float, m_flNextSlide);
+
+	CNetworkVar(int, m_nLastPressedSingleMoveKey);
+
 private:
 
 	CNetworkVar(PlayerAnimEvent_t, m_ePlayerAnimEvent);

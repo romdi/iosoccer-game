@@ -2477,18 +2477,17 @@ AngularImpulse CBall::CalcSpin(float coeff, bool applyTopspin)
 {	
 	Vector sideRot;
 
-	if ((m_pPl->m_nButtons & IN_MOVELEFT) && (m_pPl->m_nButtons & IN_MOVERIGHT)
-		|| !(m_pPl->m_nButtons & IN_MOVELEFT) && !(m_pPl->m_nButtons & IN_MOVERIGHT))
-	{
-		sideRot = Vector(0, 0, 0);
-	}
-	else if (m_pPl->m_nButtons & IN_MOVELEFT) 
+	if ((m_pPl->m_nButtons & IN_MOVELEFT) && (!(m_pPl->m_nButtons & IN_MOVERIGHT) || (mp_sidemove_override.GetBool() || mp_curl_override.GetBool()) && m_pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVERIGHT)) 
 	{
 		sideRot = Vector(0, 0, (m_pPl->IsLegacySideCurl() && mp_client_sidecurl.GetBool()) ? 1 : -1);
 	}
-	else if (m_pPl->m_nButtons & IN_MOVERIGHT)
+	else if ((m_pPl->m_nButtons & IN_MOVERIGHT) && (!(m_pPl->m_nButtons & IN_MOVELEFT) || (mp_sidemove_override.GetBool() || mp_curl_override.GetBool()) && m_pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVELEFT)) 
 	{
 		sideRot = Vector(0, 0, (m_pPl->IsLegacySideCurl() && mp_client_sidecurl.GetBool()) ? -1 : 1);
+	}
+	else
+	{
+		sideRot = Vector(0, 0, 0);
 	}
 
 	float sideSpin = m_vVel.Length() * sv_ball_spin.GetInt() * coeff / 100.0f;

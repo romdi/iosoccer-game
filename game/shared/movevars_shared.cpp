@@ -75,6 +75,9 @@ ConVar  mp_pitchdown_max("mp_pitchdown_max", "50", FCVAR_NOTIFY);
 ConVar  mp_client_pitch("mp_client_pitch", "1", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar  mp_client_sidecurl("mp_client_sidecurl", "1", FCVAR_NOTIFY);
 
+ConVar  mp_sidemove_override("mp_sidemove_override", "1", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar  mp_curl_override("mp_curl_override", "1", FCVAR_NOTIFY);
+
 ConVar	sv_airaccelerate(  "sv_airaccelerate", "10", FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );    
 ConVar	sv_wateraccelerate(  "sv_wateraccelerate", "10", FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );     
 ConVar	sv_waterfriction(  "sv_waterfriction", "1", FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );      

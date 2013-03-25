@@ -130,6 +130,8 @@ BEGIN_RECV_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	RecvPropVector( RECVINFO( m_aPlayerAnimEventStartAngle ) ),
 	RecvPropInt( RECVINFO( m_nPlayerAnimEventStartButtons ) ),
 
+	RecvPropInt( RECVINFO( m_nLastPressedSingleMoveKey ) ),
+
 	RecvPropDataTable( "sdksharedlocaldata", 0, 0, &REFERENCE_RECV_TABLE(DT_SDKSharedLocalPlayerExclusive) ),
 END_RECV_TABLE()
 
@@ -204,6 +206,8 @@ BEGIN_PREDICTION_DATA_NO_BASE( CSDKPlayerShared )
 	DEFINE_PRED_FIELD( m_flPlayerAnimEventStartTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_aPlayerAnimEventStartAngle, FIELD_VECTOR, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_nPlayerAnimEventStartButtons, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
+
+	DEFINE_PRED_FIELD( m_nLastPressedSingleMoveKey, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
 
 END_PREDICTION_DATA()
 
@@ -1392,7 +1396,6 @@ int C_SDKPlayer::DrawModel( int flags )
 void C_SDKPlayer::PreThink()
 {
 	BaseClass::PreThink();
-
-	//if (prediction->IsFirstTimePredicted())
-		CheckShotCharging();
+	CheckShotCharging();
+	CheckLastPressedSingleMoveButton();
 }

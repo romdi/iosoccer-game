@@ -602,3 +602,12 @@ void CSDKPlayer::ResetShotCharging()
 	m_Shared.m_bDoChargedShot = false;
 	m_Shared.m_bIsShotCharging = false;
 }
+
+void CSDKPlayer::CheckLastPressedSingleMoveButton()
+{
+	if ((m_nButtons & IN_MOVELEFT) && !(m_nButtons & IN_MOVERIGHT)
+		|| !(m_nButtons & IN_MOVELEFT) && (m_nButtons & IN_MOVERIGHT))
+	{
+		m_Shared.m_nLastPressedSingleMoveKey = (m_nButtons & IN_MOVELEFT) ? IN_MOVELEFT : IN_MOVERIGHT;
+	}
+}

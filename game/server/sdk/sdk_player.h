@@ -521,6 +521,8 @@ public:
 	void				CheckShotCharging();
 	void				ResetShotCharging();
 
+	void				CheckLastPressedSingleMoveButton();
+
 	int					m_nTeamToJoin;
 	int					m_nTeamPosIndexToJoin;
 
@@ -555,7 +557,6 @@ protected:
 	CHandle<CBall>		m_pPlayerBall;
 	Vector				m_vOffsideLastOppPlayerPos;
 	Vector				m_vOffsideBallPos;
-
 	int					m_nSpecTeam;
 };
 
