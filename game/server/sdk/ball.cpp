@@ -54,6 +54,7 @@ ConVar sv_ball_slidezstart("sv_ball_slidezstart", "-50", FCVAR_NOTIFY);
 ConVar sv_ball_slidezend("sv_ball_slidezend", "40", FCVAR_NOTIFY); 
 
 ConVar sv_ball_keeper_standing_reach( "sv_ball_keeper_standing_reach", "50", FCVAR_NOTIFY );
+ConVar sv_ball_keeper_standing_centeroffset( "sv_ball_keeper_standing_centeroffset", "50", FCVAR_NOTIFY );
 
 ConVar sv_ball_keeper_forwarddive_shortsidereach( "sv_ball_keeper_forwarddive_shortsidereach", "50", FCVAR_NOTIFY );
 ConVar sv_ball_keeper_forwarddive_longsidereach( "sv_ball_keeper_forwarddive_longsidereach", "100", FCVAR_NOTIFY );
@@ -66,6 +67,11 @@ ConVar sv_ball_keeper_sidedive_longsidereach( "sv_ball_keeper_sidedive_longsider
 ConVar sv_ball_keeper_sidedive_longsidereach_opposite( "sv_ball_keeper_sidedive_longsidereach_opposite", "50", FCVAR_NOTIFY );
 ConVar sv_ball_keeper_sidedive_zstart( "sv_ball_keeper_sidedive_zstart", "-20", FCVAR_NOTIFY );
 ConVar sv_ball_keeper_sidedive_zend( "sv_ball_keeper_sidedive_zend", "65", FCVAR_NOTIFY );
+ConVar sv_ball_keeper_sidedive_centeroffset( "sv_ball_keeper_sidedive_centeroffset", "0", FCVAR_NOTIFY );
+
+ConVar sv_ball_keeper_catch_reach( "sv_ball_keeper_catch_reach", "15", FCVAR_NOTIFY );
+ConVar sv_ball_keeper_punch_maxangle( "sv_ball_keeper_punch_maxangle", "135", FCVAR_NOTIFY );
+ConVar sv_ball_keeper_punch_pitch( "sv_ball_keeper_punch_pitch", "-45", FCVAR_NOTIFY );
 
 ConVar sv_ball_keeperpunchupstrength("sv_ball_keeperpunchupstrength", "500", FCVAR_NOTIFY);
 ConVar sv_ball_keeperdeflectioncoeff("sv_ball_keeperdeflectioncoeff", "0.66", FCVAR_NOTIFY);
@@ -2163,65 +2169,127 @@ bool CBall::CheckKeeperCatch()
 	Vector localDirToBall;
 	VectorIRotate(dirToBall, m_pPl->EntityToWorldTransform(), localDirToBall);
 
-	bool canCatch;
+	bool canReach = false;
+	bool canAlwaysCatch = false;
+	Vector punchDir = vec3_origin;
 
 	switch (m_pPl->m_Shared.GetAnimEvent())
 	{
 	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT:
-		canCatch = (zDist < sv_ball_keeper_sidedive_zend.GetInt()
+		canReach = (zDist < sv_ball_keeper_sidedive_zend.GetInt()
 			&& zDist >= sv_ball_keeper_sidedive_zstart.GetInt()
 			&& abs(localDirToBall.x) <= sv_ball_keeper_sidedive_shortsidereach.GetInt()
 			&& localDirToBall.y >= -sv_ball_keeper_sidedive_longsidereach_opposite.GetInt()
 			&& localDirToBall.y <= sv_ball_keeper_sidedive_longsidereach.GetInt());
+
+		if (canReach)
+		{
+			int minCatch = sv_ball_keeper_sidedive_centeroffset.GetInt() - sv_ball_keeper_catch_reach.GetInt();
+			int maxCatch = sv_ball_keeper_sidedive_centeroffset.GetInt() + sv_ball_keeper_catch_reach.GetInt();
+
+			if (localDirToBall.y >= minCatch && localDirToBall.y <= maxCatch)
+				canAlwaysCatch = true;
+			else
+			{
+				canAlwaysCatch = false;
+
+				if (localDirToBall.y >= sv_ball_keeper_sidedive_centeroffset.GetInt())
+				{
+					float frac = (localDirToBall.y - maxCatch) / (sv_ball_keeper_sidedive_longsidereach.GetInt() - maxCatch);
+					VectorRotate(m_vPlForward2D, QAngle(0, frac * sv_ball_keeper_punch_maxangle.GetInt(), 0), punchDir);
+				}
+				else
+				{
+					float frac = (localDirToBall.y - minCatch) / (-sv_ball_keeper_sidedive_longsidereach_opposite.GetInt() - minCatch);
+					VectorRotate(m_vPlForward2D, QAngle(0, frac * -sv_ball_keeper_punch_maxangle.GetInt(), 0), punchDir);
+				}
+			}
+		}
 		break;
 	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT:
-		canCatch = (zDist < sv_ball_keeper_sidedive_zend.GetInt()
+		canReach = (zDist < sv_ball_keeper_sidedive_zend.GetInt()
 			&& zDist >= sv_ball_keeper_sidedive_zstart.GetInt()
 			&& abs(localDirToBall.x) <= sv_ball_keeper_sidedive_shortsidereach.GetInt()
 			&& localDirToBall.y <= sv_ball_keeper_sidedive_longsidereach_opposite.GetInt()
 			&& localDirToBall.y >= -sv_ball_keeper_sidedive_longsidereach.GetInt());
+
+		if (canReach)
+		{
+			int minCatch = sv_ball_keeper_sidedive_centeroffset.GetInt() - sv_ball_keeper_catch_reach.GetInt();
+			int maxCatch = sv_ball_keeper_sidedive_centeroffset.GetInt() + sv_ball_keeper_catch_reach.GetInt();
+
+			if (localDirToBall.y >= minCatch && localDirToBall.y <= maxCatch)
+				canAlwaysCatch = true;
+			else
+			{
+				canAlwaysCatch = false;
+
+				if (localDirToBall.y >= sv_ball_keeper_sidedive_centeroffset.GetInt())
+				{
+					float frac = (localDirToBall.y - maxCatch) / (sv_ball_keeper_sidedive_longsidereach_opposite.GetInt() - maxCatch);
+					VectorRotate(m_vPlForward2D, QAngle(0, frac * sv_ball_keeper_punch_maxangle.GetInt(), 0), punchDir);
+				}
+				else
+				{
+					float frac = (localDirToBall.y - minCatch) / (-sv_ball_keeper_sidedive_longsidereach.GetInt() - minCatch);
+					VectorRotate(m_vPlForward2D, QAngle(0, frac * -sv_ball_keeper_punch_maxangle.GetInt(), 0), punchDir);
+				}
+			}
+		}
 		break;
 	case PLAYERANIMEVENT_KEEPER_DIVE_FORWARD:
-		canCatch = (zDist < sv_ball_keeper_forwarddive_zend.GetInt()
+		canReach = (zDist < sv_ball_keeper_forwarddive_zend.GetInt()
 			&& zDist >= sv_ball_keeper_forwarddive_zstart.GetInt()
 			&& localDirToBall.x >= -sv_ball_keeper_forwarddive_longsidereach_opposite.GetInt()
 			&& localDirToBall.x <= sv_ball_keeper_forwarddive_longsidereach.GetInt()
 			&& abs(localDirToBall.y) <= sv_ball_keeper_forwarddive_shortsidereach.GetInt());
+
+		if (canReach)
+		{
+			canAlwaysCatch = false;
+			punchDir = m_vPlForward2D;
+		}
 		break;
 	case PLAYERANIMEVENT_KEEPER_JUMP:
 	default:
-		canCatch = (zDist < sv_ball_bodypos_keeperarms_end.GetInt()
+		canReach = (zDist < sv_ball_bodypos_keeperarms_end.GetInt()
 			&& zDist >= sv_ball_bodypos_feet_start.GetInt()
 			&& xyDist <= sv_ball_keeper_standing_reach.GetInt());
+
+		if (canReach)
+		{
+			int minCatch = sv_ball_keeper_standing_centeroffset.GetInt() - sv_ball_keeper_catch_reach.GetInt();
+			int maxCatch = sv_ball_keeper_standing_centeroffset.GetInt() + sv_ball_keeper_catch_reach.GetInt();
+
+			if (zDist >= minCatch && zDist <= maxCatch)
+				canAlwaysCatch = true;
+			else
+			{
+				canAlwaysCatch = false;
+
+				if (zDist >= sv_ball_keeper_standing_centeroffset.GetInt())
+				{
+					float frac = (zDist - maxCatch) / (sv_ball_bodypos_keeperarms_end.GetInt() - maxCatch);
+					VectorRotate(m_vPlForward2D, QAngle(frac * -sv_ball_keeper_punch_maxangle.GetInt(), 0, 0), punchDir);
+					DevMsg("punchdir: %.2f, %.2f, %.2f\n", punchDir.x, punchDir.y, punchDir.z);
+				}
+				else
+				{
+					float frac = (zDist - minCatch) / (sv_ball_bodypos_feet_start.GetInt() - minCatch);
+					VectorRotate(m_vPlForward2D, QAngle(frac * sv_ball_keeper_punch_maxangle.GetInt(), 0, 0), punchDir);
+				}
+			}
+		}
 		break;
 	}
 
-	if (!canCatch)
+	if (!canReach)
 		return false;
 
-	if (m_bHasQueuedState || (gpGlobals->curtime < m_flGlobalNextKeeperCatch && (!LastInfo(true) || LastInfo(true)->m_eBallState != BALL_PENALTY))) // Punch ball away
+	if (m_bHasQueuedState || (!canAlwaysCatch && gpGlobals->curtime < m_flGlobalNextKeeperCatch && (!LastInfo(true) || LastInfo(true)->m_eBallState != BALL_PENALTY))) // Punch ball away
 	{
-		Vector vel;
-
-		if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD)
-		{
-			vel = -m_vPlForward2D * m_vVel.Length2D() * sv_ball_keeperdeflectioncoeff.GetFloat();
-			float length = vel.Length();
-			QAngle ang;
-			VectorAngles(vel, ang);
-			ang[PITCH] = -45;
-			AngleVectors(ang, &vel);
-			vel *= length;
-		}
-		else
-		{
-			Vector dir;
-			QAngle ang = m_aPlAng;
-			ang[PITCH] -= 45;
-			AngleVectors(ang, &dir);
-			vel = dir * m_vVel.Length2D() * sv_ball_keeperdeflectioncoeff.GetFloat();
-		}
-
+		VectorRotate(punchDir, QAngle(sv_ball_keeper_punch_pitch.GetInt(), 0, 0), punchDir);
+		Vector vel = punchDir * m_vVel.Length2D() * sv_ball_keeperdeflectioncoeff.GetFloat();
 		SetVel(vel, -1, BODY_PART_KEEPERPUNCH, false, false, false);
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
 	}
@@ -2556,8 +2624,21 @@ void CBall::TriggerGoal(int team)
 
 	SDKGameRules()->SetKickOffTeam(m_nTeam);
 	int scoringTeam;
+	CSDKPlayer *pKeeper = NULL;
+	bool isOwnGoal;
 
-	if (m_nTeam == LastTeam(true))
+	// Prevent own goals from keeper punches
+	if (LastInfo(true)->m_eBodyPart == BODY_PART_KEEPERPUNCH)
+	{
+		isOwnGoal = false;
+		pKeeper = LastPl(true);
+	}
+	else if (m_nTeam == LastTeam(true))
+		isOwnGoal = true;
+	else
+		isOwnGoal = false;
+
+	if (isOwnGoal)
 	{
 		scoringTeam = LastOppTeam(true);
 
@@ -2573,27 +2654,27 @@ void CBall::TriggerGoal(int team)
 	}
 	else
 	{
-		scoringTeam = LastTeam(true);
+		scoringTeam = LastTeam(true, pKeeper);
 
 		m_pScorer = NULL;
 		m_pFirstAssister = NULL;
 		m_pSecondAssister = NULL;
 
-		m_pScorer = LastPl(true);
+		m_pScorer = LastPl(true, pKeeper);
 
 		if (m_pScorer)
 		{
 			m_pScorer->AddGoal();
 
-			m_pFirstAssister = LastPl(true, m_pScorer);
+			m_pFirstAssister = LastPl(true, pKeeper, m_pScorer);
 
-			if (m_pFirstAssister && m_pFirstAssister->GetTeam() == m_pScorer->GetTeam() && gpGlobals->curtime - LastInfo(true, m_pScorer)->m_flTime <= sv_ball_stats_assist_maxtime.GetFloat())
+			if (m_pFirstAssister && m_pFirstAssister->GetTeam() == m_pScorer->GetTeam() && gpGlobals->curtime - LastInfo(true, pKeeper, m_pScorer)->m_flTime <= sv_ball_stats_assist_maxtime.GetFloat())
 			{
 				m_pFirstAssister->AddAssist();
 
-				m_pSecondAssister = LastPl(true, m_pScorer, m_pFirstAssister);
+				m_pSecondAssister = LastPl(true, pKeeper, m_pScorer, m_pFirstAssister);
 
-				if (m_pSecondAssister && m_pSecondAssister->GetTeam() == m_pScorer->GetTeam() && gpGlobals->curtime - LastInfo(true, m_pScorer, m_pFirstAssister)->m_flTime <= sv_ball_stats_assist_maxtime.GetFloat())
+				if (m_pSecondAssister && m_pSecondAssister->GetTeam() == m_pScorer->GetTeam() && gpGlobals->curtime - LastInfo(true, pKeeper, m_pScorer, m_pFirstAssister)->m_flTime <= sv_ball_stats_assist_maxtime.GetFloat())
 				{
 					m_pSecondAssister->AddAssist();
 				}
@@ -2620,9 +2701,9 @@ void CBall::TriggerGoal(int team)
 
 	//GetGlobalTeam(scoringTeam)->AddGoal();
 
-	CSDKPlayer *pKeeper = FindNearestPlayer(m_nTeam, FL_POS_KEEPER);
-	if (CSDKPlayer::IsOnField(pKeeper))
-		pKeeper->AddGoalConceded();
+	CSDKPlayer *pGoalKeeper = FindNearestPlayer(m_nTeam, FL_POS_KEEPER);
+	if (CSDKPlayer::IsOnField(pGoalKeeper))
+		pGoalKeeper->AddGoalConceded();
 
 	State_Transition(BALL_GOAL, sv_ball_statetransition_activationdelay_normal.GetFloat());
 }
@@ -2886,7 +2967,7 @@ void CBall::RemoveAllTouches()
 		m_Touches.PurgeAndDeleteElements();
 }
 
-BallTouchInfo *CBall::LastInfo(bool wasShooting, CSDKPlayer *pSkipPl /*= NULL*/, CSDKPlayer *pSkipPl2 /*= NULL*/)
+BallTouchInfo *CBall::LastInfo(bool wasShooting, CSDKPlayer *pSkipPl /*= NULL*/, CSDKPlayer *pSkipPl2 /*= NULL*/, CSDKPlayer *pSkipPl3 /*= NULL*/)
 {
 	for (int i = m_Touches.Count() - 1; i >= 0; i--)
 	{
@@ -2896,6 +2977,9 @@ BallTouchInfo *CBall::LastInfo(bool wasShooting, CSDKPlayer *pSkipPl /*= NULL*/,
 		if (pSkipPl2 && m_Touches[i]->m_pPl == pSkipPl2)
 			continue;
 
+		if (pSkipPl3 && m_Touches[i]->m_pPl == pSkipPl3)
+			continue;
+
 		if (!wasShooting || m_Touches[i]->m_bIsShot)
 			return m_Touches[i];
 	}
@@ -2903,24 +2987,24 @@ BallTouchInfo *CBall::LastInfo(bool wasShooting, CSDKPlayer *pSkipPl /*= NULL*/,
 	return NULL;
 }
 
-CSDKPlayer *CBall::LastPl(bool wasShooting, CSDKPlayer *pSkipPl /*= NULL*/, CSDKPlayer *pSkipPl2 /*= NULL*/)
+CSDKPlayer *CBall::LastPl(bool wasShooting, CSDKPlayer *pSkipPl /*= NULL*/, CSDKPlayer *pSkipPl2 /*= NULL*/, CSDKPlayer *pSkipPl3 /*= NULL*/)
 {
-	BallTouchInfo *info = LastInfo(wasShooting, pSkipPl, pSkipPl2);
+	BallTouchInfo *info = LastInfo(wasShooting, pSkipPl, pSkipPl2, pSkipPl3);
 	if (info && CSDKPlayer::IsOnField(info->m_pPl))
 		return info->m_pPl;
 	
 	return NULL;
 }
 
-int CBall::LastTeam(bool wasShooting, CSDKPlayer *pSkipPl /*= NULL*/, CSDKPlayer *pSkipPl2 /*= NULL*/)
+int CBall::LastTeam(bool wasShooting, CSDKPlayer *pSkipPl /*= NULL*/, CSDKPlayer *pSkipPl2 /*= NULL*/, CSDKPlayer *pSkipPl3 /*= NULL*/)
 {
-	BallTouchInfo *info = LastInfo(wasShooting, pSkipPl, pSkipPl2);
+	BallTouchInfo *info = LastInfo(wasShooting, pSkipPl, pSkipPl2, pSkipPl3);
 	return info ? info->m_nTeam : TEAM_INVALID;
 }
 
-int CBall::LastOppTeam(bool wasShooting, CSDKPlayer *pSkipPl /*= NULL*/, CSDKPlayer *pSkipPl2 /*= NULL*/)
+int CBall::LastOppTeam(bool wasShooting, CSDKPlayer *pSkipPl /*= NULL*/, CSDKPlayer *pSkipPl2 /*= NULL*/, CSDKPlayer *pSkipPl3 /*= NULL*/)
 {
-	BallTouchInfo *info = LastInfo(wasShooting, pSkipPl, pSkipPl2);
+	BallTouchInfo *info = LastInfo(wasShooting, pSkipPl, pSkipPl2, pSkipPl3);
 	return info ? (info->m_nTeam == TEAM_A ? TEAM_B : TEAM_A) : TEAM_INVALID;
 }
 
