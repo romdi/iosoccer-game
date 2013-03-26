@@ -1014,7 +1014,10 @@ int CSDKGameRules::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarge
 	if (!dynamic_cast<CSDKPlayer *>(pPlayer) || !dynamic_cast<CSDKPlayer *>(pTarget))
 		return GR_NOTTEAMMATE;
 
-	if (dynamic_cast<CSDKPlayer *>(pPlayer)->GetSpecTeam() == dynamic_cast<CSDKPlayer *>(pTarget)->GetSpecTeam())
+	if (dynamic_cast<CSDKPlayer *>(pPlayer)->GetTeamNumber() == dynamic_cast<CSDKPlayer *>(pTarget)->GetTeamNumber()
+		|| dynamic_cast<CSDKPlayer *>(pPlayer)->GetSpecTeam() == dynamic_cast<CSDKPlayer *>(pTarget)->GetSpecTeam()
+		|| dynamic_cast<CSDKPlayer *>(pPlayer)->GetTeamNumber() == dynamic_cast<CSDKPlayer *>(pTarget)->GetSpecTeam() - 1 + TEAM_A
+		|| dynamic_cast<CSDKPlayer *>(pPlayer)->GetSpecTeam() - 1 + TEAM_A == dynamic_cast<CSDKPlayer *>(pTarget)->GetTeamNumber())
 		return GR_TEAMMATE;
 #endif
 
