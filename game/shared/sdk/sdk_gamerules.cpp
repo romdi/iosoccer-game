@@ -1212,9 +1212,9 @@ int CSDKGameRules::WakeUpAwayPlayers()
 	char wakeUpString[2048];
 	
 	if (State_Get() == MATCH_WARMUP)
-		Q_strncpy(wakeUpString, "Auto-starting match when the following players start moving: ", sizeof(wakeUpString));
+		Q_strncpy(wakeUpString, "The match starts when the following players start moving: ", sizeof(wakeUpString));
 	else
-		Q_strncpy(wakeUpString, "Auto-continuing match when the following players start moving: ", sizeof(wakeUpString));
+		Q_strncpy(wakeUpString, "The match continues when the following players start moving: ", sizeof(wakeUpString));
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
@@ -1544,7 +1544,7 @@ void CSDKGameRules::State_HALFTIME_Enter()
 
 void CSDKGameRules::State_HALFTIME_Think()
 {
-	if (m_flStateTimeLeft <= 0 || CheckAutoStart())
+	if (m_flStateTimeLeft <= 0)
 		State_Transition(MATCH_SECOND_HALF);
 }
 
@@ -1594,7 +1594,7 @@ void CSDKGameRules::State_EXTRATIME_INTERMISSION_Enter()
 
 void CSDKGameRules::State_EXTRATIME_INTERMISSION_Think()
 {
-	if (m_flStateTimeLeft <= 0 || CheckAutoStart())
+	if (m_flStateTimeLeft <= 0)
 		State_Transition(MATCH_EXTRATIME_FIRST_HALF);
 }
 
@@ -1639,7 +1639,7 @@ void CSDKGameRules::State_EXTRATIME_HALFTIME_Enter()
 
 void CSDKGameRules::State_EXTRATIME_HALFTIME_Think()
 {
-	if (m_flStateTimeLeft <= 0 || CheckAutoStart())
+	if (m_flStateTimeLeft <= 0)
 		State_Transition(MATCH_EXTRATIME_SECOND_HALF);
 }
 
@@ -1687,7 +1687,7 @@ void CSDKGameRules::State_PENALTIES_INTERMISSION_Enter()
 
 void CSDKGameRules::State_PENALTIES_INTERMISSION_Think()
 {
-	if (m_flStateTimeLeft <= 0 || CheckAutoStart())
+	if (m_flStateTimeLeft <= 0)
 		State_Transition(MATCH_PENALTIES);
 }
 
