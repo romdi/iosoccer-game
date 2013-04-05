@@ -568,7 +568,7 @@ void CSDKPlayer::FindSafePos(Vector &startPos)
 void CSDKPlayer::CheckShotCharging()
 {
 	if ((m_nButtons & IN_ATTACK)
-		|| ((GetFlags() & (FL_FREECAM | FL_REMOTECONTROLLED)) || (m_nButtons & IN_RELOAD))
+		|| (GetFlags() & FL_REMOTECONTROLLED)
 		|| GetBall() && GetBall()->m_bNonnormalshotsBlocked
 		|| !m_bShotButtonsReleased)
 	{

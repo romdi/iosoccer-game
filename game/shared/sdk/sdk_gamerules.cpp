@@ -1011,13 +1011,22 @@ int CSDKGameRules::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarge
 	if ( !pPlayer || !pTarget || !pTarget->IsPlayer())
 		return GR_NOTTEAMMATE;
 
-	if (!dynamic_cast<CSDKPlayer *>(pPlayer) || !dynamic_cast<CSDKPlayer *>(pTarget))
+	CSDKPlayer *pPl = dynamic_cast<CSDKPlayer *>(pPlayer);
+	CSDKPlayer *pTar = dynamic_cast<CSDKPlayer *>(pTarget);
+
+	if (!pPl || !pPl)
 		return GR_NOTTEAMMATE;
 
-	if (dynamic_cast<CSDKPlayer *>(pPlayer)->GetTeamNumber() == dynamic_cast<CSDKPlayer *>(pTarget)->GetTeamNumber()
-		|| dynamic_cast<CSDKPlayer *>(pPlayer)->GetSpecTeam() == dynamic_cast<CSDKPlayer *>(pTarget)->GetSpecTeam()
-		|| dynamic_cast<CSDKPlayer *>(pPlayer)->GetTeamNumber() == dynamic_cast<CSDKPlayer *>(pTarget)->GetSpecTeam() - 1 + TEAM_A
-		|| dynamic_cast<CSDKPlayer *>(pPlayer)->GetSpecTeam() - 1 + TEAM_A == dynamic_cast<CSDKPlayer *>(pTarget)->GetTeamNumber())
+	if ((pPl->GetTeamNumber() == TEAM_A || pPl->GetSpecTeam() == 1)
+		&& (pTar->GetTeamNumber() == TEAM_A || pTar->GetSpecTeam() == 1))
+		return GR_TEAMMATE;
+
+	if ((pPl->GetTeamNumber() == TEAM_B || pPl->GetSpecTeam() == 2)
+		&& (pTar->GetTeamNumber() == TEAM_B || pTar->GetSpecTeam() == 2))
+		return GR_TEAMMATE;
+
+	if (pPl->GetTeamNumber() == TEAM_SPECTATOR && pPl->GetSpecTeam() == 0
+		&& pTar->GetTeamNumber() == TEAM_SPECTATOR && pTar->GetSpecTeam() == 0)
 		return GR_TEAMMATE;
 #endif
 
@@ -1101,7 +1110,8 @@ void CC_SV_StartTimeout(const CCommand &args)
 	if (!UTIL_IsCommandIssuedByServerAdmin())
         return;
 
-	if (SDKGameRules()->IsIntermissionState() || SDKGameRules()->GetTimeoutEnd() != 0)
+	if (SDKGameRules()->IsIntermissionState() || SDKGameRules()->AdminWantsTimeout() || GetGlobalTeam(TEAM_A)->WantsTimeout()
+		|| GetGlobalTeam(TEAM_B)->WantsTimeout() || SDKGameRules()->GetTimeoutEnd() != 0)
 		return;
 
 	SDKGameRules()->SetAdminWantsTimeout(true);
@@ -1124,14 +1134,28 @@ void CC_SV_EndTimeout(const CCommand &args)
 	if (SDKGameRules()->IsIntermissionState())
 		return;
 
-	SDKGameRules()->SetAdminWantsTimeout(false);
-	SDKGameRules()->SetTimeoutEnd(gpGlobals->curtime + 5);
-
-	IGameEvent *pEvent = gameeventmanager->CreateEvent("timeout");
-	if (pEvent)
+	if (SDKGameRules()->AdminWantsTimeout() || GetGlobalTeam(TEAM_A)->WantsTimeout() || GetGlobalTeam(TEAM_B)->WantsTimeout()) // Timeout pending
 	{
-		pEvent->SetInt("requesting_team", TEAM_UNASSIGNED);
-		gameeventmanager->FireEvent(pEvent);
+		SDKGameRules()->SetAdminWantsTimeout(false);
+		GetGlobalTeam(TEAM_A)->SetWantsTimeout(false);
+		GetGlobalTeam(TEAM_B)->SetWantsTimeout(false);
+
+		IGameEvent *pEvent = gameeventmanager->CreateEvent("end_timeout");
+		if (pEvent)
+		{
+			gameeventmanager->FireEvent(pEvent);
+		}
+	}
+	else if (SDKGameRules()->GetTimeoutEnd() != 0) // Timeout running
+	{
+		SDKGameRules()->SetTimeoutEnd(gpGlobals->curtime + 5);
+
+		IGameEvent *pEvent = gameeventmanager->CreateEvent("start_timeout");
+		if (pEvent)
+		{
+			pEvent->SetInt("requesting_team", TEAM_UNASSIGNED);
+			gameeventmanager->FireEvent(pEvent);
+		}
 	}
 }
 

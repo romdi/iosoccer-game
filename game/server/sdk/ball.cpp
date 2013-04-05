@@ -54,7 +54,8 @@ ConVar sv_ball_slidezstart("sv_ball_slidezstart", "-50", FCVAR_NOTIFY);
 ConVar sv_ball_slidezend("sv_ball_slidezend", "40", FCVAR_NOTIFY); 
 
 ConVar sv_ball_keeper_standing_reach( "sv_ball_keeper_standing_reach", "50", FCVAR_NOTIFY );
-ConVar sv_ball_keeper_standing_centeroffset( "sv_ball_keeper_standing_centeroffset", "50", FCVAR_NOTIFY );
+ConVar sv_ball_keeper_standing_catchcenteroffset_side( "sv_ball_keeper_standing_catchcenteroffset_side", "0", FCVAR_NOTIFY );
+ConVar sv_ball_keeper_standing_catchcenteroffset_z( "sv_ball_keeper_standing_catchcenteroffset_z", "50", FCVAR_NOTIFY );
 
 ConVar sv_ball_keeper_forwarddive_shortsidereach( "sv_ball_keeper_forwarddive_shortsidereach", "50", FCVAR_NOTIFY );
 ConVar sv_ball_keeper_forwarddive_longsidereach( "sv_ball_keeper_forwarddive_longsidereach", "100", FCVAR_NOTIFY );
@@ -67,11 +68,16 @@ ConVar sv_ball_keeper_sidedive_longsidereach( "sv_ball_keeper_sidedive_longsider
 ConVar sv_ball_keeper_sidedive_longsidereach_opposite( "sv_ball_keeper_sidedive_longsidereach_opposite", "50", FCVAR_NOTIFY );
 ConVar sv_ball_keeper_sidedive_zstart( "sv_ball_keeper_sidedive_zstart", "-20", FCVAR_NOTIFY );
 ConVar sv_ball_keeper_sidedive_zend( "sv_ball_keeper_sidedive_zend", "65", FCVAR_NOTIFY );
-ConVar sv_ball_keeper_sidedive_centeroffset( "sv_ball_keeper_sidedive_centeroffset", "0", FCVAR_NOTIFY );
+ConVar sv_ball_keeper_sidedive_catchcenteroffset_side( "sv_ball_keeper_sidedive_catchcenteroffset_side", "0", FCVAR_NOTIFY );
+ConVar sv_ball_keeper_sidedive_catchcenteroffset_z( "sv_ball_keeper_sidedive_catchcenteroffset_z", "40", FCVAR_NOTIFY );
 
 ConVar sv_ball_keeper_catch_reach( "sv_ball_keeper_catch_reach", "15", FCVAR_NOTIFY );
-ConVar sv_ball_keeper_punch_maxangle( "sv_ball_keeper_punch_maxangle", "135", FCVAR_NOTIFY );
-ConVar sv_ball_keeper_punch_pitch( "sv_ball_keeper_punch_pitch", "-45", FCVAR_NOTIFY );
+ConVar sv_ball_keeper_punch_maxyawangle( "sv_ball_keeper_punch_maxyawangle", "130", FCVAR_NOTIFY );
+ConVar sv_ball_keeper_punch_maxpitchangle( "sv_ball_keeper_punch_maxpitchangle", "130", FCVAR_NOTIFY );
+ConVar sv_ball_keeper_punch_pitchoffset( "sv_ball_keeper_punch_pitchoffset", "0", FCVAR_NOTIFY );
+ConVar sv_ball_keeper_punch_shortsidecoeff( "sv_ball_keeper_punch_shortsidecoeff", "0.5", FCVAR_NOTIFY );
+ConVar sv_ball_keeper_punch_minstrength( "sv_ball_keeper_punch_minstrength", "0", FCVAR_NOTIFY );
+ConVar sv_ball_keeper_punch_minpitchangle( "sv_ball_keeper_punch_minpitchangle", "180", FCVAR_NOTIFY );
 
 ConVar sv_ball_keeperpunchupstrength("sv_ball_keeperpunchupstrength", "500", FCVAR_NOTIFY);
 ConVar sv_ball_keeperdeflectioncoeff("sv_ball_keeperdeflectioncoeff", "0.66", FCVAR_NOTIFY);
@@ -174,7 +180,7 @@ ConVar sv_ball_bodypos_hip_start("sv_ball_bodypos_hip_start", "15", FCVAR_NOTIFY
 ConVar sv_ball_bodypos_chest_start("sv_ball_bodypos_chest_start", "40", FCVAR_NOTIFY);
 ConVar sv_ball_bodypos_head_start("sv_ball_bodypos_head_start", "60", FCVAR_NOTIFY);
 ConVar sv_ball_bodypos_head_end("sv_ball_bodypos_head_end", "85", FCVAR_NOTIFY);
-ConVar sv_ball_bodypos_keeperarms_end("sv_ball_bodypos_keeperarms_end", "95", FCVAR_NOTIFY);
+ConVar sv_ball_bodypos_keeperarms_end("sv_ball_bodypos_keeperarms_end", "105", FCVAR_NOTIFY);
 
 ConVar sv_ball_yellowcardproximity_forward("sv_ball_yellowcardproximity_forward", "0.5", FCVAR_NOTIFY);
 ConVar sv_ball_yellowcardproximity_backward("sv_ball_yellowcardproximity_backward", "0.25", FCVAR_NOTIFY);
@@ -782,13 +788,27 @@ void CBall::State_Think()
 
 				if (m_eNextState == BALL_GOAL)
 				{
-					if (m_nTeam == LastTeam(true))
+					CSDKPlayer *pKeeper = NULL;
+					bool isOwnGoal;
+
+					// Prevent own goals from keeper punches
+					if (LastInfo(true)->m_eBodyPart == BODY_PART_KEEPERPUNCH)
+					{
+						isOwnGoal = false;
+						pKeeper = LastPl(true);
+					}
+					else if (m_nTeam == LastTeam(true))
+						isOwnGoal = true;
+					else
+						isOwnGoal = false;
+
+					if (isOwnGoal)
 					{
 						IGameEvent *pEvent = gameeventmanager->CreateEvent("own_goal");
 						if (pEvent)
 						{
-							pEvent->SetInt("causing_team", LastTeam(true));
-							pEvent->SetInt("causer_userid", LastPl(true) ? LastPl(true)->GetUserID() : 0);
+							pEvent->SetInt("causing_team", LastTeam(true, pKeeper));
+							pEvent->SetInt("causer_userid", LastPl(true, pKeeper) ? LastPl(true, pKeeper)->GetUserID() : 0);
 							gameeventmanager->FireEvent(pEvent);
 						}
 					}
@@ -962,13 +982,12 @@ void CBall::State_Think()
 
 				SDKGameRules()->SetTimeoutEnd(timeoutTeam == TEAM_UNASSIGNED ? -1 : gpGlobals->curtime + mp_timeout_duration.GetFloat());
 
-				IGameEvent *pEvent = gameeventmanager->CreateEvent("timeout");
+				IGameEvent *pEvent = gameeventmanager->CreateEvent("start_timeout");
 				if (pEvent)
 				{
 					pEvent->SetInt("requesting_team", timeoutTeam);
-					pEvent->SetFloat("end_time", SDKGameRules()->GetTimeoutEnd());
+					gameeventmanager->FireEvent(pEvent);
 				}
-				gameeventmanager->FireEvent(pEvent);
 			}
 
 			if (SDKGameRules()->GetTimeoutEnd() == -1 || gpGlobals->curtime < SDKGameRules()->GetTimeoutEnd())
@@ -2164,120 +2183,92 @@ bool CBall::DoSlideAction()
 bool CBall::CheckKeeperCatch()
 {
 	Vector dirToBall = m_vPos - m_vPlPos;
-	float zDist = dirToBall.z;
-	float xyDist = dirToBall.Length2D();
 	Vector localDirToBall;
 	VectorIRotate(dirToBall, m_pPl->EntityToWorldTransform(), localDirToBall);
 
 	bool canReach = false;
 	bool canAlwaysCatch = false;
-	Vector punchDir = vec3_origin;
+	float punchAngYaw = m_aPlAng[YAW];
+	float punchAngPitch = 0;
 
 	switch (m_pPl->m_Shared.GetAnimEvent())
 	{
 	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT:
-		canReach = (zDist < sv_ball_keeper_sidedive_zend.GetInt()
-			&& zDist >= sv_ball_keeper_sidedive_zstart.GetInt()
+		canReach = (localDirToBall.z < sv_ball_keeper_sidedive_zend.GetInt()
+			&& localDirToBall.z >= sv_ball_keeper_sidedive_zstart.GetInt()
 			&& abs(localDirToBall.x) <= sv_ball_keeper_sidedive_shortsidereach.GetInt()
 			&& localDirToBall.y >= -sv_ball_keeper_sidedive_longsidereach_opposite.GetInt()
 			&& localDirToBall.y <= sv_ball_keeper_sidedive_longsidereach.GetInt());
 
 		if (canReach)
 		{
-			int minCatch = sv_ball_keeper_sidedive_centeroffset.GetInt() - sv_ball_keeper_catch_reach.GetInt();
-			int maxCatch = sv_ball_keeper_sidedive_centeroffset.GetInt() + sv_ball_keeper_catch_reach.GetInt();
+			float distY = localDirToBall.y - sv_ball_keeper_sidedive_catchcenteroffset_side.GetInt(); 
+			float distZ = localDirToBall.z - sv_ball_keeper_sidedive_catchcenteroffset_z.GetInt(); 
 
-			if (localDirToBall.y >= minCatch && localDirToBall.y <= maxCatch)
+			if (abs(distY) <= sv_ball_keeper_catch_reach.GetInt() && abs(distZ) <= sv_ball_keeper_catch_reach.GetInt())
 				canAlwaysCatch = true;
 			else
 			{
-				canAlwaysCatch = false;
+				float maxYReach = (distY >= 0 ? sv_ball_keeper_sidedive_longsidereach.GetInt() : -sv_ball_keeper_sidedive_longsidereach_opposite.GetInt()) - sv_ball_keeper_sidedive_catchcenteroffset_side.GetInt();
+				punchAngYaw += abs(distY) / maxYReach * sv_ball_keeper_punch_maxyawangle.GetInt();
 
-				if (localDirToBall.y >= sv_ball_keeper_sidedive_centeroffset.GetInt())
-				{
-					float frac = (localDirToBall.y - maxCatch) / (sv_ball_keeper_sidedive_longsidereach.GetInt() - maxCatch);
-					VectorRotate(m_vPlForward2D, QAngle(0, frac * sv_ball_keeper_punch_maxangle.GetInt(), 0), punchDir);
-				}
-				else
-				{
-					float frac = (localDirToBall.y - minCatch) / (-sv_ball_keeper_sidedive_longsidereach_opposite.GetInt() - minCatch);
-					VectorRotate(m_vPlForward2D, QAngle(0, frac * -sv_ball_keeper_punch_maxangle.GetInt(), 0), punchDir);
-				}
+				float maxZReach = (distZ >= 0 ? sv_ball_keeper_sidedive_zend.GetInt() : sv_ball_keeper_sidedive_zstart.GetInt()) - sv_ball_keeper_sidedive_catchcenteroffset_z.GetInt();
+				punchAngPitch -= abs(distZ) / maxZReach * sv_ball_keeper_punch_maxpitchangle.GetInt();
 			}
 		}
 		break;
 	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT:
-		canReach = (zDist < sv_ball_keeper_sidedive_zend.GetInt()
-			&& zDist >= sv_ball_keeper_sidedive_zstart.GetInt()
+		canReach = (localDirToBall.z < sv_ball_keeper_sidedive_zend.GetInt()
+			&& localDirToBall.z >= sv_ball_keeper_sidedive_zstart.GetInt()
 			&& abs(localDirToBall.x) <= sv_ball_keeper_sidedive_shortsidereach.GetInt()
 			&& localDirToBall.y <= sv_ball_keeper_sidedive_longsidereach_opposite.GetInt()
 			&& localDirToBall.y >= -sv_ball_keeper_sidedive_longsidereach.GetInt());
 
 		if (canReach)
 		{
-			int minCatch = sv_ball_keeper_sidedive_centeroffset.GetInt() - sv_ball_keeper_catch_reach.GetInt();
-			int maxCatch = sv_ball_keeper_sidedive_centeroffset.GetInt() + sv_ball_keeper_catch_reach.GetInt();
+			float distY = localDirToBall.y - -sv_ball_keeper_sidedive_catchcenteroffset_side.GetInt(); 
+			float distZ = localDirToBall.z - sv_ball_keeper_sidedive_catchcenteroffset_z.GetInt(); 
 
-			if (localDirToBall.y >= minCatch && localDirToBall.y <= maxCatch)
+			if (abs(distY) <= sv_ball_keeper_catch_reach.GetInt() && abs(distZ) <= sv_ball_keeper_catch_reach.GetInt())
 				canAlwaysCatch = true;
 			else
 			{
-				canAlwaysCatch = false;
+				float maxYReach = (distY >= 0 ? sv_ball_keeper_sidedive_longsidereach_opposite.GetInt() : -sv_ball_keeper_sidedive_longsidereach.GetInt()) - -sv_ball_keeper_sidedive_catchcenteroffset_side.GetInt();
+				punchAngYaw += abs(distY) / maxYReach * sv_ball_keeper_punch_maxyawangle.GetInt();
 
-				if (localDirToBall.y >= sv_ball_keeper_sidedive_centeroffset.GetInt())
-				{
-					float frac = (localDirToBall.y - maxCatch) / (sv_ball_keeper_sidedive_longsidereach_opposite.GetInt() - maxCatch);
-					VectorRotate(m_vPlForward2D, QAngle(0, frac * sv_ball_keeper_punch_maxangle.GetInt(), 0), punchDir);
-				}
-				else
-				{
-					float frac = (localDirToBall.y - minCatch) / (-sv_ball_keeper_sidedive_longsidereach.GetInt() - minCatch);
-					VectorRotate(m_vPlForward2D, QAngle(0, frac * -sv_ball_keeper_punch_maxangle.GetInt(), 0), punchDir);
-				}
+				float maxZReach = (distZ >= 0 ? sv_ball_keeper_sidedive_zend.GetInt() : sv_ball_keeper_sidedive_zstart.GetInt()) - sv_ball_keeper_sidedive_catchcenteroffset_z.GetInt();
+				punchAngPitch -= abs(distZ) / maxZReach * sv_ball_keeper_punch_maxpitchangle.GetInt();
 			}
 		}
 		break;
 	case PLAYERANIMEVENT_KEEPER_DIVE_FORWARD:
-		canReach = (zDist < sv_ball_keeper_forwarddive_zend.GetInt()
-			&& zDist >= sv_ball_keeper_forwarddive_zstart.GetInt()
+		canReach = (localDirToBall.z < sv_ball_keeper_forwarddive_zend.GetInt()
+			&& localDirToBall.z >= sv_ball_keeper_forwarddive_zstart.GetInt()
 			&& localDirToBall.x >= -sv_ball_keeper_forwarddive_longsidereach_opposite.GetInt()
 			&& localDirToBall.x <= sv_ball_keeper_forwarddive_longsidereach.GetInt()
 			&& abs(localDirToBall.y) <= sv_ball_keeper_forwarddive_shortsidereach.GetInt());
-
-		if (canReach)
-		{
-			canAlwaysCatch = false;
-			punchDir = m_vPlForward2D;
-		}
 		break;
 	case PLAYERANIMEVENT_KEEPER_JUMP:
 	default:
-		canReach = (zDist < sv_ball_bodypos_keeperarms_end.GetInt()
-			&& zDist >= sv_ball_bodypos_feet_start.GetInt()
-			&& xyDist <= sv_ball_keeper_standing_reach.GetInt());
+		canReach = (localDirToBall.z < sv_ball_bodypos_keeperarms_end.GetInt()
+			&& localDirToBall.z >= sv_ball_bodypos_feet_start.GetInt()
+			&& abs(localDirToBall.x) <= sv_ball_keeper_standing_reach.GetInt()
+			&& abs(localDirToBall.y) <= sv_ball_keeper_standing_reach.GetInt());
 
 		if (canReach)
 		{
-			int minCatch = sv_ball_keeper_standing_centeroffset.GetInt() - sv_ball_keeper_catch_reach.GetInt();
-			int maxCatch = sv_ball_keeper_standing_centeroffset.GetInt() + sv_ball_keeper_catch_reach.GetInt();
+			float distY = localDirToBall.y - sv_ball_keeper_standing_catchcenteroffset_side.GetInt(); 
+			float distZ = localDirToBall.z - sv_ball_keeper_standing_catchcenteroffset_z.GetInt(); 
 
-			if (zDist >= minCatch && zDist <= maxCatch)
+			if (abs(distY) <= sv_ball_keeper_catch_reach.GetInt() && abs(distZ) <= sv_ball_keeper_catch_reach.GetInt())
 				canAlwaysCatch = true;
 			else
 			{
-				canAlwaysCatch = false;
+				float maxYReach = (distY >= 0 ? sv_ball_keeper_standing_reach.GetInt() : -sv_ball_keeper_standing_reach.GetInt()) - sv_ball_keeper_standing_catchcenteroffset_side.GetInt();
+				punchAngYaw += abs(distY) / maxYReach * sv_ball_keeper_punch_maxyawangle.GetInt();
 
-				if (zDist >= sv_ball_keeper_standing_centeroffset.GetInt())
-				{
-					float frac = (zDist - maxCatch) / (sv_ball_bodypos_keeperarms_end.GetInt() - maxCatch);
-					VectorRotate(m_vPlForward2D, QAngle(frac * -sv_ball_keeper_punch_maxangle.GetInt(), 0, 0), punchDir);
-					DevMsg("punchdir: %.2f, %.2f, %.2f\n", punchDir.x, punchDir.y, punchDir.z);
-				}
-				else
-				{
-					float frac = (zDist - minCatch) / (sv_ball_bodypos_feet_start.GetInt() - minCatch);
-					VectorRotate(m_vPlForward2D, QAngle(frac * sv_ball_keeper_punch_maxangle.GetInt(), 0, 0), punchDir);
-				}
+				float maxZReach = (distZ >= 0 ? sv_ball_bodypos_keeperarms_end.GetInt() : sv_ball_bodypos_feet_start.GetInt()) - sv_ball_keeper_standing_catchcenteroffset_z.GetInt();
+				punchAngPitch -= abs(distZ) / maxZReach * sv_ball_keeper_punch_maxpitchangle.GetInt();
 			}
 		}
 		break;
@@ -2288,8 +2279,28 @@ bool CBall::CheckKeeperCatch()
 
 	if (m_bHasQueuedState || (!canAlwaysCatch && gpGlobals->curtime < m_flGlobalNextKeeperCatch && (!LastInfo(true) || LastInfo(true)->m_eBallState != BALL_PENALTY))) // Punch ball away
 	{
-		VectorRotate(punchDir, QAngle(sv_ball_keeper_punch_pitch.GetInt(), 0, 0), punchDir);
-		Vector vel = punchDir * m_vVel.Length2D() * sv_ball_keeperdeflectioncoeff.GetFloat();
+		Vector punchDirYaw;
+		AngleVectors(QAngle(0, punchAngYaw, 0), &punchDirYaw);
+		Vector punchDirPitch;
+		AngleVectors(QAngle(punchAngPitch, m_aPlAng[YAW], 0), &punchDirPitch);
+
+		if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_LEFT || m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT)
+			punchDirPitch *= sv_ball_keeper_punch_shortsidecoeff.GetFloat();
+		else
+			punchDirYaw *= sv_ball_keeper_punch_shortsidecoeff.GetFloat();
+
+		Vector punchDir = punchDirYaw + punchDirPitch;
+		punchDir.NormalizeInPlace();
+		QAngle punchAngle;
+		VectorAngles(punchDir, punchAngle);
+
+		if (punchAngle[PITCH] > 180)
+			punchAngle[PITCH] -= 360;
+
+		punchAngle[PITCH] = min(punchAngle[PITCH], sv_ball_keeper_punch_minpitchangle.GetInt());
+		punchAngle[PITCH] += sv_ball_keeper_punch_pitchoffset.GetInt();
+		AngleVectors(punchAngle, &punchDir);
+		Vector vel = punchDir * max(m_vVel.Length2D(), sv_ball_keeper_punch_minstrength.GetInt()) * sv_ball_keeperdeflectioncoeff.GetFloat();
 		SetVel(vel, -1, BODY_PART_KEEPERPUNCH, false, false, false);
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
 	}
@@ -2596,9 +2607,11 @@ void CBall::Think( void	)
 
 void CBall::TriggerGoal(int team)
 {
+	m_nTeam = team;
+
 	if (SDKGameRules()->State_Get() == MATCH_PENALTIES)
 	{
-		if (m_ePenaltyState == PENALTY_KICKED && team == m_nFoulingTeam)
+		if (m_ePenaltyState == PENALTY_KICKED && m_nTeam == m_nFoulingTeam)
 		{
 			m_ePenaltyState = PENALTY_SCORED;
 			//GetGlobalTeam(m_nFouledTeam)->AddGoal();
@@ -2610,19 +2623,18 @@ void CBall::TriggerGoal(int team)
 
 	if (LastInfo(true) && LastInfo(true)->m_eBallState == BALL_THROWIN && !LastPl(false, LastPl(true)))
 	{
-		TriggerGoalLine(team);
+		TriggerGoalLine(m_nTeam);
 		return;
 	}
 
-	if (LastTeam(true) != team && LastPl(true))
+	if (LastTeam(true) != m_nTeam && LastPl(true))
 	{
 		LastPl(true)->AddShot();
 		LastPl(true)->AddShotOnGoal();
 	}
 
-	m_nTeam = team;
-
 	SDKGameRules()->SetKickOffTeam(m_nTeam);
+
 	int scoringTeam;
 	CSDKPlayer *pKeeper = NULL;
 	bool isOwnGoal;

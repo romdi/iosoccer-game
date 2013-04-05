@@ -275,7 +275,8 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 void CHudScorebar::Init( void )
 {
 	ListenForGameEvent("timeout_pending");
-	ListenForGameEvent("timeout");
+	ListenForGameEvent("start_timeout");
+	ListenForGameEvent("end_timeout");
 	ListenForGameEvent("match_state");
 	ListenForGameEvent("set_piece");
 	ListenForGameEvent("goal");
@@ -336,8 +337,12 @@ void CHudScorebar::OnThink( void )
 			m_pNotifications[0]->SetText(L"TIMEOUT (∞)");
 		else 
 		{
-			int time = SDKGameRules()->GetTimeoutEnd() - gpGlobals->curtime;
-			m_pNotifications[0]->SetText(VarArgs("TIMEOUT: %s (%d:%02d)", g_PR->GetTeamCode(m_nCurMatchEventTeam), time / 60, time % 60));
+			int time = max(0, SDKGameRules()->GetTimeoutEnd() - gpGlobals->curtime);
+
+			if (m_nCurMatchEventTeam == TEAM_UNASSIGNED)
+				m_pNotifications[0]->SetText(VarArgs("TIMEOUT (%d:%02d)", time / 60, time % 60));
+			else
+				m_pNotifications[0]->SetText(VarArgs("TIMEOUT: %s (%d:%02d)", g_PR->GetTeamCode(m_nCurMatchEventTeam), time / 60, time % 60));
 		}
 	}
 
@@ -550,6 +555,16 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 		return;
 	}
 
+	if (!Q_strcmp(event->GetName(), "end_timeout"))
+	{
+		if (m_eCurMatchEvent == MATCH_EVENT_TIMEOUT || m_eCurMatchEvent == MATCH_EVENT_TIMEOUT_PENDING)
+		{
+			m_eCurMatchEvent = MATCH_EVENT_NONE;
+			m_flStayDuration = gpGlobals->curtime - m_flNotificationStart - slideDownDuration;
+		}
+		return;
+	}
+
 	m_flNotificationStart = gpGlobals->curtime;
 	m_nCurMatchEventTeam = TEAM_UNASSIGNED;
 	m_pNotificationPanel->SetTall(NOTIFICATION_HEIGHT);
@@ -719,7 +734,7 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 
 		m_flStayDuration = 1000;
 	}
-	else if (!Q_strcmp(event->GetName(), "timeout"))
+	else if (!Q_strcmp(event->GetName(), "start_timeout"))
 	{
 		m_nCurMatchEventTeam = event->GetInt("requesting_team");
 		m_eCurMatchEvent = MATCH_EVENT_TIMEOUT;

@@ -1578,9 +1578,9 @@ bool CGameMovement::CheckPlayerAnimEvent()
 
 	int sidemoveSign;
 
-	if ((mv->m_nButtons & IN_MOVELEFT) && (!(mv->m_nButtons & IN_MOVERIGHT) || mp_sidemove_override.GetBool() && pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVERIGHT))
+	if ((mv->m_nButtons & IN_MOVELEFT) && (!(mv->m_nButtons & IN_MOVERIGHT) || mp_keeper_sidemove_override.GetBool() && pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVERIGHT))
 		sidemoveSign = -1;
-	else if ((mv->m_nButtons & IN_MOVERIGHT) && (!(mv->m_nButtons & IN_MOVELEFT) || mp_sidemove_override.GetBool() && pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVELEFT))
+	else if ((mv->m_nButtons & IN_MOVERIGHT) && (!(mv->m_nButtons & IN_MOVELEFT) || mp_keeper_sidemove_override.GetBool() && pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVELEFT))
 		sidemoveSign = 1;
 	else
 		sidemoveSign = 0;
@@ -1600,15 +1600,16 @@ bool CGameMovement::CheckPlayerAnimEvent()
 			{
 				isSprinting = pPl->m_Shared.GetAnimEventStartButtons() & IN_SPEED;
 
-				mv->m_vecVelocity = vec3_origin;
-				mv->m_vecVelocity += forward2D * ZeroSign(mv->m_flForwardMove) * (isSprinting ? mp_keepersprintdivespeed_shortside.GetFloat() : mp_keeperdivespeed_shortside.GetFloat());
+				float moveCoeff;
 
-				if (!mp_keeperdive_moveback.GetBool() && pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_LEFT && (mv->m_nButtons & IN_MOVERIGHT))
-					mv->m_vecVelocity = vec3_origin;
-				else if (!mp_keeperdive_moveback.GetBool() && pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT && (mv->m_nButtons & IN_MOVELEFT))
-					mv->m_vecVelocity = vec3_origin;
+				if (pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_LEFT && sidemoveSign == 1
+					|| pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT && sidemoveSign == -1)
+					moveCoeff = mp_keeperdive_movebackcoeff.GetFloat();
 				else
-					mv->m_vecVelocity += right * sidemoveSign * (isSprinting ? mp_keepersprintdivespeed_longside.GetFloat() : mp_keeperdivespeed_longside.GetFloat());
+					moveCoeff = 1.0f;
+				
+				mv->m_vecVelocity = forward2D * ZeroSign(mv->m_flForwardMove) * (isSprinting ? mp_keepersprintdivespeed_shortside.GetFloat() : mp_keeperdivespeed_shortside.GetFloat());
+				mv->m_vecVelocity += right * sidemoveSign * moveCoeff * (isSprinting ? mp_keepersprintdivespeed_longside.GetFloat() : mp_keeperdivespeed_longside.GetFloat());
 
 				mv->m_vecVelocity.z = 0;
 				float maxSpeed;
@@ -1638,13 +1639,14 @@ bool CGameMovement::CheckPlayerAnimEvent()
 			{
 				isSprinting = pPl->m_Shared.GetAnimEventStartButtons() & IN_SPEED;
 
-				mv->m_vecVelocity = vec3_origin;
+				float moveCoeff;
 
-				if (!mp_keeperdive_moveback.GetBool() && (mv->m_nButtons & IN_BACK))
-					mv->m_vecVelocity = vec3_origin;
+				if (mv->m_nButtons & IN_BACK)
+					moveCoeff = mp_keeperdive_movebackcoeff.GetFloat();
 				else
-					mv->m_vecVelocity += forward2D * ZeroSign(mv->m_flForwardMove) * (isSprinting ? mp_keepersprintdivespeed_longside.GetFloat() : mp_keeperdivespeed_longside.GetFloat());
-				
+					moveCoeff = 1.0f;
+					
+				mv->m_vecVelocity = forward2D * ZeroSign(mv->m_flForwardMove) * moveCoeff * (isSprinting ? mp_keepersprintdivespeed_longside.GetFloat() : mp_keeperdivespeed_longside.GetFloat());		
 				mv->m_vecVelocity += right * sidemoveSign * (isSprinting ? mp_keepersprintdivespeed_shortside.GetFloat() : mp_keeperdivespeed_shortside.GetFloat());
 
 				mv->m_vecVelocity.z = 0;
@@ -2010,9 +2012,9 @@ bool CGameMovement::CheckJumpButton( void )
 
 		int sidemoveSign;
 
-		if ((mv->m_nButtons & IN_MOVELEFT) && (!(mv->m_nButtons & IN_MOVERIGHT) || mp_sidemove_override.GetBool() && pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVERIGHT))
+		if ((mv->m_nButtons & IN_MOVELEFT) && (!(mv->m_nButtons & IN_MOVERIGHT) || mp_keeper_sidemove_override.GetBool() && pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVERIGHT))
 			sidemoveSign = -1;
-		else if ((mv->m_nButtons & IN_MOVERIGHT) && (!(mv->m_nButtons & IN_MOVELEFT) || mp_sidemove_override.GetBool() && pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVELEFT))
+		else if ((mv->m_nButtons & IN_MOVERIGHT) && (!(mv->m_nButtons & IN_MOVELEFT) || mp_keeper_sidemove_override.GetBool() && pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVELEFT))
 			sidemoveSign = 1;
 		else
 			sidemoveSign = 0;

@@ -1185,17 +1185,11 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 	}
 	else if (!Q_stricmp(args[0], "requesttimeout"))
 	{
-		if (this != GetTeam()->GetCaptain())
+		if (SDKGameRules()->IsIntermissionState() || this != GetTeam()->GetCaptain() || SDKGameRules()->AdminWantsTimeout() || GetTeam()->WantsTimeout()
+			|| GetOppTeam()->WantsTimeout() || SDKGameRules()->GetTimeoutEnd() != 0 || GetTeam()->GetTimeoutsLeft() == 0)
 			return false;
 
-		if (GetTeam()->WantsTimeout() || GetOppTeam()->WantsTimeout() || SDKGameRules()->GetTimeoutEnd() != 0)
-			return false;
-
-		if (GetTeam()->GetTimeoutsLeft() > 0)
-			GetTeam()->SetTimeoutsLeft(GetTeam()->GetTimeoutsLeft() - 1);
-		else
-			return false;
-
+		GetTeam()->SetTimeoutsLeft(GetTeam()->GetTimeoutsLeft() - 1);
 		GetTeam()->SetWantsTimeout(true);
 
 		IGameEvent *pEvent = gameeventmanager->CreateEvent("timeout_pending");
