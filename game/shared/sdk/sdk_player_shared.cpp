@@ -312,6 +312,13 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 	bool stopPlayer = false;
 	const float border = (GetFlags() & FL_SHIELD_KEEP_IN) ? -mp_shield_border.GetInt() : mp_shield_border.GetInt();
 
+	int forward;
+#ifdef CLIENT_DLL
+	forward = GetPlayersTeam(this)->m_nForward;
+#else
+	forward = GetTeam()->m_nForward;
+#endif
+
 	if (SDKGameRules()->m_nShieldType != SHIELD_NONE)
 	{
 		if (SDKGameRules()->m_nShieldType == SHIELD_GOALKICK || 
@@ -414,7 +421,7 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 			SDKGameRules()->m_nShieldType == SHIELD_KICKOFF ||
 			SDKGameRules()->m_nShieldType == SHIELD_PENALTY && (GetFlags() & FL_SHIELD_KEEP_OUT))
 		{
-			float radius = SDKGameRules()->GetShieldRadius() + border;
+			float radius = SDKGameRules()->GetShieldRadius(GetTeamNumber()) + border;
 			Vector dir = newPos - SDKGameRules()->m_vShieldPos;
 
 			if ((GetFlags() & FL_SHIELD_KEEP_OUT && dir.Length2D() < radius || GetFlags() & FL_SHIELD_KEEP_IN && dir.Length2D() > radius)

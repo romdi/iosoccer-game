@@ -1529,7 +1529,7 @@ void CSDKPlayer::GetTargetPos(const Vector &pos, Vector &targetPos)
 		SDKGameRules()->m_nShieldType == SHIELD_KICKOFF ||
 		SDKGameRules()->m_nShieldType == SHIELD_PENALTY && (GetFlags() & FL_SHIELD_KEEP_OUT))
 	{
-		float radius = SDKGameRules()->GetShieldRadius() + border;
+		float radius = SDKGameRules()->GetShieldRadius(GetTeamNumber()) + border;
 		Vector tempPos = (SDKGameRules()->m_nShieldType == SHIELD_PENALTY && targetPos != vec3_invalid) ? targetPos : pos;
 
 		Vector dir = tempPos - SDKGameRules()->m_vShieldPos;
@@ -1653,7 +1653,7 @@ Vector CSDKPlayer::GetSpawnPos(bool findSafePos)
 	float xDist = halfField.x / 5;
 	float yDist = halfField.y / 5;
 	float xPos = g_Positions[mp_maxplayers.GetInt() - 1][GetTeamPosIndex()][POS_XPOS] * xDist + xDist;
-	float yPos = g_Positions[mp_maxplayers.GetInt() - 1][GetTeamPosIndex()][POS_YPOS] * yDist + max(mp_shield_freekick_radius.GetInt() + 2 * mp_shield_border.GetInt(), yDist);
+	float yPos = g_Positions[mp_maxplayers.GetInt() - 1][GetTeamPosIndex()][POS_YPOS] * yDist + max(mp_shield_kickoff_radius.GetInt() + 2 * mp_shield_border.GetInt(), yDist);
 
 	Vector spawnPos;
 	if (GetTeam()->m_nForward == 1)

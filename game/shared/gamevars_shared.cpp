@@ -73,9 +73,12 @@ ConVar mp_timelimit_penalties_intermission( "mp_timelimit_penalties_intermission
 ConVar mp_extratime( "mp_extratime", "1", FCVAR_NOTIFY|FCVAR_REPLICATED );
 ConVar mp_penalties( "mp_penalties", "1", FCVAR_NOTIFY|FCVAR_REPLICATED );
 
-ConVar mp_shield_throwin_radius("mp_shield_throwin_radius", "180", FCVAR_NOTIFY|FCVAR_REPLICATED);
-ConVar mp_shield_freekick_radius("mp_shield_freekick_radius", "360", FCVAR_NOTIFY|FCVAR_REPLICATED);
-ConVar mp_shield_corner_radius("mp_shield_corner_radius", "360", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar mp_shield_throwin_radius_taker("mp_shield_throwin_radius_taker", "90", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar mp_shield_throwin_radius_opponent("mp_shield_throwin_radius_opponent", "180", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar mp_shield_freekick_radius_taker("mp_shield_freekick_radius_taker", "180", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar mp_shield_freekick_radius_opponent("mp_shield_freekick_radius_opponent", "360", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar mp_shield_corner_radius_taker("mp_shield_corner_radius_taker", "180", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar mp_shield_corner_radius_opponent("mp_shield_corner_radius_opponent", "360", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar mp_shield_kickoff_radius("mp_shield_kickoff_radius", "360", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar mp_shield_ball_radius("mp_shield_ball_radius", "30", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar mp_shield_border("mp_shield_border", "20", FCVAR_NOTIFY|FCVAR_REPLICATED);
