@@ -929,6 +929,9 @@ void CHLClient::Shutdown( void )
 	
 	ClearKeyValuesCache();
 
+	SteamClient()->ReleaseUser( GetHSteamPipe(), GetHSteamUser() );
+	SteamClient()->BReleaseSteamPipe( GetHSteamPipe() );
+
 	DisconnectTier3Libraries( );
 	DisconnectTier2Libraries( );
 	ConVar_Unregister();
