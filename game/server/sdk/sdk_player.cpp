@@ -471,11 +471,8 @@ void CSDKPlayer::Precache()
 	PrecacheModel( SDK_PLAYER_MODEL );
 	PrecacheScriptSound("Player.Oomph");
 	PrecacheScriptSound("Player.DiveKeeper");
-	PrecacheScriptSound("Player.Save");
-	PrecacheScriptSound("Player.Goal");
 	PrecacheScriptSound("Player.Slide");
 	PrecacheScriptSound("Player.DivingHeader");
-	PrecacheScriptSound("Player.Card");
 
 	BaseClass::Precache();
 }

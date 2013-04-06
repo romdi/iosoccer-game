@@ -2093,7 +2093,7 @@ bool CGameMovement::CheckSlideButton()
 	if (mv->m_nOldButtons & IN_DUCK)
 		return false;
 
-	PlayerAnimEvent_t animEvent = PLAYERANIMEVENT_SLIDE;
+	PlayerAnimEvent_t animEvent;
 
 	bool isKeeper;
 	int team;
@@ -2109,6 +2109,11 @@ bool CGameMovement::CheckSlideButton()
 	{
 		MoveHelper()->StartSound( mv->GetAbsOrigin(), "Player.DiveKeeper" );
 		animEvent = PLAYERANIMEVENT_KEEPER_DIVE_FORWARD;
+	}
+	else
+	{
+		MoveHelper()->StartSound( mv->GetAbsOrigin(), "Player.Slide" );
+		animEvent = PLAYERANIMEVENT_SLIDE;
 	}
 
 	pPl->m_Shared.SetAnimEventStartAngle(mv->m_vecAbsViewAngles);

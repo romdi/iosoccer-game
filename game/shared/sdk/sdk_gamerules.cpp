@@ -1393,7 +1393,15 @@ void CSDKGameRules::State_Enter( match_state_t newState )
 	}
 
 	if (!IsIntermissionState())
+	{
 		GetBall()->RemoveAllPlayerBalls();
+		GetBall()->StopSound("Crowd.Background1");
+		GetBall()->StopSound("Crowd.Background2");
+		GetBall()->EmitSound("Crowd.Background1");
+		GetBall()->EmitSound("Crowd.Background2");
+		GetBall()->StopSound("Crowd.Song");
+		GetBall()->EmitSound("Crowd.Song");
+	}
 
 	// Initialize the new state.
 	if ( m_pCurStateInfo && m_pCurStateInfo->pfnEnterState )
@@ -1424,6 +1432,18 @@ void CSDKGameRules::State_Think()
 
 		if (!IsIntermissionState())
 		{
+			if (g_IOSRand.RandomInt(0, 240 * (1.0f / gpGlobals->interval_per_tick)) == 0)
+			{
+				GetBall()->EmitSound("Crowd.Vuvuzela");
+				GetBall()->EmitSound("Crowd.Vuvuzela");
+				GetBall()->EmitSound("Crowd.Vuvuzela");
+			}
+
+			if (g_IOSRand.RandomInt(0, 120 * (1.0f / gpGlobals->interval_per_tick)) == 0)
+			{
+				GetBall()->EmitSound("Crowd.Cheer");
+			}
+
 			int additionalTime = m_nAnnouncedInjuryTime + (abs(m_nBallZone) < 50 ? 0 : 30);
 			m_flStateTimeLeft += m_flInjuryTime + additionalTime * 60 / (90.0f / mp_timelimit_match.GetFloat());
 
@@ -1499,6 +1519,8 @@ void CSDKGameRules::State_WARMUP_Think()
 
 void CSDKGameRules::State_WARMUP_Leave(match_state_t newState)
 {
+	GetBall()->EmitSound("Ball.Whistle");
+	GetBall()->EmitSound("Crowd.EndOfPeriod");
 }
 
 void CSDKGameRules::State_FIRST_HALF_Enter()
@@ -1510,6 +1532,8 @@ void CSDKGameRules::State_FIRST_HALF_Enter()
 		gameeventmanager->FireEvent(pEvent);
 
 	UTIL_ClientPrintAll(HUD_PRINTTALK, "#game_match_start");
+
+	GetBall()->EmitSound("Crowd.YNWA");
 }
 
 void CSDKGameRules::State_FIRST_HALF_Think()
@@ -1526,8 +1550,8 @@ void CSDKGameRules::State_FIRST_HALF_Think()
 
 void CSDKGameRules::State_FIRST_HALF_Leave(match_state_t newState)
 {
-	GetBall()->EmitSound("Ball.whistle");
-	GetBall()->EmitSound("Ball.cheer");
+	GetBall()->EmitSound("Ball.Whistle");
+	GetBall()->EmitSound("Crowd.EndOfPeriod");
 }
 
 void CSDKGameRules::State_HALFTIME_Enter()
@@ -1555,6 +1579,7 @@ void CSDKGameRules::State_HALFTIME_Leave(match_state_t newState)
 void CSDKGameRules::State_SECOND_HALF_Enter()
 {
 	GetBall()->State_Transition(BALL_KICKOFF, 0, true);
+	GetBall()->EmitSound("Crowd.YNWA");
 }
 
 void CSDKGameRules::State_SECOND_HALF_Think()
@@ -1576,8 +1601,8 @@ void CSDKGameRules::State_SECOND_HALF_Think()
 
 void CSDKGameRules::State_SECOND_HALF_Leave(match_state_t newState)
 {
-	GetBall()->EmitSound("Ball.whistle");
-	GetBall()->EmitSound("Ball.cheer");
+	GetBall()->EmitSound("Ball.Whistle");
+	GetBall()->EmitSound("Crowd.EndOfPeriod");
 }
 
 void CSDKGameRules::State_EXTRATIME_INTERMISSION_Enter()
@@ -1621,8 +1646,8 @@ void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Think()
 
 void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Leave(match_state_t newState)
 {
-	GetBall()->EmitSound("Ball.whistle");
-	GetBall()->EmitSound("Ball.cheer");
+	GetBall()->EmitSound("Ball.Whistle");
+	GetBall()->EmitSound("Crowd.EndOfPeriod");
 }
 
 void CSDKGameRules::State_EXTRATIME_HALFTIME_Enter()
@@ -1669,8 +1694,8 @@ void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Think()
 
 void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Leave(match_state_t newState)
 {
-	GetBall()->EmitSound("Ball.whistle");
-	GetBall()->EmitSound("Ball.cheer");
+	GetBall()->EmitSound("Ball.Whistle");
+	GetBall()->EmitSound("Crowd.EndOfPeriod");
 }
 
 void CSDKGameRules::State_PENALTIES_INTERMISSION_Enter()
@@ -1844,8 +1869,8 @@ void CSDKGameRules::State_PENALTIES_Think()
 
 void CSDKGameRules::State_PENALTIES_Leave(match_state_t newState)
 {
-	GetBall()->EmitSound("Ball.whistle");
-	GetBall()->EmitSound("Ball.cheer");
+	GetBall()->EmitSound("Ball.Whistle");
+	GetBall()->EmitSound("Crowd.EndOfPeriod");
 }
 
 void CSDKGameRules::State_COOLDOWN_Enter()

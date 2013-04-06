@@ -436,13 +436,28 @@ void CBall::Spawn (void)
 	m_pPhys->SetPosition(GetLocalOrigin(), GetLocalAngles(), true);
 	m_pPhys->SetVelocityInstantaneous(&vec3_origin, &vec3_origin);
 
-	PrecacheScriptSound( "Ball.kicknormal" );
-	PrecacheScriptSound( "Ball.kickhard" );
-	PrecacheScriptSound( "Ball.touch" );
-	PrecacheScriptSound( "Ball.post" );
-	PrecacheScriptSound( "Ball.net" );
-	PrecacheScriptSound( "Ball.whistle" );
-	PrecacheScriptSound( "Ball.cheer" );
+	PrecacheScriptSound("Ball.Kicknormal");
+	PrecacheScriptSound("Ball.Kickhard");
+	PrecacheScriptSound("Ball.Touch");
+	PrecacheScriptSound("Ball.Post");
+	PrecacheScriptSound("Ball.Net");
+	PrecacheScriptSound("Ball.Whistle");
+	PrecacheScriptSound("Crowd.Background1");
+	PrecacheScriptSound("Crowd.Background2");
+	PrecacheScriptSound("Crowd.Cheer");
+	PrecacheScriptSound("Crowd.EndOfPeriod");
+	PrecacheScriptSound("Crowd.Goal1");
+	PrecacheScriptSound("Crowd.Goal2");
+	PrecacheScriptSound("Crowd.Goal3");
+	PrecacheScriptSound("Crowd.Save");
+	PrecacheScriptSound("Crowd.Miss");
+	PrecacheScriptSound("Crowd.Foul");
+	PrecacheScriptSound("Crowd.YellowCard");
+	PrecacheScriptSound("Crowd.RedCard");
+	PrecacheScriptSound("Crowd.Song");
+	PrecacheScriptSound("Crowd.Vuvuzela");
+	PrecacheScriptSound("Crowd.Way");
+	PrecacheScriptSound("Crowd.Easy");
 
 	State_Transition(BALL_NORMAL);
 }
@@ -553,21 +568,21 @@ void CBall::VPhysicsCollision( int index, gamevcollisionevent_t	*pEvent	)
 			//pLastPl->AddShotOnGoal();
 		}
 
-		EmitSound("Ball.post");
+		EmitSound("Ball.Post");
 	}
 	else
 	{
 		//if ball is moving fast when we hit something play a sound
 		if (flSpeed > 500.0f)
 		{
-			EmitSound("Ball.touch");
+			EmitSound("Ball.Touch");
 		}
 	}
 	
 	//iosgoalnets 82=iosgoalnets, 30=concrete!!! TEMP!!! until pricey changes nets surfaceprop!
 	if ((surfaceProps == 82 /*|| surfaceProps == 30*/) && flSpeed > 300.0f)
 	{
-		EmitSound("Ball.net");
+		EmitSound("Ball.Net");
 	}
 
 	///////////////////////////////////////////////////////////////////////
@@ -590,7 +605,7 @@ void CBall::VPhysicsCollision( int index, gamevcollisionevent_t	*pEvent	)
 			Touched(pPl, false, BODY_PART_UNKNOWN);
 		}
 
-		EmitSound("Ball.touch");
+		EmitSound("Ball.Touch");
 	}
 
 	//Warning ("surfaceprops index %d\n", surfaceProps);
@@ -827,8 +842,10 @@ void CBall::State_Think()
 						}
 					}
 
-					EmitSound("Ball.whistle");
-					EmitSound("Ball.cheer");
+					EmitSound("Ball.Whistle");
+					EmitSound("Crowd.Goal1");
+					EmitSound("Crowd.Goal2");
+					EmitSound("Crowd.Goal3");
 				}
 				else
 				{
@@ -859,7 +876,7 @@ void CBall::State_Think()
 								pEvent->SetInt("statistic_type", statType);
 								gameeventmanager->FireEvent(pEvent);
 							}
-							EmitSound("Ball.whistle");
+							EmitSound("Ball.Whistle");
 						}
 						break;
 					case BALL_GOALKICK:
@@ -872,7 +889,7 @@ void CBall::State_Think()
 								pEvent->SetInt("statistic_type", STATISTIC_SHOTSONGOAL_TEAM);
 								gameeventmanager->FireEvent(pEvent);
 							}
-							EmitSound("Ball.whistle");
+							EmitSound("Ball.Whistle");
 						}
 						break;
 					case BALL_CORNER:
@@ -885,7 +902,7 @@ void CBall::State_Think()
 								pEvent->SetInt("statistic_type", STATISTIC_SETPIECECOUNT_TEAM);
 								gameeventmanager->FireEvent(pEvent);
 							}
-							EmitSound("Ball.whistle");
+							EmitSound("Ball.Whistle");
 						}
 						break;
 					case BALL_FREEKICK:
@@ -897,25 +914,31 @@ void CBall::State_Think()
 							{
 							case FOUL_NORMAL_NO_CARD:
 								foulType = MATCH_EVENT_FOUL;
+								EmitSound("Crowd.Foul");
 								break;
 							case FOUL_NORMAL_YELLOW_CARD:
 								if (m_pFoulingPl->GetYellowCards() % 2 == 0)
 									foulType = MATCH_EVENT_YELLOWREDCARD;
 								else
 									foulType = MATCH_EVENT_YELLOWCARD;
+								EmitSound("Crowd.YellowCard");
 								break;
 							case FOUL_NORMAL_RED_CARD:
 								foulType = MATCH_EVENT_REDCARD;
+								EmitSound("Crowd.RedCard");
 								break;
 							case FOUL_OFFSIDE:
 								foulType = MATCH_EVENT_OFFSIDE;
 								SDKGameRules()->SetOffsideLinesEnabled(true);
+								EmitSound("Crowd.Foul");
 								break;
 							case FOUL_DOUBLETOUCH:
 								foulType = MATCH_EVENT_DOUBLETOUCH;
+								EmitSound("Crowd.Foul");
 								break;
 							default:
 								foulType = MATCH_EVENT_FOUL;
+								EmitSound("Crowd.Foul");
 								break;
 							}
 
@@ -945,7 +968,8 @@ void CBall::State_Think()
 								pEvent->SetInt("distance_to_goal", distToGoal * 2.54f / 100);
 								gameeventmanager->FireEvent(pEvent);
 							}
-							EmitSound("Ball.whistle");
+
+							EmitSound("Ball.Whistle");
 						}
 						break;
 					}
@@ -1187,7 +1211,7 @@ void CBall::State_KICKOFF_Think()
 			pEvent->SetInt("state", MATCH_EVENT_KICKOFF);
 			gameeventmanager->FireEvent(pEvent);
 		}
-		EmitSound("Ball.whistle");
+		EmitSound("Ball.Whistle");
 	}
 
 	if (!CSDKPlayer::IsOnField(m_pOtherPl) || m_pOtherPl == m_pPl)
@@ -1432,6 +1456,7 @@ void CBall::State_CORNER_Think()
 		&& CanTouchBallXY()
 		&& (!m_bNonnormalshotsBlocked && m_pPl->IsShooting() || m_bNonnormalshotsBlocked && (m_pPl->IsNormalshooting() || !sv_ball_blockpowershot.GetBool() && m_pPl->IsPowershooting())))
 	{
+		EmitSound("Crowd.Way");
 		m_pPl->AddCorner();
 		RemoveAllTouches();
 		DoGroundShot(false);
@@ -1566,6 +1591,7 @@ void CBall::State_FREEKICK_Think()
 		&& CanTouchBallXY()
 		&& (!m_bNonnormalshotsBlocked && m_pPl->IsShooting() || m_bNonnormalshotsBlocked && (m_pPl->IsNormalshooting() || !sv_ball_blockpowershot.GetBool() && m_pPl->IsPowershooting())))
 	{
+		EmitSound("Crowd.Way");
 		m_pPl->AddFreeKick();
 		RemoveAllTouches();
 		DoGroundShot(true);
@@ -1801,7 +1827,11 @@ void CBall::State_KEEPERHANDS_Think()
 
 			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KEEPER_HANDS_KICK);
 			spin = sv_ball_volleyshot_spincoeff.GetFloat();
-			EmitSound("Ball.kickhard");
+
+			if (vel.Length() > 1000)
+				EmitSound("Ball.Kickhard");
+			else
+				EmitSound("Ball.Kicknormal");
 		}
 
 		RemoveAllTouches();
@@ -2421,7 +2451,7 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 		vel = dir * shotStrength;
 		spin = 0;
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_PASS);
-		EmitSound("Ball.kicknormal");
+		EmitSound("Ball.Kicknormal");
 	}
 	else
 	{
@@ -2449,14 +2479,13 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 		if (vel.Length() > 700)
 		{
 			PlayerAnimEvent_t anim = PLAYERANIMEVENT_BLANK;
-			EmitSound("Ball.kickhard");
-
-			//if (m_vVel.Length() > 800)
 			anim = PLAYERANIMEVENT_KICK;
-			//else
-			//	anim = PLAYERANIMEVENT_PASS;
-
 			m_pPl->DoServerAnimationEvent(anim);
+
+			if (vel.Length() > 1000)
+				EmitSound("Ball.Kickhard");
+			else
+				EmitSound("Ball.Kicknormal");
 		}
 		else
 		{
@@ -2465,7 +2494,7 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 			else
 				m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
 
-			EmitSound("Ball.touch");
+			EmitSound("Ball.Touch");
 		}
 
 		spin = 1;
@@ -2500,7 +2529,11 @@ bool CBall::DoVolleyShot()
 
 	if (vel.Length() > 700)
 	{
-		EmitSound("Ball.kickhard");
+		if (vel.Length() > 1000)
+			EmitSound("Ball.Kickhard");
+		else
+			EmitSound("Ball.Kicknormal");
+
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_VOLLEY);
 	}
 	else
@@ -2528,7 +2561,7 @@ bool CBall::DoHeader()
 	if (m_pPl->IsNormalshooting())
 	{
 		vel = m_vPlForward * GetNormalshotStrength(GetPitchCoeff(true), sv_ball_normalheader_strength.GetInt());
-		EmitSound("Ball.kicknormal");
+		EmitSound("Ball.Kicknormal");
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEADER_STATIONARY);
 	}
 	else if (m_vPlForwardVel2D.Length2D() >= mp_walkspeed.GetInt()
@@ -2543,7 +2576,8 @@ bool CBall::DoHeader()
 		else
 			vel = forward * GetChargedshotStrength(1.0f, sv_ball_chargeddivingheader_minstrength.GetInt(), sv_ball_chargeddivingheader_maxstrength.GetInt());
 
-		EmitSound("Ball.kickhard");
+		EmitSound("Ball.Kickhard");
+		EmitSound("Player.DivingHeader");
 		//m_pPl->AddFlag(FL_FREECAM);
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_DIVINGHEADER);
 	}
@@ -2554,7 +2588,11 @@ bool CBall::DoHeader()
 		else
 			vel = m_vPlForward * GetChargedshotStrength(GetPitchCoeff(false), sv_ball_chargedheader_minstrength.GetInt(), sv_ball_chargedheader_maxstrength.GetInt());
 
-		EmitSound("Ball.kickhard");
+		if (vel.Length() > 1000)
+			EmitSound("Ball.Kickhard");
+		else
+			EmitSound("Ball.Kicknormal");
+
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEADER);
 	}
 
@@ -2743,7 +2781,10 @@ void CBall::TriggerGoalLine(int team)
 		float maxX = GetGlobalTeam(team)->m_vPenBoxMax.GetX() - boxLength * 2;
 
 		if (m_vTriggerTouchPos.x >= minX && m_vTriggerTouchPos.x <= maxX) // Has to cross the goal line inside the six-yard box
+		{
 			LastPl(true)->AddShot();
+			EmitSound("Crowd.Miss");
+		}
 		else
 			LastPl(true)->AddPass();
 	}
@@ -2934,6 +2975,7 @@ void CBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart)
 			pPl->AddKeeperSave();
 			pLastPl->AddShot();
 			pLastPl->AddShotOnGoal();
+			EmitSound("Crowd.Save");
 		}
 		else if ((m_vPos - pInfo->m_vBallPos).Length2DSqr() >= pow(sv_ball_stats_pass_mindist.GetInt(), 2.0f) && pInfo->m_eBodyPart != BODY_PART_KEEPERPUNCH) // Pass or interception
 		{
