@@ -202,7 +202,7 @@ ConVar sv_ball_assign_setpieces("sv_ball_assign_setpieces", "1", FCVAR_NOTIFY);
 
 ConVar sv_ball_nonnormalshotsblocktime_freekick("sv_ball_nonnormalshotsblocktime_freekick", "4.0", FCVAR_NOTIFY);
 ConVar sv_ball_nonnormalshotsblocktime_corner("sv_ball_nonnormalshotsblocktime_corner", "4.0", FCVAR_NOTIFY);
-ConVar sv_ball_nonnormalshotsblocktime_penalty("sv_ball_nonnormalshotsblocktime_penalty", "4.0", FCVAR_NOTIFY);
+ConVar sv_ball_shotsblocktime_penalty("sv_ball_shotsblocktime_penalty", "4.0", FCVAR_NOTIFY);
 ConVar sv_ball_blockpowershot("sv_ball_blockpowershot", "1", FCVAR_NOTIFY);
 
 
@@ -329,6 +329,7 @@ IMPLEMENT_SERVERCLASS_ST( CBall, DT_Ball )
 	SendPropBool(SENDINFO(m_bIsPlayerBall)),
 	SendPropInt(SENDINFO(m_eBallState)),
 	SendPropInt(SENDINFO(m_bNonnormalshotsBlocked)),
+	SendPropInt(SENDINFO(m_bShotsBlocked)),
 	//ios1.1
     //SendPropVector(SENDINFO(m_vecOrigin), -1, SPROP_NOSCALE|SPROP_CHANGES_OFTEN, 0.0f, HIGH_DEFAULT, SendProxy_Origin ),
 END_SEND_TABLE()
@@ -371,6 +372,7 @@ CBall::CBall()
 	m_pFirstAssister = NULL;
 	m_pSecondAssister = NULL;
 	m_bNonnormalshotsBlocked = false;
+	m_bShotsBlocked = false;
 	m_bHitThePost = false;
 }
 
@@ -1177,7 +1179,7 @@ void CBall::State_KICKOFF_Think()
 		SDKGameRules()->EnableShield(SHIELD_KICKOFF, m_pPl->GetTeamNumber(), SDKGameRules()->m_vKickOff);
 		m_pPl->SetPosInsideShield(Vector(m_vPos.x - m_pPl->GetTeam()->m_nRight * 30, m_vPos.y, SDKGameRules()->m_vKickOff.GetZ()), true);
 		m_flStateTimelimit = -1;
-		m_bNonnormalshotsBlocked = true;
+		m_bShotsBlocked = true;
 
 		IGameEvent *pEvent = gameeventmanager->CreateEvent("match_state");
 		if (pEvent)
@@ -1221,7 +1223,7 @@ void CBall::State_KICKOFF_Think()
 	{
 		m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit_setpiece.GetFloat();
 		m_pPl->SetShotButtonsReleased(false);
-		m_bNonnormalshotsBlocked = false;
+		m_bShotsBlocked = false;
 	}
 
 	UpdateCarrier();
@@ -1240,7 +1242,7 @@ void CBall::State_KICKOFF_Think()
 
 void CBall::State_KICKOFF_Leave(ball_state_t newState)
 {
-	m_bNonnormalshotsBlocked = false;
+	m_bShotsBlocked = false;
 }
 
 void CBall::State_THROWIN_Enter()
@@ -1260,6 +1262,7 @@ void CBall::State_THROWIN_Think()
 		SDKGameRules()->EnableShield(SHIELD_THROWIN, m_pPl->GetTeamNumber(), m_vPos);
 		m_pPl->SetPosInsideShield(Vector(m_vTriggerTouchPos.x, m_vTriggerTouchPos.y, SDKGameRules()->m_vKickOff.GetZ()), true);
 		m_flStateTimelimit = -1;
+		m_bShotsBlocked = true;
 	}
 
 	if (!PlayersAtTargetPos())
@@ -1272,6 +1275,7 @@ void CBall::State_THROWIN_Think()
 		m_pPl->RemoveFlag(FL_ATCONTROLS);
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_THROWIN);
 		m_pPl->SetShotButtonsReleased(false);
+		m_bShotsBlocked = false;
 	}
 
 	UpdateCarrier();
@@ -1310,6 +1314,7 @@ void CBall::State_THROWIN_Leave(ball_state_t newState)
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_THROW);
 
 	EnablePlayerCollisions(true);
+	m_bShotsBlocked = false;
 }
 
 void CBall::State_GOALKICK_Enter()
@@ -1336,6 +1341,7 @@ void CBall::State_GOALKICK_Think()
 		SDKGameRules()->EnableShield(SHIELD_GOALKICK, m_pPl->GetTeamNumber(), m_vPos);
 		m_pPl->SetPosInsideShield(Vector(m_vPos.x, m_vPos.y - 100 * m_pPl->GetTeam()->m_nForward, SDKGameRules()->m_vKickOff.GetZ()), true);
 		m_flStateTimelimit = -1;
+		m_bShotsBlocked = true;
 	}
 
 	if (!PlayersAtTargetPos())
@@ -1346,6 +1352,7 @@ void CBall::State_GOALKICK_Think()
 		m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit_setpiece.GetFloat();
 		m_pPl->RemoveFlag(FL_ATCONTROLS);
 		m_pPl->SetShotButtonsReleased(false);
+		m_bShotsBlocked = false;
 	}
 
 	UpdateCarrier();
@@ -1361,6 +1368,7 @@ void CBall::State_GOALKICK_Think()
 
 void CBall::State_GOALKICK_Leave(ball_state_t newState)
 {
+	m_bShotsBlocked = false;
 }
 
 void CBall::State_CORNER_Enter()
@@ -1374,7 +1382,6 @@ void CBall::State_CORNER_Enter()
 		ballPos = pTeam->m_vCornerRight;
 	
 	SetPos(ballPos);
-	m_bNonnormalshotsBlocked = true;
 }
 
 void CBall::State_CORNER_Think()
@@ -1399,6 +1406,7 @@ void CBall::State_CORNER_Think()
 		SDKGameRules()->EnableShield(SHIELD_CORNER, m_pPl->GetTeamNumber(), m_vPos);
 		m_pPl->SetPosInsideShield(Vector(m_vPos.x - 50 * Sign((SDKGameRules()->m_vKickOff - m_vPos).x), m_vPos.y - 50 * Sign((SDKGameRules()->m_vKickOff - m_vPos).y), SDKGameRules()->m_vKickOff[2]), true);
 		m_flStateTimelimit = -1;
+		m_bShotsBlocked = true;
 	}
 
 	if (!PlayersAtTargetPos())
@@ -1408,7 +1416,8 @@ void CBall::State_CORNER_Think()
 	{
 		m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit_setpiece.GetFloat();
 		m_pPl->RemoveFlag(FL_ATCONTROLS);
-		m_pPl->SetShotButtonsReleased(false);
+		m_bShotsBlocked = false;
+		m_bNonnormalshotsBlocked = true;
 	}
 
 	if (m_bNonnormalshotsBlocked && gpGlobals->curtime - m_flStateEnterTime > sv_ball_nonnormalshotsblocktime_corner.GetFloat())
@@ -1433,6 +1442,7 @@ void CBall::State_CORNER_Think()
 void CBall::State_CORNER_Leave(ball_state_t newState)
 {
 	m_bNonnormalshotsBlocked = false;
+	m_bShotsBlocked = false;
 }
 
 void CBall::State_GOAL_Enter()
@@ -1490,7 +1500,6 @@ void CBall::State_FREEKICK_Enter()
 {
 	HandleFoul();
 	SetPos(m_vFoulPos);
-	m_bNonnormalshotsBlocked = true;
 }
 
 void CBall::State_FREEKICK_Think()
@@ -1519,6 +1528,7 @@ void CBall::State_FREEKICK_Think()
 		SDKGameRules()->EnableShield(SHIELD_FREEKICK, m_pPl->GetTeamNumber(), m_vPos);
 		m_pPl->SetPosInsideShield(Vector(m_vPos.x, m_vPos.y - 100 * m_pPl->GetTeam()->m_nForward, SDKGameRules()->m_vKickOff.GetZ()), true);
 		m_flStateTimelimit = -1;
+		m_bShotsBlocked = true;
 	}
 
 	if (!PlayersAtTargetPos())
@@ -1537,7 +1547,8 @@ void CBall::State_FREEKICK_Think()
 		}
 
 		m_pPl->RemoveFlag(FL_ATCONTROLS);
-		m_pPl->SetShotButtonsReleased(false);
+		m_bShotsBlocked = false;
+		m_bNonnormalshotsBlocked = true;
 	}
 
 	// Remap to 0.0 - 1.0
@@ -1566,6 +1577,7 @@ void CBall::State_FREEKICK_Leave(ball_state_t newState)
 {
 	SDKGameRules()->SetOffsideLinesEnabled(false);
 	m_bNonnormalshotsBlocked = false;
+	m_bShotsBlocked = false;
 }
 
 void CBall::State_PENALTY_Enter()
@@ -1582,7 +1594,6 @@ void CBall::State_PENALTY_Enter()
 	}
 
 	m_bPenaltyTakerStartedMoving = false;
-	m_bNonnormalshotsBlocked = true;
 }
 
 void CBall::State_PENALTY_Think()
@@ -1616,6 +1627,7 @@ void CBall::State_PENALTY_Think()
 		SDKGameRules()->EnableShield(SHIELD_PENALTY, m_nFouledTeam, GetGlobalTeam(m_nFoulingTeam)->m_vPenalty);
 		m_pPl->SetPosInsideShield(Vector(m_vPos.x, m_vPos.y - 150 * m_pPl->GetTeam()->m_nForward, SDKGameRules()->m_vKickOff.GetZ()), true);
 		m_flStateTimelimit = -1;
+		m_bShotsBlocked = true;
 	}
 
 	if (!CSDKPlayer::IsOnField(m_pOtherPl))
@@ -1647,21 +1659,17 @@ void CBall::State_PENALTY_Think()
 	{
 		m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit_setpiece.GetFloat();
 		m_pPl->RemoveFlag(FL_ATCONTROLS);
-		m_pOtherPl->RemoveFlag(FL_ATCONTROLS);
-		m_pOtherPl->AddFlag(FL_ATCONTROLS);
 	}
 
-	if (m_bNonnormalshotsBlocked && gpGlobals->curtime - m_flStateEnterTime > sv_ball_nonnormalshotsblocktime_penalty.GetFloat())
+	if (m_bShotsBlocked && gpGlobals->curtime - m_flStateEnterTime > sv_ball_shotsblocktime_penalty.GetFloat())
 	{
-		m_bNonnormalshotsBlocked = false;
+		m_bShotsBlocked = false;
 		m_pPl->SetShotButtonsReleased(false);
 	}
 
 	UpdateCarrier();
 
-	if (m_pPl->ShotButtonsReleased()
-		&& CanTouchBallXY()
-		&& (!m_bNonnormalshotsBlocked && m_pPl->IsShooting() || m_bNonnormalshotsBlocked && (m_pPl->IsNormalshooting() || !sv_ball_blockpowershot.GetBool() && m_pPl->IsPowershooting())))
+	if (m_pPl->ShotButtonsReleased() && !m_bShotsBlocked && m_pPl->IsShooting() && CanTouchBallXY())
 	{
 		m_pPl->AddPenalty();
 		RemoveAllTouches();
@@ -1679,7 +1687,7 @@ void CBall::State_PENALTY_Leave(ball_state_t newState)
 		m_pOtherPl->RemoveFlag(FL_ATCONTROLS);
 	}
 
-	m_bNonnormalshotsBlocked = false;
+	m_bShotsBlocked = false;
 }
 
 void CBall::State_KEEPERHANDS_Enter()
@@ -3133,6 +3141,7 @@ void CBall::Reset()
 	m_pFirstAssister = NULL;
 	m_pSecondAssister = NULL;
 	m_bNonnormalshotsBlocked = false;
+	m_bShotsBlocked = false;
 	m_bHitThePost = false;
 }
 

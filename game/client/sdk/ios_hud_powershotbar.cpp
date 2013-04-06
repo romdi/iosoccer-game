@@ -140,10 +140,15 @@ void CHudChargedshotBar::Paint()
 		fgColor = Color(255, 255, 255, 255);
 		bgColor = Color(100, 100, 100, 255);
 	}
-	else if (GetBall() && GetBall()->m_bNonnormalshotsBlocked)
+	else if (GetBall() && GetBall()->m_bShotsBlocked)
 	{
 		fgColor = Color(255, 0, 0, 255);
-		bgColor = Color(100, 0, 0, 255);
+		bgColor = Color(139, 0, 0, 255);
+	}
+	else if (GetBall() && GetBall()->m_bNonnormalshotsBlocked)
+	{
+		fgColor = Color(255, 140, 0, 255);
+		bgColor = Color(255, 69, 0, 255);
 	}
 	else
 	{

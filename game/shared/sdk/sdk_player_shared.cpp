@@ -569,7 +569,7 @@ void CSDKPlayer::CheckShotCharging()
 {
 	if ((m_nButtons & IN_ATTACK)
 		|| (GetFlags() & FL_REMOTECONTROLLED)
-		|| GetBall() && GetBall()->m_bNonnormalshotsBlocked
+		|| GetBall() && (GetBall()->m_bNonnormalshotsBlocked || GetBall()->m_bShotsBlocked)
 		|| !m_bShotButtonsReleased)
 	{
 		m_Shared.m_bDoChargedShot = false;
