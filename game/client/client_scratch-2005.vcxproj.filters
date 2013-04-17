@@ -1422,6 +1422,9 @@
     <ClCompile Include="game_controls\matcheventmenu.cpp">
       <Filter>Source Files\game_controls</Filter>
     </ClCompile>
+    <ClCompile Include="sdk\c_ios_mapentities.cpp">
+      <Filter>Source Files\SDK</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="achievement_notification_panel.h">
@@ -3204,6 +3207,9 @@
       <Filter>game_controls Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\sdk\ios_requiredclientversion.h">
+      <Filter>Source Files\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\c_ios_mapentities.h">
       <Filter>Source Files\SDK</Filter>
     </ClInclude>
   </ItemGroup>

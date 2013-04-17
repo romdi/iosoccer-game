@@ -35,6 +35,7 @@
 #include "sdk_gamerules.h"
 #include "c_ios_replaymanager.h"
 #include "c_ball.h"
+#include "in_buttons.h"
 #if defined( _X360 )
 #include "xbox/xbox_console.h"
 #endif
@@ -260,7 +261,33 @@ ConVar cam_height("cam_height", "25", FCVAR_ARCHIVE, "Z offset in thirdperson mo
 ConVar cam_alt("cam_alt", "0", FCVAR_ARCHIVE, "Alternative thirdperson mode");
 ConVar cam_alt_dist("cam_alt_dist", "100", FCVAR_ARCHIVE, "Camera distance in alternative thirdperson mode");
 
-#include "in_buttons.h"
+ConVar cl_goal_opacity("cl_goal_opacity", "0.25", FCVAR_ARCHIVE, "Goal opacity when it obstructs the view");
+ConVar cl_goal_opacity_fieldoffset("cl_goal_opacity_fieldoffset", "20", FCVAR_ARCHIVE, "Offset from the field end where to start making it transparent");
+
+void CheckAutoTransparentProps(CViewSetup *pSetup)
+{
+	float opacity = clamp(cl_goal_opacity.GetFloat(), 0.0f, 1.0f);
+
+	int last = ClientEntityList().GetHighestEntityIndex();
+
+	for (int i = gpGlobals->maxClients; i <= last; i++)
+	{
+		C_BaseEntity *pEnt = ClientEntityList().GetBaseEntity(i);
+		if(!pEnt || Q_strcmp(pEnt->GetClassname(), "class C_AutoTransparentProp"))
+			continue;
+
+		if (opacity != 1.0f && (pSetup->origin.y <= SDKGameRules()->m_vFieldMin.GetY() + cl_goal_opacity_fieldoffset.GetFloat() && pEnt->GetLocalOrigin().y < SDKGameRules()->m_vKickOff.GetY()
+			|| pSetup->origin.y >= SDKGameRules()->m_vFieldMax.GetY() - cl_goal_opacity_fieldoffset.GetFloat() && pEnt->GetLocalOrigin().y > SDKGameRules()->m_vKickOff.GetY()))
+		{
+			pEnt->SetRenderMode(kRenderTransColor);
+			pEnt->SetRenderColorA(opacity * 255);
+		}
+		else
+		{
+			pEnt->SetRenderMode(kRenderNormal);
+		}
+	}
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -337,6 +364,8 @@ void ClientModeShared::OverrideView( CViewSetup *pSetup )
 			VectorCopy( camAngles, pSetup->angles );
 		}
 	}
+
+	CheckAutoTransparentProps(pSetup);
 }
 
 //-----------------------------------------------------------------------------

@@ -182,6 +182,23 @@ public:
 	};
 };
 
+class CAutoTransparentProp : public CDynamicProp
+{
+	DECLARE_CLASS( CAutoTransparentProp, CDynamicProp );
+
+public:
+	DECLARE_SERVERCLASS();
+	DECLARE_DATADESC();
+};
+
+BEGIN_DATADESC( CAutoTransparentProp )
+END_DATADESC()
+
+IMPLEMENT_SERVERCLASS_ST(CAutoTransparentProp, DT_AutoTransparentProp)
+END_SEND_TABLE()
+
+LINK_ENTITY_TO_CLASS(prop_autotransparent, CAutoTransparentProp);	//IOS
+
 //ios entities
 LINK_ENTITY_TO_CLASS(info_ball_start, CBallStart);	//IOS
 
