@@ -107,30 +107,6 @@ bool CBaseMultiplayerPlayer::SpeakConceptIfAllowed( int iConcept, const char *mo
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-bool CBaseMultiplayerPlayer::CanHearAndReadChatFrom( CBasePlayer *pPlayer )
-{
-	// can always hear the console unless we're ignoring all chat
-	if ( !pPlayer )
-		return m_iIgnoreGlobalChat != CHAT_IGNORE_ALL;
-
-	// check if we're ignoring all chat
-	if ( m_iIgnoreGlobalChat == CHAT_IGNORE_ALL )
-		return false;
-
-	// check if we're ignoring all but teammates
-	if ( m_iIgnoreGlobalChat == CHAT_IGNORE_TEAM && g_pGameRules->PlayerRelationship( this, pPlayer ) != GR_TEAMMATE )
-		return false;
-
-	// can't hear dead players if we're alive
-	//if ( pPlayer->m_lifeState != LIFE_ALIVE && m_lifeState == LIFE_ALIVE )
-	//	return false;
-
-	return true;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 bool CBaseMultiplayerPlayer::ShouldRunRateLimitedCommand( const CCommand &args )
 {
 	const char *pcmd = args[0];

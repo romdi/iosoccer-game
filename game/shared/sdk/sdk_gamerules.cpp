@@ -423,7 +423,7 @@ class CVoiceGameMgrHelper : public IVoiceGameMgrHelper
 public:
 	virtual bool CanPlayerHearPlayer( CBasePlayer *pListener, CBasePlayer *pTalker, bool &bProximity )
 	{
-		return SDKGameRules()->PlayerRelationship( pListener, pTalker ) == GR_TEAMMATE;
+		return SDKGameRules()->PlayerRelationship( pListener, pTalker, MM_NONE ) == GR_TEAMMATE;
 	}
 };
 CVoiceGameMgrHelper g_VoiceGameMgrHelper;
@@ -944,7 +944,7 @@ CAmmoDef* GetAmmoDef()
 
 #ifndef CLIENT_DLL
 
-const char *CSDKGameRules::GetChatPrefix( bool bTeamOnly, CBasePlayer *pPlayer )
+const char *CSDKGameRules::GetChatPrefix( MessageMode_t messageMode, CBasePlayer *pPlayer )
 {
 	if (!pPlayer)
 		return "";
@@ -957,7 +957,7 @@ const char *CSDKGameRules::GetChatPrefix( bool bTeamOnly, CBasePlayer *pPlayer )
 		return "SPEC";
 }
 
-const char *CSDKGameRules::GetChatFormat(bool bTeamOnly, CBasePlayer *pPlayer)
+const char *CSDKGameRules::GetChatFormat(MessageMode_t messageMode, CBasePlayer *pPlayer)
 {
 	const char *pszFormat = NULL;
 
@@ -965,12 +965,17 @@ const char *CSDKGameRules::GetChatFormat(bool bTeamOnly, CBasePlayer *pPlayer)
 	{
 		pszFormat = "SDK_Chat_StadiumAnnouncer";
 	}
-	else if (bTeamOnly)
+	else if (messageMode == MM_SAY_TEAM)
 	{
 		if (pPlayer->GetTeamNumber() == TEAM_SPECTATOR && ToSDKPlayer(pPlayer)->GetSpecTeam() == 0)
 			pszFormat = "SDK_Chat_Spec";
 		else
 			pszFormat = "SDK_Chat_Team_Loc";
+	}
+	else if (messageMode == MM_SAY_SPEC)
+	{
+		if (pPlayer->GetTeamNumber() == TEAM_SPECTATOR)
+			pszFormat = "SDK_Chat_Spec";
 	}
 	else
 	{
@@ -983,7 +988,7 @@ const char *CSDKGameRules::GetChatFormat(bool bTeamOnly, CBasePlayer *pPlayer)
 	return pszFormat;
 }
 
-const char *CSDKGameRules::GetChatLocation( bool bTeamOnly, CBasePlayer *pPlayer )
+const char *CSDKGameRules::GetChatLocation( MessageMode_t messageMode, CBasePlayer *pPlayer )
 {
 	if (!pPlayer)
 		return "";
@@ -998,12 +1003,17 @@ const char *CSDKGameRules::GetChatLocation( bool bTeamOnly, CBasePlayer *pPlayer
 	return g_szPosNames[(int)g_Positions[mp_maxplayers.GetInt() - 1][ToSDKPlayer(pPlayer)->GetTeamPosIndex()][POS_TYPE]];
 }
 
+bool CSDKGameRules::PlayerCanHearChat( CBasePlayer *pListener, CBasePlayer *pSpeaker, MessageMode_t messageMode )
+{
+	return ( PlayerRelationship( pListener, pSpeaker, messageMode ) == GR_TEAMMATE );
+}
+
 #endif
 
 //-----------------------------------------------------------------------------
 // Purpose: Find the relationship between players (teamplay vs. deathmatch)
 //-----------------------------------------------------------------------------
-int CSDKGameRules::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget )
+int CSDKGameRules::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget, MessageMode_t messageMode )
 {
 #ifndef CLIENT_DLL
 	// half life multiplay has a simple concept of Player Relationships.
@@ -1017,17 +1027,25 @@ int CSDKGameRules::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarge
 	if (!pPl || !pPl)
 		return GR_NOTTEAMMATE;
 
-	if ((pPl->GetTeamNumber() == TEAM_A || pPl->GetSpecTeam() == 1)
-		&& (pTar->GetTeamNumber() == TEAM_A || pTar->GetSpecTeam() == 1))
-		return GR_TEAMMATE;
+	if (messageMode == MM_SAY_SPEC)
+	{
+		if (pPl->GetTeamNumber() == TEAM_SPECTATOR && pTar->GetTeamNumber() == TEAM_SPECTATOR)
+			return GR_TEAMMATE;
+	}
+	else
+	{
+		if ((pPl->GetTeamNumber() == TEAM_A || pPl->GetTeamNumber() == TEAM_SPECTATOR && pPl->GetSpecTeam() == 1)
+			&& (pTar->GetTeamNumber() == TEAM_A || pTar->GetTeamNumber() == TEAM_SPECTATOR && pTar->GetSpecTeam() == 1))
+			return GR_TEAMMATE;
 
-	if ((pPl->GetTeamNumber() == TEAM_B || pPl->GetSpecTeam() == 2)
-		&& (pTar->GetTeamNumber() == TEAM_B || pTar->GetSpecTeam() == 2))
-		return GR_TEAMMATE;
+		if ((pPl->GetTeamNumber() == TEAM_B || pPl->GetTeamNumber() == TEAM_SPECTATOR && pPl->GetSpecTeam() == 2)
+			&& (pTar->GetTeamNumber() == TEAM_B || pTar->GetTeamNumber() == TEAM_SPECTATOR && pTar->GetSpecTeam() == 2))
+			return GR_TEAMMATE;
 
-	if (pPl->GetTeamNumber() == TEAM_SPECTATOR && pPl->GetSpecTeam() == 0
-		&& pTar->GetTeamNumber() == TEAM_SPECTATOR && pTar->GetSpecTeam() == 0)
-		return GR_TEAMMATE;
+		if (pPl->GetTeamNumber() == TEAM_SPECTATOR && pPl->GetSpecTeam() == 0
+			&& pTar->GetTeamNumber() == TEAM_SPECTATOR && pTar->GetSpecTeam() == 0)
+			return GR_TEAMMATE;
+	}
 #endif
 
 	return GR_NOTTEAMMATE;

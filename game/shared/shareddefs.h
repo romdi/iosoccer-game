@@ -77,6 +77,15 @@ public:
 	Vector m_vDeadViewHeight;
 };
 
+// Message mode types
+enum MessageMode_t
+{
+	MM_NONE = 0,
+	MM_SAY,
+	MM_SAY_TEAM,
+	MM_SAY_SPEC
+};
+
 // Height above entity position where the viewer's eye is.
 #define VEC_VIEW			g_pGameRules->GetViewVectors()->m_vView
 #define VEC_HULL_MIN		g_pGameRules->GetViewVectors()->m_vHullMin

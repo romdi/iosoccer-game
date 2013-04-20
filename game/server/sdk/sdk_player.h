@@ -207,7 +207,8 @@ public:
 	virtual const Vector	GetPlayerMins( void ) const; // uses local player
 	virtual const Vector	GetPlayerMaxs( void ) const; // uses local player
 
-	virtual bool		CanSpeak(bool isTeamOnly);
+	virtual bool		CanHearAndReadChatFrom( CBasePlayer *pPlayer );
+	virtual bool		CanSpeak(MessageMode_t messageMode);
 	virtual void		SetPlayerName(const char *name);
 
 private:

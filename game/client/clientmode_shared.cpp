@@ -513,6 +513,16 @@ int	ClientModeShared::KeyInput( int down, ButtonCode_t keynum, const char *pszCu
 		}
 		return 0;
 	}
+	else if ( pszCurrentBinding &&
+				( Q_strcmp( pszCurrentBinding, "messagemode3" ) == 0 ||
+				  Q_strcmp( pszCurrentBinding, "say_spec" ) == 0 ) )
+	{
+		if ( down )
+		{
+			StartMessageMode( MM_SAY_SPEC );
+		}
+		return 0;
+	}
 	
 	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
 

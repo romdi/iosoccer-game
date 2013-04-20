@@ -291,40 +291,6 @@ void CTeamplayRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 }
 
 //=========================================================
-// Deathnotice. 
-//=========================================================
-void CTeamplayRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &info )
-{
-	if ( m_DisableDeathMessages )
-		return;
-
-	CBaseEntity *pKiller = info.GetAttacker();
-	if ( pVictim && pKiller && pKiller->IsPlayer() )
-	{
-		CBasePlayer *pk = (CBasePlayer*)pKiller;
-
-		if ( pk )
-		{
-			if ( (pk != pVictim) && (PlayerRelationship( pVictim, pk ) == GR_TEAMMATE) )
-			{
-				IGameEvent * event = gameeventmanager->CreateEvent( "player_death" );
-				if ( event )
-				{
-					event->SetInt("killer", pk->GetUserID() );
-					event->SetInt("victim", pVictim->GetUserID() );
-					event->SetInt("priority", 7 );	// HLTV event priority, not transmitted
-					
-					gameeventmanager->FireEvent( event );
-				}
-				return;
-			}
-		}
-	}
-
-	BaseClass::DeathNotice( pVictim, info );
-}
-
-//=========================================================
 //=========================================================
 void CTeamplayRules::PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &info )
 {
@@ -342,80 +308,6 @@ void CTeamplayRules::PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &
 bool CTeamplayRules::IsTeamplay( void )
 {
 	return true;
-}
-
-bool CTeamplayRules::FPlayerCanTakeDamage( CBasePlayer *pPlayer, CBaseEntity *pAttacker )
-{
-	if ( pAttacker && PlayerRelationship( pPlayer, pAttacker ) == GR_TEAMMATE )
-	{
-		// my teammate hit me.
-		if ( (friendlyfire.GetInt() == 0) && (pAttacker != pPlayer) )
-		{
-			// friendly fire is off, and this hit came from someone other than myself,  then don't get hurt
-			return false;
-		}
-	}
-
-	return BaseClass::FPlayerCanTakeDamage( pPlayer, pAttacker );
-}
-
-//=========================================================
-//=========================================================
-int CTeamplayRules::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget )
-{
-	// half life multiplay has a simple concept of Player Relationships.
-	// you are either on another player's team, or you are not.
-	if ( !pPlayer || !pTarget || !pTarget->IsPlayer() )
-		return GR_NOTTEAMMATE;
-
-	if ( (*GetTeamID(pPlayer) != '\0') && (*GetTeamID(pTarget) != '\0') && !stricmp( GetTeamID(pPlayer), GetTeamID(pTarget) ) )
-	{
-		return GR_TEAMMATE;
-	}
-
-	return GR_NOTTEAMMATE;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : *pListener - 
-//			*pSpeaker - 
-// Output : Returns true on success, false on failure.
-//-----------------------------------------------------------------------------
-bool CTeamplayRules::PlayerCanHearChat( CBasePlayer *pListener, CBasePlayer *pSpeaker )
-{
-	return ( PlayerRelationship( pListener, pSpeaker ) == GR_TEAMMATE );
-}
-
-//=========================================================
-//=========================================================
-bool CTeamplayRules::ShouldAutoAim( CBasePlayer *pPlayer, edict_t *target )
-{
-	// always autoaim, unless target is a teammate
-	CBaseEntity *pTgt = CBaseEntity::Instance( target );
-	if ( pTgt && pTgt->IsPlayer() )
-	{
-		if ( PlayerRelationship( pPlayer, pTgt ) == GR_TEAMMATE )
-			return false; // don't autoaim at teammates
-	}
-
-	return BaseClass::ShouldAutoAim( pPlayer, target );
-}
-
-//=========================================================
-//=========================================================
-int CTeamplayRules::IPointsForKill( CBasePlayer *pAttacker, CBasePlayer *pKilled )
-{
-	if ( !pKilled )
-		return 0;
-
-	if ( !pAttacker )
-		return 1;
-
-	if ( pAttacker != pKilled && PlayerRelationship( pAttacker, pKilled ) == GR_TEAMMATE )
-		return -1;
-
-	return 1;
 }
 
 //=========================================================

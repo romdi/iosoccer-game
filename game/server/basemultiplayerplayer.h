@@ -31,7 +31,7 @@ public:
 	AI_Response				*SpeakConcept( int iConcept );
 	virtual bool			SpeakConceptIfAllowed( int iConcept, const char *modifiers = NULL, char *pszOutResponseChosen = NULL, size_t bufsize = 0, IRecipientFilter *filter = NULL );
 
-	virtual bool		CanHearAndReadChatFrom( CBasePlayer *pPlayer );
+	virtual bool		CanHearAndReadChatFrom( CBasePlayer *pPlayer ) { return true; }
 	virtual bool		CanSpeak( void ) { return true; }
 
 	virtual void		Precache( void )

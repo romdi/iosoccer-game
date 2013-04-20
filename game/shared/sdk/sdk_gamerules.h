@@ -193,7 +193,7 @@ public:
 
 	virtual bool	ShouldCollide( int collisionGroup0, int collisionGroup1 );
 
-	virtual int		PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget );
+	virtual int		PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget, MessageMode_t messageMode );
 	//ios
 	virtual bool	IsTeamplay( void ) { return true; }
 	// Get the view vectors for this mod.
@@ -228,9 +228,11 @@ public:
 
 	virtual void LevelShutdown( void );
 
-	virtual const char *GetChatPrefix( bool bTeamOnly, CBasePlayer *pPlayer );
-	virtual const char *GetChatFormat( bool bTeamOnly, CBasePlayer *pPlayer );
-	virtual const char *GetChatLocation( bool bTeamOnly, CBasePlayer *pPlayer );
+	virtual bool	PlayerCanHearChat( CBasePlayer *pListener, CBasePlayer *pSpeaker, MessageMode_t messageMode );
+
+	virtual const char *GetChatPrefix( MessageMode_t messageMode, CBasePlayer *pPlayer );
+	virtual const char *GetChatFormat( MessageMode_t messageMode, CBasePlayer *pPlayer );
+	virtual const char *GetChatLocation( MessageMode_t messageMode, CBasePlayer *pPlayer );
 	
 	void	ChooseTeamNames(bool clubTeams, bool countryTeams, bool realTeams, bool fictitiousTeams);
 

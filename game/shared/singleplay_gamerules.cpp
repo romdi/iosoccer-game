@@ -476,21 +476,6 @@ bool CSingleplayRules::Damage_ShouldNotBleed( int iDmgType )
 
 	//=========================================================
 	//=========================================================
-	int CSingleplayRules::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget )
-	{
-		// why would a single player in half life need this? 
-		return GR_NOTTEAMMATE;
-	}
-
-	//=========================================================
-	//=========================================================
-	bool CSingleplayRules::PlayerCanHearChat( CBasePlayer *pListener, CBasePlayer *pSpeaker )
-	{
-		return ( PlayerRelationship( pListener, pSpeaker ) == GR_TEAMMATE );
-	}
-
-	//=========================================================
-	//=========================================================
 	bool CSingleplayRules::FAllowNPCs( void )
 	{
 		return true;

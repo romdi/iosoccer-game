@@ -1136,9 +1136,13 @@ void CBaseHudChat::StartMessageMode( int iMessageModeType )
 	{
 		m_pChatInput->SetPrompt( L"Say :" );
 	}
-	else
+	else if ( m_nMessageMode == MM_SAY_TEAM )
 	{
 		m_pChatInput->SetPrompt( L"Say (TEAM) :" );
+	}
+	else
+	{
+		m_pChatInput->SetPrompt( L"Say (SPEC) :" );
 	}
 	
 	if ( GetChatHistory() )
@@ -1487,7 +1491,7 @@ This is a very long string that I am going to attempt to paste into the cs hud c
 	if( len > 0 )
 	{
 		char szbuf[144];	// more than 128
-		Q_snprintf( szbuf, sizeof(szbuf), "%s \"%s\"", m_nMessageMode == MM_SAY ? "say" : "say_team", ansi );
+		Q_snprintf( szbuf, sizeof(szbuf), "%s \"%s\"", (m_nMessageMode == MM_SAY ? "say" : (m_nMessageMode == MM_SAY_TEAM ? "say_team" : "say_spec")), ansi );
 
 		engine->ClientCmd_Unrestricted(szbuf);
 	}

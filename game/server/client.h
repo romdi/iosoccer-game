@@ -25,7 +25,7 @@ void ClientPrecache( void );
 // Game specific precaches
 void ClientGamePrecache( void );
 const char *GetGameDescription( void );
-void Host_Say( edict_t *pEdict, bool teamonly );
+void Host_Say( edict_t *pEdict, MessageMode_t messageMode );
 
 
 

@@ -948,20 +948,6 @@ bool CMultiplayRules::Init()
 		return pentSpawnSpot;
 	}
 
-
-	//=========================================================
-	//=========================================================
-	bool CMultiplayRules::PlayerCanHearChat( CBasePlayer *pListener, CBasePlayer *pSpeaker )
-	{
-		return ( PlayerRelationship( pListener, pSpeaker ) == GR_TEAMMATE );
-	}
-
-	int CMultiplayRules::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget )
-	{
-		// half life deathmatch has only enemies
-		return GR_NOTTEAMMATE;
-	}
-
 	bool CMultiplayRules::PlayFootstepSounds( CBasePlayer *pl )
 	{
 		if ( footsteps.GetInt() == 0 )

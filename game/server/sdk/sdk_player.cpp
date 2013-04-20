@@ -1786,9 +1786,31 @@ CSDKPlayer *CSDKPlayer::FindClosestPlayerToSelf(bool teammatesOnly, bool forward
 ConVar mp_chat_match_captain_only("mp_chat_match_captain_only", "0", FCVAR_NOTIFY);
 ConVar mp_chat_intermissions_captain_only("mp_chat_intermissions_captain_only", "0", FCVAR_NOTIFY);
 
-bool CSDKPlayer::CanSpeak(bool isTeamOnly)
+bool CSDKPlayer::CanHearAndReadChatFrom( CBasePlayer *pPlayer )
 {
-	if (isTeamOnly || GetTeam()->GetCaptain() == this)
+	// can always hear the console unless we're ignoring all chat
+	if ( !pPlayer )
+		return m_iIgnoreGlobalChat != CHAT_IGNORE_ALL;
+
+	// check if we're ignoring all chat
+	if ( m_iIgnoreGlobalChat == CHAT_IGNORE_ALL )
+		return false;
+
+	// check if we're ignoring all but teammates
+	if ( m_iIgnoreGlobalChat == CHAT_IGNORE_TEAM && g_pGameRules->PlayerRelationship( this, pPlayer, MM_NONE ) != GR_TEAMMATE )
+		return false;
+
+	// can't hear dead players if we're alive
+	//if ( pPlayer->m_lifeState != LIFE_ALIVE && m_lifeState == LIFE_ALIVE )
+	//	return false;
+
+	return true;
+}
+
+
+bool CSDKPlayer::CanSpeak(MessageMode_t messageMode)
+{
+	if (messageMode != MM_SAY || GetTeam()->GetCaptain() == this)
 		return true;
 
 	if (SDKGameRules()->IsIntermissionState() && mp_chat_intermissions_captain_only.GetBool() || !SDKGameRules()->IsIntermissionState() && mp_chat_match_captain_only.GetBool())

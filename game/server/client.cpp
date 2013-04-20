@@ -100,7 +100,7 @@ char * CheckChatText( CBasePlayer *pPlayer, char *text )
 // or as
 // blah blah blah
 //
-void Host_Say( edict_t *pEdict, const CCommand &args, bool teamonly )
+void Host_Say( edict_t *pEdict, const CCommand &args, MessageMode_t messageMode )
 {
 	CBasePlayer *client;
 	int		j;
@@ -109,6 +109,7 @@ void Host_Say( edict_t *pEdict, const CCommand &args, bool teamonly )
 	char	text[256];
 	const char *cpSay = "say";
 	const char *cpSayTeam = "say_team";
+	const char *cpSaySpec = "say_spec";
 	const char *pcmd = args[0];
 	bool bSenderDead = false;
 
@@ -116,7 +117,7 @@ void Host_Say( edict_t *pEdict, const CCommand &args, bool teamonly )
 	if ( args.ArgC() == 0 )
 		return;
 
-	if ( !stricmp( pcmd, cpSay) || !stricmp( pcmd, cpSayTeam ) )
+	if ( !stricmp( pcmd, cpSay) || !stricmp( pcmd, cpSayTeam ) || !stricmp( pcmd, cpSaySpec ) )
 	{
 		if ( args.ArgC() >= 2 )
 		{
@@ -157,7 +158,7 @@ void Host_Say( edict_t *pEdict, const CCommand &args, bool teamonly )
 
 	if ( pEdict )
 	{
-		if ( !pPlayer->CanSpeak(teamonly) )
+		if ( !pPlayer->CanSpeak(messageMode) )
 			return;
 
 		// See if the player wants to modify of check the text
@@ -179,13 +180,13 @@ void Host_Say( edict_t *pEdict, const CCommand &args, bool teamonly )
 
 	if ( g_pGameRules )
 	{
-		pszFormat = g_pGameRules->GetChatFormat( teamonly, pPlayer );
-		pszPrefix = g_pGameRules->GetChatPrefix( teamonly, pPlayer );	
+		pszFormat = g_pGameRules->GetChatFormat( messageMode, pPlayer );
+		pszPrefix = g_pGameRules->GetChatPrefix( messageMode, pPlayer );	
 
 		if (pPlayer && pPlayer->GetTeam() && pPlayer->GetTeam()->GetCaptain() == pPlayer)
-			Q_snprintf(pszLocation, sizeof(pszLocation), "(%s)", g_pGameRules->GetChatLocation( teamonly, pPlayer ));
+			Q_snprintf(pszLocation, sizeof(pszLocation), "(%s)", g_pGameRules->GetChatLocation( messageMode, pPlayer ));
 		else
-			Q_snprintf(pszLocation, sizeof(pszLocation), "%s", g_pGameRules->GetChatLocation( teamonly, pPlayer ));
+			Q_snprintf(pszLocation, sizeof(pszLocation), "%s", g_pGameRules->GetChatLocation( messageMode, pPlayer ));
 	}
 
 	const char *pszPlayerName = pPlayer ? pPlayer->GetPlayerName() : "Stadium Announcer";
@@ -208,7 +209,7 @@ void Host_Say( edict_t *pEdict, const CCommand &args, bool teamonly )
 		if ( !(client->IsNetClient()) )	// Not a client ? (should never be true)
 			continue;
 
-		if ( teamonly && g_pGameRules->PlayerCanHearChat( client, pPlayer ) != GR_TEAMMATE )
+		if ( messageMode != MM_SAY && !g_pGameRules->PlayerCanHearChat( client, pPlayer, messageMode ) )
 			continue;
 
 		if ( pPlayer && !client->CanHearAndReadChatFrom( pPlayer ) )
@@ -266,8 +267,10 @@ void Host_Say( edict_t *pEdict, const CCommand &args, bool teamonly )
 		}
 	}
 		
-	if ( teamonly )
+	if ( messageMode == MM_SAY_TEAM )
 		UTIL_LogPrintf( "\"%s<%i><%s><%s>\" say_team \"%s\"\n", playerName, userid, networkID, playerTeam, p );
+	else if ( messageMode == MM_SAY_SPEC )
+		UTIL_LogPrintf( "\"%s<%i><%s><%s>\" say_spec \"%s\"\n", playerName, userid, networkID, playerTeam, p );
 	else
 		UTIL_LogPrintf( "\"%s<%i><%s><%s>\" say \"%s\"\n", playerName, userid, networkID, playerTeam, p );
 
@@ -735,13 +738,13 @@ CON_COMMAND( say, "Display player message" )
 	{
 		if (( pPlayer->LastTimePlayerTalked() + TALK_INTERVAL ) < gpGlobals->curtime) 
 		{
-			Host_Say( pPlayer->edict(), args, 0 );
+			Host_Say( pPlayer->edict(), args, MM_SAY );
 			pPlayer->NotePlayerTalked();
 		}
 	}
 	else
 	{
-		Host_Say( NULL, args, 0 );
+		Host_Say( NULL, args, MM_SAY );
 	}
 }
 
@@ -755,8 +758,27 @@ CON_COMMAND( say_team, "Display player message to team" )
 	{
 		if (( pPlayer->LastTimePlayerTalked() + TALK_INTERVAL ) < gpGlobals->curtime) 
 		{
-			Host_Say( pPlayer->edict(), args, 1 );
+			Host_Say( pPlayer->edict(), args, MM_SAY_TEAM );
 			pPlayer->NotePlayerTalked();
+		}
+	}
+}
+
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+CON_COMMAND( say_spec, "Display player message to spectators" )
+{
+	CBasePlayer *pPlayer = ToBasePlayer( UTIL_GetCommandClient() ); 
+	if (pPlayer)
+	{
+		if (( pPlayer->LastTimePlayerTalked() + TALK_INTERVAL ) < gpGlobals->curtime) 
+		{
+			if (pPlayer->GetTeamNumber() == TEAM_SPECTATOR)
+			{
+				Host_Say( pPlayer->edict(), args, MM_SAY_SPEC );
+				pPlayer->NotePlayerTalked();
+			}
 		}
 	}
 }

@@ -76,10 +76,7 @@ enum
 enum
 {
 	GR_NOTTEAMMATE = 0,
-	GR_TEAMMATE,
-	GR_ENEMY,
-	GR_ALLY,
-	GR_NEUTRAL,
+	GR_TEAMMATE
 };
 
 
@@ -319,8 +316,8 @@ public:
 
 // Teamplay stuff
 	virtual const char *GetTeamID( CBaseEntity *pEntity ) = 0;// what team is this entity on?
-	virtual int PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget ) = 0;// What is the player's relationship with this entity?
-	virtual bool PlayerCanHearChat( CBasePlayer *pListener, CBasePlayer *pSpeaker ) = 0;
+	virtual int PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget, MessageMode_t messageMode ) = 0;// What is the player's relationship with this entity?
+	virtual bool PlayerCanHearChat( CBasePlayer *pListener, CBasePlayer *pSpeaker, MessageMode_t messageMode ) = 0;
 	virtual void CheckChatText( CBasePlayer *pPlayer, char *pText ) { return; }
 
 	virtual int GetTeamIndex( const char *pTeamName ) { return -1; }
@@ -347,13 +344,13 @@ public:
 	virtual void CreateStandardEntities();
 
 	// Team name, etc shown in chat and dedicated server console
-	virtual const char *GetChatPrefix( bool bTeamOnly, CBasePlayer *pPlayer );
+	virtual const char *GetChatPrefix( MessageMode_t messageMode, CBasePlayer *pPlayer );
 
 	// Location name shown in chat
-	virtual const char *GetChatLocation( bool bTeamOnly, CBasePlayer *pPlayer ) { return NULL; }
+	virtual const char *GetChatLocation( MessageMode_t messageMode, CBasePlayer *pPlayer ) { return NULL; }
 
 	// VGUI format string for chat, if desired
-	virtual const char *GetChatFormat( bool bTeamOnly, CBasePlayer *pPlayer ) { return NULL; }
+	virtual const char *GetChatFormat( MessageMode_t messageMode, CBasePlayer *pPlayer ) { return NULL; }
 
 	// Whether props that are on fire should get a DLIGHT.
 	virtual bool ShouldBurningPropsEmitLight() { return false; }

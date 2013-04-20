@@ -569,7 +569,7 @@ public:
 	// say/sayteam allowed?
 	virtual bool		CanHearAndReadChatFrom( CBasePlayer *pPlayer ) { return true; }
 	virtual bool		CanSpeak( void ) { return true; }
-	virtual bool		CanSpeak(bool isTeamOnly) { return true; }
+	virtual bool		CanSpeak(MessageMode_t messageMode) { return true; }
 
 	audioparams_t			&GetAudioParams() { return m_Local.m_audio; }
 
