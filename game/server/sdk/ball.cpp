@@ -160,9 +160,12 @@ ConVar sv_ball_doubletouchfouls("sv_ball_doubletouchfouls", "1", FCVAR_NOTIFY);
 ConVar sv_ball_timelimit_setpiece("sv_ball_timelimit_setpiece", "15", FCVAR_NOTIFY);
 ConVar sv_ball_timelimit_remotecontrolled("sv_ball_timelimit_remotecontrolled", "15", FCVAR_NOTIFY);
 
-ConVar sv_ball_statetransition_activationdelay_normal("sv_ball_statetransition_activationdelay_normal", "0.75", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
-ConVar sv_ball_statetransition_activationdelay_long("sv_ball_statetransition_activationdelay_long", "1.5", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
-ConVar sv_ball_statetransition_messagedelay("sv_ball_statetransition_messagedelay", "0.5", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
+ConVar sv_ball_statetransition_activationdelay_short("sv_ball_statetransition_activationdelay_short", "0.1", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
+ConVar sv_ball_statetransition_activationdelay_normal("sv_ball_statetransition_activationdelay_normal", "1.25", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
+ConVar sv_ball_statetransition_activationdelay_long("sv_ball_statetransition_activationdelay_long", "2.0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
+ConVar sv_ball_statetransition_messagedelay_normal("sv_ball_statetransition_messagedelay_normal", "0.5", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
+ConVar sv_ball_statetransition_messagedelay_short("sv_ball_statetransition_messagedelay_short", "0.1", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
+
 ConVar sv_ball_goalcelebduration("sv_ball_goalcelebduration", "5.0", FCVAR_NOTIFY);
 ConVar sv_ball_thinkinterval("sv_ball_thinkinterval", "0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
 ConVar sv_ball_chestdrop_strength("sv_ball_chestdrop_strength", "100", FCVAR_NOTIFY); 
@@ -728,7 +731,7 @@ void CBall::SetRot(AngularImpulse rot)
 
 ConVar mp_showballstatetransitions( "mp_showballstatetransitions", "1", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Show ball state transitions." );
 
-void CBall::State_Transition(ball_state_t newState, float delay /*= 0.0f*/, bool cancelQueuedState /*= false*/)
+void CBall::State_Transition(ball_state_t newState, float delay /*= 0.0f*/, bool cancelQueuedState /*= false*/, bool isShortMessageDelay /*= false*/)
 {
 	if (delay == 0)
 	{
@@ -739,7 +742,7 @@ void CBall::State_Transition(ball_state_t newState, float delay /*= 0.0f*/, bool
 	{
 		m_eNextState = newState;
 		m_flStateActivationDelay = delay;
-		m_flStateLeaveTime = gpGlobals->curtime + sv_ball_statetransition_messagedelay.GetFloat() + m_flStateActivationDelay;
+		m_flStateLeaveTime = gpGlobals->curtime + m_flStateActivationDelay + (isShortMessageDelay ? sv_ball_statetransition_messagedelay_short : sv_ball_statetransition_messagedelay_normal).GetFloat();
 		m_bHasQueuedState = true;
 	}
 }
@@ -2763,7 +2766,7 @@ void CBall::TriggerGoal(int team)
 	if (CSDKPlayer::IsOnField(pGoalKeeper))
 		pGoalKeeper->AddGoalConceded();
 
-	State_Transition(BALL_GOAL, sv_ball_statetransition_activationdelay_normal.GetFloat());
+	State_Transition(BALL_GOAL, sv_ball_statetransition_activationdelay_short.GetFloat(), false, true);
 }
 
 void CBall::TriggerGoalLine(int team)
