@@ -135,15 +135,9 @@ void CSDKTargetId::Paint()
 
 	if (GetReplayManager() && GetReplayManager()->IsReplaying())
 	{		
-		int last = ClientEntityList().GetHighestEntityIndex();
-
-		for (int i = gpGlobals->maxClients; i <= last; i++)
+		for (int i = gpGlobals->maxClients; i <= ClientEntityList().GetHighestEntityIndex(); i++)
 		{
-			C_BaseEntity *pEnt = ClientEntityList().GetBaseEntity(i);
-			if(!pEnt || Q_strcmp(pEnt->GetClassname(), "class C_ReplayPlayer"))
-				continue;
-
-			C_ReplayPlayer *pPl = dynamic_cast<C_ReplayPlayer *>(pEnt);
+			C_ReplayPlayer *pPl = dynamic_cast<C_ReplayPlayer *>(ClientEntityList().GetBaseEntity(i));
 			if (!pPl)
 				continue;
 

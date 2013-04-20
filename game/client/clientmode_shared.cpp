@@ -36,6 +36,7 @@
 #include "c_ios_replaymanager.h"
 #include "c_ball.h"
 #include "in_buttons.h"
+#include "c_ios_mapentities.h"
 #if defined( _X360 )
 #include "xbox/xbox_console.h"
 #endif
@@ -268,12 +269,10 @@ void CheckAutoTransparentProps(CViewSetup *pSetup)
 {
 	float opacity = clamp(cl_goal_opacity.GetFloat(), 0.0f, 1.0f);
 
-	int last = ClientEntityList().GetHighestEntityIndex();
-
-	for (int i = gpGlobals->maxClients; i <= last; i++)
+	for (int i = gpGlobals->maxClients; i <= ClientEntityList().GetHighestEntityIndex(); i++)
 	{
 		C_BaseEntity *pEnt = ClientEntityList().GetBaseEntity(i);
-		if(!pEnt || Q_strcmp(pEnt->GetClassname(), "class C_AutoTransparentProp"))
+		if(!dynamic_cast<C_AutoTransparentProp *>(pEnt))
 			continue;
 
 		if (opacity != 1.0f && (pSetup->origin.y <= SDKGameRules()->m_vFieldMin.GetY() + cl_goal_opacity_fieldoffset.GetFloat() && pEnt->GetLocalOrigin().y < SDKGameRules()->m_vKickOff.GetY()
