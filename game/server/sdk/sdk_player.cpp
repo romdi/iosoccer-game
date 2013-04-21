@@ -1529,7 +1529,7 @@ void CSDKPlayer::GetTargetPos(const Vector &pos, Vector &targetPos)
 		SDKGameRules()->m_nShieldType == SHIELD_KICKOFF ||
 		SDKGameRules()->m_nShieldType == SHIELD_PENALTY && (GetFlags() & FL_SHIELD_KEEP_OUT))
 	{
-		float radius = SDKGameRules()->GetShieldRadius(GetTeamNumber()) + border;
+		float radius = SDKGameRules()->GetShieldRadius(GetTeamNumber(), GetFlags() & FL_SHIELD_KEEP_IN) + border;
 		Vector tempPos = (SDKGameRules()->m_nShieldType == SHIELD_PENALTY && targetPos != vec3_invalid) ? targetPos : pos;
 
 		Vector dir = tempPos - SDKGameRules()->m_vShieldPos;

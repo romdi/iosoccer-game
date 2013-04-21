@@ -421,7 +421,7 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 			SDKGameRules()->m_nShieldType == SHIELD_KICKOFF ||
 			SDKGameRules()->m_nShieldType == SHIELD_PENALTY && (GetFlags() & FL_SHIELD_KEEP_OUT))
 		{
-			float radius = SDKGameRules()->GetShieldRadius(GetTeamNumber()) + border;
+			float radius = SDKGameRules()->GetShieldRadius(GetTeamNumber(), GetFlags() & FL_SHIELD_KEEP_IN) + border;
 			Vector dir = newPos - SDKGameRules()->m_vShieldPos;
 
 			if ((GetFlags() & FL_SHIELD_KEEP_OUT && dir.Length2D() < radius || GetFlags() & FL_SHIELD_KEEP_IN && dir.Length2D() > radius)

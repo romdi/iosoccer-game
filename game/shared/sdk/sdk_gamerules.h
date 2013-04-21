@@ -403,7 +403,7 @@ public:
 
 	bool IsIntermissionState();
 	bool IsInjuryTime();
-	int GetShieldRadius(int team);
+	int GetShieldRadius(int team, bool isTaker);
 	void SetMatchDisplayTimeSeconds(int seconds);
 	int GetMatchDisplayTimeSeconds(bool clamped = false, bool ignoreIntermissions = false);
 
