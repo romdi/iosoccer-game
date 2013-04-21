@@ -1281,7 +1281,7 @@ ConVar sv_wakeupcall_interval("sv_wakeupcall_interval", "10", FCVAR_NOTIFY);
 void CSDKGameRules::StartPenalties()
 {
 	//SetLeftSideTeam(g_IOSRand.RandomInt(TEAM_A, TEAM_B));
-	ResetMatch();
+	ResetMatch(true);
 	State_Transition(MATCH_PENALTIES);
 }
 
@@ -1523,9 +1523,7 @@ void CSDKGameRules::State_WARMUP_Enter()
 	}
 
 	m_flMatchStartTime = gpGlobals->curtime;
-
-	ResetMatch();
-
+	ResetMatch(false);
 	ApplyIntermissionSettings(false);
 }
 
@@ -1543,6 +1541,7 @@ void CSDKGameRules::State_WARMUP_Leave(match_state_t newState)
 
 void CSDKGameRules::State_FIRST_HALF_Enter()
 {
+	ResetMatch(true);
 	GetBall()->State_Transition(BALL_KICKOFF, 0, true);
 
 	IGameEvent *pEvent = gameeventmanager->CreateEvent("wakeupcall");
@@ -2430,7 +2429,7 @@ ConVar mp_daytime_sunset("mp_daytime_sunset", "20", FCVAR_NOTIFY | FCVAR_REPLICA
 
 #ifdef GAME_DLL
 
-void CSDKGameRules::ResetMatch()
+void CSDKGameRules::ResetMatch(bool resetStats)
 {
 	SetOffsideLinesEnabled(false);
 	DisableShield();
@@ -2453,11 +2452,11 @@ void CSDKGameRules::ResetMatch()
 		}
 	}
 
+	IOS_LogPrintf("Gamerules: Start ball reset\n");
 	GetBall()->Reset();
+	IOS_LogPrintf("Gamerules: End ball reset\n");
 
-	GetGlobalTeam(TEAM_A)->ResetStats();
-	GetGlobalTeam(TEAM_B)->ResetStats();
-
+	IOS_LogPrintf("Gamerules: Start player flags reset\n");
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
 		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
@@ -2466,11 +2465,24 @@ void CSDKGameRules::ResetMatch()
 
 		pPl->ResetFlags();
 	}
+	IOS_LogPrintf("Gamerules: End player flags reset\n");
 
-	CPlayerPersistentData::ReallocateAllPlayerData();
+	if (resetStats)
+	{
+		IOS_LogPrintf("Gamerules: Start team stats reset\n");
+		GetGlobalTeam(TEAM_A)->ResetStats();
+		GetGlobalTeam(TEAM_B)->ResetStats();
+		IOS_LogPrintf("Gamerules: End team stats reset\n");
 
-	if (ReplayManager())
-		ReplayManager()->CleanUp();
+		IOS_LogPrintf("Gamerules: Start player stats reset\n");
+		CPlayerPersistentData::ReallocateAllPlayerData();
+		IOS_LogPrintf("Gamerules: End player stats reset\n");
+
+		IOS_LogPrintf("Gamerules: Start replay clean-up\n");
+		if (ReplayManager())
+			ReplayManager()->CleanUp();
+		IOS_LogPrintf("Gamerules: End replay clean-up\n");
+	}
 }
 
 void CSDKGameRules::SetMatchDisplayTimeSeconds(int seconds)
@@ -2505,7 +2517,7 @@ void CSDKGameRules::SetMatchDisplayTimeSeconds(int seconds)
 		matchState = MATCH_FIRST_HALF;
 	}
 
-	ResetMatch();
+	ResetMatch(true);
 	m_flMatchStartTime = gpGlobals->curtime - (seconds / (90.0f / mp_timelimit_match.GetFloat()));
 	GetBall()->State_Transition(BALL_STATIC, 0, true);
 	SetLeftSideTeam(m_nFirstHalfLeftSideTeam);

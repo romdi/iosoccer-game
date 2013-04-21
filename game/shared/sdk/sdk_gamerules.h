@@ -380,7 +380,7 @@ public:
 	
 	void SetTimeoutEnd(float time) { m_flTimeoutEnd = time; }
 
-	void ResetMatch();
+	void ResetMatch(bool resetStats);
 
 	void ApplyIntermissionSettings(bool swapTeams);
 	bool CheckAutoStart();
