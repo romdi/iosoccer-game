@@ -197,9 +197,10 @@ ConVar sv_ball_stats_assist_maxtime("sv_ball_stats_assist_maxtime", "8", FCVAR_N
 
 ConVar sv_ball_velocity_coeff("sv_ball_velocity_coeff", "0.9", FCVAR_NOTIFY);
 
-ConVar sv_ball_freekickdist_owngoal("sv_ball_freekickdist_owngoal", "900", FCVAR_NOTIFY);
-ConVar sv_ball_freekickdist_opponentgoal("sv_ball_freekickdist_opponentgoal", "1400", FCVAR_NOTIFY);
-ConVar sv_ball_closetogoaldist("sv_ball_closetogoaldist", "1400", FCVAR_NOTIFY);
+ConVar sv_ball_freekickdist_owngoal("sv_ball_freekickdist_owngoal", "850", FCVAR_NOTIFY);
+ConVar sv_ball_freekickdist_opponentgoal("sv_ball_freekickdist_opponentgoal", "1300", FCVAR_NOTIFY);
+ConVar sv_ball_freekickangle_opponentgoal("sv_ball_freekickangle_opponentgoal", "60", FCVAR_NOTIFY);
+ConVar sv_ball_closetogoaldist("sv_ball_closetogoaldist", "1300", FCVAR_NOTIFY);
 
 ConVar sv_ball_assign_setpieces("sv_ball_assign_setpieces", "1", FCVAR_NOTIFY);
 
@@ -1536,10 +1537,26 @@ void CBall::State_FREEKICK_Think()
 	{
 		if ((m_vPos - GetGlobalTeam(m_nFouledTeam)->m_vPlayerSpawns[0]).Length2D() <= sv_ball_freekickdist_owngoal.GetInt()) // Close to own goal
 			m_pPl = FindNearestPlayer(m_nFouledTeam, FL_POS_KEEPER);
-		else if ((m_vPos - GetGlobalTeam(m_nFoulingTeam)->m_vPlayerSpawns[0]).Length2D() <= sv_ball_freekickdist_opponentgoal.GetInt()) // Close to opponent's goal
+		else if (abs(m_vPos.y - GetGlobalTeam(m_nFoulingTeam)->m_vPlayerSpawns[0].y) <= sv_ball_freekickdist_opponentgoal.GetInt()) // Close to opponent's goal
 		{
 			if (sv_ball_assign_setpieces.GetBool())
-				m_pPl = GetGlobalTeam(m_nFouledTeam)->GetFreekickTaker();
+			{
+				Vector2D dirToPl = (m_vPos - GetGlobalTeam(m_nFoulingTeam)->m_vPlayerSpawns[0]).AsVector2D();
+				dirToPl.NormalizeInPlace();
+				Vector2D yDir = Vector2D(0, GetGlobalTeam(m_nFoulingTeam)->m_nForward);
+
+				if (RAD2DEG(acos(DotProduct2D(yDir, dirToPl))) <= sv_ball_freekickangle_opponentgoal.GetInt())
+				{
+					m_pPl = GetGlobalTeam(m_nFouledTeam)->GetFreekickTaker();
+				}
+				else
+				{
+					if (abs(GetGlobalTeam(m_nFoulingTeam)->m_vCornerRight.GetX() - m_vPos.x) < abs(GetGlobalTeam(m_nFoulingTeam)->m_vCornerLeft.GetX() - m_vPos.x))
+						m_pPl = GetGlobalTeam(m_nFouledTeam)->GetLeftCornerTaker();
+					else
+						m_pPl = GetGlobalTeam(m_nFouledTeam)->GetRightCornerTaker();
+				}
+			}
 
 			if (!CSDKPlayer::IsOnField(m_pPl))
 				m_pPl = m_pFouledPl;
