@@ -2811,6 +2811,17 @@ void CBall::TriggerSideline()
 
 	Vector ballPos = GetPos();
 
+	BallTouchInfo *pInfo = LastInfo(true);
+	CSDKPlayer *pLastPl = LastPl(true);
+
+	if (pInfo && CSDKPlayer::IsOnField(pLastPl) && (ballPos - pInfo->m_vBallPos).Length2DSqr() >= pow(sv_ball_stats_pass_mindist.GetInt(), 2.0f) && pInfo->m_eBodyPart != BODY_PART_KEEPERPUNCH) // Pass or interception
+	{
+		if (m_bHitThePost)
+			pLastPl->AddShot();
+		else
+			pLastPl->AddPass();
+	}
+
 	CBaseEntity *pThrowIn = gEntList.FindEntityByClassnameNearest("info_throw_in", ballPos, 1000);
 	if (!pThrowIn)
 		return;
