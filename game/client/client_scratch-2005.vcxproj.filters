@@ -3253,13 +3253,7 @@
     <Library Include="..\..\lib\public\vstdlib.lib">
       <Filter>Link Libraries</Filter>
     </Library>
-    <Library Include="..\..\thirdparty\lib\libcurl.lib">
-      <Filter>Link Libraries</Filter>
-    </Library>
-    <Library Include="..\..\thirdparty\lib\zlibstat.lib">
-      <Filter>Link Libraries</Filter>
-    </Library>
-    <Library Include="..\..\thirdparty\lib\zlibwapi.lib">
+    <Library Include="..\..\thirdparty\lib\libcurl_nossl.lib">
       <Filter>Link Libraries</Filter>
     </Library>
   </ItemGroup>

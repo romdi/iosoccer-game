@@ -1337,6 +1337,7 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "d:\games\steam\
     <Library Include="..\..\lib\public\tier2.lib" />
     <Library Include="..\..\lib\public\tier3.lib" />
     <Library Include="..\..\lib\public\vstdlib.lib" />
+    <Library Include="..\..\thirdparty\lib\libcurl_ssl.lib" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

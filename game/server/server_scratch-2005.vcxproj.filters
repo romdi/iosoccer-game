@@ -2971,5 +2971,8 @@
     <Library Include="..\..\lib\public\vstdlib.lib">
       <Filter>Link Libraries</Filter>
     </Library>
+    <Library Include="..\..\thirdparty\lib\libcurl_ssl.lib">
+      <Filter>Link Libraries</Filter>
+    </Library>
   </ItemGroup>
 </Project>

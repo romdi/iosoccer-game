@@ -1440,9 +1440,7 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <Library Include="..\..\lib\public\tier3.lib" />
     <Library Include="..\..\lib\public\vgui_controls.lib" />
     <Library Include="..\..\lib\public\vstdlib.lib" />
-    <Library Include="..\..\thirdparty\lib\libcurl.lib" />
-    <Library Include="..\..\thirdparty\lib\zlibstat.lib" />
-    <Library Include="..\..\thirdparty\lib\zlibwapi.lib" />
+    <Library Include="..\..\thirdparty\lib\libcurl_nossl.lib" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
