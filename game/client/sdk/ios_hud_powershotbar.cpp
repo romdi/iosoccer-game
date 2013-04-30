@@ -176,9 +176,9 @@ void CHudChargedshotBar::Paint()
 		shotStrength = 1 - pow(decreaseFraction, mp_chargedshot_decreaseexponent.GetFloat());
 
 		// Flash
-		if (shotStrength > 0.95f)
+		if (shotStrength > 0.9f)
 		{
-			relStamina = 1;
+			//relStamina = 1;
 			bgColor = Color(255, 255, 255, 255);
 		}
 

@@ -42,8 +42,11 @@ void C_Ball::OnDataChanged(DataUpdateType_t updateType)
 {
 	BaseClass::OnDataChanged( updateType );
 
-	if (!g_pBall && !m_bIsPlayerBall)
-		g_pBall = this;
+	 if (updateType == DATA_UPDATE_CREATED)
+	 {
+		 if (!g_pBall && !m_bIsPlayerBall)
+			 g_pBall = this;
+	 }
 
 	return;
 }
