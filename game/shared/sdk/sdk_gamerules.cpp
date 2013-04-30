@@ -1450,14 +1450,14 @@ void CSDKGameRules::State_Think()
 
 		if (!IsIntermissionState())
 		{
-			if (g_IOSRand.RandomInt(0, 240 * (1.0f / gpGlobals->interval_per_tick)) == 0)
+			if (g_IOSRand.RandomInt(0, 2400 * (1.0f / gpGlobals->interval_per_tick)) == 0)
 			{
 				GetBall()->EmitSound("Crowd.Vuvuzela");
 				GetBall()->EmitSound("Crowd.Vuvuzela");
 				GetBall()->EmitSound("Crowd.Vuvuzela");
 			}
 
-			if (g_IOSRand.RandomInt(0, 120 * (1.0f / gpGlobals->interval_per_tick)) == 0)
+			if (g_IOSRand.RandomInt(0, 240 * (1.0f / gpGlobals->interval_per_tick)) == 0)
 			{
 				GetBall()->EmitSound("Crowd.Cheer");
 			}
@@ -2429,6 +2429,22 @@ ConVar mp_daytime_sunset("mp_daytime_sunset", "20", FCVAR_NOTIFY | FCVAR_REPLICA
 
 #ifdef GAME_DLL
 
+#include "filesystem.h"
+#include <time.h>
+
+void FlushLog(FileHandle_t logfile, char *text)
+{
+	time_t rawtime;
+	time(&rawtime);
+	struct tm *timeinfo;
+	timeinfo = localtime(&rawtime);
+	char time[64];
+	strftime(time, sizeof(time), "%Y.%m.%d_%Hh.%Mm.%Ss", timeinfo);
+
+	filesystem->FPrintf(logfile, "%s - Gamerules: %s\n", time, text);
+	filesystem->Flush(logfile);
+}
+
 void CSDKGameRules::ResetMatch(bool resetStats)
 {
 	SetOffsideLinesEnabled(false);
@@ -2452,11 +2468,15 @@ void CSDKGameRules::ResetMatch(bool resetStats)
 		}
 	}
 
-	IOS_LogPrintf("Gamerules: Start ball reset\n");
-	GetBall()->Reset();
-	IOS_LogPrintf("Gamerules: End ball reset\n");
 
-	IOS_LogPrintf("Gamerules: Start player flags reset\n");
+
+	FileHandle_t logfile = filesystem->Open("logs/cleanup.log", "a", "MOD");
+
+	FlushLog(logfile, "Start ball reset");
+	GetBall()->Reset();
+	FlushLog(logfile, "End ball reset");
+
+	FlushLog(logfile, "Start player flags reset");
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
 		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
@@ -2465,24 +2485,26 @@ void CSDKGameRules::ResetMatch(bool resetStats)
 
 		pPl->ResetFlags();
 	}
-	IOS_LogPrintf("Gamerules: End player flags reset\n");
+	FlushLog(logfile, "End player flags reset");
 
-	if (resetStats)
+	//if (resetStats)
 	{
-		IOS_LogPrintf("Gamerules: Start team stats reset\n");
+		FlushLog(logfile, "Start team stats reset");
 		GetGlobalTeam(TEAM_A)->ResetStats();
 		GetGlobalTeam(TEAM_B)->ResetStats();
-		IOS_LogPrintf("Gamerules: End team stats reset\n");
+		FlushLog(logfile, "End team stats reset");
 
-		IOS_LogPrintf("Gamerules: Start player stats reset\n");
+		FlushLog(logfile, "Start player stats reset");
 		CPlayerPersistentData::ReallocateAllPlayerData();
-		IOS_LogPrintf("Gamerules: End player stats reset\n");
+		FlushLog(logfile, "End player stats reset");
 
-		IOS_LogPrintf("Gamerules: Start replay clean-up\n");
+		FlushLog(logfile, "Start replay clean-up");
 		if (ReplayManager())
 			ReplayManager()->CleanUp();
-		IOS_LogPrintf("Gamerules: End replay clean-up\n");
+		FlushLog(logfile, "End replay clean-up\n");
 	}
+
+	filesystem->Close(logfile);
 }
 
 void CSDKGameRules::SetMatchDisplayTimeSeconds(int seconds)
