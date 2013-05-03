@@ -83,6 +83,7 @@ protected:
 	virtual void ApplySchemeSettings( vgui::IScheme *scheme );
 	void FireGameEvent(IGameEvent *event);
 	void ApplySettings(KeyValues *inResourceData);
+	void LevelInit();
 
 private:
 
@@ -131,11 +132,6 @@ CHudScorebar::CHudScorebar( const char *pElementName ) : BaseClass(NULL, "HudSco
 	vgui::Panel *pParent = g_pClientMode->GetViewport();
 	SetParent( pParent );
 
-	m_eCurMatchEvent = MATCH_EVENT_NONE;
-	m_flNotificationStart = -1;
-	m_flInjuryTimeStart = -1;
-	m_nCurMatchEventTeam = TEAM_UNASSIGNED;
-
 	m_pMainPanel = new Panel(this, "");
 
 	for (int i = 0; i < NOTIFICATION_COUNT; i++)
@@ -156,8 +152,6 @@ CHudScorebar::CHudScorebar( const char *pElementName ) : BaseClass(NULL, "HudSco
 			m_pPenaltyCells[i][j] = new Panel(m_pPenaltyPanels[i], "");
 		}
 	}
-
-	m_flStayDuration = 3.0f;
 
 	SetProportional(false);
 
@@ -742,4 +736,13 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 	}
 
 	m_pCenterFlash->SetText(g_szMatchEventNames[m_eCurMatchEvent]);
+}
+
+void CHudScorebar::LevelInit()
+{
+	m_eCurMatchEvent = MATCH_EVENT_NONE;
+	m_flNotificationStart = -1;
+	m_flInjuryTimeStart = -1;
+	m_nCurMatchEventTeam = TEAM_UNASSIGNED;
+	m_flStayDuration = 3.0f;
 }
