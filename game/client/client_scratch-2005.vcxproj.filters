@@ -1425,6 +1425,9 @@
     <ClCompile Include="sdk\c_ios_mapentities.cpp">
       <Filter>Source Files\SDK</Filter>
     </ClCompile>
+    <ClCompile Include="ios_rendertargets.cpp">
+      <Filter>Source Files\SDK</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="achievement_notification_panel.h">
@@ -3210,6 +3213,9 @@
       <Filter>Source Files\SDK</Filter>
     </ClInclude>
     <ClInclude Include="sdk\c_ios_mapentities.h">
+      <Filter>Source Files\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="ios_rendertargets.h">
       <Filter>Source Files\SDK</Filter>
     </ClInclude>
   </ItemGroup>

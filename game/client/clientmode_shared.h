@@ -65,6 +65,7 @@ public:
 	virtual void	PreRender(CViewSetup *pSetup);
 	virtual void	PostRender();
 	virtual void	PostRenderVGui();
+	virtual void	PostRenderVGuiOnTop();
 	virtual void	ProcessInput(bool bActive);
 	virtual bool	CreateMove( float flInputSampleTime, CUserCmd *cmd );
 	virtual void	Update();

@@ -33,6 +33,7 @@ public:
 	int				GetDeathMessageStartHeight( void );
 
 	virtual void	PostRenderVGui();
+	virtual void	PostRenderVGuiOnTop();
 
 	virtual bool	CanRecordDemo( char *errorMsg, int length ) const;
 

@@ -80,12 +80,12 @@ void CSDKModeManager::Init()
 	g_pClientMode = GetClientModeNormal();
 	
 	PanelMetaClassMgr()->LoadMetaClassDefinitionFile( SCREEN_FILE );
+
+	CTeamKitInfo::FindTeamKits();
 }
 
 void CSDKModeManager::LevelInit( const char *newmap )
 {
-	CTeamKitInfo::FindTeamKits();
-
 	g_pClientMode->LevelInit( newmap );
 	// HACK: the detail sway convars are archive, and default to 0.  Existing CS:S players thus have no detail
 	// prop sway.  We'll force them to DoD's default values for now.
@@ -164,8 +164,214 @@ int ClientModeSDKNormal::GetDeathMessageStartHeight( void )
 	return m_pViewport->GetDeathMessageStartHeight();
 }
 
+#include "iefx.h"
+#include "dlight.h"
+#include "view.h"
+#include "model_types.h"
+#include "iosoptions.h"
+#include "materialsystem\imaterialsystem.h"
+#include "rendertexture.h"
+#include "materialsystem/ITexture.h"
+
+CHandle<C_BaseAnimatingOverlay> g_ClassImagePlayer;	// player
+Vector camPos = vec3_invalid;
+
+bool ShouldRecreateClassImageEntity( C_BaseAnimating* pEnt, const char* pNewModelName )
+{
+	if ( !pNewModelName || !pNewModelName[0] )
+		return false;
+	if ( !pEnt )
+		return true;
+ 
+	const model_t* pModel = pEnt->GetModel();
+ 
+	if ( !pModel )
+		return true;
+	const char* pName = modelinfo->GetModelName( pModel );
+ 
+	if ( !pName )
+		return true;
+	// reload only if names are different
+	return( V_stricmp( pName, pNewModelName ) != 0 );
+}
+
+void UpdateClassImageEntity(const char* pModelName, int skin, int angle, int bodypart)
+{
+	MDLCACHE_CRITICAL_SECTION();
+
+	ITexture *pRenderTarget = GetPlayerModelTexture();
+
+	if(!pRenderTarget)
+		return;
+ 
+	if(!pRenderTarget->IsRenderTarget())
+		Msg(" not a render target");
+
+	C_BasePlayer* pLocalPlayer = C_BasePlayer::GetLocalPlayer();
+ 
+	if ( !pLocalPlayer )
+		return;
+ 
+	C_BaseAnimatingOverlay* pModel = g_ClassImagePlayer.Get();
+ 
+	// Does the entity even exist yet?
+	bool recreatePlayer = ShouldRecreateClassImageEntity( pModel, pModelName );
+	if ( recreatePlayer )
+	{
+		// if the pointer already exists, remove it as we create a new one.
+		if ( pModel )
+			pModel->Remove();
+ 
+		// create a new instance
+		pModel = new C_BaseAnimatingOverlay();
+		pModel->InitializeAsClientEntity( pModelName, RENDER_GROUP_OPAQUE_ENTITY );
+		pModel->AddEffects( EF_NODRAW ); // don't let the renderer draw the model normally
+		// have the player stand idle
+		pModel->SetSequence( pModel->LookupSequence( "walk_lower" ) );
+		pModel->SetPoseParameter( 0, 0.0f ); // move_yaw
+		pModel->SetPoseParameter( 1, 0.0f ); // body_pitch, look down a bit
+		pModel->SetPoseParameter( 2, 0.0f ); // body_yaw
+		pModel->SetPoseParameter( 3, 0.0f ); // move_y
+		pModel->SetPoseParameter( 4, 0.0f ); // move_x
+ 
+		g_ClassImagePlayer = pModel;
+	}
+ 
+	Vector origin = pLocalPlayer->EyePosition();
+	Vector lightOrigin = origin;
+ 
+	// find a spot inside the world for the dlight's origin, or it won't illuminate the model
+	Vector testPos( origin.x - 100, origin.y, origin.z + 100 );
+	trace_t tr;
+	UTIL_TraceLine( origin, testPos, MASK_OPAQUE, pLocalPlayer, COLLISION_GROUP_NONE, &tr );
+	if ( tr.fraction == 1.0f )
+		lightOrigin = tr.endpos;
+	else
+	{
+		// Now move the model away so we get the correct illumination
+		lightOrigin = tr.endpos + Vector( 1, 0, -1 );	// pull out from the solid
+		Vector start = lightOrigin;
+		Vector end = lightOrigin + Vector( 100, 0, -100 );
+		UTIL_TraceLine( start, end, MASK_OPAQUE, pLocalPlayer, COLLISION_GROUP_NONE, &tr );
+		origin = tr.endpos;
+	}
+ 
+	float ambient = engine->GetLightForPoint( origin, true ).Length();
+ 
+	// Make a light so the model is well lit.
+	// use a non-zero number so we cannibalize ourselves next frame
+	dlight_t* dl = effects->CL_AllocDlight( LIGHT_INDEX_TE_DYNAMIC+1 );
+ 
+	dl->flags = DLIGHT_NO_WORLD_ILLUMINATION;
+	dl->origin = lightOrigin;
+	// Go away immediately so it doesn't light the world too.
+	dl->die = gpGlobals->curtime + 0.1f;
+ 
+	dl->color.r = dl->color.g = dl->color.b = 250;
+	if ( ambient < 1.0f )
+		dl->color.exponent = 1 + (1 - ambient)*  2;
+	dl->radius	= 400;
+	// move player model in front of our view
+	pModel->SetAbsOrigin( origin );
+	pModel->SetAbsAngles( QAngle( 0, 180 + angle, 0 ) );
+	//pModel->m_nBody = (int)gpGlobals->curtime % 3;
+	pModel->m_nSkin = skin;
+ 
+	//// set upper body animation
+	//pModel->m_SequenceTransitioner.UpdateCurrent(
+	//	pModel->GetModelPtr(),
+	//	pModel->LookupSequence("ioskick"),
+	//	pModel->GetCycle(),
+	//	pModel->GetPlaybackRate(),
+	//	gpGlobals->realtime);
+ //
+	//// Now, blend the lower and upper (aim) anims together
+	//pModel->SetNumAnimOverlays( 2 );
+	//int numOverlays = pModel->GetNumAnimOverlays();
+	//for ( int i=0; i < numOverlays; ++i )
+	//{
+	//	C_AnimationLayer* layer = pModel->GetAnimOverlay( i );
+	//	layer->m_flCycle = pModel->GetCycle();
+	//	if ( i )
+	//		;//layer->m_nSequence = pModel->LookupSequence( pWeaponSequence );
+	//	else
+	//		layer->m_nSequence = pModel->LookupSequence("ioskick");
+	//	layer->m_flPlaybackRate = 1.0;
+	//	layer->m_flWeight = 1.0f;
+	//	layer->SetOrder( i );
+	//}
+ 
+	pModel->FrameAdvance( gpGlobals->frametime );
+
+	// Now draw it.
+	CViewSetup view;
+	// setup the views location, size and fov (amongst others)
+	view.x = 0;
+	view.y = 0;
+	view.width = pRenderTarget->GetActualWidth();
+	view.height = pRenderTarget->GetActualHeight();
+ 
+	view.m_bOrtho = false;
+	view.fov = 54;
+ 
+	// make sure that we see all of the player model
+	Vector vMins, vMaxs;
+	pModel->C_BaseAnimating::GetRenderBounds( vMins, vMaxs );
+
+	Vector target;
+
+	if (bodypart == 0)
+	{
+		target = origin + Vector(-15, 0, vMaxs.z - 9);
+	}
+	else if (bodypart == 1)
+	{
+		target = origin + Vector(-45, 0, (vMins.z + vMaxs.z) * 0.5f + 15);
+	}
+	else
+	{
+		target = origin + Vector(-25, 0, vMins.z + 20);
+	}
+
+	if (camPos == vec3_invalid)
+		camPos = target;
+	else
+		camPos += (target - camPos) / 30.0f;
+	
+	view.origin = camPos;
+	view.angles = QAngle(15, 0, 0);
+	//view.m_vUnreflectedOrigin = view.origin;
+	view.zNear = VIEW_NEARZ;
+	view.zFar = 1000;
+	//view.m_bForceAspectRatio1To1 = false;
+ 
+	// render it out to the new CViewSetup area
+	// it's possible that ViewSetup3D will be replaced in future code releases
+	Frustum dummyFrustum;
+
+	// New Function instead of ViewSetup3D...
+	render->Push3DView( view, VIEW_CLEAR_COLOR | VIEW_CLEAR_DEPTH, pRenderTarget, dummyFrustum );
+ 
+	pModel->DrawModel( STUDIO_RENDER );
+ 
+	render->PopView( dummyFrustum );
+}
+
 void ClientModeSDKNormal::PostRenderVGui()
 {
+}
+
+void ClientModeSDKNormal::PostRenderVGuiOnTop()
+{
+	CAppearanceSettingPanel *pAppearanceSettingPanel = (CAppearanceSettingPanel *)iosOptionsMenu->GetPanel()->GetSettingPanel(SETTING_PANEL_APPEARANCE);
+
+	if (!pAppearanceSettingPanel->IsVisible())
+		return;
+
+	int skin = pAppearanceSettingPanel->GetPlayerSkin();
+	int angle = pAppearanceSettingPanel->GetPlayerPreviewAngle();
+	int bodypart = pAppearanceSettingPanel->GetPlayerBodypart();
+	UpdateClassImageEntity("models/player/player.mdl", skin, angle, bodypart);
 }
 
 bool ClientModeSDKNormal::CanRecordDemo( char *errorMsg, int length ) const

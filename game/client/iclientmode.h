@@ -96,6 +96,7 @@ public:
 	virtual void	PostRender( void ) = 0;
 
 	virtual void	PostRenderVGui() = 0;
+	virtual void	PostRenderVGuiOnTop() = 0;
 
 	virtual void	ActivateInGameVGuiContext( vgui::Panel *pPanel ) = 0;
 	virtual void	DeactivateInGameVGuiContext() = 0;

@@ -2089,7 +2089,7 @@ void CViewRender::RenderView( const CViewSetup &view, int nClearFlags, int whatT
 		pRenderContext->Flush();
 		pRenderContext.SafeRelease();
 	}
-
+	
 	CDebugViewRender::Draw2DDebuggingInfo( view );
 
 	Render2DEffectsPostHUD( view );
@@ -2103,6 +2103,8 @@ void CViewRender::RenderView( const CViewSetup &view, int nClearFlags, int whatT
 	{
 		CDebugViewRender::GenerateOverdrawForTesting();
 	}
+
+	g_pClientMode->PostRenderVGuiOnTop();
 
 	render->PopView( GetFrustum() );
 	g_WorldListCache.Flush();

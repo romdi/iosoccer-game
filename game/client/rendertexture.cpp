@@ -243,6 +243,18 @@ ITexture *GetTeenyTexture( int which )
 	return s_TeenyTextures[which];
 }
 
+static CTextureReference s_pPlayerModelTexture;
+ITexture *GetPlayerModelTexture( void )
+{ 
+	if ( !s_pPlayerModelTexture )
+	{
+		s_pPlayerModelTexture.Init( materials->FindTexture( "_rt_playermodel", TEXTURE_GROUP_RENDER_TARGET ) );
+		Assert( !IsErrorTexture( s_pPlayerModelTexture ) );
+		AddReleaseFunc();
+	}
+	return s_pPlayerModelTexture;
+}
+
 void ReleaseRenderTargets( void )
 {
 	s_pPowerOfTwoFrameBufferTexture.Shutdown();
@@ -255,4 +267,6 @@ void ReleaseRenderTargets( void )
 
 	for (int i=0; i<MAX_FB_TEXTURES; ++i)
 		s_pFullFrameFrameBufferTexture[i].Shutdown();
+
+	s_pPlayerModelTexture.Shutdown();
 }

@@ -4,6 +4,7 @@
 #include "c_sdk_player.h"
 #include "c_playerresource.h"
 #include "sdk_gamerules.h"
+#include "ios_teamkit_parse.h"
 
 class CIOSOptionsMenu : public IIOSOptionsMenu
 {
@@ -50,16 +51,14 @@ void CC_IOSOptionsMenu(const CCommand &args)
 
 ConCommand iosoptionsmenu("iosoptionsmenu", CC_IOSOptionsMenu);
 
-#define LABEL_WIDTH 180
-#define INPUT_WIDTH 300
-#define TEXT_HEIGHT 30
-
 #define SHIRT_NUMBER_COUNT 11
 
+enum { LABEL_WIDTH = 180, INPUT_WIDTH = 260, SHORTINPUT_WIDTH = 200, TEXT_HEIGHT = 26, TEXT_MARGIN = 5 };
 enum { PANEL_TOPMARGIN = 70, PANEL_MARGIN = 5, PANEL_WIDTH = (1024 - 2 * PANEL_MARGIN), PANEL_HEIGHT = (720 - 2 * PANEL_MARGIN) };
-enum { PADDING = 15, TOP_PADDING = 15 };
-enum { BUTTON_WIDTH = 80, BUTTON_HEIGHT = 30, BUTTON_MARGIN = 5 };
+enum { PADDING = 10, TOP_PADDING = 30 };
+enum { BUTTON_WIDTH = 80, BUTTON_HEIGHT = 26, BUTTON_MARGIN = 5 };
 enum { INFOBUTTON_WIDTH = 30, INFOBUTTON_MARGIN = 5 };
+enum { APPEARANCE_HOFFSET = 270, APPEARANCE_RADIOBUTTONWIDTH = 70 };
 
 #define INTERP_VALUES 5
 const int interpValues[INTERP_VALUES] = { 1, 2, 3, 4, 5 };
@@ -71,131 +70,22 @@ const char *smoothTexts[SMOOTH_VALUES] = { "Very Short (cl_smoothtime 0.01)", "S
 CIOSOptionsPanel::CIOSOptionsPanel(VPANEL parent) : BaseClass(NULL, "IOSOptionsPanel")
 {
 	SetScheme("SourceScheme");
-
 	SetParent(parent);
-	m_pContent = new Panel(this, "");
-	m_pPlayerNameLabel = new Label(m_pContent, "", "Player Name:");
-	m_pPlayerNameText = new TextEntry(m_pContent, "");
-	m_pPlayerNameText->SetMaximumCharCount(MAX_PLAYER_NAME_LENGTH - 1);
-	m_pClubNameLabel = new Label(m_pContent, "", "IOS Club Initials:");
-	m_pClubNameText = new TextEntry(m_pContent, "");
-	m_pClubNameText->SetMaximumCharCount(MAX_CLUBNAME_LENGTH - 1);
-	m_pCountryNameLabel = new Label(m_pContent, "", "Country Fallback Name:");
-	m_pCountryNameList = new ComboBox(m_pContent, "", COUNTRY_NAMES_COUNT, false);
-
-	m_pLegacySideCurl = new CheckButton(m_pContent, "", "Legacy Side Curl");
-	m_pLegacyVerticalLook = new CheckButton(m_pContent, "", "Legacy Vertical Look");
-
-	m_pOKButton = new Button(m_pContent, "", "OK");
-	m_pCancelButton = new Button(m_pContent, "", "Cancel");
-	m_pSaveButton = new Button(m_pContent, "", "Apply");
-
-	m_pChangeInfoText = new Label(m_pContent, "", "Go spectator mode to change");
-
-	m_pCountryNameList->RemoveAll();
-
-	KeyValues *kv = NULL;
-
-	kv = new KeyValues("UserData", "index", 0);
-	m_pCountryNameList->AddItem("<None>", kv);
-	kv->deleteThis();
-
-	for (int i = 1; i < COUNTRY_NAMES_COUNT; i++)
-	{
-		kv = new KeyValues("UserData", "index", i);
-		m_pCountryNameList->AddItem(g_szCountryNames[i], kv);
-		kv->deleteThis();
-	}
-
-	m_pPreferredShirtNumberLabel = new Label(m_pContent, "", "Preferred Shirt Number:");
-	m_pPreferredShirtNumberList = new ComboBox(m_pContent, "", SHIRT_NUMBER_COUNT, false);
-	m_pPreferredShirtNumberList->RemoveAll();
-
-	m_pInterpDurationLabel = new Label(m_pContent, "", "Interpolation Duration:");
-	m_pInterpDurationList = new ComboBox(m_pContent, "", 0, false);
-	m_pInterpDurationInfoButton = new Button(m_pContent, "", "?");
-	m_pInterpDurationInfoButton->GetTooltip()->SetText("The shorter the interpolation duration, the quicker your client will display updated player and ball positions received from the server.\nIf you notice that other players and the ball don't move smoothly, it could mean that too many packets are lost on the way between you and the server.\nTry increasing the interpolation duration until the game is smooth again.");
-	m_pInterpDurationInfoButton->GetTooltip()->SetTooltipDelay(0);
-
-	m_pSmoothDurationLabel = new Label(m_pContent, "", "Smoothing Duration:");
-	m_pSmoothDurationList = new ComboBox(m_pContent, "", 0, false);
-	m_pSmoothDurationInfoButton = new Button(m_pContent, "", "?");
-	m_pSmoothDurationInfoButton->GetTooltip()->SetText("The shorter the smoothing duration, the quicker your client will set your local player to the correct position, should your client have incorrectly predicted your own position.\nTo make the game feel more reponsive, your client immediately performs certain actions like moving around and jumping, instead of waiting for the server to give confirmation for them.\nSometimes, when other players or the ball is close to you, the predictions of the client will be wrong and your local player can't actually move to the position he just went to during the prediction.\nThe smoothing duration is the time your client spends moving your own player to the correct position as received from the server.");
-	m_pSmoothDurationInfoButton->GetTooltip()->SetTooltipDelay(0);
-
-	kv = new KeyValues("UserData", "index", 0);
-	m_pPreferredShirtNumberList->AddItem("<None>", kv);
-	kv->deleteThis();
-
-	for (int i = 1; i < SHIRT_NUMBER_COUNT; i++)
-	{
-		kv = new KeyValues("UserData", "index", i);
-		m_pPreferredShirtNumberList->AddItem(VarArgs("%d", i + 1), kv);
-		kv->deleteThis();
-	}
-
-	for (int i = 0; i < INTERP_VALUES; i++)
-	{
-		kv = new KeyValues("UserData", "value", interpValues[i]);
-		m_pInterpDurationList->AddItem(interpTexts[i], kv);
-		kv->deleteThis();
-	}
-
-	for (int i = 0; i < SMOOTH_VALUES; i++)
-	{
-		kv = new KeyValues("UserData", "value", smoothValues[i]);
-		m_pSmoothDurationList->AddItem(smoothTexts[i], kv);
-		kv->deleteThis();
-	}
-
-	m_pRateLabel = new Label(m_pContent, "", "Rate (rate):");
-	m_pRateText = new TextEntry(m_pContent, "");
-	m_pRateInfoButton = new Button(m_pContent, "", "?");
-	m_pRateInfoButton->GetTooltip()->SetText("'Rate' sets the maximum bandwidth available for receiving packets from the server.\nIf 'net_graph 3' shows choke, increase the rate until the choke value shows 0.\nIf you can't increase 'Rate' any further due to a slow connection, consider lowering 'Update Rate' and 'Command Rate'.");
-	m_pRateInfoButton->GetTooltip()->SetTooltipDelay(0);
-
-	m_pUpdaterateLabel = new Label(m_pContent, "", "Update Rate (cl_updaterate):");
-	m_pUpdaterateText = new TextEntry(m_pContent, "");
-	m_pUpdaterateInfoButton = new Button(m_pContent, "", "?");
-	m_pUpdaterateInfoButton->GetTooltip()->SetText("'Update Rate' sets the number of updates per second you want to receive from the server.\nThe maximum value is the current server tickrate, which is usually 66 or 100.\nThe higher 'Update Rate' the more download bandwidth will be used.");
-	m_pUpdaterateInfoButton->GetTooltip()->SetTooltipDelay(0);
-
-	m_pCommandrateLabel = new Label(m_pContent, "", "Command Rate (cl_cmdrate):");
-	m_pCommandrateText = new TextEntry(m_pContent, "");
-	m_pCommandrateInfoButton = new Button(m_pContent, "", "?");
-	m_pCommandrateInfoButton->GetTooltip()->SetText("'Command Rate' sets the number of input updates per second you want to send to the server.\nThe maximum value is the current server tickrate, which is usually 66 or 100.\nThe higher 'Command Rate' the more upload bandwidth will be used.");
-	m_pCommandrateInfoButton->GetTooltip()->SetTooltipDelay(0);
-
-	m_pSkinIndexLabel = new Label(m_pContent, "", "Player model skin:");
-	m_pSkinIndexList = new ComboBox(m_pContent, "", 0, false);
-
-	kv = new KeyValues("UserData", "value", -1);
-	m_pSkinIndexList->AddItem("<Random>", kv);
-	kv->deleteThis();
-
-	kv = new KeyValues("UserData", "value", 0);
-	m_pSkinIndexList->AddItem("Dark skin", kv);
-	kv->deleteThis();
-
-	kv = new KeyValues("UserData", "value", 1);
-	m_pSkinIndexList->AddItem("Blond hair", kv);
-	kv->deleteThis();
-
-	kv = new KeyValues("UserData", "value", 2);
-	m_pSkinIndexList->AddItem("Brown hair", kv);
-	kv->deleteThis();
-
-	kv = new KeyValues("UserData", "value", 3);
-	m_pSkinIndexList->AddItem("Black hair", kv);
-	kv->deleteThis();
-
-	kv = new KeyValues("UserData", "value", 4);
-	m_pSkinIndexList->AddItem("Black hair with beard", kv);
-	kv->deleteThis();
-
-	kv = new KeyValues("UserData", "value", 5);
-	m_pSkinIndexList->AddItem("Darkish skin", kv);
-	kv->deleteThis();
+	m_pContent = new PropertySheet(this, "");
+	m_pSettingPanels[SETTING_PANEL_NETWORK] = new CNetworkSettingPanel(m_pContent, "");
+	m_pSettingPanels[SETTING_PANEL_APPEARANCE] = new CAppearanceSettingPanel(m_pContent, "");
+	m_pSettingPanels[SETTING_PANEL_GAMEPLAY] = new CGameplaySettingPanel(m_pContent, "");
+	m_pSettingPanels[SETTING_PANEL_VISUAL] = new CVisualSettingPanel(m_pContent, "");
+	m_pSettingPanels[SETTING_PANEL_SOUND] = new CSoundSettingPanel(m_pContent, "");
+	m_pContent->AddPage(dynamic_cast<CNetworkSettingPanel *>(m_pSettingPanels[SETTING_PANEL_NETWORK]), "Network");
+	m_pContent->AddPage(dynamic_cast<CAppearanceSettingPanel *>(m_pSettingPanels[SETTING_PANEL_APPEARANCE]), "Appearance");
+	m_pContent->AddPage(dynamic_cast<CGameplaySettingPanel *>(m_pSettingPanels[SETTING_PANEL_GAMEPLAY]), "Gameplay");
+	m_pContent->AddPage(dynamic_cast<CVisualSettingPanel *>(m_pSettingPanels[SETTING_PANEL_VISUAL]), "Visuals");
+	m_pContent->AddPage(dynamic_cast<CSoundSettingPanel *>(m_pSettingPanels[SETTING_PANEL_SOUND]), "Sound");
+	m_pOKButton = new Button(this, "", "OK");
+	m_pCancelButton = new Button(this, "", "Cancel");
+	m_pSaveButton = new Button(this, "", "Apply");
+	m_pChangeInfoText = new Label(this, "", "Go spectator mode to change");
 }
 
 CIOSOptionsPanel::~CIOSOptionsPanel()
@@ -207,76 +97,29 @@ void CIOSOptionsPanel::ApplySchemeSettings( IScheme *pScheme )
 	m_pScheme = pScheme;
 	BaseClass::ApplySchemeSettings( pScheme );
 
-	SetTitle("PLAYER SETTINGS", false);
+	SetTitle("Player Settings", false);
 	SetProportional(false);
 	SetSizeable(false);
-	SetBounds(0, 0, 550, 500);
-	SetBgColor(Color(0, 0, 0, 255));
+	SetBounds(0, 0, 600, PANEL_HEIGHT);
+	//SetBgColor(Color(0, 0, 0, 255));
 	SetPaintBackgroundEnabled(true);
 	MoveToCenterOfScreen();
 
-	m_pContent->SetBounds(PADDING, PADDING + TOP_PADDING, GetWide() - 2 * PADDING, GetTall() - 2 * PADDING - TOP_PADDING);
+	m_pContent->SetBounds(PADDING, PADDING + TOP_PADDING, GetWide() - 2 * PADDING, GetTall() - 2 * PADDING - TOP_PADDING - BUTTON_HEIGHT - PADDING);
 
-	m_pPlayerNameLabel->SetBounds(0, 0, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pPlayerNameText->SetBounds(LABEL_WIDTH, 0, INPUT_WIDTH, TEXT_HEIGHT);
-	m_pPlayerNameText->AddActionSignalTarget( this );
-	m_pPlayerNameText->SendNewLine(true); // with the txtEntry Type you need to set it to pass the return key as a message
-
-	m_pClubNameLabel->SetBounds(0, TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pClubNameText->SetBounds(LABEL_WIDTH, TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
-
-	m_pCountryNameLabel->SetBounds(0, 2 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pCountryNameList->SetBounds(LABEL_WIDTH, 2 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
-	m_pCountryNameList->GetMenu()->MakeReadyForUse();
-
-	m_pPreferredShirtNumberLabel->SetBounds(0, 3 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pPreferredShirtNumberList->SetBounds(LABEL_WIDTH, 3 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
-	m_pPreferredShirtNumberList->GetMenu()->MakeReadyForUse();
-
-	m_pInterpDurationLabel->SetBounds(0, 4 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pInterpDurationList->SetBounds(LABEL_WIDTH, 4 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
-	m_pInterpDurationInfoButton->SetBounds(LABEL_WIDTH + INPUT_WIDTH + INFOBUTTON_MARGIN, 4 * TEXT_HEIGHT, INFOBUTTON_WIDTH, TEXT_HEIGHT);
-	m_pInterpDurationInfoButton->SetContentAlignment(Label::a_center);
-
-	m_pSmoothDurationLabel->SetBounds(0, 5 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pSmoothDurationList->SetBounds(LABEL_WIDTH, 5 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
-	m_pSmoothDurationInfoButton->SetBounds(LABEL_WIDTH + INPUT_WIDTH + INFOBUTTON_MARGIN, 5 * TEXT_HEIGHT, INFOBUTTON_WIDTH, TEXT_HEIGHT);
-	m_pSmoothDurationInfoButton->SetContentAlignment(Label::a_center);
-
-	m_pLegacySideCurl->SetBounds(0, 6 * TEXT_HEIGHT, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
-	m_pLegacyVerticalLook->SetBounds(0, 7 * TEXT_HEIGHT, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
-
-	m_pSkinIndexLabel->SetBounds(0, 8 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pSkinIndexList->SetBounds(LABEL_WIDTH, 8 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
-
-	m_pRateLabel->SetBounds(0, 10 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pRateText->SetBounds(LABEL_WIDTH, 10 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
-	m_pRateInfoButton->SetBounds(LABEL_WIDTH + INPUT_WIDTH + INFOBUTTON_MARGIN, 10 * TEXT_HEIGHT, INFOBUTTON_WIDTH, TEXT_HEIGHT);
-	m_pRateInfoButton->SetContentAlignment(Label::a_center);
-
-	m_pUpdaterateLabel->SetBounds(0, 11 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pUpdaterateText->SetBounds(LABEL_WIDTH, 11 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
-	m_pUpdaterateInfoButton->SetBounds(LABEL_WIDTH + INPUT_WIDTH + INFOBUTTON_MARGIN, 11 * TEXT_HEIGHT, INFOBUTTON_WIDTH, TEXT_HEIGHT);
-	m_pUpdaterateInfoButton->SetContentAlignment(Label::a_center);
-
-	m_pCommandrateLabel->SetBounds(0, 12 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pCommandrateText->SetBounds(LABEL_WIDTH, 12 * TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
-	m_pCommandrateInfoButton->SetBounds(LABEL_WIDTH + INPUT_WIDTH + INFOBUTTON_MARGIN, 12 * TEXT_HEIGHT, INFOBUTTON_WIDTH, TEXT_HEIGHT);
-	m_pCommandrateInfoButton->SetContentAlignment(Label::a_center);
-
-	m_pOKButton->SetBounds(m_pContent->GetWide() - 3 * BUTTON_WIDTH - 2 * BUTTON_MARGIN, m_pContent->GetTall() - BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT);
+	m_pOKButton->SetBounds(this->GetWide() - 3 * BUTTON_WIDTH - 2 * BUTTON_MARGIN - PADDING, this->GetTall() - BUTTON_HEIGHT - PADDING, BUTTON_WIDTH, BUTTON_HEIGHT);
 	m_pOKButton->SetCommand("save_and_close");
 	m_pOKButton->AddActionSignalTarget(this);
 
-	m_pCancelButton->SetBounds(m_pContent->GetWide() - 2 * BUTTON_WIDTH - BUTTON_MARGIN, m_pContent->GetTall() - BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT);
+	m_pCancelButton->SetBounds(this->GetWide() - 2 * BUTTON_WIDTH - BUTTON_MARGIN - PADDING, this->GetTall() - BUTTON_HEIGHT - PADDING, BUTTON_WIDTH, BUTTON_HEIGHT);
 	m_pCancelButton->SetCommand("close");
 	m_pCancelButton->AddActionSignalTarget(this);
 
-	m_pSaveButton->SetBounds(m_pContent->GetWide() - BUTTON_WIDTH, m_pContent->GetTall() - BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT);
+	m_pSaveButton->SetBounds(this->GetWide() - BUTTON_WIDTH - PADDING, this->GetTall() - BUTTON_HEIGHT - PADDING, BUTTON_WIDTH, BUTTON_HEIGHT);
 	m_pSaveButton->SetCommand("save_settings");
 	m_pSaveButton->AddActionSignalTarget(this);
 
-	m_pChangeInfoText->SetBounds(0, m_pContent->GetTall() - BUTTON_HEIGHT, m_pContent->GetWide() - 3 * BUTTON_WIDTH, BUTTON_HEIGHT); 
+	m_pChangeInfoText->SetBounds(PADDING, this->GetTall() - BUTTON_HEIGHT - PADDING, this->GetWide() - 3 * BUTTON_WIDTH, BUTTON_HEIGHT); 
 	m_pChangeInfoText->SetFgColor(Color(255, 153, 153, 255));
 }
 
@@ -290,7 +133,9 @@ void CIOSOptionsPanel::OnThink()
 	BaseClass::OnThink();
 
 	//SetTall((int)(gpGlobals->curtime * 100) % 100);
-	//m_pSettingsPanel->Update();
+	//m_pSettingPanel->Update();
+	for (int i = 0; i < SETTING_PANEL_COUNT; i++)
+		m_pSettingPanels[i]->Update();
 
 	C_SDKPlayer *pLocal = C_SDKPlayer::GetLocalSDKPlayer();
 
@@ -331,30 +176,9 @@ void CIOSOptionsPanel::OnCommand(const char *cmd)
 {
 	if (!stricmp(cmd, "save_settings") || !stricmp(cmd, "save_and_close"))
 	{
-		char text[64];
-		m_pPlayerNameText->GetText(text, sizeof(text));
-		g_pCVar->FindVar("playername")->SetValue(text);
-		m_pClubNameText->GetText(text, sizeof(text));
-		g_pCVar->FindVar("clubname")->SetValue(text);
-		g_pCVar->FindVar("fallbackcountryindex")->SetValue(m_pCountryNameList->GetActiveItemUserData()->GetInt("index"));
-		m_pPreferredShirtNumberList->GetText(text, sizeof(text));
-		g_pCVar->FindVar("preferredshirtnumber")->SetValue(atoi(text));
-
-		g_pCVar->FindVar("cl_interp_ratio")->SetValue(atoi(m_pInterpDurationList->GetActiveItemUserData()->GetString("value")));
-		g_pCVar->FindVar("cl_smoothtime")->SetValue(atoi(m_pSmoothDurationList->GetActiveItemUserData()->GetString("value")) / 100.0f);
-
-		g_pCVar->FindVar("legacysidecurl")->SetValue(m_pLegacySideCurl->IsSelected() ? 1 : 0);
-		g_pCVar->FindVar("legacyverticallook")->SetValue(m_pLegacyVerticalLook->IsSelected() ? 1 : 0);
-
-		g_pCVar->FindVar("modelskinindex")->SetValue(m_pSkinIndexList->GetActiveItemUserData()->GetInt("value"));
-
-		m_pRateText->GetText(text, sizeof(text));
-		g_pCVar->FindVar("rate")->SetValue(atoi(text));
-		m_pUpdaterateText->GetText(text, sizeof(text));
-		g_pCVar->FindVar("cl_updaterate")->SetValue(atoi(text));
-		m_pCommandrateText->GetText(text, sizeof(text));
-		g_pCVar->FindVar("cl_cmdrate")->SetValue(atoi(text));
-
+		for (int i = 0; i < SETTING_PANEL_COUNT; i++)
+			m_pSettingPanels[i]->Save();
+		
 		engine->ClientCmd("host_writeconfig\n");
 
 		if (!stricmp(cmd, "save_and_close"))
@@ -372,14 +196,157 @@ void CIOSOptionsPanel::Activate()
 {
 	BaseClass::Activate();
 
+	for (int i = 0; i < SETTING_PANEL_COUNT; i++)
+		m_pSettingPanels[i]->Load();
+}
+
+CNetworkSettingPanel::CNetworkSettingPanel(Panel *parent, const char *panelName) : BaseClass(parent, panelName)
+{
+	m_pContent = new Panel(this, "");
+
+	m_pPlayerNameLabel = new Label(m_pContent, "", "Player Name:");
+	m_pPlayerNameText = new TextEntry(m_pContent, "");
+	m_pPlayerNameText->SetMaximumCharCount(MAX_PLAYER_NAME_LENGTH - 1);
+	m_pClubNameLabel = new Label(m_pContent, "", "IOS Club Initials:");
+	m_pClubNameText = new TextEntry(m_pContent, "");
+	m_pClubNameText->SetMaximumCharCount(MAX_CLUBNAME_LENGTH - 1);
+	m_pCountryNameLabel = new Label(m_pContent, "", "Country Fallback Name:");
+	m_pCountryNameList = new ComboBox(m_pContent, "", COUNTRY_NAMES_COUNT, false);
+
+	m_pCountryNameList->RemoveAll();
+
+	KeyValues *kv = NULL;
+
+	kv = new KeyValues("UserData", "index", 0);
+	m_pCountryNameList->AddItem("<None>", kv);
+	kv->deleteThis();
+
+	for (int i = 1; i < COUNTRY_NAMES_COUNT; i++)
+	{
+		kv = new KeyValues("UserData", "index", i);
+		m_pCountryNameList->AddItem(g_szCountryNames[i], kv);
+		kv->deleteThis();
+	}
+
+	m_pInterpDurationLabel = new Label(m_pContent, "", "Interpolation Duration:");
+	m_pInterpDurationList = new ComboBox(m_pContent, "", 0, false);
+	m_pInterpDurationInfoButton = new Button(m_pContent, "", "?");
+	m_pInterpDurationInfoButton->GetTooltip()->SetText("The shorter the interpolation duration, the quicker your client will display updated player and ball positions received from the server.\nIf you notice that other players and the ball don't move smoothly, it could mean that too many packets are lost on the way between you and the server.\nTry increasing the interpolation duration until the game is smooth again.");
+	m_pInterpDurationInfoButton->GetTooltip()->SetTooltipDelay(0);
+
+	m_pSmoothDurationLabel = new Label(m_pContent, "", "Smoothing Duration:");
+	m_pSmoothDurationList = new ComboBox(m_pContent, "", 0, false);
+	m_pSmoothDurationInfoButton = new Button(m_pContent, "", "?");
+	m_pSmoothDurationInfoButton->GetTooltip()->SetText("The shorter the smoothing duration, the quicker your client will set your local player to the correct position, should your client have incorrectly predicted your own position.\nTo make the game feel more reponsive, your client immediately performs certain actions like moving around and jumping, instead of waiting for the server to give confirmation for them.\nSometimes, when other players or the ball is close to you, the predictions of the client will be wrong and your local player can't actually move to the position he just went to during the prediction.\nThe smoothing duration is the time your client spends moving your own player to the correct position as received from the server.");
+	m_pSmoothDurationInfoButton->GetTooltip()->SetTooltipDelay(0);
+
+	for (int i = 0; i < INTERP_VALUES; i++)
+	{
+		kv = new KeyValues("UserData", "value", interpValues[i]);
+		m_pInterpDurationList->AddItem(interpTexts[i], kv);
+		kv->deleteThis();
+	}
+
+	for (int i = 0; i < SMOOTH_VALUES; i++)
+	{
+		kv = new KeyValues("UserData", "value", smoothValues[i]);
+		m_pSmoothDurationList->AddItem(smoothTexts[i], kv);
+		kv->deleteThis();
+	}
+
+	m_pRateLabel = new Label(m_pContent, "", "Rate (rate):");
+	m_pRateText = new TextEntry(m_pContent, "");
+	m_pRateInfoButton = new Button(m_pContent, "", "?");
+	m_pRateInfoButton->GetTooltip()->SetText("'Rate' sets the maximum bandwidth available for receiving packets from the server.\nIf 'net_graph 3' shows choke, increase the rate until the choke value shows 0.\nIf you can't increase 'Rate' any further due to a slow connection, consider lowering 'Update Rate' and 'Command Rate'.");
+	m_pRateInfoButton->GetTooltip()->SetTooltipDelay(0);
+
+	m_pUpdaterateLabel = new Label(m_pContent, "", "Update Rate (cl_updaterate):");
+	m_pUpdaterateText = new TextEntry(m_pContent, "");
+	m_pUpdaterateInfoButton = new Button(m_pContent, "", "?");
+	m_pUpdaterateInfoButton->GetTooltip()->SetText("'Update Rate' sets the number of updates per second you want to receive from the server.\nThe maximum value is the current server tickrate, which is usually 66 or 100.\nThe higher 'Update Rate' the more download bandwidth will be used.");
+	m_pUpdaterateInfoButton->GetTooltip()->SetTooltipDelay(0);
+
+	m_pCommandrateLabel = new Label(m_pContent, "", "Command Rate (cl_cmdrate):");
+	m_pCommandrateText = new TextEntry(m_pContent, "");
+	m_pCommandrateInfoButton = new Button(m_pContent, "", "?");
+	m_pCommandrateInfoButton->GetTooltip()->SetText("'Command Rate' sets the number of input updates per second you want to send to the server.\nThe maximum value is the current server tickrate, which is usually 66 or 100.\nThe higher 'Command Rate' the more upload bandwidth will be used.");
+	m_pCommandrateInfoButton->GetTooltip()->SetTooltipDelay(0);
+}
+
+void CNetworkSettingPanel::ApplySchemeSettings( IScheme *pScheme )
+{
+	//BaseClass::ApplySchemeSettings( pScheme );
+
+	//SetSize(400, 500);
+
+	m_pContent->SetBounds(PADDING, PADDING, GetWide() - 2 * PADDING, GetTall() - 2 * PADDING);
+
+	m_pPlayerNameLabel->SetBounds(0, 0, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pPlayerNameText->SetBounds(0, TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
+	m_pPlayerNameText->AddActionSignalTarget( this );
+	m_pPlayerNameText->SendNewLine(true); // with the txtEntry Type you need to set it to pass the return key as a message
+
+	m_pClubNameLabel->SetBounds(0, 2 * TEXT_HEIGHT + TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pClubNameText->SetBounds(0, 3 * TEXT_HEIGHT + TEXT_MARGIN, INPUT_WIDTH, TEXT_HEIGHT);
+
+	m_pCountryNameLabel->SetBounds(0, 4 * TEXT_HEIGHT + 2 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pCountryNameList->SetBounds(0, 5 * TEXT_HEIGHT + 2 * TEXT_MARGIN, INPUT_WIDTH, TEXT_HEIGHT);
+	m_pCountryNameList->GetMenu()->MakeReadyForUse();
+
+	m_pInterpDurationLabel->SetBounds(0, 6 * TEXT_HEIGHT + 3 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pInterpDurationList->SetBounds(0, 7 * TEXT_HEIGHT + 3 * TEXT_MARGIN, INPUT_WIDTH, TEXT_HEIGHT);
+	m_pInterpDurationInfoButton->SetBounds(INPUT_WIDTH + INFOBUTTON_MARGIN, 7 * TEXT_HEIGHT + 3 * TEXT_MARGIN, INFOBUTTON_WIDTH, TEXT_HEIGHT);
+	m_pInterpDurationInfoButton->SetContentAlignment(Label::a_center);
+
+	m_pSmoothDurationLabel->SetBounds(0, 8 * TEXT_HEIGHT + 4 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pSmoothDurationList->SetBounds(0, 9 * TEXT_HEIGHT + 4 * TEXT_MARGIN, INPUT_WIDTH, TEXT_HEIGHT);
+	m_pSmoothDurationInfoButton->SetBounds(INPUT_WIDTH + INFOBUTTON_MARGIN, 9 * TEXT_HEIGHT + 4 * TEXT_MARGIN, INFOBUTTON_WIDTH, TEXT_HEIGHT);
+	m_pSmoothDurationInfoButton->SetContentAlignment(Label::a_center);
+
+	m_pRateLabel->SetBounds(0, 10 * TEXT_HEIGHT + 5 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pRateText->SetBounds(0, 11 * TEXT_HEIGHT + 5 * TEXT_MARGIN, INPUT_WIDTH, TEXT_HEIGHT);
+	m_pRateInfoButton->SetBounds(INPUT_WIDTH + INFOBUTTON_MARGIN, 11 * TEXT_HEIGHT + 5 * TEXT_MARGIN, INFOBUTTON_WIDTH, TEXT_HEIGHT);
+	m_pRateInfoButton->SetContentAlignment(Label::a_center);
+
+	m_pUpdaterateLabel->SetBounds(0, 12 * TEXT_HEIGHT + 6 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pUpdaterateText->SetBounds(0, 13 * TEXT_HEIGHT + 6 * TEXT_MARGIN, INPUT_WIDTH, TEXT_HEIGHT);
+	m_pUpdaterateInfoButton->SetBounds(INPUT_WIDTH + INFOBUTTON_MARGIN, 13 * TEXT_HEIGHT + 6 * TEXT_MARGIN, INFOBUTTON_WIDTH, TEXT_HEIGHT);
+	m_pUpdaterateInfoButton->SetContentAlignment(Label::a_center);
+
+	m_pCommandrateLabel->SetBounds(0, 14 * TEXT_HEIGHT + 7 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pCommandrateText->SetBounds(0, 15 * TEXT_HEIGHT + 7 * TEXT_MARGIN, INPUT_WIDTH, TEXT_HEIGHT);
+	m_pCommandrateInfoButton->SetBounds(INPUT_WIDTH + INFOBUTTON_MARGIN, 15 * TEXT_HEIGHT + 7 * TEXT_MARGIN, INFOBUTTON_WIDTH, TEXT_HEIGHT);
+	m_pCommandrateInfoButton->SetContentAlignment(Label::a_center);
+}
+
+void CNetworkSettingPanel::Save()
+{
+	char text[64];
+	m_pPlayerNameText->GetText(text, sizeof(text));
+	g_pCVar->FindVar("playername")->SetValue(text);
+	m_pClubNameText->GetText(text, sizeof(text));
+	g_pCVar->FindVar("clubname")->SetValue(text);
+	g_pCVar->FindVar("fallbackcountryindex")->SetValue(m_pCountryNameList->GetActiveItemUserData()->GetInt("index"));
+
+	g_pCVar->FindVar("cl_interp_ratio")->SetValue(atoi(m_pInterpDurationList->GetActiveItemUserData()->GetString("value")));
+	g_pCVar->FindVar("cl_smoothtime")->SetValue(atoi(m_pSmoothDurationList->GetActiveItemUserData()->GetString("value")) / 100.0f);
+
+	m_pRateText->GetText(text, sizeof(text));
+	g_pCVar->FindVar("rate")->SetValue(atoi(text));
+	m_pUpdaterateText->GetText(text, sizeof(text));
+	g_pCVar->FindVar("cl_updaterate")->SetValue(atoi(text));
+	m_pCommandrateText->GetText(text, sizeof(text));
+	g_pCVar->FindVar("cl_cmdrate")->SetValue(atoi(text));
+}
+
+void CNetworkSettingPanel::Load()
+{
 	if (Q_strlen(g_pCVar->FindVar("playername")->GetString()) == 0)
 		g_pCVar->FindVar("playername")->SetValue(g_pCVar->FindVar("name")->GetString());
 
 	m_pPlayerNameText->SetText(g_pCVar->FindVar("playername")->GetString());
 	m_pCountryNameList->ActivateItemByRow(g_pCVar->FindVar("fallbackcountryindex")->GetInt());
 	m_pClubNameText->SetText(g_pCVar->FindVar("clubname")->GetString());
-	int shirtNum = g_pCVar->FindVar("preferredshirtnumber")->GetInt();
-	m_pPreferredShirtNumberList->SetText(shirtNum == 0 ? "<None>" : VarArgs("%d", clamp(shirtNum, 2, 11)));
 
 	m_pInterpDurationList->ActivateItemByRow(0);
 
@@ -403,12 +370,260 @@ void CIOSOptionsPanel::Activate()
 		}
 	}
 
-	m_pLegacySideCurl->SetSelected(g_pCVar->FindVar("legacysidecurl")->GetBool());
-	m_pLegacyVerticalLook->SetSelected(g_pCVar->FindVar("legacyverticallook")->GetBool());
-
-	m_pSkinIndexList->ActivateItemByRow(clamp(g_pCVar->FindVar("modelskinindex")->GetInt(), -1, 5) + 1);
-
 	m_pRateText->SetText(g_pCVar->FindVar("rate")->GetString());
 	m_pUpdaterateText->SetText(g_pCVar->FindVar("cl_updaterate")->GetString());
 	m_pCommandrateText->SetText(g_pCVar->FindVar("cl_cmdrate")->GetString());
+}
+
+void CNetworkSettingPanel::Update()
+{
+}
+
+CAppearanceSettingPanel::CAppearanceSettingPanel(Panel *parent, const char *panelName) : BaseClass(parent, panelName)
+{
+	m_pContent = new Panel(this, "");
+
+	m_pPlayerPreviewPanel = new ImagePanel(m_pContent, "");
+	m_pSkinIndexLabel = new Label(m_pContent, "", "Player Skin:");
+	m_pSkinIndexList = new ComboBox(m_pContent, "", 0, false);
+
+	KeyValues *kv = NULL;
+
+	kv = new KeyValues("UserData", "value", -1);
+	m_pSkinIndexList->AddItem("<Random>", kv);
+	kv->deleteThis();
+
+	kv = new KeyValues("UserData", "value", 0);
+	m_pSkinIndexList->AddItem("Dark skin", kv);
+	kv->deleteThis();
+
+	kv = new KeyValues("UserData", "value", 1);
+	m_pSkinIndexList->AddItem("Blond hair", kv);
+	kv->deleteThis();
+
+	kv = new KeyValues("UserData", "value", 2);
+	m_pSkinIndexList->AddItem("Brown hair", kv);
+	kv->deleteThis();
+
+	kv = new KeyValues("UserData", "value", 3);
+	m_pSkinIndexList->AddItem("Black hair", kv);
+	kv->deleteThis();
+
+	kv = new KeyValues("UserData", "value", 4);
+	m_pSkinIndexList->AddItem("Black hair with beard", kv);
+	kv->deleteThis();
+
+	kv = new KeyValues("UserData", "value", 5);
+	m_pSkinIndexList->AddItem("Darkish skin", kv);
+	kv->deleteThis();
+
+	m_pPreferredShirtNumberLabel = new Label(m_pContent, "", "Preferred Shirt Number:");
+	m_pPreferredShirtNumberList = new ComboBox(m_pContent, "", SHIRT_NUMBER_COUNT, false);
+	m_pPreferredShirtNumberList->RemoveAll();
+
+	kv = new KeyValues("UserData", "index", 0);
+	m_pPreferredShirtNumberList->AddItem("<None>", kv);
+	kv->deleteThis();
+
+	for (int i = 1; i < SHIRT_NUMBER_COUNT; i++)
+	{
+		kv = new KeyValues("UserData", "index", i);
+		m_pPreferredShirtNumberList->AddItem(VarArgs("%d", i + 1), kv);
+		kv->deleteThis();
+	}
+
+	m_pPlayerAngleLabel = new Label(m_pContent, "", "Rotation Angle:");
+	m_pPlayerAngleSlider = new Slider(m_pContent, "");
+	m_pPlayerAngleSlider->SetRange(-180, 180);
+	m_pPlayerAngleSlider->SetValue(0);
+
+	m_pPreviewTeamLabel = new Label(m_pContent, "", "Preview Team Kit:");
+	m_pPreviewTeamList = new ComboBox(m_pContent, "", m_TeamKitInfoDatabase.Count(), false);
+	m_pPreviewTeamList->RemoveAll();
+
+	for (unsigned int i = 0; i < m_TeamKitInfoDatabase.Count(); i++)
+	{
+		kv = new KeyValues("UserData", "kitname", m_TeamKitInfoDatabase[i]->m_szKitName);
+		m_pPreviewTeamList->AddItem(m_TeamKitInfoDatabase[i]->m_szKitName, kv);
+		kv->deleteThis();
+	}
+
+	m_pPreviewTeamList->ActivateItemByRow(0);
+
+	m_pBodypartPanel = new Panel(m_pContent, "");
+	m_pBodypartRadioButtons[0] = new RadioButton(m_pBodypartPanel, "", "Head");
+	m_pBodypartRadioButtons[1] = new RadioButton(m_pBodypartPanel, "", "Body");
+	m_pBodypartRadioButtons[2] = new RadioButton(m_pBodypartPanel, "", "Shoes");
+	m_pBodypartRadioButtons[1]->SetSelected(true);
+
+	m_pConnectionInfoLabel = new Label(m_pContent, "", "Join or create a server to activate the preview");
+}
+
+void CAppearanceSettingPanel::ApplySchemeSettings(IScheme *pScheme)
+{
+	//BaseClass::ApplySchemeSettings( pScheme );
+
+	m_pContent->SetBounds(PADDING, PADDING, GetWide() - 2 * PADDING, GetTall() - 2 * PADDING);
+
+	m_pPlayerPreviewPanel->SetBounds(APPEARANCE_RADIOBUTTONWIDTH, 0, GetParent()->GetWide(), GetParent()->GetTall() - 2 * TEXT_HEIGHT);
+	m_pPlayerPreviewPanel->SetImage("../_rt_playermodel");
+
+	m_pSkinIndexLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 0, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pSkinIndexList->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, TEXT_HEIGHT, SHORTINPUT_WIDTH, TEXT_HEIGHT);
+
+	m_pPreferredShirtNumberLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 2 * TEXT_HEIGHT + TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pPreferredShirtNumberList->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 3 * TEXT_HEIGHT + TEXT_MARGIN, SHORTINPUT_WIDTH, TEXT_HEIGHT);
+
+	m_pPlayerAngleLabel->SetBounds(APPEARANCE_RADIOBUTTONWIDTH, 2 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pPlayerAngleLabel->SetVisible(false);
+	m_pPlayerAngleSlider->SetBounds(APPEARANCE_RADIOBUTTONWIDTH, 512, 264, TEXT_HEIGHT);
+
+	m_pPreviewTeamLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 4 * TEXT_HEIGHT + 2 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pPreviewTeamList->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 5 * TEXT_HEIGHT + 2 * TEXT_MARGIN, SHORTINPUT_WIDTH, TEXT_HEIGHT);
+
+	m_pBodypartPanel->SetBounds(0, 0, APPEARANCE_RADIOBUTTONWIDTH, m_pPlayerPreviewPanel->GetTall());
+	m_pBodypartRadioButtons[0]->SetBounds(0, 0, APPEARANCE_RADIOBUTTONWIDTH, TEXT_HEIGHT);
+	m_pBodypartRadioButtons[1]->SetBounds(0, 512 / 2 - TEXT_HEIGHT / 2, APPEARANCE_RADIOBUTTONWIDTH, TEXT_HEIGHT);
+	m_pBodypartRadioButtons[2]->SetBounds(0, 512 - TEXT_HEIGHT, APPEARANCE_RADIOBUTTONWIDTH, TEXT_HEIGHT);
+
+	m_pConnectionInfoLabel->SetBounds(APPEARANCE_RADIOBUTTONWIDTH, 512 + TEXT_HEIGHT, GetParent()->GetWide() - APPEARANCE_RADIOBUTTONWIDTH, TEXT_HEIGHT);
+	m_pConnectionInfoLabel->SetFgColor(Color(255, 153, 153, 255));
+}
+
+void CAppearanceSettingPanel::Save()
+{
+	g_pCVar->FindVar("modelskinindex")->SetValue(m_pSkinIndexList->GetActiveItemUserData()->GetInt("value"));
+	char text[64];
+	m_pPreferredShirtNumberList->GetText(text, sizeof(text));
+	g_pCVar->FindVar("preferredshirtnumber")->SetValue(atoi(text));
+}
+
+void CAppearanceSettingPanel::Load()
+{
+	m_pSkinIndexList->ActivateItemByRow(clamp(g_pCVar->FindVar("modelskinindex")->GetInt(), -1, 5) + 1);
+	int shirtNum = g_pCVar->FindVar("preferredshirtnumber")->GetInt();
+	m_pPreferredShirtNumberList->SetText(shirtNum == 0 ? "<None>" : VarArgs("%d", clamp(shirtNum, 2, 11)));
+}
+
+void CAppearanceSettingPanel::Update()
+{
+	bool isConnected = CSDKPlayer::GetLocalSDKPlayer();
+
+	m_pConnectionInfoLabel->SetVisible(!isConnected);
+	m_pSkinIndexList->SetEnabled(isConnected);
+	m_pPreferredShirtNumberList->SetEnabled(isConnected);
+	m_pPlayerAngleSlider->SetEnabled(isConnected);
+	m_pPreviewTeamList->SetEnabled(isConnected);
+
+	for (int i = 0; i < 3; i++)
+		m_pBodypartRadioButtons[i]->SetEnabled(isConnected);
+}
+
+int CAppearanceSettingPanel::GetPlayerSkin()
+{
+	char text[64];
+	m_pPreferredShirtNumberList->GetText(text, sizeof(text));
+	int number = atoi(text);
+	int skin = m_pSkinIndexList->GetActiveItemUserData()->GetInt("value");
+
+	return clamp(number, 2, 11) - 2 + (skin * 10);
+}
+
+int CAppearanceSettingPanel::GetPlayerNumber()
+{
+	char text[64];
+	m_pPreferredShirtNumberList->GetText(text, sizeof(text));
+	int number = atoi(text);
+
+	return clamp(number, 2, 11);
+}
+
+int CAppearanceSettingPanel::GetPlayerBodypart()
+{
+	for (int i = 0; i < 3; i++)
+	{
+		if (m_pBodypartRadioButtons[i]->IsSelected())
+			return i;
+	}
+
+	return 0;
+}
+
+const char *CAppearanceSettingPanel::GetPlayerTeam()
+{
+	return m_pPreviewTeamList->GetActiveItemUserData()->GetString("kitname");
+}
+
+CGameplaySettingPanel::CGameplaySettingPanel(Panel *parent, const char *panelName) : BaseClass(parent, panelName)
+{
+	m_pContent = new Panel(this, "");
+	m_pLegacySideCurl = new CheckButton(m_pContent, "", "Legacy Side Curl");
+	m_pLegacyVerticalLook = new CheckButton(m_pContent, "", "Legacy Vertical Look");
+}
+
+void CGameplaySettingPanel::ApplySchemeSettings(IScheme *pScheme)
+{
+	m_pContent->SetBounds(PADDING, PADDING, GetWide() - 2 * PADDING, GetTall() - 2 * PADDING);
+	m_pLegacySideCurl->SetBounds(0, 0, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
+	m_pLegacyVerticalLook->SetBounds(0, TEXT_HEIGHT + TEXT_MARGIN, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
+}
+
+void CGameplaySettingPanel::Save()
+{
+	g_pCVar->FindVar("legacysidecurl")->SetValue(m_pLegacySideCurl->IsSelected() ? 1 : 0);
+	g_pCVar->FindVar("legacyverticallook")->SetValue(m_pLegacyVerticalLook->IsSelected() ? 1 : 0);
+}
+
+void CGameplaySettingPanel::Load()
+{
+	m_pLegacySideCurl->SetSelected(g_pCVar->FindVar("legacysidecurl")->GetBool());
+	m_pLegacyVerticalLook->SetSelected(g_pCVar->FindVar("legacyverticallook")->GetBool());
+}
+
+void CGameplaySettingPanel::Update()
+{
+}
+
+CVisualSettingPanel::CVisualSettingPanel(Panel *parent, const char *panelName) : BaseClass(parent, panelName)
+{
+	m_pContent = new Panel(this, "");
+}
+
+void CVisualSettingPanel::ApplySchemeSettings(IScheme *pScheme)
+{
+	m_pContent->SetBounds(PADDING, PADDING, GetWide() - 2 * PADDING, GetTall() - 2 * PADDING);
+}
+
+void CVisualSettingPanel::Save()
+{
+}
+
+void CVisualSettingPanel::Load()
+{
+}
+
+void CVisualSettingPanel::Update()
+{
+}
+
+CSoundSettingPanel::CSoundSettingPanel(Panel *parent, const char *panelName) : BaseClass(parent, panelName)
+{
+	m_pContent = new Panel(this, "");
+}
+
+void CSoundSettingPanel::ApplySchemeSettings(IScheme *pScheme)
+{
+	m_pContent->SetBounds(PADDING, PADDING, GetWide() - 2 * PADDING, GetTall() - 2 * PADDING);
+}
+
+void CSoundSettingPanel::Save()
+{
+}
+
+void CSoundSettingPanel::Load()
+{
+}
+
+void CSoundSettingPanel::Update()
+{
 }

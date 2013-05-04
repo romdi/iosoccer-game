@@ -488,6 +488,7 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
       </PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="ios_rendertargets.cpp" />
     <ClCompile Include="IsNPCProxy.cpp" />
     <ClCompile Include="..\..\public\jigglebones.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -853,6 +854,7 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClInclude Include="..\shared\particle_property.h" />
     <ClInclude Include="..\shared\playerclass_info_parse.h" />
     <ClInclude Include="..\shared\point_bonusmaps_accessor.h" />
+    <ClInclude Include="ios_rendertargets.h" />
     <ClInclude Include="sdk\c_ball.h" />
     <ClInclude Include="sdk\c_ios_mapentities.h" />
     <ClInclude Include="sdk\c_ios_replaymanager.h" />

@@ -10,6 +10,7 @@
 #include "sdk_gamerules.h"
 #include "c_playerresource.h"
 #include "c_ios_replaymanager.h"
+#include "iosoptions.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -99,7 +100,17 @@ void CPlayerTextureProxy::OnBind( C_BaseEntity *pEnt )
 			pos = pReplayPlayer->m_nTeamPosNum;
 		}
 		else
-			return;
+		{
+			C_BaseAnimatingOverlay *pPlayerModelPreview = dynamic_cast<C_BaseAnimatingOverlay *>(pEnt);
+			if (pPlayerModelPreview)
+			{
+				CAppearanceSettingPanel *pPanel = (CAppearanceSettingPanel *)iosOptionsMenu->GetPanel()->GetSettingPanel(SETTING_PANEL_APPEARANCE);
+				team = pPanel->GetPlayerTeam();
+				pos = pPanel->GetPlayerNumber();
+			}
+			else
+				return;
+		}
 	}
 
 	char texture[128];
