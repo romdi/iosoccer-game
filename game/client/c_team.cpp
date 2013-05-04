@@ -390,18 +390,31 @@ ConVar cl_download_url("cl_download_url", "http://downloads.iosoccer.co.uk/teamk
 
 #define KITFILECOUNT 15
 
+#include "hud_basechat.h"
+
+void ChatMsg(const char *format, ...)
+{
+	char buffer[256];
+	va_list args;
+	va_start (args, format);
+	vsnprintf (buffer, 255, format, args);
+	Msg(buffer);
+	((CBaseHudChat *)gHUD.FindElement("CHudChat"))->Printf(CHAT_FILTER_NONE, buffer);	
+	va_end (args);
+}
+
 unsigned DoCurl( void *params )
 {
 	curl_t* vars = (curl_t*) params; // always use a struct!
 
-	DevMsg("Downloading %s kit...\n", vars->kitName);
+	ChatMsg("Downloading %s kit files...\n", vars->kitName);
 
-	const char *textures[KITFILECOUNT] = { "kitdata.txt", "2.vtf", "3.vtf", "4.vtf", "5.vtf", "6.vtf", "7.vtf", "8.vtf", "9.vtf", "10.vtf", "11.vtf", "gksocks.vtf", "keeper.vtf", "socks.vtf", "teamcrest.vtf" };
+	const char *textures[KITFILECOUNT] = { "2.vtf", "3.vtf", "4.vtf", "5.vtf", "6.vtf", "7.vtf", "8.vtf", "9.vtf", "10.vtf", "11.vtf", "gksocks.vtf", "keeper.vtf", "socks.vtf", "teamcrest.vtf", "kitdata.txt" };
 
 	CURL *curl;
 	curl = curl_easy_init();
 	char url[512];
-	Q_snprintf(url, sizeof(url), "%s/%s/%s", cl_download_url.GetString(), vars->kitName, textures[0]);
+	Q_snprintf(url, sizeof(url), "%s/%s/%s", cl_download_url.GetString(), vars->kitName, "kitdata.txt");
 	curl_easy_setopt(curl, CURLOPT_URL, url);
 	CURLcode result = curl_easy_perform(curl);
 	long code;
@@ -410,7 +423,7 @@ unsigned DoCurl( void *params )
 
 	if (code >= 400)
 	{
-		Msg("%s kit not found on server\n", vars->kitName);
+		ChatMsg("%s kit not found on server. Wrong kit name?\n", vars->kitName);
 		return -1;
 	}
 
@@ -429,15 +442,12 @@ unsigned DoCurl( void *params )
 
 		CURL *curl;
 		curl = curl_easy_init();
-		//struct curl_slist *headers=NULL;
-		//headers = curl_slist_append(headers, "ACCEPT_ENCODING: gzip");
-		//curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 		char url[512];
 		Q_snprintf(url, sizeof(url), "%s/%s/%s", cl_download_url.GetString(), vars->kitName, textures[i]);
 		curl_easy_setopt(curl, CURLOPT_URL, url);
+		//curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, "gzip");
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, rcvData);
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, vars);
-		//curl_easy_setopt(curl, CURLOPT_ENCODING, "gzip");
 		CURLcode result = curl_easy_perform(curl);
 		long code;
 		curl_easy_getinfo(curl, CURLINFO_HTTP_CODE, &code);
@@ -447,12 +457,16 @@ unsigned DoCurl( void *params )
 
 		if (code >= 400)
 		{
-			Msg("%s kit file %s not found on server\n", vars->kitName, textures[i]);
+			ChatMsg("%s kit file %s not found on server\n", vars->kitName, textures[i]);
 			filesystem->RemoveFile(filename, "MOD");
+		}
+		else
+		{
+			ChatMsg("Downloaded %s kit file %s (%d/%d)\n", vars->kitName, textures[i], i + 1, KITFILECOUNT);
 		}
 	}
 
-	DevMsg("Downloaded %s kit\n", vars->kitName);
+	ChatMsg("Downloaded all %s kit files\nApplying %s kit...\n", vars->kitName, vars->kitName);
 
 	//Q_strncpy(GetGlobalTeam(vars->teamNumber)->m_szDownloadKitName, vars->kitName, sizeof(GetGlobalTeam(vars->teamNumber)->m_szDownloadKitName));
 	GetGlobalTeam(vars->teamNumber)->m_bKitDownloadFinished = true;
@@ -496,8 +510,7 @@ void C_Team::SetKitName(const char *pKitName)
 	}
 	else
 	{
-		DevMsg("%s kit not found on disk\n", m_szServerKitName);
-		//m_pTeamKitInfo = m_TeamKitInfoDatabase[GetTeamNumber() - TEAM_A];
+		ChatMsg("%s kit not found on disk\n", m_szServerKitName);
 		m_pTeamKitInfo = GetTeamKitInfoFromHandle(LookupTeamKitInfoSlot(GetTeamNumber() == TEAM_A ? "germany" : "brazil"));
 		Q_strncpy(m_szKitName, m_pTeamKitInfo->m_szKitName, MAX_KITNAME_LENGTH);
 		Q_strncpy(m_szDownloadKitName, m_szServerKitName, MAX_KITNAME_LENGTH);
