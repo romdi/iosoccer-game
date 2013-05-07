@@ -274,6 +274,9 @@ void CHudScorebar::Init( void )
 	ListenForGameEvent("match_state");
 	ListenForGameEvent("set_piece");
 	ListenForGameEvent("goal");
+	ListenForGameEvent("highlight_goal");
+	ListenForGameEvent("highlight_chance");
+	ListenForGameEvent("highlight_redcard");
 	ListenForGameEvent("own_goal");
 	ListenForGameEvent("foul");
 	ListenForGameEvent("penalty");
@@ -578,7 +581,7 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 			m_pNotifications[0]->SetText(VarArgs("%s", g_szMatchEventNames[event->GetInt("state")]));
 
 		m_eCurMatchEvent = (match_event_t)event->GetInt("state");
-		m_flStayDuration = 3.0f;
+		m_flStayDuration = INT_MAX;
 	}
 	else if (!Q_strcmp(event->GetName(), "set_piece"))
 	{
@@ -634,7 +637,7 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 		}
 
 		m_eCurMatchEvent = MATCH_EVENT_GOAL;
-		m_flStayDuration = 1000;
+		m_flStayDuration = INT_MAX;
 
 		if (pScorer)
 		{
@@ -642,6 +645,75 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 			m_pExtraInfo->SetText(VarArgs("%d%s shot on goal for %s", count, GetOrdinal(count), pScorer->GetPlayerName()));
 			m_pExtraInfo->SetVisible(true);
 		}
+	}
+	else if (!Q_strcmp(event->GetName(), "highlight_goal"))
+	{
+		const char *scorer = event->GetString("scorer");
+		const char *firstAssister = event->GetString("first_assister");
+		const char *secondAssister = event->GetString("second_assister");
+
+		m_pNotifications[0]->SetText(VarArgs("GOAL (%d'): %s", event->GetInt("second") / 60 + 1, g_PR->GetTeamCode(event->GetInt("scoring_team"))));
+
+		if (scorer[0] != 0)
+		{
+			m_pNotifications[1]->SetText(VarArgs("%s", scorer));
+			m_pNotificationPanel->SetTall(2 * NOTIFICATION_HEIGHT);
+		}
+		if (firstAssister[0] != 0)
+		{
+			m_pNotifications[2]->SetText(VarArgs("+ %s", firstAssister));
+			m_pNotificationPanel->SetTall(3 * NOTIFICATION_HEIGHT);
+		}
+		if (secondAssister[0] != 0)
+		{
+			m_pNotifications[3]->SetText(VarArgs("+ %s", secondAssister));
+			m_pNotificationPanel->SetTall(4 * NOTIFICATION_HEIGHT);
+		}
+
+		m_eCurMatchEvent = MATCH_EVENT_GOAL;
+		m_flStayDuration = INT_MAX;
+	}
+	else if (!Q_strcmp(event->GetName(), "highlight_chance"))
+	{
+		const char *finisher = event->GetString("finisher");
+		const char *firstAssister = event->GetString("first_assister");
+		const char *secondAssister = event->GetString("second_assister");
+
+		m_pNotifications[0]->SetText(VarArgs("CHANCE (%d'): %s", event->GetInt("second") / 60 + 1, g_PR->GetTeamCode(event->GetInt("finishing_team"))));
+
+		if (finisher[0] != 0)
+		{
+			m_pNotifications[1]->SetText(VarArgs("%s", finisher));
+			m_pNotificationPanel->SetTall(2 * NOTIFICATION_HEIGHT);
+		}
+		if (firstAssister[0] != 0)
+		{
+			m_pNotifications[2]->SetText(VarArgs("+ %s", firstAssister));
+			m_pNotificationPanel->SetTall(3 * NOTIFICATION_HEIGHT);
+		}
+		if (secondAssister[0] != 0)
+		{
+			m_pNotifications[3]->SetText(VarArgs("+ %s", secondAssister));
+			m_pNotificationPanel->SetTall(4 * NOTIFICATION_HEIGHT);
+		}
+
+		m_eCurMatchEvent = MATCH_EVENT_CHANCE;
+		m_flStayDuration = INT_MAX;
+	}
+	else if (!Q_strcmp(event->GetName(), "highlight_redcard"))
+	{
+		const char *foulingPlayer = event->GetString("fouling_player");
+
+		m_pNotifications[0]->SetText(VarArgs("RED CARD (%d'): %s", event->GetInt("second") / 60 + 1, g_PR->GetTeamCode(event->GetInt("fouling_team"))));
+
+		if (foulingPlayer[0] != 0)
+		{
+			m_pNotifications[1]->SetText(VarArgs("%s", foulingPlayer));
+			m_pNotificationPanel->SetTall(2 * NOTIFICATION_HEIGHT);
+		}
+
+		m_eCurMatchEvent = MATCH_EVENT_REDCARD;
+		m_flStayDuration = INT_MAX;
 	}
 	else if (!Q_strcmp(event->GetName(), "own_goal"))
 	{
@@ -656,7 +728,7 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 		}
 
 		m_eCurMatchEvent = MATCH_EVENT_OWNGOAL;
-		m_flStayDuration = 1000;
+		m_flStayDuration = INT_MAX;
 	}
 	else if (!Q_strcmp(event->GetName(), "foul"))
 	{
@@ -726,13 +798,13 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 		else
 			m_pNotifications[0]->SetText(VarArgs("TIMEOUT PENDING: %s", g_PR->GetTeamCode(m_nCurMatchEventTeam)));
 
-		m_flStayDuration = 1000;
+		m_flStayDuration = INT_MAX;
 	}
 	else if (!Q_strcmp(event->GetName(), "start_timeout"))
 	{
 		m_nCurMatchEventTeam = event->GetInt("requesting_team");
 		m_eCurMatchEvent = MATCH_EVENT_TIMEOUT;
-		m_flStayDuration = 1000;
+		m_flStayDuration = INT_MAX;
 	}
 
 	m_pCenterFlash->SetText(g_szMatchEventNames[m_eCurMatchEvent]);

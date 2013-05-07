@@ -6,29 +6,6 @@
 #include "sdk_playeranimstate.h"
 #include "team.h"
 
-void CopyAnimationLayer(CAnimationLayer *dst, const CAnimationLayer *src)
-{
-	dst->m_flCycle = src->m_flCycle;
-	dst->m_nOrder = src->m_nOrder;
-	dst->m_nSequence = src->m_nSequence;
-	dst->m_flWeight = src->m_flWeight;
-	dst->m_flPlaybackRate = src->m_flPlaybackRate;
-	dst->m_bLooping = src->m_bLooping;
-	dst->m_bSequenceFinished = src->m_bSequenceFinished;
-	dst->m_fFlags = src->m_fFlags;
-	dst->m_nPriority = src->m_nPriority;
-	dst->m_nActivity = src->m_nActivity;
-	dst->m_flLayerAnimtime = src->m_flLayerAnimtime;
-	dst->m_flBlendIn = src->m_flBlendIn;
-	dst->m_flBlendOut = src->m_flBlendOut;
-	dst->m_flPrevCycle = src->m_flPrevCycle;
-	dst->m_flKillDelay = src->m_flKillDelay;
-	dst->m_flKillRate = src->m_flKillRate;
-	dst->m_flLastAccess = src->m_flLastAccess;
-	dst->m_flLastEventCheck = src->m_flLastEventCheck;
-	dst->m_flLayerFadeOuttime = src->m_flLayerFadeOuttime;
-}
-
 BEGIN_DATADESC( CReplayBall )
 END_DATADESC()
 
@@ -138,7 +115,7 @@ void cc_StartReplay(const CCommand &args)
 	if (!UTIL_IsCommandIssuedByServerAdmin())
         return;
 
-	ReplayManager()->StartReplay(1, 0, true);
+	ReplayManager()->StartReplay(1, 0);
 }
 
 static ConCommand start_replay("start_replay", cc_StartReplay);
@@ -153,6 +130,11 @@ void cc_StopReplay(const CCommand &args)
 }
 
 static ConCommand stop_replay("stop_replay", cc_StopReplay);
+
+float GetReplayStartTime()
+{
+	return gpGlobals->curtime - max(max(sv_replay_duration1.GetFloat(), sv_replay_duration2.GetFloat()), sv_replay_duration3.GetFloat());
+}
 
 LINK_ENTITY_TO_CLASS(replaymanager, CReplayManager);
 
@@ -186,7 +168,8 @@ CReplayManager::CReplayManager()
 
 	m_bIsReplaying = false;
 	m_bIsHighlightReplay = false;
-	m_nHighlightReplayIndex = 0;
+	m_bIsReplayStart = true;
+	m_bIsHighlightStart = true;
 	m_flRunDuration = 0;
 }
 
@@ -215,8 +198,7 @@ void CReplayManager::CleanUp()
 	}
 
 	m_Snapshots.PurgeAndDeleteElements();
-	m_Replays.PurgeAndDeleteElements();
-	m_nHighlightReplayIndex = 0;
+	m_MatchEvents.PurgeAndDeleteElements();
 }
 
 void CReplayManager::Spawn()
@@ -241,27 +223,56 @@ void CReplayManager::Think()
 	CheckReplay();
 }
 
+int CReplayManager::FindNextHighlightReplayIndex(int startIndex)
+{
+	if (startIndex == -1)
+	{
+		// Iterate backwards
+		for (int i = m_MatchEvents.Count() - 1; i >= 0; i--)
+		{
+			if (m_MatchEvents[i]->snapshots.Count() > 0)
+				return i;
+		}
+	}
+	else if (startIndex >= 0 && startIndex < m_MatchEvents.Count())
+	{
+		// Iterate forwards
+		for (int i = startIndex; i < m_MatchEvents.Count(); i++)
+		{
+			if (m_MatchEvents[i]->snapshots.Count() > 0)
+				return i;
+		}
+	}
+
+	return -1;
+}
+
 void CReplayManager::CheckReplay()
 {
-	if (m_bDoReplay && gpGlobals->curtime >= m_flStartTime)
+	if (m_bDoReplay && gpGlobals->curtime >= m_flReplayActivationTime)
 		RestoreSnapshot();
 	else if (!m_bDoReplay && !SDKGameRules()->IsIntermissionState())
 		TakeSnapshot();
 }
 
-void CReplayManager::StartReplay(int numberOfRuns, float startDelay, bool atMinGoalPos)
+void CReplayManager::StartReplay(int numberOfRuns, float startDelay, int index /*= -1*/, bool isHighlightReplay /*= false*/)
 {
 	if (!sv_replays.GetBool())
 		return;
 
+	m_nReplayIndex = FindNextHighlightReplayIndex(index);
+
+	if (m_nReplayIndex == -1)
+		return;
+
+	m_bIsHighlightReplay = isHighlightReplay;
+	m_bIsHighlightStart = true;
+	m_bIsReplayStart = true;
 	m_nMaxReplayRuns = numberOfRuns;
-	m_flStartTime = gpGlobals->curtime + startDelay;
+	m_flReplayActivationTime = gpGlobals->curtime + startDelay;
 	m_nReplayRunIndex = 0;
 	m_bDoReplay = true;
-	m_bAtMinGoalPos = atMinGoalPos;
-	SaveReplay();
-	m_nReplayIndex = m_Replays.Count() - 1;
-	CalcSnapshotIndexRange();
+	CalcReplayDuration(m_flReplayActivationTime);
 }
 
 void CReplayManager::StopReplay()
@@ -330,12 +341,46 @@ void CReplayManager::StopReplay()
 			pRealPl->GetPlayerBall()->RemoveSolidFlags(FSOLID_NOT_SOLID);
 		}
 	}
+
+	if (SDKGameRules()->State_Get() == MATCH_COOLDOWN)
+	{
+		IGameEvent *pEvent = gameeventmanager->CreateEvent("match_state");
+		if (pEvent)
+		{
+			pEvent->SetInt("state", MATCH_EVENT_MATCH_END);
+			gameeventmanager->FireEvent(pEvent);
+		}
+	}
+}
+
+void CopyAnimationLayer(CAnimationLayer *dst, const CAnimationLayer *src)
+{
+	dst->m_flCycle = src->m_flCycle;
+	dst->m_nOrder = src->m_nOrder;
+	dst->m_nSequence = src->m_nSequence;
+	dst->m_flWeight = src->m_flWeight;
+	dst->m_flPlaybackRate = src->m_flPlaybackRate;
+	dst->m_bLooping = src->m_bLooping;
+	dst->m_bSequenceFinished = src->m_bSequenceFinished;
+	dst->m_fFlags = src->m_fFlags;
+	dst->m_nPriority = src->m_nPriority;
+	dst->m_nActivity = src->m_nActivity;
+	dst->m_flLayerAnimtime = src->m_flLayerAnimtime;
+	dst->m_flBlendIn = src->m_flBlendIn;
+	dst->m_flBlendOut = src->m_flBlendOut;
+	dst->m_flPrevCycle = src->m_flPrevCycle;
+	dst->m_flKillDelay = src->m_flKillDelay;
+	dst->m_flKillRate = src->m_flKillRate;
+	dst->m_flLastAccess = src->m_flLastAccess;
+	dst->m_flLastEventCheck = src->m_flLastEventCheck;
+	dst->m_flLayerFadeOuttime = src->m_flLayerFadeOuttime;
 }
 
 void CReplayManager::TakeSnapshot()
 {
 	Snapshot *pSnap = new Snapshot;
 	pSnap->snaptime = gpGlobals->curtime;
+	pSnap->isInReplay = false;
 
 	BallSnapshot *pBallSnap = new BallSnapshot;
 
@@ -369,11 +414,11 @@ void CReplayManager::TakeSnapshot()
 		int layerCount = pPl->GetNumAnimOverlays();
 		for( int layerIndex = 0; layerIndex < layerCount; ++layerIndex )
 		{
-			CAnimationLayer *currentLayer = pPl->GetAnimOverlay(layerIndex);
-			if(!currentLayer)
+			CAnimationLayer *animLayer = pPl->GetAnimOverlay(layerIndex);
+			if(!animLayer)
 				continue;
 
-			CopyAnimationLayer(&pPlSnap->m_animLayers[layerIndex], currentLayer);
+			CopyAnimationLayer(&pPlSnap->m_animLayers[layerIndex], animLayer);
 		}
 
 		pPlSnap->m_masterSequence = pPl->GetSequence();
@@ -395,58 +440,106 @@ void CReplayManager::TakeSnapshot()
 
 	m_Snapshots.AddToTail(pSnap);
 	
-	float replayStartTime = gpGlobals->curtime - max(max(sv_replay_duration1.GetFloat(), sv_replay_duration2.GetFloat()), sv_replay_duration3.GetFloat());
+	float replayStartTime = GetReplayStartTime();
 
 	while (m_Snapshots.Count() >= 2 && m_Snapshots[0]->snaptime < replayStartTime && m_Snapshots[1]->snaptime <= replayStartTime)
 	{
-		delete m_Snapshots[0];
+		if (!m_Snapshots[0]->isInReplay)
+			delete m_Snapshots[0];
+
 		m_Snapshots.Remove(0);
 	}
 }
 
 void CReplayManager::RestoreSnapshot()
 {
-	Replay *pReplay = m_Replays[m_nReplayIndex];
+	float timeSinceReplayStart = gpGlobals->curtime - m_flReplayStartTime;
 
-	if (m_nSnapshotCurIndex >= m_nSnapshotEndIndex)
+	if (timeSinceReplayStart >= m_flRunDuration)
 	{
 		if (m_nReplayRunIndex < m_nMaxReplayRuns - 1)
 		{
 			m_nReplayRunIndex += 1;
-			CalcSnapshotIndexRange();
+			m_bIsReplayStart = true;
+		}
+		else if (m_bIsHighlightReplay)
+		{
+			m_nReplayIndex = FindNextHighlightReplayIndex(m_nReplayIndex + 1);
+
+			if (m_nReplayIndex == -1)
+			{
+				StopReplay();
+				return;
+			}
+
+			m_nReplayRunIndex = 0;
+			m_bIsReplayStart = true;
+			m_bIsHighlightStart = true;
 		}
 		else
 		{
-			if (m_bIsHighlightReplay && m_nReplayIndex < m_Replays.Count() - 1)
-			{
-				m_nReplayRunIndex = 0;
-				m_nReplayIndex += 1;
-				CalcSnapshotIndexRange();
-			}
-			else
-			{
-				StopReplay();
-			}
-
+			StopReplay();
 			return;
 		}
 	}
 
-	m_bAtMinGoalPos = pReplay->m_bAtMinGoalPos;
+	MatchEvent *pMatchEvent = m_MatchEvents[m_nReplayIndex];
 
-	//if (pReplay->m_Snapshots.Count() == 0)
-	//{
-	//	StopReplay();
-	//	return;
-	//}
+	if (m_bIsReplayStart)
+	{
+		m_bIsReplayStart = false;
+		m_bAtMinGoalPos = pMatchEvent->atMinGoalPos;
+		m_bIsReplaying = true;
+		CalcReplayDuration(gpGlobals->curtime);
+		timeSinceReplayStart = 0;
 
-	m_bIsReplaying = true;
+		if (m_bIsHighlightReplay && m_bIsHighlightStart)
+		{
+			m_bIsHighlightStart = false;
+
+			if (pMatchEvent->type == MATCH_EVENT_GOAL)
+			{
+				IGameEvent *pEvent = gameeventmanager->CreateEvent("highlight_goal");
+				if (pEvent)
+				{
+					pEvent->SetInt("second", pMatchEvent->second);
+					pEvent->SetInt("scoring_team", pMatchEvent->team);
+					pEvent->SetString("scorer", pMatchEvent->pPlayerData1 ? pMatchEvent->pPlayerData1->m_szName : "");
+					pEvent->SetString("first_assister", pMatchEvent->pPlayerData2 ? pMatchEvent->pPlayerData2->m_szName : "");
+					pEvent->SetString("second_assister", pMatchEvent->pPlayerData3 ? pMatchEvent->pPlayerData3->m_szName : "");
+					gameeventmanager->FireEvent(pEvent);
+				}
+			}
+			else if (pMatchEvent->type == MATCH_EVENT_CHANCE)
+			{
+				IGameEvent *pEvent = gameeventmanager->CreateEvent("highlight_chance");
+				if (pEvent)
+				{
+					pEvent->SetInt("second", pMatchEvent->second);
+					pEvent->SetInt("finishing_team", pMatchEvent->team);
+					pEvent->SetString("finisher", pMatchEvent->pPlayerData1 ? pMatchEvent->pPlayerData1->m_szName : "");
+					pEvent->SetString("first_assister", pMatchEvent->pPlayerData2 ? pMatchEvent->pPlayerData2->m_szName : "");
+					pEvent->SetString("second_assister", pMatchEvent->pPlayerData3 ? pMatchEvent->pPlayerData3->m_szName : "");
+					gameeventmanager->FireEvent(pEvent);
+				}
+			}
+			else if (pMatchEvent->type == MATCH_EVENT_REDCARD)
+			{
+				IGameEvent *pEvent = gameeventmanager->CreateEvent("highlight_redcard");
+				if (pEvent)
+				{
+					pEvent->SetInt("second", pMatchEvent->second);
+					pEvent->SetInt("fouling_team", pMatchEvent->team);
+					pEvent->SetString("fouling_player", pMatchEvent->pPlayerData1 ? pMatchEvent->pPlayerData1->m_szName : "");
+					gameeventmanager->FireEvent(pEvent);
+				}
+			}
+		}
+	}
 
 	CBall *pRealBall = GetBall();
 	if (pRealBall && !(pRealBall->GetEffects() & EF_NODRAW))
 	{
-		//pRealBall->SetRenderMode(kRenderTransColor);
-		//pRealBall->SetRenderColorA(50);
 		pRealBall->AddEffects(EF_NODRAW);
 		pRealBall->AddSolidFlags(FSOLID_NOT_SOLID);
 	}
@@ -457,18 +550,13 @@ void CReplayManager::RestoreSnapshot()
 		if (!CSDKPlayer::IsOnField(pRealPl))
 			continue;
 
-		//pRealPl->SetRenderMode(kRenderTransColor);
-		//pRealPl->SetRenderColorA(50);
 		if (!(pRealPl->GetEffects() & EF_NODRAW))
 		{
 			pRealPl->m_vPreReplayPos = pRealPl->GetLocalOrigin();
 			pRealPl->m_aPreReplayAngles = pRealPl->GetLocalAngles();
 			pRealPl->AddEffects(EF_NODRAW);
 			pRealPl->DoServerAnimationEvent(PLAYERANIMEVENT_CANCEL);
-			//pRealPl->SetMoveType(MOVETYPE_NOCLIP);
-			//pRealPl->AddEFlags(EFL_NOCLIP_ACTIVE);
 			pRealPl->AddSolidFlags(FSOLID_NOT_SOLID);
-			//if (pRealPl->GetMoveType() != MOVETYPE_OBSERVER)
 			pRealPl->SetObserverMode(OBS_MODE_TVCAM);
 		}
 
@@ -479,7 +567,35 @@ void CReplayManager::RestoreSnapshot()
 		}
 	}
 
-	Snapshot *pSnap = pReplay->m_Snapshots[m_nSnapshotCurIndex];
+	Snapshot *pNextSnap = NULL;
+	Snapshot *pSnap = NULL;
+	float timeSinceFirstSnap = 0;
+
+	// Walk context looking for any invalidating event
+	for (int i = pMatchEvent->snapshots.Count() - 1; i >= 0; i--)
+	{
+		// remember last record
+		pNextSnap = pSnap;
+
+		// get next record
+		pSnap = pMatchEvent->snapshots[i];
+
+		timeSinceFirstSnap = pSnap->snaptime - pMatchEvent->snapshots[0]->snaptime;
+
+		// did we find a context smaller than target time ?
+		if (timeSinceFirstSnap - m_flReplayStartTimeOffset <= timeSinceReplayStart)
+			break; // hurra, stop
+	}
+
+	if (!pSnap)
+		return;
+
+	float nextTimeSinceFirstSnap;
+
+	if (pNextSnap)
+		nextTimeSinceFirstSnap = pNextSnap->snaptime - pMatchEvent->snapshots[0]->snaptime;
+	else
+		nextTimeSinceFirstSnap = 0;
 
 	BallSnapshot *pBallSnap = pSnap->pBallSnapshot;
 
@@ -488,8 +604,6 @@ void CReplayManager::RestoreSnapshot()
 		if (!m_pBall)
 		{
 			m_pBall = (CReplayBall *)CreateEntityByName("replayball");
-			//m_pBall->SetRenderMode(kRenderTransColor);
-			//m_pBall->SetRenderColorA(150);
 			m_pBall->Spawn();
 		}
 
@@ -502,6 +616,28 @@ void CReplayManager::RestoreSnapshot()
 	{
 		UTIL_Remove(m_pBall);
 		m_pBall = NULL;
+	}
+
+	float frac;
+
+	if (pNextSnap &&
+		(timeSinceFirstSnap < timeSinceReplayStart) &&
+		(timeSinceFirstSnap < nextTimeSinceFirstSnap) )
+	{
+		// we didn't find the exact time but have a valid previous record
+		// so interpolate between these two records;
+
+		// calc fraction between both records
+		frac = ( timeSinceReplayStart - (timeSinceFirstSnap - m_flReplayStartTimeOffset) ) / 
+			( nextTimeSinceFirstSnap - timeSinceFirstSnap );
+
+		Assert( frac > 0 && frac < 1 ); // should never extrapolate
+	}
+	else
+	{
+		// we found the exact record or no other record to interpolate with
+		// just copy these values since they are the best we have
+		frac = 0.0f;
 	}
 
 	for (int i = 0; i < 2; i++)
@@ -519,19 +655,12 @@ void CReplayManager::RestoreSnapshot()
 			if (!m_pPlayers[i][j])
 			{
 				m_pPlayers[i][j] = (CReplayPlayer *)CreateEntityByName("replayplayer");
-				//m_pPlayers[i]->SetRenderMode(kRenderTransColor);
-				//m_pPlayers[i]->SetRenderColorA(150);
 				m_pPlayers[i][j]->Spawn();
-				//m_pPlayers[i]->UseClientSideAnimation();
 				m_pPlayers[i][j]->SetNumAnimOverlays(NUM_LAYERS_WANTED);
 			}
 
 			CReplayPlayer *pPl = m_pPlayers[i][j];
 
-			pPl->SetLocalOrigin(pPlSnap->pos);
-			pPl->SetLocalVelocity(pPlSnap->vel);
-			pPl->SetLocalAngles(pPlSnap->ang);
-			//pPl->SnapEyeAngles(pPlSnap->ang);
 			pPl->m_nTeamNumber = pPlSnap->m_nTeamNumber;
 			pPl->m_nTeamPosNum = pPlSnap->m_nTeamPosNum;
 
@@ -541,83 +670,138 @@ void CReplayManager::RestoreSnapshot()
 			pPl->m_nSkin = pPlSnap->m_nSkin;
 			pPl->m_nBody = pPlSnap->m_nBody;
 
-			pPl->SetPoseParameter(pPl->GetModelPtr(), 4, pPlSnap->m_flMoveX);
-			pPl->SetPoseParameter(pPl->GetModelPtr(), 3, pPlSnap->m_flMoveY);
+			PlayerSnapshot *pNextPlSnap = NULL;
 
-			pPl->SetSequence(pPlSnap->m_masterSequence);
-			pPl->SetCycle(pPlSnap->m_masterCycle);
-			pPl->SetSimulationTime(pPlSnap->m_flSimulationTime);
-			pPl->SetPlaybackRate(1);
+			if (pNextSnap)
+				pNextPlSnap = pNextSnap->pPlayerSnapshot[i][j];
 
-			//CopyAnimationLayer(&pPl->m_AnimLayers[0], &pPlSnap->m_animLayers[0]);
-			//CopyAnimationLayer(&pPl->m_AnimLayers[1], &pPlSnap->m_animLayers[1]);
-
-			//if (m_nSnapshotIndex % 20 == 0)
+			if (frac > 0.0f && pNextPlSnap)
 			{
-				//int count = pPl->GetNumAnimOverlays();
-				//const int layerCount = ;//pPl->GetNumAnimOverlays();
-				//pPl->SetNumAnimOverlays(NUM_LAYERS_WANTED);
+				pPl->SetLocalOrigin(Lerp( frac, pPlSnap->pos, pNextPlSnap->pos  ));
+				//pPl->SetLocalVelocity(Lerp( frac, pPlSnap->vel, pNextPlSnap->vel  ));
+				pPl->SetLocalAngles(Lerp( frac, pPlSnap->ang, pNextPlSnap->ang ));
+			}
+			else
+			{
+				pPl->SetLocalOrigin(pPlSnap->pos);
+				//pPl->SetLocalVelocity(pPlSnap->vel);
+				pPl->SetLocalAngles(pPlSnap->ang);
+			}
 
-				for( int layerIndex = 0; layerIndex < NUM_LAYERS_WANTED; ++layerIndex )
+			bool interpolationAllowed;
+
+			if (frac > 0.0f && pNextPlSnap && pPlSnap->m_masterSequence == pNextPlSnap->m_masterSequence)
+			{
+				// If the master state changes, all layers will be invalid too, so don't interp (ya know, interp barely ever happens anyway)
+				interpolationAllowed = true;
+			}
+			else
+				interpolationAllowed = false;
+
+			// First do the master settings
+			if (interpolationAllowed)
+			{
+				pPl->SetSequence( Lerp( frac, pPlSnap->m_masterSequence, pNextPlSnap->m_masterSequence ) );
+				pPl->SetCycle( Lerp( frac, pPlSnap->m_masterCycle, pNextPlSnap->m_masterCycle ) );
+
+				if( pPlSnap->m_masterCycle > pNextPlSnap->m_masterCycle )
 				{
-					CAnimationLayer *currentLayer = pPl->GetAnimOverlay(layerIndex);
-					if(!currentLayer)
-						continue;
-
-					//currentLayer->m_flCycle = 0.5f;
-					//currentLayer->m_nSequence = 8;
-					//currentLayer->m_flPlaybackRate = 1.0;
-					//currentLayer->m_flWeight = 1.0f;
-					//currentLayer->m_nOrder = layerIndex;
-
-					//pPl->StudioFrameAdvanceManual( gpGlobals->frametime );
-					//pPl->DispatchAnimEvents(pPl);
-					CopyAnimationLayer(currentLayer, &pPlSnap->m_animLayers[layerIndex]);
-					//currentLayer->m_fFlags |= ANIM_LAYER_ACTIVE;
-					//currentLayer->MarkActive();
-					//currentLayer->StudioFrameAdvance(gpGlobals->frametime, pPl);
+					// the older record is higher in frame than the newer, it must have wrapped around from 1 back to 0
+					// add one to the newer so it is lerping from .9 to 1.1 instead of .9 to .1, for example.
+					float newCycle = Lerp( frac, pPlSnap->m_masterCycle, pNextPlSnap->m_masterCycle + 1 );
+					pPl->SetCycle(newCycle < 1 ? newCycle : newCycle - 1 );// and make sure .9 to 1.2 does not end up 1.05
 				}
-				//pPl->StudioFrameAdvance();
-				//pPl->DispatchAnimEvents(pPl);
+				else
+				{
+					pPl->SetCycle( Lerp( frac, pPlSnap->m_masterCycle, pNextPlSnap->m_masterCycle ) );
+				}
+
+				pPl->SetPoseParameter(pPl->GetModelPtr(), 4, Lerp(frac, pPlSnap->m_flMoveX, pNextPlSnap->m_flMoveX));
+				pPl->SetPoseParameter(pPl->GetModelPtr(), 3, Lerp(frac, pPlSnap->m_flMoveY, pNextPlSnap->m_flMoveY));
+			}
+			else
+			{
+				pPl->SetSequence(pPlSnap->m_masterSequence);
+				pPl->SetCycle(pPlSnap->m_masterCycle);
+				pPl->SetPoseParameter(pPl->GetModelPtr(), 4, pPlSnap->m_flMoveX);
+				pPl->SetPoseParameter(pPl->GetModelPtr(), 3, pPlSnap->m_flMoveY);
+			}
+
+			// Now do all the layers
+			for (int layerIndex = 0; layerIndex < NUM_LAYERS_WANTED; layerIndex++)
+			{
+				CAnimationLayer *animLayer = pPl->GetAnimOverlay(layerIndex);
+				if(!animLayer)
+					continue;
+
+				CAnimationLayer &animLayerSnap = pPlSnap->m_animLayers[layerIndex];
+
+				animLayer->m_nOrder = animLayerSnap.m_nOrder;
+				animLayer->m_nSequence = animLayerSnap.m_nSequence;
+				animLayer->m_fFlags = animLayerSnap.m_fFlags;
+				animLayer->m_bLooping = animLayerSnap.m_bLooping;
+				animLayer->m_bSequenceFinished = animLayerSnap.m_bSequenceFinished;
+				animLayer->m_flPlaybackRate = animLayerSnap.m_flPlaybackRate;
+				animLayer->m_nPriority = animLayerSnap.m_nPriority;
+				animLayer->m_nActivity = animLayerSnap.m_nActivity;
+				animLayer->m_flLastAccess = animLayerSnap.m_flLastAccess;
+				animLayer->m_flLastEventCheck = animLayerSnap.m_flLastEventCheck;
+
+				if (interpolationAllowed)
+				{
+					CAnimationLayer &nextAnimLayerSnap = pNextPlSnap->m_animLayers[layerIndex];
+
+					if(animLayerSnap.m_nOrder == nextAnimLayerSnap.m_nOrder && animLayerSnap.m_nSequence == nextAnimLayerSnap.m_nSequence)
+					{
+						// We can't interpolate across a sequence or order change
+						if( animLayerSnap.m_flCycle > nextAnimLayerSnap.m_flCycle )
+						{
+							// the older record is higher in frame than the newer, it must have wrapped around from 1 back to 0
+							// add one to the newer so it is lerping from .9 to 1.1 instead of .9 to .1, for example.
+							float newCycle = Lerp( frac, animLayerSnap.m_flCycle.Get(), nextAnimLayerSnap.m_flCycle + 1 );
+							animLayer->m_flCycle = newCycle < 1 ? newCycle : newCycle - 1;// and make sure .9 to 1.2 does not end up 1.05
+						}
+						else
+						{
+							animLayer->m_flCycle = Lerp( frac, animLayerSnap.m_flCycle.Get(), nextAnimLayerSnap.m_flCycle.Get()  );
+						}
+
+						animLayer->m_flWeight = Lerp( frac, animLayerSnap.m_flWeight.Get(), nextAnimLayerSnap.m_flWeight.Get()  );
+
+						animLayer->m_flLayerAnimtime = Lerp(frac, animLayerSnap.m_flLayerAnimtime, nextAnimLayerSnap.m_flLayerAnimtime);
+						animLayer->m_flBlendIn = Lerp(frac, animLayerSnap.m_flBlendIn, nextAnimLayerSnap.m_flBlendIn);
+						animLayer->m_flBlendOut = Lerp(frac, animLayerSnap.m_flBlendOut, nextAnimLayerSnap.m_flBlendOut);
+						animLayer->m_flPrevCycle = Lerp(frac, animLayerSnap.m_flPrevCycle.Get(), nextAnimLayerSnap.m_flPrevCycle.Get());
+						animLayer->m_flKillDelay = Lerp(frac, animLayerSnap.m_flKillDelay, nextAnimLayerSnap.m_flKillDelay);
+						animLayer->m_flKillRate = Lerp(frac, animLayerSnap.m_flKillRate, nextAnimLayerSnap.m_flKillRate);
+						animLayer->m_flLayerFadeOuttime = Lerp(frac, animLayerSnap.m_flLayerFadeOuttime, nextAnimLayerSnap.m_flLayerFadeOuttime);
+					}
+				}
+				else
+				{
+					//Either no interp, or interp failed.  Just use record.
+					animLayer->m_flCycle = animLayerSnap.m_flCycle;
+					animLayer->m_flWeight = animLayerSnap.m_flWeight;
+
+					animLayer->m_flLayerAnimtime = animLayerSnap.m_flLayerAnimtime;
+					animLayer->m_flBlendIn = animLayerSnap.m_flBlendIn;
+					animLayer->m_flBlendOut = animLayerSnap.m_flBlendOut;
+					animLayer->m_flPrevCycle = animLayerSnap.m_flPrevCycle;
+					animLayer->m_flKillDelay = animLayerSnap.m_flKillDelay;
+					animLayer->m_flKillRate = animLayerSnap.m_flKillRate;
+					animLayer->m_flLayerFadeOuttime = animLayerSnap.m_flLayerFadeOuttime;
+				}
 			}
 		}
 	}
-
-	m_nSnapshotCurIndex += 1;
-}
-
-void CReplayManager::SaveReplay()
-{
-	//Replay replay;
-	//replay.m_Snapshots.CopyArray(m_Snapshots.Base(), m_Snapshots.Count());
-	//m_Replays.SetCount(1);
-	//m_Replays[0] = replay;
-	Replay *pReplay = new Replay;
-	pReplay->m_Snapshots = m_Snapshots;
-	pReplay->m_nMatchSeconds = SDKGameRules()->GetMatchDisplayTimeSeconds();
-	pReplay->m_bAtMinGoalPos = m_bAtMinGoalPos;
-	//for (int i = 0; i < pReplay->m_Snapshots.Count(); i++)
-	//{
-	//	pReplay->m_Snapshots[i]->isHighlight = true;
-	//}
-
-	m_Replays.AddToTail(pReplay);
-
-	m_Snapshots.RemoveAll();
 }
 
 void CReplayManager::StartHighlights()
 {
-	if (!sv_replays.GetBool() || !sv_highlights.GetBool() || m_nHighlightReplayIndex > m_Replays.Count() - 1)
+	if (!sv_replays.GetBool() || !sv_highlights.GetBool())
 		return;
 
-	m_bIsHighlightReplay = true;
-	m_nReplayIndex = m_nHighlightReplayIndex;
-	m_nMaxReplayRuns = 2;
-	m_flStartTime = gpGlobals->curtime + 3;
-	m_nReplayRunIndex = 0;
-	m_bDoReplay = true;
-	CalcSnapshotIndexRange();
+	StartReplay(2, 5, 0, true);
 }
 
 void CReplayManager::StopHighlights()
@@ -625,12 +809,10 @@ void CReplayManager::StopHighlights()
 	if (!sv_replays.GetBool() || !sv_highlights.GetBool() || !m_bDoReplay)
 		return;
 
-	m_nHighlightReplayIndex = m_nReplayIndex;
-	m_bIsHighlightReplay = false;
 	StopReplay();
 }
 
-void CReplayManager::CalcSnapshotIndexRange()
+void CReplayManager::CalcReplayDuration(float startTime)
 {
 	if (m_nReplayRunIndex == 0)
 		m_flRunDuration = sv_replay_duration1.GetFloat();
@@ -639,19 +821,36 @@ void CReplayManager::CalcSnapshotIndexRange()
 	else if (m_nReplayRunIndex == 2)
 		m_flRunDuration = sv_replay_duration3.GetFloat();
 
-	Replay *pReplay = m_Replays[m_nReplayIndex];
-	float endTime = pReplay->m_Snapshots.Tail()->snaptime;
-	m_nSnapshotEndIndex = pReplay->m_Snapshots.Count() - 1;
-	m_nSnapshotStartIndex = 0;
+	m_flReplayStartTime = startTime;
+	m_flReplayStartTimeOffset = max(max(sv_replay_duration1.GetFloat(), sv_replay_duration2.GetFloat()), sv_replay_duration3.GetFloat()) - m_flRunDuration;
+}
 
-	for (int i = pReplay->m_Snapshots.Count() - 1; i >= 0; i--)
+void CReplayManager::AddMatchEvent(match_event_t type, int team, CSDKPlayer *pPlayer1, CSDKPlayer *pPlayer2/* = NULL*/, CSDKPlayer *pPlayer3/* = NULL*/)
+{
+	MatchEvent *pMatchEvent = new MatchEvent;
+
+	if (type == MATCH_EVENT_GOAL || type == MATCH_EVENT_CHANCE || type == MATCH_EVENT_REDCARD)
 	{
-		if (pReplay->m_Snapshots[i]->snaptime < endTime - m_flRunDuration)
+		float replayStartTime = GetReplayStartTime();
+
+		for (int i = 0; i < m_Snapshots.Count(); i++)
 		{
-			m_nSnapshotStartIndex = i + 1;
-			break;
+			if (m_Snapshots[i]->snaptime >= replayStartTime)
+			{
+				pMatchEvent->snapshots.AddToTail(m_Snapshots[i]);
+				m_Snapshots[i]->isInReplay = true;
+			}
 		}
 	}
 
-	m_nSnapshotCurIndex = m_nSnapshotStartIndex;
+	pMatchEvent->state = SDKGameRules()->State_Get();
+	pMatchEvent->type = type;
+	pMatchEvent->second = SDKGameRules()->GetMatchDisplayTimeSeconds();
+	pMatchEvent->team = team;
+	pMatchEvent->atMinGoalPos = GetBall()->GetPos().y < SDKGameRules()->m_vKickOff.GetY();
+	pMatchEvent->pPlayerData1 = pPlayer1 ? pPlayer1->GetData() : NULL;
+	pMatchEvent->pPlayerData2 = pPlayer2 ? pPlayer2->GetData() : NULL;
+	pMatchEvent->pPlayerData3 = pPlayer3 ? pPlayer3->GetData() : NULL;
+
+	m_MatchEvents.AddToTail(pMatchEvent);
 }

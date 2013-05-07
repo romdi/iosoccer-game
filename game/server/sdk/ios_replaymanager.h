@@ -64,6 +64,7 @@ struct PlayerSnapshot
 struct Snapshot
 {
 	float snaptime;
+	bool isInReplay;
 	BallSnapshot *pBallSnapshot;
 	PlayerSnapshot *pPlayerSnapshot[2][11];
 
@@ -91,6 +92,24 @@ struct Replay
 	~Replay()
 	{
 		m_Snapshots.PurgeAndDeleteElements();
+	}
+};
+
+struct MatchEvent
+{
+	match_state_t state;
+	match_event_t type;
+	int second;
+	int team;
+	bool atMinGoalPos;
+	const CPlayerPersistentData *pPlayerData1;
+	const CPlayerPersistentData *pPlayerData2;
+	const CPlayerPersistentData *pPlayerData3;
+	CUtlVector<Snapshot *> snapshots;
+
+	~MatchEvent()
+	{
+		snapshots.PurgeAndDeleteElements();
 	}
 };
 
@@ -142,17 +161,18 @@ public:
 	~CReplayManager();
 	void CheckReplay();
 	void TakeSnapshot();
-	void StartReplay(int numberOfRuns, float startDelay, bool atMinGoalPos);
+	void StartReplay(int numberOfRuns, float startDelay, int index = -1, bool isHighlightReplay = false);
 	void StopReplay();
 	void RestoreSnapshot();
-	void SaveReplay();
 	bool IsReplaying() { return m_bIsReplaying; }
 	void Think();
 	void Spawn();
+	int FindNextHighlightReplayIndex(int startIndex);
 	void StartHighlights();
 	void StopHighlights();
 	void CleanUp();
-	void CalcSnapshotIndexRange();
+	void CalcReplayDuration(float startTime);
+	void AddMatchEvent(match_event_t type, int team, CSDKPlayer *pPlayer1, CSDKPlayer *pPlayer2 = NULL, CSDKPlayer *pPlayer3 = NULL);
 
 	CNetworkVar(bool, m_bIsReplaying);
 	CNetworkVar(int, m_nReplayRunIndex);
@@ -165,19 +185,19 @@ public:
 
 private:
 	CUtlVector<Snapshot *>	m_Snapshots;
-	CUtlVector<Replay *>	m_Replays;
 	bool					m_bDoReplay;
-	int						m_nSnapshotCurIndex;
-	int						m_nSnapshotStartIndex;
-	int						m_nSnapshotEndIndex;
 	int						m_nReplayIndex;
-	int						m_nHighlightReplayIndex;
 	CReplayBall				*m_pBall;
 	CReplayPlayer			*m_pPlayers[2][11];
 	int						m_nMaxReplayRuns;
-	float					m_flStartTime;
+	float					m_flReplayActivationTime;
+	float					m_flReplayStartTime;
+	float					m_flReplayStartTimeOffset;
 	bool					m_bIsHighlightReplay;
+	bool					m_bIsReplayStart;
+	bool					m_bIsHighlightStart;
 	float					m_flRunDuration;
+	CUtlVector<MatchEvent *> m_MatchEvents;
 };
 
 extern CReplayManager *g_pReplayManager;

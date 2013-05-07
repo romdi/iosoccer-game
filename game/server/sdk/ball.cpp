@@ -1489,6 +1489,7 @@ void CBall::State_GOAL_Enter()
 
 	float delay = sv_ball_goalcelebduration.GetFloat();
 
+
 	if (sv_replays.GetBool())
 	{
 		delay += sv_replay_duration1.GetFloat();
@@ -1502,7 +1503,7 @@ void CBall::State_GOAL_Enter()
 
 	State_Transition(BALL_KICKOFF, delay);
 
-	ReplayManager()->StartReplay(sv_replay_count.GetInt(), sv_ball_goalcelebduration.GetInt(), GetGlobalTeam(m_nTeam)->m_vPlayerSpawns[0].y < GetGlobalTeam(m_nTeam)->GetOppTeam()->m_vPlayerSpawns[0].y);
+	ReplayManager()->StartReplay(sv_replay_count.GetInt(), sv_ball_goalcelebduration.GetInt());
 }
 
 void CBall::State_GOAL_Think()
@@ -2053,12 +2054,12 @@ void CBall::HandleFoul()
 		if (m_eFoulType == FOUL_NORMAL_YELLOW_CARD)
 		{
 			if (m_pFoulingPl->GetYellowCards() % 2 != 0)
-				m_pFoulingPl->GetTeam()->AddMatchEvent(SDKGameRules()->State_Get(), SDKGameRules()->GetMatchDisplayTimeSeconds(), MATCH_EVENT_YELLOWCARD, m_pFoulingPl->GetPlayerName());
+				ReplayManager()->AddMatchEvent(MATCH_EVENT_YELLOWCARD, m_nFoulingTeam, m_pFoulingPl);
 		}
 
 		if (m_eFoulType == FOUL_NORMAL_YELLOW_CARD && m_pFoulingPl->GetYellowCards() % 2 == 0 || m_eFoulType == FOUL_NORMAL_RED_CARD)
 		{
-			m_pFoulingPl->GetTeam()->AddMatchEvent(SDKGameRules()->State_Get(), SDKGameRules()->GetMatchDisplayTimeSeconds(), m_eFoulType == FOUL_NORMAL_YELLOW_CARD ? MATCH_EVENT_YELLOWREDCARD : MATCH_EVENT_REDCARD, m_pFoulingPl->GetPlayerName());
+			ReplayManager()->AddMatchEvent(m_eFoulType == FOUL_NORMAL_YELLOW_CARD ? MATCH_EVENT_YELLOWREDCARD : MATCH_EVENT_REDCARD, m_nFoulingTeam, m_pFoulingPl);
 
 			int team = m_pFoulingPl->GetTeamNumber();
 			int posIndex = m_pFoulingPl->GetTeamPosIndex();
@@ -2720,15 +2721,10 @@ void CBall::TriggerGoal(int team)
 	{
 		scoringTeam = LastOppTeam(true);
 
-		char matchEventPlayerNames[MAX_MATCH_EVENT_PLAYER_NAME_LENGTH] = {};
-
 		if (LastPl(true))
-		{
 			LastPl(true)->AddOwnGoal();
-			Q_strncpy(matchEventPlayerNames, LastPl(true)->GetPlayerName(), MAX_PLAYER_NAME_LENGTH);
-		}
 
-		GetGlobalTeam(scoringTeam)->AddMatchEvent(SDKGameRules()->State_Get(), SDKGameRules()->GetMatchDisplayTimeSeconds(), MATCH_EVENT_OWNGOAL, matchEventPlayerNames);
+		ReplayManager()->AddMatchEvent(MATCH_EVENT_OWNGOAL, scoringTeam, LastPl(true));
 	}
 	else
 	{
@@ -2765,16 +2761,7 @@ void CBall::TriggerGoal(int team)
 		else
 			m_pScorer = NULL;
 
-		char matchEventPlayerNames[MAX_MATCH_EVENT_PLAYER_NAME_LENGTH] = {};
-
-		if (m_pScorer && !m_pFirstAssister && !m_pSecondAssister)
-			Q_strncpy(matchEventPlayerNames, UTIL_VarArgs("%s", m_pScorer->GetPlayerName()), MAX_MATCH_EVENT_PLAYER_NAME_LENGTH);
-		else if (m_pScorer && m_pFirstAssister && !m_pSecondAssister)
-			Q_strncpy(matchEventPlayerNames, UTIL_VarArgs("%.13s (%.13s)", m_pScorer->GetPlayerName(), m_pFirstAssister->GetPlayerName()), MAX_MATCH_EVENT_PLAYER_NAME_LENGTH);
-		else if (m_pScorer && m_pFirstAssister && m_pSecondAssister)
-			Q_strncpy(matchEventPlayerNames, UTIL_VarArgs("%.8s (%.8s, %.8s)", m_pScorer->GetPlayerName(), m_pFirstAssister->GetPlayerName(), m_pSecondAssister->GetPlayerName()), MAX_MATCH_EVENT_PLAYER_NAME_LENGTH);
-
-		GetGlobalTeam(scoringTeam)->AddMatchEvent(SDKGameRules()->State_Get(), SDKGameRules()->GetMatchDisplayTimeSeconds(), MATCH_EVENT_GOAL, matchEventPlayerNames);
+		ReplayManager()->AddMatchEvent(MATCH_EVENT_GOAL, scoringTeam, m_pScorer, m_pFirstAssister, m_pSecondAssister);
 	}
 
 	//GetGlobalTeam(scoringTeam)->AddGoal();
@@ -2804,6 +2791,7 @@ void CBall::TriggerGoalLine(int team)
 		{
 			LastPl(true)->AddShot();
 			EmitSound("Crowd.Miss");
+			ReplayManager()->AddMatchEvent(MATCH_EVENT_CHANCE, GetGlobalTeam(team)->GetOppTeamNumber(), LastPl(true));
 		}
 		else
 			LastPl(true)->AddPass();
