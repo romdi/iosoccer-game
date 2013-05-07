@@ -1208,14 +1208,14 @@ void CC_SV_Restart(const CCommand &args)
 	bool setRandomKickOffTeam;
 
 	if (args.ArgC() > 2)
-		setRandomKickOffTeam = atoi(args[2]);
+		setRandomKickOffTeam = (atoi(args[2]) != 0);
 	else
 		setRandomKickOffTeam = false;
 
 	bool setRandomSides;
 
 	if (args.ArgC() > 3)
-		setRandomSides = atoi(args[3]);
+		setRandomSides = (atoi(args[3]) != 0);
 	else
 		setRandomSides = false;
 
@@ -1895,7 +1895,7 @@ void CSDKGameRules::State_COOLDOWN_Enter()
 	IGameEvent *pEvent = gameeventmanager->CreateEvent("match_state");
 	if (pEvent)
 	{
-		pEvent->SetInt("state", MATCH_EVENT_FINAL_WHISTLE);
+		pEvent->SetInt("state", MATCH_EVENT_MATCH_END);
 		gameeventmanager->FireEvent(pEvent);
 	}
 
@@ -2139,7 +2139,7 @@ void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 		}
 	}
 
-	pPl->SetLegacySideCurl(atoi(engine->GetClientConVarValue(pPl->entindex(), "legacysidecurl")));
+	pPl->SetLegacySideCurl(atoi(engine->GetClientConVarValue(pPl->entindex(), "legacysidecurl")) != 0);
 
 	pPl->SetCountryName(countryIndex);
 
@@ -2562,8 +2562,6 @@ void CSDKGameRules::SetOffsideLinesEnabled(bool enable)
 
 void CSDKGameRules::CheckChatText(CBasePlayer *pPlayer, char *pText)
 {
-	CSDKPlayer *pPl = ToSDKPlayer(pPlayer);
-
 	BaseClass::CheckChatText( pPlayer, pText );
 }
 
@@ -2868,6 +2866,7 @@ void CSDKGameRules::DrawSkyboxOverlay()
 			}
 			break;
 		case 5: // Bottom
+		default:
 			{
 				forward = Vector(0, 1, 0);
 				right = Vector(-1, 0, 0);
