@@ -79,33 +79,43 @@ class CNetworkSettingPanel : public PropertyPage, public ISettingPanel
 
 	Label *m_pPlayerNameLabel;
 	TextEntry *m_pPlayerNameText;
+
 	Label *m_pClubNameLabel;
 	TextEntry *m_pClubNameText;
+
 	Label *m_pCountryNameLabel;
 	ComboBox *m_pCountryNameList;
+
 	Label *m_pInterpDurationLabel;
 	ComboBox *m_pInterpDurationList;
+	Button *m_pInterpDurationSuggestedValueButton;
 	Button *m_pInterpDurationInfoButton;
+
 	Label *m_pSmoothDurationLabel;
 	ComboBox *m_pSmoothDurationList;
+	Button *m_pSmoothDurationSuggestedValueButton;
 	Button *m_pSmoothDurationInfoButton;
 
 	Label *m_pRateLabel;
-	TextEntry *m_pRateText;
+	ComboBox *m_pRateList;
+	Button *m_pRateSuggestedValueButton;
 	Button *m_pRateInfoButton;
 
 	Label *m_pUpdaterateLabel;
-	TextEntry *m_pUpdaterateText;
+	ComboBox *m_pUpdaterateList;
+	Button *m_pUpdaterateSuggestedValueButton;
 	Button *m_pUpdaterateInfoButton;
 
 	Label *m_pCommandrateLabel;
-	TextEntry *m_pCommandrateText;
+	ComboBox *m_pCommandrateList;
+	Button *m_pCommandrateSuggestedValueButton;
 	Button *m_pCommandrateInfoButton;
 
 public:
 
 	CNetworkSettingPanel(Panel *parent, const char *panelName);
 	void ApplySchemeSettings(IScheme *pScheme);
+	void OnCommand(const char *cmd);
 	void Save();
 	void Load();
 	void Update();
