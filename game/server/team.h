@@ -85,7 +85,7 @@ public:
 	virtual CSDKPlayer *GetLeftCornerTaker() { return GetPlayerByPosIndex(m_nLeftCornerTakerPosIndex); }
 	virtual CSDKPlayer *GetRightCornerTaker() { return GetPlayerByPosIndex(m_nRightCornerTakerPosIndex); }
 	virtual void FindNewCaptain();
-	virtual void AddMatchEvent(match_state_t matchState, int seconds, match_event_t event, const char *player);
+	virtual void AddMatchEvent(match_state_t matchState, int seconds, match_event_t event, const char *text);
 
 	//-----------------------------------------------------------------------------
 	// Scoring

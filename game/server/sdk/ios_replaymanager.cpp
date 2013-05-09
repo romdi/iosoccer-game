@@ -110,27 +110,6 @@ void CReplayPlayer::Think()
 	//DispatchAnimEvents(this);
 }
 
-void cc_StartReplay(const CCommand &args)
-{
-	if (!UTIL_IsCommandIssuedByServerAdmin())
-        return;
-
-	ReplayManager()->StartReplay(1, 0);
-}
-
-static ConCommand start_replay("start_replay", cc_StartReplay);
-
-
-void cc_StopReplay(const CCommand &args)
-{
-	if (!UTIL_IsCommandIssuedByServerAdmin())
-        return;
-
-	ReplayManager()->StopReplay();
-}
-
-static ConCommand stop_replay("stop_replay", cc_StopReplay);
-
 float GetReplayStartTime()
 {
 	return gpGlobals->curtime - max(max(sv_replay_duration1.GetFloat(), sv_replay_duration2.GetFloat()), sv_replay_duration3.GetFloat());
@@ -223,14 +202,30 @@ void CReplayManager::Think()
 	CheckReplay();
 }
 
-int CReplayManager::FindNextHighlightReplayIndex(int startIndex)
+bool matchEventFitsMatchState(const MatchEvent *pMatchEvent, match_state_t matchState)
+{
+	if (matchState == MATCH_COOLDOWN
+		|| matchState == MATCH_HALFTIME
+		|| matchState == MATCH_EXTRATIME_INTERMISSION && pMatchEvent->matchState == MATCH_SECOND_HALF
+		|| matchState == MATCH_EXTRATIME_HALFTIME && pMatchEvent->matchState == MATCH_EXTRATIME_FIRST_HALF
+		|| matchState == MATCH_PENALTIES_INTERMISSION
+		&& (mp_extratime.GetBool() && pMatchEvent->matchState == MATCH_EXTRATIME_SECOND_HALF
+		|| !mp_extratime.GetBool() && pMatchEvent->matchState == MATCH_SECOND_HALF))
+	{
+		return true;
+	}
+
+	return false;
+}
+
+int CReplayManager::FindNextHighlightReplayIndex(int startIndex, match_state_t matchState)
 {
 	if (startIndex == -1)
 	{
 		// Iterate backwards
 		for (int i = m_MatchEvents.Count() - 1; i >= 0; i--)
 		{
-			if (m_MatchEvents[i]->snapshots.Count() > 0)
+			if (m_MatchEvents[i]->snapshots.Count() > 0 && matchEventFitsMatchState(m_MatchEvents[i], matchState))
 				return i;
 		}
 	}
@@ -239,7 +234,7 @@ int CReplayManager::FindNextHighlightReplayIndex(int startIndex)
 		// Iterate forwards
 		for (int i = startIndex; i < m_MatchEvents.Count(); i++)
 		{
-			if (m_MatchEvents[i]->snapshots.Count() > 0)
+			if (m_MatchEvents[i]->snapshots.Count() > 0 && matchEventFitsMatchState(m_MatchEvents[i], matchState))
 				return i;
 		}
 	}
@@ -260,7 +255,7 @@ void CReplayManager::StartReplay(int numberOfRuns, float startDelay, int index /
 	if (!sv_replays.GetBool())
 		return;
 
-	m_nReplayIndex = FindNextHighlightReplayIndex(index);
+	m_nReplayIndex = FindNextHighlightReplayIndex(index, SDKGameRules()->State_Get());
 
 	if (m_nReplayIndex == -1)
 		return;
@@ -464,7 +459,7 @@ void CReplayManager::RestoreSnapshot()
 		}
 		else if (m_bIsHighlightReplay)
 		{
-			m_nReplayIndex = FindNextHighlightReplayIndex(m_nReplayIndex + 1);
+			m_nReplayIndex = FindNextHighlightReplayIndex(m_nReplayIndex + 1, SDKGameRules()->State_Get());
 
 			if (m_nReplayIndex == -1)
 			{
@@ -497,7 +492,7 @@ void CReplayManager::RestoreSnapshot()
 		{
 			m_bIsHighlightStart = false;
 
-			if (pMatchEvent->type == MATCH_EVENT_GOAL)
+			if (pMatchEvent->matchEventType == MATCH_EVENT_GOAL)
 			{
 				IGameEvent *pEvent = gameeventmanager->CreateEvent("highlight_goal");
 				if (pEvent)
@@ -510,7 +505,7 @@ void CReplayManager::RestoreSnapshot()
 					gameeventmanager->FireEvent(pEvent);
 				}
 			}
-			else if (pMatchEvent->type == MATCH_EVENT_CHANCE)
+			else if (pMatchEvent->matchEventType == MATCH_EVENT_CHANCE)
 			{
 				IGameEvent *pEvent = gameeventmanager->CreateEvent("highlight_chance");
 				if (pEvent)
@@ -523,7 +518,7 @@ void CReplayManager::RestoreSnapshot()
 					gameeventmanager->FireEvent(pEvent);
 				}
 			}
-			else if (pMatchEvent->type == MATCH_EVENT_REDCARD)
+			else if (pMatchEvent->matchEventType == MATCH_EVENT_REDCARD)
 			{
 				IGameEvent *pEvent = gameeventmanager->CreateEvent("highlight_redcard");
 				if (pEvent)
@@ -843,8 +838,8 @@ void CReplayManager::AddMatchEvent(match_event_t type, int team, CSDKPlayer *pPl
 		}
 	}
 
-	pMatchEvent->state = SDKGameRules()->State_Get();
-	pMatchEvent->type = type;
+	pMatchEvent->matchState = SDKGameRules()->State_Get();
+	pMatchEvent->matchEventType = type;
 	pMatchEvent->second = SDKGameRules()->GetMatchDisplayTimeSeconds();
 	pMatchEvent->team = team;
 	pMatchEvent->atMinGoalPos = GetBall()->GetPos().y < SDKGameRules()->m_vKickOff.GetY();
@@ -853,4 +848,17 @@ void CReplayManager::AddMatchEvent(match_event_t type, int team, CSDKPlayer *pPl
 	pMatchEvent->pPlayerData3 = pPlayer3 ? pPlayer3->GetData() : NULL;
 
 	m_MatchEvents.AddToTail(pMatchEvent);
+
+	if (type == MATCH_EVENT_GOAL)
+	{
+		char matchEventPlayerNames[MAX_MATCH_EVENT_PLAYER_NAME_LENGTH] = {};
+		if (pPlayer1 && !pPlayer2 && !pPlayer3)
+			Q_strncpy(matchEventPlayerNames, UTIL_VarArgs("%s", pPlayer1->GetPlayerName()), MAX_MATCH_EVENT_PLAYER_NAME_LENGTH);
+		else if (pPlayer1 && pPlayer2 && !pPlayer3)
+			Q_strncpy(matchEventPlayerNames, UTIL_VarArgs("%.13s (%.13s)", pPlayer1->GetPlayerName(), pPlayer2->GetPlayerName()), MAX_MATCH_EVENT_PLAYER_NAME_LENGTH);
+		else if (pPlayer1 && pPlayer2 && pPlayer3)
+			Q_strncpy(matchEventPlayerNames, UTIL_VarArgs("%.8s (%.8s, %.8s)", pPlayer1->GetPlayerName(), pPlayer2->GetPlayerName(), pPlayer3->GetPlayerName()), MAX_MATCH_EVENT_PLAYER_NAME_LENGTH);
+
+		GetGlobalTeam(pMatchEvent->team)->AddMatchEvent(pMatchEvent->matchState, pMatchEvent->second, pMatchEvent->matchEventType, matchEventPlayerNames);
+	}
 }

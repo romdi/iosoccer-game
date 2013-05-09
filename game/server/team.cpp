@@ -518,7 +518,7 @@ void CTeam::FindNewCaptain()
 	}
 }
 
-void CTeam::AddMatchEvent(match_state_t matchState, int seconds, match_event_t event, const char *player)
+void CTeam::AddMatchEvent(match_state_t matchState, int seconds, match_event_t event, const char *text)
 {
 	if (m_nMatchEventIndex == MAX_MATCH_EVENTS)
 		return;
@@ -526,7 +526,7 @@ void CTeam::AddMatchEvent(match_state_t matchState, int seconds, match_event_t e
 	m_nMatchEventSeconds.Set(m_nMatchEventIndex, seconds);
 	m_eMatchEventTypes.Set(m_nMatchEventIndex, event);
 	m_eMatchEventMatchStates.Set(m_nMatchEventIndex, matchState);
-	Q_strncpy(m_szMatchEventPlayersMemory[m_nMatchEventIndex], player, MAX_MATCH_EVENT_PLAYER_NAME_LENGTH);
+	Q_strncpy(m_szMatchEventPlayersMemory[m_nMatchEventIndex], text, MAX_MATCH_EVENT_PLAYER_NAME_LENGTH);
 	m_szMatchEventPlayers.Set(m_nMatchEventIndex, MAKE_STRING(m_szMatchEventPlayersMemory[m_nMatchEventIndex]));
 	m_nMatchEventIndex += 1;
 }

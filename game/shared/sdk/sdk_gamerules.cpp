@@ -1581,6 +1581,8 @@ void CSDKGameRules::State_HALFTIME_Enter()
 	}
 
 	ApplyIntermissionSettings(true);
+
+	ReplayManager()->StartHighlights();
 }
 
 void CSDKGameRules::State_HALFTIME_Think()
@@ -1632,6 +1634,8 @@ void CSDKGameRules::State_EXTRATIME_INTERMISSION_Enter()
 	}
 
 	ApplyIntermissionSettings(false);
+
+	ReplayManager()->StartHighlights();
 }
 
 void CSDKGameRules::State_EXTRATIME_INTERMISSION_Think()
@@ -1725,6 +1729,8 @@ void CSDKGameRules::State_PENALTIES_INTERMISSION_Enter()
 	}
 
 	ApplyIntermissionSettings(false);
+
+	ReplayManager()->StartHighlights();
 }
 
 void CSDKGameRules::State_PENALTIES_INTERMISSION_Think()
@@ -1937,8 +1943,7 @@ void CSDKGameRules::State_COOLDOWN_Enter()
 
 	CPlayerPersistentData::ConvertAllPlayerDataToJson();
 
-	if (ReplayManager())
-		ReplayManager()->StartHighlights();
+	ReplayManager()->StartHighlights();
 }
 
 void CSDKGameRules::State_COOLDOWN_Think()
@@ -1949,8 +1954,7 @@ void CSDKGameRules::State_COOLDOWN_Think()
 
 void CSDKGameRules::State_COOLDOWN_Leave(match_state_t newState)
 {
-	if (ReplayManager())
-		ReplayManager()->StopHighlights();
+	ReplayManager()->StopHighlights();
 }
 
 void CSDKGameRules::ApplyIntermissionSettings(bool swapTeams)
@@ -2499,8 +2503,7 @@ void CSDKGameRules::ResetMatch(bool resetStats)
 		FlushLog(logfile, "End player stats reset");
 
 		FlushLog(logfile, "Start replay clean-up");
-		if (ReplayManager())
-			ReplayManager()->CleanUp();
+		ReplayManager()->CleanUp();
 		FlushLog(logfile, "End replay clean-up\n");
 	}
 

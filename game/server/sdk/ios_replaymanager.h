@@ -97,8 +97,8 @@ struct Replay
 
 struct MatchEvent
 {
-	match_state_t state;
-	match_event_t type;
+	match_state_t matchState;
+	match_event_t matchEventType;
 	int second;
 	int team;
 	bool atMinGoalPos;
@@ -167,7 +167,7 @@ public:
 	bool IsReplaying() { return m_bIsReplaying; }
 	void Think();
 	void Spawn();
-	int FindNextHighlightReplayIndex(int startIndex);
+	int FindNextHighlightReplayIndex(int startIndex, match_state_t matchState);
 	void StartHighlights();
 	void StopHighlights();
 	void CleanUp();
