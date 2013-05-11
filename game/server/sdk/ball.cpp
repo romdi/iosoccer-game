@@ -145,6 +145,8 @@ ConVar sv_ball_chargedslide_maxstrength("sv_ball_chargedslide_maxstrength", "110
 
 ConVar sv_ball_penaltyshot_maxstrength("sv_ball_penaltyshot_maxstrength", "1200", FCVAR_NOTIFY);
 
+ConVar sv_ball_goalkick_speedcoeff("sv_ball_goalkick_speedcoeff", "1.15", FCVAR_NOTIFY);
+
 ConVar sv_ball_keepershot_minangle("sv_ball_keepershot_minangle", "-5", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
 
 ConVar sv_ball_groundshot_minangle("sv_ball_groundshot_minangle", "-7", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
@@ -1389,7 +1391,7 @@ void CBall::State_GOALKICK_Think()
 	{
 		m_pPl->AddGoalKick();
 		RemoveAllTouches();
-		DoGroundShot(false);
+		DoGroundShot(false, sv_ball_goalkick_speedcoeff.GetFloat());
 		State_Transition(BALL_NORMAL);
 	}
 }
@@ -2444,7 +2446,7 @@ float CBall::GetChargedshotStrength(float coeff, int minStrength, int maxStrengt
 	return coeff * shotStrength;
 }
 
-bool CBall::DoGroundShot(bool markOffsidePlayers)
+bool CBall::DoGroundShot(bool markOffsidePlayers, float velCoeff /*= 1.0f*/)
 {
 	float spin;
 	Vector vel;
@@ -2520,6 +2522,8 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 
 		spin = 1;
 	}
+
+	vel *= velCoeff;
 
 	SetVel(vel, spin, BODY_PART_FEET, false, markOffsidePlayers, true);
 

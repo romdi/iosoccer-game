@@ -223,7 +223,7 @@ private:
 	bool			DoBodyPartAction();
 	bool			DoSlideAction();
 	bool			CheckKeeperCatch();
-	bool			DoGroundShot(bool markOffsidePlayers);
+	bool			DoGroundShot(bool markOffsidePlayers, float velCoeff = 1.0f);
 	bool			DoVolleyShot();
 	bool			DoChestDrop();
 	bool			DoHeader();
