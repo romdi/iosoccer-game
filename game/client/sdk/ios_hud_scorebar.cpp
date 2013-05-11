@@ -275,6 +275,7 @@ void CHudScorebar::Init( void )
 	ListenForGameEvent("set_piece");
 	ListenForGameEvent("goal");
 	ListenForGameEvent("highlight_goal");
+	ListenForGameEvent("highlight_owngoal");
 	ListenForGameEvent("highlight_chance");
 	ListenForGameEvent("highlight_redcard");
 	ListenForGameEvent("own_goal");
@@ -671,6 +672,21 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 		}
 
 		m_eCurMatchEvent = MATCH_EVENT_GOAL;
+		m_flStayDuration = INT_MAX;
+	}
+	else if (!Q_strcmp(event->GetName(), "highlight_owngoal"))
+	{
+		const char *scorer = event->GetString("scorer");
+
+		m_pNotifications[0]->SetText(VarArgs("OWN GOAL (%d'): %s", event->GetInt("second") / 60 + 1, g_PR->GetTeamCode(event->GetInt("scoring_team"))));
+
+		if (scorer[0] != 0)
+		{
+			m_pNotifications[1]->SetText(VarArgs("%s", scorer));
+			m_pNotificationPanel->SetTall(2 * NOTIFICATION_HEIGHT);
+		}
+
+		m_eCurMatchEvent = MATCH_EVENT_OWNGOAL;
 		m_flStayDuration = INT_MAX;
 	}
 	else if (!Q_strcmp(event->GetName(), "highlight_chance"))

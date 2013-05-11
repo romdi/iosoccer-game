@@ -83,7 +83,6 @@ void CReplayPlayer::Spawn( void )
 {
 	SetClassname("replay_player");
 	Precache();
-	//SetModelName( MAKE_STRING( SDK_PLAYER_MODEL ) );
 	SetSolidFlags(FSOLID_NOT_SOLID);
 	SetModel( SDK_PLAYER_MODEL );
 	SetSolid( SOLID_BBOX );
@@ -97,17 +96,7 @@ void CReplayPlayer::Spawn( void )
 void CReplayPlayer::Think()
 {
 	SetNextThink( gpGlobals->curtime );
-	//BaseClass::Think();
-	//SetSimulationTime( gpGlobals->curtime );
-	
-	//AddGestureSequence(m_AnimLayers[0].m_nSequence);
-	//CopyAnimationLayer(GetAnimOverlay(0), &m_AnimLayers[0]);
-	//AddGestureSequence(m_AnimLayers[1].m_nSequence);
-	//CopyAnimationLayer(GetAnimOverlay(1), &m_AnimLayers[1]);
-
-	//SetAnimatedEveryTick( true );
 	StudioFrameAdvance();
-	//DispatchAnimEvents(this);
 }
 
 float GetReplayStartTime()
@@ -134,7 +123,6 @@ CReplayManager::CReplayManager()
 	Assert(!g_pReplayManager);
 	g_pReplayManager = this;
 
-	m_bDoReplay = false;
 	m_pBall = NULL;
 
 	for (int i = 0; i < 2; i++)
@@ -146,6 +134,7 @@ CReplayManager::CReplayManager()
 	}
 
 	m_bIsReplaying = false;
+	m_bReplayIsPending = false;
 	m_bIsHighlightReplay = false;
 	m_bIsReplayStart = true;
 	m_bIsHighlightStart = true;
@@ -176,8 +165,20 @@ void CReplayManager::CleanUp()
 		}
 	}
 
-	m_Snapshots.PurgeAndDeleteElements();
+	while (m_Snapshots.Count() > 0)
+	{
+		if (!m_Snapshots[0]->isInReplay)
+		{
+			delete m_Snapshots[0];
+		}
+
+		m_Snapshots.Remove(0);
+	}
+
 	m_MatchEvents.PurgeAndDeleteElements();
+
+	m_bIsReplaying = false;
+	m_bReplayIsPending = false;
 }
 
 void CReplayManager::Spawn()
@@ -204,7 +205,8 @@ void CReplayManager::Think()
 
 bool matchEventFitsMatchState(const MatchEvent *pMatchEvent, match_state_t matchState)
 {
-	if (matchState == MATCH_COOLDOWN
+	if (matchState == pMatchEvent->matchState
+		|| matchState == MATCH_COOLDOWN
 		|| matchState == MATCH_HALFTIME
 		|| matchState == MATCH_EXTRATIME_INTERMISSION && pMatchEvent->matchState == MATCH_SECOND_HALF
 		|| matchState == MATCH_EXTRATIME_HALFTIME && pMatchEvent->matchState == MATCH_EXTRATIME_FIRST_HALF
@@ -244,9 +246,9 @@ int CReplayManager::FindNextHighlightReplayIndex(int startIndex, match_state_t m
 
 void CReplayManager::CheckReplay()
 {
-	if (m_bDoReplay && gpGlobals->curtime >= m_flReplayActivationTime)
+	if (m_bReplayIsPending && gpGlobals->curtime >= m_flReplayActivationTime || m_bIsReplaying)
 		RestoreSnapshot();
-	else if (!m_bDoReplay && !SDKGameRules()->IsIntermissionState())
+	else if (!m_bReplayIsPending && !m_bIsReplaying && !SDKGameRules()->IsIntermissionState())
 		TakeSnapshot();
 }
 
@@ -266,7 +268,8 @@ void CReplayManager::StartReplay(int numberOfRuns, float startDelay, int index /
 	m_nMaxReplayRuns = numberOfRuns;
 	m_flReplayActivationTime = gpGlobals->curtime + startDelay;
 	m_nReplayRunIndex = 0;
-	m_bDoReplay = true;
+	m_bReplayIsPending = true;
+	m_bIsReplaying = false;
 	CalcReplayDuration(m_flReplayActivationTime);
 }
 
@@ -275,10 +278,15 @@ void CReplayManager::StopReplay()
 	if (!sv_replays.GetBool())
 		return;
 
-	if (!m_bDoReplay)
+	if (m_bReplayIsPending)
+	{
+		m_bReplayIsPending = false;
+		return;
+	}
+
+	if (!m_bIsReplaying)
 		return;
 
-	m_bDoReplay = false;
 	m_bIsReplaying = false;
 
 	if (m_pBall)
@@ -348,29 +356,6 @@ void CReplayManager::StopReplay()
 	}
 }
 
-void CopyAnimationLayer(CAnimationLayer *dst, const CAnimationLayer *src)
-{
-	dst->m_flCycle = src->m_flCycle;
-	dst->m_nOrder = src->m_nOrder;
-	dst->m_nSequence = src->m_nSequence;
-	dst->m_flWeight = src->m_flWeight;
-	dst->m_flPlaybackRate = src->m_flPlaybackRate;
-	dst->m_bLooping = src->m_bLooping;
-	dst->m_bSequenceFinished = src->m_bSequenceFinished;
-	dst->m_fFlags = src->m_fFlags;
-	dst->m_nPriority = src->m_nPriority;
-	dst->m_nActivity = src->m_nActivity;
-	dst->m_flLayerAnimtime = src->m_flLayerAnimtime;
-	dst->m_flBlendIn = src->m_flBlendIn;
-	dst->m_flBlendOut = src->m_flBlendOut;
-	dst->m_flPrevCycle = src->m_flPrevCycle;
-	dst->m_flKillDelay = src->m_flKillDelay;
-	dst->m_flKillRate = src->m_flKillRate;
-	dst->m_flLastAccess = src->m_flLastAccess;
-	dst->m_flLastEventCheck = src->m_flLastEventCheck;
-	dst->m_flLayerFadeOuttime = src->m_flLayerFadeOuttime;
-}
-
 void CReplayManager::TakeSnapshot()
 {
 	Snapshot *pSnap = new Snapshot;
@@ -406,29 +391,50 @@ void CReplayManager::TakeSnapshot()
 		pPlSnap->vel = pPl->GetLocalVelocity();
 		pPlSnap->ang = pPl->GetLocalAngles();
 
-		int layerCount = pPl->GetNumAnimOverlays();
-		for( int layerIndex = 0; layerIndex < layerCount; ++layerIndex )
+		for(int layerIndex = 0; layerIndex < NUM_LAYERS_WANTED; layerIndex++)
 		{
-			CAnimationLayer *animLayer = pPl->GetAnimOverlay(layerIndex);
-			if(!animLayer)
+			const CAnimationLayer *pSourceLayer = pPl->GetAnimOverlay(layerIndex);
+			if(!pSourceLayer)
 				continue;
 
-			CopyAnimationLayer(&pPlSnap->m_animLayers[layerIndex], animLayer);
+			LayerRecord *pTargetLayer = &pPlSnap->layerRecords[layerIndex];
+			if(!pTargetLayer)
+				continue;
+
+			pTargetLayer->cycle = pSourceLayer->m_flCycle;
+			pTargetLayer->order = pSourceLayer->m_nOrder;
+			pTargetLayer->sequence = pSourceLayer->m_nSequence;
+			pTargetLayer->weight = pSourceLayer->m_flWeight;
+			pTargetLayer->playbackRate = pSourceLayer->m_flPlaybackRate;
+			/*pTargetLayer->looping = pSourceLayer->m_bLooping;
+			pTargetLayer->sequenceFinished = pSourceLayer->m_bSequenceFinished;
+			pTargetLayer->flags = pSourceLayer->m_fFlags;
+			pTargetLayer->priority = pSourceLayer->m_nPriority;
+			pTargetLayer->activity = pSourceLayer->m_nActivity;
+			pTargetLayer->layerAnimtime = pSourceLayer->m_flLayerAnimtime;
+			pTargetLayer->blendIn = pSourceLayer->m_flBlendIn;
+			pTargetLayer->blendOut = pSourceLayer->m_flBlendOut;
+			pTargetLayer->prevCycle = pSourceLayer->m_flPrevCycle;
+			pTargetLayer->killDelay = pSourceLayer->m_flKillDelay;
+			pTargetLayer->killRate = pSourceLayer->m_flKillRate;
+			pTargetLayer->lastAccess = pSourceLayer->m_flLastAccess;
+			pTargetLayer->lastEventCheck = pSourceLayer->m_flLastEventCheck;
+			pTargetLayer->layerFadeOuttime = pSourceLayer->m_flLayerFadeOuttime;*/
 		}
 
-		pPlSnap->m_masterSequence = pPl->GetSequence();
-		pPlSnap->m_masterCycle = pPl->GetCycle();
-		pPlSnap->m_flSimulationTime = pPl->GetSimulationTime();
+		pPlSnap->masterSequence = pPl->GetSequence();
+		pPlSnap->masterCycle = pPl->GetCycle();
+		pPlSnap->simulationTime = pPl->GetSimulationTime();
 
-		pPlSnap->m_flMoveX = pPl->GetPoseParameter(4);
-		pPlSnap->m_flMoveY = pPl->GetPoseParameter(3);
+		pPlSnap->moveX = pPl->GetPoseParameter(4);
+		pPlSnap->moveY = pPl->GetPoseParameter(3);
 
-		pPlSnap->m_nTeamNumber = pPl->GetTeamNumber();
-		pPlSnap->m_nTeamPosNum = pPl->GetTeamPosNum();
-		pPlSnap->m_nSkin = pPl->m_nSkin;
-		pPlSnap->m_nBody = pPl->m_nBody;
+		pPlSnap->teamNumber = pPl->GetTeamNumber();
+		pPlSnap->teamPosNum = pPl->GetTeamPosNum();
+		pPlSnap->skin = pPl->m_nSkin;
+		pPlSnap->body = pPl->m_nBody;
 
-		pPlSnap->m_pPlayerData = pPl->GetData();
+		pPlSnap->pPlayerData = pPl->GetData();
 
 		pSnap->pPlayerSnapshot[pPl->GetTeamNumber() - TEAM_A][pPl->GetTeamPosIndex()] = pPlSnap;
 	}
@@ -485,6 +491,7 @@ void CReplayManager::RestoreSnapshot()
 		m_bIsReplayStart = false;
 		m_bAtMinGoalPos = pMatchEvent->atMinGoalPos;
 		m_bIsReplaying = true;
+		m_bReplayIsPending = false;
 		CalcReplayDuration(gpGlobals->curtime);
 		timeSinceReplayStart = 0;
 
@@ -656,14 +663,14 @@ void CReplayManager::RestoreSnapshot()
 
 			CReplayPlayer *pPl = m_pPlayers[i][j];
 
-			pPl->m_nTeamNumber = pPlSnap->m_nTeamNumber;
-			pPl->m_nTeamPosNum = pPlSnap->m_nTeamPosNum;
+			pPl->m_nTeamNumber = pPlSnap->teamNumber;
+			pPl->m_nTeamPosNum = pPlSnap->teamPosNum;
 
-			if (Q_strcmp(pPl->m_szPlayerName, pPlSnap->m_pPlayerData->m_szName))
-				Q_strncpy(pPl->m_szPlayerName.GetForModify(), pPlSnap->m_pPlayerData->m_szName, MAX_PLAYER_NAME_LENGTH);
+			if (Q_strcmp(pPl->m_szPlayerName, pPlSnap->pPlayerData->m_szName))
+				Q_strncpy(pPl->m_szPlayerName.GetForModify(), pPlSnap->pPlayerData->m_szName, MAX_PLAYER_NAME_LENGTH);
 
-			pPl->m_nSkin = pPlSnap->m_nSkin;
-			pPl->m_nBody = pPlSnap->m_nBody;
+			pPl->m_nSkin = pPlSnap->skin;
+			pPl->m_nBody = pPlSnap->body;
 
 			PlayerSnapshot *pNextPlSnap = NULL;
 
@@ -685,7 +692,7 @@ void CReplayManager::RestoreSnapshot()
 
 			bool interpolationAllowed;
 
-			if (frac > 0.0f && pNextPlSnap && pPlSnap->m_masterSequence == pNextPlSnap->m_masterSequence)
+			if (frac > 0.0f && pNextPlSnap && pPlSnap->masterSequence == pNextPlSnap->masterSequence)
 			{
 				// If the master state changes, all layers will be invalid too, so don't interp (ya know, interp barely ever happens anyway)
 				interpolationAllowed = true;
@@ -696,95 +703,95 @@ void CReplayManager::RestoreSnapshot()
 			// First do the master settings
 			if (interpolationAllowed)
 			{
-				pPl->SetSequence( Lerp( frac, pPlSnap->m_masterSequence, pNextPlSnap->m_masterSequence ) );
-				pPl->SetCycle( Lerp( frac, pPlSnap->m_masterCycle, pNextPlSnap->m_masterCycle ) );
+				pPl->SetSequence( Lerp( frac, pPlSnap->masterSequence, pNextPlSnap->masterSequence ) );
+				pPl->SetCycle( Lerp( frac, pPlSnap->masterCycle, pNextPlSnap->masterCycle ) );
 
-				if( pPlSnap->m_masterCycle > pNextPlSnap->m_masterCycle )
+				if( pPlSnap->masterCycle > pNextPlSnap->masterCycle )
 				{
 					// the older record is higher in frame than the newer, it must have wrapped around from 1 back to 0
 					// add one to the newer so it is lerping from .9 to 1.1 instead of .9 to .1, for example.
-					float newCycle = Lerp( frac, pPlSnap->m_masterCycle, pNextPlSnap->m_masterCycle + 1 );
+					float newCycle = Lerp( frac, pPlSnap->masterCycle, pNextPlSnap->masterCycle + 1 );
 					pPl->SetCycle(newCycle < 1 ? newCycle : newCycle - 1 );// and make sure .9 to 1.2 does not end up 1.05
 				}
 				else
 				{
-					pPl->SetCycle( Lerp( frac, pPlSnap->m_masterCycle, pNextPlSnap->m_masterCycle ) );
+					pPl->SetCycle( Lerp( frac, pPlSnap->masterCycle, pNextPlSnap->masterCycle ) );
 				}
 
-				pPl->SetPoseParameter(pPl->GetModelPtr(), 4, Lerp(frac, pPlSnap->m_flMoveX, pNextPlSnap->m_flMoveX));
-				pPl->SetPoseParameter(pPl->GetModelPtr(), 3, Lerp(frac, pPlSnap->m_flMoveY, pNextPlSnap->m_flMoveY));
+				pPl->SetPoseParameter(pPl->GetModelPtr(), 4, Lerp(frac, pPlSnap->moveX, pNextPlSnap->moveX));
+				pPl->SetPoseParameter(pPl->GetModelPtr(), 3, Lerp(frac, pPlSnap->moveY, pNextPlSnap->moveY));
 			}
 			else
 			{
-				pPl->SetSequence(pPlSnap->m_masterSequence);
-				pPl->SetCycle(pPlSnap->m_masterCycle);
-				pPl->SetPoseParameter(pPl->GetModelPtr(), 4, pPlSnap->m_flMoveX);
-				pPl->SetPoseParameter(pPl->GetModelPtr(), 3, pPlSnap->m_flMoveY);
+				pPl->SetSequence(pPlSnap->masterSequence);
+				pPl->SetCycle(pPlSnap->masterCycle);
+				pPl->SetPoseParameter(pPl->GetModelPtr(), 4, pPlSnap->moveX);
+				pPl->SetPoseParameter(pPl->GetModelPtr(), 3, pPlSnap->moveY);
 			}
 
 			// Now do all the layers
 			for (int layerIndex = 0; layerIndex < NUM_LAYERS_WANTED; layerIndex++)
 			{
-				CAnimationLayer *animLayer = pPl->GetAnimOverlay(layerIndex);
-				if(!animLayer)
+				CAnimationLayer *pTargetLayer = pPl->GetAnimOverlay(layerIndex);
+				if(!pTargetLayer)
 					continue;
 
-				CAnimationLayer &animLayerSnap = pPlSnap->m_animLayers[layerIndex];
+				LayerRecord *pSourceLayer = &pPlSnap->layerRecords[layerIndex];
 
-				animLayer->m_nOrder = animLayerSnap.m_nOrder;
-				animLayer->m_nSequence = animLayerSnap.m_nSequence;
-				animLayer->m_fFlags = animLayerSnap.m_fFlags;
-				animLayer->m_bLooping = animLayerSnap.m_bLooping;
-				animLayer->m_bSequenceFinished = animLayerSnap.m_bSequenceFinished;
-				animLayer->m_flPlaybackRate = animLayerSnap.m_flPlaybackRate;
-				animLayer->m_nPriority = animLayerSnap.m_nPriority;
-				animLayer->m_nActivity = animLayerSnap.m_nActivity;
-				animLayer->m_flLastAccess = animLayerSnap.m_flLastAccess;
-				animLayer->m_flLastEventCheck = animLayerSnap.m_flLastEventCheck;
+				pTargetLayer->m_nOrder = pSourceLayer->order;
+				pTargetLayer->m_nSequence = pSourceLayer->sequence;
+				pTargetLayer->m_flPlaybackRate = pSourceLayer->playbackRate;
+				/*pTargetLayer->m_fFlags = pSourceLayer->flags;
+				pTargetLayer->m_bLooping = pSourceLayer->looping;
+				pTargetLayer->m_bSequenceFinished = pSourceLayer->sequenceFinished;
+				pTargetLayer->m_nPriority = pSourceLayer->priority;
+				pTargetLayer->m_nActivity = pSourceLayer->activity;
+				pTargetLayer->m_flLastAccess = pSourceLayer->lastAccess;
+				pTargetLayer->m_flLastEventCheck = pSourceLayer->lastEventCheck;*/
 
 				if (interpolationAllowed)
 				{
-					CAnimationLayer &nextAnimLayerSnap = pNextPlSnap->m_animLayers[layerIndex];
+					LayerRecord *pNextSourceLayer = &pNextPlSnap->layerRecords[layerIndex];
 
-					if(animLayerSnap.m_nOrder == nextAnimLayerSnap.m_nOrder && animLayerSnap.m_nSequence == nextAnimLayerSnap.m_nSequence)
+					if(pSourceLayer->order == pNextSourceLayer->order && pSourceLayer->sequence == pNextSourceLayer->sequence)
 					{
 						// We can't interpolate across a sequence or order change
-						if( animLayerSnap.m_flCycle > nextAnimLayerSnap.m_flCycle )
+						if( pSourceLayer->cycle > pNextSourceLayer->cycle )
 						{
 							// the older record is higher in frame than the newer, it must have wrapped around from 1 back to 0
 							// add one to the newer so it is lerping from .9 to 1.1 instead of .9 to .1, for example.
-							float newCycle = Lerp( frac, animLayerSnap.m_flCycle.Get(), nextAnimLayerSnap.m_flCycle + 1 );
-							animLayer->m_flCycle = newCycle < 1 ? newCycle : newCycle - 1;// and make sure .9 to 1.2 does not end up 1.05
+							float newCycle = Lerp( frac, pSourceLayer->cycle, pNextSourceLayer->cycle + 1 );
+							pTargetLayer->m_flCycle = newCycle < 1 ? newCycle : newCycle - 1;// and make sure .9 to 1.2 does not end up 1.05
 						}
 						else
 						{
-							animLayer->m_flCycle = Lerp( frac, animLayerSnap.m_flCycle.Get(), nextAnimLayerSnap.m_flCycle.Get()  );
+							pTargetLayer->m_flCycle = Lerp(frac, pSourceLayer->cycle, pNextSourceLayer->cycle);
 						}
 
-						animLayer->m_flWeight = Lerp( frac, animLayerSnap.m_flWeight.Get(), nextAnimLayerSnap.m_flWeight.Get()  );
+						pTargetLayer->m_flWeight = Lerp(frac, pSourceLayer->weight, pNextSourceLayer->weight);
 
-						animLayer->m_flLayerAnimtime = Lerp(frac, animLayerSnap.m_flLayerAnimtime, nextAnimLayerSnap.m_flLayerAnimtime);
-						animLayer->m_flBlendIn = Lerp(frac, animLayerSnap.m_flBlendIn, nextAnimLayerSnap.m_flBlendIn);
-						animLayer->m_flBlendOut = Lerp(frac, animLayerSnap.m_flBlendOut, nextAnimLayerSnap.m_flBlendOut);
-						animLayer->m_flPrevCycle = Lerp(frac, animLayerSnap.m_flPrevCycle.Get(), nextAnimLayerSnap.m_flPrevCycle.Get());
-						animLayer->m_flKillDelay = Lerp(frac, animLayerSnap.m_flKillDelay, nextAnimLayerSnap.m_flKillDelay);
-						animLayer->m_flKillRate = Lerp(frac, animLayerSnap.m_flKillRate, nextAnimLayerSnap.m_flKillRate);
-						animLayer->m_flLayerFadeOuttime = Lerp(frac, animLayerSnap.m_flLayerFadeOuttime, nextAnimLayerSnap.m_flLayerFadeOuttime);
+						//pTargetLayer->m_flLayerAnimtime = Lerp(frac, pSourceLayer->layerAnimtime, pNextSourceLayer->layerAnimtime);
+						//pTargetLayer->m_flBlendIn = Lerp(frac, pSourceLayer->blendIn, pNextSourceLayer->blendIn);
+						//pTargetLayer->m_flBlendOut = Lerp(frac, pSourceLayer->blendOut, pNextSourceLayer->blendOut);
+						//pTargetLayer->m_flPrevCycle = Lerp(frac, pSourceLayer->prevCycle, pNextSourceLayer->prevCycle);
+						//pTargetLayer->m_flKillDelay = Lerp(frac, pSourceLayer->killDelay, pNextSourceLayer->killDelay);
+						//pTargetLayer->m_flKillRate = Lerp(frac, pSourceLayer->killRate, pNextSourceLayer->killRate);
+						//pTargetLayer->m_flLayerFadeOuttime = Lerp(frac, pSourceLayer->layerFadeOuttime, pNextSourceLayer->layerFadeOuttime);
 					}
 				}
 				else
 				{
 					//Either no interp, or interp failed.  Just use record.
-					animLayer->m_flCycle = animLayerSnap.m_flCycle;
-					animLayer->m_flWeight = animLayerSnap.m_flWeight;
+					pTargetLayer->m_flCycle = pSourceLayer->cycle;
+					pTargetLayer->m_flWeight = pSourceLayer->weight;
 
-					animLayer->m_flLayerAnimtime = animLayerSnap.m_flLayerAnimtime;
-					animLayer->m_flBlendIn = animLayerSnap.m_flBlendIn;
-					animLayer->m_flBlendOut = animLayerSnap.m_flBlendOut;
-					animLayer->m_flPrevCycle = animLayerSnap.m_flPrevCycle;
-					animLayer->m_flKillDelay = animLayerSnap.m_flKillDelay;
-					animLayer->m_flKillRate = animLayerSnap.m_flKillRate;
-					animLayer->m_flLayerFadeOuttime = animLayerSnap.m_flLayerFadeOuttime;
+					//pTargetLayer->m_flLayerAnimtime = pSourceLayer->layerAnimtime;
+					//pTargetLayer->m_flBlendIn = pSourceLayer->blendIn;
+					//pTargetLayer->m_flBlendOut = pSourceLayer->blendOut;
+					//pTargetLayer->m_flPrevCycle = pSourceLayer->prevCycle;
+					//pTargetLayer->m_flKillDelay = pSourceLayer->killDelay;
+					//pTargetLayer->m_flKillRate = pSourceLayer->killRate;
+					//pTargetLayer->m_flLayerFadeOuttime = pSourceLayer->layerFadeOuttime;
 				}
 			}
 		}
@@ -801,7 +808,7 @@ void CReplayManager::StartHighlights()
 
 void CReplayManager::StopHighlights()
 {
-	if (!sv_replays.GetBool() || !sv_highlights.GetBool() || !m_bDoReplay)
+	if (!sv_replays.GetBool() || !sv_highlights.GetBool())
 		return;
 
 	StopReplay();
@@ -824,7 +831,7 @@ void CReplayManager::AddMatchEvent(match_event_t type, int team, CSDKPlayer *pPl
 {
 	MatchEvent *pMatchEvent = new MatchEvent;
 
-	if (type == MATCH_EVENT_GOAL || type == MATCH_EVENT_CHANCE || type == MATCH_EVENT_REDCARD)
+	if (type == MATCH_EVENT_GOAL || type == MATCH_EVENT_OWNGOAL || type == MATCH_EVENT_CHANCE || type == MATCH_EVENT_REDCARD)
 	{
 		float replayStartTime = GetReplayStartTime();
 
@@ -849,7 +856,7 @@ void CReplayManager::AddMatchEvent(match_event_t type, int team, CSDKPlayer *pPl
 
 	m_MatchEvents.AddToTail(pMatchEvent);
 
-	if (type == MATCH_EVENT_GOAL)
+	if (type == MATCH_EVENT_GOAL || type == MATCH_EVENT_OWNGOAL)
 	{
 		char matchEventPlayerNames[MAX_MATCH_EVENT_PLAYER_NAME_LENGTH] = {};
 		if (pPlayer1 && !pPlayer2 && !pPlayer3)

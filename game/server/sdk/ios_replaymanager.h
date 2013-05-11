@@ -16,49 +16,47 @@ struct BallSnapshot
 
 struct LayerRecord
 {
-	int m_sequence;
-	float m_cycle;
-	float m_weight;
-	int m_order;
-	float m_playbackrate;
+	int sequence;
+	float cycle;
+	float weight;
+	int order;
+	float playbackRate;
 
 	LayerRecord()
 	{
-		m_sequence = 0;
-		m_cycle = 0;
-		m_weight = 0;
-		m_order = 0;
-		m_playbackrate = 0;
+		sequence = 0;
+		cycle = 0;
+		weight = 0;
+		order = 0;
+		playbackRate = 0;
 	}
 
 	LayerRecord( const LayerRecord& src )
 	{
-		m_sequence = src.m_sequence;
-		m_cycle = src.m_cycle;
-		m_weight = src.m_weight;
-		m_order = src.m_order;
-		m_playbackrate = src.m_playbackrate;
+		sequence = src.sequence;
+		cycle = src.cycle;
+		weight = src.weight;
+		order = src.order;
+		playbackRate = src.playbackRate;
 	}
 };
 
 struct PlayerSnapshot
 {
-	//CSDKPlayer		*pPl;
 	Vector			pos;
 	QAngle			ang;
 	Vector			vel;
-	CAnimationLayer m_animLayers[CBaseAnimatingOverlay::MAX_OVERLAYS];
-	//LayerRecord		m_layerRecords[CBaseAnimatingOverlay::MAX_OVERLAYS];
-	int				m_masterSequence;
-	float			m_masterCycle;
-	float			m_flSimulationTime;
-	float			m_flMoveX;
-	float			m_flMoveY;
-	int				m_nTeamNumber;
-	int				m_nTeamPosNum;
-	int				m_nSkin;
-	int				m_nBody;
-	const CPlayerPersistentData *m_pPlayerData;
+	LayerRecord		layerRecords[NUM_LAYERS_WANTED];
+	int				masterSequence;
+	float			masterCycle;
+	float			simulationTime;
+	float			moveX;
+	float			moveY;
+	int				teamNumber;
+	int				teamPosNum;
+	int				skin;
+	int				body;
+	const CPlayerPersistentData *pPlayerData;
 };
 
 struct Snapshot
@@ -81,18 +79,6 @@ struct Snapshot
 		}
 	}
 
-};
-
-struct Replay
-{
-	CUtlVector<Snapshot *> m_Snapshots;
-	int m_nMatchSeconds;
-	bool m_bAtMinGoalPos;
-
-	~Replay()
-	{
-		m_Snapshots.PurgeAndDeleteElements();
-	}
 };
 
 struct MatchEvent
@@ -145,9 +131,7 @@ public:
 
 	CNetworkVar(int, m_nTeamNumber);
 	CNetworkVar(int, m_nTeamPosNum);
-	CNetworkString(m_szPlayerName, MAX_PLACE_NAME_LENGTH);
-
-	CAnimationLayer m_AnimLayers[2];
+	CNetworkString(m_szPlayerName, MAX_PLAYER_NAME_LENGTH);
 };
 
 class CReplayManager : public CBaseEntity
@@ -185,7 +169,7 @@ public:
 
 private:
 	CUtlVector<Snapshot *>	m_Snapshots;
-	bool					m_bDoReplay;
+	bool					m_bReplayIsPending;
 	int						m_nReplayIndex;
 	CReplayBall				*m_pBall;
 	CReplayPlayer			*m_pPlayers[2][11];
