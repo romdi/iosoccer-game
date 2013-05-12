@@ -175,6 +175,9 @@ int ClientModeSDKNormal::GetDeathMessageStartHeight( void )
 
 CHandle<C_BaseAnimatingOverlay> g_ClassImagePlayer;	// player
 Vector camPos = vec3_invalid;
+Vector newCamPos = vec3_invalid;
+Vector oldCamPos = vec3_invalid;
+float oldCamPosTime = FLT_MAX;
 
 bool ShouldRecreateClassImageEntity( C_BaseAnimating* pEnt, const char* pNewModelName )
 {
@@ -333,10 +336,27 @@ void UpdateClassImageEntity(const char* pModelName, int skin, int angle, int bod
 		target = origin + Vector(-25, 0, vMins.z + 20);
 	}
 
-	if (camPos == vec3_invalid)
+	if (target != newCamPos)
+	{
+		newCamPos = target;
+		oldCamPosTime = gpGlobals->curtime;
+		oldCamPos = camPos;
+	}
+
+	if (camPos == vec3_invalid || oldCamPos == vec3_invalid)
+	{
 		camPos = target;
+		oldCamPos = target;
+	}
 	else
-		camPos += (target - camPos) / 30.0f;
+	{
+		static const float interpTime = 0.75f;
+		Vector dir = target - oldCamPos;
+		float dist = VectorNormalize(dir);
+		float timeFrac = min(1.0f, (gpGlobals->curtime - oldCamPosTime) / interpTime);
+		float frac = pow(timeFrac, 2) * (3 - 2 * timeFrac);
+		camPos = oldCamPos + dir * dist * frac;
+	}
 	
 	view.origin = camPos;
 	view.angles = QAngle(15, 0, 0);

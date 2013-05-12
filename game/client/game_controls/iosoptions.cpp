@@ -57,7 +57,7 @@ enum { LABEL_WIDTH = 260, INPUT_WIDTH = 260, SHORTINPUT_WIDTH = 200, TEXT_HEIGHT
 enum { PANEL_TOPMARGIN = 70, PANEL_MARGIN = 5, PANEL_WIDTH = (1024 - 2 * PANEL_MARGIN), PANEL_HEIGHT = (720 - 2 * PANEL_MARGIN) };
 enum { PADDING = 10, TOP_PADDING = 30 };
 enum { BUTTON_WIDTH = 80, BUTTON_HEIGHT = 26, BUTTON_MARGIN = 5 };
-enum { SUGGESTED_VALUE_WIDTH = 130, SUGGESTED_VALUE_MARGIN = 5 };
+enum { SUGGESTED_VALUE_WIDTH = 100, SUGGESTED_VALUE_MARGIN = 5 };
 enum { INFOBUTTON_WIDTH = 30, INFOBUTTON_MARGIN = 5 };
 enum { APPEARANCE_HOFFSET = 270, APPEARANCE_RADIOBUTTONWIDTH = 70 };
 
@@ -219,9 +219,11 @@ CNetworkSettingPanel::CNetworkSettingPanel(Panel *parent, const char *panelName)
 		kv->deleteThis();
 	}
 
+	const char *suggestedValueText = "Set Best Value";
+
 	m_pInterpDurationLabel = new Label(m_pContent, "", "Interpolation Duration:");
 	m_pInterpDurationList = new ComboBox(m_pContent, "", 0, false);
-	m_pInterpDurationSuggestedValueButton = new Button(m_pContent, "", "Set Suggested Value", this, "suggested_interpduration");
+	m_pInterpDurationSuggestedValueButton = new Button(m_pContent, "", suggestedValueText, this, "suggested_interpduration");
 	m_pInterpDurationInfoButton = new Button(m_pContent, "", "?");
 	m_pInterpDurationInfoButton->GetTooltip()->SetText("The shorter the interpolation duration, the quicker your client will display updated player and ball positions received from the server.\nIf you notice that other players and the ball don't move smoothly, it could mean that too many packets are lost on the way between you and the server.\nTry increasing the interpolation duration until the game is smooth again.");
 	m_pInterpDurationInfoButton->GetTooltip()->SetTooltipDelay(0);
@@ -236,7 +238,7 @@ CNetworkSettingPanel::CNetworkSettingPanel(Panel *parent, const char *panelName)
 	m_pSmoothDurationLabel = new Label(m_pContent, "", "Smoothing Duration:");
 	m_pSmoothDurationList = new ComboBox(m_pContent, "", 0, false);
 	m_pSmoothDurationInfoButton = new Button(m_pContent, "", "?");
-	m_pSmoothDurationSuggestedValueButton = new Button(m_pContent, "", "Set Suggested Value", this, "suggested_smoothduration");
+	m_pSmoothDurationSuggestedValueButton = new Button(m_pContent, "", suggestedValueText, this, "suggested_smoothduration");
 	m_pSmoothDurationInfoButton->GetTooltip()->SetText("The shorter the smoothing duration, the quicker your client will set your local player to the correct position, should your client have incorrectly predicted your own position.\nTo make the game feel more reponsive, your client immediately performs certain actions like moving around and jumping, instead of waiting for the server to give confirmation for them.\nSometimes, when other players or the ball is close to you, the predictions of the client will be wrong and your local player can't actually move to the position he just went to during the prediction.\nThe smoothing duration is the time your client spends moving your own player to the correct position as received from the server.");
 	m_pSmoothDurationInfoButton->GetTooltip()->SetTooltipDelay(0);
 
@@ -249,7 +251,7 @@ CNetworkSettingPanel::CNetworkSettingPanel(Panel *parent, const char *panelName)
 
 	m_pRateLabel = new Label(m_pContent, "", "Max bandwidth used (rate) / 1000:");
 	m_pRateList = new ComboBox(m_pContent, "", 0, false);
-	m_pRateSuggestedValueButton = new Button(m_pContent, "", "Set Suggested Value", this, "suggested_rate");
+	m_pRateSuggestedValueButton = new Button(m_pContent, "", suggestedValueText, this, "suggested_rate");
 	m_pRateInfoButton = new Button(m_pContent, "", "?");
 	m_pRateInfoButton->GetTooltip()->SetText("'rate' sets the maximum bandwidth available for receiving packets from the server.\nIf 'net_graph 3' shows choke, increase the rate until the choke value shows 0.\nIf you can't increase 'Rate' any further due to a slow connection, consider lowering 'Update Rate' and 'Command Rate'.");
 	m_pRateInfoButton->GetTooltip()->SetTooltipDelay(0);
@@ -264,7 +266,7 @@ CNetworkSettingPanel::CNetworkSettingPanel(Panel *parent, const char *panelName)
 
 	m_pUpdaterateLabel = new Label(m_pContent, "", "Max packets received per sec (cl_updaterate):");
 	m_pUpdaterateList = new ComboBox(m_pContent, "", 0, false);
-	m_pUpdaterateSuggestedValueButton = new Button(m_pContent, "", "Set Suggested Value", this, "suggested_updaterate");
+	m_pUpdaterateSuggestedValueButton = new Button(m_pContent, "", suggestedValueText, this, "suggested_updaterate");
 	m_pUpdaterateInfoButton = new Button(m_pContent, "", "?");
 	m_pUpdaterateInfoButton->GetTooltip()->SetText("'cl_updaterate' sets the number of updates per second you want to receive from the server.\nThe maximum value is the current server tickrate, which is usually 66 or 100.\nThe higher 'Update Rate' the more download bandwidth will be used.");
 	m_pUpdaterateInfoButton->GetTooltip()->SetTooltipDelay(0);
@@ -279,7 +281,7 @@ CNetworkSettingPanel::CNetworkSettingPanel(Panel *parent, const char *panelName)
 
 	m_pCommandrateLabel = new Label(m_pContent, "", "Max packets sent per sec (cl_cmdrate):");
 	m_pCommandrateList = new ComboBox(m_pContent, "", 0, false);
-	m_pCommandrateSuggestedValueButton = new Button(m_pContent, "", "Set Suggested Value", this, "suggested_commandrate");
+	m_pCommandrateSuggestedValueButton = new Button(m_pContent, "", suggestedValueText, this, "suggested_commandrate");
 	m_pCommandrateInfoButton = new Button(m_pContent, "", "?");
 	m_pCommandrateInfoButton->GetTooltip()->SetText("'cl_cmdrate' sets the number of input updates per second you want to send to the server.\nThe maximum value is the current server tickrate, which is usually 66 or 100.\nThe higher 'Command Rate' the more upload bandwidth will be used.");
 	m_pCommandrateInfoButton->GetTooltip()->SetTooltipDelay(0);
@@ -311,35 +313,39 @@ void CNetworkSettingPanel::ApplySchemeSettings( IScheme *pScheme )
 
 	m_pCountryNameLabel->SetBounds(0, 4 * TEXT_HEIGHT + 2 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
 	m_pCountryNameList->SetBounds(0, 5 * TEXT_HEIGHT + 2 * TEXT_MARGIN, INPUT_WIDTH, TEXT_HEIGHT);
-	m_pCountryNameList->GetMenu()->MakeReadyForUse();
 
 	m_pInterpDurationLabel->SetBounds(0, 6 * TEXT_HEIGHT + 3 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
 	m_pInterpDurationList->SetBounds(0, 7 * TEXT_HEIGHT + 3 * TEXT_MARGIN, INPUT_WIDTH, TEXT_HEIGHT);
 	m_pInterpDurationSuggestedValueButton->SetBounds(INPUT_WIDTH + SUGGESTED_VALUE_MARGIN, 7 * TEXT_HEIGHT + 3 * TEXT_MARGIN, SUGGESTED_VALUE_WIDTH, TEXT_HEIGHT);
+	m_pInterpDurationSuggestedValueButton->SetContentAlignment(Label::a_center);
 	m_pInterpDurationInfoButton->SetBounds(INPUT_WIDTH + SUGGESTED_VALUE_MARGIN + SUGGESTED_VALUE_WIDTH + INFOBUTTON_MARGIN, 7 * TEXT_HEIGHT + 3 * TEXT_MARGIN, INFOBUTTON_WIDTH, TEXT_HEIGHT);
 	m_pInterpDurationInfoButton->SetContentAlignment(Label::a_center);
 
 	m_pSmoothDurationLabel->SetBounds(0, 8 * TEXT_HEIGHT + 4 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
 	m_pSmoothDurationList->SetBounds(0, 9 * TEXT_HEIGHT + 4 * TEXT_MARGIN, INPUT_WIDTH, TEXT_HEIGHT);
 	m_pSmoothDurationSuggestedValueButton->SetBounds(INPUT_WIDTH + SUGGESTED_VALUE_MARGIN, 9 * TEXT_HEIGHT + 4 * TEXT_MARGIN, SUGGESTED_VALUE_WIDTH, TEXT_HEIGHT);
+	m_pSmoothDurationSuggestedValueButton->SetContentAlignment(Label::a_center);
 	m_pSmoothDurationInfoButton->SetBounds(INPUT_WIDTH + SUGGESTED_VALUE_MARGIN + SUGGESTED_VALUE_WIDTH + INFOBUTTON_MARGIN, 9 * TEXT_HEIGHT + 4 * TEXT_MARGIN, INFOBUTTON_WIDTH, TEXT_HEIGHT);
 	m_pSmoothDurationInfoButton->SetContentAlignment(Label::a_center);
 
 	m_pRateLabel->SetBounds(0, 10 * TEXT_HEIGHT + 5 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
 	m_pRateList->SetBounds(0, 11 * TEXT_HEIGHT + 5 * TEXT_MARGIN, INPUT_WIDTH, TEXT_HEIGHT);
 	m_pRateSuggestedValueButton->SetBounds(INPUT_WIDTH + SUGGESTED_VALUE_MARGIN, 11 * TEXT_HEIGHT + 5 * TEXT_MARGIN, SUGGESTED_VALUE_WIDTH, TEXT_HEIGHT);
+	m_pRateSuggestedValueButton->SetContentAlignment(Label::a_center);
 	m_pRateInfoButton->SetBounds(INPUT_WIDTH + SUGGESTED_VALUE_MARGIN + SUGGESTED_VALUE_WIDTH + INFOBUTTON_MARGIN, 11 * TEXT_HEIGHT + 5 * TEXT_MARGIN, INFOBUTTON_WIDTH, TEXT_HEIGHT);
 	m_pRateInfoButton->SetContentAlignment(Label::a_center);
 
 	m_pUpdaterateLabel->SetBounds(0, 12 * TEXT_HEIGHT + 6 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
 	m_pUpdaterateList->SetBounds(0, 13 * TEXT_HEIGHT + 6 * TEXT_MARGIN, INPUT_WIDTH, TEXT_HEIGHT);
 	m_pUpdaterateSuggestedValueButton->SetBounds(INPUT_WIDTH + SUGGESTED_VALUE_MARGIN, 13 * TEXT_HEIGHT + 6 * TEXT_MARGIN, SUGGESTED_VALUE_WIDTH, TEXT_HEIGHT);
+	m_pUpdaterateSuggestedValueButton->SetContentAlignment(Label::a_center);
 	m_pUpdaterateInfoButton->SetBounds(INPUT_WIDTH + SUGGESTED_VALUE_MARGIN + SUGGESTED_VALUE_WIDTH + INFOBUTTON_MARGIN, 13 * TEXT_HEIGHT + 6 * TEXT_MARGIN, INFOBUTTON_WIDTH, TEXT_HEIGHT);
 	m_pUpdaterateInfoButton->SetContentAlignment(Label::a_center);
 
 	m_pCommandrateLabel->SetBounds(0, 14 * TEXT_HEIGHT + 7 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
 	m_pCommandrateList->SetBounds(0, 15 * TEXT_HEIGHT + 7 * TEXT_MARGIN, INPUT_WIDTH, TEXT_HEIGHT);
 	m_pCommandrateSuggestedValueButton->SetBounds(INPUT_WIDTH + SUGGESTED_VALUE_MARGIN, 15 * TEXT_HEIGHT + 7 * TEXT_MARGIN, SUGGESTED_VALUE_WIDTH, TEXT_HEIGHT);
+	m_pCommandrateSuggestedValueButton->SetContentAlignment(Label::a_center);
 	m_pCommandrateInfoButton->SetBounds(INPUT_WIDTH + SUGGESTED_VALUE_MARGIN + SUGGESTED_VALUE_WIDTH + INFOBUTTON_MARGIN, 15 * TEXT_HEIGHT + 7 * TEXT_MARGIN, INFOBUTTON_WIDTH, TEXT_HEIGHT);
 	m_pCommandrateInfoButton->SetContentAlignment(Label::a_center);
 }
