@@ -21,6 +21,20 @@ struct LayerRecord
 	float weight;
 	int order;
 	float playbackRate;
+	bool looping;
+	bool sequenceFinished;
+	int flags;
+	int priority;
+	Activity activity;
+	float layerAnimtime;
+	float blendIn;
+	float blendOut;
+	float prevCycle;
+	float killDelay;
+	float killRate;
+	float lastAccess;
+	float lastEventCheck;
+	float layerFadeOuttime;
 
 	LayerRecord()
 	{
@@ -29,6 +43,20 @@ struct LayerRecord
 		weight = 0;
 		order = 0;
 		playbackRate = 0;
+		looping = false;
+		sequenceFinished = false;
+		flags = 0;
+		priority = 0;
+		activity = ACT_INVALID;
+		layerAnimtime = 0;
+		blendIn = 0;
+		blendOut = 0;
+		prevCycle = 0;
+		killDelay = 0;
+		killRate = 0;
+		lastAccess = 0;
+		lastEventCheck = 0;
+		layerFadeOuttime = 0;
 	}
 
 	LayerRecord( const LayerRecord& src )
@@ -38,6 +66,20 @@ struct LayerRecord
 		weight = src.weight;
 		order = src.order;
 		playbackRate = src.playbackRate;
+		looping = src.looping;
+		sequenceFinished = src.sequenceFinished;
+		flags = src.flags;
+		priority = src.priority;
+		activity = src.activity;
+		layerAnimtime = src.layerAnimtime;
+		blendIn = src.blendIn;
+		blendOut = src.blendOut;
+		prevCycle = src.prevCycle;
+		killDelay = src.killDelay;
+		killRate = src.killRate;
+		lastAccess = src.lastAccess;
+		lastEventCheck = src.lastEventCheck;
+		layerFadeOuttime = src.layerFadeOuttime;
 	}
 };
 

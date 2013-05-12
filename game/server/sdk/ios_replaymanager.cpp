@@ -388,7 +388,7 @@ void CReplayManager::TakeSnapshot()
 			pTargetLayer->sequence = pSourceLayer->m_nSequence;
 			pTargetLayer->weight = pSourceLayer->m_flWeight;
 			pTargetLayer->playbackRate = pSourceLayer->m_flPlaybackRate;
-			/*pTargetLayer->looping = pSourceLayer->m_bLooping;
+			pTargetLayer->looping = pSourceLayer->m_bLooping;
 			pTargetLayer->sequenceFinished = pSourceLayer->m_bSequenceFinished;
 			pTargetLayer->flags = pSourceLayer->m_fFlags;
 			pTargetLayer->priority = pSourceLayer->m_nPriority;
@@ -401,7 +401,7 @@ void CReplayManager::TakeSnapshot()
 			pTargetLayer->killRate = pSourceLayer->m_flKillRate;
 			pTargetLayer->lastAccess = pSourceLayer->m_flLastAccess;
 			pTargetLayer->lastEventCheck = pSourceLayer->m_flLastEventCheck;
-			pTargetLayer->layerFadeOuttime = pSourceLayer->m_flLayerFadeOuttime;*/
+			pTargetLayer->layerFadeOuttime = pSourceLayer->m_flLayerFadeOuttime;
 		}
 
 		pPlSnap->masterSequence = pPl->GetSequence();
@@ -749,13 +749,13 @@ void CReplayManager::RestoreSnapshot()
 				pTargetLayer->m_nOrder = pSourceLayer->order;
 				pTargetLayer->m_nSequence = pSourceLayer->sequence;
 				pTargetLayer->m_flPlaybackRate = pSourceLayer->playbackRate;
-				/*pTargetLayer->m_fFlags = pSourceLayer->flags;
+				pTargetLayer->m_fFlags = pSourceLayer->flags;
 				pTargetLayer->m_bLooping = pSourceLayer->looping;
 				pTargetLayer->m_bSequenceFinished = pSourceLayer->sequenceFinished;
 				pTargetLayer->m_nPriority = pSourceLayer->priority;
 				pTargetLayer->m_nActivity = pSourceLayer->activity;
 				pTargetLayer->m_flLastAccess = pSourceLayer->lastAccess;
-				pTargetLayer->m_flLastEventCheck = pSourceLayer->lastEventCheck;*/
+				pTargetLayer->m_flLastEventCheck = pSourceLayer->lastEventCheck;
 
 				if (interpolationAllowed)
 				{
@@ -777,14 +777,13 @@ void CReplayManager::RestoreSnapshot()
 						}
 
 						pTargetLayer->m_flWeight = Lerp(frac, pSourceLayer->weight, pNextSourceLayer->weight);
-
-						//pTargetLayer->m_flLayerAnimtime = Lerp(frac, pSourceLayer->layerAnimtime, pNextSourceLayer->layerAnimtime);
-						//pTargetLayer->m_flBlendIn = Lerp(frac, pSourceLayer->blendIn, pNextSourceLayer->blendIn);
-						//pTargetLayer->m_flBlendOut = Lerp(frac, pSourceLayer->blendOut, pNextSourceLayer->blendOut);
-						//pTargetLayer->m_flPrevCycle = Lerp(frac, pSourceLayer->prevCycle, pNextSourceLayer->prevCycle);
-						//pTargetLayer->m_flKillDelay = Lerp(frac, pSourceLayer->killDelay, pNextSourceLayer->killDelay);
-						//pTargetLayer->m_flKillRate = Lerp(frac, pSourceLayer->killRate, pNextSourceLayer->killRate);
-						//pTargetLayer->m_flLayerFadeOuttime = Lerp(frac, pSourceLayer->layerFadeOuttime, pNextSourceLayer->layerFadeOuttime);
+						pTargetLayer->m_flLayerAnimtime = Lerp(frac, pSourceLayer->layerAnimtime, pNextSourceLayer->layerAnimtime);
+						pTargetLayer->m_flBlendIn = Lerp(frac, pSourceLayer->blendIn, pNextSourceLayer->blendIn);
+						pTargetLayer->m_flBlendOut = Lerp(frac, pSourceLayer->blendOut, pNextSourceLayer->blendOut);
+						pTargetLayer->m_flPrevCycle = Lerp(frac, pSourceLayer->prevCycle, pNextSourceLayer->prevCycle);
+						pTargetLayer->m_flKillDelay = Lerp(frac, pSourceLayer->killDelay, pNextSourceLayer->killDelay);
+						pTargetLayer->m_flKillRate = Lerp(frac, pSourceLayer->killRate, pNextSourceLayer->killRate);
+						pTargetLayer->m_flLayerFadeOuttime = Lerp(frac, pSourceLayer->layerFadeOuttime, pNextSourceLayer->layerFadeOuttime);
 					}
 				}
 				else
@@ -792,14 +791,13 @@ void CReplayManager::RestoreSnapshot()
 					//Either no interp, or interp failed.  Just use record.
 					pTargetLayer->m_flCycle = pSourceLayer->cycle;
 					pTargetLayer->m_flWeight = pSourceLayer->weight;
-
-					//pTargetLayer->m_flLayerAnimtime = pSourceLayer->layerAnimtime;
-					//pTargetLayer->m_flBlendIn = pSourceLayer->blendIn;
-					//pTargetLayer->m_flBlendOut = pSourceLayer->blendOut;
-					//pTargetLayer->m_flPrevCycle = pSourceLayer->prevCycle;
-					//pTargetLayer->m_flKillDelay = pSourceLayer->killDelay;
-					//pTargetLayer->m_flKillRate = pSourceLayer->killRate;
-					//pTargetLayer->m_flLayerFadeOuttime = pSourceLayer->layerFadeOuttime;
+					pTargetLayer->m_flLayerAnimtime = pSourceLayer->layerAnimtime;
+					pTargetLayer->m_flBlendIn = pSourceLayer->blendIn;
+					pTargetLayer->m_flBlendOut = pSourceLayer->blendOut;
+					pTargetLayer->m_flPrevCycle = pSourceLayer->prevCycle;
+					pTargetLayer->m_flKillDelay = pSourceLayer->killDelay;
+					pTargetLayer->m_flKillRate = pSourceLayer->killRate;
+					pTargetLayer->m_flLayerFadeOuttime = pSourceLayer->layerFadeOuttime;
 				}
 			}
 		}
