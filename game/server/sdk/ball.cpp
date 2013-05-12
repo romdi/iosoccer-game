@@ -178,7 +178,6 @@ ConVar sv_ball_minspeed_bounce("sv_ball_minspeed_bounce", "500", FCVAR_NOTIFY);
 ConVar sv_ball_bounce_strength("sv_ball_bounce_strength", "500", FCVAR_NOTIFY);
 ConVar sv_ball_player_yellow_red_card_duration("sv_ball_player_yellow_red_card_duration", "7.5", FCVAR_NOTIFY);
 ConVar sv_ball_player_red_card_duration("sv_ball_player_red_card_duration", "15", FCVAR_NOTIFY);
-ConVar sv_ball_reset_stamina_on_freekicks("sv_ball_reset_stamina_on_freekicks", "1", FCVAR_NOTIFY);
 
 ConVar sv_ball_bodypos_feet_start("sv_ball_bodypos_feet_start", "-50", FCVAR_NOTIFY);
 ConVar sv_ball_bodypos_hip_start("sv_ball_bodypos_hip_start", "15", FCVAR_NOTIFY);
@@ -965,7 +964,7 @@ void CBall::State_Think()
 									statType = STATISTIC_DISTANCETOGOAL;
 								else if (m_eNextState == BALL_FREEKICK && m_eFoulType == FOUL_OFFSIDE)
 									statType = STATISTIC_OFFSIDES_TEAM;
-								else if (m_eNextState == BALL_FREEKICK)
+								else if (m_eNextState == BALL_FREEKICK && m_eFoulType != FOUL_DOUBLETOUCH)
 									statType = STATISTIC_FOULS_TEAM;
 								else
 									statType = (g_IOSRand.RandomInt(0, 2) == 0 ? STATISTIC_POSSESSION_TEAM : STATISTIC_SETPIECECOUNT_TEAM);
@@ -1031,10 +1030,9 @@ void CBall::State_Think()
 			{
 				SDKGameRules()->SetTimeoutEnd(0);
 
-				IGameEvent *pEvent = gameeventmanager->CreateEvent("match_state");
+				IGameEvent *pEvent = gameeventmanager->CreateEvent("end_timeout");
 				if (pEvent)
 				{
-					pEvent->SetInt("state", MATCH_EVENT_NONE);
 					gameeventmanager->FireEvent(pEvent);
 				}
 				UTIL_ClientPrintAll(HUD_PRINTTALK, "#game_match_start");
@@ -1211,12 +1209,6 @@ void CBall::State_KICKOFF_Think()
 		m_flStateTimelimit = -1;
 		m_bShotsBlocked = true;
 
-		IGameEvent *pEvent = gameeventmanager->CreateEvent("match_state");
-		if (pEvent)
-		{
-			pEvent->SetInt("state", MATCH_EVENT_KICKOFF);
-			gameeventmanager->FireEvent(pEvent);
-		}
 		EmitSound("Ball.Whistle");
 	}
 
@@ -1229,7 +1221,18 @@ void CBall::State_KICKOFF_Think()
 			m_pOtherPl = FindNearestPlayer(m_pPl->GetTeamNumber(), FL_POS_DEFENDER, false, (1 << (m_pPl->entindex() - 1)));
 
 		if (m_pOtherPl)
+		{
 			m_pOtherPl->SetPosInsideShield(Vector(m_vPos.x + m_pPl->GetTeam()->m_nRight * 100, m_vPos.y, SDKGameRules()->m_vKickOff.GetZ()), true);
+
+			IGameEvent *pEvent = gameeventmanager->CreateEvent("kickoff");
+			if (pEvent)
+			{
+				pEvent->SetInt("team", SDKGameRules()->GetKickOffTeam());
+				pEvent->SetInt("player1_userid", m_pPl ? m_pPl->GetUserID() : 0);
+				pEvent->SetInt("player2_userid", m_pOtherPl ? m_pOtherPl->GetUserID() : 0);
+				gameeventmanager->FireEvent(pEvent);
+			}
+		}
 	}
 
 	if (!PlayersAtTargetPos())
@@ -1585,24 +1588,14 @@ void CBall::State_FREEKICK_Think()
 	if (m_flStateTimelimit == -1)
 	{
 		m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit_setpiece.GetFloat();
-
-		if (sv_ball_reset_stamina_on_freekicks.GetBool())
-		{
-			float fieldZone = 100 - (CalcFieldZone() + 100) / 2;
-			if (m_pPl->GetTeam()->m_nForward == -1)
-				fieldZone = 100 - fieldZone;
-			m_pPl->m_Shared.SetStamina(min(m_pPl->m_Shared.GetStamina(), fieldZone));
-		}
-
 		m_pPl->RemoveFlag(FL_ATCONTROLS);
 		m_bShotsBlocked = false;
-		m_bNonnormalshotsBlocked = true;
+
+		if (abs(m_vPos.y - GetGlobalTeam(m_nFoulingTeam)->m_vPlayerSpawns[0].y) <= sv_ball_freekickdist_opponentgoal.GetInt())
+			m_bNonnormalshotsBlocked = true;
 	}
 
-	// Remap to 0.0 - 1.0
-	float fieldFraction = (CalcFieldZone() * m_pPl->GetTeam()->m_nForward + 100) / 2.0f / 100.0f;
-
-	if (m_bNonnormalshotsBlocked && gpGlobals->curtime - m_flStateEnterTime > sv_ball_nonnormalshotsblocktime_freekick.GetFloat() * fieldFraction)
+	if (m_bNonnormalshotsBlocked && gpGlobals->curtime - m_flStateEnterTime > sv_ball_nonnormalshotsblocktime_freekick.GetFloat())
 	{
 		m_bNonnormalshotsBlocked = false;
 		m_pPl->SetShotButtonsReleased(false);

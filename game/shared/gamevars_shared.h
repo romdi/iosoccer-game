@@ -65,6 +65,7 @@ extern ConVar
 	mp_tvcam_offset_north,
 	mp_tvcam_sideline_offset_height,
 	mp_tvcam_sideline_offset_north,
+	mp_tvcam_sideline_zoomcoeff,
 	mp_timeout_count,
 	mp_timeout_duration;
 

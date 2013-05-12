@@ -149,21 +149,8 @@ CReplayManager::~CReplayManager()
 
 void CReplayManager::CleanUp()
 {
-	if (m_pBall)
-	{
-		UTIL_Remove(m_pBall);
-	}
-
-	for (int i = 0; i < 2; i++)
-	{
-		for (int j = 0; j < 11; j++)
-		{
-			if (m_pPlayers[i][j])
-			{
-				UTIL_Remove(m_pPlayers[i][j]);
-			}
-		}
-	}
+	StopHighlights();
+	StopReplay();
 
 	while (m_Snapshots.Count() > 0)
 	{
@@ -176,9 +163,6 @@ void CReplayManager::CleanUp()
 	}
 
 	m_MatchEvents.PurgeAndDeleteElements();
-
-	m_bIsReplaying = false;
-	m_bReplayIsPending = false;
 }
 
 void CReplayManager::Spawn()
@@ -275,9 +259,6 @@ void CReplayManager::StartReplay(int numberOfRuns, float startDelay, int index /
 
 void CReplayManager::StopReplay()
 {
-	if (!sv_replays.GetBool())
-		return;
-
 	if (m_bReplayIsPending)
 	{
 		m_bReplayIsPending = false;
@@ -345,12 +326,12 @@ void CReplayManager::StopReplay()
 		}
 	}
 
-	if (SDKGameRules()->State_Get() == MATCH_COOLDOWN)
+	if (SDKGameRules()->IsIntermissionState())
 	{
 		IGameEvent *pEvent = gameeventmanager->CreateEvent("match_state");
 		if (pEvent)
 		{
-			pEvent->SetInt("state", MATCH_EVENT_MATCH_END);
+			pEvent->SetInt("state", SDKGameRules()->State_Get());
 			gameeventmanager->FireEvent(pEvent);
 		}
 	}
@@ -505,10 +486,23 @@ void CReplayManager::RestoreSnapshot()
 				if (pEvent)
 				{
 					pEvent->SetInt("second", pMatchEvent->second);
+					pEvent->SetInt("match_state", pMatchEvent->matchState);
 					pEvent->SetInt("scoring_team", pMatchEvent->team);
 					pEvent->SetString("scorer", pMatchEvent->pPlayer1Data ? pMatchEvent->pPlayer1Data->m_szName : "");
 					pEvent->SetString("first_assister", pMatchEvent->pPlayer2Data ? pMatchEvent->pPlayer2Data->m_szName : "");
 					pEvent->SetString("second_assister", pMatchEvent->pPlayer3Data ? pMatchEvent->pPlayer3Data->m_szName : "");
+					gameeventmanager->FireEvent(pEvent);
+				}
+			}
+			else if (pMatchEvent->matchEventType == MATCH_EVENT_OWNGOAL)
+			{
+				IGameEvent *pEvent = gameeventmanager->CreateEvent("highlight_owngoal");
+				if (pEvent)
+				{
+					pEvent->SetInt("second", pMatchEvent->second);
+					pEvent->SetInt("match_state", pMatchEvent->matchState);
+					pEvent->SetInt("scoring_team", pMatchEvent->team);
+					pEvent->SetString("scorer", pMatchEvent->pPlayer1Data ? pMatchEvent->pPlayer1Data->m_szName : "");
 					gameeventmanager->FireEvent(pEvent);
 				}
 			}
@@ -518,6 +512,7 @@ void CReplayManager::RestoreSnapshot()
 				if (pEvent)
 				{
 					pEvent->SetInt("second", pMatchEvent->second);
+					pEvent->SetInt("match_state", pMatchEvent->matchState);
 					pEvent->SetInt("finishing_team", pMatchEvent->team);
 					pEvent->SetString("finisher", pMatchEvent->pPlayer1Data ? pMatchEvent->pPlayer1Data->m_szName : "");
 					pEvent->SetString("first_assister", pMatchEvent->pPlayer2Data ? pMatchEvent->pPlayer2Data->m_szName : "");
@@ -531,6 +526,7 @@ void CReplayManager::RestoreSnapshot()
 				if (pEvent)
 				{
 					pEvent->SetInt("second", pMatchEvent->second);
+					pEvent->SetInt("match_state", pMatchEvent->matchState);
 					pEvent->SetInt("fouling_team", pMatchEvent->team);
 					pEvent->SetString("fouling_player", pMatchEvent->pPlayer1Data ? pMatchEvent->pPlayer1Data->m_szName : "");
 					gameeventmanager->FireEvent(pEvent);
@@ -808,9 +804,6 @@ void CReplayManager::StartHighlights()
 
 void CReplayManager::StopHighlights()
 {
-	if (!sv_replays.GetBool() || !sv_highlights.GetBool())
-		return;
-
 	StopReplay();
 }
 

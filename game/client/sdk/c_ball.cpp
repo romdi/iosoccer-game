@@ -30,6 +30,8 @@ C_Ball::C_Ball()
 {
 	m_pCreator = NULL;
 	m_bIsPlayerBall = false;
+	m_pCurrentPlayer = NULL;
+	m_nCurrentTeam = TEAM_UNASSIGNED;
 }
 
 C_Ball::~C_Ball()

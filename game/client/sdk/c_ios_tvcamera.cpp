@@ -6,7 +6,7 @@
 #include "c_ios_replaymanager.h"
 #include "c_team.h"
 
-enum cam_type_t { CAM_SIDELINE, CAM_BEHIND_GOAL, CAM_TOPDOWN, CAM_GOAL_CORNER, CAM_FLY_FOLLOW, CAM_GOAL_LINE };
+enum cam_type_t { CAM_SIDELINE, CAM_FIXED_SIDELINE, CAM_BEHIND_GOAL, CAM_TOPDOWN, CAM_GOAL_CORNER, CAM_FLY_FOLLOW, CAM_GOAL_LINE };
 
 C_TVCamera *C_TVCamera::m_pInstance = NULL;
 
@@ -31,13 +31,18 @@ const int posCount = 5;
 
 void C_TVCamera::GetPositionAndAngle(Vector &pos, QAngle &ang)
 {
+	if (!GetBall())
+		return;
+
 	C_BaseEntity *pTarget;
 	cam_type_t camType;
 	bool atMinGoalPos;
+	Vector targetPos;
 
 	if (GetReplayManager() && GetReplayManager()->IsReplaying())
 	{
 		pTarget = GetReplayBall();
+
 		switch (GetReplayManager()->m_nReplayRunIndex)
 		{
 		case 0: camType = CAM_SIDELINE; break;
@@ -46,9 +51,12 @@ void C_TVCamera::GetPositionAndAngle(Vector &pos, QAngle &ang)
 		case 3: camType = CAM_GOAL_CORNER; break;
 		case 4: camType = CAM_TOPDOWN; break;
 		case 5: camType = CAM_BEHIND_GOAL; break;
+		case 6: camType = CAM_FIXED_SIDELINE; break;
 		default: camType = CAM_SIDELINE; break;
 		}
+
 		atMinGoalPos = GetReplayManager()->m_bAtMinGoalPos;
+		targetPos = pTarget->GetLocalOrigin();
 	}
 	else
 	{
@@ -57,56 +65,70 @@ void C_TVCamera::GetPositionAndAngle(Vector &pos, QAngle &ang)
 			pTarget = GetBall();
 
 		camType = CAM_SIDELINE;
-		atMinGoalPos = true;
+		atMinGoalPos = pTarget->GetLocalOrigin().y < SDKGameRules()->m_vKickOff.GetY();
+		targetPos = pTarget->GetLocalOrigin();
 
-		if (GetBall() && GetBall()->m_nCurrentTeam != m_nLastPossessingTeam)
+		if (GetBall()->m_nCurrentTeam != TEAM_UNASSIGNED)
 		{
-			m_flLastPossessionChange = gpGlobals->curtime;
-			m_nLastPossessingTeam = GetBall()->m_nCurrentTeam;
+			if (m_nLastPossessingTeam == TEAM_UNASSIGNED)
+			{
+				m_nLastPossessingTeam = GetBall()->m_nCurrentTeam;
+				m_flLastPossessionChange = gpGlobals->curtime;
+				m_flPossCoeff = 0;
+				m_flOldPossCoeff = 0;
+			}
+			else
+			{
+				if (GetBall()->m_nCurrentTeam != m_nLastPossessingTeam)
+				{
+					m_nLastPossessingTeam = GetBall()->m_nCurrentTeam;
+					m_flLastPossessionChange = gpGlobals->curtime;
+					m_flOldPossCoeff = m_flPossCoeff;
+				}
+
+				float timeFrac = min(1.0f, (gpGlobals->curtime - m_flLastPossessionChange) / mp_tvcam_offset_forward_time.GetFloat());
+				float frac = pow(timeFrac, 2) * (3 - 2 * timeFrac); 
+				m_flPossCoeff = Lerp(frac, m_flOldPossCoeff, (float)GetGlobalTeam(GetBall()->m_nCurrentTeam)->m_nForward);
+			}
+
+			if (camType == CAM_SIDELINE)
+			{
+				targetPos.y += m_flPossCoeff * mp_tvcam_offset_forward.GetInt();
+			}
 		}
-	}
-
-	if (!pTarget)
-		return;
-
-	Vector targetPos = pTarget->GetLocalOrigin();
-
-	if (camType == CAM_SIDELINE)
-	{
-		//targetPos.x -= mp_tvcam_offset_north.GetInt();
-
-		if (GetBall() && dynamic_cast<C_Ball *>(pTarget) && (GetBall()->m_nCurrentTeam == TEAM_A || GetBall()->m_nCurrentTeam == TEAM_B))
-			targetPos.y += GetGlobalTeam(GetBall()->m_nCurrentTeam)->m_nForward * mp_tvcam_offset_forward.GetInt() * pow(clamp((gpGlobals->curtime - m_flLastPossessionChange) / mp_tvcam_offset_forward_time.GetFloat(), 0.0f, 1.0f), 2.0f);
 	}
 
 	targetPos.x = clamp(targetPos.x, SDKGameRules()->m_vFieldMin.GetX() + mp_tvcam_border_south.GetInt(), SDKGameRules()->m_vFieldMax.GetX() - mp_tvcam_border_north.GetInt());
 	targetPos.y = clamp(targetPos.y, SDKGameRules()->m_vFieldMin.GetY() + mp_tvcam_border_west.GetInt(), SDKGameRules()->m_vFieldMax.GetY() - mp_tvcam_border_east.GetInt());
 	targetPos.z = SDKGameRules()->m_vKickOff.GetZ();
-	Vector targetDir = pTarget->GetLocalVelocity();
 
 	if (m_vOldTargetPos == vec3_invalid)
 		m_vOldTargetPos = targetPos;
 	else
 	{
 		Vector changeDir = targetPos - m_vOldTargetPos;
-		float length = changeDir.Length();
+		float changeDist = changeDir.Length();
 		changeDir.NormalizeInPlace();
-		targetPos = m_vOldTargetPos + changeDir * min(length, pow(length / mp_tvcam_speed_coeff.GetFloat(), mp_tvcam_speed_exponent.GetFloat()));
+		targetPos = m_vOldTargetPos + changeDir * min(changeDist, pow(changeDist * mp_tvcam_speed_coeff.GetFloat(), mp_tvcam_speed_exponent.GetFloat()) * gpGlobals->frametime);
 	}
 
 	switch (camType)
 	{
 	case CAM_SIDELINE:
 		{
-			/*Vector newPos = Vector(SDKGameRules()->m_vFieldMin.GetX() - 800, targetPos.y, SDKGameRules()->m_vKickOff.GetZ() + 1400);
-			newPos.y = clamp(newPos.y, SDKGameRules()->m_vFieldMin.GetY() + 1300, SDKGameRules()->m_vFieldMax.GetY() - 1300);*/
 			Vector newPos = Vector(targetPos.x - mp_tvcam_sideline_offset_north.GetInt(), targetPos.y, targetPos.z + mp_tvcam_sideline_offset_height.GetInt());
 			Vector newDir = targetPos - newPos;
 			newDir.NormalizeInPlace();
-			//newPos = targetPos - newDir * 750;
 			newPos.x -= mp_tvcam_offset_north.GetInt();
 			pos = newPos;
 			VectorAngles(newDir, ang);
+		}
+		break;
+	case CAM_FIXED_SIDELINE:
+		{
+			Vector newPos = Vector(SDKGameRules()->m_vKickOff.GetX() - mp_tvcam_sideline_offset_north.GetInt(), SDKGameRules()->m_vKickOff.GetY(), SDKGameRules()->m_vKickOff.GetZ() + mp_tvcam_sideline_offset_height.GetInt());
+			pos = Lerp(mp_tvcam_sideline_zoomcoeff.GetFloat(), newPos, targetPos);
+			VectorAngles(Vector(targetPos.x -  mp_tvcam_offset_north.GetInt(), targetPos.y, targetPos.z) - newPos, ang);
 		}
 		break;
 	case CAM_BEHIND_GOAL:

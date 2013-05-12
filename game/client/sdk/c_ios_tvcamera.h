@@ -15,6 +15,9 @@ private:
 	CUtlVector<Vector> m_BallPos;
 	float m_flLastPossessionChange;
 	int m_nLastPossessingTeam;
+	float m_flPossCoeff;
+	float m_flNewPossCoeff;
+	float m_flOldPossCoeff;
 
 public:
 	static C_TVCamera *GetInstance();

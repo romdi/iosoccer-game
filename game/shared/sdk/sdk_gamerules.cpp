@@ -1515,13 +1515,6 @@ CSDKGameRulesStateInfo* CSDKGameRules::State_LookupInfo( match_state_t state )
 
 void CSDKGameRules::State_WARMUP_Enter()
 {
-	IGameEvent *pEvent = gameeventmanager->CreateEvent("match_state");
-	if (pEvent)
-	{
-		pEvent->SetInt("state", MATCH_EVENT_WARMUP);
-		gameeventmanager->FireEvent(pEvent);
-	}
-
 	m_flMatchStartTime = gpGlobals->curtime;
 	ResetMatch(false);
 	ApplyIntermissionSettings(false);
@@ -1573,16 +1566,7 @@ void CSDKGameRules::State_FIRST_HALF_Leave(match_state_t newState)
 
 void CSDKGameRules::State_HALFTIME_Enter()
 {
-	IGameEvent *pEvent = gameeventmanager->CreateEvent("match_state");
-	if (pEvent)
-	{
-		pEvent->SetInt("state", MATCH_EVENT_HALFTIME);
-		gameeventmanager->FireEvent(pEvent);
-	}
-
 	ApplyIntermissionSettings(true);
-
-	ReplayManager()->StartHighlights();
 }
 
 void CSDKGameRules::State_HALFTIME_Think()
@@ -1626,16 +1610,7 @@ void CSDKGameRules::State_SECOND_HALF_Leave(match_state_t newState)
 
 void CSDKGameRules::State_EXTRATIME_INTERMISSION_Enter()
 {
-	IGameEvent *pEvent = gameeventmanager->CreateEvent("match_state");
-	if (pEvent)
-	{
-		pEvent->SetInt("state", MATCH_EVENT_EXTRATIME);
-		gameeventmanager->FireEvent(pEvent);
-	}
-
 	ApplyIntermissionSettings(false);
-
-	ReplayManager()->StartHighlights();
 }
 
 void CSDKGameRules::State_EXTRATIME_INTERMISSION_Think()
@@ -1673,13 +1648,6 @@ void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Leave(match_state_t newState)
 
 void CSDKGameRules::State_EXTRATIME_HALFTIME_Enter()
 {
-	IGameEvent *pEvent = gameeventmanager->CreateEvent("match_state");
-	if (pEvent)
-	{
-		pEvent->SetInt("state", MATCH_EVENT_HALFTIME);
-		gameeventmanager->FireEvent(pEvent);
-	}
-
 	ApplyIntermissionSettings(true);
 }
 
@@ -1721,16 +1689,7 @@ void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Leave(match_state_t newState)
 
 void CSDKGameRules::State_PENALTIES_INTERMISSION_Enter()
 {
-	IGameEvent *pEvent = gameeventmanager->CreateEvent("match_state");
-	if (pEvent)
-	{
-		pEvent->SetInt("state", MATCH_EVENT_PENALTIES);
-		gameeventmanager->FireEvent(pEvent);
-	}
-
 	ApplyIntermissionSettings(false);
-
-	ReplayManager()->StartHighlights();
 }
 
 void CSDKGameRules::State_PENALTIES_INTERMISSION_Think()
@@ -1898,13 +1857,6 @@ void CSDKGameRules::State_PENALTIES_Leave(match_state_t newState)
 
 void CSDKGameRules::State_COOLDOWN_Enter()
 {
-	IGameEvent *pEvent = gameeventmanager->CreateEvent("match_state");
-	if (pEvent)
-	{
-		pEvent->SetInt("state", MATCH_EVENT_MATCH_END);
-		gameeventmanager->FireEvent(pEvent);
-	}
-
 	ApplyIntermissionSettings(false);
 
 	//who won?
@@ -1942,8 +1894,6 @@ void CSDKGameRules::State_COOLDOWN_Enter()
 	m_bPostMatchStatsPanelShown = false;
 
 	CPlayerPersistentData::ConvertAllPlayerDataToJson();
-
-	ReplayManager()->StartHighlights();
 }
 
 void CSDKGameRules::State_COOLDOWN_Think()
@@ -1959,6 +1909,13 @@ void CSDKGameRules::State_COOLDOWN_Leave(match_state_t newState)
 
 void CSDKGameRules::ApplyIntermissionSettings(bool swapTeams)
 {
+	IGameEvent *pEvent = gameeventmanager->CreateEvent("match_state");
+	if (pEvent)
+	{
+		pEvent->SetInt("state", State_Get());
+		gameeventmanager->FireEvent(pEvent);
+	}
+
 	GetBall()->State_Transition(BALL_STATIC, 0, true);
 	GetBall()->SetPos(m_vKickOff);
 
@@ -1987,6 +1944,8 @@ void CSDKGameRules::ApplyIntermissionSettings(bool swapTeams)
 	}
 
 	m_flLastAwayCheckTime = gpGlobals->curtime;
+
+	ReplayManager()->StartHighlights();
 }
 
 bool CSDKGameRules::CheckAutoStart()
@@ -2781,12 +2740,17 @@ void CSDKGameRules::DrawOffsideLines()
 	}
 }
 
+float CSDKGameRules::GetDaytime()
+{
+	return fmodf(mp_daytime_start.GetFloat() + ((gpGlobals->curtime - m_flMatchStartTime) / 60.0f / 60.0f) * mp_daytime_speed.GetFloat(), 24.0f);
+}
+
 void CSDKGameRules::DrawSkyboxOverlay()
 {
 	if (!mp_daytime_enabled.GetBool())
 		return;
 
-	float dayTime = fmodf(mp_daytime_start.GetFloat() + ((gpGlobals->curtime - m_flMatchStartTime) / 60.0f / 60.0f) * mp_daytime_speed.GetFloat(), 24.0f);
+	float dayTime = GetDaytime();
 	float alpha;
 
 	if (dayTime > mp_daytime_sunrise.GetFloat() && dayTime < mp_daytime_sunset.GetFloat())

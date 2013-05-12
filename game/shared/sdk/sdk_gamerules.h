@@ -364,6 +364,7 @@ public:
 	void DrawFieldTeamCrests();
 	void DrawOffsideLines();
 	void DrawSkyboxOverlay();
+	float GetDaytime();
 
 private:
 	IMaterial *m_pOffsideLineMaterial;
