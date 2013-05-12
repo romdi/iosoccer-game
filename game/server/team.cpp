@@ -421,7 +421,10 @@ Vector CTeam::GetSpotPos(const char *name)
 	if (pEnt)
 		return Vector(pEnt->GetLocalOrigin().x, pEnt->GetLocalOrigin().y, SDKGameRules()->m_vKickOff.GetZ());
 	else
+	{
+		Error(UTIL_VarArgs("'%s' missing", name));
 		return vec3_invalid;
+	}
 }
 
 void CTeam::InitFieldSpots(int team)
@@ -434,12 +437,11 @@ void CTeam::InitFieldSpots(int team)
 	m_vPenalty = GetSpotPos(UTIL_VarArgs("info_team%d_penalty_spot", index + 1));
 
 	CBaseEntity *pPenBox = gEntList.FindEntityByClassnameNearest("trigger_PenaltyBox", m_vPenalty, 9999);
-	pPenBox->CollisionProp()->WorldSpaceTriggerBounds(&m_vPenBoxMin.GetForModify(), &m_vPenBoxMax.GetForModify());
 
-	//if (SDKGameRules()->m_vKickOff.GetY() > m_vPenBoxMin.GetY())
-	//	m_vPenBoxMin.SetY(m_vPenBoxMin.GetY() - 150);
-	//else
-	//	m_vPenBoxMax.SetY(m_vPenBoxMax.GetY() + 150);
+	if (!pPenBox)
+		Error("'trigger_PenaltyBox' missing");
+
+	pPenBox->CollisionProp()->WorldSpaceTriggerBounds(&m_vPenBoxMin.GetForModify(), &m_vPenBoxMax.GetForModify());
 
 	for (int j = 0; j < 11; j++)
 	{

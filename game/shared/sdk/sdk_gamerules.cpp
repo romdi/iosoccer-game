@@ -503,8 +503,11 @@ void CSDKGameRules::ServerActivate()
 	InitTeams();
 
 	CBaseEntity *pEnt = gEntList.FindEntityByClassname(NULL, "info_ball_start");
+	if (!pEnt)
+		Error("'info_ball_start' is missing");
+
 	trace_t tr;
-	UTIL_TraceLine(pEnt->GetLocalOrigin(), Vector(0, 0, -500), MASK_SOLID_BRUSHONLY, NULL, COLLISION_GROUP_NONE, &tr);
+	UTIL_TraceLine(pEnt->GetLocalOrigin() + Vector(0, 0, 100), pEnt->GetLocalOrigin() + Vector(0, 0, -500), MASK_SOLID_BRUSHONLY, NULL, COLLISION_GROUP_NONE, &tr);
 
 	m_vKickOff = Vector(pEnt->GetLocalOrigin().x, pEnt->GetLocalOrigin().y, tr.endpos.z);
 	
@@ -528,6 +531,9 @@ void CSDKGameRules::ServerActivate()
 		}
 	}
 
+	if (minX == -FLT_MAX || maxX == FLT_MAX)
+		Error("Can't calculate the field width. 'trigger_SideLine' missing or misplaced.");
+
 	float minY = -FLT_MAX;
 	float maxY = FLT_MAX;
 
@@ -548,6 +554,9 @@ void CSDKGameRules::ServerActivate()
 		}
 	}
 
+	if (minY == -FLT_MAX || maxY == FLT_MAX)
+		Error("Can't calculate the field length. 'trigger_goal' missing or misplaced");
+
 	m_vFieldMin = Vector(minX, minY, m_vKickOff.GetZ());
 	m_vFieldMax = Vector(maxX, maxY, m_vKickOff.GetZ());
 
@@ -557,15 +566,6 @@ void CSDKGameRules::ServerActivate()
 	m_pPrecip = (CPrecipitation *)CreateEntityByName("func_precipitation");
 	m_pPrecip->SetType(PRECIPITATION_TYPE_NONE);
 	m_pPrecip->Spawn();
-
-
-	//TODO: remove this
-	//CBaseEntity *pCrossbar = NULL;
-	//while ((pCrossbar = gEntList.FindEntityByModel(pCrossbar, "goalposts.mdl")) != NULL)
-	//{
-	//	pCrossbar->SetRenderMode(kRenderTransColor);
-	//	pCrossbar->SetRenderColorA(75);
-	//}
 
 	m_nFirstHalfLeftSideTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
 	m_nFirstHalfKickOffTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
