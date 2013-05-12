@@ -88,9 +88,9 @@ struct MatchEvent
 	int second;
 	int team;
 	bool atMinGoalPos;
-	const CPlayerPersistentData *pPlayerData1;
-	const CPlayerPersistentData *pPlayerData2;
-	const CPlayerPersistentData *pPlayerData3;
+	const CPlayerPersistentData *pPlayer1Data;
+	const CPlayerPersistentData *pPlayer2Data;
+	const CPlayerPersistentData *pPlayer3Data;
 	CUtlVector<Snapshot *> snapshots;
 
 	~MatchEvent()
@@ -157,7 +157,9 @@ public:
 	void CleanUp();
 	void CalcReplayDuration(float startTime);
 	void AddMatchEvent(match_event_t type, int team, CSDKPlayer *pPlayer1, CSDKPlayer *pPlayer2 = NULL, CSDKPlayer *pPlayer3 = NULL);
-
+	int GetMatchEventCount() { return m_MatchEvents.Count(); }
+	MatchEvent *GetMatchEvent(int index) { return m_MatchEvents[index]; }
+	
 	CNetworkVar(bool, m_bIsReplaying);
 	CNetworkVar(int, m_nReplayRunIndex);
 	CNetworkVar(bool, m_bAtMinGoalPos);

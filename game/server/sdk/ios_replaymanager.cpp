@@ -506,9 +506,9 @@ void CReplayManager::RestoreSnapshot()
 				{
 					pEvent->SetInt("second", pMatchEvent->second);
 					pEvent->SetInt("scoring_team", pMatchEvent->team);
-					pEvent->SetString("scorer", pMatchEvent->pPlayerData1 ? pMatchEvent->pPlayerData1->m_szName : "");
-					pEvent->SetString("first_assister", pMatchEvent->pPlayerData2 ? pMatchEvent->pPlayerData2->m_szName : "");
-					pEvent->SetString("second_assister", pMatchEvent->pPlayerData3 ? pMatchEvent->pPlayerData3->m_szName : "");
+					pEvent->SetString("scorer", pMatchEvent->pPlayer1Data ? pMatchEvent->pPlayer1Data->m_szName : "");
+					pEvent->SetString("first_assister", pMatchEvent->pPlayer2Data ? pMatchEvent->pPlayer2Data->m_szName : "");
+					pEvent->SetString("second_assister", pMatchEvent->pPlayer3Data ? pMatchEvent->pPlayer3Data->m_szName : "");
 					gameeventmanager->FireEvent(pEvent);
 				}
 			}
@@ -519,9 +519,9 @@ void CReplayManager::RestoreSnapshot()
 				{
 					pEvent->SetInt("second", pMatchEvent->second);
 					pEvent->SetInt("finishing_team", pMatchEvent->team);
-					pEvent->SetString("finisher", pMatchEvent->pPlayerData1 ? pMatchEvent->pPlayerData1->m_szName : "");
-					pEvent->SetString("first_assister", pMatchEvent->pPlayerData2 ? pMatchEvent->pPlayerData2->m_szName : "");
-					pEvent->SetString("second_assister", pMatchEvent->pPlayerData3 ? pMatchEvent->pPlayerData3->m_szName : "");
+					pEvent->SetString("finisher", pMatchEvent->pPlayer1Data ? pMatchEvent->pPlayer1Data->m_szName : "");
+					pEvent->SetString("first_assister", pMatchEvent->pPlayer2Data ? pMatchEvent->pPlayer2Data->m_szName : "");
+					pEvent->SetString("second_assister", pMatchEvent->pPlayer3Data ? pMatchEvent->pPlayer3Data->m_szName : "");
 					gameeventmanager->FireEvent(pEvent);
 				}
 			}
@@ -532,7 +532,7 @@ void CReplayManager::RestoreSnapshot()
 				{
 					pEvent->SetInt("second", pMatchEvent->second);
 					pEvent->SetInt("fouling_team", pMatchEvent->team);
-					pEvent->SetString("fouling_player", pMatchEvent->pPlayerData1 ? pMatchEvent->pPlayerData1->m_szName : "");
+					pEvent->SetString("fouling_player", pMatchEvent->pPlayer1Data ? pMatchEvent->pPlayer1Data->m_szName : "");
 					gameeventmanager->FireEvent(pEvent);
 				}
 			}
@@ -850,9 +850,9 @@ void CReplayManager::AddMatchEvent(match_event_t type, int team, CSDKPlayer *pPl
 	pMatchEvent->second = SDKGameRules()->GetMatchDisplayTimeSeconds();
 	pMatchEvent->team = team;
 	pMatchEvent->atMinGoalPos = GetBall()->GetPos().y < SDKGameRules()->m_vKickOff.GetY();
-	pMatchEvent->pPlayerData1 = pPlayer1 ? pPlayer1->GetData() : NULL;
-	pMatchEvent->pPlayerData2 = pPlayer2 ? pPlayer2->GetData() : NULL;
-	pMatchEvent->pPlayerData3 = pPlayer3 ? pPlayer3->GetData() : NULL;
+	pMatchEvent->pPlayer1Data = pPlayer1 ? pPlayer1->GetData() : NULL;
+	pMatchEvent->pPlayer2Data = pPlayer2 ? pPlayer2->GetData() : NULL;
+	pMatchEvent->pPlayer3Data = pPlayer3 ? pPlayer3->GetData() : NULL;
 
 	m_MatchEvents.AddToTail(pMatchEvent);
 
