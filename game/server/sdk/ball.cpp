@@ -45,6 +45,7 @@ ConVar sv_ball_standing_reach( "sv_ball_standing_reach", "50", FCVAR_NOTIFY );
 ConVar sv_ball_standing_cone( "sv_ball_standing_cone", "360", FCVAR_NOTIFY );
 ConVar sv_ball_standing_shift( "sv_ball_standing_shift", "0", FCVAR_NOTIFY );
 
+ConVar sv_ball_slideaffectedbydelay( "sv_ball_slideaffectedbydelay", "1", FCVAR_NOTIFY );
 ConVar sv_ball_slidesidereach_ball( "sv_ball_slidesidereach_ball", "50", FCVAR_NOTIFY );
 ConVar sv_ball_slideforwardreach_ball( "sv_ball_slideforwardreach_ball", "60", FCVAR_NOTIFY );
 ConVar sv_ball_slidesidereach_foul( "sv_ball_slidesidereach_foul", "25", FCVAR_NOTIFY );
@@ -2133,7 +2134,7 @@ bool CBall::DoBodyPartAction()
 	if (canCatch)
 		return CheckKeeperCatch();
 
-	if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_SLIDE)
+	if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_SLIDE && !sv_ball_slideaffectedbydelay.GetBool())
 		return DoSlideAction();
 
 	if (gpGlobals->curtime < m_flGlobalNextShot)
@@ -2151,6 +2152,9 @@ bool CBall::DoBodyPartAction()
 
 		return false;
 	}
+
+	if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_SLIDE && sv_ball_slideaffectedbydelay.GetBool())
+		return DoSlideAction();
 
 	if (zDist >= sv_ball_bodypos_feet_start.GetFloat()
 		&& zDist < sv_ball_bodypos_hip_start.GetFloat()
