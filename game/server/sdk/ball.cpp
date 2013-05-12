@@ -1494,7 +1494,6 @@ void CBall::State_GOAL_Enter()
 
 	float delay = sv_ball_goalcelebduration.GetFloat();
 
-
 	if (sv_replays.GetBool())
 	{
 		delay += sv_replay_duration1.GetFloat();
@@ -2040,22 +2039,25 @@ void CBall::TriggerFoul(foul_type_t type, Vector pos, CSDKPlayer *pFoulingPl, CS
 		else if (GetGlobalTeam(m_nFoulingTeam)->m_nForward == -1 && m_vFoulPos.y > min.y)
 			m_vFoulPos.y = min.y;
 	}
+
+	if (m_eFoulType == FOUL_NORMAL_YELLOW_CARD)
+	{
+		if (m_pFoulingPl->GetYellowCards() % 2 != 0)
+			ReplayManager()->AddMatchEvent(MATCH_EVENT_YELLOWCARD, m_nFoulingTeam, m_pFoulingPl);
+	}
+
+	if (m_eFoulType == FOUL_NORMAL_YELLOW_CARD && m_pFoulingPl->GetYellowCards() % 2 == 0 || m_eFoulType == FOUL_NORMAL_RED_CARD)
+	{
+		ReplayManager()->AddMatchEvent(m_eFoulType == FOUL_NORMAL_YELLOW_CARD ? MATCH_EVENT_YELLOWREDCARD : MATCH_EVENT_REDCARD, m_nFoulingTeam, m_pFoulingPl);
+	}
 }
 
 void CBall::HandleFoul()
 {
 	if (CSDKPlayer::IsOnField(m_pFoulingPl))
 	{
-		if (m_eFoulType == FOUL_NORMAL_YELLOW_CARD)
-		{
-			if (m_pFoulingPl->GetYellowCards() % 2 != 0)
-				ReplayManager()->AddMatchEvent(MATCH_EVENT_YELLOWCARD, m_nFoulingTeam, m_pFoulingPl);
-		}
-
 		if (m_eFoulType == FOUL_NORMAL_YELLOW_CARD && m_pFoulingPl->GetYellowCards() % 2 == 0 || m_eFoulType == FOUL_NORMAL_RED_CARD)
 		{
-			ReplayManager()->AddMatchEvent(m_eFoulType == FOUL_NORMAL_YELLOW_CARD ? MATCH_EVENT_YELLOWREDCARD : MATCH_EVENT_REDCARD, m_nFoulingTeam, m_pFoulingPl);
-
 			int team = m_pFoulingPl->GetTeamNumber();
 			int posIndex = m_pFoulingPl->GetTeamPosIndex();
 			int posType = m_pFoulingPl->GetTeamPosType();

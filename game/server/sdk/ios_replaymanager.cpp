@@ -232,7 +232,8 @@ void CReplayManager::CheckReplay()
 {
 	if (m_bReplayIsPending && gpGlobals->curtime >= m_flReplayActivationTime || m_bIsReplaying)
 		RestoreSnapshot();
-	else if (!m_bReplayIsPending && !m_bIsReplaying && !SDKGameRules()->IsIntermissionState())
+	else if (!m_bIsReplaying && !SDKGameRules()->IsIntermissionState()
+		&& (!m_bReplayIsPending || m_MatchEvents.Count() > 0 && m_MatchEvents.Tail()->snapshotEndTime >= gpGlobals->curtime))
 		TakeSnapshot();
 }
 
@@ -421,6 +422,17 @@ void CReplayManager::TakeSnapshot()
 	}
 
 	m_Snapshots.AddToTail(pSnap);
+
+	if (m_MatchEvents.Count() > 0)
+	{
+		MatchEvent *pLastMatchEvent = m_MatchEvents.Tail();
+
+		if (pLastMatchEvent->snapshotEndTime > gpGlobals->curtime)
+		{
+			pLastMatchEvent->snapshots.AddToTail(pSnap);
+			pSnap->isInReplay = true;
+		}
+	}
 	
 	float replayStartTime = GetReplayStartTime();
 
@@ -826,7 +838,7 @@ void CReplayManager::AddMatchEvent(match_event_t type, int team, CSDKPlayer *pPl
 
 	if (type == MATCH_EVENT_GOAL || type == MATCH_EVENT_OWNGOAL || type == MATCH_EVENT_CHANCE || type == MATCH_EVENT_REDCARD)
 	{
-		float replayStartTime = GetReplayStartTime();
+		float replayStartTime = GetReplayStartTime() + 1.0f;
 
 		for (int i = 0; i < m_Snapshots.Count(); i++)
 		{
@@ -836,8 +848,12 @@ void CReplayManager::AddMatchEvent(match_event_t type, int team, CSDKPlayer *pPl
 				m_Snapshots[i]->isInReplay = true;
 			}
 		}
-	}
 
+		pMatchEvent->snapshotEndTime = gpGlobals->curtime + 1.0f;
+	}
+	else
+		pMatchEvent->snapshotEndTime = 0;
+	
 	pMatchEvent->matchState = SDKGameRules()->State_Get();
 	pMatchEvent->matchEventType = type;
 	pMatchEvent->second = SDKGameRules()->GetMatchDisplayTimeSeconds();

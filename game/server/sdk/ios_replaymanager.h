@@ -92,6 +92,7 @@ struct MatchEvent
 	const CPlayerPersistentData *pPlayer2Data;
 	const CPlayerPersistentData *pPlayer3Data;
 	CUtlVector<Snapshot *> snapshots;
+	float snapshotEndTime;
 
 	~MatchEvent()
 	{
