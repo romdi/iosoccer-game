@@ -178,6 +178,8 @@ Vector camPos = vec3_invalid;
 Vector newCamPos = vec3_invalid;
 Vector oldCamPos = vec3_invalid;
 float oldCamPosTime = FLT_MAX;
+int oldBodypart = -1;
+bool isAtTarget = false;
 
 bool ShouldRecreateClassImageEntity( C_BaseAnimating* pEnt, const char* pNewModelName )
 {
@@ -336,28 +338,46 @@ void UpdateClassImageEntity(const char* pModelName, int skin, int angle, int bod
 		target = origin + Vector(-25, 0, vMins.z + 20);
 	}
 
-	if (target != newCamPos)
+	if (bodypart != oldBodypart)
 	{
-		newCamPos = target;
-		oldCamPosTime = gpGlobals->curtime;
-		oldCamPos = camPos;
-	}
+		if (camPos == vec3_invalid)
+		{
+			camPos = target;
+			isAtTarget = true;
+		}
+		else
+		{
+			isAtTarget = false;
+			newCamPos = target;
+			oldCamPosTime = gpGlobals->curtime;
+			oldCamPos = camPos;
+		}
 
-	if (camPos == vec3_invalid || oldCamPos == vec3_invalid)
-	{
-		camPos = target;
-		oldCamPos = target;
+		oldBodypart = bodypart;
 	}
-	else
+	else if (bodypart == oldBodypart && !isAtTarget)
 	{
 		static const float interpTime = 0.75f;
 		Vector dir = target - oldCamPos;
 		float dist = VectorNormalize(dir);
 		float timeFrac = min(1.0f, (gpGlobals->curtime - oldCamPosTime) / interpTime);
-		float frac = pow(timeFrac, 2) * (3 - 2 * timeFrac);
-		camPos = oldCamPos + dir * dist * frac;
+
+		if (timeFrac == 1.0f)
+		{
+			isAtTarget = true;
+			camPos = target;
+		}
+		else
+		{
+			float frac = pow(timeFrac, 2) * (3 - 2 * timeFrac);
+			camPos = oldCamPos + dir * dist * frac;
+		}
 	}
-	
+	else if (bodypart == oldBodypart && isAtTarget)
+	{
+		camPos = target;
+	}
+
 	view.origin = camPos;
 	view.angles = QAngle(15, 0, 0);
 	//view.m_vUnreflectedOrigin = view.origin;
@@ -383,6 +403,9 @@ void ClientModeSDKNormal::PostRenderVGui()
 
 void ClientModeSDKNormal::PostRenderVGuiOnTop()
 {
+	if (!CSDKPlayer::GetLocalSDKPlayer())
+		return;
+
 	CAppearanceSettingPanel *pAppearanceSettingPanel = (CAppearanceSettingPanel *)iosOptionsMenu->GetPanel()->GetSettingPanel(SETTING_PANEL_APPEARANCE);
 
 	if (!pAppearanceSettingPanel->IsVisible())
