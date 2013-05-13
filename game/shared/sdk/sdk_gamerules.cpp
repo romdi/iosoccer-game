@@ -1430,6 +1430,11 @@ void CSDKGameRules::State_Enter( match_state_t newState )
 
 void CSDKGameRules::State_Leave(match_state_t newState)
 {
+	if (IsIntermissionState())
+	{
+		ReplayManager()->StopHighlights();
+	}
+
 	if ( m_pCurStateInfo && m_pCurStateInfo->pfnLeaveState )
 	{
 		(this->*m_pCurStateInfo->pfnLeaveState)(newState);
@@ -1904,7 +1909,6 @@ void CSDKGameRules::State_COOLDOWN_Think()
 
 void CSDKGameRules::State_COOLDOWN_Leave(match_state_t newState)
 {
-	ReplayManager()->StopHighlights();
 }
 
 void CSDKGameRules::ApplyIntermissionSettings(bool swapTeams)
