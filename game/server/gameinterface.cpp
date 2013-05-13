@@ -82,6 +82,8 @@
 #include "hl2orange.spa.h"
 #include "particle_parse.h"
 #include "steam/steam_api.h"
+#include "steam/steam_gameserver.h"
+#include "cdll_int.h"
 #include "tier3/tier3.h"
 #include "serverbenchmark_base.h"
 
@@ -1255,6 +1257,18 @@ void CServerGameDLL::OnQueryCvarValueFinished( QueryCvarCookie_t iCookie, edict_
 // Called when a level is shutdown (including changing levels)
 void CServerGameDLL::LevelShutdown( void )
 {
+	for (int i = 0; i <= gpGlobals->maxClients; i++)
+	{
+		CBasePlayer *pPl = UTIL_PlayerByIndex(i);
+		if (!pPl || !pPl->IsBot())
+			continue;
+
+		char kickcmd[512];
+		Q_snprintf(kickcmd, sizeof(kickcmd), "kickid %i Kick bot on map change to prevent slot bug\n", pPl->GetUserID());
+		engine->ServerCommand(kickcmd);
+		engine->ServerExecute();
+	}
+
 	MDLCACHE_CRITICAL_SECTION();
 	IGameSystem::LevelShutdownPreEntityAllSystems();
 
@@ -2421,6 +2435,25 @@ void CServerGameClients::ClientDisconnect( edict_t *pEdict )
 		// Make sure anything we "own" is simulated by the server from now on
 		player->ClearPlayerSimulationList();
 #endif
+	}
+
+	// The engine does not report fakeclient disconnections to Steam, but
+	// connections /are/ reported. Therefore we have to inform them ourselves.
+	// We don't use the CBasePlayer instance here on the off-chance that a
+	// fakeclient disconnects before it has an entity, so we get all the info
+	// from the edict via the engine instead.
+	if(SteamGameServer())
+	{
+		player_info_t info;
+		engine->GetPlayerInfo(ENTINDEX(pEdict), &info);
+
+		const CSteamID *pSteamID = engine->GetClientSteamID(pEdict);
+
+		if(info.fakeplayer && pSteamID)
+		{
+			int nUserid = engine->GetPlayerUserId(pEdict);
+			SteamGameServer()->GSSendUserDisconnect(*pSteamID, nUserid);
+		}
 	}
 }
 

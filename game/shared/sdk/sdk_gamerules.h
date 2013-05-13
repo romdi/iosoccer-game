@@ -254,8 +254,6 @@ public:
 #ifdef GAME_DLL
 
 protected:
-	float m_flLastMasterServerPingTime;
-
 	float m_flStateTimeLeft;
 	float m_flNextPenalty;
 	int m_nPenaltyTakingTeam;

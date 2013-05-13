@@ -398,7 +398,6 @@ CSDKGameRules::CSDKGameRules()
 	m_flOffsideLineOffsidePlayerPosY = 0;
 	m_flOffsideLineLastOppPlayerPosY = 0;
 	m_flMatchStartTime = gpGlobals->curtime;
-	m_flLastMasterServerPingTime = -FLT_MAX;
 	m_bUseAdjustedStateEnterTime = false;
 	m_flAdjustedStateEnterTime = -FLT_MAX;
 	m_flTimeoutEnd = 0;
@@ -488,14 +487,8 @@ void InitBodyQue()
 // CSDKGameRules implementation.
 // --------------------------------------------------------------------------------------------------- //
 
-ConVar sv_master_legacy_mode_hack_enabled("sv_master_legacy_mode_hack_enabled", "1", 0);
-ConVar sv_master_legacy_mode_hack_interval("sv_master_legacy_mode_hack_interval", "5", 0);
-ConVar sv_master_legacy_mode_hack_delay("sv_master_legacy_mode_hack_delay", "3", 0);
-
 void CSDKGameRules::ServerActivate()
 {
-	m_flLastMasterServerPingTime = gpGlobals->curtime - sv_master_legacy_mode_hack_interval.GetFloat() * 60;
-
 	CPlayerPersistentData::ReallocateAllPlayerData();
 
 	CTeamKitInfo::FindTeamKits();
@@ -642,20 +635,6 @@ void CSDKGameRules::Think()
 
 		ChangeLevel(); // intermission is over
 		return;
-	}
-
-	if (sv_master_legacy_mode_hack_enabled.GetBool())
-	{
-		if (gpGlobals->curtime >= m_flLastMasterServerPingTime + sv_master_legacy_mode_hack_interval.GetFloat() * 60 + sv_master_legacy_mode_hack_delay.GetFloat())
-		{
-			engine->ServerCommand("sv_master_legacy_mode 1\n");
-			m_flLastMasterServerPingTime = gpGlobals->curtime;
-		}
-		else if (gpGlobals->curtime >= m_flLastMasterServerPingTime + sv_master_legacy_mode_hack_interval.GetFloat() * 60)
-		{
-			engine->ServerCommand("sv_master_legacy_mode 0\n");
-			engine->ServerCommand("heartbeat\n");
-		}
 	}
 
 	//if (GetMapRemainingTime() < 0)
