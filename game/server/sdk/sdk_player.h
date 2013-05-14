@@ -535,8 +535,8 @@ public:
 	void				CheckBallShield(const Vector &oldPos, Vector &newPos, const Vector &oldVel, Vector &newVel, const QAngle &oldAng, QAngle &newAng);
 	void				MoveToTargetPos(Vector &pos, Vector &vel, QAngle &ang);
 
-	bool				IsNormalshooting(bool noShotOnCancel = false);
-	bool				IsPowershooting(bool noShotOnCancel = false);
+	bool				IsNormalshooting();
+	bool				IsPowershooting();
 	bool				IsChargedshooting();
 	bool				IsAutoPassing();
 	bool				IsShooting();

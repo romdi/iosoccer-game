@@ -1707,14 +1707,14 @@ void CSDKPlayer::ResetFlags()
 	}
 }
 
-bool CSDKPlayer::IsNormalshooting(bool noShotOnCancel /*= false*/)
+bool CSDKPlayer::IsNormalshooting()
 {
-	return (m_nButtons & IN_ATTACK) && !IsPowershooting() && (!noShotOnCancel || !(m_nButtons & IN_ATTACK2));
+	return ((m_nButtons & IN_ATTACK) != 0);
 }
 
-bool CSDKPlayer::IsPowershooting(bool noShotOnCancel /*= false*/)
+bool CSDKPlayer::IsPowershooting()
 {
-	return (m_nButtons & IN_ALT1) && (!noShotOnCancel || !(m_nButtons & IN_ATTACK2));
+	return ((m_nButtons & IN_ALT1) != 0);
 }
 
 bool CSDKPlayer::IsChargedshooting()
