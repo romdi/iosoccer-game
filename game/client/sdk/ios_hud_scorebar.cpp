@@ -609,21 +609,7 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 	}
 	else if (!Q_strcmp(event->GetName(), "kickoff"))
 	{
-		C_SDKPlayer *pPlayer1 = ToSDKPlayer(USERID2PLAYER(event->GetInt("player1_userid")));
-		C_SDKPlayer *pPlayer2 = ToSDKPlayer(USERID2PLAYER(event->GetInt("player2_userid")));
-
 		m_pNotifications[0]->SetText(VarArgs("KICK-OFF: %s", g_PR->GetTeamCode(event->GetInt("team"))));
-
-		if (pPlayer1)
-		{
-			m_pNotifications[1]->SetText(VarArgs("%s", pPlayer1->GetPlayerName()));
-			m_pNotificationPanel->SetTall(2 * NOTIFICATION_HEIGHT);
-		}
-		if (pPlayer2)
-		{
-			m_pNotifications[2]->SetText(VarArgs("+ %s", pPlayer2->GetPlayerName()));
-			m_pNotificationPanel->SetTall(3 * NOTIFICATION_HEIGHT);
-		}
 
 		m_eCurMatchEvent = MATCH_EVENT_KICKOFF;
 		m_flStayDuration = 5;

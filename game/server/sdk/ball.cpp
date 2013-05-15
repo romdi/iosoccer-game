@@ -1210,6 +1210,13 @@ void CBall::State_KICKOFF_Think()
 		m_bShotsBlocked = true;
 
 		EmitSound("Ball.Whistle");
+
+		IGameEvent *pEvent = gameeventmanager->CreateEvent("kickoff");
+		if (pEvent)
+		{
+			pEvent->SetInt("team", m_pPl->GetTeamNumber());
+			gameeventmanager->FireEvent(pEvent);
+		}
 	}
 
 	if (!CSDKPlayer::IsOnField(m_pOtherPl) || m_pOtherPl == m_pPl)
@@ -1223,15 +1230,6 @@ void CBall::State_KICKOFF_Think()
 		if (m_pOtherPl)
 		{
 			m_pOtherPl->SetPosInsideShield(Vector(m_vPos.x + m_pPl->GetTeam()->m_nRight * 100, m_vPos.y, SDKGameRules()->m_vKickOff.GetZ()), true);
-
-			IGameEvent *pEvent = gameeventmanager->CreateEvent("kickoff");
-			if (pEvent)
-			{
-				pEvent->SetInt("team", SDKGameRules()->GetKickOffTeam());
-				pEvent->SetInt("player1_userid", m_pPl ? m_pPl->GetUserID() : 0);
-				pEvent->SetInt("player2_userid", m_pOtherPl ? m_pOtherPl->GetUserID() : 0);
-				gameeventmanager->FireEvent(pEvent);
-			}
 		}
 	}
 
