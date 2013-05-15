@@ -146,6 +146,7 @@ ConVar sv_ball_chargedslide_maxstrength("sv_ball_chargedslide_maxstrength", "110
 ConVar sv_ball_penaltyshot_maxstrength("sv_ball_penaltyshot_maxstrength", "1200", FCVAR_NOTIFY);
 
 ConVar sv_ball_goalkick_speedcoeff("sv_ball_goalkick_speedcoeff", "1.15", FCVAR_NOTIFY);
+ConVar sv_ball_volleyshot_speedcoeff("sv_ball_volleyshot_speedcoeff", "1.125", FCVAR_NOTIFY);
 
 ConVar sv_ball_keepershot_minangle("sv_ball_keepershot_minangle", "-5", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
 
@@ -2482,7 +2483,7 @@ bool CBall::DoGroundShot(bool markOffsidePlayers, float velCoeff /*= 1.0f*/)
 		else
 			shotStrength = GetChargedshotStrength(GetPitchCoeff(false), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
 
-		vel = shotDir * shotStrength;
+		vel = shotDir * shotStrength * velCoeff;
 
 		if (vel.Length() > 700)
 		{
@@ -2508,8 +2509,6 @@ bool CBall::DoGroundShot(bool markOffsidePlayers, float velCoeff /*= 1.0f*/)
 		spin = 1;
 	}
 
-	vel *= velCoeff;
-
 	SetVel(vel, spin, BODY_PART_FEET, false, markOffsidePlayers, true);
 
 	return true;
@@ -2517,9 +2516,6 @@ bool CBall::DoGroundShot(bool markOffsidePlayers, float velCoeff /*= 1.0f*/)
 
 bool CBall::DoVolleyShot()
 {
-	//if (!m_pPl->IsPowershooting() || m_pPl->GetGroundEntity())
-	//	return false;
-
 	float shotStrength;
 
 	if (m_pPl->IsNormalshooting())
@@ -2535,7 +2531,7 @@ bool CBall::DoVolleyShot()
 	Vector shotDir;
 	AngleVectors(shotAngle, &shotDir);
 
-	Vector vel = shotDir * shotStrength;
+	Vector vel = shotDir * shotStrength * sv_ball_volleyshot_speedcoeff.GetFloat();
 
 	if (vel.Length() > 700)
 	{
