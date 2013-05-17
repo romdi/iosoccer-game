@@ -274,7 +274,7 @@ void Bot_RunAll( void )
 		else
 		{
 			int team = CSDKPlayer::IsOnField(pPl) ? pPl->GetTeamNumber() : pPl->GetTeamToJoin();
-			if ((team == TEAM_A || team == TEAM_B) && pPl->GetTeamPosType() == GK)
+			if ((team == TEAM_A || team == TEAM_B) && pPl->GetTeamPosType() == POS_GK)
 				keeperSpotTaken[team - TEAM_A] = true;
 		}
 	}

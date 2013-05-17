@@ -76,94 +76,86 @@ ConVar r_snow_alpha( "r_snow_alpha", "1", FCVAR_REPLICATED );
 ConVar r_snow_alphapow( "r_snow_alphapow", "0.8", FCVAR_REPLICATED );
 ConVar r_snow_initialramp( "r_snow_initialramp", "1.0", FCVAR_REPLICATED );
 
-const char g_szPosNames[POS_NAME_COUNT][5] =
-{
-	"GK",
-	"SWP", "LB", "RB", "CB", "LCB", "RCB", "LWB", "RWB",
-	"LM", "RM", "DM", "CM", "AM", "LCM", "RCM", "CDM", "CAM",
-	"LF", "RF", "CF", "ST", "SS", "LW", "RW"
-};
-
-#define HIDDEN { -1, -1, -1, -1 }
+#define POS_NONE { -1, -1, -1, -1 }
 
 const float g_Positions[11][11][4] =
 {
 	{//1
-								{ 1.5f, 3, GK, 1 },
+								{ 1.5f, 3, POS_GK, 1 },
 
-		HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN
+		POS_NONE, POS_NONE, POS_NONE, POS_NONE, POS_NONE, POS_NONE, POS_NONE, POS_NONE, POS_NONE, POS_NONE
 	},
 	{//2
-								{ 1.5f, 1, CM, 10 },
-								{ 1.5f, 3, GK, 1 },
+								{ 1.5f, 1, POS_CM, 10 },
+								{ 1.5f, 3, POS_GK, 1 },
 
-		HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN
+		POS_NONE, POS_NONE, POS_NONE, POS_NONE, POS_NONE, POS_NONE, POS_NONE, POS_NONE, POS_NONE
 	},
 	{//3
-					{ 0.5f, 1, LM, 11 }, { 2.5f, 1, RM, 9 },
-								{ 1.5f, 3, GK, 1 },
+					{ 0.5f, 1, POS_LM, 11 }, { 2.5f, 1, POS_RM, 9 },
+								{ 1.5f, 3, POS_GK, 1 },
 
-		HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN
+		POS_NONE, POS_NONE, POS_NONE, POS_NONE, POS_NONE, POS_NONE, POS_NONE, POS_NONE
 	},
 	{//4
-					{ 0.5f, 1, LM, 11 }, { 2.5f, 1, RM, 9 },
-								{ 1.5f, 1.5f, CM, 10 },
-								{ 1.5f, 3, GK, 1 },
+					{ 0.5f, 1, POS_LM, 11 }, { 2.5f, 1, POS_RM, 9 },
+								{ 1.5f, 1.5f, POS_CM, 10 },
+								{ 1.5f, 3, POS_GK, 1 },
 
-		HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN
+		POS_NONE, POS_NONE, POS_NONE, POS_NONE, POS_NONE, POS_NONE, POS_NONE
 	},
 	{//5
-					{ 0.5f, 1, LM, 11 }, { 2.5f, 1, RM, 9 },
-						{ 0.5f, 2, LB, 2 }, { 2.5f, 2, RB, 3 },
-								{ 1.5f, 3, GK, 1 },
+					{ 0.5f, 1, POS_LM, 11 }, { 2.5f, 1, POS_RM, 9 },
+						{ 0.5f, 2, POS_LB, 2 }, { 2.5f, 2, POS_RB, 3 },
+								{ 1.5f, 3, POS_GK, 1 },
 
-		HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN
+		POS_NONE, POS_NONE, POS_NONE, POS_NONE, POS_NONE, POS_NONE
 	},
 	{//6
-					{ 0.5f, 0, LW, 11 }, { 2.5f, 0, RW, 9 },
-								{ 1.5f, 1, CM, 10 },
-					{ 0.5f, 2, LB, 2 }, { 2.5f, 2, RB, 3 },
-								{ 1.5f, 3, GK, 1 },
+					{ 0.5f, 0, POS_LW, 11 }, { 2.5f, 0, POS_RW, 9 },
+								{ 1.5f, 1, POS_CM, 10 },
+					{ 0.5f, 2, POS_LB, 2 }, { 2.5f, 2, POS_RB, 3 },
+								{ 1.5f, 3, POS_GK, 1 },
 
-		HIDDEN, HIDDEN, HIDDEN, HIDDEN, HIDDEN
+		POS_NONE, POS_NONE, POS_NONE, POS_NONE, POS_NONE
 	},
 	{//7
-								{ 1.5f, 0.5f, CAM, 10 },
-			{ 0.5f, 0, LW, 8 }, { 1.5f, 1.75f, CDM, 6 }, { 2.5f, 0, RW, 7 },
-						{ 0.5f, 2, LB, 2 }, { 2.5f, 2, RB, 3 },
-								{ 1.5f, 3, GK, 1 },
+								{ 1.5f, 0.5f, POS_CAM, 10 },
+			{ 0.5f, 0, POS_LW, 8 }, { 1.5f, 1.75f, POS_CDM, 6 }, { 2.5f, 0, POS_RW, 7 },
+						{ 0.5f, 2, POS_LB, 2 }, { 2.5f, 2, POS_RB, 3 },
+								{ 1.5f, 3, POS_GK, 1 },
 
-		HIDDEN, HIDDEN, HIDDEN, HIDDEN
+		POS_NONE, POS_NONE, POS_NONE, POS_NONE
 	},
 	{//8
-								{ 1.5f, 0, CF, 10 },
-			{ 0.5f, 1, LM, 11 }, { 1.5f, 1, CM, 6 }, { 2.5f, 1, RM, 7 },
-			{ 0.5f, 2, LB, 3 }, { 1.5f, 2, CB, 4 }, { 2.5f, 2, RB, 5 },
-								{ 1.5f, 3, GK, 1 },
+								{ 1.5f, 0, POS_CF, 10 },
+			{ 0.5f, 1, POS_LM, 11 }, { 1.5f, 1, POS_CM, 6 }, { 2.5f, 1, POS_RM, 7 },
+			{ 0.5f, 2, POS_LB, 3 }, { 1.5f, 2, POS_CB, 4 }, { 2.5f, 2, POS_RB, 5 },
+								{ 1.5f, 3, POS_GK, 1 },
 
-		HIDDEN, HIDDEN, HIDDEN
+		POS_NONE, POS_NONE, POS_NONE
 	},
 	{//9
-					{ 0.5f, 0, LW, 11 }, { 2.5f, 0, RW, 9 },
-			{ 0.5f, 1, LCM, 11 }, { 1.5f, 0.5f, CM, 10 }, { 2.5f, 1, RCM, 7 },
-			{ 0.5f, 2, LB, 2 }, { 1.5f, 2, CB, 3 }, { 2.5f, 2, RB, 4 },
-								{ 1.5f, 3, GK, 1 },
+					{ 0.5f, 0, POS_LW, 11 }, { 2.5f, 0, POS_RW, 9 },
+			{ 0.5f, 1, POS_LCM, 11 }, { 1.5f, 0.5f, POS_CM, 10 }, { 2.5f, 1, POS_RCM, 7 },
+			{ 0.5f, 2, POS_LB, 2 }, { 1.5f, 2, POS_CB, 3 }, { 2.5f, 2, POS_RB, 4 },
+								{ 1.5f, 3, POS_GK, 1 },
 
-		HIDDEN, HIDDEN
+		POS_NONE, POS_NONE
 	},
 	{//10
-			{ 0.5f, 0, LW, 11 }, { 1.5f, 0, CF, 10 }, { 2.5f, 0, RW, 9 },
-			{ 0.5f, 1, LCM, 8 }, { 1.5f, 1, CM, 6 }, { 2.5f, 1, RCM, 7 },
-			{ 0.5f, 2, LB, 2 }, { 1.5f, 2, CB, 3 }, { 2.5f, 2, RB, 4 },
-								{ 1.5f, 3, GK, 1 },
+			{ 0.5f, 0, POS_LW, 11 }, { 1.5f, 0, POS_CF, 10 }, { 2.5f, 0, POS_RW, 9 },
+			{ 0.5f, 1, POS_LCM, 8 }, { 1.5f, 1, POS_CM, 6 }, { 2.5f, 1, POS_RCM, 7 },
+			{ 0.5f, 2, POS_LB, 2 }, { 1.5f, 2, POS_CB, 3 }, { 2.5f, 2, POS_RB, 4 },
+								{ 1.5f, 3, POS_GK, 1 },
 
-		HIDDEN
+		POS_NONE
 	},
 	{//11
-			{ 0.5f, 0, LW, 11 }, { 1.5f, 0, CF, 10 }, { 2.5f, 0, RW, 9 },
-			{ 0.5f, 1, LCM, 8 }, { 1.5f, 1, CM, 6 }, { 2.5f, 1, RCM, 7 },
-		{ 0, 2, LB, 2 }, { 1, 2, LCB, 3 }, { 2, 2, RCB, 4 }, { 3, 2, RB, 5 },
-								{ 1.5f, 3, GK, 1 }
+			{ 0.5f, 0, POS_LW, 11 }, { 1.5f, 0, POS_CF, 10 }, { 2.5f, 0, POS_RW, 9 },
+			{ 0.5f, 1, POS_LCM, 8 }, { 1.5f, 1, POS_CM, 6 }, { 2.5f, 1, POS_RCM, 7 },
+		{ 0, 2, POS_LB, 2 }, { 1, 2, POS_LCB, 3 }, { 2, 2, POS_RCB, 4 }, { 3, 2, POS_RB, 5 },
+								{ 1.5f, 3, POS_GK, 1 }
 	}
 };
 
@@ -171,7 +163,7 @@ int GetKeeperPosIndex()
 {
 	for (int posIndex = 0; posIndex < 11; posIndex++)
 	{
-		if (g_Positions[mp_maxplayers.GetInt() - 1][posIndex][POS_TYPE] == GK)
+		if (g_Positions[mp_maxplayers.GetInt() - 1][posIndex][POS_TYPE] == POS_GK)
 			return posIndex;
 	}
 	return 0;
@@ -1792,7 +1784,7 @@ void CSDKGameRules::State_PENALTIES_Think()
 				if (!CSDKPlayer::IsOnField(pPl))
 					continue;
 
-				if (pPl->GetTeamNumber() != m_nPenaltyTakingTeam || pPl->m_ePenaltyState == PENALTY_KICKED || pPl->GetTeamPosType() == GK && pPl->IsBot())
+				if (pPl->GetTeamNumber() != m_nPenaltyTakingTeam || pPl->m_ePenaltyState == PENALTY_KICKED || pPl->GetTeamPosType() == POS_GK && pPl->IsBot())
 					continue;
 
 				pPenTaker = pPl;

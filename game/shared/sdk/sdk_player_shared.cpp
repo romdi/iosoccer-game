@@ -458,7 +458,7 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 				#else
 					teamPosType = GetTeamPosType();
 				#endif
-				if (teamPosType != GK || GetTeamNumber() != GetGlobalTeam(SDKGameRules()->m_nShieldTeam)->GetOppTeamNumber())
+				if (teamPosType != POS_GK || GetTeamNumber() != GetGlobalTeam(SDKGameRules()->m_nShieldTeam)->GetOppTeamNumber())
 				{
 					int side = GetGlobalTeam(SDKGameRules()->m_nShieldTeam)->GetOppTeamNumber();
 					float boxLength = abs(GetGlobalTeam(side)->m_vPenBoxMax.GetY() - GetGlobalTeam(side)->m_vPenBoxMin.GetY()) / 3.0f;

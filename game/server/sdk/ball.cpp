@@ -1564,7 +1564,7 @@ void CBall::State_FREEKICK_Think()
 		else
 			m_pPl = NULL;
 
-		if (!CSDKPlayer::IsOnField(m_pPl) || m_pPl->GetTeamPosType() == GK && m_pPl->IsBot())
+		if (!CSDKPlayer::IsOnField(m_pPl) || m_pPl->GetTeamPosType() == POS_GK && m_pPl->IsBot())
 			m_pPl = FindNearestPlayer(m_nFouledTeam, FL_POS_FIELD);
 
 		if (!m_pPl)
@@ -1988,7 +1988,7 @@ bool CBall::CheckFoul()
 			int nextJoin = SDKGameRules()->GetMatchDisplayTimeSeconds(true) + banDuration;
 			m_pFoulingPl->SetNextCardJoin(nextJoin);
 
-			if (m_pFoulingPl->GetTeamPosType() != GK)
+			if (m_pFoulingPl->GetTeamPosType() != POS_GK)
 				m_pFoulingPl->GetTeam()->SetPosNextJoinSeconds(m_pFoulingPl->GetTeamPosIndex(), nextJoin);
 		}
 
@@ -2051,7 +2051,7 @@ void CBall::HandleFoul()
 			int posType = m_pFoulingPl->GetTeamPosType();
 			m_pFoulingPl->ChangeTeam(TEAM_SPECTATOR);
 
-			if (posType == GK)
+			if (posType == POS_GK)
 			{
 				for (int i = 1; i <= gpGlobals->maxClients; i++)
 				{
@@ -2078,7 +2078,7 @@ bool CBall::DoBodyPartAction()
 	bool canCatch = false;
 
 	if (m_pPl->IsNormalshooting()
-		&& m_pPl->GetTeamPosType() == GK
+		&& m_pPl->GetTeamPosType() == POS_GK
 		&& m_nInPenBoxOfTeam == m_pPl->GetTeamNumber()
 		&& !m_pPl->m_pHoldingBall
 		&& m_pPl->m_nInPenBoxOfTeam == m_pPl->GetTeamNumber())
@@ -3205,7 +3205,7 @@ void CBall::EnablePlayerCollisions(bool enable)
 
 void CBall::RemoveFromPlayerHands(CSDKPlayer *pPl)
 {
-	if (CSDKPlayer::IsOnField(pPl) && pPl->GetTeamPosType() == GK && pPl->m_nBody == MODEL_KEEPER_AND_BALL)
+	if (CSDKPlayer::IsOnField(pPl) && pPl->GetTeamPosType() == POS_GK && pPl->m_nBody == MODEL_KEEPER_AND_BALL)
 	{
 		pPl->m_pHoldingBall = NULL;
 		pPl->m_nBody = MODEL_KEEPER;

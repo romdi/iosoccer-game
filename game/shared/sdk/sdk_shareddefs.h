@@ -393,4 +393,33 @@ extern Color g_ColorYellow;
 extern Color g_ColorGray;
 extern Color g_ColorWhite;
 
+enum
+{
+	POS_XPOS = 0,
+	POS_YPOS,
+	POS_TYPE,
+	POS_NUMBER
+};
+
+enum g_PosNames_t
+{
+	POS_GK = 0, 
+	POS_SWP, POS_LB, POS_RB, POS_CB, POS_LCB, POS_RCB, POS_LWB, POS_RWB,
+	POS_LM, POS_RM, POS_DM, POS_CM, POS_AM, POS_LCM, POS_RCM, POS_CDM, POS_CAM,
+	POS_LF, POS_RF, POS_CF, POS_ST, POS_SS, POS_LW, POS_RW
+};
+
+static const int g_nPosKeeper = (1 << POS_GK);
+static const int g_nPosDefense = (1 << POS_SWP) + (1 << POS_LB) + (1 << POS_RB) + (1 << POS_CB) + (1 << POS_LCB) + (1 << POS_RCB) + (1 << POS_LWB) + (1 << POS_RWB);
+static const int g_nPosMidfield = (1 << POS_LM) + (1 << POS_RM) + (1 << POS_DM) + (1 << POS_CM) + (1 << POS_AM) + (1 << POS_LCM) + (1 << POS_RCM) + (1 << POS_CDM) + (1 << POS_CAM);
+static const int g_nPosAttack = (1 << POS_LF) + (1 << POS_RF) + (1 << POS_CF) + (1 << POS_ST) + (1 << POS_SS) + (1 << POS_LW) + (1 << POS_RW);
+
+static const char g_szPosNames[26][5] =
+{
+	"GK",
+	"SWP", "LB", "RB", "CB", "LCB", "RCB", "LWB", "RWB",
+	"LM", "RM", "DM", "CM", "AM", "LCM", "RCM", "CDM", "CAM",
+	"LF", "RF", "CF", "ST", "SS", "LW", "RW"
+};
+
 #endif // SDK_SHAREDDEFS_H

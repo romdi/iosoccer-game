@@ -611,7 +611,7 @@ void CSDKPlayer::ChangeTeam( int iTeamNum )
 
 		m_nTeamPosNum = FindUnfilledTeamPosNum();
 
-		if (GetTeamPosType() == GK)
+		if (GetTeamPosType() == POS_GK)
 			ChooseKeeperSkin();
 		else
 			ChoosePlayerSkin();				
@@ -622,7 +622,7 @@ void CSDKPlayer::ChangeTeam( int iTeamNum )
 
 	//if (GetTeamNumber() == TEAM_SPECTATOR && GetTeam()->GetCaptain() == this)
 	//	GetGlobalTeam(iOldTeam)->FindNewCaptain();
-	//else if ((GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B) && GetTeamPosType() == GK)
+	//else if ((GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B) && GetTeamPosType() == POS_GK)
 	//	GetTeam()->FindNewCaptain();
 
 	//GetGlobalTeam(TEAM_A)->FindNewCaptain();
@@ -650,7 +650,7 @@ int CSDKPlayer::FindUnfilledTeamPosNum()
 	if (!mp_custom_shirt_numbers.GetBool())
 		return (int)g_Positions[mp_maxplayers.GetInt() - 1][GetTeamPosIndex()][POS_NUMBER];
 
-	if (GetTeamPosType() == GK)
+	if (GetTeamPosType() == POS_GK)
 		return 1;
 
 	int teamPosNums[10] = { 0 };
@@ -658,7 +658,7 @@ int CSDKPlayer::FindUnfilledTeamPosNum()
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
 		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
-		if (!CSDKPlayer::IsOnField(pPl) || pPl == this || pPl->GetTeam() != GetTeam() || pPl->GetTeamPosType() == GK)
+		if (!CSDKPlayer::IsOnField(pPl) || pPl == this || pPl->GetTeam() != GetTeam() || pPl->GetTeamPosType() == POS_GK)
 			continue;
 
 		teamPosNums[pPl->GetTeamPosIndex()] = pPl->GetTeamPosNum();
@@ -1253,7 +1253,7 @@ bool CSDKPlayer::IsTeamPosFree(int team, int posIndex, bool ignoreBots, CSDKPlay
 	//if (GetGlobalTeam(team)->GetPosNextJoinSeconds(posIndex) > SDKGameRules()->GetMatchDisplayTimeSeconds())
 	//	return false;
 
-	if (g_Positions[mp_maxplayers.GetInt() - 1][posIndex][POS_TYPE] == GK)
+	if (g_Positions[mp_maxplayers.GetInt() - 1][posIndex][POS_TYPE] == POS_GK)
 	{
 		if (!IsBot() && !humankeepers.GetBool())
 			return false;
@@ -1286,7 +1286,7 @@ void CSDKPlayer::SetPreferredSkin(int num)
 
 	if (GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B)
 	{
-		if (GetTeamPosType() == GK)
+		if (GetTeamPosType() == POS_GK)
 		{
 			int body = m_nBody;
 			int ballSkin = m_nSkin - m_nBaseSkin;
@@ -1566,7 +1566,7 @@ void CSDKPlayer::GetTargetPos(const Vector &pos, Vector &targetPos)
 
 		if (SDKGameRules()->m_nShieldType == SHIELD_FREEKICK && mp_shield_block_6yardbox.GetBool())
 		{
-			if (GetTeamPosType() != GK || GetTeamNumber() != GetGlobalTeam(SDKGameRules()->m_nShieldTeam)->GetOppTeamNumber())
+			if (GetTeamPosType() != POS_GK || GetTeamNumber() != GetGlobalTeam(SDKGameRules()->m_nShieldTeam)->GetOppTeamNumber())
 			{
 				int side = GetGlobalTeam(SDKGameRules()->m_nShieldTeam)->GetOppTeamNumber();
 				int boxLength = abs(GetGlobalTeam(side)->m_vPenBoxMax.GetY() - GetGlobalTeam(side)->m_vPenBoxMin.GetY()) / 3.0f;
@@ -1701,7 +1701,7 @@ void CSDKPlayer::ResetFlags()
 		RemoveEffects(EF_NODRAW);
 	}
 
-	if (GetTeamPosType() == GK && m_nBody == MODEL_KEEPER_AND_BALL)
+	if (GetTeamPosType() == POS_GK && m_nBody == MODEL_KEEPER_AND_BALL)
 	{
 		m_nBody = MODEL_KEEPER;
 	}

@@ -789,7 +789,7 @@ void CGameMovement::ReduceTimers( void )
 	teamPosType = pPl->GetTeamPosType();
 #endif
 
-	bool bSprinting = ( (!pPl->GetGroundEntity() && (teamPosType != GK || pPl->m_nInPenBoxOfTeam != pPl->GetTeamNumber())) || (mv->m_nButtons & IN_SPEED) && ( mv->m_nButtons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT) ) );
+	bool bSprinting = ( (!pPl->GetGroundEntity() && (teamPosType != POS_GK || pPl->m_nInPenBoxOfTeam != pPl->GetTeamNumber())) || (mv->m_nButtons & IN_SPEED) && ( mv->m_nButtons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT) ) );
 
 	float fieldLength = SDKGameRules()->m_vFieldMax.GetY() - SDKGameRules()->m_vFieldMin.GetY();
 	float dist = pPl->GetLocalOrigin().y - SDKGameRules()->m_vKickOff.GetY();
@@ -1999,10 +1999,10 @@ bool CGameMovement::CheckJumpButton( void )
 	bool isKeeper;
 	int team;
 #ifdef CLIENT_DLL
-	isKeeper = GameResources()->GetTeamPosType(pPl->index) == GK;
+	isKeeper = GameResources()->GetTeamPosType(pPl->index) == POS_GK;
 	team = GameResources()->GetTeam(pPl->index);
 #else
-	isKeeper = pPl->GetTeamPosType() == GK;
+	isKeeper = pPl->GetTeamPosType() == POS_GK;
 	team = pPl->GetTeamNumber();
 #endif
 
@@ -2098,10 +2098,10 @@ bool CGameMovement::CheckSlideButton()
 	bool isKeeper;
 	int team;
 	#ifdef CLIENT_DLL
-		isKeeper = GameResources()->GetTeamPosType(pPl->index) == GK;
+		isKeeper = GameResources()->GetTeamPosType(pPl->index) == POS_GK;
 		team = GameResources()->GetTeam(pPl->index);
 	#else
-		isKeeper = pPl->GetTeamPosType() == GK;
+		isKeeper = pPl->GetTeamPosType() == POS_GK;
 		team = pPl->GetTeamNumber();
 	#endif
 

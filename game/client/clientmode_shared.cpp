@@ -323,7 +323,7 @@ void ClientModeShared::OverrideView( CViewSetup *pSetup )
 
 		if ((pPlayer->m_nButtons & IN_ZOOM)
 			&& (pPlayer->GetTeamNumber() == TEAM_A || pPlayer->GetTeamNumber() == TEAM_B)
-			&& g_PR->GetTeamPosType(GetLocalPlayerIndex()) == GK
+			&& g_PR->GetTeamPosType(GetLocalPlayerIndex()) == POS_GK
 			&& GetBall() && Sign(GetBall()->GetLocalOrigin().y - SDKGameRules()->m_vKickOff.GetY()) == pPlayer->GetTeam()->m_nForward)
 		{
 			pSetup->origin = SDKGameRules()->m_vKickOff;

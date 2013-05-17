@@ -403,30 +403,6 @@ inline CSDKGameRules* SDKGameRules()
 	return static_cast<CSDKGameRules*>(g_pGameRules);
 }
 
-enum
-{
-	POS_XPOS = 0,
-	POS_YPOS,
-	POS_TYPE,
-	POS_NUMBER
-};
-
-enum g_PosNames_t
-{
-	GK = 0, 
-	SWP, LB, RB, CB, LCB, RCB, LWB, RWB,
-	LM, RM, DM, CM, AM, LCM, RCM, CDM, CAM,
-	LF, RF, CF, ST, SS, LW, RW,
-	POS_NAME_COUNT
-};
-
-static const int g_nPosKeeper = (1 << GK);
-static const int g_nPosDefense = (1 << SWP) + (1 << LB) + (1 << RB) + (1 << CB) + (1 << LCB) + (1 << RCB) + (1 << LWB) + (1 << RWB);
-static const int g_nPosMidfield = (1 << LM) + (1 << RM) + (1 << DM) + (1 << CM) + (1 << AM) + (1 << LCM) + (1 << RCM) + (1 << CDM) + (1 << CAM);
-static const int g_nPosAttack = (1 << LF) + (1 << RF) + (1 << CF) + (1 << ST) + (1 << SS) + (1 << LW) + (1 << RW);
-
-extern const char g_szPosNames[POS_NAME_COUNT][5];
-
 extern const float g_Positions[11][11][4];
 
 int GetKeeperPosIndex();

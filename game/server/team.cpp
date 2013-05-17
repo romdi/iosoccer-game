@@ -512,7 +512,7 @@ void CTeam::FindNewCaptain()
 		if (!CSDKPlayer::IsOnField(pPl) || pPl->GetTeam() != this)
 			continue;
 
-		if (pPl->GetTeamPosType() == GK)
+		if (pPl->GetTeamPosType() == POS_GK)
 		{
 			SetCaptainPosIndex(pPl->GetTeamPosIndex());
 			break;
