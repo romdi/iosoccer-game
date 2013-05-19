@@ -1045,9 +1045,9 @@ void CBall::State_Think()
 			&& m_eNextState == BALL_NOSTATE
 			&& CSDKPlayer::IsOnField(m_pPl)
 			&& m_flStateTimelimit != -1
-			&& gpGlobals->curtime >= m_flStateTimelimit)
+			&& gpGlobals->curtime >= m_flStateTimelimit) // Player is afk or timed out
 		{
-			m_pPl->ChangeTeam(TEAM_SPECTATOR);
+			m_pPl->SetDesiredTeam(TEAM_SPECTATOR, m_pPl->GetTeamNumber(), 0, true, false);
 		}
 	}
 
@@ -1056,7 +1056,7 @@ void CBall::State_Think()
 		(this->*m_pCurStateInfo->pfnThink)();
 	}
 
-	if (m_pPl)
+	if (m_pPl) // Set info for the client
 	{
 		m_pCurrentPlayer = m_pPl;
 		m_nCurrentTeam = m_pPl->GetTeamNumber();
@@ -1851,6 +1851,7 @@ void CBall::State_KEEPERHANDS_Leave(ball_state_t newState)
 	RemoveFromPlayerHands(m_pPl);
 }
 
+// Make sure that all players are walked to the intended positions when setting shields
 bool CBall::PlayersAtTargetPos()
 {
 	bool playersAtTarget = true;
@@ -1869,7 +1870,7 @@ bool CBall::PlayersAtTargetPos()
 				if (mp_shield_liberal_teammates_positioning.GetBool() && m_pCurStateInfo->m_eBallState != BALL_KICKOFF && m_pCurStateInfo->m_eBallState != BALL_PENALTY && pPl->GetTeamNumber() == m_pPl->GetTeamNumber())
 					pPl->SetPosOutsideBall(pPl->GetLocalOrigin());
 				else
-					pPl->SetPosOutsideShield();
+					pPl->SetPosOutsideShield(false);
 			}
 
 			if (!pPl->m_bIsAtTargetPos)
@@ -1879,8 +1880,8 @@ bool CBall::PlayersAtTargetPos()
 					pPl->m_flRemoteControlledStartTime = gpGlobals->curtime;
 					playersAtTarget = false;
 				}
-				else if (gpGlobals->curtime >= pPl->m_flRemoteControlledStartTime + sv_ball_timelimit_remotecontrolled.GetFloat())
-					pPl->ChangeTeam(TEAM_SPECTATOR);
+				else if (gpGlobals->curtime >= pPl->m_flRemoteControlledStartTime + sv_ball_timelimit_remotecontrolled.GetFloat()) // Player timed out and blocks progress, so move him to specs
+					pPl->SetDesiredTeam(TEAM_SPECTATOR, pPl->GetTeamNumber(), 0, true, false);
 				else
 					playersAtTarget = false;
 			}
@@ -2049,7 +2050,7 @@ void CBall::HandleFoul()
 			int team = m_pFoulingPl->GetTeamNumber();
 			int posIndex = m_pFoulingPl->GetTeamPosIndex();
 			int posType = m_pFoulingPl->GetTeamPosType();
-			m_pFoulingPl->ChangeTeam(TEAM_SPECTATOR);
+			m_pFoulingPl->SetDesiredTeam(TEAM_SPECTATOR, m_pFoulingPl->GetTeamNumber(), 0, true, false);
 
 			if (posType == POS_GK)
 			{
@@ -2059,7 +2060,7 @@ void CBall::HandleFoul()
 					if (!CSDKPlayer::IsOnField(pPl) || pPl == m_pFoulingPl || pPl->GetTeamNumber() != team)
 						continue;
 
-					pPl->ChangeTeamPos(team, posIndex, false);
+					pPl->SetDesiredTeam(team, team, posIndex, true, false);
 					break;
 				}
 			}
@@ -3104,7 +3105,7 @@ void CBall::UpdatePossession(CSDKPlayer *pNewPossessor)
 
 		for (int i = 0; i < CPlayerPersistentData::m_PlayerPersistentData.Count(); i++)
 		{
-			CPlayerPersistentData *pData = CPlayerPersistentData::m_PlayerPersistentData[i];
+			CPlayerMatchData *pData = CPlayerPersistentData::m_PlayerPersistentData[i]->m_pMatchData;
 			
 			float exactPossession = pData->m_flPossessionTime * 100 / max(1, total);
 			pData->m_nPossession = (int)exactPossession;
@@ -3134,7 +3135,7 @@ void CBall::UpdatePossession(CSDKPlayer *pNewPossessor)
 			if (possSum == 100)
 				break;
 
-			CPlayerPersistentData *pData = CPlayerPersistentData::m_PlayerPersistentData[sortedRemainders[i].dataIndex];
+			CPlayerMatchData *pData = CPlayerPersistentData::m_PlayerPersistentData[sortedRemainders[i].dataIndex]->m_pMatchData;
 			pData->m_nPossession += 1;
 			possSum += 1;
 		}
@@ -3163,7 +3164,7 @@ int CBall::UpdateTransmitState()
 
 void CBall::Reset()
 {
-	CreateVPhysics();
+	ReloadSettings();
 	m_pPl = NULL;
 	m_pOtherPl = NULL;
 	m_pCurrentPlayer = NULL;
@@ -3189,6 +3190,11 @@ void CBall::Reset()
 	m_bNonnormalshotsBlocked = false;
 	m_bShotsBlocked = false;
 	m_bHitThePost = false;
+}
+
+void CBall::ReloadSettings()
+{
+	CreateVPhysics();
 }
 
 void CBall::SetPenaltyTaker(CSDKPlayer *pPl)

@@ -153,6 +153,7 @@ public:
 	void			State_Transition(ball_state_t newState, float delay = 0.0f, bool cancelQueuedState = false, bool isShortMessageDelay = false);
 
 	void			Reset();
+	void			ReloadSettings();
 
 	void			SetPos(Vector pos);
 	void			SetVel(Vector vel, float spinCoeff, body_part_t bodyPart, bool isDeflection, bool markOffsidePlayers, bool checkMinShotStrength);

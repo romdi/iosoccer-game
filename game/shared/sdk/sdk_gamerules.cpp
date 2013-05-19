@@ -920,9 +920,9 @@ const char *CSDKGameRules::GetChatPrefix( MessageMode_t messageMode, CBasePlayer
 	if (!pPlayer)
 		return "";
 
-	if (pPlayer->GetTeamNumber() == TEAM_A || pPlayer->GetTeamNumber() == TEAM_SPECTATOR && ToSDKPlayer(pPlayer)->GetSpecTeam() == 1)
+	if (ToSDKPlayer(pPlayer)->GetSpecTeam() == TEAM_A)
 		return "HOME";
-	else if (pPlayer->GetTeamNumber() == TEAM_B || pPlayer->GetTeamNumber() == TEAM_SPECTATOR && ToSDKPlayer(pPlayer)->GetSpecTeam() == 2)
+	else if (ToSDKPlayer(pPlayer)->GetSpecTeam() == TEAM_B)
 		return "AWAY";
 	else
 		return "SPEC";
@@ -938,7 +938,7 @@ const char *CSDKGameRules::GetChatFormat(MessageMode_t messageMode, CBasePlayer 
 	}
 	else if (messageMode == MM_SAY_TEAM)
 	{
-		if (pPlayer->GetTeamNumber() == TEAM_SPECTATOR && ToSDKPlayer(pPlayer)->GetSpecTeam() == 0)
+		if (ToSDKPlayer(pPlayer)->GetSpecTeam() == TEAM_SPECTATOR)
 			pszFormat = "SDK_Chat_Spec";
 		else
 			pszFormat = "SDK_Chat_Team_Loc";
@@ -950,7 +950,7 @@ const char *CSDKGameRules::GetChatFormat(MessageMode_t messageMode, CBasePlayer 
 	}
 	else
 	{
-		if (pPlayer->GetTeamNumber() == TEAM_SPECTATOR && ToSDKPlayer(pPlayer)->GetSpecTeam() == 0)
+		if (ToSDKPlayer(pPlayer)->GetSpecTeam() == TEAM_SPECTATOR)
 			pszFormat = "SDK_Chat_AllSpec";
 		else
 			pszFormat = "SDK_Chat_All_Loc";
@@ -964,7 +964,7 @@ const char *CSDKGameRules::GetChatLocation( MessageMode_t messageMode, CBasePlay
 	if (!pPlayer)
 		return "";
 
-	if (pPlayer->GetTeamNumber() == TEAM_SPECTATOR && ToSDKPlayer(pPlayer)->GetSpecTeam() != 0)
+	if (pPlayer->GetTeamNumber() == TEAM_SPECTATOR && ToSDKPlayer(pPlayer)->GetSpecTeam() != TEAM_SPECTATOR)
 	{
 		static char bench[6];
 		Q_strncpy(bench, "BENCH", 6);
@@ -1005,16 +1005,7 @@ int CSDKGameRules::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarge
 	}
 	else
 	{
-		if ((pPl->GetTeamNumber() == TEAM_A || pPl->GetTeamNumber() == TEAM_SPECTATOR && pPl->GetSpecTeam() == 1)
-			&& (pTar->GetTeamNumber() == TEAM_A || pTar->GetTeamNumber() == TEAM_SPECTATOR && pTar->GetSpecTeam() == 1))
-			return GR_TEAMMATE;
-
-		if ((pPl->GetTeamNumber() == TEAM_B || pPl->GetTeamNumber() == TEAM_SPECTATOR && pPl->GetSpecTeam() == 2)
-			&& (pTar->GetTeamNumber() == TEAM_B || pTar->GetTeamNumber() == TEAM_SPECTATOR && pTar->GetSpecTeam() == 2))
-			return GR_TEAMMATE;
-
-		if (pPl->GetTeamNumber() == TEAM_SPECTATOR && pPl->GetSpecTeam() == 0
-			&& pTar->GetTeamNumber() == TEAM_SPECTATOR && pTar->GetSpecTeam() == 0)
+		if (pPl->GetSpecTeam() == pTar->GetSpecTeam())
 			return GR_TEAMMATE;
 	}
 #endif
@@ -1252,7 +1243,7 @@ ConVar sv_wakeupcall_interval("sv_wakeupcall_interval", "10", FCVAR_NOTIFY);
 void CSDKGameRules::StartPenalties()
 {
 	//SetLeftSideTeam(g_IOSRand.RandomInt(TEAM_A, TEAM_B));
-	ResetMatch(true);
+	ResetMatch();
 	State_Transition(MATCH_PENALTIES);
 }
 
@@ -1308,9 +1299,7 @@ static void OnMaxPlayersChange(IConVar *var, const char *pOldValue, float flOldV
 		if (!pPl)
 			continue;
 
-		pPl->m_nTeamPosIndex = 0;
-		pPl->m_nTeamPosIndexToJoin = 0;
-		pPl->ChangeTeam(TEAM_SPECTATOR);
+		pPl->SetDesiredTeam(TEAM_SPECTATOR, pPl->GetTeamNumber(), 0, true, false);
 	}
 
 	for (int i = 0; i < 2; i++)
@@ -1377,13 +1366,19 @@ void CSDKGameRules::State_Enter( match_state_t newState )
 			&& (GetMatchDisplayTimeSeconds() < pPl->GetNextCardJoin()
 			|| GetMatchDisplayTimeSeconds() < pPl->GetTeam()->GetPosNextJoinSeconds(pPl->GetTeamPosIndex())))
 		{
-			pPl->ChangeTeam(TEAM_SPECTATOR);
+			pPl->SetDesiredTeam(TEAM_SPECTATOR, pPl->GetTeamNumber(), 0, true, false);
+		}
+
+		if (!IsIntermissionState())
+		{
+			pPl->GetData()->StartNewMatchPeriod();
 		}
 	}
 
 	if (!IsIntermissionState())
 	{
 		GetBall()->RemoveAllPlayerBalls();
+
 		GetBall()->StopSound("Crowd.Background1");
 		GetBall()->StopSound("Crowd.Background2");
 		GetBall()->EmitSound("Crowd.Background1");
@@ -1404,6 +1399,19 @@ void CSDKGameRules::State_Leave(match_state_t newState)
 	if (IsIntermissionState())
 	{
 		ReplayManager()->StopHighlights();
+	}
+
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+
+		if (!CSDKPlayer::IsOnField(pPl))
+			continue;
+
+		if (!IsIntermissionState())
+		{
+			pPl->GetData()->EndCurrentMatchPeriod();
+		}
 	}
 
 	if ( m_pCurStateInfo && m_pCurStateInfo->pfnLeaveState )
@@ -1443,16 +1451,37 @@ void CSDKGameRules::State_Think()
 
 			if (sv_playerrotation_enabled.GetBool() && m_PlayerRotationMinutes.Count() > 0 && GetMatchDisplayTimeSeconds(true) / 60 >= m_PlayerRotationMinutes.Head())
 			{
-				for (int i = 1; i <= gpGlobals->curtime; i++)
+				for (int team = TEAM_A; team <= TEAM_B; team++)
 				{
-					CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
-					if (!CSDKPlayer::IsOnField(pPl))
-						continue;
+					CTeam *pTeam = GetGlobalTeam(team);
 
-					int team = pPl->GetTeamNumber();
-					int posIndex = pPl->GetTeamPosIndex();
-					pPl->ChangeTeam(TEAM_SPECTATOR);
-					pPl->ChangeTeamPos(team, (posIndex + 1) % mp_maxplayers.GetInt(), false);
+					for (int i = 0; i < mp_maxplayers.GetInt(); i++)
+					{
+						CSDKPlayer *pPl1 = pTeam->GetPlayerByPosIndex(i);
+						if (!pPl1)
+							continue;
+
+						int j = (i + 1) % mp_maxplayers.GetInt();
+
+						while (j != i)
+						{
+							CSDKPlayer *pPl2 = pTeam->GetPlayerByPosIndex(j);
+							if (pPl2)
+							{
+								int posIndex = pPl1->GetTeamPosIndex();
+								pPl1->SetDesiredTeam(team, team, pPl2->GetTeamPosIndex(), true, false);
+								pPl2->SetDesiredTeam(team, team, posIndex, true, false);
+
+								Vector pos = pPl1->GetLocalOrigin();
+								pPl1->SetLocalOrigin(pPl2->GetLocalOrigin());
+								pPl2->SetLocalOrigin(pos);
+
+								break;
+							}
+
+							j = (j + 1) % mp_maxplayers.GetInt();
+						}
+					}
 				}
 
 				m_PlayerRotationMinutes.Remove(0);
@@ -1492,7 +1521,7 @@ CSDKGameRulesStateInfo* CSDKGameRules::State_LookupInfo( match_state_t state )
 void CSDKGameRules::State_WARMUP_Enter()
 {
 	m_flMatchStartTime = gpGlobals->curtime;
-	ResetMatch(false);
+	ResetMatch();
 	ApplyIntermissionSettings(false);
 }
 
@@ -1510,7 +1539,7 @@ void CSDKGameRules::State_WARMUP_Leave(match_state_t newState)
 
 void CSDKGameRules::State_FIRST_HALF_Enter()
 {
-	ResetMatch(true);
+	ReloadSettings();
 	GetBall()->State_Transition(BALL_KICKOFF, 0, true);
 
 	IGameEvent *pEvent = gameeventmanager->CreateEvent("wakeupcall");
@@ -1844,7 +1873,6 @@ void CSDKGameRules::State_COOLDOWN_Enter()
 	if (scoreB > scoreA)
 		winners = TEAM_B;
 
-	//for ( int i = 0; i < MAX_PLAYERS; i++ )		//maxclients?
 	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
 	{
 		CSDKPlayer *pPlayer = (CSDKPlayer*)UTIL_PlayerByIndex( i );
@@ -1852,22 +1880,12 @@ void CSDKGameRules::State_COOLDOWN_Enter()
 		if ( !pPlayer )
 			continue;
 
-		//pPlayer->ShowViewPortPanel( PANEL_SCOREBOARD );
-
 		//is this player on the winning team
 		if (pPlayer->GetTeamNumber() == winners)
 		{
 			pPlayer->AddFlag (FL_CELEB);
 		}
-		//else
-		//	pPlayer->AddFlag (FL_ATCONTROLS);
-
-		//freezes the players
-		//pPlayer->AddFlag (FL_ATCONTROLS);
 	}
-
-	m_bMotmVotingPanelShown = false;
-	m_bPostMatchStatsPanelShown = false;
 
 	CPlayerPersistentData::ConvertAllPlayerDataToJson();
 }
@@ -1913,7 +1931,7 @@ void CSDKGameRules::ApplyIntermissionSettings(bool swapTeams)
 		if (!CSDKPlayer::IsOnField(pPl))
 			continue;
 
-		pPl->SetPosOutsideShield();
+		pPl->SetPosOutsideShield(false);
 		pPl->SetLastMoveTime(gpGlobals->curtime);
 		pPl->SetAway(true);
 	}
@@ -2383,30 +2401,15 @@ void FlushLog(FileHandle_t logfile, char *text)
 	filesystem->Flush(logfile);
 }
 
-void CSDKGameRules::ResetMatch(bool resetStats)
+void CSDKGameRules::ResetMatch()
 {
+	ReloadSettings();
+
 	SetOffsideLinesEnabled(false);
 	DisableShield();
 	SetTimeoutEnd(0);
 	m_flLastAwayCheckTime = gpGlobals->curtime;
 	SetAdminWantsTimeout(false);
-
-	m_PlayerRotationMinutes.RemoveAll();
-
-	if (sv_playerrotation_enabled.GetBool())
-	{
-		char minutes[128];
-		Q_strncpy(minutes, sv_playerrotation_minutes.GetString(), sizeof(minutes));
-
-		char *pch = strtok(minutes, " ,;");
-		while (pch)
-		{
-			m_PlayerRotationMinutes.AddToTail(atoi(pch));
-			pch = strtok(NULL, " ,;");
-		}
-	}
-
-
 
 	FileHandle_t logfile = filesystem->Open("logs/cleanup.log", "a", "MOD");
 
@@ -2423,25 +2426,43 @@ void CSDKGameRules::ResetMatch(bool resetStats)
 
 		pPl->ResetFlags();
 	}
+
 	FlushLog(logfile, "End player flags reset");
 
-	//if (resetStats)
-	{
-		FlushLog(logfile, "Start team stats reset");
-		GetGlobalTeam(TEAM_A)->ResetStats();
-		GetGlobalTeam(TEAM_B)->ResetStats();
-		FlushLog(logfile, "End team stats reset");
+	FlushLog(logfile, "Start team stats reset");
+	GetGlobalTeam(TEAM_A)->ResetStats();
+	GetGlobalTeam(TEAM_B)->ResetStats();
+	FlushLog(logfile, "End team stats reset");
 
-		FlushLog(logfile, "Start player stats reset");
-		CPlayerPersistentData::ReallocateAllPlayerData();
-		FlushLog(logfile, "End player stats reset");
+	FlushLog(logfile, "Start player stats reset");
+	CPlayerPersistentData::ReallocateAllPlayerData();
+	FlushLog(logfile, "End player stats reset");
 
-		FlushLog(logfile, "Start replay clean-up");
-		ReplayManager()->CleanUp();
-		FlushLog(logfile, "End replay clean-up\n");
-	}
+	FlushLog(logfile, "Start replay clean-up");
+	ReplayManager()->CleanUp();
+	FlushLog(logfile, "End replay clean-up\n");
 
 	filesystem->Close(logfile);
+}
+
+void CSDKGameRules::ReloadSettings()
+{
+	m_PlayerRotationMinutes.RemoveAll();
+
+	if (sv_playerrotation_enabled.GetBool())
+	{
+		char minutes[128];
+		Q_strncpy(minutes, sv_playerrotation_minutes.GetString(), sizeof(minutes));
+
+		char *pch = strtok(minutes, " ,;");
+		while (pch)
+		{
+			m_PlayerRotationMinutes.AddToTail(atoi(pch));
+			pch = strtok(NULL, " ,;");
+		}
+	}
+
+	GetBall()->ReloadSettings();
 }
 
 void CSDKGameRules::SetMatchDisplayTimeSeconds(int seconds)
@@ -2476,7 +2497,7 @@ void CSDKGameRules::SetMatchDisplayTimeSeconds(int seconds)
 		matchState = MATCH_FIRST_HALF;
 	}
 
-	ResetMatch(true);
+	ResetMatch();
 	m_flMatchStartTime = gpGlobals->curtime - (seconds / (90.0f / mp_timelimit_match.GetFloat()));
 	GetBall()->State_Transition(BALL_STATIC, 0, true);
 	SetLeftSideTeam(m_nFirstHalfLeftSideTeam);
@@ -2542,8 +2563,14 @@ void CC_Bench(const CCommand &args)
 		Msg("Player not found.\n");
 		return;
 	}
+
+	if (pPl->GetTeamNumber() == TEAM_SPECTATOR)
+	{
+		Msg("Player is already spectating.\n");
+		return;
+	}
 	
-	pPl->ChangeTeam(TEAM_SPECTATOR);
+	pPl->SetDesiredTeam(TEAM_SPECTATOR, pPl->GetTeamNumber(), 0, true, true);
 	UTIL_ClientPrintAll(HUD_PRINTTALK, "#game_player_benched", pPl->GetPlayerName());
 }
 
@@ -2571,7 +2598,7 @@ void CC_BenchAll(const CCommand &args)
 
 		if (team == 0 || (pPl->GetTeamNumber() - TEAM_A + 1) == team)
 		{
-			pPl->ChangeTeam(TEAM_SPECTATOR);
+			pPl->SetDesiredTeam(TEAM_SPECTATOR, pPl->GetTeamNumber(), 0, true, true);
 			UTIL_ClientPrintAll(HUD_PRINTTALK, "#game_player_benched", pPl->GetPlayerName());
 		}
 	}

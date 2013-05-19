@@ -44,10 +44,6 @@
 #define PANEL_STATUS			"status"		//ios
 #define PANEL_MAINSTATUS		"mainstatus"	//ios
 
-#define PANEL_MOTMVOTING "motmvoting"
-
-#define PANEL_POSTMATCHSTATS "postmatchstats"
-
 #define PANEL_STATS "stats"
 #define PANEL_FORMATION "formation"
 #define PANEL_MATCHEVENTS "matchevents"

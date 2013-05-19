@@ -27,7 +27,7 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CPlayerResource, DT_PlayerResource)
 //	SendPropArray( SendPropInt( SENDINFO_ARRAY(m_iPacketloss), 7, SPROP_UNSIGNED ), m_iPacketloss ),
 	SendPropArray3( SENDINFO_ARRAY3(m_bConnected), SendPropInt( SENDINFO_ARRAY(m_bConnected), 1, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_iTeam), SendPropInt( SENDINFO_ARRAY(m_iTeam), 3 ) ),
-	SendPropArray3( SENDINFO_ARRAY3(m_nSpecTeam), SendPropInt( SENDINFO_ARRAY(m_nSpecTeam), 2, SPROP_UNSIGNED ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_nSpecTeam), SendPropInt( SENDINFO_ARRAY(m_nSpecTeam), 3 ) ),
 	
 	//ios
 	SendPropArray3( SENDINFO_ARRAY3(m_RedCards), SendPropInt( SENDINFO_ARRAY(m_RedCards), 4, SPROP_UNSIGNED ) ),

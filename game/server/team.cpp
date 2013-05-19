@@ -274,18 +274,6 @@ void CTeam::AddPlayer( CBasePlayer *pPlayer )
 //-----------------------------------------------------------------------------
 void CTeam::RemovePlayer( CBasePlayer *pPlayer )
 {
-	//for (int i = 0; i < 11; i++)
-	//{
-	//	if (m_PosIndexPlayerIndices[i] != -1)
-	//	{
-	//		if (m_aPlayers[m_PosIndexPlayerIndices[i]] == pPlayer)
-	//		{
-	//			m_PosIndexPlayerIndices[i] = -1;
-	//			break;
-	//		}
-	//	}
-	//}
-
 	if ((GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B) && pPlayer == GetCaptain())
 		SetCaptainPosIndex(11);
 

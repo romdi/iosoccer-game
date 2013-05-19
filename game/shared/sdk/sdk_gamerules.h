@@ -324,9 +324,6 @@ protected:
 
 	void CheckChatText(CBasePlayer *pPlayer, char *text);
 
-	bool m_bMotmVotingPanelShown;
-	bool m_bPostMatchStatsPanelShown;
-
 public:
 
 	void SetLeftSideTeam(int team);
@@ -351,7 +348,8 @@ public:
 	
 	void SetTimeoutEnd(float time) { m_flTimeoutEnd = time; }
 
-	void ResetMatch(bool resetStats);
+	void ResetMatch();
+	void ReloadSettings();
 
 	void ApplyIntermissionSettings(bool swapTeams);
 	bool CheckAutoStart();

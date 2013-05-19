@@ -1030,7 +1030,7 @@ void C_SDKPlayer::UpdateIDTarget()
 	m_iIDEntIndex = 0;
 
 	// don't show id's in any state but active.
-	if ( State_Get() != STATE_ACTIVE )
+	if ( State_Get() != PLAYER_STATE_ACTIVE )
 		return;
 
 	trace_t tr;

@@ -840,102 +840,102 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 		if ( bDisconnected )
 			return;
 
-		int team = event->GetInt( "team" );
+		int newTeam = event->GetInt("newteam");
+		int oldTeam = event->GetInt("oldteam");
 
-		if (team == TEAM_UNASSIGNED)
+		int newTeamPos = event->GetInt("newteampos");
+		int oldTeamPos = event->GetInt("oldteampos");
+
+		int newSpecTeam = event->GetInt("newspecteam");
+		int oldSpecTeam = event->GetInt("oldspecteam");
+
+		if (newTeam == TEAM_UNASSIGNED)
 			return;
-
-		bool bAutoTeamed = event->GetBool( "autoteam", false );
-		bool bSilent = event->GetBool( "silent", false );
 
 		const char *pszName = event->GetString( "name" );
 		if ( PlayerNameNotSetYet( pszName ) )
 			return;
 
-		if ( !bSilent )
-		{
-			wchar_t wszPlayerName[MAX_PLAYER_NAME_LENGTH];
-			g_pVGuiLocalize->ConvertANSIToUnicode( pszName, wszPlayerName, sizeof(wszPlayerName) );
+		wchar_t wszPlayerName[MAX_PLAYER_NAME_LENGTH];
+		g_pVGuiLocalize->ConvertANSIToUnicode( pszName, wszPlayerName, sizeof(wszPlayerName) );
 
-			wchar_t wszTeam[64];
-			C_Team *pTeam = GetGlobalTeam( team );
-			if ( pTeam )
+		wchar_t wszNewTeam[64];
+		C_Team *pNewTeam = GetGlobalTeam( newTeam );
+		if ( pNewTeam )
+		{
+			g_pVGuiLocalize->ConvertANSIToUnicode( pNewTeam->Get_TeamCode(), wszNewTeam, sizeof(wszNewTeam) );
+		}
+		else
+		{
+			_snwprintf ( wszNewTeam, sizeof( wszNewTeam ) / sizeof( wchar_t ), L"%d", newTeam );
+		}
+
+		wchar_t wszOldTeam[64];
+		C_Team *pOldTeam = GetGlobalTeam( oldTeam );
+		if ( pOldTeam )
+		{
+			g_pVGuiLocalize->ConvertANSIToUnicode( pOldTeam->Get_TeamCode(), wszOldTeam, sizeof(wszOldTeam) );
+		}
+		else
+		{
+			_snwprintf ( wszOldTeam, sizeof( wszOldTeam ) / sizeof( wchar_t ), L"%d", oldTeam );
+		}
+
+		wchar_t wszLocalized[100];
+
+		wchar_t wszNewTeamPos[4];
+		g_pVGuiLocalize->ConvertANSIToUnicode(g_szPosNames[(int)g_Positions[mp_maxplayers.GetInt() - 1][newTeamPos][POS_TYPE]], wszNewTeamPos, sizeof(wszNewTeamPos));
+
+		wchar_t wszOldTeamPos[4];
+		g_pVGuiLocalize->ConvertANSIToUnicode(g_szPosNames[(int)g_Positions[mp_maxplayers.GetInt() - 1][oldTeamPos][POS_TYPE]], wszOldTeamPos, sizeof(wszOldTeamPos));
+
+		if (newTeam == TEAM_A || newTeam == TEAM_B)
+		{
+			if ((oldTeam == TEAM_A || oldTeam == TEAM_B) && newTeam != oldTeam)
+				g_pVGuiLocalize->ConstructString( wszLocalized, sizeof( wszLocalized ), g_pVGuiLocalize->Find( "#game_player_switched_team" ), 3, wszPlayerName, wszNewTeam, wszNewTeamPos );
+			else if ((oldTeam == TEAM_A || oldTeam == TEAM_B) && newTeamPos != oldTeamPos)
+				g_pVGuiLocalize->ConstructString( wszLocalized, sizeof( wszLocalized ), g_pVGuiLocalize->Find( "#game_player_switched_pos" ), 2, wszPlayerName, wszNewTeamPos );
+			else
+				g_pVGuiLocalize->ConstructString( wszLocalized, sizeof( wszLocalized ), g_pVGuiLocalize->Find( "#game_player_joined_team" ), 3, wszPlayerName, wszNewTeam, wszNewTeamPos );
+		}
+		else
+		{
+			wchar_t wszNewSpecTeam[64] = {};
+			if (newSpecTeam == TEAM_A || newSpecTeam == TEAM_B)
 			{
-				g_pVGuiLocalize->ConvertANSIToUnicode( pTeam->Get_TeamCode(), wszTeam, sizeof(wszTeam) );
+				C_Team *pNewSpecTeam = GetGlobalTeam( newSpecTeam );
+				g_pVGuiLocalize->ConvertANSIToUnicode( pNewSpecTeam->Get_TeamCode(), wszNewSpecTeam, sizeof(wszNewSpecTeam) );
+			}
+
+			if (oldTeam == TEAM_A || oldTeam == TEAM_B)
+			{
+				if (newSpecTeam == TEAM_SPECTATOR)
+					g_pVGuiLocalize->ConstructString( wszLocalized, sizeof( wszLocalized ), g_pVGuiLocalize->Find( "#game_player_left_field_spectating" ), 3, wszPlayerName, wszOldTeam, wszOldTeamPos );
+				else
+					g_pVGuiLocalize->ConstructString( wszLocalized, sizeof( wszLocalized ), g_pVGuiLocalize->Find( "#game_player_left_field_bench" ), 4, wszPlayerName, wszOldTeam, wszOldTeamPos, wszNewSpecTeam );
 			}
 			else
 			{
-				_snwprintf ( wszTeam, sizeof( wszTeam ) / sizeof( wchar_t ), L"%d", team );
-			}
-
-			if ( !IsInCommentaryMode() )
-			{
-				wchar_t wszLocalized[100];
-				if ( bAutoTeamed )
-				{
-					g_pVGuiLocalize->ConstructString( wszLocalized, sizeof( wszLocalized ), g_pVGuiLocalize->Find( "#game_player_joined_autoteam" ), 2, wszPlayerName, wszTeam );
-				}
+				if (newSpecTeam == TEAM_SPECTATOR)
+					g_pVGuiLocalize->ConstructString( wszLocalized, sizeof( wszLocalized ), g_pVGuiLocalize->Find( "#game_player_joined_spectator" ), 1, wszPlayerName );
 				else
 				{
-					wchar_t wszTeamPos[4];
-					g_pVGuiLocalize->ConvertANSIToUnicode(g_szPosNames[(int)g_Positions[mp_maxplayers.GetInt() - 1][event->GetInt("teampos")][POS_TYPE]], wszTeamPos, sizeof(wszTeamPos));
 
-					if (team == TEAM_A || team == TEAM_B)
-						g_pVGuiLocalize->ConstructString( wszLocalized, sizeof( wszLocalized ), g_pVGuiLocalize->Find( "#game_player_joined_team" ), 3, wszPlayerName, wszTeam, wszTeamPos );
-					else
-					{
-						int oldteam = event->GetInt("oldteam");
-
-						if (oldteam == TEAM_A || oldteam == TEAM_B)
-						{
-							wchar_t wszOldTeam[64];
-							g_pVGuiLocalize->ConvertANSIToUnicode( GetGlobalTeam(oldteam)->Get_TeamCode(), wszOldTeam, sizeof(wszOldTeam) );
-							g_pVGuiLocalize->ConstructString( wszLocalized, sizeof( wszLocalized ), g_pVGuiLocalize->Find( "#game_player_left_team" ), 3, wszPlayerName, wszOldTeam, wszTeamPos );
-						}
-						else
-							g_pVGuiLocalize->ConstructString( wszLocalized, sizeof( wszLocalized ), g_pVGuiLocalize->Find( "#game_player_joined_spectator" ), 1, wszPlayerName );
-					}
+					g_pVGuiLocalize->ConstructString( wszLocalized, sizeof( wszLocalized ), g_pVGuiLocalize->Find( "#game_player_joined_bench" ), 2, wszPlayerName, wszNewSpecTeam );
 				}
-
-				char szLocalized[100];
-				g_pVGuiLocalize->ConvertUnicodeToANSI( wszLocalized, szLocalized, sizeof(szLocalized) );
-
-				hudChat->Printf( CHAT_FILTER_TEAMCHANGE, "%s", szLocalized );
 			}
 		}
+
+		char szLocalized[100];
+		g_pVGuiLocalize->ConvertUnicodeToANSI( wszLocalized, szLocalized, sizeof(szLocalized) );
+
+		hudChat->Printf( CHAT_FILTER_TEAMCHANGE, "%s", szLocalized );
 
 		if ( pPlayer && pPlayer->IsLocalPlayer() )
 		{
 			// that's me
-			pPlayer->TeamChange( team );
+			pPlayer->TeamChange( newTeam );
 		}
-	}
-	else if ( Q_strcmp( "player_specteam", eventname ) == 0 )
-	{
-		C_SDKPlayer *pPl = ToSDKPlayer(USERID2PLAYER(event->GetInt("userid")));
-		if (!pPl)
-			return;
-
-		wchar_t wszPlayerName[MAX_PLAYER_NAME_LENGTH];
-		g_pVGuiLocalize->ConvertANSIToUnicode(pPl->GetPlayerName(), wszPlayerName, sizeof(wszPlayerName));
-
-		wchar_t wszLocalized[128];
-
-		if (event->GetInt("specteam") == 0)
-		{
-			g_pVGuiLocalize->ConstructString(wszLocalized, sizeof(wszLocalized), g_pVGuiLocalize->Find("#game_player_joined_spectator"), 1, wszPlayerName);
-		}
-		else
-		{
-			wchar_t wszTeam[64];
-			g_pVGuiLocalize->ConvertANSIToUnicode( GetGlobalTeam(event->GetInt("specteam") - 1 + TEAM_A)->Get_TeamCode(), wszTeam, sizeof(wszTeam));
-			g_pVGuiLocalize->ConstructString(wszLocalized, sizeof(wszLocalized), g_pVGuiLocalize->Find("#game_player_joined_bench"), 2, wszPlayerName, wszTeam);
-		}
-
-		char szLocalized[128];
-		g_pVGuiLocalize->ConvertUnicodeToANSI( wszLocalized, szLocalized, sizeof(szLocalized) );
-
-		hudChat->Printf( CHAT_FILTER_TEAMCHANGE, "%s", szLocalized );
 	}
 	else if ( Q_strcmp( "player_changename", eventname ) == 0 )
 	{

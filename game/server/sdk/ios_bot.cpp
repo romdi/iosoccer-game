@@ -156,7 +156,7 @@ void CBot::FieldBotJoinTeam()
 		team = team == TEAM_A ? TEAM_B : TEAM_A;
 
 	if (playerCount[team] == mp_maxplayers.GetInt())
-		ChangeTeam(TEAM_SPECTATOR);
+		SetDesiredTeam(TEAM_SPECTATOR, GetTeamNumber(), 0, true, true);
 	else
 	{
 		int startPosIndex = g_IOSRand.RandomInt(0, 10);
@@ -168,7 +168,7 @@ void CBot::FieldBotJoinTeam()
 
 			if (posIndex != keeperPosIndex && IsTeamPosFree(team, posIndex, false, &pPl))
 			{
-				ChangeTeamPos(team, posIndex, false);
+				SetDesiredTeam(team, team, posIndex, true, false);
 				//g_CurBotNumber += 1;
 				break;
 			}
@@ -256,7 +256,7 @@ void Bot_RunAll( void )
 					}
 					else
 					{
-						pPl->ChangeTeamPos(team, keeperPosIndex, false);
+						pPl->SetDesiredTeam(team, team, keeperPosIndex, true, false);
 						keeperSpotTaken[team - TEAM_A] = true;
 					}
 				}
@@ -284,7 +284,8 @@ void Bot_RunAll( void )
 		if (!keeperSpotTaken[i] && botkeepers.GetBool())
 		{
 			CSDKPlayer *pPl = ToSDKPlayer(BotPutInServer(false, i + 1));
-			pPl->ChangeTeamPos(i == 0 ? TEAM_A : TEAM_B, keeperPosIndex, false);
+			int team = (i == 0 ? TEAM_A : TEAM_B);
+			pPl->SetDesiredTeam(team, team, keeperPosIndex, true, false);
 		}
 	}
 

@@ -34,14 +34,9 @@ const int MODEL_KEEPER_AND_BALL	= 2;
 
 class CBall;
 
-class CPlayerPersistentData
+class CPlayerMatchData
 {
 public:
-	unsigned long long m_nSteamID;
-	char	m_szSteamID[32];
-	char	m_szName[MAX_PLAYER_NAME_LENGTH];
-	int		m_nTeam;
-	int		m_nNextCardJoin;
 	int		m_nRedCards;
 	int		m_nYellowCards;
 	int		m_nFouls;
@@ -70,12 +65,43 @@ public:
 	int		m_nRating;
 	float	m_flExactDistanceCovered;
 
+	virtual void ResetData();
+};
+
+class CPlayerMatchPeriodData : public CPlayerMatchData
+{
+public:
+	int		m_nStartSecond;
+	int		m_nEndSecond;
+	int		m_nTeam;
+	int		m_nTeamPosType;
+
+	void ResetData();
+
+	typedef CPlayerMatchData BaseClass;
+};
+
+class CPlayerPersistentData
+{
+public:
+	CHandle<CSDKPlayer> m_pPl;
+	unsigned long long m_nSteamID;
+	char	m_szSteamID[32];
+	char	m_szName[MAX_PLAYER_NAME_LENGTH];
+	CPlayerMatchData *m_pMatchData;
+	CUtlVector<CPlayerMatchPeriodData *> m_MatchPeriodData;
+	int		m_nNextCardJoin;
+
 //	CPlayerPersistentData(const CSteamID *steamID);
 	static void ReallocateAllPlayerData();
 	static void ConvertAllPlayerDataToJson();
 	static void AllocateData(CSDKPlayer *pPl);
 	static CUtlVector<CPlayerPersistentData *> m_PlayerPersistentData;
 	void ResetData();
+	void StartNewMatchPeriod();
+	void EndCurrentMatchPeriod();
+	CPlayerPersistentData(CSDKPlayer *pPl);
+	~CPlayerPersistentData();
 };
 
 // Function table for each player state.
@@ -86,8 +112,8 @@ public:
 	const char *m_pStateName;
 	
 	void (CSDKPlayer::*pfnEnterState)();	// Init and deinit the state.
-	void (CSDKPlayer::*pfnLeaveState)();
 	void (CSDKPlayer::*pfnPreThink)();	// Do a PreThink() in this state.
+	void (CSDKPlayer::*pfnLeaveState)();
 };
 
 //=============================================================================
@@ -152,7 +178,7 @@ public:
 	void PhysObjectSleep();
 	void PhysObjectWake();
 
-	virtual void ChangeTeam( int iTeamNum );
+	virtual void ChangeTeam();
 
 	// Player avoidance
 	virtual	bool		ShouldCollide( int collisionGroup, int contentsMask ) const;
@@ -225,10 +251,11 @@ private:
 
 	void State_ACTIVE_Enter();
 	void State_ACTIVE_PreThink();
+	void State_ACTIVE_Leave();
 
 	void State_OBSERVER_MODE_Enter();
-	void State_OBSERVER_MODE_Leave();
 	void State_OBSERVER_MODE_PreThink();
+	void State_OBSERVER_MODE_Leave();
 
 	// Find the state info for the specified state.
 	static CSDKPlayerStateInfo* State_LookupInfo( SDKPlayerState state );
@@ -300,7 +327,7 @@ public:
 	//bool				ClientCommand(const char *pcmd);
 	//CBaseEntity			*EntSelectSpawnPoint(void);
 
-	void				ChoosePlayerSkin(void);
+	void				ChooseFieldPlayerSkin(void);
 	void				ChooseKeeperSkin(void);
 	bool				IsTeamPosFree(int team, int posIndex, bool ignoreBots, CSDKPlayer **pPlayerOnPos);
 
@@ -311,121 +338,96 @@ public:
 	
 	float				m_flNextShot;
 
-	inline CPlayerPersistentData *GetData() { return m_pData; }
-	inline void					 SetData(CPlayerPersistentData *data) { m_pData = data; }
+	inline CPlayerMatchData			*GetMatchData() { return m_pData->m_pMatchData; }
+	inline CPlayerMatchPeriodData	*GetMatchPeriodData() { return m_pData->m_MatchPeriodData.Tail(); }
+	inline CPlayerPersistentData	*GetData() { return m_pData; }
+	inline void						SetData(CPlayerPersistentData *data) { m_pData = data; }
 
-	int					GetRedCards(void) { return GetData()->m_nRedCards; }
-	void				SetRedCards(int amount) { GetData()->m_nRedCards = amount; }
+	int					GetRedCards(void) { return GetMatchData()->m_nRedCards; }
 	void				AddRedCard();
 
-	int					GetYellowCards(void) { return GetData()->m_nYellowCards; }
-	void				SetYellowCards(int amount) { GetData()->m_nYellowCards = amount; }
+	int					GetYellowCards(void) { return GetMatchData()->m_nYellowCards; }
 	void				AddYellowCard();
 
-	int					GetFouls(void) { return GetData()->m_nFouls; }
-	void				SetFouls(int amount) { GetData()->m_nFouls = amount; }
+	int					GetFouls(void) { return GetMatchData()->m_nFouls; }
 	void				AddFoul();
 
-	int					GetFoulsSuffered(void) { return GetData()->m_nFoulsSuffered; }
-	void				SetFoulsSuffered(int amount) { GetData()->m_nFoulsSuffered = amount; }
+	int					GetFoulsSuffered(void) { return GetMatchData()->m_nFoulsSuffered; }
 	void				AddFoulSuffered();
 
-	int					GetSlidingTackles(void) { return GetData()->m_nSlidingTackles; }
-	void				SetSlidingTackles(int amount) { GetData()->m_nSlidingTackles = amount; }
+	int					GetSlidingTackles(void) { return GetMatchData()->m_nSlidingTackles; }
 	void				AddSlidingTackle();
 
-	int					GetSlidingTacklesCompleted(void) { return GetData()->m_nSlidingTacklesCompleted; }
-	void				SetSlidingTacklesCompleted(int amount) { GetData()->m_nSlidingTacklesCompleted = amount; }
+	int					GetSlidingTacklesCompleted(void) { return GetMatchData()->m_nSlidingTacklesCompleted; }
 	void				AddSlidingTackleCompleted();
 
-	int					GetGoalsConceded(void) { return GetData()->m_nGoalsConceded; }
-	void				SetGoalsConceded(int amount) { GetData()->m_nGoalsConceded = amount; }
+	int					GetGoalsConceded(void) { return GetMatchData()->m_nGoalsConceded; }
 	void				AddGoalConceded();
 
-	int					GetShots(void) { return GetData()->m_nShots; }
-	void				SetShots(int amount) { GetData()->m_nShots = amount; }
+	int					GetShots(void) { return GetMatchData()->m_nShots; }
 	void				AddShot();
 
-	int					GetShotsOnGoal(void) { return GetData()->m_nShotsOnGoal; }
-	void				SetShotsOnGoal(int amount) { GetData()->m_nShotsOnGoal = amount; }
+	int					GetShotsOnGoal(void) { return GetMatchData()->m_nShotsOnGoal; }
 	void				AddShotOnGoal();
 
-	int					GetPassesCompleted(void) { return GetData()->m_nPassesCompleted; }
-	void				SetPassesCompleted(int amount) { GetData()->m_nPassesCompleted = amount; }
+	int					GetPassesCompleted(void) { return GetMatchData()->m_nPassesCompleted; }
 	void				AddPassCompleted();
 
-	int					GetInterceptions(void) { return GetData()->m_nInterceptions; }
-	void				SetInterceptions(int amount) { GetData()->m_nInterceptions = amount; }
+	int					GetInterceptions(void) { return GetMatchData()->m_nInterceptions; }
 	void				AddInterception();
 
-	int					GetOffsides(void) { return GetData()->m_nOffsides; }
-	void				SetOffsides(int amount) { GetData()->m_nOffsides = amount; }
+	int					GetOffsides(void) { return GetMatchData()->m_nOffsides; }
 	void				AddOffside();
 
-	int					GetGoals(void) { return GetData()->m_nGoals; }
-	void				SetGoals(int amount) { GetData()->m_nGoals = amount; }
+	int					GetGoals(void) { return GetMatchData()->m_nGoals; }
 	void				AddGoal();
 
-	int					GetOwnGoals(void) { return GetData()->m_nOwnGoals; }
-	void				SetOwnGoals(int amount) { GetData()->m_nOwnGoals = amount; }
+	int					GetOwnGoals(void) { return GetMatchData()->m_nOwnGoals; }
 	void				AddOwnGoal();
 
-	int					GetAssists(void) { return GetData()->m_nAssists; }
-	void				SetAssists(int amount) { GetData()->m_nAssists = amount; }
+	int					GetAssists(void) { return GetMatchData()->m_nAssists; }
 	void				AddAssist();
 
-	float				GetPossessionTime(void) { return GetData()->m_flPossessionTime; }
-	void				SetPossessionTime(float time) { GetData()->m_flPossessionTime = time; }
+	float				GetPossessionTime(void) { return GetMatchData()->m_flPossessionTime; }
 	void				AddPossessionTime(float time);
 
-	int					GetPossession(void) { return GetData()->m_nPossession; }
-	void				SetPossession(int amount) { GetData()->m_nPossession = amount; }
+	int					GetPossession(void) { return GetMatchData()->m_nPossession; }
+	void				SetPossession(int amount) { GetMatchData()->m_nPossession = amount; }
 
-	float				GetExactDistanceCovered(void) { return GetData()->m_flExactDistanceCovered; }
-	void				SetExactDistanceCovered(float amount) { GetData()->m_flExactDistanceCovered = amount; }
+	float				GetExactDistanceCovered(void) { return GetMatchData()->m_flExactDistanceCovered; }
 	void				AddExactDistanceCovered(float amount);
 
-	int					GetDistanceCovered(void) { return GetData()->m_nDistanceCovered; }
+	int					GetDistanceCovered(void) { return GetMatchData()->m_nDistanceCovered; }
 
-	int					GetPasses(void) { return GetData()->m_nPasses; }
-	void				SetPasses(int amount) { GetData()->m_nPasses = amount; }
+	int					GetPasses(void) { return GetMatchData()->m_nPasses; }
 	void				AddPass();
 
-	int					GetFreeKicks(void) { return GetData()->m_nFreeKicks; }
-	void				SetFreeKicks(int amount) { GetData()->m_nFreeKicks = amount; }
+	int					GetFreeKicks(void) { return GetMatchData()->m_nFreeKicks; }
 	void				AddFreeKick();
 
-	int					GetPenalties(void) { return GetData()->m_nPenalties; }
-	void				SetPenalties(int amount) { GetData()->m_nPenalties = amount; }
+	int					GetPenalties(void) { return GetMatchData()->m_nPenalties; }
 	void				AddPenalty();
 
-	int					GetCorners(void) { return GetData()->m_nCorners; }
-	void				SetCorners(int amount) { GetData()->m_nCorners = amount; }
+	int					GetCorners(void) { return GetMatchData()->m_nCorners; }
 	void				AddCorner();
 
-	int					GetThrowIns(void) { return GetData()->m_nThrowIns; }
-	void				SetThrowIns(int amount) { GetData()->m_nThrowIns = amount; }
+	int					GetThrowIns(void) { return GetMatchData()->m_nThrowIns; }
 	void				AddThrowIn();
 
-	int					GetKeeperSaves(void) { return GetData()->m_nKeeperSaves; }
-	void				SetKeeperSaves(int amount) { GetData()->m_nKeeperSaves = amount; }
+	int					GetKeeperSaves(void) { return GetMatchData()->m_nKeeperSaves; }
 	void				AddKeeperSave();
 
-	int					GetGoalKicks(void) { return GetData()->m_nGoalKicks; }
-	void				SetGoalKicks(int amount) { GetData()->m_nGoalKicks = amount; }
+	int					GetGoalKicks(void) { return GetMatchData()->m_nGoalKicks; }
 	void				AddGoalKick();
 
-	int					GetRating(void) { return GetData()->m_nRating; }
-	void				SetRating(int amount) { GetData()->m_nRating = amount; }
+	int					GetRating(void) { return GetMatchData()->m_nRating; }
+	void				SetRating(int amount) { GetMatchData()->m_nRating = amount; }
 
 	int					GetNextCardJoin(void) { return GetData()->m_nNextCardJoin; }
 	void				SetNextCardJoin(int seconds) { GetData()->m_nNextCardJoin = seconds; }
 
 	const char			*GetLastKnownName() { return GetData()->m_szName; }
 	void				SetLastKnownName(const char *name) { Q_strncpy(GetData()->m_szName, name, MAX_PLAYER_NAME_LENGTH); }
-
-	int					GetLastKnownTeam() { return GetData()->m_nTeam; }
-	void				SetLastKnownTeam(int team) { GetData()->m_nTeam = team; }
 
 	float				GetNextJoin() { return m_flNextJoin; }
 	void				SetNextJoin(float time) { m_flNextJoin = time; }
@@ -441,7 +443,7 @@ public:
 	int					GetTeamPosIndexToJoin(void) { return m_nTeamPosIndexToJoin; }
 
 	void				SetPreferredTeamPosNum(int num) { m_nPreferredTeamPosNum = clamp(num, 0, 11); }
-	int					FindUnfilledTeamPosNum();
+	int					FindAvailableTeamPosNum();
 
 	int					GetPreferredSkin() { return m_nPreferredSkin; }
 	void				SetPreferredSkin(int num);
@@ -497,7 +499,7 @@ public:
 	Vector				GetOffsideBallPos();
 	
 	void				SetPosInsideShield(const Vector &pos, bool holdAtTargetPos);
-	void				SetPosOutsideShield();
+	void				SetPosOutsideShield(bool teleport);
 	void				SetPosOutsideBall(const Vector &playerPos);
 	void				GetTargetPos(const Vector &pos, Vector &targetPos);
 	void				ActivateRemoteControlling(const Vector &targetPos);
@@ -526,11 +528,12 @@ public:
 
 	int					m_nTeamToJoin;
 	int					m_nTeamPosIndexToJoin;
+	int					m_nSpecTeamToJoin;
 
 	int					m_ePenaltyState;
 	void				SetPlayerBall(CBall *pPlayerBall) { m_pPlayerBall = pPlayerBall; }
 	CBall				*GetPlayerBall() { return m_pPlayerBall; }
-	bool				ChangeTeamPos(int team, int posIndex, bool setJoinDelay);
+	bool				SetDesiredTeam(int desiredTeam, int desiredSpecTeam, int desiredPosIndex, bool switchInstantly, bool setNextJoinDelay);
 
 	void				CheckBallShield(const Vector &oldPos, Vector &newPos, const Vector &oldVel, Vector &newVel, const QAngle &oldAng, QAngle &newAng);
 	void				MoveToTargetPos(Vector &pos, Vector &vel, QAngle &ang);
@@ -543,11 +546,6 @@ public:
 	CSDKPlayer			*FindClosestPlayerToSelf(bool teammatesOnly, bool forwardOnly = false, float maxYawAngle = 360);
 
 	CHandle<CBall>		m_pHoldingBall;
-
-	Vector				m_vPreReplayPos;
-	QAngle				m_aPreReplayAngles;
-
-	int					m_nMotmChoiceIds[2];
 
 protected:
 

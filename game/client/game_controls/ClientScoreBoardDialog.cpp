@@ -190,7 +190,7 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Editabl
 	m_pSpectatorText = new Label(m_pSpectatorContainer, "", "");
 
 	for (int i = 0; i < 3; i++)
-		m_pSpectateButtons[i] = new Button(m_pMainPanel, "SpectateButton", (i == 0 ? "Spectate" : "Bench"), this, VarArgs("spectate %d", i));
+		m_pSpectateButtons[i] = new Button(m_pMainPanel, "SpectateButton", (i == 0 ? "Spectate" : "Bench"), this, VarArgs("spectate %d", (i == 0 ? TEAM_SPECTATOR : TEAM_A + i - 1)));
 
 	m_pSpecInfo = new Label(m_pMainPanel, "", "");
 
@@ -688,15 +688,15 @@ void CClientScoreBoardDialog::Update( void )
 		else
 			m_pToggleCaptaincy->SetText("+ Captain");
 
-		m_pToggleCaptaincy->SetPos(GetLocalPlayerTeam() == TEAM_A ? 5 : m_pMainPanel->GetWide() - 85, m_pMainPanel->GetTall() - 5 - STATBUTTON_HEIGHT);
+		m_pToggleCaptaincy->SetPos(GetLocalPlayerTeam() == TEAM_A ? 5 : m_pMainPanel->GetWide() - 85, m_pMainPanel->GetTall() - 2 * (5 + STATBUTTON_HEIGHT));
 		m_pToggleCaptaincy->SetVisible(true);
 	}
 	else
 		m_pToggleCaptaincy->SetVisible(false);
 
-	m_pSpectateButtons[0]->SetVisible(isOnField || gr->GetSpecTeam(GetLocalPlayerIndex()) != 0);
-	m_pSpectateButtons[1]->SetVisible(!isOnField && gr->GetSpecTeam(GetLocalPlayerIndex()) != 1);
-	m_pSpectateButtons[2]->SetVisible(!isOnField && gr->GetSpecTeam(GetLocalPlayerIndex()) != 2);
+	m_pSpectateButtons[0]->SetVisible(isOnField || gr->GetSpecTeam(GetLocalPlayerIndex()) != TEAM_SPECTATOR);
+	m_pSpectateButtons[1]->SetVisible(isOnField || gr->GetSpecTeam(GetLocalPlayerIndex()) != TEAM_A);
+	m_pSpectateButtons[2]->SetVisible(isOnField || gr->GetSpecTeam(GetLocalPlayerIndex()) != TEAM_B);
 
 	m_fNextUpdateTime = gpGlobals->curtime + 0.25f; 
 }
@@ -1136,16 +1136,7 @@ bool CClientScoreBoardDialog::GetPlayerInfo(int playerIndex, KeyValues *kv)
 
 	if (gr->GetTeam(playerIndex) == TEAM_SPECTATOR)
 	{
-		const char *team;
-
-		if (gr->GetSpecTeam(playerIndex) == 1)
-			team = gr->GetTeamCode(TEAM_A);
-		else if (gr->GetSpecTeam(playerIndex) == 2)
-			team = gr->GetTeamCode(TEAM_B);
-		else
-			team = gr->GetTeamCode(TEAM_SPECTATOR);
-
-		kv->SetString("posname", team);
+		kv->SetString("posname", gr->GetTeamCode(gr->GetSpecTeam(playerIndex)));
 	}
 	else
 	{
@@ -1449,17 +1440,6 @@ void CClientScoreBoardDialog::OnCommand( char const *cmd )
 			m_eActivePanelType = STATS_MENU;
 
 		Update();
-	}
-	else if (!Q_stricmp(cmd, "becomecaptain"))
-	{
-		for (int i = 0; i < STAT_CATEGORY_COUNT; i++)
-		{
-			m_pStatButtons[i]->SetVisible(false);
-		}
-
-		m_pFormationList->SetVisible(true);
-
-		engine->ClientCmd(cmd);
 	}
 	else if (!Q_stricmp(cmd, "togglecaptaincy"))
 	{

@@ -540,22 +540,23 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 void CSDKPlayer::FindSafePos(Vector &startPos)
 {
 	bool hasSafePos = false;
-	int maxCheckDist = (GetPlayerMaxs().x - GetPlayerMins().x) * 5;
+	const float playerWidth = GetPlayerMaxs().x - GetPlayerMins().x;
+	const int maxChecks = 5;
 
-	for (int x = 0; x < maxCheckDist; x++)
+	for (int x = 0; x < maxChecks; x++)
 	{
-		for (int y = 0; y < maxCheckDist * 10; y++)
+		for (int y = 0; y < maxChecks; y++)
 		{
 			for (int sign = -1; sign <= 1; sign += 2)
 			{
-				Vector checkPos = startPos + Vector(x, y, 0);
+				Vector checkPos = startPos + sign * Vector(x * playerWidth, y * playerWidth, 0);
 				trace_t	trace;
-				UTIL_TraceHull(checkPos, checkPos, GetPlayerMins(), GetPlayerMaxs(), MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &trace);
+				UTIL_TraceHull(checkPos, checkPos - Vector(0, 0, 100), GetPlayerMins(), GetPlayerMaxs(), MASK_PLAYERSOLID, this, COLLISION_GROUP_PLAYER, &trace);
 
-				if (!trace.startsolid)
+				if (!trace.startsolid && trace.fraction != 1.0f)
 				{
 					hasSafePos = true;
-					startPos = checkPos;
+					startPos = trace.endpos;
 					break;
 				}
 			}

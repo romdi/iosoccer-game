@@ -23,6 +23,9 @@
 #include "ios_bot.h"
 #include "player_resource.h"
 #include "ios_replaymanager.h"
+#include "Filesystem.h"
+#include "client.h"
+#include <time.h>
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -262,8 +265,7 @@ CSDKPlayer::CSDKPlayer()
 	m_bShotButtonsReleased = false;
 	m_nTeamToJoin = TEAM_INVALID;
 	m_nTeamPosIndexToJoin = 0;
-	//m_flNextJoin = gpGlobals->curtime;
-	//m_bIsCardBanned = false;
+	m_nSpecTeamToJoin = TEAM_SPECTATOR;
 	m_nTeamPosIndex = 0;
 	m_nPreferredTeamPosNum = 2;
 	m_nPreferredSkin = -1;
@@ -273,11 +275,13 @@ CSDKPlayer::CSDKPlayer()
 	m_Shared.m_aPlayerAnimEventStartAngle = vec3_origin;
 	m_Shared.m_nPlayerAnimEventStartButtons = 0;
 	m_nInPenBoxOfTeam = TEAM_INVALID;
-	m_nSpecTeam = 0;
+	m_nSpecTeam = TEAM_SPECTATOR;
 	m_ePenaltyState = PENALTY_NONE;
 	m_pHoldingBall = NULL;
 	m_flNextClientSettingsChangeTime = gpGlobals->curtime;
 	m_bLegacySideCurl = false;
+
+	m_iPlayerState = PLAYER_STATE_NONE;
 
 	m_pData = NULL;
 }
@@ -314,12 +318,13 @@ void CSDKPlayer::PreThink(void)
 
 			if (gpGlobals->curtime >= m_flLastMoveTime + sv_awaytime_warmup_autospec.GetFloat())
 			{
-				ChangeTeam(TEAM_SPECTATOR);
+				SetDesiredTeam(TEAM_SPECTATOR, GetTeamNumber(), 0, true, false);
 				UTIL_ClientPrintAll(HUD_PRINTTALK, "#game_player_benched_away", GetPlayerName());
 			}
 		}
 	}
 
+	// Reset the block time when the card ban ends
 	if (GetNextCardJoin() != 0 && !SDKGameRules()->IsIntermissionState() && SDKGameRules()->GetMatchDisplayTimeSeconds() >= GetNextCardJoin())
 	{
 		SetNextCardJoin(0);
@@ -334,6 +339,7 @@ void CSDKPlayer::PreThink(void)
 		m_nTeamToJoin = TEAM_INVALID;
 	}
 
+	// Let the player take the desired position
 	if (m_nTeamToJoin != TEAM_INVALID
 		&& gpGlobals->curtime >= GetNextJoin()
 		&& (SDKGameRules()->IsIntermissionState()	
@@ -362,37 +368,25 @@ void CSDKPlayer::PreThink(void)
 
 		if (canJoin)
 		{
-			int teamToJoin = m_nTeamToJoin;
-			if (GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B)
-				ChangeTeam(TEAM_SPECTATOR);
+			Vector partnerPos = vec3_invalid;
 
 			if (pSwapPartner)
 			{
-				int partnerTeamToJoin = pSwapPartner->GetTeamToJoin();
-				if (pSwapPartner->GetTeamNumber() == TEAM_A || pSwapPartner->GetTeamNumber() == TEAM_B)
-					pSwapPartner->ChangeTeam(TEAM_SPECTATOR);
-				pSwapPartner->m_nTeamToJoin = partnerTeamToJoin;
-				pSwapPartner->m_nTeamPosIndex = pSwapPartner->m_nTeamPosIndexToJoin;
-				pSwapPartner->ChangeTeam(m_nTeamToJoin);			
+				partnerPos = pSwapPartner->GetLocalOrigin();
+				pSwapPartner->ChangeTeam();
+				pSwapPartner->SetLocalOrigin(GetLocalOrigin());
 			}
 
-			m_nTeamToJoin = teamToJoin;
-			m_nTeamPosIndex = m_nTeamPosIndexToJoin;
-			ChangeTeam(m_nTeamToJoin);
+			ChangeTeam();
+
+			if (pSwapPartner)
+			{
+				SetLocalOrigin(partnerPos);
+			}
 		}
 	}
 
-	//if (m_nRotationTeam != TEAM_INVALID && (SDKGameRules()->IsIntermissionState() || SDKGameRules()->GetMatchDisplayTimeSeconds() >= GetNextJoin()))
-	//{
-	//	if (TeamPosFree(m_nRotationTeam, m_nRotationTeamPosIndex, false))
-	//	{
-	//		ChangeTeamPos(m_nRotationTeam, m_nRotationTeamPosIndex, true);
-	//	}
-	//}
-
 	State_PreThink();
-
-	//UpdateSprint();
 
 	BaseClass::PreThink();
 }
@@ -496,34 +490,25 @@ void CSDKPlayer::Spawn()
 	//UseClientSideAnimation();
 }
 
-#include "client.h"
-
-bool CSDKPlayer::ChangeTeamPos(int wishTeam, int wishPosIndex, bool setJoinDelay)
+bool CSDKPlayer::SetDesiredTeam(int desiredTeam, int desiredSpecTeam, int desiredPosIndex, bool switchInstantly, bool setNextJoinDelay)
 {
-	if (wishTeam != TEAM_A && wishTeam != TEAM_B && wishTeam != TEAM_SPECTATOR)
+	if (desiredTeam != TEAM_A && desiredTeam != TEAM_B && desiredTeam != TEAM_SPECTATOR)
 		return false;
 
-	if (wishPosIndex < 0 || wishPosIndex > mp_maxplayers.GetInt() - 1)
+	if (desiredPosIndex < 0 || desiredPosIndex > mp_maxplayers.GetInt() - 1)
 		return false;
 
-	int oldTeam = GetTeamNumber();
+	if (setNextJoinDelay)
+		SetNextJoin(gpGlobals->curtime + mp_joindelay.GetFloat());
+	else
+		SetNextJoin(gpGlobals->curtime);
 
-	if (wishTeam == TEAM_SPECTATOR)
-		ChangeTeam(TEAM_SPECTATOR);
+	m_nTeamToJoin = desiredTeam;
+	m_nTeamPosIndexToJoin = desiredPosIndex;
+	m_nSpecTeamToJoin = desiredSpecTeam;
 
-	if (oldTeam == TEAM_A || oldTeam == TEAM_B)
-	{
-		if (setJoinDelay)
-			SetNextJoin(gpGlobals->curtime + mp_joindelay.GetFloat());
-		else
-			SetNextJoin(gpGlobals->curtime);
-	}
-	
-	if (wishTeam != TEAM_SPECTATOR)
-	{
-		m_nTeamToJoin = wishTeam;
-		m_nTeamPosIndexToJoin = wishPosIndex;
-	}
+	if (switchInstantly)
+		ChangeTeam();
 
 	return true;
 }
@@ -533,100 +518,84 @@ bool CSDKPlayer::ChangeTeamPos(int wishTeam, int wishPosIndex, bool setJoinDelay
 //-----------------------------------------------------------------------------
 //Tony; if we're not using actual teams, we don't need to override this.
 
-void CSDKPlayer::ChangeTeam( int iTeamNum )
+void CSDKPlayer::ChangeTeam()
 {
-	if ( !GetGlobalTeam( iTeamNum ) )
+	if (m_nTeamToJoin == GetTeamNumber() && m_nTeamPosIndexToJoin == GetTeamPosIndex() && m_nSpecTeamToJoin == m_nSpecTeam)
 	{
-		Warning( "CSDKPlayer::ChangeTeam( %d ) - invalid team index.\n", iTeamNum );
+		m_nTeamToJoin = TEAM_INVALID;
+		m_nTeamPosIndexToJoin = 0;
+		m_nSpecTeamToJoin = TEAM_INVALID;
+
 		return;
 	}
 
-	int iOldTeam = GetTeamNumber();
-
-	// if this is our current team, just abort
-	if (iTeamNum == iOldTeam)
-		return;
-
-	ResetFlags();
-
-	// Immediately tell all clients that he's changing team. This has to be done
-	// first, so that all user messages that follow as a result of the team change
-	// come after this one, allowing the client to be prepared for them.
-	IGameEvent * event = gameeventmanager->CreateEvent( "player_team" );
-	if ( event )
+	IGameEvent *event = gameeventmanager->CreateEvent("player_team");
+	if (event)
 	{
-		event->SetInt("userid", GetUserID() );
-		event->SetInt("team", iTeamNum );
-		event->SetInt("oldteam", GetTeamNumber() );
+		event->SetInt("userid", GetUserID());
+		event->SetInt("newteam", m_nTeamToJoin);
+		event->SetInt("oldteam", GetTeamNumber());
 		event->SetBool("disconnect", IsDisconnecting());
-		event->SetBool("autoteam", false );
-		event->SetBool("silent", false );
-		event->SetString("name", GetPlayerName() );
-		event->SetInt("teampos", GetTeamPosIndex());
+		event->SetString("name", GetPlayerName());
+		event->SetInt("newteampos", m_nTeamPosIndexToJoin);
+		event->SetInt("oldteampos", GetTeamPosIndex());
+		event->SetInt("newspecteam", m_nSpecTeamToJoin);
+		event->SetInt("oldspecteam", m_nSpecTeam);
 
 		gameeventmanager->FireEvent( event );
 	}
 
-	// Remove him from his current team
-	if ( GetTeam() )
-		GetTeam()->RemovePlayer( this );
+	GetData()->EndCurrentMatchPeriod();
 
-	// Are we being added to a team?
-	if ( iTeamNum )
-		GetGlobalTeam( iTeamNum )->AddPlayer( this );
+	if (GetTeam())
+		GetTeam()->RemovePlayer(this);
 
-	SetTeamNumber(iTeamNum);
+	GetGlobalTeam(m_nTeamToJoin)->AddPlayer(this);
 
-	if (iTeamNum == TEAM_A || iTeamNum == TEAM_B)
-		SetLastKnownTeam(iTeamNum);
-
-	//ResetStats();
-	//ResetFlags();
-
+	int oldTeam = GetTeamNumber();
+	SetTeamNumber(m_nTeamToJoin);
 	m_nTeamToJoin = TEAM_INVALID;
 
-	m_nSpecTeam = 0;
+	int oldPosIndex = m_nTeamPosIndex;
+	int oldPosType = GetTeamPosType();
+	m_nTeamPosIndex = m_nTeamPosIndexToJoin;
+	m_nTeamPosIndexToJoin = 0;
+
+	int oldSpecTeam = m_nSpecTeam;
+	m_nSpecTeam = m_nSpecTeamToJoin;
+	m_nSpecTeamToJoin = TEAM_INVALID;
 
 	// update client state 
-	if ( iTeamNum == TEAM_UNASSIGNED )
+	if (GetTeamNumber() == TEAM_UNASSIGNED || GetTeamNumber() == TEAM_SPECTATOR)
 	{
-		State_Transition( STATE_OBSERVER_MODE );
-	}
-	else if ( iTeamNum == TEAM_SPECTATOR )
-	{
-		State_Transition( STATE_OBSERVER_MODE );
+		if (State_Get() != PLAYER_STATE_OBSERVER_MODE)
+		{
+			State_Transition( PLAYER_STATE_OBSERVER_MODE);
+		}
 	}
 	else // active player
 	{
-		//m_nRotationTeam = TEAM_INVALID;
-		//m_nRotationTeamPosIndex = 0;
+		GetData()->StartNewMatchPeriod();
 
-		//m_nSpecTeam = iTeamNum - TEAM_A + 1;
+		if (GetTeamNumber() != oldTeam)
+			m_nTeamPosNum = FindAvailableTeamPosNum();
 
-		if( iOldTeam == TEAM_SPECTATOR )
-			SetMoveType( MOVETYPE_NONE );
-
-		// transmit changes for player position right away
-		//g_pPlayerResource->UpdatePlayerData();
-
-		m_nTeamPosNum = FindUnfilledTeamPosNum();
-
-		if (GetTeamPosType() == POS_GK)
+		if (GetTeamPosType() == POS_GK && (GetTeamNumber() != oldTeam || oldPosType != POS_GK))
 			ChooseKeeperSkin();
+		else if (GetTeamPosType() != POS_GK && (GetTeamNumber() != oldTeam || oldPosType == POS_GK))
+			ChooseFieldPlayerSkin();
+
+		if (State_Get() == PLAYER_STATE_ACTIVE)
+		{
+			if (GetTeamNumber() != oldTeam)
+			{
+				if (SDKGameRules()->m_nShieldType != SHIELD_NONE && (SDKGameRules()->m_nShieldType != SHIELD_KICKOFF || mp_shield_block_opponent_half.GetBool()))
+					SetPosOutsideShield(false);
+			}
+		}
 		else
-			ChoosePlayerSkin();				
-
-		if (iOldTeam != TEAM_A && iOldTeam != TEAM_B)
-			State_Transition( STATE_ACTIVE );
+			State_Transition( PLAYER_STATE_ACTIVE);
 	}
-
-	//if (GetTeamNumber() == TEAM_SPECTATOR && GetTeam()->GetCaptain() == this)
-	//	GetGlobalTeam(iOldTeam)->FindNewCaptain();
-	//else if ((GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B) && GetTeamPosType() == POS_GK)
-	//	GetTeam()->FindNewCaptain();
-
-	//GetGlobalTeam(TEAM_A)->FindNewCaptain();
-	//GetGlobalTeam(TEAM_B)->FindNewCaptain();
 
 	g_pPlayerResource->UpdatePlayerData();
 }
@@ -645,7 +614,7 @@ bool isUnfilledNum(int nums[], int num)
 	return true;
 }
 
-int CSDKPlayer::FindUnfilledTeamPosNum()
+int CSDKPlayer::FindAvailableTeamPosNum()
 {
 	if (!mp_custom_shirt_numbers.GetBool())
 		return (int)g_Positions[mp_maxplayers.GetInt() - 1][GetTeamPosIndex()][POS_NUMBER];
@@ -696,7 +665,7 @@ void CSDKPlayer::InitialSpawn( void )
 	InitSpeeds(); //Tony; initialize player speeds.
 	SetModel( SDK_PLAYER_MODEL );	//Tony; basically, leave this alone ;) unless you're not using classes or teams, then you can change it to whatever.
 	Spawn();
-	ChangeTeam(TEAM_SPECTATOR);
+	SetDesiredTeam(TEAM_SPECTATOR, TEAM_SPECTATOR, 0, true, false);
 }
 
 void CSDKPlayer::DoServerAnimationEvent(PlayerAnimEvent_t event)
@@ -799,14 +768,8 @@ CSDKPlayerStateInfo* CSDKPlayer::State_LookupInfo( SDKPlayerState state )
 	// This table MUST match the 
 	static CSDKPlayerStateInfo playerStateInfos[] =
 	{
-		{ STATE_ACTIVE,			"STATE_ACTIVE",			&CSDKPlayer::State_ACTIVE_Enter, NULL, &CSDKPlayer::State_ACTIVE_PreThink },
-#if defined ( SDK_USE_TEAMS )
-		{ STATE_PICKINGTEAM,	"STATE_PICKINGTEAM",	&CSDKPlayer::State_PICKINGTEAM_Enter, NULL,	&CSDKPlayer::State_WELCOME_PreThink },
-#endif
-#if defined ( SDK_USE_PLAYERCLASSES )
-		{ STATE_PICKINGCLASS,	"STATE_PICKINGCLASS",	&CSDKPlayer::State_PICKINGCLASS_Enter, NULL,	&CSDKPlayer::State_WELCOME_PreThink },
-#endif
-		{ STATE_OBSERVER_MODE,	"STATE_OBSERVER_MODE",	&CSDKPlayer::State_OBSERVER_MODE_Enter,	&CSDKPlayer::State_OBSERVER_MODE_Leave, &CSDKPlayer::State_OBSERVER_MODE_PreThink }
+		{ PLAYER_STATE_ACTIVE,			"STATE_ACTIVE",			&CSDKPlayer::State_ACTIVE_Enter, &CSDKPlayer::State_ACTIVE_PreThink, &CSDKPlayer::State_ACTIVE_Leave },
+		{ PLAYER_STATE_OBSERVER_MODE,	"STATE_OBSERVER_MODE",	&CSDKPlayer::State_OBSERVER_MODE_Enter, &CSDKPlayer::State_OBSERVER_MODE_PreThink, &CSDKPlayer::State_OBSERVER_MODE_Leave }
 	};
 
 	for ( int i=0; i < ARRAYSIZE( playerStateInfos ); i++ )
@@ -860,29 +823,8 @@ void CSDKPlayer::State_OBSERVER_MODE_Enter()
 	}
 }
 
-void CSDKPlayer::State_OBSERVER_MODE_Leave()
-{
-	m_bForcedObserverMode = false;
-	m_afPhysicsFlags &= ~PFLAG_OBSERVER;
-
-	if ( m_iObserverMode == OBS_MODE_NONE )
-		return;
-
-	if ( m_iObserverMode  > OBS_MODE_DEATHCAM )
-	{
-		m_iObserverLastMode = m_iObserverMode;
-	}
-
-	m_iObserverMode.Set( OBS_MODE_NONE );
-
-	ShowViewPortPanel( "specmenu", false );
-	ShowViewPortPanel( "specgui", false );
-	ShowViewPortPanel( "overview", false );
-}
-
 void CSDKPlayer::State_OBSERVER_MODE_PreThink()
 {
-
 	//Tony; if we're in eye, or chase, validate the target - if it's invalid, find a new one, or go back to roaming
 	if (  m_iObserverMode == OBS_MODE_IN_EYE || m_iObserverMode == OBS_MODE_CHASE )
 	{
@@ -910,23 +852,25 @@ void CSDKPlayer::State_OBSERVER_MODE_PreThink()
 	}
 }
 
-#if defined ( SDK_USE_PLAYERCLASSES )
-void CSDKPlayer::State_PICKINGCLASS_Enter()
+void CSDKPlayer::State_OBSERVER_MODE_Leave()
 {
-	ShowClassSelectMenu();
-	PhysObjectSleep();
+	m_bForcedObserverMode = false;
+	m_afPhysicsFlags &= ~PFLAG_OBSERVER;
 
+	if ( m_iObserverMode == OBS_MODE_NONE )
+		return;
+
+	if ( m_iObserverMode  > OBS_MODE_DEATHCAM )
+	{
+		m_iObserverLastMode = m_iObserverMode;
+	}
+
+	m_iObserverMode.Set( OBS_MODE_NONE );
+
+	ShowViewPortPanel( "specmenu", false );
+	ShowViewPortPanel( "specgui", false );
+	ShowViewPortPanel( "overview", false );
 }
-#endif // SDK_USE_PLAYERCLASSES
-
-#if defined ( SDK_USE_TEAMS )
-void CSDKPlayer::State_PICKINGTEAM_Enter()
-{
-	ShowViewPortPanel( PANEL_TEAM );
-	PhysObjectSleep();
-
-}
-#endif // SDK_USE_TEAMS
 
 void CSDKPlayer::State_ACTIVE_Enter()
 {
@@ -941,33 +885,23 @@ void CSDKPlayer::State_ACTIVE_Enter()
 	// update this counter, used to not interp players when they spawn
 	m_bSpawnInterpCounter = !m_bSpawnInterpCounter;
 	SetContextThink( &CSDKPlayer::SDKPushawayThink, gpGlobals->curtime + PUSHAWAY_THINK_INTERVAL, SDK_PUSHAWAY_THINK_CONTEXT );
-	//pl.deadflag = false;
 	m_flNextShot = gpGlobals->curtime;
 	m_hRagdoll = NULL;
-	//m_lifeState = LIFE_ALIVE;
 	RemoveEffects(EF_NODRAW);
-
 	SetViewOffset( VEC_VIEW );
 
-	Vector spawnPos = GetSpawnPos(true);
 	Vector dir = Vector(0, GetTeam()->m_nForward, 0);
 	QAngle ang;
 	VectorAngles(dir, ang);
-	SetLocalOrigin(spawnPos);
 	SetLocalVelocity(vec3_origin);
 	SetLocalAngles(ang);
-	m_Local.m_vecPunchAngle = vec3_angle;
-	m_Local.m_vecPunchAngleVel = vec3_angle;
+	SetLocalOrigin(GetSpawnPos(true));
 	SnapEyeAngles(ang);
 
-	m_vPreReplayPos = GetLocalOrigin();
-	m_aPreReplayAngles = GetLocalAngles();
-
-	m_flLastMoveTime = gpGlobals->curtime;
-	m_bIsAway = true;
+	ResetFlags();
 
 	if (SDKGameRules()->m_nShieldType != SHIELD_NONE)
-		SetPosOutsideShield();
+		SetPosOutsideShield(true);
 }
 
 void CSDKPlayer::State_ACTIVE_PreThink()
@@ -977,6 +911,10 @@ void CSDKPlayer::State_ACTIVE_PreThink()
 
 	CheckShotCharging();
 	CheckLastPressedSingleMoveButton();
+}
+
+void CSDKPlayer::State_ACTIVE_Leave()
+{
 }
 
 int CSDKPlayer::GetPlayerStance()
@@ -1064,118 +1002,17 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 		if (!SDKGameRules()->IsIntermissionState() && SDKGameRules()->GetMatchDisplayTimeSeconds() < GetGlobalTeam(team)->GetPosNextJoinSeconds(posIndex))
 			return false;
 
-		return ChangeTeamPos(team, posIndex, true);
+		return SetDesiredTeam(team, team, posIndex, false, true);
 	}
 	else if (!Q_stricmp(args[0], "spectate"))
 	{
-		if (GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B)
-		{
-			ChangeTeamPos(TEAM_SPECTATOR, 0, true);
-			return true;
-		}
+		int specTeam = ((args.ArgC() < 2) ? TEAM_SPECTATOR : atoi(args[1]));
 
-		int specTeam = ((args.ArgC() < 2) ? 0 : atoi(args[1]));
-
-		if (specTeam == m_nSpecTeam)
+		if (GetTeamNumber() == TEAM_SPECTATOR && m_nSpecTeam == specTeam)
 			return true;
 
-		if (gpGlobals->curtime >= GetNextJoin())
-		{
-			m_nSpecTeam = specTeam;
-			SetNextJoin(gpGlobals->curtime + mp_joindelay.GetFloat());
-
-			IGameEvent *pEvent = gameeventmanager->CreateEvent("player_specteam");
-			if (pEvent)
-			{
-				pEvent->SetInt("userid", GetUserID());
-				pEvent->SetInt("specteam", m_nSpecTeam);
-				gameeventmanager->FireEvent(pEvent);
-			}
-
-			return true;
-		}
-
-		return true;
-	}
-	else if (!Q_stricmp(args[0], "motmvote"))
-	{
-		if (args.ArgC() < 3)
-		{
-			Warning("Need player ids\n");
-			return false;
-		}
-
-		CSDKPlayer *pPl = NULL;
-		pPl = ToSDKPlayer(UTIL_PlayerByIndex(atoi(args[1])));
-		if (!pPl)
-			return false;
-		pPl = ToSDKPlayer(UTIL_PlayerByIndex(atoi(args[2])));
-		if (!pPl)
-			return false;
-
-		m_nMotmChoiceIds[0] = atoi(args[1]);
-		m_nMotmChoiceIds[1] = atoi(args[2]);
-
-		int playerVotes[2][MAX_PLAYERS] = {};
-		int playersOnField[2] = { 0, 0 };
-
-		int mostGoals[2] = {};
-		int mostGoalsPlayers[2] = {};
-
-		for (int i = 1; i <= gpGlobals->maxClients; i++)
-		{
-			CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
-			if (!CSDKPlayer::IsOnField(pPl))
-				continue;
-
-			for (int j = 0; j < 2; j++)
-			{
-				if (pPl->m_nMotmChoiceIds[j] > 0)
-					playerVotes[j][pPl->m_nMotmChoiceIds[j] - 1] += 1;
-			}
-
-			playersOnField[pPl->GetTeamNumber() - TEAM_A] += 1;
-
-			if (pPl->GetGoals() > mostGoals[pPl->GetTeamNumber() - TEAM_A])
-			{
-				mostGoals[pPl->GetTeamNumber() - TEAM_A] = pPl->GetGoals();
-				mostGoalsPlayers[pPl->GetTeamNumber() - TEAM_A] = i;
-			}
-		}
-
-		int mostVotesCount[2] = { 0, 0 };
-		int mostVotesPlayer[2] = { 0, 0 };
-
-		for (int i = 0; i < 2; i++)
-		{
-			for (int j = 0; j < MAX_PLAYERS; j++)
-			{
-				if (playerVotes[i][j] > mostVotesCount[i])
-				{
-					mostVotesCount[i] = playerVotes[i][j];
-					mostVotesPlayer[i] = j + 1;
-				}
-			}
-		}
-		
-		IGameEvent *pEvent = gameeventmanager->CreateEvent("motmvotingresult");
-		if (pEvent)
-		{
-			pEvent->SetInt("playerschoice_player0", mostVotesPlayer[0]);
-			pEvent->SetInt("playerschoice_percentage0", mostVotesCount[0] * 100 / max(1, playersOnField[0]));
-			pEvent->SetInt("playerschoice_player1", mostVotesPlayer[1]);
-			pEvent->SetInt("playerschoice_percentage1", mostVotesCount[1] * 100 / max(1, playersOnField[1]));
-			pEvent->SetInt("expertschoice_player0", mostGoalsPlayers[0]);
-			pEvent->SetInt("expertschoice_percentage0", 100);
-			pEvent->SetInt("expertschoice_player1", mostGoalsPlayers[1]);
-			pEvent->SetInt("expertschoice_percentage1", 100);
-			gameeventmanager->FireEvent(pEvent);
-		}
-
-		return true;
-	}
-	else if (!Q_stricmp(args[0], "becomecaptain"))
-	{
+		bool switchInstantly = (GetTeamNumber() != TEAM_SPECTATOR);
+		SetDesiredTeam(TEAM_SPECTATOR, specTeam, 0, switchInstantly, true);
 
 		return true;
 	}
@@ -1295,7 +1132,7 @@ void CSDKPlayer::SetPreferredSkin(int num)
 			m_nSkin = m_nBaseSkin + ballSkin;
 		}
 		else
-			ChoosePlayerSkin();
+			ChooseFieldPlayerSkin();
 	}
 }
 
@@ -1303,7 +1140,7 @@ void CSDKPlayer::SetPreferredSkin(int num)
 // player skins are 0-9 (blocks of 10)
 // (shirtpos-2) is always 0-9
 //
-void CSDKPlayer::ChoosePlayerSkin(void)
+void CSDKPlayer::ChooseFieldPlayerSkin(void)
 {
 	int preferred = (m_nPreferredSkin == -1 ? g_IOSRand.RandomInt(0, NUM_PLAYER_FACES - 1) : m_nPreferredSkin);
 	m_nSkin = GetTeamPosNum() - 2 + (preferred * 10);		//player skin
@@ -1420,7 +1257,7 @@ void CSDKPlayer::SetPosInsideShield(const Vector &pos, bool holdAtTargetPos)
 	}
 }
 
-void CSDKPlayer::SetPosOutsideShield()
+void CSDKPlayer::SetPosOutsideShield(bool teleport)
 {
 	RemoveFlag(FL_SHIELD_KEEP_IN);
 	AddFlag(FL_SHIELD_KEEP_OUT);
@@ -1430,8 +1267,7 @@ void CSDKPlayer::SetPosOutsideShield()
 	switch (SDKGameRules()->m_nShieldType)
 	{
 	case SHIELD_KICKOFF:
-		//m_vTargetPos = GetTeamPosNum() == 1 ? GetTeam()->m_vPenalty : GetTeam()->m_vPlayerSpawns[GetTeamPosNum() - 1];
-		m_vTargetPos = GetSpawnPos(false);
+		m_vTargetPos = GetSpawnPos(true);
 		break;
 	case SHIELD_KEEPERHANDS:
 		return;
@@ -1441,8 +1277,11 @@ void CSDKPlayer::SetPosOutsideShield()
 		break;
 	}
 
-	if (m_vTargetPos == GetLocalOrigin())
+	if (m_vTargetPos == GetLocalOrigin() || teleport)
 	{
+		if (teleport)
+			SetLocalOrigin(m_vTargetPos);
+
 		m_bIsAtTargetPos = true;
 		if (m_bHoldAtTargetPos)
 			AddFlag(FL_ATCONTROLS);
@@ -1656,9 +1495,9 @@ Vector CSDKPlayer::GetSpawnPos(bool findSafePos)
 
 	Vector spawnPos;
 	if (GetTeam()->m_nForward == 1)
-		spawnPos = Vector(SDKGameRules()->m_vFieldMin.GetX(), SDKGameRules()->m_vKickOff.GetY(), SDKGameRules()->m_vKickOff.GetZ()) + Vector(xPos, -yPos, 0);
+		spawnPos = Vector(SDKGameRules()->m_vFieldMin.GetX(), SDKGameRules()->m_vKickOff.GetY(), SDKGameRules()->m_vKickOff.GetZ()) + Vector(xPos, -yPos, 10);
 	else
-		spawnPos = Vector(SDKGameRules()->m_vFieldMax.GetX(), SDKGameRules()->m_vKickOff.GetY(), SDKGameRules()->m_vKickOff.GetZ()) + Vector(-xPos, yPos, 0);
+		spawnPos = Vector(SDKGameRules()->m_vFieldMax.GetX(), SDKGameRules()->m_vKickOff.GetY(), SDKGameRules()->m_vKickOff.GetZ()) + Vector(-xPos, yPos, 10);
 
 	if (findSafePos)
 		FindSafePos(spawnPos);
@@ -1687,8 +1526,6 @@ void CSDKPlayer::ResetFlags()
 	m_flNextJoin = gpGlobals->curtime;
 	m_bIsOffside = false;
 	m_ePenaltyState = PENALTY_NONE;
-	m_nMotmChoiceIds[0] = 0;
-	m_nMotmChoiceIds[1] = 0;
 	m_flRemoteControlledStartTime = -1;
 
 	if (GetPlayerBall())
@@ -1837,152 +1674,239 @@ void CSDKPlayer::SetPlayerName(const char *name)
 
 void CSDKPlayer::AddRedCard()
 {
-	GetData()->m_nRedCards += 1;
+	GetMatchPeriodData()->m_nRedCards += 1;
+	GetMatchData()->m_nRedCards += 1;
 	GetTeam()->m_RedCards += 1;
 }
 
 void CSDKPlayer::AddYellowCard()
 {
-	GetData()->m_nYellowCards += 1;
+	GetMatchPeriodData()->m_nYellowCards += 1;
+	GetMatchData()->m_nYellowCards += 1;
 	GetTeam()->m_YellowCards += 1;
 }
 
 void CSDKPlayer::AddFoul()
 {
-	GetData()->m_nFouls += 1;
+	GetMatchPeriodData()->m_nFouls += 1;
+	GetMatchData()->m_nFouls += 1;
 	GetTeam()->m_Fouls += 1;
 }
 
 void CSDKPlayer::AddFoulSuffered()
 {
-	GetData()->m_nFoulsSuffered += 1;
+	GetMatchPeriodData()->m_nFoulsSuffered += 1;
+	GetMatchData()->m_nFoulsSuffered += 1;
 	GetTeam()->m_FoulsSuffered += 1;
 }
 
 void CSDKPlayer::AddSlidingTackle()
 {
-	GetData()->m_nSlidingTackles += 1;
+	GetMatchPeriodData()->m_nSlidingTackles += 1;
+	GetMatchData()->m_nSlidingTackles += 1;
 	GetTeam()->m_SlidingTackles += 1;
 }
 
 void CSDKPlayer::AddSlidingTackleCompleted()
 {
-	GetData()->m_nSlidingTacklesCompleted += 1;
+	GetMatchPeriodData()->m_nSlidingTacklesCompleted += 1;
+	GetMatchData()->m_nSlidingTacklesCompleted += 1;
 	GetTeam()->m_SlidingTacklesCompleted += 1;
 }
 
 void CSDKPlayer::AddGoalConceded()
 {
-	GetData()->m_nGoalsConceded += 1;
+	GetMatchPeriodData()->m_nGoalsConceded += 1;
+	GetMatchData()->m_nGoalsConceded += 1;
 	GetTeam()->m_GoalsConceded += 1;
 }
 
 void CSDKPlayer::AddShot()
 {
-	GetData()->m_nShots += 1;
+	GetMatchPeriodData()->m_nShots += 1;
+	GetMatchData()->m_nShots += 1;
 	GetTeam()->m_Shots += 1;
 }
 
 void CSDKPlayer::AddShotOnGoal()
 {
-	GetData()->m_nShotsOnGoal += 1;
+	GetMatchPeriodData()->m_nShotsOnGoal += 1;
+	GetMatchData()->m_nShotsOnGoal += 1;
 	GetTeam()->m_ShotsOnGoal += 1;
 }
 
 void CSDKPlayer::AddPassCompleted()
 {
-	GetData()->m_nPassesCompleted += 1;
+	GetMatchPeriodData()->m_nPassesCompleted += 1;
+	GetMatchData()->m_nPassesCompleted += 1;
 	GetTeam()->m_PassesCompleted += 1;
 }
 
 void CSDKPlayer::AddInterception()
 {
-	GetData()->m_nInterceptions += 1;
+	GetMatchPeriodData()->m_nInterceptions += 1;
+	GetMatchData()->m_nInterceptions += 1;
 	GetTeam()->m_Interceptions += 1;
 }
 
 void CSDKPlayer::AddOffside()
 {
-	GetData()->m_nOffsides += 1;
+	GetMatchPeriodData()->m_nOffsides += 1;
+	GetMatchData()->m_nOffsides += 1;
 	GetTeam()->m_Offsides += 1;
 }
 
 void CSDKPlayer::AddGoal()
 {
-	GetData()->m_nGoals += 1;
+	GetMatchPeriodData()->m_nGoals += 1;
+	GetMatchData()->m_nGoals += 1;
 	GetTeam()->m_Goals += 1;
 }
 
 void CSDKPlayer::AddOwnGoal()
 {
-	GetData()->m_nOwnGoals += 1;
+	GetMatchPeriodData()->m_nOwnGoals += 1;
+	GetMatchData()->m_nOwnGoals += 1;
 	GetTeam()->m_OwnGoals += 1;
 	GetOppTeam()->m_Goals += 1;
 }
 
 void CSDKPlayer::AddAssist()
 {
-	GetData()->m_nAssists += 1;
+	GetMatchPeriodData()->m_nAssists += 1;
+	GetMatchData()->m_nAssists += 1;
 	GetTeam()->m_Assists += 1;
 }
 
 void CSDKPlayer::AddPossessionTime(float time)
 {
-	GetData()->m_flPossessionTime += time;
+	GetMatchPeriodData()->m_flPossessionTime += time;
+	GetMatchData()->m_flPossessionTime += time;
 	GetTeam()->m_flPossessionTime += time;
 }
 
 void CSDKPlayer::AddExactDistanceCovered(float amount)
 {
-	GetData()->m_flExactDistanceCovered += amount;
-	GetData()->m_nDistanceCovered = GetData()->m_flExactDistanceCovered * 10 / 1000;
+	GetMatchPeriodData()->m_flExactDistanceCovered += amount;
+	GetMatchPeriodData()->m_nDistanceCovered = GetMatchPeriodData()->m_flExactDistanceCovered * 10 / 1000;
+	GetMatchData()->m_flExactDistanceCovered += amount;
+	GetMatchData()->m_nDistanceCovered = GetMatchData()->m_flExactDistanceCovered * 10 / 1000;
 	GetTeam()->m_flExactDistanceCovered += amount;
 	GetTeam()->m_DistanceCovered = GetTeam()->m_flExactDistanceCovered * 10 / 1000;
 }
 
 void CSDKPlayer::AddPass()
 {
-	GetData()->m_nPasses += 1;
+	GetMatchPeriodData()->m_nPasses += 1;
+	GetMatchData()->m_nPasses += 1;
 	GetTeam()->m_Passes += 1;
 }
 
 void CSDKPlayer::AddFreeKick()
 {
-	GetData()->m_nFreeKicks += 1;
+	GetMatchPeriodData()->m_nFreeKicks += 1;
+	GetMatchData()->m_nFreeKicks += 1;
 	GetTeam()->m_FreeKicks += 1;
 }
 
 void CSDKPlayer::AddPenalty()
 {
-	GetData()->m_nPenalties += 1;
+	GetMatchPeriodData()->m_nPenalties += 1;
+	GetMatchData()->m_nPenalties += 1;
 	GetTeam()->m_Penalties += 1;
 }
 
 void CSDKPlayer::AddCorner()
 {
-	GetData()->m_nCorners += 1;
+	GetMatchPeriodData()->m_nCorners += 1;
+	GetMatchData()->m_nCorners += 1;
 	GetTeam()->m_Corners += 1;
 }
 
 void CSDKPlayer::AddThrowIn()
 {
-	GetData()->m_nThrowIns += 1;
+	GetMatchPeriodData()->m_nThrowIns += 1;
+	GetMatchData()->m_nThrowIns += 1;
 	GetTeam()->m_ThrowIns += 1;
 }
 
 void CSDKPlayer::AddKeeperSave()
 {
-	GetData()->m_nKeeperSaves += 1;
+	GetMatchPeriodData()->m_nKeeperSaves += 1;
+	GetMatchData()->m_nKeeperSaves += 1;
 	GetTeam()->m_KeeperSaves += 1;
 }
 
 void CSDKPlayer::AddGoalKick()
 {
-	GetData()->m_nGoalKicks += 1;
+	GetMatchPeriodData()->m_nGoalKicks += 1;
+	GetMatchData()->m_nGoalKicks += 1;
 	GetTeam()->m_GoalKicks += 1;
 }
 
 CUtlVector<CPlayerPersistentData *> CPlayerPersistentData::m_PlayerPersistentData;
+
+CPlayerPersistentData::CPlayerPersistentData(CSDKPlayer *pPl)
+{
+	m_pPl = pPl;
+	m_nSteamID = engine->GetClientSteamID(pPl->edict()) ? engine->GetClientSteamID(pPl->edict())->ConvertToUint64() : 0;
+	Q_strncpy(m_szSteamID, engine->GetPlayerNetworkIDString(pPl->edict()), 32);
+	Q_strncpy(m_szName, pPl->GetPlayerName(), MAX_PLAYER_NAME_LENGTH);
+	m_pMatchData = new CPlayerMatchData();
+	ResetData();
+}
+
+CPlayerPersistentData::~CPlayerPersistentData()
+{
+	delete m_pMatchData;
+	m_pMatchData = NULL;
+
+	m_MatchPeriodData.PurgeAndDeleteElements();
+}
+
+void CPlayerMatchData::ResetData()
+{
+	m_nRedCards = 0;
+	m_nYellowCards = 0;
+	m_nFouls = 0;
+	m_nFoulsSuffered = 0;
+	m_nSlidingTackles = 0;
+	m_nSlidingTacklesCompleted = 0;
+	m_nGoalsConceded = 0;
+	m_nShots = 0;
+	m_nShotsOnGoal = 0;
+	m_nPassesCompleted = 0;
+	m_nInterceptions = 0;
+	m_nOffsides = 0;
+	m_nGoals = 0;
+	m_nOwnGoals = 0;
+	m_nAssists = 0;
+	m_nPasses = 0;
+	m_nFreeKicks = 0;
+	m_nPenalties = 0;
+	m_nCorners = 0;
+	m_nThrowIns = 0;
+	m_nKeeperSaves = 0;
+	m_nGoalKicks = 0;
+	m_nRating = 0;
+	m_nPossession = 0;
+	m_flPossessionTime = 0.0f;
+	m_nDistanceCovered = 0;
+	m_flExactDistanceCovered = 0.0f;
+}
+
+void CPlayerMatchPeriodData::ResetData()
+{
+	BaseClass::ResetData();
+}
+
+void CPlayerPersistentData::ResetData()
+{
+	m_nNextCardJoin = 0;
+
+	m_pMatchData->ResetData();
+	m_MatchPeriodData.PurgeAndDeleteElements();
+}
 
 void CPlayerPersistentData::AllocateData(CSDKPlayer *pPl)
 {
@@ -1995,17 +1919,13 @@ void CPlayerPersistentData::AllocateData(CSDKPlayer *pPl)
 			continue;
 
 		data = m_PlayerPersistentData[i];
+		data->m_pPl = pPl;
 		break;
 	}
 
 	if (!data)
 	{
-		data = new CPlayerPersistentData;
-		data->ResetData();
-		data->m_nSteamID = steamID;
-		Q_strncpy(data->m_szSteamID, engine->GetPlayerNetworkIDString(pPl->edict()), 32);
-		Q_strncpy(data->m_szName, pPl->GetPlayerName(), MAX_PLAYER_NAME_LENGTH);
-		data->m_nTeam = pPl->GetTeamNumber();
+		data = new CPlayerPersistentData(pPl);
 		m_PlayerPersistentData.AddToTail(data);
 	}
 
@@ -2026,8 +1946,23 @@ void CPlayerPersistentData::ReallocateAllPlayerData()
 	}
 }
 
-#include "Filesystem.h"
-#include <time.h>
+void CPlayerPersistentData::StartNewMatchPeriod()
+{
+	m_MatchPeriodData.AddToTail(new CPlayerMatchPeriodData());
+	m_MatchPeriodData.Tail()->ResetData();
+	m_MatchPeriodData.Tail()->m_nStartSecond = SDKGameRules()->GetMatchDisplayTimeSeconds();
+	m_MatchPeriodData.Tail()->m_nEndSecond = -1;
+	m_MatchPeriodData.Tail()->m_nTeam = m_pPl->GetTeamNumber();
+	m_MatchPeriodData.Tail()->m_nTeamPosType = m_pPl->GetTeamPosType();
+}
+
+void CPlayerPersistentData::EndCurrentMatchPeriod()
+{
+	if (m_MatchPeriodData.Count() > 0 && m_MatchPeriodData.Tail()->m_nEndSecond == -1)
+	{
+		m_MatchPeriodData.Tail()->m_nEndSecond = SDKGameRules()->GetMatchDisplayTimeSeconds();
+	}
+}
 
 void CPlayerPersistentData::ConvertAllPlayerDataToJson()
 {
@@ -2093,97 +2028,83 @@ void CPlayerPersistentData::ConvertAllPlayerDataToJson()
 			pTeam->m_RedCards, pTeam->m_YellowCards, pTeam->m_Fouls, pTeam->m_FoulsSuffered, pTeam->m_SlidingTackles, pTeam->m_SlidingTacklesCompleted, pTeam->m_GoalsConceded, pTeam->m_Shots, pTeam->m_ShotsOnGoal, pTeam->m_PassesCompleted, pTeam->m_Interceptions, pTeam->m_Offsides, pTeam->m_Goals, pTeam->m_OwnGoals, pTeam->m_Assists, pTeam->m_Passes, pTeam->m_FreeKicks, pTeam->m_Penalties, pTeam->m_Corners, pTeam->m_ThrowIns, pTeam->m_KeeperSaves, pTeam->m_GoalKicks, pTeam->m_Possession, (int)pTeam->m_flExactDistanceCovered
 			), JSON_SIZE);
 
-		Q_strcat(json, ",\"matchEvents\":[", JSON_SIZE);
-
-		int eventsProcessed = 0;
-
-		for (int i = 0; i < ReplayManager()->GetMatchEventCount(); i++)
-		{
-			MatchEvent *pMatchEvent = ReplayManager()->GetMatchEvent(i);
-			if (pMatchEvent->team != team)
-				continue;
-
-			if (eventsProcessed > 0)
-				Q_strcat(json, ",", JSON_SIZE);
-
-			Q_strcat(json, UTIL_VarArgs("{\"second\":%d,\"event\":\"%s\",\"matchState\":\"%s\",\"player1SteamIdUint64\":%llu,\"player2SteamIdUint64\":%llu,\"player3SteamIdUint64\":%llu}", pMatchEvent->second, g_szMatchEventNames[pMatchEvent->matchEventType], g_szMatchStateNames[pMatchEvent->matchState], pMatchEvent->pPlayer1Data ? pMatchEvent->pPlayer1Data->m_nSteamID : 0, pMatchEvent->pPlayer2Data ? pMatchEvent->pPlayer2Data->m_nSteamID : 0, pMatchEvent->pPlayer3Data ? pMatchEvent->pPlayer3Data->m_nSteamID : 0), JSON_SIZE);
-			
-			eventsProcessed += 1;
-		}
-
-		Q_strcat(json, "]", JSON_SIZE);
-
-		Q_strcat(json, ",\"players\":[", JSON_SIZE);
-
-		int playersProcessed = 0;
-
-		for (int i = 0; i < m_PlayerPersistentData.Count(); i++)
-		{
-			CPlayerPersistentData *pData = m_PlayerPersistentData[i];
-
-			if (pData->m_nTeam != team)
-				continue;
-
-			char playerName[MAX_PLAYER_NAME_LENGTH];
-
-			Q_strncpy(playerName, pData->m_szName, MAX_PLAYER_NAME_LENGTH);
-
-			char *c = playerName;
-
-			while (*c != 0)
-			{
-				if (*c == '"')
-					*c = '\'';
-
-				c++;
-			}
-			
-			if (playersProcessed > 0)
-				Q_strcat(json, ",", JSON_SIZE);
-
-			Q_strcat(json, "{", JSON_SIZE);
-
-			Q_strcat(json, UTIL_VarArgs("\"info\":{\"steamIdUint64\":%llu,\"steamId\":\"%s\",\"name\":\"%s\"},", pData->m_nSteamID, pData->m_szSteamID, playerName), JSON_SIZE);
-
-			Q_strcat(json, UTIL_VarArgs("\"statistics\":[%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d]",
-				pData->m_nRedCards, pData->m_nYellowCards, pData->m_nFouls, pData->m_nFoulsSuffered, pData->m_nSlidingTackles, pData->m_nSlidingTacklesCompleted, pData->m_nGoalsConceded, pData->m_nShots, pData->m_nShotsOnGoal, pData->m_nPassesCompleted, pData->m_nInterceptions, pData->m_nOffsides, pData->m_nGoals, pData->m_nOwnGoals, pData->m_nAssists, pData->m_nPasses, pData->m_nFreeKicks, pData->m_nPenalties, pData->m_nCorners, pData->m_nThrowIns, pData->m_nKeeperSaves, pData->m_nGoalKicks, pData->m_nPossession, (int)pData->m_flExactDistanceCovered
-				), JSON_SIZE);
-
-			Q_strcat(json, "}", JSON_SIZE);
-
-			playersProcessed += 1;
-		}
-
-		Q_strcat(json, "]}", JSON_SIZE);
+		Q_strcat(json, "}", JSON_SIZE);
 	}
 
-	Q_strcat(json, ",\"debug\":[", JSON_SIZE);
+	Q_strcat(json, ",\"players\":[", JSON_SIZE);
+
+	int playersProcessed = 0;
 
 	for (int i = 0; i < m_PlayerPersistentData.Count(); i++)
 	{
 		CPlayerPersistentData *pData = m_PlayerPersistentData[i];
 
-		char playerName[MAX_PLAYER_NAME_LENGTH];
+		char playerName[MAX_PLAYER_NAME_LENGTH * 2] = {};
 
-		Q_strncpy(playerName, pData->m_szName, MAX_PLAYER_NAME_LENGTH);
+		int indexOffset = 0;
 
-		char *c = playerName;
-
-		while (*c != 0)
+		for (int j = 0; j < Q_strlen(pData->m_szName); j++)
 		{
-			if (*c == '"')
-				*c = '\'';
-
-			c++;
+			if (pData->m_szName[j] == '"')
+			{
+				playerName[j + indexOffset] = '\\';
+				playerName[j + indexOffset + 1] = '"';
+				indexOffset += 1;
+			}
+			else
+				playerName[j + indexOffset] = pData->m_szName[j];
 		}
 
-		if (i > 0)
+		if (playersProcessed > 0)
 			Q_strcat(json, ",", JSON_SIZE);
 
-		Q_strcat(json, UTIL_VarArgs(
-			"{\"steamIdUint64\":%llu,\"steamId\":\"%s\",\"name\":\"%s\",\"team\":%d}",
-			pData->m_nSteamID, pData->m_szSteamID, playerName, pData->m_nTeam
-			), JSON_SIZE);
+		Q_strcat(json, "{", JSON_SIZE);
+
+		Q_strcat(json, UTIL_VarArgs("\"info\":{\"steamIdUint64\":%llu,\"steamId\":\"%s\",\"name\":\"%s\"}", pData->m_nSteamID, pData->m_szSteamID, playerName), JSON_SIZE);
+
+		Q_strcat(json, ",\"matchPeriodData\":[", JSON_SIZE);
+
+		for (int j = 0; j < pData->m_MatchPeriodData.Count(); j++)
+		{
+			CPlayerMatchPeriodData *pMPData = pData->m_MatchPeriodData[j];
+
+			if (j > 0)
+				Q_strcat(json, ",", JSON_SIZE);
+
+			Q_strcat(json, "{", JSON_SIZE);
+
+			Q_strcat(json, UTIL_VarArgs("\"info\":{\"startSecond\":%d,\"endSecond\":%d,\"team\":%d,\"posType\":%d}", pMPData->m_nStartSecond, pMPData->m_nEndSecond, pMPData->m_nTeam - TEAM_A, pMPData->m_nTeamPosType), JSON_SIZE);
+
+			Q_strcat(json, UTIL_VarArgs(",\"statistics\":[%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d]",
+				pMPData->m_nRedCards, pMPData->m_nYellowCards, pMPData->m_nFouls, pMPData->m_nFoulsSuffered, pMPData->m_nSlidingTackles, pMPData->m_nSlidingTacklesCompleted, pMPData->m_nGoalsConceded, pMPData->m_nShots, pMPData->m_nShotsOnGoal, pMPData->m_nPassesCompleted, pMPData->m_nInterceptions, pMPData->m_nOffsides, pMPData->m_nGoals, pMPData->m_nOwnGoals, pMPData->m_nAssists, pMPData->m_nPasses, pMPData->m_nFreeKicks, pMPData->m_nPenalties, pMPData->m_nCorners, pMPData->m_nThrowIns, pMPData->m_nKeeperSaves, pMPData->m_nGoalKicks, pMPData->m_nPossession, (int)pMPData->m_flExactDistanceCovered
+				), JSON_SIZE);
+
+			Q_strcat(json, "}", JSON_SIZE);
+		}
+
+		Q_strcat(json, "]", JSON_SIZE);
+
+		Q_strcat(json, "}", JSON_SIZE);
+
+		playersProcessed += 1;
+	}
+
+	Q_strcat(json, "]", JSON_SIZE);
+
+	Q_strcat(json, ",\"matchEvents\":[", JSON_SIZE);
+
+	int eventsProcessed = 0;
+
+	for (int i = 0; i < ReplayManager()->GetMatchEventCount(); i++)
+	{
+		MatchEvent *pMatchEvent = ReplayManager()->GetMatchEvent(i);
+
+		if (eventsProcessed > 0)
+			Q_strcat(json, ",", JSON_SIZE);
+
+		Q_strcat(json, UTIL_VarArgs("{\"second\":%d,\"event\":\"%s\",\"matchState\":\"%s\",\"team\":%d,\"player1SteamIdUint64\":%llu,\"player2SteamIdUint64\":%llu,\"player3SteamIdUint64\":%llu}", pMatchEvent->second, g_szMatchEventNames[pMatchEvent->matchEventType], g_szMatchStateNames[pMatchEvent->matchState], pMatchEvent->team - TEAM_A, pMatchEvent->pPlayer1Data ? pMatchEvent->pPlayer1Data->m_nSteamID : 0, pMatchEvent->pPlayer2Data ? pMatchEvent->pPlayer2Data->m_nSteamID : 0, pMatchEvent->pPlayer3Data ? pMatchEvent->pPlayer3Data->m_nSteamID : 0), JSON_SIZE);
+
+		eventsProcessed += 1;
 	}
 
 	Q_strcat(json, "]", JSON_SIZE);
@@ -2241,36 +2162,3 @@ void CC_SV_SaveMatchData(const CCommand &args)
 }
 
 ConCommand sv_savematchdata("sv_savematchdata", CC_SV_SaveMatchData, "", 0);
-
-void CPlayerPersistentData::ResetData()
-{
-	m_nRedCards = 0;
-	m_nYellowCards = 0;
-	m_nFouls = 0;
-	m_nFoulsSuffered = 0;
-	m_nSlidingTackles = 0;
-	m_nSlidingTacklesCompleted = 0;
-	m_nGoalsConceded = 0;
-	m_nShots = 0;
-	m_nShotsOnGoal = 0;
-	m_nPassesCompleted = 0;
-	m_nInterceptions = 0;
-	m_nOffsides = 0;
-	m_nGoals = 0;
-	m_nOwnGoals = 0;
-	m_nAssists = 0;
-	m_nPasses = 0;
-	m_nFreeKicks = 0;
-	m_nPenalties = 0;
-	m_nCorners = 0;
-	m_nThrowIns = 0;
-	m_nKeeperSaves = 0;
-	m_nGoalKicks = 0;
-	m_nRating = 0;
-	m_nPossession = 0;
-	m_flPossessionTime = 0.0f;
-	m_nDistanceCovered = 0;
-	m_flExactDistanceCovered = 0.0f;
-	m_nNextCardJoin = 0;
-	m_nTeam = TEAM_UNASSIGNED;
-}

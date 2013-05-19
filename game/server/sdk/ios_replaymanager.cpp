@@ -312,8 +312,6 @@ void CReplayManager::StopReplay()
 		VectorAngles(Vector(0, pRealPl->GetTeam()->m_nForward, 0), ang);
 		pRealPl->SetLocalAngles(ang);
 		pRealPl->SetLocalVelocity(vec3_origin);
-		//pRealPl->SetLocalOrigin(pRealPl->m_vPreReplayPos);
-		//pRealPl->SetLocalAngles(pRealPl->m_aPreReplayAngles);
 		pRealPl->RemoveEffects(EF_NODRAW);
 		//pRealPl->RemoveEFlags(EFL_NOCLIP_ACTIVE);
 		pRealPl->SetMoveType(MOVETYPE_WALK);
@@ -562,8 +560,6 @@ void CReplayManager::RestoreSnapshot()
 
 		if (!(pRealPl->GetEffects() & EF_NODRAW))
 		{
-			pRealPl->m_vPreReplayPos = pRealPl->GetLocalOrigin();
-			pRealPl->m_aPreReplayAngles = pRealPl->GetLocalAngles();
 			pRealPl->AddEffects(EF_NODRAW);
 			pRealPl->DoServerAnimationEvent(PLAYERANIMEVENT_CANCEL);
 			pRealPl->AddSolidFlags(FSOLID_NOT_SOLID);

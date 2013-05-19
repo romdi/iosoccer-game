@@ -1413,12 +1413,6 @@
     <ClCompile Include="game_controls\iosoptions.cpp">
       <Filter>Source Files\game_controls</Filter>
     </ClCompile>
-    <ClCompile Include="game_controls\motmvotingmenu.cpp">
-      <Filter>Source Files\game_controls</Filter>
-    </ClCompile>
-    <ClCompile Include="game_controls\postmatchstatsmenu.cpp">
-      <Filter>Source Files\game_controls</Filter>
-    </ClCompile>
     <ClCompile Include="game_controls\matcheventmenu.cpp">
       <Filter>Source Files\game_controls</Filter>
     </ClCompile>
@@ -3198,12 +3192,6 @@
       <Filter>game_controls Header Files</Filter>
     </ClInclude>
     <ClInclude Include="game_controls\iosoptions.h">
-      <Filter>game_controls Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="game_controls\motmvotingmenu.h">
-      <Filter>game_controls Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="game_controls\postmatchstatsmenu.h">
       <Filter>game_controls Header Files</Filter>
     </ClInclude>
     <ClInclude Include="game_controls\matcheventmenu.h">

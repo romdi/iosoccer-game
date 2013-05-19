@@ -504,18 +504,7 @@ const Color &C_PlayerResource::GetPlayerColor(int index )
 		return g_ColorYellow;
 
 	if (GetTeam(index) == TEAM_SPECTATOR)
-	{
-		int team;
-
-		if (GetSpecTeam(index) == 1)
-			team = TEAM_A;
-		else if (GetSpecTeam(index) == 2)
-			team = TEAM_B;
-		else
-			team = TEAM_SPECTATOR;
-
-		return GetTeamColor(team);
-	}
+		return GetTeamColor(GetSpecTeam(index));
 
 	return GetTeamColor(GetTeam(index));
 }

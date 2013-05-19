@@ -103,7 +103,7 @@ bool CEventLog::PrintPlayerEvent( IGameEvent *event )
 
 		if ( !bDisconnecting )
 		{
-			const int newTeam = event->GetInt( "team" );
+			const int newTeam = event->GetInt( "newteam" );
 			const int oldTeam = event->GetInt( "oldteam" );
 			CTeam *team = GetGlobalTeam( newTeam );
 			CTeam *oldteam = GetGlobalTeam( oldTeam );
