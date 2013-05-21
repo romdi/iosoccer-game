@@ -15,7 +15,7 @@
 #endif
 
 
-#include "teamplay_gamerules.h"
+#include "multiplay_gamerules.h"
 #include "convar.h"
 #include "gamevars_shared.h"
 #include "weapon_sdkbase.h"
@@ -159,10 +159,10 @@ public:
 #endif
 };
 
-class CSDKGameRules : public CTeamplayRules
+class CSDKGameRules : public CMultiplayRules
 {
 public:
-	DECLARE_CLASS( CSDKGameRules, CTeamplayRules );
+	DECLARE_CLASS( CSDKGameRules, CMultiplayRules );
 
 	virtual bool	ShouldCollide( int collisionGroup0, int collisionGroup1 );
 

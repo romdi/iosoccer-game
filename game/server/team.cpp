@@ -262,10 +262,10 @@ void CTeam::UpdateClientData( CBasePlayer *pPlayer )
 //-----------------------------------------------------------------------------
 // Purpose: Add the specified player to this team. Remove them from their current team, if any.
 //-----------------------------------------------------------------------------
-void CTeam::AddPlayer( CBasePlayer *pPlayer )
+void CTeam::AddPlayer( CBasePlayer *pPlayer, int posIndex )
 {
 	m_aPlayers.AddToTail( pPlayer );
-	m_PosIndexPlayerIndices[ToSDKPlayer(pPlayer)->GetTeamPosIndex()] = m_aPlayers.Count() - 1;
+	m_PosIndexPlayerIndices[posIndex] = m_aPlayers.Count() - 1;
 	NetworkStateChanged();
 }
 

@@ -324,9 +324,6 @@
     <ClCompile Include="c_team.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="c_team_objectiveresource.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="c_tesla.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -874,12 +871,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\takedamageinfo.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\shared\teamplay_gamerules.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\shared\teamplayroundbased_gamerules.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\test_ehandle.cpp">
@@ -1440,9 +1431,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="c_slideshow_display.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="c_team_objectiveresource.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="cdll_bounded_cvars.h">
@@ -3069,12 +3057,6 @@
       <Filter>Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\takedamageinfo.h">
-      <Filter>Game Shared Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shared\teamplay_gamerules.h">
-      <Filter>Game Shared Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shared\teamplayroundbased_gamerules.h">
       <Filter>Game Shared Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\tempentity.h">

@@ -1041,9 +1041,6 @@
     <ClCompile Include="team_spawnpoint.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\shared\teamplay_gamerules.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="TemplateEntities.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -2175,9 +2172,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="team_spawnpoint.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shared\teamplay_gamerules.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\tempentity.h">

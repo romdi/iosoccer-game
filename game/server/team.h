@@ -61,7 +61,7 @@ public:
 	//-----------------------------------------------------------------------------
 	// Players
 	//-----------------------------------------------------------------------------
-	virtual void AddPlayer( CBasePlayer *pPlayer );
+	virtual void AddPlayer( CBasePlayer *pPlayer, int posIndex );
 	virtual void RemovePlayer( CBasePlayer *pPlayer );
 	virtual int  GetNumPlayers( void );
 	virtual CBasePlayer *GetPlayer( int iIndex );

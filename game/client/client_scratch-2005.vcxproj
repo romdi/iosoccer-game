@@ -319,7 +319,6 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClCompile Include="c_sprite_perfmonitor.cpp" />
     <ClCompile Include="c_sun.cpp" />
     <ClCompile Include="c_team.cpp" />
-    <ClCompile Include="c_team_objectiveresource.cpp" />
     <ClCompile Include="c_tesla.cpp" />
     <ClCompile Include="c_test_proxytoggle.cpp" />
     <ClCompile Include="c_user_message_register.cpp" />
@@ -647,8 +646,6 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     </ClCompile>
     <ClCompile Include="..\shared\studio_shared.cpp" />
     <ClCompile Include="..\shared\takedamageinfo.cpp" />
-    <ClCompile Include="..\shared\teamplay_gamerules.cpp" />
-    <ClCompile Include="..\shared\teamplayroundbased_gamerules.cpp" />
     <ClCompile Include="..\shared\test_ehandle.cpp" />
     <ClCompile Include="text_message.cpp" />
     <ClCompile Include="texturescrollmaterialproxy.cpp" />
@@ -837,7 +834,6 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClInclude Include="..\shared\baseachievement.h" />
     <ClInclude Include="c_props.h" />
     <ClInclude Include="c_slideshow_display.h" />
-    <ClInclude Include="c_team_objectiveresource.h" />
     <ClInclude Include="cdll_bounded_cvars.h" />
     <ClInclude Include="commentary_modelviewer.h" />
     <ClInclude Include="..\shared\GameStats.h" />
@@ -1390,8 +1386,6 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClInclude Include="..\shared\SpriteTrail.h" />
     <ClInclude Include="..\shared\sun_shared.h" />
     <ClInclude Include="..\shared\takedamageinfo.h" />
-    <ClInclude Include="..\shared\teamplay_gamerules.h" />
-    <ClInclude Include="..\shared\teamplayroundbased_gamerules.h" />
     <ClInclude Include="..\shared\tempentity.h" />
     <ClInclude Include="..\shared\touchlink.h" />
     <ClInclude Include="..\shared\usercmd.h" />

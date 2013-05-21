@@ -1020,12 +1020,17 @@ int CSDKGameRules::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarge
 void CSDKGameRules::ClientDisconnected( edict_t *pClient )
 {
 	CSDKPlayer *pPl = (CSDKPlayer *)CBaseEntity::Instance(pClient);
-	//CPlayerPersistentData::SavePlayerData(pPl);
+	if (pPl)
+	{
+		if (pPl->GetPlayerBall())
+			pPl->GetPlayerBall()->RemovePlayerBall();
 
-	if (pPl->GetPlayerBall())
-		pPl->GetPlayerBall()->RemovePlayerBall();
+		pPl->SetConnected(PlayerDisconnecting);
 
-	//pPl->GetTeam()->FindNewCaptain();
+		// Remove the player from his team
+		if (pPl->GetTeam())
+			pPl->SetDesiredTeam(TEAM_UNASSIGNED, TEAM_SPECTATOR, 0, true, false);
+	}
 
 	BaseClass::ClientDisconnected( pClient );
 }

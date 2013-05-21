@@ -529,28 +529,13 @@ void CSDKPlayer::ChangeTeam()
 		return;
 	}
 
-	IGameEvent *event = gameeventmanager->CreateEvent("player_team");
-	if (event)
-	{
-		event->SetInt("userid", GetUserID());
-		event->SetInt("newteam", m_nTeamToJoin);
-		event->SetInt("oldteam", GetTeamNumber());
-		event->SetBool("disconnect", IsDisconnecting());
-		event->SetString("name", GetPlayerName());
-		event->SetInt("newteampos", m_nTeamPosIndexToJoin);
-		event->SetInt("oldteampos", GetTeamPosIndex());
-		event->SetInt("newspecteam", m_nSpecTeamToJoin);
-		event->SetInt("oldspecteam", m_nSpecTeam);
-
-		gameeventmanager->FireEvent( event );
-	}
-
 	GetPlayerData()->EndCurrentMatchPeriod();
 
 	if (GetTeam())
 		GetTeam()->RemovePlayer(this);
 
-	GetGlobalTeam(m_nTeamToJoin)->AddPlayer(this);
+	if (m_nTeamToJoin != TEAM_UNASSIGNED)
+		GetGlobalTeam(m_nTeamToJoin)->AddPlayer(this, m_nTeamPosIndexToJoin);
 
 	int oldTeam = GetTeamNumber();
 	SetTeamNumber(m_nTeamToJoin);
@@ -575,7 +560,8 @@ void CSDKPlayer::ChangeTeam()
 	}
 	else // active player
 	{
-		GetPlayerData()->StartNewMatchPeriod();
+		if (!SDKGameRules()->IsIntermissionState())
+			GetPlayerData()->StartNewMatchPeriod();
 
 		if (GetTeamNumber() != oldTeam)
 			m_nTeamPosNum = FindAvailableTeamPosNum();
@@ -596,6 +582,24 @@ void CSDKPlayer::ChangeTeam()
 		else
 			State_Transition( PLAYER_STATE_ACTIVE);
 	}
+
+	IGameEvent *event = gameeventmanager->CreateEvent("player_team");
+	if (event)
+	{
+		event->SetInt("userid", GetUserID());
+		event->SetInt("newteam", GetTeamNumber());
+		event->SetInt("oldteam", oldTeam);
+		event->SetBool("disconnect", IsDisconnecting());
+		event->SetString("name", GetPlayerName());
+		event->SetInt("newteampos", GetTeamPosIndex());
+		event->SetInt("oldteampos", oldPosIndex);
+		event->SetInt("newspecteam", m_nSpecTeam);
+		event->SetInt("oldspecteam", oldSpecTeam);
+
+		gameeventmanager->FireEvent( event );
+	}
+
+	ResetFlags();
 
 	g_pPlayerResource->UpdatePlayerData();
 }
@@ -976,7 +980,7 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 		}
 
 		// Find team and pos for auto-join
-		if (posIndex == -1 || team == TEAM_INVALID)
+		if (posIndex == -1 || team == TEAM_INVALID || team == TEAM_UNASSIGNED)
 		{
 			int checkTeam = GetGlobalTeam(TEAM_A)->GetNumPlayers() <= GetGlobalTeam(TEAM_B)->GetNumPlayers() ? TEAM_A : TEAM_B;
 
@@ -993,7 +997,8 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 			}
 		}
 
-		if (posIndex == -1 || team == TEAM_INVALID)
+		// Couldn't find auto-join position
+		if (posIndex < 0 || posIndex > mp_maxplayers.GetInt() - 1 || team < TEAM_SPECTATOR || team > TEAM_B)
 			return false;
 
 		if (team == GetTeamNumber() && posIndex == GetTeamPosIndex())

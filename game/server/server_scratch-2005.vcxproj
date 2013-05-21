@@ -695,7 +695,6 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "d:\games\steam\
     <ClCompile Include="tanktrain.cpp" />
     <ClCompile Include="team.cpp" />
     <ClCompile Include="team_spawnpoint.cpp" />
-    <ClCompile Include="..\shared\teamplay_gamerules.cpp" />
     <ClCompile Include="TemplateEntities.cpp" />
     <ClCompile Include="tempmonster.cpp" />
     <ClCompile Include="tesla.cpp" />
@@ -1078,7 +1077,6 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "d:\games\steam\
     <ClInclude Include="..\..\public\stringregistry.h" />
     <ClInclude Include="team.h" />
     <ClInclude Include="team_spawnpoint.h" />
-    <ClInclude Include="..\shared\teamplay_gamerules.h" />
     <ClInclude Include="..\shared\tempentity.h" />
     <ClInclude Include="TemplateEntities.h" />
     <ClInclude Include="..\shared\touchlink.h" />
