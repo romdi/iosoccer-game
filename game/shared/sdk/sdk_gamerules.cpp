@@ -1371,7 +1371,7 @@ void CSDKGameRules::State_Enter( match_state_t newState )
 
 		if (!IsIntermissionState())
 		{
-			pPl->GetData()->StartNewMatchPeriod();
+			pPl->GetPlayerData()->StartNewMatchPeriod();
 		}
 	}
 
@@ -1410,7 +1410,7 @@ void CSDKGameRules::State_Leave(match_state_t newState)
 
 		if (!IsIntermissionState())
 		{
-			pPl->GetData()->EndCurrentMatchPeriod();
+			pPl->GetPlayerData()->EndCurrentMatchPeriod();
 		}
 	}
 

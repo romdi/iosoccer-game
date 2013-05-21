@@ -340,7 +340,7 @@ public:
 
 	inline CPlayerMatchData			*GetMatchData() { return m_pData->m_pMatchData; }
 	inline CPlayerMatchPeriodData	*GetMatchPeriodData() { return m_pData->m_MatchPeriodData.Tail(); }
-	inline CPlayerPersistentData	*GetData() { return m_pData; }
+	inline CPlayerPersistentData	*GetPlayerData() { return m_pData; }
 	inline void						SetData(CPlayerPersistentData *data) { m_pData = data; }
 
 	int					GetRedCards(void) { return GetMatchData()->m_nRedCards; }
@@ -423,11 +423,11 @@ public:
 	int					GetRating(void) { return GetMatchData()->m_nRating; }
 	void				SetRating(int amount) { GetMatchData()->m_nRating = amount; }
 
-	int					GetNextCardJoin(void) { return GetData()->m_nNextCardJoin; }
-	void				SetNextCardJoin(int seconds) { GetData()->m_nNextCardJoin = seconds; }
+	int					GetNextCardJoin(void) { return GetPlayerData()->m_nNextCardJoin; }
+	void				SetNextCardJoin(int seconds) { GetPlayerData()->m_nNextCardJoin = seconds; }
 
-	const char			*GetLastKnownName() { return GetData()->m_szName; }
-	void				SetLastKnownName(const char *name) { Q_strncpy(GetData()->m_szName, name, MAX_PLAYER_NAME_LENGTH); }
+	const char			*GetLastKnownName() { return GetPlayerData()->m_szName; }
+	void				SetLastKnownName(const char *name) { Q_strncpy(GetPlayerData()->m_szName, name, MAX_PLAYER_NAME_LENGTH); }
 
 	float				GetNextJoin() { return m_flNextJoin; }
 	void				SetNextJoin(float time) { m_flNextJoin = time; }

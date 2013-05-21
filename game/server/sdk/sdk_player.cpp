@@ -545,7 +545,7 @@ void CSDKPlayer::ChangeTeam()
 		gameeventmanager->FireEvent( event );
 	}
 
-	GetData()->EndCurrentMatchPeriod();
+	GetPlayerData()->EndCurrentMatchPeriod();
 
 	if (GetTeam())
 		GetTeam()->RemovePlayer(this);
@@ -575,7 +575,7 @@ void CSDKPlayer::ChangeTeam()
 	}
 	else // active player
 	{
-		GetData()->StartNewMatchPeriod();
+		GetPlayerData()->StartNewMatchPeriod();
 
 		if (GetTeamNumber() != oldTeam)
 			m_nTeamPosNum = FindAvailableTeamPosNum();
@@ -1665,7 +1665,7 @@ void CSDKPlayer::SetPlayerName(const char *name)
 
 		Q_strncpy(m_szNetname, name, sizeof(m_szNetname));
 
-		if (GetData())
+		if (GetPlayerData())
 			SetLastKnownName(m_szNetname);
 
 		engine->ClientCommand(edict(), UTIL_VarArgs("setinfo name \"%s\"", m_szNetname));
