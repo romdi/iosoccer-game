@@ -375,7 +375,7 @@ public:
 	bool IsInjuryTime();
 	int GetShieldRadius(int team, bool isTaker);
 	void SetMatchDisplayTimeSeconds(int seconds);
-	int GetMatchDisplayTimeSeconds(bool clamped = false, bool ignoreIntermissions = false);
+	int GetMatchDisplayTimeSeconds(bool addInjuryTime = true, bool getCountdownAtIntermissions = true);
 
 	CNetworkVar(int, m_nShieldType);
 	CNetworkVar(int, m_nShieldTeam);

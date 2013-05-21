@@ -1964,7 +1964,137 @@ void CPlayerPersistentData::EndCurrentMatchPeriod()
 	}
 }
 
-void CPlayerPersistentData::ConvertAllPlayerDataToJson()
+#include "curl/curl.h"
+ConVar sv_webserver_url("sv_webserver_url", "http://simrai.iosoccer.com/matches");
+ConVar sv_webserver_token("sv_webserver_token", "");
+
+static const int JSON_SIZE = 40 * 1024;
+
+struct Curl_t
+{
+	char json[JSON_SIZE];
+	char *memory;
+	size_t size;
+};
+ 
+static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
+{
+  size_t realsize = size * nmemb;
+  struct Curl_t *mem = (struct Curl_t *)userp;
+ 
+  mem->memory = (char *)realloc(mem->memory, mem->size + realsize + 1);
+  if(mem->memory == NULL) {
+    /* out of memory! */ 
+    printf("not enough memory (realloc returned NULL)\n");
+    return 0;
+  }
+ 
+  memcpy(&(mem->memory[mem->size]), contents, realsize);
+  mem->size += realsize;
+  mem->memory[mem->size] = 0;
+ 
+  return realsize;
+}
+
+unsigned CurlSendJSON(void *params)
+{
+	Curl_t *pVars = (Curl_t *)params;
+	pVars->memory = (char *)malloc(1);
+	pVars->size = 0;
+
+	CURL *curl;
+	CURLcode res;
+
+	/* In windows, this will init the winsock stuff */ 
+	res = curl_global_init(CURL_GLOBAL_DEFAULT);
+	/* Check for errors */ 
+	if(res != CURLE_OK) {
+		fprintf(stderr, "curl_global_init() failed: %s\n",
+			curl_easy_strerror(res));
+
+		delete pVars;
+
+		return 1;
+	}
+
+	/* get a curl handle */ 
+	curl = curl_easy_init();
+	if(curl) {
+		/* First set the URL that is about to receive our POST. */ 
+		curl_easy_setopt(curl, CURLOPT_URL, sv_webserver_url.GetString());
+
+		/* Now specify we want to POST data */ 
+		curl_easy_setopt(curl, CURLOPT_POST, 1L);
+		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, pVars->json);
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, pVars);
+		/* we want to use our own read function */ 
+		//curl_easy_setopt(curl, CURLOPT_READFUNCTION, read_callback);
+
+		/* pointer to pass to our read function */ 
+		//curl_easy_setopt(curl, CURLOPT_READDATA, &pooh);
+
+		/* get verbose debug output please */ 
+		curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+
+		struct curl_slist *headers = NULL;
+		headers = curl_slist_append(headers, "Accept: text/plain");  
+		headers = curl_slist_append(headers, "Content-Type: application/json");
+		headers = curl_slist_append(headers, "charsets: utf-8"); 
+		res = curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+		/* use curl_slist_free_all() after the *perform() call to free this
+		list again */ 
+
+		/* Perform the request, res will get the return code */ 
+		res = curl_easy_perform(curl);
+		long code;
+		curl_easy_getinfo(curl, CURLINFO_HTTP_CODE, &code);
+		/* Check for errors */ 
+		if(res != CURLE_OK)
+		{
+			char msg[128];
+			Q_snprintf(msg, sizeof(msg), "Couldn't submit match statistics to web server: cURL error code '%d'. Wrong web server URL or web server down?", res);
+			UTIL_ClientPrintAll(HUD_PRINTTALK, msg);
+		}
+		else
+		{
+			if (code == 200)
+			{
+				char msg[128];
+				Q_snprintf(msg, sizeof(msg), "Check out this match's statistics at %s/%s", sv_webserver_url.GetString(), pVars->memory);
+				UTIL_ClientPrintAll(HUD_PRINTTALK, msg);
+			}
+			else if (code == 401)
+			{
+				UTIL_ClientPrintAll(HUD_PRINTTALK, "Couldn't submit match statistics to web server: Invalid or revoked API token.");
+			}
+		}
+
+		/* always cleanup */ 
+		curl_easy_cleanup(curl);
+	}
+
+	curl_global_cleanup();
+
+	if(pVars->memory)
+		free(pVars->memory);
+
+	delete pVars;
+
+	return 0;
+}
+
+void SendMatchDataToWebserver(const char *json)
+{
+	Curl_t *pVars = new Curl_t;
+	memcpy(pVars->json, json, JSON_SIZE);
+	pVars->json[Q_strlen(pVars->json) - 1] = 0;
+	Q_strcat(pVars->json, UTIL_VarArgs(",\"access_token\":\"%s\"}", sv_webserver_token.GetString()), JSON_SIZE);
+	//Q_strncpy(pVars->json, "{\"foo\": \"bar\"}", JSON_SIZE);
+	CreateSimpleThread(CurlSendJSON, pVars);
+}
+
+void CPlayerPersistentData::ConvertAllPlayerDataToJson(bool sendToWebserver)
 {
 	static const int STAT_NAME_COUNT = 24;
 	static const char statAttrs[STAT_NAME_COUNT][32] =
@@ -1995,11 +2125,10 @@ void CPlayerPersistentData::ConvertAllPlayerDataToJson()
 		"distanceCovered"
 	};
 
-	static const int JSON_SIZE = 40960;
 	char *json = new char[JSON_SIZE];
 	json[0] = 0;
 
-	Q_strcat(json, "{", JSON_SIZE);
+	Q_strcat(json, "{\"matchData\":{", JSON_SIZE);
 
 	Q_strcat(json, "\"statisticAttributes\":[", JSON_SIZE);
 
@@ -2022,9 +2151,11 @@ void CPlayerPersistentData::ConvertAllPlayerDataToJson()
 
 		Q_strcat(json, UTIL_VarArgs("\"%s\":{", (team == TEAM_A ? "homeTeam" : "awayTeam")), JSON_SIZE);
 
-		Q_strcat(json, UTIL_VarArgs("\"info\":{\"name\":\"%s\"},", (pTeam->GetShortTeamName()[0] == 0 ? pTeam->GetKitName() : pTeam->GetShortTeamName())), JSON_SIZE);
+		bool isMix = (pTeam->GetShortTeamName()[0] == 0);
 
-		Q_strcat(json, UTIL_VarArgs("\"statistics\":[%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d]",
+		Q_strcat(json, UTIL_VarArgs("\"info\":{\"name\":\"%s\",\"isMix\":%s}", (isMix ? pTeam->GetKitName() : pTeam->GetShortTeamName()), (isMix ? "true" : "false")), JSON_SIZE);
+
+		Q_strcat(json, UTIL_VarArgs(",\"statistics\":[%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d]",
 			pTeam->m_RedCards, pTeam->m_YellowCards, pTeam->m_Fouls, pTeam->m_FoulsSuffered, pTeam->m_SlidingTackles, pTeam->m_SlidingTacklesCompleted, pTeam->m_GoalsConceded, pTeam->m_Shots, pTeam->m_ShotsOnGoal, pTeam->m_PassesCompleted, pTeam->m_Interceptions, pTeam->m_Offsides, pTeam->m_Goals, pTeam->m_OwnGoals, pTeam->m_Assists, pTeam->m_Passes, pTeam->m_FreeKicks, pTeam->m_Penalties, pTeam->m_Corners, pTeam->m_ThrowIns, pTeam->m_KeeperSaves, pTeam->m_GoalKicks, pTeam->m_Possession, (int)pTeam->m_flExactDistanceCovered
 			), JSON_SIZE);
 
@@ -2073,7 +2204,22 @@ void CPlayerPersistentData::ConvertAllPlayerDataToJson()
 
 			Q_strcat(json, "{", JSON_SIZE);
 
-			Q_strcat(json, UTIL_VarArgs("\"info\":{\"startSecond\":%d,\"endSecond\":%d,\"team\":%d,\"posType\":%d}", pMPData->m_nStartSecond, pMPData->m_nEndSecond, pMPData->m_nTeam - TEAM_A, pMPData->m_nTeamPosType), JSON_SIZE);
+			int startSecond = pMPData->m_nStartSecond;
+
+			if (startSecond < 0)
+			{
+				DevMsg("Illegal 'start second' value: %d\n", startSecond);
+				startSecond = 0;
+			}
+
+			int endSecond = pMPData->m_nEndSecond;
+
+			if (endSecond == -1)
+			{
+				endSecond = SDKGameRules()->GetMatchDisplayTimeSeconds(true, false);
+			}
+
+			Q_strcat(json, UTIL_VarArgs("\"info\":{\"startSecond\":%d,\"endSecond\":%d,\"team\":%d,\"position\":\"%s\"}", startSecond, endSecond, pMPData->m_nTeam - TEAM_A, g_szPosNames[pMPData->m_nTeamPosType]), JSON_SIZE);
 
 			Q_strcat(json, UTIL_VarArgs(",\"statistics\":[%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d]",
 				pMPData->m_nRedCards, pMPData->m_nYellowCards, pMPData->m_nFouls, pMPData->m_nFoulsSuffered, pMPData->m_nSlidingTackles, pMPData->m_nSlidingTacklesCompleted, pMPData->m_nGoalsConceded, pMPData->m_nShots, pMPData->m_nShotsOnGoal, pMPData->m_nPassesCompleted, pMPData->m_nInterceptions, pMPData->m_nOffsides, pMPData->m_nGoals, pMPData->m_nOwnGoals, pMPData->m_nAssists, pMPData->m_nPasses, pMPData->m_nFreeKicks, pMPData->m_nPenalties, pMPData->m_nCorners, pMPData->m_nThrowIns, pMPData->m_nKeeperSaves, pMPData->m_nGoalKicks, pMPData->m_nPossession, (int)pMPData->m_flExactDistanceCovered
@@ -2107,9 +2253,7 @@ void CPlayerPersistentData::ConvertAllPlayerDataToJson()
 		eventsProcessed += 1;
 	}
 
-	Q_strcat(json, "]", JSON_SIZE);
-
-	Q_strcat(json, "}", JSON_SIZE);
+	Q_strcat(json, "]}}", JSON_SIZE);
 
 	filesystem->CreateDirHierarchy("statistics", "MOD");
 
@@ -2133,6 +2277,11 @@ void CPlayerPersistentData::ConvertAllPlayerDataToJson()
 
 			c++;
 		}
+	}
+
+	if (sendToWebserver)
+	{
+		SendMatchDataToWebserver(json);
 	}
 	
 	char time[64];
@@ -2158,7 +2307,7 @@ void CC_SV_SaveMatchData(const CCommand &args)
 	if (!UTIL_IsCommandIssuedByServerAdmin())
         return;
 
-	CPlayerPersistentData::ConvertAllPlayerDataToJson();
+	CPlayerPersistentData::ConvertAllPlayerDataToJson(true);
 }
 
 ConCommand sv_savematchdata("sv_savematchdata", CC_SV_SaveMatchData, "", 0);

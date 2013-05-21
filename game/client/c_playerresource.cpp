@@ -497,7 +497,7 @@ const Color &C_PlayerResource::GetPlayerColor(int index )
 	if ( !IsConnected( index ) )
 		return g_ColorWhite;
 
-	if (SDKGameRules()->GetMatchDisplayTimeSeconds(false, true) < GetNextCardJoin(index))
+	if (SDKGameRules()->GetMatchDisplayTimeSeconds(true, false) < GetNextCardJoin(index))
 		return g_ColorRed;
 
 	if (GetYellowCards(index) % 2 == 1)

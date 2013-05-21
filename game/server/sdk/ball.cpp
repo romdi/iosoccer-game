@@ -1986,7 +1986,7 @@ bool CBall::CheckFoul()
 		{
 			m_pFoulingPl->AddRedCard();
 			int banDuration = 60 * (m_eFoulType == FOUL_NORMAL_YELLOW_CARD ? sv_ball_player_yellow_red_card_duration.GetFloat() : sv_ball_player_red_card_duration.GetFloat());
-			int nextJoin = SDKGameRules()->GetMatchDisplayTimeSeconds(true) + banDuration;
+			int nextJoin = SDKGameRules()->GetMatchDisplayTimeSeconds(false) + banDuration;
 			m_pFoulingPl->SetNextCardJoin(nextJoin);
 
 			if (m_pFoulingPl->GetTeamPosType() != POS_GK)

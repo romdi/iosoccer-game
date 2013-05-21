@@ -424,6 +424,7 @@ unsigned DoCurl( void *params )
 	if (code >= 400)
 	{
 		ChatMsg("%s kit not found on server. Wrong kit name?\n", vars->kitName);
+		delete vars;
 		return -1;
 	}
 

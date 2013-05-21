@@ -241,7 +241,7 @@ void CFormationMenu::Update(bool showCaptainMenu)
 				continue;
 			}
 
-			bool posBlocked = SDKGameRules()->GetMatchDisplayTimeSeconds(false, true) < GetGlobalTeam(TEAM_A + i)->m_PosNextJoinSeconds[j];
+			bool posBlocked = SDKGameRules()->GetMatchDisplayTimeSeconds(true, false) < GetGlobalTeam(TEAM_A + i)->m_PosNextJoinSeconds[j];
 
 			Color c;
 

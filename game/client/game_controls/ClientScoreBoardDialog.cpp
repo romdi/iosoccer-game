@@ -892,7 +892,7 @@ void CClientScoreBoardDialog::UpdatePlayerInfo()
 
 			int nextCardJoin = gr->GetNextCardJoin(specList[i].playerIndex);
 
-			if (SDKGameRules()->GetMatchDisplayTimeSeconds(false, true) < nextCardJoin)
+			if (SDKGameRules()->GetMatchDisplayTimeSeconds(true, false) < nextCardJoin)
 				Q_strncat(text, VarArgs(" [%d:%02d]", nextCardJoin / 60, nextCardJoin % 60), sizeof(text));
 
 			if (i < specList.Count() - 1)
