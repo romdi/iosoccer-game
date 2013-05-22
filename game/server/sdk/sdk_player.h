@@ -94,7 +94,7 @@ public:
 
 //	CPlayerPersistentData(const CSteamID *steamID);
 	static void ReallocateAllPlayerData();
-	static void ConvertAllPlayerDataToJson(bool sendToWebserver);
+	static void ConvertAllPlayerDataToJson();
 	static void AllocateData(CSDKPlayer *pPl);
 	static CUtlVector<CPlayerPersistentData *> m_PlayerPersistentData;
 	void ResetData();

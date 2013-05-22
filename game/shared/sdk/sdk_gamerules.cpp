@@ -394,6 +394,7 @@ CSDKGameRules::CSDKGameRules()
 	m_flAdjustedStateEnterTime = -FLT_MAX;
 	m_flTimeoutEnd = 0;
 	m_bAdminWantsTimeout = false;
+	m_nOldMaxplayers = mp_maxplayers.GetInt();
 #else
 	PrecacheMaterial("pitch/offside_line");
 	m_pOffsideLineMaterial = materials->FindMaterial( "pitch/offside_line", TEXTURE_GROUP_CLIENT_EFFECTS );
@@ -984,28 +985,31 @@ bool CSDKGameRules::PlayerCanHearChat( CBasePlayer *pListener, CBasePlayer *pSpe
 //-----------------------------------------------------------------------------
 // Purpose: Find the relationship between players (teamplay vs. deathmatch)
 //-----------------------------------------------------------------------------
-int CSDKGameRules::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget, MessageMode_t messageMode )
+int CSDKGameRules::PlayerRelationship( CBaseEntity *pTarget, CBaseEntity *pSource, MessageMode_t messageMode )
 {
 #ifndef CLIENT_DLL
 	// half life multiplay has a simple concept of Player Relationships.
 	// you are either on another player's team, or you are not.
-	if ( !pPlayer || !pTarget || !pTarget->IsPlayer())
+	if (!pSource || !pSource->IsPlayer() || !pTarget || !pTarget->IsPlayer())
 		return GR_NOTTEAMMATE;
 
-	CSDKPlayer *pPl = dynamic_cast<CSDKPlayer *>(pPlayer);
-	CSDKPlayer *pTar = dynamic_cast<CSDKPlayer *>(pTarget);
-
-	if (!pPl || !pPl)
-		return GR_NOTTEAMMATE;
+	CSDKPlayer *pSDKSource = dynamic_cast<CSDKPlayer *>(pSource);
+	CSDKPlayer *pSDKTarget = dynamic_cast<CSDKPlayer *>(pTarget);
 
 	if (messageMode == MM_SAY_SPEC)
 	{
-		if (pPl->GetTeamNumber() == TEAM_SPECTATOR && pTar->GetTeamNumber() == TEAM_SPECTATOR)
+		if (pSDKSource->GetSpecTeam() == TEAM_SPECTATOR && pSDKTarget->GetSpecTeam() == TEAM_SPECTATOR)
+			return GR_TEAMMATE;
+
+		if ((pSDKSource->GetTeamNumber() == TEAM_SPECTATOR && pSDKSource->GetSpecTeam() != TEAM_SPECTATOR) && pSDKTarget->GetTeamNumber() == TEAM_SPECTATOR)
 			return GR_TEAMMATE;
 	}
 	else
 	{
-		if (pPl->GetSpecTeam() == pTar->GetSpecTeam())
+		if (pSDKSource->GetSpecTeam() == pSDKTarget->GetSpecTeam())
+			return GR_TEAMMATE;
+
+		if (pSDKSource->GetSpecTeam() == TEAM_SPECTATOR && pSDKTarget->GetTeamNumber() == TEAM_SPECTATOR);
 			return GR_TEAMMATE;
 	}
 #endif
@@ -1298,6 +1302,9 @@ ConVar sv_highlights("sv_highlights", "1", FCVAR_NOTIFY);
 static void OnMaxPlayersChange(IConVar *var, const char *pOldValue, float flOldValue)
 {
 #ifdef GAME_DLL
+	if (SDKGameRules())
+		SDKGameRules()->SetOldMaxplayers(atoi(pOldValue));
+
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
 		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
@@ -1307,15 +1314,16 @@ static void OnMaxPlayersChange(IConVar *var, const char *pOldValue, float flOldV
 		pPl->SetDesiredTeam(TEAM_SPECTATOR, pPl->GetTeamNumber(), 0, true, false);
 	}
 
-	for (int i = 0; i < 2; i++)
+	for (int team = TEAM_A; team <= TEAM_B; team++)
 	{
-		if (GetGlobalTeam(TEAM_A + i))
-			GetGlobalTeam(TEAM_A + i)->UpdatePosIndices(true);
+		if (GetGlobalTeam(team))
+			GetGlobalTeam(team)->UpdatePosIndices(true);
 	}
 #endif
 }
 
 ConVar mp_maxplayers("mp_maxplayers", "7", FCVAR_NOTIFY|FCVAR_REPLICATED, "Maximum number of players per team <1-11>", true, 1, true, 11, OnMaxPlayersChange);
+
 ConVar sv_autostartmatch("sv_autostartmatch", "1", FCVAR_NOTIFY|FCVAR_REPLICATED, "");
 ConVar sv_awaytime_warmup("sv_awaytime_warmup", "30", FCVAR_NOTIFY);
 ConVar sv_awaytime_warmup_autospec("sv_awaytime_warmup_autospec", "180", FCVAR_NOTIFY);
@@ -1892,7 +1900,7 @@ void CSDKGameRules::State_COOLDOWN_Enter()
 		}
 	}
 
-	CPlayerPersistentData::ConvertAllPlayerDataToJson(false);
+	CPlayerPersistentData::ConvertAllPlayerDataToJson();
 }
 
 void CSDKGameRules::State_COOLDOWN_Think()

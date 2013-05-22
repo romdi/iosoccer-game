@@ -142,7 +142,7 @@ void CBot::FieldBotJoinTeam()
 		if (!pPl)
 			continue;
 
-		if (!(CSDKPlayer::IsOnField(pPl) || pPl->GetTeamToJoin() != TEAM_INVALID))
+		if (!CSDKPlayer::IsOnField(pPl) && pPl->GetTeamToJoin() != TEAM_A && pPl->GetTeamToJoin() != TEAM_B)
 			continue;
 
 		int team = CSDKPlayer::IsOnField(pPl) ? pPl->GetTeamNumber() : pPl->GetTeamToJoin();
@@ -169,7 +169,6 @@ void CBot::FieldBotJoinTeam()
 			if (posIndex != keeperPosIndex && IsTeamPosFree(team, posIndex, false, &pPl))
 			{
 				SetDesiredTeam(team, team, posIndex, true, false);
-				//g_CurBotNumber += 1;
 				break;
 			}
 			posIndex += 1;

@@ -492,12 +492,6 @@ void CSDKPlayer::Spawn()
 
 bool CSDKPlayer::SetDesiredTeam(int desiredTeam, int desiredSpecTeam, int desiredPosIndex, bool switchInstantly, bool setNextJoinDelay)
 {
-	if (desiredTeam != TEAM_A && desiredTeam != TEAM_B && desiredTeam != TEAM_SPECTATOR)
-		return false;
-
-	if (desiredPosIndex < 0 || desiredPosIndex > mp_maxplayers.GetInt() - 1)
-		return false;
-
 	if (setNextJoinDelay)
 		SetNextJoin(gpGlobals->curtime + mp_joindelay.GetFloat());
 	else
@@ -595,6 +589,8 @@ void CSDKPlayer::ChangeTeam()
 		event->SetInt("oldteampos", oldPosIndex);
 		event->SetInt("newspecteam", m_nSpecTeam);
 		event->SetInt("oldspecteam", oldSpecTeam);
+		event->SetInt("newmaxplayers", mp_maxplayers.GetInt());
+		event->SetInt("oldmaxplayers", SDKGameRules()->GetOldMaxplayers());
 
 		gameeventmanager->FireEvent( event );
 	}
@@ -1092,8 +1088,8 @@ bool CSDKPlayer::IsTeamPosFree(int team, int posIndex, bool ignoreBots, CSDKPlay
 	if (posIndex < 0 || posIndex > mp_maxplayers.GetInt() - 1)
 		return false;
 
-	//if (GetGlobalTeam(team)->GetPosNextJoinSeconds(posIndex) > SDKGameRules()->GetMatchDisplayTimeSeconds())
-	//	return false;
+	if (team == TEAM_SPECTATOR || team == TEAM_UNASSIGNED)
+		return true;
 
 	if (g_Positions[mp_maxplayers.GetInt() - 1][posIndex][POS_TYPE] == POS_GK)
 	{
@@ -1969,11 +1965,13 @@ void CPlayerPersistentData::EndCurrentMatchPeriod()
 	}
 }
 
-#include "curl/curl.h"
-ConVar sv_webserver_url("sv_webserver_url", "http://simrai.iosoccer.com/matches");
-ConVar sv_webserver_token("sv_webserver_token", "");
+ConVar sv_webserver_matchdata_url("sv_webserver_matchdata_url", "http://simrai.iosoccer.com/matches");
+ConVar sv_webserver_matchdata_accesstoken("sv_webserver_matchdata_accesstoken", "");
+ConVar sv_webserver_matchdata_enabled("sv_webserver_matchdata_enabled", "0");
 
 static const int JSON_SIZE = 40 * 1024;
+
+#include "curl/curl.h"
 
 struct Curl_t
 {
@@ -2026,7 +2024,7 @@ unsigned CurlSendJSON(void *params)
 	curl = curl_easy_init();
 	if(curl) {
 		/* First set the URL that is about to receive our POST. */ 
-		curl_easy_setopt(curl, CURLOPT_URL, sv_webserver_url.GetString());
+		curl_easy_setopt(curl, CURLOPT_URL, sv_webserver_matchdata_url.GetString());
 
 		/* Now specify we want to POST data */ 
 		curl_easy_setopt(curl, CURLOPT_POST, 1L);
@@ -2066,7 +2064,7 @@ unsigned CurlSendJSON(void *params)
 			if (code == 200)
 			{
 				char msg[128];
-				Q_snprintf(msg, sizeof(msg), "Check out this match's statistics at %s/%s", sv_webserver_url.GetString(), pVars->memory);
+				Q_snprintf(msg, sizeof(msg), "Check out this match's statistics at %s/%s", sv_webserver_matchdata_url.GetString(), pVars->memory);
 				UTIL_ClientPrintAll(HUD_PRINTTALK, msg);
 			}
 			else if (code == 401)
@@ -2094,12 +2092,12 @@ void SendMatchDataToWebserver(const char *json)
 	Curl_t *pVars = new Curl_t;
 	memcpy(pVars->json, json, JSON_SIZE);
 	pVars->json[Q_strlen(pVars->json) - 1] = 0;
-	Q_strcat(pVars->json, UTIL_VarArgs(",\"access_token\":\"%s\"}", sv_webserver_token.GetString()), JSON_SIZE);
+	Q_strcat(pVars->json, UTIL_VarArgs(",\"access_token\":\"%s\"}", sv_webserver_matchdata_accesstoken.GetString()), JSON_SIZE);
 	//Q_strncpy(pVars->json, "{\"foo\": \"bar\"}", JSON_SIZE);
 	CreateSimpleThread(CurlSendJSON, pVars);
 }
 
-void CPlayerPersistentData::ConvertAllPlayerDataToJson(bool sendToWebserver)
+void CPlayerPersistentData::ConvertAllPlayerDataToJson()
 {
 	static const int STAT_NAME_COUNT = 24;
 	static const char statAttrs[STAT_NAME_COUNT][32] =
@@ -2284,7 +2282,7 @@ void CPlayerPersistentData::ConvertAllPlayerDataToJson(bool sendToWebserver)
 		}
 	}
 
-	if (sendToWebserver)
+	if (sv_webserver_matchdata_enabled.GetBool())
 	{
 		SendMatchDataToWebserver(json);
 	}
@@ -2312,7 +2310,7 @@ void CC_SV_SaveMatchData(const CCommand &args)
 	if (!UTIL_IsCommandIssuedByServerAdmin())
         return;
 
-	CPlayerPersistentData::ConvertAllPlayerDataToJson(true);
+	CPlayerPersistentData::ConvertAllPlayerDataToJson();
 }
 
 ConCommand sv_savematchdata("sv_savematchdata", CC_SV_SaveMatchData, "", 0);

@@ -150,6 +150,9 @@ public:
 	bool			IsSettingNewPos() { return m_bSetNewPos; }
 	bool			HasQueuedState() { return m_bHasQueuedState; }
 
+	void			SendNotifications();
+	void			CheckTimeout();
+
 	void			State_Transition(ball_state_t newState, float delay = 0.0f, bool cancelQueuedState = false, bool isShortMessageDelay = false);
 
 	void			Reset();
@@ -209,7 +212,7 @@ private:
 	float			m_flStateLeaveTime;
 	float			m_flStateActivationDelay;
 	float			m_flStateTimelimit;
-	bool			m_bNextStateMessageSet;
+	bool			m_bNextStateMessageSent;
 	CBallStateInfo	*m_pCurStateInfo;
 
 	void			MarkOffsidePlayers();

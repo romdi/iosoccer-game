@@ -260,6 +260,7 @@ protected:
 	int m_nPenaltyTakingStartTeam;
 	float m_flLastAwayCheckTime;
 	bool m_bAdminWantsTimeout;
+	int m_nOldMaxplayers;
 
 	CUtlVector<int> m_PlayerRotationMinutes;
 
@@ -337,6 +338,8 @@ public:
 	void EnableShield(int type, int team, const Vector &pos);
 	void DisableShield();
 	void SetWeather(PrecipitationType_t type);
+	int GetOldMaxplayers() { return m_nOldMaxplayers; }
+	void SetOldMaxplayers(int maxplayers) { m_nOldMaxplayers = maxplayers; }
 
 	bool ClientConnected(edict_t *pEntity, const char *pszName, const char *pszAddress, char *reject, int maxrejectlen);
 
