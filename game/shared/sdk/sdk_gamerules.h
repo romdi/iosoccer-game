@@ -261,6 +261,7 @@ protected:
 	float m_flLastAwayCheckTime;
 	bool m_bAdminWantsTimeout;
 	int m_nOldMaxplayers;
+	bool m_bUseOldMaxplayers;
 
 	CUtlVector<int> m_PlayerRotationMinutes;
 
@@ -340,6 +341,8 @@ public:
 	void SetWeather(PrecipitationType_t type);
 	int GetOldMaxplayers() { return m_nOldMaxplayers; }
 	void SetOldMaxplayers(int maxplayers) { m_nOldMaxplayers = maxplayers; }
+	bool UseOldMaxplayers() { return m_bUseOldMaxplayers; }
+	void SetUseOldMaxplayers(bool state) { m_bUseOldMaxplayers = state; }
 
 	bool ClientConnected(edict_t *pEntity, const char *pszName, const char *pszAddress, char *reject, int maxrejectlen);
 

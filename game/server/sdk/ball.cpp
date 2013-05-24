@@ -54,7 +54,8 @@ ConVar sv_ball_slidesidespeedcoeff("sv_ball_slidesidespeedcoeff", "0.66", FCVAR_
 ConVar sv_ball_slidezstart("sv_ball_slidezstart", "-50", FCVAR_NOTIFY); 
 ConVar sv_ball_slidezend("sv_ball_slidezend", "40", FCVAR_NOTIFY); 
 
-ConVar sv_ball_keeper_standing_reach( "sv_ball_keeper_standing_reach", "50", FCVAR_NOTIFY );
+ConVar sv_ball_keeper_standing_reach_top( "sv_ball_keeper_standing_reach_top", "65", FCVAR_NOTIFY );
+ConVar sv_ball_keeper_standing_reach_bottom( "sv_ball_keeper_standing_reach_bottom", "35", FCVAR_NOTIFY );
 ConVar sv_ball_keeper_standing_catchcenteroffset_side( "sv_ball_keeper_standing_catchcenteroffset_side", "0", FCVAR_NOTIFY );
 ConVar sv_ball_keeper_standing_catchcenteroffset_z( "sv_ball_keeper_standing_catchcenteroffset_z", "50", FCVAR_NOTIFY );
 
@@ -2248,6 +2249,8 @@ bool CBall::CheckKeeperCatch()
 	float punchAngPitch = 0;
 	float catchCoeff = 1.0f;
 	static float sqrt2 = sqrt(2.0f);
+	float distXY = localDirToBall.Length2D();
+	float distXZ = sqrt(Sqr(localDirToBall.x) + Sqr(localDirToBall.z));
 
 	switch (m_pPl->m_Shared.GetAnimEvent())
 	{
@@ -2307,17 +2310,18 @@ bool CBall::CheckKeeperCatch()
 		break;
 	case PLAYERANIMEVENT_KEEPER_JUMP:
 	default:
+		float maxReachXY = (localDirToBall.z < sv_ball_keeper_standing_catchcenteroffset_z.GetInt() ? sv_ball_keeper_standing_reach_bottom.GetFloat() : sv_ball_keeper_standing_reach_top.GetFloat());
+
 		canReach = (localDirToBall.z < sv_ball_bodypos_keeperarms_end.GetInt()
 			&& localDirToBall.z >= sv_ball_bodypos_feet_start.GetInt()
-			&& abs(localDirToBall.x) <= sv_ball_keeper_standing_reach.GetInt()
-			&& abs(localDirToBall.y) <= sv_ball_keeper_standing_reach.GetInt());
+			&& distXY <= maxReachXY);
 
 		if (canReach)
 		{
 			float distY = localDirToBall.y - sv_ball_keeper_standing_catchcenteroffset_side.GetInt(); 
 			float distZ = localDirToBall.z - sv_ball_keeper_standing_catchcenteroffset_z.GetInt(); 
 
-			float maxYReach = (distY >= 0 ? sv_ball_keeper_standing_reach.GetInt() : -sv_ball_keeper_standing_reach.GetInt()) - sv_ball_keeper_standing_catchcenteroffset_side.GetInt();
+			float maxYReach = (distY >= 0 ? maxReachXY : -maxReachXY) - sv_ball_keeper_standing_catchcenteroffset_side.GetInt();
 			punchAngYaw += abs(distY) / maxYReach * sv_ball_keeper_punch_maxyawangle.GetInt();
 
 			float maxZReach = (distZ >= 0 ? sv_ball_bodypos_keeperarms_end.GetInt() : sv_ball_bodypos_feet_start.GetInt()) - sv_ball_keeper_standing_catchcenteroffset_z.GetInt();

@@ -395,6 +395,7 @@ CSDKGameRules::CSDKGameRules()
 	m_flTimeoutEnd = 0;
 	m_bAdminWantsTimeout = false;
 	m_nOldMaxplayers = mp_maxplayers.GetInt();
+	m_bUseOldMaxplayers = false;
 #else
 	PrecacheMaterial("pitch/offside_line");
 	m_pOffsideLineMaterial = materials->FindMaterial( "pitch/offside_line", TEXTURE_GROUP_CLIENT_EFFECTS );
@@ -1303,7 +1304,10 @@ static void OnMaxPlayersChange(IConVar *var, const char *pOldValue, float flOldV
 {
 #ifdef GAME_DLL
 	if (SDKGameRules())
+	{
 		SDKGameRules()->SetOldMaxplayers(atoi(pOldValue));
+		SDKGameRules()->SetUseOldMaxplayers(true);
+	}
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
@@ -1312,6 +1316,11 @@ static void OnMaxPlayersChange(IConVar *var, const char *pOldValue, float flOldV
 			continue;
 
 		pPl->SetDesiredTeam(TEAM_SPECTATOR, pPl->GetTeamNumber(), 0, true, false);
+	}
+
+	if (SDKGameRules())
+	{
+		SDKGameRules()->SetUseOldMaxplayers(false);
 	}
 
 	for (int team = TEAM_A; team <= TEAM_B; team++)

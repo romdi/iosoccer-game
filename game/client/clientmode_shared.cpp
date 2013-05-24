@@ -849,8 +849,7 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 		int newSpecTeam = event->GetInt("newspecteam");
 		int oldSpecTeam = event->GetInt("oldspecteam");
 
-		int newMaxplayers = event->GetInt("newmaxplayers");
-		int oldMaxplayers = event->GetInt("oldmaxplayers");
+		int maxplayers = event->GetInt("maxplayers");
 
 		if (newTeam == TEAM_UNASSIGNED)
 			return;
@@ -887,10 +886,10 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 		wchar_t wszLocalized[100];
 
 		wchar_t wszNewTeamPos[4];
-		g_pVGuiLocalize->ConvertANSIToUnicode(g_szPosNames[(int)g_Positions[oldMaxplayers - 1][newTeamPos][POS_TYPE]], wszNewTeamPos, sizeof(wszNewTeamPos));
+		g_pVGuiLocalize->ConvertANSIToUnicode(g_szPosNames[(int)g_Positions[maxplayers - 1][newTeamPos][POS_TYPE]], wszNewTeamPos, sizeof(wszNewTeamPos));
 
 		wchar_t wszOldTeamPos[4];
-		g_pVGuiLocalize->ConvertANSIToUnicode(g_szPosNames[(int)g_Positions[oldMaxplayers - 1][oldTeamPos][POS_TYPE]], wszOldTeamPos, sizeof(wszOldTeamPos));
+		g_pVGuiLocalize->ConvertANSIToUnicode(g_szPosNames[(int)g_Positions[maxplayers - 1][oldTeamPos][POS_TYPE]], wszOldTeamPos, sizeof(wszOldTeamPos));
 
 		if (newTeam == TEAM_A || newTeam == TEAM_B)
 		{

@@ -589,8 +589,7 @@ void CSDKPlayer::ChangeTeam()
 		event->SetInt("oldteampos", oldPosIndex);
 		event->SetInt("newspecteam", m_nSpecTeam);
 		event->SetInt("oldspecteam", oldSpecTeam);
-		event->SetInt("newmaxplayers", mp_maxplayers.GetInt());
-		event->SetInt("oldmaxplayers", SDKGameRules()->GetOldMaxplayers());
+		event->SetInt("maxplayers", (SDKGameRules()->UseOldMaxplayers() ? SDKGameRules()->GetOldMaxplayers() : mp_maxplayers.GetInt()));
 
 		gameeventmanager->FireEvent( event );
 	}
