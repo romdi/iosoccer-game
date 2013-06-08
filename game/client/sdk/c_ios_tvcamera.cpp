@@ -116,12 +116,90 @@ void C_TVCamera::GetPositionAndAngle(Vector &pos, QAngle &ang)
 	{
 	case CAM_SIDELINE:
 		{
-			Vector newPos = Vector(targetPos.x - mp_tvcam_sideline_offset_north.GetInt(), targetPos.y, targetPos.z + mp_tvcam_sideline_offset_height.GetInt());
-			Vector newDir = targetPos - newPos;
-			newDir.NormalizeInPlace();
-			newPos.x -= mp_tvcam_offset_north.GetInt();
-			pos = newPos;
-			VectorAngles(newDir, ang);
+			if (SDKGameRules() && SDKGameRules()->IsIntermissionState() && GetReplayManager() && !GetReplayManager()->IsReplaying())
+			{
+				//float xLength = SDKGameRules()->m_vFieldMax.GetX() - SDKGameRules()->m_vFieldMin.GetX();
+				//float yLength = SDKGameRules()->m_vFieldMax.GetY() - SDKGameRules()->m_vFieldMin.GetY();
+
+				float zPos = 450;
+				Vector points[4];
+				points[0] = Vector(SDKGameRules()->m_vFieldMin.GetX(), SDKGameRules()->m_vFieldMin.GetY(), SDKGameRules()->m_vKickOff.GetZ() + zPos);
+				points[1] = Vector(SDKGameRules()->m_vFieldMin.GetX(), SDKGameRules()->m_vFieldMax.GetY(), SDKGameRules()->m_vKickOff.GetZ() + zPos);
+				points[2] = Vector(SDKGameRules()->m_vFieldMax.GetX(), SDKGameRules()->m_vFieldMax.GetY(), SDKGameRules()->m_vKickOff.GetZ() + zPos);
+				points[3] = Vector(SDKGameRules()->m_vFieldMax.GetX(), SDKGameRules()->m_vFieldMin.GetY(), SDKGameRules()->m_vKickOff.GetZ() + zPos);
+				float totalLength = (points[1] - points[0]).Length() + (points[2] - points[1]).Length() + (points[3] - points[2]).Length() + (points[0] - points[3]).Length();
+
+				Vector newPoints[4];
+
+				const float maxDuration = 180.0f;
+				float timePassed = fmodf(gpGlobals->curtime, maxDuration);
+				
+				float lengthSum = 0;
+				int offset = 0;
+				float length = 0;
+
+				do
+				{
+					for (int i = 0; i < 4; i++)
+						newPoints[i] = points[(i + offset) % 4];
+
+					length = (newPoints[2] - newPoints[1]).Length();
+					lengthSum += length;
+					offset += 1;
+				} while (timePassed > (lengthSum / totalLength * maxDuration));
+
+				float maxStepTime = length / totalLength * maxDuration;
+
+				float frac = 1 - ((lengthSum / totalLength * maxDuration) - timePassed) / maxStepTime;
+
+				Vector output;
+				Catmull_Rom_Spline(newPoints[0], newPoints[1], newPoints[2], newPoints[3], frac, output);
+
+/*				float targetDist = (newPoints[2] - newPoints[1]).Length() * frac;
+				float epsilon = 10.0f;
+				float oldDiff = 0;
+				float diff = 0;
+				float change = 0.001f;
+				bool add = true;
+
+				do
+				{
+					frac = clamp(frac += (add ? change : -change), 0.0f, 1.0f);
+
+					Catmull_Rom_Spline(newPoints[0], newPoints[1], newPoints[2], newPoints[3], frac, output);
+					oldDiff = diff;
+					diff = abs((output - newPoints[1]).Length() - targetDist);
+					if (diff >= oldDiff)
+						add = !add;
+				} while (diff > epsilon);*/ 
+
+				pos = output;
+				VectorAngles(SDKGameRules()->m_vKickOff - output, ang);
+			}
+			else if (SDKGameRules() && !SDKGameRules()->IsIntermissionState() && gpGlobals->curtime <= SDKGameRules()->m_flStateEnterTime + 6)
+			{
+				Vector points[4];
+				float zPosStart = 450;
+				float zPosEnd = 50;
+				points[0] = Vector(SDKGameRules()->m_vFieldMin.GetX(), SDKGameRules()->m_vKickOff.GetY() + 10000, SDKGameRules()->m_vKickOff.GetZ() + zPosStart);
+				points[1] = Vector(SDKGameRules()->m_vFieldMin.GetX(), SDKGameRules()->m_vKickOff.GetY(), SDKGameRules()->m_vKickOff.GetZ() + zPosStart);
+				points[2] = Vector(SDKGameRules()->m_vKickOff.GetX(), SDKGameRules()->m_vKickOff.GetY() - 300, SDKGameRules()->m_vKickOff.GetZ() + zPosEnd);
+				points[3] = Vector(SDKGameRules()->m_vKickOff.GetX(), SDKGameRules()->m_vKickOff.GetY() + 10000, SDKGameRules()->m_vKickOff.GetZ() + zPosEnd);
+				float frac = min(1.0f, (gpGlobals->curtime - SDKGameRules()->m_flStateEnterTime) / 3.0f);
+				Vector output;
+				Catmull_Rom_Spline(points[0], points[1], points[2], points[3], frac, output);
+				pos = output;
+				VectorAngles(Vector(SDKGameRules()->m_vKickOff.GetX(), SDKGameRules()->m_vKickOff.GetY(), SDKGameRules()->m_vKickOff.GetZ() + 100) - output, ang);
+			}
+			else
+			{		
+				Vector newPos = Vector(targetPos.x - mp_tvcam_sideline_offset_north.GetInt(), targetPos.y, targetPos.z + mp_tvcam_sideline_offset_height.GetInt());
+				Vector newDir = targetPos - newPos;
+				newDir.NormalizeInPlace();
+				newPos.x -= mp_tvcam_offset_north.GetInt();
+				pos = newPos;
+				VectorAngles(newDir, ang);
+			}
 		}
 		break;
 	case CAM_FIXED_SIDELINE:
