@@ -1573,7 +1573,7 @@ bool CGameMovement::CheckPlayerAnimEvent()
 	Vector forward2D = forward;
 	forward2D.z = 0;
 	forward2D.NormalizeInPlace();
-	bool isSprinting = ((mv->m_nButtons & IN_SPEED) != 0);
+	bool doHighDive = (pPl->m_Shared.GetAnimEventStartButtons() & IN_JUMP) != 0;
 	const float stuckRescueTimeLimit = 4;
 
 	int sidemoveSign;
@@ -1590,7 +1590,7 @@ bool CGameMovement::CheckPlayerAnimEvent()
 	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT:
 	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT:
 		{
-			if (timePassed >= mp_keepersidewarddive_move_duration.GetFloat() + mp_keepersidewarddive_idle_duration.GetFloat())
+			if (timePassed >= (doHighDive ? mp_keeperhighsidewarddive_move_duration.GetFloat() + mp_keeperhighsidewarddive_idle_duration.GetFloat() : mp_keeperlowsidewarddive_move_duration.GetFloat() + mp_keeperlowsidewarddive_idle_duration.GetFloat()))
 			{
 				pPl->DoAnimationEvent(PLAYERANIMEVENT_NONE);
 				return false;
@@ -1598,8 +1598,6 @@ bool CGameMovement::CheckPlayerAnimEvent()
 
 			if (timePassed <= stuckRescueTimeLimit)
 			{
-				isSprinting = pPl->m_Shared.GetAnimEventStartButtons() & IN_SPEED;
-
 				float moveCoeff;
 
 				if (pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_LEFT && sidemoveSign == 1
@@ -1608,20 +1606,20 @@ bool CGameMovement::CheckPlayerAnimEvent()
 				else
 					moveCoeff = 1.0f;
 				
-				mv->m_vecVelocity = forward2D * ZeroSign(mv->m_flForwardMove) * (isSprinting ? mp_keepersprintdivespeed_shortside.GetFloat() : mp_keeperdivespeed_shortside.GetFloat());
-				mv->m_vecVelocity += right * sidemoveSign * moveCoeff * (isSprinting ? mp_keepersprintdivespeed_longside.GetFloat() : mp_keeperdivespeed_longside.GetFloat());
+				mv->m_vecVelocity = forward2D * ZeroSign(mv->m_flForwardMove) * (doHighDive ? mp_keeperhighdivespeed_shortside.GetFloat() : mp_keeperlowdivespeed_shortside.GetFloat());
+				mv->m_vecVelocity += right * sidemoveSign * moveCoeff * (doHighDive ? mp_keeperhighdivespeed_longside.GetFloat() : mp_keeperlowdivespeed_longside.GetFloat());
 
 				mv->m_vecVelocity.z = 0;
 				float maxSpeed;
-				if (isSprinting)
-					maxSpeed = max(mp_keepersprintdivespeed_shortside.GetFloat(), mp_keepersprintdivespeed_longside.GetFloat());
+				if (doHighDive)
+					maxSpeed = max(mp_keeperhighdivespeed_shortside.GetFloat(), mp_keeperhighdivespeed_longside.GetFloat());
 				else
-					maxSpeed = max(mp_keeperdivespeed_shortside.GetFloat(), mp_keeperdivespeed_longside.GetFloat());
+					maxSpeed = max(mp_keeperlowdivespeed_shortside.GetFloat(), mp_keeperlowdivespeed_longside.GetFloat());
 
 				float speed = mv->m_vecVelocity.NormalizeInPlace();
 				mv->m_vecVelocity *= min(speed, maxSpeed);
-				mv->m_vecVelocity *= max(0, (1 - pow(timePassed / mp_keepersidewarddive_move_duration.GetFloat(), 2)));
-				mv->m_vecVelocity.z = isSprinting ? mp_keepersprintdivespeed_z.GetInt() : mp_keeperdivespeed_z.GetInt();
+				mv->m_vecVelocity *= max(0, (1 - pow(timePassed / (doHighDive ? mp_keeperhighsidewarddive_move_duration.GetFloat() : mp_keeperlowsidewarddive_move_duration.GetFloat()), 2)));
+				mv->m_vecVelocity.z = (doHighDive ? mp_keeperhighdivespeed_z.GetInt() : mp_keeperlowdivespeed_z.GetInt());
 			}
 			else
 				mv->m_vecVelocity = forward * mv->m_flForwardMove + right * mv->m_flSideMove;
@@ -1637,8 +1635,6 @@ bool CGameMovement::CheckPlayerAnimEvent()
 
 			if (timePassed <= stuckRescueTimeLimit)
 			{
-				isSprinting = pPl->m_Shared.GetAnimEventStartButtons() & IN_SPEED;
-
 				float moveCoeff;
 
 				if (mv->m_nButtons & IN_BACK)
@@ -1646,15 +1642,15 @@ bool CGameMovement::CheckPlayerAnimEvent()
 				else
 					moveCoeff = 1.0f;
 					
-				mv->m_vecVelocity = forward2D * ZeroSign(mv->m_flForwardMove) * moveCoeff * (isSprinting ? mp_keepersprintdivespeed_longside.GetFloat() : mp_keeperdivespeed_longside.GetFloat());		
-				mv->m_vecVelocity += right * sidemoveSign * (isSprinting ? mp_keepersprintdivespeed_shortside.GetFloat() : mp_keeperdivespeed_shortside.GetFloat());
+				mv->m_vecVelocity = forward2D * ZeroSign(mv->m_flForwardMove) * moveCoeff * (doHighDive ? mp_keeperhighdivespeed_longside.GetFloat() : mp_keeperlowdivespeed_longside.GetFloat());		
+				mv->m_vecVelocity += right * sidemoveSign * (doHighDive ? mp_keeperhighdivespeed_shortside.GetFloat() : mp_keeperlowdivespeed_shortside.GetFloat());
 
 				mv->m_vecVelocity.z = 0;
 				float maxSpeed;
-				if (isSprinting)
-					maxSpeed = max(mp_keepersprintdivespeed_shortside.GetFloat(), mp_keepersprintdivespeed_longside.GetFloat());
+				if (doHighDive)
+					maxSpeed = max(mp_keeperhighdivespeed_shortside.GetFloat(), mp_keeperhighdivespeed_longside.GetFloat());
 				else
-					maxSpeed = max(mp_keeperdivespeed_shortside.GetFloat(), mp_keeperdivespeed_longside.GetFloat());
+					maxSpeed = max(mp_keeperlowdivespeed_shortside.GetFloat(), mp_keeperlowdivespeed_longside.GetFloat());
 
 				float speed = mv->m_vecVelocity.NormalizeInPlace();
 				mv->m_vecVelocity *= min(speed, maxSpeed);
@@ -2006,7 +2002,7 @@ bool CGameMovement::CheckJumpButton( void )
 	team = pPl->GetTeamNumber();
 #endif
 
-	if (isKeeper && pPl->m_nInPenBoxOfTeam == team)
+	if (isKeeper && pPl->m_nInPenBoxOfTeam == team && pPl->m_nBody != MODEL_KEEPER_AND_BALL)
 	{
 		MoveHelper()->StartSound( mv->GetAbsOrigin(), "Player.DiveKeeper" );
 
@@ -2093,7 +2089,7 @@ bool CGameMovement::CheckSlideButton()
 	if (mv->m_nOldButtons & IN_DUCK)
 		return false;
 
-	PlayerAnimEvent_t animEvent;
+	PlayerAnimEvent_t animEvent = PLAYERANIMEVENT_NONE;
 
 	bool isKeeper;
 	int team;
@@ -2105,21 +2101,51 @@ bool CGameMovement::CheckSlideButton()
 		team = pPl->GetTeamNumber();
 	#endif
 
-	if (isKeeper && pPl->m_nInPenBoxOfTeam == team)
+	if (isKeeper && pPl->m_nInPenBoxOfTeam == team && pPl->m_nBody != MODEL_KEEPER_AND_BALL)
 	{
-		MoveHelper()->StartSound( mv->GetAbsOrigin(), "Player.DiveKeeper" );
-		animEvent = PLAYERANIMEVENT_KEEPER_DIVE_FORWARD;
+		int sidemoveSign;
+
+		if ((mv->m_nButtons & IN_MOVELEFT) && (!(mv->m_nButtons & IN_MOVERIGHT) || mp_keeper_sidemove_override.GetBool() && pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVERIGHT))
+			sidemoveSign = -1;
+		else if ((mv->m_nButtons & IN_MOVERIGHT) && (!(mv->m_nButtons & IN_MOVELEFT) || mp_keeper_sidemove_override.GetBool() && pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVELEFT))
+			sidemoveSign = 1;
+		else
+			sidemoveSign = 0;
+
+		if (sidemoveSign == -1 && !(mv->m_nButtons & IN_WALK))
+		{
+			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_LEFT;
+			//mv->m_flSideMove = 2 * -mp_sprintspeed.GetInt();
+			MoveHelper()->StartSound( mv->GetAbsOrigin(), "Player.DiveKeeper" );
+		}
+		else if (sidemoveSign == 1 && !(mv->m_nButtons & IN_WALK))
+		{
+			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_RIGHT;
+			MoveHelper()->StartSound( mv->GetAbsOrigin(), "Player.DiveKeeper" );
+		}
+		else if ((mv->m_nButtons & IN_FORWARD) && !(mv->m_nButtons & IN_WALK))
+		{
+			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_FORWARD;
+			MoveHelper()->StartSound( mv->GetAbsOrigin(), "Player.DiveKeeper" );
+		}
+		//else if ((mv->m_nButtons & IN_BACK) && !(mv->m_nButtons & IN_WALK) && (mv->m_nButtons & IN_SPEED))
+		//{
+		//	animEvent = PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD;
+		//}
 	}
-	else
+	else if (pPl->m_nBody != MODEL_KEEPER_AND_BALL)
 	{
 		MoveHelper()->StartSound( mv->GetAbsOrigin(), "Player.Slide" );
 		animEvent = PLAYERANIMEVENT_SLIDE;
 	}
 
-	pPl->m_Shared.SetAnimEventStartAngle(mv->m_vecAbsViewAngles);
-	pPl->m_Shared.SetAnimEventStartButtons(mv->m_nButtons);
+	if (animEvent != PLAYERANIMEVENT_NONE)
+	{
+		pPl->m_Shared.SetAnimEventStartAngle(mv->m_vecAbsViewAngles);
+		pPl->m_Shared.SetAnimEventStartButtons(mv->m_nButtons);
 
-	pPl->DoAnimationEvent(animEvent);
+		pPl->DoAnimationEvent(animEvent);
+	}
 
 	mv->m_nOldButtons |= IN_DUCK;
 
@@ -3158,13 +3184,19 @@ void CGameMovement::SetPlayerSpeed()
 
 	float flMaxSpeed;
 
+	bool isKeeper;
+	int team;
+	#ifdef CLIENT_DLL
+		isKeeper = GameResources()->GetTeamPosType(pPl->index) == POS_GK;
+		team = GameResources()->GetTeam(pPl->index);
+	#else
+		isKeeper = pPl->GetTeamPosType() == POS_GK;
+		team = pPl->GetTeamNumber();
+	#endif
+
 	if (pPl->GetFlags() & FL_REMOTECONTROLLED)
 	{
 		flMaxSpeed = mp_remotecontrolledspeed.GetInt();
-	}
-	else if ( ( mv->m_nButtons & IN_SPEED ) && ( stamina > 0 ) && ( mv->m_nButtons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT) ) )
-	{
-		flMaxSpeed = mp_sprintspeed.GetInt();	//sprinting
 	}
 	else if (mv->m_nButtons & IN_WALK)
 	{
@@ -3172,7 +3204,18 @@ void CGameMovement::SetPlayerSpeed()
 	}
 	else
 	{
-		flMaxSpeed = mp_runspeed.GetInt();	//jogging
+		if (isKeeper && pPl->m_nInPenBoxOfTeam == team && mp_keeper_sprint_invert.GetBool())
+		{
+			// Invert for keeper in own pen box
+			flMaxSpeed = ((mv->m_nButtons & IN_SPEED) != 0 ? mp_runspeed.GetInt() : mp_sprintspeed.GetInt());
+		}
+		else
+		{
+			if ((mv->m_nButtons & IN_SPEED) != 0 && (stamina > 0) && (mv->m_nButtons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT)) != 0)
+				flMaxSpeed = mp_sprintspeed.GetInt();
+			else
+				flMaxSpeed = mp_runspeed.GetInt();
+		}
 	}
 
 	if (mp_stamina_slowdown.GetBool())

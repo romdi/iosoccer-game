@@ -113,20 +113,22 @@ ConVar mp_runspeed("mp_runspeed", "225", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_sprintspeed("mp_sprintspeed", "325", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_remotecontrolledspeed("mp_remotecontrolledspeed", "500", FCVAR_REPLICATED | FCVAR_NOTIFY);
 
-ConVar mp_keepersidewarddive_move_duration("mp_keepersidewarddive_move_duration", "1.0", FCVAR_REPLICATED | FCVAR_NOTIFY);
-ConVar mp_keepersidewarddive_idle_duration("mp_keepersidewarddive_idle_duration", "0.0", FCVAR_REPLICATED | FCVAR_NOTIFY);
+ConVar mp_keeperhighsidewarddive_move_duration("mp_keeperhighsidewarddive_move_duration", "1.0", FCVAR_REPLICATED | FCVAR_NOTIFY);
+ConVar mp_keeperhighsidewarddive_idle_duration("mp_keeperhighsidewarddive_idle_duration", "0.0", FCVAR_REPLICATED | FCVAR_NOTIFY);
+ConVar mp_keeperlowsidewarddive_move_duration("mp_keeperlowsidewarddive_move_duration", "0.75", FCVAR_REPLICATED | FCVAR_NOTIFY);
+ConVar mp_keeperlowsidewarddive_idle_duration("mp_keeperlowsidewarddive_idle_duration", "0.0", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_keeperforwarddive_move_duration("mp_keeperforwarddive_move_duration", "0.7", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_keeperforwarddive_idle_duration("mp_keeperforwarddive_idle_duration", "0.3", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_keeperbackwarddive_move_duration("mp_keeperbackwarddive_move_duration", "0.9", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_keeperbackwarddive_idle_duration("mp_keeperbackwarddive_idle_duration", "1", FCVAR_REPLICATED | FCVAR_NOTIFY);
 
-ConVar mp_keepersprintdivespeed_longside("mp_keepersprintdivespeed_longside", "350", FCVAR_REPLICATED | FCVAR_NOTIFY);
-ConVar mp_keepersprintdivespeed_shortside("mp_keepersprintdivespeed_shortside", "250", FCVAR_REPLICATED | FCVAR_NOTIFY);
-ConVar mp_keepersprintdivespeed_z("mp_keepersprintdivespeed_z", "225", FCVAR_REPLICATED | FCVAR_NOTIFY);
+ConVar mp_keeperhighdivespeed_longside("mp_keeperhighdivespeed_longside", "375", FCVAR_REPLICATED | FCVAR_NOTIFY);
+ConVar mp_keeperhighdivespeed_shortside("mp_keeperhighdivespeed_shortside", "250", FCVAR_REPLICATED | FCVAR_NOTIFY);
+ConVar mp_keeperhighdivespeed_z("mp_keeperhighdivespeed_z", "225", FCVAR_REPLICATED | FCVAR_NOTIFY);
 
-ConVar mp_keeperdivespeed_longside("mp_keeperdivespeed_longside", "350", FCVAR_REPLICATED | FCVAR_NOTIFY);
-ConVar mp_keeperdivespeed_shortside("mp_keeperdivespeed_shortside", "250", FCVAR_REPLICATED | FCVAR_NOTIFY);
-ConVar mp_keeperdivespeed_z("mp_keeperdivespeed_z", "225", FCVAR_REPLICATED | FCVAR_NOTIFY);
+ConVar mp_keeperlowdivespeed_longside("mp_keeperlowdivespeed_longside", "400", FCVAR_REPLICATED | FCVAR_NOTIFY);
+ConVar mp_keeperlowdivespeed_shortside("mp_keeperlowdivespeed_shortside", "250", FCVAR_REPLICATED | FCVAR_NOTIFY);
+ConVar mp_keeperlowdivespeed_z("mp_keeperlowdivespeed_z", "0", FCVAR_REPLICATED | FCVAR_NOTIFY);
 
 ConVar mp_keeperdiveviewcoeff_enabled("mp_keeperdiveviewcoeff_enabled", "0", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_keeperdiveviewcoeff_pitchdownangle("mp_keeperdiveviewcoeff_pitchdownangle", "45", FCVAR_REPLICATED | FCVAR_NOTIFY);

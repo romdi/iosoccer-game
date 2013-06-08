@@ -134,18 +134,20 @@ extern ConVar
 	mp_runspeed,
 	mp_sprintspeed,
 	mp_remotecontrolledspeed,
-	mp_keepersidewarddive_move_duration,
-	mp_keepersidewarddive_idle_duration,
+	mp_keeperlowsidewarddive_move_duration,
+	mp_keeperlowsidewarddive_idle_duration,
+	mp_keeperhighsidewarddive_move_duration,
+	mp_keeperhighsidewarddive_idle_duration,
 	mp_keeperbackwarddive_move_duration,
 	mp_keeperbackwarddive_idle_duration,
 	mp_keeperforwarddive_move_duration,
 	mp_keeperforwarddive_idle_duration,
-	mp_keeperdivespeed_longside,
-	mp_keeperdivespeed_shortside,
-	mp_keeperdivespeed_z,
-	mp_keepersprintdivespeed_longside,
-	mp_keepersprintdivespeed_shortside,
-	mp_keepersprintdivespeed_z,
+	mp_keeperlowdivespeed_longside,
+	mp_keeperlowdivespeed_shortside,
+	mp_keeperlowdivespeed_z,
+	mp_keeperhighdivespeed_longside,
+	mp_keeperhighdivespeed_shortside,
+	mp_keeperhighdivespeed_z,
 	mp_keeperdiveviewcoeff_enabled,
 	mp_keeperdiveviewcoeff_pitchdownangle,
 	mp_keeperdiveviewcoeff_pitchupangle,
@@ -422,6 +424,13 @@ static const char *g_szPosNames[POS_NAME_COUNT] =
 	"SWP", "LB", "RB", "CB", "LCB", "RCB", "LWB", "RWB",
 	"LM", "RM", "DM", "CM", "AM", "LCM", "RCM", "CDM", "CAM",
 	"LF", "RF", "CF", "ST", "SS", "LW", "RW"
+};
+
+enum
+{
+	MODEL_PLAYER,
+	MODEL_KEEPER,
+	MODEL_KEEPER_AND_BALL
 };
 
 #endif // SDK_SHAREDDEFS_H
