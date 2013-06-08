@@ -508,7 +508,7 @@ void CTeam::FindNewCaptain()
 	}
 }
 
-void CTeam::AddMatchEvent(match_state_t matchState, int seconds, match_event_t event, const char *text)
+void CTeam::AddMatchEvent(match_period_t matchState, int seconds, match_event_t event, const char *text)
 {
 	if (m_nMatchEventIndex == MAX_MATCH_EVENTS)
 		return;

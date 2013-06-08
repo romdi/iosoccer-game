@@ -187,16 +187,16 @@ void CReplayManager::Think()
 	CheckReplay();
 }
 
-bool matchEventFitsMatchState(const MatchEvent *pMatchEvent, match_state_t matchState)
+bool matchEventFitsMatchState(const MatchEvent *pMatchEvent, match_period_t matchState)
 {
 	if (matchState == pMatchEvent->matchState
-		|| matchState == MATCH_COOLDOWN
-		|| matchState == MATCH_HALFTIME
-		|| matchState == MATCH_EXTRATIME_INTERMISSION && pMatchEvent->matchState == MATCH_SECOND_HALF
-		|| matchState == MATCH_EXTRATIME_HALFTIME && pMatchEvent->matchState == MATCH_EXTRATIME_FIRST_HALF
-		|| matchState == MATCH_PENALTIES_INTERMISSION
-		&& (mp_extratime.GetBool() && pMatchEvent->matchState == MATCH_EXTRATIME_SECOND_HALF
-		|| !mp_extratime.GetBool() && pMatchEvent->matchState == MATCH_SECOND_HALF))
+		|| matchState == MATCH_PERIOD_COOLDOWN
+		|| matchState == MATCH_PERIOD_HALFTIME
+		|| matchState == MATCH_PERIOD_EXTRATIME_INTERMISSION && pMatchEvent->matchState == MATCH_PERIOD_SECOND_HALF
+		|| matchState == MATCH_PERIOD_EXTRATIME_HALFTIME && pMatchEvent->matchState == MATCH_PERIOD_EXTRATIME_FIRST_HALF
+		|| matchState == MATCH_PERIOD_PENALTIES_INTERMISSION
+		&& (mp_extratime.GetBool() && pMatchEvent->matchState == MATCH_PERIOD_EXTRATIME_SECOND_HALF
+		|| !mp_extratime.GetBool() && pMatchEvent->matchState == MATCH_PERIOD_SECOND_HALF))
 	{
 		return true;
 	}
@@ -204,7 +204,7 @@ bool matchEventFitsMatchState(const MatchEvent *pMatchEvent, match_state_t match
 	return false;
 }
 
-int CReplayManager::FindNextHighlightReplayIndex(int startIndex, match_state_t matchState)
+int CReplayManager::FindNextHighlightReplayIndex(int startIndex, match_period_t matchState)
 {
 	if (startIndex == -1)
 	{
@@ -516,7 +516,7 @@ void CReplayManager::RestoreSnapshot()
 					gameeventmanager->FireEvent(pEvent);
 				}
 			}
-			else if (pMatchEvent->matchEventType == MATCH_EVENT_CHANCE)
+			else if (pMatchEvent->matchEventType == MATCH_EVENT_MISS)
 			{
 				IGameEvent *pEvent = gameeventmanager->CreateEvent("highlight_chance");
 				if (pEvent)
@@ -830,7 +830,7 @@ void CReplayManager::AddMatchEvent(match_event_t type, int team, CSDKPlayer *pPl
 {
 	MatchEvent *pMatchEvent = new MatchEvent;
 
-	if (type == MATCH_EVENT_GOAL || type == MATCH_EVENT_OWNGOAL || type == MATCH_EVENT_CHANCE || type == MATCH_EVENT_REDCARD)
+	if (type == MATCH_EVENT_GOAL || type == MATCH_EVENT_OWNGOAL || type == MATCH_EVENT_MISS || type == MATCH_EVENT_REDCARD)
 	{
 		float replayStartTime = GetReplayStartTime() + 1.0f;
 

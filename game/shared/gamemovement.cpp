@@ -1541,7 +1541,7 @@ void CGameMovement::FullWalkMove( )
 	}
 
 #ifdef GAME_DLL
-	if (!SDKGameRules()->IsIntermissionState() && GetBall()->State_Get() == BALL_NORMAL && !GetBall()->HasQueuedState() && newPos != oldPos)
+	if (!SDKGameRules()->IsIntermissionState() && GetBall()->State_Get() == BALL_STATE_NORMAL && !GetBall()->HasQueuedState() && newPos != oldPos)
 	{
 		ToSDKPlayer(player)->AddExactDistanceCovered((newPos - oldPos).Length2D() * 2.54f / 100);
 	}
@@ -2155,7 +2155,7 @@ bool CGameMovement::CheckSlideButton()
 		pPl->m_Shared.m_flNextSlide = gpGlobals->curtime + mp_slide_delay.GetFloat();
 
 		#ifdef GAME_DLL
-			if (!SDKGameRules()->IsIntermissionState() && GetBall()->State_Get() == BALL_NORMAL && !GetBall()->HasQueuedState())
+			if (!SDKGameRules()->IsIntermissionState() && GetBall()->State_Get() == BALL_STATE_NORMAL && !GetBall()->HasQueuedState())
 				pPl->AddSlidingTackle();
 		#endif
 	}

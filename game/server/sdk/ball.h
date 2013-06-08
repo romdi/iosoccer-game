@@ -205,7 +205,7 @@ private:
 	void State_Leave(ball_state_t newState);
 	static CBallStateInfo* State_LookupInfo(ball_state_t state);	// Find the state info for the specified state.
 
-	void			FindStatePlayer(ball_state_t ballState = BALL_NOSTATE);
+	void			FindStatePlayer(ball_state_t ballState = BALL_STATE_NONE);
 
 	ball_state_t	m_eNextState;
 	float			m_flStateEnterTime;

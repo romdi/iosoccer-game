@@ -125,7 +125,7 @@ struct Snapshot
 
 struct MatchEvent
 {
-	match_state_t matchState;
+	match_period_t matchState;
 	match_event_t matchEventType;
 	int second;
 	int team;
@@ -194,7 +194,7 @@ public:
 	bool IsReplaying() { return m_bIsReplaying; }
 	void Think();
 	void Spawn();
-	int FindNextHighlightReplayIndex(int startIndex, match_state_t matchState);
+	int FindNextHighlightReplayIndex(int startIndex, match_period_t matchState);
 	void StartHighlights();
 	void StopHighlights();
 	void CleanUp();

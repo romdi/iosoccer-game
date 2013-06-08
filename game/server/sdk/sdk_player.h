@@ -80,7 +80,7 @@ class CPlayerPersistentData
 {
 public:
 	CHandle<CSDKPlayer> m_pPl;
-	unsigned long long m_nSteamID;
+	unsigned long long m_nSteamCommunityID;
 	char	m_szSteamID[32];
 	char	m_szName[MAX_PLAYER_NAME_LENGTH];
 	CPlayerMatchData *m_pMatchData;

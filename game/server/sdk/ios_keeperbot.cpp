@@ -47,7 +47,7 @@ ConVar mp_botkeeperskill( "mp_botkeeperskill", "75", FCVAR_NOTIFY, "Bot keeper s
 void CKeeperBot::BotThink()
 {
 	// Prevent bot from running all the way back to his goal on penalties
-	if (SDKGameRules()->State_Get() != MATCH_PENALTIES || (GetTeam()->m_vPlayerSpawns[0] - GetLocalOrigin()).Length2D() < 1000)
+	if (SDKGameRules()->State_Get() != MATCH_PERIOD_PENALTIES || (GetTeam()->m_vPlayerSpawns[0] - GetLocalOrigin()).Length2D() < 1000)
 		BotAdjustPos();
 }
 
@@ -72,7 +72,7 @@ void CKeeperBot::BotAdjustPos()
 		target.x = clamp(m_vBallPos.x + xDist, GetTeam()->m_vPlayerSpawns[0].x - 150, GetTeam()->m_vPlayerSpawns[0].x + 150);
 	}
 
-	if (m_pBall->State_Get() == BALL_KEEPERHANDS && m_pBall->GetCurrentPlayer() == this)
+	if (m_pBall->State_Get() == BALL_STATE_KEEPERHANDS && m_pBall->GetCurrentPlayer() == this)
 	{
 		if (ShotButtonsReleased())
 		{

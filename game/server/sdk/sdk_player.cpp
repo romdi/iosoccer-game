@@ -1865,7 +1865,7 @@ CUtlVector<CPlayerPersistentData *> CPlayerPersistentData::m_PlayerPersistentDat
 CPlayerPersistentData::CPlayerPersistentData(CSDKPlayer *pPl)
 {
 	m_pPl = pPl;
-	m_nSteamID = engine->GetClientSteamID(pPl->edict()) ? engine->GetClientSteamID(pPl->edict())->ConvertToUint64() : 0;
+	m_nSteamCommunityID = engine->GetClientSteamID(pPl->edict()) ? engine->GetClientSteamID(pPl->edict())->ConvertToUint64() : 0;
 	Q_strncpy(m_szSteamID, engine->GetPlayerNetworkIDString(pPl->edict()), 32);
 	Q_strncpy(m_szName, pPl->GetPlayerName(), MAX_PLAYER_NAME_LENGTH);
 	m_pMatchData = new CPlayerMatchData();
@@ -1927,11 +1927,11 @@ void CPlayerPersistentData::ResetData()
 void CPlayerPersistentData::AllocateData(CSDKPlayer *pPl)
 {
 	CPlayerPersistentData *data = NULL;
-	unsigned long long steamID = engine->GetClientSteamID(pPl->edict()) ? engine->GetClientSteamID(pPl->edict())->ConvertToUint64() : 0;
+	unsigned long long steamCommunityID = engine->GetClientSteamID(pPl->edict()) ? engine->GetClientSteamID(pPl->edict())->ConvertToUint64() : 0;
 
 	for (int i = 0; i < m_PlayerPersistentData.Count(); i++)
 	{
-		if (m_PlayerPersistentData[i]->m_nSteamID != steamID)
+		if (m_PlayerPersistentData[i]->m_nSteamCommunityID != steamCommunityID)
 			continue;
 
 		data = m_PlayerPersistentData[i];
@@ -2115,7 +2115,7 @@ void SendMatchDataToWebserver(const char *json)
 void CPlayerPersistentData::ConvertAllPlayerDataToJson()
 {
 	static const int STAT_NAME_COUNT = 24;
-	static const char statAttrs[STAT_NAME_COUNT][32] =
+	static const char statProps[STAT_NAME_COUNT][32] =
 	{
 		"redCards",
 		"yellowCards",
@@ -2148,14 +2148,14 @@ void CPlayerPersistentData::ConvertAllPlayerDataToJson()
 
 	Q_strcat(json, "{\"matchData\":{", JSON_SIZE);
 
-	Q_strcat(json, "\"statisticAttributes\":[", JSON_SIZE);
+	Q_strcat(json, "\"statisticProperties\":[", JSON_SIZE);
 
 	for (int i = 0; i < STAT_NAME_COUNT; i++)
 	{
 		if (i > 0)
 			Q_strcat(json, ",", JSON_SIZE);
 
-		Q_strcat(json, UTIL_VarArgs("\"%s\"", statAttrs[i]), JSON_SIZE);
+		Q_strcat(json, UTIL_VarArgs("\"%s\"", statProps[i]), JSON_SIZE);
 	}
 
 	Q_strcat(json, "],", JSON_SIZE);
@@ -2209,7 +2209,7 @@ void CPlayerPersistentData::ConvertAllPlayerDataToJson()
 
 		Q_strcat(json, "{", JSON_SIZE);
 
-		Q_strcat(json, UTIL_VarArgs("\"info\":{\"steamIdUint64\":%llu,\"steamId\":\"%s\",\"name\":\"%s\"}", pData->m_nSteamID, pData->m_szSteamID, playerName), JSON_SIZE);
+		Q_strcat(json, UTIL_VarArgs("\"info\":{\"steamId\":\"%s\",\"name\":\"%s\"}", pData->m_szSteamID, playerName), JSON_SIZE);
 
 		Q_strcat(json, ",\"matchPeriodData\":[", JSON_SIZE);
 
@@ -2266,7 +2266,7 @@ void CPlayerPersistentData::ConvertAllPlayerDataToJson()
 		if (eventsProcessed > 0)
 			Q_strcat(json, ",", JSON_SIZE);
 
-		Q_strcat(json, UTIL_VarArgs("{\"second\":%d,\"event\":\"%s\",\"matchState\":\"%s\",\"team\":%d,\"player1SteamIdUint64\":%llu,\"player2SteamIdUint64\":%llu,\"player3SteamIdUint64\":%llu}", pMatchEvent->second, g_szMatchEventNames[pMatchEvent->matchEventType], g_szMatchStateNames[pMatchEvent->matchState], pMatchEvent->team - TEAM_A, pMatchEvent->pPlayer1Data ? pMatchEvent->pPlayer1Data->m_nSteamID : 0, pMatchEvent->pPlayer2Data ? pMatchEvent->pPlayer2Data->m_nSteamID : 0, pMatchEvent->pPlayer3Data ? pMatchEvent->pPlayer3Data->m_nSteamID : 0), JSON_SIZE);
+		Q_strcat(json, UTIL_VarArgs("{\"second\":%d,\"event\":\"%s\",\"state\":\"%s\",\"team\":%d,\"player1SteamId\":\"%s\",\"player2SteamId\":\"%s\",\"player3SteamId\":\"%s\"}", pMatchEvent->second, g_szMatchEventNames[pMatchEvent->matchEventType], g_szMatchStateNames[pMatchEvent->matchState], pMatchEvent->team - TEAM_A, pMatchEvent->pPlayer1Data ? pMatchEvent->pPlayer1Data->m_szSteamID : 0, pMatchEvent->pPlayer2Data ? pMatchEvent->pPlayer2Data->m_szSteamID : 0, pMatchEvent->pPlayer3Data ? pMatchEvent->pPlayer3Data->m_szSteamID : 0), JSON_SIZE);
 
 		eventsProcessed += 1;
 	}
