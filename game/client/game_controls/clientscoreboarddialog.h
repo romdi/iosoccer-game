@@ -227,7 +227,6 @@ private:
 	Button		*m_pSpectateButtons[3];
 	Panel		*m_pSpectatorContainer;
 	HFont		m_pSpectatorFontList[SPEC_FONT_COUNT];
-	ImagePanel	*m_pTeamCrests[2];
 	Label		*m_pPlayerCount[2];
 	Label		*m_pPossession[2];
 	Panel		*m_pStatButtonContainer;

@@ -151,8 +151,6 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Editabl
 		m_pPlayerList[i]->SetVisible(false); // hide this until we load the images in applyschemesettings
 		m_pPlayerList[i]->AddActionSignalTarget(this);
 		m_pPlayerList[i]->EnableMouseEnterSelection(true);
-
-		m_pTeamCrests[i] = new ImagePanel(this, "");
 	}
 
 	m_HLTVSpectators = 0;
@@ -466,10 +464,6 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 
 	for (int i = 0; i < 2; i++)
 	{
-		//m_pTeamCrests[i]->SetBounds(GetWide() / 2 - TEAMCREST_SIZE / 2 + (i == 0 ? -1 : 1) * TEAMCREST_HOFFSET, TEAMCREST_VOFFSET, TEAMCREST_SIZE, TEAMCREST_SIZE);
-		//m_pTeamCrests[i]->SetShouldScaleImage(true);
-		//m_pTeamCrests[i]->SetImage(i == 0 ? "hometeamcrest" : "awayteamcrest");
-
 		m_pPlayerList[i]->SetBounds(i * (m_pMainPanel->GetWide() / 2), TOPBAR_HEIGHT, m_pMainPanel->GetWide() / 2, PLAYERLIST_HEIGHT);
 		m_pPlayerList[i]->SetPaintBorderEnabled(false);
 	}
@@ -589,6 +583,13 @@ void CClientScoreBoardDialog::Update( void )
 	if (!gr)
 		return;
 
+	C_SDKPlayer *pLocal = C_SDKPlayer::GetLocalSDKPlayer();
+	if (!pLocal)
+		return;
+
+	UpdatePlayerInfo();
+	UpdateTeamInfo();
+
 	m_pServerInfo->SetText(mp_serverinfo.GetString());
 	m_pMatchInfo->SetText(mp_matchinfo.GetString());
 	m_pMatchState->SetText(g_szStateNames[SDKGameRules()->State_Get()]);
@@ -606,8 +607,6 @@ void CClientScoreBoardDialog::Update( void )
 			m_pFormationMenu->SetVisible(false);
 			m_pStatsMenu->SetVisible(true);
 			m_pStatButtonContainer->SetVisible(false);
-			for (int i = 0; i < 3; i++)
-				m_pSpectateButtons[i]->SetVisible(false);
 			m_pMatchEventMenu->SetVisible(false);
 		}
 	}
@@ -619,8 +618,6 @@ void CClientScoreBoardDialog::Update( void )
 		m_pMatchEventMenu->Update();
 		m_pMatchEventMenu->SetVisible(true);
 		m_pStatButtonContainer->SetVisible(true);
-		for (int i = 0; i < 3; i++)
-			m_pSpectateButtons[i]->SetVisible(true);
 	}
 	
 	if (m_eActivePanelType == FORMATION_MENU_NORMAL || m_eActivePanelType == FORMATION_MENU_HIGHLIGHT)
@@ -629,41 +626,46 @@ void CClientScoreBoardDialog::Update( void )
 		m_pFormationMenu->SetVisible(true);
 		m_pStatsMenu->SetVisible(false);
 		m_pStatButtonContainer->SetVisible(true);
-		for (int i = 0; i < 3; i++)
-			m_pSpectateButtons[i]->SetVisible(true);
 		m_pMatchEventMenu->SetVisible(false);
+
+		bool isOnField = (pLocal->GetTeamNumber() == TEAM_A || pLocal->GetTeamNumber() == TEAM_B);
+
+		if (isOnField
+			&& (GetGlobalTeam(GetLocalPlayerTeam())->Get_CaptainPosIndex() == gr->GetTeamPosIndex(GetLocalPlayerIndex())
+			|| GetGlobalTeam(GetLocalPlayerTeam())->Get_CaptainPosIndex() == 11))
+		{
+			if (GetGlobalTeam(GetLocalPlayerTeam())->Get_CaptainPosIndex() == gr->GetTeamPosIndex(GetLocalPlayerIndex()))
+				m_pToggleCaptaincy->SetText("- Captain");
+			else
+				m_pToggleCaptaincy->SetText("+ Captain");
+
+			m_pToggleCaptaincy->SetPos(GetLocalPlayerTeam() == TEAM_A ? 5 : m_pMainPanel->GetWide() - 85, m_pMainPanel->GetTall() - 2 * (5 + STATBUTTON_HEIGHT));
+			m_pToggleCaptaincy->SetVisible(true);
+		}
+		else
+			m_pToggleCaptaincy->SetVisible(false);
+
+		m_pSpectateButtons[0]->SetVisible(isOnField || gr->GetSpecTeam(GetLocalPlayerIndex()) != TEAM_SPECTATOR);
+		m_pSpectateButtons[1]->SetVisible(isOnField || gr->GetSpecTeam(GetLocalPlayerIndex()) != TEAM_A);
+		m_pSpectateButtons[2]->SetVisible(isOnField || gr->GetSpecTeam(GetLocalPlayerIndex()) != TEAM_B);
 	}
-
-	UpdatePlayerInfo();
-	UpdateTeamInfo();
-
-	for (int i = 0; i < 2; i++)
-		m_pTeamCrests[i]->SetVisible(gr->HasTeamCrest(TEAM_A + i));
-
-	if (m_pFormationList->IsVisible())
+	else
 	{
-		m_pFormationList->RemoveAll();
-		KeyValues *kv = new KeyValues("UserData", "index", 0);
-		m_pFormationList->AddItem("4-3-3", kv);
-		kv->deleteThis();
-		kv = new KeyValues("UserData", "index", 1);
-		m_pFormationList->AddItem("3-5-2", kv);
-		kv->deleteThis();
-		kv = new KeyValues("UserData", "index", 2);
-		m_pFormationList->AddItem("5-3-2", kv);
-		kv->deleteThis();
+		for (int i = 0; i < 3; i++)
+			m_pSpectateButtons[i]->SetVisible(false);
+		m_pToggleCaptaincy->SetVisible(false);
 	}
-
-	C_SDKPlayer *pLocal = C_SDKPlayer::GetLocalSDKPlayer();
 
 	if ((pLocal->GetTeamNumber() == TEAM_A || pLocal->GetTeamNumber() == TEAM_B)
 		&& pLocal->GetTeam()->Get_CaptainPosIndex() == gr->GetTeamPosIndex(GetLocalPlayerIndex()))
 	{
+		// Local player is captain, so show the menu toggle button
 		if (!m_pToggleCaptainMenu->IsVisible())
 			m_pToggleCaptainMenu->SetVisible(true);
 	}
 	else
 	{
+		// Show the statistics menu instead
 		if (m_pToggleCaptainMenu->IsVisible())
 		{
 			m_bShowCaptainMenu = false;
@@ -676,27 +678,6 @@ void CClientScoreBoardDialog::Update( void )
 	{
 		m_pRequestTimeout->SetText(VarArgs("Timeout (%d left)", pLocal->GetTeam()->Get_TimeoutsLeft()));
 	}
-
-	bool isOnField = (pLocal->GetTeamNumber() == TEAM_A || pLocal->GetTeamNumber() == TEAM_B);
-
-	if (isOnField
-		&& (GetGlobalTeam(GetLocalPlayerTeam())->Get_CaptainPosIndex() == gr->GetTeamPosIndex(GetLocalPlayerIndex())
-		|| GetGlobalTeam(GetLocalPlayerTeam())->Get_CaptainPosIndex() == 11))
-	{
-		if (GetGlobalTeam(GetLocalPlayerTeam())->Get_CaptainPosIndex() == gr->GetTeamPosIndex(GetLocalPlayerIndex()))
-			m_pToggleCaptaincy->SetText("- Captain");
-		else
-			m_pToggleCaptaincy->SetText("+ Captain");
-
-		m_pToggleCaptaincy->SetPos(GetLocalPlayerTeam() == TEAM_A ? 5 : m_pMainPanel->GetWide() - 85, m_pMainPanel->GetTall() - 2 * (5 + STATBUTTON_HEIGHT));
-		m_pToggleCaptaincy->SetVisible(true);
-	}
-	else
-		m_pToggleCaptaincy->SetVisible(false);
-
-	m_pSpectateButtons[0]->SetVisible(isOnField || gr->GetSpecTeam(GetLocalPlayerIndex()) != TEAM_SPECTATOR);
-	m_pSpectateButtons[1]->SetVisible(isOnField || gr->GetSpecTeam(GetLocalPlayerIndex()) != TEAM_A);
-	m_pSpectateButtons[2]->SetVisible(isOnField || gr->GetSpecTeam(GetLocalPlayerIndex()) != TEAM_B);
 
 	m_fNextUpdateTime = gpGlobals->curtime + 0.25f; 
 }
