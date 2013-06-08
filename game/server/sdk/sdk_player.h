@@ -18,11 +18,6 @@
 #include "sdk_shareddefs.h"
 #include "steam/steam_api.h"
 
-const int MODEL_PLAYER			= 0;
-const int MODEL_KEEPER			= 1;
-const int MODEL_KEEPER_AND_BALL	= 2;
-
-
 #define PLAYER_SPEED 280.0f
 
 #define SPRINT_TIME           6.0f     //IOS sprint amount 5.5
@@ -327,6 +322,8 @@ public:
 	//bool				ClientCommand(const char *pcmd);
 	//CBaseEntity			*EntSelectSpawnPoint(void);
 
+	void				DrawDebugGeometryOverlays(void);
+
 	void				ChooseFieldPlayerSkin(void);
 	void				ChooseKeeperSkin(void);
 	bool				IsTeamPosFree(int team, int posIndex, bool ignoreBots, CSDKPlayer **pPlayerOnPos);
@@ -529,6 +526,7 @@ public:
 	int					m_nTeamToJoin;
 	int					m_nTeamPosIndexToJoin;
 	int					m_nSpecTeamToJoin;
+	//bool				m_bSetNextJoinDelay;
 
 	int					m_ePenaltyState;
 	void				SetPlayerBall(CBall *pPlayerBall) { m_pPlayerBall = pPlayerBall; }

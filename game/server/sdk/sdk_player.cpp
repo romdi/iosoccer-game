@@ -259,6 +259,8 @@ CSDKPlayer::CSDKPlayer()
 
 	UseClientSideAnimation();
 
+	m_hRagdoll = NULL;
+
 	m_angEyeAngles.Init();
 
 	m_pCurStateInfo = NULL;	// no state yet
@@ -280,6 +282,7 @@ CSDKPlayer::CSDKPlayer()
 	m_pHoldingBall = NULL;
 	m_flNextClientSettingsChangeTime = gpGlobals->curtime;
 	m_bLegacySideCurl = false;
+	//m_bSetNextJoinDelay = false;
 
 	m_iPlayerState = PLAYER_STATE_NONE;
 
@@ -487,19 +490,22 @@ void CSDKPlayer::Spawn()
 	m_Shared.m_flNextJump = gpGlobals->curtime;
 	m_Shared.m_flNextSlide = gpGlobals->curtime;
 
+	AddSolidFlags(FSOLID_NOT_STANDABLE);
+
 	//UseClientSideAnimation();
 }
 
 bool CSDKPlayer::SetDesiredTeam(int desiredTeam, int desiredSpecTeam, int desiredPosIndex, bool switchInstantly, bool setNextJoinDelay)
 {
+	m_nTeamToJoin = desiredTeam;
+	m_nTeamPosIndexToJoin = desiredPosIndex;
+	m_nSpecTeamToJoin = desiredSpecTeam;
+	//m_bSetNextJoinDelay = setNextJoinDelay;
+
 	if (setNextJoinDelay)
 		SetNextJoin(gpGlobals->curtime + mp_joindelay.GetFloat());
 	else
 		SetNextJoin(gpGlobals->curtime);
-
-	m_nTeamToJoin = desiredTeam;
-	m_nTeamPosIndexToJoin = desiredPosIndex;
-	m_nSpecTeamToJoin = desiredSpecTeam;
 
 	if (switchInstantly)
 		ChangeTeam();
@@ -519,6 +525,7 @@ void CSDKPlayer::ChangeTeam()
 		m_nTeamToJoin = TEAM_INVALID;
 		m_nTeamPosIndexToJoin = 0;
 		m_nSpecTeamToJoin = TEAM_INVALID;
+		//m_bSetNextJoinDelay = false;
 
 		return;
 	}
@@ -547,9 +554,11 @@ void CSDKPlayer::ChangeTeam()
 	// update client state 
 	if (GetTeamNumber() == TEAM_UNASSIGNED || GetTeamNumber() == TEAM_SPECTATOR)
 	{
+		ResetFlags();
+
 		if (State_Get() != PLAYER_STATE_OBSERVER_MODE)
 		{
-			State_Transition( PLAYER_STATE_OBSERVER_MODE);
+			State_Transition(PLAYER_STATE_OBSERVER_MODE);
 		}
 	}
 	else // active player
@@ -557,13 +566,14 @@ void CSDKPlayer::ChangeTeam()
 		if (!SDKGameRules()->IsIntermissionState())
 			GetPlayerData()->StartNewMatchPeriod();
 
-		if (GetTeamNumber() != oldTeam)
-			m_nTeamPosNum = FindAvailableTeamPosNum();
+		m_nTeamPosNum = FindAvailableTeamPosNum();
 
 		if (GetTeamPosType() == POS_GK && (GetTeamNumber() != oldTeam || oldPosType != POS_GK))
 			ChooseKeeperSkin();
 		else if (GetTeamPosType() != POS_GK && (GetTeamNumber() != oldTeam || oldPosType == POS_GK))
 			ChooseFieldPlayerSkin();
+
+		ResetFlags();
 
 		if (State_Get() == PLAYER_STATE_ACTIVE)
 		{
@@ -574,7 +584,7 @@ void CSDKPlayer::ChangeTeam()
 			}
 		}
 		else
-			State_Transition( PLAYER_STATE_ACTIVE);
+			State_Transition(PLAYER_STATE_ACTIVE);
 	}
 
 	IGameEvent *event = gameeventmanager->CreateEvent("player_team");
@@ -594,7 +604,12 @@ void CSDKPlayer::ChangeTeam()
 		gameeventmanager->FireEvent( event );
 	}
 
-	ResetFlags();
+	//if (m_bSetNextJoinDelay)
+	//	SetNextJoin(gpGlobals->curtime + mp_joindelay.GetFloat());
+	//else
+	//	SetNextJoin(gpGlobals->curtime);
+
+	//m_bSetNextJoinDelay = false;
 
 	g_pPlayerResource->UpdatePlayerData();
 }
@@ -873,21 +888,16 @@ void CSDKPlayer::State_OBSERVER_MODE_Leave()
 
 void CSDKPlayer::State_ACTIVE_Enter()
 {
-	SetMoveType( MOVETYPE_WALK );
-	RemoveSolidFlags( FSOLID_NOT_SOLID );
-    m_Local.m_iHideHUD = 0;
+	SetMoveType(MOVETYPE_WALK);
+	RemoveSolidFlags(FSOLID_NOT_SOLID);
+    //m_Local.m_iHideHUD = 0;
 	PhysObjectWake();
 
-	AddSolidFlags( FSOLID_NOT_STANDABLE );
-	m_Shared.SetStamina( 100 );
-	InitSprinting();
 	// update this counter, used to not interp players when they spawn
 	m_bSpawnInterpCounter = !m_bSpawnInterpCounter;
-	SetContextThink( &CSDKPlayer::SDKPushawayThink, gpGlobals->curtime + PUSHAWAY_THINK_INTERVAL, SDK_PUSHAWAY_THINK_CONTEXT );
-	m_flNextShot = gpGlobals->curtime;
-	m_hRagdoll = NULL;
+	//SetContextThink( &CSDKPlayer::SDKPushawayThink, gpGlobals->curtime + PUSHAWAY_THINK_INTERVAL, SDK_PUSHAWAY_THINK_CONTEXT );
 	RemoveEffects(EF_NODRAW);
-	SetViewOffset( VEC_VIEW );
+	SetViewOffset(VEC_VIEW);
 
 	Vector dir = Vector(0, GetTeam()->m_nForward, 0);
 	QAngle ang;
@@ -896,8 +906,6 @@ void CSDKPlayer::State_ACTIVE_Enter()
 	SetLocalAngles(ang);
 	SetLocalOrigin(GetSpawnPos(true));
 	SnapEyeAngles(ang);
-
-	ResetFlags();
 
 	if (SDKGameRules()->m_nShieldType != SHIELD_NONE)
 		SetPosOutsideShield(true);
@@ -1289,7 +1297,7 @@ void CSDKPlayer::SetPosOutsideShield(bool teleport)
 	else
 	{
 		ActivateRemoteControlling(m_vTargetPos);
-	};
+	}
 }
 
 void CSDKPlayer::SetPosOutsideBall(const Vector &playerPos)
@@ -1517,13 +1525,16 @@ int CSDKPlayer::GetTeamPosType()
 
 void CSDKPlayer::ResetFlags()
 {
+	m_Shared.SetStamina(100);
+	InitSprinting();
+	m_flNextShot = gpGlobals->curtime;
 	m_bIsAtTargetPos = false;
 	RemoveFlag(FL_SHIELD_KEEP_IN | FL_SHIELD_KEEP_OUT | FL_REMOTECONTROLLED | FL_FREECAM | FL_CELEB | FL_NO_X_MOVEMENT | FL_NO_Y_MOVEMENT | FL_ATCONTROLS | FL_FROZEN);
 	DoServerAnimationEvent(PLAYERANIMEVENT_CANCEL);
 	m_pHoldingBall = NULL;
 	m_bIsAway = true;
 	m_flLastMoveTime = gpGlobals->curtime;
-	m_flNextJoin = gpGlobals->curtime;
+	//m_flNextJoin = gpGlobals->curtime;
 	m_bIsOffside = false;
 	m_ePenaltyState = PENALTY_NONE;
 	m_flRemoteControlledStartTime = -1;
@@ -1531,9 +1542,9 @@ void CSDKPlayer::ResetFlags()
 	if (GetPlayerBall())
 		GetPlayerBall()->RemovePlayerBall();
 
-	if (GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B)
+	if ((GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B) && !ReplayManager()->IsReplaying())
 	{
-		//RemoveSolidFlags(FSOLID_NOT_SOLID);
+		RemoveSolidFlags(FSOLID_NOT_SOLID);
 		SetCollisionGroup(COLLISION_GROUP_PLAYER);
 		RemoveEffects(EF_NODRAW);
 	}
@@ -1842,6 +1853,11 @@ void CSDKPlayer::AddGoalKick()
 	GetMatchPeriodData()->m_nGoalKicks += 1;
 	GetMatchData()->m_nGoalKicks += 1;
 	GetTeam()->m_GoalKicks += 1;
+}
+
+void CSDKPlayer::DrawDebugGeometryOverlays(void) 
+{
+	BaseClass::DrawDebugGeometryOverlays();
 }
 
 CUtlVector<CPlayerPersistentData *> CPlayerPersistentData::m_PlayerPersistentData;
