@@ -2638,11 +2638,11 @@ AngularImpulse CBall::CalcSpin(float coeff, bool applyTopspin)
 		sideRot = Vector(0, 0, 0);
 	}
 
-	float sideSpin = m_vVel.Length() * sv_ball_spin.GetInt() * coeff / 100.0f;
+	float sideSpin = sv_ball_spin.GetInt() * coeff / 100.0f;
 
 	Vector backTopRot(0, 0, 0);
 
-	float backTopSpin = m_vVel.Length() * sv_ball_spin.GetInt() * coeff / 100.0f;
+	float backTopSpin = sv_ball_spin.GetInt() * coeff / 100.0f;
 
 	if (!sv_ball_jump_topspin_enabled.GetBool() || m_pPl->GetGroundEntity() && !(m_pPl->m_nButtons & IN_JUMP) || !applyTopspin)
 	{
