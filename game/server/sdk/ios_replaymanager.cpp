@@ -518,7 +518,7 @@ void CReplayManager::RestoreSnapshot()
 			}
 			else if (pMatchEvent->matchEventType == MATCH_EVENT_MISS)
 			{
-				IGameEvent *pEvent = gameeventmanager->CreateEvent("highlight_chance");
+				IGameEvent *pEvent = gameeventmanager->CreateEvent("highlight_miss");
 				if (pEvent)
 				{
 					pEvent->SetInt("second", pMatchEvent->second);

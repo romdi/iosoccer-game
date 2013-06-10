@@ -277,7 +277,7 @@ void CHudScorebar::Init( void )
 	ListenForGameEvent("goal");
 	ListenForGameEvent("highlight_goal");
 	ListenForGameEvent("highlight_owngoal");
-	ListenForGameEvent("highlight_chance");
+	ListenForGameEvent("highlight_miss");
 	ListenForGameEvent("highlight_redcard");
 	ListenForGameEvent("own_goal");
 	ListenForGameEvent("foul");
@@ -746,13 +746,13 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 		m_pExtraInfo->SetText(g_szMatchStateNames[event->GetInt("match_state")]);
 		m_pExtraInfo->SetVisible(true);
 	}
-	else if (!Q_strcmp(event->GetName(), "highlight_chance"))
+	else if (!Q_strcmp(event->GetName(), "highlight_miss"))
 	{
 		const char *finisher = event->GetString("finisher");
 		const char *firstAssister = event->GetString("first_assister");
 		const char *secondAssister = event->GetString("second_assister");
 
-		m_pNotifications[0]->SetText(VarArgs("CHANCE (%s): %s", GetMatchMinuteText(event->GetInt("second"), (match_period_t)event->GetInt("match_state")), g_PR->GetTeamCode(event->GetInt("finishing_team"))));
+		m_pNotifications[0]->SetText(VarArgs("MISS (%s): %s", GetMatchMinuteText(event->GetInt("second"), (match_period_t)event->GetInt("match_state")), g_PR->GetTeamCode(event->GetInt("finishing_team"))));
 
 		if (finisher[0] != 0)
 		{
