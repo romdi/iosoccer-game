@@ -198,6 +198,7 @@ ConVar sv_ball_update_physics("sv_ball_update_physics", "0", FCVAR_NOTIFY);
 ConVar sv_ball_stats_pass_mindist("sv_ball_stats_pass_mindist", "300", FCVAR_NOTIFY);
 ConVar sv_ball_stats_clearance_minspeed("sv_ball_stats_clearance_minspeed", "800", FCVAR_NOTIFY);
 ConVar sv_ball_stats_shot_mindist("sv_ball_stats_shot_mindist", "300", FCVAR_NOTIFY);
+ConVar sv_ball_stats_save_minspeed("sv_ball_stats_save_minspeed", "800", FCVAR_NOTIFY);
 ConVar sv_ball_stats_assist_maxtime("sv_ball_stats_assist_maxtime", "8", FCVAR_NOTIFY);
 
 ConVar sv_ball_velocity_coeff("sv_ball_velocity_coeff", "0.9", FCVAR_NOTIFY);
@@ -611,7 +612,7 @@ void CBall::VPhysicsCollision( int index, gamevcollisionevent_t	*pEvent	)
 		}
 		else if (m_pCurStateInfo->m_eBallState == BALL_STATE_NORMAL)
 		{
-			Touched(pPl, false, BODY_PART_UNKNOWN);
+			Touched(pPl, false, BODY_PART_UNKNOWN, preVelocity);
 		}
 
 		EmitSound("Ball.Touch");
@@ -695,6 +696,8 @@ void CBall::SetPos(Vector pos)
 
 void CBall::SetVel(Vector vel, float spinCoeff, body_part_t bodyPart, bool isDeflection, bool markOffsidePlayers, bool checkMinShotStrength)
 {
+	Vector oldVel = m_vVel;
+
 	m_vVel = vel * sv_ball_velocity_coeff.GetFloat();
 
 	float length = m_vVel.Length();
@@ -720,7 +723,7 @@ void CBall::SetVel(Vector vel, float spinCoeff, body_part_t bodyPart, bool isDef
 		SaveBallCannonSettings();
 	}
 
-	Kicked(bodyPart, isDeflection);
+	Kicked(bodyPart, isDeflection, oldVel);
 	
 	if (markOffsidePlayers)
 		MarkOffsidePlayers();
@@ -2954,7 +2957,7 @@ void CBall::UnmarkOffsidePlayers()
 	}
 }
 
-void CBall::Kicked(body_part_t bodyPart, bool isDeflection)
+void CBall::Kicked(body_part_t bodyPart, bool isDeflection, const Vector &oldVel)
 {
 	float dynamicDelay = RemapValClamped(m_vVel.Length(), sv_ball_dynamicshotdelay_minshotstrength.GetInt(), sv_ball_dynamicshotdelay_maxshotstrength.GetInt(), sv_ball_dynamicshotdelay_mindelay.GetFloat(), sv_ball_dynamicshotdelay_maxdelay.GetFloat());
 	
@@ -2972,10 +2975,10 @@ void CBall::Kicked(body_part_t bodyPart, bool isDeflection)
 	m_pPl->m_flNextShot = gpGlobals->curtime + delay;
 	m_flGlobalNextShot = gpGlobals->curtime + dynamicDelay * sv_ball_shotdelay_global_coeff.GetFloat();
 	m_flGlobalNextKeeperCatch = gpGlobals->curtime + dynamicDelay * sv_ball_keepercatchdelay_global_coeff.GetFloat();
-	Touched(m_pPl, !isDeflection, bodyPart);
+	Touched(m_pPl, !isDeflection, bodyPart, oldVel);
 }
 
-void CBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart)
+void CBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart, const Vector &oldVel)
 {
 	if (SDKGameRules()->IsIntermissionState() || m_bHasQueuedState || SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES)
 		return;
@@ -2997,12 +3000,13 @@ void CBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart)
 	if (pInfo && CSDKPlayer::IsOnField(pLastPl) && pLastPl != pPl)
 	{ 
 		if (pInfo->m_nTeam != pPl->GetTeamNumber() && (bodyPart == BODY_PART_KEEPERPUNCH
-			|| bodyPart == BODY_PART_KEEPERCATCH && pInfo->m_vBallVel.Length2DSqr() > pow(sv_ball_normalshot_strength.GetInt(), 2.0f))) // All fast balls by an opponent which are caught or punched away by the keeper count as shots on goal
+			|| bodyPart == BODY_PART_KEEPERCATCH && oldVel.Length2DSqr() >= pow(sv_ball_stats_save_minspeed.GetInt(), 2.0f))) // All fast balls by an opponent which are caught or punched away by the keeper count as shots on goal
 		{
 			pPl->AddKeeperSave();
 			pLastPl->AddShot();
 			pLastPl->AddShotOnGoal();
 			EmitSound("Crowd.Save");
+			ReplayManager()->AddMatchEvent(MATCH_EVENT_KEEPERSAVE, pPl->GetTeamNumber(), pPl, pLastPl);
 		}
 		else if ((m_vPos - pInfo->m_vBallPos).Length2DSqr() >= pow(sv_ball_stats_pass_mindist.GetInt(), 2.0f) && pInfo->m_eBodyPart != BODY_PART_KEEPERPUNCH) // Pass or interception
 		{

@@ -278,6 +278,7 @@ void CHudScorebar::Init( void )
 	ListenForGameEvent("highlight_goal");
 	ListenForGameEvent("highlight_owngoal");
 	ListenForGameEvent("highlight_miss");
+	ListenForGameEvent("highlight_keepersave");
 	ListenForGameEvent("highlight_redcard");
 	ListenForGameEvent("own_goal");
 	ListenForGameEvent("foul");
@@ -771,6 +772,30 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 		}
 
 		m_eCurMatchEvent = MATCH_EVENT_MISS;
+		m_flStayDuration = INT_MAX;
+
+		m_pExtraInfo->SetText(g_szMatchStateNames[event->GetInt("match_state")]);
+		m_pExtraInfo->SetVisible(true);
+	}
+	else if (!Q_strcmp(event->GetName(), "highlight_keepersave"))
+	{
+		const char *keeper = event->GetString("keeper");
+		const char *finisher = event->GetString("finisher");
+
+		m_pNotifications[0]->SetText(VarArgs("SAVE (%s): %s", GetMatchMinuteText(event->GetInt("second"), (match_period_t)event->GetInt("match_state")), g_PR->GetTeamCode(event->GetInt("keeper_team"))));
+
+		if (keeper[0] != 0)
+		{
+			m_pNotifications[1]->SetText(VarArgs("%s", keeper));
+			m_pNotificationPanel->SetTall(2 * NOTIFICATION_HEIGHT);
+		}
+		//if (finisher[0] != 0)
+		//{
+		//	m_pNotifications[2]->SetText(VarArgs("+ %s", finisher));
+		//	m_pNotificationPanel->SetTall(3 * NOTIFICATION_HEIGHT);
+		//}
+
+		m_eCurMatchEvent = MATCH_EVENT_KEEPERSAVE;
 		m_flStayDuration = INT_MAX;
 
 		m_pExtraInfo->SetText(g_szMatchStateNames[event->GetInt("match_state")]);

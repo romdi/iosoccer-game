@@ -530,6 +530,19 @@ void CReplayManager::RestoreSnapshot()
 					gameeventmanager->FireEvent(pEvent);
 				}
 			}
+			else if (pMatchEvent->matchEventType == MATCH_EVENT_KEEPERSAVE)
+			{
+				IGameEvent *pEvent = gameeventmanager->CreateEvent("highlight_keepersave");
+				if (pEvent)
+				{
+					pEvent->SetInt("second", pMatchEvent->second);
+					pEvent->SetInt("match_state", pMatchEvent->matchState);
+					pEvent->SetInt("keeper_team", pMatchEvent->team);
+					pEvent->SetString("keeper", pMatchEvent->pPlayer1Data ? pMatchEvent->pPlayer1Data->m_szName : "");
+					pEvent->SetString("finisher", pMatchEvent->pPlayer2Data ? pMatchEvent->pPlayer2Data->m_szName : "");
+					gameeventmanager->FireEvent(pEvent);
+				}
+			}
 			else if (pMatchEvent->matchEventType == MATCH_EVENT_REDCARD)
 			{
 				IGameEvent *pEvent = gameeventmanager->CreateEvent("highlight_redcard");
@@ -830,7 +843,7 @@ void CReplayManager::AddMatchEvent(match_event_t type, int team, CSDKPlayer *pPl
 {
 	MatchEvent *pMatchEvent = new MatchEvent;
 
-	if (type == MATCH_EVENT_GOAL || type == MATCH_EVENT_OWNGOAL || type == MATCH_EVENT_MISS || type == MATCH_EVENT_REDCARD)
+	if (type == MATCH_EVENT_GOAL || type == MATCH_EVENT_OWNGOAL || type == MATCH_EVENT_MISS || type == MATCH_EVENT_KEEPERSAVE || type == MATCH_EVENT_REDCARD)
 	{
 		float replayStartTime = GetReplayStartTime() + 1.0f;
 
