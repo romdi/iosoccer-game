@@ -1797,24 +1797,26 @@ void CBall::State_KEEPERHANDS_Think()
 	// Ball outside the penalty box
 	if (m_vPos.x < min.x || m_vPos.y < min.y || m_vPos.x > max.x || m_vPos.y > max.y)
 	{
-		Vector dir;
+		Vector dir, pos;
 		float vel;
 
 		// Throw the ball towards the kick-off spot instead of where the player is looking if the ball is behind the goal line
 		if (m_pPl->GetTeam()->m_nForward == 1 && m_vPos.y < min.y || m_pPl->GetTeam()->m_nForward == -1 && m_vPos.y > max.y)
 		{
-			dir = Vector(Sign(m_vPos.x - SDKGameRules()->m_vKickOff.GetX()) * g_IOSRand.RandomFloat(1.25f, 1.25f), m_pPl->GetTeam()->m_nForward, g_IOSRand.RandomFloat(1.0f, 1.25f));
-			dir.NormalizeInPlace();
+			QAngle ang = QAngle(g_IOSRand.RandomFloat(-55, -40), m_pPl->GetTeam()->m_nForward * 90 - m_pPl->GetTeam()->m_nForward * Sign(m_vPos.x - SDKGameRules()->m_vKickOff.GetX()) * g_IOSRand.RandomFloat(15, 25), 0);
+			AngleVectors(ang, &dir);
 			vel = g_IOSRand.RandomFloat(700, 800);
+			pos = Vector(m_vPos.x, (m_pPl->GetTeam()->m_nForward == 1 ? min.y : max.y) + m_pPl->GetTeam()->m_nForward * 36, m_vPos.z);
 		}
 		else
 		{
 			dir = m_vPlForward2D;
 			vel = 300;
+			pos = Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_chest_start.GetFloat()) + m_vPlForward2D * 36;
 		}
 
 		RemoveAllTouches();
-		SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_chest_start.GetFloat()) + dir * 36);
+		SetPos(pos);
 		m_bSetNewPos = false;
 		SetVel(dir * vel, 0, BODY_PART_KEEPERHANDS, false, true, true);
 

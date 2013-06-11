@@ -770,17 +770,7 @@ void CGameMovement::ReduceTimers( void )
 {
 	CSDKPlayer *pPl = (CSDKPlayer *)player;
 
-	Vector vecPlayerVelocity = pPl->GetAbsVelocity();
-
 	float flStamina = pPl->m_Shared.GetStamina();
-
-	float fl2DVelocitySquared = vecPlayerVelocity.x * vecPlayerVelocity.x + 
-								vecPlayerVelocity.y * vecPlayerVelocity.y;	
-
-	if ( !( mv->m_nButtons & IN_SPEED ) )
-	{
-		pPl->m_Shared.ResetSprintPenalty();
-	}
 
 	int teamPosType;
 #ifdef CLIENT_DLL
@@ -789,7 +779,10 @@ void CGameMovement::ReduceTimers( void )
 	teamPosType = pPl->GetTeamPosType();
 #endif
 
-	bool bSprinting = ( (!pPl->GetGroundEntity() && (teamPosType != POS_GK || pPl->m_nInPenBoxOfTeam != pPl->GetTeamNumber())) || (mv->m_nButtons & IN_SPEED) && ( mv->m_nButtons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT) ) );
+	bool isSprinting = (teamPosType == POS_GK && mp_keeper_sprint_invert.GetBool() ? !(mv->m_nButtons & IN_SPEED) : (mv->m_nButtons & IN_SPEED) != 0);
+
+	bool reduceStamina = (((mv->m_nButtons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT)) != 0 && isSprinting) || !pPl->GetGroundEntity())
+		&& (teamPosType != POS_GK || pPl->m_nInPenBoxOfTeam != pPl->GetTeamNumber());
 
 	float fieldLength = SDKGameRules()->m_vFieldMax.GetY() - SDKGameRules()->m_vFieldMin.GetY();
 	float dist = pPl->GetLocalOrigin().y - SDKGameRules()->m_vKickOff.GetY();
@@ -799,7 +792,8 @@ void CGameMovement::ReduceTimers( void )
 
 	// If we're holding the sprint key and also actually moving, remove some stamina
 	Vector vel = pPl->GetAbsVelocity();
-	if ( bSprinting && fl2DVelocitySquared > 10000 ) //speed > 100
+
+	if ( reduceStamina && vel.Length2DSqr() > 10000 ) //speed > 100
 	{
 		float coeff = 1 + (mp_stamina_variable_drain_enabled.GetBool() ? (fieldZone / 100) * mp_stamina_variable_drain_coeff.GetFloat() : 0);
 
@@ -812,7 +806,7 @@ void CGameMovement::ReduceTimers( void )
 		float coeff = 1 + (mp_stamina_variable_replenish_enabled.GetBool() ? ((100 - fieldZone) / 100) * mp_stamina_variable_replenish_coeff.GetFloat() : 0);
 
 		//gain some back		
-		if ( fl2DVelocitySquared <= 0 )
+		if ( vel.Length2DSqr() <= 0 )
 		{
 			flStamina += mp_stamina_replenish_standing.GetInt() * gpGlobals->frametime * coeff;
 		}
@@ -1530,10 +1524,18 @@ void CGameMovement::FullWalkMove( )
 	{
 		float halfBounds = (player->GetPlayerMaxs().x - player->GetPlayerMins().x) / 2;
 
-		if (mv->GetAbsOrigin().x + halfBounds >= GetGlobalTeam(team)->m_vPenBoxMin.GetX()
-			&& mv->GetAbsOrigin().y + halfBounds >= GetGlobalTeam(team)->m_vPenBoxMin.GetY()
-			&& mv->GetAbsOrigin().x - halfBounds <= GetGlobalTeam(team)->m_vPenBoxMax.GetX()
-			&& mv->GetAbsOrigin().y - halfBounds <= GetGlobalTeam(team)->m_vPenBoxMax.GetY())
+		Vector min = GetGlobalTeam(team)->m_vPenBoxMin;
+		Vector max = GetGlobalTeam(team)->m_vPenBoxMax;
+
+		if (GetGlobalTeam(team)->m_nForward == 1)
+			min.y -= 500;
+		else
+			max.y += 500;
+
+		if (mv->GetAbsOrigin().x + halfBounds >= min.x
+			&& mv->GetAbsOrigin().y + halfBounds >= min.y
+			&& mv->GetAbsOrigin().x - halfBounds <= max.x
+			&& mv->GetAbsOrigin().y - halfBounds <= max.y)
 		{
 			ToSDKPlayer(player)->m_nInPenBoxOfTeam = team;
 			break;
@@ -3204,14 +3206,17 @@ void CGameMovement::SetPlayerSpeed()
 	}
 	else
 	{
-		if (isKeeper && pPl->m_nInPenBoxOfTeam == team && mp_keeper_sprint_invert.GetBool())
+		if (isKeeper /*&& pPl->m_nInPenBoxOfTeam == team*/ && mp_keeper_sprint_invert.GetBool())
 		{
 			// Invert for keeper in own pen box
-			flMaxSpeed = ((mv->m_nButtons & IN_SPEED) != 0 ? mp_runspeed.GetInt() : mp_sprintspeed.GetInt());
+			if (!(mv->m_nButtons & IN_SPEED) && stamina > 0 && (mv->m_nButtons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT)) != 0)
+				flMaxSpeed = mp_sprintspeed.GetInt();
+			else
+				flMaxSpeed = mp_runspeed.GetInt();
 		}
 		else
 		{
-			if ((mv->m_nButtons & IN_SPEED) != 0 && (stamina > 0) && (mv->m_nButtons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT)) != 0)
+			if ((mv->m_nButtons & IN_SPEED) != 0 && stamina > 0 && (mv->m_nButtons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT)) != 0)
 				flMaxSpeed = mp_sprintspeed.GetInt();
 			else
 				flMaxSpeed = mp_runspeed.GetInt();

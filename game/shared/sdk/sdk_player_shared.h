@@ -69,8 +69,6 @@ public:
 	int GetAnimEventStartButtons();
 	void SetAnimEventStartButtons(int buttons);
 
-	void ResetSprintPenalty( void );
-
 	void ComputeWorldSpaceSurroundingBox( Vector *pVecWorldMins, Vector *pVecWorldMaxs );
 	
 	float m_flLastViewAnimationTime;
@@ -102,7 +100,6 @@ private:
 	CNetworkVector(m_aPlayerAnimEventStartAngle);
 	CNetworkVar(int, m_nPlayerAnimEventStartButtons);
 	CNetworkVar( bool, m_bIsSprinting );
-	bool m_bGaveSprintPenalty;
 	CNetworkVar( float, m_flStamina );
 	OuterClass *m_pOuter;
 };			   

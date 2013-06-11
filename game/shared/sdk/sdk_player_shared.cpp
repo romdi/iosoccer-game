@@ -149,11 +149,6 @@ void CSDKPlayerShared::SetSprinting( bool bSprinting )
 		StartSprinting();
 
 		// only one penalty per key press
-		//if ( m_bGaveSprintPenalty == false )
-		//{
-		//	m_flStamina -= INITIAL_SPRINT_STAMINA_PENALTY;
-		//	m_bGaveSprintPenalty = true;
-		//}
 		//ios always apply this penalty as we're predicting m_bSprinting
 		m_flStamina -= INITIAL_SPRINT_STAMINA_PENALTY;
 	}
@@ -162,12 +157,6 @@ void CSDKPlayerShared::SetSprinting( bool bSprinting )
 	{
 		StopSprinting();
 	}
-}
-
-// this is reset when we let go of the sprint key
-void CSDKPlayerShared::ResetSprintPenalty( void )
-{
-	m_bGaveSprintPenalty = false;
 }
 
 void CSDKPlayerShared::StartSprinting( void )

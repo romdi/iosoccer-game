@@ -149,8 +149,8 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayer, DT_SDKLocalPlayerExclusive )
 //	SendPropAngle( SENDINFO_VECTORELEM(m_angEyeAngles, 1), 10, SPROP_CHANGES_OFTEN ),
 
 //ios	SendPropInt( SENDINFO( m_ArmorValue ), 8, SPROP_UNSIGNED ),
-	SendPropInt(SENDINFO(m_nInPenBoxOfTeam)),
-	SendPropVector(SENDINFO(m_vTargetPos), -1, SPROP_NOSCALE),
+	SendPropInt(SENDINFO(m_nInPenBoxOfTeam), 3),
+	SendPropVector(SENDINFO(m_vTargetPos), -1, SPROP_COORD),
 	SendPropBool(SENDINFO(m_bIsAtTargetPos)),
 	SendPropBool(SENDINFO(m_bHoldAtTargetPos)),
 	SendPropTime( SENDINFO( m_flNextClientSettingsChangeTime ) ),
