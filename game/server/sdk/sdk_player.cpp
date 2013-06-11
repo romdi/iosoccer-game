@@ -1010,6 +1010,20 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 		if (!SDKGameRules()->IsIntermissionState() && SDKGameRules()->GetMatchDisplayTimeSeconds() < GetGlobalTeam(team)->GetPosNextJoinSeconds(posIndex))
 			return false;
 
+		CSDKPlayer *pSwapPartner = NULL;
+
+		if (!IsTeamPosFree(team, posIndex, true, &pSwapPartner) && pSwapPartner)
+		{
+			char *msg;
+
+			if (GetTeamNumber() == TEAM_SPECTATOR)
+				msg = "#game_player_pos_swap_spec";
+			else
+				msg = "#game_player_pos_swap_field";
+
+			ClientPrint(pSwapPartner, HUD_PRINTTALK, msg, GetPlayerName());
+		}
+
 		return SetDesiredTeam(team, team, posIndex, false, true);
 	}
 	else if (!Q_stricmp(args[0], "spectate"))
