@@ -113,6 +113,7 @@ public:
 	CNetworkVector(m_vGoalkickLeft);
 	CNetworkVector(m_vGoalkickRight);
 	CNetworkVector(m_vPenalty);
+	CNetworkVector(m_vGoalCenter);
 	CNetworkVector(m_vPenBoxMin);
 	CNetworkVector(m_vPenBoxMax);
 	CNetworkVector(m_vSixYardBoxMin);

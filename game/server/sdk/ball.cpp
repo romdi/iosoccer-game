@@ -885,7 +885,7 @@ void CBall::SendNotifications()
 					pEvent->SetInt("foul_type", foulType);
 					pEvent->SetInt("set_piece_type", (m_eNextState == BALL_STATE_PENALTY ? MATCH_EVENT_PENALTY : MATCH_EVENT_FREEKICK));
 
-					float distToGoal = (m_vFoulPos - GetGlobalTeam(m_nFoulingTeam)->m_vPlayerSpawns[0]).Length2D();
+					float distToGoal = (m_vFoulPos - GetGlobalTeam(m_nFoulingTeam)->m_vGoalCenter).Length2D();
 
 					statistic_type_t statType;
 
@@ -1547,13 +1547,13 @@ void CBall::State_FREEKICK_Think()
 {
 	if (!CSDKPlayer::IsOnField(m_pPl))
 	{
-		if ((m_vPos - GetGlobalTeam(m_nFouledTeam)->m_vPlayerSpawns[0]).Length2D() <= sv_ball_freekickdist_owngoal.GetInt()) // Close to own goal
+		if ((m_vPos - GetGlobalTeam(m_nFouledTeam)->m_vGoalCenter).Length2D() <= sv_ball_freekickdist_owngoal.GetInt()) // Close to own goal
 			m_pPl = FindNearestPlayer(m_nFouledTeam, FL_POS_KEEPER);
-		else if (abs(m_vPos.y - GetGlobalTeam(m_nFoulingTeam)->m_vPlayerSpawns[0].y) <= sv_ball_freekickdist_opponentgoal.GetInt()) // Close to opponent's goal
+		else if (abs(m_vPos.y - GetGlobalTeam(m_nFoulingTeam)->m_vGoalCenter.GetY()) <= sv_ball_freekickdist_opponentgoal.GetInt()) // Close to opponent's goal
 		{
 			if (sv_ball_assign_setpieces.GetBool())
 			{
-				Vector2D dirToPl = (m_vPos - GetGlobalTeam(m_nFoulingTeam)->m_vPlayerSpawns[0]).AsVector2D();
+				Vector2D dirToPl = (m_vPos - GetGlobalTeam(m_nFoulingTeam)->m_vGoalCenter).AsVector2D();
 				dirToPl.NormalizeInPlace();
 				Vector2D yDir = Vector2D(0, GetGlobalTeam(m_nFoulingTeam)->m_nForward);
 
@@ -1597,7 +1597,7 @@ void CBall::State_FREEKICK_Think()
 		m_pPl->RemoveFlag(FL_ATCONTROLS);
 		m_bShotsBlocked = false;
 
-		if (abs(m_vPos.y - GetGlobalTeam(m_nFoulingTeam)->m_vPlayerSpawns[0].y) <= sv_ball_freekickdist_opponentgoal.GetInt())
+		if (abs(m_vPos.y - GetGlobalTeam(m_nFoulingTeam)->m_vGoalCenter.GetY()) <= sv_ball_freekickdist_opponentgoal.GetInt())
 			m_bNonnormalshotsBlocked = true;
 	}
 
@@ -1696,7 +1696,7 @@ void CBall::State_PENALTY_Think()
 				return State_Transition(BALL_STATE_NORMAL);
 		}
 
-		Vector pos = m_pOtherPl->GetTeam()->m_vPlayerSpawns[0];
+		Vector pos = m_pOtherPl->GetTeam()->m_vGoalCenter + Vector(0, m_pOtherPl->GetTeam()->m_nForward * 20, 0);
 		m_pOtherPl->SetPosInsideShield(pos, true);
 	}
 
@@ -1958,7 +1958,7 @@ bool CBall::CheckFoul()
 
 		int teammatesCloserToGoalCount = 0;
 
-		bool isCloseToOwnGoal = ((m_vPos - m_pPl->GetTeam()->m_vPlayerSpawns[0]).Length2D() <= sv_ball_closetogoaldist.GetInt());
+		bool isCloseToOwnGoal = ((m_vPos - m_pPl->GetTeam()->m_vGoalCenter).Length2D() <= sv_ball_closetogoaldist.GetInt());
 
 		if (isCloseToOwnGoal)
 		{
@@ -1969,7 +1969,7 @@ bool CBall::CheckFoul()
 				if (!CSDKPlayer::IsOnField(pPl) || pPl == m_pPl || pPl->GetTeamNumber() != m_pPl->GetTeamNumber())
 					continue;
 
-				if ((m_pPl->GetTeam()->m_vPlayerSpawns[0] - pPl->GetLocalOrigin()).Length2DSqr() < (m_pPl->GetTeam()->m_vPlayerSpawns[0] - m_vPlPos).Length2DSqr())
+				if ((m_pPl->GetTeam()->m_vGoalCenter - pPl->GetLocalOrigin()).Length2DSqr() < (m_pPl->GetTeam()->m_vGoalCenter - m_vPlPos).Length2DSqr())
 					teammatesCloserToGoalCount += 1;
 			}
 		}

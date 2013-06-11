@@ -21,8 +21,8 @@ void CFieldBot::BotShootBall()
 
 	if (bot_shootatgoal.GetBool())
 	{
-		Vector target = GetOppTeam()->m_vPlayerSpawns[0];
-		float ownDistToGoal = (GetOppTeam()->m_vPlayerSpawns[0] - GetLocalOrigin()).Length2D();
+		Vector target = GetOppTeam()->m_vGoalCenter;
+		float ownDistToGoal = (GetOppTeam()->m_vGoalCenter - GetLocalOrigin()).Length2D();
 		bool isGoalShot = true;
 
 		for (int i = 1; i <= gpGlobals->maxClients; i++ )
@@ -35,7 +35,7 @@ void CFieldBot::BotShootBall()
 			if (pPl->GetTeamNumber() != GetTeamNumber())
 				continue;
 
-			float distToGoal = (GetOppTeam()->m_vPlayerSpawns[0] - pPl->GetLocalOrigin()).Length2D();
+			float distToGoal = (GetOppTeam()->m_vGoalCenter - pPl->GetLocalOrigin()).Length2D();
 			if (distToGoal < ownDistToGoal)
 			{
 				target = pPl->GetLocalOrigin();

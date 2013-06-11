@@ -47,13 +47,13 @@ ConVar mp_botkeeperskill( "mp_botkeeperskill", "75", FCVAR_NOTIFY, "Bot keeper s
 void CKeeperBot::BotThink()
 {
 	// Prevent bot from running all the way back to his goal on penalties
-	if (SDKGameRules()->State_Get() != MATCH_PERIOD_PENALTIES || (GetTeam()->m_vPlayerSpawns[0] - GetLocalOrigin()).Length2D() < 1000)
+	if (SDKGameRules()->State_Get() != MATCH_PERIOD_PENALTIES || (GetTeam()->m_vGoalCenter - GetLocalOrigin()).Length2D() < 1000)
 		BotAdjustPos();
 }
 
 void CKeeperBot::BotCenter()
 {
-	Vector dir = GetTeam()->m_vPlayerSpawns[0] - GetLocalOrigin();
+	Vector dir = GetTeam()->m_vGoalCenter - GetLocalOrigin();
 	m_cmd.sidemove = Sign(dir.x) * max(0, dir.Length2D() - 10);
 	m_cmd.forwardmove = Sign(dir.y) * max(0, dir.Length2D() - 10);
 }
@@ -62,14 +62,14 @@ void CKeeperBot::BotAdjustPos()
 {
 	float modifier = KEEPER_MID_COEFF;
 	QAngle ang = m_oldcmd.viewangles;
-	Vector target = GetTeam()->m_vPlayerSpawns[0];
+	Vector target = GetTeam()->m_vGoalCenter;
 
 	if (m_vBallVel.Length2D() > 750 && m_flAngToBallVel < 60)
 	{
-		float yDist = GetTeam()->m_vPlayerSpawns[0].y - m_vBallPos.y;
+		float yDist = GetTeam()->m_vGoalCenter.GetY() - m_vBallPos.y;
 		float vAng = acos(Sign(yDist) * m_vBallDir2D.y);
 		float xDist = Sign(m_vBallDir2D.x) * abs(yDist) * tan(vAng);
-		target.x = clamp(m_vBallPos.x + xDist, GetTeam()->m_vPlayerSpawns[0].x - 150, GetTeam()->m_vPlayerSpawns[0].x + 150);
+		target.x = clamp(m_vBallPos.x + xDist, GetTeam()->m_vGoalCenter.GetX() - 150, GetTeam()->m_vGoalCenter.GetX() + 150);
 	}
 
 	if (m_pBall->State_Get() == BALL_STATE_KEEPERHANDS && m_pBall->GetCurrentPlayer() == this)
@@ -103,7 +103,7 @@ void CKeeperBot::BotAdjustPos()
 	else// if (gpGlobals->curtime >= m_flBotNextShot)
 	{
 		VectorAngles(m_vDirToBall, ang);
-		float ballDistToGoal = (m_vBallPos - GetTeam()->m_vPlayerSpawns[0]).Length2D();
+		float ballDistToGoal = (m_vBallPos - GetTeam()->m_vGoalCenter).Length2D();
 		CSDKPlayer *pClosest = FindClosestPlayerToBall();
 		m_cmd.buttons |= IN_ATTACK;
 

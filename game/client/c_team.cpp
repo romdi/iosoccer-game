@@ -49,6 +49,7 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_Team, DT_Team, CTeam)
 	RecvPropVector(RECVINFO(m_vGoalkickLeft)),
 	RecvPropVector(RECVINFO(m_vGoalkickRight)),
 	RecvPropVector(RECVINFO(m_vPenalty)),
+	RecvPropVector(RECVINFO(m_vGoalCenter)),
 	RecvPropVector(RECVINFO(m_vPenBoxMin)),
 	RecvPropVector(RECVINFO(m_vPenBoxMax)),
 	RecvPropVector(RECVINFO(m_vSixYardBoxMin)),

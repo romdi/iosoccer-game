@@ -58,6 +58,7 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CTeam, DT_Team)
 	SendPropVector(SENDINFO(m_vGoalkickLeft), -1, SPROP_COORD),
 	SendPropVector(SENDINFO(m_vGoalkickRight), -1, SPROP_COORD),
 	SendPropVector(SENDINFO(m_vPenalty), -1, SPROP_COORD),
+	SendPropVector(SENDINFO(m_vGoalCenter), -1, SPROP_COORD),
 	SendPropVector(SENDINFO(m_vPenBoxMin), -1, SPROP_COORD),
 	SendPropVector(SENDINFO(m_vPenBoxMax), -1, SPROP_COORD),
 	SendPropVector(SENDINFO(m_vSixYardBoxMin), -1, SPROP_COORD),
@@ -426,17 +427,16 @@ void CTeam::InitFieldSpots(int team)
 	m_vGoalkickRight = GetSpotPos(UTIL_VarArgs("info_team%d_goalkick0", index + 1));
 	m_vPenalty = GetSpotPos(UTIL_VarArgs("info_team%d_penalty_spot", index + 1));
 
+	m_vGoalCenter = Vector(SDKGameRules()->m_vKickOff.GetX(),
+		(m_vPenalty.GetY() < SDKGameRules()->m_vKickOff.GetY() ? SDKGameRules()->m_vFieldMin.GetY() : SDKGameRules()->m_vFieldMax.GetY()),
+		SDKGameRules()->m_vKickOff.GetZ());
+
 	CBaseEntity *pPenBox = gEntList.FindEntityByClassnameNearest("trigger_PenaltyBox", m_vPenalty, 9999);
 
 	if (!pPenBox)
 		Error("'trigger_PenaltyBox' missing");
 
 	pPenBox->CollisionProp()->WorldSpaceTriggerBounds(&m_vPenBoxMin.GetForModify(), &m_vPenBoxMax.GetForModify());
-
-	for (int j = 0; j < 11; j++)
-	{
-		m_vPlayerSpawns[j] = GetSpotPos(UTIL_VarArgs("info_team%d_player%d", index + 1, j + 1));
-	}
 
 	CBaseEntity *pGoalTrigger = gEntList.FindEntityByClassnameNearest("trigger_goal", m_vPenalty, 9999);
 
@@ -445,11 +445,11 @@ void CTeam::InitFieldSpots(int team)
 
 	float sixYardLength = (goalMax.x - goalMin.x) / 4 * 3;
 
-	m_vSixYardBoxMin = m_vPlayerSpawns[0] - Vector(sixYardLength / 3 * 5, 0, 0);
-	m_vSixYardBoxMax = m_vPlayerSpawns[0] + Vector(sixYardLength / 3 * 5, sixYardLength, 0);
+	m_vSixYardBoxMin = m_vGoalCenter - Vector(sixYardLength / 3 * 5, 0, 0);
+	m_vSixYardBoxMax = m_vGoalCenter + Vector(sixYardLength / 3 * 5, sixYardLength, 0);
 
-	m_nForward = Sign(SDKGameRules()->m_vKickOff.GetY() - m_vPlayerSpawns[0].y);
-	m_nRight = Sign(m_vCornerRight.GetX() - m_vPlayerSpawns[0].x);
+	m_nForward = Sign(SDKGameRules()->m_vKickOff.GetY() - m_vGoalCenter.GetY());
+	m_nRight = Sign(m_vCornerRight.GetX() - m_vGoalCenter.GetX());
 }
 
 void CTeam::ResetStats()

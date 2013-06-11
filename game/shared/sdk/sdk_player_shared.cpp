@@ -386,7 +386,7 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 
 				if (SDKGameRules()->m_nShieldType == SHIELD_KEEPERHANDS && oldPosInBox)
 				{
-					Vector goalCenter = (GetGlobalTeam(SDKGameRules()->m_nShieldTeam)->m_vCornerLeft + GetGlobalTeam(SDKGameRules()->m_nShieldTeam)->m_vCornerRight) / 2;
+					Vector goalCenter = GetGlobalTeam(SDKGameRules()->m_nShieldTeam)->m_vGoalCenter;
 					goalCenter.y -= Sign(GetGlobalTeam(SDKGameRules()->m_nShieldTeam)->m_nForward) * 500;
 
 					if ((goalCenter - newPos).Length2DSqr() < (goalCenter - oldPos).Length2DSqr())

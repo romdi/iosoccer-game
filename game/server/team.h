@@ -131,14 +131,13 @@ public:
 	CNetworkVector(m_vGoalkickLeft);
 	CNetworkVector(m_vGoalkickRight);
 	CNetworkVector(m_vPenalty);
+	CNetworkVector(m_vGoalCenter);
 	CNetworkVector(m_vPenBoxMin);
 	CNetworkVector(m_vPenBoxMax);
 	CNetworkVector(m_vSixYardBoxMin);
 	CNetworkVector(m_vSixYardBoxMax);
 	CNetworkVar(int, m_nForward);
 	CNetworkVar(int, m_nRight);
-
-	Vector m_vPlayerSpawns[11];
 
 	Vector GetSpotPos(const char *name);
 	void InitFieldSpots(int team);
