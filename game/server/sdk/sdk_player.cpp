@@ -282,7 +282,7 @@ CSDKPlayer::CSDKPlayer()
 	m_pHoldingBall = NULL;
 	m_flNextClientSettingsChangeTime = gpGlobals->curtime;
 	m_bLegacySideCurl = false;
-	//m_bSetNextJoinDelay = false;
+	m_bInvertKeeperSprint = true;
 
 	m_iPlayerState = PLAYER_STATE_NONE;
 

@@ -603,6 +603,7 @@ CGameplaySettingPanel::CGameplaySettingPanel(Panel *parent, const char *panelNam
 	m_pContent = new Panel(this, "");
 	m_pLegacySideCurl = new CheckButton(m_pContent, "", "Legacy Side Curl");
 	m_pLegacyVerticalLook = new CheckButton(m_pContent, "", "Legacy Vertical Look");
+	m_pInvertKeeperSprint = new CheckButton(m_pContent, "", "Invert Keeper Sprint");
 }
 
 void CGameplaySettingPanel::ApplySchemeSettings(IScheme *pScheme)
@@ -610,18 +611,21 @@ void CGameplaySettingPanel::ApplySchemeSettings(IScheme *pScheme)
 	m_pContent->SetBounds(PADDING, PADDING, GetWide() - 2 * PADDING, GetTall() - 2 * PADDING);
 	m_pLegacySideCurl->SetBounds(0, 0, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
 	m_pLegacyVerticalLook->SetBounds(0, TEXT_HEIGHT + TEXT_MARGIN, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
+	m_pInvertKeeperSprint->SetBounds(0, 2 * (TEXT_HEIGHT + TEXT_MARGIN), LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
 }
 
 void CGameplaySettingPanel::Save()
 {
 	g_pCVar->FindVar("legacysidecurl")->SetValue(m_pLegacySideCurl->IsSelected() ? 1 : 0);
 	g_pCVar->FindVar("legacyverticallook")->SetValue(m_pLegacyVerticalLook->IsSelected() ? 1 : 0);
+	g_pCVar->FindVar("invertkeepersprint")->SetValue(m_pInvertKeeperSprint->IsSelected() ? 1 : 0);
 }
 
 void CGameplaySettingPanel::Load()
 {
 	m_pLegacySideCurl->SetSelected(g_pCVar->FindVar("legacysidecurl")->GetBool());
 	m_pLegacyVerticalLook->SetSelected(g_pCVar->FindVar("legacyverticallook")->GetBool());
+	m_pInvertKeeperSprint->SetSelected(g_pCVar->FindVar("invertkeepersprint")->GetBool());
 }
 
 void CGameplaySettingPanel::Update()

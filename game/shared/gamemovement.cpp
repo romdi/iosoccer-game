@@ -779,7 +779,7 @@ void CGameMovement::ReduceTimers( void )
 	teamPosType = pPl->GetTeamPosType();
 #endif
 
-	bool isSprinting = (teamPosType == POS_GK && mp_keeper_sprint_invert.GetBool() ? !(mv->m_nButtons & IN_SPEED) : (mv->m_nButtons & IN_SPEED) != 0);
+	bool isSprinting = (teamPosType == POS_GK && pPl->IsKeeperSprintInverted() ? !(mv->m_nButtons & IN_SPEED) : (mv->m_nButtons & IN_SPEED) != 0);
 
 	bool reduceStamina = (((mv->m_nButtons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT)) != 0 && isSprinting) || !pPl->GetGroundEntity())
 		&& (teamPosType != POS_GK || pPl->m_nInPenBoxOfTeam != pPl->GetTeamNumber());
@@ -3206,9 +3206,8 @@ void CGameMovement::SetPlayerSpeed()
 	}
 	else
 	{
-		if (isKeeper /*&& pPl->m_nInPenBoxOfTeam == team*/ && mp_keeper_sprint_invert.GetBool())
+		if (isKeeper && pPl->IsKeeperSprintInverted())
 		{
-			// Invert for keeper in own pen box
 			if (!(mv->m_nButtons & IN_SPEED) && stamina > 0 && (mv->m_nButtons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT)) != 0)
 				flMaxSpeed = mp_sprintspeed.GetInt();
 			else

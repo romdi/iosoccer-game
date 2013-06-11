@@ -193,7 +193,9 @@ public:
 	void CheckBallShield(const Vector &oldPos, Vector &newPos, const Vector &oldVel, Vector &newVel, const QAngle &oldAng, QAngle &newAng);
 	void MoveToTargetPos(Vector &pos, Vector &vel, QAngle &ang);
 
-	virtual int					DrawModel( int flags );
+	virtual int	DrawModel( int flags );
+
+	bool IsKeeperSprintInverted();
 };
 
 

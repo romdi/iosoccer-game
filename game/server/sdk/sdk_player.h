@@ -457,7 +457,9 @@ public:
 	int					GetCountryName() { return m_nCountryName; }
 	void				SetCountryName(int name) { m_nCountryName = name; } 
 	bool				IsLegacySideCurl() { return m_bLegacySideCurl; } 
-	void				SetLegacySideCurl(bool enable) { m_bLegacySideCurl = enable; } 
+	void				SetLegacySideCurl(bool enable) { m_bLegacySideCurl = enable; }
+	bool				IsKeeperSprintInverted() { return m_bInvertKeeperSprint; } 
+	void				SetKeeperSprintInverted(bool invert) { m_bInvertKeeperSprint = invert; } 
 
 	bool				ShotButtonsPressed();
 
@@ -480,6 +482,7 @@ public:
 	int					m_nCountryName;
 
 	bool				m_bLegacySideCurl;
+	bool				m_bInvertKeeperSprint;
 
 	Vector				EyeDirection2D();
 	Vector				EyeDirection3D();

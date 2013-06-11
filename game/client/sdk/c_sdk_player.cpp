@@ -42,6 +42,7 @@ ConVar fallbackcountryindex("fallbackcountryindex", "0", FCVAR_USERINFO | FCVAR_
 ConVar preferredshirtnumber("preferredshirtnumber", "", FCVAR_USERINFO | FCVAR_ARCHIVE, "Your preferred shirt number");
 ConVar legacysidecurl("legacysidecurl", "0", FCVAR_USERINFO | FCVAR_ARCHIVE, "");
 ConVar legacyverticallook("legacyverticallook", "0", FCVAR_USERINFO | FCVAR_ARCHIVE, "");
+ConVar invertkeepersprint("invertkeepersprint", "1", FCVAR_USERINFO | FCVAR_ARCHIVE, "");
 ConVar modelskinindex("modelskinindex", "-1", FCVAR_USERINFO | FCVAR_ARCHIVE, "");
 
 ConVar clientversion("clientversion", g_szRequiredClientVersion, FCVAR_USERINFO | FCVAR_HIDDEN, "");
@@ -1398,4 +1399,9 @@ void C_SDKPlayer::PreThink()
 	BaseClass::PreThink();
 	CheckShotCharging();
 	CheckLastPressedSingleMoveButton();
+}
+
+bool C_SDKPlayer::IsKeeperSprintInverted()
+{
+	return invertkeepersprint.GetBool();
 }
