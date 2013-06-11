@@ -575,16 +575,19 @@ void CSDKPlayer::ChangeTeam()
 
 		ResetFlags();
 
-		if (State_Get() == PLAYER_STATE_ACTIVE)
-		{
-			if (GetTeamNumber() != oldTeam)
-			{
-				if (SDKGameRules()->m_nShieldType != SHIELD_NONE && (SDKGameRules()->m_nShieldType != SHIELD_KICKOFF || mp_shield_block_opponent_half.GetBool()))
-					SetPosOutsideShield(false);
-			}
-		}
-		else
+		if (State_Get() != PLAYER_STATE_ACTIVE)
 			State_Transition(PLAYER_STATE_ACTIVE);
+		
+		Vector dir = Vector(0, GetTeam()->m_nForward, 0);
+		QAngle ang;
+		VectorAngles(dir, ang);
+		SetLocalVelocity(vec3_origin);
+		SetLocalAngles(ang);
+		SetLocalOrigin(GetSpawnPos(true));
+		SnapEyeAngles(ang);
+
+		if (SDKGameRules()->m_nShieldType != SHIELD_NONE)
+			SetPosOutsideShield(true);
 	}
 
 	IGameEvent *event = gameeventmanager->CreateEvent("player_team");
@@ -603,13 +606,6 @@ void CSDKPlayer::ChangeTeam()
 
 		gameeventmanager->FireEvent( event );
 	}
-
-	//if (m_bSetNextJoinDelay)
-	//	SetNextJoin(gpGlobals->curtime + mp_joindelay.GetFloat());
-	//else
-	//	SetNextJoin(gpGlobals->curtime);
-
-	//m_bSetNextJoinDelay = false;
 
 	g_pPlayerResource->UpdatePlayerData();
 }
@@ -898,17 +894,6 @@ void CSDKPlayer::State_ACTIVE_Enter()
 	//SetContextThink( &CSDKPlayer::SDKPushawayThink, gpGlobals->curtime + PUSHAWAY_THINK_INTERVAL, SDK_PUSHAWAY_THINK_CONTEXT );
 	RemoveEffects(EF_NODRAW);
 	SetViewOffset(VEC_VIEW);
-
-	Vector dir = Vector(0, GetTeam()->m_nForward, 0);
-	QAngle ang;
-	VectorAngles(dir, ang);
-	SetLocalVelocity(vec3_origin);
-	SetLocalAngles(ang);
-	SetLocalOrigin(GetSpawnPos(true));
-	SnapEyeAngles(ang);
-
-	if (SDKGameRules()->m_nShieldType != SHIELD_NONE)
-		SetPosOutsideShield(true);
 }
 
 void CSDKPlayer::State_ACTIVE_PreThink()
