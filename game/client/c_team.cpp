@@ -51,6 +51,8 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_Team, DT_Team, CTeam)
 	RecvPropVector(RECVINFO(m_vPenalty)),
 	RecvPropVector(RECVINFO(m_vPenBoxMin)),
 	RecvPropVector(RECVINFO(m_vPenBoxMax)),
+	RecvPropVector(RECVINFO(m_vSixYardBoxMin)),
+	RecvPropVector(RECVINFO(m_vSixYardBoxMax)),
 	RecvPropInt(RECVINFO(m_nForward)),
 	RecvPropInt(RECVINFO(m_nRight)),
 	RecvPropInt(RECVINFO(m_nCaptainPosIndex)),

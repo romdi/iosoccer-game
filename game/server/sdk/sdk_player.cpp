@@ -1411,25 +1411,18 @@ void CSDKPlayer::GetTargetPos(const Vector &pos, Vector &targetPos)
 				targetPos = pos;
 		}
 
-		if (SDKGameRules()->m_nShieldType == SHIELD_FREEKICK && mp_shield_block_6yardbox.GetBool())
+		if (SDKGameRules()->m_nShieldType == SHIELD_FREEKICK && mp_shield_block_sixyardbox.GetBool())
 		{
 			if (GetTeamPosType() != POS_GK || GetTeamNumber() != GetGlobalTeam(SDKGameRules()->m_nShieldTeam)->GetOppTeamNumber())
 			{
 				int side = GetGlobalTeam(SDKGameRules()->m_nShieldTeam)->GetOppTeamNumber();
-				int boxLength = abs(GetGlobalTeam(side)->m_vPenBoxMax.GetY() - GetGlobalTeam(side)->m_vPenBoxMin.GetY()) / 3.0f;
-				Vector min = GetGlobalTeam(side)->m_vPenBoxMin + Vector(boxLength * 2, 0, 0) - border;
-				Vector max = GetGlobalTeam(side)->m_vPenBoxMax - Vector(boxLength * 2, 0, 0) + border;
+				Vector min = GetGlobalTeam(side)->m_vSixYardBoxMin - border;
+				Vector max = GetGlobalTeam(side)->m_vSixYardBoxMax + border;
 
 				if (GetGlobalTeam(side)->m_nForward == 1)
-				{
-					max.y -= boxLength * 2;
 					min.y -= 500;
-				}
 				else
-				{
-					min.y += boxLength * 2;
 					max.y += 500;
-				}
 
 				bool isInsideBox = pos.x > min.x && pos.y > min.y && pos.x < max.x && pos.y < max.y; 
 

@@ -2786,9 +2786,8 @@ void CBall::TriggerGoalLine(int team)
 
 	if (pInfo->m_nTeam != team && pInfo->m_pPl && (m_vTriggerTouchPos - pInfo->m_vBallPos).Length2DSqr() >= pow(sv_ball_stats_shot_mindist.GetFloat(), 2.0f)) // Don't add a missed shot or pass if the player accidentally dribbles the ball out
 	{
-		float boxLength = abs(GetGlobalTeam(team)->m_vPenBoxMax.GetY() - GetGlobalTeam(team)->m_vPenBoxMin.GetY()) / 3.0f;
-		float minX = GetGlobalTeam(team)->m_vPenBoxMin.GetX() + boxLength * 2;
-		float maxX = GetGlobalTeam(team)->m_vPenBoxMax.GetX() - boxLength * 2;
+		float minX = GetGlobalTeam(team)->m_vSixYardBoxMin.GetX();
+		float maxX = GetGlobalTeam(team)->m_vSixYardBoxMax.GetX();
 
 		if (m_bHitThePost || m_vTriggerTouchPos.x >= minX && m_vTriggerTouchPos.x <= maxX) // Bounced off the post or crossed the goal line inside the six-yard box
 		{

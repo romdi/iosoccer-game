@@ -38,7 +38,7 @@ extern ConVar
 	mp_shield_kickoff_radius,
 	mp_shield_ball_radius,
 	mp_shield_border,
-	mp_shield_block_6yardbox,
+	mp_shield_block_sixyardbox,
 	mp_shield_liberal_taker_positioning,
 	mp_shield_liberal_teammates_positioning,
 	mp_shield_block_opponent_half,

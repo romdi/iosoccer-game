@@ -133,6 +133,8 @@ public:
 	CNetworkVector(m_vPenalty);
 	CNetworkVector(m_vPenBoxMin);
 	CNetworkVector(m_vPenBoxMax);
+	CNetworkVector(m_vSixYardBoxMin);
+	CNetworkVector(m_vSixYardBoxMax);
 	CNetworkVar(int, m_nForward);
 	CNetworkVar(int, m_nRight);
 

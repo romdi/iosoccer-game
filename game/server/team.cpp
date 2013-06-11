@@ -60,6 +60,8 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CTeam, DT_Team)
 	SendPropVector(SENDINFO(m_vPenalty), -1, SPROP_COORD),
 	SendPropVector(SENDINFO(m_vPenBoxMin), -1, SPROP_COORD),
 	SendPropVector(SENDINFO(m_vPenBoxMax), -1, SPROP_COORD),
+	SendPropVector(SENDINFO(m_vSixYardBoxMin), -1, SPROP_COORD),
+	SendPropVector(SENDINFO(m_vSixYardBoxMax), -1, SPROP_COORD),
 	SendPropInt(SENDINFO(m_nForward)),
 	SendPropInt(SENDINFO(m_nRight)),
 	SendPropInt(SENDINFO(m_nCaptainPosIndex), 4, SPROP_UNSIGNED),
@@ -435,6 +437,16 @@ void CTeam::InitFieldSpots(int team)
 	{
 		m_vPlayerSpawns[j] = GetSpotPos(UTIL_VarArgs("info_team%d_player%d", index + 1, j + 1));
 	}
+
+	CBaseEntity *pGoalTrigger = gEntList.FindEntityByClassnameNearest("trigger_goal", m_vPenalty, 9999);
+
+	Vector goalMin, goalMax;
+	pGoalTrigger->CollisionProp()->WorldSpaceTriggerBounds(&goalMin, &goalMax);
+
+	float sixYardLength = (goalMax.x - goalMin.x) / 4 * 3;
+
+	m_vSixYardBoxMin = m_vPlayerSpawns[0] - Vector(sixYardLength / 3 * 5, 0, 0);
+	m_vSixYardBoxMax = m_vPlayerSpawns[0] + Vector(sixYardLength / 3 * 5, sixYardLength, 0);
 
 	m_nForward = Sign(SDKGameRules()->m_vKickOff.GetY() - m_vPlayerSpawns[0].y);
 	m_nRight = Sign(m_vCornerRight.GetX() - m_vPlayerSpawns[0].x);
