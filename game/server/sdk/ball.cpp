@@ -196,6 +196,8 @@ ConVar sv_ball_deflectioncoeff("sv_ball_deflectioncoeff", "0.5", FCVAR_NOTIFY);
 ConVar sv_ball_update_physics("sv_ball_update_physics", "0", FCVAR_NOTIFY);
 
 ConVar sv_ball_stats_pass_mindist("sv_ball_stats_pass_mindist", "300", FCVAR_NOTIFY);
+ConVar sv_ball_stats_clearance_minspeed("sv_ball_stats_clearance_minspeed", "800", FCVAR_NOTIFY);
+ConVar sv_ball_stats_shot_mindist("sv_ball_stats_shot_mindist", "300", FCVAR_NOTIFY);
 ConVar sv_ball_stats_assist_maxtime("sv_ball_stats_assist_maxtime", "8", FCVAR_NOTIFY);
 
 ConVar sv_ball_velocity_coeff("sv_ball_velocity_coeff", "0.9", FCVAR_NOTIFY);
@@ -2780,15 +2782,16 @@ void CBall::TriggerGoalLine(int team)
 
 	m_vTriggerTouchPos = GetPos();
 
-	if (LastTeam(true) != team && LastPl(true) && m_vVel.Length2DSqr() > pow(sv_ball_normalshot_strength.GetInt(), 2.0f)) // Has to cross the line fast enough
+	BallTouchInfo *pInfo = LastInfo(true);
+
+	if (pInfo->m_nTeam != team && pInfo->m_pPl && (m_vTriggerTouchPos - pInfo->m_vBallPos).Length2DSqr() >= pow(sv_ball_stats_shot_mindist.GetFloat(), 2.0f)) // Don't add a missed shot or pass if the player accidentally dribbles the ball out
 	{
 		float boxLength = abs(GetGlobalTeam(team)->m_vPenBoxMax.GetY() - GetGlobalTeam(team)->m_vPenBoxMin.GetY()) / 3.0f;
 		float minX = GetGlobalTeam(team)->m_vPenBoxMin.GetX() + boxLength * 2;
 		float maxX = GetGlobalTeam(team)->m_vPenBoxMax.GetX() - boxLength * 2;
 
-		if (m_vTriggerTouchPos.x >= minX && m_vTriggerTouchPos.x <= maxX) // Has to cross the goal line inside the six-yard box
+		if (m_bHitThePost || m_vTriggerTouchPos.x >= minX && m_vTriggerTouchPos.x <= maxX) // Bounced off the post or crossed the goal line inside the six-yard box
 		{
-			DevMsg("Miss!\n");
 			LastPl(true)->AddShot();
 			EmitSound("Crowd.Miss");
 			ReplayManager()->AddMatchEvent(MATCH_EVENT_MISS, GetGlobalTeam(team)->GetOppTeamNumber(), LastPl(true));
@@ -2819,12 +2822,16 @@ void CBall::TriggerSideline()
 	BallTouchInfo *pInfo = LastInfo(true);
 	CSDKPlayer *pLastPl = LastPl(true);
 
-	if (pInfo && CSDKPlayer::IsOnField(pLastPl) && (ballPos - pInfo->m_vBallPos).Length2DSqr() >= pow(sv_ball_stats_pass_mindist.GetInt(), 2.0f) && pInfo->m_eBodyPart != BODY_PART_KEEPERPUNCH) // Pass or interception
+	if (pInfo && CSDKPlayer::IsOnField(pLastPl))
 	{
-		if (m_bHitThePost)
+		if (m_bHitThePost) // Goal post hits don't trigger a statistic change right away, since we don't know if it ends up being a goal or a miss. So do the check here.
 			pLastPl->AddShot();
-		else
+		else if (pInfo->m_eBodyPart != BODY_PART_KEEPERPUNCH
+			&& GetVel().Length2DSqr() < pow(sv_ball_stats_clearance_minspeed.GetFloat(), 2.0f)
+			&& (ballPos - pInfo->m_vBallPos).Length2DSqr() >= pow(sv_ball_stats_pass_mindist.GetFloat(), 2.0f)) // Pass or interception if over a distance threshold and wasn't punched away by a keeper
+		{
 			pLastPl->AddPass();
+		}
 	}
 
 	CBaseEntity *pThrowIn = gEntList.FindEntityByClassnameNearest("info_throw_in", ballPos, 1000);
