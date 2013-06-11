@@ -1468,40 +1468,34 @@ void CSDKGameRules::State_Think()
 				GetBall()->EmitSound("Crowd.Cheer");
 			}
 
+			// Don't end the match period if the ball is near a goal, unless the time limit is exceeded
 			int additionalTime = m_nAnnouncedInjuryTime + (abs(m_nBallZone) < 50 ? 0 : 30);
 			m_flStateTimeLeft += m_flInjuryTime + additionalTime * 60 / (90.0f / mp_timelimit_match.GetFloat());
 
+			// Check for player auto-rotation
 			if (sv_playerrotation_enabled.GetBool() && m_PlayerRotationMinutes.Count() > 0 && GetMatchDisplayTimeSeconds(false) / 60 >= m_PlayerRotationMinutes.Head())
 			{
 				for (int team = TEAM_A; team <= TEAM_B; team++)
 				{
 					CTeam *pTeam = GetGlobalTeam(team);
 
-					for (int i = 0; i < mp_maxplayers.GetInt(); i++)
+					for (int i = mp_maxplayers.GetInt() - 1; i >= 1; i--)
 					{
 						CSDKPlayer *pPl1 = pTeam->GetPlayerByPosIndex(i);
-						if (!pPl1)
-							continue;
+						CSDKPlayer *pPl2 = pTeam->GetPlayerByPosIndex(i - 1);
 
-						int j = (i + 1) % mp_maxplayers.GetInt();
+						if (pPl1)
+							pPl1->SetDesiredTeam(team, team, i - 1, true, false);
 
-						while (j != i)
+						if (pPl2)
+							pPl2->SetDesiredTeam(team, team, i, true, false);
+
+						if (pPl1 && pPl2)
 						{
-							CSDKPlayer *pPl2 = pTeam->GetPlayerByPosIndex(j);
-							if (pPl2)
-							{
-								int posIndex = pPl1->GetTeamPosIndex();
-								pPl1->SetDesiredTeam(team, team, pPl2->GetTeamPosIndex(), true, false);
-								pPl2->SetDesiredTeam(team, team, posIndex, true, false);
-
-								Vector pos = pPl1->GetLocalOrigin();
-								pPl1->SetLocalOrigin(pPl2->GetLocalOrigin());
-								pPl2->SetLocalOrigin(pos);
-
-								break;
-							}
-
-							j = (j + 1) % mp_maxplayers.GetInt();
+							// Swap world location
+							Vector pl1Pos = pPl1->GetLocalOrigin();
+							pPl1->SetLocalOrigin(pPl2->GetLocalOrigin());
+							pPl2->SetLocalOrigin(pl1Pos);
 						}
 					}
 				}
