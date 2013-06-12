@@ -147,6 +147,7 @@ ConVar sv_ball_chargedslide_maxstrength("sv_ball_chargedslide_maxstrength", "110
 ConVar sv_ball_penaltyshot_maxstrength("sv_ball_penaltyshot_maxstrength", "1200", FCVAR_NOTIFY);
 
 ConVar sv_ball_goalkick_speedcoeff("sv_ball_goalkick_speedcoeff", "1.15", FCVAR_NOTIFY);
+ConVar sv_ball_freekick_speedcoeff("sv_ball_freekick_speedcoeff", "1.10", FCVAR_NOTIFY);
 ConVar sv_ball_volleyshot_speedcoeff("sv_ball_volleyshot_speedcoeff", "1.125", FCVAR_NOTIFY);
 
 ConVar sv_ball_keepershot_minangle("sv_ball_keepershot_minangle", "-5", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
@@ -1619,7 +1620,7 @@ void CBall::State_FREEKICK_Think()
 		EmitSound("Crowd.Way");
 		m_pPl->AddFreeKick();
 		RemoveAllTouches();
-		DoGroundShot(true);
+		DoGroundShot(true, sv_ball_freekick_speedcoeff.GetFloat());
 		State_Transition(BALL_STATE_NORMAL);
 	}
 }
