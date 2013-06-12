@@ -2630,44 +2630,57 @@ bool CBall::DoHeader()
 
 AngularImpulse CBall::CalcSpin(float coeff, bool applyTopspin)
 {	
-	Vector sideRot;
+	Vector sideRot = vec3_origin;
+	float sideSpin = 0;
 
-	if ((m_pPl->m_nButtons & IN_MOVELEFT) && (!(m_pPl->m_nButtons & IN_MOVERIGHT) || (mp_sidemove_override.GetBool() || mp_curl_override.GetBool()) && m_pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVERIGHT)) 
+	if (coeff > 0)
 	{
-		sideRot = Vector(0, 0, (m_pPl->IsLegacySideCurl() && mp_client_sidecurl.GetBool()) ? 1 : -1);
-	}
-	else if ((m_pPl->m_nButtons & IN_MOVERIGHT) && (!(m_pPl->m_nButtons & IN_MOVELEFT) || (mp_sidemove_override.GetBool() || mp_curl_override.GetBool()) && m_pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVELEFT)) 
-	{
-		sideRot = Vector(0, 0, (m_pPl->IsLegacySideCurl() && mp_client_sidecurl.GetBool()) ? -1 : 1);
-	}
-	else
-	{
-		sideRot = Vector(0, 0, 0);
-	}
+		sideSpin = m_vVel.Length() * sv_ball_spin.GetInt() * coeff / 100.0f;
 
-	float sideSpin = sv_ball_spin.GetInt() * coeff / 100.0f;
-
-	Vector backTopRot(0, 0, 0);
-
-	float backTopSpin = sv_ball_spin.GetInt() * coeff / 100.0f;
-
-	if (!sv_ball_jump_topspin_enabled.GetBool() || m_pPl->GetGroundEntity() && !(m_pPl->m_nButtons & IN_JUMP) || !applyTopspin)
-	{
-		backTopRot = m_vPlRight;
-		backTopSpin *= sv_ball_backspin_coeff.GetFloat();
-	}
-	else if (sv_ball_jump_topspin_enabled.GetBool() && (!m_pPl->GetGroundEntity() || (m_pPl->m_nButtons & IN_JUMP) != 0))
-	{
-		backTopRot = -m_vPlRight;
-		backTopSpin *= sv_ball_topspin_coeff.GetFloat();
+		if ((m_pPl->m_nButtons & IN_MOVELEFT) && (!(m_pPl->m_nButtons & IN_MOVERIGHT) || (mp_sidemove_override.GetBool() || mp_curl_override.GetBool()) && m_pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVERIGHT)) 
+		{
+			sideRot = Vector(0, 0, (m_pPl->IsLegacySideCurl() && mp_client_sidecurl.GetBool()) ? 1 : -1);
+		}
+		else if ((m_pPl->m_nButtons & IN_MOVERIGHT) && (!(m_pPl->m_nButtons & IN_MOVELEFT) || (mp_sidemove_override.GetBool() || mp_curl_override.GetBool()) && m_pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVELEFT)) 
+		{
+			sideRot = Vector(0, 0, (m_pPl->IsLegacySideCurl() && mp_client_sidecurl.GetBool()) ? -1 : 1);
+		}
 	}
 
-	AngularImpulse randRot = AngularImpulse(0, 0, 0);
-	for (int i = 0; i < 3; i++)
+
+	Vector backTopRot = vec3_origin;
+	float backTopSpin = 0;
+
+	if (coeff > 0)
 	{
-		randRot[i] = sv_ball_defaultspin.GetInt() / 100.0f * (g_IOSRand.RandomInt(0, 1) == 1 ? 1 : -1);
+		backTopSpin = m_vVel.Length() * sv_ball_spin.GetInt() * coeff / 100.0f;
+
+		if (!sv_ball_jump_topspin_enabled.GetBool() || m_pPl->GetGroundEntity() && !(m_pPl->m_nButtons & IN_JUMP) || !applyTopspin)
+		{
+			backTopRot = m_vPlRight;
+			backTopSpin *= sv_ball_backspin_coeff.GetFloat();
+		}
+		else if (sv_ball_jump_topspin_enabled.GetBool() && (!m_pPl->GetGroundEntity() || (m_pPl->m_nButtons & IN_JUMP) != 0))
+		{
+			backTopRot = -m_vPlRight;
+			backTopSpin *= sv_ball_topspin_coeff.GetFloat();
+		}
 	}
 
+
+	AngularImpulse randRot = vec3_origin;
+
+	if (sideRot == vec3_origin && backTopRot == vec3_origin)
+	{
+		for (int i = 0; i < 3; i++)
+		{
+			// Add some random rotation if there isn't any side, back or top spin, since a non-rotating ball looks unnatural
+			randRot[i] = sv_ball_defaultspin.GetInt() / 100.0f * (g_IOSRand.RandomInt(0, 1) == 1 ? 1 : -1);
+		}
+	}
+
+
+	// The angular impulse is applied locally in the physics engine, so rotate from the player angles
 	return (WorldToLocalRotation(SetupMatrixAngles(m_aAng), sideRot, sideSpin) + WorldToLocalRotation(SetupMatrixAngles(m_aAng), backTopRot, backTopSpin) + randRot);
 }
 
