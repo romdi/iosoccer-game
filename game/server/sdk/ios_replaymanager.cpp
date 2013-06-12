@@ -237,25 +237,29 @@ void CReplayManager::CheckReplay()
 		TakeSnapshot();
 }
 
-void CReplayManager::StartReplay(int numberOfRuns, float startDelay, int index /*= -1*/, bool isHighlightReplay /*= false*/)
+extern ConVar sv_ball_goalcelebduration;
+
+void CReplayManager::StartReplay(bool isHighlightReplay)
 {
 	if (!sv_replays.GetBool())
 		return;
 
-	m_nReplayIndex = FindNextHighlightReplayIndex(index, SDKGameRules()->State_Get());
+	m_bIsHighlightReplay = isHighlightReplay;
+
+	m_nReplayIndex = FindNextHighlightReplayIndex((m_bIsHighlightReplay ? 0 : -1), SDKGameRules()->State_Get());
 
 	if (m_nReplayIndex == -1)
 		return;
 
-	m_bIsHighlightReplay = isHighlightReplay;
+	MatchEvent *pMatchEvent = m_MatchEvents[m_nReplayIndex];
+
 	m_bIsHighlightStart = true;
 	m_bIsReplayStart = true;
-	m_nMaxReplayRuns = numberOfRuns;
-	m_flReplayActivationTime = gpGlobals->curtime + startDelay;
+	m_flReplayActivationTime = gpGlobals->curtime + (m_bIsHighlightReplay ? 3.0f : sv_ball_goalcelebduration.GetFloat());
 	m_nReplayRunIndex = 0;
 	m_bReplayIsPending = true;
 	m_bIsReplaying = false;
-	CalcReplayDuration(m_flReplayActivationTime);
+	CalcMaxReplayRunsAndDuration(pMatchEvent, m_flReplayActivationTime);
 }
 
 void CReplayManager::StopReplay()
@@ -447,7 +451,7 @@ void CReplayManager::RestoreSnapshot()
 {
 	float timeSinceReplayStart = gpGlobals->curtime - m_flReplayStartTime;
 
-	if (timeSinceReplayStart >= m_flRunDuration)
+	if (timeSinceReplayStart > m_flRunDuration)
 	{
 		if (m_nReplayRunIndex < m_nMaxReplayRuns - 1)
 		{
@@ -483,7 +487,7 @@ void CReplayManager::RestoreSnapshot()
 		m_bAtMinGoalPos = pMatchEvent->atMinGoalPos;
 		m_bIsReplaying = true;
 		m_bReplayIsPending = false;
-		CalcReplayDuration(gpGlobals->curtime);
+		CalcMaxReplayRunsAndDuration(pMatchEvent, gpGlobals->curtime);
 		timeSinceReplayStart = 0;
 
 		if (m_bIsHighlightReplay && m_bIsHighlightStart)
@@ -818,7 +822,7 @@ void CReplayManager::StartHighlights()
 	if (!sv_replays.GetBool() || !sv_highlights.GetBool())
 		return;
 
-	StartReplay(2, 5, 0, true);
+	StartReplay(true);
 }
 
 void CReplayManager::StopHighlights()
@@ -826,16 +830,27 @@ void CReplayManager::StopHighlights()
 	StopReplay();
 }
 
-void CReplayManager::CalcReplayDuration(float startTime)
+void CReplayManager::CalcMaxReplayRunsAndDuration(const MatchEvent *pMatchEvent, float startTime)
 {
-	if (m_nReplayRunIndex == 0)
-		m_flRunDuration = sv_replay_duration1.GetFloat();
-	else if (m_nReplayRunIndex == 1)
-		m_flRunDuration = sv_replay_duration2.GetFloat();
-	else if (m_nReplayRunIndex == 2)
-		m_flRunDuration = sv_replay_duration3.GetFloat();
+	if (pMatchEvent->matchEventType == MATCH_EVENT_GOAL || pMatchEvent->matchEventType == MATCH_EVENT_OWNGOAL)
+	{
+		m_nMaxReplayRuns = sv_replay_count.GetInt();
+
+		if (m_nReplayRunIndex == 0)
+			m_flRunDuration = sv_replay_duration1.GetFloat();
+		else if (m_nReplayRunIndex == 1)
+			m_flRunDuration = sv_replay_duration2.GetFloat();
+		else if (m_nReplayRunIndex == 2)
+			m_flRunDuration = sv_replay_duration3.GetFloat();
+	}
+	else
+	{
+		m_nMaxReplayRuns = 1;
+		m_flRunDuration = 4.0f;
+	}
 
 	m_flReplayStartTime = startTime;
+	// If the new replay duration is shorter than the recorded time span, set the offset so it starts playing later and finishes with the last snapshot
 	m_flReplayStartTimeOffset = max(max(sv_replay_duration1.GetFloat(), sv_replay_duration2.GetFloat()), sv_replay_duration3.GetFloat()) - m_flRunDuration;
 }
 

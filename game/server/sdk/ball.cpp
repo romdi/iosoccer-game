@@ -1517,7 +1517,7 @@ void CBall::State_GOAL_Enter()
 
 	State_Transition(BALL_STATE_KICKOFF, delay);
 
-	ReplayManager()->StartReplay(sv_replay_count.GetInt(), sv_ball_goalcelebduration.GetInt());
+	ReplayManager()->StartReplay(false);
 }
 
 void CBall::State_GOAL_Think()

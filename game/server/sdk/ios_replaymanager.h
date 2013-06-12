@@ -188,7 +188,7 @@ public:
 	~CReplayManager();
 	void CheckReplay();
 	void TakeSnapshot();
-	void StartReplay(int numberOfRuns, float startDelay, int index = -1, bool isHighlightReplay = false);
+	void StartReplay(bool isHighlightReplay);
 	void StopReplay();
 	void RestoreSnapshot();
 	bool IsReplaying() { return m_bIsReplaying; }
@@ -198,7 +198,7 @@ public:
 	void StartHighlights();
 	void StopHighlights();
 	void CleanUp();
-	void CalcReplayDuration(float startTime);
+	void CalcMaxReplayRunsAndDuration(const MatchEvent *pMatchEvent, float startTime);
 	void AddMatchEvent(match_event_t type, int team, CSDKPlayer *pPlayer1, CSDKPlayer *pPlayer2 = NULL, CSDKPlayer *pPlayer3 = NULL);
 	int GetMatchEventCount() { return m_MatchEvents.Count(); }
 	MatchEvent *GetMatchEvent(int index) { return m_MatchEvents[index]; }
