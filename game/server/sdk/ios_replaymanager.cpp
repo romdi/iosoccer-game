@@ -421,19 +421,19 @@ void CReplayManager::TakeSnapshot()
 
 	m_Snapshots.AddToTail(pSnap);
 
-	if (m_MatchEvents.Count() > 0)
+	// Add the snapshot to existing highlights if their end time hasn't been reached yet
+	for (int i = 0; i < m_MatchEvents.Count(); i++)
 	{
-		MatchEvent *pLastMatchEvent = m_MatchEvents.Tail();
-
-		if (pLastMatchEvent->snapshotEndTime > gpGlobals->curtime)
+		if (m_MatchEvents[i]->snapshotEndTime >= gpGlobals->curtime)
 		{
-			pLastMatchEvent->snapshots.AddToTail(pSnap);
+			m_MatchEvents[i]->snapshots.AddToTail(pSnap);
 			pSnap->isInReplay = true;
 		}
 	}
 	
 	float replayStartTime = GetReplayStartTime();
 
+	// Remove old snapshots from the list. Only free a snapshot's memory if it isn't part of any highlight.
 	while (m_Snapshots.Count() >= 2 && m_Snapshots[0]->snaptime < replayStartTime && m_Snapshots[1]->snaptime <= replayStartTime)
 	{
 		if (!m_Snapshots[0]->isInReplay)
