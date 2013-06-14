@@ -2150,7 +2150,7 @@ void CPlayerPersistentData::ConvertAllPlayerDataToJson()
 		Q_strcat(json, UTIL_VarArgs("\"%s\"", statTypes[i]), JSON_SIZE);
 	}
 
-	Q_strcat(json, UTIL_VarArgs("],\"matchInfo\":{\"type\":\"%s\",\"startTime\":\"%lu\",\"endTime\":\"%lu\"", mp_matchinfo.GetString(), SDKGameRules()->m_nRealMatchStartTime, SDKGameRules()->m_nRealMatchEndTime), JSON_SIZE);
+	Q_strcat(json, UTIL_VarArgs("],\"matchInfo\":{\"type\":\"%s\",\"startTime\":%lu,\"endTime\":%lu", mp_matchinfo.GetString(), SDKGameRules()->m_nRealMatchStartTime, SDKGameRules()->m_nRealMatchEndTime), JSON_SIZE);
 
 	Q_strcat(json, "},\"teams\":[", JSON_SIZE);
 
