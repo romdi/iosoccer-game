@@ -37,6 +37,7 @@ extern void Bot_RunAll( void );
 	#include "ios_mapentities.h"
 	#include "movehelper_server.h"
 	#include "ios_replaymanager.h"
+	#include <time.h>
 #endif
 
 
@@ -396,6 +397,8 @@ CSDKGameRules::CSDKGameRules()
 	m_bAdminWantsTimeout = false;
 	m_nOldMaxplayers = mp_maxplayers.GetInt();
 	m_bUseOldMaxplayers = false;
+	m_nRealMatchStartTime = 0;
+	m_nRealMatchEndTime = 0;
 #else
 	PrecacheMaterial("pitch/offside_line");
 	m_pOffsideLineMaterial = materials->FindMaterial( "pitch/offside_line", TEXTURE_GROUP_CLIENT_EFFECTS );
@@ -1555,6 +1558,8 @@ void CSDKGameRules::State_WARMUP_Leave(match_period_t newState)
 
 void CSDKGameRules::State_FIRST_HALF_Enter()
 {
+	m_nRealMatchStartTime = time(NULL);
+
 	ReloadSettings();
 	GetBall()->State_Transition(BALL_STATE_KICKOFF, 0, true);
 
@@ -1878,6 +1883,8 @@ void CSDKGameRules::State_PENALTIES_Leave(match_period_t newState)
 
 void CSDKGameRules::State_COOLDOWN_Enter()
 {
+	m_nRealMatchEndTime = time(NULL);
+
 	ApplyIntermissionSettings(false);
 
 	//who won?

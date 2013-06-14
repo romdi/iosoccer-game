@@ -247,6 +247,9 @@ public:
 	bool	m_bUseAdjustedStateEnterTime;
 	CNetworkVar(float, m_flMatchStartTime);
 
+	unsigned long m_nRealMatchStartTime;
+	unsigned long m_nRealMatchEndTime;
+
 	void RestartMatch(bool setRandomKickOffTeam, bool setRandomSides);
 	int WakeUpAwayPlayers();
 	void StartPenalties();
