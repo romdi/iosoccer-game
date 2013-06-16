@@ -2009,6 +2009,12 @@ bool CBall::CheckFoul()
 
 			if (m_pFoulingPl->GetTeamPosType() != POS_GK)
 				m_pFoulingPl->GetTeam()->SetPosNextJoinSeconds(m_pFoulingPl->GetTeamPosIndex(), nextJoin);
+
+			ReplayManager()->AddMatchEvent(m_eFoulType == FOUL_NORMAL_YELLOW_CARD ? MATCH_EVENT_SECONDYELLOWCARD : MATCH_EVENT_REDCARD, m_nFoulingTeam, m_pFoulingPl);
+		}
+		else if (m_eFoulType == FOUL_NORMAL_YELLOW_CARD)
+		{
+			ReplayManager()->AddMatchEvent(MATCH_EVENT_YELLOWCARD, m_nFoulingTeam, m_pFoulingPl);
 		}
 
 		if (pPl->m_nInPenBoxOfTeam == m_pPl->GetTeamNumber())
@@ -2045,17 +2051,6 @@ void CBall::TriggerFoul(foul_type_t type, Vector pos, CSDKPlayer *pFoulingPl, CS
 			m_vFoulPos.y = max.y;
 		else if (GetGlobalTeam(m_nFoulingTeam)->m_nForward == -1 && m_vFoulPos.y > min.y)
 			m_vFoulPos.y = min.y;
-	}
-
-	if (m_eFoulType == FOUL_NORMAL_YELLOW_CARD)
-	{
-		if (m_pFoulingPl->GetYellowCards() % 2 != 0)
-			ReplayManager()->AddMatchEvent(MATCH_EVENT_YELLOWCARD, m_nFoulingTeam, m_pFoulingPl);
-	}
-
-	if (m_eFoulType == FOUL_NORMAL_YELLOW_CARD && m_pFoulingPl->GetYellowCards() % 2 == 0 || m_eFoulType == FOUL_NORMAL_RED_CARD)
-	{
-		ReplayManager()->AddMatchEvent(m_eFoulType == FOUL_NORMAL_YELLOW_CARD ? MATCH_EVENT_SECONDYELLOWCARD : MATCH_EVENT_REDCARD, m_nFoulingTeam, m_pFoulingPl);
 	}
 }
 
