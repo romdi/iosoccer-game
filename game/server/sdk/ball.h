@@ -46,12 +46,15 @@ enum penalty_state_t
 	PENALTY_ABORTED_ILLEGAL_MOVE
 };
 
-#define FL_POS_KEEPER					1
-#define FL_POS_DEFENDER					2
-#define FL_POS_MIDFIELDER				4
-#define FL_POS_ATTACKER					8
-#define FL_POS_FIELD					16
-#define FL_POS_ANY						32
+#define FL_POS_KEEPER					(1 << 0)
+#define FL_POS_DEFENDER					(1 << 1)
+#define FL_POS_MIDFIELDER				(1 << 2)
+#define FL_POS_ATTACKER					(1 << 3)
+#define FL_POS_FIELD					(1 << 4)
+#define FL_POS_ANY						(1 << 5)
+#define FL_POS_LEFT						(1 << 6)
+#define FL_POS_CENTER					(1 << 7)
+#define FL_POS_RIGHT					(1 << 8)
 
 #define	PS_OFF							0
 #define	PS_BESTOFFIVE					1

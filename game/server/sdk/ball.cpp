@@ -641,21 +641,30 @@ CSDKPlayer *CBall::FindNearestPlayer(int team /*= TEAM_INVALID*/, int posFlags /
 
 		if (!(posFlags & FL_POS_ANY))
 		{
-			int posName = (int)g_Positions[mp_maxplayers.GetInt() - 1][pPlayer->GetTeamPosIndex()][POS_TYPE];
+			int posType = (int)g_Positions[mp_maxplayers.GetInt() - 1][pPlayer->GetTeamPosIndex()][POS_TYPE];
 
-			if ((posFlags == FL_POS_FIELD) && !((1 << posName) & (g_nPosDefense + g_nPosMidfield + g_nPosAttack)))
+			if ((posFlags & FL_POS_FIELD) != 0 && !((1 << posType) & (g_nPosDefense + g_nPosMidfield + g_nPosAttack)))
 				continue;
 
-			if ((posFlags == FL_POS_KEEPER) && !((1 << posName) & g_nPosKeeper))
+			if ((posFlags & FL_POS_KEEPER) != 0 && !((1 << posType) & g_nPosKeeper))
 				continue;
 
-			if ((posFlags == FL_POS_DEFENDER) && !((1 << posName) & g_nPosDefense))
+			if ((posFlags & FL_POS_DEFENDER) != 0 && !((1 << posType) & g_nPosDefense))
 				continue;
 
-			if ((posFlags == FL_POS_MIDFIELDER) && !((1 << posName) & g_nPosMidfield))
+			if ((posFlags & FL_POS_MIDFIELDER) != 0 && !((1 << posType) & g_nPosMidfield))
 				continue;
 
-			if ((posFlags == FL_POS_ATTACKER) && !((1 << posName) & g_nPosAttack))
+			if ((posFlags & FL_POS_ATTACKER) != 0 && !((1 << posType) & g_nPosAttack))
+				continue;
+
+			if ((posFlags & FL_POS_LEFT) != 0 && !((1 << posType) & g_nPosLeft))
+				continue;
+
+			if ((posFlags & FL_POS_CENTER) != 0 && !((1 << posType) & g_nPosCenter))
+				continue;
+
+			if ((posFlags & FL_POS_RIGHT) != 0 && !((1 << posType) & g_nPosRight))
 				continue;
 		}
 
@@ -1204,14 +1213,29 @@ void CBall::State_KICKOFF_Think()
 {
 	if (!CSDKPlayer::IsOnField(m_pPl))
 	{
-		m_pPl = FindNearestPlayer(SDKGameRules()->GetKickOffTeam(), FL_POS_ATTACKER);
+		m_pPl = FindNearestPlayer(SDKGameRules()->GetKickOffTeam(), FL_POS_ATTACKER | FL_POS_LEFT);
 		if (!m_pPl)
-			m_pPl = FindNearestPlayer(SDKGameRules()->GetKickOffTeam(), FL_POS_MIDFIELDER);
+			m_pPl = FindNearestPlayer(SDKGameRules()->GetKickOffTeam(), FL_POS_ATTACKER | FL_POS_CENTER);
 		if (!m_pPl)
-			m_pPl = FindNearestPlayer(SDKGameRules()->GetKickOffTeam(), FL_POS_DEFENDER);
+			m_pPl = FindNearestPlayer(SDKGameRules()->GetKickOffTeam(), FL_POS_ATTACKER | FL_POS_RIGHT);
+
+		if (!m_pPl)
+			m_pPl = FindNearestPlayer(SDKGameRules()->GetKickOffTeam(), FL_POS_MIDFIELDER | FL_POS_LEFT);
+		if (!m_pPl)
+			m_pPl = FindNearestPlayer(SDKGameRules()->GetKickOffTeam(), FL_POS_MIDFIELDER | FL_POS_CENTER);
+		if (!m_pPl)
+			m_pPl = FindNearestPlayer(SDKGameRules()->GetKickOffTeam(), FL_POS_MIDFIELDER | FL_POS_RIGHT);
+
+		if (!m_pPl)
+			m_pPl = FindNearestPlayer(SDKGameRules()->GetKickOffTeam(), FL_POS_DEFENDER | FL_POS_LEFT);
+		if (!m_pPl)
+			m_pPl = FindNearestPlayer(SDKGameRules()->GetKickOffTeam(), FL_POS_DEFENDER | FL_POS_CENTER);
+		if (!m_pPl)
+			m_pPl = FindNearestPlayer(SDKGameRules()->GetKickOffTeam(), FL_POS_DEFENDER | FL_POS_RIGHT);
 
 		if (!m_pPl)
 			m_pPl = FindNearestPlayer(GetGlobalTeam(SDKGameRules()->GetKickOffTeam())->GetOppTeamNumber());
+
 		if (!m_pPl)
 		{
 			SDKGameRules()->EnableShield(SHIELD_KICKOFF, GetGlobalTeam(TEAM_A)->GetTeamNumber(), SDKGameRules()->m_vKickOff);
@@ -1238,11 +1262,25 @@ void CBall::State_KICKOFF_Think()
 
 	if (!CSDKPlayer::IsOnField(m_pOtherPl) || m_pOtherPl == m_pPl)
 	{
-		m_pOtherPl = FindNearestPlayer(m_pPl->GetTeamNumber(), FL_POS_ATTACKER, false, (1 << (m_pPl->entindex() - 1)));
+		m_pOtherPl = FindNearestPlayer(m_pPl->GetTeamNumber(), FL_POS_ATTACKER | FL_POS_RIGHT, false, (1 << (m_pPl->entindex() - 1)));
 		if (!m_pOtherPl)
-			m_pOtherPl = FindNearestPlayer(m_pPl->GetTeamNumber(), FL_POS_MIDFIELDER, false, (1 << (m_pPl->entindex() - 1)));
+			m_pOtherPl = FindNearestPlayer(m_pPl->GetTeamNumber(), FL_POS_ATTACKER | FL_POS_CENTER, false, (1 << (m_pPl->entindex() - 1)));
 		if (!m_pOtherPl)
-			m_pOtherPl = FindNearestPlayer(m_pPl->GetTeamNumber(), FL_POS_DEFENDER, false, (1 << (m_pPl->entindex() - 1)));
+			m_pOtherPl = FindNearestPlayer(m_pPl->GetTeamNumber(), FL_POS_ATTACKER | FL_POS_LEFT, false, (1 << (m_pPl->entindex() - 1)));
+
+		if (!m_pOtherPl)
+			m_pOtherPl = FindNearestPlayer(m_pPl->GetTeamNumber(), FL_POS_MIDFIELDER | FL_POS_RIGHT, false, (1 << (m_pPl->entindex() - 1)));
+		if (!m_pOtherPl)
+			m_pOtherPl = FindNearestPlayer(m_pPl->GetTeamNumber(), FL_POS_MIDFIELDER | FL_POS_CENTER, false, (1 << (m_pPl->entindex() - 1)));
+		if (!m_pOtherPl)
+			m_pOtherPl = FindNearestPlayer(m_pPl->GetTeamNumber(), FL_POS_MIDFIELDER | FL_POS_LEFT, false, (1 << (m_pPl->entindex() - 1)));
+
+		if (!m_pOtherPl)
+			m_pOtherPl = FindNearestPlayer(m_pPl->GetTeamNumber(), FL_POS_DEFENDER | FL_POS_RIGHT, false, (1 << (m_pPl->entindex() - 1)));
+		if (!m_pOtherPl)
+			m_pOtherPl = FindNearestPlayer(m_pPl->GetTeamNumber(), FL_POS_DEFENDER | FL_POS_CENTER, false, (1 << (m_pPl->entindex() - 1)));
+		if (!m_pOtherPl)
+			m_pOtherPl = FindNearestPlayer(m_pPl->GetTeamNumber(), FL_POS_DEFENDER | FL_POS_LEFT, false, (1 << (m_pPl->entindex() - 1)));
 
 		if (m_pOtherPl)
 		{
