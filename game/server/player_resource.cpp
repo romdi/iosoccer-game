@@ -62,9 +62,9 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CPlayerResource, DT_PlayerResource)
 	SendPropArray3( SENDINFO_ARRAY3(m_TeamToJoin), SendPropInt( SENDINFO_ARRAY(m_TeamToJoin), 3 ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_TeamPosIndexToJoin), SendPropInt( SENDINFO_ARRAY(m_TeamPosIndexToJoin), 4, SPROP_UNSIGNED ) ),
 
+	SendPropArray3( SENDINFO_ARRAY3(m_szPlayerNames), SendPropString( SENDINFO_ARRAY(m_szPlayerNames), 0, SendProxy_String_tToStringPR ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_szClubNames), SendPropString( SENDINFO_ARRAY(m_szClubNames), 0, SendProxy_String_tToStringPR ) ),
-	SendPropArray3( SENDINFO_ARRAY3(m_CountryNames), SendPropInt( SENDINFO_ARRAY(m_CountryNames), 8, SPROP_UNSIGNED ) ),
-	//SendPropArray( SendPropString( SENDINFO_ARRAY( m_szClubName ), 0, SendProxy_String_tToString ), m_szClubName ),
+	SendPropArray3( SENDINFO_ARRAY3(m_CountryIndices), SendPropInt( SENDINFO_ARRAY(m_CountryIndices), 8, SPROP_UNSIGNED ) ),
 	
 END_SEND_TABLE()
 
@@ -135,8 +135,9 @@ void CPlayerResource::Spawn( void )
 		m_TeamToJoin.Set( i, 0 );
 		m_TeamPosIndexToJoin.Set( i, 0 );
 
+		m_szPlayerNames.Set( i, MAKE_STRING("") );
 		m_szClubNames.Set( i, MAKE_STRING("") );
-		m_CountryNames.Set( i, 0 );
+		m_CountryIndices.Set( i, 0 );
 	}
 
 	SetThink( &CPlayerResource::ResourceThink );
@@ -173,101 +174,97 @@ void CPlayerResource::UpdatePlayerData( void )
 	int pingSum[2] = { 0 };
 	int pingPlayers[2] = { 0 };
 
-	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
-		CBasePlayer *pPlayer = (CBasePlayer*)UTIL_PlayerByIndex( i );
-		
-		if ( pPlayer && pPlayer->IsConnected() )
+		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+		if (!pPl || !pPl->IsConnected())
 		{
-			m_bConnected.Set( i, 1 );
-			m_iTeam.Set( i, pPlayer->GetTeamNumber() );
-
-			CSDKPlayer	*SDKPlayer = ToSDKPlayer(pPlayer);
-			if (SDKPlayer)
-			{
-				m_nSpecTeam.Set( i, SDKPlayer->GetSpecTeam() );
-				m_TeamPosIndex.Set(i, SDKPlayer->GetTeamPosIndex() );
-				m_TeamPosNum.Set(i, SDKPlayer->GetTeamPosNum() );
-				m_TeamToJoin.Set(i, SDKPlayer->GetTeamToJoin() );
-				m_TeamPosIndexToJoin.Set(i, SDKPlayer->GetTeamPosIndexToJoin() );
-				m_NextCardJoin.Set(i, SDKPlayer->GetNextCardJoin() );
-				m_IsAway.Set(i, SDKPlayer->IsAway() );
-				m_CountryNames.Set(i, SDKPlayer->GetCountryName());
-
-				m_szClubNames.Set(i, MAKE_STRING(SDKPlayer->GetClubName()));
-
-				// RomD: Enforce client update, since the value changes without notice
-				if (SDKPlayer->m_bClubNameChanged)
-				{
-					m_szClubNames.GetForModify(i);
-					SDKPlayer->m_bClubNameChanged = false;
-				}
-			}
-
-			// Don't update ping / packetloss everytime
-
-			if (m_nUpdateCounter % 20 == 0)
-			{
-				// update ping all 20 think ticks = (20*0.1=2seconds)
-				int ping, packetloss;
-				UTIL_GetPlayerConnectionInfo( i, ping, packetloss );
-				
-				// calc avg for scoreboard so it's not so jittery
-				ping = 0.8f * m_iPing.Get(i) + 0.2f * ping;
-
-				
-				m_iPing.Set( i, ping );
-				// m_iPacketloss.Set( i, packetloss );
-
-				CSDKPlayer *pPl = ToSDKPlayer(pPlayer);
-				if (SDKPlayer)
-				{
-					m_RedCards.Set(i, max( 0, pPl->GetRedCards() ) );
-					m_YellowCards.Set(i, max( 0, pPl->GetYellowCards() ) );
-					m_Fouls.Set(i, max( 0, pPl->GetFouls() ) );
-					m_FoulsSuffered.Set(i, max( 0, pPl->GetFoulsSuffered() ) );
-					m_SlidingTackles.Set(i, max( 0, pPl->GetSlidingTackles() ) );
-					m_SlidingTacklesCompleted.Set(i, max( 0, pPl->GetSlidingTacklesCompleted() ) );
-					m_GoalsConceded.Set(i, max( 0, pPl->GetGoalsConceded() ) );
-					m_Shots.Set(i, max( 0, pPl->GetShots() ) );
-					m_ShotsOnGoal.Set(i, max( 0, pPl->GetShotsOnGoal() ) );
-					m_PassesCompleted.Set(i, max( 0, pPl->GetPassesCompleted() ) );
-					m_Interceptions.Set(i, max( 0, pPl->GetInterceptions() ) );
-					m_Offsides.Set(i, max( 0, pPl->GetOffsides() ) );
-					m_Goals.Set(i, max( 0, pPl->GetGoals() ) );
-					m_OwnGoals.Set(i, max( 0, pPl->GetOwnGoals() ) );
-					m_Assists.Set(i, max( 0, pPl->GetAssists() ) );
-					m_Possession.Set(i, max( 0, pPl->GetPossession() ) );
-					m_DistanceCovered.Set(i, max( 0, pPl->GetDistanceCovered() ) );
-					m_Passes.Set(i, max( 0, pPl->GetPasses() ) );
-					m_FreeKicks.Set(i, max( 0, pPl->GetFreeKicks() ) );
-					m_Penalties.Set(i, max( 0, pPl->GetPenalties() ) );
-					m_Corners.Set(i, max( 0, pPl->GetCorners() ) );
-					m_ThrowIns.Set(i, max( 0, pPl->GetThrowIns() ) );
-					m_KeeperSaves.Set(i, max( 0, pPl->GetKeeperSaves() ) );
-					m_GoalKicks.Set(i, max( 0, pPl->GetGoalKicks() ) );
-					//m_Ratings.Set(i, max( 0, pPl->GetRating() ) );
-					m_Ratings.Set(i, 100 );
-
-					if (pPl->GetTeamNumber() == TEAM_A || pPl->GetTeamNumber() == TEAM_B)
-					{
-						int ti = pPl->GetTeamNumber() - TEAM_A;
-
-						if (ping > 0)
-						{
-							pingSum[ti] += ping;
-							pingPlayers[ti] += 1;
-						}
-					}
-				}
-			}
+			m_bConnected.Set(i, 0);
+			continue;
 		}
-		else
+		
+		m_bConnected.Set( i, 1 );
+		m_iTeam.Set( i, pPl->GetTeamNumber() );
+
+		m_nSpecTeam.Set( i, pPl->GetSpecTeam() );
+		m_TeamPosIndex.Set(i, pPl->GetTeamPosIndex() );
+		m_TeamPosNum.Set(i, pPl->GetTeamPosNum() );
+		m_TeamToJoin.Set(i, pPl->GetTeamToJoin() );
+		m_TeamPosIndexToJoin.Set(i, pPl->GetTeamPosIndexToJoin() );
+		m_NextCardJoin.Set(i, pPl->GetNextCardJoin() );
+		m_IsAway.Set(i, pPl->IsAway() );
+		m_szPlayerNames.Set(i, MAKE_STRING(pPl->GetPlayerName()));
+		m_CountryIndices.Set(i, pPl->GetCountryIndex());
+		m_szClubNames.Set(i, MAKE_STRING(pPl->GetClubName()));
+
+		// We're dealing with arrays of char pointers which point to the char array of the player object variable.
+		// Keep track of variable changes with a boolean variable so we know when to send an update to the clients.
+
+		if (pPl->m_bPlayerNameChanged)
 		{
-			m_bConnected.Set( i, 0 );
+			m_szPlayerNames.GetForModify(i);
+			pPl->m_bPlayerNameChanged = false;
+		}
+
+		if (pPl->m_bClubNameChanged)
+		{
+			m_szClubNames.GetForModify(i);
+			pPl->m_bClubNameChanged = false;
+		}
+
+		// Don't update statistics every time
+
+		if (m_nUpdateCounter % 20 == 0)
+		{
+			// update ping all 20 think ticks = (20*0.1=2seconds)
+			int ping, packetloss;
+			UTIL_GetPlayerConnectionInfo( i, ping, packetloss );
+
+			// calc avg for scoreboard so it's not so jittery
+			ping = 0.8f * m_iPing.Get(i) + 0.2f * ping;
+
+			m_iPing.Set( i, ping );
+			// m_iPacketloss.Set( i, packetloss );
+
+			m_RedCards.Set(i, max( 0, pPl->GetRedCards() ) );
+			m_YellowCards.Set(i, max( 0, pPl->GetYellowCards() ) );
+			m_Fouls.Set(i, max( 0, pPl->GetFouls() ) );
+			m_FoulsSuffered.Set(i, max( 0, pPl->GetFoulsSuffered() ) );
+			m_SlidingTackles.Set(i, max( 0, pPl->GetSlidingTackles() ) );
+			m_SlidingTacklesCompleted.Set(i, max( 0, pPl->GetSlidingTacklesCompleted() ) );
+			m_GoalsConceded.Set(i, max( 0, pPl->GetGoalsConceded() ) );
+			m_Shots.Set(i, max( 0, pPl->GetShots() ) );
+			m_ShotsOnGoal.Set(i, max( 0, pPl->GetShotsOnGoal() ) );
+			m_PassesCompleted.Set(i, max( 0, pPl->GetPassesCompleted() ) );
+			m_Interceptions.Set(i, max( 0, pPl->GetInterceptions() ) );
+			m_Offsides.Set(i, max( 0, pPl->GetOffsides() ) );
+			m_Goals.Set(i, max( 0, pPl->GetGoals() ) );
+			m_OwnGoals.Set(i, max( 0, pPl->GetOwnGoals() ) );
+			m_Assists.Set(i, max( 0, pPl->GetAssists() ) );
+			m_Possession.Set(i, max( 0, pPl->GetPossession() ) );
+			m_DistanceCovered.Set(i, max( 0, pPl->GetDistanceCovered() ) );
+			m_Passes.Set(i, max( 0, pPl->GetPasses() ) );
+			m_FreeKicks.Set(i, max( 0, pPl->GetFreeKicks() ) );
+			m_Penalties.Set(i, max( 0, pPl->GetPenalties() ) );
+			m_Corners.Set(i, max( 0, pPl->GetCorners() ) );
+			m_ThrowIns.Set(i, max( 0, pPl->GetThrowIns() ) );
+			m_KeeperSaves.Set(i, max( 0, pPl->GetKeeperSaves() ) );
+			m_GoalKicks.Set(i, max( 0, pPl->GetGoalKicks() ) );
+			//m_Ratings.Set(i, max( 0, pPl->GetRating() ) );
+			m_Ratings.Set(i, 100 );
+
+			if (pPl->GetTeamNumber() == TEAM_A || pPl->GetTeamNumber() == TEAM_B)
+			{
+				int ti = pPl->GetTeamNumber() - TEAM_A;
+
+				if (ping > 0)
+				{
+					pingSum[ti] += ping;
+					pingPlayers[ti] += 1;
+				}
+			}
 		}
 	}
-
 
 	for (int team = TEAM_A; team <= TEAM_B; team++)
 	{

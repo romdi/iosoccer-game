@@ -230,6 +230,7 @@ public:
 
 	virtual bool		CanHearAndReadChatFrom( CBasePlayer *pPlayer );
 	virtual bool		CanSpeak(MessageMode_t messageMode);
+	virtual const char	*GetPlayerName();
 	virtual void		SetPlayerName(const char *name);
 
 private:
@@ -451,11 +452,11 @@ public:
 
 	void				ResetFlags();
 
-	char				*GetClubName() { return m_szClubName; }
-	void				SetClubName(const char *name) { Q_strncpy(m_szClubName, name, sizeof(m_szClubName)); m_bClubNameChanged = true; } 
+	const char			*GetClubName();
+	void				SetClubName(const char *name);
 
-	int					GetCountryName() { return m_nCountryName; }
-	void				SetCountryName(int name) { m_nCountryName = name; } 
+	int					GetCountryIndex() { return m_nCountryIndex; }
+	void				SetCountryIndex(int index) { m_nCountryIndex = index; } 
 	bool				IsLegacySideCurl() { return m_bLegacySideCurl; } 
 	void				SetLegacySideCurl(bool enable) { m_bLegacySideCurl = enable; }
 	bool				IsKeeperSprintInverted() { return m_bInvertKeeperSprint; } 
@@ -474,12 +475,13 @@ public:
 
 	virtual void		VPhysicsCollision( int index, gamevcollisionevent_t *pEvent );
 
-	//int					m_BallInPenaltyBox;	 //-1 =	not	in box,	0,1	= teams	box
+	char				m_szPlayerName[MAX_PLAYER_NAME_LENGTH];
+	bool				m_bPlayerNameChanged;
 
 	char				m_szClubName[MAX_CLUBNAME_LENGTH];
 	bool				m_bClubNameChanged;
 
-	int					m_nCountryName;
+	int					m_nCountryIndex;
 
 	bool				m_bLegacySideCurl;
 	bool				m_bInvertKeeperSprint;

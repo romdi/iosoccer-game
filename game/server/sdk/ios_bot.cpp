@@ -1,4 +1,4 @@
-//========= Copyright � 1996-2005, Valve Corporation, All rights reserved. ============//
+﻿//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Basic BOT handling.
 //
@@ -90,15 +90,15 @@ CBasePlayer *BotPutInServer( bool bFrozen, int keeper )
 	//pick name
 	if (keeper==1)
 	{
-		Q_snprintf( botname, sizeof( botname ), "Keeper1");
+		Q_snprintf( botname, sizeof( botname ), "KeeperBotHome");
 	}
 	else if (keeper==2)
 	{
-		Q_snprintf( botname, sizeof( botname ), "Keeper2");
+		Q_snprintf( botname, sizeof( botname ), "KeeperBotAway");
 	}
 	else
 	{
-		Q_snprintf( botname, sizeof( botname ), "Arthur");
+		Q_snprintf( botname, sizeof( botname ), "FieldBot");
 	}
 
 	// This trick lets us create a CBot for this client instead of the CSDKPlayer

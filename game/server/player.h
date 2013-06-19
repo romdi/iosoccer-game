@@ -358,8 +358,8 @@ public:
 	int						GetClientIndex()	{ return ENTINDEX( edict() ) - 1; }
 
 	// returns the player name
-	const char *			GetPlayerName() { return m_szNetname; }
-	void					SetPlayerName( const char *name );
+	virtual const char		*GetPlayerName() { return m_szNetname; }
+	virtual void			SetPlayerName( const char *name );
 
 	int						GetUserID() { return engine->GetPlayerUserId( edict() ); }
 	const char *			GetNetworkIDString(); 

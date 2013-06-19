@@ -198,9 +198,11 @@ CNetworkSettingPanel::CNetworkSettingPanel(Panel *parent, const char *panelName)
 	m_pPlayerNameLabel = new Label(m_pContent, "", "Player Name:");
 	m_pPlayerNameText = new TextEntry(m_pContent, "");
 	m_pPlayerNameText->SetMaximumCharCount(MAX_PLAYER_NAME_LENGTH - 1);
+	m_pPlayerNameText->SetAllowNonAsciiCharacters(true);
 	m_pClubNameLabel = new Label(m_pContent, "", "IOS Club Initials:");
 	m_pClubNameText = new TextEntry(m_pContent, "");
 	m_pClubNameText->SetMaximumCharCount(MAX_CLUBNAME_LENGTH - 1);
+	m_pClubNameText->SetAllowNonAsciiCharacters(true);
 	m_pCountryNameLabel = new Label(m_pContent, "", "Country Fallback Name:");
 	m_pCountryNameList = new ComboBox(m_pContent, "", COUNTRY_NAMES_COUNT, false);
 

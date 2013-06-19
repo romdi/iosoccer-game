@@ -61,8 +61,9 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_PlayerResource, DT_PlayerResource, CPlayerReso
 	RecvPropArray3( RECVINFO_ARRAY(m_NextCardJoin), RecvPropInt( RECVINFO(m_NextCardJoin[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_IsAway), RecvPropBool( RECVINFO(m_IsAway[0]))),
 
+	RecvPropArray3( RECVINFO_ARRAY(m_szPlayerNames), RecvPropString( RECVINFO(m_szPlayerNames[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_szClubNames), RecvPropString( RECVINFO(m_szClubNames[0]))),
-	RecvPropArray3( RECVINFO_ARRAY(m_CountryNames), RecvPropInt( RECVINFO(m_CountryNames[0]))),
+	RecvPropArray3( RECVINFO_ARRAY(m_CountryIndices), RecvPropInt( RECVINFO(m_CountryIndices[0]))),
 END_RECV_TABLE()
 
 BEGIN_PREDICTION_DATA( C_PlayerResource )
@@ -122,8 +123,9 @@ C_PlayerResource::C_PlayerResource()
 	memset( m_NextCardJoin, 0, sizeof( m_NextCardJoin ) );
 	memset( m_IsAway, 0, sizeof( m_IsAway ) );
 
+	memset( m_szPlayerNames, 0, sizeof( m_szPlayerNames ) );
 	memset( m_szClubNames, 0, sizeof( m_szClubNames ) );
-	memset( m_CountryNames, 0, sizeof( m_CountryNames ) );
+	memset( m_CountryIndices, 0, sizeof( m_CountryIndices ) );
 
 	g_PR = this;
 }
@@ -167,11 +169,6 @@ void C_PlayerResource::ClientThink()
 {
 	BaseClass::ClientThink();
 
-	for ( int i = 1; i <= gpGlobals->maxClients; ++i )
-	{
-		UpdatePlayerName( i );
-	}
-
 	SetNextClientThink( gpGlobals->curtime + PLAYER_RESOURCE_THINK_INTERVAL );
 }
 
@@ -189,15 +186,7 @@ const char *C_PlayerResource::GetPlayerName( int iIndex )
 	if ( !IsConnected( iIndex ) )
 		return PLAYER_UNCONNECTED_NAME;
 
-	// X360TBD: Network - figure out why the name isn't set
-	if ( !m_szName[ iIndex ] || !Q_stricmp( m_szName[ iIndex ], PLAYER_UNCONNECTED_NAME ) )
-	{
-		// If you get a full "reset" uncompressed update from server, then you can have NULLNAME show up in the scoreboard
-		UpdatePlayerName( iIndex );
-	}
-
-	// This gets updated in ClientThink, so it could be up to 1 second out of date, oh well.
-	return m_szName[iIndex];
+	return m_szPlayerNames[iIndex];
 }
 
 const char *C_PlayerResource::GetSteamName( int iIndex )
@@ -241,7 +230,7 @@ const char *C_PlayerResource::GetClubName( int iIndex )
 	return m_szClubNames[iIndex];
 }
 
-int C_PlayerResource::GetCountryName( int iIndex )
+int C_PlayerResource::GetCountryIndex( int iIndex )
 {
 	if ( iIndex < 1 || iIndex > MAX_PLAYERS )
 	{
@@ -252,7 +241,7 @@ int C_PlayerResource::GetCountryName( int iIndex )
 	if ( !IsConnected( iIndex ) )
 		return 0;
 
-	return m_CountryNames[iIndex];
+	return m_CountryIndices[iIndex];
 }
 
 int C_PlayerResource::GetTeam(int iIndex )

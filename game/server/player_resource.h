@@ -67,8 +67,9 @@ protected:
 	CNetworkArray( int, m_TeamToJoin, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_TeamPosIndexToJoin, MAX_PLAYERS+1 );
 	
+	CNetworkArray( string_t, m_szPlayerNames, MAX_PLAYERS+1 );
 	CNetworkArray( string_t, m_szClubNames, MAX_PLAYERS+1 );
-	CNetworkArray( int, m_CountryNames, MAX_PLAYERS+1 );
+	CNetworkArray( int, m_CountryIndices, MAX_PLAYERS+1 );
 		
 	int	m_nUpdateCounter;
 };

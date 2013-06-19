@@ -38,6 +38,7 @@ extern void Bot_RunAll( void );
 	#include "movehelper_server.h"
 	#include "ios_replaymanager.h"
 	#include <time.h>
+	#include "ios_requiredclientversion.h"
 #endif
 
 
@@ -2101,7 +2102,9 @@ void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 {
 	CSDKPlayer *pPl = ToSDKPlayer(pPlayer);
 
-	if (gpGlobals->curtime < pPl->m_flNextClientSettingsChangeTime || (!IsIntermissionState() && (pPl->GetTeamNumber() == TEAM_A || pPl->GetTeamNumber() == TEAM_B)))
+	if (!Q_strcmp(engine->GetPlayerNetworkIDString(pPlayer->edict()), "BOT")
+		|| gpGlobals->curtime < pPl->m_flNextClientSettingsChangeTime
+		|| (!IsIntermissionState() && (pPl->GetTeamNumber() == TEAM_A || pPl->GetTeamNumber() == TEAM_B)))
 		return;
 
 	pPl->m_flNextClientSettingsChangeTime = gpGlobals->curtime + mp_clientsettingschangeinterval.GetFloat();
@@ -2122,7 +2125,7 @@ void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 
 	pPl->SetKeeperSprintInverted(atoi(engine->GetClientConVarValue(pPl->entindex(), "invertkeepersprint")) != 0);
 
-	pPl->SetCountryName(countryIndex);
+	pPl->SetCountryIndex(countryIndex);
 
 	pPl->SetPreferredTeamPosNum(atoi(engine->GetClientConVarValue(pPl->entindex(), "preferredshirtnumber")));
 
@@ -2133,22 +2136,26 @@ void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 	char pszName[MAX_PLAYER_NAME_LENGTH];
 	Q_strncpy(pszName, engine->GetClientConVarValue( pPl->entindex(), "playername" ), MAX_PLAYER_NAME_LENGTH);
 
-	const char *pszOldName = pPl->GetPlayerName();
-
 	// msg everyone if someone changes their name,  and it isn't the first time (changing no name to current name)
 	// Note, not using FStrEq so that this is case sensitive
-	if ( pszOldName[0] != 0 && Q_strlen(pszName) != 0 && Q_strcmp( pszOldName, pszName ) )
+
+	char oldPlayerName[MAX_PLAYER_NAME_LENGTH];
+
+	Q_strncpy(oldPlayerName, pPl->GetPlayerName(), sizeof(oldPlayerName));
+
+	pPl->SetPlayerName(pszName);
+
+	if (Q_strcmp(pPl->GetPlayerName(), oldPlayerName))
 	{
-		IGameEvent * event = gameeventmanager->CreateEvent( "player_changename" );
+		IGameEvent * event = gameeventmanager->CreateEvent("player_changename");
 		if ( event )
 		{
-			event->SetInt( "userid", pPl->GetUserID() );
-			event->SetString( "oldname", pszOldName );
-			event->SetString( "newname", pszName );
-			gameeventmanager->FireEvent( event );
+			event->SetInt("userid", pPl->GetUserID());
+			event->SetString("oldname", oldPlayerName);
+			event->SetString("newname", pPl->GetPlayerName());
+			gameeventmanager->FireEvent(event);
 		}
 		
-		pPl->SetPlayerName( pszName );
 	}
 
 	char pszClubName[MAX_CLUBNAME_LENGTH];
@@ -2548,8 +2555,20 @@ void CSDKGameRules::CheckChatText(CBasePlayer *pPlayer, char *pText)
 	BaseClass::CheckChatText( pPlayer, pText );
 }
 
+ConVar sv_required_client_version("sv_required_client_version", g_szRequiredClientVersion);
+
 bool CSDKGameRules::ClientConnected(edict_t *pEntity, const char *pszName, const char *pszAddress, char *reject, int maxrejectlen)
 {
+	if (Q_strcmp(engine->GetPlayerNetworkIDString(pEntity), "BOT"))
+	{
+		const char *pszClientVersion = engine->GetClientConVarValue(engine->IndexOfEdict(pEntity), "clientversion");
+		if (Q_strcmp(pszClientVersion, sv_required_client_version.GetString()))
+		{
+			Q_snprintf(reject, maxrejectlen, "%s", "Your client version is outdated.\nDownload the update at http://goo.gl/eybdx");
+			return false;
+		}
+	}
+
 	return BaseClass::ClientConnected(pEntity, pszName, pszAddress, reject, maxrejectlen);
 }
 

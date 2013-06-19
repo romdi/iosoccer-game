@@ -376,7 +376,6 @@ enum statistic_type_t
 };
 
 #define MAX_CLUBNAME_LENGTH			6
-#define MAX_COUNTRYNAME_LENGTH		64
 
 #define COUNTRY_NAMES_COUNT 194
 

@@ -284,6 +284,9 @@ CSDKPlayer::CSDKPlayer()
 	m_bLegacySideCurl = false;
 	m_bInvertKeeperSprint = true;
 
+	m_szPlayerName[0] = '\0';
+	m_szClubName[0] = '\0';
+
 	m_iPlayerState = PLAYER_STATE_NONE;
 
 	m_pData = NULL;
@@ -1658,21 +1661,111 @@ bool CSDKPlayer::CanSpeak(MessageMode_t messageMode)
 	return true;
 }
 
+#include <ctype.h>
+
+char *trim(char *str)
+{
+	size_t len = 0;
+	char *frontp = str - 1;
+	char *endp = NULL;
+
+	if( str == NULL )
+		return NULL;
+
+	if( str[0] == '\0' )
+		return str;
+
+	len = strlen(str);
+	endp = str + len;
+
+	/* Move the front and back pointers to address
+	* the first non-whitespace characters from
+	* each end.
+	*/
+	while( isspace(*(++frontp)) );
+	while( isspace(*(--endp)) && endp != frontp );
+
+	if( str + len - 1 != endp )
+		*(endp + 1) = '\0';
+	else if( frontp != str &&  endp == frontp )
+		*str = '\0';
+
+	/* Shift the string so that it starts at str so
+	* that if it's dynamically allocated, we can
+	* still free it on the returned pointer.  Note
+	* the reuse of endp to mean the front of the
+	* string buffer now.
+	*/
+	endp = str;
+	if( frontp != str )
+	{
+		while( *frontp ) *endp++ = *frontp++;
+		*endp = '\0';
+	}
+
+	return str;
+}
+
+void sanitize(char *str)
+{
+	for (char *chr = str; chr != NULL && *chr != '\0'; chr++)
+	{
+		if (*chr == '%')
+			*chr = ' ';
+	}
+}
+
+const char *CSDKPlayer::GetPlayerName()
+{
+	return m_szPlayerName;
+}
+
 void CSDKPlayer::SetPlayerName(const char *name)
 {
-	Assert(name);
+	//Q_strncpy(m_szNetname, name, sizeof(m_szNetname));
 
-	if (name)
-	{
-		Assert(strlen(name) > 0);
+	char sanitizedName[MAX_PLAYER_NAME_LENGTH];
 
-		Q_strncpy(m_szNetname, name, sizeof(m_szNetname));
+	Q_strncpy(sanitizedName, name, sizeof(sanitizedName));
 
-		if (GetPlayerData())
-			SetLastKnownName(m_szNetname);
+	sanitize(sanitizedName);
 
-		engine->ClientCommand(edict(), UTIL_VarArgs("setinfo name \"%s\"", m_szNetname));
-	}
+	trim(sanitizedName);
+
+	if (sanitizedName[0] == '\0' || !Q_strcmp(sanitizedName, m_szPlayerName))
+		return;
+
+	Q_strncpy(m_szPlayerName, sanitizedName, sizeof(m_szPlayerName));
+
+	if (GetPlayerData())
+		SetLastKnownName(m_szPlayerName);
+
+	m_bPlayerNameChanged = true;
+
+	//engine->ClientCommand(edict(), UTIL_VarArgs("setinfo name \"%s\"", m_szNetname));
+}
+
+const char *CSDKPlayer::GetClubName()
+{
+	return m_szClubName;
+}
+
+void CSDKPlayer::SetClubName(const char *name)
+{
+	char sanitizedName[MAX_PLAYER_NAME_LENGTH];
+
+	Q_strncpy(sanitizedName, name, sizeof(sanitizedName));
+
+	sanitize(sanitizedName);
+
+	trim(sanitizedName);
+
+	if (!Q_strcmp(sanitizedName, m_szClubName))
+		return;
+
+	Q_strncpy(m_szClubName, sanitizedName, sizeof(m_szClubName));
+
+	m_bClubNameChanged = true;
 }
 
 void CSDKPlayer::AddRedCard()

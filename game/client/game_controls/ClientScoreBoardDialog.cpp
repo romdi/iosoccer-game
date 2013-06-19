@@ -1172,8 +1172,8 @@ bool CClientScoreBoardDialog::GetPlayerInfo(int playerIndex, KeyValues *kv)
 	//	}
 	//}
 
-	kv->SetInt("countryindex", GetCountryFlagImageIndex(gr->GetCountryName(playerIndex)));
-	kv->SetString("countryname", g_szCountryNames[gr->GetCountryName(playerIndex)]);
+	kv->SetInt("countryindex", GetCountryFlagImageIndex(gr->GetCountryIndex(playerIndex)));
+	kv->SetString("countryname", g_szCountryNames[gr->GetCountryIndex(playerIndex)]);
 
 	const char *oldName = kv->GetString("name","");
 	char newName[MAX_PLAYER_NAME_LENGTH];
@@ -1218,9 +1218,9 @@ bool CClientScoreBoardDialog::GetTeamInfo(int team, KeyValues *kv)
 			isTeamSameClub = false;
 
 		if (teamCountry == -1)
-			teamCountry = gr->GetCountryName(i);
+			teamCountry = gr->GetCountryIndex(i);
 
-		if (gr->GetCountryName(i) != teamCountry)
+		if (gr->GetCountryIndex(i) != teamCountry)
 			isTeamSameCountry = false;
 	}
 
