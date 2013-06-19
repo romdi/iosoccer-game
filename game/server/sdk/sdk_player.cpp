@@ -960,68 +960,71 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 
 		int team = atoi(args[1]);
 		int posIndex = atoi(args[2]);
-		CSDKPlayer *pSwapPartner = NULL;
 
-		if (!SDKGameRules()->IsIntermissionState() && SDKGameRules()->GetMatchDisplayTimeSeconds() < GetNextCardJoin())
-			return true;
-
-		if (team == m_nTeamToJoin && posIndex == m_nTeamPosIndexToJoin)
-		{
-			if (!IsTeamPosFree(team, posIndex, true, &pSwapPartner) && pSwapPartner)
-			{
-				char *msg;
-
-				if (GetTeamNumber() == TEAM_SPECTATOR)
-					msg = "#game_player_cancel_pos_swap_spec";
-				else
-					msg = "#game_player_cancel_pos_swap_field";
-
-				ClientPrint(pSwapPartner, HUD_PRINTTALK, msg, GetPlayerName());
-			}
-
-			m_nTeamToJoin = TEAM_INVALID;
-
-			return true;
-		}
-
-		// Find team and pos for auto-join
-		if (posIndex == -1 || team == TEAM_INVALID || team == TEAM_UNASSIGNED)
-		{
-			int checkTeam = GetGlobalTeam(TEAM_A)->GetNumPlayers() <= GetGlobalTeam(TEAM_B)->GetNumPlayers() ? TEAM_A : TEAM_B;
-
-			for (int i = 0; i < mp_maxplayers.GetInt(); i++)
-			{
-				CSDKPlayer *pPl = NULL;
-
-				if (IsTeamPosFree(checkTeam, i, false, &pPl))
-				{
-					team = checkTeam;
-					posIndex = i;
-					break;
-				}
-			}
-		}
-
-		// Couldn't find auto-join position
 		if (posIndex < 0 || posIndex > mp_maxplayers.GetInt() - 1 || team < TEAM_SPECTATOR || team > TEAM_B)
 			return false;
 
-		if (team == GetTeamNumber() && posIndex == GetTeamPosIndex())
-			return true;
-
-		if (!SDKGameRules()->IsIntermissionState() && SDKGameRules()->GetMatchDisplayTimeSeconds() < GetGlobalTeam(team)->GetPosNextJoinSeconds(posIndex))
-			return true;
-
-		if (!IsTeamPosFree(team, posIndex, true, &pSwapPartner) && pSwapPartner)
+		// Player is card banned or position is blocked due to a card ban
+		if (!SDKGameRules()->IsIntermissionState()
+			&& (SDKGameRules()->GetMatchDisplayTimeSeconds() < GetNextCardJoin()
+				|| SDKGameRules()->GetMatchDisplayTimeSeconds() < GetGlobalTeam(team)->GetPosNextJoinSeconds(posIndex)))
 		{
+			return true;
+		}
+
+		CSDKPlayer *pSwapPartner = NULL;
+
+		// Notify the previous swap partner that the player is cancelling his swap request
+		if ((m_nTeamToJoin == TEAM_A || m_nTeamToJoin == TEAM_B)
+			&& !IsTeamPosFree(m_nTeamToJoin, m_nTeamPosIndexToJoin, true, &pSwapPartner)
+			&& pSwapPartner)
+		{
+			char *partnerMsg;
 			char *msg;
 
 			if (GetTeamNumber() == TEAM_SPECTATOR)
-				msg = "#game_player_pos_swap_spec";
+			{
+				partnerMsg = "#game_player_cancel_pos_swap_spec";
+				msg = "#game_player_cancel_pos_swap_spec_pov";
+			}
 			else
-				msg = "#game_player_pos_swap_field";
+			{
+				partnerMsg = "#game_player_cancel_pos_swap_field";
+				msg = "#game_player_cancel_pos_swap_field_pov";
+			}
 
-			ClientPrint(pSwapPartner, HUD_PRINTTALK, msg, GetPlayerName());
+			ClientPrint(pSwapPartner, HUD_PRINTTALK, partnerMsg, GetPlayerName());
+			ClientPrint(this, HUD_PRINTTALK, msg, pSwapPartner->GetPlayerName());
+		}
+
+		// Cancel the request if the desired position is the current position or the current target position
+		if (team == GetTeamNumber() && posIndex == GetTeamPosIndex() || team == m_nTeamToJoin && posIndex == m_nTeamPosIndexToJoin)
+		{
+			m_nTeamToJoin = TEAM_INVALID;
+			return true;
+		}
+
+		// Notify the player on the target position that this player wants to swap
+		if ((team == TEAM_A || team == TEAM_B)
+			&& !IsTeamPosFree(team, posIndex, true, &pSwapPartner)
+			&& pSwapPartner)
+		{
+			char *partnerMsg;
+			char *msg;
+
+			if (GetTeamNumber() == TEAM_SPECTATOR)
+			{
+				partnerMsg = "#game_player_pos_swap_spec";
+				msg = "#game_player_pos_swap_spec_pov";
+			}
+			else
+			{
+				partnerMsg = "#game_player_pos_swap_field";
+				msg = "#game_player_pos_swap_field_pov";
+			}
+
+			ClientPrint(pSwapPartner, HUD_PRINTTALK, partnerMsg, GetPlayerName());
+			ClientPrint(this, HUD_PRINTTALK, msg, pSwapPartner->GetPlayerName());
 		}
 
 		return SetDesiredTeam(team, team, posIndex, false, true);
