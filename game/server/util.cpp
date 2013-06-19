@@ -655,10 +655,9 @@ bool UTIL_IsCommandIssuedByServerAdmin( void )
 	if ( engine->IsDedicatedServer() && issuingPlayerIndex > 0 )
 		return false;
 
-	//ios listenservers
+	// Unreliable for IOS because bots could join before the hosting player does
 	//if ( issuingPlayerIndex > 1 )
-	if ( issuingPlayerIndex > 3 )
-		return false;
+	//	return false;
 
 	return true;
 }
