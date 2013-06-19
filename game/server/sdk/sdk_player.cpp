@@ -960,14 +960,28 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 
 		int team = atoi(args[1]);
 		int posIndex = atoi(args[2]);
+		CSDKPlayer *pSwapPartner = NULL;
 
 		if (!SDKGameRules()->IsIntermissionState() && SDKGameRules()->GetMatchDisplayTimeSeconds() < GetNextCardJoin())
-			return false;
+			return true;
 
 		if (team == m_nTeamToJoin && posIndex == m_nTeamPosIndexToJoin)
 		{
+			if (!IsTeamPosFree(team, posIndex, true, &pSwapPartner) && pSwapPartner)
+			{
+				char *msg;
+
+				if (GetTeamNumber() == TEAM_SPECTATOR)
+					msg = "#game_player_cancel_pos_swap_spec";
+				else
+					msg = "#game_player_cancel_pos_swap_field";
+
+				ClientPrint(pSwapPartner, HUD_PRINTTALK, msg, GetPlayerName());
+			}
+
 			m_nTeamToJoin = TEAM_INVALID;
-			return false;
+
+			return true;
 		}
 
 		// Find team and pos for auto-join
@@ -993,12 +1007,10 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 			return false;
 
 		if (team == GetTeamNumber() && posIndex == GetTeamPosIndex())
-			return false;
+			return true;
 
 		if (!SDKGameRules()->IsIntermissionState() && SDKGameRules()->GetMatchDisplayTimeSeconds() < GetGlobalTeam(team)->GetPosNextJoinSeconds(posIndex))
-			return false;
-
-		CSDKPlayer *pSwapPartner = NULL;
+			return true;
 
 		if (!IsTeamPosFree(team, posIndex, true, &pSwapPartner) && pSwapPartner)
 		{
