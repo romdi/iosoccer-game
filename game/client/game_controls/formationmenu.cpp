@@ -202,16 +202,12 @@ void CFormationMenu::Update(bool showCaptainMenu)
 		if (!gr->IsConnected(i))
 			continue;
 
-		//if (i == GetLocalPlayerIndex() && gr->GetTeamToJoin(i) != TEAM_INVALID)
-		//{
-		//	statusAtPos[gr->GetTeamToJoin(i) - TEAM_A][gr->GetTeamPosIndexToJoin(i)] = 1;
-		//}
-
 		if (gr->GetTeam(i) == TEAM_A || gr->GetTeam(i) == TEAM_B)
 		{
 			playerIndexAtPos[gr->GetTeam(i) - TEAM_A][gr->GetTeamPosIndex(i)] = i;
 		}
-		else if (gr->GetTeamToJoin(i) == TEAM_A || gr->GetTeamToJoin(i) == TEAM_B)
+		
+		if (gr->GetTeamToJoin(i) == TEAM_A || gr->GetTeamToJoin(i) == TEAM_B)
 		{
 			if (playerIndexAtPos[gr->GetTeamToJoin(i) - TEAM_A][gr->GetTeamPosIndexToJoin(i)] == 0)
 			{
@@ -351,23 +347,24 @@ void CFormationMenu::Update(bool showCaptainMenu)
 			kv->SetInt("team", i + TEAM_A);
 			kv->SetInt("selected", old->GetInt("selected"));
 
+			bool localPlayerWantsToJoinPos = gr->GetTeamToJoin(GetLocalPlayerIndex()) == i + TEAM_A && gr->GetTeamPosIndexToJoin(GetLocalPlayerIndex()) == j;
+
 			char *msg;
 
 			if (kv->GetInt("selected") == 1)
 			{
 				if (kv->GetInt("playerindex") > 0)
 				{
-					if (kv->GetInt("playerindex") == GetLocalPlayerIndex())
+					if (playerIndexAtPos[i][j] == GetLocalPlayerIndex())
 					{
-						if (GameResources()->GetTeam(GetLocalPlayerIndex()) == TEAM_SPECTATOR)
+						if (localPlayerWantsToJoinPos)
 							msg = "CANCEL";
 						else
 							msg = "YOU";
 					}
 					else
 					{
-						if (GameResources()->GetTeamToJoin(GetLocalPlayerIndex()) == GameResources()->GetTeam(kv->GetInt("playerindex"))
-							&& GameResources()->GetTeamPosIndexToJoin(GetLocalPlayerIndex()) == GameResources()->GetTeamPosIndex(kv->GetInt("playerindex")))
+						if (localPlayerWantsToJoinPos)
 							msg = "CANCEL";
 						else
 							msg = "SWAP";
@@ -378,7 +375,7 @@ void CFormationMenu::Update(bool showCaptainMenu)
 			}
 			else
 			{
-				if (gr->GetTeamToJoin(GetLocalPlayerIndex()) - TEAM_A == i && gr->GetTeamPosIndexToJoin(GetLocalPlayerIndex()) == j)
+				if (localPlayerWantsToJoinPos)
 				{
 					if (playerIndexAtPos[i][j] == GetLocalPlayerIndex())
 						msg = "JOINING";
