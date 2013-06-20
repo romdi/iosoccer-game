@@ -253,7 +253,7 @@ const char** CHLTVDirector::GetModEvents()
 		"timeout_pending",
 		"start_timeout",
 		"end_timeout",
-		"match_state",
+		"match_period",
 		"set_piece",
 		"goal",
 		"own_goal",

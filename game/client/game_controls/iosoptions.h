@@ -14,6 +14,7 @@
 #include <vgui_controls/PropertyPage.h>
 #include <vgui_controls/ImagePanel.h>
 #include <vgui_controls/Slider.h>
+#include "GameEventListener.h"
 
 using namespace vgui;
 
@@ -30,6 +31,7 @@ public:
 	virtual void Save() = 0;
 	virtual void Load() = 0;
 	virtual void Update() = 0;
+	virtual void PerformLayout() = 0;
 };
 
 class CIOSOptionsPanel : public vgui::Frame
@@ -47,6 +49,8 @@ public:
 	void Activate();
 	void Reset();
 	void Update();
+	void OnTick();
+	void Init();
 	ISettingPanel *GetSettingPanel(SettingPanel_t panel) { return m_pSettingPanels[panel]; }
 	
 protected:
@@ -114,7 +118,7 @@ class CNetworkSettingPanel : public PropertyPage, public ISettingPanel
 public:
 
 	CNetworkSettingPanel(Panel *parent, const char *panelName);
-	void ApplySchemeSettings(IScheme *pScheme);
+	void PerformLayout();
 	void OnCommand(const char *cmd);
 	void Save();
 	void Load();
@@ -143,7 +147,7 @@ class CAppearanceSettingPanel : public PropertyPage, public ISettingPanel
 public:
 
 	CAppearanceSettingPanel(Panel *parent, const char *panelName);
-	void ApplySchemeSettings(IScheme *pScheme);
+	void PerformLayout();
 	void Save();
 	void Load();
 	void Update();
@@ -168,25 +172,38 @@ class CGameplaySettingPanel : public PropertyPage, public ISettingPanel
 public:
 
 	CGameplaySettingPanel(Panel *parent, const char *panelName);
-	void ApplySchemeSettings(IScheme *pScheme);
+	void PerformLayout();
 	void Save();
 	void Load();
 	void Update();
 };
 
-class CSoundSettingPanel : public PropertyPage, public ISettingPanel
+class CSoundSettingPanel : public PropertyPage, public ISettingPanel, public CGameEventListener
 {
 	DECLARE_CLASS_SIMPLE(CSoundSettingPanel, PropertyPage);
 
+	int m_nCrowdBgGuid;
+	int m_nCrowdEventGuid;
+
 	Panel *m_pContent;
+
+	Slider *m_pCrowdBgVolume;
+	CheckButton *m_pCrowdBg;
+
+	Slider *m_pCrowdEventVolume;
+	CheckButton *m_pCrowdEvent;
+
+	MESSAGE_FUNC_PTR( OnCheckButtonChecked, "CheckButtonChecked", panel );
 
 public:
 
 	CSoundSettingPanel(Panel *parent, const char *panelName);
-	void ApplySchemeSettings(IScheme *pScheme);
+	void PerformLayout();
 	void Save();
 	void Load();
 	void Update();
+	void FireGameEvent(IGameEvent *event);
+	void OnTick();
 };
 
 class CVisualSettingPanel : public PropertyPage, public ISettingPanel
@@ -198,7 +215,7 @@ class CVisualSettingPanel : public PropertyPage, public ISettingPanel
 public:
 
 	CVisualSettingPanel(Panel *parent, const char *panelName);
-	void ApplySchemeSettings(IScheme *pScheme);
+	void PerformLayout();
 	void Save();
 	void Load();
 	void Update();

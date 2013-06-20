@@ -331,10 +331,10 @@ void CReplayManager::StopReplay()
 
 	if (SDKGameRules()->IsIntermissionState())
 	{
-		IGameEvent *pEvent = gameeventmanager->CreateEvent("match_state");
+		IGameEvent *pEvent = gameeventmanager->CreateEvent("match_period");
 		if (pEvent)
 		{
-			pEvent->SetInt("state", SDKGameRules()->State_Get());
+			pEvent->SetInt("period", SDKGameRules()->State_Get());
 			gameeventmanager->FireEvent(pEvent);
 		}
 	}
@@ -500,7 +500,7 @@ void CReplayManager::RestoreSnapshot()
 				if (pEvent)
 				{
 					pEvent->SetInt("second", pMatchEvent->second);
-					pEvent->SetInt("match_state", pMatchEvent->matchState);
+					pEvent->SetInt("match_period", pMatchEvent->matchState);
 					pEvent->SetInt("scoring_team", pMatchEvent->team);
 					pEvent->SetString("scorer", pMatchEvent->pPlayer1Data ? pMatchEvent->pPlayer1Data->m_szName : "");
 					pEvent->SetString("first_assister", pMatchEvent->pPlayer2Data ? pMatchEvent->pPlayer2Data->m_szName : "");
@@ -514,7 +514,7 @@ void CReplayManager::RestoreSnapshot()
 				if (pEvent)
 				{
 					pEvent->SetInt("second", pMatchEvent->second);
-					pEvent->SetInt("match_state", pMatchEvent->matchState);
+					pEvent->SetInt("match_period", pMatchEvent->matchState);
 					pEvent->SetInt("scoring_team", pMatchEvent->team);
 					pEvent->SetString("scorer", pMatchEvent->pPlayer1Data ? pMatchEvent->pPlayer1Data->m_szName : "");
 					gameeventmanager->FireEvent(pEvent);
@@ -526,7 +526,7 @@ void CReplayManager::RestoreSnapshot()
 				if (pEvent)
 				{
 					pEvent->SetInt("second", pMatchEvent->second);
-					pEvent->SetInt("match_state", pMatchEvent->matchState);
+					pEvent->SetInt("match_period", pMatchEvent->matchState);
 					pEvent->SetInt("finishing_team", pMatchEvent->team);
 					pEvent->SetString("finisher", pMatchEvent->pPlayer1Data ? pMatchEvent->pPlayer1Data->m_szName : "");
 					pEvent->SetString("first_assister", pMatchEvent->pPlayer2Data ? pMatchEvent->pPlayer2Data->m_szName : "");
@@ -540,7 +540,7 @@ void CReplayManager::RestoreSnapshot()
 				if (pEvent)
 				{
 					pEvent->SetInt("second", pMatchEvent->second);
-					pEvent->SetInt("match_state", pMatchEvent->matchState);
+					pEvent->SetInt("match_period", pMatchEvent->matchState);
 					pEvent->SetInt("keeper_team", pMatchEvent->team);
 					pEvent->SetString("keeper", pMatchEvent->pPlayer1Data ? pMatchEvent->pPlayer1Data->m_szName : "");
 					pEvent->SetString("finisher", pMatchEvent->pPlayer2Data ? pMatchEvent->pPlayer2Data->m_szName : "");
@@ -553,7 +553,7 @@ void CReplayManager::RestoreSnapshot()
 				if (pEvent)
 				{
 					pEvent->SetInt("second", pMatchEvent->second);
-					pEvent->SetInt("match_state", pMatchEvent->matchState);
+					pEvent->SetInt("match_period", pMatchEvent->matchState);
 					pEvent->SetInt("fouling_team", pMatchEvent->team);
 					pEvent->SetString("fouling_player", pMatchEvent->pPlayer1Data ? pMatchEvent->pPlayer1Data->m_szName : "");
 					gameeventmanager->FireEvent(pEvent);

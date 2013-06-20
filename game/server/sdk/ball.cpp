@@ -453,22 +453,22 @@ void CBall::Spawn (void)
 	PrecacheScriptSound("Ball.Post");
 	PrecacheScriptSound("Ball.Net");
 	PrecacheScriptSound("Ball.Whistle");
-	PrecacheScriptSound("Crowd.Background1");
-	PrecacheScriptSound("Crowd.Background2");
-	PrecacheScriptSound("Crowd.Cheer");
-	PrecacheScriptSound("Crowd.EndOfPeriod");
-	PrecacheScriptSound("Crowd.Goal1");
-	PrecacheScriptSound("Crowd.Goal2");
-	PrecacheScriptSound("Crowd.Goal3");
-	PrecacheScriptSound("Crowd.Save");
-	PrecacheScriptSound("Crowd.Miss");
-	PrecacheScriptSound("Crowd.Foul");
-	PrecacheScriptSound("Crowd.YellowCard");
-	PrecacheScriptSound("Crowd.RedCard");
-	PrecacheScriptSound("Crowd.Song");
-	PrecacheScriptSound("Crowd.Vuvuzela");
-	PrecacheScriptSound("Crowd.Way");
-	PrecacheScriptSound("Crowd.Easy");
+	//PrecacheScriptSound("Crowd.Background1");
+	//PrecacheScriptSound("Crowd.Background2");
+	//PrecacheScriptSound("Crowd.Cheer");
+	//PrecacheScriptSound("Crowd.EndOfPeriod");
+	//PrecacheScriptSound("Crowd.Goal1");
+	//PrecacheScriptSound("Crowd.Goal2");
+	//PrecacheScriptSound("Crowd.Goal3");
+	//PrecacheScriptSound("Crowd.Save");
+	//PrecacheScriptSound("Crowd.Miss");
+	//PrecacheScriptSound("Crowd.Foul");
+	//PrecacheScriptSound("Crowd.YellowCard");
+	//PrecacheScriptSound("Crowd.RedCard");
+	//PrecacheScriptSound("Crowd.Song");
+	//PrecacheScriptSound("Crowd.Vuvuzela");
+	//PrecacheScriptSound("Crowd.Way");
+	//PrecacheScriptSound("Crowd.Easy");
 
 	State_Transition(BALL_STATE_NORMAL);
 }
@@ -790,9 +790,9 @@ void CBall::SendNotifications()
 		}
 
 		EmitSound("Ball.Whistle");
-		EmitSound("Crowd.Goal1");
-		EmitSound("Crowd.Goal2");
-		EmitSound("Crowd.Goal3");
+		//EmitSound("Crowd.Goal1");
+		//EmitSound("Crowd.Goal2");
+		//EmitSound("Crowd.Goal3");
 	}
 	else
 	{
@@ -861,31 +861,31 @@ void CBall::SendNotifications()
 				{
 				case FOUL_NORMAL_NO_CARD:
 					foulType = MATCH_EVENT_FOUL;
-					EmitSound("Crowd.Foul");
+					//EmitSound("Crowd.Foul");
 					break;
 				case FOUL_NORMAL_YELLOW_CARD:
 					if (m_pFoulingPl->GetYellowCards() % 2 == 0)
 						foulType = MATCH_EVENT_SECONDYELLOWCARD;
 					else
 						foulType = MATCH_EVENT_YELLOWCARD;
-					EmitSound("Crowd.YellowCard");
+					//EmitSound("Crowd.YellowCard");
 					break;
 				case FOUL_NORMAL_RED_CARD:
 					foulType = MATCH_EVENT_REDCARD;
-					EmitSound("Crowd.RedCard");
+					//EmitSound("Crowd.RedCard");
 					break;
 				case FOUL_OFFSIDE:
 					foulType = MATCH_EVENT_OFFSIDE;
 					SDKGameRules()->SetOffsideLinesEnabled(true);
-					EmitSound("Crowd.Foul");
+					//EmitSound("Crowd.Foul");
 					break;
 				case FOUL_DOUBLETOUCH:
 					foulType = MATCH_EVENT_DOUBLETOUCH;
-					EmitSound("Crowd.Foul");
+					//EmitSound("Crowd.Foul");
 					break;
 				default:
 					foulType = MATCH_EVENT_FOUL;
-					EmitSound("Crowd.Foul");
+					//EmitSound("Crowd.Foul");
 					break;
 				}
 
@@ -1017,6 +1017,13 @@ void CBall::State_Enter(ball_state_t newState, bool cancelQueuedState)
 			IOS_LogPrintf( "Ball: entering state '%s'\n", m_pCurStateInfo->m_pStateName );
 		else
 			IOS_LogPrintf( "Ball: entering state #%d\n", newState );
+	}
+
+	IGameEvent *pEvent = gameeventmanager->CreateEvent("ball_state");
+	if (pEvent)
+	{
+		pEvent->SetInt("state", State_Get());
+		gameeventmanager->FireEvent(pEvent);
 	}
 
 	// Initialize the new state.
@@ -1514,7 +1521,7 @@ void CBall::State_CORNER_Think()
 		&& CanTouchBallXY()
 		&& (!m_bNonnormalshotsBlocked && m_pPl->IsShooting() || m_bNonnormalshotsBlocked && (m_pPl->IsNormalshooting() || !sv_ball_blockpowershot.GetBool() && m_pPl->IsPowershooting())))
 	{
-		EmitSound("Crowd.Way");
+		//EmitSound("Crowd.Way");
 		m_pPl->AddCorner();
 		RemoveAllTouches();
 		DoGroundShot(false);
@@ -1655,7 +1662,7 @@ void CBall::State_FREEKICK_Think()
 		&& CanTouchBallXY()
 		&& (!m_bNonnormalshotsBlocked && m_pPl->IsShooting() || m_bNonnormalshotsBlocked && (m_pPl->IsNormalshooting() || !sv_ball_blockpowershot.GetBool() && m_pPl->IsPowershooting())))
 	{
-		EmitSound("Crowd.Way");
+		//EmitSound("Crowd.Way");
 		m_pPl->AddFreeKick();
 		RemoveAllTouches();
 		DoGroundShot(true, sv_ball_freekick_speedcoeff.GetFloat());
@@ -2844,7 +2851,7 @@ void CBall::TriggerGoalLine(int team)
 		if (m_bHitThePost || m_vTriggerTouchPos.x >= minX && m_vTriggerTouchPos.x <= maxX) // Bounced off the post or crossed the goal line inside the six-yard box
 		{
 			LastPl(true)->AddShot();
-			EmitSound("Crowd.Miss");
+			//EmitSound("Crowd.Miss");
 			ReplayManager()->AddMatchEvent(MATCH_EVENT_MISS, GetGlobalTeam(team)->GetOppTeamNumber(), LastPl(true));
 		}
 		else
@@ -3052,7 +3059,7 @@ void CBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart, const Ve
 			pPl->AddKeeperSave();
 			pLastPl->AddShot();
 			pLastPl->AddShotOnGoal();
-			EmitSound("Crowd.Save");
+			//EmitSound("Crowd.Save");
 			ReplayManager()->AddMatchEvent(MATCH_EVENT_KEEPERSAVE, pPl->GetTeamNumber(), pPl, pLastPl);
 		}
 		else if ((m_vPos - pInfo->m_vBallPos).Length2DSqr() >= pow(sv_ball_stats_pass_mindist.GetInt(), 2.0f) && pInfo->m_eBodyPart != BODY_PART_KEEPERPUNCH) // Pass or interception

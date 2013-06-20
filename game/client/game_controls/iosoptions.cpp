@@ -5,6 +5,8 @@
 #include "c_playerresource.h"
 #include "sdk_gamerules.h"
 #include "ios_teamkit_parse.h"
+#include "c_ball.h"
+#include "vgui/IVgui.h"
 
 class CIOSOptionsMenu : public IIOSOptionsMenu
 {
@@ -87,6 +89,8 @@ CIOSOptionsPanel::CIOSOptionsPanel(VPANEL parent) : BaseClass(NULL, "IOSOptionsP
 	m_pCancelButton = new Button(this, "", "Cancel", this, "close");
 	m_pSaveButton = new Button(this, "", "Apply", this, "save_settings");
 	m_pChangeInfoText = new Label(this, "", "Go spectator mode to change");
+
+	vgui::ivgui()->AddTickSignal( GetVPanel(), 100 );
 }
 
 CIOSOptionsPanel::~CIOSOptionsPanel()
@@ -112,6 +116,9 @@ void CIOSOptionsPanel::ApplySchemeSettings( IScheme *pScheme )
 	m_pSaveButton->SetBounds(this->GetWide() - BUTTON_WIDTH - PADDING, this->GetTall() - BUTTON_HEIGHT - PADDING, BUTTON_WIDTH, BUTTON_HEIGHT);
 	m_pChangeInfoText->SetBounds(PADDING, this->GetTall() - BUTTON_HEIGHT - PADDING, this->GetWide() - 3 * BUTTON_WIDTH, BUTTON_HEIGHT); 
 	m_pChangeInfoText->SetFgColor(Color(255, 153, 153, 255));
+
+	for (int i = 0; i < SETTING_PANEL_COUNT; i++)
+		m_pSettingPanels[i]->PerformLayout();
 }
 
 void CIOSOptionsPanel::PerformLayout()
@@ -161,6 +168,17 @@ void CIOSOptionsPanel::OnThink()
 	//m_pSaveButton->SetText("Apply");
 	m_pSaveButton->SetEnabled(true);
 	m_pChangeInfoText->SetVisible(false);
+}
+
+void CIOSOptionsPanel::Init()
+{
+}
+
+void CIOSOptionsPanel::OnTick()
+{
+	BaseClass::OnTick();
+
+	dynamic_cast<CSoundSettingPanel *>(m_pSettingPanels[SETTING_PANEL_SOUND])->OnTick();
 }
 
 void CIOSOptionsPanel::OnCommand(const char *cmd)
@@ -297,11 +315,9 @@ CNetworkSettingPanel::CNetworkSettingPanel(Panel *parent, const char *panelName)
 	}
 }
 
-void CNetworkSettingPanel::ApplySchemeSettings( IScheme *pScheme )
+void CNetworkSettingPanel::PerformLayout()
 {
-	//BaseClass::ApplySchemeSettings( pScheme );
-
-	//SetSize(400, 500);
+	BaseClass::PerformLayout();
 
 	m_pContent->SetBounds(PADDING, PADDING, GetWide() - 2 * PADDING, GetTall() - 2 * PADDING);
 
@@ -505,9 +521,9 @@ CAppearanceSettingPanel::CAppearanceSettingPanel(Panel *parent, const char *pane
 	m_pConnectionInfoLabel = new Label(m_pContent, "", "Join or create a server to activate the preview");
 }
 
-void CAppearanceSettingPanel::ApplySchemeSettings(IScheme *pScheme)
+void CAppearanceSettingPanel::PerformLayout()
 {
-	//BaseClass::ApplySchemeSettings( pScheme );
+	BaseClass::PerformLayout();
 
 	m_pContent->SetBounds(PADDING, PADDING, GetWide() - 2 * PADDING, GetTall() - 2 * PADDING);
 
@@ -608,8 +624,10 @@ CGameplaySettingPanel::CGameplaySettingPanel(Panel *parent, const char *panelNam
 	m_pInvertKeeperSprint = new CheckButton(m_pContent, "", "Invert Keeper Sprint");
 }
 
-void CGameplaySettingPanel::ApplySchemeSettings(IScheme *pScheme)
+void CGameplaySettingPanel::PerformLayout()
 {
+	BaseClass::PerformLayout();
+
 	m_pContent->SetBounds(PADDING, PADDING, GetWide() - 2 * PADDING, GetTall() - 2 * PADDING);
 	m_pLegacySideCurl->SetBounds(0, 0, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
 	m_pLegacyVerticalLook->SetBounds(0, TEXT_HEIGHT + TEXT_MARGIN, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
@@ -639,8 +657,10 @@ CVisualSettingPanel::CVisualSettingPanel(Panel *parent, const char *panelName) :
 	m_pContent = new Panel(this, "");
 }
 
-void CVisualSettingPanel::ApplySchemeSettings(IScheme *pScheme)
+void CVisualSettingPanel::PerformLayout()
 {
+	BaseClass::PerformLayout();
+
 	m_pContent->SetBounds(PADDING, PADDING, GetWide() - 2 * PADDING, GetTall() - 2 * PADDING);
 }
 
@@ -656,14 +676,61 @@ void CVisualSettingPanel::Update()
 {
 }
 
+#include "engine/IEngineSound.h"
+
+#define MUTED_VOLUME 0.0f
+
 CSoundSettingPanel::CSoundSettingPanel(Panel *parent, const char *panelName) : BaseClass(parent, panelName)
 {
 	m_pContent = new Panel(this, "");
+
+	m_nCrowdBgGuid = 0;
+	m_nCrowdEventGuid = 0;
+
+	m_pCrowdBgVolume = new Slider(m_pContent, "");
+	m_pCrowdBgVolume->SetRange((int)(MUTED_VOLUME * 100.0f), 100);
+	m_pCrowdBgVolume->SetValue(100);
+	m_pCrowdBg = new CheckButton(m_pContent, "", "Crowd Background");
+	m_pCrowdBg->SetSelected(true);
+	m_pCrowdBg->AddActionSignalTarget(this);
+
+	m_pCrowdEventVolume = new Slider(m_pContent, "");
+	m_pCrowdEventVolume->SetRange((int)(MUTED_VOLUME * 100.0f), 100);
+	m_pCrowdEventVolume->SetValue(100);
+	m_pCrowdEvent = new CheckButton(m_pContent, "", "Crowd Events");
+	m_pCrowdEvent->SetSelected(true);
+	m_pCrowdEvent->AddActionSignalTarget(this);
+
+	ListenForGameEvent("timeout_pending");
+	ListenForGameEvent("start_timeout");
+	ListenForGameEvent("end_timeout");
+	ListenForGameEvent("match_period");
+	ListenForGameEvent("ball_state");
+	ListenForGameEvent("set_piece");
+	ListenForGameEvent("goal");
+	ListenForGameEvent("highlight_goal");
+	ListenForGameEvent("highlight_owngoal");
+	ListenForGameEvent("highlight_miss");
+	ListenForGameEvent("highlight_keepersave");
+	ListenForGameEvent("highlight_redcard");
+	ListenForGameEvent("own_goal");
+	ListenForGameEvent("foul");
+	ListenForGameEvent("penalty");
+	ListenForGameEvent("wakeupcall");
+	ListenForGameEvent("kickoff");
 }
 
-void CSoundSettingPanel::ApplySchemeSettings(IScheme *pScheme)
+void CSoundSettingPanel::PerformLayout()
 {
+	BaseClass::PerformLayout();
+
 	m_pContent->SetBounds(PADDING, PADDING, GetWide() - 2 * PADDING, GetTall() - 2 * PADDING);
+
+	m_pCrowdBgVolume->SetBounds(0, 0, INPUT_WIDTH, TEXT_HEIGHT);
+	m_pCrowdBg->SetBounds(INPUT_WIDTH, 0, INPUT_WIDTH, TEXT_HEIGHT);
+
+	m_pCrowdEventVolume->SetBounds(0, TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
+	m_pCrowdEvent->SetBounds(INPUT_WIDTH, TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
 }
 
 void CSoundSettingPanel::Save()
@@ -676,4 +743,75 @@ void CSoundSettingPanel::Load()
 
 void CSoundSettingPanel::Update()
 {
+}
+
+void CSoundSettingPanel::FireGameEvent(IGameEvent *event)
+{
+	if (!Q_strcmp(event->GetName(), "match_period"))
+	{
+		switch (event->GetInt("period"))
+		{
+		case MATCH_PERIOD_FIRST_HALF:
+		case MATCH_PERIOD_SECOND_HALF:
+		case MATCH_PERIOD_EXTRATIME_FIRST_HALF:
+		case MATCH_PERIOD_EXTRATIME_SECOND_HALF:
+		case MATCH_PERIOD_PENALTIES:
+			{
+			}
+			break;
+		}
+	}
+	else if (!Q_strcmp(event->GetName(), "goal") || !Q_strcmp(event->GetName(), "own_goal"))
+	{
+		if (m_nCrowdEventGuid && enginesound->IsSoundStillPlaying(m_nCrowdEventGuid))
+			enginesound->StopSoundByGuid(m_nCrowdEventGuid);
+
+		char *soundnames[3] = { "crowd/goal1.wav", "crowd/goal2.wav", "crowd/goal3.mp3" };
+		char drymix[512];
+		Q_snprintf(drymix, sizeof(drymix), "#%s", soundnames[g_IOSRand.RandomInt(0, 2)]);
+		enginesound->EmitAmbientSound(drymix, MUTED_VOLUME,	PITCH_NORM,	0, 0);
+		m_nCrowdEventGuid = enginesound->GetGuidForLastSoundEmitted();
+	}
+}
+
+void CSoundSettingPanel::OnTick()
+{
+	C_Ball *pBall = GetBall();
+
+	if (!pBall)
+		return;
+
+	float crowdBgVolScale = m_pCrowdBg->IsSelected() ? (float)m_pCrowdBgVolume->GetValue() / 100.0f : MUTED_VOLUME;
+	float crowdEventVolScale = m_pCrowdEvent->IsSelected() ? (float)m_pCrowdEventVolume->GetValue() / 100.0f : MUTED_VOLUME;
+
+	if (!m_nCrowdBgGuid || !enginesound->IsSoundStillPlaying(m_nCrowdBgGuid))
+	{
+		char soundname[512] = "crowd/crowd2.wav";
+		char drymix[512];
+		Q_snprintf(drymix, sizeof(drymix), "#%s", soundname);
+		enginesound->EmitAmbientSound(drymix, MUTED_VOLUME,	PITCH_NORM,	0, 0);
+		m_nCrowdBgGuid = enginesound->GetGuidForLastSoundEmitted();
+	}
+
+	if (SDKGameRules()->IsIntermissionState())
+	{
+		enginesound->SetVolumeByGuid(m_nCrowdBgGuid, 0.1f);
+	}
+	else
+	{
+		float crowdBgfrac = abs(SDKGameRules()->m_nBallZone) / 100.0f;
+		float crowdBgVol = clamp(crowdBgVolScale * (0.25f + crowdBgfrac * 0.75f), MUTED_VOLUME, 1.0f);
+		enginesound->SetVolumeByGuid(m_nCrowdBgGuid, crowdBgVol);
+
+		if (m_nCrowdEventGuid && enginesound->IsSoundStillPlaying(m_nCrowdEventGuid))
+		{
+			float crowdEventVol = clamp(crowdEventVolScale * 1.0f, MUTED_VOLUME, 1.0f);
+			enginesound->SetVolumeByGuid(m_nCrowdEventGuid, crowdEventVol);
+		}
+	}
+}
+
+void CSoundSettingPanel::OnCheckButtonChecked(Panel *panel)
+{
+	m_pCrowdBgVolume->SetEnabled(m_pCrowdBg->IsSelected());
 }
