@@ -400,6 +400,8 @@ CSDKGameRules::CSDKGameRules()
 	m_bUseOldMaxplayers = false;
 	m_nRealMatchStartTime = 0;
 	m_nRealMatchEndTime = 0;
+
+	m_flLastMasterServerPingTime = -FLT_MAX;
 #else
 	PrecacheMaterial("pitch/offside_line");
 	m_pOffsideLineMaterial = materials->FindMaterial( "pitch/offside_line", TEXTURE_GROUP_CLIENT_EFFECTS );
@@ -607,6 +609,9 @@ bool CSDKGameRules::ClientCommand( CBaseEntity *pEdict, const CCommand &args )
 	return false;
 }
 
+ConVar sv_master_legacy_mode_hack_enabled("sv_master_legacy_mode_hack_enabled", "1", 0);
+ConVar sv_master_legacy_mode_hack_interval("sv_master_legacy_mode_hack_interval", "5", 0);
+
 void CSDKGameRules::Think()
 {
 	State_Think();
@@ -633,6 +638,12 @@ void CSDKGameRules::Think()
 
 		ChangeLevel(); // intermission is over
 		return;
+	}
+
+	if (sv_master_legacy_mode_hack_enabled.GetBool() && gpGlobals->curtime >= m_flLastMasterServerPingTime + sv_master_legacy_mode_hack_interval.GetFloat() * 60)
+	{
+		engine->ServerCommand("sv_master_legacy_mode 0\nheartbeat\nsv_master_legacy_mode 1");
+		m_flLastMasterServerPingTime = gpGlobals->curtime;
 	}
 
 	//if (GetMapRemainingTime() < 0)
