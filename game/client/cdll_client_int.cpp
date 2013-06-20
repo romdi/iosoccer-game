@@ -1892,7 +1892,6 @@ void CHLClient::FrameStageNotify( ClientFrameStage_t curStage )
 			PREDICTION_ENDTRACKVALUE();
 			// Let prediction copy off pristine data
 			prediction->PostEntityPacketReceived();
-			HLTVCamera()->PostEntityPacketReceived();
 		}
 		break;
 	case FRAME_START:

@@ -1168,11 +1168,7 @@ bool C_BasePlayer::ShouldInterpolate()
 	// always interpolate myself
 	if ( IsLocalPlayer() )
 		return true;
-#ifndef _XBOX
-	// always interpolate entity if followed by HLTV
-	if ( HLTVCamera()->GetCameraMan() == this )
-		return true;
-#endif
+
 	return BaseClass::ShouldInterpolate();
 }
 

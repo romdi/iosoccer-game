@@ -102,6 +102,7 @@ CSpectatorMenu::CSpectatorMenu( IViewPort *pViewPort ) : Frame( NULL, PANEL_SPEC
 
 	m_pViewOptions = new ComboBox(this, "viewcombo", 10 , false );
 	m_pConfigSettings = new ComboBox(this, "settingscombo", 10 , false );	
+	m_pConfigSettings->SetVisible(false);
 
 	m_pLeftButton = new CSpecButton( this, "specprev");
 	m_pLeftButton->SetText("3");
@@ -109,27 +110,25 @@ CSpectatorMenu::CSpectatorMenu( IViewPort *pViewPort ) : Frame( NULL, PANEL_SPEC
 	m_pRightButton->SetText("4");
 
 	m_pPlayerList->SetText("");
-	m_pViewOptions->SetText("#Spec_Modes");
-	m_pConfigSettings->SetText("#Spec_Options");
+	m_pViewOptions->SetText("Camera");
+	m_pConfigSettings->SetText("Options");
 
 	m_pPlayerList->SetOpenDirection( Menu::UP );
 	m_pViewOptions->SetOpenDirection( Menu::UP );
 	m_pConfigSettings->SetOpenDirection( Menu::UP );
 
 	// create view config menu
-	CommandMenu * menu = new CommandMenu(m_pViewOptions, "spectatormenu", gViewPortInterface);
-	menu->LoadFromFile( "Resource/spectatormenu.res" );
-	m_pConfigSettings->SetMenu( menu );	// attach menu to combo box
+	CommandMenu *menu = new CommandMenu(m_pConfigSettings, "spectatormenu", gViewPortInterface);
+	menu->AddMenuItem("Close", "spec_menu 0", this);
+	m_pConfigSettings->SetMenu(menu);	// attach menu to combo box
 
 	// create view mode menu
 	menu = new CommandMenu(m_pViewOptions, "spectatormodes", gViewPortInterface);
-	menu->LoadFromFile("Resource/spectatormodes.res");
-	menu->AddMenuItem("Locked Chase", VarArgs("spec_mode %d", OBS_MODE_IN_EYE), this);
-	menu->AddMenuItem("Free Chase", VarArgs("spec_mode %d", OBS_MODE_CHASE), this);
-	menu->AddMenuItem("Roaming", VarArgs("spec_mode %d", OBS_MODE_ROAMING), this);
 	menu->AddMenuItem("TV Camera", VarArgs("spec_mode %d", OBS_MODE_TVCAM), this);
-	//MenuItem *m = new MenuItem("Foobar", "spec_mode 1", this);
-	m_pViewOptions->SetMenu( menu );	// attach menu to combo box
+	menu->AddMenuItem("Roaming", VarArgs("spec_mode %d", OBS_MODE_ROAMING), this);
+	menu->AddMenuItem("Free Chase", VarArgs("spec_mode %d", OBS_MODE_CHASE), this);
+	menu->AddMenuItem("Locked Chase", VarArgs("spec_mode %d", OBS_MODE_IN_EYE), this);
+	m_pViewOptions->SetMenu(menu);	// attach menu to combo box
 
 	LoadControlSettings("Resource/UI/BottomSpectator.res");
 	ListenForGameEvent( "spec_target_updated" );
@@ -324,12 +323,6 @@ void CSpectatorMenu::ShowPanel(bool bShow)
 
 	bool bIsEnabled = true;
 	
-	 if ( engine->IsHLTV() && HLTVCamera()->IsPVSLocked() )
-	 {
-		 // when watching HLTV with a locked PVS, some elements are disabled
-		 bIsEnabled = false;
-	 }
-	
 	m_pLeftButton->SetVisible( bIsEnabled );
 	m_pRightButton->SetVisible( bIsEnabled );
 	m_pPlayerList->SetVisible( bIsEnabled );
@@ -372,9 +365,9 @@ void CSpectatorMenu::Update( void )
 		char localizeTeamName[64];
 		char szPlayerIndex[16];
 		g_pVGuiLocalize->ConvertANSIToUnicode( UTIL_SafeName( gr->GetPlayerName(iPlayerIndex) ), playerName, sizeof( playerName ) );
-		g_pVGuiLocalize->ConvertANSIToUnicode(gr->GetShortTeamName( gr->GetTeam(iPlayerIndex) ), teamName, sizeof( teamName ) );
+		g_pVGuiLocalize->ConvertANSIToUnicode(gr->GetTeamCode( gr->GetTeam(iPlayerIndex) ), teamName, sizeof( teamName ) );
 
-		_snwprintf(playerText, ARRAYSIZE(playerText), L"%s - %s", playerName, teamName);
+		_snwprintf(playerText, ARRAYSIZE(playerText), L"%s | %s", teamName, playerName);
 		Q_snprintf( szPlayerIndex, sizeof( szPlayerIndex ), "%d", iPlayerIndex );
 
 		KeyValues *kv = new KeyValues( "UserData", "player", gr->GetPlayerName( iPlayerIndex ), "index", szPlayerIndex );
@@ -395,7 +388,12 @@ void CSpectatorMenu::Update( void )
 	else
 		playernum = GetSpectatorTarget();
 
-	if (playernum >= 1 && playernum <= gpGlobals->maxClients)
+	// If ball is spec target
+	if (playernum > gpGlobals->maxClients)
+	{
+		m_pPlayerList->ActivateItemByRow(0);
+	}
+	else if (playernum >= 1 && playernum <= gpGlobals->maxClients)
 	{
 		const char *selectedPlayerName = gr->GetPlayerName( playernum );
 		for ( iPlayerIndex=0; iPlayerIndex<m_pPlayerList->GetItemCount(); ++iPlayerIndex )
@@ -608,11 +606,7 @@ CON_COMMAND_F( spec_next, "Spectate next player", FCVAR_CLIENTCMD_CAN_EXECUTE )
 
 	if ( engine->IsHLTV() )
 	{
-		// handle the command clientside
-		if ( !HLTVCamera()->IsPVSLocked() )
-		{
-			HLTVCamera()->SpecNextPlayer( false );
-		}
+		HLTVCamera()->SpecNextPlayer( false );
 	}
 	else
 	{
@@ -629,11 +623,7 @@ CON_COMMAND_F( spec_prev, "Spectate previous player", FCVAR_CLIENTCMD_CAN_EXECUT
 
 	if ( engine->IsHLTV() )
 	{
-		// handle the command clientside
-		if ( !HLTVCamera()->IsPVSLocked() )
-		{
-			HLTVCamera()->SpecNextPlayer( true );
-		}
+		HLTVCamera()->SpecNextPlayer( true );
 	}
 	else
 	{
@@ -650,36 +640,25 @@ CON_COMMAND_F( spec_mode, "Set spectator mode", FCVAR_CLIENTCMD_CAN_EXECUTE )
 
 	if ( engine->IsHLTV() )
 	{
-		if ( HLTVCamera()->IsPVSLocked() )
+		// we can choose any mode, not loked to PVS
+		int mode;
+
+		if ( args.ArgC() == 2 )
 		{
-			// in locked mode we can only switch between first and 3rd person
-			HLTVCamera()->ToggleChaseAsFirstPerson();
+			// set specifc mode
+			mode = Q_atoi( args[1] );
 		}
 		else
 		{
-			// we can choose any mode, not loked to PVS
-			int mode;
+			// set next mode 
+			mode = HLTVCamera()->GetMode() + 1;
 
-			if ( args.ArgC() == 2 )
-			{
-				// set specifc mode
-				mode = Q_atoi( args[1] );
-			}
-			else
-			{
-				// set next mode 
-				mode = HLTVCamera()->GetMode()+1;
-
-				if ( mode > LAST_PLAYER_OBSERVERMODE )
-					mode = OBS_MODE_IN_EYE;
-			}
-			
-			// handle the command clientside
-			HLTVCamera()->SetMode( mode );
+			if ( mode > LAST_PLAYER_OBSERVERMODE )
+				mode = OBS_MODE_IN_EYE;
 		}
 
-			// turn off auto director once user tried to change view settings
-		HLTVCamera()->SetAutoDirector( false );
+		// handle the command clientside
+		HLTVCamera()->SetMode( mode );
 	}
 	else
 	{
@@ -700,11 +679,7 @@ CON_COMMAND_F( spec_player, "Spectate player by name", FCVAR_CLIENTCMD_CAN_EXECU
 
 	if ( engine->IsHLTV() )
 	{
-		// we can only switch primary spectator targets is PVS isnt locked by auto-director
-		if ( !HLTVCamera()->IsPVSLocked() )
-		{
-			HLTVCamera()->SpecNamedPlayer( args[1] );
-		}
+		HLTVCamera()->SpecNamedPlayer( args[1] );
 	}
 	else
 	{

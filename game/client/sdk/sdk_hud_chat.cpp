@@ -195,20 +195,10 @@ Color CHudChat::GetTextColorForClient( TextColor colorNum, int clientIndex )
 		break;
 
 	case COLOR_ACHIEVEMENT:
-		{
-			IScheme *pSourceScheme = scheme()->GetIScheme( scheme()->GetScheme( "SourceScheme" ) ); 
-			if ( pSourceScheme )
-			{
-				c = pSourceScheme->GetColor( "SteamLightGreen", GetBgColor() );
-			}
-			else
-			{
-				c = g_ColorYellow;
-			}
-		}
+		c = g_ColorGreen;
 		break;
 	default:
-		c = g_ColorGreen;
+		c = g_ColorWhite;
 	}
 
 	return Color( c[0], c[1], c[2], 255 );

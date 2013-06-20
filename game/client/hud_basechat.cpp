@@ -1661,17 +1661,24 @@ void CBaseHudChat::ChatPrintf( int iPlayerIndex, int iFilter, const char *fmt, .
 //-----------------------------------------------------------------------------
 void CBaseHudChat::FireGameEvent( IGameEvent *event )
 {
-#ifndef _XBOX
 	const char *eventname = event->GetName();
 
 	if ( Q_strcmp( "hltv_chat", eventname ) == 0 )
 	{
-		C_BasePlayer *player = C_BasePlayer::GetLocalPlayer();
+		C_BasePlayer *pPl = C_BasePlayer::GetLocalPlayer();
 
-		if ( !player )
+		if (!pPl)
 			return;
-		
-		ChatPrintf( player->entindex(), CHAT_FILTER_NONE, "(SourceTV) %s", event->GetString( "text" ) );
+
+		wchar_t wszText[256];
+		g_pVGuiLocalize->ConvertANSIToUnicode(event->GetString("text"), wszText, sizeof(wszText));
+
+		wchar_t wszLocalized[256];
+		g_pVGuiLocalize->ConstructString(wszLocalized, sizeof(wszLocalized), g_pVGuiLocalize->Find("#sourcetv_chat"), 1, wszText);
+
+		char szLocalized[256];
+		g_pVGuiLocalize->ConvertUnicodeToANSI(wszLocalized, szLocalized, sizeof(szLocalized));
+
+		ChatPrintf(pPl->entindex(), CHAT_FILTER_NONE, "%s", szLocalized);
 	}
-#endif
 }

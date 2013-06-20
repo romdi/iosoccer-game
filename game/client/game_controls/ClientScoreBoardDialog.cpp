@@ -106,7 +106,7 @@ enum { TEAMCREST_SIZE = 48, TEAMCREST_VMARGIN = 7, TEAMCREST_HOFFSET = 240, TEAM
 enum { PLAYERLIST_HEIGHT = 360, PLAYERLIST_BOTTOMMARGIN = 10, PLAYERLISTDIVIDER_WIDTH = 8 };
 enum { STATBUTTON_WIDTH = 120, STATBUTTON_HEIGHT = 30, STATBUTTON_HMARGIN = 0, STATBUTTON_VMARGIN = 5 };
 enum { EXTRAINFO_HEIGHT = 305, EXTRAINFO_MARGIN = 5 };
-enum { SPECLIST_HEIGHT = 30, SPECLIST_PADDING = 5, SPECNAME_WIDTH = 100, SPECTEXT_WIDTH = 70, SPECTEXT_MARGIN = 5, SPECBUTTON_WIDTH = 90, SPECBUTTON_HMARGIN = 5, SPECBUTTON_VMARGIN = 3 };
+enum { SPECLIST_HEIGHT = 30, SPECLIST_PADDING = 5, SPECNAME_WIDTH = 100, SPECTEXT_WIDTH = 150, SPECTEXT_MARGIN = 5, SPECBUTTON_WIDTH = 90, SPECBUTTON_HMARGIN = 5, SPECBUTTON_VMARGIN = 3 };
 enum { TOPBAR_HEIGHT = 30 };
 //enum { MATCHSTATE_WIDTH = 100 };
 enum { SERVERINFO_WIDTH = 320, SERVERINFOLINE_HEIGHT = 2, SERVERINFOLINE_MARGIN = 5 };
@@ -833,14 +833,7 @@ void CClientScoreBoardDialog::UpdatePlayerInfo()
 		}
 	}
 
-	char spectatorText[1024];
-
-	if (specList.Count() == 0)
-		Q_strncpy(spectatorText, "No specs", sizeof(spectatorText));
-	else
-		Q_snprintf(spectatorText, sizeof(spectatorText), "%d %s:", specList.Count(), (specList.Count() == 1 ? "spec" : "specs"));
-
-	m_pSpectatorText->SetText(spectatorText);
+	m_pSpectatorText->SetText(VarArgs("%d on TV | %d %s:", m_HLTVSpectators, specList.Count(), (specList.Count() == 1 ? "spec" : "specs")));
 
 	if (specList.Count() != m_SpecList.Count())
 	{
@@ -900,21 +893,6 @@ void CClientScoreBoardDialog::UpdatePlayerInfo()
 		maxNameLength -= 1;
 
 	} while (totalWidth > m_pSpectatorNames->GetWide());
-
-	//if (m_nCurSpecIndex > 0 && m_pCurSpecButton && gr->IsConnected(m_nCurSpecIndex) && gr->GetTeam(m_nCurSpecIndex) == TEAM_SPECTATOR)
-	//{
-	//	m_pSpecInfo->SetText(VarArgs("%s | %s | %s | %s | %d ms", gr->GetPlayerName(m_nCurSpecIndex), gr->GetSteamName(m_nCurSpecIndex), g_szCountryNames[gr->GetCountryName(m_nCurSpecIndex)], gr->GetClubName(m_nCurSpecIndex), gr->GetPing(m_nCurSpecIndex)));
-	//	int width, height;
-	//	m_pSpecInfo->GetContentSize(width, height);
-	//	width += 10;
-	//	int xPos = m_pSpectatorNames->GetX() + m_pCurSpecButton->GetX() + m_pCurSpecButton->GetWide() / 2 - width / 2;
-	//	xPos = clamp(xPos, 0, m_pMainPanel->GetWide() - width);
-	//	int yPos = m_pSpectatorContainer->GetY() + m_pSpectatorContainer->GetTall();
-	//	m_pSpecInfo->SetBounds(xPos, yPos, width, SPECLIST_HEIGHT);
-	//	m_pSpecInfo->SetVisible(true);
-	//}
-	//else
-	//	m_pSpecInfo->SetVisible(false);
 }
 
 //-----------------------------------------------------------------------------

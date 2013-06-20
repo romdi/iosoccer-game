@@ -581,7 +581,6 @@ int ClientModeShared::HandleSpectatorKeyInput( int down, ButtonCode_t keynum, co
 	}
 	else if ( down && pszCurrentBinding && Q_strcmp( pszCurrentBinding, "+strafe" ) == 0 )
 	{
-		HLTVCamera()->SetAutoDirector( true );
 		return 0;
 	}
 
