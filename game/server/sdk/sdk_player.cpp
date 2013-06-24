@@ -1737,8 +1737,6 @@ const char *CSDKPlayer::GetPlayerName()
 
 void CSDKPlayer::SetPlayerName(const char *name)
 {
-	//Q_strncpy(m_szNetname, name, sizeof(m_szNetname));
-
 	char sanitizedName[MAX_PLAYER_NAME_LENGTH];
 
 	Q_strncpy(sanitizedName, name, sizeof(sanitizedName));
@@ -1747,8 +1745,30 @@ void CSDKPlayer::SetPlayerName(const char *name)
 
 	trim(sanitizedName);
 
-	if (sanitizedName[0] == '\0' || !Q_strcmp(sanitizedName, m_szPlayerName))
+	if (sanitizedName[0] == '\0')
+		Q_strncpy(sanitizedName, "Arthur", sizeof(sanitizedName));
+
+	if (!Q_strcmp(sanitizedName, m_szPlayerName))
 		return;
+
+	int duplicateNameCount = 0;
+
+	// Check if the name the player wants is already taken by another player
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+		if (!pPl || pPl == this)
+			continue;
+
+		// If the name is taken, prepend an index to the name and check all players again until we have a unique name.
+		if (!Q_strcmp(sanitizedName, pPl->GetPlayerName()))
+		{
+			duplicateNameCount += 1;
+			Q_snprintf(sanitizedName, sizeof(sanitizedName), "(%d)%s", duplicateNameCount, pPl->GetPlayerName());
+			i = 0;
+			continue;
+		}
+	}
 
 	Q_strncpy(m_szPlayerName, sanitizedName, sizeof(m_szPlayerName));
 
@@ -1756,8 +1776,6 @@ void CSDKPlayer::SetPlayerName(const char *name)
 		SetLastKnownName(m_szPlayerName);
 
 	m_bPlayerNameChanged = true;
-
-	//engine->ClientCommand(edict(), UTIL_VarArgs("setinfo name \"%s\"", m_szNetname));
 }
 
 const char *CSDKPlayer::GetClubName()

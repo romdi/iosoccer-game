@@ -358,7 +358,7 @@ public:
 	int						GetClientIndex()	{ return ENTINDEX( edict() ) - 1; }
 
 	// returns the player name
-	virtual const char		*GetPlayerName() { return m_szNetname; }
+	virtual const char		*GetPlayerName() { return ""; }
 	virtual void			SetPlayerName( const char *name );
 
 	int						GetUserID() { return engine->GetPlayerUserId( edict() ); }
@@ -1044,8 +1044,6 @@ private:
 	friend class CPlayerClass;
 
 protected:
-	// Player name
-	char					m_szNetname[MAX_PLAYER_NAME_LENGTH];
 
 	// HACK FOR TF2 Prediction
 	friend class CTFGameMovementRecon;

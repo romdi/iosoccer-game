@@ -295,7 +295,6 @@ BEGIN_DATADESC( CBasePlayer )
 	DEFINE_FIELD( m_lastDamageAmount, FIELD_INTEGER ),
 	DEFINE_FIELD( m_tbdPrev, FIELD_TIME ),
 	DEFINE_FIELD( m_flStepSoundTime, FIELD_FLOAT ),
-	DEFINE_ARRAY( m_szNetname, FIELD_CHARACTER, MAX_PLAYER_NAME_LENGTH ),
 
 	//DEFINE_FIELD( m_flgeigerRange, FIELD_FLOAT ),	// Don't restore, reset in Precache()
 	//DEFINE_FIELD( m_flgeigerDelay, FIELD_FLOAT ),	// Don't restore, reset in Precache()
@@ -538,8 +537,6 @@ CBasePlayer::CBasePlayer( )
 	pl.hltv = false;
 	pl.frags = 0;
 	pl.deaths = 0;
-
-	m_szNetname[0] = '\0';
 
 	m_iHealth = 0;
 	Weapon_SetLast( NULL );
@@ -6895,16 +6892,6 @@ const char *CBasePlayer::GetNetworkIDString()
 //-----------------------------------------------------------------------------
 void CBasePlayer::SetPlayerName( const char *name )
 {
-	Assert( name );
-
-	if ( name )
-	{
-		Assert( strlen(name) > 0 );
-
-		Q_strncpy( m_szNetname, name, sizeof(m_szNetname) );
-
-		engine->ClientCommand(edict(), UTIL_VarArgs("setinfo name \"%s\"", name));
-	}
 }
 
 //-----------------------------------------------------------------------------
