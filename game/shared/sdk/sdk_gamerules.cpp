@@ -642,7 +642,9 @@ void CSDKGameRules::Think()
 
 	if (sv_master_legacy_mode_hack_enabled.GetBool() && gpGlobals->curtime >= m_flLastMasterServerPingTime + sv_master_legacy_mode_hack_interval.GetFloat() * 60)
 	{
-		engine->ServerCommand("sv_master_legacy_mode 0\nheartbeat\nsv_master_legacy_mode 1");
+		engine->ServerCommand("sv_master_legacy_mode 0\n");
+		engine->ServerCommand("heartbeat\n");
+		engine->ServerCommand("sv_master_legacy_mode 1\n");
 		m_flLastMasterServerPingTime = gpGlobals->curtime;
 	}
 
