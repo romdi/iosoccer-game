@@ -1773,6 +1773,8 @@ void CSDKPlayer::SetPlayerName(const char *name)
 		SetLastKnownName(m_szPlayerName);
 
 	m_bPlayerNameChanged = true;
+
+	engine->ClientCommand(edict(), UTIL_VarArgs("setinfo name \"%s\"", m_szPlayerName));
 }
 
 const char *CSDKPlayer::GetClubName()
