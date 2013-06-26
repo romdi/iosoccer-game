@@ -283,6 +283,7 @@ CSDKPlayer::CSDKPlayer()
 	m_flNextClientSettingsChangeTime = gpGlobals->curtime;
 	m_bLegacySideCurl = false;
 	m_bInvertKeeperSprint = true;
+	m_bJoinSilently = false;
 
 	m_szPlayerName[0] = '\0';
 	m_szClubName[0] = '\0';
@@ -324,7 +325,7 @@ void CSDKPlayer::PreThink(void)
 
 			if (gpGlobals->curtime >= m_flLastMoveTime + sv_awaytime_warmup_autospec.GetFloat())
 			{
-				SetDesiredTeam(TEAM_SPECTATOR, GetTeamNumber(), 0, true, false);
+				SetDesiredTeam(TEAM_SPECTATOR, GetTeamNumber(), 0, true, false, false);
 				UTIL_ClientPrintAll(HUD_PRINTTALK, "#game_player_benched_away", GetPlayerName());
 			}
 		}
@@ -498,12 +499,12 @@ void CSDKPlayer::Spawn()
 	//UseClientSideAnimation();
 }
 
-bool CSDKPlayer::SetDesiredTeam(int desiredTeam, int desiredSpecTeam, int desiredPosIndex, bool switchInstantly, bool setNextJoinDelay)
+bool CSDKPlayer::SetDesiredTeam(int desiredTeam, int desiredSpecTeam, int desiredPosIndex, bool switchInstantly, bool setNextJoinDelay, bool silent)
 {
 	m_nTeamToJoin = desiredTeam;
 	m_nTeamPosIndexToJoin = desiredPosIndex;
 	m_nSpecTeamToJoin = desiredSpecTeam;
-	//m_bSetNextJoinDelay = setNextJoinDelay;
+	m_bJoinSilently = silent;
 
 	if (setNextJoinDelay)
 		SetNextJoin(gpGlobals->curtime + mp_joindelay.GetFloat());
@@ -515,11 +516,6 @@ bool CSDKPlayer::SetDesiredTeam(int desiredTeam, int desiredSpecTeam, int desire
 
 	return true;
 }
-
-//-----------------------------------------------------------------------------
-// Purpose: Put the player in the specified team
-//-----------------------------------------------------------------------------
-//Tony; if we're not using actual teams, we don't need to override this.
 
 void CSDKPlayer::ChangeTeam()
 {
@@ -606,6 +602,7 @@ void CSDKPlayer::ChangeTeam()
 		event->SetInt("newspecteam", m_nSpecTeam);
 		event->SetInt("oldspecteam", oldSpecTeam);
 		event->SetInt("maxplayers", (SDKGameRules()->UseOldMaxplayers() ? SDKGameRules()->GetOldMaxplayers() : mp_maxplayers.GetInt()));
+		event->SetBool("silent", m_bJoinSilently);
 
 		gameeventmanager->FireEvent( event );
 	}
@@ -678,7 +675,7 @@ void CSDKPlayer::InitialSpawn( void )
 	InitSpeeds(); //Tony; initialize player speeds.
 	SetModel( SDK_PLAYER_MODEL );	//Tony; basically, leave this alone ;) unless you're not using classes or teams, then you can change it to whatever.
 	Spawn();
-	SetDesiredTeam(TEAM_SPECTATOR, TEAM_SPECTATOR, 0, true, false);
+	SetDesiredTeam(TEAM_SPECTATOR, TEAM_SPECTATOR, 0, true, false, false);
 }
 
 void CSDKPlayer::DoServerAnimationEvent(PlayerAnimEvent_t event)
@@ -1027,7 +1024,7 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 			ClientPrint(this, HUD_PRINTTALK, msg, pSwapPartner->GetPlayerName());
 		}
 
-		return SetDesiredTeam(team, team, posIndex, false, true);
+		return SetDesiredTeam(team, team, posIndex, false, true, false);
 	}
 	else if (!Q_stricmp(args[0], "spectate"))
 	{
@@ -1037,7 +1034,7 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 			return true;
 
 		bool switchInstantly = (GetTeamNumber() != TEAM_SPECTATOR);
-		SetDesiredTeam(TEAM_SPECTATOR, specTeam, 0, switchInstantly, true);
+		SetDesiredTeam(TEAM_SPECTATOR, specTeam, 0, switchInstantly, true, false);
 
 		return true;
 	}

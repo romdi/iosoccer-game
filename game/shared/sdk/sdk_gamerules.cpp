@@ -1049,7 +1049,7 @@ void CSDKGameRules::ClientDisconnected( edict_t *pClient )
 
 		// Remove the player from his team
 		if (pPl->GetTeam())
-			pPl->SetDesiredTeam(TEAM_UNASSIGNED, TEAM_SPECTATOR, 0, true, false);
+			pPl->SetDesiredTeam(TEAM_UNASSIGNED, TEAM_SPECTATOR, 0, true, false, false);
 	}
 
 	BaseClass::ClientDisconnected( pClient );
@@ -1330,7 +1330,7 @@ static void OnMaxPlayersChange(IConVar *var, const char *pOldValue, float flOldV
 		if (!pPl)
 			continue;
 
-		pPl->SetDesiredTeam(TEAM_SPECTATOR, pPl->GetTeamNumber(), 0, true, false);
+		pPl->SetDesiredTeam(TEAM_SPECTATOR, pPl->GetTeamNumber(), 0, true, false, true);
 	}
 
 	if (SDKGameRules())
@@ -1356,6 +1356,9 @@ ConVar sv_awaytime_warmup_autospec("sv_awaytime_warmup_autospec", "180", FCVAR_N
 
 ConVar sv_playerrotation_enabled("sv_playerrotation_enabled", "0", FCVAR_NOTIFY);
 ConVar sv_playerrotation_minutes("sv_playerrotation_minutes", "30,60", FCVAR_NOTIFY);
+
+ConVar sv_singlekeeper("sv_singlekeeper", "0", FCVAR_NOTIFY);
+ConVar sv_singlekeeper_switchvalue("sv_singlekeeper_switchvalue", "50", FCVAR_NOTIFY);
 
 void CSDKGameRules::State_Transition( match_period_t newState )
 {
@@ -1410,7 +1413,7 @@ void CSDKGameRules::State_Enter( match_period_t newState )
 			&& (GetMatchDisplayTimeSeconds() < pPl->GetNextCardJoin()
 			|| GetMatchDisplayTimeSeconds() < pPl->GetTeam()->GetPosNextJoinSeconds(pPl->GetTeamPosIndex())))
 		{
-			pPl->SetDesiredTeam(TEAM_SPECTATOR, pPl->GetTeamNumber(), 0, true, false);
+			pPl->SetDesiredTeam(TEAM_SPECTATOR, pPl->GetTeamNumber(), 0, true, false, false);
 		}
 
 		if (!IsIntermissionState())
@@ -1478,16 +1481,29 @@ void CSDKGameRules::State_Think()
 
 		if (!IsIntermissionState())
 		{
-			if (g_IOSRand.RandomInt(0, 2400 * (1.0f / gpGlobals->interval_per_tick)) == 0)
+			// If there's only one keeper for both teams, switch him to the other team when the ball comes near the goal
+			if (sv_singlekeeper.GetBool())
 			{
-				//GetBall()->EmitSound("Crowd.Vuvuzela");
-				//GetBall()->EmitSound("Crowd.Vuvuzela");
-				//GetBall()->EmitSound("Crowd.Vuvuzela");
-			}
+				if (abs(m_nBallZone) > sv_singlekeeper_switchvalue.GetFloat())
+				{
+					CSDKPlayer *pKeeper = NULL;
 
-			if (g_IOSRand.RandomInt(0, 240 * (1.0f / gpGlobals->interval_per_tick)) == 0)
-			{
-				//GetBall()->EmitSound("Crowd.Cheer");
+					// If ball is on left side and no keeper on left side team
+					if (m_nBallZone < 0 && !GetGlobalTeam(TEAM_A)->GetPlayerByPosIndex(GetKeeperPosIndex()))
+					{
+						pKeeper = GetGlobalTeam(TEAM_B)->GetPlayerByPosIndex(GetKeeperPosIndex());
+					}
+					// If ball is on right side and no keeper on right side team
+					else if (m_nBallZone >= 0 && !GetGlobalTeam(TEAM_B)->GetPlayerByPosIndex(GetKeeperPosIndex()))
+					{
+						pKeeper = GetGlobalTeam(TEAM_A)->GetPlayerByPosIndex(GetKeeperPosIndex());
+					}
+					
+					if (pKeeper)
+					{
+						pKeeper->SetDesiredTeam(pKeeper->GetOppTeamNumber(), pKeeper->GetOppTeamNumber(), pKeeper->GetTeamPosIndex(), true, false, true);
+					}
+				}
 			}
 
 			// Don't end the match period if the ball is near a goal, unless the time limit is exceeded
@@ -1507,10 +1523,10 @@ void CSDKGameRules::State_Think()
 						CSDKPlayer *pPl2 = pTeam->GetPlayerByPosIndex(i - 1);
 
 						if (pPl1)
-							pPl1->SetDesiredTeam(team, team, i - 1, true, false);
+							pPl1->SetDesiredTeam(team, team, i - 1, true, false, true);
 
 						if (pPl2)
-							pPl2->SetDesiredTeam(team, team, i, true, false);
+							pPl2->SetDesiredTeam(team, team, i, true, false, true);
 
 						if (pPl1 && pPl2)
 						{
@@ -1978,9 +1994,13 @@ void CSDKGameRules::ApplyIntermissionSettings(bool swapTeams)
 
 bool CSDKGameRules::CheckAutoStart()
 {
+	int requiredPlayerCount = mp_maxplayers.GetInt() * 2;
+
+	if (sv_singlekeeper.GetBool())
+		requiredPlayerCount -= 1;
+
 	if (sv_autostartmatch.GetBool()
-		&& GetGlobalTeam(TEAM_A)->GetNumPlayers() == mp_maxplayers.GetInt()
-		&& GetGlobalTeam(TEAM_B)->GetNumPlayers() == mp_maxplayers.GetInt()
+		&& GetGlobalTeam(TEAM_A)->GetNumPlayers() + GetGlobalTeam(TEAM_B)->GetNumPlayers() >= requiredPlayerCount
 		&& gpGlobals->curtime >= m_flLastAwayCheckTime + sv_wakeupcall_interval.GetFloat())
 	{
 		m_flLastAwayCheckTime = gpGlobals->curtime;
@@ -2625,7 +2645,7 @@ void CC_Bench(const CCommand &args)
 		return;
 	}
 	
-	pPl->SetDesiredTeam(TEAM_SPECTATOR, pPl->GetTeamNumber(), 0, true, true);
+	pPl->SetDesiredTeam(TEAM_SPECTATOR, pPl->GetTeamNumber(), 0, true, true, false);
 	UTIL_ClientPrintAll(HUD_PRINTTALK, "#game_player_benched", pPl->GetPlayerName());
 }
 
@@ -2653,7 +2673,7 @@ void CC_BenchAll(const CCommand &args)
 
 		if (team == 0 || (pPl->GetTeamNumber() - TEAM_A + 1) == team)
 		{
-			pPl->SetDesiredTeam(TEAM_SPECTATOR, pPl->GetTeamNumber(), 0, true, true);
+			pPl->SetDesiredTeam(TEAM_SPECTATOR, pPl->GetTeamNumber(), 0, true, true, true);
 			UTIL_ClientPrintAll(HUD_PRINTTALK, "#game_player_benched", pPl->GetPlayerName());
 		}
 	}

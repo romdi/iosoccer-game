@@ -1079,7 +1079,7 @@ void CBall::State_Think()
 			&& m_flStateTimelimit != -1
 			&& gpGlobals->curtime >= m_flStateTimelimit) // Player is afk or timed out
 		{
-			m_pPl->SetDesiredTeam(TEAM_SPECTATOR, m_pPl->GetTeamNumber(), 0, true, false);
+			m_pPl->SetDesiredTeam(TEAM_SPECTATOR, m_pPl->GetTeamNumber(), 0, true, false, false);
 		}
 	}
 
@@ -1944,7 +1944,7 @@ bool CBall::PlayersAtTargetPos()
 					playersAtTarget = false;
 				}
 				else if (gpGlobals->curtime >= pPl->m_flRemoteControlledStartTime + sv_ball_timelimit_remotecontrolled.GetFloat()) // Player timed out and blocks progress, so move him to specs
-					pPl->SetDesiredTeam(TEAM_SPECTATOR, pPl->GetTeamNumber(), 0, true, false);
+					pPl->SetDesiredTeam(TEAM_SPECTATOR, pPl->GetTeamNumber(), 0, true, false, false);
 				else
 					playersAtTarget = false;
 			}
@@ -2108,7 +2108,7 @@ void CBall::HandleFoul()
 			int team = m_pFoulingPl->GetTeamNumber();
 			int posIndex = m_pFoulingPl->GetTeamPosIndex();
 			int posType = m_pFoulingPl->GetTeamPosType();
-			m_pFoulingPl->SetDesiredTeam(TEAM_SPECTATOR, m_pFoulingPl->GetTeamNumber(), 0, true, false);
+			m_pFoulingPl->SetDesiredTeam(TEAM_SPECTATOR, m_pFoulingPl->GetTeamNumber(), 0, true, false, false);
 
 			if (posType == POS_GK)
 			{
@@ -2118,7 +2118,7 @@ void CBall::HandleFoul()
 					if (!CSDKPlayer::IsOnField(pPl) || pPl == m_pFoulingPl || pPl->GetTeamNumber() != team)
 						continue;
 
-					pPl->SetDesiredTeam(team, team, posIndex, true, false);
+					pPl->SetDesiredTeam(team, team, posIndex, true, false, false);
 					break;
 				}
 			}
@@ -3353,11 +3353,14 @@ AngularImpulse CBall::GetRot()
 	}
 }
 
+// -100 = ball at the goal line of the home team
+// 0 = ball at the the half-way line
+// 100 = ball at the goal line of the away team
 float CBall::CalcFieldZone()
 {
 	Vector pos = GetPos();
 	float fieldLength = SDKGameRules()->m_vFieldMax.GetY() - SDKGameRules()->m_vFieldMin.GetY();
-	float dist = pos.y - SDKGameRules()->m_vKickOff.GetY();
+	float dist = GetGlobalTeam(TEAM_A)->m_nForward * (pos.y - SDKGameRules()->m_vKickOff.GetY());
 	return clamp(dist * 100 / (fieldLength / 2), -100, 100);
 }
 
