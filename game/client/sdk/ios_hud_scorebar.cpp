@@ -514,27 +514,31 @@ char *GetSetPieceCountText(match_event_t matchEvent, int team)
 	{
 	case MATCH_EVENT_THROWIN: 
 		number = GetGlobalTeam(team)->m_ThrowIns + 1;
-		Q_strncpy(text, "throw-in for", 32);
+		Q_strncpy(text, "throw-in for", sizeof(text));
 		break;
 	case MATCH_EVENT_GOALKICK: 
 		number = GetGlobalTeam(team)->m_GoalKicks + 1;
-		Q_strncpy(text, "goal kick for", 32);
+		Q_strncpy(text, "goal kick for", sizeof(text));
 		break;
 	case MATCH_EVENT_CORNER: 
 		number = GetGlobalTeam(team)->m_Corners + 1;
-		Q_strncpy(text, "corner kick for", 32);
+		Q_strncpy(text, "corner kick for", sizeof(text));
 		break;
 	case MATCH_EVENT_FREEKICK: 
 		number = GetGlobalTeam(team)->m_FreeKicks + 1;
-		Q_strncpy(text, "free kick for", 32);
+		Q_strncpy(text, "free kick for", sizeof(text));
 		break;
 	case MATCH_EVENT_FOUL: 
 		number = GetGlobalTeam(team)->m_Fouls;
-		Q_strncpy(text, "foul for", 32);
+		Q_strncpy(text, "foul for", sizeof(text));
 		break;
 	case MATCH_EVENT_OFFSIDE: 
 		number = GetGlobalTeam(team)->m_Offsides;
-		Q_strncpy(text, "offside for", 32);
+		Q_strncpy(text, "offside for", sizeof(text));
+		break;
+	case MATCH_EVENT_PENALTY: 
+		number = GetGlobalTeam(team)->m_Penalties + 1;
+		Q_strncpy(text, "penalty for", sizeof(text));
 		break;
 	}
 
