@@ -1734,6 +1734,9 @@ const char *CSDKPlayer::GetPlayerName()
 
 void CSDKPlayer::SetPlayerName(const char *name)
 {
+	static const int reservedNameCount = 7;
+	static const char *reservedNames[reservedNameCount] = { "KeeperBotHome", "KeeperBotAway", "FieldBot", "SourceTV", "Source TV", "IOSTV", "IOS TV" };
+
 	char sanitizedName[MAX_PLAYER_NAME_LENGTH];
 
 	Q_strncpy(sanitizedName, name, sizeof(sanitizedName));
@@ -1748,6 +1751,18 @@ void CSDKPlayer::SetPlayerName(const char *name)
 	if (!Q_strcmp(sanitizedName, m_szPlayerName))
 		return;
 
+	if (Q_strcmp(engine->GetPlayerNetworkIDString(this->edict()), "BOT"))
+	{
+		for (int i = 0; i < reservedNameCount; i++)
+		{
+			if (!Q_stricmp(reservedNames[i], sanitizedName))
+			{
+				Q_snprintf(sanitizedName, sizeof(sanitizedName), "Not %s", reservedNames[i]);
+				break;
+			}
+		}
+	}
+
 	int duplicateNameCount = 0;
 
 	// Check if the name the player wants is already taken by another player
@@ -1758,7 +1773,7 @@ void CSDKPlayer::SetPlayerName(const char *name)
 			continue;
 
 		// If the name is taken, prepend an index to the name and check all players again until we have a unique name.
-		if (!Q_strcmp(sanitizedName, pPl->GetPlayerName()))
+		if (!Q_stricmp(pPl->GetPlayerName(), sanitizedName))
 		{
 			duplicateNameCount += 1;
 			Q_snprintf(sanitizedName, sizeof(sanitizedName), "(%d)%s", duplicateNameCount, pPl->GetPlayerName());
