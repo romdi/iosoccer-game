@@ -43,6 +43,9 @@ void C_TVCamera::GetPositionAndAngle(Vector &pos, QAngle &ang)
 	{
 		pTarget = GetReplayBall();
 
+		if (!pTarget)
+			return;
+
 		switch (GetReplayManager()->m_nReplayRunIndex)
 		{
 		case 0: camType = CAM_SIDELINE; break;
@@ -176,7 +179,7 @@ void C_TVCamera::GetPositionAndAngle(Vector &pos, QAngle &ang)
 				pos = output;
 				VectorAngles(SDKGameRules()->m_vKickOff - output, ang);
 			}
-			else if (SDKGameRules() && !SDKGameRules()->IsIntermissionState() && gpGlobals->curtime <= SDKGameRules()->m_flStateEnterTime + 6)
+			else if (SDKGameRules() && !SDKGameRules()->IsIntermissionState() && gpGlobals->curtime <= SDKGameRules()->m_flStateEnterTime + 4)
 			{
 				Vector points[4];
 				float zPosStart = 450;

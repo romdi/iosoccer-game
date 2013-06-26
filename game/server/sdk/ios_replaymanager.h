@@ -163,6 +163,8 @@ public:
 	bool CreateVPhysics( void );
 	void Spawn( void );
 	virtual void Precache();
+
+	int UpdateTransmitState() {	return SetTransmitState(FL_EDICT_ALWAYS); }
 };
 
 
@@ -215,10 +217,7 @@ public:
 	CNetworkVar(int, m_nReplayRunIndex);
 	CNetworkVar(bool, m_bAtMinGoalPos);
 
-	int UpdateTransmitState()	// always send to all clients
-	{
-		return SetTransmitState( FL_EDICT_ALWAYS );
-	}
+	int UpdateTransmitState() {	return SetTransmitState(FL_EDICT_ALWAYS); }
 
 private:
 	CUtlVector<Snapshot *>	m_Snapshots;
