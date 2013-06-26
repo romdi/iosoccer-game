@@ -21,6 +21,7 @@
 #include "ios_bot.h"
 #include "ios_keeperbot.h"
 #include "ios_fieldbot.h"
+#include "team.h"
 
 
 ConVar bot_forcefireweapon( "bot_forcefireweapon", "", 0, "Force bots with the specified weapon to fire." );
@@ -161,7 +162,7 @@ void CBot::FieldBotJoinTeam()
 	{
 		int startPosIndex = g_IOSRand.RandomInt(0, 10);
 		int posIndex = startPosIndex;
-		int keeperPosIndex = GetKeeperPosIndex();
+		int keeperPosIndex = GetGlobalTeam(team)->GetPosIndexForPosType(POS_GK);
 		while (true)
 		{
 			CSDKPlayer *pPl = NULL;
@@ -222,7 +223,10 @@ void Bot_RunAll( void )
 {
 	bool keeperSpotTaken[2] = {};
 
-	int keeperPosIndex = GetKeeperPosIndex();
+	int keeperPosIndices[2] = {};
+
+	for (int i = 0; i < 2; i++)
+		keeperPosIndices[i] = GetGlobalTeam(TEAM_A + i)->GetPosIndexForPosType(POS_GK);
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
@@ -247,7 +251,7 @@ void Bot_RunAll( void )
 				{
 					CSDKPlayer *pSpotTaker = NULL;
 
-					if (!pPl->IsTeamPosFree(team, keeperPosIndex, false, &pSpotTaker))
+					if (!pPl->IsTeamPosFree(team, keeperPosIndices[team - TEAM_A], false, &pSpotTaker))
 					{
 						char kickcmd[512];
 						Q_snprintf(kickcmd, sizeof(kickcmd), "kickid %i Position already taken\n", pPl->GetUserID());
@@ -255,7 +259,7 @@ void Bot_RunAll( void )
 					}
 					else
 					{
-						pPl->SetDesiredTeam(team, team, keeperPosIndex, true, false, false);
+						pPl->SetDesiredTeam(team, team, keeperPosIndices[team - TEAM_A], true, false, false);
 						keeperSpotTaken[team - TEAM_A] = true;
 					}
 				}
@@ -284,7 +288,7 @@ void Bot_RunAll( void )
 		{
 			CSDKPlayer *pPl = ToSDKPlayer(BotPutInServer(false, i + 1));
 			int team = (i == 0 ? TEAM_A : TEAM_B);
-			pPl->SetDesiredTeam(team, team, keeperPosIndex, true, false, false);
+			pPl->SetDesiredTeam(team, team, keeperPosIndices[i], true, false, false);
 		}
 	}
 

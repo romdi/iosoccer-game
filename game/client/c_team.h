@@ -16,6 +16,7 @@
 #include "client_thinklist.h"
 #include "ios_teamkit_parse.h"
 #include "c_sdk_player.h"
+#include "sdk_gamerules.h"
 
 #define MAX_MATCH_EVENTS 16
 #define MAX_MATCH_EVENT_PLAYER_NAME_LENGTH 64
@@ -154,6 +155,10 @@ public:
 	CNetworkVar(int, m_GoalKicks);
 	CNetworkVar(int, m_Ping);
 	CNetworkVar(int, m_Rating);
+
+	CNetworkVar(int, m_nFormationIndex);
+
+	Formation *GetFormation();
 };
 
 

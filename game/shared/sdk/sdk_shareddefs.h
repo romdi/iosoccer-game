@@ -397,7 +397,7 @@ enum
 	POS_NUMBER
 };
 
-enum g_PosNames_t
+enum PosTypes_t
 {
 	POS_GK = 0, 
 	POS_SWP, POS_LB, POS_RB, POS_CB, POS_LCB, POS_RCB, POS_LWB, POS_RWB,

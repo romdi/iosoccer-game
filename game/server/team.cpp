@@ -112,6 +112,8 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CTeam, DT_Team)
 	SendPropInt(SENDINFO(m_GoalKicks), 5, SPROP_UNSIGNED),
 	SendPropInt(SENDINFO(m_Ping), 10, SPROP_UNSIGNED),
 	SendPropInt(SENDINFO(m_Rating), 7, SPROP_UNSIGNED),
+
+	SendPropInt(SENDINFO(m_nFormationIndex), 4, SPROP_UNSIGNED),
 END_SEND_TABLE()
 
 LINK_ENTITY_TO_CLASS( team_manager, CTeam );
@@ -148,6 +150,7 @@ CTeam::CTeam( void )
 	UpdatePosIndices(true);
 	m_nTimeoutsLeft = mp_timeout_count.GetInt();
 	m_bWantsTimeout = false;
+	m_nFormationIndex = 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -531,4 +534,28 @@ void CTeam::AddMatchEvent(match_period_t matchState, int seconds, match_event_t 
 	Q_strncpy(m_szMatchEventPlayersMemory[m_nMatchEventIndex], text, MAX_MATCH_EVENT_PLAYER_NAME_LENGTH);
 	m_szMatchEventPlayers.Set(m_nMatchEventIndex, MAKE_STRING(m_szMatchEventPlayersMemory[m_nMatchEventIndex]));
 	m_nMatchEventIndex += 1;
+}
+
+Formation *CTeam::GetFormation()
+{
+	return SDKGameRules()->GetFormations()[m_nFormationIndex];
+}
+
+int CTeam::GetPosIndexForPosType(PosTypes_t posType)
+{
+	for (int i = 0; i < GetFormation()->positions.Count(); i++)
+	{
+		if (GetFormation()->positions[i]->type == posType)
+			return i;
+	}
+
+	return 0;
+}
+
+void CTeam::SetFormationIndex(int index)
+{
+	if (index == m_nFormationIndex || index < 0 || index > SDKGameRules()->GetFormations().Count() - 1)
+		return;
+
+	m_nFormationIndex = index;
 }

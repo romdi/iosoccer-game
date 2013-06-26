@@ -78,97 +78,151 @@ ConVar r_snow_alpha( "r_snow_alpha", "1", FCVAR_REPLICATED );
 ConVar r_snow_alphapow( "r_snow_alphapow", "0.8", FCVAR_REPLICATED );
 ConVar r_snow_initialramp( "r_snow_initialramp", "1.0", FCVAR_REPLICATED );
 
-#define POS_NONE { -1, -1, -1, -1 }
-
-const float g_Positions[11][11][4] =
+void CSDKGameRules::SetupFormations()
 {
-	{//1
-								{ 1.5f, 3, POS_GK, 1 },
+	for (int i = 0; i < 11; i++)
+		m_Formations[i].PurgeAndDeleteElements();
 
-		POS_NONE, POS_NONE, POS_NONE, POS_NONE, POS_NONE, POS_NONE, POS_NONE, POS_NONE, POS_NONE, POS_NONE
-	},
-	{//2
-								{ 1.5f, 1, POS_CM, 10 },
-								{ 1.5f, 3, POS_GK, 1 },
+	// 1
+	Formation *f = new Formation("0");
+	f->positions.AddToTail(new Position(1.5f, 3, POS_GK, 1));
+	m_Formations[0].AddToTail(f);
 
-		POS_NONE, POS_NONE, POS_NONE, POS_NONE, POS_NONE, POS_NONE, POS_NONE, POS_NONE, POS_NONE
-	},
-	{//3
-					{ 0.5f, 1, POS_LM, 11 }, { 2.5f, 1, POS_RM, 9 },
-								{ 1.5f, 3, POS_GK, 1 },
+	// 2
+	f = new Formation("1");
+	f->positions.AddToTail(new Position(1.5f, 1, POS_CM, 10));
+	f->positions.AddToTail(new Position(1.5f, 3, POS_GK, 1));
+	m_Formations[1].AddToTail(f);
 
-		POS_NONE, POS_NONE, POS_NONE, POS_NONE, POS_NONE, POS_NONE, POS_NONE, POS_NONE
-	},
-	{//4
-					{ 0.5f, 1, POS_LM, 11 }, { 2.5f, 1, POS_RM, 9 },
-								{ 1.5f, 1.5f, POS_CM, 10 },
-								{ 1.5f, 3, POS_GK, 1 },
+	// 3
+	f = new Formation("2");
+	f->positions.AddToTail(new Position(0.5f, 1, POS_LM, 11));
+	f->positions.AddToTail(new Position(2.5f, 1, POS_RM, 9));
+	f->positions.AddToTail(new Position(1.5f, 3, POS_GK, 1));
+	m_Formations[2].AddToTail(f);
 
-		POS_NONE, POS_NONE, POS_NONE, POS_NONE, POS_NONE, POS_NONE, POS_NONE
-	},
-	{//5
-					{ 0.5f, 1, POS_LM, 11 }, { 2.5f, 1, POS_RM, 9 },
-						{ 0.5f, 2, POS_LB, 2 }, { 2.5f, 2, POS_RB, 3 },
-								{ 1.5f, 3, POS_GK, 1 },
+	// 4
+	f = new Formation("1-2");
+	f->positions.AddToTail(new Position(0.5f, 1, POS_LM, 11));
+	f->positions.AddToTail(new Position(2.5f, 1, POS_RM, 9));
+	f->positions.AddToTail(new Position(1.5f, 1.5f, POS_CM, 10));
+	f->positions.AddToTail(new Position(1.5f, 3, POS_GK, 1));
+	m_Formations[3].AddToTail(f);
 
-		POS_NONE, POS_NONE, POS_NONE, POS_NONE, POS_NONE, POS_NONE
-	},
-	{//6
-					{ 0.5f, 0, POS_LW, 11 }, { 2.5f, 0, POS_RW, 9 },
-								{ 1.5f, 1, POS_CM, 10 },
-					{ 0.5f, 2, POS_LB, 2 }, { 2.5f, 2, POS_RB, 3 },
-								{ 1.5f, 3, POS_GK, 1 },
+	// 5
+	f = new Formation("2-2");
+	f->positions.AddToTail(new Position(0.5f, 1, POS_LM, 11));
+	f->positions.AddToTail(new Position(2.5f, 1, POS_RM, 9));
+	f->positions.AddToTail(new Position(0.5f, 2, POS_LB, 2));
+	f->positions.AddToTail(new Position(2.5f, 2, POS_RB, 3));
+	f->positions.AddToTail(new Position(1.5f, 3, POS_GK, 1));
+	m_Formations[4].AddToTail(f);
 
-		POS_NONE, POS_NONE, POS_NONE, POS_NONE, POS_NONE
-	},
-	{//7
-								{ 1.5f, 0.5f, POS_CAM, 10 },
-			{ 0.5f, 0, POS_LW, 8 }, { 1.5f, 1.75f, POS_CDM, 6 }, { 2.5f, 0, POS_RW, 7 },
-						{ 0.5f, 2, POS_LB, 2 }, { 2.5f, 2, POS_RB, 3 },
-								{ 1.5f, 3, POS_GK, 1 },
+	// 6
+	f = new Formation("2-1-2");
+	f->positions.AddToTail(new Position(0.5f, 0, POS_LW, 11));
+	f->positions.AddToTail(new Position(2.5f, 0, POS_RW, 9));
+	f->positions.AddToTail(new Position(1.5f, 1, POS_CM, 10));
+	f->positions.AddToTail(new Position(0.5f, 2, POS_LB, 2));
+	f->positions.AddToTail(new Position(2.5f, 2, POS_RB, 3));
+	f->positions.AddToTail(new Position(1.5f, 3, POS_GK, 1));
+	m_Formations[5].AddToTail(f);
 
-		POS_NONE, POS_NONE, POS_NONE, POS_NONE
-	},
-	{//8
-								{ 1.5f, 0, POS_CF, 10 },
-			{ 0.5f, 1, POS_LM, 11 }, { 1.5f, 1, POS_CM, 6 }, { 2.5f, 1, POS_RM, 7 },
-			{ 0.5f, 2, POS_LB, 3 }, { 1.5f, 2, POS_CB, 4 }, { 2.5f, 2, POS_RB, 5 },
-								{ 1.5f, 3, POS_GK, 1 },
+	// 7
+	f = new Formation("2-1-1-2");
+	f->positions.AddToTail(new Position(0.5f, 0, POS_LW, 8));
+	f->positions.AddToTail(new Position(2.5f, 0, POS_RW, 7));
+	f->positions.AddToTail(new Position(1.5f, 0.5f, POS_CAM, 10));
+	f->positions.AddToTail(new Position(1.5f, 1.75f, POS_CDM, 6));
+	f->positions.AddToTail(new Position(0.5f, 2, POS_LB, 2));
+	f->positions.AddToTail(new Position(2.5f, 2, POS_RB, 3));
+	f->positions.AddToTail(new Position(1.5f, 3, POS_GK, 1));
+	m_Formations[6].AddToTail(f);
 
-		POS_NONE, POS_NONE, POS_NONE
-	},
-	{//9
-					{ 0.5f, 0, POS_LW, 11 }, { 2.5f, 0, POS_RW, 9 },
-			{ 0.5f, 1, POS_LCM, 11 }, { 1.5f, 0.5f, POS_CM, 10 }, { 2.5f, 1, POS_RCM, 7 },
-			{ 0.5f, 2, POS_LB, 2 }, { 1.5f, 2, POS_CB, 3 }, { 2.5f, 2, POS_RB, 4 },
-								{ 1.5f, 3, POS_GK, 1 },
+	f = new Formation("2-2-2");
+	f->positions.AddToTail(new Position(0.5f, 0, POS_LW, 8));
+	f->positions.AddToTail(new Position(2.5f, 0, POS_RW, 7));
+	f->positions.AddToTail(new Position(1.0f, 1, POS_LCM, 6));
+	f->positions.AddToTail(new Position(2.0f, 1, POS_RCM, 9));
+	f->positions.AddToTail(new Position(0.5f, 2, POS_LB, 2));
+	f->positions.AddToTail(new Position(2.5f, 2, POS_RB, 3));
+	f->positions.AddToTail(new Position(1.5f, 3, POS_GK, 1));
+	m_Formations[6].AddToTail(f);
 
-		POS_NONE, POS_NONE
-	},
-	{//10
-			{ 0.5f, 0, POS_LW, 11 }, { 1.5f, 0, POS_CF, 10 }, { 2.5f, 0, POS_RW, 9 },
-			{ 0.5f, 1, POS_LCM, 8 }, { 1.5f, 1, POS_CM, 6 }, { 2.5f, 1, POS_RCM, 7 },
-			{ 0.5f, 2, POS_LB, 2 }, { 1.5f, 2, POS_CB, 3 }, { 2.5f, 2, POS_RB, 4 },
-								{ 1.5f, 3, POS_GK, 1 },
+	f = new Formation("2-3-1");
+	f->positions.AddToTail(new Position(1.5f, 0, POS_CF, 8));
+	f->positions.AddToTail(new Position(0.5f, 1, POS_LM, 6));
+	f->positions.AddToTail(new Position(1.5f, 1, POS_CM, 10));
+	f->positions.AddToTail(new Position(2.5f, 1, POS_RM, 9));
+	f->positions.AddToTail(new Position(0.5f, 2, POS_LB, 2));
+	f->positions.AddToTail(new Position(2.5f, 2, POS_RB, 3));
+	f->positions.AddToTail(new Position(1.5f, 3, POS_GK, 1));
+	m_Formations[6].AddToTail(f);
 
-		POS_NONE
-	},
-	{//11
-			{ 0.5f, 0, POS_LW, 11 }, { 1.5f, 0, POS_CF, 10 }, { 2.5f, 0, POS_RW, 9 },
-			{ 0.5f, 1, POS_LCM, 8 }, { 1.5f, 1, POS_CM, 6 }, { 2.5f, 1, POS_RCM, 7 },
-		{ 0, 2, POS_LB, 2 }, { 1, 2, POS_LCB, 3 }, { 2, 2, POS_RCB, 4 }, { 3, 2, POS_RB, 5 },
-								{ 1.5f, 3, POS_GK, 1 }
-	}
-};
+	// 8
+	f = new Formation("3-3-1");
+	f->positions.AddToTail(new Position(1.5f, 0, POS_CF, 10));
+	f->positions.AddToTail(new Position(0.5f, 1, POS_LM, 11));
+	f->positions.AddToTail(new Position(1.5f, 1, POS_CM, 6));
+	f->positions.AddToTail(new Position(2.5f, 1, POS_RM, 7));
+	f->positions.AddToTail(new Position(0.5f, 2, POS_LB, 3));
+	f->positions.AddToTail(new Position(1.5f, 2, POS_CB, 4));
+	f->positions.AddToTail(new Position(2.5f, 2, POS_RB, 5));
+	f->positions.AddToTail(new Position(1.5f, 3, POS_GK, 1));
+	m_Formations[7].AddToTail(f);
 
-int GetKeeperPosIndex()
+	// 9
+	f = new Formation("3-3-2");
+	f->positions.AddToTail(new Position(0.5f, 0, POS_LW, 11));
+	f->positions.AddToTail(new Position(2.5f, 0, POS_RW, 9));
+	f->positions.AddToTail(new Position(0.5f, 1, POS_LCM, 8));
+	f->positions.AddToTail(new Position(1.5f, 0.5f, POS_CM, 10));
+	f->positions.AddToTail(new Position(2.5f, 1, POS_RCM, 7));
+	f->positions.AddToTail(new Position(0.5f, 2, POS_LB, 2));
+	f->positions.AddToTail(new Position(1.5f, 2, POS_CB, 3));
+	f->positions.AddToTail(new Position(2.5f, 2, POS_RB, 4));
+	f->positions.AddToTail(new Position(1.5f, 3, POS_GK, 1));
+	m_Formations[8].AddToTail(f);
+
+	// 10
+	f = new Formation("3-3-3");
+	f->positions.AddToTail(new Position(0.5f, 0, POS_LW, 11));
+	f->positions.AddToTail(new Position(1.5f, 0, POS_CF, 10));
+	f->positions.AddToTail(new Position(2.5f, 0, POS_RW, 9));
+	f->positions.AddToTail(new Position(0.5f, 1, POS_LCM, 8));
+	f->positions.AddToTail(new Position(1.5f, 1, POS_CM, 6));
+	f->positions.AddToTail(new Position(2.5f, 1, POS_RCM, 7));
+	f->positions.AddToTail(new Position(0.5f, 2, POS_LB, 2));
+	f->positions.AddToTail(new Position(1.5f, 2, POS_CB, 3));
+	f->positions.AddToTail(new Position(2.5f, 2, POS_RB, 4));
+	f->positions.AddToTail(new Position(1.5f, 3, POS_GK, 1));
+	m_Formations[9].AddToTail(f);
+
+	// 11
+	f = new Formation("4-3-3");
+	f->positions.AddToTail(new Position(0.5f, 0, POS_LW, 11));
+	f->positions.AddToTail(new Position(1.5f, 0, POS_CF, 10));
+	f->positions.AddToTail(new Position(2.5f, 0, POS_RW, 9));
+	f->positions.AddToTail(new Position(0.5f, 1, POS_LCM, 8));
+	f->positions.AddToTail(new Position(1.5f, 1, POS_CM, 6));
+	f->positions.AddToTail(new Position(2.5f, 1, POS_RCM, 7));
+	f->positions.AddToTail(new Position(0.0f, 2, POS_LB, 2));
+	f->positions.AddToTail(new Position(1.0f, 2, POS_LCB, 3));
+	f->positions.AddToTail(new Position(2.0f, 2, POS_RCB, 4));
+	f->positions.AddToTail(new Position(3.0f, 2, POS_RB, 5));
+	f->positions.AddToTail(new Position(1.5f, 3, POS_GK, 1));
+	m_Formations[10].AddToTail(f);
+}
+
+CUtlVector<Formation *> &CSDKGameRules::GetFormations()
 {
-	for (int posIndex = 0; posIndex < 11; posIndex++)
-	{
-		if (g_Positions[mp_maxplayers.GetInt() - 1][posIndex][POS_TYPE] == POS_GK)
-			return posIndex;
-	}
-	return 0;
+	int maxplayers;
+#ifdef GAME_DLL
+	maxplayers = UseOldMaxplayers() ? GetOldMaxplayers() : mp_maxplayers.GetInt();
+#else
+	maxplayers = mp_maxplayers.GetInt();
+#endif
+	return m_Formations[maxplayers - 1];
 }
 
 #ifndef CLIENT_DLL
@@ -371,6 +425,7 @@ const CSDKViewVectors *CSDKGameRules::GetSDKViewVectors() const
 CSDKGameRules::CSDKGameRules()
 {
 	g_IOSRand.SetSeed(Plat_FloatTime() * 1000);
+	SetupFormations();
 
 #ifdef GAME_DLL
 	m_pCurStateInfo = NULL;
@@ -983,14 +1038,23 @@ const char *CSDKGameRules::GetChatLocation( MessageMode_t messageMode, CBasePlay
 	if (!pPlayer)
 		return "";
 
-	if (pPlayer->GetTeamNumber() == TEAM_SPECTATOR && ToSDKPlayer(pPlayer)->GetSpecTeam() != TEAM_SPECTATOR)
+	if (pPlayer->GetTeamNumber() == TEAM_SPECTATOR)
 	{
-		static char bench[6];
-		Q_strncpy(bench, "BENCH", 6);
-		return bench;
+		if (ToSDKPlayer(pPlayer)->GetSpecTeam() == TEAM_SPECTATOR)
+		{
+			static char spec[5];
+			Q_strncpy(spec, "SPEC", sizeof(spec));
+			return spec;
+		}
+		else
+		{
+			static char bench[6];
+			Q_strncpy(bench, "BENCH", sizeof(bench));
+			return bench;
+		}
 	}
 
-	return g_szPosNames[(int)g_Positions[mp_maxplayers.GetInt() - 1][ToSDKPlayer(pPlayer)->GetTeamPosIndex()][POS_TYPE]];
+	return g_szPosNames[ToSDKPlayer(pPlayer)->GetTeam()->GetFormation()->positions[ToSDKPlayer(pPlayer)->GetTeamPosIndex()]->type];
 }
 
 bool CSDKGameRules::PlayerCanHearChat( CBasePlayer *pListener, CBasePlayer *pSpeaker, MessageMode_t messageMode )
@@ -1326,10 +1390,15 @@ static void OnMaxPlayersChange(IConVar *var, const char *pOldValue, float flOldV
 		SDKGameRules()->SetUseOldMaxplayers(true);
 	}
 
+	for (int i = 0; i < g_Teams.Count(); i++)
+	{
+		g_Teams[i]->SetFormationIndex(0);
+	}
+
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
 		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
-		if (!pPl)
+		if (!CSDKPlayer::IsOnField(pPl))
 			continue;
 
 		pPl->SetDesiredTeam(TEAM_SPECTATOR, pPl->GetTeamNumber(), 0, true, false, true);
@@ -1343,7 +1412,9 @@ static void OnMaxPlayersChange(IConVar *var, const char *pOldValue, float flOldV
 	for (int team = TEAM_A; team <= TEAM_B; team++)
 	{
 		if (GetGlobalTeam(team))
+		{
 			GetGlobalTeam(team)->UpdatePosIndices(true);
+		}
 	}
 #endif
 }
@@ -1491,14 +1562,14 @@ void CSDKGameRules::State_Think()
 					CSDKPlayer *pKeeper = NULL;
 
 					// If ball is on left side and no keeper on left side team
-					if (m_nBallZone < 0 && !GetGlobalTeam(TEAM_A)->GetPlayerByPosIndex(GetKeeperPosIndex()))
+					if (m_nBallZone < 0 && !GetGlobalTeam(TEAM_A)->GetPlayerByPosIndex(GetGlobalTeam(TEAM_A)->GetPosIndexForPosType(POS_GK)))
 					{
-						pKeeper = GetGlobalTeam(TEAM_B)->GetPlayerByPosIndex(GetKeeperPosIndex());
+						pKeeper = GetGlobalTeam(TEAM_B)->GetPlayerByPosIndex(GetGlobalTeam(TEAM_B)->GetPosIndexForPosType(POS_GK));
 					}
 					// If ball is on right side and no keeper on right side team
-					else if (m_nBallZone >= 0 && !GetGlobalTeam(TEAM_B)->GetPlayerByPosIndex(GetKeeperPosIndex()))
+					else if (m_nBallZone >= 0 && !GetGlobalTeam(TEAM_B)->GetPlayerByPosIndex(GetGlobalTeam(TEAM_B)->GetPosIndexForPosType(POS_GK)))
 					{
-						pKeeper = GetGlobalTeam(TEAM_A)->GetPlayerByPosIndex(GetKeeperPosIndex());
+						pKeeper = GetGlobalTeam(TEAM_A)->GetPlayerByPosIndex(GetGlobalTeam(TEAM_A)->GetPosIndexForPosType(POS_GK));
 					}
 					
 					if (pKeeper)

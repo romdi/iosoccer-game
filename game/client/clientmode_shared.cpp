@@ -887,10 +887,12 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 			wchar_t wszLocalized[100];
 
 			wchar_t wszNewTeamPos[4];
-			g_pVGuiLocalize->ConvertANSIToUnicode(g_szPosNames[(int)g_Positions[maxplayers - 1][newTeamPos][POS_TYPE]], wszNewTeamPos, sizeof(wszNewTeamPos));
+			if (newTeam == TEAM_A || newTeam == TEAM_B)
+				g_pVGuiLocalize->ConvertANSIToUnicode(g_szPosNames[(int)GetGlobalTeam(newTeam)->GetFormation()->positions[newTeamPos]->type], wszNewTeamPos, sizeof(wszNewTeamPos));
 
 			wchar_t wszOldTeamPos[4];
-			g_pVGuiLocalize->ConvertANSIToUnicode(g_szPosNames[(int)g_Positions[maxplayers - 1][oldTeamPos][POS_TYPE]], wszOldTeamPos, sizeof(wszOldTeamPos));
+			if (oldTeam == TEAM_A || oldTeam == TEAM_B)
+				g_pVGuiLocalize->ConvertANSIToUnicode(g_szPosNames[(int)GetGlobalTeam(oldTeam)->GetFormation()->positions[oldTeamPos]->type], wszOldTeamPos, sizeof(wszOldTeamPos));
 
 			if (newTeam == TEAM_A || newTeam == TEAM_B)
 			{

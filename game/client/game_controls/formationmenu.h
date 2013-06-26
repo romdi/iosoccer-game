@@ -69,6 +69,7 @@ protected:
 	Button		*m_pLeftCornerTakerTicks[11];
 	Button		*m_pRightCornerTakerTicks[11];
 	bool		m_bShowCaptainMenu;
+	Label		*m_pFormationNames[2];
 };
 
 

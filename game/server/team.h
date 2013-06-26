@@ -180,6 +180,15 @@ public:
 	CNetworkVar(int, m_GoalKicks);
 	CNetworkVar(int, m_Ping);
 	CNetworkVar(int, m_Rating);
+
+	Formation *GetFormation();
+	int GetPosIndexForPosType(PosTypes_t posType);
+	int GetFormationIndex() { return m_nFormationIndex; }
+	void SetFormationIndex(int index);
+
+private:
+
+	CNetworkVar(int, m_nFormationIndex);
 };
 
 extern CUtlVector< CTeam * > g_Teams;

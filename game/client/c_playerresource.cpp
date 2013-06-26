@@ -700,7 +700,17 @@ int	C_PlayerResource::GetTeamPosType( int iIndex )
 	if ( !IsConnected( iIndex ) )
 		return 0;
 
-	return (int)g_Positions[mp_maxplayers.GetInt() - 1][m_TeamPosIndex[iIndex]][POS_TYPE];
+	//Assert(m_TeamPosIndex[iIndex] < GetGlobalTeam(GetTeam(iIndex))->GetFormation()->positions.Count());
+
+	// FIXME: mp_maxplayers seems to get synced before team pos indices do.
+	// So if we reduce mp_maxplayers, we might end up with team pos indices which are out of bounds and crash the client.
+	// This ugly workaround just returns the GK pos when the index it too high until the new value is synced.
+	if (m_TeamPosIndex[iIndex] >= GetGlobalTeam(GetTeam(iIndex))->GetFormation()->positions.Count())
+	{
+		return POS_GK;
+	}
+
+	return (int)GetGlobalTeam(GetTeam(iIndex))->GetFormation()->positions[m_TeamPosIndex[iIndex]]->type;
 }
 
 int	C_PlayerResource::GetTeamPosIndex( int iIndex )

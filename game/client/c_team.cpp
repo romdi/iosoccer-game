@@ -103,6 +103,8 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_Team, DT_Team, CTeam)
 	RecvPropInt(RECVINFO(m_GoalKicks)),
 	RecvPropInt(RECVINFO(m_Ping)),
 	RecvPropInt(RECVINFO(m_Rating)),
+
+	RecvPropInt(RECVINFO(m_nFormationIndex)),
 END_RECV_TABLE()
 
 BEGIN_PREDICTION_DATA( C_Team )
@@ -136,6 +138,8 @@ C_Team::C_Team()
 
 	m_iPing = 0;
 	m_iPacketloss = 0;
+
+	m_nFormationIndex = 0;
 
 	for (int i = 0; i < MAX_MATCH_EVENTS; i++)
 	{
@@ -580,6 +584,11 @@ C_Team *GetPlayersTeam( int iPlayerIndex )
 C_Team *GetPlayersTeam( C_BasePlayer *pPlayer )
 {
 	return GetPlayersTeam( pPlayer->entindex() );
+}
+
+Formation *C_Team::GetFormation()
+{
+	return SDKGameRules()->GetFormations()[m_nFormationIndex];
 }
 
 //-----------------------------------------------------------------------------

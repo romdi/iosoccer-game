@@ -627,7 +627,7 @@ bool isUnfilledNum(int nums[], int num)
 int CSDKPlayer::FindAvailableTeamPosNum()
 {
 	if (!mp_custom_shirt_numbers.GetBool())
-		return (int)g_Positions[mp_maxplayers.GetInt() - 1][GetTeamPosIndex()][POS_NUMBER];
+		return (int)GetTeam()->GetFormation()->positions[GetTeamPosIndex()]->number;
 
 	if (GetTeamPosType() == POS_GK)
 		return 1;
@@ -647,7 +647,7 @@ int CSDKPlayer::FindAvailableTeamPosNum()
 
 	if (!isUnfilledNum(teamPosNums, teamPosNum))
 	{
-		teamPosNum = (int)g_Positions[mp_maxplayers.GetInt() - 1][GetTeamPosIndex()][POS_NUMBER];
+		teamPosNum = (int)GetTeam()->GetFormation()->positions[GetTeamPosIndex()]->number;
 
 		if (!isUnfilledNum(teamPosNums, teamPosNum))
 		{
@@ -1100,6 +1100,17 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 		GetTeam()->SetRightCornerTakerPosIndex(atoi(args[1]));
 		return true;
 	}
+	else if (!Q_stricmp(args[0], "formation"))
+	{
+		if (args.ArgC() < 2)
+			return false;
+
+		if (this != GetTeam()->GetCaptain())
+			return false;
+
+		GetTeam()->SetFormationIndex(atoi(args[1]));
+		return true;
+	}
 
 	return BaseClass::ClientCommand (args);
 }
@@ -1112,7 +1123,7 @@ bool CSDKPlayer::IsTeamPosFree(int team, int posIndex, bool ignoreBots, CSDKPlay
 	if (team == TEAM_SPECTATOR || team == TEAM_UNASSIGNED)
 		return true;
 
-	if (g_Positions[mp_maxplayers.GetInt() - 1][posIndex][POS_TYPE] == POS_GK)
+	if (GetTeam()->GetFormation()->positions[posIndex]->type == POS_GK)
 	{
 		if (!IsBot() && !humankeepers.GetBool())
 			return false;
@@ -1505,8 +1516,8 @@ Vector CSDKPlayer::GetSpawnPos(bool findSafePos)
 	halfField.y /= 2;
 	float xDist = halfField.x / 5;
 	float yDist = halfField.y / 5;
-	float xPos = g_Positions[mp_maxplayers.GetInt() - 1][GetTeamPosIndex()][POS_XPOS] * xDist + xDist;
-	float yPos = g_Positions[mp_maxplayers.GetInt() - 1][GetTeamPosIndex()][POS_YPOS] * yDist + max(mp_shield_kickoff_radius.GetInt() + 2 * mp_shield_border.GetInt(), yDist);
+	float xPos = GetTeam()->GetFormation()->positions[GetTeamPosIndex()]->x * xDist + xDist;
+	float yPos = GetTeam()->GetFormation()->positions[GetTeamPosIndex()]->y * yDist + max(mp_shield_kickoff_radius.GetInt() + 2 * mp_shield_border.GetInt(), yDist);
 
 	Vector spawnPos;
 	if (GetTeam()->m_nForward == 1)
@@ -1527,7 +1538,8 @@ int CSDKPlayer::GetTeamPosNum()
 
 int CSDKPlayer::GetTeamPosType()
 {
-	return (int)g_Positions[mp_maxplayers.GetInt() - 1][GetTeamPosIndex()][POS_TYPE];
+	Assert(GetTeamPosIndex() < GetTeam()->GetFormation()->positions.Count());
+	return (int)GetTeam()->GetFormation()->positions[GetTeamPosIndex()]->type;
 }
 
 void CSDKPlayer::ResetFlags()

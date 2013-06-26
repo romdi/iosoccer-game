@@ -641,7 +641,7 @@ CSDKPlayer *CBall::FindNearestPlayer(int team /*= TEAM_INVALID*/, int posFlags /
 
 		if (!(posFlags & FL_POS_ANY))
 		{
-			int posType = (int)g_Positions[mp_maxplayers.GetInt() - 1][pPlayer->GetTeamPosIndex()][POS_TYPE];
+			int posType = (int)pPlayer->GetTeam()->GetFormation()->positions[pPlayer->GetTeamPosIndex()]->type;
 
 			if ((posFlags & FL_POS_FIELD) != 0 && !((1 << posType) & (g_nPosDefense + g_nPosMidfield + g_nPosAttack)))
 				continue;

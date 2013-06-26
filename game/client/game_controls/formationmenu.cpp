@@ -39,6 +39,7 @@
 #include "c_sdk_player.h"
 #include "steam/steam_api.h"
 #include "clientscoreboarddialog.h"
+#include "sdk_gamerules.h"
 
 #include "materialsystem/itexture.h"
 
@@ -51,6 +52,7 @@ enum { FORMATION_BUTTON_WIDTH = 90, FORMATION_BUTTON_HEIGHT = 55 };
 enum { FORMATION_HPADDING = (FORMATION_BUTTON_WIDTH / 2 + 40), FORMATION_VTOPPADDING = (FORMATION_BUTTON_HEIGHT / 2 + 0), FORMATION_VBOTTOMPADDING = (FORMATION_BUTTON_HEIGHT / 2 + 22), FORMATION_CENTERPADDING = 35 };
 enum { TOOLTIP_WIDTH = 100, TOOLTIP_HEIGHT = 20 };
 enum { TICK_WIDTH = 25, TICK_HEIGHT = 20 };
+enum { FORMATION_NAME_WIDTH = 100, FORMATION_NAME_HEIGHT = 25, FORMATION_NAME_HMARGIN = 126, FORMATION_NAME_VMARGIN = 25 };
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -60,6 +62,7 @@ CFormationMenu::CFormationMenu(Panel *parent, const char *name) : Panel(parent, 
 	for (int i = 0; i < 2; i++)
 	{
 		m_pFormations[i] = new Panel(this, "");
+		m_pFormationNames[i] = new Label(m_pFormations[i], "", "");
 
 		for (int j = 0; j < 11; j++)
 		{
@@ -105,6 +108,10 @@ void CFormationMenu::PerformLayout()
 	{
 		m_pFormations[i]->SetBounds(i * (GetWide() / 2), 0, GetWide() / 2, GetTall());
 		//m_pFormations[i]->SetBgColor(Color(255, 0, 0, 255));
+		m_pFormationNames[i]->SetBounds(i == 0 ? m_pFormations[i]->GetWide() - FORMATION_NAME_WIDTH - FORMATION_NAME_HMARGIN : FORMATION_NAME_HMARGIN, m_pFormations[i]->GetTall() - FORMATION_NAME_HEIGHT - FORMATION_NAME_VMARGIN, FORMATION_NAME_WIDTH, FORMATION_NAME_HEIGHT);
+		m_pFormationNames[i]->SetFont(m_pScheme->GetFont("IOSTeamMenuNormal"));
+		m_pFormationNames[i]->SetContentAlignment(Label::a_center);
+		//m_pFormationNames[i]->SetBgColor(Color(255, 0, 0, 255));
 
 		for (int j = 0; j < 11; j++)
 		{
@@ -224,6 +231,8 @@ void CFormationMenu::Update(bool showCaptainMenu)
 
 	for (int i = 0; i < 2; i++)
 	{
+		m_pFormationNames[i]->SetText(GetGlobalTeam(TEAM_A + i)->GetFormation()->name);
+
 		for (int j = 0; j < 11; j++)
 		{
 			if (j > mp_maxplayers.GetInt() - 1)
@@ -254,7 +263,7 @@ void CFormationMenu::Update(bool showCaptainMenu)
 			color32 pressed = { c.r(), c.g(), c.b(), 10 };
 
 			m_pFormationButtons[i][j]->SetVisible(true);
-			m_pFormationButtons[i][j]->SetText(VarArgs("%s", g_szPosNames[(int)g_Positions[mp_maxplayers.GetInt() - 1][j][POS_TYPE]]));
+			m_pFormationButtons[i][j]->SetText(VarArgs("%s", g_szPosNames[GetGlobalTeam(TEAM_A + i)->GetFormation()->positions[j]->type]));
 
 			m_pToolTips[i][j]->SetVisible(true);
 
@@ -318,9 +327,9 @@ void CFormationMenu::Update(bool showCaptainMenu)
 
 			float xDist = (m_pFormations[i]->GetWide() - 2 * FORMATION_HPADDING) / 3;
 			float yDist = (m_pFormations[i]->GetTall() - FORMATION_VTOPPADDING - FORMATION_VBOTTOMPADDING) / 3;
-			float xPos = FORMATION_HPADDING + g_Positions[mp_maxplayers.GetInt() - 1][j][POS_XPOS] * xDist - m_pFormationButtons[i][j]->GetWide() / 2;
+			float xPos = FORMATION_HPADDING + GetGlobalTeam(TEAM_A + i)->GetFormation()->positions[j]->x * xDist - m_pFormationButtons[i][j]->GetWide() / 2;
 			xPos += (i == 0 ? -1 : 1) * FORMATION_CENTERPADDING;
-			float yPos = FORMATION_VTOPPADDING + g_Positions[mp_maxplayers.GetInt() - 1][j][POS_YPOS] * yDist - m_pFormationButtons[i][j]->GetTall() / 2;
+			float yPos = FORMATION_VTOPPADDING + GetGlobalTeam(TEAM_A + i)->GetFormation()->positions[j]->y * yDist - m_pFormationButtons[i][j]->GetTall() / 2;
 			m_pFormationButtons[i][j]->SetPos(xPos, yPos);
 
 			bool isFree = (playerIndexAtPos[i][j] == 0);

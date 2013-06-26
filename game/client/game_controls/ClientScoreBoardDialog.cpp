@@ -32,6 +32,7 @@
 #include <game/client/iviewport.h>
 #include <igameresources.h>
 #include "vgui_controls/TextImage.h"
+#include "commandmenu.h"
 
 #include <vgui/IInput.h>
 
@@ -209,6 +210,8 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Editabl
 	m_pToggleCaptainMenu->SetVisible(false);
 
 	m_pFormationList = new ComboBox(m_pStatButtonContainer, "", 0, false);
+	CommandMenu *pMenu = new CommandMenu(m_pFormationList, "formationlist", gViewPortInterface);
+	m_pFormationList->SetMenu(pMenu);
 
 	m_pRequestTimeout = new Button(m_pStatButtonContainer, "", "Timeout", this, "requesttimeout");
 
@@ -677,6 +680,15 @@ void CClientScoreBoardDialog::Update( void )
 	if (m_bShowCaptainMenu)
 	{
 		m_pRequestTimeout->SetText(VarArgs("Timeout (%d left)", pLocal->GetTeam()->Get_TimeoutsLeft()));
+
+		m_pFormationList->GetMenu()->DeleteAllItems();
+
+		for (int i = 0; i < SDKGameRules()->GetFormations().Count(); i++)
+		{
+			m_pFormationList->GetMenu()->AddMenuItem(SDKGameRules()->GetFormations()[i]->name, VarArgs("formation %d", i), this);
+		}
+
+		//m_pFormationList->GetMenu()->ActivateItemByRow(pLocal->GetTeam()->m_nFormationIndex);
 	}
 
 	m_fNextUpdateTime = gpGlobals->curtime + 0.25f; 
@@ -1104,7 +1116,7 @@ bool CClientScoreBoardDialog::GetPlayerInfo(int playerIndex, KeyValues *kv)
 			posNameFormat = "(%s)";
 		else
 			posNameFormat = "%s";
-		kv->SetString("posname", VarArgs(posNameFormat, g_szPosNames[(int)g_Positions[mp_maxplayers.GetInt() - 1][gr->GetTeamPosIndex(playerIndex)][POS_TYPE]]));
+		kv->SetString("posname", VarArgs(posNameFormat, g_szPosNames[(int)GetGlobalTeam(gr->GetTeam(playerIndex))->GetFormation()->positions[gr->GetTeamPosIndex(playerIndex)]->type]));
 	}
 
 	kv->SetString("name", gr->GetPlayerName( playerIndex ) );
@@ -1423,6 +1435,10 @@ void CClientScoreBoardDialog::OnCommand( char const *cmd )
 	{		
 		m_eActivePanelType = FORMATION_MENU_NORMAL;
 		Update();
+	}
+	else if (!Q_strnicmp(cmd, "formation", 9))
+	{		
+		engine->ClientCmd(cmd);
 	}
 	else
 		BaseClass::OnCommand(cmd);

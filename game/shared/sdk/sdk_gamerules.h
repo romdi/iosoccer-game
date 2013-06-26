@@ -83,6 +83,36 @@ extern ConVar
 
 class CSDKGameRules;
 
+struct Position
+{
+	float x;
+	float y;
+	PosTypes_t type;
+	int number;
+
+public:
+
+	Position(float x, float y, PosTypes_t type, int number) : x(x), y(y), type(type), number(number)
+	{
+	}
+};
+
+struct Formation
+{
+	char name[16];
+	CUtlVector<Position *> positions;
+
+	Formation(const char *name)
+	{
+		Q_strncpy(this->name, name, sizeof(this->name));
+	}
+
+	~Formation()
+	{
+		positions.PurgeAndDeleteElements();
+	}
+};
+
 class CSDKGameRulesStateInfo
 {
 public:
@@ -365,6 +395,8 @@ public:
 	void ApplyIntermissionSettings(bool swapTeams);
 	bool CheckAutoStart();
 
+	void SetMatchDisplayTimeSeconds(int seconds);
+
 #else
 
 public:
@@ -385,7 +417,6 @@ public:
 	bool IsIntermissionState();
 	bool IsInjuryTime();
 	int GetShieldRadius(int team, bool isTaker);
-	void SetMatchDisplayTimeSeconds(int seconds);
 	int GetMatchDisplayTimeSeconds(bool addInjuryTime = true, bool getCountdownAtIntermissions = true);
 
 	CNetworkVar(int, m_nShieldType);
@@ -401,6 +432,13 @@ public:
 	CNetworkVar(bool, m_bOffsideLinesEnabled);
 
 	CNetworkVar(float, m_flTimeoutEnd);
+
+	void SetupFormations();
+	CUtlVector<Formation *> &GetFormations();
+
+private:
+
+	CUtlVector<Formation *> m_Formations[11];
 };
 
 //-----------------------------------------------------------------------------
@@ -411,9 +449,5 @@ inline CSDKGameRules* SDKGameRules()
 {
 	return static_cast<CSDKGameRules*>(g_pGameRules);
 }
-
-extern const float g_Positions[11][11][4];
-
-int GetKeeperPosIndex();
 
 #endif // SDK_GAMERULES_H
