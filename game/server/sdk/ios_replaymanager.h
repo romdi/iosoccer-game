@@ -104,7 +104,7 @@ struct PlayerSnapshot
 struct Snapshot
 {
 	float snaptime;
-	bool isInReplay;
+	int replayCount;
 	BallSnapshot *pBallSnapshot;
 	PlayerSnapshot *pPlayerSnapshot[2][11];
 
@@ -138,7 +138,15 @@ struct MatchEvent
 
 	~MatchEvent()
 	{
-		snapshots.PurgeAndDeleteElements();
+		while (snapshots.Count() > 0)
+		{
+			snapshots[0]->replayCount -= 1;
+
+			if (snapshots[0]->replayCount == 0)
+				delete snapshots[0];
+
+			snapshots.Remove(0);
+		}
 	}
 };
 

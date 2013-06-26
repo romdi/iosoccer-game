@@ -154,10 +154,8 @@ void CReplayManager::CleanUp()
 
 	while (m_Snapshots.Count() > 0)
 	{
-		if (!m_Snapshots[0]->isInReplay)
-		{
+		if (m_Snapshots[0]->replayCount == 0)
 			delete m_Snapshots[0];
-		}
 
 		m_Snapshots.Remove(0);
 	}
@@ -344,7 +342,7 @@ void CReplayManager::TakeSnapshot()
 {
 	Snapshot *pSnap = new Snapshot;
 	pSnap->snaptime = gpGlobals->curtime;
-	pSnap->isInReplay = false;
+	pSnap->replayCount = 0;
 
 	BallSnapshot *pBallSnap = new BallSnapshot;
 
@@ -431,7 +429,7 @@ void CReplayManager::TakeSnapshot()
 		if (m_MatchEvents[i]->snapshotEndTime >= gpGlobals->curtime)
 		{
 			m_MatchEvents[i]->snapshots.AddToTail(pSnap);
-			pSnap->isInReplay = true;
+			pSnap->replayCount += 1;
 		}
 	}
 	
@@ -440,7 +438,7 @@ void CReplayManager::TakeSnapshot()
 	// Remove old snapshots from the list. Only free a snapshot's memory if it isn't part of any highlight.
 	while (m_Snapshots.Count() >= 2 && m_Snapshots[0]->snaptime < replayStartTime && m_Snapshots[1]->snaptime <= replayStartTime)
 	{
-		if (!m_Snapshots[0]->isInReplay)
+		if (m_Snapshots[0]->replayCount == 0)
 			delete m_Snapshots[0];
 
 		m_Snapshots.Remove(0);
@@ -582,7 +580,7 @@ void CReplayManager::RestoreSnapshot()
 			pRealPl->AddSolidFlags(FSOLID_NOT_SOLID);
 			pRealPl->SetObserverMode(OBS_MODE_TVCAM);
 		}
-
+		
 		if (pRealPl->GetPlayerBall() && !(pRealPl->GetPlayerBall()->GetEffects() & EF_NODRAW))
 		{
 			pRealPl->GetPlayerBall()->AddEffects(EF_NODRAW);
@@ -867,7 +865,7 @@ void CReplayManager::AddMatchEvent(match_event_t type, int team, CSDKPlayer *pPl
 			if (m_Snapshots[i]->snaptime >= replayStartTime)
 			{
 				pMatchEvent->snapshots.AddToTail(m_Snapshots[i]);
-				m_Snapshots[i]->isInReplay = true;
+				m_Snapshots[i]->replayCount += 1;
 			}
 		}
 
