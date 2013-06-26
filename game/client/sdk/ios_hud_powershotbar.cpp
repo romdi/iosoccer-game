@@ -20,9 +20,12 @@
 #include "sdk_gamerules.h"
 #include "c_ios_replaymanager.h"
 #include "c_ball.h"
+#include "view.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
+
+extern ConVar centeredstaminabar;
 
 class CHudChargedshotBar : public CHudElement, public vgui::Panel
 {
@@ -46,15 +49,10 @@ DECLARE_HUDELEMENT( CHudChargedshotBar );
 
 using namespace vgui;
 
-#define BAR_WIDTH 40
-#define BAR_HEIGHT 200
-#define BAR_VMARGIN 15
-#define BAR_HMARGIN 250
-#define BAR_HPADDING 2
-#define BAR_VPADDING 2
-#define PS_INDICATOR_HEIGHT 9
-#define PS_INDICATOR_OFFSET 9
-#define PS_INDICATOR_BORDER 2
+enum { BAR_WIDTH = 40, BAR_HEIGHT = 200, BAR_VMARGIN = 15, BAR_HMARGIN = 250, BAR_HPADDING = 2, BAR_VPADDING = 2 };
+enum { PS_INDICATOR_HEIGHT = 9, PS_INDICATOR_OFFSET = 9, PS_INDICATOR_BORDER = 2 };
+enum { SMALLBAR_WIDTH = 80, SMALLBAR_HEIGHT = 14, SMALLBAR_HPADDING = 1, SMALLBAR_VPADDING = 1 };
+enum { SMALLPS_INDICATOR_WIDTH = 7, SMALLPS_INDICATOR_OFFSET = 5, SMALLPS_INDICATOR_BORDER = 1 };
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -73,7 +71,7 @@ void CHudChargedshotBar::ApplySchemeSettings( IScheme *scheme )
 {
 	BaseClass::ApplySchemeSettings(scheme);
 
-	SetBounds(ScreenWidth() - BAR_WIDTH - 2 * BAR_HMARGIN, ScreenHeight() - BAR_HEIGHT - 2 * BAR_VMARGIN, BAR_WIDTH + 2 * BAR_HMARGIN, BAR_HEIGHT + 2 * BAR_VMARGIN);
+	SetBounds(0, 0, ScreenWidth(), ScreenHeight());
 }
 
 
@@ -185,45 +183,113 @@ void CHudChargedshotBar::Paint()
 		drawChargedshotIndicator = true;
 	}
 
-	// Draw stamina bar back
-	surface()->DrawSetColor(bgColor);
-	surface()->DrawFilledRect(BAR_HMARGIN, BAR_VMARGIN, BAR_HMARGIN + BAR_WIDTH, BAR_VMARGIN + BAR_HEIGHT);
-
-	// Draw stamina bar front
-	surface()->DrawSetColor(fgColor);
-	surface()->DrawFilledRect(
-		BAR_HMARGIN + BAR_HPADDING,
-		BAR_VMARGIN + BAR_VPADDING + (1 - relStamina) * (BAR_HEIGHT - 2 * BAR_VPADDING),
-		BAR_HMARGIN + BAR_WIDTH - BAR_HPADDING,
-		BAR_VMARGIN + BAR_VPADDING + BAR_HEIGHT - 2 * BAR_VPADDING);
-
-	const int partCount = 4;
-	int vMargin = BAR_HEIGHT / partCount;
-
-	surface()->DrawSetColor(bgColor);
-
-	for (int i = 1; i < partCount; i++)
+	if (centeredstaminabar.GetBool())
 	{
-		surface()->DrawFilledRect(BAR_HMARGIN, BAR_VMARGIN + i * vMargin, BAR_HMARGIN + BAR_WIDTH, BAR_VMARGIN + i * vMargin + 1);
+		const int CenterX = GetWide() / 2;
+		const int CenterY = GetTall() / 2;
+
+		// Draw stamina bar back
+		surface()->DrawSetColor(bgColor);
+		surface()->DrawFilledRect(
+			CenterX - (SMALLBAR_WIDTH / 2),
+			CenterY - (SMALLBAR_HEIGHT / 2),
+			CenterX + (SMALLBAR_WIDTH / 2),
+			CenterY + (SMALLBAR_HEIGHT / 2));
+
+		// Draw stamina bar front
+		surface()->DrawSetColor(fgColor);
+		surface()->DrawFilledRect(
+			CenterX - (SMALLBAR_WIDTH / 2 - SMALLBAR_HPADDING),
+			CenterY - (SMALLBAR_HEIGHT / 2 - SMALLBAR_VPADDING),
+			CenterX - (SMALLBAR_WIDTH / 2 - SMALLBAR_HPADDING) + relStamina * (SMALLBAR_WIDTH - 2 * SMALLBAR_VPADDING),
+			CenterY + (SMALLBAR_HEIGHT / 2 - SMALLBAR_VPADDING));
+
+		const int partCount = 4;
+		const int hMargin = SMALLBAR_WIDTH / partCount;
+
+		surface()->DrawSetColor(bgColor);
+
+		for (int i = 1; i < partCount; i++)
+		{
+			surface()->DrawFilledRect(
+				CenterX - SMALLBAR_WIDTH / 2 + i * hMargin,
+				CenterY - SMALLBAR_HEIGHT / 2,
+				CenterX - SMALLBAR_WIDTH / 2 + i * hMargin + 1,
+				CenterY + SMALLBAR_HEIGHT / 2);
+		}
+
+		if (drawChargedshotIndicator)
+		{
+			// Draw chargedshot indicator back
+			surface()->DrawSetColor(0, 0, 0, 255);
+			surface()->DrawFilledRect(
+				CenterX - SMALLBAR_WIDTH / 2 + shotStrength * SMALLBAR_WIDTH - SMALLPS_INDICATOR_WIDTH / 2,
+				CenterY - SMALLBAR_HEIGHT / 2 - SMALLPS_INDICATOR_OFFSET,
+				CenterX - SMALLBAR_WIDTH / 2 + shotStrength * SMALLBAR_WIDTH + SMALLPS_INDICATOR_WIDTH / 2,
+				CenterY + SMALLBAR_HEIGHT / 2 + SMALLPS_INDICATOR_OFFSET);
+
+			// Draw chargedshot indicator front
+			surface()->DrawSetColor(255, 255, 255, 255);
+			surface()->DrawFilledRect(
+				CenterX - SMALLBAR_WIDTH / 2 + shotStrength * SMALLBAR_WIDTH - SMALLPS_INDICATOR_WIDTH / 2 + SMALLPS_INDICATOR_BORDER,
+				CenterY - SMALLBAR_HEIGHT / 2 - SMALLPS_INDICATOR_OFFSET + SMALLPS_INDICATOR_BORDER,
+				CenterX - SMALLBAR_WIDTH / 2 + shotStrength * SMALLBAR_WIDTH + SMALLPS_INDICATOR_WIDTH / 2 - SMALLPS_INDICATOR_BORDER,
+				CenterY + SMALLBAR_HEIGHT / 2 + SMALLPS_INDICATOR_OFFSET - SMALLPS_INDICATOR_BORDER);
+
+		}
 	}
-
-	if (drawChargedshotIndicator)
+	else
 	{
-		// Draw chargedshot indicator back
-		surface()->DrawSetColor(0, 0, 0, 255);
-		surface()->DrawFilledRect(
-			BAR_HMARGIN - PS_INDICATOR_OFFSET,
-			BAR_VMARGIN + (1 - shotStrength) * (BAR_HEIGHT - PS_INDICATOR_HEIGHT),
-			BAR_HMARGIN + BAR_WIDTH + PS_INDICATOR_OFFSET,
-			BAR_VMARGIN + (1 - shotStrength) * (BAR_HEIGHT - PS_INDICATOR_HEIGHT) + PS_INDICATOR_HEIGHT);
+		const int LeftX = GetWide() - BAR_WIDTH - 2 * BAR_HMARGIN;
+		const int LeftY = GetTall() - BAR_HEIGHT - 2 * BAR_VMARGIN;
 
-		// Draw chargedshot indicator front
-		surface()->DrawSetColor(255, 255, 255, 255);
+		// Draw stamina bar back
+		surface()->DrawSetColor(bgColor);
 		surface()->DrawFilledRect(
-			BAR_HMARGIN - PS_INDICATOR_OFFSET + PS_INDICATOR_BORDER,
-			BAR_VMARGIN + (1 - shotStrength) * (BAR_HEIGHT - PS_INDICATOR_HEIGHT) + PS_INDICATOR_BORDER,
-			BAR_HMARGIN + BAR_WIDTH + PS_INDICATOR_OFFSET - PS_INDICATOR_BORDER,
-			BAR_VMARGIN + (1 - shotStrength) * (BAR_HEIGHT - PS_INDICATOR_HEIGHT) + PS_INDICATOR_HEIGHT - PS_INDICATOR_BORDER);
+			LeftX + BAR_HMARGIN,
+			LeftY + BAR_VMARGIN,
+			LeftX + BAR_HMARGIN + BAR_WIDTH,
+			LeftY + BAR_VMARGIN + BAR_HEIGHT);
 
+		// Draw stamina bar front
+		surface()->DrawSetColor(fgColor);
+		surface()->DrawFilledRect(
+			LeftX + BAR_HMARGIN + BAR_HPADDING,
+			LeftY + BAR_VMARGIN + BAR_VPADDING + (1 - relStamina) * (BAR_HEIGHT - 2 * BAR_VPADDING),
+			LeftX + BAR_HMARGIN + BAR_WIDTH - BAR_HPADDING,
+			LeftY + BAR_VMARGIN + BAR_VPADDING + BAR_HEIGHT - 2 * BAR_VPADDING);
+
+		const int partCount = 4;
+		const int vMargin = BAR_HEIGHT / partCount;
+
+		surface()->DrawSetColor(bgColor);
+
+		for (int i = 1; i < partCount; i++)
+		{
+			surface()->DrawFilledRect(
+				LeftX + BAR_HMARGIN,
+				LeftY + BAR_VMARGIN + i * vMargin,
+				LeftX + BAR_HMARGIN + BAR_WIDTH,
+				LeftY + BAR_VMARGIN + i * vMargin + 1);
+		}
+
+		if (drawChargedshotIndicator)
+		{
+			// Draw chargedshot indicator back
+			surface()->DrawSetColor(0, 0, 0, 255);
+			surface()->DrawFilledRect(
+				LeftX + BAR_HMARGIN - PS_INDICATOR_OFFSET,
+				LeftY + BAR_VMARGIN + (1 - shotStrength) * (BAR_HEIGHT - PS_INDICATOR_HEIGHT),
+				LeftX + BAR_HMARGIN + BAR_WIDTH + PS_INDICATOR_OFFSET,
+				LeftY + BAR_VMARGIN + (1 - shotStrength) * (BAR_HEIGHT - PS_INDICATOR_HEIGHT) + PS_INDICATOR_HEIGHT);
+
+			// Draw chargedshot indicator front
+			surface()->DrawSetColor(255, 255, 255, 255);
+			surface()->DrawFilledRect(
+				LeftX + BAR_HMARGIN - PS_INDICATOR_OFFSET + PS_INDICATOR_BORDER,
+				LeftY + BAR_VMARGIN + (1 - shotStrength) * (BAR_HEIGHT - PS_INDICATOR_HEIGHT) + PS_INDICATOR_BORDER,
+				LeftX + BAR_HMARGIN + BAR_WIDTH + PS_INDICATOR_OFFSET - PS_INDICATOR_BORDER,
+				LeftY + BAR_VMARGIN + (1 - shotStrength) * (BAR_HEIGHT - PS_INDICATOR_HEIGHT) + PS_INDICATOR_HEIGHT - PS_INDICATOR_BORDER);
+		}
 	}
 }

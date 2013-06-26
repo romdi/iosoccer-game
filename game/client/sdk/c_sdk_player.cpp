@@ -44,6 +44,7 @@ ConVar legacysidecurl("legacysidecurl", "0", FCVAR_USERINFO | FCVAR_ARCHIVE, "")
 ConVar legacyverticallook("legacyverticallook", "0", FCVAR_USERINFO | FCVAR_ARCHIVE, "");
 ConVar invertkeepersprint("invertkeepersprint", "1", FCVAR_USERINFO | FCVAR_ARCHIVE, "");
 ConVar modelskinindex("modelskinindex", "-1", FCVAR_USERINFO | FCVAR_ARCHIVE, "");
+ConVar centeredstaminabar("centeredstaminabar", "1", FCVAR_USERINFO | FCVAR_ARCHIVE, "");
 
 ConVar clientversion("clientversion", g_szRequiredClientVersion, FCVAR_USERINFO | FCVAR_HIDDEN, "");
 
@@ -1385,11 +1386,208 @@ void DrawPlayerCircle(C_BasePlayer *pPlayer)
 	}
 }
 
+void Draw3DStaminaBar(C_SDKPlayer *pPl)
+{
+	float stamina = pPl->m_Shared.GetStamina();
+	float relStamina = stamina / 100.0f;
+
+	Color fgColor, bgColor;
+
+	if (pPl->GetFlags() & FL_REMOTECONTROLLED)
+	{
+		fgColor = Color(255, 255, 255, 255);
+		bgColor = Color(100, 100, 100, 255);
+	}
+	else if (GetBall() && GetBall()->m_bShotsBlocked)
+	{
+		fgColor = Color(255, 0, 0, 255);
+		bgColor = Color(139, 0, 0, 255);
+	}
+	else if (GetBall() && GetBall()->m_bNonnormalshotsBlocked)
+	{
+		fgColor = Color(255, 140, 0, 255);
+		bgColor = Color(255, 69, 0, 255);
+	}
+	else
+	{
+		fgColor = Color(255 * (1 - relStamina), 255 * relStamina, 0, 255);
+		bgColor = Color(0, 0, 0, 255);
+	}
+
+	float shotStrength;
+
+	bool drawChargedshotIndicator = false;
+
+	if (pPl->m_Shared.m_bDoChargedShot || pPl->m_Shared.m_bIsShotCharging)
+	{
+		float currentTime = pPl->GetFinalPredictedTime();
+		currentTime -= TICK_INTERVAL;
+		currentTime += (gpGlobals->interpolation_amount * TICK_INTERVAL);
+
+		float duration = (pPl->m_Shared.m_bIsShotCharging ? currentTime - pPl->m_Shared.m_flShotChargingStart : pPl->m_Shared.m_flShotChargingDuration);
+		float totalTime = currentTime - pPl->m_Shared.m_flShotChargingStart;
+		float activeTime = min(duration, mp_chargedshot_increaseduration.GetFloat());
+		float extra = totalTime - activeTime;
+		float increaseFraction = clamp(pow(activeTime / mp_chargedshot_increaseduration.GetFloat(), mp_chargedshot_increaseexponent.GetFloat()), 0, 1);
+		float decTime = (pow(1 - increaseFraction, 1.0f / mp_chargedshot_decreaseexponent.GetFloat())) * mp_chargedshot_decreaseduration.GetFloat();
+		float decreaseFraction = clamp((decTime + extra) / mp_chargedshot_decreaseduration.GetFloat(), 0, 1);
+		shotStrength = 1 - pow(decreaseFraction, mp_chargedshot_decreaseexponent.GetFloat());
+
+		// Flash
+		if (shotStrength > 0.9f)
+		{
+			//relStamina = 1;
+			bgColor = Color(255, 255, 255, 255);
+		}
+
+		drawChargedshotIndicator = true;
+	}
+
+
+	// Place it 20 units above his head.
+	Vector vOrigin = pPl->GetLocalOrigin();
+	vOrigin.z += VEC_HULL_MAX.z + 10;
+
+
+	// Align it so it never points up or down.
+	Vector vUp = CurrentViewUp();
+	Vector vRight = CurrentViewRight();
+	Vector vForward = CurrentViewForward();
+	if ( fabs( vRight.z ) > 0.95 )	// don't draw it edge-on
+		return;
+
+	vRight.z = 0;
+	VectorNormalize( vRight );
+
+	const float height = 1.5f;
+	const float width = 15;
+	const float padding = 0.25f;
+
+	CMatRenderContextPtr pRenderContext( materials );
+
+	pRenderContext->Bind( materials->FindMaterial( "pitch/chargebar", TEXTURE_GROUP_CLIENT_EFFECTS ) );
+
+	IMesh *pMesh = pRenderContext->GetDynamicMesh();
+	CMeshBuilder meshBuilder;
+
+	Vector vBgColor = Vector(bgColor.r() / 255.0f, bgColor.g() / 255.0f, bgColor.b() / 255.0f);
+
+	meshBuilder.Begin( pMesh, MATERIAL_QUADS, 1 );
+
+	meshBuilder.Color3fv(vBgColor.Base());
+	meshBuilder.TexCoord2f( 0,0,0 );
+	meshBuilder.Position3fv( (vOrigin + (vForward * 1.0f) + (vRight * -(width / 2 + padding)) + (vUp * (height + padding))).Base() );
+	meshBuilder.AdvanceVertex();
+
+	meshBuilder.Color3fv(vBgColor.Base());
+	meshBuilder.TexCoord2f( 0,1,0 );
+	meshBuilder.Position3fv( (vOrigin + (vForward * 1.0f) + (vRight * (width / 2 + padding)) + (vUp * (height + padding))).Base() );
+	meshBuilder.AdvanceVertex();
+
+	meshBuilder.Color3fv(vBgColor.Base());
+	meshBuilder.TexCoord2f( 0,1,1 );
+	meshBuilder.Position3fv( (vOrigin + (vForward * 1.0f) + (vRight * (width / 2 + padding)) + (vUp * -(height + padding))).Base() );
+	meshBuilder.AdvanceVertex();
+
+	meshBuilder.Color3fv(vBgColor.Base());
+	meshBuilder.TexCoord2f( 0,0,1 );
+	meshBuilder.Position3fv( (vOrigin + (vForward * 1.0f) + (vRight * -(width / 2 + padding)) + (vUp * -(height + padding))).Base() );
+	meshBuilder.AdvanceVertex();
+	meshBuilder.End();
+
+	Vector vFgColor = Vector(fgColor.r() / 255.0f, fgColor.g() / 255.0f, fgColor.b() / 255.0f);
+
+	meshBuilder.Begin( pMesh, MATERIAL_QUADS, 1 );
+
+	meshBuilder.Color3fv(vFgColor.Base());
+	meshBuilder.TexCoord2f( 0,0,0 );
+	meshBuilder.Position3fv( (vOrigin + (vForward * 0.0f) + (vRight * (-width / 2)) + (vUp * height)).Base() );
+	meshBuilder.AdvanceVertex();
+
+	meshBuilder.Color3fv(vFgColor.Base());
+	meshBuilder.TexCoord2f( 0,1,0 );
+	meshBuilder.Position3fv( (vOrigin + (vForward * 0.0f) + (vRight * (-width / 2 + width * relStamina)) + (vUp * height)).Base() );
+	meshBuilder.AdvanceVertex();
+
+	meshBuilder.Color3fv(vFgColor.Base());
+	meshBuilder.TexCoord2f( 0,1,1 );
+	meshBuilder.Position3fv( (vOrigin + (vForward * 0.0f) + (vRight * (-width / 2 + width * relStamina)) + (vUp * -height)).Base() );
+	meshBuilder.AdvanceVertex();
+
+	meshBuilder.Color3fv(vFgColor.Base());
+	meshBuilder.TexCoord2f( 0,0,1 );
+	meshBuilder.Position3fv( (vOrigin + (vForward * 0.0f) + (vRight * (-width / 2)) + (vUp * -height)).Base() );
+	meshBuilder.AdvanceVertex();
+	meshBuilder.End();
+
+	if (drawChargedshotIndicator)
+	{
+		const float lineHeight = 2.0f;
+		const float lineWidth = 0.5f;
+		const float linePadding = 0.25f;
+
+		Vector vLineBgColor = Vector(0, 0, 0);
+
+		meshBuilder.Begin( pMesh, MATERIAL_QUADS, 1 );
+
+		meshBuilder.Color3fv(vLineBgColor.Base());
+		meshBuilder.TexCoord2f( 0,0,0 );
+		meshBuilder.Position3fv( (vOrigin + (vForward * -1.0f) + (vRight * (-width / 2 + width * shotStrength - (lineWidth / 2 + linePadding))) + (vUp * (lineHeight + linePadding))).Base() );
+		meshBuilder.AdvanceVertex();
+
+		meshBuilder.Color3fv(vLineBgColor.Base());
+		meshBuilder.TexCoord2f( 0,1,0 );
+		meshBuilder.Position3fv( (vOrigin + (vForward * -1.0f) + (vRight * (-width / 2 + width * shotStrength + (lineWidth / 2 + linePadding))) + (vUp * (lineHeight + linePadding))).Base() );
+		meshBuilder.AdvanceVertex();
+
+		meshBuilder.Color3fv(vLineBgColor.Base());
+		meshBuilder.TexCoord2f( 0,1,1 );
+		meshBuilder.Position3fv( (vOrigin + (vForward * -1.0f) + (vRight * (-width / 2 + width * shotStrength + (lineWidth / 2 + linePadding))) + (vUp * -(lineHeight + linePadding))).Base() );
+		meshBuilder.AdvanceVertex();
+
+		meshBuilder.Color3fv(vLineBgColor.Base());
+		meshBuilder.TexCoord2f( 0,0,1 );
+		meshBuilder.Position3fv( (vOrigin + (vForward * -1.0f) + (vRight * (-width / 2 + width * shotStrength - (lineWidth / 2 + linePadding))) + (vUp * -(lineHeight + linePadding))).Base() );
+		meshBuilder.AdvanceVertex();
+		meshBuilder.End();
+
+		Vector vLineFgColor = Vector(1, 1, 1);
+
+		meshBuilder.Begin( pMesh, MATERIAL_QUADS, 1 );
+
+		meshBuilder.Color3fv(vLineFgColor.Base());
+		meshBuilder.TexCoord2f( 0,0,0 );
+		meshBuilder.Position3fv( (vOrigin + (vForward * -2.0f) + (vRight * (-width / 2 + width * shotStrength - lineWidth / 2)) + (vUp * lineHeight)).Base() );
+		meshBuilder.AdvanceVertex();
+
+		meshBuilder.Color3fv(vLineFgColor.Base());
+		meshBuilder.TexCoord2f( 0,1,0 );
+		meshBuilder.Position3fv( (vOrigin + (vForward * -2.0f) + (vRight * (-width / 2 + width * shotStrength + lineWidth / 2)) + (vUp * lineHeight)).Base() );
+		meshBuilder.AdvanceVertex();
+
+		meshBuilder.Color3fv(vLineFgColor.Base());
+		meshBuilder.TexCoord2f( 0,1,1 );
+		meshBuilder.Position3fv( (vOrigin + (vForward * -2.0f) + (vRight * (-width / 2 + width * shotStrength + lineWidth / 2)) + (vUp * -lineHeight)).Base() );
+		meshBuilder.AdvanceVertex();
+
+		meshBuilder.Color3fv(vLineFgColor.Base());
+		meshBuilder.TexCoord2f( 0,0,1 );
+		meshBuilder.Position3fv( (vOrigin + (vForward * -2.0f) + (vRight * (-width / 2 + width * shotStrength - lineWidth / 2)) + (vUp * -lineHeight)).Base() );
+		meshBuilder.AdvanceVertex();
+		meshBuilder.End();
+	}
+
+	pMesh->Draw();
+}
+
 int C_SDKPlayer::DrawModel( int flags )
 {
 	int retVal = BaseClass::DrawModel( flags );
 
 	//DrawPlayerCircle(this);
+
+	//if (this == GetLocalPlayer())
+	//	Draw3DStaminaBar(this);
 
 	return retVal;
 }

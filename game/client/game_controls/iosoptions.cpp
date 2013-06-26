@@ -102,7 +102,7 @@ void CIOSOptionsPanel::ApplySchemeSettings( IScheme *pScheme )
 	m_pScheme = pScheme;
 	BaseClass::ApplySchemeSettings( pScheme );
 
-	SetTitle("Player Settings", false);
+	SetTitle("IOS Settings", false);
 	SetProportional(false);
 	SetSizeable(false);
 	SetBounds(0, 0, 600, PANEL_HEIGHT);
@@ -655,6 +655,7 @@ void CGameplaySettingPanel::Update()
 CVisualSettingPanel::CVisualSettingPanel(Panel *parent, const char *panelName) : BaseClass(parent, panelName)
 {
 	m_pContent = new Panel(this, "");
+	m_pCenteredStaminaBar = new CheckButton(m_pContent, "", "Centered Stamina Bar");
 }
 
 void CVisualSettingPanel::PerformLayout()
@@ -662,14 +663,17 @@ void CVisualSettingPanel::PerformLayout()
 	BaseClass::PerformLayout();
 
 	m_pContent->SetBounds(PADDING, PADDING, GetWide() - 2 * PADDING, GetTall() - 2 * PADDING);
+	m_pCenteredStaminaBar->SetBounds(0, 0, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
 }
 
 void CVisualSettingPanel::Save()
 {
+	g_pCVar->FindVar("centeredstaminabar")->SetValue(m_pCenteredStaminaBar->IsSelected() ? 1 : 0);
 }
 
 void CVisualSettingPanel::Load()
 {
+	m_pCenteredStaminaBar->SetSelected(g_pCVar->FindVar("centeredstaminabar")->GetBool());
 }
 
 void CVisualSettingPanel::Update()
@@ -795,12 +799,13 @@ void CSoundSettingPanel::OnTick()
 
 	if (SDKGameRules()->IsIntermissionState())
 	{
-		enginesound->SetVolumeByGuid(m_nCrowdBgGuid, 0.1f);
+		float crowdBgVol = clamp(crowdBgVolScale * 0.5f, MUTED_VOLUME, 1.0f);
+		enginesound->SetVolumeByGuid(m_nCrowdBgGuid, crowdBgVol);
 	}
 	else
 	{
 		float crowdBgfrac = abs(SDKGameRules()->m_nBallZone) / 100.0f;
-		float crowdBgVol = clamp(crowdBgVolScale * (0.25f + crowdBgfrac * 0.75f), MUTED_VOLUME, 1.0f);
+		float crowdBgVol = clamp(crowdBgVolScale * (0.5f + crowdBgfrac * 0.5f), MUTED_VOLUME, 1.0f);
 		enginesound->SetVolumeByGuid(m_nCrowdBgGuid, crowdBgVol);
 
 		if (m_nCrowdEventGuid && enginesound->IsSoundStillPlaying(m_nCrowdEventGuid))

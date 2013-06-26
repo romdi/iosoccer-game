@@ -212,6 +212,8 @@ class CVisualSettingPanel : public PropertyPage, public ISettingPanel
 
 	Panel *m_pContent;
 
+	CheckButton *m_pCenteredStaminaBar;
+
 public:
 
 	CVisualSettingPanel(Panel *parent, const char *panelName);
