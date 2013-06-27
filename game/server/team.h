@@ -66,6 +66,8 @@ public:
 	virtual int  GetNumPlayers( void );
 	virtual CBasePlayer *GetPlayer( int iIndex );
 	CSDKPlayer *GetPlayerByPosIndex(int posIndex);
+	int GetPosIndexByPosType(PosTypes_t posType);
+	CSDKPlayer *GetPlayerByPosType(PosTypes_t posType);
 	int GetPosNextJoinSeconds(int posIndex);
 	void SetPosNextJoinSeconds(int posIndex, int seconds);
 	void UnblockAllPos();
@@ -182,7 +184,6 @@ public:
 	CNetworkVar(int, m_Rating);
 
 	Formation *GetFormation();
-	int GetPosIndexForPosType(PosTypes_t posType);
 	int GetFormationIndex() { return m_nFormationIndex; }
 	void SetFormationIndex(int index);
 

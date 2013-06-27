@@ -2925,6 +2925,8 @@ void CBall::UpdateCarrier()
 	}
 }
 
+extern ConVar sv_singlekeeper;
+
 void CBall::MarkOffsidePlayers()
 {
 	if (SDKGameRules()->IsIntermissionState() || m_bHasQueuedState || SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES)
@@ -2982,6 +2984,16 @@ void CBall::MarkOffsidePlayers()
 			}
 		}
 
+		// If the defending team doesn't have a keeper, just assume there is one at his goal line and increase the counter by one.
+		// This is mainly relevant for matches with sv_singlekeeper enabled when the keeper spot of the defending team is empty when the attackers play a pass.
+		// An attacker can be caught offside then, even if a defender is closer to the goal than he is.
+		// It also helps preventing abuse by keepers who go to spec during an attack to force false offsides.
+		if (!m_pPl->GetOppTeam()->GetPlayerByPosType(POS_GK))
+		{
+			nearerPlayerCount += 1;
+		}
+
+		// Require at least two opponent players on the field to consider an offside. Useful in public matches with few players.
 		if (oppPlayerCount >= 2 && nearerPlayerCount <= 1)
 		{
 			pPl->SetOffside(true);

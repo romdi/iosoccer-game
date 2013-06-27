@@ -1573,14 +1573,14 @@ void CSDKGameRules::State_Think()
 					CSDKPlayer *pKeeper = NULL;
 
 					// If ball is on left side and no keeper on left side team
-					if (m_nBallZone < 0 && !GetGlobalTeam(TEAM_A)->GetPlayerByPosIndex(GetGlobalTeam(TEAM_A)->GetPosIndexForPosType(POS_GK)))
+					if (m_nBallZone < 0 && !GetGlobalTeam(TEAM_A)->GetPlayerByPosType(POS_GK))
 					{
-						pKeeper = GetGlobalTeam(TEAM_B)->GetPlayerByPosIndex(GetGlobalTeam(TEAM_B)->GetPosIndexForPosType(POS_GK));
+						pKeeper = GetGlobalTeam(TEAM_B)->GetPlayerByPosType(POS_GK);
 					}
 					// If ball is on right side and no keeper on right side team
-					else if (m_nBallZone >= 0 && !GetGlobalTeam(TEAM_B)->GetPlayerByPosIndex(GetGlobalTeam(TEAM_B)->GetPosIndexForPosType(POS_GK)))
+					else if (m_nBallZone >= 0 && !GetGlobalTeam(TEAM_B)->GetPlayerByPosType(POS_GK))
 					{
-						pKeeper = GetGlobalTeam(TEAM_A)->GetPlayerByPosIndex(GetGlobalTeam(TEAM_A)->GetPosIndexForPosType(POS_GK));
+						pKeeper = GetGlobalTeam(TEAM_A)->GetPlayerByPosType(POS_GK);
 					}
 					
 					if (pKeeper)

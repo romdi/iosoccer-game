@@ -162,7 +162,7 @@ void CBot::FieldBotJoinTeam()
 	{
 		int startPosIndex = g_IOSRand.RandomInt(0, 10);
 		int posIndex = startPosIndex;
-		int keeperPosIndex = GetGlobalTeam(team)->GetPosIndexForPosType(POS_GK);
+		int keeperPosIndex = GetGlobalTeam(team)->GetPosIndexByPosType(POS_GK);
 		while (true)
 		{
 			CSDKPlayer *pPl = NULL;
@@ -222,11 +222,14 @@ ConVar sv_bots_fill_field("sv_bots_fill_field", "0", 0);
 void Bot_RunAll( void )
 {
 	bool keeperSpotTaken[2] = {};
-
 	int keeperPosIndices[2] = {};
 
 	for (int i = 0; i < 2; i++)
-		keeperPosIndices[i] = GetGlobalTeam(TEAM_A + i)->GetPosIndexForPosType(POS_GK);
+	{
+		keeperPosIndices[i] = GetGlobalTeam(TEAM_A + i)->GetPosIndexByPosType(POS_GK);
+		if (keeperPosIndices[i] == -1)
+			return;
+	}
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{

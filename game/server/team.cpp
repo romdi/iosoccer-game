@@ -330,10 +330,26 @@ CBasePlayer *CTeam::GetPlayer( int iIndex )
 
 CSDKPlayer *CTeam::GetPlayerByPosIndex(int posIndex)
 {
-	if (posIndex > 10 || m_PosIndexPlayerIndices[posIndex] == -1)
+	if (posIndex < 0 || posIndex > 10 || m_PosIndexPlayerIndices[posIndex] == -1)
 		return NULL;
 	else
 		return ToSDKPlayer(m_aPlayers[m_PosIndexPlayerIndices[posIndex]]);
+}
+
+int CTeam::GetPosIndexByPosType(PosTypes_t posType)
+{
+	for (int i = 0; i < GetFormation()->positions.Count(); i++)
+	{
+		if (GetFormation()->positions[i]->type == posType)
+			return i;
+	}
+
+	return -1;
+}
+
+CSDKPlayer *CTeam::GetPlayerByPosType(PosTypes_t posType)
+{
+	return GetPlayerByPosIndex(GetPosIndexByPosType(posType));
 }
 
 int CTeam::GetPosNextJoinSeconds(int posIndex)
@@ -539,17 +555,6 @@ void CTeam::AddMatchEvent(match_period_t matchState, int seconds, match_event_t 
 Formation *CTeam::GetFormation()
 {
 	return SDKGameRules()->GetFormations()[m_nFormationIndex];
-}
-
-int CTeam::GetPosIndexForPosType(PosTypes_t posType)
-{
-	for (int i = 0; i < GetFormation()->positions.Count(); i++)
-	{
-		if (GetFormation()->positions[i]->type == posType)
-			return i;
-	}
-
-	return 0;
 }
 
 void CTeam::SetFormationIndex(int index)
