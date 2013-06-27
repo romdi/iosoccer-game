@@ -546,9 +546,6 @@
     <ClCompile Include="..\shared\hintsystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="history_resource.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="hltvcamera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -999,9 +996,6 @@
     <ClCompile Include="..\shared\weapon_parse.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="weapon_selection.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="weapons_resource.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -1288,9 +1282,6 @@
       <Filter>Source Files\SDK\Hud Elements</Filter>
     </ClCompile>
     <ClCompile Include="sdk\sdk_hud_targetid.cpp">
-      <Filter>Source Files\SDK\Hud Elements</Filter>
-    </ClCompile>
-    <ClCompile Include="sdk\sdk_hud_weaponselection.cpp">
       <Filter>Source Files\SDK\Hud Elements</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\sdk\sdk_basegrenade_projectile.cpp">
@@ -1811,9 +1802,6 @@
     <ClInclude Include="..\shared\hintsystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="history_resource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="hltvcamera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -2109,9 +2097,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="viewrender.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="weapon_selection.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="weapons_resource.h">

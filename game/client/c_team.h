@@ -156,9 +156,13 @@ public:
 	CNetworkVar(int, m_Ping);
 	CNetworkVar(int, m_Rating);
 
-	CNetworkVar(int, m_nFormationIndex);
-
 	Formation *GetFormation();
+	int GetQuickTactic() { return m_eQuickTactic; }
+
+private:
+
+	CNetworkVar(int, m_nFormationIndex);
+	CNetworkVar(int, m_eQuickTactic);
 };
 
 

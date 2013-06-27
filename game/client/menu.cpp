@@ -14,7 +14,6 @@
 #include "text_message.h"
 #include "hud_macros.h"
 #include "iclientmode.h"
-#include "weapon_selection.h"
 
 #include <vgui/vgui.h>
 #include <vgui/ISurface.h>

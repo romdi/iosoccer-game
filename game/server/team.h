@@ -186,10 +186,13 @@ public:
 	Formation *GetFormation();
 	int GetFormationIndex() { return m_nFormationIndex; }
 	void SetFormationIndex(int index, bool silent);
+	int GetQuickTactic() { return m_eQuickTactic; }
+	void SetQuickTactic(QuickTactics_t quickTactic) { m_eQuickTactic = quickTactic; }
 
 private:
 
 	CNetworkVar(int, m_nFormationIndex);
+	CNetworkVar(int, m_eQuickTactic);
 };
 
 extern CUtlVector< CTeam * > g_Teams;

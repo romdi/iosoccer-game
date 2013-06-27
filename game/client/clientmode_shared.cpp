@@ -14,7 +14,6 @@
 #include "view_shared.h"
 #include "iviewrender.h"
 #include "hud_basechat.h"
-#include "weapon_selection.h"
 #include <vgui/IVGUI.h>
 #include <vgui/Cursor.h>
 #include <vgui/IPanel.h>
@@ -165,7 +164,6 @@ ClientModeShared::ClientModeShared()
 {
 	m_pViewport = NULL;
 	m_pChatElement = NULL;
-	m_pWeaponSelection = NULL;
 	m_nRootSize[ 0 ] = m_nRootSize[ 1 ] = -1;
 }
 
@@ -190,9 +188,6 @@ void ClientModeShared::Init()
 {
 	m_pChatElement = ( CBaseHudChat * )GET_HUDELEMENT( CHudChat );
 	Assert( m_pChatElement );
-
-	m_pWeaponSelection = ( CBaseHudWeaponSelection * )GET_HUDELEMENT( CHudWeaponSelection );
-	Assert( m_pWeaponSelection );
 
 	// Derived ClientMode class must make sure m_Viewport is instantiated
 	Assert( m_pViewport );
@@ -593,13 +588,6 @@ int ClientModeShared::HandleSpectatorKeyInput( int down, ButtonCode_t keynum, co
 //-----------------------------------------------------------------------------
 int ClientModeShared::HudElementKeyInput( int down, ButtonCode_t keynum, const char *pszCurrentBinding )
 {
-	if ( m_pWeaponSelection )
-	{
-		if ( !m_pWeaponSelection->KeyInput( down, keynum, pszCurrentBinding ) )
-		{
-			return 0;
-		}
-	}
 
 	return 1;
 }

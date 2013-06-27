@@ -12,7 +12,6 @@
 //
 #include "cbase.h"
 #include "hud_macros.h"
-#include "history_resource.h"
 #include "iinput.h"
 #include "clientmode.h"
 #include "in_buttons.h"
@@ -26,6 +25,7 @@
 #include <vgui_controls/AnimationController.h>
 #include <vgui/ISurface.h>
 #include "hud_lcd.h"
+#include "hudelement.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"

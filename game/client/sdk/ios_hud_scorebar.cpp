@@ -38,6 +38,8 @@
 #include "vgui_controls/AnimationController.h"
 #include "clientmode_shared.h"
 #include <time.h>
+#include "sdk_shareddefs.h"
+#include "hud_macros.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -45,10 +47,13 @@
 using namespace vgui;
 
 #define NOTIFICATION_COUNT 4
+
+enum { SCOREBAR_MARGIN = 30 };
 enum { NOTIFICATION_HEIGHT = 25 };
 enum { CENTERFLASH_HEIGHT = 100 };
 enum { EXTRAINFO_HEIGHT = 25 };
 enum { PENALTYPANEL_CENTEROFFSET = 100, PENALTYCELL_WIDTH = 39, PENALTYPANEL_HEIGHT = 30, PENALTYPANEL_PADDING = 2, PENALTYPANEL_TOPMARGIN = 30 };
+enum { QUICKTACTIC_WIDTH = 175, QUICKTACTIC_HEIGHT = 35, QUICKTACTICPANEL_MARGIN = 30 };
 
 const float slideDownDuration = 0.5f;
 const float slideUpDuration = 0.5f;
@@ -58,14 +63,6 @@ const float slideUpExp = 2.0f;
 const float flashDuration = 0.5f;
 
 const float extraInfoFadeDuration = 0.5f;
-
-struct Event_t
-{
-	Panel *pEventBox;
-	Label *pEventType;
-	Label *pEventText;
-	float startTime;
-};
 
 //-----------------------------------------------------------------------------
 // Purpose: Displays suit power (armor) on hud
@@ -77,6 +74,18 @@ class CHudScorebar : public CHudElement, public vgui::EditablePanel
 public:
 	CHudScorebar( const char *pElementName );
 	void Init( void );
+	void SelectQuickTactic(int index);
+
+	void _cdecl UserCmd_Slot1() { SelectQuickTactic(0); }
+	void _cdecl UserCmd_Slot2() { SelectQuickTactic(1); }
+	void _cdecl UserCmd_Slot3() { SelectQuickTactic(2); }
+	void _cdecl UserCmd_Slot4() { SelectQuickTactic(3); }
+	void _cdecl UserCmd_Slot5() { SelectQuickTactic(4); }
+	void _cdecl UserCmd_Slot6() { SelectQuickTactic(5); }
+	void _cdecl UserCmd_Slot7() { SelectQuickTactic(6); }
+	void _cdecl UserCmd_Slot8() { SelectQuickTactic(7); }
+	void _cdecl UserCmd_Slot9() { SelectQuickTactic(8); }
+	void _cdecl UserCmd_Slot0() { SelectQuickTactic(-1); }
 
 protected:
 	virtual void OnThink( void );
@@ -108,9 +117,36 @@ private:
 	Label *m_pExtraInfo;
 	Panel *m_pPenaltyPanels[2];
 	Panel *m_pPenaltyCells[2][5];
+
+	Panel *m_pQuickTacticPanel;
+	Label *m_pQuickTactics[QUICKTACTIC_COUNT];
 };
 
 DECLARE_HUDELEMENT( CHudScorebar );
+
+
+DECLARE_HUD_COMMAND_NAME(CHudScorebar, Slot1, "CHudScorebar");
+DECLARE_HUD_COMMAND_NAME(CHudScorebar, Slot2, "CHudScorebar");
+DECLARE_HUD_COMMAND_NAME(CHudScorebar, Slot3, "CHudScorebar");
+DECLARE_HUD_COMMAND_NAME(CHudScorebar, Slot4, "CHudScorebar");
+DECLARE_HUD_COMMAND_NAME(CHudScorebar, Slot5, "CHudScorebar");
+DECLARE_HUD_COMMAND_NAME(CHudScorebar, Slot6, "CHudScorebar");
+DECLARE_HUD_COMMAND_NAME(CHudScorebar, Slot7, "CHudScorebar");
+DECLARE_HUD_COMMAND_NAME(CHudScorebar, Slot8, "CHudScorebar");
+DECLARE_HUD_COMMAND_NAME(CHudScorebar, Slot9, "CHudScorebar");
+DECLARE_HUD_COMMAND_NAME(CHudScorebar, Slot0, "CHudScorebar");
+
+HOOK_COMMAND( slot1, Slot1 );
+HOOK_COMMAND( slot2, Slot2 );
+HOOK_COMMAND( slot3, Slot3 );
+HOOK_COMMAND( slot4, Slot4 );
+HOOK_COMMAND( slot5, Slot5 );
+HOOK_COMMAND( slot6, Slot6 );
+HOOK_COMMAND( slot7, Slot7 );
+HOOK_COMMAND( slot8, Slot8 );
+HOOK_COMMAND( slot9, Slot9 );
+HOOK_COMMAND( slot0, Slot0 );
+
 
 static CHudScorebar *g_pHudScorebar = NULL;
 
@@ -154,6 +190,13 @@ CHudScorebar::CHudScorebar( const char *pElementName ) : BaseClass(NULL, "HudSco
 		}
 	}
 
+	m_pQuickTacticPanel = new Panel(this, "");
+
+	for (int i = 0; i < QUICKTACTIC_COUNT; i++)
+	{
+		m_pQuickTactics[i] = new Label(m_pQuickTacticPanel, "", g_szQuickTacticNames[i]);
+	}
+
 	SetProportional(false);
 
 	LoadControlSettings("resource/ui/scorebars/default.res");
@@ -171,7 +214,7 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 
 	SetBounds(0, 0, ScreenWidth(), ScreenHeight());
 
-	m_pMainPanel->SetBounds(30, 30, GetWide() - 30, GetTall() - 30);
+	m_pMainPanel->SetBounds(SCOREBAR_MARGIN, SCOREBAR_MARGIN, GetWide() - SCOREBAR_MARGIN, GetTall() - SCOREBAR_MARGIN);
 
 	HFont font = m_pScheme->GetFont("IOSScorebarMedium");
 
@@ -262,6 +305,17 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 			m_pPenaltyCells[i][j]->SetBounds(PENALTYPANEL_PADDING + j * (PENALTYCELL_WIDTH + PENALTYPANEL_PADDING), PENALTYPANEL_PADDING, PENALTYCELL_WIDTH, PENALTYPANEL_HEIGHT - 2 * PENALTYPANEL_PADDING);
 		}
 	}
+
+	m_pQuickTacticPanel->SetBounds(GetWide() - QUICKTACTIC_WIDTH - QUICKTACTICPANEL_MARGIN, QUICKTACTICPANEL_MARGIN, QUICKTACTIC_WIDTH, QUICKTACTIC_COUNT * QUICKTACTIC_HEIGHT);
+	m_pQuickTacticPanel->SetVisible(false);
+
+	for (int i = 0; i < QUICKTACTIC_COUNT; i++)
+	{
+		m_pQuickTactics[i]->SetBounds(0, i * QUICKTACTIC_HEIGHT, QUICKTACTIC_WIDTH, QUICKTACTIC_HEIGHT);
+		m_pQuickTactics[i]->SetContentAlignment(Label::a_west);
+		m_pQuickTactics[i]->SetFont(m_pScheme->GetFont("IOSScorebarMedium"));
+		m_pQuickTactics[i]->SetTextInset(10, 0);
+	}	
 }
 
 //-----------------------------------------------------------------------------
@@ -330,6 +384,29 @@ void CHudScorebar::OnThink( void )
 		m_pTeamColors[team - TEAM_A][0]->SetBgColor(GetGlobalTeam(team)->Get_PrimaryKitColor());
 		m_pTeamColors[team - TEAM_A][1]->SetBgColor(GetGlobalTeam(team)->Get_SecondaryKitColor());
 		m_pTeamGoals[team - TEAM_A]->SetText(VarArgs("%d", GetGlobalTeam(team)->Get_Goals()));
+	}
+
+	for (int i = 0; i < QUICKTACTIC_COUNT; i++)
+	{
+		if (GetLocalPlayerTeam() == TEAM_A || GetLocalPlayerTeam() == TEAM_B)
+		{
+			m_pQuickTacticPanel->SetVisible(true);
+
+			if (i == GetGlobalTeam(GetLocalPlayerTeam())->GetQuickTactic())
+			{
+				m_pQuickTactics[i]->SetFgColor(Color(0, 0, 0, 255));
+				m_pQuickTactics[i]->SetBgColor(Color(255, 255, 255, 200));
+			}
+			else
+			{
+				m_pQuickTactics[i]->SetFgColor(Color(255, 255, 255, 75));
+				m_pQuickTactics[i]->SetBgColor(Color(0, 0, 0, 0));
+			}
+		}
+		else
+		{
+			m_pQuickTacticPanel->SetVisible(false);
+		}
 	}
 
 	if (m_eCurMatchEvent == MATCH_EVENT_TIMEOUT)
@@ -919,4 +996,9 @@ void CHudScorebar::LevelInit()
 	m_flInjuryTimeStart = -1;
 	m_nCurMatchEventTeam = TEAM_UNASSIGNED;
 	m_flStayDuration = 3.0f;
+}
+
+void CHudScorebar::SelectQuickTactic(int index)
+{
+	engine->ClientCmd(VarArgs("quicktactic %d", index));
 }

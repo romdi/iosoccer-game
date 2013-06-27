@@ -952,14 +952,14 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 		if (args.ArgC() < 3)
 		{
 			Warning("Player sent bad jointeam syntax\n");
-			return false;	//go away
+			return true;	//go away
 		}
 
 		int team = atoi(args[1]);
 		int posIndex = atoi(args[2]);
 
 		if (posIndex < 0 || posIndex > mp_maxplayers.GetInt() - 1 || team < TEAM_SPECTATOR || team > TEAM_B)
-			return false;
+			return true;
 
 		// Player is card banned or position is blocked due to a card ban
 		if (!SDKGameRules()->IsIntermissionState()
@@ -1042,7 +1042,7 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 	{
 		if (SDKGameRules()->IsIntermissionState() || this != GetTeam()->GetCaptain() || SDKGameRules()->AdminWantsTimeout() || GetTeam()->WantsTimeout()
 			|| GetOppTeam()->WantsTimeout() || SDKGameRules()->GetTimeoutEnd() != 0 || GetTeam()->GetTimeoutsLeft() == 0)
-			return false;
+			return true;
 
 		GetTeam()->SetTimeoutsLeft(GetTeam()->GetTimeoutsLeft() - 1);
 		GetTeam()->SetWantsTimeout(true);
@@ -1059,7 +1059,7 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 	else if (!Q_stricmp(args[0], "togglecaptaincy"))
 	{
 		if (GetTeamNumber() != TEAM_A && GetTeamNumber() != TEAM_B)
-			return false;
+			return true;
 
 		if (this == GetTeam()->GetCaptain())
 			GetTeam()->SetCaptainPosIndex(11);
@@ -1071,7 +1071,7 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 	else if (!Q_stricmp(args[0], "setfreekicktaker"))
 	{
 		if (this != GetTeam()->GetCaptain())
-			return false;
+			return true;
 
 		GetTeam()->SetFreekickTakerPosIndex(atoi(args[1]));
 		return true;
@@ -1079,7 +1079,7 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 	else if (!Q_stricmp(args[0], "setpenaltytaker"))
 	{
 		if (this != GetTeam()->GetCaptain())
-			return false;
+			return true;
 
 		GetTeam()->SetPenaltyTakerPosIndex(atoi(args[1]));
 		return true;
@@ -1087,7 +1087,7 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 	else if (!Q_stricmp(args[0], "setleftcornertaker"))
 	{
 		if (this != GetTeam()->GetCaptain())
-			return false;
+			return true;
 
 		GetTeam()->SetLeftCornerTakerPosIndex(atoi(args[1]));
 		return true;
@@ -1095,7 +1095,7 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 	else if (!Q_stricmp(args[0], "setrightcornertaker"))
 	{
 		if (this != GetTeam()->GetCaptain())
-			return false;
+			return true;
 
 		GetTeam()->SetRightCornerTakerPosIndex(atoi(args[1]));
 		return true;
@@ -1103,12 +1103,29 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 	else if (!Q_stricmp(args[0], "formation"))
 	{
 		if (args.ArgC() < 2)
-			return false;
+			return true;
 
 		if (this != GetTeam()->GetCaptain())
-			return false;
+			return true;
 
 		GetTeam()->SetFormationIndex(atoi(args[1]), false);
+		return true;
+	}
+	else if (!Q_stricmp(args[0], "quicktactic"))
+	{
+		if (args.ArgC() < 2)
+			return true;
+
+		if (this != GetTeam()->GetCaptain())
+			return true;
+
+		QuickTactics_t quickTactic = (QuickTactics_t)atoi(args[1]);
+
+		if (quickTactic == QUICKTACTIC_NONE || quickTactic == GetTeam()->GetQuickTactic())
+			GetTeam()->SetQuickTactic(QUICKTACTIC_NONE);
+		else
+			GetTeam()->SetQuickTactic(quickTactic);
+
 		return true;
 	}
 

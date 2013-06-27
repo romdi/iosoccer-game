@@ -438,7 +438,6 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClCompile Include="glow_overlay.cpp" />
     <ClCompile Include="..\shared\hintmessage.cpp" />
     <ClCompile Include="..\shared\hintsystem.cpp" />
-    <ClCompile Include="history_resource.cpp" />
     <ClCompile Include="hltvcamera.cpp" />
     <ClCompile Include="hud.cpp" />
     <ClCompile Include="hud_animationinfo.cpp" />
@@ -698,7 +697,6 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClCompile Include="warp_overlay.cpp" />
     <ClCompile Include="WaterLODMaterialProxy.cpp" />
     <ClCompile Include="..\shared\weapon_parse.cpp" />
-    <ClCompile Include="weapon_selection.cpp" />
     <ClCompile Include="weapons_resource.cpp" />
     <ClCompile Include="WorldDimsProxy.cpp" />
     <ClCompile Include="stdafx.cpp">
@@ -798,7 +796,6 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClCompile Include="sdk\sdk_hud_message.cpp" />
     <ClCompile Include="sdk\sdk_hud_stamina.cpp" />
     <ClCompile Include="sdk\sdk_hud_targetid.cpp" />
-    <ClCompile Include="sdk\sdk_hud_weaponselection.cpp" />
     <ClCompile Include="..\shared\sdk\sdk_basegrenade_projectile.cpp" />
     <ClCompile Include="sdk\sdk_fx_impacts.cpp" />
     <ClCompile Include="..\shared\sdk\sdk_fx_shared.cpp" />
@@ -970,7 +967,6 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClInclude Include="glow_overlay.h" />
     <ClInclude Include="..\shared\hintmessage.h" />
     <ClInclude Include="..\shared\hintsystem.h" />
-    <ClInclude Include="history_resource.h" />
     <ClInclude Include="hltvcamera.h" />
     <ClInclude Include="hud.h" />
     <ClInclude Include="hud_basechat.h" />
@@ -1070,7 +1066,6 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClInclude Include="viewangleanim.h" />
     <ClInclude Include="ViewConeImage.h" />
     <ClInclude Include="viewrender.h" />
-    <ClInclude Include="weapon_selection.h" />
     <ClInclude Include="weapons_resource.h" />
     <ClInclude Include="..\..\public\mathlib\amd3dx.h" />
     <ClInclude Include="..\..\public\vgui_controls\AnimationController.h" />
