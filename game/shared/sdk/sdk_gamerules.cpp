@@ -457,6 +457,8 @@ CSDKGameRules::CSDKGameRules()
 	m_nRealMatchEndTime = 0;
 
 	m_flLastMasterServerPingTime = -FLT_MAX;
+	m_bIsPingingMasterServer = false;
+
 #else
 	PrecacheMaterial("pitch/offside_line");
 	m_pOffsideLineMaterial = materials->FindMaterial( "pitch/offside_line", TEXTURE_GROUP_CLIENT_EFFECTS );
@@ -666,6 +668,7 @@ bool CSDKGameRules::ClientCommand( CBaseEntity *pEdict, const CCommand &args )
 
 ConVar sv_master_legacy_mode_hack_enabled("sv_master_legacy_mode_hack_enabled", "1", 0);
 ConVar sv_master_legacy_mode_hack_interval("sv_master_legacy_mode_hack_interval", "5", 0);
+ConVar sv_master_legacy_mode_hack_duration("sv_master_legacy_mode_hack_duration", "0.05", 0);
 
 void CSDKGameRules::Think()
 {
@@ -695,12 +698,20 @@ void CSDKGameRules::Think()
 		return;
 	}
 
-	if (sv_master_legacy_mode_hack_enabled.GetBool() && gpGlobals->curtime >= m_flLastMasterServerPingTime + sv_master_legacy_mode_hack_interval.GetFloat() * 60)
+	if (sv_master_legacy_mode_hack_enabled.GetBool())
 	{
-		engine->ServerCommand("sv_master_legacy_mode 0\n");
-		engine->ServerCommand("heartbeat\n");
-		engine->ServerCommand("sv_master_legacy_mode 1\n");
-		m_flLastMasterServerPingTime = gpGlobals->curtime;
+		if (!m_bIsPingingMasterServer && gpGlobals->curtime >= m_flLastMasterServerPingTime + sv_master_legacy_mode_hack_interval.GetFloat() * 60)
+		{
+			engine->ServerCommand("sv_master_legacy_mode 0\n");
+			engine->ServerCommand("heartbeat\n");
+			m_bIsPingingMasterServer = true;
+			m_flLastMasterServerPingTime = gpGlobals->curtime;
+		}
+		else if (m_bIsPingingMasterServer && gpGlobals->curtime >= m_flLastMasterServerPingTime + sv_master_legacy_mode_hack_duration.GetFloat() * 60)
+		{
+			engine->ServerCommand("sv_master_legacy_mode 1\n");
+			m_bIsPingingMasterServer = false;
+		}
 	}
 
 	//if (GetMapRemainingTime() < 0)

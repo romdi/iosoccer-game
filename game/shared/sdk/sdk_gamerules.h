@@ -288,6 +288,7 @@ public:
 
 protected:
 	float m_flLastMasterServerPingTime;
+	bool m_bIsPingingMasterServer;
 
 	float m_flStateTimeLeft;
 	float m_flNextPenalty;
