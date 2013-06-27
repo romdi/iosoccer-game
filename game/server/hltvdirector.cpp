@@ -267,6 +267,7 @@ const char** CHLTVDirector::GetModEvents()
 		"set_piece",
 		"spec_target_updated",
 		"start_timeout",
+		"team_formation",
 		"timeout_pending",
 		"wakeupcall",
 		NULL

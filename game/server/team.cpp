@@ -557,10 +557,22 @@ Formation *CTeam::GetFormation()
 	return SDKGameRules()->GetFormations()[m_nFormationIndex];
 }
 
-void CTeam::SetFormationIndex(int index)
+void CTeam::SetFormationIndex(int index, bool silent)
 {
 	if (index == m_nFormationIndex || index < 0 || index > SDKGameRules()->GetFormations().Count() - 1)
 		return;
+
+	if (!silent)
+	{
+		IGameEvent *pEvent = gameeventmanager->CreateEvent("team_formation");
+		if (pEvent)
+		{
+			pEvent->SetInt("team", GetTeamNumber());
+			pEvent->SetInt("old_formation", m_nFormationIndex);
+			pEvent->SetInt("new_formation", index);
+			gameeventmanager->FireEvent(pEvent);
+		}
+	}
 
 	m_nFormationIndex = index;
 }

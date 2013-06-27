@@ -1401,9 +1401,12 @@ static void OnMaxPlayersChange(IConVar *var, const char *pOldValue, float flOldV
 		SDKGameRules()->SetUseOldMaxplayers(true);
 	}
 
-	for (int i = 0; i < g_Teams.Count(); i++)
+	for (int team = TEAM_A; team <= TEAM_B; team++)
 	{
-		g_Teams[i]->SetFormationIndex(0);
+		if (GetGlobalTeam(team))
+		{
+			GetGlobalTeam(team)->SetFormationIndex(0, true);
+		}
 	}
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++)

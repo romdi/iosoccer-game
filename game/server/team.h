@@ -185,7 +185,7 @@ public:
 
 	Formation *GetFormation();
 	int GetFormationIndex() { return m_nFormationIndex; }
-	void SetFormationIndex(int index);
+	void SetFormationIndex(int index, bool silent);
 
 private:
 

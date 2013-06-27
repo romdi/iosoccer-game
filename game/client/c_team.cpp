@@ -588,7 +588,8 @@ C_Team *GetPlayersTeam( C_BasePlayer *pPlayer )
 
 Formation *C_Team::GetFormation()
 {
-	return SDKGameRules()->GetFormations()[m_nFormationIndex];
+	// FIXME: Clamping this to avoid problems when mp_maxplayers is lowered, since mp_maxplayers seems to get synced before other variables do
+	return SDKGameRules()->GetFormations()[clamp(m_nFormationIndex, 0, SDKGameRules()->GetFormations().Count() - 1)];
 }
 
 //-----------------------------------------------------------------------------

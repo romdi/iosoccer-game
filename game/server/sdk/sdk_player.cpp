@@ -1108,7 +1108,7 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 		if (this != GetTeam()->GetCaptain())
 			return false;
 
-		GetTeam()->SetFormationIndex(atoi(args[1]));
+		GetTeam()->SetFormationIndex(atoi(args[1]), false);
 		return true;
 	}
 

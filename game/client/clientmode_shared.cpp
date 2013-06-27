@@ -207,6 +207,7 @@ void ClientModeShared::Init()
 	ListenForGameEvent( "player_changeclub" );
 	ListenForGameEvent( "teamplay_broadcast_audio" );
 	ListenForGameEvent( "achievement_earned" );
+	ListenForGameEvent( "team_formation" );
 
 #ifndef _XBOX
 	HLTVCamera()->Init();
@@ -1109,6 +1110,25 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 				}
 			}
 		}
+	}
+	else if ( Q_strcmp( "team_formation", eventname ) == 0 )
+	{
+		wchar_t wszTeamName[MAX_SHORTTEAMNAME_LENGTH];
+		g_pVGuiLocalize->ConvertANSIToUnicode( GetGlobalTeam(event->GetInt("team"))->Get_TeamCode(), wszTeamName, sizeof(wszTeamName) );
+
+		wchar_t wszOldFormation[16];
+		g_pVGuiLocalize->ConvertANSIToUnicode( SDKGameRules()->GetFormations()[event->GetInt("old_formation")]->name, wszOldFormation, sizeof(wszOldFormation) );
+
+		wchar_t wszNewFormation[16];
+		g_pVGuiLocalize->ConvertANSIToUnicode( SDKGameRules()->GetFormations()[event->GetInt("new_formation")]->name, wszNewFormation, sizeof(wszNewFormation) );
+
+		wchar_t wszLocalized[128];
+		g_pVGuiLocalize->ConstructString( wszLocalized, sizeof( wszLocalized ), g_pVGuiLocalize->Find( "#team_formation_changed" ), 3, wszTeamName, wszOldFormation, wszNewFormation );
+
+		char szLocalized[128];
+		g_pVGuiLocalize->ConvertUnicodeToANSI( wszLocalized, szLocalized, sizeof(szLocalized) );
+
+		hudChat->Printf( CHAT_FILTER_SERVERMSG, "%s", szLocalized );
 	}
 	else
 	{
