@@ -22,7 +22,6 @@
 #include <vgui_controls/AnimationController.h>
 #include "vgui_int.h"
 #include "hud_macros.h"
-#include "hltvcamera.h"
 #include "particlemgr.h"
 #include "c_vguiscreen.h"
 #include "c_team.h"
@@ -36,6 +35,7 @@
 #include "c_ball.h"
 #include "in_buttons.h"
 #include "c_ios_mapentities.h"
+#include "ios_camera.h"
 #if defined( _X360 )
 #include "xbox/xbox_console.h"
 #endif
@@ -204,9 +204,8 @@ void ClientModeShared::Init()
 	ListenForGameEvent( "achievement_earned" );
 	ListenForGameEvent( "team_formation" );
 
-#ifndef _XBOX
-	HLTVCamera()->Init();
-#endif
+	Camera()->Init();
+
 	m_CursorNone = vgui::dc_none;
 
 	HOOK_MESSAGE( VGUIMenu );
@@ -249,118 +248,13 @@ bool ClientModeShared::CreateMove( float flInputSampleTime, CUserCmd *cmd )
 	return pPlayer->CreateMove( flInputSampleTime, cmd );
 }
 
-//ios
-ConVar cam_firstperson( "cam_firstperson", "0", FCVAR_ARCHIVE, "Enable experimental firstperson camera with visible player model");
-ConVar cam_firstperson_xy( "cam_firstperson_xy", "15", FCVAR_ARCHIVE, "X/Y offset");
-ConVar cam_firstperson_z( "cam_firstperson_z", "5", FCVAR_ARCHIVE, "Z offset");
-
-ConVar cam_height("cam_height", "25", FCVAR_ARCHIVE, "Z offset in thirdperson mode");
-ConVar cam_alt("cam_alt", "0", FCVAR_ARCHIVE, "Alternative thirdperson mode");
-ConVar cam_alt_dist("cam_alt_dist", "100", FCVAR_ARCHIVE, "Camera distance in alternative thirdperson mode");
-
-ConVar cl_goal_opacity("cl_goal_opacity", "0.25", FCVAR_ARCHIVE, "Goal opacity when it obstructs the view");
-ConVar cl_goal_opacity_fieldoffset("cl_goal_opacity_fieldoffset", "20", FCVAR_ARCHIVE, "Offset from the field end where to start making it transparent");
-
-void CheckAutoTransparentProps(CViewSetup *pSetup)
-{
-	float opacity = clamp(cl_goal_opacity.GetFloat(), 0.0f, 1.0f);
-
-	for (int i = gpGlobals->maxClients; i <= ClientEntityList().GetHighestEntityIndex(); i++)
-	{
-		C_BaseEntity *pEnt = ClientEntityList().GetBaseEntity(i);
-		if(!dynamic_cast<C_AutoTransparentProp *>(pEnt))
-			continue;
-
-		if (opacity != 1.0f && (pSetup->origin.y <= SDKGameRules()->m_vFieldMin.GetY() + cl_goal_opacity_fieldoffset.GetFloat() && pEnt->GetLocalOrigin().y < SDKGameRules()->m_vKickOff.GetY()
-			|| pSetup->origin.y >= SDKGameRules()->m_vFieldMax.GetY() - cl_goal_opacity_fieldoffset.GetFloat() && pEnt->GetLocalOrigin().y > SDKGameRules()->m_vKickOff.GetY()))
-		{
-			pEnt->SetRenderMode(kRenderTransColor);
-			pEnt->SetRenderColorA(opacity * 255);
-		}
-		else
-		{
-			pEnt->SetRenderMode(kRenderNormal);
-		}
-	}
-}
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : *pSetup - 
 //-----------------------------------------------------------------------------
 void ClientModeShared::OverrideView( CViewSetup *pSetup )
 {
-	QAngle camAngles;
 
-	// Let the player override the view.
-	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
-	if(!pPlayer)
-		return;
-
-	if (pPlayer->IsObserver() && pPlayer->GetObserverMode() != OBS_MODE_IN_EYE && pPlayer->GetObserverMode() != OBS_MODE_CHASE)
-		return;
-
-	//pPlayer->OverrideView( pSetup );
-
-	if( ::input->CAM_IsThirdPerson() )
-	{
-		Vector cam_ofs = vec3_origin;
-
-		::input->CAM_GetCameraOffset( cam_ofs );
-
-		camAngles[ PITCH ] = cam_ofs[ PITCH ];
-		camAngles[ YAW ] = cam_ofs[ YAW ];
-		camAngles[ ROLL ] = 0;		
-
-		Vector camForward, camRight, camUp;
-		AngleVectors( camAngles, &camForward, &camRight, &camUp );
-
-		Vector oldOrigin = pSetup->origin;
-
-		if ((pPlayer->m_nButtons & IN_ZOOM)
-			&& (pPlayer->GetTeamNumber() == TEAM_A || pPlayer->GetTeamNumber() == TEAM_B)
-			&& g_PR->GetTeamPosType(GetLocalPlayerIndex()) == POS_GK
-			&& GetBall() && Sign(GetBall()->GetLocalOrigin().y - SDKGameRules()->m_vKickOff.GetY()) == pPlayer->GetTeam()->m_nForward)
-		{
-			pSetup->origin = SDKGameRules()->m_vKickOff;
-			pSetup->origin.z += 500;
-			pSetup->origin.y += pPlayer->GetTeam()->m_nForward * ((SDKGameRules()->m_vFieldMax.GetY() - SDKGameRules()->m_vFieldMin.GetY()) * (1.0f / 8.0f));
-			pSetup->angles = camAngles;
-		}
-		else
-		{
-			if (cam_alt.GetBool())
-			{
-				Vector xyForward = Vector(camForward.x, camForward.y, 0);
-				xyForward.NormalizeInPlace();
-				VectorMA( pSetup->origin, -cam_alt_dist.GetInt(), xyForward, pSetup->origin );		
-			}
-			else
-			{
-				VectorMA( pSetup->origin, -cam_ofs[ ROLL ], camForward, pSetup->origin );
-			}
-
-			//ios
-			if (cam_firstperson.GetBool())
-			{
-				Vector firstpersonOffset = camForward;
-				firstpersonOffset.z = 0;
-				VectorNormalize(firstpersonOffset);
-				firstpersonOffset *= cam_firstperson_xy.GetFloat();
-				firstpersonOffset.z = cam_firstperson_z.GetFloat();
-				pSetup->origin += firstpersonOffset;
-			}
-			else
-			{
-				pSetup->origin.z += cam_height.GetInt();
-			}
-
-			// Override angles from third person camera
-			VectorCopy( camAngles, pSetup->angles );
-		}
-	}
-
-	CheckAutoTransparentProps(pSetup);
 }
 
 //-----------------------------------------------------------------------------
@@ -526,10 +420,10 @@ int	ClientModeShared::KeyInput( int down, ButtonCode_t keynum, const char *pszCu
 	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
 
 	// if ingame spectator mode, let spectator input intercept key event here
-	if( pPlayer &&
-		( pPlayer->GetObserverMode() > OBS_MODE_DEATHCAM ) &&
-		!(GetReplayManager() && GetReplayManager()->IsReplaying()) && //TODO: Remove once it works properly in replay mode
-		!HandleSpectatorKeyInput( down, keynum, pszCurrentBinding ) )
+	if( pPlayer
+		&& pPlayer->GetObserverMode() != OBS_MODE_NONE
+		&& !(GetReplayManager() && GetReplayManager()->IsReplaying()) //TODO: Remove once it works properly in replay mode
+		&& !HandleSpectatorKeyInput( down, keynum, pszCurrentBinding ) )
 	{
 		return 0;
 	}
@@ -560,12 +454,12 @@ int ClientModeShared::HandleSpectatorKeyInput( int down, ButtonCode_t keynum, co
 		m_pViewport->ShowPanel( PANEL_SPECMENU, true );
 		return 0; // we handled it, don't handle twice or send to server
 	}
-	else if ( down && pszCurrentBinding && Q_strcmp( pszCurrentBinding, "+moveright" ) == 0 && GetSpectatorMode() != OBS_MODE_ROAMING)
+	else if ( down && pszCurrentBinding && Q_strcmp( pszCurrentBinding, "+moveright" ) == 0 && Camera()->GetMode() != OBS_MODE_ROAMING)
 	{
 		engine->ClientCmd( "spec_next" );
 		return 0;
 	}
-	else if ( down && pszCurrentBinding && Q_strcmp( pszCurrentBinding, "+moveleft" ) == 0 && GetSpectatorMode() != OBS_MODE_ROAMING)
+	else if ( down && pszCurrentBinding && Q_strcmp( pszCurrentBinding, "+moveleft" ) == 0 && Camera()->GetMode() != OBS_MODE_ROAMING)
 	{
 		engine->ClientCmd( "spec_prev" );
 		return 0;
@@ -992,20 +886,6 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 		if ( (GetLocalTeam() && GetLocalTeam()->GetTeamNumber() == team) )
 		{
 			bValidTeam = true;
-		}
-
-		//If we're in the spectator team then we should be getting whatever messages the person I'm spectating gets.
-		if ( bValidTeam == false )
-		{
-			CBasePlayer *pSpectatorTarget = UTIL_PlayerByIndex( GetSpectatorTarget() );
-
-			if ( pSpectatorTarget && (GetSpectatorMode() == OBS_MODE_IN_EYE || GetSpectatorMode() == OBS_MODE_CHASE) )
-			{
-				if ( pSpectatorTarget->GetTeamNumber() == team )
-				{
-					bValidTeam = true;
-				}
-			}
 		}
 
 		if ( team == 0 && GetLocalTeam() > 0 )

@@ -223,8 +223,6 @@ public:
 	void State_Transition( SDKPlayerState newState );
 	SDKPlayerState State_Get() const;				// Get the current state.
 
-	virtual bool	ModeWantsSpectatorGUI( int iMode ) { return ( iMode != OBS_MODE_DEATHCAM && iMode != OBS_MODE_FREEZECAM ); }
-
 	virtual const Vector	GetPlayerMins( void ) const; // uses local player
 	virtual const Vector	GetPlayerMaxs( void ) const; // uses local player
 

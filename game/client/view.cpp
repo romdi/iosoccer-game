@@ -26,7 +26,6 @@
 #include "igameevents.h"
 #include "smoke_fog_overlay.h"
 #include "bitmap/tgawriter.h"
-#include "hltvcamera.h"
 #include "input.h"
 #include "filesystem.h"
 #include "materialsystem/itexture.h"
@@ -556,38 +555,9 @@ void CViewRender::SetUpView()
 	partition->SuppressLists( PARTITION_ALL_CLIENT_EDICTS, false );
 
 	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
-
-	//if ( engine->IsHLTV() )
-	//{
-	//	HLTVCamera()->CalcView( m_View.origin, m_View.angles, m_View.fov );
-	//}
-	//else
+	if (pPlayer)
 	{
-		// FIXME: Are there multiple views? If so, then what?
-		// FIXME: What happens when there's no player?
-		if (pPlayer)
-		{
-			pPlayer->CalcView( m_View.origin, m_View.angles, m_View.zNear, m_View.zFar, m_View.fov );
-
-			// If we are looking through another entities eyes, then override the angles/origin for m_View
-			int viewentity = render->GetViewEntity();
-
-			if ( !g_nKillCamMode && (pPlayer->entindex() != viewentity) )
-			{
-				C_BaseEntity *ve = cl_entitylist->GetEnt( viewentity );
-				if ( ve )
-				{
-					VectorCopy( ve->GetAbsOrigin(), m_View.origin );
-					VectorCopy( ve->GetAbsAngles(), m_View.angles );
-				}
-			}
-
-			//pPlayer->CalcViewModelView( m_View.origin, m_View.angles );
-		}
-
-		// Even if the engine is paused need to override the view
-		// for keeping the camera control during pause.
-		g_pClientMode->OverrideView( &m_View );
+		pPlayer->CalcView( m_View.origin, m_View.angles, m_View.zNear, m_View.zFar, m_View.fov );
 	}
 
 	// give the toolsystem a chance to override the view

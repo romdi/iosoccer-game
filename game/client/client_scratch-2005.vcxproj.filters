@@ -546,9 +546,6 @@
     <ClCompile Include="..\shared\hintsystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="hltvcamera.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="hud.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -598,9 +595,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\igamesystem.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="in_camera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="in_joystick.cpp">
@@ -1368,9 +1362,6 @@
     <ClCompile Include="sdk\c_ball.cpp">
       <Filter>Source Files\SDK</Filter>
     </ClCompile>
-    <ClCompile Include="sdk\c_ios_tvcamera.cpp">
-      <Filter>Source Files\SDK</Filter>
-    </ClCompile>
     <ClCompile Include="game_controls\statsmenu.cpp">
       <Filter>Source Files\game_controls</Filter>
     </ClCompile>
@@ -1402,6 +1393,9 @@
       <Filter>Source Files\SDK</Filter>
     </ClCompile>
     <ClCompile Include="ios_rendertargets.cpp">
+      <Filter>Source Files\SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\ios_camera.cpp">
       <Filter>Source Files\SDK</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1800,9 +1794,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\hintsystem.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="hltvcamera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="hud.h">
@@ -3137,9 +3128,6 @@
     <ClInclude Include="sdk\c_ball.h">
       <Filter>Source Files\SDK</Filter>
     </ClInclude>
-    <ClInclude Include="sdk\c_ios_tvcamera.h">
-      <Filter>Source Files\SDK</Filter>
-    </ClInclude>
     <ClInclude Include="game_controls\statsmenu.h">
       <Filter>game_controls Header Files</Filter>
     </ClInclude>
@@ -3171,6 +3159,9 @@
       <Filter>Source Files\SDK</Filter>
     </ClInclude>
     <ClInclude Include="ios_rendertargets.h">
+      <Filter>Source Files\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="sdk\ios_camera.h">
       <Filter>Source Files\SDK</Filter>
     </ClInclude>
   </ItemGroup>

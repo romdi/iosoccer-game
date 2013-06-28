@@ -807,25 +807,25 @@ void CSDKPlayer::PhysObjectWake()
 
 void CSDKPlayer::State_OBSERVER_MODE_Enter()
 {
-	m_iObserverLastMode = OBS_MODE_TVCAM;
-
 	AddEffects(EF_NODRAW);
-	SetMoveType(MOVETYPE_OBSERVER);
+	SetMoveType(MOVETYPE_NONE);
 	AddSolidFlags(FSOLID_NOT_SOLID);
 	PhysObjectSleep();
 
-	if ( !IsObserver() )
-	{
-		// set position to last view offset
-		SetAbsOrigin( GetAbsOrigin() + GetViewOffset() );
-		SetViewOffset( vec3_origin );
-	}
+	//if ( !IsObserver() )
+	//{
+	//	// set position to last view offset
+	//	SetAbsOrigin( GetAbsOrigin() + GetViewOffset() );
+	//	SetViewOffset( vec3_origin );
+	//}
+
+	SetViewOffset(VEC_VIEW);
 	
 	m_afPhysicsFlags |= PFLAG_OBSERVER;
 
 	SetGroundEntity( (CBaseEntity *)NULL );
 
-	SetObserverMode( m_iObserverLastMode );
+	SetObserverMode(OBS_MODE_TVCAM);
 
 	if ( gpGlobals->eLoadType != MapLoad_Background )
 	{
@@ -835,31 +835,6 @@ void CSDKPlayer::State_OBSERVER_MODE_Enter()
 
 void CSDKPlayer::State_OBSERVER_MODE_PreThink()
 {
-	//Tony; if we're in eye, or chase, validate the target - if it's invalid, find a new one, or go back to roaming
-	if (  m_iObserverMode == OBS_MODE_IN_EYE || m_iObserverMode == OBS_MODE_CHASE )
-	{
-		//Tony; if they're not on a spectating team use the cbaseplayer validation method.
-		if ( GetTeamNumber() != TEAM_SPECTATOR )
-			ValidateCurrentObserverTarget();
-		else
-		{
-			if ( !IsValidObserverTarget( m_hObserverTarget.Get() ) )
-			{
-				// our target is not valid, try to find new target
-				CBaseEntity * target = FindNextObserverTarget( false );
-				if ( target )
-				{
-					// switch to new valid target
-					SetObserverTarget( target );	
-				}
-				else
-				{
-					// let player roam around
-					ForceObserverMode( OBS_MODE_ROAMING );
-				}
-			}
-		}
-	}
 }
 
 void CSDKPlayer::State_OBSERVER_MODE_Leave()
@@ -869,11 +844,6 @@ void CSDKPlayer::State_OBSERVER_MODE_Leave()
 
 	if ( m_iObserverMode == OBS_MODE_NONE )
 		return;
-
-	if ( m_iObserverMode  > OBS_MODE_DEATHCAM )
-	{
-		m_iObserverLastMode = m_iObserverMode;
-	}
 
 	m_iObserverMode.Set( OBS_MODE_NONE );
 
@@ -894,6 +864,8 @@ void CSDKPlayer::State_ACTIVE_Enter()
 	//SetContextThink( &CSDKPlayer::SDKPushawayThink, gpGlobals->curtime + PUSHAWAY_THINK_INTERVAL, SDK_PUSHAWAY_THINK_CONTEXT );
 	RemoveEffects(EF_NODRAW);
 	SetViewOffset(VEC_VIEW);
+
+	SetObserverMode(OBS_MODE_NONE);
 }
 
 void CSDKPlayer::State_ACTIVE_PreThink()

@@ -25,7 +25,7 @@
 
 #include <game/client/iviewport.h>
 #include "commandmenu.h"
-#include "hltvcamera.h"
+#include "ios_camera.h"
 
 #include <vgui_controls/TextEntry.h>
 #include <vgui_controls/Panel.h>
@@ -126,8 +126,8 @@ CSpectatorMenu::CSpectatorMenu( IViewPort *pViewPort ) : Frame( NULL, PANEL_SPEC
 	menu = new CommandMenu(m_pViewOptions, "spectatormodes", gViewPortInterface);
 	menu->AddMenuItem("TV Camera", VarArgs("spec_mode %d", OBS_MODE_TVCAM), this);
 	menu->AddMenuItem("Roaming", VarArgs("spec_mode %d", OBS_MODE_ROAMING), this);
-	menu->AddMenuItem("Free Chase", VarArgs("spec_mode %d", OBS_MODE_CHASE), this);
-	menu->AddMenuItem("Locked Chase", VarArgs("spec_mode %d", OBS_MODE_IN_EYE), this);
+	menu->AddMenuItem("Free Chase", VarArgs("spec_mode %d", OBS_MODE_FREE_CHASE), this);
+	menu->AddMenuItem("Locked Chase", VarArgs("spec_mode %d", OBS_MODE_LOCKED_CHASE), this);
 	m_pViewOptions->SetMenu(menu);	// attach menu to combo box
 
 	LoadControlSettings("Resource/UI/BottomSpectator.res");
@@ -185,15 +185,10 @@ void CSpectatorMenu::OnTextChanged(KeyValues *data)
 
 			int playernum;
 
-			if (engine->IsHLTV())
-			{
-				if (HLTVCamera()->GetPrimaryTarget())
-					playernum = HLTVCamera()->GetPrimaryTarget()->entindex();
-				else
-					playernum = 0;
-			}
+			if (Camera()->GetTarget())
+				playernum = Camera()->GetTarget()->entindex();
 			else
-				playernum = GetSpectatorTarget();
+				playernum = 0;
 
 			bool update = false;
 
@@ -215,10 +210,7 @@ void CSpectatorMenu::OnTextChanged(KeyValues *data)
 
 			if (update)
 			{
-				if (engine->IsHLTV())
-					HLTVCamera()->SetPrimaryTarget(kv->GetInt("index"));
-				else
-					engine->ClientCmd( VarArgs("spec_player %d", kv->GetInt("index")) );
+				Camera()->SetTarget(kv->GetInt("index"));
 			}
 		}
 	}
@@ -253,15 +245,10 @@ void CSpectatorMenu::FireGameEvent( IGameEvent * event )
 		// make sure the player combo box is up to date
 		int playernum;
 
-		if (engine->IsHLTV())
-		{
-			if (HLTVCamera()->GetPrimaryTarget())
-				playernum = HLTVCamera()->GetPrimaryTarget()->entindex();
-			else
-				playernum = 0;
-		}
+		if (Camera()->GetTarget())
+			playernum = Camera()->GetTarget()->entindex();
 		else
-			playernum = GetSpectatorTarget();
+			playernum = 0;
 
 		if ( playernum < 1 || playernum > gpGlobals->maxClients )
 		{
@@ -378,15 +365,10 @@ void CSpectatorMenu::Update( void )
 	// make sure the player combo box is up to date
 	int playernum;
 
-	if (engine->IsHLTV())
-	{
-		if (HLTVCamera()->GetPrimaryTarget())
-			playernum = HLTVCamera()->GetPrimaryTarget()->entindex();
-		else
-			playernum = 0;
-	}
+	if (Camera()->GetTarget())
+		playernum = Camera()->GetTarget()->entindex();
 	else
-		playernum = GetSpectatorTarget();
+		playernum = 0;
 
 	// If ball is spec target
 	if (playernum > gpGlobals->maxClients)
@@ -560,10 +542,6 @@ void CSpectatorGUI::ShowPanel(bool bShow)
 	}
 }
 
-bool CSpectatorGUI::ShouldShowPlayerLabel( int specmode )
-{
-	return ( (specmode == OBS_MODE_IN_EYE) ||	(specmode == OBS_MODE_CHASE) );
-}
 //-----------------------------------------------------------------------------
 // Purpose: Updates the gui, rearranges elements
 //-----------------------------------------------------------------------------
@@ -578,25 +556,6 @@ void CSpectatorGUI::UpdateTimer()
 {
 }
 
-static void ForwardSpecCmdToServer( const CCommand &args )
-{
-	if ( engine->IsPlayingDemo() )
-		return;
-
-	if ( args.ArgC() == 1 )
-	{
-		// just forward the command without parameters
-		engine->ServerCmd( args[ 0 ] );
-	}
-	else if ( args.ArgC() == 2 )
-	{
-		// forward the command with parameter
-		char command[128];
-		Q_snprintf( command, sizeof(command), "%s \"%s\"", args[ 0 ], args[ 1 ] );
-		engine->ServerCmd( command );
-	}
-}
-
 CON_COMMAND_F( spec_next, "Spectate next player", FCVAR_CLIENTCMD_CAN_EXECUTE )
 {
 	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
@@ -604,14 +563,7 @@ CON_COMMAND_F( spec_next, "Spectate next player", FCVAR_CLIENTCMD_CAN_EXECUTE )
 	if ( !pPlayer || !pPlayer->IsObserver() )
 		return;
 
-	if ( engine->IsHLTV() )
-	{
-		HLTVCamera()->SpecNextPlayer( false );
-	}
-	else
-	{
-		ForwardSpecCmdToServer( args );
-	}
+	Camera()->SpecNextPlayer( false );
 }
 
 CON_COMMAND_F( spec_prev, "Spectate previous player", FCVAR_CLIENTCMD_CAN_EXECUTE )
@@ -621,14 +573,7 @@ CON_COMMAND_F( spec_prev, "Spectate previous player", FCVAR_CLIENTCMD_CAN_EXECUT
 	if ( !pPlayer || !pPlayer->IsObserver() )
 		return;
 
-	if ( engine->IsHLTV() )
-	{
-		HLTVCamera()->SpecNextPlayer( true );
-	}
-	else
-	{
-		ForwardSpecCmdToServer( args );
-	}
+	Camera()->SpecNextPlayer( true );
 }
 
 CON_COMMAND_F( spec_mode, "Set spectator mode", FCVAR_CLIENTCMD_CAN_EXECUTE )
@@ -638,33 +583,24 @@ CON_COMMAND_F( spec_mode, "Set spectator mode", FCVAR_CLIENTCMD_CAN_EXECUTE )
 	if ( !pPlayer || !pPlayer->IsObserver() )
 		return;
 
-	if ( engine->IsHLTV() )
+	// we can choose any mode, not loked to PVS
+	int mode;
+
+	if ( args.ArgC() == 2 )
 	{
-		// we can choose any mode, not loked to PVS
-		int mode;
-
-		if ( args.ArgC() == 2 )
-		{
-			// set specifc mode
-			mode = Q_atoi( args[1] );
-		}
-		else
-		{
-			// set next mode 
-			mode = HLTVCamera()->GetMode() + 1;
-
-			if ( mode > LAST_PLAYER_OBSERVERMODE )
-				mode = OBS_MODE_IN_EYE;
-		}
-
-		// handle the command clientside
-		HLTVCamera()->SetMode( mode );
+		// set specifc mode
+		mode = Q_atoi( args[1] );
 	}
 	else
 	{
-		// we spectate on a game server, forward command
-		ForwardSpecCmdToServer( args );
+		// set next mode 
+		mode = Camera()->GetMode() + 1;
+
+		if ( mode > LAST_PLAYER_OBSERVERMODE )
+			mode = OBS_MODE_FREE_CHASE;
 	}
+
+	Camera()->SetMode( mode );
 }
 
 CON_COMMAND_F( spec_player, "Spectate player by name", FCVAR_CLIENTCMD_CAN_EXECUTE )
@@ -677,14 +613,7 @@ CON_COMMAND_F( spec_player, "Spectate player by name", FCVAR_CLIENTCMD_CAN_EXECU
 	if ( args.ArgC() != 2 )
 		return;
 
-	if ( engine->IsHLTV() )
-	{
-		HLTVCamera()->SpecNamedPlayer( args[1] );
-	}
-	else
-	{
-		ForwardSpecCmdToServer( args );
-	}
+	Camera()->SpecNamedPlayer( args[1] );
 }
 
 

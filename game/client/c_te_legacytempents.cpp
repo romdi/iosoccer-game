@@ -3340,13 +3340,6 @@ void CTempEnts::CSEjectBrass( const Vector &vecPosition, const QAngle &angVeloci
 
 	bool bViewModelBrass = false;
 
-	if ( pShooter && pShooter->GetObserverMode() == OBS_MODE_IN_EYE )
-	{
-		// we are spectating the shooter in first person view
-		pShooter = ToBasePlayer( pShooter->GetObserverTarget() );
-		bViewModelBrass = true;
-	}
-
 	if ( pShooter )
 	{
 		pTemp->clientIndex = pShooter->entindex();

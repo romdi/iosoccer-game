@@ -52,9 +52,6 @@ public:
 #define CHASE_CAM_DISTANCE		96.0f
 #define WALL_OFFSET				6.0f
 
-
-bool IsInFreezeCam( void );
-
 //-----------------------------------------------------------------------------
 // Purpose: Base Player class
 //-----------------------------------------------------------------------------
@@ -134,7 +131,6 @@ public:
 	// observer mode
 	virtual int			GetObserverMode() const;
 	virtual CBaseEntity	*GetObserverTarget() const;
-	void			SetObserverTarget( EHANDLE hObserverTarget );
 
 	bool			AudioStateIsUnderwater( Vector vecMainViewOrigin );
 
@@ -393,16 +389,6 @@ public:
 
 protected:
 
-	//Tony; made all of these virtual so mods can override.
-	virtual void		CalcPlayerView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
-	virtual void		CalcObserverView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
-	virtual Vector		GetChaseCamViewOffset( CBaseEntity *target );
-	virtual void		CalcChaseCamView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
-	virtual void		CalcInEyeCamView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
-	virtual void		CalcRoamingView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov);
-	virtual void		CalcFreezeCamView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
-	virtual void		CalcTVCamView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
-
 	// Check to see if we're in vgui input mode...
 	void DetermineVguiInputMode( CUserCmd *pCmd );
 
@@ -419,12 +405,9 @@ protected:
 
 // DATA
 	int				m_iObserverMode;	// if in spectator mode != 0
-	EHANDLE			m_hObserverTarget;	// current observer target
-	float			m_flObserverChaseDistance; // last distance to observer traget
 	Vector			m_vecFreezeFrameStart;
 	float			m_flFreezeFrameStartTime;	// Time at which we entered freeze frame observer mode
 	float			m_flFreezeFrameDistance;
-	bool			m_bWasFreezeFraming; 
 	float			m_flDeathTime;		// last time player died
 
 	float			m_flStepSoundTime;

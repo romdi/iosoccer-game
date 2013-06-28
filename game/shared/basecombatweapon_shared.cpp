@@ -615,45 +615,7 @@ void CBaseCombatWeapon::Drop( const Vector &vecVelocity )
 //-----------------------------------------------------------------------------
 void CBaseCombatWeapon::OnPickedUp( CBaseCombatCharacter *pNewOwner )
 {
-#if !defined( CLIENT_DLL )
-	RemoveEffects( EF_ITEM_BLINK );
-
-	if( pNewOwner->IsPlayer() )
-	{
-		m_OnPlayerPickup.FireOutput(pNewOwner, this);
-
-		// Play the pickup sound for 1st-person observers
-		CRecipientFilter filter;
-		for ( int i=1; i <= gpGlobals->maxClients; ++i )
-		{
-			CBasePlayer *player = UTIL_PlayerByIndex(i);
-			if ( player && !player->IsAlive() && player->GetObserverMode() == OBS_MODE_IN_EYE )
-			{
-				filter.AddRecipient( player );
-			}
-		}
-		if ( filter.GetRecipientCount() )
-		{
-			CBaseEntity::EmitSound( filter, pNewOwner->entindex(), "Player.PickupWeapon" );
-		}
-
-		// Robin: We don't want to delete weapons the player has picked up, so 
-		// clear the name of the weapon. This prevents wildcards that are meant 
-		// to find NPCs finding weapons dropped by the NPCs as well.
-		SetName( NULL_STRING );
-	}
-	else
-	{
-		m_OnNPCPickup.FireOutput(pNewOwner, this);
-	}
-
-#ifdef HL2MP
-	HL2MPRules()->RemoveLevelDesignerPlacedObject( this );
-#endif
-
-	// Someone picked me up, so make it so that I can't be removed.
-	SetRemoveable( false );
-#endif
+	return;
 }
 
 //-----------------------------------------------------------------------------

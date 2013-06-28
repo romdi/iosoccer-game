@@ -448,17 +448,10 @@ public:
 	virtual bool			ModeWantsSpectatorGUI( int iMode ) { return true; }
 	virtual bool			SetObserverMode(int mode); // sets new observer mode, returns true if successful
 	virtual int				GetObserverMode( void ); // returns observer mode or OBS_NONE
-	virtual bool			SetObserverTarget(CBaseEntity * target);
 	virtual void			ObserverUse( bool bIsPressed ); // observer pressed use
-	virtual CBaseEntity		*GetObserverTarget( void ); // returns players targer or NULL
-	virtual CBaseEntity		*FindNextObserverTarget( bool bReverse ); // returns next/prev player to follow or NULL
-	virtual int				GetNextObserverSearchStartPoint( bool bReverse ); // Where we should start looping the player list in a FindNextObserverTarget call
-	virtual bool			IsValidObserverTarget(CBaseEntity * target); // true, if player is allowed to see this target
-	virtual void			CheckObserverSettings(); // checks, if target still valid (didn't die etc)
 	virtual void			JumptoPosition(const Vector &origin, const QAngle &angles);
 	virtual void			ForceObserverMode(int mode); // sets a temporary mode, force because of invalid targets
 	virtual void			ResetObserverMode(); // resets all observer related settings
-	virtual void			ValidateCurrentObserverTarget( void ); // Checks the current observer target, and moves on if it's not valid anymore
 	virtual void			AttemptToExitFreezeCam( void ) {};
 
 	virtual bool			StartReplayMode( float fDelay, float fDuration, int iEntity );
@@ -643,7 +636,6 @@ public:
 	float	PlayerDrownTime() const	{ return m_AirFinished; }
 
 	int		GetObserverMode() const	{ return m_iObserverMode; }
-	CBaseEntity *GetObserverTarget() const	{ return m_hObserverTarget; }
 
 	// Round gamerules
 	virtual bool	IsReadyToPlay( void ) { return true; }
@@ -822,8 +814,6 @@ public:
 
 protected:
 
-	void					CalcPlayerView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
-	void					CalcObserverView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
 	void					CalcViewModelView( const Vector& eyeOrigin, const QAngle& eyeAngles);
 
 	// FIXME: Make these private! (tf_player uses them)
@@ -870,7 +860,6 @@ protected:
 	CNetworkVar( float,	m_flFOVTime );		// Time our FOV change started
 	
 	int						m_iObserverLastMode; // last used observer mode
-	CNetworkHandle( CBaseEntity, m_hObserverTarget );	// entity handle to m_iObserverTarget
 	bool					m_bForcedObserverMode; // true, player was forced by invalid targets to switch mode
 	
 	CNetworkHandle( CBaseEntity, m_hZoomOwner );	//This is a pointer to the entity currently controlling the player's zoom

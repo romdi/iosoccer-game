@@ -68,9 +68,7 @@ public:
 	virtual	float		GetLastForwardMove( void ) = 0;
 
 	// Third Person camera ( TODO/FIXME:  Move this to a separate interface? )
-	virtual void		CAM_Think( void ) = 0;
 	virtual int			CAM_IsThirdPerson( void ) = 0;
-	virtual void		CAM_GetCameraOffset( Vector& ofs ) = 0;
 
 #if defined( HL2_CLIENT_DLL )
 	// IK back channel info
@@ -81,6 +79,9 @@ public:
 
 	// Causes an input to have to be re-pressed to become active
 	virtual void		ClearInputButton( int bits ) = 0;
+
+	virtual		QAngle		&GetCameraAngles() = 0;
+	virtual		Vector		&GetCameraOffset() = 0;
 };
 
 extern ::IInput *input;

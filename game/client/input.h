@@ -80,9 +80,10 @@ public:
 	virtual		float		GetLastForwardMove( void );
 	virtual		void		ClearInputButton( int bits );
 
-	virtual		void		CAM_Think( void );
 	virtual		int			CAM_IsThirdPerson( void ) { return true; }
-	virtual		void		CAM_GetCameraOffset( Vector& ofs );
+
+	virtual		QAngle		&GetCameraAngles() { return m_aCameraViewAngles; }
+	virtual		Vector		&GetCameraOffset() { return m_vecCameraOffset; }
 	
 #if defined( HL2_CLIENT_DLL )
 	// IK back channel info
@@ -93,7 +94,6 @@ public:
 // Private Implementation
 private:
 	// Implementation specific initialization
-	void		Init_Camera( void );
 	void		Init_Keyboard( void );
 	void		Init_Mouse( void );
 	void		Shutdown_Keyboard( void );

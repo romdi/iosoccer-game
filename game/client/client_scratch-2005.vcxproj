@@ -438,7 +438,6 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClCompile Include="glow_overlay.cpp" />
     <ClCompile Include="..\shared\hintmessage.cpp" />
     <ClCompile Include="..\shared\hintsystem.cpp" />
-    <ClCompile Include="hltvcamera.cpp" />
     <ClCompile Include="hud.cpp" />
     <ClCompile Include="hud_animationinfo.cpp" />
     <ClCompile Include="hud_basechat.cpp" />
@@ -461,7 +460,6 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClCompile Include="hud_vehicle.cpp" />
     <ClCompile Include="hud_voicestatus.cpp" />
     <ClCompile Include="..\shared\igamesystem.cpp" />
-    <ClCompile Include="in_camera.cpp" />
     <ClCompile Include="in_joystick.cpp" />
     <ClCompile Include="in_main.cpp" />
     <ClCompile Include="in_mouse.cpp">
@@ -610,7 +608,7 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClCompile Include="sdk\c_ball.cpp" />
     <ClCompile Include="sdk\c_ios_mapentities.cpp" />
     <ClCompile Include="sdk\c_ios_replaymanager.cpp" />
-    <ClCompile Include="sdk\c_ios_tvcamera.cpp" />
+    <ClCompile Include="sdk\ios_camera.cpp" />
     <ClCompile Include="sdk\ios_crowdtextureproxy.cpp" />
     <ClCompile Include="sdk\ios_hud_powershotbar.cpp" />
     <ClCompile Include="sdk\ios_hud_scorebar.cpp" />
@@ -847,7 +845,7 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClInclude Include="sdk\c_ball.h" />
     <ClInclude Include="sdk\c_ios_mapentities.h" />
     <ClInclude Include="sdk\c_ios_replaymanager.h" />
-    <ClInclude Include="sdk\c_ios_tvcamera.h" />
+    <ClInclude Include="sdk\ios_camera.h" />
     <ClInclude Include="vgui_avatarimage.h" />
     <ClInclude Include="viewdebug.h" />
     <ClInclude Include="viewpostprocess.h" />
@@ -967,7 +965,6 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClInclude Include="glow_overlay.h" />
     <ClInclude Include="..\shared\hintmessage.h" />
     <ClInclude Include="..\shared\hintsystem.h" />
-    <ClInclude Include="hltvcamera.h" />
     <ClInclude Include="hud.h" />
     <ClInclude Include="hud_basechat.h" />
     <ClInclude Include="hud_basetimer.h" />

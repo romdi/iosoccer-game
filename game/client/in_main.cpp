@@ -18,10 +18,10 @@
 #include "prediction.h"
 #include "bitbuf.h"
 #include "checksum_md5.h"
-#include "hltvcamera.h"
 #include <ctype.h> // isalnum()
 #include <voice_status.h>
 #include "c_sdk_player.h"
+#include "ios_camera.h"
 
 extern ConVar in_joystick;
 extern ConVar cam_idealpitch;
@@ -971,8 +971,12 @@ void CInput::ControllerMove( float frametime, CUserCmd *cmd )
 {
 	if ( IsPC() )
 	{
-		C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
-		if ( !m_fCameraInterceptingMouse && m_fMouseActive && pPlayer->GetObserverMode() != OBS_MODE_IN_EYE && pPlayer->GetObserverMode() != OBS_MODE_TVCAM )
+		C_BasePlayer *pLocal = C_BasePlayer::GetLocalPlayer();
+		if ( !m_fCameraInterceptingMouse
+			&& m_fMouseActive
+			&& pLocal->GetObserverMode() == OBS_MODE_NONE
+			|| (Camera()->GetMode() != OBS_MODE_LOCKED_CHASE
+				&& Camera()->GetMode() != OBS_MODE_TVCAM) )
 		{
 			MouseMove( cmd);
 		}
@@ -1167,7 +1171,7 @@ void CInput::CreateMove ( int sequence_number, float input_sample_frametime, boo
 
 	cmd->random_seed = MD5_PseudoRandom( sequence_number ) & 0x7fffffff;
 
-	HLTVCamera()->CreateMove( cmd );
+	Camera()->CreateMove( cmd );
 
 #if defined( HL2_CLIENT_DLL )
 	// copy backchannel data
@@ -1570,9 +1574,6 @@ void CInput::Init_All (void)
 		Init_Mouse ();
 		Init_Keyboard();
 	}
-		
-	// Initialize third person camera controls.
-	Init_Camera();
 }
 
 /*
@@ -1599,4 +1600,3 @@ void CInput::LevelInit( void )
 	m_EntityGroundContact.RemoveAll();
 #endif
 }
-

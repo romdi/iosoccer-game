@@ -86,7 +86,6 @@
 #include "avi/iavi.h"
 #include "ihudlcd.h"
 #include "toolframework_client.h"
-#include "hltvcamera.h"
 #include "ixboxsystem.h"
 #include "ipresence.h"
 #include "engine/imatchmaking.h"
@@ -1744,10 +1743,6 @@ void OnRenderStart()
 		// aiments the player may be attached to to forcibly update their position
 		C_BaseEntity::MarkAimEntsDirty();
 	}
-
-	// Make sure the camera simulation happens before OnRenderStart, where it's used.
-	// NOTE: the only thing that happens in CAM_Think is thirdperson related code.
-	input->CAM_Think();
 
 	// This will place the player + the view models + all parent
 	// entities	at the correct abs position so that their attachment points

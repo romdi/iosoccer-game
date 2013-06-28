@@ -28,7 +28,6 @@
 #include "KeyValues.h"
 #include "particles_simple.h"
 #include "fx_water.h"
-#include "hltvcamera.h"
 #include "toolframework/itoolframework.h"
 #include "toolframework_client.h"
 #include "view_scene.h"
@@ -37,11 +36,13 @@
 #include "vgui/isurface.h"
 #include "voice_status.h"
 #include "fx.h"
-
-#include "c_ios_tvcamera.h"
+#include "c_ios_mapentities.h"
+#include "iinput.h"
+#include "c_team.h"
+#include "c_playerresource.h"
 #include "c_ball.h"
-
 #include "sdk_gamerules.h"
+#include "ios_camera.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -93,8 +94,6 @@ ConVar	spec_freeze_distance_max( "spec_freeze_distance_max", "200", FCVAR_CHEAT,
 void RecvProxy_LocalVelocityX( const CRecvProxyData *pData, void *pStruct, void *pOut );
 void RecvProxy_LocalVelocityY( const CRecvProxyData *pData, void *pStruct, void *pOut );
 void RecvProxy_LocalVelocityZ( const CRecvProxyData *pData, void *pStruct, void *pOut );
-
-void RecvProxy_ObserverTarget( const CRecvProxyData *pData, void *pStruct, void *pOut );
 
 // -------------------------------------------------------------------------------- //
 // RecvTable for CPlayerState.
@@ -253,7 +252,6 @@ END_RECV_TABLE()
 
 
 		RecvPropInt		(RECVINFO(m_iObserverMode) ),
-		RecvPropEHandle	(RECVINFO(m_hObserverTarget), RecvProxy_ObserverTarget ),
 		RecvPropArray	( RecvPropEHandle( RECVINFO( m_hViewModel[0] ) ), m_hViewModel ),
 		
 
@@ -439,8 +437,6 @@ void C_BasePlayer::Spawn( void )
 	SetThink(NULL);
 
 	SharedSpawn();
-
-	m_bWasFreezeFraming = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -465,59 +461,15 @@ bool C_BasePlayer::IsHLTV() const
 
 CBaseEntity	*C_BasePlayer::GetObserverTarget() const	// returns players targer or NULL
 {
-#ifndef _XBOX
-	if ( IsHLTV() )
-	{
-		return HLTVCamera()->GetPrimaryTarget();
-	}
-#endif
-	
-	if ( GetObserverMode() == OBS_MODE_ROAMING )
-	{
-		return NULL;	// no target in roaming mode
-	}
-	else
-	{
-		return m_hObserverTarget;
-	}
-}
-
-// Called from Recv Proxy, mainly to reset tone map scale
-void C_BasePlayer::SetObserverTarget( EHANDLE hObserverTarget )
-{
-	// If the observer target is changing to an entity that the client doesn't know about yet,
-	// it can resolve to NULL.  If the client didn't have an observer target before, then
-	// comparing EHANDLEs directly will see them as equal, since it uses Get(), and compares
-	// NULL to NULL.  To combat this, we need to check against GetEntryIndex() and
-	// GetSerialNumber().
-	if ( hObserverTarget.GetEntryIndex() != m_hObserverTarget.GetEntryIndex() ||
-		hObserverTarget.GetSerialNumber() != m_hObserverTarget.GetSerialNumber())
-	{
-		// Init based on the new handle's entry index and serial number, so that it's Get()
-		// has a chance to become non-NULL even if it currently resolves to NULL.
-		m_hObserverTarget.Init( hObserverTarget.GetEntryIndex(), hObserverTarget.GetSerialNumber() );
-
-		IGameEvent *event = gameeventmanager->CreateEvent( "spec_target_updated" );
-		if ( event )
-		{
-			gameeventmanager->FireEventClientSide( event );
-		}
-
-		if ( IsLocalPlayer() )
-		{
-			ResetToneMapping(1.0);
-		}
-	}
+	return Camera()->GetTarget();
 }
 
 int C_BasePlayer::GetObserverMode() const 
 { 
-#ifndef _XBOX
 	if ( IsHLTV() )
 	{
-		return HLTVCamera()->GetMode();
+		return Camera()->GetMode();
 	}
-#endif
 
 	return m_iObserverMode; 
 }
@@ -600,7 +552,6 @@ void C_BasePlayer::OnPreDataChanged( DataUpdateType_t updateType )
 		m_iOldAmmo[i] = GetAmmoCount(i);
 	}
 
-	m_bWasFreezeFraming = (GetObserverMode() == OBS_MODE_FREEZECAM);
 	m_hOldFogController = m_Local.m_PlayerFog.m_hCtrl;
 
 	BaseClass::OnPreDataChanged( updateType );
@@ -676,39 +627,6 @@ void C_BasePlayer::PostDataUpdate( DataUpdateType_t updateType )
 			m_flOldPlayerZ = GetLocalOrigin().z;
 		}
 		SetLocalAngles( angles );
-
-		if ( !m_bWasFreezeFraming && GetObserverMode() == OBS_MODE_FREEZECAM )
-		{
-			m_vecFreezeFrameStart = MainViewOrigin();
-			m_flFreezeFrameStartTime = gpGlobals->curtime;
-			m_flFreezeFrameDistance = RandomFloat( spec_freeze_distance_min.GetFloat(), spec_freeze_distance_max.GetFloat() );
-			m_flFreezeZOffset = RandomFloat( -30, 20 );
-			m_bSentFreezeFrame = false;
-
-			IGameEvent *pEvent = gameeventmanager->CreateEvent( "show_freezepanel" );
-			if ( pEvent )
-			{
-				pEvent->SetInt( "killer", GetObserverTarget() ? GetObserverTarget()->entindex() : 0 );
-				gameeventmanager->FireEventClientSide( pEvent );
-			}
-
-			// Force the sound mixer to the freezecam mixer
-			ConVar *pVar = (ConVar *)cvar->FindVar( "snd_soundmixer" );
-			pVar->SetValue( "FreezeCam_Only" );
-		}
-		else if ( m_bWasFreezeFraming && GetObserverMode() != OBS_MODE_FREEZECAM )
-		{
-			IGameEvent *pEvent = gameeventmanager->CreateEvent( "hide_freezepanel" );
-			if ( pEvent )
-			{
-				gameeventmanager->FireEventClientSide( pEvent );
-			}
-
-			view->FreezeFrame(0);
-
-			ConVar *pVar = (ConVar *)cvar->FindVar( "snd_soundmixer" );
-			pVar->Revert();
-		}
 	}
 
 	// If we are updated while paused, allow the player origin to be snapped by the
@@ -725,7 +643,7 @@ void C_BasePlayer::PostDataUpdate( DataUpdateType_t updateType )
 bool C_BasePlayer::CanSetSoundMixer( void )
 {
 	// Can't set sound mixers when we're in freezecam mode, since it has a code-enforced mixer
-	return (GetObserverMode() != OBS_MODE_FREEZECAM);
+	return true;
 }
 
 void C_BasePlayer::ReceiveMessage( int classID, bf_read &msg )
@@ -1009,13 +927,6 @@ void C_BasePlayer::UpdateFlashlight()
 void C_BasePlayer::Flashlight( void )
 {
 	UpdateFlashlight();
-
-	// Check for muzzle flash and apply to view model
-	C_BaseAnimating *ve = this;
-	if ( GetObserverMode() == OBS_MODE_IN_EYE )
-	{
-		ve = dynamic_cast< C_BaseAnimating* >( GetObserverTarget() );
-	}
 }
 
 
@@ -1153,9 +1064,10 @@ bool C_BasePlayer::ShouldInterpolate()
 
 bool C_BasePlayer::ShouldDraw()
 {
-	return ( !IsLocalPlayer() || C_BasePlayer::ShouldDrawLocalPlayer() || (GetObserverMode() == OBS_MODE_DEATHCAM ) ) &&
-		   BaseClass::ShouldDraw();
+	return ( !IsLocalPlayer() || C_BasePlayer::ShouldDrawLocalPlayer() ) &&  BaseClass::ShouldDraw();
 }
+
+static ConVar cl_player_opacity( "cl_player_opacity", "1.0", FCVAR_ARCHIVE);
 
 int C_BasePlayer::DrawModel( int flags )
 {
@@ -1169,254 +1081,17 @@ int C_BasePlayer::DrawModel( int flags )
 	//		return 0;
 	//}
 
+	if (cl_player_opacity.GetFloat() < 1)
+	{
+		SetRenderMode( kRenderTransColor );
+		SetRenderColorA(clamp(cl_player_opacity.GetFloat() * 255, 0, 255));
+	}
+	else
+	{
+		SetRenderMode( kRenderNormal );
+	}
+
 	return BaseClass::DrawModel( flags );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-Vector C_BasePlayer::GetChaseCamViewOffset( CBaseEntity *target )
-{
-	C_BasePlayer *player = ToBasePlayer( target );
-	
-	if ( player && player->IsAlive() )
-	{
-		//if( player->GetFlags() & FL_DUCKING )
-		//	return VEC_DUCK_VIEW;
-
-		return VEC_VIEW;
-	}
-
-	// assume it's the players ragdoll
-	return VEC_DEAD_VIEWHEIGHT;
-}
-
-void C_BasePlayer::CalcChaseCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov)
-{
-	C_BaseEntity *target = GetObserverTarget();
-
-	if ( !target ) 
-	{
-		// just copy a save in-map position
-		VectorCopy( EyePosition(), eyeOrigin );
-		VectorCopy( EyeAngles(), eyeAngles );
-		return;
-	};
-
-	// If our target isn't visible, we're at a camera point of some kind.
-	// Instead of letting the player rotate around an invisible point, treat
-	// the point as a fixed camera.
-	if ( !target->GetBaseAnimating() && !target->GetModel() )
-	{
-		CalcRoamingView( eyeOrigin, eyeAngles, fov );
-		return;
-	}
-
-	Vector forward, viewpoint;
-
-	QAngle viewangles;
-
-	if (GetObserverMode() == OBS_MODE_IN_EYE && dynamic_cast<C_Ball *>(target))
-	{
-		viewangles = QAngle(89, 0, 0);
-		engine->SetViewAngles(viewangles);
-	}
-	else if ( GetObserverMode() == OBS_MODE_IN_EYE)
-	{
-		viewangles = target->EyeAngles();
-		engine->SetViewAngles(viewangles);
-	}
-	else if ( IsLocalPlayer() )
-	{
-		engine->GetViewAngles( viewangles );
-	}
-	else
-	{
-		viewangles = EyeAngles();
-	}
-	
-	VectorCopy( viewangles, eyeAngles );
-	VectorCopy( target->EyePosition(), eyeOrigin );
-
-	fov = GetFOV();
-}
-
-void C_BasePlayer::CalcRoamingView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov)
-{
-	C_BaseEntity *target = GetObserverTarget();
-	
-	if ( !target ) 
-	{
-		target = this;
-	}
-
-	m_flObserverChaseDistance = 0.0;
-
-	eyeOrigin = target->EyePosition();
-	eyeAngles = target->EyeAngles();
-	
-	if ( spec_track.GetInt() > 0 )
-	{
-		C_BaseEntity *target =  ClientEntityList().GetBaseEntity( spec_track.GetInt() );
-
-		if ( target )
-		{
-			Vector v = target->GetAbsOrigin(); v.z += 54;
-			QAngle a; VectorAngles( v - eyeOrigin, a );
-
-			NormalizeAngles( a );
-			eyeAngles = a;
-			engine->SetViewAngles( a );
-		}
-	}
-
-	// Apply a smoothing offset to smooth out prediction errors.
-	Vector vSmoothOffset;
-	GetPredictionErrorSmoothingVector( vSmoothOffset );
-	eyeOrigin += vSmoothOffset;
-
-	fov = GetFOV();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Calculate the view for the player while he's in freeze frame observer mode
-//-----------------------------------------------------------------------------
-void C_BasePlayer::CalcFreezeCamView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov )
-{
-	C_BaseEntity *pTarget = GetObserverTarget();
-	if ( !pTarget )
-	{
-		return;
-	}
-
-	// Zoom towards our target
-	float flCurTime = (gpGlobals->curtime - m_flFreezeFrameStartTime);
-	float flBlendPerc = clamp( flCurTime / spec_freeze_traveltime.GetFloat(), 0, 1 );
-	flBlendPerc = SimpleSpline( flBlendPerc );
-
-	Vector vecCamDesired = pTarget->GetObserverCamOrigin();	// Returns ragdoll origin if they're ragdolled
-	VectorAdd( vecCamDesired, GetChaseCamViewOffset( pTarget ), vecCamDesired );
-	Vector vecCamTarget = vecCamDesired;
-	if ( pTarget->IsAlive() )
-	{
-		// Look at their chest, not their head
-		Vector maxs = GameRules()->GetViewVectors()->m_vHullMax;
-		vecCamTarget.z -= (maxs.z * 0.5);
-	}
-	else
-	{
-		vecCamTarget.z += VEC_DEAD_VIEWHEIGHT.z;	// look over ragdoll, not through
-	}
-
-	// Figure out a view position in front of the target
-	Vector vecEyeOnPlane = eyeOrigin;
-	vecEyeOnPlane.z = vecCamTarget.z;
-	Vector vecTargetPos = vecCamTarget;
-	Vector vecToTarget = vecTargetPos - vecEyeOnPlane;
-	VectorNormalize( vecToTarget );
-
-	// Stop a few units away from the target, and shift up to be at the same height
-	vecTargetPos = vecCamTarget - (vecToTarget * m_flFreezeFrameDistance);
-	float flEyePosZ = pTarget->EyePosition().z;
-	vecTargetPos.z = flEyePosZ + m_flFreezeZOffset;
-
-	// Now trace out from the target, so that we're put in front of any walls
-	trace_t trace;
-	C_BaseEntity::PushEnableAbsRecomputations( false ); // HACK don't recompute positions while doing RayTrace
-	UTIL_TraceHull( vecCamTarget, vecTargetPos, WALL_MIN, WALL_MAX, MASK_SOLID, pTarget, COLLISION_GROUP_NONE, &trace );
-	C_BaseEntity::PopEnableAbsRecomputations();
-	if (trace.fraction < 1.0)
-	{
-		// The camera's going to be really close to the target. So we don't end up
-		// looking at someone's chest, aim close freezecams at the target's eyes.
-		vecTargetPos = trace.endpos;
-		vecCamTarget = vecCamDesired;
-
-		// To stop all close in views looking up at character's chins, move the view up.
-		vecTargetPos.z += fabs(vecCamTarget.z - vecTargetPos.z) * 0.85;
-		C_BaseEntity::PushEnableAbsRecomputations( false ); // HACK don't recompute positions while doing RayTrace
-		UTIL_TraceHull( vecCamTarget, vecTargetPos, WALL_MIN, WALL_MAX, MASK_SOLID, pTarget, COLLISION_GROUP_NONE, &trace );
-		C_BaseEntity::PopEnableAbsRecomputations();
-		vecTargetPos = trace.endpos;
-	}
-
-	// Look directly at the target
-	vecToTarget = vecCamTarget - vecTargetPos;
-	VectorNormalize( vecToTarget );
-	VectorAngles( vecToTarget, eyeAngles );
-	
-	VectorLerp( m_vecFreezeFrameStart, vecTargetPos, flBlendPerc, eyeOrigin );
-
-	if ( flCurTime >= spec_freeze_traveltime.GetFloat() && !m_bSentFreezeFrame )
-	{
-		IGameEvent *pEvent = gameeventmanager->CreateEvent( "freezecam_started" );
-		if ( pEvent )
-		{
-			gameeventmanager->FireEventClientSide( pEvent );
-		}
-
-		m_bSentFreezeFrame = true;
-		view->FreezeFrame( spec_freeze_time.GetFloat() );
-	}
-}
-
-void C_BasePlayer::CalcInEyeCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov)
-{
-	C_BaseEntity *target = GetObserverTarget();
-
-	if ( !target ) 
-	{
-		// just copy a save in-map position
-		VectorCopy( EyePosition(), eyeOrigin );
-		VectorCopy( EyeAngles(), eyeAngles );
-		return;
-	};
-
-	if ( !target->IsAlive() || !((C_BasePlayer *)target) )
-	{
-		// if dead, show from 3rd person
-		CalcChaseCamView( eyeOrigin, eyeAngles, fov );
-		return;
-	}
-
-	fov = GetFOV();	// TODO use tragets FOV
-
-	m_flObserverChaseDistance = 0.0;
-
-	eyeAngles = target->EyeAngles();
-	eyeOrigin = target->GetAbsOrigin();
-
-	// Apply punch angle
-	VectorAdd( eyeAngles, GetPunchAngle(), eyeAngles );
-
-	//if( engine->IsHLTV() )
-	//{
-	//	//if ( target->GetFlags() & FL_DUCKING )
-	//	//{
-	//	//	eyeOrigin += VEC_DUCK_VIEW;
-	//	//}
-	//	//else
-	//	{
-	//		eyeOrigin += VEC_VIEW;
-	//	}
-	//}
-	//else
-	{
-		Vector offset = m_vecViewOffset;
-#ifdef HL2MP
-		offset = target->GetViewOffset();
-#endif
-		eyeOrigin += offset; // hack hack
-	}
-
-	engine->SetViewAngles( eyeAngles );
-}
-
-void C_BasePlayer::CalcTVCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov)
-{
-	C_TVCamera::GetInstance()->GetPositionAndAngle(eyeOrigin, eyeAngles);
-	engine->SetViewAngles(eyeAngles);
-	fov = GetFOV();
 }
 
 //-----------------------------------------------------------------------------
@@ -1597,24 +1272,24 @@ void C_BasePlayer::GetToolRecordingState( KeyValues *msg )
 	// this is a straight copy from ClientModeShared::OverrideView,
 	// When that method is removed in favor of rolling it into CalcView,
 	// then this code can (should!) be removed
-	if ( state.m_bThirdPerson )
-	{
-		Vector cam_ofs;
-		::input->CAM_GetCameraOffset( cam_ofs );
+	//if ( state.m_bThirdPerson )
+	//{
+	//	Vector cam_ofs;
+	//	::input->CAM_GetCameraOffset( cam_ofs );
 
-		QAngle camAngles;
-		camAngles[ PITCH ] = cam_ofs[ PITCH ];
-		camAngles[ YAW ] = cam_ofs[ YAW ];
-		camAngles[ ROLL ] = 0;
+	//	QAngle camAngles;
+	//	camAngles[ PITCH ] = cam_ofs[ PITCH ];
+	//	camAngles[ YAW ] = cam_ofs[ YAW ];
+	//	camAngles[ ROLL ] = 0;
 
-		Vector camForward, camRight, camUp;
-		AngleVectors( camAngles, &camForward, &camRight, &camUp );
+	//	Vector camForward, camRight, camUp;
+	//	AngleVectors( camAngles, &camForward, &camRight, &camUp );
 
-		VectorMA( state.m_vecEyePosition, -cam_ofs[ ROLL ], camForward, state.m_vecEyePosition );
+	//	VectorMA( state.m_vecEyePosition, -cam_ofs[ ROLL ], camForward, state.m_vecEyePosition );
 
-		// Override angles from third person camera
-		VectorCopy( camAngles, state.m_vecEyeAngles );
-	}
+	//	// Override angles from third person camera
+	//	VectorCopy( camAngles, state.m_vecEyeAngles );
+	//}
 
 	msg->SetPtr( "camera", &state );
 }
@@ -1654,17 +1329,6 @@ C_BaseViewModel *C_BasePlayer::GetViewModel( int index /*= 0*/ )
 	Assert( index >= 0 && index < MAX_VIEWMODELS );
 
 	C_BaseViewModel *vm = m_hViewModel[ index ];
-	
-	if ( GetObserverMode() == OBS_MODE_IN_EYE )
-	{
-		C_BasePlayer *target =  ToBasePlayer( GetObserverTarget() );
-
-		// get the targets viewmodel unless the target is an observer itself
-		if ( target && target != this && !target->IsObserver() )
-		{
-			vm = target->GetViewModel( index );
-		}
-	}
 
 	return vm;
 }
@@ -1672,17 +1336,6 @@ C_BaseViewModel *C_BasePlayer::GetViewModel( int index /*= 0*/ )
 C_BaseCombatWeapon	*C_BasePlayer::GetActiveWeapon( void ) const
 {
 	const C_BasePlayer *fromPlayer = this;
-
-	// if localplayer is in InEye spectator mode, return weapon on chased player
-	if ( (fromPlayer == GetLocalPlayer()) && ( GetObserverMode() == OBS_MODE_IN_EYE) )
-	{
-		C_BaseEntity *target =  GetObserverTarget();
-
-		if ( target && target->IsPlayer() )
-		{
-			fromPlayer = ToBasePlayer( target );
-		}
-	}
 
 	return fromPlayer->C_BaseCombatCharacter::GetActiveWeapon();
 }
@@ -1881,17 +1534,6 @@ bool C_BasePlayer::IsUseableEntity( CBaseEntity *pEntity, unsigned int requiredC
 //-----------------------------------------------------------------------------
 float C_BasePlayer::GetFOV( void )
 {
-	if ( GetObserverMode() == OBS_MODE_IN_EYE )
-	{
-		C_BasePlayer *pTargetPlayer = dynamic_cast<C_BasePlayer*>( GetObserverTarget() );
-
-		// get fov from observer target. Not if target is observer itself
-		if ( pTargetPlayer && !pTargetPlayer->IsObserver() )
-		{
-			return pTargetPlayer->GetFOV();
-		}
-	}
-
 	// Allow our vehicle to override our FOV if it's currently at the default FOV.
 	float flDefaultFOV = GetDefaultFOV();
 	float fFOV = ( m_iFOV == 0 ) ? flDefaultFOV : m_iFOV;
@@ -1979,19 +1621,6 @@ void RecvProxy_LocalVelocityZ( const CRecvProxyData *pData, void *pStruct, void 
 		vecVelocity.z = flNewVel_z;
 		pPlayer->SetLocalVelocity( vecVelocity );
 	}
-}
-
-void RecvProxy_ObserverTarget( const CRecvProxyData *pData, void *pStruct, void *pOut )
-{
-	C_BasePlayer *pPlayer = (C_BasePlayer *) pStruct;
-
-	Assert( pPlayer );
-
-	EHANDLE hTarget;
-
-	RecvProxy_IntToEHandle( pData, pStruct, &hTarget );
-
-	pPlayer->SetObserverTarget( hTarget );
 }
 
 float C_BasePlayer::GetMinFOV()	const
@@ -2116,15 +1745,6 @@ IMaterial *C_BasePlayer::GetHeadLabelMaterial( void )
 		return NULL;
 
 	return GetClientVoiceMgr()->GetHeadLabelMaterial();
-}
-
-bool IsInFreezeCam( void )
-{
-	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
-	if ( pPlayer && pPlayer->GetObserverMode() == OBS_MODE_FREEZECAM )
-		return true;
-
-	return false;
 }
 
 //-----------------------------------------------------------------------------

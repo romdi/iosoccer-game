@@ -3428,6 +3428,8 @@ int CBaseEntity::ShouldTransmit( const CCheckTransmitInfo *pInfo )
 		return FL_EDICT_DONTSEND;
 	}
 
+	return FL_EDICT_ALWAYS;
+
 //	if ( IsToolRecording() )
 //	{
 //		return FL_EDICT_ALWAYS;

@@ -33,7 +33,6 @@
 #include "apparent_velocity_helper.h"
 #include "c_baseanimatingoverlay.h"
 #include "tier1/KeyValues.h"
-#include "hltvcamera.h"
 #include "datacache/imdlcache.h"
 #include "toolframework/itoolframework.h"
 #include "toolframework_client.h"

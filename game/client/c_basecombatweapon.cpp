@@ -10,7 +10,6 @@
 #include "hud_crosshair.h"
 #include "engine/ivmodelinfo.h"
 #include "tier0/vprof.h"
-#include "hltvcamera.h"
 #include "tier1/KeyValues.h"
 #include "toolframework/itoolframework.h"
 #include "toolframework_client.h"
@@ -433,20 +432,6 @@ int C_BaseCombatWeapon::DrawModel( int flags )
 
 	if ( !IsVisible() )
 		return 0;
-
-	// check if local player chases owner of this weapon in first person
-	C_BasePlayer *localplayer = C_BasePlayer::GetLocalPlayer();
-
-	if ( localplayer && localplayer->IsObserver() && GetOwner() )
-	{
-		// don't draw weapon if chasing this guy as spectator
-		// we don't check that in ShouldDraw() since this may change
-		// without notification 
-		
-		if ( localplayer->GetObserverMode() == OBS_MODE_IN_EYE &&
-			 localplayer->GetObserverTarget() == GetOwner() ) 
-			return false;
-	}
 
 	// See comment below
 	EnsureCorrectRenderingModel();

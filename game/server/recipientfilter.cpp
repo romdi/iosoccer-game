@@ -330,27 +330,8 @@ CTeamRecipientFilter::CTeamRecipientFilter( int team, bool isReliable )
 	{
 		CBasePlayer *pPlayer = UTIL_PlayerByIndex( i );
 
-		if ( !pPlayer )
-		{
+		if (!pPlayer || pPlayer->GetTeamNumber() != team)
 			continue;
-		}
-
-		if ( pPlayer->GetTeamNumber() != team )
-		{
-			//If we're in the spectator team then we should be getting whatever messages the person I'm spectating gets.
-			if ( pPlayer->GetTeamNumber() == TEAM_SPECTATOR && (pPlayer->GetObserverMode() == OBS_MODE_IN_EYE || pPlayer->GetObserverMode() == OBS_MODE_CHASE) )
-			{
-				if ( pPlayer->GetObserverTarget() )
-				{
-					if ( pPlayer->GetObserverTarget()->GetTeamNumber() != team )
-						continue;
-				}
-			}
-			else
-			{
-				continue;
-			}
-		}
 
 		AddRecipient( pPlayer );
 	}

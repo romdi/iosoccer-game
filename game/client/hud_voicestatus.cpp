@@ -301,9 +301,6 @@ void CHudVoiceStatus::OnThink( void )
 
 bool CHudVoiceStatus::ShouldDraw()
 {
-	if ( IsInFreezeCam() == true )
-		return false;
-
 	return true;
 }
 

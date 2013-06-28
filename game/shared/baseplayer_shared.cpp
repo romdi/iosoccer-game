@@ -17,7 +17,7 @@
 	#include "c_basedoor.h"
 	#include "c_world.h"
 	#include "view.h"
-	#include "hltvcamera.h"
+	#include "ios_camera.h"
 
 	#define CRecipientFilter C_RecipientFilter
 
@@ -132,7 +132,7 @@ Vector CBasePlayer::EyePosition( )
 #ifdef CLIENT_DLL
 	if ( IsObserver() )
 	{
-		if ( m_iObserverMode == OBS_MODE_CHASE )
+		if ( m_iObserverMode == OBS_MODE_LOCKED_CHASE )
 		{
 			if ( IsLocalPlayer() )
 			{
@@ -871,7 +871,6 @@ static bool IsWaterContents( int contents )
 void CBasePlayer::ResetObserverMode()
 {
 
-	m_hObserverTarget.Set( 0 );
 	m_iObserverMode = (int)OBS_MODE_NONE;
 
 #ifndef CLIENT_DLL
@@ -891,15 +890,12 @@ void CBasePlayer::ResetObserverMode()
 //-----------------------------------------------------------------------------
 void CBasePlayer::CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNear, float &zFar, float &fov )
 {
+	eyeOrigin = EyePosition();
+	eyeAngles = EyeAngles();
 
-	if ( IsObserver() )
-	{
-		CalcObserverView( eyeOrigin, eyeAngles, fov );
-	}
-	else
-	{
-		CalcPlayerView( eyeOrigin, eyeAngles, fov );
-	}
+#if defined( CLIENT_DLL )
+	Camera()->CalcView(eyeOrigin, eyeAngles, fov);
+#endif
 }
 
 
@@ -913,94 +909,6 @@ void CBasePlayer::CalcViewModelView( const Vector& eyeOrigin, const QAngle& eyeA
 	
 		vm->CalcViewModelView( this, eyeOrigin, eyeAngles );
 	}
-}
-
-void CBasePlayer::CalcPlayerView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov )
-{
-#if defined( CLIENT_DLL )
-	if ( !prediction->InPrediction() )
-	{
-		// FIXME: Move into prediction
-		view->DriftPitch();
-	}
-#endif
-
-	VectorCopy( EyePosition(), eyeOrigin );
-
-	VectorCopy( EyeAngles(), eyeAngles );
-
-
-#if defined( CLIENT_DLL )
-	if ( !prediction->InPrediction() )
-#endif
-	{
-		SmoothViewOnStairs( eyeOrigin );
-	}
-
-	// Snack off the origin before bob + water offset are applied
-	Vector vecBaseEyePosition = eyeOrigin;
-
-	CalcViewRoll( eyeAngles );
-
-	// Apply punch angle
-	VectorAdd( eyeAngles, m_Local.m_vecPunchAngle, eyeAngles );
-
-#if defined( CLIENT_DLL )
-	if ( !prediction->InPrediction() )
-	{
-		// Shake it up baby!
-		vieweffects->CalcShake();
-		vieweffects->ApplyShake( eyeOrigin, eyeAngles, 1.0 );
-	}
-#endif
-
-#if defined( CLIENT_DLL )
-	// Apply a smoothing offset to smooth out prediction errors.
-	Vector vSmoothOffset;
-	GetPredictionErrorSmoothingVector( vSmoothOffset );
-	eyeOrigin += vSmoothOffset;
-	//SetLocalOrigin(eyeOrigin - Vector(0, 0, VEC_VIEW.z) + vSmoothOffset);
-	m_flObserverChaseDistance = 0.0;
-#endif
-
-	// calc current FOV
-	fov = GetFOV();
-}
-
-void CBasePlayer::CalcObserverView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov )
-{
-#if defined( CLIENT_DLL )
-	switch ( GetObserverMode() )
-	{
-
-		case OBS_MODE_DEATHCAM	:
-									break;
-
-		case OBS_MODE_ROAMING	:	// just copy current position without view offset
-		case OBS_MODE_FIXED		:	
-			if (engine->IsHLTV())
-				HLTVCamera()->CalcRoamingView( eyeOrigin, eyeAngles, fov );
-			else
-				CalcRoamingView( eyeOrigin, eyeAngles, fov );
-									break;
-
-		case OBS_MODE_IN_EYE	:	CalcChaseCamView( eyeOrigin, eyeAngles, fov ); //CalcInEyeCamView( eyeOrigin, eyeAngles, fov );
-									break;
-
-		case OBS_MODE_CHASE		:	CalcChaseCamView( eyeOrigin, eyeAngles, fov  );
-									break;
-
-		case OBS_MODE_FREEZECAM	:	CalcFreezeCamView( eyeOrigin, eyeAngles, fov  );
-									break;
-		
-		case OBS_MODE_TVCAM		:	CalcTVCamView( eyeOrigin, eyeAngles, fov  );
-									break;
-	}
-#else
-	// on server just copy target postions, final view positions will be calculated on client
-	VectorCopy( EyePosition(), eyeOrigin );
-	VectorCopy( EyeAngles(), eyeAngles );
-#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -1146,7 +1054,7 @@ void CBasePlayer::SharedSpawn()
 int CBasePlayer::GetDefaultFOV( void ) const
 {
 #if defined( CLIENT_DLL )
-	if ( GetObserverMode() == OBS_MODE_IN_EYE )
+	if ( GetObserverMode() == OBS_MODE_LOCKED_CHASE )
 	{
 		C_BasePlayer *pTargetPlayer = dynamic_cast<C_BasePlayer*>( GetObserverTarget() );
 

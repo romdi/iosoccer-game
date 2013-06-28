@@ -125,9 +125,6 @@ protected:
 	bool			CheckSlideButton();
 
 	bool			CheckPlayerAnimEvent();
-	
-	// Player is a Observer chasing another player
-	void			FullObserverMove( void );
 
 	// The basic solid body movement clip that slides along multiple planes
 	virtual int		TryPlayerMove( Vector *pFirstDest=NULL, trace_t *pFirstTrace=NULL );

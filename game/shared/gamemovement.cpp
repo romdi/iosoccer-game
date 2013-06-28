@@ -1756,114 +1756,6 @@ bool CGameMovement::CheckPlayerAnimEvent()
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CGameMovement::FullObserverMove( void )
-{
-	int mode = player->GetObserverMode();
-
-	if ( mode == OBS_MODE_IN_EYE || mode == OBS_MODE_CHASE )
-	{
-		CBaseEntity * target = player->GetObserverTarget();
-
-		if ( target != NULL )
-		{
-			mv->SetAbsOrigin( target->GetAbsOrigin() );
-			mv->m_vecViewAngles = target->GetAbsAngles();
-			mv->m_vecVelocity = target->GetAbsVelocity();
-		}
-
-		return;
-	}
-
-	if ( mode != OBS_MODE_ROAMING )
-	{
-		// don't move in fixed or death cam mode
-		return;
-	}
-
-	if ( sv_specnoclip.GetBool() )
-	{
-		// roam in noclip mode
-		FullNoClipMove( sv_specspeed.GetFloat(), sv_specaccelerate.GetFloat() );
-		return;
-	}
-
-	// do a full clipped free roam move:
-
-	Vector wishvel;
-	Vector forward, right, up;
-	Vector wishdir, wishend;
-	float wishspeed;
-
-	AngleVectors (mv->m_vecViewAngles, &forward, &right, &up);  // Determine movement angles
-	
-	// Copy movement amounts
-
-	float factor = sv_specspeed.GetFloat();
-
-	if ( mv->m_nButtons & IN_SPEED )
-	{
-		factor /= 2.0f;
-	}
-
-	float fmove = mv->m_flForwardMove * factor;
-	float smove = mv->m_flSideMove * factor;
-	
-	VectorNormalize (forward);  // Normalize remainder of vectors
-	VectorNormalize (right);    // 
-
-	for (int i=0 ; i<3 ; i++)       // Determine x and y parts of velocity
-		wishvel[i] = forward[i]*fmove + right[i]*smove;
-	wishvel[2] += mv->m_flUpMove;
-
-	VectorCopy (wishvel, wishdir);   // Determine maginitude of speed of move
-	wishspeed = VectorNormalize(wishdir);
-
-	//
-	// Clamp to server defined max speed
-	//
-
-	float maxspeed = sv_maxvelocity.GetFloat(); 
-
-	if (wishspeed > maxspeed )
-	{
-		VectorScale (wishvel, mv->m_flMaxSpeed/wishspeed, wishvel);
-		wishspeed = maxspeed;
-	}
-
-	// Set pmove velocity, give observer 50% acceration bonus
-	Accelerate ( wishdir, wishspeed, sv_specaccelerate.GetFloat() );
-
-	float spd = VectorLength( mv->m_vecVelocity );
-	if (spd < 1.0f)
-	{
-		mv->m_vecVelocity.Init();
-		return;
-	}
-		
-	float friction = sv_friction.GetFloat();
-					
-	// Add the amount to the drop amount.
-	float drop = spd * friction * gpGlobals->frametime;
-
-			// scale the velocity
-	float newspeed = spd - drop;
-
-	if (newspeed < 0)
-		newspeed = 0;
-
-	// Determine proportion of old speed we are using.
-	newspeed /= spd;
-
-	VectorScale( mv->m_vecVelocity, newspeed, mv->m_vecVelocity );
-
-	CheckVelocity();
-
-	TryPlayerMove();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 void CGameMovement::FullNoClipMove( float factor, float maxacceleration )
 {
 	Vector wishvel;
@@ -3101,7 +2993,6 @@ void CGameMovement::PlayerMove( void )
 			break;
 			
 		case MOVETYPE_OBSERVER:
-			FullObserverMove(); // clips against world&players
 			break;
 
 		default:

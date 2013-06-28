@@ -17,7 +17,6 @@
 #include "eventlist.h"
 #include "tools/bonelist.h"
 #include <KeyValues.h>
-#include "hltvcamera.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -237,15 +236,7 @@ void C_BaseViewModel::ApplyBoneMatrixTransform( matrix3x4_t& transform )
 //-----------------------------------------------------------------------------
 bool C_BaseViewModel::ShouldDraw()
 {
-	if ( engine->IsHLTV() )
-	{
-		return ( HLTVCamera()->GetMode() == OBS_MODE_IN_EYE &&
-				 HLTVCamera()->GetPrimaryTarget() == GetOwner()	);
-	}
-	else
-	{
-		return BaseClass::ShouldDraw();
-	}
+	return BaseClass::ShouldDraw();
 }
 
 //-----------------------------------------------------------------------------

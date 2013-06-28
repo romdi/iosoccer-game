@@ -64,8 +64,6 @@ public:
 
 	virtual int GetBottomBarHeight() { return m_pBottomBarBlank->GetTall(); }
 	
-	virtual bool ShouldShowPlayerLabel( int specmode );
-
 	virtual Color GetBlackBarColor( void ) { return BLACK_BAR_COLOR; }
 	
 protected:

@@ -185,7 +185,7 @@ int CTeam::UpdateTransmitState()
 bool CTeam::ShouldTransmitToPlayer( CBasePlayer* pRecipient, CBaseEntity* pEntity )
 {
 	// Always transmit the observer target to players
-	if ( pRecipient && pRecipient->IsObserver() && pRecipient->GetObserverTarget() == pEntity )
+	if ( pRecipient && pRecipient->IsObserver())
 		return true;
 
 	return false;
