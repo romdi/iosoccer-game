@@ -823,9 +823,6 @@ void CSDKPlayer::State_OBSERVER_MODE_PreThink()
 
 void CSDKPlayer::State_OBSERVER_MODE_Leave()
 {
-	ShowViewPortPanel( "specmenu", false );
-	ShowViewPortPanel( "specgui", false );
-	ShowViewPortPanel( "overview", false );
 }
 
 void CSDKPlayer::State_ACTIVE_Enter()

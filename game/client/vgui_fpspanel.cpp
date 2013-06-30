@@ -128,7 +128,7 @@ void CFPSPanel::ApplySchemeSettings(vgui::IScheme *pScheme)
 {
 	BaseClass::ApplySchemeSettings(pScheme);
 
-	m_hFont = pScheme->GetFont( "DefaultFixedOutline" );
+	m_hFont = pScheme->GetFont( "DefaultFixedOutlineBig" );
 	Assert( m_hFont );
 
 	ComputeSize();

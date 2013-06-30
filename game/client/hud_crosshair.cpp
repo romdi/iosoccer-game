@@ -58,18 +58,7 @@ void CHudCrosshair::ApplySchemeSettings( IScheme *scheme )
 //-----------------------------------------------------------------------------
 bool CHudCrosshair::ShouldDraw( void )
 {
-	bool bNeedsDraw;
-
-	if ( m_bHideCrosshair )
-		return false;
-
-	C_BasePlayer* pPlayer = C_BasePlayer::GetLocalPlayer();
-	if ( !pPlayer )
-		return false;
-
-	C_BaseCombatWeapon *pWeapon = pPlayer->GetActiveWeapon();
-	if ( pWeapon && !pWeapon->ShouldDrawCrosshair() )
-		return false;
+	bool bNeedsDraw = false;
 
 	return ( bNeedsDraw && CHudElement::ShouldDraw() );
 }

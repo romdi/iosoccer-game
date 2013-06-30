@@ -214,7 +214,6 @@ void CBaseViewport::CreateDefaultPanels( void )
 #ifndef _XBOX
 	AddNewPanel( CreatePanelByName( PANEL_SCOREBOARD ), "PANEL_SCOREBOARD" );
 	AddNewPanel( CreatePanelByName( PANEL_INFO ), "PANEL_INFO" );
-	AddNewPanel( CreatePanelByName( PANEL_SPECGUI ), "PANEL_SPECGUI" );
 	AddNewPanel( CreatePanelByName( PANEL_SPECMENU ), "PANEL_SPECMENU" );
 	AddNewPanel( CreatePanelByName( PANEL_NAV_PROGRESS ), "PANEL_NAV_PROGRESS" );
 	//AddNewPanel( CreatePanelByName( PANEL_TEAM ), "PANEL_TEAM" );			//ios uncommented this
@@ -254,26 +253,9 @@ IViewPortPanel* CBaseViewport::CreatePanelByName(const char *szPanelName)
 	{
 		newpanel = new CTextWindow( this );
 	}
-/*	else if ( Q_strcmp(PANEL_OVERVIEW, szPanelName) == 0 )
-	{
-		newpanel = new CMapOverview( this );
-	}
-	*/
-	//else if ( Q_strcmp(PANEL_TEAM, szPanelName) == 0 )
-	//{
-	//	newpanel = new CTeamMenu( this );
-	//}
-	//else if ( Q_strcmp(PANEL_CLASS, szPanelName) == 0 )			//IOS added ffs
-	//{
-	//	newpanel = new CClassMenu( this );
-	//}
 	else if ( Q_strcmp(PANEL_SPECMENU, szPanelName) == 0 )
 	{
 		newpanel = new CSpectatorMenu( this );
-	}
-	else if ( Q_strcmp(PANEL_SPECGUI, szPanelName) == 0 )
-	{
-		newpanel = new CSpectatorGUI( this );
 	}
 	else if ( Q_strcmp(PANEL_NAV_PROGRESS, szPanelName) == 0 )
 	{

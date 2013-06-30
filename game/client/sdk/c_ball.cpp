@@ -4,6 +4,7 @@
 #include "fx_line.h"
 #include "sdk_gamerules.h"
 #include "c_team.h"
+#include "ios_camera.h"
 
 LINK_ENTITY_TO_CLASS(football, C_Ball);
 
@@ -47,7 +48,10 @@ void C_Ball::OnDataChanged(DataUpdateType_t updateType)
 	 if (updateType == DATA_UPDATE_CREATED)
 	 {
 		 if (!g_pBall && !m_bIsPlayerBall)
+		 {
 			 g_pBall = this;
+			 Camera()->SetTarget(this->entindex());
+		 }
 	 }
 
 	return;

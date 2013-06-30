@@ -12,15 +12,45 @@
 
 #include "gameeventlistener.h"
 
-enum TVCam_Types_t
+// Spectator Movement modes
+enum Cam_Modes_t
+{
+	CAM_MODE_TVCAM,
+	CAM_MODE_ROAMING,
+	CAM_MODE_FREE_CHASE,
+	CAM_MODE_LOCKED_CHASE,
+	CAM_MODE_COUNT,
+};
+
+static const char *g_szCamModeNames[CAM_MODE_COUNT] =
+{
+	"TV Camera",
+	"Roaming",
+	"Free Chase",
+	"Locked Chase"
+};
+
+enum TVCam_Modes_t
 { 
-	TVCAM_SIDELINE,
-	TVCAM_FIXED_SIDELINE,
-	TVCAM_BEHIND_GOAL,
-	TVCAM_TOPDOWN,
-	TVCAM_GOAL_CORNER,
-	TVCAM_FLY_FOLLOW,
-	TVCAM_GOAL_LINE
+	TVCAM_MODE_SIDELINE,
+	TVCAM_MODE_FIXED_SIDELINE,
+	TVCAM_MODE_BEHIND_GOAL,
+	TVCAM_MODE_TOPDOWN,
+	TVCAM_MODE_FLY_FOLLOW,
+	TVCAM_MODE_GOAL_LINE,
+	TVCAM_MODE_CELEBRATION,
+	TVCAM_MODE_COUNT
+};
+
+static const char *g_szTVCamModeNames[TVCAM_MODE_COUNT] =
+{
+	"Sideline",
+	"Fixed Sideline",
+	"Behind Goal",
+	"Top-Down",
+	"Fly Follow",
+	"Goal Line",
+	"Celebration",
 };
 
 class C_Camera : CGameEventListener
@@ -36,8 +66,11 @@ public:
 
 	int  GetCamMode();	// returns current camera mode
 	void SetCamMode(int mode);
-	void SpecNextPlayer( bool bInverse );
-	void SpecNamedPlayer( const char *szPlayerName );
+	int  GetTVCamMode();
+	void SetTVCamMode(int mode);
+	void SpecNextTarget(bool inverse);
+	void SpecTargetByName(const char *name);
+	void SpecTargetByIndex(int index);
 	
 	C_BaseEntity *GetTarget();  // return primary target
 	void SetTarget( int nEntity); // set the primary obs target
@@ -58,6 +91,7 @@ protected:
 	QAngle		m_aCamAngle;   //current camera angle
 	float		m_flFOV; // current FOV
 	int			m_nCamMode; // current camera mode
+	int			m_nTVCamMode; // current camera mode
 	int			m_nTarget;	// first tracked target or 0
 	CUserCmd	m_LastCmd;
 	Vector		m_vecVelocity;

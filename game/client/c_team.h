@@ -157,6 +157,7 @@ public:
 	CNetworkVar(int, m_Rating);
 
 	Formation *GetFormation();
+	int GetFormationIndex() { return m_nFormationIndex; }
 	int GetQuickTactic() { return m_eQuickTactic; }
 
 private:

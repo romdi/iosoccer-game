@@ -21,6 +21,7 @@
 #include "c_ios_replaymanager.h"
 #include "c_ball.h"
 #include "view.h"
+#include "ios_camera.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -104,7 +105,7 @@ bool CHudChargedshotBar::ShouldDraw()
 	if (!pPlayer || pPlayer->GetTeamNumber() != TEAM_A && pPlayer->GetTeamNumber() != TEAM_B)
 		return false;
 
-	if (GetReplayManager() && GetReplayManager()->IsReplaying())
+	if (GetBall() && GetBall()->m_eBallState == BALL_STATE_GOAL)
 		return false;
 
 	return true;

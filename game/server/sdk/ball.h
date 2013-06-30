@@ -146,6 +146,7 @@ public:
 	void			VPhysicsUpdate(IPhysicsObject *pPhysics);
 	bool			CreateVPhysics();
 	
+	void			GetGoalInfo(bool &isOwnGoal, int &scoringTeam, CSDKPlayer **pScorer, CSDKPlayer **pFirstAssister, CSDKPlayer **pSecondAssister);
 	void			TriggerGoal(int team);
 	void			TriggerGoalLine(int team);
 	void			TriggerSideline();
@@ -303,10 +304,6 @@ private:
 	Vector			m_vBallCannonVel;
 	QAngle			m_aBallCannonAng;
 	AngularImpulse	m_vBallCannonRot;
-
-	CHandle<CSDKPlayer> m_pScorer;
-	CHandle<CSDKPlayer> m_pFirstAssister;
-	CHandle<CSDKPlayer> m_pSecondAssister;
 
 	bool			m_bHitThePost;
 };

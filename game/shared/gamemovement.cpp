@@ -41,9 +41,11 @@ extern IFileSystem *filesystem;
 	#include "c_sdk_player.h"
 	#include "c_team.h"
 	#include "c_playerresource.h"
+	#include "c_ball.h"
 #else
 	#include "sdk_player.h"
 	#include "team.h"
+	#include "ball.h"
 #endif
 
 // tickcount currently isn't set during prediction, although gpGlobals->curtime and
@@ -780,8 +782,23 @@ void CGameMovement::ReduceTimers( void )
 
 	bool isSprinting = (teamPosType == POS_GK && pPl->IsKeeperSprintInverted() ? !(mv->m_nButtons & IN_SPEED) : (mv->m_nButtons & IN_SPEED) != 0);
 
-	bool reduceStamina = (((mv->m_nButtons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT)) != 0 && isSprinting) || !pPl->GetGroundEntity())
-		&& (teamPosType != POS_GK || pPl->m_nInPenBoxOfTeam != pPl->GetTeamNumber());
+	bool reduceStamina = false;
+
+	// If moving and holding sprint button
+	if ((mv->m_nButtons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT)) != 0 && isSprinting)
+		reduceStamina = true;
+
+	// If in air (to prevent stamina bugging)
+	if (!pPl->GetGroundEntity())
+		reduceStamina = true;
+
+	// If keeper and in own penalty box
+	if (teamPosType == POS_GK && pPl->m_nInPenBoxOfTeam == pPl->GetTeamNumber())
+		reduceStamina = false;
+
+	// If celebrating after a goal
+	if (GetBall() && GetBall()->m_eBallState == BALL_STATE_GOAL)
+		reduceStamina = false;
 
 	float fieldLength = SDKGameRules()->m_vFieldMax.GetY() - SDKGameRules()->m_vFieldMin.GetY();
 	float dist = pPl->GetLocalOrigin().y - SDKGameRules()->m_vKickOff.GetY();

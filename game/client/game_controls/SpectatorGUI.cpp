@@ -26,6 +26,7 @@
 #include <game/client/iviewport.h>
 #include "commandmenu.h"
 #include "ios_camera.h"
+#include "c_ball.h"
 
 #include <vgui_controls/TextEntry.h>
 #include <vgui_controls/Panel.h>
@@ -43,111 +44,120 @@
 extern IGameUIFuncs *gameuifuncs; // for key binding details
 #endif
 
-// void DuckMessage(const char *str); // from vgui_teamfortressviewport.cpp
-
-ConVar spec_scoreboard( "spec_scoreboard", "0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE );
-
-CSpectatorGUI *g_pSpectatorGUI = NULL;
-
 using namespace vgui;
 
-ConVar cl_spec_mode(
-	"cl_spec_mode",
-	"1",
-	FCVAR_ARCHIVE | FCVAR_USERINFO | FCVAR_SERVER_CAN_EXECUTE,
-	"spectator mode" );
-
-
-
-//-----------------------------------------------------------------------------
-// Purpose: left and right buttons pointing buttons
-//-----------------------------------------------------------------------------
-class CSpecButton : public Button
-{
-public:
-	CSpecButton(Panel *parent, const char *panelName): Button(parent, panelName, "") {}
-
-private:
-	void ApplySchemeSettings(vgui::IScheme *pScheme)
-	{
-		Button::ApplySchemeSettings(pScheme);
-		SetFont(pScheme->GetFont("Marlett", IsProportional()) );
-	}
-};
+enum { PANEL_MARGIN = 5, PANEL_WIDTH = (1024 - 2 * PANEL_MARGIN) };
+enum { MAINPANEL_HEIGHT = 50, MAINPANEL_MARGIN = 10, MAINPANEL_ITEM_MARGIN = 10 };
+enum { PLAYERLIST_WIDTH = 250, PLAYERLIST_HEIGHT = 30 };
+enum { CAMMODES_WIDTH = 130, CAMMODES_HEIGHT = 30 };
+enum { TVCAMMODES_WIDTH = 130, TVCAMMODES_HEIGHT = 30 };
+enum { BUTTON_WIDTH = 30, BUTTON_HEIGHT = 30, BUTTON_MARGIN = 5 };
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
 CSpectatorMenu::CSpectatorMenu( IViewPort *pViewPort ) : Frame( NULL, PANEL_SPECMENU )
 {
-	SetScheme("SourceScheme");
+	SetScheme("ClientScheme");
 
 	m_iDuckKey = BUTTON_CODE_INVALID;
 		
 	m_pViewPort = pViewPort;
 
 	SetMouseInputEnabled( true );
-	SetKeyBoardInputEnabled( true );
+	SetKeyBoardInputEnabled( false );
 	SetTitleBarVisible( false ); // don't draw a title bar
 	SetMoveable( false );
 	SetSizeable( false );
-	SetProportional(true);
+	SetProportional(false);
 
-	m_pPlayerList = new ComboBox(this, "playercombo", 10 , false);
-	HFont hFallbackFont = scheme()->GetIScheme( GetScheme() )->GetFont( "DefaultVerySmallFallBack", false );
-	if ( INVALID_FONT != hFallbackFont )
+	m_pMainPanel = new Panel(this, "");
+
+	m_pTargetList = new ComboBox(m_pMainPanel, "playercombo", 10 , false);
+	m_pTargetList->SetOpenDirection(Menu::UP);
+	
+	CommandMenu *pTargetListMenu = new CommandMenu(m_pTargetList, "playercombo", gViewPortInterface);
+	m_pTargetList->SetMenu(pTargetListMenu);
+
+
+	m_pCamModes = new ComboBox(m_pMainPanel, "cammodes", 10 , false );
+	m_pCamModes->SetOpenDirection(Menu::UP);
+
+	CommandMenu *pCamModeMenu = new CommandMenu(m_pCamModes, "cammodes", gViewPortInterface);
+	for (int i = 0; i < CAM_MODE_COUNT; i++)
 	{
-		m_pPlayerList->SetUseFallbackFont( true, hFallbackFont );
+		pCamModeMenu->AddMenuItem(g_szCamModeNames[i], VarArgs("cam_mode %d", i), this);
 	}
+	m_pCamModes->SetMenu(pCamModeMenu);
+	m_pCamModes->ActivateItemByRow(0);
 
-	m_pViewOptions = new ComboBox(this, "viewcombo", 10 , false );
-	m_pConfigSettings = new ComboBox(this, "settingscombo", 10 , false );	
-	m_pConfigSettings->SetVisible(false);
+	
+	m_pTVCamModes = new ComboBox(m_pMainPanel, "tvcammodes", 10 , false );	
+	m_pTVCamModes->SetOpenDirection(Menu::UP);
 
-	m_pLeftButton = new CSpecButton( this, "specprev");
-	m_pLeftButton->SetText("3");
-	m_pRightButton = new CSpecButton( this, "specnext");
-	m_pRightButton->SetText("4");
+	CommandMenu *pTVCamModeMenu = new CommandMenu(m_pTVCamModes, "tvcammodes", gViewPortInterface);
+	for (int i = 0; i < TVCAM_MODE_COUNT; i++)
+	{
+		pTVCamModeMenu->AddMenuItem(g_szTVCamModeNames[i], VarArgs("tvcam_mode %d", i), this);
+	}
+	m_pTVCamModes->SetMenu(pTVCamModeMenu);
+	m_pTVCamModes->ActivateItemByRow(0);
 
-	m_pPlayerList->SetText("");
-	m_pViewOptions->SetText("Camera");
-	m_pConfigSettings->SetText("Options");
 
-	m_pPlayerList->SetOpenDirection( Menu::UP );
-	m_pViewOptions->SetOpenDirection( Menu::UP );
-	m_pConfigSettings->SetOpenDirection( Menu::UP );
+	m_pLeftButton = new Button(m_pMainPanel, "", "<", this, "spec_prev");
 
-	// create view config menu
-	CommandMenu *menu = new CommandMenu(m_pConfigSettings, "spectatormenu", gViewPortInterface);
-	menu->AddMenuItem("Close", "spec_menu 0", this);
-	m_pConfigSettings->SetMenu(menu);	// attach menu to combo box
+	m_pRightButton = new Button(m_pMainPanel, "", ">", this, "spec_next");
 
-	// create view mode menu
-	menu = new CommandMenu(m_pViewOptions, "spectatormodes", gViewPortInterface);
-	menu->AddMenuItem("TV Camera", VarArgs("spec_mode %d", CAM_MODE_TVCAM), this);
-	menu->AddMenuItem("Roaming", VarArgs("spec_mode %d", CAM_MODE_ROAMING), this);
-	menu->AddMenuItem("Free Chase", VarArgs("spec_mode %d", CAM_MODE_FREE_CHASE), this);
-	menu->AddMenuItem("Locked Chase", VarArgs("spec_mode %d", CAM_MODE_LOCKED_CHASE), this);
-	m_pViewOptions->SetMenu(menu);	// attach menu to combo box
-
-	LoadControlSettings("Resource/UI/BottomSpectator.res");
-	ListenForGameEvent( "spec_target_updated" );
+	ListenForGameEvent("spec_target_updated");
+	ListenForGameEvent("player_team");
+	ListenForGameEvent("cam_mode_updated");
+	ListenForGameEvent("tvcam_mode_updated");
 }
 
 void CSpectatorMenu::ApplySchemeSettings(IScheme *pScheme)
 {
 	BaseClass::ApplySchemeSettings(pScheme);
 	// need to MakeReadyForUse() on the menus so we can set their bg color before they are displayed
-	m_pConfigSettings->GetMenu()->MakeReadyForUse();
-	m_pViewOptions->GetMenu()->MakeReadyForUse();
-	m_pPlayerList->GetMenu()->MakeReadyForUse();
+	m_pTVCamModes->GetMenu()->MakeReadyForUse();
+	m_pCamModes->GetMenu()->MakeReadyForUse();
+	m_pTargetList->GetMenu()->MakeReadyForUse();
 
-	if ( g_pSpectatorGUI )
-	{
-		m_pConfigSettings->GetMenu()->SetBgColor( g_pSpectatorGUI->GetBlackBarColor() );
-		m_pViewOptions->GetMenu()->SetBgColor( g_pSpectatorGUI->GetBlackBarColor() );
-		m_pPlayerList->GetMenu()->SetBgColor( g_pSpectatorGUI->GetBlackBarColor() );
-	}
+	HFont font = pScheme->GetFont("StatButton");
+
+	//if ( g_pSpectatorGUI )
+	//{
+	//	m_pTVCamModes->GetMenu()->SetBgColor( g_pSpectatorGUI->GetBlackBarColor() );
+	//	m_pCamModes->GetMenu()->SetBgColor( g_pSpectatorGUI->GetBlackBarColor() );
+	//	m_pTargetList->GetMenu()->SetBgColor( g_pSpectatorGUI->GetBlackBarColor() );
+	//}
+
+	SetBounds(ScreenWidth() / 2 - PANEL_WIDTH / 2, 0, PANEL_WIDTH, ScreenHeight());
+	SetPaintBackgroundEnabled(false);
+	SetPaintBorderEnabled(false);
+	
+	m_pMainPanel->SetBounds(0, GetTall() - MAINPANEL_HEIGHT - MAINPANEL_MARGIN, GetWide(), MAINPANEL_HEIGHT);
+	
+	m_pLeftButton->SetBounds(GetWide() / 2 - PLAYERLIST_WIDTH / 2 - BUTTON_WIDTH - BUTTON_MARGIN, 0, BUTTON_WIDTH, BUTTON_HEIGHT);
+	m_pLeftButton->SetFont(font);
+	//m_pLeftButton->SetFgColor(Color(0, 0, 0, 255));
+	m_pLeftButton->SetContentAlignment(Label::a_center);
+
+	m_pTargetList->SetBounds(GetWide() / 2 - PLAYERLIST_WIDTH / 2, 0, PLAYERLIST_WIDTH, PLAYERLIST_HEIGHT);
+	m_pTargetList->SetFont(font);
+	//m_pTargetList->GetMenu()->SetFgColor(Color(0, 0, 0, 255));
+
+	m_pRightButton->SetBounds(GetWide() / 2 + PLAYERLIST_WIDTH / 2 + BUTTON_MARGIN, 0, BUTTON_WIDTH, BUTTON_HEIGHT);
+	m_pRightButton->SetFont(font);
+	//m_pRightButton->SetFgColor(Color(0, 0, 0, 255));
+	m_pRightButton->SetContentAlignment(Label::a_center);
+	
+	m_pTVCamModes->SetBounds(GetWide() - CAMMODES_WIDTH - MAINPANEL_ITEM_MARGIN - TVCAMMODES_WIDTH, 0, TVCAMMODES_WIDTH, TVCAMMODES_HEIGHT);
+	m_pTVCamModes->SetFont(font);
+	//m_pTVCamModes->GetMenu()->SetFgColor(Color(0, 0, 0, 255));
+	
+	m_pCamModes->SetBounds(GetWide() - TVCAMMODES_WIDTH, 0, CAMMODES_WIDTH, CAMMODES_HEIGHT);
+	m_pCamModes->SetFont(font);
+	//m_pCamModes->GetMenu()->SetFgColor(Color(0, 0, 0, 255));
 }
 
 //-----------------------------------------------------------------------------
@@ -155,11 +165,11 @@ void CSpectatorMenu::ApplySchemeSettings(IScheme *pScheme)
 //-----------------------------------------------------------------------------
 void CSpectatorMenu::PerformLayout()
 {
-	int w,h;
-	GetHudSize(w, h);
+	//int w,h;
+	//GetHudSize(w, h);
 
 	// fill the screen
-	SetSize(w,GetTall());
+	//SetSize(w,GetTall());
 }
 
 
@@ -168,65 +178,36 @@ void CSpectatorMenu::PerformLayout()
 //-----------------------------------------------------------------------------
 void CSpectatorMenu::OnTextChanged(KeyValues *data)
 {
-	Panel *panel = reinterpret_cast<vgui::Panel *>( data->GetPtr("panel") );
-
-	vgui::ComboBox *box = dynamic_cast<vgui::ComboBox *>( panel );
-
-	if( box == m_pConfigSettings) // don't change the text in the config setting combo
-	{
-		m_pConfigSettings->SetText("#Spec_Options");
-	}
-	else if ( box == m_pPlayerList )
-	{
-		KeyValues *kv = box->GetActiveItemUserData();
-		if ( kv && GameResources() )
-		{
-			const char *player = kv->GetString("player");
-
-			int playernum;
-
-			if (Camera()->GetTarget())
-				playernum = Camera()->GetTarget()->entindex();
-			else
-				playernum = 0;
-
-			bool update = false;
-
-			if (!Q_stricmp(player, "ball"))
-			{
-				if (playernum <= gpGlobals->maxClients)
-					update = true;
-			}
-			else
-			{
-				if (playernum >= 1 && playernum <= gpGlobals->maxClients)
-				{
-					const char *currentPlayerName = GameResources()->GetPlayerName( playernum );
-					update = Q_strcmp(currentPlayerName, player) != 0;
-				}
-				else
-					update = true;
-			}
-
-			if (update)
-			{
-				Camera()->SetTarget(kv->GetInt("index"));
-			}
-		}
-	}
 }
 
 void CSpectatorMenu::OnCommand( const char *command )
 {
-	if (!stricmp(command, "specnext") )
+	if (!strcmp(command, "spec_next") )
 	{
-		engine->ClientCmd("spec_next");
+		engine->ClientCmd(command);
 	}
-	else if (!stricmp(command, "specprev") )
+	else if (!strcmp(command, "spec_prev") )
 	{
-		engine->ClientCmd("spec_prev");
+		engine->ClientCmd(command);
 	}
-	else if (!strnicmp(command, "spec_mode", 9))
+	else if (!strncmp(command, "spec_mode", 9))
+	{
+		engine->ClientCmd(command);
+	}
+	else if (!strncmp(command, "cam_mode", 8))
+	{
+		m_pTVCamModes->SetVisible(atoi(&command[9]) == CAM_MODE_TVCAM);
+		engine->ClientCmd(command);
+	}
+	else if (!strncmp(command, "tvcam_mode", 10))
+	{
+		engine->ClientCmd(command);
+	}
+	else if (!strncmp(command, "spec_by_index", 13))
+	{
+		engine->ClientCmd(command);
+	}
+	else if (!strncmp(command, "spec_by_name", 12))
 	{
 		engine->ClientCmd(command);
 	}
@@ -234,9 +215,7 @@ void CSpectatorMenu::OnCommand( const char *command )
 
 void CSpectatorMenu::FireGameEvent( IGameEvent * event )
 {
-	const char *pEventName = event->GetName();
-
- 	if ( Q_strcmp( "spec_target_updated", pEventName ) == 0 )
+ 	if (!Q_strcmp("spec_target_updated", event->GetName()))
 	{
 		IGameResources *gr = GameResources();
 		if ( !gr )
@@ -245,35 +224,46 @@ void CSpectatorMenu::FireGameEvent( IGameEvent * event )
 		// make sure the player combo box is up to date
 		int playernum;
 
+		// make sure the player combo box is up to date
+		int targetIndex;
+
 		if (Camera()->GetTarget())
-			playernum = Camera()->GetTarget()->entindex();
+			targetIndex = Camera()->GetTarget()->entindex();
 		else
-			playernum = 0;
+			targetIndex = 0;
 
-		if ( playernum < 1 || playernum > gpGlobals->maxClients )
+		// If ball is spec target
+		if (targetIndex > gpGlobals->maxClients)
 		{
-			m_pPlayerList->ActivateItemByRow(0);
-			return;
+			m_pTargetList->ActivateItemByRow(0);
 		}
-
-		const char *selectedPlayerName = gr->GetPlayerName( playernum );
-		const char *currentPlayerName = "";
-		KeyValues *kv = m_pPlayerList->GetActiveItemUserData();
-		if ( kv )
+		else if (targetIndex >= 1 && targetIndex <= gpGlobals->maxClients)
 		{
-			currentPlayerName = kv->GetString( "player" );
-		}
-		if ( !FStrEq( currentPlayerName, selectedPlayerName ) )
-		{
-			for ( int i=0; i<m_pPlayerList->GetItemCount(); ++i )
+			for (int i = 0; i < m_pTargetList->GetMenu()->GetItemCount(); i++)
 			{
-				KeyValues *kv = m_pPlayerList->GetItemUserData( i );
-				if ( kv && FStrEq( kv->GetString( "player" ), selectedPlayerName ) )
+				if (m_pTargetList->GetMenu()->GetItemUserData(i)->GetInt("index") == targetIndex)
 				{
-					m_pPlayerList->ActivateItemByRow( i );
+					m_pTargetList->GetMenu()->ActivateItemByRow(i);
 					break;
 				}
 			}
+		}
+	}
+	else if (!Q_strcmp("cam_mode_updated", event->GetName()))
+	{
+		m_pCamModes->SetText(g_szCamModeNames[Camera()->GetCamMode()]);
+		m_pTVCamModes->SetVisible(Camera()->GetCamMode() == CAM_MODE_TVCAM);
+	}
+	else if (!Q_strcmp("tvcam_mode_updated", event->GetName()))
+	{
+		m_pTVCamModes->SetText(g_szTVCamModeNames[Camera()->GetTVCamMode()]);
+	}
+	else if (!Q_strcmp("player_team", event->GetName()))
+	{
+		C_SDKPlayer *pLocal = C_SDKPlayer::GetLocalSDKPlayer();
+		if (!pLocal || pLocal->GetUserID() == event->GetInt("userid"))
+		{
+			SetVisible(event->GetInt("newteam") == TEAM_SPECTATOR);
 		}
 	}
 }
@@ -286,7 +276,9 @@ void CSpectatorMenu::OnKeyCodePressed(KeyCode code)
 	if ( code == m_iDuckKey )
 	{
 		// hide if DUCK is pressed again
-		m_pViewPort->ShowPanel( this, false );
+		//m_pViewPort->ShowPanel( this, false );
+		//SetMouseInputEnabled(!IsMouseInputEnabled());
+		//SetKeyBoardInputEnabled(!IsKeyBoardInputEnabled());
 	}
 }
 
@@ -298,22 +290,16 @@ void CSpectatorMenu::ShowPanel(bool bShow)
 	if ( bShow )
 	{
 		Activate();
-		SetMouseInputEnabled( true );
-		SetKeyBoardInputEnabled( true );
 	}
 	else
 	{
-		SetVisible( false );
-		SetMouseInputEnabled( false );
-		SetKeyBoardInputEnabled( false );
+		SetVisible(false);
 	}
+}
 
-	bool bIsEnabled = true;
-	
-	m_pLeftButton->SetVisible( bIsEnabled );
-	m_pRightButton->SetVisible( bIsEnabled );
-	m_pPlayerList->SetVisible( bIsEnabled );
-	m_pViewOptions->SetVisible( bIsEnabled );
+bool CSpectatorMenu::NeedsUpdate()
+{
+	return IsVisible();
 }
 
 void CSpectatorMenu::Update( void )
@@ -330,288 +316,106 @@ void CSpectatorMenu::Update( void )
 	if ( !gr )
 		return;
 
-	KeyValues *kv = new KeyValues( "UserData", "player", "ball", "index", "0" );
-	m_pPlayerList->AddItem( L"Ball", kv );
-	kv->deleteThis();
-
-	int iPlayerIndex;
-	for ( iPlayerIndex = 1 ; iPlayerIndex <= gpGlobals->maxClients; iPlayerIndex++ )
+	if (!m_pTargetList->IsDropdownVisible())
 	{
+		m_pTargetList->GetMenu()->DeleteAllItems();
 
-		// does this slot in the array have a name?
-		if ( !gr->IsConnected( iPlayerIndex ) )
-			continue;
+		KeyValues *pKV = new KeyValues("UserData", "index", GetBall() ? GetBall()->entindex() : 0);
+		m_pTargetList->GetMenu()->AddMenuItem("Ball", VarArgs("spec_by_index %d", GetBall() ? GetBall()->entindex() : 0), this, pKV);
+		pKV->deleteThis();
 
-		if ( gr->IsLocalPlayer( iPlayerIndex ) )
-			continue;
-
-		if ( gr->GetTeam(iPlayerIndex) != TEAM_A && gr->GetTeam(iPlayerIndex) != TEAM_B )
-			continue;
-
-		wchar_t playerText[ 80 ], playerName[ 64 ], *team, teamName[ 64 ];
-		char localizeTeamName[64];
-		char szPlayerIndex[16];
-		g_pVGuiLocalize->ConvertANSIToUnicode( UTIL_SafeName( gr->GetPlayerName(iPlayerIndex) ), playerName, sizeof( playerName ) );
-		g_pVGuiLocalize->ConvertANSIToUnicode(gr->GetTeamCode( gr->GetTeam(iPlayerIndex) ), teamName, sizeof( teamName ) );
-
-		_snwprintf(playerText, ARRAYSIZE(playerText), L"%s | %s", teamName, playerName);
-		Q_snprintf( szPlayerIndex, sizeof( szPlayerIndex ), "%d", iPlayerIndex );
-
-		KeyValues *kv = new KeyValues( "UserData", "player", gr->GetPlayerName( iPlayerIndex ), "index", szPlayerIndex );
-		m_pPlayerList->AddItem( playerText, kv );
-		kv->deleteThis();
-	}
-
-	// make sure the player combo box is up to date
-	int playernum;
-
-	if (Camera()->GetTarget())
-		playernum = Camera()->GetTarget()->entindex();
-	else
-		playernum = 0;
-
-	// If ball is spec target
-	if (playernum > gpGlobals->maxClients)
-	{
-		m_pPlayerList->ActivateItemByRow(0);
-	}
-	else if (playernum >= 1 && playernum <= gpGlobals->maxClients)
-	{
-		const char *selectedPlayerName = gr->GetPlayerName( playernum );
-		for ( iPlayerIndex=0; iPlayerIndex<m_pPlayerList->GetItemCount(); ++iPlayerIndex )
+		for (int i = 1; i <= gpGlobals->maxClients; i++)
 		{
-			KeyValues *kv = m_pPlayerList->GetItemUserData( iPlayerIndex );
-			if ( kv && FStrEq( kv->GetString( "player" ), selectedPlayerName ) )
-			{
-				m_pPlayerList->ActivateItemByRow( iPlayerIndex );
-				break;
-			}
+			if (!gr->IsConnected(i) || gr->IsLocalPlayer(i) || gr->GetTeam(i) != TEAM_A && gr->GetTeam(i) != TEAM_B)
+				continue;
+
+			KeyValues *pKV = new KeyValues("UserData", "index", i);
+			char playerText[MAX_PLAYER_NAME_LENGTH * 2];
+			Q_snprintf(playerText, sizeof(playerText), "%s | %s", gr->GetTeamCode(gr->GetTeam(i)), gr->GetPlayerName(i));
+			m_pTargetList->GetMenu()->AddMenuItem(playerText, VarArgs("spec_by_index %d", i), this, pKV);
+			pKV->deleteThis();
 		}
+
+		m_pTargetList->GetMenu()->MakeReadyForUse();
 	}
 }
 
-//-----------------------------------------------------------------------------
-// main spectator panel
-
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Constructor
-//-----------------------------------------------------------------------------
-CSpectatorGUI::CSpectatorGUI(IViewPort *pViewPort) : EditablePanel( NULL, PANEL_SPECGUI )
-{
-// 	m_bHelpShown = false;
-//	m_bInsetVisible = false;
-//	m_iDuckKey = KEY_NONE;
-	m_bSpecScoreboard = false;
-
-	m_pViewPort = pViewPort;
-	g_pSpectatorGUI = this;
-
-	// initialize dialog
-	SetVisible(false);
-	SetProportional(true);
-
-	// load the new scheme early!!
-	//SetScheme("ClientScheme");
-	SetMouseInputEnabled( false );
-	SetKeyBoardInputEnabled( false );
-
- 	m_pBottomBarBlank = new Panel( this, "bottombarblank" );
-
-	// m_pBannerImage = new ImagePanel( m_pTopBar, NULL );
-
-	SetPaintBorderEnabled(false);
-	SetPaintBackgroundEnabled(false);
-
-	// m_pBannerImage->SetVisible(false);
-	InvalidateLayout();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Destructor
-//-----------------------------------------------------------------------------
-CSpectatorGUI::~CSpectatorGUI()
-{
-	g_pSpectatorGUI = NULL;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Sets the colour of the top and bottom bars
-//-----------------------------------------------------------------------------
-void CSpectatorGUI::ApplySchemeSettings(IScheme *pScheme)
-{
-	LoadControlSettings("Resource/UI/Spectator.res");
-	m_pBottomBarBlank->SetVisible( false );
-
-	BaseClass::ApplySchemeSettings( pScheme );
-	SetBgColor(Color( 0,0,0,0 ) ); // make the background transparent
-	m_pBottomBarBlank->SetBgColor(GetBlackBarColor());
-	// m_pBottomBar->SetBgColor(Color( 0,0,0,0 ));
-	SetPaintBorderEnabled(false);
-
-	SetBorder( NULL );
-
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: makes the GUI fill the screen
-//-----------------------------------------------------------------------------
-void CSpectatorGUI::PerformLayout()
-{
-	int w,h,x,y;
-	GetHudSize(w, h);
-	
-	// fill the screen
-	SetBounds(0,0,w,h);
-
-	// stretch the bottom bar across the screen
-	m_pBottomBarBlank->GetPos(x,y);
-	m_pBottomBarBlank->SetSize( w, h - y );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: checks spec_scoreboard cvar to see if the scoreboard should be displayed
-//-----------------------------------------------------------------------------
-void CSpectatorGUI::OnThink()
-{
-	BaseClass::OnThink();
-
-	if ( IsVisible() )
-	{
-		if ( m_bSpecScoreboard != spec_scoreboard.GetBool() )
-		{
-			if ( !spec_scoreboard.GetBool() || !gViewPortInterface->GetActivePanel() )
-			{
-				m_bSpecScoreboard = spec_scoreboard.GetBool();
-				gViewPortInterface->ShowPanel( PANEL_SCOREBOARD, m_bSpecScoreboard );
-			}
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Sets the text of a control by name
-//-----------------------------------------------------------------------------
-void CSpectatorGUI::SetLabelText(const char *textEntryName, const char *text)
-{
-	Label *entry = dynamic_cast<Label *>(FindChildByName(textEntryName));
-	if (entry)
-	{
-		entry->SetText(text);
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Sets the text of a control by name
-//-----------------------------------------------------------------------------
-void CSpectatorGUI::SetLabelText(const char *textEntryName, wchar_t *text)
-{
-	Label *entry = dynamic_cast<Label *>(FindChildByName(textEntryName));
-	if (entry)
-	{
-		entry->SetText(text);
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Sets the text of a control by name
-//-----------------------------------------------------------------------------
-void CSpectatorGUI::MoveLabelToFront(const char *textEntryName)
-{
-	Label *entry = dynamic_cast<Label *>(FindChildByName(textEntryName));
-	if (entry)
-	{
-		entry->MoveToFront();
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: shows/hides the buy menu
-//-----------------------------------------------------------------------------
-void CSpectatorGUI::ShowPanel(bool bShow)
-{
-	if ( bShow && !IsVisible() )
-	{
-		m_bSpecScoreboard = false;
-	}
-	SetVisible( bShow );
-	if ( !bShow && m_bSpecScoreboard )
-	{
-		gViewPortInterface->ShowPanel( PANEL_SCOREBOARD, false );
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Updates the gui, rearranges elements
-//-----------------------------------------------------------------------------
-void CSpectatorGUI::Update()
-{
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Updates the timer label if one exists
-//-----------------------------------------------------------------------------
-void CSpectatorGUI::UpdateTimer()
-{
-}
-
-CON_COMMAND_F( spec_next, "Spectate next player", FCVAR_CLIENTCMD_CAN_EXECUTE )
+CON_COMMAND_F( spec_next, "Spectate next target", FCVAR_CLIENTCMD_CAN_EXECUTE )
 {
 	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
 
 	if ( !pPlayer || !pPlayer->IsObserver() )
 		return;
 
-	Camera()->SpecNextPlayer( false );
+	Camera()->SpecNextTarget(false);
 }
 
-CON_COMMAND_F( spec_prev, "Spectate previous player", FCVAR_CLIENTCMD_CAN_EXECUTE )
+CON_COMMAND_F( spec_prev, "Spectate previous target", FCVAR_CLIENTCMD_CAN_EXECUTE )
 {
 	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
 
 	if ( !pPlayer || !pPlayer->IsObserver() )
 		return;
 
-	Camera()->SpecNextPlayer( true );
+	Camera()->SpecNextTarget(true);
 }
 
-CON_COMMAND_F( spec_mode, "Set spectator mode", FCVAR_CLIENTCMD_CAN_EXECUTE )
+CON_COMMAND_F(spec_by_index, "Spectate target by index", FCVAR_CLIENTCMD_CAN_EXECUTE)
 {
 	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
 
 	if (!pPlayer || !pPlayer->IsObserver())
 		return;
 
-	// we can choose any mode, not loked to PVS
+	if (args.ArgC() != 2)
+		return;
+
+	Camera()->SpecTargetByIndex(atoi(args[1]));
+}
+
+CON_COMMAND_F(spec_by_name, "Spectate target by name", FCVAR_CLIENTCMD_CAN_EXECUTE)
+{
+	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
+
+	if (!pPlayer || !pPlayer->IsObserver())
+		return;
+
+	if (args.ArgC() != 2)
+		return;
+
+	Camera()->SpecTargetByName(args[1]);
+}
+
+CON_COMMAND_F(cam_mode, "Set camera mode", FCVAR_CLIENTCMD_CAN_EXECUTE)
+{
+	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
+
+	if (!pPlayer || !pPlayer->IsObserver())
+		return;
+
 	int mode;
 
 	if ( args.ArgC() == 2 )
-	{
-		// set specifc mode
-		mode = Q_atoi( args[1] );
-	}
+		mode = Q_atoi(args[1]);
 	else
-	{
-		// set next mode 
 		mode = (Camera()->GetCamMode() + 1) % CAM_MODE_COUNT;
-	}
 
 	Camera()->SetCamMode(mode);
 }
 
-CON_COMMAND_F( spec_player, "Spectate player by name", FCVAR_CLIENTCMD_CAN_EXECUTE )
+CON_COMMAND_F(tvcam_mode, "Set TV camera mode", FCVAR_CLIENTCMD_CAN_EXECUTE)
 {
 	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
 
-	if ( !pPlayer || !pPlayer->IsObserver() )
+	if (!pPlayer || Camera()->GetCamMode() != CAM_MODE_TVCAM)
 		return;
 
-	if ( args.ArgC() != 2 )
-		return;
+	int mode;
 
-	Camera()->SpecNamedPlayer( args[1] );
+	if ( args.ArgC() == 2 )
+		mode = Q_atoi(args[1]);
+	else
+		mode = (Camera()->GetTVCamMode() + 1) % CAM_MODE_COUNT;
+
+	Camera()->SetTVCamMode(mode);
 }
-
-
-

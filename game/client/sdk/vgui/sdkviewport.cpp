@@ -209,14 +209,6 @@ int SDKViewport::GetDeathMessageStartHeight( void )
 {
 	int x = YRES(2);
 
-	IViewPortPanel *spectator = gViewPortInterface->FindPanelByName( PANEL_SPECGUI );
-
-	//TODO: Link to actual height of spectator bar
-	if ( spectator && spectator->IsVisible() )
-	{
-		x += YRES(52);
-	}
-
 	return x;
 }
 

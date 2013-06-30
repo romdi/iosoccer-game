@@ -118,6 +118,8 @@ enum { MATCHINFO_WIDTH = 320 };
 //-----------------------------------------------------------------------------
 CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : EditablePanel( NULL, PANEL_SCOREBOARD )
 {
+	SetScheme("ClientScheme");
+
 	m_iPlayerIndexSymbol = KeyValuesSystem()->GetSymbolForString("playerindex");
 	m_nCloseKey = BUTTON_CODE_INVALID;
 
@@ -127,9 +129,6 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Editabl
 
 	// initialize dialog
 	SetProportional(false);
-
-	// set the scheme before any child control is created
-	//SetScheme("ClientScheme");
 
 	m_pMainPanel = new Panel(this);
 
@@ -681,14 +680,17 @@ void CClientScoreBoardDialog::Update( void )
 	{
 		m_pRequestTimeout->SetText(VarArgs("Timeout (%d left)", pLocal->GetTeam()->Get_TimeoutsLeft()));
 
-		m_pFormationList->GetMenu()->DeleteAllItems();
-
-		for (int i = 0; i < SDKGameRules()->GetFormations().Count(); i++)
+		if (!m_pFormationList->IsDropdownVisible())
 		{
-			m_pFormationList->GetMenu()->AddMenuItem(SDKGameRules()->GetFormations()[i]->name, VarArgs("formation %d", i), this);
-		}
+			m_pFormationList->GetMenu()->DeleteAllItems();
 
-		//m_pFormationList->GetMenu()->ActivateItemByRow(pLocal->GetTeam()->m_nFormationIndex);
+			for (int i = 0; i < SDKGameRules()->GetFormations().Count(); i++)
+			{
+				m_pFormationList->GetMenu()->AddMenuItem(SDKGameRules()->GetFormations()[i]->name, VarArgs("formation %d", i), this);
+			}
+
+			m_pFormationList->ActivateItemByRow(pLocal->GetTeam()->GetFormationIndex());
+		}
 	}
 
 	m_fNextUpdateTime = gpGlobals->curtime + 0.25f; 

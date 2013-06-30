@@ -36,6 +36,7 @@
 #include "in_buttons.h"
 #include "c_ios_mapentities.h"
 #include "ios_camera.h"
+#include "spectatorgui.h"
 #if defined( _X360 )
 #include "xbox/xbox_console.h"
 #endif
@@ -450,7 +451,9 @@ int ClientModeShared::HandleSpectatorKeyInput( int down, ButtonCode_t keynum, co
 	// we are in spectator mode, open spectator menu
 	if ( down && pszCurrentBinding && Q_strcmp( pszCurrentBinding, "+duck" ) == 0 )
 	{
-		m_pViewport->ShowPanel( PANEL_SPECMENU, true );
+		//m_pViewport->ShowPanel( PANEL_SPECMENU, true );
+		CSpectatorMenu *pSpecMenu = (CSpectatorMenu *)m_pViewport->FindPanelByName(PANEL_SPECMENU);
+		pSpecMenu->SetMouseInputEnabled(!pSpecMenu->IsMouseInputEnabled());
 		return 0; // we handled it, don't handle twice or send to server
 	}
 	else if ( down && pszCurrentBinding && Q_strcmp( pszCurrentBinding, "+moveright" ) == 0 && Camera()->GetCamMode() != CAM_MODE_ROAMING)
@@ -465,11 +468,16 @@ int ClientModeShared::HandleSpectatorKeyInput( int down, ButtonCode_t keynum, co
 	}
 	else if ( down && pszCurrentBinding && Q_strcmp( pszCurrentBinding, "+jump" ) == 0 )
 	{
-		engine->ClientCmd( "spec_mode" );
+		engine->ClientCmd( "cam_mode" );
 		return 0;
 	}
 	else if ( down && pszCurrentBinding && Q_strcmp( pszCurrentBinding, "+strafe" ) == 0 )
 	{
+		return 0;
+	}
+	else if ( down && pszCurrentBinding && Q_strncmp( pszCurrentBinding, "slot", 4 ) == 0 )
+	{
+		engine->ClientCmd(VarArgs("tvcam_mode %d", (pszCurrentBinding[4] - '0') - 1));
 		return 0;
 	}
 

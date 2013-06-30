@@ -379,9 +379,6 @@ CBall::CBall()
 	m_nPossessingTeam = TEAM_INVALID;
 	m_flPossessionStart = -1;
 	m_flLastMatchEventSetTime = -1;
-	m_pScorer = NULL;
-	m_pFirstAssister = NULL;
-	m_pSecondAssister = NULL;
 	m_bNonnormalshotsBlocked = false;
 	m_bShotsBlocked = false;
 	m_bHitThePost = false;
@@ -752,27 +749,20 @@ void CBall::SendNotifications()
 {
 	if (m_eNextState == BALL_STATE_GOAL)
 	{
-		CSDKPlayer *pKeeper = NULL;
 		bool isOwnGoal;
-
-		// Prevent own goals from keeper punches
-		if (LastInfo(true)->m_eBodyPart == BODY_PART_KEEPERPUNCH)
-		{
-			isOwnGoal = false;
-			pKeeper = LastPl(true);
-		}
-		else if (m_nTeam == LastTeam(true))
-			isOwnGoal = true;
-		else
-			isOwnGoal = false;
+		int scoringTeam;
+		CSDKPlayer *pScorer = NULL;
+		CSDKPlayer *pFirstAssister = NULL;
+		CSDKPlayer *pSecondAssister = NULL;
+		GetGoalInfo(isOwnGoal, scoringTeam, &pScorer, &pFirstAssister, &pSecondAssister);
 
 		if (isOwnGoal)
 		{
 			IGameEvent *pEvent = gameeventmanager->CreateEvent("own_goal");
 			if (pEvent)
 			{
-				pEvent->SetInt("causing_team", LastTeam(true, pKeeper));
-				pEvent->SetInt("causer_userid", LastPl(true, pKeeper) ? LastPl(true, pKeeper)->GetUserID() : 0);
+				pEvent->SetInt("causing_team", GetGlobalTeam(scoringTeam)->GetOppTeamNumber());
+				pEvent->SetInt("causer_userid", pScorer ? pScorer->GetUserID() : 0);
 				gameeventmanager->FireEvent(pEvent);
 			}
 		}
@@ -781,10 +771,10 @@ void CBall::SendNotifications()
 			IGameEvent *pEvent = gameeventmanager->CreateEvent("goal");
 			if (pEvent)
 			{
-				pEvent->SetInt("scoring_team", LastTeam(true));
-				pEvent->SetInt("scorer_userid", m_pScorer ? m_pScorer->GetUserID() : 0);
-				pEvent->SetInt("first_assister_userid", m_pFirstAssister ? m_pFirstAssister->GetUserID() : 0);
-				pEvent->SetInt("second_assister_userid", m_pSecondAssister ? m_pSecondAssister->GetUserID() : 0);
+				pEvent->SetInt("scoring_team", scoringTeam);
+				pEvent->SetInt("scorer_userid", pScorer ? pScorer->GetUserID() : 0);
+				pEvent->SetInt("first_assister_userid", pFirstAssister ? pFirstAssister->GetUserID() : 0);
+				pEvent->SetInt("second_assister_userid", pSecondAssister ? pSecondAssister->GetUserID() : 0);
 				gameeventmanager->FireEvent(pEvent);
 			}
 		}
@@ -1537,16 +1527,14 @@ void CBall::State_CORNER_Leave(ball_state_t newState)
 
 void CBall::State_GOAL_Enter()
 {
-	for (int i = 1; i <= gpGlobals->maxClients; i++)
-	{
-		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+	bool isOwnGoal;
+	int scoringTeam;
+	CSDKPlayer *pScorer = NULL;
+	CSDKPlayer *pFirstAssister = NULL;
+	CSDKPlayer *pSecondAssister = NULL;
+	GetGoalInfo(isOwnGoal, scoringTeam, &pScorer, &pFirstAssister, &pSecondAssister);
 
-		if (!CSDKPlayer::IsOnField(pPl))
-			continue;
-
-		if (pPl->GetTeamNumber() != m_nTeam)
-			pPl->AddFlag(FL_CELEB);
-	}
+	m_pPl = pScorer;
 
 	float delay = sv_ball_goalcelebduration.GetFloat();
 
@@ -1568,6 +1556,18 @@ void CBall::State_GOAL_Enter()
 
 void CBall::State_GOAL_Think()
 {
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+
+		if (!CSDKPlayer::IsOnField(pPl))
+			continue;
+
+		if (pPl->GetTeamNumber() == m_nTeam)
+			pPl->AddFlag(FL_FROZEN);
+		else
+			pPl->AddFlag(FL_CELEB);
+	}
 }
 
 void CBall::State_GOAL_Leave(ball_state_t newState)
@@ -1581,7 +1581,7 @@ void CBall::State_GOAL_Leave(ball_state_t newState)
 		if (!CSDKPlayer::IsOnField(pPl))
 			continue;
 
-		pPl->RemoveFlag(FL_CELEB);
+		pPl->RemoveFlag(FL_CELEB | FL_FROZEN);
 		pPl->DoServerAnimationEvent(PLAYERANIMEVENT_CANCEL);
 	}
 }
@@ -2732,6 +2732,56 @@ void CBall::Think( void	)
 	State_Think();
 }
 
+void CBall::GetGoalInfo(bool &isOwnGoal, int &scoringTeam, CSDKPlayer **pScorer, CSDKPlayer **pFirstAssister, CSDKPlayer **pSecondAssister)
+{
+	CSDKPlayer *pKeeper = NULL;
+
+	// Prevent own goals from keeper punches
+	if (LastInfo(true)->m_eBodyPart == BODY_PART_KEEPERPUNCH)
+	{
+		isOwnGoal = false;
+		pKeeper = LastPl(true);
+	}
+	else if (m_nTeam == LastTeam(true))
+		isOwnGoal = true;
+	else
+		isOwnGoal = false;
+
+	if (isOwnGoal)
+	{
+		scoringTeam = LastOppTeam(true);
+		*pScorer = LastPl(true);
+	}
+	else
+	{
+		scoringTeam = LastTeam(true, pKeeper);
+		*pScorer = LastPl(true, pKeeper);
+
+		if (!*pScorer)
+			return;
+
+		*pFirstAssister = LastPl(true, pKeeper, *pScorer);
+
+		if (!*pFirstAssister
+			|| (*pFirstAssister)->GetTeam() != (*pScorer)->GetTeam()
+			|| gpGlobals->curtime - LastInfo(true, pKeeper, *pScorer)->m_flTime > sv_ball_stats_assist_maxtime.GetFloat())
+		{
+			*pFirstAssister = NULL;
+			return;
+		}
+
+		*pSecondAssister = LastPl(true, pKeeper, *pScorer, *pFirstAssister);
+
+		if (!*pSecondAssister
+			|| (*pSecondAssister)->GetTeam() != (*pScorer)->GetTeam()
+			|| gpGlobals->curtime - LastInfo(true, pKeeper, *pScorer, *pFirstAssister)->m_flTime > sv_ball_stats_assist_maxtime.GetFloat())
+		{
+			*pSecondAssister = NULL;
+			return;
+		}
+	}
+}
+
 void CBall::TriggerGoal(int team)
 {
 	m_nTeam = team;
@@ -2741,7 +2791,6 @@ void CBall::TriggerGoal(int team)
 		if (m_ePenaltyState == PENALTY_KICKED && m_nTeam == m_nFoulingTeam)
 		{
 			m_ePenaltyState = PENALTY_SCORED;
-			//GetGlobalTeam(m_nFouledTeam)->AddGoal();
 			m_bHasQueuedState = true;
 		}
 
@@ -2762,73 +2811,37 @@ void CBall::TriggerGoal(int team)
 
 	SDKGameRules()->SetKickOffTeam(m_nTeam);
 
-	int scoringTeam;
-	CSDKPlayer *pKeeper = NULL;
 	bool isOwnGoal;
-
-	// Prevent own goals from keeper punches
-	if (LastInfo(true)->m_eBodyPart == BODY_PART_KEEPERPUNCH)
-	{
-		isOwnGoal = false;
-		pKeeper = LastPl(true);
-	}
-	else if (m_nTeam == LastTeam(true))
-		isOwnGoal = true;
-	else
-		isOwnGoal = false;
+	int scoringTeam;
+	CSDKPlayer *pScorer = NULL;
+	CSDKPlayer *pFirstAssister = NULL;
+	CSDKPlayer *pSecondAssister = NULL;
+	GetGoalInfo(isOwnGoal, scoringTeam, &pScorer, &pFirstAssister, &pSecondAssister);
 
 	if (isOwnGoal)
 	{
-		scoringTeam = LastOppTeam(true);
+		if (pScorer)
+			pScorer->AddOwnGoal();
 
-		if (LastPl(true))
-			LastPl(true)->AddOwnGoal();
-
-		ReplayManager()->AddMatchEvent(MATCH_EVENT_OWNGOAL, scoringTeam, LastPl(true));
+		ReplayManager()->AddMatchEvent(MATCH_EVENT_OWNGOAL, scoringTeam, pScorer);
 	}
 	else
 	{
-		scoringTeam = LastTeam(true, pKeeper);
+		if (pScorer)
+			pScorer->AddGoal();
 
-		m_pScorer = NULL;
-		m_pFirstAssister = NULL;
-		m_pSecondAssister = NULL;
+		if (pFirstAssister)
+			pFirstAssister->AddAssist();
 
-		m_pScorer = LastPl(true, pKeeper);
+		if (pSecondAssister)
+			pSecondAssister->AddAssist();
 
-		if (m_pScorer)
-		{
-			m_pScorer->AddGoal();
-
-			m_pFirstAssister = LastPl(true, pKeeper, m_pScorer);
-
-			if (m_pFirstAssister && m_pFirstAssister->GetTeam() == m_pScorer->GetTeam() && gpGlobals->curtime - LastInfo(true, pKeeper, m_pScorer)->m_flTime <= sv_ball_stats_assist_maxtime.GetFloat())
-			{
-				m_pFirstAssister->AddAssist();
-
-				m_pSecondAssister = LastPl(true, pKeeper, m_pScorer, m_pFirstAssister);
-
-				if (m_pSecondAssister && m_pSecondAssister->GetTeam() == m_pScorer->GetTeam() && gpGlobals->curtime - LastInfo(true, pKeeper, m_pScorer, m_pFirstAssister)->m_flTime <= sv_ball_stats_assist_maxtime.GetFloat())
-				{
-					m_pSecondAssister->AddAssist();
-				}
-				else
-					m_pSecondAssister = NULL;
-			}
-			else
-				m_pFirstAssister = NULL;
-		}
-		else
-			m_pScorer = NULL;
-
-		ReplayManager()->AddMatchEvent(MATCH_EVENT_GOAL, scoringTeam, m_pScorer, m_pFirstAssister, m_pSecondAssister);
+		ReplayManager()->AddMatchEvent(MATCH_EVENT_GOAL, scoringTeam, pScorer, pFirstAssister, pSecondAssister);
 	}
 
-	//GetGlobalTeam(scoringTeam)->AddGoal();
-
-	CSDKPlayer *pGoalKeeper = FindNearestPlayer(m_nTeam, FL_POS_KEEPER);
-	if (CSDKPlayer::IsOnField(pGoalKeeper))
-		pGoalKeeper->AddGoalConceded();
+	CSDKPlayer *pKeeper = GetGlobalTeam(m_nTeam)->GetPlayerByPosType(POS_GK);
+	if (pKeeper)
+		pKeeper->AddGoalConceded();
 
 	State_Transition(BALL_STATE_GOAL, sv_ball_statetransition_activationdelay_short.GetFloat(), false, true);
 }
@@ -3276,9 +3289,6 @@ void CBall::Reset()
 	m_nPossessingTeam = TEAM_INVALID;
 	m_flPossessionStart = -1;
 	m_flLastMatchEventSetTime = -1;
-	m_pScorer = NULL;
-	m_pFirstAssister = NULL;
-	m_pSecondAssister = NULL;
 	m_bNonnormalshotsBlocked = false;
 	m_bShotsBlocked = false;
 	m_bHitThePost = false;

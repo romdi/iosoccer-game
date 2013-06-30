@@ -426,15 +426,6 @@ enum PLAYER_ANIM
 #define	DAMAGE_YES				2
 #define	DAMAGE_AIM				3
 
-// Spectator Movement modes
-enum {
-	CAM_MODE_TVCAM,
-	CAM_MODE_ROAMING,
-	CAM_MODE_FREE_CHASE,
-	CAM_MODE_LOCKED_CHASE,
-	CAM_MODE_COUNT,
-};
-
 // Force Camera Restrictions with mp_forcecamera
 enum {
 	OBS_ALLOW_ALL = 0,	// allow all modes, all targets
