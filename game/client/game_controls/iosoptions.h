@@ -213,6 +213,7 @@ class CVisualSettingPanel : public PropertyPage, public ISettingPanel
 	Panel *m_pContent;
 
 	CheckButton *m_pCenteredStaminaBar;
+	CheckButton *m_pQuickTactic;
 
 public:
 

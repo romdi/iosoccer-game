@@ -656,6 +656,7 @@ CVisualSettingPanel::CVisualSettingPanel(Panel *parent, const char *panelName) :
 {
 	m_pContent = new Panel(this, "");
 	m_pCenteredStaminaBar = new CheckButton(m_pContent, "", "Centered Stamina Bar");
+	m_pQuickTactic = new CheckButton(m_pContent, "", "Quick Tactic Panel");
 }
 
 void CVisualSettingPanel::PerformLayout()
@@ -664,16 +665,19 @@ void CVisualSettingPanel::PerformLayout()
 
 	m_pContent->SetBounds(PADDING, PADDING, GetWide() - 2 * PADDING, GetTall() - 2 * PADDING);
 	m_pCenteredStaminaBar->SetBounds(0, 0, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
+	m_pQuickTactic->SetBounds(0, TEXT_HEIGHT, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
 }
 
 void CVisualSettingPanel::Save()
 {
 	g_pCVar->FindVar("centeredstaminabar")->SetValue(m_pCenteredStaminaBar->IsSelected() ? 1 : 0);
+	g_pCVar->FindVar("quicktacticpanel")->SetValue(m_pQuickTactic->IsSelected() ? 1 : 0);
 }
 
 void CVisualSettingPanel::Load()
 {
 	m_pCenteredStaminaBar->SetSelected(g_pCVar->FindVar("centeredstaminabar")->GetBool());
+	m_pQuickTactic->SetSelected(g_pCVar->FindVar("quicktacticpanel")->GetBool());
 }
 
 void CVisualSettingPanel::Update()

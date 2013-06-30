@@ -390,7 +390,7 @@ void CHudScorebar::OnThink( void )
 	{
 		if (GetLocalPlayerTeam() == TEAM_A || GetLocalPlayerTeam() == TEAM_B)
 		{
-			m_pQuickTacticPanel->SetVisible(true);
+			m_pQuickTacticPanel->SetVisible(g_pCVar->FindVar("quicktacticpanel")->GetBool());
 
 			if (i == GetGlobalTeam(GetLocalPlayerTeam())->GetQuickTactic())
 			{
