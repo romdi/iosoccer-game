@@ -125,7 +125,7 @@ void C_Camera::Init()
 
 void C_Camera::Reset()
 {
-	m_nCameraMode = OBS_MODE_TVCAM;
+	m_nCamMode = CAM_MODE_TVCAM;
 	m_nTarget = 0;
 	m_flFOV = 90;
 	m_vCamOrigin.Init();
@@ -141,9 +141,40 @@ void C_Camera::Reset()
 	m_nLastPossessingTeam = TEAM_UNASSIGNED;
 }
 
-int C_Camera::GetMode()
+int C_Camera::GetCamMode()
 {
-	return m_nCameraMode;	
+	C_SDKPlayer *pLocal = C_SDKPlayer::GetLocalSDKPlayer();
+	if (!pLocal)
+		return CAM_MODE_ROAMING;
+
+	if (GetReplayManager() && GetReplayManager()->IsReplaying())
+	{
+		return CAM_MODE_TVCAM;
+	}
+	else if (GetBall() && GetBall()->m_eBallState == BALL_STATE_GOAL)
+	{
+		if (pLocal->IsObserver() || !(pLocal->GetFlags() & FL_CELEB))
+			return CAM_MODE_TVCAM;
+		else
+			return CAM_MODE_FREE_CHASE;
+	}
+	else
+	{
+		if (pLocal->IsObserver())
+			return m_nCamMode;
+		else
+			return CAM_MODE_FREE_CHASE;
+	}
+}
+
+void C_Camera::SetCamMode(int mode)
+{
+	if ( m_nCamMode == mode )
+		return;
+
+    Assert(mode > 0 && mode < CAM_MODE_COUNT);
+
+	m_nCamMode = mode;
 }
 
 C_BaseEntity* C_Camera::GetTarget()
@@ -154,16 +185,6 @@ C_BaseEntity* C_Camera::GetTarget()
 	C_BaseEntity* target = ClientEntityList().GetEnt( m_nTarget );
 
 	return target;
-}
-
-void C_Camera::SetMode(int iMode)
-{
-	if ( m_nCameraMode == iMode )
-		return;
-
-    Assert( iMode > OBS_MODE_NONE && iMode <= LAST_PLAYER_OBSERVERMODE );
-
-	m_nCameraMode = iMode;
 }
 
 void C_Camera::SetTarget( int nEntity ) 
@@ -271,7 +292,7 @@ void C_Camera::FireGameEvent( IGameEvent * event)
 			// for demo playback show full menu
 			gViewPortInterface->ShowPanel( PANEL_SPECMENU, true );
 
-			SetMode( OBS_MODE_ROAMING );
+			SetCamMode( CAM_MODE_ROAMING );
 		}
 		else
 		{
@@ -438,40 +459,14 @@ void C_Camera::Accelerate( Vector& wishdir, float wishspeed, float accel )
 
 void C_Camera::CalcView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov)
 {
-	C_SDKPlayer *pLocal = C_SDKPlayer::GetLocalSDKPlayer();
-
-	if (pLocal->GetObserverMode() == OBS_MODE_NONE)
-	{
-		if ((pLocal->m_nButtons & IN_ZOOM)
-			&& (pLocal->GetTeamNumber() == TEAM_A || pLocal->GetTeamNumber() == TEAM_B)
-			&& g_PR->GetTeamPosType(GetLocalPlayerIndex()) == POS_GK
-			&& GetBall() && Sign(GetBall()->GetLocalOrigin().y - SDKGameRules()->m_vKickOff.GetY()) == pLocal->GetTeam()->m_nForward)
-		{
-			CalcHawkEyeView(eyeOrigin, eyeAngles, fov);
-		}
-		else
-		{
-			CalcChaseCamView(eyeOrigin, eyeAngles, fov);
-		}
-	}
+	if (GetCamMode() == CAM_MODE_TVCAM)
+		CalcTVCamView(eyeOrigin, eyeAngles, fov);
+	else if (GetCamMode() == CAM_MODE_FREE_CHASE || GetCamMode() == CAM_MODE_LOCKED_CHASE)
+		CalcChaseCamView(eyeOrigin, eyeAngles, fov);
 	else
-	{
-		switch (GetMode())
-		{
-		case OBS_MODE_TVCAM:
-		default:
-			CalcTVCamView(eyeOrigin, eyeAngles, fov);
-			break;
-		case OBS_MODE_ROAMING:
-			CalcRoamingView(eyeOrigin, eyeAngles, fov);
-			break;
-		case OBS_MODE_FREE_CHASE:
-		case OBS_MODE_LOCKED_CHASE:
-			CalcChaseCamView(eyeOrigin, eyeAngles, fov);
-			break;
-		}
-	}
+		CalcRoamingView(eyeOrigin, eyeAngles, fov);
 
+	// Save the last position and angle so when switching to roaming view it starts at the current position
 	m_vCamOrigin = eyeOrigin;
 	m_aCamAngle = eyeAngles;
 }
@@ -491,7 +486,17 @@ void C_Camera::CalcChaseCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov
 
 	C_BaseEntity *pTarget = NULL;
 
-	if (pLocal->GetObserverMode() == OBS_MODE_NONE)
+	if ((pLocal->m_nButtons & IN_ZOOM)
+		&& !pLocal->IsObserver()
+		&& g_PR->GetTeamPosType(GetLocalPlayerIndex()) == POS_GK
+		&& GetBall()
+		&& Sign(GetBall()->GetLocalOrigin().y - SDKGameRules()->m_vKickOff.GetY()) == pLocal->GetTeam()->m_nForward)
+	{
+		CalcHawkEyeView(eyeOrigin, eyeAngles, fov);
+		return;
+	}
+
+	if (!pLocal->IsObserver())
 	{
 		pTarget = pLocal;
 
@@ -521,7 +526,7 @@ void C_Camera::CalcChaseCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov
 	const QAngle camAngles = ::input->GetCameraAngles();
 	Vector &camOffset = ::input->GetCameraOffset();
 
-	if (pLocal->IsObserver() && GetMode() == OBS_MODE_LOCKED_CHASE)
+	if (pLocal->IsObserver() && GetCamMode() == CAM_MODE_LOCKED_CHASE && !dynamic_cast<C_Ball *>(pTarget))
 	{
 		camOffset[PITCH] = eyeAngles[PITCH];
 		camOffset[YAW] = eyeAngles[YAW];
@@ -604,14 +609,13 @@ void C_Camera::CalcTVCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov)
 
 		switch (GetReplayManager()->m_nReplayRunIndex)
 		{
-		case 0: camType = CAM_SIDELINE; break;
-		case 1: camType = CAM_FLY_FOLLOW; break;
-		case 2: camType = CAM_GOAL_LINE; break;
-		case 3: camType = CAM_GOAL_CORNER; break;
-		case 4: camType = CAM_TOPDOWN; break;
-		case 5: camType = CAM_BEHIND_GOAL; break;
-		case 6: camType = CAM_FIXED_SIDELINE; break;
-		default: camType = CAM_SIDELINE; break;
+		case 0: default: camType = TVCAM_SIDELINE; break;
+		case 1: camType = TVCAM_FLY_FOLLOW; break;
+		case 2: camType = TVCAM_GOAL_LINE; break;
+		case 3: camType = TVCAM_GOAL_CORNER; break;
+		case 4: camType = TVCAM_TOPDOWN; break;
+		case 5: camType = TVCAM_BEHIND_GOAL; break;
+		case 6: camType = TVCAM_FIXED_SIDELINE; break;
 		}
 
 		atMinGoalPos = GetReplayManager()->m_bAtMinGoalPos;
@@ -623,7 +627,7 @@ void C_Camera::CalcTVCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov)
 		if (!pTarget)
 			pTarget = GetBall();
 
-		camType = CAM_SIDELINE;
+		camType = TVCAM_SIDELINE;
 		atMinGoalPos = pTarget->GetLocalOrigin().y < SDKGameRules()->m_vKickOff.GetY();
 		targetPos = pTarget->GetLocalOrigin();
 
@@ -650,7 +654,7 @@ void C_Camera::CalcTVCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov)
 				m_flPossCoeff = Lerp(frac, m_flOldPossCoeff, (float)GetGlobalTeam(GetBall()->m_nCurrentTeam)->m_nForward);
 			}
 
-			if (camType == CAM_SIDELINE)
+			if (camType == TVCAM_SIDELINE)
 			{
 				targetPos.y += m_flPossCoeff * mp_tvcam_offset_forward.GetInt();
 			}
@@ -673,7 +677,7 @@ void C_Camera::CalcTVCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov)
 
 	switch (camType)
 	{
-	case CAM_SIDELINE:
+	case TVCAM_SIDELINE:
 		{
 			if (SDKGameRules() && SDKGameRules()->IsIntermissionState() && GetReplayManager() && !GetReplayManager()->IsReplaying())
 			{
@@ -761,14 +765,14 @@ void C_Camera::CalcTVCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov)
 			}
 		}
 		break;
-	case CAM_FIXED_SIDELINE:
+	case TVCAM_FIXED_SIDELINE:
 		{
 			Vector newPos = Vector(SDKGameRules()->m_vKickOff.GetX() - mp_tvcam_sideline_offset_north.GetInt(), SDKGameRules()->m_vKickOff.GetY(), SDKGameRules()->m_vKickOff.GetZ() + mp_tvcam_sideline_offset_height.GetInt());
 			eyeOrigin = Lerp(mp_tvcam_sideline_zoomcoeff.GetFloat(), newPos, targetPos);
 			VectorAngles(Vector(targetPos.x -  mp_tvcam_offset_north.GetInt(), targetPos.y, targetPos.z) - newPos, eyeAngles);
 		}
 		break;
-	case CAM_BEHIND_GOAL:
+	case TVCAM_BEHIND_GOAL:
 		{
 			float yPos = atMinGoalPos ? SDKGameRules()->m_vFieldMin.GetY() : SDKGameRules()->m_vFieldMax.GetY();
 			Vector goalCenter = Vector((SDKGameRules()->m_vFieldMin.GetX() + SDKGameRules()->m_vFieldMax.GetX()) / 2.0f, yPos, SDKGameRules()->m_vKickOff.GetZ());
@@ -779,7 +783,7 @@ void C_Camera::CalcTVCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov)
 			VectorAngles(newDir, eyeAngles);
 		}
 		break;
-	case CAM_TOPDOWN:
+	case TVCAM_TOPDOWN:
 		{
 			Vector newPos = Vector(targetPos.x, targetPos.y, SDKGameRules()->m_vKickOff.GetZ() + 600) + (atMinGoalPos ? 1 : -1) * 600;
 			Vector newDir = Vector(0, (atMinGoalPos ? -1 : 1) * 0.0000001, -1);
@@ -788,7 +792,7 @@ void C_Camera::CalcTVCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov)
 			VectorAngles(newDir, eyeAngles);
 		}
 		break;
-	case CAM_FLY_FOLLOW:
+	case TVCAM_FLY_FOLLOW:
 		{
 			Vector newPos = Vector(targetPos.x, targetPos.y + (atMinGoalPos ? 1 : -1) * 500, SDKGameRules()->m_vKickOff.GetZ() + 225);
 			Vector newDir = Vector(0, (atMinGoalPos ? -1 : 1) * 1.75f, -1);
@@ -797,7 +801,7 @@ void C_Camera::CalcTVCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov)
 			VectorAngles(newDir, eyeAngles);
 		}
 		break;
-	case CAM_GOAL_CORNER:
+	case TVCAM_GOAL_CORNER:
 		{
 			// setpos -139.917419 2082.051514 -140.906738;setang 13.860826 -57.723770 0.000000
 			// setpos 139.729691 -2086.090820 -149.303741;setang 13.397299 125.494232 0.000000
@@ -813,7 +817,7 @@ void C_Camera::CalcTVCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov)
 			eyeAngles = newAng;
 		}
 		break;
-	case CAM_GOAL_LINE:
+	case TVCAM_GOAL_LINE:
 		{
 			Vector center = Vector(SDKGameRules()->m_vKickOff.GetX(), (atMinGoalPos ? SDKGameRules()->m_vFieldMin.GetY() + 5 : SDKGameRules()->m_vFieldMax.GetY() - 5), SDKGameRules()->m_vKickOff.GetZ());
 			Vector newPos = center;

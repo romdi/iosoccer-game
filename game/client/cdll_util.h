@@ -75,10 +75,6 @@ client_textmessage_t	*TextMessageGet( const char *pName );
 
 char	*VarArgs( char *format, ... );
 	
-
-// Get the entity the local player is spectating (can be a player or a ragdoll entity).
-int		GetSpectatorTarget();
-int		GetSpectatorMode( void );
 bool	IsPlayerIndex( int index );
 int		GetLocalPlayerIndex( void );
 int		GetLocalPlayerTeam( void );

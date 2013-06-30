@@ -129,14 +129,13 @@ public:
 	int		GetBonusChallenge() const { return m_iBonusChallenge; }
 
 	// observer mode
-	virtual int			GetObserverMode() const;
+	virtual int			GetServerCamMode() const;
 	virtual CBaseEntity	*GetObserverTarget() const;
 
 	bool			AudioStateIsUnderwater( Vector vecMainViewOrigin );
 
 	bool IsObserver() const;
 	bool IsHLTV() const;
-	void ResetObserverMode();
 	bool IsBot( void ) const { return false; }
 
 	// Eye position..
@@ -404,7 +403,7 @@ protected:
 	bool			JustEnteredVehicle();
 
 // DATA
-	int				m_iObserverMode;	// if in spectator mode != 0
+	int				m_nServerCamMode;	// if in spectator mode != 0
 	Vector			m_vecFreezeFrameStart;
 	float			m_flFreezeFrameStartTime;	// Time at which we entered freeze frame observer mode
 	float			m_flFreezeFrameDistance;
@@ -581,7 +580,7 @@ inline C_BaseEntity *C_BasePlayer::GetUseEntity()
 
 inline bool C_BasePlayer::IsObserver() const 
 { 
-	return (GetObserverMode() != OBS_MODE_NONE); 
+	return GetTeamNumber() == TEAM_SPECTATOR; 
 }
 
 inline int C_BasePlayer::GetImpulse( void ) const 

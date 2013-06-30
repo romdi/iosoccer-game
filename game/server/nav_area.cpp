@@ -3270,7 +3270,7 @@ static void CommandNavUpdateBlocked( void )
 			CBasePlayer *player = UTIL_GetListenServerHost();
 			if ( player )
 			{
-				if ( ( player->IsDead() || player->IsObserver() ) && player->GetObserverMode() == OBS_MODE_ROAMING )
+				if ( ( player->IsDead() || player->IsObserver() ) )
 				{
 					Vector origin = blockedArea->GetCenter() + Vector( 0, 0, 0.75f * HumanHeight );
 					UTIL_SetOrigin( player, origin );

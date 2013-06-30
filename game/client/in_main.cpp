@@ -972,11 +972,8 @@ void CInput::ControllerMove( float frametime, CUserCmd *cmd )
 	if ( IsPC() )
 	{
 		C_BasePlayer *pLocal = C_BasePlayer::GetLocalPlayer();
-		if ( !m_fCameraInterceptingMouse
-			&& m_fMouseActive
-			&& pLocal->GetObserverMode() == OBS_MODE_NONE
-			|| (Camera()->GetMode() != OBS_MODE_LOCKED_CHASE
-				&& Camera()->GetMode() != OBS_MODE_TVCAM) )
+		if (!m_fCameraInterceptingMouse && m_fMouseActive
+			&& Camera()->GetCamMode() != CAM_MODE_LOCKED_CHASE && Camera()->GetCamMode() != CAM_MODE_TVCAM)
 		{
 			MouseMove( cmd);
 		}
@@ -1556,6 +1553,7 @@ void CInput::Init_All (void)
 	m_fMouseInitialized	= false;
 	m_fRestoreSPI		= false;
 	m_fMouseActive		= false;
+	m_fCameraInterceptingMouse = false;
 	Q_memset( m_rgOrigMouseParms, 0, sizeof( m_rgOrigMouseParms ) );
 	Q_memset( m_rgNewMouseParms, 0, sizeof( m_rgNewMouseParms ) );
 	Q_memset( m_rgCheckMouseParam, 0, sizeof( m_rgCheckMouseParam ) );

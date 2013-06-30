@@ -811,26 +811,10 @@ void CSDKPlayer::State_OBSERVER_MODE_Enter()
 	SetMoveType(MOVETYPE_NONE);
 	AddSolidFlags(FSOLID_NOT_SOLID);
 	PhysObjectSleep();
-
-	//if ( !IsObserver() )
-	//{
-	//	// set position to last view offset
-	//	SetAbsOrigin( GetAbsOrigin() + GetViewOffset() );
-	//	SetViewOffset( vec3_origin );
-	//}
-
-	SetViewOffset(VEC_VIEW);
-	
-	m_afPhysicsFlags |= PFLAG_OBSERVER;
-
-	SetGroundEntity( (CBaseEntity *)NULL );
-
-	SetObserverMode(OBS_MODE_TVCAM);
-
-	if ( gpGlobals->eLoadType != MapLoad_Background )
-	{
-		ShowViewPortPanel( "specgui" , ModeWantsSpectatorGUI(m_iObserverLastMode) );
-	}
+	SetLocalOrigin(SDKGameRules()->m_vKickOff + Vector(0, 0, 100));
+	//SetViewOffset(vec3_origin);
+	//SetViewOffset(VEC_VIEW);
+	SetGroundEntity(NULL);
 }
 
 void CSDKPlayer::State_OBSERVER_MODE_PreThink()
@@ -839,14 +823,6 @@ void CSDKPlayer::State_OBSERVER_MODE_PreThink()
 
 void CSDKPlayer::State_OBSERVER_MODE_Leave()
 {
-	m_bForcedObserverMode = false;
-	m_afPhysicsFlags &= ~PFLAG_OBSERVER;
-
-	if ( m_iObserverMode == OBS_MODE_NONE )
-		return;
-
-	m_iObserverMode.Set( OBS_MODE_NONE );
-
 	ShowViewPortPanel( "specmenu", false );
 	ShowViewPortPanel( "specgui", false );
 	ShowViewPortPanel( "overview", false );
@@ -858,14 +834,11 @@ void CSDKPlayer::State_ACTIVE_Enter()
 	RemoveSolidFlags(FSOLID_NOT_SOLID);
     //m_Local.m_iHideHUD = 0;
 	PhysObjectWake();
-
 	// update this counter, used to not interp players when they spawn
 	m_bSpawnInterpCounter = !m_bSpawnInterpCounter;
 	//SetContextThink( &CSDKPlayer::SDKPushawayThink, gpGlobals->curtime + PUSHAWAY_THINK_INTERVAL, SDK_PUSHAWAY_THINK_CONTEXT );
 	RemoveEffects(EF_NODRAW);
 	SetViewOffset(VEC_VIEW);
-
-	SetObserverMode(OBS_MODE_NONE);
 }
 
 void CSDKPlayer::State_ACTIVE_PreThink()

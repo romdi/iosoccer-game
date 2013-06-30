@@ -14,13 +14,13 @@
 
 enum TVCam_Types_t
 { 
-	CAM_SIDELINE,
-	CAM_FIXED_SIDELINE,
-	CAM_BEHIND_GOAL,
-	CAM_TOPDOWN,
-	CAM_GOAL_CORNER,
-	CAM_FLY_FOLLOW,
-	CAM_GOAL_LINE
+	TVCAM_SIDELINE,
+	TVCAM_FIXED_SIDELINE,
+	TVCAM_BEHIND_GOAL,
+	TVCAM_TOPDOWN,
+	TVCAM_GOAL_CORNER,
+	TVCAM_FLY_FOLLOW,
+	TVCAM_GOAL_LINE
 };
 
 class C_Camera : CGameEventListener
@@ -34,11 +34,11 @@ public:
 
 	void FireGameEvent( IGameEvent *event );
 
-	void SetMode(int iMode);
+	int  GetCamMode();	// returns current camera mode
+	void SetCamMode(int mode);
 	void SpecNextPlayer( bool bInverse );
 	void SpecNamedPlayer( const char *szPlayerName );
 	
-	int  GetMode();	// returns current camera mode
 	C_BaseEntity *GetTarget();  // return primary target
 	void SetTarget( int nEntity); // set the primary obs target
 	void CreateMove(CUserCmd *cmd);
@@ -57,7 +57,7 @@ protected:
 	Vector		m_vCamOrigin;  //current camera origin
 	QAngle		m_aCamAngle;   //current camera angle
 	float		m_flFOV; // current FOV
-	int			m_nCameraMode; // current camera mode
+	int			m_nCamMode; // current camera mode
 	int			m_nTarget;	// first tracked target or 0
 	CUserCmd	m_LastCmd;
 	Vector		m_vecVelocity;

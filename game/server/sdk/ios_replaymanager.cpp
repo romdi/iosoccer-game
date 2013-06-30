@@ -308,7 +308,6 @@ void CReplayManager::StopReplay()
 
 		//pRealPl->SetRenderMode(kRenderNormal);
 		//pRealPl->SetRenderColorA(255);
-		pRealPl->StopObserverMode();
 		pRealPl->SetLocalOrigin(pRealPl->GetSpawnPos(true));
 		QAngle ang;
 		VectorAngles(Vector(0, pRealPl->GetTeam()->m_nForward, 0), ang);
@@ -318,7 +317,6 @@ void CReplayManager::StopReplay()
 		//pRealPl->RemoveEFlags(EFL_NOCLIP_ACTIVE);
 		pRealPl->SetMoveType(MOVETYPE_WALK);
 		pRealPl->RemoveSolidFlags(FSOLID_NOT_SOLID);
-		pRealPl->SetViewOffset(VEC_VIEW);
 
 		if (pRealPl->GetPlayerBall())
 		{
@@ -578,7 +576,7 @@ void CReplayManager::RestoreSnapshot()
 			pRealPl->AddEffects(EF_NODRAW);
 			pRealPl->DoServerAnimationEvent(PLAYERANIMEVENT_CANCEL);
 			pRealPl->AddSolidFlags(FSOLID_NOT_SOLID);
-			pRealPl->SetObserverMode(OBS_MODE_TVCAM);
+			pRealPl->SetMoveType(MOVETYPE_NONE);
 		}
 		
 		if (pRealPl->GetPlayerBall() && !(pRealPl->GetPlayerBall()->GetEffects() & EF_NODRAW))

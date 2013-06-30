@@ -193,7 +193,6 @@ public:
 		float y ) {};
 
 	CNetworkVarEmbedded( CSDKPlayerShared, m_Shared );
-	virtual void			PlayerDeathThink( void ) {};
 	virtual bool		ClientCommand( const CCommand &args );
 
 	void IncreaseShotsFired() { m_iShotsFired++; if (m_iShotsFired > 16) m_iShotsFired = 16; }

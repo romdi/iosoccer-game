@@ -2035,7 +2035,7 @@ void CNavMesh::CommandNavWarpToMark( void )
 
 	if (GetMarkedArea())
 	{
-		if ( ( player->IsDead() || player->IsObserver() ) && player->GetObserverMode() == OBS_MODE_ROAMING )
+		if ( ( player->IsDead() || player->IsObserver() ) )
 		{
 			Vector origin = GetMarkedArea()->GetCenter() + Vector( 0, 0, 0.75f * HumanHeight );
 			UTIL_SetOrigin( player, origin );
@@ -2048,7 +2048,7 @@ void CNavMesh::CommandNavWarpToMark( void )
 	else if (GetMarkedLadder())
 	{
 		CNavLadder *ladder = GetMarkedLadder();
-		if ( ( player->IsDead() || player->IsObserver() ) && player->GetObserverMode() == OBS_MODE_ROAMING )
+		if ( ( player->IsDead() || player->IsObserver() ) )
 		{
 			Vector origin = (ladder->m_top + ladder->m_bottom)/2;
 			origin.x += ladder->GetNormal().x * GenerationStepSize;

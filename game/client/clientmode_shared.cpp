@@ -421,8 +421,7 @@ int	ClientModeShared::KeyInput( int down, ButtonCode_t keynum, const char *pszCu
 
 	// if ingame spectator mode, let spectator input intercept key event here
 	if( pPlayer
-		&& pPlayer->GetObserverMode() != OBS_MODE_NONE
-		&& !(GetReplayManager() && GetReplayManager()->IsReplaying()) //TODO: Remove once it works properly in replay mode
+		&& pPlayer->IsObserver()
 		&& !HandleSpectatorKeyInput( down, keynum, pszCurrentBinding ) )
 	{
 		return 0;
@@ -454,12 +453,12 @@ int ClientModeShared::HandleSpectatorKeyInput( int down, ButtonCode_t keynum, co
 		m_pViewport->ShowPanel( PANEL_SPECMENU, true );
 		return 0; // we handled it, don't handle twice or send to server
 	}
-	else if ( down && pszCurrentBinding && Q_strcmp( pszCurrentBinding, "+moveright" ) == 0 && Camera()->GetMode() != OBS_MODE_ROAMING)
+	else if ( down && pszCurrentBinding && Q_strcmp( pszCurrentBinding, "+moveright" ) == 0 && Camera()->GetCamMode() != CAM_MODE_ROAMING)
 	{
 		engine->ClientCmd( "spec_next" );
 		return 0;
 	}
-	else if ( down && pszCurrentBinding && Q_strcmp( pszCurrentBinding, "+moveleft" ) == 0 && Camera()->GetMode() != OBS_MODE_ROAMING)
+	else if ( down && pszCurrentBinding && Q_strcmp( pszCurrentBinding, "+moveleft" ) == 0 && Camera()->GetCamMode() != CAM_MODE_ROAMING)
 	{
 		engine->ClientCmd( "spec_prev" );
 		return 0;

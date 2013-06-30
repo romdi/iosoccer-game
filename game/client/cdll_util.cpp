@@ -91,35 +91,6 @@ bool IsLocalPlayerSpectator( void )
 		return false;	// game not started yet
 }
 
-int GetSpectatorMode( void )
-{
-	C_BasePlayer * player = C_BasePlayer::GetLocalPlayer();
-
-	if ( player )
-		return player->GetObserverMode();
-	else
-		return OBS_MODE_NONE;	// game not started yet
-}
-
-int GetSpectatorTarget( void )
-{
-	C_BasePlayer * player = C_BasePlayer::GetLocalPlayer();
-
-	if ( player )
-	{
-		CBaseEntity * target = player->GetObserverTarget();
-
-		if ( target )
-			return target->entindex();
-		else
-			return 0;
-	}
-	else
-	{
-		return  0;	// game not started yet
-	}
-}
-
 int GetLocalPlayerTeam( void ) 
 { 
 	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();

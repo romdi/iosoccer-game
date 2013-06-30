@@ -129,18 +129,6 @@ const QAngle &CBasePlayer::LocalEyeAngles()
 //-----------------------------------------------------------------------------
 Vector CBasePlayer::EyePosition( )
 {
-#ifdef CLIENT_DLL
-	if ( IsObserver() )
-	{
-		if ( m_iObserverMode == OBS_MODE_LOCKED_CHASE )
-		{
-			if ( IsLocalPlayer() )
-			{
-				return MainViewOrigin();
-			}
-		}
-	}
-#endif
 	return BaseClass::EyePosition();
 }
 
@@ -217,7 +205,7 @@ void CBasePlayer::UpdateStepSound( surfacedata_t *psurface, const Vector &vecOri
 	if ( GetFlags() & (FL_FROZEN|FL_ATCONTROLS))
 		return;
 
-	if ( GetMoveType() == MOVETYPE_NOCLIP || GetMoveType() == MOVETYPE_OBSERVER )
+	if ( GetMoveType() == MOVETYPE_NOCLIP )
 		return;
 
 	if ( !sv_footsteps.GetFloat() )
@@ -868,18 +856,6 @@ static bool IsWaterContents( int contents )
 	return false;
 }
 
-void CBasePlayer::ResetObserverMode()
-{
-
-	m_iObserverMode = (int)OBS_MODE_NONE;
-
-#ifndef CLIENT_DLL
-	m_iObserverLastMode = OBS_MODE_ROAMING;
-	m_bForcedObserverMode = false;
-	m_afPhysicsFlags &= ~PFLAG_OBSERVER;
-#endif
-}
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 // Input  : eyeOrigin - 
@@ -1053,18 +1029,6 @@ void CBasePlayer::SharedSpawn()
 //-----------------------------------------------------------------------------
 int CBasePlayer::GetDefaultFOV( void ) const
 {
-#if defined( CLIENT_DLL )
-	if ( GetObserverMode() == OBS_MODE_LOCKED_CHASE )
-	{
-		C_BasePlayer *pTargetPlayer = dynamic_cast<C_BasePlayer*>( GetObserverTarget() );
-
-		if ( pTargetPlayer && !pTargetPlayer->IsObserver() )
-		{
-			return pTargetPlayer->GetDefaultFOV();
-		}
-	}
-#endif
-
 	int iFOV = ( m_iDefaultFOV == 0 ) ? g_pGameRules->DefaultFOV() : m_iDefaultFOV;
 
 	return iFOV;
@@ -1078,13 +1042,12 @@ void CBasePlayer::AvoidPhysicsProps( CUserCmd *pCmd )
 	{
 	case MOVETYPE_NOCLIP:
 	case MOVETYPE_NONE:
-	case MOVETYPE_OBSERVER:
 		return;
 	default:
 		break;
 	}
 
-	if ( GetObserverMode() != OBS_MODE_NONE || !IsAlive() )
+	if ( !IsObserver() )
 		return;
 
 	AvoidPushawayProps( this, pCmd );

@@ -705,8 +705,7 @@ void CGameMovement::CheckParameters( void )
 	SetPlayerSpeed();
 
 	if ( player->GetMoveType() != MOVETYPE_ISOMETRIC &&
-		 player->GetMoveType() != MOVETYPE_NOCLIP &&
-		 player->GetMoveType() != MOVETYPE_OBSERVER )
+		 player->GetMoveType() != MOVETYPE_NOCLIP )
 	{
 		float spd;
 		float maxspeed;
@@ -2929,7 +2928,6 @@ void CGameMovement::PlayerMove( void )
 	if ( player->GetMoveType() != MOVETYPE_NOCLIP && 
 		 player->GetMoveType() != MOVETYPE_NONE && 		 
 		 player->GetMoveType() != MOVETYPE_ISOMETRIC && 
-		 player->GetMoveType() != MOVETYPE_OBSERVER && 
 		 (player->GetTeamNumber() == TEAM_A || player->GetTeamNumber() == TEAM_B) &&
 		 !(player->GetFlags() & FL_REMOTECONTROLLED))
 	{
@@ -2990,9 +2988,6 @@ void CGameMovement::PlayerMove( void )
 				MoveToTargetPos();
 			else
 				FullWalkMove();
-			break;
-			
-		case MOVETYPE_OBSERVER:
 			break;
 
 		default:

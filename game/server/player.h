@@ -285,8 +285,6 @@ public:
 	virtual void			InitHUD( void ) {}
 	virtual void			ShowViewPortPanel( const char * name, bool bShow = true, KeyValues *data = NULL );
 
-	virtual void			PlayerDeathThink( void );
-
 	virtual void			Jump( void );
 	virtual void			Duck( void );
 
@@ -443,16 +441,8 @@ public:
 	bool					IsSinglePlayerGameEnding() { return m_bSinglePlayerGameEnding == true; }
 	
 	// Observer functions
-	virtual bool			StartObserverMode(int mode); // true, if successful
-	virtual void			StopObserverMode( void );	// stop spectator mode
-	virtual bool			ModeWantsSpectatorGUI( int iMode ) { return true; }
-	virtual bool			SetObserverMode(int mode); // sets new observer mode, returns true if successful
-	virtual int				GetObserverMode( void ); // returns observer mode or OBS_NONE
 	virtual void			ObserverUse( bool bIsPressed ); // observer pressed use
 	virtual void			JumptoPosition(const Vector &origin, const QAngle &angles);
-	virtual void			ForceObserverMode(int mode); // sets a temporary mode, force because of invalid targets
-	virtual void			ResetObserverMode(); // resets all observer related settings
-	virtual void			AttemptToExitFreezeCam( void ) {};
 
 	virtual bool			StartReplayMode( float fDelay, float fDuration, int iEntity );
 	virtual void			StopReplayMode();
@@ -630,12 +620,10 @@ public:
 	Activity GetActivity( ) const	{ return m_Activity; }
 	inline void SetActivity( Activity eActivity ) { m_Activity = eActivity; }
 	bool	IsPlayerLockedInPlace() const { return m_iPlayerLocked != 0; }
-	bool	IsObserver() const		{ return (m_afPhysicsFlags & PFLAG_OBSERVER) != 0; }
+	bool	IsObserver() const		{ return GetTeamNumber() == TEAM_SPECTATOR; }
 	bool	IsOnTarget() const		{ return m_fOnTarget; }
 	float	MuzzleFlashTime() const { return m_flFlashTime; }
 	float	PlayerDrownTime() const	{ return m_AirFinished; }
-
-	int		GetObserverMode() const	{ return m_iObserverMode; }
 
 	// Round gamerules
 	virtual bool	IsReadyToPlay( void ) { return true; }
@@ -797,7 +785,7 @@ public:
 	bool					m_bLagCompensation;	// user wants lag compenstation
 	bool					m_bPredictWeapons; //  user has client side predicted weapons
 	
-	float		GetDeathTime( void ) { return m_flDeathTime; }
+	float		GetDeathTime( void ) { return 0; }
 
 	void		ClearZoomOwner( void );
 
@@ -850,17 +838,10 @@ protected:
 	int						m_bitsDamageType;	// what types of damage has player taken
 	int						m_bitsHUDDamage;	// Damage bits for the current fame. These get sent to the hud via gmsgDamage
 
-	CNetworkVar( float, m_flDeathTime );		// the time at which the player died  (used in PlayerDeathThink())
-	float					m_flDeathAnimTime;	// the time at which the player finished their death anim (used in PlayerDeathThink() and ShouldTransmit())
-
-	CNetworkVar( int, m_iObserverMode );	// if in spectator mode != 0
 	CNetworkVar( int,	m_iFOV );			// field of view
 	CNetworkVar( int,	m_iDefaultFOV );	// default field of view
 	CNetworkVar( int,	m_iFOVStart );		// What our FOV started at
 	CNetworkVar( float,	m_flFOVTime );		// Time our FOV change started
-	
-	int						m_iObserverLastMode; // last used observer mode
-	bool					m_bForcedObserverMode; // true, player was forced by invalid targets to switch mode
 	
 	CNetworkHandle( CBaseEntity, m_hZoomOwner );	//This is a pointer to the entity currently controlling the player's zoom
 													//Only this entity can change the zoom state once it has ownership

@@ -124,10 +124,10 @@ CSpectatorMenu::CSpectatorMenu( IViewPort *pViewPort ) : Frame( NULL, PANEL_SPEC
 
 	// create view mode menu
 	menu = new CommandMenu(m_pViewOptions, "spectatormodes", gViewPortInterface);
-	menu->AddMenuItem("TV Camera", VarArgs("spec_mode %d", OBS_MODE_TVCAM), this);
-	menu->AddMenuItem("Roaming", VarArgs("spec_mode %d", OBS_MODE_ROAMING), this);
-	menu->AddMenuItem("Free Chase", VarArgs("spec_mode %d", OBS_MODE_FREE_CHASE), this);
-	menu->AddMenuItem("Locked Chase", VarArgs("spec_mode %d", OBS_MODE_LOCKED_CHASE), this);
+	menu->AddMenuItem("TV Camera", VarArgs("spec_mode %d", CAM_MODE_TVCAM), this);
+	menu->AddMenuItem("Roaming", VarArgs("spec_mode %d", CAM_MODE_ROAMING), this);
+	menu->AddMenuItem("Free Chase", VarArgs("spec_mode %d", CAM_MODE_FREE_CHASE), this);
+	menu->AddMenuItem("Locked Chase", VarArgs("spec_mode %d", CAM_MODE_LOCKED_CHASE), this);
 	m_pViewOptions->SetMenu(menu);	// attach menu to combo box
 
 	LoadControlSettings("Resource/UI/BottomSpectator.res");
@@ -580,7 +580,7 @@ CON_COMMAND_F( spec_mode, "Set spectator mode", FCVAR_CLIENTCMD_CAN_EXECUTE )
 {
 	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
 
-	if ( !pPlayer || !pPlayer->IsObserver() )
+	if (!pPlayer || !pPlayer->IsObserver())
 		return;
 
 	// we can choose any mode, not loked to PVS
@@ -594,13 +594,10 @@ CON_COMMAND_F( spec_mode, "Set spectator mode", FCVAR_CLIENTCMD_CAN_EXECUTE )
 	else
 	{
 		// set next mode 
-		mode = Camera()->GetMode() + 1;
-
-		if ( mode > LAST_PLAYER_OBSERVERMODE )
-			mode = OBS_MODE_FREE_CHASE;
+		mode = (Camera()->GetCamMode() + 1) % CAM_MODE_COUNT;
 	}
 
-	Camera()->SetMode( mode );
+	Camera()->SetCamMode(mode);
 }
 
 CON_COMMAND_F( spec_player, "Spectate player by name", FCVAR_CLIENTCMD_CAN_EXECUTE )

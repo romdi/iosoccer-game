@@ -241,9 +241,6 @@ BEGIN_DATADESC( CBasePlayer )
 	DEFINE_FIELD( m_flVehicleViewFOV, FIELD_FLOAT ),
 
 	//DEFINE_FIELD( m_fOnTarget, FIELD_BOOLEAN ), // Don't need to restore
-	DEFINE_FIELD( m_iObserverMode, FIELD_INTEGER ),
-	DEFINE_FIELD( m_iObserverLastMode, FIELD_INTEGER ),
-	DEFINE_FIELD( m_bForcedObserverMode, FIELD_BOOLEAN ),
 	DEFINE_AUTO_ARRAY( m_szAnimExtension, FIELD_CHARACTER ),
 //	DEFINE_CUSTOM_FIELD( m_Activity, ActivityDataOps() ),
 
@@ -313,8 +310,6 @@ BEGIN_DATADESC( CBasePlayer )
 
 	DEFINE_FIELD( m_bitsHUDDamage, FIELD_INTEGER ),
 	DEFINE_FIELD( m_fInitHUD, FIELD_BOOLEAN ),
-	DEFINE_FIELD( m_flDeathTime, FIELD_TIME ),
-	DEFINE_FIELD( m_flDeathAnimTime, FIELD_TIME ),
 
 	//DEFINE_FIELD( m_fGameHUDInitialized, FIELD_BOOLEAN ), // only used in multiplayer games
 	//DEFINE_FIELD( m_fWeapon, FIELD_BOOLEAN ),  // Don't restore, client needs reset
@@ -399,9 +394,6 @@ BEGIN_DATADESC( CBasePlayer )
 	DEFINE_ARRAY( m_szLastPlaceName, FIELD_CHARACTER, MAX_PLACE_NAME_LENGTH ),
 
 	DEFINE_FIELD( m_autoKickDisabled, FIELD_BOOLEAN ),
-
-	// Function Pointers
-	DEFINE_FUNCTION( PlayerDeathThink ),
 
 	// Inputs
 	DEFINE_INPUTFUNC( FIELD_INTEGER, "SetHealth", InputSetHealth ),
@@ -560,8 +552,6 @@ CBasePlayer::CBasePlayer( )
 	m_fLastPlayerTalkTime = 0.0f;
 	m_PlayerInfo.SetParent( this );
 
-	ResetObserverMode();
-
 	m_surfaceProps = 0;
 	m_pSurfaceData = NULL;
 	m_surfaceFriction = 1.0f;
@@ -665,8 +655,7 @@ int CBasePlayer::ShouldTransmit( const CCheckTransmitInfo *pInfo )
 	// Transmit for a short time after death and our death anim finishes so ragdolls can access reliable player data.
 	// Note that if m_flDeathAnimTime is never set, as long as m_lifeState is set to LIFE_DEAD after dying, this
 	// test will act as if the death anim is finished.
-	if ( IsEffectActive( EF_NODRAW ) || ( IsObserver() && ( gpGlobals->curtime - m_flDeathTime > 0.5 ) && 
-		( m_lifeState == LIFE_DEAD ) && ( gpGlobals->curtime - m_flDeathAnimTime > 0.5 ) ) )
+	if ( IsEffectActive( EF_NODRAW ) )
 	{
 		return FL_EDICT_DONTSEND;
 	}
@@ -1214,259 +1203,6 @@ void CBasePlayer::ShowViewPortPanel( const char * name, bool bShow, KeyValues *d
 			subkey = subkey->GetNextKey();
 		}
 	MessageEnd();
-}
-
-
-void CBasePlayer::PlayerDeathThink(void)
-{
-	float flForward;
-
-	SetNextThink( gpGlobals->curtime + 0.1f );
-
-	if (GetFlags() & FL_ONGROUND)
-	{
-		flForward = GetAbsVelocity().Length() - 20;
-		if (flForward <= 0)
-		{
-			SetAbsVelocity( vec3_origin );
-		}
-		else
-		{
-			Vector vecNewVelocity = GetAbsVelocity();
-			VectorNormalize( vecNewVelocity );
-			vecNewVelocity *= flForward;
-			SetAbsVelocity( vecNewVelocity );
-		}
-	}
-
-	if ( HasWeapons() )
-	{
-		// we drop the guns here because weapons that have an area effect and can kill their user
-		// will sometimes crash coming back from CBasePlayer::Killed() if they kill their owner because the
-		// player class sometimes is freed. It's safer to manipulate the weapons once we know
-		// we aren't calling into any of their code anymore through the player pointer.
-		PackDeadPlayerItems();
-	}
-
-	if (GetModelIndex() && (!IsSequenceFinished()) && (m_lifeState == LIFE_DYING))
-	{
-		StudioFrameAdvance( );
-
-		m_iRespawnFrames++;
-		if ( m_iRespawnFrames < 60 )  // animations should be no longer than this
-			return;
-	}
-
-	if (m_lifeState == LIFE_DYING)
-	{
-		m_lifeState = LIFE_DEAD;
-		m_flDeathAnimTime = gpGlobals->curtime;
-	}
-	
-	StopAnimation();
-
-	AddEffects( EF_NOINTERP );
-	m_flPlaybackRate = 0.0;
-	
-	int fAnyButtonDown = (m_nButtons & ~IN_SCORE);
-	
-	// Strip out the duck key from this check if it's toggled
-	if ( (fAnyButtonDown & IN_DUCK) && GetToggledDuckState())
-	{
-		fAnyButtonDown &= ~IN_DUCK;
-	}
-
-	// wait for all buttons released
-	if (m_lifeState == LIFE_DEAD)
-	{
-		if (fAnyButtonDown)
-			return;
-
-		if ( g_pGameRules->FPlayerCanRespawn( this ) )
-		{
-			m_lifeState = LIFE_RESPAWNABLE;
-		}
-		
-		return;
-	}
-
-// if the player has been dead for one second longer than allowed by forcerespawn, 
-// forcerespawn isn't on. Send the player off to an intermission camera until they 
-// choose to respawn.
-	if ( g_pGameRules->IsMultiplayer() && ( gpGlobals->curtime > (m_flDeathTime + DEATH_ANIMATION_TIME) ) && !IsObserver() )
-	{
-		// go to dead camera. 
-		StartObserverMode( m_iObserverLastMode );
-	}
-	
-// wait for any button down,  or mp_forcerespawn is set and the respawn time is up
-	if (!fAnyButtonDown 
-		&& !( g_pGameRules->IsMultiplayer() && forcerespawn.GetInt() > 0 && (gpGlobals->curtime > (m_flDeathTime + 5))) )
-		return;
-
-	m_nButtons = 0;
-	m_iRespawnFrames = 0;
-
-	//Msg( "Respawn\n");
-
-	//IOS stop goig into limbo when pressing a key during wait for join menu after kill
-	respawn( this, !IsObserver() );// don't copy a corpse if we're in deathcam.
-	SetNextThink( TICK_NEVER_THINK );
-}
-
-/*
-
-//=========================================================
-// StartDeathCam - find an intermission spot and send the
-// player off into observer mode
-//=========================================================
-void CBasePlayer::StartDeathCam( void )
-{
-	CBaseEntity *pSpot, *pNewSpot;
-	int iRand;
-
-	if ( GetViewOffset() == vec3_origin )
-	{
-		// don't accept subsequent attempts to StartDeathCam()
-		return;
-	}
-
-	pSpot = gEntList.FindEntityByClassname( NULL, "info_intermission");	
-
-	if ( pSpot )
-	{
-		// at least one intermission spot in the world.
-		iRand = random->RandomInt( 0, 3 );
-
-		while ( iRand > 0 )
-		{
-			pNewSpot = gEntList.FindEntityByClassname( pSpot, "info_intermission");
-			
-			if ( pNewSpot )
-			{
-				pSpot = pNewSpot;
-			}
-
-			iRand--;
-		}
-
-		CreateCorpse();
-		StartObserverMode( pSpot->GetAbsOrigin(), pSpot->GetAbsAngles() );
-	}
-	else
-	{
-		// no intermission spot. Push them up in the air, looking down at their corpse
-		trace_t tr;
-
-		CreateCorpse();
-
-		UTIL_TraceLine( GetAbsOrigin(), GetAbsOrigin() + Vector( 0, 0, 128 ), 
-			MASK_PLAYERSOLID_BRUSHONLY, this, COLLISION_GROUP_NONE, &tr );
-		QAngle angles;
-		VectorAngles( GetAbsOrigin() - tr.endpos, angles );
-		StartObserverMode( tr.endpos, angles );
-		return;
-	}
-} */
-
-void CBasePlayer::StopObserverMode()
-{
-	m_bForcedObserverMode = false;
-	m_afPhysicsFlags &= ~PFLAG_OBSERVER;
-
-	if ( m_iObserverMode == OBS_MODE_NONE )
-		return;
-
-	m_iObserverLastMode = m_iObserverMode;
-
-	m_iObserverMode.Set( OBS_MODE_NONE );
-
-	ShowViewPortPanel( "specmenu", false );
-	ShowViewPortPanel( "specgui", false );
-	ShowViewPortPanel( "overview", false );
-}
-
-bool CBasePlayer::StartObserverMode(int mode)
-{
-	if ( !IsObserver() )
-	{
-		// set position to last view offset
-		SetAbsOrigin( GetAbsOrigin() + GetViewOffset() );
-		SetViewOffset( vec3_origin );
-	}
-
-	Assert( mode > OBS_MODE_NONE );
-	
-	m_afPhysicsFlags |= PFLAG_OBSERVER;
-
-	// clear out the suit message cache so we don't keep chattering
-    //SetSuitUpdate(NULL, FALSE, 0);
-
-	SetGroundEntity( (CBaseEntity *)NULL );
-	
-	//RemoveFlag( FL_DUCKING );
-	
-    AddSolidFlags( FSOLID_NOT_SOLID );
-
-	SetObserverMode( mode );
-
-	if ( gpGlobals->eLoadType != MapLoad_Background )
-	{
-		ShowViewPortPanel( "specgui" , ModeWantsSpectatorGUI(mode) );
-	}
-	
-	// Setup flags
-    m_Local.m_iHideHUD = HIDEHUD_HEALTH;
-	//m_takedamage = DAMAGE_NO;		
-
-	// Become invisible
-	AddEffects( EF_NODRAW );		
-
-	//m_iHealth = 1;
-	//m_lifeState = LIFE_DEAD; // Can't be dead, otherwise movement doesn't work right.
-	//m_flDeathAnimTime = gpGlobals->curtime;
-	//pl.deadflag = true;
-
-	return true;
-}
-
-bool CBasePlayer::SetObserverMode(int mode )
-{
-	if ( mode < OBS_MODE_NONE || mode >= NUM_OBSERVER_MODES )
-		return false;
-
-	m_iObserverMode = mode;
-
-	return true;	
-}
-
-int CBasePlayer::GetObserverMode()
-{
-	return m_iObserverMode;
-}
-
-void CBasePlayer::ForceObserverMode(int mode)
-{
-	int tempMode = OBS_MODE_ROAMING;
-
-	if ( m_iObserverMode == mode )
-		return;
-
-	// don't change last mode if already in forced mode
-
-	if ( m_bForcedObserverMode )
-	{
-		tempMode = m_iObserverLastMode;
-	}
-	
-	SetObserverMode( mode );
-
-	if ( m_bForcedObserverMode )
-	{
-		m_iObserverLastMode = tempMode;
-	}
-
-	m_bForcedObserverMode = true;
 }
 
 bool CBasePlayer::StartReplayMode( float fDelay, float fDuration, int iEntity )
@@ -3293,7 +3029,7 @@ void CBasePlayer::PostThinkVPhysics( void )
 	}
 
 	int collisionState = VPHYS_WALK;
-	if ( GetMoveType() == MOVETYPE_NOCLIP || GetMoveType() == MOVETYPE_OBSERVER )
+	if ( GetMoveType() == MOVETYPE_NOCLIP )
 	{
 		collisionState = VPHYS_NOCLIP;
 	}
@@ -5602,8 +5338,6 @@ void SendProxy_CropFlagsToPlayerFlagBitsLength( const SendProp *pProp, const voi
 		SendPropFloat		( SENDINFO( m_flConstraintWidth ), 0, SPROP_NOSCALE ),
 		SendPropFloat		( SENDINFO( m_flConstraintSpeedFactor ), 0, SPROP_NOSCALE ),
 
-		SendPropFloat		( SENDINFO( m_flDeathTime ), 0, SPROP_NOSCALE ),
-
 		//SendPropInt			( SENDINFO( m_nWaterLevel ), 2, SPROP_UNSIGNED ),
 		SendPropFloat		( SENDINFO( m_flLaggedMovementValue ), 0, SPROP_NOSCALE ),
 
@@ -5626,7 +5360,6 @@ void SendProxy_CropFlagsToPlayerFlagBitsLength( const SendProp *pProp, const voi
 		//SendPropInt		(SENDINFO(m_iBonusChallenge), 4 ),
 		SendPropFloat	(SENDINFO(m_flMaxspeed), 12, SPROP_ROUNDDOWN, 0.0f, 2048.0f ),  // CL
 		SendPropInt		(SENDINFO(m_fFlags), PLAYER_FLAG_BITS, SPROP_UNSIGNED|SPROP_CHANGES_OFTEN, SendProxy_CropFlagsToPlayerFlagBitsLength ),
-		SendPropInt		(SENDINFO(m_iObserverMode), 3, SPROP_UNSIGNED ),
 		SendPropInt		(SENDINFO(m_iFOV), 8, SPROP_UNSIGNED ),
 		SendPropInt		(SENDINFO(m_iFOVStart), 8, SPROP_UNSIGNED ),
 		SendPropFloat	(SENDINFO(m_flFOVTime) ),
@@ -6445,7 +6178,6 @@ void CBasePlayer::HandleAnimEvent( animevent_t *pEvent )
 			BecomeRagdollOnClient( vec3_origin );
  
 			// Force the player to start death thinking
-			SetThink(&CBasePlayer::PlayerDeathThink);
 			SetNextThink( gpGlobals->curtime + 0.1f );
 			return;
 		}

@@ -52,7 +52,7 @@
 #undef CBasePlayer	
 #endif
 
-int g_nKillCamMode = OBS_MODE_NONE;
+int g_nKillCamMode = 0;
 int g_nKillCamTarget1 = 0;
 int g_nKillCamTarget2 = 0;
 
@@ -250,10 +250,7 @@ END_RECV_TABLE()
 		RecvPropFloat	(RECVINFO(m_flMaxspeed)),
 		RecvPropInt		(RECVINFO(m_fFlags)),
 
-
-		RecvPropInt		(RECVINFO(m_iObserverMode) ),
 		RecvPropArray	( RecvPropEHandle( RECVINFO( m_hViewModel[0] ) ), m_hViewModel ),
-		
 
 		RecvPropString( RECVINFO(m_szLastPlaceName) ),
 
@@ -387,8 +384,6 @@ C_BasePlayer::C_BasePlayer() : m_iv_vecViewOffset( "C_BasePlayer::m_iv_vecViewOf
 
 	m_bResampleWaterSurface = true;
 	
-	ResetObserverMode();
-
 	m_vecPredictionError.Init();
 	m_flPredictionErrorTime = 0;
 
@@ -464,14 +459,14 @@ CBaseEntity	*C_BasePlayer::GetObserverTarget() const	// returns players targer o
 	return Camera()->GetTarget();
 }
 
-int C_BasePlayer::GetObserverMode() const 
+int C_BasePlayer::GetServerCamMode() const 
 { 
 	if ( IsHLTV() )
 	{
-		return Camera()->GetMode();
+		return Camera()->GetCamMode();
 	}
 
-	return m_iObserverMode; 
+	return m_nServerCamMode; 
 }
 
 bool C_BasePlayer::ViewModel_IsTransparent( void )
@@ -1071,16 +1066,6 @@ static ConVar cl_player_opacity( "cl_player_opacity", "1.0", FCVAR_ARCHIVE);
 
 int C_BasePlayer::DrawModel( int flags )
 {
-	// if local player is spectating this player in first person mode, don't draw it
-	//C_BasePlayer * player = C_BasePlayer::GetLocalPlayer();
-
-	//if ( player && player->IsObserver() )
-	//{
-	//	if ( player->GetObserverMode() == OBS_MODE_IN_EYE &&
-	//		 player->GetObserverTarget() == this )
-	//		return 0;
-	//}
-
 	if (cl_player_opacity.GetFloat() < 1)
 	{
 		SetRenderMode( kRenderTransColor );
