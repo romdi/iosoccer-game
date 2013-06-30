@@ -108,6 +108,9 @@ bool CHudChargedshotBar::ShouldDraw()
 	if (GetBall() && GetBall()->m_eBallState == BALL_STATE_GOAL)
 		return false;
 
+	if (GetReplayManager() && GetReplayManager()->IsReplaying())
+		return false;
+
 	return true;
 }
 
