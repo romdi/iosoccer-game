@@ -453,7 +453,19 @@ int ClientModeShared::HandleSpectatorKeyInput( int down, ButtonCode_t keynum, co
 	{
 		//m_pViewport->ShowPanel( PANEL_SPECMENU, true );
 		CSpectatorMenu *pSpecMenu = (CSpectatorMenu *)m_pViewport->FindPanelByName(PANEL_SPECMENU);
-		pSpecMenu->SetMouseInputEnabled(!pSpecMenu->IsMouseInputEnabled());
+		if (pSpecMenu->IsMouseInputEnabled())
+		{
+			pSpecMenu->SetMouseInputEnabled(false);
+
+			if (g_pCVar->FindVar("autohidespecmenu")->GetBool())
+				pSpecMenu->SetVisible(false);
+		}
+		else
+		{
+			pSpecMenu->SetMouseInputEnabled(true);
+			pSpecMenu->SetVisible(true);
+		}
+
 		return 0; // we handled it, don't handle twice or send to server
 	}
 	else if ( down && pszCurrentBinding && Q_strcmp( pszCurrentBinding, "+moveright" ) == 0 && Camera()->GetCamMode() != CAM_MODE_ROAMING)
