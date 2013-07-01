@@ -330,6 +330,7 @@ public:
 	int					m_nTeamPosNum;
 	int					m_nPreferredTeamPosNum;
 	int					m_nPreferredSkin;
+	int					m_nPlayerBallSkin;
 	
 	float				m_flNextShot;
 
@@ -442,6 +443,9 @@ public:
 
 	int					GetPreferredSkin() { return m_nPreferredSkin; }
 	void				SetPreferredSkin(int num);
+
+	int					GetPlayerBallSkin() { return m_nPlayerBallSkin; }
+	void				SetPlayerBallSkin(int skin) { m_nPlayerBallSkin = clamp(skin, -1, BALL_SKIN_COUNT - 1); }
 
 	int					GetSpecTeam() { return m_nSpecTeam; }
 

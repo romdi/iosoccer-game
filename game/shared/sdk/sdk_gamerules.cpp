@@ -2247,6 +2247,8 @@ void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 
 	pPl->SetPreferredTeamPosNum(atoi(engine->GetClientConVarValue(pPl->entindex(), "preferredshirtnumber")));
 
+	pPl->SetPlayerBallSkin(atoi(engine->GetClientConVarValue(pPl->entindex(), "playerballskin")));
+
 	int preferredSkin = atoi(engine->GetClientConVarValue(pPl->entindex(), "modelskinindex"));
 	if (preferredSkin != pPl->GetPreferredSkin())
 		pPl->SetPreferredSkin(preferredSkin);

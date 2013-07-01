@@ -452,4 +452,6 @@ static const char *g_szQuickTacticNames[QUICKTACTIC_COUNT] =
 	"Counter Attack",
 };
 
+#define BALL_SKIN_COUNT 6
+
 #endif // SDK_SHAREDDEFS_H

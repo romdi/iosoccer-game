@@ -8,6 +8,7 @@
 #include "in_buttons.h"
 
 #define	BALL_MODEL	 "models/w_fb.mdl"
+#define BALL_PHYS_RADIUS 5.0f
 
 enum body_part_t
 {

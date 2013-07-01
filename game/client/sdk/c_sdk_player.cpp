@@ -47,6 +47,7 @@ ConVar modelskinindex("modelskinindex", "-1", FCVAR_USERINFO | FCVAR_ARCHIVE, ""
 ConVar centeredstaminabar("centeredstaminabar", "1", FCVAR_USERINFO | FCVAR_ARCHIVE, "");
 ConVar quicktacticpanel("quicktacticpanel", "0", FCVAR_USERINFO | FCVAR_ARCHIVE, "");
 ConVar autohidespecmenu("autohidespecmenu", "0", FCVAR_USERINFO | FCVAR_ARCHIVE, "");
+ConVar playerballskin("playerballskin", "-1", FCVAR_USERINFO | FCVAR_ARCHIVE, "");
 
 ConVar clientversion("clientversion", g_szRequiredClientVersion, FCVAR_USERINFO | FCVAR_HIDDEN, "");
 

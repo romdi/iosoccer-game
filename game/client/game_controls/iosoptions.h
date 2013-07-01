@@ -135,6 +135,8 @@ class CAppearanceSettingPanel : public PropertyPage, public ISettingPanel
 	ComboBox *m_pSkinIndexList;
 	Label *m_pPreferredShirtNumberLabel;
 	ComboBox *m_pPreferredShirtNumberList;
+	Label *m_pPlayerBallSkinLabel;
+	ComboBox *m_pPlayerBallSkinList;
 	ImagePanel *m_pPlayerPreviewPanel;
 	Label *m_pPlayerAngleLabel;
 	Slider *m_pPlayerAngleSlider;

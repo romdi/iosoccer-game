@@ -271,6 +271,7 @@ CSDKPlayer::CSDKPlayer()
 	m_nTeamPosIndex = 0;
 	m_nPreferredTeamPosNum = 2;
 	m_nPreferredSkin = -1;
+	m_nPlayerBallSkin = -1;
 	m_pPlayerBall = NULL;
 	m_Shared.m_flPlayerAnimEventStartTime = gpGlobals->curtime;
 	m_Shared.m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;

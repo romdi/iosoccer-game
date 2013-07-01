@@ -460,28 +460,28 @@ CAppearanceSettingPanel::CAppearanceSettingPanel(Panel *parent, const char *pane
 	kv->deleteThis();
 
 	kv = new KeyValues("UserData", "value", 1);
-	m_pSkinIndexList->AddItem("Blond hair", kv);
+	m_pSkinIndexList->AddItem("Light skin, blond hair", kv);
 	kv->deleteThis();
 
 	kv = new KeyValues("UserData", "value", 2);
-	m_pSkinIndexList->AddItem("Brown hair", kv);
+	m_pSkinIndexList->AddItem("Light skin, brown hair", kv);
 	kv->deleteThis();
 
 	kv = new KeyValues("UserData", "value", 3);
-	m_pSkinIndexList->AddItem("Black hair", kv);
+	m_pSkinIndexList->AddItem("Light skin, black hair", kv);
 	kv->deleteThis();
 
 	kv = new KeyValues("UserData", "value", 4);
-	m_pSkinIndexList->AddItem("Black hair with beard", kv);
+	m_pSkinIndexList->AddItem("Light skin, black hair, beard", kv);
 	kv->deleteThis();
 
 	kv = new KeyValues("UserData", "value", 5);
 	m_pSkinIndexList->AddItem("Darkish skin", kv);
 	kv->deleteThis();
 
+
 	m_pPreferredShirtNumberLabel = new Label(m_pContent, "", "Preferred Shirt Number:");
 	m_pPreferredShirtNumberList = new ComboBox(m_pContent, "", SHIRT_NUMBER_COUNT, false);
-	m_pPreferredShirtNumberList->RemoveAll();
 
 	kv = new KeyValues("UserData", "index", 0);
 	m_pPreferredShirtNumberList->AddItem("<None>", kv);
@@ -493,6 +493,38 @@ CAppearanceSettingPanel::CAppearanceSettingPanel(Panel *parent, const char *pane
 		m_pPreferredShirtNumberList->AddItem(VarArgs("%d", i + 1), kv);
 		kv->deleteThis();
 	}
+
+
+	m_pPlayerBallSkinLabel = new Label(m_pContent, "", "Player Ball Skin:");
+	m_pPlayerBallSkinList = new ComboBox(m_pContent, "", BALL_SKIN_COUNT + 1, false);
+
+	kv = new KeyValues("UserData", "index", -1);
+	m_pPlayerBallSkinList->AddItem("<Random>", kv);
+	kv->deleteThis();
+
+	kv = new KeyValues("UserData", "index", 0);
+	m_pPlayerBallSkinList->AddItem("T90 White", kv);
+	kv->deleteThis();
+
+	kv = new KeyValues("UserData", "index", 1);
+	m_pPlayerBallSkinList->AddItem("Classic", kv);
+	kv->deleteThis();
+
+	kv = new KeyValues("UserData", "index", 2);
+	m_pPlayerBallSkinList->AddItem("T90 Hivis", kv);
+	kv->deleteThis();
+
+	kv = new KeyValues("UserData", "index", 3);
+	m_pPlayerBallSkinList->AddItem("T90 Red", kv);
+	kv->deleteThis();
+
+	kv = new KeyValues("UserData", "index", 4);
+	m_pPlayerBallSkinList->AddItem("T90 Blue", kv);
+	kv->deleteThis();
+
+	kv = new KeyValues("UserData", "index", 5);
+	m_pPlayerBallSkinList->AddItem("T90 Black", kv);
+	kv->deleteThis();
 
 	m_pPlayerAngleLabel = new Label(m_pContent, "", "Rotation Angle:");
 	m_pPlayerAngleSlider = new Slider(m_pContent, "");
@@ -535,13 +567,16 @@ void CAppearanceSettingPanel::PerformLayout()
 
 	m_pPreferredShirtNumberLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 2 * TEXT_HEIGHT + TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
 	m_pPreferredShirtNumberList->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 3 * TEXT_HEIGHT + TEXT_MARGIN, SHORTINPUT_WIDTH, TEXT_HEIGHT);
+	
+	m_pPlayerBallSkinLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 4 * TEXT_HEIGHT + TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pPlayerBallSkinList->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 5 * TEXT_HEIGHT + TEXT_MARGIN, SHORTINPUT_WIDTH, TEXT_HEIGHT);
 
 	m_pPlayerAngleLabel->SetBounds(APPEARANCE_RADIOBUTTONWIDTH, 2 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
 	m_pPlayerAngleLabel->SetVisible(false);
 	m_pPlayerAngleSlider->SetBounds(APPEARANCE_RADIOBUTTONWIDTH, 512, 264, TEXT_HEIGHT);
 
-	m_pPreviewTeamLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 4 * TEXT_HEIGHT + 2 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pPreviewTeamList->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 5 * TEXT_HEIGHT + 2 * TEXT_MARGIN, SHORTINPUT_WIDTH, TEXT_HEIGHT);
+	m_pPreviewTeamLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 6 * TEXT_HEIGHT + 2 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pPreviewTeamList->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 7 * TEXT_HEIGHT + 2 * TEXT_MARGIN, SHORTINPUT_WIDTH, TEXT_HEIGHT);
 
 	m_pBodypartPanel->SetBounds(0, 0, APPEARANCE_RADIOBUTTONWIDTH, m_pPlayerPreviewPanel->GetTall());
 	m_pBodypartRadioButtons[0]->SetBounds(0, 0, APPEARANCE_RADIOBUTTONWIDTH, TEXT_HEIGHT);
@@ -558,6 +593,7 @@ void CAppearanceSettingPanel::Save()
 	char text[64];
 	m_pPreferredShirtNumberList->GetText(text, sizeof(text));
 	g_pCVar->FindVar("preferredshirtnumber")->SetValue(atoi(text));
+	g_pCVar->FindVar("playerballskin")->SetValue(m_pPlayerBallSkinList->GetActiveItemUserData()->GetInt("index"));
 }
 
 void CAppearanceSettingPanel::Load()
@@ -565,6 +601,7 @@ void CAppearanceSettingPanel::Load()
 	m_pSkinIndexList->ActivateItemByRow(clamp(g_pCVar->FindVar("modelskinindex")->GetInt(), -1, 5) + 1);
 	int shirtNum = g_pCVar->FindVar("preferredshirtnumber")->GetInt();
 	m_pPreferredShirtNumberList->SetText(shirtNum == 0 ? "<None>" : VarArgs("%d", clamp(shirtNum, 2, 11)));
+	m_pPlayerBallSkinList->ActivateItemByRow(g_pCVar->FindVar("playerballskin")->GetInt() + 1);
 }
 
 void CAppearanceSettingPanel::Update()
@@ -574,6 +611,7 @@ void CAppearanceSettingPanel::Update()
 	m_pConnectionInfoLabel->SetVisible(!isConnected);
 	m_pSkinIndexList->SetEnabled(isConnected);
 	m_pPreferredShirtNumberList->SetEnabled(isConnected);
+	m_pPlayerBallSkinList->SetEnabled(isConnected);
 	m_pPlayerAngleSlider->SetEnabled(isConnected);
 	m_pPreviewTeamList->SetEnabled(isConnected);
 

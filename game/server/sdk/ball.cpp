@@ -217,6 +217,15 @@ ConVar sv_ball_shotsblocktime_penalty("sv_ball_shotsblocktime_penalty", "4.0", F
 ConVar sv_ball_blockpowershot("sv_ball_blockpowershot", "1", FCVAR_NOTIFY);
 
 
+void OnBallSkinChange(IConVar *var, const char *pOldValue, float flOldValue)
+{
+	if (GetBall())
+		GetBall()->m_nSkin = ((ConVar*)var)->GetInt() == -1 ? g_IOSRand.RandomInt(0, BALL_SKIN_COUNT - 1) : clamp(((ConVar*)var)->GetInt(), 0, BALL_SKIN_COUNT - 1);
+}
+
+ConVar sv_ball_skin("sv_ball_skin", "-1", FCVAR_NOTIFY, "Set the ball skin (-1 = random, 0-5)", &OnBallSkinChange);
+
+
 extern ConVar mp_client_sidecurl;
 
 CBall *CreateBall(const Vector &pos, CSDKPlayer *pCreator)
@@ -242,8 +251,19 @@ void CC_CreatePlayerBall(const CCommand &args)
 	if (pPl->GetFlags() & FL_REMOTECONTROLLED)
 		return;
 
-	Vector pos = pPl->GetLocalOrigin() + VEC_VIEW + pPl->EyeDirection3D() * 150;
-	pos.z = max(pos.z, SDKGameRules()->m_vKickOff.GetZ());
+	trace_t tr;
+
+	UTIL_TraceHull(
+		pPl->GetLocalOrigin() + VEC_VIEW,
+		pPl->GetLocalOrigin() + VEC_VIEW + pPl->EyeDirection3D() * 150,
+		-Vector(BALL_PHYS_RADIUS, BALL_PHYS_RADIUS, BALL_PHYS_RADIUS),
+		Vector(BALL_PHYS_RADIUS, BALL_PHYS_RADIUS, BALL_PHYS_RADIUS),
+		MASK_SOLID,
+		pPl,
+		COLLISION_GROUP_NONE,
+		&tr);
+
+	Vector pos = tr.endpos;
 
 	if (pPl->GetPlayerBall())
 	{
@@ -261,6 +281,7 @@ void CC_CreatePlayerBall(const CCommand &args)
 	else
 		pPl->SetPlayerBall(CreateBall(pos, pPl));
 
+	pPl->GetPlayerBall()->m_nSkin = pPl->GetPlayerBallSkin() == -1 ? g_IOSRand.RandomInt(0, BALL_SKIN_COUNT - 1) : pPl->GetPlayerBallSkin();
 	pPl->GetPlayerBall()->SaveBallCannonSettings();
 	pPl->m_Shared.SetStamina(100);
 }
@@ -439,8 +460,13 @@ void CBall::Spawn (void)
 	SetThink(&CBall::Think);
 	SetNextThink(gpGlobals->curtime + sv_ball_thinkinterval.GetFloat());
 
-	m_nBody = 0; 
-	m_nSkin = g_IOSRand.RandomInt(0,5);
+	m_nBody = 0;
+
+	if (m_bIsPlayerBall && m_pCreator)
+		m_nSkin = m_pCreator->GetPlayerBallSkin();
+	else
+		m_nSkin = sv_ball_skin.GetInt() == -1 ? g_IOSRand.RandomInt(0, BALL_SKIN_COUNT - 1) : clamp(sv_ball_skin.GetInt(), 0, BALL_SKIN_COUNT - 1);
+
 	m_pPhys->SetPosition(GetLocalOrigin(), GetLocalAngles(), true);
 	m_pPhys->SetVelocityInstantaneous(&vec3_origin, &vec3_origin);
 
@@ -478,7 +504,7 @@ bool CBall::CreateVPhysics()
 		m_pPhys = NULL;
 	}
 
-	m_flPhysRadius = 5.0f;
+	m_flPhysRadius = BALL_PHYS_RADIUS;
 	objectparams_t params =	g_IOSPhysDefaultObjectParams;
 	params.pGameData = static_cast<void	*>(this);
 	params.damping = sv_ball_damping.GetFloat();
