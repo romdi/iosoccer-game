@@ -16,6 +16,7 @@
 #include "c_ios_replaymanager.h"
 #include "voice_status.h"
 #include "view.h"
+#include "c_team.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -106,7 +107,7 @@ void DrawPlayerName(HFont font, const Vector &origin, const char *playerName, in
 	int wide, tall;
 	vgui::surface()->GetTextSize(font, wszPlayerName, wide, tall);
 
-	Color c = GameResources()->GetTeamColor(teamNumber);
+	Color c = GetGlobalTeam(teamNumber)->GetHudKitColor();
 
 	Vector pos = origin;
 	pos.z += VEC_HULL_MAX.z + hud_names_offset.GetInt();

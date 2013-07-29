@@ -61,8 +61,8 @@ END_DATADESC()
 LINK_ENTITY_TO_CLASS( replayplayer, CReplayPlayer );
 
 IMPLEMENT_SERVERCLASS_ST(CReplayPlayer, DT_ReplayPlayer)
-	SendPropInt(SENDINFO(m_nTeamNumber)),
-	SendPropInt(SENDINFO(m_nTeamPosNum)),
+	SendPropInt(SENDINFO(m_nTeamNumber), 3),
+	SendPropInt(SENDINFO(m_nShirtNumber), 7, SPROP_UNSIGNED),
 	SendPropString(SENDINFO(m_szPlayerName)),
 END_SEND_TABLE()
 
@@ -75,7 +75,7 @@ void CReplayPlayer::Precache()
 CReplayPlayer::CReplayPlayer()
 {
 	m_nTeamNumber = 0;
-	m_nTeamPosNum = 0;
+	m_nShirtNumber = 0;
 	m_szPlayerName.GetForModify()[0] = 0;
 }
 
@@ -108,7 +108,7 @@ LINK_ENTITY_TO_CLASS(replaymanager, CReplayManager);
 
 IMPLEMENT_SERVERCLASS_ST(CReplayManager, DT_ReplayManager)
 	SendPropBool(SENDINFO(m_bIsReplaying)),
-	SendPropInt(SENDINFO(m_nReplayRunIndex)),
+	SendPropInt(SENDINFO(m_nReplayRunIndex), 3, SPROP_UNSIGNED),
 	SendPropBool(SENDINFO(m_bAtMinGoalPos)),
 END_SEND_TABLE()
 
@@ -410,7 +410,7 @@ void CReplayManager::TakeSnapshot()
 		pPlSnap->moveY = pPl->GetPoseParameter(3);
 
 		pPlSnap->teamNumber = pPl->GetTeamNumber();
-		pPlSnap->teamPosNum = pPl->GetTeamPosNum();
+		pPlSnap->shirtNumber = pPl->GetShirtNumber();
 		pPlSnap->skin = pPl->m_nSkin;
 		pPlSnap->body = pPl->m_nBody;
 
@@ -681,7 +681,7 @@ void CReplayManager::RestoreSnapshot()
 			CReplayPlayer *pPl = m_pPlayers[i][j];
 
 			pPl->m_nTeamNumber = pPlSnap->teamNumber;
-			pPl->m_nTeamPosNum = pPlSnap->teamPosNum;
+			pPl->m_nShirtNumber = pPlSnap->shirtNumber;
 
 			if (Q_strcmp(pPl->m_szPlayerName, pPlSnap->pPlayerData->m_szName))
 				Q_strncpy(pPl->m_szPlayerName.GetForModify(), pPlSnap->pPlayerData->m_szName, MAX_PLAYER_NAME_LENGTH);

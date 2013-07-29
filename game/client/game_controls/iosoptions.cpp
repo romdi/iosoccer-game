@@ -53,8 +53,6 @@ void CC_IOSOptionsMenu(const CCommand &args)
 
 ConCommand iosoptionsmenu("iosoptionsmenu", CC_IOSOptionsMenu);
 
-#define SHIRT_NUMBER_COUNT 11
-
 enum { LABEL_WIDTH = 260, INPUT_WIDTH = 260, SHORTINPUT_WIDTH = 200, TEXT_HEIGHT = 26, TEXT_MARGIN = 5 };
 enum { PANEL_TOPMARGIN = 70, PANEL_MARGIN = 5, PANEL_WIDTH = (1024 - 2 * PANEL_MARGIN), PANEL_HEIGHT = (720 - 2 * PANEL_MARGIN) };
 enum { PADDING = 10, TOP_PADDING = 30 };
@@ -69,6 +67,8 @@ const char *interpTexts[INTERP_VALUES] = { "Very Short (cl_interp_ratio 1)", "Sh
 #define SMOOTH_VALUES 5
 const int smoothValues[SMOOTH_VALUES] = { 1, 5, 10, 25, 50 };
 const char *smoothTexts[SMOOTH_VALUES] = { "Very Short (cl_smoothtime 0.01)", "Short (cl_smoothtime 0.05)", "Medium (cl_smoothtime 0.1)", "Long (cl_smoothtime 0.25)", "Very Long (cl_smoothtime 0.5)" };
+
+#define MAX_VISIBLE_DROPDOWN 20
 
 CIOSOptionsPanel::CIOSOptionsPanel(VPANEL parent) : BaseClass(NULL, "IOSOptionsPanel")
 {
@@ -222,7 +222,7 @@ CNetworkSettingPanel::CNetworkSettingPanel(Panel *parent, const char *panelName)
 	m_pClubNameText->SetMaximumCharCount(MAX_CLUBNAME_LENGTH - 1);
 	m_pClubNameText->SetAllowNonAsciiCharacters(true);
 	m_pCountryNameLabel = new Label(m_pContent, "", "Country Fallback Name:");
-	m_pCountryNameList = new ComboBox(m_pContent, "", COUNTRY_NAMES_COUNT, false);
+	m_pCountryNameList = new ComboBox(m_pContent, "", MAX_VISIBLE_DROPDOWN, false);
 
 	m_pCountryNameList->RemoveAll();
 
@@ -480,17 +480,24 @@ CAppearanceSettingPanel::CAppearanceSettingPanel(Panel *parent, const char *pane
 	kv->deleteThis();
 
 
-	m_pPreferredShirtNumberLabel = new Label(m_pContent, "", "Preferred Shirt Number:");
-	m_pPreferredShirtNumberList = new ComboBox(m_pContent, "", SHIRT_NUMBER_COUNT, false);
+	m_pPreferredOutfieldShirtNumberLabel = new Label(m_pContent, "", "Preferred Outfield Shirt Number:");
+	m_pPreferredOutfieldShirtNumberList = new ComboBox(m_pContent, "", MAX_VISIBLE_DROPDOWN, false);
 
-	kv = new KeyValues("UserData", "index", 0);
-	m_pPreferredShirtNumberList->AddItem("<None>", kv);
-	kv->deleteThis();
-
-	for (int i = 1; i < SHIRT_NUMBER_COUNT; i++)
+	for (int i = 2; i <= 99; i++)
 	{
 		kv = new KeyValues("UserData", "index", i);
-		m_pPreferredShirtNumberList->AddItem(VarArgs("%d", i + 1), kv);
+		m_pPreferredOutfieldShirtNumberList->AddItem(VarArgs("%d", i), kv);
+		kv->deleteThis();
+	}
+
+
+	m_pPreferredKeeperShirtNumberLabel = new Label(m_pContent, "", "Preferred Keeper Shirt Number:");
+	m_pPreferredKeeperShirtNumberList = new ComboBox(m_pContent, "", MAX_VISIBLE_DROPDOWN, false);
+
+	for (int i = 1; i <= 99; i++)
+	{
+		kv = new KeyValues("UserData", "index", i);
+		m_pPreferredKeeperShirtNumberList->AddItem(VarArgs("%d", i), kv);
 		kv->deleteThis();
 	}
 
@@ -532,13 +539,13 @@ CAppearanceSettingPanel::CAppearanceSettingPanel(Panel *parent, const char *pane
 	m_pPlayerAngleSlider->SetValue(0);
 
 	m_pPreviewTeamLabel = new Label(m_pContent, "", "Preview Team Kit:");
-	m_pPreviewTeamList = new ComboBox(m_pContent, "", m_TeamKitInfoDatabase.Count(), false);
+	m_pPreviewTeamList = new ComboBox(m_pContent, "", CTeamInfo::m_TeamInfo.Count(), false);
 	m_pPreviewTeamList->RemoveAll();
 
-	for (unsigned int i = 0; i < m_TeamKitInfoDatabase.Count(); i++)
+	for (int i = 0; i < CTeamInfo::m_TeamInfo.Count(); i++)
 	{
-		kv = new KeyValues("UserData", "kitname", m_TeamKitInfoDatabase[i]->m_szKitName);
-		m_pPreviewTeamList->AddItem(m_TeamKitInfoDatabase[i]->m_szKitName, kv);
+		kv = new KeyValues("UserData", "teamfolder", CTeamInfo::m_TeamInfo[i]->m_szFolderName, "kitfolder", CTeamInfo::m_TeamInfo[i]->m_TeamKitInfo[0]->m_szFolderName);
+		m_pPreviewTeamList->AddItem(CTeamInfo::m_TeamInfo[i]->m_TeamKitInfo[0]->m_szName, kv);
 		kv->deleteThis();
 	}
 
@@ -560,23 +567,26 @@ void CAppearanceSettingPanel::PerformLayout()
 	m_pContent->SetBounds(PADDING, PADDING, GetWide() - 2 * PADDING, GetTall() - 2 * PADDING);
 
 	m_pPlayerPreviewPanel->SetBounds(APPEARANCE_RADIOBUTTONWIDTH, 0, GetParent()->GetWide(), GetParent()->GetTall() - 2 * TEXT_HEIGHT);
-	m_pPlayerPreviewPanel->SetImage("../_rt_playermodel");
+	m_pPlayerPreviewPanel->SetImage("../_rt_playermodelTEST");
 
 	m_pSkinIndexLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 0, LABEL_WIDTH, TEXT_HEIGHT);
 	m_pSkinIndexList->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, TEXT_HEIGHT, SHORTINPUT_WIDTH, TEXT_HEIGHT);
 
-	m_pPreferredShirtNumberLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 2 * TEXT_HEIGHT + TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pPreferredShirtNumberList->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 3 * TEXT_HEIGHT + TEXT_MARGIN, SHORTINPUT_WIDTH, TEXT_HEIGHT);
-	
-	m_pPlayerBallSkinLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 4 * TEXT_HEIGHT + TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pPlayerBallSkinList->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 5 * TEXT_HEIGHT + TEXT_MARGIN, SHORTINPUT_WIDTH, TEXT_HEIGHT);
+	m_pPreferredKeeperShirtNumberLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 2 * TEXT_HEIGHT + TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pPreferredKeeperShirtNumberList->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 3 * TEXT_HEIGHT + TEXT_MARGIN, SHORTINPUT_WIDTH, TEXT_HEIGHT);
+
+	m_pPreferredOutfieldShirtNumberLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 4 * TEXT_HEIGHT + TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pPreferredOutfieldShirtNumberList->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 5 * TEXT_HEIGHT + TEXT_MARGIN, SHORTINPUT_WIDTH, TEXT_HEIGHT);
+
+	m_pPlayerBallSkinLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 6 * TEXT_HEIGHT + TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pPlayerBallSkinList->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 7 * TEXT_HEIGHT + TEXT_MARGIN, SHORTINPUT_WIDTH, TEXT_HEIGHT);
 
 	m_pPlayerAngleLabel->SetBounds(APPEARANCE_RADIOBUTTONWIDTH, 2 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
 	m_pPlayerAngleLabel->SetVisible(false);
 	m_pPlayerAngleSlider->SetBounds(APPEARANCE_RADIOBUTTONWIDTH, 512, 264, TEXT_HEIGHT);
 
-	m_pPreviewTeamLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 6 * TEXT_HEIGHT + 2 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pPreviewTeamList->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 7 * TEXT_HEIGHT + 2 * TEXT_MARGIN, SHORTINPUT_WIDTH, TEXT_HEIGHT);
+	m_pPreviewTeamLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 8 * TEXT_HEIGHT + 2 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pPreviewTeamList->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 9 * TEXT_HEIGHT + 2 * TEXT_MARGIN, SHORTINPUT_WIDTH, TEXT_HEIGHT);
 
 	m_pBodypartPanel->SetBounds(0, 0, APPEARANCE_RADIOBUTTONWIDTH, m_pPlayerPreviewPanel->GetTall());
 	m_pBodypartRadioButtons[0]->SetBounds(0, 0, APPEARANCE_RADIOBUTTONWIDTH, TEXT_HEIGHT);
@@ -590,17 +600,21 @@ void CAppearanceSettingPanel::PerformLayout()
 void CAppearanceSettingPanel::Save()
 {
 	g_pCVar->FindVar("modelskinindex")->SetValue(m_pSkinIndexList->GetActiveItemUserData()->GetInt("value"));
-	char text[64];
-	m_pPreferredShirtNumberList->GetText(text, sizeof(text));
-	g_pCVar->FindVar("preferredshirtnumber")->SetValue(atoi(text));
+	g_pCVar->FindVar("preferredoutfieldshirtnumber")->SetValue(m_pPreferredOutfieldShirtNumberList->GetActiveItemUserData()->GetInt("index"));
+	g_pCVar->FindVar("preferredkeepershirtnumber")->SetValue(m_pPreferredKeeperShirtNumberList->GetActiveItemUserData()->GetInt("index"));
 	g_pCVar->FindVar("playerballskin")->SetValue(m_pPlayerBallSkinList->GetActiveItemUserData()->GetInt("index"));
 }
 
 void CAppearanceSettingPanel::Load()
 {
 	m_pSkinIndexList->ActivateItemByRow(clamp(g_pCVar->FindVar("modelskinindex")->GetInt(), -1, 5) + 1);
-	int shirtNum = g_pCVar->FindVar("preferredshirtnumber")->GetInt();
-	m_pPreferredShirtNumberList->SetText(shirtNum == 0 ? "<None>" : VarArgs("%d", clamp(shirtNum, 2, 11)));
+
+	int outfieldNumber = clamp(g_pCVar->FindVar("preferredoutfieldshirtnumber")->GetInt(), 2, 99);
+	m_pPreferredOutfieldShirtNumberList->ActivateItemByRow(outfieldNumber - 2);
+
+	int keeperNumber = clamp(g_pCVar->FindVar("preferredkeepershirtnumber")->GetInt(), 1, 99);
+	m_pPreferredKeeperShirtNumberList->ActivateItemByRow(keeperNumber - 1);
+
 	m_pPlayerBallSkinList->ActivateItemByRow(g_pCVar->FindVar("playerballskin")->GetInt() + 1);
 }
 
@@ -610,7 +624,8 @@ void CAppearanceSettingPanel::Update()
 
 	m_pConnectionInfoLabel->SetVisible(!isConnected);
 	m_pSkinIndexList->SetEnabled(isConnected);
-	m_pPreferredShirtNumberList->SetEnabled(isConnected);
+	m_pPreferredOutfieldShirtNumberList->SetEnabled(isConnected);
+	m_pPreferredKeeperShirtNumberList->SetEnabled(isConnected);
 	m_pPlayerBallSkinList->SetEnabled(isConnected);
 	m_pPlayerAngleSlider->SetEnabled(isConnected);
 	m_pPreviewTeamList->SetEnabled(isConnected);
@@ -621,21 +636,18 @@ void CAppearanceSettingPanel::Update()
 
 int CAppearanceSettingPanel::GetPlayerSkin()
 {
-	char text[64];
-	m_pPreferredShirtNumberList->GetText(text, sizeof(text));
-	int number = atoi(text);
+	int number = GetPlayerOutfieldShirtNumber();
 	int skin = m_pSkinIndexList->GetActiveItemUserData()->GetInt("value");
 
-	return clamp(number, 2, 11) - 2 + (skin * 10);
+	return number - 2 + (skin * 10);
 }
 
-int CAppearanceSettingPanel::GetPlayerNumber()
+int CAppearanceSettingPanel::GetPlayerOutfieldShirtNumber()
 {
-	char text[64];
-	m_pPreferredShirtNumberList->GetText(text, sizeof(text));
-	int number = atoi(text);
-
-	return clamp(number, 2, 11);
+	int number = m_pPreferredOutfieldShirtNumberList->GetActiveItemUserData()->GetInt("index");
+	if (number == -1)
+		number = 2;
+	return number;
 }
 
 int CAppearanceSettingPanel::GetPlayerBodypart()
@@ -649,9 +661,10 @@ int CAppearanceSettingPanel::GetPlayerBodypart()
 	return 0;
 }
 
-const char *CAppearanceSettingPanel::GetPlayerTeam()
+void CAppearanceSettingPanel::GetPlayerTeamInfo(const char **teamFolder, const char **kitFolder)
 {
-	return m_pPreviewTeamList->GetActiveItemUserData()->GetString("kitname");
+	*teamFolder = m_pPreviewTeamList->GetActiveItemUserData()->GetString("teamfolder");
+	*kitFolder = m_pPreviewTeamList->GetActiveItemUserData()->GetString("kitfolder");
 }
 
 CGameplaySettingPanel::CGameplaySettingPanel(Panel *parent, const char *panelName) : BaseClass(parent, panelName)

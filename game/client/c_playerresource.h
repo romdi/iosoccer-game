@@ -28,20 +28,6 @@ public:
 
 public : // IGameResources intreface
 
-	// Team data access 
-	virtual int		GetTeamGoals( int index );
-	virtual bool	IsClubTeam( int index );
-	virtual bool	IsRealTeam( int index );
-	virtual bool	HasTeamCrest( int index );
-	virtual const char *GetTeamCode( int index );
-	virtual const char *GetShortTeamName( int index );
-	virtual const char *GetFullTeamName( int index );
-	virtual const char *GetTeamKitName( int index );
-	virtual Color &GetHudTeamKitColor(int index);
-	virtual Color &GetPrimaryTeamKitColor(int index);
-	virtual Color &GetSecondaryTeamKitColor(int index);
-	virtual const Color &GetTeamColor( int index );
-	virtual const Color &GetPlayerColor( int index );
 
 	// Player data access
 	virtual bool	IsConnected( int index );
@@ -57,6 +43,7 @@ public : // IGameResources intreface
 //	virtual int		GetPacketloss( int index );
 	virtual int		GetTeam( int index );
 	virtual int		GetSpecTeam( int index );
+	virtual const Color &GetPlayerColor( int index );
 
 	//ios
 	virtual int		GetRedCards( int index );
@@ -84,7 +71,7 @@ public : // IGameResources intreface
 	virtual int		GetKeeperSaves( int index );
 	virtual int		GetGoalKicks( int index );
 	virtual int		GetRatings( int index );
-	virtual int		GetTeamPosNum( int iIndex );
+	virtual int		GetShirtNumber( int iIndex );
 	virtual int		GetTeamPosType( int iIndex );
 	virtual int		GetTeamPosIndex( int iIndex );
 	virtual int		GetTeamToJoin( int iIndex );
@@ -136,7 +123,7 @@ protected:
 	int		m_GoalKicks[MAX_PLAYERS+1];
 	int		m_Ratings[MAX_PLAYERS+1];
 	int		m_TeamPosIndex[MAX_PLAYERS+1];
-	int		m_TeamPosNum[MAX_PLAYERS+1];
+	int		m_ShirtNumber[MAX_PLAYERS+1];
 
 	int		m_TeamToJoin[MAX_PLAYERS+1];
 	int		m_TeamPosIndexToJoin[MAX_PLAYERS+1];

@@ -44,14 +44,14 @@ void SendProxy_String_tToStringT( const SendProp *pProp, const void *pStruct, co
 
 // Datatable
 IMPLEMENT_SERVERCLASS_ST_NOBASE(CTeam, DT_Team)
-	SendPropInt( SENDINFO(m_iTeamNum), 5 ),
-	SendPropInt( SENDINFO(m_nPenaltyGoals), 0 ),
-	SendPropInt( SENDINFO(m_nPenaltyGoalBits), 0 ),
-	SendPropInt( SENDINFO(m_nPenaltyRound)),
-	SendPropInt( SENDINFO(m_nTimeoutsLeft)),
+	SendPropInt( SENDINFO(m_iTeamNum), 3 ),
+	SendPropInt( SENDINFO(m_nPenaltyGoals), 5, SPROP_UNSIGNED),
+	SendPropInt( SENDINFO(m_nPenaltyGoalBits), 32, SPROP_UNSIGNED),
+	SendPropInt( SENDINFO(m_nPenaltyRound), 5, SPROP_UNSIGNED),
+	SendPropInt( SENDINFO(m_nTimeoutsLeft), 4, SPROP_UNSIGNED),
 	SendPropString( SENDINFO( m_szServerKitName ) ),
-	SendPropString( SENDINFO( m_szTeamCode ) ),
-	SendPropString( SENDINFO( m_szShortTeamName ) ),
+	SendPropString( SENDINFO( m_szServerCode ) ),
+	SendPropString( SENDINFO( m_szServerShortName ) ),
 
 	SendPropVector(SENDINFO(m_vCornerLeft), -1, SPROP_COORD),
 	SendPropVector(SENDINFO(m_vCornerRight), -1, SPROP_COORD),
@@ -63,8 +63,8 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CTeam, DT_Team)
 	SendPropVector(SENDINFO(m_vPenBoxMax), -1, SPROP_COORD),
 	SendPropVector(SENDINFO(m_vSixYardBoxMin), -1, SPROP_COORD),
 	SendPropVector(SENDINFO(m_vSixYardBoxMax), -1, SPROP_COORD),
-	SendPropInt(SENDINFO(m_nForward)),
-	SendPropInt(SENDINFO(m_nRight)),
+	SendPropInt(SENDINFO(m_nForward), 2),
+	SendPropInt(SENDINFO(m_nRight), 2),
 	SendPropInt(SENDINFO(m_nCaptainPosIndex), 4, SPROP_UNSIGNED),
 	SendPropInt(SENDINFO(m_nFreekickTakerPosIndex), 4, SPROP_UNSIGNED),
 	SendPropInt(SENDINFO(m_nPenaltyTakerPosIndex), 4, SPROP_UNSIGNED),
@@ -145,8 +145,8 @@ int GetNumberOfTeams( void )
 CTeam::CTeam( void )
 {
 	memset( m_szServerKitName.GetForModify(), 0, sizeof(m_szServerKitName) );
-	memset( m_szTeamCode.GetForModify(), 0, sizeof(m_szTeamCode) );
-	memset( m_szShortTeamName.GetForModify(), 0, sizeof(m_szShortTeamName) );
+	memset( m_szServerCode.GetForModify(), 0, sizeof(m_szServerCode) );
+	memset( m_szServerShortName.GetForModify(), 0, sizeof(m_szServerShortName) );
 	ResetStats();
 	UpdatePosIndices(true);
 	m_nTimeoutsLeft = mp_timeout_count.GetInt();
@@ -168,7 +168,6 @@ CTeam::~CTeam( void )
 //-----------------------------------------------------------------------------
 void CTeam::Think( void )
 {
-	DevMsg("foo\n");
 }
 
 //-----------------------------------------------------------------------------
@@ -184,11 +183,7 @@ int CTeam::UpdateTransmitState()
 //-----------------------------------------------------------------------------
 bool CTeam::ShouldTransmitToPlayer( CBasePlayer* pRecipient, CBaseEntity* pEntity )
 {
-	// Always transmit the observer target to players
-	if ( pRecipient && pRecipient->IsObserver())
-		return true;
-
-	return false;
+	return true;
 }
 
 //-----------------------------------------------------------------------------
@@ -223,12 +218,12 @@ CTeam *CTeam::GetOppTeam( void ) const
 
 const char *CTeam::GetTeamCode( void )
 {
-	return m_szTeamCode;
+	return m_szServerCode;
 }
 
 const char *CTeam::GetShortTeamName( void )
 {
-	return m_szShortTeamName;
+	return m_szServerShortName;
 }
 
 void CTeam::SetTeamNumber(int teamNum)
@@ -243,12 +238,12 @@ void CTeam::SetKitName(const char *pName)
 
 void CTeam::SetTeamCode(const char *pCode)
 {
-	Q_strncpy( m_szTeamCode.GetForModify(), pCode, MAX_TEAMCODE_LENGTH );
+	Q_strncpy( m_szServerCode.GetForModify(), pCode, MAX_TEAMCODE_LENGTH );
 }
 
 void CTeam::SetShortTeamName(const char *pName)
 {
-	Q_strncpy( m_szShortTeamName.GetForModify(), pName, MAX_SHORTTEAMNAME_LENGTH );
+	Q_strncpy( m_szServerShortName.GetForModify(), pName, MAX_SHORTTEAMNAME_LENGTH );
 }
 
 

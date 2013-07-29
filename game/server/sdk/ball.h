@@ -234,7 +234,6 @@ private:
 	bool			CheckKeeperCatch();
 	bool			DoGroundShot(bool markOffsidePlayers, float velCoeff = 1.0f);
 	bool			DoVolleyShot();
-	bool			DoChestDrop();
 	bool			DoHeader();
 	AngularImpulse	CalcSpin(float coeff, bool applyTopspin);
 	float			GetPitchCoeff(bool isNormalShot);

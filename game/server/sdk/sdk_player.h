@@ -327,8 +327,9 @@ public:
 	bool				IsTeamPosFree(int team, int posIndex, bool ignoreBots, CSDKPlayer **pPlayerOnPos);
 
 	int					m_nTeamPosIndex;
-	int					m_nTeamPosNum;
-	int					m_nPreferredTeamPosNum;
+	int					m_nShirtNumber;
+	int					m_nPreferredOutfieldShirtNumber;
+	int					m_nPreferredKeeperShirtNumber;
 	int					m_nPreferredSkin;
 	int					m_nPlayerBallSkin;
 	
@@ -428,7 +429,7 @@ public:
 	float				GetNextJoin() { return m_flNextJoin; }
 	void				SetNextJoin(float time) { m_flNextJoin = time; }
 
-	int					GetTeamPosNum(void);
+	int					GetShirtNumber(void);
 
 	int					GetTeamPosType(void);
 
@@ -438,8 +439,9 @@ public:
 
 	int					GetTeamPosIndexToJoin(void) { return m_nTeamPosIndexToJoin; }
 
-	void				SetPreferredTeamPosNum(int num) { m_nPreferredTeamPosNum = clamp(num, 0, 11); }
-	int					FindAvailableTeamPosNum();
+	void				SetPreferredOutfieldShirtNumber(int num);
+	void				SetPreferredKeeperShirtNumber(int num);
+	int					FindAvailableShirtNumber();
 
 	int					GetPreferredSkin() { return m_nPreferredSkin; }
 	void				SetPreferredSkin(int num);

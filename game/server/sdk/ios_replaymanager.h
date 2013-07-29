@@ -95,7 +95,7 @@ struct PlayerSnapshot
 	float			moveX;
 	float			moveY;
 	int				teamNumber;
-	int				teamPosNum;
+	int				shirtNumber;
 	int				skin;
 	int				body;
 	const CPlayerPersistentData *pPlayerData;
@@ -183,7 +183,7 @@ public:
 	void Think();
 
 	CNetworkVar(int, m_nTeamNumber);
-	CNetworkVar(int, m_nTeamPosNum);
+	CNetworkVar(int, m_nShirtNumber);
 	CNetworkString(m_szPlayerName, MAX_PLAYER_NAME_LENGTH);
 };
 

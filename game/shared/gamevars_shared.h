@@ -48,7 +48,7 @@ extern ConVar
 	mp_joindelay,
 	mp_maxplayers,
 	mp_weather,
-	mp_teamlist,
+	mp_teamkits,
 	mp_teamnames,
 	mp_custom_shirt_numbers,
 	mp_reset_spin_toggles_on_shot,

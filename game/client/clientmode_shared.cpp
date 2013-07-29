@@ -768,7 +768,7 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 			C_Team *pNewTeam = GetGlobalTeam( newTeam );
 			if ( pNewTeam )
 			{
-				g_pVGuiLocalize->ConvertANSIToUnicode( pNewTeam->Get_TeamCode(), wszNewTeam, sizeof(wszNewTeam) );
+				g_pVGuiLocalize->ConvertANSIToUnicode( pNewTeam->GetCode(), wszNewTeam, sizeof(wszNewTeam) );
 			}
 			else
 			{
@@ -779,7 +779,7 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 			C_Team *pOldTeam = GetGlobalTeam( oldTeam );
 			if ( pOldTeam )
 			{
-				g_pVGuiLocalize->ConvertANSIToUnicode( pOldTeam->Get_TeamCode(), wszOldTeam, sizeof(wszOldTeam) );
+				g_pVGuiLocalize->ConvertANSIToUnicode( pOldTeam->GetCode(), wszOldTeam, sizeof(wszOldTeam) );
 			}
 			else
 			{
@@ -811,7 +811,7 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 				if (newSpecTeam == TEAM_A || newSpecTeam == TEAM_B)
 				{
 					C_Team *pNewSpecTeam = GetGlobalTeam( newSpecTeam );
-					g_pVGuiLocalize->ConvertANSIToUnicode( pNewSpecTeam->Get_TeamCode(), wszNewSpecTeam, sizeof(wszNewSpecTeam) );
+					g_pVGuiLocalize->ConvertANSIToUnicode( pNewSpecTeam->GetCode(), wszNewSpecTeam, sizeof(wszNewSpecTeam) );
 				}
 
 				if (oldTeam == TEAM_A || oldTeam == TEAM_B)
@@ -1001,7 +1001,7 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 	else if ( Q_strcmp( "team_formation", eventname ) == 0 )
 	{
 		wchar_t wszTeamName[MAX_SHORTTEAMNAME_LENGTH];
-		g_pVGuiLocalize->ConvertANSIToUnicode( GetGlobalTeam(event->GetInt("team"))->Get_TeamCode(), wszTeamName, sizeof(wszTeamName) );
+		g_pVGuiLocalize->ConvertANSIToUnicode( GetGlobalTeam(event->GetInt("team"))->GetCode(), wszTeamName, sizeof(wszTeamName) );
 
 		wchar_t wszOldFormation[16];
 		g_pVGuiLocalize->ConvertANSIToUnicode( SDKGameRules()->GetFormations()[event->GetInt("old_formation")]->name, wszOldFormation, sizeof(wszOldFormation) );

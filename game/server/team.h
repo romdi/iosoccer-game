@@ -106,8 +106,8 @@ public:
 
 	// Data
 	CNetworkString( m_szServerKitName, MAX_TEAM_NAME_LENGTH );
-	CNetworkString( m_szTeamCode, MAX_TEAMCODE_LENGTH );
-	CNetworkString( m_szShortTeamName, MAX_SHORTTEAMNAME_LENGTH );
+	CNetworkString( m_szServerCode, MAX_TEAMCODE_LENGTH );
+	CNetworkString( m_szServerShortName, MAX_SHORTTEAMNAME_LENGTH );
 	CNetworkVar( int, m_iTeamNum );
 	CNetworkVar( int, m_nPenaltyGoals );
 	CNetworkVar( int, m_nPenaltyGoalBits );

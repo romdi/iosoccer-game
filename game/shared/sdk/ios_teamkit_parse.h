@@ -15,59 +15,89 @@
 
 class IFileSystem;
 class KeyValues;
-
-typedef unsigned short TEAMKIT_FILE_INFO_HANDLE;
+class CTeamInfo;
 
 #define MAX_TEAMCODE_LENGTH				8
 #define MAX_KITNAME_LENGTH				32
+#define MAX_FOLDERNAME_LENGTH			64
 #define MAX_SHORTTEAMNAME_LENGTH		32
 #define MAX_FULLTEAMNAME_LENGTH			64
 
-//-----------------------------------------------------------------------------
-// Purpose: Contains the data read from the player class script files. 
-// It's cached so we only read each script file once.
-// Each game provides a CreateTeamKitInfo function so it can have game-specific
-// data in the player class scripts.
-//-----------------------------------------------------------------------------
+struct chr_t
+{
+	int x;
+	int y;
+	int w;
+	int h;
+
+	chr_t() : x(0), y(0), w(0), h(0) {}
+};
+
+class CFontAtlas
+{
+public:
+	unsigned char **m_NamePixels;
+	int m_nNamePixelsWidth;
+	int m_nNamePixelsHeight;
+	chr_t m_NameChars[128];
+
+	unsigned char **m_NumberPixels;
+	int m_nNumberPixelsWidth;
+	int m_nNumberPixelsHeight;
+	chr_t m_NumberChars[128];
+
+	CFontAtlas(const char *folderPath);
+	unsigned char **ParseInfo(const char *folderPath, const char *type, chr_t *chars, int &width, int &height);
+};
+
 class CTeamKitInfo
 {
 public:
 
+	char		m_szName[MAX_KITNAME_LENGTH];
+	char		m_szAuthor[MAX_PLAYER_NAME_LENGTH];
+	char		m_szFolderName[MAX_FOLDERNAME_LENGTH];
+	Color		m_HudColor;
+	Color		m_PrimaryColor;
+	Color		m_SecondaryColor;
+	Color		m_OutfieldShirtNameColor;
+	Color		m_OutfieldShirtNumberColor;
+	int			m_nOutfieldShirtNameOffset;
+	int			m_nOutfieldShirtNumberOffset;
+	Color		m_KeeperShirtNameColor;
+	Color		m_KeeperShirtNumberColor;
+	int			m_nKeeperShirtNameOffset;
+	int			m_nKeeperShirtNumberOffset;
+	CFontAtlas	*m_pFontAtlas;
+	CTeamInfo	*m_pTeamInfo;
+
+	static CFontAtlas *m_pDefaultFontAtlas;
+
 	CTeamKitInfo();
-	
-	// Each game can override this to get whatever values it wants from the script.
-	virtual void Parse( KeyValues *pKeyValuesData, const char *szClassName );
-	static void FindTeamKits();
-
-	bool		m_bParsedScript;
-
-	bool		m_bIsClubTeam;
-	bool		m_bIsRealTeam;
-	bool		m_bHasTeamCrest;
-	char		m_szTeamCode[MAX_TEAMCODE_LENGTH];
-	char		m_szKitName[MAX_KITNAME_LENGTH];
-	char		m_szShortTeamName[MAX_SHORTTEAMNAME_LENGTH];
-	char		m_szFullTeamName[MAX_FULLTEAMNAME_LENGTH];
-	Color		m_HudKitColor;
-	Color		m_PrimaryKitColor;
-	Color		m_SecondaryKitColor;
 };
 
-// The weapon parse function
-bool ReadTeamKitDataFromFileForSlot( IFileSystem* filesystem, const char *szTeamKitName, TEAMKIT_FILE_INFO_HANDLE *phandle);
+class CTeamInfo
+{
+public:
 
-// If player class info has been loaded for the specified class name, this returns it.
-TEAMKIT_FILE_INFO_HANDLE LookupTeamKitInfoSlot( const char *name );
+	// Each game can override this to get whatever values it wants from the script.
+	static void ParseTeamKits();
+	static void GetNonClashingTeamKits(char *homeTeam, char *awayTeam, bool clubTeams, bool nationalTeams, bool realTeams, bool fictitiousTeams);
+	static CTeamKitInfo *FindTeamByShortName(const char *name);
+	static CTeamKitInfo *FindTeamByCode(const char *name);
+	bool		m_bIsClub;
+	bool		m_bIsReal;
+	bool		m_bHasCrest;
+	char		m_szCode[MAX_TEAMCODE_LENGTH];
+	char		m_szShortName[MAX_SHORTTEAMNAME_LENGTH];
+	char		m_szFullName[MAX_FULLTEAMNAME_LENGTH];
+	char		m_szFolderName[MAX_FOLDERNAME_LENGTH];
 
-// Given a handle to the player class info, return the class data
-CTeamKitInfo *GetTeamKitInfoFromHandle( TEAMKIT_FILE_INFO_HANDLE handle );
+	CTeamInfo();
+	~CTeamInfo();
 
-// Get the null Player Class object
-TEAMKIT_FILE_INFO_HANDLE GetInvalidTeamKitInfoHandle( void );
-
-// Initialize all player class info
-void ResetTeamKitInfoDatabase( void );
-
-extern CUtlDict< CTeamKitInfo*, unsigned short > m_TeamKitInfoDatabase;
+	static CUtlVector<CTeamInfo *> m_TeamInfo;
+	CUtlVector<CTeamKitInfo *> m_TeamKitInfo;
+};
 
 #endif // TeamKit_INFO_PARSE_H

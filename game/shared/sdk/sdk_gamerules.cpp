@@ -548,7 +548,7 @@ void CSDKGameRules::ServerActivate()
 {
 	CPlayerPersistentData::ReallocateAllPlayerData();
 
-	CTeamKitInfo::FindTeamKits();
+	CTeamInfo::ParseTeamKits();
 
 	InitTeams();
 
@@ -783,89 +783,21 @@ void CSDKGameRules::InitTeams( void )
 	CreateEntityByName( "sdk_gamerules" );
 }
 
-//Source: http://www.compuphase.com/cmetric.htm
-double ColorDistance(const Color &e1, const Color &e2)
+void CSDKGameRules::ChooseTeamNames(bool clubTeams, bool nationalTeams, bool realTeams, bool fictitiousTeams)
 {
-  long rmean = ( (long)e1.r() + (long)e2.r() ) / 2;
-  long r = (long)e1.r() - (long)e2.r();
-  long g = (long)e1.g() - (long)e2.g();
-  long b = (long)e1.b() - (long)e2.b();
-  return sqrtl((((512+rmean)*r*r)>>8) + 4*g*g + (((767-rmean)*b*b)>>8));
-}
+	char homeTeam[MAX_KITNAME_LENGTH] = {};
+	char awayTeam[MAX_KITNAME_LENGTH] = {};
+	CTeamInfo::GetNonClashingTeamKits(homeTeam, awayTeam, clubTeams, nationalTeams, realTeams, fictitiousTeams);
 
-void CSDKGameRules::ChooseTeamNames(bool clubTeams, bool countryTeams, bool realTeams, bool fictitiousTeams)
-{
-	int kitCount = m_TeamKitInfoDatabase.Count();
-	//int clubTeamCount = 0;
-	//int countryTeamCount = 0;
-	//int realTeamCount = 0;
-	//int fictitiousTeamCount = 0;
-
-	//for (int i = 0; i < kitCount; i++)
-	//{
-	//	if (m_TeamKitInfoDatabase[i]->m_bIsClubTeam)
-	//		clubTeamCount += 1;
-	//	else
-	//		countryTeamCount += 1;
-
-	//	if (m_TeamKitInfoDatabase[i]->m_bIsRealTeam)
-	//		realTeamCount += 1;
-	//	else
-	//		fictitiousTeamCount += 1;
-	//}
-
-	//if (clubTeamCount == 0 && clubTeams)
-	//	clubTeams = false;
-
-	//if (countryTeamCount == 0 && countryTeams)
-	//	countryTeams = false;
-
-	//if (realTeamCount == 0 && realTeams)
-	//	realTeams = false;
-
-	//if (fictitiousTeamCount == 0 && fictitiousTeams)
-	//	fictitiousTeams = false;
-
-	int attemptCount = 0;
-	int teamHome;
-	int teamAway;
-
-	do
+	if (homeTeam[0] != '\0' && awayTeam[0] != '\0')
 	{
-		attemptCount += 1;
-		teamHome = g_IOSRand.RandomInt(0, kitCount - 1);
-		teamAway = g_IOSRand.RandomInt(0, kitCount - 1);
-
-		if (m_TeamKitInfoDatabase[teamHome]->m_bIsClubTeam && !clubTeams || !m_TeamKitInfoDatabase[teamHome]->m_bIsClubTeam && !countryTeams)
-			continue;
-
-		if (m_TeamKitInfoDatabase[teamHome]->m_bIsRealTeam && !realTeams || !m_TeamKitInfoDatabase[teamHome]->m_bIsRealTeam && !fictitiousTeams)
-			continue;
-
-		if (m_TeamKitInfoDatabase[teamAway]->m_bIsClubTeam && !clubTeams || !m_TeamKitInfoDatabase[teamAway]->m_bIsClubTeam && !countryTeams)
-			continue;
-
-		if (m_TeamKitInfoDatabase[teamAway]->m_bIsRealTeam && !realTeams || !m_TeamKitInfoDatabase[teamAway]->m_bIsRealTeam && !fictitiousTeams)
-			continue;
-
-		if (m_TeamKitInfoDatabase[teamHome]->m_PrimaryKitColor == m_TeamKitInfoDatabase[teamAway]->m_PrimaryKitColor ||
-			m_TeamKitInfoDatabase[teamHome]->m_bIsClubTeam != m_TeamKitInfoDatabase[teamAway]->m_bIsClubTeam ||
-			m_TeamKitInfoDatabase[teamHome]->m_bIsRealTeam != m_TeamKitInfoDatabase[teamAway]->m_bIsRealTeam)
-			continue;
-
-		Msg("color distance: %f\n", ColorDistance(m_TeamKitInfoDatabase[teamHome]->m_PrimaryKitColor, m_TeamKitInfoDatabase[teamAway]->m_PrimaryKitColor));
-
-		mp_teamlist.SetValue(UTIL_VarArgs("%s,%s", m_TeamKitInfoDatabase[teamHome]->m_szKitName, m_TeamKitInfoDatabase[teamAway]->m_szKitName));
-		IOS_LogPrintf("Setting random teams: %s against %s\n", m_TeamKitInfoDatabase[teamHome]->m_szKitName, m_TeamKitInfoDatabase[teamAway]->m_szKitName);
-		GetGlobalTeam(TEAM_A)->SetKitName(m_TeamKitInfoDatabase[teamHome]->m_szKitName);
-		GetGlobalTeam(TEAM_B)->SetKitName(m_TeamKitInfoDatabase[teamAway]->m_szKitName);
-		break;
-
-	} while (attemptCount < 1000);
-
-	if (attemptCount == 1000)
-		Msg("ERROR: No compatible teams found. Check sv_randomteams parameters.\n");
-	
+		mp_teamkits.SetValue(UTIL_VarArgs("%s,%s", homeTeam, awayTeam));
+		IOS_LogPrintf("Setting random teams: %s against %s\n", homeTeam, awayTeam);
+		GetGlobalTeam(TEAM_A)->SetKitName(homeTeam);
+		GetGlobalTeam(TEAM_B)->SetKitName(awayTeam);
+	}
+	else
+		Msg("ERROR: No compatible teams found. Check sv_randomteams parameters.\n");	
 }
 
 /* create some proxy entities that we use for transmitting data */
@@ -2097,119 +2029,212 @@ bool CSDKGameRules::CheckAutoStart()
 	return false;
 }
 
-#endif
+#include <ctype.h>
+
+char *trim(char *str)
+{
+	size_t len = 0;
+	char *frontp = str - 1;
+	char *endp = NULL;
+
+	if( str == NULL )
+		return NULL;
+
+	if( str[0] == '\0' )
+		return str;
+
+	len = strlen(str);
+	endp = str + len;
+
+	/* Move the front and back pointers to address
+	* the first non-whitespace characters from
+	* each end.
+	*/
+	while( isspace(*(++frontp)) );
+	while( isspace(*(--endp)) && endp != frontp );
+
+	if( str + len - 1 != endp )
+		*(endp + 1) = '\0';
+	else if( frontp != str &&  endp == frontp )
+		*str = '\0';
+
+	/* Shift the string so that it starts at str so
+	* that if it's dynamically allocated, we can
+	* still free it on the returned pointer.  Note
+	* the reuse of endp to mean the front of the
+	* string buffer now.
+	*/
+	endp = str;
+	if( frontp != str )
+	{
+		while( *frontp ) *endp++ = *frontp++;
+		*endp = '\0';
+	}
+
+	return str;
+}
 
 void OnTeamnamesChange(IConVar *var, const char *pOldValue, float flOldValue)
 {
-	#ifdef GAME_DLL
-		if (SDKGameRules())
+	if (!SDKGameRules())
+		return;
+
+	char val[256];
+	Q_strncpy(val, ((ConVar*)var)->GetString(), sizeof(val));
+
+	if (val[0] == 0)
+		return;
+
+	char homeString[128] = {};
+	char awayString[128] = {};
+	char *result = NULL;
+
+	result = strtok(val, ",");
+
+	if (result != NULL)
+		Q_strncpy(homeString, result, sizeof(homeString));
+
+	if (homeString[0] != '\0')
+	{
+		result = strtok(NULL, ",");
+
+		if (result != NULL)
+			Q_strncpy(awayString, result, sizeof(awayString));
+	}
+
+	if (homeString[0] != '\0' && awayString[0] != '\0')
+	{
+		char homeCode[MAX_TEAMCODE_LENGTH] = {};
+		char homeName[MAX_SHORTTEAMNAME_LENGTH] = {};
+		char awayCode[MAX_TEAMCODE_LENGTH] = {};
+		char awayName[MAX_SHORTTEAMNAME_LENGTH] = {};
+
+		result = strtok(homeString, ":");
+
+		if (result != NULL)
+			Q_strncpy(homeCode, result, sizeof(homeCode));
+
+		if (homeCode[0] != '\0')
 		{
-			char val[256];
-			Q_strncpy(val, ((ConVar*)var)->GetString(), sizeof(val));
-
-			if (val[0] == 0)
-				return;
-
-			char teamstrings[2][128] = {};
-			char *result = NULL;
-
-			result = strtok(val, ",");
+			result = strtok(NULL, ":");
 
 			if (result != NULL)
-				Q_strncpy(teamstrings[0], result, sizeof(teamstrings[0]));
+				Q_strncpy(homeName, result, sizeof(homeName));
 
-			if (teamstrings[0][0] != 0)
+			if (homeName[0] != '\0')
 			{
-				result = strtok(NULL, ",");
+				result = strtok(awayString, ":");
 
 				if (result != NULL)
-					Q_strncpy(teamstrings[1], result, sizeof(teamstrings[1]));
-			}
+					Q_strncpy(awayCode, result, sizeof(awayCode));
 
-			if (teamstrings[0][0] != 0 && teamstrings[1][0] != 0)
-			{
-				char codes[2][16] = {};
-				char names[2][64] = {};
-
-				result = strtok(teamstrings[0], ":");
-
-				if (result != NULL)
-					Q_strncpy(codes[0], result, sizeof(codes[0]));
-
-				if (codes[0][0] != 0)
+				if (awayCode[0] != '\0')
 				{
 					result = strtok(NULL, ":");
 
 					if (result != NULL)
-						Q_strncpy(names[0], result, sizeof(names[0]));
+						Q_strncpy(awayName, result, sizeof(awayName));
 
-					if (names[0][0] != 0)
+					if (awayName[0] != '\0')
 					{
-						result = strtok(teamstrings[1], ":");
+						GetGlobalTeam(TEAM_A)->SetTeamCode(trim(homeCode));
+						GetGlobalTeam(TEAM_A)->SetShortTeamName(trim(homeName));
 
-						if (result != NULL)
-							Q_strncpy(codes[1], result, sizeof(codes[1]));
+						GetGlobalTeam(TEAM_B)->SetTeamCode(trim(awayCode));
+						GetGlobalTeam(TEAM_B)->SetShortTeamName(trim(awayName));
 
-						if (codes[1][0] != 0)
-						{
-							result = strtok(NULL, ":");
-
-							if (result != NULL)
-								Q_strncpy(names[1], result, sizeof(names[1]));
-
-							if (names[1][0] != 0)
-							{
-								GetGlobalTeam(TEAM_A)->SetTeamCode(codes[0]);
-								GetGlobalTeam(TEAM_A)->SetShortTeamName(names[0]);
-
-								GetGlobalTeam(TEAM_B)->SetTeamCode(codes[1]);
-								GetGlobalTeam(TEAM_B)->SetShortTeamName(names[1]);
-
-								return;
-							}
-						}
+						return;
 					}
 				}
 			}
-
-			Msg("Error: Wrong format\n");
 		}
-	#endif
+	}
+
+	Msg("Error: Wrong format\n");
 }
 
-ConVar mp_teamnames("mp_teamnames", "", FCVAR_REPLICATED|FCVAR_NOTIFY, "Override team names. Example: mp_teamnames \"FCB:FC Barcelona,RMA:Real Madrid\"", &OnTeamnamesChange);
-
-#ifdef GAME_DLL
+ConVar mp_teamnames("mp_teamnames", "", FCVAR_NOTIFY, "Override team names. Example: mp_teamnames \"FCB:FC Barcelona,RMA:Real Madrid\"", &OnTeamnamesChange);
 
 void OnTeamlistChange(IConVar *var, const char *pOldValue, float flOldValue)
 {
-	if (SDKGameRules())
+	if (!SDKGameRules())
+		return;
+
+	char val[256];
+	Q_strncpy(val, ((ConVar*)var)->GetString(), sizeof(val));
+
+	if (val[0] == 0)
+		return;
+
+	char homeString[128] = {};
+	char awayString[128] = {};
+	char *result = NULL;
+
+	result = strtok(val, ",");
+
+	if (result != NULL)
+		Q_strncpy(homeString, result, sizeof(homeString));
+
+	if (homeString[0] != '\0')
 	{
-		char teamlist[256];
-		Q_strncpy(teamlist, ((ConVar*)var)->GetString(), sizeof(teamlist));
+		result = strtok(NULL, ",");
 
-		char *home = NULL;
-		char *away = NULL;
+		if (result != NULL)
+			Q_strncpy(awayString, result, sizeof(awayString));
+	}
 
-		home = strtok(teamlist, " ,;");
+	if (homeString[0] != '\0' && awayString[0] != '\0')
+	{
+		char homeCode[MAX_TEAMCODE_LENGTH] = {};
+		char homeName[MAX_SHORTTEAMNAME_LENGTH] = {};
+		char awayCode[MAX_TEAMCODE_LENGTH] = {};
+		char awayName[MAX_SHORTTEAMNAME_LENGTH] = {};
 
-		if (home != NULL)
-			away = strtok(NULL, " ,;");
+		result = strtok(homeString, ":");
 
-		if (home == NULL || away == NULL)
-			Msg( "Format: mp_teamlist \"<home team>,<away team>\"\n" );
-		else
+		if (result != NULL)
+			Q_strncpy(homeCode, result, sizeof(homeCode));
+
+		if (homeCode[0] != '\0')
 		{
-			home = strlwr(home);
-			away = strlwr(away);
-			IOS_LogPrintf("Setting new teams: %s against %s\n", home, away);
-			GetGlobalTeam(TEAM_A)->SetKitName(home);
-			GetGlobalTeam(TEAM_B)->SetKitName(away);
+			result = strtok(NULL, ":");
+
+			if (result != NULL)
+				Q_strncpy(homeName, result, sizeof(homeName));
+
+			if (homeName[0] != '\0')
+			{
+				result = strtok(awayString, ":");
+
+				if (result != NULL)
+					Q_strncpy(awayCode, result, sizeof(awayCode));
+
+				if (awayCode[0] != '\0')
+				{
+					result = strtok(NULL, ":");
+
+					if (result != NULL)
+						Q_strncpy(awayName, result, sizeof(awayName));
+
+					if (awayName[0] != '\0')
+					{
+						GetGlobalTeam(TEAM_A)->SetTeamCode(strlwr(trim(homeCode)));
+						GetGlobalTeam(TEAM_A)->SetShortTeamName(strlwr(trim(homeName)));
+
+						GetGlobalTeam(TEAM_B)->SetTeamCode(strlwr(trim(awayCode)));
+						GetGlobalTeam(TEAM_B)->SetShortTeamName(strlwr(trim(awayName)));
+
+						return;
+					}
+				}
+			}
 		}
 	}
+
+	Msg("Error: Wrong format\n");
 }
 
-ConVar mp_teamlist("mp_teamlist", "england,brazil", FCVAR_REPLICATED|FCVAR_NOTIFY, "Set team names", &OnTeamlistChange);
+ConVar mp_teamkits("mp_teamkits", "england,brazil", FCVAR_NOTIFY, "Set team names", &OnTeamlistChange);
 
 ConVar mp_teamrotation("mp_teamrotation", "brazil,germany,italy,scotland,barcelona,bayern,liverpool,milan,palmeiras", 0, "Set available teams");
 
@@ -2245,7 +2270,8 @@ void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 
 	pPl->SetCountryIndex(countryIndex);
 
-	pPl->SetPreferredTeamPosNum(atoi(engine->GetClientConVarValue(pPl->entindex(), "preferredshirtnumber")));
+	pPl->SetPreferredOutfieldShirtNumber(atoi(engine->GetClientConVarValue(pPl->entindex(), "preferredoutfieldshirtnumber")));
+	pPl->SetPreferredKeeperShirtNumber(atoi(engine->GetClientConVarValue(pPl->entindex(), "preferredkeepershirtnumber")));
 
 	pPl->SetPlayerBallSkin(atoi(engine->GetClientConVarValue(pPl->entindex(), "playerballskin")));
 
@@ -2840,7 +2866,7 @@ void CSDKGameRules::DrawFieldTeamCrests()
 
 	for (int i = 0; i < 2; i++)
 	{
-		if (!GameResources()->HasTeamCrest(i + TEAM_A))
+		if (!GetGlobalTeam(i + TEAM_A)->HasCrest())
 			continue;
 
 		int sign;

@@ -185,8 +185,8 @@ void CStatsMenu::Update(int playerIndex, KeyValues *kv)
 
 	for (int i = 0; i < 3; i++)
 	{
-		m_pPlayerStats[i]->SetFgColor(pTeam->Get_HudKitColor());
-		m_pPlayerStats[i]->SetSectionFgColor(0, pTeam->Get_HudKitColor());
+		m_pPlayerStats[i]->SetFgColor(pTeam->GetHudKitColor());
+		m_pPlayerStats[i]->SetSectionFgColor(0, pTeam->GetHudKitColor());
 		//m_pPlayerStats[i]->SetVisible(true);
 		//m_pPlayerStats[i]->Repaint();
 		//m_pPlayerStats[i]->SetSectionDividerColor(0, Color(255, 255, 255, 255));

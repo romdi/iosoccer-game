@@ -379,11 +379,11 @@ void CHudScorebar::OnThink( void )
 
 	for (int team = TEAM_A; team <= TEAM_B; team++)
 	{
-		m_pTeamNames[team - TEAM_A]->SetText(GetGlobalTeam(team)->Get_TeamCode());
+		m_pTeamNames[team - TEAM_A]->SetText(GetGlobalTeam(team)->GetCode());
 		m_pTeamNames[team - TEAM_A]->SetFgColor(Color(255, 255, 255, 255));
-		m_pTeamColors[team - TEAM_A][0]->SetBgColor(GetGlobalTeam(team)->Get_PrimaryKitColor());
-		m_pTeamColors[team - TEAM_A][1]->SetBgColor(GetGlobalTeam(team)->Get_SecondaryKitColor());
-		m_pTeamGoals[team - TEAM_A]->SetText(VarArgs("%d", GetGlobalTeam(team)->Get_Goals()));
+		m_pTeamColors[team - TEAM_A][0]->SetBgColor(GetGlobalTeam(team)->GetPrimaryKitColor());
+		m_pTeamColors[team - TEAM_A][1]->SetBgColor(GetGlobalTeam(team)->GetSecondaryKitColor());
+		m_pTeamGoals[team - TEAM_A]->SetText(VarArgs("%d", GetGlobalTeam(team)->GetGoals()));
 	}
 
 	for (int i = 0; i < QUICKTACTIC_COUNT; i++)
@@ -420,7 +420,7 @@ void CHudScorebar::OnThink( void )
 			if (m_nCurMatchEventTeam == TEAM_UNASSIGNED)
 				m_pNotifications[0]->SetText(VarArgs("TIMEOUT (%d:%02d)", time / 60, time % 60));
 			else
-				m_pNotifications[0]->SetText(VarArgs("TIMEOUT: %s (%d:%02d)", g_PR->GetTeamCode(m_nCurMatchEventTeam), time / 60, time % 60));
+				m_pNotifications[0]->SetText(VarArgs("TIMEOUT: %s (%d:%02d)", GetGlobalTeam(m_nCurMatchEventTeam)->GetCode(), time / 60, time % 60));
 		}
 	}
 
@@ -619,7 +619,7 @@ char *GetSetPieceCountText(match_event_t matchEvent, int team)
 		break;
 	}
 
-	return VarArgs("%d%s %s %s", number, GetOrdinal(number), text, GetGlobalTeam(team)->Get_ShortTeamName());
+	return VarArgs("%d%s %s %s", number, GetOrdinal(number), text, GetGlobalTeam(team)->GetShortName());
 }
 
 char *GetMatchMinuteText(int second, match_period_t matchState)
@@ -684,7 +684,7 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 	}
 	else if (!Q_strcmp(event->GetName(), "kickoff"))
 	{
-		m_pNotifications[0]->SetText(VarArgs("KICK-OFF: %s", g_PR->GetTeamCode(event->GetInt("team"))));
+		m_pNotifications[0]->SetText(VarArgs("KICK-OFF: %s", GetGlobalTeam(event->GetInt("team"))->GetCode()));
 
 		m_eCurMatchEvent = MATCH_EVENT_KICKOFF;
 		m_flStayDuration = 5;
@@ -712,7 +712,7 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 	}
 	else if (!Q_strcmp(event->GetName(), "set_piece"))
 	{
-		m_pNotifications[0]->SetText(VarArgs("%s: %s", g_szMatchEventNames[event->GetInt("type")], g_PR->GetTeamCode(event->GetInt("taking_team"))));
+		m_pNotifications[0]->SetText(VarArgs("%s: %s", g_szMatchEventNames[event->GetInt("type")], GetGlobalTeam(event->GetInt("taking_team"))->GetCode()));
 		m_eCurMatchEvent = (match_event_t)event->GetInt("type");
 		m_flStayDuration = 3.0f;
 		char *text;
@@ -745,7 +745,7 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 		C_SDKPlayer *pFirstAssister = ToSDKPlayer(USERID2PLAYER(event->GetInt("first_assister_userid")));
 		C_SDKPlayer *pSecondAssister = ToSDKPlayer(USERID2PLAYER(event->GetInt("second_assister_userid")));
 
-		m_pNotifications[0]->SetText(VarArgs("GOAL: %s", g_PR->GetTeamCode(event->GetInt("scoring_team"))));
+		m_pNotifications[0]->SetText(VarArgs("GOAL: %s", GetGlobalTeam(event->GetInt("scoring_team"))->GetCode()));
 
 		if (pScorer)
 		{
@@ -779,7 +779,7 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 		const char *firstAssister = event->GetString("first_assister");
 		const char *secondAssister = event->GetString("second_assister");
 
-		m_pNotifications[0]->SetText(VarArgs("GOAL (%s): %s", GetMatchMinuteText(event->GetInt("second"), (match_period_t)event->GetInt("match_period")), g_PR->GetTeamCode(event->GetInt("scoring_team"))));
+		m_pNotifications[0]->SetText(VarArgs("GOAL (%s): %s", GetMatchMinuteText(event->GetInt("second"), (match_period_t)event->GetInt("match_period")), GetGlobalTeam(event->GetInt("scoring_team"))->GetCode()));
 
 		if (scorer[0] != 0)
 		{
@@ -807,7 +807,7 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 	{
 		const char *scorer = event->GetString("scorer");
 
-		m_pNotifications[0]->SetText(VarArgs("OWN GOAL (%s): %s", GetMatchMinuteText(event->GetInt("second"), (match_period_t)event->GetInt("match_period")), g_PR->GetTeamCode(event->GetInt("scoring_team"))));
+		m_pNotifications[0]->SetText(VarArgs("OWN GOAL (%s): %s", GetMatchMinuteText(event->GetInt("second"), (match_period_t)event->GetInt("match_period")), GetGlobalTeam(event->GetInt("scoring_team"))->GetCode()));
 
 		if (scorer[0] != 0)
 		{
@@ -827,7 +827,7 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 		const char *firstAssister = event->GetString("first_assister");
 		const char *secondAssister = event->GetString("second_assister");
 
-		m_pNotifications[0]->SetText(VarArgs("MISS (%s): %s", GetMatchMinuteText(event->GetInt("second"), (match_period_t)event->GetInt("match_period")), g_PR->GetTeamCode(event->GetInt("finishing_team"))));
+		m_pNotifications[0]->SetText(VarArgs("MISS (%s): %s", GetMatchMinuteText(event->GetInt("second"), (match_period_t)event->GetInt("match_period")), GetGlobalTeam(event->GetInt("finishing_team"))->GetCode()));
 
 		if (finisher[0] != 0)
 		{
@@ -856,7 +856,7 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 		const char *keeper = event->GetString("keeper");
 		const char *finisher = event->GetString("finisher");
 
-		m_pNotifications[0]->SetText(VarArgs("SAVE (%s): %s", GetMatchMinuteText(event->GetInt("second"), (match_period_t)event->GetInt("match_period")), g_PR->GetTeamCode(event->GetInt("keeper_team"))));
+		m_pNotifications[0]->SetText(VarArgs("SAVE (%s): %s", GetMatchMinuteText(event->GetInt("second"), (match_period_t)event->GetInt("match_period")), GetGlobalTeam(event->GetInt("keeper_team"))->GetCode()));
 
 		if (keeper[0] != 0)
 		{
@@ -879,7 +879,7 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 	{
 		const char *foulingPlayer = event->GetString("fouling_player");
 
-		m_pNotifications[0]->SetText(VarArgs("RED CARD (%s): %s", GetMatchMinuteText(event->GetInt("second"), (match_period_t)event->GetInt("match_period")), g_PR->GetTeamCode(event->GetInt("fouling_team"))));
+		m_pNotifications[0]->SetText(VarArgs("RED CARD (%s): %s", GetMatchMinuteText(event->GetInt("second"), (match_period_t)event->GetInt("match_period")), GetGlobalTeam(event->GetInt("fouling_team"))->GetCode()));
 
 		if (foulingPlayer[0] != 0)
 		{
@@ -897,7 +897,7 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 	{
 		C_SDKPlayer *pCauser = ToSDKPlayer(USERID2PLAYER(event->GetInt("causer_userid")));
 
-		m_pNotifications[0]->SetText(VarArgs("OWN GOAL: %s", g_PR->GetTeamCode(event->GetInt("causing_team"))));
+		m_pNotifications[0]->SetText(VarArgs("OWN GOAL: %s", GetGlobalTeam(event->GetInt("causing_team"))->GetCode()));
 
 		if (pCauser)
 		{
@@ -919,8 +919,8 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 		match_event_t setpieceType = (match_event_t)event->GetInt("set_piece_type");
 		match_event_t foulType = (match_event_t)event->GetInt("foul_type");
 
-		m_pNotifications[0]->SetText(VarArgs("%s: %s", g_szMatchEventNames[setpieceType], pFoulingTeam->GetOppTeam()->Get_TeamCode()));
-		m_pNotifications[1]->SetText(VarArgs("%s: %s", g_szMatchEventNames[foulType], (pFoulingPl ? pFoulingPl->GetPlayerName() : pFoulingTeam->Get_TeamCode())));
+		m_pNotifications[0]->SetText(VarArgs("%s: %s", g_szMatchEventNames[setpieceType], pFoulingTeam->GetOppTeam()->GetCode()));
+		m_pNotifications[1]->SetText(VarArgs("%s: %s", g_szMatchEventNames[foulType], (pFoulingPl ? pFoulingPl->GetPlayerName() : pFoulingTeam->GetCode())));
 		m_pNotificationPanel->SetTall(2 * NOTIFICATION_HEIGHT);
 	
 		m_eCurMatchEvent = setpieceType;
@@ -956,7 +956,7 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 	{
 		C_SDKPlayer *pTaker = ToSDKPlayer(USERID2PLAYER(event->GetInt("taking_player_userid")));
 
-		m_pNotifications[0]->SetText(VarArgs("PENALTY: %s", g_PR->GetTeamCode(event->GetInt("taking_team"))));
+		m_pNotifications[0]->SetText(VarArgs("PENALTY: %s", GetGlobalTeam(event->GetInt("taking_team"))->GetCode()));
 
 		if (pTaker)
 		{
@@ -975,7 +975,7 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 		if (m_nCurMatchEventTeam == TEAM_UNASSIGNED)
 			m_pNotifications[0]->SetText("TIMEOUT PENDING");
 		else
-			m_pNotifications[0]->SetText(VarArgs("TIMEOUT PENDING: %s", g_PR->GetTeamCode(m_nCurMatchEventTeam)));
+			m_pNotifications[0]->SetText(VarArgs("TIMEOUT PENDING: %s", GetGlobalTeam(m_nCurMatchEventTeam)->GetCode()));
 
 		m_flStayDuration = INT_MAX;
 	}

@@ -39,7 +39,8 @@ ConVar playername("playername", "", FCVAR_USERINFO | FCVAR_ARCHIVE, "Your name")
 ConVar clubname("clubname", "Team Arthur", FCVAR_USERINFO | FCVAR_ARCHIVE, "The name of your club");
 ConVar geoipcountryindex("geoipcountryindex", "0", FCVAR_USERINFO | FCVAR_ARCHIVE | FCVAR_HIDDEN, "The name of your country");
 ConVar fallbackcountryindex("fallbackcountryindex", "0", FCVAR_USERINFO | FCVAR_ARCHIVE, "The name of your country");
-ConVar preferredshirtnumber("preferredshirtnumber", "", FCVAR_USERINFO | FCVAR_ARCHIVE, "Your preferred shirt number");
+ConVar preferredoutfieldshirtnumber("preferredoutfieldshirtnumber", "2", FCVAR_USERINFO | FCVAR_ARCHIVE, "Your preferred outfield shirt number");
+ConVar preferredkeepershirtnumber("preferredkeepershirtnumber", "1", FCVAR_USERINFO | FCVAR_ARCHIVE, "Your preferred keeper shirt number");
 ConVar legacysidecurl("legacysidecurl", "0", FCVAR_USERINFO | FCVAR_ARCHIVE, "");
 ConVar legacyverticallook("legacyverticallook", "0", FCVAR_USERINFO | FCVAR_ARCHIVE, "");
 ConVar invertkeepersprint("invertkeepersprint", "0", FCVAR_USERINFO | FCVAR_ARCHIVE, "");
@@ -643,6 +644,28 @@ const QAngle& C_SDKPlayer::GetRenderAngles()
 	else
 	{
 		return m_PlayerAnimState->GetRenderAngles();
+	}
+}
+
+const Vector& C_SDKPlayer::GetRenderOrigin( void )
+{
+	if ( IsRagdoll() )
+	{
+		return m_pRagdoll->GetRagdollOrigin();
+	}
+	else
+	{
+		if (this == GetLocalSDKPlayer())
+		{
+			static Vector origin = vec3_origin;
+			origin = BaseClass::GetRenderOrigin();
+			//Vector vSmoothOffset;
+			//GetPredictionErrorSmoothingVector( vSmoothOffset );
+			//origin += vSmoothOffset;
+			return origin;
+		}
+		else
+			return BaseClass::GetRenderOrigin();	
 	}
 }
 

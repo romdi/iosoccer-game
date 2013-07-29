@@ -775,9 +775,9 @@ void CBaseHudChat::MsgFunc_SayText2( bf_read &msg )
 	ReadLocalizedString( msg, szBuf[4], sizeof( szBuf[4] ), true );
 
 	if (!Q_wcscmp(szBuf[4], L"HOME"))
-		g_pVGuiLocalize->ConvertANSIToUnicode(GetGlobalTeam(TEAM_A)->Get_TeamCode(), szBuf[4], sizeof(szBuf[4]));
+		g_pVGuiLocalize->ConvertANSIToUnicode(GetGlobalTeam(TEAM_A)->GetCode(), szBuf[4], sizeof(szBuf[4]));
 	else if (!Q_wcscmp(szBuf[4], L"AWAY"))
-		g_pVGuiLocalize->ConvertANSIToUnicode(GetGlobalTeam(TEAM_B)->Get_TeamCode(), szBuf[4], sizeof(szBuf[4]));
+		g_pVGuiLocalize->ConvertANSIToUnicode(GetGlobalTeam(TEAM_B)->GetCode(), szBuf[4], sizeof(szBuf[4]));
 
 	g_pVGuiLocalize->ConstructString( szBuf[5], sizeof( szBuf[5] ), msg_text, 4, szBuf[1], szBuf[2], szBuf[3], szBuf[4] );
 

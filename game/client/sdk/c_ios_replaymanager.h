@@ -21,7 +21,7 @@ public:
 	DECLARE_CLIENTCLASS();
 
 	int m_nTeamNumber;
-	int m_nTeamPosNum;
+	int m_nShirtNumber;
 	char m_szPlayerName[MAX_PLAYER_NAME_LENGTH];
 };
 

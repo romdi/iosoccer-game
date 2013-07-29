@@ -126,8 +126,8 @@ void CMatchEventMenu::Update()
 
 	for (int i = 0; i < 2; i++)
 	{
-		m_pMatchEvents[i]->SetFgColor(gr->GetTeamColor(TEAM_A + i));
-		m_pMatchEvents[i]->SetSectionFgColor(0, gr->GetTeamColor(TEAM_A + i));
+		m_pMatchEvents[i]->SetFgColor(GetGlobalTeam(TEAM_A + i)->GetHudKitColor());
+		m_pMatchEvents[i]->SetSectionFgColor(0, GetGlobalTeam(TEAM_A + i)->GetHudKitColor());
 		//m_pMatchEvents[i]->SetVisible(true);
 
 		HFont font = m_pScheme->GetFont("StatsPlayerNameSmall");

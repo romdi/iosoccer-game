@@ -633,10 +633,10 @@ void CClientScoreBoardDialog::Update( void )
 		bool isOnField = (pLocal->GetTeamNumber() == TEAM_A || pLocal->GetTeamNumber() == TEAM_B);
 
 		if (isOnField
-			&& (GetGlobalTeam(GetLocalPlayerTeam())->Get_CaptainPosIndex() == gr->GetTeamPosIndex(GetLocalPlayerIndex())
-			|| GetGlobalTeam(GetLocalPlayerTeam())->Get_CaptainPosIndex() == 11))
+			&& (GetGlobalTeam(GetLocalPlayerTeam())->GetCaptainPosIndex() == gr->GetTeamPosIndex(GetLocalPlayerIndex())
+			|| GetGlobalTeam(GetLocalPlayerTeam())->GetCaptainPosIndex() == 11))
 		{
-			if (GetGlobalTeam(GetLocalPlayerTeam())->Get_CaptainPosIndex() == gr->GetTeamPosIndex(GetLocalPlayerIndex()))
+			if (GetGlobalTeam(GetLocalPlayerTeam())->GetCaptainPosIndex() == gr->GetTeamPosIndex(GetLocalPlayerIndex()))
 				m_pToggleCaptaincy->SetText("- Captain");
 			else
 				m_pToggleCaptaincy->SetText("+ Captain");
@@ -659,7 +659,7 @@ void CClientScoreBoardDialog::Update( void )
 	}
 
 	if ((pLocal->GetTeamNumber() == TEAM_A || pLocal->GetTeamNumber() == TEAM_B)
-		&& pLocal->GetTeam()->Get_CaptainPosIndex() == gr->GetTeamPosIndex(GetLocalPlayerIndex()))
+		&& pLocal->GetTeam()->GetCaptainPosIndex() == gr->GetTeamPosIndex(GetLocalPlayerIndex()))
 	{
 		// Local player is captain, so show the menu toggle button
 		if (!m_pToggleCaptainMenu->IsVisible())
@@ -678,7 +678,7 @@ void CClientScoreBoardDialog::Update( void )
 
 	if (m_bShowCaptainMenu)
 	{
-		m_pRequestTimeout->SetText(VarArgs("Timeout (%d left)", pLocal->GetTeam()->Get_TimeoutsLeft()));
+		m_pRequestTimeout->SetText(VarArgs("Timeout (%d left)", pLocal->GetTeam()->GetTimeoutsLeft()));
 
 		if (!m_pFormationList->IsDropdownVisible())
 		{
@@ -1109,12 +1109,12 @@ bool CClientScoreBoardDialog::GetPlayerInfo(int playerIndex, KeyValues *kv)
 
 	if (gr->GetTeam(playerIndex) == TEAM_SPECTATOR)
 	{
-		kv->SetString("posname", gr->GetTeamCode(gr->GetSpecTeam(playerIndex)));
+		kv->SetString("posname", GetGlobalTeam(gr->GetSpecTeam(playerIndex))->GetCode());
 	}
 	else
 	{
 		char *posNameFormat;
-		if (GetGlobalTeam(gr->GetTeam(playerIndex))->Get_CaptainPosIndex() == gr->GetTeamPosIndex(playerIndex))
+		if (GetGlobalTeam(gr->GetTeam(playerIndex))->GetCaptainPosIndex() == gr->GetTeamPosIndex(playerIndex))
 			posNameFormat = "(%s)";
 		else
 			posNameFormat = "%s";
@@ -1222,7 +1222,7 @@ bool CClientScoreBoardDialog::GetTeamInfo(int team, KeyValues *kv)
 	if (!isTeamSameCountry || teamCountry == -1)
 		teamCountry = 0;
 
-	kv->SetString("name", pTeam->Get_ShortTeamName());
+	kv->SetString("name", pTeam->GetShortName());
 	kv->SetInt("playerindex", teamIndex - 2);
 	kv->SetInt("posname", pTeam->GetNumPlayers());
 	kv->SetInt("countryindex", GetCountryFlagImageIndex(teamCountry));

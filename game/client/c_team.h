@@ -39,36 +39,46 @@ public:
 	virtual int		GetTeamNumber( void ) const;
 	virtual int		GetOppTeamNumber( void ) const;
 	C_Team			*GetOppTeam( void ) const;
-	virtual bool	Get_IsClubTeam( void );
-	virtual bool	Get_IsRealTeam( void );
-	virtual bool	Get_HasTeamCrest( void );
-	virtual char	*Get_TeamCode( void );
-	virtual char	*Get_ShortTeamName( void );
-	virtual char	*Get_FullTeamName( void );
-	virtual char	*Get_KitName( void );
-	virtual Color	&Get_HudKitColor( void );
-	virtual Color	&Get_PrimaryKitColor( void );
-	virtual Color	&Get_SecondaryKitColor( void );
-	virtual int		Get_Goals( void );
-	virtual int		Get_Ping( void );
+	virtual bool	IsClub( void );
+	virtual bool	IsReal( void );
+	virtual bool	HasCrest( void );
+	virtual CFontAtlas	*GetFontAtlas( void );
+	virtual char	*GetCode( void );
+	virtual char	*GetShortName( void );
+	virtual char	*GetFullName( void );
+	virtual char	*GetKitName( void );
+	virtual char	*GetKitFolderName( void );
+	virtual char	*GetFolderName( void );
+	virtual Color	&GetHudKitColor( void );
+	virtual Color	&GetPrimaryKitColor( void );
+	virtual Color	&GetSecondaryKitColor( void );
+	virtual Color	&GetOutfieldShirtNameColor( void );
+	virtual int		GetOutfieldShirtNameOffset( void );
+	virtual Color	&GetOutfieldShirtNumberColor( void );
+	virtual int		GetOutfieldShirtNumberOffset( void );
+	virtual Color	&GetKeeperShirtNameColor( void );
+	virtual int		GetKeeperShirtNameOffset( void );
+	virtual Color	&GetKeeperShirtNumberColor( void );
+	virtual int		GetKeeperShirtNumberOffset( void );
+	virtual int		GetGoals( void );
+	virtual int		GetPing( void );
 
-	virtual int		Get_Possession();
+	virtual int		GetPossession();
 
-	virtual int	Get_CaptainPosIndex() { return m_nCaptainPosIndex; }
-	virtual int	Get_FreekickTakerPosIndex() { return m_nFreekickTakerPosIndex; }
-	virtual int	Get_PenaltyTakerPosIndex() { return m_nPenaltyTakerPosIndex; }
-	virtual int	Get_LeftCornerTakerPosIndex() { return m_nLeftCornerTakerPosIndex; }
-	virtual int	Get_RightCornerTakerPosIndex() { return m_nRightCornerTakerPosIndex; }
+	virtual int	GetCaptainPosIndex() { return m_nCaptainPosIndex; }
+	virtual int	GetFreekickTakerPosIndex() { return m_nFreekickTakerPosIndex; }
+	virtual int	GetPenaltyTakerPosIndex() { return m_nPenaltyTakerPosIndex; }
+	virtual int	GetLeftCornerTakerPosIndex() { return m_nLeftCornerTakerPosIndex; }
+	virtual int	GetRightCornerTakerPosIndex() { return m_nRightCornerTakerPosIndex; }
 
-	virtual int		Get_TimeoutsLeft() { return m_nTimeoutsLeft; }
+	virtual int		GetTimeoutsLeft() { return m_nTimeoutsLeft; }
 
 	// Player Handling
-	virtual int		Get_Number_Players( void );
 	virtual bool	ContainsPlayer( int iPlayerIndex );
 	C_BasePlayer*	GetPlayer( int idx );
 
 	// for shared code, use the same function name
-	virtual int		GetNumPlayers( void ) { return Get_Number_Players(); }
+	virtual int		GetNumPlayers( void ) { return m_aPlayers.Count(); }
 
 	void	RemoveAllPlayers();
 
@@ -88,12 +98,11 @@ public:
 
 	// Data received from the server
 	CUtlVector< int > m_aPlayers;
-	CTeamKitInfo *m_pTeamKitInfo;
+	CTeamKitInfo *m_pKitInfo;
 	int		m_iTeamNum;
-	char	m_szKitName[MAX_KITNAME_LENGTH];
 	char	m_szServerKitName[MAX_KITNAME_LENGTH];
-	char	m_szTeamCode[MAX_TEAMCODE_LENGTH];
-	char	m_szShortTeamName[MAX_SHORTTEAMNAME_LENGTH];
+	char	m_szServerCode[MAX_TEAMCODE_LENGTH];
+	char	m_szServerShortName[MAX_SHORTTEAMNAME_LENGTH];
 	int		m_nPenaltyGoals;
 	int		m_nPenaltyGoalBits;
 	int		m_nPenaltyRound;

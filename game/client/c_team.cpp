@@ -41,8 +41,8 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_Team, DT_Team, CTeam)
 	RecvPropInt( RECVINFO(m_nPenaltyRound) ),
 	RecvPropInt( RECVINFO(m_nTimeoutsLeft) ),
 	RecvPropString( RECVINFO(m_szServerKitName), 0, RecvProxy_KitName),
-	RecvPropString( RECVINFO(m_szTeamCode) ),
-	RecvPropString( RECVINFO(m_szShortTeamName) ),
+	RecvPropString( RECVINFO(m_szServerCode) ),
+	RecvPropString( RECVINFO(m_szServerShortName) ),
 
 	RecvPropVector(RECVINFO(m_vCornerLeft)),
 	RecvPropVector(RECVINFO(m_vCornerRight)),
@@ -130,12 +130,11 @@ C_Team::C_Team()
 
 	m_Goals = 0;
 	m_Possession = 0;
-	m_szKitName[0] = 0;
 	m_szServerKitName[0] = 0;
 	m_szDownloadKitName[0] = 0;
 
-	m_szTeamCode[0] = 0;
-	m_szShortTeamName[0] = 0;
+	m_szServerCode[0] = 0;
+	m_szServerShortName[0] = 0;
 
 	m_iPing = 0;
 	m_iPacketloss = 0;
@@ -220,61 +219,91 @@ C_Team *C_Team::GetOppTeam( void ) const
 	return m_iTeamNum == TEAM_A ? GetGlobalTeam(TEAM_B) : GetGlobalTeam(TEAM_A);
 }
 
-bool C_Team::Get_IsClubTeam( void )
+bool C_Team::IsClub( void )
 {
-	return m_pTeamKitInfo->m_bIsClubTeam;
+	return m_pKitInfo->m_pTeamInfo->m_bIsClub;
 }
 
-bool C_Team::Get_IsRealTeam( void )
+bool C_Team::IsReal( void )
 {
-	return m_pTeamKitInfo->m_bIsRealTeam;
+	return m_pKitInfo->m_pTeamInfo->m_bIsReal;
 }
 
-bool C_Team::Get_HasTeamCrest( void )
+bool C_Team::HasCrest( void )
 {
-	return m_pTeamKitInfo->m_bHasTeamCrest;
+	return m_pKitInfo->m_pTeamInfo->m_bHasCrest;
 }
 
-char *C_Team::Get_TeamCode( void )
+CFontAtlas *C_Team::GetFontAtlas( void )
+{
+	return m_pKitInfo->m_pFontAtlas;
+}
+
+char *C_Team::GetCode( void )
 {
 	if (m_iTeamNum == TEAM_A || m_iTeamNum == TEAM_B)
 	{
-		if (m_szTeamCode[0] != 0)
-			return m_szTeamCode;
+		if (m_szServerCode[0] != 0)
+			return m_szServerCode;
 		else
-			return m_pTeamKitInfo->m_szTeamCode;
+			return m_pKitInfo->m_pTeamInfo->m_szCode;
 	}
 	else
 		return "";
 }
 
-char *C_Team::Get_FullTeamName( void )
+char *C_Team::GetFullName( void )
 {
 	if (m_iTeamNum == TEAM_A || m_iTeamNum == TEAM_B)
-		return m_pTeamKitInfo->m_szFullTeamName;
+		return m_pKitInfo->m_pTeamInfo->m_szFullName;
 	else
-		return m_szKitName;
+		return "";
 }
 
-char *C_Team::Get_ShortTeamName( void )
+char *C_Team::GetShortName( void )
 {
 	if (m_iTeamNum == TEAM_A || m_iTeamNum == TEAM_B)
 	{
-		if (m_szShortTeamName[0] != 0)
-			return m_szShortTeamName;
+		if (m_szServerShortName[0] != 0)
+			return m_szServerShortName;
 		else
-			return m_pTeamKitInfo->m_szShortTeamName;
+			return m_pKitInfo->m_pTeamInfo->m_szShortName;
 	}
 	else
-		return m_szKitName;
+		return "";
 }
 
-char *C_Team::Get_KitName( void )
+char *C_Team::GetKitName( void )
 {
-	return m_szKitName;
+	if (m_iTeamNum == TEAM_A || m_iTeamNum == TEAM_B)
+	{
+		return m_pKitInfo->m_szName;
+	}
+	else
+		return "";
 }
 
-Color &C_Team::Get_HudKitColor()
+char *C_Team::GetKitFolderName( void )
+{
+	if (m_iTeamNum == TEAM_A || m_iTeamNum == TEAM_B)
+	{
+		return m_pKitInfo->m_szFolderName;
+	}
+	else
+		return "";
+}
+
+char *C_Team::GetFolderName( void )
+{
+	if (m_iTeamNum == TEAM_A || m_iTeamNum == TEAM_B)
+	{
+		return m_pKitInfo->m_pTeamInfo->m_szFolderName;
+	}
+	else
+		return "";
+}
+
+Color &C_Team::GetHudKitColor()
 {
 	if (GetTeamNumber() == TEAM_A)
 	{
@@ -292,23 +321,63 @@ Color &C_Team::Get_HudKitColor()
 		return col;
 	}
 
-	return m_pTeamKitInfo->m_HudKitColor;
+	return m_pKitInfo->m_HudColor;
 }
 
-Color &C_Team::Get_PrimaryKitColor()
+Color &C_Team::GetPrimaryKitColor()
 {
-	return m_pTeamKitInfo->m_PrimaryKitColor;
+	return m_pKitInfo->m_PrimaryColor;
 }
 
-Color &C_Team::Get_SecondaryKitColor()
+Color &C_Team::GetSecondaryKitColor()
 {
-	return m_pTeamKitInfo->m_SecondaryKitColor;
+	return m_pKitInfo->m_SecondaryColor;
+}
+
+Color &C_Team::GetOutfieldShirtNameColor()
+{
+	return m_pKitInfo->m_OutfieldShirtNameColor;
+}
+
+int C_Team::GetOutfieldShirtNameOffset( void )
+{
+	return m_pKitInfo->m_nOutfieldShirtNameOffset;
+}
+
+Color &C_Team::GetOutfieldShirtNumberColor()
+{
+	return m_pKitInfo->m_OutfieldShirtNumberColor;
+}
+
+int C_Team::GetOutfieldShirtNumberOffset( void )
+{
+	return m_pKitInfo->m_nOutfieldShirtNumberOffset;
+}
+
+Color &C_Team::GetKeeperShirtNameColor()
+{
+	return m_pKitInfo->m_KeeperShirtNameColor;
+}
+
+int C_Team::GetKeeperShirtNameOffset( void )
+{
+	return m_pKitInfo->m_nKeeperShirtNameOffset;
+}
+
+Color &C_Team::GetKeeperShirtNumberColor()
+{
+	return m_pKitInfo->m_KeeperShirtNumberColor;
+}
+
+int C_Team::GetKeeperShirtNumberOffset( void )
+{
+	return m_pKitInfo->m_nKeeperShirtNumberOffset;
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-int C_Team::Get_Goals( void )
+int C_Team::GetGoals( void )
 {
 	return m_Goals;
 }
@@ -316,22 +385,14 @@ int C_Team::Get_Goals( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-int C_Team::Get_Ping( void )
+int C_Team::GetPing( void )
 {
 	return m_iPing;
 }
 
-int C_Team::Get_Possession()
+int C_Team::GetPossession()
 {
 	return m_Possession;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Return the number of players in this team
-//-----------------------------------------------------------------------------
-int C_Team::Get_Number_Players( void )
-{
-	return m_aPlayers.Size();
 }
 
 //-----------------------------------------------------------------------------
@@ -354,13 +415,9 @@ void C_Team::ClientThink()
 	if (m_bKitDownloadFinished)
 	{
 		m_bKitDownloadFinished = false;
-		materials->ReloadTextures();
-		TEAMKIT_FILE_INFO_HANDLE hKitHandle;
-		if (ReadTeamKitDataFromFileForSlot(filesystem, m_szDownloadKitName, &hKitHandle))
-		{
-			Q_strncpy(m_szKitName, m_szDownloadKitName, MAX_KITNAME_LENGTH);
-			m_pTeamKitInfo = GetTeamKitInfoFromHandle(hKitHandle);
-		}
+		//materials->ReloadTextures();
+		CTeamInfo::ParseTeamKits();
+		m_pKitInfo = CTeamInfo::FindTeamByShortName(m_szDownloadKitName);
 	}
 }
 
@@ -498,33 +555,31 @@ void C_Team::DownloadTeamKit(const char *pKitName, int teamNumber)
 
 void C_Team::SetKitName(const char *pKitName)
 {
-	//if (!Q_strcmp(pKitName, "Unassigned") || !Q_strcmp(pKitName, "Spectator"))
-	//	return;
-
 	Q_strncpy(m_szServerKitName, pKitName, MAX_KITNAME_LENGTH);
 
-	if (GetTeamNumber() == TEAM_INVALID || GetTeamNumber() == TEAM_UNASSIGNED || GetTeamNumber() == TEAM_SPECTATOR)
-	{
-		Q_strncpy(m_szKitName, m_szServerKitName, MAX_KITNAME_LENGTH);
-		return;
-	}
-
-	if (!Q_stricmp(m_szServerKitName, m_szKitName) || !Q_stricmp(m_szServerKitName, m_szDownloadKitName))
+	if (m_pKitInfo && !Q_stricmp(m_szServerKitName, m_pKitInfo->m_szName) || !Q_stricmp(m_szServerKitName, m_szDownloadKitName))
 		return;
 
-	TEAMKIT_FILE_INFO_HANDLE hKitHandle;
-	if (ReadTeamKitDataFromFileForSlot(filesystem, m_szServerKitName, &hKitHandle))
+	CTeamKitInfo *pKitInfo = CTeamInfo::FindTeamByShortName(m_szServerKitName);
+
+	if (pKitInfo)
 	{
-		Q_strncpy(m_szKitName, m_szServerKitName, MAX_KITNAME_LENGTH);
-		m_pTeamKitInfo = GetTeamKitInfoFromHandle(hKitHandle);
+		m_pKitInfo = pKitInfo;
 	}
 	else
 	{
-		ChatMsg("%s kit not found on disk\n", m_szServerKitName);
-		m_pTeamKitInfo = GetTeamKitInfoFromHandle(LookupTeamKitInfoSlot(GetTeamNumber() == TEAM_A ? "germany" : "brazil"));
-		Q_strncpy(m_szKitName, m_pTeamKitInfo->m_szKitName, MAX_KITNAME_LENGTH);
-		Q_strncpy(m_szDownloadKitName, m_szServerKitName, MAX_KITNAME_LENGTH);
-		DownloadTeamKit(pKitName, GetTeamNumber());
+		if (GetTeamNumber() == TEAM_INVALID || GetTeamNumber() == TEAM_UNASSIGNED || GetTeamNumber() == TEAM_SPECTATOR)
+		{
+			m_pKitInfo = CTeamInfo::m_TeamInfo[0]->m_TeamKitInfo[0];
+		}
+		else
+		{
+			ChatMsg("%s kit not found on disk\n", m_szServerKitName);
+			//m_pTeamKitInfo = GetTeamKitInfoFromHandle(LookupTeamKitInfoSlot(GetTeamNumber() == TEAM_A ? "germany" : "brazil"));
+			m_pKitInfo = CTeamInfo::m_TeamInfo[0]->m_TeamKitInfo[0];
+			Q_strncpy(m_szDownloadKitName, m_szServerKitName, MAX_KITNAME_LENGTH);
+			DownloadTeamKit(m_szServerKitName, GetTeamNumber());
+		}
 	}
 }
 

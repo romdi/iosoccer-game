@@ -36,6 +36,7 @@
 #include <imapoverview.h>
 #include <shareddefs.h>
 #include <igameresources.h>
+#include "c_team.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -331,7 +332,7 @@ void CSpectatorMenu::Update( void )
 
 			KeyValues *pKV = new KeyValues("UserData", "index", i);
 			char playerText[MAX_PLAYER_NAME_LENGTH * 2];
-			Q_snprintf(playerText, sizeof(playerText), "%s | %s", gr->GetTeamCode(gr->GetTeam(i)), gr->GetPlayerName(i));
+			Q_snprintf(playerText, sizeof(playerText), "%s | %s", GetGlobalTeam(gr->GetTeam(i))->GetCode(), gr->GetPlayerName(i));
 			m_pTargetList->GetMenu()->AddMenuItem(playerText, VarArgs("spec_by_index %d", i), this, pKV);
 			pKV->deleteThis();
 		}

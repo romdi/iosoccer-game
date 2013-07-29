@@ -11,7 +11,7 @@
 #pragma once
 #endif
 
-#define TEAMNUM_NUM_BITS	6
+#define TEAMNUM_NUM_BITS	3
 
 #include "entitylist.h"
 #include "entityoutput.h"

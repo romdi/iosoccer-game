@@ -157,7 +157,7 @@ Color CHudChat::GetClientColor( int clientIndex )
 	{
 		int iTeam = g_PR->GetTeam( clientIndex );
 
-		return g_PR->GetTeamColor( iTeam );
+		return GetGlobalTeam(iTeam)->GetHudKitColor();
 	}
 
 	return g_ColorGray;
@@ -191,7 +191,7 @@ Color CHudChat::GetTextColorForClient( TextColor colorNum, int clientIndex )
 		if (clientIndex == 0)
 			c = g_ColorBlue;
 		else
-			c = GameResources()->GetTeamColor(GameResources()->GetSpecTeam(clientIndex));
+			c = GetGlobalTeam(GameResources()->GetSpecTeam(clientIndex))->GetHudKitColor();
 		break;
 
 	case COLOR_ACHIEVEMENT:

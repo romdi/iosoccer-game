@@ -31,6 +31,7 @@ public:
 	static C_SDKPlayer* GetLocalSDKPlayer();
 
 	virtual const QAngle& GetRenderAngles();
+	virtual const Vector& GetRenderOrigin( void );
 	virtual void Spawn();
 	virtual void UpdateClientSideAnimation();
 	virtual void PostDataUpdate( DataUpdateType_t updateType );

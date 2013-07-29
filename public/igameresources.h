@@ -17,21 +17,6 @@ abstract_class IGameResources
 public:
 	virtual	~IGameResources() {};
 
-	// Team data access 
-	virtual bool			IsClubTeam( int index ) = 0;
-	virtual bool			IsRealTeam( int index ) = 0;
-	virtual bool			HasTeamCrest( int index ) = 0;
-	virtual const char		*GetTeamCode( int index ) = 0;
-	virtual const char		*GetShortTeamName( int index ) = 0;
-	virtual const char		*GetFullTeamName( int index ) = 0;
-	virtual const char		*GetTeamKitName( int index ) = 0;
-	virtual Color			&GetHudTeamKitColor(int index) = 0;
-	virtual Color			&GetPrimaryTeamKitColor(int index) = 0;
-	virtual Color			&GetSecondaryTeamKitColor(int index) = 0;
-	virtual int				GetTeamGoals( int index ) = 0;
-	virtual const Color&	GetTeamColor( int index ) = 0;
-	virtual const Color&	GetPlayerColor( int index ) = 0;
-
 	// Player data access
 	virtual bool	IsConnected( int index ) = 0;
 	virtual bool	IsFakePlayer( int index ) = 0;
@@ -45,6 +30,7 @@ public:
 //	virtual int		GetPacketloss( int index ) = 0;
 	virtual int		GetTeam( int index ) = 0;
 	virtual int		GetSpecTeam( int index ) = 0;
+	virtual const Color&	GetPlayerColor( int index ) = 0;
 
 	//ios
 	virtual int		GetRedCards( int index ) = 0;
@@ -72,7 +58,7 @@ public:
 	virtual int		GetKeeperSaves( int index ) = 0;
 	virtual int		GetGoalKicks( int index ) = 0;
 	virtual int		GetRatings( int index ) = 0;
-	virtual int		GetTeamPosNum( int iIndex ) = 0;
+	virtual int		GetShirtNumber( int iIndex ) = 0;
 	virtual int		GetTeamPosType( int iIndex ) = 0;
 	virtual int		GetTeamPosIndex( int iIndex ) = 0;
 	virtual int		GetTeamToJoin( int iIndex ) = 0;

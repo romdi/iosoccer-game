@@ -184,10 +184,11 @@ ConVar sv_ball_player_red_card_duration("sv_ball_player_red_card_duration", "15"
 
 ConVar sv_ball_bodypos_feet_start("sv_ball_bodypos_feet_start", "-50", FCVAR_NOTIFY);
 ConVar sv_ball_bodypos_hip_start("sv_ball_bodypos_hip_start", "15", FCVAR_NOTIFY);
-ConVar sv_ball_bodypos_chest_start("sv_ball_bodypos_chest_start", "40", FCVAR_NOTIFY);
-ConVar sv_ball_bodypos_head_start("sv_ball_bodypos_head_start", "60", FCVAR_NOTIFY);
+ConVar sv_ball_bodypos_head_start("sv_ball_bodypos_head_start", "50", FCVAR_NOTIFY);
 ConVar sv_ball_bodypos_head_end("sv_ball_bodypos_head_end", "85", FCVAR_NOTIFY);
 ConVar sv_ball_bodypos_keeperarms_end("sv_ball_bodypos_keeperarms_end", "105", FCVAR_NOTIFY);
+
+ConVar sv_ball_bodypos_keeperhands("sv_ball_bodypos_keeperhands", "40", FCVAR_NOTIFY);
 
 ConVar sv_ball_yellowcardproximity_forward("sv_ball_yellowcardproximity_forward", "0.5", FCVAR_NOTIFY);
 ConVar sv_ball_yellowcardproximity_backward("sv_ball_yellowcardproximity_backward", "0.25", FCVAR_NOTIFY);
@@ -253,14 +254,15 @@ void CC_CreatePlayerBall(const CCommand &args)
 
 	trace_t tr;
 
+	CTraceFilterSkipTwoEntities traceFilter(pPl, pPl->GetPlayerBall(), COLLISION_GROUP_NONE);
+
 	UTIL_TraceHull(
 		pPl->GetLocalOrigin() + VEC_VIEW,
 		pPl->GetLocalOrigin() + VEC_VIEW + pPl->EyeDirection3D() * 150,
 		-Vector(BALL_PHYS_RADIUS, BALL_PHYS_RADIUS, BALL_PHYS_RADIUS),
 		Vector(BALL_PHYS_RADIUS, BALL_PHYS_RADIUS, BALL_PHYS_RADIUS),
 		MASK_SOLID,
-		pPl,
-		COLLISION_GROUP_NONE,
+		&traceFilter,
 		&tr);
 
 	Vector pos = tr.endpos;
@@ -1861,7 +1863,7 @@ void CBall::State_KEEPERHANDS_Think()
 
 	UpdateCarrier();
 
-	SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_chest_start.GetFloat()) + m_vPlForward2D * 18);
+	SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_keeperhands.GetFloat()) + m_vPlForward2D * 18);
 
 	// Don't ignore triggers when setting the new ball position
 	m_bSetNewPos = false;
@@ -1887,7 +1889,7 @@ void CBall::State_KEEPERHANDS_Think()
 		{
 			dir = m_vPlForward2D;
 			vel = 300;
-			pos = Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_chest_start.GetFloat()) + m_vPlForward2D * 36;
+			pos = Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_keeperhands.GetFloat()) + m_vPlForward2D * 36;
 		}
 
 		RemoveAllTouches();
@@ -1927,7 +1929,7 @@ void CBall::State_KEEPERHANDS_Think()
 		}
 
 		RemoveAllTouches();
-		SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_chest_start.GetFloat()) + m_vPlForward2D * 36);
+		SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_keeperhands.GetFloat()) + m_vPlForward2D * 36);
 		m_bSetNewPos = false;
 		SetVel(vel, spin, BODY_PART_KEEPERHANDS, false, true, true);
 
@@ -2235,16 +2237,8 @@ bool CBall::DoBodyPartAction()
 		return DoGroundShot(true);
 	}
 
-	if (zDist >= sv_ball_bodypos_hip_start.GetFloat() && zDist < sv_ball_bodypos_chest_start.GetFloat() && CanTouchBallXY())
-	{
-		if (DoVolleyShot())
-			return true;
-		else
-			return DoChestDrop();
-	}
-
-	if (zDist >= sv_ball_bodypos_chest_start.GetFloat() && zDist < sv_ball_bodypos_head_start.GetFloat() && CanTouchBallXY())
-		return DoChestDrop();
+	if (zDist >= sv_ball_bodypos_hip_start.GetFloat() && zDist < sv_ball_bodypos_head_start.GetFloat() && CanTouchBallXY())
+		return DoVolleyShot();
 
 	if (zDist >= sv_ball_bodypos_head_start.GetFloat() && zDist < sv_ball_bodypos_head_end.GetFloat() && CanTouchBallXY())
 		return DoHeader();
@@ -2634,16 +2628,6 @@ bool CBall::DoVolleyShot()
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
 
 	SetVel(vel, sv_ball_volleyshot_spincoeff.GetFloat(), BODY_PART_FEET, false, true, true);
-
-	return true;
-}
-
-bool CBall::DoChestDrop()
-{
-	QAngle ang = QAngle(sv_ball_chestdrop_angle.GetInt(), m_aPlAng[YAW], 0);
-	Vector dir;
-	AngleVectors(ang, &dir);
-	SetVel(m_vPlForwardVel2D + dir * sv_ball_chestdrop_strength.GetInt(), 0, BODY_PART_CHEST, false, true, false);
 
 	return true;
 }

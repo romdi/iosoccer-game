@@ -23,7 +23,7 @@ C_ReplayBall::~C_ReplayBall()
 
 IMPLEMENT_CLIENTCLASS_DT(C_ReplayPlayer, DT_ReplayPlayer, CReplayPlayer)
 	RecvPropInt(RECVINFO(m_nTeamNumber)),
-	RecvPropInt(RECVINFO(m_nTeamPosNum)),
+	RecvPropInt(RECVINFO(m_nShirtNumber)),
 	RecvPropString(RECVINFO(m_szPlayerName)),
 END_RECV_TABLE()
 

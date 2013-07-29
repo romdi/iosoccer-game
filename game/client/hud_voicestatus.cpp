@@ -19,6 +19,7 @@
 #include "voice_common.h"
 #include <igameresources.h>
 #include "c_sdk_player.h"
+#include "c_team.h"
 
 #include "vgui_avatarimage.h"
 
@@ -325,7 +326,7 @@ void CHudVoiceStatus::Paint()
 
 		vgui::surface()->GetTextSize(m_hFont, wszPlayerText, wide, tall);
 
-		Color c = g_PR->GetTeamColor(g_PR->GetTeam(playerIndex));
+		Color c = GetGlobalTeam(g_PR->GetTeam(playerIndex))->GetHudKitColor();
 		c = Color(c.r(), c.g(), c.b(), 255);
 
 		surface()->DrawSetTextFont(m_hFont);

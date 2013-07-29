@@ -55,7 +55,7 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_PlayerResource, DT_PlayerResource, CPlayerReso
 	RecvPropArray3( RECVINFO_ARRAY(m_GoalKicks), RecvPropInt( RECVINFO(m_GoalKicks[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_Ratings), RecvPropInt( RECVINFO(m_Ratings[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_TeamPosIndex), RecvPropInt( RECVINFO(m_TeamPosIndex[0]))),
-	RecvPropArray3( RECVINFO_ARRAY(m_TeamPosNum), RecvPropInt( RECVINFO(m_TeamPosNum[0]))),
+	RecvPropArray3( RECVINFO_ARRAY(m_ShirtNumber), RecvPropInt( RECVINFO(m_ShirtNumber[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_TeamToJoin), RecvPropInt( RECVINFO(m_TeamToJoin[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_TeamPosIndexToJoin), RecvPropInt( RECVINFO(m_TeamPosIndexToJoin[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_NextCardJoin), RecvPropInt( RECVINFO(m_NextCardJoin[0]))),
@@ -117,7 +117,7 @@ C_PlayerResource::C_PlayerResource()
 	memset( m_GoalKicks, 0, sizeof( m_GoalKicks ) );
 	memset( m_Ratings, 0, sizeof( m_Ratings ) );
 	memset( m_TeamPosIndex, 0, sizeof( m_TeamPosIndex ) );
-	memset( m_TeamPosNum, 0, sizeof( m_TeamPosNum ) );
+	memset( m_ShirtNumber, 0, sizeof( m_ShirtNumber ) );
 	memset( m_TeamToJoin, 0, sizeof( m_TeamToJoin ) );
 	memset( m_TeamPosIndexToJoin, 0, sizeof( m_TeamPosIndexToJoin ) );
 	memset( m_NextCardJoin, 0, sizeof( m_NextCardJoin ) );
@@ -271,134 +271,6 @@ int C_PlayerResource::GetSpecTeam(int iIndex )
 	}
 }
 
-bool C_PlayerResource::IsClubTeam(int index)
-{
-	C_Team *team = GetGlobalTeam( index );
-
-	if ( !team )
-		return false;
-
-	return team->Get_IsClubTeam();
-}
-
-bool C_PlayerResource::IsRealTeam(int index)
-{
-	C_Team *team = GetGlobalTeam( index );
-
-	if ( !team )
-		return false;
-
-	return team->Get_IsRealTeam();
-}
-
-bool C_PlayerResource::HasTeamCrest(int index)
-{
-	C_Team *team = GetGlobalTeam( index );
-
-	if ( !team )
-		return false;
-
-	return team->Get_HasTeamCrest();
-}
-
-const char * C_PlayerResource::GetTeamCode(int index)
-{
-	C_Team *team = GetGlobalTeam( index );
-
-	if ( !team )
-		return "???";
-
-	if (index == TEAM_SPECTATOR || index == TEAM_UNASSIGNED || index == TEAM_INVALID)
-	{
-		static char code[5];
-		Q_strncpy(code, "SPEC", 5);
-		return code;
-	}
-
-	return team->Get_TeamCode();
-}
-
-const char * C_PlayerResource::GetShortTeamName(int index)
-{
-	C_Team *team = GetGlobalTeam( index );
-
-	if ( !team )
-		return "???";
-
-	return team->Get_ShortTeamName();
-}
-
-const char * C_PlayerResource::GetFullTeamName(int index)
-{
-	C_Team *team = GetGlobalTeam( index );
-
-	if ( !team )
-		return "???";
-
-	return team->Get_FullTeamName();
-}
-
-const char * C_PlayerResource::GetTeamKitName(int index)
-{
-	C_Team *team = GetGlobalTeam( index );
-
-	if ( !team )
-		return "???";
-
-	return team->Get_KitName();
-}
-
-Color &C_PlayerResource::GetHudTeamKitColor(int index)
-{
-	C_Team *team = GetGlobalTeam( index );
-
-	if ( !team )
-	{
-		Assert( false );
-		return g_ColorWhite;
-	}
-
-	return team->Get_HudKitColor();
-}
-
-Color &C_PlayerResource::GetPrimaryTeamKitColor(int index)
-{
-	C_Team *team = GetGlobalTeam( index );
-
-	if ( !team )
-	{
-		Assert( false );
-		static Color color;
-		return color;
-	}
-
-	return team->Get_PrimaryKitColor();
-}
-
-Color &C_PlayerResource::GetSecondaryTeamKitColor(int index)
-{
-	C_Team *team = GetGlobalTeam( index );
-
-	if ( !team )
-	{
-		Assert( false );
-		static Color color;
-		return color;
-	}
-
-	return team->Get_SecondaryKitColor();
-}
-
-int C_PlayerResource::GetTeamGoals(int index)
-{
-	C_Team *team = GetGlobalTeam( index );
-
-	if ( !team )
-		return 0;
-
-	return team->Get_Goals();
-}
-
 bool C_PlayerResource::IsLocalPlayer(int index)
 {
 	C_BasePlayer *pPlayer =	C_BasePlayer::GetLocalPlayer();
@@ -454,33 +326,6 @@ int	C_PlayerResource::GetPing( int iIndex )
 	return m_iPing[iIndex];
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: 
-/*-----------------------------------------------------------------------------
-int	C_PlayerResource::GetPacketloss( int iIndex )
-{
-	if ( !IsConnected( iIndex ) )
-		return 0;
-
-	return m_iPacketloss[iIndex];
-}*/
-
-const Color &C_PlayerResource::GetTeamColor(int index )
-{
-	if ( index < 0 || index >= MAX_TEAMS )
-	{
-		Assert( false );
-		return g_ColorWhite;
-	}
-	else
-	{
-		if (index == TEAM_A || index == TEAM_B)
-			return GetHudTeamKitColor(index);
-		else
-			return g_ColorWhite;
-	}
-}
-
 const Color &C_PlayerResource::GetPlayerColor(int index )
 {
 	if ( !IsConnected( index ) )
@@ -493,9 +338,9 @@ const Color &C_PlayerResource::GetPlayerColor(int index )
 		return g_ColorYellow;
 
 	if (GetTeam(index) == TEAM_SPECTATOR)
-		return GetTeamColor(GetSpecTeam(index));
+		return GetGlobalTeam(GetSpecTeam(index))->GetHudKitColor();
 
-	return GetTeamColor(GetTeam(index));
+	return GetGlobalTeam(GetTeam(index))->GetHudKitColor();
 }
 
 //-----------------------------------------------------------------------------
@@ -687,12 +532,12 @@ int	C_PlayerResource::GetRatings( int iIndex )
 	return m_Ratings[iIndex];
 }
 
-int	C_PlayerResource::GetTeamPosNum( int iIndex )
+int	C_PlayerResource::GetShirtNumber( int iIndex )
 {
 	if ( !IsConnected( iIndex ) )
 		return 0;
 
-	return m_TeamPosNum[iIndex];
+	return m_ShirtNumber[iIndex];
 }
 
 int	C_PlayerResource::GetTeamPosType( int iIndex )

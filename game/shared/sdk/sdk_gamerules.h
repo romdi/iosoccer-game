@@ -237,7 +237,7 @@ public:
 	virtual const char *GetChatFormat( MessageMode_t messageMode, CBasePlayer *pPlayer );
 	virtual const char *GetChatLocation( MessageMode_t messageMode, CBasePlayer *pPlayer );
 	
-	void	ChooseTeamNames(bool clubTeams, bool countryTeams, bool realTeams, bool fictitiousTeams);
+	void	ChooseTeamNames(bool clubTeams, bool nationalTeams, bool realTeams, bool fictitiousTeams);
 
 	virtual void	ClientDisconnected( edict_t *pClient );
 

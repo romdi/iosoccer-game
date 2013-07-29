@@ -272,7 +272,7 @@ void CFormationMenu::Update(bool showCaptainMenu)
 				m_pFreekickTakerTicks[j]->SetParent(m_pFormations[i]);
 				m_pFreekickTakerTicks[j]->SetVisible(true);
 				m_pFreekickTakerTicks[j]->SetBounds(m_pFormationButtons[i][j]->GetX() - TICK_WIDTH + TICK_WIDTH * 0.75f, m_pFormationButtons[i][j]->GetY() + m_pFormationButtons[i][j]->GetTall() - TICK_WIDTH / 2, TICK_WIDTH, TICK_HEIGHT);
-				if (GetGlobalTeam(TEAM_A + i)->Get_FreekickTakerPosIndex() == j)
+				if (GetGlobalTeam(TEAM_A + i)->GetFreekickTakerPosIndex() == j)
 				{
 					m_pFreekickTakerTicks[j]->SetDefaultColor(Color(0, 0, 0, 255), Color(taken.r, taken.g, taken.b, taken.a));
 				}
@@ -284,7 +284,7 @@ void CFormationMenu::Update(bool showCaptainMenu)
 				m_pPenaltyTakerTicks[j]->SetParent(m_pFormations[i]);
 				m_pPenaltyTakerTicks[j]->SetVisible(true);
 				m_pPenaltyTakerTicks[j]->SetBounds(m_pFormationButtons[i][j]->GetX() + FORMATION_BUTTON_WIDTH - TICK_WIDTH * 0.75f, m_pFormationButtons[i][j]->GetY() + m_pFormationButtons[i][j]->GetTall() - TICK_WIDTH / 2, TICK_WIDTH, TICK_HEIGHT);
-				if (GetGlobalTeam(TEAM_A + i)->Get_PenaltyTakerPosIndex() == j)
+				if (GetGlobalTeam(TEAM_A + i)->GetPenaltyTakerPosIndex() == j)
 				{
 					m_pPenaltyTakerTicks[j]->SetDefaultColor(Color(0, 0, 0, 255), Color(taken.r, taken.g, taken.b, taken.a));
 				}
@@ -296,7 +296,7 @@ void CFormationMenu::Update(bool showCaptainMenu)
 				m_pLeftCornerTakerTicks[j]->SetParent(m_pFormations[i]);
 				m_pLeftCornerTakerTicks[j]->SetVisible(true);
 				m_pLeftCornerTakerTicks[j]->SetBounds(m_pFormationButtons[i][j]->GetX() - TICK_WIDTH + TICK_WIDTH * 0.75f, m_pFormationButtons[i][j]->GetY() + m_pFormationButtons[i][j]->GetTall() - TICK_WIDTH * 1.25f, TICK_WIDTH, TICK_HEIGHT);
-				if (GetGlobalTeam(TEAM_A + i)->Get_LeftCornerTakerPosIndex() == j)
+				if (GetGlobalTeam(TEAM_A + i)->GetLeftCornerTakerPosIndex() == j)
 				{
 					m_pLeftCornerTakerTicks[j]->SetDefaultColor(Color(0, 0, 0, 255), Color(taken.r, taken.g, taken.b, taken.a));
 				}
@@ -308,7 +308,7 @@ void CFormationMenu::Update(bool showCaptainMenu)
 				m_pRightCornerTakerTicks[j]->SetParent(m_pFormations[i]);
 				m_pRightCornerTakerTicks[j]->SetVisible(true);
 				m_pRightCornerTakerTicks[j]->SetBounds(m_pFormationButtons[i][j]->GetX() + FORMATION_BUTTON_WIDTH - TICK_WIDTH * 0.75f, m_pFormationButtons[i][j]->GetY() + m_pFormationButtons[i][j]->GetTall() - TICK_WIDTH * 1.25f, TICK_WIDTH, TICK_HEIGHT);
-				if (GetGlobalTeam(TEAM_A + i)->Get_RightCornerTakerPosIndex() == j)
+				if (GetGlobalTeam(TEAM_A + i)->GetRightCornerTakerPosIndex() == j)
 				{
 					m_pRightCornerTakerTicks[j]->SetDefaultColor(Color(0, 0, 0, 255), Color(taken.r, taken.g, taken.b, taken.a));
 				}

@@ -269,7 +269,8 @@ CSDKPlayer::CSDKPlayer()
 	m_nTeamPosIndexToJoin = 0;
 	m_nSpecTeamToJoin = TEAM_SPECTATOR;
 	m_nTeamPosIndex = 0;
-	m_nPreferredTeamPosNum = 2;
+	m_nPreferredOutfieldShirtNumber = 2;
+	m_nPreferredKeeperShirtNumber = 1;
 	m_nPreferredSkin = -1;
 	m_nPlayerBallSkin = -1;
 	m_pPlayerBall = NULL;
@@ -566,7 +567,7 @@ void CSDKPlayer::ChangeTeam()
 		if (!SDKGameRules()->IsIntermissionState())
 			GetPlayerData()->StartNewMatchPeriod();
 
-		m_nTeamPosNum = FindAvailableTeamPosNum();
+		m_nShirtNumber = FindAvailableShirtNumber();
 
 		if (GetTeamPosType() == POS_GK && (GetTeamNumber() != oldTeam || oldPosType != POS_GK))
 			ChooseKeeperSkin();
@@ -611,12 +612,21 @@ void CSDKPlayer::ChangeTeam()
 	g_pPlayerResource->UpdatePlayerData();
 }
 
-bool isUnfilledNum(int nums[], int num)
+void CSDKPlayer::SetPreferredOutfieldShirtNumber(int num)
 {
-	if (num == 0 || num == 1)
-		return false;
+	m_nPreferredOutfieldShirtNumber = clamp(num, 2, 99);
+	m_nShirtNumber = FindAvailableShirtNumber();
+}
 
-	for (int i = 0; i < 10; i++)
+void CSDKPlayer::SetPreferredKeeperShirtNumber(int num)
+{
+	m_nPreferredKeeperShirtNumber = clamp(num, 1, 99);
+	m_nShirtNumber = FindAvailableShirtNumber();
+}
+
+bool IsFreeShirtNumber(int nums[], int num)
+{
+	for (int i = 0; i < 11; i++)
 	{
 		if (nums[i] == num)
 			return false;
@@ -625,45 +635,44 @@ bool isUnfilledNum(int nums[], int num)
 	return true;
 }
 
-int CSDKPlayer::FindAvailableTeamPosNum()
+int CSDKPlayer::FindAvailableShirtNumber()
 {
 	if (!mp_custom_shirt_numbers.GetBool())
 		return (int)GetTeam()->GetFormation()->positions[GetTeamPosIndex()]->number;
 
-	if (GetTeamPosType() == POS_GK)
-		return 1;
-
-	int teamPosNums[10] = { 0 };
+	int shirtNumbers[11] = {};
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
 		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
-		if (!CSDKPlayer::IsOnField(pPl) || pPl == this || pPl->GetTeam() != GetTeam() || pPl->GetTeamPosType() == POS_GK)
+		if (!CSDKPlayer::IsOnField(pPl) || pPl == this || pPl->GetTeam() != GetTeam())
 			continue;
 
-		teamPosNums[pPl->GetTeamPosIndex()] = pPl->GetTeamPosNum();
+		shirtNumbers[pPl->GetTeamPosIndex()] = pPl->GetShirtNumber();
 	}
 
-	int teamPosNum = m_nPreferredTeamPosNum;
+	int newNumber = GetTeamPosType() == POS_GK ? m_nPreferredKeeperShirtNumber : m_nPreferredOutfieldShirtNumber;
 
-	if (!isUnfilledNum(teamPosNums, teamPosNum))
+	if (!IsFreeShirtNumber(shirtNumbers, newNumber))
 	{
-		teamPosNum = (int)GetTeam()->GetFormation()->positions[GetTeamPosIndex()]->number;
+		newNumber = (int)GetTeam()->GetFormation()->positions[GetTeamPosIndex()]->number;
 
-		if (!isUnfilledNum(teamPosNums, teamPosNum))
+		if (!IsFreeShirtNumber(shirtNumbers, newNumber))
 		{
-			for (int i = 2; i <= 11; i++)
+			int startNumber = GetTeamPosType() == POS_GK ? 1 : 2;
+
+			for (int i = startNumber; i <= 99; i++)
 			{
-				if (isUnfilledNum(teamPosNums, i))
+				if (IsFreeShirtNumber(shirtNumbers, i))
 				{
-					teamPosNum = i;
+					newNumber = i;
 					break;
 				}
 			}
 		}
 	}
 
-	return teamPosNum;
+	return newNumber;
 }
 
 void CSDKPlayer::InitialSpawn( void )
@@ -1136,7 +1145,7 @@ void CSDKPlayer::SetPreferredSkin(int num)
 void CSDKPlayer::ChooseFieldPlayerSkin(void)
 {
 	int preferred = (m_nPreferredSkin == -1 ? g_IOSRand.RandomInt(0, NUM_PLAYER_FACES - 1) : m_nPreferredSkin);
-	m_nSkin = GetTeamPosNum() - 2 + (preferred * 10);		//player skin
+	m_nSkin = preferred;		//player skin
 	m_nBody = MODEL_PLAYER;
 }
 
@@ -1150,7 +1159,7 @@ void CSDKPlayer::ChooseFieldPlayerSkin(void)
 void CSDKPlayer::ChooseKeeperSkin(void)
 {
 	int preferred = (m_nPreferredSkin == -1 ? g_IOSRand.RandomInt(0, NUM_PLAYER_FACES - 1) : m_nPreferredSkin);
-	m_nSkin = NUM_PLAYER_FACES * 10 + (preferred * NUM_BALL_TYPES);
+	m_nSkin = NUM_PLAYER_FACES + (preferred * NUM_BALL_TYPES);
 	m_nBaseSkin = m_nSkin;
 	m_nBody = MODEL_KEEPER;
 }
@@ -1471,7 +1480,7 @@ Vector CSDKPlayer::GetOffsideBallPos()
 
 Vector CSDKPlayer::GetSpawnPos(bool findSafePos)
 {
-	//Vector spawnPos = pPlayer->GetTeam()->m_vPlayerSpawns[ToSDKPlayer(pPlayer)->GetTeamPosNum() - 1];
+	//Vector spawnPos = pPlayer->GetTeam()->m_vPlayerSpawns[ToSDKPlayer(pPlayer)->GetShirtNumber() - 1];
 	Vector halfField = (SDKGameRules()->m_vFieldMax - SDKGameRules()->m_vFieldMin);
 	halfField.y /= 2;
 	float xDist = halfField.x / 5;
@@ -1491,9 +1500,9 @@ Vector CSDKPlayer::GetSpawnPos(bool findSafePos)
 	return spawnPos;
 }
 
-int CSDKPlayer::GetTeamPosNum()
+int CSDKPlayer::GetShirtNumber()
 {
-	return m_nTeamPosNum;
+	return m_nShirtNumber;
 }
 
 int CSDKPlayer::GetTeamPosType()
@@ -2296,10 +2305,10 @@ void CPlayerPersistentData::ConvertAllPlayerDataToJson()
 
 		for (int j = 0; j < Q_strlen(pData->m_szName); j++)
 		{
-			if (pData->m_szName[j] == '"')
+			if (pData->m_szName[j] == '"' || pData->m_szName[j] == '\\')
 			{
 				playerName[j + indexOffset] = '\\';
-				playerName[j + indexOffset + 1] = '"';
+				playerName[j + indexOffset + 1] = pData->m_szName[j];
 				indexOffset += 1;
 			}
 			else
