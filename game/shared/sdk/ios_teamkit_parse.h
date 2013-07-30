@@ -18,7 +18,7 @@ class KeyValues;
 class CTeamInfo;
 
 #define MAX_TEAMCODE_LENGTH				8
-#define MAX_KITNAME_LENGTH				32
+#define MAX_KITNAME_LENGTH				64
 #define MAX_FOLDERNAME_LENGTH			64
 #define MAX_SHORTTEAMNAME_LENGTH		32
 #define MAX_FULLTEAMNAME_LENGTH			64
@@ -81,8 +81,10 @@ class CTeamInfo
 public:
 
 	// Each game can override this to get whatever values it wants from the script.
+	static void DownloadTeamKits();
 	static void ParseTeamKits();
 	static void GetNonClashingTeamKits(char *homeTeam, char *awayTeam, bool clubTeams, bool nationalTeams, bool realTeams, bool fictitiousTeams);
+	static CTeamKitInfo *FindTeamByKitName(const char *name);
 	static CTeamKitInfo *FindTeamByShortName(const char *name);
 	static CTeamKitInfo *FindTeamByCode(const char *name);
 	bool		m_bIsClub;

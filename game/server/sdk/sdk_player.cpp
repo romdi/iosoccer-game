@@ -1656,7 +1656,7 @@ bool CSDKPlayer::CanSpeak(MessageMode_t messageMode)
 
 #include <ctype.h>
 
-char *trim(char *str)
+char *trimstr(char *str)
 {
 	size_t len = 0;
 	char *frontp = str - 1;
@@ -1724,7 +1724,7 @@ void CSDKPlayer::SetPlayerName(const char *name)
 
 	sanitize(sanitizedName);
 
-	trim(sanitizedName);
+	trimstr(sanitizedName);
 
 	if (sanitizedName[0] == '\0')
 		Q_strncpy(sanitizedName, "Arthur", sizeof(sanitizedName));
@@ -1786,7 +1786,7 @@ void CSDKPlayer::SetClubName(const char *name)
 
 	sanitize(sanitizedName);
 
-	trim(sanitizedName);
+	trimstr(sanitizedName);
 
 	if (!Q_strcmp(sanitizedName, m_szClubName))
 		return;

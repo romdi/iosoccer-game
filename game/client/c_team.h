@@ -42,7 +42,6 @@ public:
 	virtual bool	IsClub( void );
 	virtual bool	IsReal( void );
 	virtual bool	HasCrest( void );
-	virtual CFontAtlas	*GetFontAtlas( void );
 	virtual char	*GetCode( void );
 	virtual char	*GetShortName( void );
 	virtual char	*GetFullName( void );
@@ -52,14 +51,7 @@ public:
 	virtual Color	&GetHudKitColor( void );
 	virtual Color	&GetPrimaryKitColor( void );
 	virtual Color	&GetSecondaryKitColor( void );
-	virtual Color	&GetOutfieldShirtNameColor( void );
-	virtual int		GetOutfieldShirtNameOffset( void );
-	virtual Color	&GetOutfieldShirtNumberColor( void );
-	virtual int		GetOutfieldShirtNumberOffset( void );
-	virtual Color	&GetKeeperShirtNameColor( void );
-	virtual int		GetKeeperShirtNameOffset( void );
-	virtual Color	&GetKeeperShirtNumberColor( void );
-	virtual int		GetKeeperShirtNumberOffset( void );
+	virtual CTeamKitInfo *GetKitInfo();
 	virtual int		GetGoals( void );
 	virtual int		GetPing( void );
 

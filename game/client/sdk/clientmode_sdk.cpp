@@ -81,7 +81,8 @@ void CSDKModeManager::Init()
 	
 	PanelMetaClassMgr()->LoadMetaClassDefinitionFile( SCREEN_FILE );
 
-	CTeamInfo::ParseTeamKits();
+	CTeamInfo::DownloadTeamKits();
+	//CTeamInfo::ParseTeamKits();
 }
 
 void CSDKModeManager::LevelInit( const char *newmap )

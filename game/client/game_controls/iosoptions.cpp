@@ -542,12 +542,20 @@ CAppearanceSettingPanel::CAppearanceSettingPanel(Panel *parent, const char *pane
 	m_pPreviewTeamList = new ComboBox(m_pContent, "", CTeamInfo::m_TeamInfo.Count(), false);
 	m_pPreviewTeamList->RemoveAll();
 
+	int kitCount = 0;
+
 	for (int i = 0; i < CTeamInfo::m_TeamInfo.Count(); i++)
 	{
-		kv = new KeyValues("UserData", "teamfolder", CTeamInfo::m_TeamInfo[i]->m_szFolderName, "kitfolder", CTeamInfo::m_TeamInfo[i]->m_TeamKitInfo[0]->m_szFolderName);
-		m_pPreviewTeamList->AddItem(CTeamInfo::m_TeamInfo[i]->m_TeamKitInfo[0]->m_szName, kv);
-		kv->deleteThis();
+		for (int j = 0; j < CTeamInfo::m_TeamInfo[i]->m_TeamKitInfo.Count(); j++)
+		{
+			kitCount += 1;
+			kv = new KeyValues("UserData", "teamfolder", CTeamInfo::m_TeamInfo[i]->m_szFolderName, "kitfolder", CTeamInfo::m_TeamInfo[i]->m_TeamKitInfo[j]->m_szFolderName);
+			m_pPreviewTeamList->AddItem(VarArgs("%s/%s", CTeamInfo::m_TeamInfo[i]->m_szFolderName, CTeamInfo::m_TeamInfo[i]->m_TeamKitInfo[j]->m_szFolderName), kv);
+			kv->deleteThis();
+		}
 	}
+
+	m_pPreviewTeamList->SetNumberOfEditLines(kitCount);
 
 	m_pPreviewTeamList->ActivateItemByRow(0);
 
@@ -567,7 +575,7 @@ void CAppearanceSettingPanel::PerformLayout()
 	m_pContent->SetBounds(PADDING, PADDING, GetWide() - 2 * PADDING, GetTall() - 2 * PADDING);
 
 	m_pPlayerPreviewPanel->SetBounds(APPEARANCE_RADIOBUTTONWIDTH, 0, GetParent()->GetWide(), GetParent()->GetTall() - 2 * TEXT_HEIGHT);
-	m_pPlayerPreviewPanel->SetImage("../_rt_playermodelTEST");
+	m_pPlayerPreviewPanel->SetImage("../_rt_playermodel");
 
 	m_pSkinIndexLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 0, LABEL_WIDTH, TEXT_HEIGHT);
 	m_pSkinIndexList->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, TEXT_HEIGHT, SHORTINPUT_WIDTH, TEXT_HEIGHT);

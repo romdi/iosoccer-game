@@ -548,7 +548,8 @@ void CSDKGameRules::ServerActivate()
 {
 	CPlayerPersistentData::ReallocateAllPlayerData();
 
-	CTeamInfo::ParseTeamKits();
+	CTeamInfo::DownloadTeamKits();
+	//CTeamInfo::ParseTeamKits();
 
 	InitTeams();
 
@@ -2155,7 +2156,7 @@ void OnTeamnamesChange(IConVar *var, const char *pOldValue, float flOldValue)
 
 ConVar mp_teamnames("mp_teamnames", "", FCVAR_NOTIFY, "Override team names. Example: mp_teamnames \"FCB:FC Barcelona,RMA:Real Madrid\"", &OnTeamnamesChange);
 
-void OnTeamlistChange(IConVar *var, const char *pOldValue, float flOldValue)
+void OnTeamkitsChange(IConVar *var, const char *pOldValue, float flOldValue)
 {
 	if (!SDKGameRules())
 		return;
@@ -2183,58 +2184,41 @@ void OnTeamlistChange(IConVar *var, const char *pOldValue, float flOldValue)
 			Q_strncpy(awayString, result, sizeof(awayString));
 	}
 
-	if (homeString[0] != '\0' && awayString[0] != '\0')
-	{
-		char homeCode[MAX_TEAMCODE_LENGTH] = {};
-		char homeName[MAX_SHORTTEAMNAME_LENGTH] = {};
-		char awayCode[MAX_TEAMCODE_LENGTH] = {};
-		char awayName[MAX_SHORTTEAMNAME_LENGTH] = {};
+	GetGlobalTeam(TEAM_A)->SetKitName(homeString);
+	GetGlobalTeam(TEAM_B)->SetKitName(awayString);
 
-		result = strtok(homeString, ":");
-
-		if (result != NULL)
-			Q_strncpy(homeCode, result, sizeof(homeCode));
-
-		if (homeCode[0] != '\0')
-		{
-			result = strtok(NULL, ":");
-
-			if (result != NULL)
-				Q_strncpy(homeName, result, sizeof(homeName));
-
-			if (homeName[0] != '\0')
-			{
-				result = strtok(awayString, ":");
-
-				if (result != NULL)
-					Q_strncpy(awayCode, result, sizeof(awayCode));
-
-				if (awayCode[0] != '\0')
-				{
-					result = strtok(NULL, ":");
-
-					if (result != NULL)
-						Q_strncpy(awayName, result, sizeof(awayName));
-
-					if (awayName[0] != '\0')
-					{
-						GetGlobalTeam(TEAM_A)->SetTeamCode(strlwr(trim(homeCode)));
-						GetGlobalTeam(TEAM_A)->SetShortTeamName(strlwr(trim(homeName)));
-
-						GetGlobalTeam(TEAM_B)->SetTeamCode(strlwr(trim(awayCode)));
-						GetGlobalTeam(TEAM_B)->SetShortTeamName(strlwr(trim(awayName)));
-
-						return;
-					}
-				}
-			}
-		}
-	}
-
-	Msg("Error: Wrong format\n");
+	//Msg("Error: Wrong format\n");
+	//ClientPrint( pPlayer, HUD_PRINTCONSOLE, "Usage:\n   ent_dump <entity name>\n" );
 }
 
-ConVar mp_teamkits("mp_teamkits", "england,brazil", FCVAR_NOTIFY, "Set team names", &OnTeamlistChange);
+ConVar mp_teamkits("mp_teamkits", "england,brazil", FCVAR_NOTIFY, "Set team names", &OnTeamkitsChange);
+
+//void CC_MP_HomeKit(const CCommand &args)
+//{
+//	if (!UTIL_IsCommandIssuedByServerAdmin())
+//        return;
+//
+//	if (args.ArgC() < 2)
+//	{
+//		char list[1024];
+//
+//		for (int i = 0; i < CTeamInfo::m_TeamInfo.Count(); i++)
+//		{
+//			for (int j = 0; j < CTeamInfo::m_TeamInfo[i]->m_TeamKitInfo.Count(); j++)
+//			{
+//
+//			}
+//		}
+//		ClientPrint(UTIL_GetCommandClient(), HUD_PRINTCONSOLE, "#game_respawn_asrandom" );
+//		return;
+//	}
+//
+//	SDKGameRules()->SetMatchDisplayTimeSeconds(atoi(args[3]) * 60);
+//	GetGlobalTeam(TEAM_A)->SetKitName(UTIL_VarArgs("%s/%s", CTeamInfo::FindTeamByKitName);
+//	GetGlobalTeam(TEAM_B)->SetGoals(atoi(args[2]));
+//}
+//
+//ConVar mp_homekit("mp_teamkits", "england,brazil", FCVAR_NOTIFY, "Set team names", &OnTeamkitsChange);
 
 ConVar mp_teamrotation("mp_teamrotation", "brazil,germany,italy,scotland,barcelona,bayern,liverpool,milan,palmeiras", 0, "Set available teams");
 
@@ -2426,6 +2410,30 @@ void CSDKGameRules::StopMeteringInjuryTime()
 		//}
 	}
 }
+
+#endif
+
+#ifdef CLIENT_DLL
+
+void CC_CL_Kits(const CCommand &args)
+{
+	char list[4096] = {};
+	int kitCount = 0;
+
+	for (int i = 0; i < CTeamInfo::m_TeamInfo.Count(); i++)
+	{
+		Q_strcat(list, VarArgs("%s:\n", CTeamInfo::m_TeamInfo[i]->m_szFolderName), sizeof(list));
+		for (int j = 0; j < CTeamInfo::m_TeamInfo[i]->m_TeamKitInfo.Count(); j++)
+		{
+			kitCount += 1;
+			Q_strcat(list, VarArgs("    %d: %s\n", kitCount, CTeamInfo::m_TeamInfo[i]->m_TeamKitInfo[j]->m_szFolderName), sizeof(list));
+		}
+	}
+
+	Msg(list);
+}
+
+ConCommand cl_kits( "cl_kits", CC_CL_Kits, "", 0);
 
 #endif
 

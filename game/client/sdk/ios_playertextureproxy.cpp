@@ -196,6 +196,7 @@ private:
 	ITexture		*m_pTexture;		// default texture
 	char m_szTextureType[64];
 	CProceduralRegenerator	*m_pTextureRegen[2][11]; // The regenerator
+	CProceduralRegenerator *m_pPreviewTextureRegen;
 	IMaterial *m_pMaterial;
 };
 
@@ -208,6 +209,8 @@ CPlayerTextureProxy::CPlayerTextureProxy()
 	for (int i = 0; i < 2; i++)
 		for (int j = 0; j < 11; j++)
 			m_pTextureRegen[i][j] = NULL;
+
+	m_pPreviewTextureRegen = NULL;
 }
 
 CPlayerTextureProxy::~CPlayerTextureProxy()
@@ -218,9 +221,13 @@ void CPlayerTextureProxy::Release()
 {
 	m_pBaseTextureVar = NULL;
 	m_pTexture = NULL;
+
 	for (int i = 0; i < 2; i++)
 		for (int j = 0; j < 11; j++)
 			m_pTextureRegen[i][j] = NULL;
+
+	m_pPreviewTextureRegen = NULL;
+
 	delete this;
 }
 
@@ -269,6 +276,7 @@ void CPlayerTextureProxy::OnBind( C_BaseEntity *pEnt )
 	if (pPl)
 	{
 		C_Team *pTeam = GetGlobalTeam(g_PR->GetTeam(pEnt->index));
+		CTeamKitInfo *pKitInfo = pTeam->GetKitInfo();
 		teamFolder = pTeam->GetFolderName();
 		kitFolder = pTeam->GetKitFolderName();
 		shirtNumber = g_PR->GetShirtNumber(pEnt->index);
@@ -290,9 +298,9 @@ void CPlayerTextureProxy::OnBind( C_BaseEntity *pEnt )
 			bool needsUpdate;
 
 			if (g_PR->GetTeamPosType(pEnt->index) == POS_GK)
-				needsUpdate = m_pTextureRegen[teamIndex][posIndex]->SetPlayerInfo(name, shirtNumber, pTeam->GetKeeperShirtNameColor(), pTeam->GetKeeperShirtNameOffset(), pTeam->GetKeeperShirtNumberColor(), pTeam->GetKeeperShirtNumberOffset(), true, pTeam->GetFontAtlas());
+				needsUpdate = m_pTextureRegen[teamIndex][posIndex]->SetPlayerInfo(name, shirtNumber, pKitInfo->m_KeeperShirtNameColor, pKitInfo->m_nKeeperShirtNameOffset, pKitInfo->m_KeeperShirtNumberColor, pKitInfo->m_nKeeperShirtNumberOffset, true, pKitInfo->m_pFontAtlas);
 			else
-				needsUpdate = m_pTextureRegen[teamIndex][posIndex]->SetPlayerInfo(name, shirtNumber, pTeam->GetOutfieldShirtNameColor(), pTeam->GetOutfieldShirtNameOffset(), pTeam->GetOutfieldShirtNumberColor(), pTeam->GetOutfieldShirtNumberOffset(), false, pTeam->GetFontAtlas());
+				needsUpdate = m_pTextureRegen[teamIndex][posIndex]->SetPlayerInfo(name, shirtNumber, pKitInfo->m_OutfieldShirtNameColor, pKitInfo->m_nOutfieldShirtNameOffset, pKitInfo->m_OutfieldShirtNumberColor, pKitInfo->m_nOutfieldShirtNumberOffset, false, pKitInfo->m_pFontAtlas);
 				
 			if (needsUpdate)
 				pDetailTexture->Download();
@@ -310,11 +318,27 @@ void CPlayerTextureProxy::OnBind( C_BaseEntity *pEnt )
 		else
 		{
 			C_BaseAnimatingOverlay *pPlayerModelPreview = dynamic_cast<C_BaseAnimatingOverlay *>(pEnt);
+
 			if (pPlayerModelPreview)
 			{
 				CAppearanceSettingPanel *pPanel = (CAppearanceSettingPanel *)iosOptionsMenu->GetPanel()->GetSettingPanel(SETTING_PANEL_APPEARANCE);
 				pPanel->GetPlayerTeamInfo(&teamFolder, &kitFolder);
 				shirtNumber = pPanel->GetPlayerOutfieldShirtNumber();
+				const char *name = g_PR->GetPlayerName(GetLocalPlayerIndex());
+				CTeamKitInfo *pKitInfo = CTeamInfo::FindTeamByKitName(VarArgs("%s/%s", teamFolder, kitFolder));
+
+				ITexture *pDetailTexture = materials->FindTexture("models/player/default/detail_preview", NULL, true);
+
+				if (!m_pPreviewTextureRegen)
+					m_pPreviewTextureRegen = new CProceduralRegenerator();
+
+				//pDetailTexture->SetTextureRegenerator(m_pPreviewTextureRegen);
+				//m_pDetailTextureVar->SetTextureValue(pDetailTexture);
+
+				//bool needsUpdate = m_pPreviewTextureRegen->SetPlayerInfo(name, shirtNumber, pKitInfo->m_OutfieldShirtNameColor, pKitInfo->m_nOutfieldShirtNameOffset, pKitInfo->m_OutfieldShirtNumberColor, pKitInfo->m_nOutfieldShirtNumberOffset, false, pKitInfo->m_pFontAtlas);
+				
+				//if (needsUpdate)
+				//	pDetailTexture->Download();
 			}
 			else
 				return;
