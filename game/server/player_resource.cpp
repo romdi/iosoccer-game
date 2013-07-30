@@ -64,6 +64,7 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CPlayerResource, DT_PlayerResource)
 
 	SendPropArray3( SENDINFO_ARRAY3(m_szPlayerNames), SendPropString( SENDINFO_ARRAY(m_szPlayerNames), 0, SendProxy_String_tToStringPR ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_szClubNames), SendPropString( SENDINFO_ARRAY(m_szClubNames), 0, SendProxy_String_tToStringPR ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_szShirtNames), SendPropString( SENDINFO_ARRAY(m_szShirtNames), 0, SendProxy_String_tToStringPR ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_CountryIndices), SendPropInt( SENDINFO_ARRAY(m_CountryIndices), 8, SPROP_UNSIGNED ) ),
 	
 END_SEND_TABLE()
@@ -137,6 +138,7 @@ void CPlayerResource::Spawn( void )
 
 		m_szPlayerNames.Set( i, MAKE_STRING("") );
 		m_szClubNames.Set( i, MAKE_STRING("") );
+		m_szShirtNames.Set( i, MAKE_STRING("") );
 		m_CountryIndices.Set( i, 0 );
 	}
 
@@ -196,6 +198,7 @@ void CPlayerResource::UpdatePlayerData( void )
 		m_szPlayerNames.Set(i, MAKE_STRING(pPl->GetPlayerName()));
 		m_CountryIndices.Set(i, pPl->GetCountryIndex());
 		m_szClubNames.Set(i, MAKE_STRING(pPl->GetClubName()));
+		m_szShirtNames.Set(i, MAKE_STRING(pPl->GetShirtName()));
 
 		// We're dealing with arrays of char pointers which point to the char array of the player object variable.
 		// Keep track of variable changes with a boolean variable so we know when to send an update to the clients.
@@ -210,6 +213,12 @@ void CPlayerResource::UpdatePlayerData( void )
 		{
 			m_szClubNames.GetForModify(i);
 			pPl->m_bClubNameChanged = false;
+		}
+
+		if (pPl->m_bShirtNameChanged)
+		{
+			m_szShirtNames.GetForModify(i);
+			pPl->m_bShirtNameChanged = false;
 		}
 
 		// Don't update statistics every time

@@ -131,6 +131,9 @@ class CAppearanceSettingPanel : public PropertyPage, public ISettingPanel
 
 	Panel *m_pContent;
 
+	Label *m_pShirtNameLabel;
+	TextEntry *m_pShirtNameText;
+
 	Label *m_pSkinIndexLabel;
 	ComboBox *m_pSkinIndexList;
 	Label *m_pPreferredOutfieldShirtNumberLabel;

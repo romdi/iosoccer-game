@@ -75,7 +75,6 @@ public:
 	void	RemoveAllPlayers();
 
 	void	SetKitName(const char *pKitName);
-	void	DownloadTeamKit(const char *pKitName, int teamNumber);
 
 // IClientThinkable overrides.
 public:

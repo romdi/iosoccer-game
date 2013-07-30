@@ -289,6 +289,7 @@ CSDKPlayer::CSDKPlayer()
 
 	m_szPlayerName[0] = '\0';
 	m_szClubName[0] = '\0';
+	m_szShirtName[0] = '\0';
 
 	m_iPlayerState = PLAYER_STATE_NONE;
 
@@ -1794,6 +1795,29 @@ void CSDKPlayer::SetClubName(const char *name)
 	Q_strncpy(m_szClubName, sanitizedName, sizeof(m_szClubName));
 
 	m_bClubNameChanged = true;
+}
+
+const char *CSDKPlayer::GetShirtName()
+{
+	return m_szShirtName;
+}
+
+void CSDKPlayer::SetShirtName(const char *name)
+{
+	char sanitizedName[MAX_PLAYER_NAME_LENGTH];
+
+	Q_strncpy(sanitizedName, name, sizeof(sanitizedName));
+
+	sanitize(sanitizedName);
+
+	trimstr(sanitizedName);
+
+	if (!Q_strcmp(sanitizedName, m_szShirtName))
+		return;
+
+	Q_strncpy(m_szShirtName, sanitizedName, sizeof(m_szShirtName));
+
+	m_bShirtNameChanged = true;
 }
 
 void CSDKPlayer::AddRedCard()

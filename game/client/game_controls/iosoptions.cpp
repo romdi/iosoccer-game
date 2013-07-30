@@ -217,10 +217,12 @@ CNetworkSettingPanel::CNetworkSettingPanel(Panel *parent, const char *panelName)
 	m_pPlayerNameText = new TextEntry(m_pContent, "");
 	m_pPlayerNameText->SetMaximumCharCount(MAX_PLAYER_NAME_LENGTH - 1);
 	m_pPlayerNameText->SetAllowNonAsciiCharacters(true);
+
 	m_pClubNameLabel = new Label(m_pContent, "", "IOS Club Initials:");
 	m_pClubNameText = new TextEntry(m_pContent, "");
 	m_pClubNameText->SetMaximumCharCount(MAX_CLUBNAME_LENGTH - 1);
 	m_pClubNameText->SetAllowNonAsciiCharacters(true);
+
 	m_pCountryNameLabel = new Label(m_pContent, "", "Country Fallback Name:");
 	m_pCountryNameList = new ComboBox(m_pContent, "", MAX_VISIBLE_DROPDOWN, false);
 
@@ -446,6 +448,12 @@ CAppearanceSettingPanel::CAppearanceSettingPanel(Panel *parent, const char *pane
 	m_pContent = new Panel(this, "");
 
 	m_pPlayerPreviewPanel = new ImagePanel(m_pContent, "");
+
+	m_pShirtNameLabel = new Label(m_pContent, "", "Shirt Name:");
+	m_pShirtNameText = new TextEntry(m_pContent, "");
+	m_pShirtNameText->SetMaximumCharCount(MAX_PLAYER_NAME_LENGTH - 1);
+	m_pShirtNameText->SetAllowNonAsciiCharacters(false);
+
 	m_pSkinIndexLabel = new Label(m_pContent, "", "Player Skin:");
 	m_pSkinIndexList = new ComboBox(m_pContent, "", 0, false);
 
@@ -577,24 +585,27 @@ void CAppearanceSettingPanel::PerformLayout()
 	m_pPlayerPreviewPanel->SetBounds(APPEARANCE_RADIOBUTTONWIDTH, 0, GetParent()->GetWide(), GetParent()->GetTall() - 2 * TEXT_HEIGHT);
 	m_pPlayerPreviewPanel->SetImage("../_rt_playermodel");
 
-	m_pSkinIndexLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 0, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pSkinIndexList->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, TEXT_HEIGHT, SHORTINPUT_WIDTH, TEXT_HEIGHT);
+	m_pShirtNameLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 0 * TEXT_HEIGHT + 0 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pShirtNameText->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 1 * TEXT_HEIGHT + 0 * TEXT_MARGIN, SHORTINPUT_WIDTH, TEXT_HEIGHT);
 
-	m_pPreferredKeeperShirtNumberLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 2 * TEXT_HEIGHT + TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pPreferredKeeperShirtNumberList->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 3 * TEXT_HEIGHT + TEXT_MARGIN, SHORTINPUT_WIDTH, TEXT_HEIGHT);
+	m_pPreferredKeeperShirtNumberLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 2 * TEXT_HEIGHT + 1 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pPreferredKeeperShirtNumberList->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 3 * TEXT_HEIGHT + 1 * TEXT_MARGIN, SHORTINPUT_WIDTH, TEXT_HEIGHT);
 
-	m_pPreferredOutfieldShirtNumberLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 4 * TEXT_HEIGHT + TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pPreferredOutfieldShirtNumberList->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 5 * TEXT_HEIGHT + TEXT_MARGIN, SHORTINPUT_WIDTH, TEXT_HEIGHT);
+	m_pPreferredOutfieldShirtNumberLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 4 * TEXT_HEIGHT + 2 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pPreferredOutfieldShirtNumberList->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 5 * TEXT_HEIGHT + 2 * TEXT_MARGIN, SHORTINPUT_WIDTH, TEXT_HEIGHT);
 
-	m_pPlayerBallSkinLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 6 * TEXT_HEIGHT + TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pPlayerBallSkinList->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 7 * TEXT_HEIGHT + TEXT_MARGIN, SHORTINPUT_WIDTH, TEXT_HEIGHT);
+	m_pSkinIndexLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 6 * TEXT_HEIGHT + 3 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pSkinIndexList->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 7 * TEXT_HEIGHT + 3 * TEXT_MARGIN, SHORTINPUT_WIDTH, TEXT_HEIGHT);
+
+	m_pPlayerBallSkinLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 8 * TEXT_HEIGHT + 4 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pPlayerBallSkinList->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 9 * TEXT_HEIGHT + 4 * TEXT_MARGIN, SHORTINPUT_WIDTH, TEXT_HEIGHT);
+
+	m_pPreviewTeamLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 10 * TEXT_HEIGHT + 5 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pPreviewTeamList->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 11 * TEXT_HEIGHT + 5 * TEXT_MARGIN, SHORTINPUT_WIDTH, TEXT_HEIGHT);
 
 	m_pPlayerAngleLabel->SetBounds(APPEARANCE_RADIOBUTTONWIDTH, 2 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
 	m_pPlayerAngleLabel->SetVisible(false);
 	m_pPlayerAngleSlider->SetBounds(APPEARANCE_RADIOBUTTONWIDTH, 512, 264, TEXT_HEIGHT);
-
-	m_pPreviewTeamLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 8 * TEXT_HEIGHT + 2 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pPreviewTeamList->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 9 * TEXT_HEIGHT + 2 * TEXT_MARGIN, SHORTINPUT_WIDTH, TEXT_HEIGHT);
 
 	m_pBodypartPanel->SetBounds(0, 0, APPEARANCE_RADIOBUTTONWIDTH, m_pPlayerPreviewPanel->GetTall());
 	m_pBodypartRadioButtons[0]->SetBounds(0, 0, APPEARANCE_RADIOBUTTONWIDTH, TEXT_HEIGHT);
@@ -607,6 +618,9 @@ void CAppearanceSettingPanel::PerformLayout()
 
 void CAppearanceSettingPanel::Save()
 {
+	char shirtName[MAX_PLAYER_NAME_LENGTH];
+	m_pShirtNameText->GetText(shirtName, sizeof(shirtName));
+	g_pCVar->FindVar("shirtname")->SetValue(shirtName);
 	g_pCVar->FindVar("modelskinindex")->SetValue(m_pSkinIndexList->GetActiveItemUserData()->GetInt("value"));
 	g_pCVar->FindVar("preferredoutfieldshirtnumber")->SetValue(m_pPreferredOutfieldShirtNumberList->GetActiveItemUserData()->GetInt("index"));
 	g_pCVar->FindVar("preferredkeepershirtnumber")->SetValue(m_pPreferredKeeperShirtNumberList->GetActiveItemUserData()->GetInt("index"));
@@ -615,6 +629,8 @@ void CAppearanceSettingPanel::Save()
 
 void CAppearanceSettingPanel::Load()
 {
+	m_pShirtNameText->SetText(g_pCVar->FindVar("shirtname")->GetString());
+
 	m_pSkinIndexList->ActivateItemByRow(clamp(g_pCVar->FindVar("modelskinindex")->GetInt(), -1, 5) + 1);
 
 	int outfieldNumber = clamp(g_pCVar->FindVar("preferredoutfieldshirtnumber")->GetInt(), 2, 99);

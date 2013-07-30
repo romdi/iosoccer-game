@@ -30,8 +30,8 @@ public:
 private:
 	unsigned char **ParseInfo(const char *filename, chr_t *chars, int &width, int &height);
 	virtual void WriteText(CPixelWriter &pixelWriter, const char *text, unsigned char **pixels, const chr_t *chars, const int &width, const int &height, int offsetY, const Color &color, bool isKeeper);
-	char m_szPlayerName[MAX_PLAYER_NAME_LENGTH];
-	char m_szPlayerNumber[4];
+	char m_szShirtName[MAX_PLAYER_NAME_LENGTH];
+	char m_szShirtNumber[4];
 	Color m_NameColor;
 	int m_nNameOffset;
 	Color m_NumberColor;
@@ -42,8 +42,8 @@ private:
 
 CProceduralRegenerator::CProceduralRegenerator()
 {
-	m_szPlayerName[0] = '\0';
-	m_szPlayerNumber[0] = '\0';
+	m_szShirtName[0] = '\0';
+	m_szShirtNumber[0] = '\0';
 	m_NameColor = Color(0, 0, 0, 255);
 	m_nNameOffset = 0;
 	m_NumberColor = Color(0, 0, 0, 255);
@@ -56,15 +56,15 @@ bool CProceduralRegenerator::SetPlayerInfo(const char *name, int number, const C
 {
 	bool hasChanged = false;
 
-	if (Q_strcmp(name, m_szPlayerName))
+	if (Q_strcmp(name, m_szShirtName))
 	{
-		Q_strncpy(m_szPlayerName, name, sizeof(m_szPlayerName));
+		Q_strncpy(m_szShirtName, name, sizeof(m_szShirtName));
 		hasChanged = true;
 	}
 
-	if (number != atoi(m_szPlayerNumber))
+	if (number != atoi(m_szShirtNumber))
 	{
-		Q_snprintf(m_szPlayerNumber, sizeof(m_szPlayerNumber), "%d", number);
+		Q_snprintf(m_szShirtNumber, sizeof(m_szShirtNumber), "%d", number);
 		hasChanged = true;
 	}
 
@@ -134,8 +134,8 @@ void CProceduralRegenerator::RegenerateTextureBits( ITexture *pTexture, IVTFText
 		}
 	}
 
-	WriteText(pixelWriter, m_szPlayerName, m_pFontAtlas->m_NamePixels, m_pFontAtlas->m_NameChars, m_pFontAtlas->m_nNamePixelsWidth, m_pFontAtlas->m_nNamePixelsHeight, m_nNameOffset, m_NameColor, m_bIsKeeper);
-	WriteText(pixelWriter, m_szPlayerNumber, m_pFontAtlas->m_NumberPixels, m_pFontAtlas->m_NumberChars, m_pFontAtlas->m_nNumberPixelsWidth, m_pFontAtlas->m_nNumberPixelsHeight, m_nNumberOffset, m_NumberColor, m_bIsKeeper);	
+	WriteText(pixelWriter, m_szShirtName, m_pFontAtlas->m_NamePixels, m_pFontAtlas->m_NameChars, m_pFontAtlas->m_nNamePixelsWidth, m_pFontAtlas->m_nNamePixelsHeight, m_nNameOffset, m_NameColor, m_bIsKeeper);
+	WriteText(pixelWriter, m_szShirtNumber, m_pFontAtlas->m_NumberPixels, m_pFontAtlas->m_NumberChars, m_pFontAtlas->m_nNumberPixelsWidth, m_pFontAtlas->m_nNumberPixelsHeight, m_nNumberOffset, m_NumberColor, m_bIsKeeper);	
 }
 
 void CProceduralRegenerator::WriteText(CPixelWriter &pixelWriter, const char *text, unsigned char **pixels, const chr_t *chars, const int &width, const int &height, int offsetY, const Color &color, bool isKeeper)
@@ -178,7 +178,7 @@ void CProceduralRegenerator::Release()
 	//delete stuff
 }
 
-#define PLAYERTEXTURE_PATH "models/player/teams"
+#define TEAMKITS_PATH "models/player/teamkits"
 
 class CPlayerTextureProxy : public CEntityMaterialProxy
 {
@@ -280,7 +280,9 @@ void CPlayerTextureProxy::OnBind( C_BaseEntity *pEnt )
 		teamFolder = pTeam->GetFolderName();
 		kitFolder = pTeam->GetKitFolderName();
 		shirtNumber = g_PR->GetShirtNumber(pEnt->index);
-		const char *name = g_PR->GetPlayerName(pEnt->index);
+		const char *name = g_PR->GetShirtName(pEnt->index);
+		if (name[0] == '\0')
+			name = g_PR->GetPlayerName(pEnt->index);
 		int teamNumber = pTeam->GetTeamNumber();
 		int teamIndex = teamNumber - TEAM_A;
 		int posIndex = g_PR->GetTeamPosIndex(pEnt->index);
@@ -324,7 +326,9 @@ void CPlayerTextureProxy::OnBind( C_BaseEntity *pEnt )
 				CAppearanceSettingPanel *pPanel = (CAppearanceSettingPanel *)iosOptionsMenu->GetPanel()->GetSettingPanel(SETTING_PANEL_APPEARANCE);
 				pPanel->GetPlayerTeamInfo(&teamFolder, &kitFolder);
 				shirtNumber = pPanel->GetPlayerOutfieldShirtNumber();
-				const char *name = g_PR->GetPlayerName(GetLocalPlayerIndex());
+				const char *name = g_PR->GetShirtName(GetLocalPlayerIndex());
+				if (name[0] == '\0')
+					name = g_PR->GetPlayerName(GetLocalPlayerIndex());
 				CTeamKitInfo *pKitInfo = CTeamInfo::FindTeamByKitName(VarArgs("%s/%s", teamFolder, kitFolder));
 
 				ITexture *pDetailTexture = materials->FindTexture("models/player/default/detail_preview", NULL, true);
@@ -348,13 +352,13 @@ void CPlayerTextureProxy::OnBind( C_BaseEntity *pEnt )
 	char texture[128];
 
 	if (Q_stricmp(m_szTextureType, "shirt") == 0)
-		Q_snprintf(texture, sizeof(texture), "%s/%s/%s/outfield", PLAYERTEXTURE_PATH, teamFolder, kitFolder);
+		Q_snprintf(texture, sizeof(texture), "%s/%s/%s/outfield", TEAMKITS_PATH, teamFolder, kitFolder);
 	else if (Q_stricmp(m_szTextureType, "keepershirt") == 0)
-		Q_snprintf(texture, sizeof(texture), "%s/%s/%s/keeper", PLAYERTEXTURE_PATH, teamFolder, kitFolder);
+		Q_snprintf(texture, sizeof(texture), "%s/%s/%s/keeper", TEAMKITS_PATH, teamFolder, kitFolder);
 	else if (Q_stricmp(m_szTextureType, "socks") == 0)
-		Q_snprintf(texture, sizeof(texture), "%s/%s/%s/socks", PLAYERTEXTURE_PATH, teamFolder, kitFolder);
+		Q_snprintf(texture, sizeof(texture), "%s/%s/%s/socks", TEAMKITS_PATH, teamFolder, kitFolder);
 	else if (Q_stricmp(m_szTextureType, "gksocks") == 0)
-		Q_snprintf(texture, sizeof(texture), "%s/%s/%s/gksocks", PLAYERTEXTURE_PATH, teamFolder, kitFolder);
+		Q_snprintf(texture, sizeof(texture), "%s/%s/%s/gksocks", TEAMKITS_PATH, teamFolder, kitFolder);
 	else if (Q_stricmp(m_szTextureType, "skin") == 0)
 		Q_snprintf(texture, sizeof(texture), "%s", m_pTexture->GetName());
 	else
@@ -441,9 +445,9 @@ void CTextureProxy::OnBind( void *pEntity )
 	char texture[128];
 
 	if (Q_stricmp(m_szTextureType, "hometeamcrest") == 0 && GetGlobalTeam(TEAM_A)->HasCrest())
-		Q_snprintf(texture, sizeof(texture), "%s/%s/teamcrest", PLAYERTEXTURE_PATH, GetGlobalTeam(TEAM_A)->GetFolderName());
+		Q_snprintf(texture, sizeof(texture), "%s/%s/teamcrest", TEAMKITS_PATH, GetGlobalTeam(TEAM_A)->GetFolderName());
 	else if (Q_stricmp(m_szTextureType, "awayteamcrest") == 0 && GetGlobalTeam(TEAM_B)->HasCrest())
-		Q_snprintf(texture, sizeof(texture), "%s/%s/teamcrest", PLAYERTEXTURE_PATH, GetGlobalTeam(TEAM_B)->GetFolderName());
+		Q_snprintf(texture, sizeof(texture), "%s/%s/teamcrest", TEAMKITS_PATH, GetGlobalTeam(TEAM_B)->GetFolderName());
 	else
 		Q_snprintf(texture, sizeof(texture), "%s", m_pDefaultTexture->GetName());
 

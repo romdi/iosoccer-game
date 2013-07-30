@@ -7,6 +7,7 @@
 #include "cbase.h"
 #include "c_team.h"
 #include "sdk_gamerules.h"
+#include "hud_basechat.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -369,61 +370,10 @@ bool C_Team::ContainsPlayer( int iPlayerIndex )
 	return false;
 }
 
-
 void C_Team::ClientThink()
 {
-	//if (m_bKitDownloadFinished)
-	//{
-	//	m_bKitDownloadFinished = false;
-	//	//materials->ReloadTextures();
-	//	CTeamInfo::ParseTeamKits();
-	//	m_pKitInfo = CTeamInfo::FindTeamByKitName(m_szDownloadKitName);
-	//}
 }
 
-//#include "checksum_md5.h"
-//
-//void CC_ReloadTextures(const CCommand &args)
-//{
-//	materials->ReloadTextures();
-//}
-//
-//static ConCommand reloadtextures("reloadtextures", CC_ReloadTextures);
-//
-//#include "curl/curl.h"
-//#include "Filesystem.h"
-//#include "utlbuffer.h"
-//  
-//struct curl_t
-//{
-//	char teamName[MAX_KITNAME_LENGTH];
-//	char kitName[MAX_KITNAME_LENGTH];
-//	int teamNumber;
-//	//CUtlBuffer buf;
-//	FileHandle_t fh;
-//	MD5Context_t md5_ctx;
-//};
-//
-//// Called when curl receives data from the server
-//static size_t rcvData(void *ptr, size_t size, size_t nmemb, curl_t* vars)
-//{
-//	//Msg((char*)ptr); // up to 989 characters each time
-//	//CUtlBuffer buf(0, 0, CUtlBuffer::TEXT_BUFFER);
-//	//vars->buf.Put(ptr, nmemb);
-//	filesystem->Write(ptr, nmemb, vars->fh);
-//	MD5Update(&vars->md5_ctx, (unsigned char *)ptr, nmemb);
-//
-//	//filesystem->WriteFile(VarArgs("materials/models/player_new/foobar/%s", vars->filename), "MOD", buf);
-//	return size * nmemb;
-//}
-//
-////ConVar cl_download_url("cl_download_url", "http://downloads.iosoccer.co.uk/teamkits/");
-//ConVar cl_download_url("cl_download_url", "http://simrai.iosoccer.com/downloads/teamkits");
-//
-//#define KITFILECOUNT 5
-//
-#include "hud_basechat.h"
-//
 void ChatMsg(const char *format, ...)
 {
 	char buffer[256];
@@ -433,107 +383,6 @@ void ChatMsg(const char *format, ...)
 	Msg(buffer);
 	((CBaseHudChat *)gHUD.FindElement("CHudChat"))->Printf(CHAT_FILTER_NONE, buffer);	
 	va_end (args);
-}
-//
-//unsigned DoDownloadTeamKit(void *params)
-//{
-//	curl_t* vars = (curl_t*) params; // always use a struct!
-//
-//	ChatMsg("Downloading %s/%s kit files...\n", vars->teamName, vars->kitName);
-//
-//	//const char *textures[KITFILECOUNT] = { "2.vtf", "3.vtf", "4.vtf", "5.vtf", "6.vtf", "7.vtf", "8.vtf", "9.vtf", "10.vtf", "11.vtf", "gksocks.vtf", "keeper.vtf", "socks.vtf", "teamcrest.vtf", "kitdata.txt" };
-//	const char *textures[KITFILECOUNT] = { "kitdata.txt", "outfield.vtf", "socks.vtf", "keeper.vtf", "gksocks.vtf" };
-//
-//	CURL *curl;
-//	curl = curl_easy_init();
-//	char url[512];
-//	Q_snprintf(url, sizeof(url), "%s/%s/%s/kitdata.txt.gz", cl_download_url.GetString(), vars->teamName, vars->kitName);
-//	curl_easy_setopt(curl, CURLOPT_URL, url);
-//	CURLcode result = curl_easy_perform(curl);
-//	long code;
-//	curl_easy_getinfo(curl, CURLINFO_HTTP_CODE, &code);
-//	curl_easy_cleanup(curl);
-//
-//	if (code >= 400)
-//	{
-//		ChatMsg("%s/%s kit not found on server. Wrong kit name?\n", vars->teamName, vars->kitName);
-//		delete vars;
-//		return -1;
-//	}
-//
-//	char path[512];
-//	Q_snprintf(path, sizeof(path), "materials/models/player/teams/%s/%s", vars->teamName, vars->kitName);
-//	filesystem->CreateDirHierarchy(path, "MOD");
-//
-//	for (int i = 0; i < KITFILECOUNT; i++)
-//	{
-//		char filename[512];
-//		Q_snprintf(filename, sizeof(filename), "materials/models/player/teams/%s/%s/%s", vars->teamName, vars->kitName, textures[i]);
-//		vars->fh = filesystem->Open(filename, "wb", "MOD");
-//
-//		if (!vars->fh)
-//			continue;
-//
-//		memset(&vars->md5_ctx, 0, sizeof(MD5Context_t));
-//		MD5Init(&vars->md5_ctx);
-//
-//		CURL *curl;
-//		curl = curl_easy_init();
-//		char url[512];
-//		Q_snprintf(url, sizeof(url), "%s/%s/%s/%s.gz", cl_download_url.GetString(), vars->teamName, vars->kitName, textures[i]);
-//		curl_easy_setopt(curl, CURLOPT_URL, url);
-//		curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, "gzip");
-//		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, rcvData);
-//		curl_easy_setopt(curl, CURLOPT_WRITEDATA, vars);
-//		CURLcode result = curl_easy_perform(curl);
-//		long code;
-//		curl_easy_getinfo(curl, CURLINFO_HTTP_CODE, &code);
-//		curl_easy_cleanup(curl);
-//
-//		filesystem->Close(vars->fh);
-//
-//		if (code >= 400)
-//		{
-//			ChatMsg("%s kit file %s not found on server\n", vars->kitName, textures[i]);
-//			filesystem->RemoveFile(filename, "MOD");
-//		}
-//		else
-//		{
-//			unsigned char digest[MD5_DIGEST_LENGTH];
-//			MD5Final(digest, &vars->md5_ctx);
-//			char hexDigest[MD5_DIGEST_LENGTH * 2 + 1];
-//
-//			for (int j = 0; j < MD5_DIGEST_LENGTH; j++)
-//				Q_snprintf(&hexDigest[j * 2], sizeof(hexDigest) - (j * 2), "%02X", digest[j]);
-//
-//			Q_snprintf(filename, sizeof(filename), "materials/models/player/teams/%s/%s/%s-%s.md5", vars->teamName, vars->kitName, textures[i], hexDigest);
-//			FileHandle_t md5file = filesystem->Open(filename, "w", "MOD");
-//			filesystem->Close(md5file);
-//
-//			ChatMsg("Downloaded %s/%s kit file %s (%d/%d)\n", vars->teamName, vars->kitName, textures[i], i + 1, KITFILECOUNT);
-//		}
-//	}
-//
-//	ChatMsg("Downloaded all %s/%s kit files\nApplying %s/%s kit...\n", vars->teamName, vars->kitName, vars->teamName, vars->kitName);
-//
-//	//Q_strncpy(GetGlobalTeam(vars->teamNumber)->m_szDownloadKitName, vars->kitName, sizeof(GetGlobalTeam(vars->teamNumber)->m_szDownloadKitName));
-//	GetGlobalTeam(vars->teamNumber)->m_bKitDownloadFinished = true;
-//
-//	// clean up the memory
-//	delete vars;
-//
-//	return 0;
-//}
-
-void C_Team::DownloadTeamKit(const char *pKitName, int teamNumber)
-{
-	//curl_t *vars = new curl_t;
-	//char fullName[MAX_KITNAME_LENGTH];
-	//Q_strncpy(fullName, pKitName, sizeof(fullName));
-	//Q_strncpy(vars->teamName, strtok(fullName, "/"), sizeof(vars->kitName));
-	//Q_strncpy(vars->kitName, strtok(NULL, "/"), sizeof(vars->kitName));
-	//vars->teamNumber = teamNumber;
-	//CreateSimpleThread(DoDownloadTeamKit, vars);
 }
 
 
@@ -559,10 +408,6 @@ void C_Team::SetKitName(const char *pKitName)
 		else
 		{
 			//ChatMsg("%s kit not found on disk\n", m_szServerKitName);
-			//m_pTeamKitInfo = GetTeamKitInfoFromHandle(LookupTeamKitInfoSlot(GetTeamNumber() == TEAM_A ? "germany" : "brazil"));
-			//m_pKitInfo = CTeamInfo::m_TeamInfo[0]->m_TeamKitInfo[0];
-			//Q_strncpy(m_szDownloadKitName, m_szServerKitName, MAX_KITNAME_LENGTH);
-			//DownloadTeamKit(m_szServerKitName, GetTeamNumber());
 		}
 	}
 }

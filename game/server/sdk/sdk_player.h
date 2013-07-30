@@ -458,6 +458,9 @@ public:
 	const char			*GetClubName();
 	void				SetClubName(const char *name);
 
+	const char			*GetShirtName();
+	void				SetShirtName(const char *name);
+
 	int					GetCountryIndex() { return m_nCountryIndex; }
 	void				SetCountryIndex(int index) { m_nCountryIndex = index; } 
 	bool				IsLegacySideCurl() { return m_bLegacySideCurl; } 
@@ -483,6 +486,9 @@ public:
 
 	char				m_szClubName[MAX_CLUBNAME_LENGTH];
 	bool				m_bClubNameChanged;
+
+	char				m_szShirtName[MAX_PLAYER_NAME_LENGTH];
+	bool				m_bShirtNameChanged;
 
 	int					m_nCountryIndex;
 

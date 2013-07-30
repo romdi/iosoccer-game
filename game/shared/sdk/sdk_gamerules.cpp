@@ -2306,6 +2306,8 @@ void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 		
 		pPl->SetClubName(pszClubName);
 	}
+
+	pPl->SetShirtName(engine->GetClientConVarValue(pPl->entindex(), "shirtname"));
 }
 
 void CSDKGameRules::EnableShield(int type, int team, const Vector &pos)
