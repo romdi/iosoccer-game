@@ -72,7 +72,7 @@
 
 
 
-#define SDK_GAME_DESCRIPTION	"IOS:S"
+#define SDK_GAME_DESCRIPTION	"IOSoccer Beta"
 
 //================================================================================
 // Most elements below here are specific to the options above.

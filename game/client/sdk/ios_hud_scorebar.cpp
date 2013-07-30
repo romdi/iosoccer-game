@@ -648,7 +648,7 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 	{
 		FLASHWINFO flashInfo;
 		flashInfo.cbSize = sizeof(FLASHWINFO);
-		flashInfo.hwnd = FindWindow(NULL, "IOS Source Dev");
+		flashInfo.hwnd = FindWindow(NULL, "IOSoccer Beta");
 		flashInfo.dwFlags = FLASHW_TRAY | FLASHW_TIMERNOFG;
 		flashInfo.uCount = 3;
 		flashInfo.dwTimeout = 0;
