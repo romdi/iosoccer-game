@@ -226,9 +226,9 @@ private:
 	void			HandleFoul();
 	bool			PlayersAtTargetPos();
 	bool			CanTouchBallXY();
-	bool			CheckFoul();
+	bool			CheckFoul(bool canShootBall, const Vector &localDirToBall);
 	void			TriggerFoul(foul_type_t type, Vector pos, CSDKPlayer *pFoulingPl, CSDKPlayer *pFouledPl = NULL);
-	CSDKPlayer		*FindNearestPlayer(int team = TEAM_INVALID, int posFlags = FL_POS_FIELD, bool checkIfShooting = false, int ignoredPlayerBits = 0);
+	CSDKPlayer		*FindNearestPlayer(int team = TEAM_INVALID, int posFlags = FL_POS_FIELD, bool checkIfShooting = false, int ignoredPlayerBits = 0, float radius = -1);
 	bool			DoBodyPartAction();
 	bool			DoSlideAction();
 	bool			CheckKeeperCatch();

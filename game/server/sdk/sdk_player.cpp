@@ -317,7 +317,8 @@ void CSDKPlayer::PreThink(void)
 	{
 		bool isActive = ((m_nButtons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT | IN_JUMP | IN_DUCK)) != 0);
 
-		if (isActive)
+		// Bots are never away
+		if (isActive || IsBot())
 		{
 			m_flLastMoveTime = gpGlobals->curtime;
 			m_bIsAway = false;
@@ -1546,7 +1547,12 @@ void CSDKPlayer::ResetFlags()
 
 bool CSDKPlayer::IsNormalshooting()
 {
-	return ((m_nButtons & IN_ATTACK) != 0);
+	return ((m_nButtons & IN_ATTACK) != 0
+		|| m_Shared.GetAnimEvent() == PLAYERANIMEVENT_SLIDE
+		|| m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_LEFT
+		|| m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT
+		|| m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_FORWARD
+		|| m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD);
 }
 
 bool CSDKPlayer::IsPowershooting()

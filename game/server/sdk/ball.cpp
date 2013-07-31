@@ -33,7 +33,8 @@ ConVar sv_ball_inertia( "sv_ball_inertia", "1.5", FCVAR_NOTIFY | FCVAR_DEVELOPME
 ConVar sv_ball_drag_enabled("sv_ball_drag_enabled", "1", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
 
 ConVar sv_ball_spin( "sv_ball_spin", "500", FCVAR_NOTIFY );
-ConVar sv_ball_defaultspin( "sv_ball_defaultspin", "10000", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
+ConVar sv_ball_spin_exponent( "sv_ball_spin_exponent", "0.75", FCVAR_NOTIFY );
+ConVar sv_ball_defaultspin( "sv_ball_defaultspin", "150", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
 ConVar sv_ball_topspin_coeff( "sv_ball_topspin_coeff", "0.1", FCVAR_NOTIFY );
 ConVar sv_ball_backspin_coeff( "sv_ball_backspin_coeff", "0.25", FCVAR_NOTIFY );
 ConVar sv_ball_jump_topspin_enabled("sv_ball_jump_topspin_enabled", "1", FCVAR_NOTIFY );
@@ -46,10 +47,15 @@ ConVar sv_ball_standing_cone( "sv_ball_standing_cone", "360", FCVAR_NOTIFY );
 ConVar sv_ball_standing_shift( "sv_ball_standing_shift", "0", FCVAR_NOTIFY );
 
 ConVar sv_ball_slideaffectedbydelay( "sv_ball_slideaffectedbydelay", "1", FCVAR_NOTIFY );
+
 ConVar sv_ball_slidesidereach_ball( "sv_ball_slidesidereach_ball", "50", FCVAR_NOTIFY );
 ConVar sv_ball_slideforwardreach_ball( "sv_ball_slideforwardreach_ball", "60", FCVAR_NOTIFY );
+ConVar sv_ball_slidebackwardreach_ball( "sv_ball_slidebackwardreach_ball", "20", FCVAR_NOTIFY );
+
 ConVar sv_ball_slidesidereach_foul( "sv_ball_slidesidereach_foul", "25", FCVAR_NOTIFY );
 ConVar sv_ball_slideforwardreach_foul( "sv_ball_slideforwardreach_foul", "60", FCVAR_NOTIFY );
+ConVar sv_ball_slidebackwardreach_foul( "sv_ball_slidebackwardreach_foul", "20", FCVAR_NOTIFY );
+
 ConVar sv_ball_slidesidespeedcoeff("sv_ball_slidesidespeedcoeff", "0.66", FCVAR_NOTIFY); 
 ConVar sv_ball_slidezstart("sv_ball_slidezstart", "-50", FCVAR_NOTIFY); 
 ConVar sv_ball_slidezend("sv_ball_slidezend", "40", FCVAR_NOTIFY); 
@@ -139,10 +145,7 @@ ConVar sv_ball_powerdivingheader_strength("sv_ball_powerdivingheader_strength", 
 ConVar sv_ball_chargeddivingheader_minstrength("sv_ball_chargeddivingheader_minstrength", "600", FCVAR_NOTIFY); 
 ConVar sv_ball_chargeddivingheader_maxstrength("sv_ball_chargeddivingheader_maxstrength", "1200", FCVAR_NOTIFY);
 
-ConVar sv_ball_normalslide_strength("sv_ball_normalslide_strength", "700", FCVAR_NOTIFY); 
-ConVar sv_ball_powerslide_strength("sv_ball_powerslide_strength", "900", FCVAR_NOTIFY); 
-ConVar sv_ball_chargedslide_minstrength("sv_ball_chargedslide_minstrength", "600", FCVAR_NOTIFY); 
-ConVar sv_ball_chargedslide_maxstrength("sv_ball_chargedslide_maxstrength", "1100", FCVAR_NOTIFY);
+ConVar sv_ball_slide_strength("sv_ball_slide_strength", "1000", FCVAR_NOTIFY); 
 
 ConVar sv_ball_penaltyshot_maxstrength("sv_ball_penaltyshot_maxstrength", "1200", FCVAR_NOTIFY);
 
@@ -190,8 +193,8 @@ ConVar sv_ball_bodypos_keeperarms_end("sv_ball_bodypos_keeperarms_end", "105", F
 
 ConVar sv_ball_bodypos_keeperhands("sv_ball_bodypos_keeperhands", "40", FCVAR_NOTIFY);
 
-ConVar sv_ball_yellowcardproximity_forward("sv_ball_yellowcardproximity_forward", "0.5", FCVAR_NOTIFY);
-ConVar sv_ball_yellowcardproximity_backward("sv_ball_yellowcardproximity_backward", "0.25", FCVAR_NOTIFY);
+ConVar sv_ball_yellowcardballdist_forward("sv_ball_yellowcardballdist_forward", "50", FCVAR_NOTIFY);
+ConVar sv_ball_yellowcardballdist_backward("sv_ball_yellowcardballdist_backward", "25", FCVAR_NOTIFY);
 ConVar sv_ball_goalreplay_count("sv_ball_goalreplay_count", "2", FCVAR_NOTIFY);
 ConVar sv_ball_goalreplay_delay("sv_ball_goalreplay_delay", "1", FCVAR_NOTIFY);
 ConVar sv_ball_deflectioncoeff("sv_ball_deflectioncoeff", "0.5", FCVAR_NOTIFY);
@@ -216,6 +219,8 @@ ConVar sv_ball_nonnormalshotsblocktime_freekick("sv_ball_nonnormalshotsblocktime
 ConVar sv_ball_nonnormalshotsblocktime_corner("sv_ball_nonnormalshotsblocktime_corner", "4.0", FCVAR_NOTIFY);
 ConVar sv_ball_shotsblocktime_penalty("sv_ball_shotsblocktime_penalty", "4.0", FCVAR_NOTIFY);
 ConVar sv_ball_blockpowershot("sv_ball_blockpowershot", "1", FCVAR_NOTIFY);
+
+ConVar sv_ball_maxcheckdist("sv_ball_maxcheckdist", "200", FCVAR_NOTIFY);
 
 
 void OnBallSkinChange(IConVar *var, const char *pOldValue, float flOldValue)
@@ -649,7 +654,7 @@ void CBall::VPhysicsCollision( int index, gamevcollisionevent_t	*pEvent	)
 	BaseClass::VPhysicsCollision( index, pEvent );
 }
 
-CSDKPlayer *CBall::FindNearestPlayer(int team /*= TEAM_INVALID*/, int posFlags /*= FL_POS_FIELD*/, bool checkIfShooting /*= false*/, int ignoredPlayerBits /*= 0*/)
+CSDKPlayer *CBall::FindNearestPlayer(int team /*= TEAM_INVALID*/, int posFlags /*= FL_POS_FIELD*/, bool checkIfShooting /*= false*/, int ignoredPlayerBits /*= 0*/, float radius /*= -1*/)
 {
 	CSDKPlayer *pNearest = NULL;
 	float shortestDist = FLT_MAX;
@@ -697,6 +702,9 @@ CSDKPlayer *CBall::FindNearestPlayer(int team /*= TEAM_INVALID*/, int posFlags /
 			continue;
 
 		if (checkIfShooting && (!pPlayer->IsShooting() || pPlayer->m_flNextShot > gpGlobals->curtime))
+			continue;
+
+		if (radius != -1 && (pPlayer->GetLocalOrigin() - m_vPos).Length2DSqr() > Sqr(radius))
 			continue;
 
 		Vector dir = m_vPos - pPlayer->GetLocalOrigin();
@@ -1183,30 +1191,37 @@ void CBall::State_NORMAL_Think()
 	if (m_eNextState == BALL_STATE_GOAL)
 		return;
 
-	for (int ignoredPlayerBits = 0;;)
+	if (SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES)
 	{
-		if (SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES)
-		{
-			if (m_ePenaltyState == PENALTY_KICKED)
-				m_pPl = FindNearestPlayer(m_nFoulingTeam, FL_POS_KEEPER, true);
-			else
-				m_pPl = NULL;
-		}
+		if (m_ePenaltyState == PENALTY_KICKED)
+			m_pPl = FindNearestPlayer(m_nFoulingTeam, FL_POS_KEEPER, true);
 		else
-			m_pPl = FindNearestPlayer(TEAM_INVALID, FL_POS_ANY, true, ignoredPlayerBits);
+			m_pPl = NULL;
 
 		if (!m_pPl)
 			return;
 
 		UpdateCarrier();
+		DoBodyPartAction();
+	}
+	else
+	{
+		for (int ignoredPlayerBits = 0;;)
+		{
+			m_pPl = FindNearestPlayer(TEAM_INVALID, FL_POS_ANY, true, ignoredPlayerBits, sv_ball_maxcheckdist.GetFloat());
 
-		if (DoBodyPartAction())
-			break;
+			if (!m_pPl)
+				return;
 
-		if (SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES)
-			break;
+			UpdateCarrier();
 
-		ignoredPlayerBits |= (1 << (m_pPl->entindex() - 1));
+			// The current player was able to perform an action, so exit the loop
+			if (DoBodyPartAction())
+				break;
+
+			// Skip the current player for further checks
+			ignoredPlayerBits |= (1 << (m_pPl->entindex() - 1));
+		}
 	}
 }
 
@@ -1997,7 +2012,7 @@ bool CBall::CanTouchBallXY()
 	return false;
 }
 
-bool CBall::CheckFoul()
+bool CBall::CheckFoul(bool canShootBall, const Vector &localDirToBall)
 {
 	for (int i = 1; i <= gpGlobals->maxClients; i++) 
 	{
@@ -2023,10 +2038,15 @@ bool CBall::CheckFoul()
 
 		dirToPl.z = 0;
 		dirToPl.NormalizeInPlace();
-		if (localDirToPl.x < 0 || localDirToPl.x > sv_ball_slideforwardreach_foul.GetInt() || abs(localDirToPl.y) > sv_ball_slidesidereach_foul.GetInt())		
+
+		// Can't reach the other player
+		if (localDirToPl.x < -sv_ball_slidebackwardreach_foul.GetInt()
+			|| localDirToPl.x > sv_ball_slideforwardreach_foul.GetInt()
+			|| abs(localDirToPl.y) > sv_ball_slidesidereach_foul.GetInt())		
 			continue;
 
-		if (distToPl >= (m_vPos - m_vPlPos).Length2D())
+		// Can shoot the ball and ball is closer to the player than the opponent
+		if (canShootBall && localDirToBall.x <= localDirToPl.x)
 			continue;
 
 		// It's a foul
@@ -2053,15 +2073,12 @@ bool CBall::CheckFoul()
 			}
 		}
 
-
-		float proximity = clamp(1 - abs(localDirToPl.y) / sv_ball_slidesidereach_foul.GetFloat(), 0.0f, 1.0f);
-
 		foul_type_t foulType;
 
 		if (isCloseToOwnGoal && teammatesCloserToGoalCount <= 1)
 			foulType = FOUL_NORMAL_RED_CARD;
-		else if (anim == PLAYERANIMEVENT_TACKLED_FORWARD && proximity >= sv_ball_yellowcardproximity_forward.GetFloat() ||
-				 anim == PLAYERANIMEVENT_TACKLED_BACKWARD && proximity >= sv_ball_yellowcardproximity_backward.GetFloat())
+		else if (anim == PLAYERANIMEVENT_TACKLED_FORWARD && localDirToBall.Length2DSqr() >= Sqr(sv_ball_yellowcardballdist_forward.GetFloat()) ||
+				 anim == PLAYERANIMEVENT_TACKLED_BACKWARD && localDirToBall.Length2DSqr() >= Sqr(sv_ball_yellowcardballdist_backward.GetFloat()))
 			foulType = FOUL_NORMAL_YELLOW_CARD;
 		else
 			foulType = FOUL_NORMAL_NO_CARD;
@@ -2258,47 +2275,30 @@ bool CBall::DoSlideAction()
 
 	bool canShootBall = zDist < sv_ball_slidezend.GetFloat()
 		&& zDist >= sv_ball_slidezstart.GetFloat()
-		&& localDirToBall.x >= 0
+		&& localDirToBall.x >= -sv_ball_slidebackwardreach_ball.GetFloat()
 		&& localDirToBall.x <= sv_ball_slideforwardreach_ball.GetFloat()
 		&& abs(localDirToBall.y) <= sv_ball_slidesidereach_ball.GetFloat();
 
-	if (!canShootBall)
-		return false;
+	//if (!canShootBall)
+	//	return false;
 
 	if (!SDKGameRules()->IsIntermissionState() && !m_bHasQueuedState)
 	{
-		if (CheckFoul())
+		if (CheckFoul(canShootBall, localDirToBall))
 			return true;
 	}
+	
+	if (!canShootBall)
+		return false;
 
 	float coeff = clamp(m_vPlForwardVel2D.Length2D() / mp_slidespeed.GetFloat(), 0.0f, 1.0f);
-
-	float shotStrength;
-
-	if (m_pPl->IsNormalshooting())
-		shotStrength = GetNormalshotStrength(coeff, sv_ball_normalslide_strength.GetInt());
-	else if (m_pPl->IsPowershooting())
-		shotStrength = GetPowershotStrength(coeff, sv_ball_powerslide_strength.GetInt());
-	else
-		shotStrength = GetChargedshotStrength(coeff, sv_ball_chargedslide_minstrength.GetInt(), sv_ball_chargedslide_maxstrength.GetInt());
 
 	Vector forward;
 	AngleVectors(QAngle(-15, m_aPlAng[YAW], 0), &forward, NULL, NULL);
 
-	Vector ballVel = forward * shotStrength;
+	Vector ballVel = forward * GetNormalshotStrength(coeff, sv_ball_slide_strength.GetInt());
 
-	if (m_pPl->m_nButtons & IN_MOVELEFT)
-	{
-		VectorYawRotate(ballVel, 45, ballVel);
-		ballVel *= sv_ball_slidesidespeedcoeff.GetFloat();
-	}
-	else if (m_pPl->m_nButtons & IN_MOVERIGHT)
-	{
-		VectorYawRotate(ballVel, -45, ballVel);
-		ballVel *= sv_ball_slidesidespeedcoeff.GetFloat();
-	}
-
-	SetVel(ballVel, 0, BODY_PART_FEET, false, true, true);
+	SetVel(ballVel, -1, BODY_PART_FEET, false, true, true);
 
 	if (!SDKGameRules()->IsIntermissionState() && State_Get() == BALL_STATE_NORMAL && !HasQueuedState())
 		m_pPl->AddSlidingTackleCompleted();
@@ -2684,9 +2684,11 @@ AngularImpulse CBall::CalcSpin(float coeff, bool applyTopspin)
 	Vector sideRot = vec3_origin;
 	float sideSpin = 0;
 
+	float speedCoeff = pow(sin(RemapValClamped(m_vVel.Length(), sv_ball_dynamicshotdelay_minshotstrength.GetInt(), sv_ball_dynamicshotdelay_maxshotstrength.GetInt(), 0.0f, 1.0f) * M_PI), (double)sv_ball_spin_exponent.GetFloat());
+
 	if (coeff > 0)
 	{
-		sideSpin = m_vVel.Length() * sv_ball_spin.GetInt() * coeff / 100.0f;
+		sideSpin = speedCoeff * sv_ball_spin.GetInt() * coeff;
 
 		if ((m_pPl->m_nButtons & IN_MOVELEFT) && (!(m_pPl->m_nButtons & IN_MOVERIGHT) || (mp_sidemove_override.GetBool() || mp_curl_override.GetBool()) && m_pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVERIGHT)) 
 		{
@@ -2704,7 +2706,7 @@ AngularImpulse CBall::CalcSpin(float coeff, bool applyTopspin)
 
 	if (coeff > 0)
 	{
-		backTopSpin = m_vVel.Length() * sv_ball_spin.GetInt() * coeff / 100.0f;
+		backTopSpin = speedCoeff * sv_ball_spin.GetInt() * coeff;
 
 		if (!sv_ball_jump_topspin_enabled.GetBool() || m_pPl->GetGroundEntity() && !(m_pPl->m_nButtons & IN_JUMP) || !applyTopspin)
 		{
@@ -2726,7 +2728,7 @@ AngularImpulse CBall::CalcSpin(float coeff, bool applyTopspin)
 		for (int i = 0; i < 3; i++)
 		{
 			// Add some random rotation if there isn't any side, back or top spin, since a non-rotating ball looks unnatural
-			randRot[i] = sv_ball_defaultspin.GetInt() / 100.0f * (g_IOSRand.RandomInt(0, 1) == 1 ? 1 : -1);
+			randRot[i] = sv_ball_defaultspin.GetInt() * (g_IOSRand.RandomInt(0, 1) == 1 ? 1 : -1);
 		}
 	}
 
