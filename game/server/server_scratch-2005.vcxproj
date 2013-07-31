@@ -65,8 +65,8 @@
     </PreBuildEvent>
     <CustomBuildStep>
       <Message>Copying server.dll to bin folder</Message>
-      <Command>copy "$(TargetDir)"server.dll "d:\games\steam\steamapps\SourceMods\ios_dev\bin\server.dll"</Command>
-      <Outputs>d:\games\steam\steamapps\SourceMods\ios_dev\bin\server.dll;%(Outputs)</Outputs>
+      <Command>copy "$(TargetDir)"server.dll "d:\games\steam\steamapps\SourceMods\iosoccer\bin\server.dll"</Command>
+      <Outputs>d:\games\steam\steamapps\SourceMods\iosoccer\bin\server.dll;%(Outputs)</Outputs>
       <Inputs>$(TargetPath)</Inputs>
     </CustomBuildStep>
     <ClCompile>
@@ -143,9 +143,9 @@
     </PreBuildEvent>
     <CustomBuildStep>
       <Message>Copying server.dll and server.pdb to bin folder</Message>
-      <Command>copy "$(TargetDir)"server.dll "d:\games\steam\steamapps\SourceMods\ios_dev\bin\server.dll"
-if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "d:\games\steam\steamapps\SourceMods\ios_dev\bin\server.pdb"</Command>
-      <Outputs>d:\games\steam\steamapps\SourceMods\ios_dev\bin\server.dll;d:\games\steam\steamapps\SourceMods\ios_dev\bin\server.pdb;%(Outputs)</Outputs>
+      <Command>copy "$(TargetDir)"server.dll "d:\games\steam\steamapps\SourceMods\iosoccer\bin\server.dll"
+if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "d:\games\steam\steamapps\SourceMods\iosoccer\bin\server.pdb"</Command>
+      <Outputs>d:\games\steam\steamapps\SourceMods\iosoccer\bin\server.dll;d:\games\steam\steamapps\SourceMods\iosoccer\bin\server.pdb;%(Outputs)</Outputs>
       <Inputs>$(TargetPath)</Inputs>
     </CustomBuildStep>
     <ClCompile>
