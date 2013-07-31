@@ -1734,7 +1734,7 @@ void CSDKPlayer::SetPlayerName(const char *name)
 	trimstr(sanitizedName);
 
 	if (sanitizedName[0] == '\0')
-		Q_strncpy(sanitizedName, "Arthur", sizeof(sanitizedName));
+		Q_strncpy(sanitizedName, "unnamed", sizeof(sanitizedName));
 
 	if (!Q_strcmp(sanitizedName, m_szPlayerName))
 		return;

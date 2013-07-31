@@ -33,6 +33,7 @@
 #include "c_sdk_player.h"
 #include "c_weapon__stubs.h"		//Tony; add stubs
 #include "ios_teamkit_parse.h"
+#include "steam/steam_api.h"
 
 class CHudChat;
 
@@ -83,6 +84,9 @@ void CSDKModeManager::Init()
 
 	CTeamInfo::DownloadTeamKits();
 	//CTeamInfo::ParseTeamKits();
+
+	if (g_pCVar->FindVar("playername")->GetString()[0] == '\0')
+		g_pCVar->FindVar("playername")->SetValue(steamapicontext->SteamFriends()->GetPersonaName());
 }
 
 void CSDKModeManager::LevelInit( const char *newmap )

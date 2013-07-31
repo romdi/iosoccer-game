@@ -405,9 +405,6 @@ void CNetworkSettingPanel::Save()
 
 void CNetworkSettingPanel::Load()
 {
-	if (Q_strlen(g_pCVar->FindVar("playername")->GetString()) == 0)
-		g_pCVar->FindVar("playername")->SetValue(g_pCVar->FindVar("name")->GetString());
-
 	m_pPlayerNameText->SetText(g_pCVar->FindVar("playername")->GetString());
 	m_pCountryNameList->ActivateItemByRow(g_pCVar->FindVar("fallbackcountryindex")->GetInt());
 	m_pClubNameText->SetText(g_pCVar->FindVar("clubname")->GetString());

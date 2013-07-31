@@ -34,10 +34,16 @@ ConVar cl_ragdoll_physics_enable( "cl_ragdoll_physics_enable", "1", 0, "Enable/d
 #if defined( CSDKPlayer )
 	#undef CSDKPlayer
 #endif
- 
-ConVar playername("playername", "", FCVAR_USERINFO | FCVAR_ARCHIVE, "Your name");
+
+void OnPlayerNameChange(IConVar *var, const char *pOldValue, float flOldValue)
+{
+	engine->ClientCmd(VarArgs("setinfo name \"%s\"", ((ConVar *)var)->GetString()));
+}
+
+ConVar playername("playername", "", FCVAR_USERINFO | FCVAR_ARCHIVE, "Your name", &OnPlayerNameChange);
+
 ConVar shirtname("shirtname", "", FCVAR_USERINFO | FCVAR_ARCHIVE, "Your shirt name");
-ConVar clubname("clubname", "Team Arthur", FCVAR_USERINFO | FCVAR_ARCHIVE, "The name of your club");
+ConVar clubname("clubname", "", FCVAR_USERINFO | FCVAR_ARCHIVE, "The name of your club");
 ConVar geoipcountryindex("geoipcountryindex", "0", FCVAR_USERINFO | FCVAR_ARCHIVE | FCVAR_HIDDEN, "The name of your country");
 ConVar fallbackcountryindex("fallbackcountryindex", "0", FCVAR_USERINFO | FCVAR_ARCHIVE, "The name of your country");
 ConVar preferredoutfieldshirtnumber("preferredoutfieldshirtnumber", "2", FCVAR_USERINFO | FCVAR_ARCHIVE, "Your preferred outfield shirt number");
