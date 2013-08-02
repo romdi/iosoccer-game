@@ -139,6 +139,7 @@ enum MessageMode_t
 #define HUD_PRINTCONSOLE	2
 #define HUD_PRINTTALK		3
 #define HUD_PRINTCENTER		4
+#define HUD_PRINTCONSOLE_NO_NEWLINE	5
 
 //===================================================================================================================
 // Close caption flags

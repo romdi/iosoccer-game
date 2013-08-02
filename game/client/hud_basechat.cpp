@@ -896,6 +896,12 @@ void CBaseHudChat::MsgFunc_TextMsg( bf_read &msg )
 		}
 		Msg( "%s", ConvertCRtoNL( szString ) );
 		break;
+
+	case HUD_PRINTCONSOLE_NO_NEWLINE:
+		g_pVGuiLocalize->ConstructString( outputBuf, sizeof(outputBuf), szBuf[0], 4, szBuf[1], szBuf[2], szBuf[3], szBuf[4] );
+		g_pVGuiLocalize->ConvertUnicodeToANSI( outputBuf, szString, sizeof(szString) );
+		Msg( "%s", ConvertCRtoNL( szString ) );
+		break;
 	}
 }
 

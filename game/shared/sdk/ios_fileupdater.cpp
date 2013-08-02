@@ -7,7 +7,8 @@
 #include "threadtools.h"
 #include "ios_teamkit_parse.h"
 
-ConVar cl_download_url("cl_download_url", "http://simrai.iosoccer.com/downloads/clientfiles/iosoccer");
+ConVar cl_clientfiles_download_url("cl_clientfiles_download_url", "http://simrai.iosoccer.com/downloads/clientfiles/iosoccer");
+ConVar sv_serverfiles_download_url("sv_serverfiles_download_url", "http://simrai.iosoccer.com/downloads/serverfiles/iosoccer");
 
 struct FileInfo
 {
@@ -58,6 +59,14 @@ void GetFileList(char *fileListString, CUtlVector<FileInfo> &fileList)
 
 unsigned PerformUpdate(void *params)
 {
+	const char *downloadUrl;
+
+#ifdef CLIENT_DLL
+	downloadUrl = cl_clientfiles_download_url.GetString();
+#else
+	downloadUrl = sv_serverfiles_download_url.GetString();
+#endif
+
 	IOSUpdateInfo *pUpdateInfo = (IOSUpdateInfo *)params;
 
 	const char *fileListPath = "filelist.txt";
@@ -82,7 +91,7 @@ unsigned PerformUpdate(void *params)
 	CURL *curl;
 	curl = curl_easy_init();
 	char url[512];
-	Q_snprintf(url, sizeof(url), "%s/filelist.txt.gz", cl_download_url.GetString());
+	Q_snprintf(url, sizeof(url), "%s/filelist.txt.gz", downloadUrl);
 	curl_easy_setopt(curl, CURLOPT_URL, url);
 	curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, "gzip");
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, rcvFileListData);
@@ -96,7 +105,7 @@ unsigned PerformUpdate(void *params)
 	{
 		pUpdateInfo->connectionError = true;
 		pUpdateInfo->filesToUpdateCount = 0;
-		return 1;
+		return CFileUpdater::UpdateFinished(pUpdateInfo);
 	}
 
 	char *serverFileListString = new char[buffer.Size() + 1];
@@ -131,7 +140,9 @@ unsigned PerformUpdate(void *params)
 	pUpdateInfo->filesToUpdateCount = serverFileList.Count();
 
 	if (pUpdateInfo->checkOnly || pUpdateInfo->filesToUpdateCount == 0)
-		return 0;
+	{
+		return CFileUpdater::UpdateFinished(pUpdateInfo);
+	}
 
 	FileHandle_t fh = filesystem->Open(fileListPath, "w", "MOD");
 
@@ -180,7 +191,7 @@ unsigned PerformUpdate(void *params)
 		MD5Init(&curlData.md5Ctx);
 
 		curl = curl_easy_init();
-		Q_snprintf(url, sizeof(url), "%s/%s.gz", cl_download_url.GetString(), serverFileList[i].path);
+		Q_snprintf(url, sizeof(url), "%s/%s.gz", downloadUrl, serverFileList[i].path);
 		curl_easy_setopt(curl, CURLOPT_URL, url);
 		curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, "gzip");
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, rcvKitData);
@@ -205,16 +216,42 @@ unsigned PerformUpdate(void *params)
 
 	filesystem->Close(fh);
 
-	CFileUpdater::UpdateFinished();
-
-	return 0;
+	return CFileUpdater::UpdateFinished(pUpdateInfo);
 }
 
 void CFileUpdater::UpdateFiles(IOSUpdateInfo *pUpdateInfo)
 {
+#ifdef CLIENT_DLL
 	PerformUpdate(pUpdateInfo);
+#else
+	CreateSimpleThread(PerformUpdate, pUpdateInfo);
+#endif
 }
 
-void CFileUpdater::UpdateFinished()
+int CFileUpdater::UpdateFinished(IOSUpdateInfo *pUpdateInfo)
 {
+#ifdef CLIENT_DLL
+	return 0;
+#else
+	const char *msg;
+
+	if (pUpdateInfo->connectionError)
+		msg = "Couldn't connect to the update server.";
+	else if (pUpdateInfo->filesToUpdateCount == 0)
+		msg = "All server files are up to date";
+	else
+	{
+		if (pUpdateInfo->restartRequired)
+			msg = "Server files successfully updated. A server restart is required to use the new binaries.";
+		else
+			msg = "Server files successfully updated.";
+	}
+
+	if (pUpdateInfo->pClient)
+		ClientPrint(pUpdateInfo->pClient, HUD_PRINTCONSOLE, msg);
+
+	delete pUpdateInfo;
+
+	return 0;
+#endif
 }

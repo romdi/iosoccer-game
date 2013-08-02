@@ -407,7 +407,7 @@ void C_Team::SetKitName(const char *pKitName)
 		}
 		else
 		{
-			//ChatMsg("%s kit not found on disk\n", m_szServerKitName);
+			ChatMsg("%s kit not found on disk. Try updating your files.\n", m_szServerKitName);
 		}
 	}
 }

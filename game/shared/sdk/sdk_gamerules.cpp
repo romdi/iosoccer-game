@@ -39,6 +39,7 @@ extern void Bot_RunAll( void );
 	#include "ios_replaymanager.h"
 	#include <time.h>
 	#include "ios_requiredclientversion.h"
+	#include "ios_fileupdater.h"
 #endif
 
 
@@ -793,7 +794,6 @@ void CSDKGameRules::ChooseTeamNames(bool clubTeams, bool nationalTeams, bool rea
 
 	if (homeTeam[0] != '\0' && awayTeam[0] != '\0')
 	{
-		mp_teamkits.SetValue(UTIL_VarArgs("%s,%s", homeTeam, awayTeam));
 		IOS_LogPrintf("Setting random teams: %s against %s\n", homeTeam, awayTeam);
 		GetGlobalTeam(TEAM_A)->SetKitName(homeTeam);
 		GetGlobalTeam(TEAM_B)->SetKitName(awayTeam);
@@ -2157,71 +2157,109 @@ void OnTeamnamesChange(IConVar *var, const char *pOldValue, float flOldValue)
 
 ConVar mp_teamnames("mp_teamnames", "", FCVAR_NOTIFY, "Override team names. Example: mp_teamnames \"FCB:FC Barcelona,RMA:Real Madrid\"", &OnTeamnamesChange);
 
-void OnTeamkitsChange(IConVar *var, const char *pOldValue, float flOldValue)
+
+void CC_SV_UpdateServer(const CCommand &args)
 {
-	if (!SDKGameRules())
-		return;
+	if (!UTIL_IsCommandIssuedByServerAdmin())
+        return;
 
-	char val[256];
-	Q_strncpy(val, ((ConVar*)var)->GetString(), sizeof(val));
+	ClientPrint(UTIL_GetCommandClient(), HUD_PRINTCONSOLE, "Updating all server files. Please wait...");
 
-	if (val[0] == 0)
-		return;
-
-	char homeString[128] = {};
-	char awayString[128] = {};
-	char *result = NULL;
-
-	result = strtok(val, ",");
-
-	if (result != NULL)
-		Q_strncpy(homeString, result, sizeof(homeString));
-
-	if (homeString[0] != '\0')
-	{
-		result = strtok(NULL, ",");
-
-		if (result != NULL)
-			Q_strncpy(awayString, result, sizeof(awayString));
-	}
-
-	GetGlobalTeam(TEAM_A)->SetKitName(homeString);
-	GetGlobalTeam(TEAM_B)->SetKitName(awayString);
-
-	//Msg("Error: Wrong format\n");
-	//ClientPrint( pPlayer, HUD_PRINTCONSOLE, "Usage:\n   ent_dump <entity name>\n" );
+	IOSUpdateInfo* pUpdateInfo = new IOSUpdateInfo();
+	pUpdateInfo->checkOnly = false;
+	pUpdateInfo->pClient = ToSDKPlayer(UTIL_GetCommandClient());
+	CFileUpdater::UpdateFiles(pUpdateInfo);
 }
 
-ConVar mp_teamkits("mp_teamkits", "england,brazil", FCVAR_NOTIFY, "Set team names", &OnTeamkitsChange);
+ConCommand sv_update_server("sv_update_server", CC_SV_UpdateServer, "", 0);
 
-//void CC_MP_HomeKit(const CCommand &args)
-//{
-//	if (!UTIL_IsCommandIssuedByServerAdmin())
-//        return;
-//
-//	if (args.ArgC() < 2)
-//	{
-//		char list[1024];
-//
-//		for (int i = 0; i < CTeamInfo::m_TeamInfo.Count(); i++)
-//		{
-//			for (int j = 0; j < CTeamInfo::m_TeamInfo[i]->m_TeamKitInfo.Count(); j++)
-//			{
-//
-//			}
-//		}
-//		ClientPrint(UTIL_GetCommandClient(), HUD_PRINTCONSOLE, "#game_respawn_asrandom" );
-//		return;
-//	}
-//
-//	SDKGameRules()->SetMatchDisplayTimeSeconds(atoi(args[3]) * 60);
-//	GetGlobalTeam(TEAM_A)->SetKitName(UTIL_VarArgs("%s/%s", CTeamInfo::FindTeamByKitName);
-//	GetGlobalTeam(TEAM_B)->SetGoals(atoi(args[2]));
-//}
-//
-//ConVar mp_homekit("mp_teamkits", "england,brazil", FCVAR_NOTIFY, "Set team names", &OnTeamkitsChange);
 
-ConVar mp_teamrotation("mp_teamrotation", "brazil,germany,italy,scotland,barcelona,bayern,liverpool,milan,palmeiras", 0, "Set available teams");
+void CC_MP_Teamkits(const CCommand &args)
+{
+	if (!UTIL_IsCommandIssuedByServerAdmin())
+        return;
+
+	if (args.ArgC() == 1)
+	{
+		char list[2048] = {};
+		int teamCount = 0;
+		int kitCount = 0;
+
+		Q_strcat(list, "\n--------------------\n", sizeof(list));
+
+		for (int i = 0; i < CTeamInfo::m_TeamInfo.Count(); i++)
+		{
+			teamCount += 1;
+			kitCount = 0;
+			//Q_strcat(list, UTIL_VarArgs("%s:\n", CTeamInfo::m_TeamInfo[i]->m_szFolderName), sizeof(list));
+			for (int j = 0; j < CTeamInfo::m_TeamInfo[i]->m_TeamKitInfo.Count(); j++)
+			{
+				kitCount += 1;
+				//Q_strcat(list, UTIL_VarArgs("    %d: %s\n", kitCount, CTeamInfo::m_TeamInfo[i]->m_TeamKitInfo[j]->m_szFolderName), sizeof(list));
+				Q_strcat(list, UTIL_VarArgs("%d: %s/%s\n", teamCount * 100 + kitCount, CTeamInfo::m_TeamInfo[i]->m_szFolderName, CTeamInfo::m_TeamInfo[i]->m_TeamKitInfo[j]->m_szFolderName), sizeof(list));
+			}
+		}
+
+		Q_strcat(list, "--------------------\n", sizeof(list));
+
+		Q_strcat(list, "\nUse 'mp_teamkits <home kit number> <away kit number>' to set the kits. E.g. 'mp_teamkits 103 202'\n\n", sizeof(list));
+
+		const int maxMsgSize = 250;
+
+		int index = 0;
+
+		while (index < strlen(list))
+		{
+			char listSlice[maxMsgSize];
+			Q_strncpy(listSlice, &list[index], sizeof(listSlice));
+			ClientPrint(UTIL_GetCommandClient(), HUD_PRINTCONSOLE_NO_NEWLINE, listSlice);
+			index += maxMsgSize - 1;
+		}
+	}
+	else if (args.ArgC() == 3)
+	{
+		int homeNumber = atoi(args[1]);
+		int homeTeamIndex = homeNumber / 100 - 1;
+		int homeKitIndex = homeNumber % 100 - 1;
+
+		int awayNumber = atoi(args[2]);
+		int awayTeamIndex = awayNumber / 100 - 1;
+		int awayKitIndex = awayNumber % 100 - 1;
+
+		char homeKit[256] = {};
+		char awayKit[256] = {};
+
+		if (CTeamInfo::m_TeamInfo.Count() > homeTeamIndex && CTeamInfo::m_TeamInfo[homeTeamIndex]->m_TeamKitInfo.Count() > homeKitIndex)
+			Q_snprintf(homeKit, sizeof(homeKit), "%s/%s", CTeamInfo::m_TeamInfo[homeTeamIndex]->m_szFolderName, CTeamInfo::m_TeamInfo[homeTeamIndex]->m_TeamKitInfo[homeKitIndex]->m_szFolderName);
+
+		if (CTeamInfo::m_TeamInfo.Count() > awayTeamIndex && CTeamInfo::m_TeamInfo[awayTeamIndex]->m_TeamKitInfo.Count() > awayKitIndex)
+			Q_snprintf(awayKit, sizeof(awayKit), "%s/%s", CTeamInfo::m_TeamInfo[awayTeamIndex]->m_szFolderName, CTeamInfo::m_TeamInfo[awayTeamIndex]->m_TeamKitInfo[awayKitIndex]->m_szFolderName);
+
+		if (homeKit[0] != '\0' && awayKit[0] != '\0')
+		{
+			GetGlobalTeam(TEAM_A)->SetKitName(homeKit);
+			GetGlobalTeam(TEAM_B)->SetKitName(awayKit);
+		}
+		else
+		{
+			if (homeKit[0] == '\0')
+			{
+				ClientPrint(UTIL_GetCommandClient(), HUD_PRINTCONSOLE, "Error: Home team or kit not found.");
+			}
+			if (awayKit[0] == '\0')
+			{
+				ClientPrint(UTIL_GetCommandClient(), HUD_PRINTCONSOLE, "Error: Away team or kit not found.");
+			}
+		}
+	}
+	else
+	{
+		ClientPrint(UTIL_GetCommandClient(), HUD_PRINTCONSOLE, "Error: Wrong syntax.");
+	}
+}
+
+ConCommand mp_teamkits("mp_teamkits", CC_MP_Teamkits, "", 0);
+
 
 ConVar mp_clientsettingschangeinterval("mp_clientsettingschangeinterval", "5", FCVAR_REPLICATED|FCVAR_NOTIFY, "");
 
