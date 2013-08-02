@@ -33,7 +33,9 @@
 #include "c_sdk_player.h"
 #include "c_weapon__stubs.h"		//Tony; add stubs
 #include "ios_teamkit_parse.h"
+#include "ios_fileupdater.h"
 #include "steam/steam_api.h"
+#include "ios_update_menu.h"
 
 class CHudChat;
 
@@ -82,8 +84,10 @@ void CSDKModeManager::Init()
 	
 	PanelMetaClassMgr()->LoadMetaClassDefinitionFile( SCREEN_FILE );
 
-	CTeamInfo::DownloadTeamKits();
-	//CTeamInfo::ParseTeamKits();
+	//CTeamInfo::DownloadTeamKits();
+	CTeamInfo::ParseTeamKits();
+	//CFileUpdater::UpdateFiles();
+	//iosUpdateMenu->GetPanel()->Activate();
 
 	if (g_pCVar->FindVar("playername")->GetString()[0] == '\0')
 		g_pCVar->FindVar("playername")->SetValue(steamapicontext->SteamFriends()->GetPersonaName());

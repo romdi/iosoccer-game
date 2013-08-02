@@ -1398,6 +1398,12 @@
     <ClCompile Include="sdk\ios_camera.cpp">
       <Filter>Source Files\SDK</Filter>
     </ClCompile>
+    <ClCompile Include="..\shared\sdk\ios_fileupdater.cpp">
+      <Filter>Source Files\SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="game_controls\ios_update_menu.cpp">
+      <Filter>Source Files\game_controls</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="achievement_notification_panel.h">
@@ -3163,6 +3169,12 @@
     </ClInclude>
     <ClInclude Include="sdk\ios_camera.h">
       <Filter>Source Files\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\sdk\ios_fileupdater.h">
+      <Filter>Source Files\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="game_controls\ios_update_menu.h">
+      <Filter>game_controls Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

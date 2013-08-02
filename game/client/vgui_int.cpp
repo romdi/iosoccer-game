@@ -26,6 +26,8 @@
 
 //#include "game_controls/ircclient.h"
 #include "game_controls/iosoptions.h"
+#include "game_controls/ios_update_menu.h"
+#include "ios_fileupdater.h"
 
 //Tony; so we can load localization at initialize
 #include <vgui/ILocalize.h>
@@ -198,6 +200,8 @@ void VGui_CreateGlobalPanels( void )
 	//g_pTestPanel = testPanel;
 
 	iosOptionsMenu->Create(GameUiDll);
+	iosUpdateMenu->Create(GameUiDll);
+	iosUpdateMenu->GetPanel()->Activate(UPDATE_CHECK_ONLY_AND_CLOSE);
 }
 
 void VGui_Shutdown()
@@ -223,6 +227,7 @@ void VGui_Shutdown()
 	//delete g_pTestPanel;
 
 	iosOptionsMenu->Destroy();
+	iosUpdateMenu->Destroy();
 
 	if ( g_pClientMode )
 	{

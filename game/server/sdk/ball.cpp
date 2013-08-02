@@ -46,8 +46,6 @@ ConVar sv_ball_standing_reach( "sv_ball_standing_reach", "50", FCVAR_NOTIFY );
 ConVar sv_ball_standing_cone( "sv_ball_standing_cone", "360", FCVAR_NOTIFY );
 ConVar sv_ball_standing_shift( "sv_ball_standing_shift", "0", FCVAR_NOTIFY );
 
-ConVar sv_ball_slideaffectedbydelay( "sv_ball_slideaffectedbydelay", "1", FCVAR_NOTIFY );
-
 ConVar sv_ball_slidesidereach_ball( "sv_ball_slidesidereach_ball", "50", FCVAR_NOTIFY );
 ConVar sv_ball_slideforwardreach_ball( "sv_ball_slideforwardreach_ball", "60", FCVAR_NOTIFY );
 ConVar sv_ball_slidebackwardreach_ball( "sv_ball_slidebackwardreach_ball", "20", FCVAR_NOTIFY );
@@ -2225,9 +2223,6 @@ bool CBall::DoBodyPartAction()
 	if (canCatch)
 		return CheckKeeperCatch();
 
-	if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_SLIDE && !sv_ball_slideaffectedbydelay.GetBool())
-		return DoSlideAction();
-
 	if (gpGlobals->curtime < m_flGlobalNextShot)
 	{
 		if (zDist >= sv_ball_bodypos_feet_start.GetFloat() && zDist < sv_ball_bodypos_head_end.GetFloat() && xyDist <= sv_ball_deflectionradius.GetInt())
@@ -2244,7 +2239,7 @@ bool CBall::DoBodyPartAction()
 		return false;
 	}
 
-	if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_SLIDE && sv_ball_slideaffectedbydelay.GetBool())
+	if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_SLIDE)
 		return DoSlideAction();
 
 	if (zDist >= sv_ball_bodypos_feet_start.GetFloat()
@@ -2265,7 +2260,7 @@ bool CBall::DoBodyPartAction()
 
 bool CBall::DoSlideAction()
 {
-	if (m_vPlForwardVel2D.Length2DSqr() == 0)
+	if (!m_pPl->IsShooting() || m_vPlForwardVel2D.Length2DSqr() == 0)
 		return false;
 
 	Vector dirToBall = m_vPos - m_vPlPos;
@@ -2279,9 +2274,6 @@ bool CBall::DoSlideAction()
 		&& localDirToBall.x <= sv_ball_slideforwardreach_ball.GetFloat()
 		&& abs(localDirToBall.y) <= sv_ball_slidesidereach_ball.GetFloat();
 
-	//if (!canShootBall)
-	//	return false;
-
 	if (!SDKGameRules()->IsIntermissionState() && !m_bHasQueuedState)
 	{
 		if (CheckFoul(canShootBall, localDirToBall))
@@ -2291,12 +2283,10 @@ bool CBall::DoSlideAction()
 	if (!canShootBall)
 		return false;
 
-	float coeff = clamp(m_vPlForwardVel2D.Length2D() / mp_slidespeed.GetFloat(), 0.0f, 1.0f);
-
 	Vector forward;
 	AngleVectors(QAngle(-15, m_aPlAng[YAW], 0), &forward, NULL, NULL);
 
-	Vector ballVel = forward * GetNormalshotStrength(coeff, sv_ball_slide_strength.GetInt());
+	Vector ballVel = forward * GetNormalshotStrength(1.0f, sv_ball_slide_strength.GetInt());
 
 	SetVel(ballVel, -1, BODY_PART_FEET, false, true, true);
 

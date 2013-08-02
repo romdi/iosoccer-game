@@ -1547,12 +1547,7 @@ void CSDKPlayer::ResetFlags()
 
 bool CSDKPlayer::IsNormalshooting()
 {
-	return ((m_nButtons & IN_ATTACK) != 0
-		|| m_Shared.GetAnimEvent() == PLAYERANIMEVENT_SLIDE
-		|| m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_LEFT
-		|| m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT
-		|| m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_FORWARD
-		|| m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD);
+	return (m_nButtons & IN_ATTACK) != 0;
 }
 
 bool CSDKPlayer::IsPowershooting()
@@ -2209,9 +2204,9 @@ unsigned CurlSendJSON(void *params)
 		/* Perform the request, res will get the return code */ 
 		res = curl_easy_perform(curl);
 		long code;
-		curl_easy_getinfo(curl, CURLINFO_HTTP_CODE, &code);
+		curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &code);
 		/* Check for errors */ 
-		if(res != CURLE_OK)
+		if (res != CURLE_OK)
 		{
 			char msg[128];
 			Q_snprintf(msg, sizeof(msg), "Couldn't submit match statistics to web server: cURL error code '%d'. Wrong web server URL or web server down?", res);

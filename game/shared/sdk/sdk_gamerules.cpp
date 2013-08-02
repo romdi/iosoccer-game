@@ -548,8 +548,9 @@ void CSDKGameRules::ServerActivate()
 {
 	CPlayerPersistentData::ReallocateAllPlayerData();
 
-	CTeamInfo::DownloadTeamKits();
-	//CTeamInfo::ParseTeamKits();
+	//CTeamInfo::DownloadTeamKits();
+	CTeamInfo::ParseTeamKits();
+	//CFileUpdater::UpdateFiles();
 
 	InitTeams();
 

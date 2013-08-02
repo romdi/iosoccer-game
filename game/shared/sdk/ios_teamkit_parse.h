@@ -81,7 +81,6 @@ class CTeamInfo
 public:
 
 	// Each game can override this to get whatever values it wants from the script.
-	static void DownloadTeamKits();
 	static void ParseTeamKits();
 	static void GetNonClashingTeamKits(char *homeTeam, char *awayTeam, bool clubTeams, bool nationalTeams, bool realTeams, bool fictitiousTeams);
 	static CTeamKitInfo *FindTeamByKitName(const char *name);

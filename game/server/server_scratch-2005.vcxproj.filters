@@ -1407,6 +1407,9 @@
     <ClCompile Include="..\shared\sdk\ios_teamkit_parse.cpp">
       <Filter>Source Files\SDK</Filter>
     </ClCompile>
+    <ClCompile Include="..\shared\sdk\ios_fileupdater.cpp">
+      <Filter>Source Files\SDK</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\achievement_saverestore.h">
@@ -2931,6 +2934,9 @@
       <Filter>Source Files\SDK</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\sdk\ios_teamkit_parse.h">
+      <Filter>Source Files\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\sdk\ios_fileupdater.h">
       <Filter>Source Files\SDK</Filter>
     </ClInclude>
   </ItemGroup>
