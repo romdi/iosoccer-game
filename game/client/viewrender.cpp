@@ -1966,6 +1966,8 @@ void CViewRender::RenderView( const CViewSetup &view, int nClearFlags, int whatT
 
 		SDKGameRules()->DrawFieldTeamCrests();
 
+		SDKGameRules()->DrawGoalTeamCrests();
+
 		SDKGameRules()->DrawOffsideLines();
 
 		SDKGameRules()->DrawSkyboxOverlay();

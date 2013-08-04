@@ -2725,7 +2725,7 @@ bool CSDKGameRules::ClientConnected(edict_t *pEntity, const char *pszName, const
 		const char *pszClientVersion = engine->GetClientConVarValue(engine->IndexOfEdict(pEntity), "clientversion");
 		if (Q_strcmp(pszClientVersion, sv_required_client_version.GetString()))
 		{
-			Q_snprintf(reject, maxrejectlen, "%s", "Your client version is outdated.\nDownload the update at http://goo.gl/eybdx");
+			Q_snprintf(reject, maxrejectlen, "%s", "Client update required. Use the 'IOS Updater' in the main menu.");
 			return false;
 		}
 	}
@@ -2930,6 +2930,70 @@ void CSDKGameRules::DrawFieldTeamCrests()
 		meshBuilder.Color3f( 1.0, 1.0, 1.0 );
 		meshBuilder.TexCoord2f( 0,0,1 );
 		meshBuilder.Position3fv( (origin + (right * sign * size) + (forward * sign * size)).Base() );
+		meshBuilder.AdvanceVertex();
+		meshBuilder.End();
+		pMesh->Draw();
+	}
+}
+
+extern ConVar goalteamcrests;
+
+void CSDKGameRules::DrawGoalTeamCrests()
+{
+	if (!goalteamcrests.GetBool())
+		return;
+
+	for (int i = 0; i < 2; i++)
+	{
+		if (!GetGlobalTeam(i + TEAM_A)->HasCrest())
+			continue;
+
+		int sign;
+		char *material;
+
+		if (i == 0)
+		{
+			sign = m_nLeftSideTeam == TEAM_A ? 1 : -1;
+			material = "vgui/hometeamcrest";
+		}
+		else
+		{
+			sign = m_nLeftSideTeam == TEAM_A ? -1 : 1;
+			material = "vgui/awayteamcrest";
+		}
+
+		Vector right = Vector(-1, 0, 0);
+		Vector up = Vector(0, 0, -1);
+		float size = 150;
+		Vector origin = GetGlobalTeam(i + TEAM_A)->m_vGoalCenter;
+		origin.y += sign * (40 + size);
+		origin.z += 350;
+
+		CMatRenderContextPtr pRenderContext( materials );
+		IMaterial *pPreviewMaterial = materials->FindMaterial( material, TEXTURE_GROUP_CLIENT_EFFECTS );
+		pRenderContext->Bind( pPreviewMaterial );
+		IMesh *pMesh = pRenderContext->GetDynamicMesh();
+		CMeshBuilder meshBuilder;
+		meshBuilder.Begin( pMesh, MATERIAL_QUADS, 1 );
+
+		meshBuilder.Color3f( 1.0, 1.0, 1.0 );
+		meshBuilder.TexCoord2f( 0,0,0 );
+		meshBuilder.Position3fv( (origin + (right * sign * size) + (up * -size)).Base() );
+		meshBuilder.AdvanceVertex();
+
+		meshBuilder.Color3f( 1.0, 1.0, 1.0 );
+		meshBuilder.TexCoord2f( 0,1,0 );
+		meshBuilder.Position3fv( (origin + (right * sign * -size) + (up * -size)).Base() );
+		meshBuilder.AdvanceVertex();
+
+		meshBuilder.Color3f( 1.0, 1.0, 1.0 );
+		meshBuilder.TexCoord2f( 0,1,1 );
+		meshBuilder.Position3fv( (origin + (right * sign * -size) + (up * size)).Base() );
+		meshBuilder.AdvanceVertex();
+
+		meshBuilder.Color3f( 1.0, 1.0, 1.0 );
+		meshBuilder.TexCoord2f( 0,0,1 );
+		meshBuilder.Position3fv( (origin + (right * sign * size) + (up * size)).Base() );
 		meshBuilder.AdvanceVertex();
 		meshBuilder.End();
 		pMesh->Draw();

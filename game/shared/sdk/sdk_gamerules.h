@@ -402,6 +402,7 @@ public:
 
 public:
 	void DrawFieldTeamCrests();
+	void DrawGoalTeamCrests();
 	void DrawOffsideLines();
 	void DrawSkyboxOverlay();
 	float GetDaytime();

@@ -736,6 +736,7 @@ CVisualSettingPanel::CVisualSettingPanel(Panel *parent, const char *panelName) :
 	m_pCenteredStaminaBar = new CheckButton(m_pContent, "", "Centered Stamina Bar");
 	m_pQuickTactic = new CheckButton(m_pContent, "", "Quick Tactic Panel");
 	m_pAutoHideSpecMenu = new CheckButton(m_pContent, "", "Auto-Hide Spectator Menu");
+	m_pGoalTeamCrests = new CheckButton(m_pContent, "", "Goal Team Crests");
 }
 
 void CVisualSettingPanel::PerformLayout()
@@ -746,6 +747,7 @@ void CVisualSettingPanel::PerformLayout()
 	m_pCenteredStaminaBar->SetBounds(0, 0, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
 	m_pQuickTactic->SetBounds(0, TEXT_HEIGHT, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
 	m_pAutoHideSpecMenu->SetBounds(0, 2 * TEXT_HEIGHT, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
+	m_pGoalTeamCrests->SetBounds(0, 3 * TEXT_HEIGHT, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
 }
 
 void CVisualSettingPanel::Save()
@@ -753,6 +755,7 @@ void CVisualSettingPanel::Save()
 	g_pCVar->FindVar("centeredstaminabar")->SetValue(m_pCenteredStaminaBar->IsSelected() ? 1 : 0);
 	g_pCVar->FindVar("quicktacticpanel")->SetValue(m_pQuickTactic->IsSelected() ? 1 : 0);
 	g_pCVar->FindVar("autohidespecmenu")->SetValue(m_pAutoHideSpecMenu->IsSelected() ? 1 : 0);
+	g_pCVar->FindVar("goalteamcrests")->SetValue(m_pGoalTeamCrests->IsSelected() ? 1 : 0);
 }
 
 void CVisualSettingPanel::Load()
@@ -760,6 +763,7 @@ void CVisualSettingPanel::Load()
 	m_pCenteredStaminaBar->SetSelected(g_pCVar->FindVar("centeredstaminabar")->GetBool());
 	m_pQuickTactic->SetSelected(g_pCVar->FindVar("quicktacticpanel")->GetBool());
 	m_pAutoHideSpecMenu->SetSelected(g_pCVar->FindVar("autohidespecmenu")->GetBool());
+	m_pGoalTeamCrests->SetSelected(g_pCVar->FindVar("goalteamcrests")->GetBool());
 }
 
 void CVisualSettingPanel::Update()
