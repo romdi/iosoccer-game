@@ -220,8 +220,6 @@ ConVar sv_ball_blockpowershot("sv_ball_blockpowershot", "1", FCVAR_NOTIFY);
 
 ConVar sv_ball_maxcheckdist("sv_ball_maxcheckdist", "200", FCVAR_NOTIFY);
 
-ConVar sv_ball_fakeshotdelay("sv_ball_fakeshotdelay", "0.5", FCVAR_NOTIFY);
-
 
 void OnBallSkinChange(IConVar *var, const char *pOldValue, float flOldValue)
 {
@@ -2510,16 +2508,6 @@ float CBall::GetChargedshotStrength(float coeff, int minStrength, int maxStrengt
 
 bool CBall::DoGroundShot(bool markOffsidePlayers, float velCoeff /*= 1.0f*/)
 {
-	if (m_pPl->m_Shared.m_bDoFakeShot)
-	{
-		m_pPl->m_Shared.m_bDoFakeShot = false;
-
-		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_PASS);
-		m_pPl->m_flNextShot = gpGlobals->curtime + sv_ball_fakeshotdelay.GetFloat();
-
-		return true;
-	}
-
 	Vector dirToBall = m_vPos - m_vPlPos;
 	Vector localDirToBall;
 	VectorIRotate(dirToBall, m_pPl->EntityToWorldTransform(), localDirToBall);
