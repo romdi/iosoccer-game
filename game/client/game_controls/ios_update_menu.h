@@ -5,16 +5,24 @@
 #include <vgui_controls/Frame.h>
 #include <game/client/iviewport.h>
 #include <vgui_controls/Button.h>
+#include <vgui_controls/progressbar.h>
+#include "ios_fileupdater.h"
 
 using namespace vgui;
 
-enum PendingUpdate_t
+enum UpdateState_t
 {
-	UPDATE_NONE_PENDING,
-	UPDATE_CHECK_ONLY,
-	UPDATE_CHECK_ONLY_AND_CLOSE,
-	UPDATE_DOWNLOAD,
-	UPDATE_DOWNLOAD_AND_CLOSE,
+	UPDATE_STATE_NONE,
+	UPDATE_STATE_READY_TO_CHECK,
+	UPDATE_STATE_CHECK_ONLY_PENDING,
+	UPDATE_STATE_CHECK_ONLY_RUNNING,
+	UPDATE_STATE_CHECK_ONLY_AND_CLOSE_PENDING,
+	UPDATE_STATE_CHECK_ONLY_AND_CLOSE_RUNNING,
+	UPDATE_STATE_CHECK_ONLY_FINISHED,
+	UPDATE_STATE_CHECK_ONLY_AND_CLOSE_FINISHED,
+	UPDATE_STATE_DOWNLOAD_PENDING,
+	UPDATE_STATE_DOWNLOAD_RUNNING,
+	UPDATE_STATE_DOWNLOAD_FINISHED,
 };
 
 class CIOSUpdatePanel : public vgui::Frame
@@ -29,7 +37,7 @@ public:
 	virtual void PerformLayout();
 	virtual void OnThink();
 	void OnCommand(const char *cmd);
-	void Activate(PendingUpdate_t pendingUpdate);
+	void Activate(UpdateState_t updateState);
 	void Reset();
 	void Update();
 	void OnTick();
@@ -43,7 +51,9 @@ protected:
 	Button *m_pCloseButton;
 	Label *m_pInfoText;
 	Label *m_pExtraInfoText;
-	PendingUpdate_t m_ePendingUpdate;
+	UpdateState_t m_eUpdateState;
+	IOSUpdateInfo *m_pUpdateInfo;
+	ProgressBar *m_pProgressBar;
 };
 
 class IIOSUpdateMenu

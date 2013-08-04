@@ -1707,6 +1707,42 @@ bool CGameMovement::CheckPlayerAnimEvent()
 			//	VectorAngles(forward2D, mv->m_vecViewAngles);
 			//}
 
+//			QAngle startAng = pPl->m_Shared.GetAnimEventStartAngle();
+//			//ang[PITCH] = 0;
+//
+//			QAngle ang = mv->m_vecViewAngles;
+//
+//			// Angle range is 0-180,-180-0. Remap to 0-360
+//
+//			//if (ang[YAW] < 0)
+//			//	ang[YAW] += 360;
+//
+//			//if (startAng[YAW] < 0)
+//			//	startAng[YAW] += 360;
+//
+//			// Add
+//
+//			float lower = startAng[YAW] - 45;
+//			if (lower < -180)
+//				lower += 360;
+//
+//			float upper = startAng[YAW] + 45;
+//			if (upper > 180)
+//				upper -= 360;
+//
+//			ang[YAW] = clamp(ang[YAW], lower, upper);
+//			mv->m_vecViewAngles = ang;
+//#ifdef CLIENT_DLL
+//			engine->SetViewAngles(mv->m_vecViewAngles);
+//#endif
+//			ang[PITCH] = 0;
+//
+//			AngleVectors(ang, &forward2D);
+//
+//			Vector startDir;
+//
+//			AngleVectors(startAng, &startDir);
+
 			if (timePassed <= stuckRescueTimeLimit)
 				mv->m_vecVelocity = forward2D * mp_slidespeed.GetInt() * max(0, (1 - pow(timePassed / mp_slide_move_duration.GetFloat(), 2)));
 			else

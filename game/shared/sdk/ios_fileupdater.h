@@ -14,23 +14,30 @@
 
 struct IOSUpdateInfo
 {
+	bool cancelled;
+	bool finished;
+	bool async;
 	bool checkOnly;
 	int filesToUpdateCount;
+	int filesUpdatedCount;
 	bool restartRequired;
 	bool connectionError;
-#ifdef CLIENT_DLL
-	CHandle<C_SDKPlayer> pClient;
-#else
-	CHandle<CSDKPlayer> pClient;
-#endif
 
 	IOSUpdateInfo()
 	{
+		Reset();
+	}
+
+	void Reset()
+	{
+		cancelled = false;
+		finished = false;
+		async = false;
 		checkOnly = false;
 		filesToUpdateCount = 0;
+		filesUpdatedCount = 0;
 		restartRequired = false;
 		connectionError = false;
-		pClient = NULL;
 	}
 };
 

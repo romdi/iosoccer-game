@@ -547,23 +547,6 @@ CAppearanceSettingPanel::CAppearanceSettingPanel(Panel *parent, const char *pane
 	m_pPreviewTeamList = new ComboBox(m_pContent, "", CTeamInfo::m_TeamInfo.Count(), false);
 	m_pPreviewTeamList->RemoveAll();
 
-	int kitCount = 0;
-
-	for (int i = 0; i < CTeamInfo::m_TeamInfo.Count(); i++)
-	{
-		for (int j = 0; j < CTeamInfo::m_TeamInfo[i]->m_TeamKitInfo.Count(); j++)
-		{
-			kitCount += 1;
-			kv = new KeyValues("UserData", "teamfolder", CTeamInfo::m_TeamInfo[i]->m_szFolderName, "kitfolder", CTeamInfo::m_TeamInfo[i]->m_TeamKitInfo[j]->m_szFolderName);
-			m_pPreviewTeamList->AddItem(VarArgs("%s/%s", CTeamInfo::m_TeamInfo[i]->m_szFolderName, CTeamInfo::m_TeamInfo[i]->m_TeamKitInfo[j]->m_szFolderName), kv);
-			kv->deleteThis();
-		}
-	}
-
-	m_pPreviewTeamList->SetNumberOfEditLines(kitCount);
-
-	m_pPreviewTeamList->ActivateItemByRow(0);
-
 	m_pBodypartPanel = new Panel(m_pContent, "");
 	m_pBodypartRadioButtons[0] = new RadioButton(m_pBodypartPanel, "", "Head");
 	m_pBodypartRadioButtons[1] = new RadioButton(m_pBodypartPanel, "", "Body");
@@ -571,6 +554,8 @@ CAppearanceSettingPanel::CAppearanceSettingPanel(Panel *parent, const char *pane
 	m_pBodypartRadioButtons[1]->SetSelected(true);
 
 	m_pConnectionInfoLabel = new Label(m_pContent, "", "Join or create a server to activate the preview");
+
+	m_flLastTeamKitUpdateTime = -1;
 }
 
 void CAppearanceSettingPanel::PerformLayout()
@@ -653,6 +638,27 @@ void CAppearanceSettingPanel::Update()
 
 	for (int i = 0; i < 3; i++)
 		m_pBodypartRadioButtons[i]->SetEnabled(isConnected);
+
+	if (m_flLastTeamKitUpdateTime == -1 || m_flLastTeamKitUpdateTime < CTeamInfo::m_flLastUpdateTime)
+	{
+		m_flLastTeamKitUpdateTime = CTeamInfo::m_flLastUpdateTime;
+
+		int kitCount = 0;
+
+		for (int i = 0; i < CTeamInfo::m_TeamInfo.Count(); i++)
+		{
+			for (int j = 0; j < CTeamInfo::m_TeamInfo[i]->m_TeamKitInfo.Count(); j++)
+			{
+				kitCount += 1;
+				KeyValues *kv = new KeyValues("UserData", "teamfolder", CTeamInfo::m_TeamInfo[i]->m_szFolderName, "kitfolder", CTeamInfo::m_TeamInfo[i]->m_TeamKitInfo[j]->m_szFolderName);
+				m_pPreviewTeamList->AddItem(VarArgs("%s/%s", CTeamInfo::m_TeamInfo[i]->m_szFolderName, CTeamInfo::m_TeamInfo[i]->m_TeamKitInfo[j]->m_szFolderName), kv);
+				kv->deleteThis();
+			}
+		}
+
+		m_pPreviewTeamList->SetNumberOfEditLines(kitCount);
+		m_pPreviewTeamList->ActivateItemByRow(0);
+	}
 }
 
 int CAppearanceSettingPanel::GetPlayerSkin()

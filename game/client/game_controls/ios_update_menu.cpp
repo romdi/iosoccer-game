@@ -47,7 +47,7 @@ IIOSUpdateMenu *iosUpdateMenu = (IIOSUpdateMenu *)&g_IOSUpdateMenu;
 void CC_IOSUpdateMenu(const CCommand &args)
 {
 	if (!iosUpdateMenu->GetPanel()->IsVisible())
-		iosUpdateMenu->GetPanel()->Activate(UPDATE_NONE_PENDING);
+		iosUpdateMenu->GetPanel()->Activate(UPDATE_STATE_READY_TO_CHECK);
 	else
 		iosUpdateMenu->GetPanel()->Close();
 }
@@ -58,10 +58,9 @@ enum { LABEL_WIDTH = 260, INPUT_WIDTH = 260, SHORTINPUT_WIDTH = 200, TEXT_HEIGHT
 enum { PANEL_TOPMARGIN = 70, PANEL_MARGIN = 5, PANEL_WIDTH = 500, PANEL_HEIGHT = 300 };
 enum { PADDING = 10, TOP_PADDING = 30 };
 enum { UPDATE_BUTTON_WIDTH = 160, UPDATE_BUTTON_HEIGHT = 52, UPDATE_BUTTON_MARGIN = 5 };
-enum { BUTTON_WIDTH = 80, BUTTON_HEIGHT = 26, BUTTON_MARGIN = 50 };
-enum { SUGGESTED_VALUE_WIDTH = 100, SUGGESTED_VALUE_MARGIN = 5 };
+enum { BUTTON_WIDTH = 80, BUTTON_HEIGHT = 26, BUTTON_MARGIN = 40 };
 enum { INFO_WIDTH = 400, INFO_HEIGHT = 20 };
-enum { APPEARANCE_HOFFSET = 270, APPEARANCE_RADIOBUTTONWIDTH = 70 };
+enum { PROGRESSBAR_WIDTH = 400, PROGRESSBAR_HEIGHT = 25 };
 
 CIOSUpdatePanel::CIOSUpdatePanel(VPANEL parent) : BaseClass(NULL, "IOSUpdatePanel")
 {
@@ -72,8 +71,10 @@ CIOSUpdatePanel::CIOSUpdatePanel(VPANEL parent) : BaseClass(NULL, "IOSUpdatePane
 	m_pCloseButton = new Button(m_pContent, "", "", this, "");
 	m_pInfoText = new Label(m_pContent, "", "");
 	m_pExtraInfoText = new Label(m_pContent, "", "");
+	m_pProgressBar = new ProgressBar(m_pContent, "");
 
-	m_ePendingUpdate = UPDATE_NONE_PENDING;
+	m_eUpdateState = UPDATE_STATE_NONE;
+	m_pUpdateInfo = new IOSUpdateInfo();
 
 	vgui::ivgui()->AddTickSignal( GetVPanel(), 100 );
 }
@@ -113,6 +114,8 @@ void CIOSUpdatePanel::ApplySchemeSettings( IScheme *pScheme )
 	m_pExtraInfoText->SetFont(pScheme->GetFont("DefaultBig"));
 	m_pExtraInfoText->SetContentAlignment(Label::a_center);
 	m_pExtraInfoText->SetFgColor(Color(255, 255, 255, 255));
+
+	m_pProgressBar->SetBounds(m_pContent->GetWide() / 2 - PROGRESSBAR_WIDTH / 2, 3 * PADDING + 2 * (INFO_HEIGHT + PADDING), PROGRESSBAR_WIDTH, PROGRESSBAR_HEIGHT);
 }
 
 void CIOSUpdatePanel::PerformLayout()
@@ -135,25 +138,56 @@ void CIOSUpdatePanel::OnTick()
 {
 	BaseClass::OnTick();
 
-	if (m_ePendingUpdate != UPDATE_NONE_PENDING)
+	if (m_eUpdateState == UPDATE_STATE_READY_TO_CHECK)
 	{
-		IOSUpdateInfo updateInfo = IOSUpdateInfo();
-		updateInfo.checkOnly = (m_ePendingUpdate == UPDATE_CHECK_ONLY || m_ePendingUpdate == UPDATE_CHECK_ONLY_AND_CLOSE);
+		m_pInfoText->SetText("");
+		m_pExtraInfoText->SetText("");
+		m_pProgressBar->SetVisible(false);
+		m_pUpdateButton->SetVisible(true);
+		m_pUpdateButton->SetText("Check for updates");
+		m_pUpdateButton->SetCommand("check");
+		m_pCloseButton->SetText("Close");
+		m_pCloseButton->SetCommand("close");
 
-		CFileUpdater::UpdateFiles(&updateInfo);
+		m_eUpdateState = UPDATE_STATE_NONE;
+	}
+	else if (m_eUpdateState == UPDATE_STATE_CHECK_ONLY_PENDING || m_eUpdateState == UPDATE_STATE_CHECK_ONLY_AND_CLOSE_PENDING)
+	{
+		m_pInfoText->SetText("Checking for updates...");
+		m_pExtraInfoText->SetText("");
+		m_pUpdateButton->SetVisible(false);
+		m_pCloseButton->SetText("Cancel");
+		m_pCloseButton->SetCommand("cancel");
 
-		if (updateInfo.connectionError)
+		m_eUpdateState = (m_eUpdateState == UPDATE_STATE_CHECK_ONLY_PENDING ? UPDATE_STATE_CHECK_ONLY_RUNNING : UPDATE_STATE_CHECK_ONLY_AND_CLOSE_RUNNING);
+
+		m_pUpdateInfo->Reset();
+		m_pUpdateInfo->checkOnly = true;
+		m_pUpdateInfo->async = true;
+
+		CFileUpdater::UpdateFiles(m_pUpdateInfo);
+	}
+	else if (m_eUpdateState == UPDATE_STATE_CHECK_ONLY_RUNNING || m_eUpdateState == UPDATE_STATE_CHECK_ONLY_AND_CLOSE_RUNNING)
+	{
+		if (m_pUpdateInfo->finished)
+		{
+			m_eUpdateState = (m_eUpdateState == UPDATE_STATE_CHECK_ONLY_RUNNING ? UPDATE_STATE_CHECK_ONLY_FINISHED : UPDATE_STATE_CHECK_ONLY_AND_CLOSE_FINISHED);
+		}
+	}
+	else if (m_eUpdateState == UPDATE_STATE_CHECK_ONLY_FINISHED || m_eUpdateState == UPDATE_STATE_CHECK_ONLY_AND_CLOSE_FINISHED)
+	{
+		if (m_pUpdateInfo->connectionError)
 		{
 			m_pInfoText->SetText("Can't connect to the IOS update server.");
 			m_pExtraInfoText->SetText("Try to update again in a few minutes.");
-			m_pCloseButton->SetText("Close");
+			m_pCloseButton->SetText("OK");
 			m_pCloseButton->SetCommand("close");
 		}
-		else if (updateInfo.checkOnly)
+		else
 		{
-			if (updateInfo.filesToUpdateCount > 0)
+			if (m_pUpdateInfo->filesToUpdateCount > 0)
 			{
-				m_pInfoText->SetText(VarArgs("Updates available for %d %s.", updateInfo.filesToUpdateCount, updateInfo.filesToUpdateCount == 1 ? "file" : "files"));
+				m_pInfoText->SetText(VarArgs("Updates available for %d %s.", m_pUpdateInfo->filesToUpdateCount, m_pUpdateInfo->filesToUpdateCount == 1 ? "file" : "files"));
 				m_pExtraInfoText->SetText("");
 				m_pUpdateButton->SetVisible(true);
 				m_pUpdateButton->SetText("Download the updates");
@@ -163,27 +197,86 @@ void CIOSUpdatePanel::OnTick()
 			}
 			else
 			{
-				m_pInfoText->SetText("Your files are up to date.");
+				m_pInfoText->SetText("All of your files are up to date.");
 				m_pUpdateButton->SetVisible(false);
-				m_pCloseButton->SetText("Close");
+				m_pCloseButton->SetText("OK");
 				m_pCloseButton->SetCommand("close");
 
-				if (m_ePendingUpdate == UPDATE_CHECK_ONLY_AND_CLOSE)
+				if (m_eUpdateState == UPDATE_STATE_CHECK_ONLY_AND_CLOSE_FINISHED)
 				{
-					m_ePendingUpdate = UPDATE_NONE_PENDING;
+					m_eUpdateState = UPDATE_STATE_NONE;
 					Close();
 				}
 			}
+		}
+
+		m_eUpdateState = UPDATE_STATE_NONE;
+	}
+	else if (m_eUpdateState == UPDATE_STATE_DOWNLOAD_PENDING)
+	{
+		m_pInfoText->SetText("Downloading updates. Please wait...");
+		m_pExtraInfoText->SetText("");
+		m_pProgressBar->SetVisible(true);
+		m_pProgressBar->SetProgress(0.0f);
+		m_pUpdateButton->SetVisible(false);
+		m_pCloseButton->SetText("Cancel");
+		m_pCloseButton->SetCommand("cancel");
+
+		m_eUpdateState = UPDATE_STATE_DOWNLOAD_RUNNING;
+
+		int filesToUpdateCount = m_pUpdateInfo->filesToUpdateCount;
+		m_pUpdateInfo->Reset();
+
+		// Just make sure the file doesn't jump to 0 for a short duration. The thread will set the value eventually.
+		m_pUpdateInfo->filesToUpdateCount = filesToUpdateCount;
+
+		m_pUpdateInfo->checkOnly = false;
+		m_pUpdateInfo->async = true;
+
+		CFileUpdater::UpdateFiles(m_pUpdateInfo);
+	}
+	else if (m_eUpdateState == UPDATE_STATE_DOWNLOAD_RUNNING)
+	{
+		int filesUpdatedCount = m_pUpdateInfo->filesUpdatedCount;
+		int filesToUpdateCount = m_pUpdateInfo->filesToUpdateCount;
+
+		char leftSpinner, rightSpinner;
+		int spinnerIndex = (int)(gpGlobals->curtime * 5) % 4;
+
+		switch (spinnerIndex)
+		{
+		case 0: default: leftSpinner = '-'; rightSpinner = '-'; break;
+		case 1: leftSpinner = '\\'; rightSpinner = '/'; break;
+		case 2: leftSpinner = '|'; rightSpinner = '|'; break;
+		case 3: leftSpinner = '/'; rightSpinner = '\\'; break;
+		}
+
+		m_pExtraInfoText->SetText(VarArgs("%c          %d of %d files downloaded.          %c", leftSpinner, filesUpdatedCount, filesToUpdateCount, rightSpinner));
+		m_pProgressBar->SetProgress(clamp(filesUpdatedCount / (float)filesToUpdateCount, 0.0f, 1.0f));
+
+		if (m_pUpdateInfo->finished)
+		{
+			m_eUpdateState = UPDATE_STATE_DOWNLOAD_FINISHED;
+		}
+	}
+	else if (m_eUpdateState == UPDATE_STATE_DOWNLOAD_FINISHED)
+	{
+		if (m_pUpdateInfo->connectionError)
+		{
+			m_pInfoText->SetText("Can't connect to the IOS update server.");
+			m_pExtraInfoText->SetText("Try to update again in a few minutes.");
+			m_pCloseButton->SetText("OK");
+			m_pCloseButton->SetCommand("close");
 		}
 		else
 		{
 			CTeamInfo::ParseTeamKits();
 
-			m_pCloseButton->SetText("Close");
+			m_pCloseButton->SetText("OK");
 			m_pCloseButton->SetCommand("close");
-			m_pInfoText->SetText("Files successfully updated.");
+			m_pInfoText->SetText("All files successfully updated.");
 
-			if (updateInfo.restartRequired)
+			if (m_pUpdateInfo->restartRequired)
 			{
 				m_pExtraInfoText->SetText("RESTART THE GAME TO APPLY THE UPDATES.");
 				m_pUpdateButton->SetVisible(true);
@@ -192,7 +285,7 @@ void CIOSUpdatePanel::OnTick()
 			}
 		}
 
-		m_ePendingUpdate = UPDATE_NONE_PENDING;
+		m_eUpdateState = UPDATE_STATE_NONE;
 	}
 }
 
@@ -200,20 +293,15 @@ void CIOSUpdatePanel::OnCommand(const char *cmd)
 {
 	if (!stricmp(cmd, "update"))
 	{
-		m_pInfoText->SetText("Downloading updates. This may take a while. Please wait...");
-		m_pExtraInfoText->SetText("");
-		m_pUpdateButton->SetVisible(false);
-		m_pCloseButton->SetText("Cancel");
-		m_pCloseButton->SetCommand("cancel");
-
-		m_ePendingUpdate = UPDATE_DOWNLOAD;
+		m_eUpdateState = UPDATE_STATE_DOWNLOAD_PENDING;
 	}
 	else if (!stricmp(cmd, "check"))
 	{
-		m_ePendingUpdate = UPDATE_CHECK_ONLY;
+		m_eUpdateState = UPDATE_STATE_CHECK_ONLY_PENDING;
 	}
 	else if (!stricmp(cmd, "cancel"))
 	{
+		m_pUpdateInfo->cancelled = true;
 		Close();
 	}
 	else if (!stricmp(cmd, "close"))
@@ -228,28 +316,11 @@ void CIOSUpdatePanel::OnCommand(const char *cmd)
 		BaseClass::OnCommand(cmd);
 }
 
-void CIOSUpdatePanel::Activate(PendingUpdate_t pendingUpdate)
+void CIOSUpdatePanel::Activate(UpdateState_t updateState)
 {
 	BaseClass::Activate();
 
-	m_ePendingUpdate = pendingUpdate;
+	m_eUpdateState = updateState;
 
-	if (m_ePendingUpdate == UPDATE_CHECK_ONLY_AND_CLOSE)
-	{
-		m_pInfoText->SetText("Checking for updates...");
-		m_pExtraInfoText->SetText("");
-		m_pUpdateButton->SetVisible(false);
-		m_pCloseButton->SetText("Cancel");
-		m_pCloseButton->SetCommand("cancel");
-	}
-	else
-	{
-		m_pInfoText->SetText("");
-		m_pExtraInfoText->SetText("");
-		m_pUpdateButton->SetVisible(true);
-		m_pUpdateButton->SetText("Check for updates");
-		m_pUpdateButton->SetCommand("check");
-		m_pCloseButton->SetText("Close");
-		m_pCloseButton->SetCommand("close");
-	}
+	OnTick();
 }

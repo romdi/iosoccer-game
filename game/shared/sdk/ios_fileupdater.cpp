@@ -104,7 +104,6 @@ unsigned PerformUpdate(void *params)
 	if (result != CURLE_OK || code != 200)
 	{
 		pUpdateInfo->connectionError = true;
-		pUpdateInfo->filesToUpdateCount = 0;
 		return CFileUpdater::UpdateFinished(pUpdateInfo);
 	}
 
@@ -212,6 +211,11 @@ unsigned PerformUpdate(void *params)
 		char str[256];
 		Q_snprintf(str, sizeof(str), "%s%s:%s", localFileList.Count() == 0 && i == 0 ? "" : "\n", serverFileList[i].path, hexDigest);
 		filesystem->Write(str, strlen(str), fh);
+
+		pUpdateInfo->filesUpdatedCount = i + 1;
+
+		if (pUpdateInfo->cancelled)
+			break;
 	}
 
 	filesystem->Close(fh);
@@ -221,36 +225,48 @@ unsigned PerformUpdate(void *params)
 
 void CFileUpdater::UpdateFiles(IOSUpdateInfo *pUpdateInfo)
 {
-#ifdef CLIENT_DLL
-	PerformUpdate(pUpdateInfo);
-#else
-	CreateSimpleThread(PerformUpdate, pUpdateInfo);
-#endif
+	if (pUpdateInfo->async)
+		CreateSimpleThread(PerformUpdate, pUpdateInfo);
+	else
+		PerformUpdate(pUpdateInfo);
 }
 
 int CFileUpdater::UpdateFinished(IOSUpdateInfo *pUpdateInfo)
 {
+	pUpdateInfo->finished = true;
+
 #ifdef CLIENT_DLL
 	return 0;
 #else
 	const char *msg;
 
 	if (pUpdateInfo->connectionError)
-		msg = "Couldn't connect to the update server.";
-	else if (pUpdateInfo->filesToUpdateCount == 0)
-		msg = "All server files are up to date";
+		msg = "Server Updater: Couldn't connect to the update server.";
+	else if (pUpdateInfo->checkOnly)
+		msg = "Server Updater: Check for changes successful.";
 	else
 	{
-		if (pUpdateInfo->restartRequired)
-			msg = "Server files successfully updated. A server restart is required to use the new binaries.";
+		if (pUpdateInfo->filesToUpdateCount == 0)
+			msg = "Server Updater: All server files are up to date.";
 		else
-			msg = "Server files successfully updated.";
+		{
+			CTeamInfo::ParseTeamKits();
+
+			if (pUpdateInfo->restartRequired)
+				msg = "Server Updater: Server files successfully updated. A server restart is required to use the new binaries.";
+			else
+				msg = "Server Updater: Server files successfully updated.";
+		}
 	}
 
-	if (pUpdateInfo->pClient)
-		ClientPrint(pUpdateInfo->pClient, HUD_PRINTCONSOLE, msg);
+	char consoleMsg[256];
+	Q_snprintf(consoleMsg, sizeof(consoleMsg), "%s\n", msg);
+	Msg(consoleMsg);
 
-	delete pUpdateInfo;
+	UTIL_ClientPrintAll(HUD_PRINTCONSOLE, msg);
+
+	if (pUpdateInfo->async)
+		delete pUpdateInfo;
 
 	return 0;
 #endif

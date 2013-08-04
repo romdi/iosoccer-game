@@ -99,6 +99,8 @@ public:
 
 	static CUtlVector<CTeamInfo *> m_TeamInfo;
 	CUtlVector<CTeamKitInfo *> m_TeamKitInfo;
+
+	static float m_flLastUpdateTime;
 };
 
 #endif // TeamKit_INFO_PARSE_H

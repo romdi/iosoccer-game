@@ -336,13 +336,13 @@ void CPlayerTextureProxy::OnBind( C_BaseEntity *pEnt )
 				if (!m_pPreviewTextureRegen)
 					m_pPreviewTextureRegen = new CProceduralRegenerator();
 
-				//pDetailTexture->SetTextureRegenerator(m_pPreviewTextureRegen);
-				//m_pDetailTextureVar->SetTextureValue(pDetailTexture);
+				/*pDetailTexture->SetTextureRegenerator(m_pPreviewTextureRegen);
+				m_pDetailTextureVar->SetTextureValue(pDetailTexture);
 
-				//bool needsUpdate = m_pPreviewTextureRegen->SetPlayerInfo(name, shirtNumber, pKitInfo->m_OutfieldShirtNameColor, pKitInfo->m_nOutfieldShirtNameOffset, pKitInfo->m_OutfieldShirtNumberColor, pKitInfo->m_nOutfieldShirtNumberOffset, false, pKitInfo->m_pFontAtlas);
+				bool needsUpdate = m_pPreviewTextureRegen->SetPlayerInfo(name, shirtNumber, pKitInfo->m_OutfieldShirtNameColor, pKitInfo->m_nOutfieldShirtNameOffset, pKitInfo->m_OutfieldShirtNumberColor, pKitInfo->m_nOutfieldShirtNumberOffset, false, pKitInfo->m_pFontAtlas);
 				
-				//if (needsUpdate)
-				//	pDetailTexture->Download();
+				if (needsUpdate)
+					pDetailTexture->Download();*/
 			}
 			else
 				return;

@@ -426,6 +426,9 @@ const CSDKViewVectors *CSDKGameRules::GetSDKViewVectors() const
 CSDKGameRules::CSDKGameRules()
 {
 	g_IOSRand.SetSeed(Plat_FloatTime() * 1000);
+
+	CTeamInfo::ParseTeamKits();
+
 	SetupFormations();
 
 #ifdef GAME_DLL
@@ -548,10 +551,6 @@ void InitBodyQue()
 void CSDKGameRules::ServerActivate()
 {
 	CPlayerPersistentData::ReallocateAllPlayerData();
-
-	//CTeamInfo::DownloadTeamKits();
-	CTeamInfo::ParseTeamKits();
-	//CFileUpdater::UpdateFiles();
 
 	InitTeams();
 
@@ -2163,11 +2162,10 @@ void CC_SV_UpdateServer(const CCommand &args)
 	if (!UTIL_IsCommandIssuedByServerAdmin())
         return;
 
-	ClientPrint(UTIL_GetCommandClient(), HUD_PRINTCONSOLE, "Updating all server files. Please wait...");
+	Msg("Server Updater: Updating all server files. Please wait...\n");
 
 	IOSUpdateInfo* pUpdateInfo = new IOSUpdateInfo();
-	pUpdateInfo->checkOnly = false;
-	pUpdateInfo->pClient = ToSDKPlayer(UTIL_GetCommandClient());
+	pUpdateInfo->async = true;
 	CFileUpdater::UpdateFiles(pUpdateInfo);
 }
 
@@ -2177,7 +2175,7 @@ ConCommand sv_update_server("sv_update_server", CC_SV_UpdateServer, "", 0);
 void CC_MP_Teamkits(const CCommand &args)
 {
 	if (!UTIL_IsCommandIssuedByServerAdmin())
-        return;
+		return;
 
 	if (args.ArgC() == 1)
 	{
@@ -2185,7 +2183,7 @@ void CC_MP_Teamkits(const CCommand &args)
 		int teamCount = 0;
 		int kitCount = 0;
 
-		Q_strcat(list, "\n--------------------\n", sizeof(list));
+		Q_strcat(list, "\n----------------------------------------\n", sizeof(list));
 
 		for (int i = 0; i < CTeamInfo::m_TeamInfo.Count(); i++)
 		{
@@ -2200,21 +2198,11 @@ void CC_MP_Teamkits(const CCommand &args)
 			}
 		}
 
-		Q_strcat(list, "--------------------\n", sizeof(list));
+		Q_strcat(list, "----------------------------------------\n", sizeof(list));
 
 		Q_strcat(list, "\nUse 'mp_teamkits <home kit number> <away kit number>' to set the kits. E.g. 'mp_teamkits 103 202'\n\n", sizeof(list));
 
-		const int maxMsgSize = 250;
-
-		int index = 0;
-
-		while (index < strlen(list))
-		{
-			char listSlice[maxMsgSize];
-			Q_strncpy(listSlice, &list[index], sizeof(listSlice));
-			ClientPrint(UTIL_GetCommandClient(), HUD_PRINTCONSOLE_NO_NEWLINE, listSlice);
-			index += maxMsgSize - 1;
-		}
+		Msg(list);
 	}
 	else if (args.ArgC() == 3)
 	{
@@ -2229,10 +2217,12 @@ void CC_MP_Teamkits(const CCommand &args)
 		char homeKit[256] = {};
 		char awayKit[256] = {};
 
-		if (CTeamInfo::m_TeamInfo.Count() > homeTeamIndex && CTeamInfo::m_TeamInfo[homeTeamIndex]->m_TeamKitInfo.Count() > homeKitIndex)
+		if (homeTeamIndex >= 0 && CTeamInfo::m_TeamInfo.Count() > homeTeamIndex
+			&& homeKitIndex >= 0 && CTeamInfo::m_TeamInfo[homeTeamIndex]->m_TeamKitInfo.Count() > homeKitIndex)
 			Q_snprintf(homeKit, sizeof(homeKit), "%s/%s", CTeamInfo::m_TeamInfo[homeTeamIndex]->m_szFolderName, CTeamInfo::m_TeamInfo[homeTeamIndex]->m_TeamKitInfo[homeKitIndex]->m_szFolderName);
 
-		if (CTeamInfo::m_TeamInfo.Count() > awayTeamIndex && CTeamInfo::m_TeamInfo[awayTeamIndex]->m_TeamKitInfo.Count() > awayKitIndex)
+		if (awayTeamIndex >= 0 && CTeamInfo::m_TeamInfo.Count() > awayTeamIndex
+			&& awayKitIndex >= 0 && CTeamInfo::m_TeamInfo[awayTeamIndex]->m_TeamKitInfo.Count() > awayKitIndex)
 			Q_snprintf(awayKit, sizeof(awayKit), "%s/%s", CTeamInfo::m_TeamInfo[awayTeamIndex]->m_szFolderName, CTeamInfo::m_TeamInfo[awayTeamIndex]->m_TeamKitInfo[awayKitIndex]->m_szFolderName);
 
 		if (homeKit[0] != '\0' && awayKit[0] != '\0')
@@ -2244,17 +2234,17 @@ void CC_MP_Teamkits(const CCommand &args)
 		{
 			if (homeKit[0] == '\0')
 			{
-				ClientPrint(UTIL_GetCommandClient(), HUD_PRINTCONSOLE, "Error: Home team or kit not found.");
+				Msg("Error: Home team or kit not found.\n");
 			}
 			if (awayKit[0] == '\0')
 			{
-				ClientPrint(UTIL_GetCommandClient(), HUD_PRINTCONSOLE, "Error: Away team or kit not found.");
+				Msg("Error: Away team or kit not found.\n");
 			}
 		}
 	}
 	else
 	{
-		ClientPrint(UTIL_GetCommandClient(), HUD_PRINTCONSOLE, "Error: Wrong syntax.");
+		Msg("Error: Wrong syntax.\n");
 	}
 }
 
@@ -2451,30 +2441,6 @@ void CSDKGameRules::StopMeteringInjuryTime()
 		//}
 	}
 }
-
-#endif
-
-#ifdef CLIENT_DLL
-
-void CC_CL_Kits(const CCommand &args)
-{
-	char list[4096] = {};
-	int kitCount = 0;
-
-	for (int i = 0; i < CTeamInfo::m_TeamInfo.Count(); i++)
-	{
-		Q_strcat(list, VarArgs("%s:\n", CTeamInfo::m_TeamInfo[i]->m_szFolderName), sizeof(list));
-		for (int j = 0; j < CTeamInfo::m_TeamInfo[i]->m_TeamKitInfo.Count(); j++)
-		{
-			kitCount += 1;
-			Q_strcat(list, VarArgs("    %d: %s\n", kitCount, CTeamInfo::m_TeamInfo[i]->m_TeamKitInfo[j]->m_szFolderName), sizeof(list));
-		}
-	}
-
-	Msg(list);
-}
-
-ConCommand cl_kits( "cl_kits", CC_CL_Kits, "", 0);
 
 #endif
 

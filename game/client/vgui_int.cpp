@@ -201,7 +201,7 @@ void VGui_CreateGlobalPanels( void )
 
 	iosOptionsMenu->Create(GameUiDll);
 	iosUpdateMenu->Create(GameUiDll);
-	iosUpdateMenu->GetPanel()->Activate(UPDATE_CHECK_ONLY_AND_CLOSE);
+	iosUpdateMenu->GetPanel()->Activate(UPDATE_STATE_CHECK_ONLY_AND_CLOSE_PENDING);
 }
 
 void VGui_Shutdown()

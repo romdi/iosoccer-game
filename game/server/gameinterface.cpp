@@ -86,6 +86,8 @@
 #include "cdll_int.h"
 #include "tier3/tier3.h"
 #include "serverbenchmark_base.h"
+#include "ios_fileupdater.h"
+#include "ios_teamkit_parse.h"
 
 #ifdef CSTRIKE_DLL // BOTPORT: TODO: move these ifdefs out
 #include "bot/bot.h"
@@ -633,6 +635,12 @@ bool CServerGameDLL::DLLInit( CreateInterfaceFn appSystemFactory,
 	factories.fileSystemFactory = fileSystemFactory;
 	factories.physicsFactory = physicsFactory;
 	FactoryList_Store( factories );
+
+	//if (engine->IsDedicatedServer())
+	//{
+	//	IOSUpdateInfo updateInfo = IOSUpdateInfo();
+	//	CFileUpdater::UpdateFiles(&updateInfo);
+	//}
 
 	// load used game events  
 	gameeventmanager->LoadEventsFromFile("resource/gameevents.res");

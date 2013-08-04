@@ -279,6 +279,8 @@ colors_t classify(const HSL &hsl)
 //	return 0;
 //}
 
+float CTeamInfo::m_flLastUpdateTime = 0;
+
 CFontAtlas *CTeamKitInfo::m_pDefaultFontAtlas = NULL;
 
 CTeamKitInfo::CTeamKitInfo()
@@ -365,6 +367,10 @@ unsigned char **CFontAtlas::ParseInfo(const char *folderPath, const char *type, 
 	char path[128];
 
 	Q_snprintf(path, sizeof(path), "%s/%s_atlas.bmp", folderPath, type);
+
+	if (!filesystem->FileExists(path, "MOD"))
+		return NULL;
+
     FileHandle_t fh = filesystem->Open(path, "rb", "MOD");
 	int file_len = filesystem->Size(fh);
 
@@ -544,6 +550,8 @@ void CTeamInfo::ParseTeamKits()
 			}
 		}
 	}
+
+	m_flLastUpdateTime = gpGlobals->curtime;
 }
 
 void CTeamInfo::GetNonClashingTeamKits(char *homeTeam, char *awayTeam, bool clubTeams, bool nationalTeams, bool realTeams, bool fictitiousTeams)

@@ -151,6 +151,8 @@ class CAppearanceSettingPanel : public PropertyPage, public ISettingPanel
 	RadioButton *m_pBodypartRadioButtons[3];
 	Label *m_pConnectionInfoLabel;
 
+	float m_flLastTeamKitUpdateTime;
+
 public:
 
 	CAppearanceSettingPanel(Panel *parent, const char *panelName);

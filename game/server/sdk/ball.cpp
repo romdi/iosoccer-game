@@ -2288,7 +2288,7 @@ bool CBall::DoSlideAction()
 
 	Vector ballVel = forward * GetNormalshotStrength(1.0f, sv_ball_slide_strength.GetInt());
 
-	SetVel(ballVel, -1, BODY_PART_FEET, false, true, true);
+	SetVel(ballVel, 0, BODY_PART_FEET, false, true, true);
 
 	if (!SDKGameRules()->IsIntermissionState() && State_Get() == BALL_STATE_NORMAL && !HasQueuedState())
 		m_pPl->AddSlidingTackleCompleted();
@@ -2420,7 +2420,7 @@ bool CBall::CheckKeeperCatch()
 		punchAngle[PITCH] += sv_ball_keeper_punch_pitchoffset.GetInt();
 		AngleVectors(punchAngle, &punchDir);
 		Vector vel = punchDir * max(m_vVel.Length2D(), sv_ball_keeper_punch_minstrength.GetInt()) * sv_ball_keeperdeflectioncoeff.GetFloat();
-		SetVel(vel, -1, BODY_PART_KEEPERPUNCH, false, false, false);
+		SetVel(vel, 0, BODY_PART_KEEPERPUNCH, false, false, false);
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
 	}
 	else // Catch ball
@@ -2664,7 +2664,7 @@ bool CBall::DoHeader()
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEADER);
 	}
 
-	SetVel(m_vPlForwardVel2D + vel, -1, BODY_PART_HEAD, false, true, true);
+	SetVel(m_vPlForwardVel2D + vel, 0, BODY_PART_HEAD, false, true, true);
 
 	return true;
 }
