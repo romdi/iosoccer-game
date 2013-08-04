@@ -8,6 +8,24 @@
 #include "c_ball.h"
 #include "vgui/IVgui.h"
 
+extern ConVar
+	autohidespecmenu,
+	centeredstaminabar,
+	rate,
+	clubname,
+	fallbackcountryindex,
+	goalteamcrests,
+	invertkeepersprint,
+	legacysidecurl,
+	legacyverticallook,
+	modelskinindex,
+	playerballskin,
+	playername,
+	preferredkeepershirtnumber,
+	preferredoutfieldshirtnumber,
+	quicktacticpanel,
+	shirtname;
+
 class CIOSOptionsMenu : public IIOSOptionsMenu
 {
 private:
@@ -390,10 +408,10 @@ void CNetworkSettingPanel::Save()
 {
 	char text[64];
 	m_pPlayerNameText->GetText(text, sizeof(text));
-	g_pCVar->FindVar("playername")->SetValue(text);
+	playername.SetValue(text);
 	m_pClubNameText->GetText(text, sizeof(text));
-	g_pCVar->FindVar("clubname")->SetValue(text);
-	g_pCVar->FindVar("fallbackcountryindex")->SetValue(m_pCountryNameList->GetActiveItemUserData()->GetInt("index"));
+	clubname.SetValue(text);
+	fallbackcountryindex.SetValue(m_pCountryNameList->GetActiveItemUserData()->GetInt("index"));
 
 	g_pCVar->FindVar("cl_interp_ratio")->SetValue(atoi(m_pInterpDurationList->GetActiveItemUserData()->GetString("value")));
 	g_pCVar->FindVar("cl_smoothtime")->SetValue(atoi(m_pSmoothDurationList->GetActiveItemUserData()->GetString("value")) / 100.0f);
@@ -405,9 +423,9 @@ void CNetworkSettingPanel::Save()
 
 void CNetworkSettingPanel::Load()
 {
-	m_pPlayerNameText->SetText(g_pCVar->FindVar("playername")->GetString());
-	m_pCountryNameList->ActivateItemByRow(g_pCVar->FindVar("fallbackcountryindex")->GetInt());
-	m_pClubNameText->SetText(g_pCVar->FindVar("clubname")->GetString());
+	m_pPlayerNameText->SetText(playername.GetString());
+	m_pCountryNameList->ActivateItemByRow(fallbackcountryindex.GetInt());
+	m_pClubNameText->SetText(clubname.GetString());
 
 	m_pInterpDurationList->ActivateItemByRow(0);
 
@@ -602,26 +620,26 @@ void CAppearanceSettingPanel::Save()
 {
 	char shirtName[MAX_PLAYER_NAME_LENGTH];
 	m_pShirtNameText->GetText(shirtName, sizeof(shirtName));
-	g_pCVar->FindVar("shirtname")->SetValue(shirtName);
-	g_pCVar->FindVar("modelskinindex")->SetValue(m_pSkinIndexList->GetActiveItemUserData()->GetInt("value"));
-	g_pCVar->FindVar("preferredoutfieldshirtnumber")->SetValue(m_pPreferredOutfieldShirtNumberList->GetActiveItemUserData()->GetInt("index"));
-	g_pCVar->FindVar("preferredkeepershirtnumber")->SetValue(m_pPreferredKeeperShirtNumberList->GetActiveItemUserData()->GetInt("index"));
-	g_pCVar->FindVar("playerballskin")->SetValue(m_pPlayerBallSkinList->GetActiveItemUserData()->GetInt("index"));
+	shirtname.SetValue(shirtName);
+	modelskinindex.SetValue(m_pSkinIndexList->GetActiveItemUserData()->GetInt("value"));
+	preferredoutfieldshirtnumber.SetValue(m_pPreferredOutfieldShirtNumberList->GetActiveItemUserData()->GetInt("index"));
+	preferredkeepershirtnumber.SetValue(m_pPreferredKeeperShirtNumberList->GetActiveItemUserData()->GetInt("index"));
+	playerballskin.SetValue(m_pPlayerBallSkinList->GetActiveItemUserData()->GetInt("index"));
 }
 
 void CAppearanceSettingPanel::Load()
 {
-	m_pShirtNameText->SetText(g_pCVar->FindVar("shirtname")->GetString());
+	m_pShirtNameText->SetText(shirtname.GetString());
 
-	m_pSkinIndexList->ActivateItemByRow(clamp(g_pCVar->FindVar("modelskinindex")->GetInt(), -1, 5) + 1);
+	m_pSkinIndexList->ActivateItemByRow(clamp(modelskinindex.GetInt(), -1, 5) + 1);
 
-	int outfieldNumber = clamp(g_pCVar->FindVar("preferredoutfieldshirtnumber")->GetInt(), 2, 99);
+	int outfieldNumber = clamp(preferredoutfieldshirtnumber.GetInt(), 2, 99);
 	m_pPreferredOutfieldShirtNumberList->ActivateItemByRow(outfieldNumber - 2);
 
-	int keeperNumber = clamp(g_pCVar->FindVar("preferredkeepershirtnumber")->GetInt(), 1, 99);
+	int keeperNumber = clamp(preferredkeepershirtnumber.GetInt(), 1, 99);
 	m_pPreferredKeeperShirtNumberList->ActivateItemByRow(keeperNumber - 1);
 
-	m_pPlayerBallSkinList->ActivateItemByRow(g_pCVar->FindVar("playerballskin")->GetInt() + 1);
+	m_pPlayerBallSkinList->ActivateItemByRow(playerballskin.GetInt() + 1);
 }
 
 void CAppearanceSettingPanel::Update()
@@ -714,16 +732,16 @@ void CGameplaySettingPanel::PerformLayout()
 
 void CGameplaySettingPanel::Save()
 {
-	g_pCVar->FindVar("legacysidecurl")->SetValue(m_pLegacySideCurl->IsSelected() ? 1 : 0);
-	g_pCVar->FindVar("legacyverticallook")->SetValue(m_pLegacyVerticalLook->IsSelected() ? 1 : 0);
-	g_pCVar->FindVar("invertkeepersprint")->SetValue(m_pInvertKeeperSprint->IsSelected() ? 1 : 0);
+	legacysidecurl.SetValue(m_pLegacySideCurl->IsSelected() ? 1 : 0);
+	legacyverticallook.SetValue(m_pLegacyVerticalLook->IsSelected() ? 1 : 0);
+	invertkeepersprint.SetValue(m_pInvertKeeperSprint->IsSelected() ? 1 : 0);
 }
 
 void CGameplaySettingPanel::Load()
 {
-	m_pLegacySideCurl->SetSelected(g_pCVar->FindVar("legacysidecurl")->GetBool());
-	m_pLegacyVerticalLook->SetSelected(g_pCVar->FindVar("legacyverticallook")->GetBool());
-	m_pInvertKeeperSprint->SetSelected(g_pCVar->FindVar("invertkeepersprint")->GetBool());
+	m_pLegacySideCurl->SetSelected(legacysidecurl.GetBool());
+	m_pLegacyVerticalLook->SetSelected(legacyverticallook.GetBool());
+	m_pInvertKeeperSprint->SetSelected(invertkeepersprint.GetBool());
 }
 
 void CGameplaySettingPanel::Update()
@@ -752,18 +770,18 @@ void CVisualSettingPanel::PerformLayout()
 
 void CVisualSettingPanel::Save()
 {
-	g_pCVar->FindVar("centeredstaminabar")->SetValue(m_pCenteredStaminaBar->IsSelected() ? 1 : 0);
-	g_pCVar->FindVar("quicktacticpanel")->SetValue(m_pQuickTactic->IsSelected() ? 1 : 0);
-	g_pCVar->FindVar("autohidespecmenu")->SetValue(m_pAutoHideSpecMenu->IsSelected() ? 1 : 0);
-	g_pCVar->FindVar("goalteamcrests")->SetValue(m_pGoalTeamCrests->IsSelected() ? 1 : 0);
+	centeredstaminabar.SetValue(m_pCenteredStaminaBar->IsSelected() ? 1 : 0);
+	quicktacticpanel.SetValue(m_pQuickTactic->IsSelected() ? 1 : 0);
+	autohidespecmenu.SetValue(m_pAutoHideSpecMenu->IsSelected() ? 1 : 0);
+	goalteamcrests.SetValue(m_pGoalTeamCrests->IsSelected() ? 1 : 0);
 }
 
 void CVisualSettingPanel::Load()
 {
-	m_pCenteredStaminaBar->SetSelected(g_pCVar->FindVar("centeredstaminabar")->GetBool());
-	m_pQuickTactic->SetSelected(g_pCVar->FindVar("quicktacticpanel")->GetBool());
-	m_pAutoHideSpecMenu->SetSelected(g_pCVar->FindVar("autohidespecmenu")->GetBool());
-	m_pGoalTeamCrests->SetSelected(g_pCVar->FindVar("goalteamcrests")->GetBool());
+	m_pCenteredStaminaBar->SetSelected(centeredstaminabar.GetBool());
+	m_pQuickTactic->SetSelected(quicktacticpanel.GetBool());
+	m_pAutoHideSpecMenu->SetSelected(autohidespecmenu.GetBool());
+	m_pGoalTeamCrests->SetSelected(goalteamcrests.GetBool());
 }
 
 void CVisualSettingPanel::Update()

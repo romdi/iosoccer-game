@@ -346,6 +346,8 @@ void CHudScorebar::ApplySettings( KeyValues *inResourceData )
 	Panel::ApplySettings( inResourceData );
 }
 
+extern ConVar quicktacticpanel;
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -390,7 +392,7 @@ void CHudScorebar::OnThink( void )
 	{
 		if (GetLocalPlayerTeam() == TEAM_A || GetLocalPlayerTeam() == TEAM_B)
 		{
-			m_pQuickTacticPanel->SetVisible(g_pCVar->FindVar("quicktacticpanel")->GetBool());
+			m_pQuickTacticPanel->SetVisible(quicktacticpanel.GetBool());
 
 			if (i == GetGlobalTeam(GetLocalPlayerTeam())->GetQuickTactic())
 			{
