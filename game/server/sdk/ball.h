@@ -125,8 +125,8 @@ public:
 	CNetworkHandle(CSDKPlayer, m_pCreator);
 	CNetworkVar(bool, m_bIsPlayerBall);
 	CNetworkVar(ball_state_t, m_eBallState);
-	CNetworkHandle(CSDKPlayer, m_pCurrentPlayer);
-	CNetworkVar(int, m_nCurrentTeam);
+	CNetworkHandle(CSDKPlayer, m_pLastActivePlayer);
+	CNetworkVar(int, m_nLastActiveTeam);
 	CNetworkVar(bool, m_bNonnormalshotsBlocked);
 	CNetworkVar(bool, m_bShotsBlocked);
 
@@ -174,6 +174,7 @@ public:
 
 	inline ball_state_t State_Get( void ) { return m_pCurStateInfo->m_eBallState; }
 
+	CSDKPlayer		*GetLastActivePlayer() { return m_pLastActivePlayer; }
 	CSDKPlayer		*GetCurrentPlayer() { return m_pPl; }
 	CSDKPlayer		*GetCurrentOtherPlayer() { return m_pOtherPl; }
 	CSDKPlayer		*GetCreator() { return m_pCreator; }

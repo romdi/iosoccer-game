@@ -12,8 +12,8 @@ IMPLEMENT_CLIENTCLASS_DT( C_Ball, DT_Ball, CBall )
 	RecvPropInt( RECVINFO( m_iPhysicsMode ) ),
 	RecvPropFloat( RECVINFO( m_fMass ) ),
 	RecvPropEHandle(RECVINFO(m_pCreator)),
-	RecvPropEHandle(RECVINFO(m_pCurrentPlayer)),
-	RecvPropInt(RECVINFO(m_nCurrentTeam)),
+	RecvPropEHandle(RECVINFO(m_pLastActivePlayer)),
+	RecvPropInt(RECVINFO(m_nLastActiveTeam)),
 	RecvPropBool(RECVINFO(m_bIsPlayerBall)),
 	RecvPropInt(RECVINFO(m_eBallState)),
 	RecvPropBool(RECVINFO(m_bNonnormalshotsBlocked)),
@@ -31,8 +31,8 @@ C_Ball::C_Ball()
 {
 	m_pCreator = NULL;
 	m_bIsPlayerBall = false;
-	m_pCurrentPlayer = NULL;
-	m_nCurrentTeam = TEAM_UNASSIGNED;
+	m_pLastActivePlayer = NULL;
+	m_nLastActiveTeam = TEAM_UNASSIGNED;
 }
 
 C_Ball::~C_Ball()

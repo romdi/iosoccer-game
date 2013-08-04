@@ -683,7 +683,7 @@ void C_Camera::CalcTVCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov)
 	{
 		if (GetBall() && GetBall()->m_eBallState == BALL_STATE_GOAL)
 		{
-			pTarget = GetBall()->m_pCurrentPlayer;
+			pTarget = GetBall()->m_pLastActivePlayer;
 
 			if (!pTarget)
 				pTarget = GetBall();
@@ -701,27 +701,27 @@ void C_Camera::CalcTVCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov)
 			targetPos = pTarget->GetLocalOrigin();
 
 			// Move the camera towards the defending team's goal
-			if (GetBall()->m_nCurrentTeam != TEAM_UNASSIGNED)
+			if (GetBall()->m_nLastActiveTeam != TEAM_UNASSIGNED)
 			{
 				if (m_nLastPossessingTeam == TEAM_UNASSIGNED)
 				{
-					m_nLastPossessingTeam = GetBall()->m_nCurrentTeam;
+					m_nLastPossessingTeam = GetBall()->m_nLastActiveTeam;
 					m_flLastPossessionChange = gpGlobals->curtime;
 					m_flPossCoeff = 0;
 					m_flOldPossCoeff = 0;
 				}
 				else
 				{
-					if (GetBall()->m_nCurrentTeam != m_nLastPossessingTeam)
+					if (GetBall()->m_nLastActiveTeam != m_nLastPossessingTeam)
 					{
-						m_nLastPossessingTeam = GetBall()->m_nCurrentTeam;
+						m_nLastPossessingTeam = GetBall()->m_nLastActiveTeam;
 						m_flLastPossessionChange = gpGlobals->curtime;
 						m_flOldPossCoeff = m_flPossCoeff;
 					}
 
 					float timeFrac = min(1.0f, (gpGlobals->curtime - m_flLastPossessionChange) / mp_tvcam_offset_forward_time.GetFloat());
 					float frac = pow(timeFrac, 2) * (3 - 2 * timeFrac); 
-					m_flPossCoeff = Lerp(frac, m_flOldPossCoeff, (float)GetGlobalTeam(GetBall()->m_nCurrentTeam)->m_nForward);
+					m_flPossCoeff = Lerp(frac, m_flOldPossCoeff, (float)GetGlobalTeam(GetBall()->m_nLastActiveTeam)->m_nForward);
 				}
 
 				if (tvcamMode == TVCAM_MODE_SIDELINE)

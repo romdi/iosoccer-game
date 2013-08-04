@@ -557,6 +557,11 @@ void CSDKPlayer::FindSafePos(Vector &startPos)
 
 void CSDKPlayer::CheckShotCharging()
 {
+	if ((m_Shared.m_bIsShotCharging || m_Shared.m_bDoChargedShot) && (m_nButtons & IN_ATTACK) != 0)
+		m_Shared.m_bDoFakeShot = true;
+	else if ((m_nButtons & IN_ATTACK) == 0)
+		m_Shared.m_bDoFakeShot = false;
+
 	if ((m_nButtons & IN_ATTACK)
 		|| (GetFlags() & FL_REMOTECONTROLLED)
 		|| GetBall() && (GetBall()->m_bNonnormalshotsBlocked || GetBall()->m_bShotsBlocked)
@@ -568,6 +573,7 @@ void CSDKPlayer::CheckShotCharging()
 	else if ((m_nButtons & IN_ATTACK2) && !m_Shared.m_bIsShotCharging)
 	{
 		m_Shared.m_bDoChargedShot = false;
+		m_Shared.m_bDoFakeShot = false;
 		m_Shared.m_bIsShotCharging = true;
 		m_Shared.m_flShotChargingStart = gpGlobals->curtime;
 	}
@@ -583,6 +589,7 @@ void CSDKPlayer::CheckShotCharging()
 			m_Shared.m_bIsShotCharging = false;
 			m_Shared.m_flShotChargingDuration = gpGlobals->curtime - m_Shared.m_flShotChargingStart;
 			m_Shared.m_bDoChargedShot = true;
+			m_Shared.m_bDoFakeShot = false;
 		}
 	}
 }
@@ -590,6 +597,7 @@ void CSDKPlayer::CheckShotCharging()
 void CSDKPlayer::ResetShotCharging()
 {
 	m_Shared.m_bDoChargedShot = false;
+	m_Shared.m_bDoFakeShot = false;
 	m_Shared.m_bIsShotCharging = false;
 }
 

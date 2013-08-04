@@ -46,8 +46,8 @@ public:
 	int m_iPhysicsMode;	// One of the PHYSICS_MULTIPLAYER_ defines.	
 	float m_fMass;
 	CHandle<C_SDKPlayer> m_pCreator;
-	CHandle<C_SDKPlayer> m_pCurrentPlayer;
-	int m_nCurrentTeam;
+	CHandle<C_SDKPlayer> m_pLastActivePlayer;
+	int m_nLastActiveTeam;
 	bool m_bIsPlayerBall;
 	ball_state_t m_eBallState;
 	bool m_bNonnormalshotsBlocked;

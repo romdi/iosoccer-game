@@ -220,6 +220,8 @@ ConVar sv_ball_blockpowershot("sv_ball_blockpowershot", "1", FCVAR_NOTIFY);
 
 ConVar sv_ball_maxcheckdist("sv_ball_maxcheckdist", "200", FCVAR_NOTIFY);
 
+ConVar sv_ball_fakeshotdelay("sv_ball_fakeshotdelay", "0.5", FCVAR_NOTIFY);
+
 
 void OnBallSkinChange(IConVar *var, const char *pOldValue, float flOldValue)
 {
@@ -361,8 +363,8 @@ IMPLEMENT_SERVERCLASS_ST( CBall, DT_Ball )
 	SendPropInt( SENDINFO( m_iPhysicsMode ), 2,	SPROP_UNSIGNED ),
 	SendPropFloat( SENDINFO( m_fMass ),	0, SPROP_NOSCALE ),
 	SendPropEHandle(SENDINFO(m_pCreator)),
-	SendPropEHandle(SENDINFO(m_pCurrentPlayer)),
-	SendPropInt(SENDINFO(m_nCurrentTeam)),
+	SendPropEHandle(SENDINFO(m_pLastActivePlayer)),
+	SendPropInt(SENDINFO(m_nLastActiveTeam)),
 	SendPropBool(SENDINFO(m_bIsPlayerBall)),
 	SendPropInt(SENDINFO(m_eBallState)),
 	SendPropInt(SENDINFO(m_bNonnormalshotsBlocked)),
@@ -394,7 +396,7 @@ CBall::CBall()
 	m_flStateTimelimit = -1;
 	m_pPl = NULL;
 	m_pOtherPl = NULL;
-	m_pCurrentPlayer = NULL;
+	m_pLastActivePlayer = NULL;
 	m_ePenaltyState = PENALTY_NONE;
 	m_bSetNewPos = false;
 	m_bSetNewVel = false;
@@ -1114,8 +1116,8 @@ void CBall::State_Think()
 
 	if (m_pPl) // Set info for the client
 	{
-		m_pCurrentPlayer = m_pPl;
-		m_nCurrentTeam = m_pPl->GetTeamNumber();
+		m_pLastActivePlayer = m_pPl;
+		m_nLastActiveTeam = m_pPl->GetTeamNumber();
 	}
 }
 
@@ -1217,8 +1219,10 @@ void CBall::State_NORMAL_Think()
 			if (DoBodyPartAction())
 				break;
 
-			// Skip the current player for further checks
+			// Exclude the current player from subsequent checks
 			ignoredPlayerBits |= (1 << (m_pPl->entindex() - 1));
+
+			m_pPl = NULL;
 		}
 	}
 }
@@ -2506,82 +2510,58 @@ float CBall::GetChargedshotStrength(float coeff, int minStrength, int maxStrengt
 
 bool CBall::DoGroundShot(bool markOffsidePlayers, float velCoeff /*= 1.0f*/)
 {
-	float spin;
-	Vector vel;
-
-	if (m_pPl->IsAutoPassing())
+	if (m_pPl->m_Shared.m_bDoFakeShot)
 	{
-		CSDKPlayer *pPl = m_pPl->FindClosestPlayerToSelf(true, true, 180);
-		if (!pPl)
-			pPl = m_pPl->FindClosestPlayerToSelf(true, false, 180);
-		if (!pPl)
-			return false;
+		m_pPl->m_Shared.m_bDoFakeShot = false;
 
-		Vector dir = pPl->GetLocalOrigin() - m_vPlPos;
-		float length = dir.Length2D();
-		QAngle ang;
-		VectorAngles(dir, ang);
-		ang[PITCH] = -30;
-		AngleVectors(ang, &dir);
+		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_PASS);
+		m_pPl->m_flNextShot = gpGlobals->curtime + sv_ball_fakeshotdelay.GetFloat();
 
-		float shotStrength = clamp(length * sv_ball_autopass_coeff.GetFloat(), sv_ball_autopass_minstrength.GetInt(), sv_ball_autopass_maxstrength.GetInt());
-		float staminaUsage = min(m_pPl->m_Shared.GetStamina(), shotStrength * 100 / sv_ball_autopass_maxstrength.GetInt());
-		shotStrength = max(sv_ball_minshotstrength.GetInt(), staminaUsage / 100.0f * sv_ball_autopass_maxstrength.GetInt());
-		m_pPl->m_Shared.SetStamina(m_pPl->m_Shared.GetStamina() - staminaUsage);
+		return true;
+	}
 
-		vel = dir * shotStrength;
-		spin = 0;
+	Vector dirToBall = m_vPos - m_vPlPos;
+	Vector localDirToBall;
+	VectorIRotate(dirToBall, m_pPl->EntityToWorldTransform(), localDirToBall);
+
+	QAngle shotAngle = m_aPlAng;
+	shotAngle[PITCH] = min(sv_ball_groundshot_minangle.GetFloat(), m_aPlAng[PITCH]);
+
+	Vector shotDir;
+	AngleVectors(shotAngle, &shotDir);
+
+	float shotStrength;
+
+	if (m_pPl->IsNormalshooting())
+		shotStrength = GetNormalshotStrength(GetPitchCoeff(true), sv_ball_normalshot_strength.GetInt());
+	else if (m_pPl->IsPowershooting())
+		shotStrength = GetPowershotStrength(GetPitchCoeff(false), sv_ball_powershot_strength.GetInt());
+	else
+		shotStrength = GetChargedshotStrength(GetPitchCoeff(false), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
+
+	Vector vel = shotDir * shotStrength * velCoeff;
+
+	if (vel.Length() > 1000)
+	{
+		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KICK);
+		EmitSound("Ball.Kickhard");
+	}
+	else if (vel.Length() > 700)
+	{
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_PASS);
 		EmitSound("Ball.Kicknormal");
 	}
 	else
 	{
-		Vector dirToBall = m_vPos - m_vPlPos;
-		Vector localDirToBall;
-		VectorIRotate(dirToBall, m_pPl->EntityToWorldTransform(), localDirToBall);
-
-		QAngle shotAngle = m_aPlAng;
-		shotAngle[PITCH] = min(sv_ball_groundshot_minangle.GetFloat(), m_aPlAng[PITCH]);
-
-		Vector shotDir;
-		AngleVectors(shotAngle, &shotDir);
-
-		float shotStrength;
-
-		if (m_pPl->IsNormalshooting())
-			shotStrength = GetNormalshotStrength(GetPitchCoeff(true), sv_ball_normalshot_strength.GetInt());
-		else if (m_pPl->IsPowershooting())
-			shotStrength = GetPowershotStrength(GetPitchCoeff(false), sv_ball_powershot_strength.GetInt());
+		if (localDirToBall.x < 0 && m_aPlAng[PITCH] <= -45)
+			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEELKICK);
 		else
-			shotStrength = GetChargedshotStrength(GetPitchCoeff(false), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
+			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
 
-		vel = shotDir * shotStrength * velCoeff;
-
-		if (vel.Length() > 700)
-		{
-			PlayerAnimEvent_t anim = PLAYERANIMEVENT_BLANK;
-			anim = PLAYERANIMEVENT_KICK;
-			m_pPl->DoServerAnimationEvent(anim);
-
-			if (vel.Length() > 1000)
-				EmitSound("Ball.Kickhard");
-			else
-				EmitSound("Ball.Kicknormal");
-		}
-		else
-		{
-			if (localDirToBall.x < 0 && m_aPlAng[PITCH] <= -45)
-				m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEELKICK);
-			else
-				m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
-
-			EmitSound("Ball.Touch");
-		}
-
-		spin = 1;
+		EmitSound("Ball.Touch");
 	}
 
-	SetVel(vel, spin, BODY_PART_FEET, false, markOffsidePlayers, true);
+	SetVel(vel, 1.0f, BODY_PART_FEET, false, markOffsidePlayers, true);
 
 	return true;
 }
@@ -3053,9 +3033,14 @@ void CBall::Kicked(body_part_t bodyPart, bool isDeflection, const Vector &oldVel
 		delay = sv_ball_shotdelay_setpiece.GetFloat();
 	}
 	
-	m_pPl->m_flNextShot = gpGlobals->curtime + delay;
 	m_flGlobalNextShot = gpGlobals->curtime + dynamicDelay * sv_ball_shotdelay_global_coeff.GetFloat();
 	m_flGlobalNextKeeperCatch = gpGlobals->curtime + dynamicDelay * sv_ball_keepercatchdelay_global_coeff.GetFloat();
+
+	if (isDeflection)
+		m_pPl->m_flNextShot = m_flGlobalNextShot;
+	else
+		m_pPl->m_flNextShot = gpGlobals->curtime + delay;
+
 	Touched(m_pPl, !isDeflection, bodyPart, oldVel);
 }
 
@@ -3274,7 +3259,7 @@ void CBall::Reset()
 	ReloadSettings();
 	m_pPl = NULL;
 	m_pOtherPl = NULL;
-	m_pCurrentPlayer = NULL;
+	m_pLastActivePlayer = NULL;
 	RemoveAllTouches();
 	m_ePenaltyState = PENALTY_NONE;
 	UnmarkOffsidePlayers();

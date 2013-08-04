@@ -553,7 +553,6 @@ public:
 	bool				IsNormalshooting();
 	bool				IsPowershooting();
 	bool				IsChargedshooting();
-	bool				IsAutoPassing();
 	bool				IsShooting();
 	CSDKPlayer			*FindClosestPlayerToSelf(bool teammatesOnly, bool forwardOnly = false, float maxYawAngle = 360);
 

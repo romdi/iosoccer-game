@@ -126,6 +126,7 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 
 	SendPropBool( SENDINFO( m_bIsShotCharging ) ),
 	SendPropBool( SENDINFO( m_bDoChargedShot ) ),
+	SendPropBool( SENDINFO( m_bDoFakeShot ) ),
 	SendPropTime( SENDINFO( m_flShotChargingStart ) ),
 	SendPropTime( SENDINFO( m_flShotChargingDuration ) ),
 	SendPropInt( SENDINFO( m_ePlayerAnimEvent ) ),
@@ -1560,14 +1561,9 @@ bool CSDKPlayer::IsChargedshooting()
 	return m_Shared.m_bDoChargedShot;
 }
 
-bool CSDKPlayer::IsAutoPassing()
-{
-	return false; //(m_nButtons & IN_ALT2) != 0;
-}
-
 bool CSDKPlayer::IsShooting()
 {
-	return IsNormalshooting() || IsPowershooting() || IsChargedshooting() || IsAutoPassing();
+	return IsNormalshooting() || IsPowershooting() || IsChargedshooting();
 }
 
 bool CSDKPlayer::ShotButtonsPressed()
