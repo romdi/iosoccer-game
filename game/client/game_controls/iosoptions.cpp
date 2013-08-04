@@ -792,6 +792,12 @@ void CVisualSettingPanel::Update()
 
 #define MUTED_VOLUME 0.0f
 
+ConVar cl_sound_crowdbg_enabled("cl_sound_crowdbg_enabled", "1", FCVAR_ARCHIVE);
+ConVar cl_sound_crowdbg_volume("cl_sound_crowdbg_volume", "100", FCVAR_ARCHIVE);
+
+ConVar cl_sound_crowdevent_enabled("cl_sound_crowdevent_enabled", "1", FCVAR_ARCHIVE);
+ConVar cl_sound_crowdevent_volume("cl_sound_crowdevent_volume", "100", FCVAR_ARCHIVE);
+
 CSoundSettingPanel::CSoundSettingPanel(Panel *parent, const char *panelName) : BaseClass(parent, panelName)
 {
 	m_pContent = new Panel(this, "");
@@ -830,6 +836,8 @@ CSoundSettingPanel::CSoundSettingPanel(Panel *parent, const char *panelName) : B
 	ListenForGameEvent("penalty");
 	ListenForGameEvent("wakeupcall");
 	ListenForGameEvent("kickoff");
+
+	m_bIsFirstTick = true;
 }
 
 void CSoundSettingPanel::PerformLayout()
@@ -888,6 +896,31 @@ void CSoundSettingPanel::FireGameEvent(IGameEvent *event)
 
 void CSoundSettingPanel::OnTick()
 {
+	if (m_bIsFirstTick)
+	{
+		m_bIsFirstTick = false;
+
+		m_pCrowdBg->SetSelected(cl_sound_crowdbg_enabled.GetBool());
+		m_pCrowdBgVolume->SetValue(cl_sound_crowdbg_volume.GetInt());
+
+		m_pCrowdEvent->SetSelected(cl_sound_crowdevent_enabled.GetBool());
+		m_pCrowdEventVolume->SetValue(cl_sound_crowdevent_volume.GetInt());
+	}
+	else
+	{
+		if (m_pCrowdBg->IsSelected() != cl_sound_crowdbg_enabled.GetBool())
+			cl_sound_crowdbg_enabled.SetValue(m_pCrowdBg->IsSelected() ? 1 : 0);
+
+		if (m_pCrowdBgVolume->GetValue() != cl_sound_crowdbg_volume.GetInt())
+			cl_sound_crowdbg_volume.SetValue(m_pCrowdBgVolume->GetValue());
+
+		if (m_pCrowdEvent->IsSelected() != cl_sound_crowdevent_enabled.GetBool())
+			cl_sound_crowdevent_enabled.SetValue(m_pCrowdEvent->IsSelected() ? 1 : 0);
+
+		if (m_pCrowdEventVolume->GetValue() != cl_sound_crowdevent_volume.GetInt())
+			cl_sound_crowdevent_volume.SetValue(m_pCrowdEventVolume->GetValue());
+	}
+
 	C_Ball *pBall = GetBall();
 
 	if (!pBall)

@@ -204,6 +204,8 @@ class CSoundSettingPanel : public PropertyPage, public ISettingPanel, public CGa
 
 	MESSAGE_FUNC_PTR( OnCheckButtonChecked, "CheckButtonChecked", panel );
 
+	bool m_bIsFirstTick;
+
 public:
 
 	CSoundSettingPanel(Panel *parent, const char *panelName);
