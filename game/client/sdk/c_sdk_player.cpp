@@ -44,7 +44,7 @@ ConVar playername("playername", "", FCVAR_USERINFO | FCVAR_ARCHIVE, "Your name",
 
 ConVar shirtname("shirtname", "", FCVAR_USERINFO | FCVAR_ARCHIVE, "Your shirt name");
 ConVar clubname("clubname", "", FCVAR_USERINFO | FCVAR_ARCHIVE, "The name of your club");
-ConVar geoipcountryindex("geoipcountryindex", "0", FCVAR_USERINFO | FCVAR_ARCHIVE | FCVAR_HIDDEN, "The name of your country");
+ConVar hiddengeoipcountryindex("hiddengeoipcountryindex", "0", FCVAR_USERINFO | FCVAR_HIDDEN, "The name of your country");
 ConVar fallbackcountryindex("fallbackcountryindex", "0", FCVAR_USERINFO | FCVAR_ARCHIVE, "The name of your country");
 ConVar preferredoutfieldshirtnumber("preferredoutfieldshirtnumber", "2", FCVAR_USERINFO | FCVAR_ARCHIVE, "Your preferred outfield shirt number");
 ConVar preferredkeepershirtnumber("preferredkeepershirtnumber", "1", FCVAR_USERINFO | FCVAR_ARCHIVE, "Your preferred keeper shirt number");
