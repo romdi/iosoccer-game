@@ -583,7 +583,7 @@ void CAppearanceSettingPanel::PerformLayout()
 	m_pContent->SetBounds(PADDING, PADDING, GetWide() - 2 * PADDING, GetTall() - 2 * PADDING);
 
 	m_pPlayerPreviewPanel->SetBounds(APPEARANCE_RADIOBUTTONWIDTH, 0, GetParent()->GetWide(), GetParent()->GetTall() - 2 * TEXT_HEIGHT);
-	m_pPlayerPreviewPanel->SetImage("../_rt_playermodel");
+	m_pPlayerPreviewPanel->SetImage("../_rt_playermodelTEMPREMOVE");
 
 	m_pShirtNameLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 0 * TEXT_HEIGHT + 0 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
 	m_pShirtNameText->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 1 * TEXT_HEIGHT + 0 * TEXT_MARGIN, SHORTINPUT_WIDTH, TEXT_HEIGHT);

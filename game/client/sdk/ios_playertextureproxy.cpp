@@ -323,18 +323,18 @@ void CPlayerTextureProxy::OnBind( C_BaseEntity *pEnt )
 
 			if (pPlayerModelPreview)
 			{
-				CAppearanceSettingPanel *pPanel = (CAppearanceSettingPanel *)iosOptionsMenu->GetPanel()->GetSettingPanel(SETTING_PANEL_APPEARANCE);
-				pPanel->GetPlayerTeamInfo(&teamFolder, &kitFolder);
-				shirtNumber = pPanel->GetPlayerOutfieldShirtNumber();
-				const char *name = g_PR->GetShirtName(GetLocalPlayerIndex());
-				if (name[0] == '\0')
-					name = g_PR->GetPlayerName(GetLocalPlayerIndex());
-				CTeamKitInfo *pKitInfo = CTeamInfo::FindTeamByKitName(VarArgs("%s/%s", teamFolder, kitFolder));
+				//CAppearanceSettingPanel *pPanel = (CAppearanceSettingPanel *)iosOptionsMenu->GetPanel()->GetSettingPanel(SETTING_PANEL_APPEARANCE);
+				//pPanel->GetPlayerTeamInfo(&teamFolder, &kitFolder);
+				//shirtNumber = pPanel->GetPlayerOutfieldShirtNumber();
+				//const char *name = g_PR->GetShirtName(GetLocalPlayerIndex());
+				//if (name[0] == '\0')
+				//	name = g_PR->GetPlayerName(GetLocalPlayerIndex());
+				//CTeamKitInfo *pKitInfo = CTeamInfo::FindTeamByKitName(VarArgs("%s/%s", teamFolder, kitFolder));
 
-				ITexture *pDetailTexture = materials->FindTexture("models/player/default/detail_preview", NULL, true);
+				//ITexture *pDetailTexture = materials->FindTexture("models/player/default/detail_preview", NULL, true);
 
-				if (!m_pPreviewTextureRegen)
-					m_pPreviewTextureRegen = new CProceduralRegenerator();
+				//if (!m_pPreviewTextureRegen)
+				//	m_pPreviewTextureRegen = new CProceduralRegenerator();
 
 				/*pDetailTexture->SetTextureRegenerator(m_pPreviewTextureRegen);
 				m_pDetailTextureVar->SetTextureValue(pDetailTexture);
