@@ -85,14 +85,12 @@ void CKeeperBot::BotAdjustPos()
 
 			if (pPl)
 			{
-				m_cmd.powershot_strength = 66;
 				VectorAngles(pPl->GetLocalOrigin() - GetLocalOrigin(), ang);
 				ang[PITCH] = g_IOSRand.RandomFloat(-40, 0);
 				//m_flBotNextShot = gpGlobals->curtime + 1;
 			}
 			else
 			{
-				m_cmd.powershot_strength = g_IOSRand.RandomFloat(50, 100);
 				VectorAngles(Vector(0, GetTeam()->m_nForward, 0), ang);
 				ang[YAW] += g_IOSRand.RandomFloat(-45, 45);
 				ang[PITCH] = g_IOSRand.RandomFloat(-40, 0);
@@ -110,7 +108,6 @@ void CKeeperBot::BotAdjustPos()
 		if (ballDistToGoal < 750 && m_vDirToBall.Length2D() < 200 && m_vDirToBall.z < 200 && (m_vDirToBall.z < 80 || m_vBallVel.z <= 0))
 		{
 			modifier = KEEPER_CLOSE_COEFF;// max(0.15f, 1 - ballDistToGoal / 750);
-			m_cmd.powershot_strength = 50;
 			VectorAngles(Vector(0, GetTeam()->m_nForward, 0), ang);
 			bool diving = false;
 
@@ -150,14 +147,12 @@ void CKeeperBot::BotAdjustPos()
 
 					if (pPl)
 					{
-						m_cmd.powershot_strength = 66;
 						VectorAngles(pPl->GetLocalOrigin() - GetLocalOrigin(), ang);
 						ang[PITCH] = g_IOSRand.RandomFloat(-40, 0);
 						//m_flBotNextShot = gpGlobals->curtime + 1;
 					}
 					else
 					{
-						m_cmd.powershot_strength = g_IOSRand.RandomFloat(50, 100);
 						VectorAngles(Vector(0, GetTeam()->m_nForward, 0), ang);
 						ang[YAW] += g_IOSRand.RandomFloat(-45, 45);
 						ang[PITCH] = g_IOSRand.RandomFloat(-40, 0);

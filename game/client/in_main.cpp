@@ -1124,15 +1124,6 @@ void CInput::CreateMove ( int sequence_number, float input_sample_frametime, boo
 	// Set button and flag bits
 	cmd->buttons = GetButtonBits( 1 );
 
-	//if (cmd->buttons & IN_ATTACK2)
-	//{
-	//	cmd->powershot_strength = clamp(cl_powershot_fixed_strength.GetInt(), 0, 100);
-	//}
-	//else
-	//{
-		cmd->powershot_strength = 0;
-	//}
-
 	// Using joystick?
 	if ( in_joystick.GetInt() )
 	{

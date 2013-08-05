@@ -187,16 +187,6 @@ void WriteUsercmd( bf_write *buf, const CUserCmd *to, const CUserCmd *from )
 		buf->WriteOneBit( 0 );
 	}
 #endif
-
-	if (to->powershot_strength != from->powershot_strength)
-	{
-		buf->WriteOneBit(1);
-		buf->WriteByte(to->powershot_strength);
-	}
-	else
-	{
-		buf->WriteOneBit(0);
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -311,9 +301,4 @@ void ReadUsercmd( bf_read *buf, CUserCmd *move, CUserCmd *from )
 		}
 	}
 #endif
-
-	if (buf->ReadOneBit())
-	{
-		move->powershot_strength = buf->ReadByte();
-	}
 }

@@ -348,8 +348,6 @@ void CPlayerMove::RunCommand ( CBasePlayer *player, CUserCmd *ucmd, IMoveHelper 
 
 	CommentarySystem_PePlayerRunCommand( player, ucmd );
 
-	player->m_nPowershotStrength = clamp(ucmd->powershot_strength, 0, 100);
-
 	// Do weapon selection
 	if ( ucmd->weaponselect != 0 )
 	{

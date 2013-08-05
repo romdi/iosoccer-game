@@ -58,8 +58,6 @@ public:
 #if defined( HL2_DLL ) || defined( HL2_CLIENT_DLL )
 		entitygroundcontact.RemoveAll();
 #endif
-
-		powershot_strength = 0;
 	}
 
 	CUserCmd& operator =( const CUserCmd& src )
@@ -87,8 +85,6 @@ public:
 		entitygroundcontact			= src.entitygroundcontact;
 #endif
 
-		powershot_strength = src.powershot_strength;
-
 		return *this;
 	}
 
@@ -115,7 +111,6 @@ public:
 		CRC32_ProcessBuffer( &crc, &random_seed, sizeof( random_seed ) );
 		CRC32_ProcessBuffer( &crc, &mousedx, sizeof( mousedx ) );
 		CRC32_ProcessBuffer( &crc, &mousedy, sizeof( mousedy ) );
-		CRC32_ProcessBuffer( &crc, &powershot_strength, sizeof( powershot_strength ) );
 		CRC32_Final( &crc );
 
 		return crc;
@@ -156,8 +151,6 @@ public:
 #if defined( HL2_DLL ) || defined( HL2_CLIENT_DLL )
 	CUtlVector< CEntityGroundContact > entitygroundcontact;
 #endif
-
-	byte powershot_strength;
 };
 
 void ReadUsercmd( bf_read *buf, CUserCmd *move, CUserCmd *from );

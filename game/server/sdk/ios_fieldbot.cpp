@@ -63,7 +63,6 @@ void CFieldBot::BotShootBall()
 		}
 
 		VectorAngles(shotDir, m_cmd.viewangles);
-		m_cmd.powershot_strength = g_IOSRand.RandomInt(0, 100);
 		m_cmd.viewangles[PITCH] = g_IOSRand.RandomFloat(-89, 89);
 	}
 	else
@@ -81,8 +80,7 @@ void CFieldBot::BotShootBall()
 
 		VectorAngles(shotDir, m_cmd.viewangles);
 		m_cmd.buttons |= IN_ALT1;
-		m_cmd.powershot_strength = 100 * g_IOSRand.RandomFloat(0, 1);
-		m_cmd.viewangles[PITCH] = -30 + 30 * (1 - m_cmd.powershot_strength / 100.0f);
+		m_cmd.viewangles[PITCH] = 0;
 	}
 
 	if (m_vDirToBall.z > GetPlayerMaxs().z + 10)
