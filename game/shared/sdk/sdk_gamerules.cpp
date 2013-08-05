@@ -427,8 +427,6 @@ CSDKGameRules::CSDKGameRules()
 {
 	g_IOSRand.SetSeed(Plat_FloatTime() * 1000);
 
-	CTeamInfo::ParseTeamKits();
-
 	SetupFormations();
 
 #ifdef GAME_DLL
@@ -779,6 +777,8 @@ void CSDKGameRules::InitTeams( void )
 
 		g_Teams.AddToTail( pTeam );
 	}
+
+	CTeamInfo::ParseTeamKits();
 
 	ChooseTeamNames(true, true, true, false);
 
