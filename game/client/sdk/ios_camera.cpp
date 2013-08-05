@@ -74,8 +74,12 @@ void CheckAutoTransparentProps(const Vector &pos, const QAngle &ang)
 		if(!dynamic_cast<C_AutoTransparentProp *>(pEnt))
 			continue;
 
-		if (opacity != 1.0f && (pos.y <= SDKGameRules()->m_vFieldMin.GetY() + cl_goal_opacity_fieldoffset.GetFloat() && pEnt->GetLocalOrigin().y < SDKGameRules()->m_vKickOff.GetY()
-			|| pos.y >= SDKGameRules()->m_vFieldMax.GetY() - cl_goal_opacity_fieldoffset.GetFloat() && pEnt->GetLocalOrigin().y > SDKGameRules()->m_vKickOff.GetY()))
+		// Check if the camera is behind the goal line and close to the goal. Use an additional offset so the goal post doesn't get in the way.
+		if (
+			opacity != 1.0f
+			&& (pos.y <= SDKGameRules()->m_vFieldMin.GetY() + cl_goal_opacity_fieldoffset.GetFloat() && pEnt->GetLocalOrigin().y < SDKGameRules()->m_vKickOff.GetY()
+				|| pos.y >= SDKGameRules()->m_vFieldMax.GetY() - cl_goal_opacity_fieldoffset.GetFloat() && pEnt->GetLocalOrigin().y > SDKGameRules()->m_vKickOff.GetY())
+			&& pos.x >= SDKGameRules()->m_vKickOff.GetX() - 500 && pos.x <= SDKGameRules()->m_vKickOff.GetX() + 500)
 		{
 			pEnt->SetRenderMode(kRenderTransColor);
 			pEnt->SetRenderColorA(opacity * 255);
@@ -84,6 +88,18 @@ void CheckAutoTransparentProps(const Vector &pos, const QAngle &ang)
 		{
 			pEnt->SetRenderMode(kRenderNormal);
 		}
+	}
+}
+
+void ResetAutoTransparentProps()
+{
+	for (int i = gpGlobals->maxClients; i <= ClientEntityList().GetHighestEntityIndex(); i++)
+	{
+		C_BaseEntity *pEnt = ClientEntityList().GetBaseEntity(i);
+		if(!dynamic_cast<C_AutoTransparentProp *>(pEnt))
+			continue;
+
+		pEnt->SetRenderMode(kRenderNormal);
 	}
 }
 
@@ -529,11 +545,20 @@ void C_Camera::Accelerate( Vector& wishdir, float wishspeed, float accel )
 void C_Camera::CalcView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov)
 {
 	if (GetCamMode() == CAM_MODE_TVCAM)
+	{
 		CalcTVCamView(eyeOrigin, eyeAngles, fov);
+		ResetAutoTransparentProps();
+	}
 	else if (GetCamMode() == CAM_MODE_FREE_CHASE || GetCamMode() == CAM_MODE_LOCKED_CHASE)
+	{
 		CalcChaseCamView(eyeOrigin, eyeAngles, fov);
+		CheckAutoTransparentProps(eyeOrigin, eyeAngles);
+	}
 	else
+	{
 		CalcRoamingView(eyeOrigin, eyeAngles, fov);
+		CheckAutoTransparentProps(eyeOrigin, eyeAngles);
+	}
 
 	// Save the last position and angle so when switching to roaming view it starts at the current position
 	m_vCamOrigin = eyeOrigin;
@@ -655,8 +680,6 @@ void C_Camera::CalcChaseCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov
 	}
 	
 	fov = pLocal->GetFOV();
-
-	CheckAutoTransparentProps(eyeOrigin, eyeAngles);
 }
 
 void C_Camera::CalcTVCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov)
