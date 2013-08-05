@@ -75,16 +75,16 @@ enum { LABEL_WIDTH = 260, INPUT_WIDTH = 260, SHORTINPUT_WIDTH = 200, TEXT_HEIGHT
 enum { PANEL_TOPMARGIN = 70, PANEL_MARGIN = 5, PANEL_WIDTH = (1024 - 2 * PANEL_MARGIN), PANEL_HEIGHT = (720 - 2 * PANEL_MARGIN) };
 enum { PADDING = 10, TOP_PADDING = 30 };
 enum { BUTTON_WIDTH = 80, BUTTON_HEIGHT = 26, BUTTON_MARGIN = 5 };
-enum { SUGGESTED_VALUE_WIDTH = 100, SUGGESTED_VALUE_MARGIN = 5 };
+enum { SUGGESTED_VALUE_WIDTH = 150, SUGGESTED_VALUE_MARGIN = 5 };
 enum { INFOBUTTON_WIDTH = 30, INFOBUTTON_MARGIN = 5 };
 enum { APPEARANCE_HOFFSET = 270, APPEARANCE_RADIOBUTTONWIDTH = 70 };
 
 #define INTERP_VALUES 5
 const int interpValues[INTERP_VALUES] = { 1, 2, 3, 4, 5 };
-const char *interpTexts[INTERP_VALUES] = { "Very Short (cl_interp_ratio 1)", "Short (cl_interp_ratio 2)", "Medium (cl_interp_ratio 3)", "Long (cl_interp_ratio 4)", "Very Long (cl_interp_ratio 5)" };
+const char *interpTexts[INTERP_VALUES] = { "Very Short (1.0)", "Short (2.0)", "Medium (3.0)", "Long (4.0)", "Very Long (5.0)" };
 #define SMOOTH_VALUES 5
 const int smoothValues[SMOOTH_VALUES] = { 1, 5, 10, 25, 50 };
-const char *smoothTexts[SMOOTH_VALUES] = { "Very Short (cl_smoothtime 0.01)", "Short (cl_smoothtime 0.05)", "Medium (cl_smoothtime 0.1)", "Long (cl_smoothtime 0.25)", "Very Long (cl_smoothtime 0.5)" };
+const char *smoothTexts[SMOOTH_VALUES] = { "Very Short (0.01s)", "Short (0.05s)", "Medium (0.1s)", "Long (0.25s)", "Very Long (0.5s)" };
 
 #define MAX_VISIBLE_DROPDOWN 20
 
@@ -259,9 +259,9 @@ CNetworkSettingPanel::CNetworkSettingPanel(Panel *parent, const char *panelName)
 		kv->deleteThis();
 	}
 
-	const char *suggestedValueText = "Set Best Value";
+	const char *suggestedValueText = "Set Recommended Value";
 
-	m_pInterpDurationLabel = new Label(m_pContent, "", "Interpolation Duration:");
+	m_pInterpDurationLabel = new Label(m_pContent, "", "Interpolation Duration (cl_interp_ratio):");
 	m_pInterpDurationList = new ComboBox(m_pContent, "", 0, false);
 	m_pInterpDurationSuggestedValueButton = new Button(m_pContent, "", suggestedValueText, this, "suggested_interpduration");
 	m_pInterpDurationInfoButton = new Button(m_pContent, "", "?");
@@ -275,7 +275,7 @@ CNetworkSettingPanel::CNetworkSettingPanel(Panel *parent, const char *panelName)
 		kv->deleteThis();
 	}
 
-	m_pSmoothDurationLabel = new Label(m_pContent, "", "Smoothing Duration:");
+	m_pSmoothDurationLabel = new Label(m_pContent, "", "Smoothing Duration (cl_smoothtime):");
 	m_pSmoothDurationList = new ComboBox(m_pContent, "", 0, false);
 	m_pSmoothDurationInfoButton = new Button(m_pContent, "", "?");
 	m_pSmoothDurationSuggestedValueButton = new Button(m_pContent, "", suggestedValueText, this, "suggested_smoothduration");
@@ -393,7 +393,7 @@ void CNetworkSettingPanel::OnCommand(const char *cmd)
 	if (!Q_strcmp(cmd, "suggested_interpduration"))
 		m_pInterpDurationList->ActivateItemByRow(0);
 	if (!Q_strcmp(cmd, "suggested_smoothduration"))
-		m_pSmoothDurationList->ActivateItemByRow(0);
+		m_pSmoothDurationList->ActivateItemByRow(3);
 	else if (!Q_strcmp(cmd, "suggested_rate"))
 		m_pRateList->ActivateItemByRow(m_pRateList->GetItemCount() - 1);
 	else if (!Q_strcmp(cmd, "suggested_updaterate"))

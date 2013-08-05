@@ -667,9 +667,9 @@ const Vector& C_SDKPlayer::GetRenderOrigin( void )
 		{
 			static Vector origin = vec3_origin;
 			origin = BaseClass::GetRenderOrigin();
-			//Vector vSmoothOffset;
-			//GetPredictionErrorSmoothingVector( vSmoothOffset );
-			//origin += vSmoothOffset;
+			Vector vSmoothOffset;
+			GetPredictionErrorSmoothingVector( vSmoothOffset );
+			origin += Vector(vSmoothOffset.x, vSmoothOffset.y, 0);
 			return origin;
 		}
 		else

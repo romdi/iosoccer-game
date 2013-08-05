@@ -590,20 +590,10 @@ void C_Camera::CalcChaseCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov
 		return;
 	}
 
-	if (!pLocal->IsObserver())
-	{
-		pTarget = pLocal;
-
-		// Apply a smoothing offset to smooth out prediction errors.
-		Vector vSmoothOffset;
-		pLocal->GetPredictionErrorSmoothingVector( vSmoothOffset );
-		eyeOrigin += vSmoothOffset;
-		//SetLocalOrigin(eyeOrigin - Vector(0, 0, VEC_VIEW.z) + vSmoothOffset);
-	}
-	else
-	{
+	if (pLocal->IsObserver())
 		pTarget = GetTarget();
-	}
+	else
+		pTarget = pLocal;
 
 	// If our target isn't visible, we're at a camera point of some kind.
 	// Instead of letting the player rotate around an invisible point, treat
@@ -677,6 +667,14 @@ void C_Camera::CalcChaseCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov
 	else
 	{
 		eyeOrigin.z += cam_height.GetInt();
+	}
+
+	if (!pLocal->IsObserver())
+	{
+		// Apply a smoothing offset to smooth out prediction errors.
+		Vector vSmoothOffset;
+		pLocal->GetPredictionErrorSmoothingVector( vSmoothOffset );
+		eyeOrigin += Vector(vSmoothOffset.x, vSmoothOffset.y, 0);
 	}
 	
 	fov = pLocal->GetFOV();
