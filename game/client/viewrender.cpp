@@ -1920,6 +1920,8 @@ void CViewRender::RenderView( const CViewSetup &view, int nClearFlags, int whatT
 			ViewDrawScene_Intro( view, nClearFlags, *g_pIntroData );
 		}
 
+		SDKGameRules()->DrawSkyboxOverlay();
+
 		// We can still use the 'current view' stuff set up in ViewDrawScene
 		s_bCanAccessCurrentView = true;
 
@@ -1969,8 +1971,6 @@ void CViewRender::RenderView( const CViewSetup &view, int nClearFlags, int whatT
 		SDKGameRules()->DrawGoalTeamCrests();
 
 		SDKGameRules()->DrawOffsideLines();
-
-		SDKGameRules()->DrawSkyboxOverlay();
 
 		// Overlay screen fade on entire screen
 		IMaterial* pMaterial = blend ? m_ModulateSingleColor : m_TranslucentSingleColor;
