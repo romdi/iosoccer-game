@@ -189,6 +189,7 @@ public:
 	CNetworkVar(float, m_flNextClientSettingsChangeTime);
 	CNetworkVar(float, m_flNextJoin);
 	CNetworkVar(int, m_nInPenBoxOfTeam);
+	CNetworkVar(int, m_nModelScale);
 	CNetworkVar(bool, m_bShotButtonsReleased);
 
 	void CheckBallShield(const Vector &oldPos, Vector &newPos, const Vector &oldVel, Vector &newVel, const QAngle &oldAng, QAngle &newAng);

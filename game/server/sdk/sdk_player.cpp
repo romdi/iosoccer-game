@@ -196,6 +196,8 @@ IMPLEMENT_SERVERCLASS_ST( CSDKPlayer, DT_SDKPlayer )
 	SendPropTime( SENDINFO( m_flStateEnterTime )),
 
 	SendPropBool( SENDINFO( m_bSpawnInterpCounter ) ),
+
+	SendPropInt(SENDINFO(m_nModelScale), 8, SPROP_UNSIGNED)
 END_SEND_TABLE()
 
 class CSDKRagdoll : public CBaseAnimatingOverlay
@@ -241,6 +243,50 @@ void cc_CreatePredictionError_f()
 
 ConCommand cc_CreatePredictionError( "CreatePredictionError", cc_CreatePredictionError_f, "Create a prediction error", FCVAR_CHEAT );
 
+
+void CC_MP_PlayerModelScale(const CCommand &args)
+{
+	if (!UTIL_IsCommandIssuedByServerAdmin())
+        return;
+
+	if (args.ArgC() < 3)
+	{
+		Msg("Usage: mp_player_model_scale <userid> <scale 0-255>\n");
+		return;
+	}
+
+	CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByUserId(atoi(args[1])));
+
+	if (!pPl)
+	{
+		Msg("Player not found.\n");
+		return;
+	}
+
+	int scale = atoi(args[2]);
+
+	if (scale < 0)
+	{
+		Msg("Scale too small.\n");
+		return;
+	}
+
+	if (scale > 255)
+	{
+		Msg("Scale too big.\n");
+		return;
+	}
+	
+	int oldScale = pPl->m_nModelScale;
+
+	pPl->m_nModelScale = scale;
+
+	UTIL_ClientPrintAll(HUD_PRINTTALK, "#game_player_model_scale", pPl->GetPlayerName(), scale == 100 ? "is back to normal size" : (scale - oldScale > 0 ? "grows..." : "shrinks..."));
+}
+
+ConCommand mp_player_model_scale("mp_player_model_scale", CC_MP_PlayerModelScale, "", 0);
+
+
 void CSDKPlayer::SetupVisibility( CBaseEntity *pViewEntity, unsigned char *pvs, int pvssize )
 {
 	BaseClass::SetupVisibility( pViewEntity, pvs, pvssize );
@@ -279,6 +325,7 @@ CSDKPlayer::CSDKPlayer()
 	m_Shared.m_aPlayerAnimEventStartAngle = vec3_origin;
 	m_Shared.m_nPlayerAnimEventStartButtons = 0;
 	m_nInPenBoxOfTeam = TEAM_INVALID;
+	m_nModelScale = 100;
 	m_nSpecTeam = TEAM_SPECTATOR;
 	m_ePenaltyState = PENALTY_NONE;
 	m_pHoldingBall = NULL;

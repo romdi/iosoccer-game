@@ -186,6 +186,8 @@ IMPLEMENT_CLIENTCLASS_DT( C_SDKPlayer, DT_SDKPlayer, CSDKPlayer )
 	RecvPropTime( RECVINFO( m_flStateEnterTime ) ),
 
 	RecvPropBool( RECVINFO( m_bSpawnInterpCounter ) ),
+
+	RecvPropInt(RECVINFO(m_nModelScale))
 END_RECV_TABLE()
 
 // ------------------------------------------------------------------------------------------ //
@@ -618,6 +620,8 @@ C_SDKPlayer::C_SDKPlayer() :
 	m_Shared.m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
 	m_Shared.m_aPlayerAnimEventStartAngle = vec3_origin;
 	m_Shared.m_nPlayerAnimEventStartButtons = 0;
+
+	m_nModelScale = 100;
 }
 
 
@@ -663,17 +667,20 @@ const Vector& C_SDKPlayer::GetRenderOrigin( void )
 	}
 	else
 	{
+		static Vector origin = vec3_origin;
+		origin = BaseClass::GetRenderOrigin();
+		//origin.z = origin.z - VEC_HULL_MAX.z + VEC_HULL_MAX.z * m_nModelScale / 100.0f;
+		origin.z += VEC_HULL_MAX.z / 2.0f * (m_nModelScale / 100.0f - 1.0f);
+
 		if (this == GetLocalSDKPlayer())
 		{
-			static Vector origin = vec3_origin;
-			origin = BaseClass::GetRenderOrigin();
 			Vector vSmoothOffset;
 			GetPredictionErrorSmoothingVector( vSmoothOffset );
 			origin += Vector(vSmoothOffset.x, vSmoothOffset.y, 0);
 			return origin;
 		}
 		else
-			return BaseClass::GetRenderOrigin();	
+			return origin;	
 	}
 }
 
@@ -1339,13 +1346,10 @@ void C_SDKPlayer::ApplyBoneMatrixTransform(matrix3x4_t& transform)
 {
 	//BaseClass::ApplyBoneMatrixTransform(transform);
 
-	//if (this->GetTeamNumber() == TEAM_A)
-	//{
-	//	float scale = 2;
-	//	VectorScale( transform[0], scale, transform[0] );
-	//	VectorScale( transform[1], scale, transform[1] );
-	//	VectorScale( transform[2], scale, transform[2] );
-	//}
+	float scale = m_nModelScale / 100.0f;
+	VectorScale( transform[0], scale, transform[0] );
+	VectorScale( transform[1], scale, transform[1] );
+	VectorScale( transform[2], scale, transform[2] );
 }
 
 int C_SDKPlayer::DrawModel( int flags )
