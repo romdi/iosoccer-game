@@ -1109,18 +1109,6 @@ void CInput::CreateMove ( int sequence_number, float input_sample_frametime, boo
 	cmd->impulse = in_impulse;
 	in_impulse = 0;
 
-	// Latch and clear weapon selection
-	if ( m_hSelectedWeapon != NULL )
-	{
-		C_BaseCombatWeapon *weapon = m_hSelectedWeapon;
-
-		cmd->weaponselect = weapon->entindex();
-		cmd->weaponsubtype = weapon->GetSubType();
-
-		// Always clear weapon selection
-		m_hSelectedWeapon = NULL;
-	}
-
 	// Set button and flag bits
 	cmd->buttons = GetButtonBits( 1 );
 

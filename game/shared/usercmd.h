@@ -48,8 +48,6 @@ public:
 		upmove = 0.0f;
 		buttons = 0;
 		impulse = 0;
-		weaponselect = 0;
-		weaponsubtype = 0;
 		random_seed = 0;
 		mousedx = 0;
 		mousedy = 0;
@@ -73,8 +71,6 @@ public:
 		upmove				= src.upmove;
 		buttons				= src.buttons;
 		impulse				= src.impulse;
-		weaponselect		= src.weaponselect;
-		weaponsubtype		= src.weaponsubtype;
 		random_seed			= src.random_seed;
 		mousedx				= src.mousedx;
 		mousedy				= src.mousedy;
@@ -106,8 +102,6 @@ public:
 		CRC32_ProcessBuffer( &crc, &upmove, sizeof( upmove ) );         
 		CRC32_ProcessBuffer( &crc, &buttons, sizeof( buttons ) );		
 		CRC32_ProcessBuffer( &crc, &impulse, sizeof( impulse ) );        
-		CRC32_ProcessBuffer( &crc, &weaponselect, sizeof( weaponselect ) );	
-		CRC32_ProcessBuffer( &crc, &weaponsubtype, sizeof( weaponsubtype ) );
 		CRC32_ProcessBuffer( &crc, &random_seed, sizeof( random_seed ) );
 		CRC32_ProcessBuffer( &crc, &mousedx, sizeof( mousedx ) );
 		CRC32_ProcessBuffer( &crc, &mousedy, sizeof( mousedy ) );
@@ -135,9 +129,6 @@ public:
 	int		buttons;		
 	// Impulse command issued.
 	byte    impulse;        
-	// Current weapon id
-	int		weaponselect;	
-	int		weaponsubtype;
 
 	int		random_seed;	// For shared random functions
 

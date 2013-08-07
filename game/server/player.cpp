@@ -6459,8 +6459,6 @@ void CPlayerInfo::RunPlayerMove( CBotCmd *ucmd )
 	//	cmd.tick_count = ucmd->tick_count;
 	//	cmd.upmove = ucmd->upmove;
 	//	cmd.viewangles = ucmd->viewangles;
-	//	cmd.weaponselect = ucmd->weaponselect;
-	//	cmd.weaponsubtype = ucmd->weaponsubtype;
 
 	//	// Store off the globals.. they're gonna get whacked
 	//	float flOldFrametime = gpGlobals->frametime;
@@ -6502,8 +6500,6 @@ void CPlayerInfo::SetLastUserCommand( const CBotCmd &ucmd )
 		cmd.tick_count = ucmd.tick_count;
 		cmd.upmove = ucmd.upmove;
 		cmd.viewangles = ucmd.viewangles;
-		cmd.weaponselect = ucmd.weaponselect;
-		cmd.weaponsubtype = ucmd.weaponsubtype;
 
 		m_pParent->SetLastUserCommand(cmd); 
 	}
@@ -6528,8 +6524,6 @@ CBotCmd CPlayerInfo::GetLastUserCommand()
 		cmd.tick_count = ucmd->tick_count;
 		cmd.upmove = ucmd->upmove;
 		cmd.viewangles = ucmd->viewangles;
-		cmd.weaponselect = ucmd->weaponselect;
-		cmd.weaponsubtype = ucmd->weaponsubtype;
 	}
 	return cmd;
 }

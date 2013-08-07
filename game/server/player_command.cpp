@@ -348,17 +348,6 @@ void CPlayerMove::RunCommand ( CBasePlayer *player, CUserCmd *ucmd, IMoveHelper 
 
 	CommentarySystem_PePlayerRunCommand( player, ucmd );
 
-	// Do weapon selection
-	if ( ucmd->weaponselect != 0 )
-	{
-		CBaseCombatWeapon *weapon = dynamic_cast< CBaseCombatWeapon * >( CBaseEntity::Instance( ucmd->weaponselect ) );
-		if ( weapon )
-		{
-			VPROF( "player->SelectItem()" );
-			player->SelectItem( weapon->GetName(), ucmd->weaponsubtype );
-		}
-	}
-
 	IServerVehicle *pVehicle = player->GetVehicle();
 
 	// Latch in impulse.

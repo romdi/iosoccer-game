@@ -840,16 +840,6 @@ void CPrediction::RunCommand( C_BasePlayer *player, CUserCmd *ucmd, IMoveHelper 
 // TODO
 // TODO:  Check for impulse predicted?
 
-	// Do weapon selection
-	if ( ucmd->weaponselect != 0 )
-	{
-		C_BaseCombatWeapon *weapon = dynamic_cast< C_BaseCombatWeapon * >( CBaseEntity::Instance( ucmd->weaponselect ) );
-		if ( weapon )
-		{
-			player->SelectItem( weapon->GetName(), ucmd->weaponsubtype );
-		}
-	}
-
 	// Latch in impulse.
 	IClientVehicle *pVehicle = player->GetVehicle();
 	if ( ucmd->impulse )

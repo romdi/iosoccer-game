@@ -32,8 +32,6 @@ public:
 		upmove = 0.0f;
 		buttons = 0;
 		impulse = 0;
-		weaponselect = 0;
-		weaponsubtype = 0;
 		random_seed = 0;
 		mousedx = 0;
 		mousedy = 0;
@@ -54,8 +52,6 @@ public:
 		upmove				= src.upmove;
 		buttons				= src.buttons;
 		impulse				= src.impulse;
-		weaponselect		= src.weaponselect;
-		weaponsubtype		= src.weaponsubtype;
 		random_seed			= src.random_seed;
 		mousedx				= src.mousedx;
 		mousedy				= src.mousedy;
@@ -82,9 +78,6 @@ public:
 	int		buttons;		
 	// Impulse command issued.
 	byte    impulse;        
-	// Current weapon id
-	int		weaponselect;	
-	int		weaponsubtype;
 
 	int		random_seed;	// For shared random functions
 
