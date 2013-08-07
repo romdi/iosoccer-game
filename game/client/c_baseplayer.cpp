@@ -1459,7 +1459,6 @@ void C_BasePlayer::PhysicsSimulate( void )
 		ctx->cmd.sidemove = 0;
 		ctx->cmd.upmove = 0;
 		ctx->cmd.buttons = 0;
-		ctx->cmd.impulse = 0;
 		//VectorCopy ( pl.v_angle, ctx->cmd.viewangles );
 	}
 

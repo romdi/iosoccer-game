@@ -614,7 +614,6 @@ void CPrediction::SetupMove( C_BasePlayer *player, CUserCmd *ucmd, IMoveHelper *
 
 	move->m_vecAngles		= ucmd->viewangles;
 	move->m_vecViewAngles	= ucmd->viewangles;
-	move->m_nImpulseCommand = ucmd->impulse;	
 	move->m_nButtons		= ucmd->buttons;
 
 	CBaseEntity *pMoveParent = player->GetMoveParent();
@@ -840,19 +839,6 @@ void CPrediction::RunCommand( C_BasePlayer *player, CUserCmd *ucmd, IMoveHelper 
 // TODO
 // TODO:  Check for impulse predicted?
 
-	// Latch in impulse.
-	IClientVehicle *pVehicle = player->GetVehicle();
-	if ( ucmd->impulse )
-	{
-		// Discard impulse commands unless the vehicle allows them.
-		// FIXME: UsingStandardWeapons seems like a bad filter for this. 
-		// The flashlight is an impulse command, for example.
-		if ( !pVehicle || player->UsingStandardWeaponsInVehicle() )
-		{
-			player->m_nImpulse = ucmd->impulse;
-		}
-	}
-
 	// Get button states
 	player->UpdateButtonState( ucmd->buttons );
 
@@ -881,15 +867,8 @@ void CPrediction::RunCommand( C_BasePlayer *player, CUserCmd *ucmd, IMoveHelper 
 	}
 
 	// RUN MOVEMENT
-	if ( !pVehicle )
-	{
-		Assert( g_pGameMovement );
-		g_pGameMovement->ProcessMovement( player, g_pMoveData );
-	}
-	else
-	{
-		pVehicle->ProcessMovement( player, g_pMoveData );
-	}
+	Assert( g_pGameMovement );
+	g_pGameMovement->ProcessMovement( player, g_pMoveData );
 
 	FinishMove( player, ucmd, g_pMoveData );
 

@@ -31,7 +31,6 @@ public:
 		sidemove = 0.0f;
 		upmove = 0.0f;
 		buttons = 0;
-		impulse = 0;
 		random_seed = 0;
 		mousedx = 0;
 		mousedy = 0;
@@ -51,7 +50,6 @@ public:
 		sidemove			= src.sidemove;
 		upmove				= src.upmove;
 		buttons				= src.buttons;
-		impulse				= src.impulse;
 		random_seed			= src.random_seed;
 		mousedx				= src.mousedx;
 		mousedy				= src.mousedy;
@@ -76,8 +74,6 @@ public:
 	float	upmove;         
 	// Attack button states
 	int		buttons;		
-	// Impulse command issued.
-	byte    impulse;        
 
 	int		random_seed;	// For shared random functions
 

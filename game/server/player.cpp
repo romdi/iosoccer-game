@@ -2118,7 +2118,6 @@ void CBasePlayer::PlayerRunCommand(CUserCmd *ucmd, IMoveHelper *moveHelper)
 		ucmd->sidemove = 0;
 		ucmd->upmove = 0;
 		ucmd->buttons = 0;
-		ucmd->impulse = 0;
 		VectorCopy ( pl.v_angle, ucmd->viewangles );
 	}
 	else
@@ -6451,7 +6450,6 @@ void CPlayerInfo::RunPlayerMove( CBotCmd *ucmd )
 	//	cmd.command_number = ucmd->command_number;
 	//	cmd.forwardmove = ucmd->forwardmove;
 	//	cmd.hasbeenpredicted = ucmd->hasbeenpredicted;
-	//	cmd.impulse = ucmd->impulse;
 	//	cmd.mousedx = ucmd->mousedx;
 	//	cmd.mousedy = ucmd->mousedy;
 	//	cmd.random_seed = ucmd->random_seed;
@@ -6492,7 +6490,6 @@ void CPlayerInfo::SetLastUserCommand( const CBotCmd &ucmd )
 		cmd.command_number = ucmd.command_number;
 		cmd.forwardmove = ucmd.forwardmove;
 		cmd.hasbeenpredicted = ucmd.hasbeenpredicted;
-		cmd.impulse = ucmd.impulse;
 		cmd.mousedx = ucmd.mousedx;
 		cmd.mousedy = ucmd.mousedy;
 		cmd.random_seed = ucmd.random_seed;
@@ -6516,7 +6513,6 @@ CBotCmd CPlayerInfo::GetLastUserCommand()
 		cmd.command_number = ucmd->command_number;
 		cmd.forwardmove = ucmd->forwardmove;
 		cmd.hasbeenpredicted = ucmd->hasbeenpredicted;
-		cmd.impulse = ucmd->impulse;
 		cmd.mousedx = ucmd->mousedx;
 		cmd.mousedy = ucmd->mousedy;
 		cmd.random_seed = ucmd->random_seed;

@@ -116,16 +116,6 @@ void WriteUsercmd( bf_write *buf, const CUserCmd *to, const CUserCmd *from )
 		buf->WriteOneBit( 0 );
 	}
 
-	if ( to->impulse != from->impulse )
-	{
-		buf->WriteOneBit( 1 );
-	    buf->WriteUBitLong( to->impulse, 8 );
-	}
-	else
-	{
-		buf->WriteOneBit( 0 );
-	}
-
 	// TODO: Can probably get away with fewer bits.
 	if ( to->mousedx != from->mousedx )
 	{
@@ -235,11 +225,6 @@ void ReadUsercmd( bf_read *buf, CUserCmd *move, CUserCmd *from )
 	if ( buf->ReadOneBit() )
 	{
 		move->buttons = buf->ReadUBitLong( 32 );
-	}
-
-	if ( buf->ReadOneBit() )
-	{
-		move->impulse = buf->ReadUBitLong( 8 );
 	}
 
 	move->random_seed = MD5_PseudoRandom( move->command_number ) & 0x7fffffff;

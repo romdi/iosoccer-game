@@ -42,7 +42,6 @@ static int s_ClearInputState = 0;
 float anglemod( float a );
 
 // FIXME void V_Init( void );
-static int in_impulse = 0;
 static int in_cancel = 0;
 
 ConVar cl_anglespeedkey( "cl_anglespeedkey", "0.67", 0 );
@@ -533,11 +532,6 @@ void IN_AttackUp( const CCommand &args )
 void IN_Cancel( const CCommand &args )
 {
 	in_cancel = 1;
-}
-
-void IN_Impulse( const CCommand &args )
-{
-	in_impulse = atoi( args[1] );
 }
 
 void IN_ScoreDown( const CCommand &args )
@@ -1105,10 +1099,6 @@ void CInput::CreateMove ( int sequence_number, float input_sample_frametime, boo
 	// Retreive view angles from engine ( could have been set in IN_AdjustAngles above )
 	engine->GetViewAngles( viewangles );
 
-	// Latch and clear impulse
-	cmd->impulse = in_impulse;
-	in_impulse = 0;
-
 	// Set button and flag bits
 	cmd->buttons = GetButtonBits( 1 );
 
@@ -1475,7 +1465,6 @@ static ConCommand startuse("+use", IN_UseDown);
 static ConCommand enduse("-use", IN_UseUp);
 static ConCommand startjump("+jump", IN_JumpDown);
 static ConCommand endjump("-jump", IN_JumpUp);
-static ConCommand impulse("impulse", IN_Impulse);
 static ConCommand startklook("+klook", IN_KLookDown);
 static ConCommand endklook("-klook", IN_KLookUp);
 static ConCommand startjlook("+jlook", IN_JLookDown);

@@ -47,7 +47,6 @@ public:
 		sidemove = 0.0f;
 		upmove = 0.0f;
 		buttons = 0;
-		impulse = 0;
 		random_seed = 0;
 		mousedx = 0;
 		mousedy = 0;
@@ -70,7 +69,6 @@ public:
 		sidemove			= src.sidemove;
 		upmove				= src.upmove;
 		buttons				= src.buttons;
-		impulse				= src.impulse;
 		random_seed			= src.random_seed;
 		mousedx				= src.mousedx;
 		mousedy				= src.mousedy;
@@ -101,7 +99,6 @@ public:
 		CRC32_ProcessBuffer( &crc, &sidemove, sizeof( sidemove ) );      
 		CRC32_ProcessBuffer( &crc, &upmove, sizeof( upmove ) );         
 		CRC32_ProcessBuffer( &crc, &buttons, sizeof( buttons ) );		
-		CRC32_ProcessBuffer( &crc, &impulse, sizeof( impulse ) );        
 		CRC32_ProcessBuffer( &crc, &random_seed, sizeof( random_seed ) );
 		CRC32_ProcessBuffer( &crc, &mousedx, sizeof( mousedx ) );
 		CRC32_ProcessBuffer( &crc, &mousedy, sizeof( mousedy ) );
@@ -127,8 +124,6 @@ public:
 	float	upmove;         
 	// Attack button states
 	int		buttons;		
-	// Impulse command issued.
-	byte    impulse;        
 
 	int		random_seed;	// For shared random functions
 
