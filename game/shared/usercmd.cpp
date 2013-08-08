@@ -45,7 +45,6 @@ void WriteUsercmd( bf_write *buf, const CUserCmd *to, const CUserCmd *from )
 		buf->WriteOneBit( 0 );
 	}
 
-
 	if ( to->viewangles[ 0 ] != from->viewangles[ 0 ] )
 	{
 		buf->WriteOneBit( 1 );
@@ -70,6 +69,36 @@ void WriteUsercmd( bf_write *buf, const CUserCmd *to, const CUserCmd *from )
 	{
 		buf->WriteOneBit( 1 );
 		buf->WriteFloat( to->viewangles[ 2 ] );
+	}
+	else
+	{
+		buf->WriteOneBit( 0 );
+	}
+
+	if ( to->camviewangles[ 0 ] != from->camviewangles[ 0 ] )
+	{
+		buf->WriteOneBit( 1 );
+		buf->WriteFloat( to->camviewangles[ 0 ] );
+	}
+	else
+	{
+		buf->WriteOneBit( 0 );
+	}
+
+	if ( to->camviewangles[ 1 ] != from->camviewangles[ 1 ] )
+	{
+		buf->WriteOneBit( 1 );
+		buf->WriteFloat( to->camviewangles[ 1 ] );
+	}
+	else
+	{
+		buf->WriteOneBit( 0 );
+	}
+
+	if ( to->camviewangles[ 2 ] != from->camviewangles[ 2 ] )
+	{
+		buf->WriteOneBit( 1 );
+		buf->WriteFloat( to->camviewangles[ 2 ] );
 	}
 	else
 	{
@@ -203,6 +232,21 @@ void ReadUsercmd( bf_read *buf, CUserCmd *move, CUserCmd *from )
 	if ( buf->ReadOneBit() )
 	{
 		move->viewangles[2] = buf->ReadFloat();
+	}
+
+	if ( buf->ReadOneBit() )
+	{
+		move->camviewangles[0] = buf->ReadFloat();
+	}
+
+	if ( buf->ReadOneBit() )
+	{
+		move->camviewangles[1] = buf->ReadFloat();
+	}
+
+	if ( buf->ReadOneBit() )
+	{
+		move->camviewangles[2] = buf->ReadFloat();
 	}
 
 	// Read movement

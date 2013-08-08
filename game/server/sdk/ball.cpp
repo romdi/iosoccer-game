@@ -88,12 +88,9 @@ ConVar sv_ball_keeper_punch_minpitchangle( "sv_ball_keeper_punch_minpitchangle",
 ConVar sv_ball_keeperpunchupstrength("sv_ball_keeperpunchupstrength", "500", FCVAR_NOTIFY);
 ConVar sv_ball_keeperdeflectioncoeff("sv_ball_keeperdeflectioncoeff", "0.66", FCVAR_NOTIFY);
 
-ConVar sv_ball_shotdelay_normal("sv_ball_shotdelay_normal", "0.15", FCVAR_NOTIFY);
 ConVar sv_ball_shotdelay_setpiece("sv_ball_shotdelay_setpiece", "0.5", FCVAR_NOTIFY);
-ConVar sv_ball_shotdelay_global("sv_ball_shotdelay_global", "0.25", FCVAR_NOTIFY);
 ConVar sv_ball_shotdelay_global_coeff("sv_ball_shotdelay_global_coeff", "0.5", FCVAR_NOTIFY);
 ConVar sv_ball_keepercatchdelay_global_coeff("sv_ball_keepercatchdelay_global_coeff", "1.0", FCVAR_NOTIFY);
-ConVar sv_ball_dynamicshotdelay_enabled("sv_ball_dynamicshotdelay_enabled", "1", FCVAR_NOTIFY);
 ConVar sv_ball_dynamicshotdelay_mindelay("sv_ball_dynamicshotdelay_mindelay", "0.2", FCVAR_NOTIFY);
 ConVar sv_ball_dynamicshotdelay_maxdelay("sv_ball_dynamicshotdelay_maxdelay", "1.0", FCVAR_NOTIFY);
 ConVar sv_ball_dynamicshotdelay_minshotstrength("sv_ball_dynamicshotdelay_minshotstrength", "400", FCVAR_NOTIFY);
@@ -219,6 +216,9 @@ ConVar sv_ball_shotsblocktime_penalty("sv_ball_shotsblocktime_penalty", "4.0", F
 ConVar sv_ball_blockpowershot("sv_ball_blockpowershot", "1", FCVAR_NOTIFY);
 
 ConVar sv_ball_maxcheckdist("sv_ball_maxcheckdist", "200", FCVAR_NOTIFY);
+
+ConVar sv_ball_freecamshot_maxangle("sv_ball_freecamshot_maxangle", "60", FCVAR_NOTIFY);
+ConVar sv_ball_heelshot_strength("sv_ball_heelshot_strength", "800", FCVAR_NOTIFY);
 
 
 void OnBallSkinChange(IConVar *var, const char *pOldValue, float flOldValue)
@@ -735,7 +735,7 @@ void CBall::SetPos(Vector pos)
 	m_bSetNewPos = true;
 }
 
-void CBall::SetVel(Vector vel, float spinCoeff, body_part_t bodyPart, bool isDeflection, bool markOffsidePlayers, bool checkMinShotStrength)
+void CBall::SetVel(Vector vel, float spinCoeff, body_part_t bodyPart, bool isDeflection, bool markOffsidePlayers, bool ensureMinShotStrength, float nextShotDelay /*= -1*/)
 {
 	Vector oldVel = m_vVel;
 
@@ -744,7 +744,7 @@ void CBall::SetVel(Vector vel, float spinCoeff, body_part_t bodyPart, bool isDef
 	float length = m_vVel.Length();
 	m_vVel.NormalizeInPlace();
 
-	if (checkMinShotStrength)
+	if (ensureMinShotStrength)
 		length = max(length, sv_ball_minshotstrength.GetInt());
 
 	length = min(length, sv_ball_chargedshot_maxstrength.GetInt());
@@ -764,7 +764,29 @@ void CBall::SetVel(Vector vel, float spinCoeff, body_part_t bodyPart, bool isDef
 		SaveBallCannonSettings();
 	}
 
-	Kicked(bodyPart, isDeflection, oldVel);
+	float dynamicDelay = RemapValClamped(m_vVel.Length(), sv_ball_dynamicshotdelay_minshotstrength.GetInt(), sv_ball_dynamicshotdelay_maxshotstrength.GetInt(), sv_ball_dynamicshotdelay_mindelay.GetFloat(), sv_ball_dynamicshotdelay_maxdelay.GetFloat());
+	
+	m_flGlobalNextShot = gpGlobals->curtime + dynamicDelay * sv_ball_shotdelay_global_coeff.GetFloat();
+	m_flGlobalNextKeeperCatch = gpGlobals->curtime + dynamicDelay * sv_ball_keepercatchdelay_global_coeff.GetFloat();
+
+	if (isDeflection)
+	{
+		m_pPl->m_flNextShot = m_flGlobalNextShot;
+	}
+	else
+	{
+		float delay;
+
+		if (State_Get() == BALL_STATE_NORMAL)
+			delay = nextShotDelay == -1 ? dynamicDelay : nextShotDelay;
+		else
+			delay = sv_ball_shotdelay_setpiece.GetFloat();
+
+		m_pPl->m_flNextShot = gpGlobals->curtime + delay;
+	}
+
+	Touched(m_pPl, !isDeflection, bodyPart, oldVel);
+
 	
 	if (markOffsidePlayers)
 		MarkOffsidePlayers();
@@ -2435,13 +2457,13 @@ bool CBall::CheckKeeperCatch()
 	return true;
 }
 
-float CBall::GetPitchCoeff(bool isNormalShot)
+float CBall::GetPitchCoeff(bool isNormalShot, bool useCamViewAngles /*= false*/)
 {
 	//return pow(cos((m_aPlAng[PITCH] - sv_ball_bestshotangle.GetInt()) / (PITCH_LIMIT - sv_ball_bestshotangle.GetInt()) * M_PI / 2), 2);
 	// plot 0.5 + (cos(x/89 * pi/2) * 0.5), x=-89..89
 
 	float bestAng = sv_ball_bestshotangle.GetInt();
-	float pitch = m_aPlAng[PITCH];
+	float pitch = useCamViewAngles ? m_pPl->m_aCamViewAngles[PITCH] : m_aPlAng[PITCH];
 
 	float coeff;
 
@@ -2508,48 +2530,128 @@ float CBall::GetChargedshotStrength(float coeff, int minStrength, int maxStrengt
 
 bool CBall::DoGroundShot(bool markOffsidePlayers, float velCoeff /*= 1.0f*/)
 {
-	Vector dirToBall = m_vPos - m_vPlPos;
-	Vector localDirToBall;
-	VectorIRotate(dirToBall, m_pPl->EntityToWorldTransform(), localDirToBall);
-
-	QAngle shotAngle = m_aPlAng;
-	shotAngle[PITCH] = min(sv_ball_groundshot_minangle.GetFloat(), m_aPlAng[PITCH]);
-
-	Vector shotDir;
-	AngleVectors(shotAngle, &shotDir);
-
-	float shotStrength;
-
-	if (m_pPl->IsNormalshooting())
-		shotStrength = GetNormalshotStrength(GetPitchCoeff(true), sv_ball_normalshot_strength.GetInt());
-	else if (m_pPl->IsPowershooting())
-		shotStrength = GetPowershotStrength(GetPitchCoeff(false), sv_ball_powershot_strength.GetInt());
-	else
-		shotStrength = GetChargedshotStrength(GetPitchCoeff(false), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
-
-	Vector vel = shotDir * shotStrength * velCoeff;
-
-	if (vel.Length() > 1000)
+	if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_ROULETTE_CLOCKWISE || m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_ROULETTE_CC)
 	{
-		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KICK);
-		EmitSound("Ball.Kickhard");
+		float timePassed = gpGlobals->curtime - m_pPl->m_Shared.GetAnimEventStartTime();
+
+		QAngle shotAngle = m_pPl->m_Shared.GetAnimEventStartAngle();
+		shotAngle[PITCH] = 0;
+		
+		shotAngle[YAW] += 45 * (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_ROULETTE_CLOCKWISE ? -1 : 1);
+		
+		float shotStrength = mp_runspeed.GetInt() * 2.33f;
+
+		Vector shotDir;
+		AngleVectors(shotAngle, &shotDir);
+
+		Vector vel = shotDir * shotStrength;
+
+		SetVel(vel, 0, BODY_PART_FEET, false, markOffsidePlayers, false, 0.75f - timePassed);
+
+		return true;
 	}
-	else if (vel.Length() > 700)
+
+	if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_BALL_HOP)
 	{
-		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_PASS);
-		EmitSound("Ball.Kicknormal");
+		QAngle shotAngle = m_aPlAng;
+		shotAngle[PITCH] = -75;
+
+		Vector shotDir;
+		AngleVectors(shotAngle, &shotDir);
+
+		Vector vel = shotDir * 300 + m_vPlVel2D;
+
+		SetVel(vel, 0, BODY_PART_FEET, false, markOffsidePlayers, false, 0.66f);
+
+		return true;
 	}
-	else
+
+	if (m_pPl->m_nButtons & IN_RELOAD)
 	{
-		if (localDirToBall.x < 0 && m_aPlAng[PITCH] <= -45)
+		if (m_pPl->m_nButtons & IN_DUCK)
+		{
+			if ((m_pPl->m_nButtons & IN_MOVELEFT) || (m_pPl->m_nButtons & IN_MOVERIGHT))
+			{
+				Vector vel = m_vPlRight * 350 * ((m_pPl->m_nButtons & IN_MOVELEFT) ? -1 : 1);
+
+				if (DotProduct2D(m_vPlForward.AsVector2D(), (m_vPos - m_vPlPos).AsVector2D()) < 0)
+					m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEELKICK);
+
+				SetVel(vel, 0, BODY_PART_FEET, false, markOffsidePlayers, true);
+			}
+			else
+			{
+				m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KICK);
+				m_pPl->m_flNextShot = gpGlobals->curtime + 1.0f;
+			}
+
+			return true;
+		}
+
+		QAngle shotAngle = m_pPl->m_aCamViewAngles;
+		shotAngle[PITCH] = sv_ball_groundshot_minangle.GetFloat();
+		//shotAngle[PITCH] = min(sv_ball_groundshot_minangle.GetFloat(), shotAngle[PITCH]);
+		Vector shotDir;
+		AngleVectors(shotAngle, &shotDir);
+
+		float angDiff = AngleDiff(m_aPlAng[YAW], shotAngle[YAW]);
+
+		if (abs(angDiff) > sv_ball_freecamshot_maxangle.GetInt())
+		{
+			Vector vel = shotDir * max(sv_ball_heelshot_strength.GetInt(), m_vVel.Length2D());
+
 			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEELKICK);
-		else
-			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
+			EmitSound("Ball.Kicknormal");
+			SetVel(vel, 0, BODY_PART_FEET, false, markOffsidePlayers, true);
 
-		EmitSound("Ball.Touch");
+			return true;
+		}
 	}
+	
+	{
+		bool useCamViewAngles = (m_pPl->m_nButtons & IN_RELOAD);
 
-	SetVel(vel, 1.0f, BODY_PART_FEET, false, markOffsidePlayers, true);
+		float shotStrength;
+
+		if (m_pPl->IsNormalshooting())
+			shotStrength = GetNormalshotStrength(GetPitchCoeff(true, useCamViewAngles), sv_ball_normalshot_strength.GetInt());
+		else if (m_pPl->IsPowershooting())
+			shotStrength = GetPowershotStrength(GetPitchCoeff(false, useCamViewAngles), sv_ball_powershot_strength.GetInt());
+		else
+			shotStrength = GetChargedshotStrength(GetPitchCoeff(false, useCamViewAngles), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
+
+		QAngle shotAngle = useCamViewAngles ? m_pPl->m_aCamViewAngles : m_aPlAng;
+		shotAngle[PITCH] = min(sv_ball_groundshot_minangle.GetFloat(), shotAngle[PITCH]);
+
+		Vector shotDir;
+		AngleVectors(shotAngle, &shotDir);
+
+		Vector vel = shotDir * shotStrength * velCoeff;
+
+		if (vel.Length() > 1000)
+		{
+			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KICK);
+			EmitSound("Ball.Kickhard");
+		}
+		else if (vel.Length() > 700)
+		{
+			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_PASS);
+			EmitSound("Ball.Kicknormal");
+		}
+		else
+		{
+			if (DotProduct2D(m_vPlForward.AsVector2D(), (m_vPos - m_vPlPos).AsVector2D()) < 0 && shotAngle[PITCH] <= -45)
+				m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEELKICK);
+			else
+				m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
+
+			EmitSound("Ball.Touch");
+		}
+
+		SetVel(vel, 1.0f, BODY_PART_FEET, false, markOffsidePlayers, true);
+
+		return true;
+	}
 
 	return true;
 }
@@ -2648,13 +2750,22 @@ AngularImpulse CBall::CalcSpin(float coeff, bool applyTopspin)
 	{
 		sideSpin = speedCoeff * sv_ball_spin.GetInt() * coeff;
 
-		if ((m_pPl->m_nButtons & IN_MOVELEFT) && (!(m_pPl->m_nButtons & IN_MOVERIGHT) || (mp_sidemove_override.GetBool() || mp_curl_override.GetBool()) && m_pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVERIGHT)) 
+		if (m_pPl->m_nButtons & IN_RELOAD)
 		{
-			sideRot = Vector(0, 0, (m_pPl->IsLegacySideCurl() && mp_client_sidecurl.GetBool()) ? 1 : -1);
+			float angDiff = AngleDiff(m_aPlAng[YAW], m_pPl->m_aCamViewAngles[YAW]);
+			sideRot = Vector(0, 0, angDiff >= 0 ? -1 : 1);
 		}
-		else if ((m_pPl->m_nButtons & IN_MOVERIGHT) && (!(m_pPl->m_nButtons & IN_MOVELEFT) || (mp_sidemove_override.GetBool() || mp_curl_override.GetBool()) && m_pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVELEFT)) 
+		else
 		{
-			sideRot = Vector(0, 0, (m_pPl->IsLegacySideCurl() && mp_client_sidecurl.GetBool()) ? -1 : 1);
+
+			if ((m_pPl->m_nButtons & IN_MOVELEFT) && (!(m_pPl->m_nButtons & IN_MOVERIGHT) || (mp_sidemove_override.GetBool() || mp_curl_override.GetBool()) && m_pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVERIGHT)) 
+			{
+				sideRot = Vector(0, 0, (m_pPl->IsLegacySideCurl() && mp_client_sidecurl.GetBool()) ? 1 : -1);
+			}
+			else if ((m_pPl->m_nButtons & IN_MOVERIGHT) && (!(m_pPl->m_nButtons & IN_MOVELEFT) || (mp_sidemove_override.GetBool() || mp_curl_override.GetBool()) && m_pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVELEFT)) 
+			{
+				sideRot = Vector(0, 0, (m_pPl->IsLegacySideCurl() && mp_client_sidecurl.GetBool()) ? -1 : 1);
+			}
 		}
 	}
 
@@ -3004,32 +3115,6 @@ void CBall::UnmarkOffsidePlayers()
 		if (CSDKPlayer::IsOnField(pPl))
 			pPl->SetOffside(false);
 	}
-}
-
-void CBall::Kicked(body_part_t bodyPart, bool isDeflection, const Vector &oldVel)
-{
-	float dynamicDelay = RemapValClamped(m_vVel.Length(), sv_ball_dynamicshotdelay_minshotstrength.GetInt(), sv_ball_dynamicshotdelay_maxshotstrength.GetInt(), sv_ball_dynamicshotdelay_mindelay.GetFloat(), sv_ball_dynamicshotdelay_maxdelay.GetFloat());
-	
-	float delay;
-
-	if (State_Get() == BALL_STATE_NORMAL)
-	{
-		delay = sv_ball_dynamicshotdelay_enabled.GetBool() ? dynamicDelay : sv_ball_shotdelay_normal.GetFloat();
-	}
-	else
-	{
-		delay = sv_ball_shotdelay_setpiece.GetFloat();
-	}
-	
-	m_flGlobalNextShot = gpGlobals->curtime + dynamicDelay * sv_ball_shotdelay_global_coeff.GetFloat();
-	m_flGlobalNextKeeperCatch = gpGlobals->curtime + dynamicDelay * sv_ball_keepercatchdelay_global_coeff.GetFloat();
-
-	if (isDeflection)
-		m_pPl->m_flNextShot = m_flGlobalNextShot;
-	else
-		m_pPl->m_flNextShot = gpGlobals->curtime + delay;
-
-	Touched(m_pPl, !isDeflection, bodyPart, oldVel);
 }
 
 void CBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart, const Vector &oldVel)

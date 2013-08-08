@@ -230,10 +230,13 @@ int CSDKPlayerAnimState::CalcPrimaryActionSequence(PlayerAnimEvent_t event)
 	switch (event)
 	{
 	case PLAYERANIMEVENT_KICK: return CalcSequenceIndex("ioskick");
+	case PLAYERANIMEVENT_FAKE_SHOT: return CalcSequenceIndex("ioskick");
 	case PLAYERANIMEVENT_PASS: return CalcSequenceIndex("iospass");
 	case PLAYERANIMEVENT_PASS_STATIONARY: return CalcSequenceIndex("iospass_stationary");
 	case PLAYERANIMEVENT_VOLLEY: return CalcSequenceIndex("iosvolley");
 	case PLAYERANIMEVENT_HEELKICK: return CalcSequenceIndex("iosheelkick");
+	case PLAYERANIMEVENT_ROULETTE_CLOCKWISE: return CalcSequenceIndex("iosheelkick");
+	case PLAYERANIMEVENT_ROULETTE_CC: return CalcSequenceIndex("iosheelkick");
 	case PLAYERANIMEVENT_HEADER: return CalcSequenceIndex("iosheader");
 	case PLAYERANIMEVENT_HEADER_STATIONARY: return CalcSequenceIndex("iosheader_stationary");
 	case PLAYERANIMEVENT_THROWIN: return CalcSequenceIndex("iosthrowin");
@@ -396,6 +399,12 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT:
 	case PLAYERANIMEVENT_KEEPER_DIVE_FORWARD:
 	case PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD:
+	case PLAYERANIMEVENT_ROULETTE_CLOCKWISE:
+	case PLAYERANIMEVENT_ROULETTE_CC:
+	case PLAYERANIMEVENT_BALL_HOP:
+	case PLAYERANIMEVENT_BALL_ROLL_LEFT:
+	case PLAYERANIMEVENT_BALL_ROLL_RIGHT:
+	case PLAYERANIMEVENT_FAKE_SHOT:
 		{
 			// HACKHACK: Side effects?
 			//if (GetSDKPlayer()->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_SLIDE)
@@ -458,6 +467,9 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 	//case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT:
 	case PLAYERANIMEVENT_KEEPER_DIVE_FORWARD:
 	case PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD:
+	case PLAYERANIMEVENT_ROULETTE_CLOCKWISE:
+	case PLAYERANIMEVENT_ROULETTE_CC:
+	case PLAYERANIMEVENT_BALL_HOP:
 		GetSDKPlayer()->AddFlag(FL_FREECAM);
 		break;
 	case PLAYERANIMEVENT_CARRY:

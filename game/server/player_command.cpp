@@ -144,6 +144,8 @@ void CPlayerMove::SetupMove( CBasePlayer *player, CUserCmd *ucmd, IMoveHelper *p
 
 	// Prepare the usercmd fields
 	move->m_vecViewAngles		= ucmd->viewangles;
+	move->m_vecCamAngles		= ucmd->camviewangles;
+	player->m_aCamViewAngles	= ucmd->camviewangles;
 
 	CBaseEntity *pMoveParent = player->GetMoveParent();
 	if (!pMoveParent)

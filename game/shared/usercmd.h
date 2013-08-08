@@ -43,6 +43,7 @@ public:
 		command_number = 0;
 		tick_count = 0;
 		viewangles.Init();
+		camviewangles.Init();
 		forwardmove = 0.0f;
 		sidemove = 0.0f;
 		upmove = 0.0f;
@@ -65,6 +66,7 @@ public:
 		command_number		= src.command_number;
 		tick_count			= src.tick_count;
 		viewangles			= src.viewangles;
+		camviewangles		= src.camviewangles;
 		forwardmove			= src.forwardmove;
 		sidemove			= src.sidemove;
 		upmove				= src.upmove;
@@ -95,6 +97,7 @@ public:
 		CRC32_ProcessBuffer( &crc, &command_number, sizeof( command_number ) );
 		CRC32_ProcessBuffer( &crc, &tick_count, sizeof( tick_count ) );
 		CRC32_ProcessBuffer( &crc, &viewangles, sizeof( viewangles ) );    
+		CRC32_ProcessBuffer( &crc, &camviewangles, sizeof( camviewangles ) );    
 		CRC32_ProcessBuffer( &crc, &forwardmove, sizeof( forwardmove ) );   
 		CRC32_ProcessBuffer( &crc, &sidemove, sizeof( sidemove ) );      
 		CRC32_ProcessBuffer( &crc, &upmove, sizeof( upmove ) );         
@@ -114,7 +117,10 @@ public:
 	int		tick_count;
 	
 	// Player instantaneous view angles.
-	QAngle	viewangles;     
+	QAngle	viewangles;  
+
+	QAngle	camviewangles;
+
 	// Intended velocities
 	//	forward velocity.
 	float	forwardmove;   

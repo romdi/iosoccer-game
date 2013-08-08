@@ -717,6 +717,8 @@ public:
 	void					IncrementEFNoInterpParity();
 	int						GetEFNoInterpParity() const;
 
+	QAngle m_aCamViewAngles;
+
 private:
 	
 	// For queueing up CUserCmds and running them from PhysicsSimulate

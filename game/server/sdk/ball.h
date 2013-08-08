@@ -164,7 +164,7 @@ public:
 	void			ReloadSettings();
 
 	void			SetPos(Vector pos);
-	void			SetVel(Vector vel, float spinCoeff, body_part_t bodyPart, bool isDeflection, bool markOffsidePlayers, bool checkMinShotStrength);
+	void			SetVel(Vector vel, float spinCoeff, body_part_t bodyPart, bool isDeflection, bool markOffsidePlayers, bool ensureMinShotStrength, float nextShotDelay = -1);
 	void			SetRot(AngularImpulse rot = NULL);
 
 	void			SetPenaltyState(penalty_state_t penaltyState) { m_ePenaltyState = penaltyState; }
@@ -237,12 +237,11 @@ private:
 	bool			DoVolleyShot();
 	bool			DoHeader();
 	AngularImpulse	CalcSpin(float coeff, bool applyTopspin);
-	float			GetPitchCoeff(bool isNormalShot);
+	float			GetPitchCoeff(bool isNormalShot, bool useCamViewAngles = false);
 	float			GetNormalshotStrength(float coeff, int strength);
 	float			GetPowershotStrength(float coeff, int strength);
 	float			GetChargedshotStrength(float coeff, int minStrength, int maxStrength);
 	void			UpdateCarrier();
-	void			Kicked(body_part_t bodyPart, bool isDeflection, const Vector &oldVel);
 	void			Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart, const Vector &oldVel);
 	void			RemoveAllTouches();
 	BallTouchInfo	*LastInfo(bool wasShooting, CSDKPlayer *pSkipPl = NULL, CSDKPlayer *pSkipPl2 = NULL, CSDKPlayer *pSkipPl3 = NULL);

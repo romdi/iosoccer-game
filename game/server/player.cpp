@@ -576,6 +576,8 @@ CBasePlayer::CBasePlayer( )
 	m_nBodyPitchPoseParam = -1;
 	m_flForwardMove = 0;
 	m_flSideMove = 0;
+
+	m_aCamViewAngles = vec3_angle;
 }
 
 CBasePlayer::~CBasePlayer( )
