@@ -358,23 +358,23 @@ void TextImage::Paint()
 			y += lineHeight;
 			continue;
 		}
-		else if (ch == '&')
-		{
-			// "&&" means draw a single ampersand, single one is a shortcut character
-			if (wsz[1] == '&')
-			{
-				// just move on and draw the second ampersand
-				wsz++;
-			}
-			else
-			{
-				// draw the underline, then continue to the next character without moving forward
-#ifdef VGUI_DRAW_HOTKEYS_ENABLED
-				DrawPrintChar(x + px, y + py, '_');
-#endif
-				continue;
-			}
-		}
+//		else if (ch == '&')
+//		{
+//			// "&&" means draw a single ampersand, single one is a shortcut character
+//			if (wsz[1] == '&')
+//			{
+//				// just move on and draw the second ampersand
+//				wsz++;
+//			}
+//			else
+//			{
+//				// draw the underline, then continue to the next character without moving forward
+//#ifdef VGUI_DRAW_HOTKEYS_ENABLED
+//				DrawPrintChar(x + px, y + py, '_');
+//#endif
+//				continue;
+//			}
+//		}
 
 		// see if we've hit the truncated portion of the string
 		if (wsz == m_pwszEllipsesPosition)
@@ -448,11 +448,11 @@ void TextImage::GetTextSize(int &wide, int &tall)
 	int textLen = wcslen(text);
 	for (int i = 0; i < textLen; i++)
 	{
-		// handle stupid special characters, these should be removed
-		if (text[i] == '&' && text[i + 1] != 0)
-		{
-			i++;
-		}
+		//// handle stupid special characters, these should be removed
+		//if (text[i] == '&' && text[i + 1] != 0)
+		//{
+		//	i++;
+		//}
 
 		int a, b, c;
 		surface()->GetCharABCwide(font, text[i], a, b, c);
@@ -658,19 +658,19 @@ void TextImage::RecalculateEllipsesPosition()
 				// ignore, just use \n for newlines
 				continue;
 			}
-			else if (ch == '&')
-			{
-				// "&&" means draw a single ampersand, single one is a shortcut character
-				if (wsz[1] == '&')
-				{
-					// just move on and draw the second ampersand
-					wsz++;
-				}
-				else
-				{
-					continue;
-				}
-			}
+			//else if (ch == '&')
+			//{
+			//	// "&&" means draw a single ampersand, single one is a shortcut character
+			//	if (wsz[1] == '&')
+			//	{
+			//		// just move on and draw the second ampersand
+			//		wsz++;
+			//	}
+			//	else
+			//	{
+			//		continue;
+			//	}
+			//}
 
 			// don't truncate the first character
 			if (wsz == _utext)
@@ -776,20 +776,20 @@ void TextImage::RecalculateCenterWrapIndents()
 			iCurLineW = 0;
 			continue;
 		}
-		else if (ch == '&')
-		{
-			// "&&" means draw a single ampersand, single one is a shortcut character
-			if (wsz[1] == '&')
-			{
-				// just move on and draw the second ampersand
-				wsz++;
-			}
-			else
-			{
-				// draw the underline, then continue to the next character without moving forward
-				continue;
-			}
-		}
+		//else if (ch == '&')
+		//{
+		//	// "&&" means draw a single ampersand, single one is a shortcut character
+		//	if (wsz[1] == '&')
+		//	{
+		//		// just move on and draw the second ampersand
+		//		wsz++;
+		//	}
+		//	else
+		//	{
+		//		// draw the underline, then continue to the next character without moving forward
+		//		continue;
+		//	}
+		//}
 
 		// Don't need to check ellipses, they're not used when wrapping
 

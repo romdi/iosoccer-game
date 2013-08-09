@@ -1747,8 +1747,12 @@ void sanitize(char *str)
 {
 	for (char *chr = str; chr != NULL && *chr != '\0'; chr++)
 	{
-		if (*chr == '%')
-			*chr = ' ';
+		// Replace reserved characters:
+		// #: Signals a localization string if used as first character
+		// %: Used in localization strings as placeholders
+		// 1-5: Used in localization strings as color codes
+		if ((chr == str && *chr == '#') || *chr == '%' || *chr == 1 || *chr == 2 || *chr == 3 || *chr == 4 || *chr == 5)
+			*chr = '*';
 	}
 }
 

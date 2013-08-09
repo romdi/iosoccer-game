@@ -142,61 +142,61 @@ void Label::GetContentSize(int &wide, int &tall)
 //-----------------------------------------------------------------------------
 wchar_t Label::CalculateHotkey(const char *text)
 {
-	for (const char *ch = text; *ch != 0; ch++)
-	{
-		if (*ch == '&')
-			{
-			// get the next character
-			ch++;
+	//for (const char *ch = text; *ch != 0; ch++)
+	//{
+	//	if (*ch == '&')
+	//		{
+	//		// get the next character
+	//		ch++;
 
-			if (*ch == '&')
-			{
-				// just an &
-				continue;
-			}
-			else if (*ch == 0)
-			{
-				break;
-			}
-			else if (isalnum(*ch))
-			{
-				// found the hotkey
-				return (wchar_t)tolower(*ch);
-			}
-		}
-	}
+	//		if (*ch == '&')
+	//		{
+	//			// just an &
+	//			continue;
+	//		}
+	//		else if (*ch == 0)
+	//		{
+	//			break;
+	//		}
+	//		else if (isalnum(*ch))
+	//		{
+	//			// found the hotkey
+	//			return (wchar_t)tolower(*ch);
+	//		}
+	//	}
+	//}
 
 	return '\0';
 }
 
 wchar_t Label::CalculateHotkey(const wchar_t *text)
 {
-	if( text )
-	{
-		for (const wchar_t *ch = text; *ch != 0; ch++)
-		{
-			if (*ch == '&')
-			{
-				// get the next character
-				ch++;
+	//if( text )
+	//{
+	//	for (const wchar_t *ch = text; *ch != 0; ch++)
+	//	{
+	//		if (*ch == '&')
+	//		{
+	//			// get the next character
+	//			ch++;
 
-				if (*ch == '&')
-				{
-					// just an &
-					continue;
-				}
-				else if (*ch == 0)
-				{
-					break;
-				}
-				else if (iswalnum(*ch))
-				{
-					// found the hotkey
-					return (wchar_t)towlower(*ch);
-				}
-			}
-		}
-	}
+	//			if (*ch == '&')
+	//			{
+	//				// just an &
+	//				continue;
+	//			}
+	//			else if (*ch == 0)
+	//			{
+	//				break;
+	//			}
+	//			else if (iswalnum(*ch))
+	//			{
+	//				// found the hotkey
+	//				return (wchar_t)towlower(*ch);
+	//			}
+	//		}
+	//	}
+	//}
 
 	return '\0';
 }

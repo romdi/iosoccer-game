@@ -102,7 +102,7 @@ void CSDKTargetId::VidInit()
 void DrawPlayerName(HFont font, const Vector &origin, const char *playerName, int teamNumber)
 {
 	wchar_t wszPlayerName[MAX_PLAYER_NAME_LENGTH];
-	g_pVGuiLocalize->ConvertANSIToUnicode(UTIL_SafeName(playerName), wszPlayerName, sizeof(wszPlayerName));
+	g_pVGuiLocalize->ConvertANSIToUnicode(playerName, wszPlayerName, sizeof(wszPlayerName));
 
 	int wide, tall;
 	vgui::surface()->GetTextSize(font, wszPlayerName, wide, tall);
