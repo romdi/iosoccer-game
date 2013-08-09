@@ -256,7 +256,7 @@ private:
 	CHandle<CSDKPlayer>	m_pPl;
 	CHandle<CSDKPlayer>	m_pOtherPl;
 
-	QAngle			m_aPlAng;
+	QAngle			m_aPlAng, m_aPlCamAng;
 	Vector			m_vPlVel, m_vPlVel2D, m_vPlForwardVel2D, m_vPlPos, m_vPlForward, m_vPlForward2D, m_vPlRight, m_vPlUp, m_vPlDirToBall, m_vPlLocalDirToBall;
 
 	CHandle<CSDKPlayer>	m_pFouledPl;

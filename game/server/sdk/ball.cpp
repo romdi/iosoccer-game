@@ -2463,7 +2463,7 @@ float CBall::GetPitchCoeff(bool isNormalShot, bool useCamViewAngles /*= false*/)
 	// plot 0.5 + (cos(x/89 * pi/2) * 0.5), x=-89..89
 
 	float bestAng = sv_ball_bestshotangle.GetInt();
-	float pitch = useCamViewAngles ? m_pPl->m_aCamViewAngles[PITCH] : m_aPlAng[PITCH];
+	float pitch = useCamViewAngles ? m_aPlCamAng[PITCH] : m_aPlAng[PITCH];
 
 	float coeff;
 
@@ -2588,7 +2588,7 @@ bool CBall::DoGroundShot(bool markOffsidePlayers, float velCoeff /*= 1.0f*/)
 			return true;
 		}
 
-		QAngle shotAngle = m_pPl->m_aCamViewAngles;
+		QAngle shotAngle = m_aPlCamAng;
 		shotAngle[PITCH] = sv_ball_groundshot_minangle.GetFloat();
 		//shotAngle[PITCH] = min(sv_ball_groundshot_minangle.GetFloat(), shotAngle[PITCH]);
 		Vector shotDir;
@@ -2620,7 +2620,7 @@ bool CBall::DoGroundShot(bool markOffsidePlayers, float velCoeff /*= 1.0f*/)
 		else
 			shotStrength = GetChargedshotStrength(GetPitchCoeff(false, useCamViewAngles), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
 
-		QAngle shotAngle = useCamViewAngles ? m_pPl->m_aCamViewAngles : m_aPlAng;
+		QAngle shotAngle = useCamViewAngles ? m_aPlCamAng : m_aPlAng;
 		shotAngle[PITCH] = min(sv_ball_groundshot_minangle.GetFloat(), shotAngle[PITCH]);
 
 		Vector shotDir;
@@ -2752,7 +2752,7 @@ AngularImpulse CBall::CalcSpin(float coeff, bool applyTopspin)
 
 		if (m_pPl->m_nButtons & IN_RELOAD)
 		{
-			float angDiff = AngleDiff(m_aPlAng[YAW], m_pPl->m_aCamViewAngles[YAW]);
+			float angDiff = AngleDiff(m_aPlAng[YAW], m_aPlCamAng[YAW]);
 			sideRot = Vector(0, 0, angDiff >= 0 ? -1 : 1);
 		}
 		else
@@ -3005,15 +3005,22 @@ void CBall::UpdateCarrier()
 	if (CSDKPlayer::IsOnField(m_pPl))
 	{
 		m_vPlPos = m_pPl->GetLocalOrigin();
+
 		m_vPlVel = m_pPl->GetLocalVelocity();
 		m_vPlVel2D = Vector(m_vPlVel.x, m_vPlVel.y, 0);
+
 		m_aPlAng = m_pPl->EyeAngles();
 		m_aPlAng[PITCH] = RemapValClamped(m_aPlAng[PITCH], -mp_pitchup.GetFloat(), mp_pitchdown.GetFloat(), -mp_pitchup_remap.GetFloat(), mp_pitchdown_remap.GetFloat());
 		AngleVectors(m_aPlAng, &m_vPlForward, &m_vPlRight, &m_vPlUp);
+		
+		m_aPlCamAng = m_pPl->m_aCamViewAngles;
+		m_aPlCamAng[PITCH] = RemapValClamped(m_aPlCamAng[PITCH], -mp_pitchup.GetFloat(), mp_pitchdown.GetFloat(), -mp_pitchup_remap.GetFloat(), mp_pitchdown_remap.GetFloat());
+		
 		m_vPlForward2D = m_vPlForward;
 		m_vPlForward2D.z = 0;
 		m_vPlForward2D.NormalizeInPlace();
 		m_vPlForwardVel2D = m_vPlForward2D * max(0, (m_vPlVel2D.x * m_vPlForward2D.x + m_vPlVel2D.y * m_vPlForward2D.y));
+		
 		m_vPlDirToBall = m_vPos - m_vPlPos;
 		VectorIRotate(m_vPlDirToBall, m_pPl->EntityToWorldTransform(), m_vPlLocalDirToBall);
 	}
