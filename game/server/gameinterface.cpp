@@ -2467,6 +2467,11 @@ void CServerGameClients::ClientDisconnect( edict_t *pEdict )
 
 void CServerGameClients::ClientPutInServer( edict_t *pEntity, const char *playername )
 {
+	const char *customName = engine->GetClientConVarValue(engine->IndexOfEdict(pEntity), "playername");
+
+	if (customName[0] != '\0')
+		playername = customName;
+
 	if ( g_pClientPutInServerOverride )
 		g_pClientPutInServerOverride( pEntity, playername );
 	else
