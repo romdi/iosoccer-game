@@ -221,15 +221,6 @@ ConVar sv_ball_freecamshot_maxangle("sv_ball_freecamshot_maxangle", "60", FCVAR_
 ConVar sv_ball_heelshot_strength("sv_ball_heelshot_strength", "800", FCVAR_NOTIFY);
 
 
-void OnBallSkinChange(IConVar *var, const char *pOldValue, float flOldValue)
-{
-	if (GetBall())
-		GetBall()->m_nSkin = ((ConVar*)var)->GetInt() == -1 ? g_IOSRand.RandomInt(0, BALL_SKIN_COUNT - 1) : clamp(((ConVar*)var)->GetInt(), 0, BALL_SKIN_COUNT - 1);
-}
-
-ConVar sv_ball_skin("sv_ball_skin", "-1", FCVAR_NOTIFY, "Set the ball skin (-1 = random, 0-5)", &OnBallSkinChange);
-
-
 extern ConVar mp_client_sidecurl;
 
 CBall *CreateBall(const Vector &pos, CSDKPlayer *pCreator)
@@ -269,6 +260,7 @@ void CC_CreatePlayerBall(const CCommand &args)
 		&tr);
 
 	Vector pos = tr.endpos;
+	pos.z -= BALL_PHYS_RADIUS;
 
 	if (pPl->GetPlayerBall())
 	{
@@ -286,7 +278,8 @@ void CC_CreatePlayerBall(const CCommand &args)
 	else
 		pPl->SetPlayerBall(CreateBall(pos, pPl));
 
-	pPl->GetPlayerBall()->m_nSkin = pPl->GetPlayerBallSkin() == -1 ? g_IOSRand.RandomInt(0, BALL_SKIN_COUNT - 1) : pPl->GetPlayerBallSkin();
+	//pPl->GetPlayerBall()->m_nSkin = pPl->GetPlayerBallSkin() == -1 ? g_IOSRand.RandomInt(0, BALL_SKIN_COUNT - 1) : pPl->GetPlayerBallSkin();
+	pPl->GetPlayerBall()->SetSkinName(pPl->GetPlayerBallSkinName());
 	pPl->GetPlayerBall()->SaveBallCannonSettings();
 	pPl->m_Shared.SetStamina(100);
 }
@@ -362,11 +355,14 @@ IMPLEMENT_SERVERCLASS_ST( CBall, DT_Ball )
 	SendPropFloat( SENDINFO( m_fMass ),	0, SPROP_NOSCALE ),
 	SendPropEHandle(SENDINFO(m_pCreator)),
 	SendPropEHandle(SENDINFO(m_pLastActivePlayer)),
+	SendPropEHandle(SENDINFO(m_pHoldingPlayer)),
 	SendPropInt(SENDINFO(m_nLastActiveTeam)),
 	SendPropBool(SENDINFO(m_bIsPlayerBall)),
 	SendPropInt(SENDINFO(m_eBallState)),
 	SendPropInt(SENDINFO(m_bNonnormalshotsBlocked)),
 	SendPropInt(SENDINFO(m_bShotsBlocked)),
+	SendPropString(SENDINFO(m_szSkinName)),
+
 	//ios1.1
     //SendPropVector(SENDINFO(m_vecOrigin), -1, SPROP_NOSCALE|SPROP_CHANGES_OFTEN, 0.0f, HIGH_DEFAULT, SendProxy_Origin ),
 END_SEND_TABLE()
@@ -395,6 +391,7 @@ CBall::CBall()
 	m_pPl = NULL;
 	m_pOtherPl = NULL;
 	m_pLastActivePlayer = NULL;
+	m_pHoldingPlayer = NULL;
 	m_ePenaltyState = PENALTY_NONE;
 	m_bSetNewPos = false;
 	m_bSetNewVel = false;
@@ -408,6 +405,7 @@ CBall::CBall()
 	m_bNonnormalshotsBlocked = false;
 	m_bShotsBlocked = false;
 	m_bHitThePost = false;
+	memset(m_szSkinName.GetForModify(), 0, sizeof(m_szSkinName));
 }
 
 CBall::~CBall()
@@ -451,7 +449,10 @@ void CBall::RemovePlayerBall()
 void CBall::Spawn (void)
 {
 	if (!g_pBall && !m_bIsPlayerBall)
+	{
+		CBallInfo::ParseBallSkins();
 		g_pBall = this;
+	}
 
 	//RomD: Don't fade the ball
 	SetFadeDistance(-1, 0);
@@ -467,10 +468,8 @@ void CBall::Spawn (void)
 
 	m_nBody = 0;
 
-	if (m_bIsPlayerBall && m_pCreator)
-		m_nSkin = m_pCreator->GetPlayerBallSkin();
-	else
-		m_nSkin = sv_ball_skin.GetInt() == -1 ? g_IOSRand.RandomInt(0, BALL_SKIN_COUNT - 1) : clamp(sv_ball_skin.GetInt(), 0, BALL_SKIN_COUNT - 1);
+	int ballSkinIndex = g_IOSRand.RandomInt(0, CBallInfo::m_BallInfo.Count() - 1);
+	Q_strncpy(m_szSkinName.GetForModify(), CBallInfo::m_BallInfo[ballSkinIndex]->m_szFolderName, sizeof(m_szSkinName));
 
 	m_pPhys->SetPosition(GetLocalOrigin(), GetLocalAngles(), true);
 	m_pPhys->SetVelocityInstantaneous(&vec3_origin, &vec3_origin);
@@ -518,7 +517,7 @@ bool CBall::CreateVPhysics()
 	params.inertia = sv_ball_inertia.GetFloat();
 	params.rotdamping = sv_ball_rotdamping.GetFloat();
 	params.rotInertiaLimit = sv_ball_rotinertialimit.GetFloat();
-	int	nMaterialIndex = physprops->GetSurfaceIndex("ios");
+	int	nMaterialIndex = physprops->GetSurfaceIndex(mp_weather.GetInt() == 0 ? "dryball" : (mp_weather.GetInt() == 1 ? "wetball" : "icyball"));
 	m_pPhys = physenv->CreateSphereObject( m_flPhysRadius, nMaterialIndex, GetAbsOrigin(), GetAbsAngles(), &params, false );
 	if (!m_pPhys)
 		return false;
@@ -562,25 +561,16 @@ bool CBall::CreateVPhysics()
 
 void CBall::VPhysicsUpdate(IPhysicsObject *pPhysics)
 {
-	if (m_bIsBallCannonMode && m_bRestoreBallCannonSettings)
-	{
-		m_pPhys->SetPosition(m_vBallCannonPos, m_aBallCannonAng, true);
-		m_pPhys->SetVelocity(&m_vBallCannonVel, &m_vBallCannonRot);
-		m_bRestoreBallCannonSettings = false;
-	}
-	else
-	{
-		Vector vel, worldAngImp;
-		AngularImpulse angImp;
-		m_pPhys->GetVelocity(&vel, &angImp);
-		VectorRotate(angImp, EntityToWorldTransform(), worldAngImp);
-		Vector magnusDir = worldAngImp.Cross(vel);
+	Vector vel, worldAngImp;
+	AngularImpulse angImp;
+	m_pPhys->GetVelocity(&vel, &angImp);
+	VectorRotate(angImp, EntityToWorldTransform(), worldAngImp);
+	Vector magnusDir = worldAngImp.Cross(vel);
 
-		if (vel.Length() > 0)
-			vel += magnusDir * 1e-6 * sv_ball_curve.GetFloat() * gpGlobals->frametime;
+	if (vel.Length() > 0)
+		vel += magnusDir * 1e-6 * sv_ball_curve.GetFloat() * gpGlobals->frametime;
 
-		VPhysicsGetObject()->SetVelocity(&vel, &angImp);
-	}
+	VPhysicsGetObject()->SetVelocity(&vel, &angImp);
 
 	BaseClass::VPhysicsUpdate(pPhysics);
 
@@ -722,7 +712,7 @@ CSDKPlayer *CBall::FindNearestPlayer(int team /*= TEAM_INVALID*/, int posFlags /
 	return pNearest;
 }
 
-void CBall::SetPos(Vector pos)
+void CBall::SetPos(const Vector &pos, bool teleport /*= true*/)
 {
 	m_vPos = Vector(pos.x, pos.y, pos.z + m_flPhysRadius);
 	m_vVel = vec3_origin;
@@ -730,9 +720,15 @@ void CBall::SetPos(Vector pos)
 	m_pPhys->EnableMotion(true);
 	m_pPhys->Wake();
 	m_pPhys->SetVelocityInstantaneous(&vec3_origin, &vec3_origin);
-	m_pPhys->SetPosition(m_vPos, m_aAng, true);
+	m_pPhys->SetPosition(m_vPos, m_aAng, teleport);
 	m_pPhys->EnableMotion(false);
 	m_bSetNewPos = true;
+}
+
+void CBall::SetAng(const QAngle &ang)
+{
+	m_aAng = ang;
+	m_pPhys->SetPosition(m_vPos, m_aAng, false);
 }
 
 void CBall::SetVel(Vector vel, float spinCoeff, body_part_t bodyPart, bool isDeflection, bool markOffsidePlayers, bool ensureMinShotStrength, float nextShotDelay /*= -1*/)
@@ -1428,6 +1424,13 @@ void CBall::State_THROWIN_Think()
 
 	UpdateCarrier();
 
+	//Vector handPos;
+	//QAngle handAng;
+	//m_pPl->GetAttachment("ballrighthand", handPos, handAng);
+	//handPos.z -= BALL_PHYS_RADIUS;
+	//SetPos(handPos, false);
+	//SetAng(handAng);
+
 	if (m_pPl->ShotButtonsReleased() && (m_pPl->IsPowershooting() || m_pPl->IsChargedshooting()))
 	{
 		QAngle ang = m_aPlAng;
@@ -1881,10 +1884,10 @@ void CBall::State_KEEPERHANDS_Think()
 		m_pPl->SetShotButtonsReleased(false);
 		m_pHoldingPlayer = m_pPl;
 		m_pPl->m_pHoldingBall = this;
-		m_pPl->m_nBody = MODEL_KEEPER_AND_BALL;
+		//m_pPl->m_nBody = MODEL_KEEPER_AND_BALL;
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_CARRY);
-		m_pPl->m_nSkin = m_pPl->m_nBaseSkin + m_nSkin;
-		SetEffects(EF_NODRAW);
+		//m_pPl->m_nSkin = m_pPl->m_nBaseSkin + m_nSkin;
+		//SetEffects(EF_NODRAW);
 		EnablePlayerCollisions(false);
 		m_flStateTimelimit = -1;
 		PlayersAtTargetPos();
@@ -1900,7 +1903,13 @@ void CBall::State_KEEPERHANDS_Think()
 
 	UpdateCarrier();
 
-	SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_keeperhands.GetFloat()) + m_vPlForward2D * 18);
+	//SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_keeperhands.GetFloat()) + m_vPlForward2D * 18);
+	Vector handPos;
+	QAngle handAng;
+	m_pPl->GetAttachment("keeperballrighthand", handPos, handAng);
+	handPos.z -= BALL_PHYS_RADIUS;
+	SetPos(handPos, false);
+	SetAng(handAng);
 
 	// Don't ignore triggers when setting the new ball position
 	m_bSetNewPos = false;
@@ -3380,10 +3389,9 @@ void CBall::EnablePlayerCollisions(bool enable)
 
 void CBall::RemoveFromPlayerHands(CSDKPlayer *pPl)
 {
-	if (CSDKPlayer::IsOnField(pPl) && pPl->GetTeamPosType() == POS_GK && pPl->m_nBody == MODEL_KEEPER_AND_BALL)
+	if (CSDKPlayer::IsOnField(pPl) && pPl->GetTeamPosType() == POS_GK && pPl->m_pHoldingBall.Get() == this)
 	{
 		pPl->m_pHoldingBall = NULL;
-		pPl->m_nBody = MODEL_KEEPER;
 		pPl->DoServerAnimationEvent(PLAYERANIMEVENT_CARRY_END);
 	}
 
@@ -3467,9 +3475,30 @@ void CBall::SaveBallCannonSettings()
 void CBall::RestoreBallCannonSettings()
 {
 	State_Transition(BALL_STATE_NORMAL);
-	m_bRestoreBallCannonSettings = true;
 	m_bIsBallCannonMode = true;
-	//m_pPhys->SetVelocityInstantaneous(&vec3_origin, &vec3_origin);
-	//m_pPhys->SetPosition(m_vBallCannonPos, m_aBallCannonAng, true);
-	//m_pPhys->SetVelocity(&m_vBallCannonVel, &m_vBallCannonRot);
+	m_pPhys->SetVelocityInstantaneous(&vec3_origin, &vec3_origin);
+	m_pPhys->SetPosition(m_vBallCannonPos, m_aBallCannonAng, true);
+	m_pPhys->SetVelocity(&m_vBallCannonVel, &m_vBallCannonRot);
+}
+
+void CBall::SetSkinName(const char *skinName)
+{
+	if (m_szSkinName[0] != '\0' && !Q_strcmp(skinName, m_szSkinName))
+		return;
+
+	int ballSkinIndex = -1;
+
+	for (int i = 0; i < CBallInfo::m_BallInfo.Count(); i++)
+	{
+		if (!Q_strcmp(CBallInfo::m_BallInfo[i]->m_szFolderName, skinName))
+		{
+			ballSkinIndex = i;
+			break;
+		}
+	}
+
+	if (ballSkinIndex == -1)
+		ballSkinIndex = g_IOSRand.RandomInt(0, CBallInfo::m_BallInfo.Count() - 1);
+
+	Q_strncpy(m_szSkinName.GetForModify(), CBallInfo::m_BallInfo[ballSkinIndex]->m_szFolderName, sizeof(m_szSkinName));
 }

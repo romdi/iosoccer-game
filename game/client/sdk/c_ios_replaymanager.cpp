@@ -2,6 +2,7 @@
 #include "c_ios_replaymanager.h"
 
 IMPLEMENT_CLIENTCLASS_DT(C_ReplayBall, DT_ReplayBall, CReplayBall)
+	RecvPropString(RECVINFO(m_szSkinName)),
 END_RECV_TABLE()
 
 C_ReplayBall *g_pReplayBall = NULL;

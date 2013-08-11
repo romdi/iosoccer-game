@@ -12,6 +12,7 @@ END_DATADESC()
 LINK_ENTITY_TO_CLASS( replayball, CReplayBall );
 
 IMPLEMENT_SERVERCLASS_ST(CReplayBall, DT_ReplayBall)
+	SendPropString(SENDINFO(m_szSkinName)),
 END_SEND_TABLE()
 
 bool CReplayBall::CreateVPhysics()
@@ -39,7 +40,7 @@ void CReplayBall::Precache()
 
 CReplayBall::CReplayBall()
 {
-
+	m_szSkinName.GetForModify()[0] = '\0';
 }
 
 void CReplayBall::Spawn( void )
@@ -346,8 +347,6 @@ void CReplayManager::TakeSnapshot()
 
 	GetBall()->VPhysicsGetObject()->GetPosition(&pBallSnap->pos, &pBallSnap->ang);
 	GetBall()->VPhysicsGetObject()->GetVelocity(&pBallSnap->vel, &pBallSnap->rot);
-	pBallSnap->skin = GetBall()->m_nSkin;
-	pBallSnap->effects = GetBall()->GetEffects();
 
 	pSnap->pBallSnapshot = pBallSnap;
 
@@ -626,8 +625,9 @@ void CReplayManager::RestoreSnapshot()
 			m_pBall->Spawn();
 		}
 
-		m_pBall->SetEffects(pBallSnap->effects);
-		m_pBall->m_nSkin = pBallSnap->skin;
+		if (Q_strcmp(m_pBall->m_szSkinName, GetBall()->GetSkinName()))
+			Q_strncpy(m_pBall->m_szSkinName.GetForModify(), GetBall()->GetSkinName(), MAX_KITNAME_LENGTH);
+
 		m_pBall->VPhysicsGetObject()->SetPosition(pBallSnap->pos, pBallSnap->ang, false);
 		m_pBall->VPhysicsGetObject()->SetVelocity(&pBallSnap->vel, &pBallSnap->rot);
 	}

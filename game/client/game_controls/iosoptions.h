@@ -152,6 +152,7 @@ class CAppearanceSettingPanel : public PropertyPage, public ISettingPanel
 	Label *m_pConnectionInfoLabel;
 
 	float m_flLastTeamKitUpdateTime;
+	float m_flLastBallSkinUpdateTime;
 
 public:
 

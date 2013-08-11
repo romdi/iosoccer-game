@@ -2017,7 +2017,7 @@ bool CGameMovement::CheckJumpButton( void )
 	team = pPl->GetTeamNumber();
 #endif
 
-	if (mv->m_nButtons & IN_RELOAD)
+	if ((mv->m_nButtons & IN_RELOAD) && (!isKeeper || !pPl->m_pHoldingBall))
 	{
 		if (mv->m_nButtons & IN_MOVERIGHT)
 			animEvent = PLAYERANIMEVENT_ROULETTE_CLOCKWISE;
@@ -2026,7 +2026,7 @@ bool CGameMovement::CheckJumpButton( void )
 		else
 			animEvent = PLAYERANIMEVENT_BALL_HOP;
 	}
-	else if (isKeeper && pPl->m_nInPenBoxOfTeam == team && pPl->m_nBody != MODEL_KEEPER_AND_BALL)
+	else if (isKeeper && pPl->m_nInPenBoxOfTeam == team && !pPl->m_pHoldingBall)
 	{
 		MoveHelper()->StartSound( mv->GetAbsOrigin(), "Player.DiveKeeper" );
 
@@ -2129,7 +2129,7 @@ bool CGameMovement::CheckSlideButton()
 	{
 		animEvent = PLAYERANIMEVENT_NONE;
 	}
-	else if (isKeeper && pPl->m_nInPenBoxOfTeam == team && pPl->m_nBody != MODEL_KEEPER_AND_BALL)
+	else if (isKeeper && pPl->m_nInPenBoxOfTeam == team && !pPl->m_pHoldingBall)
 	{
 		int sidemoveSign;
 
@@ -2161,7 +2161,7 @@ bool CGameMovement::CheckSlideButton()
 		//	animEvent = PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD;
 		//}
 	}
-	else if (pPl->m_nBody != MODEL_KEEPER_AND_BALL)
+	else if (!pPl->m_pHoldingBall)
 	{
 		MoveHelper()->StartSound( mv->GetAbsOrigin(), "Player.Slide" );
 		animEvent = PLAYERANIMEVENT_SLIDE;

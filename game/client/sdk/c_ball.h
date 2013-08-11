@@ -9,6 +9,7 @@
 #include "props_shared.h"
 #include "c_props.h"
 #include "c_sdk_player.h"
+#include "ios_teamkit_parse.h"
 
 class C_Ball;
 
@@ -34,12 +35,21 @@ public:
 	{
 		return m_fMass;
 	}
+
 	virtual bool IsAsleep()
 	{
 		return false;
 	}
 
+
+	const char *GetSkinName()
+	{
+		return m_szSkinName;
+	}
+
 	virtual bool ShouldInterpolate();
+
+	virtual void ClientThink();
 
 	void OnDataChanged(DataUpdateType_t updateType);
 
@@ -47,11 +57,16 @@ public:
 	float m_fMass;
 	CHandle<C_SDKPlayer> m_pCreator;
 	CHandle<C_SDKPlayer> m_pLastActivePlayer;
+	CHandle<C_SDKPlayer> m_pHoldingPlayer;
 	int m_nLastActiveTeam;
 	bool m_bIsPlayerBall;
 	ball_state_t m_eBallState;
 	bool m_bNonnormalshotsBlocked;
 	bool m_bShotsBlocked;
+
+private:
+
+	char m_szSkinName[MAX_KITNAME_LENGTH];
 };
 
 extern C_Ball *GetBall();

@@ -19,7 +19,7 @@ extern ConVar
 	legacysidecurl,
 	legacyverticallook,
 	modelskinindex,
-	playerballskin,
+	playerballskinname,
 	playername,
 	preferredkeepershirtnumber,
 	preferredoutfieldshirtnumber,
@@ -524,46 +524,11 @@ CAppearanceSettingPanel::CAppearanceSettingPanel(Panel *parent, const char *pane
 		kv->deleteThis();
 	}
 
-
 	m_pPlayerBallSkinLabel = new Label(m_pContent, "", "Player Ball Skin:");
-	m_pPlayerBallSkinList = new ComboBox(m_pContent, "", BALL_SKIN_COUNT + 1, false);
-
-	kv = new KeyValues("UserData", "index", -1);
-	m_pPlayerBallSkinList->AddItem("<Random>", kv);
-	kv->deleteThis();
-
-	kv = new KeyValues("UserData", "index", 0);
-	m_pPlayerBallSkinList->AddItem("T90 White", kv);
-	kv->deleteThis();
-
-	kv = new KeyValues("UserData", "index", 1);
-	m_pPlayerBallSkinList->AddItem("Classic", kv);
-	kv->deleteThis();
-
-	kv = new KeyValues("UserData", "index", 2);
-	m_pPlayerBallSkinList->AddItem("T90 Hivis", kv);
-	kv->deleteThis();
-
-	kv = new KeyValues("UserData", "index", 3);
-	m_pPlayerBallSkinList->AddItem("T90 Red", kv);
-	kv->deleteThis();
-
-	kv = new KeyValues("UserData", "index", 4);
-	m_pPlayerBallSkinList->AddItem("T90 Blue", kv);
-	kv->deleteThis();
-
-	kv = new KeyValues("UserData", "index", 5);
-	m_pPlayerBallSkinList->AddItem("T90 Black", kv);
-	kv->deleteThis();
-
-	m_pPlayerAngleLabel = new Label(m_pContent, "", "Rotation Angle:");
-	m_pPlayerAngleSlider = new Slider(m_pContent, "");
-	m_pPlayerAngleSlider->SetRange(-180, 180);
-	m_pPlayerAngleSlider->SetValue(0);
+	m_pPlayerBallSkinList = new ComboBox(m_pContent, "", MAX_VISIBLE_DROPDOWN, false);
 
 	m_pPreviewTeamLabel = new Label(m_pContent, "", "Preview Team Kit:");
-	m_pPreviewTeamList = new ComboBox(m_pContent, "", CTeamInfo::m_TeamInfo.Count(), false);
-	m_pPreviewTeamList->RemoveAll();
+	m_pPreviewTeamList = new ComboBox(m_pContent, "", MAX_VISIBLE_DROPDOWN, false);
 
 	m_pBodypartPanel = new Panel(m_pContent, "");
 	m_pBodypartRadioButtons[0] = new RadioButton(m_pBodypartPanel, "", "Head");
@@ -571,9 +536,15 @@ CAppearanceSettingPanel::CAppearanceSettingPanel(Panel *parent, const char *pane
 	m_pBodypartRadioButtons[2] = new RadioButton(m_pBodypartPanel, "", "Shoes");
 	m_pBodypartRadioButtons[1]->SetSelected(true);
 
+	m_pPlayerAngleLabel = new Label(m_pContent, "", "Rotation Angle:");
+	m_pPlayerAngleSlider = new Slider(m_pContent, "");
+	m_pPlayerAngleSlider->SetRange(-180, 180);
+	m_pPlayerAngleSlider->SetValue(0);
+
 	m_pConnectionInfoLabel = new Label(m_pContent, "", "Join or create a server to activate the preview");
 
 	m_flLastTeamKitUpdateTime = -1;
+	m_flLastBallSkinUpdateTime = -1;
 }
 
 void CAppearanceSettingPanel::PerformLayout()
@@ -624,7 +595,7 @@ void CAppearanceSettingPanel::Save()
 	modelskinindex.SetValue(m_pSkinIndexList->GetActiveItemUserData()->GetInt("value"));
 	preferredoutfieldshirtnumber.SetValue(m_pPreferredOutfieldShirtNumberList->GetActiveItemUserData()->GetInt("index"));
 	preferredkeepershirtnumber.SetValue(m_pPreferredKeeperShirtNumberList->GetActiveItemUserData()->GetInt("index"));
-	playerballskin.SetValue(m_pPlayerBallSkinList->GetActiveItemUserData()->GetInt("index"));
+	playerballskinname.SetValue(m_pPlayerBallSkinList->GetActiveItemUserData()->GetString("ballskinname"));
 }
 
 void CAppearanceSettingPanel::Load()
@@ -638,8 +609,6 @@ void CAppearanceSettingPanel::Load()
 
 	int keeperNumber = clamp(preferredkeepershirtnumber.GetInt(), 1, 99);
 	m_pPreferredKeeperShirtNumberList->ActivateItemByRow(keeperNumber - 1);
-
-	m_pPlayerBallSkinList->ActivateItemByRow(playerballskin.GetInt() + 1);
 }
 
 void CAppearanceSettingPanel::Update()
@@ -661,6 +630,8 @@ void CAppearanceSettingPanel::Update()
 	{
 		m_flLastTeamKitUpdateTime = CTeamInfo::m_flLastUpdateTime;
 
+		m_pPreviewTeamList->RemoveAll();
+
 		int kitCount = 0;
 
 		for (int i = 0; i < CTeamInfo::m_TeamInfo.Count(); i++)
@@ -674,8 +645,31 @@ void CAppearanceSettingPanel::Update()
 			}
 		}
 
-		m_pPreviewTeamList->SetNumberOfEditLines(kitCount);
 		m_pPreviewTeamList->ActivateItemByRow(0);
+	}
+
+	if (m_flLastBallSkinUpdateTime == -1 || m_flLastBallSkinUpdateTime < CBallInfo::m_flLastUpdateTime)
+	{
+		m_flLastBallSkinUpdateTime = CBallInfo::m_flLastUpdateTime;
+
+		m_pPlayerBallSkinList->RemoveAll();
+
+		int activeItemID = 0;
+		int ballCount = 0;
+
+		for (int i = 0; i < CBallInfo::m_BallInfo.Count(); i++)
+		{
+			ballCount += 1;
+			KeyValues *kv = new KeyValues("UserData", "ballskinname", CBallInfo::m_BallInfo[i]->m_szFolderName);
+			int itemID = m_pPlayerBallSkinList->AddItem(VarArgs("%s [by %s]", CBallInfo::m_BallInfo[i]->m_szName, CBallInfo::m_BallInfo[i]->m_szAuthor), kv);
+
+			if (!Q_strcmp(CBallInfo::m_BallInfo[i]->m_szFolderName, playerballskinname.GetString()))
+				activeItemID = itemID;
+
+			kv->deleteThis();
+		}
+
+		m_pPlayerBallSkinList->ActivateItem(activeItemID);
 	}
 }
 

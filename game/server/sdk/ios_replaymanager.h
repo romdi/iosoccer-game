@@ -10,8 +10,6 @@ struct BallSnapshot
 	QAngle			ang;
 	Vector			vel;
 	AngularImpulse	rot;
-	int				skin;
-	int				effects;
 };
 
 struct LayerRecord
@@ -165,6 +163,8 @@ public:
 	virtual void Precache();
 
 	int UpdateTransmitState() {	return SetTransmitState(FL_EDICT_ALWAYS); }
+
+	CNetworkString(m_szSkinName, MAX_KITNAME_LENGTH);
 };
 
 

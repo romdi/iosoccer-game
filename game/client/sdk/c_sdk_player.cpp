@@ -56,7 +56,7 @@ ConVar centeredstaminabar("centeredstaminabar", "1", FCVAR_ARCHIVE, "");
 ConVar quicktacticpanel("quicktacticpanel", "0", FCVAR_ARCHIVE, "");
 ConVar autohidespecmenu("autohidespecmenu", "0", FCVAR_ARCHIVE, "");
 ConVar goalteamcrests("goalteamcrests", "1", FCVAR_ARCHIVE, "");
-ConVar playerballskin("playerballskin", "-1", FCVAR_USERINFO | FCVAR_ARCHIVE, "");
+ConVar playerballskinname("playerballskinname", "", FCVAR_USERINFO | FCVAR_ARCHIVE, "");
 
 ConVar clientversion("clientversion", g_szRequiredClientVersion, FCVAR_USERINFO | FCVAR_HIDDEN, "");
 
@@ -187,7 +187,9 @@ IMPLEMENT_CLIENTCLASS_DT( C_SDKPlayer, DT_SDKPlayer, CSDKPlayer )
 
 	RecvPropBool( RECVINFO( m_bSpawnInterpCounter ) ),
 
-	RecvPropInt(RECVINFO(m_nModelScale))
+	RecvPropInt(RECVINFO(m_nModelScale)),
+	RecvPropEHandle(RECVINFO(m_pHoldingBall))
+
 END_RECV_TABLE()
 
 // ------------------------------------------------------------------------------------------ //
@@ -622,6 +624,7 @@ C_SDKPlayer::C_SDKPlayer() :
 	m_Shared.m_nPlayerAnimEventStartButtons = 0;
 
 	m_nModelScale = 100;
+	m_pHoldingBall = NULL;
 }
 
 

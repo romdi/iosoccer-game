@@ -85,6 +85,7 @@ void CSDKModeManager::Init()
 	PanelMetaClassMgr()->LoadMetaClassDefinitionFile( SCREEN_FILE );
 
 	CTeamInfo::ParseTeamKits();
+	CBallInfo::ParseBallSkins();
 
 	if (g_pCVar->FindVar("playername")->GetString()[0] == '\0')
 		g_pCVar->FindVar("playername")->SetValue(steamapicontext->SteamFriends()->GetPersonaName());

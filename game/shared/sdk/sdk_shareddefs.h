@@ -427,7 +427,6 @@ enum
 {
 	MODEL_PLAYER,
 	MODEL_KEEPER,
-	MODEL_KEEPER_AND_BALL
 };
 
 enum QuickTactics_t
@@ -452,6 +451,6 @@ static const char *g_szQuickTacticNames[QUICKTACTIC_COUNT] =
 	"Counter Attack",
 };
 
-#define BALL_SKIN_COUNT 6
+#define BALL_PHYS_RADIUS 4.5f
 
 #endif // SDK_SHAREDDEFS_H

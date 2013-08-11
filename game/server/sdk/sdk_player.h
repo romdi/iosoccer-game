@@ -18,14 +18,7 @@
 #include "sdk_shareddefs.h"
 #include "steam/steam_api.h"
 
-#define PLAYER_SPEED 280.0f
-
-#define SPRINT_TIME           6.0f     //IOS sprint amount 5.5
-#define SPRINT_RECHARGE_TIME  12.0f    //IOS time before sprint re-charges
-#define SPRINT_SPEED          90.0f    //IOS sprint increase in speed
-
 #define NUM_PLAYER_FACES 6
-#define NUM_BALL_TYPES 6
 
 class CBall;
 
@@ -331,7 +324,7 @@ public:
 	int					m_nPreferredOutfieldShirtNumber;
 	int					m_nPreferredKeeperShirtNumber;
 	int					m_nPreferredSkin;
-	int					m_nPlayerBallSkin;
+	char				m_szPlayerBallSkinName[MAX_KITNAME_LENGTH];
 	
 	float				m_flNextShot;
 
@@ -446,8 +439,8 @@ public:
 	int					GetPreferredSkin() { return m_nPreferredSkin; }
 	void				SetPreferredSkin(int num);
 
-	int					GetPlayerBallSkin() { return m_nPlayerBallSkin; }
-	void				SetPlayerBallSkin(int skin) { m_nPlayerBallSkin = clamp(skin, -1, BALL_SKIN_COUNT - 1); }
+	const char 			*GetPlayerBallSkinName() { return m_szPlayerBallSkinName; }
+	void				SetPlayerBallSkinName(const char *skinName);
 
 	int					GetSpecTeam() { return m_nSpecTeam; }
 
@@ -557,7 +550,7 @@ public:
 	bool				IsShooting();
 	CSDKPlayer			*FindClosestPlayerToSelf(bool teammatesOnly, bool forwardOnly = false, float maxYawAngle = 360);
 
-	CHandle<CBall>		m_pHoldingBall;
+	CNetworkHandle(CBall, m_pHoldingBall);
 
 protected:
 

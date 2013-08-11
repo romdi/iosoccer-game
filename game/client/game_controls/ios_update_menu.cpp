@@ -271,6 +271,7 @@ void CIOSUpdatePanel::OnTick()
 		else
 		{
 			CTeamInfo::ParseTeamKits();
+			CBallInfo::ParseBallSkins();
 
 			m_pCloseButton->SetText("OK");
 			m_pCloseButton->SetCommand("close");

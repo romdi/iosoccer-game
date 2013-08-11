@@ -3,6 +3,7 @@
 
 #include "cbase.h"
 #include "c_physicsprop.h"
+#include "ios_teamkit_parse.h"
 
 class C_ReplayBall : public C_PhysicsProp
 {
@@ -12,6 +13,8 @@ public:
 
 	C_ReplayBall();
 	~C_ReplayBall();
+
+	char m_szSkinName[MAX_KITNAME_LENGTH];
 };
 
 class C_ReplayPlayer : public CBaseAnimatingOverlay

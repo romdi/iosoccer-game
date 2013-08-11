@@ -80,7 +80,6 @@ class CTeamInfo
 {
 public:
 
-	// Each game can override this to get whatever values it wants from the script.
 	static void ParseTeamKits();
 	static void GetNonClashingTeamKits(char *homeTeam, char *awayTeam, bool clubTeams, bool nationalTeams, bool realTeams, bool fictitiousTeams);
 	static CTeamKitInfo *FindTeamByKitName(const char *name);
@@ -101,6 +100,24 @@ public:
 	CUtlVector<CTeamKitInfo *> m_TeamKitInfo;
 
 	static float m_flLastUpdateTime;
+};
+
+class CBallInfo
+{
+public:
+
+	static void ParseBallSkins();
+	static CUtlVector<CBallInfo *> m_BallInfo;
+	char m_szName[MAX_KITNAME_LENGTH];
+	char m_szAuthor[MAX_PLAYER_NAME_LENGTH];
+	char m_szFolderName[MAX_FOLDERNAME_LENGTH];
+	static float m_flLastUpdateTime;
+
+	CBallInfo()
+	{
+		m_szName[0] = '\0';
+		m_szAuthor[0] = '\0';
+	}
 };
 
 #endif // TeamKit_INFO_PARSE_H

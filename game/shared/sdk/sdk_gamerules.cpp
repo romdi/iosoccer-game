@@ -2251,6 +2251,53 @@ void CC_MP_Teamkits(const CCommand &args)
 ConCommand mp_teamkits("mp_teamkits", CC_MP_Teamkits, "", 0);
 
 
+void CC_MP_Ball(const CCommand &args)
+{
+	if (!UTIL_IsCommandIssuedByServerAdmin())
+		return;
+
+	if (args.ArgC() == 1)
+	{
+		char list[2048] = {};
+		int ballCount = 0;
+
+		Q_strcat(list, "\n----------------------------------------\n", sizeof(list));
+
+		for (int i = 0; i < CBallInfo::m_BallInfo.Count(); i++)
+		{
+			ballCount += 1;
+			Q_strcat(list, UTIL_VarArgs("%d: %s [by %s]\n", ballCount, CBallInfo::m_BallInfo[i]->m_szName, CBallInfo::m_BallInfo[i]->m_szAuthor), sizeof(list));
+		}
+
+		Q_strcat(list, "----------------------------------------\n", sizeof(list));
+
+		Q_strcat(list, "\nUse 'mp_ball <ball number>' to set the ball. E.g. 'mp_ball 3'\n\n", sizeof(list));
+
+		Msg(list);
+	}
+	else if (args.ArgC() == 2)
+	{
+		int ballSkinIndex = atoi(args[1]) - 1;
+
+		char ballSkinName[256] = {};
+
+		if (ballSkinIndex >= 0 && ballSkinIndex < CBallInfo::m_BallInfo.Count())
+			Q_snprintf(ballSkinName, sizeof(ballSkinName), "%s", CBallInfo::m_BallInfo[ballSkinIndex]->m_szFolderName);
+
+		if (ballSkinName[0] != '\0')
+			GetBall()->SetSkinName(ballSkinName);
+		else
+			Msg("Error: Ball skin not found.\n");
+	}
+	else
+	{
+		Msg("Error: Wrong syntax.\n");
+	}
+}
+
+ConCommand mp_ball("mp_ball", CC_MP_Ball, "", 0);
+
+
 ConVar mp_clientsettingschangeinterval("mp_clientsettingschangeinterval", "5", FCVAR_REPLICATED|FCVAR_NOTIFY, "");
 
 
@@ -2286,7 +2333,7 @@ void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 	pPl->SetPreferredOutfieldShirtNumber(atoi(engine->GetClientConVarValue(pPl->entindex(), "preferredoutfieldshirtnumber")));
 	pPl->SetPreferredKeeperShirtNumber(atoi(engine->GetClientConVarValue(pPl->entindex(), "preferredkeepershirtnumber")));
 
-	pPl->SetPlayerBallSkin(atoi(engine->GetClientConVarValue(pPl->entindex(), "playerballskin")));
+	pPl->SetPlayerBallSkinName(engine->GetClientConVarValue(pPl->entindex(), "playerballskinname"));
 
 	int preferredSkin = atoi(engine->GetClientConVarValue(pPl->entindex(), "modelskinindex"));
 	if (preferredSkin != pPl->GetPreferredSkin())

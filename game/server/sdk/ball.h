@@ -6,9 +6,9 @@
 #include "props.h"
 #include "sdk_player.h"
 #include "in_buttons.h"
+#include "ios_teamkit_parse.h"
 
-#define	BALL_MODEL	 "models/w_fb.mdl"
-#define BALL_PHYS_RADIUS 5.0f
+#define	BALL_MODEL	 "models/ball/ball.mdl"
 
 enum body_part_t
 {
@@ -126,9 +126,11 @@ public:
 	CNetworkVar(bool, m_bIsPlayerBall);
 	CNetworkVar(ball_state_t, m_eBallState);
 	CNetworkHandle(CSDKPlayer, m_pLastActivePlayer);
+	CNetworkHandle(CSDKPlayer, m_pHoldingPlayer);
 	CNetworkVar(int, m_nLastActiveTeam);
 	CNetworkVar(bool, m_bNonnormalshotsBlocked);
 	CNetworkVar(bool, m_bShotsBlocked);
+	CNetworkString(m_szSkinName, MAX_KITNAME_LENGTH);
 
 	void			RemoveAllPlayerBalls();
 	void			RemovePlayerBall();
@@ -163,7 +165,8 @@ public:
 	void			Reset();
 	void			ReloadSettings();
 
-	void			SetPos(Vector pos);
+	void			SetPos(const Vector &pos, bool teleport = true);
+	void			SetAng(const QAngle &ang);
 	void			SetVel(Vector vel, float spinCoeff, body_part_t bodyPart, bool isDeflection, bool markOffsidePlayers, bool ensureMinShotStrength, float nextShotDelay = -1);
 	void			SetRot(AngularImpulse rot = NULL);
 
@@ -190,6 +193,9 @@ public:
 	void			UpdatePossession(CSDKPlayer *pNewPossessor);
 	void			SaveBallCannonSettings();
 	void			RestoreBallCannonSettings();
+
+	const char		*GetSkinName() { return m_szSkinName; }
+	void			SetSkinName(const char *skinName);
 
 private:
 
@@ -288,7 +294,7 @@ private:
 
 	MatchEventPlayerInfo m_MatchEventPlayerInfo;
 
-	CHandle<CSDKPlayer> m_pHoldingPlayer;
+	//CHandle<CSDKPlayer> m_pHoldingPlayer;
 
 	float			m_flGlobalNextShot;
 	float			m_flGlobalNextKeeperCatch;
@@ -299,7 +305,6 @@ private:
 	float			m_flLastMatchEventSetTime;
 
 	bool			m_bIsBallCannonMode;
-	bool			m_bRestoreBallCannonSettings;
 	Vector			m_vBallCannonPos;
 	Vector			m_vBallCannonVel;
 	QAngle			m_aBallCannonAng;

@@ -16,6 +16,7 @@
 #include "baseparticleentity.h"
 #include "sdk_player_shared.h"
 
+class C_Ball;
 
 class C_SDKPlayer : public C_BasePlayer
 {
@@ -191,6 +192,8 @@ public:
 	CNetworkVar(int, m_nInPenBoxOfTeam);
 	CNetworkVar(int, m_nModelScale);
 	CNetworkVar(bool, m_bShotButtonsReleased);
+
+	CHandle<C_Ball> m_pHoldingBall;
 
 	void CheckBallShield(const Vector &oldPos, Vector &newPos, const Vector &oldVel, Vector &newVel, const QAngle &oldAng, QAngle &newAng);
 	void MoveToTargetPos(Vector &pos, Vector &vel, QAngle &ang);

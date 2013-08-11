@@ -443,7 +443,6 @@ void CTeamInfo::ParseTeamKits()
 			continue;
 
 		CTeamInfo *pTeamInfo = new CTeamInfo();
-		CTeamInfo::m_TeamInfo.AddToTail(pTeamInfo);
 		Q_strncpy(pTeamInfo->m_szFolderName, teamFolders[i].name, sizeof(pTeamInfo->m_szFolderName));
 
 		CUtlVector<FileInfo_t> teamFolderFiles;
@@ -474,7 +473,6 @@ void CTeamInfo::ParseTeamKits()
 			else
 			{
 				CTeamKitInfo *pKitInfo = new CTeamKitInfo();
-				pTeamInfo->m_TeamKitInfo.AddToTail(pKitInfo);
 				pKitInfo->m_pTeamInfo = pTeamInfo;
 				Q_strncpy(pKitInfo->m_szFolderName, teamFolderFiles[j].name, sizeof(pKitInfo->m_szFolderName));
 				Q_strncpy(pKitInfo->m_szName, strtok(teamFolderFiles[j].name, "@"), sizeof(pKitInfo->m_szName));
@@ -547,8 +545,12 @@ void CTeamInfo::ParseTeamKits()
 				else
 					pKitInfo->m_pFontAtlas = CTeamKitInfo::m_pDefaultFontAtlas;
 #endif
+				
+				pTeamInfo->m_TeamKitInfo.AddToTail(pKitInfo);
 			}
 		}
+
+		CTeamInfo::m_TeamInfo.AddToTail(pTeamInfo);
 	}
 
 	m_flLastUpdateTime = gpGlobals->curtime;
@@ -642,4 +644,48 @@ CTeamKitInfo *CTeamInfo::FindTeamByCode(const char *code)
 	}
 
 	return NULL;
+}
+
+CUtlVector<CBallInfo *> CBallInfo::m_BallInfo;
+float CBallInfo::m_flLastUpdateTime = 0;
+
+void CBallInfo::ParseBallSkins()
+{
+	CBallInfo::m_BallInfo.PurgeAndDeleteElements();
+
+	CUtlVector<FileInfo_t> ballFolders;
+	FindFiles("materials/models/ball/skins/", ballFolders);
+
+	for (int i = 0; i < ballFolders.Count(); i++)
+	{
+		if (!ballFolders[i].isDirectory)
+			continue;
+
+		CBallInfo *pBallInfo = new CBallInfo();
+		Q_strncpy(pBallInfo->m_szFolderName, ballFolders[i].name, sizeof(pBallInfo->m_szFolderName));
+
+		CUtlVector<FileInfo_t> ballFolderFiles;
+		FindFiles(ballFolders[i].path, ballFolderFiles);
+
+ 		for (int j = 0; j < ballFolderFiles.Count(); j++)
+		{
+			if (ballFolderFiles[j].isDirectory)
+				continue;
+
+			if (!Q_strcmp(ballFolderFiles[j].name, "balldata.txt"))
+			{
+				KeyValues *pKV = new KeyValues("BallData");
+				pKV->LoadFromFile(filesystem, ballFolderFiles[j].path, "MOD");
+
+				Q_strncpy(pBallInfo->m_szName, pKV->GetString("Name", "???"), sizeof(pBallInfo->m_szName));
+				Q_strncpy(pBallInfo->m_szAuthor, pKV->GetString("Author", "???"), sizeof(pBallInfo->m_szAuthor));
+
+				pKV->deleteThis();
+			}
+		}
+
+		CBallInfo::m_BallInfo.AddToTail(pBallInfo);
+	}
+
+	m_flLastUpdateTime = gpGlobals->curtime;
 }

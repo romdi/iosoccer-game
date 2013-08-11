@@ -251,6 +251,7 @@ int CFileUpdater::UpdateFinished(IOSUpdateInfo *pUpdateInfo)
 		else
 		{
 			CTeamInfo::ParseTeamKits();
+			CBallInfo::ParseBallSkins();
 
 			if (pUpdateInfo->restartRequired)
 				msg = "Server Updater: Server files successfully updated. A server restart is required to use the new binaries.";

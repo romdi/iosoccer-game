@@ -197,7 +197,8 @@ IMPLEMENT_SERVERCLASS_ST( CSDKPlayer, DT_SDKPlayer )
 
 	SendPropBool( SENDINFO( m_bSpawnInterpCounter ) ),
 
-	SendPropInt(SENDINFO(m_nModelScale), 8, SPROP_UNSIGNED)
+	SendPropInt(SENDINFO(m_nModelScale), 8, SPROP_UNSIGNED),
+	SendPropEHandle(SENDINFO(m_pHoldingBall))
 END_SEND_TABLE()
 
 class CSDKRagdoll : public CBaseAnimatingOverlay
@@ -318,7 +319,7 @@ CSDKPlayer::CSDKPlayer()
 	m_nPreferredOutfieldShirtNumber = 2;
 	m_nPreferredKeeperShirtNumber = 1;
 	m_nPreferredSkin = -1;
-	m_nPlayerBallSkin = -1;
+	m_szPlayerBallSkinName[0] = '\0';
 	m_pPlayerBall = NULL;
 	m_Shared.m_flPlayerAnimEventStartTime = gpGlobals->curtime;
 	m_Shared.m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
@@ -1208,7 +1209,7 @@ void CSDKPlayer::ChooseFieldPlayerSkin(void)
 void CSDKPlayer::ChooseKeeperSkin(void)
 {
 	int preferred = (m_nPreferredSkin == -1 ? g_IOSRand.RandomInt(0, NUM_PLAYER_FACES - 1) : m_nPreferredSkin);
-	m_nSkin = NUM_PLAYER_FACES + (preferred * NUM_BALL_TYPES);
+	m_nSkin = preferred;
 	m_nBaseSkin = m_nSkin;
 	m_nBody = MODEL_KEEPER;
 }
@@ -1584,11 +1585,6 @@ void CSDKPlayer::ResetFlags()
 		RemoveSolidFlags(FSOLID_NOT_SOLID);
 		SetCollisionGroup(COLLISION_GROUP_PLAYER);
 		RemoveEffects(EF_NODRAW);
-	}
-
-	if (GetTeamPosType() == POS_GK && m_nBody == MODEL_KEEPER_AND_BALL)
-	{
-		m_nBody = MODEL_KEEPER;
 	}
 }
 
@@ -2042,6 +2038,18 @@ void CSDKPlayer::AddGoalKick()
 void CSDKPlayer::DrawDebugGeometryOverlays(void) 
 {
 	BaseClass::DrawDebugGeometryOverlays();
+}
+
+void CSDKPlayer::SetPlayerBallSkinName(const char *skinName)
+{
+	for (int i = 0; i < CBallInfo::m_BallInfo.Count(); i++)
+	{
+		if (!Q_strcmp(skinName, CBallInfo::m_BallInfo[i]->m_szFolderName))
+		{
+			Q_strncpy(m_szPlayerBallSkinName, skinName, sizeof(m_szPlayerBallSkinName));
+			break;
+		}
+	}
 }
 
 CUtlVector<CPlayerPersistentData *> CPlayerPersistentData::m_PlayerPersistentData;
