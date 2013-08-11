@@ -3225,7 +3225,7 @@ void CGameMovement::SetPlayerSpeed()
 	{
 		flMaxSpeed = mp_walkspeed.GetInt();
 	}
-	else if ((mv->m_nButtons & IN_RELOAD) && (mv->m_nButtons & IN_DUCK))
+	else if ((mv->m_nButtons & IN_RELOAD) && ((mv->m_nButtons & IN_DUCK) || (mv->m_nButtons & IN_MOVELEFT) || (mv->m_nButtons & IN_MOVERIGHT) || (mv->m_nButtons & IN_BACK)))
 	{
 		flMaxSpeed = mp_runspeed.GetInt();
 	}
