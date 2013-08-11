@@ -475,8 +475,6 @@ void CTeamInfo::ParseTeamKits()
 				CTeamKitInfo *pKitInfo = new CTeamKitInfo();
 				pKitInfo->m_pTeamInfo = pTeamInfo;
 				Q_strncpy(pKitInfo->m_szFolderName, teamFolderFiles[j].name, sizeof(pKitInfo->m_szFolderName));
-				Q_strncpy(pKitInfo->m_szName, strtok(teamFolderFiles[j].name, "@"), sizeof(pKitInfo->m_szName));
-				Q_strncpy(pKitInfo->m_szAuthor, strtok(NULL, "@"), sizeof(pKitInfo->m_szAuthor));
 
 				CUtlVector<FileInfo_t> kitFiles;
 				FindFiles(teamFolderFiles[j].path, kitFiles);
@@ -497,6 +495,9 @@ void CTeamInfo::ParseTeamKits()
 					{
 						KeyValues *pKV = new KeyValues("KitData");
 						pKV->LoadFromFile(filesystem, kitFiles[k].path, "MOD");
+
+						Q_strncpy(pKitInfo->m_szName, pKV->GetString("Name", "???"), sizeof(pKitInfo->m_szName));
+						Q_strncpy(pKitInfo->m_szAuthor, pKV->GetString("Author", "???"), sizeof(pKitInfo->m_szAuthor));
 
 						Color c = pKV->GetColor("PrimaryColor");
 						pKitInfo->m_PrimaryColor = Color(c.r(), c.g(), c.b(), 255);

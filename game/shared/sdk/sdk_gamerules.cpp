@@ -2189,12 +2189,11 @@ void CC_MP_Teamkits(const CCommand &args)
 		{
 			teamCount += 1;
 			kitCount = 0;
-			//Q_strcat(list, UTIL_VarArgs("%s:\n", CTeamInfo::m_TeamInfo[i]->m_szFolderName), sizeof(list));
+			Q_strcat(list, UTIL_VarArgs("%s:\n", CTeamInfo::m_TeamInfo[i]->m_szShortName), sizeof(list));
 			for (int j = 0; j < CTeamInfo::m_TeamInfo[i]->m_TeamKitInfo.Count(); j++)
 			{
 				kitCount += 1;
-				//Q_strcat(list, UTIL_VarArgs("    %d: %s\n", kitCount, CTeamInfo::m_TeamInfo[i]->m_TeamKitInfo[j]->m_szFolderName), sizeof(list));
-				Q_strcat(list, UTIL_VarArgs("%d: %s/%s\n", teamCount * 100 + kitCount, CTeamInfo::m_TeamInfo[i]->m_szFolderName, CTeamInfo::m_TeamInfo[i]->m_TeamKitInfo[j]->m_szFolderName), sizeof(list));
+				Q_strcat(list, UTIL_VarArgs("    %d: %s [by %s]\n", teamCount * 100 + kitCount, CTeamInfo::m_TeamInfo[i]->m_TeamKitInfo[j]->m_szName, CTeamInfo::m_TeamInfo[i]->m_TeamKitInfo[j]->m_szAuthor), sizeof(list));
 			}
 		}
 
