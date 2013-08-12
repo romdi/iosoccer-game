@@ -2250,7 +2250,7 @@ void CC_MP_Teamkits(const CCommand &args)
 ConCommand mp_teamkits("mp_teamkits", CC_MP_Teamkits, "", 0);
 
 
-void CC_MP_Ball(const CCommand &args)
+void CC_MP_BallSkin(const CCommand &args)
 {
 	if (!UTIL_IsCommandIssuedByServerAdmin())
 		return;
@@ -2270,7 +2270,7 @@ void CC_MP_Ball(const CCommand &args)
 
 		Q_strcat(list, "----------------------------------------\n", sizeof(list));
 
-		Q_strcat(list, "\nUse 'mp_ball <ball number>' to set the ball. E.g. 'mp_ball 3'\n\n", sizeof(list));
+		Q_strcat(list, "\nUse 'mp_ballskin <ball number>' to set the ball. E.g. 'mp_ballskin 3'\n\n", sizeof(list));
 
 		Msg(list);
 	}
@@ -2294,7 +2294,7 @@ void CC_MP_Ball(const CCommand &args)
 	}
 }
 
-ConCommand mp_ball("mp_ball", CC_MP_Ball, "", 0);
+ConCommand mp_ball("mp_ballskin", CC_MP_BallSkin, "", 0);
 
 
 ConVar mp_clientsettingschangeinterval("mp_clientsettingschangeinterval", "5", FCVAR_REPLICATED|FCVAR_NOTIFY, "");
