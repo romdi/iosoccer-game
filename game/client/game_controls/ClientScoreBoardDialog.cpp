@@ -109,7 +109,6 @@ enum { STATBUTTON_WIDTH = 120, STATBUTTON_HEIGHT = 30, STATBUTTON_HMARGIN = 0, S
 enum { EXTRAINFO_HEIGHT = 305, EXTRAINFO_MARGIN = 5 };
 enum { SPECLIST_HEIGHT = 30, SPECLIST_PADDING = 5, SPECNAME_WIDTH = 100, SPECTEXT_WIDTH = 150, SPECTEXT_MARGIN = 5, SPECBUTTON_WIDTH = 90, SPECBUTTON_HMARGIN = 5, SPECBUTTON_VMARGIN = 3 };
 enum { TOPBAR_HEIGHT = 30 };
-//enum { MATCHSTATE_WIDTH = 100 };
 enum { SERVERINFO_WIDTH = 320, SERVERINFOLINE_HEIGHT = 2, SERVERINFOLINE_MARGIN = 5 };
 enum { MATCHINFO_WIDTH = 320 };
 
@@ -199,7 +198,7 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Editabl
 
 	m_pMatchInfo = new Label(m_pMainPanel, "", "");
 
-	m_pMatchState = new Label(m_pMainPanel, "", "");
+	m_pMatchPeriod = new Label(m_pMainPanel, "", "");
 
 	m_pJoinRandom = new Button(m_pStatButtonContainer, "JoinRandom", "Auto-Join", this, VarArgs("jointeam %d -1", TEAM_INVALID));
 
@@ -450,11 +449,11 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 	//m_pMatchInfo->SetBgColor(Color(0, 0, 0, 150));
 	m_pMatchInfo->SetTextInset(5, 0);
 
-	m_pMatchState->SetBounds(SERVERINFO_WIDTH, 0, m_pMainPanel->GetWide() - SERVERINFO_WIDTH - MATCHINFO_WIDTH, TOPBAR_HEIGHT);
-	m_pMatchState->SetFont(m_pScheme->GetFont("IOSTeamMenuNormal"));
-	m_pMatchState->SetContentAlignment(Label::a_center);
-	m_pMatchState->SetFgColor(Color(255, 255, 255, 255));
-	//m_pMatchState->SetBgColor(Color(0, 0, 0, 150));
+	m_pMatchPeriod->SetBounds(SERVERINFO_WIDTH, 0, m_pMainPanel->GetWide() - SERVERINFO_WIDTH - MATCHINFO_WIDTH, TOPBAR_HEIGHT);
+	m_pMatchPeriod->SetFont(m_pScheme->GetFont("IOSTeamMenuNormal"));
+	m_pMatchPeriod->SetContentAlignment(Label::a_center);
+	m_pMatchPeriod->SetFgColor(Color(255, 255, 255, 255));
+	//m_pMatchPeriod->SetBgColor(Color(0, 0, 0, 150));
 
 	m_pServerInfoLine->SetBounds(SERVERINFOLINE_MARGIN, TOPBAR_HEIGHT, m_pMainPanel->GetWide() - 2 * SERVERINFOLINE_MARGIN, SERVERINFOLINE_HEIGHT);
 	m_pServerInfoLine->SetBgColor(Color(255, 255, 255, 255));
@@ -561,21 +560,6 @@ bool CClientScoreBoardDialog::NeedsUpdate( void )
 	return (m_fNextUpdateTime < gpGlobals->curtime);	
 }
 
-char *g_szStateNames[32] =
-{
-	"WARM-UP",
-	"FIRST HALF",
-	"HALF-TIME",
-	"SECOND HALF",
-	"ET BREAK",
-	"ET FIRST HALF",
-	"ET HALF-TIME",
-	"ET SECOND HALF",
-	"PENALTIES BREAK",
-	"PENALTIES",
-	"COOL-DOWN"
-};
-
 //-----------------------------------------------------------------------------
 // Purpose: Recalculate the internal scoreboard data
 //-----------------------------------------------------------------------------
@@ -594,7 +578,7 @@ void CClientScoreBoardDialog::Update( void )
 
 	m_pServerInfo->SetText(mp_serverinfo.GetString());
 	m_pMatchInfo->SetText(mp_matchinfo.GetString());
-	m_pMatchState->SetText(g_szStateNames[SDKGameRules()->State_Get()]);
+	m_pMatchPeriod->SetText(g_szMatchPeriodShortNames[SDKGameRules()->State_Get()]);
 
 	if (m_eActivePanelType == STATS_MENU)
 	{

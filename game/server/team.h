@@ -87,7 +87,7 @@ public:
 	virtual CSDKPlayer *GetLeftCornerTaker() { return GetPlayerByPosIndex(m_nLeftCornerTakerPosIndex); }
 	virtual CSDKPlayer *GetRightCornerTaker() { return GetPlayerByPosIndex(m_nRightCornerTakerPosIndex); }
 	virtual void FindNewCaptain();
-	virtual void AddMatchEvent(match_period_t matchState, int seconds, match_event_t event, const char *text);
+	virtual void AddMatchEvent(match_period_t matchPeriod, int seconds, match_event_t event, const char *text);
 
 	//-----------------------------------------------------------------------------
 	// Scoring
@@ -148,7 +148,7 @@ public:
 	char m_szMatchEventPlayersMemory[MAX_MATCH_EVENTS][MAX_MATCH_EVENT_PLAYER_NAME_LENGTH];
 	CNetworkArray( string_t, m_szMatchEventPlayers, MAX_MATCH_EVENTS );
 	CNetworkArray(int, m_eMatchEventTypes, MAX_MATCH_EVENTS);
-	CNetworkArray(int, m_eMatchEventMatchStates, MAX_MATCH_EVENTS);
+	CNetworkArray(int, m_eMatchEventMatchPeriods, MAX_MATCH_EVENTS);
 	CNetworkArray(int, m_nMatchEventSeconds, MAX_MATCH_EVENTS);
 	int m_nMatchEventIndex;
 

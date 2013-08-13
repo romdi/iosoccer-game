@@ -250,7 +250,7 @@ private:
 	Label		*m_pServerInfo;
 	Panel		*m_pServerInfoLine;
 	Label		*m_pMatchInfo;
-	Label		*m_pMatchState;
+	Label		*m_pMatchPeriod;
 
 	CUtlVector<SpecInfo> m_SpecList;
 

@@ -73,7 +73,7 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_Team, DT_Team, CTeam)
 
 	RecvPropArray3( RECVINFO_ARRAY(m_szMatchEventPlayers), RecvPropString( RECVINFO(m_szMatchEventPlayers[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_eMatchEventTypes), RecvPropInt( RECVINFO(m_eMatchEventTypes[0]))),
-	RecvPropArray3( RECVINFO_ARRAY(m_eMatchEventMatchStates), RecvPropInt( RECVINFO(m_eMatchEventMatchStates[0]))),
+	RecvPropArray3( RECVINFO_ARRAY(m_eMatchEventMatchPeriods), RecvPropInt( RECVINFO(m_eMatchEventMatchPeriods[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_nMatchEventSeconds), RecvPropInt( RECVINFO(m_nMatchEventSeconds[0]))),
 
 	RecvPropArray3( RECVINFO_ARRAY(m_PosNextJoinSeconds), RecvPropInt( RECVINFO(m_PosNextJoinSeconds[0]))),
@@ -147,7 +147,7 @@ C_Team::C_Team()
 	{
 		memset(m_szMatchEventPlayers, 0, sizeof(m_szMatchEventPlayers));
 		memset(m_eMatchEventTypes, 0, sizeof(m_eMatchEventTypes));
-		memset(m_eMatchEventMatchStates, 0, sizeof(m_eMatchEventMatchStates));
+		memset(m_eMatchEventMatchPeriods, 0, sizeof(m_eMatchEventMatchPeriods));
 		memset(m_nMatchEventSeconds, 0, sizeof(m_nMatchEventSeconds));
 
 		memset(m_PosNextJoinSeconds, 0, sizeof(m_PosNextJoinSeconds));

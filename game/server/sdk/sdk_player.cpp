@@ -2448,7 +2448,7 @@ void CPlayerPersistentData::ConvertAllPlayerDataToJson()
 		if (eventsProcessed > 0)
 			Q_strcat(json, ",", JSON_SIZE);
 
-		Q_strcat(json, UTIL_VarArgs("{\"second\":%d,\"event\":\"%s\",\"period\":\"%s\",\"team\":\"%s\",\"player1SteamId\":\"%s\",\"player2SteamId\":\"%s\",\"player3SteamId\":\"%s\"}", pMatchEvent->second, g_szMatchEventNames[pMatchEvent->matchEventType], g_szMatchStateNames[pMatchEvent->matchState], (pMatchEvent->team == TEAM_A ? "home" : "away"), pMatchEvent->pPlayer1Data ? pMatchEvent->pPlayer1Data->m_szSteamID : "", pMatchEvent->pPlayer2Data ? pMatchEvent->pPlayer2Data->m_szSteamID : "", pMatchEvent->pPlayer3Data ? pMatchEvent->pPlayer3Data->m_szSteamID : ""), JSON_SIZE);
+		Q_strcat(json, UTIL_VarArgs("{\"second\":%d,\"event\":\"%s\",\"period\":\"%s\",\"team\":\"%s\",\"player1SteamId\":\"%s\",\"player2SteamId\":\"%s\",\"player3SteamId\":\"%s\"}", pMatchEvent->second, g_szMatchEventNames[pMatchEvent->matchEventType], g_szMatchPeriodNames[pMatchEvent->matchPeriod], (pMatchEvent->team == TEAM_A ? "home" : "away"), pMatchEvent->pPlayer1Data ? pMatchEvent->pPlayer1Data->m_szSteamID : "", pMatchEvent->pPlayer2Data ? pMatchEvent->pPlayer2Data->m_szSteamID : "", pMatchEvent->pPlayer3Data ? pMatchEvent->pPlayer3Data->m_szSteamID : ""), JSON_SIZE);
 
 		eventsProcessed += 1;
 	}

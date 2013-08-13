@@ -186,16 +186,16 @@ void CReplayManager::Think()
 	CheckReplay();
 }
 
-bool matchEventFitsMatchState(const MatchEvent *pMatchEvent, match_period_t matchState)
+bool matchEventFitsMatchPeriod(const MatchEvent *pMatchEvent, match_period_t matchPeriod)
 {
-	if (matchState == pMatchEvent->matchState
-		|| matchState == MATCH_PERIOD_COOLDOWN
-		|| matchState == MATCH_PERIOD_HALFTIME
-		|| matchState == MATCH_PERIOD_EXTRATIME_INTERMISSION && pMatchEvent->matchState == MATCH_PERIOD_SECOND_HALF
-		|| matchState == MATCH_PERIOD_EXTRATIME_HALFTIME && pMatchEvent->matchState == MATCH_PERIOD_EXTRATIME_FIRST_HALF
-		|| matchState == MATCH_PERIOD_PENALTIES_INTERMISSION
-		&& (mp_extratime.GetBool() && pMatchEvent->matchState == MATCH_PERIOD_EXTRATIME_SECOND_HALF
-		|| !mp_extratime.GetBool() && pMatchEvent->matchState == MATCH_PERIOD_SECOND_HALF))
+	if (matchPeriod == pMatchEvent->matchPeriod
+		|| matchPeriod == MATCH_PERIOD_COOLDOWN
+		|| matchPeriod == MATCH_PERIOD_HALFTIME
+		|| matchPeriod == MATCH_PERIOD_EXTRATIME_INTERMISSION && pMatchEvent->matchPeriod == MATCH_PERIOD_SECOND_HALF
+		|| matchPeriod == MATCH_PERIOD_EXTRATIME_HALFTIME && pMatchEvent->matchPeriod == MATCH_PERIOD_EXTRATIME_FIRST_HALF
+		|| matchPeriod == MATCH_PERIOD_PENALTIES_INTERMISSION
+		&& (mp_extratime.GetBool() && pMatchEvent->matchPeriod == MATCH_PERIOD_EXTRATIME_SECOND_HALF
+		|| !mp_extratime.GetBool() && pMatchEvent->matchPeriod == MATCH_PERIOD_SECOND_HALF))
 	{
 		return true;
 	}
@@ -203,14 +203,14 @@ bool matchEventFitsMatchState(const MatchEvent *pMatchEvent, match_period_t matc
 	return false;
 }
 
-int CReplayManager::FindNextHighlightReplayIndex(int startIndex, match_period_t matchState)
+int CReplayManager::FindNextHighlightReplayIndex(int startIndex, match_period_t matchPeriod)
 {
 	if (startIndex == -1)
 	{
 		// Iterate backwards
 		for (int i = m_MatchEvents.Count() - 1; i >= 0; i--)
 		{
-			if (m_MatchEvents[i]->snapshots.Count() > 0 && matchEventFitsMatchState(m_MatchEvents[i], matchState))
+			if (m_MatchEvents[i]->snapshots.Count() > 0 && matchEventFitsMatchPeriod(m_MatchEvents[i], matchPeriod))
 				return i;
 		}
 	}
@@ -219,7 +219,7 @@ int CReplayManager::FindNextHighlightReplayIndex(int startIndex, match_period_t 
 		// Iterate forwards
 		for (int i = startIndex; i < m_MatchEvents.Count(); i++)
 		{
-			if (m_MatchEvents[i]->snapshots.Count() > 0 && matchEventFitsMatchState(m_MatchEvents[i], matchState))
+			if (m_MatchEvents[i]->snapshots.Count() > 0 && matchEventFitsMatchPeriod(m_MatchEvents[i], matchPeriod))
 				return i;
 		}
 	}
@@ -495,7 +495,7 @@ void CReplayManager::RestoreSnapshot()
 				if (pEvent)
 				{
 					pEvent->SetInt("second", pMatchEvent->second);
-					pEvent->SetInt("match_period", pMatchEvent->matchState);
+					pEvent->SetInt("match_period", pMatchEvent->matchPeriod);
 					pEvent->SetInt("scoring_team", pMatchEvent->team);
 					pEvent->SetString("scorer", pMatchEvent->pPlayer1Data ? pMatchEvent->pPlayer1Data->m_szName : "");
 					pEvent->SetString("first_assister", pMatchEvent->pPlayer2Data ? pMatchEvent->pPlayer2Data->m_szName : "");
@@ -509,7 +509,7 @@ void CReplayManager::RestoreSnapshot()
 				if (pEvent)
 				{
 					pEvent->SetInt("second", pMatchEvent->second);
-					pEvent->SetInt("match_period", pMatchEvent->matchState);
+					pEvent->SetInt("match_period", pMatchEvent->matchPeriod);
 					pEvent->SetInt("scoring_team", pMatchEvent->team);
 					pEvent->SetString("scorer", pMatchEvent->pPlayer1Data ? pMatchEvent->pPlayer1Data->m_szName : "");
 					gameeventmanager->FireEvent(pEvent);
@@ -521,7 +521,7 @@ void CReplayManager::RestoreSnapshot()
 				if (pEvent)
 				{
 					pEvent->SetInt("second", pMatchEvent->second);
-					pEvent->SetInt("match_period", pMatchEvent->matchState);
+					pEvent->SetInt("match_period", pMatchEvent->matchPeriod);
 					pEvent->SetInt("finishing_team", pMatchEvent->team);
 					pEvent->SetString("finisher", pMatchEvent->pPlayer1Data ? pMatchEvent->pPlayer1Data->m_szName : "");
 					pEvent->SetString("first_assister", pMatchEvent->pPlayer2Data ? pMatchEvent->pPlayer2Data->m_szName : "");
@@ -535,7 +535,7 @@ void CReplayManager::RestoreSnapshot()
 				if (pEvent)
 				{
 					pEvent->SetInt("second", pMatchEvent->second);
-					pEvent->SetInt("match_period", pMatchEvent->matchState);
+					pEvent->SetInt("match_period", pMatchEvent->matchPeriod);
 					pEvent->SetInt("keeper_team", pMatchEvent->team);
 					pEvent->SetString("keeper", pMatchEvent->pPlayer1Data ? pMatchEvent->pPlayer1Data->m_szName : "");
 					pEvent->SetString("finisher", pMatchEvent->pPlayer2Data ? pMatchEvent->pPlayer2Data->m_szName : "");
@@ -548,7 +548,7 @@ void CReplayManager::RestoreSnapshot()
 				if (pEvent)
 				{
 					pEvent->SetInt("second", pMatchEvent->second);
-					pEvent->SetInt("match_period", pMatchEvent->matchState);
+					pEvent->SetInt("match_period", pMatchEvent->matchPeriod);
 					pEvent->SetInt("fouling_team", pMatchEvent->team);
 					pEvent->SetString("fouling_player", pMatchEvent->pPlayer1Data ? pMatchEvent->pPlayer1Data->m_szName : "");
 					gameeventmanager->FireEvent(pEvent);
@@ -872,7 +872,7 @@ void CReplayManager::AddMatchEvent(match_event_t type, int team, CSDKPlayer *pPl
 	else
 		pMatchEvent->snapshotEndTime = 0;
 	
-	pMatchEvent->matchState = SDKGameRules()->State_Get();
+	pMatchEvent->matchPeriod = SDKGameRules()->State_Get();
 	pMatchEvent->matchEventType = type;
 	pMatchEvent->second = SDKGameRules()->GetMatchDisplayTimeSeconds();
 	pMatchEvent->team = team;
@@ -893,6 +893,6 @@ void CReplayManager::AddMatchEvent(match_event_t type, int team, CSDKPlayer *pPl
 		else if (pPlayer1 && pPlayer2 && pPlayer3)
 			Q_strncpy(matchEventPlayerNames, UTIL_VarArgs("%.8s (%.8s, %.8s)", pPlayer1->GetPlayerName(), pPlayer2->GetPlayerName(), pPlayer3->GetPlayerName()), MAX_MATCH_EVENT_PLAYER_NAME_LENGTH);
 
-		GetGlobalTeam(pMatchEvent->team)->AddMatchEvent(pMatchEvent->matchState, pMatchEvent->second, pMatchEvent->matchEventType, matchEventPlayerNames);
+		GetGlobalTeam(pMatchEvent->team)->AddMatchEvent(pMatchEvent->matchPeriod, pMatchEvent->second, pMatchEvent->matchEventType, matchEventPlayerNames);
 	}
 }

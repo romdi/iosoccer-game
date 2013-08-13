@@ -624,19 +624,19 @@ char *GetSetPieceCountText(match_event_t matchEvent, int team)
 	return VarArgs("%d%s %s %s", number, GetOrdinal(number), text, GetGlobalTeam(team)->GetShortName());
 }
 
-char *GetMatchMinuteText(int second, match_period_t matchState)
+char *GetMatchMinuteText(int second, match_period_t matchPeriod)
 {
 	static char time[16];
 
 	int minute = second / 60.0f + 1;
 
-	if (matchState == MATCH_PERIOD_FIRST_HALF && minute > 45)
+	if (matchPeriod == MATCH_PERIOD_FIRST_HALF && minute > 45)
 		Q_snprintf(time, sizeof(time), "%d'+%d", 45, min(4, minute - 45));
-	else if (matchState == MATCH_PERIOD_SECOND_HALF && minute > 90)
+	else if (matchPeriod == MATCH_PERIOD_SECOND_HALF && minute > 90)
 		Q_snprintf(time, sizeof(time), "%d'+%d", 90, min(4, minute - 90));
-	else if (matchState == MATCH_PERIOD_EXTRATIME_FIRST_HALF && minute > 105)
+	else if (matchPeriod == MATCH_PERIOD_EXTRATIME_FIRST_HALF && minute > 105)
 		Q_snprintf(time, sizeof(time), "%d'+%d", 105, min(4, minute - 105));
-	else if (matchState == MATCH_PERIOD_EXTRATIME_SECOND_HALF && minute > 120)
+	else if (matchPeriod == MATCH_PERIOD_EXTRATIME_SECOND_HALF && minute > 120)
 		Q_snprintf(time, sizeof(time), "%d'+%d", 120, min(4, minute - 120));
 	else
 		Q_snprintf(time, sizeof(time), "%d'", minute);
@@ -679,7 +679,7 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 
 	if (!Q_strcmp(event->GetName(), "match_period"))
 	{
-		m_pNotifications[0]->SetText(VarArgs("%s", g_szMatchStateNames[event->GetInt("period")]));
+		m_pNotifications[0]->SetText(VarArgs("%s", g_szMatchPeriodNames[event->GetInt("period")]));
 
 		m_eCurMatchEvent = MATCH_EVENT_NONE;
 		m_flStayDuration = INT_MAX;
@@ -802,7 +802,7 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 		m_eCurMatchEvent = MATCH_EVENT_GOAL;
 		m_flStayDuration = INT_MAX;
 
-		m_pExtraInfo->SetText(g_szMatchStateNames[event->GetInt("match_period")]);
+		m_pExtraInfo->SetText(g_szMatchPeriodNames[event->GetInt("match_period")]);
 		m_pExtraInfo->SetVisible(true);
 	}
 	else if (!Q_strcmp(event->GetName(), "highlight_owngoal"))
@@ -820,7 +820,7 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 		m_eCurMatchEvent = MATCH_EVENT_OWNGOAL;
 		m_flStayDuration = INT_MAX;
 
-		m_pExtraInfo->SetText(g_szMatchStateNames[event->GetInt("match_period")]);
+		m_pExtraInfo->SetText(g_szMatchPeriodNames[event->GetInt("match_period")]);
 		m_pExtraInfo->SetVisible(true);
 	}
 	else if (!Q_strcmp(event->GetName(), "highlight_miss"))
@@ -850,7 +850,7 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 		m_eCurMatchEvent = MATCH_EVENT_MISS;
 		m_flStayDuration = INT_MAX;
 
-		m_pExtraInfo->SetText(g_szMatchStateNames[event->GetInt("match_period")]);
+		m_pExtraInfo->SetText(g_szMatchPeriodNames[event->GetInt("match_period")]);
 		m_pExtraInfo->SetVisible(true);
 	}
 	else if (!Q_strcmp(event->GetName(), "highlight_keepersave"))
@@ -874,7 +874,7 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 		m_eCurMatchEvent = MATCH_EVENT_KEEPERSAVE;
 		m_flStayDuration = INT_MAX;
 
-		m_pExtraInfo->SetText(g_szMatchStateNames[event->GetInt("match_period")]);
+		m_pExtraInfo->SetText(g_szMatchPeriodNames[event->GetInt("match_period")]);
 		m_pExtraInfo->SetVisible(true);
 	}
 	else if (!Q_strcmp(event->GetName(), "highlight_redcard"))
@@ -892,7 +892,7 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 		m_eCurMatchEvent = MATCH_EVENT_REDCARD;
 		m_flStayDuration = INT_MAX;
 
-		m_pExtraInfo->SetText(g_szMatchStateNames[event->GetInt("match_period")]);
+		m_pExtraInfo->SetText(g_szMatchPeriodNames[event->GetInt("match_period")]);
 		m_pExtraInfo->SetVisible(true);
 	}
 	else if (!Q_strcmp(event->GetName(), "own_goal"))

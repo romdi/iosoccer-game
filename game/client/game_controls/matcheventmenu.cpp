@@ -143,13 +143,13 @@ void CMatchEventMenu::Update()
 			int minute = ceil(pTeam->m_nMatchEventSeconds[j] / 60.0f);
 			char *time;
 
-			if (pTeam->m_eMatchEventMatchStates[j] == MATCH_PERIOD_FIRST_HALF && minute > 45)
+			if (pTeam->m_eMatchEventMatchPeriods[j] == MATCH_PERIOD_FIRST_HALF && minute > 45)
 				time = VarArgs("%d'+%d", 45, min(4, minute - 45));
-			else if (pTeam->m_eMatchEventMatchStates[j] == MATCH_PERIOD_SECOND_HALF && minute > 90)
+			else if (pTeam->m_eMatchEventMatchPeriods[j] == MATCH_PERIOD_SECOND_HALF && minute > 90)
 				time = VarArgs("%d'+%d", 90, min(4, minute - 90));
-			else if (pTeam->m_eMatchEventMatchStates[j] == MATCH_PERIOD_EXTRATIME_FIRST_HALF && minute > 105)
+			else if (pTeam->m_eMatchEventMatchPeriods[j] == MATCH_PERIOD_EXTRATIME_FIRST_HALF && minute > 105)
 				time = VarArgs("%d'+%d", 105, min(4, minute - 105));
-			else if (pTeam->m_eMatchEventMatchStates[j] == MATCH_PERIOD_EXTRATIME_SECOND_HALF && minute > 120)
+			else if (pTeam->m_eMatchEventMatchPeriods[j] == MATCH_PERIOD_EXTRATIME_SECOND_HALF && minute > 120)
 				time = VarArgs("%d'+%d", 120, min(4, minute - 120));
 			else
 				time = VarArgs("%d'", minute);

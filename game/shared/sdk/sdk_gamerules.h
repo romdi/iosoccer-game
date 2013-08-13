@@ -116,7 +116,7 @@ struct Formation
 class CSDKGameRulesStateInfo
 {
 public:
-	match_period_t			m_eMatchState;
+	match_period_t			m_eMatchPeriod;
 	const char				*m_pStateName;
 
 	void (CSDKGameRules::*pfnEnterState)();	// Init and deinit the state.
@@ -211,7 +211,6 @@ public:
 
 	DECLARE_CLIENTCLASS_NOBASE(); // This makes datatables able to access our private vars.
 
-	//void SetMatchState(match_period_t nMatchState);
 #else
 
 	DECLARE_SERVERCLASS_NOBASE(); // This makes datatables able to access our private vars.
@@ -260,7 +259,7 @@ public:
 #endif
 
 public:
-	CNetworkVar(match_period_t, m_eMatchState);
+	CNetworkVar(match_period_t, m_eMatchPeriod);
 	CNetworkVar(int, m_nAnnouncedInjuryTime);
 	CNetworkVar(float, m_flInjuryTime);
 
@@ -271,7 +270,7 @@ public:
 	int	GetMapRemainingTime(void);
 	int GetMapTime(void);
 	void StartRoundtimer(int iDuration);
-	inline match_period_t State_Get( void ) { return m_eMatchState; }
+	inline match_period_t State_Get( void ) { return m_eMatchPeriod; }
 	CNetworkVar(float, m_flStateEnterTime);
 	float	m_flAdjustedStateEnterTime;
 	bool	m_bUseAdjustedStateEnterTime;

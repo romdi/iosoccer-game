@@ -262,25 +262,14 @@ END_DATADESC();
 
 REGISTER_GAMERULES_CLASS( CSDKGameRules );
 
-//#ifdef CLIENT_DLL
-//void RecvProxy_MatchState( const CRecvProxyData *pData, void *pStruct, void *pOut )
-//{
-//	CSDKGameRules *pGamerules = ( CSDKGameRules *)pStruct;
-//	match_period_t eMatchState = (match_period_t)pData->m_Value.m_Int;
-//	pGamerules->SetMatchState( eMatchState );
-//}
-//#endif 
-
 BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 #if defined ( CLIENT_DLL )
 	RecvPropTime( RECVINFO( m_flStateEnterTime ) ),
 	RecvPropTime( RECVINFO( m_flMatchStartTime ) ),
-	//RecvPropFloat( RECVINFO( m_fStart) ),
-	//RecvPropInt( RECVINFO( m_iDuration) ),
-	RecvPropInt( RECVINFO( m_eMatchState) ),// 0, RecvProxy_MatchState ),
-	RecvPropInt( RECVINFO( m_nAnnouncedInjuryTime) ),// 0, RecvProxy_MatchState ),
-	RecvPropTime( RECVINFO( m_flInjuryTimeStart) ),// 0, RecvProxy_MatchState ),
-	RecvPropTime( RECVINFO( m_flInjuryTime) ),// 0, RecvProxy_MatchState ),
+	RecvPropInt( RECVINFO( m_eMatchPeriod) ),
+	RecvPropInt( RECVINFO( m_nAnnouncedInjuryTime) ),
+	RecvPropTime( RECVINFO( m_flInjuryTimeStart) ),
+	RecvPropTime( RECVINFO( m_flInjuryTime) ),
 
 	RecvPropInt(RECVINFO(m_nShieldType)),
 	RecvPropInt(RECVINFO(m_nShieldTeam)),
@@ -304,7 +293,7 @@ BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 	SendPropTime( SENDINFO( m_flMatchStartTime )),
 	//SendPropFloat( SENDINFO( m_fStart) ),
 	//SendPropInt( SENDINFO( m_iDuration) ),
-	SendPropInt( SENDINFO( m_eMatchState )),
+	SendPropInt( SENDINFO( m_eMatchPeriod )),
 	SendPropInt( SENDINFO( m_nAnnouncedInjuryTime )),
 	SendPropTime( SENDINFO( m_flInjuryTimeStart )),
 	SendPropTime( SENDINFO( m_flInjuryTime )),
@@ -1388,7 +1377,7 @@ void CSDKGameRules::State_Transition( match_period_t newState )
 
 void CSDKGameRules::State_Enter( match_period_t newState )
 {
-	m_eMatchState = newState;
+	m_eMatchPeriod = newState;
 	m_pCurStateInfo = State_LookupInfo( newState );
 
 	if (m_bUseAdjustedStateEnterTime)
@@ -1494,7 +1483,7 @@ void CSDKGameRules::State_Think()
 		if (GetBall())
 			m_nBallZone = GetBall()->CalcFieldZone();
 
-		if (m_pCurStateInfo->m_eMatchState == MATCH_PERIOD_WARMUP && mp_timelimit_warmup.GetFloat() < 0)
+		if (m_pCurStateInfo->m_eMatchPeriod == MATCH_PERIOD_WARMUP && mp_timelimit_warmup.GetFloat() < 0)
 			m_flStateTimeLeft = 1.0f;
 		else
 			m_flStateTimeLeft = (m_flStateEnterTime + m_pCurStateInfo->m_MinDurationConVar->GetFloat() * 60 / m_pCurStateInfo->m_flMinDurationDivisor) - gpGlobals->curtime;
@@ -1585,7 +1574,7 @@ CSDKGameRulesStateInfo* CSDKGameRules::State_LookupInfo( match_period_t state )
 
 	for ( int i=0; i < ARRAYSIZE( gameRulesStateInfos ); i++ )
 	{
-		if ( gameRulesStateInfos[i].m_eMatchState == state )
+		if ( gameRulesStateInfos[i].m_eMatchPeriod == state )
 			return &gameRulesStateInfos[i];
 	}
 
@@ -2708,32 +2697,32 @@ void CSDKGameRules::SetMatchDisplayTimeSeconds(int seconds)
 {
 	m_bUseAdjustedStateEnterTime = true;
 	float minute = seconds / 60.0f;
-	match_period_t matchState;
+	match_period_t matchPeriod;
 
 	if (minute >= 120)
 	{
 		m_flAdjustedStateEnterTime = gpGlobals->curtime - ((seconds - 120 * 60) / (90.0f / mp_timelimit_match.GetFloat()));
-		matchState = MATCH_PERIOD_PENALTIES;
+		matchPeriod = MATCH_PERIOD_PENALTIES;
 	}
 	else if (minute >= 105)
 	{
 		m_flAdjustedStateEnterTime = gpGlobals->curtime - ((seconds - 105 * 60) / (90.0f / mp_timelimit_match.GetFloat()));
-		matchState = MATCH_PERIOD_EXTRATIME_SECOND_HALF;
+		matchPeriod = MATCH_PERIOD_EXTRATIME_SECOND_HALF;
 	}
 	else if (minute >= 90)
 	{
 		m_flAdjustedStateEnterTime = gpGlobals->curtime - ((seconds - 90 * 60) / (90.0f / mp_timelimit_match.GetFloat()));
-		matchState = MATCH_PERIOD_EXTRATIME_FIRST_HALF;
+		matchPeriod = MATCH_PERIOD_EXTRATIME_FIRST_HALF;
 	}
 	else if (minute >= 45)
 	{
 		m_flAdjustedStateEnterTime = gpGlobals->curtime - ((seconds - 45 * 60) / (90.0f / mp_timelimit_match.GetFloat()));
-		matchState = MATCH_PERIOD_SECOND_HALF;
+		matchPeriod = MATCH_PERIOD_SECOND_HALF;
 	}
 	else
 	{
 		m_flAdjustedStateEnterTime = gpGlobals->curtime - ((seconds - 0 * 60) / (90.0f / mp_timelimit_match.GetFloat()));
-		matchState = MATCH_PERIOD_FIRST_HALF;
+		matchPeriod = MATCH_PERIOD_FIRST_HALF;
 	}
 
 	ResetMatch();
@@ -2741,7 +2730,7 @@ void CSDKGameRules::SetMatchDisplayTimeSeconds(int seconds)
 	GetBall()->State_Transition(BALL_STATE_STATIC, 0, true);
 	SetLeftSideTeam(m_nFirstHalfLeftSideTeam);
 	SetKickOffTeam(m_nFirstHalfKickOffTeam);
-	State_Transition(matchState);
+	State_Transition(matchPeriod);
 }
 
 void CSDKGameRules::SetOffsideLinePositions(float ballPosY, float offsidePlayerPosY, float lastOppPlayerPosY)

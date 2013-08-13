@@ -308,7 +308,7 @@ enum match_period_t
 	MATCH_PERIOD_COUNT
 };
 
-static const char *g_szMatchStateNames[MATCH_PERIOD_COUNT] =
+static const char *g_szMatchPeriodNames[MATCH_PERIOD_COUNT] =
 {
 	"WARM-UP",
 	"FIRST HALF",
@@ -318,9 +318,24 @@ static const char *g_szMatchStateNames[MATCH_PERIOD_COUNT] =
 	"EXTRA TIME FIRST HALF",
 	"EXTRA TIME HALF-TIME",
 	"EXTRA TIME SECOND HALF",
-	"MATCH PENALTIES INTERMISSION",
-	"MATCH PENALTIES",
-	"MATCH END"
+	"PENALTIES INTERMISSION",
+	"PENALTIES",
+	"COOL-DOWN"
+};
+
+static const char *g_szMatchPeriodShortNames[MATCH_PERIOD_COUNT] =
+{
+	"WARM-UP",
+	"FIRST HALF",
+	"HALF-TIME",
+	"SECOND HALF",
+	"ET INT.",
+	"ET FIRST HALF",
+	"ET HALF-TIME",
+	"ET SECOND HALF",
+	"PENALTIES INT.",
+	"PENALTIES",
+	"COOL-DOWN"
 };
 
 enum ball_shield_type_t
