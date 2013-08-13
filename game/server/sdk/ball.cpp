@@ -1954,9 +1954,9 @@ void CBall::State_KEEPERHANDS_Think()
 
 		if (m_pPl->IsPowershooting())
 		{
-			vel = m_vPlForward * GetNormalshotStrength(GetPitchCoeff(true), sv_ball_normalshot_strength.GetInt());
-			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KEEPER_HANDS_THROW);
+			vel = vec3_origin;
 			spin = 0;
+			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KEEPER_HANDS_THROW);
 		}
 		else
 		{
