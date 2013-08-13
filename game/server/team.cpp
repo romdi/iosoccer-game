@@ -65,11 +65,11 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CTeam, DT_Team)
 	SendPropVector(SENDINFO(m_vSixYardBoxMax), -1, SPROP_COORD),
 	SendPropInt(SENDINFO(m_nForward), 2),
 	SendPropInt(SENDINFO(m_nRight), 2),
-	SendPropInt(SENDINFO(m_nCaptainPosIndex), 4, SPROP_UNSIGNED),
-	SendPropInt(SENDINFO(m_nFreekickTakerPosIndex), 4, SPROP_UNSIGNED),
-	SendPropInt(SENDINFO(m_nPenaltyTakerPosIndex), 4, SPROP_UNSIGNED),
-	SendPropInt(SENDINFO(m_nLeftCornerTakerPosIndex), 4, SPROP_UNSIGNED),
-	SendPropInt(SENDINFO(m_nRightCornerTakerPosIndex), 4, SPROP_UNSIGNED),
+	SendPropIntWithMinusOneFlag(SENDINFO(m_nCaptainPosIndex), 4),
+	SendPropIntWithMinusOneFlag(SENDINFO(m_nFreekickTakerPosIndex), 4),
+	SendPropIntWithMinusOneFlag(SENDINFO(m_nPenaltyTakerPosIndex), 4),
+	SendPropIntWithMinusOneFlag(SENDINFO(m_nLeftCornerTakerPosIndex), 4),
+	SendPropIntWithMinusOneFlag(SENDINFO(m_nRightCornerTakerPosIndex), 4),
 
 	SendPropArray2( 
 		SendProxyArrayLength_PlayerArray,
@@ -278,7 +278,7 @@ void CTeam::AddPlayer( CBasePlayer *pPlayer, int posIndex )
 void CTeam::RemovePlayer( CBasePlayer *pPlayer )
 {
 	if ((GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B) && pPlayer == GetCaptain())
-		SetCaptainPosIndex(11);
+		SetCaptainPosIndex(-1);
 
 	m_aPlayers.FindAndRemove( pPlayer );
 
@@ -299,11 +299,11 @@ void CTeam::UpdatePosIndices(bool reset)
 
 	if (reset)
 	{
-		SetCaptainPosIndex(11);
-		SetFreekickTakerPosIndex(11);
-		SetPenaltyTakerPosIndex(11);
-		SetLeftCornerTakerPosIndex(11);
-		SetRightCornerTakerPosIndex(11);
+		SetCaptainPosIndex(-1);
+		SetFreekickTakerPosIndex(-1);
+		SetPenaltyTakerPosIndex(-1);
+		SetLeftCornerTakerPosIndex(-1);
+		SetRightCornerTakerPosIndex(-1);
 		UnblockAllPos();
 	}
 }

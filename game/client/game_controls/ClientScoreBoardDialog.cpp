@@ -618,7 +618,7 @@ void CClientScoreBoardDialog::Update( void )
 
 		if (isOnField
 			&& (GetGlobalTeam(GetLocalPlayerTeam())->GetCaptainPosIndex() == gr->GetTeamPosIndex(GetLocalPlayerIndex())
-			|| GetGlobalTeam(GetLocalPlayerTeam())->GetCaptainPosIndex() == 11))
+			|| GetGlobalTeam(GetLocalPlayerTeam())->GetCaptainPosIndex() == -1))
 		{
 			if (GetGlobalTeam(GetLocalPlayerTeam())->GetCaptainPosIndex() == gr->GetTeamPosIndex(GetLocalPlayerIndex()))
 				m_pToggleCaptaincy->SetText("- Captain");

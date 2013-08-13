@@ -72,15 +72,28 @@ public:
 	void SetPosNextJoinSeconds(int posIndex, int seconds);
 	void UnblockAllPos();
 	void UpdatePosIndices(bool reset);
-	virtual void SetCaptainPosIndex(int posIndex) { m_nCaptainPosIndex = clamp(posIndex, 0, 11); }
-	virtual void SetFreekickTakerPosIndex(int posIndex) { m_nFreekickTakerPosIndex = clamp(posIndex, 0, 11); }
-	virtual void SetPenaltyTakerPosIndex(int posIndex) { m_nPenaltyTakerPosIndex = clamp(posIndex, 0, 11); }
-	virtual void SetLeftCornerTakerPosIndex(int posIndex) { m_nLeftCornerTakerPosIndex = clamp(posIndex, 0, 11); }
-	virtual void SetRightCornerTakerPosIndex(int posIndex) { m_nRightCornerTakerPosIndex = clamp(posIndex, 0, 11); }
+
+	virtual void SetCaptainPosIndex(int posIndex) { m_nCaptainPosIndex = clamp(posIndex, -1, 10); }
+	virtual int GetCaptainPosIndex() { return m_nCaptainPosIndex; }
+
+	virtual void SetFreekickTakerPosIndex(int posIndex) { m_nFreekickTakerPosIndex = clamp(posIndex, -1, 10); }
+	virtual int GetFreekickTakerPosIndex() { return m_nFreekickTakerPosIndex; }
+
+	virtual void SetPenaltyTakerPosIndex(int posIndex) { m_nPenaltyTakerPosIndex = clamp(posIndex, -1, 10); }
+	virtual int GetPenaltyTakerPosIndex() { return m_nPenaltyTakerPosIndex; }
+
+	virtual void SetLeftCornerTakerPosIndex(int posIndex) { m_nLeftCornerTakerPosIndex = clamp(posIndex, -1, 10); }
+	virtual int GetLeftCornerTakerPosIndex() { return m_nLeftCornerTakerPosIndex; }
+
+	virtual void SetRightCornerTakerPosIndex(int posIndex) { m_nRightCornerTakerPosIndex = clamp(posIndex, -1, 10); }
+	virtual int GetRightCornerTakerPosIndex() { return m_nRightCornerTakerPosIndex; }
+
 	virtual void SetTimeoutsLeft(int amount) { m_nTimeoutsLeft = amount; }
 	virtual int GetTimeoutsLeft() { return m_nTimeoutsLeft; }
+
 	virtual void SetWantsTimeout(bool state) { m_bWantsTimeout = state; }
 	virtual bool WantsTimeout() { return m_bWantsTimeout; }
+
 	virtual CSDKPlayer *GetCaptain() { return GetPlayerByPosIndex(m_nCaptainPosIndex); }
 	virtual CSDKPlayer *GetFreekickTaker() { return GetPlayerByPosIndex(m_nFreekickTakerPosIndex); }
 	virtual CSDKPlayer *GetPenaltyTaker() { return GetPlayerByPosIndex(m_nPenaltyTakerPosIndex); }

@@ -1064,7 +1064,7 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 			return true;
 
 		if (this == GetTeam()->GetCaptain())
-			GetTeam()->SetCaptainPosIndex(11);
+			GetTeam()->SetCaptainPosIndex(-1);
 		else
 			GetTeam()->SetCaptainPosIndex(GetTeamPosIndex());
 
@@ -1075,7 +1075,13 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 		if (this != GetTeam()->GetCaptain())
 			return true;
 
-		GetTeam()->SetFreekickTakerPosIndex(atoi(args[1]));
+		int posIndex = atoi(args[1]);
+
+		// Toggle off
+		if (GetTeam()->GetFreekickTakerPosIndex() == posIndex)
+			posIndex = -1;
+
+		GetTeam()->SetFreekickTakerPosIndex(posIndex);
 		return true;
 	}
 	else if (!Q_stricmp(args[0], "setpenaltytaker"))
@@ -1083,7 +1089,13 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 		if (this != GetTeam()->GetCaptain())
 			return true;
 
-		GetTeam()->SetPenaltyTakerPosIndex(atoi(args[1]));
+		int posIndex = atoi(args[1]);
+
+		// Toggle off
+		if (GetTeam()->GetPenaltyTakerPosIndex() == posIndex)
+			posIndex = -1;
+
+		GetTeam()->SetPenaltyTakerPosIndex(posIndex);
 		return true;
 	}
 	else if (!Q_stricmp(args[0], "setleftcornertaker"))
@@ -1091,7 +1103,13 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 		if (this != GetTeam()->GetCaptain())
 			return true;
 
-		GetTeam()->SetLeftCornerTakerPosIndex(atoi(args[1]));
+		int posIndex = atoi(args[1]);
+
+		// Toggle off
+		if (GetTeam()->GetLeftCornerTakerPosIndex() == posIndex)
+			posIndex = -1;
+
+		GetTeam()->SetLeftCornerTakerPosIndex(posIndex);
 		return true;
 	}
 	else if (!Q_stricmp(args[0], "setrightcornertaker"))
@@ -1099,7 +1117,13 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 		if (this != GetTeam()->GetCaptain())
 			return true;
 
-		GetTeam()->SetRightCornerTakerPosIndex(atoi(args[1]));
+		int posIndex = atoi(args[1]);
+
+		// Toggle off
+		if (GetTeam()->GetRightCornerTakerPosIndex() == posIndex)
+			posIndex = -1;
+
+		GetTeam()->SetRightCornerTakerPosIndex(posIndex);
 		return true;
 	}
 	else if (!Q_stricmp(args[0], "formation"))
