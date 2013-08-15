@@ -63,8 +63,12 @@ LINK_ENTITY_TO_CLASS( replayplayer, CReplayPlayer );
 
 IMPLEMENT_SERVERCLASS_ST(CReplayPlayer, DT_ReplayPlayer)
 	SendPropInt(SENDINFO(m_nTeamNumber), 3),
+	SendPropInt(SENDINFO(m_nTeamPosIndex), 4, SPROP_UNSIGNED),
+	SendPropBool(SENDINFO(m_bIsKeeper)),
 	SendPropInt(SENDINFO(m_nShirtNumber), 7, SPROP_UNSIGNED),
+	SendPropInt(SENDINFO(m_nSkinIndex), 3, SPROP_UNSIGNED),
 	SendPropString(SENDINFO(m_szPlayerName)),
+	SendPropString(SENDINFO(m_szShirtName)),
 END_SEND_TABLE()
 
 void CReplayPlayer::Precache()
@@ -76,8 +80,12 @@ void CReplayPlayer::Precache()
 CReplayPlayer::CReplayPlayer()
 {
 	m_nTeamNumber = 0;
-	m_nShirtNumber = 0;
-	m_szPlayerName.GetForModify()[0] = 0;
+	m_nTeamPosIndex = 0;
+	m_bIsKeeper = false;
+	m_nShirtNumber = 2;
+	m_nSkinIndex = 0;
+	m_szPlayerName.GetForModify()[0] = '\0';
+	m_szShirtName.GetForModify()[0] = '\0';
 }
 
 void CReplayPlayer::Spawn( void )
@@ -409,8 +417,10 @@ void CReplayManager::TakeSnapshot()
 		pPlSnap->moveY = pPl->GetPoseParameter(3);
 
 		pPlSnap->teamNumber = pPl->GetTeamNumber();
+		pPlSnap->teamPosIndex = pPl->GetTeamPosIndex();
+		pPlSnap->isKeeper = pPl->GetTeamPosType() == POS_GK;
 		pPlSnap->shirtNumber = pPl->GetShirtNumber();
-		pPlSnap->skin = pPl->m_nSkin;
+		pPlSnap->skinIndex = pPl->GetSkinIndex();
 		pPlSnap->body = pPl->m_nBody;
 
 		pPlSnap->pPlayerData = pPl->GetPlayerData();
@@ -681,12 +691,17 @@ void CReplayManager::RestoreSnapshot()
 			CReplayPlayer *pPl = m_pPlayers[i][j];
 
 			pPl->m_nTeamNumber = pPlSnap->teamNumber;
+			pPl->m_nTeamPosIndex = pPlSnap->teamPosIndex;
+			pPl->m_bIsKeeper = pPlSnap->isKeeper;
 			pPl->m_nShirtNumber = pPlSnap->shirtNumber;
 
 			if (Q_strcmp(pPl->m_szPlayerName, pPlSnap->pPlayerData->m_szName))
 				Q_strncpy(pPl->m_szPlayerName.GetForModify(), pPlSnap->pPlayerData->m_szName, MAX_PLAYER_NAME_LENGTH);
 
-			pPl->m_nSkin = pPlSnap->skin;
+			if (Q_strcmp(pPl->m_szShirtName, pPlSnap->pPlayerData->m_szShirtName))
+				Q_strncpy(pPl->m_szShirtName.GetForModify(), pPlSnap->pPlayerData->m_szShirtName, MAX_PLAYER_NAME_LENGTH);
+
+			pPl->m_nSkinIndex = pPlSnap->skinIndex;
 			pPl->m_nBody = pPlSnap->body;
 
 			PlayerSnapshot *pNextPlSnap = NULL;

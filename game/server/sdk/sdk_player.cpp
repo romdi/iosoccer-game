@@ -318,7 +318,6 @@ CSDKPlayer::CSDKPlayer()
 	m_nTeamPosIndex = 0;
 	m_nPreferredOutfieldShirtNumber = 2;
 	m_nPreferredKeeperShirtNumber = 1;
-	m_nPreferredSkin = -1;
 	m_szPlayerBallSkinName[0] = '\0';
 	m_pPlayerBall = NULL;
 	m_Shared.m_flPlayerAnimEventStartTime = gpGlobals->curtime;
@@ -338,6 +337,8 @@ CSDKPlayer::CSDKPlayer()
 	m_szPlayerName[0] = '\0';
 	m_szClubName[0] = '\0';
 	m_szShirtName[0] = '\0';
+
+	m_nSkinIndex = 0;
 
 	m_iPlayerState = PLAYER_STATE_NONE;
 
@@ -619,10 +620,10 @@ void CSDKPlayer::ChangeTeam()
 
 		m_nShirtNumber = FindAvailableShirtNumber();
 
-		if (GetTeamPosType() == POS_GK && (GetTeamNumber() != oldTeam || oldPosType != POS_GK))
-			ChooseKeeperSkin();
-		else if (GetTeamPosType() != POS_GK && (GetTeamNumber() != oldTeam || oldPosType == POS_GK))
-			ChooseFieldPlayerSkin();
+		if (GetTeamPosType() == POS_GK)
+			m_nBody = MODEL_KEEPER;
+		else
+			m_nBody = MODEL_PLAYER;
 
 		ResetFlags();
 
@@ -1191,51 +1192,6 @@ bool CSDKPlayer::IsTeamPosFree(int team, int posIndex, bool ignoreBots, CSDKPlay
 		}
 	}
 	return true;
-}
-
-void CSDKPlayer::SetPreferredSkin(int num)
-{
-	m_nPreferredSkin = clamp(num, -1, NUM_PLAYER_FACES - 1);
-
-	if (GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B)
-	{
-		if (GetTeamPosType() == POS_GK)
-		{
-			int body = m_nBody;
-			int ballSkin = m_nSkin - m_nBaseSkin;
-			ChooseKeeperSkin();
-			m_nBody = body;
-			m_nSkin = m_nBaseSkin + ballSkin;
-		}
-		else
-			ChooseFieldPlayerSkin();
-	}
-}
-
-////////////////////////////////////////////////
-// player skins are 0-9 (blocks of 10)
-// (shirtpos-2) is always 0-9
-//
-void CSDKPlayer::ChooseFieldPlayerSkin(void)
-{
-	int preferred = (m_nPreferredSkin == -1 ? g_IOSRand.RandomInt(0, NUM_PLAYER_FACES - 1) : m_nPreferredSkin);
-	m_nSkin = preferred;		//player skin
-	m_nBody = MODEL_PLAYER;
-}
-
-
-///////////////////////////////////////////////
-// keeper skins start at (faces*10) e.g. 60.
-// so index into the start of a particular face group
-// then (later) by adding on the ball skin number to this
-// skin we will get the keeper with the correct ball.
-//
-void CSDKPlayer::ChooseKeeperSkin(void)
-{
-	int preferred = (m_nPreferredSkin == -1 ? g_IOSRand.RandomInt(0, NUM_PLAYER_FACES - 1) : m_nPreferredSkin);
-	m_nSkin = preferred;
-	m_nBaseSkin = m_nSkin;
-	m_nBody = MODEL_KEEPER;
 }
 
 //-----------------------------------------------------------------------------
@@ -1836,6 +1792,9 @@ void CSDKPlayer::SetPlayerName(const char *name)
 	if (GetPlayerData())
 		SetLastKnownName(m_szPlayerName);
 
+	if (GetShirtName()[0] == '\0')
+		SetShirtName(m_szPlayerName);
+
 	m_bPlayerNameChanged = true;
 
 	engine->ClientCommand(edict(), UTIL_VarArgs("setinfo name \"%s\"", m_szPlayerName));
@@ -1883,6 +1842,9 @@ void CSDKPlayer::SetShirtName(const char *name)
 		return;
 
 	Q_strncpy(m_szShirtName, sanitizedName, sizeof(m_szShirtName));
+
+	if (GetPlayerData())
+		SetLastKnownShirtName(m_szShirtName);
 
 	m_bShirtNameChanged = true;
 }
@@ -2084,6 +2046,7 @@ CPlayerPersistentData::CPlayerPersistentData(CSDKPlayer *pPl)
 	m_nSteamCommunityID = engine->GetClientSteamID(pPl->edict()) ? engine->GetClientSteamID(pPl->edict())->ConvertToUint64() : 0;
 	Q_strncpy(m_szSteamID, engine->GetPlayerNetworkIDString(pPl->edict()), 32);
 	Q_strncpy(m_szName, pPl->GetPlayerName(), MAX_PLAYER_NAME_LENGTH);
+	Q_strncpy(m_szShirtName, pPl->GetShirtName(), MAX_PLAYER_NAME_LENGTH);
 	m_pMatchData = new CPlayerMatchData();
 	ResetData();
 }

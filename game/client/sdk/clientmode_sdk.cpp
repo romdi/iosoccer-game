@@ -207,7 +207,7 @@ bool ShouldRecreateClassImageEntity( C_BaseAnimating* pEnt, const char* pNewMode
 	return( V_stricmp( pName, pNewModelName ) != 0 );
 }
 
-void UpdateClassImageEntity(const char* pModelName, int skin, int angle, int bodypart)
+void UpdateClassImageEntity(const char* pModelName, float angle, int bodypart)
 {
 	MDLCACHE_CRITICAL_SECTION();
 
@@ -287,7 +287,6 @@ void UpdateClassImageEntity(const char* pModelName, int skin, int angle, int bod
 	pModel->SetAbsOrigin( origin );
 	pModel->SetAbsAngles( QAngle( 0, 180 + angle, 0 ) );
 	//pModel->m_nBody = (int)gpGlobals->curtime % 3;
-	pModel->m_nSkin = skin;
  
 	//// set upper body animation
 	//pModel->m_SequenceTransitioner.UpdateCurrent(
@@ -418,10 +417,9 @@ void ClientModeSDKNormal::PostRenderVGuiOnTop()
 	if (!pAppearanceSettingPanel->IsVisible())
 		return;
 
-	int skin = pAppearanceSettingPanel->GetPlayerSkin();
-	int angle = pAppearanceSettingPanel->GetPlayerPreviewAngle();
+	float angle = pAppearanceSettingPanel->GetPlayerPreviewAngle();
 	int bodypart = pAppearanceSettingPanel->GetPlayerBodypart();
-	UpdateClassImageEntity("models/player/player.mdl", skin, angle, bodypart);
+	UpdateClassImageEntity("models/player/player.mdl", angle, bodypart);
 }
 
 bool ClientModeSDKNormal::CanRecordDemo( char *errorMsg, int length ) const

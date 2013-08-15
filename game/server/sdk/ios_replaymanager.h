@@ -93,8 +93,10 @@ struct PlayerSnapshot
 	float			moveX;
 	float			moveY;
 	int				teamNumber;
+	int				teamPosIndex;
+	bool			isKeeper;
 	int				shirtNumber;
-	int				skin;
+	int				skinIndex;
 	int				body;
 	const CPlayerPersistentData *pPlayerData;
 };
@@ -183,8 +185,12 @@ public:
 	void Think();
 
 	CNetworkVar(int, m_nTeamNumber);
+	CNetworkVar(int, m_nTeamPosIndex);
+	CNetworkVar(bool, m_bIsKeeper);
 	CNetworkVar(int, m_nShirtNumber);
+	CNetworkVar(int, m_nSkinIndex);
 	CNetworkString(m_szPlayerName, MAX_PLAYER_NAME_LENGTH);
+	CNetworkString(m_szShirtName, MAX_PLAYER_NAME_LENGTH);
 };
 
 class CReplayManager : public CBaseEntity

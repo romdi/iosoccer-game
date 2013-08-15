@@ -2323,9 +2323,7 @@ void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 
 	pPl->SetPlayerBallSkinName(engine->GetClientConVarValue(pPl->entindex(), "playerballskinname"));
 
-	int preferredSkin = atoi(engine->GetClientConVarValue(pPl->entindex(), "modelskinindex"));
-	if (preferredSkin != pPl->GetPreferredSkin())
-		pPl->SetPreferredSkin(preferredSkin);
+	pPl->SetSkinIndex(atoi(engine->GetClientConVarValue(pPl->entindex(), "modelskinindex")));
 
 	char pszName[MAX_PLAYER_NAME_LENGTH];
 	Q_strncpy(pszName, engine->GetClientConVarValue( pPl->entindex(), "playername" ), MAX_PLAYER_NAME_LENGTH);

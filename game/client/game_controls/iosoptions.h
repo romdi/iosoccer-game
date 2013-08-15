@@ -143,8 +143,8 @@ class CAppearanceSettingPanel : public PropertyPage, public ISettingPanel
 	Label *m_pPlayerBallSkinLabel;
 	ComboBox *m_pPlayerBallSkinList;
 	ImagePanel *m_pPlayerPreviewPanel;
-	Label *m_pPlayerAngleLabel;
 	Slider *m_pPlayerAngleSlider;
+	CheckButton *m_pPlayerAngleAutoRotate;
 	Label *m_pPreviewTeamLabel;
 	ComboBox *m_pPreviewTeamList;
 	Panel *m_pBodypartPanel;
@@ -162,10 +162,11 @@ public:
 	void Load();
 	void Update();
 	Panel *GetPlayerPreviewPanel() { return m_pPlayerPreviewPanel; }
-	int GetPlayerSkin();
+	const char *GetPlayerShirtName();
+	int GetPlayerSkinIndex();
 	int GetPlayerOutfieldShirtNumber();
 	void GetPlayerTeamInfo(const char **teamFolder, const char **kitFolder);
-	int GetPlayerPreviewAngle() { return m_pPlayerAngleSlider->GetValue(); }
+	float GetPlayerPreviewAngle();
 	int GetPlayerBodypart();
 };
 

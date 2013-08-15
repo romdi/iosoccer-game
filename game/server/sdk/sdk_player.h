@@ -18,8 +18,6 @@
 #include "sdk_shareddefs.h"
 #include "steam/steam_api.h"
 
-#define NUM_PLAYER_FACES 6
-
 class CBall;
 
 class CPlayerMatchData
@@ -76,6 +74,7 @@ public:
 	unsigned long long m_nSteamCommunityID;
 	char	m_szSteamID[32];
 	char	m_szName[MAX_PLAYER_NAME_LENGTH];
+	char	m_szShirtName[MAX_PLAYER_NAME_LENGTH];
 	CPlayerMatchData *m_pMatchData;
 	CUtlVector<CPlayerMatchPeriodData *> m_MatchPeriodData;
 	int		m_nNextCardJoin;
@@ -315,15 +314,12 @@ public:
 
 	void				DrawDebugGeometryOverlays(void);
 
-	void				ChooseFieldPlayerSkin(void);
-	void				ChooseKeeperSkin(void);
 	bool				IsTeamPosFree(int team, int posIndex, bool ignoreBots, CSDKPlayer **pPlayerOnPos);
 
 	int					m_nTeamPosIndex;
 	int					m_nShirtNumber;
 	int					m_nPreferredOutfieldShirtNumber;
 	int					m_nPreferredKeeperShirtNumber;
-	int					m_nPreferredSkin;
 	char				m_szPlayerBallSkinName[MAX_KITNAME_LENGTH];
 	
 	float				m_flNextShot;
@@ -419,6 +415,9 @@ public:
 	const char			*GetLastKnownName() { return GetPlayerData()->m_szName; }
 	void				SetLastKnownName(const char *name) { Q_strncpy(GetPlayerData()->m_szName, name, MAX_PLAYER_NAME_LENGTH); }
 
+	const char			*GetLastKnownShirtName() { return GetPlayerData()->m_szShirtName; }
+	void				SetLastKnownShirtName(const char *name) { Q_strncpy(GetPlayerData()->m_szShirtName, name, MAX_PLAYER_NAME_LENGTH); }
+
 	float				GetNextJoin() { return m_flNextJoin; }
 	void				SetNextJoin(float time) { m_flNextJoin = time; }
 
@@ -436,8 +435,8 @@ public:
 	void				SetPreferredKeeperShirtNumber(int num);
 	int					FindAvailableShirtNumber();
 
-	int					GetPreferredSkin() { return m_nPreferredSkin; }
-	void				SetPreferredSkin(int num);
+	int					GetSkinIndex() { return m_nSkinIndex; }
+	void				SetSkinIndex(int index) { m_nSkinIndex = clamp(index, 0, PLAYER_SKIN_COUNT - 1); }
 
 	const char 			*GetPlayerBallSkinName() { return m_szPlayerBallSkinName; }
 	void				SetPlayerBallSkinName(const char *skinName);
@@ -465,8 +464,6 @@ public:
 
 	virtual bool		ShotButtonsReleased();
 	virtual void		SetShotButtonsReleased(bool released);
-
-	int					m_nBaseSkin;					//keeper skin before ball offset added
 
 	void				LookAtBall(void);
 
@@ -562,6 +559,7 @@ protected:
 	Vector				m_vOffsideLastOppPlayerPos;
 	Vector				m_vOffsideBallPos;
 	int					m_nSpecTeam;
+	int					m_nSkinIndex;
 };
 
 

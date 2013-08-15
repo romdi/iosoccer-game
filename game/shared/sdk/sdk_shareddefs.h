@@ -468,4 +468,6 @@ static const char *g_szQuickTacticNames[QUICKTACTIC_COUNT] =
 
 #define BALL_PHYS_RADIUS 4.5f
 
+#define PLAYER_SKIN_COUNT 6
+
 #endif // SDK_SHAREDDEFS_H

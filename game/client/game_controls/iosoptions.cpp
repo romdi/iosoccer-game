@@ -475,31 +475,27 @@ CAppearanceSettingPanel::CAppearanceSettingPanel(Panel *parent, const char *pane
 
 	KeyValues *kv = NULL;
 
-	kv = new KeyValues("UserData", "value", -1);
-	m_pSkinIndexList->AddItem("<Random>", kv);
-	kv->deleteThis();
-
-	kv = new KeyValues("UserData", "value", 0);
+	kv = new KeyValues("UserData", "index", 0);
 	m_pSkinIndexList->AddItem("Dark skin", kv);
 	kv->deleteThis();
 
-	kv = new KeyValues("UserData", "value", 1);
+	kv = new KeyValues("UserData", "index", 1);
 	m_pSkinIndexList->AddItem("Light skin, blond hair", kv);
 	kv->deleteThis();
 
-	kv = new KeyValues("UserData", "value", 2);
+	kv = new KeyValues("UserData", "index", 2);
 	m_pSkinIndexList->AddItem("Light skin, brown hair", kv);
 	kv->deleteThis();
 
-	kv = new KeyValues("UserData", "value", 3);
+	kv = new KeyValues("UserData", "index", 3);
 	m_pSkinIndexList->AddItem("Light skin, black hair", kv);
 	kv->deleteThis();
 
-	kv = new KeyValues("UserData", "value", 4);
+	kv = new KeyValues("UserData", "index", 4);
 	m_pSkinIndexList->AddItem("Light skin, black hair, beard", kv);
 	kv->deleteThis();
 
-	kv = new KeyValues("UserData", "value", 5);
+	kv = new KeyValues("UserData", "index", 5);
 	m_pSkinIndexList->AddItem("Darkish skin", kv);
 	kv->deleteThis();
 
@@ -509,7 +505,7 @@ CAppearanceSettingPanel::CAppearanceSettingPanel(Panel *parent, const char *pane
 
 	for (int i = 2; i <= 99; i++)
 	{
-		kv = new KeyValues("UserData", "index", i);
+		kv = new KeyValues("UserData", "number", i);
 		m_pPreferredOutfieldShirtNumberList->AddItem(VarArgs("%d", i), kv);
 		kv->deleteThis();
 	}
@@ -520,7 +516,7 @@ CAppearanceSettingPanel::CAppearanceSettingPanel(Panel *parent, const char *pane
 
 	for (int i = 1; i <= 99; i++)
 	{
-		kv = new KeyValues("UserData", "index", i);
+		kv = new KeyValues("UserData", "number", i);
 		m_pPreferredKeeperShirtNumberList->AddItem(VarArgs("%d", i), kv);
 		kv->deleteThis();
 	}
@@ -537,12 +533,14 @@ CAppearanceSettingPanel::CAppearanceSettingPanel(Panel *parent, const char *pane
 	m_pBodypartRadioButtons[2] = new RadioButton(m_pBodypartPanel, "", "Shoes");
 	m_pBodypartRadioButtons[1]->SetSelected(true);
 
-	m_pPlayerAngleLabel = new Label(m_pContent, "", "Rotation Angle:");
 	m_pPlayerAngleSlider = new Slider(m_pContent, "");
-	m_pPlayerAngleSlider->SetRange(-180, 180);
+	m_pPlayerAngleSlider->SetRange(-18000, 18000);
 	m_pPlayerAngleSlider->SetValue(0);
 
-	m_pConnectionInfoLabel = new Label(m_pContent, "", "Join or create a server to activate the preview");
+	m_pPlayerAngleAutoRotate = new CheckButton(m_pContent, "", "Auto-rotate the player model preview");
+	m_pPlayerAngleAutoRotate->SetSelected(true);
+
+	m_pConnectionInfoLabel = new Label(m_pContent, "", "No preview when disconnected");
 
 	m_flLastTeamKitUpdateTime = -1;
 	m_flLastBallSkinUpdateTime = -1;
@@ -555,7 +553,7 @@ void CAppearanceSettingPanel::PerformLayout()
 	m_pContent->SetBounds(PADDING, PADDING, GetWide() - 2 * PADDING, GetTall() - 2 * PADDING);
 
 	m_pPlayerPreviewPanel->SetBounds(APPEARANCE_RADIOBUTTONWIDTH, 0, GetParent()->GetWide(), GetParent()->GetTall() - 2 * TEXT_HEIGHT);
-	m_pPlayerPreviewPanel->SetImage("../_rt_playermodelTEMPREMOVE");
+	m_pPlayerPreviewPanel->SetImage("../_rt_playermodel");
 
 	m_pShirtNameLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 0 * TEXT_HEIGHT + 0 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
 	m_pShirtNameText->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 1 * TEXT_HEIGHT + 0 * TEXT_MARGIN, SHORTINPUT_WIDTH, TEXT_HEIGHT);
@@ -575,17 +573,18 @@ void CAppearanceSettingPanel::PerformLayout()
 	m_pPreviewTeamLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 10 * TEXT_HEIGHT + 5 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
 	m_pPreviewTeamList->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 11 * TEXT_HEIGHT + 5 * TEXT_MARGIN, SHORTINPUT_WIDTH, TEXT_HEIGHT);
 
-	m_pPlayerAngleLabel->SetBounds(APPEARANCE_RADIOBUTTONWIDTH, 2 * TEXT_HEIGHT, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pPlayerAngleLabel->SetVisible(false);
 	m_pPlayerAngleSlider->SetBounds(APPEARANCE_RADIOBUTTONWIDTH, 512, 264, TEXT_HEIGHT);
+
+	m_pPlayerAngleAutoRotate->SetBounds(APPEARANCE_RADIOBUTTONWIDTH, 512 + TEXT_HEIGHT, 264, TEXT_HEIGHT);
 
 	m_pBodypartPanel->SetBounds(0, 0, APPEARANCE_RADIOBUTTONWIDTH, m_pPlayerPreviewPanel->GetTall());
 	m_pBodypartRadioButtons[0]->SetBounds(0, 0, APPEARANCE_RADIOBUTTONWIDTH, TEXT_HEIGHT);
 	m_pBodypartRadioButtons[1]->SetBounds(0, 512 / 2 - TEXT_HEIGHT / 2, APPEARANCE_RADIOBUTTONWIDTH, TEXT_HEIGHT);
 	m_pBodypartRadioButtons[2]->SetBounds(0, 512 - TEXT_HEIGHT, APPEARANCE_RADIOBUTTONWIDTH, TEXT_HEIGHT);
 
-	m_pConnectionInfoLabel->SetBounds(APPEARANCE_RADIOBUTTONWIDTH, 512 + TEXT_HEIGHT, GetParent()->GetWide() - APPEARANCE_RADIOBUTTONWIDTH, TEXT_HEIGHT);
+	m_pConnectionInfoLabel->SetBounds(APPEARANCE_RADIOBUTTONWIDTH, 0, 256, 512);
 	m_pConnectionInfoLabel->SetFgColor(Color(255, 153, 153, 255));
+	m_pConnectionInfoLabel->SetContentAlignment(Label::a_center);
 }
 
 void CAppearanceSettingPanel::Save()
@@ -593,9 +592,9 @@ void CAppearanceSettingPanel::Save()
 	char shirtName[MAX_PLAYER_NAME_LENGTH];
 	m_pShirtNameText->GetText(shirtName, sizeof(shirtName));
 	shirtname.SetValue(shirtName);
-	modelskinindex.SetValue(m_pSkinIndexList->GetActiveItemUserData()->GetInt("value"));
-	preferredoutfieldshirtnumber.SetValue(m_pPreferredOutfieldShirtNumberList->GetActiveItemUserData()->GetInt("index"));
-	preferredkeepershirtnumber.SetValue(m_pPreferredKeeperShirtNumberList->GetActiveItemUserData()->GetInt("index"));
+	modelskinindex.SetValue(m_pSkinIndexList->GetActiveItemUserData()->GetInt("index"));
+	preferredoutfieldshirtnumber.SetValue(m_pPreferredOutfieldShirtNumberList->GetActiveItemUserData()->GetInt("number"));
+	preferredkeepershirtnumber.SetValue(m_pPreferredKeeperShirtNumberList->GetActiveItemUserData()->GetInt("number"));
 	playerballskinname.SetValue(m_pPlayerBallSkinList->GetActiveItemUserData()->GetString("ballskinname"));
 }
 
@@ -603,7 +602,7 @@ void CAppearanceSettingPanel::Load()
 {
 	m_pShirtNameText->SetText(shirtname.GetString());
 
-	m_pSkinIndexList->ActivateItemByRow(clamp(modelskinindex.GetInt(), -1, 5) + 1);
+	m_pSkinIndexList->ActivateItemByRow(clamp(modelskinindex.GetInt(), 0, PLAYER_SKIN_COUNT - 1));
 
 	int outfieldNumber = clamp(preferredoutfieldshirtnumber.GetInt(), 2, 99);
 	m_pPreferredOutfieldShirtNumberList->ActivateItemByRow(outfieldNumber - 2);
@@ -617,12 +616,8 @@ void CAppearanceSettingPanel::Update()
 	bool isConnected = CSDKPlayer::GetLocalSDKPlayer();
 
 	m_pConnectionInfoLabel->SetVisible(!isConnected);
-	m_pSkinIndexList->SetEnabled(isConnected);
-	m_pPreferredOutfieldShirtNumberList->SetEnabled(isConnected);
-	m_pPreferredKeeperShirtNumberList->SetEnabled(isConnected);
-	m_pPlayerBallSkinList->SetEnabled(isConnected);
 	m_pPlayerAngleSlider->SetEnabled(isConnected);
-	m_pPreviewTeamList->SetEnabled(isConnected);
+	m_pPlayerAngleAutoRotate->SetEnabled(isConnected);
 
 	for (int i = 0; i < 3; i++)
 		m_pBodypartRadioButtons[i]->SetEnabled(isConnected);
@@ -672,22 +667,37 @@ void CAppearanceSettingPanel::Update()
 
 		m_pPlayerBallSkinList->ActivateItem(activeItemID);
 	}
+
+	if (m_pPlayerAngleAutoRotate->IsSelected() && isConnected)
+	{
+		float value = m_pPlayerAngleSlider->GetValue() / 100.0f + 180;
+		value = fmodf(value + 60 * gpGlobals->frametime, 360);
+		value = (value - 180) * 100;
+		m_pPlayerAngleSlider->SetValue((int)value);
+	}
 }
 
-int CAppearanceSettingPanel::GetPlayerSkin()
+const char *CAppearanceSettingPanel::GetPlayerShirtName()
 {
-	int number = GetPlayerOutfieldShirtNumber();
-	int skin = m_pSkinIndexList->GetActiveItemUserData()->GetInt("value");
+	static char shirtName[MAX_PLAYER_NAME_LENGTH];
+	m_pShirtNameText->GetText(shirtName, sizeof(shirtName));
 
-	return number - 2 + (skin * 10);
+	return shirtName;
+}
+
+int CAppearanceSettingPanel::GetPlayerSkinIndex()
+{
+	return m_pSkinIndexList->GetActiveItemUserData()->GetInt("index");
 }
 
 int CAppearanceSettingPanel::GetPlayerOutfieldShirtNumber()
 {
-	int number = m_pPreferredOutfieldShirtNumberList->GetActiveItemUserData()->GetInt("index");
-	if (number == -1)
-		number = 2;
-	return number;
+	return m_pPreferredOutfieldShirtNumberList->GetActiveItemUserData()->GetInt("number");
+}
+
+float CAppearanceSettingPanel::GetPlayerPreviewAngle()
+{
+	return m_pPlayerAngleSlider->GetValue() / 100.0f;
 }
 
 int CAppearanceSettingPanel::GetPlayerBodypart()

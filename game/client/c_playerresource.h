@@ -73,6 +73,7 @@ public : // IGameResources intreface
 	virtual int		GetGoalKicks( int index );
 	virtual int		GetRatings( int index );
 	virtual int		GetShirtNumber( int iIndex );
+	virtual int		GetSkinIndex( int iIndex );
 	virtual int		GetTeamPosType( int iIndex );
 	virtual int		GetTeamPosIndex( int iIndex );
 	virtual int		GetTeamToJoin( int iIndex );
@@ -126,6 +127,7 @@ protected:
 	int		m_Ratings[MAX_PLAYERS+1];
 	int		m_TeamPosIndex[MAX_PLAYERS+1];
 	int		m_ShirtNumber[MAX_PLAYERS+1];
+	int		m_SkinIndex[MAX_PLAYERS+1];
 
 	int		m_TeamToJoin[MAX_PLAYERS+1];
 	int		m_TeamPosIndexToJoin[MAX_PLAYERS+1];

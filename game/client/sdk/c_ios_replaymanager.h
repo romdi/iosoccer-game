@@ -23,9 +23,16 @@ public:
 	DECLARE_CLASS(C_ReplayPlayer, CBaseAnimatingOverlay);
 	DECLARE_CLIENTCLASS();
 
+	C_ReplayPlayer();
+	~C_ReplayPlayer();
+
 	int m_nTeamNumber;
+	int m_nTeamPosIndex;
+	bool m_bIsKeeper;
 	int m_nShirtNumber;
+	int m_nSkinIndex;
 	char m_szPlayerName[MAX_PLAYER_NAME_LENGTH];
+	char m_szShirtName[MAX_PLAYER_NAME_LENGTH];
 };
 
 class C_ReplayManager : public CBaseEntity

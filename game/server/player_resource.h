@@ -62,6 +62,7 @@ protected:
 	CNetworkArray( int, m_Ratings, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_TeamPosIndex, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_ShirtNumber, MAX_PLAYERS+1 );
+	CNetworkArray( int, m_SkinIndex, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_NextCardJoin, MAX_PLAYERS+1 );
 	CNetworkArray( bool, m_IsAway, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_TeamToJoin, MAX_PLAYERS+1 );

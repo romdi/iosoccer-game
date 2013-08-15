@@ -14,6 +14,8 @@ C_ReplayBall *GetReplayBall()
 
 C_ReplayBall::C_ReplayBall()
 {
+	m_szSkinName[0] = '\0';
+
 	g_pReplayBall = this;
 }
 
@@ -24,9 +26,28 @@ C_ReplayBall::~C_ReplayBall()
 
 IMPLEMENT_CLIENTCLASS_DT(C_ReplayPlayer, DT_ReplayPlayer, CReplayPlayer)
 	RecvPropInt(RECVINFO(m_nTeamNumber)),
+	RecvPropInt(RECVINFO(m_nTeamPosIndex)),
+	RecvPropBool(RECVINFO(m_bIsKeeper)),
 	RecvPropInt(RECVINFO(m_nShirtNumber)),
+	RecvPropInt(RECVINFO(m_nSkinIndex)),
 	RecvPropString(RECVINFO(m_szPlayerName)),
+	RecvPropString(RECVINFO(m_szShirtName)),
 END_RECV_TABLE()
+
+C_ReplayPlayer::C_ReplayPlayer()
+{
+	m_nTeamNumber = TEAM_A;
+	m_nTeamPosIndex = 0;
+	m_bIsKeeper = false;
+	m_nShirtNumber = 2;
+	m_nSkinIndex = 0;
+	m_szPlayerName[0] = '\0';
+	m_szShirtName[0] = '\0';
+}
+
+C_ReplayPlayer::~C_ReplayPlayer()
+{
+}
 
 IMPLEMENT_CLIENTCLASS_DT(C_ReplayManager, DT_ReplayManager, CReplayManager)
 	RecvPropBool(RECVINFO(m_bIsReplaying)),
@@ -43,8 +64,11 @@ C_ReplayManager *GetReplayManager()
 
 C_ReplayManager::C_ReplayManager()
 {
-	g_pReplayManager = this;
 	m_bIsReplaying = false;
+	m_nReplayRunIndex = 0;
+	m_bAtMinGoalPos = true;
+
+	g_pReplayManager = this;
 }
 
 C_ReplayManager::~C_ReplayManager()
