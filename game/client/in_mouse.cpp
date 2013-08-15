@@ -534,6 +534,8 @@ void CInput::SetMousePos(int x, int y)
 	SetVGUICursorPos(x, y);
 }
 
+extern ConVar snapbackafterfreecam;
+
 //-----------------------------------------------------------------------------
 // Purpose: MouseMove -- main entry point for applying mouse
 // Input  : *cmd - 
@@ -549,13 +551,11 @@ void CInput::MouseMove( CUserCmd *cmd )
 	if (pPlayer && ((pPlayer->GetFlags() & (FL_FREECAM | FL_REMOTECONTROLLED)) || (pPlayer->m_nButtons & IN_RELOAD)))
 	{
 		viewangles = m_aCameraViewAngles;
-
-		if (!(pPlayer->m_nButtons & IN_RELOAD))
-			m_bWasFreeCam = true;
+		m_bWasFreeCam = true;
 	}
 	else
 	{
-		if (m_bWasFreeCam)
+		if (m_bWasFreeCam && !snapbackafterfreecam.GetBool())
 		{
 			viewangles = m_aCameraViewAngles;
 			m_bWasFreeCam = false;

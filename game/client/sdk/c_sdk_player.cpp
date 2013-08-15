@@ -57,6 +57,7 @@ ConVar quicktacticpanel("quicktacticpanel", "0", FCVAR_ARCHIVE, "");
 ConVar autohidespecmenu("autohidespecmenu", "0", FCVAR_ARCHIVE, "");
 ConVar goalteamcrests("goalteamcrests", "1", FCVAR_ARCHIVE, "");
 ConVar playerballskinname("playerballskinname", "", FCVAR_USERINFO | FCVAR_ARCHIVE, "");
+ConVar snapbackafterfreecam("snapbackafterfreecam", "0", FCVAR_ARCHIVE, "");
 
 ConVar clientversion("clientversion", g_szRequiredClientVersion, FCVAR_USERINFO | FCVAR_HIDDEN, "");
 
