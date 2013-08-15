@@ -12,7 +12,7 @@ ITexture* CIOSRenderTargets::CreatePlayerModelTexture( IMaterialSystem* pMateria
 		pMaterialSystem->GetBackBufferFormat(),
 		MATERIAL_RT_DEPTH_SHARED, 
 		TEXTUREFLAGS_CLAMPS | TEXTUREFLAGS_CLAMPT,
-		CREATERENDERTARGETFLAGS_HDR );
+		0 );
 }
  
 //-----------------------------------------------------------------------------
