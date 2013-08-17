@@ -3,6 +3,19 @@
 
 #include "cbase.h"
 #include "sdk_player.h"
+#include "SpriteTrail.h"
+
+extern ConVar
+	r_balltrail_replays,
+	r_balltrail_intermissions,
+	r_balltrail_match,
+	r_balltrail_red,
+	r_balltrail_green,
+	r_balltrail_blue,
+	r_balltrail_alpha,
+	r_balltrail_startwidth,
+	r_balltrail_endwidth,
+	r_balltrail_lifetime;
 
 struct BallSnapshot
 {
@@ -167,6 +180,8 @@ public:
 	int UpdateTransmitState() {	return SetTransmitState(FL_EDICT_ALWAYS); }
 
 	CNetworkString(m_szSkinName, MAX_KITNAME_LENGTH);
+
+	CHandle<CSpriteTrail> m_pGlowTrail;
 };
 
 

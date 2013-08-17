@@ -480,22 +480,6 @@ void CBall::Spawn (void)
 	PrecacheScriptSound("Ball.Post");
 	PrecacheScriptSound("Ball.Net");
 	PrecacheScriptSound("Ball.Whistle");
-	//PrecacheScriptSound("Crowd.Background1");
-	//PrecacheScriptSound("Crowd.Background2");
-	//PrecacheScriptSound("Crowd.Cheer");
-	//PrecacheScriptSound("Crowd.EndOfPeriod");
-	//PrecacheScriptSound("Crowd.Goal1");
-	//PrecacheScriptSound("Crowd.Goal2");
-	//PrecacheScriptSound("Crowd.Goal3");
-	//PrecacheScriptSound("Crowd.Save");
-	//PrecacheScriptSound("Crowd.Miss");
-	//PrecacheScriptSound("Crowd.Foul");
-	//PrecacheScriptSound("Crowd.YellowCard");
-	//PrecacheScriptSound("Crowd.RedCard");
-	//PrecacheScriptSound("Crowd.Song");
-	//PrecacheScriptSound("Crowd.Vuvuzela");
-	//PrecacheScriptSound("Crowd.Way");
-	//PrecacheScriptSound("Crowd.Easy");
 
 	State_Transition(BALL_STATE_NORMAL);
 }
@@ -555,6 +539,30 @@ bool CBall::CreateVPhysics()
 	EnablePlayerCollisions(true);
 	m_pPhys->SetBuoyancyRatio(0.5f);
 	m_pPhys->Wake();
+
+	if (m_bIsPlayerBall && r_balltrail_intermissions.GetBool() || !m_bIsPlayerBall && r_balltrail_match.GetBool())
+	{
+		if (!m_pGlowTrail)
+			m_pGlowTrail = CSpriteTrail::SpriteTrailCreate("sprites/bluelaser1.vmt", GetLocalOrigin(), false);
+
+		if (m_pGlowTrail)
+		{
+			m_pGlowTrail->FollowEntity(this);
+			//m_pGlowTrail->SetAttachment( this, nAttachment );
+
+			m_pGlowTrail->SetTransparency(
+				kRenderTransAdd,
+				clamp(r_balltrail_red.GetInt(), 0, 255),
+				clamp(r_balltrail_green.GetInt(), 0, 255),
+				clamp(r_balltrail_blue.GetInt(), 0, 255),
+				clamp(r_balltrail_alpha.GetInt(), 0, 255),
+				kRenderFxNone);
+
+			m_pGlowTrail->SetStartWidth(r_balltrail_startwidth.GetFloat());
+			m_pGlowTrail->SetEndWidth(r_balltrail_endwidth.GetFloat());
+			m_pGlowTrail->SetLifeTime(r_balltrail_lifetime.GetFloat());
+		}
+	}
 
 	return true;
 }

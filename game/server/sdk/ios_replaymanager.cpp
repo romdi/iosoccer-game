@@ -6,6 +6,17 @@
 #include "sdk_playeranimstate.h"
 #include "team.h"
 
+ConVar r_balltrail_replays("r_balltrail_replays", "1", FCVAR_NOTIFY);
+ConVar r_balltrail_intermissions("r_balltrail_intermissions", "0", FCVAR_NOTIFY);
+ConVar r_balltrail_match("r_balltrail_match", "0", FCVAR_NOTIFY);
+ConVar r_balltrail_red("r_balltrail_red", "255", FCVAR_NOTIFY);
+ConVar r_balltrail_green("r_balltrail_green", "255", FCVAR_NOTIFY);
+ConVar r_balltrail_blue("r_balltrail_blue", "0", FCVAR_NOTIFY);
+ConVar r_balltrail_alpha("r_balltrail_alpha", "255", FCVAR_NOTIFY);
+ConVar r_balltrail_startwidth("r_balltrail_startwidth", "10.0", FCVAR_NOTIFY);
+ConVar r_balltrail_endwidth("r_balltrail_endwidth", "1.0", FCVAR_NOTIFY);
+ConVar r_balltrail_lifetime("r_balltrail_lifetime", "3.0", FCVAR_NOTIFY);
+
 BEGIN_DATADESC( CReplayBall )
 END_DATADESC()
 
@@ -52,6 +63,30 @@ void CReplayBall::Spawn( void )
 	//SetSolid(SOLID_NONE);
 	SetSimulatedEveryTick(true);
 	SetAnimatedEveryTick(true);
+
+	if (r_balltrail_replays.GetBool())
+	{
+		if (!m_pGlowTrail)
+			m_pGlowTrail = CSpriteTrail::SpriteTrailCreate("sprites/bluelaser1.vmt", GetLocalOrigin(), false);
+
+		if (m_pGlowTrail)
+		{
+			m_pGlowTrail->FollowEntity(this);
+			//m_pGlowTrail->SetAttachment( this, nAttachment );
+
+			m_pGlowTrail->SetTransparency(
+				kRenderTransAdd,
+				clamp(r_balltrail_red.GetInt(), 0, 255),
+				clamp(r_balltrail_green.GetInt(), 0, 255),
+				clamp(r_balltrail_blue.GetInt(), 0, 255),
+				clamp(r_balltrail_alpha.GetInt(), 0, 255),
+				kRenderFxNone);
+
+			m_pGlowTrail->SetStartWidth(r_balltrail_startwidth.GetFloat());
+			m_pGlowTrail->SetEndWidth(r_balltrail_endwidth.GetFloat());
+			m_pGlowTrail->SetLifeTime(r_balltrail_lifetime.GetFloat());
+		}
+	}
 }
 
 

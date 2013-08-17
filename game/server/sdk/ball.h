@@ -7,6 +7,7 @@
 #include "sdk_player.h"
 #include "in_buttons.h"
 #include "ios_teamkit_parse.h"
+#include "SpriteTrail.h"
 
 #define	BALL_MODEL	 "models/ball/ball.mdl"
 
@@ -311,6 +312,8 @@ private:
 	AngularImpulse	m_vBallCannonRot;
 
 	bool			m_bHitThePost;
+
+	CHandle<CSpriteTrail> m_pGlowTrail;
 };
 
 #endif
