@@ -237,6 +237,8 @@ private:
 	Button		*m_pMatchEvents;
 	Button		*m_pToggleCaptainMenu;
 	ComboBox	*m_pFormationList;
+	Label		*m_pTimeoutHeader;
+	Label		*m_pTimeoutInfo;
 	Button		*m_pRequestTimeout;
 	Button		*m_pToggleCaptaincy;
 

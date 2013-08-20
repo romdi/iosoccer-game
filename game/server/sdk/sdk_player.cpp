@@ -1043,12 +1043,16 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 	}
 	else if (!Q_stricmp(args[0], "requesttimeout"))
 	{
-		if (SDKGameRules()->IsIntermissionState() || this != GetTeam()->GetCaptain() || SDKGameRules()->AdminWantsTimeout() || GetTeam()->WantsTimeout()
-			|| GetOppTeam()->WantsTimeout() || SDKGameRules()->GetTimeoutEnd() != 0 || GetTeam()->GetTimeoutsLeft() == 0)
+		if (SDKGameRules()->IsIntermissionState()
+			|| this != GetTeam()->GetCaptain()
+			|| SDKGameRules()->GetTimeoutState() != TIMEOUT_STATE_NONE
+			|| GetTeam()->GetTimeoutTimeLeft() <= 0
+			|| GetTeam()->GetTimeoutsLeft() <= 0)
 			return true;
 
+		SDKGameRules()->SetTimeoutState(TIMEOUT_STATE_PENDING);
+		SDKGameRules()->SetTimeoutTeam(GetTeamNumber());
 		GetTeam()->SetTimeoutsLeft(GetTeam()->GetTimeoutsLeft() - 1);
-		GetTeam()->SetWantsTimeout(true);
 
 		IGameEvent *pEvent = gameeventmanager->CreateEvent("timeout_pending");
 		if (pEvent)
@@ -1056,6 +1060,20 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 			pEvent->SetInt("requesting_team", GetTeamNumber());
 			gameeventmanager->FireEvent(pEvent);
 		}
+
+		UTIL_ClientPrintAll(HUD_PRINTCENTER, "Timeout pending");
+
+		return true;
+	}
+	else if (!Q_stricmp(args[0], "endtimeout"))
+	{
+		if (SDKGameRules()->IsIntermissionState()
+			|| this != GetTeam()->GetCaptain()
+			|| SDKGameRules()->GetTimeoutState() == TIMEOUT_STATE_NONE
+			|| SDKGameRules()->GetTimeoutTeam() != GetTeamNumber())
+			return true;
+
+		SDKGameRules()->EndTimeout();
 
 		return true;
 	}

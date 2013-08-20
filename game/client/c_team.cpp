@@ -41,6 +41,7 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_Team, DT_Team, CTeam)
 	RecvPropInt( RECVINFO(m_nPenaltyGoalBits) ),
 	RecvPropInt( RECVINFO(m_nPenaltyRound) ),
 	RecvPropInt( RECVINFO(m_nTimeoutsLeft) ),
+	RecvPropInt( RECVINFO(m_nTimeoutTimeLeft) ),
 	RecvPropString( RECVINFO(m_szServerKitName), 0, RecvProxy_KitName),
 	RecvPropString( RECVINFO(m_szServerCode) ),
 	RecvPropString( RECVINFO(m_szServerShortName) ),

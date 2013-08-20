@@ -211,7 +211,9 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Editabl
 	CommandMenu *pMenu = new CommandMenu(m_pFormationList, "formationlist", gViewPortInterface);
 	m_pFormationList->SetMenu(pMenu);
 
-	m_pRequestTimeout = new Button(m_pStatButtonContainer, "", "Timeout", this, "requesttimeout");
+	m_pTimeoutHeader = new Label(m_pStatButtonContainer, "", "Timeout");
+	m_pTimeoutInfo = new Label(m_pStatButtonContainer, "", "");
+	m_pRequestTimeout = new Button(m_pStatButtonContainer, "", "Request", this, "requesttimeout");
 
 	m_pToggleCaptaincy = new Button(m_pMainPanel, "", "Take Captaincy", this, "togglecaptaincy");
 
@@ -396,7 +398,17 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 	//m_pFormationList->SetPaintBorderEnabled(false);
 	m_pFormationList->SetVisible(false);
 
-	m_pRequestTimeout->SetBounds(STATBUTTON_HMARGIN, 4 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
+	m_pTimeoutHeader->SetBounds(STATBUTTON_HMARGIN, 4 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
+	m_pTimeoutHeader->SetFont(m_pScheme->GetFont("StatButton"));
+	m_pTimeoutHeader->SetContentAlignment(Label::a_center);
+	m_pTimeoutHeader->SetVisible(false);
+
+	m_pTimeoutInfo->SetBounds(STATBUTTON_HMARGIN, 5 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
+	m_pTimeoutInfo->SetFont(m_pScheme->GetFont("StatButton"));
+	m_pTimeoutInfo->SetContentAlignment(Label::a_center);
+	m_pTimeoutInfo->SetVisible(false);
+
+	m_pRequestTimeout->SetBounds(STATBUTTON_HMARGIN, 6 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
 	m_pRequestTimeout->SetFont(m_pScheme->GetFont("StatButton"));
 	m_pRequestTimeout->SetContentAlignment(Label::a_center);
 	m_pRequestTimeout->SetPaintBorderEnabled(false);
@@ -662,7 +674,22 @@ void CClientScoreBoardDialog::Update( void )
 
 	if (m_bShowCaptainMenu)
 	{
-		m_pRequestTimeout->SetText(VarArgs("Timeout (%d left)", pLocal->GetTeam()->GetTimeoutsLeft()));
+		wchar_t text[32];
+		_snwprintf(text, sizeof(text) / sizeof(wchar_t), L"(%d • %d:%02dm)", pLocal->GetTeam()->GetTimeoutsLeft(), pLocal->GetTeam()->GetTimeoutTimeLeft() / 60, pLocal->GetTeam()->GetTimeoutTimeLeft() % 60);
+		m_pTimeoutInfo->SetText(text);
+
+		if (SDKGameRules()->m_eTimeoutState != TIMEOUT_STATE_NONE && SDKGameRules()->m_nTimeoutTeam == pLocal->GetTeamNumber())
+		{
+			m_pRequestTimeout->SetText("End Timeout");
+			m_pRequestTimeout->SetCommand("endtimeout");
+			m_pRequestTimeout->SetEnabled(true);
+		}
+		else
+		{
+			m_pRequestTimeout->SetText("Start Timeout");
+			m_pRequestTimeout->SetCommand("requesttimeout");
+			m_pRequestTimeout->SetEnabled(SDKGameRules()->m_eTimeoutState == TIMEOUT_STATE_NONE);
+		}
 
 		if (!m_pFormationList->IsDropdownVisible())
 		{
@@ -721,9 +748,6 @@ void CClientScoreBoardDialog::UpdatePlayerInfo()
 	IGameResources *gr = GameResources();
 	if (!gr)
 		return;
-
-	char spectatorNames[1024] = "";
-	int spectatorCount = 0;
 
 	bool isPosTaken[2][11] = {};
 
@@ -831,7 +855,9 @@ void CClientScoreBoardDialog::UpdatePlayerInfo()
 		}
 	}
 
-	m_pSpectatorText->SetText(VarArgs("%d on TV | %d %s:", m_HLTVSpectators, specList.Count(), (specList.Count() == 1 ? "spec" : "specs")));
+	wchar_t specText[32];
+	_snwprintf(specText, sizeof(specText) / sizeof(wchar_t), L"%d on TV • %d %s:", m_HLTVSpectators, specList.Count(), (specList.Count() == 1 ? L"spec" : L"specs"));
+	m_pSpectatorText->SetText(specText);
 
 	if (specList.Count() != m_SpecList.Count())
 	{
@@ -859,18 +885,29 @@ void CClientScoreBoardDialog::UpdatePlayerInfo()
 		{
 			Button *pPl = (Button *)m_pSpectatorNames->GetChild(i);
 
-			char text[MAX_PLAYER_NAME_LENGTH + 16];
-			Q_snprintf(text, sizeof(text), VarArgs("%%.%ds", clamp(maxNameLength, 1, MAX_PLAYER_NAME_LENGTH)), specList[i].playerName);
+			wchar_t nameFormat[16];
+			_snwprintf(nameFormat, sizeof(nameFormat) / sizeof(wchar_t), L"%%.%ds", clamp(maxNameLength, 1, MAX_PLAYER_NAME_LENGTH));
+
+			wchar_t fullName[64];
+			g_pVGuiLocalize->ConvertANSIToUnicode(specList[i].playerName, fullName, sizeof(fullName));
+
+			wchar_t truncatedName[64];
+			_snwprintf(truncatedName, sizeof(truncatedName) / sizeof(wchar_t), nameFormat, fullName);
 
 			int nextCardJoin = gr->GetNextCardJoin(specList[i].playerIndex);
 
+			wchar_t cardText[64] = {};
 			if (SDKGameRules()->GetMatchDisplayTimeSeconds(true, false) < nextCardJoin)
-				Q_strncat(text, VarArgs(" [%d:%02d]", nextCardJoin / 60, nextCardJoin % 60), sizeof(text));
+				_snwprintf(cardText, sizeof(cardText) / sizeof(wchar_t), L" [%d:%02d]", nextCardJoin / 60, nextCardJoin % 60);
 
-			if (i < specList.Count() - 1)
-				Q_strncat(text, ", ", sizeof(text));
+			wchar_t separator[16] = {};
+			if (i > 0)
+				_snwprintf(separator, sizeof(separator) / sizeof(wchar_t), L"• ");
 
+			wchar_t text[64];
+			_snwprintf(text, sizeof(text) / sizeof(wchar_t), L"%s%s%s", separator, truncatedName, cardText);
 			pPl->SetText(text);
+
 			pPl->SetCommand(VarArgs("specindex:%d", specList[i]));
 			pPl->AddActionSignalTarget(this);
 			pPl->SetBounds(totalWidth, 0, SPECNAME_WIDTH, SPECLIST_HEIGHT);
@@ -1404,6 +1441,10 @@ void CClientScoreBoardDialog::OnCommand( char const *cmd )
 	{
 		engine->ClientCmd(cmd);
 	}
+	else if (!Q_stricmp(cmd, "endtimeout"))
+	{
+		engine->ClientCmd(cmd);
+	}
 	else if (!Q_stricmp(cmd, "showmatchevents"))
 	{
 		m_eActivePanelType = MATCHEVENT_MENU;
@@ -1432,6 +1473,8 @@ void CClientScoreBoardDialog::ToggleMenu()
 	}
 
 	m_pFormationList->SetVisible(m_bShowCaptainMenu);
+	m_pTimeoutHeader->SetVisible(m_bShowCaptainMenu);
+	m_pTimeoutInfo->SetVisible(m_bShowCaptainMenu);
 	m_pRequestTimeout->SetVisible(m_bShowCaptainMenu);
 	m_pStatText->SetText(m_bShowCaptainMenu ? "Captain" : "Statistics");
 }

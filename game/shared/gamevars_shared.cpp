@@ -115,5 +115,5 @@ ConVar mp_tvcam_sideline_offset_height("mp_tvcam_sideline_offset_height", "600",
 ConVar mp_tvcam_sideline_offset_north("mp_tvcam_sideline_offset_north", "750", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar mp_tvcam_sideline_zoomcoeff("mp_tvcam_sideline_zoomcoeff", "0.5", FCVAR_NOTIFY | FCVAR_REPLICATED);
 
-ConVar mp_timeout_count("mp_timeout_count", "1", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar mp_timeout_duration("mp_timeout_duration", "30", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_timeout_count("mp_timeout_count", "4", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_timeout_duration("mp_timeout_duration", "10", FCVAR_NOTIFY | FCVAR_REPLICATED);

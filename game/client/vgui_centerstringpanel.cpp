@@ -112,7 +112,7 @@ void CCenterStringLabel::ComputeSize( void )
 	int iHeight = (int)(h * 0.3);
 
 	SetSize( w, iHeight );
-	SetPos( 0, ( h * 0.5f ) - ( iHeight / 2 ) );
+	SetPos( 0, ( h * 0.1f ) - ( iHeight / 2 ) );
 }
 
 void CCenterStringLabel::ApplySchemeSettings(vgui::IScheme *pScheme)
@@ -129,7 +129,7 @@ void CCenterStringLabel::ApplySchemeSettings(vgui::IScheme *pScheme)
 	h = ScreenHeight();
 	int iHeight = (int)(h * 0.3);
 	SetSize( w, iHeight );
-	SetPos( 0, ( h * 0.5f ) - ( iHeight / 2 ) );
+	SetPos( 0, ( h * 0.1f ) - ( iHeight / 2 ) );
 }
 
 //-----------------------------------------------------------------------------

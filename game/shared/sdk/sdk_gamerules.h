@@ -294,7 +294,6 @@ protected:
 	int m_nPenaltyTakingTeam;
 	int m_nPenaltyTakingStartTeam;
 	float m_flLastAwayCheckTime;
-	bool m_bAdminWantsTimeout;
 	int m_nOldMaxplayers;
 	bool m_bUseOldMaxplayers;
 
@@ -384,8 +383,11 @@ public:
 	void SetOffsideLinePositions(float ballPosY, float offsidePlayerPosY, float lastOppPlayerPosY);
 	void SetOffsideLinesEnabled(bool enable);
 
-	void SetAdminWantsTimeout(bool state) { m_bAdminWantsTimeout = state; }
-	bool AdminWantsTimeout() { return m_bAdminWantsTimeout; }
+	void SetTimeoutTeam(int team) { m_nTimeoutTeam = team; }
+	int GetTimeoutTeam() { return m_nTimeoutTeam; }
+
+	void SetTimeoutState(int state) { m_eTimeoutState = state; }
+	int GetTimeoutState() { return m_eTimeoutState; }
 	
 	void SetTimeoutEnd(float time) { m_flTimeoutEnd = time; }
 
@@ -396,6 +398,9 @@ public:
 	bool CheckAutoStart();
 
 	void SetMatchDisplayTimeSeconds(int seconds);
+
+	bool CheckTimeout();
+	bool EndTimeout();
 
 #else
 
@@ -427,12 +432,15 @@ public:
 	CNetworkVar(int, m_nBallZone);
 	CNetworkVar(int, m_nLeftSideTeam);
 
+	CNetworkVar(int, m_nTimeoutTeam);
+	CNetworkVar(int, m_eTimeoutState);
+	CNetworkVar(float, m_flTimeoutEnd);
+
 	CNetworkVar(float, m_flOffsideLineBallPosY);
 	CNetworkVar(float, m_flOffsideLineOffsidePlayerPosY);
 	CNetworkVar(float, m_flOffsideLineLastOppPlayerPosY);
 	CNetworkVar(bool, m_bOffsideLinesEnabled);
 
-	CNetworkVar(float, m_flTimeoutEnd);
 
 	void SetupFormations();
 	CUtlVector<Formation *> &GetFormations();

@@ -282,39 +282,45 @@ BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 	RecvPropInt(RECVINFO(m_nBallZone)),
 	RecvPropInt(RECVINFO(m_nLeftSideTeam)),
 
+	RecvPropInt(RECVINFO(m_nTimeoutTeam)),
+	RecvPropInt(RECVINFO(m_eTimeoutState)),
+	RecvPropTime(RECVINFO(m_flTimeoutEnd)),
+
 	RecvPropFloat(RECVINFO(m_flOffsideLineBallPosY)),
 	RecvPropFloat(RECVINFO(m_flOffsideLineOffsidePlayerPosY)),
 	RecvPropFloat(RECVINFO(m_flOffsideLineLastOppPlayerPosY)),
 	RecvPropInt(RECVINFO(m_bOffsideLinesEnabled)),
 
-	RecvPropTime(RECVINFO(m_flTimeoutEnd)),
 #else
 	SendPropTime( SENDINFO( m_flStateEnterTime )),
 	SendPropTime( SENDINFO( m_flMatchStartTime )),
 	//SendPropFloat( SENDINFO( m_fStart) ),
 	//SendPropInt( SENDINFO( m_iDuration) ),
-	SendPropInt( SENDINFO( m_eMatchPeriod )),
-	SendPropInt( SENDINFO( m_nAnnouncedInjuryTime )),
+	SendPropInt( SENDINFO( m_eMatchPeriod ), 4, SPROP_UNSIGNED),
+	SendPropInt( SENDINFO( m_nAnnouncedInjuryTime ), 3, SPROP_UNSIGNED),
 	SendPropTime( SENDINFO( m_flInjuryTimeStart )),
 	SendPropTime( SENDINFO( m_flInjuryTime )),
 
-	SendPropInt(SENDINFO(m_nShieldType)),
-	SendPropInt(SENDINFO(m_nShieldTeam)),
+	SendPropInt(SENDINFO(m_nShieldType), 3, SPROP_UNSIGNED),
+	SendPropInt(SENDINFO(m_nShieldTeam), 3),
 	SendPropVector(SENDINFO(m_vShieldPos), -1, SPROP_COORD),
 
 	SendPropVector(SENDINFO(m_vFieldMin), -1, SPROP_COORD),
 	SendPropVector(SENDINFO(m_vFieldMax), -1, SPROP_COORD),
 	SendPropVector(SENDINFO(m_vKickOff), -1, SPROP_COORD),
 
-	SendPropInt(SENDINFO(m_nBallZone)),
-	SendPropInt(SENDINFO(m_nLeftSideTeam)),
+	SendPropInt(SENDINFO(m_nBallZone), 8),
+	SendPropInt(SENDINFO(m_nLeftSideTeam), 3),
 
-	SendPropFloat(SENDINFO(m_flOffsideLineBallPosY), 0, SPROP_COORD),
-	SendPropFloat(SENDINFO(m_flOffsideLineOffsidePlayerPosY), 0, SPROP_COORD),
-	SendPropFloat(SENDINFO(m_flOffsideLineLastOppPlayerPosY), 0, SPROP_COORD),
+	SendPropInt(SENDINFO(m_nTimeoutTeam), 3),
+	SendPropInt(SENDINFO(m_eTimeoutState), 2, SPROP_UNSIGNED),
+	SendPropTime(SENDINFO(m_flTimeoutEnd)),
+
+	SendPropFloat(SENDINFO(m_flOffsideLineBallPosY), -1, SPROP_COORD),
+	SendPropFloat(SENDINFO(m_flOffsideLineOffsidePlayerPosY), -1, SPROP_COORD),
+	SendPropFloat(SENDINFO(m_flOffsideLineLastOppPlayerPosY), -1, SPROP_COORD),
 	SendPropBool(SENDINFO(m_bOffsideLinesEnabled)),
 
-	SendPropTime(SENDINFO(m_flTimeoutEnd)),
 #endif
 END_NETWORK_TABLE()
 
@@ -431,6 +437,9 @@ CSDKGameRules::CSDKGameRules()
 	m_pPrecip = NULL;
 	m_nFirstHalfLeftSideTeam = TEAM_A;
 	m_nLeftSideTeam = TEAM_A;
+	m_nTimeoutTeam = TEAM_INVALID;
+	m_eTimeoutState = TIMEOUT_STATE_NONE;
+	m_flTimeoutEnd = 0;
 	m_nFirstHalfKickOffTeam = TEAM_A;
 	m_nKickOffTeam = TEAM_A;
 	m_bOffsideLinesEnabled = false;
@@ -440,8 +449,6 @@ CSDKGameRules::CSDKGameRules()
 	m_flMatchStartTime = gpGlobals->curtime;
 	m_bUseAdjustedStateEnterTime = false;
 	m_flAdjustedStateEnterTime = -FLT_MAX;
-	m_flTimeoutEnd = 0;
-	m_bAdminWantsTimeout = false;
 	m_nOldMaxplayers = mp_maxplayers.GetInt();
 	m_bUseOldMaxplayers = false;
 	m_nRealMatchStartTime = 0;
@@ -1114,11 +1121,11 @@ void CC_SV_StartTimeout(const CCommand &args)
 	if (!UTIL_IsCommandIssuedByServerAdmin())
         return;
 
-	if (SDKGameRules()->IsIntermissionState() || SDKGameRules()->AdminWantsTimeout() || GetGlobalTeam(TEAM_A)->WantsTimeout()
-		|| GetGlobalTeam(TEAM_B)->WantsTimeout() || SDKGameRules()->GetTimeoutEnd() != 0)
+	if (SDKGameRules()->IsIntermissionState() || SDKGameRules()->GetTimeoutState() != TIMEOUT_STATE_NONE)
 		return;
 
-	SDKGameRules()->SetAdminWantsTimeout(true);
+	SDKGameRules()->SetTimeoutState(TIMEOUT_STATE_PENDING);
+	SDKGameRules()->SetTimeoutTeam(TEAM_UNASSIGNED);
 
 	IGameEvent *pEvent = gameeventmanager->CreateEvent("timeout_pending");
 	if (pEvent)
@@ -1135,32 +1142,10 @@ void CC_SV_EndTimeout(const CCommand &args)
 	if (!UTIL_IsCommandIssuedByServerAdmin())
         return;
 
-	if (SDKGameRules()->IsIntermissionState())
+	if (SDKGameRules()->IsIntermissionState() || SDKGameRules()->GetTimeoutState() == TIMEOUT_STATE_NONE)
 		return;
 
-	if (SDKGameRules()->AdminWantsTimeout() || GetGlobalTeam(TEAM_A)->WantsTimeout() || GetGlobalTeam(TEAM_B)->WantsTimeout()) // Timeout pending
-	{
-		SDKGameRules()->SetAdminWantsTimeout(false);
-		GetGlobalTeam(TEAM_A)->SetWantsTimeout(false);
-		GetGlobalTeam(TEAM_B)->SetWantsTimeout(false);
-
-		IGameEvent *pEvent = gameeventmanager->CreateEvent("end_timeout");
-		if (pEvent)
-		{
-			gameeventmanager->FireEvent(pEvent);
-		}
-	}
-	else if (SDKGameRules()->GetTimeoutEnd() != 0) // Timeout running
-	{
-		SDKGameRules()->SetTimeoutEnd(gpGlobals->curtime + 5);
-
-		IGameEvent *pEvent = gameeventmanager->CreateEvent("start_timeout");
-		if (pEvent)
-		{
-			pEvent->SetInt("requesting_team", TEAM_UNASSIGNED);
-			gameeventmanager->FireEvent(pEvent);
-		}
-	}
+	SDKGameRules()->EndTimeout();
 }
 
 ConCommand sv_endtimeout( "sv_endtimeout", CC_SV_EndTimeout, "", 0 );
@@ -1612,6 +1597,7 @@ void CSDKGameRules::State_FIRST_HALF_Enter()
 		gameeventmanager->FireEvent(pEvent);
 
 	UTIL_ClientPrintAll(HUD_PRINTTALK, "#game_match_start");
+	UTIL_ClientPrintAll(HUD_PRINTCENTER, "LIVE");
 
 	//GetBall()->EmitSound("Crowd.YNWA");
 }
@@ -2633,9 +2619,10 @@ void CSDKGameRules::ResetMatch()
 
 	SetOffsideLinesEnabled(false);
 	DisableShield();
-	SetTimeoutEnd(0);
+	m_nTimeoutTeam = TEAM_INVALID;
+	m_eTimeoutState = TIMEOUT_STATE_NONE;
+	m_flTimeoutEnd = 0;
 	m_flLastAwayCheckTime = gpGlobals->curtime;
-	SetAdminWantsTimeout(false);
 
 	FileHandle_t logfile = filesystem->Open("logs/cleanup.log", "a", "MOD");
 
@@ -2729,6 +2716,84 @@ void CSDKGameRules::SetMatchDisplayTimeSeconds(int seconds)
 	SetLeftSideTeam(m_nFirstHalfLeftSideTeam);
 	SetKickOffTeam(m_nFirstHalfKickOffTeam);
 	State_Transition(matchPeriod);
+}
+
+bool CSDKGameRules::CheckTimeout()
+{
+	if (GetTimeoutState() == TIMEOUT_STATE_PENDING)
+	{
+		SetTimeoutState(TIMEOUT_STATE_ACTIVE);
+
+		if (GetTimeoutTeam() == TEAM_UNASSIGNED)
+			SetTimeoutEnd(-1);
+		else
+			SetTimeoutEnd(gpGlobals->curtime + GetGlobalTeam(GetTimeoutTeam())->GetTimeoutTimeLeft());
+
+		IGameEvent *pEvent = gameeventmanager->CreateEvent("start_timeout");
+		if (pEvent)
+		{
+			pEvent->SetInt("requesting_team", GetTimeoutTeam());
+			gameeventmanager->FireEvent(pEvent);
+		}
+
+		return true;
+	}
+	else if (GetTimeoutState() == TIMEOUT_STATE_ACTIVE)
+	{
+		if (GetTimeoutEnd() != -1 && gpGlobals->curtime >= GetTimeoutEnd())
+			return EndTimeout();
+
+		return true;
+	}
+
+	return false;
+}
+
+bool CSDKGameRules::EndTimeout()
+{
+	if (SDKGameRules()->GetTimeoutState() == TIMEOUT_STATE_PENDING)
+	{
+		SDKGameRules()->SetTimeoutState(TIMEOUT_STATE_NONE);
+
+		IGameEvent *pEvent = gameeventmanager->CreateEvent("end_timeout");
+		if (pEvent)
+		{
+			gameeventmanager->FireEvent(pEvent);
+		}
+
+		UTIL_ClientPrintAll(HUD_PRINTCENTER, "Timeout cancelled");
+	}
+	else if (SDKGameRules()->GetTimeoutState() == TIMEOUT_STATE_ACTIVE)
+	{
+		if (SDKGameRules()->GetTimeoutTeam() == TEAM_UNASSIGNED && GetTimeoutEnd() != -1)
+		{
+			SDKGameRules()->SetTimeoutState(TIMEOUT_STATE_NONE);
+
+			UTIL_ClientPrintAll(HUD_PRINTTALK, "#game_match_start");
+			UTIL_ClientPrintAll(HUD_PRINTCENTER, "LIVE");
+
+			return false;
+		}
+		
+		if (SDKGameRules()->GetTimeoutTeam() != TEAM_UNASSIGNED)
+		{
+			GetGlobalTeam(SDKGameRules()->GetTimeoutTeam())->SetTimeoutTimeLeft(max(0, (int)(SDKGameRules()->GetTimeoutEnd() - gpGlobals->curtime)));
+			SDKGameRules()->SetTimeoutTeam(TEAM_UNASSIGNED);
+		}
+
+		SDKGameRules()->SetTimeoutEnd(gpGlobals->curtime + 10);
+
+		IGameEvent *pEvent = gameeventmanager->CreateEvent("start_timeout");
+		if (pEvent)
+		{
+			pEvent->SetInt("requesting_team", TEAM_UNASSIGNED);
+			gameeventmanager->FireEvent(pEvent);
+		}
+
+		UTIL_ClientPrintAll(HUD_PRINTCENTER, "Match resuming in 10 seconds");
+	}
+
+	return true;
 }
 
 void CSDKGameRules::SetOffsideLinePositions(float ballPosY, float offsidePlayerPosY, float lastOppPlayerPosY)

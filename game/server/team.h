@@ -91,8 +91,8 @@ public:
 	virtual void SetTimeoutsLeft(int amount) { m_nTimeoutsLeft = amount; }
 	virtual int GetTimeoutsLeft() { return m_nTimeoutsLeft; }
 
-	virtual void SetWantsTimeout(bool state) { m_bWantsTimeout = state; }
-	virtual bool WantsTimeout() { return m_bWantsTimeout; }
+	virtual void SetTimeoutTimeLeft(int seconds) { m_nTimeoutTimeLeft = seconds; }
+	virtual int GetTimeoutTimeLeft() { return m_nTimeoutTimeLeft; }
 
 	virtual CSDKPlayer *GetCaptain() { return GetPlayerByPosIndex(m_nCaptainPosIndex); }
 	virtual CSDKPlayer *GetFreekickTaker() { return GetPlayerByPosIndex(m_nFreekickTakerPosIndex); }
@@ -126,6 +126,7 @@ public:
 	CNetworkVar( int, m_nPenaltyGoalBits );
 	CNetworkVar( int, m_nPenaltyRound );
 	CNetworkVar( int, m_nTimeoutsLeft );
+	CNetworkVar( int, m_nTimeoutTimeLeft );
 
 	CNetworkVar( int, m_nCaptainPosIndex );
 	CNetworkVar( int, m_nFreekickTakerPosIndex );
@@ -166,8 +167,6 @@ public:
 	int m_nMatchEventIndex;
 
 	CNetworkArray(int, m_PosNextJoinSeconds, 11);
-
-	bool m_bWantsTimeout;
 
 	CNetworkVar(int, m_RedCards);
 	CNetworkVar(int, m_YellowCards);

@@ -64,6 +64,7 @@ public:
 	virtual int	GetRightCornerTakerPosIndex() { return m_nRightCornerTakerPosIndex; }
 
 	virtual int		GetTimeoutsLeft() { return m_nTimeoutsLeft; }
+	virtual int		GetTimeoutTimeLeft() { return m_nTimeoutTimeLeft; }
 
 	// Player Handling
 	virtual bool	ContainsPlayer( int iPlayerIndex );
@@ -98,6 +99,7 @@ public:
 	int		m_nPenaltyGoalBits;
 	int		m_nPenaltyRound;
 	int		m_nTimeoutsLeft;
+	int		m_nTimeoutTimeLeft;
 
 	int m_nCaptainPosIndex;
 	int m_nFreekickTakerPosIndex;

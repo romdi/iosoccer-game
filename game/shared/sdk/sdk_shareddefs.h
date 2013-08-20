@@ -470,4 +470,11 @@ static const char *g_szQuickTacticNames[QUICKTACTIC_COUNT] =
 
 #define PLAYER_SKIN_COUNT 6
 
+enum TimeoutState_t
+{
+	TIMEOUT_STATE_NONE,
+	TIMEOUT_STATE_PENDING,
+	TIMEOUT_STATE_ACTIVE
+};
+
 #endif // SDK_SHAREDDEFS_H

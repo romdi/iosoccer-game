@@ -159,7 +159,6 @@ public:
 	bool			HasQueuedState() { return m_bHasQueuedState; }
 
 	void			SendNotifications();
-	void			CheckTimeout();
 
 	void			State_Transition(ball_state_t newState, float delay = 0.0f, bool cancelQueuedState = false, bool isShortMessageDelay = false);
 

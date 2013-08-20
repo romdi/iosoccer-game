@@ -543,7 +543,7 @@ bool CBall::CreateVPhysics()
 	if (m_bIsPlayerBall && r_balltrail_intermissions.GetBool() || !m_bIsPlayerBall && r_balltrail_match.GetBool())
 	{
 		if (!m_pGlowTrail)
-			m_pGlowTrail = CSpriteTrail::SpriteTrailCreate("sprites/bluelaser1.vmt", GetLocalOrigin(), false);
+			m_pGlowTrail = CSpriteTrail::SpriteTrailCreate("sprites/balltrail.vmt", GetLocalOrigin(), false);
 
 		if (m_pGlowTrail)
 		{
@@ -973,58 +973,6 @@ void CBall::SendNotifications()
 	}
 }
 
-void CBall::CheckTimeout()
-{
-	if (SDKGameRules()->AdminWantsTimeout() || GetGlobalTeam(TEAM_A)->WantsTimeout() || GetGlobalTeam(TEAM_B)->WantsTimeout())
-	{
-		int timeoutTeam = TEAM_UNASSIGNED;
-
-		if (SDKGameRules()->AdminWantsTimeout())
-		{
-			timeoutTeam = TEAM_UNASSIGNED;
-			SDKGameRules()->SetAdminWantsTimeout(false);
-		}
-
-		if (GetGlobalTeam(TEAM_A)->WantsTimeout())
-		{
-			timeoutTeam = TEAM_A;
-			GetGlobalTeam(TEAM_A)->SetWantsTimeout(false);
-		}
-
-		if (GetGlobalTeam(TEAM_B)->WantsTimeout())
-		{
-			timeoutTeam = TEAM_B;
-			GetGlobalTeam(TEAM_B)->SetWantsTimeout(false);
-		}
-
-		SDKGameRules()->SetTimeoutEnd(timeoutTeam == TEAM_UNASSIGNED ? -1 : gpGlobals->curtime + mp_timeout_duration.GetFloat());
-
-		IGameEvent *pEvent = gameeventmanager->CreateEvent("start_timeout");
-		if (pEvent)
-		{
-			pEvent->SetInt("requesting_team", timeoutTeam);
-			gameeventmanager->FireEvent(pEvent);
-		}
-	}
-
-	if (SDKGameRules()->GetTimeoutEnd() == -1 || gpGlobals->curtime < SDKGameRules()->GetTimeoutEnd())
-	{
-		m_flStateTimelimit = -1;
-		return;
-	}
-	else if (SDKGameRules()->GetTimeoutEnd() > 0)
-	{
-		SDKGameRules()->SetTimeoutEnd(0);
-
-		IGameEvent *pEvent = gameeventmanager->CreateEvent("end_timeout");
-		if (pEvent)
-		{
-			gameeventmanager->FireEvent(pEvent);
-		}
-		UTIL_ClientPrintAll(HUD_PRINTTALK, "#game_match_start");
-	}
-}
-
 ConVar mp_showballstatetransitions( "mp_showballstatetransitions", "1", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Show ball state transitions." );
 
 void CBall::State_Transition(ball_state_t newState, float delay /*= 0.0f*/, bool cancelQueuedState /*= false*/, bool isShortMessageDelay /*= false*/)
@@ -1119,7 +1067,8 @@ void CBall::State_Think()
 
 		if (State_Get() == BALL_STATE_THROWIN || State_Get() == BALL_STATE_CORNER || State_Get() == BALL_STATE_GOALKICK)
 		{
-			CheckTimeout();
+			if (SDKGameRules()->CheckTimeout())
+				m_flStateTimelimit = -1;
 		}
 
 		if (m_pCurStateInfo

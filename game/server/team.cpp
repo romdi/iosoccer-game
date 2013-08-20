@@ -49,6 +49,7 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CTeam, DT_Team)
 	SendPropInt( SENDINFO(m_nPenaltyGoalBits), 32, SPROP_UNSIGNED),
 	SendPropInt( SENDINFO(m_nPenaltyRound), 5, SPROP_UNSIGNED),
 	SendPropInt( SENDINFO(m_nTimeoutsLeft), 4, SPROP_UNSIGNED),
+	SendPropInt( SENDINFO(m_nTimeoutTimeLeft), 10, SPROP_UNSIGNED),
 	SendPropString( SENDINFO( m_szServerKitName ) ),
 	SendPropString( SENDINFO( m_szServerCode ) ),
 	SendPropString( SENDINFO( m_szServerShortName ) ),
@@ -150,7 +151,7 @@ CTeam::CTeam( void )
 	ResetStats();
 	UpdatePosIndices(true);
 	m_nTimeoutsLeft = mp_timeout_count.GetInt();
-	m_bWantsTimeout = false;
+	m_nTimeoutTimeLeft = mp_timeout_duration.GetInt() * 60;
 	m_nFormationIndex = 0;
 	m_eQuickTactic = QUICKTACTIC_NONE;
 }
@@ -499,8 +500,8 @@ void CTeam::ResetStats()
 	m_nMatchEventIndex = 0;
 	m_Rating = 0;
 	m_Ping = 0;
-	m_bWantsTimeout = false;
 	m_nTimeoutsLeft = mp_timeout_count.GetInt();
+	m_nTimeoutTimeLeft = mp_timeout_duration.GetInt() * 60;
 
 	for (int i = 0; i < MAX_MATCH_EVENTS; i++)
 	{
