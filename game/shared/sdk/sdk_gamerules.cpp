@@ -1547,7 +1547,7 @@ CSDKGameRulesStateInfo* CSDKGameRules::State_LookupInfo( match_period_t state )
 		{ MATCH_PERIOD_WARMUP,						"MATCH_PERIOD_WARMUP",						&CSDKGameRules::State_WARMUP_Enter,					&CSDKGameRules::State_WARMUP_Think,					&CSDKGameRules::State_WARMUP_Leave,					&mp_timelimit_warmup, 1	},
 		{ MATCH_PERIOD_FIRST_HALF,					"MATCH_PERIOD_FIRST_HALF",					&CSDKGameRules::State_FIRST_HALF_Enter,				&CSDKGameRules::State_FIRST_HALF_Think,				&CSDKGameRules::State_FIRST_HALF_Leave,				&mp_timelimit_match, 2 },
 		{ MATCH_PERIOD_HALFTIME,					"MATCH_PERIOD_HALFTIME",					&CSDKGameRules::State_HALFTIME_Enter,				&CSDKGameRules::State_HALFTIME_Think,				&CSDKGameRules::State_HALFTIME_Leave,				&mp_timelimit_halftime, 1 },
-		{ MATCH_PERIOD_SECOND_HALF,					"MATCH_PERIOD_SECOND_HALF",				&CSDKGameRules::State_SECOND_HALF_Enter,			&CSDKGameRules::State_SECOND_HALF_Think,			&CSDKGameRules::State_SECOND_HALF_Leave,			&mp_timelimit_match, 2 },
+		{ MATCH_PERIOD_SECOND_HALF,					"MATCH_PERIOD_SECOND_HALF",					&CSDKGameRules::State_SECOND_HALF_Enter,			&CSDKGameRules::State_SECOND_HALF_Think,			&CSDKGameRules::State_SECOND_HALF_Leave,			&mp_timelimit_match, 2 },
 		{ MATCH_PERIOD_EXTRATIME_INTERMISSION,		"MATCH_PERIOD_EXTRATIME_INTERMISSION",		&CSDKGameRules::State_EXTRATIME_INTERMISSION_Enter, &CSDKGameRules::State_EXTRATIME_INTERMISSION_Think,	&CSDKGameRules::State_EXTRATIME_INTERMISSION_Leave,	&mp_timelimit_extratime_intermission, 1	},
 		{ MATCH_PERIOD_EXTRATIME_FIRST_HALF,		"MATCH_PERIOD_EXTRATIME_FIRST_HALF",		&CSDKGameRules::State_EXTRATIME_FIRST_HALF_Enter,	&CSDKGameRules::State_EXTRATIME_FIRST_HALF_Think,	&CSDKGameRules::State_EXTRATIME_FIRST_HALF_Leave,	&mp_timelimit_match, 6 },
 		{ MATCH_PERIOD_EXTRATIME_HALFTIME,			"MATCH_PERIOD_EXTRATIME_HALFTIME",			&CSDKGameRules::State_EXTRATIME_HALFTIME_Enter,		&CSDKGameRules::State_EXTRATIME_HALFTIME_Think,		&CSDKGameRules::State_EXTRATIME_HALFTIME_Leave,		&mp_timelimit_extratime_halftime, 1 },
@@ -1606,7 +1606,7 @@ void CSDKGameRules::State_FIRST_HALF_Think()
 {
 	if ((45 * 60 - GetMatchDisplayTimeSeconds()) <= 60 && m_nAnnouncedInjuryTime == 0)
 	{
-		m_nAnnouncedInjuryTime = g_IOSRand.RandomInt(1, 4);
+		m_nAnnouncedInjuryTime = g_IOSRand.RandomInt(mp_injurytime_min.GetInt(), mp_injurytime_max.GetInt());
 	}
 	else if (m_flStateTimeLeft <= 0 && GetBall()->State_Get() == BALL_STATE_NORMAL && !GetBall()->HasQueuedState())
 	{
@@ -1645,7 +1645,7 @@ void CSDKGameRules::State_SECOND_HALF_Think()
 {
 	if ((90 * 60 - GetMatchDisplayTimeSeconds()) <= 60 && m_nAnnouncedInjuryTime == 0)
 	{
-		m_nAnnouncedInjuryTime = g_IOSRand.RandomInt(1, 4);
+		m_nAnnouncedInjuryTime = g_IOSRand.RandomInt(mp_injurytime_min.GetInt(), mp_injurytime_max.GetInt());
 	}
 	else if (m_flStateTimeLeft <= 0 && GetBall()->State_Get() == BALL_STATE_NORMAL && !GetBall()->HasQueuedState())
 	{
@@ -1688,7 +1688,7 @@ void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Think()
 {
 	if ((105 * 60 - GetMatchDisplayTimeSeconds()) <= 60 && m_nAnnouncedInjuryTime == 0)
 	{
-		m_nAnnouncedInjuryTime = g_IOSRand.RandomInt(1, 4);
+		m_nAnnouncedInjuryTime = g_IOSRand.RandomInt(mp_injurytime_min.GetInt(), mp_injurytime_max.GetInt());
 	}
 	else if (m_flStateTimeLeft <= 0 && GetBall()->State_Get() == BALL_STATE_NORMAL && !GetBall()->HasQueuedState())
 	{
@@ -1726,7 +1726,7 @@ void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Think()
 {
 	if ((120 * 60 - GetMatchDisplayTimeSeconds()) <= 60 && m_nAnnouncedInjuryTime == 0)
 	{
-		m_nAnnouncedInjuryTime = g_IOSRand.RandomInt(1, 4);
+		m_nAnnouncedInjuryTime = g_IOSRand.RandomInt(mp_injurytime_min.GetInt(), mp_injurytime_max.GetInt());
 	}
 	else if (m_flStateTimeLeft <= 0 && GetBall()->State_Get() == BALL_STATE_NORMAL && !GetBall()->HasQueuedState())
 	{
