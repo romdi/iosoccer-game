@@ -2546,24 +2546,11 @@ bool CBall::DoGroundShot(bool markOffsidePlayers, float velCoeff /*= 1.0f*/)
 		{
 			Vector vel = m_vPlRight * 350 * ((m_pPl->m_nButtons & IN_MOVELEFT) ? -1 : 1);
 
-			if (DotProduct2D(m_vPlForward.AsVector2D(), (m_vPos - m_vPlPos).AsVector2D()) < 0)
-				m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEELKICK);
-
-			SetVel(vel, 0, BODY_PART_FEET, false, markOffsidePlayers, true);
-
-			return true;
-		}
-
-		if (m_pPl->m_nButtons & IN_BACK)
-		{
-			Vector vel = -m_vPlForward2D * 350;
-
-			if (DotProduct2D(m_vPlForward.AsVector2D(), (m_vPos - m_vPlPos).AsVector2D()) < 0)
-				m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEELKICK);
-
-			SetVel(vel, 0, BODY_PART_FEET, false, markOffsidePlayers, true);
-
-			return true;
+			if (DotProduct2D(m_vPlForward.AsVector2D(), (m_vPos - m_vPlPos).AsVector2D()) >= 0)
+			{
+				SetVel(vel, 0, BODY_PART_FEET, false, markOffsidePlayers, true);
+				return true;
+			}
 		}
 
 		QAngle shotAngle = m_aPlCamAng;
