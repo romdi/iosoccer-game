@@ -162,6 +162,7 @@ extern ConVar
 	mp_chargedshot_increaseexponent,
 	mp_chargedshot_decreaseduration,
 	mp_chargedshot_decreaseexponent,
+	mp_chargedshot_idleduration,
 	mp_throwinthrow_idle_duration,
 	mp_tackled_idle_duration,
 	mp_charging_animation_enabled,

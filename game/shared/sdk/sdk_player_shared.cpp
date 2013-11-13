@@ -609,6 +609,14 @@ float CSDKPlayer::GetChargedShotStrength()
 	// Otherwise we use the saved charge duration.
 	float activeDuration = (m_Shared.m_bIsShotCharging ? currentTime - m_Shared.m_flShotChargingStart : m_Shared.m_flShotChargingDuration);
 
+	if (!m_Shared.m_bIsShotCharging)
+	{
+		if (currentTime - m_Shared.m_flShotChargingStart <= m_Shared.m_flShotChargingDuration + mp_chargedshot_idleduration.GetFloat())
+			currentTime = m_Shared.m_flShotChargingStart + m_Shared.m_flShotChargingDuration;
+		else
+			currentTime -= mp_chargedshot_idleduration.GetFloat();
+	}
+
 	// Scenario 1: charge duration is zero
 	if (activeDuration == 0)
 		return 0.0f;
