@@ -2481,15 +2481,7 @@ float CBall::GetChargedshotStrength(float coeff, int minStrength, int maxStrengt
 	if (State_Get() == BALL_STATE_PENALTY)
 		minStrength = maxStrength = sv_ball_penaltyshot_maxstrength.GetInt();
 
-	float duration = (m_pPl->m_Shared.m_bIsShotCharging ? gpGlobals->curtime - m_pPl->m_Shared.m_flShotChargingStart : m_pPl->m_Shared.m_flShotChargingDuration);
-	float totalTime = gpGlobals->curtime - m_pPl->m_Shared.m_flShotChargingStart;
-	float activeTime = min(duration, mp_chargedshot_increaseduration.GetFloat());
-	float extra = totalTime - activeTime;
-	float increaseFraction = clamp(pow(activeTime / mp_chargedshot_increaseduration.GetFloat(), mp_chargedshot_increaseexponent.GetFloat()), 0, 1);
-	float decTime = (pow(1 - increaseFraction, 1.0f / mp_chargedshot_decreaseexponent.GetFloat())) * mp_chargedshot_decreaseduration.GetFloat();
-	float decreaseFraction = clamp((decTime + extra) / mp_chargedshot_decreaseduration.GetFloat(), 0, 1);
-	float shotStrengthCoeff = 1 - pow(decreaseFraction, mp_chargedshot_decreaseexponent.GetFloat());
-	float shotStrength = minStrength + (maxStrength - minStrength) * shotStrengthCoeff;
+	float shotStrength = minStrength + (maxStrength - minStrength) * m_pPl->GetChargedShotStrength();
 
 	return coeff * shotStrength;
 }

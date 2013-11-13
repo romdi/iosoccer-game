@@ -164,18 +164,7 @@ void CHudChargedshotBar::Paint()
 
 	if (pPlayer->m_Shared.m_bDoChargedShot || pPlayer->m_Shared.m_bIsShotCharging)
 	{
-		float currentTime = pPlayer->GetFinalPredictedTime();
-		currentTime -= TICK_INTERVAL;
-		currentTime += (gpGlobals->interpolation_amount * TICK_INTERVAL);
-
-		float duration = (pPlayer->m_Shared.m_bIsShotCharging ? currentTime - pPlayer->m_Shared.m_flShotChargingStart : pPlayer->m_Shared.m_flShotChargingDuration);
-		float totalTime = currentTime - pPlayer->m_Shared.m_flShotChargingStart;
-		float activeTime = min(duration, mp_chargedshot_increaseduration.GetFloat());
-		float extra = totalTime - activeTime;
-		float increaseFraction = clamp(pow(activeTime / mp_chargedshot_increaseduration.GetFloat(), mp_chargedshot_increaseexponent.GetFloat()), 0, 1);
-		float decTime = (pow(1 - increaseFraction, 1.0f / mp_chargedshot_decreaseexponent.GetFloat())) * mp_chargedshot_decreaseduration.GetFloat();
-		float decreaseFraction = clamp((decTime + extra) / mp_chargedshot_decreaseduration.GetFloat(), 0, 1);
-		shotStrength = 1 - pow(decreaseFraction, mp_chargedshot_decreaseexponent.GetFloat());
+		shotStrength = pPlayer->GetChargedShotStrength();
 
 		// Flash
 		if (shotStrength > 0.9f)
