@@ -40,6 +40,7 @@
 #include "hud.h"
 #include "NavProgress.h"
 #include "commentary_modelviewer.h"
+#include "ios_emote_menu.h"
 
 // our definition
 #include "baseviewport.h"
@@ -216,6 +217,7 @@ void CBaseViewport::CreateDefaultPanels( void )
 	AddNewPanel( CreatePanelByName( PANEL_INFO ), "PANEL_INFO" );
 	AddNewPanel( CreatePanelByName( PANEL_SPECMENU ), "PANEL_SPECMENU" );
 	AddNewPanel( CreatePanelByName( PANEL_NAV_PROGRESS ), "PANEL_NAV_PROGRESS" );
+	AddNewPanel( CreatePanelByName( PANEL_EMOTEMENU ), "PANEL_EMOTE" );
 	//AddNewPanel( CreatePanelByName( PANEL_TEAM ), "PANEL_TEAM" );			//ios uncommented this
 	//AddNewPanel( CreatePanelByName( PANEL_MATCH ), "PANEL_MATCH" );			//ios uncommented this
 	//AddNewPanel( CreatePanelByName( PANEL_ACTION ), "PANEL_ACTION" );			//ios uncommented this
@@ -260,6 +262,10 @@ IViewPortPanel* CBaseViewport::CreatePanelByName(const char *szPanelName)
 	else if ( Q_strcmp(PANEL_NAV_PROGRESS, szPanelName) == 0 )
 	{
 		newpanel = new CNavProgress( this );
+	}
+	if ( Q_strcmp(PANEL_EMOTEMENU, szPanelName) == 0 )
+	{
+		newpanel = new CEmoteMenu( this );
 	}
 #endif
 

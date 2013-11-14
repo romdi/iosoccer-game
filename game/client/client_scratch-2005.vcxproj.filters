@@ -1407,6 +1407,9 @@
     <ClCompile Include="sdk\ios_balltextureproxy.cpp">
       <Filter>Source Files\SDK</Filter>
     </ClCompile>
+    <ClCompile Include="game_controls\ios_emote_menu.cpp">
+      <Filter>Source Files\game_controls</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="achievement_notification_panel.h">
@@ -3177,6 +3180,9 @@
       <Filter>Source Files\SDK</Filter>
     </ClInclude>
     <ClInclude Include="game_controls\ios_update_menu.h">
+      <Filter>game_controls Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="game_controls\ios_emote_menu.h">
       <Filter>game_controls Header Files</Filter>
     </ClInclude>
   </ItemGroup>

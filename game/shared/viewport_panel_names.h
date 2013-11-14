@@ -16,6 +16,7 @@
 #define PANEL_ACTIVE		"active"	// current active panel			
 
 #define PANEL_SCOREBOARD	"scores"
+#define PANEL_EMOTEMENU		"emotes"
 #define PANEL_OVERVIEW		"overview"
 #define PANEL_CLASS			"class"
 #define PANEL_TEAM			"team"
