@@ -2136,6 +2136,7 @@ void CPlayerPersistentData::AllocateData(CSDKPlayer *pPl)
 
 		data = m_PlayerPersistentData[i];
 		data->m_pPl = pPl;
+		data->m_pPl->m_Shared.SetMaxStamina(data->m_flMaxStamina, false);
 		break;
 	}
 

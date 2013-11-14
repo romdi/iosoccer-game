@@ -137,6 +137,8 @@ void CHudChargedshotBar::Paint()
 
 	Color fgColor, bgColor;
 
+	Color missingMaxStaminaColor = Color(100, 100, 100, 255);
+
 	if (pPlayer->GetFlags() & FL_REMOTECONTROLLED)
 	{
 		fgColor = Color(255, 255, 255, 255);
@@ -188,6 +190,14 @@ void CHudChargedshotBar::Paint()
 			CenterY - (SMALLBAR_HEIGHT / 2),
 			CenterX + (SMALLBAR_WIDTH / 2),
 			CenterY + (SMALLBAR_HEIGHT / 2));
+
+		// Draw missing max stamina
+		surface()->DrawSetColor(missingMaxStaminaColor);
+		surface()->DrawFilledRect(
+			CenterX + (SMALLBAR_WIDTH / 2 - SMALLBAR_HPADDING) - (1.0f - pPlayer->m_Shared.GetMaxStamina() / 100.0f) * (SMALLBAR_WIDTH - 2 * SMALLBAR_VPADDING),
+			CenterY - (SMALLBAR_HEIGHT / 2 - SMALLBAR_VPADDING),
+			CenterX + (SMALLBAR_WIDTH / 2 - SMALLBAR_HPADDING),
+			CenterY + (SMALLBAR_HEIGHT / 2 - SMALLBAR_VPADDING));
 
 		// Draw stamina bar front
 		surface()->DrawSetColor(fgColor);
@@ -243,6 +253,14 @@ void CHudChargedshotBar::Paint()
 			LeftY + BAR_VMARGIN,
 			LeftX + BAR_HMARGIN + BAR_WIDTH,
 			LeftY + BAR_VMARGIN + BAR_HEIGHT);
+
+		// Draw missing max stamina
+		surface()->DrawSetColor(missingMaxStaminaColor);
+		surface()->DrawFilledRect(
+			LeftX + BAR_HMARGIN + BAR_HPADDING,
+			LeftY + BAR_VMARGIN + BAR_VPADDING,
+			LeftX + BAR_HMARGIN + BAR_WIDTH - BAR_HPADDING,
+			LeftY + BAR_VMARGIN + BAR_VPADDING + (1.0f - pPlayer->m_Shared.GetMaxStamina() / 100.0f) * (BAR_HEIGHT - 2 * BAR_VPADDING));
 
 		// Draw stamina bar front
 		surface()->DrawSetColor(fgColor);
