@@ -2149,6 +2149,19 @@ void CPlayerPersistentData::AllocateData(CSDKPlayer *pPl)
 	pPl->SetData(data);
 }
 
+void CPlayerPersistentData::AddToAllMaxStaminas(float staminaToAdd)
+{
+	for (int i = 0; i < m_PlayerPersistentData.Count(); i++)
+	{
+		CPlayerPersistentData *pData = m_PlayerPersistentData[i];
+
+		pData->m_flMaxStamina = min(100, pData->m_flMaxStamina + staminaToAdd);
+
+		if (pData->m_pPl)
+			pData->m_pPl->m_Shared.SetMaxStamina(pData->m_flMaxStamina, false);
+	}
+}
+
 void CPlayerPersistentData::ReallocateAllPlayerData()
 {
 	m_PlayerPersistentData.PurgeAndDeleteElements();

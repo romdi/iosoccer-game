@@ -13,6 +13,7 @@
 #include "weapon_sdkbase.h"
 #include "ios_teamkit_parse.h"
 #include "gamevars_shared.h"
+#include "movevars_shared.h"
 
 extern void Bot_RunAll( void );
 
@@ -1637,6 +1638,7 @@ void CSDKGameRules::State_HALFTIME_Leave(match_period_t newState)
 
 void CSDKGameRules::State_SECOND_HALF_Enter()
 {
+	CPlayerPersistentData::AddToAllMaxStaminas(mp_stamina_max_add_halftime.GetFloat());
 	GetBall()->State_Transition(BALL_STATE_KICKOFF, 0, true);
 	//GetBall()->EmitSound("Crowd.YNWA");
 }
@@ -1681,6 +1683,7 @@ void CSDKGameRules::State_EXTRATIME_INTERMISSION_Leave(match_period_t newState)
 
 void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Enter()
 {
+	CPlayerPersistentData::AddToAllMaxStaminas(mp_stamina_max_add_extratime_intermission.GetFloat());
 	GetBall()->State_Transition(BALL_STATE_KICKOFF, 0, true);
 }
 
@@ -1719,6 +1722,7 @@ void CSDKGameRules::State_EXTRATIME_HALFTIME_Leave(match_period_t newState)
 
 void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Enter()
 {
+	CPlayerPersistentData::AddToAllMaxStaminas(mp_stamina_max_add_extratime_halftime.GetFloat());
 	GetBall()->State_Transition(BALL_STATE_KICKOFF, 0, true);
 }
 

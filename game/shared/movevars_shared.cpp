@@ -102,6 +102,9 @@ ConVar  mp_stamina_variable_drain_coeff	("mp_stamina_variable_drain_coeff", "1",
 ConVar  mp_stamina_variable_replenish_enabled	("mp_stamina_variable_replenish_enabled", "0", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar  mp_stamina_variable_replenish_coeff	("mp_stamina_variable_replenish_coeff", "1", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar  mp_stamina_max_reduce_coeff	("mp_stamina_max_reduce_coeff", "0.0", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar  mp_stamina_max_add_halftime	("mp_stamina_max_add_halftime", "10.0", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar  mp_stamina_max_add_extratime_intermission	("mp_stamina_max_add_extratime_intermission", "5.0", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar  mp_stamina_max_add_extratime_halftime	("mp_stamina_max_add_extratime_halftime", "5.0", FCVAR_NOTIFY | FCVAR_REPLICATED);
 
 ConVar  mp_pitchup("mp_pitchup", "60", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar  mp_pitchup_remap("mp_pitchup_remap", "60", FCVAR_NOTIFY);

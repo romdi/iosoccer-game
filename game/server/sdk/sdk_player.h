@@ -84,6 +84,7 @@ public:
 	static void ReallocateAllPlayerData();
 	static void ConvertAllPlayerDataToJson();
 	static void AllocateData(CSDKPlayer *pPl);
+	static void AddToAllMaxStaminas(float staminaToAdd);
 	static CUtlVector<CPlayerPersistentData *> m_PlayerPersistentData;
 	void ResetData();
 	void StartNewMatchPeriod();

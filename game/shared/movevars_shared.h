@@ -49,6 +49,9 @@ extern ConVar mp_stamina_variable_drain_coeff;
 extern ConVar mp_stamina_variable_replenish_enabled;
 extern ConVar mp_stamina_variable_replenish_coeff;
 extern ConVar mp_stamina_max_reduce_coeff;
+extern ConVar mp_stamina_max_add_halftime;
+extern ConVar mp_stamina_max_add_extratime_intermission;
+extern ConVar mp_stamina_max_add_extratime_halftime;
 
 extern ConVar mp_pitchup;
 extern ConVar mp_pitchup_remap;
