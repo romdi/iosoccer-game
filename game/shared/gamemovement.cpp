@@ -771,8 +771,6 @@ void CGameMovement::ReduceTimers( void )
 {
 	CSDKPlayer *pPl = (CSDKPlayer *)player;
 
-	float flStamina = pPl->m_Shared.GetStamina();
-
 	int teamPosType;
 #ifdef CLIENT_DLL
 	teamPosType = GameResources()->GetTeamPosType(pPl->entindex());
@@ -813,29 +811,34 @@ void CGameMovement::ReduceTimers( void )
 	{
 		float coeff = 1 + (mp_stamina_variable_drain_enabled.GetBool() ? (fieldZone / 100) * mp_stamina_variable_drain_coeff.GetFloat() : 0);
 
-		flStamina -= mp_stamina_drain_sprinting.GetInt() * gpGlobals->frametime * coeff;
-		//DevMsg("Remove stamina %.2f\n", flStamina);
-		pPl->m_Shared.SetStamina( flStamina );
+		float reduceAmount = mp_stamina_drain_sprinting.GetInt() * gpGlobals->frametime * coeff;
+
+		if (!SDKGameRules()->IsIntermissionState())
+			pPl->m_Shared.SetMaxStamina(pPl->m_Shared.GetMaxStamina() - reduceAmount * mp_stamina_max_reduce_coeff.GetFloat(), true);
+
+		pPl->m_Shared.SetStamina(pPl->m_Shared.GetStamina() - reduceAmount);
 	}
 	else
 	{
 		float coeff = 1 + (mp_stamina_variable_replenish_enabled.GetBool() ? ((100 - fieldZone) / 100) * mp_stamina_variable_replenish_coeff.GetFloat() : 0);
 
+		float replenishAmount;
+
 		//gain some back		
-		if ( vel.Length2DSqr() <= 0 )
+		if (vel.Length2DSqr() <= 0)
 		{
-			flStamina += mp_stamina_replenish_standing.GetInt() * gpGlobals->frametime * coeff;
+			replenishAmount = mp_stamina_replenish_standing.GetInt() * gpGlobals->frametime * coeff;
 		}
 		else if (mv->m_nButtons & IN_WALK)
 		{
-			flStamina += mp_stamina_replenish_walking.GetInt() * gpGlobals->frametime * coeff;
+			replenishAmount = mp_stamina_replenish_walking.GetInt() * gpGlobals->frametime * coeff;
 		}
 		else
 		{
-			flStamina += mp_stamina_replenish_running.GetInt() * gpGlobals->frametime * coeff;
+			replenishAmount = mp_stamina_replenish_running.GetInt() * gpGlobals->frametime * coeff;
 		}
 
-		pPl->m_Shared.SetStamina( flStamina );	
+		pPl->m_Shared.SetStamina(pPl->m_Shared.GetStamina() + replenishAmount);	
 	}
 
 	float frame_msec = 1000.0f * gpGlobals->frametime;

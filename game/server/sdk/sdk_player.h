@@ -78,6 +78,7 @@ public:
 	CPlayerMatchData *m_pMatchData;
 	CUtlVector<CPlayerMatchPeriodData *> m_MatchPeriodData;
 	int		m_nNextCardJoin;
+	float	m_flMaxStamina;
 
 //	CPlayerPersistentData(const CSteamID *steamID);
 	static void ReallocateAllPlayerData();
@@ -417,6 +418,9 @@ public:
 
 	const char			*GetLastKnownShirtName() { return GetPlayerData()->m_szShirtName; }
 	void				SetLastKnownShirtName(const char *name) { Q_strncpy(GetPlayerData()->m_szShirtName, name, MAX_PLAYER_NAME_LENGTH); }
+
+	float				GetMaxStamina() { return GetPlayerData()->m_flMaxStamina; }
+	void				SetMaxStamina(float maxStamina) { GetPlayerData()->m_flMaxStamina = maxStamina; }
 
 	float				GetNextJoin() { return m_flNextJoin; }
 	void				SetNextJoin(float time) { m_flNextJoin = time; }

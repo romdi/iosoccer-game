@@ -117,6 +117,7 @@ END_RECV_TABLE()
 BEGIN_RECV_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 #if defined ( SDK_USE_STAMINA ) || defined ( SDK_USE_SPRINTING )
 	RecvPropFloat( RECVINFO( m_flStamina ) ),
+	RecvPropFloat( RECVINFO( m_flMaxStamina ) ),
 #endif
 
 #if defined ( SDK_USE_PRONE )
@@ -199,6 +200,7 @@ END_RECV_TABLE()
 BEGIN_PREDICTION_DATA_NO_BASE( CSDKPlayerShared )
 #if defined ( SDK_USE_STAMINA ) || defined ( SDK_USE_SPRINTING )
 	DEFINE_PRED_FIELD( m_flStamina, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_flMaxStamina, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 #endif
 #if defined( SDK_USE_PRONE )
 	DEFINE_PRED_FIELD( m_bProne, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),

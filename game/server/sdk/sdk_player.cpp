@@ -106,6 +106,7 @@ END_SEND_TABLE()
 BEGIN_SEND_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 #if defined ( SDK_USE_STAMINA ) || defined ( SDK_USE_SPRINTING )
 	SendPropFloat( SENDINFO( m_flStamina ), 0, SPROP_NOSCALE | SPROP_CHANGES_OFTEN ),
+	SendPropFloat( SENDINFO( m_flMaxStamina ), 0, SPROP_NOSCALE | SPROP_CHANGES_OFTEN ),
 #endif
 
 #if defined ( SDK_USE_PRONE )
@@ -2116,6 +2117,8 @@ void CPlayerMatchPeriodData::ResetData()
 void CPlayerPersistentData::ResetData()
 {
 	m_nNextCardJoin = 0;
+	m_flMaxStamina = 100;
+	m_pPl->m_Shared.SetMaxStamina(100, false);
 
 	m_pMatchData->ResetData();
 	m_MatchPeriodData.PurgeAndDeleteElements();

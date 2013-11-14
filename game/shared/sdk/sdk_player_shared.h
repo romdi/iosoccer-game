@@ -43,6 +43,9 @@ public:
 	void	SetStamina( float stamina );
 	float	GetStamina( void ) { return m_flStamina; }
 
+	void	SetMaxStamina(float maxStamina, bool savePersistently);
+	float	GetMaxStamina() { return m_flMaxStamina; }
+
 	void	Init( OuterClass *pOuter );
 
 	bool	IsSniperZoomed( void ) const { return false; };
@@ -101,6 +104,7 @@ private:
 	CNetworkVar(int, m_nPlayerAnimEventStartButtons);
 	CNetworkVar( bool, m_bIsSprinting );
 	CNetworkVar( float, m_flStamina );
+	CNetworkVar( float, m_flMaxStamina );
 	OuterClass *m_pOuter;
 };			   
 

@@ -176,7 +176,17 @@ void CSDKPlayerShared::SetJumping( bool bJumping )
 
 void CSDKPlayerShared::SetStamina( float flStamina )
 {
-	m_flStamina = clamp( flStamina, 0, 100 );
+	m_flStamina = clamp(flStamina, 0, m_flMaxStamina);
+}
+
+void CSDKPlayerShared::SetMaxStamina(float maxStamina, bool savePersistently)
+{
+	m_flMaxStamina = clamp(maxStamina, 0, 100);
+
+#ifdef GAME_DLL
+	if (savePersistently)
+		m_pOuter->SetMaxStamina(m_flMaxStamina);
+#endif
 }
 
 void CSDKPlayerShared::SetAnimEvent(PlayerAnimEvent_t animEvent)
