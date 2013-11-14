@@ -605,49 +605,35 @@ float CSDKPlayer::GetChargedShotStrength()
 	currentTime = gpGlobals->curtime;
 #endif
 
-	// If the player is still charging, the duration is calculated on the fly.
-	// Otherwise we use the saved charge duration.
-	float activeDuration = (m_Shared.m_bIsShotCharging ? currentTime - m_Shared.m_flShotChargingStart : m_Shared.m_flShotChargingDuration);
+	float activeDuration;
 
-	if (!m_Shared.m_bIsShotCharging)
+	if (m_Shared.m_bIsShotCharging)
+		activeDuration = currentTime - m_Shared.m_flShotChargingStart;
+	else
 	{
+		// Let the bar idle at the release position for a short amount of time to allow more precise shots and passes
 		if (currentTime - m_Shared.m_flShotChargingStart <= m_Shared.m_flShotChargingDuration + mp_chargedshot_idleduration.GetFloat())
 			currentTime = m_Shared.m_flShotChargingStart + m_Shared.m_flShotChargingDuration;
 		else
 			currentTime -= mp_chargedshot_idleduration.GetFloat();
+
+		activeDuration = m_Shared.m_flShotChargingDuration;
 	}
 
-	// Scenario 1: charge duration is zero
-	if (activeDuration == 0)
-		return 0.0f;
-	// Scenario 2: full power shot
-	else if (activeDuration == mp_chargedshot_increaseduration.GetFloat())
-		return 1.0f;
-	// Scenario 3: Charged more than 100% and bar is moving down
-	else if (activeDuration > mp_chargedshot_increaseduration.GetFloat())
-		return 1 - pow(clamp((currentTime - m_Shared.m_flShotChargingStart - mp_chargedshot_increaseduration.GetFloat()) / mp_chargedshot_decreaseduration.GetFloat(), 0, 1), mp_chargedshot_decreaseexponent.GetFloat());
-	// Scenario 4: Charged less than 100%
-	else
-	{
-		// The time since the start of the charge. Is identical to the duration if we are still charging.
-		float totalDuration = currentTime - m_Shared.m_flShotChargingStart;
+	// The time since the start of the charge. Is identical to the duration if we are still charging.
+	float totalDuration = currentTime - m_Shared.m_flShotChargingStart;
 
-		// Calculate the fraction of the upwards movement using a convar as exponent.
-		float moveUpFraction = clamp(pow(activeDuration / mp_chargedshot_increaseduration.GetFloat(), mp_chargedshot_increaseexponent.GetFloat()), 0, 1);
+	// Calculate the fraction of the upwards movement using a convar as exponent.
+	float moveUpFraction = pow(clamp(activeDuration / mp_chargedshot_increaseduration.GetFloat(), 0, 1), mp_chargedshot_increaseexponent.GetFloat());
 
-		if (totalDuration == activeDuration)
-			return moveUpFraction;
-		else
-		{
-			// Convert the bar position of the upwards move to the fictional downwards move time from the top
-			float moveDownDuration = (pow(1 - moveUpFraction, 1.0f / mp_chargedshot_decreaseexponent.GetFloat())) * mp_chargedshot_decreaseduration.GetFloat();
+	// Convert the bar position of the upwards move to the fictional downwards move time from the top
+	float moveDownDuration = (pow(1 - moveUpFraction, 1.0f / mp_chargedshot_decreaseexponent.GetFloat())) * mp_chargedshot_decreaseduration.GetFloat();
 
-			// Calculate the new bar pos with the additional time passed
-			float moveDownFraction = clamp((moveDownDuration + (totalDuration - activeDuration)) / mp_chargedshot_decreaseduration.GetFloat(), 0, 1);
+	// Calculate the new bar pos with the additional time passed
+	float moveDownFraction = clamp((moveDownDuration + (totalDuration - min(mp_chargedshot_increaseduration.GetFloat(), activeDuration))) / mp_chargedshot_decreaseduration.GetFloat(), 0, 1);
 
-			return 1 - pow(moveDownFraction, mp_chargedshot_decreaseexponent.GetFloat());
-		}
-	}
+	// Adjust the bar pos
+	return 1 - pow(moveDownFraction, mp_chargedshot_decreaseexponent.GetFloat());
 }
 
 void CSDKPlayer::CheckLastPressedSingleMoveButton()
