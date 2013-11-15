@@ -132,8 +132,11 @@ extern char pszTeamNames[4][32];
 extern ConVar
 	mp_walkspeed,
 	mp_runspeed,
+	mp_runshotspeed,
 	mp_sprintspeed,
+	mp_sprintshotspeed,
 	mp_remotecontrolledspeed,
+	mp_speed_shot_slowdown,
 	mp_keeperlowsidewarddive_move_duration,
 	mp_keeperlowsidewarddive_idle_duration,
 	mp_keeperhighsidewarddive_move_duration,

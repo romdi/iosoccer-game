@@ -109,9 +109,12 @@ const char *WeaponIDToAlias( int id )
 }
 
 ConVar mp_walkspeed("mp_walkspeed", "100", FCVAR_REPLICATED | FCVAR_NOTIFY);
-ConVar mp_runspeed("mp_runspeed", "225", FCVAR_REPLICATED | FCVAR_NOTIFY);
+ConVar mp_runspeed("mp_runspeed", "250", FCVAR_REPLICATED | FCVAR_NOTIFY);
+ConVar mp_runshotspeed("mp_runshotspeed", "225", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_sprintspeed("mp_sprintspeed", "325", FCVAR_REPLICATED | FCVAR_NOTIFY);
+ConVar mp_sprintshotspeed("mp_sprintshotspeed", "300", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_remotecontrolledspeed("mp_remotecontrolledspeed", "500", FCVAR_REPLICATED | FCVAR_NOTIFY);
+ConVar mp_speed_shot_slowdown("mp_speed_shot_slowdown", "1", FCVAR_REPLICATED | FCVAR_NOTIFY);
 
 ConVar mp_keeperhighsidewarddive_move_duration("mp_keeperhighsidewarddive_move_duration", "1.0", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_keeperhighsidewarddive_idle_duration("mp_keeperhighsidewarddive_idle_duration", "0.0", FCVAR_REPLICATED | FCVAR_NOTIFY);

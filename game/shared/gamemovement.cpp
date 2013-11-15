@@ -3230,23 +3230,23 @@ void CGameMovement::SetPlayerSpeed()
 	}
 	else if ((mv->m_nButtons & IN_RELOAD) && ((mv->m_nButtons & IN_DUCK) || (mv->m_nButtons & IN_MOVELEFT) || (mv->m_nButtons & IN_MOVERIGHT) || (mv->m_nButtons & IN_BACK)))
 	{
-		flMaxSpeed = mp_runspeed.GetInt();
+		flMaxSpeed = mp_speed_shot_slowdown.GetBool() && (mv->m_nButtons & (IN_ATTACK | IN_ATTACK2 | IN_ALT1)) ? mp_runshotspeed.GetInt() : mp_runspeed.GetInt();
 	}
 	else
 	{
 		if (isKeeper && pPl->IsKeeperSprintInverted())
 		{
 			if (!(mv->m_nButtons & IN_SPEED) && stamina > 0 && (mv->m_nButtons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT)) != 0)
-				flMaxSpeed = mp_sprintspeed.GetInt();
+				flMaxSpeed = mp_speed_shot_slowdown.GetBool() && (mv->m_nButtons & (IN_ATTACK | IN_ATTACK2 | IN_ALT1)) ? mp_sprintshotspeed.GetInt() : mp_sprintspeed.GetInt();
 			else
-				flMaxSpeed = mp_runspeed.GetInt();
+				flMaxSpeed = mp_speed_shot_slowdown.GetBool() && (mv->m_nButtons & (IN_ATTACK | IN_ATTACK2 | IN_ALT1)) ? mp_runshotspeed.GetInt() : mp_runspeed.GetInt();
 		}
 		else
 		{
 			if ((mv->m_nButtons & IN_SPEED) != 0 && stamina > 0 && (mv->m_nButtons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT)) != 0)
-				flMaxSpeed = mp_sprintspeed.GetInt();
+				flMaxSpeed = mp_speed_shot_slowdown.GetBool() && (mv->m_nButtons & (IN_ATTACK | IN_ATTACK2 | IN_ALT1)) ? mp_sprintshotspeed.GetInt() : mp_sprintspeed.GetInt();
 			else
-				flMaxSpeed = mp_runspeed.GetInt();
+				flMaxSpeed = mp_speed_shot_slowdown.GetBool() && (mv->m_nButtons & (IN_ATTACK | IN_ATTACK2 | IN_ALT1)) ? mp_runshotspeed.GetInt() : mp_runspeed.GetInt();
 		}
 	}
 
