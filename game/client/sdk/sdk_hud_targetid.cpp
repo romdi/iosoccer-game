@@ -121,6 +121,32 @@ void DrawPlayerName(HFont font, const Vector &origin, const char *playerName, in
 	surface()->DrawPrintText(wszPlayerName, wcslen(wszPlayerName));
 }
 
+void DrawPlayerEmote(HFont font, const Vector &origin, const char *playerName, int teamNumber)
+{
+	wchar_t wszText[32];
+	_snwprintf ( wszText, sizeof( wszText ) / sizeof( wchar_t ), L"%s", L"Cross!" );
+
+	int wide, tall;
+	vgui::surface()->GetTextSize(font, wszText, wide, tall);
+
+	Color c = GetGlobalTeam(teamNumber)->GetHudKitColor();
+
+	Vector pos = origin;
+	pos.z += VEC_HULL_MAX.z;
+
+	int xPos, yPos;
+	GetVectorInScreenSpace(pos, xPos, yPos);
+
+	float coeff = fmod(gpGlobals->curtime, 1.0f);
+
+	Color fade = Color(255, 255, 255, 255 * (1 - coeff));
+
+	surface()->DrawSetTextFont(font);
+	surface()->DrawSetTextColor(fade);
+	surface()->DrawSetTextPos(xPos - wide / 2, yPos - tall - coeff * 4 * tall);
+	surface()->DrawPrintText(wszText, wcslen(wszText));
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Draw function for the element
 //-----------------------------------------------------------------------------
@@ -154,6 +180,8 @@ void CSDKTargetId::Paint()
 				continue;
 
 			DrawPlayerName(m_hFont, pPl->GetLocalOrigin(), pPl->GetPlayerName(), pPl->GetTeamNumber());
+
+			//DrawPlayerEmote(m_hFont, pPl->GetLocalOrigin(), pPl->GetPlayerName(), pPl->GetTeamNumber());
 		}
 	}
 }

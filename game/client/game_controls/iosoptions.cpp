@@ -15,10 +15,8 @@ extern ConVar
 	clubname,
 	fallbackcountryindex,
 	goalteamcrests,
-	invertkeepersprint,
 	legacysidecurl,
 	legacyverticallook,
-	snapbackafterfreecam,
 	modelskinindex,
 	playerballskinname,
 	playername,
@@ -262,7 +260,7 @@ CNetworkSettingPanel::CNetworkSettingPanel(Panel *parent, const char *panelName)
 
 	const char *suggestedValueText = "Set Recommended Value";
 
-	m_pInterpDurationLabel = new Label(m_pContent, "", "Interpolation Duration (cl_interp_ratio):");
+	m_pInterpDurationLabel = new Label(m_pContent, "", "Network Smoothing Ratio (cl_interp_ratio):");
 	m_pInterpDurationList = new ComboBox(m_pContent, "", 0, false);
 	m_pInterpDurationSuggestedValueButton = new Button(m_pContent, "", suggestedValueText, this, "suggested_interpduration");
 	m_pInterpDurationInfoButton = new Button(m_pContent, "", "?");
@@ -276,7 +274,7 @@ CNetworkSettingPanel::CNetworkSettingPanel(Panel *parent, const char *panelName)
 		kv->deleteThis();
 	}
 
-	m_pSmoothDurationLabel = new Label(m_pContent, "", "Smoothing Duration (cl_smoothtime):");
+	m_pSmoothDurationLabel = new Label(m_pContent, "", "Local Smoothing Duration (cl_smoothtime):");
 	m_pSmoothDurationList = new ComboBox(m_pContent, "", 0, false);
 	m_pSmoothDurationInfoButton = new Button(m_pContent, "", "?");
 	m_pSmoothDurationSuggestedValueButton = new Button(m_pContent, "", suggestedValueText, this, "suggested_smoothduration");
@@ -723,8 +721,6 @@ CGameplaySettingPanel::CGameplaySettingPanel(Panel *parent, const char *panelNam
 	m_pContent = new Panel(this, "");
 	m_pLegacySideCurl = new CheckButton(m_pContent, "", "Invert the ball curl direction");
 	m_pLegacyVerticalLook = new CheckButton(m_pContent, "", "Don't limit the vertical view range");
-	m_pInvertKeeperSprint = new CheckButton(m_pContent, "", "Invert the keeper sprint");
-	m_pSnapBackAfterFreeCam = new CheckButton(m_pContent, "", "Snap the player view back when leaving free cam mode");
 }
 
 void CGameplaySettingPanel::PerformLayout()
@@ -734,24 +730,18 @@ void CGameplaySettingPanel::PerformLayout()
 	m_pContent->SetBounds(PADDING, PADDING, GetWide() - 2 * PADDING, GetTall() - 2 * PADDING);
 	m_pLegacySideCurl->SetBounds(0, 0, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
 	m_pLegacyVerticalLook->SetBounds(0, TEXT_HEIGHT + TEXT_MARGIN, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
-	m_pInvertKeeperSprint->SetBounds(0, 2 * (TEXT_HEIGHT + TEXT_MARGIN), LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
-	m_pSnapBackAfterFreeCam->SetBounds(0, 3 * (TEXT_HEIGHT + TEXT_MARGIN), LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
 }
 
 void CGameplaySettingPanel::Save()
 {
 	legacysidecurl.SetValue(m_pLegacySideCurl->IsSelected() ? 1 : 0);
 	legacyverticallook.SetValue(m_pLegacyVerticalLook->IsSelected() ? 1 : 0);
-	invertkeepersprint.SetValue(m_pInvertKeeperSprint->IsSelected() ? 1 : 0);
-	snapbackafterfreecam.SetValue(m_pSnapBackAfterFreeCam->IsSelected() ? 1 : 0);
 }
 
 void CGameplaySettingPanel::Load()
 {
 	m_pLegacySideCurl->SetSelected(legacysidecurl.GetBool());
 	m_pLegacyVerticalLook->SetSelected(legacyverticallook.GetBool());
-	m_pInvertKeeperSprint->SetSelected(invertkeepersprint.GetBool());
-	m_pSnapBackAfterFreeCam->SetSelected(snapbackafterfreecam.GetBool());
 }
 
 void CGameplaySettingPanel::Update()

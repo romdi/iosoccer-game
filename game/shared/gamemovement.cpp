@@ -67,10 +67,6 @@ ConVar player_limit_jump_speed( "player_limit_jump_speed", "1", FCVAR_REPLICATED
 // duck controls. Its value is meaningless anytime we don't have the options window open.
 ConVar option_duck_method("option_duck_method", "1", FCVAR_REPLICATED|FCVAR_ARCHIVE );// 0 = HOLD to duck, 1 = Duck is a toggle
 
-// [MD] I'll remove this eventually. For now, I want the ability to A/B the optimizations.
-//bool g_bMovementOptimizations = true;
-bool g_bMovementOptimizations = false;	//ios
-
 // Roughly how often we want to update the info about the ground surface we're on.
 // We don't need to do this very often.
 #define CATEGORIZE_GROUND_SURFACE_INTERVAL			0.3f
@@ -685,13 +681,13 @@ int CGameMovement::GetCheckInterval( IntervalType_t type )
 //-----------------------------------------------------------------------------
 bool CGameMovement::CheckInterval( IntervalType_t type )
 {
-	int tickInterval = GetCheckInterval( type );
+	//int tickInterval = GetCheckInterval( type );
 
-	if ( g_bMovementOptimizations )
-	{
-		return (player->CurrentCommandNumber() + player->entindex()) % tickInterval == 0;
-	}
-	else
+	//if ( g_bMovementOptimizations )
+	//{
+	//	return (player->CurrentCommandNumber() + player->entindex()) % tickInterval == 0;
+	//}
+	//else
 	{
 		return true;
 	}
@@ -722,27 +718,13 @@ void CGameMovement::CheckParameters( void )
 			mv->m_flMaxSpeed = min( maxspeed, mv->m_flMaxSpeed );
 		}
 
-		if ( g_bMovementOptimizations )
+		// Same thing but only do the sqrt if we have to.
+		if ( ( spd != 0.0 ) && ( spd > mv->m_flMaxSpeed*mv->m_flMaxSpeed ) )
 		{
-			// Same thing but only do the sqrt if we have to.
-			if ( ( spd != 0.0 ) && ( spd > mv->m_flMaxSpeed*mv->m_flMaxSpeed ) )
-			{
-				float fRatio = mv->m_flMaxSpeed / sqrt( spd );
-				mv->m_flForwardMove *= fRatio;
-				mv->m_flSideMove    *= fRatio;
-				mv->m_flUpMove      *= fRatio;
-			}
-		}
-		else
-		{
-			spd = sqrt( spd );
-			if ( ( spd != 0.0 ) && ( spd > mv->m_flMaxSpeed ) )
-			{
-				float fRatio = mv->m_flMaxSpeed / spd;
-				mv->m_flForwardMove *= fRatio;
-				mv->m_flSideMove    *= fRatio;
-				mv->m_flUpMove      *= fRatio;
-			}
+			float fRatio = mv->m_flMaxSpeed / sqrt( spd );
+			mv->m_flForwardMove *= fRatio;
+			mv->m_flSideMove    *= fRatio;
+			mv->m_flUpMove      *= fRatio;
 		}
 	}
 
@@ -778,40 +760,22 @@ void CGameMovement::ReduceTimers( void )
 	teamPosType = pPl->GetTeamPosType();
 #endif
 
-	bool isSprinting = (teamPosType == POS_GK && pPl->IsKeeperSprintInverted() ? !(mv->m_nButtons & IN_SPEED) : (mv->m_nButtons & IN_SPEED) != 0);
-
 	bool reduceStamina = false;
 
 	// If moving and holding sprint button
-	if ((mv->m_nButtons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT)) != 0 && isSprinting)
+	if ((mv->m_nButtons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT)) != 0 && (mv->m_nButtons & IN_SPEED))
 		reduceStamina = true;
-
-	// If in air (to prevent stamina bugging)
-	if (!pPl->GetGroundEntity())
-		reduceStamina = true;
-
-	// If keeper and in own penalty box
-	if (teamPosType == POS_GK && pPl->m_nInPenBoxOfTeam == pPl->GetTeamNumber())
-		reduceStamina = false;
 
 	// If celebrating after a goal
 	if (GetBall() && GetBall()->m_eBallState == BALL_STATE_GOAL)
 		reduceStamina = false;
-
-	float fieldLength = SDKGameRules()->m_vFieldMax.GetY() - SDKGameRules()->m_vFieldMin.GetY();
-	float dist = pPl->GetLocalOrigin().y - SDKGameRules()->m_vKickOff.GetY();
-	float fieldZone = (clamp(dist * 100 / (fieldLength / 2), -100, 100) + 100) / 2;
-	if ((pPl->GetTeamNumber() == TEAM_A || pPl->GetTeamNumber() == TEAM_B) && pPl->GetTeam()->m_nForward == -1)
-		fieldZone = 100 - fieldZone;
 
 	// If we're holding the sprint key and also actually moving, remove some stamina
 	Vector vel = pPl->GetAbsVelocity();
 
 	if ( reduceStamina && vel.Length2DSqr() > 10000 ) //speed > 100
 	{
-		float coeff = 1 + (mp_stamina_variable_drain_enabled.GetBool() ? (fieldZone / 100) * mp_stamina_variable_drain_coeff.GetFloat() : 0);
-
-		float reduceAmount = mp_stamina_drain_sprinting.GetInt() * gpGlobals->frametime * coeff;
+		float reduceAmount = mp_stamina_drain_sprinting.GetInt() * gpGlobals->frametime;
 
 		if (!SDKGameRules()->IsIntermissionState())
 			pPl->m_Shared.SetMaxStamina(pPl->m_Shared.GetMaxStamina() - reduceAmount * mp_stamina_max_reduce_coeff.GetFloat(), true);
@@ -820,22 +784,20 @@ void CGameMovement::ReduceTimers( void )
 	}
 	else
 	{
-		float coeff = 1 + (mp_stamina_variable_replenish_enabled.GetBool() ? ((100 - fieldZone) / 100) * mp_stamina_variable_replenish_coeff.GetFloat() : 0);
-
 		float replenishAmount;
 
 		//gain some back		
 		if (vel.Length2DSqr() <= 0)
 		{
-			replenishAmount = mp_stamina_replenish_standing.GetInt() * gpGlobals->frametime * coeff;
+			replenishAmount = mp_stamina_replenish_standing.GetInt() * gpGlobals->frametime;
 		}
 		else if (mv->m_nButtons & IN_WALK)
 		{
-			replenishAmount = mp_stamina_replenish_walking.GetInt() * gpGlobals->frametime * coeff;
+			replenishAmount = mp_stamina_replenish_walking.GetInt() * gpGlobals->frametime;
 		}
 		else
 		{
-			replenishAmount = mp_stamina_replenish_running.GetInt() * gpGlobals->frametime * coeff;
+			replenishAmount = mp_stamina_replenish_running.GetInt() * gpGlobals->frametime;
 		}
 
 		pPl->m_Shared.SetStamina(pPl->m_Shared.GetStamina() + replenishAmount);	
@@ -1359,27 +1321,16 @@ void CGameMovement::WalkMove( void )
 	smove = mv->m_flSideMove;
 
 	// Zero out z components of movement vectors
-	if ( g_bMovementOptimizations )
-	{
-		if ( forward[2] != 0 )
-		{
-			forward[2] = 0;
-			VectorNormalize( forward );
-		}
-
-		if ( right[2] != 0 )
-		{
-			right[2] = 0;
-			VectorNormalize( right );
-		}
-	}
-	else
+	if ( forward[2] != 0 )
 	{
 		forward[2] = 0;
-		right[2]   = 0;
-		
-		VectorNormalize (forward);  // Normalize remainder of vectors.
-		VectorNormalize (right);    // 
+		VectorNormalize( forward );
+	}
+
+	if ( right[2] != 0 )
+	{
+		right[2] = 0;
+		VectorNormalize( right );
 	}
 
 	for (int i=0 ; i<2 ; i++)       // Determine x and y parts of velocity
@@ -2235,17 +2186,9 @@ int CGameMovement::TryPlayerMove( Vector *pFirstDest, trace_t *pFirstTrace )
 		//  end point.
 		VectorMA( mv->GetAbsOrigin(), time_left, mv->m_vecVelocity, end );
 
-		// See if we can make it from origin to end point.
-		if ( g_bMovementOptimizations )
-		{
-			// If their velocity Z is 0, then we can avoid an extra trace here during WalkMove.
-			if ( pFirstDest && end == *pFirstDest )
-				pm = *pFirstTrace;
-			else
-			{
-				TracePlayerBBox( mv->GetAbsOrigin(), end, PlayerSolidMask(), COLLISION_GROUP_PLAYER_MOVEMENT, pm );
-			}
-		}
+		// If their velocity Z is 0, then we can avoid an extra trace here during WalkMove.
+		if ( pFirstDest && end == *pFirstDest )
+			pm = *pFirstTrace;
 		else
 		{
 			TracePlayerBBox( mv->GetAbsOrigin(), end, PlayerSolidMask(), COLLISION_GROUP_PLAYER_MOVEMENT, pm );
@@ -3206,8 +3149,6 @@ void CGameMovement::SetPlayerSpeed()
 {
 	CSDKPlayer *pPl = (CSDKPlayer *)player;
 
-	float stamina = pPl->m_Shared.GetStamina();
-
 	float flMaxSpeed;
 
 	bool isKeeper;
@@ -3220,6 +3161,8 @@ void CGameMovement::SetPlayerSpeed()
 		team = pPl->GetTeamNumber();
 	#endif
 
+	bool speedShotSlowdown = mp_speed_shot_slowdown.GetBool() && (mv->m_nButtons & (IN_ATTACK | IN_ATTACK2 | IN_ALT1));
+
 	if (pPl->GetFlags() & FL_REMOTECONTROLLED)
 	{
 		flMaxSpeed = mp_remotecontrolledspeed.GetInt();
@@ -3230,28 +3173,15 @@ void CGameMovement::SetPlayerSpeed()
 	}
 	else if ((mv->m_nButtons & IN_RELOAD) && ((mv->m_nButtons & IN_DUCK) || (mv->m_nButtons & IN_MOVELEFT) || (mv->m_nButtons & IN_MOVERIGHT) || (mv->m_nButtons & IN_BACK)))
 	{
-		flMaxSpeed = mp_speed_shot_slowdown.GetBool() && (mv->m_nButtons & (IN_ATTACK | IN_ATTACK2 | IN_ALT1)) ? mp_runshotspeed.GetInt() : mp_runspeed.GetInt();
+		flMaxSpeed = speedShotSlowdown ? mp_runshotspeed.GetInt() : mp_runspeed.GetInt();
 	}
 	else
 	{
-		if (isKeeper && pPl->IsKeeperSprintInverted())
-		{
-			if (!(mv->m_nButtons & IN_SPEED) && stamina > 0 && (mv->m_nButtons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT)) != 0)
-				flMaxSpeed = mp_speed_shot_slowdown.GetBool() && (mv->m_nButtons & (IN_ATTACK | IN_ATTACK2 | IN_ALT1)) ? mp_sprintshotspeed.GetInt() : mp_sprintspeed.GetInt();
-			else
-				flMaxSpeed = mp_speed_shot_slowdown.GetBool() && (mv->m_nButtons & (IN_ATTACK | IN_ATTACK2 | IN_ALT1)) ? mp_runshotspeed.GetInt() : mp_runspeed.GetInt();
-		}
+		if (mv->m_nButtons & IN_SPEED)
+			flMaxSpeed = speedShotSlowdown ? mp_sprintshotspeed.GetInt() : mp_sprintspeed.GetInt();
 		else
-		{
-			if ((mv->m_nButtons & IN_SPEED) != 0 && stamina > 0 && (mv->m_nButtons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT)) != 0)
-				flMaxSpeed = mp_speed_shot_slowdown.GetBool() && (mv->m_nButtons & (IN_ATTACK | IN_ATTACK2 | IN_ALT1)) ? mp_sprintshotspeed.GetInt() : mp_sprintspeed.GetInt();
-			else
-				flMaxSpeed = mp_speed_shot_slowdown.GetBool() && (mv->m_nButtons & (IN_ATTACK | IN_ATTACK2 | IN_ALT1)) ? mp_runshotspeed.GetInt() : mp_runspeed.GetInt();
-		}
+			flMaxSpeed = speedShotSlowdown ? mp_runshotspeed.GetInt() : mp_runspeed.GetInt();
 	}
 
-	if (mp_stamina_slowdown.GetBool())
-		mv->m_flClientMaxSpeed = flMaxSpeed - 100 + stamina;
-	else
-		mv->m_flClientMaxSpeed = flMaxSpeed;
+	mv->m_flClientMaxSpeed = flMaxSpeed;
 }

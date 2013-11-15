@@ -332,7 +332,6 @@ CSDKPlayer::CSDKPlayer()
 	m_pHoldingBall = NULL;
 	m_flNextClientSettingsChangeTime = gpGlobals->curtime;
 	m_bLegacySideCurl = false;
-	m_bInvertKeeperSprint = true;
 	m_bJoinSilently = false;
 
 	m_szPlayerName[0] = '\0';

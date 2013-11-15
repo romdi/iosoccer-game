@@ -178,8 +178,6 @@ class CGameplaySettingPanel : public PropertyPage, public ISettingPanel
 
 	CheckButton *m_pLegacySideCurl;
 	CheckButton *m_pLegacyVerticalLook;
-	CheckButton *m_pInvertKeeperSprint;
-	CheckButton *m_pSnapBackAfterFreeCam;
 
 public:
 

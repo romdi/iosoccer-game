@@ -90,17 +90,12 @@ ConVar  sv_accelerate	( "sv_accelerate", "7", FCVAR_NOTIFY | FCVAR_REPLICATED | 
 
 ConVar  mp_jump_delay	("mp_jump_delay", "0.7", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar  mp_slide_delay	("mp_slide_delay", "1.7", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar  mp_stamina_slowdown	("mp_stamina_slowdown", "0", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar  mp_stamina_drain_jumping	("mp_stamina_drain_jumping", "0", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar  mp_stamina_drain_sliding	("mp_stamina_drain_sliding", "0", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar  mp_stamina_drain_sprinting	("mp_stamina_drain_sprinting", "18", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar  mp_stamina_replenish_standing	("mp_stamina_replenish_standing", "20", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar  mp_stamina_replenish_walking	("mp_stamina_replenish_walking", "17", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar  mp_stamina_replenish_running	("mp_stamina_replenish_running", "15", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar  mp_stamina_variable_drain_enabled	("mp_stamina_variable_drain_enabled", "0", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar  mp_stamina_variable_drain_coeff	("mp_stamina_variable_drain_coeff", "1", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar  mp_stamina_variable_replenish_enabled	("mp_stamina_variable_replenish_enabled", "0", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar  mp_stamina_variable_replenish_coeff	("mp_stamina_variable_replenish_coeff", "1", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar  mp_stamina_max_reduce_coeff	("mp_stamina_max_reduce_coeff", "0.0", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar  mp_stamina_max_add_halftime	("mp_stamina_max_add_halftime", "10.0", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar  mp_stamina_max_add_extratime_intermission	("mp_stamina_max_add_extratime_intermission", "5.0", FCVAR_NOTIFY | FCVAR_REPLICATED);
