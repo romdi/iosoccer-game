@@ -2691,7 +2691,7 @@ bool CBall::DoHeader()
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEADER);
 	}
 
-	SetVel(m_vPlForwardVel2D + vel, 0, BODY_PART_HEAD, false, true, true);
+	SetVel(vel, 0, BODY_PART_HEAD, false, true, true);
 
 	return true;
 }
