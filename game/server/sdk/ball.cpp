@@ -595,7 +595,7 @@ void CBall::VPhysicsCollision( int index, gamevcollisionevent_t	*pEvent	)
 	int surfaceProps = pEvent->surfaceProps[!index];
 
 	//IOS goal post hacks!!
-	if (surfaceProps == 81 && flSpeed > 300.0f)
+	if (surfaceProps == 84 && flSpeed > 300.0f)
 	{
 		CSDKPlayer *pLastPl = LastPl(true);
 		if (pLastPl && Sign(m_vPos.y - SDKGameRules()->m_vKickOff.GetY()) == pLastPl->GetTeam()->m_nForward) // Check if it's the opponent's goal
@@ -616,8 +616,8 @@ void CBall::VPhysicsCollision( int index, gamevcollisionevent_t	*pEvent	)
 		}
 	}
 	
-	//iosgoalnets 82=iosgoalnets, 30=concrete!!! TEMP!!! until pricey changes nets surfaceprop!
-	if ((surfaceProps == 82 /*|| surfaceProps == 30*/) && flSpeed > 300.0f)
+	//iosgoalnets 85=iosgoalnets, 30=concrete!!! TEMP!!! until pricey changes nets surfaceprop!
+	if ((surfaceProps == 85 /*|| surfaceProps == 30*/) && flSpeed > 300.0f)
 	{
 		EmitSound("Ball.Net");
 	}
