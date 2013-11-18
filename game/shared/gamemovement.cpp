@@ -1916,8 +1916,6 @@ void CGameMovement::FullNoClipMove( float factor, float maxacceleration )
 	}
 }
 
-ConVar mp_jump_height("mp_jump_height", "35", FCVAR_REPLICATED | FCVAR_NOTIFY);
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -2038,6 +2036,16 @@ bool CGameMovement::CheckJumpButton( void )
 	pPl->m_Shared.SetStamina(pPl->m_Shared.GetStamina() - mp_stamina_drain_jumping.GetInt());
 
 	pPl->m_Shared.m_flNextJump = gpGlobals->curtime + mp_jump_delay.GetFloat();
+
+	if (animEvent != PLAYERANIMEVENT_KEEPER_DIVE_LEFT && animEvent != PLAYERANIMEVENT_KEEPER_DIVE_RIGHT)
+	{
+		mv->m_flMaxSpeed = mp_jump_speed.GetInt();
+		float zVel = mv->m_vecVelocity.z;
+		mv->m_vecVelocity.z = 0;
+		float xySpeed = VectorNormalize(mv->m_vecVelocity);
+		mv->m_vecVelocity *= min(mv->m_flMaxSpeed, xySpeed);
+		mv->m_vecVelocity.z = zVel;
+	}
 
 	return true;
 }
