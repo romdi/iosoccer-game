@@ -174,9 +174,6 @@ void DrawPlayerEmote(HFont font, C_SDKPlayer *pPl, Emote &emote)
 //-----------------------------------------------------------------------------
 void CSDKTargetId::Paint()
 {
-	if (hud_names_visible.GetInt() == 0)
-		return;
-
 	C_SDKPlayer *pLocal = C_SDKPlayer::GetLocalSDKPlayer();
 
 	if (!pLocal)
@@ -190,7 +187,8 @@ void CSDKTargetId::Paint()
 			if (!pPl)
 				continue;
 
-			DrawPlayerName(m_hFont, pPl->GetLocalOrigin(), pPl->m_szPlayerName, pPl->m_nTeamNumber);
+			if (hud_names_visible.GetBool())
+				DrawPlayerName(m_hFont, pPl->GetLocalOrigin(), pPl->m_szPlayerName, pPl->m_nTeamNumber);
 		}
 	}
 	else
@@ -201,7 +199,7 @@ void CSDKTargetId::Paint()
 			if (!pPl || pPl->IsDormant())
 				continue;
 
-			if (pPl != pLocal)
+			if (pPl != pLocal && hud_names_visible.GetBool())
 				DrawPlayerName(m_hFont, pPl->GetLocalOrigin(), pPl->GetPlayerName(), pPl->GetTeamNumber());
 
 			if (pPl->GetTeamNumber() == pLocal->GetTeamNumber())
