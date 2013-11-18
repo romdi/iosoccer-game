@@ -462,8 +462,16 @@ void CTeam::InitFieldSpots(int team)
 
 	float sixYardLength = (goalMax.x - goalMin.x) / 4 * 3;
 
-	m_vSixYardBoxMin = m_vGoalCenter - Vector(sixYardLength / 3 * 5, 0, 0);
-	m_vSixYardBoxMax = m_vGoalCenter + Vector(sixYardLength / 3 * 5, sixYardLength, 0);
+	if (m_vPenalty.GetY() < SDKGameRules()->m_vKickOff.GetY())
+	{
+		m_vSixYardBoxMin = m_vGoalCenter - Vector(sixYardLength / 3 * 5, 0, 0);
+		m_vSixYardBoxMax = m_vGoalCenter + Vector(sixYardLength / 3 * 5, sixYardLength, 0);
+	}
+	else
+	{
+		m_vSixYardBoxMin = m_vGoalCenter - Vector(sixYardLength / 3 * 5, sixYardLength, 0);
+		m_vSixYardBoxMax = m_vGoalCenter + Vector(sixYardLength / 3 * 5, 0, 0);
+	}
 
 	m_nForward = Sign(SDKGameRules()->m_vKickOff.GetY() - m_vGoalCenter.GetY());
 	m_nRight = Sign(m_vCornerRight.GetX() - m_vGoalCenter.GetX());
