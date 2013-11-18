@@ -3185,7 +3185,7 @@ void CGameMovement::SetPlayerSpeed()
 	}
 	else
 	{
-		if (mv->m_nButtons & IN_SPEED)
+		if ((mv->m_nButtons & IN_SPEED) && pPl->m_Shared.GetStamina() > 0 && (mv->m_nButtons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT)))
 			flMaxSpeed = speedShotSlowdown ? mp_sprintshotspeed.GetInt() : mp_sprintspeed.GetInt();
 		else
 			flMaxSpeed = speedShotSlowdown ? mp_runshotspeed.GetInt() : mp_runspeed.GetInt();
