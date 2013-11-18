@@ -52,7 +52,7 @@ private:
 
 	Button *m_pEmoteButtons[EMOTE_COUNT];
 
-	char m_szEmote[32];
+	int m_nEmote;
 
 	IScheme *m_pScheme;
 

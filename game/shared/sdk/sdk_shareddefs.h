@@ -169,7 +169,8 @@ extern ConVar
 	mp_throwinthrow_idle_duration,
 	mp_tackled_idle_duration,
 	mp_charging_animation_enabled,
-	mp_majorevent_messageduration;
+	mp_majorevent_messageduration,
+	mp_emote_duration;
 
 //--------------------------------------------------------------------------------------------------------
 //

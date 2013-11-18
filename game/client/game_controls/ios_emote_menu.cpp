@@ -16,11 +16,11 @@ CEmoteMenu::CEmoteMenu(IViewPort *pViewPort) : Frame(NULL, PANEL_ACTION)
 	SetPaintBorderEnabled(false);
 	SetPaintBackgroundEnabled(false);
 
-	m_szEmote[0] = '\0';
+	m_nEmote = -1;
 
 	for (int i = 0; i < EMOTE_COUNT; i++)
 	{
-		m_pEmoteButtons[i] = new Button(this, "", g_szEmotes[i], this, g_szEmotes[i]);
+		m_pEmoteButtons[i] = new Button(this, "", g_szEmotes[i], this, VarArgs("%d", i));
 	}
 }
 
@@ -60,14 +60,18 @@ void CEmoteMenu::PerformLayout()
 
 void CEmoteMenu::ShowPanel(bool bShow)
 {
-	if ( BaseClass::IsVisible() == bShow )
+	if (BaseClass::IsVisible() == bShow)
 		return;
 
-	if ( bShow )
+	if (bShow)
 	{
-		Activate();
-		SetMouseInputEnabled( true );
-		SetKeyBoardInputEnabled( false );
+		if (C_SDKPlayer::GetLocalPlayer()
+			&& (C_SDKPlayer::GetLocalPlayer()->GetTeamNumber() == TEAM_A || C_SDKPlayer::GetLocalPlayer()->GetTeamNumber() == TEAM_B))
+		{
+			Activate();
+			SetMouseInputEnabled( true );
+			SetKeyBoardInputEnabled( false );
+		}
 	}
 	else
 	{
@@ -75,8 +79,8 @@ void CEmoteMenu::ShowPanel(bool bShow)
 		SetMouseInputEnabled( false );
 		SetKeyBoardInputEnabled( false );
 
-		if (m_szEmote[0] != '\0')
-			engine->ClientCmd(VarArgs("say_team %s", m_szEmote));
+		if (m_nEmote != -1)
+			engine->ClientCmd(VarArgs("emote %d", m_nEmote));
 	}
 }
 
@@ -105,10 +109,10 @@ void CEmoteMenu::Update()
 void CEmoteMenu::OnCursorEntered(Panel *panel)
 {
 	const char *cmd = ((Button *)panel)->GetCommand()->GetString("command");
-	Q_strncpy(m_szEmote, cmd, sizeof(m_szEmote));
+	m_nEmote = atoi(cmd);
 }
 
 void CEmoteMenu::OnCursorExited(Panel *panel)
 {
-	m_szEmote[0] = '\0';
+	m_nEmote = -1;
 }

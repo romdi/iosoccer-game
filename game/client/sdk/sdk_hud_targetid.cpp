@@ -17,6 +17,8 @@
 #include "voice_status.h"
 #include "view.h"
 #include "c_team.h"
+#include "clientmode_shared.h"
+#include "ios_emote_menu.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -36,6 +38,12 @@ ConCommand hud_names_toggle("hud_names_toggle", CC_HudNamesToggle);
 
 using namespace vgui;
 
+struct Emote
+{
+	int emoteId;
+	float startTime;
+};
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -49,10 +57,11 @@ public:
 	virtual void	ApplySchemeSettings( vgui::IScheme *scheme );
 	virtual void	Paint( void );
 	void VidInit( void );
-	void Doit();
+	void FireGameEvent(IGameEvent *event);
 
 private:
 	vgui::HFont		m_hFont;
+	Emote		m_Emotes[11];
 };
 
 DECLARE_HUDELEMENT( CSDKTargetId );
@@ -71,6 +80,11 @@ CSDKTargetId::CSDKTargetId( const char *pElementName ) :
 	SetParent( pParent );
 
 	m_hFont = g_hFontTrebuchet24;
+
+	for (int i = 0; i < 11; i++)
+	{
+		m_Emotes[i].emoteId = -1;
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -78,7 +92,8 @@ CSDKTargetId::CSDKTargetId( const char *pElementName ) :
 //-----------------------------------------------------------------------------
 void CSDKTargetId::Init( void )
 {
-};
+	ListenForGameEvent("emote");
+}
 
 void CSDKTargetId::ApplySchemeSettings( vgui::IScheme *scheme )
 {
@@ -121,23 +136,30 @@ void DrawPlayerName(HFont font, const Vector &origin, const char *playerName, in
 	surface()->DrawPrintText(wszPlayerName, wcslen(wszPlayerName));
 }
 
-void DrawPlayerEmote(HFont font, const Vector &origin, const char *playerName, int teamNumber)
+void DrawPlayerEmote(HFont font, C_SDKPlayer *pPl, Emote &emote)
 {
+	const float maxEmoteDuration = mp_emote_duration.GetFloat();
+	float emoteDuration = gpGlobals->curtime - emote.startTime;
+
+	if (emoteDuration > maxEmoteDuration)
+	{
+		emote.emoteId = -1;
+		return;
+	}
+
+	Vector pos = pPl->GetLocalOrigin();
+	pos.z += VEC_HULL_MAX.z;
+
+	int xPos, yPos;
+	bool isOnscreen = GetVectorInScreenSpace(pos, xPos, yPos);
+
 	wchar_t wszText[32];
-	_snwprintf ( wszText, sizeof( wszText ) / sizeof( wchar_t ), L"%s", L"Cross!" );
+	g_pVGuiLocalize->ConvertANSIToUnicode(g_szEmotes[emote.emoteId], wszText, sizeof(wszText));
 
 	int wide, tall;
 	vgui::surface()->GetTextSize(font, wszText, wide, tall);
 
-	Color c = GetGlobalTeam(teamNumber)->GetHudKitColor();
-
-	Vector pos = origin;
-	pos.z += VEC_HULL_MAX.z;
-
-	int xPos, yPos;
-	GetVectorInScreenSpace(pos, xPos, yPos);
-
-	float coeff = fmod(gpGlobals->curtime, 1.0f);
+	float coeff = emoteDuration / maxEmoteDuration;
 
 	Color fade = Color(255, 255, 255, 255 * (1 - coeff));
 
@@ -176,12 +198,40 @@ void CSDKTargetId::Paint()
 		for (int i = 1; i <= gpGlobals->maxClients; i++)
 		{
 			C_SDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
-			if (!pPl || pPl->IsDormant() || pPl == pLocal)
+			if (!pPl || pPl->IsDormant())
 				continue;
 
-			DrawPlayerName(m_hFont, pPl->GetLocalOrigin(), pPl->GetPlayerName(), pPl->GetTeamNumber());
+			if (pPl != pLocal)
+				DrawPlayerName(m_hFont, pPl->GetLocalOrigin(), pPl->GetPlayerName(), pPl->GetTeamNumber());
 
-			//DrawPlayerEmote(m_hFont, pPl->GetLocalOrigin(), pPl->GetPlayerName(), pPl->GetTeamNumber());
+			if (pPl->GetTeamNumber() == pLocal->GetTeamNumber())
+			{
+				int teamPosIndex = GameResources()->GetTeamPosIndex(pPl->index);
+				if (m_Emotes[teamPosIndex].emoteId != -1)
+				{
+					DrawPlayerEmote(m_hFont, pPl, m_Emotes[teamPosIndex]);
+				}
+			}
+		}
+	}
+}
+
+void CSDKTargetId::FireGameEvent(IGameEvent *event)
+{
+	if (!Q_strcmp(event->GetName(), "emote"))
+	{
+		C_SDKPlayer *pPl = ToSDKPlayer(USERID2PLAYER(event->GetInt("userid")));
+
+		if (C_SDKPlayer::GetLocalPlayer() && pPl && pPl->GetTeamNumber() == C_SDKPlayer::GetLocalPlayer()->GetTeamNumber())
+		{
+			int emoteId = event->GetInt("emoteid");
+
+			if (emoteId >= 0 && emoteId < EMOTE_COUNT)
+			{
+				int teamPosIndex = GameResources()->GetTeamPosIndex(pPl->index);
+				m_Emotes[teamPosIndex].emoteId = emoteId;
+				m_Emotes[teamPosIndex].startTime = gpGlobals->curtime;
+			}
 		}
 	}
 }
