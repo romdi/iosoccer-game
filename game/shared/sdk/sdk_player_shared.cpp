@@ -359,6 +359,7 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 			if (GetFlags() & FL_SHIELD_KEEP_OUT && isInsideBox)
 			{
 				bool oldPosInBox = true;
+
 				if (newPos.x > min.x && oldPos.x <= min.x && newPos.x < boxCenter.x)
 				{
 					newPos.x = min.x;
@@ -386,7 +387,7 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 				if (SDKGameRules()->m_nShieldType == SHIELD_KEEPERHANDS && oldPosInBox)
 				{
 					Vector goalCenter = GetGlobalTeam(SDKGameRules()->m_nShieldTeam)->m_vGoalCenter;
-					goalCenter.y -= Sign(GetGlobalTeam(SDKGameRules()->m_nShieldTeam)->m_nForward) * 500;
+					goalCenter.y -= GetGlobalTeam(SDKGameRules()->m_nShieldTeam)->m_nForward * 500;
 
 					if ((goalCenter - newPos).Length2DSqr() < (goalCenter - oldPos).Length2DSqr())
 					{
@@ -442,7 +443,7 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 					forward = GetTeam()->m_nForward;
 				#endif
 				float yBorder = SDKGameRules()->m_vKickOff.GetY() - abs(border) * forward;
-				if (Sign(newPos.y - yBorder) == forward)
+				if (ZeroSign(newPos.y - yBorder) == forward)
 				{
 					newPos.y = yBorder;
 					stopPlayer = true;
@@ -520,6 +521,7 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 
 		if (trace.startsolid)
 		{
+			// Stay at the old pos since the new pos is taken
 			newPos = oldPos;
 		}
 
