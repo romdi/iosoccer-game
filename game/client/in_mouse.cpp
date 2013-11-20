@@ -547,9 +547,22 @@ void CInput::MouseMove( CUserCmd *cmd )
 	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
 
 	if (pPlayer && ((pPlayer->GetFlags() & (FL_FREECAM | FL_REMOTECONTROLLED)) || (pPlayer->m_nButtons & IN_RELOAD)))
+	{
 		viewangles = m_aCameraViewAngles;
+
+		if (!(pPlayer->m_nButtons & IN_RELOAD))
+			m_bWasFreeCam = true;
+	}
 	else
-		engine->GetViewAngles(viewangles);
+	{
+		if (m_bWasFreeCam)
+		{
+			viewangles = m_aCameraViewAngles;
+			m_bWasFreeCam = false;
+		}
+		else
+			engine->GetViewAngles(viewangles);
+	}
 
 	// Validate mouse speed/acceleration settings
 	CheckMouseAcclerationVars();

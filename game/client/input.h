@@ -205,6 +205,7 @@ private:
 	float		m_flLastForwardMove;
 
 	QAngle		m_aCameraViewAngles;
+	bool		m_bWasFreeCam;
 
 	class CVerifiedUserCmd
 	{

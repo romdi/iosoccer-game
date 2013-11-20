@@ -297,6 +297,7 @@ CInput::CInput( void )
 	m_pCommands = NULL;
 	m_pVerifiedCommands = NULL;
 	m_aCameraViewAngles = vec3_angle;
+	m_bWasFreeCam = false;
 }
 
 //-----------------------------------------------------------------------------
