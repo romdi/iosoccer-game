@@ -140,6 +140,8 @@ ConVar sv_ball_powerdivingheader_strength("sv_ball_powerdivingheader_strength", 
 ConVar sv_ball_chargeddivingheader_minstrength("sv_ball_chargeddivingheader_minstrength", "600", FCVAR_NOTIFY); 
 ConVar sv_ball_chargeddivingheader_maxstrength("sv_ball_chargeddivingheader_maxstrength", "1200", FCVAR_NOTIFY);
 
+ConVar sv_ball_header_mindelay("sv_ball_header_mindelay", "0.75", FCVAR_NOTIFY); 
+
 ConVar sv_ball_slide_strength("sv_ball_slide_strength", "1000", FCVAR_NOTIFY); 
 
 ConVar sv_ball_penaltyshot_maxstrength("sv_ball_penaltyshot_maxstrength", "1200", FCVAR_NOTIFY);
@@ -739,7 +741,7 @@ void CBall::SetAng(const QAngle &ang)
 	m_pPhys->SetPosition(m_vPos, m_aAng, false);
 }
 
-void CBall::SetVel(Vector vel, float spinCoeff, body_part_t bodyPart, bool isDeflection, bool markOffsidePlayers, bool ensureMinShotStrength, float nextShotDelay /*= -1*/)
+void CBall::SetVel(Vector vel, float spinCoeff, body_part_t bodyPart, bool isDeflection, bool markOffsidePlayers, bool ensureMinShotStrength, float nextShotMinDelay /*= 0*/)
 {
 	Vector oldVel = m_vVel;
 
@@ -782,7 +784,7 @@ void CBall::SetVel(Vector vel, float spinCoeff, body_part_t bodyPart, bool isDef
 		float delay;
 
 		if (State_Get() == BALL_STATE_NORMAL)
-			delay = nextShotDelay == -1 ? dynamicDelay : nextShotDelay;
+			delay = max(dynamicDelay, nextShotMinDelay);
 		else
 			delay = sv_ball_shotdelay_setpiece.GetFloat();
 
@@ -2696,7 +2698,7 @@ bool CBall::DoHeader()
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEADER);
 	}
 
-	SetVel(m_vPlForwardVel2D + vel, 0, BODY_PART_HEAD, false, true, true);
+	SetVel(m_vPlForwardVel2D + vel, 0, BODY_PART_HEAD, false, true, true, sv_ball_header_mindelay.GetFloat());
 
 	return true;
 }

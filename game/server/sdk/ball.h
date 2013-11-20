@@ -167,7 +167,7 @@ public:
 
 	void			SetPos(const Vector &pos, bool teleport = true);
 	void			SetAng(const QAngle &ang);
-	void			SetVel(Vector vel, float spinCoeff, body_part_t bodyPart, bool isDeflection, bool markOffsidePlayers, bool ensureMinShotStrength, float nextShotDelay = -1);
+	void			SetVel(Vector vel, float spinCoeff, body_part_t bodyPart, bool isDeflection, bool markOffsidePlayers, bool ensureMinShotStrength, float nextShotMinDelay = 0);
 	void			SetRot(AngularImpulse rot = NULL);
 
 	void			SetPenaltyState(penalty_state_t penaltyState) { m_ePenaltyState = penaltyState; }
