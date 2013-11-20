@@ -2536,10 +2536,15 @@ bool CBall::DoGroundShot(bool markOffsidePlayers, float velCoeff /*= 1.0f*/)
 
 		if ((m_pPl->m_nButtons & IN_MOVELEFT) || (m_pPl->m_nButtons & IN_MOVERIGHT))
 		{
-			Vector vel = m_vPlRight * 350 * ((m_pPl->m_nButtons & IN_MOVELEFT) ? -1 : 1);
-
 			if (DotProduct2D(m_vPlForward.AsVector2D(), (m_vPos - m_vPlPos).AsVector2D()) >= 0)
 			{
+				Vector vel;
+
+				if (m_pPl->m_nButtons & IN_FORWARD)
+					vel = m_vPlRight * 300 * ((m_pPl->m_nButtons & IN_MOVELEFT) ? -1 : 1) + m_vPlForward2D * 300;
+				else
+					vel = m_vPlRight * 350 * ((m_pPl->m_nButtons & IN_MOVELEFT) ? -1 : 1);
+
 				SetVel(vel, 0, BODY_PART_FEET, false, markOffsidePlayers, true);
 				return true;
 			}
