@@ -75,7 +75,7 @@ unsigned PerformUpdate(void *params)
 
 	if (filesystem->FileExists(fileListPath, "MOD"))
 	{
-		FileHandle_t fh = filesystem->Open(fileListPath, "r", "MOD");
+		FileHandle_t fh = filesystem->Open(fileListPath, "rb", "MOD");
 		int fileSize = filesystem->Size(fh);
 		char *localFileListString = new char[fileSize + 1];
  
@@ -143,7 +143,7 @@ unsigned PerformUpdate(void *params)
 		return CFileUpdater::UpdateFinished(pUpdateInfo);
 	}
 
-	FileHandle_t fh = filesystem->Open(fileListPath, "w", "MOD");
+	FileHandle_t fh = filesystem->Open(fileListPath, "wb", "MOD");
 
 	for (int i = 0; i < localFileList.Count(); i++)
 	{
