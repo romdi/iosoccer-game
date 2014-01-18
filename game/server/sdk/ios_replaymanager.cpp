@@ -256,6 +256,8 @@ void CReplayManager::CheckReplay()
 }
 
 extern ConVar sv_ball_goalcelebduration;
+extern ConVar sv_ball_highlightsdelay_intermissions;
+extern ConVar sv_ball_highlightsdelay_cooldown;
 
 void CReplayManager::StartReplay(bool isHighlightReplay)
 {
@@ -273,7 +275,15 @@ void CReplayManager::StartReplay(bool isHighlightReplay)
 
 	m_bIsHighlightStart = true;
 	m_bIsReplayStart = true;
-	m_flReplayActivationTime = gpGlobals->curtime + (m_bIsHighlightReplay ? 3.0f : sv_ball_goalcelebduration.GetFloat());
+
+	float replayActivationDelay;
+
+	if (m_bIsHighlightReplay)
+		replayActivationDelay = SDKGameRules()->State_Get() == MATCH_PERIOD_COOLDOWN ? sv_ball_highlightsdelay_cooldown.GetFloat() : sv_ball_highlightsdelay_intermissions.GetBool();
+	else
+		replayActivationDelay = sv_ball_goalcelebduration.GetFloat();
+
+	m_flReplayActivationTime = gpGlobals->curtime + replayActivationDelay;
 	m_nReplayRunIndex = 0;
 	m_bReplayIsPending = true;
 	m_bIsReplaying = false;

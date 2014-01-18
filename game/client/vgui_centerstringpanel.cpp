@@ -54,7 +54,7 @@ private:
 
 	vgui::HFont			m_hFont;
 
-	float				m_flCentertimeOff;
+	float				m_flCentertimeStart;
 };
 
 //-----------------------------------------------------------------------------
@@ -79,7 +79,7 @@ CCenterStringLabel::CCenterStringLabel( vgui::VPANEL parent ) :
 
 	SetPaintBackgroundEnabled( false );
 
-	m_flCentertimeOff = 0.0;
+	m_flCentertimeStart = -1;
 
 	vgui::ivgui()->AddTickSignal( GetVPanel(), 100 );
 }
@@ -151,7 +151,7 @@ void CCenterStringLabel::Print( char *text )
 {
 	SetText( text );
 	
-	m_flCentertimeOff = cl_centermessagetime.GetFloat() + gpGlobals->curtime;
+	m_flCentertimeStart = gpGlobals->curtime;
 }
 
 //-----------------------------------------------------------------------------
@@ -161,7 +161,7 @@ void CCenterStringLabel::Print( wchar_t *text )
 {
 	SetText( text );
 	
-	m_flCentertimeOff = cl_centermessagetime.GetFloat() + gpGlobals->curtime;
+	m_flCentertimeStart = gpGlobals->curtime;
 }
 
 //-----------------------------------------------------------------------------
@@ -187,7 +187,7 @@ void CCenterStringLabel::ColorPrint( int r, int g, int b, int a, wchar_t *text )
 //-----------------------------------------------------------------------------
 void CCenterStringLabel::Clear( void )
 {
-	m_flCentertimeOff = 0;
+	m_flCentertimeStart = -1;
 }
 
 //-----------------------------------------------------------------------------
@@ -196,6 +196,22 @@ void CCenterStringLabel::Clear( void )
 void CCenterStringLabel::OnTick( void )
 {
 	SetVisible( ShouldDraw() );
+
+	if (m_flCentertimeStart != -1)
+	{
+		if (gpGlobals->curtime < m_flCentertimeStart + 0.5f)
+		{
+			SetAlpha((gpGlobals->curtime - m_flCentertimeStart) / 0.5f * 255);
+		}
+		else if (gpGlobals->curtime < m_flCentertimeStart + cl_centermessagetime.GetFloat() - 0.5f)
+		{
+			SetAlpha(255);
+		}
+		else
+		{
+			SetAlpha(1 - ((gpGlobals->curtime - (m_flCentertimeStart + cl_centermessagetime.GetFloat())) / 0.5f) * 255);
+		}
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -210,8 +226,10 @@ bool CCenterStringLabel::ShouldDraw( void )
 		return false;
 	}
 
-	if ( m_flCentertimeOff <= gpGlobals->curtime )
+	if ( m_flCentertimeStart == -1 || gpGlobals->curtime >= m_flCentertimeStart + cl_centermessagetime.GetFloat() )
 	{
+		m_flCentertimeStart = -1;
+
 		// not time to turn off the message yet
 		return false;
 	}

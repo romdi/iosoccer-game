@@ -172,6 +172,8 @@ ConVar sv_ball_statetransition_messagedelay_normal("sv_ball_statetransition_mess
 ConVar sv_ball_statetransition_messagedelay_short("sv_ball_statetransition_messagedelay_short", "0.1", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
 
 ConVar sv_ball_goalcelebduration("sv_ball_goalcelebduration", "5.0", FCVAR_NOTIFY);
+ConVar sv_ball_highlightsdelay_intermissions("sv_ball_highlightsdelay_intermissions", "5.0", FCVAR_NOTIFY);
+ConVar sv_ball_highlightsdelay_cooldown("sv_ball_highlightsdelay_cooldown", "30.0", FCVAR_NOTIFY);
 ConVar sv_ball_thinkinterval("sv_ball_thinkinterval", "0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
 ConVar sv_ball_chestdrop_strength("sv_ball_chestdrop_strength", "100", FCVAR_NOTIFY); 
 ConVar sv_ball_chestdrop_angle("sv_ball_chestdrop_angle", "80", FCVAR_NOTIFY); 

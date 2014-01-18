@@ -394,7 +394,7 @@ public:
 	void ResetMatch();
 	void ReloadSettings();
 
-	void ApplyIntermissionSettings(bool swapTeams);
+	void ApplyIntermissionSettings(bool startHighlights, bool movePlayers);
 	bool CheckAutoStart();
 
 	void SetMatchDisplayTimeSeconds(int seconds);

@@ -425,7 +425,7 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 			Vector dir = newPos - SDKGameRules()->m_vShieldPos;
 
 			if ((GetFlags() & FL_SHIELD_KEEP_OUT && dir.Length2D() < radius || GetFlags() & FL_SHIELD_KEEP_IN && dir.Length2D() > radius)
-				&& (!SDKGameRules()->IsIntermissionState() || mp_shield_block_opponent_half.GetBool()))
+				&& (!SDKGameRules()->IsIntermissionState() || SDKGameRules()->State_Get() == MATCH_PERIOD_WARMUP && mp_shield_block_opponent_half.GetBool()))
 			{
 				dir.z = 0;
 				dir.NormalizeInPlace();
@@ -434,7 +434,7 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 			}
 
 			if (SDKGameRules()->m_nShieldType == SHIELD_KICKOFF && (GetFlags() & FL_SHIELD_KEEP_OUT)
-				&& (!SDKGameRules()->IsIntermissionState() || mp_shield_block_opponent_half.GetBool()))
+				&& (!SDKGameRules()->IsIntermissionState() || SDKGameRules()->State_Get() == MATCH_PERIOD_WARMUP && mp_shield_block_opponent_half.GetBool()))
 			{
 				int forward;
 				#ifdef CLIENT_DLL
