@@ -1775,7 +1775,8 @@ void CBall::State_PENALTY_Think()
 		}
 
 		Vector pos = m_pOtherPl->GetTeam()->m_vGoalCenter + Vector(0, m_pOtherPl->GetTeam()->m_nForward * 20, 0);
-		m_pOtherPl->SetPosInsideShield(pos, true);
+		m_pOtherPl->SetPosInsideShield(pos, false);
+		m_pOtherPl->AddFlag(FL_NO_Y_MOVEMENT);
 	}
 
 	if (!PlayersAtTargetPos())
@@ -1810,7 +1811,7 @@ void CBall::State_PENALTY_Leave(ball_state_t newState)
 {
 	if (CSDKPlayer::IsOnField(m_pOtherPl))
 	{
-		m_pOtherPl->RemoveFlag(FL_ATCONTROLS);
+		m_pOtherPl->RemoveFlag(FL_NO_Y_MOVEMENT);
 	}
 
 	m_bShotsBlocked = false;
