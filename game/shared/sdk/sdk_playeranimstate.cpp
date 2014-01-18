@@ -245,8 +245,10 @@ int CSDKPlayerAnimState::CalcPrimaryActionSequence(PlayerAnimEvent_t event)
 	case PLAYERANIMEVENT_TACKLED_FORWARD: return CalcSequenceIndex("iostackled_forward");
 	case PLAYERANIMEVENT_TACKLED_BACKWARD: return CalcSequenceIndex("iostackled_backward");
 	case PLAYERANIMEVENT_DIVINGHEADER: return CalcSequenceIndex("iosdivingheader");
-	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT: return CalcSequenceIndex("iosdiveright");
-	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT: return CalcSequenceIndex("iosdiveleft");
+	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT_LOW: return CalcSequenceIndex("iosdiveright");
+	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT_HIGH: return CalcSequenceIndex("iosdiveright");
+	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT_LOW: return CalcSequenceIndex("iosdiveleft");
+	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT_HIGH: return CalcSequenceIndex("iosdiveleft");
 	case PLAYERANIMEVENT_KEEPER_DIVE_FORWARD: return CalcSequenceIndex("iostackled_forward");
 	case PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD: return CalcSequenceIndex("iostackled_backward");
 	case PLAYERANIMEVENT_KEEPER_HANDS_THROW: return CalcSequenceIndex("iosthrow");
@@ -395,8 +397,10 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 	case PLAYERANIMEVENT_SLIDE:
 	case PLAYERANIMEVENT_TACKLED_FORWARD:
 	case PLAYERANIMEVENT_TACKLED_BACKWARD:
-	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT:
-	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT:
+	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT_LOW:
+	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT_HIGH:
+	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT_LOW:
+	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT_HIGH:
 	case PLAYERANIMEVENT_KEEPER_DIVE_FORWARD:
 	case PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD:
 	case PLAYERANIMEVENT_ROULETTE_CLOCKWISE:
