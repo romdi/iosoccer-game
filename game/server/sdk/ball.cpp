@@ -90,7 +90,9 @@ ConVar sv_ball_keeperdeflectioncoeff("sv_ball_keeperdeflectioncoeff", "0.66", FC
 
 ConVar sv_ball_shotdelay_setpiece("sv_ball_shotdelay_setpiece", "0.5", FCVAR_NOTIFY);
 ConVar sv_ball_shotdelay_global_coeff("sv_ball_shotdelay_global_coeff", "0.5", FCVAR_NOTIFY);
-ConVar sv_ball_keepercatchdelay_global_coeff("sv_ball_keepercatchdelay_global_coeff", "1.0", FCVAR_NOTIFY);
+ConVar sv_ball_keepercatchdelay_sidedive_global_coeff("sv_ball_keepercatchdelay_sidedive_global_coeff", "0.75", FCVAR_NOTIFY);
+ConVar sv_ball_keepercatchdelay_forwarddive_global_coeff("sv_ball_keepercatchdelay_forwarddive_global_coeff", "0.75", FCVAR_NOTIFY);
+ConVar sv_ball_keepercatchdelay_standing_global_coeff("sv_ball_keepercatchdelay_standing_global_coeff", "0.5", FCVAR_NOTIFY);
 ConVar sv_ball_dynamicshotdelay_mindelay("sv_ball_dynamicshotdelay_mindelay", "0.2", FCVAR_NOTIFY);
 ConVar sv_ball_dynamicshotdelay_maxdelay("sv_ball_dynamicshotdelay_maxdelay", "1.0", FCVAR_NOTIFY);
 ConVar sv_ball_dynamicshotdelay_minshotstrength("sv_ball_dynamicshotdelay_minshotstrength", "400", FCVAR_NOTIFY);
@@ -774,12 +776,12 @@ void CBall::SetVel(Vector vel, float spinCoeff, body_part_t bodyPart, bool isDef
 
 	float dynamicDelay = RemapValClamped(m_vVel.Length(), sv_ball_dynamicshotdelay_minshotstrength.GetInt(), sv_ball_dynamicshotdelay_maxshotstrength.GetInt(), sv_ball_dynamicshotdelay_mindelay.GetFloat(), sv_ball_dynamicshotdelay_maxdelay.GetFloat());
 	
-	m_flGlobalNextShot = gpGlobals->curtime + dynamicDelay * sv_ball_shotdelay_global_coeff.GetFloat();
-	m_flGlobalNextKeeperCatch = gpGlobals->curtime + dynamicDelay * sv_ball_keepercatchdelay_global_coeff.GetFloat();
+	m_flGlobalLastShot = gpGlobals->curtime;
+	m_flGlobalDynamicShotDelay = dynamicDelay;
 
 	if (isDeflection)
 	{
-		m_pPl->m_flNextShot = m_flGlobalNextShot;
+		m_pPl->m_flNextShot = m_flGlobalLastShot + m_flGlobalDynamicShotDelay * sv_ball_shotdelay_global_coeff.GetFloat();
 	}
 	else
 	{
@@ -2218,7 +2220,7 @@ bool CBall::DoBodyPartAction()
 	if (canCatch)
 		return CheckKeeperCatch();
 
-	if (gpGlobals->curtime < m_flGlobalNextShot)
+	if (gpGlobals->curtime < m_flGlobalLastShot + m_flGlobalDynamicShotDelay * sv_ball_shotdelay_global_coeff.GetFloat())
 	{
 		if (zDist >= sv_ball_bodypos_feet_start.GetFloat() && zDist < sv_ball_bodypos_head_end.GetFloat() && xyDist <= sv_ball_deflectionradius.GetInt())
 		{
@@ -2304,6 +2306,7 @@ bool CBall::CheckKeeperCatch()
 	static float sqrt2 = sqrt(2.0f);
 	float distXY = localDirToBall.Length2D();
 	float distXZ = sqrt(Sqr(localDirToBall.x) + Sqr(localDirToBall.z));
+	float globalCatchCoeff = 0;
 
 	switch (m_pPl->m_Shared.GetAnimEvent())
 	{
@@ -2326,6 +2329,7 @@ bool CBall::CheckKeeperCatch()
 			punchAngPitch -= abs(distZ) / maxZReach * sv_ball_keeper_punch_maxpitchangle.GetInt();
 
 			catchCoeff = sqrt(pow(abs(distY) / maxYReach, 2) + pow(abs(distZ) / maxZReach, 2)) / sqrt2;
+			globalCatchCoeff = sv_ball_keepercatchdelay_sidedive_global_coeff.GetFloat();
 		}
 		break;
 	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT:
@@ -2347,6 +2351,7 @@ bool CBall::CheckKeeperCatch()
 			punchAngPitch -= abs(distZ) / maxZReach * sv_ball_keeper_punch_maxpitchangle.GetInt();
 
 			catchCoeff = sqrt(pow(abs(distY) / maxYReach, 2) + pow(abs(distZ) / maxZReach, 2)) / sqrt2;
+			globalCatchCoeff = sv_ball_keepercatchdelay_sidedive_global_coeff.GetFloat();
 		}
 		break;
 	case PLAYERANIMEVENT_KEEPER_DIVE_FORWARD:
@@ -2359,6 +2364,7 @@ bool CBall::CheckKeeperCatch()
 		if (canReach)
 		{
 			catchCoeff = sv_ball_keeper_forwarddive_catchcoeff.GetFloat();
+			globalCatchCoeff = sv_ball_keepercatchdelay_forwarddive_global_coeff.GetFloat();
 		}
 		break;
 	case PLAYERANIMEVENT_KEEPER_JUMP:
@@ -2381,6 +2387,7 @@ bool CBall::CheckKeeperCatch()
 			punchAngPitch -= abs(distZ) / maxZReach * sv_ball_keeper_punch_maxpitchangle.GetInt();
 
 			catchCoeff = sqrt(pow(abs(distY) / maxYReach, 2) + pow(abs(distZ) / maxZReach, 2)) / sqrt2;
+			globalCatchCoeff = sv_ball_keepercatchdelay_standing_global_coeff.GetFloat();
 		}
 		break;
 	}
@@ -2388,8 +2395,7 @@ bool CBall::CheckKeeperCatch()
 	if (!canReach)
 		return false;
 
-	float catchTimeLeft = m_flGlobalNextKeeperCatch - gpGlobals->curtime;
-	catchTimeLeft *= catchCoeff;
+	float catchTimeLeft = ((m_flGlobalLastShot + m_flGlobalDynamicShotDelay * globalCatchCoeff) - gpGlobals->curtime) * catchCoeff;
 
 	if (m_bHasQueuedState || (catchTimeLeft > 0.0f && (!LastInfo(true) || LastInfo(true)->m_eBallState != BALL_STATE_PENALTY))) // Punch ball away
 	{
