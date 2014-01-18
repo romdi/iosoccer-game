@@ -1363,6 +1363,13 @@ void CGameMovement::WalkMove( void )
 		return;
 	}
 
+	if (ToSDKPlayer(player)->m_Shared.m_bWasJumping && spd > mp_runspeed.GetInt())
+	{
+		VectorNormalize(mv->m_vecVelocity);
+		mv->m_vecVelocity *= mp_runspeed.GetInt();
+		ToSDKPlayer(player)->m_Shared.m_bWasJumping = false;
+	}
+
 	// first try just moving to the destination	
 	dest[0] = mv->GetAbsOrigin()[0] + mv->m_vecVelocity[0]*gpGlobals->frametime;
 	dest[1] = mv->GetAbsOrigin()[1] + mv->m_vecVelocity[1]*gpGlobals->frametime;	
@@ -2036,16 +2043,6 @@ bool CGameMovement::CheckJumpButton( void )
 	pPl->m_Shared.SetStamina(pPl->m_Shared.GetStamina() - mp_stamina_drain_jumping.GetInt());
 
 	pPl->m_Shared.m_flNextJump = gpGlobals->curtime + mp_jump_delay.GetFloat();
-
-	if (animEvent != PLAYERANIMEVENT_KEEPER_DIVE_LEFT && animEvent != PLAYERANIMEVENT_KEEPER_DIVE_RIGHT)
-	{
-		mv->m_flMaxSpeed = mp_jump_speed.GetInt();
-		float zVel = mv->m_vecVelocity.z;
-		mv->m_vecVelocity.z = 0;
-		float xySpeed = VectorNormalize(mv->m_vecVelocity);
-		mv->m_vecVelocity *= min(mv->m_flMaxSpeed, xySpeed);
-		mv->m_vecVelocity.z = zVel;
-	}
 
 	return true;
 }

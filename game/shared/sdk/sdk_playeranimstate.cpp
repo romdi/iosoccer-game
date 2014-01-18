@@ -523,6 +523,7 @@ bool CSDKPlayerAnimState::HandleJumping( Activity &idealActivity )
 				m_bJumping = false;
 				//GetSDKPlayer()->m_Shared.m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
 				RestartMainSequence();	// Reset the animation.
+				GetSDKPlayer()->m_Shared.m_bWasJumping = true;
 			}
 		}
 	}

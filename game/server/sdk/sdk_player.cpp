@@ -122,6 +122,7 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	SendPropTime( SENDINFO( m_flNextSlide) ),
 
 	SendPropBool( SENDINFO( m_bJumping ) ),
+	SendPropBool( SENDINFO( m_bWasJumping ) ),
 	SendPropBool( SENDINFO( m_bFirstJumpFrame ) ),
 	SendPropTime( SENDINFO( m_flJumpStartTime ) ),
 
@@ -546,6 +547,7 @@ void CSDKPlayer::Spawn()
 
 	m_Shared.m_flNextJump = gpGlobals->curtime;
 	m_Shared.m_flNextSlide = gpGlobals->curtime;
+	m_Shared.m_bWasJumping = false;
 
 	AddSolidFlags(FSOLID_NOT_STANDABLE);
 

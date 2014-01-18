@@ -88,6 +88,7 @@ public:
 	CNetworkVar(float, m_flShotChargingDuration);
 
 	CNetworkVar(bool, m_bJumping);
+	CNetworkVar(bool, m_bWasJumping);
 	CNetworkVar(bool, m_bFirstJumpFrame);
 	CNetworkVar(float, m_flJumpStartTime);
 

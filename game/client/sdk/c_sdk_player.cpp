@@ -131,6 +131,7 @@ BEGIN_RECV_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	RecvPropTime( RECVINFO( m_flNextSlide ) ),
 
 	RecvPropBool( RECVINFO( m_bJumping ) ),
+	RecvPropBool( RECVINFO( m_bWasJumping ) ),
 	RecvPropBool( RECVINFO( m_bFirstJumpFrame ) ),
 	RecvPropTime( RECVINFO( m_flJumpStartTime ) ),
 
@@ -213,6 +214,7 @@ BEGIN_PREDICTION_DATA_NO_BASE( CSDKPlayerShared )
 	DEFINE_PRED_FIELD( m_flNextSlide, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 
 	DEFINE_PRED_FIELD( m_bJumping, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_bWasJumping, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_bFirstJumpFrame, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flJumpStartTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 
@@ -694,6 +696,7 @@ void C_SDKPlayer::Spawn()
 
 	m_Shared.m_flNextJump = gpGlobals->curtime;
 	m_Shared.m_flNextSlide = gpGlobals->curtime;
+	m_Shared.m_bWasJumping = false;
 }
 
 void C_SDKPlayer::UpdateClientSideAnimation()
