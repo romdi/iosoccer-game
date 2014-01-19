@@ -1363,10 +1363,13 @@ void CGameMovement::WalkMove( void )
 		return;
 	}
 
-	if (ToSDKPlayer(player)->m_Shared.m_bWasJumping && spd > mp_runspeed.GetInt())
+	bool speedShotSlowdown = mp_speed_shot_slowdown.GetBool() && (mv->m_nButtons & (IN_ATTACK | IN_ATTACK2 | IN_ALT1));
+	float landingSpeed = speedShotSlowdown ? mp_jumplandingshotspeed.GetFloat() : mp_jumplandingspeed.GetFloat();
+
+	if (ToSDKPlayer(player)->m_Shared.m_bWasJumping && spd > landingSpeed)
 	{
 		VectorNormalize(mv->m_vecVelocity);
-		mv->m_vecVelocity *= mp_runspeed.GetInt();
+		mv->m_vecVelocity *= landingSpeed;
 		ToSDKPlayer(player)->m_Shared.m_bWasJumping = false;
 	}
 

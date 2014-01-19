@@ -135,6 +135,8 @@ extern ConVar
 	mp_runshotspeed,
 	mp_sprintspeed,
 	mp_sprintshotspeed,
+	mp_jumplandingspeed,
+	mp_jumplandingshotspeed,
 	mp_remotecontrolledspeed,
 	mp_speed_shot_slowdown,
 	mp_keeperlowsidewarddive_move_duration,
