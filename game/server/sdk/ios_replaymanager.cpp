@@ -279,7 +279,7 @@ void CReplayManager::StartReplay(bool isHighlightReplay)
 	float replayActivationDelay;
 
 	if (m_bIsHighlightReplay)
-		replayActivationDelay = SDKGameRules()->State_Get() == MATCH_PERIOD_COOLDOWN ? sv_ball_highlightsdelay_cooldown.GetFloat() : sv_ball_highlightsdelay_intermissions.GetBool();
+		replayActivationDelay = SDKGameRules()->State_Get() == MATCH_PERIOD_COOLDOWN ? sv_ball_highlightsdelay_cooldown.GetFloat() : sv_ball_highlightsdelay_intermissions.GetFloat();
 	else
 		replayActivationDelay = sv_ball_goalcelebduration.GetFloat();
 
