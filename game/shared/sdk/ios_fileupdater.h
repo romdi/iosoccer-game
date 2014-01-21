@@ -22,6 +22,8 @@ struct IOSUpdateInfo
 	int filesUpdatedCount;
 	bool restartRequired;
 	bool connectionError;
+	char changelogText[1024];
+	bool changelogDownloaded;
 
 	IOSUpdateInfo()
 	{
@@ -38,6 +40,8 @@ struct IOSUpdateInfo
 		filesUpdatedCount = 0;
 		restartRequired = false;
 		connectionError = false;
+		changelogDownloaded = false;
+		changelogText[0] = '\0';
 	}
 };
 

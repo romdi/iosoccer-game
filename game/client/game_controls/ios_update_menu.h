@@ -6,6 +6,7 @@
 #include <game/client/iviewport.h>
 #include <vgui_controls/Button.h>
 #include <vgui_controls/progressbar.h>
+#include <vgui_controls/richtext.h>
 #include "ios_fileupdater.h"
 
 using namespace vgui;
@@ -54,6 +55,7 @@ protected:
 	UpdateState_t m_eUpdateState;
 	IOSUpdateInfo *m_pUpdateInfo;
 	ProgressBar *m_pProgressBar;
+	RichText *m_pChangelog;
 };
 
 class IIOSUpdateMenu

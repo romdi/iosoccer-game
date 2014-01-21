@@ -140,6 +140,28 @@ unsigned PerformUpdate(void *params)
 
 	if (pUpdateInfo->checkOnly || pUpdateInfo->filesToUpdateCount == 0)
 	{
+		if (pUpdateInfo->checkOnly)
+		{
+			CUtlBuffer changelogBuffer;
+			curl = curl_easy_init();
+			Q_snprintf(url, sizeof(url), "%s/changelog.txt.gz", downloadUrl);
+			curl_easy_setopt(curl, CURLOPT_URL, url);
+			curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, "gzip");
+			curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, rcvFileListData);
+			curl_easy_setopt(curl, CURLOPT_WRITEDATA, &changelogBuffer);
+			result = curl_easy_perform(curl);
+			curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &code);
+			curl_easy_cleanup(curl);
+
+			char *changelogString = new char[changelogBuffer.Size() + 1];
+			changelogBuffer.GetString(changelogString);
+			changelogString[changelogBuffer.Size()] = 0;
+
+			Q_strncpy(pUpdateInfo->changelogText, changelogString, sizeof(pUpdateInfo->changelogText));
+			delete[] changelogString;
+			pUpdateInfo->changelogDownloaded = true;
+		}
+
 		return CFileUpdater::UpdateFinished(pUpdateInfo);
 	}
 

@@ -55,12 +55,13 @@ void CC_IOSUpdateMenu(const CCommand &args)
 ConCommand iosupdatemenu("iosupdatemenu", CC_IOSUpdateMenu);
 
 enum { LABEL_WIDTH = 260, INPUT_WIDTH = 260, SHORTINPUT_WIDTH = 200, TEXT_HEIGHT = 26, TEXT_MARGIN = 5 };
-enum { PANEL_TOPMARGIN = 70, PANEL_MARGIN = 5, PANEL_WIDTH = 500, PANEL_HEIGHT = 300 };
+enum { PANEL_TOPMARGIN = 70, PANEL_MARGIN = 5, PANEL_WIDTH = 500, PANEL_HEIGHT = 700 };
 enum { PADDING = 10, TOP_PADDING = 30 };
 enum { UPDATE_BUTTON_WIDTH = 160, UPDATE_BUTTON_HEIGHT = 52, UPDATE_BUTTON_MARGIN = 5 };
 enum { BUTTON_WIDTH = 80, BUTTON_HEIGHT = 26, BUTTON_MARGIN = 40 };
 enum { INFO_WIDTH = 400, INFO_HEIGHT = 20 };
 enum { PROGRESSBAR_WIDTH = 400, PROGRESSBAR_HEIGHT = 25 };
+enum { CHANGELOG_WIDTH = 400, CHANGELOG_HEIGHT = 400 };
 
 CIOSUpdatePanel::CIOSUpdatePanel(VPANEL parent) : BaseClass(NULL, "IOSUpdatePanel")
 {
@@ -72,6 +73,7 @@ CIOSUpdatePanel::CIOSUpdatePanel(VPANEL parent) : BaseClass(NULL, "IOSUpdatePane
 	m_pInfoText = new Label(m_pContent, "", "");
 	m_pExtraInfoText = new Label(m_pContent, "", "");
 	m_pProgressBar = new ProgressBar(m_pContent, "");
+	m_pChangelog = new RichText(m_pContent, "");
 
 	m_eUpdateState = UPDATE_STATE_NONE;
 	m_pUpdateInfo = new IOSUpdateInfo();
@@ -116,6 +118,8 @@ void CIOSUpdatePanel::ApplySchemeSettings( IScheme *pScheme )
 	m_pExtraInfoText->SetFgColor(Color(255, 255, 255, 255));
 
 	m_pProgressBar->SetBounds(m_pContent->GetWide() / 2 - PROGRESSBAR_WIDTH / 2, 3 * PADDING + 2 * (INFO_HEIGHT + PADDING), PROGRESSBAR_WIDTH, PROGRESSBAR_HEIGHT);
+
+	m_pChangelog->SetBounds(m_pContent->GetWide() / 2 - CHANGELOG_WIDTH / 2, 4 * PADDING + 2 * (INFO_HEIGHT + PADDING) + PROGRESSBAR_HEIGHT, CHANGELOG_WIDTH, CHANGELOG_HEIGHT);
 }
 
 void CIOSUpdatePanel::PerformLayout()
@@ -185,6 +189,12 @@ void CIOSUpdatePanel::OnTick()
 		}
 		else
 		{
+			if (m_pUpdateInfo->changelogDownloaded)
+			{
+				m_pChangelog->SetText("");
+				m_pChangelog->InsertString(m_pUpdateInfo->changelogText);
+			}
+
 			if (m_pUpdateInfo->filesToUpdateCount > 0)
 			{
 				m_pInfoText->SetText(VarArgs("Updates available for %d %s.", m_pUpdateInfo->filesToUpdateCount, m_pUpdateInfo->filesToUpdateCount == 1 ? "file" : "files"));
