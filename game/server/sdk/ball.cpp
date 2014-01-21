@@ -73,10 +73,8 @@ ConVar sv_ball_keeper_forwarddive_catchcoeff( "sv_ball_keeper_forwarddive_catchc
 ConVar sv_ball_keeper_sidedive_shortsidereach( "sv_ball_keeper_sidedive_shortsidereach", "50", FCVAR_NOTIFY );
 ConVar sv_ball_keeper_sidedive_longsidereach( "sv_ball_keeper_sidedive_longsidereach", "60", FCVAR_NOTIFY );
 ConVar sv_ball_keeper_sidedive_longsidereach_opposite( "sv_ball_keeper_sidedive_longsidereach_opposite", "50", FCVAR_NOTIFY );
-ConVar sv_ball_keeper_sidedive_zstart_lowdive( "sv_ball_keeper_sidedive_zstart_lowdive", "-10", FCVAR_NOTIFY );
-ConVar sv_ball_keeper_sidedive_zend_lowdive( "sv_ball_keeper_sidedive_zend_lowdive", "40", FCVAR_NOTIFY );
-ConVar sv_ball_keeper_sidedive_zstart_highdive( "sv_ball_keeper_sidedive_zstart_highdive", "-10", FCVAR_NOTIFY );
-ConVar sv_ball_keeper_sidedive_zend_highdive( "sv_ball_keeper_sidedive_zend_highdive", "40", FCVAR_NOTIFY );
+ConVar sv_ball_keeper_sidedive_zstart( "sv_ball_keeper_sidedive_zstart", "-30", FCVAR_NOTIFY );
+ConVar sv_ball_keeper_sidedive_zend( "sv_ball_keeper_sidedive_zend", "70", FCVAR_NOTIFY );
 ConVar sv_ball_keeper_sidedive_catchcenteroffset_side( "sv_ball_keeper_sidedive_catchcenteroffset_side", "0", FCVAR_NOTIFY );
 ConVar sv_ball_keeper_sidedive_catchcenteroffset_z( "sv_ball_keeper_sidedive_catchcenteroffset_z", "40", FCVAR_NOTIFY );
 
@@ -2317,14 +2315,10 @@ bool CBall::CheckKeeperCatch()
 
 	switch (m_pPl->m_Shared.GetAnimEvent())
 	{
-	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT_LOW:
-	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT_HIGH:
+	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT:
 		{
-			float zStart = m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_LEFT_LOW ? sv_ball_keeper_sidedive_zstart_lowdive.GetFloat() : sv_ball_keeper_sidedive_zstart_highdive.GetFloat();
-			float zEnd = m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_LEFT_LOW ? sv_ball_keeper_sidedive_zend_lowdive.GetFloat() : sv_ball_keeper_sidedive_zend_highdive.GetFloat();
-
-			canReach = (localDirToBall.z < zEnd
-				&& localDirToBall.z >= zStart
+			canReach = (localDirToBall.z < sv_ball_keeper_sidedive_zend.GetFloat()
+				&& localDirToBall.z >= sv_ball_keeper_sidedive_zstart.GetFloat()
 				&& abs(localDirToBall.x) <= sv_ball_keeper_sidedive_shortsidereach.GetFloat()
 				&& localDirToBall.y >= -sv_ball_keeper_sidedive_longsidereach_opposite.GetFloat()
 				&& localDirToBall.y <= sv_ball_keeper_sidedive_longsidereach.GetFloat());
@@ -2337,7 +2331,7 @@ bool CBall::CheckKeeperCatch()
 				float maxYReach = (distY >= 0 ? sv_ball_keeper_sidedive_longsidereach.GetFloat() : -sv_ball_keeper_sidedive_longsidereach_opposite.GetFloat()) - sv_ball_keeper_sidedive_catchcenteroffset_side.GetFloat();
 				punchAngYaw += abs(distY) / maxYReach * sv_ball_keeper_punch_maxyawangle.GetFloat();
 
-				float maxZReach = (distZ >= 0 ? zEnd : zStart) - sv_ball_keeper_sidedive_catchcenteroffset_z.GetFloat();
+				float maxZReach = (distZ >= 0 ? sv_ball_keeper_sidedive_zend.GetFloat() : sv_ball_keeper_sidedive_zstart.GetFloat()) - sv_ball_keeper_sidedive_catchcenteroffset_z.GetFloat();
 				punchAngPitch -= abs(distZ) / maxZReach * sv_ball_keeper_punch_maxpitchangle.GetFloat();
 
 				catchCoeff = sqrt(pow(abs(distY) / maxYReach, 2) + pow(abs(distZ) / maxZReach, 2)) / sqrt2;
@@ -2345,14 +2339,10 @@ bool CBall::CheckKeeperCatch()
 			}
 		}
 		break;
-	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT_LOW:
-	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT_HIGH:
+	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT:
 		{
-			float zStart = m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT_LOW ? sv_ball_keeper_sidedive_zstart_lowdive.GetFloat() : sv_ball_keeper_sidedive_zstart_highdive.GetFloat();
-			float zEnd = m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT_LOW ? sv_ball_keeper_sidedive_zend_lowdive.GetFloat() : sv_ball_keeper_sidedive_zend_highdive.GetFloat();
-
-			canReach = (localDirToBall.z < zEnd
-				&& localDirToBall.z >= zStart
+			canReach = (localDirToBall.z < sv_ball_keeper_sidedive_zend.GetFloat()
+				&& localDirToBall.z >= sv_ball_keeper_sidedive_zstart.GetFloat()
 				&& abs(localDirToBall.x) <= sv_ball_keeper_sidedive_shortsidereach.GetFloat()
 				&& localDirToBall.y <= sv_ball_keeper_sidedive_longsidereach_opposite.GetFloat()
 				&& localDirToBall.y >= -sv_ball_keeper_sidedive_longsidereach.GetFloat());
@@ -2365,7 +2355,7 @@ bool CBall::CheckKeeperCatch()
 				float maxYReach = (distY >= 0 ? sv_ball_keeper_sidedive_longsidereach_opposite.GetFloat() : -sv_ball_keeper_sidedive_longsidereach.GetFloat()) - -sv_ball_keeper_sidedive_catchcenteroffset_side.GetFloat();
 				punchAngYaw += abs(distY) / maxYReach * sv_ball_keeper_punch_maxyawangle.GetFloat();
 
-				float maxZReach = (distZ >= 0 ? zEnd : zStart) - sv_ball_keeper_sidedive_catchcenteroffset_z.GetFloat();
+				float maxZReach = (distZ >= 0 ? sv_ball_keeper_sidedive_zend.GetFloat() : sv_ball_keeper_sidedive_zstart.GetFloat()) - sv_ball_keeper_sidedive_catchcenteroffset_z.GetFloat();
 				punchAngPitch -= abs(distZ) / maxZReach * sv_ball_keeper_punch_maxpitchangle.GetFloat();
 
 				catchCoeff = sqrt(pow(abs(distY) / maxYReach, 2) + pow(abs(distZ) / maxZReach, 2)) / sqrt2;
@@ -2423,10 +2413,8 @@ bool CBall::CheckKeeperCatch()
 		Vector punchDirPitch;
 		AngleVectors(QAngle(punchAngPitch, m_aPlAng[YAW], 0), &punchDirPitch);
 
-		if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_LEFT_LOW
-			|| m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_LEFT_HIGH
-			|| m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT_LOW
-			|| m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT_HIGH)
+		if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_LEFT
+			|| m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT)
 		{
 			punchDirPitch *= sv_ball_keeper_punch_shortsidecoeff.GetFloat();
 		}
