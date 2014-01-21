@@ -1578,9 +1578,6 @@ void CSDKGameRules::State_WARMUP_Enter()
 	SetKickOffTeam(m_nFirstHalfKickOffTeam);
 
 	ApplyIntermissionSettings(false, true);
-
-	GetBall()->State_Transition(BALL_STATE_NORMAL, 0, true);
-	GetBall()->SetPos(m_vKickOff);
 }
 
 void CSDKGameRules::State_WARMUP_Think()
@@ -1981,7 +1978,11 @@ void CSDKGameRules::State_COOLDOWN_Leave(match_period_t newState)
 void CSDKGameRules::ApplyIntermissionSettings(bool startHighlights, bool movePlayers)
 {
 	if (movePlayers)
+	{
+		GetBall()->State_Transition(BALL_STATE_NORMAL, 0, true);
+		GetBall()->SetPos(m_vKickOff);
 		EnableShield(SHIELD_KICKOFF, TEAM_A, SDKGameRules()->m_vKickOff);
+	}
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
