@@ -523,7 +523,7 @@ bool CBall::CreateVPhysics()
 	VPhysicsSetObject( m_pPhys );
 	
 	SetSolid( SOLID_VPHYSICS );
-	//SetSolidFlags( FSOLID_NOT_STANDABLE	);
+	SetSolidFlags( FSOLID_NOT_STANDABLE	);
 	UTIL_SetSize(this, -Vector(m_flPhysRadius, m_flPhysRadius, m_flPhysRadius), Vector(m_flPhysRadius, m_flPhysRadius, m_flPhysRadius));
 
 	SetMoveType( MOVETYPE_VPHYSICS );

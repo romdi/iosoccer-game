@@ -5385,7 +5385,7 @@ void CBasePlayer::SetupVPhysicsShadow( const Vector &vecAbsOrigin, const Vector 
 	solid_t solid;
 	Q_strncpy( solid.surfaceprop, "player", sizeof(solid.surfaceprop) );
 	solid.params = g_PhysDefaultObjectParams;
-	solid.params.mass = 85.0f;
+	solid.params.mass = FLT_MAX;
 	solid.params.inertia = 1e24f;
 	solid.params.enableCollisions = false;
 	//disable drag
@@ -5404,8 +5404,8 @@ void CBasePlayer::SetupVPhysicsShadow( const Vector &vecAbsOrigin, const Vector 
 	// tell physics lists I'm a shadow controller object
 	PhysAddShadow( this );	
 	m_pPhysicsController = physenv->CreatePlayerController( m_pShadowStand );
-	m_pPhysicsController->SetPushMassLimit( 350.0f );
-	m_pPhysicsController->SetPushSpeedLimit( 50.0f );
+	m_pPhysicsController->SetPushMassLimit( 10000.0f );
+	m_pPhysicsController->SetPushSpeedLimit( 10000.0f );
 	
 	// Give the controller a valid position so it doesn't do anything rash.
 	UpdatePhysicsShadowToPosition( vecAbsOrigin );
