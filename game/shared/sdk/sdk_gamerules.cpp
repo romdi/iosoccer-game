@@ -1579,6 +1579,7 @@ void CSDKGameRules::State_WARMUP_Enter()
 
 	ApplyIntermissionSettings(false, true);
 
+	GetBall()->State_Transition(BALL_STATE_NORMAL, 0, true);
 	GetBall()->SetPos(m_vKickOff);
 }
 
