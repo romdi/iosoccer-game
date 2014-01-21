@@ -170,7 +170,8 @@ extern ConVar
 	mp_emote_duration,
 	mp_ball_mass_fix_enabled,
 	mp_player_bbox_xy,
-	mp_player_bbox_z;
+	mp_player_bbox_z,
+	mp_no_ball_unstuck;
 
 //--------------------------------------------------------------------------------------------------------
 //

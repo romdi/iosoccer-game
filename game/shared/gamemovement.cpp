@@ -2646,7 +2646,12 @@ int CGameMovement::CheckStuck( void )
 	CreateStuckTable();
 
 	hitent = TestPlayerPosition( mv->GetAbsOrigin(), COLLISION_GROUP_PLAYER_MOVEMENT, traceresult );
-	if ( hitent == INVALID_ENTITY_HANDLE )
+
+#ifdef CLIENT_DLL
+	#define CBall C_Ball
+#endif
+
+	if ( hitent == INVALID_ENTITY_HANDLE || mp_no_ball_unstuck.GetBool() && dynamic_cast<CBall *>(traceresult.m_pEnt) )
 	{
 		ResetStuckOffsets( player );
 		return 0;
