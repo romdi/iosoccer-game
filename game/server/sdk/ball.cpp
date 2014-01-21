@@ -42,7 +42,10 @@ ConVar sv_ball_curve("sv_ball_curve", "200", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONL
 
 ConVar sv_ball_deflectionradius( "sv_ball_deflectionradius", "30", FCVAR_NOTIFY );
 
-ConVar sv_ball_standing_reach( "sv_ball_standing_reach", "50", FCVAR_NOTIFY );
+ConVar sv_ball_standing_reach_min( "sv_ball_standing_reach_min", "30", FCVAR_NOTIFY );
+ConVar sv_ball_standing_reach_max( "sv_ball_standing_reach_max", "50", FCVAR_NOTIFY );
+ConVar sv_ball_standing_reach_speed_min( "sv_ball_standing_reach_speed_min", "100", FCVAR_NOTIFY );
+ConVar sv_ball_standing_reach_speed_max( "sv_ball_standing_reach_speed_max", "1000", FCVAR_NOTIFY );
 ConVar sv_ball_standing_cone( "sv_ball_standing_cone", "360", FCVAR_NOTIFY );
 ConVar sv_ball_standing_shift( "sv_ball_standing_shift", "0", FCVAR_NOTIFY );
 
@@ -2001,7 +2004,10 @@ bool CBall::CanTouchBallXY()
 {
 	Vector circleCenter = m_vPlPos + m_vPlForward2D * sv_ball_standing_shift.GetFloat();
 	Vector dirToBall = m_vPos - circleCenter;
-	if (dirToBall.Length2DSqr() <= pow(sv_ball_standing_reach.GetFloat(), 2))
+
+	float reach = -RemapValClamped(m_vVel.Length(), sv_ball_standing_reach_speed_min.GetFloat(), sv_ball_standing_reach_speed_max.GetFloat(), -sv_ball_standing_reach_max.GetFloat(), -sv_ball_standing_reach_min.GetFloat());
+
+	if (dirToBall.Length2DSqr() <= pow(reach, 2))
 	{
 		dirToBall.NormalizeInPlace();
 
