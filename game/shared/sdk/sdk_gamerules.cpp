@@ -380,8 +380,8 @@ static CSDKViewVectors g_SDKViewVectors(
 	//Vector(-16, -16, 0 ),		//VEC_HULL_MIN
 	//Vector( 16,  16,  72 ),		//VEC_HULL_MAX
 	
-	Vector(-13, -13, 0 ),		//VEC_HULL_MIN
-	Vector( 13,  13,  72 ),		//VEC_HULL_MAX
+	Vector(-mp_player_bbox_xy.GetFloat(), -mp_player_bbox_xy.GetFloat(), 0 ),		//VEC_HULL_MIN
+	Vector( mp_player_bbox_xy.GetFloat(),  mp_player_bbox_xy.GetFloat(),  mp_player_bbox_z.GetFloat() ),		//VEC_HULL_MAX
 
 	Vector( 0, 0, 58 ),		
 	Vector(-13, -13, 0 ),	

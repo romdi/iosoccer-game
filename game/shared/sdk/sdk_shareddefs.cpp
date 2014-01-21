@@ -161,6 +161,9 @@ ConVar mp_emote_duration("mp_emote_duration", "2.0", FCVAR_REPLICATED | FCVAR_NO
 
 ConVar mp_ball_mass_fix_enabled("mp_ball_mass_fix_enabled", "1", FCVAR_REPLICATED | FCVAR_NOTIFY);
 
+ConVar mp_player_bbox_xy("mp_player_bbox_xy", "10", FCVAR_REPLICATED | FCVAR_NOTIFY);
+ConVar mp_player_bbox_z("mp_player_bbox_z", "72", FCVAR_REPLICATED | FCVAR_NOTIFY);
+
 // basic team colors
 Color g_ColorRed(255, 153, 153, 255);
 Color g_ColorBlue(161, 190, 230, 255);

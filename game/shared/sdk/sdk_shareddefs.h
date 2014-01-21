@@ -168,7 +168,9 @@ extern ConVar
 	mp_charging_animation_enabled,
 	mp_majorevent_messageduration,
 	mp_emote_duration,
-	mp_ball_mass_fix_enabled;
+	mp_ball_mass_fix_enabled,
+	mp_player_bbox_xy,
+	mp_player_bbox_z;
 
 //--------------------------------------------------------------------------------------------------------
 //
