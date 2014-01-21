@@ -1580,6 +1580,7 @@ bool CGameMovement::CheckPlayerAnimEvent()
 			if (timePassed > mp_keepersidewarddive_move_duration.GetFloat() + mp_keepersidewarddive_idle_duration.GetFloat())
 			{
 				pPl->DoAnimationEvent(PLAYERANIMEVENT_NONE);
+				pPl->RemoveFlag(FL_FREECAM);
 				return false;
 			}
 
@@ -1605,6 +1606,10 @@ bool CGameMovement::CheckPlayerAnimEvent()
 			}
 			else
 				mv->m_vecVelocity = forward * mv->m_flForwardMove + right * mv->m_flSideMove;
+
+			if (!(mv->m_nButtons & IN_DUCK))
+				pPl->AddFlag(FL_FREECAM);
+
 			break;
 		}
 	case PLAYERANIMEVENT_KEEPER_DIVE_FORWARD:
