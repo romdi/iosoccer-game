@@ -84,3 +84,8 @@ void C_Ball::ClientThink()
 
 	SetNextClientThink(CLIENT_THINK_ALWAYS);
 }
+
+bool C_Ball::ShouldCollide( int collisionGroup, int contentsMask ) const
+{
+	return false;
+}

@@ -143,6 +143,8 @@ public:
 	int				ObjectCaps(void)	{  return BaseClass::ObjectCaps() |	FCAP_CONTINUOUS_USE; }
 	int				UpdateTransmitState();
 
+	virtual	bool		ShouldCollide( int collisionGroup, int contentsMask ) const;
+
 	bool			IsAsleep(void) { return	false; }
 	void			Spawn(void);
 	void			Think( void	);

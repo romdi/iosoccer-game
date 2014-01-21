@@ -450,6 +450,11 @@ void CBall::RemovePlayerBall()
 	UTIL_Remove(this);
 }
 
+bool CBall::ShouldCollide( int collisionGroup, int contentsMask ) const
+{
+	return false;
+}
+
 //==========================================================
 //	
 //	

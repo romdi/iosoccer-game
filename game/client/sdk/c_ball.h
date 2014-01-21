@@ -53,6 +53,8 @@ public:
 
 	void OnDataChanged(DataUpdateType_t updateType);
 
+	virtual	bool		ShouldCollide( int collisionGroup, int contentsMask ) const;
+
 	int m_iPhysicsMode;	// One of the PHYSICS_MULTIPLAYER_ defines.	
 	float m_fMass;
 	CHandle<C_SDKPlayer> m_pCreator;
