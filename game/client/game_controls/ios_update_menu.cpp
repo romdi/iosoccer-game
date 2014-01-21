@@ -193,6 +193,7 @@ void CIOSUpdatePanel::OnTick()
 			{
 				m_pChangelog->SetText("");
 				m_pChangelog->InsertString(m_pUpdateInfo->changelogText);
+				m_pChangelog->GotoTextStart();
 			}
 
 			if (m_pUpdateInfo->filesToUpdateCount > 0)
