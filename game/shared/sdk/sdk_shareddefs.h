@@ -167,7 +167,8 @@ extern ConVar
 	mp_tackled_idle_duration,
 	mp_charging_animation_enabled,
 	mp_majorevent_messageduration,
-	mp_emote_duration;
+	mp_emote_duration,
+	mp_ball_mass_fix_enabled;
 
 //--------------------------------------------------------------------------------------------------------
 //

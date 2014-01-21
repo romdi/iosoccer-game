@@ -453,7 +453,7 @@ void CBall::RemovePlayerBall()
 
 bool CBall::ShouldCollide( int collisionGroup, int contentsMask ) const
 {
-	return false;
+	return !mp_ball_mass_fix_enabled.GetBool();
 }
 
 //==========================================================
