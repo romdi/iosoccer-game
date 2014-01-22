@@ -292,14 +292,17 @@ void CIOSUpdatePanel::OnTick()
 			{
 				m_pExtraInfoText->SetText("RESTART THE GAME TO APPLY THE UPDATES.");
 				m_pUpdateButton->SetVisible(true);
-				m_pUpdateButton->SetText("Quit the game");
-				m_pUpdateButton->SetCommand("quit");
+				m_pUpdateButton->SetText("Restart IOSoccer");
+				m_pUpdateButton->SetCommand("restart");
 			}
 		}
 
 		m_eUpdateState = UPDATE_STATE_NONE;
 	}
 }
+
+#include "Windows.h"
+#include "Filesystem.h"
 
 void CIOSUpdatePanel::OnCommand(const char *cmd)
 {
@@ -320,8 +323,14 @@ void CIOSUpdatePanel::OnCommand(const char *cmd)
 	{
 		Close();
 	}
-	else if (!stricmp(cmd, "quit"))
+	else if (!stricmp(cmd, "restart"))
 	{
+		char path[1024];
+		filesystem->GetSearchPath("MOD", true, path, sizeof(path));
+		Q_strcat(path, "/launcher.bat", sizeof(path));
+		HINSTANCE hReturnCode=ShellExecute(NULL, _T("open"), _T(path), NULL, NULL, SW_SHOWNORMAL);
+		DWORD LastError = GetLastError();
+
 		engine->ClientCmd("quit");
 	}
 	else
