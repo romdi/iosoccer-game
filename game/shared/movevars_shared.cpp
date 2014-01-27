@@ -90,7 +90,6 @@ ConVar  sv_accelerate	( "sv_accelerate", "7", FCVAR_NOTIFY | FCVAR_REPLICATED | 
 
 ConVar	mp_jump_height("mp_jump_height", "35", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar  mp_jump_delay	("mp_jump_delay", "0.7", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar  mp_jump_speed	("mp_jump_speed", "200", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar  mp_slide_delay	("mp_slide_delay", "1.7", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar  mp_stamina_drain_jumping	("mp_stamina_drain_jumping", "0", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar  mp_stamina_drain_sliding	("mp_stamina_drain_sliding", "0", FCVAR_NOTIFY | FCVAR_REPLICATED);

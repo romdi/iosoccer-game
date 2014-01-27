@@ -37,7 +37,6 @@ extern ConVar sv_specnoclip;
 
 extern ConVar mp_jump_height;
 extern ConVar mp_jump_delay; //ios
-extern ConVar mp_jump_speed;
 extern ConVar mp_slide_delay; //ios
 extern ConVar mp_stamina_drain_jumping; //ios
 extern ConVar mp_stamina_drain_sliding; //ios
