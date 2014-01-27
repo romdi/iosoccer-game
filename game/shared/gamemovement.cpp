@@ -1607,7 +1607,7 @@ bool CGameMovement::CheckPlayerAnimEvent()
 			else
 				mv->m_vecVelocity = forward * mv->m_flForwardMove + right * mv->m_flSideMove;
 
-			if (!(mv->m_nButtons & IN_DUCK))
+			if (!(mv->m_nButtons & IN_JUMP))
 				pPl->AddFlag(FL_FREECAM);
 
 			break;
