@@ -22,6 +22,12 @@
 class CBasePlayer;
 class CTeamSpawnPoint;
 
+struct LastPlayerCoords
+{
+	Vector coords;
+	float leaveTime;
+};
+
 class CTeam : public CBaseEntity
 {
 	DECLARE_CLASS( CTeam, CBaseEntity );
@@ -72,6 +78,7 @@ public:
 	void SetPosNextJoinSeconds(int posIndex, int seconds);
 	void UnblockAllPos();
 	void UpdatePosIndices(bool reset);
+	Vector GetLastPlayerCoordsByPosIndex(int posIndex);
 
 	virtual void SetCaptainPosIndex(int posIndex) { m_nCaptainPosIndex = clamp(posIndex, -1, 10); }
 	virtual int GetCaptainPosIndex() { return m_nCaptainPosIndex; }
@@ -116,6 +123,7 @@ public:
 public:
 	CUtlVector< CBasePlayer * >		m_aPlayers;
 	int m_PosIndexPlayerIndices[11];
+	LastPlayerCoords m_LastPlayerCoordsByPosIndex[11];
 
 	// Data
 	CNetworkString( m_szServerKitName, MAX_TEAM_NAME_LENGTH );

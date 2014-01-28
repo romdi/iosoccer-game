@@ -278,6 +278,9 @@ void CTeam::AddPlayer( CBasePlayer *pPlayer, int posIndex )
 //-----------------------------------------------------------------------------
 void CTeam::RemovePlayer( CBasePlayer *pPlayer )
 {
+	m_LastPlayerCoordsByPosIndex[ToSDKPlayer(pPlayer)->GetTeamPosIndex()].coords = pPlayer->GetLocalOrigin();
+	m_LastPlayerCoordsByPosIndex[ToSDKPlayer(pPlayer)->GetTeamPosIndex()].leaveTime = gpGlobals->curtime;
+
 	if ((GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B) && pPlayer == GetCaptain())
 		SetCaptainPosIndex(-1);
 
@@ -307,6 +310,11 @@ void CTeam::UpdatePosIndices(bool reset)
 		SetRightCornerTakerPosIndex(-1);
 		UnblockAllPos();
 	}
+}
+
+Vector CTeam::GetLastPlayerCoordsByPosIndex(int posIndex)
+{
+	return gpGlobals->curtime > m_LastPlayerCoordsByPosIndex[posIndex].leaveTime + mp_joincoordduration.GetFloat() ? vec3_invalid : m_LastPlayerCoordsByPosIndex[posIndex].coords;
 }
 
 //-----------------------------------------------------------------------------
@@ -521,6 +529,12 @@ void CTeam::ResetStats()
 	}
 
 	UnblockAllPos();
+
+	for (int i = 0; i < 11; i++)
+	{
+		m_LastPlayerCoordsByPosIndex[i].coords = vec3_invalid;
+		m_LastPlayerCoordsByPosIndex[i].leaveTime = -1;
+	}
 }
 
 void CTeam::FindNewCaptain()

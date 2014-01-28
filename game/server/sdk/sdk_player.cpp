@@ -444,6 +444,29 @@ void CSDKPlayer::PreThink(void)
 			{
 				SetLocalOrigin(partnerPos);
 			}
+			else if (!SDKGameRules()->IsIntermissionState())
+			{
+				Vector pos = GetTeam()->GetLastPlayerCoordsByPosIndex(GetTeamPosIndex());
+
+				if (pos != vec3_invalid)
+				{
+					SetLocalOrigin(pos);
+				}
+				else if (GetTeamPosType() != POS_GK)
+				{
+					pos = SDKGameRules()->m_vKickOff;
+
+					pos.y -= 50 * GetTeam()->m_nForward;
+
+					if (GetLocalOrigin().x > SDKGameRules()->m_vKickOff.GetX())
+						pos.x = SDKGameRules()->m_vFieldMax.GetX() - 50;
+					else
+						pos.x = SDKGameRules()->m_vFieldMin.GetX() + 50;
+
+					FindSafePos(pos);
+					SetLocalOrigin(pos);
+				}
+			}
 		}
 	}
 

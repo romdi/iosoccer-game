@@ -48,6 +48,7 @@ extern ConVar
 	mp_field_border_enabled,
 	mp_offside,
 	mp_joindelay,
+	mp_joincoordduration,
 	mp_maxplayers,
 	mp_weather,
 	mp_teamnames,

@@ -93,6 +93,7 @@ ConVar mp_field_border_enabled("mp_field_border_enabled", "1", FCVAR_NOTIFY|FCVA
 
 ConVar mp_offside("mp_offside", "1", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar mp_joindelay("mp_joindelay", "2", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar mp_joincoordduration("mp_joincoordduration", "5", FCVAR_NOTIFY|FCVAR_REPLICATED);
 
 ConVar mp_custom_shirt_numbers("mp_custom_shirt_numbers", "1", FCVAR_NOTIFY);
 
