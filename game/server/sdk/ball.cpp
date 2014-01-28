@@ -2080,9 +2080,14 @@ bool CBall::CheckFoul(bool canShootBall, const Vector &localDirToBall)
 			}
 		}
 
+		bool isPenalty = pPl->m_nInPenBoxOfTeam == m_pPl->GetTeamNumber();
+
 		foul_type_t foulType;
 
-		if (isCloseToOwnGoal && teammatesCloserToGoalCount <= 1)
+		// Always give a yellow card on penalties to avoid double punishment with a red card
+		if (isPenalty)
+			foulType = FOUL_NORMAL_YELLOW_CARD;
+		else if (isCloseToOwnGoal && teammatesCloserToGoalCount <= 1)
 			foulType = FOUL_NORMAL_RED_CARD;
 		else if (anim == PLAYERANIMEVENT_TACKLED_FORWARD && localDirToBall.Length2DSqr() >= Sqr(sv_ball_yellowcardballdist_forward.GetFloat()) ||
 				 anim == PLAYERANIMEVENT_TACKLED_BACKWARD && localDirToBall.Length2DSqr() >= Sqr(sv_ball_yellowcardballdist_backward.GetFloat()))
@@ -2114,7 +2119,7 @@ bool CBall::CheckFoul(bool canShootBall, const Vector &localDirToBall)
 			ReplayManager()->AddMatchEvent(MATCH_EVENT_YELLOWCARD, m_nFoulingTeam, m_pFoulingPl);
 		}
 
-		if (pPl->m_nInPenBoxOfTeam == m_pPl->GetTeamNumber())
+		if (isPenalty)
 			State_Transition(BALL_STATE_PENALTY, sv_ball_statetransition_activationdelay_long.GetFloat());
 		else
 			State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_activationdelay_long.GetFloat());
