@@ -165,6 +165,7 @@ ConVar sv_ball_autopass_minstrength("sv_ball_autopass_minstrength", "500", FCVAR
 ConVar sv_ball_autopass_maxstrength("sv_ball_autopass_maxstrength", "1600", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
 ConVar sv_ball_autopass_coeff("sv_ball_autopass_coeff", "1", FCVAR_NOTIFY);
 ConVar sv_ball_volleyshot_spincoeff("sv_ball_volleyshot_spincoeff", "1.25", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
+ConVar sv_ball_header_spincoeff("sv_ball_header_spincoeff", "0.66", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
 ConVar sv_ball_doubletouchfouls("sv_ball_doubletouchfouls", "1", FCVAR_NOTIFY);
 
 ConVar sv_ball_timelimit_setpiece("sv_ball_timelimit_setpiece", "15", FCVAR_NOTIFY);
@@ -2725,7 +2726,7 @@ bool CBall::DoHeader()
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEADER);
 	}
 
-	SetVel(m_vPlForwardVel2D + vel, 0, BODY_PART_HEAD, false, true, true, sv_ball_header_mindelay.GetFloat());
+	SetVel(m_vPlForwardVel2D + vel, sv_ball_header_spincoeff.GetFloat(), BODY_PART_HEAD, false, true, true, sv_ball_header_mindelay.GetFloat());
 
 	return true;
 }
