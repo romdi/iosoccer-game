@@ -317,7 +317,7 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 	SetBounds(0, 0, ScreenWidth(), ScreenHeight());
 
 	//m_pMainPanel->SetPaintBackgroundType(2);
-	m_pMainPanel->SetBgColor(Color(0, 0, 0, 250));
+	m_pMainPanel->SetBgColor(Color(0, 0, 0, 247));
 	//m_pMainPanel->SetBounds(GetWide() / 2 - PANEL_WIDTH / 2, PANEL_TOPMARGIN, PANEL_WIDTH, PANEL_HEIGHT);
 	m_pMainPanel->SetBounds(GetWide() / 2 - PANEL_WIDTH / 2, GetTall() / 2 - PANEL_HEIGHT / 2, PANEL_WIDTH, PANEL_HEIGHT);
 	m_pMainPanel->SetPaintBorderEnabled(false);
@@ -974,7 +974,7 @@ void CClientScoreBoardDialog::AddHeader()
 			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "passes",					"Passes",		defaultFlags, 50);
 			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "passescompleted",			"~ compl.",		defaultFlags, 55);
 			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "interceptions",				"Interc.",		defaultFlags, 50);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "interceptions",				"Turnovers",	defaultFlags, 50);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "turnovers",					"Turnovers",	defaultFlags, 50);
 			break;
 		case TACKLES:
 			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "slidingtackles",			"Tackles",		defaultFlags, 55);
@@ -1001,11 +1001,10 @@ void CClientScoreBoardDialog::AddHeader()
 			break;
 		case KEEPER:
 			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "keepersaves",				"Saves",		defaultFlags, 80);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "keepersaves",				"~ caught",		defaultFlags, 80);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "keepersavescaught",				"~ caught",		defaultFlags, 80);
 			//m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goalkicks",					"Goal kicks",	defaultFlags, 65);
-			//m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "owngoals",					"Own goals",	defaultFlags, 65);
 			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goalsconceded",				"Goals conc.",	defaultFlags, 80);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goalsconceded",				"Max clean sheet dur.",	defaultFlags, 80);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "owngoals",					"Own goals",	defaultFlags, 80);
 			break;
 		default:
 			//m_pPlayerList[i]->AddColumnToSection(m_iSectionId, g_szStatIdentifiers[m_nCurStat], g_szStatNames[m_nCurStat], 0, 90);
@@ -1095,7 +1094,14 @@ bool CClientScoreBoardDialog::GetPlayerInfo(int playerIndex, KeyValues *kv)
 	kv->SetString("assists", GET_STAT_TEXT(gr->GetAssists(playerIndex)));
 	kv->SetString("offsides", GET_STAT_TEXT(gr->GetOffsides(playerIndex)));
 	kv->SetString("keepersaves", GET_STAT_TEXT(gr->GetKeeperSaves(playerIndex)));
+
+	if (gr->GetKeeperSaves(playerIndex) > 0)
+		kv->SetString("keepersavescaught", GET_STAT_FTEXT_SHOWZERO(gr->GetKeeperSavesCaught(playerIndex) * 100 / max(1, gr->GetKeeperSaves(playerIndex)), "%d%%"));
+	else
+		kv->SetString("keepersavescaught", "");
+
 	kv->SetString("possession", GET_STAT_FTEXT_SHOWZERO(gr->GetPossession(playerIndex), "%d%%"));
+	kv->SetString("turnovers", GET_STAT_TEXT(gr->GetTurnovers(playerIndex)));
 	kv->SetString("distancecovered", GET_STAT_FTEXT_SHOWZERO(gr->GetDistanceCovered(playerIndex) / 10.0f, "%.1f km"));
 	kv->SetString("redcards", GET_STAT_TEXT(gr->GetRedCards(playerIndex)));
 	kv->SetString("yellowcards", GET_STAT_TEXT(gr->GetYellowCards(playerIndex)));
@@ -1278,6 +1284,7 @@ bool CClientScoreBoardDialog::GetTeamInfo(int team, KeyValues *kv)
 	kv->SetString("nationalteam", teamNationalTeam);
 	kv->SetString("ping", GET_TSTAT_TEXT(pTeam->m_Ping));
 	kv->SetString("possession", GET_TSTAT_FTEXT(pTeam->m_Possession, "%d%%"));
+	kv->SetString("turnovers", GET_TSTAT_TEXT(pTeam->m_Turnovers));
 	kv->SetString("passes", GET_TSTAT_TEXT(pTeam->m_Passes));
 	kv->SetString("passescompleted", GET_TSTAT_FTEXT(pTeam->m_PassesCompleted * 100 / max(1, pTeam->m_Passes), "%d%%"));
 	kv->SetString("distancecovered", GET_TSTAT_FTEXT(pTeam->m_DistanceCovered / 10.0f, "%.1f km"));
@@ -1299,6 +1306,7 @@ bool CClientScoreBoardDialog::GetTeamInfo(int team, KeyValues *kv)
 	kv->SetString("penalties", GET_TSTAT_TEXT(pTeam->m_Penalties));
 	kv->SetString("throwins", GET_TSTAT_TEXT(pTeam->m_ThrowIns));
 	kv->SetString("keepersaves", GET_TSTAT_TEXT(pTeam->m_KeeperSaves));
+	kv->SetString("keepersavescaught", GET_TSTAT_FTEXT(pTeam->m_KeeperSavesCaught * 100 / max(1, pTeam->m_KeeperSaves), "%d%%"));
 	kv->SetString("owngoals", GET_TSTAT_TEXT(pTeam->m_OwnGoals));
 	kv->SetString("goalsconceded", GET_TSTAT_TEXT(pTeam->m_GoalsConceded));
 

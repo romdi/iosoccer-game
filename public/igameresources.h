@@ -51,6 +51,7 @@ public:
 	virtual int		GetOwnGoals( int index ) = 0;
 	virtual int		GetAssists( int index ) = 0;
 	virtual int		GetPossession( int index ) = 0;
+	virtual int		GetTurnovers( int index ) = 0;
 	virtual int		GetDistanceCovered( int index ) = 0;
 	virtual int		GetPasses( int index ) = 0;
 	virtual int		GetFreeKicks( int index ) = 0;
@@ -58,6 +59,7 @@ public:
 	virtual int		GetCorners( int index ) = 0;
 	virtual int		GetThrowIns( int index ) = 0;
 	virtual int		GetKeeperSaves( int index ) = 0;
+	virtual int		GetKeeperSavesCaught( int index ) = 0;
 	virtual int		GetGoalKicks( int index ) = 0;
 	virtual int		GetRatings( int index ) = 0;
 	virtual int		GetShirtNumber( int iIndex ) = 0;

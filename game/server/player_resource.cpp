@@ -46,6 +46,7 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CPlayerResource, DT_PlayerResource)
 	SendPropArray3( SENDINFO_ARRAY3(m_OwnGoals), SendPropInt( SENDINFO_ARRAY(m_OwnGoals), 5, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_Assists), SendPropInt( SENDINFO_ARRAY(m_Assists), 5, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_Possession), SendPropInt( SENDINFO_ARRAY(m_Possession), 7, SPROP_UNSIGNED ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_Turnovers), SendPropInt( SENDINFO_ARRAY(m_Turnovers), 10, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_DistanceCovered), SendPropInt( SENDINFO_ARRAY(m_DistanceCovered), 8, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_Passes), SendPropInt( SENDINFO_ARRAY(m_Passes), 8, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_FreeKicks), SendPropInt( SENDINFO_ARRAY(m_FreeKicks), 6, SPROP_UNSIGNED ) ),
@@ -53,6 +54,7 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CPlayerResource, DT_PlayerResource)
 	SendPropArray3( SENDINFO_ARRAY3(m_Corners), SendPropInt( SENDINFO_ARRAY(m_Corners), 6, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_ThrowIns), SendPropInt( SENDINFO_ARRAY(m_ThrowIns), 6, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_KeeperSaves), SendPropInt( SENDINFO_ARRAY(m_KeeperSaves), 6, SPROP_UNSIGNED ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_KeeperSavesCaught), SendPropInt( SENDINFO_ARRAY(m_KeeperSavesCaught), 6, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_GoalKicks), SendPropInt( SENDINFO_ARRAY(m_GoalKicks), 5, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_Ratings), SendPropInt( SENDINFO_ARRAY(m_Ratings), 7, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_TeamPosIndex), SendPropInt( SENDINFO_ARRAY(m_TeamPosIndex), 4, SPROP_UNSIGNED  ) ),
@@ -123,6 +125,7 @@ void CPlayerResource::Spawn( void )
 		m_OwnGoals.Set( i, 0 );
 		m_Assists.Set( i, 0 );
 		m_Possession.Set( i, 0 );
+		m_Turnovers.Set( i, 0 );
 		m_DistanceCovered.Set( i, 0 );
 		m_Passes.Set( i, 0 );
 		m_FreeKicks.Set( i, 0 );
@@ -130,6 +133,7 @@ void CPlayerResource::Spawn( void )
 		m_Corners.Set( i, 0 );
 		m_ThrowIns.Set( i, 0 );
 		m_KeeperSaves.Set( i, 0 );
+		m_KeeperSavesCaught.Set( i, 0 );
 		m_GoalKicks.Set( i, 0 );
 		m_Ratings.Set( i, 0 );
 		m_TeamPosIndex.Set( i, 0 );
@@ -266,6 +270,7 @@ void CPlayerResource::UpdatePlayerData( void )
 			m_OwnGoals.Set(i, max( 0, pPl->GetOwnGoals() ) );
 			m_Assists.Set(i, max( 0, pPl->GetAssists() ) );
 			m_Possession.Set(i, max( 0, pPl->GetPossession() ) );
+			m_Turnovers.Set(i, max( 0, pPl->GetTurnovers() ) );
 			m_DistanceCovered.Set(i, max( 0, pPl->GetDistanceCovered() ) );
 			m_Passes.Set(i, max( 0, pPl->GetPasses() ) );
 			m_FreeKicks.Set(i, max( 0, pPl->GetFreeKicks() ) );
@@ -273,6 +278,7 @@ void CPlayerResource::UpdatePlayerData( void )
 			m_Corners.Set(i, max( 0, pPl->GetCorners() ) );
 			m_ThrowIns.Set(i, max( 0, pPl->GetThrowIns() ) );
 			m_KeeperSaves.Set(i, max( 0, pPl->GetKeeperSaves() ) );
+			m_KeeperSavesCaught.Set(i, max( 0, pPl->GetKeeperSavesCaught() ) );
 			m_GoalKicks.Set(i, max( 0, pPl->GetGoalKicks() ) );
 			//m_Ratings.Set(i, max( 0, pPl->GetRating() ) );
 			m_Ratings.Set(i, 100 );

@@ -40,6 +40,7 @@ public:
 	int		m_nAssists;
 	float	m_flPossessionTime;
 	int		m_nPossession;
+	int		m_nTurnovers;
 	int		m_nDistanceCovered;
 	int		m_nPasses;
 	int		m_nFreeKicks;
@@ -47,6 +48,7 @@ public:
 	int		m_nCorners;
 	int		m_nThrowIns;
 	int		m_nKeeperSaves;
+	int		m_nKeeperSavesCaught;
 	int		m_nGoalKicks;
 	int		m_nRating;
 	float	m_flExactDistanceCovered;
@@ -382,6 +384,9 @@ public:
 	int					GetPossession(void) { return GetMatchData()->m_nPossession; }
 	void				SetPossession(int amount) { GetMatchData()->m_nPossession = amount; }
 
+	int					GetTurnovers(void) { return GetMatchData()->m_nTurnovers; }
+	void				AddTurnover();
+
 	float				GetExactDistanceCovered(void) { return GetMatchData()->m_flExactDistanceCovered; }
 	void				AddExactDistanceCovered(float amount);
 
@@ -404,6 +409,9 @@ public:
 
 	int					GetKeeperSaves(void) { return GetMatchData()->m_nKeeperSaves; }
 	void				AddKeeperSave();
+	
+	int					GetKeeperSavesCaught(void) { return GetMatchData()->m_nKeeperSavesCaught; }
+	void				AddKeeperSaveCaught();
 
 	int					GetGoalKicks(void) { return GetMatchData()->m_nGoalKicks; }
 	void				AddGoalKick();

@@ -51,6 +51,7 @@ protected:
 	CNetworkArray( int, m_OwnGoals, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_Assists, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_Possession, MAX_PLAYERS+1 );
+	CNetworkArray( int, m_Turnovers, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_DistanceCovered, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_Passes, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_FreeKicks, MAX_PLAYERS+1 );
@@ -58,6 +59,7 @@ protected:
 	CNetworkArray( int, m_Corners, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_ThrowIns, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_KeeperSaves, MAX_PLAYERS+1 );
+	CNetworkArray( int, m_KeeperSavesCaught, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_GoalKicks, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_Ratings, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_TeamPosIndex, MAX_PLAYERS+1 );

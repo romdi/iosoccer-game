@@ -147,6 +147,7 @@ public:
 	CNetworkVar(int, m_OwnGoals);
 	CNetworkVar(int, m_Assists);
 	CNetworkVar(int, m_Possession);
+	CNetworkVar(int, m_Turnovers);
 	CNetworkVar(int, m_DistanceCovered);
 	CNetworkVar(int, m_Passes);
 	CNetworkVar(int, m_FreeKicks);
@@ -154,6 +155,7 @@ public:
 	CNetworkVar(int, m_Corners);
 	CNetworkVar(int, m_ThrowIns);
 	CNetworkVar(int, m_KeeperSaves);
+	CNetworkVar(int, m_KeeperSavesCaught);
 	CNetworkVar(int, m_GoalKicks);
 	CNetworkVar(int, m_Ping);
 	CNetworkVar(int, m_Rating);

@@ -65,6 +65,7 @@ public : // IGameResources intreface
 	virtual int		GetOwnGoals( int index );
 	virtual int		GetAssists( int index );
 	virtual int		GetPossession( int index );
+	virtual int		GetTurnovers( int index );
 	virtual int		GetDistanceCovered( int index );
 	virtual int		GetPasses( int index );
 	virtual int		GetFreeKicks( int index );
@@ -72,6 +73,7 @@ public : // IGameResources intreface
 	virtual int		GetCorners( int index );
 	virtual int		GetThrowIns( int index );
 	virtual int		GetKeeperSaves( int index );
+	virtual int		GetKeeperSavesCaught( int index );
 	virtual int		GetGoalKicks( int index );
 	virtual int		GetRatings( int index );
 	virtual int		GetShirtNumber( int iIndex );
@@ -120,6 +122,7 @@ protected:
 	int		m_OwnGoals[MAX_PLAYERS+1];
 	int		m_Assists[MAX_PLAYERS+1];
 	int		m_Possession[MAX_PLAYERS+1];
+	int		m_Turnovers[MAX_PLAYERS+1];
 	int		m_DistanceCovered[MAX_PLAYERS+1];
 	int		m_Passes[MAX_PLAYERS+1];
 	int		m_FreeKicks[MAX_PLAYERS+1];
@@ -127,6 +130,7 @@ protected:
 	int		m_Corners[MAX_PLAYERS+1];
 	int		m_ThrowIns[MAX_PLAYERS+1];
 	int		m_KeeperSaves[MAX_PLAYERS+1];
+	int		m_KeeperSavesCaught[MAX_PLAYERS+1];
 	int		m_GoalKicks[MAX_PLAYERS+1];
 	int		m_Ratings[MAX_PLAYERS+1];
 	int		m_TeamPosIndex[MAX_PLAYERS+1];

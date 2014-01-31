@@ -3156,10 +3156,16 @@ void CBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart, const Ve
 
 	if (pInfo && CSDKPlayer::IsOnField(pLastPl) && pLastPl != pPl)
 	{ 
-		if (pInfo->m_nTeam != pPl->GetTeamNumber() && (bodyPart == BODY_PART_KEEPERPUNCH
-			|| bodyPart == BODY_PART_KEEPERCATCH && oldVel.Length2DSqr() >= pow(sv_ball_stats_save_minspeed.GetInt(), 2.0f))) // All fast balls by an opponent which are caught or punched away by the keeper count as shots on goal
+		if (pInfo->m_nTeam != pPl->GetTeamNumber()
+			&& (bodyPart == BODY_PART_KEEPERPUNCH
+				|| bodyPart == BODY_PART_KEEPERCATCH
+				&& oldVel.Length2DSqr() >= pow(sv_ball_stats_save_minspeed.GetInt(), 2.0f))) // All fast balls by an opponent which are caught or punched away by the keeper count as shots on goal
 		{
 			pPl->AddKeeperSave();
+
+			if (bodyPart == BODY_PART_KEEPERCATCH)
+				pPl->AddKeeperSaveCaught();
+
 			pLastPl->AddShot();
 			pLastPl->AddShotOnGoal();
 			//EmitSound("Crowd.Save");
@@ -3328,6 +3334,11 @@ void CBall::UpdatePossession(CSDKPlayer *pNewPossessor)
 
 	if (CSDKPlayer::IsOnField(pNewPossessor))
 	{
+		if (CSDKPlayer::IsOnField(m_pPossessingPl) && m_pPossessingPl->GetTeamNumber() != pNewPossessor->GetTeamNumber())
+		{
+			m_pPossessingPl->AddTurnover();
+		}
+
 		m_pPossessingPl = pNewPossessor;
 		m_nPossessingTeam = pNewPossessor->GetTeamNumber();
 		m_flPossessionStart = gpGlobals->curtime;

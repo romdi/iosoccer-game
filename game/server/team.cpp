@@ -103,6 +103,7 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CTeam, DT_Team)
 	SendPropInt(SENDINFO(m_OwnGoals), 5, SPROP_UNSIGNED),
 	SendPropInt(SENDINFO(m_Assists), 5, SPROP_UNSIGNED),
 	SendPropInt(SENDINFO(m_Possession), 7, SPROP_UNSIGNED),
+	SendPropInt(SENDINFO(m_Turnovers), 11, SPROP_UNSIGNED),
 	SendPropInt(SENDINFO(m_DistanceCovered), 11, SPROP_UNSIGNED),
 	SendPropInt(SENDINFO(m_Passes), 9, SPROP_UNSIGNED),
 	SendPropInt(SENDINFO(m_FreeKicks), 6, SPROP_UNSIGNED),
@@ -110,6 +111,7 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CTeam, DT_Team)
 	SendPropInt(SENDINFO(m_Corners), 6, SPROP_UNSIGNED),
 	SendPropInt(SENDINFO(m_ThrowIns), 6, SPROP_UNSIGNED),
 	SendPropInt(SENDINFO(m_KeeperSaves), 6, SPROP_UNSIGNED),
+	SendPropInt(SENDINFO(m_KeeperSavesCaught), 6, SPROP_UNSIGNED),
 	SendPropInt(SENDINFO(m_GoalKicks), 5, SPROP_UNSIGNED),
 	SendPropInt(SENDINFO(m_Ping), 10, SPROP_UNSIGNED),
 	SendPropInt(SENDINFO(m_Rating), 7, SPROP_UNSIGNED),
@@ -503,6 +505,7 @@ void CTeam::ResetStats()
 	m_OwnGoals = 0;
 	m_Assists = 0;
 	m_Possession = 0;
+	m_Turnovers = 0;
 	m_DistanceCovered = 0;
 	m_Passes = 0;
 	m_FreeKicks = 0;
@@ -510,6 +513,7 @@ void CTeam::ResetStats()
 	m_Corners = 0;
 	m_ThrowIns = 0;
 	m_KeeperSaves = 0;
+	m_KeeperSavesCaught = 0;
 	m_GoalKicks = 0;
 	m_flPossessionTime = 0;
 	m_flExactDistanceCovered = 0;
