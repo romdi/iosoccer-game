@@ -455,11 +455,18 @@ public:
 	const char			*GetClubName();
 	void				SetClubName(const char *name);
 
+	const char			*GetNationalTeamName();
+	void				SetNationalTeamName(const char *name);
+
 	const char			*GetShirtName();
 	void				SetShirtName(const char *name);
 
 	int					GetCountryIndex() { return m_nCountryIndex; }
-	void				SetCountryIndex(int index) { m_nCountryIndex = index; } 
+	void				SetCountryIndex(int index) { m_nCountryIndex = index; }
+
+	int					GetNationalityIndex() { return m_nNationalityIndex; }
+	void				SetNationalityIndex(int index) { m_nNationalityIndex = index; } 
+
 	bool				IsLegacySideCurl() { return m_bLegacySideCurl; } 
 	void				SetLegacySideCurl(bool enable) { m_bLegacySideCurl = enable; }
 
@@ -480,10 +487,15 @@ public:
 	char				m_szClubName[MAX_CLUBNAME_LENGTH];
 	bool				m_bClubNameChanged;
 
+	char				m_szNationalTeamName[MAX_CLUBNAME_LENGTH];
+	bool				m_bNationalTeamNameChanged;
+
 	char				m_szShirtName[MAX_PLAYER_NAME_LENGTH];
 	bool				m_bShirtNameChanged;
 
 	int					m_nCountryIndex;
+
+	int					m_nNationalityIndex;
 
 	bool				m_bLegacySideCurl;
 

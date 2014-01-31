@@ -2309,19 +2309,27 @@ void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 
 	int countryIndex = atoi(engine->GetClientConVarValue(pPl->entindex(), "hiddengeoipcountryindex"));
 
-	if (countryIndex <= 0 || countryIndex >= COUNTRY_NAMES_COUNT - 1)
+	if (countryIndex <= 0 || countryIndex > COUNTRY_NAMES_COUNT - 1)
 	{
 		countryIndex = atoi(engine->GetClientConVarValue(pPl->entindex(), "fallbackcountryindex"));
 
-		if (countryIndex <= 0 || countryIndex >= COUNTRY_NAMES_COUNT - 1)
+		if (countryIndex <= 0 || countryIndex > COUNTRY_NAMES_COUNT - 1)
 		{
 			countryIndex = 0;
 		}
 	}
 
-	pPl->SetLegacySideCurl(atoi(engine->GetClientConVarValue(pPl->entindex(), "legacysidecurl")) != 0);
-
 	pPl->SetCountryIndex(countryIndex);
+
+	int nationalityIndex = atoi(engine->GetClientConVarValue(pPl->entindex(), "nationalityindex"));
+	if (nationalityIndex <= 0 || nationalityIndex > COUNTRY_NAMES_COUNT - 1)
+	{
+		nationalityIndex = 0;
+	}
+
+	pPl->SetNationalityIndex(nationalityIndex);
+
+	pPl->SetLegacySideCurl(atoi(engine->GetClientConVarValue(pPl->entindex(), "legacysidecurl")) != 0);
 
 	pPl->SetPreferredOutfieldShirtNumber(atoi(engine->GetClientConVarValue(pPl->entindex(), "preferredoutfieldshirtnumber")));
 	pPl->SetPreferredKeeperShirtNumber(atoi(engine->GetClientConVarValue(pPl->entindex(), "preferredkeepershirtnumber")));
@@ -2372,6 +2380,25 @@ void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 		}
 		
 		pPl->SetClubName(pszClubName);
+	}
+
+	char pszNationalTeamName[MAX_CLUBNAME_LENGTH];
+	Q_strncpy(pszNationalTeamName, engine->GetClientConVarValue( pPl->entindex(), "nationalteamname" ), MAX_CLUBNAME_LENGTH);
+
+	const char *pszOldNationalTeamName = pPl->GetNationalTeamName();
+
+	if (Q_strcmp(pszOldNationalTeamName, pszNationalTeamName))
+	{
+		IGameEvent * event = gameeventmanager->CreateEvent( "player_changenationalteam" );
+		if ( event )
+		{
+			event->SetInt("userid", pPl->GetUserID());
+			event->SetString("oldnationalteam", pszOldNationalTeamName);
+			event->SetString("newnationalteam", pszNationalTeamName);
+			gameeventmanager->FireEvent(event);
+		}
+		
+		pPl->SetNationalTeamName(pszNationalTeamName);
 	}
 
 	pPl->SetShirtName(engine->GetClientConVarValue(pPl->entindex(), "shirtname"));

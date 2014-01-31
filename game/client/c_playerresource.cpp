@@ -64,8 +64,10 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_PlayerResource, DT_PlayerResource, CPlayerReso
 
 	RecvPropArray3( RECVINFO_ARRAY(m_szPlayerNames), RecvPropString( RECVINFO(m_szPlayerNames[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_szClubNames), RecvPropString( RECVINFO(m_szClubNames[0]))),
+	RecvPropArray3( RECVINFO_ARRAY(m_szNationalTeamNames), RecvPropString( RECVINFO(m_szNationalTeamNames[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_szShirtNames), RecvPropString( RECVINFO(m_szShirtNames[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_CountryIndices), RecvPropInt( RECVINFO(m_CountryIndices[0]))),
+	RecvPropArray3( RECVINFO_ARRAY(m_NationalityIndices), RecvPropInt( RECVINFO(m_NationalityIndices[0]))),
 END_RECV_TABLE()
 
 BEGIN_PREDICTION_DATA( C_PlayerResource )
@@ -128,8 +130,10 @@ C_PlayerResource::C_PlayerResource()
 
 	memset( m_szPlayerNames, 0, sizeof( m_szPlayerNames ) );
 	memset( m_szClubNames, 0, sizeof( m_szClubNames ) );
+	memset( m_szNationalTeamNames, 0, sizeof( m_szNationalTeamNames ) );
 	memset( m_szShirtNames, 0, sizeof( m_szShirtNames ) );
 	memset( m_CountryIndices, 0, sizeof( m_CountryIndices ) );
+	memset( m_NationalityIndices, 0, sizeof( m_NationalityIndices ) );
 
 	g_PR = this;
 }
@@ -234,6 +238,20 @@ const char *C_PlayerResource::GetClubName( int iIndex )
 	return m_szClubNames[iIndex];
 }
 
+const char *C_PlayerResource::GetNationalTeamName( int iIndex )
+{
+	if ( iIndex < 1 || iIndex > MAX_PLAYERS )
+	{
+		Assert( false );
+		return "ERRORNAME";
+	}
+	
+	if ( !IsConnected( iIndex ) )
+		return PLAYER_UNCONNECTED_NAME;
+
+	return m_szNationalTeamNames[iIndex];
+}
+
 const char *C_PlayerResource::GetShirtName( int iIndex )
 {
 	if ( iIndex < 1 || iIndex > MAX_PLAYERS )
@@ -260,6 +278,20 @@ int C_PlayerResource::GetCountryIndex( int iIndex )
 		return 0;
 
 	return m_CountryIndices[iIndex];
+}
+
+int C_PlayerResource::GetNationalityIndex( int iIndex )
+{
+	if ( iIndex < 1 || iIndex > MAX_PLAYERS )
+	{
+		Assert( false );
+		return 0;
+	}
+	
+	if ( !IsConnected( iIndex ) )
+		return 0;
+
+	return m_NationalityIndices[iIndex];
 }
 
 int C_PlayerResource::GetTeam(int iIndex )

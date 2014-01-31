@@ -256,6 +256,7 @@ const char** CHLTVDirector::GetModEvents()
 		"own_goal",
 		"penalty",
 		"player_changeclub",
+		"player_changenationalteam",
 		"player_changename",
 		"player_chat",
 		"player_connect",

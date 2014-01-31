@@ -317,7 +317,7 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 	SetBounds(0, 0, ScreenWidth(), ScreenHeight());
 
 	//m_pMainPanel->SetPaintBackgroundType(2);
-	m_pMainPanel->SetBgColor(Color(0, 0, 0, 253));
+	m_pMainPanel->SetBgColor(Color(0, 0, 0, 250));
 	//m_pMainPanel->SetBounds(GetWide() / 2 - PANEL_WIDTH / 2, PANEL_TOPMARGIN, PANEL_WIDTH, PANEL_HEIGHT);
 	m_pMainPanel->SetBounds(GetWide() / 2 - PANEL_WIDTH / 2, GetTall() / 2 - PANEL_HEIGHT / 2, PANEL_WIDTH, PANEL_HEIGHT);
 	m_pMainPanel->SetPaintBorderEnabled(false);
@@ -962,9 +962,9 @@ void CClientScoreBoardDialog::AddHeader()
 		{
 		case DEFAULT_STATS:
 			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "countryindex",				"Loc.",			defaultFlags | SectionedListPanel::COLUMN_IMAGE, 50);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "countryindex",				"Nat.",			defaultFlags | SectionedListPanel::COLUMN_IMAGE, 50);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "nationalityindex",			"Nat.",			defaultFlags | SectionedListPanel::COLUMN_IMAGE, 50);
 			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "club",						"Club",			defaultFlags, 70);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "club",						"Nat.T.",		defaultFlags, 70);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "nationalteam",				"Nat.T.",		defaultFlags, 70);
 			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "rating",					"Rating",		defaultFlags, 40);
 			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "ping",						"Ping",			defaultFlags, 55);
 			break;
@@ -1149,6 +1149,7 @@ bool CClientScoreBoardDialog::GetPlayerInfo(int playerIndex, KeyValues *kv)
 	kv->SetString("name", gr->GetPlayerName( playerIndex ) );
 	kv->SetString("steamname", gr->GetSteamName( playerIndex ) );
 	kv->SetString("club", gr->GetClubName(playerIndex));
+	kv->SetString("nationalteam", gr->GetNationalTeamName(playerIndex));
 
 	char rating[5];
 	if (gr->GetRatings(playerIndex) == 100)
@@ -1192,6 +1193,9 @@ bool CClientScoreBoardDialog::GetPlayerInfo(int playerIndex, KeyValues *kv)
 	kv->SetInt("countryindex", GetCountryFlagImageIndex(gr->GetCountryIndex(playerIndex)));
 	kv->SetString("countryname", g_szCountryNames[gr->GetCountryIndex(playerIndex)]);
 
+	kv->SetInt("nationalityindex", GetCountryFlagImageIndex(gr->GetNationalityIndex(playerIndex)));
+	kv->SetString("nationalityname", g_szCountryNames[gr->GetNationalityIndex(playerIndex)]);
+
 	return true;
 }
 
@@ -1209,8 +1213,13 @@ bool CClientScoreBoardDialog::GetTeamInfo(int team, KeyValues *kv)
 	bool teamClubInit = false;
 	char teamClub[32] = {};
 	bool isTeamSameClub = true;
+	bool teamNationalTeamInit = false;
+	char teamNationalTeam[32] = {};
+	bool isTeamSameNationalTeam = true;
 	int teamCountry = -1;
 	bool isTeamSameCountry = true;
+	int teamNationality = -1;
+	bool isTeamSameNationality = true;
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
@@ -1226,24 +1235,47 @@ bool CClientScoreBoardDialog::GetTeamInfo(int team, KeyValues *kv)
 		if (Q_strcmp(gr->GetClubName(i), teamClub))
 			isTeamSameClub = false;
 
+		if (!teamNationalTeamInit)
+		{
+			Q_strncpy(teamNationalTeam, gr->GetNationalTeamName(i), sizeof(teamNationalTeam));
+			teamNationalTeamInit = true;
+		}
+
+		if (Q_strcmp(gr->GetNationalTeamName(i), teamNationalTeam))
+			isTeamSameNationalTeam = false;
+
 		if (teamCountry == -1)
 			teamCountry = gr->GetCountryIndex(i);
 
 		if (gr->GetCountryIndex(i) != teamCountry)
 			isTeamSameCountry = false;
+
+		if (teamNationality == -1)
+			teamNationality = gr->GetNationalityIndex(i);
+
+		if (gr->GetNationalityIndex(i) != teamNationality)
+			isTeamSameNationality = false;
 	}
 
 	if (!isTeamSameClub)
 		Q_strncpy(teamClub, "", sizeof(teamClub));
 
+	if (!isTeamSameNationalTeam)
+		Q_strncpy(teamNationalTeam, "", sizeof(teamNationalTeam));
+
 	if (!isTeamSameCountry || teamCountry == -1)
 		teamCountry = 0;
+
+	if (!isTeamSameNationality || teamNationality == -1)
+		teamNationality = 0;
 
 	kv->SetString("name", pTeam->GetShortName());
 	kv->SetInt("playerindex", teamIndex - 2);
 	kv->SetInt("posname", pTeam->GetNumPlayers());
 	kv->SetInt("countryindex", GetCountryFlagImageIndex(teamCountry));
+	kv->SetInt("nationalityindex", GetCountryFlagImageIndex(teamNationality));
 	kv->SetString("club", teamClub);
+	kv->SetString("nationalteam", teamNationalTeam);
 	kv->SetString("ping", GET_TSTAT_TEXT(pTeam->m_Ping));
 	kv->SetString("possession", GET_TSTAT_FTEXT(pTeam->m_Possession, "%d%%"));
 	kv->SetString("passes", GET_TSTAT_TEXT(pTeam->m_Passes));

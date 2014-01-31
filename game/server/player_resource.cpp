@@ -65,8 +65,10 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CPlayerResource, DT_PlayerResource)
 
 	SendPropArray3( SENDINFO_ARRAY3(m_szPlayerNames), SendPropString( SENDINFO_ARRAY(m_szPlayerNames), 0, SendProxy_String_tToStringPR ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_szClubNames), SendPropString( SENDINFO_ARRAY(m_szClubNames), 0, SendProxy_String_tToStringPR ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_szNationalTeamNames), SendPropString( SENDINFO_ARRAY(m_szNationalTeamNames), 0, SendProxy_String_tToStringPR ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_szShirtNames), SendPropString( SENDINFO_ARRAY(m_szShirtNames), 0, SendProxy_String_tToStringPR ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_CountryIndices), SendPropInt( SENDINFO_ARRAY(m_CountryIndices), 8, SPROP_UNSIGNED ) ),
+	SendPropArray3( SENDINFO_ARRAY3(m_NationalityIndices), SendPropInt( SENDINFO_ARRAY(m_NationalityIndices), 8, SPROP_UNSIGNED ) ),
 	
 END_SEND_TABLE()
 
@@ -140,8 +142,10 @@ void CPlayerResource::Spawn( void )
 
 		m_szPlayerNames.Set( i, MAKE_STRING("") );
 		m_szClubNames.Set( i, MAKE_STRING("") );
+		m_szNationalTeamNames.Set( i, MAKE_STRING("") );
 		m_szShirtNames.Set( i, MAKE_STRING("") );
 		m_CountryIndices.Set( i, 0 );
+		m_NationalityIndices.Set( i, 0 );
 	}
 
 	SetThink( &CPlayerResource::ResourceThink );
@@ -200,7 +204,9 @@ void CPlayerResource::UpdatePlayerData( void )
 		m_IsAway.Set(i, pPl->IsAway() );
 		m_szPlayerNames.Set(i, MAKE_STRING(pPl->GetPlayerName()));
 		m_CountryIndices.Set(i, pPl->GetCountryIndex());
+		m_NationalityIndices.Set(i, pPl->GetNationalityIndex());
 		m_szClubNames.Set(i, MAKE_STRING(pPl->GetClubName()));
+		m_szNationalTeamNames.Set(i, MAKE_STRING(pPl->GetNationalTeamName()));
 		m_szShirtNames.Set(i, MAKE_STRING(pPl->GetShirtName()));
 
 		// We're dealing with arrays of char pointers which point to the char array of the player object variable.
@@ -216,6 +222,12 @@ void CPlayerResource::UpdatePlayerData( void )
 		{
 			m_szClubNames.GetForModify(i);
 			pPl->m_bClubNameChanged = false;
+		}
+
+		if (pPl->m_bNationalTeamNameChanged)
+		{
+			m_szNationalTeamNames.GetForModify(i);
+			pPl->m_bNationalTeamNameChanged = false;
 		}
 
 		if (pPl->m_bShirtNameChanged)

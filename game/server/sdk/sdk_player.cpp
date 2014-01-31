@@ -339,6 +339,9 @@ CSDKPlayer::CSDKPlayer()
 	m_szClubName[0] = '\0';
 	m_szShirtName[0] = '\0';
 
+	m_nCountryIndex = 0;
+	m_nNationalityIndex = 0;
+
 	m_nSkinIndex = 0;
 
 	m_iPlayerState = PLAYER_STATE_NONE;
@@ -1866,7 +1869,7 @@ const char *CSDKPlayer::GetClubName()
 
 void CSDKPlayer::SetClubName(const char *name)
 {
-	char sanitizedName[MAX_PLAYER_NAME_LENGTH];
+	char sanitizedName[MAX_CLUBNAME_LENGTH];
 
 	Q_strncpy(sanitizedName, name, sizeof(sanitizedName));
 
@@ -1880,6 +1883,29 @@ void CSDKPlayer::SetClubName(const char *name)
 	Q_strncpy(m_szClubName, sanitizedName, sizeof(m_szClubName));
 
 	m_bClubNameChanged = true;
+}
+
+const char *CSDKPlayer::GetNationalTeamName()
+{
+	return m_szNationalTeamName;
+}
+
+void CSDKPlayer::SetNationalTeamName(const char *name)
+{
+	char sanitizedName[MAX_CLUBNAME_LENGTH];
+
+	Q_strncpy(sanitizedName, name, sizeof(sanitizedName));
+
+	sanitize(sanitizedName);
+
+	trimstr(sanitizedName);
+
+	if (!Q_strcmp(sanitizedName, m_szNationalTeamName))
+		return;
+
+	Q_strncpy(m_szNationalTeamName, sanitizedName, sizeof(m_szNationalTeamName));
+
+	m_bNationalTeamNameChanged = true;
 }
 
 const char *CSDKPlayer::GetShirtName()

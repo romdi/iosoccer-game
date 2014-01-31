@@ -87,8 +87,14 @@ class CNetworkSettingPanel : public PropertyPage, public ISettingPanel
 	Label *m_pClubNameLabel;
 	TextEntry *m_pClubNameText;
 
+	Label *m_pNationalTeamNameLabel;
+	TextEntry *m_pNationalTeamNameText;
+
 	Label *m_pCountryNameLabel;
 	ComboBox *m_pCountryNameList;
+
+	Label *m_pNationalityNameLabel;
+	ComboBox *m_pNationalityNameList;
 
 	Label *m_pInterpDurationLabel;
 	ComboBox *m_pInterpDurationList;

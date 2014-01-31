@@ -201,6 +201,7 @@ void ClientModeShared::Init()
 	ListenForGameEvent( "server_cvar" );
 	ListenForGameEvent( "player_changename" );
 	ListenForGameEvent( "player_changeclub" );
+	ListenForGameEvent( "player_changenationalteam" );
 	ListenForGameEvent( "teamplay_broadcast_audio" );
 	ListenForGameEvent( "achievement_earned" );
 	ListenForGameEvent( "team_formation" );
@@ -890,6 +891,34 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 
 		wchar_t wszLocalized[100];
 		g_pVGuiLocalize->ConstructString( wszLocalized, sizeof( wszLocalized ), g_pVGuiLocalize->Find( "#game_player_changed_club" ), 3, wszPlayerName, wszOldClub, wszNewClub );
+
+		char szLocalized[100];
+		g_pVGuiLocalize->ConvertUnicodeToANSI( wszLocalized, szLocalized, sizeof(szLocalized) );
+
+		hudChat->Printf( CHAT_FILTER_NAMECHANGE, "%s", szLocalized );
+	}
+	else if ( Q_strcmp( "player_changenationalteam", eventname ) == 0 )
+	{
+		if ( !hudChat )
+			return;
+
+		C_SDKPlayer *pPl = ToSDKPlayer(USERID2PLAYER(event->GetInt("userid")));
+		if (!pPl)
+			return;
+
+		const char *pszOldNationalTeam = event->GetString("oldnationalteam")[0] == 0 ? "''" : event->GetString("oldnationalteam");
+
+		wchar_t wszOldNationalTeam[MAX_CLUBNAME_LENGTH];
+		g_pVGuiLocalize->ConvertANSIToUnicode( pszOldNationalTeam, wszOldNationalTeam, sizeof(wszOldNationalTeam) );
+
+		wchar_t wszNewNationalTeam[MAX_CLUBNAME_LENGTH];
+		g_pVGuiLocalize->ConvertANSIToUnicode( event->GetString("newnationalteam")[0] == 0 ? "''" : event->GetString("newnationalteam"), wszNewNationalTeam, sizeof(wszNewNationalTeam) );
+
+		wchar_t wszPlayerName[MAX_PLAYER_NAME_LENGTH];
+		g_pVGuiLocalize->ConvertANSIToUnicode( pPl->GetPlayerName(), wszPlayerName, sizeof(wszPlayerName) );
+
+		wchar_t wszLocalized[100];
+		g_pVGuiLocalize->ConstructString( wszLocalized, sizeof( wszLocalized ), g_pVGuiLocalize->Find( "#game_player_changed_nationalteam" ), 3, wszPlayerName, wszOldNationalTeam, wszNewNationalTeam );
 
 		char szLocalized[100];
 		g_pVGuiLocalize->ConvertUnicodeToANSI( wszLocalized, szLocalized, sizeof(szLocalized) );
