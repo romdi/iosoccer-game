@@ -953,7 +953,7 @@ void CReplayManager::AddMatchEvent(match_event_t type, int team, CSDKPlayer *pPl
 
 	m_MatchEvents.AddToTail(pMatchEvent);
 
-	if (type == MATCH_EVENT_GOAL || type == MATCH_EVENT_OWNGOAL)
+	if (type == MATCH_EVENT_GOAL || type == MATCH_EVENT_OWNGOAL || type == MATCH_EVENT_YELLOWCARD || type == MATCH_EVENT_SECONDYELLOWCARD || type == MATCH_EVENT_REDCARD)
 	{
 		char matchEventPlayerNames[MAX_MATCH_EVENT_PLAYER_NAME_LENGTH] = {};
 		if (pPlayer1 && !pPlayer2 && !pPlayer3)
