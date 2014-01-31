@@ -49,10 +49,10 @@
 using namespace vgui;
 
 enum { FORMATION_BUTTON_WIDTH = 90, FORMATION_BUTTON_HEIGHT = 55 };
-enum { FORMATION_HPADDING = (FORMATION_BUTTON_WIDTH / 2 + 40), FORMATION_VTOPPADDING = (FORMATION_BUTTON_HEIGHT / 2 + 0), FORMATION_VBOTTOMPADDING = (FORMATION_BUTTON_HEIGHT / 2 + 22), FORMATION_CENTERPADDING = 35 };
+enum { FORMATION_HPADDING = (FORMATION_BUTTON_WIDTH / 2 + 80), FORMATION_VTOPPADDING = (FORMATION_BUTTON_HEIGHT / 2 + 10), FORMATION_VBOTTOMPADDING = (FORMATION_BUTTON_HEIGHT / 2 + 20), FORMATION_CENTERPADDING = 40 };
 enum { TOOLTIP_WIDTH = 100, TOOLTIP_HEIGHT = 20 };
 enum { TICK_WIDTH = 25, TICK_HEIGHT = 20 };
-enum { FORMATION_NAME_WIDTH = 100, FORMATION_NAME_HEIGHT = 25, FORMATION_NAME_HMARGIN = 126, FORMATION_NAME_VMARGIN = 25 };
+enum { FORMATION_NAME_WIDTH = 100, FORMATION_NAME_HEIGHT = 25, FORMATION_NAME_HMARGIN = 80, FORMATION_NAME_VMARGIN = 7 };
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -108,7 +108,7 @@ void CFormationMenu::PerformLayout()
 	{
 		m_pFormations[i]->SetBounds(i * (GetWide() / 2), 0, GetWide() / 2, GetTall());
 		//m_pFormations[i]->SetBgColor(Color(255, 0, 0, 255));
-		m_pFormationNames[i]->SetBounds(i == 0 ? m_pFormations[i]->GetWide() - FORMATION_NAME_WIDTH - FORMATION_NAME_HMARGIN : FORMATION_NAME_HMARGIN, m_pFormations[i]->GetTall() - FORMATION_NAME_HEIGHT - FORMATION_NAME_VMARGIN, FORMATION_NAME_WIDTH, FORMATION_NAME_HEIGHT);
+		m_pFormationNames[i]->SetBounds(i == 0 ? FORMATION_NAME_HMARGIN : m_pFormations[i]->GetWide() - FORMATION_NAME_WIDTH - FORMATION_NAME_HMARGIN, m_pFormations[i]->GetTall() - FORMATION_NAME_HEIGHT - FORMATION_NAME_VMARGIN, FORMATION_NAME_WIDTH, FORMATION_NAME_HEIGHT);
 		m_pFormationNames[i]->SetFont(m_pScheme->GetFont("IOSTeamMenuNormal"));
 		m_pFormationNames[i]->SetContentAlignment(Label::a_center);
 		//m_pFormationNames[i]->SetBgColor(Color(255, 0, 0, 255));

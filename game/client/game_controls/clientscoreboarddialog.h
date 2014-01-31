@@ -87,9 +87,9 @@ enum stat_categories_t
 	DEFAULT_STATS = -1,
 	GENERAL = 0,
 	TACKLES,
-	SET_PIECES,
+	//SET_PIECES,
+	ATTACK,
 	KEEPER,
-	OFFENSE,
 	STAT_CATEGORY_COUNT,
 };
 
@@ -97,9 +97,9 @@ static const char g_szStatCategoryNames[STAT_CATEGORY_COUNT][32] =
 {
 	"General",
 	"Tackles",
-	"Set Pieces",
+	//"Set Pieces",
+	"Attack",
 	"Keeper",
-	"Offense",
 };
 
 struct SpecInfo
@@ -136,8 +136,6 @@ public:
 	virtual bool NeedsUpdate( void );
 	virtual bool HasInputElements( void ) { return true; }
 	virtual void ShowPanel( bool bShow );
-
-	virtual bool ShowAvatars() { return false; }
 
 	void ToggleMenu();
 

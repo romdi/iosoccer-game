@@ -102,15 +102,15 @@ void CC_Gag(const CCommand &args)
 static ConCommand gag("gag", CC_Gag);
 
 
-enum { PANEL_TOPMARGIN = 70, PANEL_MARGIN = 5, PANEL_WIDTH = (1024 - 2 * PANEL_MARGIN), PANEL_HEIGHT = (720 - 2 * PANEL_MARGIN) };
+enum { PANEL_TOPMARGIN = 70, PANEL_MARGIN = 5, PANEL_WIDTH = (1280 - 2 * PANEL_MARGIN), PANEL_HEIGHT = (768 - 2 * PANEL_MARGIN) };
 enum { TEAMCREST_SIZE = 48, TEAMCREST_VMARGIN = 7, TEAMCREST_HOFFSET = 240, TEAMCREST_VOFFSET = 10 };
-enum { PLAYERLIST_HEIGHT = 360, PLAYERLIST_BOTTOMMARGIN = 10, PLAYERLISTDIVIDER_WIDTH = 8 };
+enum { PLAYERLIST_HEIGHT = 400, PLAYERLIST_BOTTOMMARGIN = 10, PLAYERLISTDIVIDER_WIDTH = 8 };
 enum { STATBUTTON_WIDTH = 120, STATBUTTON_HEIGHT = 30, STATBUTTON_HMARGIN = 0, STATBUTTON_VMARGIN = 5 };
-enum { EXTRAINFO_HEIGHT = 305, EXTRAINFO_MARGIN = 5 };
+enum { EXTRAINFO_HEIGHT = 313, EXTRAINFO_MARGIN = 5 };
 enum { SPECLIST_HEIGHT = 30, SPECLIST_PADDING = 5, SPECNAME_WIDTH = 100, SPECTEXT_WIDTH = 150, SPECTEXT_MARGIN = 5, SPECBUTTON_WIDTH = 90, SPECBUTTON_HMARGIN = 5, SPECBUTTON_VMARGIN = 3 };
 enum { TOPBAR_HEIGHT = 30 };
-enum { SERVERINFO_WIDTH = 320, SERVERINFOLINE_HEIGHT = 2, SERVERINFOLINE_MARGIN = 5 };
-enum { MATCHINFO_WIDTH = 320 };
+enum { SERVERINFO_WIDTH = 448, SERVERINFOLINE_HEIGHT = 2, SERVERINFOLINE_MARGIN = 5 };
+enum { MATCHINFO_WIDTH = 448 };
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -317,7 +317,7 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 	SetBounds(0, 0, ScreenWidth(), ScreenHeight());
 
 	//m_pMainPanel->SetPaintBackgroundType(2);
-	m_pMainPanel->SetBgColor(Color(0, 0, 0, 240));
+	m_pMainPanel->SetBgColor(Color(0, 0, 0, 253));
 	//m_pMainPanel->SetBounds(GetWide() / 2 - PANEL_WIDTH / 2, PANEL_TOPMARGIN, PANEL_WIDTH, PANEL_HEIGHT);
 	m_pMainPanel->SetBounds(GetWide() / 2 - PANEL_WIDTH / 2, GetTall() / 2 - PANEL_HEIGHT / 2, PANEL_WIDTH, PANEL_HEIGHT);
 	m_pMainPanel->SetPaintBorderEnabled(false);
@@ -346,7 +346,7 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 	m_pMatchEventMenu->SetBounds(0, 0, m_pExtraInfoPanel->GetWide(), m_pExtraInfoPanel->GetTall());
 	m_pMatchEventMenu->PerformLayout();
 
-	m_pStatButtonContainer->SetBounds(m_pMainPanel->GetWide() / 2 - (STATBUTTON_WIDTH + 2 * STATBUTTON_HMARGIN) / 2, m_pExtraInfoPanel->GetY(), STATBUTTON_WIDTH + 2 * STATBUTTON_HMARGIN, 5 * STATBUTTON_HEIGHT + STAT_CATEGORY_COUNT * STATBUTTON_HEIGHT - 5 - STATBUTTON_HEIGHT);
+	m_pStatButtonContainer->SetBounds(m_pMainPanel->GetWide() / 2 - (STATBUTTON_WIDTH + 2 * STATBUTTON_HMARGIN) / 2, m_pExtraInfoPanel->GetY(), STATBUTTON_WIDTH + 2 * STATBUTTON_HMARGIN, 6 * STATBUTTON_HEIGHT + STAT_CATEGORY_COUNT * STATBUTTON_HEIGHT - 5 - STATBUTTON_HEIGHT);
 	m_pStatButtonContainer->SetZPos(1);
 
 	for (int i = 0; i < 3; i++)
@@ -383,32 +383,32 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 	m_pMatchEvents->SetPaintBorderEnabled(false);
 	//m_pMatchEvents->SetVisible(false);
 
-	m_pToggleCaptainMenu->SetBounds(STATBUTTON_HMARGIN, 1 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
+	m_pToggleCaptainMenu->SetBounds(STATBUTTON_HMARGIN, 2 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
 	m_pToggleCaptainMenu->SetFont(m_pScheme->GetFont("StatButton"));
 	m_pToggleCaptainMenu->SetContentAlignment(Label::a_center);
 	m_pToggleCaptainMenu->SetPaintBorderEnabled(false);
 	m_pToggleCaptainMenu->SetCursor(dc_hand);
 
-	m_pStatText->SetBounds(STATBUTTON_HMARGIN, 2 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
+	m_pStatText->SetBounds(STATBUTTON_HMARGIN, 3 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
 	m_pStatText->SetFont(m_pScheme->GetFont("StatButton"));
 	m_pStatText->SetContentAlignment(Label::a_center);
 
-	m_pFormationList->SetBounds(STATBUTTON_HMARGIN, 3 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
+	m_pFormationList->SetBounds(STATBUTTON_HMARGIN, 4 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
 	m_pFormationList->SetFont(m_pScheme->GetFont("StatButton"));
 	//m_pFormationList->SetPaintBorderEnabled(false);
 	m_pFormationList->SetVisible(false);
 
-	m_pTimeoutHeader->SetBounds(STATBUTTON_HMARGIN, 4 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
+	m_pTimeoutHeader->SetBounds(STATBUTTON_HMARGIN, 5 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
 	m_pTimeoutHeader->SetFont(m_pScheme->GetFont("StatButton"));
 	m_pTimeoutHeader->SetContentAlignment(Label::a_center);
 	m_pTimeoutHeader->SetVisible(false);
 
-	m_pTimeoutInfo->SetBounds(STATBUTTON_HMARGIN, 5 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
+	m_pTimeoutInfo->SetBounds(STATBUTTON_HMARGIN, 6 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
 	m_pTimeoutInfo->SetFont(m_pScheme->GetFont("StatButton"));
 	m_pTimeoutInfo->SetContentAlignment(Label::a_center);
 	m_pTimeoutInfo->SetVisible(false);
 
-	m_pRequestTimeout->SetBounds(STATBUTTON_HMARGIN, 6 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
+	m_pRequestTimeout->SetBounds(STATBUTTON_HMARGIN, 7 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
 	m_pRequestTimeout->SetFont(m_pScheme->GetFont("StatButton"));
 	m_pRequestTimeout->SetContentAlignment(Label::a_center);
 	m_pRequestTimeout->SetPaintBorderEnabled(false);
@@ -417,7 +417,7 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 
 	for (int i = 0; i < STAT_CATEGORY_COUNT; i++)
 	{
-		m_pStatButtons[i]->SetBounds(STATBUTTON_HMARGIN, 3 * STATBUTTON_HEIGHT + i * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
+		m_pStatButtons[i]->SetBounds(STATBUTTON_HMARGIN, 4 * STATBUTTON_HEIGHT + i * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
 		m_pStatButtons[i]->SetFont(m_pScheme->GetFont("StatButton"));
 		m_pStatButtons[i]->SetContentAlignment(Label::a_center);
 		m_pStatButtons[i]->SetPaintBorderEnabled(false);
@@ -704,6 +704,9 @@ void CClientScoreBoardDialog::Update( void )
 		}
 	}
 
+	for (int i = 0; i < 2; i++)
+		m_pPlayerList[i]->SetLineSpacing(400 / (mp_maxplayers.GetInt() + 2.5f));
+
 	m_fNextUpdateTime = gpGlobals->curtime + 0.25f; 
 }
 
@@ -942,66 +945,67 @@ void CClientScoreBoardDialog::AddHeader()
 		m_pPlayerList[i]->AddSection(m_iSectionId, "", StaticPlayerSortFunc);
 		m_pPlayerList[i]->SetSectionAlwaysVisible(m_iSectionId);
 		m_pPlayerList[i]->SetFontSection(m_iSectionId, m_pScheme->GetFont("IOSTeamMenuSmall"));
-		m_pPlayerList[i]->SetLineSpacing(25);
+		m_pPlayerList[i]->SetLineSpacing(29);
 		m_pPlayerList[i]->SetFgColor(g_ColorWhite);
 		m_pPlayerList[i]->SetSectionFgColor(0, g_ColorWhite);
 
 		int defaultFlags = SectionedListPanel::HEADER_CENTER | SectionedListPanel::COLUMN_CENTER;
 
 		//m_pPlayerList[i]->SetSectionDividerColor(m_iSectionId, Color(255, 255, 255, 255));
-		m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "posname",		"Pos.", defaultFlags, 60 );
-		//if ( ShowAvatars() )
-		//{
-		//	m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "avatar",		"", SectionedListPanel::COLUMN_IMAGE, 50 );
-		//}
-		m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "name",			"Name", 0, 175);
+		m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "posname",		"", defaultFlags, 50 );
+		m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "avatar",		"", defaultFlags | SectionedListPanel::COLUMN_IMAGE, 50 );
+		m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "name",			"", 0, 200);
 
-		// Max width = 270
+		// Max width = 398
 
 		switch (m_nCurStat)
 		{
 		case DEFAULT_STATS:
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "countryindex",				"Loc.",			defaultFlags | SectionedListPanel::COLUMN_IMAGE, 45);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "club",						"Club",			defaultFlags, 60);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goals",						"Goals",		defaultFlags, 35);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "assists",					"Assists",		defaultFlags, 35);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "rating",					"Rating",		defaultFlags, 35);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "ping",						"Ping",			defaultFlags, 50);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "countryindex",				"Loc.",			defaultFlags | SectionedListPanel::COLUMN_IMAGE, 50);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "countryindex",				"Nat.",			defaultFlags | SectionedListPanel::COLUMN_IMAGE, 50);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "club",						"Club",			defaultFlags, 70);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "club",						"Nat.T.",		defaultFlags, 70);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "rating",					"Rating",		defaultFlags, 40);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "ping",						"Ping",			defaultFlags, 55);
 			break;
 		case GENERAL:
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "possession",				"Poss.",		defaultFlags, 45);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "distancecovered",			"Distance",		defaultFlags, 70);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "passes",					"Passes",		defaultFlags, 45);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "possession",				"Poss.",		defaultFlags, 50);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "distancecovered",			"Distance",		defaultFlags, 75);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "passes",					"Passes",		defaultFlags, 50);
 			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "passescompleted",			"~ compl.",		defaultFlags, 55);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "interceptions",				"Interc.",		defaultFlags, 45);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "interceptions",				"Interc.",		defaultFlags, 50);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "interceptions",				"Turnovers",	defaultFlags, 50);
 			break;
 		case TACKLES:
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "slidingtackles",			"Tackles",		defaultFlags, 43);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "slidingtacklescompleted",	"~ compl.",		defaultFlags, 43);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "fouls",						"Fouls",		defaultFlags, 43);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "foulssuffered",				"~ suffered",	defaultFlags, 43);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "yellowcards",				"Yellows",		defaultFlags, 43);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "redcards",					"Reds",			defaultFlags, 43);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "slidingtackles",			"Tackles",		defaultFlags, 55);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "slidingtacklescompleted",	"~ compl.",		defaultFlags, 55);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "fouls",						"Fouls",		defaultFlags, 55);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "foulssuffered",				"~ suffered",	defaultFlags, 55);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "yellowcards",				"Yellows",		defaultFlags, 55);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "redcards",					"Reds",			defaultFlags, 55);
 			break;
-		case SET_PIECES:
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "freekicks",					"Free kicks",	defaultFlags, 52);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "penalties",					"Penalties",	defaultFlags, 52);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "throwins",					"Throw-ins",	defaultFlags, 52);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "corners",					"Corners",		defaultFlags, 52);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goalkicks",					"Goal kicks",	defaultFlags, 52);
+		//case SET_PIECES:
+		//	m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "freekicks",					"Free kicks",	defaultFlags, 52);
+		//	m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "penalties",					"Penalties",	defaultFlags, 52);
+		//	m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "throwins",					"Throw-ins",	defaultFlags, 52);
+		//	m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "corners",					"Corners",		defaultFlags, 52);
+		//	m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goalkicks",					"Goal kicks",	defaultFlags, 52);
+		//	break;
+		case ATTACK:
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goals",						"Goals",		defaultFlags, 55);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "assists",					"Assists",		defaultFlags, 55);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "shots",						"Shots",		defaultFlags, 55);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "shotsongoal",				"~ on goal",	defaultFlags, 55);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "offsides",					"Offsides",		defaultFlags, 55);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "corners",					"Corners",		defaultFlags, 55);
 			break;
 		case KEEPER:
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "keepersaves",				"Saves",		defaultFlags, 65);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goalkicks",					"Goal kicks",	defaultFlags, 65);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "owngoals",					"Own goals",	defaultFlags, 65);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goalsconceded",				"Goals conc.",	defaultFlags, 65);
-			break;
-		case OFFENSE:
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goals",						"Goals",		defaultFlags, 52);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "assists",					"Assists",		defaultFlags, 52);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "shots",						"Shots",		defaultFlags, 52);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "shotsongoal",				"~ on goal",	defaultFlags, 52);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "offsides",					"Offsides",		defaultFlags, 52);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "keepersaves",				"Saves",		defaultFlags, 80);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "keepersaves",				"~ caught",		defaultFlags, 80);
+			//m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goalkicks",					"Goal kicks",	defaultFlags, 65);
+			//m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "owngoals",					"Own goals",	defaultFlags, 65);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goalsconceded",				"Goals conc.",	defaultFlags, 80);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goalsconceded",				"Max clean sheet dur.",	defaultFlags, 80);
 			break;
 		default:
 			//m_pPlayerList[i]->AddColumnToSection(m_iSectionId, g_szStatIdentifiers[m_nCurStat], g_szStatNames[m_nCurStat], 0, 90);
@@ -1285,7 +1289,7 @@ bool CClientScoreBoardDialog::GetTeamInfo(int team, KeyValues *kv)
 void CClientScoreBoardDialog::UpdatePlayerAvatar( int playerIndex, KeyValues *kv )
 {
 	// Update their avatar
-	if ( kv && ShowAvatars() && steamapicontext->SteamFriends() && steamapicontext->SteamUtils() )
+	if ( kv && steamapicontext->SteamFriends() && steamapicontext->SteamUtils() )
 	{
 		player_info_t pi;
 		if ( engine->GetPlayerInfo( playerIndex, &pi ) )
@@ -1306,7 +1310,7 @@ void CClientScoreBoardDialog::UpdatePlayerAvatar( int playerIndex, KeyValues *kv
 					{
 						CAvatarImage *pImage = new CAvatarImage();
 						pImage->SetAvatarSteamID( steamIDForPlayer );
-						pImage->SetAvatarSize( 32, 32 );	// Deliberately non scaling
+						pImage->SetAvatarSize( 25, 25 );	// Deliberately non scaling
 						int iImageIndex = m_pImageList->AddImage( pImage );
 
 						m_mapAvatarsToImageList.Insert( iAvatar, iImageIndex );
