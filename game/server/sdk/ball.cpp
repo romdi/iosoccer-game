@@ -32,7 +32,8 @@ ConVar sv_ball_dragcoeff( "sv_ball_dragcoeff", "1", FCVAR_NOTIFY | FCVAR_DEVELOP
 ConVar sv_ball_inertia( "sv_ball_inertia", "1.5", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
 ConVar sv_ball_drag_enabled("sv_ball_drag_enabled", "1", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
 
-ConVar sv_ball_spin( "sv_ball_spin", "500", FCVAR_NOTIFY );
+ConVar sv_ball_sidespin( "sv_ball_sidespin", "3500", FCVAR_NOTIFY );
+ConVar sv_ball_backtopspin( "sv_ball_backtopspin", "3500", FCVAR_NOTIFY );
 ConVar sv_ball_spin_exponent( "sv_ball_spin_exponent", "0.75", FCVAR_NOTIFY );
 ConVar sv_ball_defaultspin( "sv_ball_defaultspin", "150", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
 ConVar sv_ball_topspin_coeff( "sv_ball_topspin_coeff", "0.1", FCVAR_NOTIFY );
@@ -111,13 +112,15 @@ ConVar sv_ball_fixedpitchdowncoeff_nonnormalshot("sv_ball_fixedpitchdowncoeff_no
 ConVar sv_ball_pitchup_exponent("sv_ball_pitchup_exponent", "3", FCVAR_NOTIFY);
 ConVar sv_ball_fixedpitchupcoeff("sv_ball_fixedpitchupcoeff", "0.35", FCVAR_NOTIFY);
 
-ConVar sv_ball_bestbackspinangle("sv_ball_bestbackspinangle", "-55", FCVAR_NOTIFY);
+ConVar sv_ball_bestbackspinangle_start("sv_ball_bestbackspinangle_start", "-50", FCVAR_NOTIFY);
+ConVar sv_ball_bestbackspinangle_end("sv_ball_bestbackspinangle_end", "-25", FCVAR_NOTIFY);
 ConVar sv_ball_pitchdownbackspin_exponent("sv_ball_pitchdownbackspin_exponent", "4", FCVAR_NOTIFY);
 ConVar sv_ball_fixedpitchdownbackspincoeff("sv_ball_fixedpitchdownbackspincoeff", "0.1", FCVAR_NOTIFY);
 ConVar sv_ball_pitchupbackspin_exponent("sv_ball_pitchupbackspin_exponent", "2", FCVAR_NOTIFY);
 ConVar sv_ball_fixedpitchupbackspincoeff("sv_ball_fixedpitchupbackspincoeff", "0.1", FCVAR_NOTIFY);
 
-ConVar sv_ball_besttopspinangle("sv_ball_besttopspinangle", "-10", FCVAR_NOTIFY);
+ConVar sv_ball_besttopspinangle_start("sv_ball_besttopspinangle_start", "-15", FCVAR_NOTIFY);
+ConVar sv_ball_besttopspinangle_end("sv_ball_besttopspinangle_end", "0", FCVAR_NOTIFY);
 ConVar sv_ball_pitchdowntopspin_exponent("sv_ball_pitchdowntopspin_exponent", "2", FCVAR_NOTIFY);
 ConVar sv_ball_fixedpitchdowntopspincoeff("sv_ball_fixedpitchdowntopspincoeff", "0.1", FCVAR_NOTIFY);
 ConVar sv_ball_pitchuptopspin_exponent("sv_ball_pitchuptopspin_exponent", "4", FCVAR_NOTIFY);
@@ -2743,9 +2746,12 @@ AngularImpulse CBall::CalcSpin(float coeff, bool applyTopspin)
 
 	float speedCoeff = pow(sin(RemapValClamped(m_vVel.Length(), sv_ball_dynamicshotdelay_minshotstrength.GetInt(), sv_ball_dynamicshotdelay_maxshotstrength.GetInt(), 0.0f, 1.0f) * M_PI), (double)sv_ball_spin_exponent.GetFloat());
 
+	bool useCamViewAngles = false;
+	float pitch = useCamViewAngles ? m_aPlCamAng[PITCH] : m_aPlAng[PITCH];
+
 	if (coeff > 0)
 	{
-		sideSpin = speedCoeff * sv_ball_spin.GetInt() * coeff;
+		sideSpin = speedCoeff * sv_ball_sidespin.GetInt() * coeff;
 
 		if ((m_pPl->m_nButtons & IN_MOVELEFT) && (!(m_pPl->m_nButtons & IN_MOVERIGHT) || (mp_sidemove_override.GetBool() || mp_curl_override.GetBool()) && m_pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVERIGHT)) 
 		{
@@ -2759,28 +2765,27 @@ AngularImpulse CBall::CalcSpin(float coeff, bool applyTopspin)
 
 
 	Vector backTopRot = vec3_origin;
-	float backTopSpin = 0;
+	float backTopSpin = speedCoeff * sv_ball_backtopspin.GetInt() * coeff;
 
-	if (coeff > 0)
+	if (coeff > 0 && sideRot == vec3_origin)
 	{
-		backTopSpin = speedCoeff * sv_ball_spin.GetInt() * coeff;
-
-		if (!sv_ball_jump_topspin_enabled.GetBool() || m_pPl->GetGroundEntity() && !(m_pPl->m_nButtons & IN_JUMP) || !applyTopspin)
+		if (pitch >= sv_ball_bestbackspinangle_start.GetFloat() && pitch <= sv_ball_bestbackspinangle_end.GetFloat())
 		{
+			backTopSpin *= pow((double)cos(RemapValClamped(pitch, sv_ball_bestbackspinangle_start.GetFloat(), sv_ball_bestbackspinangle_end.GetFloat(), M_PI * 0.5, M_PI * 1.5)), 2.0) * sv_ball_backspin_coeff.GetFloat();
 			backTopRot = m_vPlRight;
-			backTopSpin *= sv_ball_backspin_coeff.GetFloat();
 		}
-		else if (sv_ball_jump_topspin_enabled.GetBool() && (!m_pPl->GetGroundEntity() || (m_pPl->m_nButtons & IN_JUMP) != 0))
+		else if (pitch >= sv_ball_besttopspinangle_start.GetFloat() && pitch <= sv_ball_besttopspinangle_end.GetFloat())
 		{
+			backTopSpin *= pow((double)cos(RemapValClamped(pitch, sv_ball_besttopspinangle_start.GetFloat(), sv_ball_besttopspinangle_end.GetFloat(), M_PI * 0.5, M_PI * 1.5)), 2.0) * sv_ball_topspin_coeff.GetFloat();
 			backTopRot = -m_vPlRight;
-			backTopSpin *= sv_ball_topspin_coeff.GetFloat();
 		}
 	}
 
+	//DevMsg("pitch: %.2f, backtopspin: %.2f\n", pitch, backTopSpin);
 
 	AngularImpulse randRot = vec3_origin;
 
-	if (sideRot == vec3_origin && backTopRot == vec3_origin)
+	//if (sideRot == vec3_origin && backTopRot == vec3_origin)
 	{
 		for (int i = 0; i < 3; i++)
 		{
