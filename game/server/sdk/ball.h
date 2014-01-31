@@ -48,6 +48,15 @@ enum penalty_state_t
 	PENALTY_ABORTED_ILLEGAL_MOVE
 };
 
+#define FL_SPIN_PERMIT_BACK		(1 << 0)
+#define FL_SPIN_PERMIT_TOP		(1 << 1)
+#define FL_SPIN_PERMIT_SIDE		(1 << 2)
+#define FL_SPIN_FORCE_BACK		(1 << 3)
+#define FL_SPIN_FORCE_TOP		(1 << 4)
+#define FL_SPIN_FORCE_SIDE		(1 << 5)
+
+#define FL_SPIN_PERMIT_ALL		(FL_SPIN_PERMIT_BACK | FL_SPIN_PERMIT_TOP | FL_SPIN_PERMIT_SIDE)
+
 #define FL_POS_KEEPER					(1 << 0)
 #define FL_POS_DEFENDER					(1 << 1)
 #define FL_POS_MIDFIELDER				(1 << 2)
@@ -169,7 +178,7 @@ public:
 
 	void			SetPos(const Vector &pos, bool teleport = true);
 	void			SetAng(const QAngle &ang);
-	void			SetVel(Vector vel, float spinCoeff, body_part_t bodyPart, bool isDeflection, bool markOffsidePlayers, bool ensureMinShotStrength, float nextShotMinDelay = 0);
+	void			SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyPart, bool isDeflection, bool markOffsidePlayers, bool ensureMinShotStrength, float nextShotMinDelay = 0);
 	void			SetRot(AngularImpulse rot = NULL);
 
 	void			SetPenaltyState(penalty_state_t penaltyState) { m_ePenaltyState = penaltyState; }
@@ -244,7 +253,7 @@ private:
 	bool			DoGroundShot(bool markOffsidePlayers, float velCoeff = 1.0f);
 	bool			DoVolleyShot();
 	bool			DoHeader();
-	AngularImpulse	CalcSpin(float coeff, bool applyTopspin);
+	AngularImpulse	CalcSpin(float coeff, int spinFlags);
 	float			GetPitchCoeff(bool isNormalShot, bool useCamViewAngles = false);
 	float			GetNormalshotStrength(float coeff, int strength);
 	float			GetPowershotStrength(float coeff, int strength);
