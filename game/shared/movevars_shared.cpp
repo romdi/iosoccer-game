@@ -103,17 +103,7 @@ ConVar  mp_stamina_max_add_extratime_intermission	("mp_stamina_max_add_extratime
 ConVar  mp_stamina_max_add_extratime_halftime	("mp_stamina_max_add_extratime_halftime", "5.0", FCVAR_NOTIFY | FCVAR_REPLICATED);
 
 ConVar  mp_pitchup("mp_pitchup", "60", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar  mp_pitchup_remap("mp_pitchup_remap", "60", FCVAR_NOTIFY);
-ConVar  mp_pitchup_max("mp_pitchup_max", "60", FCVAR_NOTIFY);
 ConVar  mp_pitchdown("mp_pitchdown", "50", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar  mp_pitchdown_remap("mp_pitchdown_remap", "50", FCVAR_NOTIFY);
-ConVar  mp_pitchdown_max("mp_pitchdown_max", "50", FCVAR_NOTIFY);
-ConVar  mp_client_pitch("mp_client_pitch", "1", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar  mp_client_sidecurl("mp_client_sidecurl", "1", FCVAR_NOTIFY);
-
-ConVar  mp_sidemove_override("mp_sidemove_override", "0", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar  mp_keeper_sidemove_override("mp_keeper_sidemove_override", "1", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar  mp_curl_override("mp_curl_override", "1", FCVAR_NOTIFY);
 
 ConVar	sv_airaccelerate(  "sv_airaccelerate", "10", FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );    
 ConVar	sv_wateraccelerate(  "sv_wateraccelerate", "10", FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );     

@@ -228,8 +228,6 @@ ConVar sv_ball_freecamshot_maxangle("sv_ball_freecamshot_maxangle", "60", FCVAR_
 ConVar sv_ball_heelshot_strength("sv_ball_heelshot_strength", "800", FCVAR_NOTIFY);
 
 
-extern ConVar mp_client_sidecurl;
-
 CBall *CreateBall(const Vector &pos, CSDKPlayer *pCreator)
 {
 	CBall *pBall = static_cast<CBall *>(CreateEntityByName("football"));
@@ -2755,13 +2753,13 @@ AngularImpulse CBall::CalcSpin(float coeff, int spinFlags)
 	{
 		sideSpin = speedCoeff * sv_ball_spin.GetInt() * coeff;
 
-		if ((m_pPl->m_nButtons & IN_MOVELEFT) && (!(m_pPl->m_nButtons & IN_MOVERIGHT) || (mp_sidemove_override.GetBool() || mp_curl_override.GetBool()) && m_pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVERIGHT)) 
+		if ((m_pPl->m_nButtons & IN_MOVELEFT) && (!(m_pPl->m_nButtons & IN_MOVERIGHT) || m_pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVERIGHT)) 
 		{
-			sideRot = Vector(0, 0, (m_pPl->IsLegacySideCurl() && mp_client_sidecurl.GetBool()) ? 1 : -1);
+			sideRot = Vector(0, 0, m_pPl->IsLegacySideCurl() ? 1 : -1);
 		}
-		else if ((m_pPl->m_nButtons & IN_MOVERIGHT) && (!(m_pPl->m_nButtons & IN_MOVELEFT) || (mp_sidemove_override.GetBool() || mp_curl_override.GetBool()) && m_pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVELEFT)) 
+		else if ((m_pPl->m_nButtons & IN_MOVERIGHT) && (!(m_pPl->m_nButtons & IN_MOVELEFT) || m_pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVELEFT)) 
 		{
-			sideRot = Vector(0, 0, (m_pPl->IsLegacySideCurl() && mp_client_sidecurl.GetBool()) ? -1 : 1);
+			sideRot = Vector(0, 0, m_pPl->IsLegacySideCurl() ? -1 : 1);
 		}
 	}
 

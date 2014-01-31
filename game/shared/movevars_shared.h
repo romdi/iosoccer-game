@@ -50,14 +50,7 @@ extern ConVar mp_stamina_max_add_extratime_intermission;
 extern ConVar mp_stamina_max_add_extratime_halftime;
 
 extern ConVar mp_pitchup;
-extern ConVar mp_pitchup_remap;
-extern ConVar mp_pitchup_max;
 extern ConVar mp_pitchdown;
-extern ConVar mp_pitchdown_remap;
-extern ConVar mp_pitchdown_max;
-extern ConVar mp_sidemove_override;
-extern ConVar mp_keeper_sidemove_override;
-extern ConVar mp_curl_override;
 
 // Vehicle convars
 extern ConVar r_VehicleViewDampen;

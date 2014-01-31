@@ -1565,9 +1565,9 @@ bool CGameMovement::CheckPlayerAnimEvent()
 
 	int sidemoveSign;
 
-	if ((mv->m_nButtons & IN_MOVELEFT) && (!(mv->m_nButtons & IN_MOVERIGHT) || mp_keeper_sidemove_override.GetBool() && pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVERIGHT))
+	if ((mv->m_nButtons & IN_MOVELEFT) && (!(mv->m_nButtons & IN_MOVERIGHT) || pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVERIGHT))
 		sidemoveSign = -1;
-	else if ((mv->m_nButtons & IN_MOVERIGHT) && (!(mv->m_nButtons & IN_MOVELEFT) || mp_keeper_sidemove_override.GetBool() && pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVELEFT))
+	else if ((mv->m_nButtons & IN_MOVERIGHT) && (!(mv->m_nButtons & IN_MOVELEFT) || pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVELEFT))
 		sidemoveSign = 1;
 	else
 		sidemoveSign = 0;
@@ -1943,9 +1943,9 @@ bool CGameMovement::CheckJumpButton( void )
 
 		int sidemoveSign;
 
-		if ((mv->m_nButtons & IN_MOVELEFT) && (!(mv->m_nButtons & IN_MOVERIGHT) || mp_keeper_sidemove_override.GetBool() && pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVERIGHT))
+		if ((mv->m_nButtons & IN_MOVELEFT) && (!(mv->m_nButtons & IN_MOVERIGHT) || pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVERIGHT))
 			sidemoveSign = -1;
-		else if ((mv->m_nButtons & IN_MOVERIGHT) && (!(mv->m_nButtons & IN_MOVELEFT) || mp_keeper_sidemove_override.GetBool() && pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVELEFT))
+		else if ((mv->m_nButtons & IN_MOVERIGHT) && (!(mv->m_nButtons & IN_MOVELEFT) || pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVELEFT))
 			sidemoveSign = 1;
 		else
 			sidemoveSign = 0;

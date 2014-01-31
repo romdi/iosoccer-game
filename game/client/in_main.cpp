@@ -61,9 +61,7 @@ extern ConVar mp_pitchdown;
 extern ConVar cl_pitchdown;
 extern ConVar mp_pitchup;
 extern ConVar cl_pitchup;
-extern ConVar mp_client_pitch;
 extern ConVar legacyverticallook;
-extern ConVar mp_sidemove_override;
 
 ConVar thirdperson_platformer( "thirdperson_platformer", "0", 0, "Player will aim in the direction they are moving." );
 ConVar thirdperson_screenspace( "thirdperson_screenspace", "0", 0, "Movement will be relative to the camera, eg: left means screen-left" );
@@ -77,7 +75,7 @@ extern ConVar cl_mouselook;
 float GetPitchup()
 {
 	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
-	if (pPlayer && (pPlayer->GetTeamNumber() == TEAM_A || pPlayer->GetTeamNumber() == TEAM_B) && !(in_zoom.state & 1) && (!legacyverticallook.GetBool() || !mp_client_pitch.GetBool()))
+	if (pPlayer && (pPlayer->GetTeamNumber() == TEAM_A || pPlayer->GetTeamNumber() == TEAM_B) && !(in_zoom.state & 1) && !legacyverticallook.GetBool())
 		return mp_pitchup.GetFloat();
 	else
 		return cl_pitchup.GetFloat();
@@ -86,7 +84,7 @@ float GetPitchup()
 float GetPitchdown()
 {
 	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
-	if (pPlayer && (pPlayer->GetTeamNumber() == TEAM_A || pPlayer->GetTeamNumber() == TEAM_B) && !(in_zoom.state & 1) && (!legacyverticallook.GetBool() || !mp_client_pitch.GetBool()))
+	if (pPlayer && (pPlayer->GetTeamNumber() == TEAM_A || pPlayer->GetTeamNumber() == TEAM_B) && !(in_zoom.state & 1) && !legacyverticallook.GetBool())
 		return mp_pitchdown.GetFloat();
 	else
 		return cl_pitchdown.GetFloat();
@@ -866,18 +864,8 @@ void CInput::ComputeSideMove( CUserCmd *cmd )
 
 	C_SDKPlayer *pPlayer = ToSDKPlayer(C_BasePlayer::GetLocalPlayer());
 
-	if (pPlayer && mp_sidemove_override.GetBool())
-	{
-		if (KeyState(&in_moveright) && (!KeyState(&in_moveleft) || pPlayer->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVELEFT)) 
-			cmd->sidemove += cl_sidespeed.GetFloat();
-		else if (KeyState(&in_moveleft) && (!KeyState(&in_moveright) || pPlayer->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVERIGHT)) 
-			cmd->sidemove -= cl_sidespeed.GetFloat();
-	}
-	else
-	{
-		cmd->sidemove += cl_sidespeed.GetFloat() * KeyState (&in_moveright);
-		cmd->sidemove -= cl_sidespeed.GetFloat() * KeyState (&in_moveleft);
-	}
+	cmd->sidemove += cl_sidespeed.GetFloat() * KeyState (&in_moveright);
+	cmd->sidemove -= cl_sidespeed.GetFloat() * KeyState (&in_moveleft);
 }
 
 /*
