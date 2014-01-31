@@ -201,6 +201,7 @@ public:
 	virtual bool	IsTeamplay( void ) { return true; }
 	// Get the view vectors for this mod.
 	virtual const CViewVectors* GetViewVectors() const;
+	virtual CViewVectors* GetViewVectorsToModify();
 	virtual const CSDKViewVectors *GetSDKViewVectors() const;
 	//Tony; define a default encryption key.
 	virtual const unsigned char *GetEncryptionKey( void ) { return (unsigned char *)"a1b2c3d4"; }

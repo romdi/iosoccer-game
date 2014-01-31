@@ -380,26 +380,26 @@ static CSDKViewVectors g_SDKViewVectors(
 	//Vector(-16, -16, 0 ),		//VEC_HULL_MIN
 	//Vector( 16,  16,  72 ),		//VEC_HULL_MAX
 	
-	Vector(-mp_player_bbox_xy.GetFloat(), -mp_player_bbox_xy.GetFloat(), 0 ),		//VEC_HULL_MIN
-	Vector( mp_player_bbox_xy.GetFloat(),  mp_player_bbox_xy.GetFloat(),  mp_player_bbox_z.GetFloat() ),		//VEC_HULL_MAX
+	Vector(-12, -12, 0 ),		//VEC_HULL_MIN
+	Vector( 12,  12,  72 ),		//VEC_HULL_MAX
 
 	Vector( 0, 0, 58 ),		
-	Vector(-13, -13, 0 ),	
-	Vector( 13,  13,  36 ),
+	Vector(-12, -12, 0 ),	
+	Vector( 12,  12,  36 ),
 
 	Vector( 0, 0, 58 ),		
-	Vector(-13, -13, 0 ),	
-	Vector( 13,  13,  36 ),	
+	Vector(-12, -12, 0 ),	
+	Vector( 12,  12,  36 ),	
 													
-	Vector(-16, -16, 0 ),		//VEC_DUCK_HULL_MIN
-	Vector( 16,  16, 45 ),		//VEC_DUCK_HULL_MAX
+	Vector(-12, -12, 0 ),		//VEC_DUCK_HULL_MIN
+	Vector( 12,  12, 45 ),		//VEC_DUCK_HULL_MAX
 	Vector( 0, 0, 34 ),			//VEC_DUCK_VIEW
 													
 	//Vector(-13, -13, -13 ),		//VEC_OBS_HULL_MIN
 	//Vector( 13,  13,  13 ),		//VEC_OBS_HULL_MAX
 
-	Vector(-13, -13, 0 ),		//VEC_OBS_HULL_MIN
-	Vector( 13,  13,  58 ),		//VEC_OBS_HULL_MAX
+	Vector(-12, -12, 0 ),		//VEC_OBS_HULL_MIN
+	Vector( 12,  12,  58 ),		//VEC_OBS_HULL_MAX
 													
 	Vector( 0, 0, 14 )			//VEC_DEAD_VIEWHEIGHT
 #if defined ( SDK_USE_PRONE )			
@@ -410,6 +410,11 @@ static CSDKViewVectors g_SDKViewVectors(
 );
 
 const CViewVectors* CSDKGameRules::GetViewVectors() const
+{
+	return (CViewVectors*)GetSDKViewVectors();
+}
+
+CViewVectors* CSDKGameRules::GetViewVectorsToModify()
 {
 	return (CViewVectors*)GetSDKViewVectors();
 }
