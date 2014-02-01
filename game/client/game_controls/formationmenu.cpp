@@ -253,7 +253,7 @@ void CFormationMenu::Update(bool showCaptainMenu)
 			if (posBlocked)
 				c = g_ColorRed;
 			else if (playerIndexAtPos[i][j] > 0)
-				c = gr->GetPlayerColor(playerIndexAtPos[i][j]);
+				c = GetGlobalTeam(gr->GetTeam(playerIndexAtPos[i][j]))->GetHudKitColor();
 			else
 				c = g_ColorWhite;
 
@@ -394,7 +394,12 @@ void CFormationMenu::Update(bool showCaptainMenu)
 				else if (swapperAtPos[i][j])
 					msg = "SWAPPER";
 				else
-					msg = "";
+				{
+					if (playerIndexAtPos[i][j] > 0)
+						msg = VarArgs("%d | %s", gr->GetShirtNumber(playerIndexAtPos[i][j]), gr->GetPlayerName(playerIndexAtPos[i][j]));
+					else
+						msg = "";
+				}
 			}
 
 			m_pToolTips[i][j]->SetText(msg);
