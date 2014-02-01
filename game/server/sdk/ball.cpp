@@ -227,6 +227,8 @@ ConVar sv_ball_maxcheckdist("sv_ball_maxcheckdist", "200", FCVAR_NOTIFY);
 ConVar sv_ball_freecamshot_maxangle("sv_ball_freecamshot_maxangle", "60", FCVAR_NOTIFY);
 ConVar sv_ball_heelshot_strength("sv_ball_heelshot_strength", "800", FCVAR_NOTIFY);
 
+ConVar sv_ball_offsidedist("sv_ball_offsidedist", "200", FCVAR_NOTIFY);
+
 
 CBall *CreateBall(const Vector &pos, CSDKPlayer *pCreator)
 {
@@ -1189,6 +1191,29 @@ void CBall::State_NORMAL_Think()
 	}
 	else
 	{
+		if (!SDKGameRules()->IsIntermissionState() && !m_bHasQueuedState)
+		{
+			for (int i = 1; i <= gpGlobals->maxClients; i++)
+			{
+				CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+
+				if (!CSDKPlayer::IsOnField(pPl) || !pPl->IsOffside())
+					continue;
+
+				Vector dir = (m_vPos - pPl->GetLocalOrigin());
+
+				if (dir.z > sv_ball_offsidedist.GetFloat() || dir.Length2DSqr() > pow(sv_ball_offsidedist.GetFloat(), 2))
+					continue;
+
+				pPl->AddOffside();
+				TriggerFoul(FOUL_OFFSIDE, pPl->GetOffsidePos(), pPl);
+				SDKGameRules()->SetOffsideLinePositions(pPl->GetOffsideBallPos().y, pPl->GetOffsidePos().y, pPl->GetOffsideLastOppPlayerPos().y);
+				State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_activationdelay_long.GetFloat());
+			
+				return;
+			}
+		}
+
 		for (int ignoredPlayerBits = 0;;)
 		{
 			m_pPl = FindNearestPlayer(TEAM_INVALID, FL_POS_ANY, true, ignoredPlayerBits, sv_ball_maxcheckdist.GetFloat());
