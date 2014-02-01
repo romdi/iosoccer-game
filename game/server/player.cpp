@@ -3051,7 +3051,6 @@ void CBasePlayer::PostThinkVPhysics( void )
 	if ( !(TouchedPhysics() || pPhysGround) )
 	{
 		float maxSpeed = m_flMaxspeed > 0.0f ? m_flMaxspeed : sv_maxspeed.GetFloat();
-		//maxSpeed *= 0.5f;		//ios
 		g_pMoveData->m_outWishVel.Init( maxSpeed, maxSpeed, maxSpeed );
 	}
 
@@ -3060,7 +3059,7 @@ void CBasePlayer::PostThinkVPhysics( void )
 	{
 		if ( g_pMoveData->m_outStepHeight > 4.0f )
 		{
-			//ios VPhysicsGetObject()->SetPosition( GetAbsOrigin(), vec3_angle, true );
+			VPhysicsGetObject()->SetPosition( GetAbsOrigin(), vec3_angle, true );
 		}
 		else
 		{
@@ -3075,9 +3074,9 @@ void CBasePlayer::PostThinkVPhysics( void )
 			{
 				g_pMoveData->m_outStepHeight = trace.endpos.z - position.z;
 			}
-			//ios m_pPhysicsController->StepUp( g_pMoveData->m_outStepHeight );
+			m_pPhysicsController->StepUp( g_pMoveData->m_outStepHeight );
 		}
-		//ios m_pPhysicsController->Jump();
+		m_pPhysicsController->Jump();
 	}
 	g_pMoveData->m_outStepHeight = 0.0f;
 	
@@ -5385,13 +5384,15 @@ void CBasePlayer::SetupVPhysicsShadow( const Vector &vecAbsOrigin, const Vector 
 	solid_t solid;
 	Q_strncpy( solid.surfaceprop, "player", sizeof(solid.surfaceprop) );
 	solid.params = g_PhysDefaultObjectParams;
-	solid.params.mass = FLT_MAX;
+	solid.params.mass = 100000;
 	solid.params.inertia = 1e24f;
-	solid.params.enableCollisions = false;
+	solid.params.enableCollisions = true;
 	//disable drag
 	solid.params.dragCoefficient = 0;
 	// create standing hull
 	m_pShadowStand = PhysModelCreateCustom( this, pStandModel, GetLocalOrigin(), GetLocalAngles(), pStandHullName, false, &solid );
+	//m_pShadowStand = PhysModelCreateOBB(this, Vector(-8, 8, 0), Vector(8, 8, 72), GetLocalOrigin(), GetLocalAngles(), false);
+	//m_pShadowStand = PhysModelCreate( this, GetModelIndex(), GetAbsOrigin(), GetAbsAngles(), NULL );
 	m_pShadowStand->SetCallbackFlags( CALLBACK_GLOBAL_COLLISION | CALLBACK_SHADOW_COLLISION );
 
 	// create crouchig hull
@@ -5434,12 +5435,6 @@ void CBasePlayer::VPhysicsCollision( int index, gamevcollisionevent_t *pEvent )
 //-----------------------------------------------------------------------------
 void CBasePlayer::VPhysicsUpdate( IPhysicsObject *pPhysics )
 {
-	float savedImpact = m_impactEnergyScale;
-	
-	// HACKHACK: Reduce player's stress by 1/8th
-	m_impactEnergyScale *= 0.125f;
-	ApplyStressDamage( pPhysics, true );
-	m_impactEnergyScale = savedImpact;
 }
 
 //-----------------------------------------------------------------------------
@@ -5668,7 +5663,8 @@ void CBasePlayer::InitVCollision( const Vector &vecAbsOrigin, const Vector &vecA
 	if ( sv_turbophysics.GetBool() )
 		return;
 	
-	CPhysCollide *pModel = PhysCreateBbox( VEC_HULL_MIN, VEC_HULL_MAX );
+	CPhysCollide *pModel = PhysCreateBbox( Vector(-8, -8, 0), Vector(8, 8, 72) );
+
 	//CPhysCollide *pCrouchModel = PhysCreateBbox( VEC_DUCK_HULL_MIN, VEC_DUCK_HULL_MAX );
 	CPhysCollide *pCrouchModel = PhysCreateBbox( VEC_SLIDE_HULL_MIN, VEC_SLIDE_HULL_MAX );
 
