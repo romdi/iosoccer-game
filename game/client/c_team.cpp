@@ -306,12 +306,12 @@ Color &C_Team::GetHudKitColor()
 {
 	if (GetTeamNumber() == TEAM_A)
 	{
-		static Color col = Color(220, 209, 180, 255);
+		static Color col = Color(127, 255, 255, 255);
 		return col;
 	}
 	else if (GetTeamNumber() == TEAM_B)
 	{
-		static Color col = Color(197, 224, 220, 255);
+		static Color col = Color(255, 155, 116, 255);
 		return col;
 	}
 	else
