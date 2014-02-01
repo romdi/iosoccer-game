@@ -154,6 +154,7 @@ public:
 
 	virtual void UpdatePlayerAvatar( int playerIndex, KeyValues *kv );
 	virtual int GetCountryFlagImageIndex(int countryIndex);
+	virtual int GetCardImageIndex(int cardIndex);
 
 	void SetHighlightedPlayer(int playerIndex);
 			
@@ -207,6 +208,9 @@ protected:
 
 	int							m_iCountryFlags[MAX_PLAYERS+1];
 	CUtlMap<int,int>			m_mapCountryFlagsToImageList;
+
+	int							m_iCards[MAX_PLAYERS+1];
+	CUtlMap<int,int>			m_mapCardsToImageList;
 
 	//CPanelAnimationVar( int, m_iAvatarWidth, "avatar_width", "34" );		// Avatar width doesn't scale with resolution
 	//CPanelAnimationVarAliasType( int, m_iAvatarWidth, "avatar_width", "34", "proportional_int" );

@@ -56,6 +56,11 @@ bool CountryFlagIndexLessFunc( const int &lhs, const int &rhs )
 	return lhs < rhs; 
 }
 
+bool CardsIndexLessFunc( const int &lhs, const int &rhs )	
+{ 
+	return lhs < rhs; 
+}
+
 
 void CC_Gag(const CCommand &args)
 {
@@ -170,6 +175,10 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Editabl
 	m_mapCountryFlagsToImageList.SetLessFunc( CountryFlagIndexLessFunc );
 	m_mapCountryFlagsToImageList.RemoveAll();
 	memset( &m_iCountryFlags, 0, sizeof(int) * (MAX_PLAYERS+1) );
+
+	m_mapCardsToImageList.SetLessFunc( CardsIndexLessFunc );
+	m_mapCardsToImageList.RemoveAll();
+	memset( &m_iCards, 0, sizeof(int) * (MAX_PLAYERS+1) );
 
 	m_pStatButtonContainer = new Panel(m_pMainPanel);
 
@@ -303,6 +312,31 @@ void CClientScoreBoardDialog::Reset()
 	m_fNextUpdateTime = 0;
 	// add all the sections
 	AddHeader();
+
+	for (int i = 0; i < 2; i++)
+	{
+		KeyValues *kv = new KeyValues("data");
+		kv->SetInt("posindex", 0);
+		m_pPlayerList[i]->AddItem(0, kv);
+		kv->deleteThis();
+		m_pPlayerList[i]->SetItemFont(0, m_pScheme->GetFont("IOSTeamMenuNormalBold"));
+
+		for (int j = 0; j < mp_maxplayers.GetInt(); j++)
+		{
+			kv = new KeyValues("data");
+
+			if (GameResources())
+				kv->SetString("posname", g_szPosNames[(int)GetGlobalTeam(GameResources()->GetTeam(TEAM_A + i))->GetFormation()->positions[j]->type]);
+
+			kv->SetInt("posindex", j + 1);
+			m_pPlayerList[i]->AddItem(0, kv);
+			kv->deleteThis();
+			m_pPlayerList[i]->SetItemFont(j + 1, m_pScheme->GetFont("IOSTeamMenuNormal"));
+
+			if (GetGlobalTeam(TEAM_A + i))
+				m_pPlayerList[i]->SetItemFgColor(j + 1, g_ColorWhite);
+		}
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -333,6 +367,9 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 
 	m_mapCountryFlagsToImageList.RemoveAll();
 	memset( &m_iCountryFlags, 0, sizeof(int) * (MAX_PLAYERS+1) );
+
+	m_mapCardsToImageList.RemoveAll();
+	memset( &m_iCards, 0, sizeof(int) * (MAX_PLAYERS+1) );
 
 	m_pExtraInfoPanel->SetBounds(EXTRAINFO_MARGIN, PLAYERLIST_HEIGHT + PLAYERLIST_BOTTOMMARGIN + SPECLIST_HEIGHT + EXTRAINFO_MARGIN, m_pMainPanel->GetWide() - 2 * EXTRAINFO_MARGIN, EXTRAINFO_HEIGHT);
 	//m_pExtraInfoPanel->SetBgColor(Color(255, 0, 0, 200));
@@ -585,6 +622,14 @@ void CClientScoreBoardDialog::Update( void )
 	if (!pLocal)
 		return;
 
+	static int oldMaxPlayers = 0;
+
+	if (mp_maxplayers.GetInt() != oldMaxPlayers)
+	{
+		oldMaxPlayers = mp_maxplayers.GetInt();
+		Reset();
+	}
+
 	UpdatePlayerInfo();
 	UpdateTeamInfo();
 
@@ -767,6 +812,8 @@ void CClientScoreBoardDialog::UpdatePlayerInfo()
 	//	m_pSpectatorContainer->GetChild(0)->DeletePanel();
 	//}
 
+	int playerIndexAtPos[2][11] = {};
+
 	CUtlVector<SpecInfo> specList;
 
 	// walk all the players and make sure they're in the scoreboard
@@ -803,6 +850,8 @@ void CClientScoreBoardDialog::UpdatePlayerInfo()
 			}
 			else
 			{
+				playerIndexAtPos[gr->GetTeam(i) - TEAM_A][gr->GetTeamPosIndex(i)] = i;
+
 				// add the player to the list
 				KeyValues *playerData = new KeyValues("data");
 				GetPlayerInfo( i, playerData );
@@ -810,30 +859,40 @@ void CClientScoreBoardDialog::UpdatePlayerInfo()
 				UpdatePlayerAvatar( i, playerData );
 
 				int side = -1;
-				int itemID = FindItemIDForPlayerIndex(i, side);
 				int team = gr->GetTeam(i); //omega; set a variable to team so we can reuse it
 				int teamIndex = team - TEAM_A;
 				int sectionID = 0;//iTeamSections[playerTeam]; //omega; make sure it goes into the proper section
 
-				if (itemID != -1)
-				{
-					if (side == teamIndex)
-						m_pPlayerList[side]->ModifyItem( itemID, sectionID, playerData );
-					else
-					{
-						m_pPlayerList[side]->RemoveItem(itemID);
-						itemID = -1;
-					}
-				}
+				//int itemID = m_pPlayerList[teamIndex]->GetItemIDFromRow(gr->GetTeamPosIndex(i));
 
-				if (itemID == -1)
-				{
-					itemID = m_pPlayerList[teamIndex]->AddItem( sectionID, playerData );
-				}
+				//DevMsg("itemid: %d\n", itemID);
+
+				//int itemID = FindItemIDForPlayerIndex(i, side);
+				
+				int itemID = gr->GetTeamPosIndex(i) + 1;
+
+				m_pPlayerList[teamIndex]->ModifyItem( itemID, 0, playerData );
+
+				//if (itemID != -1)
+				//{
+				//	// Same team as before
+				//	if (side == teamIndex)
+				//		m_pPlayerList[side]->ModifyItem( itemID, sectionID, playerData );
+				//	else
+				//	{
+				//		m_pPlayerList[side]->RemoveItem(itemID);
+				//		itemID = -1;
+				//	}
+				//}
+
+				//if (itemID == -1)
+				//{
+				//	itemID = m_pPlayerList[teamIndex]->AddItem( sectionID, playerData );
+				//}
 
 				// set the row color based on the players team
-				m_pPlayerList[teamIndex]->SetItemFgColor(itemID, gr->GetPlayerColor(i));
-				m_pPlayerList[teamIndex]->SetItemFont( itemID, m_pScheme->GetFont("IOSTeamMenuNormal"));
+				m_pPlayerList[teamIndex]->SetItemFgColor(itemID, GetGlobalTeam(team)->GetHudKitColor());
+				//m_pPlayerList[teamIndex]->SetItemFont( itemID, m_pScheme->GetFont("IOSTeamMenuNormal"));
 
 				if (i == m_nSelectedPlayerIndex)
 					m_pStatsMenu->Update(m_nSelectedPlayerIndex, playerData);
@@ -848,12 +907,28 @@ void CClientScoreBoardDialog::UpdatePlayerInfo()
 		}
 		else
 		{
-			// remove the player
-			int side = -1;
-			int itemID = FindItemIDForPlayerIndex(i, side);
-			if (itemID != -1)
+			// Remove the player
+			//int side = -1;
+			//int itemID = FindItemIDForPlayerIndex(i, side);
+			//if (itemID != -1)
+			//{
+			//	m_pPlayerList[side]->RemoveItem(itemID);
+			//}
+		}
+	}
+
+	for (int i = 0; i < 2; i++)
+	{
+		for (int j = 0; j < mp_maxplayers.GetInt(); j++)
+		{
+			if (playerIndexAtPos[i][j] == 0)
 			{
-				m_pPlayerList[side]->RemoveItem(itemID);
+				KeyValues *emptyData = new KeyValues("data");
+				emptyData->SetString("posname", g_szPosNames[(int)GetGlobalTeam(gr->GetTeam(TEAM_A + i))->GetFormation()->positions[j]->type]);
+				emptyData->SetInt("posindex", j + 1);
+				m_pPlayerList[i]->ModifyItem(j + 1, 0, emptyData);
+				emptyData->deleteThis();
+				m_pPlayerList[i]->SetItemFgColor(j + 1, g_ColorWhite);
 			}
 		}
 	}
@@ -954,7 +1029,8 @@ void CClientScoreBoardDialog::AddHeader()
 		//m_pPlayerList[i]->SetSectionDividerColor(m_iSectionId, Color(255, 255, 255, 255));
 		m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "posname",		"", defaultFlags, 50 );
 		m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "avatar",		"", defaultFlags | SectionedListPanel::COLUMN_IMAGE, 50 );
-		m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "name",			"", 0, 200);
+		m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "name",			"", 0, 185);
+		m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "cardindex",		"",	defaultFlags | SectionedListPanel::COLUMN_IMAGE, 15);
 
 		// Max width = 398
 
@@ -1013,11 +1089,6 @@ void CClientScoreBoardDialog::AddHeader()
 		//m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "possession",		"Poss.", 0, 55);
 		//m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "voice",		"Voice", SectionedListPanel::COLUMN_IMAGE, scheme()->GetProportionalScaledValue(VOICE_WIDTH) );
 		//m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "tracker", "#PlayerTracker", SectionedListPanel::COLUMN_IMAGE, scheme()->GetProportionalScaledValueEx( GetScheme(),FRIENDS_WIDTH) );
-		KeyValues *kv = new KeyValues("data");
-		kv->SetInt("playerindex", i - 1);
-		m_pPlayerList[i]->AddItem(0, kv);
-		kv->deleteThis();
-		m_pPlayerList[i]->SetItemFont(0, m_pScheme->GetFont("IOSTeamMenuNormalBold"));
 	}
 }
 
@@ -1202,6 +1273,18 @@ bool CClientScoreBoardDialog::GetPlayerInfo(int playerIndex, KeyValues *kv)
 	kv->SetInt("nationalityindex", GetCountryFlagImageIndex(gr->GetNationalityIndex(playerIndex)));
 	kv->SetString("nationalityname", g_szCountryNames[gr->GetNationalityIndex(playerIndex)]);
 
+	int cardIndex;
+
+	if (SDKGameRules()->GetMatchDisplayTimeSeconds(true, false) < gr->GetNextCardJoin(playerIndex))
+		cardIndex = 2;
+	else if (gr->GetYellowCards(playerIndex) % 2 == 1)
+		cardIndex = 1;
+	else
+		cardIndex = 0;
+
+
+	kv->SetInt("cardindex", GetCardImageIndex(cardIndex));
+
 	return true;
 }
 
@@ -1278,6 +1361,7 @@ bool CClientScoreBoardDialog::GetTeamInfo(int team, KeyValues *kv)
 	kv->SetString("name", pTeam->GetShortName());
 	kv->SetInt("playerindex", teamIndex - 2);
 	kv->SetInt("posname", pTeam->GetNumPlayers());
+	kv->SetInt("index", -1);
 	kv->SetInt("countryindex", GetCountryFlagImageIndex(teamCountry));
 	kv->SetInt("nationalityindex", GetCountryFlagImageIndex(teamNationality));
 	kv->SetString("club", teamClub);
@@ -1388,6 +1472,31 @@ int CClientScoreBoardDialog::GetCountryFlagImageIndex(int countryIndex)
 			countryFlag->SetColor(Color(255, 255, 255, 200));
 			imageIndex = m_pImageList->AddImage(countryFlag);
 			m_mapCountryFlagsToImageList.Insert(countryIndex, imageIndex);
+		}
+	}
+	else
+		imageIndex = 0;
+
+	return imageIndex;
+}
+
+int CClientScoreBoardDialog::GetCardImageIndex(int cardIndex)
+{
+	int imageIndex;
+
+	if (cardIndex > 0)
+	{
+		int listIndex = m_mapCardsToImageList.Find(cardIndex);
+
+		if (m_mapCardsToImageList.IsValidIndex(listIndex))
+			imageIndex = m_mapCardsToImageList[listIndex];
+		else
+		{
+			IImage *card = scheme()->GetImage(VarArgs("cards/%s", cardIndex == 1 ? "yellow_card" : "red_card"), false);
+			card->SetSize(10, 25);
+			card->SetColor(Color(255, 255, 255, 200));
+			imageIndex = m_pImageList->AddImage(card);
+			m_mapCardsToImageList.Insert(cardIndex, imageIndex);
 		}
 	}
 	else
@@ -1539,7 +1648,7 @@ void CClientScoreBoardDialog::OnItemSelected(KeyValues *data)
 		{
 			KeyValues *kv = pPanel->GetItemData(itemId);
 			if (kv)
-				m_nSelectedPlayerIndex = kv->GetInt("playerindex");
+				m_nSelectedPlayerIndex = kv->GetInt("playerindex", 0);
 		}
 	}
 
