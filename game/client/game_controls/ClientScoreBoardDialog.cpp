@@ -797,8 +797,6 @@ void CClientScoreBoardDialog::UpdatePlayerInfo()
 	if (!gr)
 		return;
 
-	bool isPosTaken[2][11] = {};
-
 	Color black = Color(0, 0, 0, 255);
 	Color darker = Color(75, 75, 75, 255);
 	Color dark = Color(125, 125, 125, 255);
@@ -819,102 +817,58 @@ void CClientScoreBoardDialog::UpdatePlayerInfo()
 	// walk all the players and make sure they're in the scoreboard
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
-		if (gr->IsConnected( i ))
+		if (!gr->IsConnected(i))
+			continue;
+		
+		if (gr->GetTeam(i) != TEAM_A && gr->GetTeam(i) != TEAM_B)
 		{
-			if (gr->GetTeam(i) != TEAM_A && gr->GetTeam(i) != TEAM_B)
-			{
-				SpecInfo info;
-				info.playerIndex = i;
-				Q_strncpy(info.playerName, gr->GetPlayerName(i), sizeof(info.playerName));
+			SpecInfo info;
+			info.playerIndex = i;
+			Q_strncpy(info.playerName, gr->GetPlayerName(i), sizeof(info.playerName));
 
-				specList.AddToTail(info);
+			specList.AddToTail(info);
 
-				// remove the player
-				int side = -1;
-				int itemID = FindItemIDForPlayerIndex(i, side);
-				if (itemID != -1)
-				{
-					m_pPlayerList[side]->RemoveItem(itemID);
-				}
+			KeyValues *playerData = new KeyValues("data");
+			GetPlayerInfo(i, playerData);
 
-				KeyValues *playerData = new KeyValues("data");
-				GetPlayerInfo(i, playerData);
+			if (i == m_nSelectedPlayerIndex)
+				m_pStatsMenu->Update(m_nSelectedPlayerIndex, playerData);
 
-				if (i == m_nSelectedPlayerIndex)
-					m_pStatsMenu->Update(m_nSelectedPlayerIndex, playerData);
+			playerData->deleteThis();
 
-				playerData->deleteThis();
-
-				if (gr->GetTeamToJoin(i) == TEAM_INVALID)
-					continue;
-			}
-			else
-			{
-				playerIndexAtPos[gr->GetTeam(i) - TEAM_A][gr->GetTeamPosIndex(i)] = i;
-
-				// add the player to the list
-				KeyValues *playerData = new KeyValues("data");
-				GetPlayerInfo( i, playerData );
-
-				UpdatePlayerAvatar( i, playerData );
-
-				int side = -1;
-				int team = gr->GetTeam(i); //omega; set a variable to team so we can reuse it
-				int teamIndex = team - TEAM_A;
-				int sectionID = 0;//iTeamSections[playerTeam]; //omega; make sure it goes into the proper section
-
-				//int itemID = m_pPlayerList[teamIndex]->GetItemIDFromRow(gr->GetTeamPosIndex(i));
-
-				//DevMsg("itemid: %d\n", itemID);
-
-				//int itemID = FindItemIDForPlayerIndex(i, side);
-				
-				int itemID = gr->GetTeamPosIndex(i) + 1;
-
-				m_pPlayerList[teamIndex]->ModifyItem( itemID, 0, playerData );
-
-				//if (itemID != -1)
-				//{
-				//	// Same team as before
-				//	if (side == teamIndex)
-				//		m_pPlayerList[side]->ModifyItem( itemID, sectionID, playerData );
-				//	else
-				//	{
-				//		m_pPlayerList[side]->RemoveItem(itemID);
-				//		itemID = -1;
-				//	}
-				//}
-
-				//if (itemID == -1)
-				//{
-				//	itemID = m_pPlayerList[teamIndex]->AddItem( sectionID, playerData );
-				//}
-
-				// set the row color based on the players team
-				m_pPlayerList[teamIndex]->SetItemFgColor(itemID, GetGlobalTeam(team)->GetHudKitColor());
-				//m_pPlayerList[teamIndex]->SetItemFont( itemID, m_pScheme->GetFont("IOSTeamMenuNormal"));
-
-				if (i == m_nSelectedPlayerIndex)
-					m_pStatsMenu->Update(m_nSelectedPlayerIndex, playerData);
-
-				playerData->deleteThis();
-			}
-
-			int team = gr->GetTeamToJoin(i) != TEAM_INVALID ? gr->GetTeamToJoin(i) : gr->GetTeam(i);
-			int teamIndex = team - TEAM_A;
-
-			isPosTaken[teamIndex][gr->GetTeamPosIndex(i)] = true;
+			if (gr->GetTeamToJoin(i) == TEAM_INVALID)
+				continue;
 		}
 		else
 		{
-			// Remove the player
-			//int side = -1;
-			//int itemID = FindItemIDForPlayerIndex(i, side);
-			//if (itemID != -1)
-			//{
-			//	m_pPlayerList[side]->RemoveItem(itemID);
-			//}
+			playerIndexAtPos[gr->GetTeam(i) - TEAM_A][gr->GetTeamPosIndex(i)] = i;
+
+			// add the player to the list
+			KeyValues *playerData = new KeyValues("data");
+			GetPlayerInfo( i, playerData );
+
+			UpdatePlayerAvatar( i, playerData );
+
+			int side = -1;
+			int team = gr->GetTeam(i); //omega; set a variable to team so we can reuse it
+			int teamIndex = team - TEAM_A;
+			int sectionID = 0;//iTeamSections[playerTeam]; //omega; make sure it goes into the proper section
+
+			int itemID = gr->GetTeamPosIndex(i) + 1;
+
+			m_pPlayerList[teamIndex]->ModifyItem( itemID, 0, playerData );
+
+			// set the row color based on the players team
+			m_pPlayerList[teamIndex]->SetItemFgColor(itemID, GetGlobalTeam(team)->GetHudKitColor());
+
+			if (i == m_nSelectedPlayerIndex)
+				m_pStatsMenu->Update(m_nSelectedPlayerIndex, playerData);
+
+			playerData->deleteThis();
 		}
+
+		int team = gr->GetTeamToJoin(i) != TEAM_INVALID ? gr->GetTeamToJoin(i) : gr->GetTeam(i);
+		int teamIndex = team - TEAM_A;
 	}
 
 	for (int i = 0; i < 2; i++)
