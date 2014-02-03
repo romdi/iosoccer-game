@@ -959,9 +959,9 @@ void CReplayManager::AddMatchEvent(match_event_t type, int team, CSDKPlayer *pPl
 		if (pPlayer1 && !pPlayer2 && !pPlayer3)
 			Q_strncpy(matchEventPlayerNames, UTIL_VarArgs("%s", pPlayer1->GetPlayerName()), MAX_MATCH_EVENT_PLAYER_NAME_LENGTH);
 		else if (pPlayer1 && pPlayer2 && !pPlayer3)
-			Q_strncpy(matchEventPlayerNames, UTIL_VarArgs("%.13s (%.13s)", pPlayer1->GetPlayerName(), pPlayer2->GetPlayerName()), MAX_MATCH_EVENT_PLAYER_NAME_LENGTH);
+			Q_strncpy(matchEventPlayerNames, UTIL_VarArgs("%.15s (%.15s)", pPlayer1->GetPlayerName(), pPlayer2->GetPlayerName()), MAX_MATCH_EVENT_PLAYER_NAME_LENGTH);
 		else if (pPlayer1 && pPlayer2 && pPlayer3)
-			Q_strncpy(matchEventPlayerNames, UTIL_VarArgs("%.8s (%.8s, %.8s)", pPlayer1->GetPlayerName(), pPlayer2->GetPlayerName(), pPlayer3->GetPlayerName()), MAX_MATCH_EVENT_PLAYER_NAME_LENGTH);
+			Q_strncpy(matchEventPlayerNames, UTIL_VarArgs("%.10s (%.10s, %.10s)", pPlayer1->GetPlayerName(), pPlayer2->GetPlayerName(), pPlayer3->GetPlayerName()), MAX_MATCH_EVENT_PLAYER_NAME_LENGTH);
 
 		GetGlobalTeam(pMatchEvent->team)->AddMatchEvent(pMatchEvent->matchPeriod, pMatchEvent->second, pMatchEvent->matchEventType, matchEventPlayerNames);
 	}
