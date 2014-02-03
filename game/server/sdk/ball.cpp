@@ -2225,6 +2225,7 @@ bool CBall::DoBodyPartAction()
 		}
 		else
 		{
+			// Skip the keeper
 			BallTouchInfo *pLastTouch = LastInfo(false, m_pPl);
 			BallTouchInfo *pLastShot = LastInfo(true, m_pPl);
 
@@ -2239,12 +2240,22 @@ bool CBall::DoBodyPartAction()
 				{
 					if (pLastShot->m_eBodyPart == BODY_PART_HEAD || pLastShot->m_eBodyPart == BODY_PART_CHEST)
 					{
-						// Check if any opponent has touched the ball since the last set piece. Only allow back-passes with the head or chest if this is true to prevent abuse.
-						for (int i = m_Touches.Count() - 1; i >= 0; i--)
+						// Only allow the keeper to pick up the ball if the shot or touch before the last header or chest action was by an opponent
+						for (int i = m_Touches.Count() - 1; i >= 1; i--)
 						{
-							if (m_Touches[i]->m_nTeam != m_pPl->GetTeamNumber())
+							if (m_Touches[i]->m_bIsShot)
 							{
-								canCatch = true;
+								for (int j = i - 1; j >= 0; j--)
+								{
+									if (m_Touches[j]->m_bIsShot)
+									{
+										if (m_Touches[j]->m_nTeam != pLastTouch->m_nTeam)
+											canCatch = true;
+
+										break;
+									}
+								}
+
 								break;
 							}
 						}
