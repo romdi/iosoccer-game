@@ -229,6 +229,8 @@ ConVar sv_ball_heelshot_strength("sv_ball_heelshot_strength", "800", FCVAR_NOTIF
 
 ConVar sv_ball_offsidedist("sv_ball_offsidedist", "200", FCVAR_NOTIFY);
 
+ConVar sv_ball_turnovertime("sv_ball_turnovertime", "1.0", FCVAR_NOTIFY);
+
 
 CBall *CreateBall(const Vector &pos, CSDKPlayer *pCreator)
 {
@@ -408,6 +410,7 @@ CBall::CBall()
 	m_pPossessingPl = NULL;
 	m_nPossessingTeam = TEAM_INVALID;
 	m_flPossessionStart = -1;
+	m_pTurnoverPlayer = NULL;
 	m_flLastMatchEventSetTime = -1;
 	m_bNonnormalshotsBlocked = false;
 	m_bShotsBlocked = false;
@@ -1193,6 +1196,18 @@ void CBall::State_NORMAL_Think()
 	{
 		if (!SDKGameRules()->IsIntermissionState() && !m_bHasQueuedState)
 		{
+			if (m_flPossessionStart != -1
+				&& CSDKPlayer::IsOnField(m_pPossessingPl)
+				&& gpGlobals->curtime > m_flPossessionStart + sv_ball_turnovertime.GetFloat())
+			{
+				if (CSDKPlayer::IsOnField(m_pTurnoverPlayer) && m_pTurnoverPlayer->GetTeamNumber() != m_nPossessingTeam)
+				{
+					m_pTurnoverPlayer->AddTurnover();
+				}
+
+				m_pTurnoverPlayer = m_pPossessingPl;
+			}
+
 			for (int i = 1; i <= gpGlobals->maxClients; i++)
 			{
 				CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
@@ -3370,11 +3385,6 @@ void CBall::UpdatePossession(CSDKPlayer *pNewPossessor)
 
 	if (CSDKPlayer::IsOnField(pNewPossessor))
 	{
-		if (CSDKPlayer::IsOnField(m_pPossessingPl) && m_pPossessingPl->GetTeamNumber() != pNewPossessor->GetTeamNumber())
-		{
-			m_pPossessingPl->AddTurnover();
-		}
-
 		m_pPossessingPl = pNewPossessor;
 		m_nPossessingTeam = pNewPossessor->GetTeamNumber();
 		m_flPossessionStart = gpGlobals->curtime;
@@ -3413,6 +3423,7 @@ void CBall::Reset()
 	m_pPossessingPl = NULL;
 	m_nPossessingTeam = TEAM_INVALID;
 	m_flPossessionStart = -1;
+	m_pTurnoverPlayer = NULL;
 	m_flLastMatchEventSetTime = -1;
 	m_bNonnormalshotsBlocked = false;
 	m_bShotsBlocked = false;

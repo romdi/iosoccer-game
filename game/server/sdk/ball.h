@@ -299,6 +299,8 @@ private:
 	int				m_nPossessingTeam;
 	float			m_flPossessionStart;
 
+	CHandle<CSDKPlayer>	m_pTurnoverPlayer;
+
 	CUtlVector<BallTouchInfo *> m_Touches;
 
 	penalty_state_t m_ePenaltyState;
