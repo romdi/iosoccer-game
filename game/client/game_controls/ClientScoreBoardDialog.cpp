@@ -334,7 +334,7 @@ void CClientScoreBoardDialog::Reset()
 			m_pPlayerList[i]->SetItemFont(j + 1, m_pScheme->GetFont("IOSTeamMenuNormal"));
 
 			if (GetGlobalTeam(TEAM_A + i))
-				m_pPlayerList[i]->SetItemFgColor(j + 1, g_ColorWhite);
+				m_pPlayerList[i]->SetItemFgColor(j + 1, g_ColorGray);
 		}
 	}
 }
@@ -784,7 +784,7 @@ void CClientScoreBoardDialog::UpdateTeamInfo()
 			}
 		}
 
-		m_pPlayerList[i]->SetItemDividerColor(0, g_ColorWhite);
+		m_pPlayerList[i]->SetItemDividerColor(0, g_ColorGray);
 	}
 }
 
@@ -882,7 +882,7 @@ void CClientScoreBoardDialog::UpdatePlayerInfo()
 				emptyData->SetInt("posindex", j + 1);
 				m_pPlayerList[i]->ModifyItem(j + 1, 0, emptyData);
 				emptyData->deleteThis();
-				m_pPlayerList[i]->SetItemFgColor(j + 1, g_ColorWhite);
+				m_pPlayerList[i]->SetItemFgColor(j + 1, g_ColorGray);
 			}
 		}
 	}
@@ -975,8 +975,8 @@ void CClientScoreBoardDialog::AddHeader()
 		m_pPlayerList[i]->SetSectionAlwaysVisible(m_iSectionId);
 		m_pPlayerList[i]->SetFontSection(m_iSectionId, m_pScheme->GetFont("IOSTeamMenuSmall"));
 		m_pPlayerList[i]->SetLineSpacing(29);
-		m_pPlayerList[i]->SetFgColor(g_ColorWhite);
-		m_pPlayerList[i]->SetSectionFgColor(0, g_ColorWhite);
+		m_pPlayerList[i]->SetFgColor(g_ColorGray);
+		m_pPlayerList[i]->SetSectionFgColor(0, g_ColorGray);
 
 		int defaultFlags = SectionedListPanel::HEADER_CENTER | SectionedListPanel::COLUMN_CENTER;
 

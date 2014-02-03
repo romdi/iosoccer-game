@@ -252,10 +252,8 @@ void CFormationMenu::Update(bool showCaptainMenu)
 
 			if (posBlocked)
 				c = g_ColorRed;
-			else if (playerIndexAtPos[i][j] > 0)
-				c = GetGlobalTeam(gr->GetTeam(playerIndexAtPos[i][j]))->GetHudKitColor();
 			else
-				c = g_ColorWhite;
+				c = g_ColorGray;
 
 			color32 taken = { c.r(), c.g(), c.b(), 240 };
 			color32 free = { c.r(), c.g(), c.b(), 10 };
@@ -380,7 +378,12 @@ void CFormationMenu::Update(bool showCaptainMenu)
 					}
 				}
 				else
-					msg = "JOIN";
+				{
+					if (posBlocked)
+						msg = "RED CARD";
+					else
+						msg = "JOIN";
+				}
 			}
 			else
 			{
@@ -398,7 +401,12 @@ void CFormationMenu::Update(bool showCaptainMenu)
 					if (playerIndexAtPos[i][j] > 0)
 						msg = VarArgs("%d | %s", gr->GetShirtNumber(playerIndexAtPos[i][j]), gr->GetPlayerName(playerIndexAtPos[i][j]));
 					else
-						msg = "";
+					{
+						if (posBlocked)
+							msg = "";
+						else
+							msg = "";
+					}
 				}
 			}
 
