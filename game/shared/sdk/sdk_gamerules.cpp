@@ -1988,6 +1988,8 @@ void CSDKGameRules::ApplyIntermissionSettings(bool startHighlights, bool movePla
 		GetBall()->SetPos(m_vKickOff);
 		EnableShield(SHIELD_KICKOFF, TEAM_A, SDKGameRules()->m_vKickOff);
 	}
+	else
+		GetBall()->UpdatePossession(NULL);
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
