@@ -2119,10 +2119,7 @@ bool CBall::CheckFoul(bool canShootBall, const Vector &localDirToBall)
 
 		foul_type_t foulType;
 
-		// Always give a yellow card on penalties to avoid double punishment with a red card
-		if (isPenalty)
-			foulType = FOUL_NORMAL_YELLOW_CARD;
-		else if (isCloseToOwnGoal && teammatesCloserToGoalCount <= 1)
+		if (isCloseToOwnGoal && teammatesCloserToGoalCount <= 1)
 			foulType = FOUL_NORMAL_RED_CARD;
 		else if (anim == PLAYERANIMEVENT_TACKLED_FORWARD && localDirToBall.Length2DSqr() >= Sqr(sv_ball_yellowcardballdist_forward.GetFloat()) ||
 				 anim == PLAYERANIMEVENT_TACKLED_BACKWARD && localDirToBall.Length2DSqr() >= Sqr(sv_ball_yellowcardballdist_backward.GetFloat()))
