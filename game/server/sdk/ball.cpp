@@ -1770,6 +1770,8 @@ void CBall::State_PENALTY_Enter()
 
 void CBall::State_PENALTY_Think()
 {
+	bool takerHasChanged = false;
+
 	if (!CSDKPlayer::IsOnField(m_pPl))
 	{
 		if (SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES)
@@ -1800,9 +1802,10 @@ void CBall::State_PENALTY_Think()
 		m_pPl->SetPosInsideShield(Vector(m_vPos.x, m_vPos.y - 150 * m_pPl->GetTeam()->m_nForward, SDKGameRules()->m_vKickOff.GetZ()), true);
 		m_flStateTimelimit = -1;
 		m_bShotsBlocked = true;
+		takerHasChanged = true;
 	}
 
-	if (!CSDKPlayer::IsOnField(m_pOtherPl))
+	if (!CSDKPlayer::IsOnField(m_pOtherPl) || takerHasChanged)
 	{
 		if (SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES)
 		{
