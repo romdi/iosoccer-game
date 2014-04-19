@@ -2835,7 +2835,7 @@ AngularImpulse CBall::CalcSpin(float coeff, int spinFlags)
 				backSpin *= pow((double)cos(RemapValClamped(pitch, sv_ball_bestbackspinangle_start.GetFloat(), sv_ball_bestbackspinangle_end.GetFloat(), M_PI * 0.5, M_PI * 1.5)), 2.0);
 		}
 
-		if (sideRot == vec3_origin && (!m_pPl->GetGroundEntity() || (m_pPl->m_nButtons & IN_JUMP)) && (spinFlags & FL_SPIN_PERMIT_TOP)
+		if ((!m_pPl->GetGroundEntity() || (m_pPl->m_nButtons & IN_JUMP)) && (spinFlags & FL_SPIN_PERMIT_TOP)
 			&& pitch >= sv_ball_besttopspinangle_start.GetFloat() && pitch <= sv_ball_besttopspinangle_end.GetFloat()
 			|| (spinFlags & FL_SPIN_FORCE_TOP))
 		{
