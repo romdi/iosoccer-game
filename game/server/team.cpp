@@ -539,6 +539,8 @@ void CTeam::ResetStats()
 		m_LastPlayerCoordsByPosIndex[i].coords = vec3_invalid;
 		m_LastPlayerCoordsByPosIndex[i].leaveTime = -1;
 	}
+
+	m_MatchPeriodData.PurgeAndDeleteElements();
 }
 
 void CTeam::FindNewCaptain()
@@ -599,4 +601,40 @@ void CTeam::SetFormationIndex(int index, bool silent)
 	}
 
 	m_nFormationIndex = index;
+}
+
+void CTeamMatchPeriodData::ResetData()
+{
+	m_nRedCards = 0;
+	m_nYellowCards = 0;
+	m_nFouls = 0;
+	m_nFoulsSuffered = 0;
+	m_nSlidingTackles = 0;
+	m_nSlidingTacklesCompleted = 0;
+	m_nGoalsConceded = 0;
+	m_nShots = 0;
+	m_nShotsOnGoal = 0;
+	m_nPassesCompleted = 0;
+	m_nInterceptions = 0;
+	m_nOffsides = 0;
+	m_nGoals = 0;
+	m_nOwnGoals = 0;
+	m_nAssists = 0;
+	m_nPasses = 0;
+	m_nFreeKicks = 0;
+	m_nPenalties = 0;
+	m_nCorners = 0;
+	m_nThrowIns = 0;
+	m_nKeeperSaves = 0;
+	m_nKeeperSavesCaught = 0;
+	m_nGoalKicks = 0;
+	m_nRating = 0;
+	m_nPossession = 0;
+	m_flPossessionTime = 0.0f;
+	m_nTurnovers = 0;
+	m_nDistanceCovered = 0;
+	m_flExactDistanceCovered = 0.0f;
+
+	m_nAnnouncedInjuryTimeSeconds = 0;
+	m_nActualInjuryTimeSeconds = 0;
 }

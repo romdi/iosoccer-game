@@ -28,6 +28,48 @@ struct LastPlayerCoords
 	float leaveTime;
 };
 
+class CTeamMatchPeriodData
+{
+public:
+	int		m_nRedCards;
+	int		m_nYellowCards;
+	int		m_nFouls;
+	int		m_nFoulsSuffered;
+	int		m_nSlidingTackles;
+	int		m_nSlidingTacklesCompleted;
+	int		m_nGoalsConceded;
+	int		m_nShots;
+	int		m_nShotsOnGoal;
+	int		m_nPassesCompleted;
+	int		m_nInterceptions;
+	int		m_nOffsides;
+	int		m_nGoals;
+	int		m_nOwnGoals;
+	int		m_nAssists;
+	float	m_flPossessionTime;
+	int		m_nPossession;
+	int		m_nTurnovers;
+	int		m_nDistanceCovered;
+	int		m_nPasses;
+	int		m_nFreeKicks;
+	int		m_nPenalties;
+	int		m_nCorners;
+	int		m_nThrowIns;
+	int		m_nKeeperSaves;
+	int		m_nKeeperSavesCaught;
+	int		m_nGoalKicks;
+	int		m_nRating;
+	float	m_flExactDistanceCovered;
+
+	char m_szMatchPeriodName[32];
+	int m_nAnnouncedInjuryTimeSeconds;
+	int m_nActualInjuryTimeSeconds;
+
+	virtual void ResetData();
+
+	CTeamMatchPeriodData(const char *szMatchPeriodName) { Q_strncpy(m_szMatchPeriodName, szMatchPeriodName, sizeof(m_szMatchPeriodName)); }
+};
+
 class CTeam : public CBaseEntity
 {
 	DECLARE_CLASS( CTeam, CBaseEntity );
@@ -210,6 +252,10 @@ public:
 	void SetFormationIndex(int index, bool silent);
 	int GetQuickTactic() { return m_eQuickTactic; }
 	void SetQuickTactic(QuickTactics_t quickTactic) { m_eQuickTactic = quickTactic; }
+
+	CUtlVector<CTeamMatchPeriodData *> m_MatchPeriodData;
+
+	CTeamMatchPeriodData *GetMatchPeriodData() { return m_MatchPeriodData.Tail(); }
 
 private:
 

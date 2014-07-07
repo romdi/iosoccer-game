@@ -1426,12 +1426,12 @@ void CSDKGameRules::State_Enter( match_period_t newState )
 	{
 		GetBall()->RemoveAllPlayerBalls();
 
-		//GetBall()->StopSound("Crowd.Background1");
-		//GetBall()->StopSound("Crowd.Background2");
-		//GetBall()->EmitSound("Crowd.Background1");
-		//GetBall()->EmitSound("Crowd.Background2");
-		//GetBall()->StopSound("Crowd.Song");
-		//GetBall()->EmitSound("Crowd.Song");
+		for (int i = 0; i < 2; i++)
+		{
+			CTeamMatchPeriodData *pTeamData = new CTeamMatchPeriodData(g_szMatchPeriodNames[m_pCurStateInfo->m_eMatchPeriod]);
+			pTeamData->ResetData();
+			GetGlobalTeam(TEAM_A + i)->m_MatchPeriodData.AddToTail(pTeamData); 
+		}
 	}
 
 	UTIL_ClientPrintAll(HUD_PRINTCENTER, g_szMatchPeriodNames[m_pCurStateInfo->m_eMatchPeriod]);
@@ -1448,6 +1448,18 @@ void CSDKGameRules::State_Leave(match_period_t newState)
 	if (IsIntermissionState())
 	{
 		ReplayManager()->StopHighlights();
+	}
+	else
+	{
+		for (int i = 0; i < 2; i++)
+		{
+			if (GetGlobalTeam(TEAM_A + i)->m_MatchPeriodData.Count() == 0)
+				continue;
+
+			CTeamMatchPeriodData *pTeamData = GetGlobalTeam(TEAM_A + i)->m_MatchPeriodData.Tail();
+			pTeamData->m_nAnnouncedInjuryTimeSeconds = m_nAnnouncedInjuryTime * 60;
+			pTeamData->m_nActualInjuryTimeSeconds = GetMatchDisplayTimeSeconds() - GetMatchDisplayTimeSeconds(false);
+		}
 	}
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++)

@@ -1939,6 +1939,7 @@ void CSDKPlayer::AddRedCard()
 	GetMatchPeriodData()->m_nRedCards += 1;
 	GetMatchData()->m_nRedCards += 1;
 	GetTeam()->m_RedCards += 1;
+	GetTeam()->GetMatchPeriodData()->m_nRedCards += 1;
 }
 
 void CSDKPlayer::AddYellowCard()
@@ -1946,6 +1947,7 @@ void CSDKPlayer::AddYellowCard()
 	GetMatchPeriodData()->m_nYellowCards += 1;
 	GetMatchData()->m_nYellowCards += 1;
 	GetTeam()->m_YellowCards += 1;
+	GetTeam()->GetMatchPeriodData()->m_nYellowCards += 1;
 }
 
 void CSDKPlayer::AddFoul()
@@ -1953,6 +1955,7 @@ void CSDKPlayer::AddFoul()
 	GetMatchPeriodData()->m_nFouls += 1;
 	GetMatchData()->m_nFouls += 1;
 	GetTeam()->m_Fouls += 1;
+	GetTeam()->GetMatchPeriodData()->m_nFouls += 1;
 }
 
 void CSDKPlayer::AddFoulSuffered()
@@ -1960,6 +1963,7 @@ void CSDKPlayer::AddFoulSuffered()
 	GetMatchPeriodData()->m_nFoulsSuffered += 1;
 	GetMatchData()->m_nFoulsSuffered += 1;
 	GetTeam()->m_FoulsSuffered += 1;
+	GetTeam()->GetMatchPeriodData()->m_nFoulsSuffered += 1;
 }
 
 void CSDKPlayer::AddSlidingTackle()
@@ -1967,6 +1971,7 @@ void CSDKPlayer::AddSlidingTackle()
 	GetMatchPeriodData()->m_nSlidingTackles += 1;
 	GetMatchData()->m_nSlidingTackles += 1;
 	GetTeam()->m_SlidingTackles += 1;
+	GetTeam()->GetMatchPeriodData()->m_nSlidingTackles += 1;
 }
 
 void CSDKPlayer::AddSlidingTackleCompleted()
@@ -1974,6 +1979,7 @@ void CSDKPlayer::AddSlidingTackleCompleted()
 	GetMatchPeriodData()->m_nSlidingTacklesCompleted += 1;
 	GetMatchData()->m_nSlidingTacklesCompleted += 1;
 	GetTeam()->m_SlidingTacklesCompleted += 1;
+	GetTeam()->GetMatchPeriodData()->m_nSlidingTacklesCompleted += 1;
 }
 
 void CSDKPlayer::AddGoalConceded()
@@ -1981,6 +1987,7 @@ void CSDKPlayer::AddGoalConceded()
 	GetMatchPeriodData()->m_nGoalsConceded += 1;
 	GetMatchData()->m_nGoalsConceded += 1;
 	GetTeam()->m_GoalsConceded += 1;
+	GetTeam()->GetMatchPeriodData()->m_nGoalsConceded += 1;
 }
 
 void CSDKPlayer::AddShot()
@@ -1988,6 +1995,7 @@ void CSDKPlayer::AddShot()
 	GetMatchPeriodData()->m_nShots += 1;
 	GetMatchData()->m_nShots += 1;
 	GetTeam()->m_Shots += 1;
+	GetTeam()->GetMatchPeriodData()->m_nShots += 1;
 }
 
 void CSDKPlayer::AddShotOnGoal()
@@ -1995,6 +2003,7 @@ void CSDKPlayer::AddShotOnGoal()
 	GetMatchPeriodData()->m_nShotsOnGoal += 1;
 	GetMatchData()->m_nShotsOnGoal += 1;
 	GetTeam()->m_ShotsOnGoal += 1;
+	GetTeam()->GetMatchPeriodData()->m_nShotsOnGoal += 1;
 }
 
 void CSDKPlayer::AddPassCompleted()
@@ -2002,6 +2011,7 @@ void CSDKPlayer::AddPassCompleted()
 	GetMatchPeriodData()->m_nPassesCompleted += 1;
 	GetMatchData()->m_nPassesCompleted += 1;
 	GetTeam()->m_PassesCompleted += 1;
+	GetTeam()->GetMatchPeriodData()->m_nPassesCompleted += 1;
 }
 
 void CSDKPlayer::AddInterception()
@@ -2009,6 +2019,7 @@ void CSDKPlayer::AddInterception()
 	GetMatchPeriodData()->m_nInterceptions += 1;
 	GetMatchData()->m_nInterceptions += 1;
 	GetTeam()->m_Interceptions += 1;
+	GetTeam()->GetMatchPeriodData()->m_nInterceptions += 1;
 }
 
 void CSDKPlayer::AddOffside()
@@ -2016,6 +2027,7 @@ void CSDKPlayer::AddOffside()
 	GetMatchPeriodData()->m_nOffsides += 1;
 	GetMatchData()->m_nOffsides += 1;
 	GetTeam()->m_Offsides += 1;
+	GetTeam()->GetMatchPeriodData()->m_nOffsides += 1;
 }
 
 void CSDKPlayer::AddGoal()
@@ -2023,14 +2035,19 @@ void CSDKPlayer::AddGoal()
 	GetMatchPeriodData()->m_nGoals += 1;
 	GetMatchData()->m_nGoals += 1;
 	GetTeam()->m_Goals += 1;
+	GetTeam()->GetMatchPeriodData()->m_nGoals += 1;
 }
 
 void CSDKPlayer::AddOwnGoal()
 {
 	GetMatchPeriodData()->m_nOwnGoals += 1;
 	GetMatchData()->m_nOwnGoals += 1;
+
 	GetTeam()->m_OwnGoals += 1;
+	GetTeam()->GetMatchPeriodData()->m_nOwnGoals += 1;
+
 	GetOppTeam()->m_Goals += 1;
+	GetOppTeam()->GetMatchPeriodData()->m_nGoals += 1;
 }
 
 void CSDKPlayer::AddAssist()
@@ -2038,6 +2055,7 @@ void CSDKPlayer::AddAssist()
 	GetMatchPeriodData()->m_nAssists += 1;
 	GetMatchData()->m_nAssists += 1;
 	GetTeam()->m_Assists += 1;
+	GetTeam()->GetMatchPeriodData()->m_nAssists += 1;
 }
 
 void CSDKPlayer::AddPossessionTime(float time)
@@ -2045,6 +2063,7 @@ void CSDKPlayer::AddPossessionTime(float time)
 	GetMatchPeriodData()->m_flPossessionTime += time;
 	GetMatchData()->m_flPossessionTime += time;
 	GetTeam()->m_flPossessionTime += time;
+	GetTeam()->GetMatchPeriodData()->m_flPossessionTime += time;
 }
 
 void CSDKPlayer::AddTurnover()
@@ -2052,16 +2071,22 @@ void CSDKPlayer::AddTurnover()
 	GetMatchPeriodData()->m_nTurnovers += 1;
 	GetMatchData()->m_nTurnovers += 1;
 	GetTeam()->m_Turnovers += 1;
+	GetTeam()->GetMatchPeriodData()->m_nTurnovers += 1;
 }
 
 void CSDKPlayer::AddExactDistanceCovered(float amount)
 {
 	GetMatchPeriodData()->m_flExactDistanceCovered += amount;
 	GetMatchPeriodData()->m_nDistanceCovered = GetMatchPeriodData()->m_flExactDistanceCovered * 10 / 1000;
+
 	GetMatchData()->m_flExactDistanceCovered += amount;
 	GetMatchData()->m_nDistanceCovered = GetMatchData()->m_flExactDistanceCovered * 10 / 1000;
+
 	GetTeam()->m_flExactDistanceCovered += amount;
 	GetTeam()->m_DistanceCovered = GetTeam()->m_flExactDistanceCovered * 10 / 1000;
+
+	GetTeam()->GetMatchPeriodData()->m_flExactDistanceCovered += amount;
+	GetTeam()->GetMatchPeriodData()->m_nDistanceCovered = GetTeam()->GetMatchPeriodData()->m_flExactDistanceCovered * 10 / 1000;
 }
 
 void CSDKPlayer::AddPass()
@@ -2069,6 +2094,7 @@ void CSDKPlayer::AddPass()
 	GetMatchPeriodData()->m_nPasses += 1;
 	GetMatchData()->m_nPasses += 1;
 	GetTeam()->m_Passes += 1;
+	GetTeam()->GetMatchPeriodData()->m_nPasses += 1;
 }
 
 void CSDKPlayer::AddFreeKick()
@@ -2076,6 +2102,7 @@ void CSDKPlayer::AddFreeKick()
 	GetMatchPeriodData()->m_nFreeKicks += 1;
 	GetMatchData()->m_nFreeKicks += 1;
 	GetTeam()->m_FreeKicks += 1;
+	GetTeam()->GetMatchPeriodData()->m_nFreeKicks += 1;
 }
 
 void CSDKPlayer::AddPenalty()
@@ -2083,6 +2110,7 @@ void CSDKPlayer::AddPenalty()
 	GetMatchPeriodData()->m_nPenalties += 1;
 	GetMatchData()->m_nPenalties += 1;
 	GetTeam()->m_Penalties += 1;
+	GetTeam()->GetMatchPeriodData()->m_nPenalties += 1;
 }
 
 void CSDKPlayer::AddCorner()
@@ -2090,6 +2118,7 @@ void CSDKPlayer::AddCorner()
 	GetMatchPeriodData()->m_nCorners += 1;
 	GetMatchData()->m_nCorners += 1;
 	GetTeam()->m_Corners += 1;
+	GetTeam()->GetMatchPeriodData()->m_nCorners += 1;
 }
 
 void CSDKPlayer::AddThrowIn()
@@ -2097,6 +2126,7 @@ void CSDKPlayer::AddThrowIn()
 	GetMatchPeriodData()->m_nThrowIns += 1;
 	GetMatchData()->m_nThrowIns += 1;
 	GetTeam()->m_ThrowIns += 1;
+	GetTeam()->GetMatchPeriodData()->m_nThrowIns += 1;
 }
 
 void CSDKPlayer::AddKeeperSave()
@@ -2104,6 +2134,7 @@ void CSDKPlayer::AddKeeperSave()
 	GetMatchPeriodData()->m_nKeeperSaves += 1;
 	GetMatchData()->m_nKeeperSaves += 1;
 	GetTeam()->m_KeeperSaves += 1;
+	GetTeam()->GetMatchPeriodData()->m_nKeeperSaves += 1;
 }
 
 void CSDKPlayer::AddKeeperSaveCaught()
@@ -2111,6 +2142,7 @@ void CSDKPlayer::AddKeeperSaveCaught()
 	GetMatchPeriodData()->m_nKeeperSavesCaught += 1;
 	GetMatchData()->m_nKeeperSavesCaught += 1;
 	GetTeam()->m_KeeperSavesCaught += 1;
+	GetTeam()->GetMatchPeriodData()->m_nKeeperSavesCaught += 1;
 }
 
 void CSDKPlayer::AddGoalKick()
@@ -2118,6 +2150,7 @@ void CSDKPlayer::AddGoalKick()
 	GetMatchPeriodData()->m_nGoalKicks += 1;
 	GetMatchData()->m_nGoalKicks += 1;
 	GetTeam()->m_GoalKicks += 1;
+	GetTeam()->GetMatchPeriodData()->m_nGoalKicks += 1;
 }
 
 void CSDKPlayer::DrawDebugGeometryOverlays(void) 
@@ -2456,9 +2489,9 @@ void CPlayerPersistentData::ConvertAllPlayerDataToJson()
 		Q_strcat(json, UTIL_VarArgs("\"%s\"", statTypes[i]), JSON_SIZE);
 	}
 
-	Q_strcat(json, UTIL_VarArgs("],\"matchInfo\":{\"type\":\"%s\",\"startTime\":%lu,\"endTime\":%lu", mp_matchinfo.GetString(), SDKGameRules()->m_nRealMatchStartTime, SDKGameRules()->m_nRealMatchEndTime), JSON_SIZE);
+	Q_strcat(json, UTIL_VarArgs("],\"matchInfo\":{\"type\":\"%s\",\"startTime\":%lu,\"endTime\":%lu,\"periods\":%d,\"lastPeriodName\":\"%s\"},", mp_matchinfo.GetString(), SDKGameRules()->m_nRealMatchStartTime, SDKGameRules()->m_nRealMatchEndTime, GetGlobalTeam(TEAM_A)->m_MatchPeriodData.Count(), GetGlobalTeam(TEAM_A)->m_MatchPeriodData.Count() == 0 ? "<none>" : GetGlobalTeam(TEAM_A)->m_MatchPeriodData[GetGlobalTeam(TEAM_A)->m_MatchPeriodData.Count() - 1]->m_szMatchPeriodName), JSON_SIZE);
 
-	Q_strcat(json, "},\"teams\":[", JSON_SIZE);
+	Q_strcat(json, "\"teams\":[", JSON_SIZE);
 
 	for (int team = TEAM_A; team <= TEAM_B; team++)
 	{
@@ -2469,11 +2502,31 @@ void CPlayerPersistentData::ConvertAllPlayerDataToJson()
 
 		bool isMix = (pTeam->GetShortTeamName()[0] == 0);
 
-		Q_strcat(json, UTIL_VarArgs("{\"info\":{\"name\":\"%s\",\"side\":\"%s\",\"isMix\":%s}", (isMix ? pTeam->GetKitName() : pTeam->GetShortTeamName()), (team == TEAM_A ? "home" : "away"), (isMix ? "true" : "false")), JSON_SIZE);
+		Q_strcat(json, "{\"matchTotal\":{", JSON_SIZE);
 
-		Q_strcat(json, UTIL_VarArgs(",\"statistics\":[%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d]}",
+		Q_strcat(json, UTIL_VarArgs("\"name\":\"%s\",\"side\":\"%s\",\"isMix\":%s,", (isMix ? pTeam->GetKitName() : pTeam->GetShortTeamName()), (team == TEAM_A ? "home" : "away"), (isMix ? "true" : "false")), JSON_SIZE);
+
+		Q_strcat(json, UTIL_VarArgs("\"statistics\":[%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d]",
 			pTeam->m_RedCards, pTeam->m_YellowCards, pTeam->m_Fouls, pTeam->m_FoulsSuffered, pTeam->m_SlidingTackles, pTeam->m_SlidingTacklesCompleted, pTeam->m_GoalsConceded, pTeam->m_Shots, pTeam->m_ShotsOnGoal, pTeam->m_PassesCompleted, pTeam->m_Interceptions, pTeam->m_Offsides, pTeam->m_Goals, pTeam->m_OwnGoals, pTeam->m_Assists, pTeam->m_Passes, pTeam->m_FreeKicks, pTeam->m_Penalties, pTeam->m_Corners, pTeam->m_ThrowIns, pTeam->m_KeeperSaves, pTeam->m_GoalKicks, (int)pTeam->m_flPossessionTime, (int)pTeam->m_flExactDistanceCovered, pTeam->m_KeeperSavesCaught, pTeam->m_Turnovers
 			), JSON_SIZE);
+
+		Q_strcat(json, "},\"matchPeriods\":[", JSON_SIZE);
+
+		for (int i = 0; i < pTeam->m_MatchPeriodData.Count(); i++)
+		{
+			CTeamMatchPeriodData *pPeriod = pTeam->m_MatchPeriodData[i];
+
+			if (i > 0)
+				Q_strcat(json, ",", JSON_SIZE);
+
+			Q_strcat(json, UTIL_VarArgs("{\"period\":%d,\"periodName\":\"%s\",\"announcedInjuryTimeSeconds\":%d,\"actualInjuryTimeSeconds\":%d", i + 1, pPeriod->m_szMatchPeriodName, pPeriod->m_nAnnouncedInjuryTimeSeconds, pPeriod->m_nActualInjuryTimeSeconds), JSON_SIZE);
+
+			Q_strcat(json, UTIL_VarArgs(",\"statistics\":[%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d]}",
+				pPeriod->m_nRedCards, pPeriod->m_nYellowCards, pPeriod->m_nFouls, pPeriod->m_nFoulsSuffered, pPeriod->m_nSlidingTackles, pPeriod->m_nSlidingTacklesCompleted, pPeriod->m_nGoalsConceded, pPeriod->m_nShots, pPeriod->m_nShotsOnGoal, pPeriod->m_nPassesCompleted, pPeriod->m_nInterceptions, pPeriod->m_nOffsides, pPeriod->m_nGoals, pPeriod->m_nOwnGoals, pPeriod->m_nAssists, pPeriod->m_nPasses, pPeriod->m_nFreeKicks, pPeriod->m_nPenalties, pPeriod->m_nCorners, pPeriod->m_nThrowIns, pPeriod->m_nKeeperSaves, pPeriod->m_nGoalKicks, (int)pPeriod->m_flPossessionTime, (int)pPeriod->m_flExactDistanceCovered, pPeriod->m_nKeeperSavesCaught, pPeriod->m_nTurnovers
+				), JSON_SIZE);
+		}
+
+		Q_strcat(json, "]}", JSON_SIZE);
 	}
 
 	Q_strcat(json, "],\"players\":[", JSON_SIZE);
