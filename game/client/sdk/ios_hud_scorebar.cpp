@@ -50,7 +50,6 @@ using namespace vgui;
 
 enum { SCOREBAR_MARGIN = 30 };
 enum { NOTIFICATION_HEIGHT = 25 };
-enum { CENTERFLASH_HEIGHT = 100 };
 enum { EXTRAINFO_HEIGHT = 25 };
 enum { PENALTYPANEL_CENTEROFFSET = 100, PENALTYCELL_WIDTH = 39, PENALTYPANEL_HEIGHT = 30, PENALTYPANEL_PADDING = 2, PENALTYPANEL_TOPMARGIN = 30 };
 enum { QUICKTACTIC_WIDTH = 175, QUICKTACTIC_HEIGHT = 35, QUICKTACTICPANEL_MARGIN = 30 };
@@ -110,7 +109,6 @@ private:
 	float m_flNotificationStart;
 	float m_flInjuryTimeStart;
 	int m_nCurMatchEventTeam;
-	Label *m_pCenterFlash;
 	IScheme *m_pScheme;
 	Panel *m_pMainPanel;
 	float m_flStayDuration;
@@ -175,8 +173,6 @@ CHudScorebar::CHudScorebar( const char *pElementName ) : BaseClass(NULL, "HudSco
 	{
 		m_pNotifications[i] = new Label(this, "", "");
 	}
-
-	m_pCenterFlash = new Label(this, "", "");
 
 	m_pExtraInfo = new Label(this, "", "");
 
@@ -278,12 +274,6 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 		m_pNotifications[i]->SetContentAlignment(Label::a_center);
 		m_pNotifications[i]->SetFgColor(Color(0, 0, 0, 255));
 	}
-
-	m_pCenterFlash->SetBounds(0, GetTall() * 0.33f - CENTERFLASH_HEIGHT / 2, GetWide(), CENTERFLASH_HEIGHT);
-	m_pCenterFlash->SetContentAlignment(Label::a_center);
-	m_pCenterFlash->SetFont(m_pScheme->GetFont("IOSImportantEvent"));
-	m_pCenterFlash->SetFgColor(Color(255, 255, 255, 255));
-	m_pCenterFlash->SetVisible(false);
 
 	m_pExtraInfo->SetContentAlignment(Label::a_center);
 	m_pExtraInfo->SetFont(m_pScheme->GetFont("IOSScorebarMediumItalic"));
@@ -444,7 +434,6 @@ void CHudScorebar::OnThink( void )
 		else if (gpGlobals->curtime - m_flNotificationStart <= slideDownDuration + m_flStayDuration)
 		{
 			m_pNotificationPanel->SetY(m_pBackgroundPanel->GetTall());
-			m_pCenterFlash->SetText("");
 
 			m_pExtraInfo->SetBounds(m_pNotificationPanel->GetX(), m_pNotificationPanel->GetY() + m_pNotificationPanel->GetTall(), m_pNotificationPanel->GetWide(), EXTRAINFO_HEIGHT);
 			
@@ -480,14 +469,12 @@ void CHudScorebar::OnThink( void )
 			}
 
 			m_pNotificationPanel->SetY(m_pBackgroundPanel->GetTall() - pow(fraction, slideUpExp) * (m_pNotificationPanel->GetTall() + m_pExtraInfo->GetTall()));
-			m_pCenterFlash->SetText("");
 			m_pExtraInfo->SetY(m_pNotificationPanel->GetY() + m_pNotificationPanel->GetTall());
 		}	
 	}
 	else
 	{
 		m_pNotificationPanel->SetY(m_pBackgroundPanel->GetTall() - m_pNotificationPanel->GetTall());
-		m_pCenterFlash->SetText("");
 		//m_pNotificationPanel->SetBgColor(Color(0, 0, 0, 255));
 		//m_pExtraInfo->SetAlpha(0);
 		m_pExtraInfo->SetY(m_pBackgroundPanel->GetTall() - m_pExtraInfo->GetTall());
@@ -1003,8 +990,6 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 		m_eCurMatchEvent = MATCH_EVENT_ILLEGAL_MOVE;
 		m_flStayDuration = 5.0f;
 	}
-
-	m_pCenterFlash->SetText(g_szMatchEventNames[m_eCurMatchEvent]);
 }
 
 void CHudScorebar::LevelInit()
