@@ -407,6 +407,7 @@ public:
 
 public:
 	void DrawFieldTeamCrests();
+	void DrawSprayLine();
 	void DrawGoalTeamCrests();
 	void DrawOffsideLines();
 	void DrawSkyboxOverlay();
@@ -441,7 +442,6 @@ public:
 	CNetworkVar(float, m_flOffsideLineOffsidePlayerPosY);
 	CNetworkVar(float, m_flOffsideLineLastOppPlayerPosY);
 	CNetworkVar(bool, m_bOffsideLinesEnabled);
-
 
 	void SetupFormations();
 	CUtlVector<Formation *> &GetFormations();

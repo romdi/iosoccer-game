@@ -3094,6 +3094,50 @@ void CSDKGameRules::DrawFieldTeamCrests()
 	}
 }
 
+void CSDKGameRules::DrawSprayLine()
+{
+	if (m_nShieldType != SHIELD_FREEKICK)
+		return;
+
+	float length = 75;
+	float width = 2;
+	int radius = mp_shield_freekick_radius_opponent.GetInt() + mp_shield_border.GetInt();
+	Vector dir = GetGlobalTeam(m_nShieldTeam)->GetOppTeam()->m_vGoalCenter - m_vShieldPos;
+	dir.NormalizeInPlace();
+	Vector ort = Vector(-dir.y, dir.x, dir.z);
+	Vector origin = m_vShieldPos + dir * (radius - width);
+	origin.z += 1;
+
+	CMatRenderContextPtr pRenderContext( materials );
+	IMaterial *pPreviewMaterial = materials->FindMaterial("pitch/spray_line", TEXTURE_GROUP_CLIENT_EFFECTS);
+	pRenderContext->Bind( pPreviewMaterial );
+	IMesh *pMesh = pRenderContext->GetDynamicMesh();
+	CMeshBuilder meshBuilder;
+	meshBuilder.Begin( pMesh, MATERIAL_QUADS, 1 );
+
+	meshBuilder.Color3f( 1.0, 1.0, 1.0 );
+	meshBuilder.TexCoord2f( 0,0,0 );
+	meshBuilder.Position3fv( (origin + (ort * -length) + (dir * -width)).Base() );
+	meshBuilder.AdvanceVertex();
+
+	meshBuilder.Color3f( 1.0, 1.0, 1.0 );
+	meshBuilder.TexCoord2f( 0,1,0 );
+	meshBuilder.Position3fv( (origin + (ort * length) + (dir * -width)).Base() );
+	meshBuilder.AdvanceVertex();
+
+	meshBuilder.Color3f( 1.0, 1.0, 1.0 );
+	meshBuilder.TexCoord2f( 0,1,1 );
+	meshBuilder.Position3fv( (origin + (ort * length) + (dir * width)).Base() );
+	meshBuilder.AdvanceVertex();
+
+	meshBuilder.Color3f( 1.0, 1.0, 1.0 );
+	meshBuilder.TexCoord2f( 0,0,1 );
+	meshBuilder.Position3fv( (origin + (ort * -length) + (dir * width)).Base() );
+	meshBuilder.AdvanceVertex();
+	meshBuilder.End();
+	pMesh->Draw();
+}
+
 extern ConVar goalteamcrests;
 
 void CSDKGameRules::DrawGoalTeamCrests()
