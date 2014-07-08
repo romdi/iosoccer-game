@@ -191,6 +191,7 @@ void CIOSUpdatePanel::OnTick()
 		{
 			if (m_pUpdateInfo->changelogDownloaded)
 			{
+				// We have to use InsertString or the \r won't be filtered out and there will be extra newlines
 				m_pChangelog->SetText("");
 				m_pChangelog->InsertString(m_pUpdateInfo->changelogText);
 				m_pChangelog->GotoTextStart();
@@ -342,6 +343,8 @@ void CIOSUpdatePanel::Activate(UpdateState_t updateState)
 	BaseClass::Activate();
 
 	m_eUpdateState = updateState;
+
+	m_pChangelog->GotoTextStart();
 
 	OnTick();
 }

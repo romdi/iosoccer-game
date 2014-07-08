@@ -235,6 +235,8 @@ private:
 	float			m_flStateLeaveTime;
 	float			m_flStateActivationDelay;
 	float			m_flStateTimelimit;
+	float			m_flStateIllegalMoveStartTime;
+	float			m_nStateIllegalMoveCount;
 	bool			m_bNextStateMessageSent;
 	CBallStateInfo	*m_pCurStateInfo;
 
@@ -244,6 +246,7 @@ private:
 	void			HandleFoul();
 	bool			PlayersAtTargetPos();
 	bool			CanTouchBallXY();
+	bool			IsPlayerClose();
 	bool			CheckFoul(bool canShootBall, const Vector &localDirToBall);
 	void			TriggerFoul(foul_type_t type, Vector pos, CSDKPlayer *pFoulingPl, CSDKPlayer *pFouledPl = NULL);
 	CSDKPlayer		*FindNearestPlayer(int team = TEAM_INVALID, int posFlags = FL_POS_FIELD, bool checkIfShooting = false, int ignoredPlayerBits = 0, float radius = -1);
@@ -311,8 +314,6 @@ private:
 
 	float			m_flGlobalLastShot;
 	float			m_flGlobalDynamicShotDelay;
-
-	bool			m_bPenaltyTakerStartedMoving;
 
 	float			m_flLastMatchEventSetTime;
 

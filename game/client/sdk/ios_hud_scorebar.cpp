@@ -339,6 +339,7 @@ void CHudScorebar::Init( void )
 	ListenForGameEvent("penalty");
 	ListenForGameEvent("wakeupcall");
 	ListenForGameEvent("kickoff");
+	ListenForGameEvent("illegal_move");
 }
 
 void CHudScorebar::ApplySettings( KeyValues *inResourceData )
@@ -986,6 +987,21 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 		m_nCurMatchEventTeam = event->GetInt("requesting_team");
 		m_eCurMatchEvent = MATCH_EVENT_TIMEOUT;
 		m_flStayDuration = INT_MAX;
+	}
+	else if (!Q_strcmp(event->GetName(), "illegal_move"))
+	{
+		C_SDKPlayer *pTaker = ToSDKPlayer(USERID2PLAYER(event->GetInt("taker_userid")));
+
+		m_pNotifications[0]->SetText(VarArgs("PENALTY: %s", GetGlobalTeam(event->GetInt("taking_team"))->GetCode()));
+
+		if (pTaker)
+		{
+			m_pNotifications[1]->SetText(VarArgs("%s", pTaker->GetPlayerName()));
+			m_pNotificationPanel->SetTall(2 * NOTIFICATION_HEIGHT);
+		}
+
+		m_eCurMatchEvent = MATCH_EVENT_ILLEGAL_MOVE;
+		m_flStayDuration = 5.0f;
 	}
 
 	m_pCenterFlash->SetText(g_szMatchEventNames[m_eCurMatchEvent]);

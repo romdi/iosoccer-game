@@ -48,6 +48,8 @@ ConVar sv_ball_standing_reach_speed_max( "sv_ball_standing_reach_speed_max", "10
 ConVar sv_ball_standing_cone( "sv_ball_standing_cone", "360", FCVAR_NOTIFY );
 ConVar sv_ball_standing_shift( "sv_ball_standing_shift", "0", FCVAR_NOTIFY );
 
+ConVar sv_ball_close_dist( "sv_ball_close_dist", "75", FCVAR_NOTIFY );
+
 ConVar sv_ball_slidesidereach_ball( "sv_ball_slidesidereach_ball", "50", FCVAR_NOTIFY );
 ConVar sv_ball_slideforwardreach_ball( "sv_ball_slideforwardreach_ball", "60", FCVAR_NOTIFY );
 ConVar sv_ball_slidebackwardreach_ball( "sv_ball_slidebackwardreach_ball", "20", FCVAR_NOTIFY );
@@ -167,6 +169,7 @@ ConVar sv_ball_doubletouchfouls("sv_ball_doubletouchfouls", "1", FCVAR_NOTIFY);
 
 ConVar sv_ball_timelimit_setpiece("sv_ball_timelimit_setpiece", "15", FCVAR_NOTIFY);
 ConVar sv_ball_timelimit_remotecontrolled("sv_ball_timelimit_remotecontrolled", "15", FCVAR_NOTIFY);
+ConVar sv_ball_timelimit_illegalmove("sv_ball_timelimit_illegalmove", "1.0", FCVAR_NOTIFY);
 
 ConVar sv_ball_statetransition_activationdelay_short("sv_ball_statetransition_activationdelay_short", "0.1", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
 ConVar sv_ball_statetransition_activationdelay_normal("sv_ball_statetransition_activationdelay_normal", "1.25", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
@@ -397,6 +400,7 @@ CBall::CBall()
 	m_flStateLeaveTime = gpGlobals->curtime;
 	m_flStateActivationDelay = 0;
 	m_flStateTimelimit = -1;
+	m_nStateIllegalMoveCount = 0;
 	m_pPl = NULL;
 	m_pOtherPl = NULL;
 	m_pLastActivePlayer = NULL;
@@ -1019,6 +1023,7 @@ void CBall::State_Enter(ball_state_t newState, bool cancelQueuedState)
 
 	m_flStateEnterTime = gpGlobals->curtime;
 	m_flStateTimelimit = -1;
+	m_nStateIllegalMoveCount = 0;
 	m_bNextStateMessageSent = false;
 
 	m_pPl = NULL;
@@ -1761,15 +1766,34 @@ void CBall::State_PENALTY_Enter()
 	else
 	{
 		HandleFoul();
-
 		SetPos(GetGlobalTeam(m_nFoulingTeam)->m_vPenalty);
 	}
-
-	m_bPenaltyTakerStartedMoving = false;
 }
 
 void CBall::State_PENALTY_Think()
 {
+	if (m_flStateTimelimit > -1
+		&& m_flStateIllegalMoveStartTime > -1
+		&& gpGlobals->curtime > m_flStateIllegalMoveStartTime + sv_ball_timelimit_illegalmove.GetFloat())
+	{
+		m_nStateIllegalMoveCount += 1;
+
+		IGameEvent *pEvent = gameeventmanager->CreateEvent("illegal_move");
+		if (pEvent)
+		{
+			pEvent->SetInt("taker_userid", m_pPl->GetUserID());
+			pEvent->SetInt("taking_team", m_pPl->GetTeamNumber());
+			pEvent->SetInt("count", m_nStateIllegalMoveCount);
+			gameeventmanager->FireEvent(pEvent);
+		}
+
+		UTIL_ClientPrintAll(HUD_PRINTCENTER, g_szMatchEventNames[MATCH_EVENT_ILLEGAL_MOVE]);
+
+		SetPos(GetGlobalTeam(m_nFoulingTeam)->m_vPenalty);
+		m_pPl = NULL; // Force a reset for player positions and shield
+		m_flStateTimelimit = -1;
+	}
+
 	bool takerHasChanged = false;
 
 	if (!CSDKPlayer::IsOnField(m_pPl))
@@ -1834,6 +1858,7 @@ void CBall::State_PENALTY_Think()
 	if (m_flStateTimelimit == -1)
 	{
 		m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit_setpiece.GetFloat();
+		m_flStateIllegalMoveStartTime = -1;
 		m_pPl->RemoveFlag(FL_ATCONTROLS);
 	}
 
@@ -1844,6 +1869,11 @@ void CBall::State_PENALTY_Think()
 	}
 
 	UpdateCarrier();
+
+	if (m_flStateIllegalMoveStartTime == -1 && IsPlayerClose())
+	{
+		m_flStateIllegalMoveStartTime = gpGlobals->curtime;
+	}
 
 	if (m_pPl->ShotButtonsReleased() && !m_bShotsBlocked && m_pPl->IsShooting() && CanTouchBallXY())
 	{
@@ -2055,6 +2085,11 @@ bool CBall::CanTouchBallXY()
 	}
 
 	return false;
+}
+
+bool CBall::IsPlayerClose()
+{
+	return (m_vPos - m_vPlPos).Length2DSqr() <= pow(sv_ball_close_dist.GetFloat(), 2);
 }
 
 bool CBall::CheckFoul(bool canShootBall, const Vector &localDirToBall)
