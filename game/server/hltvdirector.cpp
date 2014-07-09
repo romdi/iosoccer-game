@@ -271,7 +271,6 @@ const char** CHLTVDirector::GetModEvents()
 		"team_formation",
 		"timeout_pending",
 		"wakeupcall",
-		"illegal_move",
 		NULL
 	};
 

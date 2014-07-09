@@ -235,8 +235,7 @@ private:
 	float			m_flStateLeaveTime;
 	float			m_flStateActivationDelay;
 	float			m_flStateTimelimit;
-	float			m_flStateIllegalMoveStartTime;
-	float			m_nStateIllegalMoveCount;
+	float			m_flSetpieceCloseStartTime;
 	bool			m_bNextStateMessageSent;
 	CBallStateInfo	*m_pCurStateInfo;
 
