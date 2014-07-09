@@ -143,8 +143,6 @@ ConVar sv_ball_header_mindelay("sv_ball_header_mindelay", "0.75", FCVAR_NOTIFY);
 
 ConVar sv_ball_slide_strength("sv_ball_slide_strength", "1000", FCVAR_NOTIFY); 
 
-ConVar sv_ball_penaltyshot_maxstrength("sv_ball_penaltyshot_maxstrength", "1200", FCVAR_NOTIFY);
-
 ConVar sv_ball_goalkick_speedcoeff("sv_ball_goalkick_speedcoeff", "1.15", FCVAR_NOTIFY);
 ConVar sv_ball_freekick_speedcoeff("sv_ball_freekick_speedcoeff", "1.10", FCVAR_NOTIFY);
 ConVar sv_ball_volleyshot_speedcoeff("sv_ball_volleyshot_speedcoeff", "1.125", FCVAR_NOTIFY);
@@ -2613,17 +2611,11 @@ float CBall::GetNormalshotStrength(float coeff, int strength)
 
 float CBall::GetPowershotStrength(float coeff, int strength)
 {
-	if (State_Get() == BALL_STATE_PENALTY)
-		strength = sv_ball_penaltyshot_maxstrength.GetInt();
-
 	return coeff * strength;
 }
 
 float CBall::GetChargedshotStrength(float coeff, int minStrength, int maxStrength)
 {
-	if (State_Get() == BALL_STATE_PENALTY)
-		minStrength = maxStrength = sv_ball_penaltyshot_maxstrength.GetInt();
-
 	float shotStrength = minStrength + (maxStrength - minStrength) * m_pPl->GetChargedShotStrength();
 
 	return coeff * shotStrength;
