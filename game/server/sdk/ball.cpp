@@ -221,7 +221,6 @@ ConVar sv_ball_assign_setpieces("sv_ball_assign_setpieces", "1", FCVAR_NOTIFY);
 ConVar sv_ball_nonnormalshotsblocktime_freekick("sv_ball_nonnormalshotsblocktime_freekick", "4.0", FCVAR_NOTIFY);
 ConVar sv_ball_nonnormalshotsblocktime_corner("sv_ball_nonnormalshotsblocktime_corner", "4.0", FCVAR_NOTIFY);
 ConVar sv_ball_shotsblocktime_penalty("sv_ball_shotsblocktime_penalty", "4.0", FCVAR_NOTIFY);
-ConVar sv_ball_blockpowershot("sv_ball_blockpowershot", "1", FCVAR_NOTIFY);
 
 ConVar sv_ball_maxcheckdist("sv_ball_maxcheckdist", "200", FCVAR_NOTIFY);
 
@@ -1527,7 +1526,10 @@ void CBall::State_GOALKICK_Think()
 	else
 		m_bNonnormalshotsBlocked = false;
 
-	if (m_pPl->ShotButtonsReleased() && m_pPl->IsShooting() && CanTouchBallXY())
+	if (!m_bShotsBlocked
+		&& m_pPl->ShotButtonsReleased()
+		&& CanTouchBallXY()
+		&& (m_pPl->IsNormalshooting() || !m_bNonnormalshotsBlocked && (m_pPl->IsPowershooting() || m_pPl->IsChargedshooting())))
 	{
 		m_pPl->AddGoalKick();
 		RemoveAllTouches();
@@ -1538,6 +1540,7 @@ void CBall::State_GOALKICK_Think()
 
 void CBall::State_GOALKICK_Leave(ball_state_t newState)
 {
+	m_bNonnormalshotsBlocked = false;
 	m_bShotsBlocked = false;
 }
 
@@ -1608,9 +1611,10 @@ void CBall::State_CORNER_Think()
 	else
 		m_bNonnormalshotsBlocked = false;
 
-	if (m_pPl->ShotButtonsReleased()
+	if (!m_bShotsBlocked
+		&& m_pPl->ShotButtonsReleased()
 		&& CanTouchBallXY()
-		&& (!m_bNonnormalshotsBlocked && m_pPl->IsShooting() || m_bNonnormalshotsBlocked && (m_pPl->IsNormalshooting() || !sv_ball_blockpowershot.GetBool() && m_pPl->IsPowershooting())))
+		&& (m_pPl->IsNormalshooting() || !m_bNonnormalshotsBlocked && (m_pPl->IsPowershooting() || m_pPl->IsChargedshooting())))
 	{
 		//EmitSound("Crowd.Way");
 		m_pPl->AddCorner();
@@ -1769,9 +1773,10 @@ void CBall::State_FREEKICK_Think()
 	else
 		m_bNonnormalshotsBlocked = false;
 
-	if (m_pPl->ShotButtonsReleased()
+	if (!m_bShotsBlocked
+		&& m_pPl->ShotButtonsReleased()
 		&& CanTouchBallXY()
-		&& (!m_bNonnormalshotsBlocked && m_pPl->IsShooting() || m_bNonnormalshotsBlocked && (m_pPl->IsNormalshooting() || !sv_ball_blockpowershot.GetBool() && m_pPl->IsPowershooting())))
+		&& (m_pPl->IsNormalshooting() || !m_bNonnormalshotsBlocked && (m_pPl->IsPowershooting() || m_pPl->IsChargedshooting())))
 	{
 		//EmitSound("Crowd.Way");
 		m_pPl->AddFreeKick();
@@ -1894,7 +1899,10 @@ void CBall::State_PENALTY_Think()
 	else
 		m_bNonnormalshotsBlocked = false;
 
-	if (m_pPl->ShotButtonsReleased() && !m_bShotsBlocked && m_pPl->IsShooting() && CanTouchBallXY())
+	if (!m_bShotsBlocked
+		&& m_pPl->ShotButtonsReleased()
+		&& CanTouchBallXY()
+		&& (m_pPl->IsNormalshooting() || !m_bNonnormalshotsBlocked && (m_pPl->IsPowershooting() || m_pPl->IsChargedshooting())))
 	{
 		m_pPl->AddPenalty();
 		RemoveAllTouches();
@@ -1908,10 +1916,9 @@ void CBall::State_PENALTY_Think()
 void CBall::State_PENALTY_Leave(ball_state_t newState)
 {
 	if (CSDKPlayer::IsOnField(m_pOtherPl))
-	{
 		m_pOtherPl->RemoveFlag(FL_NO_Y_MOVEMENT);
-	}
 
+	m_bNonnormalshotsBlocked = false;
 	m_bShotsBlocked = false;
 }
 
