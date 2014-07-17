@@ -41,6 +41,8 @@
 #include "vgui_avatarimage.h"
 #include "c_team.h"
 
+#include "c_ball.h"
+
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -209,16 +211,10 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Editabl
 
 	m_pMatchPeriod = new Label(m_pMainPanel, "", "");
 
-	m_pJoinRandom = new Button(m_pStatButtonContainer, "JoinRandom", "Auto-Join", this, VarArgs("jointeam %d -1", TEAM_INVALID));
-
 	m_pMatchEvents = new Button(m_pStatButtonContainer, "MatchEvents", "Events", this, "showmatchevents");
 
 	m_pToggleCaptainMenu = new Button(m_pStatButtonContainer, "ToggleMenu", "Captain Menu", this, "togglemenu");
 	m_pToggleCaptainMenu->SetVisible(false);
-
-	m_pFormationList = new ComboBox(m_pStatButtonContainer, "", 0, false);
-	CommandMenu *pMenu = new CommandMenu(m_pFormationList, "formationlist", gViewPortInterface);
-	m_pFormationList->SetMenu(pMenu);
 
 	m_pTimeoutHeader = new Label(m_pStatButtonContainer, "", "Timeout");
 	m_pTimeoutInfo = new Label(m_pStatButtonContainer, "", "");
@@ -235,6 +231,8 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Editabl
 	m_eActivePanelType = FORMATION_MENU_NORMAL;
 
 	m_bShowCaptainMenu = false;
+
+	m_bCanSetSetpieceTaker = false;
 
 	MakePopup();
 }
@@ -320,6 +318,7 @@ void CClientScoreBoardDialog::Reset()
 		m_pPlayerList[i]->AddItem(0, kv);
 		kv->deleteThis();
 		m_pPlayerList[i]->SetItemFont(0, m_pScheme->GetFont("IOSTeamMenuNormalBold"));
+		m_pPlayerList[i]->SetLineSpacing(400 / (mp_maxplayers.GetInt() + 2.5f));
 
 		for (int j = 0; j < mp_maxplayers.GetInt(); j++)
 		{
@@ -335,6 +334,7 @@ void CClientScoreBoardDialog::Reset()
 
 			if (GetGlobalTeam(TEAM_A + i))
 				m_pPlayerList[i]->SetItemFgColor(j + 1, g_ColorGray);
+
 		}
 	}
 }
@@ -407,13 +407,6 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 	m_pToggleCaptaincy->SetCursor(dc_hand);
 	m_pToggleCaptaincy->SetVisible(false);
 
-	m_pJoinRandom->SetBounds(STATBUTTON_HMARGIN, 0, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
-	m_pJoinRandom->SetFont(m_pScheme->GetFont("StatButton"));
-	m_pJoinRandom->SetContentAlignment(Label::a_center);
-	m_pJoinRandom->SetPaintBorderEnabled(false);
-	m_pJoinRandom->SetCursor(dc_hand);
-	m_pJoinRandom->SetVisible(false);
-
 	m_pMatchEvents->SetBounds(STATBUTTON_HMARGIN, 0 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
 	m_pMatchEvents->SetFont(m_pScheme->GetFont("StatButton"));
 	m_pMatchEvents->SetContentAlignment(Label::a_center);
@@ -430,22 +423,17 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 	m_pStatText->SetFont(m_pScheme->GetFont("StatButton"));
 	m_pStatText->SetContentAlignment(Label::a_center);
 
-	m_pFormationList->SetBounds(STATBUTTON_HMARGIN, 4 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
-	m_pFormationList->SetFont(m_pScheme->GetFont("StatButton"));
-	//m_pFormationList->SetPaintBorderEnabled(false);
-	m_pFormationList->SetVisible(false);
-
-	m_pTimeoutHeader->SetBounds(STATBUTTON_HMARGIN, 5 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
+	m_pTimeoutHeader->SetBounds(STATBUTTON_HMARGIN, 4 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
 	m_pTimeoutHeader->SetFont(m_pScheme->GetFont("StatButton"));
 	m_pTimeoutHeader->SetContentAlignment(Label::a_center);
 	m_pTimeoutHeader->SetVisible(false);
 
-	m_pTimeoutInfo->SetBounds(STATBUTTON_HMARGIN, 6 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
+	m_pTimeoutInfo->SetBounds(STATBUTTON_HMARGIN, 5 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
 	m_pTimeoutInfo->SetFont(m_pScheme->GetFont("StatButton"));
 	m_pTimeoutInfo->SetContentAlignment(Label::a_center);
 	m_pTimeoutInfo->SetVisible(false);
 
-	m_pRequestTimeout->SetBounds(STATBUTTON_HMARGIN, 7 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
+	m_pRequestTimeout->SetBounds(STATBUTTON_HMARGIN, 6 * STATBUTTON_HEIGHT, STATBUTTON_WIDTH, STATBUTTON_HEIGHT);
 	m_pRequestTimeout->SetFont(m_pScheme->GetFont("StatButton"));
 	m_pRequestTimeout->SetContentAlignment(Label::a_center);
 	m_pRequestTimeout->SetPaintBorderEnabled(false);
@@ -735,22 +723,23 @@ void CClientScoreBoardDialog::Update( void )
 			m_pRequestTimeout->SetCommand("requesttimeout");
 			m_pRequestTimeout->SetEnabled(SDKGameRules()->m_eTimeoutState == TIMEOUT_STATE_NONE);
 		}
-
-		if (!m_pFormationList->IsDropdownVisible())
-		{
-			m_pFormationList->GetMenu()->DeleteAllItems();
-
-			for (int i = 0; i < SDKGameRules()->GetFormations().Count(); i++)
-			{
-				m_pFormationList->GetMenu()->AddMenuItem(SDKGameRules()->GetFormations()[i]->name, VarArgs("formation %d", i), this);
-			}
-
-			m_pFormationList->ActivateItemByRow(pLocal->GetTeam()->GetFormationIndex());
-		}
 	}
 
+	if (GetGlobalTeam(GetLocalPlayerTeam())->GetCaptainPosIndex() == gr->GetTeamPosIndex(GetLocalPlayerIndex())
+		&& GetBall()
+		&& (GetBall()->State_Get() == BALL_STATE_FREEKICK
+			|| GetBall()->State_Get() == BALL_STATE_CORNER
+			|| GetBall()->State_Get() == BALL_STATE_GOALKICK
+			|| GetBall()->State_Get() == BALL_STATE_THROWIN
+			|| GetBall()->State_Get() == BALL_STATE_PENALTY))
+	{
+		m_bCanSetSetpieceTaker = true;
+	}
+	else
+		m_bCanSetSetpieceTaker = false;
+
 	for (int i = 0; i < 2; i++)
-		m_pPlayerList[i]->SetLineSpacing(400 / (mp_maxplayers.GetInt() + 2.5f));
+		m_pPlayerList[i]->SetCursor(m_bCanSetSetpieceTaker && i == GetLocalPlayerTeam() - TEAM_A ? dc_hand : dc_arrow);
 
 	m_fNextUpdateTime = gpGlobals->curtime + 0.25f; 
 }
@@ -986,16 +975,19 @@ void CClientScoreBoardDialog::AddHeader()
 		m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "name",			"", 0, 185);
 		m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "cardindex",		"",	defaultFlags | SectionedListPanel::COLUMN_IMAGE, 15);
 
-		// Max width = 398
+		// Max width = 330
 
 		switch (m_nCurStat)
 		{
 		case DEFAULT_STATS:
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "countryindex",				"Loc.",			defaultFlags | SectionedListPanel::COLUMN_IMAGE, 50);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "nationalityindex",			"Nat.",			defaultFlags | SectionedListPanel::COLUMN_IMAGE, 50);
+			//m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "countryindex",			"Loc.",			defaultFlags | SectionedListPanel::COLUMN_IMAGE, 50);
+			//m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "nationalityindex",		"Nat.",			defaultFlags | SectionedListPanel::COLUMN_IMAGE, 50);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "number",					"No.",			defaultFlags, 45);
 			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "club",						"Club",			defaultFlags, 70);
 			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "nationalteam",				"Nat.T.",		defaultFlags, 70);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "rating",					"Rating",		defaultFlags, 40);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "goals",						"Goals",		defaultFlags, 45);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "assists",					"Assists",		defaultFlags, 45);
+			//m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "rating",					"Rating",		defaultFlags, 40);
 			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "ping",						"Ping",			defaultFlags, 55);
 			break;
 		case GENERAL:
@@ -1159,6 +1151,8 @@ bool CClientScoreBoardDialog::GetPlayerInfo(int playerIndex, KeyValues *kv)
 		kv->SetString("shotsongoal", GET_STAT_FTEXT_SHOWZERO(gr->GetShotsOnGoal(playerIndex) * 100 / gr->GetShots(playerIndex), "%d%%"));
 	else
 		kv->SetString("shotsongoal", "");
+
+	kv->SetInt("number", gr->GetShirtNumber(playerIndex));
 
 	kv->SetInt("posindex", gr->GetTeamPosIndex(playerIndex));
 	kv->SetInt("playerindex", playerIndex);
@@ -1579,7 +1573,6 @@ void CClientScoreBoardDialog::ToggleMenu()
 		m_pStatButtons[i]->SetVisible(!m_bShowCaptainMenu);
 	}
 
-	m_pFormationList->SetVisible(m_bShowCaptainMenu);
 	m_pTimeoutHeader->SetVisible(m_bShowCaptainMenu);
 	m_pTimeoutInfo->SetVisible(m_bShowCaptainMenu);
 	m_pRequestTimeout->SetVisible(m_bShowCaptainMenu);
@@ -1602,7 +1595,10 @@ void CClientScoreBoardDialog::OnItemSelected(KeyValues *data)
 		{
 			KeyValues *kv = pPanel->GetItemData(itemId);
 			if (kv)
+			{
 				m_nSelectedPlayerIndex = kv->GetInt("playerindex", 0);
+				//DevMsg("selectedplayer: %d\n", m_nSelectedPlayerIndex);
+			}
 		}
 	}
 
@@ -1612,6 +1608,18 @@ void CClientScoreBoardDialog::OnItemSelected(KeyValues *data)
 		m_eActivePanelType = STATS_MENU;
 
 	Update();
+}
+
+void CClientScoreBoardDialog::OnItemLeftClick(KeyValues *data)
+{
+	if (m_bCanSetSetpieceTaker
+		&& m_nSelectedPlayerIndex > 0
+		&& GameResources()->GetTeam(m_nSelectedPlayerIndex) == GetLocalPlayerTeam())
+	{
+		int playerIndex = ((SectionedListPanel *)data->GetPtr("panel"))->GetItemData(data->GetInt("itemID"))->GetInt("playerindex", 0);
+		//DevMsg("changing taker with index: %d\n", playerIndex);
+		engine->ClientCmd(VarArgs("settaker %d", playerIndex));
+	}
 }
 
 void CClientScoreBoardDialog::OnCursorEntered(Panel *panel)

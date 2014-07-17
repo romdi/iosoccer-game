@@ -125,18 +125,6 @@ public:
 	virtual void SetCaptainPosIndex(int posIndex) { m_nCaptainPosIndex = clamp(posIndex, -1, 10); }
 	virtual int GetCaptainPosIndex() { return m_nCaptainPosIndex; }
 
-	virtual void SetFreekickTakerPosIndex(int posIndex) { m_nFreekickTakerPosIndex = clamp(posIndex, -1, 10); }
-	virtual int GetFreekickTakerPosIndex() { return m_nFreekickTakerPosIndex; }
-
-	virtual void SetPenaltyTakerPosIndex(int posIndex) { m_nPenaltyTakerPosIndex = clamp(posIndex, -1, 10); }
-	virtual int GetPenaltyTakerPosIndex() { return m_nPenaltyTakerPosIndex; }
-
-	virtual void SetLeftCornerTakerPosIndex(int posIndex) { m_nLeftCornerTakerPosIndex = clamp(posIndex, -1, 10); }
-	virtual int GetLeftCornerTakerPosIndex() { return m_nLeftCornerTakerPosIndex; }
-
-	virtual void SetRightCornerTakerPosIndex(int posIndex) { m_nRightCornerTakerPosIndex = clamp(posIndex, -1, 10); }
-	virtual int GetRightCornerTakerPosIndex() { return m_nRightCornerTakerPosIndex; }
-
 	virtual void SetTimeoutsLeft(int amount) { m_nTimeoutsLeft = amount; }
 	virtual int GetTimeoutsLeft() { return m_nTimeoutsLeft; }
 
@@ -144,11 +132,6 @@ public:
 	virtual int GetTimeoutTimeLeft() { return m_nTimeoutTimeLeft; }
 
 	virtual CSDKPlayer *GetCaptain() { return GetPlayerByPosIndex(m_nCaptainPosIndex); }
-	virtual CSDKPlayer *GetFreekickTaker() { return GetPlayerByPosIndex(m_nFreekickTakerPosIndex); }
-	virtual CSDKPlayer *GetPenaltyTaker() { return GetPlayerByPosIndex(m_nPenaltyTakerPosIndex); }
-	virtual CSDKPlayer *GetLeftCornerTaker() { return GetPlayerByPosIndex(m_nLeftCornerTakerPosIndex); }
-	virtual CSDKPlayer *GetRightCornerTaker() { return GetPlayerByPosIndex(m_nRightCornerTakerPosIndex); }
-	virtual void FindNewCaptain();
 	virtual void AddMatchEvent(match_period_t matchPeriod, int seconds, match_event_t event, const char *text);
 
 	//-----------------------------------------------------------------------------
@@ -179,10 +162,6 @@ public:
 	CNetworkVar( int, m_nTimeoutTimeLeft );
 
 	CNetworkVar( int, m_nCaptainPosIndex );
-	CNetworkVar( int, m_nFreekickTakerPosIndex );
-	CNetworkVar( int, m_nPenaltyTakerPosIndex );
-	CNetworkVar( int, m_nLeftCornerTakerPosIndex );
-	CNetworkVar( int, m_nRightCornerTakerPosIndex );
 
 	int		m_iDeaths;
 

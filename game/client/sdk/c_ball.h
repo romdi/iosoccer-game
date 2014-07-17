@@ -66,6 +66,8 @@ public:
 	bool m_bNonnormalshotsBlocked;
 	bool m_bShotsBlocked;
 
+	inline ball_state_t State_Get() { return m_eBallState; }
+
 private:
 
 	char m_szSkinName[MAX_KITNAME_LENGTH];

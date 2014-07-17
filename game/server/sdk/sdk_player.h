@@ -543,7 +543,7 @@ public:
 	CNetworkVar(int, m_nModelScale);
 	CNetworkVar(bool, m_bShotButtonsReleased);
 
-	static bool			IsOnField(CSDKPlayer *pPl);
+	static bool			IsOnField(CSDKPlayer *pPl, int teamNumber = TEAM_UNASSIGNED);
 
 	void				CheckShotCharging();
 	void				ResetShotCharging();

@@ -58,10 +58,6 @@ public:
 	virtual int		GetPossession();
 
 	virtual int	GetCaptainPosIndex() { return m_nCaptainPosIndex; }
-	virtual int	GetFreekickTakerPosIndex() { return m_nFreekickTakerPosIndex; }
-	virtual int	GetPenaltyTakerPosIndex() { return m_nPenaltyTakerPosIndex; }
-	virtual int	GetLeftCornerTakerPosIndex() { return m_nLeftCornerTakerPosIndex; }
-	virtual int	GetRightCornerTakerPosIndex() { return m_nRightCornerTakerPosIndex; }
 
 	virtual int		GetTimeoutsLeft() { return m_nTimeoutsLeft; }
 	virtual int		GetTimeoutTimeLeft() { return m_nTimeoutTimeLeft; }
@@ -102,10 +98,6 @@ public:
 	int		m_nTimeoutTimeLeft;
 
 	int m_nCaptainPosIndex;
-	int m_nFreekickTakerPosIndex;
-	int m_nPenaltyTakerPosIndex;
-	int m_nLeftCornerTakerPosIndex;
-	int m_nRightCornerTakerPosIndex;
 
 	// Data for the scoreboard
 	int		m_iPing;

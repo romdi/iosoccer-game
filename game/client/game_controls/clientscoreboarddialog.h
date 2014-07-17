@@ -185,6 +185,8 @@ protected:
 
 	MESSAGE_FUNC_PARAMS(OnItemSelected, "ItemSelected", data);
 
+	MESSAGE_FUNC_PARAMS(OnItemLeftClick, "ItemLeftClick", data);
+
 	int m_iNumTeams;
 
 	vgui::SectionedListPanel *m_pPlayerList[2];
@@ -240,10 +242,8 @@ private:
 	Label		*m_pStatText;
 	Button		*m_pStatButtons[STAT_COUNT];
 	Panel		*m_pPlayerListDivider;
-	Button		*m_pJoinRandom;
 	Button		*m_pMatchEvents;
 	Button		*m_pToggleCaptainMenu;
-	ComboBox	*m_pFormationList;
 	Label		*m_pTimeoutHeader;
 	Label		*m_pTimeoutInfo;
 	Button		*m_pRequestTimeout;
@@ -275,6 +275,8 @@ private:
 
 	int			m_nCursorPosX;
 	int			m_nCursorPosY;
+
+	bool		m_bCanSetSetpieceTaker;
 
 	IScheme *m_pScheme;
 };

@@ -216,8 +216,6 @@ ConVar sv_ball_freekickdist_opponentgoal("sv_ball_freekickdist_opponentgoal", "1
 ConVar sv_ball_freekickangle_opponentgoal("sv_ball_freekickangle_opponentgoal", "60", FCVAR_NOTIFY);
 ConVar sv_ball_closetogoaldist("sv_ball_closetogoaldist", "1300", FCVAR_NOTIFY);
 
-ConVar sv_ball_assign_setpieces("sv_ball_assign_setpieces", "1", FCVAR_NOTIFY);
-
 ConVar sv_ball_nonnormalshotsblocktime_freekick("sv_ball_nonnormalshotsblocktime_freekick", "4.0", FCVAR_NOTIFY);
 ConVar sv_ball_nonnormalshotsblocktime_corner("sv_ball_nonnormalshotsblocktime_corner", "4.0", FCVAR_NOTIFY);
 ConVar sv_ball_shotsblocktime_penalty("sv_ball_shotsblocktime_penalty", "4.0", FCVAR_NOTIFY);
@@ -415,6 +413,7 @@ CBall::CBall()
 	m_bNonnormalshotsBlocked = false;
 	m_bShotsBlocked = false;
 	m_bHitThePost = false;
+	m_pSetpieceTaker = NULL;
 	memset(m_szSkinName.GetForModify(), 0, sizeof(m_szSkinName));
 }
 
@@ -1023,6 +1022,7 @@ void CBall::State_Enter(ball_state_t newState, bool cancelQueuedState)
 
 	m_pPl = NULL;
 	m_pOtherPl = NULL;
+	m_pSetpieceTaker = NULL;
 
 	if ( mp_showballstatetransitions.GetInt() > 0 )
 	{
@@ -1276,8 +1276,10 @@ void CBall::State_KICKOFF_Enter()
 
 void CBall::State_KICKOFF_Think()
 {
-	if (!CSDKPlayer::IsOnField(m_pPl))
+	if (!CSDKPlayer::IsOnField(m_pPl, SDKGameRules()->GetKickOffTeam()))
 	{
+		m_pPl = NULL;
+
 		m_pPl = FindNearestPlayer(SDKGameRules()->GetKickOffTeam(), FL_POS_ATTACKER | FL_POS_LEFT);
 		if (!m_pPl)
 			m_pPl = FindNearestPlayer(SDKGameRules()->GetKickOffTeam(), FL_POS_ATTACKER | FL_POS_CENTER);
@@ -1297,9 +1299,6 @@ void CBall::State_KICKOFF_Think()
 			m_pPl = FindNearestPlayer(SDKGameRules()->GetKickOffTeam(), FL_POS_DEFENDER | FL_POS_CENTER);
 		if (!m_pPl)
 			m_pPl = FindNearestPlayer(SDKGameRules()->GetKickOffTeam(), FL_POS_DEFENDER | FL_POS_RIGHT);
-
-		if (!m_pPl)
-			m_pPl = FindNearestPlayer(GetGlobalTeam(SDKGameRules()->GetKickOffTeam())->GetOppTeamNumber());
 
 		if (!m_pPl)
 		{
@@ -1325,8 +1324,10 @@ void CBall::State_KICKOFF_Think()
 		}
 	}
 
-	if (!CSDKPlayer::IsOnField(m_pOtherPl) || m_pOtherPl == m_pPl)
+	if (!CSDKPlayer::IsOnField(m_pOtherPl, SDKGameRules()->GetKickOffTeam()) || m_pOtherPl == m_pPl)
 	{
+		m_pOtherPl = NULL;
+
 		m_pOtherPl = FindNearestPlayer(m_pPl->GetTeamNumber(), FL_POS_ATTACKER | FL_POS_RIGHT, false, (1 << (m_pPl->entindex() - 1)));
 		if (!m_pOtherPl)
 			m_pOtherPl = FindNearestPlayer(m_pPl->GetTeamNumber(), FL_POS_ATTACKER | FL_POS_CENTER, false, (1 << (m_pPl->entindex() - 1)));
@@ -1404,9 +1405,15 @@ void CBall::State_THROWIN_Enter()
 
 void CBall::State_THROWIN_Think()
 {
-	if (!CSDKPlayer::IsOnField(m_pPl))
+	if (!CSDKPlayer::IsOnField(m_pPl, LastOppTeam(false)))
 	{
-		m_pPl = FindNearestPlayer(LastOppTeam(false));
+		m_pPl = NULL;
+
+		if (CSDKPlayer::IsOnField(m_pSetpieceTaker, LastOppTeam(false)))
+			m_pPl = m_pSetpieceTaker;
+
+		if (!m_pPl)
+			m_pPl = FindNearestPlayer(LastOppTeam(false));
 		if (!m_pPl)
 			return State_Transition(BALL_STATE_NORMAL);
 
@@ -1484,11 +1491,19 @@ void CBall::State_GOALKICK_Enter()
 
 void CBall::State_GOALKICK_Think()
 {
-	if (!CSDKPlayer::IsOnField(m_pPl))
+	if (!CSDKPlayer::IsOnField(m_pPl, LastOppTeam(false)))
 	{
-		m_pPl = FindNearestPlayer(LastOppTeam(false), FL_POS_KEEPER);
+		m_pPl = NULL;
+
+		if (CSDKPlayer::IsOnField(m_pSetpieceTaker, LastOppTeam(false)))
+			m_pPl = m_pSetpieceTaker;
+
+		if (!m_pPl)
+			m_pPl = FindNearestPlayer(LastOppTeam(false), FL_POS_KEEPER);
+
 		if (!m_pPl)
 			m_pPl = FindNearestPlayer(LastOppTeam(false));
+
 		if (!m_pPl)
 			return State_Transition(BALL_STATE_NORMAL);
 
@@ -1559,20 +1574,16 @@ void CBall::State_CORNER_Enter()
 
 void CBall::State_CORNER_Think()
 {
-	if (!CSDKPlayer::IsOnField(m_pPl))
+	if (!CSDKPlayer::IsOnField(m_pPl, LastOppTeam(false)))
 	{
-		if (sv_ball_assign_setpieces.GetBool())
-		{
-			if (m_vPos.x == GetGlobalTeam(LastTeam(false))->m_vCornerRight.GetX())
-				m_pPl = GetGlobalTeam(LastOppTeam(false))->GetLeftCornerTaker();
-			else
-				m_pPl = GetGlobalTeam(LastOppTeam(false))->GetRightCornerTaker();
-		}
-		else
-			m_pPl = NULL;
-		
+		m_pPl = NULL;
+
+		if (CSDKPlayer::IsOnField(m_pSetpieceTaker, LastOppTeam(false)))
+			m_pPl = m_pSetpieceTaker;
+
 		if (!m_pPl)
 			m_pPl = FindNearestPlayer(LastOppTeam(false));
+
 		if (!m_pPl)
 			return State_Transition(BALL_STATE_NORMAL);
 
@@ -1699,36 +1710,15 @@ void CBall::State_FREEKICK_Enter()
 
 void CBall::State_FREEKICK_Think()
 {
-	if (!CSDKPlayer::IsOnField(m_pPl))
+	if (!CSDKPlayer::IsOnField(m_pPl, m_nFouledTeam))
 	{
-		if ((m_vPos - GetGlobalTeam(m_nFouledTeam)->m_vGoalCenter).Length2D() <= sv_ball_freekickdist_owngoal.GetInt()) // Close to own goal
+		m_pPl = NULL;
+
+		if (CSDKPlayer::IsOnField(m_pSetpieceTaker, m_nFouledTeam))
+			m_pPl = m_pSetpieceTaker;
+
+		if (!m_pPl && (m_vPos - GetGlobalTeam(m_nFouledTeam)->m_vGoalCenter).Length2D() <= sv_ball_freekickdist_owngoal.GetInt()) // Close to own goal
 			m_pPl = FindNearestPlayer(m_nFouledTeam, FL_POS_KEEPER);
-		else if (abs(m_vPos.y - GetGlobalTeam(m_nFoulingTeam)->m_vGoalCenter.GetY()) <= sv_ball_freekickdist_opponentgoal.GetInt()) // Close to opponent's goal
-		{
-			if (sv_ball_assign_setpieces.GetBool())
-			{
-				Vector2D dirToPl = (m_vPos - GetGlobalTeam(m_nFoulingTeam)->m_vGoalCenter).AsVector2D();
-				dirToPl.NormalizeInPlace();
-				Vector2D yDir = Vector2D(0, GetGlobalTeam(m_nFoulingTeam)->m_nForward);
-
-				if (RAD2DEG(acos(DotProduct2D(yDir, dirToPl))) <= sv_ball_freekickangle_opponentgoal.GetInt())
-				{
-					m_pPl = GetGlobalTeam(m_nFouledTeam)->GetFreekickTaker();
-				}
-				else
-				{
-					if (abs(GetGlobalTeam(m_nFoulingTeam)->m_vCornerRight.GetX() - m_vPos.x) < abs(GetGlobalTeam(m_nFoulingTeam)->m_vCornerLeft.GetX() - m_vPos.x))
-						m_pPl = GetGlobalTeam(m_nFouledTeam)->GetLeftCornerTaker();
-					else
-						m_pPl = GetGlobalTeam(m_nFouledTeam)->GetRightCornerTaker();
-				}
-			}
-
-			if (!CSDKPlayer::IsOnField(m_pPl))
-				m_pPl = m_pFouledPl;
-		}
-		else
-			m_pPl = NULL;
 
 		if (!CSDKPlayer::IsOnField(m_pPl) || m_pPl->GetTeamPosType() == POS_GK && m_pPl->IsBot())
 			m_pPl = FindNearestPlayer(m_nFouledTeam, FL_POS_FIELD);
@@ -1810,12 +1800,15 @@ void CBall::State_PENALTY_Think()
 {
 	bool takerHasChanged = false;
 
-	if (!CSDKPlayer::IsOnField(m_pPl))
+	if (!CSDKPlayer::IsOnField(m_pPl, m_nFouledTeam))
 	{
+		m_pPl = NULL;
+
 		if (SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES)
 		{
 			m_pPl = m_pFouledPl;
-			if (!CSDKPlayer::IsOnField(m_pPl))
+
+			if (!CSDKPlayer::IsOnField(m_pPl, m_nFouledTeam))
 			{
 				m_ePenaltyState = PENALTY_ABORTED_NO_TAKER;
 				return State_Transition(BALL_STATE_NORMAL);
@@ -1823,10 +1816,8 @@ void CBall::State_PENALTY_Think()
 		}
 		else
 		{
-			if (sv_ball_assign_setpieces.GetBool())
-				m_pPl = GetGlobalTeam(m_nFouledTeam)->GetPenaltyTaker();
-			else
-				m_pPl = NULL;
+			if (CSDKPlayer::IsOnField(m_pSetpieceTaker, m_nFouledTeam))
+				m_pPl = m_pSetpieceTaker;
 
 			if (!m_pPl)
 				m_pPl = m_pFouledPl;
@@ -1934,13 +1925,14 @@ void CBall::State_KEEPERHANDS_Think()
 	if (m_eNextState == BALL_STATE_GOAL)
 		return;
 
-	if (!CSDKPlayer::IsOnField(m_pPl))
+	if (!CSDKPlayer::IsOnField(m_pPl, m_nInPenBoxOfTeam))
 	{
+		m_pPl = NULL;
+
 		m_pPl = FindNearestPlayer(m_nInPenBoxOfTeam, FL_POS_KEEPER);
+
 		if (!m_pPl)
-		{
 			return State_Transition(BALL_STATE_NORMAL);
-		}
 
 		if (!SDKGameRules()->IsIntermissionState() && !m_bHasQueuedState && SDKGameRules()->State_Get() != MATCH_PERIOD_PENALTIES)
 		{
@@ -3483,6 +3475,7 @@ void CBall::Reset()
 	m_bNonnormalshotsBlocked = false;
 	m_bShotsBlocked = false;
 	m_bHitThePost = false;
+	m_pSetpieceTaker = NULL;
 }
 
 void CBall::ReloadSettings()

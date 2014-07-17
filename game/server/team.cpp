@@ -67,10 +67,6 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CTeam, DT_Team)
 	SendPropInt(SENDINFO(m_nForward), 2),
 	SendPropInt(SENDINFO(m_nRight), 2),
 	SendPropIntWithMinusOneFlag(SENDINFO(m_nCaptainPosIndex), 4),
-	SendPropIntWithMinusOneFlag(SENDINFO(m_nFreekickTakerPosIndex), 4),
-	SendPropIntWithMinusOneFlag(SENDINFO(m_nPenaltyTakerPosIndex), 4),
-	SendPropIntWithMinusOneFlag(SENDINFO(m_nLeftCornerTakerPosIndex), 4),
-	SendPropIntWithMinusOneFlag(SENDINFO(m_nRightCornerTakerPosIndex), 4),
 
 	SendPropArray2( 
 		SendProxyArrayLength_PlayerArray,
@@ -306,10 +302,6 @@ void CTeam::UpdatePosIndices(bool reset)
 	if (reset)
 	{
 		SetCaptainPosIndex(-1);
-		SetFreekickTakerPosIndex(-1);
-		SetPenaltyTakerPosIndex(-1);
-		SetLeftCornerTakerPosIndex(-1);
-		SetRightCornerTakerPosIndex(-1);
 		UnblockAllPos();
 	}
 }
@@ -541,28 +533,6 @@ void CTeam::ResetStats()
 	}
 
 	m_MatchPeriodData.PurgeAndDeleteElements();
-}
-
-void CTeam::FindNewCaptain()
-{
-	if (GetTeamNumber() != TEAM_A && GetTeamNumber() != TEAM_B)
-		return;
-
-	SetCaptainPosIndex(0);
-
-	for (int i = 1; i <= gpGlobals->maxClients; i++)
-	{
-		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
-
-		if (!CSDKPlayer::IsOnField(pPl) || pPl->GetTeam() != this)
-			continue;
-
-		if (pPl->GetTeamPosType() == POS_GK)
-		{
-			SetCaptainPosIndex(pPl->GetTeamPosIndex());
-			break;
-		}
-	}
 }
 
 void CTeam::AddMatchEvent(match_period_t matchPeriod, int seconds, match_event_t event, const char *text)

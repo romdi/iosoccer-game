@@ -208,6 +208,8 @@ public:
 	const char		*GetSkinName() { return m_szSkinName; }
 	void			SetSkinName(const char *skinName);
 
+	void			SetSetpieceTaker(CSDKPlayer *pPlayer) { m_pSetpieceTaker = pPlayer; m_pPl = NULL; }
+
 private:
 
 	void State_STATIC_Enter();			void State_STATIC_Think();			void State_STATIC_Leave(ball_state_t newState);
@@ -325,6 +327,8 @@ private:
 	bool			m_bHitThePost;
 
 	CHandle<CSpriteTrail> m_pGlowTrail;
+
+	CHandle<CSDKPlayer>	m_pSetpieceTaker;
 };
 
 #endif

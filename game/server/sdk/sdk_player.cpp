@@ -1117,90 +1117,6 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 
 		return true;
 	}
-	else if (!Q_stricmp(args[0], "setfreekicktaker"))
-	{
-		if (this != GetTeam()->GetCaptain())
-			return true;
-
-		int posIndex = atoi(args[1]);
-
-		// Toggle off
-		if (GetTeam()->GetFreekickTakerPosIndex() == posIndex)
-			posIndex = -1;
-
-		GetTeam()->SetFreekickTakerPosIndex(posIndex);
-		return true;
-	}
-	else if (!Q_stricmp(args[0], "setpenaltytaker"))
-	{
-		if (this != GetTeam()->GetCaptain())
-			return true;
-
-		int posIndex = atoi(args[1]);
-
-		// Toggle off
-		if (GetTeam()->GetPenaltyTakerPosIndex() == posIndex)
-			posIndex = -1;
-
-		GetTeam()->SetPenaltyTakerPosIndex(posIndex);
-		return true;
-	}
-	else if (!Q_stricmp(args[0], "setleftcornertaker"))
-	{
-		if (this != GetTeam()->GetCaptain())
-			return true;
-
-		int posIndex = atoi(args[1]);
-
-		// Toggle off
-		if (GetTeam()->GetLeftCornerTakerPosIndex() == posIndex)
-			posIndex = -1;
-
-		GetTeam()->SetLeftCornerTakerPosIndex(posIndex);
-		return true;
-	}
-	else if (!Q_stricmp(args[0], "setrightcornertaker"))
-	{
-		if (this != GetTeam()->GetCaptain())
-			return true;
-
-		int posIndex = atoi(args[1]);
-
-		// Toggle off
-		if (GetTeam()->GetRightCornerTakerPosIndex() == posIndex)
-			posIndex = -1;
-
-		GetTeam()->SetRightCornerTakerPosIndex(posIndex);
-		return true;
-	}
-	else if (!Q_stricmp(args[0], "formation"))
-	{
-		if (args.ArgC() < 2)
-			return true;
-
-		if (this != GetTeam()->GetCaptain())
-			return true;
-
-		GetTeam()->SetFormationIndex(atoi(args[1]), false);
-		return true;
-	}
-	else if (!Q_stricmp(args[0], "quicktactic"))
-	{
-		if (args.ArgC() < 2)
-			return true;
-
-		if (this != GetTeam()->GetCaptain())
-			return true;
-
-		QuickTactics_t quickTactic = (QuickTactics_t)atoi(args[1]);
-
-		if (quickTactic == QUICKTACTIC_NONE || quickTactic == GetTeam()->GetQuickTactic())
-			GetTeam()->SetQuickTactic(QUICKTACTIC_NONE);
-		else
-			GetTeam()->SetQuickTactic(quickTactic);
-
-		return true;
-	}
 	else if (!Q_strcmp(args[0], "emote"))
 	{
 		if (args.ArgC() < 2)
@@ -1214,6 +1130,23 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 
 			gameeventmanager->FireEvent(event);
 		}
+
+		return true;
+	}
+	else if (!Q_strcmp(args[0], "settaker"))
+	{
+		if (args.ArgC() < 2)
+			return false;
+
+		if (this != GetTeam()->GetCaptain())
+			return true;
+
+		int playerIndex = atoi(args[1]);
+
+		CSDKPlayer *pPl = (CSDKPlayer*)UTIL_PlayerByIndex(playerIndex);
+
+		if (pPl && pPl->GetTeam() == GetTeam())
+			GetBall()->SetSetpieceTaker(pPl);
 
 		return true;
 	}
@@ -1525,9 +1458,11 @@ void CSDKPlayer::GetTargetPos(const Vector &pos, Vector &targetPos)
 		targetPos = pos;
 }
 
-bool CSDKPlayer::IsOnField(CSDKPlayer *pPl)
+bool CSDKPlayer::IsOnField(CSDKPlayer *pPl, int teamNumber/* = TEAM_UNASSIGNED*/)
 {
-	return (pPl && pPl->IsConnected() && (pPl->GetTeamNumber() == TEAM_A || pPl->GetTeamNumber() == TEAM_B));
+	return (pPl && pPl->IsConnected() // Is on server
+		&& ((teamNumber == TEAM_UNASSIGNED && (pPl->GetTeamNumber() == TEAM_A || pPl->GetTeamNumber() == TEAM_B)) // No specific team given - is on field
+			|| (teamNumber != TEAM_UNASSIGNED && pPl->GetTeamNumber() == teamNumber))); // Specific team given - is in this team
 }
 
 bool CSDKPlayer::IsOffside()
