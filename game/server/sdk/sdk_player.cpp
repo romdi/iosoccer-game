@@ -1585,6 +1585,11 @@ bool CSDKPlayer::IsShooting()
 	return IsNormalshooting() || IsPowershooting() || IsChargedshooting();
 }
 
+bool CSDKPlayer::CanShoot()
+{
+	return gpGlobals->curtime >= m_flNextShot;
+}
+
 bool CSDKPlayer::ShotButtonsPressed()
 {
 	return ((m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1 | IN_ALT2))) != 0);

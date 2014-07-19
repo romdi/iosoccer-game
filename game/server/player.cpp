@@ -5379,12 +5379,16 @@ void SendProxy_CropFlagsToPlayerFlagBitsLength( const SendProp *pProp, const voi
 // Player Physics Shadow Code
 //
 
+ConVar sv_player_mass("sv_player_mass", "75", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
+ConVar sv_player_pushmasslimit("sv_player_pushmasslimit", "10000", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
+ConVar sv_player_pushspeedlimit("sv_player_pushspeedlimit", "10000", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
+
 void CBasePlayer::SetupVPhysicsShadow( const Vector &vecAbsOrigin, const Vector &vecAbsVelocity, CPhysCollide *pStandModel, const char *pStandHullName, CPhysCollide *pCrouchModel, const char *pCrouchHullName )
 {
 	solid_t solid;
 	Q_strncpy( solid.surfaceprop, "player", sizeof(solid.surfaceprop) );
 	solid.params = g_PhysDefaultObjectParams;
-	solid.params.mass = 100000;
+	solid.params.mass = sv_player_mass.GetFloat();
 	solid.params.inertia = 1e24f;
 	solid.params.enableCollisions = true;
 	//disable drag
@@ -5405,8 +5409,8 @@ void CBasePlayer::SetupVPhysicsShadow( const Vector &vecAbsOrigin, const Vector 
 	// tell physics lists I'm a shadow controller object
 	PhysAddShadow( this );	
 	m_pPhysicsController = physenv->CreatePlayerController( m_pShadowStand );
-	m_pPhysicsController->SetPushMassLimit( 10000.0f );
-	m_pPhysicsController->SetPushSpeedLimit( 10000.0f );
+	m_pPhysicsController->SetPushMassLimit( sv_player_pushmasslimit.GetFloat() );
+	m_pPhysicsController->SetPushSpeedLimit( sv_player_pushspeedlimit.GetFloat() );
 	
 	// Give the controller a valid position so it doesn't do anything rash.
 	UpdatePhysicsShadowToPosition( vecAbsOrigin );

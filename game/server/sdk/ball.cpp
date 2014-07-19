@@ -40,6 +40,7 @@ ConVar sv_ball_backspin_coeff( "sv_ball_backspin_coeff", "0.25", FCVAR_NOTIFY );
 ConVar sv_ball_curve("sv_ball_curve", "200", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
 
 ConVar sv_ball_deflectionradius( "sv_ball_deflectionradius", "30", FCVAR_NOTIFY );
+ConVar sv_ball_collisionradius( "sv_ball_collisionradius", "15", FCVAR_NOTIFY );
 
 ConVar sv_ball_standing_reach_min( "sv_ball_standing_reach_min", "30", FCVAR_NOTIFY );
 ConVar sv_ball_standing_reach_max( "sv_ball_standing_reach_max", "50", FCVAR_NOTIFY );
@@ -201,6 +202,7 @@ ConVar sv_ball_yellowcardballdist_backward("sv_ball_yellowcardballdist_backward"
 ConVar sv_ball_goalreplay_count("sv_ball_goalreplay_count", "2", FCVAR_NOTIFY);
 ConVar sv_ball_goalreplay_delay("sv_ball_goalreplay_delay", "1", FCVAR_NOTIFY);
 ConVar sv_ball_deflectioncoeff("sv_ball_deflectioncoeff", "0.5", FCVAR_NOTIFY);
+ConVar sv_ball_collisioncoeff("sv_ball_collisioncoeff", "0.75", FCVAR_NOTIFY);
 ConVar sv_ball_update_physics("sv_ball_update_physics", "0", FCVAR_NOTIFY);
 
 ConVar sv_ball_stats_pass_mindist("sv_ball_stats_pass_mindist", "300", FCVAR_NOTIFY);
@@ -605,7 +607,8 @@ void CBall::VPhysicsUpdate(IPhysicsObject *pPhysics)
 void CBall::VPhysicsCollision( int index, gamevcollisionevent_t	*pEvent	)
 {
 	Vector preVelocity = pEvent->preVelocity[index];
-	float flSpeed =	VectorNormalize( preVelocity );
+	Vector preDir = preVelocity;
+	float flSpeed =	VectorNormalize(preDir);
 	int surfaceProps = pEvent->surfaceProps[!index];
 
 	//IOS goal post hacks!!
@@ -658,10 +661,6 @@ void CBall::VPhysicsCollision( int index, gamevcollisionevent_t	*pEvent	)
 
 		EmitSound("Ball.Touch");
 	}
-
-	//Warning ("surfaceprops index %d\n", surfaceProps);
-
-	BaseClass::VPhysicsCollision( index, pEvent );
 }
 
 CSDKPlayer *CBall::FindNearestPlayer(int team /*= TEAM_INVALID*/, int posFlags /*= FL_POS_FIELD*/, bool checkIfShooting /*= false*/, int ignoredPlayerBits /*= 0*/, float radius /*= -1*/)
@@ -711,7 +710,7 @@ CSDKPlayer *CBall::FindNearestPlayer(int team /*= TEAM_INVALID*/, int posFlags /
 		if (team != TEAM_INVALID && pPlayer->GetTeamNumber() != team)
 			continue;
 
-		if (checkIfShooting && (!pPlayer->IsShooting() || pPlayer->m_flNextShot > gpGlobals->curtime))
+		if (checkIfShooting && (!pPlayer->IsShooting() || !pPlayer->CanShoot()))
 			continue;
 
 		if (radius != -1 && (pPlayer->GetLocalOrigin() - m_vPos).Length2DSqr() > Sqr(radius))
@@ -1231,7 +1230,7 @@ void CBall::State_NORMAL_Think()
 
 		for (int ignoredPlayerBits = 0;;)
 		{
-			m_pPl = FindNearestPlayer(TEAM_INVALID, FL_POS_ANY, true, ignoredPlayerBits, sv_ball_maxcheckdist.GetFloat());
+			m_pPl = FindNearestPlayer(TEAM_INVALID, FL_POS_ANY, false, ignoredPlayerBits, sv_ball_maxcheckdist.GetFloat());
 
 			if (!m_pPl)
 				return;
@@ -2007,7 +2006,7 @@ void CBall::State_KEEPERHANDS_Think()
 
 	Vector vel;
 
-	if (m_pPl->ShotButtonsReleased() && (m_pPl->IsPowershooting() || m_pPl->IsChargedshooting()) && m_pPl->m_flNextShot <= gpGlobals->curtime)
+	if (m_pPl->ShotButtonsReleased() && (m_pPl->IsPowershooting() || m_pPl->IsChargedshooting()) && m_pPl->CanShoot())
 	{
 		float spin;
 
@@ -2271,6 +2270,8 @@ void CBall::HandleFoul()
 	}
 }
 
+extern ConVar sv_player_mass;
+
 bool CBall::DoBodyPartAction()
 {
 	Vector dirToBall = m_vPos - m_vPlPos;
@@ -2282,6 +2283,7 @@ bool CBall::DoBodyPartAction()
 	bool canCatch = false;
 
 	if (m_pPl->IsNormalshooting()
+		&& m_pPl->CanShoot()
 		&& m_pPl->GetTeamPosType() == POS_GK
 		&& m_nInPenBoxOfTeam == m_pPl->GetTeamNumber()
 		&& !m_pPl->m_pHoldingBall
@@ -2331,23 +2333,55 @@ bool CBall::DoBodyPartAction()
 				}
 			}
 		}
+
+		if (canCatch && CheckKeeperCatch())
+			return true;
 	}
 
-	if (canCatch)
-		return CheckKeeperCatch();
+	bool deflect = false;
+	float deflectCoeff = 1.0f;
 
-	if (gpGlobals->curtime < m_flGlobalLastShot + m_flGlobalDynamicShotDelay * sv_ball_shotdelay_global_coeff.GetFloat())
+	if ((!m_pPl->IsShooting() || !m_pPl->CanShoot()) && zDist >= sv_ball_bodypos_feet_start.GetFloat() && zDist < sv_ball_bodypos_head_end.GetFloat() && xyDist <= sv_ball_collisionradius.GetFloat())
 	{
-		if (zDist >= sv_ball_bodypos_feet_start.GetFloat() && zDist < sv_ball_bodypos_head_end.GetFloat() && xyDist <= sv_ball_deflectionradius.GetInt())
+		deflect = true;
+		deflectCoeff = sv_ball_collisioncoeff.GetFloat();
+	}
+	else if (m_pPl->IsShooting() && m_pPl->CanShoot())
+	{
+		if (gpGlobals->curtime < m_flGlobalLastShot + m_flGlobalDynamicShotDelay * sv_ball_shotdelay_global_coeff.GetFloat())
 		{
-			Vector dir = dirToBall;
-			dir.z = 0;
-			dir.NormalizeInPlace();
-			Vector vel = sv_ball_deflectioncoeff.GetFloat() * (m_vVel - 2 * DotProduct(m_vVel, dir) * dir);
-			SetVel(vel, -1, 0, BODY_PART_UNKNOWN, true, false, false);
-
-			return true;
+			if (zDist >= sv_ball_bodypos_feet_start.GetFloat() && zDist < sv_ball_bodypos_head_end.GetFloat() && xyDist <= sv_ball_deflectionradius.GetFloat())
+			{
+				deflect = true;
+				deflectCoeff = sv_ball_deflectioncoeff.GetFloat();
+			}
+			else
+				return false;
 		}
+	}
+	else
+		return false;
+
+	if (deflect)
+	{
+		// http://gamedev.stackexchange.com/a/15936
+		Vector dir = dirToBall;
+		dir.z = 0;
+		dir.NormalizeInPlace();
+		Vector v1 = m_vVel;
+		//v1.z = 0;
+		Vector v2 = m_vPlVel;
+		//v2.z = 0;
+		float a1 = v1.Dot(dir);
+		float a2 = v2.Dot(dir);
+		float optimizedP = (2 * (a1 - a2)) / (sv_ball_mass.GetFloat() + sv_player_mass.GetFloat());
+		Vector vel = v1 - optimizedP * sv_player_mass.GetFloat() * dir;
+		vel *= deflectCoeff;
+		//Vector plvel = v2 + optimizedP * sv_ball_mass.GetFloat() * dir;
+		//DevMsg("a1: %.2f, a2: %.2f, vel: %.2f, plvel: %.2f\n", a1, a2, vel.Length(), plvel.Length());
+
+		if (optimizedP < 0)
+			SetVel(vel, -1, 0, BODY_PART_UNKNOWN, true, false, false);
 
 		return false;
 	}

@@ -832,7 +832,7 @@ void CSDKGameRules::LevelShutdown()
 
 #endif
 
-ConVar mp_ball_player_collision("mp_ball_player_collision", "1", FCVAR_ARCHIVE | FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_ball_player_collision("mp_ball_player_collision", "0", FCVAR_NOTIFY | FCVAR_REPLICATED);
 
 bool CSDKGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 {
@@ -845,8 +845,14 @@ bool CSDKGameRules::ShouldCollide( int collisionGroup0, int collisionGroup1 )
 	if (collisionGroup0 == COLLISION_GROUP_NONSOLID_PLAYER || collisionGroup1 == COLLISION_GROUP_NONSOLID_PLAYER)
 		return false;
 
+	if (collisionGroup0 == COLLISION_GROUP_NONSOLID_BALL ||
+		collisionGroup1 == COLLISION_GROUP_NONSOLID_BALL)
+	{
+		return false;
+	}
+
 	if ( (collisionGroup0 == COLLISION_GROUP_PLAYER || collisionGroup0 == COLLISION_GROUP_PLAYER_MOVEMENT) &&
-		collisionGroup1 == COLLISION_GROUP_PUSHAWAY )
+		collisionGroup1 == COLLISION_GROUP_SOLID_BALL )
 	{
 		if (mp_ball_player_collision.GetBool())
 			return true;

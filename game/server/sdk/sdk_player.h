@@ -568,6 +568,7 @@ public:
 	bool				IsPowershooting();
 	bool				IsChargedshooting();
 	bool				IsShooting();
+	bool				CanShoot();
 	CSDKPlayer			*FindClosestPlayerToSelf(bool teammatesOnly, bool forwardOnly = false, float maxYawAngle = 360);
 
 	CNetworkHandle(CBall, m_pHoldingBall);
