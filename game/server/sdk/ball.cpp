@@ -2426,7 +2426,17 @@ bool CBall::DoBodyPartAction()
 		vel *= deflectCoeff;
 
 		if (optimizedP < 0)
-			SetVel(vel, -1, 0, BODY_PART_UNKNOWN, true, false, false);
+		{
+			if (m_vVel.Length() > 900.0f)
+				m_pPl->EmitSound ("Player.Oomph");
+
+			Touched(m_pPl, false, BODY_PART_UNKNOWN, m_vVel);
+
+			EmitSound("Ball.Touch");
+			m_vVel = vel;
+			m_pPhys->SetVelocity(&m_vVel, &m_vRot);
+			m_bSetNewVel = true;
+		}
 
 		return false;
 	}
