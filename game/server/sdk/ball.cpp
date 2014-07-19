@@ -2278,6 +2278,33 @@ void CBall::HandleFoul()
 	}
 }
 
+bool CBall::IsInDeflectRange(bool isCollision)
+{
+	Vector dirToBall = m_vPos - m_vPlPos;
+	Vector localDirToBall;
+	VectorIRotate(dirToBall, m_pPl->EntityToWorldTransform(), localDirToBall);
+	float zDist = dirToBall.z;
+	float xyDist = dirToBall.Length2D();
+	float radius = isCollision ? sv_ball_collisionradius.GetFloat() : sv_ball_deflectionradius.GetFloat();
+
+	if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_SLIDE || m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_DIVINGHEADER)
+	{
+		float padding = isCollision ? -15 : 0;
+
+		return zDist < sv_ball_slidezend.GetFloat() + padding
+			&& zDist >= sv_ball_slidezstart.GetFloat() - padding
+			&& localDirToBall.x >= -sv_ball_slideforwardreach_ball.GetFloat() - padding
+			&& localDirToBall.x <= sv_ball_slideforwardreach_ball.GetFloat() + padding
+			&& abs(localDirToBall.y) <= sv_ball_slidesidereach_ball.GetFloat() + padding;
+	}
+	else
+	{
+		return zDist >= sv_ball_bodypos_feet_start.GetFloat() && zDist < sv_ball_bodypos_head_end.GetFloat() && xyDist <= radius;
+	}
+
+	return false;
+}
+
 extern ConVar sv_player_mass;
 
 bool CBall::DoBodyPartAction()
@@ -2287,8 +2314,7 @@ bool CBall::DoBodyPartAction()
 	VectorIRotate(dirToBall, m_pPl->EntityToWorldTransform(), localDirToBall);
 	float zDist = dirToBall.z;
 	float xyDist = dirToBall.Length2D();
-
-	bool canCatch = false;
+	bool canLegallyCatch = false;
 
 	if (m_pPl->IsNormalshooting()
 		&& m_pPl->CanShoot()
@@ -2299,7 +2325,7 @@ bool CBall::DoBodyPartAction()
 	{
 		if (SDKGameRules()->IsIntermissionState() || SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES)
 		{
-			canCatch = true;
+			canLegallyCatch = true;
 		}
 		else
 		{
@@ -2312,7 +2338,7 @@ bool CBall::DoBodyPartAction()
 				// Can catch if opponent has touched or shot the ball
 				if (pLastTouch->m_nTeam != m_pPl->GetTeamNumber() || pLastShot->m_nTeam != m_pPl->GetTeamNumber())
 				{
-					canCatch = true;
+					canLegallyCatch = true;
 				}
 				else
 				{
@@ -2328,7 +2354,7 @@ bool CBall::DoBodyPartAction()
 									if (m_Touches[j]->m_bIsShot)
 									{
 										if (m_Touches[j]->m_nTeam != pLastTouch->m_nTeam)
-											canCatch = true;
+											canLegallyCatch = true;
 
 										break;
 									}
@@ -2342,14 +2368,16 @@ bool CBall::DoBodyPartAction()
 			}
 		}
 
-		if (canCatch && CheckKeeperCatch())
-			return true;
+		// The keeper wants and is allowed to catch the ball, so either he's close enough to do so or we can jump out here
+		if (canLegallyCatch)
+			return CheckKeeperCatch();
 	}
 
+	bool isInDeflectDist = false;
 	bool deflect = false;
 	float deflectCoeff = 1.0f;
 
-	if ((!m_pPl->IsShooting() || !m_pPl->CanShoot()) && zDist >= sv_ball_bodypos_feet_start.GetFloat() && zDist < sv_ball_bodypos_head_end.GetFloat() && xyDist <= sv_ball_collisionradius.GetFloat())
+	if ((!m_pPl->IsShooting() || !m_pPl->CanShoot()) && IsInDeflectRange(true))
 	{
 		deflect = true;
 		deflectCoeff = sv_ball_collisioncoeff.GetFloat();
@@ -2358,7 +2386,7 @@ bool CBall::DoBodyPartAction()
 	{
 		if (gpGlobals->curtime < m_flGlobalLastShot + m_flGlobalDynamicShotDelay * sv_ball_shotdelay_global_coeff.GetFloat())
 		{
-			if (zDist >= sv_ball_bodypos_feet_start.GetFloat() && zDist < sv_ball_bodypos_head_end.GetFloat() && xyDist <= sv_ball_deflectionradius.GetFloat())
+			if (IsInDeflectRange(false))
 			{
 				deflect = true;
 				deflectCoeff = sv_ball_deflectioncoeff.GetFloat();
@@ -2373,20 +2401,29 @@ bool CBall::DoBodyPartAction()
 	if (deflect)
 	{
 		// http://gamedev.stackexchange.com/a/15936
-		Vector dir = dirToBall;
-		dir.z = 0;
-		dir.NormalizeInPlace();
+		Vector normal;
+
+		if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_SLIDE || m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_DIVINGHEADER)
+		{
+			normal = localDirToBall.y > 0 ? -m_vPlRight : m_vPlRight;
+			QAngle ang;
+			VectorAngles((m_vPos - (m_vPlPos + m_flPhysRadius)), ang);
+			VectorRotate(normal, QAngle(ang[PITCH], 0, 0), normal);
+		}
+		else
+		{
+			normal = dirToBall;
+			normal.z = 0;
+		}
+
+		normal.NormalizeInPlace();
 		Vector v1 = m_vVel;
-		//v1.z = 0;
 		Vector v2 = m_vPlVel;
-		//v2.z = 0;
-		float a1 = v1.Dot(dir);
-		float a2 = v2.Dot(dir);
+		float a1 = v1.Dot(normal);
+		float a2 = v2.Dot(normal);
 		float optimizedP = (2 * (a1 - a2)) / (sv_ball_mass.GetFloat() + sv_player_mass.GetFloat());
-		Vector vel = v1 - optimizedP * sv_player_mass.GetFloat() * dir;
+		Vector vel = v1 - optimizedP * sv_player_mass.GetFloat() * normal;
 		vel *= deflectCoeff;
-		//Vector plvel = v2 + optimizedP * sv_ball_mass.GetFloat() * dir;
-		//DevMsg("a1: %.2f, a2: %.2f, vel: %.2f, plvel: %.2f\n", a1, a2, vel.Length(), plvel.Length());
 
 		if (optimizedP < 0)
 			SetVel(vel, -1, 0, BODY_PART_UNKNOWN, true, false, false);
