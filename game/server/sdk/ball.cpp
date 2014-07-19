@@ -197,6 +197,9 @@ ConVar sv_ball_bodypos_keeperarms_end("sv_ball_bodypos_keeperarms_end", "105", F
 
 ConVar sv_ball_bodypos_keeperhands("sv_ball_bodypos_keeperhands", "40", FCVAR_NOTIFY);
 
+ConVar sv_ball_bodypos_collision_start("sv_ball_bodypos_collision_start", "15", FCVAR_NOTIFY);
+ConVar sv_ball_bodypos_collision_end("sv_ball_bodypos_collision_end", "75", FCVAR_NOTIFY);
+
 ConVar sv_ball_yellowcardballdist_forward("sv_ball_yellowcardballdist_forward", "50", FCVAR_NOTIFY);
 ConVar sv_ball_yellowcardballdist_backward("sv_ball_yellowcardballdist_backward", "25", FCVAR_NOTIFY);
 ConVar sv_ball_goalreplay_count("sv_ball_goalreplay_count", "2", FCVAR_NOTIFY);
@@ -2299,7 +2302,7 @@ bool CBall::IsInDeflectRange(bool isCollision)
 	}
 	else
 	{
-		return zDist >= sv_ball_bodypos_feet_start.GetFloat() && zDist < sv_ball_bodypos_head_end.GetFloat() && xyDist <= radius;
+		return zDist >= sv_ball_bodypos_collision_start.GetFloat() && zDist < sv_ball_bodypos_collision_end.GetFloat() && xyDist <= radius;
 	}
 
 	return false;
