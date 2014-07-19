@@ -193,6 +193,7 @@ public:
 	CNetworkVar(int, m_nInPenBoxOfTeam);
 	CNetworkVar(int, m_nModelScale);
 	CNetworkVar(bool, m_bShotButtonsReleased);
+	CNetworkVar(bool, m_bIsPressured);
 
 	CHandle<C_Ball> m_pHoldingBall;
 

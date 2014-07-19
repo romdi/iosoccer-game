@@ -171,7 +171,12 @@ extern ConVar
 	mp_ball_mass_fix_enabled,
 	mp_player_bbox_xy,
 	mp_player_bbox_z,
-	mp_no_ball_unstuck;
+	mp_no_ball_unstuck,
+	mp_player_pressure_enabled,
+	mp_player_pressure_dist,
+	mp_player_pressure_effect_pitch,
+	mp_player_pressure_effect_yaw,
+	mp_player_pressure_effect_roll;
 
 //--------------------------------------------------------------------------------------------------------
 //

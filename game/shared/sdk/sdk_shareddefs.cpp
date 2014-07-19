@@ -163,6 +163,12 @@ ConVar mp_ball_mass_fix_enabled("mp_ball_mass_fix_enabled", "1", FCVAR_REPLICATE
 
 ConVar mp_no_ball_unstuck("mp_no_ball_unstuck", "1", FCVAR_REPLICATED | FCVAR_NOTIFY);
 
+ConVar mp_player_pressure_enabled("mp_player_pressure_enabled", "1", FCVAR_REPLICATED | FCVAR_NOTIFY);
+ConVar mp_player_pressure_dist("mp_player_pressure_dist", "60", FCVAR_REPLICATED | FCVAR_NOTIFY);
+ConVar mp_player_pressure_effect_pitch("mp_player_pressure_effect_pitch", "4", FCVAR_REPLICATED | FCVAR_NOTIFY);
+ConVar mp_player_pressure_effect_yaw("mp_player_pressure_effect_yaw", "4", FCVAR_REPLICATED | FCVAR_NOTIFY);
+ConVar mp_player_pressure_effect_roll("mp_player_pressure_effect_roll", "2", FCVAR_REPLICATED | FCVAR_NOTIFY);
+
 // basic team colors
 Color g_ColorRed(255, 153, 153, 255);
 Color g_ColorBlue(161, 190, 230, 255);

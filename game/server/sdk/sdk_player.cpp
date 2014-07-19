@@ -158,6 +158,7 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayer, DT_SDKLocalPlayerExclusive )
 	SendPropTime( SENDINFO( m_flNextClientSettingsChangeTime ) ),
 	SendPropTime(SENDINFO(m_flNextJoin)),
 	SendPropBool(SENDINFO(m_bShotButtonsReleased)),
+	SendPropBool(SENDINFO(m_bIsPressured)),
 END_SEND_TABLE()
 
 BEGIN_SEND_TABLE_NOBASE( CSDKPlayer, DT_SDKNonLocalPlayerExclusive )
@@ -314,6 +315,7 @@ CSDKPlayer::CSDKPlayer()
 
 	m_pCurStateInfo = NULL;	// no state yet
 	m_bShotButtonsReleased = false;
+	m_bIsPressured = false;
 	m_nTeamToJoin = TEAM_INVALID;
 	m_nTeamPosIndexToJoin = 0;
 	m_nSpecTeamToJoin = TEAM_SPECTATOR;
@@ -1553,6 +1555,7 @@ void CSDKPlayer::ResetFlags()
 	m_bIsOffside = false;
 	m_ePenaltyState = PENALTY_NONE;
 	m_flRemoteControlledStartTime = -1;
+	m_bIsPressured = false;
 
 	if (GetPlayerBall())
 		GetPlayerBall()->RemovePlayerBall();
@@ -1603,6 +1606,16 @@ bool CSDKPlayer::ShotButtonsReleased()
 void CSDKPlayer::SetShotButtonsReleased(bool released)
 {
 	m_bShotButtonsReleased = released;
+}
+
+bool CSDKPlayer::IsPressured()
+{
+	return m_bIsPressured;
+}
+
+void CSDKPlayer::SetPressured(bool pressured)
+{
+	m_bIsPressured = pressured;
 }
 
 CSDKPlayer *CSDKPlayer::FindClosestPlayerToSelf(bool teammatesOnly, bool forwardOnly /*= false*/, float maxYawAngle /*= 360*/)

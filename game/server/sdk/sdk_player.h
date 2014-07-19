@@ -483,6 +483,9 @@ public:
 	virtual bool		ShotButtonsReleased();
 	virtual void		SetShotButtonsReleased(bool released);
 
+	bool				IsPressured();
+	void				SetPressured(bool pressured);
+
 	void				LookAtBall(void);
 
 	float				m_flRemoteControlledStartTime;
@@ -542,6 +545,7 @@ public:
 	CNetworkVar(int, m_nInPenBoxOfTeam);
 	CNetworkVar(int, m_nModelScale);
 	CNetworkVar(bool, m_bShotButtonsReleased);
+	CNetworkVar(bool, m_bIsPressured);
 
 	static bool			IsOnField(CSDKPlayer *pPl, int teamNumber = TEAM_UNASSIGNED);
 
