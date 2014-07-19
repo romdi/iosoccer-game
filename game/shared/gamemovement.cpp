@@ -1607,7 +1607,7 @@ bool CGameMovement::CheckPlayerAnimEvent()
 			else
 				mv->m_vecVelocity = forward * mv->m_flForwardMove + right * mv->m_flSideMove;
 
-			if (!(mv->m_nButtons & IN_JUMP))
+			if (mv->m_nButtons & IN_ATTACK)
 				pPl->AddFlag(FL_FREECAM);
 
 			break;
@@ -1963,6 +1963,9 @@ bool CGameMovement::CheckJumpButton( void )
 		{
 			animEvent = PLAYERANIMEVENT_KEEPER_JUMP;
 		}
+
+		if (mv->m_nButtons & IN_ATTACK)
+			pPl->AddFlag(FL_FREECAM);
 	}
 
 	pPl->m_Shared.SetAnimEventStartAngle(mv->m_vecAbsViewAngles);

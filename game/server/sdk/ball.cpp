@@ -2632,6 +2632,7 @@ bool CBall::CheckKeeperCatch()
 		punchAngle[PITCH] = min(punchAngle[PITCH], sv_ball_keeper_punch_minpitchangle.GetFloat());
 		punchAngle[PITCH] += sv_ball_keeper_punch_pitchoffset.GetFloat();
 		AngleVectors(punchAngle, &punchDir);
+		AngleVectors(m_aPlCamAng, &punchDir);
 		Vector vel = punchDir * max(m_vVel.Length2D(), sv_ball_keeper_punch_minstrength.GetFloat()) * sv_ball_keeperdeflectioncoeff.GetFloat();
 		SetVel(vel, 0, 0, BODY_PART_KEEPERPUNCH, false, false, false);
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
