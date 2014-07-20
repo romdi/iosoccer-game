@@ -200,6 +200,9 @@ ConVar sv_ball_bodypos_keeperhands("sv_ball_bodypos_keeperhands", "40", FCVAR_NO
 ConVar sv_ball_bodypos_collision_start("sv_ball_bodypos_collision_start", "15", FCVAR_NOTIFY);
 ConVar sv_ball_bodypos_collision_end("sv_ball_bodypos_collision_end", "75", FCVAR_NOTIFY);
 
+ConVar sv_ball_bodypos_deflection_start("sv_ball_bodypos_deflection_start", "0", FCVAR_NOTIFY);
+ConVar sv_ball_bodypos_deflection_end("sv_ball_bodypos_deflection_end", "80", FCVAR_NOTIFY);
+
 ConVar sv_ball_yellowcardballdist_forward("sv_ball_yellowcardballdist_forward", "50", FCVAR_NOTIFY);
 ConVar sv_ball_yellowcardballdist_backward("sv_ball_yellowcardballdist_backward", "25", FCVAR_NOTIFY);
 ConVar sv_ball_goalreplay_count("sv_ball_goalreplay_count", "2", FCVAR_NOTIFY);
@@ -2288,7 +2291,6 @@ bool CBall::IsInDeflectRange(bool isCollision)
 	VectorIRotate(dirToBall, m_pPl->EntityToWorldTransform(), localDirToBall);
 	float zDist = dirToBall.z;
 	float xyDist = dirToBall.Length2D();
-	float radius = isCollision ? sv_ball_collisionradius.GetFloat() : sv_ball_deflectionradius.GetFloat();
 
 	if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_SLIDE || m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_DIVINGHEADER)
 	{
@@ -2302,7 +2304,10 @@ bool CBall::IsInDeflectRange(bool isCollision)
 	}
 	else
 	{
-		return zDist >= sv_ball_bodypos_collision_start.GetFloat() && zDist < sv_ball_bodypos_collision_end.GetFloat() && xyDist <= radius;
+		if (isCollision)
+			return zDist >= sv_ball_bodypos_collision_start.GetFloat() && zDist < sv_ball_bodypos_collision_end.GetFloat() && xyDist <= sv_ball_collisionradius.GetFloat();
+		else
+			return zDist >= sv_ball_bodypos_deflection_start.GetFloat() && zDist < sv_ball_bodypos_deflection_end.GetFloat() && xyDist <= sv_ball_deflectionradius.GetFloat();
 	}
 
 	return false;
