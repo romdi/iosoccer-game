@@ -42,12 +42,10 @@ ConVar sv_ball_curve("sv_ball_curve", "200", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONL
 ConVar sv_ball_deflectionradius( "sv_ball_deflectionradius", "30", FCVAR_NOTIFY );
 ConVar sv_ball_collisionradius( "sv_ball_collisionradius", "15", FCVAR_NOTIFY );
 
-ConVar sv_ball_standing_reach_min( "sv_ball_standing_reach_min", "30", FCVAR_NOTIFY );
-ConVar sv_ball_standing_reach_max( "sv_ball_standing_reach_max", "50", FCVAR_NOTIFY );
-ConVar sv_ball_standing_reach_speed_min( "sv_ball_standing_reach_speed_min", "100", FCVAR_NOTIFY );
-ConVar sv_ball_standing_reach_speed_max( "sv_ball_standing_reach_speed_max", "1000", FCVAR_NOTIFY );
-ConVar sv_ball_standing_cone( "sv_ball_standing_cone", "360", FCVAR_NOTIFY );
-ConVar sv_ball_standing_shift( "sv_ball_standing_shift", "0", FCVAR_NOTIFY );
+ConVar sv_ball_standing_reach_shortside( "sv_ball_standing_reach_shortside", "35", FCVAR_NOTIFY );
+ConVar sv_ball_standing_reach_longside( "sv_ball_standing_reach_longside", "45", FCVAR_NOTIFY );
+ConVar sv_ball_standing_reach_shift( "sv_ball_standing_reach_shift", "10", FCVAR_NOTIFY );
+ConVar sv_ball_standing_reach_ellipse( "sv_ball_standing_reach_ellipse", "1", FCVAR_NOTIFY );
 
 ConVar sv_ball_slidesidereach_ball( "sv_ball_slidesidereach_ball", "50", FCVAR_NOTIFY );
 ConVar sv_ball_slideforwardreach_ball( "sv_ball_slideforwardreach_ball", "60", FCVAR_NOTIFY );
@@ -2102,20 +2100,34 @@ bool CBall::PlayersAtTargetPos()
 
 bool CBall::CanTouchBallXY()
 {
-	Vector circleCenter = m_vPlPos + m_vPlForward2D * sv_ball_standing_shift.GetFloat();
-	Vector dirToBall = m_vPos - circleCenter;
+	Vector center = m_vPlPos + m_vPlForward2D * sv_ball_standing_reach_shift.GetFloat();
 
-	float reach = -RemapValClamped(m_vVel.Length(), sv_ball_standing_reach_speed_min.GetFloat(), sv_ball_standing_reach_speed_max.GetFloat(), -sv_ball_standing_reach_max.GetFloat(), -sv_ball_standing_reach_min.GetFloat());
-
-	if (dirToBall.Length2DSqr() <= pow(reach, 2))
+	if (sv_ball_standing_reach_ellipse.GetBool())
 	{
-		dirToBall.NormalizeInPlace();
+		// http://stackoverflow.com/questions/7946187/point-and-ellipse-rotated-position-test-algorithm
 
-		if (RAD2DEG(acos(m_vPlForward2D.Dot(dirToBall))) <= sv_ball_standing_cone.GetFloat() / 2)
+		float ang = DEG2RAD(m_aPlAng[YAW] + 90);
+		float cosa = cos(ang);
+		float sina = sin(ang);
+		float dshortd = Square(sv_ball_standing_reach_shortside.GetFloat());
+		float dlongd = Square(sv_ball_standing_reach_longside.GetFloat());
+
+		float a = Square(cosa * (m_vPos.x - center.x) + sina * (m_vPos.y - center.y));
+		float b = Square(sina * (m_vPos.x - center.x) - cosa * (m_vPos.y - center.y));
+
+		float ellipse = (a / dshortd) + (b / dlongd);
+
+		if (ellipse <= 1)
 			return true;
+		else
+			return false;
 	}
-
-	return false;
+	else
+	{
+		return abs(m_vPlLocalDirToBall.y) <= sv_ball_standing_reach_shortside.GetFloat()
+			&& m_vPlLocalDirToBall.x >= -sv_ball_standing_reach_longside.GetFloat() + sv_ball_standing_reach_shift.GetFloat()
+			&& m_vPlLocalDirToBall.x <= sv_ball_standing_reach_longside.GetFloat() + sv_ball_standing_reach_shift.GetFloat();
+	}
 }
 
 bool CBall::IsPlayerClose()
