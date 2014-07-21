@@ -61,9 +61,11 @@ const float slideUpDuration = 0.5f;
 const float slideDownExp = 2.0f;
 const float slideUpExp = 2.0f;
 
-const float flashDuration = 0.5f;
-
 const float extraInfoFadeDuration = 0.5f;
+
+const float transitionFadeInDuration = 0.5f;
+const float transitionStayDuration = 0.5f;
+const float transitionFadeOutDuration = 0.5f;
 
 //-----------------------------------------------------------------------------
 // Purpose: Displays suit power (armor) on hud
@@ -126,6 +128,9 @@ private:
 	Label *m_pCenterNotifications[NOTIFICATION_COUNT];
 
 	ImagePanel *m_pTeamCrest;
+	ImagePanel *m_pTransition;
+
+	float m_flTransitionStart;
 };
 
 DECLARE_HUDELEMENT( CHudScorebar );
@@ -209,6 +214,8 @@ CHudScorebar::CHudScorebar( const char *pElementName ) : BaseClass(NULL, "HudSco
 	}
 
 	m_pTeamCrest = new ImagePanel(m_pCenterPanel, "");
+
+	m_pTransition = new ImagePanel(this, "");
 
 	SetProportional(false);
 
@@ -354,6 +361,11 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 
 	m_pTeamCrest->SetBounds(TEAMCREST_HMARGIN, CENTERNOTIFICATION_HEIGHT + TEAMCREST_VMARGIN, TEAMCREST_SIZE, TEAMCREST_SIZE);
 	m_pTeamCrest->SetShouldScaleImage(true);
+
+	m_pTransition->SetBounds(ScreenWidth() / 2 - 1024, ScreenHeight() / 2 - 1024, 2048, 2048);
+	m_pTransition->SetShouldScaleImage(true);
+	m_pTransition->SetImage("transition");
+	m_pTransition->SetVisible(false);
 }
 
 //-----------------------------------------------------------------------------
@@ -377,6 +389,7 @@ void CHudScorebar::Init( void )
 	ListenForGameEvent("penalty");
 	ListenForGameEvent("wakeupcall");
 	ListenForGameEvent("kickoff");
+	ListenForGameEvent("transition");
 }
 
 void CHudScorebar::ApplySettings( KeyValues *inResourceData )
@@ -464,6 +477,35 @@ void CHudScorebar::OnThink( void )
 		}
 	}
 
+	if (m_flTransitionStart != -1)
+	{
+		m_pTransition->SetVisible(true);
+
+		if (gpGlobals->curtime <= m_flTransitionStart + transitionFadeInDuration)
+		{
+			float fraction = (gpGlobals->curtime - m_flTransitionStart) / transitionFadeInDuration;
+			m_pTransition->SetBounds(fraction * (ScreenWidth() / 2 - 1024), ScreenHeight() - (fraction * 2048) - fraction * (ScreenHeight() / 2 - 1024), fraction * 2048, fraction * 2048);
+			m_pTransition->SetAlpha(fraction * 255);
+		}
+		else if (gpGlobals->curtime <= m_flTransitionStart + transitionFadeInDuration + transitionStayDuration)
+		{
+			float fraction = (gpGlobals->curtime - m_flTransitionStart - transitionFadeInDuration) / transitionStayDuration;
+			m_pTransition->SetBounds(ScreenWidth() / 2 - 1024, ScreenHeight() / 2 - 1024, 2048, 2048);
+			m_pTransition->SetAlpha(255);
+		}
+		else if (gpGlobals->curtime <= m_flTransitionStart + transitionFadeInDuration + transitionStayDuration + transitionFadeOutDuration)
+		{
+			float fraction = (gpGlobals->curtime - m_flTransitionStart - transitionFadeInDuration - transitionStayDuration) / transitionFadeOutDuration;
+			int newSize = 2048 * (1 + fraction);
+			m_pTransition->SetBounds(ScreenWidth() / 2 - (newSize / 2), ScreenHeight() / 2 - (newSize / 2), newSize, newSize);
+			m_pTransition->SetAlpha(255 * (1 - fraction));
+		}
+		else
+			m_pTransition->SetVisible(false);
+	}
+	else
+		m_pTransition->SetVisible(false);
+
 	if (m_flNotificationStart != -1)
 	{
 		float timePassed = gpGlobals->curtime - m_flNotificationStart;
@@ -472,7 +514,7 @@ void CHudScorebar::OnThink( void )
 		//m_pNotificationPanel->SetBgColor(Color(255 * colorCoeff, 255 * colorCoeff, 255 * colorCoeff, 255));
 		m_pNotificationPanel->SetBgColor(Color(255, 255, 255, 200));
 
-		if (gpGlobals->curtime - m_flNotificationStart <= slideDownDuration)
+		if (gpGlobals->curtime <= slideDownDuration + m_flNotificationStart)
 		{
 			float fraction = (gpGlobals->curtime - m_flNotificationStart) / slideDownDuration;
 			m_pNotificationPanel->SetY(m_pBackgroundPanel->GetTall() - pow(1 - fraction, slideDownExp) * m_pNotificationPanel->GetTall());
@@ -480,7 +522,7 @@ void CHudScorebar::OnThink( void )
 
 			m_pCenterPanel->SetAlpha(fraction * 255);
 		}
-		else if (gpGlobals->curtime - m_flNotificationStart <= slideDownDuration + m_flStayDuration)
+		else if (gpGlobals->curtime <= slideDownDuration + m_flNotificationStart + m_flStayDuration)
 		{
 			m_pNotificationPanel->SetY(m_pBackgroundPanel->GetTall());
 
@@ -488,15 +530,17 @@ void CHudScorebar::OnThink( void )
 			
 			m_pCenterPanel->SetAlpha(255);
 
-			if (timePassed - slideDownDuration <= 0)
+			if (timePassed <= slideDownDuration)
+			{
 				m_pExtraInfo->SetAlpha(0);
-			else if (timePassed - slideDownDuration <= extraInfoFadeDuration)
+			}
+			else if (timePassed <= extraInfoFadeDuration + slideDownDuration)
 			{
 				float extraFrac = min(1, (timePassed - slideDownDuration) / extraInfoFadeDuration);
 				float extraCoeff = pow(extraFrac, 2) * (3 - 2 * extraFrac);
 				m_pExtraInfo->SetAlpha(255 * extraCoeff);
 			}
-			else if (timePassed - slideDownDuration <= m_flStayDuration - extraInfoFadeDuration)
+			else if (timePassed <= m_flStayDuration - extraInfoFadeDuration + slideDownDuration)
 			{
 				m_pExtraInfo->SetAlpha(255);
 			}
@@ -714,6 +758,15 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 		return;
 	}
 
+	if (!Q_strcmp(event->GetName(), "transition"))
+	{
+		m_flTransitionStart = gpGlobals->curtime + event->GetInt("delay") - 0.5f;
+		m_pTransition->SetVisible(true);
+		m_pTransition->SetBounds(0, 0, 0, 0);
+		m_pTransition->SetAlpha(0);
+		return;
+	}
+
 	m_flNotificationStart = gpGlobals->curtime;
 	m_nCurMatchEventTeam = TEAM_UNASSIGNED;
 	m_pNotificationPanel->SetVisible(true);
@@ -721,6 +774,7 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 	m_pExtraInfo->SetVisible(false);
 	m_bIsHighlight = false;
 	m_pCenterPanel->SetVisible(false);
+	m_pTransition->SetVisible(false);
 
 	for (int i = 1; i < NOTIFICATION_COUNT; i++)
 		m_pNotifications[i]->SetText("");
@@ -1070,6 +1124,7 @@ void CHudScorebar::LevelInit()
 	m_flInjuryTimeStart = -1;
 	m_nCurMatchEventTeam = TEAM_UNASSIGNED;
 	m_flStayDuration = 3.0f;
+	m_flTransitionStart = -1;
 }
 
 void CHudScorebar::SelectQuickTactic(int index)

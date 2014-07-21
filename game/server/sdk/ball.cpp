@@ -1676,6 +1676,13 @@ void CBall::State_GOAL_Enter()
 			delay += sv_replay_duration3.GetFloat();
 	}
 
+	IGameEvent *pEvent = gameeventmanager->CreateEvent("transition");
+	if (pEvent)
+	{
+		pEvent->SetInt("delay", sv_ball_goalcelebduration.GetInt());
+		gameeventmanager->FireEvent(pEvent);
+	}
+
 	State_Transition(BALL_STATE_KICKOFF, delay);
 
 	ReplayManager()->StartReplay(false);
