@@ -802,16 +802,25 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 			m_pCenterNotifications[1]->SetText(VarArgs("%d   %s", gr->GetShirtNumber(pScorer->entindex()), pScorer->GetPlayerName()));
 			//m_pCenterPanel->SetTall(2 * NOTIFICATION_HEIGHT);
 		}
+		else
+			m_pCenterNotifications[1]->SetText("");
+
 		if (pFirstAssister)
 		{
-			m_pCenterNotifications[2]->SetText(VarArgs("+ %d   %s", gr->GetShirtNumber(pScorer->entindex()), pFirstAssister->GetPlayerName()));
+			m_pCenterNotifications[2]->SetText(VarArgs("%d   %s", gr->GetShirtNumber(pFirstAssister->entindex()), pFirstAssister->GetPlayerName()));
 			//m_pCenterPanel->SetTall(3 * NOTIFICATION_HEIGHT);
 		}
+		else
+			m_pCenterNotifications[2]->SetText("");
+
 		if (pSecondAssister)
 		{
-			m_pCenterNotifications[3]->SetText(VarArgs("+ %d   %s", gr->GetShirtNumber(pScorer->entindex()),  pSecondAssister->GetPlayerName()));
+			m_pCenterNotifications[3]->SetText(VarArgs("%d   %s", gr->GetShirtNumber(pSecondAssister->entindex()),  pSecondAssister->GetPlayerName()));
 			//m_pCenterPanel->SetTall(4 * NOTIFICATION_HEIGHT);
 		}
+		else
+			m_pCenterNotifications[3]->SetText("");
+
 
 		m_eCurMatchEvent = MATCH_EVENT_GOAL;
 		m_flStayDuration = INT_MAX;
