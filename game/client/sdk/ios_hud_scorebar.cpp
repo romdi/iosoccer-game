@@ -53,6 +53,8 @@ enum { NOTIFICATION_HEIGHT = 25 };
 enum { EXTRAINFO_HEIGHT = 25 };
 enum { PENALTYPANEL_CENTEROFFSET = 100, PENALTYCELL_WIDTH = 39, PENALTYPANEL_HEIGHT = 30, PENALTYPANEL_PADDING = 2, PENALTYPANEL_TOPMARGIN = 30 };
 enum { QUICKTACTIC_WIDTH = 175, QUICKTACTIC_HEIGHT = 35, QUICKTACTICPANEL_MARGIN = 30 };
+enum { CENTERPANEL_WIDTH = 500, CENTERPANEL_HEIGHT = 120, CENTERPANEL_MARGIN = 30, CENTERNOTIFICATION_SHORTWIDTH = 200, CENTERNOTIFICATION_LONGWIDTH = 500, CENTERNOTIFICATION_HEIGHT = 30 };
+enum { TEAMCREST_SIZE = 70, TEAMCREST_HMARGIN = 10, TEAMCREST_VMARGIN = 10 };
 
 const float slideDownDuration = 0.5f;
 const float slideUpDuration = 0.5f;
@@ -106,6 +108,7 @@ private:
 	Label *m_pInjuryTime;
 	Panel *m_pBackgroundPanel;
 	match_event_t m_eCurMatchEvent;
+	bool m_bIsHighlight;
 	float m_flNotificationStart;
 	float m_flInjuryTimeStart;
 	int m_nCurMatchEventTeam;
@@ -118,6 +121,11 @@ private:
 
 	Panel *m_pQuickTacticPanel;
 	Label *m_pQuickTactics[QUICKTACTIC_COUNT];
+
+	Panel *m_pCenterPanel;
+	Label *m_pCenterNotifications[NOTIFICATION_COUNT];
+
+	ImagePanel *m_pTeamCrest;
 };
 
 DECLARE_HUDELEMENT( CHudScorebar );
@@ -192,6 +200,15 @@ CHudScorebar::CHudScorebar( const char *pElementName ) : BaseClass(NULL, "HudSco
 	{
 		m_pQuickTactics[i] = new Label(m_pQuickTacticPanel, "", g_szQuickTacticNames[i]);
 	}
+
+	m_pCenterPanel = new Panel(this);
+
+	for (int i = 0; i < NOTIFICATION_COUNT; i++)
+	{
+		m_pCenterNotifications[i] = new Label(m_pCenterPanel, "", "");
+	}
+
+	m_pTeamCrest = new ImagePanel(m_pCenterPanel, "");
 
 	SetProportional(false);
 
@@ -305,7 +322,38 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 		m_pQuickTactics[i]->SetContentAlignment(Label::a_west);
 		m_pQuickTactics[i]->SetFont(m_pScheme->GetFont("IOSScorebarMedium"));
 		m_pQuickTactics[i]->SetTextInset(10, 0);
-	}	
+	}
+
+	m_pCenterPanel->SetBounds(GetWide() / 2 - CENTERPANEL_WIDTH / 2, CENTERPANEL_MARGIN, CENTERPANEL_WIDTH, CENTERPANEL_HEIGHT);
+
+	for (int i = 0; i < NOTIFICATION_COUNT; i++)
+	{
+		m_pCenterNotifications[i]->SetContentAlignment(Label::a_center);
+		m_pCenterNotifications[i]->SetFont(m_pScheme->GetFont("IOSScorebarMedium"));
+
+		if (i == 0)
+		{
+			m_pCenterNotifications[i]->SetFgColor(Color(0, 0, 0, 255));
+			m_pCenterNotifications[i]->SetBgColor(Color(255, 255, 255, 200));
+			m_pCenterNotifications[i]->SetBounds(m_pCenterPanel->GetWide() / 2 - CENTERNOTIFICATION_SHORTWIDTH / 2, 0, CENTERNOTIFICATION_SHORTWIDTH, CENTERNOTIFICATION_HEIGHT);
+		}
+
+		if (i > 0)
+		{
+			m_pCenterNotifications[i]->SetFgColor(Color(255, 255, 255, 255));
+			m_pCenterNotifications[i]->SetBgColor(Color(0, 0, 0, 247));
+			m_pCenterNotifications[i]->SetBounds(m_pCenterPanel->GetWide() / 2 - CENTERNOTIFICATION_LONGWIDTH / 2, i * CENTERNOTIFICATION_HEIGHT, CENTERNOTIFICATION_LONGWIDTH, CENTERNOTIFICATION_HEIGHT);
+		}
+
+		if (i > 1)
+		{
+			m_pCenterNotifications[i]->SetFont(m_pScheme->GetFont("IOSScorebarMediumItalic"));
+		}
+
+	}
+
+	m_pTeamCrest->SetBounds(TEAMCREST_HMARGIN, CENTERNOTIFICATION_HEIGHT + TEAMCREST_VMARGIN, TEAMCREST_SIZE, TEAMCREST_SIZE);
+	m_pTeamCrest->SetShouldScaleImage(true);
 }
 
 //-----------------------------------------------------------------------------
@@ -429,6 +477,8 @@ void CHudScorebar::OnThink( void )
 			float fraction = (gpGlobals->curtime - m_flNotificationStart) / slideDownDuration;
 			m_pNotificationPanel->SetY(m_pBackgroundPanel->GetTall() - pow(1 - fraction, slideDownExp) * m_pNotificationPanel->GetTall());
 			m_pExtraInfo->SetY(m_pBackgroundPanel->GetTall() - m_pExtraInfo->GetTall());
+
+			m_pCenterPanel->SetAlpha(fraction * 255);
 		}
 		else if (gpGlobals->curtime - m_flNotificationStart <= slideDownDuration + m_flStayDuration)
 		{
@@ -436,6 +486,8 @@ void CHudScorebar::OnThink( void )
 
 			m_pExtraInfo->SetBounds(m_pNotificationPanel->GetX(), m_pNotificationPanel->GetY() + m_pNotificationPanel->GetTall(), m_pNotificationPanel->GetWide(), EXTRAINFO_HEIGHT);
 			
+			m_pCenterPanel->SetAlpha(255);
+
 			if (timePassed - slideDownDuration <= 0)
 				m_pExtraInfo->SetAlpha(0);
 			else if (timePassed - slideDownDuration <= extraInfoFadeDuration)
@@ -469,6 +521,8 @@ void CHudScorebar::OnThink( void )
 
 			m_pNotificationPanel->SetY(m_pBackgroundPanel->GetTall() - pow(fraction, slideUpExp) * (m_pNotificationPanel->GetTall() + m_pExtraInfo->GetTall()));
 			m_pExtraInfo->SetY(m_pNotificationPanel->GetY() + m_pNotificationPanel->GetTall());
+
+			m_pCenterPanel->SetAlpha((1 - fraction) * 255);
 		}	
 	}
 	else
@@ -477,6 +531,8 @@ void CHudScorebar::OnThink( void )
 		//m_pNotificationPanel->SetBgColor(Color(0, 0, 0, 255));
 		//m_pExtraInfo->SetAlpha(0);
 		m_pExtraInfo->SetY(m_pBackgroundPanel->GetTall() - m_pExtraInfo->GetTall());
+
+		m_pCenterPanel->SetAlpha(0);
 	}
 
 	if (m_flInjuryTimeStart != -1)
@@ -633,6 +689,8 @@ char *GetMatchMinuteText(int second, match_period_t matchPeriod)
 
 void CHudScorebar::FireGameEvent(IGameEvent *event)
 {
+	IGameResources *gr = GameResources();
+
 	if (!Q_strcmp(event->GetName(), "wakeupcall"))
 	{
 		FLASHWINFO flashInfo;
@@ -658,8 +716,11 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 
 	m_flNotificationStart = gpGlobals->curtime;
 	m_nCurMatchEventTeam = TEAM_UNASSIGNED;
+	m_pNotificationPanel->SetVisible(true);
 	m_pNotificationPanel->SetTall(NOTIFICATION_HEIGHT);
 	m_pExtraInfo->SetVisible(false);
+	m_bIsHighlight = false;
+	m_pCenterPanel->SetVisible(false);
 
 	for (int i = 1; i < NOTIFICATION_COUNT; i++)
 		m_pNotifications[i]->SetText("");
@@ -734,33 +795,38 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 		C_SDKPlayer *pFirstAssister = ToSDKPlayer(USERID2PLAYER(event->GetInt("first_assister_userid")));
 		C_SDKPlayer *pSecondAssister = ToSDKPlayer(USERID2PLAYER(event->GetInt("second_assister_userid")));
 
-		m_pNotifications[0]->SetText(VarArgs("GOAL: %s", GetGlobalTeam(event->GetInt("scoring_team"))->GetCode()));
+		m_pCenterNotifications[0]->SetText(VarArgs("%d' GOAL", (int)ceil(SDKGameRules()->GetMatchDisplayTimeSeconds(true) / 60.0f)));
 
 		if (pScorer)
 		{
-			m_pNotifications[1]->SetText(VarArgs("%s", pScorer->GetPlayerName()));
-			m_pNotificationPanel->SetTall(2 * NOTIFICATION_HEIGHT);
+			m_pCenterNotifications[1]->SetText(VarArgs("%d   %s", gr->GetShirtNumber(pScorer->entindex()), pScorer->GetPlayerName()));
+			//m_pCenterPanel->SetTall(2 * NOTIFICATION_HEIGHT);
 		}
 		if (pFirstAssister)
 		{
-			m_pNotifications[2]->SetText(VarArgs("+ %s", pFirstAssister->GetPlayerName()));
-			m_pNotificationPanel->SetTall(3 * NOTIFICATION_HEIGHT);
+			m_pCenterNotifications[2]->SetText(VarArgs("+ %d   %s", gr->GetShirtNumber(pScorer->entindex()), pFirstAssister->GetPlayerName()));
+			//m_pCenterPanel->SetTall(3 * NOTIFICATION_HEIGHT);
 		}
 		if (pSecondAssister)
 		{
-			m_pNotifications[3]->SetText(VarArgs("+ %s", pSecondAssister->GetPlayerName()));
-			m_pNotificationPanel->SetTall(4 * NOTIFICATION_HEIGHT);
+			m_pCenterNotifications[3]->SetText(VarArgs("+ %d   %s", gr->GetShirtNumber(pScorer->entindex()),  pSecondAssister->GetPlayerName()));
+			//m_pCenterPanel->SetTall(4 * NOTIFICATION_HEIGHT);
 		}
 
 		m_eCurMatchEvent = MATCH_EVENT_GOAL;
 		m_flStayDuration = INT_MAX;
 
-		if (pScorer)
-		{
-			int count = g_PR->GetShotsOnGoal(pScorer->entindex()) + 1;
-			m_pExtraInfo->SetText(VarArgs("%d%s shot on goal for %s", count, GetOrdinal(count), pScorer->GetPlayerName()));
-			m_pExtraInfo->SetVisible(true);
-		}
+		m_pNotificationPanel->SetVisible(false);
+		m_pCenterPanel->SetVisible(true);
+		m_pCenterPanel->SetAlpha(0);
+		m_pTeamCrest->SetImage(event->GetInt("scoring_team") == TEAM_A ? "hometeamcrest_notification" : "awayteamcrest_notification");
+
+		//if (pScorer)
+		//{
+		//	int count = g_PR->GetShotsOnGoal(pScorer->entindex()) + 1;
+		//	m_pExtraInfo->SetText(VarArgs("%d%s shot on goal for %s", count, GetOrdinal(count), pScorer->GetPlayerName()));
+		//	m_pExtraInfo->SetVisible(true);
+		//}
 	}
 	else if (!Q_strcmp(event->GetName(), "highlight_goal"))
 	{
@@ -787,6 +853,7 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 		}
 
 		m_eCurMatchEvent = MATCH_EVENT_GOAL;
+		m_bIsHighlight = true;
 		m_flStayDuration = INT_MAX;
 
 		m_pExtraInfo->SetText(g_szMatchPeriodNames[event->GetInt("match_period")]);
@@ -805,6 +872,7 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 		}
 
 		m_eCurMatchEvent = MATCH_EVENT_OWNGOAL;
+		m_bIsHighlight = true;
 		m_flStayDuration = INT_MAX;
 
 		m_pExtraInfo->SetText(g_szMatchPeriodNames[event->GetInt("match_period")]);
@@ -835,6 +903,7 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 		}
 
 		m_eCurMatchEvent = MATCH_EVENT_MISS;
+		m_bIsHighlight = true;
 		m_flStayDuration = INT_MAX;
 
 		m_pExtraInfo->SetText(g_szMatchPeriodNames[event->GetInt("match_period")]);
@@ -859,6 +928,7 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 		//}
 
 		m_eCurMatchEvent = MATCH_EVENT_KEEPERSAVE;
+		m_bIsHighlight = true;
 		m_flStayDuration = INT_MAX;
 
 		m_pExtraInfo->SetText(g_szMatchPeriodNames[event->GetInt("match_period")]);
@@ -877,6 +947,7 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 		}
 
 		m_eCurMatchEvent = MATCH_EVENT_REDCARD;
+		m_bIsHighlight = true;
 		m_flStayDuration = INT_MAX;
 
 		m_pExtraInfo->SetText(g_szMatchPeriodNames[event->GetInt("match_period")]);
@@ -974,6 +1045,13 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 		m_eCurMatchEvent = MATCH_EVENT_TIMEOUT;
 		m_flStayDuration = INT_MAX;
 	}
+
+	//for (int i = 0; i < NOTIFICATION_COUNT; i++)
+	//{
+	//	char text[256];
+	//	m_pNotifications[i]->GetText(text, sizeof(text));
+	//	m_pCenterNotifications[i]->SetText(text);
+	//}
 }
 
 void CHudScorebar::LevelInit()
