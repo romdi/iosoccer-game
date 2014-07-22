@@ -70,7 +70,10 @@ extern ConVar
 	mp_tvcam_sideline_offset_height,
 	mp_tvcam_sideline_offset_north,
 	mp_tvcam_sideline_zoomcoeff,
+	mp_tvcam_firstreplay,
+	mp_tvcam_secondreplay,
 	mp_timeout_count,
-	mp_timeout_duration;
+	mp_timeout_duration,
+	mp_center_notification_top;
 
 #endif // CS_GAMEVARS_SHARED_H

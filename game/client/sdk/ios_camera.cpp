@@ -206,15 +206,7 @@ int C_Camera::GetTVCamMode()
 
 	if (GetReplayManager() && GetReplayManager()->IsReplaying())
 	{
-		switch (GetReplayManager()->m_nReplayRunIndex)
-		{
-		case 0: default: return TVCAM_MODE_SIDELINE;
-		case 1: return TVCAM_MODE_BEHIND_GOAL;
-		case 2: return TVCAM_MODE_GOAL_LINE;
-		case 3: return TVCAM_MODE_TOPDOWN;
-		case 4: return TVCAM_MODE_FLY_FOLLOW;
-		case 5: return TVCAM_MODE_FIXED_SIDELINE;
-		}
+		return GetReplayManager()->m_nReplayRunIndex == 0 ? mp_tvcam_firstreplay.GetInt() : mp_tvcam_secondreplay.GetInt();
 	}
 	else if (GetBall() && GetBall()->m_eBallState == BALL_STATE_GOAL)
 	{

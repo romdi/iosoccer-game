@@ -1075,6 +1075,10 @@ void CSDKGameRules::ClientDisconnected( edict_t *pClient )
 
 void CSDKGameRules::RestartMatch(bool setRandomKickOffTeam, bool setRandomSides)
 {
+	IGameEvent *pEvent = gameeventmanager->CreateEvent("match_restart");
+	if (pEvent)
+		gameeventmanager->FireEvent(pEvent);
+
 	if (setRandomKickOffTeam)
 		m_nFirstHalfKickOffTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
 

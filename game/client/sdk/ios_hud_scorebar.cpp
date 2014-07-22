@@ -130,7 +130,9 @@ private:
 	ImagePanel *m_pTeamCrest;
 	ImagePanel *m_pTransition;
 
-	float m_flTransitionStart;
+	float m_flFirstTransitionStart;
+	float m_flSecondTransitionStart;
+	int m_nTransitionIndex;
 };
 
 DECLARE_HUDELEMENT( CHudScorebar );
@@ -390,6 +392,7 @@ void CHudScorebar::Init( void )
 	ListenForGameEvent("wakeupcall");
 	ListenForGameEvent("kickoff");
 	ListenForGameEvent("transition");
+	ListenForGameEvent("match_restart");
 }
 
 void CHudScorebar::ApplySettings( KeyValues *inResourceData )
@@ -477,41 +480,49 @@ void CHudScorebar::OnThink( void )
 		}
 	}
 
-	if (m_flTransitionStart != -1)
+	if (m_nTransitionIndex != -1)
 	{
-		m_pTransition->SetVisible(true);
+		float transitionStart = m_nTransitionIndex == 0 ? m_flFirstTransitionStart : m_flSecondTransitionStart;
 
-		if (gpGlobals->curtime <= m_flTransitionStart + transitionFadeInDuration)
+		if (gpGlobals->curtime >= transitionStart)
 		{
-			float fraction = (gpGlobals->curtime - m_flTransitionStart) / transitionFadeInDuration;
-			m_pTransition->SetBounds(fraction * (ScreenWidth() / 2 - 1024), ScreenHeight() - (fraction * 2048) - fraction * (ScreenHeight() / 2 - 1024), fraction * 2048, fraction * 2048);
-			m_pTransition->SetAlpha(fraction * 255);
+			if (gpGlobals->curtime <= transitionStart + transitionFadeInDuration)
+			{
+				m_pTransition->SetVisible(true);
+				float fraction = (gpGlobals->curtime - transitionStart) / transitionFadeInDuration;
+				m_pTransition->SetBounds(fraction * (ScreenWidth() / 2 - 1024), ScreenHeight() - (fraction * 2048) - fraction * (ScreenHeight() / 2 - 1024), fraction * 2048, fraction * 2048);
+				m_pTransition->SetAlpha(fraction * 255);
+			}
+			else if (gpGlobals->curtime <= transitionStart + transitionFadeInDuration + transitionStayDuration)
+			{
+				m_pTransition->SetVisible(true);
+				float fraction = (gpGlobals->curtime - transitionStart - transitionFadeInDuration) / transitionStayDuration;
+				m_pTransition->SetBounds(ScreenWidth() / 2 - 1024, ScreenHeight() / 2 - 1024, 2048, 2048);
+				m_pTransition->SetAlpha(255);
+			}
+			else if (gpGlobals->curtime <= transitionStart + transitionFadeInDuration + transitionStayDuration + transitionFadeOutDuration)
+			{
+				m_pTransition->SetVisible(true);
+				float fraction = (gpGlobals->curtime - transitionStart - transitionFadeInDuration - transitionStayDuration) / transitionFadeOutDuration;
+				int newSize = 2048 * (1 + fraction);
+				m_pTransition->SetBounds(ScreenWidth() / 2 - (newSize / 2), ScreenHeight() / 2 - (newSize / 2), newSize, newSize);
+				m_pTransition->SetAlpha(255 * (1 - fraction));
+			}
+			else
+			{
+				m_pTransition->SetVisible(false);
+				m_nTransitionIndex = m_nTransitionIndex == 0 ? 1 : -1;
+			}
 		}
-		else if (gpGlobals->curtime <= m_flTransitionStart + transitionFadeInDuration + transitionStayDuration)
-		{
-			float fraction = (gpGlobals->curtime - m_flTransitionStart - transitionFadeInDuration) / transitionStayDuration;
-			m_pTransition->SetBounds(ScreenWidth() / 2 - 1024, ScreenHeight() / 2 - 1024, 2048, 2048);
-			m_pTransition->SetAlpha(255);
-		}
-		else if (gpGlobals->curtime <= m_flTransitionStart + transitionFadeInDuration + transitionStayDuration + transitionFadeOutDuration)
-		{
-			float fraction = (gpGlobals->curtime - m_flTransitionStart - transitionFadeInDuration - transitionStayDuration) / transitionFadeOutDuration;
-			int newSize = 2048 * (1 + fraction);
-			m_pTransition->SetBounds(ScreenWidth() / 2 - (newSize / 2), ScreenHeight() / 2 - (newSize / 2), newSize, newSize);
-			m_pTransition->SetAlpha(255 * (1 - fraction));
-		}
-		else
-			m_pTransition->SetVisible(false);
 	}
 	else
 		m_pTransition->SetVisible(false);
 
+	m_pCenterPanel->SetY(mp_center_notification_top.GetBool() ? CENTERPANEL_MARGIN : ScreenHeight() - CENTERPANEL_HEIGHT - CENTERPANEL_MARGIN);
+
 	if (m_flNotificationStart != -1)
 	{
 		float timePassed = gpGlobals->curtime - m_flNotificationStart;
-		//float timeFrac = min(2, timePassed / (flashDuration / 2.0f));
-		//float colorCoeff = -cos(M_PI * timeFrac) / 2 + 0.5f;
-		//m_pNotificationPanel->SetBgColor(Color(255 * colorCoeff, 255 * colorCoeff, 255 * colorCoeff, 255));
 		m_pNotificationPanel->SetBgColor(Color(255, 255, 255, 200));
 
 		if (gpGlobals->curtime <= slideDownDuration + m_flNotificationStart)
@@ -544,14 +555,6 @@ void CHudScorebar::OnThink( void )
 			{
 				m_pExtraInfo->SetAlpha(255);
 			}
-			//else if (timePassed - slideDownDuration <= m_flStayDuration - extraInfoFadeDuration)
-			//{
-			//	float extraFrac = min(1, (m_flStayDuration - (timePassed - slideDownDuration) - extraInfoFadeDuration) / extraInfoFadeDuration);
-			//	float extraCoeff = pow(extraFrac, 2) * (3 - 2 * extraFrac);
-			//	m_pExtraInfo->SetAlpha(255 * extraCoeff);
-			//}
-			//else
-			//	m_pExtraInfo->SetAlpha(0);
 		}
 		else
 		{
@@ -572,8 +575,6 @@ void CHudScorebar::OnThink( void )
 	else
 	{
 		m_pNotificationPanel->SetY(m_pBackgroundPanel->GetTall() - m_pNotificationPanel->GetTall());
-		//m_pNotificationPanel->SetBgColor(Color(0, 0, 0, 255));
-		//m_pExtraInfo->SetAlpha(0);
 		m_pExtraInfo->SetY(m_pBackgroundPanel->GetTall() - m_pExtraInfo->GetTall());
 
 		m_pCenterPanel->SetAlpha(0);
@@ -760,10 +761,15 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 
 	if (!Q_strcmp(event->GetName(), "transition"))
 	{
-		m_flTransitionStart = gpGlobals->curtime + event->GetInt("delay") - 0.5f;
-		m_pTransition->SetVisible(true);
-		m_pTransition->SetBounds(0, 0, 0, 0);
-		m_pTransition->SetAlpha(0);
+		m_flFirstTransitionStart = gpGlobals->curtime + event->GetInt("firstdelay") - 0.75f;
+		m_flSecondTransitionStart = gpGlobals->curtime + event->GetInt("seconddelay") - 0.75f;
+		m_nTransitionIndex = 0;
+		return;
+	}
+
+	if (!Q_strcmp(event->GetName(), "match_restart"))
+	{
+		LevelInit(); // Reset all notifications
 		return;
 	}
 
@@ -1108,13 +1114,6 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 		m_eCurMatchEvent = MATCH_EVENT_TIMEOUT;
 		m_flStayDuration = INT_MAX;
 	}
-
-	//for (int i = 0; i < NOTIFICATION_COUNT; i++)
-	//{
-	//	char text[256];
-	//	m_pNotifications[i]->GetText(text, sizeof(text));
-	//	m_pCenterNotifications[i]->SetText(text);
-	//}
 }
 
 void CHudScorebar::LevelInit()
@@ -1124,7 +1123,7 @@ void CHudScorebar::LevelInit()
 	m_flInjuryTimeStart = -1;
 	m_nCurMatchEventTeam = TEAM_UNASSIGNED;
 	m_flStayDuration = 3.0f;
-	m_flTransitionStart = -1;
+	m_nTransitionIndex = -1;
 }
 
 void CHudScorebar::SelectQuickTactic(int index)

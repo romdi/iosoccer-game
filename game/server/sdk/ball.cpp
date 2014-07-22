@@ -1679,7 +1679,8 @@ void CBall::State_GOAL_Enter()
 	IGameEvent *pEvent = gameeventmanager->CreateEvent("transition");
 	if (pEvent)
 	{
-		pEvent->SetInt("delay", sv_ball_goalcelebduration.GetInt());
+		pEvent->SetInt("firstdelay", sv_ball_goalcelebduration.GetInt());
+		pEvent->SetInt("seconddelay", delay);
 		gameeventmanager->FireEvent(pEvent);
 	}
 

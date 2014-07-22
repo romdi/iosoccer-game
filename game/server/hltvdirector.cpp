@@ -271,6 +271,8 @@ const char** CHLTVDirector::GetModEvents()
 		"team_formation",
 		"timeout_pending",
 		"wakeupcall",
+		"transition",
+		"match_restart",
 		NULL
 	};
 
