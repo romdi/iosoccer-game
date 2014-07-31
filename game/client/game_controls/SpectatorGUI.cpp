@@ -26,7 +26,7 @@
 #include <game/client/iviewport.h>
 #include "commandmenu.h"
 #include "ios_camera.h"
-#include "c_ball.h"
+#include "c_match_ball.h"
 
 #include <vgui_controls/TextEntry.h>
 #include <vgui_controls/Panel.h>
@@ -321,8 +321,8 @@ void CSpectatorMenu::Update( void )
 	{
 		m_pTargetList->GetMenu()->DeleteAllItems();
 
-		KeyValues *pKV = new KeyValues("UserData", "index", GetBall() ? GetBall()->entindex() : 0);
-		m_pTargetList->GetMenu()->AddMenuItem("Ball", VarArgs("spec_by_index %d", GetBall() ? GetBall()->entindex() : 0), this, pKV);
+		KeyValues *pKV = new KeyValues("UserData", "index", GetMatchBall() ? GetMatchBall()->entindex() : 0);
+		m_pTargetList->GetMenu()->AddMenuItem("Ball", VarArgs("spec_by_index %d", GetMatchBall() ? GetMatchBall()->entindex() : 0), this, pKV);
 		pKV->deleteThis();
 
 		for (int i = 1; i <= gpGlobals->maxClients; i++)

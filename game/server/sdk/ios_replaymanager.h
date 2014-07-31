@@ -4,6 +4,8 @@
 #include "cbase.h"
 #include "sdk_player.h"
 #include "SpriteTrail.h"
+#include "props_shared.h"
+#include "props.h"
 
 extern ConVar
 	r_balltrail_replays,

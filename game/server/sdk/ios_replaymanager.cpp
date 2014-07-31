@@ -1,10 +1,11 @@
 #include "cbase.h"
 #include "ios_replaymanager.h"
-#include "ball.h"
 #include "sdk_gamerules.h"
 #include "convar.h"
 #include "sdk_playeranimstate.h"
 #include "team.h"
+#include "player_ball.h"
+#include "match_ball.h"
 
 ConVar r_balltrail_replays("r_balltrail_replays", "1", FCVAR_NOTIFY);
 ConVar r_balltrail_intermissions("r_balltrail_intermissions", "0", FCVAR_NOTIFY);
@@ -199,7 +200,7 @@ void CReplayManager::Think()
 	if (!sv_replays.GetBool())
 		return;
 
-	if (!GetBall())
+	if (!GetMatchBall())
 		return;
 
 	CheckReplay();
@@ -321,7 +322,7 @@ void CReplayManager::StopReplay()
 		}
 	}
 
-	CBall *pRealBall = GetBall();
+	CBall *pRealBall = GetMatchBall();
 	if (pRealBall)
 	{
 		//pRealBall->SetRenderMode(kRenderNormal);
@@ -374,8 +375,8 @@ void CReplayManager::TakeSnapshot()
 
 	BallSnapshot *pBallSnap = new BallSnapshot;
 
-	GetBall()->VPhysicsGetObject()->GetPosition(&pBallSnap->pos, &pBallSnap->ang);
-	GetBall()->VPhysicsGetObject()->GetVelocity(&pBallSnap->vel, &pBallSnap->rot);
+	GetMatchBall()->VPhysicsGetObject()->GetPosition(&pBallSnap->pos, &pBallSnap->ang);
+	GetMatchBall()->VPhysicsGetObject()->GetVelocity(&pBallSnap->vel, &pBallSnap->rot);
 
 	pSnap->pBallSnapshot = pBallSnap;
 
@@ -590,7 +591,7 @@ void CReplayManager::RestoreSnapshot()
 		}
 	}
 
-	CBall *pRealBall = GetBall();
+	CBall *pRealBall = GetMatchBall();
 	if (pRealBall && !(pRealBall->GetEffects() & EF_NODRAW))
 	{
 		pRealBall->AddEffects(EF_NODRAW);
@@ -658,8 +659,8 @@ void CReplayManager::RestoreSnapshot()
 			m_pBall->Spawn();
 		}
 
-		if (Q_strcmp(m_pBall->m_szSkinName, GetBall()->GetSkinName()))
-			Q_strncpy(m_pBall->m_szSkinName.GetForModify(), GetBall()->GetSkinName(), MAX_KITNAME_LENGTH);
+		if (Q_strcmp(m_pBall->m_szSkinName, GetMatchBall()->GetSkinName()))
+			Q_strncpy(m_pBall->m_szSkinName.GetForModify(), GetMatchBall()->GetSkinName(), MAX_KITNAME_LENGTH);
 
 		m_pBall->VPhysicsGetObject()->SetPosition(pBallSnap->pos, pBallSnap->ang, false);
 		m_pBall->VPhysicsGetObject()->SetVelocity(&pBallSnap->vel, &pBallSnap->rot);
@@ -946,7 +947,7 @@ void CReplayManager::AddMatchEvent(match_event_t type, int team, CSDKPlayer *pPl
 	pMatchEvent->matchEventType = type;
 	pMatchEvent->second = SDKGameRules()->GetMatchDisplayTimeSeconds();
 	pMatchEvent->team = team;
-	pMatchEvent->atMinGoalPos = GetBall()->GetPos().y < SDKGameRules()->m_vKickOff.GetY();
+	pMatchEvent->atMinGoalPos = GetMatchBall()->GetPos().y < SDKGameRules()->m_vKickOff.GetY();
 	pMatchEvent->pPlayer1Data = pPlayer1 ? pPlayer1->GetPlayerData() : NULL;
 	pMatchEvent->pPlayer2Data = pPlayer2 ? pPlayer2->GetPlayerData() : NULL;
 	pMatchEvent->pPlayer3Data = pPlayer3 ? pPlayer3->GetPlayerData() : NULL;

@@ -19,7 +19,7 @@
 #include "in_buttons.h"
 #include "sdk_gamerules.h"
 #include "c_ios_replaymanager.h"
-#include "c_ball.h"
+#include "c_match_ball.h"
 #include "view.h"
 #include "ios_camera.h"
 
@@ -113,7 +113,7 @@ bool CHudChargedshotBar::ShouldDraw()
 	if (!pPlayer || pPlayer->GetTeamNumber() != TEAM_A && pPlayer->GetTeamNumber() != TEAM_B)
 		return false;
 
-	if (GetBall() && GetBall()->m_eBallState == BALL_STATE_GOAL)
+	if (GetMatchBall() && GetMatchBall()->m_eBallState == BALL_STATE_GOAL)
 		return false;
 
 	if (GetReplayManager() && GetReplayManager()->IsReplaying())
@@ -152,12 +152,12 @@ void CHudChargedshotBar::Paint()
 		fgColor = Color(255, 255, 255, 255);
 		bgColor = Color(100, 100, 100, 255);
 	}
-	else if (GetBall() && GetBall()->m_bShotsBlocked)
+	else if (GetMatchBall() && GetMatchBall()->m_bShotsBlocked)
 	{
 		fgColor = Color(255, 0, 0, 255);
 		bgColor = Color(139, 0, 0, 255);
 	}
-	else if (GetBall() && GetBall()->m_bNonnormalshotsBlocked)
+	else if (GetMatchBall() && GetMatchBall()->m_bNonnormalshotsBlocked)
 	{
 		fgColor = Color(255, 140, 0, 255);
 		bgColor = Color(255, 69, 0, 255);

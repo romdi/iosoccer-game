@@ -22,7 +22,8 @@
 #include "sdk_player.h"
 #include "in_buttons.h"
 
-#include "ball.h"
+#include "player_ball.h"
+#include "match_ball.h"
 
 #include "ios_keeperbot.h"
 #include "game.h"

@@ -235,118 +235,6 @@ ConVar sv_ball_offsidedist("sv_ball_offsidedist", "200", FCVAR_NOTIFY);
 
 ConVar sv_ball_turnovertime("sv_ball_turnovertime", "1.0", FCVAR_NOTIFY);
 
-
-CBall *CreateBall(const Vector &pos, CSDKPlayer *pCreator)
-{
-	CBall *pBall = static_cast<CBall *>(CreateEntityByName("football"));
-	pBall->SetCreator(pCreator);
-	pBall->SetAbsOrigin(pos);
-	pBall->Spawn();
-	pBall->SetPos(pos);
-
-	return pBall;
-}
-
-void CC_CreatePlayerBall(const CCommand &args)
-{
-	if (!SDKGameRules()->IsIntermissionState())
-		return;
-
-	CSDKPlayer *pPl = ToSDKPlayer(UTIL_GetCommandClient());
-	if (!CSDKPlayer::IsOnField(pPl))
-		return;
-
-	if (pPl->GetFlags() & FL_REMOTECONTROLLED)
-		return;
-
-	trace_t tr;
-
-	CTraceFilterSkipTwoEntities traceFilter(pPl, pPl->GetPlayerBall(), COLLISION_GROUP_NONE);
-
-	UTIL_TraceHull(
-		pPl->GetLocalOrigin() + VEC_VIEW,
-		pPl->GetLocalOrigin() + VEC_VIEW + pPl->EyeDirection3D() * 150,
-		-Vector(BALL_PHYS_RADIUS, BALL_PHYS_RADIUS, BALL_PHYS_RADIUS),
-		Vector(BALL_PHYS_RADIUS, BALL_PHYS_RADIUS, BALL_PHYS_RADIUS),
-		MASK_SOLID,
-		&traceFilter,
-		&tr);
-
-	Vector pos = tr.endpos;
-	pos.z -= BALL_PHYS_RADIUS;
-
-	if (pPl->GetPlayerBall())
-	{
-		if (pPl->GetPlayerBall()->GetHoldingPlayer())
-		{
-			//pPl->GetPlayerBall()->RemoveFromPlayerHands(pPl->GetPlayerBall()->GetHoldingPlayer());
-			pPl->GetPlayerBall()->State_Transition(BALL_STATE_NORMAL);
-		}
-
-		if (sv_ball_update_physics.GetBool())
-			pPl->GetPlayerBall()->CreateVPhysics();
-
-		pPl->GetPlayerBall()->SetPos(pos);
-	}
-	else
-		pPl->SetPlayerBall(CreateBall(pos, pPl));
-
-	//pPl->GetPlayerBall()->m_nSkin = pPl->GetPlayerBallSkin() == -1 ? g_IOSRand.RandomInt(0, BALL_SKIN_COUNT - 1) : pPl->GetPlayerBallSkin();
-	pPl->GetPlayerBall()->SetSkinName(pPl->GetPlayerBallSkinName());
-	pPl->GetPlayerBall()->SaveBallCannonSettings();
-	pPl->m_Shared.SetStamina(100);
-}
-
-static ConCommand createplayerball("createplayerball", CC_CreatePlayerBall);
-
-void CC_ShootPlayerBall(const CCommand &args)
-{
-	CSDKPlayer *pPl = ToSDKPlayer(UTIL_GetCommandClient());
-	if (!CSDKPlayer::IsOnField(pPl) || !pPl->GetPlayerBall())
-		return;
-
-	pPl->GetPlayerBall()->RestoreBallCannonSettings();
-	pPl->m_Shared.SetStamina(100);
-}
-
-static ConCommand shootplayerball("shootplayerball", CC_ShootPlayerBall);
-
-CBall *g_pBall = NULL;
-
-CBall *GetBall()
-{
-	return g_pBall;
-}
-
-CBall *GetNearestBall(const Vector &pos)
-{
-	CBall *pNearestBall = GetBall();
-	Vector ballPos = pNearestBall->GetPos();
-	float shortestDist = (ballPos - pos).Length2DSqr();
-
-	for (int i = 1; i <= gpGlobals->maxClients; i++)
-	{
-		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
-		if (!pPl || !CSDKPlayer::IsOnField(pPl))
-			continue;
-
-		CBall *pBall = pPl->GetPlayerBall();
-		if (!pBall)
-			continue;
-
-		Vector ballPos = pBall->GetPos();
-
-		float dist = (ballPos - pos).Length2DSqr();
-		if (dist < shortestDist)
-		{
-			shortestDist = dist;
-			pNearestBall = pBall;
-		}
-	}
-
-	return pNearestBall;
-}
-
 LINK_ENTITY_TO_CLASS( football,	CBall );
 
 //==========================================================
@@ -366,11 +254,7 @@ END_DATADESC()
 IMPLEMENT_SERVERCLASS_ST( CBall, DT_Ball )
 	SendPropInt( SENDINFO( m_iPhysicsMode ), 2,	SPROP_UNSIGNED ),
 	SendPropFloat( SENDINFO( m_fMass ),	0, SPROP_NOSCALE ),
-	SendPropEHandle(SENDINFO(m_pCreator)),
-	SendPropEHandle(SENDINFO(m_pLastActivePlayer)),
 	SendPropEHandle(SENDINFO(m_pHoldingPlayer)),
-	SendPropInt(SENDINFO(m_nLastActiveTeam)),
-	SendPropBool(SENDINFO(m_bIsPlayerBall)),
 	SendPropInt(SENDINFO(m_eBallState)),
 	SendPropInt(SENDINFO(m_bNonnormalshotsBlocked)),
 	SendPropInt(SENDINFO(m_bShotsBlocked)),
@@ -403,7 +287,6 @@ CBall::CBall()
 	m_flStateTimelimit = -1;
 	m_pPl = NULL;
 	m_pOtherPl = NULL;
-	m_pLastActivePlayer = NULL;
 	m_pHoldingPlayer = NULL;
 	m_ePenaltyState = PENALTY_NONE;
 	m_bSetNewPos = false;
@@ -425,36 +308,6 @@ CBall::CBall()
 
 CBall::~CBall()
 {
-	if (!m_bIsPlayerBall)
-		g_pBall = NULL;
-}
-
-void CBall::RemoveAllPlayerBalls()
-{
-	CBall *pBall = NULL;
-
-	while (true)
-	{
-		pBall = static_cast<CBall *>(gEntList.FindEntityByClassname(pBall, "football"));
-		if (!pBall)
-			break;
-
-		if (pBall == this)
-			continue;
-
-		pBall->RemovePlayerBall();
-	}
-}
-
-void CBall::RemovePlayerBall()
-{
-	if (GetHoldingPlayer())
-		RemoveFromPlayerHands(GetHoldingPlayer());
-
-	if (GetCreator())
-		GetCreator()->SetPlayerBall(NULL);
-
-	UTIL_Remove(this);
 }
 
 bool CBall::ShouldCollide( int collisionGroup, int contentsMask ) const
@@ -468,12 +321,6 @@ bool CBall::ShouldCollide( int collisionGroup, int contentsMask ) const
 //==========================================================
 void CBall::Spawn (void)
 {
-	if (!g_pBall && !m_bIsPlayerBall)
-	{
-		CBallInfo::ParseBallSkins();
-		g_pBall = this;
-	}
-
 	//RomD: Don't fade the ball
 	SetFadeDistance(-1, 0);
 	DisableAutoFade();
@@ -559,30 +406,6 @@ bool CBall::CreateVPhysics()
 	EnablePlayerCollisions(true);
 	m_pPhys->SetBuoyancyRatio(0.5f);
 	m_pPhys->Wake();
-
-	if (m_bIsPlayerBall && r_balltrail_intermissions.GetBool() || !m_bIsPlayerBall && r_balltrail_match.GetBool())
-	{
-		if (!m_pGlowTrail)
-			m_pGlowTrail = CSpriteTrail::SpriteTrailCreate("sprites/balltrail.vmt", GetLocalOrigin(), false);
-
-		if (m_pGlowTrail)
-		{
-			m_pGlowTrail->FollowEntity(this);
-			//m_pGlowTrail->SetAttachment( this, nAttachment );
-
-			m_pGlowTrail->SetTransparency(
-				kRenderTransAdd,
-				clamp(r_balltrail_red.GetInt(), 0, 255),
-				clamp(r_balltrail_green.GetInt(), 0, 255),
-				clamp(r_balltrail_blue.GetInt(), 0, 255),
-				clamp(r_balltrail_alpha.GetInt(), 0, 255),
-				kRenderFxNone);
-
-			m_pGlowTrail->SetStartWidth(r_balltrail_startwidth.GetFloat());
-			m_pGlowTrail->SetEndWidth(r_balltrail_endwidth.GetFloat());
-			m_pGlowTrail->SetLifeTime(r_balltrail_lifetime.GetFloat());
-		}
-	}
 
 	return true;
 }
@@ -786,11 +609,6 @@ void CBall::SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyP
 	if (spinCoeff != -1)
 	{
 		SetRot(CalcSpin(spinCoeff, spinFlags));
-	}
-
-	if (m_bIsPlayerBall && !m_bIsBallCannonMode && m_pPl == GetCreator())
-	{
-		SaveBallCannonSettings();
 	}
 
 	float dynamicDelay = RemapValClamped(m_vVel.Length(), sv_ball_dynamicshotdelay_minshotstrength.GetInt(), sv_ball_dynamicshotdelay_maxshotstrength.GetInt(), sv_ball_dynamicshotdelay_mindelay.GetFloat(), sv_ball_dynamicshotdelay_maxdelay.GetFloat());
@@ -998,8 +816,6 @@ void CBall::SendNotifications()
 	}
 }
 
-ConVar mp_showballstatetransitions( "mp_showballstatetransitions", "1", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Show ball state transitions." );
-
 void CBall::State_Transition(ball_state_t newState, float delay /*= 0.0f*/, bool cancelQueuedState /*= false*/, bool isShortMessageDelay /*= false*/)
 {
 	if (delay == 0)
@@ -1035,14 +851,6 @@ void CBall::State_Enter(ball_state_t newState, bool cancelQueuedState)
 	m_pOtherPl = NULL;
 	m_pSetpieceTaker = NULL;
 
-	if ( mp_showballstatetransitions.GetInt() > 0 )
-	{
-		if ( m_pCurStateInfo )
-			IOS_LogPrintf( "Ball: entering state '%s'\n", m_pCurStateInfo->m_pStateName );
-		else
-			IOS_LogPrintf( "Ball: entering state #%d\n", newState );
-	}
-
 	IGameEvent *pEvent = gameeventmanager->CreateEvent("ball_state");
 	if (pEvent)
 	{
@@ -1061,9 +869,6 @@ void CBall::State_Enter(ball_state_t newState, bool cancelQueuedState)
 
 void CBall::State_Leave(ball_state_t newState)
 {
-	if (!m_bIsPlayerBall)
-		SDKGameRules()->DisableShield();
-
 	if ( m_pCurStateInfo && m_pCurStateInfo->pfnLeaveState )
 	{
 		(this->*m_pCurStateInfo->pfnLeaveState)(newState);
@@ -1075,48 +880,9 @@ void CBall::State_Think()
 	m_pPhys->GetPosition(&m_vPos, &m_aAng);
 	m_pPhys->GetVelocity(&m_vVel, &m_vRot);
 
-	if (!m_bIsPlayerBall)
-	{
-		if (m_eNextState != BALL_STATE_NONE)
-		{
-			if (!m_bNextStateMessageSent && gpGlobals->curtime >= m_flStateLeaveTime - m_flStateActivationDelay && m_eNextState != BALL_STATE_KICKOFF)
-			{
-				SendNotifications();
-				m_bNextStateMessageSent = true;
-			}
-			else if (gpGlobals->curtime >= m_flStateLeaveTime)
-			{
-				State_Leave(m_eNextState);
-				State_Enter(m_eNextState, true);
-			}
-		}
-
-		if (State_Get() == BALL_STATE_THROWIN || State_Get() == BALL_STATE_CORNER || State_Get() == BALL_STATE_GOALKICK)
-		{
-			if (SDKGameRules()->CheckTimeout())
-				m_flStateTimelimit = -1;
-		}
-
-		if (m_pCurStateInfo
-			&& State_Get() != BALL_STATE_NORMAL
-			&& m_eNextState == BALL_STATE_NONE
-			&& CSDKPlayer::IsOnField(m_pPl)
-			&& m_flStateTimelimit != -1
-			&& gpGlobals->curtime >= m_flStateTimelimit) // Player is afk or timed out
-		{
-			m_pPl->SetDesiredTeam(TEAM_SPECTATOR, m_pPl->GetTeamNumber(), 0, true, false, false);
-		}
-	}
-
 	if (m_pCurStateInfo && m_pCurStateInfo->pfnThink)
 	{	
 		(this->*m_pCurStateInfo->pfnThink)();
-	}
-
-	if (m_pPl) // Set info for the client
-	{
-		m_pLastActivePlayer = m_pPl;
-		m_nLastActiveTeam = m_pPl->GetTeamNumber();
 	}
 }
 
@@ -3572,7 +3338,6 @@ void CBall::Reset()
 	ReloadSettings();
 	m_pPl = NULL;
 	m_pOtherPl = NULL;
-	m_pLastActivePlayer = NULL;
 	RemoveAllTouches();
 	m_ePenaltyState = PENALTY_NONE;
 	UnmarkOffsidePlayers();
@@ -3685,26 +3450,6 @@ float CBall::CalcFieldZone()
 	float fieldLength = SDKGameRules()->m_vFieldMax.GetY() - SDKGameRules()->m_vFieldMin.GetY();
 	float dist = GetGlobalTeam(TEAM_A)->m_nForward * (pos.y - SDKGameRules()->m_vKickOff.GetY());
 	return clamp(dist * 100 / (fieldLength / 2), -100, 100);
-}
-
-void CBall::SaveBallCannonSettings()
-{
-	m_vBallCannonPos = GetPos();
-	m_aBallCannonAng = GetAng();
-	m_vBallCannonVel = GetVel();
-	m_vBallCannonRot = GetRot();
-	m_bIsBallCannonMode = false;
-	//m_pPhys->GetPosition(&m_vBallCannonPos, &m_aBallCannonAng);
-	//m_pPhys->GetVelocity(&m_vBallCannonVel, &m_vBallCannonRot);
-}
-
-void CBall::RestoreBallCannonSettings()
-{
-	State_Transition(BALL_STATE_NORMAL);
-	m_bIsBallCannonMode = true;
-	m_pPhys->SetVelocityInstantaneous(&vec3_origin, &vec3_origin);
-	m_pPhys->SetPosition(m_vBallCannonPos, m_aBallCannonAng, true);
-	m_pPhys->SetVelocity(&m_vBallCannonVel, &m_vBallCannonRot);
 }
 
 void CBall::SetSkinName(const char *skinName)

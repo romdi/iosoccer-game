@@ -611,6 +611,8 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClCompile Include="sdk\c_ball.cpp" />
     <ClCompile Include="sdk\c_ios_mapentities.cpp" />
     <ClCompile Include="sdk\c_ios_replaymanager.cpp" />
+    <ClCompile Include="sdk\c_match_ball.cpp" />
+    <ClCompile Include="sdk\c_player_ball.cpp" />
     <ClCompile Include="sdk\ios_balltextureproxy.cpp" />
     <ClCompile Include="sdk\ios_camera.cpp" />
     <ClCompile Include="sdk\ios_crowdtextureproxy.cpp" />
@@ -852,6 +854,8 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClInclude Include="sdk\c_ball.h" />
     <ClInclude Include="sdk\c_ios_mapentities.h" />
     <ClInclude Include="sdk\c_ios_replaymanager.h" />
+    <ClInclude Include="sdk\c_match_ball.h" />
+    <ClInclude Include="sdk\c_player_ball.h" />
     <ClInclude Include="sdk\ios_camera.h" />
     <ClInclude Include="vgui_avatarimage.h" />
     <ClInclude Include="viewdebug.h" />

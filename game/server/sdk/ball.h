@@ -1,15 +1,14 @@
-
 #ifndef _BALL_H
 #define _BALL_H
 
 #include "props_shared.h"
 #include "props.h"
-#include "sdk_player.h"
-#include "in_buttons.h"
 #include "ios_teamkit_parse.h"
-#include "SpriteTrail.h"
+#include "sdk_player.h"
 
 #define	BALL_MODEL	 "models/ball/ball.mdl"
+
+//class CSDKPlayer;
 
 enum body_part_t
 {
@@ -82,9 +81,6 @@ enum penalty_state_t
 
 class CBall;
 
-extern CBall *GetBall();
-extern CBall *GetNearestBall(const Vector &pos);
-
 struct CBallStateInfo
 {
 	ball_state_t			m_eBallState;
@@ -130,20 +126,14 @@ public:
 	CBall();//	{ m_iPhysicsMode = PHYSICS_MULTIPLAYER_AUTODETECT; }
 	~CBall();
 
+
 	CNetworkVar( int, m_iPhysicsMode );	// One of the PHYSICS_MULTIPLAYER_ defines.	
 	CNetworkVar( float,	m_fMass	);
-	CNetworkHandle(CSDKPlayer, m_pCreator);
-	CNetworkVar(bool, m_bIsPlayerBall);
 	CNetworkVar(ball_state_t, m_eBallState);
-	CNetworkHandle(CSDKPlayer, m_pLastActivePlayer);
 	CNetworkHandle(CSDKPlayer, m_pHoldingPlayer);
-	CNetworkVar(int, m_nLastActiveTeam);
 	CNetworkVar(bool, m_bNonnormalshotsBlocked);
 	CNetworkVar(bool, m_bShotsBlocked);
 	CNetworkString(m_szSkinName, MAX_KITNAME_LENGTH);
-
-	void			RemoveAllPlayerBalls();
-	void			RemovePlayerBall();
 
 	void			SetPhysicsMode(int iMode)	{ m_iPhysicsMode = iMode; }
 	int				GetPhysicsMode(void) { return m_iPhysicsMode; }
@@ -155,7 +145,7 @@ public:
 	virtual	bool		ShouldCollide( int collisionGroup, int contentsMask ) const;
 
 	bool			IsAsleep(void) { return	false; }
-	void			Spawn(void);
+	virtual void	Spawn(void);
 	void			Think( void	);
 	void			VPhysicsCollision( int index, gamevcollisionevent_t	*pEvent	);
 	void			VPhysicsUpdate(IPhysicsObject *pPhysics);
@@ -171,14 +161,12 @@ public:
 
 	void			SendNotifications();
 
-	void			State_Transition(ball_state_t newState, float delay = 0.0f, bool cancelQueuedState = false, bool isShortMessageDelay = false);
-
-	void			Reset();
+	virtual void	Reset();
 	void			ReloadSettings();
 
 	void			SetPos(const Vector &pos, bool teleport = true);
 	void			SetAng(const QAngle &ang);
-	void			SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyPart, bool isDeflection, bool markOffsidePlayers, bool ensureMinShotStrength, float nextShotMinDelay = 0);
+	virtual void	SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyPart, bool isDeflection, bool markOffsidePlayers, bool ensureMinShotStrength, float nextShotMinDelay = 0);
 	void			SetRot(AngularImpulse rot = NULL);
 
 	void			SetPenaltyState(penalty_state_t penaltyState) { m_ePenaltyState = penaltyState; }
@@ -188,11 +176,8 @@ public:
 
 	inline ball_state_t State_Get( void ) { return m_pCurStateInfo->m_eBallState; }
 
-	CSDKPlayer		*GetLastActivePlayer() { return m_pLastActivePlayer; }
 	CSDKPlayer		*GetCurrentPlayer() { return m_pPl; }
 	CSDKPlayer		*GetCurrentOtherPlayer() { return m_pOtherPl; }
-	CSDKPlayer		*GetCreator() { return m_pCreator; }
-	void			SetCreator(CSDKPlayer *pCreator) { m_pCreator = pCreator; m_bIsPlayerBall = (pCreator != NULL); }
 	CSDKPlayer		*GetHoldingPlayer() { return m_pHoldingPlayer; }
 	void			EnablePlayerCollisions(bool enable);
 	void			RemoveFromPlayerHands(CSDKPlayer *pPl);
@@ -202,15 +187,15 @@ public:
 	AngularImpulse	GetRot();
 	float			CalcFieldZone();
 	void			UpdatePossession(CSDKPlayer *pNewPossessor);
-	void			SaveBallCannonSettings();
-	void			RestoreBallCannonSettings();
 
 	const char		*GetSkinName() { return m_szSkinName; }
 	void			SetSkinName(const char *skinName);
 
 	void			SetSetpieceTaker(CSDKPlayer *pPlayer) { m_pSetpieceTaker = pPlayer; m_pPl = NULL; }
 
-private:
+	virtual void State_Transition(ball_state_t newState, float delay = 0.0f, bool cancelQueuedState = false, bool isShortMessageDelay = false);
+
+protected:
 
 	void State_STATIC_Enter();			void State_STATIC_Think();			void State_STATIC_Leave(ball_state_t newState);
 	void State_NORMAL_Enter();			void State_NORMAL_Think();			void State_NORMAL_Leave(ball_state_t newState);
@@ -223,11 +208,9 @@ private:
 	void State_PENALTY_Enter();			void State_PENALTY_Think();			void State_PENALTY_Leave(ball_state_t newState);
 	void State_KEEPERHANDS_Enter();		void State_KEEPERHANDS_Think();		void State_KEEPERHANDS_Leave(ball_state_t newState);
 
-	void State_PreThink();
-	void State_PostThink();
-	void State_Enter(ball_state_t newState, bool cancelQueuedState);	// Initialize the new state.
-	void State_Think();										// Update the current state.
-	void State_Leave(ball_state_t newState);
+	virtual void State_Enter(ball_state_t newState, bool cancelQueuedState);	// Initialize the new state.
+	virtual void State_Think();										// Update the current state.
+	virtual void State_Leave(ball_state_t newState);
 	static CBallStateInfo* State_LookupInfo(ball_state_t state);	// Find the state info for the specified state.
 
 	void			FindStatePlayer(ball_state_t ballState = BALL_STATE_NONE);
@@ -319,15 +302,7 @@ private:
 
 	float			m_flLastMatchEventSetTime;
 
-	bool			m_bIsBallCannonMode;
-	Vector			m_vBallCannonPos;
-	Vector			m_vBallCannonVel;
-	QAngle			m_aBallCannonAng;
-	AngularImpulse	m_vBallCannonRot;
-
 	bool			m_bHitThePost;
-
-	CHandle<CSpriteTrail> m_pGlowTrail;
 
 	CHandle<CSDKPlayer>	m_pSetpieceTaker;
 };

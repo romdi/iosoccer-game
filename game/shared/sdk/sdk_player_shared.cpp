@@ -32,12 +32,14 @@
 	#include "clientmode_sdk.h"
 	#include "vgui_controls/AnimationController.h"
 	#include "igameresources.h"
-	#include "c_ball.h"
+	#include "c_player_ball.h"
+	#include "c_match_ball.h"
 	#define CRecipientFilter C_RecipientFilter
 #else
 	#include "sdk_player.h"
 	#include "team.h"
-	#include "ball.h"
+	#include "player_ball.h"
+	#include "match_ball.h"
 #endif
 
 ConVar sv_showimpacts("sv_showimpacts", "0", FCVAR_REPLICATED, "Shows client (red) and server (blue) bullet impact point" );
@@ -571,7 +573,7 @@ void CSDKPlayer::CheckShotCharging()
 {
 	if ((m_nButtons & IN_ATTACK)
 		|| (GetFlags() & FL_REMOTECONTROLLED)
-		|| GetBall() && (GetBall()->m_bNonnormalshotsBlocked || GetBall()->m_bShotsBlocked)
+		|| GetMatchBall() && (GetMatchBall()->m_bNonnormalshotsBlocked || GetMatchBall()->m_bShotsBlocked)
 		|| !m_bShotButtonsReleased)
 	{
 		m_Shared.m_bDoChargedShot = false;

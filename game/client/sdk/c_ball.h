@@ -11,10 +11,6 @@
 #include "c_sdk_player.h"
 #include "ios_teamkit_parse.h"
 
-class C_Ball;
-
-extern C_Ball *g_pBall;
-
 class C_Ball : public C_PhysicsProp, public IMultiplayerPhysics
 {
 public:
@@ -57,10 +53,8 @@ public:
 
 	int m_iPhysicsMode;	// One of the PHYSICS_MULTIPLAYER_ defines.	
 	float m_fMass;
-	CHandle<C_SDKPlayer> m_pCreator;
-	CHandle<C_SDKPlayer> m_pLastActivePlayer;
+	//CHandle<C_SDKPlayer> m_pCreator;
 	CHandle<C_SDKPlayer> m_pHoldingPlayer;
-	int m_nLastActiveTeam;
 	bool m_bIsPlayerBall;
 	ball_state_t m_eBallState;
 	bool m_bNonnormalshotsBlocked;
@@ -72,7 +66,5 @@ private:
 
 	char m_szSkinName[MAX_KITNAME_LENGTH];
 };
-
-extern C_Ball *GetBall();
 
 #endif

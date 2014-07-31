@@ -40,7 +40,7 @@
 #include "iinput.h"
 #include "c_team.h"
 #include "c_playerresource.h"
-#include "c_ball.h"
+#include "c_match_ball.h"
 #include "sdk_gamerules.h"
 #include "ios_camera.h"
 

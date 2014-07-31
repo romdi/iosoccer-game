@@ -407,7 +407,10 @@ void CBot::BotFrame()
 			RunMimicCommand(m_cmd);
 		else
 		{
-			m_pBall = GetNearestBall(GetLocalOrigin());
+			if (SDKGameRules()->IsIntermissionState())
+				m_pBall = GetNearestPlayerBall(GetLocalOrigin());
+			else
+				m_pBall = GetMatchBall();
 			m_vBallPos = m_pBall->GetPos();
 			m_vBallVel = m_pBall->GetVel();
 

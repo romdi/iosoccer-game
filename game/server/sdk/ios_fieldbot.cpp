@@ -2,6 +2,7 @@
 #include "ios_fieldbot.h"
 #include "sdk_player.h"
 #include "team.h"
+#include "in_buttons.h"
 
 LINK_ENTITY_TO_CLASS(ios_fieldbot, CFieldBot);
 

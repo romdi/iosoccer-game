@@ -13,12 +13,16 @@
 #include "server_class.h"
 #include "sdk_playeranimstate.h"
 #include "sdk_player_shared.h"
-#include "ball.h"
 #include "sdk_gamerules.h"
 #include "sdk_shareddefs.h"
 #include "steam/steam_api.h"
+#include "ios_teamkit_parse.h"
+//#include "player_ball.h"
+//#include "match_ball.h"
 
 class CBall;
+class CPlayerBall;
+class CMatchBall;
 
 class CPlayerMatchData
 {
@@ -561,8 +565,8 @@ public:
 	bool				m_bJoinSilently;
 
 	int					m_ePenaltyState;
-	void				SetPlayerBall(CBall *pPlayerBall) { m_pPlayerBall = pPlayerBall; }
-	CBall				*GetPlayerBall() { return m_pPlayerBall; }
+	void				SetPlayerBall(CPlayerBall *pPlayerBall) { m_pPlayerBall = pPlayerBall; }
+	CPlayerBall			*GetPlayerBall() { return m_pPlayerBall; }
 	bool				SetDesiredTeam(int desiredTeam, int desiredSpecTeam, int desiredPosIndex, bool switchInstantly, bool setNextJoinDelay, bool silent);
 
 	void				CheckBallShield(const Vector &oldPos, Vector &newPos, const Vector &oldVel, Vector &newVel, const QAngle &oldAng, QAngle &newAng);
@@ -583,7 +587,7 @@ protected:
 	float				m_flLastMoveTime;
 	bool				m_bIsOffside;
 	Vector				m_vOffsidePos;
-	CHandle<CBall>		m_pPlayerBall;
+	CHandle<CPlayerBall>	m_pPlayerBall;
 	Vector				m_vOffsideLastOppPlayerPos;
 	Vector				m_vOffsideBallPos;
 	int					m_nSpecTeam;

@@ -41,11 +41,13 @@ extern IFileSystem *filesystem;
 	#include "c_sdk_player.h"
 	#include "c_team.h"
 	#include "c_playerresource.h"
-	#include "c_ball.h"
+	#include "c_player_ball.h"
+	#include "c_match_ball.h"
 #else
 	#include "sdk_player.h"
 	#include "team.h"
-	#include "ball.h"
+	#include "player_ball.h"
+	#include "match_ball.h"
 #endif
 
 // tickcount currently isn't set during prediction, although gpGlobals->curtime and
@@ -767,7 +769,7 @@ void CGameMovement::ReduceTimers( void )
 		reduceStamina = true;
 
 	// If celebrating after a goal
-	if (GetBall() && GetBall()->m_eBallState == BALL_STATE_GOAL)
+	if (GetMatchBall() && GetMatchBall()->m_eBallState == BALL_STATE_GOAL)
 		reduceStamina = false;
 
 	// If we're holding the sprint key and also actually moving, remove some stamina
@@ -1529,7 +1531,7 @@ void CGameMovement::FullWalkMove( )
 	}
 
 #ifdef GAME_DLL
-	if (!SDKGameRules()->IsIntermissionState() && GetBall()->State_Get() == BALL_STATE_NORMAL && !GetBall()->HasQueuedState() && newPos != oldPos)
+	if (!SDKGameRules()->IsIntermissionState() && GetMatchBall()->State_Get() == BALL_STATE_NORMAL && !GetMatchBall()->HasQueuedState() && newPos != oldPos)
 	{
 		ToSDKPlayer(player)->AddExactDistanceCovered((newPos - oldPos).Length2D() * 2.54f / 100);
 	}
@@ -2065,7 +2067,7 @@ bool CGameMovement::CheckSlideButton()
 		pPl->m_Shared.m_flNextSlide = gpGlobals->curtime + mp_slide_delay.GetFloat();
 
 		#ifdef GAME_DLL
-			if (!SDKGameRules()->IsIntermissionState() && GetBall()->State_Get() == BALL_STATE_NORMAL && !GetBall()->HasQueuedState())
+			if (!SDKGameRules()->IsIntermissionState() && GetMatchBall()->State_Get() == BALL_STATE_NORMAL && !GetMatchBall()->HasQueuedState())
 				pPl->AddSlidingTackle();
 		#endif
 	}

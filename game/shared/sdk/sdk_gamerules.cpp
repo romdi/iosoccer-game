@@ -41,6 +41,8 @@ extern void Bot_RunAll( void );
 	#include <time.h>
 	#include "ios_requiredclientversion.h"
 	#include "ios_fileupdater.h"
+	#include "player_ball.h"
+	#include "match_ball.h"
 #endif
 
 
@@ -1434,7 +1436,7 @@ void CSDKGameRules::State_Enter( match_period_t newState )
 
 	if (!IsIntermissionState())
 	{
-		GetBall()->RemoveAllPlayerBalls();
+		CPlayerBall::RemoveAllPlayerBalls();
 
 		for (int i = 0; i < 2; i++)
 		{
@@ -1495,8 +1497,8 @@ void CSDKGameRules::State_Think()
 {
 	if ( m_pCurStateInfo && m_pCurStateInfo->pfnThink )
 	{
-		if (GetBall())
-			m_nBallZone = GetBall()->CalcFieldZone();
+		if (GetMatchBall())
+			m_nBallZone = GetMatchBall()->CalcFieldZone();
 
 		if (m_pCurStateInfo->m_eMatchPeriod == MATCH_PERIOD_WARMUP && mp_timelimit_warmup.GetFloat() < 0)
 			m_flStateTimeLeft = 1.0f;
@@ -1650,8 +1652,8 @@ void CSDKGameRules::State_WARMUP_Think()
 
 void CSDKGameRules::State_WARMUP_Leave(match_period_t newState)
 {
-	GetBall()->EmitSound("Ball.Whistle");
-	//GetBall()->EmitSound("Crowd.EndOfPeriod");
+	GetMatchBall()->EmitSound("Ball.Whistle");
+	//GetMatchBall()->EmitSound("Crowd.EndOfPeriod");
 }
 
 void CSDKGameRules::State_FIRST_HALF_Enter()
@@ -1662,7 +1664,7 @@ void CSDKGameRules::State_FIRST_HALF_Enter()
 	m_nRealMatchStartTime = time(NULL);
 
 	ReloadSettings();
-	GetBall()->State_Transition(BALL_STATE_KICKOFF, 0, true);
+	GetMatchBall()->State_Transition(BALL_STATE_KICKOFF, 0, true);
 
 	IGameEvent *pEvent = gameeventmanager->CreateEvent("wakeupcall");
 	if (pEvent)
@@ -1671,7 +1673,7 @@ void CSDKGameRules::State_FIRST_HALF_Enter()
 	UTIL_ClientPrintAll(HUD_PRINTTALK, "#game_match_start");
 	//UTIL_ClientPrintAll(HUD_PRINTCENTER, "LIVE");
 
-	//GetBall()->EmitSound("Crowd.YNWA");
+	//GetMatchBall()->EmitSound("Crowd.YNWA");
 }
 
 void CSDKGameRules::State_FIRST_HALF_Think()
@@ -1680,7 +1682,7 @@ void CSDKGameRules::State_FIRST_HALF_Think()
 	{
 		m_nAnnouncedInjuryTime = g_IOSRand.RandomInt(mp_injurytime_min.GetInt(), mp_injurytime_max.GetInt());
 	}
-	else if (m_flStateTimeLeft <= 0 && GetBall()->State_Get() == BALL_STATE_NORMAL && !GetBall()->HasQueuedState())
+	else if (m_flStateTimeLeft <= 0 && GetMatchBall()->State_Get() == BALL_STATE_NORMAL && !GetMatchBall()->HasQueuedState())
 	{
 		State_Transition(MATCH_PERIOD_HALFTIME);
 	}
@@ -1688,8 +1690,8 @@ void CSDKGameRules::State_FIRST_HALF_Think()
 
 void CSDKGameRules::State_FIRST_HALF_Leave(match_period_t newState)
 {
-	GetBall()->EmitSound("Ball.Whistle");
-	//GetBall()->EmitSound("Crowd.EndOfPeriod");
+	GetMatchBall()->EmitSound("Ball.Whistle");
+	//GetMatchBall()->EmitSound("Crowd.EndOfPeriod");
 }
 
 void CSDKGameRules::State_HALFTIME_Enter()
@@ -1713,8 +1715,8 @@ void CSDKGameRules::State_SECOND_HALF_Enter()
 	SetKickOffTeam(GetGlobalTeam(m_nFirstHalfKickOffTeam)->GetOppTeamNumber());
 
 	CPlayerPersistentData::AddToAllMaxStaminas(mp_stamina_max_add_halftime.GetFloat());
-	GetBall()->State_Transition(BALL_STATE_KICKOFF, 0, true);
-	//GetBall()->EmitSound("Crowd.YNWA");
+	GetMatchBall()->State_Transition(BALL_STATE_KICKOFF, 0, true);
+	//GetMatchBall()->EmitSound("Crowd.YNWA");
 }
 
 void CSDKGameRules::State_SECOND_HALF_Think()
@@ -1723,7 +1725,7 @@ void CSDKGameRules::State_SECOND_HALF_Think()
 	{
 		m_nAnnouncedInjuryTime = g_IOSRand.RandomInt(mp_injurytime_min.GetInt(), mp_injurytime_max.GetInt());
 	}
-	else if (m_flStateTimeLeft <= 0 && GetBall()->State_Get() == BALL_STATE_NORMAL && !GetBall()->HasQueuedState())
+	else if (m_flStateTimeLeft <= 0 && GetMatchBall()->State_Get() == BALL_STATE_NORMAL && !GetMatchBall()->HasQueuedState())
 	{
 		if (mp_extratime.GetBool() && GetGlobalTeam(TEAM_A)->GetGoals() == GetGlobalTeam(TEAM_B)->GetGoals())
 			State_Transition(MATCH_PERIOD_EXTRATIME_INTERMISSION);
@@ -1736,8 +1738,8 @@ void CSDKGameRules::State_SECOND_HALF_Think()
 
 void CSDKGameRules::State_SECOND_HALF_Leave(match_period_t newState)
 {
-	GetBall()->EmitSound("Ball.Whistle");
-	//GetBall()->EmitSound("Crowd.EndOfPeriod");
+	GetMatchBall()->EmitSound("Ball.Whistle");
+	//GetMatchBall()->EmitSound("Crowd.EndOfPeriod");
 }
 
 void CSDKGameRules::State_EXTRATIME_INTERMISSION_Enter()
@@ -1761,7 +1763,7 @@ void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Enter()
 	SetKickOffTeam(m_nFirstHalfKickOffTeam);
 
 	CPlayerPersistentData::AddToAllMaxStaminas(mp_stamina_max_add_extratime_intermission.GetFloat());
-	GetBall()->State_Transition(BALL_STATE_KICKOFF, 0, true);
+	GetMatchBall()->State_Transition(BALL_STATE_KICKOFF, 0, true);
 }
 
 void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Think()
@@ -1770,7 +1772,7 @@ void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Think()
 	{
 		m_nAnnouncedInjuryTime = g_IOSRand.RandomInt(mp_injurytime_min.GetInt(), mp_injurytime_max.GetInt());
 	}
-	else if (m_flStateTimeLeft <= 0 && GetBall()->State_Get() == BALL_STATE_NORMAL && !GetBall()->HasQueuedState())
+	else if (m_flStateTimeLeft <= 0 && GetMatchBall()->State_Get() == BALL_STATE_NORMAL && !GetMatchBall()->HasQueuedState())
 	{
 		State_Transition(MATCH_PERIOD_EXTRATIME_HALFTIME);
 	}
@@ -1778,8 +1780,8 @@ void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Think()
 
 void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Leave(match_period_t newState)
 {
-	GetBall()->EmitSound("Ball.Whistle");
-	//GetBall()->EmitSound("Crowd.EndOfPeriod");
+	GetMatchBall()->EmitSound("Ball.Whistle");
+	//GetMatchBall()->EmitSound("Crowd.EndOfPeriod");
 }
 
 void CSDKGameRules::State_EXTRATIME_HALFTIME_Enter()
@@ -1803,7 +1805,7 @@ void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Enter()
 	SetKickOffTeam(GetGlobalTeam(m_nFirstHalfKickOffTeam)->GetOppTeamNumber());
 
 	CPlayerPersistentData::AddToAllMaxStaminas(mp_stamina_max_add_extratime_halftime.GetFloat());
-	GetBall()->State_Transition(BALL_STATE_KICKOFF, 0, true);
+	GetMatchBall()->State_Transition(BALL_STATE_KICKOFF, 0, true);
 }
 
 void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Think()
@@ -1812,7 +1814,7 @@ void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Think()
 	{
 		m_nAnnouncedInjuryTime = g_IOSRand.RandomInt(mp_injurytime_min.GetInt(), mp_injurytime_max.GetInt());
 	}
-	else if (m_flStateTimeLeft <= 0 && GetBall()->State_Get() == BALL_STATE_NORMAL && !GetBall()->HasQueuedState())
+	else if (m_flStateTimeLeft <= 0 && GetMatchBall()->State_Get() == BALL_STATE_NORMAL && !GetMatchBall()->HasQueuedState())
 	{
 		if (mp_penalties.GetBool() && GetGlobalTeam(TEAM_A)->GetGoals() == GetGlobalTeam(TEAM_B)->GetGoals())
 			State_Transition(MATCH_PERIOD_PENALTIES_INTERMISSION);
@@ -1823,8 +1825,8 @@ void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Think()
 
 void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Leave(match_period_t newState)
 {
-	GetBall()->EmitSound("Ball.Whistle");
-	//GetBall()->EmitSound("Crowd.EndOfPeriod");
+	GetMatchBall()->EmitSound("Ball.Whistle");
+	//GetMatchBall()->EmitSound("Crowd.EndOfPeriod");
 }
 
 void CSDKGameRules::State_PENALTIES_INTERMISSION_Enter()
@@ -1855,7 +1857,7 @@ void CSDKGameRules::State_PENALTIES_Enter()
 	m_nPenaltyTakingStartTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
 	m_nPenaltyTakingTeam = m_nPenaltyTakingStartTeam;
 	SetLeftSideTeam(g_IOSRand.RandomInt(TEAM_A, TEAM_B));
-	GetBall()->SetPenaltyState(PENALTY_NONE);
+	GetMatchBall()->SetPenaltyState(PENALTY_NONE);
 }
 
 void CSDKGameRules::State_PENALTIES_Think()
@@ -1866,11 +1868,11 @@ void CSDKGameRules::State_PENALTIES_Think()
 		return;
 	}
 
-	if (GetBall()->GetPenaltyState() == PENALTY_KICKED
-		|| GetBall()->GetPenaltyState() == PENALTY_SCORED
-		|| GetBall()->GetPenaltyState() == PENALTY_SAVED
-		|| GetBall()->GetPenaltyState() == PENALTY_ABORTED_NO_KEEPER
-		|| GetBall()->GetPenaltyState() == PENALTY_ABORTED_ILLEGAL_MOVE)
+	if (GetMatchBall()->GetPenaltyState() == PENALTY_KICKED
+		|| GetMatchBall()->GetPenaltyState() == PENALTY_SCORED
+		|| GetMatchBall()->GetPenaltyState() == PENALTY_SAVED
+		|| GetMatchBall()->GetPenaltyState() == PENALTY_ABORTED_NO_KEEPER
+		|| GetMatchBall()->GetPenaltyState() == PENALTY_ABORTED_ILLEGAL_MOVE)
 	{
 		if (m_flNextPenalty == -1)
 		{
@@ -1878,14 +1880,14 @@ void CSDKGameRules::State_PENALTIES_Think()
 		}
 		else if (m_flNextPenalty <= gpGlobals->curtime)
 		{
-			if (GetBall()->GetPenaltyState() == PENALTY_KICKED
-				|| GetBall()->GetPenaltyState() == PENALTY_SCORED
-				|| GetBall()->GetPenaltyState() == PENALTY_SAVED
-				|| GetBall()->GetPenaltyState() == PENALTY_ABORTED_ILLEGAL_MOVE)
+			if (GetMatchBall()->GetPenaltyState() == PENALTY_KICKED
+				|| GetMatchBall()->GetPenaltyState() == PENALTY_SCORED
+				|| GetMatchBall()->GetPenaltyState() == PENALTY_SAVED
+				|| GetMatchBall()->GetPenaltyState() == PENALTY_ABORTED_ILLEGAL_MOVE)
 			{
-				GetBall()->State_Transition(BALL_STATE_NORMAL, 0, true);
+				GetMatchBall()->State_Transition(BALL_STATE_NORMAL, 0, true);
 
-				if (GetBall()->GetPenaltyState() == PENALTY_SCORED)
+				if (GetMatchBall()->GetPenaltyState() == PENALTY_SCORED)
 				{
 					GetGlobalTeam(m_nPenaltyTakingTeam)->m_Goals += 1;
 					GetGlobalTeam(m_nPenaltyTakingTeam)->m_nPenaltyGoals += 1;
@@ -1917,10 +1919,10 @@ void CSDKGameRules::State_PENALTIES_Think()
 				SetLeftSideTeam(GetGlobalTeam(GetLeftSideTeam())->GetOppTeamNumber());
 			}
 
-			GetBall()->SetPenaltyState(PENALTY_NONE);
+			GetMatchBall()->SetPenaltyState(PENALTY_NONE);
 		}
 	}
-	else if (GetBall()->GetPenaltyState() == PENALTY_NONE || GetBall()->GetPenaltyState() == PENALTY_ABORTED_NO_TAKER)
+	else if (GetMatchBall()->GetPenaltyState() == PENALTY_NONE || GetMatchBall()->GetPenaltyState() == PENALTY_ABORTED_NO_TAKER)
 	{
 		for (int attemptCount = 1; attemptCount <= 2; attemptCount++)
 		{
@@ -1965,9 +1967,9 @@ void CSDKGameRules::State_PENALTIES_Think()
 					gameeventmanager->FireEvent(pEvent);
 				}
 
-				GetBall()->SetPenaltyTaker(pPenTaker);
-				GetBall()->SetPenaltyState(PENALTY_ASSIGNED);
-				GetBall()->State_Transition(BALL_STATE_PENALTY, 0, true);
+				GetMatchBall()->SetPenaltyTaker(pPenTaker);
+				GetMatchBall()->SetPenaltyState(PENALTY_ASSIGNED);
+				GetMatchBall()->State_Transition(BALL_STATE_PENALTY, 0, true);
 				m_flNextPenalty = -1;
 				return;
 			}
@@ -1991,8 +1993,8 @@ void CSDKGameRules::State_PENALTIES_Think()
 
 void CSDKGameRules::State_PENALTIES_Leave(match_period_t newState)
 {
-	GetBall()->EmitSound("Ball.Whistle");
-	//GetBall()->EmitSound("Crowd.EndOfPeriod");
+	GetMatchBall()->EmitSound("Ball.Whistle");
+	//GetMatchBall()->EmitSound("Crowd.EndOfPeriod");
 }
 
 void CSDKGameRules::State_COOLDOWN_Enter()
@@ -2041,12 +2043,12 @@ void CSDKGameRules::ApplyIntermissionSettings(bool startHighlights, bool movePla
 {
 	if (movePlayers)
 	{
-		GetBall()->State_Transition(BALL_STATE_NORMAL, 0, true);
-		GetBall()->SetPos(m_vKickOff);
+		GetMatchBall()->State_Transition(BALL_STATE_NORMAL, 0, true);
+		GetMatchBall()->SetPos(m_vKickOff);
 		EnableShield(SHIELD_KICKOFF, TEAM_A, SDKGameRules()->m_vKickOff);
 	}
 	else
-		GetBall()->UpdatePossession(NULL);
+		GetMatchBall()->UpdatePossession(NULL);
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
@@ -2339,7 +2341,7 @@ void CC_MP_BallSkin(const CCommand &args)
 			Q_snprintf(ballSkinName, sizeof(ballSkinName), "%s", CBallInfo::m_BallInfo[ballSkinIndex]->m_szFolderName);
 
 		if (ballSkinName[0] != '\0')
-			GetBall()->SetSkinName(ballSkinName);
+			GetMatchBall()->SetSkinName(ballSkinName);
 		else
 			Msg("Error: Ball skin not found.\n");
 	}
@@ -2732,7 +2734,7 @@ void CSDKGameRules::ResetMatch()
 	FileHandle_t logfile = filesystem->Open("logs/cleanup.log", "a", "MOD");
 
 	FlushLog(logfile, "Start ball reset");
-	GetBall()->Reset();
+	GetMatchBall()->Reset();
 	FlushLog(logfile, "End ball reset");
 
 	FlushLog(logfile, "Start player flags reset");
@@ -2780,7 +2782,7 @@ void CSDKGameRules::ReloadSettings()
 		}
 	}
 
-	GetBall()->ReloadSettings();
+	GetMatchBall()->ReloadSettings();
 }
 
 void CSDKGameRules::SetMatchDisplayTimeSeconds(int seconds)
@@ -2817,7 +2819,7 @@ void CSDKGameRules::SetMatchDisplayTimeSeconds(int seconds)
 
 	ResetMatch();
 	m_flMatchStartTime = gpGlobals->curtime - (seconds / (90.0f / mp_timelimit_match.GetFloat()));
-	GetBall()->State_Transition(BALL_STATE_STATIC, 0, true);
+	GetMatchBall()->State_Transition(BALL_STATE_STATIC, 0, true);
 	SetLeftSideTeam(m_nFirstHalfLeftSideTeam);
 	SetKickOffTeam(m_nFirstHalfKickOffTeam);
 	State_Transition(matchPeriod);

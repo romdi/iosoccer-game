@@ -32,7 +32,7 @@
 #include <stdio.h>
 #include "byteswap.h"
 
-#include "c_ball.h"
+#include "c_match_ball.h"
 #include "c_team.h"
 #include "sdk_backgroundpanel.h"
 #include "sdk_gamerules.h"

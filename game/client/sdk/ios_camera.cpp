@@ -17,7 +17,7 @@
 #include "vguicenterprint.h"
 #include "game/client/iviewport.h"
 #include <KeyValues.h>
-#include "c_ball.h"
+#include "c_match_ball.h"
 #include "c_ios_mapentities.h"
 #include "iinput.h"
 #include "c_playerresource.h"
@@ -168,7 +168,7 @@ int C_Camera::GetCamMode()
 	{
 		return CAM_MODE_TVCAM;
 	}
-	else if (GetBall() && GetBall()->m_eBallState == BALL_STATE_GOAL)
+	else if (GetMatchBall() && GetMatchBall()->m_eBallState == BALL_STATE_GOAL)
 	{
 		if (pLocal->IsObserver() || !(pLocal->GetFlags() & FL_CELEB))
 			return CAM_MODE_TVCAM;
@@ -208,7 +208,7 @@ int C_Camera::GetTVCamMode()
 	{
 		return GetReplayManager()->m_nReplayRunIndex == 0 ? mp_tvcam_firstreplay.GetInt() : mp_tvcam_secondreplay.GetInt();
 	}
-	else if (GetBall() && GetBall()->m_eBallState == BALL_STATE_GOAL)
+	else if (GetMatchBall() && GetMatchBall()->m_eBallState == BALL_STATE_GOAL)
 	{
 		return TVCAM_MODE_CELEBRATION;
 	}
@@ -262,7 +262,7 @@ void C_Camera::SpecNextTarget(bool inverse)
 
 	if (m_nTarget > 0 && m_nTarget <= gpGlobals->maxClients)
 		start = m_nTarget;
-	else if (GetBall() && m_nTarget == GetBall()->entindex())
+	else if (GetMatchBall() && m_nTarget == GetMatchBall()->entindex())
 		start = 0;
 
 	int index = start;
@@ -303,8 +303,8 @@ void C_Camera::SpecNextTarget(bool inverse)
 		break; // found a new player
 	}
 
-	if (index == 0 && GetBall())
-		index = GetBall()->entindex();
+	if (index == 0 && GetMatchBall())
+		index = GetMatchBall()->entindex();
 
 	if (index != 0)
 		SetTarget( index );
@@ -314,9 +314,9 @@ void C_Camera::SpecTargetByName(const char *name)
 {
 	if (!Q_stricmp(name, "ball"))
 	{
-		if (GetBall())
+		if (GetMatchBall())
 		{
-			SetTarget(GetBall()->entindex());
+			SetTarget(GetMatchBall()->entindex());
 		}
 	}
 	else
@@ -338,7 +338,7 @@ void C_Camera::SpecTargetByIndex(int index)
 {
 	if (index > gpGlobals->maxClients)
 	{
-		if (GetBall() && GetBall()->entindex() == index)
+		if (GetMatchBall() && GetMatchBall()->entindex() == index)
 			SetTarget(index);
 	}
 	else
@@ -575,8 +575,8 @@ void C_Camera::CalcChaseCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov
 	if ((pLocal->m_nButtons & IN_ZOOM)
 		&& !pLocal->IsObserver()
 		&& g_PR->GetTeamPosType(GetLocalPlayerIndex()) == POS_GK
-		&& GetBall()
-		&& Sign(GetBall()->GetLocalOrigin().y - SDKGameRules()->m_vKickOff.GetY()) == pLocal->GetTeam()->m_nForward)
+		&& GetMatchBall()
+		&& Sign(GetMatchBall()->GetLocalOrigin().y - SDKGameRules()->m_vKickOff.GetY()) == pLocal->GetTeam()->m_nForward)
 	{
 		CalcHawkEyeView(eyeOrigin, eyeAngles, fov);
 		return;
@@ -602,7 +602,7 @@ void C_Camera::CalcChaseCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov
 	const QAngle camAngles = ::input->GetCameraAngles();
 	Vector &camOffset = ::input->GetCameraOffset();
 
-	if (pLocal->IsObserver() && GetCamMode() == CAM_MODE_LOCKED_CHASE && !dynamic_cast<C_Ball *>(pTarget))
+	if (pLocal->IsObserver() && GetCamMode() == CAM_MODE_LOCKED_CHASE && !dynamic_cast<C_MatchBall *>(pTarget))
 	{
 		camOffset[PITCH] = eyeAngles[PITCH];
 		camOffset[YAW] = eyeAngles[YAW];
@@ -674,7 +674,7 @@ void C_Camera::CalcChaseCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov
 
 void C_Camera::CalcTVCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov)
 {
-	if (!GetBall())
+	if (!GetMatchBall())
 		return;
 
 	C_BaseEntity *pTarget;
@@ -694,12 +694,12 @@ void C_Camera::CalcTVCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov)
 	}
 	else
 	{
-		if (GetBall() && GetBall()->m_eBallState == BALL_STATE_GOAL)
+		if (GetMatchBall() && GetMatchBall()->m_eBallState == BALL_STATE_GOAL)
 		{
-			pTarget = GetBall()->m_pLastActivePlayer;
+			pTarget = GetMatchBall()->m_pLastActivePlayer;
 
 			if (!pTarget)
-				pTarget = GetBall();
+				pTarget = GetMatchBall();
 
 			atMinGoalPos = pTarget->GetLocalOrigin().y < SDKGameRules()->m_vKickOff.GetY();
 			targetPos = pTarget->GetLocalOrigin();
@@ -708,33 +708,33 @@ void C_Camera::CalcTVCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov)
 		{
 			pTarget = CBasePlayer::GetLocalPlayer()->GetObserverTarget();
 			if (!pTarget)
-				pTarget = GetBall();
+				pTarget = GetMatchBall();
 
 			atMinGoalPos = pTarget->GetLocalOrigin().y < SDKGameRules()->m_vKickOff.GetY();
 			targetPos = pTarget->GetLocalOrigin();
 
 			// Move the camera towards the defending team's goal
-			if (GetBall()->m_nLastActiveTeam != TEAM_UNASSIGNED)
+			if (GetMatchBall()->m_nLastActiveTeam != TEAM_UNASSIGNED)
 			{
 				if (m_nLastPossessingTeam == TEAM_UNASSIGNED)
 				{
-					m_nLastPossessingTeam = GetBall()->m_nLastActiveTeam;
+					m_nLastPossessingTeam = GetMatchBall()->m_nLastActiveTeam;
 					m_flLastPossessionChange = gpGlobals->curtime;
 					m_flPossCoeff = 0;
 					m_flOldPossCoeff = 0;
 				}
 				else
 				{
-					if (GetBall()->m_nLastActiveTeam != m_nLastPossessingTeam)
+					if (GetMatchBall()->m_nLastActiveTeam != m_nLastPossessingTeam)
 					{
-						m_nLastPossessingTeam = GetBall()->m_nLastActiveTeam;
+						m_nLastPossessingTeam = GetMatchBall()->m_nLastActiveTeam;
 						m_flLastPossessionChange = gpGlobals->curtime;
 						m_flOldPossCoeff = m_flPossCoeff;
 					}
 
 					float timeFrac = min(1.0f, (gpGlobals->curtime - m_flLastPossessionChange) / mp_tvcam_offset_forward_time.GetFloat());
 					float frac = pow(timeFrac, 2) * (3 - 2 * timeFrac); 
-					m_flPossCoeff = Lerp(frac, m_flOldPossCoeff, (float)GetGlobalTeam(GetBall()->m_nLastActiveTeam)->m_nForward);
+					m_flPossCoeff = Lerp(frac, m_flOldPossCoeff, (float)GetGlobalTeam(GetMatchBall()->m_nLastActiveTeam)->m_nForward);
 				}
 
 				if (tvcamMode == TVCAM_MODE_SIDELINE)

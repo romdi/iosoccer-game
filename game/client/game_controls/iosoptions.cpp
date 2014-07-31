@@ -5,7 +5,7 @@
 #include "c_playerresource.h"
 #include "sdk_gamerules.h"
 #include "ios_teamkit_parse.h"
-#include "c_ball.h"
+#include "c_match_ball.h"
 #include "vgui/IVgui.h"
 
 extern ConVar
@@ -959,7 +959,7 @@ void CSoundSettingPanel::OnTick()
 			cl_sound_crowdevent_volume.SetValue(m_pCrowdEventVolume->GetValue());
 	}
 
-	C_Ball *pBall = GetBall();
+	C_MatchBall *pBall = GetMatchBall();
 
 	if (!pBall)
 		return;

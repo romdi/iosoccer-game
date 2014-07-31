@@ -2,9 +2,10 @@
 #include "triggers.h"
 #include "sdk_gamerules.h"
 #include "sdk_player.h"
-#include "ball.h"
 #include "ios_mapentities.h"
 #include "team.h"
+#include "player_ball.h"
+#include "match_ball.h"
 
 class CBallTrigger : public CBaseTrigger
 {
@@ -170,15 +171,13 @@ END_DATADESC()
 
 LINK_ENTITY_TO_CLASS( trigger_PenaltyBox, CTriggerPenaltyBox );
 
-extern CBall *CreateBall(const Vector &pos, CSDKPlayer *pCreator);
-
 class CBallStart : public CPointEntity //IOS
 {
 public:
 	DECLARE_CLASS( CBallStart, CPointEntity );
 	void Spawn(void)
 	{
-		CreateBall(GetLocalOrigin(), NULL);	
+		CreateMatchBall(GetLocalOrigin());	
 	};
 };
 

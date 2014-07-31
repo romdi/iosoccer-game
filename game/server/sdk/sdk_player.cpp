@@ -500,7 +500,12 @@ void CSDKPlayer::PostThink()
 
 void CSDKPlayer::LookAtBall(void)
 {
-	CBall *pBall = GetNearestBall(GetLocalOrigin());
+	CBall *pBall;
+	
+	if (SDKGameRules()->IsIntermissionState())
+		pBall = GetNearestPlayerBall(GetLocalOrigin());
+	else
+		pBall = GetMatchBall();
 
 	if (!pBall)
 		return;
@@ -1148,7 +1153,7 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 		CSDKPlayer *pPl = (CSDKPlayer*)UTIL_PlayerByIndex(playerIndex);
 
 		if (pPl && pPl->GetTeam() == GetTeam())
-			GetBall()->SetSetpieceTaker(pPl);
+			GetMatchBall()->SetSetpieceTaker(pPl);
 
 		return true;
 	}
@@ -1325,7 +1330,7 @@ void CSDKPlayer::SetPosOutsideBall(const Vector &playerPos)
 {
 	RemoveFlag(FL_SHIELD_KEEP_IN | FL_SHIELD_KEEP_OUT);
 
-	Vector ballPos = GetBall()->GetPos();
+	Vector ballPos = GetMatchBall()->GetPos();
 
 	Vector ballPlayerDir = playerPos - ballPos;
 

@@ -32,7 +32,7 @@
 #include <vgui/ILocalize.h>
 #include "sdk_gamerules.h"
 #include "c_ios_replaymanager.h"
-#include "c_ball.h"
+#include "c_match_ball.h"
 #include "in_buttons.h"
 #include "c_ios_mapentities.h"
 #include "ios_camera.h"

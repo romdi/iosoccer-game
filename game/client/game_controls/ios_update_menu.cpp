@@ -5,7 +5,7 @@
 #include "c_playerresource.h"
 #include "sdk_gamerules.h"
 #include "ios_teamkit_parse.h"
-#include "c_ball.h"
+#include "c_match_ball.h"
 #include "vgui/IVgui.h"
 #include "ios_fileupdater.h"
 

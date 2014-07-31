@@ -25,7 +25,7 @@
 #include "clientmode_shared.h"
 #include "c_baseplayer.h"
 #include "c_team.h"
-#include "c_ball.h"
+#include "c_match_ball.h"
 #include "sdk_gamerules.h"
 #include <vgui_controls/ImagePanel.h>
 #include "UtlVector.h"

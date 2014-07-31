@@ -41,7 +41,7 @@
 #include "vgui_avatarimage.h"
 #include "c_team.h"
 
-#include "c_ball.h"
+#include "c_match_ball.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -726,12 +726,12 @@ void CClientScoreBoardDialog::Update( void )
 	}
 
 	if (GetGlobalTeam(GetLocalPlayerTeam())->GetCaptainPosIndex() == gr->GetTeamPosIndex(GetLocalPlayerIndex())
-		&& GetBall()
-		&& (GetBall()->State_Get() == BALL_STATE_FREEKICK
-			|| GetBall()->State_Get() == BALL_STATE_CORNER
-			|| GetBall()->State_Get() == BALL_STATE_GOALKICK
-			|| GetBall()->State_Get() == BALL_STATE_THROWIN
-			|| GetBall()->State_Get() == BALL_STATE_PENALTY))
+		&& GetMatchBall()
+		&& (GetMatchBall()->State_Get() == BALL_STATE_FREEKICK
+			|| GetMatchBall()->State_Get() == BALL_STATE_CORNER
+			|| GetMatchBall()->State_Get() == BALL_STATE_GOALKICK
+			|| GetMatchBall()->State_Get() == BALL_STATE_THROWIN
+			|| GetMatchBall()->State_Get() == BALL_STATE_PENALTY))
 	{
 		m_bCanSetSetpieceTaker = true;
 	}

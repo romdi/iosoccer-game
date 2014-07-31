@@ -22,7 +22,7 @@
 #include "bone_setup.h"
 #include "cl_animevent.h"
 #include "sdk_gamerules.h"
-#include "c_ball.h"
+#include "c_match_ball.h"
 #include "igameresources.h"
 
 #include "ios_requiredclientversion.h"
@@ -712,7 +712,7 @@ void C_SDKPlayer::UpdateClientSideAnimation()
 
 void C_SDKPlayer::LookAtBall(void)
 {
-	C_Ball *pBall = GetBall();
+	C_MatchBall *pBall = GetMatchBall();
 
 	if (!pBall)
 		return;

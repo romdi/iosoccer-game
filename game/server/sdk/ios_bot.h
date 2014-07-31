@@ -13,7 +13,8 @@
 
 #include "sdk_player.h"
 #include "ios_mapentities.h"
-#include "ball.h"
+#include "player_ball.h"
+#include "match_ball.h"
 
 struct BotHistory
 {
