@@ -8,6 +8,218 @@
 
 #define	BALL_MODEL	 "models/ball/ball.mdl"
 
+extern ConVar
+	sv_ball_mass,
+	sv_ball_damping,
+	sv_ball_rotdamping,
+	sv_ball_rotinertialimit,
+	sv_ball_dragcoeff,
+	sv_ball_inertia,
+	sv_ball_drag_enabled,
+	
+	sv_ball_spin,
+	sv_ball_spin_exponent,
+	sv_ball_defaultspin,
+	sv_ball_topspin_coeff,
+	sv_ball_backspin_coeff,
+	sv_ball_curve,
+	
+	sv_ball_deflectionradius,
+	sv_ball_collisionradius,
+	
+	sv_ball_standing_reach_shortside,
+	sv_ball_standing_reach_longside,
+	sv_ball_standing_reach_shift,
+	sv_ball_standing_reach_ellipse,
+	
+	sv_ball_slidesidereach_ball,
+	sv_ball_slideforwardreach_ball,
+	sv_ball_slidebackwardreach_ball,
+	
+	sv_ball_slidesidereach_foul,
+	sv_ball_slideforwardreach_foul,
+	sv_ball_slidebackwardreach_foul,
+	
+	sv_ball_slidesidespeedcoeff,
+	sv_ball_slidezstart,
+	sv_ball_slidezend,
+	
+	sv_ball_keeper_standing_reach_top,
+	sv_ball_keeper_standing_reach_bottom,
+	sv_ball_keeper_standing_catchcenteroffset_side,
+	sv_ball_keeper_standing_catchcenteroffset_z,
+	
+	sv_ball_keeper_forwarddive_shortsidereach,
+	sv_ball_keeper_forwarddive_longsidereach,
+	sv_ball_keeper_forwarddive_longsidereach_opposite,
+	sv_ball_keeper_forwarddive_zstart,
+	sv_ball_keeper_forwarddive_zend,
+	sv_ball_keeper_forwarddive_catchcoeff,
+	
+	sv_ball_keeper_sidedive_shortsidereach,
+	sv_ball_keeper_sidedive_longsidereach,
+	sv_ball_keeper_sidedive_longsidereach_opposite,
+	sv_ball_keeper_sidedive_zstart,
+	sv_ball_keeper_sidedive_zend,
+	sv_ball_keeper_sidedive_catchcenteroffset_side,
+	sv_ball_keeper_sidedive_catchcenteroffset_z,
+	
+	sv_ball_keeper_punch_maxyawangle,
+	sv_ball_keeper_punch_maxpitchangle,
+	sv_ball_keeper_punch_pitchoffset,
+	sv_ball_keeper_punch_shortsidecoeff,
+	sv_ball_keeper_punch_minstrength,
+	sv_ball_keeper_punch_minpitchangle,
+	
+	sv_ball_keeperpunchupstrength,
+	sv_ball_keeperdeflectioncoeff,
+	
+	sv_ball_shotdelay_setpiece,
+	sv_ball_shotdelay_global_coeff,
+	sv_ball_keepercatchdelay_sidedive_global_coeff,
+	sv_ball_keepercatchdelay_forwarddive_global_coeff,
+	sv_ball_keepercatchdelay_standing_global_coeff,
+	sv_ball_dynamicshotdelay_mindelay,
+	sv_ball_dynamicshotdelay_maxdelay,
+	sv_ball_dynamicshotdelay_minshotstrength,
+	sv_ball_dynamicshotdelay_maxshotstrength,
+	sv_ball_dynamicbounce_enabled,
+	
+	sv_ball_bestshotangle,
+	
+	sv_ball_pitchdown_exponent_normalshot,
+	sv_ball_fixedpitchdowncoeff_normalshot,
+	sv_ball_pitchdown_exponent_nonnormalshot,
+	sv_ball_fixedpitchdowncoeff_nonnormalshot,
+	sv_ball_pitchup_exponent_normalshot,
+	sv_ball_fixedpitchupcoeff_normalshot,
+	sv_ball_pitchup_exponent_nonnormalshot,
+	sv_ball_fixedpitchupcoeff_nonnormalshot,
+	
+	sv_ball_bestbackspinangle_start,
+	sv_ball_bestbackspinangle_end,
+	
+	sv_ball_besttopspinangle_start,
+	sv_ball_besttopspinangle_end,
+	
+	sv_ball_keepercatchspeed,
+	sv_ball_keeperpickupangle,
+	
+	sv_ball_normalshot_strength,
+	sv_ball_powershot_strength,
+	sv_ball_chargedshot_minstrength,
+	sv_ball_chargedshot_maxstrength,
+	
+	sv_ball_powerthrow_strength,
+	sv_ball_chargedthrow_minstrength,
+	sv_ball_chargedthrow_maxstrength,
+	
+	sv_ball_normalheader_strength,
+	sv_ball_powerheader_strength,
+	sv_ball_chargedheader_minstrength,
+	sv_ball_chargedheader_maxstrength,
+	
+	sv_ball_powerdivingheader_strength,
+	sv_ball_chargeddivingheader_minstrength,
+	sv_ball_chargeddivingheader_maxstrength,
+	
+	sv_ball_header_mindelay,
+	
+	sv_ball_slide_strength,
+	
+	sv_ball_goalkick_speedcoeff,
+	sv_ball_freekick_speedcoeff,
+	sv_ball_volleyshot_speedcoeff,
+	
+	sv_ball_keepershot_minangle,
+	
+	sv_ball_groundshot_minangle,
+	sv_ball_volleyshot_minangle,
+	sv_ball_throwin_minangle,
+	sv_ball_throwin_minstrength,
+	sv_ball_autopass_minstrength,
+	sv_ball_autopass_maxstrength,
+	sv_ball_autopass_coeff,
+	sv_ball_volleyshot_spincoeff,
+	sv_ball_rainbowflick_spincoeff,
+	sv_ball_rainbowflick_angle,
+	sv_ball_rainbowflick_dist,
+	sv_ball_header_spincoeff,
+	sv_ball_doubletouchfouls,
+	
+	sv_ball_timelimit_setpiece,
+	sv_ball_timelimit_remotecontrolled,
+	
+	sv_ball_setpiece_close_time,
+	sv_ball_setpiece_close_dist,
+	
+	sv_ball_statetransition_activationdelay_short,
+	sv_ball_statetransition_activationdelay_normal,
+	sv_ball_statetransition_activationdelay_long,
+	sv_ball_statetransition_messagedelay_normal,
+	sv_ball_statetransition_messagedelay_short,
+	
+	sv_ball_goalcelebduration,
+	sv_ball_highlightsdelay_intermissions,
+	sv_ball_highlightsdelay_cooldown,
+	sv_ball_thinkinterval,
+	sv_ball_chestdrop_strength,
+	sv_ball_chestdrop_angle,
+	sv_ball_minshotstrength,
+	sv_ball_minspeed_passive,
+	sv_ball_minspeed_bounce,
+	sv_ball_bounce_strength,
+	sv_ball_player_yellow_red_card_duration,
+	sv_ball_player_red_card_duration,
+	
+	sv_ball_bodypos_feet_start,
+	sv_ball_bodypos_hip_start,
+	sv_ball_bodypos_head_start,
+	sv_ball_bodypos_head_end,
+	sv_ball_bodypos_keeperarms_end,
+	
+	sv_ball_bodypos_keeperhands,
+	
+	sv_ball_bodypos_collision_start,
+	sv_ball_bodypos_collision_end,
+	
+	sv_ball_bodypos_deflection_start,
+	sv_ball_bodypos_deflection_end,
+	
+	sv_ball_yellowcardballdist_forward,
+	sv_ball_yellowcardballdist_backward,
+	sv_ball_goalreplay_count,
+	sv_ball_goalreplay_delay,
+	sv_ball_deflectioncoeff,
+	sv_ball_collisioncoeff,
+	sv_ball_update_physics,
+	
+	sv_ball_stats_pass_mindist,
+	sv_ball_stats_clearance_minspeed,
+	sv_ball_stats_shot_mindist,
+	sv_ball_stats_save_minspeed,
+	sv_ball_stats_assist_maxtime,
+	
+	sv_ball_velocity_coeff,
+	
+	sv_ball_freekickdist_owngoal,
+	sv_ball_freekickdist_opponentgoal,
+	sv_ball_freekickangle_opponentgoal,
+	sv_ball_closetogoaldist,
+	
+	sv_ball_nonnormalshotsblocktime_freekick,
+	sv_ball_nonnormalshotsblocktime_corner,
+	sv_ball_shotsblocktime_penalty,
+	
+	sv_ball_maxcheckdist,
+	
+	sv_ball_freecamshot_maxangle,
+	sv_ball_heelshot_strength,
+	
+	sv_ball_offsidedist,
+	
+	sv_ball_turnovertime;
+
 //class CSDKPlayer;
 
 enum body_part_t
@@ -197,16 +409,17 @@ public:
 
 protected:
 
-	void State_STATIC_Enter();			void State_STATIC_Think();			void State_STATIC_Leave(ball_state_t newState);
-	void State_NORMAL_Enter();			void State_NORMAL_Think();			void State_NORMAL_Leave(ball_state_t newState);
-	void State_KICKOFF_Enter();			void State_KICKOFF_Think();			void State_KICKOFF_Leave(ball_state_t newState);
-	void State_THROWIN_Enter();			void State_THROWIN_Think();			void State_THROWIN_Leave(ball_state_t newState);
-	void State_GOALKICK_Enter();		void State_GOALKICK_Think();		void State_GOALKICK_Leave(ball_state_t newState);
-	void State_CORNER_Enter();			void State_CORNER_Think();			void State_CORNER_Leave(ball_state_t newState);
-	void State_GOAL_Enter();			void State_GOAL_Think();			void State_GOAL_Leave(ball_state_t newState);
-	void State_FREEKICK_Enter();		void State_FREEKICK_Think();		void State_FREEKICK_Leave(ball_state_t newState);
-	void State_PENALTY_Enter();			void State_PENALTY_Think();			void State_PENALTY_Leave(ball_state_t newState);
-	void State_KEEPERHANDS_Enter();		void State_KEEPERHANDS_Think();		void State_KEEPERHANDS_Leave(ball_state_t newState);
+	virtual void State_STATIC_Enter();				virtual void State_STATIC_Think();				virtual void State_STATIC_Leave(ball_state_t newState);
+	virtual void State_NORMAL_Enter();				virtual void State_NORMAL_Think();				virtual void State_NORMAL_Leave(ball_state_t newState);
+	virtual void State_KEEPERHANDS_Enter();			virtual void State_KEEPERHANDS_Think();			virtual void State_KEEPERHANDS_Leave(ball_state_t newState);
+
+	virtual void State_KICKOFF_Enter() {};			virtual void State_KICKOFF_Think() {};			virtual void State_KICKOFF_Leave(ball_state_t newState) {};
+	virtual void State_THROWIN_Enter() {};			virtual void State_THROWIN_Think() {};			virtual void State_THROWIN_Leave(ball_state_t newState) {};
+	virtual void State_GOALKICK_Enter() {};			virtual void State_GOALKICK_Think() {};			virtual void State_GOALKICK_Leave(ball_state_t newState) {};
+	virtual void State_CORNER_Enter() {};			virtual void State_CORNER_Think() {};			virtual void State_CORNER_Leave(ball_state_t newState) {};
+	virtual void State_GOAL_Enter() {};				virtual void State_GOAL_Think() {};				virtual void State_GOAL_Leave(ball_state_t newState) {};
+	virtual void State_FREEKICK_Enter() {};			virtual void State_FREEKICK_Think() {};			virtual void State_FREEKICK_Leave(ball_state_t newState) {};
+	virtual void State_PENALTY_Enter() {};			virtual void State_PENALTY_Think() {};			virtual void State_PENALTY_Leave(ball_state_t newState) {};
 
 	virtual void State_Enter(ball_state_t newState, bool cancelQueuedState);	// Initialize the new state.
 	virtual void State_Think();										// Update the current state.

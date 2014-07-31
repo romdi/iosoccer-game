@@ -31,7 +31,6 @@ public:
 	//void			State_Leave(ball_state_t newState);
 
 	CNetworkHandle(CSDKPlayer, m_pCreator);
-	
 
 protected:
 
