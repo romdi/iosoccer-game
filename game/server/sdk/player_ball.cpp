@@ -127,6 +127,46 @@ CPlayerBall::~CPlayerBall()
 {
 }
 
+void CPlayerBall::State_Transition(ball_state_t newState, float delay /*= 0.0f*/, bool cancelQueuedState /*= false*/, bool isShortMessageDelay /*= false*/)
+{
+	State_Leave(newState);
+	State_Enter(newState, cancelQueuedState);
+}
+
+void CPlayerBall::State_Enter(ball_state_t newState, bool cancelQueuedState)
+{
+	m_eBallState = newState;
+	m_pCurStateInfo = State_LookupInfo( newState );
+
+	m_flStateTimelimit = -1;
+
+	m_pPl = NULL;
+
+	if ( m_pCurStateInfo && m_pCurStateInfo->pfnEnterState )
+	{
+		(this->*m_pCurStateInfo->pfnEnterState)();
+	}
+}
+
+void CPlayerBall::State_Leave(ball_state_t newState)
+{
+	if ( m_pCurStateInfo && m_pCurStateInfo->pfnLeaveState )
+	{
+		(this->*m_pCurStateInfo->pfnLeaveState)(newState);
+	}
+}
+
+void CPlayerBall::State_Think()
+{
+	m_pPhys->GetPosition(&m_vPos, &m_aAng);
+	m_pPhys->GetVelocity(&m_vVel, &m_vRot);
+
+	if (m_pCurStateInfo && m_pCurStateInfo->pfnThink)
+	{	
+		(this->*m_pCurStateInfo->pfnThink)();
+	}
+}
+
 void CPlayerBall::SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyPart, bool isDeflection, bool markOffsidePlayers, bool ensureMinShotStrength, float nextShotMinDelay)
 {
 	CBall::SetVel(vel, spinCoeff, spinFlags, bodyPart, isDeflection, markOffsidePlayers, ensureMinShotStrength, nextShotMinDelay);
@@ -144,8 +184,6 @@ void CPlayerBall::SaveBallCannonSettings()
 	m_vBallCannonVel = GetVel();
 	m_vBallCannonRot = GetRot();
 	m_bIsBallCannonMode = false;
-	//m_pPhys->GetPosition(&m_vBallCannonPos, &m_aBallCannonAng);
-	//m_pPhys->GetVelocity(&m_vBallCannonVel, &m_vBallCannonRot);
 }
 
 void CPlayerBall::RestoreBallCannonSettings()
@@ -180,4 +218,49 @@ void CPlayerBall::RemovePlayerBall()
 		GetCreator()->SetPlayerBall(NULL);
 
 	UTIL_Remove(this);
+}
+
+void CPlayerBall::State_NORMAL_Enter()
+{
+	m_pPhys->EnableMotion(true);
+	EnablePlayerCollisions(true);
+	m_pPhys->Wake();
+}
+
+void CPlayerBall::State_NORMAL_Think()
+{
+	for (int ignoredPlayerBits = 0;;)
+	{
+		m_pPl = FindNearestPlayer(TEAM_INVALID, FL_POS_ANY, false, ignoredPlayerBits, sv_ball_maxcheckdist.GetFloat());
+
+		if (!m_pPl)
+			return;
+
+		UpdateCarrier();
+
+		// The current player was able to perform an action, so exit the loop
+		if (DoBodyPartAction())
+			break;
+
+		// Exclude the current player from subsequent checks
+		ignoredPlayerBits |= (1 << (m_pPl->entindex() - 1));
+
+		m_pPl = NULL;
+	}
+}
+
+void CPlayerBall::State_NORMAL_Leave(ball_state_t newState)
+{
+}
+
+void CPlayerBall::TriggerGoal(int team)
+{
+}
+
+void CPlayerBall::TriggerGoalLine(int team)
+{
+}
+
+void CPlayerBall::TriggerSideline()
+{
 }

@@ -363,15 +363,12 @@ public:
 	void			VPhysicsUpdate(IPhysicsObject *pPhysics);
 	bool			CreateVPhysics();
 	
-	void			GetGoalInfo(bool &isOwnGoal, int &scoringTeam, CSDKPlayer **pScorer, CSDKPlayer **pFirstAssister, CSDKPlayer **pSecondAssister);
-	void			TriggerGoal(int team);
-	void			TriggerGoalLine(int team);
-	void			TriggerSideline();
+	virtual void	TriggerGoal(int team) = 0;
+	virtual void	TriggerGoalLine(int team) = 0;
+	virtual void	TriggerSideline() = 0;
 	void			TriggerPenaltyBox(int team);
 	bool			IsSettingNewPos() { return m_bSetNewPos; }
 	bool			HasQueuedState() { return m_bHasQueuedState; }
-
-	void			SendNotifications();
 
 	virtual void	Reset();
 	void			ReloadSettings();
@@ -389,7 +386,6 @@ public:
 	inline ball_state_t State_Get( void ) { return m_pCurStateInfo->m_eBallState; }
 
 	CSDKPlayer		*GetCurrentPlayer() { return m_pPl; }
-	CSDKPlayer		*GetCurrentOtherPlayer() { return m_pOtherPl; }
 	CSDKPlayer		*GetHoldingPlayer() { return m_pHoldingPlayer; }
 	void			EnablePlayerCollisions(bool enable);
 	void			RemoveFromPlayerHands(CSDKPlayer *pPl);
@@ -403,16 +399,14 @@ public:
 	const char		*GetSkinName() { return m_szSkinName; }
 	void			SetSkinName(const char *skinName);
 
-	void			SetSetpieceTaker(CSDKPlayer *pPlayer) { m_pSetpieceTaker = pPlayer; m_pPl = NULL; }
-
-	virtual void State_Transition(ball_state_t newState, float delay = 0.0f, bool cancelQueuedState = false, bool isShortMessageDelay = false);
+	virtual void State_Transition(ball_state_t newState, float delay = 0.0f, bool cancelQueuedState = false, bool isShortMessageDelay = false) = 0;
 
 protected:
 
-	virtual void State_STATIC_Enter();				virtual void State_STATIC_Think();				virtual void State_STATIC_Leave(ball_state_t newState);
-	virtual void State_NORMAL_Enter();				virtual void State_NORMAL_Think();				virtual void State_NORMAL_Leave(ball_state_t newState);
 	virtual void State_KEEPERHANDS_Enter();			virtual void State_KEEPERHANDS_Think();			virtual void State_KEEPERHANDS_Leave(ball_state_t newState);
 
+	virtual void State_STATIC_Enter() {};			virtual void State_STATIC_Think() {};		virtual void State_STATIC_Leave(ball_state_t newState) {};
+	virtual void State_NORMAL_Enter() {};			virtual void State_NORMAL_Think() {};			virtual void State_NORMAL_Leave(ball_state_t newState)  {};
 	virtual void State_KICKOFF_Enter() {};			virtual void State_KICKOFF_Think() {};			virtual void State_KICKOFF_Leave(ball_state_t newState) {};
 	virtual void State_THROWIN_Enter() {};			virtual void State_THROWIN_Think() {};			virtual void State_THROWIN_Leave(ball_state_t newState) {};
 	virtual void State_GOALKICK_Enter() {};			virtual void State_GOALKICK_Think() {};			virtual void State_GOALKICK_Leave(ball_state_t newState) {};
@@ -421,20 +415,15 @@ protected:
 	virtual void State_FREEKICK_Enter() {};			virtual void State_FREEKICK_Think() {};			virtual void State_FREEKICK_Leave(ball_state_t newState) {};
 	virtual void State_PENALTY_Enter() {};			virtual void State_PENALTY_Think() {};			virtual void State_PENALTY_Leave(ball_state_t newState) {};
 
-	virtual void State_Enter(ball_state_t newState, bool cancelQueuedState);	// Initialize the new state.
-	virtual void State_Think();										// Update the current state.
-	virtual void State_Leave(ball_state_t newState);
+	virtual void State_Enter(ball_state_t newState, bool cancelQueuedState) = 0;	// Initialize the new state.
+	virtual void State_Think() = 0;										// Update the current state.
+	virtual void State_Leave(ball_state_t newState) = 0;
 	static CBallStateInfo* State_LookupInfo(ball_state_t state);	// Find the state info for the specified state.
 
 	void			FindStatePlayer(ball_state_t ballState = BALL_STATE_NONE);
 
 	ball_state_t	m_eNextState;
-	float			m_flStateEnterTime;
-	float			m_flStateLeaveTime;
-	float			m_flStateActivationDelay;
 	float			m_flStateTimelimit;
-	float			m_flSetpieceCloseStartTime;
-	bool			m_bNextStateMessageSent;
 	CBallStateInfo	*m_pCurStateInfo;
 
 	void			MarkOffsidePlayers();
@@ -472,7 +461,6 @@ protected:
 	Vector			m_vTriggerTouchPos;
 
 	CHandle<CSDKPlayer>	m_pPl;
-	CHandle<CSDKPlayer>	m_pOtherPl;
 
 	QAngle			m_aPlAng, m_aPlCamAng;
 	Vector			m_vPlVel, m_vPlVel2D, m_vPlForwardVel2D, m_vPlPos, m_vPlForward, m_vPlForward2D, m_vPlRight, m_vPlUp, m_vPlDirToBall, m_vPlLocalDirToBall;
@@ -516,8 +504,6 @@ protected:
 	float			m_flLastMatchEventSetTime;
 
 	bool			m_bHitThePost;
-
-	CHandle<CSDKPlayer>	m_pSetpieceTaker;
 };
 
 #endif

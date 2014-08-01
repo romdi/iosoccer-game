@@ -26,9 +26,16 @@ public:
 	void			RemovePlayerBall();
 	CSDKPlayer		*GetCreator() { return m_pCreator; }
 	void			SetCreator(CSDKPlayer *pCreator) { m_pCreator = pCreator; }
-	//void			State_Enter(ball_state_t newState, bool cancelQueuedState);
-	//void			State_Think();
-	//void			State_Leave(ball_state_t newState);
+	void			TriggerGoal(int team);
+	void			TriggerGoalLine(int team);
+	void			TriggerSideline();
+
+	void			State_Enter(ball_state_t newState, bool cancelQueuedState);
+	void			State_Think();
+	void			State_Leave(ball_state_t newState);
+	void			State_Transition(ball_state_t newState, float delay = 0.0f, bool cancelQueuedState = false, bool isShortMessageDelay = false);
+
+	void State_NORMAL_Enter();		void State_NORMAL_Think();		void State_NORMAL_Leave(ball_state_t newState);
 
 	CNetworkHandle(CSDKPlayer, m_pCreator);
 
