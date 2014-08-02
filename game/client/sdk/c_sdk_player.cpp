@@ -754,6 +754,9 @@ void C_SDKPlayer::LookAtBall(void)
 	if (pitch > 180) pitch -= 360;
 	if (pitch < -180) pitch += 360;
 
+	if (yaw > 90) yaw = 180 - yaw;
+	if (yaw < -90) yaw = -180 - yaw;
+
 	SetBoneController(2, yaw);
 	SetBoneController(3, pitch);
 }
