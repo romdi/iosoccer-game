@@ -235,6 +235,10 @@ ConVar sv_ball_offsidedist("sv_ball_offsidedist", "200", FCVAR_NOTIFY);
 
 ConVar sv_ball_turnovertime("sv_ball_turnovertime", "1.0", FCVAR_NOTIFY);
 
+ConVar sv_ball_keeperautopunch_limit("sv_ball_keeperautopunch_limit", "30", FCVAR_NOTIFY);
+ConVar sv_ball_keeperautopunch_pitch("sv_ball_keeperautopunch_pitch", "-45", FCVAR_NOTIFY);
+ConVar sv_ball_keeperautopunch_yaw("sv_ball_keeperautopunch_yaw", "45", FCVAR_NOTIFY);
+
 //==========================================================
 //	
 //	
@@ -1285,11 +1289,11 @@ bool CBall::CheckKeeperCatch()
 	bool canReach = false;
 	float punchAngYaw = m_aPlAng[YAW];
 	float punchAngPitch = 0;
-	float catchCoeff = 1.0f;
 	static float sqrt2 = sqrt(2.0f);
 	float distXY = localDirToBall.Length2D();
 	float distXZ = sqrt(Sqr(localDirToBall.x) + Sqr(localDirToBall.z));
-	float globalCatchCoeff = 0;
+	float diveTypeCatchCoeff = 1.0f;
+	float ballPosCatchCoeff = 1.0f;
 
 	switch (m_pPl->m_Shared.GetAnimEvent())
 	{
@@ -1312,8 +1316,8 @@ bool CBall::CheckKeeperCatch()
 				float maxZReach = (distZ >= 0 ? sv_ball_keeper_sidedive_zend.GetFloat() : sv_ball_keeper_sidedive_zstart.GetFloat()) - sv_ball_keeper_sidedive_catchcenteroffset_z.GetFloat();
 				punchAngPitch -= abs(distZ) / maxZReach * sv_ball_keeper_punch_maxpitchangle.GetFloat();
 
-				catchCoeff = sqrt(pow(abs(distY) / maxYReach, 2) + pow(abs(distZ) / maxZReach, 2)) / sqrt2;
-				globalCatchCoeff = sv_ball_keepercatchdelay_sidedive_global_coeff.GetFloat();
+				ballPosCatchCoeff = sqrt(pow(abs(distY) / maxYReach, 2) + pow(abs(distZ) / maxZReach, 2)) / sqrt2;
+				diveTypeCatchCoeff = sv_ball_keepercatchdelay_sidedive_global_coeff.GetFloat();
 			}
 		}
 		break;
@@ -1336,8 +1340,8 @@ bool CBall::CheckKeeperCatch()
 				float maxZReach = (distZ >= 0 ? sv_ball_keeper_sidedive_zend.GetFloat() : sv_ball_keeper_sidedive_zstart.GetFloat()) - sv_ball_keeper_sidedive_catchcenteroffset_z.GetFloat();
 				punchAngPitch -= abs(distZ) / maxZReach * sv_ball_keeper_punch_maxpitchangle.GetFloat();
 
-				catchCoeff = sqrt(pow(abs(distY) / maxYReach, 2) + pow(abs(distZ) / maxZReach, 2)) / sqrt2;
-				globalCatchCoeff = sv_ball_keepercatchdelay_sidedive_global_coeff.GetFloat();
+				ballPosCatchCoeff = sqrt(pow(abs(distY) / maxYReach, 2) + pow(abs(distZ) / maxZReach, 2)) / sqrt2;
+				diveTypeCatchCoeff = sv_ball_keepercatchdelay_sidedive_global_coeff.GetFloat();
 			}
 		}
 		break;
@@ -1350,8 +1354,8 @@ bool CBall::CheckKeeperCatch()
 
 		if (canReach)
 		{
-			catchCoeff = sv_ball_keeper_forwarddive_catchcoeff.GetFloat();
-			globalCatchCoeff = sv_ball_keepercatchdelay_forwarddive_global_coeff.GetFloat();
+			ballPosCatchCoeff = sv_ball_keeper_forwarddive_catchcoeff.GetFloat();
+			diveTypeCatchCoeff = sv_ball_keepercatchdelay_forwarddive_global_coeff.GetFloat();
 		}
 		break;
 	case PLAYERANIMEVENT_KEEPER_JUMP:
@@ -1373,8 +1377,8 @@ bool CBall::CheckKeeperCatch()
 			float maxZReach = (distZ >= 0 ? sv_ball_bodypos_keeperarms_end.GetFloat() : sv_ball_bodypos_feet_start.GetFloat()) - sv_ball_keeper_standing_catchcenteroffset_z.GetFloat();
 			punchAngPitch -= abs(distZ) / maxZReach * sv_ball_keeper_punch_maxpitchangle.GetFloat();
 
-			catchCoeff = sqrt(pow(abs(distY) / maxYReach, 2) + pow(abs(distZ) / maxZReach, 2)) / sqrt2;
-			globalCatchCoeff = sv_ball_keepercatchdelay_standing_global_coeff.GetFloat();
+			ballPosCatchCoeff = sqrt(pow(abs(distY) / maxYReach, 2) + pow(abs(distZ) / maxZReach, 2)) / sqrt2;
+			diveTypeCatchCoeff = sv_ball_keepercatchdelay_standing_global_coeff.GetFloat();
 		}
 		break;
 	}
@@ -1382,36 +1386,39 @@ bool CBall::CheckKeeperCatch()
 	if (!canReach)
 		return false;
 
-	float catchTimeLeft = ((m_flGlobalLastShot + m_flGlobalDynamicShotDelay * globalCatchCoeff) - gpGlobals->curtime) * catchCoeff;
+	float nextCatch = m_flGlobalLastShot + m_flGlobalDynamicShotDelay * diveTypeCatchCoeff * ballPosCatchCoeff;
 
-	if (m_bHasQueuedState || (catchTimeLeft > 0.0f && (!LastInfo(true) || LastInfo(true)->m_eBallState != BALL_STATE_PENALTY))) // Punch ball away
+	if (m_bHasQueuedState || (gpGlobals->curtime < nextCatch && (!LastInfo(true) || LastInfo(true)->m_eBallState != BALL_STATE_PENALTY))) // Punch ball away
 	{
-		Vector punchDirYaw;
-		AngleVectors(QAngle(0, punchAngYaw, 0), &punchDirYaw);
-		Vector punchDirPitch;
-		AngleVectors(QAngle(punchAngPitch, m_aPlAng[YAW], 0), &punchDirPitch);
+		Vector punchDir;
 
-		if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_LEFT
-			|| m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT)
+		QAngle angDiff = m_aPlCamAng - m_aPlAng;
+
+		if (Square(angDiff[PITCH]) + Square(angDiff[YAW]) <= Square(sv_ball_keeperautopunch_limit.GetFloat()))
 		{
-			punchDirPitch *= sv_ball_keeper_punch_shortsidecoeff.GetFloat();
+			int buttonSign;
+
+			if ((m_pPl->m_nButtons & IN_MOVELEFT) && (!(m_pPl->m_nButtons & IN_MOVERIGHT) || m_pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVERIGHT)) 
+				buttonSign = 1;
+			else if ((m_pPl->m_nButtons & IN_MOVERIGHT) && (!(m_pPl->m_nButtons & IN_MOVELEFT) || m_pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVELEFT)) 
+				buttonSign = -1;
+			else
+				buttonSign = 0;
+
+			QAngle ang = m_aPlAng;
+
+			ang[PITCH] = sv_ball_keeperautopunch_pitch.GetFloat();
+			ang[YAW] += sv_ball_keeperautopunch_yaw.GetFloat() * buttonSign;
+
+			AngleVectors(ang, &punchDir);
 		}
 		else
-			punchDirYaw *= sv_ball_keeper_punch_shortsidecoeff.GetFloat();
+		{
+			AngleVectors(m_aPlCamAng, &punchDir);
+		}
 
-		Vector punchDir = punchDirYaw + punchDirPitch;
-		punchDir.NormalizeInPlace();
-		QAngle punchAngle;
-		VectorAngles(punchDir, punchAngle);
-
-		if (punchAngle[PITCH] > 180)
-			punchAngle[PITCH] -= 360;
-
-		punchAngle[PITCH] = min(punchAngle[PITCH], sv_ball_keeper_punch_minpitchangle.GetFloat());
-		punchAngle[PITCH] += sv_ball_keeper_punch_pitchoffset.GetFloat();
-		AngleVectors(punchAngle, &punchDir);
-		AngleVectors(m_aPlCamAng, &punchDir);
 		Vector vel = punchDir * max(m_vVel.Length2D(), sv_ball_keeper_punch_minstrength.GetFloat()) * sv_ball_keeperdeflectioncoeff.GetFloat();
+
 		SetVel(vel, 0, 0, BODY_PART_KEEPERPUNCH, false, false, false);
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
 	}
