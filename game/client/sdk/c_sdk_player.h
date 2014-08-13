@@ -139,6 +139,8 @@ public: // Public Variables
 	QAngle	m_angEyeAngles;
 	CInterpolatedVar< QAngle >	m_iv_angEyeAngles;
 
+	QAngle	m_angCamViewAngles;
+
 	CNetworkVar( int, m_iShotsFired );	// number of shots fired recently
 
 	EHANDLE	m_hRagdoll;

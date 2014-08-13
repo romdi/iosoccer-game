@@ -146,11 +146,10 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayer, DT_SDKLocalPlayerExclusive )
 	// send a hi-res origin to the local player for use in prediction
 	//new ios1.1 we need this for free roaming mode - do not remove!
     SendPropVector(SENDINFO(m_vecOrigin), -1, SPROP_NOSCALE|SPROP_CHANGES_OFTEN, 0.0f, HIGH_DEFAULT, SendProxy_Origin ),
-	//new
-	SendPropFloat( SENDINFO_VECTORELEM(m_angEyeAngles, 0), 8, SPROP_CHANGES_OFTEN, -90.0f, 90.0f ),
-//	SendPropAngle( SENDINFO_VECTORELEM(m_angEyeAngles, 1), 10, SPROP_CHANGES_OFTEN ),
-
-//ios	SendPropInt( SENDINFO( m_ArmorValue ), 8, SPROP_UNSIGNED ),
+	SendPropAngle( SENDINFO_VECTORELEM(m_angEyeAngles, 0), 11, SPROP_CHANGES_OFTEN ),
+	SendPropAngle( SENDINFO_VECTORELEM(m_angEyeAngles, 1), 11, SPROP_CHANGES_OFTEN ),
+	SendPropAngle( SENDINFO_VECTORELEM(m_angCamViewAngles, 0), 11, SPROP_CHANGES_OFTEN ),
+	SendPropAngle( SENDINFO_VECTORELEM(m_angCamViewAngles, 1), 11, SPROP_CHANGES_OFTEN ),
 	SendPropInt(SENDINFO(m_nInPenBoxOfTeam), 3),
 	SendPropVector(SENDINFO(m_vTargetPos), -1, SPROP_COORD),
 	SendPropBool(SENDINFO(m_bIsAtTargetPos)),
@@ -163,10 +162,14 @@ END_SEND_TABLE()
 
 BEGIN_SEND_TABLE_NOBASE( CSDKPlayer, DT_SDKNonLocalPlayerExclusive )
 	// send a lo-res origin to other players
-	SendPropVector	(SENDINFO(m_vecOrigin), -1,  SPROP_COORD_MP_LOWPRECISION|SPROP_CHANGES_OFTEN, 0.0f, HIGH_DEFAULT, SendProxy_Origin ),
+	//SendPropVector	(SENDINFO(m_vecOrigin), -1,  SPROP_COORD_MP_LOWPRECISION|SPROP_CHANGES_OFTEN, 0.0f, HIGH_DEFAULT, SendProxy_Origin ),
+	// TODO: Check if this causes too much network traffic
+    SendPropVector(SENDINFO(m_vecOrigin), -1, SPROP_NOSCALE|SPROP_CHANGES_OFTEN, 0.0f, HIGH_DEFAULT, SendProxy_Origin ),
 
-	SendPropFloat( SENDINFO_VECTORELEM(m_angEyeAngles, 0), 8, SPROP_CHANGES_OFTEN, -90.0f, 90.0f ),
-	SendPropAngle( SENDINFO_VECTORELEM(m_angEyeAngles, 1), 10, SPROP_CHANGES_OFTEN ),
+	SendPropAngle( SENDINFO_VECTORELEM(m_angEyeAngles, 0), 11, SPROP_CHANGES_OFTEN ),
+	SendPropAngle( SENDINFO_VECTORELEM(m_angEyeAngles, 1), 11, SPROP_CHANGES_OFTEN ),
+	SendPropAngle( SENDINFO_VECTORELEM(m_angCamViewAngles, 0), 11, SPROP_CHANGES_OFTEN ),
+	SendPropAngle( SENDINFO_VECTORELEM(m_angCamViewAngles, 1), 11, SPROP_CHANGES_OFTEN ),
 END_SEND_TABLE()
 
 
@@ -312,6 +315,8 @@ CSDKPlayer::CSDKPlayer()
 	m_hRagdoll = NULL;
 
 	m_angEyeAngles.Init();
+
+	m_angCamViewAngles.Init();
 
 	m_pCurStateInfo = NULL;	// no state yet
 	m_bShotButtonsReleased = false;
@@ -492,6 +497,8 @@ void CSDKPlayer::PostThink()
 	m_angEyeAngles = EyeAngles();
 
 	m_PlayerAnimState->Update( m_angEyeAngles[YAW], m_angEyeAngles[PITCH] );
+
+	m_angCamViewAngles = m_aCamViewAngles;
 	
 	//LookAtBall();
 
@@ -500,6 +507,8 @@ void CSDKPlayer::PostThink()
 
 void CSDKPlayer::LookAtBall(void)
 {
+	return;
+
 	CBall *pBall;
 	
 	if (SDKGameRules()->IsIntermissionState())

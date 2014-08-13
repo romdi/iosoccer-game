@@ -161,6 +161,7 @@ public:
 	virtual void	SetSpawnArmorValue( int i ) { m_iSpawnArmorValue = i; }
 
 	CNetworkQAngle( m_angEyeAngles );	// Copied from EyeAngles() so we can send it to the client.
+	CNetworkQAngle( m_angCamViewAngles );
 	CNetworkVar( int, m_iShotsFired );	// number of shots fired recently
 
 	// Tracks our ragdoll entity.

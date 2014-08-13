@@ -23,7 +23,9 @@
 #include "cl_animevent.h"
 #include "sdk_gamerules.h"
 #include "c_match_ball.h"
+#include "c_player_ball.h"
 #include "igameresources.h"
+#include "iinput.h"
 
 #include "ios_requiredclientversion.h"
 
@@ -153,13 +155,12 @@ BEGIN_RECV_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 END_RECV_TABLE()
 
 BEGIN_RECV_TABLE_NOBASE( C_SDKPlayer, DT_SDKLocalPlayerExclusive )
-	//RecvPropInt( RECVINFO( m_iShotsFired ) ),
 	//new ios1.1
 	RecvPropVector( RECVINFO_NAME( m_vecNetworkOrigin, m_vecOrigin ) ),
-	//new ios
 	RecvPropFloat( RECVINFO( m_angEyeAngles[0] ) ),
-//	RecvPropFloat( RECVINFO( m_angEyeAngles[1] ) ),
-//ios	RecvPropInt( RECVINFO( m_ArmorValue ) ),
+	RecvPropFloat( RECVINFO( m_angEyeAngles[1] ) ),
+	RecvPropFloat( RECVINFO( m_angCamViewAngles[0] ) ),
+	RecvPropFloat( RECVINFO( m_angCamViewAngles[1] ) ),
 	RecvPropInt(RECVINFO(m_nInPenBoxOfTeam)),
 	RecvPropVector(RECVINFO(m_vTargetPos)),
 	RecvPropBool(RECVINFO(m_bIsAtTargetPos)),
@@ -175,6 +176,8 @@ BEGIN_RECV_TABLE_NOBASE( C_SDKPlayer, DT_SDKNonLocalPlayerExclusive )
 
 	RecvPropFloat( RECVINFO( m_angEyeAngles[0] ) ),
 	RecvPropFloat( RECVINFO( m_angEyeAngles[1] ) ),
+	RecvPropFloat( RECVINFO( m_angCamViewAngles[0] ) ),
+	RecvPropFloat( RECVINFO( m_angCamViewAngles[1] ) ),
 END_RECV_TABLE()
 
 // main table
@@ -623,6 +626,8 @@ C_SDKPlayer::C_SDKPlayer() :
 	m_angEyeAngles.Init();
 	AddVar( &m_angEyeAngles, &m_iv_angEyeAngles, LATCH_SIMULATION_VAR );
 
+	m_angCamViewAngles.Init();
+
 	m_fNextThinkPushAway = 0.0f;
 	m_Shared.m_flPlayerAnimEventStartTime = gpGlobals->curtime;
 	m_Shared.m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
@@ -705,59 +710,38 @@ void C_SDKPlayer::Spawn()
 void C_SDKPlayer::UpdateClientSideAnimation()
 {
 	m_PlayerAnimState->Update( EyeAngles()[YAW], EyeAngles()[PITCH] );
-	BaseClass::UpdateClientSideAnimation();
-
 	LookAtBall();
+	BaseClass::UpdateClientSideAnimation();
 }
 
 void C_SDKPlayer::LookAtBall(void)
 {
-	C_MatchBall *pBall = GetMatchBall();
-
-	if (!pBall)
-		return;
-
-	float yaw, pitch;
-
-	Vector ballPos = pBall->GetLocalOrigin();
-	Vector dirToBall = ballPos - Vector(GetLocalOrigin().x, GetLocalOrigin().y, GetLocalOrigin().z + VEC_VIEW.z);
-
-	//float controllers[MAXSTUDIOBONECTRLS];
-	//GetBoneControllers(controllers);
-	//float curyaw = controllers[2] * 180;
-	//float curpitch = controllers[3] * 180;
-
-	//if (dirToBall.Length2D() <= 60)
-	//{
-	//	//yaw = (curyaw > 0 ? max(0, curyaw - 1 * gpGlobals->frametime) : min(0, curyaw + 1 * gpGlobals->frametime));
-	//	//pitch = (curpitch > 0 ? max(0, curpitch - 1 * gpGlobals->frametime) : min(0, curpitch + 1 * gpGlobals->frametime));
-	//	yaw = 0;
-	//	pitch = 0;
-	//}
-	//else
-	if (SDKGameRules()->IsIntermissionState())
-	{
-		yaw = 0;
-		pitch = 0;
-	}
-	else
-	{
-		QAngle angToBall;
-		VectorAngles(dirToBall, angToBall );
-
-		yaw = angToBall[YAW] - GetLocalAngles()[YAW];
-		pitch = angToBall[PITCH];
-	}
+	const QAngle camAngles = IsLocalPlayer() ? ::input->GetCameraAngles() : m_angCamViewAngles;
+	float yaw = camAngles[YAW] - EyeAngles()[YAW];
+	float pitch = camAngles[PITCH];
 
 	if (yaw > 180) yaw -= 360;
 	if (yaw < -180) yaw += 360;
 	if (pitch > 180) pitch -= 360;
 	if (pitch < -180) pitch += 360;
 
-	if (yaw > 90) yaw = 180 - yaw;
-	if (yaw < -90) yaw = -180 - yaw;
+	//if (yaw > 90) yaw = 180 - yaw;
+	//if (yaw < -90) yaw = -180 - yaw;
 
-	SetBoneController(2, yaw);
+	pitch = clamp(pitch, -60, 60);
+	yaw = clamp(yaw, -120, 120);
+
+	float neckVal = clamp(yaw, -50, 50);
+	SetBoneController(2, neckVal); // Neck
+	yaw -= neckVal;
+
+	float upperSpineVal = clamp(yaw, -40, 40);
+	SetBoneController(1, upperSpineVal); // Upper spine
+	yaw -= upperSpineVal;
+
+	float lowerSpineVal = clamp(yaw, -30, 30);
+	SetBoneController(0, lowerSpineVal); // Lower spine
+
 	SetBoneController(3, pitch);
 }
 
