@@ -37,11 +37,4 @@ void C_MatchBall::OnDataChanged(DataUpdateType_t updateType)
 
 		SetNextClientThink(CLIENT_THINK_ALWAYS);
 	 }
-
-	return;
-}
-
-bool C_MatchBall::ShouldInterpolate()
-{
-	return true;
 }

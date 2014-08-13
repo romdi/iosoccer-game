@@ -436,8 +436,9 @@ protected:
 	bool			CheckFoul(bool canShootBall, const Vector &localDirToBall);
 	void			TriggerFoul(foul_type_t type, Vector pos, CSDKPlayer *pFoulingPl, CSDKPlayer *pFouledPl = NULL);
 	CSDKPlayer		*FindNearestPlayer(int team = TEAM_INVALID, int posFlags = FL_POS_FIELD, bool checkIfShooting = false, int ignoredPlayerBits = 0, float radius = -1);
-	bool			IsInDeflectRange(bool isCollision);
+	bool			IsInCollisionRange(bool isDeflection);
 	bool			DoBodyPartAction();
+	bool			CheckCollision();
 	bool			DoSlideAction();
 	bool			CheckKeeperCatch();
 	bool			DoGroundShot(bool markOffsidePlayers, float velCoeff = 1.0f);
@@ -449,7 +450,7 @@ protected:
 	float			GetPowershotStrength(float coeff, int strength);
 	float			GetChargedshotStrength(float coeff, int minStrength, int maxStrength);
 	void			UpdateCarrier();
-	void			Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart, const Vector &oldVel);
+	virtual void	Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart, const Vector &oldVel) = 0;
 	void			RemoveAllTouches();
 	BallTouchInfo	*LastInfo(bool wasShooting, CSDKPlayer *pSkipPl = NULL, CSDKPlayer *pSkipPl2 = NULL, CSDKPlayer *pSkipPl3 = NULL);
 	CSDKPlayer		*LastPl(bool wasShooting, CSDKPlayer *pSkipPl = NULL, CSDKPlayer *pSkipPl2 = NULL, CSDKPlayer *pSkipPl3 = NULL);
@@ -504,6 +505,8 @@ protected:
 	float			m_flLastMatchEventSetTime;
 
 	bool			m_bHitThePost;
+
+	bool			m_bLastContactWasTouch;
 };
 
 #endif

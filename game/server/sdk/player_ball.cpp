@@ -264,3 +264,8 @@ void CPlayerBall::TriggerGoalLine(int team)
 void CPlayerBall::TriggerSideline()
 {
 }
+
+void CPlayerBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart, const Vector &oldVel)
+{
+	m_bLastContactWasTouch = !isShot;
+}

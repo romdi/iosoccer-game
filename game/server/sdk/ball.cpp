@@ -241,6 +241,9 @@ ConVar sv_ball_keeperautopunch_yaw("sv_ball_keeperautopunch_yaw", "45", FCVAR_NO
 
 ConVar sv_ball_keepercatchdelay_poscoeffmin("sv_ball_keepercatchdelay_poscoeffmin", "0.5", FCVAR_NOTIFY);
 
+ConVar sv_ball_dribbling_mass("sv_ball_dribbling_mass", "75", FCVAR_NOTIFY);
+ConVar sv_ball_dribbling_collisioncoeff("sv_ball_dribbling_collisioncoeff", "1.25", FCVAR_NOTIFY);
+
 
 //==========================================================
 //	
@@ -304,6 +307,7 @@ CBall::CBall()
 	m_bNonnormalshotsBlocked = false;
 	m_bShotsBlocked = false;
 	m_bHitThePost = false;
+	m_bLastContactWasTouch = false;
 	memset(m_szSkinName.GetForModify(), 0, sizeof(m_szSkinName));
 }
 
@@ -465,29 +469,6 @@ void CBall::VPhysicsCollision( int index, gamevcollisionevent_t	*pEvent	)
 	if ((surfaceProps == 85 /*|| surfaceProps == 30*/) && flSpeed > 300.0f)
 	{
 		EmitSound("Ball.Net");
-	}
-
-	///////////////////////////////////////////////////////////////////////
-	// player
-	//this doesnt seem to get called often enough to be any use!!
-	IPhysicsObject *pPhysObj = pEvent->pObjects[!index];
-	CBaseEntity *pOther = static_cast<CBaseEntity *>(pPhysObj->GetGameData());
-	if (pOther && pOther->IsPlayer())
-	{
-		CSDKPlayer *pPl = ToSDKPlayer(pOther);
-		if (flSpeed > 900.0f)
-			pPl->EmitSound ("Player.Oomph");
-
-		if (SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES && m_ePenaltyState == PENALTY_KICKED && pPl != m_pPl)
-		{
-			m_ePenaltyState = PENALTY_SAVED;
-		}
-		else if (m_pCurStateInfo->m_eBallState == BALL_STATE_NORMAL)
-		{
-			Touched(pPl, false, BODY_PART_UNKNOWN, preVelocity);
-		}
-
-		EmitSound("Ball.Touch");
 	}
 }
 
@@ -1061,7 +1042,7 @@ void CBall::HandleFoul()
 	}
 }
 
-bool CBall::IsInDeflectRange(bool isCollision)
+bool CBall::IsInCollisionRange(bool isDeflection)
 {
 	Vector dirToBall = m_vPos - m_vPlPos;
 	Vector localDirToBall;
@@ -1071,7 +1052,7 @@ bool CBall::IsInDeflectRange(bool isCollision)
 
 	if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_SLIDE || m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_DIVINGHEADER)
 	{
-		float padding = isCollision ? -15 : 0;
+		float padding = isDeflection ? 0 : -15;
 
 		return zDist < sv_ball_slidezend.GetFloat() + padding
 			&& zDist >= sv_ball_slidezstart.GetFloat() - padding
@@ -1081,10 +1062,10 @@ bool CBall::IsInDeflectRange(bool isCollision)
 	}
 	else
 	{
-		if (isCollision)
-			return zDist >= sv_ball_bodypos_collision_start.GetFloat() && zDist < sv_ball_bodypos_collision_end.GetFloat() && xyDist <= sv_ball_collisionradius.GetFloat();
-		else
+		if (isDeflection)
 			return zDist >= sv_ball_bodypos_deflection_start.GetFloat() && zDist < sv_ball_bodypos_deflection_end.GetFloat() && xyDist <= sv_ball_deflectionradius.GetFloat();
+		else
+			return zDist >= sv_ball_bodypos_collision_start.GetFloat() && zDist < sv_ball_bodypos_collision_end.GetFloat() && xyDist <= sv_ball_collisionradius.GetFloat();
 	}
 
 	return false;
@@ -1158,73 +1139,11 @@ bool CBall::DoBodyPartAction()
 			return CheckKeeperCatch();
 	}
 
-	bool isInDeflectDist = false;
-	bool deflect = false;
-	float deflectCoeff = 1.0f;
-
-	if ((!m_pPl->IsShooting() || !m_pPl->CanShoot()) && IsInDeflectRange(true))
-	{
-		deflect = true;
-		deflectCoeff = sv_ball_collisioncoeff.GetFloat();
-	}
-	else if (m_pPl->IsShooting() && m_pPl->CanShoot())
-	{
-		if (gpGlobals->curtime < m_flGlobalLastShot + m_flGlobalDynamicShotDelay * sv_ball_shotdelay_global_coeff.GetFloat())
-		{
-			if (IsInDeflectRange(false))
-			{
-				deflect = true;
-				deflectCoeff = sv_ball_deflectioncoeff.GetFloat();
-			}
-			else
-				return false;
-		}
-	}
-	else
+	if (CheckCollision())
 		return false;
 
-	if (deflect)
-	{
-		// http://gamedev.stackexchange.com/a/15936
-		Vector normal;
-
-		if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_SLIDE || m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_DIVINGHEADER)
-		{
-			normal = localDirToBall.y > 0 ? -m_vPlRight : m_vPlRight;
-			QAngle ang;
-			VectorAngles((m_vPos - (m_vPlPos + m_flPhysRadius)), ang);
-			VectorRotate(normal, QAngle(ang[PITCH], 0, 0), normal);
-		}
-		else
-		{
-			normal = dirToBall;
-			normal.z = 0;
-		}
-
-		normal.NormalizeInPlace();
-		Vector v1 = m_vVel;
-		Vector v2 = m_vPlVel;
-		float a1 = v1.Dot(normal);
-		float a2 = v2.Dot(normal);
-		float optimizedP = (2 * (a1 - a2)) / (sv_ball_mass.GetFloat() + sv_player_mass.GetFloat());
-		Vector vel = v1 - optimizedP * sv_player_mass.GetFloat() * normal;
-		vel *= deflectCoeff;
-
-		if (optimizedP < 0)
-		{
-			if (m_vVel.Length() > 900.0f)
-				m_pPl->EmitSound ("Player.Oomph");
-
-			Touched(m_pPl, false, BODY_PART_UNKNOWN, m_vVel);
-
-			EmitSound("Ball.Touch");
-			m_vVel = vel;
-			m_pPhys->SetVelocity(&m_vVel, &m_vRot);
-			m_bSetNewVel = true;
-		}
-
+	if (!m_pPl->IsShooting() || !m_pPl->CanShoot() || gpGlobals->curtime < m_flGlobalLastShot + m_flGlobalDynamicShotDelay * sv_ball_shotdelay_global_coeff.GetFloat())
 		return false;
-	}
 
 	if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_SLIDE)
 		return DoSlideAction();
@@ -1243,6 +1162,89 @@ bool CBall::DoBodyPartAction()
 		return DoHeader();
 
 	return false;
+}
+
+bool CBall::CheckCollision()
+{
+	Vector dirToBall = m_vPos - m_vPlPos;
+	Vector localDirToBall;
+	VectorIRotate(dirToBall, m_pPl->EntityToWorldTransform(), localDirToBall);
+	bool collide = false;
+	float collisionCoeff;
+	float ballMass;
+
+	if ((!m_pPl->IsShooting() || !m_pPl->CanShoot()) && IsInCollisionRange(false))
+	{
+		collide = true;
+
+		if (m_bLastContactWasTouch)
+		{
+			collisionCoeff = sv_ball_dribbling_collisioncoeff.GetFloat();
+			ballMass = sv_ball_dribbling_mass.GetFloat();
+		}
+		else
+		{
+			collisionCoeff = sv_ball_collisioncoeff.GetFloat();
+			ballMass = sv_ball_mass.GetFloat();
+		}
+	}
+	else if (m_pPl->IsShooting() && m_pPl->CanShoot()
+		&& gpGlobals->curtime < m_flGlobalLastShot + m_flGlobalDynamicShotDelay * sv_ball_shotdelay_global_coeff.GetFloat()
+		&& IsInCollisionRange(true))
+	{
+		collide = true;
+		collisionCoeff = sv_ball_deflectioncoeff.GetFloat();
+		ballMass = sv_ball_mass.GetFloat();
+	}
+
+	if (!collide)
+		return false;
+
+	// http://gamedev.stackexchange.com/a/15936
+	Vector normal;
+
+	if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_SLIDE || m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_DIVINGHEADER)
+	{
+		normal = localDirToBall.y > 0 ? -m_vPlRight : m_vPlRight;
+		QAngle ang;
+		VectorAngles((m_vPos - (m_vPlPos + m_flPhysRadius)), ang);
+		VectorRotate(normal, QAngle(ang[PITCH], 0, 0), normal);
+	}
+	else
+	{
+		normal = dirToBall;
+		normal.z = 0;
+	}
+
+	normal.NormalizeInPlace();
+	Vector v1 = m_vVel;
+	Vector v2 = m_vPlVel;
+	float a1 = v1.Dot(normal);
+	float a2 = v2.Dot(normal);
+	float optimizedP = (2 * (a1 - a2)) / (ballMass + sv_player_mass.GetFloat());
+	Vector vel = v1 - optimizedP * sv_player_mass.GetFloat() * normal;
+	vel *= collisionCoeff;
+
+	if (optimizedP < 0)
+	{
+		// TODO: Check if this is still needed
+		//if (SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES && m_ePenaltyState == PENALTY_KICKED && pPl != m_pPl)
+		//{
+		//	m_ePenaltyState = PENALTY_SAVED;
+		//}
+
+		if (m_vVel.Length() > 900.0f)
+			m_pPl->EmitSound ("Player.Oomph");
+
+		Touched(m_pPl, false, BODY_PART_UNKNOWN, m_vVel);
+
+		EmitSound("Ball.Touch");
+		m_vVel = vel;
+		m_pPhys->SetVelocity(&m_vVel, &m_vRot);
+		m_bSetNewVel = true;
+	}
+
+	return true;
 }
 
 bool CBall::DoSlideAction()
@@ -1911,88 +1913,6 @@ void CBall::UnmarkOffsidePlayers()
 	}
 }
 
-void CBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart, const Vector &oldVel)
-{
-	if (SDKGameRules()->IsIntermissionState() || m_bHasQueuedState || SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES)
-		return;
-
-	if (m_Touches.Count() > 0 && m_Touches.Tail()->m_pPl == pPl && m_Touches.Tail()->m_nTeam == pPl->GetTeamNumber()
-		&& sv_ball_doubletouchfouls.GetBool() && State_Get() == BALL_STATE_NORMAL && m_Touches.Tail()->m_eBallState != BALL_STATE_NORMAL
-		&& m_Touches.Tail()->m_eBallState != BALL_STATE_KEEPERHANDS && pPl->GetTeam()->GetNumPlayers() > 2 && pPl->GetOppTeam()->GetNumPlayers() > 2) // Double touch foul
-	{
-		TriggerFoul(FOUL_DOUBLETOUCH, pPl->GetLocalOrigin(), pPl);
-		State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_activationdelay_long.GetFloat());
-
-		return;
-	}
-
-	// Regular touch
-	BallTouchInfo *pInfo = LastInfo(true);
-	CSDKPlayer *pLastPl = LastPl(true);
-
-	if (pInfo && CSDKPlayer::IsOnField(pLastPl) && pLastPl != pPl)
-	{ 
-		if (pInfo->m_nTeam != pPl->GetTeamNumber()
-			&& (bodyPart == BODY_PART_KEEPERPUNCH
-				|| bodyPart == BODY_PART_KEEPERCATCH
-				&& oldVel.Length2DSqr() >= pow(sv_ball_stats_save_minspeed.GetInt(), 2.0f))) // All fast balls by an opponent which are caught or punched away by the keeper count as shots on goal
-		{
-			pPl->AddKeeperSave();
-
-			if (bodyPart == BODY_PART_KEEPERCATCH)
-				pPl->AddKeeperSaveCaught();
-
-			pLastPl->AddShot();
-			pLastPl->AddShotOnGoal();
-			//EmitSound("Crowd.Save");
-			ReplayManager()->AddMatchEvent(MATCH_EVENT_KEEPERSAVE, pPl->GetTeamNumber(), pPl, pLastPl);
-		}
-		else if ((m_vPos - pInfo->m_vBallPos).Length2DSqr() >= pow(sv_ball_stats_pass_mindist.GetInt(), 2.0f) && pInfo->m_eBodyPart != BODY_PART_KEEPERPUNCH) // Pass or interception
-		{
-			if (m_bHitThePost)
-			{
-				pLastPl->AddShot();
-			}
-			else
-			{
-				pLastPl->AddPass();
-
-				if (pInfo->m_nTeam == pPl->GetTeamNumber()) // Pass to teammate
-				{
-					pLastPl->AddPassCompleted();
-				}
-				else // Intercepted by opponent
-				{
-					pPl->AddInterception();
-				}
-			}
-		}
-	}
-
-	UpdatePossession(pPl);
-	BallTouchInfo *info = new BallTouchInfo;
-	info->m_pPl = pPl;
-	info->m_nTeam = pPl->GetTeamNumber();
-	info->m_bIsShot = isShot;
-	info->m_eBodyPart = bodyPart;
-	info->m_eBallState = State_Get();
-	info->m_vBallPos = m_vPos;
-	info->m_vBallVel = m_vVel;
-	info->m_flTime = gpGlobals->curtime;
-	m_Touches.AddToTail(info);
-	m_bHitThePost = false;
-
-	//DevMsg("touches: %d\n", m_Touches.Count());
-	
-	if (pPl->IsOffside())
-	{
-		pPl->AddOffside();
-		TriggerFoul(FOUL_OFFSIDE, pPl->GetOffsidePos(), pPl);
-		SDKGameRules()->SetOffsideLinePositions(pPl->GetOffsideBallPos().y, pPl->GetOffsidePos().y, pPl->GetOffsideLastOppPlayerPos().y);
-		State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_activationdelay_long.GetFloat());
-	}
-}
-
 void CBall::RemoveAllTouches()
 {
 	if (!m_bHasQueuedState)
@@ -2151,6 +2071,7 @@ void CBall::Reset()
 	m_bNonnormalshotsBlocked = false;
 	m_bShotsBlocked = false;
 	m_bHitThePost = false;
+	m_bLastContactWasTouch = false;
 }
 
 void CBall::ReloadSettings()

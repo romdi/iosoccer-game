@@ -19,7 +19,6 @@ public:
 	~C_MatchBall();
 
 	void OnDataChanged(DataUpdateType_t updateType);
-	bool ShouldInterpolate();
 
 	CHandle<C_SDKPlayer> m_pLastActivePlayer;
 	int m_nLastActiveTeam;

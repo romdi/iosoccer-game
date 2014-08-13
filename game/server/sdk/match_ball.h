@@ -44,6 +44,8 @@ public:
 	CSDKPlayer		*GetLastActivePlayer() { return m_pLastActivePlayer; }
 	void			SetSetpieceTaker(CSDKPlayer *pPlayer) { m_pSetpieceTaker = pPlayer; m_pPl = NULL; }
 
+	void			Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart, const Vector &oldVel);
+
 	float			m_flStateEnterTime;
 	float			m_flStateLeaveTime;
 	float			m_flStateActivationDelay;

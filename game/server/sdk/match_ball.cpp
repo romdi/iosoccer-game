@@ -1292,3 +1292,86 @@ void CMatchBall::GetGoalInfo(bool &isOwnGoal, int &scoringTeam, CSDKPlayer **pSc
 		}
 	}
 }
+
+void CMatchBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart, const Vector &oldVel)
+{
+	if (SDKGameRules()->IsIntermissionState() || m_bHasQueuedState || SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES)
+		return;
+
+	if (m_Touches.Count() > 0 && m_Touches.Tail()->m_pPl == pPl && m_Touches.Tail()->m_nTeam == pPl->GetTeamNumber()
+		&& sv_ball_doubletouchfouls.GetBool() && State_Get() == BALL_STATE_NORMAL && m_Touches.Tail()->m_eBallState != BALL_STATE_NORMAL
+		&& m_Touches.Tail()->m_eBallState != BALL_STATE_KEEPERHANDS && pPl->GetTeam()->GetNumPlayers() > 2 && pPl->GetOppTeam()->GetNumPlayers() > 2) // Double touch foul
+	{
+		TriggerFoul(FOUL_DOUBLETOUCH, pPl->GetLocalOrigin(), pPl);
+		State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_activationdelay_long.GetFloat());
+
+		return;
+	}
+
+	// Regular touch
+	BallTouchInfo *pInfo = LastInfo(true);
+	CSDKPlayer *pLastPl = LastPl(true);
+
+	if (pInfo && CSDKPlayer::IsOnField(pLastPl) && pLastPl != pPl)
+	{ 
+		if (pInfo->m_nTeam != pPl->GetTeamNumber()
+			&& (bodyPart == BODY_PART_KEEPERPUNCH
+				|| bodyPart == BODY_PART_KEEPERCATCH
+				&& oldVel.Length2DSqr() >= pow(sv_ball_stats_save_minspeed.GetInt(), 2.0f))) // All fast balls by an opponent which are caught or punched away by the keeper count as shots on goal
+		{
+			pPl->AddKeeperSave();
+
+			if (bodyPart == BODY_PART_KEEPERCATCH)
+				pPl->AddKeeperSaveCaught();
+
+			pLastPl->AddShot();
+			pLastPl->AddShotOnGoal();
+			//EmitSound("Crowd.Save");
+			ReplayManager()->AddMatchEvent(MATCH_EVENT_KEEPERSAVE, pPl->GetTeamNumber(), pPl, pLastPl);
+		}
+		else if ((m_vPos - pInfo->m_vBallPos).Length2DSqr() >= pow(sv_ball_stats_pass_mindist.GetInt(), 2.0f) && pInfo->m_eBodyPart != BODY_PART_KEEPERPUNCH) // Pass or interception
+		{
+			if (m_bHitThePost)
+			{
+				pLastPl->AddShot();
+			}
+			else
+			{
+				pLastPl->AddPass();
+
+				if (pInfo->m_nTeam == pPl->GetTeamNumber()) // Pass to teammate
+				{
+					pLastPl->AddPassCompleted();
+				}
+				else // Intercepted by opponent
+				{
+					pPl->AddInterception();
+				}
+			}
+		}
+	}
+
+	UpdatePossession(pPl);
+	BallTouchInfo *info = new BallTouchInfo;
+	info->m_pPl = pPl;
+	info->m_nTeam = pPl->GetTeamNumber();
+	info->m_bIsShot = isShot;
+	info->m_eBodyPart = bodyPart;
+	info->m_eBallState = State_Get();
+	info->m_vBallPos = m_vPos;
+	info->m_vBallVel = m_vVel;
+	info->m_flTime = gpGlobals->curtime;
+	m_Touches.AddToTail(info);
+	m_bHitThePost = false;
+	m_bLastContactWasTouch = !isShot;
+
+	//DevMsg("touches: %d\n", m_Touches.Count());
+	
+	if (pPl->IsOffside())
+	{
+		pPl->AddOffside();
+		TriggerFoul(FOUL_OFFSIDE, pPl->GetOffsidePos(), pPl);
+		SDKGameRules()->SetOffsideLinePositions(pPl->GetOffsideBallPos().y, pPl->GetOffsidePos().y, pPl->GetOffsideLastOppPlayerPos().y);
+		State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_activationdelay_long.GetFloat());
+	}
+}

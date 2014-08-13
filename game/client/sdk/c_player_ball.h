@@ -15,7 +15,13 @@ public:
 	DECLARE_CLIENTCLASS();
 	DECLARE_CLASS( C_PlayerBall, C_Ball );
 
+	C_PlayerBall();
+	~C_PlayerBall();
+	void OnDataChanged(DataUpdateType_t updateType);
+
 	CHandle<C_SDKPlayer> m_pCreator;
 };
+
+extern C_PlayerBall *GetLocalPlayerBall();
 
 #endif

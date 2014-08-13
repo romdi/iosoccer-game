@@ -37,6 +37,8 @@ public:
 
 	void State_NORMAL_Enter();		void State_NORMAL_Think();		void State_NORMAL_Leave(ball_state_t newState);
 
+	void			Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart, const Vector &oldVel);
+
 	CNetworkHandle(CSDKPlayer, m_pCreator);
 
 protected:
