@@ -239,6 +239,9 @@ ConVar sv_ball_keeperautopunch_limit("sv_ball_keeperautopunch_limit", "30", FCVA
 ConVar sv_ball_keeperautopunch_pitch("sv_ball_keeperautopunch_pitch", "-45", FCVAR_NOTIFY);
 ConVar sv_ball_keeperautopunch_yaw("sv_ball_keeperautopunch_yaw", "45", FCVAR_NOTIFY);
 
+ConVar sv_ball_keepercatchdelay_poscoeffmin("sv_ball_keepercatchdelay_poscoeffmin", "0.5", FCVAR_NOTIFY);
+
+
 //==========================================================
 //	
 //	
@@ -1287,8 +1290,6 @@ bool CBall::CheckKeeperCatch()
 	VectorIRotate(dirToBall, m_pPl->EntityToWorldTransform(), localDirToBall);
 
 	bool canReach = false;
-	float punchAngYaw = m_aPlAng[YAW];
-	float punchAngPitch = 0;
 	static float sqrt2 = sqrt(2.0f);
 	float distXY = localDirToBall.Length2D();
 	float distXZ = sqrt(Sqr(localDirToBall.x) + Sqr(localDirToBall.z));
@@ -1308,15 +1309,9 @@ bool CBall::CheckKeeperCatch()
 			if (canReach)
 			{
 				float distY = localDirToBall.y - sv_ball_keeper_sidedive_catchcenteroffset_side.GetFloat(); 
-				float distZ = localDirToBall.z - sv_ball_keeper_sidedive_catchcenteroffset_z.GetFloat(); 
-
 				float maxYReach = (distY >= 0 ? sv_ball_keeper_sidedive_longsidereach.GetFloat() : -sv_ball_keeper_sidedive_longsidereach_opposite.GetFloat()) - sv_ball_keeper_sidedive_catchcenteroffset_side.GetFloat();
-				punchAngYaw += abs(distY) / maxYReach * sv_ball_keeper_punch_maxyawangle.GetFloat();
 
-				float maxZReach = (distZ >= 0 ? sv_ball_keeper_sidedive_zend.GetFloat() : sv_ball_keeper_sidedive_zstart.GetFloat()) - sv_ball_keeper_sidedive_catchcenteroffset_z.GetFloat();
-				punchAngPitch -= abs(distZ) / maxZReach * sv_ball_keeper_punch_maxpitchangle.GetFloat();
-
-				ballPosCatchCoeff = sqrt(pow(abs(distY) / maxYReach, 2) + pow(abs(distZ) / maxZReach, 2)) / sqrt2;
+				ballPosCatchCoeff = Square(min(1, abs(distY) / maxYReach));
 				diveTypeCatchCoeff = sv_ball_keepercatchdelay_sidedive_global_coeff.GetFloat();
 			}
 		}
@@ -1332,15 +1327,9 @@ bool CBall::CheckKeeperCatch()
 			if (canReach)
 			{
 				float distY = localDirToBall.y - -sv_ball_keeper_sidedive_catchcenteroffset_side.GetFloat(); 
-				float distZ = localDirToBall.z - sv_ball_keeper_sidedive_catchcenteroffset_z.GetFloat(); 
-
 				float maxYReach = (distY >= 0 ? sv_ball_keeper_sidedive_longsidereach_opposite.GetFloat() : -sv_ball_keeper_sidedive_longsidereach.GetFloat()) - -sv_ball_keeper_sidedive_catchcenteroffset_side.GetFloat();
-				punchAngYaw += abs(distY) / maxYReach * sv_ball_keeper_punch_maxyawangle.GetFloat();
 
-				float maxZReach = (distZ >= 0 ? sv_ball_keeper_sidedive_zend.GetFloat() : sv_ball_keeper_sidedive_zstart.GetFloat()) - sv_ball_keeper_sidedive_catchcenteroffset_z.GetFloat();
-				punchAngPitch -= abs(distZ) / maxZReach * sv_ball_keeper_punch_maxpitchangle.GetFloat();
-
-				ballPosCatchCoeff = sqrt(pow(abs(distY) / maxYReach, 2) + pow(abs(distZ) / maxZReach, 2)) / sqrt2;
+				ballPosCatchCoeff = Square(min(1, abs(distY) / maxYReach));
 				diveTypeCatchCoeff = sv_ball_keepercatchdelay_sidedive_global_coeff.GetFloat();
 			}
 		}
@@ -1369,15 +1358,9 @@ bool CBall::CheckKeeperCatch()
 		if (canReach)
 		{
 			float distY = localDirToBall.y - sv_ball_keeper_standing_catchcenteroffset_side.GetFloat(); 
-			float distZ = localDirToBall.z - sv_ball_keeper_standing_catchcenteroffset_z.GetFloat(); 
-
 			float maxYReach = (distY >= 0 ? maxReachXY : -maxReachXY) - sv_ball_keeper_standing_catchcenteroffset_side.GetFloat();
-			punchAngYaw += abs(distY) / maxYReach * sv_ball_keeper_punch_maxyawangle.GetFloat();
 
-			float maxZReach = (distZ >= 0 ? sv_ball_bodypos_keeperarms_end.GetFloat() : sv_ball_bodypos_feet_start.GetFloat()) - sv_ball_keeper_standing_catchcenteroffset_z.GetFloat();
-			punchAngPitch -= abs(distZ) / maxZReach * sv_ball_keeper_punch_maxpitchangle.GetFloat();
-
-			ballPosCatchCoeff = sqrt(pow(abs(distY) / maxYReach, 2) + pow(abs(distZ) / maxZReach, 2)) / sqrt2;
+			ballPosCatchCoeff = Square(min(1, abs(distY) / maxYReach));
 			diveTypeCatchCoeff = sv_ball_keepercatchdelay_standing_global_coeff.GetFloat();
 		}
 		break;
@@ -1385,6 +1368,8 @@ bool CBall::CheckKeeperCatch()
 
 	if (!canReach)
 		return false;
+	
+	ballPosCatchCoeff = clamp(ballPosCatchCoeff * (1 - sv_ball_keepercatchdelay_poscoeffmin.GetFloat()) + sv_ball_keepercatchdelay_poscoeffmin.GetFloat(), 0.0f, 1.0f);
 
 	float nextCatch = m_flGlobalLastShot + m_flGlobalDynamicShotDelay * diveTypeCatchCoeff * ballPosCatchCoeff;
 
