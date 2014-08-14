@@ -1619,6 +1619,7 @@ bool CGameMovement::CheckPlayerAnimEvent()
 			if (timePassed > mp_keeperforwarddive_move_duration.GetFloat() + mp_keeperforwarddive_idle_duration.GetFloat())
 			{
 				pPl->DoAnimationEvent(PLAYERANIMEVENT_NONE);
+				pPl->RemoveFlag(FL_FREECAM);
 				return false;
 			}
 
@@ -1657,6 +1658,10 @@ bool CGameMovement::CheckPlayerAnimEvent()
 				pPl->DoAnimationEvent(PLAYERANIMEVENT_NONE);
 				return false;
 			}
+
+			AngleVectors(pPl->m_Shared.GetAnimEventStartAngle(), &forward2D);
+			forward2D.z = 0;
+			forward2D.NormalizeInPlace();
 
 			if (timePassed <= stuckRescueTimeLimit)
 				mv->m_vecVelocity = forward2D * mp_slidespeed.GetInt() * max(0, (1 - pow(timePassed / mp_slide_move_duration.GetFloat(), 2)));
@@ -2043,6 +2048,7 @@ bool CGameMovement::CheckSlideButton()
 		{
 			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_FORWARD;
 			MoveHelper()->StartSound( mv->GetAbsOrigin(), "Player.DiveKeeper" );
+			pPl->AddFlag(FL_FREECAM);
 		}
 	}
 	else if (!pPl->m_pHoldingBall)
