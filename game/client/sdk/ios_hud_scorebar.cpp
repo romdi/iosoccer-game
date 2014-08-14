@@ -418,7 +418,7 @@ void CHudScorebar::OnThink( void )
 	}
 	else
 	{
-		int time = abs(SDKGameRules()->GetMatchDisplayTimeSeconds(false));
+		int time = abs(SDKGameRules()->GetMatchDisplayTimeSeconds(true));
 		m_pTime->SetText(VarArgs("%d:%02d", time / 60, time % 60));
 	}
 
