@@ -11,6 +11,8 @@ END_DATADESC()
 IMPLEMENT_SERVERCLASS_ST( CMatchBall, DT_MatchBall )
 	SendPropEHandle(SENDINFO(m_pLastActivePlayer)),
 	SendPropInt(SENDINFO(m_nLastActiveTeam)),
+	SendPropInt(SENDINFO(m_bNonnormalshotsBlocked)),
+	SendPropInt(SENDINFO(m_bShotsBlocked)),
 END_SEND_TABLE()
 
 CMatchBall *CreateMatchBall(const Vector &pos)
@@ -35,6 +37,13 @@ CMatchBall::CMatchBall()
 	g_pMatchBall = NULL;
 	m_pLastActivePlayer = NULL;
 	m_nLastActiveTeam = TEAM_UNASSIGNED;
+	m_pPossessingPl = NULL;
+	m_nPossessingTeam = TEAM_INVALID;
+	m_flPossessionStart = -1;
+	m_pTurnoverPlayer = NULL;
+	m_bNonnormalshotsBlocked = false;
+	m_bShotsBlocked = false;
+	m_ePenaltyState = PENALTY_NONE;
 }
 
 CMatchBall::~CMatchBall()
@@ -54,13 +63,23 @@ void CMatchBall::Spawn()
 
 void CMatchBall::Reset()
 {
+	CBall::Reset();
+
 	m_pLastActivePlayer = NULL;
 	m_pSetpieceTaker = NULL;
 	m_flStateLeaveTime = gpGlobals->curtime;
 	m_flStateActivationDelay = 0;
 	m_pOtherPl = NULL;
+	m_pPossessingPl = NULL;
+	m_nPossessingTeam = TEAM_INVALID;
+	m_flPossessionStart = -1;
+	m_pTurnoverPlayer = NULL;
+	m_bNonnormalshotsBlocked = false;
+	m_bShotsBlocked = false;
+	m_ePenaltyState = PENALTY_NONE;
 
-	CBall::Reset();
+	UnmarkOffsidePlayers();
+	RemoveAllTouches();
 }
 
 void CMatchBall::State_Transition(ball_state_t newState, float delay /*= 0.0f*/, bool cancelQueuedState /*= false*/, bool isShortMessageDelay /*= false*/)
@@ -195,6 +214,8 @@ void CMatchBall::State_NORMAL_Enter()
 	//SetMatchEvent(MATCH_EVENT_NONE);
 	//SetMatchSubEvent(MATCH_EVENT_NONE);
 }
+
+extern ConVar sv_ball_advantage_duration;
 
 void CMatchBall::State_NORMAL_Think()
 {
@@ -1374,4 +1395,519 @@ void CMatchBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart, con
 		SDKGameRules()->SetOffsideLinePositions(pPl->GetOffsideBallPos().y, pPl->GetOffsidePos().y, pPl->GetOffsideLastOppPlayerPos().y);
 		State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_activationdelay_long.GetFloat());
 	}
+}
+
+bool CMatchBall::CheckFoul(bool canShootBall, const Vector &localDirToBall)
+{
+	for (int i = 1; i <= gpGlobals->maxClients; i++) 
+	{
+		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+
+		if (!CSDKPlayer::IsOnField(pPl))
+			continue;
+
+		if (pPl == m_pPl || pPl->GetTeamNumber() == m_pPl->GetTeamNumber())
+			continue;
+
+		Vector plPos = pPl->GetLocalOrigin();
+
+		//if (plPos.x < SDKGameRules()->m_vFieldMin.GetX() || plPos.y < SDKGameRules()->m_vFieldMin.GetY() ||
+		//	plPos.x > SDKGameRules()->m_vFieldMax.GetX() || plPos.y > SDKGameRules()->m_vFieldMax.GetY())
+		//	continue;
+
+		Vector dirToPl = pPl->GetLocalOrigin() - m_vPlPos;
+		float distToPl = dirToPl.Length2D();
+
+		Vector localDirToPl;
+		VectorIRotate(dirToPl, m_pPl->EntityToWorldTransform(), localDirToPl);
+
+		dirToPl.z = 0;
+		dirToPl.NormalizeInPlace();
+
+		// Can't reach the other player
+		if (localDirToPl.x < -sv_ball_slidebackwardreach_foul.GetInt()
+			|| localDirToPl.x > sv_ball_slideforwardreach_foul.GetInt()
+			|| abs(localDirToPl.y) > sv_ball_slidesidereach_foul.GetInt())		
+			continue;
+
+		// Can shoot the ball and ball is closer to the player than the opponent
+		if (canShootBall && localDirToBall.x <= localDirToPl.x)
+			continue;
+
+		// It's a foul
+
+		PlayerAnimEvent_t anim = RAD2DEG(acos(m_vPlForward2D.Dot(pPl->EyeDirection2D()))) <= 90 ? PLAYERANIMEVENT_TACKLED_BACKWARD : PLAYERANIMEVENT_TACKLED_FORWARD;
+		pPl->DoAnimationEvent(anim);
+
+		int teammatesCloserToGoalCount = 0;
+
+		bool isCloseToOwnGoal = ((m_vPos - m_pPl->GetTeam()->m_vGoalCenter).Length2D() <= sv_ball_closetogoaldist.GetInt());
+
+		if (isCloseToOwnGoal)
+		{
+			for (int j = 1; j <= gpGlobals->maxClients; j++) 
+			{
+				CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(j));
+
+				if (!CSDKPlayer::IsOnField(pPl) || pPl == m_pPl || pPl->GetTeamNumber() != m_pPl->GetTeamNumber())
+					continue;
+
+				if ((m_pPl->GetTeam()->m_vGoalCenter - pPl->GetLocalOrigin()).Length2DSqr() < (m_pPl->GetTeam()->m_vGoalCenter - m_vPlPos).Length2DSqr())
+					teammatesCloserToGoalCount += 1;
+			}
+		}
+
+		bool isPenalty = pPl->m_nInPenBoxOfTeam == m_pPl->GetTeamNumber();
+
+		foul_type_t foulType;
+
+		if (isCloseToOwnGoal && teammatesCloserToGoalCount <= 1)
+			foulType = FOUL_NORMAL_RED_CARD;
+		else if (anim == PLAYERANIMEVENT_TACKLED_FORWARD && localDirToBall.Length2DSqr() >= Sqr(sv_ball_yellowcardballdist_forward.GetFloat()) ||
+				 anim == PLAYERANIMEVENT_TACKLED_BACKWARD && localDirToBall.Length2DSqr() >= Sqr(sv_ball_yellowcardballdist_backward.GetFloat()))
+			foulType = FOUL_NORMAL_YELLOW_CARD;
+		else
+			foulType = FOUL_NORMAL_NO_CARD;
+
+		TriggerFoul(foulType, pPl->GetLocalOrigin(), m_pPl, pPl);
+		m_pFoulingPl->AddFoul();
+		m_pFouledPl->AddFoulSuffered();
+
+		if (m_eFoulType == FOUL_NORMAL_YELLOW_CARD)
+			m_pFoulingPl->AddYellowCard();
+
+		if (m_eFoulType == FOUL_NORMAL_YELLOW_CARD && m_pFoulingPl->GetYellowCards() % 2 == 0 || m_eFoulType == FOUL_NORMAL_RED_CARD)
+		{
+			m_pFoulingPl->AddRedCard();
+			int banDuration = 60 * (m_eFoulType == FOUL_NORMAL_YELLOW_CARD ? sv_ball_player_yellow_red_card_duration.GetFloat() : sv_ball_player_red_card_duration.GetFloat());
+			int nextJoin = SDKGameRules()->GetMatchDisplayTimeSeconds(false) + banDuration;
+			m_pFoulingPl->SetNextCardJoin(nextJoin);
+
+			if (m_pFoulingPl->GetTeamPosType() != POS_GK)
+				m_pFoulingPl->GetTeam()->SetPosNextJoinSeconds(m_pFoulingPl->GetTeamPosIndex(), nextJoin);
+
+			ReplayManager()->AddMatchEvent(m_eFoulType == FOUL_NORMAL_YELLOW_CARD ? MATCH_EVENT_SECONDYELLOWCARD : MATCH_EVENT_REDCARD, m_nFoulingTeam, m_pFoulingPl);
+		}
+		else if (m_eFoulType == FOUL_NORMAL_YELLOW_CARD)
+		{
+			ReplayManager()->AddMatchEvent(MATCH_EVENT_YELLOWCARD, m_nFoulingTeam, m_pFoulingPl);
+		}
+
+		if (isPenalty)
+			State_Transition(BALL_STATE_PENALTY, sv_ball_statetransition_activationdelay_long.GetFloat());
+		else
+			State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_activationdelay_long.GetFloat());
+
+		return true;
+	}
+
+	return false;
+}
+
+void CMatchBall::HandleFoul()
+{
+	if (CSDKPlayer::IsOnField(m_pFoulingPl))
+	{
+		if (m_eFoulType == FOUL_NORMAL_YELLOW_CARD && m_pFoulingPl->GetYellowCards() % 2 == 0 || m_eFoulType == FOUL_NORMAL_RED_CARD)
+		{
+			int team = m_pFoulingPl->GetTeamNumber();
+			int posIndex = m_pFoulingPl->GetTeamPosIndex();
+			int posType = m_pFoulingPl->GetTeamPosType();
+			m_pFoulingPl->SetDesiredTeam(TEAM_SPECTATOR, m_pFoulingPl->GetTeamNumber(), 0, true, false, false);
+
+			if (posType == POS_GK)
+			{
+				for (int i = 1; i <= gpGlobals->maxClients; i++)
+				{
+					CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+					if (!CSDKPlayer::IsOnField(pPl) || pPl == m_pFoulingPl || pPl->GetTeamNumber() != team)
+						continue;
+
+					pPl->SetDesiredTeam(team, team, posIndex, true, false, false);
+					break;
+				}
+			}
+		}
+	}
+}
+
+void CMatchBall::TriggerFoul(foul_type_t type, Vector pos, CSDKPlayer *pFoulingPl, CSDKPlayer *pFouledPl /*= NULL*/)
+{
+	m_eFoulType = type;
+	m_pFoulingPl = pFoulingPl;
+	m_pFouledPl = pFouledPl;
+	m_nFoulingTeam = pFoulingPl->GetTeamNumber();
+	m_nFouledTeam = pFoulingPl->GetOppTeamNumber();
+	m_vFoulPos.x = clamp(pos.x, SDKGameRules()->m_vFieldMin.GetX() + 2 * m_flPhysRadius, SDKGameRules()->m_vFieldMax.GetX() - 2 * m_flPhysRadius);
+	m_vFoulPos.y = clamp(pos.y, SDKGameRules()->m_vFieldMin.GetY() + 2 * m_flPhysRadius, SDKGameRules()->m_vFieldMax.GetY() - 2 * m_flPhysRadius);
+	m_vFoulPos.z = SDKGameRules()->m_vKickOff.GetZ();
+
+	// Move the ball to the edge of the penalty box if the foul happened inside. This will probably only be relevant for double touch fouls.
+
+	Vector min = GetGlobalTeam(m_nFoulingTeam)->m_vPenBoxMin - m_flPhysRadius;
+	Vector max = GetGlobalTeam(m_nFoulingTeam)->m_vPenBoxMax + m_flPhysRadius;
+
+	// Ball inside the penalty box
+	if (m_vFoulPos.x > min.x && m_vFoulPos.x < max.x)
+	{
+		if (GetGlobalTeam(m_nFoulingTeam)->m_nForward == 1 && m_vFoulPos.y < max.y)
+			m_vFoulPos.y = max.y;
+		else if (GetGlobalTeam(m_nFoulingTeam)->m_nForward == -1 && m_vFoulPos.y > min.y)
+			m_vFoulPos.y = min.y;
+	}
+}
+
+bool CMatchBall::IsPlayerClose()
+{
+	return (m_vPos - m_vPlPos).Length2DSqr() <= pow(sv_ball_setpiece_close_dist.GetFloat(), 2);
+}
+
+void CMatchBall::SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyPart, bool isDeflection, bool markOffsidePlayers, bool ensureMinShotStrength, float nextShotMinDelay)
+{
+	CBall::SetVel(vel, spinCoeff, spinFlags, bodyPart, isDeflection, markOffsidePlayers, ensureMinShotStrength, nextShotMinDelay);
+
+	if (markOffsidePlayers)
+		MarkOffsidePlayers();
+}
+
+extern ConVar sv_singlekeeper;
+
+void CMatchBall::MarkOffsidePlayers()
+{
+	if (SDKGameRules()->IsIntermissionState() || m_bHasQueuedState || SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES)
+		return;
+
+	m_vOffsidePos = m_vPos;
+
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+
+		if (pPl)
+			pPl->SetOffside(false);
+
+		if (!CSDKPlayer::IsOnField(pPl) || pPl == m_pPl || pPl->GetTeamNumber() != m_pPl->GetTeamNumber())
+			continue;
+
+		Vector pos = pPl->GetLocalOrigin();
+		int forward = pPl->GetTeam()->m_nForward;
+
+		// In opponent half?
+		if (Sign((pos - SDKGameRules()->m_vKickOff).y) != forward)
+			continue;
+
+		// Player closer to goal than the ball?
+		if (Sign(pos.y - m_vPos.y) != forward)
+			continue;
+
+		int oppPlayerCount = 0;
+		int nearerPlayerCount = 0;
+		CSDKPlayer *pLastPl = NULL;
+		float shortestDist = FLT_MAX;
+
+		// Count opponent players who are nearer to the goal
+		for (int j = 1; j <= gpGlobals->maxClients; j++)
+		{
+			CSDKPlayer *pOpp = ToSDKPlayer(UTIL_PlayerByIndex(j));
+			if (!CSDKPlayer::IsOnField(pOpp) || pOpp->GetTeamNumber() == pPl->GetTeamNumber())
+				continue;
+
+			oppPlayerCount += 1;
+
+			if (Sign(pOpp->GetLocalOrigin().y - pos.y) == forward)
+			{
+				nearerPlayerCount += 1;
+			}
+			else
+			{
+				float dist = abs(pos.y - pOpp->GetLocalOrigin().y);
+				if (dist < shortestDist)
+				{
+					shortestDist = dist;
+					pLastPl = pOpp;
+				}
+			}
+		}
+
+		// If the defending team doesn't have a keeper, just assume there is one at his goal line and increase the counter by one.
+		// This is mainly relevant for matches with sv_singlekeeper enabled when the keeper spot of the defending team is empty when the attackers play a pass.
+		// An attacker can be caught offside then, even if a defender is closer to the goal than he is.
+		// It also helps preventing abuse by keepers who go to spec during an attack to force false offsides.
+		if (!m_pPl->GetOppTeam()->GetPlayerByPosType(POS_GK))
+		{
+			nearerPlayerCount += 1;
+		}
+
+		// Require at least two opponent players on the field to consider an offside. Useful in public matches with few players.
+		if (oppPlayerCount >= 2 && nearerPlayerCount <= 1)
+		{
+			pPl->SetOffside(true);
+			pPl->SetOffsidePos(pPl->GetLocalOrigin());
+			pPl->SetOffsideBallPos(m_vPos);
+
+			Vector lastSafePos;
+
+			if (abs(pLastPl->GetLocalOrigin().y - pPl->GetLocalOrigin().y) < abs(SDKGameRules()->m_vKickOff.GetY() - pPl->GetLocalOrigin().y))
+				lastSafePos = pLastPl->GetLocalOrigin();
+			else
+				lastSafePos = SDKGameRules()->m_vKickOff;
+
+			pPl->SetOffsideLastOppPlayerPos(lastSafePos);
+		}
+	}
+}
+
+void CMatchBall::UnmarkOffsidePlayers()
+{
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+
+		if (CSDKPlayer::IsOnField(pPl))
+			pPl->SetOffside(false);
+	}
+}
+
+void CMatchBall::UpdatePossession(CSDKPlayer *pNewPossessor)
+{
+	if (m_pPossessingPl == pNewPossessor)
+		return;
+
+	if (m_flPossessionStart != -1)
+	{
+		float duration = gpGlobals->curtime - m_flPossessionStart;
+
+		if (m_pPossessingPl)
+			m_pPossessingPl->AddPossessionTime(duration);
+
+		float total = GetGlobalTeam(TEAM_A)->m_flPossessionTime + GetGlobalTeam(TEAM_B)->m_flPossessionTime;
+
+		GetGlobalTeam(TEAM_A)->m_Possession = floor(GetGlobalTeam(TEAM_A)->m_flPossessionTime * 100 / max(1, total) + 0.5f);
+		GetGlobalTeam(TEAM_B)->m_Possession = 100 - GetGlobalTeam(TEAM_A)->m_Possession;
+
+		int possSum = 0;
+
+		struct remainder_t
+		{
+			int dataIndex;
+			float remainder;
+			remainder_t() : dataIndex(0), remainder(0) {}
+		};
+
+		remainder_t *sortedRemainders = new remainder_t[CPlayerPersistentData::m_PlayerPersistentData.Count()];
+
+		for (int i = 0; i < CPlayerPersistentData::m_PlayerPersistentData.Count(); i++)
+		{
+			CPlayerMatchData *pData = CPlayerPersistentData::m_PlayerPersistentData[i]->m_pMatchData;
+			
+			float exactPossession = pData->m_flPossessionTime * 100 / max(1, total);
+			pData->m_nPossession = (int)exactPossession;
+			float remainder = exactPossession - pData->m_nPossession;
+
+			possSum += pData->m_nPossession;
+
+			for (int j = 0; j <= i; j++)
+			{
+				if (sortedRemainders[j].remainder <= remainder)
+				{
+					for (int k = i; k > j; k--)
+					{
+						sortedRemainders[k] = sortedRemainders[k - 1];
+					}
+
+					sortedRemainders[j].dataIndex = i;
+					sortedRemainders[j].remainder = remainder;
+
+					break;
+				}
+			}
+		}
+
+		for (int i = 0; i < CPlayerPersistentData::m_PlayerPersistentData.Count(); i++)
+		{
+			if (possSum == 100)
+				break;
+
+			CPlayerMatchData *pData = CPlayerPersistentData::m_PlayerPersistentData[sortedRemainders[i].dataIndex]->m_pMatchData;
+			pData->m_nPossession += 1;
+			possSum += 1;
+		}
+
+		delete[] sortedRemainders;
+	}
+
+	if (CSDKPlayer::IsOnField(pNewPossessor))
+	{
+		m_pPossessingPl = pNewPossessor;
+		m_nPossessingTeam = pNewPossessor->GetTeamNumber();
+		m_flPossessionStart = gpGlobals->curtime;
+	}
+	else
+	{
+		m_pPossessingPl = NULL;
+		m_nPossessingTeam = TEAM_INVALID;
+		m_flPossessionStart = -1;
+	}
+}
+
+// -100 = ball at the goal line of the home team
+// 0 = ball at the the half-way line
+// 100 = ball at the goal line of the away team
+float CMatchBall::CalcFieldZone()
+{
+	Vector pos = GetPos();
+	float fieldLength = SDKGameRules()->m_vFieldMax.GetY() - SDKGameRules()->m_vFieldMin.GetY();
+	float dist = GetGlobalTeam(TEAM_A)->m_nForward * (pos.y - SDKGameRules()->m_vKickOff.GetY());
+	return clamp(dist * 100 / (fieldLength / 2), -100, 100);
+}
+
+void CMatchBall::SetPenaltyTaker(CSDKPlayer *pPl)
+{
+	m_pFouledPl = pPl;
+	m_nFouledTeam = pPl->GetTeamNumber();
+	m_nFoulingTeam = pPl->GetOppTeamNumber();
+}
+
+// Make sure that all players are walked to the intended positions when setting shields
+bool CMatchBall::PlayersAtTargetPos()
+{
+	bool playersAtTarget = true;
+
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+
+		if (!CSDKPlayer::IsOnField(pPl))
+			continue;
+
+		if (!pPl->m_bIsAtTargetPos)
+		{
+			if (!(pPl->GetFlags() & FL_REMOTECONTROLLED))
+			{
+				if (mp_shield_liberal_teammates_positioning.GetBool() && m_pCurStateInfo->m_eBallState != BALL_STATE_KICKOFF && m_pCurStateInfo->m_eBallState != BALL_STATE_PENALTY && pPl->GetTeamNumber() == m_pPl->GetTeamNumber())
+					pPl->SetPosOutsideBall(pPl->GetLocalOrigin());
+				else
+					pPl->SetPosOutsideShield(false);
+			}
+
+			if (!pPl->m_bIsAtTargetPos)
+			{
+				if (pPl->m_flRemoteControlledStartTime == -1)
+				{
+					pPl->m_flRemoteControlledStartTime = gpGlobals->curtime;
+					playersAtTarget = false;
+				}
+				else if (gpGlobals->curtime >= pPl->m_flRemoteControlledStartTime + sv_ball_timelimit_remotecontrolled.GetFloat()) // Player timed out and blocks progress, so move him to specs
+					pPl->SetDesiredTeam(TEAM_SPECTATOR, pPl->GetTeamNumber(), 0, true, false, false);
+				else
+					playersAtTarget = false;
+			}
+		}
+	}
+
+	return playersAtTarget;
+}
+
+void CMatchBall::VPhysicsCollision(int index, gamevcollisionevent_t *pEvent)
+{
+	float speed = pEvent->collisionSpeed;
+	int surfaceProps = pEvent->surfaceProps[!index];
+
+	if (surfaceProps == POST_SURFACEPROPS && speed > 300.0f)
+	{
+		CSDKPlayer *pLastPl = LastPl(true);
+		if (pLastPl && Sign(m_vPos.y - SDKGameRules()->m_vKickOff.GetY()) == pLastPl->GetTeam()->m_nForward) // Check if it's the opponent's goal
+			m_bHitThePost = true;
+	}
+
+	CBall::VPhysicsCollision(index, pEvent);
+}
+
+void CMatchBall::RemoveAllTouches()
+{
+	if (!m_bHasQueuedState)
+		m_Touches.PurgeAndDeleteElements();
+}
+
+BallTouchInfo *CMatchBall::LastInfo(bool wasShooting, CSDKPlayer *pSkipPl /*= NULL*/, CSDKPlayer *pSkipPl2 /*= NULL*/, CSDKPlayer *pSkipPl3 /*= NULL*/)
+{
+	for (int i = m_Touches.Count() - 1; i >= 0; i--)
+	{
+		if (pSkipPl && m_Touches[i]->m_pPl == pSkipPl)
+			continue;
+
+		if (pSkipPl2 && m_Touches[i]->m_pPl == pSkipPl2)
+			continue;
+
+		if (pSkipPl3 && m_Touches[i]->m_pPl == pSkipPl3)
+			continue;
+
+		if (!wasShooting || m_Touches[i]->m_bIsShot)
+			return m_Touches[i];
+	}
+
+	return NULL;
+}
+
+CSDKPlayer *CMatchBall::LastPl(bool wasShooting, CSDKPlayer *pSkipPl /*= NULL*/, CSDKPlayer *pSkipPl2 /*= NULL*/, CSDKPlayer *pSkipPl3 /*= NULL*/)
+{
+	BallTouchInfo *info = LastInfo(wasShooting, pSkipPl, pSkipPl2, pSkipPl3);
+	if (info && CSDKPlayer::IsOnField(info->m_pPl))
+		return info->m_pPl;
+	
+	return NULL;
+}
+
+int CMatchBall::LastTeam(bool wasShooting, CSDKPlayer *pSkipPl /*= NULL*/, CSDKPlayer *pSkipPl2 /*= NULL*/, CSDKPlayer *pSkipPl3 /*= NULL*/)
+{
+	BallTouchInfo *info = LastInfo(wasShooting, pSkipPl, pSkipPl2, pSkipPl3);
+	return info ? info->m_nTeam : TEAM_INVALID;
+}
+
+int CMatchBall::LastOppTeam(bool wasShooting, CSDKPlayer *pSkipPl /*= NULL*/, CSDKPlayer *pSkipPl2 /*= NULL*/, CSDKPlayer *pSkipPl3 /*= NULL*/)
+{
+	BallTouchInfo *info = LastInfo(wasShooting, pSkipPl, pSkipPl2, pSkipPl3);
+	return info ? (info->m_nTeam == TEAM_A ? TEAM_B : TEAM_A) : TEAM_INVALID;
+}
+
+bool CMatchBall::IsLegallyCatchableByKeeper()
+{
+	if (SDKGameRules()->IsIntermissionState() || SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES)
+		return true;
+
+	// Skip the keeper
+	BallTouchInfo *pLastTouch = LastInfo(false, m_pPl);
+	BallTouchInfo *pLastShot = LastInfo(true, m_pPl);
+
+	if (pLastTouch && pLastShot)
+	{
+		// Can catch if opponent has touched or shot the ball
+		if (pLastTouch->m_nTeam != m_pPl->GetTeamNumber() || pLastShot->m_nTeam != m_pPl->GetTeamNumber())
+			return true;
+
+		if (pLastShot->m_eBodyPart == BODY_PART_HEAD || pLastShot->m_eBodyPart == BODY_PART_CHEST)
+		{
+			// Only allow the keeper to pick up the ball if the shot or touch before the last header or chest action was by an opponent
+			for (int i = m_Touches.Count() - 1; i >= 1; i--)
+			{
+				if (m_Touches[i]->m_bIsShot)
+				{
+					for (int j = i - 1; j >= 0; j--)
+					{
+						if (m_Touches[j]->m_bIsShot)
+						{
+							if (m_Touches[j]->m_nTeam != pLastTouch->m_nTeam)
+								return true;
+
+							break;
+						}
+					}
+
+					break;
+				}
+			}
+		}
+	}
+
+	return false;
 }

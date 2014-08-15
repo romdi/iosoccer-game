@@ -269,3 +269,18 @@ void CPlayerBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart, co
 {
 	m_bLastContactWasTouch = !isShot;
 }
+
+void CPlayerBall::VPhysicsCollision(int index, gamevcollisionevent_t *pEvent)
+{
+	CBall::VPhysicsCollision(index, pEvent);
+}
+
+bool CPlayerBall::IsLegallyCatchableByKeeper()
+{
+	return true;
+}
+
+void CPlayerBall::RemoveAllTouches()
+{
+	m_bLastContactWasTouch = false;
+}

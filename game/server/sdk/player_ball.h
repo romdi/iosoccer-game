@@ -38,6 +38,11 @@ public:
 	void State_NORMAL_Enter();		void State_NORMAL_Think();		void State_NORMAL_Leave(ball_state_t newState);
 
 	void			Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart, const Vector &oldVel);
+	bool			CheckFoul(bool canShootBall, const Vector &localDirToBall) { return false; }
+	bool			PlayersAtTargetPos() { return true; }
+	void			VPhysicsCollision(int index, gamevcollisionevent_t	*pEvent);
+	bool			IsLegallyCatchableByKeeper();
+	void			RemoveAllTouches();
 
 	CNetworkHandle(CSDKPlayer, m_pCreator);
 

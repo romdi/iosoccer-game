@@ -57,8 +57,6 @@ public:
 	CHandle<C_SDKPlayer> m_pHoldingPlayer;
 	bool m_bIsPlayerBall;
 	ball_state_t m_eBallState;
-	bool m_bNonnormalshotsBlocked;
-	bool m_bShotsBlocked;
 
 	inline ball_state_t State_Get() { return m_eBallState; }
 

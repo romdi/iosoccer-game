@@ -490,4 +490,7 @@ enum TimeoutState_t
 	TIMEOUT_STATE_ACTIVE
 };
 
+#define POST_SURFACEPROPS 84
+#define NET_SURFACEPROPS 85
+
 #endif // SDK_SHAREDDEFS_H

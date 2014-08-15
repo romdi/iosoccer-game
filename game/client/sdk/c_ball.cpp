@@ -15,8 +15,6 @@ IMPLEMENT_CLIENTCLASS_DT( C_Ball, DT_Ball, CBall )
 	RecvPropEHandle(RECVINFO(m_pHoldingPlayer)),
 	RecvPropBool(RECVINFO(m_bIsPlayerBall)),
 	RecvPropInt(RECVINFO(m_eBallState)),
-	RecvPropBool(RECVINFO(m_bNonnormalshotsBlocked)),
-	RecvPropBool(RECVINFO(m_bShotsBlocked)),
 	RecvPropString(RECVINFO(m_szSkinName))
 END_RECV_TABLE()
 

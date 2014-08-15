@@ -220,8 +220,6 @@ extern ConVar
 	
 	sv_ball_turnovertime;
 
-//class CSDKPlayer;
-
 enum body_part_t
 {
 	BODY_PART_NONE = 0,
@@ -343,8 +341,6 @@ public:
 	CNetworkVar( float,	m_fMass	);
 	CNetworkVar(ball_state_t, m_eBallState);
 	CNetworkHandle(CSDKPlayer, m_pHoldingPlayer);
-	CNetworkVar(bool, m_bNonnormalshotsBlocked);
-	CNetworkVar(bool, m_bShotsBlocked);
 	CNetworkString(m_szSkinName, MAX_KITNAME_LENGTH);
 
 	void			SetPhysicsMode(int iMode)	{ m_iPhysicsMode = iMode; }
@@ -359,7 +355,7 @@ public:
 	bool			IsAsleep(void) { return	false; }
 	virtual void	Spawn(void);
 	void			Think( void	);
-	void			VPhysicsCollision( int index, gamevcollisionevent_t	*pEvent	);
+	virtual void	VPhysicsCollision(int index, gamevcollisionevent_t	*pEvent);
 	void			VPhysicsUpdate(IPhysicsObject *pPhysics);
 	bool			CreateVPhysics();
 	
@@ -378,11 +374,6 @@ public:
 	virtual void	SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyPart, bool isDeflection, bool markOffsidePlayers, bool ensureMinShotStrength, float nextShotMinDelay = 0);
 	void			SetRot(AngularImpulse rot = NULL);
 
-	void			SetPenaltyState(penalty_state_t penaltyState) { m_ePenaltyState = penaltyState; }
-	penalty_state_t	GetPenaltyState() { return m_ePenaltyState; }
-
-	void			SetPenaltyTaker(CSDKPlayer *pPl);
-
 	inline ball_state_t State_Get( void ) { return m_pCurStateInfo->m_eBallState; }
 
 	CSDKPlayer		*GetCurrentPlayer() { return m_pPl; }
@@ -393,8 +384,6 @@ public:
 	QAngle			GetAng();
 	Vector			GetVel();
 	AngularImpulse	GetRot();
-	float			CalcFieldZone();
-	void			UpdatePossession(CSDKPlayer *pNewPossessor);
 
 	const char		*GetSkinName() { return m_szSkinName; }
 	void			SetSkinName(const char *skinName);
@@ -420,21 +409,13 @@ protected:
 	virtual void State_Leave(ball_state_t newState) = 0;
 	static CBallStateInfo* State_LookupInfo(ball_state_t state);	// Find the state info for the specified state.
 
-	void			FindStatePlayer(ball_state_t ballState = BALL_STATE_NONE);
-
 	ball_state_t	m_eNextState;
 	float			m_flStateTimelimit;
 	CBallStateInfo	*m_pCurStateInfo;
 
-	void			MarkOffsidePlayers();
-	void			UnmarkOffsidePlayers();
-
-	void			HandleFoul();
-	bool			PlayersAtTargetPos();
+	virtual bool	PlayersAtTargetPos() = 0;
 	bool			CanTouchBallXY();
-	bool			IsPlayerClose();
-	bool			CheckFoul(bool canShootBall, const Vector &localDirToBall);
-	void			TriggerFoul(foul_type_t type, Vector pos, CSDKPlayer *pFoulingPl, CSDKPlayer *pFouledPl = NULL);
+	virtual bool	CheckFoul(bool canShootBall, const Vector &localDirToBall) = 0;
 	CSDKPlayer		*FindNearestPlayer(int team = TEAM_INVALID, int posFlags = FL_POS_FIELD, bool checkIfShooting = false, int ignoredPlayerBits = 0, float radius = -1);
 	bool			IsInCollisionRange(bool isDeflection);
 	bool			DoBodyPartAction();
@@ -451,11 +432,8 @@ protected:
 	float			GetChargedshotStrength(float coeff, int minStrength, int maxStrength);
 	void			UpdateCarrier();
 	virtual void	Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart, const Vector &oldVel) = 0;
-	void			RemoveAllTouches();
-	BallTouchInfo	*LastInfo(bool wasShooting, CSDKPlayer *pSkipPl = NULL, CSDKPlayer *pSkipPl2 = NULL, CSDKPlayer *pSkipPl3 = NULL);
-	CSDKPlayer		*LastPl(bool wasShooting, CSDKPlayer *pSkipPl = NULL, CSDKPlayer *pSkipPl2 = NULL, CSDKPlayer *pSkipPl3 = NULL);
-	int				LastTeam(bool wasShooting, CSDKPlayer *pSkipPl = NULL, CSDKPlayer *pSkipPl2 = NULL, CSDKPlayer *pSkipPl3 = NULL);
-	int				LastOppTeam(bool wasShooting, CSDKPlayer *pSkipPl = NULL, CSDKPlayer *pSkipPl2 = NULL, CSDKPlayer *pSkipPl3 = NULL);
+	virtual bool	IsLegallyCatchableByKeeper() = 0;
+	virtual void	RemoveAllTouches() = 0;
 
 	IPhysicsObject	*m_pPhys;
 	float			m_flPhysRadius;
@@ -465,13 +443,6 @@ protected:
 
 	QAngle			m_aPlAng, m_aPlCamAng;
 	Vector			m_vPlVel, m_vPlVel2D, m_vPlForwardVel2D, m_vPlPos, m_vPlForward, m_vPlForward2D, m_vPlRight, m_vPlUp, m_vPlDirToBall, m_vPlLocalDirToBall;
-
-	CHandle<CSDKPlayer>	m_pFouledPl;
-	CHandle<CSDKPlayer>	m_pFoulingPl;
-	int				m_nFouledTeam;
-	int				m_nFoulingTeam;
-	foul_type_t		m_eFoulType;
-	Vector			m_vFoulPos;
 
 	Vector			m_vPos, m_vVel, m_vOffsidePos;
 	QAngle			m_aAng;
@@ -484,28 +455,10 @@ protected:
 	bool			m_bSetNewPos;
 	bool			m_bSetNewVel;
 	bool			m_bSetNewRot;
-	
-	CHandle<CSDKPlayer>	m_pPossessingPl;
-	int				m_nPossessingTeam;
-	float			m_flPossessionStart;
-
-	CHandle<CSDKPlayer>	m_pTurnoverPlayer;
-
-	CUtlVector<BallTouchInfo *> m_Touches;
-
-	penalty_state_t m_ePenaltyState;
-
-	MatchEventPlayerInfo m_MatchEventPlayerInfo;
-
-	//CHandle<CSDKPlayer> m_pHoldingPlayer;
 
 	float			m_flGlobalLastShot;
 	float			m_flGlobalDynamicShotDelay;
-
-	float			m_flLastMatchEventSetTime;
-
 	bool			m_bHitThePost;
-
 	bool			m_bLastContactWasTouch;
 };
 

@@ -45,6 +45,26 @@ public:
 	void			SetSetpieceTaker(CSDKPlayer *pPlayer) { m_pSetpieceTaker = pPlayer; m_pPl = NULL; }
 
 	void			Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart, const Vector &oldVel);
+	bool			CheckFoul(bool canShootBall, const Vector &localDirToBall);
+	void			HandleFoul();
+	void			TriggerFoul(foul_type_t type, Vector pos, CSDKPlayer *pFoulingPl, CSDKPlayer *pFouledPl = NULL);
+	bool			IsPlayerClose();
+	void			SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyPart, bool isDeflection, bool markOffsidePlayers, bool ensureMinShotStrength, float nextShotMinDelay = 0);
+	void			MarkOffsidePlayers();
+	void			UnmarkOffsidePlayers();
+	float			CalcFieldZone();
+	void			UpdatePossession(CSDKPlayer *pNewPossessor);
+	void			SetPenaltyState(penalty_state_t penaltyState) { m_ePenaltyState = penaltyState; }
+	penalty_state_t	GetPenaltyState() { return m_ePenaltyState; }
+	void			SetPenaltyTaker(CSDKPlayer *pPl);
+	bool			PlayersAtTargetPos();
+	void			VPhysicsCollision(int index, gamevcollisionevent_t	*pEvent);
+	void			RemoveAllTouches();
+	BallTouchInfo	*LastInfo(bool wasShooting, CSDKPlayer *pSkipPl = NULL, CSDKPlayer *pSkipPl2 = NULL, CSDKPlayer *pSkipPl3 = NULL);
+	CSDKPlayer		*LastPl(bool wasShooting, CSDKPlayer *pSkipPl = NULL, CSDKPlayer *pSkipPl2 = NULL, CSDKPlayer *pSkipPl3 = NULL);
+	int				LastTeam(bool wasShooting, CSDKPlayer *pSkipPl = NULL, CSDKPlayer *pSkipPl2 = NULL, CSDKPlayer *pSkipPl3 = NULL);
+	int				LastOppTeam(bool wasShooting, CSDKPlayer *pSkipPl = NULL, CSDKPlayer *pSkipPl2 = NULL, CSDKPlayer *pSkipPl3 = NULL);
+	bool			IsLegallyCatchableByKeeper();
 
 	float			m_flStateEnterTime;
 	float			m_flStateLeaveTime;
@@ -57,6 +77,25 @@ public:
 
 	CNetworkHandle(CSDKPlayer, m_pLastActivePlayer);
 	CNetworkVar(int, m_nLastActiveTeam);
+
+	CNetworkVar(bool, m_bNonnormalshotsBlocked);
+	CNetworkVar(bool, m_bShotsBlocked);
+
+	CHandle<CSDKPlayer>	m_pTurnoverPlayer;
+	CHandle<CSDKPlayer>	m_pPossessingPl;
+	int				m_nPossessingTeam;
+	float			m_flPossessionStart;
+
+	CUtlVector<BallTouchInfo *> m_Touches;
+
+	penalty_state_t m_ePenaltyState;
+
+	CHandle<CSDKPlayer>	m_pFouledPl;
+	CHandle<CSDKPlayer>	m_pFoulingPl;
+	int				m_nFouledTeam;
+	int				m_nFoulingTeam;
+	foul_type_t		m_eFoulType;
+	Vector			m_vFoulPos;
 };
 
 extern CMatchBall *GetMatchBall();
