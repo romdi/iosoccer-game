@@ -21,9 +21,9 @@ ConVar
 	sv_ball_goalreplay_count("sv_ball_goalreplay_count", "2", FCVAR_NOTIFY),
 	sv_ball_goalreplay_delay("sv_ball_goalreplay_delay", "1", FCVAR_NOTIFY),
 	sv_ball_stats_pass_mindist("sv_ball_stats_pass_mindist", "300", FCVAR_NOTIFY),
-	sv_ball_stats_clearance_minspeed("sv_ball_stats_clearance_minspeed", "800", FCVAR_NOTIFY),
-	sv_ball_stats_shot_mindist("sv_ball_stats_shot_mindist", "300", FCVAR_NOTIFY),
-	sv_ball_stats_save_minspeed("sv_ball_stats_save_minspeed", "800", FCVAR_NOTIFY),
+	sv_ball_stats_clearance_minspeed("sv_ball_stats_clearance_minspeed", "720", FCVAR_NOTIFY),
+	sv_ball_stats_shot_mindist("sv_ball_stats_shot_mindist", "270", FCVAR_NOTIFY),
+	sv_ball_stats_save_minspeed("sv_ball_stats_save_minspeed", "720", FCVAR_NOTIFY),
 	sv_ball_stats_assist_maxtime("sv_ball_stats_assist_maxtime", "8", FCVAR_NOTIFY),
 	sv_ball_advantage_enabled("sv_ball_advantage_enabled", "1", FCVAR_NOTIFY),
 	sv_ball_advantage_duration("sv_ball_advantage_duration", "3", FCVAR_NOTIFY),
@@ -46,13 +46,13 @@ ConVar
 	sv_ball_slidesidereach_foul( "sv_ball_slidesidereach_foul", "10", FCVAR_NOTIFY ),
 	sv_ball_slideforwardreach_foul( "sv_ball_slideforwardreach_foul", "25", FCVAR_NOTIFY ),
 	sv_ball_slidebackwardreach_foul( "sv_ball_slidebackwardreach_foul", "20", FCVAR_NOTIFY ),
-	sv_ball_powerthrow_strength("sv_ball_powerthrow_strength", "800", FCVAR_NOTIFY),
-	sv_ball_chargedthrow_minstrength("sv_ball_chargedthrow_minstrength", "500", FCVAR_NOTIFY),
-	sv_ball_chargedthrow_maxstrength("sv_ball_chargedthrow_maxstrength", "1100", FCVAR_NOTIFY),
+	sv_ball_powerthrow_strength("sv_ball_powerthrow_strength", "720", FCVAR_NOTIFY),
+	sv_ball_chargedthrow_minstrength("sv_ball_chargedthrow_minstrength", "450", FCVAR_NOTIFY),
+	sv_ball_chargedthrow_maxstrength("sv_ball_chargedthrow_maxstrength", "990", FCVAR_NOTIFY),
 	sv_ball_timelimit_setpiece("sv_ball_timelimit_setpiece", "15", FCVAR_NOTIFY),
 	sv_ball_timelimit_remotecontrolled("sv_ball_timelimit_remotecontrolled", "15", FCVAR_NOTIFY),
 	sv_ball_throwin_minangle("sv_ball_throwin_minangle", "-5", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_throwin_minstrength("sv_ball_throwin_minstrength", "300", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
+	sv_ball_throwin_minstrength("sv_ball_throwin_minstrength", "270", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
 
 
 LINK_ENTITY_TO_CLASS( match_ball, CMatchBall );

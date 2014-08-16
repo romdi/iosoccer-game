@@ -76,9 +76,9 @@ ConVar
 	sv_ball_keeper_sidedive_catchcenteroffset_side( "sv_ball_keeper_sidedive_catchcenteroffset_side", "0", FCVAR_NOTIFY ),
 	sv_ball_keeper_sidedive_catchcenteroffset_z( "sv_ball_keeper_sidedive_catchcenteroffset_z", "40", FCVAR_NOTIFY ),
 	
-	sv_ball_keeper_punch_minstrength( "sv_ball_keeper_punch_minstrength", "1000", FCVAR_NOTIFY ),
+	sv_ball_keeper_punch_minstrength( "sv_ball_keeper_punch_minstrength", "900", FCVAR_NOTIFY ),
 	
-	sv_ball_keeperpunchupstrength("sv_ball_keeperpunchupstrength", "500", FCVAR_NOTIFY),
+	sv_ball_keeperpunchupstrength("sv_ball_keeperpunchupstrength", "450", FCVAR_NOTIFY),
 	sv_ball_keeperdeflectioncoeff("sv_ball_keeperdeflectioncoeff", "0.5", FCVAR_NOTIFY),
 	
 	sv_ball_shotdelay_global_coeff("sv_ball_shotdelay_global_coeff", "0.33", FCVAR_NOTIFY),
@@ -87,8 +87,8 @@ ConVar
 	sv_ball_keepercatchdelay_standing_global_coeff("sv_ball_keepercatchdelay_standing_global_coeff", "0.5", FCVAR_NOTIFY),
 	sv_ball_dynamicshotdelay_mindelay("sv_ball_dynamicshotdelay_mindelay", "0.2", FCVAR_NOTIFY),
 	sv_ball_dynamicshotdelay_maxdelay("sv_ball_dynamicshotdelay_maxdelay", "1.0", FCVAR_NOTIFY),
-	sv_ball_dynamicshotdelay_minshotstrength("sv_ball_dynamicshotdelay_minshotstrength", "400", FCVAR_NOTIFY),
-	sv_ball_dynamicshotdelay_maxshotstrength("sv_ball_dynamicshotdelay_maxshotstrength", "1600", FCVAR_NOTIFY),
+	sv_ball_dynamicshotdelay_minshotstrength("sv_ball_dynamicshotdelay_minshotstrength", "360", FCVAR_NOTIFY),
+	sv_ball_dynamicshotdelay_maxshotstrength("sv_ball_dynamicshotdelay_maxshotstrength", "1440", FCVAR_NOTIFY),
 	
 	sv_ball_bestshotangle("sv_ball_bestshotangle", "-20", FCVAR_NOTIFY),
 	
@@ -107,23 +107,23 @@ ConVar
 	sv_ball_besttopspinangle_start("sv_ball_besttopspinangle_start", "-50", FCVAR_NOTIFY),
 	sv_ball_besttopspinangle_end("sv_ball_besttopspinangle_end", "0", FCVAR_NOTIFY),
 	
-	sv_ball_normalshot_strength("sv_ball_normalshot_strength", "900", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_powershot_strength("sv_ball_powershot_strength", "1100", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_chargedshot_minstrength("sv_ball_chargedshot_minstrength", "900", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_chargedshot_maxstrength("sv_ball_chargedshot_maxstrength", "1600", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_normalshot_strength("sv_ball_normalshot_strength", "810", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_powershot_strength("sv_ball_powershot_strength", "990", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_chargedshot_minstrength("sv_ball_chargedshot_minstrength", "810", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_chargedshot_maxstrength("sv_ball_chargedshot_maxstrength", "1440", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	
-	sv_ball_normalheader_strength("sv_ball_normalheader_strength", "500", FCVAR_NOTIFY), 
-	sv_ball_powerheader_strength("sv_ball_powerheader_strength", "700", FCVAR_NOTIFY), 
-	sv_ball_chargedheader_minstrength("sv_ball_chargedheader_minstrength", "500", FCVAR_NOTIFY), 
-	sv_ball_chargedheader_maxstrength("sv_ball_chargedheader_maxstrength", "1000", FCVAR_NOTIFY), 
+	sv_ball_normalheader_strength("sv_ball_normalheader_strength", "450", FCVAR_NOTIFY), 
+	sv_ball_powerheader_strength("sv_ball_powerheader_strength", "630", FCVAR_NOTIFY), 
+	sv_ball_chargedheader_minstrength("sv_ball_chargedheader_minstrength", "450", FCVAR_NOTIFY), 
+	sv_ball_chargedheader_maxstrength("sv_ball_chargedheader_maxstrength", "900", FCVAR_NOTIFY), 
 	
-	sv_ball_powerdivingheader_strength("sv_ball_powerdivingheader_strength", "900", FCVAR_NOTIFY), 
-	sv_ball_chargeddivingheader_minstrength("sv_ball_chargeddivingheader_minstrength", "700", FCVAR_NOTIFY), 
-	sv_ball_chargeddivingheader_maxstrength("sv_ball_chargeddivingheader_maxstrength", "1100", FCVAR_NOTIFY),
+	sv_ball_powerdivingheader_strength("sv_ball_powerdivingheader_strength", "810", FCVAR_NOTIFY), 
+	sv_ball_chargeddivingheader_minstrength("sv_ball_chargeddivingheader_minstrength", "630", FCVAR_NOTIFY), 
+	sv_ball_chargeddivingheader_maxstrength("sv_ball_chargeddivingheader_maxstrength", "990", FCVAR_NOTIFY),
 	
 	sv_ball_header_mindelay("sv_ball_header_mindelay", "0.33", FCVAR_NOTIFY), 
 	
-	sv_ball_slide_strength("sv_ball_slide_strength", "800", FCVAR_NOTIFY), 
+	sv_ball_slide_strength("sv_ball_slide_strength", "720", FCVAR_NOTIFY), 
 	
 	sv_ball_keepershot_minangle("sv_ball_keepershot_minangle", "60", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	
@@ -137,7 +137,7 @@ ConVar
 	
 	sv_ball_highlightsdelay_intermissions("sv_ball_highlightsdelay_intermissions", "5.0", FCVAR_NOTIFY),
 	sv_ball_highlightsdelay_cooldown("sv_ball_highlightsdelay_cooldown", "30.0", FCVAR_NOTIFY),
-	sv_ball_minshotstrength("sv_ball_minshotstrength", "200", FCVAR_NOTIFY),  
+	sv_ball_minshotstrength("sv_ball_minshotstrength", "180", FCVAR_NOTIFY),  
 	
 	sv_ball_bodypos_feet_start("sv_ball_bodypos_feet_start", "-25", FCVAR_NOTIFY),
 	sv_ball_bodypos_hip_start("sv_ball_bodypos_hip_start", "15", FCVAR_NOTIFY),
@@ -159,7 +159,7 @@ ConVar
 	sv_ball_maxplayerfinddist("sv_ball_maxplayerfinddist", "200", FCVAR_NOTIFY),
 	
 	sv_ball_freecamshot_maxangle("sv_ball_freecamshot_maxangle", "60", FCVAR_NOTIFY),
-	sv_ball_heelshot_strength("sv_ball_heelshot_strength", "800", FCVAR_NOTIFY),
+	sv_ball_heelshot_strength("sv_ball_heelshot_strength", "720", FCVAR_NOTIFY),
 	
 	sv_ball_keeperautopunch_limit("sv_ball_keeperautopunch_limit", "30", FCVAR_NOTIFY),
 	sv_ball_keeperautopunch_pitch("sv_ball_keeperautopunch_pitch", "-45", FCVAR_NOTIFY),
