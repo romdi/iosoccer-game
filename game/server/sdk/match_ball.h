@@ -47,8 +47,7 @@ public:
 
 	void			Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart, const Vector &oldVel);
 	bool			CheckFoul(bool canShootBall, const Vector &localDirToBall);
-	void			HandleFoul();
-	void			TriggerFoul(foul_type_t type, Vector pos, CSDKPlayer *pFoulingPl, CSDKPlayer *pFouledPl = NULL);
+	void			SetFoulParams(foul_type_t type, Vector pos, CSDKPlayer *pFoulingPl, CSDKPlayer *pFouledPl = NULL);
 	bool			IsPlayerClose();
 	void			SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyPart, bool isDeflection, bool markOffsidePlayers, bool ensureMinShotStrength, float nextShotMinDelay = 0);
 	void			MarkOffsidePlayers();

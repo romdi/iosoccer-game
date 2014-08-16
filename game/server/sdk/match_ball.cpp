@@ -25,9 +25,7 @@ ConVar
 	sv_ball_stats_shot_mindist("sv_ball_stats_shot_mindist", "270", FCVAR_NOTIFY),
 	sv_ball_stats_save_minspeed("sv_ball_stats_save_minspeed", "720", FCVAR_NOTIFY),
 	sv_ball_stats_assist_maxtime("sv_ball_stats_assist_maxtime", "8", FCVAR_NOTIFY),
-	sv_ball_advantage_enabled("sv_ball_advantage_enabled", "1", FCVAR_NOTIFY),
 	sv_ball_advantage_duration("sv_ball_advantage_duration", "3", FCVAR_NOTIFY),
-	sv_ball_advantage_ignore_duration("sv_ball_advantage_ignore_duration", "0.5", FCVAR_NOTIFY),
 	sv_ball_offsidedist("sv_ball_offsidedist", "60", FCVAR_NOTIFY),
 	sv_ball_turnovertime("sv_ball_turnovertime", "2.0", FCVAR_NOTIFY),
 	sv_ball_goalcelebduration("sv_ball_goalcelebduration", "8.0", FCVAR_NOTIFY),
@@ -273,8 +271,6 @@ void CMatchBall::State_NORMAL_Enter()
 	//SetMatchSubEvent(MATCH_EVENT_NONE);
 }
 
-extern ConVar sv_ball_advantage_duration;
-
 void CMatchBall::State_NORMAL_Think()
 {
 	if (m_eNextState == BALL_STATE_GOAL)
@@ -335,11 +331,21 @@ void CMatchBall::State_NORMAL_Think()
 				if (dir.z > sv_ball_offsidedist.GetFloat() || dir.Length2DSqr() > pow(sv_ball_offsidedist.GetFloat(), 2))
 					continue;
 
-				pPl->AddOffside();
-				TriggerFoul(FOUL_OFFSIDE, pPl->GetOffsidePos(), pPl);
-				SDKGameRules()->SetOffsideLinePositions(pPl->GetOffsideBallPos().y, pPl->GetOffsidePos().y, pPl->GetOffsideLastOppPlayerPos().y);
-				State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_activationdelay_long.GetFloat());
-			
+				if (m_bIsAdvantage)
+				{
+					if (m_bIsPenalty)
+						State_Transition(BALL_STATE_PENALTY, sv_ball_statetransition_activationdelay_long.GetFloat());
+					else
+						State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_activationdelay_long.GetFloat());
+				}
+				else
+				{
+						pPl->AddOffside();
+						SetFoulParams(FOUL_OFFSIDE, pPl->GetOffsidePos(), pPl);
+						SDKGameRules()->SetOffsideLinePositions(pPl->GetOffsideBallPos().y, pPl->GetOffsidePos().y, pPl->GetOffsideLastOppPlayerPos().y);
+						State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_activationdelay_long.GetFloat());
+				}
+
 				return;
 			}
 		}
@@ -827,7 +833,6 @@ void CMatchBall::State_GOAL_Leave(ball_state_t newState)
 
 void CMatchBall::State_FREEKICK_Enter()
 {
-	HandleFoul();
 	SetPos(m_vFoulPos);
 }
 
@@ -914,7 +919,6 @@ void CMatchBall::State_PENALTY_Enter()
 	}
 	else
 	{
-		HandleFoul();
 		SetPos(GetGlobalTeam(m_nFoulingTeam)->m_vPenalty);
 	}
 }
@@ -1555,7 +1559,7 @@ void CMatchBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart, con
 		&& sv_ball_doubletouchfouls.GetBool() && State_Get() == BALL_STATE_NORMAL && m_Touches.Tail()->m_eBallState != BALL_STATE_NORMAL
 		&& m_Touches.Tail()->m_eBallState != BALL_STATE_KEEPERHANDS && pPl->GetTeam()->GetNumPlayers() > 2 && pPl->GetOppTeam()->GetNumPlayers() > 2) // Double touch foul
 	{
-		TriggerFoul(FOUL_DOUBLETOUCH, pPl->GetLocalOrigin(), pPl);
+		SetFoulParams(FOUL_DOUBLETOUCH, pPl->GetLocalOrigin(), pPl);
 		State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_activationdelay_long.GetFloat());
 
 		return;
@@ -1618,14 +1622,22 @@ void CMatchBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart, con
 	m_bHitThePost = false;
 	m_bLastContactWasTouch = !isShot;
 
-	//DevMsg("touches: %d\n", m_Touches.Count());
-	
 	if (pPl->IsOffside())
 	{
-		pPl->AddOffside();
-		TriggerFoul(FOUL_OFFSIDE, pPl->GetOffsidePos(), pPl);
-		SDKGameRules()->SetOffsideLinePositions(pPl->GetOffsideBallPos().y, pPl->GetOffsidePos().y, pPl->GetOffsideLastOppPlayerPos().y);
-		State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_activationdelay_long.GetFloat());
+		if (m_bIsAdvantage)
+		{
+			if (m_bIsPenalty)
+				State_Transition(BALL_STATE_PENALTY, sv_ball_statetransition_activationdelay_long.GetFloat());
+			else
+				State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_activationdelay_long.GetFloat());
+		}
+		else
+		{
+			pPl->AddOffside();
+			SetFoulParams(FOUL_OFFSIDE, pPl->GetOffsidePos(), pPl);
+			SDKGameRules()->SetOffsideLinePositions(pPl->GetOffsideBallPos().y, pPl->GetOffsidePos().y, pPl->GetOffsideLastOppPlayerPos().y);
+			State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_activationdelay_long.GetFloat());
+		}
 	}
 }
 
@@ -1670,10 +1682,6 @@ bool CMatchBall::CheckFoul(bool canShootBall, const Vector &localDirToBall)
 		PlayerAnimEvent_t anim = RAD2DEG(acos(m_vPlForward2D.Dot(pPl->EyeDirection2D()))) <= 90 ? PLAYERANIMEVENT_TACKLED_BACKWARD : PLAYERANIMEVENT_TACKLED_FORWARD;
 		pPl->DoAnimationEvent(anim);
 
-		// TODO: Punish subsequent fouls too when a foul is pending instead of ignoring them 
-		if (m_bIsAdvantage)
-			return true;
-
 		int teammatesCloserToGoalCount = 0;
 
 		bool isCloseToOwnGoal = ((m_vPos - m_pPl->GetTeam()->m_vGoalCenter).Length2D() <= sv_ball_closetogoaldist.GetInt());
@@ -1704,7 +1712,7 @@ bool CMatchBall::CheckFoul(bool canShootBall, const Vector &localDirToBall)
 		else
 			foulType = FOUL_NORMAL_NO_CARD;
 
-		TriggerFoul(foulType, pPl->GetLocalOrigin(), m_pPl, pPl);
+		SetFoulParams(foulType, pPl->GetLocalOrigin(), m_pPl, pPl);
 		m_pFoulingPl->AddFoul();
 		m_pFouledPl->AddFoulSuffered();
 
@@ -1718,10 +1726,33 @@ bool CMatchBall::CheckFoul(bool canShootBall, const Vector &localDirToBall)
 			int nextJoin = SDKGameRules()->GetMatchDisplayTimeSeconds(false) + banDuration;
 			m_pFoulingPl->SetNextCardJoin(nextJoin);
 
-			if (m_pFoulingPl->GetTeamPosType() != POS_GK)
-				m_pFoulingPl->GetTeam()->SetPosNextJoinSeconds(m_pFoulingPl->GetTeamPosIndex(), nextJoin);
-
 			ReplayManager()->AddMatchEvent(m_eFoulType == FOUL_NORMAL_YELLOW_CARD ? MATCH_EVENT_SECONDYELLOWCARD : MATCH_EVENT_REDCARD, m_nFoulingTeam, m_pFoulingPl);
+
+			int team = m_pFoulingPl->GetTeamNumber();
+			int posIndex = m_pFoulingPl->GetTeamPosIndex();
+			int posType = m_pFoulingPl->GetTeamPosType();
+
+			m_pFoulingPl->SetDesiredTeam(TEAM_SPECTATOR, m_pFoulingPl->GetTeamNumber(), 0, true, false, false);
+
+			if (posType != POS_GK)
+			{
+				// Block carded player's pos
+				m_pFoulingPl->GetTeam()->SetPosNextJoinSeconds(m_pFoulingPl->GetTeamPosIndex(), nextJoin);
+			}
+			else
+			{
+				for (int i = 1; i <= gpGlobals->maxClients; i++)
+				{
+					CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+					if (!CSDKPlayer::IsOnField(pPl) || pPl == m_pFoulingPl || pPl->GetTeamNumber() != team)
+						continue;
+
+					// Switch another player to the keeper pos and block this player's pos instead
+					pPl->GetTeam()->SetPosNextJoinSeconds(pPl->GetTeamPosIndex(), nextJoin);
+					pPl->SetDesiredTeam(team, team, posIndex, true, false, false);
+					break;
+				}
+			}
 		}
 		else if (m_eFoulType == FOUL_NORMAL_YELLOW_CARD)
 		{
@@ -1732,45 +1763,13 @@ bool CMatchBall::CheckFoul(bool canShootBall, const Vector &localDirToBall)
 		m_flFoulTime = gpGlobals->curtime;
 		m_bIsPenalty = isPenalty;
 
-		/*if (isPenalty)
-			State_Transition(BALL_STATE_PENALTY, sv_ball_statetransition_activationdelay_long.GetFloat());
-		else
-			State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_activationdelay_long.GetFloat());*/
-
 		return true;
 	}
 
 	return false;
 }
 
-void CMatchBall::HandleFoul()
-{
-	if (CSDKPlayer::IsOnField(m_pFoulingPl))
-	{
-		if (m_eFoulType == FOUL_NORMAL_YELLOW_CARD && m_pFoulingPl->GetYellowCards() % 2 == 0 || m_eFoulType == FOUL_NORMAL_RED_CARD)
-		{
-			int team = m_pFoulingPl->GetTeamNumber();
-			int posIndex = m_pFoulingPl->GetTeamPosIndex();
-			int posType = m_pFoulingPl->GetTeamPosType();
-			m_pFoulingPl->SetDesiredTeam(TEAM_SPECTATOR, m_pFoulingPl->GetTeamNumber(), 0, true, false, false);
-
-			if (posType == POS_GK)
-			{
-				for (int i = 1; i <= gpGlobals->maxClients; i++)
-				{
-					CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
-					if (!CSDKPlayer::IsOnField(pPl) || pPl == m_pFoulingPl || pPl->GetTeamNumber() != team)
-						continue;
-
-					pPl->SetDesiredTeam(team, team, posIndex, true, false, false);
-					break;
-				}
-			}
-		}
-	}
-}
-
-void CMatchBall::TriggerFoul(foul_type_t type, Vector pos, CSDKPlayer *pFoulingPl, CSDKPlayer *pFouledPl /*= NULL*/)
+void CMatchBall::SetFoulParams(foul_type_t type, Vector pos, CSDKPlayer *pFoulingPl, CSDKPlayer *pFouledPl /*= NULL*/)
 {
 	m_eFoulType = type;
 	m_pFoulingPl = pFoulingPl;
