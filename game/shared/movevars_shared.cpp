@@ -90,19 +90,19 @@ ConVar  sv_accelerate	( "sv_accelerate", "7", FCVAR_NOTIFY | FCVAR_REPLICATED | 
 
 ConVar	mp_jump_height("mp_jump_height", "35", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar  mp_jump_delay	("mp_jump_delay", "0.7", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar  mp_slide_delay	("mp_slide_delay", "1.7", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar  mp_slide_delay	("mp_slide_delay", "2", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar  mp_stamina_drain_jumping	("mp_stamina_drain_jumping", "0", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar  mp_stamina_drain_sliding	("mp_stamina_drain_sliding", "0", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar  mp_stamina_drain_sprinting	("mp_stamina_drain_sprinting", "18", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar  mp_stamina_replenish_standing	("mp_stamina_replenish_standing", "20", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar  mp_stamina_replenish_walking	("mp_stamina_replenish_walking", "17", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar  mp_stamina_replenish_running	("mp_stamina_replenish_running", "15", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar  mp_stamina_drain_sprinting	("mp_stamina_drain_sprinting", "15", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar  mp_stamina_replenish_standing	("mp_stamina_replenish_standing", "15", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar  mp_stamina_replenish_walking	("mp_stamina_replenish_walking", "13", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar  mp_stamina_replenish_running	("mp_stamina_replenish_running", "10", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar  mp_stamina_max_reduce_coeff	("mp_stamina_max_reduce_coeff", "0.0", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar  mp_stamina_max_add_halftime	("mp_stamina_max_add_halftime", "10.0", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar  mp_stamina_max_add_extratime_intermission	("mp_stamina_max_add_extratime_intermission", "5.0", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar  mp_stamina_max_add_extratime_halftime	("mp_stamina_max_add_extratime_halftime", "5.0", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar  mp_stamina_max_add_halftime	("mp_stamina_max_add_halftime", "0", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar  mp_stamina_max_add_extratime_intermission	("mp_stamina_max_add_extratime_intermission", "0", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar  mp_stamina_max_add_extratime_halftime	("mp_stamina_max_add_extratime_halftime", "0", FCVAR_NOTIFY | FCVAR_REPLICATED);
 
-ConVar  mp_pitchup("mp_pitchup", "60", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar  mp_pitchup("mp_pitchup", "50", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar  mp_pitchdown("mp_pitchdown", "50", FCVAR_NOTIFY | FCVAR_REPLICATED);
 
 ConVar	sv_airaccelerate(  "sv_airaccelerate", "10", FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );    

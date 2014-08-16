@@ -3,6 +3,58 @@
 #include "team.h"
 #include "ios_replaymanager.h"
 
+extern ConVar
+	sv_ball_bodypos_keeperhands,
+	sv_ball_chargedshot_minstrength,
+	sv_ball_chargedshot_maxstrength,
+	sv_ball_keepershot_minangle,
+	sv_ball_maxplayerfinddist;
+
+ConVar
+	sv_ball_statetransition_activationdelay_short("sv_ball_statetransition_activationdelay_short", "0.1", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_statetransition_activationdelay_normal("sv_ball_statetransition_activationdelay_normal", "1.25", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_statetransition_activationdelay_long("sv_ball_statetransition_activationdelay_long", "2.0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_statetransition_messagedelay_normal("sv_ball_statetransition_messagedelay_normal", "0.5", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_statetransition_messagedelay_short("sv_ball_statetransition_messagedelay_short", "0.1", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_yellowcardballdist_forward("sv_ball_yellowcardballdist_forward", "70", FCVAR_NOTIFY),
+	sv_ball_yellowcardballdist_backward("sv_ball_yellowcardballdist_backward", "70", FCVAR_NOTIFY),
+	sv_ball_goalreplay_count("sv_ball_goalreplay_count", "2", FCVAR_NOTIFY),
+	sv_ball_goalreplay_delay("sv_ball_goalreplay_delay", "1", FCVAR_NOTIFY),
+	sv_ball_stats_pass_mindist("sv_ball_stats_pass_mindist", "300", FCVAR_NOTIFY),
+	sv_ball_stats_clearance_minspeed("sv_ball_stats_clearance_minspeed", "800", FCVAR_NOTIFY),
+	sv_ball_stats_shot_mindist("sv_ball_stats_shot_mindist", "300", FCVAR_NOTIFY),
+	sv_ball_stats_save_minspeed("sv_ball_stats_save_minspeed", "800", FCVAR_NOTIFY),
+	sv_ball_stats_assist_maxtime("sv_ball_stats_assist_maxtime", "8", FCVAR_NOTIFY),
+	sv_ball_advantage_enabled("sv_ball_advantage_enabled", "1", FCVAR_NOTIFY),
+	sv_ball_advantage_duration("sv_ball_advantage_duration", "3", FCVAR_NOTIFY),
+	sv_ball_advantage_ignore_duration("sv_ball_advantage_ignore_duration", "0.5", FCVAR_NOTIFY),
+	sv_ball_offsidedist("sv_ball_offsidedist", "60", FCVAR_NOTIFY),
+	sv_ball_turnovertime("sv_ball_turnovertime", "2.0", FCVAR_NOTIFY),
+	sv_ball_goalcelebduration("sv_ball_goalcelebduration", "8.0", FCVAR_NOTIFY),
+	sv_ball_setpiece_close_time("sv_ball_setpiece_close_time", "0.75", FCVAR_NOTIFY),
+	sv_ball_setpiece_close_dist( "sv_ball_setpiece_close_dist", "75", FCVAR_NOTIFY ),
+	sv_ball_doubletouchfouls("sv_ball_doubletouchfouls", "1", FCVAR_NOTIFY),
+	sv_ball_player_secondyellowcard_banduration("sv_ball_player_secondyellowcard_banduration", "15", FCVAR_NOTIFY),
+	sv_ball_player_redcard_banduration("sv_ball_player_redcard_banduration", "15", FCVAR_NOTIFY),
+	sv_ball_freekickdist_owngoal("sv_ball_freekickdist_owngoal", "850", FCVAR_NOTIFY),
+	sv_ball_freekickdist_opponentgoal("sv_ball_freekickdist_opponentgoal", "1300", FCVAR_NOTIFY),
+	sv_ball_freekickangle_opponentgoal("sv_ball_freekickangle_opponentgoal", "60", FCVAR_NOTIFY),
+	sv_ball_closetogoaldist("sv_ball_closetogoaldist", "1300", FCVAR_NOTIFY),
+	sv_ball_nonnormalshotsblocktime_freekick("sv_ball_nonnormalshotsblocktime_freekick", "4.0", FCVAR_NOTIFY),
+	sv_ball_nonnormalshotsblocktime_corner("sv_ball_nonnormalshotsblocktime_corner", "4.0", FCVAR_NOTIFY),
+	sv_ball_shotsblocktime_penalty("sv_ball_shotsblocktime_penalty", "4.0", FCVAR_NOTIFY),
+	sv_ball_slidesidereach_foul( "sv_ball_slidesidereach_foul", "10", FCVAR_NOTIFY ),
+	sv_ball_slideforwardreach_foul( "sv_ball_slideforwardreach_foul", "25", FCVAR_NOTIFY ),
+	sv_ball_slidebackwardreach_foul( "sv_ball_slidebackwardreach_foul", "20", FCVAR_NOTIFY ),
+	sv_ball_powerthrow_strength("sv_ball_powerthrow_strength", "800", FCVAR_NOTIFY),
+	sv_ball_chargedthrow_minstrength("sv_ball_chargedthrow_minstrength", "500", FCVAR_NOTIFY),
+	sv_ball_chargedthrow_maxstrength("sv_ball_chargedthrow_maxstrength", "1100", FCVAR_NOTIFY),
+	sv_ball_timelimit_setpiece("sv_ball_timelimit_setpiece", "15", FCVAR_NOTIFY),
+	sv_ball_timelimit_remotecontrolled("sv_ball_timelimit_remotecontrolled", "15", FCVAR_NOTIFY),
+	sv_ball_throwin_minangle("sv_ball_throwin_minangle", "-5", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_throwin_minstrength("sv_ball_throwin_minstrength", "300", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
+
+
 LINK_ENTITY_TO_CLASS( match_ball, CMatchBall );
 
 BEGIN_DATADESC(	CMatchBall )
@@ -44,6 +96,8 @@ CMatchBall::CMatchBall()
 	m_bNonnormalshotsBlocked = false;
 	m_bShotsBlocked = false;
 	m_ePenaltyState = PENALTY_NONE;
+	m_bIsAdvantage = false;
+	m_flStateTimelimit = -1;
 }
 
 CMatchBall::~CMatchBall()
@@ -77,6 +131,8 @@ void CMatchBall::Reset()
 	m_bNonnormalshotsBlocked = false;
 	m_bShotsBlocked = false;
 	m_ePenaltyState = PENALTY_NONE;
+	m_bIsAdvantage = false;
+	m_flStateTimelimit = -1;
 
 	UnmarkOffsidePlayers();
 	RemoveAllTouches();
@@ -116,6 +172,8 @@ void CMatchBall::State_Enter(ball_state_t newState, bool cancelQueuedState)
 	m_pPl = NULL;
 	m_pOtherPl = NULL;
 	m_pSetpieceTaker = NULL;
+
+	m_bIsAdvantage = false;
 
 	IGameEvent *pEvent = gameeventmanager->CreateEvent("ball_state");
 	if (pEvent)
@@ -222,6 +280,20 @@ void CMatchBall::State_NORMAL_Think()
 	if (m_eNextState == BALL_STATE_GOAL)
 		return;
 
+	if (m_bIsAdvantage && gpGlobals->curtime > m_flFoulTime + sv_ball_advantage_duration.GetFloat())
+	{
+		// If the opponent has kicked the ball away during the initial ignore stage and the fouled team hasn't touched it last
+		if (LastInfo(false) && LastTeam(false) != m_nFouledTeam)
+		{
+			if (m_bIsPenalty)
+				State_Transition(BALL_STATE_PENALTY, sv_ball_statetransition_activationdelay_long.GetFloat());
+			else
+				State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_activationdelay_long.GetFloat());
+		}
+
+		m_bIsAdvantage = false;
+	}
+
 	if (SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES)
 	{
 		if (m_ePenaltyState == PENALTY_KICKED)
@@ -274,7 +346,7 @@ void CMatchBall::State_NORMAL_Think()
 
 		for (int ignoredPlayerBits = 0;;)
 		{
-			m_pPl = FindNearestPlayer(TEAM_INVALID, FL_POS_ANY, false, ignoredPlayerBits, sv_ball_maxcheckdist.GetFloat());
+			m_pPl = FindNearestPlayer(TEAM_INVALID, FL_POS_ANY, false, ignoredPlayerBits, sv_ball_maxplayerfinddist.GetFloat());
 
 			if (!m_pPl)
 				return;
@@ -591,7 +663,7 @@ void CMatchBall::State_GOALKICK_Think()
 	{
 		m_pPl->AddGoalKick();
 		RemoveAllTouches();
-		DoGroundShot(false, sv_ball_goalkick_speedcoeff.GetFloat());
+		DoGroundShot(false);
 		State_Transition(BALL_STATE_NORMAL);
 	}
 }
@@ -822,7 +894,7 @@ void CMatchBall::State_FREEKICK_Think()
 		//EmitSound("Crowd.Way");
 		m_pPl->AddFreeKick();
 		RemoveAllTouches();
-		DoGroundShot(true, sv_ball_freekick_speedcoeff.GetFloat());
+		DoGroundShot(true);
 		State_Transition(BALL_STATE_NORMAL);
 	}
 }
@@ -964,9 +1036,149 @@ void CMatchBall::State_PENALTY_Leave(ball_state_t newState)
 	m_bShotsBlocked = false;
 }
 
+void CMatchBall::State_KEEPERHANDS_Enter()
+{
+	SetPos(m_vPos);
+	// Don't ignore triggers when setting the new ball position
+	m_bSetNewPos = false;
+}
+
+void CMatchBall::State_KEEPERHANDS_Think()
+{
+	if (m_eNextState == BALL_STATE_GOAL)
+		return;
+
+	if (!CSDKPlayer::IsOnField(m_pPl, m_nInPenBoxOfTeam))
+	{
+		m_pPl = NULL;
+
+		m_pPl = FindNearestPlayer(m_nInPenBoxOfTeam, FL_POS_KEEPER);
+
+		if (!m_pPl)
+			return State_Transition(BALL_STATE_NORMAL);
+
+		if (!SDKGameRules()->IsIntermissionState() && !m_bHasQueuedState && SDKGameRules()->State_Get() != MATCH_PERIOD_PENALTIES)
+		{
+			SDKGameRules()->EnableShield(SHIELD_KEEPERHANDS, m_pPl->GetTeamNumber(), m_vPos);
+			m_pPl->m_bIsAtTargetPos = true;
+		}
+
+		m_pPl->SetShotButtonsReleased(false);
+		m_pHoldingPlayer = m_pPl;
+		m_pPl->m_pHoldingBall = this;
+		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_CARRY);
+		EnablePlayerCollisions(false);
+		m_flStateTimelimit = -1;
+		PlayersAtTargetPos();
+	}
+
+	if (!SDKGameRules()->IsIntermissionState() && !m_bHasQueuedState && SDKGameRules()->State_Get() != MATCH_PERIOD_PENALTIES)
+	{
+		if (m_flStateTimelimit == -1)
+		{
+			m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit_setpiece.GetFloat();
+		}
+	}
+
+	UpdateCarrier();
+
+	Vector handPos;
+	QAngle handAng;
+	m_pPl->GetAttachment("keeperballrighthand", handPos, handAng);
+	handPos.z -= BALL_PHYS_RADIUS;
+	SetPos(handPos, false);
+	SetAng(handAng);
+
+	// Don't ignore triggers when setting the new ball position
+	m_bSetNewPos = false;
+
+	Vector min = GetGlobalTeam(m_pPl->GetTeamNumber())->m_vPenBoxMin + m_flPhysRadius;
+	Vector max = GetGlobalTeam(m_pPl->GetTeamNumber())->m_vPenBoxMax - m_flPhysRadius;
+
+	// Ball outside the penalty box
+	if (m_vPos.x < min.x || m_vPos.y < min.y || m_vPos.x > max.x || m_vPos.y > max.y)
+	{
+		Vector dir, pos;
+		float vel;
+
+		// Throw the ball towards the kick-off spot instead of where the player is looking if the ball is behind the goal line
+		if (m_pPl->GetTeam()->m_nForward == 1 && m_vPos.y < min.y || m_pPl->GetTeam()->m_nForward == -1 && m_vPos.y > max.y)
+		{
+			QAngle ang = QAngle(g_IOSRand.RandomFloat(-55, -40), m_pPl->GetTeam()->m_nForward * 90 - m_pPl->GetTeam()->m_nForward * Sign(m_vPos.x - SDKGameRules()->m_vKickOff.GetX()) * g_IOSRand.RandomFloat(15, 25), 0);
+			AngleVectors(ang, &dir);
+			vel = g_IOSRand.RandomFloat(700, 800);
+			pos = Vector(m_vPos.x, (m_pPl->GetTeam()->m_nForward == 1 ? min.y : max.y) + m_pPl->GetTeam()->m_nForward * 36, m_vPos.z);
+		}
+		else
+		{
+			dir = m_vPlForward2D;
+			vel = 300;
+			pos = Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_keeperhands.GetFloat()) + m_vPlForward2D * 36;
+		}
+
+		RemoveAllTouches();
+		SetPos(pos);
+		m_bSetNewPos = false;
+		SetVel(dir * vel, 0, 0, BODY_PART_KEEPERHANDS, false, true, true);
+
+		return State_Transition(BALL_STATE_NORMAL);
+	}
+
+	Vector vel;
+
+	if (m_pPl->ShotButtonsReleased() && (m_pPl->IsPowershooting() || m_pPl->IsChargedshooting()) && m_pPl->CanShoot())
+	{
+		float spin;
+
+		if (m_pPl->IsPowershooting())
+		{
+			vel = vec3_origin;
+			spin = 0;
+			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KEEPER_HANDS_THROW);
+		}
+		else
+		{
+			QAngle ang = m_aPlAng;
+			ang[PITCH] = min(sv_ball_keepershot_minangle.GetFloat(), m_aPlAng[PITCH]);
+			Vector dir;
+			AngleVectors(ang, &dir);
+			vel = dir * GetChargedshotStrength(GetPitchCoeff(false), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
+			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KEEPER_HANDS_KICK);
+
+			if (vel.Length() > 1000)
+				EmitSound("Ball.Kickhard");
+			else
+				EmitSound("Ball.Kicknormal");
+		}
+
+		RemoveAllTouches();
+		SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_keeperhands.GetFloat()) + m_vPlForward2D * 36);
+		m_bSetNewPos = false;
+		SetVel(vel, 1.0f, FL_SPIN_PERMIT_ALL, BODY_PART_KEEPERHANDS, false, true, true);
+
+		return State_Transition(BALL_STATE_NORMAL);
+	}
+}
+
+void CMatchBall::State_KEEPERHANDS_Leave(ball_state_t newState)
+{
+	RemoveFromPlayerHands(m_pPl);
+}
+
 void CMatchBall::TriggerGoal(int team)
 {
 	m_nTeam = team;
+
+	// Don't count the goal if there was advantage play for the team which concedes the goal
+	if (m_bIsAdvantage && m_nTeam == m_nFouledTeam)
+	{
+		if (m_bIsPenalty)
+			State_Transition(BALL_STATE_PENALTY, sv_ball_statetransition_activationdelay_long.GetFloat());
+		else
+			State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_activationdelay_long.GetFloat());
+
+		return;
+	}
 
 	if (SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES)
 	{
@@ -1034,6 +1246,16 @@ void CMatchBall::TriggerGoalLine(int team)
 	if (SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES)
 		return;
 
+	if (m_bIsAdvantage)
+	{
+		if (m_bIsPenalty)
+			State_Transition(BALL_STATE_PENALTY, sv_ball_statetransition_activationdelay_long.GetFloat());
+		else
+			State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_activationdelay_long.GetFloat());
+
+		return;
+	}
+
 	m_vTriggerTouchPos = GetPos();
 
 	BallTouchInfo *pInfo = LastInfo(true);
@@ -1069,6 +1291,16 @@ void CMatchBall::TriggerSideline()
 {
 	if (SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES)
 		return;
+
+	if (m_bIsAdvantage)
+	{
+		if (m_bIsPenalty)
+			State_Transition(BALL_STATE_PENALTY, sv_ball_statetransition_activationdelay_long.GetFloat());
+		else
+			State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_activationdelay_long.GetFloat());
+
+		return;
+	}
 
 	Vector ballPos = GetPos();
 
@@ -1416,7 +1648,6 @@ bool CMatchBall::CheckFoul(bool canShootBall, const Vector &localDirToBall)
 		//	continue;
 
 		Vector dirToPl = pPl->GetLocalOrigin() - m_vPlPos;
-		float distToPl = dirToPl.Length2D();
 
 		Vector localDirToPl;
 		VectorIRotate(dirToPl, m_pPl->EntityToWorldTransform(), localDirToPl);
@@ -1438,6 +1669,10 @@ bool CMatchBall::CheckFoul(bool canShootBall, const Vector &localDirToBall)
 
 		PlayerAnimEvent_t anim = RAD2DEG(acos(m_vPlForward2D.Dot(pPl->EyeDirection2D()))) <= 90 ? PLAYERANIMEVENT_TACKLED_BACKWARD : PLAYERANIMEVENT_TACKLED_FORWARD;
 		pPl->DoAnimationEvent(anim);
+
+		// TODO: Punish subsequent fouls too when a foul is pending instead of ignoring them 
+		if (m_bIsAdvantage)
+			return true;
 
 		int teammatesCloserToGoalCount = 0;
 
@@ -1479,7 +1714,7 @@ bool CMatchBall::CheckFoul(bool canShootBall, const Vector &localDirToBall)
 		if (m_eFoulType == FOUL_NORMAL_YELLOW_CARD && m_pFoulingPl->GetYellowCards() % 2 == 0 || m_eFoulType == FOUL_NORMAL_RED_CARD)
 		{
 			m_pFoulingPl->AddRedCard();
-			int banDuration = 60 * (m_eFoulType == FOUL_NORMAL_YELLOW_CARD ? sv_ball_player_yellow_red_card_duration.GetFloat() : sv_ball_player_red_card_duration.GetFloat());
+			int banDuration = 60 * (m_eFoulType == FOUL_NORMAL_YELLOW_CARD ? sv_ball_player_secondyellowcard_banduration.GetFloat() : sv_ball_player_redcard_banduration.GetFloat());
 			int nextJoin = SDKGameRules()->GetMatchDisplayTimeSeconds(false) + banDuration;
 			m_pFoulingPl->SetNextCardJoin(nextJoin);
 
@@ -1493,10 +1728,14 @@ bool CMatchBall::CheckFoul(bool canShootBall, const Vector &localDirToBall)
 			ReplayManager()->AddMatchEvent(MATCH_EVENT_YELLOWCARD, m_nFoulingTeam, m_pFoulingPl);
 		}
 
-		if (isPenalty)
+		m_bIsAdvantage = true;
+		m_flFoulTime = gpGlobals->curtime;
+		m_bIsPenalty = isPenalty;
+
+		/*if (isPenalty)
 			State_Transition(BALL_STATE_PENALTY, sv_ball_statetransition_activationdelay_long.GetFloat());
 		else
-			State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_activationdelay_long.GetFloat());
+			State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_activationdelay_long.GetFloat());*/
 
 		return true;
 	}

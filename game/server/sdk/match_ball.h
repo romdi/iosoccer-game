@@ -31,6 +31,7 @@ public:
 	void State_GOAL_Enter();			void State_GOAL_Think();			void State_GOAL_Leave(ball_state_t newState);
 	void State_FREEKICK_Enter();		void State_FREEKICK_Think();		void State_FREEKICK_Leave(ball_state_t newState);
 	void State_PENALTY_Enter();			void State_PENALTY_Think();			void State_PENALTY_Leave(ball_state_t newState);
+	void State_KEEPERHANDS_Enter();		void State_KEEPERHANDS_Think();		void State_KEEPERHANDS_Leave(ball_state_t newState);
 
 	void			Spawn();
 	void			Reset();
@@ -71,6 +72,7 @@ public:
 	float			m_flStateActivationDelay;
 	float			m_flSetpieceCloseStartTime;
 	bool			m_bNextStateMessageSent;
+	float			m_flStateTimelimit;
 
 	CHandle<CSDKPlayer>	m_pOtherPl;
 	CHandle<CSDKPlayer>	m_pSetpieceTaker;
@@ -96,6 +98,9 @@ public:
 	int				m_nFoulingTeam;
 	foul_type_t		m_eFoulType;
 	Vector			m_vFoulPos;
+	bool			m_bIsAdvantage;
+	float			m_flFoulTime;
+	bool			m_bIsPenalty;
 };
 
 extern CMatchBall *GetMatchBall();

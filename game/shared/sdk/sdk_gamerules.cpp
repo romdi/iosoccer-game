@@ -1313,7 +1313,7 @@ void CSDKGameRules::SetWeather(PrecipitationType_t type)
 ConVar sv_replays("sv_replays", "1", FCVAR_NOTIFY);
 ConVar sv_replay_count("sv_replay_count", "2", FCVAR_NOTIFY);
 ConVar sv_replay_duration1("sv_replay_duration1", "6", FCVAR_NOTIFY);
-ConVar sv_replay_duration2("sv_replay_duration2", "4", FCVAR_NOTIFY);
+ConVar sv_replay_duration2("sv_replay_duration2", "6", FCVAR_NOTIFY);
 ConVar sv_replay_duration3("sv_replay_duration3", "4", FCVAR_NOTIFY);
 ConVar sv_highlights("sv_highlights", "1", FCVAR_NOTIFY);
 
@@ -1362,7 +1362,7 @@ ConVar mp_maxplayers("mp_maxplayers", "7", FCVAR_NOTIFY|FCVAR_REPLICATED, "Maxim
 
 ConVar sv_autostartmatch("sv_autostartmatch", "1", FCVAR_NOTIFY|FCVAR_REPLICATED, "");
 ConVar sv_awaytime_warmup("sv_awaytime_warmup", "30", FCVAR_NOTIFY);
-ConVar sv_awaytime_warmup_autospec("sv_awaytime_warmup_autospec", "180", FCVAR_NOTIFY);
+ConVar sv_awaytime_warmup_autospec("sv_awaytime_warmup_autospec", "3600", FCVAR_NOTIFY);
 
 #ifdef GAME_DLL
 
@@ -1370,7 +1370,7 @@ ConVar sv_playerrotation_enabled("sv_playerrotation_enabled", "0", FCVAR_NOTIFY)
 ConVar sv_playerrotation_minutes("sv_playerrotation_minutes", "30,60", FCVAR_NOTIFY);
 
 ConVar sv_singlekeeper("sv_singlekeeper", "0", FCVAR_NOTIFY);
-ConVar sv_singlekeeper_switchvalue("sv_singlekeeper_switchvalue", "50", FCVAR_NOTIFY);
+ConVar sv_singlekeeper_switchvalue("sv_singlekeeper_switchvalue", "10", FCVAR_NOTIFY);
 
 void CSDKGameRules::State_Transition( match_period_t newState )
 {

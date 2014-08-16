@@ -65,13 +65,13 @@ ConVar mp_showstatetransitions( "mp_showstatetransitions", "1", FCVAR_CHEAT | FC
 
 ConVar mp_timelimit_match( "mp_timelimit_match", "20", FCVAR_NOTIFY|FCVAR_REPLICATED, "match duration in minutes without breaks (90 is real time)", true, 0.1f, true, 90 );
 ConVar mp_timelimit_warmup( "mp_timelimit_warmup", "1", FCVAR_NOTIFY|FCVAR_REPLICATED, "time before match start" );
-ConVar mp_timelimit_cooldown( "mp_timelimit_cooldown", "10", FCVAR_NOTIFY|FCVAR_REPLICATED, "time after match end" );
+ConVar mp_timelimit_cooldown( "mp_timelimit_cooldown", "0.5", FCVAR_NOTIFY|FCVAR_REPLICATED, "time after match end" );
 ConVar mp_timelimit_halftime( "mp_timelimit_halftime", "1", FCVAR_NOTIFY|FCVAR_REPLICATED, "half time duration" );
 ConVar mp_timelimit_extratime_halftime( "mp_timelimit_extratime_halftime", "0.5", FCVAR_NOTIFY|FCVAR_REPLICATED, "extra time halftime duration" );
 ConVar mp_timelimit_extratime_intermission( "mp_timelimit_extratime_intermission", "0.5", FCVAR_NOTIFY|FCVAR_REPLICATED, "time before extra time start" );
 ConVar mp_timelimit_penalties_intermission( "mp_timelimit_penalties_intermission", "0.5", FCVAR_NOTIFY|FCVAR_REPLICATED, "time before penalties start" );
-ConVar mp_injurytime_min("mp_injurytime_min", "2", FCVAR_NOTIFY);
-ConVar mp_injurytime_max("mp_injurytime_max", "5", FCVAR_NOTIFY);
+ConVar mp_injurytime_min("mp_injurytime_min", "1", FCVAR_NOTIFY);
+ConVar mp_injurytime_max("mp_injurytime_max", "4", FCVAR_NOTIFY);
 ConVar mp_extratime( "mp_extratime", "1", FCVAR_NOTIFY|FCVAR_REPLICATED );
 ConVar mp_penalties( "mp_penalties", "1", FCVAR_NOTIFY|FCVAR_REPLICATED );
 
@@ -88,7 +88,7 @@ ConVar mp_shield_block_sixyardbox("mp_shield_block_sixyardbox", "1", FCVAR_NOTIF
 ConVar mp_shield_liberal_taker_positioning("mp_shield_liberal_taker_positioning", "0", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar mp_shield_liberal_teammates_positioning("mp_shield_liberal_teammates_positioning", "0", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar mp_shield_block_opponent_half("mp_shield_block_opponent_half", "1", FCVAR_NOTIFY|FCVAR_REPLICATED);
-ConVar mp_field_border("mp_field_border", "150", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar mp_field_border("mp_field_border", "175", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar mp_field_border_enabled("mp_field_border_enabled", "1", FCVAR_NOTIFY|FCVAR_REPLICATED);
 
 ConVar mp_offside("mp_offside", "1", FCVAR_NOTIFY|FCVAR_REPLICATED);
@@ -117,10 +117,10 @@ ConVar mp_tvcam_offset_north("mp_tvcam_offset_north", "250", FCVAR_NOTIFY | FCVA
 ConVar mp_tvcam_sideline_offset_height("mp_tvcam_sideline_offset_height", "600", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar mp_tvcam_sideline_offset_north("mp_tvcam_sideline_offset_north", "750", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar mp_tvcam_sideline_zoomcoeff("mp_tvcam_sideline_zoomcoeff", "0.5", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar mp_tvcam_firstreplay("mp_tvcam_firstreplay", "0", FCVAR_NOTIFY | FCVAR_REPLICATED, "0: sideline, 1: fixed sideline, 2: behind goal, 3: topdown, 4: fly follow, 5: goal line, 6: celebration");
-ConVar mp_tvcam_secondreplay("mp_tvcam_secondreplay", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "0: sideline, 1: fixed sideline, 2: behind goal, 3: topdown, 4: fly follow, 5: goal line, 6: celebration");
+ConVar mp_tvcam_firstreplaycam("mp_tvcam_firstreplaycam", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "0: sideline, 1: fixed sideline, 2: behind goal, 3: topdown, 4: fly follow, 5: goal line, 6: celebration");
+ConVar mp_tvcam_secondreplaycam("mp_tvcam_secondreplaycam", "4", FCVAR_NOTIFY | FCVAR_REPLICATED, "0: sideline, 1: fixed sideline, 2: behind goal, 3: topdown, 4: fly follow, 5: goal line, 6: celebration");
 
-ConVar mp_timeout_count("mp_timeout_count", "4", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar mp_timeout_duration("mp_timeout_duration", "10", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_timeout_count("mp_timeout_count", "3", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_timeout_duration("mp_timeout_duration", "5", FCVAR_NOTIFY | FCVAR_REPLICATED);
 
-ConVar mp_center_notification_top("mp_center_notification_top", "1", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_center_notification_top("mp_center_notification_top", "0", FCVAR_NOTIFY | FCVAR_REPLICATED);

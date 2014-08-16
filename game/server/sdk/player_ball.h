@@ -35,14 +35,13 @@ public:
 	void			State_Leave(ball_state_t newState);
 	void			State_Transition(ball_state_t newState, float delay = 0.0f, bool cancelQueuedState = false, bool isShortMessageDelay = false);
 
-	void State_NORMAL_Enter();		void State_NORMAL_Think();		void State_NORMAL_Leave(ball_state_t newState);
+	void State_NORMAL_Enter();			void State_NORMAL_Think();			void State_NORMAL_Leave(ball_state_t newState);
+	void State_KEEPERHANDS_Enter();		void State_KEEPERHANDS_Think();		void State_KEEPERHANDS_Leave(ball_state_t newState);
 
 	void			Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart, const Vector &oldVel);
 	bool			CheckFoul(bool canShootBall, const Vector &localDirToBall) { return false; }
-	bool			PlayersAtTargetPos() { return true; }
 	void			VPhysicsCollision(int index, gamevcollisionevent_t	*pEvent);
 	bool			IsLegallyCatchableByKeeper();
-	void			RemoveAllTouches();
 
 	CNetworkHandle(CSDKPlayer, m_pCreator);
 

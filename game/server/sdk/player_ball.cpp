@@ -2,8 +2,17 @@
 #include "player_ball.h"
 #include "match_ball.h"
 #include "sdk_player.h"
+#include "team.h"
 
-extern ConVar sv_ball_update_physics;
+extern ConVar
+	sv_ball_bodypos_keeperhands,
+	sv_ball_chargedshot_minstrength,
+	sv_ball_chargedshot_maxstrength,
+	sv_ball_keepershot_minangle,
+	sv_ball_maxplayerfinddist;
+
+ConVar sv_ball_update_physics("sv_ball_update_physics", "0", FCVAR_NOTIFY);
+
 
 LINK_ENTITY_TO_CLASS( player_ball, CPlayerBall );
 
@@ -138,8 +147,6 @@ void CPlayerBall::State_Enter(ball_state_t newState, bool cancelQueuedState)
 	m_eBallState = newState;
 	m_pCurStateInfo = State_LookupInfo( newState );
 
-	m_flStateTimelimit = -1;
-
 	m_pPl = NULL;
 
 	if ( m_pCurStateInfo && m_pCurStateInfo->pfnEnterState )
@@ -231,7 +238,7 @@ void CPlayerBall::State_NORMAL_Think()
 {
 	for (int ignoredPlayerBits = 0;;)
 	{
-		m_pPl = FindNearestPlayer(TEAM_INVALID, FL_POS_ANY, false, ignoredPlayerBits, sv_ball_maxcheckdist.GetFloat());
+		m_pPl = FindNearestPlayer(TEAM_INVALID, FL_POS_ANY, false, ignoredPlayerBits, sv_ball_maxplayerfinddist.GetFloat());
 
 		if (!m_pPl)
 			return;
@@ -251,6 +258,117 @@ void CPlayerBall::State_NORMAL_Think()
 
 void CPlayerBall::State_NORMAL_Leave(ball_state_t newState)
 {
+}
+
+void CPlayerBall::State_KEEPERHANDS_Enter()
+{
+	SetPos(m_vPos);
+	// Don't ignore triggers when setting the new ball position
+	m_bSetNewPos = false;
+}
+
+void CPlayerBall::State_KEEPERHANDS_Think()
+{
+	if (m_eNextState == BALL_STATE_GOAL)
+		return;
+
+	if (!CSDKPlayer::IsOnField(m_pPl, m_nInPenBoxOfTeam))
+	{
+		m_pPl = NULL;
+
+		m_pPl = FindNearestPlayer(m_nInPenBoxOfTeam, FL_POS_KEEPER);
+
+		if (!m_pPl)
+			return State_Transition(BALL_STATE_NORMAL);
+
+		m_pPl->SetShotButtonsReleased(false);
+		m_pHoldingPlayer = m_pPl;
+		m_pPl->m_pHoldingBall = this;
+		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_CARRY);
+		EnablePlayerCollisions(false);
+	}
+
+	UpdateCarrier();
+
+	Vector handPos;
+	QAngle handAng;
+	m_pPl->GetAttachment("keeperballrighthand", handPos, handAng);
+	handPos.z -= BALL_PHYS_RADIUS;
+	SetPos(handPos, false);
+	SetAng(handAng);
+
+	// Don't ignore triggers when setting the new ball position
+	m_bSetNewPos = false;
+
+	Vector min = GetGlobalTeam(m_pPl->GetTeamNumber())->m_vPenBoxMin + m_flPhysRadius;
+	Vector max = GetGlobalTeam(m_pPl->GetTeamNumber())->m_vPenBoxMax - m_flPhysRadius;
+
+	// Ball outside the penalty box
+	if (m_vPos.x < min.x || m_vPos.y < min.y || m_vPos.x > max.x || m_vPos.y > max.y)
+	{
+		Vector dir, pos;
+		float vel;
+
+		// Throw the ball towards the kick-off spot instead of where the player is looking if the ball is behind the goal line
+		if (m_pPl->GetTeam()->m_nForward == 1 && m_vPos.y < min.y || m_pPl->GetTeam()->m_nForward == -1 && m_vPos.y > max.y)
+		{
+			QAngle ang = QAngle(g_IOSRand.RandomFloat(-55, -40), m_pPl->GetTeam()->m_nForward * 90 - m_pPl->GetTeam()->m_nForward * Sign(m_vPos.x - SDKGameRules()->m_vKickOff.GetX()) * g_IOSRand.RandomFloat(15, 25), 0);
+			AngleVectors(ang, &dir);
+			vel = g_IOSRand.RandomFloat(700, 800);
+			pos = Vector(m_vPos.x, (m_pPl->GetTeam()->m_nForward == 1 ? min.y : max.y) + m_pPl->GetTeam()->m_nForward * 36, m_vPos.z);
+		}
+		else
+		{
+			dir = m_vPlForward2D;
+			vel = 300;
+			pos = Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_keeperhands.GetFloat()) + m_vPlForward2D * 36;
+		}
+
+		SetPos(pos);
+		m_bSetNewPos = false;
+		SetVel(dir * vel, 0, 0, BODY_PART_KEEPERHANDS, false, true, true);
+
+		return State_Transition(BALL_STATE_NORMAL);
+	}
+
+	Vector vel;
+
+	if (m_pPl->ShotButtonsReleased() && (m_pPl->IsPowershooting() || m_pPl->IsChargedshooting()) && m_pPl->CanShoot())
+	{
+		float spin;
+
+		if (m_pPl->IsPowershooting())
+		{
+			vel = vec3_origin;
+			spin = 0;
+			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KEEPER_HANDS_THROW);
+		}
+		else
+		{
+			QAngle ang = m_aPlAng;
+			ang[PITCH] = min(sv_ball_keepershot_minangle.GetFloat(), m_aPlAng[PITCH]);
+			Vector dir;
+			AngleVectors(ang, &dir);
+			vel = dir * GetChargedshotStrength(GetPitchCoeff(false), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
+			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KEEPER_HANDS_KICK);
+
+			if (vel.Length() > 1000)
+				EmitSound("Ball.Kickhard");
+			else
+				EmitSound("Ball.Kicknormal");
+		}
+
+		SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_keeperhands.GetFloat()) + m_vPlForward2D * 36);
+		m_bSetNewPos = false;
+		SetVel(vel, 1.0f, FL_SPIN_PERMIT_ALL, BODY_PART_KEEPERHANDS, false, true, true);
+
+		return State_Transition(BALL_STATE_NORMAL);
+	}
+}
+
+void CPlayerBall::State_KEEPERHANDS_Leave(ball_state_t newState)
+{
+	RemoveFromPlayerHands(m_pPl);
 }
 
 void CPlayerBall::TriggerGoal(int team)
@@ -278,9 +396,4 @@ void CPlayerBall::VPhysicsCollision(int index, gamevcollisionevent_t *pEvent)
 bool CPlayerBall::IsLegallyCatchableByKeeper()
 {
 	return true;
-}
-
-void CPlayerBall::RemoveAllTouches()
-{
-	m_bLastContactWasTouch = false;
 }

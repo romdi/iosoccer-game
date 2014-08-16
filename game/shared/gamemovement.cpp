@@ -1365,8 +1365,7 @@ void CGameMovement::WalkMove( void )
 		return;
 	}
 
-	bool speedShotSlowdown = mp_speed_shot_slowdown.GetBool() && (mv->m_nButtons & (IN_ATTACK | IN_ATTACK2 | IN_ALT1));
-	float landingSpeed = speedShotSlowdown ? mp_jumplandingshotspeed.GetFloat() : mp_jumplandingspeed.GetFloat();
+	float landingSpeed = mp_jumplandingspeed.GetFloat();
 
 	if (ToSDKPlayer(player)->m_Shared.m_bWasJumping && spd > landingSpeed)
 	{
@@ -3102,8 +3101,6 @@ void CGameMovement::SetPlayerSpeed()
 		team = pPl->GetTeamNumber();
 	#endif
 
-	bool speedShotSlowdown = mp_speed_shot_slowdown.GetBool() && (mv->m_nButtons & (IN_ATTACK | IN_ATTACK2 | IN_ALT1));
-
 	if (pPl->GetFlags() & FL_REMOTECONTROLLED)
 	{
 		flMaxSpeed = mp_remotecontrolledspeed.GetInt();
@@ -3114,14 +3111,14 @@ void CGameMovement::SetPlayerSpeed()
 	}
 	else if ((mv->m_nButtons & IN_RELOAD) && ((mv->m_nButtons & IN_DUCK) || (mv->m_nButtons & IN_MOVELEFT) || (mv->m_nButtons & IN_MOVERIGHT) || (mv->m_nButtons & IN_BACK)))
 	{
-		flMaxSpeed = speedShotSlowdown ? mp_runshotspeed.GetInt() : mp_runspeed.GetInt();
+		flMaxSpeed = mp_runspeed.GetInt();
 	}
 	else
 	{
 		if ((mv->m_nButtons & IN_SPEED) && pPl->m_Shared.GetStamina() > 0 && (mv->m_nButtons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT)))
-			flMaxSpeed = speedShotSlowdown ? mp_sprintshotspeed.GetInt() : mp_sprintspeed.GetInt();
+			flMaxSpeed = mp_sprintspeed.GetInt();
 		else
-			flMaxSpeed = speedShotSlowdown ? mp_runshotspeed.GetInt() : mp_runspeed.GetInt();
+			flMaxSpeed = mp_runspeed.GetInt();
 	}
 
 	mv->m_flClientMaxSpeed = flMaxSpeed;

@@ -206,7 +206,7 @@ int C_Camera::GetTVCamMode()
 
 	if (GetReplayManager() && GetReplayManager()->IsReplaying())
 	{
-		return GetReplayManager()->m_nReplayRunIndex == 0 ? mp_tvcam_firstreplay.GetInt() : mp_tvcam_secondreplay.GetInt();
+		return GetReplayManager()->m_nReplayRunIndex == 0 ? mp_tvcam_firstreplaycam.GetInt() : mp_tvcam_secondreplaycam.GetInt();
 	}
 	else if (GetMatchBall() && GetMatchBall()->m_eBallState == BALL_STATE_GOAL)
 	{
