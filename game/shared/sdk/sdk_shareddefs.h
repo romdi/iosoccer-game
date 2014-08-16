@@ -162,17 +162,7 @@ extern ConVar
 	mp_throwinthrow_idle_duration,
 	mp_tackled_idle_duration,
 	mp_charging_animation_enabled,
-	mp_majorevent_messageduration,
-	mp_emote_duration,
-	mp_ball_mass_fix_enabled,
-	mp_player_bbox_xy,
-	mp_player_bbox_z,
-	mp_no_ball_unstuck,
-	mp_player_pressure_enabled,
-	mp_player_pressure_dist,
-	mp_player_pressure_effect_pitch,
-	mp_player_pressure_effect_yaw,
-	mp_player_pressure_effect_roll;
+	mp_emote_duration;
 
 //--------------------------------------------------------------------------------------------------------
 //

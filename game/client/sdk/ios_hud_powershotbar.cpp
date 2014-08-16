@@ -44,8 +44,6 @@ protected:
 	virtual void	Paint();
 
 	float m_flNextUpdate;
-	vgui::HFont		m_hFontBig;
-	vgui::HFont		m_hFontSmall;
 };
 
 DECLARE_HUDELEMENT( CHudChargedshotBar );
@@ -67,9 +65,6 @@ CHudChargedshotBar::CHudChargedshotBar( const char *pElementName ) : CHudElement
 	vgui::Panel *pParent = g_pClientMode->GetViewport();
 	SetParent( pParent );
 
-	m_hFontBig = g_hFontTrebuchet24;
-	m_hFontSmall = g_hFontTrebuchet24;
-
 	m_flNextUpdate = gpGlobals->curtime;
 }
 
@@ -78,9 +73,6 @@ void CHudChargedshotBar::ApplySchemeSettings( IScheme *scheme )
 	BaseClass::ApplySchemeSettings(scheme);
 
 	SetBounds(0, 0, ScreenWidth(), ScreenHeight());
-
-	m_hFontBig = scheme->GetFont("IOSPressureIndicatorBig");
-	m_hFontSmall = scheme->GetFont("IOSPressureIndicatorSmall");
 }
 
 
@@ -186,10 +178,6 @@ void CHudChargedshotBar::Paint()
 		drawChargedshotIndicator = true;
 	}
 
-	wchar_t pressureIndicator[6];
-	swprintf(pressureIndicator, L"!");
-	surface()->DrawSetTextColor(255, 140, 0, 255);
-
 	if (centeredstaminabar.GetBool())
 	{
 		const int CenterX = GetWide() / 2;
@@ -252,15 +240,6 @@ void CHudChargedshotBar::Paint()
 				CenterY + SMALLBAR_HEIGHT / 2 + SMALLPS_INDICATOR_OFFSET - SMALLPS_INDICATOR_BORDER);
 
 		}
-
-		if (pPlayer->m_bIsPressured)
-		{
-			surface()->DrawSetTextFont(m_hFontSmall);
-			surface()->DrawSetTextPos(CenterX - (SMALLBAR_WIDTH / 2) - 10, CenterY - (SMALLBAR_HEIGHT / 2) - 7);
-			surface()->DrawUnicodeString(pressureIndicator);
-			surface()->DrawSetTextPos(CenterX + (SMALLBAR_WIDTH / 2) + 5, CenterY - (SMALLBAR_HEIGHT / 2) - 7);
-			surface()->DrawUnicodeString(pressureIndicator);
-		}
 	}
 	else
 	{
@@ -322,15 +301,6 @@ void CHudChargedshotBar::Paint()
 				LeftY + BAR_VMARGIN + (1 - shotStrength) * (BAR_HEIGHT - PS_INDICATOR_HEIGHT) + PS_INDICATOR_BORDER,
 				LeftX + BAR_HMARGIN + BAR_WIDTH + PS_INDICATOR_OFFSET - PS_INDICATOR_BORDER,
 				LeftY + BAR_VMARGIN + (1 - shotStrength) * (BAR_HEIGHT - PS_INDICATOR_HEIGHT) + PS_INDICATOR_HEIGHT - PS_INDICATOR_BORDER);
-		}
-
-		if (pPlayer->m_bIsPressured)
-		{
-			surface()->DrawSetTextFont(m_hFontBig);
-			surface()->DrawSetTextPos(LeftX + BAR_HMARGIN - 22, LeftY + BAR_VMARGIN - 5);
-			surface()->DrawUnicodeString(pressureIndicator);
-			surface()->DrawSetTextPos(LeftX + BAR_HMARGIN + BAR_WIDTH + 9, LeftY + BAR_VMARGIN - 5);
-			surface()->DrawUnicodeString(pressureIndicator);
 		}
 	}
 }

@@ -231,7 +231,7 @@ CBall::~CBall()
 
 bool CBall::ShouldCollide( int collisionGroup, int contentsMask ) const
 {
-	return !mp_ball_mass_fix_enabled.GetBool();
+	return false;
 }
 
 //==========================================================
@@ -456,14 +456,6 @@ void CBall::SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyP
 	Vector oldVel = m_vVel;
 
 	m_vVel = vel;
-
-	if (!isDeflection && mp_player_pressure_enabled.GetBool() && m_pPl->IsPressured())
-	{
-		float pitch = g_IOSRand.RandomFloat(-mp_player_pressure_effect_pitch.GetFloat(), mp_player_pressure_effect_pitch.GetFloat());
-		float yaw = g_IOSRand.RandomFloat(-mp_player_pressure_effect_yaw.GetFloat(), mp_player_pressure_effect_yaw.GetFloat());
-		float roll = g_IOSRand.RandomFloat(-mp_player_pressure_effect_roll.GetFloat(), mp_player_pressure_effect_roll.GetFloat());
-		VectorRotate(m_vVel, QAngle(pitch, yaw, roll), m_vVel);
-	}
 
 	float length = m_vVel.Length();
 	m_vVel.NormalizeInPlace();

@@ -59,5 +59,5 @@ void C_Ball::ClientThink()
 
 bool C_Ball::ShouldCollide( int collisionGroup, int contentsMask ) const
 {
-	return !mp_ball_mass_fix_enabled.GetBool();
+	return false;
 }

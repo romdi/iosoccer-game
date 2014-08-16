@@ -2632,7 +2632,7 @@ int CGameMovement::CheckStuck( void )
 	#define CBall C_Ball
 #endif
 
-	if ( hitent == INVALID_ENTITY_HANDLE || mp_no_ball_unstuck.GetBool() && dynamic_cast<CBall *>(traceresult.m_pEnt) )
+	if ( hitent == INVALID_ENTITY_HANDLE || dynamic_cast<CBall *>(traceresult.m_pEnt) )
 	{
 		ResetStuckOffsets( player );
 		return 0;

@@ -1568,41 +1568,6 @@ void CSDKGameRules::State_Think()
 			}
 		}
 
-		for (int i = 1; i <= gpGlobals->maxClients - 1; i++)
-		{
-			CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
-			if (!CSDKPlayer::IsOnField(pPl))
-				continue;
-
-			pPl->SetPressured(false);
-		}
-
-		if (mp_player_pressure_enabled.GetBool())
-		{
-			for (int i = 1; i <= gpGlobals->maxClients - 1; i++)
-			{
-				CSDKPlayer *pPl1 = ToSDKPlayer(UTIL_PlayerByIndex(i));
-				if (!CSDKPlayer::IsOnField(pPl1))
-					continue;
-
-				for (int j = i + 1; j <= gpGlobals->maxClients; j++)
-				{
-					CSDKPlayer *pPl2 = ToSDKPlayer(UTIL_PlayerByIndex(j));
-					if (!CSDKPlayer::IsOnField(pPl2))
-						continue;
-
-					if (pPl2->GetTeam() == pPl1->GetTeam() || pPl1->IsPressured() && pPl2->IsPressured())
-						continue;
-
-					if ((pPl2->GetLocalOrigin() - pPl1->GetLocalOrigin()).Length2DSqr() <= Square(mp_player_pressure_dist.GetFloat()))
-					{
-						pPl1->SetPressured(true);
-						pPl2->SetPressured(true);
-					}
-				}
-			}
-		}
-
 		(this->*m_pCurStateInfo->pfnThink)();
 	}
 }

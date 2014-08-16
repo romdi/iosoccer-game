@@ -168,7 +168,6 @@ BEGIN_RECV_TABLE_NOBASE( C_SDKPlayer, DT_SDKLocalPlayerExclusive )
 	RecvPropTime( RECVINFO( m_flNextClientSettingsChangeTime ) ),
 	RecvPropTime(RECVINFO(m_flNextJoin)),
 	RecvPropBool(RECVINFO(m_bShotButtonsReleased)),
-	RecvPropBool(RECVINFO(m_bIsPressured)),
 END_RECV_TABLE()
 
 BEGIN_RECV_TABLE_NOBASE( C_SDKPlayer, DT_SDKNonLocalPlayerExclusive )
