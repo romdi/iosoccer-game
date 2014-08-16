@@ -332,6 +332,7 @@ public:
 	char				m_szPlayerBallSkinName[MAX_KITNAME_LENGTH];
 	
 	float				m_flNextShot;
+	float				m_flNextFoulCheck;
 
 	inline CPlayerMatchData			*GetMatchData() { return m_pData->m_pMatchData; }
 	inline CPlayerMatchPeriodData	*GetMatchPeriodData() { return m_pData->m_MatchPeriodData.Tail(); }

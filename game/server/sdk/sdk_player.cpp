@@ -1557,6 +1557,7 @@ void CSDKPlayer::ResetFlags()
 	m_Shared.SetStamina(100);
 	InitSprinting();
 	m_flNextShot = gpGlobals->curtime;
+	m_flNextFoulCheck = gpGlobals->curtime;
 	m_bIsAtTargetPos = false;
 	RemoveFlag(FL_SHIELD_KEEP_IN | FL_SHIELD_KEEP_OUT | FL_REMOTECONTROLLED | FL_FREECAM | FL_CELEB | FL_NO_X_MOVEMENT | FL_NO_Y_MOVEMENT | FL_ATCONTROLS | FL_FROZEN);
 	DoServerAnimationEvent(PLAYERANIMEVENT_CANCEL);

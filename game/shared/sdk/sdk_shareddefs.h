@@ -254,6 +254,7 @@ enum match_event_t
 	MATCH_EVENT_TIMEOUT,
 	MATCH_EVENT_TIMEOUT_PENDING,
 	MATCH_EVENT_MISS,
+	MATCH_EVENT_ADVANTAGE,
 	MATCH_EVENT_COUNT
 };
 
@@ -286,7 +287,8 @@ static const char *g_szMatchEventNames[MATCH_EVENT_COUNT] =
 	"INTERCEPTION",
 	"TIMEOUT",
 	"TIMEOUT PENDING",
-	"MISS"
+	"MISS",
+	"ADVANTAGE"
 };
 
 enum match_period_t

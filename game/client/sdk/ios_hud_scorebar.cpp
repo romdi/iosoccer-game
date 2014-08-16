@@ -1054,7 +1054,8 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 	
 		m_eCurMatchEvent = setpieceType;
 		m_flStayDuration = 5.0f;
-		char *text;
+		char *text = "";
+		bool showExtraInfo = true;
 
 		switch ((statistic_type_t)event->GetInt("statistic_type"))
 		{
@@ -1074,12 +1075,12 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 			text = GetPossessionText();
 			break;
 		default:
-			text = "";
+			showExtraInfo = false;
 			break;
 		}	
 
 		m_pExtraInfo->SetText(text);
-		m_pExtraInfo->SetVisible(true);
+		m_pExtraInfo->SetVisible(showExtraInfo);
 	}
 	else if (!Q_strcmp(event->GetName(), "penalty"))
 	{

@@ -50,7 +50,8 @@ ConVar
 	sv_ball_timelimit_setpiece("sv_ball_timelimit_setpiece", "15", FCVAR_NOTIFY),
 	sv_ball_timelimit_remotecontrolled("sv_ball_timelimit_remotecontrolled", "15", FCVAR_NOTIFY),
 	sv_ball_throwin_minangle("sv_ball_throwin_minangle", "-5", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_throwin_minstrength("sv_ball_throwin_minstrength", "270", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
+	sv_ball_throwin_minstrength("sv_ball_throwin_minstrength", "270", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_foulcheckdelay("sv_ball_foulcheckdelay", "2.0", FCVAR_NOTIFY);
 
 
 LINK_ENTITY_TO_CLASS( match_ball, CMatchBall );
@@ -1473,7 +1474,7 @@ void CMatchBall::SendNotifications()
 					pEvent->SetInt("fouled_player_userid", (m_pFouledPl ? m_pFouledPl->GetUserID() : 0));
 					pEvent->SetInt("fouling_team", m_nFoulingTeam);
 					pEvent->SetInt("foul_type", foulType);
-					pEvent->SetInt("set_piece_type", (m_eNextState == BALL_STATE_PENALTY ? MATCH_EVENT_PENALTY : MATCH_EVENT_FREEKICK));
+					pEvent->SetInt("set_piece_type", m_eNextState == BALL_STATE_PENALTY ? MATCH_EVENT_PENALTY : MATCH_EVENT_FREEKICK);
 
 					float distToGoal = (m_vFoulPos - GetGlobalTeam(m_nFoulingTeam)->m_vGoalCenter).Length2D();
 
@@ -1643,6 +1644,9 @@ void CMatchBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart, con
 
 bool CMatchBall::CheckFoul(bool canShootBall, const Vector &localDirToBall)
 {
+	if (gpGlobals->curtime < m_pPl->m_flNextFoulCheck)
+		return false;
+
 	for (int i = 1; i <= gpGlobals->maxClients; i++) 
 	{
 		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
@@ -1654,10 +1658,6 @@ bool CMatchBall::CheckFoul(bool canShootBall, const Vector &localDirToBall)
 			continue;
 
 		Vector plPos = pPl->GetLocalOrigin();
-
-		//if (plPos.x < SDKGameRules()->m_vFieldMin.GetX() || plPos.y < SDKGameRules()->m_vFieldMin.GetY() ||
-		//	plPos.x > SDKGameRules()->m_vFieldMax.GetX() || plPos.y > SDKGameRules()->m_vFieldMax.GetY())
-		//	continue;
 
 		Vector dirToPl = pPl->GetLocalOrigin() - m_vPlPos;
 
@@ -1680,7 +1680,9 @@ bool CMatchBall::CheckFoul(bool canShootBall, const Vector &localDirToBall)
 		// It's a foul
 
 		PlayerAnimEvent_t anim = RAD2DEG(acos(m_vPlForward2D.Dot(pPl->EyeDirection2D()))) <= 90 ? PLAYERANIMEVENT_TACKLED_BACKWARD : PLAYERANIMEVENT_TACKLED_FORWARD;
-		pPl->DoAnimationEvent(anim);
+		pPl->DoServerAnimationEvent(anim);
+
+		m_pPl->m_flNextFoulCheck = gpGlobals->curtime + sv_ball_foulcheckdelay.GetFloat();
 
 		int teammatesCloserToGoalCount = 0;
 
@@ -1732,12 +1734,12 @@ bool CMatchBall::CheckFoul(bool canShootBall, const Vector &localDirToBall)
 			int posIndex = m_pFoulingPl->GetTeamPosIndex();
 			int posType = m_pFoulingPl->GetTeamPosType();
 
-			m_pFoulingPl->SetDesiredTeam(TEAM_SPECTATOR, m_pFoulingPl->GetTeamNumber(), 0, true, false, false);
+			m_pFoulingPl->SetDesiredTeam(TEAM_SPECTATOR, team, 0, true, false, false);
 
 			if (posType != POS_GK)
 			{
 				// Block carded player's pos
-				m_pFoulingPl->GetTeam()->SetPosNextJoinSeconds(m_pFoulingPl->GetTeamPosIndex(), nextJoin);
+				GetGlobalTeam(team)->SetPosNextJoinSeconds(posIndex, nextJoin);
 			}
 			else
 			{
@@ -1757,6 +1759,36 @@ bool CMatchBall::CheckFoul(bool canShootBall, const Vector &localDirToBall)
 		else if (m_eFoulType == FOUL_NORMAL_YELLOW_CARD)
 		{
 			ReplayManager()->AddMatchEvent(MATCH_EVENT_YELLOWCARD, m_nFoulingTeam, m_pFoulingPl);
+		}
+
+		IGameEvent *pEvent = gameeventmanager->CreateEvent("foul");
+		if (pEvent)
+		{
+			match_event_t foulMatchEvent;
+
+			switch (m_eFoulType)
+			{
+			case FOUL_NORMAL_NO_CARD:
+				foulMatchEvent = MATCH_EVENT_FOUL;
+				break;
+			case FOUL_NORMAL_YELLOW_CARD:
+				if (m_pFoulingPl->GetYellowCards() % 2 == 0)
+					foulMatchEvent = MATCH_EVENT_SECONDYELLOWCARD;
+				else
+					foulMatchEvent = MATCH_EVENT_YELLOWCARD;
+				break;
+			case FOUL_NORMAL_RED_CARD:
+				foulMatchEvent = MATCH_EVENT_REDCARD;
+				break;
+			}
+
+			pEvent->SetInt("fouling_player_userid", m_pFoulingPl->GetUserID());
+			pEvent->SetInt("fouled_player_userid", m_pFouledPl->GetUserID());
+			pEvent->SetInt("fouling_team", m_nFoulingTeam);
+			pEvent->SetInt("foul_type", foulMatchEvent);
+			pEvent->SetInt("set_piece_type", MATCH_EVENT_ADVANTAGE);
+			pEvent->SetInt("statistic_type", STATISTIC_DEFAULT);
+			gameeventmanager->FireEvent(pEvent);
 		}
 
 		m_bIsAdvantage = true;
