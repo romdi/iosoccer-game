@@ -2212,8 +2212,6 @@ void CMatchBall::CheckAdvantage()
 						State_Transition(BALL_STATE_PENALTY, sv_ball_statetransition_activationdelay_long.GetFloat());
 					else
 						State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_activationdelay_long.GetFloat());
-
-					return;
 				}
 			}
 
@@ -2233,11 +2231,8 @@ void CMatchBall::CheckAdvantage()
 							State_Transition(BALL_STATE_PENALTY, sv_ball_statetransition_activationdelay_long.GetFloat());
 						else
 							State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_activationdelay_long.GetFloat());
-
-						return;
 					}
 				}
-				// TODO: fixed degree doesn't really work out and depends on the distance to goal. check if the ball would arrive somewhere close to the goal at the goal line
 				else if (LastPl(true) && LastPl(true)->GetTeamNumber() == m_nFouledTeam && m_nInPenBoxOfTeam == m_nFoulingTeam)
 				{
 					Vector vel = m_vVel;
