@@ -269,9 +269,6 @@ void CPlayerBall::State_KEEPERHANDS_Enter()
 
 void CPlayerBall::State_KEEPERHANDS_Think()
 {
-	if (m_eNextState == BALL_STATE_GOAL)
-		return;
-
 	if (!CSDKPlayer::IsOnField(m_pPl, m_nInPenBoxOfTeam))
 	{
 		m_pPl = NULL;

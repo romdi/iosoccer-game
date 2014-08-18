@@ -65,6 +65,7 @@ public:
 	int				LastTeam(bool wasShooting, CSDKPlayer *pSkipPl = NULL, CSDKPlayer *pSkipPl2 = NULL, CSDKPlayer *pSkipPl3 = NULL);
 	int				LastOppTeam(bool wasShooting, CSDKPlayer *pSkipPl = NULL, CSDKPlayer *pSkipPl2 = NULL, CSDKPlayer *pSkipPl3 = NULL);
 	bool			IsLegallyCatchableByKeeper();
+	void			CheckAdvantage();
 
 	float			m_flStateEnterTime;
 	float			m_flStateLeaveTime;
