@@ -297,8 +297,8 @@ void CPlayerBall::State_KEEPERHANDS_Think()
 	// Don't ignore triggers when setting the new ball position
 	m_bSetNewPos = false;
 
-	Vector min = GetGlobalTeam(m_pPl->GetTeamNumber())->m_vPenBoxMin + m_flPhysRadius;
-	Vector max = GetGlobalTeam(m_pPl->GetTeamNumber())->m_vPenBoxMax - m_flPhysRadius;
+	Vector min = GetGlobalTeam(m_pPl->GetTeamNumber())->m_vPenBoxMin - BALL_PHYS_RADIUS;
+	Vector max = GetGlobalTeam(m_pPl->GetTeamNumber())->m_vPenBoxMax + BALL_PHYS_RADIUS;
 
 	// Ball outside the penalty box
 	if (m_vPos.x < min.x || m_vPos.y < min.y || m_vPos.x > max.x || m_vPos.y > max.y)
