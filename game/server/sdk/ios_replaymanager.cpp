@@ -7,17 +7,6 @@
 #include "player_ball.h"
 #include "match_ball.h"
 
-ConVar r_balltrail_replays("r_balltrail_replays", "1", FCVAR_NOTIFY);
-ConVar r_balltrail_intermissions("r_balltrail_intermissions", "0", FCVAR_NOTIFY);
-ConVar r_balltrail_match("r_balltrail_match", "0", FCVAR_NOTIFY);
-ConVar r_balltrail_red("r_balltrail_red", "255", FCVAR_NOTIFY);
-ConVar r_balltrail_green("r_balltrail_green", "255", FCVAR_NOTIFY);
-ConVar r_balltrail_blue("r_balltrail_blue", "255", FCVAR_NOTIFY);
-ConVar r_balltrail_alpha("r_balltrail_alpha", "255", FCVAR_NOTIFY);
-ConVar r_balltrail_startwidth("r_balltrail_startwidth", "10.0", FCVAR_NOTIFY);
-ConVar r_balltrail_endwidth("r_balltrail_endwidth", "1.0", FCVAR_NOTIFY);
-ConVar r_balltrail_lifetime("r_balltrail_lifetime", "3.0", FCVAR_NOTIFY);
-
 BEGIN_DATADESC( CReplayBall )
 END_DATADESC()
 
@@ -508,8 +497,6 @@ void CReplayManager::RestoreSnapshot()
 
 	MatchEvent *pMatchEvent = m_MatchEvents[m_nReplayIndex];
 
-	bool toggleGlowTrail = m_bIsReplayStart;
-
 	if (m_bIsReplayStart)
 	{
 		m_bIsReplayStart = false;
@@ -664,38 +651,6 @@ void CReplayManager::RestoreSnapshot()
 
 		m_pBall->VPhysicsGetObject()->SetPosition(pBallSnap->pos, pBallSnap->ang, false);
 		m_pBall->VPhysicsGetObject()->SetVelocity(&pBallSnap->vel, &pBallSnap->rot);
-
-		if (toggleGlowTrail)
-		{
-			if (m_pBall->m_pGlowTrail)
-			{
-				UTIL_Remove(m_pBall->m_pGlowTrail);
-				m_pBall->m_pGlowTrail = NULL;
-			}
-
-			if (r_balltrail_replays.GetBool())
-			{
-				m_pBall->m_pGlowTrail = CSpriteTrail::SpriteTrailCreate("sprites/balltrail.vmt", pBallSnap->pos, false);
-
-				if (m_pBall->m_pGlowTrail)
-				{
-					m_pBall->m_pGlowTrail->FollowEntity(m_pBall);
-					//m_pGlowTrail->SetAttachment( this, nAttachment );
-
-					m_pBall->m_pGlowTrail->SetTransparency(
-						kRenderTransAdd,
-						clamp(r_balltrail_red.GetInt(), 0, 255),
-						clamp(r_balltrail_green.GetInt(), 0, 255),
-						clamp(r_balltrail_blue.GetInt(), 0, 255),
-						clamp(r_balltrail_alpha.GetInt(), 0, 255),
-						kRenderFxNone);
-
-					m_pBall->m_pGlowTrail->SetStartWidth(r_balltrail_startwidth.GetFloat());
-					m_pBall->m_pGlowTrail->SetEndWidth(r_balltrail_endwidth.GetFloat());
-					m_pBall->m_pGlowTrail->SetLifeTime(r_balltrail_lifetime.GetFloat());
-				}
-			}
-		}
 	}
 	else
 	{

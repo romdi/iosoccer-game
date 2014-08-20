@@ -182,8 +182,6 @@ public:
 	int UpdateTransmitState() {	return SetTransmitState(FL_EDICT_ALWAYS); }
 
 	CNetworkString(m_szSkinName, MAX_KITNAME_LENGTH);
-
-	CHandle<CSpriteTrail> m_pGlowTrail;
 };
 
 
