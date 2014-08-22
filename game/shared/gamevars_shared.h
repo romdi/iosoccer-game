@@ -74,6 +74,7 @@ extern ConVar
 	mp_tvcam_secondreplaycam,
 	mp_timeout_count,
 	mp_timeout_duration,
-	mp_center_notification_top;
+	mp_center_notification_top,
+	mp_pitchtexture;
 
 #endif // CS_GAMEVARS_SHARED_H

@@ -618,6 +618,7 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClCompile Include="sdk\ios_crowdtextureproxy.cpp" />
     <ClCompile Include="sdk\ios_hud_powershotbar.cpp" />
     <ClCompile Include="sdk\ios_hud_scorebar.cpp" />
+    <ClCompile Include="sdk\ios_pitchtextureproxy.cpp" />
     <ClCompile Include="sdk\ios_playertextureproxy.cpp" />
     <ClCompile Include="simple_keys.cpp" />
     <ClCompile Include="..\..\public\simple_physics.cpp">

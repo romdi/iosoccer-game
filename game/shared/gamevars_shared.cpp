@@ -124,3 +124,5 @@ ConVar mp_timeout_count("mp_timeout_count", "3", FCVAR_NOTIFY | FCVAR_REPLICATED
 ConVar mp_timeout_duration("mp_timeout_duration", "5", FCVAR_NOTIFY | FCVAR_REPLICATED);
 
 ConVar mp_center_notification_top("mp_center_notification_top", "0", FCVAR_NOTIFY | FCVAR_REPLICATED);
+
+ConVar mp_pitchtexture("mp_pitchtexture", "0", FCVAR_NOTIFY | FCVAR_REPLICATED);
