@@ -216,8 +216,9 @@ protected:
 	float			GetPowershotStrength(float coeff, int strength);
 	float			GetChargedshotStrength(float coeff, int minStrength, int maxStrength);
 	void			UpdateCarrier();
-	virtual void	Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart, const Vector &oldVel) = 0;
+	virtual void	Touched(bool isShot, body_part_t bodyPart, const Vector &oldVel) = 0;
 	virtual bool	IsLegallyCatchableByKeeper() = 0;
+	virtual bool	UseDribblingCollision() = 0;
 
 	IPhysicsObject	*m_pPhys;
 	float			m_flPhysRadius;
@@ -243,7 +244,6 @@ protected:
 	float			m_flGlobalLastShot;
 	float			m_flGlobalDynamicShotDelay;
 	bool			m_bHitThePost;
-	bool			m_bLastContactWasTouch;
 };
 
 #endif

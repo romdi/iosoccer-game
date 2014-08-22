@@ -45,7 +45,7 @@ public:
 	CSDKPlayer		*GetLastActivePlayer() { return m_pLastActivePlayer; }
 	void			SetSetpieceTaker(CSDKPlayer *pPlayer) { m_pSetpieceTaker = pPlayer; m_pPl = NULL; }
 
-	void			Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart, const Vector &oldVel);
+	void			Touched(bool isShot, body_part_t bodyPart, const Vector &oldVel);
 	bool			CheckFoul(bool canShootBall, const Vector &localDirToBall);
 	void			SetFoulParams(foul_type_t type, Vector pos, CSDKPlayer *pFoulingPl, CSDKPlayer *pFouledPl = NULL);
 	bool			IsPlayerClose();
@@ -65,6 +65,7 @@ public:
 	int				LastTeam(bool wasShooting, CSDKPlayer *pSkipPl = NULL, CSDKPlayer *pSkipPl2 = NULL, CSDKPlayer *pSkipPl3 = NULL);
 	int				LastOppTeam(bool wasShooting, CSDKPlayer *pSkipPl = NULL, CSDKPlayer *pSkipPl2 = NULL, CSDKPlayer *pSkipPl3 = NULL);
 	bool			IsLegallyCatchableByKeeper();
+	bool			UseDribblingCollision();
 	void			CheckAdvantage();
 
 	float			m_flStateEnterTime;

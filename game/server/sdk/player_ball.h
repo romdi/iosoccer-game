@@ -38,10 +38,11 @@ public:
 	void State_NORMAL_Enter();			void State_NORMAL_Think();			void State_NORMAL_Leave(ball_state_t newState);
 	void State_KEEPERHANDS_Enter();		void State_KEEPERHANDS_Think();		void State_KEEPERHANDS_Leave(ball_state_t newState);
 
-	void			Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart, const Vector &oldVel);
+	void			Touched(bool isShot, body_part_t bodyPart, const Vector &oldVel);
 	bool			CheckFoul(bool canShootBall, const Vector &localDirToBall) { return false; }
 	void			VPhysicsCollision(int index, gamevcollisionevent_t	*pEvent);
 	bool			IsLegallyCatchableByKeeper();
+	bool			UseDribblingCollision();
 
 	CNetworkHandle(CSDKPlayer, m_pCreator);
 
@@ -52,6 +53,7 @@ protected:
 	Vector			m_vBallCannonVel;
 	QAngle			m_aBallCannonAng;
 	AngularImpulse	m_vBallCannonRot;
+	CHandle<CSDKPlayer>	m_pLastShooter;
 };
 
 extern CPlayerBall *CreatePlayerBall(const Vector &pos, CSDKPlayer *pCreator);

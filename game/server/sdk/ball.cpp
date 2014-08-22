@@ -161,7 +161,11 @@ ConVar
 	sv_ball_keepercatchdelay_poscoeffmin("sv_ball_keepercatchdelay_poscoeffmin", "0.5", FCVAR_NOTIFY),
 	
 	sv_ball_dribbling_mass("sv_ball_dribbling_mass", "75", FCVAR_NOTIFY),
-	sv_ball_dribbling_collisioncoeff("sv_ball_dribbling_collisioncoeff", "1.25", FCVAR_NOTIFY);
+	sv_ball_dribbling_collisioncoeff("sv_ball_dribbling_collisioncoeff", "1.25", FCVAR_NOTIFY),
+
+	sv_ball_selfhit_mass("sv_ball_selfhit_mass", "75", FCVAR_NOTIFY),
+	sv_ball_selfhit_collisioncoeff("sv_ball_selfhit_collisioncoeff", "0.25", FCVAR_NOTIFY);
+
 
 //==========================================================
 //	
@@ -214,7 +218,6 @@ CBall::CBall()
 	m_bHasQueuedState = false;
 	m_pHoldingPlayer = NULL;
 	m_bHitThePost = false;
-	m_bLastContactWasTouch = false;
 	memset(m_szSkinName.GetForModify(), 0, sizeof(m_szSkinName));
 }
 
@@ -478,7 +481,7 @@ void CBall::SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyP
 	else
 		m_pPl->m_flNextShot = gpGlobals->curtime + max(dynamicDelay, nextShotMinDelay);
 
-	Touched(m_pPl, !isDeflection, bodyPart, oldVel);
+	Touched(!isDeflection, bodyPart, oldVel);
 }
 
 void CBall::SetRot(AngularImpulse rot)
@@ -634,10 +637,18 @@ bool CBall::CheckCollision()
 	{
 		collide = true;
 
-		if (m_bLastContactWasTouch)
+		if (UseDribblingCollision())
 		{
-			collisionCoeff = sv_ball_dribbling_collisioncoeff.GetFloat();
-			ballMass = sv_ball_dribbling_mass.GetFloat();
+			if (DotProduct2D(m_vVel.AsVector2D(), m_vPlVel.AsVector2D()) >= 0 && DotProduct2D(m_vVel.AsVector2D(), dirToBall.AsVector2D()) >= 0)
+			{
+				collisionCoeff = sv_ball_dribbling_collisioncoeff.GetFloat();
+				ballMass = sv_ball_dribbling_mass.GetFloat();
+			}
+			else
+			{
+				collisionCoeff = sv_ball_selfhit_collisioncoeff.GetFloat();
+				ballMass = sv_ball_selfhit_mass.GetFloat();
+			}
 		}
 		else
 		{
@@ -682,6 +693,7 @@ bool CBall::CheckCollision()
 	Vector vel = v1 - optimizedP * sv_player_mass.GetFloat() * normal;
 	vel *= collisionCoeff;
 
+	// If optimizedP is bigger or equal to 0, the ball is either moving away from the player or going the same speed, so there's no need to apply additional velocity
 	if (optimizedP < 0)
 	{
 		// TODO: Check if this is still needed
@@ -693,7 +705,7 @@ bool CBall::CheckCollision()
 		if (m_vVel.Length() > 900.0f)
 			m_pPl->EmitSound ("Player.Oomph");
 
-		Touched(m_pPl, false, BODY_PART_UNKNOWN, m_vVel);
+		Touched(false, BODY_PART_UNKNOWN, m_vVel);
 
 		EmitSound("Ball.Touch");
 		m_vVel = vel;
@@ -1173,7 +1185,6 @@ void CBall::Reset()
 	m_pPhys->Wake();
 	m_pHoldingPlayer = NULL;
 	m_bHitThePost = false;
-	m_bLastContactWasTouch = false;
 }
 
 void CBall::ReloadSettings()

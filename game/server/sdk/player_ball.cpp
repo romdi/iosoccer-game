@@ -130,6 +130,7 @@ CBall *GetNearestPlayerBall(const Vector &pos)
 CPlayerBall::CPlayerBall()
 {
 	m_pCreator = NULL;
+	m_pLastShooter = NULL;
 }
 
 CPlayerBall::~CPlayerBall()
@@ -369,9 +370,10 @@ void CPlayerBall::TriggerSideline()
 {
 }
 
-void CPlayerBall::Touched(CSDKPlayer *pPl, bool isShot, body_part_t bodyPart, const Vector &oldVel)
+void CPlayerBall::Touched(bool isShot, body_part_t bodyPart, const Vector &oldVel)
 {
-	m_bLastContactWasTouch = !isShot;
+	if (isShot)
+		m_pLastShooter = m_pPl;
 }
 
 void CPlayerBall::VPhysicsCollision(int index, gamevcollisionevent_t *pEvent)
@@ -382,4 +384,9 @@ void CPlayerBall::VPhysicsCollision(int index, gamevcollisionevent_t *pEvent)
 bool CPlayerBall::IsLegallyCatchableByKeeper()
 {
 	return true;
+}
+
+bool CPlayerBall::UseDribblingCollision()
+{
+	return m_pPl == m_pLastShooter;
 }
