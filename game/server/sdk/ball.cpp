@@ -1160,7 +1160,7 @@ bool CBall::DoHeader()
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEADER);
 	}
 
-	SetVel(vel, sv_ball_header_spincoeff.GetFloat(), FL_SPIN_PERMIT_SIDE, BODY_PART_HEAD, false, true, true, sv_ball_header_mindelay.GetFloat());
+	SetVel(m_vPlForwardVel2D + vel, sv_ball_header_spincoeff.GetFloat(), FL_SPIN_PERMIT_SIDE, BODY_PART_HEAD, false, true, true, sv_ball_header_mindelay.GetFloat());
 
 	return true;
 }
