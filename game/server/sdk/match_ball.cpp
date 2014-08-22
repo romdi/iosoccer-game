@@ -2193,8 +2193,11 @@ void CMatchBall::CheckAdvantage()
 			{
 				//todo add check if towards goal if goal scoring
 				CSDKPlayer *pPl = FindNearestPlayer();
+				BallTouchInfo *pLastInfo = LastInfo(true);
 
-				if (pPl && pPl->GetTeamNumber() == m_nFoulingTeam)
+				if (pPl && pPl->GetTeamNumber() == m_nFoulingTeam // Fouling team player is closest
+					|| pLastInfo && pLastInfo->m_nTeam == m_nFoulingTeam // Fouling team shot last
+					|| pLastInfo && pLastInfo->m_flTime <= m_flFoulTime + sv_ball_advantage_ignore_duration.GetFloat()) // Last shot happened shortly after the foul was committed
 				{
 					if (m_bIsPenalty)
 						State_Transition(BALL_STATE_PENALTY, sv_ball_statetransition_activationdelay_long.GetFloat());
