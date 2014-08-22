@@ -571,7 +571,7 @@ public:
 	void				MoveToTargetPos(Vector &pos, Vector &vel, QAngle &ang);
 
 	bool				IsNormalshooting();
-	bool				IsPowershooting();
+	bool				IsSkillshooting();
 	bool				IsChargedshooting();
 	bool				IsShooting();
 	bool				CanShoot();

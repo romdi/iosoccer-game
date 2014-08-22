@@ -149,7 +149,7 @@ void CHudChargedshotBar::Paint()
 		fgColor = Color(255, 0, 0, 255);
 		bgColor = Color(139, 0, 0, 255);
 	}
-	else if (GetMatchBall() && GetMatchBall()->m_bNonnormalshotsBlocked)
+	else if (GetMatchBall() && GetMatchBall()->m_bChargedshotBlocked)
 	{
 		fgColor = Color(255, 140, 0, 255);
 		bgColor = Color(255, 69, 0, 255);

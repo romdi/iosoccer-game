@@ -39,8 +39,8 @@ ConVar
 	sv_ball_freekickdist_opponentgoal("sv_ball_freekickdist_opponentgoal", "1300", FCVAR_NOTIFY),
 	sv_ball_freekickangle_opponentgoal("sv_ball_freekickangle_opponentgoal", "60", FCVAR_NOTIFY),
 	sv_ball_closetogoaldist("sv_ball_closetogoaldist", "1300", FCVAR_NOTIFY),
-	sv_ball_nonnormalshotsblocktime_freekick("sv_ball_nonnormalshotsblocktime_freekick", "4.0", FCVAR_NOTIFY),
-	sv_ball_nonnormalshotsblocktime_corner("sv_ball_nonnormalshotsblocktime_corner", "4.0", FCVAR_NOTIFY),
+	sv_ball_chargedshotblocktime_freekick("sv_ball_chargedshotblocktime_freekick", "4.0", FCVAR_NOTIFY),
+	sv_ball_chargedshotblocktime_corner("sv_ball_chargedshotblocktime_corner", "4.0", FCVAR_NOTIFY),
 	sv_ball_shotsblocktime_penalty("sv_ball_shotsblocktime_penalty", "4.0", FCVAR_NOTIFY),
 	sv_ball_slidesidereach_foul( "sv_ball_slidesidereach_foul", "10", FCVAR_NOTIFY ),
 	sv_ball_slideforwardreach_foul( "sv_ball_slideforwardreach_foul", "25", FCVAR_NOTIFY ),
@@ -63,7 +63,7 @@ END_DATADESC()
 IMPLEMENT_SERVERCLASS_ST( CMatchBall, DT_MatchBall )
 	SendPropEHandle(SENDINFO(m_pLastActivePlayer)),
 	SendPropInt(SENDINFO(m_nLastActiveTeam)),
-	SendPropInt(SENDINFO(m_bNonnormalshotsBlocked)),
+	SendPropInt(SENDINFO(m_bChargedshotBlocked)),
 	SendPropInt(SENDINFO(m_bShotsBlocked)),
 END_SEND_TABLE()
 
@@ -93,7 +93,7 @@ CMatchBall::CMatchBall()
 	m_nPossessingTeam = TEAM_INVALID;
 	m_flPossessionStart = -1;
 	m_pTurnoverPlayer = NULL;
-	m_bNonnormalshotsBlocked = false;
+	m_bChargedshotBlocked = false;
 	m_bShotsBlocked = false;
 	m_ePenaltyState = PENALTY_NONE;
 	m_bIsAdvantage = false;
@@ -128,7 +128,7 @@ void CMatchBall::Reset()
 	m_nPossessingTeam = TEAM_INVALID;
 	m_flPossessionStart = -1;
 	m_pTurnoverPlayer = NULL;
-	m_bNonnormalshotsBlocked = false;
+	m_bChargedshotBlocked = false;
 	m_bShotsBlocked = false;
 	m_ePenaltyState = PENALTY_NONE;
 	m_bIsAdvantage = false;
@@ -419,7 +419,7 @@ void CMatchBall::State_THROWIN_Think()
 	//SetPos(handPos, false);
 	//SetAng(handAng);
 
-	if (m_pPl->ShotButtonsReleased() && (m_pPl->IsPowershooting() || m_pPl->IsChargedshooting()))
+	if (m_pPl->ShotButtonsReleased() && m_pPl->IsChargedshooting())
 	{
 		QAngle ang = m_aPlAng;
 
@@ -427,12 +427,7 @@ void CMatchBall::State_THROWIN_Think()
 
 		Vector dir;
 		AngleVectors(ang, &dir);
-		float strength;
-
-		if (m_pPl->IsPowershooting())
-			strength = GetPowershotStrength(GetPitchCoeff(false), sv_ball_powerthrow_strength.GetInt());
-		else
-			strength = GetChargedshotStrength(GetPitchCoeff(false), sv_ball_chargedthrow_minstrength.GetInt(), sv_ball_chargedthrow_maxstrength.GetInt());
+		float strength = GetChargedshotStrength(GetPitchCoeff(false), sv_ball_chargedthrow_minstrength.GetInt(), sv_ball_chargedthrow_maxstrength.GetInt());
 
 		Vector vel = dir * max(strength, sv_ball_throwin_minstrength.GetInt());
 
@@ -648,15 +643,15 @@ void CMatchBall::State_GOALKICK_Think()
 
 	if (m_flSetpieceCloseStartTime != -1 && gpGlobals->curtime > m_flSetpieceCloseStartTime + sv_ball_setpiece_close_time.GetFloat())
 	{
-		m_bNonnormalshotsBlocked = true;
+		m_bChargedshotBlocked = true;
 	}
 	else
-		m_bNonnormalshotsBlocked = false;
+		m_bChargedshotBlocked = false;
 
 	if (!m_bShotsBlocked
 		&& m_pPl->ShotButtonsReleased()
 		&& CanTouchBallXY()
-		&& (m_pPl->IsNormalshooting() || !m_bNonnormalshotsBlocked && (m_pPl->IsPowershooting() || m_pPl->IsChargedshooting())))
+		&& (m_pPl->IsNormalshooting() || !m_bChargedshotBlocked && m_pPl->IsChargedshooting()))
 	{
 		m_pPl->AddGoalKick();
 		RemoveAllTouches();
@@ -667,7 +662,7 @@ void CMatchBall::State_GOALKICK_Think()
 
 void CMatchBall::State_GOALKICK_Leave(ball_state_t newState)
 {
-	m_bNonnormalshotsBlocked = false;
+	m_bChargedshotBlocked = false;
 	m_bShotsBlocked = false;
 }
 
@@ -726,18 +721,18 @@ void CMatchBall::State_CORNER_Think()
 	else
 		m_flSetpieceCloseStartTime = -1;
 
-	if (gpGlobals->curtime <= m_flStateEnterTime + sv_ball_nonnormalshotsblocktime_corner.GetFloat()
+	if (gpGlobals->curtime <= m_flStateEnterTime + sv_ball_chargedshotblocktime_corner.GetFloat()
 		|| m_flSetpieceCloseStartTime != -1 && gpGlobals->curtime > m_flSetpieceCloseStartTime + sv_ball_setpiece_close_time.GetFloat())
 	{
-		m_bNonnormalshotsBlocked = true;
+		m_bChargedshotBlocked = true;
 	}
 	else
-		m_bNonnormalshotsBlocked = false;
+		m_bChargedshotBlocked = false;
 
 	if (!m_bShotsBlocked
 		&& m_pPl->ShotButtonsReleased()
 		&& CanTouchBallXY()
-		&& (m_pPl->IsNormalshooting() || !m_bNonnormalshotsBlocked && (m_pPl->IsPowershooting() || m_pPl->IsChargedshooting())))
+		&& (m_pPl->IsNormalshooting() || !m_bChargedshotBlocked && m_pPl->IsChargedshooting()))
 	{
 		//EmitSound("Crowd.Way");
 		m_pPl->AddCorner();
@@ -749,7 +744,7 @@ void CMatchBall::State_CORNER_Think()
 
 void CMatchBall::State_CORNER_Leave(ball_state_t newState)
 {
-	m_bNonnormalshotsBlocked = false;
+	m_bChargedshotBlocked = false;
 	m_bShotsBlocked = false;
 }
 
@@ -874,18 +869,18 @@ void CMatchBall::State_FREEKICK_Think()
 		m_flSetpieceCloseStartTime = -1;
 
 	if (abs(m_vPos.y - GetGlobalTeam(m_nFoulingTeam)->m_vGoalCenter.GetY()) <= sv_ball_freekickdist_opponentgoal.GetInt()
-		&& gpGlobals->curtime <= m_flStateEnterTime + sv_ball_nonnormalshotsblocktime_freekick.GetFloat()
+		&& gpGlobals->curtime <= m_flStateEnterTime + sv_ball_chargedshotblocktime_freekick.GetFloat()
 		|| m_flSetpieceCloseStartTime != -1 && gpGlobals->curtime > m_flSetpieceCloseStartTime + sv_ball_setpiece_close_time.GetFloat())
 	{
-		m_bNonnormalshotsBlocked = true;
+		m_bChargedshotBlocked = true;
 	}
 	else
-		m_bNonnormalshotsBlocked = false;
+		m_bChargedshotBlocked = false;
 
 	if (!m_bShotsBlocked
 		&& m_pPl->ShotButtonsReleased()
 		&& CanTouchBallXY()
-		&& (m_pPl->IsNormalshooting() || !m_bNonnormalshotsBlocked && (m_pPl->IsPowershooting() || m_pPl->IsChargedshooting())))
+		&& (m_pPl->IsNormalshooting() || !m_bChargedshotBlocked && m_pPl->IsChargedshooting()))
 	{
 		//EmitSound("Crowd.Way");
 		m_pPl->AddFreeKick();
@@ -898,7 +893,7 @@ void CMatchBall::State_FREEKICK_Think()
 void CMatchBall::State_FREEKICK_Leave(ball_state_t newState)
 {
 	SDKGameRules()->SetOffsideLinesEnabled(false);
-	m_bNonnormalshotsBlocked = false;
+	m_bChargedshotBlocked = false;
 	m_bShotsBlocked = false;
 }
 
@@ -1003,15 +998,15 @@ void CMatchBall::State_PENALTY_Think()
 
 	if (m_flSetpieceCloseStartTime != -1 && gpGlobals->curtime > m_flSetpieceCloseStartTime + sv_ball_setpiece_close_time.GetFloat())
 	{
-		m_bNonnormalshotsBlocked = true;
+		m_bChargedshotBlocked = true;
 	}
 	else
-		m_bNonnormalshotsBlocked = false;
+		m_bChargedshotBlocked = false;
 
 	if (!m_bShotsBlocked
 		&& m_pPl->ShotButtonsReleased()
 		&& CanTouchBallXY()
-		&& (m_pPl->IsNormalshooting() || !m_bNonnormalshotsBlocked && (m_pPl->IsPowershooting() || m_pPl->IsChargedshooting())))
+		&& (m_pPl->IsNormalshooting() || !m_bChargedshotBlocked && m_pPl->IsChargedshooting()))
 	{
 		m_pPl->AddPenalty();
 		RemoveAllTouches();
@@ -1027,7 +1022,7 @@ void CMatchBall::State_PENALTY_Leave(ball_state_t newState)
 	if (CSDKPlayer::IsOnField(m_pOtherPl))
 		m_pOtherPl->RemoveFlag(FL_NO_Y_MOVEMENT);
 
-	m_bNonnormalshotsBlocked = false;
+	m_bChargedshotBlocked = false;
 	m_bShotsBlocked = false;
 }
 
@@ -1131,30 +1126,19 @@ void CMatchBall::State_KEEPERHANDS_Think()
 
 	Vector vel;
 
-	if (m_pPl->ShotButtonsReleased() && (m_pPl->IsPowershooting() || m_pPl->IsChargedshooting()) && m_pPl->CanShoot())
+	if (m_pPl->ShotButtonsReleased() && m_pPl->IsChargedshooting() && m_pPl->CanShoot())
 	{
-		float spin;
+		QAngle ang = m_aPlAng;
+		ang[PITCH] = min(sv_ball_keepershot_minangle.GetFloat(), m_aPlAng[PITCH]);
+		Vector dir;
+		AngleVectors(ang, &dir);
+		vel = dir * GetChargedshotStrength(GetPitchCoeff(false), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
+		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KEEPER_HANDS_KICK);
 
-		if (m_pPl->IsPowershooting())
-		{
-			vel = vec3_origin;
-			spin = 0;
-			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KEEPER_HANDS_THROW);
-		}
+		if (vel.Length() > 1000)
+			EmitSound("Ball.Kickhard");
 		else
-		{
-			QAngle ang = m_aPlAng;
-			ang[PITCH] = min(sv_ball_keepershot_minangle.GetFloat(), m_aPlAng[PITCH]);
-			Vector dir;
-			AngleVectors(ang, &dir);
-			vel = dir * GetChargedshotStrength(GetPitchCoeff(false), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
-			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KEEPER_HANDS_KICK);
-
-			if (vel.Length() > 1000)
-				EmitSound("Ball.Kickhard");
-			else
-				EmitSound("Ball.Kicknormal");
-		}
+			EmitSound("Ball.Kicknormal");
 
 		RemoveAllTouches();
 		SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_keeperhands.GetFloat()) + m_vPlForward2D * 36);

@@ -5,7 +5,7 @@
 IMPLEMENT_CLIENTCLASS_DT( C_MatchBall, DT_MatchBall, CMatchBall )
 	RecvPropEHandle(RECVINFO(m_pLastActivePlayer)),
 	RecvPropInt(RECVINFO(m_nLastActiveTeam)),
-	RecvPropBool(RECVINFO(m_bNonnormalshotsBlocked)),
+	RecvPropBool(RECVINFO(m_bChargedshotBlocked)),
 	RecvPropBool(RECVINFO(m_bShotsBlocked)),
 END_RECV_TABLE()
 

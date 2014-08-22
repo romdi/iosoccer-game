@@ -330,30 +330,19 @@ void CPlayerBall::State_KEEPERHANDS_Think()
 
 	Vector vel;
 
-	if (m_pPl->ShotButtonsReleased() && (m_pPl->IsPowershooting() || m_pPl->IsChargedshooting()) && m_pPl->CanShoot())
+	if (m_pPl->ShotButtonsReleased() && m_pPl->IsChargedshooting() && m_pPl->CanShoot())
 	{
-		float spin;
+		QAngle ang = m_aPlAng;
+		ang[PITCH] = min(sv_ball_keepershot_minangle.GetFloat(), m_aPlAng[PITCH]);
+		Vector dir;
+		AngleVectors(ang, &dir);
+		vel = dir * GetChargedshotStrength(GetPitchCoeff(false), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
+		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KEEPER_HANDS_KICK);
 
-		if (m_pPl->IsPowershooting())
-		{
-			vel = vec3_origin;
-			spin = 0;
-			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KEEPER_HANDS_THROW);
-		}
+		if (vel.Length() > 1000)
+			EmitSound("Ball.Kickhard");
 		else
-		{
-			QAngle ang = m_aPlAng;
-			ang[PITCH] = min(sv_ball_keepershot_minangle.GetFloat(), m_aPlAng[PITCH]);
-			Vector dir;
-			AngleVectors(ang, &dir);
-			vel = dir * GetChargedshotStrength(GetPitchCoeff(false), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
-			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KEEPER_HANDS_KICK);
-
-			if (vel.Length() > 1000)
-				EmitSound("Ball.Kickhard");
-			else
-				EmitSound("Ball.Kicknormal");
-		}
+			EmitSound("Ball.Kicknormal");
 
 		SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_keeperhands.GetFloat()) + m_vPlForward2D * 36);
 		m_bSetNewPos = false;

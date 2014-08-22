@@ -92,14 +92,10 @@ ConVar
 	
 	sv_ball_bestshotangle("sv_ball_bestshotangle", "-20", FCVAR_NOTIFY),
 	
-	sv_ball_pitchdown_exponent_normalshot("sv_ball_pitchdown_exponent_normalshot", "2.5", FCVAR_NOTIFY),
-	sv_ball_fixedpitchdowncoeff_normalshot("sv_ball_fixedpitchdowncoeff_normalshot", "0.35", FCVAR_NOTIFY),
-	sv_ball_pitchdown_exponent_nonnormalshot("sv_ball_pitchdown_exponent_nonnormalshot", "2", FCVAR_NOTIFY),
-	sv_ball_fixedpitchdowncoeff_nonnormalshot("sv_ball_fixedpitchdowncoeff_nonnormalshot", "0.37", FCVAR_NOTIFY),
-	sv_ball_pitchup_exponent_normalshot("sv_ball_pitchup_exponent_normalshot", "3", FCVAR_NOTIFY),
-	sv_ball_fixedpitchupcoeff_normalshot("sv_ball_fixedpitchupcoeff_normalshot", "0.35", FCVAR_NOTIFY),
-	sv_ball_pitchup_exponent_nonnormalshot("sv_ball_pitchup_exponent_nonnormalshot", "3", FCVAR_NOTIFY),
-	sv_ball_fixedpitchupcoeff_nonnormalshot("sv_ball_fixedpitchupcoeff_nonnormalshot", "0.35", FCVAR_NOTIFY),
+	sv_ball_pitchdown_exponent("sv_ball_pitchdown_exponent", "3.0", FCVAR_NOTIFY),
+	sv_ball_pitchdown_fixedcoeff("sv_ball_pitchdown_fixedcoeff", "0.3", FCVAR_NOTIFY),
+	sv_ball_pitchup_exponent("sv_ball_pitchup_exponent", "3.0", FCVAR_NOTIFY),
+	sv_ball_pitchup_fixedcoeff("sv_ball_pitchup_fixedcoeff", "0.3", FCVAR_NOTIFY),
 	
 	sv_ball_bestbackspinangle_start("sv_ball_bestbackspinangle_start", "-65", FCVAR_NOTIFY),
 	sv_ball_bestbackspinangle_end("sv_ball_bestbackspinangle_end", "-30", FCVAR_NOTIFY),
@@ -108,16 +104,13 @@ ConVar
 	sv_ball_besttopspinangle_end("sv_ball_besttopspinangle_end", "0", FCVAR_NOTIFY),
 	
 	sv_ball_normalshot_strength("sv_ball_normalshot_strength", "810", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_powershot_strength("sv_ball_powershot_strength", "990", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_chargedshot_minstrength("sv_ball_chargedshot_minstrength", "810", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_chargedshot_maxstrength("sv_ball_chargedshot_maxstrength", "1440", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	
 	sv_ball_normalheader_strength("sv_ball_normalheader_strength", "450", FCVAR_NOTIFY), 
-	sv_ball_powerheader_strength("sv_ball_powerheader_strength", "630", FCVAR_NOTIFY), 
 	sv_ball_chargedheader_minstrength("sv_ball_chargedheader_minstrength", "450", FCVAR_NOTIFY), 
 	sv_ball_chargedheader_maxstrength("sv_ball_chargedheader_maxstrength", "900", FCVAR_NOTIFY), 
 	
-	sv_ball_powerdivingheader_strength("sv_ball_powerdivingheader_strength", "810", FCVAR_NOTIFY), 
 	sv_ball_chargeddivingheader_minstrength("sv_ball_chargeddivingheader_minstrength", "630", FCVAR_NOTIFY), 
 	sv_ball_chargeddivingheader_maxstrength("sv_ball_chargeddivingheader_maxstrength", "990", FCVAR_NOTIFY),
 	
@@ -894,33 +887,15 @@ float CBall::GetPitchCoeff(bool isNormalShot, bool useCamViewAngles /*= false*/)
 
 	if (pitch <= bestAng)
 	{
-		if (isNormalShot)
-		{
-			float upCoeff = sv_ball_fixedpitchupcoeff_normalshot.GetFloat();
-			double upExp = sv_ball_pitchup_exponent_normalshot.GetFloat();
-			coeff = upCoeff + (1 - upCoeff) * pow(cos((pitch - bestAng) / (mp_pitchup.GetFloat() - bestAng) * M_PI / 2), upExp);		
-		}
-		else
-		{
-			float upCoeff = sv_ball_fixedpitchupcoeff_nonnormalshot.GetFloat();
-			double upExp = sv_ball_pitchup_exponent_nonnormalshot.GetFloat();
-			coeff = upCoeff + (1 - upCoeff) * pow(cos((pitch - bestAng) / (mp_pitchup.GetFloat() - bestAng) * M_PI / 2), upExp);
-		}
+		float upCoeff = sv_ball_pitchup_fixedcoeff.GetFloat();
+		double upExp = sv_ball_pitchup_exponent.GetFloat();
+		coeff = upCoeff + (1 - upCoeff) * pow(cos((pitch - bestAng) / (mp_pitchup.GetFloat() - bestAng) * M_PI / 2), upExp);		
 	}
 	else
 	{
-		if (isNormalShot)
-		{
-			float downCoeff = sv_ball_fixedpitchdowncoeff_normalshot.GetFloat();
-			double downExp = sv_ball_pitchdown_exponent_normalshot.GetFloat();
-			coeff = downCoeff + (1 - downCoeff) * pow(cos((pitch - bestAng) / (mp_pitchdown.GetFloat() - bestAng) * M_PI / 2), downExp);		
-		}
-		else
-		{
-			float downCoeff = sv_ball_fixedpitchdowncoeff_nonnormalshot.GetFloat();
-			double downExp = sv_ball_pitchdown_exponent_nonnormalshot.GetFloat();
-			coeff = downCoeff + (1 - downCoeff) * pow(cos((pitch - bestAng) / (mp_pitchdown.GetFloat() - bestAng) * M_PI / 2), downExp);		
-		}
+		float downCoeff = sv_ball_pitchdown_fixedcoeff.GetFloat();
+		double downExp = sv_ball_pitchdown_exponent.GetFloat();
+		coeff = downCoeff + (1 - downCoeff) * pow(cos((pitch - bestAng) / (mp_pitchdown.GetFloat() - bestAng) * M_PI / 2), downExp);
 	}
 
 	//DevMsg("coeff: %.2f\n", coeff);
@@ -929,11 +904,6 @@ float CBall::GetPitchCoeff(bool isNormalShot, bool useCamViewAngles /*= false*/)
 }
 
 float CBall::GetNormalshotStrength(float coeff, int strength)
-{
-	return coeff * strength;
-}
-
-float CBall::GetPowershotStrength(float coeff, int strength)
 {
 	return coeff * strength;
 }
@@ -1036,8 +1006,6 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 
 	if (m_pPl->IsNormalshooting())
 		shotStrength = GetNormalshotStrength(GetPitchCoeff(true, useCamViewAngles), sv_ball_normalshot_strength.GetInt());
-	else if (m_pPl->IsPowershooting())
-		shotStrength = GetPowershotStrength(GetPitchCoeff(false, useCamViewAngles), sv_ball_powershot_strength.GetInt());
 	else
 		shotStrength = GetChargedshotStrength(GetPitchCoeff(false, useCamViewAngles), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
 
@@ -1088,8 +1056,6 @@ bool CBall::DoVolleyShot()
 
 	if (m_pPl->IsNormalshooting())
 		shotStrength = GetNormalshotStrength(GetPitchCoeff(true), sv_ball_normalshot_strength.GetInt());
-	else if (m_pPl->IsPowershooting())
-		shotStrength = GetPowershotStrength(GetPitchCoeff(false), sv_ball_powershot_strength.GetInt());
 	else
 		shotStrength = GetChargedshotStrength(GetPitchCoeff(false), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
 
@@ -1135,10 +1101,7 @@ bool CBall::DoHeader()
 		Vector forward;
 		AngleVectors(QAngle(-5, m_aPlAng[YAW], 0), &forward, NULL, NULL);
 
-		if (m_pPl->IsPowershooting())
-			vel = forward * GetPowershotStrength(1.0f, sv_ball_powerdivingheader_strength.GetInt());
-		else
-			vel = forward * GetChargedshotStrength(1.0f, sv_ball_chargeddivingheader_minstrength.GetInt(), sv_ball_chargeddivingheader_maxstrength.GetInt());
+		vel = forward * GetChargedshotStrength(1.0f, sv_ball_chargeddivingheader_minstrength.GetInt(), sv_ball_chargeddivingheader_maxstrength.GetInt());
 
 		EmitSound("Ball.Kickhard");
 		EmitSound("Player.DivingHeader");
@@ -1147,10 +1110,7 @@ bool CBall::DoHeader()
 	}
 	else
 	{
-		if (m_pPl->IsPowershooting())
-			vel = m_vPlForward * GetPowershotStrength(GetPitchCoeff(false), sv_ball_powerheader_strength.GetInt());
-		else
-			vel = m_vPlForward * GetChargedshotStrength(GetPitchCoeff(false), sv_ball_chargedheader_minstrength.GetInt(), sv_ball_chargedheader_maxstrength.GetInt());
+		vel = m_vPlForward * GetChargedshotStrength(GetPitchCoeff(false), sv_ball_chargedheader_minstrength.GetInt(), sv_ball_chargedheader_maxstrength.GetInt());
 
 		if (vel.Length() > 1000)
 			EmitSound("Ball.Kickhard");

@@ -1582,12 +1582,12 @@ void CSDKPlayer::ResetFlags()
 
 bool CSDKPlayer::IsNormalshooting()
 {
-	return (m_nButtons & IN_ATTACK) != 0;
+	return m_nButtons & IN_ATTACK;
 }
 
-bool CSDKPlayer::IsPowershooting()
+bool CSDKPlayer::IsSkillshooting()
 {
-	return ((m_nButtons & IN_ALT1) != 0);
+	return m_nButtons & IN_ALT1;
 }
 
 bool CSDKPlayer::IsChargedshooting()
@@ -1597,7 +1597,7 @@ bool CSDKPlayer::IsChargedshooting()
 
 bool CSDKPlayer::IsShooting()
 {
-	return IsNormalshooting() || IsPowershooting() || IsChargedshooting();
+	return IsNormalshooting() /*|| IsSkillshooting() */|| IsChargedshooting();
 }
 
 bool CSDKPlayer::CanShoot()
@@ -1607,7 +1607,7 @@ bool CSDKPlayer::CanShoot()
 
 bool CSDKPlayer::ShotButtonsPressed()
 {
-	return ((m_nButtons & (IN_ATTACK | (IN_ATTACK2 | IN_ALT1 | IN_ALT2))) != 0);
+	return m_nButtons & (IN_ATTACK | IN_ATTACK2 | IN_ALT1);
 }
 
 bool CSDKPlayer::ShotButtonsReleased()

@@ -80,7 +80,7 @@ public:
 	CNetworkHandle(CSDKPlayer, m_pLastActivePlayer);
 	CNetworkVar(int, m_nLastActiveTeam);
 
-	CNetworkVar(bool, m_bNonnormalshotsBlocked);
+	CNetworkVar(bool, m_bChargedshotBlocked);
 	CNetworkVar(bool, m_bShotsBlocked);
 
 	CHandle<CSDKPlayer>	m_pTurnoverPlayer;

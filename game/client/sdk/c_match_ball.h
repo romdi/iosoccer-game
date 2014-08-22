@@ -22,7 +22,7 @@ public:
 
 	CHandle<C_SDKPlayer> m_pLastActivePlayer;
 	int m_nLastActiveTeam;
-	bool m_bNonnormalshotsBlocked;
+	bool m_bChargedshotBlocked;
 	bool m_bShotsBlocked;
 };
 
