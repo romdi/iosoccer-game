@@ -639,7 +639,9 @@ bool CBall::CheckCollision()
 
 		if (UseDribblingCollision())
 		{
-			if (DotProduct2D(m_vVel.AsVector2D(), m_vPlVel.AsVector2D()) >= 0 && DotProduct2D(m_vVel.AsVector2D(), dirToBall.AsVector2D()) >= 0)
+			if (DotProduct2D(m_vVel.AsVector2D(), m_vPlVel.AsVector2D()) >= 0
+				&& DotProduct2D(m_vVel.AsVector2D(), dirToBall.AsVector2D()) >= 0
+				&& DotProduct2D(m_vPlVel.AsVector2D(), dirToBall.AsVector2D()) >= 0)
 			{
 				collisionCoeff = sv_ball_dribbling_collisioncoeff.GetFloat();
 				ballMass = sv_ball_dribbling_mass.GetFloat();
