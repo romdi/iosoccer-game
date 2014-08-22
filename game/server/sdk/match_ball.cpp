@@ -427,7 +427,7 @@ void CMatchBall::State_THROWIN_Think()
 
 		Vector dir;
 		AngleVectors(ang, &dir);
-		float strength = GetChargedshotStrength(GetPitchCoeff(false), sv_ball_chargedthrow_minstrength.GetInt(), sv_ball_chargedthrow_maxstrength.GetInt());
+		float strength = GetChargedshotStrength(GetPitchCoeff(), sv_ball_chargedthrow_minstrength.GetInt(), sv_ball_chargedthrow_maxstrength.GetInt());
 
 		Vector vel = dir * max(strength, sv_ball_throwin_minstrength.GetInt());
 
@@ -1132,7 +1132,7 @@ void CMatchBall::State_KEEPERHANDS_Think()
 		ang[PITCH] = min(sv_ball_keepershot_minangle.GetFloat(), m_aPlAng[PITCH]);
 		Vector dir;
 		AngleVectors(ang, &dir);
-		vel = dir * GetChargedshotStrength(GetPitchCoeff(false), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
+		vel = dir * GetChargedshotStrength(GetPitchCoeff(), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KEEPER_HANDS_KICK);
 
 		if (vel.Length() > 1000)

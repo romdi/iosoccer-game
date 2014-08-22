@@ -211,7 +211,7 @@ protected:
 	bool			DoVolleyShot();
 	bool			DoHeader();
 	AngularImpulse	CalcSpin(float coeff, int spinFlags);
-	float			GetPitchCoeff(bool isNormalShot, bool useCamViewAngles = false);
+	float			GetPitchCoeff();
 	float			GetNormalshotStrength(float coeff, int strength);
 	float			GetPowershotStrength(float coeff, int strength);
 	float			GetChargedshotStrength(float coeff, int minStrength, int maxStrength);

@@ -1713,75 +1713,6 @@ bool CGameMovement::CheckPlayerAnimEvent()
 		{
 			return false;
 		}
-	case PLAYERANIMEVENT_ROULETTE_CLOCKWISE:
-	case PLAYERANIMEVENT_ROULETTE_CC:
-		{
-			const float duration = 0.75f;
-
-			if (timePassed > duration)
-			{
-				pPl->DoAnimationEvent(PLAYERANIMEVENT_NONE);
-				return false;
-			}
-
-			Vector startDir;
-			QAngle startAng = pPl->m_Shared.GetAnimEventStartAngle();
-			startAng[YAW] += 30 * (pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_ROULETTE_CLOCKWISE ? -1 : 1);
-			startAng[PITCH] = 0;
-
-			AngleVectors(startAng, &startDir);
-
-			mv->m_vecVelocity = startDir * mp_runspeed.GetInt();
-			mv->m_vecVelocity.z = 185;
-			QAngle ang = startAng;
-			ang[YAW] += min(1.0f, timePassed / duration) * 360 * (pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_ROULETTE_CLOCKWISE ? 1 : -1);
-			mv->m_vecViewAngles = ang;
-
-#ifdef GAME_DLL
-			pPl->SnapEyeAngles(ang);
-#else
-			pPl->SetViewAngles(ang);
-#endif
-
-			break;
-		}
-	case PLAYERANIMEVENT_BALL_HOP:
-		{
-			const float duration = 0.66f;
-
-			if (timePassed > duration)
-			{
-				pPl->DoAnimationEvent(PLAYERANIMEVENT_NONE);
-				return false;
-			}
-
-			mv->m_vecVelocity = forward2D * (pPl->m_Shared.GetAnimEventStartButtons() & IN_FORWARD ? mp_walkspeed.GetInt() : 0);
-			mv->m_vecVelocity.z = 175;
-
-			break;
-		}
-	//case PLAYERANIMEVENT_BALL_ROLL_LEFT:
-	//case PLAYERANIMEVENT_BALL_ROLL_RIGHT:
-	//	{
-	//		
-
-	//		break;
-	//	}
-	//case PLAYERANIMEVENT_FAKE_SHOT:
-	//	{
-	//		const float duration = 0.5f;
-
-	//		if (timePassed > duration)
-	//		{
-	//			pPl->DoAnimationEvent(PLAYERANIMEVENT_NONE);
-	//			return false;
-	//		}
-
-	//		mv->m_vecVelocity = forward2D * (pPl->m_Shared.GetAnimEventStartButtons() & IN_FORWARD ? mp_walkspeed.GetInt() : 0);
-	//		mv->m_vecVelocity.z = 175;
-
-	//		break;
-	//	}
 	default:
 		{
 			return false;
@@ -1934,16 +1865,7 @@ bool CGameMovement::CheckJumpButton( void )
 	team = pPl->GetTeamNumber();
 #endif
 
-	if ((mv->m_nButtons & IN_RELOAD) && (!isKeeper || !pPl->m_pHoldingBall))
-	{
-		if (mv->m_nButtons & IN_MOVERIGHT)
-			animEvent = PLAYERANIMEVENT_ROULETTE_CLOCKWISE;
-		else if (mv->m_nButtons & IN_MOVELEFT)
-			animEvent = PLAYERANIMEVENT_ROULETTE_CC;
-		else
-			animEvent = PLAYERANIMEVENT_BALL_HOP;
-	}
-	else if (isKeeper && pPl->m_nInPenBoxOfTeam == team && !pPl->m_pHoldingBall)
+	if (isKeeper && pPl->m_nInPenBoxOfTeam == team && !pPl->m_pHoldingBall)
 	{
 		MoveHelper()->StartSound( mv->GetAbsOrigin(), "Player.DiveKeeper" );
 
@@ -2037,11 +1959,7 @@ bool CGameMovement::CheckSlideButton()
 		team = pPl->GetTeamNumber();
 	#endif
 
-	if (mv->m_nButtons & IN_RELOAD)
-	{
-		animEvent = PLAYERANIMEVENT_NONE;
-	}
-	else if (isKeeper && pPl->m_nInPenBoxOfTeam == team && !pPl->m_pHoldingBall)
+	if (isKeeper && pPl->m_nInPenBoxOfTeam == team && !pPl->m_pHoldingBall)
 	{
 		if ((mv->m_nButtons & IN_FORWARD) && !(mv->m_nButtons & IN_WALK))
 		{
@@ -3108,10 +3026,6 @@ void CGameMovement::SetPlayerSpeed()
 	else if (mv->m_nButtons & IN_WALK)
 	{
 		flMaxSpeed = mp_walkspeed.GetInt();
-	}
-	else if ((mv->m_nButtons & IN_RELOAD) && ((mv->m_nButtons & IN_DUCK) || (mv->m_nButtons & IN_MOVELEFT) || (mv->m_nButtons & IN_MOVERIGHT) || (mv->m_nButtons & IN_BACK)))
-	{
-		flMaxSpeed = mp_runspeed.GetInt();
 	}
 	else
 	{

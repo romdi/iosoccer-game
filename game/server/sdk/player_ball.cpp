@@ -336,7 +336,7 @@ void CPlayerBall::State_KEEPERHANDS_Think()
 		ang[PITCH] = min(sv_ball_keepershot_minangle.GetFloat(), m_aPlAng[PITCH]);
 		Vector dir;
 		AngleVectors(ang, &dir);
-		vel = dir * GetChargedshotStrength(GetPitchCoeff(false), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
+		vel = dir * GetChargedshotStrength(GetPitchCoeff(), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KEEPER_HANDS_KICK);
 
 		if (vel.Length() > 1000)
