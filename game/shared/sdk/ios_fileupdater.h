@@ -22,7 +22,7 @@ struct IOSUpdateInfo
 	int filesUpdatedCount;
 	bool restartRequired;
 	bool connectionError;
-	char changelogText[1024];
+	char changelogText[40960];
 	bool changelogDownloaded;
 
 	IOSUpdateInfo()

@@ -77,6 +77,7 @@ CIOSUpdatePanel::CIOSUpdatePanel(VPANEL parent) : BaseClass(NULL, "IOSUpdatePane
 
 	m_eUpdateState = UPDATE_STATE_NONE;
 	m_pUpdateInfo = new IOSUpdateInfo();
+	m_bGoToTextStart = false;
 
 	vgui::ivgui()->AddTickSignal( GetVPanel(), 100 );
 }
@@ -142,6 +143,12 @@ void CIOSUpdatePanel::OnTick()
 {
 	BaseClass::OnTick();
 
+	if (m_bGoToTextStart)
+	{
+		m_pChangelog->GotoTextStart();
+		m_bGoToTextStart = false;
+	}
+
 	if (m_eUpdateState == UPDATE_STATE_READY_TO_CHECK)
 	{
 		m_pInfoText->SetText("");
@@ -194,7 +201,7 @@ void CIOSUpdatePanel::OnTick()
 				// We have to use InsertString or the \r won't be filtered out and there will be extra newlines
 				m_pChangelog->SetText("");
 				m_pChangelog->InsertString(m_pUpdateInfo->changelogText);
-				m_pChangelog->GotoTextStart();
+				m_bGoToTextStart = true;
 			}
 
 			if (m_pUpdateInfo->filesToUpdateCount > 0)

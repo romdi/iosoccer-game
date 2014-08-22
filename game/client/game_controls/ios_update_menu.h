@@ -56,6 +56,7 @@ protected:
 	IOSUpdateInfo *m_pUpdateInfo;
 	ProgressBar *m_pProgressBar;
 	RichText *m_pChangelog;
+	bool m_bGoToTextStart;
 };
 
 class IIOSUpdateMenu
