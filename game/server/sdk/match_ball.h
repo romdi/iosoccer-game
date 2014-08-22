@@ -102,6 +102,7 @@ public:
 	bool			m_bIsAdvantage;
 	float			m_flFoulTime;
 	bool			m_bIsPenalty;
+	int				m_nTeam;
 };
 
 extern CMatchBall *GetMatchBall();

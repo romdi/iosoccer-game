@@ -49,6 +49,10 @@
 #include "renderparm.h"
 #include "con_nprint.h"
 #include "sdk_gamerules.h"
+#include "c_sdk_player.h"
+#include "c_match_ball.h"
+#include "ios_camera.h"
+#include "c_ios_replaymanager.h"
 
 #ifdef PORTAL
 //#include "C_Portal_Player.h"
@@ -1869,14 +1873,16 @@ void CViewRender::RenderView( const CViewSetup &view, int nClearFlags, int whatT
 
 		g_pClientShadowMgr->AdvanceFrame();
 
-	#ifdef USE_MONITORS
-		if ( cl_drawmonitors.GetBool() && 
-			( g_pMaterialSystemHardwareConfig->GetDXSupportLevel() >= 70 ) &&
-			( ( whatToDraw & RENDERVIEW_SUPPRESSMONITORRENDERING ) == 0 ) )
-		{
-			DrawMonitors( view );	
-		}
-	#endif
+	//#ifdef USE_MONITORS
+	//	if ( cl_drawmonitors.GetBool() && 
+	//		( g_pMaterialSystemHardwareConfig->GetDXSupportLevel() >= 70 ) &&
+	//		( ( whatToDraw & RENDERVIEW_SUPPRESSMONITORRENDERING ) == 0 ) )
+	//	{
+	//		DrawMonitors( view );	
+	//	}
+	//#endif
+
+		DrawTVScreen(view);
 
 		g_bRenderingView = true;
 
@@ -1973,6 +1979,8 @@ void CViewRender::RenderView( const CViewSetup &view, int nClearFlags, int whatT
 		SDKGameRules()->DrawGoalTeamCrests();
 
 		SDKGameRules()->DrawOffsideLines();
+
+		SDKGameRules()->DrawCelebScreen();
 
 		// Overlay screen fade on entire screen
 		IMaterial* pMaterial = blend ? m_ModulateSingleColor : m_TranslucentSingleColor;
@@ -2957,6 +2965,48 @@ void CViewRender::DrawMonitors( const CViewSetup &cameraView )
 #endif // USE_MONITORS
 }
 
+void CViewRender::DrawTVScreen( const CViewSetup &viewSet )
+{
+	C_SDKPlayer *pPl = C_SDKPlayer::GetLocalSDKPlayer();
+	if(!pPl)
+		return;
+
+	if (!GetMatchBall() || GetMatchBall()->m_eBallState != BALL_STATE_GOAL)
+		return;
+
+	if (GetReplayManager() && GetReplayManager()->IsReplaying())
+		return;
+
+	if (!(pPl->GetFlags() & FL_CELEB))
+		return;
+
+	//Copy our current View.
+	CViewSetup screenView = viewSet;
+ 
+	//Get our camera render target.
+	ITexture *pRenderTarget = GetCameraTexture();
+ 
+	//Our view information, Origin, View Direction, window size
+	//	location on material, and visual ratios.
+	screenView.width = 1024;
+	screenView.height = 1024;
+	screenView.x = 0;
+	screenView.y = 0;
+	//screenView.origin = localPlayer->GetAbsOrigin() + Vector( 0, 0, 50);
+	//screenView.angles = localPlayer->GetRenderAngles();
+	//screenView.angles.x += 30;
+	//screenView.angles.y = AngleNormalize( screenView.angles.y + 180 );
+	//screenView.fov = localPlayer->GetFOV();
+	screenView.m_bOrtho = false;
+	screenView.m_flAspectRatio = 1.0f;
+
+	Camera()->CalcTVCamView(screenView.origin, screenView.angles, screenView.fov, false);
+ 
+	//Set the view up and output the scene to our RenderTarget (Camera Material).
+ 	render->Push3DView(screenView, VIEW_CLEAR_DEPTH | VIEW_CLEAR_COLOR, pRenderTarget, m_Frustum);
+	ViewDrawScene(false, SKYBOX_2DSKYBOX_VISIBLE, screenView, 0, VIEW_MONITOR);
+ 	render->PopView(m_Frustum);
+}
 
 //-----------------------------------------------------------------------------
 //

@@ -23,6 +23,9 @@ extern void Bot_RunAll( void );
 	#include "c_sdk_player.h"
 	#include "c_team.h"
 	#include "igameresources.h"
+	#include "ios_camera.h"
+	#include "c_match_ball.h"
+	#include "c_ios_replaymanager.h"
 
 #else
 	
@@ -3223,6 +3226,70 @@ void CSDKGameRules::DrawOffsideLines()
 		DrawOffsideLine(m_pOffsideLineMaterial, m_flOffsideLineOffsidePlayerPosY, Vector(1, 0, 0));
 		//DrawOffsideLine(m_pOffsideLineMaterial, m_flOffsideLinePlayerY);
 	}
+}
+
+void CSDKGameRules::DrawCelebScreen()
+{
+	C_SDKPlayer *pPl = C_SDKPlayer::GetLocalSDKPlayer();
+	if(!pPl)
+		return;
+
+	if (!GetMatchBall() || GetMatchBall()->m_eBallState != BALL_STATE_GOAL)
+		return;
+
+	if (GetReplayManager() && GetReplayManager()->IsReplaying())
+		return;
+
+	if (!(pPl->GetFlags() & FL_CELEB))
+		return;
+
+	C_BaseEntity *pTarget = GetMatchBall()->m_pLastActivePlayer;
+	if (!pTarget)
+		return;
+
+	char *material = "_rt_celebcam";
+	float size = 50;
+	Vector origin;
+	QAngle angles;
+	float fov;
+
+	Camera()->CalcTVCamView(origin, angles, fov, false);
+
+	Vector forward, right, up;
+	AngleVectors(angles, &forward, &right, &up);
+
+	Vector dir = C_SDKPlayer::GetLocalSDKPlayer()->GetLocalOrigin() - origin;
+	dir.NormalizeInPlace();
+	VectorVectors(dir, right, up);
+
+	CMatRenderContextPtr pRenderContext( materials );
+	IMaterial *pPreviewMaterial = materials->FindMaterial( material, TEXTURE_GROUP_CLIENT_EFFECTS );
+	pRenderContext->Bind( pPreviewMaterial );
+	IMesh *pMesh = pRenderContext->GetDynamicMesh();
+	CMeshBuilder meshBuilder;
+	meshBuilder.Begin( pMesh, MATERIAL_QUADS, 1 );
+
+	meshBuilder.Color4f( 1.0, 1.0, 1.0, 0.5 );
+	meshBuilder.TexCoord2f( 0,0,1 );
+	meshBuilder.Position3fv( (origin + (-right * size) + (-up * size)).Base() );
+	meshBuilder.AdvanceVertex();
+
+	meshBuilder.Color4f( 1.0, 1.0, 1.0, 0.5 );
+	meshBuilder.TexCoord2f( 0,1,1 );
+	meshBuilder.Position3fv( (origin + (right * size) + (-up * size)).Base() );
+	meshBuilder.AdvanceVertex();
+
+	meshBuilder.Color4f( 1.0, 1.0, 1.0, 0.5 );
+	meshBuilder.TexCoord2f( 0,1,0 );
+	meshBuilder.Position3fv( (origin + (right * size) + (up * size)).Base() );
+	meshBuilder.AdvanceVertex();
+
+	meshBuilder.Color4f( 1.0, 1.0, 1.0, 0.5 );
+	meshBuilder.TexCoord2f( 0,0,0 );
+	meshBuilder.Position3fv( (origin + (-right * size) + (up * size)).Base() );
+	meshBuilder.AdvanceVertex();
+	meshBuilder.End();
+	pMesh->Draw();
 }
 
 float CSDKGameRules::GetDaytime()

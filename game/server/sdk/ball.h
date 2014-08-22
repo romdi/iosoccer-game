@@ -233,7 +233,6 @@ protected:
 	QAngle			m_aAng;
 	AngularImpulse	m_vRot;
 
-	int				m_nTeam;				  //team the ball can be kicked	by (during a corner	etc) (0=any)
 	int				m_nInPenBoxOfTeam;	 //-1 =	not	in box,	0,1	= teams	box
 
 	bool			m_bHasQueuedState;

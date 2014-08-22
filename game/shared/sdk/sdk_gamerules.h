@@ -410,6 +410,7 @@ public:
 	void DrawSprayLine();
 	void DrawGoalTeamCrests();
 	void DrawOffsideLines();
+	void DrawCelebScreen();
 	void DrawSkyboxOverlay();
 	float GetDaytime();
 

@@ -78,12 +78,12 @@ public:
 	virtual void		CalcView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
 	void				ThirdpersonThink(Vector &camOffset, QAngle &camViewAngles);
 
-protected:
+	void CalcChaseCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov);
+	void CalcRoamingView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov);
+	void CalcTVCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov, bool setViewAngles = true);
+	void CalcHawkEyeView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov);
 
-	virtual void		CalcChaseCamView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
-	virtual void		CalcRoamingView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov);
-	virtual void		CalcTVCamView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
-	virtual void		CalcHawkEyeView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
+protected:
 
 	void Accelerate( Vector& wishdir, float wishspeed, float accel );
 
