@@ -960,19 +960,7 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 	}
 	else
 	{
-		Vector dirToBall = m_vPos - m_vPlPos;
-		Vector localDirToBall;
-		VectorIRotate(dirToBall, m_pPl->EntityToWorldTransform(), localDirToBall);
-
-		if (m_pPl->IsNormalshooting() && localDirToBall.x <= sv_ball_rainbowflick_dist.GetFloat() && shotAngle[PITCH] <= sv_ball_rainbowflick_angle.GetFloat())
-		{
-			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEELKICK);
-			spinFlags = FL_SPIN_FORCE_TOP;
-			spinCoeff = sv_ball_rainbowflick_spincoeff.GetFloat();
-		}
-		else
-			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
-
+		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
 		EmitSound("Ball.Touch");
 	}
 
