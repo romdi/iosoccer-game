@@ -7,6 +7,7 @@
 #include "ios_teamkit_parse.h"
 #include "c_match_ball.h"
 #include "vgui/IVgui.h"
+#include "clientmode_shared.h"
 
 extern ConVar
 	autohidespecmenu,
@@ -871,9 +872,9 @@ CSoundSettingPanel::CSoundSettingPanel(Panel *parent, const char *panelName) : B
 	ListenForGameEvent("highlight_redcard");
 	ListenForGameEvent("own_goal");
 	ListenForGameEvent("foul");
-	ListenForGameEvent("penalty");
 	ListenForGameEvent("wakeupcall");
 	ListenForGameEvent("kickoff");
+	ListenForGameEvent("penalty_shootout");
 
 	m_bIsFirstTick = true;
 }
@@ -925,10 +926,60 @@ void CSoundSettingPanel::FireGameEvent(IGameEvent *event)
 			enginesound->StopSoundByGuid(m_nCrowdEventGuid);
 
 		char *soundnames[3] = { "crowd/goal1.wav", "crowd/goal2.wav", "crowd/goal3.mp3" };
-		char drymix[512];
+		char drymix[128];
 		Q_snprintf(drymix, sizeof(drymix), "#%s", soundnames[g_IOSRand.RandomInt(0, 2)]);
 		enginesound->EmitAmbientSound(drymix, MUTED_VOLUME,	PITCH_NORM,	0, 0);
 		m_nCrowdEventGuid = enginesound->GetGuidForLastSoundEmitted();
+	}
+	else if (!Q_strcmp(event->GetName(), "penalty_shootout"))
+	{
+		C_SDKPlayer *pTaker = ToSDKPlayer(USERID2PLAYER(event->GetInt("taker_userid")));
+		int takingTeam = event->GetInt("taking_team");
+		C_SDKPlayer *pKeeper = ToSDKPlayer(USERID2PLAYER(event->GetInt("keeper_userid")));
+		penalty_state_t penaltyState = (penalty_state_t)event->GetInt("penalty_state");
+
+		bool cheer = false;
+
+		switch (penaltyState)
+		{
+		case PENALTY_ASSIGNED:
+			{
+				cheer = false;
+			}
+			break;
+		case PENALTY_SCORED:
+			{
+				cheer = true;
+			}
+			break;
+		case PENALTY_SAVED:
+			{
+				cheer = true;
+			}
+			break;
+		case PENALTY_MISSED:
+			{
+				cheer = true;
+			}
+			break;
+		default:
+			{
+				cheer = false;
+			}
+			break;
+		}
+
+		if (cheer)
+		{
+			if (m_nCrowdEventGuid && enginesound->IsSoundStillPlaying(m_nCrowdEventGuid))
+				enginesound->StopSoundByGuid(m_nCrowdEventGuid);
+
+			char *soundnames[3] = { "crowd/goal1.wav", "crowd/goal2.wav", "crowd/goal3.mp3" };
+			char drymix[128];
+			Q_snprintf(drymix, sizeof(drymix), "#%s", soundnames[g_IOSRand.RandomInt(0, 2)]);
+			enginesound->EmitAmbientSound(drymix, MUTED_VOLUME,	PITCH_NORM,	0, 0);
+			m_nCrowdEventGuid = enginesound->GetGuidForLastSoundEmitted();
+		}
 	}
 }
 

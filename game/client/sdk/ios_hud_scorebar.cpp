@@ -388,11 +388,11 @@ void CHudScorebar::Init( void )
 	ListenForGameEvent("highlight_redcard");
 	ListenForGameEvent("own_goal");
 	ListenForGameEvent("foul");
-	ListenForGameEvent("penalty");
 	ListenForGameEvent("wakeupcall");
 	ListenForGameEvent("kickoff");
 	ListenForGameEvent("transition");
 	ListenForGameEvent("match_restart");
+	ListenForGameEvent("penalty_shootout");
 }
 
 void CHudScorebar::ApplySettings( KeyValues *inResourceData )
@@ -1082,16 +1082,61 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 		m_pExtraInfo->SetText(text);
 		m_pExtraInfo->SetVisible(showExtraInfo);
 	}
-	else if (!Q_strcmp(event->GetName(), "penalty"))
+	else if (!Q_strcmp(event->GetName(), "penalty_shootout"))
 	{
-		C_SDKPlayer *pTaker = ToSDKPlayer(USERID2PLAYER(event->GetInt("taking_player_userid")));
+		C_SDKPlayer *pTaker = ToSDKPlayer(USERID2PLAYER(event->GetInt("taker_userid")));
+		int takingTeam = event->GetInt("taking_team");
+		C_SDKPlayer *pKeeper = ToSDKPlayer(USERID2PLAYER(event->GetInt("keeper_userid")));
+		penalty_state_t penaltyState = (penalty_state_t)event->GetInt("penalty_state");
 
-		m_pNotifications[0]->SetText(VarArgs("PENALTY: %s", GetGlobalTeam(event->GetInt("taking_team"))->GetCode()));
-
-		if (pTaker)
+		switch (penaltyState)
 		{
-			m_pNotifications[1]->SetText(VarArgs("%s", pTaker->GetPlayerName()));
-			m_pNotificationPanel->SetTall(2 * NOTIFICATION_HEIGHT);
+		case PENALTY_ASSIGNED:
+			{
+				m_pNotifications[0]->SetText(VarArgs("PENALTY: %s", GetGlobalTeam(takingTeam)->GetCode()));
+
+				if (pTaker)
+				{
+					m_pNotifications[1]->SetText(VarArgs("TAKER: %s", pTaker->GetPlayerName()));
+					m_pNotificationPanel->SetTall(2 * NOTIFICATION_HEIGHT);
+				}
+			}
+			break;
+		case PENALTY_SCORED:
+			{
+				m_pNotifications[0]->SetText(VarArgs("PENALTY: %s", GetGlobalTeam(takingTeam)->GetCode()));
+
+				if (pTaker)
+				{
+					m_pNotifications[1]->SetText(VarArgs("GOAL: %s", pTaker->GetPlayerName()));
+					m_pNotificationPanel->SetTall(2 * NOTIFICATION_HEIGHT);
+				}
+			}
+			break;
+		case PENALTY_SAVED:
+			{
+				m_pNotifications[0]->SetText(VarArgs("PENALTY: %s", GetGlobalTeam(takingTeam)->GetCode()));
+
+				if (pKeeper)
+				{
+					m_pNotifications[1]->SetText(VarArgs("SAVE: %s", pKeeper->GetPlayerName()));
+					m_pNotificationPanel->SetTall(2 * NOTIFICATION_HEIGHT);
+				}
+			}
+			break;
+		case PENALTY_MISSED:
+			{
+				m_pNotifications[0]->SetText(VarArgs("PENALTY: %s", GetGlobalTeam(takingTeam)->GetCode()));
+
+				if (pTaker)
+				{
+					m_pNotifications[1]->SetText(VarArgs("MISS: %s", pTaker->GetPlayerName()));
+					m_pNotificationPanel->SetTall(2 * NOTIFICATION_HEIGHT);
+				}
+			}
+			break;
+		default:
+			return;
 		}
 
 		m_eCurMatchEvent = MATCH_EVENT_PENALTY;

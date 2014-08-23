@@ -284,7 +284,11 @@ void CMatchBall::State_NORMAL_Think()
 	if (SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES)
 	{
 		if (m_ePenaltyState == PENALTY_KICKED)
-			m_pPl = FindNearestPlayer(m_nFoulingTeam, FL_POS_KEEPER, true);
+		{
+			m_pPl = GetGlobalTeam(m_nFoulingTeam)->GetPlayerByPosType(POS_GK);
+			if (!m_pPl->IsShooting())
+				m_pPl = NULL;
+		}
 		else
 			m_pPl = NULL;
 
@@ -606,7 +610,7 @@ void CMatchBall::State_GOALKICK_Think()
 			m_pPl = m_pSetpieceTaker;
 
 		if (!m_pPl)
-			m_pPl = FindNearestPlayer(LastOppTeam(false), FL_POS_KEEPER);
+			m_pPl = GetGlobalTeam(LastOppTeam(false))->GetPlayerByPosType(POS_GK);
 
 		if (!m_pPl)
 			m_pPl = FindNearestPlayer(LastOppTeam(false));
@@ -832,7 +836,7 @@ void CMatchBall::State_FREEKICK_Think()
 			m_pPl = m_pSetpieceTaker;
 
 		if (!m_pPl && (m_vPos - GetGlobalTeam(m_nFouledTeam)->m_vGoalCenter).Length2D() <= sv_ball_freekickdist_owngoal.GetInt()) // Close to own goal
-			m_pPl = FindNearestPlayer(m_nFouledTeam, FL_POS_KEEPER);
+			m_pPl = GetGlobalTeam(m_nFouledTeam)->GetPlayerByPosType(POS_GK);
 
 		if (!CSDKPlayer::IsOnField(m_pPl) || m_pPl->GetTeamPosType() == POS_GK && m_pPl->IsBot())
 			m_pPl = FindNearestPlayer(m_nFouledTeam, FL_POS_FIELD);
@@ -923,7 +927,7 @@ void CMatchBall::State_PENALTY_Think()
 
 			if (!CSDKPlayer::IsOnField(m_pPl, m_nFouledTeam))
 			{
-				m_ePenaltyState = PENALTY_ABORTED_NO_TAKER;
+				SetPenaltyState(PENALTY_ABORTED_NO_TAKER);
 				return State_Transition(BALL_STATE_NORMAL);
 			}
 		}
@@ -951,16 +955,16 @@ void CMatchBall::State_PENALTY_Think()
 	{
 		if (SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES)
 		{
-			m_pOtherPl = FindNearestPlayer(m_pPl->GetOppTeamNumber(), FL_POS_KEEPER);
+			m_pOtherPl = GetGlobalTeam(m_pPl->GetOppTeamNumber())->GetPlayerByPosType(POS_GK);
 			if (!m_pOtherPl)
 			{
-				m_ePenaltyState = PENALTY_ABORTED_NO_KEEPER;
+				SetPenaltyState(PENALTY_ABORTED_NO_KEEPER);
 				return State_Transition(BALL_STATE_NORMAL);
 			}
 		}
 		else
 		{
-			m_pOtherPl = FindNearestPlayer(m_nInPenBoxOfTeam, FL_POS_KEEPER);
+			m_pOtherPl = GetGlobalTeam(m_nInPenBoxOfTeam)->GetPlayerByPosType(POS_GK);
 			if (!m_pOtherPl)
 				return State_Transition(BALL_STATE_NORMAL);
 		}
@@ -1008,10 +1012,15 @@ void CMatchBall::State_PENALTY_Think()
 		&& CanTouchBallXY()
 		&& (m_pPl->IsNormalshooting() || !m_bChargedshotBlocked && m_pPl->IsChargedshooting()))
 	{
-		m_pPl->AddPenalty();
+		if (SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES)
+		{
+			SetPenaltyState(PENALTY_KICKED);
+			m_pPl->m_ePenaltyState = PENALTY_KICKED;
+		}
+		else
+			m_pPl->AddPenalty();
+
 		RemoveAllTouches();
-		m_ePenaltyState = PENALTY_KICKED;
-		m_pPl->m_ePenaltyState = PENALTY_KICKED;
 		DoGroundShot(false);
 		State_Transition(BALL_STATE_NORMAL);
 	}
@@ -1039,7 +1048,7 @@ void CMatchBall::State_KEEPERHANDS_Think()
 	{
 		m_pPl = NULL;
 
-		m_pPl = FindNearestPlayer(m_nInPenBoxOfTeam, FL_POS_KEEPER);
+		m_pPl = GetGlobalTeam(m_nInPenBoxOfTeam)->GetPlayerByPosType(POS_GK);
 
 		if (!m_pPl)
 			return State_Transition(BALL_STATE_NORMAL);
@@ -1173,7 +1182,7 @@ void CMatchBall::TriggerGoal(int team)
 	{
 		if (m_ePenaltyState == PENALTY_KICKED && m_nTeam == m_nFoulingTeam)
 		{
-			m_ePenaltyState = PENALTY_SCORED;
+			SetPenaltyState(PENALTY_SCORED);
 			m_bHasQueuedState = true;
 		}
 
@@ -2028,6 +2037,7 @@ void CMatchBall::SetPenaltyTaker(CSDKPlayer *pPl)
 	m_pFouledPl = pPl;
 	m_nFouledTeam = pPl->GetTeamNumber();
 	m_nFoulingTeam = pPl->GetOppTeamNumber();
+	m_pFoulingPl = GetGlobalTeam(m_nFoulingTeam)->GetPlayerByPosType(POS_GK);
 }
 
 // Make sure that all players are walked to the intended positions when setting shields
@@ -2238,5 +2248,20 @@ void CMatchBall::CheckAdvantage()
 				}
 			}
 		}
+	}
+}
+
+void CMatchBall::SetPenaltyState(penalty_state_t penaltyState)
+{
+	m_ePenaltyState = penaltyState;
+
+	IGameEvent *pEvent = gameeventmanager->CreateEvent("penalty_shootout");
+	if (pEvent)
+	{
+		pEvent->SetInt("taking_team", m_nFouledTeam);
+		pEvent->SetInt("taker_userid", m_pFouledPl ? m_pFouledPl->GetUserID() : 0);
+		pEvent->SetInt("keeper_userid", m_pOtherPl ? m_pOtherPl->GetUserID() : (m_pFoulingPl ? m_pFoulingPl->GetUserID() : 0));
+		pEvent->SetInt("penalty_state", m_ePenaltyState);
+		gameeventmanager->FireEvent(pEvent);
 	}
 }

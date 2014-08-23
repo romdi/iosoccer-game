@@ -54,7 +54,7 @@ public:
 	void			UnmarkOffsidePlayers();
 	float			CalcFieldZone();
 	void			UpdatePossession(CSDKPlayer *pNewPossessor);
-	void			SetPenaltyState(penalty_state_t penaltyState) { m_ePenaltyState = penaltyState; }
+	void			SetPenaltyState(penalty_state_t penaltyState);
 	penalty_state_t	GetPenaltyState() { return m_ePenaltyState; }
 	void			SetPenaltyTaker(CSDKPlayer *pPl);
 	bool			PlayersAtTargetPos();

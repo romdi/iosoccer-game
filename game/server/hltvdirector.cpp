@@ -254,7 +254,6 @@ const char** CHLTVDirector::GetModEvents()
 		"kickoff",
 		"match_period",
 		"own_goal",
-		"penalty",
 		"player_changeclub",
 		"player_changenationalteam",
 		"player_changename",
@@ -273,6 +272,7 @@ const char** CHLTVDirector::GetModEvents()
 		"wakeupcall",
 		"transition",
 		"match_restart",
+		"penalty_shootout",
 		NULL
 	};
 

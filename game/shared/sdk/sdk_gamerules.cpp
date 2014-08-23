@@ -1839,6 +1839,7 @@ void CSDKGameRules::State_PENALTIES_Think()
 	if (GetMatchBall()->GetPenaltyState() == PENALTY_KICKED
 		|| GetMatchBall()->GetPenaltyState() == PENALTY_SCORED
 		|| GetMatchBall()->GetPenaltyState() == PENALTY_SAVED
+		|| GetMatchBall()->GetPenaltyState() == PENALTY_MISSED
 		|| GetMatchBall()->GetPenaltyState() == PENALTY_ABORTED_NO_KEEPER
 		|| GetMatchBall()->GetPenaltyState() == PENALTY_ABORTED_ILLEGAL_MOVE)
 	{
@@ -1851,6 +1852,7 @@ void CSDKGameRules::State_PENALTIES_Think()
 			if (GetMatchBall()->GetPenaltyState() == PENALTY_KICKED
 				|| GetMatchBall()->GetPenaltyState() == PENALTY_SCORED
 				|| GetMatchBall()->GetPenaltyState() == PENALTY_SAVED
+				|| GetMatchBall()->GetPenaltyState() == PENALTY_MISSED
 				|| GetMatchBall()->GetPenaltyState() == PENALTY_ABORTED_ILLEGAL_MOVE)
 			{
 				GetMatchBall()->State_Transition(BALL_STATE_NORMAL, 0, true);
@@ -1927,14 +1929,6 @@ void CSDKGameRules::State_PENALTIES_Think()
 
 			if (pPenTaker)
 			{
-				IGameEvent *pEvent = gameeventmanager->CreateEvent("penalty");
-				if (pEvent)
-				{
-					pEvent->SetInt("taking_team", m_nPenaltyTakingTeam);
-					pEvent->SetInt("taking_player_userid", pPenTaker->GetUserID());
-					gameeventmanager->FireEvent(pEvent);
-				}
-
 				GetMatchBall()->SetPenaltyTaker(pPenTaker);
 				GetMatchBall()->SetPenaltyState(PENALTY_ASSIGNED);
 				GetMatchBall()->State_Transition(BALL_STATE_PENALTY, 0, true);
