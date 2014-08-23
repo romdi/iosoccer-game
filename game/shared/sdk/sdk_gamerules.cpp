@@ -1363,6 +1363,26 @@ static void OnMaxPlayersChange(IConVar *var, const char *pOldValue, float flOldV
 
 ConVar mp_maxplayers("mp_maxplayers", "7", FCVAR_NOTIFY|FCVAR_REPLICATED, "Maximum number of players per team <1-11>", true, 1, true, 11, OnMaxPlayersChange);
 
+
+void OnCaptaincyChange(IConVar *var, const char *pOldValue, float flOldValue)
+{
+#ifdef GAME_DLL
+	if (!SDKGameRules())
+		return;
+
+	bool captaincy = ((ConVar*)var)->GetBool();
+
+	if (!captaincy)
+	{
+		for (int team = TEAM_A; team <= TEAM_B; team++)
+			GetGlobalTeam(team)->SetCaptainPosIndex(-1);
+	}
+#endif
+}
+
+ConVar mp_captaincy("mp_captaincy", "1", FCVAR_REPLICATED | FCVAR_NOTIFY, "", &OnCaptaincyChange);
+
+
 ConVar sv_autostartmatch("sv_autostartmatch", "1", FCVAR_NOTIFY|FCVAR_REPLICATED, "");
 ConVar sv_awaytime_warmup("sv_awaytime_warmup", "30", FCVAR_NOTIFY);
 ConVar sv_awaytime_warmup_autospec("sv_awaytime_warmup_autospec", "3600", FCVAR_NOTIFY);
