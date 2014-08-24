@@ -1707,6 +1707,9 @@ bool CMatchBall::CheckFoul(bool canShootBall, const Vector &localDirToBall)
 		else
 			foulType = FOUL_NORMAL_NO_CARD;
 
+		if (!m_bIsAdvantage || !m_bIsPenalty || isPenalty)
+			SetFoulParams(foulType, pPl->GetLocalOrigin(), m_pPl, pPl);
+
 		m_pPl->AddFoul();
 		pPl->AddFoulSuffered();
 
@@ -1760,8 +1763,6 @@ bool CMatchBall::CheckFoul(bool canShootBall, const Vector &localDirToBall)
 		}
 		else
 		{
-			SetFoulParams(foulType, pPl->GetLocalOrigin(), m_pPl, pPl);
-
 			IGameEvent *pEvent = gameeventmanager->CreateEvent("foul");
 			if (pEvent)
 			{
