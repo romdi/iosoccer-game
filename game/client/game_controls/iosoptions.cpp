@@ -83,7 +83,7 @@ enum { APPEARANCE_HOFFSET = 270, APPEARANCE_RADIOBUTTONWIDTH = 70, RENDER_TEXTUR
 
 #define INTERP_VALUES 5
 const int interpValues[INTERP_VALUES] = { 1, 2, 3, 4, 5 };
-const char *interpTexts[INTERP_VALUES] = { "Very Short (1.0)", "Short (2.0)", "Medium (3.0)", "Long (4.0)", "Very Long (5.0)" };
+const char *interpTexts[INTERP_VALUES] = { "Very Short (1)", "Short (2)", "Medium (3)", "Long (4)", "Very Long (5)" };
 #define SMOOTH_VALUES 5
 const int smoothValues[SMOOTH_VALUES] = { 1, 5, 10, 25, 50 };
 const char *smoothTexts[SMOOTH_VALUES] = { "Very Short (0.01s)", "Short (0.05s)", "Medium (0.1s)", "Long (0.25s)", "Very Long (0.5s)" };
@@ -469,7 +469,7 @@ void CNetworkSettingPanel::Load()
 
 	for (int i = 0; i < INTERP_VALUES; i++)
 	{
-		if (interpValues[i] == (int)g_pCVar->FindVar("cl_interp_ratio")->GetFloat())
+		if (interpValues[i] == g_pCVar->FindVar("cl_interp_ratio")->GetInt())
 		{
 			m_pInterpDurationList->ActivateItemByRow(i);
 			break;
@@ -480,7 +480,7 @@ void CNetworkSettingPanel::Load()
 
 	for (int i = 0; i < SMOOTH_VALUES; i++)
 	{
-		if (smoothValues[i] == (int)(g_pCVar->FindVar("cl_smoothtime")->GetFloat() * 100))
+		if (smoothValues[i] == (int)(g_pCVar->FindVar("cl_smoothtime")->GetFloat() * 100 + 0.5f))
 		{
 			m_pSmoothDurationList->ActivateItemByRow(i);
 			break;
