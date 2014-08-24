@@ -1082,6 +1082,7 @@ void CMatchBall::State_KEEPERHANDS_Think()
 	QAngle handAng;
 	m_pPl->GetAttachment("keeperballrighthand", handPos, handAng);
 	handPos.z -= BALL_PHYS_RADIUS;
+	handPos.z = max(handPos.z, SDKGameRules()->m_vKickOff.GetZ());
 	SetPos(handPos, false);
 	SetAng(handAng);
 
