@@ -1948,7 +1948,7 @@ void CMatchBall::UpdatePossession(CSDKPlayer *pNewPossessor)
 	{
 		float duration = gpGlobals->curtime - m_flPossessionStart;
 
-		if (m_pPossessingPl)
+		if (CSDKPlayer::IsOnField(m_pPossessingPl))
 			m_pPossessingPl->AddPossessionTime(duration);
 
 		float total = GetGlobalTeam(TEAM_A)->m_flPossessionTime + GetGlobalTeam(TEAM_B)->m_flPossessionTime;
