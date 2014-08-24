@@ -1121,7 +1121,10 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 	}
 	else if (!Q_stricmp(args[0], "togglecaptaincy"))
 	{
-		if (!mp_captaincy.GetBool() || GetTeamNumber() != TEAM_A && GetTeamNumber() != TEAM_B)
+		if (GetTeamNumber() != TEAM_A && GetTeamNumber() != TEAM_B)
+			return true;
+
+		if (GetTeamNumber() == TEAM_A && !mp_captaincy_home.GetBool() || GetTeamNumber() == TEAM_B && !mp_captaincy_away.GetBool())
 			return true;
 
 		if (this == GetTeam()->GetCaptain())

@@ -76,6 +76,7 @@ extern ConVar
 	mp_timeout_duration,
 	mp_center_notification_top,
 	mp_pitchtexture,
-	mp_captaincy;
+	mp_captaincy_home,
+	mp_captaincy_away;
 
 #endif // CS_GAMEVARS_SHARED_H

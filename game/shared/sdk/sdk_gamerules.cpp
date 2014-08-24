@@ -1364,7 +1364,7 @@ static void OnMaxPlayersChange(IConVar *var, const char *pOldValue, float flOldV
 ConVar mp_maxplayers("mp_maxplayers", "7", FCVAR_NOTIFY|FCVAR_REPLICATED, "Maximum number of players per team <1-11>", true, 1, true, 11, OnMaxPlayersChange);
 
 
-void OnCaptaincyChange(IConVar *var, const char *pOldValue, float flOldValue)
+void OnCaptaincyHomeChange(IConVar *var, const char *pOldValue, float flOldValue)
 {
 #ifdef GAME_DLL
 	if (!SDKGameRules())
@@ -1373,14 +1373,26 @@ void OnCaptaincyChange(IConVar *var, const char *pOldValue, float flOldValue)
 	bool captaincy = ((ConVar*)var)->GetBool();
 
 	if (!captaincy)
-	{
-		for (int team = TEAM_A; team <= TEAM_B; team++)
-			GetGlobalTeam(team)->SetCaptainPosIndex(-1);
-	}
+		GetGlobalTeam(TEAM_A)->SetCaptainPosIndex(-1);
 #endif
 }
 
-ConVar mp_captaincy("mp_captaincy", "1", FCVAR_REPLICATED | FCVAR_NOTIFY, "", &OnCaptaincyChange);
+ConVar mp_captaincy_home("mp_captaincy_home", "1", FCVAR_REPLICATED | FCVAR_NOTIFY, "", &OnCaptaincyHomeChange);
+
+void OnCaptaincyAwayChange(IConVar *var, const char *pOldValue, float flOldValue)
+{
+#ifdef GAME_DLL
+	if (!SDKGameRules())
+		return;
+
+	bool captaincy = ((ConVar*)var)->GetBool();
+
+	if (!captaincy)
+		GetGlobalTeam(TEAM_B)->SetCaptainPosIndex(-1);
+#endif
+}
+
+ConVar mp_captaincy_away("mp_captaincy_away", "1", FCVAR_REPLICATED | FCVAR_NOTIFY, "", &OnCaptaincyAwayChange);
 
 
 ConVar sv_autostartmatch("sv_autostartmatch", "1", FCVAR_NOTIFY|FCVAR_REPLICATED, "");

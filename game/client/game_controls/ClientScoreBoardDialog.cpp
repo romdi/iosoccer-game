@@ -661,7 +661,7 @@ void CClientScoreBoardDialog::Update( void )
 
 		bool isOnField = (pLocal->GetTeamNumber() == TEAM_A || pLocal->GetTeamNumber() == TEAM_B);
 
-		if (mp_captaincy.GetBool() && isOnField)
+		if (pLocal->GetTeamNumber() == TEAM_A && mp_captaincy_home.GetBool() || pLocal->GetTeamNumber() == TEAM_B && mp_captaincy_away.GetBool())
 		{
 			if (GetGlobalTeam(GetLocalPlayerTeam())->GetCaptainPosIndex() == gr->GetTeamPosIndex(GetLocalPlayerIndex()))
 				m_pToggleCaptaincy->SetText("- Captain");
