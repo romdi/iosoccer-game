@@ -127,6 +127,7 @@ ConVar
 	sv_ball_rainbowflick_angle("sv_ball_rainbowflick_angle", "-30", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_rainbowflick_dist("sv_ball_rainbowflick_dist", "-10", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_header_spincoeff("sv_ball_header_spincoeff", "0.5", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_header_maxangle("sv_ball_header_maxangle", "-40", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	
 	sv_ball_highlightsdelay_intermissions("sv_ball_highlightsdelay_intermissions", "5.0", FCVAR_NOTIFY),
 	sv_ball_highlightsdelay_cooldown("sv_ball_highlightsdelay_cooldown", "30.0", FCVAR_NOTIFY),
@@ -1039,7 +1040,17 @@ bool CBall::DoHeader()
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEADER);
 	}
 
-	SetVel(m_vPlForwardVel2D + vel, sv_ball_header_spincoeff.GetFloat(), FL_SPIN_RETAIN_SIDE, BODY_PART_HEAD, false, true, true, sv_ball_header_mindelay.GetFloat());
+	vel = m_vPlForwardVel2D + vel;
+
+	float speed = vel.NormalizeInPlace();
+	QAngle headerAngle;
+	VectorAngles(vel, headerAngle);
+	headerAngle[PITCH] = max(sv_ball_header_maxangle.GetFloat(), headerAngle[PITCH]);
+	AngleVectors(headerAngle, &vel);
+
+	vel *= speed;
+
+	SetVel(vel, sv_ball_header_spincoeff.GetFloat(), FL_SPIN_RETAIN_SIDE, BODY_PART_HEAD, false, true, true, sv_ball_header_mindelay.GetFloat());
 
 	return true;
 }
