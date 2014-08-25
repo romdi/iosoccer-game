@@ -1039,83 +1039,92 @@ bool CBall::DoHeader()
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEADER);
 	}
 
-	SetVel(m_vPlForwardVel2D + vel, sv_ball_header_spincoeff.GetFloat(), FL_SPIN_PERMIT_SIDE, BODY_PART_HEAD, false, true, true, sv_ball_header_mindelay.GetFloat());
+	SetVel(m_vPlForwardVel2D + vel, sv_ball_header_spincoeff.GetFloat(), FL_SPIN_RETAIN_SIDE, BODY_PART_HEAD, false, true, true, sv_ball_header_mindelay.GetFloat());
 
 	return true;
 }
 
 AngularImpulse CBall::CalcSpin(float coeff, int spinFlags)
 {	
-	Vector sideRot = vec3_origin;
-	float sideSpin = 0;
+	Vector worldRot;
 
-	float speedCoeff = pow(sin(RemapValClamped(m_vVel.Length(), sv_ball_dynamicshotdelay_minshotstrength.GetInt(), sv_ball_dynamicshotdelay_maxshotstrength.GetInt(), 0.0f, 1.0f) * M_PI), (double)sv_ball_spin_exponent.GetFloat());
-
-	if (coeff > 0 && (spinFlags & (FL_SPIN_PERMIT_SIDE | FL_SPIN_FORCE_SIDE)))
+	if (spinFlags & FL_SPIN_RETAIN_SIDE)
 	{
-		sideSpin = speedCoeff * sv_ball_spin.GetInt() * coeff;
-
-		if ((m_pPl->m_nButtons & IN_MOVELEFT) && (!(m_pPl->m_nButtons & IN_MOVERIGHT) || m_pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVERIGHT)) 
-		{
-			sideRot = Vector(0, 0, m_pPl->IsLegacySideCurl() ? 1 : -1);
-		}
-		else if ((m_pPl->m_nButtons & IN_MOVERIGHT) && (!(m_pPl->m_nButtons & IN_MOVELEFT) || m_pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVELEFT)) 
-		{
-			sideRot = Vector(0, 0, m_pPl->IsLegacySideCurl() ? -1 : 1);
-		}
+		VectorRotate(m_vRot, EntityToWorldTransform(), worldRot);
+		worldRot.x = 0;
+		worldRot.y = 0;
+		worldRot *= coeff;
 	}
-
-	float pitch = m_aPlAng[PITCH];
-
-	Vector backRot = m_vPlRight;
-	float backSpin = 0;
-
-	Vector topRot = -m_vPlRight;
-	float topSpin = 0;
-
-	if (coeff > 0)
+	else
 	{
-		if ((spinFlags & FL_SPIN_PERMIT_BACK)
-			&& pitch >= sv_ball_bestbackspinangle_start.GetFloat() && pitch <= sv_ball_bestbackspinangle_end.GetFloat()
-			|| (spinFlags & FL_SPIN_FORCE_BACK))
-		{
-			backSpin = speedCoeff * sv_ball_spin.GetInt() * coeff * sv_ball_backspin_coeff.GetFloat();
+		float speedCoeff = pow(sin(RemapValClamped(m_vVel.Length(), sv_ball_dynamicshotdelay_minshotstrength.GetInt(), sv_ball_dynamicshotdelay_maxshotstrength.GetInt(), 0.0f, 1.0f) * M_PI), (double)sv_ball_spin_exponent.GetFloat());
 
-			if (!(spinFlags & FL_SPIN_FORCE_BACK))
-				backSpin *= pow((double)cos(RemapValClamped(pitch, sv_ball_bestbackspinangle_start.GetFloat(), sv_ball_bestbackspinangle_end.GetFloat(), M_PI * 0.5, M_PI * 1.5)), 2.0);
+		Vector sideRot = vec3_origin;
+		float sideSpin = 0;
+
+		if (coeff > 0 && (spinFlags & FL_SPIN_PERMIT_SIDE))
+		{
+			sideSpin = speedCoeff * sv_ball_spin.GetInt() * coeff;
+
+			if ((m_pPl->m_nButtons & IN_MOVELEFT) && (!(m_pPl->m_nButtons & IN_MOVERIGHT) || m_pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVERIGHT)) 
+			{
+				sideRot = Vector(0, 0, m_pPl->IsLegacySideCurl() ? 1 : -1);
+			}
+			else if ((m_pPl->m_nButtons & IN_MOVERIGHT) && (!(m_pPl->m_nButtons & IN_MOVELEFT) || m_pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVELEFT)) 
+			{
+				sideRot = Vector(0, 0, m_pPl->IsLegacySideCurl() ? -1 : 1);
+			}
 		}
 
-		if ((!m_pPl->GetGroundEntity() || (m_pPl->m_nButtons & IN_JUMP)) && (spinFlags & FL_SPIN_PERMIT_TOP)
-			&& pitch >= sv_ball_besttopspinangle_start.GetFloat() && pitch <= sv_ball_besttopspinangle_end.GetFloat()
-			|| (spinFlags & FL_SPIN_FORCE_TOP))
-		{
-			topSpin = speedCoeff * sv_ball_spin.GetInt() * coeff * sv_ball_topspin_coeff.GetFloat();
+		float pitch = m_aPlAng[PITCH];
 
-			if (!(spinFlags & FL_SPIN_FORCE_TOP))
-				topSpin *= pow((double)cos(RemapValClamped(pitch, sv_ball_besttopspinangle_start.GetFloat(), sv_ball_besttopspinangle_end.GetFloat(), M_PI * 0.5, M_PI * 1.5)), 2.0);
+		Vector backRot = m_vPlRight;
+		float backSpin = 0;
+
+		Vector topRot = -m_vPlRight;
+		float topSpin = 0;
+
+		if (coeff > 0)
+		{
+			if ((spinFlags & FL_SPIN_PERMIT_BACK)
+				&& pitch >= sv_ball_bestbackspinangle_start.GetFloat() && pitch <= sv_ball_bestbackspinangle_end.GetFloat()
+				|| (spinFlags & FL_SPIN_FORCE_BACK))
+			{
+				backSpin = speedCoeff * sv_ball_spin.GetInt() * coeff * sv_ball_backspin_coeff.GetFloat();
+
+				if (!(spinFlags & FL_SPIN_FORCE_BACK))
+					backSpin *= pow((double)cos(RemapValClamped(pitch, sv_ball_bestbackspinangle_start.GetFloat(), sv_ball_bestbackspinangle_end.GetFloat(), M_PI * 0.5, M_PI * 1.5)), 2.0);
+			}
+
+			if ((!m_pPl->GetGroundEntity() || (m_pPl->m_nButtons & IN_JUMP)) && (spinFlags & FL_SPIN_PERMIT_TOP)
+				&& pitch >= sv_ball_besttopspinangle_start.GetFloat() && pitch <= sv_ball_besttopspinangle_end.GetFloat()
+				|| (spinFlags & FL_SPIN_FORCE_TOP))
+			{
+				topSpin = speedCoeff * sv_ball_spin.GetInt() * coeff * sv_ball_topspin_coeff.GetFloat();
+
+				if (!(spinFlags & FL_SPIN_FORCE_TOP))
+					topSpin *= pow((double)cos(RemapValClamped(pitch, sv_ball_besttopspinangle_start.GetFloat(), sv_ball_besttopspinangle_end.GetFloat(), M_PI * 0.5, M_PI * 1.5)), 2.0);
+			}
 		}
+
+		worldRot = sideRot * sideSpin + backRot * backSpin + topRot * topSpin;
 	}
-
-	//DevMsg("pitch: %.2f, backtopspin: %.2f\n", pitch, backTopSpin);
 
 	AngularImpulse randRot = vec3_origin;
 
-	//if (sideRot == vec3_origin && backTopRot == vec3_origin)
+	for (int i = 0; i < 3; i++)
 	{
-		for (int i = 0; i < 3; i++)
-		{
-			// Add some random rotation if there isn't any side, back or top spin, since a non-rotating ball looks unnatural
-			randRot[i] = sv_ball_defaultspin.GetInt() * (g_IOSRand.RandomInt(0, 1) == 1 ? 1 : -1);
-		}
+		// Add some weak random rotation to all three axes, since a ball which only rotates in one or no axis looks unnatural
+		randRot[i] = g_IOSRand.RandomInt(0, 1) == 1 ? 1 : -1;
 	}
 
+	worldRot += randRot * sv_ball_defaultspin.GetInt();
 
-	// The angular impulse is applied locally in the physics engine, so rotate from the player angles
-	return (WorldToLocalRotation(
-		SetupMatrixAngles(m_aAng), sideRot, sideSpin)
-		+ WorldToLocalRotation(SetupMatrixAngles(m_aAng), backRot, backSpin)
-		+ WorldToLocalRotation(SetupMatrixAngles(m_aAng), topRot, topSpin)
-		+ randRot);
+	AngularImpulse localRot;
+
+	VectorIRotate(worldRot, EntityToWorldTransform(), localRot);
+
+	return localRot;
 }
 
 void CBall::Think( void	)
