@@ -40,6 +40,7 @@
 #include <time.h>
 #include "sdk_shareddefs.h"
 #include "hud_macros.h"
+#include "c_ios_replaymanager.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -53,7 +54,8 @@ enum { NOTIFICATION_HEIGHT = 25 };
 enum { EXTRAINFO_HEIGHT = 25 };
 enum { PENALTYPANEL_CENTEROFFSET = 100, PENALTYCELL_WIDTH = 39, PENALTYPANEL_HEIGHT = 30, PENALTYPANEL_PADDING = 2, PENALTYPANEL_TOPMARGIN = 30 };
 enum { QUICKTACTIC_WIDTH = 175, QUICKTACTIC_HEIGHT = 35, QUICKTACTICPANEL_MARGIN = 30 };
-enum { CENTERPANEL_WIDTH = 500, CENTERPANEL_HEIGHT = 120, CENTERPANEL_MARGIN = 30, CENTERNOTIFICATION_SHORTWIDTH = 200, CENTERNOTIFICATION_LONGWIDTH = 500, CENTERNOTIFICATION_HEIGHT = 30 };
+enum { BOTTOMPANEL_WIDTH = 500, BOTTOMPANEL_HEIGHT = 120, BOTTOMPANEL_MARGIN = 30, BOTTOMNOTIFICATION_SHORTWIDTH = 200, BOTTOMNOTIFICATION_LONGWIDTH = 500, BOTTOMNOTIFICATION_HEIGHT = 30 };
+enum { STATUSPANEL_WIDTH = 120, STATUSPANEL_HEIGHT = 30, STATUSPANEL_MARGIN = 30 };
 enum { TEAMCREST_SIZE = 70, TEAMCREST_HMARGIN = 10, TEAMCREST_VMARGIN = 10 };
 
 const float slideDownDuration = 0.5f;
@@ -124,8 +126,10 @@ private:
 	Panel *m_pQuickTacticPanel;
 	Label *m_pQuickTactics[QUICKTACTIC_COUNT];
 
-	Panel *m_pCenterPanel;
-	Label *m_pCenterNotifications[NOTIFICATION_COUNT];
+	Panel *m_pBottomPanel;
+	Label *m_pBottomNotifications[NOTIFICATION_COUNT];
+
+	Label *m_pStatusPanel;
 
 	ImagePanel *m_pTeamCrest;
 	ImagePanel *m_pTransition;
@@ -208,14 +212,16 @@ CHudScorebar::CHudScorebar( const char *pElementName ) : BaseClass(NULL, "HudSco
 		m_pQuickTactics[i] = new Label(m_pQuickTacticPanel, "", g_szQuickTacticNames[i]);
 	}
 
-	m_pCenterPanel = new Panel(this);
+	m_pBottomPanel = new Panel(this);
 
 	for (int i = 0; i < NOTIFICATION_COUNT; i++)
 	{
-		m_pCenterNotifications[i] = new Label(m_pCenterPanel, "", "");
+		m_pBottomNotifications[i] = new Label(m_pBottomPanel, "", "");
 	}
 
-	m_pTeamCrest = new ImagePanel(m_pCenterPanel, "");
+	m_pStatusPanel = new Label(this, "", "");
+
+	m_pTeamCrest = new ImagePanel(m_pBottomPanel, "");
 
 	m_pTransition = new ImagePanel(this, "");
 
@@ -333,35 +339,42 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 		m_pQuickTactics[i]->SetTextInset(10, 0);
 	}
 
-	m_pCenterPanel->SetBounds(GetWide() / 2 - CENTERPANEL_WIDTH / 2, CENTERPANEL_MARGIN, CENTERPANEL_WIDTH, CENTERPANEL_HEIGHT);
+	m_pBottomPanel->SetBounds(GetWide() / 2 - BOTTOMPANEL_WIDTH / 2, BOTTOMPANEL_MARGIN, BOTTOMPANEL_WIDTH, BOTTOMPANEL_HEIGHT);
 
 	for (int i = 0; i < NOTIFICATION_COUNT; i++)
 	{
-		m_pCenterNotifications[i]->SetContentAlignment(Label::a_center);
-		m_pCenterNotifications[i]->SetFont(m_pScheme->GetFont("IOSScorebarMedium"));
+		m_pBottomNotifications[i]->SetContentAlignment(Label::a_center);
+		m_pBottomNotifications[i]->SetFont(m_pScheme->GetFont("IOSScorebarMedium"));
 
 		if (i == 0)
 		{
-			m_pCenterNotifications[i]->SetFgColor(Color(0, 0, 0, 255));
-			m_pCenterNotifications[i]->SetBgColor(Color(255, 255, 255, 200));
-			m_pCenterNotifications[i]->SetBounds(m_pCenterPanel->GetWide() / 2 - CENTERNOTIFICATION_SHORTWIDTH / 2, 0, CENTERNOTIFICATION_SHORTWIDTH, CENTERNOTIFICATION_HEIGHT);
+			m_pBottomNotifications[i]->SetFgColor(Color(0, 0, 0, 255));
+			m_pBottomNotifications[i]->SetBgColor(Color(255, 255, 255, 200));
+			m_pBottomNotifications[i]->SetBounds(m_pBottomPanel->GetWide() / 2 - BOTTOMNOTIFICATION_SHORTWIDTH / 2, 0, BOTTOMNOTIFICATION_SHORTWIDTH, BOTTOMNOTIFICATION_HEIGHT);
 		}
 
 		if (i > 0)
 		{
-			m_pCenterNotifications[i]->SetFgColor(Color(255, 255, 255, 255));
-			m_pCenterNotifications[i]->SetBgColor(Color(0, 0, 0, 247));
-			m_pCenterNotifications[i]->SetBounds(m_pCenterPanel->GetWide() / 2 - CENTERNOTIFICATION_LONGWIDTH / 2, i * CENTERNOTIFICATION_HEIGHT, CENTERNOTIFICATION_LONGWIDTH, CENTERNOTIFICATION_HEIGHT);
+			m_pBottomNotifications[i]->SetFgColor(Color(255, 255, 255, 255));
+			m_pBottomNotifications[i]->SetBgColor(Color(0, 0, 0, 247));
+			m_pBottomNotifications[i]->SetBounds(m_pBottomPanel->GetWide() / 2 - BOTTOMNOTIFICATION_LONGWIDTH / 2, i * BOTTOMNOTIFICATION_HEIGHT, BOTTOMNOTIFICATION_LONGWIDTH, BOTTOMNOTIFICATION_HEIGHT);
 		}
 
 		if (i > 1)
 		{
-			m_pCenterNotifications[i]->SetFont(m_pScheme->GetFont("IOSScorebarMediumItalic"));
+			m_pBottomNotifications[i]->SetFont(m_pScheme->GetFont("IOSScorebarMediumItalic"));
 		}
 
 	}
 
-	m_pTeamCrest->SetBounds(TEAMCREST_HMARGIN, CENTERNOTIFICATION_HEIGHT + TEAMCREST_VMARGIN, TEAMCREST_SIZE, TEAMCREST_SIZE);
+	m_pStatusPanel->SetBounds(ScreenWidth() / 2 - STATUSPANEL_WIDTH / 2, STATUSPANEL_MARGIN, STATUSPANEL_WIDTH, STATUSPANEL_HEIGHT);
+	m_pStatusPanel->SetFont(m_pScheme->GetFont("IOSScorebarMedium"));
+	m_pStatusPanel->SetFgColor(Color(255, 255, 255, 255));
+	m_pStatusPanel->SetBgColor(Color(0, 0, 0, 247));
+	m_pStatusPanel->SetContentAlignment(Label::a_center);
+	m_pStatusPanel->SetVisible(false);
+
+	m_pTeamCrest->SetBounds(TEAMCREST_HMARGIN, BOTTOMNOTIFICATION_HEIGHT + TEAMCREST_VMARGIN, TEAMCREST_SIZE, TEAMCREST_SIZE);
 	m_pTeamCrest->SetShouldScaleImage(true);
 
 	m_pTransition->SetBounds(ScreenWidth() / 2 - 1024, ScreenHeight() / 2 - 1024, 2048, 2048);
@@ -442,6 +455,14 @@ void CHudScorebar::OnThink( void )
 		m_pTeamGoals[team - TEAM_A]->SetText(VarArgs("%d", GetGlobalTeam(team)->GetGoals()));
 	}
 
+	if (GetReplayManager() && GetReplayManager()->m_bIsReplaying)
+	{
+		m_pStatusPanel->SetText("REPLAY");
+		m_pStatusPanel->SetVisible(true);
+	}
+	else
+		m_pStatusPanel->SetVisible(false);
+
 	for (int i = 0; i < QUICKTACTIC_COUNT; i++)
 	{
 		if (GetLocalPlayerTeam() == TEAM_A || GetLocalPlayerTeam() == TEAM_B)
@@ -518,7 +539,7 @@ void CHudScorebar::OnThink( void )
 	else
 		m_pTransition->SetVisible(false);
 
-	m_pCenterPanel->SetY(mp_center_notification_top.GetBool() ? CENTERPANEL_MARGIN : ScreenHeight() - CENTERPANEL_HEIGHT - CENTERPANEL_MARGIN);
+	m_pBottomPanel->SetY(ScreenHeight() - BOTTOMPANEL_HEIGHT - BOTTOMPANEL_MARGIN);
 
 	if (m_flNotificationStart != -1)
 	{
@@ -531,7 +552,7 @@ void CHudScorebar::OnThink( void )
 			m_pNotificationPanel->SetY(m_pBackgroundPanel->GetTall() - pow(1 - fraction, slideDownExp) * m_pNotificationPanel->GetTall());
 			m_pExtraInfo->SetY(m_pBackgroundPanel->GetTall() - m_pExtraInfo->GetTall());
 
-			m_pCenterPanel->SetAlpha(fraction * 255);
+			m_pBottomPanel->SetAlpha(fraction * 255);
 		}
 		else if (gpGlobals->curtime <= slideDownDuration + m_flNotificationStart + m_flStayDuration)
 		{
@@ -539,7 +560,7 @@ void CHudScorebar::OnThink( void )
 
 			m_pExtraInfo->SetBounds(m_pNotificationPanel->GetX(), m_pNotificationPanel->GetY() + m_pNotificationPanel->GetTall(), m_pNotificationPanel->GetWide(), EXTRAINFO_HEIGHT);
 			
-			m_pCenterPanel->SetAlpha(255);
+			m_pBottomPanel->SetAlpha(255);
 
 			if (timePassed <= slideDownDuration)
 			{
@@ -569,7 +590,7 @@ void CHudScorebar::OnThink( void )
 			m_pNotificationPanel->SetY(m_pBackgroundPanel->GetTall() - pow(fraction, slideUpExp) * (m_pNotificationPanel->GetTall() + m_pExtraInfo->GetTall()));
 			m_pExtraInfo->SetY(m_pNotificationPanel->GetY() + m_pNotificationPanel->GetTall());
 
-			m_pCenterPanel->SetAlpha((1 - fraction) * 255);
+			m_pBottomPanel->SetAlpha((1 - fraction) * 255);
 		}	
 	}
 	else
@@ -577,7 +598,7 @@ void CHudScorebar::OnThink( void )
 		m_pNotificationPanel->SetY(m_pBackgroundPanel->GetTall() - m_pNotificationPanel->GetTall());
 		m_pExtraInfo->SetY(m_pBackgroundPanel->GetTall() - m_pExtraInfo->GetTall());
 
-		m_pCenterPanel->SetAlpha(0);
+		m_pBottomPanel->SetAlpha(0);
 	}
 
 	if (m_flInjuryTimeStart != -1)
@@ -779,7 +800,7 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 	m_pNotificationPanel->SetTall(NOTIFICATION_HEIGHT);
 	m_pExtraInfo->SetVisible(false);
 	m_bIsHighlight = false;
-	m_pCenterPanel->SetVisible(false);
+	m_pBottomPanel->SetVisible(false);
 	m_pTransition->SetVisible(false);
 
 	for (int i = 1; i < NOTIFICATION_COUNT; i++)
@@ -855,39 +876,39 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 		C_SDKPlayer *pFirstAssister = ToSDKPlayer(USERID2PLAYER(event->GetInt("first_assister_userid")));
 		C_SDKPlayer *pSecondAssister = ToSDKPlayer(USERID2PLAYER(event->GetInt("second_assister_userid")));
 
-		m_pCenterNotifications[0]->SetText(VarArgs("%d' GOAL", (int)ceil(SDKGameRules()->GetMatchDisplayTimeSeconds(true) / 60.0f)));
+		m_pBottomNotifications[0]->SetText(VarArgs("%d' GOAL", (int)ceil(SDKGameRules()->GetMatchDisplayTimeSeconds(true) / 60.0f)));
 
 		if (pScorer)
 		{
-			m_pCenterNotifications[1]->SetText(VarArgs("%d   %s", gr->GetShirtNumber(pScorer->entindex()), pScorer->GetPlayerName()));
-			//m_pCenterPanel->SetTall(2 * NOTIFICATION_HEIGHT);
+			m_pBottomNotifications[1]->SetText(VarArgs("%d   %s", gr->GetShirtNumber(pScorer->entindex()), pScorer->GetPlayerName()));
+			//m_pBottomPanel->SetTall(2 * NOTIFICATION_HEIGHT);
 		}
 		else
-			m_pCenterNotifications[1]->SetText("");
+			m_pBottomNotifications[1]->SetText("");
 
 		if (pFirstAssister)
 		{
-			m_pCenterNotifications[2]->SetText(VarArgs("%d   %s", gr->GetShirtNumber(pFirstAssister->entindex()), pFirstAssister->GetPlayerName()));
-			//m_pCenterPanel->SetTall(3 * NOTIFICATION_HEIGHT);
+			m_pBottomNotifications[2]->SetText(VarArgs("%d   %s", gr->GetShirtNumber(pFirstAssister->entindex()), pFirstAssister->GetPlayerName()));
+			//m_pBottomPanel->SetTall(3 * NOTIFICATION_HEIGHT);
 		}
 		else
-			m_pCenterNotifications[2]->SetText("");
+			m_pBottomNotifications[2]->SetText("");
 
 		if (pSecondAssister)
 		{
-			m_pCenterNotifications[3]->SetText(VarArgs("%d   %s", gr->GetShirtNumber(pSecondAssister->entindex()),  pSecondAssister->GetPlayerName()));
-			//m_pCenterPanel->SetTall(4 * NOTIFICATION_HEIGHT);
+			m_pBottomNotifications[3]->SetText(VarArgs("%d   %s", gr->GetShirtNumber(pSecondAssister->entindex()),  pSecondAssister->GetPlayerName()));
+			//m_pBottomPanel->SetTall(4 * NOTIFICATION_HEIGHT);
 		}
 		else
-			m_pCenterNotifications[3]->SetText("");
+			m_pBottomNotifications[3]->SetText("");
 
 
 		m_eCurMatchEvent = MATCH_EVENT_GOAL;
 		m_flStayDuration = INT_MAX;
 
 		m_pNotificationPanel->SetVisible(false);
-		m_pCenterPanel->SetVisible(true);
-		m_pCenterPanel->SetAlpha(0);
+		m_pBottomPanel->SetVisible(true);
+		m_pBottomPanel->SetAlpha(0);
 		m_pTeamCrest->SetImage(event->GetInt("scoring_team") == TEAM_A ? "hometeamcrest_notification" : "awayteamcrest_notification");
 
 		//if (pScorer)
