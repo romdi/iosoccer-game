@@ -54,7 +54,7 @@ enum { NOTIFICATION_HEIGHT = 25 };
 enum { EXTRAINFO_HEIGHT = 25 };
 enum { PENALTYPANEL_CENTEROFFSET = 100, PENALTYCELL_WIDTH = 39, PENALTYPANEL_HEIGHT = 30, PENALTYPANEL_PADDING = 2, PENALTYPANEL_TOPMARGIN = 30 };
 enum { QUICKTACTIC_WIDTH = 175, QUICKTACTIC_HEIGHT = 35, QUICKTACTICPANEL_MARGIN = 30 };
-enum { BOTTOMPANEL_WIDTH = 500, BOTTOMPANEL_HEIGHT = 120, BOTTOMPANEL_MARGIN = 30, BOTTOMNOTIFICATION_SHORTWIDTH = 200, BOTTOMNOTIFICATION_LONGWIDTH = 500, BOTTOMNOTIFICATION_HEIGHT = 30 };
+enum { GOALINFOPANEL_WIDTH = 500, GOALINFOPANEL_HEIGHT = 120, GOALINFOPANEL_MARGIN = 30, BOTTOMNOTIFICATION_SHORTWIDTH = 200, BOTTOMNOTIFICATION_LONGWIDTH = 500, BOTTOMNOTIFICATION_HEIGHT = 30 };
 enum { STATUSPANEL_WIDTH = 120, STATUSPANEL_HEIGHT = 30, STATUSPANEL_MARGIN = 30 };
 enum { TEAMCREST_SIZE = 70, TEAMCREST_HMARGIN = 10, TEAMCREST_VMARGIN = 10 };
 
@@ -126,12 +126,12 @@ private:
 	Panel *m_pQuickTacticPanel;
 	Label *m_pQuickTactics[QUICKTACTIC_COUNT];
 
-	Panel *m_pBottomPanel;
-	Label *m_pBottomNotifications[NOTIFICATION_COUNT];
+	Panel *m_pGoalInfoPanel;
+	Label *m_pGoalInfoNotifications[NOTIFICATION_COUNT];
+	ImagePanel *m_pGoalInfoPanelTeamCrest;
 
 	Label *m_pStatusPanel;
 
-	ImagePanel *m_pTeamCrest;
 	ImagePanel *m_pTransition;
 
 	float m_flFirstTransitionStart;
@@ -212,16 +212,16 @@ CHudScorebar::CHudScorebar( const char *pElementName ) : BaseClass(NULL, "HudSco
 		m_pQuickTactics[i] = new Label(m_pQuickTacticPanel, "", g_szQuickTacticNames[i]);
 	}
 
-	m_pBottomPanel = new Panel(this);
+	m_pGoalInfoPanel = new Panel(this);
 
 	for (int i = 0; i < NOTIFICATION_COUNT; i++)
 	{
-		m_pBottomNotifications[i] = new Label(m_pBottomPanel, "", "");
+		m_pGoalInfoNotifications[i] = new Label(m_pGoalInfoPanel, "", "");
 	}
 
 	m_pStatusPanel = new Label(this, "", "");
 
-	m_pTeamCrest = new ImagePanel(m_pBottomPanel, "");
+	m_pGoalInfoPanelTeamCrest = new ImagePanel(m_pGoalInfoPanel, "");
 
 	m_pTransition = new ImagePanel(this, "");
 
@@ -339,30 +339,30 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 		m_pQuickTactics[i]->SetTextInset(10, 0);
 	}
 
-	m_pBottomPanel->SetBounds(GetWide() / 2 - BOTTOMPANEL_WIDTH / 2, BOTTOMPANEL_MARGIN, BOTTOMPANEL_WIDTH, BOTTOMPANEL_HEIGHT);
+	m_pGoalInfoPanel->SetBounds(GetWide() / 2 - GOALINFOPANEL_WIDTH / 2, GOALINFOPANEL_MARGIN, GOALINFOPANEL_WIDTH, GOALINFOPANEL_HEIGHT);
 
 	for (int i = 0; i < NOTIFICATION_COUNT; i++)
 	{
-		m_pBottomNotifications[i]->SetContentAlignment(Label::a_center);
-		m_pBottomNotifications[i]->SetFont(m_pScheme->GetFont("IOSScorebarMedium"));
+		m_pGoalInfoNotifications[i]->SetContentAlignment(Label::a_center);
+		m_pGoalInfoNotifications[i]->SetFont(m_pScheme->GetFont("IOSScorebarMedium"));
 
 		if (i == 0)
 		{
-			m_pBottomNotifications[i]->SetFgColor(Color(0, 0, 0, 255));
-			m_pBottomNotifications[i]->SetBgColor(Color(255, 255, 255, 200));
-			m_pBottomNotifications[i]->SetBounds(m_pBottomPanel->GetWide() / 2 - BOTTOMNOTIFICATION_SHORTWIDTH / 2, 0, BOTTOMNOTIFICATION_SHORTWIDTH, BOTTOMNOTIFICATION_HEIGHT);
+			m_pGoalInfoNotifications[i]->SetFgColor(Color(0, 0, 0, 255));
+			m_pGoalInfoNotifications[i]->SetBgColor(Color(255, 255, 255, 200));
+			m_pGoalInfoNotifications[i]->SetBounds(m_pGoalInfoPanel->GetWide() / 2 - BOTTOMNOTIFICATION_SHORTWIDTH / 2, 0, BOTTOMNOTIFICATION_SHORTWIDTH, BOTTOMNOTIFICATION_HEIGHT);
 		}
 
 		if (i > 0)
 		{
-			m_pBottomNotifications[i]->SetFgColor(Color(255, 255, 255, 255));
-			m_pBottomNotifications[i]->SetBgColor(Color(0, 0, 0, 247));
-			m_pBottomNotifications[i]->SetBounds(m_pBottomPanel->GetWide() / 2 - BOTTOMNOTIFICATION_LONGWIDTH / 2, i * BOTTOMNOTIFICATION_HEIGHT, BOTTOMNOTIFICATION_LONGWIDTH, BOTTOMNOTIFICATION_HEIGHT);
+			m_pGoalInfoNotifications[i]->SetFgColor(Color(255, 255, 255, 255));
+			m_pGoalInfoNotifications[i]->SetBgColor(Color(0, 0, 0, 247));
+			m_pGoalInfoNotifications[i]->SetBounds(m_pGoalInfoPanel->GetWide() / 2 - BOTTOMNOTIFICATION_LONGWIDTH / 2, i * BOTTOMNOTIFICATION_HEIGHT, BOTTOMNOTIFICATION_LONGWIDTH, BOTTOMNOTIFICATION_HEIGHT);
 		}
 
 		if (i > 1)
 		{
-			m_pBottomNotifications[i]->SetFont(m_pScheme->GetFont("IOSScorebarMediumItalic"));
+			m_pGoalInfoNotifications[i]->SetFont(m_pScheme->GetFont("IOSScorebarMediumItalic"));
 		}
 
 	}
@@ -374,8 +374,8 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 	m_pStatusPanel->SetContentAlignment(Label::a_center);
 	m_pStatusPanel->SetVisible(false);
 
-	m_pTeamCrest->SetBounds(TEAMCREST_HMARGIN, BOTTOMNOTIFICATION_HEIGHT + TEAMCREST_VMARGIN, TEAMCREST_SIZE, TEAMCREST_SIZE);
-	m_pTeamCrest->SetShouldScaleImage(true);
+	m_pGoalInfoPanelTeamCrest->SetBounds(TEAMCREST_HMARGIN, BOTTOMNOTIFICATION_HEIGHT + TEAMCREST_VMARGIN, TEAMCREST_SIZE, TEAMCREST_SIZE);
+	m_pGoalInfoPanelTeamCrest->SetShouldScaleImage(true);
 
 	m_pTransition->SetBounds(ScreenWidth() / 2 - 1024, ScreenHeight() / 2 - 1024, 2048, 2048);
 	m_pTransition->SetShouldScaleImage(true);
@@ -539,7 +539,7 @@ void CHudScorebar::OnThink( void )
 	else
 		m_pTransition->SetVisible(false);
 
-	m_pBottomPanel->SetY(ScreenHeight() - BOTTOMPANEL_HEIGHT - BOTTOMPANEL_MARGIN);
+	m_pGoalInfoPanel->SetY(ScreenHeight() - GOALINFOPANEL_HEIGHT - GOALINFOPANEL_MARGIN);
 
 	if (m_flNotificationStart != -1)
 	{
@@ -552,7 +552,7 @@ void CHudScorebar::OnThink( void )
 			m_pNotificationPanel->SetY(m_pBackgroundPanel->GetTall() - pow(1 - fraction, slideDownExp) * m_pNotificationPanel->GetTall());
 			m_pExtraInfo->SetY(m_pBackgroundPanel->GetTall() - m_pExtraInfo->GetTall());
 
-			m_pBottomPanel->SetAlpha(fraction * 255);
+			m_pGoalInfoPanel->SetAlpha(fraction * 255);
 		}
 		else if (gpGlobals->curtime <= slideDownDuration + m_flNotificationStart + m_flStayDuration)
 		{
@@ -560,7 +560,7 @@ void CHudScorebar::OnThink( void )
 
 			m_pExtraInfo->SetBounds(m_pNotificationPanel->GetX(), m_pNotificationPanel->GetY() + m_pNotificationPanel->GetTall(), m_pNotificationPanel->GetWide(), EXTRAINFO_HEIGHT);
 			
-			m_pBottomPanel->SetAlpha(255);
+			m_pGoalInfoPanel->SetAlpha(255);
 
 			if (timePassed <= slideDownDuration)
 			{
@@ -590,7 +590,7 @@ void CHudScorebar::OnThink( void )
 			m_pNotificationPanel->SetY(m_pBackgroundPanel->GetTall() - pow(fraction, slideUpExp) * (m_pNotificationPanel->GetTall() + m_pExtraInfo->GetTall()));
 			m_pExtraInfo->SetY(m_pNotificationPanel->GetY() + m_pNotificationPanel->GetTall());
 
-			m_pBottomPanel->SetAlpha((1 - fraction) * 255);
+			m_pGoalInfoPanel->SetAlpha((1 - fraction) * 255);
 		}	
 	}
 	else
@@ -598,7 +598,7 @@ void CHudScorebar::OnThink( void )
 		m_pNotificationPanel->SetY(m_pBackgroundPanel->GetTall() - m_pNotificationPanel->GetTall());
 		m_pExtraInfo->SetY(m_pBackgroundPanel->GetTall() - m_pExtraInfo->GetTall());
 
-		m_pBottomPanel->SetAlpha(0);
+		m_pGoalInfoPanel->SetAlpha(0);
 	}
 
 	if (m_flInjuryTimeStart != -1)
@@ -800,7 +800,7 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 	m_pNotificationPanel->SetTall(NOTIFICATION_HEIGHT);
 	m_pExtraInfo->SetVisible(false);
 	m_bIsHighlight = false;
-	m_pBottomPanel->SetVisible(false);
+	m_pGoalInfoPanel->SetVisible(false);
 	m_pTransition->SetVisible(false);
 
 	for (int i = 1; i < NOTIFICATION_COUNT; i++)
@@ -876,40 +876,40 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 		C_SDKPlayer *pFirstAssister = ToSDKPlayer(USERID2PLAYER(event->GetInt("first_assister_userid")));
 		C_SDKPlayer *pSecondAssister = ToSDKPlayer(USERID2PLAYER(event->GetInt("second_assister_userid")));
 
-		m_pBottomNotifications[0]->SetText(VarArgs("%d' GOAL", (int)ceil(SDKGameRules()->GetMatchDisplayTimeSeconds(true) / 60.0f)));
+		m_pGoalInfoNotifications[0]->SetText(VarArgs("%d' GOAL", (int)ceil(SDKGameRules()->GetMatchDisplayTimeSeconds(true) / 60.0f)));
 
 		if (pScorer)
 		{
-			m_pBottomNotifications[1]->SetText(VarArgs("%d   %s", gr->GetShirtNumber(pScorer->entindex()), pScorer->GetPlayerName()));
-			//m_pBottomPanel->SetTall(2 * NOTIFICATION_HEIGHT);
+			m_pGoalInfoNotifications[1]->SetText(VarArgs("%d   %s", gr->GetShirtNumber(pScorer->entindex()), pScorer->GetPlayerName()));
+			//m_pGoalInfoPanel->SetTall(2 * NOTIFICATION_HEIGHT);
 		}
 		else
-			m_pBottomNotifications[1]->SetText("");
+			m_pGoalInfoNotifications[1]->SetText("");
 
 		if (pFirstAssister)
 		{
-			m_pBottomNotifications[2]->SetText(VarArgs("%d   %s", gr->GetShirtNumber(pFirstAssister->entindex()), pFirstAssister->GetPlayerName()));
-			//m_pBottomPanel->SetTall(3 * NOTIFICATION_HEIGHT);
+			m_pGoalInfoNotifications[2]->SetText(VarArgs("%d   %s", gr->GetShirtNumber(pFirstAssister->entindex()), pFirstAssister->GetPlayerName()));
+			//m_pGoalInfoPanel->SetTall(3 * NOTIFICATION_HEIGHT);
 		}
 		else
-			m_pBottomNotifications[2]->SetText("");
+			m_pGoalInfoNotifications[2]->SetText("");
 
 		if (pSecondAssister)
 		{
-			m_pBottomNotifications[3]->SetText(VarArgs("%d   %s", gr->GetShirtNumber(pSecondAssister->entindex()),  pSecondAssister->GetPlayerName()));
-			//m_pBottomPanel->SetTall(4 * NOTIFICATION_HEIGHT);
+			m_pGoalInfoNotifications[3]->SetText(VarArgs("%d   %s", gr->GetShirtNumber(pSecondAssister->entindex()),  pSecondAssister->GetPlayerName()));
+			//m_pGoalInfoPanel->SetTall(4 * NOTIFICATION_HEIGHT);
 		}
 		else
-			m_pBottomNotifications[3]->SetText("");
+			m_pGoalInfoNotifications[3]->SetText("");
 
 
 		m_eCurMatchEvent = MATCH_EVENT_GOAL;
 		m_flStayDuration = INT_MAX;
 
 		m_pNotificationPanel->SetVisible(false);
-		m_pBottomPanel->SetVisible(true);
-		m_pBottomPanel->SetAlpha(0);
-		m_pTeamCrest->SetImage(event->GetInt("scoring_team") == TEAM_A ? "hometeamcrest_notification" : "awayteamcrest_notification");
+		m_pGoalInfoPanel->SetVisible(true);
+		m_pGoalInfoPanel->SetAlpha(0);
+		m_pGoalInfoPanelTeamCrest->SetImage(event->GetInt("scoring_team") == TEAM_A ? "hometeamcrest_notification" : "awayteamcrest_notification");
 
 		//if (pScorer)
 		//{
