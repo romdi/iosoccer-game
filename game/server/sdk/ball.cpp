@@ -33,7 +33,7 @@ ConVar
 	sv_ball_inertia( "sv_ball_inertia", "1.5", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY ),
 	sv_ball_drag_enabled("sv_ball_drag_enabled", "1", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY ),
 	
-	sv_ball_spin( "sv_ball_sidespin", "4000", FCVAR_NOTIFY ),
+	sv_ball_spin( "sv_ball_spin", "4000", FCVAR_NOTIFY ),
 	sv_ball_spin_exponent( "sv_ball_spin_exponent", "0.5", FCVAR_NOTIFY ),
 	sv_ball_defaultspin( "sv_ball_defaultspin", "150", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY ),
 	sv_ball_topspin_coeff( "sv_ball_topspin_coeff", "1.25", FCVAR_NOTIFY ),
@@ -904,7 +904,7 @@ float CBall::GetPitchCoeff()
 	{
 		float upCoeff = sv_ball_pitchup_fixedcoeff.GetFloat();
 		double upExp = sv_ball_pitchup_exponent.GetFloat();
-		coeff = upCoeff + (1 - upCoeff) * pow(cos((pitch - bestAng) / (mp_pitchup.GetFloat() - bestAng) * M_PI / 2), upExp);		
+		coeff = upCoeff + (1 - upCoeff) * pow(cos((pitch - bestAng) / (-mp_pitchup.GetFloat() - bestAng) * M_PI / 2), upExp);		
 	}
 	else
 	{
