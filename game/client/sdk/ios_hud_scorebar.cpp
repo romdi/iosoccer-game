@@ -52,7 +52,7 @@ using namespace vgui;
 enum { SCOREBAR_MARGIN = 30 };
 enum { NOTIFICATION_HEIGHT = 25 };
 enum { EXTRAINFO_HEIGHT = 25 };
-enum { PENALTYPANEL_CENTEROFFSET = 100, PENALTYCELL_WIDTH = 39, PENALTYPANEL_HEIGHT = 30, PENALTYPANEL_PADDING = 2, PENALTYPANEL_TOPMARGIN = 30 };
+enum { PENALTYPANEL_CENTEROFFSET = 75, PENALTYCELL_WIDTH = 39, PENALTYPANEL_HEIGHT = 30, PENALTYPANEL_PADDING = 2, PENALTYPANEL_TOPMARGIN = 30, PENALTYPANEL_TEAMNAMEMARGIN = 5 };
 enum { QUICKTACTIC_WIDTH = 175, QUICKTACTIC_HEIGHT = 35, QUICKTACTICPANEL_MARGIN = 30 };
 enum { GOALINFOPANEL_WIDTH = 500, GOALINFOPANEL_HEIGHT = 120, GOALINFOPANEL_MARGIN = 30, BOTTOMNOTIFICATION_SHORTWIDTH = 200, BOTTOMNOTIFICATION_LONGWIDTH = 500, BOTTOMNOTIFICATION_HEIGHT = 30 };
 enum { STATUSPANEL_WIDTH = 120, STATUSPANEL_HEIGHT = 30, STATUSPANEL_MARGIN = 30 };
@@ -120,8 +120,10 @@ private:
 	Panel *m_pMainPanel;
 	float m_flStayDuration;
 	Label *m_pExtraInfo;
+
 	Panel *m_pPenaltyPanels[2];
 	Panel *m_pPenaltyCells[2][5];
+	Label *m_pPenaltyTeamNames[2];
 
 	Panel *m_pQuickTacticPanel;
 	Label *m_pQuickTactics[QUICKTACTIC_COUNT];
@@ -203,6 +205,8 @@ CHudScorebar::CHudScorebar( const char *pElementName ) : BaseClass(NULL, "HudSco
 		{
 			m_pPenaltyCells[i][j] = new Panel(m_pPenaltyPanels[i], "");
 		}
+
+		m_pPenaltyTeamNames[i] = new Label(this, "", "");
 	}
 
 	m_pQuickTacticPanel = new Panel(this, "");
@@ -319,13 +323,18 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 
 	for (int i = 0; i < 2; i++)
 	{
-		m_pPenaltyPanels[i]->SetBounds(GetWide() / 2 + (i == 0 ? - panelWidth / 2 - PENALTYPANEL_CENTEROFFSET :  PENALTYPANEL_CENTEROFFSET), PENALTYPANEL_TOPMARGIN, panelWidth, PENALTYPANEL_HEIGHT);
+		m_pPenaltyPanels[i]->SetBounds(GetWide() / 2 + (i == 0 ? -panelWidth - PENALTYPANEL_CENTEROFFSET : PENALTYPANEL_CENTEROFFSET), PENALTYPANEL_TOPMARGIN, panelWidth, PENALTYPANEL_HEIGHT);
 		m_pPenaltyPanels[i]->SetBgColor(Color(0, 0, 0, 255));
 
 		for (int j = 0; j < 5; j++)
 		{
 			m_pPenaltyCells[i][j]->SetBounds(PENALTYPANEL_PADDING + j * (PENALTYCELL_WIDTH + PENALTYPANEL_PADDING), PENALTYPANEL_PADDING, PENALTYCELL_WIDTH, PENALTYPANEL_HEIGHT - 2 * PENALTYPANEL_PADDING);
 		}
+
+		m_pPenaltyTeamNames[i]->SetBounds(GetWide() / 2 + (i == 0 ? -panelWidth - PENALTYPANEL_CENTEROFFSET :  PENALTYPANEL_CENTEROFFSET), PENALTYPANEL_TOPMARGIN + PENALTYPANEL_HEIGHT + PENALTYPANEL_TEAMNAMEMARGIN, panelWidth, PENALTYPANEL_HEIGHT);
+		m_pPenaltyTeamNames[i]->SetFgColor(Color(255, 255, 255, 255));
+		m_pPenaltyTeamNames[i]->SetFont(m_pScheme->GetFont("IOSScorebarMedium"));
+		m_pPenaltyTeamNames[i]->SetContentAlignment(Label::a_center);
 	}
 
 	m_pQuickTacticPanel->SetBounds(GetWide() - QUICKTACTIC_WIDTH - QUICKTACTICPANEL_MARGIN, QUICKTACTICPANEL_MARGIN, QUICKTACTIC_WIDTH, QUICKTACTIC_COUNT * QUICKTACTIC_HEIGHT);
@@ -622,9 +631,11 @@ void CHudScorebar::OnThink( void )
 		{
 			int relativeRound = GetGlobalTeam(TEAM_A + i)->m_nPenaltyRound == 0 ? -1 : (GetGlobalTeam(TEAM_A + i)->m_nPenaltyRound - 1) % 5;
 			int fullRounds = max(0, GetGlobalTeam(TEAM_A + i)->m_nPenaltyRound - 1) / 5;
+
 			for (int j = 0; j < 5; j++)
 			{
 				Color color;
+
 				if (j > relativeRound)
 					color = Color(100, 100, 100, 255);
 				else
@@ -634,9 +645,13 @@ void CHudScorebar::OnThink( void )
 					else
 						color = Color(255, 0, 0, 255);
 				}
+
 				m_pPenaltyCells[i][j]->SetBgColor(color);
 			}
+
 			m_pPenaltyPanels[i]->SetVisible(true);
+			m_pPenaltyTeamNames[i]->SetText(GetGlobalTeam(i + TEAM_A)->GetShortName());
+			m_pPenaltyTeamNames[i]->SetVisible(true);
 		}
 	}
 	else
@@ -644,6 +659,7 @@ void CHudScorebar::OnThink( void )
 		for (int i = 0; i < 2; i++)
 		{
 			m_pPenaltyPanels[i]->SetVisible(false);
+			m_pPenaltyTeamNames[i]->SetVisible(false);
 		}
 	}
 }
@@ -1134,28 +1150,28 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 				}
 			}
 			break;
-		case PENALTY_SAVED:
-			{
-				m_pNotifications[0]->SetText(VarArgs("PENALTY: %s", GetGlobalTeam(takingTeam)->GetCode()));
+		//case PENALTY_SAVED:
+		//	{
+		//		m_pNotifications[0]->SetText(VarArgs("PENALTY: %s", GetGlobalTeam(takingTeam)->GetCode()));
 
-				if (pKeeper)
-				{
-					m_pNotifications[1]->SetText(VarArgs("SAVE: %s", pKeeper->GetPlayerName()));
-					m_pNotificationPanel->SetTall(2 * NOTIFICATION_HEIGHT);
-				}
-			}
-			break;
-		case PENALTY_MISSED:
-			{
-				m_pNotifications[0]->SetText(VarArgs("PENALTY: %s", GetGlobalTeam(takingTeam)->GetCode()));
+		//		if (pKeeper)
+		//		{
+		//			m_pNotifications[1]->SetText(VarArgs("SAVE: %s", pKeeper->GetPlayerName()));
+		//			m_pNotificationPanel->SetTall(2 * NOTIFICATION_HEIGHT);
+		//		}
+		//	}
+		//	break;
+		//case PENALTY_MISSED:
+		//	{
+		//		m_pNotifications[0]->SetText(VarArgs("PENALTY: %s", GetGlobalTeam(takingTeam)->GetCode()));
 
-				if (pTaker)
-				{
-					m_pNotifications[1]->SetText(VarArgs("MISS: %s", pTaker->GetPlayerName()));
-					m_pNotificationPanel->SetTall(2 * NOTIFICATION_HEIGHT);
-				}
-			}
-			break;
+		//		if (pTaker)
+		//		{
+		//			m_pNotifications[1]->SetText(VarArgs("MISS: %s", pTaker->GetPlayerName()));
+		//			m_pNotificationPanel->SetTall(2 * NOTIFICATION_HEIGHT);
+		//		}
+		//	}
+		//	break;
 		default:
 			return;
 		}

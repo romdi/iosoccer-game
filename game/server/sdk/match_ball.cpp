@@ -2258,6 +2258,9 @@ void CMatchBall::SetPenaltyState(penalty_state_t penaltyState)
 {
 	m_ePenaltyState = penaltyState;
 
+	if (m_ePenaltyState != PENALTY_ASSIGNED && m_ePenaltyState != PENALTY_SCORED)
+		return;
+
 	IGameEvent *pEvent = gameeventmanager->CreateEvent("penalty_shootout");
 	if (pEvent)
 	{

@@ -699,12 +699,6 @@ bool CBall::CheckCollision()
 	// If optimizedP is bigger or equal to 0, the ball is either moving away from the player or going the same speed, so there's no need to apply additional velocity
 	if (optimizedP < 0)
 	{
-		// TODO: Check if this is still needed
-		//if (SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES && m_ePenaltyState == PENALTY_KICKED && pPl != m_pPl)
-		//{
-		//	m_ePenaltyState = PENALTY_SAVED;
-		//}
-
 		if (m_vVel.Length() > 900.0f)
 			m_pPl->EmitSound ("Player.Oomph");
 

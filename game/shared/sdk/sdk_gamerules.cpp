@@ -1877,7 +1877,7 @@ void CSDKGameRules::State_PENALTIES_Think()
 	{
 		if (m_flNextPenalty == -1)
 		{
-			m_flNextPenalty = gpGlobals->curtime + 3;
+			m_flNextPenalty = gpGlobals->curtime + 5;
 		}
 		else if (m_flNextPenalty <= gpGlobals->curtime)
 		{
