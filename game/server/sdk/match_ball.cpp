@@ -1436,10 +1436,11 @@ void CMatchBall::SendNotifications()
 					//EmitSound("Crowd.Foul");
 					break;
 				case FOUL_NORMAL_YELLOW_CARD:
-					if (m_pFoulingPl->GetYellowCards() % 2 == 0)
-						foulType = MATCH_EVENT_SECONDYELLOWCARD;
-					else
-						foulType = MATCH_EVENT_YELLOWCARD;
+					foulType = MATCH_EVENT_YELLOWCARD;
+					//EmitSound("Crowd.YellowCard");
+					break;
+				case FOUL_NORMAL_SECOND_YELLOW_CARD:
+					foulType = MATCH_EVENT_SECONDYELLOWCARD;
 					//EmitSound("Crowd.YellowCard");
 					break;
 				case FOUL_NORMAL_RED_CARD:
@@ -1703,7 +1704,7 @@ bool CMatchBall::CheckFoul(bool canShootBall, const Vector &localDirToBall)
 			foulType = FOUL_NORMAL_RED_CARD;
 		else if (anim == PLAYERANIMEVENT_TACKLED_FORWARD && localDirToBall.Length2DSqr() >= Sqr(sv_ball_yellowcardballdist_forward.GetFloat()) ||
 				 anim == PLAYERANIMEVENT_TACKLED_BACKWARD && localDirToBall.Length2DSqr() >= Sqr(sv_ball_yellowcardballdist_backward.GetFloat()))
-			foulType = FOUL_NORMAL_YELLOW_CARD;
+			foulType = m_pPl->GetYellowCards() % 2 == 0 ? FOUL_NORMAL_YELLOW_CARD : FOUL_NORMAL_SECOND_YELLOW_CARD;
 		else
 			foulType = FOUL_NORMAL_NO_CARD;
 
@@ -1713,17 +1714,17 @@ bool CMatchBall::CheckFoul(bool canShootBall, const Vector &localDirToBall)
 		m_pPl->AddFoul();
 		pPl->AddFoulSuffered();
 
-		if (foulType == FOUL_NORMAL_YELLOW_CARD)
+		if (foulType == FOUL_NORMAL_YELLOW_CARD || foulType == FOUL_NORMAL_SECOND_YELLOW_CARD)
 			m_pPl->AddYellowCard();
 
-		if (foulType == FOUL_NORMAL_YELLOW_CARD && m_pPl->GetYellowCards() % 2 == 0 || foulType == FOUL_NORMAL_RED_CARD)
+		if (foulType == FOUL_NORMAL_SECOND_YELLOW_CARD || foulType == FOUL_NORMAL_RED_CARD)
 		{
 			m_pPl->AddRedCard();
-			int banDuration = 60 * (foulType == FOUL_NORMAL_YELLOW_CARD ? sv_ball_player_secondyellowcard_banduration.GetFloat() : sv_ball_player_redcard_banduration.GetFloat());
+			int banDuration = 60 * (foulType == FOUL_NORMAL_SECOND_YELLOW_CARD ? sv_ball_player_secondyellowcard_banduration.GetFloat() : sv_ball_player_redcard_banduration.GetFloat());
 			int nextJoin = SDKGameRules()->GetMatchDisplayTimeSeconds(false) + banDuration;
 			m_pPl->SetNextCardJoin(nextJoin);
 
-			ReplayManager()->AddMatchEvent(foulType == FOUL_NORMAL_YELLOW_CARD ? MATCH_EVENT_SECONDYELLOWCARD : MATCH_EVENT_REDCARD, m_pPl->GetTeamNumber(), m_pPl);
+			ReplayManager()->AddMatchEvent(foulType == FOUL_NORMAL_SECOND_YELLOW_CARD ? MATCH_EVENT_SECONDYELLOWCARD : MATCH_EVENT_REDCARD, m_pPl->GetTeamNumber(), m_pPl);
 
 			int team = m_pPl->GetTeamNumber();
 			int posIndex = m_pPl->GetTeamPosIndex();
@@ -1774,10 +1775,10 @@ bool CMatchBall::CheckFoul(bool canShootBall, const Vector &localDirToBall)
 					foulMatchEvent = MATCH_EVENT_FOUL;
 					break;
 				case FOUL_NORMAL_YELLOW_CARD:
-					if (m_pFoulingPl->GetYellowCards() % 2 == 0)
-						foulMatchEvent = MATCH_EVENT_SECONDYELLOWCARD;
-					else
-						foulMatchEvent = MATCH_EVENT_YELLOWCARD;
+					foulMatchEvent = MATCH_EVENT_YELLOWCARD;
+					break;
+				case FOUL_NORMAL_SECOND_YELLOW_CARD:
+					foulMatchEvent = MATCH_EVENT_SECONDYELLOWCARD;
 					break;
 				case FOUL_NORMAL_RED_CARD:
 					foulMatchEvent = MATCH_EVENT_REDCARD;
