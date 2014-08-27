@@ -2608,9 +2608,7 @@ int CSDKGameRules::GetMatchDisplayTimeSeconds(bool addInjuryTime /*= true*/, boo
 	switch ( SDKGameRules()->State_Get() )
 	{
 	case MATCH_PERIOD_PENALTIES:
-		nTime = (int)(flTime * (90.0f / mp_timelimit_match.GetFloat())) + (mp_extratime.GetBool() ? 120 : 90) * 60;
-		if (!addInjuryTime)
-			nTime = min((mp_extratime.GetBool() ? 150 : 120) * 60, nTime);
+		nTime = (mp_extratime.GetBool() ? 120 : 90) * 60;
 		break;
 	case MATCH_PERIOD_EXTRATIME_SECOND_HALF:
 		nTime = (int)(flTime * (90.0f / mp_timelimit_match.GetFloat())) + 105 * 60;
