@@ -218,6 +218,7 @@ void CMatchBall::State_Think()
 		{
 			State_Leave(m_eNextState);
 			State_Enter(m_eNextState, true);
+			return;
 		}
 	}
 
