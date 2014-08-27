@@ -622,7 +622,9 @@ void CClientScoreBoardDialog::Update( void )
 	UpdateTeamInfo();
 
 	m_pServerInfo->SetText(mp_serverinfo.GetString());
-	m_pMatchInfo->SetText(mp_matchinfo.GetString());
+	char mapname[MAX_MAP_NAME];
+	Q_FileBase(engine->GetLevelName(), mapname, sizeof(mapname));
+	m_pMatchInfo->SetText(VarArgs("%s @ %s", mp_matchinfo.GetString(), mapname));
 	m_pMatchPeriod->SetText(g_szMatchPeriodShortNames[SDKGameRules()->State_Get()]);
 
 	if (m_eActivePanelType == STATS_MENU)
