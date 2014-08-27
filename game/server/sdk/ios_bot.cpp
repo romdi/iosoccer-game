@@ -156,7 +156,7 @@ void CBot::FieldBotJoinTeam()
 	if (playerCount[team] == mp_maxplayers.GetInt())
 		team = team == TEAM_A ? TEAM_B : TEAM_A;
 
-	if (playerCount[team] == mp_maxplayers.GetInt())
+	if (playerCount[team] == mp_maxplayers.GetInt() || SDKGameRules()->GetMatchDisplayTimeSeconds() < GetNextCardJoin())
 		SetDesiredTeam(TEAM_SPECTATOR, GetTeamNumber(), 0, true, true, false);
 	else
 	{
