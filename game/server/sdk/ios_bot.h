@@ -35,7 +35,6 @@ public:
 	float			m_flSideMove;
 
 	QAngle			m_ForwardAngle;
-	QAngle			m_LastAngles;
 
 	//ios
 	Vector			m_SpawnPos;
@@ -51,7 +50,7 @@ public:
 
 	Vector			m_vDirToBall;
 	Vector			m_vLocalDirToBall;
-	float			m_flAngToBallVel;
+	float			m_flAngToBallMoveDir;
 	int				m_nPlayerType;
 
 	void BotFrame();
@@ -61,9 +60,6 @@ public:
 	void FieldBotJoinTeam();
 
 	virtual void PhysicsSimulate();
-
-	virtual bool		ShotButtonsReleased();
-	virtual void		SetShotButtonsReleased(bool released);
 
 	CUtlVector<BotHistory> m_BotHistory;
 

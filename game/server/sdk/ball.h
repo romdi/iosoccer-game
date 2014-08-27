@@ -167,6 +167,9 @@ public:
 
 	virtual void State_Transition(ball_state_t newState, float delay = 0.0f, bool cancelQueuedState = false, bool isShortMessageDelay = false) = 0;
 
+	float			GetStateEnterTime() { return m_flStateEnterTime; }
+	virtual Vector	GetLastShotPos() = 0;
+
 protected:
 
 	virtual void State_STATIC_Enter() {};			virtual void State_STATIC_Think() {};			virtual void State_STATIC_Leave(ball_state_t newState) {};
@@ -187,6 +190,8 @@ protected:
 
 	ball_state_t	m_eNextState;
 	CBallStateInfo	*m_pCurStateInfo;
+	float			m_flStateEnterTime;
+	float			m_flStateLeaveTime;
 
 	bool			CanTouchBallXY();
 	virtual bool	CheckFoul(bool canShootBall, const Vector &localDirToBall) = 0;

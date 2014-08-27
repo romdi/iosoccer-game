@@ -846,7 +846,7 @@ bool CBall::CheckKeeperCatch()
 
 		QAngle angDiff = m_aPlCamAng - m_aPlAng;
 
-		if (Square(angDiff[PITCH]) + Square(angDiff[YAW]) <= Square(sv_ball_keeperautopunch_limit.GetFloat()))
+		if (m_pPl->IsBot() || Square(angDiff[PITCH]) + Square(angDiff[YAW]) <= Square(sv_ball_keeperautopunch_limit.GetFloat()))
 		{
 			int buttonSign;
 

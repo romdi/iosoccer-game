@@ -66,10 +66,9 @@ public:
 	int				LastOppTeam(bool wasShooting, CSDKPlayer *pSkipPl = NULL, CSDKPlayer *pSkipPl2 = NULL, CSDKPlayer *pSkipPl3 = NULL);
 	bool			IsLegallyCatchableByKeeper();
 	bool			UseDribblingCollision();
+	Vector			GetLastShotPos();
 	void			CheckAdvantage();
 
-	float			m_flStateEnterTime;
-	float			m_flStateLeaveTime;
 	float			m_flStateActivationDelay;
 	float			m_flSetpieceCloseStartTime;
 	bool			m_bNextStateMessageSent;

@@ -407,10 +407,13 @@ void CBot::BotFrame()
 			RunMimicCommand(m_cmd);
 		else
 		{
-			if (SDKGameRules()->IsIntermissionState())
+			if (m_pHoldingBall)
+				m_pBall = m_pHoldingBall;
+			else if (SDKGameRules()->IsIntermissionState())
 				m_pBall = GetNearestPlayerBall(GetLocalOrigin());
 			else
 				m_pBall = GetMatchBall();
+
 			m_vBallPos = m_pBall->GetPos();
 			m_vBallVel = m_pBall->GetVel();
 
@@ -422,7 +425,7 @@ void CBot::BotFrame()
 
 			if (m_vBallVel.Length2D() == 0)
 			{
-				m_flAngToBallVel = 0;
+				m_flAngToBallMoveDir = 0;
 			}
 			else
 			{
@@ -432,7 +435,7 @@ void CBot::BotFrame()
 				Vector dir = -m_vDirToBall;
 				dir.z = 0;
 				dir.NormalizeInPlace();
-				m_flAngToBallVel = RAD2DEG(acos(dir.Dot(vel)));
+				m_flAngToBallMoveDir = RAD2DEG(acos(dir.Dot(vel)));
 			}
 
 			BotThink();
@@ -447,7 +450,6 @@ void CBot::BotFrame()
 			else if ( m_cmd.viewangles[PITCH] < -180.0f )
 				m_cmd.viewangles[PITCH] += 360.0f;
 
-			m_LastAngles = m_cmd.viewangles;
 			SetLocalAngles(m_cmd.viewangles);
 			SnapEyeAngles(m_cmd.viewangles);
 		}
@@ -477,15 +479,4 @@ void CBot::PhysicsSimulate()
 
 	// Since this isn't called for bots.. call it here
 	UpdateVPhysicsPosition(m_vNewVPhysicsPosition, m_vNewVPhysicsVelocity, gpGlobals->frametime);
-}
-
-bool CBot::ShotButtonsReleased()
-{
-	return (gpGlobals->curtime >= m_flBotNextShot);
-}
-
-void CBot::SetShotButtonsReleased(bool released)
-{
-	if (!released)
-		m_flBotNextShot = gpGlobals->curtime + 1;
 }

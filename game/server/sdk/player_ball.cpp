@@ -131,6 +131,7 @@ CPlayerBall::CPlayerBall()
 {
 	m_pCreator = NULL;
 	m_pLastShooter = NULL;
+	m_vLastShotPos = vec3_invalid;
 }
 
 CPlayerBall::~CPlayerBall()
@@ -147,6 +148,7 @@ void CPlayerBall::State_Enter(ball_state_t newState, bool cancelQueuedState)
 {
 	m_eBallState = newState;
 	m_pCurStateInfo = State_LookupInfo( newState );
+	m_flStateEnterTime = gpGlobals->curtime;
 
 	m_pPl = NULL;
 
@@ -373,7 +375,10 @@ void CPlayerBall::TriggerSideline()
 void CPlayerBall::Touched(bool isShot, body_part_t bodyPart, const Vector &oldVel)
 {
 	if (isShot)
+	{
 		m_pLastShooter = m_pPl;
+		m_vLastShotPos = m_vPos;
+	}
 }
 
 void CPlayerBall::VPhysicsCollision(int index, gamevcollisionevent_t *pEvent)
@@ -389,4 +394,9 @@ bool CPlayerBall::IsLegallyCatchableByKeeper()
 bool CPlayerBall::UseDribblingCollision()
 {
 	return m_pPl == m_pLastShooter;
+}
+
+Vector CPlayerBall::GetLastShotPos()
+{
+	return m_vLastShotPos != vec3_invalid ? m_vLastShotPos : SDKGameRules()->m_vKickOff;
 }

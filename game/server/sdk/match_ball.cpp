@@ -2193,6 +2193,11 @@ bool CMatchBall::UseDribblingCollision()
 	return m_pPl == LastPl(true);
 }
 
+Vector CMatchBall::GetLastShotPos()
+{
+	return LastInfo(true) ? LastInfo(true)->m_vBallPos : SDKGameRules()->m_vKickOff;
+}
+
 void CMatchBall::CheckAdvantage()
 {
 	if (m_bIsAdvantage && !SDKGameRules()->IsIntermissionState() && !m_bHasQueuedState && gpGlobals->curtime > m_flFoulTime + sv_ball_advantage_ignore_duration.GetFloat())

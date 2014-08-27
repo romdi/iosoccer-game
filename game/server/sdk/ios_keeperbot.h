@@ -15,14 +15,26 @@
 
 #include "ios_bot.h"
 
+struct BotCommand
+{
+	CUserCmd *pCmd;
+	float cmdTime;
+
+	BotCommand(CUserCmd *pCmd, float time) : pCmd(pCmd), cmdTime(cmdTime) {}
+	~BotCommand()
+	{
+		delete pCmd;
+	}
+};
+
 // This is our bot class.
 class CKeeperBot : public CBot
 {
 public:
 	void BotThink();
-	void BotCenter();
-	void BotAdjustPos();
-	CSDKPlayer *FindClosestPlayerToBall();
+	void BotCalcCommand(CUserCmd &cmd);
+	CSDKPlayer *FindClosestPlayerToBall(bool ignoreSelf);
+	CUtlVector<BotCommand *> m_Commands;
 };
 
 #endif

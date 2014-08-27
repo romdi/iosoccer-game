@@ -43,6 +43,7 @@ public:
 	void			VPhysicsCollision(int index, gamevcollisionevent_t	*pEvent);
 	bool			IsLegallyCatchableByKeeper();
 	bool			UseDribblingCollision();
+	Vector			GetLastShotPos();
 
 	CNetworkHandle(CSDKPlayer, m_pCreator);
 
@@ -54,6 +55,7 @@ protected:
 	QAngle			m_aBallCannonAng;
 	AngularImpulse	m_vBallCannonRot;
 	CHandle<CSDKPlayer>	m_pLastShooter;
+	Vector			m_vLastShotPos;
 };
 
 extern CPlayerBall *CreatePlayerBall(const Vector &pos, CSDKPlayer *pCreator);
