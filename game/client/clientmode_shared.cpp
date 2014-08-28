@@ -457,9 +457,7 @@ int ClientModeShared::HandleSpectatorKeyInput( int down, ButtonCode_t keynum, co
 		if (pSpecMenu->IsMouseInputEnabled())
 		{
 			pSpecMenu->SetMouseInputEnabled(false);
-
-			if (g_pCVar->FindVar("autohidespecmenu")->GetBool())
-				pSpecMenu->SetVisible(false);
+			pSpecMenu->SetVisible(false);
 		}
 		else
 		{

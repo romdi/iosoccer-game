@@ -105,7 +105,6 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_Team, DT_Team, CTeam)
 	RecvPropInt(RECVINFO(m_Rating)),
 
 	RecvPropInt(RECVINFO(m_nFormationIndex)),
-	RecvPropIntWithMinusOneFlag(RECVINFO(m_eQuickTactic)),
 END_RECV_TABLE()
 
 BEGIN_PREDICTION_DATA( C_Team )
@@ -140,7 +139,6 @@ C_Team::C_Team()
 	m_iPacketloss = 0;
 
 	m_nFormationIndex = 0;
-	m_eQuickTactic = QUICKTACTIC_NONE;
 
 	for (int i = 0; i < MAX_MATCH_EVENTS; i++)
 	{

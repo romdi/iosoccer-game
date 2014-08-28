@@ -22,6 +22,7 @@
 #include "c_match_ball.h"
 #include "view.h"
 #include "ios_camera.h"
+#include "iinput.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -50,10 +51,8 @@ DECLARE_HUDELEMENT( CHudChargedshotBar );
 
 using namespace vgui;
 
-enum { BAR_WIDTH = 40, BAR_HEIGHT = 200, BAR_VMARGIN = 15, BAR_HMARGIN = 250, BAR_HPADDING = 2, BAR_VPADDING = 2 };
-enum { PS_INDICATOR_HEIGHT = 9, PS_INDICATOR_OFFSET = 9, PS_INDICATOR_BORDER = 2 };
-enum { SMALLBAR_WIDTH = 80, SMALLBAR_HEIGHT = 14, SMALLBAR_HPADDING = 1, SMALLBAR_VPADDING = 1 };
-enum { SMALLPS_INDICATOR_WIDTH = 7, SMALLPS_INDICATOR_OFFSET = 5, SMALLPS_INDICATOR_BORDER = 1 };
+enum { BAR_WIDTH = 80, BAR_HEIGHT = 14, BAR_HPADDING = 1, BAR_VPADDING = 1 };
+enum { INDICATOR_WIDTH = 9, INDICATOR_OFFSET = 7, INDICATOR_BORDER = 1 };
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -178,129 +177,64 @@ void CHudChargedshotBar::Paint()
 		drawChargedshotIndicator = true;
 	}
 
-	if (centeredstaminabar.GetBool())
+	const int CenterX = GetWide() / 2;
+	const int CenterY = min(GetTall() - 30, GetTall() / 2 + (100 -::input->GetCameraAngles()[PITCH]) * (2 * GetTall() / 480.0f));
+
+	// Draw stamina bar back
+	surface()->DrawSetColor(bgColor);
+	surface()->DrawFilledRect(
+		CenterX - (BAR_WIDTH / 2),
+		CenterY - (BAR_HEIGHT / 2),
+		CenterX + (BAR_WIDTH / 2),
+		CenterY + (BAR_HEIGHT / 2));
+
+	// Draw missing max stamina
+	surface()->DrawSetColor(missingMaxStaminaColor);
+	surface()->DrawFilledRect(
+		CenterX + (BAR_WIDTH / 2 - BAR_HPADDING) - (1.0f - pPlayer->m_Shared.GetMaxStamina() / 100.0f) * (BAR_WIDTH - 2 * BAR_VPADDING),
+		CenterY - (BAR_HEIGHT / 2 - BAR_VPADDING),
+		CenterX + (BAR_WIDTH / 2 - BAR_HPADDING),
+		CenterY + (BAR_HEIGHT / 2 - BAR_VPADDING));
+
+	// Draw stamina bar front
+	surface()->DrawSetColor(fgColor);
+	surface()->DrawFilledRect(
+		CenterX - (BAR_WIDTH / 2 - BAR_HPADDING),
+		CenterY - (BAR_HEIGHT / 2 - BAR_VPADDING),
+		CenterX - (BAR_WIDTH / 2 - BAR_HPADDING) + relStamina * (BAR_WIDTH - 2 * BAR_VPADDING),
+		CenterY + (BAR_HEIGHT / 2 - BAR_VPADDING));
+
+	const int partCount = 4;
+	const int hMargin = BAR_WIDTH / partCount;
+
+	surface()->DrawSetColor(bgColor);
+
+	for (int i = 1; i < partCount; i++)
 	{
-		const int CenterX = GetWide() / 2;
-		const int CenterY = GetTall() / 2;
-
-		// Draw stamina bar back
-		surface()->DrawSetColor(bgColor);
 		surface()->DrawFilledRect(
-			CenterX - (SMALLBAR_WIDTH / 2),
-			CenterY - (SMALLBAR_HEIGHT / 2),
-			CenterX + (SMALLBAR_WIDTH / 2),
-			CenterY + (SMALLBAR_HEIGHT / 2));
-
-		// Draw missing max stamina
-		surface()->DrawSetColor(missingMaxStaminaColor);
-		surface()->DrawFilledRect(
-			CenterX + (SMALLBAR_WIDTH / 2 - SMALLBAR_HPADDING) - (1.0f - pPlayer->m_Shared.GetMaxStamina() / 100.0f) * (SMALLBAR_WIDTH - 2 * SMALLBAR_VPADDING),
-			CenterY - (SMALLBAR_HEIGHT / 2 - SMALLBAR_VPADDING),
-			CenterX + (SMALLBAR_WIDTH / 2 - SMALLBAR_HPADDING),
-			CenterY + (SMALLBAR_HEIGHT / 2 - SMALLBAR_VPADDING));
-
-		// Draw stamina bar front
-		surface()->DrawSetColor(fgColor);
-		surface()->DrawFilledRect(
-			CenterX - (SMALLBAR_WIDTH / 2 - SMALLBAR_HPADDING),
-			CenterY - (SMALLBAR_HEIGHT / 2 - SMALLBAR_VPADDING),
-			CenterX - (SMALLBAR_WIDTH / 2 - SMALLBAR_HPADDING) + relStamina * (SMALLBAR_WIDTH - 2 * SMALLBAR_VPADDING),
-			CenterY + (SMALLBAR_HEIGHT / 2 - SMALLBAR_VPADDING));
-
-		const int partCount = 4;
-		const int hMargin = SMALLBAR_WIDTH / partCount;
-
-		surface()->DrawSetColor(bgColor);
-
-		for (int i = 1; i < partCount; i++)
-		{
-			surface()->DrawFilledRect(
-				CenterX - SMALLBAR_WIDTH / 2 + i * hMargin,
-				CenterY - SMALLBAR_HEIGHT / 2,
-				CenterX - SMALLBAR_WIDTH / 2 + i * hMargin + 1,
-				CenterY + SMALLBAR_HEIGHT / 2);
-		}
-
-		if (drawChargedshotIndicator)
-		{
-			// Draw chargedshot indicator back
-			surface()->DrawSetColor(0, 0, 0, 255);
-			surface()->DrawFilledRect(
-				CenterX - SMALLBAR_WIDTH / 2 + shotStrength * SMALLBAR_WIDTH - SMALLPS_INDICATOR_WIDTH / 2,
-				CenterY - SMALLBAR_HEIGHT / 2 - SMALLPS_INDICATOR_OFFSET,
-				CenterX - SMALLBAR_WIDTH / 2 + shotStrength * SMALLBAR_WIDTH + SMALLPS_INDICATOR_WIDTH / 2,
-				CenterY + SMALLBAR_HEIGHT / 2 + SMALLPS_INDICATOR_OFFSET);
-
-			// Draw chargedshot indicator front
-			surface()->DrawSetColor(255, 255, 255, 255);
-			surface()->DrawFilledRect(
-				CenterX - SMALLBAR_WIDTH / 2 + shotStrength * SMALLBAR_WIDTH - SMALLPS_INDICATOR_WIDTH / 2 + SMALLPS_INDICATOR_BORDER,
-				CenterY - SMALLBAR_HEIGHT / 2 - SMALLPS_INDICATOR_OFFSET + SMALLPS_INDICATOR_BORDER,
-				CenterX - SMALLBAR_WIDTH / 2 + shotStrength * SMALLBAR_WIDTH + SMALLPS_INDICATOR_WIDTH / 2 - SMALLPS_INDICATOR_BORDER,
-				CenterY + SMALLBAR_HEIGHT / 2 + SMALLPS_INDICATOR_OFFSET - SMALLPS_INDICATOR_BORDER);
-
-		}
+			CenterX - BAR_WIDTH / 2 + i * hMargin,
+			CenterY - BAR_HEIGHT / 2,
+			CenterX - BAR_WIDTH / 2 + i * hMargin + 1,
+			CenterY + BAR_HEIGHT / 2);
 	}
-	else
+
+	if (drawChargedshotIndicator)
 	{
-		const int LeftX = GetWide() - BAR_WIDTH - 2 * BAR_HMARGIN;
-		const int LeftY = GetTall() - BAR_HEIGHT - 2 * BAR_VMARGIN;
-
-		// Draw stamina bar back
-		surface()->DrawSetColor(bgColor);
+		// Draw chargedshot indicator back
+		surface()->DrawSetColor(0, 0, 0, 255);
 		surface()->DrawFilledRect(
-			LeftX + BAR_HMARGIN,
-			LeftY + BAR_VMARGIN,
-			LeftX + BAR_HMARGIN + BAR_WIDTH,
-			LeftY + BAR_VMARGIN + BAR_HEIGHT);
+			CenterX - BAR_WIDTH / 2 + shotStrength * BAR_WIDTH - INDICATOR_WIDTH / 2,
+			CenterY - BAR_HEIGHT / 2 - INDICATOR_OFFSET,
+			CenterX - BAR_WIDTH / 2 + shotStrength * BAR_WIDTH + INDICATOR_WIDTH / 2,
+			CenterY + BAR_HEIGHT / 2 + INDICATOR_OFFSET);
 
-		// Draw missing max stamina
-		surface()->DrawSetColor(missingMaxStaminaColor);
+		// Draw chargedshot indicator front
+		surface()->DrawSetColor(255, 255, 255, 255);
 		surface()->DrawFilledRect(
-			LeftX + BAR_HMARGIN + BAR_HPADDING,
-			LeftY + BAR_VMARGIN + BAR_VPADDING,
-			LeftX + BAR_HMARGIN + BAR_WIDTH - BAR_HPADDING,
-			LeftY + BAR_VMARGIN + BAR_VPADDING + (1.0f - pPlayer->m_Shared.GetMaxStamina() / 100.0f) * (BAR_HEIGHT - 2 * BAR_VPADDING));
+			CenterX - BAR_WIDTH / 2 + shotStrength * BAR_WIDTH - INDICATOR_WIDTH / 2 + INDICATOR_BORDER,
+			CenterY - BAR_HEIGHT / 2 - INDICATOR_OFFSET + INDICATOR_BORDER,
+			CenterX - BAR_WIDTH / 2 + shotStrength * BAR_WIDTH + INDICATOR_WIDTH / 2 - INDICATOR_BORDER,
+			CenterY + BAR_HEIGHT / 2 + INDICATOR_OFFSET - INDICATOR_BORDER);
 
-		// Draw stamina bar front
-		surface()->DrawSetColor(fgColor);
-		surface()->DrawFilledRect(
-			LeftX + BAR_HMARGIN + BAR_HPADDING,
-			LeftY + BAR_VMARGIN + BAR_VPADDING + (1 - relStamina) * (BAR_HEIGHT - 2 * BAR_VPADDING),
-			LeftX + BAR_HMARGIN + BAR_WIDTH - BAR_HPADDING,
-			LeftY + BAR_VMARGIN + BAR_VPADDING + BAR_HEIGHT - 2 * BAR_VPADDING);
-
-		const int partCount = 4;
-		const int vMargin = BAR_HEIGHT / partCount;
-
-		surface()->DrawSetColor(bgColor);
-
-		for (int i = 1; i < partCount; i++)
-		{
-			surface()->DrawFilledRect(
-				LeftX + BAR_HMARGIN,
-				LeftY + BAR_VMARGIN + i * vMargin,
-				LeftX + BAR_HMARGIN + BAR_WIDTH,
-				LeftY + BAR_VMARGIN + i * vMargin + 1);
-		}
-
-		if (drawChargedshotIndicator)
-		{
-			// Draw chargedshot indicator back
-			surface()->DrawSetColor(0, 0, 0, 255);
-			surface()->DrawFilledRect(
-				LeftX + BAR_HMARGIN - PS_INDICATOR_OFFSET,
-				LeftY + BAR_VMARGIN + (1 - shotStrength) * (BAR_HEIGHT - PS_INDICATOR_HEIGHT),
-				LeftX + BAR_HMARGIN + BAR_WIDTH + PS_INDICATOR_OFFSET,
-				LeftY + BAR_VMARGIN + (1 - shotStrength) * (BAR_HEIGHT - PS_INDICATOR_HEIGHT) + PS_INDICATOR_HEIGHT);
-
-			// Draw chargedshot indicator front
-			surface()->DrawSetColor(255, 255, 255, 255);
-			surface()->DrawFilledRect(
-				LeftX + BAR_HMARGIN - PS_INDICATOR_OFFSET + PS_INDICATOR_BORDER,
-				LeftY + BAR_VMARGIN + (1 - shotStrength) * (BAR_HEIGHT - PS_INDICATOR_HEIGHT) + PS_INDICATOR_BORDER,
-				LeftX + BAR_HMARGIN + BAR_WIDTH + PS_INDICATOR_OFFSET - PS_INDICATOR_BORDER,
-				LeftY + BAR_VMARGIN + (1 - shotStrength) * (BAR_HEIGHT - PS_INDICATOR_HEIGHT) + PS_INDICATOR_HEIGHT - PS_INDICATOR_BORDER);
-		}
 	}
 }

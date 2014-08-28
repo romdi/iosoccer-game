@@ -445,28 +445,6 @@ enum
 	MODEL_KEEPER,
 };
 
-enum QuickTactics_t
-{
-	QUICKTACTIC_NONE = -1,
-	QUICKTACTIC_COUNTER_ATTACK = 0,
-	QUICKTACTIC_TEAM_PRESSURE,
-	QUICKTACTIC_POSSESSION,
-	QUICKTACTIC_LONG_BALLS,
-	QUICKTACTIC_DEFENDERS_ATTACK,
-	QUICKTACTIC_SWAP_WINGS,
-	QUICKTACTIC_COUNT
-};
-
-static const char *g_szQuickTacticNames[QUICKTACTIC_COUNT] =
-{
-	"Team Pressure",
-	"Possession",
-	"Long Balls",
-	"Swap Wings",
-	"Defenders Attack",
-	"Counter Attack",
-};
-
 #define BALL_PHYS_RADIUS 4.5f
 
 #define PLAYER_SKIN_COUNT 6

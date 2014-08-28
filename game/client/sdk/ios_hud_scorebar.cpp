@@ -79,18 +79,6 @@ class CHudScorebar : public CHudElement, public vgui::EditablePanel
 public:
 	CHudScorebar( const char *pElementName );
 	void Init( void );
-	void SelectQuickTactic(int index);
-
-	void _cdecl UserCmd_Slot1() { SelectQuickTactic(0); }
-	void _cdecl UserCmd_Slot2() { SelectQuickTactic(1); }
-	void _cdecl UserCmd_Slot3() { SelectQuickTactic(2); }
-	void _cdecl UserCmd_Slot4() { SelectQuickTactic(3); }
-	void _cdecl UserCmd_Slot5() { SelectQuickTactic(4); }
-	void _cdecl UserCmd_Slot6() { SelectQuickTactic(5); }
-	void _cdecl UserCmd_Slot7() { SelectQuickTactic(6); }
-	void _cdecl UserCmd_Slot8() { SelectQuickTactic(7); }
-	void _cdecl UserCmd_Slot9() { SelectQuickTactic(8); }
-	void _cdecl UserCmd_Slot0() { SelectQuickTactic(-1); }
 
 protected:
 	virtual void OnThink( void );
@@ -125,9 +113,6 @@ private:
 	Panel *m_pPenaltyCells[2][5];
 	Label *m_pPenaltyTeamNames[2];
 
-	Panel *m_pQuickTacticPanel;
-	Label *m_pQuickTactics[QUICKTACTIC_COUNT];
-
 	Panel *m_pGoalInfoPanel;
 	Label *m_pGoalInfoNotifications[NOTIFICATION_COUNT];
 	ImagePanel *m_pGoalInfoPanelTeamCrest;
@@ -142,30 +127,6 @@ private:
 };
 
 DECLARE_HUDELEMENT( CHudScorebar );
-
-
-DECLARE_HUD_COMMAND_NAME(CHudScorebar, Slot1, "CHudScorebar");
-DECLARE_HUD_COMMAND_NAME(CHudScorebar, Slot2, "CHudScorebar");
-DECLARE_HUD_COMMAND_NAME(CHudScorebar, Slot3, "CHudScorebar");
-DECLARE_HUD_COMMAND_NAME(CHudScorebar, Slot4, "CHudScorebar");
-DECLARE_HUD_COMMAND_NAME(CHudScorebar, Slot5, "CHudScorebar");
-DECLARE_HUD_COMMAND_NAME(CHudScorebar, Slot6, "CHudScorebar");
-DECLARE_HUD_COMMAND_NAME(CHudScorebar, Slot7, "CHudScorebar");
-DECLARE_HUD_COMMAND_NAME(CHudScorebar, Slot8, "CHudScorebar");
-DECLARE_HUD_COMMAND_NAME(CHudScorebar, Slot9, "CHudScorebar");
-DECLARE_HUD_COMMAND_NAME(CHudScorebar, Slot0, "CHudScorebar");
-
-HOOK_COMMAND( slot1, Slot1 );
-HOOK_COMMAND( slot2, Slot2 );
-HOOK_COMMAND( slot3, Slot3 );
-HOOK_COMMAND( slot4, Slot4 );
-HOOK_COMMAND( slot5, Slot5 );
-HOOK_COMMAND( slot6, Slot6 );
-HOOK_COMMAND( slot7, Slot7 );
-HOOK_COMMAND( slot8, Slot8 );
-HOOK_COMMAND( slot9, Slot9 );
-HOOK_COMMAND( slot0, Slot0 );
-
 
 static CHudScorebar *g_pHudScorebar = NULL;
 
@@ -207,13 +168,6 @@ CHudScorebar::CHudScorebar( const char *pElementName ) : BaseClass(NULL, "HudSco
 		}
 
 		m_pPenaltyTeamNames[i] = new Label(this, "", "");
-	}
-
-	m_pQuickTacticPanel = new Panel(this, "");
-
-	for (int i = 0; i < QUICKTACTIC_COUNT; i++)
-	{
-		m_pQuickTactics[i] = new Label(m_pQuickTacticPanel, "", g_szQuickTacticNames[i]);
 	}
 
 	m_pGoalInfoPanel = new Panel(this);
@@ -337,17 +291,6 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 		m_pPenaltyTeamNames[i]->SetContentAlignment(Label::a_center);
 	}
 
-	m_pQuickTacticPanel->SetBounds(GetWide() - QUICKTACTIC_WIDTH - QUICKTACTICPANEL_MARGIN, QUICKTACTICPANEL_MARGIN, QUICKTACTIC_WIDTH, QUICKTACTIC_COUNT * QUICKTACTIC_HEIGHT);
-	m_pQuickTacticPanel->SetVisible(false);
-
-	for (int i = 0; i < QUICKTACTIC_COUNT; i++)
-	{
-		m_pQuickTactics[i]->SetBounds(0, i * QUICKTACTIC_HEIGHT, QUICKTACTIC_WIDTH, QUICKTACTIC_HEIGHT);
-		m_pQuickTactics[i]->SetContentAlignment(Label::a_west);
-		m_pQuickTactics[i]->SetFont(m_pScheme->GetFont("IOSScorebarMedium"));
-		m_pQuickTactics[i]->SetTextInset(10, 0);
-	}
-
 	m_pGoalInfoPanel->SetBounds(GetWide() / 2 - GOALINFOPANEL_WIDTH / 2, GOALINFOPANEL_MARGIN, GOALINFOPANEL_WIDTH, GOALINFOPANEL_HEIGHT);
 
 	for (int i = 0; i < NOTIFICATION_COUNT; i++)
@@ -422,8 +365,6 @@ void CHudScorebar::ApplySettings( KeyValues *inResourceData )
 	Panel::ApplySettings( inResourceData );
 }
 
-extern ConVar quicktacticpanel;
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -471,29 +412,6 @@ void CHudScorebar::OnThink( void )
 	}
 	else
 		m_pStatusPanel->SetVisible(false);
-
-	for (int i = 0; i < QUICKTACTIC_COUNT; i++)
-	{
-		if (GetLocalPlayerTeam() == TEAM_A || GetLocalPlayerTeam() == TEAM_B)
-		{
-			m_pQuickTacticPanel->SetVisible(quicktacticpanel.GetBool());
-
-			if (i == GetGlobalTeam(GetLocalPlayerTeam())->GetQuickTactic())
-			{
-				m_pQuickTactics[i]->SetFgColor(Color(0, 0, 0, 255));
-				m_pQuickTactics[i]->SetBgColor(Color(255, 255, 255, 200));
-			}
-			else
-			{
-				m_pQuickTactics[i]->SetFgColor(Color(255, 255, 255, 75));
-				m_pQuickTactics[i]->SetBgColor(Color(0, 0, 0, 0));
-			}
-		}
-		else
-		{
-			m_pQuickTacticPanel->SetVisible(false);
-		}
-	}
 
 	if (m_eCurMatchEvent == MATCH_EVENT_TIMEOUT)
 	{
@@ -841,7 +759,7 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 		const char *weather;
 
 		if (mp_weather.GetInt() == 0)
-			weather = "sunny";
+			weather = "clear";
 		else if (mp_weather.GetInt() == 1)
 			weather = "rainy";
 		else
@@ -1207,9 +1125,4 @@ void CHudScorebar::LevelInit()
 	m_nCurMatchEventTeam = TEAM_UNASSIGNED;
 	m_flStayDuration = 3.0f;
 	m_nTransitionIndex = -1;
-}
-
-void CHudScorebar::SelectQuickTactic(int index)
-{
-	engine->ClientCmd(VarArgs("quicktactic %d", index));
 }

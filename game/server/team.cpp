@@ -113,7 +113,6 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CTeam, DT_Team)
 	SendPropInt(SENDINFO(m_Rating), 7, SPROP_UNSIGNED),
 
 	SendPropInt(SENDINFO(m_nFormationIndex), 4, SPROP_UNSIGNED),
-	SendPropIntWithMinusOneFlag(SENDINFO(m_eQuickTactic), 4),
 END_SEND_TABLE()
 
 LINK_ENTITY_TO_CLASS( team_manager, CTeam );
@@ -151,7 +150,6 @@ CTeam::CTeam( void )
 	m_nTimeoutsLeft = mp_timeout_count.GetInt();
 	m_nTimeoutTimeLeft = mp_timeout_duration.GetInt() * 60;
 	m_nFormationIndex = 0;
-	m_eQuickTactic = QUICKTACTIC_NONE;
 }
 
 //-----------------------------------------------------------------------------

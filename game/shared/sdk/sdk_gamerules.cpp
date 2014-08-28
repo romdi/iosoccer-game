@@ -3177,12 +3177,9 @@ void CSDKGameRules::DrawSprayLine()
 	pMesh->Draw();
 }
 
-extern ConVar goalteamcrests;
-
 void CSDKGameRules::DrawGoalTeamCrests()
 {
-	if (!goalteamcrests.GetBool())
-		return;
+	return;
 
 	for (int i = 0; i < 2; i++)
 	{

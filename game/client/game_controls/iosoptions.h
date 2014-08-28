@@ -230,11 +230,6 @@ class CVisualSettingPanel : public PropertyPage, public ISettingPanel
 
 	Panel *m_pContent;
 
-	CheckButton *m_pCenteredStaminaBar;
-	CheckButton *m_pQuickTactic;
-	CheckButton *m_pAutoHideSpecMenu;
-	CheckButton *m_pGoalTeamCrests;
-
 public:
 
 	CVisualSettingPanel(Panel *parent, const char *panelName);

@@ -55,10 +55,6 @@ ConVar preferredkeepershirtnumber("preferredkeepershirtnumber", "1", FCVAR_USERI
 ConVar legacysidecurl("legacysidecurl", "0", FCVAR_USERINFO | FCVAR_ARCHIVE, "");
 ConVar legacyverticallook("legacyverticallook", "0", FCVAR_USERINFO | FCVAR_ARCHIVE, "");
 ConVar modelskinindex("modelskinindex", "0", FCVAR_USERINFO | FCVAR_ARCHIVE, "");
-ConVar centeredstaminabar("centeredstaminabar", "1", FCVAR_ARCHIVE, "");
-ConVar quicktacticpanel("quicktacticpanel", "0", FCVAR_ARCHIVE, "");
-ConVar autohidespecmenu("autohidespecmenu", "0", FCVAR_ARCHIVE, "");
-ConVar goalteamcrests("goalteamcrests", "1", FCVAR_ARCHIVE, "");
 ConVar playerballskinname("playerballskinname", "", FCVAR_USERINFO | FCVAR_ARCHIVE, "");
 
 ConVar clientversion("clientversion", g_szRequiredClientVersion, FCVAR_USERINFO | FCVAR_HIDDEN, "");

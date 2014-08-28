@@ -10,8 +10,6 @@
 #include "clientmode_shared.h"
 
 extern ConVar
-	autohidespecmenu,
-	centeredstaminabar,
 	rate,
 	clubname,
 	nationalteamname,
@@ -25,7 +23,6 @@ extern ConVar
 	playername,
 	preferredkeepershirtnumber,
 	preferredoutfieldshirtnumber,
-	quicktacticpanel,
 	shirtname;
 
 class CIOSOptionsMenu : public IIOSOptionsMenu
@@ -790,10 +787,6 @@ void CGameplaySettingPanel::Update()
 CVisualSettingPanel::CVisualSettingPanel(Panel *parent, const char *panelName) : BaseClass(parent, panelName)
 {
 	m_pContent = new Panel(this, "");
-	m_pCenteredStaminaBar = new CheckButton(m_pContent, "", "Centered Stamina Bar");
-	m_pQuickTactic = new CheckButton(m_pContent, "", "Quick Tactic Panel");
-	m_pAutoHideSpecMenu = new CheckButton(m_pContent, "", "Auto-Hide Spectator Menu");
-	m_pGoalTeamCrests = new CheckButton(m_pContent, "", "Goal Team Crests");
 }
 
 void CVisualSettingPanel::PerformLayout()
@@ -801,26 +794,14 @@ void CVisualSettingPanel::PerformLayout()
 	BaseClass::PerformLayout();
 
 	m_pContent->SetBounds(PADDING, PADDING, GetWide() - 2 * PADDING, GetTall() - 2 * PADDING);
-	m_pCenteredStaminaBar->SetBounds(0, 0, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
-	m_pQuickTactic->SetBounds(0, TEXT_HEIGHT, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
-	m_pAutoHideSpecMenu->SetBounds(0, 2 * TEXT_HEIGHT, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
-	m_pGoalTeamCrests->SetBounds(0, 3 * TEXT_HEIGHT, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
 }
 
 void CVisualSettingPanel::Save()
 {
-	centeredstaminabar.SetValue(m_pCenteredStaminaBar->IsSelected() ? 1 : 0);
-	quicktacticpanel.SetValue(m_pQuickTactic->IsSelected() ? 1 : 0);
-	autohidespecmenu.SetValue(m_pAutoHideSpecMenu->IsSelected() ? 1 : 0);
-	goalteamcrests.SetValue(m_pGoalTeamCrests->IsSelected() ? 1 : 0);
 }
 
 void CVisualSettingPanel::Load()
 {
-	m_pCenteredStaminaBar->SetSelected(centeredstaminabar.GetBool());
-	m_pQuickTactic->SetSelected(quicktacticpanel.GetBool());
-	m_pAutoHideSpecMenu->SetSelected(autohidespecmenu.GetBool());
-	m_pGoalTeamCrests->SetSelected(goalteamcrests.GetBool());
 }
 
 void CVisualSettingPanel::Update()
