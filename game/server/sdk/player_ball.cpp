@@ -171,6 +171,8 @@ void CPlayerBall::State_Think()
 	m_pPhys->GetPosition(&m_vPos, &m_aAng);
 	m_pPhys->GetVelocity(&m_vVel, &m_vRot);
 
+	CheckPenBoxPosition();
+
 	if (m_pCurStateInfo && m_pCurStateInfo->pfnThink)
 	{	
 		(this->*m_pCurStateInfo->pfnThink)();
@@ -266,17 +268,15 @@ void CPlayerBall::State_NORMAL_Leave(ball_state_t newState)
 void CPlayerBall::State_KEEPERHANDS_Enter()
 {
 	SetPos(m_vPos);
-	// Don't ignore triggers when setting the new ball position
-	m_bSetNewPos = false;
 }
 
 void CPlayerBall::State_KEEPERHANDS_Think()
 {
-	if (!CSDKPlayer::IsOnField(m_pPl, m_nInPenBoxOfTeam))
-	{
-		m_pPl = NULL;
+	int wasOrIsinPenBoxOfTeam = m_nInPenBoxOfTeam != TEAM_INVALID ? m_nInPenBoxOfTeam : m_nWasInPenBoxOfTeam;
 
-		m_pPl = FindNearestPlayer(m_nInPenBoxOfTeam, FL_POS_KEEPER);
+	if (!CSDKPlayer::IsOnField(m_pPl, wasOrIsinPenBoxOfTeam))
+	{
+		m_pPl = GetGlobalTeam(wasOrIsinPenBoxOfTeam)->GetPlayerByPosType(POS_GK);
 
 		if (!m_pPl)
 			return State_Transition(BALL_STATE_NORMAL);
@@ -290,21 +290,11 @@ void CPlayerBall::State_KEEPERHANDS_Think()
 
 	UpdateCarrier();
 
-	Vector handPos;
-	QAngle handAng;
-	m_pPl->GetAttachment("keeperballrighthand", handPos, handAng);
-	handPos.z -= BALL_PHYS_RADIUS;
-	SetPos(handPos, false);
-	SetAng(handAng);
-
-	// Don't ignore triggers when setting the new ball position
-	m_bSetNewPos = false;
-
-	Vector min = GetGlobalTeam(m_pPl->GetTeamNumber())->m_vPenBoxMin - BALL_PHYS_RADIUS;
-	Vector max = GetGlobalTeam(m_pPl->GetTeamNumber())->m_vPenBoxMax + BALL_PHYS_RADIUS;
+	Vector min = GetGlobalTeam(m_pPl->GetTeamNumber())->m_vPenBoxMin - Vector(BALL_PHYS_RADIUS, BALL_PHYS_RADIUS, 0);
+	Vector max = GetGlobalTeam(m_pPl->GetTeamNumber())->m_vPenBoxMax + Vector(BALL_PHYS_RADIUS, BALL_PHYS_RADIUS, 0);
 
 	// Ball outside the penalty box
-	if (m_vPos.x < min.x || m_vPos.y < min.y || m_vPos.x > max.x || m_vPos.y > max.y)
+	if (m_nInPenBoxOfTeam == TEAM_INVALID)
 	{
 		Vector dir, pos;
 		float vel;
@@ -330,6 +320,13 @@ void CPlayerBall::State_KEEPERHANDS_Think()
 
 		return State_Transition(BALL_STATE_NORMAL);
 	}
+
+	Vector handPos;
+	QAngle handAng;
+	m_pPl->GetAttachment("keeperballrighthand", handPos, handAng);
+	handPos.z -= BALL_PHYS_RADIUS;
+	SetPos(handPos, false);
+	SetAng(handAng);
 
 	Vector vel;
 

@@ -144,24 +144,18 @@ public:
 
 	void BallStartTouch(CBall *pBall)
 	{
-		int team = m_nTeam == 1 ? SDKGameRules()->GetLeftSideTeam() : SDKGameRules()->GetRightSideTeam();
-		pBall->TriggerPenaltyBox(team);
 	};
 
 	void BallEndTouch(CBall *pBall)
 	{
-		pBall->TriggerPenaltyBox(TEAM_INVALID);
 	};
 
 	void PlayerStartTouch(CSDKPlayer *pPl)
 	{
-		int team = m_nTeam == 1 ? SDKGameRules()->GetLeftSideTeam() : SDKGameRules()->GetRightSideTeam();
-		//pPl->m_nInPenBoxOfTeam = team;
 	};
 
 	void PlayerEndTouch(CSDKPlayer *pPl)
 	{
-		//pPl->m_nInPenBoxOfTeam = TEAM_INVALID;
 	};
 };
 

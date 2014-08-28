@@ -139,7 +139,6 @@ public:
 	virtual void	TriggerGoal(int team) = 0;
 	virtual void	TriggerGoalLine(int team) = 0;
 	virtual void	TriggerSideline() = 0;
-	void			TriggerPenaltyBox(int team);
 	bool			IsSettingNewPos() { return m_bSetNewPos; }
 	bool			HasQueuedState() { return m_bHasQueuedState; }
 
@@ -213,6 +212,7 @@ protected:
 	virtual void	Touched(bool isShot, body_part_t bodyPart, const Vector &oldVel) = 0;
 	virtual bool	IsLegallyCatchableByKeeper() = 0;
 	virtual bool	UseDribblingCollision() = 0;
+	void			CheckPenBoxPosition();
 
 	IPhysicsObject	*m_pPhys;
 	float			m_flPhysRadius;
@@ -227,7 +227,8 @@ protected:
 	QAngle			m_aAng;
 	AngularImpulse	m_vRot;
 
-	int				m_nInPenBoxOfTeam;	 //-1 =	not	in box,	0,1	= teams	box
+	int				m_nInPenBoxOfTeam;
+	int				m_nWasInPenBoxOfTeam;
 
 	bool			m_bHasQueuedState;
 	bool			m_bSetNewPos;

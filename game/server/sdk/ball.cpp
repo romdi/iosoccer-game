@@ -219,6 +219,7 @@ CBall::CBall()
 	m_bHasQueuedState = false;
 	m_pHoldingPlayer = NULL;
 	m_bHitThePost = false;
+	m_nInPenBoxOfTeam = TEAM_INVALID;
 	memset(m_szSkinName.GetForModify(), 0, sizeof(m_szSkinName));
 }
 
@@ -1139,11 +1140,6 @@ void CBall::Think( void	)
 	State_Think();
 }
 
-void CBall::TriggerPenaltyBox(int team)
-{
-	m_nInPenBoxOfTeam = team;
-}
-
 void CBall::UpdateCarrier()
 {
 	if (CSDKPlayer::IsOnField(m_pPl))
@@ -1189,6 +1185,7 @@ void CBall::Reset()
 	m_pPhys->Wake();
 	m_pHoldingPlayer = NULL;
 	m_bHitThePost = false;
+	m_nInPenBoxOfTeam = TEAM_INVALID;
 }
 
 void CBall::ReloadSettings()
@@ -1284,4 +1281,23 @@ void CBall::SetSkinName(const char *skinName)
 		ballSkinIndex = g_IOSRand.RandomInt(0, CBallInfo::m_BallInfo.Count() - 1);
 
 	Q_strncpy(m_szSkinName.GetForModify(), CBallInfo::m_BallInfo[ballSkinIndex]->m_szFolderName, sizeof(m_szSkinName));
+}
+
+void CBall::CheckPenBoxPosition()
+{
+	for (int team = TEAM_A; team <= TEAM_B; team++)
+	{
+		Vector min = GetGlobalTeam(team)->m_vPenBoxMin - Vector(BALL_PHYS_RADIUS, BALL_PHYS_RADIUS, 0);
+		Vector max = GetGlobalTeam(team)->m_vPenBoxMax + Vector(BALL_PHYS_RADIUS, BALL_PHYS_RADIUS, 0);
+
+		if (m_vPos.x >= min.x && m_vPos.y >= min.y && m_vPos.x <= max.x	&& m_vPos.y <= max.y)
+		{
+			m_nWasInPenBoxOfTeam = m_nInPenBoxOfTeam;
+			m_nInPenBoxOfTeam = team;
+			return;
+		}
+	}
+
+	m_nWasInPenBoxOfTeam = m_nInPenBoxOfTeam;
+	m_nInPenBoxOfTeam = TEAM_INVALID;
 }
