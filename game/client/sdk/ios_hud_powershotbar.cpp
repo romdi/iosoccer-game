@@ -51,7 +51,7 @@ DECLARE_HUDELEMENT( CHudChargedshotBar );
 
 using namespace vgui;
 
-enum { BAR_WIDTH = 80, BAR_HEIGHT = 14, BAR_HPADDING = 2, BAR_VPADDING = 6, SHOTBAR_HEIGHT = 6 };
+enum { BAR_WIDTH = 200, BAR_HEIGHT = 12, BAR_HPADDING = 2, BAR_VPADDING = 2, SHOTBAR_HEIGHT = 6 };
 enum { INDICATOR_WIDTH = 9, INDICATOR_OFFSET = 7, INDICATOR_BORDER = 1 };
 
 //-----------------------------------------------------------------------------
@@ -132,26 +132,40 @@ void CHudChargedshotBar::Paint()
 		return;
 
 	float stamina = pPlayer->m_Shared.GetStamina() / 100.0f;
-	float shotStrength = pPlayer->m_Shared.m_bDoChargedShot || pPlayer->m_Shared.m_bIsShotCharging ? pPlayer->GetChargedShotStrength() : 0;
+	
 
-	Color staminaFgColor, staminaBgColor, shotFgColor;
+	Color staminaFgColor, staminaBgColor, shotFgColor, shotBgColor;
+
+	bool shotUnusable = true;
 
 	if (pPlayer->GetFlags() & FL_REMOTECONTROLLED)
-		staminaBgColor = Color(100, 100, 100, 255);
+		shotFgColor = Color(100, 100, 100, 255);
 	else if (GetMatchBall() && GetMatchBall()->m_bShotsBlocked)
-		staminaBgColor = Color(139, 0, 0, 255);
+		shotFgColor = Color(139, 0, 0, 255);
 	else if (GetMatchBall() && GetMatchBall()->m_bChargedshotBlocked)
-		staminaBgColor = Color(255, 69, 0, 255);
+		shotFgColor = Color(255, 69, 0, 255);
 	else
-		staminaBgColor = Color(0, 0, 0, 255);
+		shotUnusable = false;
+
+	float shotStrength;
+
+	if (shotUnusable)
+	{
+		shotStrength = 1.0f;
+	}
+	else
+	{
+		shotStrength = pPlayer->m_Shared.m_bDoChargedShot || pPlayer->m_Shared.m_bIsShotCharging ? pPlayer->GetChargedShotStrength() : 0;
+		shotFgColor = Color(255 * (1 - shotStrength), 255, 255, 255);
+	}
 
 	staminaFgColor = Color(255 * (1 - stamina), 255 * stamina, 0, 255);
 	staminaBgColor = Color(0, 0, 0, 255);
 
-	shotFgColor = Color(255, 255, 255, 255);
+	shotBgColor = Color(0, 0, 0, 255);
 
-	int centerX = GetWide() / 2;
-	int centerY = min(GetTall() - 30, GetTall() / 2 + (100 -::input->GetCameraAngles()[PITCH]) * (2 * GetTall() / 480.0f));
+	int centerX = 30 + BAR_HPADDING + BAR_WIDTH / 2;
+	int centerY = GetTall() - 30 - BAR_HEIGHT / 2 - BAR_VPADDING;
 
 	// Draw stamina bar back
 	surface()->DrawSetColor(staminaBgColor);
@@ -169,18 +183,21 @@ void CHudChargedshotBar::Paint()
 		centerX - (BAR_WIDTH / 2) + stamina * (BAR_WIDTH),
 		centerY + (BAR_HEIGHT / 2));
 
-	// Draw shot bars
-	surface()->DrawSetColor(shotFgColor);
-	surface()->DrawFilledRect(
-		centerX - (BAR_WIDTH / 2),
-		centerY - (BAR_HEIGHT / 2 + 4),
-		centerX - (BAR_WIDTH / 2) + shotStrength * (BAR_WIDTH),
-		centerY - (BAR_HEIGHT / 2 - 2));
+	centerY -= 2 * (BAR_HEIGHT / 2 + BAR_VPADDING) + 10;
 
+	// Draw shot bar back
+	surface()->DrawSetColor(shotBgColor);
+	surface()->DrawFilledRect(
+		centerX - (BAR_WIDTH / 2 + BAR_HPADDING),
+		centerY - (BAR_HEIGHT / 2 + BAR_VPADDING),
+		centerX + (BAR_WIDTH / 2 + BAR_HPADDING),
+		centerY + (BAR_HEIGHT / 2 + BAR_VPADDING));
+
+	// Draw shot bar front
 	surface()->DrawSetColor(shotFgColor);
 	surface()->DrawFilledRect(
 		centerX - (BAR_WIDTH / 2),
-		centerY + (BAR_HEIGHT / 2 - 2),
+		centerY - (BAR_HEIGHT / 2),
 		centerX - (BAR_WIDTH / 2) + shotStrength * (BAR_WIDTH),
-		centerY + (BAR_HEIGHT / 2 + 4));
+		centerY + (BAR_HEIGHT / 2));
 }
