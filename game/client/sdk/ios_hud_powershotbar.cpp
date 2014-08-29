@@ -51,7 +51,7 @@ DECLARE_HUDELEMENT( CHudChargedshotBar );
 
 using namespace vgui;
 
-enum { BAR_WIDTH = 80, BAR_HEIGHT = 14, BAR_HPADDING = 1, BAR_VPADDING = 1 };
+enum { BAR_WIDTH = 80, BAR_HEIGHT = 14, BAR_HPADDING = 2, BAR_VPADDING = 6, SHOTBAR_HEIGHT = 6 };
 enum { INDICATOR_WIDTH = 9, INDICATOR_OFFSET = 7, INDICATOR_BORDER = 1 };
 
 //-----------------------------------------------------------------------------
@@ -131,110 +131,56 @@ void CHudChargedshotBar::Paint()
 	if ( !pPlayer )
 		return;
 
-	float stamina = pPlayer->m_Shared.GetStamina();
-	float relStamina = stamina / 100.0f;
+	float stamina = pPlayer->m_Shared.GetStamina() / 100.0f;
+	float shotStrength = pPlayer->m_Shared.m_bDoChargedShot || pPlayer->m_Shared.m_bIsShotCharging ? pPlayer->GetChargedShotStrength() : 0;
 
-	Color fgColor, bgColor;
-
-	Color missingMaxStaminaColor = Color(100, 100, 100, 255);
+	Color staminaFgColor, staminaBgColor, shotFgColor;
 
 	if (pPlayer->GetFlags() & FL_REMOTECONTROLLED)
-	{
-		fgColor = Color(255, 255, 255, 255);
-		bgColor = Color(100, 100, 100, 255);
-	}
+		staminaBgColor = Color(100, 100, 100, 255);
 	else if (GetMatchBall() && GetMatchBall()->m_bShotsBlocked)
-	{
-		fgColor = Color(255, 0, 0, 255);
-		bgColor = Color(139, 0, 0, 255);
-	}
+		staminaBgColor = Color(139, 0, 0, 255);
 	else if (GetMatchBall() && GetMatchBall()->m_bChargedshotBlocked)
-	{
-		fgColor = Color(255, 140, 0, 255);
-		bgColor = Color(255, 69, 0, 255);
-	}
+		staminaBgColor = Color(255, 69, 0, 255);
 	else
-	{
-		fgColor = Color(255 * (1 - relStamina), 255 * relStamina, 0, 255);
-		bgColor = Color(0, 0, 0, 255);
-	}
+		staminaBgColor = Color(0, 0, 0, 255);
 
-	float shotStrength;
+	staminaFgColor = Color(255 * (1 - stamina), 255 * stamina, 0, 255);
+	staminaBgColor = Color(0, 0, 0, 255);
 
-	bool drawChargedshotIndicator = false;
+	shotFgColor = Color(255, 255, 255, 255);
 
-	if (pPlayer->m_Shared.m_bDoChargedShot || pPlayer->m_Shared.m_bIsShotCharging)
-	{
-		shotStrength = pPlayer->GetChargedShotStrength();
-
-		// Flash
-		if (shotStrength > 0.9f)
-		{
-			//relStamina = 1;
-			bgColor = Color(255, 255, 255, 255);
-		}
-
-		drawChargedshotIndicator = true;
-	}
-
-	const int CenterX = GetWide() / 2;
-	const int CenterY = min(GetTall() - 30, GetTall() / 2 + (100 -::input->GetCameraAngles()[PITCH]) * (2 * GetTall() / 480.0f));
+	int centerX = GetWide() / 2;
+	int centerY = min(GetTall() - 30, GetTall() / 2 + (100 -::input->GetCameraAngles()[PITCH]) * (2 * GetTall() / 480.0f));
 
 	// Draw stamina bar back
-	surface()->DrawSetColor(bgColor);
+	surface()->DrawSetColor(staminaBgColor);
 	surface()->DrawFilledRect(
-		CenterX - (BAR_WIDTH / 2),
-		CenterY - (BAR_HEIGHT / 2),
-		CenterX + (BAR_WIDTH / 2),
-		CenterY + (BAR_HEIGHT / 2));
-
-	// Draw missing max stamina
-	surface()->DrawSetColor(missingMaxStaminaColor);
-	surface()->DrawFilledRect(
-		CenterX + (BAR_WIDTH / 2 - BAR_HPADDING) - (1.0f - pPlayer->m_Shared.GetMaxStamina() / 100.0f) * (BAR_WIDTH - 2 * BAR_VPADDING),
-		CenterY - (BAR_HEIGHT / 2 - BAR_VPADDING),
-		CenterX + (BAR_WIDTH / 2 - BAR_HPADDING),
-		CenterY + (BAR_HEIGHT / 2 - BAR_VPADDING));
+		centerX - (BAR_WIDTH / 2 + BAR_HPADDING),
+		centerY - (BAR_HEIGHT / 2 + BAR_VPADDING),
+		centerX + (BAR_WIDTH / 2 + BAR_HPADDING),
+		centerY + (BAR_HEIGHT / 2 + BAR_VPADDING));
 
 	// Draw stamina bar front
-	surface()->DrawSetColor(fgColor);
+	surface()->DrawSetColor(staminaFgColor);
 	surface()->DrawFilledRect(
-		CenterX - (BAR_WIDTH / 2 - BAR_HPADDING),
-		CenterY - (BAR_HEIGHT / 2 - BAR_VPADDING),
-		CenterX - (BAR_WIDTH / 2 - BAR_HPADDING) + relStamina * (BAR_WIDTH - 2 * BAR_VPADDING),
-		CenterY + (BAR_HEIGHT / 2 - BAR_VPADDING));
+		centerX - (BAR_WIDTH / 2),
+		centerY - (BAR_HEIGHT / 2),
+		centerX - (BAR_WIDTH / 2) + stamina * (BAR_WIDTH),
+		centerY + (BAR_HEIGHT / 2));
 
-	const int partCount = 4;
-	const int hMargin = BAR_WIDTH / partCount;
+	// Draw shot bars
+	surface()->DrawSetColor(shotFgColor);
+	surface()->DrawFilledRect(
+		centerX - (BAR_WIDTH / 2),
+		centerY - (BAR_HEIGHT / 2 + 4),
+		centerX - (BAR_WIDTH / 2) + shotStrength * (BAR_WIDTH),
+		centerY - (BAR_HEIGHT / 2 - 2));
 
-	surface()->DrawSetColor(bgColor);
-
-	for (int i = 1; i < partCount; i++)
-	{
-		surface()->DrawFilledRect(
-			CenterX - BAR_WIDTH / 2 + i * hMargin,
-			CenterY - BAR_HEIGHT / 2,
-			CenterX - BAR_WIDTH / 2 + i * hMargin + 1,
-			CenterY + BAR_HEIGHT / 2);
-	}
-
-	if (drawChargedshotIndicator)
-	{
-		// Draw chargedshot indicator back
-		surface()->DrawSetColor(0, 0, 0, 255);
-		surface()->DrawFilledRect(
-			CenterX - BAR_WIDTH / 2 + shotStrength * BAR_WIDTH - INDICATOR_WIDTH / 2,
-			CenterY - BAR_HEIGHT / 2 - INDICATOR_OFFSET,
-			CenterX - BAR_WIDTH / 2 + shotStrength * BAR_WIDTH + INDICATOR_WIDTH / 2,
-			CenterY + BAR_HEIGHT / 2 + INDICATOR_OFFSET);
-
-		// Draw chargedshot indicator front
-		surface()->DrawSetColor(255, 255, 255, 255);
-		surface()->DrawFilledRect(
-			CenterX - BAR_WIDTH / 2 + shotStrength * BAR_WIDTH - INDICATOR_WIDTH / 2 + INDICATOR_BORDER,
-			CenterY - BAR_HEIGHT / 2 - INDICATOR_OFFSET + INDICATOR_BORDER,
-			CenterX - BAR_WIDTH / 2 + shotStrength * BAR_WIDTH + INDICATOR_WIDTH / 2 - INDICATOR_BORDER,
-			CenterY + BAR_HEIGHT / 2 + INDICATOR_OFFSET - INDICATOR_BORDER);
-
-	}
+	surface()->DrawSetColor(shotFgColor);
+	surface()->DrawFilledRect(
+		centerX - (BAR_WIDTH / 2),
+		centerY + (BAR_HEIGHT / 2 - 2),
+		centerX - (BAR_WIDTH / 2) + shotStrength * (BAR_WIDTH),
+		centerY + (BAR_HEIGHT / 2 + 4));
 }
