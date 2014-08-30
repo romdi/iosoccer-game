@@ -192,9 +192,10 @@ public:
 	CNetworkVar(bool, m_bHoldAtTargetPos);
 	CNetworkVar(float, m_flNextClientSettingsChangeTime);
 	CNetworkVar(float, m_flNextJoin);
-	CNetworkVar(int, m_nInPenBoxOfTeam);
 	CNetworkVar(int, m_nModelScale);
-	CNetworkVar(bool, m_bShotButtonsReleased);
+
+	CNetworkVar(bool, m_bChargedshotBlocked);
+	CNetworkVar(bool, m_bShotsBlocked);
 
 	CHandle<C_Ball> m_pHoldingBall;
 
@@ -203,7 +204,9 @@ public:
 
 	virtual int	DrawModel( int flags );
 
-	bool IsKeeperSprintInverted();
+	bool ShotButtonsPressed();
+	bool ShotButtonsReleased();
+	void SetShotButtonsReleased(bool released);
 };
 
 

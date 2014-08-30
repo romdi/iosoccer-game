@@ -167,7 +167,14 @@ public:
 	virtual void State_Transition(ball_state_t newState, float delay = 0.0f, bool cancelQueuedState = false, bool isShortMessageDelay = false) = 0;
 
 	float			GetStateEnterTime() { return m_flStateEnterTime; }
-	virtual Vector	GetLastShotPos() = 0;
+	void			RemoveAllTouches();
+	BallTouchInfo	*LastInfo(bool wasShooting, CSDKPlayer *pSkipPl = NULL, CSDKPlayer *pSkipPl2 = NULL, CSDKPlayer *pSkipPl3 = NULL);
+	CSDKPlayer		*LastPl(bool wasShooting, CSDKPlayer *pSkipPl = NULL, CSDKPlayer *pSkipPl2 = NULL, CSDKPlayer *pSkipPl3 = NULL);
+	int				LastTeam(bool wasShooting, CSDKPlayer *pSkipPl = NULL, CSDKPlayer *pSkipPl2 = NULL, CSDKPlayer *pSkipPl3 = NULL);
+	int				LastOppTeam(bool wasShooting, CSDKPlayer *pSkipPl = NULL, CSDKPlayer *pSkipPl2 = NULL, CSDKPlayer *pSkipPl3 = NULL);
+
+	int				InPenBoxOfTeam() { return m_nInPenBoxOfTeam; }
+	void			GetPredictedGoalLineCrossPosX(int &xPos, int &team);
 
 protected:
 
@@ -211,7 +218,6 @@ protected:
 	void			UpdateCarrier();
 	virtual void	Touched(bool isShot, body_part_t bodyPart, const Vector &oldVel) = 0;
 	virtual bool	IsLegallyCatchableByKeeper() = 0;
-	virtual bool	UseDribblingCollision() = 0;
 	void			CheckPenBoxPosition();
 
 	IPhysicsObject	*m_pPhys;
@@ -219,6 +225,7 @@ protected:
 	Vector			m_vTriggerTouchPos;
 
 	CHandle<CSDKPlayer>	m_pPl;
+	CUtlVector<BallTouchInfo *> m_Touches;
 
 	QAngle			m_aPlAng, m_aPlCamAng;
 	Vector			m_vPlVel, m_vPlVel2D, m_vPlForwardVel2D, m_vPlPos, m_vPlForward, m_vPlForward2D, m_vPlRight, m_vPlUp, m_vPlDirToBall, m_vPlLocalDirToBall;

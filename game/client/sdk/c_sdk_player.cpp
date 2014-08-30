@@ -110,6 +110,22 @@ BEGIN_RECV_TABLE_NOBASE( CSDKPlayerShared, DT_SDKSharedLocalPlayerExclusive )
 	RecvPropInt( RECVINFO( m_iPlayerClass ) ),
 	RecvPropInt( RECVINFO( m_iDesiredPlayerClass ) ),
 #endif
+	RecvPropTime( RECVINFO( m_flNextJump ) ),
+	RecvPropTime( RECVINFO( m_flNextSlide ) ),
+
+	RecvPropTime( RECVINFO( m_flPlayerAnimEventStartTime ) ),
+	RecvPropVector( RECVINFO( m_aPlayerAnimEventStartAngle ) ),
+	RecvPropInt( RECVINFO( m_nPlayerAnimEventStartButtons ) ),
+
+	RecvPropBool( RECVINFO( m_bIsShotCharging ) ),
+	RecvPropBool( RECVINFO( m_bDoChargedShot ) ),
+	RecvPropTime( RECVINFO( m_flShotChargingStart ) ),
+	RecvPropTime( RECVINFO( m_flShotChargingDuration ) ),
+
+	RecvPropInt(RECVINFO(m_nInPenBoxOfTeam)),
+	RecvPropBool(RECVINFO(m_bShotButtonsReleased)),
+
+	RecvPropInt( RECVINFO( m_nLastPressedSingleMoveKey ) ),
 END_RECV_TABLE()
 
 BEGIN_RECV_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
@@ -127,25 +143,12 @@ BEGIN_RECV_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	RecvPropBool( RECVINFO( m_bIsSprinting ) ),
 #endif
 
-	RecvPropTime( RECVINFO( m_flNextJump ) ),
-	RecvPropTime( RECVINFO( m_flNextSlide ) ),
-
 	RecvPropBool( RECVINFO( m_bJumping ) ),
 	RecvPropBool( RECVINFO( m_bWasJumping ) ),
 	RecvPropBool( RECVINFO( m_bFirstJumpFrame ) ),
 	RecvPropTime( RECVINFO( m_flJumpStartTime ) ),
 
-	RecvPropBool( RECVINFO( m_bIsShotCharging ) ),
-	RecvPropBool( RECVINFO( m_bDoChargedShot ) ),
-	RecvPropTime( RECVINFO( m_flShotChargingStart ) ),
-	RecvPropTime( RECVINFO( m_flShotChargingDuration ) ),
-
 	RecvPropInt( RECVINFO( m_ePlayerAnimEvent ) ),
-	RecvPropTime( RECVINFO( m_flPlayerAnimEventStartTime ) ),
-	RecvPropVector( RECVINFO( m_aPlayerAnimEventStartAngle ) ),
-	RecvPropInt( RECVINFO( m_nPlayerAnimEventStartButtons ) ),
-
-	RecvPropInt( RECVINFO( m_nLastPressedSingleMoveKey ) ),
 
 	RecvPropDataTable( "sdksharedlocaldata", 0, 0, &REFERENCE_RECV_TABLE(DT_SDKSharedLocalPlayerExclusive) ),
 END_RECV_TABLE()
@@ -157,13 +160,13 @@ BEGIN_RECV_TABLE_NOBASE( C_SDKPlayer, DT_SDKLocalPlayerExclusive )
 	RecvPropFloat( RECVINFO( m_angEyeAngles[1] ) ),
 	RecvPropFloat( RECVINFO( m_angCamViewAngles[0] ) ),
 	RecvPropFloat( RECVINFO( m_angCamViewAngles[1] ) ),
-	RecvPropInt(RECVINFO(m_nInPenBoxOfTeam)),
 	RecvPropVector(RECVINFO(m_vTargetPos)),
 	RecvPropBool(RECVINFO(m_bIsAtTargetPos)),
 	RecvPropBool(RECVINFO(m_bHoldAtTargetPos)),
 	RecvPropTime( RECVINFO( m_flNextClientSettingsChangeTime ) ),
 	RecvPropTime(RECVINFO(m_flNextJoin)),
-	RecvPropBool(RECVINFO(m_bShotButtonsReleased)),
+	RecvPropBool(RECVINFO(m_bChargedshotBlocked)),
+	RecvPropBool(RECVINFO(m_bShotsBlocked)),
 END_RECV_TABLE()
 
 BEGIN_RECV_TABLE_NOBASE( C_SDKPlayer, DT_SDKNonLocalPlayerExclusive )
@@ -229,6 +232,9 @@ BEGIN_PREDICTION_DATA_NO_BASE( CSDKPlayerShared )
 	DEFINE_PRED_FIELD( m_aPlayerAnimEventStartAngle, FIELD_VECTOR, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_nPlayerAnimEventStartButtons, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
 
+	DEFINE_PRED_FIELD(m_nInPenBoxOfTeam, FIELD_INTEGER, FTYPEDESC_INSENDTABLE),
+	DEFINE_PRED_FIELD( m_bShotButtonsReleased, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
+
 	DEFINE_PRED_FIELD( m_nLastPressedSingleMoveKey, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
 
 END_PREDICTION_DATA()
@@ -240,8 +246,6 @@ BEGIN_PREDICTION_DATA( C_SDKPlayer )
 	//DEFINE_PRED_FIELD( m_nSequence, FIELD_INTEGER, FTYPEDESC_OVERRIDE | FTYPEDESC_PRIVATE | FTYPEDESC_NOERRORCHECK ),	
 	//DEFINE_PRED_FIELD( m_nNewSequenceParity, FIELD_INTEGER, FTYPEDESC_OVERRIDE | FTYPEDESC_PRIVATE | FTYPEDESC_NOERRORCHECK ),
 	//DEFINE_PRED_FIELD( m_nResetEventsParity, FIELD_INTEGER, FTYPEDESC_OVERRIDE | FTYPEDESC_PRIVATE | FTYPEDESC_NOERRORCHECK ),
-	DEFINE_PRED_FIELD(m_nInPenBoxOfTeam, FIELD_INTEGER, FTYPEDESC_INSENDTABLE),
-	//DEFINE_PRED_FIELD( m_bShotButtonsReleased, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 END_PREDICTION_DATA()
 
 LINK_ENTITY_TO_CLASS( player, C_SDKPlayer );
@@ -1354,6 +1358,10 @@ int C_SDKPlayer::DrawModel( int flags )
 void C_SDKPlayer::PreThink()
 {
 	BaseClass::PreThink();
+
+	if (!ShotButtonsPressed())
+		SetShotButtonsReleased(true);
+
 	CheckShotCharging();
 	CheckLastPressedSingleMoveButton();
 }

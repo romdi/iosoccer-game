@@ -101,6 +101,24 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayerShared, DT_SDKSharedLocalPlayerExclusive )
 	SendPropInt( SENDINFO( m_iPlayerClass), 4 ),
 	SendPropInt( SENDINFO( m_iDesiredPlayerClass ), 4 ),
 #endif
+
+	SendPropTime( SENDINFO( m_flNextJump ) ),
+	SendPropTime( SENDINFO( m_flNextSlide) ),
+
+	SendPropTime( SENDINFO( m_flPlayerAnimEventStartTime ) ),
+	SendPropVector( SENDINFO( m_aPlayerAnimEventStartAngle ) ),
+	SendPropInt( SENDINFO( m_nPlayerAnimEventStartButtons ) ),
+
+	SendPropBool( SENDINFO( m_bIsShotCharging ) ),
+	SendPropBool( SENDINFO( m_bDoChargedShot ) ),
+	SendPropTime( SENDINFO( m_flShotChargingStart ) ),
+	SendPropTime( SENDINFO( m_flShotChargingDuration ) ),
+
+	SendPropInt(SENDINFO(m_nInPenBoxOfTeam), 3),
+	SendPropBool(SENDINFO(m_bShotButtonsReleased)),
+
+	SendPropInt( SENDINFO( m_nLastPressedSingleMoveKey ) ),
+
 END_SEND_TABLE()
 
 BEGIN_SEND_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
@@ -118,24 +136,12 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	SendPropBool( SENDINFO( m_bIsSprinting ) ),
 #endif
 
-	SendPropTime( SENDINFO( m_flNextJump ) ),
-	SendPropTime( SENDINFO( m_flNextSlide) ),
-
 	SendPropBool( SENDINFO( m_bJumping ) ),
 	SendPropBool( SENDINFO( m_bWasJumping ) ),
 	SendPropBool( SENDINFO( m_bFirstJumpFrame ) ),
 	SendPropTime( SENDINFO( m_flJumpStartTime ) ),
 
-	SendPropBool( SENDINFO( m_bIsShotCharging ) ),
-	SendPropBool( SENDINFO( m_bDoChargedShot ) ),
-	SendPropTime( SENDINFO( m_flShotChargingStart ) ),
-	SendPropTime( SENDINFO( m_flShotChargingDuration ) ),
 	SendPropInt( SENDINFO( m_ePlayerAnimEvent ) ),
-	SendPropTime( SENDINFO( m_flPlayerAnimEventStartTime ) ),
-	SendPropVector( SENDINFO( m_aPlayerAnimEventStartAngle ) ),
-	SendPropInt( SENDINFO( m_nPlayerAnimEventStartButtons ) ),
-
-	SendPropInt( SENDINFO( m_nLastPressedSingleMoveKey ) ),
 
 	SendPropDataTable( "sdksharedlocaldata", 0, &REFERENCE_SEND_TABLE(DT_SDKSharedLocalPlayerExclusive), SendProxy_SendLocalDataTable ),
 END_SEND_TABLE()
@@ -150,13 +156,13 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayer, DT_SDKLocalPlayerExclusive )
 	SendPropAngle( SENDINFO_VECTORELEM(m_angEyeAngles, 1), 11, SPROP_CHANGES_OFTEN ),
 	SendPropAngle( SENDINFO_VECTORELEM(m_angCamViewAngles, 0), 11, SPROP_CHANGES_OFTEN ),
 	SendPropAngle( SENDINFO_VECTORELEM(m_angCamViewAngles, 1), 11, SPROP_CHANGES_OFTEN ),
-	SendPropInt(SENDINFO(m_nInPenBoxOfTeam), 3),
 	SendPropVector(SENDINFO(m_vTargetPos), -1, SPROP_COORD),
 	SendPropBool(SENDINFO(m_bIsAtTargetPos)),
 	SendPropBool(SENDINFO(m_bHoldAtTargetPos)),
 	SendPropTime( SENDINFO( m_flNextClientSettingsChangeTime ) ),
 	SendPropTime(SENDINFO(m_flNextJoin)),
-	SendPropBool(SENDINFO(m_bShotButtonsReleased)),
+	SendPropBool( SENDINFO( m_bChargedshotBlocked ) ),
+	SendPropBool( SENDINFO( m_bShotsBlocked ) ),
 END_SEND_TABLE()
 
 BEGIN_SEND_TABLE_NOBASE( CSDKPlayer, DT_SDKNonLocalPlayerExclusive )
@@ -316,7 +322,6 @@ CSDKPlayer::CSDKPlayer()
 	m_angCamViewAngles.Init();
 
 	m_pCurStateInfo = NULL;	// no state yet
-	m_bShotButtonsReleased = false;
 	m_nTeamToJoin = TEAM_INVALID;
 	m_nTeamPosIndexToJoin = 0;
 	m_nSpecTeamToJoin = TEAM_SPECTATOR;
@@ -329,7 +334,6 @@ CSDKPlayer::CSDKPlayer()
 	m_Shared.m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
 	m_Shared.m_aPlayerAnimEventStartAngle = vec3_origin;
 	m_Shared.m_nPlayerAnimEventStartButtons = 0;
-	m_nInPenBoxOfTeam = TEAM_INVALID;
 	m_nModelScale = 100;
 	m_nSpecTeam = TEAM_SPECTATOR;
 	m_ePenaltyState = PENALTY_NONE;
@@ -337,6 +341,8 @@ CSDKPlayer::CSDKPlayer()
 	m_flNextClientSettingsChangeTime = gpGlobals->curtime;
 	m_bLegacySideCurl = false;
 	m_bJoinSilently = false;
+	SetChargedshotBlocked(false);
+	SetShotsBlocked(false);
 
 	m_szPlayerName[0] = '\0';
 	m_szClubName[0] = '\0';
@@ -1569,6 +1575,8 @@ void CSDKPlayer::ResetFlags()
 	m_bIsOffside = false;
 	m_ePenaltyState = PENALTY_NONE;
 	m_flRemoteControlledStartTime = -1;
+	SetChargedshotBlocked(false);
+	SetShotsBlocked(false);
 
 	if (GetPlayerBall())
 		GetPlayerBall()->RemovePlayerBall();
@@ -1606,19 +1614,24 @@ bool CSDKPlayer::CanShoot()
 	return gpGlobals->curtime >= m_flNextShot;
 }
 
-bool CSDKPlayer::ShotButtonsPressed()
+void CSDKPlayer::SetChargedshotBlocked(bool blocked)
 {
-	return m_nButtons & (IN_ATTACK | IN_ATTACK2 | IN_ALT1);
+	m_bChargedshotBlocked = IsBot() ? false : blocked;
 }
 
-bool CSDKPlayer::ShotButtonsReleased()
+bool CSDKPlayer::ChargedshotBlocked()
 {
-	return m_bShotButtonsReleased;
+	return m_bChargedshotBlocked;
 }
 
-void CSDKPlayer::SetShotButtonsReleased(bool released)
+void CSDKPlayer::SetShotsBlocked(bool blocked)
 {
-	m_bShotButtonsReleased = released;
+	m_bShotsBlocked = blocked;
+}
+
+bool CSDKPlayer::ShotsBlocked()
+{
+	return m_bShotsBlocked;
 }
 
 CSDKPlayer *CSDKPlayer::FindClosestPlayerToSelf(bool teammatesOnly, bool forwardOnly /*= false*/, float maxYawAngle /*= 360*/)

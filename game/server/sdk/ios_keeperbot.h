@@ -34,6 +34,7 @@ public:
 	void BotThink();
 	void BotCalcCommand(CUserCmd &cmd);
 	CSDKPlayer *FindClosestPlayerToBall(bool ignoreSelf);
+	void SetChargedshotParams(QAngle &ang, QAngle &camAng, CUserCmd &cmd, float &chargeTime);
 	CUtlVector<BotCommand *> m_Commands;
 };
 

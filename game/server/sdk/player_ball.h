@@ -42,8 +42,6 @@ public:
 	bool			CheckFoul(bool canShootBall, const Vector &localDirToBall) { return false; }
 	void			VPhysicsCollision(int index, gamevcollisionevent_t	*pEvent);
 	bool			IsLegallyCatchableByKeeper();
-	bool			UseDribblingCollision();
-	Vector			GetLastShotPos();
 
 	CNetworkHandle(CSDKPlayer, m_pCreator);
 
@@ -56,6 +54,7 @@ protected:
 	AngularImpulse	m_vBallCannonRot;
 	CHandle<CSDKPlayer>	m_pLastShooter;
 	Vector			m_vLastShotPos;
+	BallTouchInfo	m_BallShotInfo;
 };
 
 extern CPlayerBall *CreatePlayerBall(const Vector &pos, CSDKPlayer *pCreator);

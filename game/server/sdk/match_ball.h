@@ -59,14 +59,7 @@ public:
 	void			SetPenaltyTaker(CSDKPlayer *pPl);
 	bool			PlayersAtTargetPos();
 	void			VPhysicsCollision(int index, gamevcollisionevent_t	*pEvent);
-	void			RemoveAllTouches();
-	BallTouchInfo	*LastInfo(bool wasShooting, CSDKPlayer *pSkipPl = NULL, CSDKPlayer *pSkipPl2 = NULL, CSDKPlayer *pSkipPl3 = NULL);
-	CSDKPlayer		*LastPl(bool wasShooting, CSDKPlayer *pSkipPl = NULL, CSDKPlayer *pSkipPl2 = NULL, CSDKPlayer *pSkipPl3 = NULL);
-	int				LastTeam(bool wasShooting, CSDKPlayer *pSkipPl = NULL, CSDKPlayer *pSkipPl2 = NULL, CSDKPlayer *pSkipPl3 = NULL);
-	int				LastOppTeam(bool wasShooting, CSDKPlayer *pSkipPl = NULL, CSDKPlayer *pSkipPl2 = NULL, CSDKPlayer *pSkipPl3 = NULL);
 	bool			IsLegallyCatchableByKeeper();
-	bool			UseDribblingCollision();
-	Vector			GetLastShotPos();
 	void			CheckAdvantage();
 
 	float			m_flStateActivationDelay;
@@ -80,15 +73,10 @@ public:
 	CNetworkHandle(CSDKPlayer, m_pLastActivePlayer);
 	CNetworkVar(int, m_nLastActiveTeam);
 
-	CNetworkVar(bool, m_bChargedshotBlocked);
-	CNetworkVar(bool, m_bShotsBlocked);
-
 	CHandle<CSDKPlayer>	m_pTurnoverPlayer;
 	CHandle<CSDKPlayer>	m_pPossessingPl;
 	int				m_nPossessingTeam;
 	float			m_flPossessionStart;
-
-	CUtlVector<BallTouchInfo *> m_Touches;
 
 	penalty_state_t m_ePenaltyState;
 

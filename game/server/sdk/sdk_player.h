@@ -485,9 +485,14 @@ public:
 	void				SetLegacySideCurl(bool enable) { m_bLegacySideCurl = enable; }
 
 	bool				ShotButtonsPressed();
+	bool				ShotButtonsReleased();
+	void				SetShotButtonsReleased(bool released);
 
-	virtual bool		ShotButtonsReleased();
-	virtual void		SetShotButtonsReleased(bool released);
+	void				SetChargedshotBlocked(bool blocked);
+	bool				ChargedshotBlocked();
+
+	void				SetShotsBlocked(bool blocked);
+	bool				ShotsBlocked();
 
 	void				LookAtBall(void);
 
@@ -545,9 +550,7 @@ public:
 	CNetworkVar(bool, m_bHoldAtTargetPos);
 	CNetworkVar(float, m_flNextClientSettingsChangeTime);
 	CNetworkVar(float, m_flNextJoin);
-	CNetworkVar(int, m_nInPenBoxOfTeam);
 	CNetworkVar(int, m_nModelScale);
-	CNetworkVar(bool, m_bShotButtonsReleased);
 
 	static bool			IsOnField(CSDKPlayer *pPl, int teamNumber = TEAM_UNASSIGNED);
 
@@ -590,6 +593,9 @@ protected:
 	Vector				m_vOffsideBallPos;
 	int					m_nSpecTeam;
 	int					m_nSkinIndex;
+
+	CNetworkVar(bool, m_bChargedshotBlocked);
+	CNetworkVar(bool, m_bShotsBlocked);
 };
 
 

@@ -141,6 +141,8 @@ CSDKPlayerShared::~CSDKPlayerShared()
 void CSDKPlayerShared::Init( CSDKPlayer *pPlayer )
 {
 	m_pOuter = pPlayer;
+	m_bShotButtonsReleased = false;
+	m_nInPenBoxOfTeam = TEAM_INVALID;
 }
 
 void CSDKPlayerShared::SetSprinting( bool bSprinting )
@@ -573,8 +575,9 @@ void CSDKPlayer::CheckShotCharging()
 {
 	if ((m_nButtons & IN_ATTACK)
 		|| (GetFlags() & FL_REMOTECONTROLLED)
-		|| GetMatchBall() && (GetMatchBall()->m_bChargedshotBlocked || GetMatchBall()->m_bShotsBlocked)
-		|| !m_bShotButtonsReleased)
+		|| m_bChargedshotBlocked
+		|| m_bShotsBlocked
+		|| !m_Shared.m_bShotButtonsReleased)
 	{
 		m_Shared.m_bDoChargedShot = false;
 		m_Shared.m_bIsShotCharging = false;
@@ -657,4 +660,19 @@ void CSDKPlayer::CheckLastPressedSingleMoveButton()
 	{
 		m_Shared.m_nLastPressedSingleMoveKey = (m_nButtons & IN_MOVELEFT) ? IN_MOVELEFT : IN_MOVERIGHT;
 	}
+}
+
+bool CSDKPlayer::ShotButtonsPressed()
+{
+	return m_nButtons & (IN_ATTACK | IN_ATTACK2 | IN_ALT1);
+}
+
+bool CSDKPlayer::ShotButtonsReleased()
+{
+	return m_Shared.m_bShotButtonsReleased;
+}
+
+void CSDKPlayer::SetShotButtonsReleased(bool released)
+{
+	m_Shared.m_bShotButtonsReleased = released;
 }

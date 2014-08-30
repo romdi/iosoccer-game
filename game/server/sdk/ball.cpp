@@ -595,7 +595,7 @@ bool CBall::DoBodyPartAction()
 		&& m_pPl->GetTeamPosType() == POS_GK
 		&& m_nInPenBoxOfTeam == m_pPl->GetTeamNumber()
 		&& !m_pPl->m_pHoldingBall
-		&& m_pPl->m_nInPenBoxOfTeam == m_pPl->GetTeamNumber())
+		&& m_pPl->m_Shared.m_nInPenBoxOfTeam == m_pPl->GetTeamNumber())
 	{
 		if (IsLegallyCatchableByKeeper())
 			return CheckKeeperCatch();
@@ -639,7 +639,7 @@ bool CBall::CheckCollision()
 	{
 		collide = true;
 
-		if (UseDribblingCollision())
+		if (m_pPl == LastPl(true))
 		{
 			if (DotProduct2D(m_vVel.AsVector2D(), m_vPlVel.AsVector2D()) >= 0
 				&& DotProduct2D(m_vVel.AsVector2D(), dirToBall.AsVector2D()) >= 0
@@ -1300,4 +1300,81 @@ void CBall::CheckPenBoxPosition()
 
 	m_nWasInPenBoxOfTeam = m_nInPenBoxOfTeam;
 	m_nInPenBoxOfTeam = TEAM_INVALID;
+}
+
+void CBall::RemoveAllTouches()
+{
+	if (!m_bHasQueuedState)
+		m_Touches.PurgeAndDeleteElements();
+}
+
+BallTouchInfo *CBall::LastInfo(bool wasShooting, CSDKPlayer *pSkipPl /*= NULL*/, CSDKPlayer *pSkipPl2 /*= NULL*/, CSDKPlayer *pSkipPl3 /*= NULL*/)
+{
+	for (int i = m_Touches.Count() - 1; i >= 0; i--)
+	{
+		if (pSkipPl && m_Touches[i]->m_pPl == pSkipPl)
+			continue;
+
+		if (pSkipPl2 && m_Touches[i]->m_pPl == pSkipPl2)
+			continue;
+
+		if (pSkipPl3 && m_Touches[i]->m_pPl == pSkipPl3)
+			continue;
+
+		if (!wasShooting || m_Touches[i]->m_bIsShot)
+			return m_Touches[i];
+	}
+
+	return NULL;
+}
+
+CSDKPlayer *CBall::LastPl(bool wasShooting, CSDKPlayer *pSkipPl /*= NULL*/, CSDKPlayer *pSkipPl2 /*= NULL*/, CSDKPlayer *pSkipPl3 /*= NULL*/)
+{
+	BallTouchInfo *info = LastInfo(wasShooting, pSkipPl, pSkipPl2, pSkipPl3);
+	if (info && CSDKPlayer::IsOnField(info->m_pPl))
+		return info->m_pPl;
+	
+	return NULL;
+}
+
+int CBall::LastTeam(bool wasShooting, CSDKPlayer *pSkipPl /*= NULL*/, CSDKPlayer *pSkipPl2 /*= NULL*/, CSDKPlayer *pSkipPl3 /*= NULL*/)
+{
+	BallTouchInfo *info = LastInfo(wasShooting, pSkipPl, pSkipPl2, pSkipPl3);
+	return info ? info->m_nTeam : TEAM_INVALID;
+}
+
+int CBall::LastOppTeam(bool wasShooting, CSDKPlayer *pSkipPl /*= NULL*/, CSDKPlayer *pSkipPl2 /*= NULL*/, CSDKPlayer *pSkipPl3 /*= NULL*/)
+{
+	BallTouchInfo *info = LastInfo(wasShooting, pSkipPl, pSkipPl2, pSkipPl3);
+	return info ? (info->m_nTeam == TEAM_A ? TEAM_B : TEAM_A) : TEAM_INVALID;
+}
+
+void CBall::GetPredictedGoalLineCrossPosX(int &xPos, int &team)
+{
+	Vector vel = GetVel();
+	Vector dir = vel;
+	dir.z = 0;
+	dir.NormalizeInPlace();
+
+	team = TEAM_INVALID;
+
+	for (int i = 0; i < 2; i++)
+	{
+		if (-GetGlobalTeam(i + TEAM_A)->m_nForward == ZeroSign(dir.y))
+		{
+			team = i + TEAM_A;
+			break;
+		}
+	}
+
+	if (team == TEAM_INVALID)
+	{
+		xPos = 0;
+	}
+	else
+	{
+		Vector pos = GetPos();
+		float ang = acos(Vector(0, Sign(vel.y), 0).Dot(dir));
+		xPos = pos.x + Sign(vel.x) * tan(ang) * abs(GetGlobalTeam(team)->m_vGoalCenter.GetY() - pos.y);
+	}
 }

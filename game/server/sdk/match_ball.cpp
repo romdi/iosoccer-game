@@ -63,8 +63,6 @@ END_DATADESC()
 IMPLEMENT_SERVERCLASS_ST( CMatchBall, DT_MatchBall )
 	SendPropEHandle(SENDINFO(m_pLastActivePlayer)),
 	SendPropInt(SENDINFO(m_nLastActiveTeam)),
-	SendPropInt(SENDINFO(m_bChargedshotBlocked)),
-	SendPropInt(SENDINFO(m_bShotsBlocked)),
 END_SEND_TABLE()
 
 CMatchBall *CreateMatchBall(const Vector &pos)
@@ -93,8 +91,6 @@ CMatchBall::CMatchBall()
 	m_nPossessingTeam = TEAM_INVALID;
 	m_flPossessionStart = -1;
 	m_pTurnoverPlayer = NULL;
-	m_bChargedshotBlocked = false;
-	m_bShotsBlocked = false;
 	m_ePenaltyState = PENALTY_NONE;
 	m_bIsAdvantage = false;
 	m_flStateTimelimit = -1;
@@ -128,8 +124,6 @@ void CMatchBall::Reset()
 	m_nPossessingTeam = TEAM_INVALID;
 	m_flPossessionStart = -1;
 	m_pTurnoverPlayer = NULL;
-	m_bChargedshotBlocked = false;
-	m_bShotsBlocked = false;
 	m_ePenaltyState = PENALTY_NONE;
 	m_bIsAdvantage = false;
 	m_flStateTimelimit = -1;
@@ -195,6 +189,12 @@ void CMatchBall::State_Enter(ball_state_t newState, bool cancelQueuedState)
 void CMatchBall::State_Leave(ball_state_t newState)
 {
 	SDKGameRules()->DisableShield();
+
+	if (CSDKPlayer::IsOnField(m_pPl))
+	{
+		m_pPl->SetChargedshotBlocked(false);
+		m_pPl->SetShotsBlocked(false);
+	}
 
 	if ( m_pCurStateInfo && m_pCurStateInfo->pfnLeaveState )
 	{
@@ -401,7 +401,7 @@ void CMatchBall::State_THROWIN_Think()
 		SDKGameRules()->EnableShield(SHIELD_THROWIN, m_pPl->GetTeamNumber(), m_vPos);
 		m_pPl->SetPosInsideShield(Vector(m_vTriggerTouchPos.x, m_vTriggerTouchPos.y, SDKGameRules()->m_vKickOff.GetZ()), true);
 		m_flStateTimelimit = -1;
-		m_bShotsBlocked = true;
+		m_pPl->SetShotsBlocked(true);
 	}
 
 	if (!PlayersAtTargetPos())
@@ -414,7 +414,7 @@ void CMatchBall::State_THROWIN_Think()
 		m_pPl->RemoveFlag(FL_ATCONTROLS);
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_THROWIN);
 		m_pPl->SetShotButtonsReleased(false);
-		m_bShotsBlocked = false;
+		m_pPl->SetShotsBlocked(false);
 	}
 
 	UpdateCarrier();
@@ -451,7 +451,6 @@ void CMatchBall::State_THROWIN_Leave(ball_state_t newState)
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_THROW);
 
 	EnablePlayerCollisions(true);
-	m_bShotsBlocked = false;
 }
 
 void CMatchBall::State_KICKOFF_Enter()
@@ -507,7 +506,7 @@ void CMatchBall::State_KICKOFF_Think()
 		SDKGameRules()->EnableShield(SHIELD_KICKOFF, m_pPl->GetTeamNumber(), SDKGameRules()->m_vKickOff);
 		m_pPl->SetPosInsideShield(Vector(m_vPos.x - m_pPl->GetTeam()->m_nRight * 30, m_vPos.y, SDKGameRules()->m_vKickOff.GetZ()), true);
 		m_flStateTimelimit = -1;
-		m_bShotsBlocked = true;
+		m_pPl->SetShotsBlocked(true);
 
 		EmitSound("Ball.Whistle");
 
@@ -570,7 +569,7 @@ void CMatchBall::State_KICKOFF_Think()
 	{
 		m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit_setpiece.GetFloat();
 		m_pPl->SetShotButtonsReleased(false);
-		m_bShotsBlocked = false;
+		m_pPl->SetShotsBlocked(false);
 	}
 
 	UpdateCarrier();
@@ -589,7 +588,6 @@ void CMatchBall::State_KICKOFF_Think()
 
 void CMatchBall::State_KICKOFF_Leave(ball_state_t newState)
 {
-	m_bShotsBlocked = false;
 }
 
 void CMatchBall::State_GOALKICK_Enter()
@@ -624,7 +622,7 @@ void CMatchBall::State_GOALKICK_Think()
 		SDKGameRules()->EnableShield(SHIELD_GOALKICK, m_pPl->GetTeamNumber(), m_vPos);
 		m_pPl->SetPosInsideShield(Vector(m_vPos.x, m_vPos.y - 100 * m_pPl->GetTeam()->m_nForward, SDKGameRules()->m_vKickOff.GetZ()), true);
 		m_flStateTimelimit = -1;
-		m_bShotsBlocked = true;
+		m_pPl->SetShotsBlocked(true);
 	}
 
 	if (!PlayersAtTargetPos())
@@ -636,7 +634,7 @@ void CMatchBall::State_GOALKICK_Think()
 	{
 		m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit_setpiece.GetFloat();
 		m_pPl->RemoveFlag(FL_ATCONTROLS);
-		m_bShotsBlocked = false;
+		m_pPl->SetShotsBlocked(false);
 		m_pPl->SetShotButtonsReleased(false);
 	}
 
@@ -650,15 +648,15 @@ void CMatchBall::State_GOALKICK_Think()
 
 	if (m_flSetpieceCloseStartTime != -1 && gpGlobals->curtime > m_flSetpieceCloseStartTime + sv_ball_setpiece_close_time.GetFloat())
 	{
-		m_bChargedshotBlocked = true;
+		m_pPl->SetChargedshotBlocked(true);
 	}
 	else
-		m_bChargedshotBlocked = false;
+		m_pPl->SetChargedshotBlocked(false);
 
-	if (!m_bShotsBlocked
+	if (!m_pPl->ShotsBlocked()
 		&& m_pPl->ShotButtonsReleased()
 		&& CanTouchBallXY()
-		&& (m_pPl->IsNormalshooting() || !m_bChargedshotBlocked && m_pPl->IsChargedshooting()))
+		&& (m_pPl->IsNormalshooting() || !m_pPl->ChargedshotBlocked() && m_pPl->IsChargedshooting()))
 	{
 		m_pPl->AddGoalKick();
 		RemoveAllTouches();
@@ -669,8 +667,6 @@ void CMatchBall::State_GOALKICK_Think()
 
 void CMatchBall::State_GOALKICK_Leave(ball_state_t newState)
 {
-	m_bChargedshotBlocked = false;
-	m_bShotsBlocked = false;
 }
 
 void CMatchBall::State_CORNER_Enter()
@@ -704,7 +700,7 @@ void CMatchBall::State_CORNER_Think()
 		SDKGameRules()->EnableShield(SHIELD_CORNER, m_pPl->GetTeamNumber(), m_vPos);
 		m_pPl->SetPosInsideShield(Vector(m_vPos.x - 25 * Sign((SDKGameRules()->m_vKickOff - m_vPos).x), m_vPos.y - 25 * Sign((SDKGameRules()->m_vKickOff - m_vPos).y), SDKGameRules()->m_vKickOff[2]), true);
 		m_flStateTimelimit = -1;
-		m_bShotsBlocked = true;
+		m_pPl->SetShotsBlocked(true);
 	}
 
 	if (!PlayersAtTargetPos())
@@ -716,7 +712,7 @@ void CMatchBall::State_CORNER_Think()
 	{
 		m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit_setpiece.GetFloat();
 		m_pPl->RemoveFlag(FL_ATCONTROLS);
-		m_bShotsBlocked = false;
+		m_pPl->SetShotsBlocked(false);
 		m_pPl->SetShotButtonsReleased(false);
 	}
 
@@ -731,15 +727,15 @@ void CMatchBall::State_CORNER_Think()
 	if (gpGlobals->curtime <= m_flStateEnterTime + sv_ball_chargedshotblocktime_corner.GetFloat()
 		|| m_flSetpieceCloseStartTime != -1 && gpGlobals->curtime > m_flSetpieceCloseStartTime + sv_ball_setpiece_close_time.GetFloat())
 	{
-		m_bChargedshotBlocked = true;
+		m_pPl->SetChargedshotBlocked(true);
 	}
 	else
-		m_bChargedshotBlocked = false;
+		m_pPl->SetChargedshotBlocked(false);
 
-	if (!m_bShotsBlocked
+	if (!m_pPl->ShotsBlocked()
 		&& m_pPl->ShotButtonsReleased()
 		&& CanTouchBallXY()
-		&& (m_pPl->IsNormalshooting() || !m_bChargedshotBlocked && m_pPl->IsChargedshooting()))
+		&& (m_pPl->IsNormalshooting() || !m_pPl->ChargedshotBlocked() && m_pPl->IsChargedshooting()))
 	{
 		//EmitSound("Crowd.Way");
 		m_pPl->AddCorner();
@@ -751,8 +747,6 @@ void CMatchBall::State_CORNER_Think()
 
 void CMatchBall::State_CORNER_Leave(ball_state_t newState)
 {
-	m_bChargedshotBlocked = false;
-	m_bShotsBlocked = false;
 }
 
 void CMatchBall::State_GOAL_Enter()
@@ -850,7 +844,7 @@ void CMatchBall::State_FREEKICK_Think()
 		SDKGameRules()->EnableShield(SHIELD_FREEKICK, m_pPl->GetTeamNumber(), m_vPos);
 		m_pPl->SetPosInsideShield(Vector(m_vPos.x, m_vPos.y - 35 * m_pPl->GetTeam()->m_nForward, SDKGameRules()->m_vKickOff.GetZ()), true);
 		m_flStateTimelimit = -1;
-		m_bShotsBlocked = true;
+		m_pPl->SetShotsBlocked(true);
 	}
 
 	if (!PlayersAtTargetPos())
@@ -863,7 +857,7 @@ void CMatchBall::State_FREEKICK_Think()
 		m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit_setpiece.GetFloat();
 		m_flSetpieceCloseStartTime = -1;
 		m_pPl->RemoveFlag(FL_ATCONTROLS);
-		m_bShotsBlocked = false;
+		m_pPl->SetShotsBlocked(false);
 		m_pPl->SetShotButtonsReleased(false);
 	}
 
@@ -879,15 +873,15 @@ void CMatchBall::State_FREEKICK_Think()
 		&& gpGlobals->curtime <= m_flStateEnterTime + sv_ball_chargedshotblocktime_freekick.GetFloat()
 		|| m_flSetpieceCloseStartTime != -1 && gpGlobals->curtime > m_flSetpieceCloseStartTime + sv_ball_setpiece_close_time.GetFloat())
 	{
-		m_bChargedshotBlocked = true;
+		m_pPl->SetChargedshotBlocked(true);
 	}
 	else
-		m_bChargedshotBlocked = false;
+		m_pPl->SetChargedshotBlocked(false);
 
-	if (!m_bShotsBlocked
+	if (!m_pPl->ShotsBlocked()
 		&& m_pPl->ShotButtonsReleased()
 		&& CanTouchBallXY()
-		&& (m_pPl->IsNormalshooting() || !m_bChargedshotBlocked && m_pPl->IsChargedshooting()))
+		&& (m_pPl->IsNormalshooting() || !m_pPl->ChargedshotBlocked() && m_pPl->IsChargedshooting()))
 	{
 		//EmitSound("Crowd.Way");
 		m_pPl->AddFreeKick();
@@ -900,8 +894,6 @@ void CMatchBall::State_FREEKICK_Think()
 void CMatchBall::State_FREEKICK_Leave(ball_state_t newState)
 {
 	SDKGameRules()->SetOffsideLinesEnabled(false);
-	m_bChargedshotBlocked = false;
-	m_bShotsBlocked = false;
 }
 
 void CMatchBall::State_PENALTY_Enter()
@@ -950,7 +942,7 @@ void CMatchBall::State_PENALTY_Think()
 		SDKGameRules()->EnableShield(SHIELD_PENALTY, m_nFouledTeam, GetGlobalTeam(m_nFoulingTeam)->m_vPenalty);
 		m_pPl->SetPosInsideShield(Vector(m_vPos.x, m_vPos.y - 150 * m_pPl->GetTeam()->m_nForward, SDKGameRules()->m_vKickOff.GetZ()), true);
 		m_flStateTimelimit = -1;
-		m_bShotsBlocked = true;
+		m_pPl->SetShotsBlocked(true);
 		takerHasChanged = true;
 	}
 
@@ -989,9 +981,9 @@ void CMatchBall::State_PENALTY_Think()
 		m_pPl->RemoveFlag(FL_ATCONTROLS);
 	}
 
-	if (m_bShotsBlocked && gpGlobals->curtime - m_flStateEnterTime > sv_ball_shotsblocktime_penalty.GetFloat())
+	if (m_pPl->ShotsBlocked() && gpGlobals->curtime - m_flStateEnterTime > sv_ball_shotsblocktime_penalty.GetFloat())
 	{
-		m_bShotsBlocked = false;
+		m_pPl->SetShotsBlocked(false);
 		m_pPl->SetShotButtonsReleased(false);
 	}
 
@@ -1005,15 +997,15 @@ void CMatchBall::State_PENALTY_Think()
 
 	if (m_flSetpieceCloseStartTime != -1 && gpGlobals->curtime > m_flSetpieceCloseStartTime + sv_ball_setpiece_close_time.GetFloat())
 	{
-		m_bChargedshotBlocked = true;
+		m_pPl->SetChargedshotBlocked(true);
 	}
 	else
-		m_bChargedshotBlocked = false;
+		m_pPl->SetChargedshotBlocked(false);
 
-	if (!m_bShotsBlocked
+	if (!m_pPl->ShotsBlocked()
 		&& m_pPl->ShotButtonsReleased()
 		&& CanTouchBallXY()
-		&& (m_pPl->IsNormalshooting() || !m_bChargedshotBlocked && m_pPl->IsChargedshooting()))
+		&& (m_pPl->IsNormalshooting() || !m_pPl->ChargedshotBlocked() && m_pPl->IsChargedshooting()))
 	{
 		if (SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES)
 		{
@@ -1033,9 +1025,6 @@ void CMatchBall::State_PENALTY_Leave(ball_state_t newState)
 {
 	if (CSDKPlayer::IsOnField(m_pOtherPl))
 		m_pOtherPl->RemoveFlag(FL_NO_Y_MOVEMENT);
-
-	m_bChargedshotBlocked = false;
-	m_bShotsBlocked = false;
 }
 
 void CMatchBall::State_KEEPERHANDS_Enter()
@@ -1690,7 +1679,7 @@ bool CMatchBall::CheckFoul(bool canShootBall, const Vector &localDirToBall)
 			}
 		}
 
-		bool isPenalty = pPl->m_nInPenBoxOfTeam == m_pPl->GetTeamNumber();
+		bool isPenalty = pPl->m_Shared.m_nInPenBoxOfTeam == m_pPl->GetTeamNumber();
 
 		foul_type_t foulType;
 
@@ -1776,6 +1765,9 @@ bool CMatchBall::CheckFoul(bool canShootBall, const Vector &localDirToBall)
 					break;
 				case FOUL_NORMAL_RED_CARD:
 					foulMatchEvent = MATCH_EVENT_REDCARD;
+					break;
+				default:
+					foulMatchEvent = MATCH_EVENT_FOUL;
 					break;
 				}
 
@@ -2092,53 +2084,6 @@ void CMatchBall::VPhysicsCollision(int index, gamevcollisionevent_t *pEvent)
 	CBall::VPhysicsCollision(index, pEvent);
 }
 
-void CMatchBall::RemoveAllTouches()
-{
-	if (!m_bHasQueuedState)
-		m_Touches.PurgeAndDeleteElements();
-}
-
-BallTouchInfo *CMatchBall::LastInfo(bool wasShooting, CSDKPlayer *pSkipPl /*= NULL*/, CSDKPlayer *pSkipPl2 /*= NULL*/, CSDKPlayer *pSkipPl3 /*= NULL*/)
-{
-	for (int i = m_Touches.Count() - 1; i >= 0; i--)
-	{
-		if (pSkipPl && m_Touches[i]->m_pPl == pSkipPl)
-			continue;
-
-		if (pSkipPl2 && m_Touches[i]->m_pPl == pSkipPl2)
-			continue;
-
-		if (pSkipPl3 && m_Touches[i]->m_pPl == pSkipPl3)
-			continue;
-
-		if (!wasShooting || m_Touches[i]->m_bIsShot)
-			return m_Touches[i];
-	}
-
-	return NULL;
-}
-
-CSDKPlayer *CMatchBall::LastPl(bool wasShooting, CSDKPlayer *pSkipPl /*= NULL*/, CSDKPlayer *pSkipPl2 /*= NULL*/, CSDKPlayer *pSkipPl3 /*= NULL*/)
-{
-	BallTouchInfo *info = LastInfo(wasShooting, pSkipPl, pSkipPl2, pSkipPl3);
-	if (info && CSDKPlayer::IsOnField(info->m_pPl))
-		return info->m_pPl;
-	
-	return NULL;
-}
-
-int CMatchBall::LastTeam(bool wasShooting, CSDKPlayer *pSkipPl /*= NULL*/, CSDKPlayer *pSkipPl2 /*= NULL*/, CSDKPlayer *pSkipPl3 /*= NULL*/)
-{
-	BallTouchInfo *info = LastInfo(wasShooting, pSkipPl, pSkipPl2, pSkipPl3);
-	return info ? info->m_nTeam : TEAM_INVALID;
-}
-
-int CMatchBall::LastOppTeam(bool wasShooting, CSDKPlayer *pSkipPl /*= NULL*/, CSDKPlayer *pSkipPl2 /*= NULL*/, CSDKPlayer *pSkipPl3 /*= NULL*/)
-{
-	BallTouchInfo *info = LastInfo(wasShooting, pSkipPl, pSkipPl2, pSkipPl3);
-	return info ? (info->m_nTeam == TEAM_A ? TEAM_B : TEAM_A) : TEAM_INVALID;
-}
-
 bool CMatchBall::IsLegallyCatchableByKeeper()
 {
 	if (SDKGameRules()->IsIntermissionState() || SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES)
@@ -2179,16 +2124,6 @@ bool CMatchBall::IsLegallyCatchableByKeeper()
 	}
 
 	return false;
-}
-
-bool CMatchBall::UseDribblingCollision()
-{
-	return m_pPl == LastPl(true);
-}
-
-Vector CMatchBall::GetLastShotPos()
-{
-	return LastInfo(true) ? LastInfo(true)->m_vBallPos : SDKGameRules()->m_vKickOff;
 }
 
 void CMatchBall::CheckAdvantage()
@@ -2238,15 +2173,15 @@ void CMatchBall::CheckAdvantage()
 				}
 				else if (LastPl(true) && LastPl(true)->GetTeamNumber() == m_nFouledTeam && m_nInPenBoxOfTeam == m_nFoulingTeam)
 				{
-					Vector vel = m_vVel;
-					vel.z = 0;
-					vel.NormalizeInPlace();
+					int xPos, team;
+					GetPredictedGoalLineCrossPosX(xPos, team);
 
-					float ang = acos(Vector(0, Sign(m_vVel.y), 0).Dot(vel));
-					float xPos = m_vPos.x + Sign(m_vVel.x) * tan(ang) * abs(GetGlobalTeam(m_nFoulingTeam)->m_vGoalCenter.GetY() - m_vPos.y);
-
-					if (xPos >= GetGlobalTeam(m_nFoulingTeam)->m_vPenBoxMin.GetX() && xPos <= GetGlobalTeam(m_nFoulingTeam)->m_vPenBoxMax.GetX())
+					if (team == LastPl(true)->GetOppTeamNumber()
+						&& xPos >= GetGlobalTeam(m_nFoulingTeam)->m_vPenBoxMin.GetX()
+						&& xPos <= GetGlobalTeam(m_nFoulingTeam)->m_vPenBoxMax.GetX())
+					{
 						m_bIsAdvantage = false;
+					}
 				}
 			}
 		}

@@ -22,8 +22,6 @@ public:
 
 	CHandle<C_SDKPlayer> m_pLastActivePlayer;
 	int m_nLastActiveTeam;
-	bool m_bChargedshotBlocked;
-	bool m_bShotsBlocked;
 };
 
 extern C_MatchBall *GetMatchBall();

@@ -95,6 +95,9 @@ public:
 	CNetworkVar(float, m_flNextJump);
 	CNetworkVar(float, m_flNextSlide);
 
+	CNetworkVar(int, m_nInPenBoxOfTeam);
+	CNetworkVar(bool, m_bShotButtonsReleased);
+
 	CNetworkVar(int, m_nLastPressedSingleMoveKey);
 
 private:

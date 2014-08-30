@@ -140,9 +140,9 @@ void CHudChargedshotBar::Paint()
 
 	if (pPlayer->GetFlags() & FL_REMOTECONTROLLED)
 		shotFgColor = Color(100, 100, 100, 255);
-	else if (GetMatchBall() && GetMatchBall()->m_bShotsBlocked)
+	else if (pPlayer->m_bShotsBlocked)
 		shotFgColor = Color(139, 0, 0, 255);
-	else if (GetMatchBall() && GetMatchBall()->m_bChargedshotBlocked)
+	else if (pPlayer->m_bChargedshotBlocked)
 		shotFgColor = Color(255, 69, 0, 255);
 	else
 		shotUnusable = false;

@@ -1505,7 +1505,7 @@ void CGameMovement::FullWalkMove( )
 	mv->m_vecVelocity = newVel;
 	mv->m_vecAbsViewAngles = newAng;
 
-	ToSDKPlayer(player)->m_nInPenBoxOfTeam = TEAM_INVALID;
+	ToSDKPlayer(player)->m_Shared.m_nInPenBoxOfTeam = TEAM_INVALID;
 
 	for (int team = TEAM_A; team <= TEAM_B; team++)
 	{
@@ -1524,7 +1524,7 @@ void CGameMovement::FullWalkMove( )
 			&& mv->GetAbsOrigin().x - halfBounds <= max.x
 			&& mv->GetAbsOrigin().y - halfBounds <= max.y)
 		{
-			ToSDKPlayer(player)->m_nInPenBoxOfTeam = team;
+			ToSDKPlayer(player)->m_Shared.m_nInPenBoxOfTeam = team;
 			break;
 		}
 	}
@@ -1865,7 +1865,7 @@ bool CGameMovement::CheckJumpButton( void )
 	team = pPl->GetTeamNumber();
 #endif
 
-	if (isKeeper && pPl->m_nInPenBoxOfTeam == team && !pPl->m_pHoldingBall)
+	if (isKeeper && pPl->m_Shared.m_nInPenBoxOfTeam == team && !pPl->m_pHoldingBall)
 	{
 		MoveHelper()->StartSound( mv->GetAbsOrigin(), "Player.DiveKeeper" );
 
@@ -1959,7 +1959,7 @@ bool CGameMovement::CheckSlideButton()
 		team = pPl->GetTeamNumber();
 	#endif
 
-	if (isKeeper && pPl->m_nInPenBoxOfTeam == team && !pPl->m_pHoldingBall)
+	if (isKeeper && pPl->m_Shared.m_nInPenBoxOfTeam == team && !pPl->m_pHoldingBall)
 	{
 		if ((mv->m_nButtons & IN_FORWARD) && !(mv->m_nButtons & IN_WALK))
 		{

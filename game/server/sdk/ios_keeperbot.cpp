@@ -87,17 +87,24 @@ void CKeeperBot::BotCalcCommand(CUserCmd &cmd)
 	Vector dir = m_vBallPos - GetTeam()->m_vGoalCenter;
 	dir.z = 0;
 	dir.NormalizeInPlace();
-	Vector target = GetTeam()->m_vGoalCenter + dir * 150;
+	Vector target;
 	//ballDirToGoal.NormalizeInPlace();
 	//float ballGoalDot = DotProduct2D(m_vBallVel.AsVector2D(), ballDirToGoal.AsVector2D());
 
-	if (m_flAngToBallMoveDir < 60 && m_flAngToBallMoveDir > 15 && m_vBallVel.Length2D() > 200)
+	int ballCrossPosX, ballCrossTeam;
+	m_pBall->GetPredictedGoalLineCrossPosX(ballCrossPosX, ballCrossTeam);
+
+	bool ballMovesTowardsGoal;
+
+	if (ballCrossTeam == GetTeamNumber() && ballCrossPosX >= GetTeam()->m_vGoalCenter.GetX() - 200 && ballCrossPosX <= GetTeam()->m_vGoalCenter.GetX() + 200)
 	{
-		float yDist = GetTeam()->m_vGoalCenter.GetY() - m_vBallPos.y;
-		float vAng = acos(Sign(yDist) * m_vBallDir2D.y);
-		float xDist = Sign(m_vBallDir2D.x) * abs(yDist) * tan(vAng);
-		target = GetTeam()->m_vGoalCenter;
-		target.x = clamp(m_vBallPos.x + xDist, GetTeam()->m_vGoalCenter.GetX() - 150, GetTeam()->m_vGoalCenter.GetX() + 150);
+		ballMovesTowardsGoal = true;
+		target = Vector(ballCrossPosX, GetTeam()->m_vGoalCenter.GetY(), GetTeam()->m_vGoalCenter.GetZ());
+	}
+	else
+	{
+		ballMovesTowardsGoal = false;
+		target = GetTeam()->m_vGoalCenter + dir * 150;
 	}
 
 	if (m_pHoldingBall)
@@ -105,27 +112,9 @@ void CKeeperBot::BotCalcCommand(CUserCmd &cmd)
 		if (ShotButtonsReleased())
 		{
 			float chargeTime;
-			Vector passTarget;
+			SetChargedshotParams(ang, camAng, cmd, chargeTime);
 
-			CSDKPlayer *pPlayerTarget = FindClosestPlayerToSelf(true, true);
-
-			if (!pPlayerTarget && SDKGameRules()->IsIntermissionState())
-				pPlayerTarget = FindClosestPlayerToSelf(false, true);
-
-			if (pPlayerTarget)
-				passTarget = pPlayerTarget->GetLocalOrigin();
-			else
-				passTarget = GetOppTeam()->m_vGoalCenter;
-
-			Vector dir = passTarget - GetLocalOrigin();
-			float dist = dir.NormalizeInPlace();
-			float distCoeff = pow(clamp(dist / ((SDKGameRules()->m_vFieldMax.GetY() - SDKGameRules()->m_vFieldMin.GetY()) / 1.85f), 0.0f, 1.0f), 1.5f);
-			VectorAngles(dir, ang);
-			ang[PITCH] = -5 + distCoeff * -30;
-			VectorAngles(dir, camAng);
-			chargeTime = distCoeff * mp_chargedshot_increaseduration.GetFloat();
-
-			if (gpGlobals->curtime > m_pHoldingBall->GetStateEnterTime() + 1.5f)
+			if (gpGlobals->curtime > m_pHoldingBall->GetStateEnterTime() + (SDKGameRules()->IsIntermissionState() ? 0.5f : 2.0f))
 			{
 				if (m_Shared.m_bDoChargedShot)
 				{
@@ -155,23 +144,65 @@ void CKeeperBot::BotCalcCommand(CUserCmd &cmd)
 	}
 	else
 	{
-		cmd.buttons |= IN_ATTACK;
-
 		CSDKPlayer *pClosestPl = FindClosestPlayerToBall(false);
 
 		//VectorRotate(m_vDirToBall, -ang, m_vLocalDirToBall);
-
-		Vector dirToShotPos = m_pBall->GetLastShotPos() - GetLocalOrigin();
-
+		//Vector dirToShotPos = m_pBall->GetLastShotPos() - GetLocalOrigin();
 		//VectorAngles(dirToShotPos, ang);
 		VectorAngles(Vector(0, GetTeam()->m_nForward, 0), ang);
 		VectorAngles(m_vDirToBall, camAng);
 
-		if (m_pBall->State_Get() == BALL_STATE_FREEKICK || m_pBall->State_Get() == BALL_STATE_CORNER)
+		if ((m_pBall->State_Get() == BALL_STATE_GOALKICK || m_pBall->State_Get() == BALL_STATE_FREEKICK) && m_pBall->GetCurrentPlayer() == this)
+		{
+			target = m_vBallPos;
+			target.y -= GetTeam()->m_nForward * 200;
+
+			if (ShotButtonsReleased())
+			{
+				float chargeTime;
+				SetChargedshotParams(ang, camAng, cmd, chargeTime);
+
+				if (gpGlobals->curtime > m_pBall->GetStateEnterTime() + 2.0f)
+				{
+					if (m_Shared.m_bDoChargedShot)
+					{
+						target = m_vBallPos;
+						target.y -= GetTeam()->m_nForward * 20;
+					}
+					else if (m_Shared.m_bIsShotCharging)
+					{
+						if (gpGlobals->curtime >= m_Shared.m_flShotChargingStart + chargeTime)
+						{
+							target = m_vBallPos;
+							target.y -= GetTeam()->m_nForward * 20;
+						}
+						else if (gpGlobals->curtime >= m_Shared.m_flShotChargingStart + chargeTime / 2)
+						{
+							cmd.buttons |= IN_ATTACK2;
+							target = m_vBallPos;
+							target.y -= GetTeam()->m_nForward * 20;
+						}
+						else
+						{
+							cmd.buttons |= IN_ATTACK2;
+						}
+					}
+					else
+					{
+						cmd.buttons |= IN_ATTACK2;
+					}
+				}
+			}
+		}
+		else if ((m_pBall->State_Get() == BALL_STATE_FREEKICK || m_pBall->State_Get() == BALL_STATE_CORNER) && m_pBall->GetCurrentPlayer() != this)
 		{
 			modifier = KEEPER_FAR_COEFF;
 		}
-		else if (ballDistToGoal < 1250)
+		else if (m_pBall->InPenBoxOfTeam() != GetTeamNumber())
+		{
+			modifier = KEEPER_MID_COEFF;
+		}
+		else
 		{
 			// High ball
 			if (m_vDirToBall.z > 50 && m_vBallVel.z > 100 || m_vDirToBall.z > 100)
@@ -193,29 +224,33 @@ void CKeeperBot::BotCalcCommand(CUserCmd &cmd)
 			{
 				modifier = max(KEEPER_FAR_COEFF, 1 - pow(min(1, ballDistToGoal / 750.0f), 2));
 			}
-		}
-		else
-		{
-			modifier = KEEPER_MID_COEFF;
-		}
 
-		if (abs(m_vLocalDirToBall.x) > 50 && abs(m_vLocalDirToBall.x) < 225 && m_vDirToBall.z < 50 && abs(m_vLocalDirToBall.y) < 40 && m_vBallVel.Length() < 750 && pClosestPl != this)
-		{
-			cmd.buttons |= IN_DUCK;
-			cmd.buttons |= Sign(m_vLocalDirToBall.x) == 1 ? IN_FORWARD : IN_BACK;
-		}
-		else if (m_vDirToBall.z <= 80 && m_vDirToBall.Length2D() < 50)
-		{
-		}
-		else if (m_vLocalDirToBall.z > 80 && m_vDirToBall.z < 150 && m_vDirToBall.Length2D() < 50)
-		{
-			cmd.buttons |= IN_JUMP;
-		}
-		else if (m_flAngToBallMoveDir < 60 && m_flAngToBallMoveDir > 15
-			&& abs(m_vLocalDirToBall.y) > 40 && abs(m_vLocalDirToBall.y) < 350 && m_vDirToBall.z < 100 && abs(m_vLocalDirToBall.x) < 150 && m_vBallVel.Length() > 200)
-		{
-			cmd.buttons |= IN_JUMP;
-			cmd.buttons |= Sign(m_vLocalDirToBall.y) == 1 ? IN_MOVELEFT : IN_MOVERIGHT;
+			// Forward or backward dive
+			if (abs(m_vLocalDirToBall.x) > 50 && abs(m_vLocalDirToBall.x) < 225 && m_vDirToBall.z < 50 && abs(m_vLocalDirToBall.y) < 40 && m_vBallVel.Length() < 750 && pClosestPl != this)
+			{
+				cmd.buttons |= IN_ATTACK;
+				cmd.buttons |= IN_DUCK;
+				cmd.buttons |= Sign(m_vLocalDirToBall.x) == 1 ? IN_FORWARD : IN_BACK;
+			}
+			// Standing catch
+			else if (m_vDirToBall.z <= 80 && m_vDirToBall.Length2D() < 50)
+			{
+				cmd.buttons |= IN_ATTACK;
+			}
+			// Jumping catch
+			else if (m_vLocalDirToBall.z > 80 && m_vDirToBall.z < 150 && m_vDirToBall.Length2D() < 50)
+			{
+				cmd.buttons |= IN_ATTACK;
+				cmd.buttons |= IN_JUMP;
+			}
+			// Sideward dive
+			else if (m_flAngToBallMoveDir > 15
+				&& abs(m_vLocalDirToBall.y) > 40 && abs(m_vLocalDirToBall.y) < 350 && m_vDirToBall.z < 100 && abs(m_vLocalDirToBall.x) < 150 && m_vBallVel.Length() > 200)
+			{
+				cmd.buttons |= IN_ATTACK;
+				cmd.buttons |= IN_JUMP;
+				cmd.buttons |= Sign(m_vLocalDirToBall.y) == 1 ? IN_MOVELEFT : IN_MOVERIGHT;
+			}
 		}
 	}
 
@@ -225,7 +260,7 @@ void CKeeperBot::BotCalcCommand(CUserCmd &cmd)
 	//SnapEyeAngles(ang);
 	Vector targetPosDir;
 
-	if (m_pHoldingBall)
+	if (m_pHoldingBall || (m_pBall->State_Get() == BALL_STATE_GOALKICK || m_pBall->State_Get() == BALL_STATE_FREEKICK) && m_pBall->GetCurrentPlayer() == this)
 		targetPosDir = target - GetLocalOrigin();
 	else if (m_vBallPos.y < SDKGameRules()->m_vFieldMin.GetY() || m_vBallPos.y > SDKGameRules()->m_vFieldMax.GetY())
 		targetPosDir = goalCenterWithOffset - GetLocalOrigin();
@@ -294,4 +329,27 @@ CSDKPlayer *CKeeperBot::FindClosestPlayerToBall(bool ignoreSelf)
 	}
 
 	return pClosest;
+}
+
+void CKeeperBot::SetChargedshotParams(QAngle &ang, QAngle &camAng, CUserCmd &cmd, float &chargeTime)
+{
+	Vector passTarget;
+
+	CSDKPlayer *pPlayerTarget = SDKGameRules()->IsIntermissionState() ? m_pBall->LastPl(true, this) : FindClosestPlayerToSelf(true, true);
+
+	if (!pPlayerTarget && SDKGameRules()->IsIntermissionState())
+		pPlayerTarget = FindClosestPlayerToSelf(false, true);
+
+	if (pPlayerTarget)
+		passTarget = pPlayerTarget->GetLocalOrigin();
+	else
+		passTarget = GetOppTeam()->m_vGoalCenter;
+
+	Vector dir = passTarget - GetLocalOrigin();
+	float dist = dir.NormalizeInPlace();
+	float distCoeff = pow(clamp(dist / ((SDKGameRules()->m_vFieldMax.GetY() - SDKGameRules()->m_vFieldMin.GetY()) / 1.85f), 0.0f, 1.0f), 1.5f);
+	VectorAngles(dir, ang);
+	ang[PITCH] = -5 + distCoeff * -30;
+	VectorAngles(dir, camAng);
+	chargeTime = distCoeff * mp_chargedshot_increaseduration.GetFloat();
 }

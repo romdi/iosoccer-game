@@ -74,6 +74,7 @@ void CC_CreatePlayerBall(const CCommand &args)
 			pPl->GetPlayerBall()->CreateVPhysics();
 
 		pPl->GetPlayerBall()->SetPos(pos);
+		pPl->GetPlayerBall()->RemoveAllTouches();
 	}
 	else
 		pPl->SetPlayerBall(CreatePlayerBall(pos, pPl));
@@ -371,11 +372,16 @@ void CPlayerBall::TriggerSideline()
 
 void CPlayerBall::Touched(bool isShot, body_part_t bodyPart, const Vector &oldVel)
 {
-	if (isShot)
-	{
-		m_pLastShooter = m_pPl;
-		m_vLastShotPos = m_vPos;
-	}
+	BallTouchInfo *info = new BallTouchInfo;
+	info->m_pPl = m_pPl;
+	info->m_nTeam = m_pPl->GetTeamNumber();
+	info->m_bIsShot = isShot;
+	info->m_eBodyPart = bodyPart;
+	info->m_eBallState = State_Get();
+	info->m_vBallPos = m_vPos;
+	info->m_vBallVel = m_vVel;
+	info->m_flTime = gpGlobals->curtime;
+	m_Touches.AddToTail(info);
 }
 
 void CPlayerBall::VPhysicsCollision(int index, gamevcollisionevent_t *pEvent)
@@ -386,14 +392,4 @@ void CPlayerBall::VPhysicsCollision(int index, gamevcollisionevent_t *pEvent)
 bool CPlayerBall::IsLegallyCatchableByKeeper()
 {
 	return true;
-}
-
-bool CPlayerBall::UseDribblingCollision()
-{
-	return m_pPl == m_pLastShooter;
-}
-
-Vector CPlayerBall::GetLastShotPos()
-{
-	return m_vLastShotPos != vec3_invalid ? m_vLastShotPos : SDKGameRules()->m_vKickOff;
 }
