@@ -1819,6 +1819,21 @@ bool CGameMovement::CheckJumpButton( void )
 {
 	CSDKPlayer *pPl = ToSDKPlayer(player);
 
+	bool isKeeper;
+	int team;
+#ifdef CLIENT_DLL
+	isKeeper = GameResources()->GetTeamPosType(pPl->index) == POS_GK;
+	team = GameResources()->GetTeam(pPl->index);
+#else
+	isKeeper = pPl->GetTeamPosType() == POS_GK;
+	team = pPl->GetTeamNumber();
+#endif
+
+	if (isKeeper && GetMatchBall() && GetMatchBall()->State_Get() == BALL_STATE_PENALTY)
+	{
+		return false;
+	}
+
 	if (gpGlobals->curtime < pPl->m_Shared.m_flNextJump)
 	{
 		mv->m_nOldButtons |= IN_JUMP;
@@ -1854,16 +1869,6 @@ bool CGameMovement::CheckJumpButton( void )
 	player->PlayStepSound( (Vector &)mv->GetAbsOrigin(), player->m_pSurfaceData, 1.0, true );
 
 	PlayerAnimEvent_t animEvent = PLAYERANIMEVENT_JUMP;
-
-	bool isKeeper;
-	int team;
-#ifdef CLIENT_DLL
-	isKeeper = GameResources()->GetTeamPosType(pPl->index) == POS_GK;
-	team = GameResources()->GetTeam(pPl->index);
-#else
-	isKeeper = pPl->GetTeamPosType() == POS_GK;
-	team = pPl->GetTeamNumber();
-#endif
 
 	if (isKeeper && pPl->m_Shared.m_nInPenBoxOfTeam == team && !pPl->m_pHoldingBall)
 	{

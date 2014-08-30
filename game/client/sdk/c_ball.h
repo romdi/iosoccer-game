@@ -55,7 +55,6 @@ public:
 	float m_fMass;
 	//CHandle<C_SDKPlayer> m_pCreator;
 	CHandle<C_SDKPlayer> m_pHoldingPlayer;
-	bool m_bIsPlayerBall;
 	ball_state_t m_eBallState;
 
 	inline ball_state_t State_Get() { return m_eBallState; }

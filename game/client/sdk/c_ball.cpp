@@ -13,7 +13,6 @@ IMPLEMENT_CLIENTCLASS_DT( C_Ball, DT_Ball, CBall )
 	RecvPropFloat( RECVINFO( m_fMass ) ),
 	//RecvPropEHandle(RECVINFO(m_pCreator)),
 	RecvPropEHandle(RECVINFO(m_pHoldingPlayer)),
-	RecvPropBool(RECVINFO(m_bIsPlayerBall)),
 	RecvPropInt(RECVINFO(m_eBallState)),
 	RecvPropString(RECVINFO(m_szSkinName))
 END_RECV_TABLE()
