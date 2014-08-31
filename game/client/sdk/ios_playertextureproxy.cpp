@@ -11,6 +11,7 @@
 #include "c_playerresource.h"
 #include "c_ios_replaymanager.h"
 #include "iosoptions.h"
+#include "clientmode_sdk.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -197,7 +198,8 @@ private:
 	char m_szTextureType[64];
 	CProceduralRegenerator	*m_pTextureRegen[2][11]; // The regenerator
 	CProceduralRegenerator *m_pPreviewTextureRegen;
-	IMaterial *m_pMaterial;
+	float m_flLastPreviewTextureUpdate;
+	float m_flLastTextureUpdate[2][11];
 };
 
 CPlayerTextureProxy::CPlayerTextureProxy()
@@ -207,27 +209,30 @@ CPlayerTextureProxy::CPlayerTextureProxy()
 	m_pTexture = NULL;
 
 	for (int i = 0; i < 2; i++)
+	{
 		for (int j = 0; j < 11; j++)
+		{
 			m_pTextureRegen[i][j] = NULL;
+			m_flLastTextureUpdate[2][11] = -1;
+		}
+	}
 
 	m_pPreviewTextureRegen = NULL;
+	m_flLastPreviewTextureUpdate = -1;
 }
 
 CPlayerTextureProxy::~CPlayerTextureProxy()
 {
-	// Do nothing
 }
+
 void CPlayerTextureProxy::Release()
 {
-	m_pBaseTextureVar = NULL;
-	m_pTexture = NULL;
-
-	for (int i = 0; i < 2; i++)
-		for (int j = 0; j < 11; j++)
-			m_pTextureRegen[i][j] = NULL;
-
-	m_pPreviewTextureRegen = NULL;
-
+//	for (int i = 0; i < 2; i++)
+//		for (int j = 0; j < 11; j++)
+//			delete m_pTextureRegen[i][j];
+//
+//	delete m_pPreviewTextureRegen;
+//
 	delete this;
 }
 
@@ -236,8 +241,6 @@ bool CPlayerTextureProxy::Init( IMaterial *pMaterial, KeyValues *pKeyValues )
 	#ifdef ALLPROXIESFAIL
 	return false;
 	#endif
-
-	m_pMaterial = pMaterial;
 
 	// Check for $basetexture variable
 	m_pBaseTextureVar = pMaterial->FindVar( "$basetexture", NULL );
@@ -256,7 +259,6 @@ bool CPlayerTextureProxy::Init( IMaterial *pMaterial, KeyValues *pKeyValues )
 	if (!Q_strcmp(m_szTextureType, "shirt") || !Q_strcmp(m_szTextureType, "keepershirt"))
 	{
 		m_pDetailTextureVar = pMaterial->FindVar("$detail", NULL);
-		//m_pTextureRegen = new CProceduralRegenerator();
 	}
 
 	return true;
@@ -278,6 +280,7 @@ void CPlayerTextureProxy::OnBind( C_BaseEntity *pEnt )
 
 	ITexture *pDetailTexture;
 	CProceduralRegenerator **pProcReg;
+	float *pLastTextureUpdate;
 
 	if (dynamic_cast<C_SDKPlayer *>(pEnt))
 	{
@@ -298,6 +301,7 @@ void CPlayerTextureProxy::OnBind( C_BaseEntity *pEnt )
 
 		pDetailTexture = materials->FindTexture(VarArgs("models/player/default/detail_%d_%d", teamIndex, posIndex), NULL, true);
 		pProcReg = &m_pTextureRegen[teamIndex][posIndex];
+		pLastTextureUpdate = &m_flLastTextureUpdate[teamIndex][posIndex];
 	}
 	else if (dynamic_cast<C_ReplayPlayer *>(pEnt))
 	{
@@ -318,6 +322,7 @@ void CPlayerTextureProxy::OnBind( C_BaseEntity *pEnt )
 
 		pDetailTexture = materials->FindTexture(VarArgs("models/player/default/detail_%d_%d", teamIndex, posIndex), NULL, true);
 		pProcReg = &m_pTextureRegen[teamIndex][posIndex];
+		pLastTextureUpdate = &m_flLastTextureUpdate[teamIndex][posIndex];
 	}
 	else if (dynamic_cast<C_BaseAnimatingOverlay *>(pEnt))
 	{
@@ -334,6 +339,7 @@ void CPlayerTextureProxy::OnBind( C_BaseEntity *pEnt )
 
 		pDetailTexture = materials->FindTexture("models/player/default/detail_preview", NULL, true);
 		pProcReg = &m_pPreviewTextureRegen;
+		pLastTextureUpdate = &m_flLastPreviewTextureUpdate;
 	}
 	else
 	{
@@ -355,8 +361,11 @@ void CPlayerTextureProxy::OnBind( C_BaseEntity *pEnt )
 		else
 			needsUpdate = (*pProcReg)->SetPlayerInfo(shirtName, shirtNumber, pKitInfo->m_OutfieldShirtNameColor, pKitInfo->m_nOutfieldShirtNameOffset, pKitInfo->m_OutfieldShirtNumberColor, pKitInfo->m_nOutfieldShirtNumberOffset, false, pKitInfo->m_pFontAtlas);
 				
-		if (needsUpdate)
+		if (needsUpdate || *pLastTextureUpdate <= ClientModeSDKNormal::m_flLastMapChange)
+		{
 			pDetailTexture->Download();
+			*pLastTextureUpdate = gpGlobals->curtime;
+		}
 	}
 
 	char texture[128];

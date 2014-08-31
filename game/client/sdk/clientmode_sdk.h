@@ -37,6 +37,8 @@ public:
 
 	virtual bool	CanRecordDemo( char *errorMsg, int length ) const;
 
+	static float m_flLastMapChange;
+
 private:
 	
 	//	void	UpdateSpectatorMode( void );

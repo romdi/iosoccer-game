@@ -43,6 +43,8 @@ ConVar default_fov( "default_fov", "90", FCVAR_CHEAT );
 
 IClientMode *g_pClientMode = NULL;
 
+float ClientModeSDKNormal::m_flLastMapChange = -1;
+
 //Tony; add stubs for cycler weapon and cubemap.
 STUB_WEAPON_CLASS( cycler_weapon,   WeaponCycler,   C_BaseCombatWeapon );
 STUB_WEAPON_CLASS( weapon_cubemap,  WeaponCubemap,  C_BaseCombatWeapon );
@@ -106,6 +108,8 @@ void CSDKModeManager::LevelInit( const char *newmap )
 		cl_detail_avoid_force.SetValue( "0.4" );
 		cl_detail_avoid_recover_speed.SetValue( "0.25" );
 	}
+
+	ClientModeSDKNormal::m_flLastMapChange = gpGlobals->curtime;
 }
 
 void CSDKModeManager::LevelShutdown( void )
