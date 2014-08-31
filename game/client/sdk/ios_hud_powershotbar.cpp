@@ -29,6 +29,20 @@
 
 extern ConVar centeredstaminabar;
 
+ConVar cl_staminabar_x("cl_staminabar_x", "30", FCVAR_ARCHIVE);
+ConVar cl_staminabar_y("cl_staminabar_y", "-30", FCVAR_ARCHIVE);
+ConVar cl_staminabar_width("cl_staminabar_width", "200", FCVAR_ARCHIVE);
+ConVar cl_staminabar_height("cl_staminabar_height", "12", FCVAR_ARCHIVE);
+ConVar cl_staminabar_vertical("cl_staminabar_vertical", "0", FCVAR_ARCHIVE);
+ConVar cl_staminabar_border("cl_staminabar_border", "2", FCVAR_ARCHIVE);
+
+ConVar cl_shotbar_x("cl_shotbar_x", "30", FCVAR_ARCHIVE);
+ConVar cl_shotbar_y("cl_shotbar_y", "-50", FCVAR_ARCHIVE);
+ConVar cl_shotbar_width("cl_shotbar_width", "200", FCVAR_ARCHIVE);
+ConVar cl_shotbar_height("cl_shotbar_height", "12", FCVAR_ARCHIVE);
+ConVar cl_shotbar_vertical("cl_shotbar_vertical", "0", FCVAR_ARCHIVE);
+ConVar cl_shotbar_border("cl_shotbar_border", "2", FCVAR_ARCHIVE);
+
 class CHudChargedshotBar : public CHudElement, public vgui::Panel
 {
 	DECLARE_CLASS_SIMPLE( CHudChargedshotBar, vgui::Panel );
@@ -50,9 +64,6 @@ protected:
 DECLARE_HUDELEMENT( CHudChargedshotBar );
 
 using namespace vgui;
-
-enum { BAR_WIDTH = 200, BAR_HEIGHT = 12, BAR_HPADDING = 2, BAR_VPADDING = 2, SHOTBAR_HEIGHT = 6 };
-enum { INDICATOR_WIDTH = 9, INDICATOR_OFFSET = 7, INDICATOR_BORDER = 1 };
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -164,40 +175,78 @@ void CHudChargedshotBar::Paint()
 
 	shotBgColor = Color(0, 0, 0, 255);
 
-	int centerX = 30 + BAR_HPADDING + BAR_WIDTH / 2;
-	int centerY = GetTall() - 30 - BAR_HEIGHT / 2 - BAR_VPADDING;
+	int centerX;
+	int centerY;
+
+	centerX = cl_staminabar_x.GetInt() > 0 ?
+		cl_staminabar_x.GetInt() + cl_staminabar_border.GetInt() + cl_staminabar_width.GetInt() / 2
+		: GetWide() + cl_staminabar_x.GetInt() - cl_staminabar_border.GetInt() - cl_staminabar_width.GetInt() / 2;
+	
+	centerY = cl_staminabar_y.GetInt() > 0 ?
+		cl_staminabar_y.GetInt() + cl_staminabar_border.GetInt() + cl_staminabar_height.GetInt() / 2
+		: GetTall() + cl_staminabar_y.GetInt() - cl_staminabar_border.GetInt() - cl_staminabar_height.GetInt() / 2;
 
 	// Draw stamina bar back
 	surface()->DrawSetColor(staminaBgColor);
 	surface()->DrawFilledRect(
-		centerX - (BAR_WIDTH / 2 + BAR_HPADDING),
-		centerY - (BAR_HEIGHT / 2 + BAR_VPADDING),
-		centerX + (BAR_WIDTH / 2 + BAR_HPADDING),
-		centerY + (BAR_HEIGHT / 2 + BAR_VPADDING));
+		centerX - (cl_staminabar_width.GetInt() / 2 + cl_staminabar_border.GetInt()),
+		centerY - (cl_staminabar_height.GetInt() / 2 + cl_staminabar_border.GetInt()),
+		centerX + (cl_staminabar_width.GetInt() / 2 + cl_staminabar_border.GetInt()),
+		centerY + (cl_staminabar_height.GetInt() / 2 + cl_staminabar_border.GetInt()));
 
 	// Draw stamina bar front
 	surface()->DrawSetColor(staminaFgColor);
-	surface()->DrawFilledRect(
-		centerX - (BAR_WIDTH / 2),
-		centerY - (BAR_HEIGHT / 2),
-		centerX - (BAR_WIDTH / 2) + stamina * (BAR_WIDTH),
-		centerY + (BAR_HEIGHT / 2));
 
-	centerY -= 2 * (BAR_HEIGHT / 2 + BAR_VPADDING) + 10;
+	if (cl_staminabar_vertical.GetBool())
+	{
+		surface()->DrawFilledRect(
+			centerX - (cl_staminabar_width.GetInt() / 2),
+			centerY - (cl_staminabar_height.GetInt() / 2) + (1 - stamina) * (cl_staminabar_width.GetInt()),
+			centerX + (cl_staminabar_width.GetInt() / 2),
+			centerY + (cl_staminabar_height.GetInt() / 2));
+	}
+	else
+	{
+		surface()->DrawFilledRect(
+			centerX - (cl_staminabar_width.GetInt() / 2),
+			centerY - (cl_staminabar_height.GetInt() / 2),
+			centerX - (cl_staminabar_width.GetInt() / 2) + stamina * (cl_staminabar_width.GetInt()),
+			centerY + (cl_staminabar_height.GetInt() / 2));
+	}
+
+	centerX = cl_shotbar_x.GetInt() > 0 ?
+		cl_shotbar_x.GetInt() + cl_shotbar_border.GetInt() + cl_shotbar_width.GetInt() / 2
+		: GetWide() + cl_shotbar_x.GetInt() - cl_shotbar_border.GetInt() - cl_shotbar_width.GetInt() / 2;
+	
+	centerY = cl_shotbar_y.GetInt() > 0 ?
+		cl_shotbar_y.GetInt() + cl_shotbar_border.GetInt() + cl_shotbar_height.GetInt() / 2
+		: GetTall() + cl_shotbar_y.GetInt() - cl_shotbar_border.GetInt() - cl_shotbar_height.GetInt() / 2;
 
 	// Draw shot bar back
 	surface()->DrawSetColor(shotBgColor);
 	surface()->DrawFilledRect(
-		centerX - (BAR_WIDTH / 2 + BAR_HPADDING),
-		centerY - (BAR_HEIGHT / 2 + BAR_VPADDING),
-		centerX + (BAR_WIDTH / 2 + BAR_HPADDING),
-		centerY + (BAR_HEIGHT / 2 + BAR_VPADDING));
+		centerX - (cl_shotbar_width.GetInt() / 2 + cl_shotbar_border.GetInt()),
+		centerY - (cl_shotbar_height.GetInt() / 2 + cl_shotbar_border.GetInt()),
+		centerX + (cl_shotbar_width.GetInt() / 2 + cl_shotbar_border.GetInt()),
+		centerY + (cl_shotbar_height.GetInt() / 2 + cl_shotbar_border.GetInt()));
 
 	// Draw shot bar front
 	surface()->DrawSetColor(shotFgColor);
-	surface()->DrawFilledRect(
-		centerX - (BAR_WIDTH / 2),
-		centerY - (BAR_HEIGHT / 2),
-		centerX - (BAR_WIDTH / 2) + shotStrength * (BAR_WIDTH),
-		centerY + (BAR_HEIGHT / 2));
+
+	if (cl_shotbar_vertical.GetBool())
+	{
+		surface()->DrawFilledRect(
+			centerX - (cl_shotbar_width.GetInt() / 2),
+			centerY - (cl_shotbar_height.GetInt() / 2) + (1 - shotStrength) * (cl_shotbar_height.GetInt()),
+			centerX + (cl_shotbar_width.GetInt() / 2),
+			centerY + (cl_shotbar_height.GetInt() / 2));
+	}
+	else
+	{
+		surface()->DrawFilledRect(
+			centerX - (cl_shotbar_width.GetInt() / 2),
+			centerY - (cl_shotbar_height.GetInt() / 2),
+			centerX - (cl_shotbar_width.GetInt() / 2) + shotStrength * (cl_shotbar_width.GetInt()),
+			centerY + (cl_shotbar_height.GetInt() / 2));
+	}
 }
