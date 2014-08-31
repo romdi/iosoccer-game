@@ -836,7 +836,7 @@ void CMatchBall::State_FREEKICK_Think()
 			m_pPl = GetGlobalTeam(m_nFouledTeam)->GetPlayerByPosType(POS_GK);
 
 		if (!CSDKPlayer::IsOnField(m_pPl) || m_pPl->GetTeamPosType() == POS_GK && m_pPl->IsBot())
-			m_pPl = FindNearestPlayer(m_nFouledTeam, FL_POS_FIELD);
+			m_pPl = FindNearestPlayer(m_nFouledTeam);
 
 		if (!m_pPl)
 			return State_Transition(BALL_STATE_NORMAL);

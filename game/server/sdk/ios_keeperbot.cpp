@@ -152,7 +152,7 @@ void CKeeperBot::BotCalcCommand(CUserCmd &cmd)
 		VectorAngles(Vector(0, GetTeam()->m_nForward, 0), ang);
 		VectorAngles(m_vDirToBall, camAng);
 
-		if ((m_pBall->State_Get() == BALL_STATE_GOALKICK || m_pBall->State_Get() == BALL_STATE_FREEKICK) && m_pBall->GetCurrentPlayer() == this)
+		if (m_pBall->State_Get() == BALL_STATE_GOALKICK && m_pBall->GetCurrentPlayer() == this)
 		{
 			target = m_vBallPos;
 			target.y -= GetTeam()->m_nForward * 200;

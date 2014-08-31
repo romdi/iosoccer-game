@@ -360,7 +360,7 @@ void CBall::VPhysicsCollision(int index, gamevcollisionevent_t *pEvent)
 		EmitSound("Ball.Touch");
 }
 
-CSDKPlayer *CBall::FindNearestPlayer(int team /*= TEAM_INVALID*/, int posFlags /*= FL_POS_FIELD*/, bool checkIfShooting /*= false*/, int ignoredPlayerBits /*= 0*/, float radius /*= -1*/)
+CSDKPlayer *CBall::FindNearestPlayer(int team /*= TEAM_INVALID*/, int posFlags /*= FL_POS_OUTFIELD*/, bool checkIfShooting /*= false*/, int ignoredPlayerBits /*= 0*/, float radius /*= -1*/)
 {
 	CSDKPlayer *pNearest = NULL;
 	float shortestDist = FLT_MAX;
@@ -379,7 +379,7 @@ CSDKPlayer *CBall::FindNearestPlayer(int team /*= TEAM_INVALID*/, int posFlags /
 		{
 			int posType = (int)pPlayer->GetTeam()->GetFormation()->positions[pPlayer->GetTeamPosIndex()]->type;
 
-			if ((posFlags & FL_POS_FIELD) != 0 && !((1 << posType) & (g_nPosDefense + g_nPosMidfield + g_nPosAttack)))
+			if ((posFlags & FL_POS_OUTFIELD) != 0 && !((1 << posType) & (g_nPosDefense + g_nPosMidfield + g_nPosAttack)))
 				continue;
 
 			if ((posFlags & FL_POS_KEEPER) != 0 && !((1 << posType) & g_nPosKeeper))

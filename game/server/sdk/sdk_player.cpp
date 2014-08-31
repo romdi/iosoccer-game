@@ -1172,7 +1172,7 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 
 		CSDKPlayer *pPl = (CSDKPlayer*)UTIL_PlayerByIndex(playerIndex);
 
-		if (pPl && pPl->GetTeam() == GetTeam())
+		if (pPl && pPl->GetTeam() == GetTeam() && !pPl->IsBot())
 			GetMatchBall()->SetSetpieceTaker(pPl);
 
 		return true;

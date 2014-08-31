@@ -47,7 +47,7 @@ enum foul_type_t
 #define FL_POS_DEFENDER					(1 << 1)
 #define FL_POS_MIDFIELDER				(1 << 2)
 #define FL_POS_ATTACKER					(1 << 3)
-#define FL_POS_FIELD					(1 << 4)
+#define FL_POS_OUTFIELD					(1 << 4)
 #define FL_POS_ANY						(1 << 5)
 #define FL_POS_LEFT						(1 << 6)
 #define FL_POS_CENTER					(1 << 7)
@@ -201,7 +201,7 @@ protected:
 
 	bool			CanTouchBallXY();
 	virtual bool	CheckFoul(bool canShootBall, const Vector &localDirToBall) = 0;
-	CSDKPlayer		*FindNearestPlayer(int team = TEAM_INVALID, int posFlags = FL_POS_FIELD, bool checkIfShooting = false, int ignoredPlayerBits = 0, float radius = -1);
+	CSDKPlayer		*FindNearestPlayer(int team = TEAM_INVALID, int posFlags = FL_POS_OUTFIELD, bool checkIfShooting = false, int ignoredPlayerBits = 0, float radius = -1);
 	bool			IsInCollisionRange(bool isDeflection);
 	bool			DoBodyPartAction();
 	bool			CheckCollision();
