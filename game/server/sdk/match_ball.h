@@ -43,7 +43,7 @@ public:
 
 	CSDKPlayer		*GetCurrentOtherPlayer() { return m_pOtherPl; }
 	CSDKPlayer		*GetLastActivePlayer() { return m_pLastActivePlayer; }
-	void			SetSetpieceTaker(CSDKPlayer *pPlayer) { m_pSetpieceTaker = pPlayer; m_pPl = NULL; }
+	void			SetSetpieceTaker(CSDKPlayer *pPlayer);
 
 	void			Touched(bool isShot, body_part_t bodyPart, const Vector &oldVel);
 	bool			CheckFoul(bool canShootBall, const Vector &localDirToBall);

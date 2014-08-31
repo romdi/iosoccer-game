@@ -2736,7 +2736,7 @@ void CSDKGameRules::ResetMatch()
 		if (!pPl)
 			continue;
 
-		pPl->ResetFlags();
+		pPl->Reset();
 	}
 
 	FlushLog(logfile, "End player flags reset");

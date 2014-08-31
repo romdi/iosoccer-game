@@ -652,7 +652,7 @@ void CSDKPlayer::ChangeTeam()
 	// update client state 
 	if (GetTeamNumber() == TEAM_UNASSIGNED || GetTeamNumber() == TEAM_SPECTATOR)
 	{
-		ResetFlags();
+		Reset();
 
 		if (State_Get() != PLAYER_STATE_OBSERVER_MODE)
 		{
@@ -671,7 +671,7 @@ void CSDKPlayer::ChangeTeam()
 		else
 			m_nBody = MODEL_PLAYER;
 
-		ResetFlags();
+		Reset();
 
 		if (State_Get() != PLAYER_STATE_ACTIVE)
 			State_Transition(PLAYER_STATE_ACTIVE);
@@ -1159,7 +1159,13 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 		if (args.ArgC() < 2)
 			return false;
 
-		if (this != GetTeam()->GetCaptain())
+		if (this != GetTeam()->GetCaptain()
+			|| !CSDKPlayer::IsOnField(GetMatchBall()->GetCurrentPlayer(), GetTeamNumber())
+			|| (GetMatchBall()->State_Get() != BALL_STATE_GOALKICK
+				&& GetMatchBall()->State_Get() != BALL_STATE_FREEKICK
+				&& GetMatchBall()->State_Get() != BALL_STATE_CORNER
+				&& GetMatchBall()->State_Get() != BALL_STATE_PENALTY
+				&& GetMatchBall()->State_Get() != BALL_STATE_THROWIN))
 			return true;
 
 		int playerIndex = atoi(args[1]);
@@ -1559,14 +1565,14 @@ int CSDKPlayer::GetTeamPosType()
 	return (int)GetTeam()->GetFormation()->positions[GetTeamPosIndex()]->type;
 }
 
-void CSDKPlayer::ResetFlags()
+void CSDKPlayer::Reset()
 {
 	m_Shared.SetStamina(100);
 	InitSprinting();
 	m_flNextShot = gpGlobals->curtime;
 	m_flNextFoulCheck = gpGlobals->curtime;
 	m_bIsAtTargetPos = false;
-	RemoveFlag(FL_SHIELD_KEEP_IN | FL_SHIELD_KEEP_OUT | FL_REMOTECONTROLLED | FL_FREECAM | FL_CELEB | FL_NO_X_MOVEMENT | FL_NO_Y_MOVEMENT | FL_ATCONTROLS | FL_FROZEN);
+	RemoveFlags();
 	DoServerAnimationEvent(PLAYERANIMEVENT_CANCEL);
 	m_pHoldingBall = NULL;
 	m_bIsAway = true;
@@ -1587,6 +1593,11 @@ void CSDKPlayer::ResetFlags()
 		SetCollisionGroup(COLLISION_GROUP_PLAYER);
 		RemoveEffects(EF_NODRAW);
 	}
+}
+
+void CSDKPlayer::RemoveFlags()
+{
+	RemoveFlag(FL_SHIELD_KEEP_IN | FL_SHIELD_KEEP_OUT | FL_REMOTECONTROLLED | FL_FREECAM | FL_CELEB | FL_NO_X_MOVEMENT | FL_NO_Y_MOVEMENT | FL_ATCONTROLS | FL_FROZEN);
 }
 
 bool CSDKPlayer::IsNormalshooting()

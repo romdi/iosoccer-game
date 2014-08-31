@@ -464,7 +464,8 @@ public:
 
 	void				FindSafePos(Vector &startPos);
 
-	void				ResetFlags();
+	void				Reset();
+	void				RemoveFlags();
 
 	const char			*GetClubName();
 	void				SetClubName(const char *name);

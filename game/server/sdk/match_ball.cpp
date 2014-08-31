@@ -2205,3 +2205,17 @@ void CMatchBall::SetPenaltyState(penalty_state_t penaltyState)
 		gameeventmanager->FireEvent(pEvent);
 	}
 }
+
+void CMatchBall::SetSetpieceTaker(CSDKPlayer *pPlayer)
+{
+	m_pSetpieceTaker = pPlayer;
+
+	if (CSDKPlayer::IsOnField(m_pPl))
+	{
+		m_pPl->SetShotsBlocked(false);
+		m_pPl->SetChargedshotBlocked(false);
+		m_pPl->RemoveFlags();
+	}
+
+	m_pPl = NULL;
+}
