@@ -1587,13 +1587,13 @@ void CSDKGameRules::State_Think()
 						CSDKPlayer *pPl1 = pTeam->GetPlayerByPosIndex(i);
 						CSDKPlayer *pPl2 = pTeam->GetPlayerByPosIndex(i - 1);
 
-						if (pPl1)
+						if (pPl1 && !pPl1->IsBot() && (!pPl2 || !pPl2->IsBot()))
 							pPl1->SetDesiredTeam(team, team, i - 1, true, false, true);
 
-						if (pPl2)
+						if (pPl2 && !pPl2->IsBot() && (!pPl1 || !pPl1->IsBot()))
 							pPl2->SetDesiredTeam(team, team, i, true, false, true);
 
-						if (pPl1 && pPl2)
+						if (pPl1 && !pPl1->IsBot() && pPl2 && !pPl2->IsBot())
 						{
 							// Swap world location
 							Vector pl1Pos = pPl1->GetLocalOrigin();
