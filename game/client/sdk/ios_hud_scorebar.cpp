@@ -383,6 +383,11 @@ void CHudScorebar::OnThink( void )
 	{
 		int time = abs(SDKGameRules()->GetMatchDisplayTimeSeconds(true));
 		m_pTime->SetText(VarArgs("%d:%02d", time / 60, time % 60));
+
+		if (!SDKGameRules()->IsIntermissionState() && time != abs(SDKGameRules()->GetMatchDisplayTimeSeconds(false)))
+			m_pTime->SetBgColor(Color(220, 20, 60, 255));
+		else
+			m_pTime->SetBgColor(Color(0, 0, 0, 0));
 	}
 
 	if (SDKGameRules()->m_nAnnouncedInjuryTime > 0 && m_flInjuryTimeStart == -1)
