@@ -3279,10 +3279,6 @@ void CSDKGameRules::DrawCelebScreen()
 	Vector forward, right, up;
 	AngleVectors(angles, &forward, &right, &up);
 
-	Vector dir = C_SDKPlayer::GetLocalSDKPlayer()->GetLocalOrigin() - origin;
-	dir.NormalizeInPlace();
-	VectorVectors(dir, right, up);
-
 	CMatRenderContextPtr pRenderContext( materials );
 	IMaterial *pPreviewMaterial = materials->FindMaterial( material, TEXTURE_GROUP_CLIENT_EFFECTS );
 	pRenderContext->Bind( pPreviewMaterial );
