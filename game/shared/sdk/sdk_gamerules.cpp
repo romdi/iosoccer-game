@@ -1572,7 +1572,11 @@ void CSDKGameRules::State_Think()
 			m_flStateTimeLeft += m_flInjuryTime + additionalTime * 60 / (90.0f / mp_timelimit_match.GetFloat());
 
 			// Check for player auto-rotation
-			if (sv_playerrotation_enabled.GetBool() && m_PlayerRotationMinutes.Count() > 0 && GetMatchDisplayTimeSeconds(false) / 60 >= m_PlayerRotationMinutes.Head())
+			if (sv_playerrotation_enabled.GetBool() && m_PlayerRotationMinutes.Count() > 0 && GetMatchDisplayTimeSeconds(false) / 60 >= m_PlayerRotationMinutes.Head()
+				&& (m_PlayerRotationMinutes.Head() != 45 && m_PlayerRotationMinutes.Head() != 90 && m_PlayerRotationMinutes.Head() != 105
+				|| m_PlayerRotationMinutes.Head() == 45 && SDKGameRules()->State_Get() == MATCH_PERIOD_SECOND_HALF
+				|| m_PlayerRotationMinutes.Head() == 90 && SDKGameRules()->State_Get() == MATCH_PERIOD_EXTRATIME_FIRST_HALF
+				|| m_PlayerRotationMinutes.Head() == 105 && SDKGameRules()->State_Get() == MATCH_PERIOD_EXTRATIME_SECOND_HALF))
 			{
 				for (int team = TEAM_A; team <= TEAM_B; team++)
 				{
