@@ -35,6 +35,7 @@ ConVar
 	
 	sv_ball_spin( "sv_ball_spin", "4000", FCVAR_NOTIFY ),
 	sv_ball_spin_exponent( "sv_ball_spin_exponent", "0.5", FCVAR_NOTIFY ),
+	sv_ball_spin_mincoeff( "sv_ball_spin_mincoeff", "0.0", FCVAR_NOTIFY ),
 	sv_ball_defaultspin( "sv_ball_defaultspin", "150", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY ),
 	sv_ball_topspin_coeff( "sv_ball_topspin_coeff", "1.25", FCVAR_NOTIFY ),
 	sv_ball_backspin_coeff( "sv_ball_backspin_coeff", "0.1", FCVAR_NOTIFY ),
@@ -164,9 +165,10 @@ ConVar
 	sv_ball_dribbling_mass("sv_ball_dribbling_mass", "75", FCVAR_NOTIFY),
 	sv_ball_dribbling_collisioncoeff("sv_ball_dribbling_collisioncoeff", "1.25", FCVAR_NOTIFY),
 
+	sv_ball_selfhit_collide("sv_ball_selfhit_collide", "0", FCVAR_NOTIFY),
 	sv_ball_selfhit_mass("sv_ball_selfhit_mass", "75", FCVAR_NOTIFY),
 	sv_ball_selfhit_collisioncoeff("sv_ball_selfhit_collisioncoeff", "0.25", FCVAR_NOTIFY);
-
+	
 
 //==========================================================
 //	
@@ -650,6 +652,9 @@ bool CBall::CheckCollision()
 			}
 			else
 			{
+				if (!sv_ball_selfhit_collide.GetBool())
+					return false;
+
 				collisionCoeff = sv_ball_selfhit_collisioncoeff.GetFloat();
 				ballMass = sv_ball_selfhit_mass.GetFloat();
 			}
@@ -707,6 +712,7 @@ bool CBall::CheckCollision()
 
 		EmitSound("Ball.Touch");
 		m_vVel = vel;
+
 		m_pPhys->SetVelocity(&m_vVel, &m_vRot);
 		m_bSetNewVel = true;
 	}
@@ -1063,10 +1069,9 @@ AngularImpulse CBall::CalcSpin(float coeff, int spinFlags)
 	}
 	else
 	{
-		float speedCoeff = pow(sin(RemapValClamped(m_vVel.Length(), sv_ball_dynamicshotdelay_minshotstrength.GetInt(), sv_ball_dynamicshotdelay_maxshotstrength.GetInt(), 0.0f, 1.0f) * M_PI), (double)sv_ball_spin_exponent.GetFloat());
-
+		double speedCoeff = pow(sin((double)RemapValClamped(m_vVel.Length(), sv_ball_dynamicshotdelay_minshotstrength.GetInt(), sv_ball_dynamicshotdelay_maxshotstrength.GetInt(), sv_ball_spin_mincoeff.GetFloat(), 1.0f) * M_PI), (double)sv_ball_spin_exponent.GetFloat());
 		Vector sideRot = vec3_origin;
-		float sideSpin = 0;
+		double sideSpin = 0;
 
 		if (coeff > 0 && (spinFlags & FL_SPIN_PERMIT_SIDE))
 		{
@@ -1085,10 +1090,10 @@ AngularImpulse CBall::CalcSpin(float coeff, int spinFlags)
 		float pitch = m_aPlAng[PITCH];
 
 		Vector backRot = m_vPlRight;
-		float backSpin = 0;
+		double backSpin = 0;
 
 		Vector topRot = -m_vPlRight;
-		float topSpin = 0;
+		double topSpin = 0;
 
 		if (coeff > 0)
 		{
