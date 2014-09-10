@@ -1710,7 +1710,7 @@ bool CSDKPlayer::CanSpeak(MessageMode_t messageMode)
 	if (messageMode != MM_SAY || GetTeam()->GetCaptain() == this)
 		return true;
 
-	if (SDKGameRules()->IsIntermissionState() && mp_chat_intermissions_captain_only.GetBool() || !SDKGameRules()->IsIntermissionState() && mp_chat_match_captain_only.GetBool())
+	if (SDKGameRules()->IsIntermissionState() && SDKGameRules()->State_Get() != MATCH_PERIOD_COOLDOWN && mp_chat_intermissions_captain_only.GetBool() || !SDKGameRules()->IsIntermissionState() && mp_chat_match_captain_only.GetBool())
 		return false;
 
 	return true;
