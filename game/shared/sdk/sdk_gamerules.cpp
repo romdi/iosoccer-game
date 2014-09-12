@@ -2234,7 +2234,7 @@ void CC_MP_Teamkits(const CCommand &args)
 
 	if (args.ArgC() == 1)
 	{
-		char list[2048] = {};
+		char list[10240] = {};
 		int teamCount = 0;
 		int kitCount = 0;
 
