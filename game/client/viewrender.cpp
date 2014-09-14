@@ -1882,7 +1882,7 @@ void CViewRender::RenderView( const CViewSetup &view, int nClearFlags, int whatT
 	//	}
 	//#endif
 
-		DrawTVScreen(view);
+		//DrawTVScreen(view);
 
 		g_bRenderingView = true;
 
@@ -1980,7 +1980,7 @@ void CViewRender::RenderView( const CViewSetup &view, int nClearFlags, int whatT
 
 		SDKGameRules()->DrawOffsideLines();
 
-		SDKGameRules()->DrawCelebScreen();
+		//SDKGameRules()->DrawCelebScreen();
 
 		// Overlay screen fade on entire screen
 		IMaterial* pMaterial = blend ? m_ModulateSingleColor : m_TranslucentSingleColor;

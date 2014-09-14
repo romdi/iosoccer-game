@@ -907,11 +907,14 @@ void C_Camera::CalcTVCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov, b
 		break;
 	case TVCAM_MODE_CELEBRATION:
 		{
-			Vector newPos = Vector(SDKGameRules()->m_vFieldMin.GetX() - 500, (atMinGoalPos ? SDKGameRules()->m_vFieldMin.GetY() - 500 : SDKGameRules()->m_vFieldMax.GetY() + 500), SDKGameRules()->m_vKickOff.GetZ() + 1000);
+			Vector newPos = Vector(
+				targetPos.x < SDKGameRules()->m_vKickOff.GetX() ? SDKGameRules()->m_vFieldMin.GetX() - 500 : SDKGameRules()->m_vFieldMax.GetX() + 500,
+				targetPos.y < SDKGameRules()->m_vKickOff.GetY() ? SDKGameRules()->m_vFieldMin.GetY() - 500 : SDKGameRules()->m_vFieldMax.GetY() + 500,
+				SDKGameRules()->m_vKickOff.GetZ() + 1000);
 			Vector newDir = targetPos - newPos;
 			float dist = newDir.Length();
 			newDir.NormalizeInPlace();
-			newPos = targetPos - min(250, dist) * newDir;
+			newPos = targetPos - min(300, dist) * newDir;
 			eyeOrigin = newPos;
 			VectorAngles(newDir, eyeAngles);
 		}
