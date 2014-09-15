@@ -1068,8 +1068,7 @@ void CSDKGameRules::ClientDisconnected( edict_t *pClient )
 		if (pPl->GetPlayerBall())
 			pPl->GetPlayerBall()->RemovePlayerBall();
 
-		if (pPl->IsPropCreationAllowed())
-			pPl->AllowPropCreation(false);
+		pPl->RemoveProps();
 
 		pPl->SetConnected(PlayerDisconnecting);
 

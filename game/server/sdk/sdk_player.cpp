@@ -1717,18 +1717,21 @@ bool CSDKPlayer::CanSpeak(MessageMode_t messageMode)
 	return true;
 }
 
+void CSDKPlayer::RemoveProps()
+{
+	while (m_PlayerProps.Count() > 0)
+	{
+		if (m_PlayerProps[0])
+			UTIL_Remove(m_PlayerProps[0]);
+
+		m_PlayerProps.Remove(0);
+	}
+}
+
 void CSDKPlayer::AllowPropCreation(bool allow)
 {
 	if (m_bAllowPropCreation && !allow)
-	{
-		while (m_PlayerProps.Count() > 0)
-		{
-			if (m_PlayerProps[0])
-				UTIL_Remove(m_PlayerProps[0]);
-
-			m_PlayerProps.Remove(0);
-		}
-	}
+		RemoveProps();
 
 	m_bAllowPropCreation = allow;
 }
@@ -1741,7 +1744,7 @@ void CSDKPlayer::RemoveAllPlayerProps()
 		if (!pPl)
 			continue;
 
-		pPl->AllowPropCreation(false);
+		pPl->RemoveProps();
 	}
 }
 
@@ -1761,7 +1764,7 @@ void CC_SV_PropCreation(const CCommand &args)
 
 	if (userId == -1)
 	{
-		Msg("Allowing prop creation for all players\n");
+		Msg("%s prop creation for all players\n", allowPropCreation ? "Allowing" : "Disallowing");
 
 		for (int i = 1; i <= gpGlobals->maxClients; i++)
 		{
@@ -1800,6 +1803,10 @@ const char *g_szPlayerProps[4] =
 
 void CC_CreateProp(const CCommand &args)
 {
+	CSDKPlayer *pPl = ToSDKPlayer(UTIL_GetCommandClient());
+	if (!pPl)
+		return;
+
 	if (args.ArgC() < 2)
 	{
 		char msg[1024];
@@ -1812,29 +1819,21 @@ void CC_CreateProp(const CCommand &args)
 			Q_strncat(msg, "\n", sizeof(msg));
 		}
 
-		Msg(msg);
+		ClientPrint(pPl, HUD_PRINTCONSOLE, msg);
 
 		return;
 	}
 
-	CSDKPlayer *pPl = ToSDKPlayer(UTIL_GetCommandClient());
-
-	if (!pPl)
-		return;
-
 	if (!pPl->IsPropCreationAllowed())
 	{
-		Msg("You are not allowed to create props\n");
+		ClientPrint(pPl, HUD_PRINTCONSOLE, "You are not allowed to create props\n");
 		return;
 	}
 
 	if (!CSDKPlayer::IsOnField(pPl) || !SDKGameRules()->IsIntermissionState() || pPl->GetFlags() & FL_REMOTECONTROLLED)
 		return;
 
-	int propType = atoi(args[1]) - 1;
-
-	if (propType < 0 || propType >= PLAYER_PROP_COUNT)
-		return;
+	int propType = clamp(atoi(args[1]) - 1, 0, PLAYER_PROP_COUNT - 1);
 
 	const char *modelName = g_szPlayerProps[propType];
 
@@ -1878,6 +1877,8 @@ void CC_CreateProp(const CCommand &args)
 
 	pPl->m_PlayerProps.AddToTail(pProp);
 
+	ClientPrint(pPl, HUD_PRINTCONSOLE, "Prop created\n");
+
 	CBaseEntity::SetAllowPrecache(allowPrecache);
 }
 
@@ -1886,6 +1887,10 @@ static ConCommand createprop("createprop", CC_CreateProp);
 
 void CC_DeleteProp(const CCommand &args)
 {
+	CSDKPlayer *pPl = ToSDKPlayer(UTIL_GetCommandClient());
+	if (!pPl)
+		return;
+
 	if (args.ArgC() < 2)
 	{
 		char msg[1024];
@@ -1898,20 +1903,19 @@ void CC_DeleteProp(const CCommand &args)
 			Q_strncat(msg, "\n", sizeof(msg));
 		}
 
-		Msg(msg);
+		ClientPrint(pPl, HUD_PRINTCONSOLE, msg);
 		return;
 	}
 
-	CSDKPlayer *pPl = ToSDKPlayer(UTIL_GetCommandClient());
 
-	if (!pPl || !pPl->IsPropCreationAllowed() || !SDKGameRules()->IsIntermissionState() || pPl->GetFlags() & FL_REMOTECONTROLLED)
+	if (!pPl->IsPropCreationAllowed() || !SDKGameRules()->IsIntermissionState() || pPl->GetFlags() & FL_REMOTECONTROLLED)
 		return;
 
 	int propType = clamp(atoi(args[1]), -1, PLAYER_PROP_COUNT);
 
 	if (propType == -1)
 	{
-		pPl->AllowPropCreation(false);
+		pPl->RemoveProps();
 	}
 	else if (CSDKPlayer::IsOnField(pPl))
 	{
@@ -1941,10 +1945,14 @@ void CC_DeleteProp(const CCommand &args)
 				{
 					UTIL_Remove(pProp);
 					pPl->m_PlayerProps.Remove(index);
+					ClientPrint(pPl, HUD_PRINTCONSOLE, "Prop deleted\n");
+					return;
 				}
 			}
 		}
 	}
+
+	ClientPrint(pPl, HUD_PRINTCONSOLE, "No prop found\n");
 }
 
 static ConCommand deleteprop("deleteprop", CC_DeleteProp);

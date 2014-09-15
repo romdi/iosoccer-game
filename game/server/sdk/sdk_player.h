@@ -584,6 +584,7 @@ public:
 
 	void				AllowPropCreation(bool allow);
 	bool				IsPropCreationAllowed() { return m_bAllowPropCreation; }
+	void				RemoveProps();
 
 	CNetworkHandle(CBall, m_pHoldingBall);
 
