@@ -162,6 +162,7 @@ ConVar
 	
 	sv_ball_keepercatchdelay_poscoeffmin("sv_ball_keepercatchdelay_poscoeffmin", "0.5", FCVAR_NOTIFY),
 	
+	sv_ball_dribbling_collide("sv_ball_dribbling_collide", "0", FCVAR_NOTIFY),
 	sv_ball_dribbling_mass("sv_ball_dribbling_mass", "75", FCVAR_NOTIFY),
 	sv_ball_dribbling_collisioncoeff("sv_ball_dribbling_collisioncoeff", "1.25", FCVAR_NOTIFY),
 
@@ -673,6 +674,9 @@ bool CBall::CheckCollision()
 				&& DotProduct2D(m_vVel.AsVector2D(), dirToBall.AsVector2D()) >= 0
 				&& DotProduct2D(m_vPlVel.AsVector2D(), dirToBall.AsVector2D()) >= 0)
 			{
+				if (!sv_ball_dribbling_collide.GetBool())
+					return false;
+
 				collisionCoeff = sv_ball_dribbling_collisioncoeff.GetFloat();
 				ballMass = sv_ball_dribbling_mass.GetFloat();
 			}
