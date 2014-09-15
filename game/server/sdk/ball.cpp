@@ -97,7 +97,7 @@ ConVar
 	sv_ball_pitchdown_fixedcoeff("sv_ball_pitchdown_fixedcoeff", "0.3", FCVAR_NOTIFY),
 	sv_ball_pitchup_exponent("sv_ball_pitchup_exponent", "3.0", FCVAR_NOTIFY),
 	sv_ball_pitchup_fixedcoeff("sv_ball_pitchup_fixedcoeff", "0.3", FCVAR_NOTIFY),
-	
+
 	sv_ball_bestbackspinangle_start("sv_ball_bestbackspinangle_start", "-65", FCVAR_NOTIFY),
 	sv_ball_bestbackspinangle_end("sv_ball_bestbackspinangle_end", "-30", FCVAR_NOTIFY),
 	
@@ -628,6 +628,7 @@ bool CBall::DoBodyPartAction()
 	return false;
 }
 
+// http://gamedev.stackexchange.com/a/15936
 bool CBall::CheckCollision()
 {
 	Vector dirToBall = m_vPos - m_vPlPos;
@@ -636,12 +637,37 @@ bool CBall::CheckCollision()
 	bool collide = false;
 	float collisionCoeff;
 	float ballMass;
+	Vector dirToBallNormal;
+
+	if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_SLIDE || m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_DIVINGHEADER)
+	{
+		dirToBallNormal = localDirToBall.y > 0 ? -m_vPlRight : m_vPlRight;
+		QAngle ang;
+		VectorAngles((m_vPos - (m_vPlPos + m_flPhysRadius)), ang);
+		VectorRotate(dirToBallNormal, QAngle(ang[PITCH], 0, 0), dirToBallNormal);
+	}
+	else
+	{
+		dirToBallNormal = dirToBall;
+		dirToBallNormal.z = 0;
+	}
+
+	dirToBallNormal.NormalizeInPlace();
+	float dotballVel = m_vVel.Dot(dirToBallNormal);
+	float dotPlayerVel = m_vPlVel.Dot(dirToBallNormal);
+	float indicator = dotballVel - dotPlayerVel;
+
+	// If indicator is bigger or equal to 0, the ball is either moving away from the player or going the same speed, so there's no need to apply additional velocity
+	if (indicator >= 0)
+		return false;
 
 	if ((!m_pPl->IsShooting() || !m_pPl->CanShoot()) && IsInCollisionRange(false))
 	{
 		collide = true;
 
-		if (m_pPl == LastPl(true))
+		BallTouchInfo *pLastShot = LastInfo(true);
+
+		if (pLastShot && pLastShot->m_pPl == m_pPl)
 		{
 			if (DotProduct2D(m_vVel.AsVector2D(), m_vPlVel.AsVector2D()) >= 0
 				&& DotProduct2D(m_vVel.AsVector2D(), dirToBall.AsVector2D()) >= 0
@@ -677,45 +703,21 @@ bool CBall::CheckCollision()
 	if (!collide)
 		return false;
 
-	// http://gamedev.stackexchange.com/a/15936
-	Vector normal;
-
-	if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_SLIDE || m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_DIVINGHEADER)
-	{
-		normal = localDirToBall.y > 0 ? -m_vPlRight : m_vPlRight;
-		QAngle ang;
-		VectorAngles((m_vPos - (m_vPlPos + m_flPhysRadius)), ang);
-		VectorRotate(normal, QAngle(ang[PITCH], 0, 0), normal);
-	}
-	else
-	{
-		normal = dirToBall;
-		normal.z = 0;
-	}
-
-	normal.NormalizeInPlace();
-	Vector v1 = m_vVel;
-	Vector v2 = m_vPlVel;
-	float a1 = v1.Dot(normal);
-	float a2 = v2.Dot(normal);
-	float optimizedP = (2 * (a1 - a2)) / (ballMass + sv_player_mass.GetFloat());
-	Vector vel = v1 - optimizedP * sv_player_mass.GetFloat() * normal;
+	float optimizedP = 2 * indicator / (ballMass + sv_player_mass.GetFloat());
+	Vector vel = m_vVel - optimizedP * sv_player_mass.GetFloat() * dirToBallNormal;
 	vel *= collisionCoeff;
 
-	// If optimizedP is bigger or equal to 0, the ball is either moving away from the player or going the same speed, so there's no need to apply additional velocity
-	if (optimizedP < 0)
-	{
-		if (m_vVel.Length() > 900.0f)
-			m_pPl->EmitSound ("Player.Oomph");
+	if (m_vVel.Length() > 900.0f)
+		m_pPl->EmitSound ("Player.Oomph");
 
-		Touched(false, BODY_PART_UNKNOWN, m_vVel);
+	Touched(false, BODY_PART_UNKNOWN, m_vVel);
 
-		EmitSound("Ball.Touch");
-		m_vVel = vel;
+	EmitSound("Ball.Touch");
 
-		m_pPhys->SetVelocity(&m_vVel, &m_vRot);
-		m_bSetNewVel = true;
-	}
+	m_vVel = vel;
+
+	m_pPhys->SetVelocity(&m_vVel, &m_vRot);
+	m_bSetNewVel = true;
 
 	return true;
 }
@@ -1059,6 +1061,7 @@ bool CBall::DoHeader()
 AngularImpulse CBall::CalcSpin(float coeff, int spinFlags)
 {	
 	Vector worldRot;
+	float pitch = m_aPlAng[PITCH];
 
 	if (spinFlags & FL_SPIN_RETAIN_SIDE)
 	{
@@ -1069,13 +1072,13 @@ AngularImpulse CBall::CalcSpin(float coeff, int spinFlags)
 	}
 	else
 	{
-		double speedCoeff = pow(sin((double)RemapValClamped(m_vVel.Length(), sv_ball_dynamicshotdelay_minshotstrength.GetInt(), sv_ball_dynamicshotdelay_maxshotstrength.GetInt(), sv_ball_spin_mincoeff.GetFloat(), 1.0f) * M_PI), (double)sv_ball_spin_exponent.GetFloat());
+		float speedCoeff = pow(sin(RemapValClamped(m_vVel.Length(), sv_ball_dynamicshotdelay_minshotstrength.GetInt(), sv_ball_dynamicshotdelay_maxshotstrength.GetInt(), sv_ball_spin_mincoeff.GetFloat(), 1.0f) * M_PI), (double)sv_ball_spin_exponent.GetFloat());
 		Vector sideRot = vec3_origin;
-		double sideSpin = 0;
+		float sideSpin = 0;
 
 		if (coeff > 0 && (spinFlags & FL_SPIN_PERMIT_SIDE))
 		{
-			sideSpin = speedCoeff * sv_ball_spin.GetInt() * coeff;
+			sideSpin = speedCoeff * sv_ball_spin.GetInt() * coeff * GetPitchCoeff();
 
 			if ((m_pPl->m_nButtons & IN_MOVELEFT) && (!(m_pPl->m_nButtons & IN_MOVERIGHT) || m_pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVERIGHT)) 
 			{
@@ -1087,13 +1090,11 @@ AngularImpulse CBall::CalcSpin(float coeff, int spinFlags)
 			}
 		}
 
-		float pitch = m_aPlAng[PITCH];
-
 		Vector backRot = m_vPlRight;
-		double backSpin = 0;
+		float backSpin = 0;
 
 		Vector topRot = -m_vPlRight;
-		double topSpin = 0;
+		float topSpin = 0;
 
 		if (coeff > 0)
 		{
