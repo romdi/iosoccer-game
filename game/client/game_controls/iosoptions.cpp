@@ -419,7 +419,7 @@ void CNetworkSettingPanel::OnCommand(const char *cmd)
 	if (!Q_strcmp(cmd, "suggested_interpduration"))
 		m_pInterpDurationList->ActivateItemByRow(0);
 	if (!Q_strcmp(cmd, "suggested_smoothduration"))
-		m_pSmoothDurationList->ActivateItemByRow(3);
+		m_pSmoothDurationList->ActivateItemByRow(2);
 	else if (!Q_strcmp(cmd, "suggested_rate"))
 		m_pRateList->ActivateItemByRow(m_pRateList->GetItemCount() - 1);
 	else if (!Q_strcmp(cmd, "suggested_updaterate"))
