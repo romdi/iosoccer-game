@@ -1809,18 +1809,11 @@ void CC_CreateProp(const CCommand &args)
 
 	if (args.ArgC() < 2)
 	{
-		char msg[1024];
+		char msg[256];
 
-		Q_snprintf(msg, sizeof(msg), "Usage: createprop <proptype>{1-%d} <zoffset> <pitchrotation>\nThe available models are:\n", PLAYER_PROP_COUNT);
-
-		for (int i = 0; i < PLAYER_PROP_COUNT; i++)
-		{
-			Q_strncat(msg, g_szPlayerProps[i], sizeof(msg));
-			Q_strncat(msg, "\n", sizeof(msg));
-		}
+		Q_snprintf(msg, sizeof(msg), "Usage: createprop <proptype>{1-%d} <zoffset> <pitchrotation>\n", PLAYER_PROP_COUNT);
 
 		ClientPrint(pPl, HUD_PRINTCONSOLE, msg);
-
 		return;
 	}
 
@@ -1893,15 +1886,9 @@ void CC_DeleteProp(const CCommand &args)
 
 	if (args.ArgC() < 2)
 	{
-		char msg[1024];
+		char msg[256];
 
-		Q_snprintf(msg, sizeof(msg), "Usage: deleteprop <proptype>{1-%d}\nDeletes the prop you're looking at filtered by type\nUse 0 for any type\nUse -1 to delete all of your props\nThe available models are:\n", PLAYER_PROP_COUNT);
-
-		for (int i = 0; i < PLAYER_PROP_COUNT; i++)
-		{
-			Q_strncat(msg, g_szPlayerProps[i], sizeof(msg));
-			Q_strncat(msg, "\n", sizeof(msg));
-		}
+		Q_snprintf(msg, sizeof(msg), "Usage: deleteprop <proptype>{1-%d}\nDeletes the prop you're looking at filtered by type\nUse 0 for any type\nUse -1 to delete all of your props\n", PLAYER_PROP_COUNT);
 
 		ClientPrint(pPl, HUD_PRINTCONSOLE, msg);
 		return;
@@ -1916,6 +1903,8 @@ void CC_DeleteProp(const CCommand &args)
 	if (propType == -1)
 	{
 		pPl->RemoveProps();
+		ClientPrint(pPl, HUD_PRINTCONSOLE, "All props deleted\n");
+		return;
 	}
 	else if (CSDKPlayer::IsOnField(pPl))
 	{
