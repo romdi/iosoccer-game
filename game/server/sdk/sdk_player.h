@@ -17,6 +17,7 @@
 #include "sdk_shareddefs.h"
 #include "steam/steam_api.h"
 #include "ios_teamkit_parse.h"
+#include "props.h"
 //#include "player_ball.h"
 //#include "match_ball.h"
 
@@ -581,7 +582,13 @@ public:
 	bool				CanShoot();
 	CSDKPlayer			*FindClosestPlayerToSelf(bool teammatesOnly, bool forwardOnly = false, float maxYawAngle = 360);
 
+	void				AllowPropCreation(bool allow);
+	bool				IsPropCreationAllowed() { return m_bAllowPropCreation; }
+
 	CNetworkHandle(CBall, m_pHoldingBall);
+
+	CUtlVector<CDynamicProp *> m_PlayerProps;
+	static void		RemoveAllPlayerProps();
 
 protected:
 
@@ -594,6 +601,7 @@ protected:
 	Vector				m_vOffsideBallPos;
 	int					m_nSpecTeam;
 	int					m_nSkinIndex;
+	bool				m_bAllowPropCreation;
 
 	CNetworkVar(bool, m_bChargedshotBlocked);
 	CNetworkVar(bool, m_bShotsBlocked);

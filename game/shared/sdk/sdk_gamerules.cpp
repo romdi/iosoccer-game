@@ -1068,6 +1068,9 @@ void CSDKGameRules::ClientDisconnected( edict_t *pClient )
 		if (pPl->GetPlayerBall())
 			pPl->GetPlayerBall()->RemovePlayerBall();
 
+		if (pPl->IsPropCreationAllowed())
+			pPl->AllowPropCreation(false);
+
 		pPl->SetConnected(PlayerDisconnecting);
 
 		// Remove the player from his team
@@ -1472,6 +1475,7 @@ void CSDKGameRules::State_Enter( match_period_t newState )
 	if (!IsIntermissionState())
 	{
 		CPlayerBall::RemoveAllPlayerBalls();
+		CSDKPlayer::RemoveAllPlayerProps();
 
 		for (int i = 0; i < 2; i++)
 		{

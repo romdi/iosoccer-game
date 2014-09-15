@@ -343,6 +343,7 @@ CSDKPlayer::CSDKPlayer()
 	m_bJoinSilently = false;
 	SetChargedshotBlocked(false);
 	SetShotsBlocked(false);
+	m_bAllowPropCreation = false;
 
 	m_szPlayerName[0] = '\0';
 	m_szClubName[0] = '\0';
@@ -1715,6 +1716,240 @@ bool CSDKPlayer::CanSpeak(MessageMode_t messageMode)
 
 	return true;
 }
+
+void CSDKPlayer::AllowPropCreation(bool allow)
+{
+	if (m_bAllowPropCreation && !allow)
+	{
+		while (m_PlayerProps.Count() > 0)
+		{
+			if (m_PlayerProps[0])
+				UTIL_Remove(m_PlayerProps[0]);
+
+			m_PlayerProps.Remove(0);
+		}
+	}
+
+	m_bAllowPropCreation = allow;
+}
+
+void CSDKPlayer::RemoveAllPlayerProps()
+{
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+		if (!pPl)
+			continue;
+
+		pPl->AllowPropCreation(false);
+	}
+}
+
+void CC_SV_PropCreation(const CCommand &args)
+{
+	if (!UTIL_IsCommandIssuedByServerAdmin())
+        return;
+
+	if (args.ArgC() < 3)
+	{
+		Msg("Usage: sv_propcreation <userid> <allowed>{0/1}\nUse userid -1 to allow or disallow prop creation for all players\n");
+		return;
+	}
+
+	int userId = atoi(args[1]);
+	bool allowPropCreation = atoi(args[2]) == 1 ? true : false;
+
+	if (userId == -1)
+	{
+		Msg("Allowing prop creation for all players\n");
+
+		for (int i = 1; i <= gpGlobals->maxClients; i++)
+		{
+			CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+			if (!pPl)
+				continue;
+
+			pPl->AllowPropCreation(allowPropCreation);
+		}
+	}
+	else
+	{
+		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByUserId(userId));
+
+		if (pPl)
+		{
+			pPl->AllowPropCreation(allowPropCreation);
+			Msg("Prop creation %s for player with user id %d\n", allowPropCreation ? "allowed" : "disallowed", userId);
+		}
+		else
+			Msg("Player with user id %d not found\n", userId);
+	}
+}
+
+static ConCommand sv_propcreation("sv_propcreation", CC_SV_PropCreation);
+
+#define PLAYER_PROP_COUNT 4
+
+const char *g_szPlayerProps[4] =
+{
+	"props_junk/trafficcone001a",
+	"props_lab/blastdoor001a",
+	"props_lab/blastdoor001c",
+	"props_pipes/concrete_pipe001a"
+};
+
+void CC_CreateProp(const CCommand &args)
+{
+	if (args.ArgC() < 2)
+	{
+		char msg[1024];
+
+		Q_snprintf(msg, sizeof(msg), "Usage: createprop <proptype>{1-%d} <zoffset> <pitchrotation>\nThe available models are:\n", PLAYER_PROP_COUNT);
+
+		for (int i = 0; i < PLAYER_PROP_COUNT; i++)
+		{
+			Q_strncat(msg, g_szPlayerProps[i], sizeof(msg));
+			Q_strncat(msg, "\n", sizeof(msg));
+		}
+
+		Msg(msg);
+
+		return;
+	}
+
+	CSDKPlayer *pPl = ToSDKPlayer(UTIL_GetCommandClient());
+
+	if (!pPl)
+		return;
+
+	if (!pPl->IsPropCreationAllowed())
+	{
+		Msg("You are not allowed to create props\n");
+		return;
+	}
+
+	if (!CSDKPlayer::IsOnField(pPl) || !SDKGameRules()->IsIntermissionState() || pPl->GetFlags() & FL_REMOTECONTROLLED)
+		return;
+
+	int propType = atoi(args[1]) - 1;
+
+	if (propType < 0 || propType >= PLAYER_PROP_COUNT)
+		return;
+
+	const char *modelName = g_szPlayerProps[propType];
+
+	trace_t tr;
+
+	Vector pos = pPl->GetLocalOrigin();
+	pos.z = SDKGameRules()->m_vKickOff.GetZ();
+	pos += pPl->EyeDirection2D() * 200;
+
+	if (args.ArgC() >= 3)
+		pos.z += atoi(args[2]);
+
+	QAngle ang = pPl->GetLocalAngles();
+
+	if (args.ArgC() >= 4)
+		ang[PITCH] += atof(args[3]);
+
+	bool allowPrecache = CBaseEntity::IsPrecacheAllowed();
+	CBaseEntity::SetAllowPrecache(true);
+
+	CDynamicProp *pProp = static_cast<CDynamicProp *>(CreateEntityByName("prop_dynamic_override"));
+
+	if (!pProp)
+		return;
+
+	char buf[512];
+	// Pass in standard key values
+	Q_snprintf(buf, sizeof(buf), "%.10f %.10f %.10f", pos.x, pos.y, pos.z);
+	pProp->KeyValue("origin", buf);
+	Q_snprintf(buf, sizeof(buf), "%.10f %.10f %.10f", ang.x, ang.y, ang.z);
+	pProp->KeyValue("angles", buf);
+	Q_snprintf(buf, sizeof(buf), "models/%s.mdl", modelName);
+	pProp->KeyValue("model", buf);
+	pProp->KeyValue("fademindist", "-1");
+	pProp->KeyValue("fademaxdist", "0");
+	pProp->KeyValue("fadescale", "1");
+	pProp->KeyValue("solid", "6");
+	pProp->Precache();
+	DispatchSpawn(pProp);
+	pProp->Activate();
+
+	pPl->m_PlayerProps.AddToTail(pProp);
+
+	CBaseEntity::SetAllowPrecache(allowPrecache);
+}
+
+static ConCommand createprop("createprop", CC_CreateProp);
+
+
+void CC_DeleteProp(const CCommand &args)
+{
+	if (args.ArgC() < 2)
+	{
+		char msg[1024];
+
+		Q_snprintf(msg, sizeof(msg), "Usage: deleteprop <proptype>{1-%d}\nDeletes the prop you're looking at filtered by type\nUse 0 for any type\nUse -1 to delete all of your props\nThe available models are:\n", PLAYER_PROP_COUNT);
+
+		for (int i = 0; i < PLAYER_PROP_COUNT; i++)
+		{
+			Q_strncat(msg, g_szPlayerProps[i], sizeof(msg));
+			Q_strncat(msg, "\n", sizeof(msg));
+		}
+
+		Msg(msg);
+		return;
+	}
+
+	CSDKPlayer *pPl = ToSDKPlayer(UTIL_GetCommandClient());
+
+	if (!pPl || !pPl->IsPropCreationAllowed() || !SDKGameRules()->IsIntermissionState() || pPl->GetFlags() & FL_REMOTECONTROLLED)
+		return;
+
+	int propType = clamp(atoi(args[1]), -1, PLAYER_PROP_COUNT);
+
+	if (propType == -1)
+	{
+		pPl->AllowPropCreation(false);
+	}
+	else if (CSDKPlayer::IsOnField(pPl))
+	{
+		trace_t tr;
+
+		UTIL_TraceLine(
+			pPl->GetLocalOrigin() + VEC_VIEW,
+			pPl->GetLocalOrigin() + VEC_VIEW + pPl->EyeDirection3D() * 500,
+			MASK_SOLID,
+			pPl,
+			COLLISION_GROUP_NONE,
+			&tr);
+
+		CDynamicProp *pProp = dynamic_cast<CDynamicProp *>(tr.m_pEnt);
+
+		if (pProp)
+		{
+			int index = pPl->m_PlayerProps.Find(pProp);
+
+			if (index > -1)
+			{
+				CDynamicProp *pProp = pPl->m_PlayerProps[index];
+				char modelName[1024];
+				Q_snprintf(modelName, sizeof(modelName), "models/%s.mdl", g_szPlayerProps[propType - 1]);
+
+				if (propType == 0 || propType > 0 && !Q_strcmp(pProp->GetModelName().ToCStr(), modelName))
+				{
+					UTIL_Remove(pProp);
+					pPl->m_PlayerProps.Remove(index);
+				}
+			}
+		}
+	}
+}
+
+static ConCommand deleteprop("deleteprop", CC_DeleteProp);
+
+
 
 #include <ctype.h>
 
