@@ -995,6 +995,8 @@ void CSDKPlayer::SetAnimation( PLAYER_ANIM playerAnim )
 
 //ConVar mp_autobalance( "mp_autobalance", "1", FCVAR_REPLICATED|FCVAR_NOTIFY, "autobalance teams after a goal. blocks joining unbalanced teams" );
 
+extern ConVar sv_singlekeeper;
+
 bool CSDKPlayer::ClientCommand( const CCommand &args )
 {
 	if (!Q_stricmp(args[0], "jointeam")) 
@@ -1014,7 +1016,10 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 		// Player is card banned or position is blocked due to a card ban
 		if (!SDKGameRules()->IsIntermissionState()
 			&& (SDKGameRules()->GetMatchDisplayTimeSeconds() < GetNextCardJoin()
-				|| SDKGameRules()->GetMatchDisplayTimeSeconds() < GetGlobalTeam(team)->GetPosNextJoinSeconds(posIndex)))
+				|| SDKGameRules()->GetMatchDisplayTimeSeconds() < GetGlobalTeam(team)->GetPosNextJoinSeconds(posIndex))
+				|| sv_singlekeeper.GetInt() == 2
+					&& posIndex == GetGlobalTeam(team)->GetPosIndexByPosType(POS_GK)
+					&& (GetGlobalTeam(team)->GetPlayerByPosType(POS_GK) || GetGlobalTeam(team)->GetOppTeam()->GetPlayerByPosType(POS_GK)))
 		{
 			return true;
 		}

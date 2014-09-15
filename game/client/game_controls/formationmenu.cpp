@@ -48,6 +48,8 @@
 
 using namespace vgui;
 
+extern ConVar sv_singlekeeper;
+
 enum { FORMATION_BUTTON_WIDTH = 90, FORMATION_BUTTON_HEIGHT = 55 };
 enum { FORMATION_HPADDING = (FORMATION_BUTTON_WIDTH / 2 + 80), FORMATION_VTOPPADDING = (FORMATION_BUTTON_HEIGHT / 2 + 10), FORMATION_VBOTTOMPADDING = (FORMATION_BUTTON_HEIGHT / 2 + 20), FORMATION_CENTERPADDING = 40 };
 enum { TOOLTIP_WIDTH = 100, TOOLTIP_HEIGHT = 20 };
@@ -161,6 +163,7 @@ void CFormationMenu::Update(bool showCaptainMenu)
 
 	int playerIndexAtPos[2][11] = {};
 	bool swapperAtPos[2][11] = {};
+	int keeperCount = 0;
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
@@ -170,6 +173,9 @@ void CFormationMenu::Update(bool showCaptainMenu)
 		if (gr->GetTeam(i) == TEAM_A || gr->GetTeam(i) == TEAM_B)
 		{
 			playerIndexAtPos[gr->GetTeam(i) - TEAM_A][gr->GetTeamPosIndex(i)] = i;
+			
+			if (gr->GetTeamPosType(i) == POS_GK)
+				keeperCount += 1;
 		}
 		
 		if (gr->GetTeamToJoin(i) == TEAM_A || gr->GetTeamToJoin(i) == TEAM_B)
@@ -198,7 +204,8 @@ void CFormationMenu::Update(bool showCaptainMenu)
 				continue;
 			}
 
-			bool posBlocked = SDKGameRules()->GetMatchDisplayTimeSeconds(true, false) < GetGlobalTeam(TEAM_A + i)->m_PosNextJoinSeconds[j];
+			bool posBlocked = SDKGameRules()->GetMatchDisplayTimeSeconds(true, false) < GetGlobalTeam(TEAM_A + i)->m_PosNextJoinSeconds[j]
+							  || sv_singlekeeper.GetInt() == 2 && GetGlobalTeam(TEAM_A + i)->GetFormation()->positions[j]->type == POS_GK && playerIndexAtPos[i][j] == 0 && keeperCount == 1;
 
 			Color color = posBlocked ? g_ColorRed : g_ColorGray;
 

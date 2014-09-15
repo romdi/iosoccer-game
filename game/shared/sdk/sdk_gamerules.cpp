@@ -1401,12 +1401,13 @@ ConVar sv_autostartmatch("sv_autostartmatch", "1", FCVAR_NOTIFY|FCVAR_REPLICATED
 ConVar sv_awaytime_warmup("sv_awaytime_warmup", "30", FCVAR_NOTIFY);
 ConVar sv_awaytime_warmup_autospec("sv_awaytime_warmup_autospec", "3600", FCVAR_NOTIFY);
 
+ConVar sv_singlekeeper("sv_singlekeeper", "0", FCVAR_NOTIFY | FCVAR_REPLICATED);
+
 #ifdef GAME_DLL
 
 ConVar sv_playerrotation_enabled("sv_playerrotation_enabled", "0", FCVAR_NOTIFY);
 ConVar sv_playerrotation_minutes("sv_playerrotation_minutes", "30,60", FCVAR_NOTIFY);
 
-ConVar sv_singlekeeper("sv_singlekeeper", "0", FCVAR_NOTIFY);
 ConVar sv_singlekeeper_switchvalue("sv_singlekeeper_switchvalue", "10", FCVAR_NOTIFY);
 
 void CSDKGameRules::State_Transition( match_period_t newState )
@@ -1546,7 +1547,7 @@ void CSDKGameRules::State_Think()
 		if (!IsIntermissionState())
 		{
 			// If there's only one keeper for both teams, switch him to the other team when the ball comes near the goal
-			if (sv_singlekeeper.GetBool())
+			if (sv_singlekeeper.GetInt() > 0)
 			{
 				if (abs(m_nBallZone) > sv_singlekeeper_switchvalue.GetFloat())
 				{
@@ -2074,7 +2075,7 @@ bool CSDKGameRules::CheckAutoStart()
 {
 	int requiredPlayerCount = mp_maxplayers.GetInt() * 2;
 
-	if (sv_singlekeeper.GetBool())
+	if (sv_singlekeeper.GetInt() > 0)
 		requiredPlayerCount -= 1;
 
 	if (sv_autostartmatch.GetBool()
