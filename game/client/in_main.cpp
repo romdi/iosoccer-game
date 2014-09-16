@@ -144,7 +144,6 @@ static  kbutton_t   in_grenade1;
 static  kbutton_t   in_grenade2;
 static	kbutton_t	in_topspin;
 static	kbutton_t	in_backspin;
-static	kbutton_t	in_emote;
 kbutton_t	in_ducktoggle;
 
 /*
@@ -548,24 +547,6 @@ void IN_ScoreUp( const CCommand &args )
 	{
 		gViewPortInterface->ShowPanel( PANEL_SCOREBOARD, false );
 		GetClientVoiceMgr()->StopSquelchMode();
-	}
-}
-
-void IN_EmoteDown( const CCommand &args )
-{
-	KeyDown( &in_emote, args[1] );
-	if ( gViewPortInterface )
-	{
-		gViewPortInterface->ShowPanel(PANEL_EMOTEMENU, true);
-	}
-}
-
-void IN_EmoteUp( const CCommand &args )
-{
-	KeyUp( &in_emote, args[1] );
-	if ( gViewPortInterface )
-	{
-		gViewPortInterface->ShowPanel( PANEL_EMOTEMENU, false );
 	}
 }
 
@@ -1345,7 +1326,6 @@ int CInput::GetButtonBits( int bResetState )
 	CalcButtonBits( bits, IN_GRENADE2, s_ClearInputState, &in_grenade2, bResetState );
 	CalcButtonBits( bits, IN_TOPSPIN, s_ClearInputState, &in_topspin, bResetState );
 	CalcButtonBits( bits, IN_BACKSPIN, s_ClearInputState, &in_backspin, bResetState );
-	CalcButtonBits( bits, IN_EMOTE, s_ClearInputState, &in_emote, bResetState );
 
 	if ( KeyState(&in_ducktoggle) )
 	{
@@ -1505,8 +1485,6 @@ static ConCommand startbackspin( "+backspin", IN_BackspinDown );
 static ConCommand endbackspin( "-backspin", IN_BackspinUp );
 static ConCommand toggle_topspin("toggle_topspin", IN_TopspinToggle);
 static ConCommand toggle_backspin("toggle_backspin", IN_BackspinToggle);
-static ConCommand startemote( "+emote", IN_EmoteDown );
-static ConCommand endemote( "-emote", IN_EmoteUp );
 
 #ifdef TF_CLIENT_DLL
 static ConCommand toggle_duck( "toggle_duck", IN_DuckToggle );

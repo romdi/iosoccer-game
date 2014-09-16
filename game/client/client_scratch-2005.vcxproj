@@ -432,7 +432,6 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClCompile Include="..\shared\gamevars_shared.cpp" />
     <ClCompile Include="game_controls\formationmenu.cpp" />
     <ClCompile Include="game_controls\iosoptions.cpp" />
-    <ClCompile Include="game_controls\ios_emote_menu.cpp" />
     <ClCompile Include="game_controls\ios_update_menu.cpp" />
     <ClCompile Include="game_controls\ircclient.cpp" />
     <ClCompile Include="game_controls\matcheventmenu.cpp" />
@@ -842,7 +841,6 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClInclude Include="..\shared\GameStats.h" />
     <ClInclude Include="game_controls\formationmenu.h" />
     <ClInclude Include="game_controls\iosoptions.h" />
-    <ClInclude Include="game_controls\ios_emote_menu.h" />
     <ClInclude Include="game_controls\ios_update_menu.h" />
     <ClInclude Include="game_controls\ircclient.h" />
     <ClInclude Include="game_controls\matcheventmenu.h" />

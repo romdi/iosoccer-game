@@ -1144,22 +1144,6 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 
 		return true;
 	}
-	else if (!Q_strcmp(args[0], "emote"))
-	{
-		if (args.ArgC() < 2)
-			return true;
-
-		IGameEvent *event = gameeventmanager->CreateEvent("emote");
-		if (event)
-		{
-			event->SetInt("userid", GetUserID());
-			event->SetInt("emoteid", atoi(args[1]));
-
-			gameeventmanager->FireEvent(event);
-		}
-
-		return true;
-	}
 	else if (!Q_strcmp(args[0], "settaker"))
 	{
 		if (args.ArgC() < 2)
