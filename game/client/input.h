@@ -207,6 +207,8 @@ private:
 	QAngle		m_aCameraViewAngles;
 	bool		m_bWasFreeCam;
 
+	QAngle		m_aCamIdealAngles;
+
 	class CVerifiedUserCmd
 	{
 	public:

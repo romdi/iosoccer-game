@@ -52,8 +52,6 @@ extern ConVar cl_pitchup;
 extern ConVar legacyverticallook;
 extern const ConVar *sv_cheats;
 
-extern ConVar cam_idealyaw;
-extern ConVar cam_idealpitch;
 extern ConVar thirdperson_platformer;
 
 static ConVar m_filter( "m_filter","0", FCVAR_ARCHIVE, "Mouse filtering (set this to 1 to average the mouse over 2 frames)." );
@@ -385,7 +383,7 @@ void CInput::ApplyMouse( QAngle& viewangles, CUserCmd *cmd, float mouse_x, float
 				{
 					// use the mouse to orbit the camera around the player, and update the idealAngle
 					m_vecCameraOffset[ YAW ] -= m_yaw.GetFloat() * mouse_x;
-					cam_idealyaw.SetValue( m_vecCameraOffset[ YAW ] - viewangles[ YAW ] );
+					m_aCamIdealAngles[YAW] = m_vecCameraOffset[ YAW ] - viewangles[ YAW ];
 
 					// why doesn't this work??? CInput::AdjustYaw is why
 					//cam_idealyaw.SetValue( cam_idealyaw.GetFloat() - m_yaw.GetFloat() * mouse_x );
@@ -423,7 +421,7 @@ void CInput::ApplyMouse( QAngle& viewangles, CUserCmd *cmd, float mouse_x, float
 				{
 					// use the mouse to orbit the camera around the player, and update the idealAngle
 					m_vecCameraOffset[ PITCH ] += m_pitch.GetFloat() * mouse_y;
-					cam_idealpitch.SetValue( m_vecCameraOffset[ PITCH ] - viewangles[ PITCH ] );
+					m_aCamIdealAngles[PITCH] = m_vecCameraOffset[ PITCH ] - viewangles[ PITCH ];
 
 					// why doesn't this work??? CInput::AdjustYaw is why
 					//cam_idealpitch.SetValue( cam_idealpitch.GetFloat() + m_pitch->GetFloat() * mouse_y );

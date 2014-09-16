@@ -29,37 +29,8 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-#define CHASE_CAM_DISTANCE		96.0f
-#define WALL_OFFSET				6.0f
-
-static Vector WALL_MIN(-WALL_OFFSET,-WALL_OFFSET,-WALL_OFFSET);
-static Vector WALL_MAX(WALL_OFFSET,WALL_OFFSET,WALL_OFFSET);
-
-ConVar cam_firstperson( "cam_firstperson", "0", FCVAR_ARCHIVE, "Enable experimental firstperson camera with visible player model");
-ConVar cam_firstperson_xy( "cam_firstperson_xy", "15", FCVAR_ARCHIVE, "X/Y offset");
-ConVar cam_firstperson_z( "cam_firstperson_z", "5", FCVAR_ARCHIVE, "Z offset");
-
-ConVar cam_height("cam_height", "25", FCVAR_ARCHIVE, "Z offset in thirdperson mode");
-ConVar cam_alt("cam_alt", "0", FCVAR_ARCHIVE, "Alternative thirdperson mode");
-ConVar cam_alt_dist("cam_alt_dist", "100", FCVAR_ARCHIVE, "Camera distance in alternative thirdperson mode");
-
-ConVar cam_command( "cam_command", "0", FCVAR_ARCHIVE );	 // tells camera to go to thirdperson
-ConVar cam_snapto( "cam_snapto", "0", FCVAR_ARCHIVE );	 // snap to thirdperson view
-ConVar cam_ideallag( "cam_ideallag", "4.0", FCVAR_ARCHIVE, "Amount of lag used when matching offset to ideal angles in thirdperson view" );
-ConVar cam_idealdelta( "cam_idealdelta", "4.0", FCVAR_ARCHIVE, "Controls the speed when matching offset to ideal angles in thirdperson view" );
-ConVar cam_idealyaw( "cam_idealyaw", "0", FCVAR_ARCHIVE );	 // thirdperson yaw
-ConVar cam_idealpitch( "cam_idealpitch", "0", FCVAR_ARCHIVE );	 // thirperson pitch
-ConVar cam_dist( "cam_dist", "175", FCVAR_ARCHIVE, "", true, 0, true, 175 );	 // thirdperson distance
-ConVar cam_collision( "cam_collision", "1", FCVAR_ARCHIVE, "When in thirdperson and cam_collision is set to 1, an attempt is made to keep the camera from passing though walls." );
-ConVar cam_showangles( "cam_showangles", "0", FCVAR_CHEAT, "When in thirdperson, print viewangles/idealangles/cameraoffsets to the console." );
-ConVar c_maxpitch( "c_maxpitch", "90", FCVAR_ARCHIVE );
-ConVar c_minpitch( "c_minpitch", "0", FCVAR_ARCHIVE );
-ConVar c_maxyaw( "c_maxyaw",   "135", FCVAR_ARCHIVE );
-ConVar c_minyaw( "c_minyaw",   "-135", FCVAR_ARCHIVE );
-ConVar c_maxdistance( "c_maxdistance",   "500", FCVAR_ARCHIVE );
-ConVar c_mindistance( "c_mindistance",   "30", FCVAR_ARCHIVE );
-ConVar c_orthowidth( "c_orthowidth",   "100", FCVAR_ARCHIVE );
-ConVar c_orthoheight( "c_orthoheight",   "100", FCVAR_ARCHIVE );
+#define CAM_DIST 160
+#define CAM_HEIGHT 20
 
 ConVar cl_goal_opacity("cl_goal_opacity", "0.25", FCVAR_ARCHIVE, "Goal opacity when it obstructs the view");
 ConVar cl_goal_opacity_fieldoffset("cl_goal_opacity_fieldoffset", "20", FCVAR_ARCHIVE, "Offset from the field end where to start making it transparent");
@@ -75,8 +46,7 @@ void CheckAutoTransparentProps(const Vector &pos, const QAngle &ang)
 			continue;
 
 		// Check if the camera is behind the goal line and close to the goal. Use an additional offset so the goal post doesn't get in the way.
-		if (
-			opacity != 1.0f
+		if (opacity != 1.0f
 			&& (pos.y <= SDKGameRules()->m_vFieldMin.GetY() + cl_goal_opacity_fieldoffset.GetFloat() && pEnt->GetLocalOrigin().y < SDKGameRules()->m_vKickOff.GetY()
 				|| pos.y >= SDKGameRules()->m_vFieldMax.GetY() - cl_goal_opacity_fieldoffset.GetFloat() && pEnt->GetLocalOrigin().y > SDKGameRules()->m_vKickOff.GetY())
 			&& pos.x >= SDKGameRules()->m_vKickOff.GetX() - 500 && pos.x <= SDKGameRules()->m_vKickOff.GetX() + 500)
@@ -587,9 +557,6 @@ void C_Camera::CalcChaseCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov
 	else
 		pTarget = pLocal;
 
-	// If our target isn't visible, we're at a camera point of some kind.
-	// Instead of letting the player rotate around an invisible point, treat
-	// the point as a fixed camera.
 	if (!pTarget || !pTarget->GetBaseAnimating() && !pTarget->GetModel())
 	{
 		CalcRoamingView( eyeOrigin, eyeAngles, fov );
@@ -609,24 +576,18 @@ void C_Camera::CalcChaseCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov
 	}
 	else
 	{
-		camOffset[PITCH] = cam_idealpitch.GetFloat() + camAngles[PITCH];
-		camOffset[YAW] = cam_idealyaw.GetFloat() + camAngles[YAW];
+		camOffset[PITCH] = camAngles[PITCH];
+		camOffset[YAW] = camAngles[YAW];
 	}
 
-	// move the camera closer to the player if it hit something
-	if (cam_collision.GetInt())
+	if (camOffset[PITCH] >= 0)
 	{
-		if (camOffset[PITCH] >= 0)
-			camOffset[ROLL] = cam_dist.GetFloat();
-		else
-		{
-			float coeff = clamp(cos(DEG2RAD(camOffset[PITCH] + 90)), 0.001f, 1.0f);
-			camOffset[ROLL] = min((VEC_VIEW.z + cam_height.GetInt() - 5) / coeff, cam_dist.GetFloat());
-		}
+		camOffset[ROLL] = CAM_DIST;
 	}
 	else
 	{
-		camOffset[ROLL] = cam_dist.GetFloat();
+		float coeff = clamp(cos(DEG2RAD(camOffset[PITCH] + 90)), 0.001f, 1.0f);
+		camOffset[ROLL] = min((VEC_VIEW.z + CAM_HEIGHT - 5) / coeff, CAM_DIST);
 	}
 
 	eyeAngles[PITCH] = camOffset[PITCH];
@@ -636,30 +597,9 @@ void C_Camera::CalcChaseCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov
 	Vector camForward, camRight, camUp;
 	AngleVectors(eyeAngles, &camForward, &camRight, &camUp);
 
-	if (cam_alt.GetBool())
-	{
-		Vector xyForward = Vector(camForward.x, camForward.y, 0);
-		xyForward.NormalizeInPlace();
-		VectorMA( eyeOrigin, -cam_alt_dist.GetInt(), xyForward, eyeOrigin );		
-	}
-	else
-	{
-		VectorMA(eyeOrigin, -camOffset[ROLL], camForward, eyeOrigin);
-	}
+	VectorMA(eyeOrigin, -camOffset[ROLL], camForward, eyeOrigin);
 
-	if (cam_firstperson.GetBool())
-	{
-		Vector firstpersonOffset = camForward;
-		firstpersonOffset.z = 0;
-		VectorNormalize(firstpersonOffset);
-		firstpersonOffset *= cam_firstperson_xy.GetFloat();
-		firstpersonOffset.z = cam_firstperson_z.GetFloat();
-		eyeOrigin += firstpersonOffset;
-	}
-	else
-	{
-		eyeOrigin.z += cam_height.GetInt();
-	}
+	eyeOrigin.z += CAM_HEIGHT;
 
 	if (!pLocal->IsObserver())
 	{

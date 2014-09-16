@@ -62,9 +62,6 @@ extern ConVar mp_forcecamera; // in gamevars_shared.h
 #define MAX_VGUI_INPUT_MODE_SPEED 30
 #define MAX_VGUI_INPUT_MODE_SPEED_SQ (MAX_VGUI_INPUT_MODE_SPEED*MAX_VGUI_INPUT_MODE_SPEED)
 
-static Vector WALL_MIN(-WALL_OFFSET,-WALL_OFFSET,-WALL_OFFSET);
-static Vector WALL_MAX(WALL_OFFSET,WALL_OFFSET,WALL_OFFSET);
-
 bool CommentaryModeShouldSwallowInput( C_BasePlayer *pPlayer );
 
 extern ConVar default_fov;

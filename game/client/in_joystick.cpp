@@ -125,8 +125,6 @@ extern ConVar cl_pitchup;
 extern ConVar legacyverticallook;
 extern ConVar cl_pitchspeed;
 
-extern ConVar cam_idealpitch;
-extern ConVar cam_idealyaw;
 extern ConVar thirdperson_platformer;
 extern ConVar thirdperson_screenspace;
 
@@ -758,8 +756,8 @@ void CInput::JoyStickMove( float frametime, CUserCmd *cmd )
 		if ( forward || side || pitch || yaw )
 		{
 			// update the ideal pitch and yaw
-			cam_idealpitch.SetValue( m_vecCameraOffset[ PITCH ] - viewangles[ PITCH ] );
-			cam_idealyaw.SetValue( m_vecCameraOffset[ YAW ] - viewangles[ YAW ] );
+			m_aCamIdealAngles[PITCH] = m_vecCameraOffset[ PITCH ] - viewangles[ PITCH ];
+			m_aCamIdealAngles[YAW] = m_vecCameraOffset[ YAW ] - viewangles[ YAW ];
 		}
 		return;
 	}
@@ -833,7 +831,7 @@ void CInput::JoyStickMove( float frametime, CUserCmd *cmd )
 	// apply player motion relative to screen space
 	if ( CAM_IsThirdPerson() && thirdperson_screenspace.GetInt() )
 	{
-		float ideal_yaw = cam_idealyaw.GetFloat();
+		float ideal_yaw = m_aCamIdealAngles[YAW];
 		float ideal_sin = sin(DEG2RAD(ideal_yaw));
 		float ideal_cos = cos(DEG2RAD(ideal_yaw));
 		float side_movement = ideal_cos*joySideMove - ideal_sin*joyForwardMove;

@@ -24,8 +24,6 @@
 #include "ios_camera.h"
 
 extern ConVar in_joystick;
-extern ConVar cam_idealpitch;
-extern ConVar cam_idealyaw;
 
 // For showing/hiding the scoreboard
 #include <game/client/iviewport.h>
@@ -296,6 +294,7 @@ CInput::CInput( void )
 	m_pVerifiedCommands = NULL;
 	m_aCameraViewAngles = vec3_angle;
 	m_bWasFreeCam = false;
+	m_aCamIdealAngles = vec3_angle;
 }
 
 //-----------------------------------------------------------------------------
@@ -714,7 +713,7 @@ void CInput::AdjustYaw( float speed, QAngle& viewangles )
 		}
 		if ( side || forward || KeyState (&in_right) || KeyState (&in_left) )
 		{
-			cam_idealyaw.SetValue( m_vecCameraOffset[ YAW ] - viewangles[ YAW ] );
+			m_aCamIdealAngles[YAW] = m_vecCameraOffset[ YAW ] - viewangles[ YAW ];
 		}
 	}
 }
@@ -839,7 +838,7 @@ void CInput::ComputeSideMove( CUserCmd *cmd )
 	// thirdperson screenspace movement
 	if ( CAM_IsThirdPerson() && thirdperson_screenspace.GetInt() )
 	{
-		float ideal_yaw = cam_idealyaw.GetFloat();
+		float ideal_yaw = m_aCamIdealAngles[YAW];
 		float ideal_sin = sin(DEG2RAD(ideal_yaw));
 		float ideal_cos = cos(DEG2RAD(ideal_yaw));
 		
@@ -905,7 +904,7 @@ void CInput::ComputeForwardMove( CUserCmd *cmd )
 	// thirdperson screenspace movement
 	if ( CAM_IsThirdPerson() && thirdperson_screenspace.GetInt() )
 	{
-		float ideal_yaw = cam_idealyaw.GetFloat();
+		float ideal_yaw = m_aCamIdealAngles[YAW];
 		float ideal_sin = sin(DEG2RAD(ideal_yaw));
 		float ideal_cos = cos(DEG2RAD(ideal_yaw));
 		
