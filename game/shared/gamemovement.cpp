@@ -1938,9 +1938,9 @@ bool CGameMovement::CheckSlideButton()
 		team = pPl->GetTeamNumber();
 	#endif
 
-	if (isKeeper)
+	if (isKeeper && pPl->m_Shared.m_nInPenBoxOfTeam == team)
 	{
-		if (pPl->m_Shared.m_nInPenBoxOfTeam == team && !pPl->m_pHoldingBall)
+		if (!pPl->m_pHoldingBall)
 		{
 			int sidemoveSign;
 
