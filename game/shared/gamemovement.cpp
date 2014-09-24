@@ -1872,7 +1872,33 @@ bool CGameMovement::CheckJumpButton( void )
 
 	if (isKeeper && pPl->m_Shared.m_nInPenBoxOfTeam == team && !pPl->m_pHoldingBall)
 	{
-		animEvent = PLAYERANIMEVENT_KEEPER_JUMP;
+		MoveHelper()->StartSound( mv->GetAbsOrigin(), "Player.DiveKeeper" );
+
+		int sidemoveSign;
+
+		if ((mv->m_nButtons & IN_MOVELEFT) && (!(mv->m_nButtons & IN_MOVERIGHT) || pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVERIGHT))
+			sidemoveSign = -1;
+		else if ((mv->m_nButtons & IN_MOVERIGHT) && (!(mv->m_nButtons & IN_MOVELEFT) || pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVELEFT))
+			sidemoveSign = 1;
+		else
+			sidemoveSign = 0;
+
+		if (sidemoveSign == -1 && !(mv->m_nButtons & IN_WALK))
+		{
+			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_LEFT;
+			//mv->m_flSideMove = 2 * -mp_sprintspeed.GetInt();
+		}
+		else if (sidemoveSign == 1 && !(mv->m_nButtons & IN_WALK))
+		{
+			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_RIGHT;
+		}
+		else
+		{
+			animEvent = PLAYERANIMEVENT_KEEPER_JUMP;
+		}
+
+		if (mv->m_nButtons & IN_ATTACK)
+			pPl->AddFlag(FL_FREECAM);
 	}
 
 	pPl->m_Shared.SetAnimEventStartAngle(mv->m_vecAbsViewAngles);
@@ -1938,43 +1964,16 @@ bool CGameMovement::CheckSlideButton()
 		team = pPl->GetTeamNumber();
 	#endif
 
-	if (isKeeper && pPl->m_Shared.m_nInPenBoxOfTeam == team)
+	if (isKeeper && pPl->m_Shared.m_nInPenBoxOfTeam == team && !pPl->m_pHoldingBall)
 	{
-		if (!pPl->m_pHoldingBall)
+		if ((mv->m_nButtons & IN_FORWARD) && !(mv->m_nButtons & IN_WALK))
 		{
-			int sidemoveSign;
-
-			if ((mv->m_nButtons & IN_MOVELEFT) && (!(mv->m_nButtons & IN_MOVERIGHT) || pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVERIGHT))
-				sidemoveSign = -1;
-			else if ((mv->m_nButtons & IN_MOVERIGHT) && (!(mv->m_nButtons & IN_MOVELEFT) || pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVELEFT))
-				sidemoveSign = 1;
-			else
-				sidemoveSign = 0;
-
-			if (sidemoveSign == -1)
-			{
-				animEvent = PLAYERANIMEVENT_KEEPER_DIVE_LEFT;
-				
-				if (mv->m_nButtons & IN_ATTACK)
-					pPl->AddFlag(FL_FREECAM);
-			}
-			else if (sidemoveSign == 1)
-			{
-				animEvent = PLAYERANIMEVENT_KEEPER_DIVE_RIGHT;
-
-				if (mv->m_nButtons & IN_ATTACK)
-					pPl->AddFlag(FL_FREECAM);
-			}
-			else if (mv->m_nButtons & IN_FORWARD)
-			{
-				animEvent = PLAYERANIMEVENT_KEEPER_DIVE_FORWARD;
-				pPl->AddFlag(FL_FREECAM);
-			}
-
+			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_FORWARD;
 			MoveHelper()->StartSound( mv->GetAbsOrigin(), "Player.DiveKeeper" );
+			pPl->AddFlag(FL_FREECAM);
 		}
 	}
-	else
+	else if (!pPl->m_pHoldingBall)
 	{
 		MoveHelper()->StartSound( mv->GetAbsOrigin(), "Player.Slide" );
 		animEvent = PLAYERANIMEVENT_SLIDE;
