@@ -52,6 +52,7 @@ protected:
 	Button *m_pCloseButton;
 	Label *m_pInfoText;
 	Label *m_pExtraInfoText;
+	Label *m_pExtraInfoText2;
 	UpdateState_t m_eUpdateState;
 	IOSUpdateInfo *m_pUpdateInfo;
 	ProgressBar *m_pProgressBar;

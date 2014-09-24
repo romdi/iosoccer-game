@@ -14,12 +14,15 @@ struct FileInfo
 {
 	char path[256];
 	char md5[33];
+	int bytes;
 };
 
-struct TeamKitCurl
+struct FileData
 {
 	FileHandle_t fh;
 	MD5Context_t md5Ctx;
+	IOSUpdateInfo *pUpdateInfo;
+	int receivedFileBytes;
 };
 
 static size_t rcvFileListData(void *ptr, size_t size, size_t nmemb, CUtlBuffer &buffer)
@@ -29,32 +32,72 @@ static size_t rcvFileListData(void *ptr, size_t size, size_t nmemb, CUtlBuffer &
 	return size * nmemb;
 }
 
-static size_t rcvKitData(void *ptr, size_t size, size_t nmemb, TeamKitCurl *vars)
+static size_t rcvFile(void *ptr, size_t size, size_t nmemb, FileData *vars)
 {
 	filesystem->Write(ptr, nmemb, vars->fh);
 	MD5Update(&vars->md5Ctx, (unsigned char *)ptr, nmemb);
+	vars->receivedFileBytes += nmemb;
+	vars->pUpdateInfo->receivedBytes += nmemb;
 
 	return size * nmemb;
 }
 
-void GetFileList(char *fileListString, CUtlVector<FileInfo> &fileList)
+void GetLocalFileList(char *fileListString, CUtlVector<FileInfo> &fileList)
 {
-	char *file = strtok(fileListString, "\n");
+	char *line = strtok(fileListString, "\n");
 
-	while (file != NULL)
+	while (line != NULL)
 	{
-		FileInfo fileInfo;
-		Q_strncpy(fileInfo.path, file, min(strcspn(file, ":") + 1, sizeof(fileInfo.path)));
-		Q_strncpy(fileInfo.md5, strstr(file, ":") + 1, sizeof(fileInfo.md5));
-//#ifdef GAME_DLL
-//		if (strstr(fileInfo.path, ".txt"))
-//			fileList.AddToTail(fileInfo);
-//#else
-		fileList.AddToTail(fileInfo);
-//#endif
+		char *md5 = strstr(line, ":");
+		if (md5 && md5 + 1)
+		{
+			md5 += 1;
+			if (strlen(md5) == 32)
+			{
+				FileInfo fileInfo;
+				Q_strncpy(fileInfo.path, line, min(md5 - line, sizeof(fileInfo.path)));
+				Q_strncpy(fileInfo.md5, md5, sizeof(fileInfo.md5));
+				fileInfo.bytes = 0;
+				fileList.AddToTail(fileInfo);
+			}
+		}
 
-		file = strtok(NULL, "\n");
+		line = strtok(NULL, "\n");
 	}
+}
+
+long GetServerFileList(char *fileListString, CUtlVector<FileInfo> &fileList)
+{
+	long totalBytes = 0;
+
+	char *line = strtok(fileListString, "\n");
+
+	while (line != NULL)
+	{
+		char *md5 = strstr(line, ":");
+		if (md5 && md5 + 1)
+		{
+			md5 += 1;
+			char *bytes = strstr(md5, ":");
+			if (bytes && bytes + 1)
+			{
+				if (bytes - md5 == 32)
+				{
+					bytes += 1;
+					FileInfo fileInfo;
+					Q_strncpy(fileInfo.path, line, min(md5 - line, sizeof(fileInfo.path)));
+					Q_strncpy(fileInfo.md5, md5, sizeof(fileInfo.md5));
+					fileInfo.bytes = atoi(bytes);
+					totalBytes += fileInfo.bytes;
+					fileList.AddToTail(fileInfo);
+				}
+			}
+		}
+
+		line = strtok(NULL, "\n");
+	}
+
+	return totalBytes;
 }
 
 unsigned PerformUpdate(void *params)
@@ -83,7 +126,7 @@ unsigned PerformUpdate(void *params)
 		localFileListString[fileSize] = 0; // null terminator
  
 		filesystem->Close(fh);
-		GetFileList(localFileListString, localFileList);
+		GetLocalFileList(localFileListString, localFileList);
 		delete[] localFileListString;
 	}
 
@@ -91,7 +134,7 @@ unsigned PerformUpdate(void *params)
 	CURL *curl;
 	curl = curl_easy_init();
 	char url[512];
-	Q_snprintf(url, sizeof(url), "%s/filelist.txt.gz", downloadUrl);
+	Q_snprintf(url, sizeof(url), "%s/filelist_v2.txt.gz", downloadUrl);
 	curl_easy_setopt(curl, CURLOPT_URL, url);
 	curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, "gzip");
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, rcvFileListData);
@@ -113,7 +156,7 @@ unsigned PerformUpdate(void *params)
 
 	CUtlVector<FileInfo> serverFileList;
 
-	GetFileList(serverFileListString, serverFileList);
+	long totalServerBytes = GetServerFileList(serverFileListString, serverFileList);
 
 	delete[] serverFileListString;
 
@@ -124,7 +167,10 @@ unsigned PerformUpdate(void *params)
 			if (!Q_strcmp(serverFileList[j].path, localFileList[i].path))
 			{
 				if (!Q_strcmp(serverFileList[j].md5, localFileList[i].md5))
+				{
+					totalServerBytes -= serverFileList[j].bytes;
 					serverFileList.Remove(j);
+				}
 				else
 				{
 					localFileList.Remove(i);
@@ -137,6 +183,7 @@ unsigned PerformUpdate(void *params)
 	}
 
 	pUpdateInfo->filesToUpdateCount = serverFileList.Count();
+	pUpdateInfo->totalBytes = totalServerBytes;
 
 	if (pUpdateInfo->checkOnly || pUpdateInfo->filesToUpdateCount == 0)
 	{
@@ -204,18 +251,20 @@ unsigned PerformUpdate(void *params)
 			pUpdateInfo->restartRequired = true;
 		}
 
-		TeamKitCurl curlData;
+		Q_strncpy(pUpdateInfo->filePath, serverFileList[i].path, sizeof(pUpdateInfo->filePath));
 
+		FileData curlData;
 		curlData.fh = filesystem->Open(filePath, "wb", "MOD");
-
 		memset(&curlData.md5Ctx, 0, sizeof(MD5Context_t));
 		MD5Init(&curlData.md5Ctx);
+		curlData.receivedFileBytes = 0;
+		curlData.pUpdateInfo = pUpdateInfo;
 
 		curl = curl_easy_init();
 		Q_snprintf(url, sizeof(url), "%s/%s.gz", downloadUrl, serverFileList[i].path);
 		curl_easy_setopt(curl, CURLOPT_URL, url);
 		curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, "gzip");
-		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, rcvKitData);
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, rcvFile);
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &curlData);
 		CURLcode result = curl_easy_perform(curl);
 		curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &code);
@@ -278,7 +327,7 @@ int CFileUpdater::UpdateFinished(IOSUpdateInfo *pUpdateInfo)
 			if (pUpdateInfo->restartRequired)
 				msg = "Server Updater: Server files successfully updated. A server restart is required to use the new binaries.";
 			else
-				msg = "Server Updater: Server files successfully updated.";
+				msg = "Server Updater: Server files successfully updated. A server restart might be required to use the new files.";
 		}
 	}
 

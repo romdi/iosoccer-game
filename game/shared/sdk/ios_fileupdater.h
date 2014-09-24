@@ -20,6 +20,9 @@ struct IOSUpdateInfo
 	bool checkOnly;
 	int filesToUpdateCount;
 	int filesUpdatedCount;
+	long totalBytes;
+	long receivedBytes;
+	char filePath[256];
 	bool restartRequired;
 	bool connectionError;
 	char changelogText[40960];
@@ -38,10 +41,13 @@ struct IOSUpdateInfo
 		checkOnly = false;
 		filesToUpdateCount = 0;
 		filesUpdatedCount = 0;
+		totalBytes = 0;
+		receivedBytes = 0;
 		restartRequired = false;
 		connectionError = false;
 		changelogDownloaded = false;
 		changelogText[0] = '\0';
+		filePath[0] = '\0';
 	}
 };
 

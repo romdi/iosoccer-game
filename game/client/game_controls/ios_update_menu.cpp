@@ -8,6 +8,8 @@
 #include "c_match_ball.h"
 #include "vgui/IVgui.h"
 #include "ios_fileupdater.h"
+#include "Windows.h"
+#include "Filesystem.h"
 
 class CIOSUpdateMenu : public IIOSUpdateMenu
 {
@@ -55,13 +57,13 @@ void CC_IOSUpdateMenu(const CCommand &args)
 ConCommand iosupdatemenu("iosupdatemenu", CC_IOSUpdateMenu);
 
 enum { LABEL_WIDTH = 260, INPUT_WIDTH = 260, SHORTINPUT_WIDTH = 200, TEXT_HEIGHT = 26, TEXT_MARGIN = 5 };
-enum { PANEL_TOPMARGIN = 70, PANEL_MARGIN = 5, PANEL_WIDTH = 500, PANEL_HEIGHT = 700 };
+enum { PANEL_TOPMARGIN = 70, PANEL_MARGIN = 5, PANEL_WIDTH = 850, PANEL_HEIGHT = 750 };
 enum { PADDING = 10, TOP_PADDING = 30 };
 enum { UPDATE_BUTTON_WIDTH = 160, UPDATE_BUTTON_HEIGHT = 52, UPDATE_BUTTON_MARGIN = 5 };
 enum { BUTTON_WIDTH = 80, BUTTON_HEIGHT = 26, BUTTON_MARGIN = 40 };
-enum { INFO_WIDTH = 400, INFO_HEIGHT = 20 };
-enum { PROGRESSBAR_WIDTH = 400, PROGRESSBAR_HEIGHT = 25 };
-enum { CHANGELOG_WIDTH = 400, CHANGELOG_HEIGHT = 400 };
+enum { INFO_WIDTH = 800, INFO_HEIGHT = 20 };
+enum { PROGRESSBAR_WIDTH = 800, PROGRESSBAR_HEIGHT = 25 };
+enum { CHANGELOG_WIDTH = 800, CHANGELOG_HEIGHT = 400 };
 
 CIOSUpdatePanel::CIOSUpdatePanel(VPANEL parent) : BaseClass(NULL, "IOSUpdatePanel")
 {
@@ -72,6 +74,7 @@ CIOSUpdatePanel::CIOSUpdatePanel(VPANEL parent) : BaseClass(NULL, "IOSUpdatePane
 	m_pCloseButton = new Button(m_pContent, "", "", this, "");
 	m_pInfoText = new Label(m_pContent, "", "");
 	m_pExtraInfoText = new Label(m_pContent, "", "");
+	m_pExtraInfoText2 = new Label(m_pContent, "", "");
 	m_pProgressBar = new ProgressBar(m_pContent, "");
 	m_pChangelog = new RichText(m_pContent, "");
 
@@ -118,9 +121,14 @@ void CIOSUpdatePanel::ApplySchemeSettings( IScheme *pScheme )
 	m_pExtraInfoText->SetContentAlignment(Label::a_center);
 	m_pExtraInfoText->SetFgColor(Color(255, 255, 255, 255));
 
-	m_pProgressBar->SetBounds(m_pContent->GetWide() / 2 - PROGRESSBAR_WIDTH / 2, 3 * PADDING + 2 * (INFO_HEIGHT + PADDING), PROGRESSBAR_WIDTH, PROGRESSBAR_HEIGHT);
+	m_pExtraInfoText2->SetBounds(PADDING, 3 * PADDING + 2 * (INFO_HEIGHT + PADDING), m_pContent->GetWide() - 2 * PADDING, INFO_HEIGHT); 
+	m_pExtraInfoText2->SetFont(pScheme->GetFont("DefaultBig"));
+	m_pExtraInfoText2->SetContentAlignment(Label::a_center);
+	m_pExtraInfoText2->SetFgColor(Color(255, 255, 255, 255));
 
-	m_pChangelog->SetBounds(m_pContent->GetWide() / 2 - CHANGELOG_WIDTH / 2, 4 * PADDING + 2 * (INFO_HEIGHT + PADDING) + PROGRESSBAR_HEIGHT, CHANGELOG_WIDTH, CHANGELOG_HEIGHT);
+	m_pProgressBar->SetBounds(m_pContent->GetWide() / 2 - PROGRESSBAR_WIDTH / 2, 3 * PADDING + 3 * (INFO_HEIGHT + PADDING), PROGRESSBAR_WIDTH, PROGRESSBAR_HEIGHT);
+
+	m_pChangelog->SetBounds(m_pContent->GetWide() / 2 - CHANGELOG_WIDTH / 2, 4 * PADDING + 3 * (INFO_HEIGHT + PADDING) + PROGRESSBAR_HEIGHT, CHANGELOG_WIDTH, CHANGELOG_HEIGHT);
 }
 
 void CIOSUpdatePanel::PerformLayout()
@@ -153,6 +161,7 @@ void CIOSUpdatePanel::OnTick()
 	{
 		m_pInfoText->SetText("");
 		m_pExtraInfoText->SetText("");
+		m_pExtraInfoText2->SetText("");
 		m_pProgressBar->SetVisible(false);
 		m_pUpdateButton->SetVisible(true);
 		m_pUpdateButton->SetText("Check for updates");
@@ -166,6 +175,7 @@ void CIOSUpdatePanel::OnTick()
 	{
 		m_pInfoText->SetText("Checking for updates...");
 		m_pExtraInfoText->SetText("");
+		m_pExtraInfoText2->SetText("");
 		m_pUpdateButton->SetVisible(false);
 		m_pCloseButton->SetText("Cancel");
 		m_pCloseButton->SetCommand("cancel");
@@ -189,9 +199,10 @@ void CIOSUpdatePanel::OnTick()
 	{
 		if (m_pUpdateInfo->connectionError)
 		{
-			m_pInfoText->SetText("Can't connect to the IOS update server.");
-			m_pExtraInfoText->SetText("Try to update again in a few minutes.");
-			m_pCloseButton->SetText("OK");
+			m_pInfoText->SetText("Can't connect to the IOS update server");
+			m_pExtraInfoText->SetText("Try to update again in a few minutes");
+			m_pExtraInfoText2->SetText("");
+			m_pCloseButton->SetText("Close");
 			m_pCloseButton->SetCommand("close");
 		}
 		else
@@ -206,8 +217,9 @@ void CIOSUpdatePanel::OnTick()
 
 			if (m_pUpdateInfo->filesToUpdateCount > 0)
 			{
-				m_pInfoText->SetText(VarArgs("Updates available for %d %s.", m_pUpdateInfo->filesToUpdateCount, m_pUpdateInfo->filesToUpdateCount == 1 ? "file" : "files"));
+				m_pInfoText->SetText(VarArgs("Updates available for %d %s", m_pUpdateInfo->filesToUpdateCount, m_pUpdateInfo->filesToUpdateCount == 1 ? "file" : "files"));
 				m_pExtraInfoText->SetText("");
+				m_pExtraInfoText2->SetText("");
 				m_pUpdateButton->SetVisible(true);
 				m_pUpdateButton->SetText("Download the updates");
 				m_pUpdateButton->SetCommand("update");
@@ -216,9 +228,9 @@ void CIOSUpdatePanel::OnTick()
 			}
 			else
 			{
-				m_pInfoText->SetText("All of your files are up to date.");
+				m_pInfoText->SetText("No updates found");
 				m_pUpdateButton->SetVisible(false);
-				m_pCloseButton->SetText("OK");
+				m_pCloseButton->SetText("Close");
 				m_pCloseButton->SetCommand("close");
 
 				if (m_eUpdateState == UPDATE_STATE_CHECK_ONLY_AND_CLOSE_FINISHED)
@@ -235,6 +247,7 @@ void CIOSUpdatePanel::OnTick()
 	{
 		m_pInfoText->SetText("Downloading updates. Please wait...");
 		m_pExtraInfoText->SetText("");
+		m_pExtraInfoText2->SetText("");
 		m_pProgressBar->SetVisible(true);
 		m_pProgressBar->SetProgress(0.0f);
 		m_pUpdateButton->SetVisible(false);
@@ -258,20 +271,14 @@ void CIOSUpdatePanel::OnTick()
 	{
 		int filesUpdatedCount = m_pUpdateInfo->filesUpdatedCount;
 		int filesToUpdateCount = m_pUpdateInfo->filesToUpdateCount;
+		char filePath[256];
+		Q_strncpy(filePath, m_pUpdateInfo->filePath, sizeof(filePath));
+		float receivedMegaBytes = m_pUpdateInfo->receivedBytes / 1024.0 / 1024.0;
+		float totalMegaBytes = m_pUpdateInfo->totalBytes / 1024.0 / 1024.0;
 
-		char leftSpinner, rightSpinner;
-		int spinnerIndex = (int)(gpGlobals->curtime * 5) % 4;
-
-		switch (spinnerIndex)
-		{
-		case 0: default: leftSpinner = '-'; rightSpinner = '-'; break;
-		case 1: leftSpinner = '\\'; rightSpinner = '/'; break;
-		case 2: leftSpinner = '|'; rightSpinner = '|'; break;
-		case 3: leftSpinner = '/'; rightSpinner = '\\'; break;
-		}
-
-		m_pExtraInfoText->SetText(VarArgs("%c          %d of %d files downloaded.          %c", leftSpinner, filesUpdatedCount, filesToUpdateCount, rightSpinner));
-		m_pProgressBar->SetProgress(clamp(filesUpdatedCount / (float)filesToUpdateCount, 0.0f, 1.0f));
+		m_pExtraInfoText->SetText(VarArgs("%.2f/%.2f MB (%d/%d files) downloaded", receivedMegaBytes, totalMegaBytes, filesUpdatedCount, filesToUpdateCount));
+		m_pExtraInfoText2->SetText(filePath);
+		m_pProgressBar->SetProgress(clamp(receivedMegaBytes / totalMegaBytes, 0.0f, 1.0f));
 
 		if (m_pUpdateInfo->finished)
 		{
@@ -282,35 +289,27 @@ void CIOSUpdatePanel::OnTick()
 	{
 		if (m_pUpdateInfo->connectionError)
 		{
-			m_pInfoText->SetText("Can't connect to the IOS update server.");
-			m_pExtraInfoText->SetText("Try to update again in a few minutes.");
-			m_pCloseButton->SetText("OK");
+			m_pInfoText->SetText("Can't connect to the IOS update server");
+			m_pExtraInfoText->SetText("Try to update again in a few minutes");
+			m_pExtraInfoText2->SetText("");
+			m_pCloseButton->SetText("Close");
 			m_pCloseButton->SetCommand("close");
 		}
 		else
 		{
-			CTeamInfo::ParseTeamKits();
-			CBallInfo::ParseBallSkins();
-
-			m_pCloseButton->SetText("OK");
+			m_pCloseButton->SetText("Close");
 			m_pCloseButton->SetCommand("close");
-			m_pInfoText->SetText("All files successfully updated.");
-
-			if (m_pUpdateInfo->restartRequired)
-			{
-				m_pExtraInfoText->SetText("RESTART THE GAME TO APPLY THE UPDATES.");
-				m_pUpdateButton->SetVisible(true);
-				m_pUpdateButton->SetText("Quit IOSoccer");
-				m_pUpdateButton->SetCommand("quit");
-			}
+			m_pInfoText->SetText("All files successfully updated");
+			m_pExtraInfoText->SetText("RESTART IOSOCCER TO APPLY THE UPDATES");
+			m_pExtraInfoText2->SetText("");
+			m_pUpdateButton->SetVisible(true);
+			m_pUpdateButton->SetText("Quit IOSoccer");
+			m_pUpdateButton->SetCommand("quit");
 		}
 
 		m_eUpdateState = UPDATE_STATE_NONE;
 	}
 }
-
-#include "Windows.h"
-#include "Filesystem.h"
 
 void CIOSUpdatePanel::OnCommand(const char *cmd)
 {
@@ -325,7 +324,7 @@ void CIOSUpdatePanel::OnCommand(const char *cmd)
 	else if (!stricmp(cmd, "cancel"))
 	{
 		m_pUpdateInfo->cancelled = true;
-		Close();
+		m_eUpdateState = UPDATE_STATE_READY_TO_CHECK;
 	}
 	else if (!stricmp(cmd, "close"))
 	{
@@ -345,7 +344,7 @@ void CIOSUpdatePanel::Activate(UpdateState_t updateState)
 
 	m_eUpdateState = updateState;
 
-	m_pChangelog->GotoTextStart();
-
 	OnTick();
+
+	m_bGoToTextStart = true;
 }
