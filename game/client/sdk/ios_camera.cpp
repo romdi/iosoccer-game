@@ -174,7 +174,11 @@ int C_Camera::GetTVCamMode()
 	if (!pLocal)
 		return TVCAM_MODE_SIDELINE;
 
-	if (GetReplayManager() && GetReplayManager()->IsReplaying())
+	if (SDKGameRules()->IsCeremony())
+	{
+		return TVCAM_MODE_SIDELINE;
+	}
+	else if (GetReplayManager() && GetReplayManager()->IsReplaying())
 	{
 		return GetReplayManager()->m_nReplayRunIndex == 0 ? mp_tvcam_firstreplaycam.GetInt() : mp_tvcam_secondreplaycam.GetInt();
 	}
@@ -769,7 +773,7 @@ void C_Camera::CalcTVCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov, b
 				eyeOrigin = output;
 				VectorAngles(SDKGameRules()->m_vKickOff - output, eyeAngles);
 			}
-			else if (SDKGameRules() && !SDKGameRules()->IsIntermissionState() && gpGlobals->curtime <= SDKGameRules()->m_flStateEnterTime + 4)
+			/*else if (SDKGameRules() && !SDKGameRules()->IsIntermissionState() && gpGlobals->curtime <= SDKGameRules()->m_flStateEnterTime + 4)
 			{
 				Vector points[4];
 				float zPosStart = 450;
@@ -783,7 +787,7 @@ void C_Camera::CalcTVCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov, b
 				Catmull_Rom_Spline(points[0], points[1], points[2], points[3], frac, output);
 				eyeOrigin = output;
 				VectorAngles(Vector(SDKGameRules()->m_vKickOff.GetX(), SDKGameRules()->m_vKickOff.GetY(), SDKGameRules()->m_vKickOff.GetZ() + 100) - output, eyeAngles);
-			}
+			}*/
 			else
 			{		
 				Vector newPos = Vector(targetPos.x - mp_tvcam_sideline_offset_north.GetInt(), targetPos.y, targetPos.z + mp_tvcam_sideline_offset_height.GetInt());

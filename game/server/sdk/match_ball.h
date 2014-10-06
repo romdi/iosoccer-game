@@ -57,7 +57,6 @@ public:
 	void			SetPenaltyState(penalty_state_t penaltyState);
 	penalty_state_t	GetPenaltyState() { return m_ePenaltyState; }
 	void			SetPenaltyTaker(CSDKPlayer *pPl);
-	bool			PlayersAtTargetPos();
 	void			VPhysicsCollision(int index, gamevcollisionevent_t	*pEvent);
 	bool			IsLegallyCatchableByKeeper();
 	void			CheckAdvantage();

@@ -121,6 +121,9 @@ bool CHudChargedshotBar::ShouldDraw()
 	if (GetReplayManager() && GetReplayManager()->IsReplaying())
 		return false;
 
+	if (SDKGameRules()->IsCeremony())
+		return false;
+
 	return true;
 }
 

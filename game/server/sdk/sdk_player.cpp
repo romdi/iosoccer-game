@@ -1247,14 +1247,41 @@ Vector CSDKPlayer::EyeDirection3D( void )
 	return vecForward;
 }
 
-const Vector CSDKPlayer::GetVisualLocalOrigin()
-{
-	Vector origin = GetLocalOrigin();
-	// FIXME: Hack, because the ios player model moves up, but the bounding box doesn't
-	if (!GetGroundEntity())
-		origin.z += 20;
+extern ConVar sv_ball_timelimit_remotecontrolled;
 
-	return origin;
+// Make sure that all players are walked to the intended positions when setting shields
+bool CSDKPlayer::PlayersAtTargetPos()
+{
+	bool playersAtTarget = true;
+
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+
+		if (!CSDKPlayer::IsOnField(pPl))
+			continue;
+
+		if (!pPl->m_bIsAtTargetPos)
+		{
+			if (!(pPl->GetFlags() & FL_REMOTECONTROLLED))
+				pPl->SetPosOutsideShield(false);
+
+			if (!pPl->m_bIsAtTargetPos)
+			{
+				if (pPl->m_flRemoteControlledStartTime == -1)
+				{
+					pPl->m_flRemoteControlledStartTime = gpGlobals->curtime;
+					playersAtTarget = false;
+				}
+				else if (gpGlobals->curtime >= pPl->m_flRemoteControlledStartTime + sv_ball_timelimit_remotecontrolled.GetFloat()) // Player timed out and blocks progress, so move him to specs
+					pPl->SetDesiredTeam(TEAM_SPECTATOR, pPl->GetTeamNumber(), 0, true, false, false);
+				else
+					playersAtTarget = false;
+			}
+		}
+	}
+
+	return playersAtTarget;
 }
 
 void CSDKPlayer::SetPosInsideShield(const Vector &pos, bool holdAtTargetPos)
@@ -1263,37 +1290,12 @@ void CSDKPlayer::SetPosInsideShield(const Vector &pos, bool holdAtTargetPos)
 	AddFlag(FL_SHIELD_KEEP_IN);
 	m_vTargetPos = pos;
 	m_bHoldAtTargetPos = holdAtTargetPos;
-	//SetMoveType(MOVETYPE_NOCLIP);
-
-	switch (SDKGameRules()->m_nShieldType)
-	{
-	case SHIELD_KICKOFF:
-		break;
-	case SHIELD_THROWIN:
-	case SHIELD_PENALTY:
-		break;
-	case SHIELD_GOALKICK:
-	case SHIELD_CORNER:
-	case SHIELD_FREEKICK:
-		if (mp_shield_liberal_taker_positioning.GetBool())
-		{
-			//m_vTargetPos = GetLocalOrigin();
-			//AddFlag(FL_SHIELD_KEEP_IN);
-			GetTargetPos(GetLocalOrigin(), m_vTargetPos.GetForModify());
-			//RemoveFlag(FL_SHIELD_KEEP_IN);
-			SetPosOutsideBall(m_vTargetPos);
-		}
-		break;
-	}
 
 	if (m_vTargetPos == GetLocalOrigin())
 	{
 		m_bIsAtTargetPos = true;
 		if (m_bHoldAtTargetPos)
 			AddFlag(FL_ATCONTROLS);
-
-		//if (ShotButtonsPressed())
-		//	m_bShotButtonsReleased = false;
 	}
 	else
 	{
@@ -1316,6 +1318,10 @@ void CSDKPlayer::SetPosOutsideShield(bool teleport)
 	case SHIELD_KEEPERHANDS:
 		return;
 		break;
+	case SHIELD_CEREMONY:
+		m_vTargetPos = GetCeremonyPos();
+		m_bHoldAtTargetPos = true;
+		break;
 	default:
 		GetTargetPos(GetLocalOrigin(), m_vTargetPos.GetForModify());
 		break;
@@ -1336,33 +1342,12 @@ void CSDKPlayer::SetPosOutsideShield(bool teleport)
 	}
 }
 
-void CSDKPlayer::SetPosOutsideBall(const Vector &playerPos)
-{
-	RemoveFlag(FL_SHIELD_KEEP_IN | FL_SHIELD_KEEP_OUT);
-
-	Vector ballPos = GetMatchBall()->GetPos();
-
-	Vector ballPlayerDir = playerPos - ballPos;
-
-	if (ballPlayerDir.Length2D() >= 1.5f * (GetPlayerMaxs().x - GetPlayerMins().x))
-	{
-		m_bIsAtTargetPos = true;
-	}
-	else
-	{
-		Vector moveDir = Vector(0, -GetTeam()->m_nForward, 0);
-		moveDir *= 2 * (GetPlayerMaxs().x - GetPlayerMins().x);
-		ActivateRemoteControlling(ballPos + moveDir);
-	}
-}
-
 void CSDKPlayer::ActivateRemoteControlling(const Vector &targetPos)
 {
 	m_vTargetPos = targetPos;
 	m_bIsAtTargetPos = false;
 	DoServerAnimationEvent(PLAYERANIMEVENT_CANCEL);
 	AddFlag(FL_REMOTECONTROLLED);
-	//AddSolidFlags(FSOLID_NOT_SOLID);
 	SetCollisionGroup(COLLISION_GROUP_NONSOLID_PLAYER);
 }
 
@@ -1542,6 +1527,15 @@ Vector CSDKPlayer::GetSpawnPos(bool findSafePos)
 		FindSafePos(spawnPos);
 
 	return spawnPos;
+}
+
+Vector CSDKPlayer::GetCeremonyPos()
+{
+	Vector pos = SDKGameRules()->m_vKickOff;
+	pos.y -= GetTeam()->m_nForward * 50;
+	pos.x = SDKGameRules()->m_vFieldMin.GetX() + GetTeamPosIndex() * 50;
+
+	return pos;
 }
 
 int CSDKPlayer::GetShirtNumber()

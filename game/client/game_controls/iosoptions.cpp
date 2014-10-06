@@ -502,7 +502,7 @@ CAppearanceSettingPanel::CAppearanceSettingPanel(Panel *parent, const char *pane
 	m_pShirtNameLabel = new Label(m_pContent, "", "Shirt Name:");
 	m_pShirtNameText = new TextEntry(m_pContent, "");
 	m_pShirtNameText->SetMaximumCharCount(MAX_PLAYER_NAME_LENGTH - 1);
-	m_pShirtNameText->SetAllowNonAsciiCharacters(false);
+	m_pShirtNameText->SetAllowNonAsciiCharacters(true);
 
 	m_pSkinIndexLabel = new Label(m_pContent, "", "Player Skin:");
 	m_pSkinIndexList = new ComboBox(m_pContent, "", 0, false);

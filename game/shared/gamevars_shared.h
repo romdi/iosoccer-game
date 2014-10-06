@@ -41,8 +41,6 @@ extern ConVar
 	mp_shield_ball_radius,
 	mp_shield_border,
 	mp_shield_block_sixyardbox,
-	mp_shield_liberal_taker_positioning,
-	mp_shield_liberal_teammates_positioning,
 	mp_shield_block_opponent_half,
 	mp_field_border,
 	mp_field_border_enabled,

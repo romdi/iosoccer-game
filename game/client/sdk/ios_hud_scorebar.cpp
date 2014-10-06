@@ -57,6 +57,7 @@ enum { QUICKTACTIC_WIDTH = 175, QUICKTACTIC_HEIGHT = 35, QUICKTACTICPANEL_MARGIN
 enum { GOALINFOPANEL_WIDTH = 500, GOALINFOPANEL_HEIGHT = 120, GOALINFOPANEL_MARGIN = 30, BOTTOMNOTIFICATION_SHORTWIDTH = 200, BOTTOMNOTIFICATION_LONGWIDTH = 500, BOTTOMNOTIFICATION_HEIGHT = 30 };
 enum { STATUSPANEL_WIDTH = 120, STATUSPANEL_HEIGHT = 30, STATUSPANEL_MARGIN = 30 };
 enum { TEAMCREST_SIZE = 70, TEAMCREST_HMARGIN = 10, TEAMCREST_VMARGIN = 10 };
+enum { TICKER_PANEL_HEIGHT = 50, TICKER_PANEL_MARGIN = 30 };
 
 const float slideDownDuration = 0.5f;
 const float slideUpDuration = 0.5f;
@@ -124,6 +125,13 @@ private:
 	float m_flFirstTransitionStart;
 	float m_flSecondTransitionStart;
 	int m_nTransitionIndex;
+
+	Panel *m_pTickerPanel;
+	Label *m_pTickerText;
+
+	float m_flTickerStartTime;
+	int m_nTickerTeamIndex;
+	int m_nTickerTextWidth;
 };
 
 DECLARE_HUDELEMENT( CHudScorebar );
@@ -182,6 +190,13 @@ CHudScorebar::CHudScorebar( const char *pElementName ) : BaseClass(NULL, "HudSco
 	m_pGoalInfoPanelTeamCrest = new ImagePanel(m_pGoalInfoPanel, "");
 
 	m_pTransition = new ImagePanel(this, "");
+
+	m_pTickerPanel = new Panel(this, "");
+	m_pTickerText = new Label(m_pTickerPanel, "", "");
+
+	m_flTickerStartTime = -1;
+	m_nTickerTeamIndex = 0;
+	m_nTickerTextWidth = 0;
 
 	SetProportional(false);
 
@@ -333,6 +348,15 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 	m_pTransition->SetShouldScaleImage(true);
 	m_pTransition->SetImage("transition");
 	m_pTransition->SetVisible(false);
+
+	m_pTickerPanel->SetBounds(0, ScreenHeight() - TICKER_PANEL_MARGIN - TICKER_PANEL_HEIGHT, ScreenWidth(), TICKER_PANEL_HEIGHT);
+	m_pTickerPanel->SetBgColor(Color(0, 0, 0, 247));
+	m_pTickerPanel->SetVisible(false);
+
+	m_pTickerText->SetBounds(0, 0, m_pTickerPanel->GetWide(), TICKER_PANEL_HEIGHT);
+	m_pTickerText->SetFont(m_pScheme->GetFont("IOSScorebarMedium"));
+	m_pTickerText->SetFgColor(Color(255, 255, 255, 255));
+	m_pTickerText->SetContentAlignment(Label::a_west);
 }
 
 //-----------------------------------------------------------------------------
@@ -585,6 +609,68 @@ void CHudScorebar::OnThink( void )
 			m_pPenaltyTeamNames[i]->SetVisible(false);
 		}
 	}
+
+	IGameResources *gr = GameResources();
+	if (!gr)
+		return;
+
+	if (SDKGameRules()->IsCeremony())
+	{
+		if (m_flTickerStartTime == -1 || m_pTickerText->GetX() < -m_nTickerTextWidth)
+		{
+			m_flTickerStartTime = gpGlobals->curtime;
+			m_pTickerPanel->SetVisible(true);
+			m_nTickerTeamIndex = m_flTickerStartTime == -1 ? 0 : 1 - m_nTickerTeamIndex;
+
+			int playerIndexAtPos[2][11] = {};
+
+			for (int i = 1; i <= gpGlobals->maxClients; i++)
+			{
+				if (!gr->IsConnected(i))
+					continue;
+
+				if (gr->GetTeam(i) == TEAM_A || gr->GetTeam(i) == TEAM_B)
+				{
+					playerIndexAtPos[gr->GetTeam(i) - TEAM_A][gr->GetTeamPosIndex(i)] = i;
+				}
+			}
+
+			char text[4096];
+
+			C_Team *pTeam = GetGlobalTeam(TEAM_A + m_nTickerTeamIndex);
+
+			Q_strcat(text, VarArgs("%s:     ", pTeam->GetShortName()), sizeof(text));
+
+			for (int firstPos = 0, j = 0; j < mp_maxplayers.GetInt(); j++)
+			{
+				int posIndex = mp_maxplayers.GetInt() - 1 - j;
+
+				if (!playerIndexAtPos[m_nTickerTeamIndex][posIndex])
+				{
+					firstPos += 1;
+					continue;
+				}
+
+				if (j > firstPos)
+					Q_strcat(text, "   -   ", sizeof(text));
+
+				Position *pPos = pTeam->GetFormation()->positions[posIndex];
+
+				Q_strcat(text, VarArgs("%s | %d | %s", g_szPosNames[pPos->type], gr->GetShirtNumber(playerIndexAtPos[m_nTickerTeamIndex][posIndex]), gr->GetPlayerName(playerIndexAtPos[m_nTickerTeamIndex][posIndex])), sizeof(text));
+			}
+
+			m_pTickerText->SetText(text);
+			int height;
+			m_pTickerText->GetTextImage()->GetContentSize(m_nTickerTextWidth, height);
+		}
+
+		m_pTickerText->SetX(m_pTickerPanel->GetWide() - (gpGlobals->curtime - m_flTickerStartTime) * m_pTickerPanel->GetWide() / 10.0f);
+	}
+	else
+	{
+		m_pTickerPanel->SetVisible(false);
+		m_flTickerStartTime = -1;
+	}
 }
 
 void CHudScorebar::Paint( void )
@@ -747,7 +833,9 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 
 	if (!Q_strcmp(event->GetName(), "match_period"))
 	{
-		m_pNotifications[0]->SetText(VarArgs("%s", g_szMatchPeriodNames[event->GetInt("period")]));
+		match_period_t matchPeriod = (match_period_t)event->GetInt("period");
+
+		m_pNotifications[0]->SetText(VarArgs("%s", g_szMatchPeriodNames[matchPeriod]));
 
 		m_eCurMatchEvent = MATCH_EVENT_NONE;
 		m_flStayDuration = INT_MAX;
@@ -1130,4 +1218,5 @@ void CHudScorebar::LevelInit()
 	m_nCurMatchEventTeam = TEAM_UNASSIGNED;
 	m_flStayDuration = 3.0f;
 	m_nTransitionIndex = -1;
+	m_flTickerStartTime = -1;
 }

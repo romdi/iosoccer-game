@@ -523,8 +523,6 @@ public:
 	Vector				EyeDirection2D();
 	Vector				EyeDirection3D();
 
-	const Vector		GetVisualLocalOrigin();
-
 	void				SetOffside(bool isOffside);
 	void				SetOffsidePos(Vector pos);
 	bool				IsOffside();
@@ -536,11 +534,11 @@ public:
 	
 	void				SetPosInsideShield(const Vector &pos, bool holdAtTargetPos);
 	void				SetPosOutsideShield(bool teleport);
-	void				SetPosOutsideBall(const Vector &playerPos);
 	void				GetTargetPos(const Vector &pos, Vector &targetPos);
 	void				ActivateRemoteControlling(const Vector &targetPos);
 
 	Vector				GetSpawnPos(bool findSafePos);
+	Vector				GetCeremonyPos();
 
 	bool				IsAway() { return m_bIsAway; }
 	void				SetAway(bool away) { m_bIsAway = away; }
@@ -555,6 +553,7 @@ public:
 	CNetworkVar(int, m_nModelScale);
 
 	static bool			IsOnField(CSDKPlayer *pPl, int teamNumber = TEAM_UNASSIGNED);
+	static bool			PlayersAtTargetPos();
 
 	void				CheckShotCharging();
 	void				ResetShotCharging();

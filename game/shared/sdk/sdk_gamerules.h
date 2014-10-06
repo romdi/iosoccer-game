@@ -280,7 +280,7 @@ public:
 	unsigned long m_nRealMatchStartTime;
 	unsigned long m_nRealMatchEndTime;
 
-	void RestartMatch(bool setRandomKickOffTeam, bool setRandomSides);
+	void RestartMatch(bool isMatchMode, int kickOffTeam, int leftSideTeam);
 	int WakeUpAwayPlayers();
 	void StartPenalties();
 
@@ -420,7 +420,7 @@ private:
 #endif
 
 public:
-
+	bool IsCeremony() { return m_bIsCeremony; }
 	float GetTimeoutEnd() { return m_flTimeoutEnd; }
 
 	bool IsIntermissionState();
@@ -435,6 +435,7 @@ public:
 	CNetworkVar(int, m_nBallZone);
 	CNetworkVar(int, m_nLeftSideTeam);
 
+
 	CNetworkVar(int, m_nTimeoutTeam);
 	CNetworkVar(int, m_eTimeoutState);
 	CNetworkVar(float, m_flTimeoutEnd);
@@ -447,8 +448,9 @@ public:
 	void SetupFormations();
 	CUtlVector<Formation *> &GetFormations();
 
-private:
+protected:
 
+	CNetworkVar(bool, m_bIsCeremony);
 	CUtlVector<Formation *> m_Formations[11];
 };
 

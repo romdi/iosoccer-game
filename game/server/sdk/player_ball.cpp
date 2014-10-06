@@ -36,7 +36,7 @@ CPlayerBall *CreatePlayerBall(const Vector &pos, CSDKPlayer *pCreator)
 
 void CC_CreatePlayerBall(const CCommand &args)
 {
-	if (!SDKGameRules()->IsIntermissionState())
+	if (!SDKGameRules()->IsIntermissionState() || SDKGameRules()->IsCeremony())
 		return;
 
 	CSDKPlayer *pPl = ToSDKPlayer(UTIL_GetCommandClient());

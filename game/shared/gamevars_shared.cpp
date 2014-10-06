@@ -85,8 +85,6 @@ ConVar mp_shield_kickoff_radius("mp_shield_kickoff_radius", "360", FCVAR_NOTIFY|
 ConVar mp_shield_ball_radius("mp_shield_ball_radius", "30", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar mp_shield_border("mp_shield_border", "20", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar mp_shield_block_sixyardbox("mp_shield_block_sixyardbox", "1", FCVAR_NOTIFY|FCVAR_REPLICATED);
-ConVar mp_shield_liberal_taker_positioning("mp_shield_liberal_taker_positioning", "0", FCVAR_NOTIFY|FCVAR_REPLICATED);
-ConVar mp_shield_liberal_teammates_positioning("mp_shield_liberal_teammates_positioning", "0", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar mp_shield_block_opponent_half("mp_shield_block_opponent_half", "1", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar mp_field_border("mp_field_border", "175", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar mp_field_border_enabled("mp_field_border_enabled", "1", FCVAR_NOTIFY|FCVAR_REPLICATED);

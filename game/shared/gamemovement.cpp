@@ -1426,19 +1426,22 @@ void CGameMovement::FullWalkMove( )
 	{
 		StartGravity();
 
-		if (mv->m_nButtons & IN_JUMP)
+		if (!SDKGameRules()->IsCeremony())
 		{
-			CheckJumpButton();
-		}
-		else
-			mv->m_nOldButtons &= ~IN_JUMP;
+			if (mv->m_nButtons & IN_JUMP)
+			{
+				CheckJumpButton();
+			}
+			else
+				mv->m_nOldButtons &= ~IN_JUMP;
 
-		if (mv->m_nButtons & IN_DUCK)
-		{
-			CheckSlideButton();
+			if (mv->m_nButtons & IN_DUCK)
+			{
+				CheckSlideButton();
+			}
+			else
+				mv->m_nOldButtons &= ~IN_DUCK;
 		}
-		else
-			mv->m_nOldButtons &= ~IN_DUCK;
 
 		// Fricion is handled before we add in any base velocity. That way, if we are on a conveyor, 
 		//  we don't slow when standing still, relative to the conveyor.
@@ -3028,7 +3031,7 @@ void CGameMovement::SetPlayerSpeed()
 	{
 		flMaxSpeed = mp_remotecontrolledspeed.GetInt();
 	}
-	else if (mv->m_nButtons & IN_WALK)
+	else if (mv->m_nButtons & IN_WALK || SDKGameRules()->IsCeremony())
 	{
 		flMaxSpeed = mp_walkspeed.GetInt();
 	}

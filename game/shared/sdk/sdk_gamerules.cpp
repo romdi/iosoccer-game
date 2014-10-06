@@ -295,7 +295,8 @@ BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 	RecvPropFloat(RECVINFO(m_flOffsideLineBallPosY)),
 	RecvPropFloat(RECVINFO(m_flOffsideLineOffsidePlayerPosY)),
 	RecvPropFloat(RECVINFO(m_flOffsideLineLastOppPlayerPosY)),
-	RecvPropInt(RECVINFO(m_bOffsideLinesEnabled)),
+	RecvPropBool(RECVINFO(m_bOffsideLinesEnabled)),
+	RecvPropBool(RECVINFO(m_bIsCeremony)),
 
 #else
 	SendPropTime( SENDINFO( m_flStateEnterTime )),
@@ -326,6 +327,7 @@ BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 	SendPropFloat(SENDINFO(m_flOffsideLineOffsidePlayerPosY), -1, SPROP_COORD),
 	SendPropFloat(SENDINFO(m_flOffsideLineLastOppPlayerPosY), -1, SPROP_COORD),
 	SendPropBool(SENDINFO(m_bOffsideLinesEnabled)),
+	SendPropBool(SENDINFO(m_bIsCeremony)),
 
 #endif
 END_NETWORK_TABLE()
@@ -448,6 +450,7 @@ CSDKGameRules::CSDKGameRules()
 	m_pPrecip = NULL;
 	m_nFirstHalfLeftSideTeam = TEAM_A;
 	m_nLeftSideTeam = TEAM_A;
+	m_bIsCeremony = false;
 	m_nTimeoutTeam = TEAM_INVALID;
 	m_eTimeoutState = TIMEOUT_STATE_NONE;
 	m_flTimeoutEnd = 0;
@@ -626,6 +629,8 @@ void CSDKGameRules::ServerActivate()
 
 	m_nFirstHalfLeftSideTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
 	m_nFirstHalfKickOffTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
+
+	m_bIsCeremony = false;
 
 	State_Transition(MATCH_PERIOD_WARMUP);
 }
@@ -1080,17 +1085,29 @@ void CSDKGameRules::ClientDisconnected( edict_t *pClient )
 	BaseClass::ClientDisconnected( pClient );
 }
 
-void CSDKGameRules::RestartMatch(bool setRandomKickOffTeam, bool setRandomSides)
+void CSDKGameRules::RestartMatch(bool isCeremony, int kickOffTeam, int leftSideTeam)
 {
 	IGameEvent *pEvent = gameeventmanager->CreateEvent("match_restart");
 	if (pEvent)
 		gameeventmanager->FireEvent(pEvent);
 
-	if (setRandomKickOffTeam)
-		m_nFirstHalfKickOffTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
+	m_bIsCeremony = isCeremony;
 
-	if (setRandomSides)
-		m_nFirstHalfLeftSideTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
+	switch (kickOffTeam)
+	{
+		case -1: break;
+		case 0: m_nFirstHalfKickOffTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B); break;
+		case 1: m_nFirstHalfKickOffTeam = TEAM_A; break;
+		case 2: m_nFirstHalfKickOffTeam = TEAM_B; break;
+	}
+
+	switch (leftSideTeam)
+	{
+		case -1: break;
+		case 0: m_nFirstHalfLeftSideTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B); break;
+		case 1: m_nFirstHalfLeftSideTeam = TEAM_A; break;
+		case 2: m_nFirstHalfLeftSideTeam = TEAM_B; break;
+	}
 
 	SDKGameRules()->State_Transition(MATCH_PERIOD_WARMUP);
 }
@@ -1191,6 +1208,7 @@ void CC_SV_ResumeMatch(const CCommand &args)
 
 ConCommand sv_resumematch( "sv_resumematch", CC_SV_ResumeMatch, "", 0 );
 
+
 void CC_SV_Restart(const CCommand &args)
 {
 	if ( !UTIL_IsCommandIssuedByServerAdmin() )
@@ -1199,24 +1217,32 @@ void CC_SV_Restart(const CCommand &args)
 	if (args.ArgC() > 1)
 		mp_timelimit_warmup.SetValue((float)atof(args[1]));
 
-	bool setRandomKickOffTeam;
+	bool isCeremony;
 
 	if (args.ArgC() > 2)
-		setRandomKickOffTeam = (atoi(args[2]) != 0);
+		isCeremony = atoi(args[2]) != 0;
 	else
-		setRandomKickOffTeam = false;
+		isCeremony = false;
 
-	bool setRandomSides;
+	int kickOffTeam;
 
 	if (args.ArgC() > 3)
-		setRandomSides = (atoi(args[3]) != 0);
+		kickOffTeam = atoi(args[3]);
 	else
-		setRandomSides = false;
+		kickOffTeam = -1;
 
-	SDKGameRules()->RestartMatch(setRandomKickOffTeam, setRandomSides);
+	int leftSideTeam;
+
+	if (args.ArgC() > 4)
+		leftSideTeam = atoi(args[4]);
+	else
+		leftSideTeam = -1;
+
+	SDKGameRules()->RestartMatch(isCeremony, kickOffTeam, leftSideTeam);
 }
 
-ConCommand sv_restart( "sv_restart", CC_SV_Restart, "Restart game", 0 );
+ConCommand sv_restart( "sv_restart", CC_SV_Restart, "Usage: sv_restart <countdown in minutes> <is ceremony> <kick-off team> <left side team>", 0 );
+
 
 int CSDKGameRules::WakeUpAwayPlayers()
 {
@@ -1485,6 +1511,11 @@ void CSDKGameRules::State_Enter( match_period_t newState )
 		}
 	}
 
+	if (State_Get() != MATCH_PERIOD_WARMUP)
+	{
+		m_bIsCeremony = false;
+	}
+
 	UTIL_ClientPrintAll(HUD_PRINTCENTER, g_szMatchPeriodNames[m_pCurStateInfo->m_eMatchPeriod]);
 
 	// Initialize the new state.
@@ -1656,6 +1687,11 @@ void CSDKGameRules::State_WARMUP_Think()
 {
 	if (m_flStateTimeLeft <= 0 || CheckAutoStart())
 		State_Transition(MATCH_PERIOD_FIRST_HALF);
+	else
+	{
+		if (m_bIsCeremony && m_nShieldType == SHIELD_CEREMONY && CSDKPlayer::PlayersAtTargetPos())
+			DisableShield();
+	}
 }
 
 void CSDKGameRules::State_WARMUP_Leave(match_period_t newState)
@@ -2047,7 +2083,11 @@ void CSDKGameRules::ApplyIntermissionSettings(bool startHighlights, bool movePla
 	{
 		GetMatchBall()->State_Transition(BALL_STATE_NORMAL, 0, true);
 		GetMatchBall()->SetPos(m_vKickOff);
-		EnableShield(SHIELD_KICKOFF, TEAM_A, SDKGameRules()->m_vKickOff);
+
+		if (m_bIsCeremony)
+			EnableShield(SHIELD_CEREMONY, TEAM_A, SDKGameRules()->m_vKickOff);
+		else
+			EnableShield(SHIELD_KICKOFF, TEAM_A, SDKGameRules()->m_vKickOff);
 	}
 	else
 		GetMatchBall()->UpdatePossession(NULL);
@@ -2079,6 +2119,7 @@ bool CSDKGameRules::CheckAutoStart()
 		requiredPlayerCount -= 1;
 
 	if (sv_autostartmatch.GetBool()
+		&& !m_bIsCeremony
 		&& GetGlobalTeam(TEAM_A)->GetNumPlayers() + GetGlobalTeam(TEAM_B)->GetNumPlayers() >= requiredPlayerCount
 		&& gpGlobals->curtime >= m_flLastAwayCheckTime + sv_wakeupcall_interval.GetFloat())
 	{

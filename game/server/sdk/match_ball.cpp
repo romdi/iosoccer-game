@@ -404,7 +404,7 @@ void CMatchBall::State_THROWIN_Think()
 		m_pPl->SetShotsBlocked(true);
 	}
 
-	if (!PlayersAtTargetPos())
+	if (!CSDKPlayer::PlayersAtTargetPos())
 		return;
 
 	if (m_flStateTimelimit == -1)
@@ -497,7 +497,7 @@ void CMatchBall::State_KICKOFF_Think()
 		if (!m_pPl)
 		{
 			SDKGameRules()->EnableShield(SHIELD_KICKOFF, GetGlobalTeam(TEAM_A)->GetTeamNumber(), SDKGameRules()->m_vKickOff);
-			if (!PlayersAtTargetPos())
+			if (!CSDKPlayer::PlayersAtTargetPos())
 				return;
 
 			return State_Transition(BALL_STATE_NORMAL);
@@ -548,7 +548,7 @@ void CMatchBall::State_KICKOFF_Think()
 		}
 	}
 
-	if (!PlayersAtTargetPos())
+	if (!CSDKPlayer::PlayersAtTargetPos())
 		return;
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++) 
@@ -625,7 +625,7 @@ void CMatchBall::State_GOALKICK_Think()
 		m_pPl->SetShotsBlocked(true);
 	}
 
-	if (!PlayersAtTargetPos())
+	if (!CSDKPlayer::PlayersAtTargetPos())
 		return;
 
 	UpdateCarrier();
@@ -703,7 +703,7 @@ void CMatchBall::State_CORNER_Think()
 		m_pPl->SetShotsBlocked(true);
 	}
 
-	if (!PlayersAtTargetPos())
+	if (!CSDKPlayer::PlayersAtTargetPos())
 		return;
 
 	UpdateCarrier();
@@ -847,7 +847,7 @@ void CMatchBall::State_FREEKICK_Think()
 		m_pPl->SetShotsBlocked(true);
 	}
 
-	if (!PlayersAtTargetPos())
+	if (!CSDKPlayer::PlayersAtTargetPos())
 		return;
 
 	UpdateCarrier();
@@ -969,7 +969,7 @@ void CMatchBall::State_PENALTY_Think()
 		m_pOtherPl->AddFlag(FL_NO_Y_MOVEMENT);
 	}
 
-	if (!PlayersAtTargetPos())
+	if (!CSDKPlayer::PlayersAtTargetPos())
 		return;
 
 	UpdateCarrier();
@@ -1055,7 +1055,7 @@ void CMatchBall::State_KEEPERHANDS_Think()
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_CARRY);
 		EnablePlayerCollisions(false);
 		m_flStateTimelimit = -1;
-		PlayersAtTargetPos();
+		CSDKPlayer::PlayersAtTargetPos();
 	}
 
 	if (!SDKGameRules()->IsIntermissionState() && !m_bHasQueuedState && SDKGameRules()->State_Get() != MATCH_PERIOD_PENALTIES)
@@ -2027,46 +2027,6 @@ void CMatchBall::SetPenaltyTaker(CSDKPlayer *pPl)
 	m_nFouledTeam = pPl->GetTeamNumber();
 	m_nFoulingTeam = pPl->GetOppTeamNumber();
 	m_pFoulingPl = GetGlobalTeam(m_nFoulingTeam)->GetPlayerByPosType(POS_GK);
-}
-
-// Make sure that all players are walked to the intended positions when setting shields
-bool CMatchBall::PlayersAtTargetPos()
-{
-	bool playersAtTarget = true;
-
-	for (int i = 1; i <= gpGlobals->maxClients; i++)
-	{
-		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
-
-		if (!CSDKPlayer::IsOnField(pPl))
-			continue;
-
-		if (!pPl->m_bIsAtTargetPos)
-		{
-			if (!(pPl->GetFlags() & FL_REMOTECONTROLLED))
-			{
-				if (mp_shield_liberal_teammates_positioning.GetBool() && m_pCurStateInfo->m_eBallState != BALL_STATE_KICKOFF && m_pCurStateInfo->m_eBallState != BALL_STATE_PENALTY && pPl->GetTeamNumber() == m_pPl->GetTeamNumber())
-					pPl->SetPosOutsideBall(pPl->GetLocalOrigin());
-				else
-					pPl->SetPosOutsideShield(false);
-			}
-
-			if (!pPl->m_bIsAtTargetPos)
-			{
-				if (pPl->m_flRemoteControlledStartTime == -1)
-				{
-					pPl->m_flRemoteControlledStartTime = gpGlobals->curtime;
-					playersAtTarget = false;
-				}
-				else if (gpGlobals->curtime >= pPl->m_flRemoteControlledStartTime + sv_ball_timelimit_remotecontrolled.GetFloat()) // Player timed out and blocks progress, so move him to specs
-					pPl->SetDesiredTeam(TEAM_SPECTATOR, pPl->GetTeamNumber(), 0, true, false, false);
-				else
-					playersAtTarget = false;
-			}
-		}
-	}
-
-	return playersAtTarget;
 }
 
 void CMatchBall::VPhysicsCollision(int index, gamevcollisionevent_t *pEvent)
