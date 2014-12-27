@@ -114,7 +114,10 @@ ConVar
 	
 	sv_ball_chargeddivingheader_minstrength("sv_ball_chargeddivingheader_minstrength", "630", FCVAR_NOTIFY), 
 	sv_ball_chargeddivingheader_maxstrength("sv_ball_chargeddivingheader_maxstrength", "990", FCVAR_NOTIFY),
-	
+
+	sv_ball_divingheader_minangle("sv_ball_divingheader_minangle", "30", FCVAR_NOTIFY), 
+	sv_ball_divingheader_maxangle("sv_ball_divingheader_maxangle", "-30", FCVAR_NOTIFY),
+
 	sv_ball_header_mindelay("sv_ball_header_mindelay", "0.33", FCVAR_NOTIFY), 
 	
 	sv_ball_slide_strength("sv_ball_slide_strength", "720", FCVAR_NOTIFY), 
@@ -1015,47 +1018,51 @@ bool CBall::DoVolleyShot()
 
 bool CBall::DoHeader()
 {
-	Vector vel;
+	Vector vel, forward;
 
-	if (m_pPl->IsNormalshooting())
-	{
-		vel = m_vPlForward * GetNormalshotStrength(GetPitchCoeff(), sv_ball_normalheader_strength.GetInt());
-		EmitSound("Ball.Kicknormal");
-		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEADER_STATIONARY);
-	}
-	else if (m_vPlForwardVel2D.Length2D() >= mp_walkspeed.GetInt()
+	QAngle headerAngle = m_aPlAng;
+
+	// Diving header
+	if (!m_pPl->IsNormalshooting()
+		&& m_vPlForwardVel2D.Length2D() >= mp_walkspeed.GetInt()
 		&& (m_nInPenBoxOfTeam == m_pPl->GetTeamNumber() || m_nInPenBoxOfTeam == m_pPl->GetOppTeamNumber())
 		&& (m_pPl->m_nButtons & IN_SPEED) && m_pPl->GetGroundEntity())
 	{
-		vel = m_vPlForward * GetChargedshotStrength(1.0f, sv_ball_chargeddivingheader_minstrength.GetInt(), sv_ball_chargeddivingheader_maxstrength.GetInt());
+		headerAngle[PITCH] = clamp(headerAngle[PITCH], sv_ball_divingheader_maxangle.GetFloat(), sv_ball_divingheader_minangle.GetFloat());
+		AngleVectors(headerAngle, &forward);
+
+		vel = forward * GetChargedshotStrength(1.0f, sv_ball_chargeddivingheader_minstrength.GetInt(), sv_ball_chargeddivingheader_maxstrength.GetInt());
 
 		EmitSound("Ball.Kickhard");
 		EmitSound("Player.DivingHeader");
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_DIVINGHEADER);
 	}
+	// Normal or charged header
 	else
 	{
-		vel = m_vPlForward * GetChargedshotStrength(GetPitchCoeff(), sv_ball_chargedheader_minstrength.GetInt(), sv_ball_chargedheader_maxstrength.GetInt());
+		headerAngle[PITCH] = clamp(headerAngle[PITCH], sv_ball_header_maxangle.GetFloat(), sv_ball_header_minangle.GetFloat());
+		AngleVectors(headerAngle, &forward);
+
+		if (m_pPl->IsNormalshooting())
+			vel = forward * GetNormalshotStrength(GetPitchCoeff(), sv_ball_normalheader_strength.GetInt());
+		else
+			vel = forward * GetChargedshotStrength(GetPitchCoeff(), sv_ball_chargedheader_minstrength.GetInt(), sv_ball_chargedheader_maxstrength.GetInt());
 
 		if (vel.Length() > 1000)
+		{
+			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEADER);
 			EmitSound("Ball.Kickhard");
+		}
 		else
+		{
+			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEADER_STATIONARY);
 			EmitSound("Ball.Kicknormal");
-
-		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEADER);
+		}
 	}
 
 	vel += m_vPlForwardVel2D * sv_ball_header_playerspeedcoeff.GetFloat();
 
-	float speed = vel.NormalizeInPlace();
-	QAngle headerAngle;
-	VectorAngles(vel, headerAngle);
-	headerAngle[PITCH] = clamp(headerAngle[PITCH], sv_ball_header_maxangle.GetFloat(), sv_ball_header_minangle.GetFloat());
-	AngleVectors(headerAngle, &vel);
-
-	vel *= speed;
-
-	SetVel(vel, sv_ball_header_spincoeff.GetFloat(), FL_SPIN_RETAIN_SIDE, BODY_PART_HEAD, false, true, true, sv_ball_header_mindelay.GetFloat());
+	SetVel(vel, sv_ball_header_spincoeff.GetFloat(), FL_SPIN_PERMIT_SIDE, BODY_PART_HEAD, false, true, true, sv_ball_header_mindelay.GetFloat());
 
 	return true;
 }
