@@ -129,6 +129,7 @@ ConVar
 	sv_ball_rainbowflick_dist("sv_ball_rainbowflick_dist", "-10", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_header_spincoeff("sv_ball_header_spincoeff", "0.5", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_header_maxangle("sv_ball_header_maxangle", "-40", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_header_playerspeedcoeff("sv_ball_header_playerspeedcoeff", "1.0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	
 	sv_ball_highlightsdelay_intermissions("sv_ball_highlightsdelay_intermissions", "5.0", FCVAR_NOTIFY),
 	sv_ball_highlightsdelay_cooldown("sv_ball_highlightsdelay_cooldown", "30.0", FCVAR_NOTIFY),
@@ -1047,7 +1048,7 @@ bool CBall::DoHeader()
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEADER);
 	}
 
-	vel = m_vPlForwardVel2D + vel;
+	vel += m_vPlForwardVel2D * sv_ball_header_playerspeedcoeff.GetFloat();
 
 	float speed = vel.NormalizeInPlace();
 	QAngle headerAngle;
