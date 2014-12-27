@@ -128,6 +128,7 @@ ConVar
 	sv_ball_rainbowflick_angle("sv_ball_rainbowflick_angle", "-30", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_rainbowflick_dist("sv_ball_rainbowflick_dist", "-10", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_header_spincoeff("sv_ball_header_spincoeff", "0.5", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_header_minangle("sv_ball_header_minangle", "70", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_header_maxangle("sv_ball_header_maxangle", "-40", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_header_playerspeedcoeff("sv_ball_header_playerspeedcoeff", "1.0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	
@@ -1026,14 +1027,10 @@ bool CBall::DoHeader()
 		&& (m_nInPenBoxOfTeam == m_pPl->GetTeamNumber() || m_nInPenBoxOfTeam == m_pPl->GetOppTeamNumber())
 		&& (m_pPl->m_nButtons & IN_SPEED) && m_pPl->GetGroundEntity())
 	{
-		Vector forward;
-		AngleVectors(QAngle(-5, m_aPlAng[YAW], 0), &forward, NULL, NULL);
-
-		vel = forward * GetChargedshotStrength(1.0f, sv_ball_chargeddivingheader_minstrength.GetInt(), sv_ball_chargeddivingheader_maxstrength.GetInt());
+		vel = m_vPlForward * GetChargedshotStrength(1.0f, sv_ball_chargeddivingheader_minstrength.GetInt(), sv_ball_chargeddivingheader_maxstrength.GetInt());
 
 		EmitSound("Ball.Kickhard");
 		EmitSound("Player.DivingHeader");
-		//m_pPl->AddFlag(FL_FREECAM);
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_DIVINGHEADER);
 	}
 	else
@@ -1053,7 +1050,7 @@ bool CBall::DoHeader()
 	float speed = vel.NormalizeInPlace();
 	QAngle headerAngle;
 	VectorAngles(vel, headerAngle);
-	headerAngle[PITCH] = max(sv_ball_header_maxangle.GetFloat(), headerAngle[PITCH]);
+	headerAngle[PITCH] = clamp(headerAngle[PITCH], sv_ball_header_maxangle.GetFloat(), sv_ball_header_minangle.GetFloat());
 	AngleVectors(headerAngle, &vel);
 
 	vel *= speed;
