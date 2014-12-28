@@ -1022,9 +1022,19 @@ bool CBall::DoHeader()
 
 	QAngle headerAngle = m_aPlAng;
 
-	// Diving header
-	if (!m_pPl->IsNormalshooting()
-		&& m_vPlForwardVel2D.Length2D() >= mp_walkspeed.GetInt()
+	// Normal header
+	if (m_pPl->IsNormalshooting())
+	{
+		headerAngle[PITCH] = clamp(headerAngle[PITCH], sv_ball_header_maxangle.GetFloat(), sv_ball_header_minangle.GetFloat());
+		AngleVectors(headerAngle, &forward);
+
+		vel = forward * GetNormalshotStrength(GetPitchCoeff(), sv_ball_normalheader_strength.GetInt());
+
+		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEADER_STATIONARY);
+		EmitSound("Ball.Kickhard");
+	}
+	// Charged diving header
+	else if (m_vPlForwardVel2D.Length2D() >= mp_walkspeed.GetInt()
 		&& (m_nInPenBoxOfTeam == m_pPl->GetTeamNumber() || m_nInPenBoxOfTeam == m_pPl->GetOppTeamNumber())
 		&& (m_pPl->m_nButtons & IN_SPEED) && m_pPl->GetGroundEntity())
 	{
@@ -1033,33 +1043,23 @@ bool CBall::DoHeader()
 
 		vel = forward * GetChargedshotStrength(1.0f, sv_ball_chargeddivingheader_minstrength.GetInt(), sv_ball_chargeddivingheader_maxstrength.GetInt());
 
+		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_DIVINGHEADER);
 		EmitSound("Ball.Kickhard");
 		EmitSound("Player.DivingHeader");
-		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_DIVINGHEADER);
 	}
-	// Normal or charged header
+	// Charged header
 	else
 	{
 		headerAngle[PITCH] = clamp(headerAngle[PITCH], sv_ball_header_maxangle.GetFloat(), sv_ball_header_minangle.GetFloat());
 		AngleVectors(headerAngle, &forward);
 
-		if (m_pPl->IsNormalshooting())
-			vel = forward * GetNormalshotStrength(GetPitchCoeff(), sv_ball_normalheader_strength.GetInt());
-		else
-			vel = forward * GetChargedshotStrength(GetPitchCoeff(), sv_ball_chargedheader_minstrength.GetInt(), sv_ball_chargedheader_maxstrength.GetInt());
+		vel = forward * GetChargedshotStrength(GetPitchCoeff(), sv_ball_chargedheader_minstrength.GetInt(), sv_ball_chargedheader_maxstrength.GetInt());
 
-		if (vel.Length() > 1000)
-		{
-			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEADER);
-			EmitSound("Ball.Kickhard");
-		}
-		else
-		{
-			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEADER_STATIONARY);
-			EmitSound("Ball.Kicknormal");
-		}
+		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEADER);
+		EmitSound("Ball.Kickhard");
 	}
 
+	// Add player forward move speed to ball speed
 	vel += m_vPlForwardVel2D * sv_ball_header_playerspeedcoeff.GetFloat();
 
 	SetVel(vel, sv_ball_header_spincoeff.GetFloat(), FL_SPIN_PERMIT_SIDE, BODY_PART_HEAD, false, true, true, sv_ball_header_mindelay.GetFloat());
