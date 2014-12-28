@@ -397,6 +397,7 @@ public:
 
 	void ApplyIntermissionSettings(bool startHighlights, bool movePlayers);
 	bool CheckAutoStart();
+	void CalcAnnouncedInjuryTime();
 
 	void SetMatchDisplayTimeSeconds(int seconds);
 
@@ -424,7 +425,6 @@ public:
 	float GetTimeoutEnd() { return m_flTimeoutEnd; }
 
 	bool IsIntermissionState();
-	bool IsInjuryTime();
 	int GetShieldRadius(int team, bool isTaker);
 	int GetMatchDisplayTimeSeconds(bool addInjuryTime = true, bool getCountdownAtIntermissions = true);
 

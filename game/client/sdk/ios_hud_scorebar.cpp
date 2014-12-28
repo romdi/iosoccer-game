@@ -414,12 +414,12 @@ void CHudScorebar::OnThink( void )
 			m_pTime->SetBgColor(Color(0, 0, 0, 0));
 	}
 
-	if (SDKGameRules()->m_nAnnouncedInjuryTime > 0 && m_flInjuryTimeStart == -1)
+	if (SDKGameRules()->m_nAnnouncedInjuryTime > -1 && m_flInjuryTimeStart == -1)
 	{
 		m_flInjuryTimeStart = gpGlobals->curtime;
 		m_pInjuryTime->SetText(VarArgs("+%d", SDKGameRules()->m_nAnnouncedInjuryTime));
 	}
-	else if (SDKGameRules()->m_nAnnouncedInjuryTime == 0 && m_flInjuryTimeStart != -1)
+	else if (SDKGameRules()->m_nAnnouncedInjuryTime == -1 && m_flInjuryTimeStart != -1)
 	{
 		m_flInjuryTimeStart = -1;
 		m_pInjuryTime->SetText("");

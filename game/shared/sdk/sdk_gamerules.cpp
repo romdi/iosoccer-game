@@ -273,7 +273,7 @@ BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 	RecvPropTime( RECVINFO( m_flStateEnterTime ) ),
 	RecvPropTime( RECVINFO( m_flMatchStartTime ) ),
 	RecvPropInt( RECVINFO( m_eMatchPeriod) ),
-	RecvPropInt( RECVINFO( m_nAnnouncedInjuryTime) ),
+	RecvPropIntWithMinusOneFlag( RECVINFO( m_nAnnouncedInjuryTime) ),
 	RecvPropTime( RECVINFO( m_flInjuryTimeStart) ),
 	RecvPropTime( RECVINFO( m_flInjuryTime) ),
 
@@ -304,7 +304,7 @@ BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 	//SendPropFloat( SENDINFO( m_fStart) ),
 	//SendPropInt( SENDINFO( m_iDuration) ),
 	SendPropInt( SENDINFO( m_eMatchPeriod ), 4, SPROP_UNSIGNED),
-	SendPropInt( SENDINFO( m_nAnnouncedInjuryTime ), 3, SPROP_UNSIGNED),
+	SendPropIntWithMinusOneFlag( SENDINFO( m_nAnnouncedInjuryTime ), 4),
 	SendPropTime( SENDINFO( m_flInjuryTimeStart )),
 	SendPropTime( SENDINFO( m_flInjuryTime )),
 
@@ -1457,7 +1457,7 @@ void CSDKGameRules::State_Enter( match_period_t newState )
 
 	m_flInjuryTime = 0.0f;
 	m_flInjuryTimeStart = -1;
-	m_nAnnouncedInjuryTime = 0;
+	m_nAnnouncedInjuryTime = -1;
 
 	if ( mp_showstatetransitions.GetInt() > 0 )
 	{
@@ -1539,7 +1539,7 @@ void CSDKGameRules::State_Leave(match_period_t newState)
 				continue;
 
 			CTeamMatchPeriodData *pTeamData = GetGlobalTeam(TEAM_A + i)->m_MatchPeriodData.Tail();
-			pTeamData->m_nAnnouncedInjuryTimeSeconds = m_nAnnouncedInjuryTime * 60;
+			pTeamData->m_nAnnouncedInjuryTimeSeconds = m_nAnnouncedInjuryTime == -1 ? -1 : m_nAnnouncedInjuryTime * 60;
 			pTeamData->m_nActualInjuryTimeSeconds = GetMatchDisplayTimeSeconds() - GetMatchDisplayTimeSeconds(false);
 		}
 	}
@@ -1602,8 +1602,7 @@ void CSDKGameRules::State_Think()
 				}
 			}
 
-			// Don't end the match period if the ball is near a goal, unless the time limit is exceeded
-			int additionalTime = m_nAnnouncedInjuryTime + (abs(m_nBallZone) < 50 ? 0 : 30);
+			int additionalTime = m_nAnnouncedInjuryTime == -1 ? 0 : m_nAnnouncedInjuryTime + (abs(m_nBallZone) < 50 ? 0 : 30);
 			m_flStateTimeLeft += m_flInjuryTime + additionalTime * 60 / (90.0f / mp_timelimit_match.GetFloat());
 
 			// Check for player auto-rotation
@@ -1722,9 +1721,9 @@ void CSDKGameRules::State_FIRST_HALF_Enter()
 
 void CSDKGameRules::State_FIRST_HALF_Think()
 {
-	if ((45 * 60 - GetMatchDisplayTimeSeconds()) <= 60 && m_nAnnouncedInjuryTime == 0)
+	if ((45 * 60 - GetMatchDisplayTimeSeconds()) <= 60 && m_nAnnouncedInjuryTime == -1)
 	{
-		m_nAnnouncedInjuryTime = g_IOSRand.RandomInt(mp_injurytime_min.GetInt(), mp_injurytime_max.GetInt());
+		CalcAnnouncedInjuryTime();
 	}
 	else if (m_flStateTimeLeft <= 0 && GetMatchBall()->State_Get() == BALL_STATE_NORMAL && !GetMatchBall()->HasQueuedState())
 	{
@@ -1765,9 +1764,9 @@ void CSDKGameRules::State_SECOND_HALF_Enter()
 
 void CSDKGameRules::State_SECOND_HALF_Think()
 {
-	if ((90 * 60 - GetMatchDisplayTimeSeconds()) <= 60 && m_nAnnouncedInjuryTime == 0)
+	if ((90 * 60 - GetMatchDisplayTimeSeconds()) <= 60 && m_nAnnouncedInjuryTime == -1)
 	{
-		m_nAnnouncedInjuryTime = g_IOSRand.RandomInt(mp_injurytime_min.GetInt(), mp_injurytime_max.GetInt());
+		CalcAnnouncedInjuryTime();
 	}
 	else if (m_flStateTimeLeft <= 0 && GetMatchBall()->State_Get() == BALL_STATE_NORMAL && !GetMatchBall()->HasQueuedState())
 	{
@@ -1812,9 +1811,9 @@ void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Enter()
 
 void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Think()
 {
-	if ((105 * 60 - GetMatchDisplayTimeSeconds()) <= 60 && m_nAnnouncedInjuryTime == 0)
+	if ((105 * 60 - GetMatchDisplayTimeSeconds()) <= 60 && m_nAnnouncedInjuryTime == -1)
 	{
-		m_nAnnouncedInjuryTime = g_IOSRand.RandomInt(mp_injurytime_min.GetInt(), mp_injurytime_max.GetInt());
+		CalcAnnouncedInjuryTime();
 	}
 	else if (m_flStateTimeLeft <= 0 && GetMatchBall()->State_Get() == BALL_STATE_NORMAL && !GetMatchBall()->HasQueuedState())
 	{
@@ -1854,9 +1853,9 @@ void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Enter()
 
 void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Think()
 {
-	if ((120 * 60 - GetMatchDisplayTimeSeconds()) <= 60 && m_nAnnouncedInjuryTime == 0)
+	if ((120 * 60 - GetMatchDisplayTimeSeconds()) <= 60 && m_nAnnouncedInjuryTime == -1)
 	{
-		m_nAnnouncedInjuryTime = g_IOSRand.RandomInt(mp_injurytime_min.GetInt(), mp_injurytime_max.GetInt());
+		CalcAnnouncedInjuryTime();
 	}
 	else if (m_flStateTimeLeft <= 0 && GetMatchBall()->State_Get() == BALL_STATE_NORMAL && !GetMatchBall()->HasQueuedState())
 	{
@@ -2128,6 +2127,11 @@ bool CSDKGameRules::CheckAutoStart()
 	}
 
 	return false;
+}
+
+void CSDKGameRules::CalcAnnouncedInjuryTime()
+{
+	m_nAnnouncedInjuryTime = max(0, g_IOSRand.RandomInt(mp_injurytime_min.GetInt(), mp_injurytime_max.GetInt()));
 }
 
 #include <ctype.h>
@@ -2627,11 +2631,6 @@ bool CSDKGameRules::IsIntermissionState()
 	default:
 		return false;
 	}
-}
-
-bool CSDKGameRules::IsInjuryTime()
-{
-	return (m_nAnnouncedInjuryTime > 0);
 }
 
 int CSDKGameRules::GetShieldRadius(int team, bool isTaker)
