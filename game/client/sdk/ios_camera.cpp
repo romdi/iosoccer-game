@@ -29,11 +29,11 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-#define CAM_DIST 160
-#define CAM_HEIGHT 20
-
 ConVar cl_goal_opacity("cl_goal_opacity", "0.25", FCVAR_ARCHIVE, "Goal opacity when it obstructs the view");
 ConVar cl_goal_opacity_fieldoffset("cl_goal_opacity_fieldoffset", "20", FCVAR_ARCHIVE, "Offset from the field end where to start making it transparent");
+
+ConVar cl_cam_dist("cl_cam_dist", "160", FCVAR_ARCHIVE, "", true, 0, true, 160);
+ConVar cl_cam_height("cl_cam_height", "20", FCVAR_ARCHIVE, "", true, -50, true, 50);
 
 void CheckAutoTransparentProps(const Vector &pos, const QAngle &ang)
 {
@@ -586,12 +586,12 @@ void C_Camera::CalcChaseCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov
 
 	if (camOffset[PITCH] >= 0)
 	{
-		camOffset[ROLL] = CAM_DIST;
+		camOffset[ROLL] = cl_cam_dist.GetInt();
 	}
 	else
 	{
 		float coeff = clamp(cos(DEG2RAD(camOffset[PITCH] + 90)), 0.001f, 1.0f);
-		camOffset[ROLL] = min((VEC_VIEW.z + CAM_HEIGHT - 5) / coeff, CAM_DIST);
+		camOffset[ROLL] = min((VEC_VIEW.z + cl_cam_height.GetInt() - 5) / coeff, cl_cam_dist.GetInt());
 	}
 
 	eyeAngles[PITCH] = camOffset[PITCH];
@@ -603,7 +603,7 @@ void C_Camera::CalcChaseCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov
 
 	VectorMA(eyeOrigin, -camOffset[ROLL], camForward, eyeOrigin);
 
-	eyeOrigin.z += CAM_HEIGHT;
+	eyeOrigin.z += cl_cam_height.GetInt();
 
 	if (!pLocal->IsObserver())
 	{
