@@ -68,6 +68,14 @@ ConVar
 	sv_ball_keeper_forwarddive_zstart( "sv_ball_keeper_forwarddive_zstart", "-50", FCVAR_NOTIFY ),
 	sv_ball_keeper_forwarddive_zend( "sv_ball_keeper_forwarddive_zend", "90", FCVAR_NOTIFY ),
 	sv_ball_keeper_forwarddive_catchcoeff( "sv_ball_keeper_forwarddive_catchcoeff", "0.5", FCVAR_NOTIFY ),
+
+	sv_ball_keeper_backwarddive_shortsidereach( "sv_ball_keeper_backwarddive_shortsidereach", "50", FCVAR_NOTIFY ),
+	sv_ball_keeper_backwarddive_longsidereach( "sv_ball_keeper_backwarddive_longsidereach", "100", FCVAR_NOTIFY ),
+	sv_ball_keeper_backwarddive_longsidereach_opposite( "sv_ball_keeper_backwarddive_longsidereach_opposite", "0", FCVAR_NOTIFY ),
+	sv_ball_keeper_backwarddive_zstart( "sv_ball_keeper_backwarddive_zstart", "50", FCVAR_NOTIFY ),
+	sv_ball_keeper_backwarddive_zend( "sv_ball_keeper_backwarddive_zend", "100", FCVAR_NOTIFY ),
+	sv_ball_keeper_backwarddive_catchcoeff( "sv_ball_keeper_backwarddive_catchcoeff", "0.5", FCVAR_NOTIFY ),
+	sv_ball_keeper_backwarddive_punchupangle( "sv_ball_keeper_backwarddive_punchupangle", "45", FCVAR_NOTIFY ),
 	
 	sv_ball_keeper_sidedive_shortsidereach( "sv_ball_keeper_sidedive_shortsidereach", "50", FCVAR_NOTIFY ),
 	sv_ball_keeper_sidedive_longsidereach( "sv_ball_keeper_sidedive_longsidereach", "60", FCVAR_NOTIFY ),
@@ -79,12 +87,12 @@ ConVar
 	
 	sv_ball_keeper_punch_minstrength( "sv_ball_keeper_punch_minstrength", "900", FCVAR_NOTIFY ),
 	
-	sv_ball_keeperpunchupstrength("sv_ball_keeperpunchupstrength", "450", FCVAR_NOTIFY),
 	sv_ball_keeperdeflectioncoeff("sv_ball_keeperdeflectioncoeff", "0.5", FCVAR_NOTIFY),
 	
 	sv_ball_shotdelay_global_coeff("sv_ball_shotdelay_global_coeff", "0.33", FCVAR_NOTIFY),
 	sv_ball_keepercatchdelay_sidedive_global_coeff("sv_ball_keepercatchdelay_sidedive_global_coeff", "1.0", FCVAR_NOTIFY),
 	sv_ball_keepercatchdelay_forwarddive_global_coeff("sv_ball_keepercatchdelay_forwarddive_global_coeff", "0.75", FCVAR_NOTIFY),
+	sv_ball_keepercatchdelay_backwarddive_global_coeff("sv_ball_keepercatchdelay_backwarddive_global_coeff", "1.0", FCVAR_NOTIFY),
 	sv_ball_keepercatchdelay_standing_global_coeff("sv_ball_keepercatchdelay_standing_global_coeff", "0.5", FCVAR_NOTIFY),
 	sv_ball_dynamicshotdelay_mindelay("sv_ball_dynamicshotdelay_mindelay", "0.2", FCVAR_NOTIFY),
 	sv_ball_dynamicshotdelay_maxdelay("sv_ball_dynamicshotdelay_maxdelay", "1.0", FCVAR_NOTIFY),
@@ -832,6 +840,19 @@ bool CBall::CheckKeeperCatch()
 			diveTypeCatchCoeff = sv_ball_keepercatchdelay_forwarddive_global_coeff.GetFloat();
 		}
 		break;
+	case PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD:
+		canReach = (localDirToBall.z < sv_ball_keeper_backwarddive_zend.GetFloat()
+			&& localDirToBall.z >= sv_ball_keeper_backwarddive_zstart.GetFloat()
+			&& localDirToBall.x >= -sv_ball_keeper_backwarddive_longsidereach.GetFloat()
+			&& localDirToBall.x <= sv_ball_keeper_backwarddive_longsidereach_opposite.GetFloat()
+			&& abs(localDirToBall.y) <= sv_ball_keeper_backwarddive_shortsidereach.GetFloat());
+
+		if (canReach)
+		{
+			ballPosCatchCoeff = sv_ball_keeper_backwarddive_catchcoeff.GetFloat();
+			diveTypeCatchCoeff = sv_ball_keepercatchdelay_backwarddive_global_coeff.GetFloat();
+		}
+		break;
 	case PLAYERANIMEVENT_KEEPER_JUMP:
 	default:
 		float maxReachXY = (localDirToBall.z < sv_ball_keeper_standing_catchcenteroffset_z.GetFloat() ? sv_ball_keeper_standing_reach_bottom.GetFloat() : sv_ball_keeper_standing_reach_top.GetFloat());
@@ -864,27 +885,37 @@ bool CBall::CheckKeeperCatch()
 
 		QAngle angDiff = m_aPlCamAng - m_aPlAng;
 
-		if (m_pPl->IsBot() || Square(angDiff[PITCH]) + Square(angDiff[YAW]) <= Square(sv_ball_keeperautopunch_limit.GetFloat()))
+		if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD)
 		{
-			int buttonSign;
-
-			if ((m_pPl->m_nButtons & IN_MOVELEFT) && (!(m_pPl->m_nButtons & IN_MOVERIGHT) || m_pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVERIGHT)) 
-				buttonSign = 1;
-			else if ((m_pPl->m_nButtons & IN_MOVERIGHT) && (!(m_pPl->m_nButtons & IN_MOVELEFT) || m_pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVELEFT)) 
-				buttonSign = -1;
-			else
-				buttonSign = 0;
-
-			QAngle ang = m_aPlAng;
-
-			ang[PITCH] = sv_ball_keeperautopunch_pitch.GetFloat();
-			ang[YAW] += sv_ball_keeperautopunch_yaw.GetFloat() * buttonSign;
-
+			QAngle ang = m_aPlCamAng;
+			ang[YAW] += 180;
+			ang[PITCH] = -sv_ball_keeper_backwarddive_punchupangle.GetInt();
 			AngleVectors(ang, &punchDir);
 		}
 		else
 		{
-			AngleVectors(m_aPlCamAng, &punchDir);
+			if (m_pPl->IsBot() || Square(angDiff[PITCH]) + Square(angDiff[YAW]) <= Square(sv_ball_keeperautopunch_limit.GetFloat()))
+			{
+				int buttonSign;
+
+				if ((m_pPl->m_nButtons & IN_MOVELEFT) && (!(m_pPl->m_nButtons & IN_MOVERIGHT) || m_pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVERIGHT)) 
+					buttonSign = 1;
+				else if ((m_pPl->m_nButtons & IN_MOVERIGHT) && (!(m_pPl->m_nButtons & IN_MOVELEFT) || m_pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVELEFT)) 
+					buttonSign = -1;
+				else
+					buttonSign = 0;
+
+				QAngle ang = m_aPlAng;
+
+				ang[PITCH] = sv_ball_keeperautopunch_pitch.GetFloat();
+				ang[YAW] += sv_ball_keeperautopunch_yaw.GetFloat() * buttonSign;
+
+				AngleVectors(ang, &punchDir);
+			}
+			else
+			{
+				AngleVectors(m_aPlCamAng, &punchDir);
+			}
 		}
 
 		Vector vel = punchDir * max(m_vVel.Length2D(), sv_ball_keeper_punch_minstrength.GetFloat()) * sv_ball_keeperdeflectioncoeff.GetFloat();

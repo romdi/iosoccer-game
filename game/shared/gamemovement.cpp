@@ -1565,7 +1565,6 @@ bool CGameMovement::CheckPlayerAnimEvent()
 	Vector forward2D = forward;
 	forward2D.z = 0;
 	forward2D.NormalizeInPlace();
-	const float stuckRescueTimeLimit = 4;
 
 	int sidemoveSign;
 
@@ -1588,28 +1587,23 @@ bool CGameMovement::CheckPlayerAnimEvent()
 				return false;
 			}
 
-			if (timePassed <= stuckRescueTimeLimit)
-			{
-				float moveCoeff;
+			float moveCoeff;
 
-				if (pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_LEFT && sidemoveSign == 1
-					|| pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT && sidemoveSign == -1)
-					moveCoeff = mp_keeperdive_movebackcoeff.GetFloat();
-				else
-					moveCoeff = 1.0f;
-				
-				mv->m_vecVelocity = forward2D * ZeroSign(mv->m_flForwardMove) * mp_keeperdivespeed_shortside.GetFloat();
-				mv->m_vecVelocity += right * sidemoveSign * moveCoeff * mp_keeperdivespeed_longside.GetFloat();
-
-				mv->m_vecVelocity.z = 0;
-				float maxSpeed = max(mp_keeperdivespeed_shortside.GetFloat(), mp_keeperdivespeed_longside.GetFloat());
-				float speed = mv->m_vecVelocity.NormalizeInPlace();
-				mv->m_vecVelocity *= min(speed, maxSpeed);
-				mv->m_vecVelocity *= max(0, (1 - pow(timePassed / mp_keepersidewarddive_move_duration.GetFloat(), 2)));
-				mv->m_vecVelocity.z = mp_keeperdivespeed_z.GetInt();
-			}
+			if (pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_LEFT && sidemoveSign == 1
+				|| pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT && sidemoveSign == -1)
+				moveCoeff = mp_keeperdive_movebackcoeff.GetFloat();
 			else
-				mv->m_vecVelocity = forward * mv->m_flForwardMove + right * mv->m_flSideMove;
+				moveCoeff = 1.0f;
+				
+			mv->m_vecVelocity = forward2D * ZeroSign(mv->m_flForwardMove) * mp_keeperdivespeed_shortside.GetFloat();
+			mv->m_vecVelocity += right * sidemoveSign * moveCoeff * mp_keeperdivespeed_longside.GetFloat();
+
+			mv->m_vecVelocity.z = 0;
+			float maxSpeed = max(mp_keeperdivespeed_shortside.GetFloat(), mp_keeperdivespeed_longside.GetFloat());
+			float speed = mv->m_vecVelocity.NormalizeInPlace();
+			mv->m_vecVelocity *= min(speed, maxSpeed);
+			mv->m_vecVelocity *= max(0, (1 - pow(timePassed / mp_keepersidewarddive_move_duration.GetFloat(), 2)));
+			mv->m_vecVelocity.z = mp_keeperdivespeed_z.GetInt();
 
 			if (mv->m_nButtons & IN_ATTACK)
 				pPl->AddFlag(FL_FREECAM);
@@ -1625,27 +1619,41 @@ bool CGameMovement::CheckPlayerAnimEvent()
 				return false;
 			}
 
-			if (timePassed <= stuckRescueTimeLimit)
-			{
-				float moveCoeff;
+			float moveCoeff;
 
-				if (mv->m_nButtons & IN_BACK)
-					moveCoeff = mp_keeperdive_movebackcoeff.GetFloat();
-				else
-					moveCoeff = 1.0f;
-					
-				mv->m_vecVelocity = forward2D * ZeroSign(mv->m_flForwardMove) * moveCoeff * mp_keeperdivespeed_longside.GetFloat();		
-				mv->m_vecVelocity += right * sidemoveSign * mp_keeperdivespeed_shortside.GetFloat();
-
-				mv->m_vecVelocity.z = 0;
-				float maxSpeed = max(mp_keeperdivespeed_shortside.GetFloat(), mp_keeperdivespeed_longside.GetFloat());
-				float speed = mv->m_vecVelocity.NormalizeInPlace();
-				mv->m_vecVelocity *= min(speed, maxSpeed);
-				mv->m_vecVelocity *= max(0, (1 - pow(timePassed / mp_keeperforwarddive_move_duration.GetFloat(), 2)));
-				mv->m_vecVelocity.z = 0;
-			}
+			if (mv->m_nButtons & IN_BACK)
+				moveCoeff = mp_keeperdive_movebackcoeff.GetFloat();
 			else
-				mv->m_vecVelocity = forward * mv->m_flForwardMove + right * mv->m_flSideMove;
+				moveCoeff = 1.0f;
+					
+			mv->m_vecVelocity = forward2D * ZeroSign(mv->m_flForwardMove) * moveCoeff * mp_keeperdivespeed_longside.GetFloat();		
+			mv->m_vecVelocity += right * sidemoveSign * mp_keeperdivespeed_shortside.GetFloat();
+
+			mv->m_vecVelocity.z = 0;
+			float maxSpeed = max(mp_keeperdivespeed_shortside.GetFloat(), mp_keeperdivespeed_longside.GetFloat());
+			float speed = mv->m_vecVelocity.NormalizeInPlace();
+			mv->m_vecVelocity *= min(speed, maxSpeed);
+			mv->m_vecVelocity *= max(0, (1 - pow(timePassed / mp_keeperforwarddive_move_duration.GetFloat(), 2)));
+			mv->m_vecVelocity.z = 0;
+
+			break;
+		}
+	case PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD:
+		{
+			if (timePassed > mp_keeperbackwarddive_move_duration.GetFloat() + mp_keeperbackwarddive_idle_duration.GetFloat())
+			{
+				pPl->DoAnimationEvent(PLAYERANIMEVENT_NONE);
+				pPl->RemoveFlag(FL_FREECAM);
+				return false;
+			}
+
+			AngleVectors(pPl->m_Shared.GetAnimEventStartAngle(), &forward2D);
+			forward2D.z = 0;
+			forward2D.NormalizeInPlace();
+
+			mv->m_vecVelocity = -forward2D * mp_keeperdivespeed_longside.GetFloat() * max(0, (1 - pow(timePassed / mp_keeperbackwarddive_move_duration.GetFloat(), 2)));		
+			mv->m_vecVelocity.z = mp_jump_height.GetInt();
+
 			break;
 		}
 	case PLAYERANIMEVENT_KEEPER_HANDS_THROW:
@@ -1665,10 +1673,7 @@ bool CGameMovement::CheckPlayerAnimEvent()
 			forward2D.z = 0;
 			forward2D.NormalizeInPlace();
 
-			if (timePassed <= stuckRescueTimeLimit)
-				mv->m_vecVelocity = forward2D * mp_slidespeed.GetInt() * max(0, (1 - pow(timePassed / mp_slide_move_duration.GetFloat(), 2)));
-			else
-				mv->m_vecVelocity = forward * mv->m_flForwardMove + right * mv->m_flSideMove;
+			mv->m_vecVelocity = forward2D * mp_slidespeed.GetInt() * max(0, (1 - pow(timePassed / mp_slide_move_duration.GetFloat(), 2)));
 			break;
 		}
 	case PLAYERANIMEVENT_TACKLED_FORWARD:
@@ -1706,10 +1711,7 @@ bool CGameMovement::CheckPlayerAnimEvent()
 				return false;
 			}
 
-			if (timePassed <= stuckRescueTimeLimit)
-				mv->m_vecVelocity = forward2D * mp_divingheaderspeed.GetInt() * max(0, (1 - pow(timePassed / mp_divingheader_move_duration.GetFloat(), 2)));
-			else
-				mv->m_vecVelocity = forward * mv->m_flForwardMove + right * mv->m_flSideMove;
+			mv->m_vecVelocity = forward2D * mp_divingheaderspeed.GetInt() * max(0, (1 - pow(timePassed / mp_divingheader_move_duration.GetFloat(), 2)));
 			break;
 		}
 	case PLAYERANIMEVENT_KICK:
@@ -1832,44 +1834,24 @@ bool CGameMovement::CheckJumpButton( void )
 	team = pPl->GetTeamNumber();
 #endif
 
-	if (isKeeper && GetMatchBall() && GetMatchBall()->State_Get() == BALL_STATE_PENALTY)
+	if (mv->m_nOldButtons & IN_JUMP
+		|| isKeeper && GetMatchBall() && GetMatchBall()->State_Get() == BALL_STATE_PENALTY)
 	{
 		return false;
 	}
 
-	if (gpGlobals->curtime < pPl->m_Shared.m_flNextJump)
+	if (gpGlobals->curtime < pPl->m_Shared.m_flNextJump
+		|| !player->GetGroundEntity()
+		|| player->GetFlags() & FL_ATCONTROLS)
 	{
 		mv->m_nOldButtons |= IN_JUMP;
 		return false;
 	}
-
-	// No more effect
- 	if (player->GetGroundEntity() == NULL)
-	{
-		mv->m_nOldButtons |= IN_JUMP;
-		return false;		// in air, so no effect
-	}
-
-	//ios cant jump during throwin
-	if (player->GetFlags() & FL_ATCONTROLS)
-	{
-		mv->m_nOldButtons |= IN_JUMP;
-		return false;		// in air, so no effect
-	}
-
-	if (pPl->m_Shared.GetStamina() < mp_stamina_drain_jumping.GetInt())
-	{
-		mv->m_nOldButtons |= IN_JUMP;
-		return false;		// in air, so no effect
-	}
-
-	if ( mv->m_nOldButtons & IN_JUMP )
-		return false;		// don't pogo stick
 
 	// In the air now.
     SetGroundEntity( NULL );
 
-	player->PlayStepSound( (Vector &)mv->GetAbsOrigin(), player->m_pSurfaceData, 1.0, true );
+	player->PlayStepSound((Vector &)mv->GetAbsOrigin(), player->m_pSurfaceData, 1.0, true);
 
 	PlayerAnimEvent_t animEvent = PLAYERANIMEVENT_JUMP;
 
@@ -1897,7 +1879,22 @@ bool CGameMovement::CheckJumpButton( void )
 		}
 		else
 		{
-			animEvent = PLAYERANIMEVENT_KEEPER_JUMP;
+			if (mv->m_nButtons & IN_FORWARD)
+			{
+				animEvent = PLAYERANIMEVENT_KEEPER_DIVE_FORWARD;
+				MoveHelper()->StartSound( mv->GetAbsOrigin(), "Player.DiveKeeper" );
+				pPl->AddFlag(FL_FREECAM);
+			}
+			else if (mv->m_nButtons & IN_BACK)
+			{
+				animEvent = PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD;
+				MoveHelper()->StartSound( mv->GetAbsOrigin(), "Player.DiveKeeper" );
+				pPl->AddFlag(FL_FREECAM);
+			}
+			else
+			{
+				animEvent = PLAYERANIMEVENT_KEEPER_JUMP;
+			}
 		}
 
 		if (mv->m_nButtons & IN_ATTACK)
@@ -1911,19 +1908,10 @@ bool CGameMovement::CheckJumpButton( void )
 
 	//pPl->m_Shared.SetAnimEvent(animEvent);
 
-	mv->m_vecVelocity.z = sqrt(2 * sv_gravity.GetFloat() * mp_jump_height.GetInt());
-
-	FinishGravity();
-
-	CheckV( player->CurrentCommandNumber(), "CheckJump", mv->m_vecVelocity );
-
-	mv->m_outJumpVel.z += mv->m_vecVelocity.z;
-	mv->m_outStepHeight += 0.15f;
+	mv->m_vecVelocity.z = mp_jump_height.GetInt();
 
 	// Flag that we jumped.
 	mv->m_nOldButtons |= IN_JUMP;	// don't jump again until released
-
-	pPl->m_Shared.SetStamina(pPl->m_Shared.GetStamina() - mp_stamina_drain_jumping.GetInt());
 
 	pPl->m_Shared.m_flNextJump = gpGlobals->curtime + mp_jump_delay.GetFloat();
 
@@ -1934,26 +1922,15 @@ bool CGameMovement::CheckSlideButton()
 {
 	CSDKPlayer *pPl = ToSDKPlayer(player);
 
-	if (player->GetFlags() & FL_ATCONTROLS)
-	{
-		mv->m_nOldButtons |= IN_DUCK;
-		return false;
-	}
-
-	if (pPl->m_Shared.GetStamina() < mp_stamina_drain_sliding.GetInt())
-	{
-		mv->m_nOldButtons |= IN_DUCK;
-		return false;
-	}
-
-	if (gpGlobals->curtime < pPl->m_Shared.m_flNextSlide)
-	{
-		mv->m_nOldButtons |= IN_DUCK;
-		return false;
-	}
-
 	if (mv->m_nOldButtons & IN_DUCK)
 		return false;
+
+	if (player->GetFlags() & FL_ATCONTROLS
+		|| gpGlobals->curtime < pPl->m_Shared.m_flNextSlide)
+	{
+		mv->m_nOldButtons |= IN_DUCK;
+		return false;
+	}
 
 	PlayerAnimEvent_t animEvent = PLAYERANIMEVENT_NONE;
 
@@ -1967,19 +1944,23 @@ bool CGameMovement::CheckSlideButton()
 		team = pPl->GetTeamNumber();
 	#endif
 
-	if (isKeeper && pPl->m_Shared.m_nInPenBoxOfTeam == team && !pPl->m_pHoldingBall)
+	if (!pPl->m_pHoldingBall)
 	{
-		if ((mv->m_nButtons & IN_FORWARD) && !(mv->m_nButtons & IN_WALK))
+		if (isKeeper && pPl->m_Shared.m_nInPenBoxOfTeam == team)
 		{
-			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_FORWARD;
-			MoveHelper()->StartSound( mv->GetAbsOrigin(), "Player.DiveKeeper" );
-			pPl->AddFlag(FL_FREECAM);
+			if (player->GetGroundEntity())
+			{
+				SetGroundEntity(NULL);
+				mv->m_vecVelocity.z = mp_jump_height.GetInt();
+				animEvent = PLAYERANIMEVENT_KEEPER_JUMP;
+				player->PlayStepSound((Vector &)mv->GetAbsOrigin(), player->m_pSurfaceData, 1.0, true);
+			}
 		}
-	}
-	else if (!pPl->m_pHoldingBall)
-	{
-		MoveHelper()->StartSound( mv->GetAbsOrigin(), "Player.Slide" );
-		animEvent = PLAYERANIMEVENT_SLIDE;
+		else
+		{
+			MoveHelper()->StartSound( mv->GetAbsOrigin(), "Player.Slide" );
+			animEvent = PLAYERANIMEVENT_SLIDE;
+		}
 	}
 
 	if (animEvent != PLAYERANIMEVENT_NONE)
@@ -1994,7 +1975,6 @@ bool CGameMovement::CheckSlideButton()
 
 	if (animEvent == PLAYERANIMEVENT_SLIDE)
 	{
-		pPl->m_Shared.SetStamina(pPl->m_Shared.GetStamina() - mp_stamina_drain_sliding.GetInt());
 		pPl->m_Shared.m_flNextSlide = gpGlobals->curtime + mp_slide_delay.GetFloat();
 
 		#ifdef GAME_DLL
