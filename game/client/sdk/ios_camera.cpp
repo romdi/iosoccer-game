@@ -34,6 +34,7 @@ ConVar cl_goal_opacity_fieldoffset("cl_goal_opacity_fieldoffset", "20", FCVAR_AR
 
 ConVar cl_cam_dist("cl_cam_dist", "160", FCVAR_ARCHIVE, "", true, 0, true, 160);
 ConVar cl_cam_height("cl_cam_height", "20", FCVAR_ARCHIVE, "", true, -50, true, 50);
+ConVar cl_cam_firstperson("cl_cam_firstperson", "0", FCVAR_ARCHIVE, "");
 
 void CheckAutoTransparentProps(const Vector &pos, const QAngle &ang)
 {
@@ -573,6 +574,9 @@ void C_Camera::CalcChaseCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov
 	const QAngle camAngles = ::input->GetCameraAngles();
 	Vector &camOffset = ::input->GetCameraOffset();
 
+	float dist = cl_cam_firstperson.GetBool() ? -10 : cl_cam_dist.GetFloat();
+	float height = cl_cam_firstperson.GetBool() ? 8 : cl_cam_height.GetFloat();
+
 	if (pLocal->IsObserver() && GetCamMode() == CAM_MODE_LOCKED_CHASE && !dynamic_cast<C_MatchBall *>(pTarget))
 	{
 		camOffset[PITCH] = eyeAngles[PITCH];
@@ -586,12 +590,12 @@ void C_Camera::CalcChaseCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov
 
 	if (camOffset[PITCH] >= 0)
 	{
-		camOffset[ROLL] = cl_cam_dist.GetInt();
+		camOffset[ROLL] = dist;
 	}
 	else
 	{
 		float coeff = clamp(cos(DEG2RAD(camOffset[PITCH] + 90)), 0.001f, 1.0f);
-		camOffset[ROLL] = min((VEC_VIEW.z + cl_cam_height.GetInt() - 5) / coeff, cl_cam_dist.GetInt());
+		camOffset[ROLL] = min((VEC_VIEW.z + height - 5) / coeff, dist);
 	}
 
 	eyeAngles[PITCH] = camOffset[PITCH];
@@ -603,7 +607,7 @@ void C_Camera::CalcChaseCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov
 
 	VectorMA(eyeOrigin, -camOffset[ROLL], camForward, eyeOrigin);
 
-	eyeOrigin.z += cl_cam_height.GetInt();
+	eyeOrigin.z += height;
 
 	if (!pLocal->IsObserver())
 	{
