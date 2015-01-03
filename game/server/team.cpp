@@ -455,6 +455,14 @@ void CTeam::InitFieldSpots(int team)
 
 	pPenBox->CollisionProp()->WorldSpaceTriggerBounds(&m_vPenBoxMin.GetForModify(), &m_vPenBoxMax.GetForModify());
 
+	// Make up for the current pen box which incorrectly stops before the goal line
+	int goalLineWidth = 5;
+
+	if (m_vPenalty.GetY() < SDKGameRules()->m_vKickOff.GetY())
+		m_vPenBoxMin.SetY(m_vPenBoxMin.GetY() - goalLineWidth);
+	else
+		m_vPenBoxMax.SetY(m_vPenBoxMax.GetY() + goalLineWidth);
+
 	CBaseEntity *pGoalTrigger = gEntList.FindEntityByClassnameNearest("trigger_goal", m_vPenalty, 9999);
 
 	Vector goalMin, goalMax;
