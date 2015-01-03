@@ -1605,9 +1605,6 @@ bool CGameMovement::CheckPlayerAnimEvent()
 			mv->m_vecVelocity *= max(0, (1 - pow(timePassed / mp_keepersidewarddive_move_duration.GetFloat(), 2)));
 			mv->m_vecVelocity.z = mp_keeperdivespeed_z.GetInt();
 
-			if (mv->m_nButtons & IN_ATTACK)
-				pPl->AddFlag(FL_FREECAM);
-
 			break;
 		}
 	case PLAYERANIMEVENT_KEEPER_DIVE_FORWARD:
@@ -1857,8 +1854,6 @@ bool CGameMovement::CheckJumpButton( void )
 
 	if (isKeeper && pPl->m_Shared.m_nInPenBoxOfTeam == team && !pPl->m_pHoldingBall)
 	{
-		MoveHelper()->StartSound( mv->GetAbsOrigin(), "Player.DiveKeeper" );
-
 		int sidemoveSign;
 
 		if ((mv->m_nButtons & IN_MOVELEFT) && (!(mv->m_nButtons & IN_MOVERIGHT) || pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVERIGHT))
@@ -1871,34 +1866,34 @@ bool CGameMovement::CheckJumpButton( void )
 		if (sidemoveSign == -1 && !(mv->m_nButtons & IN_WALK))
 		{
 			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_LEFT;
-			//mv->m_flSideMove = 2 * -mp_sprintspeed.GetInt();
+			pPl->AddFlag(FL_FREECAM);
+			MoveHelper()->StartSound( mv->GetAbsOrigin(), "Player.DiveKeeper" );
 		}
 		else if (sidemoveSign == 1 && !(mv->m_nButtons & IN_WALK))
 		{
 			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_RIGHT;
+			pPl->AddFlag(FL_FREECAM);
+			MoveHelper()->StartSound( mv->GetAbsOrigin(), "Player.DiveKeeper" );
 		}
 		else
 		{
 			if (mv->m_nButtons & IN_FORWARD)
 			{
 				animEvent = PLAYERANIMEVENT_KEEPER_DIVE_FORWARD;
-				MoveHelper()->StartSound( mv->GetAbsOrigin(), "Player.DiveKeeper" );
 				pPl->AddFlag(FL_FREECAM);
+				MoveHelper()->StartSound( mv->GetAbsOrigin(), "Player.DiveKeeper" );
 			}
 			else if (mv->m_nButtons & IN_BACK)
 			{
 				animEvent = PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD;
-				MoveHelper()->StartSound( mv->GetAbsOrigin(), "Player.DiveKeeper" );
 				pPl->AddFlag(FL_FREECAM);
+				MoveHelper()->StartSound( mv->GetAbsOrigin(), "Player.DiveKeeper" );
 			}
 			else
 			{
 				animEvent = PLAYERANIMEVENT_KEEPER_JUMP;
 			}
 		}
-
-		if (mv->m_nButtons & IN_ATTACK)
-			pPl->AddFlag(FL_FREECAM);
 	}
 
 	pPl->m_Shared.SetAnimEventStartAngle(mv->m_vecAbsViewAngles);
