@@ -879,7 +879,7 @@ bool CBall::CheckKeeperCatch()
 
 	float nextCatch = m_flGlobalLastShot + m_flGlobalDynamicShotDelay * diveTypeCatchCoeff * ballPosCatchCoeff;
 
-	if (m_bHasQueuedState || gpGlobals->curtime < nextCatch) // Punch ball away
+	if (m_bHasQueuedState || gpGlobals->curtime < nextCatch || m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD) // Punch ball away
 	{
 		Vector punchDir;
 
