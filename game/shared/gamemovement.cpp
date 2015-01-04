@@ -1852,7 +1852,7 @@ bool CGameMovement::CheckJumpButton( void )
 
 	PlayerAnimEvent_t animEvent = PLAYERANIMEVENT_JUMP;
 
-	if (isKeeper && pPl->m_Shared.m_nInPenBoxOfTeam == team && !pPl->m_pHoldingBall)
+	if (isKeeper && pPl->m_Shared.m_nInPenBoxOfTeam == team && !pPl->m_pHoldingBall && mv->m_nButtons & IN_ATTACK)
 	{
 		int sidemoveSign;
 
@@ -1863,13 +1863,13 @@ bool CGameMovement::CheckJumpButton( void )
 		else
 			sidemoveSign = 0;
 
-		if (sidemoveSign == -1 && !(mv->m_nButtons & IN_WALK))
+		if (sidemoveSign == -1)
 		{
 			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_LEFT;
 			pPl->AddFlag(FL_FREECAM);
 			MoveHelper()->StartSound( mv->GetAbsOrigin(), "Player.DiveKeeper" );
 		}
-		else if (sidemoveSign == 1 && !(mv->m_nButtons & IN_WALK))
+		else if (sidemoveSign == 1)
 		{
 			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_RIGHT;
 			pPl->AddFlag(FL_FREECAM);
@@ -1927,49 +1927,15 @@ bool CGameMovement::CheckSlideButton()
 		return false;
 	}
 
-	PlayerAnimEvent_t animEvent = PLAYERANIMEVENT_NONE;
-
-	bool isKeeper;
-	int team;
-	#ifdef CLIENT_DLL
-		isKeeper = GameResources()->GetTeamPosType(pPl->index) == POS_GK;
-		team = GameResources()->GetTeam(pPl->index);
-	#else
-		isKeeper = pPl->GetTeamPosType() == POS_GK;
-		team = pPl->GetTeamNumber();
-	#endif
-
 	if (!pPl->m_pHoldingBall)
 	{
-		if (isKeeper && pPl->m_Shared.m_nInPenBoxOfTeam == team)
-		{
-			if (player->GetGroundEntity())
-			{
-				SetGroundEntity(NULL);
-				mv->m_vecVelocity.z = mp_jump_height.GetInt();
-				animEvent = PLAYERANIMEVENT_KEEPER_JUMP;
-				player->PlayStepSound((Vector &)mv->GetAbsOrigin(), player->m_pSurfaceData, 1.0, true);
-			}
-		}
-		else
-		{
-			MoveHelper()->StartSound( mv->GetAbsOrigin(), "Player.Slide" );
-			animEvent = PLAYERANIMEVENT_SLIDE;
-		}
-	}
+		MoveHelper()->StartSound( mv->GetAbsOrigin(), "Player.Slide" );
 
-	if (animEvent != PLAYERANIMEVENT_NONE)
-	{
 		pPl->m_Shared.SetAnimEventStartAngle(mv->m_vecAbsViewAngles);
 		pPl->m_Shared.SetAnimEventStartButtons(mv->m_nButtons);
 
-		pPl->DoAnimationEvent(animEvent);
-	}
+		pPl->DoAnimationEvent(PLAYERANIMEVENT_SLIDE);
 
-	mv->m_nOldButtons |= IN_DUCK;
-
-	if (animEvent == PLAYERANIMEVENT_SLIDE)
-	{
 		pPl->m_Shared.m_flNextSlide = gpGlobals->curtime + mp_slide_delay.GetFloat();
 
 		#ifdef GAME_DLL
@@ -1977,6 +1943,8 @@ bool CGameMovement::CheckSlideButton()
 				pPl->AddSlidingTackle();
 		#endif
 	}
+
+	mv->m_nOldButtons |= IN_DUCK;
 
 	return true;
 }
