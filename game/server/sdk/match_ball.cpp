@@ -1068,34 +1068,30 @@ void CMatchBall::State_KEEPERHANDS_Think()
 
 	UpdateCarrier();
 
-	Vector min = GetGlobalTeam(m_pPl->GetTeamNumber())->m_vPenBoxMin - Vector(BALL_PHYS_RADIUS, BALL_PHYS_RADIUS, 0);
-	Vector max = GetGlobalTeam(m_pPl->GetTeamNumber())->m_vPenBoxMax + Vector(BALL_PHYS_RADIUS, BALL_PHYS_RADIUS, 0);
+	Vector min = GetGlobalTeam(m_pPl->GetTeamNumber())->m_vPenBoxMin;
+	Vector max = GetGlobalTeam(m_pPl->GetTeamNumber())->m_vPenBoxMax;
 
 	// Ball outside the penalty box
 	if (m_nInPenBoxOfTeam == TEAM_INVALID)
 	{
-		Vector dir, pos;
-		float vel;
+		Vector vel, pos;
 
 		// Throw the ball towards the kick-off spot instead of where the player is looking if the ball is behind the goal line
 		if (m_pPl->GetTeam()->m_nForward == 1 && m_vPos.y < min.y || m_pPl->GetTeam()->m_nForward == -1 && m_vPos.y > max.y)
 		{
-			QAngle ang = QAngle(g_IOSRand.RandomFloat(-55, -40), m_pPl->GetTeam()->m_nForward * 90 - m_pPl->GetTeam()->m_nForward * Sign(m_vPos.x - SDKGameRules()->m_vKickOff.GetX()) * g_IOSRand.RandomFloat(15, 25), 0);
-			AngleVectors(ang, &dir);
-			vel = g_IOSRand.RandomFloat(700, 800);
-			pos = Vector(m_vPos.x, (m_pPl->GetTeam()->m_nForward == 1 ? min.y : max.y) + m_pPl->GetTeam()->m_nForward * 36, m_vPos.z);
+			pos = Vector(m_vPos.x, (m_pPl->GetTeam()->m_nForward == 1 ? min.y - BALL_PHYS_RADIUS : max.y + BALL_PHYS_RADIUS) + m_pPl->GetTeam()->m_nForward * 36, m_vPos.z);
+			vel = 25 * Vector(0, m_pPl->GetTeam()->m_nForward, 0);
 		}
 		else
 		{
-			dir = m_vPlForward2D;
-			vel = 300;
 			pos = Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_keeperhands.GetFloat()) + m_vPlForward2D * 36;
+			vel = 25 * m_vPlForward2D;
 		}
 
 		RemoveAllTouches();
 		SetPos(pos);
 		m_bSetNewPos = false;
-		SetVel(dir * vel, 0, 0, BODY_PART_KEEPERHANDS, false, true, true);
+		SetVel(vel, 0, 0, BODY_PART_KEEPERHANDS, false, true, false);
 
 		return State_Transition(BALL_STATE_NORMAL);
 	}
@@ -1117,15 +1113,13 @@ void CMatchBall::State_KEEPERHANDS_Think()
 		return;
 	}
 
-	Vector vel;
-
 	if (m_pPl->ShotButtonsReleased() && m_pPl->IsChargedshooting() && m_pPl->CanShoot())
 	{
 		QAngle ang = m_aPlAng;
 		ang[PITCH] = min(sv_ball_keepershot_minangle.GetFloat(), m_aPlAng[PITCH]);
 		Vector dir;
 		AngleVectors(ang, &dir);
-		vel = dir * GetChargedshotStrength(GetPitchCoeff(), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
+		Vector vel = dir * GetChargedshotStrength(GetPitchCoeff(), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KEEPER_HANDS_KICK);
 
 		if (vel.Length() > 1000)

@@ -1522,10 +1522,10 @@ void CGameMovement::FullWalkMove( )
 		else
 			max.y += 500;
 
-		if (mv->GetAbsOrigin().x + halfBounds >= min.x
-			&& mv->GetAbsOrigin().y + halfBounds >= min.y
-			&& mv->GetAbsOrigin().x - halfBounds <= max.x
-			&& mv->GetAbsOrigin().y - halfBounds <= max.y)
+		if (mv->GetAbsOrigin().x >= min.x - halfBounds
+			&& mv->GetAbsOrigin().y >= min.y - halfBounds
+			&& mv->GetAbsOrigin().x <= max.x + halfBounds
+			&& mv->GetAbsOrigin().y <= max.y + halfBounds)
 		{
 			ToSDKPlayer(player)->m_Shared.m_nInPenBoxOfTeam = team;
 			break;

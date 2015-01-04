@@ -1333,10 +1333,13 @@ void CBall::CheckPenBoxPosition()
 {
 	for (int team = TEAM_A; team <= TEAM_B; team++)
 	{
-		Vector min = GetGlobalTeam(team)->m_vPenBoxMin - Vector(BALL_PHYS_RADIUS, BALL_PHYS_RADIUS, 0);
-		Vector max = GetGlobalTeam(team)->m_vPenBoxMax + Vector(BALL_PHYS_RADIUS, BALL_PHYS_RADIUS, 0);
+		Vector min = GetGlobalTeam(team)->m_vPenBoxMin;
+		Vector max = GetGlobalTeam(team)->m_vPenBoxMax;
 
-		if (m_vPos.x >= min.x && m_vPos.y >= min.y && m_vPos.x <= max.x	&& m_vPos.y <= max.y)
+		if (m_vPos.x >= min.x - BALL_PHYS_RADIUS
+			&& m_vPos.y >= min.y - BALL_PHYS_RADIUS
+			&& m_vPos.x <= max.x + BALL_PHYS_RADIUS
+			&& m_vPos.y <= max.y + BALL_PHYS_RADIUS)
 		{
 			m_nWasInPenBoxOfTeam = m_nInPenBoxOfTeam;
 			m_nInPenBoxOfTeam = team;
