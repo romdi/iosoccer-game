@@ -91,7 +91,6 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_Team, DT_Team, CTeam)
 	RecvPropInt(RECVINFO(m_OwnGoals)),
 	RecvPropInt(RECVINFO(m_Assists)),
 	RecvPropInt(RECVINFO(m_Possession)),
-	RecvPropInt(RECVINFO(m_Turnovers)),
 	RecvPropInt(RECVINFO(m_DistanceCovered)),
 	RecvPropInt(RECVINFO(m_Passes)),
 	RecvPropInt(RECVINFO(m_FreeKicks)),

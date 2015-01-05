@@ -45,7 +45,6 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_PlayerResource, DT_PlayerResource, CPlayerReso
 	RecvPropArray3( RECVINFO_ARRAY(m_OwnGoals), RecvPropInt( RECVINFO(m_OwnGoals[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_Assists), RecvPropInt( RECVINFO(m_Assists[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_Possession), RecvPropInt( RECVINFO(m_Possession[0]))),
-	RecvPropArray3( RECVINFO_ARRAY(m_Turnovers), RecvPropInt( RECVINFO(m_Turnovers[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_DistanceCovered), RecvPropInt( RECVINFO(m_DistanceCovered[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_Passes), RecvPropInt( RECVINFO(m_Passes[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_FreeKicks), RecvPropInt( RECVINFO(m_FreeKicks[0]))),
@@ -113,7 +112,6 @@ C_PlayerResource::C_PlayerResource()
 	memset( m_Goals, 0, sizeof( m_Goals ) );
 	memset( m_Assists, 0, sizeof( m_Assists ) );
 	memset( m_Possession, 0, sizeof( m_Possession ) );
-	memset( m_Turnovers, 0, sizeof( m_Turnovers ) );
 	memset( m_DistanceCovered, 0, sizeof( m_DistanceCovered ) );
 	memset( m_Passes, 0, sizeof( m_Passes ) );
 	memset( m_FreeKicks, 0, sizeof( m_FreeKicks ) );
@@ -520,13 +518,6 @@ int	C_PlayerResource::GetPossession( int iIndex )
 		return 0;
 
 	return m_Possession[iIndex];
-}
-int	C_PlayerResource::GetTurnovers( int iIndex )
-{
-	if ( !IsConnected( iIndex ) )
-		return 0;
-
-	return m_Turnovers[iIndex];
 }
 int	C_PlayerResource::GetDistanceCovered( int iIndex )
 {

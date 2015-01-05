@@ -99,7 +99,6 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CTeam, DT_Team)
 	SendPropInt(SENDINFO(m_OwnGoals), 5, SPROP_UNSIGNED),
 	SendPropInt(SENDINFO(m_Assists), 5, SPROP_UNSIGNED),
 	SendPropInt(SENDINFO(m_Possession), 7, SPROP_UNSIGNED),
-	SendPropInt(SENDINFO(m_Turnovers), 9, SPROP_UNSIGNED),
 	SendPropInt(SENDINFO(m_DistanceCovered), 11, SPROP_UNSIGNED),
 	SendPropInt(SENDINFO(m_Passes), 9, SPROP_UNSIGNED),
 	SendPropInt(SENDINFO(m_FreeKicks), 6, SPROP_UNSIGNED),
@@ -503,7 +502,6 @@ void CTeam::ResetStats()
 	m_OwnGoals = 0;
 	m_Assists = 0;
 	m_Possession = 0;
-	m_Turnovers = 0;
 	m_DistanceCovered = 0;
 	m_Passes = 0;
 	m_FreeKicks = 0;
@@ -607,7 +605,6 @@ void CTeamMatchPeriodData::ResetData()
 	m_nRating = 0;
 	m_nPossession = 0;
 	m_flPossessionTime = 0.0f;
-	m_nTurnovers = 0;
 	m_nDistanceCovered = 0;
 	m_flExactDistanceCovered = 0.0f;
 

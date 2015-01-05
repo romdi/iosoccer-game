@@ -2262,14 +2262,6 @@ void CSDKPlayer::AddPossessionTime(float time)
 	GetTeam()->GetMatchPeriodData()->m_flPossessionTime += time;
 }
 
-void CSDKPlayer::AddTurnover()
-{
-	GetMatchPeriodData()->m_nTurnovers += 1;
-	GetMatchData()->m_nTurnovers += 1;
-	GetTeam()->m_Turnovers += 1;
-	GetTeam()->GetMatchPeriodData()->m_nTurnovers += 1;
-}
-
 void CSDKPlayer::AddExactDistanceCovered(float amount)
 {
 	GetMatchPeriodData()->m_flExactDistanceCovered += amount;
@@ -2415,7 +2407,6 @@ void CPlayerMatchData::ResetData()
 	m_nRating = 0;
 	m_nPossession = 0;
 	m_flPossessionTime = 0.0f;
-	m_nTurnovers = 0;
 	m_nDistanceCovered = 0;
 	m_flExactDistanceCovered = 0.0f;
 }
@@ -2639,7 +2630,7 @@ void SendMatchDataToWebserver(const char *json)
 
 void CPlayerPersistentData::ConvertAllPlayerDataToJson()
 {
-	static const int STAT_TYPE_COUNT = 26;
+	static const int STAT_TYPE_COUNT = 25;
 	static const char statTypes[STAT_TYPE_COUNT][32] =
 	{
 		"redCards",
@@ -2666,8 +2657,7 @@ void CPlayerPersistentData::ConvertAllPlayerDataToJson()
 		"goalKicks",
 		"possession",
 		"distanceCovered",
-		"keeperSavesCaught",
-		"turnovers"
+		"keeperSavesCaught"
 	};
 
 	char *json = new char[JSON_SIZE];
@@ -2702,8 +2692,8 @@ void CPlayerPersistentData::ConvertAllPlayerDataToJson()
 
 		Q_strcat(json, UTIL_VarArgs("\"name\":\"%s\",\"side\":\"%s\",\"isMix\":%s,", (isMix ? pTeam->GetKitName() : pTeam->GetShortTeamName()), (team == TEAM_A ? "home" : "away"), (isMix ? "true" : "false")), JSON_SIZE);
 
-		Q_strcat(json, UTIL_VarArgs("\"statistics\":[%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d]",
-			pTeam->m_RedCards, pTeam->m_YellowCards, pTeam->m_Fouls, pTeam->m_FoulsSuffered, pTeam->m_SlidingTackles, pTeam->m_SlidingTacklesCompleted, pTeam->m_GoalsConceded, pTeam->m_Shots, pTeam->m_ShotsOnGoal, pTeam->m_PassesCompleted, pTeam->m_Interceptions, pTeam->m_Offsides, pTeam->m_Goals, pTeam->m_OwnGoals, pTeam->m_Assists, pTeam->m_Passes, pTeam->m_FreeKicks, pTeam->m_Penalties, pTeam->m_Corners, pTeam->m_ThrowIns, pTeam->m_KeeperSaves, pTeam->m_GoalKicks, (int)pTeam->m_flPossessionTime, (int)pTeam->m_flExactDistanceCovered, pTeam->m_KeeperSavesCaught, pTeam->m_Turnovers
+		Q_strcat(json, UTIL_VarArgs("\"statistics\":[%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d]",
+			pTeam->m_RedCards, pTeam->m_YellowCards, pTeam->m_Fouls, pTeam->m_FoulsSuffered, pTeam->m_SlidingTackles, pTeam->m_SlidingTacklesCompleted, pTeam->m_GoalsConceded, pTeam->m_Shots, pTeam->m_ShotsOnGoal, pTeam->m_PassesCompleted, pTeam->m_Interceptions, pTeam->m_Offsides, pTeam->m_Goals, pTeam->m_OwnGoals, pTeam->m_Assists, pTeam->m_Passes, pTeam->m_FreeKicks, pTeam->m_Penalties, pTeam->m_Corners, pTeam->m_ThrowIns, pTeam->m_KeeperSaves, pTeam->m_GoalKicks, (int)pTeam->m_flPossessionTime, (int)pTeam->m_flExactDistanceCovered, pTeam->m_KeeperSavesCaught
 			), JSON_SIZE);
 
 		Q_strcat(json, "},\"matchPeriods\":[", JSON_SIZE);
@@ -2717,8 +2707,8 @@ void CPlayerPersistentData::ConvertAllPlayerDataToJson()
 
 			Q_strcat(json, UTIL_VarArgs("{\"period\":%d,\"periodName\":\"%s\",\"announcedInjuryTimeSeconds\":%d,\"actualInjuryTimeSeconds\":%d", i + 1, pPeriod->m_szMatchPeriodName, pPeriod->m_nAnnouncedInjuryTimeSeconds, pPeriod->m_nActualInjuryTimeSeconds), JSON_SIZE);
 
-			Q_strcat(json, UTIL_VarArgs(",\"statistics\":[%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d]}",
-				pPeriod->m_nRedCards, pPeriod->m_nYellowCards, pPeriod->m_nFouls, pPeriod->m_nFoulsSuffered, pPeriod->m_nSlidingTackles, pPeriod->m_nSlidingTacklesCompleted, pPeriod->m_nGoalsConceded, pPeriod->m_nShots, pPeriod->m_nShotsOnGoal, pPeriod->m_nPassesCompleted, pPeriod->m_nInterceptions, pPeriod->m_nOffsides, pPeriod->m_nGoals, pPeriod->m_nOwnGoals, pPeriod->m_nAssists, pPeriod->m_nPasses, pPeriod->m_nFreeKicks, pPeriod->m_nPenalties, pPeriod->m_nCorners, pPeriod->m_nThrowIns, pPeriod->m_nKeeperSaves, pPeriod->m_nGoalKicks, (int)pPeriod->m_flPossessionTime, (int)pPeriod->m_flExactDistanceCovered, pPeriod->m_nKeeperSavesCaught, pPeriod->m_nTurnovers
+			Q_strcat(json, UTIL_VarArgs(",\"statistics\":[%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d]}",
+				pPeriod->m_nRedCards, pPeriod->m_nYellowCards, pPeriod->m_nFouls, pPeriod->m_nFoulsSuffered, pPeriod->m_nSlidingTackles, pPeriod->m_nSlidingTacklesCompleted, pPeriod->m_nGoalsConceded, pPeriod->m_nShots, pPeriod->m_nShotsOnGoal, pPeriod->m_nPassesCompleted, pPeriod->m_nInterceptions, pPeriod->m_nOffsides, pPeriod->m_nGoals, pPeriod->m_nOwnGoals, pPeriod->m_nAssists, pPeriod->m_nPasses, pPeriod->m_nFreeKicks, pPeriod->m_nPenalties, pPeriod->m_nCorners, pPeriod->m_nThrowIns, pPeriod->m_nKeeperSaves, pPeriod->m_nGoalKicks, (int)pPeriod->m_flPossessionTime, (int)pPeriod->m_flExactDistanceCovered, pPeriod->m_nKeeperSavesCaught
 				), JSON_SIZE);
 		}
 
@@ -2782,8 +2772,8 @@ void CPlayerPersistentData::ConvertAllPlayerDataToJson()
 
 			Q_strcat(json, UTIL_VarArgs("{\"info\":{\"startSecond\":%d,\"endSecond\":%d,\"team\":\"%s\",\"position\":\"%s\"}", startSecond, endSecond, (pMPData->m_nTeam == TEAM_A ? "home" : "away"), g_szPosNames[pMPData->m_nTeamPosType]), JSON_SIZE);
 
-			Q_strcat(json, UTIL_VarArgs(",\"statistics\":[%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d]}",
-				pMPData->m_nRedCards, pMPData->m_nYellowCards, pMPData->m_nFouls, pMPData->m_nFoulsSuffered, pMPData->m_nSlidingTackles, pMPData->m_nSlidingTacklesCompleted, pMPData->m_nGoalsConceded, pMPData->m_nShots, pMPData->m_nShotsOnGoal, pMPData->m_nPassesCompleted, pMPData->m_nInterceptions, pMPData->m_nOffsides, pMPData->m_nGoals, pMPData->m_nOwnGoals, pMPData->m_nAssists, pMPData->m_nPasses, pMPData->m_nFreeKicks, pMPData->m_nPenalties, pMPData->m_nCorners, pMPData->m_nThrowIns, pMPData->m_nKeeperSaves, pMPData->m_nGoalKicks, (int)pMPData->m_flPossessionTime, (int)pMPData->m_flExactDistanceCovered, pMPData->m_nKeeperSavesCaught, pMPData->m_nTurnovers
+			Q_strcat(json, UTIL_VarArgs(",\"statistics\":[%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d]}",
+				pMPData->m_nRedCards, pMPData->m_nYellowCards, pMPData->m_nFouls, pMPData->m_nFoulsSuffered, pMPData->m_nSlidingTackles, pMPData->m_nSlidingTacklesCompleted, pMPData->m_nGoalsConceded, pMPData->m_nShots, pMPData->m_nShotsOnGoal, pMPData->m_nPassesCompleted, pMPData->m_nInterceptions, pMPData->m_nOffsides, pMPData->m_nGoals, pMPData->m_nOwnGoals, pMPData->m_nAssists, pMPData->m_nPasses, pMPData->m_nFreeKicks, pMPData->m_nPenalties, pMPData->m_nCorners, pMPData->m_nThrowIns, pMPData->m_nKeeperSaves, pMPData->m_nGoalKicks, (int)pMPData->m_flPossessionTime, (int)pMPData->m_flExactDistanceCovered, pMPData->m_nKeeperSavesCaught
 				), JSON_SIZE);
 		}
 

@@ -72,7 +72,6 @@ public:
 	CNetworkHandle(CSDKPlayer, m_pLastActivePlayer);
 	CNetworkVar(int, m_nLastActiveTeam);
 
-	CHandle<CSDKPlayer>	m_pTurnoverPlayer;
 	CHandle<CSDKPlayer>	m_pPossessingPl;
 	int				m_nPossessingTeam;
 	float			m_flPossessionStart;

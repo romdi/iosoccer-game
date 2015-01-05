@@ -45,7 +45,6 @@ public:
 	int		m_nAssists;
 	float	m_flPossessionTime;
 	int		m_nPossession;
-	int		m_nTurnovers;
 	int		m_nDistanceCovered;
 	int		m_nPasses;
 	int		m_nFreeKicks;
@@ -390,9 +389,6 @@ public:
 
 	int					GetPossession(void) { return GetMatchData()->m_nPossession; }
 	void				SetPossession(int amount) { GetMatchData()->m_nPossession = amount; }
-
-	int					GetTurnovers(void) { return GetMatchData()->m_nTurnovers; }
-	void				AddTurnover();
 
 	float				GetExactDistanceCovered(void) { return GetMatchData()->m_flExactDistanceCovered; }
 	void				AddExactDistanceCovered(float amount);

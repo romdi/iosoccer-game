@@ -48,7 +48,6 @@ public:
 	int		m_nAssists;
 	float	m_flPossessionTime;
 	int		m_nPossession;
-	int		m_nTurnovers;
 	int		m_nDistanceCovered;
 	int		m_nPasses;
 	int		m_nFreeKicks;
@@ -213,7 +212,6 @@ public:
 	CNetworkVar(int, m_OwnGoals);
 	CNetworkVar(int, m_Assists);
 	CNetworkVar(int, m_Possession);
-	CNetworkVar(int, m_Turnovers);
 	CNetworkVar(int, m_DistanceCovered);
 	CNetworkVar(int, m_Passes);
 	CNetworkVar(int, m_FreeKicks);

@@ -991,12 +991,11 @@ void CClientScoreBoardDialog::AddHeader()
 			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "ping",						"Ping",			defaultFlags, 55);
 			break;
 		case GENERAL:
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "possession",				"Poss.",		defaultFlags, 50);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "distancecovered",			"Distance",		defaultFlags, 75);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "passes",					"Passes",		defaultFlags, 50);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "passescompleted",			"~ compl.",		defaultFlags, 55);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "interceptions",				"Interc.",		defaultFlags, 50);
-			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "turnovers",					"Turnovers",	defaultFlags, 50);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "possession",				"Poss.",		defaultFlags, 60);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "distancecovered",			"Distance",		defaultFlags, 85);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "passes",					"Passes",		defaultFlags, 60);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "passescompleted",			"~ compl.",		defaultFlags, 65);
+			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "interceptions",				"Interc.",		defaultFlags, 60);
 			break;
 		case TACKLES:
 			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "slidingtackles",			"Tackles",		defaultFlags, 55);
@@ -1118,7 +1117,6 @@ bool CClientScoreBoardDialog::GetPlayerInfo(int playerIndex, KeyValues *kv)
 		kv->SetString("keepersavescaught", "");
 
 	kv->SetString("possession", GET_STAT_FTEXT_SHOWZERO(gr->GetPossession(playerIndex), "%d%%"));
-	kv->SetString("turnovers", GET_STAT_TEXT(gr->GetTurnovers(playerIndex)));
 	kv->SetString("distancecovered", GET_STAT_FTEXT_SHOWZERO(gr->GetDistanceCovered(playerIndex) / 10.0f, "%.1f km"));
 	kv->SetString("redcards", GET_STAT_TEXT(gr->GetRedCards(playerIndex)));
 	kv->SetString("yellowcards", GET_STAT_TEXT(gr->GetYellowCards(playerIndex)));
@@ -1316,7 +1314,6 @@ bool CClientScoreBoardDialog::GetTeamInfo(int team, KeyValues *kv)
 	kv->SetString("nationalteam", teamNationalTeam);
 	kv->SetString("ping", GET_TSTAT_TEXT(pTeam->m_Ping));
 	kv->SetString("possession", GET_TSTAT_FTEXT(pTeam->m_Possession, "%d%%"));
-	kv->SetString("turnovers", GET_TSTAT_TEXT(pTeam->m_Turnovers));
 	kv->SetString("passes", GET_TSTAT_TEXT(pTeam->m_Passes));
 	kv->SetString("passescompleted", GET_TSTAT_FTEXT(pTeam->m_PassesCompleted * 100 / max(1, pTeam->m_Passes), "%d%%"));
 	kv->SetString("distancecovered", GET_TSTAT_FTEXT(pTeam->m_DistanceCovered / 10.0f, "%.1f km"));

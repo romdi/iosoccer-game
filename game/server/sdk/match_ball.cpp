@@ -28,7 +28,6 @@ ConVar
 	sv_ball_advantage_duration("sv_ball_advantage_duration", "3", FCVAR_NOTIFY),
 	sv_ball_advantage_ignore_duration("sv_ball_advantage_ignore_duration", "1", FCVAR_NOTIFY),
 	sv_ball_offsidedist("sv_ball_offsidedist", "60", FCVAR_NOTIFY),
-	sv_ball_turnovertime("sv_ball_turnovertime", "2.0", FCVAR_NOTIFY),
 	sv_ball_goalcelebduration("sv_ball_goalcelebduration", "8.0", FCVAR_NOTIFY),
 	sv_ball_setpiece_close_time("sv_ball_setpiece_close_time", "0.75", FCVAR_NOTIFY),
 	sv_ball_setpiece_close_dist( "sv_ball_setpiece_close_dist", "75", FCVAR_NOTIFY ),
@@ -90,7 +89,6 @@ CMatchBall::CMatchBall()
 	m_pPossessingPl = NULL;
 	m_nPossessingTeam = TEAM_INVALID;
 	m_flPossessionStart = -1;
-	m_pTurnoverPlayer = NULL;
 	m_ePenaltyState = PENALTY_NONE;
 	m_bIsAdvantage = false;
 	m_flStateTimelimit = -1;
@@ -123,7 +121,6 @@ void CMatchBall::Reset()
 	m_pPossessingPl = NULL;
 	m_nPossessingTeam = TEAM_INVALID;
 	m_flPossessionStart = -1;
-	m_pTurnoverPlayer = NULL;
 	m_ePenaltyState = PENALTY_NONE;
 	m_bIsAdvantage = false;
 	m_flStateTimelimit = -1;
@@ -305,18 +302,6 @@ void CMatchBall::State_NORMAL_Think()
 	{
 		if (!SDKGameRules()->IsIntermissionState() && !m_bHasQueuedState)
 		{
-			if (m_flPossessionStart != -1
-				&& CSDKPlayer::IsOnField(m_pPossessingPl)
-				&& gpGlobals->curtime > m_flPossessionStart + sv_ball_turnovertime.GetFloat())
-			{
-				if (CSDKPlayer::IsOnField(m_pTurnoverPlayer) && m_pTurnoverPlayer->GetTeamNumber() != m_nPossessingTeam)
-				{
-					m_pTurnoverPlayer->AddTurnover();
-				}
-
-				m_pTurnoverPlayer = m_pPossessingPl;
-			}
-
 			for (int i = 1; i <= gpGlobals->maxClients; i++)
 			{
 				CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));

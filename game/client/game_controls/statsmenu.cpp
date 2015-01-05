@@ -100,14 +100,13 @@ void CStatsMenu::Reset()
 		}
 		else if (i == 1)
 		{
-			int columnWidth = GetWide() / 12;
+			int columnWidth = GetWide() / 11;
 
 			m_pPlayerStats[i]->AddColumnToSection(sectionId, "rating",					"Rating",		defaultFlags,	columnWidth);
 			m_pPlayerStats[i]->AddColumnToSection(sectionId, "ping",					"Ping",			defaultFlags,	columnWidth);
 			m_pPlayerStats[i]->AddColumnToSection(sectionId, "goals",					"Goals",		defaultFlags,	columnWidth);
 			m_pPlayerStats[i]->AddColumnToSection(sectionId, "assists",					"Assists",		defaultFlags,	columnWidth);
 			m_pPlayerStats[i]->AddColumnToSection(sectionId, "possession",				"Poss.",		defaultFlags,	columnWidth);
-			m_pPlayerStats[i]->AddColumnToSection(sectionId, "turnovers",				"Turnovers",	defaultFlags,	columnWidth);
 			m_pPlayerStats[i]->AddColumnToSection(sectionId, "distancecovered",			"Distance",		defaultFlags,	columnWidth);
 			m_pPlayerStats[i]->AddColumnToSection(sectionId, "passes",					"Passes",		defaultFlags,	columnWidth);
 			m_pPlayerStats[i]->AddColumnToSection(sectionId, "passescompleted",			"~ compl.",		defaultFlags,	columnWidth);
