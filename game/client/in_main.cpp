@@ -476,32 +476,6 @@ void IN_BackspinUp( const CCommand &args ) { KeyUp( &in_backspin, args[1] ); }
 void IN_BackspinDown( const CCommand &args ) { KeyDown( &in_backspin, args[1] ); }
 void IN_XboxStub( const CCommand &args ) { /*do nothing*/ }
 
-void IN_TopspinToggle( const CCommand &args ) 
-{ 
-	if ( ::input->KeyState(&in_topspin) )
-	{
-		KeyUp( &in_topspin, args[1] ); 
-	}
-	else
-	{
-		KeyUp( &in_backspin, args[1] );
-		KeyDown( &in_topspin, args[1] ); 
-	}
-}
-
-void IN_BackspinToggle( const CCommand &args ) 
-{ 
-	if ( ::input->KeyState(&in_backspin) )
-	{
-		KeyUp( &in_backspin, args[1] ); 
-	}
-	else
-	{
-		KeyUp( &in_topspin, args[1] ); 
-		KeyDown( &in_backspin, args[1] ); 
-	}
-}
-
 void IN_DuckToggle( const CCommand &args ) 
 { 
 	if ( ::input->KeyState(&in_ducktoggle) )
@@ -1483,8 +1457,6 @@ static ConCommand starttopspin( "+topspin", IN_TopspinDown );
 static ConCommand endtopspin( "-topspin", IN_TopspinUp );
 static ConCommand startbackspin( "+backspin", IN_BackspinDown );
 static ConCommand endbackspin( "-backspin", IN_BackspinUp );
-static ConCommand toggle_topspin("toggle_topspin", IN_TopspinToggle);
-static ConCommand toggle_backspin("toggle_backspin", IN_BackspinToggle);
 
 #ifdef TF_CLIENT_DLL
 static ConCommand toggle_duck( "toggle_duck", IN_DuckToggle );
