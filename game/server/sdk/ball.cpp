@@ -741,7 +741,7 @@ bool CBall::CheckCollision()
 
 bool CBall::DoSlideAction()
 {
-	if (!m_pPl->IsShooting() || m_vPlForwardVel2D.Length2DSqr() == 0)
+	if (!m_pPl->IsShooting())
 		return false;
 
 	Vector dirToBall = m_vPos - m_vPlPos;
