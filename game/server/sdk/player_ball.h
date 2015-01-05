@@ -8,6 +8,15 @@ class CBall;
 
 extern CBall *GetNearestPlayerBall(const Vector &pos);
 
+struct BallCannonSettings
+{
+	Vector pos;
+	Vector vel;
+	QAngle ang;
+	AngularImpulse rot;
+	float globalDynamicShotDelay;
+};
+
 class CPlayerBall : public CBall
 {
 public:
@@ -22,6 +31,7 @@ public:
 	void			SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyPart, bool isDeflection, bool markOffsidePlayers, bool ensureMinShotStrength, float nextShotMinDelay = 0);
 	void			SaveBallCannonSettings();
 	void			RestoreBallCannonSettings();
+	void			SetSaveNextShotToBallCannon(bool save);
 	static void		RemoveAllPlayerBalls();
 	void			RemovePlayerBall();
 	CSDKPlayer		*GetCreator() { return m_pCreator; }
@@ -47,11 +57,8 @@ public:
 
 protected:
 
-	bool			m_bIsBallCannonMode;
-	Vector			m_vBallCannonPos;
-	Vector			m_vBallCannonVel;
-	QAngle			m_aBallCannonAng;
-	AngularImpulse	m_vBallCannonRot;
+	bool			m_bSaveNextShotToBallCannon;
+	BallCannonSettings m_BallCannonSettings;
 	CHandle<CSDKPlayer>	m_pLastShooter;
 	Vector			m_vLastShotPos;
 	BallTouchInfo	m_BallShotInfo;

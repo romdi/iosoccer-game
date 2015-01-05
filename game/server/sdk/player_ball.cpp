@@ -82,6 +82,7 @@ void CC_CreatePlayerBall(const CCommand &args)
 	//pPl->GetPlayerBall()->m_nSkin = pPl->GetPlayerBallSkin() == -1 ? g_IOSRand.RandomInt(0, BALL_SKIN_COUNT - 1) : pPl->GetPlayerBallSkin();
 	pPl->GetPlayerBall()->SetSkinName(pPl->GetPlayerBallSkinName());
 	pPl->GetPlayerBall()->SaveBallCannonSettings();
+	pPl->GetPlayerBall()->SetSaveNextShotToBallCannon(true);
 	pPl->m_Shared.SetStamina(100);
 }
 
@@ -184,28 +185,35 @@ void CPlayerBall::SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t
 {
 	CBall::SetVel(vel, spinCoeff, spinFlags, bodyPart, isDeflection, markOffsidePlayers, ensureMinShotStrength, nextShotMinDelay);
 
-	if (!m_bIsBallCannonMode && m_pPl == GetCreator())
+	if (m_bSaveNextShotToBallCannon && m_pPl == GetCreator())
 	{
 		SaveBallCannonSettings();
+		m_bSaveNextShotToBallCannon = false;
 	}
 }
 
 void CPlayerBall::SaveBallCannonSettings()
 {
-	m_vBallCannonPos = GetPos();
-	m_aBallCannonAng = GetAng();
-	m_vBallCannonVel = GetVel();
-	m_vBallCannonRot = GetRot();
-	m_bIsBallCannonMode = false;
+	m_BallCannonSettings.pos = GetPos();
+	m_BallCannonSettings.ang = GetAng();
+	m_BallCannonSettings.vel = GetVel();
+	m_BallCannonSettings.rot = GetRot();
+	m_BallCannonSettings.globalDynamicShotDelay = m_flGlobalDynamicShotDelay;
 }
 
 void CPlayerBall::RestoreBallCannonSettings()
 {
 	State_Transition(BALL_STATE_NORMAL);
-	m_bIsBallCannonMode = true;
+	m_flGlobalLastShot = gpGlobals->curtime;
+	m_flGlobalDynamicShotDelay = m_BallCannonSettings.globalDynamicShotDelay;
 	m_pPhys->SetVelocityInstantaneous(&vec3_origin, &vec3_origin);
-	m_pPhys->SetPosition(m_vBallCannonPos, m_aBallCannonAng, true);
-	m_pPhys->SetVelocity(&m_vBallCannonVel, &m_vBallCannonRot);
+	m_pPhys->SetPosition(m_BallCannonSettings.pos, m_BallCannonSettings.ang, true);
+	m_pPhys->SetVelocity(&m_BallCannonSettings.vel, &m_BallCannonSettings.rot);
+}
+
+void CPlayerBall::SetSaveNextShotToBallCannon(bool save)
+{
+	m_bSaveNextShotToBallCannon = save;
 }
 
 void CPlayerBall::RemoveAllPlayerBalls()
@@ -299,21 +307,22 @@ void CPlayerBall::State_KEEPERHANDS_Think()
 	{
 		Vector vel, pos;
 
-		// Throw the ball towards the kick-off spot instead of where the player is looking if the ball is behind the goal line
-		if (m_pPl->GetTeam()->m_nForward == 1 && m_vPos.y < min.y || m_pPl->GetTeam()->m_nForward == -1 && m_vPos.y > max.y)
+		if ((m_pPl->GetTeam()->m_nForward == 1 && m_vPos.y < min.y || m_pPl->GetTeam()->m_nForward == -1 && m_vPos.y > max.y)
+			/*&& m_vPos.x >= m_pPl->GetTeam()->m_vGoalCenter.GetX() - SDKGameRules()->m_vGoalTriggerSize.x / 2
+			&& m_vPos.x <= m_pPl->GetTeam()->m_vGoalCenter.GetX() + SDKGameRules()->m_vGoalTriggerSize.x / 2*/)
 		{
 			pos = Vector(m_vPos.x, (m_pPl->GetTeam()->m_nForward == 1 ? min.y - BALL_PHYS_RADIUS : max.y + BALL_PHYS_RADIUS) + m_pPl->GetTeam()->m_nForward * 36, m_vPos.z);
 			vel = 25 * Vector(0, m_pPl->GetTeam()->m_nForward, 0);
 		}
 		else
 		{
-			pos = Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_keeperhands.GetFloat()) + m_vPlForward2D * 36;
-			vel = 25 * m_vPlForward2D;
+			pos = m_vPos;
+			vel = m_vPlVel;
 		}
 
 		SetPos(pos);
 		m_bSetNewPos = false;
-		SetVel(vel, 0, 0, BODY_PART_KEEPERHANDS, false, true, false);
+		SetVel(vel, 0, 0, BODY_PART_KEEPERHANDS, false, true, false, 0.5f);
 
 		return State_Transition(BALL_STATE_NORMAL);
 	}

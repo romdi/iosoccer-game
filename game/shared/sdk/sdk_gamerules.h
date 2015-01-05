@@ -268,6 +268,8 @@ public:
 	CNetworkVector(m_vFieldMax);
 	CNetworkVector(m_vKickOff);
 
+	Vector m_vGoalTriggerSize;
+
 	int	GetMapRemainingTime(void);
 	int GetMapTime(void);
 	void StartRoundtimer(int iDuration);

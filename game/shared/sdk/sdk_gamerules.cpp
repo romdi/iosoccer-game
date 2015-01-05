@@ -602,6 +602,9 @@ void CSDKGameRules::ServerActivate()
 	{
 		Vector min, max;
 		pGoalTrigger->CollisionProp()->WorldSpaceTriggerBounds(&min, &max);
+
+		m_vGoalTriggerSize = max - min;
+
 		if (max.y > m_vKickOff.GetY())
 		{
 			if (min.y < maxY)
