@@ -569,7 +569,7 @@ bool CBall::CanTouchBallXY()
 	}
 }
 
-bool CBall::IsInCollisionRange(bool isDeflection)
+bool CBall::GetCollisionPoint(bool isDeflection, Vector &collisionPoint)
 {
 	Vector dirToBall = m_vPos - m_vPlPos;
 	Vector localDirToBall;
@@ -577,22 +577,94 @@ bool CBall::IsInCollisionRange(bool isDeflection)
 	float zDist = dirToBall.z;
 	float xyDist = dirToBall.Length2D();
 
-	if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_SLIDE || m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_DIVINGHEADER)
+	if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_SLIDE
+		|| m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_DIVINGHEADER
+		|| m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_LEFT
+		|| m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT
+		|| m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_FORWARD
+		|| m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD)
 	{
 		float padding = isDeflection ? 0 : -15;
+		Vector plDir;
 
-		return zDist < sv_ball_slidezend.GetFloat() + padding
-			&& zDist >= sv_ball_slidezstart.GetFloat() - padding
-			&& localDirToBall.x >= -sv_ball_slideforwardreach_ball.GetFloat() - padding
-			&& localDirToBall.x <= sv_ball_slideforwardreach_ball.GetFloat() + padding
-			&& abs(localDirToBall.y) <= sv_ball_slidesidereach_ball.GetFloat() + padding;
+		if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_LEFT)
+			plDir = -m_vPlRight;
+		else if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT)
+			plDir = m_vPlRight;
+		else
+			plDir = m_vPlForward2D;
+
+		Vector plOffsetPos = Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + BALL_PHYS_RADIUS);
+		float dot = (m_vPos - plOffsetPos).Dot(plDir);
+		Vector closestPoint = plOffsetPos + plDir * dot;
+		Vector closestDir = m_vPos - closestPoint;
+		float plDistToClosestPoint = (closestPoint - plOffsetPos).Length();
+
+		if ((dot >= 0 && plDistToClosestPoint <= sv_ball_slideforwardreach_ball.GetFloat() + padding
+			|| dot < 0 && plDistToClosestPoint <= sv_ball_slidebackwardreach_ball.GetFloat() + padding)
+			&& closestDir.Length() <= sv_ball_slidesidereach_ball.GetFloat() + padding)
+		{
+			if (dot >= 0 && plDistToClosestPoint > (sv_ball_slideforwardreach_ball.GetFloat() + padding) - (sv_ball_slidesidereach_ball.GetFloat() + padding))
+			{
+				collisionPoint = plOffsetPos + plDir * ((sv_ball_slideforwardreach_ball.GetFloat() + padding) - (sv_ball_slidesidereach_ball.GetFloat() + padding));
+				return true;
+			}
+			else if (dot < 0 && plDistToClosestPoint > (sv_ball_slidebackwardreach_ball.GetFloat() + padding) - (sv_ball_slidesidereach_ball.GetFloat() + padding))
+			{
+				collisionPoint = plOffsetPos - plDir * ((sv_ball_slidebackwardreach_ball.GetFloat() + padding) - (sv_ball_slidesidereach_ball.GetFloat() + padding));
+				return true;
+			}
+			else
+			{
+				collisionPoint = closestPoint;
+				return true;
+			}
+		}
 	}
 	else
 	{
 		if (isDeflection)
-			return zDist >= sv_ball_bodypos_deflection_start.GetFloat() && zDist < sv_ball_bodypos_deflection_end.GetFloat() && xyDist <= sv_ball_deflectionradius.GetFloat();
+		{
+			if (zDist >= sv_ball_bodypos_deflection_start.GetFloat() && zDist < sv_ball_bodypos_deflection_end.GetFloat() && xyDist <= sv_ball_deflectionradius.GetFloat())
+			{
+				if (zDist > sv_ball_bodypos_deflection_end.GetFloat() - sv_ball_deflectionradius.GetFloat())
+				{
+					collisionPoint = Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_deflection_end.GetFloat() - sv_ball_deflectionradius.GetFloat());
+					return true;
+				}
+				else if (zDist < sv_ball_bodypos_deflection_start.GetFloat() + sv_ball_deflectionradius.GetFloat())
+				{
+					collisionPoint = Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_deflection_start.GetFloat() + sv_ball_deflectionradius.GetFloat());
+					return true;
+				}
+				else
+				{
+					collisionPoint = Vector(m_vPlPos.x, m_vPlPos.y, m_vPos.z);
+					return true;
+				}
+			}
+		}
 		else
-			return zDist >= sv_ball_bodypos_collision_start.GetFloat() && zDist < sv_ball_bodypos_collision_end.GetFloat() && xyDist <= sv_ball_collisionradius.GetFloat();
+		{
+			if (zDist >= sv_ball_bodypos_collision_start.GetFloat() && zDist < sv_ball_bodypos_collision_end.GetFloat() && xyDist <= sv_ball_collisionradius.GetFloat())
+			{
+				if (zDist > sv_ball_bodypos_collision_end.GetFloat() - sv_ball_collisionradius.GetFloat())
+				{
+					collisionPoint = Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_collision_end.GetFloat() - sv_ball_collisionradius.GetFloat());
+					return true;
+				}
+				else if (zDist < sv_ball_bodypos_collision_start.GetFloat() + sv_ball_collisionradius.GetFloat())
+				{
+					collisionPoint = Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_collision_start.GetFloat() + sv_ball_collisionradius.GetFloat());
+					return true;
+				}
+				else
+				{
+					collisionPoint = Vector(m_vPlPos.x, m_vPlPos.y, m_vPos.z);
+					return true;
+				}
+			}
+		}
 	}
 
 	return false;
@@ -652,31 +724,9 @@ bool CBall::CheckCollision()
 	bool collide = false;
 	float collisionCoeff;
 	float ballMass;
-	Vector dirToBallNormal;
+	Vector collisionPoint;
 
-	if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_SLIDE || m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_DIVINGHEADER)
-	{
-		dirToBallNormal = localDirToBall.y > 0 ? -m_vPlRight : m_vPlRight;
-		QAngle ang;
-		VectorAngles((m_vPos - (m_vPlPos + m_flPhysRadius)), ang);
-		VectorRotate(dirToBallNormal, QAngle(ang[PITCH], 0, 0), dirToBallNormal);
-	}
-	else
-	{
-		dirToBallNormal = dirToBall;
-		dirToBallNormal.z = 0;
-	}
-
-	dirToBallNormal.NormalizeInPlace();
-	float dotballVel = m_vVel.Dot(dirToBallNormal);
-	float dotPlayerVel = m_vPlVel.Dot(dirToBallNormal);
-	float indicator = dotballVel - dotPlayerVel;
-
-	// If indicator is bigger or equal to 0, the ball is either moving away from the player or going the same speed, so there's no need to apply additional velocity
-	if (indicator >= 0)
-		return false;
-
-	if ((!m_pPl->IsShooting() || !m_pPl->CanShoot()) && IsInCollisionRange(false))
+	if ((!m_pPl->IsShooting() || !m_pPl->CanShoot()) && GetCollisionPoint(false, collisionPoint))
 	{
 		collide = true;
 
@@ -711,7 +761,7 @@ bool CBall::CheckCollision()
 	}
 	else if (m_pPl->IsShooting() && m_pPl->CanShoot()
 		&& gpGlobals->curtime < m_flGlobalLastShot + m_flGlobalDynamicShotDelay * sv_ball_shotdelay_global_coeff.GetFloat()
-		&& IsInCollisionRange(true))
+		&& GetCollisionPoint(true, collisionPoint))
 	{
 		collide = true;
 		collisionCoeff = sv_ball_deflectioncoeff.GetFloat();
@@ -719,6 +769,16 @@ bool CBall::CheckCollision()
 	}
 
 	if (!collide)
+		return false;
+
+	Vector dirToBallNormal = m_vPos - collisionPoint;
+	dirToBallNormal.NormalizeInPlace();
+	float dotballVel = m_vVel.Dot(dirToBallNormal);
+	float dotPlayerVel = m_vPlVel.Dot(dirToBallNormal);
+	float indicator = dotballVel - dotPlayerVel;
+
+	// If indicator is bigger or equal to 0, the ball is either moving away from the player or going the same speed, so there's no need to apply additional velocity
+	if (indicator >= 0)
 		return false;
 
 	float optimizedP = 2 * indicator / (ballMass + sv_player_mass.GetFloat());
