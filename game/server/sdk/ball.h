@@ -34,6 +34,7 @@ enum foul_type_t
 	FOUL_TIMEWASTING
 };
 
+#define FL_SPIN_FORCE_NONE		0
 #define FL_SPIN_PERMIT_BACK		(1 << 0)
 #define FL_SPIN_PERMIT_TOP		(1 << 1)
 #define FL_SPIN_PERMIT_SIDE		(1 << 2)

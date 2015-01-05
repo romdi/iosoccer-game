@@ -425,7 +425,7 @@ void CMatchBall::State_THROWIN_Think()
 
 		m_pPl->AddThrowIn();
 		RemoveAllTouches();
-		SetVel(vel, 0, 0, BODY_PART_HANDS, false, false, false);
+		SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_HANDS, false, false, false);
 		State_Transition(BALL_STATE_NORMAL);
 	}
 }
@@ -562,7 +562,7 @@ void CMatchBall::State_KICKOFF_Think()
 	if (m_pPl->ShotButtonsReleased() && m_pPl->IsShooting())
 	{
 		RemoveAllTouches();
-		SetVel(m_vPlForward2D * 350, 0, 0, BODY_PART_FEET, false, false, false);
+		SetVel(m_vPlForward2D * 350, 0, FL_SPIN_FORCE_NONE, BODY_PART_FEET, false, false, false);
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
 		m_pPl->RemoveFlag(FL_ATCONTROLS);
 		if (m_pOtherPl)
@@ -1077,7 +1077,7 @@ void CMatchBall::State_KEEPERHANDS_Think()
 		RemoveAllTouches();
 		SetPos(pos);
 		m_bSetNewPos = false;
-		SetVel(vel, 0, 0, BODY_PART_KEEPERHANDS, false, true, false, 0.5f);
+		SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_KEEPERHANDS, false, true, false, 0.5f);
 
 		return State_Transition(BALL_STATE_NORMAL);
 	}

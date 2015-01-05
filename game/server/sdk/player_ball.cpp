@@ -322,7 +322,7 @@ void CPlayerBall::State_KEEPERHANDS_Think()
 
 		SetPos(pos);
 		m_bSetNewPos = false;
-		SetVel(vel, 0, 0, BODY_PART_KEEPERHANDS, false, true, false, 0.5f);
+		SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_KEEPERHANDS, false, true, false, 0.5f);
 
 		return State_Transition(BALL_STATE_NORMAL);
 	}
