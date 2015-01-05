@@ -1019,7 +1019,8 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 				|| SDKGameRules()->GetMatchDisplayTimeSeconds() < GetGlobalTeam(team)->GetPosNextJoinSeconds(posIndex))
 				|| sv_singlekeeper.GetInt() == 2
 					&& posIndex == GetGlobalTeam(team)->GetPosIndexByPosType(POS_GK)
-					&& (GetGlobalTeam(team)->GetPlayerByPosType(POS_GK) || GetGlobalTeam(team)->GetOppTeam()->GetPlayerByPosType(POS_GK)))
+					&& !GetGlobalTeam(team)->GetPlayerByPosType(POS_GK)
+					&& GetGlobalTeam(team)->GetOppTeam()->GetPlayerByPosType(POS_GK))
 		{
 			return true;
 		}
