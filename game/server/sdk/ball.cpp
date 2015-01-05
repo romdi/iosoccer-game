@@ -143,6 +143,9 @@ ConVar
 	sv_ball_header_minangle("sv_ball_header_minangle", "70", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_header_maxangle("sv_ball_header_maxangle", "-40", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_header_playerspeedcoeff("sv_ball_header_playerspeedcoeff", "1.0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+
+	sv_ball_animation_minstrength_strongshot("sv_ball_animation_minstrength_strongshot", "800", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_animation_minstrength_weakshot("sv_ball_animation_minstrength_weakshot", "600", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	
 	sv_ball_highlightsdelay_intermissions("sv_ball_highlightsdelay_intermissions", "5.0", FCVAR_NOTIFY),
 	sv_ball_highlightsdelay_cooldown("sv_ball_highlightsdelay_cooldown", "30.0", FCVAR_NOTIFY),
@@ -1053,12 +1056,12 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 
 	Vector vel = shotDir * shotStrength;
 
-	if (vel.Length() > 1000)
+	if (vel.Length() >= sv_ball_animation_minstrength_strongshot.GetInt())
 	{
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KICK);
 		EmitSound("Ball.Kickhard");
 	}
-	else if (vel.Length() > 700)
+	else if (vel.Length() >= sv_ball_animation_minstrength_weakshot.GetInt())
 	{
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_PASS);
 		EmitSound("Ball.Kicknormal");
