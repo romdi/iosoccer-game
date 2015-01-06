@@ -1045,6 +1045,8 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 	QAngle shotAngle;
 	Vector vel;
 	bool setVel = true;
+	float nextShotMinDelay = 0.0f;
+	float pitchCoeff = GetPitchCoeff(true);
 
 	if (m_pPl->m_nButtons & IN_RELOAD)
 	{
@@ -1058,11 +1060,11 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 		if (angDiff >= 90)
 		{
 			shotAngle[PITCH] = -5;
-			shotStrength = 150 + 400 * GetPitchCoeff(true);
+			shotStrength = 150 + 400 * pitchCoeff;
 			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEELKICK);
 		}
 		// Ball roll
-		else if (m_pPl->m_nButtons & IN_MOVELEFT || m_pPl->m_nButtons & IN_MOVERIGHT || m_pPl->m_nButtons & IN_BACK)
+		else if (m_vPlLocalDirToBall.x >= 0 && (m_pPl->m_nButtons & IN_MOVELEFT || m_pPl->m_nButtons & IN_MOVERIGHT || m_pPl->m_nButtons & IN_BACK))
 		{
 			shotAngle = m_aPlAng;
 
@@ -1089,19 +1091,21 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 			{
 				shotAngle = m_aPlAng;
 				shotAngle[PITCH] = -50;
-				shotStrength = 150 + 425 * GetPitchCoeff(true);
+				shotStrength = 150 + 425 * pitchCoeff;
 				spinFlags = FL_SPIN_FORCE_BACK;
-				spinCoeff = pow(GetPitchCoeff(true), 2);
+				spinCoeff = pow(pitchCoeff, 2);
+				nextShotMinDelay = pitchCoeff;
 			}
 			// Rainbow flick
 			else
 			{
 				shotAngle = m_aPlAng;
-				shotAngle[PITCH] = -50 - 30 * (1 - GetPitchCoeff(true));
+				shotAngle[PITCH] = -50 - 30 * (1 - pitchCoeff);
 				shotStrength = 475;
 				spinFlags = FL_SPIN_FORCE_TOP;
 				spinCoeff = 1.0f;
 				m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_RAINBOW_FLICK);
+				nextShotMinDelay = 1.0f;
 			}
 		}
 		// Fake shot
@@ -1148,7 +1152,7 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 	}
 
 	if (setVel)
-		SetVel(vel, spinCoeff, spinFlags, BODY_PART_FEET, false, markOffsidePlayers, true);
+		SetVel(vel, spinCoeff, spinFlags, BODY_PART_FEET, false, markOffsidePlayers, true, nextShotMinDelay);
 
 	return true;
 }
