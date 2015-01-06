@@ -249,6 +249,9 @@ int CSDKPlayerAnimState::CalcPrimaryActionSequence(PlayerAnimEvent_t event)
 	case PLAYERANIMEVENT_KEEPER_HANDS_THROW: return CalcSequenceIndex("iosthrow");
 	case PLAYERANIMEVENT_KEEPER_HANDS_KICK: return CalcSequenceIndex("iosvolley");
 	case PLAYERANIMEVENT_KEEPER_HANDS_PUNCH: return CalcSequenceIndex("iosthrow");
+	case PLAYERANIMEVENT_FAKE_SHOT: return CalcSequenceIndex("ioskick");
+	case PLAYERANIMEVENT_RAINBOW_FLICK: return CalcSequenceIndex("iosheelkick");
+	case PLAYERANIMEVENT_BICYCLE_KICK: return CalcSequenceIndex("iostackled_backward");
 	default: return -1;
 	}
 }
@@ -396,6 +399,12 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT:
 	case PLAYERANIMEVENT_KEEPER_DIVE_FORWARD:
 	case PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD:
+	case PLAYERANIMEVENT_LIFT_UP:
+	case PLAYERANIMEVENT_BALL_ROLL_LEFT:
+	case PLAYERANIMEVENT_BALL_ROLL_RIGHT:
+	case PLAYERANIMEVENT_FAKE_SHOT:
+	case PLAYERANIMEVENT_RAINBOW_FLICK:
+	case PLAYERANIMEVENT_BICYCLE_KICK:
 		{
 			// HACKHACK: Side effects?
 			//if (GetSDKPlayer()->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_SLIDE)
