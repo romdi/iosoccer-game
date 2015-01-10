@@ -91,6 +91,7 @@ CMatchBall::CMatchBall()
 	m_flPossessionStart = -1;
 	m_ePenaltyState = PENALTY_NONE;
 	m_bIsAdvantage = false;
+	m_bBallInAirAfterThrowIn = false;
 	m_flStateTimelimit = -1;
 }
 
@@ -123,6 +124,7 @@ void CMatchBall::Reset()
 	m_flPossessionStart = -1;
 	m_ePenaltyState = PENALTY_NONE;
 	m_bIsAdvantage = false;
+	m_bBallInAirAfterThrowIn = false;
 	m_flStateTimelimit = -1;
 
 	UnmarkOffsidePlayers();
@@ -133,6 +135,9 @@ void CMatchBall::State_Transition(ball_state_t newState, float delay /*= 0.0f*/,
 {
 	if (newState != BALL_STATE_KEEPERHANDS)
 		m_bIsAdvantage = false;
+
+	if (newState != BALL_STATE_NORMAL)
+		m_bBallInAirAfterThrowIn = false;
 
 	if (delay == 0)
 	{
@@ -351,10 +356,10 @@ void CMatchBall::State_THROWIN_Enter()
 
 void CMatchBall::State_THROWIN_Think()
 {
+	Vector groundPos = Vector(m_vTriggerTouchPos.x < SDKGameRules()->m_vKickOff.GetX() ? SDKGameRules()->m_vFieldMin.GetX() - BALL_PHYS_RADIUS - 15 : SDKGameRules()->m_vFieldMax.GetX() + BALL_PHYS_RADIUS + 15, m_vTriggerTouchPos.y, SDKGameRules()->m_vKickOff.GetZ());
+
 	if (!CSDKPlayer::IsOnField(m_pPl, LastOppTeam(false)))
 	{
-		Vector groundPos = Vector(m_vTriggerTouchPos.x, m_vTriggerTouchPos.y, SDKGameRules()->m_vKickOff.GetZ());
-
 		m_pPl = NULL;
 
 		if (CSDKPlayer::IsOnField(m_pSetpieceTaker, LastOppTeam(false)))
@@ -365,13 +370,13 @@ void CMatchBall::State_THROWIN_Think()
 
 		if (!m_pPl)
 		{
-			SetPos(groundPos + Vector(2 * BALL_PHYS_RADIUS * Sign(SDKGameRules()->m_vKickOff.GetX() - m_vTriggerTouchPos.x), 0, 0));
+			SetPos(groundPos + Vector(30 * Sign(SDKGameRules()->m_vKickOff.GetX() - m_vTriggerTouchPos.x), 0, 0));
 			return State_Transition(BALL_STATE_NORMAL);
 		}
 
 		SetPos(groundPos);
 		SDKGameRules()->EnableShield(SHIELD_THROWIN, m_pPl->GetTeamNumber(), m_vPos);
-		m_pPl->SetPosInsideShield(Vector(m_vTriggerTouchPos.x, m_vTriggerTouchPos.y, SDKGameRules()->m_vKickOff.GetZ()), true);
+		m_pPl->SetPosInsideShield(groundPos, true);
 		m_flStateTimelimit = -1;
 		m_pPl->SetShotsBlocked(true);
 	}
@@ -382,7 +387,7 @@ void CMatchBall::State_THROWIN_Think()
 	if (m_flStateTimelimit == -1)
 	{
 		m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit_setpiece.GetFloat();
-		SetPos(Vector(m_vTriggerTouchPos.x, m_vTriggerTouchPos.y, SDKGameRules()->m_vKickOff.GetZ() + m_pPl->GetPlayerMaxs().z + 2));
+		SetPos(groundPos + Vector(0, 0, m_pPl->GetPlayerMaxs().z + 2));
 		m_pPl->RemoveFlag(FL_ATCONTROLS);
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_THROWIN);
 		m_pPl->SetShotButtonsReleased(false);
@@ -390,13 +395,6 @@ void CMatchBall::State_THROWIN_Think()
 	}
 
 	UpdateCarrier();
-
-	//Vector handPos;
-	//QAngle handAng;
-	//m_pPl->GetAttachment("ballrighthand", handPos, handAng);
-	//handPos.z -= BALL_PHYS_RADIUS;
-	//SetPos(handPos, false);
-	//SetAng(handAng);
 
 	if (m_pPl->ShotButtonsReleased() && m_pPl->IsChargedshooting())
 	{
@@ -413,6 +411,7 @@ void CMatchBall::State_THROWIN_Think()
 		m_pPl->AddThrowIn();
 		RemoveAllTouches();
 		SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_HANDS, false, false, false);
+		m_bBallInAirAfterThrowIn = true;
 		State_Transition(BALL_STATE_NORMAL);
 	}
 }
@@ -565,10 +564,13 @@ void CMatchBall::State_KICKOFF_Leave(ball_state_t newState)
 void CMatchBall::State_GOALKICK_Enter()
 {
 	Vector ballPos;
-	if (m_vTriggerTouchPos.x - SDKGameRules()->m_vKickOff.GetX() > 0)
-		ballPos = GetGlobalTeam(LastOppTeam(false))->m_vGoalkickLeft;
+
+	CTeam *pTeam = GetGlobalTeam(LastOppTeam(false));
+
+	if (Sign(m_vTriggerTouchPos.x - SDKGameRules()->m_vKickOff.GetX()) == pTeam->m_nRight)
+		ballPos = pTeam->m_vGoalkickRight;
 	else
-		ballPos = GetGlobalTeam(LastOppTeam(false))->m_vGoalkickRight;
+		ballPos = pTeam->m_vGoalkickLeft;
 
 	SetPos(ballPos);
 }
@@ -646,10 +648,10 @@ void CMatchBall::State_CORNER_Enter()
 	Vector ballPos;
 	CTeam *pTeam = GetGlobalTeam(LastTeam(false));
 
-	if (Sign((m_vTriggerTouchPos - SDKGameRules()->m_vKickOff).x) == -pTeam->m_nRight)
-		ballPos = pTeam->m_vCornerLeft;
-	else
+	if (Sign(m_vTriggerTouchPos.x - SDKGameRules()->m_vKickOff.GetX()) == pTeam->m_nRight)
 		ballPos = pTeam->m_vCornerRight;
+	else
+		ballPos = pTeam->m_vCornerLeft;
 	
 	SetPos(ballPos);
 }
@@ -1114,6 +1116,9 @@ void CMatchBall::State_KEEPERHANDS_Leave(ball_state_t newState)
 
 bool CMatchBall::CheckSideline()
 {
+	if (m_bBallInAirAfterThrowIn)
+		return false;
+
 	if (m_vPos.x + BALL_PHYS_RADIUS >= SDKGameRules()->m_vFieldMin.GetX() && m_vPos.x - BALL_PHYS_RADIUS <= SDKGameRules()->m_vFieldMax.GetX())
 		return false;
 
@@ -1161,8 +1166,6 @@ bool CMatchBall::CheckGoalLine()
 
 	if (team == TEAM_INVALID)
 		return false;
-
-	DevMsg("team: %d, bottomteam: %d\n", team, SDKGameRules()->GetBottomTeam());
 
 	if (m_bIsAdvantage)
 	{
@@ -1221,8 +1224,6 @@ bool CMatchBall::CheckGoal()
 
 	if (team == TEAM_INVALID)
 		return false;
-
-	DevMsg("team: %d, bottomteam: %d\n", team, SDKGameRules()->GetBottomTeam());
 
 	m_nTeam = team;
 
@@ -1640,6 +1641,7 @@ void CMatchBall::Touched(bool isShot, body_part_t bodyPart, const Vector &oldVel
 	info->m_flTime = gpGlobals->curtime;
 	m_Touches.AddToTail(info);
 	m_bHitThePost = false;
+	m_bBallInAirAfterThrowIn = false;
 
 	if (m_pPl->IsOffside())
 	{
@@ -2078,6 +2080,8 @@ void CMatchBall::VPhysicsCollision(int index, gamevcollisionevent_t *pEvent)
 		if (pLastPl && Sign(m_vPos.y - SDKGameRules()->m_vKickOff.GetY()) == pLastPl->GetTeam()->m_nForward) // Check if it's the opponent's goal
 			m_bHitThePost = true;
 	}
+
+	m_bBallInAirAfterThrowIn = false;
 
 	CBall::VPhysicsCollision(index, pEvent);
 }

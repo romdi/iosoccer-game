@@ -455,7 +455,7 @@ void CTeam::InitFieldSpots(bool isBottomTeam)
 	{
 		m_vGoalCenter = Vector(SDKGameRules()->m_vKickOff.GetX(), SDKGameRules()->m_vFieldMin.GetY(), zPos);
 
-		m_vCornerLeft = SDKGameRules()->m_vFieldMin.Get() + Vector(setPieceOffset, setPieceOffset, 0);
+		m_vCornerLeft = SDKGameRules()->m_vFieldMin + Vector(setPieceOffset, setPieceOffset, 0);
 		m_vCornerRight = Vector(SDKGameRules()->m_vFieldMax.GetX(), SDKGameRules()->m_vFieldMin.GetY(), zPos) + Vector(-setPieceOffset, setPieceOffset, 0);
 
 		m_vPenBoxMin = Vector(SDKGameRules()->m_vKickOff.GetX() - (penboxMax.x - penboxMin.x), SDKGameRules()->m_vFieldMin.GetY(), zPos);
@@ -473,7 +473,7 @@ void CTeam::InitFieldSpots(bool isBottomTeam)
 	{
 		m_vGoalCenter = Vector(SDKGameRules()->m_vKickOff.GetX(), SDKGameRules()->m_vFieldMax.GetY(), zPos);
 
-		m_vCornerLeft = SDKGameRules()->m_vFieldMax.Get() + Vector(-setPieceOffset, -setPieceOffset, 0);
+		m_vCornerLeft = SDKGameRules()->m_vFieldMax + Vector(-setPieceOffset, -setPieceOffset, 0);
 		m_vCornerRight = Vector(SDKGameRules()->m_vFieldMin.GetX(), SDKGameRules()->m_vFieldMax.GetY(), zPos) + Vector(setPieceOffset, -setPieceOffset, 0);
 
 		m_vPenBoxMin = Vector(SDKGameRules()->m_vKickOff.GetX() - (penboxMax.x - penboxMin.x), SDKGameRules()->m_vFieldMax.GetY() - (penboxMax.y - penboxMin.y), zPos);

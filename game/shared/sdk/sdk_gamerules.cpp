@@ -607,14 +607,14 @@ void CSDKGameRules::InitFieldSpots()
 		Error("'trigger_goal' entity is missing from map");
 	pGoal->CollisionProp()->WorldSpaceAABB(&goalMin, &goalMax);
 
-	trace_t tr;
-	UTIL_TraceLine(fieldMin + Vector(0, 0, 100), fieldMin + Vector(0, 0, -500), MASK_SOLID_BRUSHONLY, NULL, COLLISION_GROUP_NONE, &tr);
-	fieldMin.z = tr.endpos.z;
-
 	m_vKickOff = fieldMin;
 
+	trace_t tr;
+	UTIL_TraceLine(m_vKickOff + Vector(0, 0, 100), m_vKickOff + Vector(0, 0, -500), MASK_SOLID_BRUSHONLY, NULL, COLLISION_GROUP_NONE, &tr);
+	m_vKickOff.SetZ(tr.endpos.z);
+
 	m_vFieldMin = m_vKickOff - Vector(fieldMax.x - fieldMin.x, fieldMax.y - fieldMin.y, 0);
-	m_vFieldMax = fieldMax;
+	m_vFieldMax = m_vKickOff + Vector(fieldMax.x - fieldMin.x, fieldMax.y - fieldMin.y, 0);
 
 	m_vGoalTriggerSize = goalMax - goalMin;
 

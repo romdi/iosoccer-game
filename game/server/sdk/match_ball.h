@@ -87,6 +87,7 @@ public:
 	foul_type_t		m_eFoulType;
 	Vector			m_vFoulPos;
 	bool			m_bIsAdvantage;
+	bool			m_bBallInAirAfterThrowIn;
 	float			m_flFoulTime;
 	bool			m_bIsPenalty;
 	int				m_nTeam;
