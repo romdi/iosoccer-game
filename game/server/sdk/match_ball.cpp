@@ -1049,8 +1049,8 @@ void CMatchBall::State_KEEPERHANDS_Think()
 		Vector vel, pos;
 
 		if ((m_pPl->GetTeam()->m_nForward == 1 && m_vPos.y < min.y || m_pPl->GetTeam()->m_nForward == -1 && m_vPos.y > max.y)
-			/*&& m_vPos.x >= m_pPl->GetTeam()->m_vGoalCenter.GetX() - SDKGameRules()->m_vGoalTriggerSize.x / 2
-			&& m_vPos.x <= m_pPl->GetTeam()->m_vGoalCenter.GetX() + SDKGameRules()->m_vGoalTriggerSize.x / 2*/)
+			&& m_vPos.x >= m_pPl->GetTeam()->m_vGoalCenter.GetX() - SDKGameRules()->m_vGoalTriggerSize.x / 2
+			&& m_vPos.x <= m_pPl->GetTeam()->m_vGoalCenter.GetX() + SDKGameRules()->m_vGoalTriggerSize.x / 2)
 		{
 			pos = Vector(m_vPos.x, (m_pPl->GetTeam()->m_nForward == 1 ? min.y - BALL_PHYS_RADIUS : max.y + BALL_PHYS_RADIUS) + m_pPl->GetTeam()->m_nForward * 36, m_vPos.z);
 			vel = 25 * Vector(0, m_pPl->GetTeam()->m_nForward, 0);
