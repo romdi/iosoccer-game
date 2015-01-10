@@ -448,7 +448,7 @@ CSDKGameRules::CSDKGameRules()
 	m_flInjuryTime = 0;
 	m_flInjuryTimeStart = -1;
 	m_pPrecip = NULL;
-	m_nFirstHalfLeftSideTeam = TEAM_A;
+	m_nFirstHalfBottomTeam = TEAM_A;
 	m_nBottomTeam = TEAM_A;
 	m_bIsCeremony = false;
 	m_nTimeoutTeam = TEAM_INVALID;
@@ -572,7 +572,7 @@ void CSDKGameRules::ServerActivate()
 	m_pPrecip->SetType(PRECIPITATION_TYPE_NONE);
 	m_pPrecip->Spawn();
 
-	m_nFirstHalfLeftSideTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
+	m_nFirstHalfBottomTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
 	m_nFirstHalfKickOffTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
 
 	m_bIsCeremony = false;
@@ -1072,7 +1072,7 @@ void CSDKGameRules::ClientDisconnected( edict_t *pClient )
 	BaseClass::ClientDisconnected( pClient );
 }
 
-void CSDKGameRules::RestartMatch(bool isCeremony, int kickOffTeam, int leftSideTeam)
+void CSDKGameRules::RestartMatch(bool isCeremony, int kickOffTeam, int bottomTeam)
 {
 	IGameEvent *pEvent = gameeventmanager->CreateEvent("match_restart");
 	if (pEvent)
@@ -1088,12 +1088,12 @@ void CSDKGameRules::RestartMatch(bool isCeremony, int kickOffTeam, int leftSideT
 		case 2: m_nFirstHalfKickOffTeam = TEAM_B; break;
 	}
 
-	switch (leftSideTeam)
+	switch (bottomTeam)
 	{
 		case -1: break;
-		case 0: m_nFirstHalfLeftSideTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B); break;
-		case 1: m_nFirstHalfLeftSideTeam = TEAM_A; break;
-		case 2: m_nFirstHalfLeftSideTeam = TEAM_B; break;
+		case 0: m_nFirstHalfBottomTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B); break;
+		case 1: m_nFirstHalfBottomTeam = TEAM_A; break;
+		case 2: m_nFirstHalfBottomTeam = TEAM_B; break;
 	}
 
 	SDKGameRules()->State_Transition(MATCH_PERIOD_WARMUP);
@@ -1218,17 +1218,17 @@ void CC_SV_Restart(const CCommand &args)
 	else
 		kickOffTeam = -1;
 
-	int leftSideTeam;
+	int bottomTeam;
 
 	if (args.ArgC() > 4)
-		leftSideTeam = atoi(args[4]);
+		bottomTeam = atoi(args[4]);
 	else
-		leftSideTeam = -1;
+		bottomTeam = -1;
 
-	SDKGameRules()->RestartMatch(isCeremony, kickOffTeam, leftSideTeam);
+	SDKGameRules()->RestartMatch(isCeremony, kickOffTeam, bottomTeam);
 }
 
-ConCommand sv_restart( "sv_restart", CC_SV_Restart, "Usage: sv_restart <countdown in minutes> <is ceremony> <kick-off team> <left side team>", 0 );
+ConCommand sv_restart( "sv_restart", CC_SV_Restart, "Usage: sv_restart <countdown in minutes> <is ceremony> <kick-off team> <bottom team>", 0 );
 
 
 int CSDKGameRules::WakeUpAwayPlayers()
@@ -1663,7 +1663,7 @@ void CSDKGameRules::State_WARMUP_Enter()
 	m_flMatchStartTime = gpGlobals->curtime;
 	ResetMatch();
 
-	SetBottomTeam(m_nFirstHalfLeftSideTeam);
+	SetBottomTeam(m_nFirstHalfBottomTeam);
 	SetKickOffTeam(m_nFirstHalfKickOffTeam);
 
 	ApplyIntermissionSettings(false, true);
@@ -1688,7 +1688,7 @@ void CSDKGameRules::State_WARMUP_Leave(match_period_t newState)
 
 void CSDKGameRules::State_FIRST_HALF_Enter()
 {
-	SetBottomTeam(m_nFirstHalfLeftSideTeam);
+	SetBottomTeam(m_nFirstHalfBottomTeam);
 	SetKickOffTeam(m_nFirstHalfKickOffTeam);
 
 	m_nRealMatchStartTime = time(NULL);
@@ -1741,7 +1741,7 @@ void CSDKGameRules::State_HALFTIME_Leave(match_period_t newState)
 
 void CSDKGameRules::State_SECOND_HALF_Enter()
 {
-	SetBottomTeam(GetGlobalTeam(m_nFirstHalfLeftSideTeam)->GetOppTeamNumber());
+	SetBottomTeam(GetGlobalTeam(m_nFirstHalfBottomTeam)->GetOppTeamNumber());
 	SetKickOffTeam(GetGlobalTeam(m_nFirstHalfKickOffTeam)->GetOppTeamNumber());
 
 	CPlayerPersistentData::AddToAllMaxStaminas(mp_stamina_max_add_halftime.GetFloat());
@@ -1789,7 +1789,7 @@ void CSDKGameRules::State_EXTRATIME_INTERMISSION_Leave(match_period_t newState)
 
 void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Enter()
 {
-	SetBottomTeam(m_nFirstHalfLeftSideTeam);
+	SetBottomTeam(m_nFirstHalfBottomTeam);
 	SetKickOffTeam(m_nFirstHalfKickOffTeam);
 
 	CPlayerPersistentData::AddToAllMaxStaminas(mp_stamina_max_add_extratime_intermission.GetFloat());
@@ -1831,7 +1831,7 @@ void CSDKGameRules::State_EXTRATIME_HALFTIME_Leave(match_period_t newState)
 
 void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Enter()
 {
-	SetBottomTeam(GetGlobalTeam(m_nFirstHalfLeftSideTeam)->GetOppTeamNumber());
+	SetBottomTeam(GetGlobalTeam(m_nFirstHalfBottomTeam)->GetOppTeamNumber());
 	SetKickOffTeam(GetGlobalTeam(m_nFirstHalfKickOffTeam)->GetOppTeamNumber());
 
 	CPlayerPersistentData::AddToAllMaxStaminas(mp_stamina_max_add_extratime_halftime.GetFloat());
@@ -2842,7 +2842,7 @@ void CSDKGameRules::SetMatchDisplayTimeSeconds(int seconds)
 	ResetMatch();
 	m_flMatchStartTime = gpGlobals->curtime - (seconds / (90.0f / mp_timelimit_match.GetFloat()));
 	GetMatchBall()->State_Transition(BALL_STATE_STATIC, 0, true);
-	SetBottomTeam(m_nFirstHalfLeftSideTeam);
+	SetBottomTeam(m_nFirstHalfBottomTeam);
 	SetKickOffTeam(m_nFirstHalfKickOffTeam);
 	State_Transition(matchPeriod);
 }

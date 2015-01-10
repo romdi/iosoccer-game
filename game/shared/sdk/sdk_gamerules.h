@@ -284,7 +284,7 @@ public:
 	unsigned long m_nRealMatchStartTime;
 	unsigned long m_nRealMatchEndTime;
 
-	void RestartMatch(bool isMatchMode, int kickOffTeam, int leftSideTeam);
+	void RestartMatch(bool isMatchMode, int kickOffTeam, int bottomTeam);
 	int WakeUpAwayPlayers();
 	void StartPenalties();
 
@@ -363,7 +363,7 @@ protected:
 
 	int m_nFirstHalfKickOffTeam;
 	int m_nKickOffTeam;
-	int m_nFirstHalfLeftSideTeam;
+	int m_nFirstHalfBottomTeam;
 	CPrecipitation *m_pPrecip;
 
 	void CheckChatText(CBasePlayer *pPlayer, char *text);

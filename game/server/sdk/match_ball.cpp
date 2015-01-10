@@ -1049,8 +1049,8 @@ void CMatchBall::State_KEEPERHANDS_Think()
 		Vector vel, pos;
 
 		if ((m_pPl->GetTeam()->m_nForward == 1 && m_vPos.y < min.y || m_pPl->GetTeam()->m_nForward == -1 && m_vPos.y > max.y)
-			&& m_vPos.x >= m_pPl->GetTeam()->m_vGoalCenter.GetX() - SDKGameRules()->m_vGoalTriggerSize.x / 2
-			&& m_vPos.x <= m_pPl->GetTeam()->m_vGoalCenter.GetX() + SDKGameRules()->m_vGoalTriggerSize.x / 2)
+			&& m_vPos.x >= m_pPl->GetTeam()->m_vGoalCenter.GetX() - SDKGameRules()->m_vGoalTriggerSize.x
+			&& m_vPos.x <= m_pPl->GetTeam()->m_vGoalCenter.GetX() + SDKGameRules()->m_vGoalTriggerSize.x)
 		{
 			pos = Vector(m_vPos.x, (m_pPl->GetTeam()->m_nForward == 1 ? min.y - BALL_PHYS_RADIUS : max.y + BALL_PHYS_RADIUS) + m_pPl->GetTeam()->m_nForward * 36, m_vPos.z);
 			vel = 25 * Vector(0, m_pPl->GetTeam()->m_nForward, 0);
@@ -1162,6 +1162,8 @@ bool CMatchBall::CheckGoalLine()
 	if (team == TEAM_INVALID)
 		return false;
 
+	DevMsg("team: %d, bottomteam: %d\n", team, SDKGameRules()->GetBottomTeam());
+
 	if (m_bIsAdvantage)
 	{
 		if (m_bIsPenalty)
@@ -1207,8 +1209,8 @@ bool CMatchBall::CheckGoal()
 {
 	int team = TEAM_INVALID;
 
-	if (m_vPos.x + BALL_PHYS_RADIUS >= SDKGameRules()->m_vKickOff.GetX() - SDKGameRules()->m_vGoalTriggerSize.x / 2
-		&& m_vPos.x - BALL_PHYS_RADIUS <= SDKGameRules()->m_vKickOff.GetX() + SDKGameRules()->m_vGoalTriggerSize.x / 2
+	if (m_vPos.x + BALL_PHYS_RADIUS >= SDKGameRules()->m_vKickOff.GetX() - SDKGameRules()->m_vGoalTriggerSize.x
+		&& m_vPos.x - BALL_PHYS_RADIUS <= SDKGameRules()->m_vKickOff.GetX() + SDKGameRules()->m_vGoalTriggerSize.x
 		&& m_vPos.z - BALL_PHYS_RADIUS <= SDKGameRules()->m_vKickOff.GetZ() + SDKGameRules()->m_vGoalTriggerSize.z)
 	{
 		if (m_vPos.y + BALL_PHYS_RADIUS < SDKGameRules()->m_vFieldMin.GetY())
@@ -1219,6 +1221,8 @@ bool CMatchBall::CheckGoal()
 
 	if (team == TEAM_INVALID)
 		return false;
+
+	DevMsg("team: %d, bottomteam: %d\n", team, SDKGameRules()->GetBottomTeam());
 
 	m_nTeam = team;
 
