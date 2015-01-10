@@ -137,10 +137,6 @@ public:
 	void			VPhysicsUpdate(IPhysicsObject *pPhysics);
 	bool			CreateVPhysics();
 	
-	virtual void	TriggerGoal(int team) = 0;
-	virtual void	TriggerGoalLine(int team) = 0;
-	virtual void	TriggerSideline() = 0;
-	bool			IsSettingNewPos() { return m_bSetNewPos; }
 	bool			HasQueuedState() { return m_bHasQueuedState; }
 
 	virtual void	Reset();
@@ -239,9 +235,6 @@ protected:
 	int				m_nWasInPenBoxOfTeam;
 
 	bool			m_bHasQueuedState;
-	bool			m_bSetNewPos;
-	bool			m_bSetNewVel;
-	bool			m_bSetNewRot;
 
 	float			m_flGlobalLastShot;
 	float			m_flGlobalDynamicShotDelay;

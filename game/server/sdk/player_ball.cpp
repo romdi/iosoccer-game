@@ -321,7 +321,6 @@ void CPlayerBall::State_KEEPERHANDS_Think()
 		}
 
 		SetPos(pos);
-		m_bSetNewPos = false;
 		SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_KEEPERHANDS, false, true, false, 0.5f);
 
 		return State_Transition(BALL_STATE_NORMAL);
@@ -349,7 +348,6 @@ void CPlayerBall::State_KEEPERHANDS_Think()
 			EmitSound("Ball.Kicknormal");
 
 		SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_keeperhands.GetFloat()) + m_vPlForward2D * 36);
-		m_bSetNewPos = false;
 		SetVel(vel, 1.0f, FL_SPIN_PERMIT_ALL, BODY_PART_KEEPERHANDS, false, true, true);
 
 		return State_Transition(BALL_STATE_NORMAL);
@@ -359,18 +357,6 @@ void CPlayerBall::State_KEEPERHANDS_Think()
 void CPlayerBall::State_KEEPERHANDS_Leave(ball_state_t newState)
 {
 	RemoveFromPlayerHands(m_pPl);
-}
-
-void CPlayerBall::TriggerGoal(int team)
-{
-}
-
-void CPlayerBall::TriggerGoalLine(int team)
-{
-}
-
-void CPlayerBall::TriggerSideline()
-{
 }
 
 void CPlayerBall::Touched(bool isShot, body_part_t bodyPart, const Vector &oldVel)

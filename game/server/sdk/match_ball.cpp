@@ -204,8 +204,6 @@ void CMatchBall::State_Think()
 	m_pPhys->GetPosition(&m_vPos, &m_aAng);
 	m_pPhys->GetVelocity(&m_vVel, &m_vRot);
 
-	CheckPenBoxPosition();
-
 	if (m_eNextState != BALL_STATE_NONE)
 	{
 		if (!m_bNextStateMessageSent && gpGlobals->curtime >= m_flStateLeaveTime - m_flStateActivationDelay && m_eNextState != BALL_STATE_KICKOFF)
@@ -279,8 +277,6 @@ void CMatchBall::State_NORMAL_Think()
 	if (m_eNextState == BALL_STATE_GOAL)
 		return;
 
-	CheckAdvantage();
-
 	if (SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES)
 	{
 		if (m_ePenaltyState == PENALTY_KICKED)
@@ -292,65 +288,50 @@ void CMatchBall::State_NORMAL_Think()
 		else
 			m_pPl = NULL;
 
+		if (m_pPl)
+		{
+			UpdateCarrier();
+			DoBodyPartAction();
+		}
+
+		return;
+	}
+
+	if (!SDKGameRules()->IsIntermissionState() && !m_bHasQueuedState)
+	{
+		CheckFieldZone();
+		CheckPenBoxPosition();
+		CheckAdvantage();
+
+		if (!CheckOffside())
+		{
+			if (!CheckGoal())
+			{
+				if (!CheckGoalLine())
+				{
+					CheckSideline();
+				}
+			}
+		}
+	}
+
+	for (int ignoredPlayerBits = 0;;)
+	{
+		m_pPl = FindNearestPlayer(TEAM_INVALID, FL_POS_ANY, false, ignoredPlayerBits, sv_ball_maxplayerfinddist.GetFloat());
+
 		if (!m_pPl)
 			return;
 
 		UpdateCarrier();
-		DoBodyPartAction();
-	}
-	else
-	{
-		if (!SDKGameRules()->IsIntermissionState() && !m_bHasQueuedState)
-		{
-			for (int i = 1; i <= gpGlobals->maxClients; i++)
-			{
-				CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
 
-				if (!CSDKPlayer::IsOnField(pPl) || !pPl->IsOffside())
-					continue;
+		// The current player was able to perform an action, so exit the loop
+		if (DoBodyPartAction())
+			break;
 
-				Vector dir = (m_vPos - pPl->GetLocalOrigin());
+		// Exclude the current player from subsequent checks
+		ignoredPlayerBits |= (1 << (m_pPl->entindex() - 1));
 
-				if (dir.z > sv_ball_offsidedist.GetFloat() || dir.Length2DSqr() > pow(sv_ball_offsidedist.GetFloat(), 2))
-					continue;
-
-				if (m_bIsAdvantage)
-				{
-					if (m_bIsPenalty)
-						State_Transition(BALL_STATE_PENALTY, sv_ball_statetransition_activationdelay_short.GetFloat());
-					else
-						State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_activationdelay_short.GetFloat());
-				}
-				else
-				{
-						pPl->AddOffside();
-						SetFoulParams(FOUL_OFFSIDE, pPl->GetOffsidePos(), pPl);
-						SDKGameRules()->SetOffsideLinePositions(pPl->GetOffsideBallPos().y, pPl->GetOffsidePos().y, pPl->GetOffsideLastOppPlayerPos().y);
-						State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_activationdelay_long.GetFloat());
-				}
-
-				return;
-			}
-		}
-
-		for (int ignoredPlayerBits = 0;;)
-		{
-			m_pPl = FindNearestPlayer(TEAM_INVALID, FL_POS_ANY, false, ignoredPlayerBits, sv_ball_maxplayerfinddist.GetFloat());
-
-			if (!m_pPl)
-				return;
-
-			UpdateCarrier();
-
-			// The current player was able to perform an action, so exit the loop
-			if (DoBodyPartAction())
-				break;
-
-			// Exclude the current player from subsequent checks
-			ignoredPlayerBits |= (1 << (m_pPl->entindex() - 1));
-
-			m_pPl = NULL;
-		}
+		m_pPl = NULL;
 	}
 }
 
@@ -366,13 +347,14 @@ void CMatchBall::State_NORMAL_Leave(ball_state_t newState)
 void CMatchBall::State_THROWIN_Enter()
 {
 	EnablePlayerCollisions(false);
-	SetPos(Vector(m_vTriggerTouchPos.x + 0 * Sign(SDKGameRules()->m_vKickOff.GetX() - m_vTriggerTouchPos.x), m_vTriggerTouchPos.y, SDKGameRules()->m_vKickOff.GetZ()));
 }
 
 void CMatchBall::State_THROWIN_Think()
 {
 	if (!CSDKPlayer::IsOnField(m_pPl, LastOppTeam(false)))
 	{
+		Vector groundPos = Vector(m_vTriggerTouchPos.x, m_vTriggerTouchPos.y, SDKGameRules()->m_vKickOff.GetZ());
+
 		m_pPl = NULL;
 
 		if (CSDKPlayer::IsOnField(m_pSetpieceTaker, LastOppTeam(false)))
@@ -380,9 +362,14 @@ void CMatchBall::State_THROWIN_Think()
 
 		if (!m_pPl)
 			m_pPl = FindNearestPlayer(LastOppTeam(false));
-		if (!m_pPl)
-			return State_Transition(BALL_STATE_NORMAL);
 
+		if (!m_pPl)
+		{
+			SetPos(groundPos + Vector(2 * BALL_PHYS_RADIUS * Sign(SDKGameRules()->m_vKickOff.GetX() - m_vTriggerTouchPos.x), 0, 0));
+			return State_Transition(BALL_STATE_NORMAL);
+		}
+
+		SetPos(groundPos);
 		SDKGameRules()->EnableShield(SHIELD_THROWIN, m_pPl->GetTeamNumber(), m_vPos);
 		m_pPl->SetPosInsideShield(Vector(m_vTriggerTouchPos.x, m_vTriggerTouchPos.y, SDKGameRules()->m_vKickOff.GetZ()), true);
 		m_flStateTimelimit = -1;
@@ -1076,7 +1063,6 @@ void CMatchBall::State_KEEPERHANDS_Think()
 
 		RemoveAllTouches();
 		SetPos(pos);
-		m_bSetNewPos = false;
 		SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_KEEPERHANDS, false, true, false, 0.5f);
 
 		return State_Transition(BALL_STATE_NORMAL);
@@ -1115,7 +1101,6 @@ void CMatchBall::State_KEEPERHANDS_Think()
 
 		RemoveAllTouches();
 		SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_keeperhands.GetFloat()) + m_vPlForward2D * 36);
-		m_bSetNewPos = false;
 		SetVel(vel, 1.0f, FL_SPIN_PERMIT_ALL, BODY_PART_KEEPERHANDS, false, true, true);
 
 		return State_Transition(BALL_STATE_NORMAL);
@@ -1127,8 +1112,120 @@ void CMatchBall::State_KEEPERHANDS_Leave(ball_state_t newState)
 	RemoveFromPlayerHands(m_pPl);
 }
 
-void CMatchBall::TriggerGoal(int team)
+bool CMatchBall::CheckSideline()
 {
+	if (m_vPos.x + BALL_PHYS_RADIUS >= SDKGameRules()->m_vFieldMin.GetX() && m_vPos.x - BALL_PHYS_RADIUS <= SDKGameRules()->m_vFieldMax.GetX())
+		return false;
+
+	if (SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES)
+		return false;
+
+	if (m_bIsAdvantage)
+	{
+		if (m_bIsPenalty)
+			State_Transition(BALL_STATE_PENALTY, sv_ball_statetransition_activationdelay_short.GetFloat());
+		else
+			State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_activationdelay_short.GetFloat());
+
+		return true;
+	}
+
+	BallTouchInfo *pInfo = LastInfo(true);
+	CSDKPlayer *pLastPl = LastPl(true);
+
+	if (pInfo && CSDKPlayer::IsOnField(pLastPl))
+	{
+		if (m_bHitThePost) // Goal post hits don't trigger a statistic change right away, since we don't know if it ends up being a goal or a miss. So do the check here.
+			pLastPl->AddShot();
+		else if (pInfo->m_eBodyPart != BODY_PART_KEEPERPUNCH
+			&& GetVel().Length2DSqr() < pow(sv_ball_stats_clearance_minspeed.GetFloat(), 2.0f)
+			&& (m_vPos - pInfo->m_vBallPos).Length2DSqr() >= pow(sv_ball_stats_pass_mindist.GetFloat(), 2.0f)) // Pass or interception if over a distance threshold and wasn't punched away by a keeper
+		{
+			pLastPl->AddPass();
+		}
+	}
+
+	m_vTriggerTouchPos = m_vPos;
+
+	//SetMatchEvent(MATCH_EVENT_THROWIN, NULL, LastOppTeam(false));
+	State_Transition(BALL_STATE_THROWIN, sv_ball_statetransition_activationdelay_normal.GetFloat());
+
+	return true;
+}
+
+bool CMatchBall::CheckGoalLine()
+{
+	int team = TEAM_INVALID;
+
+	if (m_vPos.y + BALL_PHYS_RADIUS < SDKGameRules()->m_vFieldMin.GetY())
+		team = SDKGameRules()->GetBottomTeam();
+	else if (m_vPos.y - BALL_PHYS_RADIUS > SDKGameRules()->m_vFieldMax.GetY())
+		team = GetGlobalTeam(SDKGameRules()->GetBottomTeam())->GetOppTeamNumber();
+
+	if (team == TEAM_INVALID)
+		return false;
+
+	if (SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES)
+		return false;
+
+	if (m_bIsAdvantage)
+	{
+		if (m_bIsPenalty)
+			State_Transition(BALL_STATE_PENALTY, sv_ball_statetransition_activationdelay_short.GetFloat());
+		else
+			State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_activationdelay_short.GetFloat());
+
+		return true;
+	}
+
+	m_vTriggerTouchPos = m_vPos;
+
+	BallTouchInfo *pInfo = LastInfo(true);
+
+	if (pInfo->m_nTeam != team && pInfo->m_pPl && (m_vTriggerTouchPos - pInfo->m_vBallPos).Length2DSqr() >= pow(sv_ball_stats_shot_mindist.GetFloat(), 2.0f)) // Don't add a missed shot or pass if the player accidentally dribbles the ball out
+	{
+		float minX = GetGlobalTeam(team)->m_vSixYardBoxMin.GetX();
+		float maxX = GetGlobalTeam(team)->m_vSixYardBoxMax.GetX();
+
+		if (m_bHitThePost || m_vTriggerTouchPos.x >= minX && m_vTriggerTouchPos.x <= maxX) // Bounced off the post or crossed the goal line inside the six-yard box
+		{
+			LastPl(true)->AddShot();
+			//EmitSound("Crowd.Miss");
+			ReplayManager()->AddMatchEvent(MATCH_EVENT_MISS, GetGlobalTeam(team)->GetOppTeamNumber(), LastPl(true));
+		}
+		else
+			LastPl(true)->AddPass();
+	}
+
+	if (LastTeam(false) == team)
+	{
+		//SetMatchEvent(MATCH_EVENT_CORNER, NULL, LastOppTeam(false));
+		State_Transition(BALL_STATE_CORNER, sv_ball_statetransition_activationdelay_normal.GetFloat());
+	}
+	else
+	{
+		//SetMatchEvent(MATCH_EVENT_THROWIN, NULL, LastOppTeam(false));
+		State_Transition(BALL_STATE_GOALKICK, sv_ball_statetransition_activationdelay_normal.GetFloat());
+	}
+}
+
+bool CMatchBall::CheckGoal()
+{
+	int team = TEAM_INVALID;
+
+	if (m_vPos.x + BALL_PHYS_RADIUS >= SDKGameRules()->m_vKickOff.GetX() - SDKGameRules()->m_vGoalTriggerSize.x / 2
+		&& m_vPos.x - BALL_PHYS_RADIUS <= SDKGameRules()->m_vKickOff.GetX() + SDKGameRules()->m_vGoalTriggerSize.x / 2
+		&& m_vPos.z - BALL_PHYS_RADIUS <= SDKGameRules()->m_vKickOff.GetZ() + SDKGameRules()->m_vGoalTriggerSize.z)
+	{
+		if (m_vPos.y + BALL_PHYS_RADIUS < SDKGameRules()->m_vFieldMin.GetY())
+			team = SDKGameRules()->GetBottomTeam();
+		else if (m_vPos.y - BALL_PHYS_RADIUS > SDKGameRules()->m_vFieldMax.GetY())
+			team = GetGlobalTeam(SDKGameRules()->GetBottomTeam())->GetOppTeamNumber();
+	}
+
+	if (team == TEAM_INVALID)
+		return false;
+
 	m_nTeam = team;
 
 	// Don't count the goal if there was advantage play for the team which concedes the goal
@@ -1139,7 +1236,7 @@ void CMatchBall::TriggerGoal(int team)
 		else
 			State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_activationdelay_short.GetFloat());
 
-		return;
+		return true;
 	}
 
 	if (SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES)
@@ -1150,13 +1247,23 @@ void CMatchBall::TriggerGoal(int team)
 			m_bHasQueuedState = true;
 		}
 
-		return;
+		return true;
 	}
 
 	if (LastInfo(true) && LastInfo(true)->m_eBallState == BALL_STATE_THROWIN && !LastPl(false, LastPl(true)))
 	{
-		TriggerGoalLine(m_nTeam);
-		return;
+		if (LastTeam(true) == team)
+		{
+			//SetMatchEvent(MATCH_EVENT_CORNER, NULL, LastOppTeam(false));
+			State_Transition(BALL_STATE_CORNER, sv_ball_statetransition_activationdelay_normal.GetFloat());
+		}
+		else
+		{
+			//SetMatchEvent(MATCH_EVENT_THROWIN, NULL, LastOppTeam(false));
+			State_Transition(BALL_STATE_GOALKICK, sv_ball_statetransition_activationdelay_normal.GetFloat());
+		}
+
+		return true;
 	}
 
 	if (LastTeam(true) != m_nTeam && LastPl(true))
@@ -1200,94 +1307,50 @@ void CMatchBall::TriggerGoal(int team)
 		pKeeper->AddGoalConceded();
 
 	State_Transition(BALL_STATE_GOAL, sv_ball_statetransition_activationdelay_short.GetFloat(), false, true);
+
+	return true;
 }
 
-void CMatchBall::TriggerGoalLine(int team)
+void CMatchBall::CheckFieldZone()
 {
-	//DevMsg("Trigger goal line\n");
-	if (SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES)
-		return;
-
-	if (m_bIsAdvantage)
-	{
-		if (m_bIsPenalty)
-			State_Transition(BALL_STATE_PENALTY, sv_ball_statetransition_activationdelay_short.GetFloat());
-		else
-			State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_activationdelay_short.GetFloat());
-
-		return;
-	}
-
-	m_vTriggerTouchPos = GetPos();
-
-	BallTouchInfo *pInfo = LastInfo(true);
-
-	if (pInfo->m_nTeam != team && pInfo->m_pPl && (m_vTriggerTouchPos - pInfo->m_vBallPos).Length2DSqr() >= pow(sv_ball_stats_shot_mindist.GetFloat(), 2.0f)) // Don't add a missed shot or pass if the player accidentally dribbles the ball out
-	{
-		float minX = GetGlobalTeam(team)->m_vSixYardBoxMin.GetX();
-		float maxX = GetGlobalTeam(team)->m_vSixYardBoxMax.GetX();
-
-		if (m_bHitThePost || m_vTriggerTouchPos.x >= minX && m_vTriggerTouchPos.x <= maxX) // Bounced off the post or crossed the goal line inside the six-yard box
-		{
-			LastPl(true)->AddShot();
-			//EmitSound("Crowd.Miss");
-			ReplayManager()->AddMatchEvent(MATCH_EVENT_MISS, GetGlobalTeam(team)->GetOppTeamNumber(), LastPl(true));
-		}
-		else
-			LastPl(true)->AddPass();
-	}
-
-	if (LastTeam(false) == team)
-	{
-		//SetMatchEvent(MATCH_EVENT_CORNER, NULL, LastOppTeam(false));
-		State_Transition(BALL_STATE_CORNER, sv_ball_statetransition_activationdelay_normal.GetFloat());
-	}
-	else
-	{
-		//SetMatchEvent(MATCH_EVENT_THROWIN, NULL, LastOppTeam(false));
-		State_Transition(BALL_STATE_GOALKICK, sv_ball_statetransition_activationdelay_normal.GetFloat());
-	}
+	float fieldLength = SDKGameRules()->m_vFieldMax.GetY() - SDKGameRules()->m_vFieldMin.GetY();
+	float dist = GetGlobalTeam(TEAM_A)->m_nForward * (m_vPos.y - SDKGameRules()->m_vKickOff.GetY());
+	m_flFieldZone = clamp(dist * 100 / (fieldLength / 2), -100, 100);
 }
 
-void CMatchBall::TriggerSideline()
+bool CMatchBall::CheckOffside()
 {
-	if (SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES)
-		return;
-
-	if (m_bIsAdvantage)
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
-		if (m_bIsPenalty)
-			State_Transition(BALL_STATE_PENALTY, sv_ball_statetransition_activationdelay_short.GetFloat());
-		else
-			State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_activationdelay_short.GetFloat());
+		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
 
-		return;
-	}
+		if (!CSDKPlayer::IsOnField(pPl) || !pPl->IsOffside())
+			continue;
 
-	Vector ballPos = GetPos();
+		Vector dir = (m_vPos - pPl->GetLocalOrigin());
 
-	BallTouchInfo *pInfo = LastInfo(true);
-	CSDKPlayer *pLastPl = LastPl(true);
+		if (dir.z > sv_ball_offsidedist.GetFloat() || dir.Length2DSqr() > pow(sv_ball_offsidedist.GetFloat(), 2))
+			continue;
 
-	if (pInfo && CSDKPlayer::IsOnField(pLastPl))
-	{
-		if (m_bHitThePost) // Goal post hits don't trigger a statistic change right away, since we don't know if it ends up being a goal or a miss. So do the check here.
-			pLastPl->AddShot();
-		else if (pInfo->m_eBodyPart != BODY_PART_KEEPERPUNCH
-			&& GetVel().Length2DSqr() < pow(sv_ball_stats_clearance_minspeed.GetFloat(), 2.0f)
-			&& (ballPos - pInfo->m_vBallPos).Length2DSqr() >= pow(sv_ball_stats_pass_mindist.GetFloat(), 2.0f)) // Pass or interception if over a distance threshold and wasn't punched away by a keeper
+		if (m_bIsAdvantage)
 		{
-			pLastPl->AddPass();
+			if (m_bIsPenalty)
+				State_Transition(BALL_STATE_PENALTY, sv_ball_statetransition_activationdelay_short.GetFloat());
+			else
+				State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_activationdelay_short.GetFloat());
 		}
+		else
+		{
+			pPl->AddOffside();
+			SetFoulParams(FOUL_OFFSIDE, pPl->GetOffsidePos(), pPl);
+			SDKGameRules()->SetOffsideLinePositions(pPl->GetOffsideBallPos().y, pPl->GetOffsidePos().y, pPl->GetOffsideLastOppPlayerPos().y);
+			State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_activationdelay_long.GetFloat());
+		}
+
+		return true;
 	}
 
-	CBaseEntity *pThrowIn = gEntList.FindEntityByClassnameNearest("info_throw_in", ballPos, 1000);
-	if (!pThrowIn)
-		return;
-
-	m_vTriggerTouchPos = pThrowIn->GetLocalOrigin();
-	//SetMatchEvent(MATCH_EVENT_THROWIN, NULL, LastOppTeam(false));
-	State_Transition(BALL_STATE_THROWIN, sv_ball_statetransition_activationdelay_normal.GetFloat());
+	return false;
 }
 
 void CMatchBall::SendNotifications()
@@ -1993,12 +2056,9 @@ void CMatchBall::UpdatePossession(CSDKPlayer *pNewPossessor)
 // -100 = ball at the goal line of the home team
 // 0 = ball at the the half-way line
 // 100 = ball at the goal line of the away team
-float CMatchBall::CalcFieldZone()
+float CMatchBall::GetFieldZone()
 {
-	Vector pos = GetPos();
-	float fieldLength = SDKGameRules()->m_vFieldMax.GetY() - SDKGameRules()->m_vFieldMin.GetY();
-	float dist = GetGlobalTeam(TEAM_A)->m_nForward * (pos.y - SDKGameRules()->m_vKickOff.GetY());
-	return clamp(dist * 100 / (fieldLength / 2), -100, 100);
+	return m_flFieldZone;
 }
 
 void CMatchBall::SetPenaltyTaker(CSDKPlayer *pPl)

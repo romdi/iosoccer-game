@@ -184,7 +184,7 @@ public:
 	CNetworkVar(int, m_nRight);
 
 	Vector GetSpotPos(const char *name);
-	void InitFieldSpots(int team);
+	void InitFieldSpots(bool isBottomTeam);
 	void ResetStats();
 
 	char m_szMatchEventPlayersMemory[MAX_MATCH_EVENTS][MAX_MATCH_EVENT_PLAYER_NAME_LENGTH];

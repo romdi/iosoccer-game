@@ -286,7 +286,7 @@ BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 	RecvPropVector(RECVINFO(m_vKickOff)),
 
 	RecvPropInt(RECVINFO(m_nBallZone)),
-	RecvPropInt(RECVINFO(m_nLeftSideTeam)),
+	RecvPropInt(RECVINFO(m_nBottomTeam)),
 
 	RecvPropInt(RECVINFO(m_nTimeoutTeam)),
 	RecvPropInt(RECVINFO(m_eTimeoutState)),
@@ -317,7 +317,7 @@ BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 	SendPropVector(SENDINFO(m_vKickOff), -1, SPROP_COORD),
 
 	SendPropInt(SENDINFO(m_nBallZone), 8),
-	SendPropInt(SENDINFO(m_nLeftSideTeam), 3),
+	SendPropInt(SENDINFO(m_nBottomTeam), 3),
 
 	SendPropInt(SENDINFO(m_nTimeoutTeam), 3),
 	SendPropInt(SENDINFO(m_eTimeoutState), 2, SPROP_UNSIGNED),
@@ -449,7 +449,7 @@ CSDKGameRules::CSDKGameRules()
 	m_flInjuryTimeStart = -1;
 	m_pPrecip = NULL;
 	m_nFirstHalfLeftSideTeam = TEAM_A;
-	m_nLeftSideTeam = TEAM_A;
+	m_nBottomTeam = TEAM_A;
 	m_bIsCeremony = false;
 	m_nTimeoutTeam = TEAM_INVALID;
 	m_eTimeoutState = TIMEOUT_STATE_NONE;
@@ -467,6 +467,8 @@ CSDKGameRules::CSDKGameRules()
 	m_bUseOldMaxplayers = false;
 	m_nRealMatchStartTime = 0;
 	m_nRealMatchEndTime = 0;
+	m_bHasWalledField = false;
+	m_bIsTrainingMap = false;
 
 	m_flLastMasterServerPingTime = -FLT_MAX;
 	m_bIsPingingMasterServer = false;
@@ -562,69 +564,9 @@ void CSDKGameRules::ServerActivate()
 
 	InitTeams();
 
-	CBaseEntity *pEnt = gEntList.FindEntityByClassname(NULL, "info_ball_start");
-	if (!pEnt)
-		Error("'info_ball_start' is missing");
+	InitFieldSpots();
 
-	trace_t tr;
-	UTIL_TraceLine(pEnt->GetLocalOrigin() + Vector(0, 0, 100), pEnt->GetLocalOrigin() + Vector(0, 0, -500), MASK_SOLID_BRUSHONLY, NULL, COLLISION_GROUP_NONE, &tr);
-
-	m_vKickOff = Vector(pEnt->GetLocalOrigin().x, pEnt->GetLocalOrigin().y, tr.endpos.z);
-	
-	float minX = -FLT_MAX;
-	float maxX = FLT_MAX;
-
-	CBaseEntity *pSidelineTrigger = NULL;
-	while ((pSidelineTrigger = gEntList.FindEntityByClassname(pSidelineTrigger, "trigger_SideLine")) != NULL)
-	{
-		Vector min, max;
-		pSidelineTrigger->CollisionProp()->WorldSpaceTriggerBounds(&min, &max);
-		if (max.x > m_vKickOff.GetX())
-		{
-			if (min.x < maxX)
-				maxX = min.x;
-		}
-		else
-		{
-			if (max.x > minX)
-				minX = max.x;
-		}
-	}
-
-	if (minX == -FLT_MAX || maxX == FLT_MAX)
-		Error("Can't calculate the field width. 'trigger_SideLine' missing or misplaced.");
-
-	float minY = -FLT_MAX;
-	float maxY = FLT_MAX;
-
-	CBaseEntity *pGoalTrigger = NULL;
-	while ((pGoalTrigger = gEntList.FindEntityByClassname(pGoalTrigger, "trigger_goal")) != NULL)
-	{
-		Vector min, max;
-		pGoalTrigger->CollisionProp()->WorldSpaceTriggerBounds(&min, &max);
-
-		m_vGoalTriggerSize = max - min;
-
-		if (max.y > m_vKickOff.GetY())
-		{
-			if (min.y < maxY)
-				maxY = min.y;
-		}
-		else
-		{
-			if (max.y > minY)
-				minY = max.y;
-		}
-	}
-
-	if (minY == -FLT_MAX || maxY == FLT_MAX)
-		Error("Can't calculate the field length. 'trigger_goal' missing or misplaced");
-
-	m_vFieldMin = Vector(minX, minY, m_vKickOff.GetZ());
-	m_vFieldMax = Vector(maxX, maxY, m_vKickOff.GetZ());
-
-	GetGlobalTeam(TEAM_A)->InitFieldSpots(TEAM_A);
-	GetGlobalTeam(TEAM_B)->InitFieldSpots(TEAM_B);
+	CreateMatchBall(m_vKickOff);
 
 	m_pPrecip = (CPrecipitation *)CreateEntityByName("func_precipitation");
 	m_pPrecip->SetType(PRECIPITATION_TYPE_NONE);
@@ -636,6 +578,48 @@ void CSDKGameRules::ServerActivate()
 	m_bIsCeremony = false;
 
 	State_Transition(MATCH_PERIOD_WARMUP);
+}
+
+void CSDKGameRules::InitFieldSpots()
+{
+	CInfoStadium *pInfoStadium = (CInfoStadium *)gEntList.FindEntityByClassname(NULL, "info_stadium");
+
+	if (pInfoStadium)
+	{
+		m_bHasWalledField = pInfoStadium->m_bHasWalledField;
+		m_bIsTrainingMap = pInfoStadium->m_bIsTrainingMap;
+	}
+	else
+	{
+		m_bHasWalledField = false;
+		m_bIsTrainingMap = false;
+	}
+
+	Vector fieldMin, fieldMax;
+	CBaseEntity *pField = gEntList.FindEntityByClassname(NULL, "trigger_field");
+	if (!pField)
+		Error("'trigger_field' entity is missing from map");
+	pField->CollisionProp()->WorldSpaceAABB(&fieldMin, &fieldMax);
+
+	Vector goalMin, goalMax;
+	CBaseEntity *pGoal = gEntList.FindEntityByClassname(NULL, "trigger_goal");
+	if (!pGoal)
+		Error("'trigger_goal' entity is missing from map");
+	pGoal->CollisionProp()->WorldSpaceAABB(&goalMin, &goalMax);
+
+	trace_t tr;
+	UTIL_TraceLine(fieldMin + Vector(0, 0, 100), fieldMin + Vector(0, 0, -500), MASK_SOLID_BRUSHONLY, NULL, COLLISION_GROUP_NONE, &tr);
+	fieldMin.z = tr.endpos.z;
+
+	m_vKickOff = fieldMin;
+
+	m_vFieldMin = m_vKickOff - Vector(fieldMax.x - fieldMin.x, fieldMax.y - fieldMin.y, 0);
+	m_vFieldMax = fieldMax;
+
+	m_vGoalTriggerSize = goalMax - goalMin;
+
+	GetGlobalTeam(TEAM_A)->InitFieldSpots(true);
+	GetGlobalTeam(TEAM_B)->InitFieldSpots(false);
 }
 
 //-----------------------------------------------------------------------------
@@ -1303,7 +1287,7 @@ ConVar sv_wakeupcall_interval("sv_wakeupcall_interval", "10", FCVAR_NOTIFY);
 
 void CSDKGameRules::StartPenalties()
 {
-	//SetLeftSideTeam(g_IOSRand.RandomInt(TEAM_A, TEAM_B));
+	//SetBottomTeam(g_IOSRand.RandomInt(TEAM_A, TEAM_B));
 	ResetMatch();
 	State_Transition(MATCH_PERIOD_PENALTIES);
 }
@@ -1571,7 +1555,7 @@ void CSDKGameRules::State_Think()
 	if ( m_pCurStateInfo && m_pCurStateInfo->pfnThink )
 	{
 		if (GetMatchBall())
-			m_nBallZone = GetMatchBall()->CalcFieldZone();
+			m_nBallZone = GetMatchBall()->GetFieldZone();
 
 		if (m_pCurStateInfo->m_eMatchPeriod == MATCH_PERIOD_WARMUP && mp_timelimit_warmup.GetFloat() < 0)
 			m_flStateTimeLeft = 1.0f;
@@ -1679,7 +1663,7 @@ void CSDKGameRules::State_WARMUP_Enter()
 	m_flMatchStartTime = gpGlobals->curtime;
 	ResetMatch();
 
-	SetLeftSideTeam(m_nFirstHalfLeftSideTeam);
+	SetBottomTeam(m_nFirstHalfLeftSideTeam);
 	SetKickOffTeam(m_nFirstHalfKickOffTeam);
 
 	ApplyIntermissionSettings(false, true);
@@ -1704,7 +1688,7 @@ void CSDKGameRules::State_WARMUP_Leave(match_period_t newState)
 
 void CSDKGameRules::State_FIRST_HALF_Enter()
 {
-	SetLeftSideTeam(m_nFirstHalfLeftSideTeam);
+	SetBottomTeam(m_nFirstHalfLeftSideTeam);
 	SetKickOffTeam(m_nFirstHalfKickOffTeam);
 
 	m_nRealMatchStartTime = time(NULL);
@@ -1757,7 +1741,7 @@ void CSDKGameRules::State_HALFTIME_Leave(match_period_t newState)
 
 void CSDKGameRules::State_SECOND_HALF_Enter()
 {
-	SetLeftSideTeam(GetGlobalTeam(m_nFirstHalfLeftSideTeam)->GetOppTeamNumber());
+	SetBottomTeam(GetGlobalTeam(m_nFirstHalfLeftSideTeam)->GetOppTeamNumber());
 	SetKickOffTeam(GetGlobalTeam(m_nFirstHalfKickOffTeam)->GetOppTeamNumber());
 
 	CPlayerPersistentData::AddToAllMaxStaminas(mp_stamina_max_add_halftime.GetFloat());
@@ -1805,7 +1789,7 @@ void CSDKGameRules::State_EXTRATIME_INTERMISSION_Leave(match_period_t newState)
 
 void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Enter()
 {
-	SetLeftSideTeam(m_nFirstHalfLeftSideTeam);
+	SetBottomTeam(m_nFirstHalfLeftSideTeam);
 	SetKickOffTeam(m_nFirstHalfKickOffTeam);
 
 	CPlayerPersistentData::AddToAllMaxStaminas(mp_stamina_max_add_extratime_intermission.GetFloat());
@@ -1847,7 +1831,7 @@ void CSDKGameRules::State_EXTRATIME_HALFTIME_Leave(match_period_t newState)
 
 void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Enter()
 {
-	SetLeftSideTeam(GetGlobalTeam(m_nFirstHalfLeftSideTeam)->GetOppTeamNumber());
+	SetBottomTeam(GetGlobalTeam(m_nFirstHalfLeftSideTeam)->GetOppTeamNumber());
 	SetKickOffTeam(GetGlobalTeam(m_nFirstHalfKickOffTeam)->GetOppTeamNumber());
 
 	CPlayerPersistentData::AddToAllMaxStaminas(mp_stamina_max_add_extratime_halftime.GetFloat());
@@ -1902,7 +1886,7 @@ void CSDKGameRules::State_PENALTIES_Enter()
 	m_flNextPenalty = -1;
 	m_nPenaltyTakingStartTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
 	m_nPenaltyTakingTeam = m_nPenaltyTakingStartTeam;
-	SetLeftSideTeam(g_IOSRand.RandomInt(TEAM_A, TEAM_B));
+	SetBottomTeam(g_IOSRand.RandomInt(TEAM_A, TEAM_B));
 	GetMatchBall()->SetPenaltyState(PENALTY_NONE);
 }
 
@@ -1964,7 +1948,7 @@ void CSDKGameRules::State_PENALTIES_Think()
 				}
 
 				m_nPenaltyTakingTeam = GetGlobalTeam(m_nPenaltyTakingTeam)->GetOppTeamNumber();
-				SetLeftSideTeam(GetGlobalTeam(GetLeftSideTeam())->GetOppTeamNumber());
+				SetBottomTeam(GetGlobalTeam(GetBottomTeam())->GetOppTeamNumber());
 			}
 
 			GetMatchBall()->SetPenaltyState(PENALTY_NONE);
@@ -2554,25 +2538,20 @@ void CSDKGameRules::DisableShield()
 	}
 }
 
-void CSDKGameRules::SetLeftSideTeam(int team)
+void CSDKGameRules::SetBottomTeam(int team)
 {
-	if (team == m_nLeftSideTeam)
+	if (team == m_nBottomTeam)
 		return;
 
-	m_nLeftSideTeam = team;
-	GetGlobalTeam(TEAM_A)->InitFieldSpots(team);
-	GetGlobalTeam(TEAM_B)->InitFieldSpots(GetGlobalTeam(team)->GetOppTeamNumber());
-	IOS_LogPrintf("Left team set to %s\n", GetGlobalTeam(team)->GetKitName());
+	m_nBottomTeam = team;
+
+	GetGlobalTeam(m_nBottomTeam)->InitFieldSpots(true);
+	GetGlobalTeam(GetGlobalTeam(m_nBottomTeam)->GetOppTeamNumber())->InitFieldSpots(false);
 }
 
-int CSDKGameRules::GetLeftSideTeam()
+int CSDKGameRules::GetBottomTeam()
 {
-	return m_nLeftSideTeam;
-}
-
-int CSDKGameRules::GetRightSideTeam()
-{
-	return GetGlobalTeam(m_nLeftSideTeam)->GetOppTeamNumber();
+	return m_nBottomTeam;
 }
 
 void CSDKGameRules::SetKickOffTeam(int team)
@@ -2863,7 +2842,7 @@ void CSDKGameRules::SetMatchDisplayTimeSeconds(int seconds)
 	ResetMatch();
 	m_flMatchStartTime = gpGlobals->curtime - (seconds / (90.0f / mp_timelimit_match.GetFloat()));
 	GetMatchBall()->State_Transition(BALL_STATE_STATIC, 0, true);
-	SetLeftSideTeam(m_nFirstHalfLeftSideTeam);
+	SetBottomTeam(m_nFirstHalfLeftSideTeam);
 	SetKickOffTeam(m_nFirstHalfKickOffTeam);
 	State_Transition(matchPeriod);
 }
@@ -3137,12 +3116,12 @@ void CSDKGameRules::DrawFieldTeamCrests()
 
 		if (i == 0)
 		{
-			sign = m_nLeftSideTeam == TEAM_A ? 1 : -1;
+			sign = m_nBottomTeam == TEAM_A ? 1 : -1;
 			material = "vgui/hometeamcrest";
 		}
 		else
 		{
-			sign = m_nLeftSideTeam == TEAM_A ? -1 : 1;
+			sign = m_nBottomTeam == TEAM_A ? -1 : 1;
 			material = "vgui/awayteamcrest";
 		}
 
@@ -3242,12 +3221,12 @@ void CSDKGameRules::DrawGoalTeamCrests()
 
 		if (i == 0)
 		{
-			sign = m_nLeftSideTeam == TEAM_A ? 1 : -1;
+			sign = m_nBottomTeam == TEAM_A ? 1 : -1;
 			material = "vgui/hometeamcrest";
 		}
 		else
 		{
-			sign = m_nLeftSideTeam == TEAM_A ? -1 : 1;
+			sign = m_nBottomTeam == TEAM_A ? -1 : 1;
 			material = "vgui/awayteamcrest";
 		}
 

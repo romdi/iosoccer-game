@@ -233,9 +233,6 @@ CBall::CBall()
 	m_eNextState = BALL_STATE_NONE;
 	m_pPl = NULL;
 	m_pHoldingPlayer = NULL;
-	m_bSetNewPos = false;
-	m_bSetNewVel = false;
-	m_bSetNewRot = false;
 	m_bHasQueuedState = false;
 	m_pHoldingPlayer = NULL;
 	m_bHitThePost = false;
@@ -361,10 +358,6 @@ void CBall::VPhysicsUpdate(IPhysicsObject *pPhysics)
 	VPhysicsGetObject()->SetVelocity(&vel, &angImp);
 
 	BaseClass::VPhysicsUpdate(pPhysics);
-
-	m_bSetNewPos = false;
-	m_bSetNewVel = false;
-	m_bSetNewRot = false;
 }
 
 void CBall::VPhysicsCollision(int index, gamevcollisionevent_t *pEvent)
@@ -460,7 +453,6 @@ void CBall::SetPos(const Vector &pos, bool teleport /*= true*/)
 	m_pPhys->SetVelocityInstantaneous(&vec3_origin, &vec3_origin);
 	m_pPhys->SetPosition(m_vPos, m_aAng, teleport);
 	m_pPhys->EnableMotion(false);
-	m_bSetNewPos = true;
 }
 
 void CBall::SetAng(const QAngle &ang)
@@ -486,7 +478,6 @@ void CBall::SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyP
 	m_pPhys->EnableMotion(true);
 	m_pPhys->Wake();
 	m_pPhys->SetVelocity(&m_vVel, &m_vRot);
-	m_bSetNewVel = true;
 
 	if (spinCoeff != -1)
 	{
@@ -512,7 +503,6 @@ void CBall::SetRot(AngularImpulse rot)
 	m_pPhys->EnableMotion(true);
 	m_pPhys->Wake();
 	m_pPhys->SetVelocity(&m_vVel, &m_vRot);
-	m_bSetNewRot = true;
 }
 
 CBallStateInfo *CBall::State_LookupInfo(ball_state_t state)
@@ -798,7 +788,6 @@ bool CBall::CheckCollision()
 	m_vVel = vel;
 
 	m_pPhys->SetVelocity(&m_vVel, &m_vRot);
-	m_bSetNewVel = true;
 
 	return true;
 }
@@ -1399,9 +1388,6 @@ void CBall::Reset()
 {
 	ReloadSettings();
 	m_pPl = NULL;
-	m_bSetNewPos = false;
-	m_bSetNewVel = false;
-	m_bSetNewRot = false;
 	m_bHasQueuedState = false;
 	RemoveEffects(EF_NODRAW);
 	EnablePlayerCollisions(true);
@@ -1439,50 +1425,22 @@ void CBall::RemoveFromPlayerHands(CSDKPlayer *pPl)
 
 Vector CBall::GetPos()
 {
-	if (m_bSetNewPos)
-		return m_vPos;
-	else
-	{
-		Vector pos;
-		m_pPhys->GetPosition(&pos, NULL);
-		return pos;
-	}
+	return m_vPos;
 }
 
 QAngle CBall::GetAng()
 {
-	if (m_bSetNewPos)
-		return m_aAng;
-	else
-	{
-		QAngle ang;
-		m_pPhys->GetPosition(NULL, &ang);
-		return ang;
-	}
+	return m_aAng;
 }
 
 Vector CBall::GetVel()
 {
-	if (m_bSetNewVel)
-		return m_vVel;
-	else
-	{
-		Vector vel;
-		m_pPhys->GetVelocity(&vel, NULL);
-		return vel;
-	}
+	return m_vVel;
 }
 
 AngularImpulse CBall::GetRot()
 {
-	if (m_bSetNewRot)
-		return m_vRot;
-	else
-	{
-		AngularImpulse rot;
-		m_pPhys->GetVelocity(NULL, &rot);
-		return rot;
-	}
+	return m_vRot;
 }
 
 void CBall::SetSkinName(const char *skinName)
@@ -1514,10 +1472,10 @@ void CBall::CheckPenBoxPosition()
 		Vector min = GetGlobalTeam(team)->m_vPenBoxMin;
 		Vector max = GetGlobalTeam(team)->m_vPenBoxMax;
 
-		if (m_vPos.x >= min.x - BALL_PHYS_RADIUS
-			&& m_vPos.y >= min.y - BALL_PHYS_RADIUS
-			&& m_vPos.x <= max.x + BALL_PHYS_RADIUS
-			&& m_vPos.y <= max.y + BALL_PHYS_RADIUS)
+		if (m_vPos.x + BALL_PHYS_RADIUS >= min.x
+			&& m_vPos.y + BALL_PHYS_RADIUS >= min.y
+			&& m_vPos.x - BALL_PHYS_RADIUS <= max.x
+			&& m_vPos.y - BALL_PHYS_RADIUS <= max.y)
 		{
 			m_nWasInPenBoxOfTeam = m_nInPenBoxOfTeam;
 			m_nInPenBoxOfTeam = team;

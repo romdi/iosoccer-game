@@ -35,9 +35,6 @@ public:
 
 	void			Spawn();
 	void			Reset();
-	void			TriggerGoal(int team);
-	void			TriggerGoalLine(int team);
-	void			TriggerSideline();
 	void			GetGoalInfo(bool &isOwnGoal, int &scoringTeam, CSDKPlayer **pScorer, CSDKPlayer **pFirstAssister, CSDKPlayer **pSecondAssister);
 	void			SendNotifications();
 
@@ -52,7 +49,7 @@ public:
 	void			SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyPart, bool isDeflection, bool markOffsidePlayers, bool ensureMinShotStrength, float nextShotMinDelay = 0);
 	void			MarkOffsidePlayers();
 	void			UnmarkOffsidePlayers();
-	float			CalcFieldZone();
+	float			GetFieldZone();
 	void			UpdatePossession(CSDKPlayer *pNewPossessor);
 	void			SetPenaltyState(penalty_state_t penaltyState);
 	penalty_state_t	GetPenaltyState() { return m_ePenaltyState; }
@@ -60,6 +57,11 @@ public:
 	void			VPhysicsCollision(int index, gamevcollisionevent_t	*pEvent);
 	bool			IsLegallyCatchableByKeeper();
 	void			CheckAdvantage();
+	bool			CheckOffside();
+	bool			CheckSideline();
+	bool			CheckGoalLine();
+	bool			CheckGoal();
+	void			CheckFieldZone();
 
 	float			m_flStateActivationDelay;
 	float			m_flSetpieceCloseStartTime;
@@ -88,6 +90,7 @@ public:
 	float			m_flFoulTime;
 	bool			m_bIsPenalty;
 	int				m_nTeam;
+	float			m_flFieldZone;
 };
 
 extern CMatchBall *GetMatchBall();

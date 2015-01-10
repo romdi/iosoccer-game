@@ -434,50 +434,55 @@ Vector CTeam::GetSpotPos(const char *name)
 	}
 }
 
-void CTeam::InitFieldSpots(int team)
+void CTeam::InitFieldSpots(bool isBottomTeam)
 {
-	int index = team - TEAM_A;
-	m_vCornerLeft = GetSpotPos(UTIL_VarArgs("info_team%d_corner%d", index + 1, 1 - index));
-	m_vCornerRight = GetSpotPos(UTIL_VarArgs("info_team%d_corner%d", index + 1, index));
-	m_vGoalkickLeft = GetSpotPos(UTIL_VarArgs("info_team%d_goalkick1", index + 1));
-	m_vGoalkickRight = GetSpotPos(UTIL_VarArgs("info_team%d_goalkick0", index + 1));
-	m_vPenalty = GetSpotPos(UTIL_VarArgs("info_team%d_penalty_spot", index + 1));
+	float zPos = SDKGameRules()->m_vKickOff.GetZ();
 
-	m_vGoalCenter = Vector(SDKGameRules()->m_vKickOff.GetX(),
-		(m_vPenalty.GetY() < SDKGameRules()->m_vKickOff.GetY() ? SDKGameRules()->m_vFieldMin.GetY() : SDKGameRules()->m_vFieldMax.GetY()),
-		SDKGameRules()->m_vKickOff.GetZ());
+	Vector penboxMin, penboxMax;
+	CBaseEntity *pPenbox = gEntList.FindEntityByClassname(NULL, "trigger_penaltybox");
+	if (!pPenbox)
+		Error("'trigger_penaltybox' entity is missing from map");
+	pPenbox->CollisionProp()->WorldSpaceAABB(&penboxMin, &penboxMax);
 
-	CBaseEntity *pPenBox = gEntList.FindEntityByClassnameNearest("trigger_PenaltyBox", m_vPenalty, 9999);
+	Vector sixyardMin, sixyardMax;
+	CBaseEntity *pSixyard = gEntList.FindEntityByClassname(NULL, "trigger_sixyardbox");
+	if (!pSixyard)
+		Error("'trigger_sixyardbox' entity is missing from map");
+	pSixyard->CollisionProp()->WorldSpaceAABB(&sixyardMin, &sixyardMax);
 
-	if (!pPenBox)
-		Error("'trigger_PenaltyBox' missing");
-
-	pPenBox->CollisionProp()->WorldSpaceTriggerBounds(&m_vPenBoxMin.GetForModify(), &m_vPenBoxMax.GetForModify());
-
-	// Make up for the current pen box which incorrectly stops before the goal line
-	int goalLineWidth = 5;
-
-	if (m_vPenalty.GetY() < SDKGameRules()->m_vKickOff.GetY())
-		m_vPenBoxMin.SetY(m_vPenBoxMin.GetY() - goalLineWidth);
-	else
-		m_vPenBoxMax.SetY(m_vPenBoxMax.GetY() + goalLineWidth);
-
-	CBaseEntity *pGoalTrigger = gEntList.FindEntityByClassnameNearest("trigger_goal", m_vPenalty, 9999);
-
-	Vector goalMin, goalMax;
-	pGoalTrigger->CollisionProp()->WorldSpaceTriggerBounds(&goalMin, &goalMax);
-
-	float sixYardLength = (goalMax.x - goalMin.x) / 4 * 3;
-
-	if (m_vPenalty.GetY() < SDKGameRules()->m_vKickOff.GetY())
+	if (isBottomTeam)
 	{
-		m_vSixYardBoxMin = m_vGoalCenter - Vector(sixYardLength / 3 * 5, 0, 0);
-		m_vSixYardBoxMax = m_vGoalCenter + Vector(sixYardLength / 3 * 5, sixYardLength, 0);
+		m_vGoalCenter = Vector(SDKGameRules()->m_vKickOff.GetX(), SDKGameRules()->m_vFieldMin.GetY(), zPos);
+		m_vCornerLeft = SDKGameRules()->m_vFieldMin.Get();
+		m_vCornerRight = Vector(SDKGameRules()->m_vFieldMax.GetX(), SDKGameRules()->m_vFieldMin.GetY(), zPos);
+
+		m_vPenBoxMin = Vector(SDKGameRules()->m_vKickOff.GetX() - (penboxMax.x - penboxMin.x), SDKGameRules()->m_vFieldMin.GetY(), zPos);
+		m_vPenBoxMax = Vector(SDKGameRules()->m_vKickOff.GetX() + (penboxMax.x - penboxMin.x), SDKGameRules()->m_vFieldMin.GetY() + (penboxMax.y - penboxMin.y), zPos);
+
+		m_vPenalty = Vector(m_vGoalCenter.GetX(), m_vGoalCenter.GetY() + (penboxMax.y - penboxMin.y) / 3 * 2, zPos);
+
+		m_vSixYardBoxMin = Vector(SDKGameRules()->m_vKickOff.GetX() - (sixyardMax.x - sixyardMin.x), SDKGameRules()->m_vFieldMin.GetY(), zPos);
+		m_vSixYardBoxMax = Vector(SDKGameRules()->m_vKickOff.GetX() + (sixyardMax.x - sixyardMin.x), SDKGameRules()->m_vFieldMin.GetY() + (sixyardMax.y - sixyardMin.y), zPos);
+
+		m_vGoalkickLeft = Vector(m_vSixYardBoxMin.GetX(), m_vSixYardBoxMax.GetY(), zPos);
+		m_vGoalkickRight = m_vSixYardBoxMax;
 	}
 	else
 	{
-		m_vSixYardBoxMin = m_vGoalCenter - Vector(sixYardLength / 3 * 5, sixYardLength, 0);
-		m_vSixYardBoxMax = m_vGoalCenter + Vector(sixYardLength / 3 * 5, 0, 0);
+		m_vGoalCenter = Vector(SDKGameRules()->m_vKickOff.GetX(), SDKGameRules()->m_vFieldMax.GetY(), zPos);
+		m_vCornerLeft = SDKGameRules()->m_vFieldMax.Get();
+		m_vCornerRight = Vector(SDKGameRules()->m_vFieldMin.GetX(), SDKGameRules()->m_vFieldMax.GetY(), zPos);
+
+		m_vPenBoxMin = Vector(SDKGameRules()->m_vKickOff.GetX() - (penboxMax.x - penboxMin.x), SDKGameRules()->m_vFieldMax.GetY() - (penboxMax.y - penboxMin.y), zPos);
+		m_vPenBoxMax = Vector(SDKGameRules()->m_vKickOff.GetX() + (penboxMax.x - penboxMin.x), SDKGameRules()->m_vFieldMax.GetY(), zPos);
+
+		m_vPenalty = Vector(m_vGoalCenter.GetX(), m_vGoalCenter.GetY() - (penboxMax.y - penboxMin.y) / 3 * 2, zPos);
+
+		m_vSixYardBoxMin = Vector(SDKGameRules()->m_vKickOff.GetX() - (sixyardMax.x - sixyardMin.x), SDKGameRules()->m_vFieldMax.GetY() - (sixyardMax.y - sixyardMin.y), zPos);
+		m_vSixYardBoxMax = Vector(SDKGameRules()->m_vKickOff.GetX() + (sixyardMax.x - sixyardMin.x), SDKGameRules()->m_vFieldMax.GetY(), zPos);
+
+		m_vGoalkickLeft = Vector(m_vSixYardBoxMax.GetX(), m_vSixYardBoxMin.GetY(), zPos);
+		m_vGoalkickRight = m_vSixYardBoxMin;
 	}
 
 	m_nForward = Sign(SDKGameRules()->m_vKickOff.GetY() - m_vGoalCenter.GetY());

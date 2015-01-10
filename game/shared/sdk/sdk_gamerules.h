@@ -227,6 +227,8 @@ public:
 
 	void InitTeams( void );
 
+	void InitFieldSpots();
+
 	void CreateStandardEntities( void );
 
 	virtual void LevelShutdown( void );
@@ -300,6 +302,9 @@ protected:
 	int m_nOldMaxplayers;
 	bool m_bUseOldMaxplayers;
 
+	bool m_bHasWalledField;
+	bool m_bIsTrainingMap;
+
 	CUtlVector<int> m_PlayerRotationMinutes;
 
 	CSDKGameRulesStateInfo		*m_pCurStateInfo;			// Per-state data 
@@ -365,9 +370,8 @@ protected:
 
 public:
 
-	void SetLeftSideTeam(int team);
-	int GetLeftSideTeam();
-	int GetRightSideTeam();
+	void SetBottomTeam(int team);
+	int GetBottomTeam();
 	void SetKickOffTeam(int team);
 	int GetKickOffTeam();
 	void StartMeteringInjuryTime();
@@ -406,6 +410,9 @@ public:
 	bool CheckTimeout();
 	bool EndTimeout();
 
+	bool HasWalledField() { return m_bHasWalledField; }
+	bool IsTrainingMap() { return m_bIsTrainingMap; }
+
 #else
 
 public:
@@ -435,8 +442,7 @@ public:
 	CNetworkVector(m_vShieldPos);
 	CNetworkVar(float, m_flInjuryTimeStart);
 	CNetworkVar(int, m_nBallZone);
-	CNetworkVar(int, m_nLeftSideTeam);
-
+	CNetworkVar(int, m_nBottomTeam);
 
 	CNetworkVar(int, m_nTimeoutTeam);
 	CNetworkVar(int, m_eTimeoutState);
