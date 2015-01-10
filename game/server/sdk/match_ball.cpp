@@ -204,6 +204,9 @@ void CMatchBall::State_Think()
 	m_pPhys->GetPosition(&m_vPos, &m_aAng);
 	m_pPhys->GetVelocity(&m_vVel, &m_vRot);
 
+	CheckFieldZone();
+	CheckPenBoxPosition();
+
 	if (m_eNextState != BALL_STATE_NONE)
 	{
 		if (!m_bNextStateMessageSent && gpGlobals->curtime >= m_flStateLeaveTime - m_flStateActivationDelay && m_eNextState != BALL_STATE_KICKOFF)
@@ -281,17 +284,16 @@ void CMatchBall::State_NORMAL_Think()
 	{
 		if (m_ePenaltyState == PENALTY_KICKED)
 		{
-			m_pPl = GetGlobalTeam(m_nFoulingTeam)->GetPlayerByPosType(POS_GK);
-			if (!m_pPl->IsShooting())
-				m_pPl = NULL;
-		}
-		else
-			m_pPl = NULL;
+			if (!CheckGoal())
+			{
+				m_pPl = GetGlobalTeam(m_nFoulingTeam)->GetPlayerByPosType(POS_GK);
 
-		if (m_pPl)
-		{
-			UpdateCarrier();
-			DoBodyPartAction();
+				if (m_pPl && m_pPl->IsShooting())
+				{
+					UpdateCarrier();
+					DoBodyPartAction();
+				}
+			}
 		}
 
 		return;
@@ -299,8 +301,6 @@ void CMatchBall::State_NORMAL_Think()
 
 	if (!SDKGameRules()->IsIntermissionState() && !m_bHasQueuedState)
 	{
-		CheckFieldZone();
-		CheckPenBoxPosition();
 		CheckAdvantage();
 
 		if (!CheckOffside())
@@ -1117,9 +1117,6 @@ bool CMatchBall::CheckSideline()
 	if (m_vPos.x + BALL_PHYS_RADIUS >= SDKGameRules()->m_vFieldMin.GetX() && m_vPos.x - BALL_PHYS_RADIUS <= SDKGameRules()->m_vFieldMax.GetX())
 		return false;
 
-	if (SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES)
-		return false;
-
 	if (m_bIsAdvantage)
 	{
 		if (m_bIsPenalty)
@@ -1163,9 +1160,6 @@ bool CMatchBall::CheckGoalLine()
 		team = GetGlobalTeam(SDKGameRules()->GetBottomTeam())->GetOppTeamNumber();
 
 	if (team == TEAM_INVALID)
-		return false;
-
-	if (SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES)
 		return false;
 
 	if (m_bIsAdvantage)
@@ -1241,7 +1235,7 @@ bool CMatchBall::CheckGoal()
 
 	if (SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES)
 	{
-		if (m_ePenaltyState == PENALTY_KICKED && m_nTeam == m_nFoulingTeam)
+		if (m_nTeam == m_nFoulingTeam)
 		{
 			SetPenaltyState(PENALTY_SCORED);
 			m_bHasQueuedState = true;
