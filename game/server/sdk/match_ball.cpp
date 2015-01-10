@@ -1844,8 +1844,11 @@ void CMatchBall::SetFoulParams(foul_type_t type, Vector pos, CSDKPlayer *pFoulin
 	m_pFouledPl = pFouledPl;
 	m_nFoulingTeam = pFoulingPl->GetTeamNumber();
 	m_nFouledTeam = pFoulingPl->GetOppTeamNumber();
-	m_vFoulPos.x = clamp(pos.x, SDKGameRules()->m_vFieldMin.GetX() + 2 * BALL_PHYS_RADIUS, SDKGameRules()->m_vFieldMax.GetX() - 2 * BALL_PHYS_RADIUS);
-	m_vFoulPos.y = clamp(pos.y, SDKGameRules()->m_vFieldMin.GetY() + 2 * BALL_PHYS_RADIUS, SDKGameRules()->m_vFieldMax.GetY() - 2 * BALL_PHYS_RADIUS);
+
+	float foulPosFieldOffset = SDKGameRules()->HasWalledField() ? 100 : 15;
+
+	m_vFoulPos.x = clamp(pos.x, SDKGameRules()->m_vFieldMin.GetX() + foulPosFieldOffset, SDKGameRules()->m_vFieldMax.GetX() - foulPosFieldOffset);
+	m_vFoulPos.y = clamp(pos.y, SDKGameRules()->m_vFieldMin.GetY() + foulPosFieldOffset, SDKGameRules()->m_vFieldMax.GetY() - foulPosFieldOffset);
 	m_vFoulPos.z = SDKGameRules()->m_vKickOff.GetZ();
 
 	// Move the ball to the edge of the penalty box if the foul happened inside. This will probably only be relevant for double touch fouls.
