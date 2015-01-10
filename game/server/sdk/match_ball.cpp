@@ -360,6 +360,8 @@ void CMatchBall::State_THROWIN_Think()
 
 	if (!CSDKPlayer::IsOnField(m_pPl, LastOppTeam(false)))
 	{
+		SetPos(groundPos);
+
 		m_pPl = NULL;
 
 		if (CSDKPlayer::IsOnField(m_pSetpieceTaker, LastOppTeam(false)))
@@ -374,7 +376,6 @@ void CMatchBall::State_THROWIN_Think()
 			return State_Transition(BALL_STATE_NORMAL);
 		}
 
-		SetPos(groundPos);
 		SDKGameRules()->EnableShield(SHIELD_THROWIN, m_pPl->GetTeamNumber(), m_vPos);
 		m_pPl->SetPosInsideShield(groundPos, true);
 		m_flStateTimelimit = -1;
