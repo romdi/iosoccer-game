@@ -1042,19 +1042,21 @@ void CMatchBall::State_KEEPERHANDS_Think()
 
 	UpdateCarrier();
 
-	Vector min = GetGlobalTeam(m_pPl->GetTeamNumber())->m_vPenBoxMin;
-	Vector max = GetGlobalTeam(m_pPl->GetTeamNumber())->m_vPenBoxMax;
+	Vector min = GetGlobalTeam(m_pPl->GetTeamNumber())->m_vPenBoxMin - Vector(BALL_PHYS_RADIUS, BALL_PHYS_RADIUS, 0);
+	Vector max = GetGlobalTeam(m_pPl->GetTeamNumber())->m_vPenBoxMax + Vector(BALL_PHYS_RADIUS, BALL_PHYS_RADIUS, 0);
 
 	// Ball outside the penalty box
 	if (m_nInPenBoxOfTeam == TEAM_INVALID)
 	{
 		Vector vel, pos;
 
+		// Throw the ball towards the kick-off spot if it's behind the goal line and either would end up inside the goal or is in a map with a walled field
 		if ((m_pPl->GetTeam()->m_nForward == 1 && m_vPos.y < min.y || m_pPl->GetTeam()->m_nForward == -1 && m_vPos.y > max.y)
-			&& m_vPos.x >= m_pPl->GetTeam()->m_vGoalCenter.GetX() - SDKGameRules()->m_vGoalTriggerSize.x
-			&& m_vPos.x <= m_pPl->GetTeam()->m_vGoalCenter.GetX() + SDKGameRules()->m_vGoalTriggerSize.x)
+			&& (SDKGameRules()->HasWalledField()
+				|| (m_vPos.x >= m_pPl->GetTeam()->m_vGoalCenter.GetX() - SDKGameRules()->m_vGoalTriggerSize.x
+					&& m_vPos.x <= m_pPl->GetTeam()->m_vGoalCenter.GetX() + SDKGameRules()->m_vGoalTriggerSize.x)))
 		{
-			pos = Vector(m_vPos.x, (m_pPl->GetTeam()->m_nForward == 1 ? min.y - BALL_PHYS_RADIUS : max.y + BALL_PHYS_RADIUS) + m_pPl->GetTeam()->m_nForward * 36, m_vPos.z);
+			pos = Vector(m_vPos.x, (m_pPl->GetTeam()->m_nForward == 1 ? SDKGameRules()->m_vFieldMin.GetY() - BALL_PHYS_RADIUS : SDKGameRules()->m_vFieldMax.GetY() + BALL_PHYS_RADIUS) + m_pPl->GetTeam()->m_nForward * 36, m_vPos.z);
 			vel = 25 * Vector(0, m_pPl->GetTeam()->m_nForward, 0);
 		}
 		else
