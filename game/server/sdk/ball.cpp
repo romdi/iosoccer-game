@@ -293,7 +293,6 @@ bool CBall::CreateVPhysics()
 		m_pPhys = NULL;
 	}
 
-	m_flPhysRadius = BALL_PHYS_RADIUS;
 	objectparams_t params =	g_IOSPhysDefaultObjectParams;
 	params.pGameData = static_cast<void	*>(this);
 	params.damping = sv_ball_damping.GetFloat();
@@ -303,7 +302,7 @@ bool CBall::CreateVPhysics()
 	params.rotdamping = sv_ball_rotdamping.GetFloat();
 	params.rotInertiaLimit = sv_ball_rotinertialimit.GetFloat();
 	int	nMaterialIndex = physprops->GetSurfaceIndex(mp_weather.GetInt() == 0 ? "dryball" : (mp_weather.GetInt() == 1 ? "wetball" : "icyball"));
-	m_pPhys = physenv->CreateSphereObject( m_flPhysRadius, nMaterialIndex, GetAbsOrigin(), GetAbsAngles(), &params, false );
+	m_pPhys = physenv->CreateSphereObject( BALL_PHYS_RADIUS, nMaterialIndex, GetAbsOrigin(), GetAbsAngles(), &params, false );
 	if (!m_pPhys)
 		return false;
 
@@ -311,7 +310,7 @@ bool CBall::CreateVPhysics()
 	
 	SetSolid( SOLID_VPHYSICS );
 	SetSolidFlags( FSOLID_NOT_STANDABLE	);
-	UTIL_SetSize(this, -Vector(m_flPhysRadius, m_flPhysRadius, m_flPhysRadius), Vector(m_flPhysRadius, m_flPhysRadius, m_flPhysRadius));
+	UTIL_SetSize(this, -Vector(BALL_PHYS_RADIUS, BALL_PHYS_RADIUS, BALL_PHYS_RADIUS), Vector(BALL_PHYS_RADIUS, BALL_PHYS_RADIUS, BALL_PHYS_RADIUS));
 
 	SetMoveType( MOVETYPE_VPHYSICS );
 
@@ -445,7 +444,7 @@ CSDKPlayer *CBall::FindNearestPlayer(int team /*= TEAM_INVALID*/, int posFlags /
 
 void CBall::SetPos(const Vector &pos, bool teleport /*= true*/)
 {
-	m_vPos = Vector(pos.x, pos.y, pos.z + m_flPhysRadius);
+	m_vPos = Vector(pos.x, pos.y, pos.z + BALL_PHYS_RADIUS);
 	m_vVel = vec3_origin;
 	m_vRot = vec3_origin;
 	m_pPhys->EnableMotion(true);

@@ -218,7 +218,6 @@ protected:
 	void			CheckPenBoxPosition();
 
 	IPhysicsObject	*m_pPhys;
-	float			m_flPhysRadius;
 	Vector			m_vTriggerTouchPos;
 
 	CHandle<CSDKPlayer>	m_pPl;
