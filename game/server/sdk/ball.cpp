@@ -442,7 +442,7 @@ CSDKPlayer *CBall::FindNearestPlayer(int team /*= TEAM_INVALID*/, int posFlags /
 	return pNearest;
 }
 
-void CBall::SetPos(const Vector &pos, bool teleport /*= true*/)
+void CBall::SetPos(const Vector &pos, bool freeze/* = true*/)
 {
 	m_vPos = Vector(pos.x, pos.y, pos.z + BALL_PHYS_RADIUS);
 	m_vVel = vec3_origin;
@@ -450,8 +450,10 @@ void CBall::SetPos(const Vector &pos, bool teleport /*= true*/)
 	m_pPhys->EnableMotion(true);
 	m_pPhys->Wake();
 	m_pPhys->SetVelocityInstantaneous(&vec3_origin, &vec3_origin);
-	m_pPhys->SetPosition(m_vPos, m_aAng, teleport);
-	m_pPhys->EnableMotion(false);
+	m_pPhys->SetPosition(m_vPos, m_aAng, true);
+
+	if (freeze)
+		m_pPhys->EnableMotion(false);
 }
 
 void CBall::SetAng(const QAngle &ang)

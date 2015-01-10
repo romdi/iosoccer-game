@@ -1004,7 +1004,7 @@ void CMatchBall::State_PENALTY_Leave(ball_state_t newState)
 
 void CMatchBall::State_KEEPERHANDS_Enter()
 {
-	SetPos(m_vPos, false);
+	SetPos(m_vPos);
 }
 
 void CMatchBall::State_KEEPERHANDS_Think()
@@ -1077,7 +1077,7 @@ void CMatchBall::State_KEEPERHANDS_Think()
 	QAngle handAng;
 	m_pPl->GetAttachment("keeperballrighthand", handPos, handAng);
 	handPos.z -= BALL_PHYS_RADIUS;
-	SetPos(handPos, false);
+	SetPos(handPos);
 	SetAng(handAng);
 
 	if (m_bIsAdvantage)
@@ -1135,6 +1135,13 @@ bool CMatchBall::CheckSideline()
 		return true;
 	}
 
+	if (SDKGameRules()->HasWalledField())
+	{
+		float safePosX = m_vPos.x < SDKGameRules()->m_vKickOff.GetX() ? SDKGameRules()->m_vFieldMin.GetX() + 50 : SDKGameRules()->m_vFieldMax.GetX() - 50;
+		SetPos(Vector(safePosX, m_vPos.y, m_vPos.z), false);
+		return true;
+	}
+
 	BallTouchInfo *pInfo = LastInfo(true);
 	CSDKPlayer *pLastPl = LastPl(true);
 
@@ -1177,6 +1184,13 @@ bool CMatchBall::CheckGoalLine()
 		else
 			State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_activationdelay_short.GetFloat());
 
+		return true;
+	}
+
+	if (SDKGameRules()->HasWalledField())
+	{
+		float safePosY = m_vPos.y < SDKGameRules()->m_vKickOff.GetY() ? SDKGameRules()->m_vFieldMin.GetY() + 50 : SDKGameRules()->m_vFieldMax.GetY() - 50;
+		SetPos(Vector(m_vPos.x, safePosY, m_vPos.z), false);
 		return true;
 	}
 

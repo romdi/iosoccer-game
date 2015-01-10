@@ -142,7 +142,7 @@ public:
 	virtual void	Reset();
 	void			ReloadSettings();
 
-	void			SetPos(const Vector &pos, bool teleport = true);
+	void			SetPos(const Vector &pos, bool freeze = true);
 	void			SetAng(const QAngle &ang);
 	virtual void	SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyPart, bool isDeflection, bool markOffsidePlayers, bool ensureMinShotStrength, float nextShotMinDelay = 0);
 	void			SetRot(AngularImpulse rot = NULL);
