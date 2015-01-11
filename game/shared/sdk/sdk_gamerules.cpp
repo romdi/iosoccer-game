@@ -2019,6 +2019,20 @@ void CSDKGameRules::State_PENALTIES_Think()
 
 			if (pPenTaker)
 			{
+				for (int i = 1; i <= gpGlobals->maxClients; i++)
+				{
+					CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+
+					if (!CSDKPlayer::IsOnField(pPl))
+						continue;
+
+					// Use TV camera mode for all players other than the penalty taker and the opponent keeper
+					if (pPl == pPenTaker || pPl == pPenTaker->GetOppTeam()->GetPlayerByPosType(POS_GK))
+						pPl->RemoveFlag(FL_USE_TV_CAM);
+					else
+						pPl->AddFlag(FL_USE_TV_CAM);
+				}
+
 				GetMatchBall()->SetPenaltyTaker(pPenTaker);
 				GetMatchBall()->SetPenaltyState(PENALTY_ASSIGNED);
 				GetMatchBall()->State_Transition(BALL_STATE_PENALTY, 0, true);
@@ -2045,6 +2059,16 @@ void CSDKGameRules::State_PENALTIES_Think()
 
 void CSDKGameRules::State_PENALTIES_Leave(match_period_t newState)
 {
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+
+		if (!CSDKPlayer::IsOnField(pPl))
+			continue;
+
+		pPl->RemoveFlag(FL_USE_TV_CAM);
+	}
+
 	GetMatchBall()->EmitSound("Ball.Whistle");
 	//GetMatchBall()->EmitSound("Crowd.EndOfPeriod");
 }
@@ -2074,7 +2098,7 @@ void CSDKGameRules::State_COOLDOWN_Enter()
 		//is this player on the winning team
 		if (pPlayer->GetTeamNumber() == winners)
 		{
-			pPlayer->AddFlag (FL_CELEB);
+			pPlayer->AddFlag(FL_CELEB);
 		}
 	}
 

@@ -83,18 +83,7 @@ const Vector CSDKPlayer::GetPlayerMins( void ) const
 	}
 	else
 	{
-		if (GetFlags() & FL_KEEPER_SIDEWAYS_DIVING)
-		{
-			return VEC_KEEPER_SIDEWAYS_DIVE_HULL_MIN;
-		}
-		else if (GetFlags() & FL_SLIDING)
-		{
-			return VEC_SLIDE_HULL_MIN;
-		}
-		else
-		{
-			return VEC_HULL_MIN;
-		}
+		return VEC_HULL_MIN;
 	}
 }
 
@@ -111,18 +100,7 @@ const Vector CSDKPlayer::GetPlayerMaxs( void ) const
 	}
 	else
 	{
-		if (GetFlags() & FL_KEEPER_SIDEWAYS_DIVING)
-		{
-			return VEC_KEEPER_SIDEWAYS_DIVE_HULL_MAX;
-		}
-		else if (GetFlags() & FL_SLIDING)
-		{
-			return VEC_SLIDE_HULL_MAX;
-		}
-		else
-		{
-			return VEC_HULL_MAX;
-		}
+		return VEC_HULL_MAX;
 	}
 }
 

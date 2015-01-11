@@ -3030,17 +3030,10 @@ void CBasePlayer::PostThinkVPhysics( void )
 	}
 
 	int collisionState = VPHYS_WALK;
+
 	if ( GetMoveType() == MOVETYPE_NOCLIP )
 	{
 		collisionState = VPHYS_NOCLIP;
-	}
-	//else if ( GetFlags() & FL_DUCKING )
-	//{
-	//	collisionState = VPHYS_CROUCH;
-	//}
-	else if ( GetFlags() & (FL_SLIDING | FL_KEEPER_SIDEWAYS_DIVING) )
-	{
-		collisionState = VPHYS_CROUCH;
 	}
 
 	if ( collisionState != m_vphysicsCollisionState )
@@ -5670,7 +5663,7 @@ void CBasePlayer::InitVCollision( const Vector &vecAbsOrigin, const Vector &vecA
 	CPhysCollide *pModel = PhysCreateBbox( Vector(-8, -8, 0), Vector(8, 8, 72) );
 
 	//CPhysCollide *pCrouchModel = PhysCreateBbox( VEC_DUCK_HULL_MIN, VEC_DUCK_HULL_MAX );
-	CPhysCollide *pCrouchModel = PhysCreateBbox( VEC_SLIDE_HULL_MIN, VEC_SLIDE_HULL_MAX );
+	CPhysCollide *pCrouchModel = PhysCreateBbox( VEC_HULL_MIN, VEC_HULL_MAX );
 
 	SetupVPhysicsShadow( vecAbsOrigin, vecAbsVelocity, pModel, "player_stand", pCrouchModel, "player_crouch" );
 }

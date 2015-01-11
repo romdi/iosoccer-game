@@ -771,7 +771,7 @@ void CMatchBall::State_GOAL_Think()
 			continue;
 
 		if (pPl->GetTeamNumber() == m_nTeam)
-			pPl->AddFlag(FL_FROZEN);
+			pPl->AddFlag(FL_FROZEN | FL_USE_TV_CAM);
 		else
 			pPl->AddFlag(FL_CELEB);
 	}
@@ -788,7 +788,7 @@ void CMatchBall::State_GOAL_Leave(ball_state_t newState)
 		if (!CSDKPlayer::IsOnField(pPl))
 			continue;
 
-		pPl->RemoveFlag(FL_CELEB | FL_FROZEN);
+		pPl->RemoveFlag(FL_CELEB | FL_FROZEN | FL_USE_TV_CAM);
 		pPl->DoServerAnimationEvent(PLAYERANIMEVENT_CANCEL);
 	}
 }

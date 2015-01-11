@@ -139,9 +139,9 @@ int C_Camera::GetCamMode()
 	{
 		return CAM_MODE_TVCAM;
 	}
-	else if (GetMatchBall() && GetMatchBall()->m_eBallState == BALL_STATE_GOAL)
+	else if (GetMatchBall() && GetMatchBall()->m_eBallState == BALL_STATE_GOAL || SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES)
 	{
-		if (pLocal->IsObserver() || !(pLocal->GetFlags() & FL_CELEB))
+		if (pLocal->IsObserver() || pLocal->GetFlags() & FL_USE_TV_CAM)
 			return CAM_MODE_TVCAM;
 		else
 			return CAM_MODE_FREE_CHASE;

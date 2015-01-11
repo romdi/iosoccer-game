@@ -91,14 +91,6 @@ enum MessageMode_t
 #define VEC_HULL_MIN		g_pGameRules->GetViewVectors()->m_vHullMin
 #define VEC_HULL_MAX		g_pGameRules->GetViewVectors()->m_vHullMax
 
-#define VEC_KEEPER_SIDEWAYS_DIVE_VIEW			g_pGameRules->GetViewVectors()->m_vKeeperSidewaysDiveView
-#define VEC_KEEPER_SIDEWAYS_DIVE_HULL_MIN		g_pGameRules->GetViewVectors()->m_vKeeperSidewaysDiveHullMin
-#define VEC_KEEPER_SIDEWAYS_DIVE_HULL_MAX		g_pGameRules->GetViewVectors()->m_vKeeperSidewaysDiveHullMax
-
-#define VEC_SLIDE_VIEW			g_pGameRules->GetViewVectors()->m_vSlideView
-#define VEC_SLIDE_HULL_MIN		g_pGameRules->GetViewVectors()->m_vSlideHullMin
-#define VEC_SLIDE_HULL_MAX		g_pGameRules->GetViewVectors()->m_vSlideHullMax
-
 #define VEC_DUCK_HULL_MIN	g_pGameRules->GetViewVectors()->m_vDuckHullMin
 #define VEC_DUCK_HULL_MAX	g_pGameRules->GetViewVectors()->m_vDuckHullMax
 #define VEC_DUCK_VIEW		g_pGameRules->GetViewVectors()->m_vDuckView

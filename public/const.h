@@ -107,7 +107,7 @@
 #define FL_SHIELD_KEEP_OUT			(1<<10)	// IOS play celeb anims
 #define FL_SHIELD_KEEP_IN			(1<<11)	// IOS play celeb anims
 #define FL_FREECAM					(1<<12)	// IOS play celeb anims
-#define FL_KEEPER_SIDEWAYS_DIVING	(1<<13)
+#define FL_USE_TV_CAM				(1<<13)
 // NOTE if you move things up, make sure to change this value
 #define PLAYER_FLAG_BITS			14
 
