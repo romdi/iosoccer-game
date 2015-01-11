@@ -529,7 +529,7 @@ const char * C_BasePlayer::GetPlayerName()
 //-----------------------------------------------------------------------------
 bool C_BasePlayer::IsPlayerDead()
 {
-	return (GetTeamNumber() != TEAM_A && GetTeamNumber() != TEAM_B);
+	return (GetTeamNumber() != TEAM_HOME && GetTeamNumber() != TEAM_AWAY);
 }
 
 //-----------------------------------------------------------------------------

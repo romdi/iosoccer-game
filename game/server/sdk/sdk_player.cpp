@@ -376,7 +376,7 @@ CSDKPlayer *CSDKPlayer::CreatePlayer( const char *className, edict_t *ed )
 void CSDKPlayer::PreThink(void)
 {
 	// Check if player is away
-	if (SDKGameRules()->IsIntermissionState() && (GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B))
+	if (SDKGameRules()->IsIntermissionState() && (GetTeamNumber() == TEAM_HOME || GetTeamNumber() == TEAM_AWAY))
 	{
 		bool isActive = ((m_nButtons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT | IN_JUMP | IN_DUCK)) != 0);
 
@@ -406,7 +406,7 @@ void CSDKPlayer::PreThink(void)
 
 	// Prevent the player from reserving a position if he's card banned or if the position is blocked
 	if (!SDKGameRules()->IsIntermissionState()
-		&& (GetTeamToJoin() == TEAM_A || GetTeamToJoin() == TEAM_B)
+		&& (GetTeamToJoin() == TEAM_HOME || GetTeamToJoin() == TEAM_AWAY)
 		&& (SDKGameRules()->GetMatchDisplayTimeSeconds() < GetNextCardJoin()
 		|| SDKGameRules()->GetMatchDisplayTimeSeconds() < GetGlobalTeam(GetTeamToJoin())->GetPosNextJoinSeconds(GetTeamPosIndexToJoin())))
 	{
@@ -1010,7 +1010,7 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 		int team = atoi(args[1]);
 		int posIndex = atoi(args[2]);
 
-		if (posIndex < 0 || posIndex > mp_maxplayers.GetInt() - 1 || team < TEAM_SPECTATOR || team > TEAM_B)
+		if (posIndex < 0 || posIndex > mp_maxplayers.GetInt() - 1 || team < TEAM_SPECTATOR || team > TEAM_AWAY)
 			return true;
 
 		// Player is card banned or position is blocked due to a card ban
@@ -1028,7 +1028,7 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 		CSDKPlayer *pSwapPartner = NULL;
 
 		// Notify the previous swap partner that the player is cancelling his swap request
-		if ((m_nTeamToJoin == TEAM_A || m_nTeamToJoin == TEAM_B)
+		if ((m_nTeamToJoin == TEAM_HOME || m_nTeamToJoin == TEAM_AWAY)
 			&& !IsTeamPosFree(m_nTeamToJoin, m_nTeamPosIndexToJoin, true, &pSwapPartner)
 			&& pSwapPartner)
 		{
@@ -1058,7 +1058,7 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 		}
 
 		// Notify the player on the target position that this player wants to swap
-		if ((team == TEAM_A || team == TEAM_B)
+		if ((team == TEAM_HOME || team == TEAM_AWAY)
 			&& !IsTeamPosFree(team, posIndex, true, &pSwapPartner)
 			&& pSwapPartner)
 		{
@@ -1132,10 +1132,10 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 	}
 	else if (!Q_stricmp(args[0], "togglecaptaincy"))
 	{
-		if (GetTeamNumber() != TEAM_A && GetTeamNumber() != TEAM_B)
+		if (GetTeamNumber() != TEAM_HOME && GetTeamNumber() != TEAM_AWAY)
 			return true;
 
-		if (GetTeamNumber() == TEAM_A && !mp_captaincy_home.GetBool() || GetTeamNumber() == TEAM_B && !mp_captaincy_away.GetBool())
+		if (GetTeamNumber() == TEAM_HOME && !mp_captaincy_home.GetBool() || GetTeamNumber() == TEAM_AWAY && !mp_captaincy_away.GetBool())
 			return true;
 
 		if (this == GetTeam()->GetCaptain())
@@ -1464,7 +1464,7 @@ void CSDKPlayer::GetTargetPos(const Vector &pos, Vector &targetPos)
 bool CSDKPlayer::IsOnField(CSDKPlayer *pPl, int teamNumber/* = TEAM_UNASSIGNED*/)
 {
 	return (pPl && pPl->IsConnected() // Is on server
-		&& ((teamNumber == TEAM_UNASSIGNED && (pPl->GetTeamNumber() == TEAM_A || pPl->GetTeamNumber() == TEAM_B)) // No specific team given - is on field
+		&& ((teamNumber == TEAM_UNASSIGNED && (pPl->GetTeamNumber() == TEAM_HOME || pPl->GetTeamNumber() == TEAM_AWAY)) // No specific team given - is on field
 			|| (teamNumber != TEAM_UNASSIGNED && pPl->GetTeamNumber() == teamNumber))); // Specific team given - is in this team
 }
 
@@ -1572,7 +1572,7 @@ void CSDKPlayer::Reset()
 	if (GetPlayerBall())
 		GetPlayerBall()->RemovePlayerBall();
 
-	if ((GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B) && !ReplayManager()->IsReplaying())
+	if ((GetTeamNumber() == TEAM_HOME || GetTeamNumber() == TEAM_AWAY) && !ReplayManager()->IsReplaying())
 	{
 		RemoveSolidFlags(FSOLID_NOT_SOLID);
 		SetCollisionGroup(COLLISION_GROUP_PLAYER);
@@ -2675,22 +2675,22 @@ void CPlayerPersistentData::ConvertAllPlayerDataToJson()
 		Q_strcat(json, UTIL_VarArgs("\"%s\"", statTypes[i]), JSON_SIZE);
 	}
 
-	Q_strcat(json, UTIL_VarArgs("],\"matchInfo\":{\"type\":\"%s\",\"startTime\":%lu,\"endTime\":%lu,\"periods\":%d,\"lastPeriodName\":\"%s\"},", mp_matchinfo.GetString(), SDKGameRules()->m_nRealMatchStartTime, SDKGameRules()->m_nRealMatchEndTime, GetGlobalTeam(TEAM_A)->m_MatchPeriodData.Count(), GetGlobalTeam(TEAM_A)->m_MatchPeriodData.Count() == 0 ? "<none>" : GetGlobalTeam(TEAM_A)->m_MatchPeriodData[GetGlobalTeam(TEAM_A)->m_MatchPeriodData.Count() - 1]->m_szMatchPeriodName), JSON_SIZE);
+	Q_strcat(json, UTIL_VarArgs("],\"matchInfo\":{\"type\":\"%s\",\"startTime\":%lu,\"endTime\":%lu,\"periods\":%d,\"lastPeriodName\":\"%s\"},", mp_matchinfo.GetString(), SDKGameRules()->m_nRealMatchStartTime, SDKGameRules()->m_nRealMatchEndTime, GetGlobalTeam(TEAM_HOME)->m_MatchPeriodData.Count(), GetGlobalTeam(TEAM_HOME)->m_MatchPeriodData.Count() == 0 ? "<none>" : GetGlobalTeam(TEAM_HOME)->m_MatchPeriodData[GetGlobalTeam(TEAM_HOME)->m_MatchPeriodData.Count() - 1]->m_szMatchPeriodName), JSON_SIZE);
 
 	Q_strcat(json, "\"teams\":[", JSON_SIZE);
 
-	for (int team = TEAM_A; team <= TEAM_B; team++)
+	for (int team = TEAM_HOME; team <= TEAM_AWAY; team++)
 	{
 		CTeam *pTeam = GetGlobalTeam(team);
 
-		if (team == TEAM_B)
+		if (team == TEAM_AWAY)
 			Q_strcat(json, ",", JSON_SIZE);
 
 		bool isMix = (pTeam->GetShortTeamName()[0] == 0);
 
 		Q_strcat(json, "{\"matchTotal\":{", JSON_SIZE);
 
-		Q_strcat(json, UTIL_VarArgs("\"name\":\"%s\",\"side\":\"%s\",\"isMix\":%s,", (isMix ? pTeam->GetKitName() : pTeam->GetShortTeamName()), (team == TEAM_A ? "home" : "away"), (isMix ? "true" : "false")), JSON_SIZE);
+		Q_strcat(json, UTIL_VarArgs("\"name\":\"%s\",\"side\":\"%s\",\"isMix\":%s,", (isMix ? pTeam->GetKitName() : pTeam->GetShortTeamName()), (team == TEAM_HOME ? "home" : "away"), (isMix ? "true" : "false")), JSON_SIZE);
 
 		Q_strcat(json, UTIL_VarArgs("\"statistics\":[%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d]",
 			pTeam->m_RedCards, pTeam->m_YellowCards, pTeam->m_Fouls, pTeam->m_FoulsSuffered, pTeam->m_SlidingTackles, pTeam->m_SlidingTacklesCompleted, pTeam->m_GoalsConceded, pTeam->m_Shots, pTeam->m_ShotsOnGoal, pTeam->m_PassesCompleted, pTeam->m_Interceptions, pTeam->m_Offsides, pTeam->m_Goals, pTeam->m_OwnGoals, pTeam->m_Assists, pTeam->m_Passes, pTeam->m_FreeKicks, pTeam->m_Penalties, pTeam->m_Corners, pTeam->m_ThrowIns, pTeam->m_KeeperSaves, pTeam->m_GoalKicks, (int)pTeam->m_flPossessionTime, (int)pTeam->m_flExactDistanceCovered, pTeam->m_KeeperSavesCaught
@@ -2770,7 +2770,7 @@ void CPlayerPersistentData::ConvertAllPlayerDataToJson()
 				endSecond = SDKGameRules()->GetMatchDisplayTimeSeconds(true, false);
 			}
 
-			Q_strcat(json, UTIL_VarArgs("{\"info\":{\"startSecond\":%d,\"endSecond\":%d,\"team\":\"%s\",\"position\":\"%s\"}", startSecond, endSecond, (pMPData->m_nTeam == TEAM_A ? "home" : "away"), g_szPosNames[pMPData->m_nTeamPosType]), JSON_SIZE);
+			Q_strcat(json, UTIL_VarArgs("{\"info\":{\"startSecond\":%d,\"endSecond\":%d,\"team\":\"%s\",\"position\":\"%s\"}", startSecond, endSecond, (pMPData->m_nTeam == TEAM_HOME ? "home" : "away"), g_szPosNames[pMPData->m_nTeamPosType]), JSON_SIZE);
 
 			Q_strcat(json, UTIL_VarArgs(",\"statistics\":[%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d]}",
 				pMPData->m_nRedCards, pMPData->m_nYellowCards, pMPData->m_nFouls, pMPData->m_nFoulsSuffered, pMPData->m_nSlidingTackles, pMPData->m_nSlidingTacklesCompleted, pMPData->m_nGoalsConceded, pMPData->m_nShots, pMPData->m_nShotsOnGoal, pMPData->m_nPassesCompleted, pMPData->m_nInterceptions, pMPData->m_nOffsides, pMPData->m_nGoals, pMPData->m_nOwnGoals, pMPData->m_nAssists, pMPData->m_nPasses, pMPData->m_nFreeKicks, pMPData->m_nPenalties, pMPData->m_nCorners, pMPData->m_nThrowIns, pMPData->m_nKeeperSaves, pMPData->m_nGoalKicks, (int)pMPData->m_flPossessionTime, (int)pMPData->m_flExactDistanceCovered, pMPData->m_nKeeperSavesCaught
@@ -2793,7 +2793,7 @@ void CPlayerPersistentData::ConvertAllPlayerDataToJson()
 		if (eventsProcessed > 0)
 			Q_strcat(json, ",", JSON_SIZE);
 
-		Q_strcat(json, UTIL_VarArgs("{\"second\":%d,\"event\":\"%s\",\"period\":\"%s\",\"team\":\"%s\",\"player1SteamId\":\"%s\",\"player2SteamId\":\"%s\",\"player3SteamId\":\"%s\"}", pMatchEvent->second, g_szMatchEventNames[pMatchEvent->matchEventType], g_szMatchPeriodNames[pMatchEvent->matchPeriod], (pMatchEvent->team == TEAM_A ? "home" : "away"), pMatchEvent->pPlayer1Data ? pMatchEvent->pPlayer1Data->m_szSteamID : "", pMatchEvent->pPlayer2Data ? pMatchEvent->pPlayer2Data->m_szSteamID : "", pMatchEvent->pPlayer3Data ? pMatchEvent->pPlayer3Data->m_szSteamID : ""), JSON_SIZE);
+		Q_strcat(json, UTIL_VarArgs("{\"second\":%d,\"event\":\"%s\",\"period\":\"%s\",\"team\":\"%s\",\"player1SteamId\":\"%s\",\"player2SteamId\":\"%s\",\"player3SteamId\":\"%s\"}", pMatchEvent->second, g_szMatchEventNames[pMatchEvent->matchEventType], g_szMatchPeriodNames[pMatchEvent->matchPeriod], (pMatchEvent->team == TEAM_HOME ? "home" : "away"), pMatchEvent->pPlayer1Data ? pMatchEvent->pPlayer1Data->m_szSteamID : "", pMatchEvent->pPlayer2Data ? pMatchEvent->pPlayer2Data->m_szSteamID : "", pMatchEvent->pPlayer3Data ? pMatchEvent->pPlayer3Data->m_szSteamID : ""), JSON_SIZE);
 
 		eventsProcessed += 1;
 	}
@@ -2810,10 +2810,10 @@ void CPlayerPersistentData::ConvertAllPlayerDataToJson()
 
 	char teamNames[2][32];
 
-	for (int team = TEAM_A; team <= TEAM_B; team++)
+	for (int team = TEAM_HOME; team <= TEAM_AWAY; team++)
 	{
-		Q_strncpy(teamNames[team - TEAM_A], (GetGlobalTeam(team)->GetTeamCode()[0] == 0 ? GetGlobalTeam(team)->GetKitName() : GetGlobalTeam(team)->GetTeamCode()), 32);
-		char *c = teamNames[team - TEAM_A];
+		Q_strncpy(teamNames[team - TEAM_HOME], (GetGlobalTeam(team)->GetTeamCode()[0] == 0 ? GetGlobalTeam(team)->GetKitName() : GetGlobalTeam(team)->GetTeamCode()), 32);
+		char *c = teamNames[team - TEAM_HOME];
 
 		while (*c != 0)
 		{
@@ -2832,7 +2832,7 @@ void CPlayerPersistentData::ConvertAllPlayerDataToJson()
 	char time[64];
 	strftime(time, sizeof(time), "%Y.%m.%d_%Hh.%Mm.%Ss", timeinfo);
 
-	const char *filename = UTIL_VarArgs("statistics\\%s_%s-vs-%s_%d-%d.json", time, teamNames[0], teamNames[1], GetGlobalTeam(TEAM_A)->GetGoals(), GetGlobalTeam(TEAM_B)->GetGoals());
+	const char *filename = UTIL_VarArgs("statistics\\%s_%s-vs-%s_%d-%d.json", time, teamNames[0], teamNames[1], GetGlobalTeam(TEAM_HOME)->GetGoals(), GetGlobalTeam(TEAM_AWAY)->GetGoals());
 
 	FileHandle_t fh = filesystem->Open(filename, "w", "MOD");
  

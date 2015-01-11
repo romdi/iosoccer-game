@@ -624,11 +624,11 @@ unsigned int CGameMovement::PlayerSolidMask( bool brushOnly )
 	int mask = 0;
 	switch ( player->GetTeamNumber() )
 	{
-	case TEAM_A:
+	case TEAM_HOME:
 		mask = CONTENTS_TEAM1;
 		break;
 
-	case TEAM_B:
+	case TEAM_AWAY:
 		mask = CONTENTS_TEAM2;
 		break;
 	}
@@ -1510,7 +1510,7 @@ void CGameMovement::FullWalkMove( )
 
 	ToSDKPlayer(player)->m_Shared.m_nInPenBoxOfTeam = TEAM_INVALID;
 
-	for (int team = TEAM_A; team <= TEAM_B; team++)
+	for (int team = TEAM_HOME; team <= TEAM_AWAY; team++)
 	{
 		float halfBounds = (player->GetPlayerMaxs().x - player->GetPlayerMins().x) / 2;
 
@@ -2818,7 +2818,7 @@ void CGameMovement::PlayerMove( void )
 	if ( player->GetMoveType() != MOVETYPE_NOCLIP && 
 		 player->GetMoveType() != MOVETYPE_NONE && 		 
 		 player->GetMoveType() != MOVETYPE_ISOMETRIC && 
-		 (player->GetTeamNumber() == TEAM_A || player->GetTeamNumber() == TEAM_B) &&
+		 (player->GetTeamNumber() == TEAM_HOME || player->GetTeamNumber() == TEAM_AWAY) &&
 		 !(player->GetFlags() & FL_REMOTECONTROLLED))
 	{
 		//Vector pos = mv->GetAbsOrigin();

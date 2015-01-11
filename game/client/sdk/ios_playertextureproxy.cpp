@@ -409,7 +409,7 @@ void CPlayerTextureProxy::OnBind( C_BaseEntity *pEnt )
 		shirtName = g_PR->GetShirtName(pPl->index);
 		isKeeper = g_PR->GetTeamPosType(pPl->index) == POS_GK;
 
-		int teamIndex = pTeam->GetTeamNumber() - TEAM_A;
+		int teamIndex = pTeam->GetTeamNumber() - TEAM_HOME;
 		int posIndex = g_PR->GetTeamPosIndex(pPl->index);
 
 		pDetailTexture = materials->FindTexture(VarArgs("models/player/default/detail_%d_%d", teamIndex, posIndex), NULL, true);
@@ -430,7 +430,7 @@ void CPlayerTextureProxy::OnBind( C_BaseEntity *pEnt )
 		shirtName = pReplayPl->m_szShirtName;
 		isKeeper = pReplayPl->m_bIsKeeper;
 
-		int teamIndex = pReplayPl->m_nTeamNumber - TEAM_A;
+		int teamIndex = pReplayPl->m_nTeamNumber - TEAM_HOME;
 		int posIndex = pReplayPl->m_nTeamPosIndex;
 
 		pDetailTexture = materials->FindTexture(VarArgs("models/player/default/detail_%d_%d", teamIndex, posIndex), NULL, true);
@@ -586,10 +586,10 @@ void CTextureProxy::OnBind( void *pEntity )
 
 	char texture[128];
 
-	if (Q_stricmp(m_szTextureType, "hometeamcrest") == 0 && GetGlobalTeam(TEAM_A)->HasCrest())
-		Q_snprintf(texture, sizeof(texture), "%s/%s/teamcrest", TEAMKITS_PATH, GetGlobalTeam(TEAM_A)->GetFolderName());
-	else if (Q_stricmp(m_szTextureType, "awayteamcrest") == 0 && GetGlobalTeam(TEAM_B)->HasCrest())
-		Q_snprintf(texture, sizeof(texture), "%s/%s/teamcrest", TEAMKITS_PATH, GetGlobalTeam(TEAM_B)->GetFolderName());
+	if (Q_stricmp(m_szTextureType, "hometeamcrest") == 0 && GetGlobalTeam(TEAM_HOME)->HasCrest())
+		Q_snprintf(texture, sizeof(texture), "%s/%s/teamcrest", TEAMKITS_PATH, GetGlobalTeam(TEAM_HOME)->GetFolderName());
+	else if (Q_stricmp(m_szTextureType, "awayteamcrest") == 0 && GetGlobalTeam(TEAM_AWAY)->HasCrest())
+		Q_snprintf(texture, sizeof(texture), "%s/%s/teamcrest", TEAMKITS_PATH, GetGlobalTeam(TEAM_AWAY)->GetFolderName());
 	else
 		Q_snprintf(texture, sizeof(texture), "%s", m_pDefaultTexture->GetName());
 

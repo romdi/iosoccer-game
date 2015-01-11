@@ -205,8 +205,8 @@ enum MessageMode_t
 // Start your team numbers after this
 #define LAST_SHARED_TEAM		TEAM_SPECTATOR
 
-#define TEAM_A					2	//IOS
-#define TEAM_B					3	//IOS
+#define TEAM_HOME					2	//IOS
+#define TEAM_AWAY					3	//IOS
 #define TEAMS_COUNT				4	//IOS
 
 // The first team that's game specific (i.e. not unassigned / spectator)

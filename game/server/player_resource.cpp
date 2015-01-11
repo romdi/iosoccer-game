@@ -280,9 +280,9 @@ void CPlayerResource::UpdatePlayerData( void )
 			//m_Ratings.Set(i, max( 0, pPl->GetRating() ) );
 			m_Ratings.Set(i, 100 );
 
-			if (pPl->GetTeamNumber() == TEAM_A || pPl->GetTeamNumber() == TEAM_B)
+			if (pPl->GetTeamNumber() == TEAM_HOME || pPl->GetTeamNumber() == TEAM_AWAY)
 			{
-				int ti = pPl->GetTeamNumber() - TEAM_A;
+				int ti = pPl->GetTeamNumber() - TEAM_HOME;
 
 				if (ping > 0)
 				{
@@ -293,9 +293,9 @@ void CPlayerResource::UpdatePlayerData( void )
 		}
 	}
 
-	for (int team = TEAM_A; team <= TEAM_B; team++)
+	for (int team = TEAM_HOME; team <= TEAM_AWAY; team++)
 	{
-		int ti = team - TEAM_A;
+		int ti = team - TEAM_HOME;
 		CTeam *pTeam = GetGlobalTeam(team);
 
 		if (m_nUpdateCounter % 20 == 0)

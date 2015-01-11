@@ -36,7 +36,7 @@ END_RECV_TABLE()
 
 C_ReplayPlayer::C_ReplayPlayer()
 {
-	m_nTeamNumber = TEAM_A;
+	m_nTeamNumber = TEAM_HOME;
 	m_nTeamPosIndex = 0;
 	m_bIsKeeper = false;
 	m_nShirtNumber = 2;

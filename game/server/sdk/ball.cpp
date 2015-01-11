@@ -1468,7 +1468,7 @@ void CBall::SetSkinName(const char *skinName)
 
 void CBall::CheckPenBoxPosition()
 {
-	for (int team = TEAM_A; team <= TEAM_B; team++)
+	for (int team = TEAM_HOME; team <= TEAM_AWAY; team++)
 	{
 		Vector min = GetGlobalTeam(team)->m_vPenBoxMin;
 		Vector max = GetGlobalTeam(team)->m_vPenBoxMax;
@@ -1532,7 +1532,7 @@ int CBall::LastTeam(bool wasShooting, CSDKPlayer *pSkipPl /*= NULL*/, CSDKPlayer
 int CBall::LastOppTeam(bool wasShooting, CSDKPlayer *pSkipPl /*= NULL*/, CSDKPlayer *pSkipPl2 /*= NULL*/, CSDKPlayer *pSkipPl3 /*= NULL*/)
 {
 	BallTouchInfo *info = LastInfo(wasShooting, pSkipPl, pSkipPl2, pSkipPl3);
-	return info ? (info->m_nTeam == TEAM_A ? TEAM_B : TEAM_A) : TEAM_INVALID;
+	return info ? (info->m_nTeam == TEAM_HOME ? TEAM_AWAY : TEAM_HOME) : TEAM_INVALID;
 }
 
 void CBall::GetPredictedGoalLineCrossPosX(int &xPos, int &team)
@@ -1546,9 +1546,9 @@ void CBall::GetPredictedGoalLineCrossPosX(int &xPos, int &team)
 
 	for (int i = 0; i < 2; i++)
 	{
-		if (-GetGlobalTeam(i + TEAM_A)->m_nForward == ZeroSign(dir.y))
+		if (-GetGlobalTeam(i + TEAM_HOME)->m_nForward == ZeroSign(dir.y))
 		{
-			team = i + TEAM_A;
+			team = i + TEAM_HOME;
 			break;
 		}
 	}

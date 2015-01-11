@@ -177,7 +177,7 @@ void CStatsMenu::Update(int playerIndex, KeyValues *kv)
 
 	bool isPlayer = playerIndex > 0;
 
-	C_Team *pTeam = GetGlobalTeam(isPlayer ? gr->GetTeam(playerIndex) : playerIndex + 2 + TEAM_A);
+	C_Team *pTeam = GetGlobalTeam(isPlayer ? gr->GetTeam(playerIndex) : playerIndex + 2 + TEAM_HOME);
 
 	Reset();
 

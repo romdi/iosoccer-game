@@ -444,18 +444,18 @@ CSDKGameRules::CSDKGameRules()
 	m_flStateTimeLeft = 0;
 	m_flLastAwayCheckTime = gpGlobals->curtime;
 	m_flNextPenalty = gpGlobals->curtime;
-	m_nPenaltyTakingTeam = TEAM_A;
+	m_nPenaltyTakingTeam = TEAM_HOME;
 	m_flInjuryTime = 0;
 	m_flInjuryTimeStart = -1;
 	m_pPrecip = NULL;
-	m_nFirstHalfBottomTeam = TEAM_A;
-	m_nBottomTeam = TEAM_A;
+	m_nFirstHalfBottomTeam = TEAM_HOME;
+	m_nBottomTeam = TEAM_HOME;
 	m_bIsCeremony = false;
 	m_nTimeoutTeam = TEAM_INVALID;
 	m_eTimeoutState = TIMEOUT_STATE_NONE;
 	m_flTimeoutEnd = 0;
-	m_nFirstHalfKickOffTeam = TEAM_A;
-	m_nKickOffTeam = TEAM_A;
+	m_nFirstHalfKickOffTeam = TEAM_HOME;
+	m_nKickOffTeam = TEAM_HOME;
 	m_bOffsideLinesEnabled = false;
 	m_flOffsideLineBallPosY = 0;
 	m_flOffsideLineOffsidePlayerPosY = 0;
@@ -572,8 +572,8 @@ void CSDKGameRules::ServerActivate()
 	m_pPrecip->SetType(PRECIPITATION_TYPE_NONE);
 	m_pPrecip->Spawn();
 
-	m_nFirstHalfBottomTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
-	m_nFirstHalfKickOffTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
+	m_nFirstHalfBottomTeam = g_IOSRand.RandomInt(TEAM_HOME, TEAM_AWAY);
+	m_nFirstHalfKickOffTeam = g_IOSRand.RandomInt(TEAM_HOME, TEAM_AWAY);
 
 	m_bIsCeremony = false;
 
@@ -618,8 +618,8 @@ void CSDKGameRules::InitFieldSpots()
 
 	m_vGoalTriggerSize = goalMax - goalMin;
 
-	GetGlobalTeam(TEAM_A)->InitFieldSpots(true);
-	GetGlobalTeam(TEAM_B)->InitFieldSpots(false);
+	GetGlobalTeam(TEAM_HOME)->InitFieldSpots(true);
+	GetGlobalTeam(TEAM_AWAY)->InitFieldSpots(false);
 }
 
 //-----------------------------------------------------------------------------
@@ -793,8 +793,8 @@ void CSDKGameRules::ChooseTeamNames(bool clubTeams, bool nationalTeams, bool rea
 	if (homeTeam[0] != '\0' && awayTeam[0] != '\0')
 	{
 		IOS_LogPrintf("Setting random teams: %s against %s\n", homeTeam, awayTeam);
-		GetGlobalTeam(TEAM_A)->SetKitName(homeTeam);
-		GetGlobalTeam(TEAM_B)->SetKitName(awayTeam);
+		GetGlobalTeam(TEAM_HOME)->SetKitName(homeTeam);
+		GetGlobalTeam(TEAM_AWAY)->SetKitName(awayTeam);
 	}
 	else
 		Msg("ERROR: No compatible teams found. Check sv_randomteams parameters.\n");	
@@ -943,9 +943,9 @@ const char *CSDKGameRules::GetChatPrefix( MessageMode_t messageMode, CBasePlayer
 	if (!pPlayer)
 		return "";
 
-	if (ToSDKPlayer(pPlayer)->GetSpecTeam() == TEAM_A)
+	if (ToSDKPlayer(pPlayer)->GetSpecTeam() == TEAM_HOME)
 		return "HOME";
-	else if (ToSDKPlayer(pPlayer)->GetSpecTeam() == TEAM_B)
+	else if (ToSDKPlayer(pPlayer)->GetSpecTeam() == TEAM_AWAY)
 		return "AWAY";
 	else
 		return "SPEC";
@@ -1083,17 +1083,17 @@ void CSDKGameRules::RestartMatch(bool isCeremony, int kickOffTeam, int bottomTea
 	switch (kickOffTeam)
 	{
 		case -1: break;
-		case 0: m_nFirstHalfKickOffTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B); break;
-		case 1: m_nFirstHalfKickOffTeam = TEAM_A; break;
-		case 2: m_nFirstHalfKickOffTeam = TEAM_B; break;
+		case 0: m_nFirstHalfKickOffTeam = g_IOSRand.RandomInt(TEAM_HOME, TEAM_AWAY); break;
+		case 1: m_nFirstHalfKickOffTeam = TEAM_HOME; break;
+		case 2: m_nFirstHalfKickOffTeam = TEAM_AWAY; break;
 	}
 
 	switch (bottomTeam)
 	{
 		case -1: break;
-		case 0: m_nFirstHalfBottomTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B); break;
-		case 1: m_nFirstHalfBottomTeam = TEAM_A; break;
-		case 2: m_nFirstHalfBottomTeam = TEAM_B; break;
+		case 0: m_nFirstHalfBottomTeam = g_IOSRand.RandomInt(TEAM_HOME, TEAM_AWAY); break;
+		case 1: m_nFirstHalfBottomTeam = TEAM_HOME; break;
+		case 2: m_nFirstHalfBottomTeam = TEAM_AWAY; break;
 	}
 
 	SDKGameRules()->State_Transition(MATCH_PERIOD_WARMUP);
@@ -1125,7 +1125,7 @@ void CC_SV_MatchGoalsHome(const CCommand &args)
 	if (args.ArgC() < 2)
 		return;
 
-	GetGlobalTeam(TEAM_A)->SetGoals(atoi(args[1]));
+	GetGlobalTeam(TEAM_HOME)->SetGoals(atoi(args[1]));
 }
 
 ConCommand sv_matchgoalshome( "sv_matchgoalshome", CC_SV_MatchGoalsHome, "", 0 );
@@ -1138,7 +1138,7 @@ void CC_SV_MatchGoalsAway(const CCommand &args)
 	if (args.ArgC() < 2)
 		return;
 
-	GetGlobalTeam(TEAM_B)->SetGoals(atoi(args[1]));
+	GetGlobalTeam(TEAM_AWAY)->SetGoals(atoi(args[1]));
 }
 
 ConCommand sv_matchgoalsaway( "sv_matchgoalsaway", CC_SV_MatchGoalsAway, "", 0 );
@@ -1189,8 +1189,8 @@ void CC_SV_ResumeMatch(const CCommand &args)
 	}
 
 	SDKGameRules()->SetMatchDisplayTimeSeconds(atoi(args[3]) * 60);
-	GetGlobalTeam(TEAM_A)->SetGoals(atoi(args[1]));
-	GetGlobalTeam(TEAM_B)->SetGoals(atoi(args[2]));
+	GetGlobalTeam(TEAM_HOME)->SetGoals(atoi(args[1]));
+	GetGlobalTeam(TEAM_AWAY)->SetGoals(atoi(args[2]));
 }
 
 ConCommand sv_resumematch( "sv_resumematch", CC_SV_ResumeMatch, "", 0 );
@@ -1287,7 +1287,7 @@ ConVar sv_wakeupcall_interval("sv_wakeupcall_interval", "10", FCVAR_NOTIFY);
 
 void CSDKGameRules::StartPenalties()
 {
-	//SetBottomTeam(g_IOSRand.RandomInt(TEAM_A, TEAM_B));
+	//SetBottomTeam(g_IOSRand.RandomInt(TEAM_HOME, TEAM_AWAY));
 	ResetMatch();
 	State_Transition(MATCH_PERIOD_PENALTIES);
 }
@@ -1344,7 +1344,7 @@ static void OnMaxPlayersChange(IConVar *var, const char *pOldValue, float flOldV
 		SDKGameRules()->SetUseOldMaxplayers(true);
 	}
 
-	for (int team = TEAM_A; team <= TEAM_B; team++)
+	for (int team = TEAM_HOME; team <= TEAM_AWAY; team++)
 	{
 		if (GetGlobalTeam(team))
 		{
@@ -1366,7 +1366,7 @@ static void OnMaxPlayersChange(IConVar *var, const char *pOldValue, float flOldV
 		SDKGameRules()->SetUseOldMaxplayers(false);
 	}
 
-	for (int team = TEAM_A; team <= TEAM_B; team++)
+	for (int team = TEAM_HOME; team <= TEAM_AWAY; team++)
 	{
 		if (GetGlobalTeam(team))
 		{
@@ -1388,7 +1388,7 @@ void OnCaptaincyHomeChange(IConVar *var, const char *pOldValue, float flOldValue
 	bool captaincy = ((ConVar*)var)->GetBool();
 
 	if (!captaincy)
-		GetGlobalTeam(TEAM_A)->SetCaptainPosIndex(-1);
+		GetGlobalTeam(TEAM_HOME)->SetCaptainPosIndex(-1);
 #endif
 }
 
@@ -1403,7 +1403,7 @@ void OnCaptaincyAwayChange(IConVar *var, const char *pOldValue, float flOldValue
 	bool captaincy = ((ConVar*)var)->GetBool();
 
 	if (!captaincy)
-		GetGlobalTeam(TEAM_B)->SetCaptainPosIndex(-1);
+		GetGlobalTeam(TEAM_AWAY)->SetCaptainPosIndex(-1);
 #endif
 }
 
@@ -1472,7 +1472,7 @@ void CSDKGameRules::State_Enter( match_period_t newState )
 
 		// Remove the player if he's in a team but card banned or in a blocked position
 		if (!IsIntermissionState()
-			&& (pPl->GetTeamNumber() == TEAM_A || pPl->GetTeamNumber() == TEAM_B)
+			&& (pPl->GetTeamNumber() == TEAM_HOME || pPl->GetTeamNumber() == TEAM_AWAY)
 			&& (GetMatchDisplayTimeSeconds() < pPl->GetNextCardJoin()
 			|| GetMatchDisplayTimeSeconds() < pPl->GetTeam()->GetPosNextJoinSeconds(pPl->GetTeamPosIndex())))
 		{
@@ -1494,7 +1494,7 @@ void CSDKGameRules::State_Enter( match_period_t newState )
 		{
 			CTeamMatchPeriodData *pTeamData = new CTeamMatchPeriodData(g_szMatchPeriodNames[m_pCurStateInfo->m_eMatchPeriod]);
 			pTeamData->ResetData();
-			GetGlobalTeam(TEAM_A + i)->m_MatchPeriodData.AddToTail(pTeamData); 
+			GetGlobalTeam(TEAM_HOME + i)->m_MatchPeriodData.AddToTail(pTeamData); 
 		}
 	}
 
@@ -1522,10 +1522,10 @@ void CSDKGameRules::State_Leave(match_period_t newState)
 	{
 		for (int i = 0; i < 2; i++)
 		{
-			if (GetGlobalTeam(TEAM_A + i)->m_MatchPeriodData.Count() == 0)
+			if (GetGlobalTeam(TEAM_HOME + i)->m_MatchPeriodData.Count() == 0)
 				continue;
 
-			CTeamMatchPeriodData *pTeamData = GetGlobalTeam(TEAM_A + i)->m_MatchPeriodData.Tail();
+			CTeamMatchPeriodData *pTeamData = GetGlobalTeam(TEAM_HOME + i)->m_MatchPeriodData.Tail();
 			pTeamData->m_nAnnouncedInjuryTimeSeconds = m_nAnnouncedInjuryTime == -1 ? -1 : m_nAnnouncedInjuryTime * 60;
 			pTeamData->m_nActualInjuryTimeSeconds = GetMatchDisplayTimeSeconds() - GetMatchDisplayTimeSeconds(false);
 		}
@@ -1572,14 +1572,14 @@ void CSDKGameRules::State_Think()
 					CSDKPlayer *pKeeper = NULL;
 
 					// If ball is on left side and no keeper on left side team
-					if (m_nBallZone < 0 && !GetGlobalTeam(TEAM_A)->GetPlayerByPosType(POS_GK))
+					if (m_nBallZone < 0 && !GetGlobalTeam(TEAM_HOME)->GetPlayerByPosType(POS_GK))
 					{
-						pKeeper = GetGlobalTeam(TEAM_B)->GetPlayerByPosType(POS_GK);
+						pKeeper = GetGlobalTeam(TEAM_AWAY)->GetPlayerByPosType(POS_GK);
 					}
 					// If ball is on right side and no keeper on right side team
-					else if (m_nBallZone >= 0 && !GetGlobalTeam(TEAM_B)->GetPlayerByPosType(POS_GK))
+					else if (m_nBallZone >= 0 && !GetGlobalTeam(TEAM_AWAY)->GetPlayerByPosType(POS_GK))
 					{
-						pKeeper = GetGlobalTeam(TEAM_A)->GetPlayerByPosType(POS_GK);
+						pKeeper = GetGlobalTeam(TEAM_HOME)->GetPlayerByPosType(POS_GK);
 					}
 					
 					if (pKeeper)
@@ -1599,7 +1599,7 @@ void CSDKGameRules::State_Think()
 				|| m_PlayerRotationMinutes.Head() == 90 && SDKGameRules()->State_Get() == MATCH_PERIOD_EXTRATIME_FIRST_HALF
 				|| m_PlayerRotationMinutes.Head() == 105 && SDKGameRules()->State_Get() == MATCH_PERIOD_EXTRATIME_SECOND_HALF))
 			{
-				for (int team = TEAM_A; team <= TEAM_B; team++)
+				for (int team = TEAM_HOME; team <= TEAM_AWAY; team++)
 				{
 					CTeam *pTeam = GetGlobalTeam(team);
 
@@ -1757,9 +1757,9 @@ void CSDKGameRules::State_SECOND_HALF_Think()
 	}
 	else if (m_flStateTimeLeft <= 0 && GetMatchBall()->State_Get() == BALL_STATE_NORMAL && !GetMatchBall()->HasQueuedState())
 	{
-		if (mp_extratime.GetBool() && GetGlobalTeam(TEAM_A)->GetGoals() == GetGlobalTeam(TEAM_B)->GetGoals())
+		if (mp_extratime.GetBool() && GetGlobalTeam(TEAM_HOME)->GetGoals() == GetGlobalTeam(TEAM_AWAY)->GetGoals())
 			State_Transition(MATCH_PERIOD_EXTRATIME_INTERMISSION);
-		else if (mp_penalties.GetBool() && GetGlobalTeam(TEAM_A)->GetGoals() == GetGlobalTeam(TEAM_B)->GetGoals())
+		else if (mp_penalties.GetBool() && GetGlobalTeam(TEAM_HOME)->GetGoals() == GetGlobalTeam(TEAM_AWAY)->GetGoals())
 			State_Transition(MATCH_PERIOD_PENALTIES_INTERMISSION);
 		else
 			State_Transition(MATCH_PERIOD_COOLDOWN);
@@ -1846,7 +1846,7 @@ void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Think()
 	}
 	else if (m_flStateTimeLeft <= 0 && GetMatchBall()->State_Get() == BALL_STATE_NORMAL && !GetMatchBall()->HasQueuedState())
 	{
-		if (mp_penalties.GetBool() && GetGlobalTeam(TEAM_A)->GetGoals() == GetGlobalTeam(TEAM_B)->GetGoals())
+		if (mp_penalties.GetBool() && GetGlobalTeam(TEAM_HOME)->GetGoals() == GetGlobalTeam(TEAM_AWAY)->GetGoals())
 			State_Transition(MATCH_PERIOD_PENALTIES_INTERMISSION);
 		else
 			State_Transition(MATCH_PERIOD_COOLDOWN);
@@ -1878,15 +1878,15 @@ void CSDKGameRules::State_PENALTIES_Enter()
 {
 	for (int i = 0; i < 2; i++)
 	{
-		GetGlobalTeam(TEAM_A + i)->m_nPenaltyGoals = 0;
-		GetGlobalTeam(TEAM_A + i)->m_nPenaltyGoalBits = 0;
-		GetGlobalTeam(TEAM_A + i)->m_nPenaltyRound = 0;
+		GetGlobalTeam(TEAM_HOME + i)->m_nPenaltyGoals = 0;
+		GetGlobalTeam(TEAM_HOME + i)->m_nPenaltyGoalBits = 0;
+		GetGlobalTeam(TEAM_HOME + i)->m_nPenaltyRound = 0;
 	}
 
 	m_flNextPenalty = -1;
-	m_nPenaltyTakingStartTeam = g_IOSRand.RandomInt(TEAM_A, TEAM_B);
+	m_nPenaltyTakingStartTeam = g_IOSRand.RandomInt(TEAM_HOME, TEAM_AWAY);
 	m_nPenaltyTakingTeam = m_nPenaltyTakingStartTeam;
-	SetBottomTeam(g_IOSRand.RandomInt(TEAM_A, TEAM_B));
+	SetBottomTeam(g_IOSRand.RandomInt(TEAM_HOME, TEAM_AWAY));
 	GetMatchBall()->SetPenaltyState(PENALTY_NONE);
 }
 
@@ -1940,7 +1940,7 @@ void CSDKGameRules::State_PENALTIES_Think()
 				}
 				else
 				{
-					if (m_nPenaltyTakingTeam != m_nPenaltyTakingStartTeam && GetGlobalTeam(TEAM_A)->GetGoals() != GetGlobalTeam(TEAM_B)->GetGoals())
+					if (m_nPenaltyTakingTeam != m_nPenaltyTakingStartTeam && GetGlobalTeam(TEAM_HOME)->GetGoals() != GetGlobalTeam(TEAM_AWAY)->GetGoals())
 					{
 						State_Transition(MATCH_PERIOD_COOLDOWN);
 						return;
@@ -2029,12 +2029,12 @@ void CSDKGameRules::State_COOLDOWN_Enter()
 
 	//who won?
 	int winners = 0;
-	int scoreA = GetGlobalTeam( TEAM_A )->GetGoals();
-	int scoreB = GetGlobalTeam( TEAM_B )->GetGoals();
+	int scoreA = GetGlobalTeam( TEAM_HOME )->GetGoals();
+	int scoreB = GetGlobalTeam( TEAM_AWAY )->GetGoals();
 	if (scoreA > scoreB)
-		winners = TEAM_A;
+		winners = TEAM_HOME;
 	if (scoreB > scoreA)
-		winners = TEAM_B;
+		winners = TEAM_AWAY;
 
 	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
 	{
@@ -2071,9 +2071,9 @@ void CSDKGameRules::ApplyIntermissionSettings(bool startHighlights, bool movePla
 		GetMatchBall()->SetPos(m_vKickOff);
 
 		if (m_bIsCeremony)
-			EnableShield(SHIELD_CEREMONY, TEAM_A, SDKGameRules()->m_vKickOff);
+			EnableShield(SHIELD_CEREMONY, TEAM_HOME, SDKGameRules()->m_vKickOff);
 		else
-			EnableShield(SHIELD_KICKOFF, TEAM_A, SDKGameRules()->m_vKickOff);
+			EnableShield(SHIELD_KICKOFF, TEAM_HOME, SDKGameRules()->m_vKickOff);
 	}
 	else
 		GetMatchBall()->UpdatePossession(NULL);
@@ -2106,7 +2106,7 @@ bool CSDKGameRules::CheckAutoStart()
 
 	if (sv_autostartmatch.GetBool()
 		&& !m_bIsCeremony
-		&& GetGlobalTeam(TEAM_A)->GetNumPlayers() + GetGlobalTeam(TEAM_B)->GetNumPlayers() >= requiredPlayerCount
+		&& GetGlobalTeam(TEAM_HOME)->GetNumPlayers() + GetGlobalTeam(TEAM_AWAY)->GetNumPlayers() >= requiredPlayerCount
 		&& gpGlobals->curtime >= m_flLastAwayCheckTime + sv_wakeupcall_interval.GetFloat())
 	{
 		m_flLastAwayCheckTime = gpGlobals->curtime;
@@ -2229,11 +2229,11 @@ void OnTeamnamesChange(IConVar *var, const char *pOldValue, float flOldValue)
 
 					if (awayName[0] != '\0')
 					{
-						GetGlobalTeam(TEAM_A)->SetTeamCode(trim(homeCode));
-						GetGlobalTeam(TEAM_A)->SetShortTeamName(trim(homeName));
+						GetGlobalTeam(TEAM_HOME)->SetTeamCode(trim(homeCode));
+						GetGlobalTeam(TEAM_HOME)->SetShortTeamName(trim(homeName));
 
-						GetGlobalTeam(TEAM_B)->SetTeamCode(trim(awayCode));
-						GetGlobalTeam(TEAM_B)->SetShortTeamName(trim(awayName));
+						GetGlobalTeam(TEAM_AWAY)->SetTeamCode(trim(awayCode));
+						GetGlobalTeam(TEAM_AWAY)->SetShortTeamName(trim(awayName));
 
 						return;
 					}
@@ -2317,8 +2317,8 @@ void CC_MP_Teamkits(const CCommand &args)
 
 		if (homeKit[0] != '\0' && awayKit[0] != '\0')
 		{
-			GetGlobalTeam(TEAM_A)->SetKitName(homeKit);
-			GetGlobalTeam(TEAM_B)->SetKitName(awayKit);
+			GetGlobalTeam(TEAM_HOME)->SetKitName(homeKit);
+			GetGlobalTeam(TEAM_AWAY)->SetKitName(awayKit);
 		}
 		else
 		{
@@ -2397,7 +2397,7 @@ void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 
 	if (!Q_strcmp(engine->GetPlayerNetworkIDString(pPlayer->edict()), "BOT")
 		|| gpGlobals->curtime < pPl->m_flNextClientSettingsChangeTime
-		|| (!IsIntermissionState() && (pPl->GetTeamNumber() == TEAM_A || pPl->GetTeamNumber() == TEAM_B)))
+		|| (!IsIntermissionState() && (pPl->GetTeamNumber() == TEAM_HOME || pPl->GetTeamNumber() == TEAM_AWAY)))
 		return;
 
 	pPl->m_flNextClientSettingsChangeTime = gpGlobals->curtime + mp_clientsettingschangeinterval.GetFloat();
@@ -2772,8 +2772,8 @@ void CSDKGameRules::ResetMatch()
 	FlushLog(logfile, "End player flags reset");
 
 	FlushLog(logfile, "Start team stats reset");
-	GetGlobalTeam(TEAM_A)->ResetStats();
-	GetGlobalTeam(TEAM_B)->ResetStats();
+	GetGlobalTeam(TEAM_HOME)->ResetStats();
+	GetGlobalTeam(TEAM_AWAY)->ResetStats();
 	FlushLog(logfile, "End team stats reset");
 
 	FlushLog(logfile, "Start player stats reset");
@@ -3028,7 +3028,7 @@ void CC_BenchAll(const CCommand &args)
 		if (!CSDKPlayer::IsOnField(pPl)/* || pPl->IsBot()*/)
 			continue;
 
-		if (team == 0 || (pPl->GetTeamNumber() - TEAM_A + 1) == team)
+		if (team == 0 || (pPl->GetTeamNumber() - TEAM_HOME + 1) == team)
 		{
 			pPl->SetDesiredTeam(TEAM_SPECTATOR, pPl->GetTeamNumber(), 0, true, true, true);
 			UTIL_ClientPrintAll(HUD_PRINTTALK, "#game_player_benched", pPl->GetPlayerName());
@@ -3108,7 +3108,7 @@ void CSDKGameRules::DrawFieldTeamCrests()
 
 	for (int i = 0; i < 2; i++)
 	{
-		if (!GetGlobalTeam(i + TEAM_A)->HasCrest())
+		if (!GetGlobalTeam(i + TEAM_HOME)->HasCrest())
 			continue;
 
 		int sign;
@@ -3116,12 +3116,12 @@ void CSDKGameRules::DrawFieldTeamCrests()
 
 		if (i == 0)
 		{
-			sign = m_nBottomTeam == TEAM_A ? 1 : -1;
+			sign = m_nBottomTeam == TEAM_HOME ? 1 : -1;
 			material = "vgui/hometeamcrest";
 		}
 		else
 		{
-			sign = m_nBottomTeam == TEAM_A ? -1 : 1;
+			sign = m_nBottomTeam == TEAM_HOME ? -1 : 1;
 			material = "vgui/awayteamcrest";
 		}
 
@@ -3213,7 +3213,7 @@ void CSDKGameRules::DrawGoalTeamCrests()
 
 	for (int i = 0; i < 2; i++)
 	{
-		if (!GetGlobalTeam(i + TEAM_A)->HasCrest())
+		if (!GetGlobalTeam(i + TEAM_HOME)->HasCrest())
 			continue;
 
 		int sign;
@@ -3221,19 +3221,19 @@ void CSDKGameRules::DrawGoalTeamCrests()
 
 		if (i == 0)
 		{
-			sign = m_nBottomTeam == TEAM_A ? 1 : -1;
+			sign = m_nBottomTeam == TEAM_HOME ? 1 : -1;
 			material = "vgui/hometeamcrest";
 		}
 		else
 		{
-			sign = m_nBottomTeam == TEAM_A ? -1 : 1;
+			sign = m_nBottomTeam == TEAM_HOME ? -1 : 1;
 			material = "vgui/awayteamcrest";
 		}
 
 		Vector right = Vector(-1, 0, 0);
 		Vector up = Vector(0, 0, -1);
 		float size = 150;
-		Vector origin = GetGlobalTeam(i + TEAM_A)->m_vGoalCenter;
+		Vector origin = GetGlobalTeam(i + TEAM_HOME)->m_vGoalCenter;
 		origin.y += sign * (40 + size);
 		origin.z += 350;
 

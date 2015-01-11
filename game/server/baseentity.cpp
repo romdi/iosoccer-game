@@ -4182,10 +4182,10 @@ CTeam *CBaseEntity::GetTeam( void ) const
 
 CTeam *CBaseEntity::GetOppTeam( void ) const
 {
-	if (m_iTeamNum != TEAM_A && m_iTeamNum != TEAM_B)
+	if (m_iTeamNum != TEAM_HOME && m_iTeamNum != TEAM_AWAY)
 		return GetGlobalTeam(m_iTeamNum);
 
-	return m_iTeamNum == TEAM_A ? GetGlobalTeam(TEAM_B) : GetGlobalTeam(TEAM_A);
+	return m_iTeamNum == TEAM_HOME ? GetGlobalTeam(TEAM_AWAY) : GetGlobalTeam(TEAM_HOME);
 }
 
 //-----------------------------------------------------------------------------
@@ -4231,10 +4231,10 @@ int CBaseEntity::GetTeamNumber( void ) const
 //-----------------------------------------------------------------------------
 int CBaseEntity::GetOppTeamNumber( void ) const
 {
-	if (m_iTeamNum != TEAM_A && m_iTeamNum != TEAM_B)
+	if (m_iTeamNum != TEAM_HOME && m_iTeamNum != TEAM_AWAY)
 		return m_iTeamNum;
 
-	return m_iTeamNum == TEAM_A ? TEAM_B : TEAM_A;
+	return m_iTeamNum == TEAM_HOME ? TEAM_AWAY : TEAM_HOME;
 }
 
 void CBaseEntity::SetTeamNumber(int teamNum)

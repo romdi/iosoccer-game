@@ -396,7 +396,7 @@ void CHudScorebar::OnThink( void )
 {
 	C_SDKPlayer *pLocal = C_SDKPlayer::GetLocalSDKPlayer();
 
-	if (!SDKGameRules() || !GetGlobalTeam(TEAM_A) || !GetGlobalTeam(TEAM_B) || !pLocal)
+	if (!SDKGameRules() || !GetGlobalTeam(TEAM_HOME) || !GetGlobalTeam(TEAM_AWAY) || !pLocal)
 		return;
 
 	if (SDKGameRules()->State_Get() == MATCH_PERIOD_WARMUP && mp_timelimit_warmup.GetFloat() < 0)
@@ -425,13 +425,13 @@ void CHudScorebar::OnThink( void )
 		m_pInjuryTime->SetText("");
 	}
 
-	for (int team = TEAM_A; team <= TEAM_B; team++)
+	for (int team = TEAM_HOME; team <= TEAM_AWAY; team++)
 	{
-		m_pTeamNames[team - TEAM_A]->SetText(GetGlobalTeam(team)->GetCode());
-		m_pTeamNames[team - TEAM_A]->SetFgColor(Color(255, 255, 255, 255));
-		m_pTeamColors[team - TEAM_A][0]->SetBgColor(GetGlobalTeam(team)->GetPrimaryKitColor());
-		m_pTeamColors[team - TEAM_A][1]->SetBgColor(GetGlobalTeam(team)->GetSecondaryKitColor());
-		m_pTeamGoals[team - TEAM_A]->SetText(VarArgs("%d", GetGlobalTeam(team)->GetGoals()));
+		m_pTeamNames[team - TEAM_HOME]->SetText(GetGlobalTeam(team)->GetCode());
+		m_pTeamNames[team - TEAM_HOME]->SetFgColor(Color(255, 255, 255, 255));
+		m_pTeamColors[team - TEAM_HOME][0]->SetBgColor(GetGlobalTeam(team)->GetPrimaryKitColor());
+		m_pTeamColors[team - TEAM_HOME][1]->SetBgColor(GetGlobalTeam(team)->GetSecondaryKitColor());
+		m_pTeamGoals[team - TEAM_HOME]->SetText(VarArgs("%d", GetGlobalTeam(team)->GetGoals()));
 	}
 
 	if (GetReplayManager() && GetReplayManager()->m_bIsReplaying)
@@ -576,8 +576,8 @@ void CHudScorebar::OnThink( void )
 	{
 		for (int i = 0; i < 2; i++)
 		{
-			int relativeRound = GetGlobalTeam(TEAM_A + i)->m_nPenaltyRound == 0 ? -1 : (GetGlobalTeam(TEAM_A + i)->m_nPenaltyRound - 1) % 5;
-			int fullRounds = max(0, GetGlobalTeam(TEAM_A + i)->m_nPenaltyRound - 1) / 5;
+			int relativeRound = GetGlobalTeam(TEAM_HOME + i)->m_nPenaltyRound == 0 ? -1 : (GetGlobalTeam(TEAM_HOME + i)->m_nPenaltyRound - 1) % 5;
+			int fullRounds = max(0, GetGlobalTeam(TEAM_HOME + i)->m_nPenaltyRound - 1) / 5;
 
 			for (int j = 0; j < 5; j++)
 			{
@@ -587,7 +587,7 @@ void CHudScorebar::OnThink( void )
 					color = Color(100, 100, 100, 255);
 				else
 				{
-					if ((GetGlobalTeam(TEAM_A + i)->m_nPenaltyGoalBits & (1 << (j + fullRounds * 5))) != 0)
+					if ((GetGlobalTeam(TEAM_HOME + i)->m_nPenaltyGoalBits & (1 << (j + fullRounds * 5))) != 0)
 						color = Color(0, 255, 0, 255);
 					else
 						color = Color(255, 0, 0, 255);
@@ -597,7 +597,7 @@ void CHudScorebar::OnThink( void )
 			}
 
 			m_pPenaltyPanels[i]->SetVisible(true);
-			m_pPenaltyTeamNames[i]->SetText(GetGlobalTeam(i + TEAM_A)->GetShortName());
+			m_pPenaltyTeamNames[i]->SetText(GetGlobalTeam(i + TEAM_HOME)->GetShortName());
 			m_pPenaltyTeamNames[i]->SetVisible(true);
 		}
 	}
@@ -629,15 +629,15 @@ void CHudScorebar::OnThink( void )
 				if (!gr->IsConnected(i))
 					continue;
 
-				if (gr->GetTeam(i) == TEAM_A || gr->GetTeam(i) == TEAM_B)
+				if (gr->GetTeam(i) == TEAM_HOME || gr->GetTeam(i) == TEAM_AWAY)
 				{
-					playerIndexAtPos[gr->GetTeam(i) - TEAM_A][gr->GetTeamPosIndex(i)] = i;
+					playerIndexAtPos[gr->GetTeam(i) - TEAM_HOME][gr->GetTeamPosIndex(i)] = i;
 				}
 			}
 
 			char text[4096];
 
-			C_Team *pTeam = GetGlobalTeam(TEAM_A + m_nTickerTeamIndex);
+			C_Team *pTeam = GetGlobalTeam(TEAM_HOME + m_nTickerTeamIndex);
 
 			Q_strcat(text, VarArgs("%s:     ", pTeam->GetShortName()), sizeof(text));
 
@@ -679,21 +679,21 @@ void CHudScorebar::Paint( void )
 
 char *GetPossessionText()
 {
-	return VarArgs("%d%% possession %d%%", GetGlobalTeam(TEAM_A)->m_Possession, GetGlobalTeam(TEAM_B)->m_Possession);
+	return VarArgs("%d%% possession %d%%", GetGlobalTeam(TEAM_HOME)->m_Possession, GetGlobalTeam(TEAM_AWAY)->m_Possession);
 }
 
 char *GetShotsOnGoalText()
 {
 	return VarArgs("%d%% shots on goal %d%%",
-		GetGlobalTeam(TEAM_A)->m_ShotsOnGoal * 100 / max(1, GetGlobalTeam(TEAM_A)->m_Shots),
-		GetGlobalTeam(TEAM_B)->m_ShotsOnGoal * 100 / max(1, GetGlobalTeam(TEAM_B)->m_Shots));
+		GetGlobalTeam(TEAM_HOME)->m_ShotsOnGoal * 100 / max(1, GetGlobalTeam(TEAM_HOME)->m_Shots),
+		GetGlobalTeam(TEAM_AWAY)->m_ShotsOnGoal * 100 / max(1, GetGlobalTeam(TEAM_AWAY)->m_Shots));
 }
 
 char *GetPassingText()
 {
 	return VarArgs("%d%% passes completed %d%%",
-		GetGlobalTeam(TEAM_A)->m_PassesCompleted * 100 / max(1, GetGlobalTeam(TEAM_A)->m_Passes),
-		GetGlobalTeam(TEAM_B)->m_PassesCompleted * 100 / max(1, GetGlobalTeam(TEAM_B)->m_Passes));
+		GetGlobalTeam(TEAM_HOME)->m_PassesCompleted * 100 / max(1, GetGlobalTeam(TEAM_HOME)->m_Passes),
+		GetGlobalTeam(TEAM_AWAY)->m_PassesCompleted * 100 / max(1, GetGlobalTeam(TEAM_AWAY)->m_Passes));
 }
 
 char *GetOrdinal(int number)
@@ -936,7 +936,7 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 		m_pNotificationPanel->SetVisible(false);
 		m_pGoalInfoPanel->SetVisible(true);
 		m_pGoalInfoPanel->SetAlpha(0);
-		m_pGoalInfoPanelTeamCrest->SetImage(event->GetInt("scoring_team") == TEAM_A ? "hometeamcrest_notification" : "awayteamcrest_notification");
+		m_pGoalInfoPanelTeamCrest->SetImage(event->GetInt("scoring_team") == TEAM_HOME ? "hometeamcrest_notification" : "awayteamcrest_notification");
 
 		//if (pScorer)
 		//{

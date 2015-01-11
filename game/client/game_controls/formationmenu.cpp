@@ -67,7 +67,7 @@ CFormationMenu::CFormationMenu(Panel *parent, const char *name) : Panel(parent, 
 		for (int j = 0; j < 11; j++)
 		{
 			m_pFormationButtons[i][j] = new CBitmapButton(m_pFormations[i], "", "JOIN");
-			m_pFormationButtons[i][j]->SetCommand(VarArgs("jointeam %d %d", i + TEAM_A, j));
+			m_pFormationButtons[i][j]->SetCommand(VarArgs("jointeam %d %d", i + TEAM_HOME, j));
 			m_pFormationButtons[i][j]->AddActionSignalTarget(this);
 
 			m_pToolTips[i][j] = new Label(m_pFormations[i], "", "");
@@ -170,25 +170,25 @@ void CFormationMenu::Update(bool showCaptainMenu)
 		if (!gr->IsConnected(i))
 			continue;
 
-		if (gr->GetTeam(i) == TEAM_A || gr->GetTeam(i) == TEAM_B)
+		if (gr->GetTeam(i) == TEAM_HOME || gr->GetTeam(i) == TEAM_AWAY)
 		{
-			playerIndexAtPos[gr->GetTeam(i) - TEAM_A][gr->GetTeamPosIndex(i)] = i;
+			playerIndexAtPos[gr->GetTeam(i) - TEAM_HOME][gr->GetTeamPosIndex(i)] = i;
 			
 			if (gr->GetTeamPosType(i) == POS_GK)
 				keeperCount += 1;
 		}
 		
-		if (gr->GetTeamToJoin(i) == TEAM_A || gr->GetTeamToJoin(i) == TEAM_B)
+		if (gr->GetTeamToJoin(i) == TEAM_HOME || gr->GetTeamToJoin(i) == TEAM_AWAY)
 		{
-			if (playerIndexAtPos[gr->GetTeamToJoin(i) - TEAM_A][gr->GetTeamPosIndexToJoin(i)] == 0)
+			if (playerIndexAtPos[gr->GetTeamToJoin(i) - TEAM_HOME][gr->GetTeamPosIndexToJoin(i)] == 0)
 			{
-				playerIndexAtPos[gr->GetTeamToJoin(i) - TEAM_A][gr->GetTeamPosIndexToJoin(i)] = i;
+				playerIndexAtPos[gr->GetTeamToJoin(i) - TEAM_HOME][gr->GetTeamPosIndexToJoin(i)] = i;
 			}
 			
 			if (gr->GetTeamToJoin(i) == gr->GetTeam(GetLocalPlayerIndex()) && gr->GetTeamPosIndexToJoin(i) == gr->GetTeamPosIndex(GetLocalPlayerIndex()))
 			{
 				if (gr->GetTeam(i) != TEAM_SPECTATOR)
-					swapperAtPos[gr->GetTeam(i) - TEAM_A][gr->GetTeamPosIndex(i)] = true;
+					swapperAtPos[gr->GetTeam(i) - TEAM_HOME][gr->GetTeamPosIndex(i)] = true;
 			}
 		}
 	}
@@ -204,8 +204,8 @@ void CFormationMenu::Update(bool showCaptainMenu)
 				continue;
 			}
 
-			bool posBlocked = SDKGameRules()->GetMatchDisplayTimeSeconds(true, false) < GetGlobalTeam(TEAM_A + i)->m_PosNextJoinSeconds[j]
-							  || sv_singlekeeper.GetInt() == 2 && GetGlobalTeam(TEAM_A + i)->GetFormation()->positions[j]->type == POS_GK && playerIndexAtPos[i][j] == 0 && keeperCount == 1;
+			bool posBlocked = SDKGameRules()->GetMatchDisplayTimeSeconds(true, false) < GetGlobalTeam(TEAM_HOME + i)->m_PosNextJoinSeconds[j]
+							  || sv_singlekeeper.GetInt() == 2 && GetGlobalTeam(TEAM_HOME + i)->GetFormation()->positions[j]->type == POS_GK && playerIndexAtPos[i][j] == 0 && keeperCount == 1;
 
 			Color color = posBlocked ? g_ColorRed : g_ColorGray;
 
@@ -215,15 +215,15 @@ void CFormationMenu::Update(bool showCaptainMenu)
 			color32 pressed = { color.r(), color.g(), color.b(), 20 };
 
 			m_pFormationButtons[i][j]->SetVisible(true);
-			m_pFormationButtons[i][j]->SetText(VarArgs("%s", g_szPosNames[GetGlobalTeam(TEAM_A + i)->GetFormation()->positions[j]->type]));
+			m_pFormationButtons[i][j]->SetText(VarArgs("%s", g_szPosNames[GetGlobalTeam(TEAM_HOME + i)->GetFormation()->positions[j]->type]));
 
 			m_pToolTips[i][j]->SetVisible(true);
 
 			float xDist = (m_pFormations[i]->GetWide() - 2 * FORMATION_HPADDING) / 3;
 			float yDist = (m_pFormations[i]->GetTall() - FORMATION_VTOPPADDING - FORMATION_VBOTTOMPADDING) / 3;
-			float xPos = FORMATION_HPADDING + GetGlobalTeam(TEAM_A + i)->GetFormation()->positions[j]->x * xDist - m_pFormationButtons[i][j]->GetWide() / 2;
+			float xPos = FORMATION_HPADDING + GetGlobalTeam(TEAM_HOME + i)->GetFormation()->positions[j]->x * xDist - m_pFormationButtons[i][j]->GetWide() / 2;
 			xPos += (i == 0 ? -1 : 1) * FORMATION_CENTERPADDING;
-			float yPos = FORMATION_VTOPPADDING + GetGlobalTeam(TEAM_A + i)->GetFormation()->positions[j]->y * yDist - m_pFormationButtons[i][j]->GetTall() / 2;
+			float yPos = FORMATION_VTOPPADDING + GetGlobalTeam(TEAM_HOME + i)->GetFormation()->positions[j]->y * yDist - m_pFormationButtons[i][j]->GetTall() / 2;
 			m_pFormationButtons[i][j]->SetPos(xPos, yPos);
 
 			bool isFree = (playerIndexAtPos[i][j] == 0);
@@ -233,7 +233,7 @@ void CFormationMenu::Update(bool showCaptainMenu)
 
 			KeyValues *kv = new KeyValues("Command");
 
-			char *cmd = VarArgs("jointeam %d %d", i + TEAM_A, j);
+			char *cmd = VarArgs("jointeam %d %d", i + TEAM_HOME, j);
 
 			m_pFormationButtons[i][j]->SetImage(CBitmapButton::BUTTON_ENABLED, "vgui/shirt", isFree ? free : taken);
 			m_pFormationButtons[i][j]->SetImage(CBitmapButton::BUTTON_ENABLED_MOUSE_OVER, "vgui/shirt", m_bShowCaptainMenu ? (isFree ? free : taken) : hover);
@@ -246,10 +246,10 @@ void CFormationMenu::Update(bool showCaptainMenu)
 			kv->SetString("command", cmd);
 			kv->SetInt("playerindex", playerIndexAtPos[i][j]);
 			kv->SetInt("posindex", j);
-			kv->SetInt("team", i + TEAM_A);
+			kv->SetInt("team", i + TEAM_HOME);
 			kv->SetInt("selected", old->GetInt("selected"));
 
-			bool localPlayerWantsToJoinPos = gr->GetTeamToJoin(GetLocalPlayerIndex()) == i + TEAM_A && gr->GetTeamPosIndexToJoin(GetLocalPlayerIndex()) == j;
+			bool localPlayerWantsToJoinPos = gr->GetTeamToJoin(GetLocalPlayerIndex()) == i + TEAM_HOME && gr->GetTeamPosIndexToJoin(GetLocalPlayerIndex()) == j;
 
 			int alpha = 240;
 

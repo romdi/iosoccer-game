@@ -202,18 +202,18 @@ int	C_Team::GetTeamNumber( void ) const
 
 int C_Team::GetOppTeamNumber( void ) const
 {
-	if (m_iTeamNum != TEAM_A && m_iTeamNum != TEAM_B)
+	if (m_iTeamNum != TEAM_HOME && m_iTeamNum != TEAM_AWAY)
 		return m_iTeamNum;
 
-	return m_iTeamNum == TEAM_A ? TEAM_B : TEAM_A;
+	return m_iTeamNum == TEAM_HOME ? TEAM_AWAY : TEAM_HOME;
 }
 
 C_Team *C_Team::GetOppTeam( void ) const
 {
-	if (m_iTeamNum != TEAM_A && m_iTeamNum != TEAM_B)
+	if (m_iTeamNum != TEAM_HOME && m_iTeamNum != TEAM_AWAY)
 		return GetGlobalTeam(m_iTeamNum);
 
-	return m_iTeamNum == TEAM_A ? GetGlobalTeam(TEAM_B) : GetGlobalTeam(TEAM_A);
+	return m_iTeamNum == TEAM_HOME ? GetGlobalTeam(TEAM_AWAY) : GetGlobalTeam(TEAM_HOME);
 }
 
 bool C_Team::IsClub( void )
@@ -233,7 +233,7 @@ bool C_Team::HasCrest( void )
 
 char *C_Team::GetCode( void )
 {
-	if (m_iTeamNum == TEAM_A || m_iTeamNum == TEAM_B)
+	if (m_iTeamNum == TEAM_HOME || m_iTeamNum == TEAM_AWAY)
 	{
 		if (m_szServerCode[0] != 0)
 			return m_szServerCode;
@@ -246,7 +246,7 @@ char *C_Team::GetCode( void )
 
 char *C_Team::GetFullName( void )
 {
-	if (m_iTeamNum == TEAM_A || m_iTeamNum == TEAM_B)
+	if (m_iTeamNum == TEAM_HOME || m_iTeamNum == TEAM_AWAY)
 		return m_pKitInfo->m_pTeamInfo->m_szFullName;
 	else
 		return "";
@@ -254,7 +254,7 @@ char *C_Team::GetFullName( void )
 
 char *C_Team::GetShortName( void )
 {
-	if (m_iTeamNum == TEAM_A || m_iTeamNum == TEAM_B)
+	if (m_iTeamNum == TEAM_HOME || m_iTeamNum == TEAM_AWAY)
 	{
 		if (m_szServerShortName[0] != 0)
 			return m_szServerShortName;
@@ -267,7 +267,7 @@ char *C_Team::GetShortName( void )
 
 char *C_Team::GetKitName( void )
 {
-	if (m_iTeamNum == TEAM_A || m_iTeamNum == TEAM_B)
+	if (m_iTeamNum == TEAM_HOME || m_iTeamNum == TEAM_AWAY)
 	{
 		return m_pKitInfo->m_szName;
 	}
@@ -277,7 +277,7 @@ char *C_Team::GetKitName( void )
 
 char *C_Team::GetKitFolderName( void )
 {
-	if (m_iTeamNum == TEAM_A || m_iTeamNum == TEAM_B)
+	if (m_iTeamNum == TEAM_HOME || m_iTeamNum == TEAM_AWAY)
 	{
 		return m_pKitInfo->m_szFolderName;
 	}
@@ -287,7 +287,7 @@ char *C_Team::GetKitFolderName( void )
 
 char *C_Team::GetFolderName( void )
 {
-	if (m_iTeamNum == TEAM_A || m_iTeamNum == TEAM_B)
+	if (m_iTeamNum == TEAM_HOME || m_iTeamNum == TEAM_AWAY)
 	{
 		return m_pKitInfo->m_pTeamInfo->m_szFolderName;
 	}
@@ -297,12 +297,12 @@ char *C_Team::GetFolderName( void )
 
 Color &C_Team::GetHudKitColor()
 {
-	if (GetTeamNumber() == TEAM_A)
+	if (GetTeamNumber() == TEAM_HOME)
 	{
 		static Color col = Color(120, 192, 168, 255);
 		return col;
 	}
-	else if (GetTeamNumber() == TEAM_B)
+	else if (GetTeamNumber() == TEAM_AWAY)
 	{
 		static Color col = Color(255, 155, 116, 255);
 		return col;

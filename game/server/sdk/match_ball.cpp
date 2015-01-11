@@ -468,7 +468,7 @@ void CMatchBall::State_KICKOFF_Think()
 
 		if (!m_pPl)
 		{
-			SDKGameRules()->EnableShield(SHIELD_KICKOFF, GetGlobalTeam(TEAM_A)->GetTeamNumber(), SDKGameRules()->m_vKickOff);
+			SDKGameRules()->EnableShield(SHIELD_KICKOFF, GetGlobalTeam(TEAM_HOME)->GetTeamNumber(), SDKGameRules()->m_vKickOff);
 			if (!CSDKPlayer::PlayersAtTargetPos())
 				return;
 
@@ -1330,7 +1330,7 @@ bool CMatchBall::CheckGoal()
 void CMatchBall::CheckFieldZone()
 {
 	float fieldLength = SDKGameRules()->m_vFieldMax.GetY() - SDKGameRules()->m_vFieldMin.GetY();
-	float dist = GetGlobalTeam(TEAM_A)->m_nForward * (m_vPos.y - SDKGameRules()->m_vKickOff.GetY());
+	float dist = GetGlobalTeam(TEAM_HOME)->m_nForward * (m_vPos.y - SDKGameRules()->m_vKickOff.GetY());
 	m_flFieldZone = clamp(dist * 100 / (fieldLength / 2), -100, 100);
 }
 
@@ -2003,10 +2003,10 @@ void CMatchBall::UpdatePossession(CSDKPlayer *pNewPossessor)
 		if (CSDKPlayer::IsOnField(m_pPossessingPl))
 			m_pPossessingPl->AddPossessionTime(duration);
 
-		float total = GetGlobalTeam(TEAM_A)->m_flPossessionTime + GetGlobalTeam(TEAM_B)->m_flPossessionTime;
+		float total = GetGlobalTeam(TEAM_HOME)->m_flPossessionTime + GetGlobalTeam(TEAM_AWAY)->m_flPossessionTime;
 
-		GetGlobalTeam(TEAM_A)->m_Possession = floor(GetGlobalTeam(TEAM_A)->m_flPossessionTime * 100 / max(1, total) + 0.5f);
-		GetGlobalTeam(TEAM_B)->m_Possession = 100 - GetGlobalTeam(TEAM_A)->m_Possession;
+		GetGlobalTeam(TEAM_HOME)->m_Possession = floor(GetGlobalTeam(TEAM_HOME)->m_flPossessionTime * 100 / max(1, total) + 0.5f);
+		GetGlobalTeam(TEAM_AWAY)->m_Possession = 100 - GetGlobalTeam(TEAM_HOME)->m_Possession;
 
 		int possSum = 0;
 

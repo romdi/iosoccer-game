@@ -198,18 +198,18 @@ int CTeam::GetTeamNumber( void ) const
 
 int CTeam::GetOppTeamNumber( void ) const
 {
-	if (m_iTeamNum != TEAM_A && m_iTeamNum != TEAM_B)
+	if (m_iTeamNum != TEAM_HOME && m_iTeamNum != TEAM_AWAY)
 		return m_iTeamNum;
 
-	return m_iTeamNum == TEAM_A ? TEAM_B : TEAM_A;
+	return m_iTeamNum == TEAM_HOME ? TEAM_AWAY : TEAM_HOME;
 }
 
 CTeam *CTeam::GetOppTeam( void ) const
 {
-	if (m_iTeamNum != TEAM_A && m_iTeamNum != TEAM_B)
+	if (m_iTeamNum != TEAM_HOME && m_iTeamNum != TEAM_AWAY)
 		return GetGlobalTeam(m_iTeamNum);
 
-	return m_iTeamNum == TEAM_A ? GetGlobalTeam(TEAM_B) : GetGlobalTeam(TEAM_A);
+	return m_iTeamNum == TEAM_HOME ? GetGlobalTeam(TEAM_AWAY) : GetGlobalTeam(TEAM_HOME);
 }
 
 const char *CTeam::GetTeamCode( void )
@@ -276,7 +276,7 @@ void CTeam::RemovePlayer( CBasePlayer *pPlayer )
 	m_LastPlayerCoordsByPosIndex[ToSDKPlayer(pPlayer)->GetTeamPosIndex()].coords = pPlayer->GetLocalOrigin();
 	m_LastPlayerCoordsByPosIndex[ToSDKPlayer(pPlayer)->GetTeamPosIndex()].leaveTime = gpGlobals->curtime;
 
-	if ((GetTeamNumber() == TEAM_A || GetTeamNumber() == TEAM_B) && pPlayer == GetCaptain())
+	if ((GetTeamNumber() == TEAM_HOME || GetTeamNumber() == TEAM_AWAY) && pPlayer == GetCaptain())
 		SetCaptainPosIndex(-1);
 
 	m_aPlayers.FindAndRemove( pPlayer );

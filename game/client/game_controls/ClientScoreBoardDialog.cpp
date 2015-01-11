@@ -198,7 +198,7 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Editabl
 	m_pSpectatorText = new Label(m_pSpectatorContainer, "", "");
 
 	for (int i = 0; i < 3; i++)
-		m_pSpectateButtons[i] = new Button(m_pMainPanel, "SpectateButton", (i == 0 ? "Spectate" : "Bench"), this, VarArgs("spectate %d", (i == 0 ? TEAM_SPECTATOR : TEAM_A + i - 1)));
+		m_pSpectateButtons[i] = new Button(m_pMainPanel, "SpectateButton", (i == 0 ? "Spectate" : "Bench"), this, VarArgs("spectate %d", (i == 0 ? TEAM_SPECTATOR : TEAM_HOME + i - 1)));
 
 	m_pSpecInfo = new Label(m_pMainPanel, "", "");
 
@@ -325,14 +325,14 @@ void CClientScoreBoardDialog::Reset()
 			kv = new KeyValues("data");
 
 			if (GameResources())
-				kv->SetString("posname", g_szPosNames[(int)GetGlobalTeam(GameResources()->GetTeam(TEAM_A + i))->GetFormation()->positions[j]->type]);
+				kv->SetString("posname", g_szPosNames[(int)GetGlobalTeam(GameResources()->GetTeam(TEAM_HOME + i))->GetFormation()->positions[j]->type]);
 
 			kv->SetInt("posindex", j + 1);
 			m_pPlayerList[i]->AddItem(0, kv);
 			kv->deleteThis();
 			m_pPlayerList[i]->SetItemFont(j + 1, m_pScheme->GetFont("IOSTeamMenuNormal"));
 
-			if (GetGlobalTeam(TEAM_A + i))
+			if (GetGlobalTeam(TEAM_HOME + i))
 				m_pPlayerList[i]->SetItemFgColor(j + 1, g_ColorGray);
 
 		}
@@ -661,24 +661,24 @@ void CClientScoreBoardDialog::Update( void )
 		m_pStatButtonContainer->SetVisible(true);
 		m_pMatchEventMenu->SetVisible(false);
 
-		bool isOnField = (pLocal->GetTeamNumber() == TEAM_A || pLocal->GetTeamNumber() == TEAM_B);
+		bool isOnField = (pLocal->GetTeamNumber() == TEAM_HOME || pLocal->GetTeamNumber() == TEAM_AWAY);
 
-		if (pLocal->GetTeamNumber() == TEAM_A && mp_captaincy_home.GetBool() || pLocal->GetTeamNumber() == TEAM_B && mp_captaincy_away.GetBool())
+		if (pLocal->GetTeamNumber() == TEAM_HOME && mp_captaincy_home.GetBool() || pLocal->GetTeamNumber() == TEAM_AWAY && mp_captaincy_away.GetBool())
 		{
 			if (GetGlobalTeam(GetLocalPlayerTeam())->GetCaptainPosIndex() == gr->GetTeamPosIndex(GetLocalPlayerIndex()))
 				m_pToggleCaptaincy->SetText("- Captain");
 			else
 				m_pToggleCaptaincy->SetText("+ Captain");
 
-			m_pToggleCaptaincy->SetPos(GetLocalPlayerTeam() == TEAM_A ? 5 : m_pMainPanel->GetWide() - 85, m_pMainPanel->GetTall() - 2 * (5 + STATBUTTON_HEIGHT));
+			m_pToggleCaptaincy->SetPos(GetLocalPlayerTeam() == TEAM_HOME ? 5 : m_pMainPanel->GetWide() - 85, m_pMainPanel->GetTall() - 2 * (5 + STATBUTTON_HEIGHT));
 			m_pToggleCaptaincy->SetVisible(true);
 		}
 		else
 			m_pToggleCaptaincy->SetVisible(false);
 
 		m_pSpectateButtons[0]->SetVisible(isOnField || gr->GetSpecTeam(GetLocalPlayerIndex()) != TEAM_SPECTATOR);
-		m_pSpectateButtons[1]->SetVisible(isOnField || gr->GetSpecTeam(GetLocalPlayerIndex()) != TEAM_A);
-		m_pSpectateButtons[2]->SetVisible(isOnField || gr->GetSpecTeam(GetLocalPlayerIndex()) != TEAM_B);
+		m_pSpectateButtons[1]->SetVisible(isOnField || gr->GetSpecTeam(GetLocalPlayerIndex()) != TEAM_HOME);
+		m_pSpectateButtons[2]->SetVisible(isOnField || gr->GetSpecTeam(GetLocalPlayerIndex()) != TEAM_AWAY);
 	}
 	else
 	{
@@ -687,7 +687,7 @@ void CClientScoreBoardDialog::Update( void )
 		m_pToggleCaptaincy->SetVisible(false);
 	}
 
-	if ((pLocal->GetTeamNumber() == TEAM_A || pLocal->GetTeamNumber() == TEAM_B)
+	if ((pLocal->GetTeamNumber() == TEAM_HOME || pLocal->GetTeamNumber() == TEAM_AWAY)
 		&& pLocal->GetTeam()->GetCaptainPosIndex() == gr->GetTeamPosIndex(GetLocalPlayerIndex()))
 	{
 		// Local player is captain, so show the menu toggle button
@@ -739,7 +739,7 @@ void CClientScoreBoardDialog::Update( void )
 		m_bCanSetSetpieceTaker = false;
 
 	for (int i = 0; i < 2; i++)
-		m_pPlayerList[i]->SetCursor(m_bCanSetSetpieceTaker && i == GetLocalPlayerTeam() - TEAM_A ? dc_hand : dc_arrow);
+		m_pPlayerList[i]->SetCursor(m_bCanSetSetpieceTaker && i == GetLocalPlayerTeam() - TEAM_HOME ? dc_hand : dc_arrow);
 
 	m_fNextUpdateTime = gpGlobals->curtime + 0.25f; 
 }
@@ -755,7 +755,7 @@ void CClientScoreBoardDialog::UpdateTeamInfo()
 	for (int i = 0; i < 2; i++)
 	{
 		KeyValues *kv = new KeyValues("data");
-		GetTeamInfo(i + TEAM_A, kv);
+		GetTeamInfo(i + TEAM_HOME, kv);
 		m_pPlayerList[i]->ModifyItem(0, 0, kv);
 
 		if (m_nSelectedPlayerIndex == i - 2)
@@ -809,7 +809,7 @@ void CClientScoreBoardDialog::UpdatePlayerInfo()
 		if (!gr->IsConnected(i))
 			continue;
 		
-		if (gr->GetTeam(i) != TEAM_A && gr->GetTeam(i) != TEAM_B)
+		if (gr->GetTeam(i) != TEAM_HOME && gr->GetTeam(i) != TEAM_AWAY)
 		{
 			SpecInfo info;
 			info.playerIndex = i;
@@ -830,7 +830,7 @@ void CClientScoreBoardDialog::UpdatePlayerInfo()
 		}
 		else
 		{
-			playerIndexAtPos[gr->GetTeam(i) - TEAM_A][gr->GetTeamPosIndex(i)] = i;
+			playerIndexAtPos[gr->GetTeam(i) - TEAM_HOME][gr->GetTeamPosIndex(i)] = i;
 
 			// add the player to the list
 			KeyValues *playerData = new KeyValues("data");
@@ -840,7 +840,7 @@ void CClientScoreBoardDialog::UpdatePlayerInfo()
 
 			int side = -1;
 			int team = gr->GetTeam(i); //omega; set a variable to team so we can reuse it
-			int teamIndex = team - TEAM_A;
+			int teamIndex = team - TEAM_HOME;
 			int sectionID = 0;//iTeamSections[playerTeam]; //omega; make sure it goes into the proper section
 
 			int itemID = gr->GetTeamPosIndex(i) + 1;
@@ -857,7 +857,7 @@ void CClientScoreBoardDialog::UpdatePlayerInfo()
 		}
 
 		int team = gr->GetTeamToJoin(i) != TEAM_INVALID ? gr->GetTeamToJoin(i) : gr->GetTeam(i);
-		int teamIndex = team - TEAM_A;
+		int teamIndex = team - TEAM_HOME;
 	}
 
 	for (int i = 0; i < 2; i++)
@@ -867,7 +867,7 @@ void CClientScoreBoardDialog::UpdatePlayerInfo()
 			if (playerIndexAtPos[i][j] == 0)
 			{
 				KeyValues *emptyData = new KeyValues("data");
-				emptyData->SetString("posname", g_szPosNames[(int)GetGlobalTeam(gr->GetTeam(TEAM_A + i))->GetFormation()->positions[j]->type]);
+				emptyData->SetString("posname", g_szPosNames[(int)GetGlobalTeam(gr->GetTeam(TEAM_HOME + i))->GetFormation()->positions[j]->type]);
 				emptyData->SetInt("posindex", j + 1);
 				m_pPlayerList[i]->ModifyItem(j + 1, 0, emptyData);
 				emptyData->deleteThis();
@@ -1244,7 +1244,7 @@ bool CClientScoreBoardDialog::GetTeamInfo(int team, KeyValues *kv)
 		return false;
 
 	C_Team *pTeam = GetGlobalTeam(team);
-	int teamIndex = team - TEAM_A;
+	int teamIndex = team - TEAM_HOME;
 	bool teamClubInit = false;
 	char teamClub[32] = {};
 	bool isTeamSameClub = true;

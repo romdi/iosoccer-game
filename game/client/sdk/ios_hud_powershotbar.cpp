@@ -112,7 +112,7 @@ bool CHudChargedshotBar::ShouldDraw()
 		return false;
 
 	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
-	if (!pPlayer || pPlayer->GetTeamNumber() != TEAM_A && pPlayer->GetTeamNumber() != TEAM_B)
+	if (!pPlayer || pPlayer->GetTeamNumber() != TEAM_HOME && pPlayer->GetTeamNumber() != TEAM_AWAY)
 		return false;
 
 	if (GetMatchBall() && GetMatchBall()->m_eBallState == BALL_STATE_GOAL)

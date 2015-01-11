@@ -436,7 +436,7 @@ void CReplayManager::TakeSnapshot()
 
 		pPlSnap->pPlayerData = pPl->GetPlayerData();
 
-		pSnap->pPlayerSnapshot[pPl->GetTeamNumber() - TEAM_A][pPl->GetTeamPosIndex()] = pPlSnap;
+		pSnap->pPlayerSnapshot[pPl->GetTeamNumber() - TEAM_HOME][pPl->GetTeamPosIndex()] = pPlSnap;
 	}
 
 	m_Snapshots.AddToTail(pSnap);

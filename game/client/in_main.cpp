@@ -73,7 +73,7 @@ extern ConVar cl_mouselook;
 float GetPitchup()
 {
 	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
-	if (pPlayer && (pPlayer->GetTeamNumber() == TEAM_A || pPlayer->GetTeamNumber() == TEAM_B) && !(in_zoom.state & 1) && !legacyverticallook.GetBool())
+	if (pPlayer && (pPlayer->GetTeamNumber() == TEAM_HOME || pPlayer->GetTeamNumber() == TEAM_AWAY) && !(in_zoom.state & 1) && !legacyverticallook.GetBool())
 		return mp_pitchup.GetFloat();
 	else
 		return cl_pitchup.GetFloat();
@@ -82,7 +82,7 @@ float GetPitchup()
 float GetPitchdown()
 {
 	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
-	if (pPlayer && (pPlayer->GetTeamNumber() == TEAM_A || pPlayer->GetTeamNumber() == TEAM_B) && !(in_zoom.state & 1) && !legacyverticallook.GetBool())
+	if (pPlayer && (pPlayer->GetTeamNumber() == TEAM_HOME || pPlayer->GetTeamNumber() == TEAM_AWAY) && !(in_zoom.state & 1) && !legacyverticallook.GetBool())
 		return mp_pitchdown.GetFloat();
 	else
 		return cl_pitchdown.GetFloat();

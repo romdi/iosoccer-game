@@ -327,7 +327,7 @@ void CSpectatorMenu::Update( void )
 
 		for (int i = 1; i <= gpGlobals->maxClients; i++)
 		{
-			if (!gr->IsConnected(i) || gr->IsLocalPlayer(i) || gr->GetTeam(i) != TEAM_A && gr->GetTeam(i) != TEAM_B)
+			if (!gr->IsConnected(i) || gr->IsLocalPlayer(i) || gr->GetTeam(i) != TEAM_HOME && gr->GetTeam(i) != TEAM_AWAY)
 				continue;
 
 			KeyValues *pKV = new KeyValues("UserData", "index", i);

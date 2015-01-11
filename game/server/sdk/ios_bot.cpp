@@ -143,18 +143,18 @@ void CBot::FieldBotJoinTeam()
 		if (!pPl)
 			continue;
 
-		if (!CSDKPlayer::IsOnField(pPl) && pPl->GetTeamToJoin() != TEAM_A && pPl->GetTeamToJoin() != TEAM_B)
+		if (!CSDKPlayer::IsOnField(pPl) && pPl->GetTeamToJoin() != TEAM_HOME && pPl->GetTeamToJoin() != TEAM_AWAY)
 			continue;
 
 		int team = CSDKPlayer::IsOnField(pPl) ? pPl->GetTeamNumber() : pPl->GetTeamToJoin();
 
-		playerCount[team - TEAM_A] += 1;
+		playerCount[team - TEAM_HOME] += 1;
 	}
 
-	int team = playerCount[0] < playerCount[1] ? TEAM_A : TEAM_B;
+	int team = playerCount[0] < playerCount[1] ? TEAM_HOME : TEAM_AWAY;
 
 	if (playerCount[team] == mp_maxplayers.GetInt())
-		team = team == TEAM_A ? TEAM_B : TEAM_A;
+		team = team == TEAM_HOME ? TEAM_AWAY : TEAM_HOME;
 
 	if (playerCount[team] == mp_maxplayers.GetInt() || SDKGameRules()->GetMatchDisplayTimeSeconds() < GetNextCardJoin())
 		SetDesiredTeam(TEAM_SPECTATOR, GetTeamNumber(), 0, true, true, false);
@@ -226,7 +226,7 @@ void Bot_RunAll( void )
 
 	for (int i = 0; i < 2; i++)
 	{
-		keeperPosIndices[i] = GetGlobalTeam(TEAM_A + i)->GetPosIndexByPosType(POS_GK);
+		keeperPosIndices[i] = GetGlobalTeam(TEAM_HOME + i)->GetPosIndexByPosType(POS_GK);
 		if (keeperPosIndices[i] == -1)
 			return;
 	}
@@ -242,7 +242,7 @@ void Bot_RunAll( void )
 		{
 			if (((CBot *)pPl)->m_nPlayerType != 0)
 			{
-				int team = ((CBot *)pPl)->m_nPlayerType == 1 ? TEAM_A : TEAM_B;
+				int team = ((CBot *)pPl)->m_nPlayerType == 1 ? TEAM_HOME : TEAM_AWAY;
 
 				if (!botkeepers.GetBool())
 				{
@@ -250,11 +250,11 @@ void Bot_RunAll( void )
 					Q_snprintf(kickcmd, sizeof(kickcmd), "kickid %i Bot keepers not allowed\n", pPl->GetUserID());
 					engine->ServerCommand(kickcmd);
 				}
-				else if (!CSDKPlayer::IsOnField(pPl) && pPl->GetTeamToJoin() != TEAM_A && pPl->GetTeamToJoin() != TEAM_B)
+				else if (!CSDKPlayer::IsOnField(pPl) && pPl->GetTeamToJoin() != TEAM_HOME && pPl->GetTeamToJoin() != TEAM_AWAY)
 				{
 					CSDKPlayer *pSpotTaker = NULL;
 
-					if (!pPl->IsTeamPosFree(team, keeperPosIndices[team - TEAM_A], false, &pSpotTaker))
+					if (!pPl->IsTeamPosFree(team, keeperPosIndices[team - TEAM_HOME], false, &pSpotTaker))
 					{
 						char kickcmd[512];
 						Q_snprintf(kickcmd, sizeof(kickcmd), "kickid %i Position already taken\n", pPl->GetUserID());
@@ -262,26 +262,26 @@ void Bot_RunAll( void )
 					}
 					else
 					{
-						pPl->SetDesiredTeam(team, team, keeperPosIndices[team - TEAM_A], true, false, false);
-						keeperSpotTaken[team - TEAM_A] = true;
+						pPl->SetDesiredTeam(team, team, keeperPosIndices[team - TEAM_HOME], true, false, false);
+						keeperSpotTaken[team - TEAM_HOME] = true;
 					}
 				}
 				else
 				{
-					keeperSpotTaken[team - TEAM_A] = true;
+					keeperSpotTaken[team - TEAM_HOME] = true;
 				}
 			}
 			else
 			{
-				if (!CSDKPlayer::IsOnField(pPl) && pPl->GetTeamToJoin() != TEAM_A && pPl->GetTeamToJoin() != TEAM_B)
+				if (!CSDKPlayer::IsOnField(pPl) && pPl->GetTeamToJoin() != TEAM_HOME && pPl->GetTeamToJoin() != TEAM_AWAY)
 					((CBot *)pPl)->FieldBotJoinTeam();
 			}
 		}
 		else
 		{
 			int team = CSDKPlayer::IsOnField(pPl) ? pPl->GetTeamNumber() : pPl->GetTeamToJoin();
-			if ((team == TEAM_A || team == TEAM_B) && pPl->GetTeamPosType() == POS_GK)
-				keeperSpotTaken[team - TEAM_A] = true;
+			if ((team == TEAM_HOME || team == TEAM_AWAY) && pPl->GetTeamPosType() == POS_GK)
+				keeperSpotTaken[team - TEAM_HOME] = true;
 		}
 	}
 
@@ -290,7 +290,7 @@ void Bot_RunAll( void )
 		if (!keeperSpotTaken[i] && botkeepers.GetBool())
 		{
 			CSDKPlayer *pPl = ToSDKPlayer(BotPutInServer(false, i + 1));
-			int team = (i == 0 ? TEAM_A : TEAM_B);
+			int team = (i == 0 ? TEAM_HOME : TEAM_AWAY);
 			pPl->SetDesiredTeam(team, team, keeperPosIndices[i], true, false, false);
 		}
 	}
@@ -303,7 +303,7 @@ void Bot_RunAll( void )
 		{
 			CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
 
-			if (!pPl/* || pPl->GetTeamNumber() != TEAM_A && pPl->GetTeamNumber() != TEAM_B && pPl->GetTeamToJoin() != TEAM_A && pPl->GetTeamToJoin() != TEAM_B*/)
+			if (!pPl/* || pPl->GetTeamNumber() != TEAM_HOME && pPl->GetTeamNumber() != TEAM_AWAY && pPl->GetTeamToJoin() != TEAM_HOME && pPl->GetTeamToJoin() != TEAM_AWAY*/)
 				continue;
 
 			playerCount += 1;

@@ -788,18 +788,18 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 			wchar_t wszLocalized[100];
 
 			wchar_t wszNewTeamPos[4];
-			if (newTeam == TEAM_A || newTeam == TEAM_B)
+			if (newTeam == TEAM_HOME || newTeam == TEAM_AWAY)
 				g_pVGuiLocalize->ConvertANSIToUnicode(g_szPosNames[(int)GetGlobalTeam(newTeam)->GetFormation()->positions[newTeamPos]->type], wszNewTeamPos, sizeof(wszNewTeamPos));
 
 			wchar_t wszOldTeamPos[4];
-			if (oldTeam == TEAM_A || oldTeam == TEAM_B)
+			if (oldTeam == TEAM_HOME || oldTeam == TEAM_AWAY)
 				g_pVGuiLocalize->ConvertANSIToUnicode(g_szPosNames[(int)GetGlobalTeam(oldTeam)->GetFormation()->positions[oldTeamPos]->type], wszOldTeamPos, sizeof(wszOldTeamPos));
 
-			if (newTeam == TEAM_A || newTeam == TEAM_B)
+			if (newTeam == TEAM_HOME || newTeam == TEAM_AWAY)
 			{
-				if ((oldTeam == TEAM_A || oldTeam == TEAM_B) && newTeam != oldTeam)
+				if ((oldTeam == TEAM_HOME || oldTeam == TEAM_AWAY) && newTeam != oldTeam)
 					g_pVGuiLocalize->ConstructString( wszLocalized, sizeof( wszLocalized ), g_pVGuiLocalize->Find( "#game_player_switched_team" ), 3, wszPlayerName, wszNewTeam, wszNewTeamPos );
-				else if ((oldTeam == TEAM_A || oldTeam == TEAM_B) && newTeamPos != oldTeamPos)
+				else if ((oldTeam == TEAM_HOME || oldTeam == TEAM_AWAY) && newTeamPos != oldTeamPos)
 					g_pVGuiLocalize->ConstructString( wszLocalized, sizeof( wszLocalized ), g_pVGuiLocalize->Find( "#game_player_switched_pos" ), 2, wszPlayerName, wszNewTeamPos );
 				else
 					g_pVGuiLocalize->ConstructString( wszLocalized, sizeof( wszLocalized ), g_pVGuiLocalize->Find( "#game_player_joined_team" ), 3, wszPlayerName, wszNewTeam, wszNewTeamPos );
@@ -807,13 +807,13 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 			else
 			{
 				wchar_t wszNewSpecTeam[64] = {};
-				if (newSpecTeam == TEAM_A || newSpecTeam == TEAM_B)
+				if (newSpecTeam == TEAM_HOME || newSpecTeam == TEAM_AWAY)
 				{
 					C_Team *pNewSpecTeam = GetGlobalTeam( newSpecTeam );
 					g_pVGuiLocalize->ConvertANSIToUnicode( pNewSpecTeam->GetCode(), wszNewSpecTeam, sizeof(wszNewSpecTeam) );
 				}
 
-				if (oldTeam == TEAM_A || oldTeam == TEAM_B)
+				if (oldTeam == TEAM_HOME || oldTeam == TEAM_AWAY)
 				{
 					if (newSpecTeam == TEAM_SPECTATOR)
 						g_pVGuiLocalize->ConstructString( wszLocalized, sizeof( wszLocalized ), g_pVGuiLocalize->Find( "#game_player_left_field_spectating" ), 3, wszPlayerName, wszOldTeam, wszOldTeamPos );

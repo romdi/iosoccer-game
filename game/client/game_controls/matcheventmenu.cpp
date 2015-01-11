@@ -134,7 +134,7 @@ void CMatchEventMenu::Update()
 
 		for (int j = 0; j < MAX_MATCH_EVENTS; j++)
 		{
-			C_Team *pTeam = GetGlobalTeam(TEAM_A + i);
+			C_Team *pTeam = GetGlobalTeam(TEAM_HOME + i);
 
 			if (pTeam->m_eMatchEventTypes[j] == MATCH_EVENT_NONE)
 				continue;
