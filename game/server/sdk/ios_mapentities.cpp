@@ -106,5 +106,10 @@ LINK_ENTITY_TO_CLASS(info_stadium, CInfoStadium);
 
 BEGIN_DATADESC(CInfoStadium)
 	DEFINE_KEYFIELD(m_bHasWalledField, FIELD_BOOLEAN, "HasWalledField"),
-	DEFINE_KEYFIELD(m_bIsTrainingMap, FIELD_BOOLEAN, "IsTrainingMap")
+	DEFINE_KEYFIELD(m_bIsTrainingMap, FIELD_BOOLEAN, "IsTrainingMap"),
+	DEFINE_KEYFIELD(m_bAllowGrassFieldMaterial, FIELD_BOOLEAN, "AllowGrassFieldMaterial"),
+	DEFINE_KEYFIELD(m_bAllowArtificialFieldMaterial, FIELD_BOOLEAN, "AllowArtificialFieldMaterial"),
+	DEFINE_KEYFIELD(m_bAllowStreetFieldMaterial, FIELD_BOOLEAN, "AllowStreetFieldMaterial"),
+	DEFINE_KEYFIELD(m_bAllowSandFieldMaterial, FIELD_BOOLEAN, "AllowSandFieldMaterial"),
+	DEFINE_KEYFIELD(m_bAllowMudFieldMaterial, FIELD_BOOLEAN, "AllowMudFieldMaterial")
 END_DATADESC()

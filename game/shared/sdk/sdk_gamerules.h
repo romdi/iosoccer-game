@@ -19,6 +19,7 @@
 #include "convar.h"
 #include "gamevars_shared.h"
 #include "weapon_sdkbase.h"
+#include "ios_teamkit_parse.h"
 
 #ifdef CLIENT_DLL
 	#include "c_baseplayer.h"
@@ -270,6 +271,8 @@ public:
 	CNetworkVector(m_vFieldMax);
 	CNetworkVector(m_vKickOff);
 
+	CNetworkString(m_szPitchTextureName, MAX_KITNAME_LENGTH);
+
 	Vector m_vGoalTriggerSize;
 
 	int	GetMapRemainingTime(void);
@@ -304,6 +307,7 @@ protected:
 
 	bool m_bHasWalledField;
 	bool m_bIsTrainingMap;
+	int m_nAllowedFieldMaterials;
 
 	CUtlVector<int> m_PlayerRotationMinutes;
 
@@ -412,6 +416,8 @@ public:
 
 	bool HasWalledField() { return m_bHasWalledField; }
 	bool IsTrainingMap() { return m_bIsTrainingMap; }
+
+	void SetPitchTextureName(const char *textureName);
 
 #else
 

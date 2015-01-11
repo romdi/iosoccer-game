@@ -184,4 +184,23 @@ public:
 	}
 };
 
+class CPitchInfo
+{
+public:
+
+	static void ParsePitchTextures();
+	static CUtlVector<CPitchInfo *> m_PitchInfo;
+	char m_szName[MAX_KITNAME_LENGTH];
+	char m_szAuthor[MAX_PLAYER_NAME_LENGTH];
+	int m_nType;
+	char m_szFolderName[MAX_FOLDERNAME_LENGTH];
+
+	CPitchInfo()
+	{
+		m_szName[0] = '\0';
+		m_szAuthor[0] = '\0';
+		m_nType = 0;
+	}
+};
+
 #endif // TeamKit_INFO_PARSE_H

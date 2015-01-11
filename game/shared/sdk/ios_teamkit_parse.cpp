@@ -809,3 +809,45 @@ void CBallInfo::ParseBallSkins()
 
 	m_flLastUpdateTime = gpGlobals->curtime;
 }
+
+CUtlVector<CPitchInfo *> CPitchInfo::m_PitchInfo;
+
+void CPitchInfo::ParsePitchTextures()
+{
+	CPitchInfo::m_PitchInfo.PurgeAndDeleteElements();
+
+	CUtlVector<FileInfo_t> pitchFolders;
+	FindFiles("materials/pitch/textures", pitchFolders);
+
+	for (int i = 0; i < pitchFolders.Count(); i++)
+	{
+		if (!pitchFolders[i].isDirectory)
+			continue;
+
+		CPitchInfo *pPitchInfo = new CPitchInfo();
+		Q_strncpy(pPitchInfo->m_szFolderName, pitchFolders[i].name, sizeof(pPitchInfo->m_szFolderName));
+
+		CUtlVector<FileInfo_t> pitchFolderFiles;
+		FindFiles(pitchFolders[i].path, pitchFolderFiles);
+
+		for (int j = 0; j < pitchFolderFiles.Count(); j++)
+		{
+			if (pitchFolderFiles[j].isDirectory)
+				continue;
+
+			if (!Q_strcmp(pitchFolderFiles[j].name, "pitchdata.txt"))
+			{
+				KeyValues *pKV = new KeyValues("PitchData");
+				pKV->LoadFromFile(filesystem, pitchFolderFiles[j].path, "MOD");
+
+				Q_strncpy(pPitchInfo->m_szName, pKV->GetString("Name", "???"), sizeof(pPitchInfo->m_szName));
+				Q_strncpy(pPitchInfo->m_szAuthor, pKV->GetString("Author", "???"), sizeof(pPitchInfo->m_szAuthor));
+				pPitchInfo->m_nType = pKV->GetInt("Type", 0);
+
+				pKV->deleteThis();
+			}
+		}
+
+		CPitchInfo::m_PitchInfo.AddToTail(pPitchInfo);
+	}
+}

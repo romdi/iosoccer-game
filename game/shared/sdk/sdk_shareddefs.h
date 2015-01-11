@@ -472,4 +472,29 @@ enum penalty_state_t
 	PENALTY_ABORTED_ILLEGAL_MOVE
 };
 
+#define FL_FIELD_MATERIAL_GRASS			(1 << 0)
+#define FL_FIELD_MATERIAL_ARTIFICIAL	(1 << 1)
+#define FL_FIELD_MATERIAL_STREET		(1 << 2)
+#define FL_FIELD_MATERIAL_SAND			(1 << 3)
+#define FL_FIELD_MATERIAL_MUD			(1 << 4)
+
+enum field_material_t
+{
+	FIELD_MATERIAL_GRASS = 0,
+	FIELD_MATERIAL_ARTIFICIAL,
+	FIELD_MATERIAL_STREET,
+	FIELD_MATERIAL_SAND,
+	FIELD_MATERIAL_MUD,
+	FIELD_MATERIAL_COUNT
+};
+
+static const char *g_szFieldMaterials[FIELD_MATERIAL_COUNT] =
+{
+	"grass",
+	"artificial",
+	"street",
+	"sand",
+	"mud"
+};
+
 #endif // SDK_SHAREDDEFS_H

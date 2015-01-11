@@ -16,20 +16,6 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-#define PITCH_TEXTURE_COUNT 8
-
-const char *g_szPitchTextures[PITCH_TEXTURE_COUNT] =
-{
-	"grass_stripe",
-	"grass_stripe_narrow",
-	"pitch2_astro",
-	"pitch2_frozen",
-	"pitch2_grass",
-	"pitch2_grass_alt",
-	"pitch2_mud",
-	"pitch2_sand"
-};
-
 class CPitchTextureProxy : public IMaterialProxy
 {
 public:
@@ -94,7 +80,7 @@ void CPitchTextureProxy::OnBind(void *pC_BaseEntity)
 
 	char texture[64];
 
-	Q_snprintf(texture, sizeof(texture), "pitch/%s.vtf", g_szPitchTextures[clamp(mp_pitchtexture.GetInt(), 0, PITCH_TEXTURE_COUNT - 1)]);
+	Q_snprintf(texture, sizeof(texture), "pitch/textures/%s/pitch.vtf", SDKGameRules()->m_szPitchTextureName.Get());
 
 	m_pNewTexture = materials->FindTexture(texture, NULL, true);
 		

@@ -297,6 +297,7 @@ BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 	RecvPropFloat(RECVINFO(m_flOffsideLineLastOppPlayerPosY)),
 	RecvPropBool(RECVINFO(m_bOffsideLinesEnabled)),
 	RecvPropBool(RECVINFO(m_bIsCeremony)),
+	RecvPropString(RECVINFO(m_szPitchTextureName)),
 
 #else
 	SendPropTime( SENDINFO( m_flStateEnterTime )),
@@ -328,6 +329,7 @@ BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 	SendPropFloat(SENDINFO(m_flOffsideLineLastOppPlayerPosY), -1, SPROP_COORD),
 	SendPropBool(SENDINFO(m_bOffsideLinesEnabled)),
 	SendPropBool(SENDINFO(m_bIsCeremony)),
+	SendPropString(SENDINFO(m_szPitchTextureName)),
 
 #endif
 END_NETWORK_TABLE()
@@ -437,6 +439,8 @@ CSDKGameRules::CSDKGameRules()
 
 	SetupFormations();
 
+	m_szPitchTextureName.GetForModify()[0] = '\0';
+
 #ifdef GAME_DLL
 	m_pCurStateInfo = NULL;
 	m_nShieldType = SHIELD_NONE;
@@ -469,6 +473,7 @@ CSDKGameRules::CSDKGameRules()
 	m_nRealMatchEndTime = 0;
 	m_bHasWalledField = false;
 	m_bIsTrainingMap = false;
+	m_nAllowedFieldMaterials = FL_FIELD_MATERIAL_GRASS;
 
 	m_flLastMasterServerPingTime = -FLT_MAX;
 	m_bIsPingingMasterServer = false;
@@ -562,6 +567,8 @@ void CSDKGameRules::ServerActivate()
 {
 	CPlayerPersistentData::ReallocateAllPlayerData();
 
+	CPitchInfo::ParsePitchTextures();
+
 	InitTeams();
 
 	InitFieldSpots();
@@ -588,11 +595,32 @@ void CSDKGameRules::InitFieldSpots()
 	{
 		m_bHasWalledField = pInfoStadium->m_bHasWalledField;
 		m_bIsTrainingMap = pInfoStadium->m_bIsTrainingMap;
+
+		m_nAllowedFieldMaterials = 0;
+
+		if (pInfoStadium->m_bAllowGrassFieldMaterial)
+			m_nAllowedFieldMaterials |= FL_FIELD_MATERIAL_GRASS;
+
+		if (pInfoStadium->m_bAllowArtificialFieldMaterial)
+			m_nAllowedFieldMaterials |= FL_FIELD_MATERIAL_ARTIFICIAL;
+
+		if (pInfoStadium->m_bAllowStreetFieldMaterial)
+			m_nAllowedFieldMaterials |= FL_FIELD_MATERIAL_STREET;
+
+		if (pInfoStadium->m_bAllowSandFieldMaterial)
+			m_nAllowedFieldMaterials |= FL_FIELD_MATERIAL_SAND;
+
+		if (pInfoStadium->m_bAllowMudFieldMaterial)
+			m_nAllowedFieldMaterials |= FL_FIELD_MATERIAL_MUD;
+
+		if (m_nAllowedFieldMaterials == 0)
+			m_nAllowedFieldMaterials = FL_FIELD_MATERIAL_GRASS;
 	}
 	else
 	{
 		m_bHasWalledField = false;
 		m_bIsTrainingMap = false;
+		m_nAllowedFieldMaterials = FL_FIELD_MATERIAL_GRASS;
 	}
 
 	Vector fieldMin, fieldMax;
@@ -2385,7 +2413,54 @@ void CC_MP_BallSkin(const CCommand &args)
 	}
 }
 
-ConCommand mp_ball("mp_ballskin", CC_MP_BallSkin, "", 0);
+ConCommand mp_ballskin("mp_ballskin", CC_MP_BallSkin, "", 0);
+
+
+void CC_MP_PitchTexture(const CCommand &args)
+{
+	if (!UTIL_IsCommandIssuedByServerAdmin())
+		return;
+
+	if (args.ArgC() == 1)
+	{
+		char list[2048] = {};
+		int pitchCount = 0;
+
+		Q_strcat(list, "\n----------------------------------------\n", sizeof(list));
+
+		for (int i = 0; i < CPitchInfo::m_PitchInfo.Count(); i++)
+		{
+			pitchCount += 1;
+			Q_strcat(list, UTIL_VarArgs("%d: %s (%s) [by %s]\n", pitchCount, CPitchInfo::m_PitchInfo[i]->m_szName, g_szFieldMaterials[CPitchInfo::m_PitchInfo[i]->m_nType], CPitchInfo::m_PitchInfo[i]->m_szAuthor), sizeof(list));
+		}
+
+		Q_strcat(list, "----------------------------------------\n", sizeof(list));
+
+		Q_strcat(list, "\nUse 'mp_pitchtexture <pitch number>' to set the pitch. E.g. 'mp_pitchtexture 3'\n\n", sizeof(list));
+
+		Msg(list);
+	}
+	else if (args.ArgC() == 2)
+	{
+		int pitchTextureIndex = atoi(args[1]) - 1;
+
+		char pitchTextureName[256] = {};
+
+		if (pitchTextureIndex >= 0 && pitchTextureIndex < CPitchInfo::m_PitchInfo.Count())
+			Q_snprintf(pitchTextureName, sizeof(pitchTextureName), "%s", CPitchInfo::m_PitchInfo[pitchTextureIndex]->m_szFolderName);
+
+		if (pitchTextureName[0] != '\0')
+			SDKGameRules()->SetPitchTextureName(pitchTextureName);
+		else
+			Msg("Error: Pitch texture not found.\n");
+	}
+	else
+	{
+		Msg("Error: Wrong syntax.\n");
+	}
+}
+
+ConCommand mp_pitchtexture("mp_pitchtexture", CC_MP_PitchTexture, "", 0);
 
 
 ConVar mp_clientsettingschangeinterval("mp_clientsettingschangeinterval", "5", FCVAR_REPLICATED|FCVAR_NOTIFY, "");
@@ -2958,6 +3033,28 @@ bool CSDKGameRules::ClientConnected(edict_t *pEntity, const char *pszName, const
 	}
 
 	return BaseClass::ClientConnected(pEntity, pszName, pszAddress, reject, maxrejectlen);
+}
+
+void CSDKGameRules::SetPitchTextureName(const char *textureName)
+{
+	if (m_szPitchTextureName[0] != '\0' && !Q_strcmp(textureName, m_szPitchTextureName))
+		return;
+
+	int pitchTextureIndex = -1;
+
+	for (int i = 0; i < CPitchInfo::m_PitchInfo.Count(); i++)
+	{
+		if (!Q_strcmp(CPitchInfo::m_PitchInfo[i]->m_szFolderName, textureName))
+		{
+			pitchTextureIndex = i;
+			break;
+		}
+	}
+
+	if (pitchTextureIndex == -1)
+		pitchTextureIndex = g_IOSRand.RandomInt(0, CPitchInfo::m_PitchInfo.Count() - 1);
+
+	Q_strncpy(m_szPitchTextureName.GetForModify(), CPitchInfo::m_PitchInfo[pitchTextureIndex]->m_szFolderName, sizeof(m_szPitchTextureName));
 }
 
 void IOS_LogPrintf( char *fmt, ... )
