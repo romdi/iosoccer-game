@@ -3106,24 +3106,13 @@ void CSDKGameRules::DrawFieldTeamCrests()
 	if (!IsIntermissionState())
 		return;
 
-	for (int i = 0; i < 2; i++)
+	for (int team = TEAM_HOME; team <= TEAM_AWAY; team++)
 	{
-		if (!GetGlobalTeam(i + TEAM_HOME)->HasCrest())
+		if (!GetGlobalTeam(team)->HasCrest())
 			continue;
 
-		int sign;
-		char *material;
-
-		if (i == 0)
-		{
-			sign = m_nBottomTeam == TEAM_HOME ? 1 : -1;
-			material = "vgui/hometeamcrest";
-		}
-		else
-		{
-			sign = m_nBottomTeam == TEAM_HOME ? -1 : 1;
-			material = "vgui/awayteamcrest";
-		}
+		char *material = team == TEAM_HOME ? "vgui/hometeamcrest" : "vgui/awayteamcrest";
+		int sign = team == m_nBottomTeam ? -1 : 1;
 
 		Vector right = Vector(1, 0, 0);
 		Vector forward = Vector(0, 1, 0);
