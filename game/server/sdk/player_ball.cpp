@@ -60,7 +60,6 @@ void CC_CreatePlayerBall(const CCommand &args)
 		&tr);
 
 	Vector pos = tr.endpos;
-	pos.z -= BALL_PHYS_RADIUS;
 
 	if (pPl->GetPlayerBall())
 	{
@@ -73,7 +72,7 @@ void CC_CreatePlayerBall(const CCommand &args)
 		if (sv_ball_update_physics.GetBool())
 			pPl->GetPlayerBall()->CreateVPhysics();
 
-		pPl->GetPlayerBall()->SetPos(pos);
+		pPl->GetPlayerBall()->SetPos(pos, false);
 		pPl->GetPlayerBall()->RemoveAllTouches();
 	}
 	else
@@ -276,7 +275,7 @@ void CPlayerBall::State_NORMAL_Leave(ball_state_t newState)
 
 void CPlayerBall::State_KEEPERHANDS_Enter()
 {
-	SetPos(m_vPos);
+	SetPos(m_vPos, false);
 }
 
 void CPlayerBall::State_KEEPERHANDS_Think()
@@ -322,7 +321,7 @@ void CPlayerBall::State_KEEPERHANDS_Think()
 			vel = m_vPlVel;
 		}
 
-		SetPos(pos);
+		SetPos(pos, false);
 		SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_KEEPERHANDS, false, true, false, 0.5f);
 
 		return State_Transition(BALL_STATE_NORMAL);
@@ -331,7 +330,6 @@ void CPlayerBall::State_KEEPERHANDS_Think()
 	Vector handPos;
 	QAngle handAng;
 	m_pPl->GetAttachment("keeperballrighthand", handPos, handAng);
-	handPos.z -= BALL_PHYS_RADIUS;
 	SetPos(handPos, false);
 	SetAng(handAng);
 
@@ -349,7 +347,7 @@ void CPlayerBall::State_KEEPERHANDS_Think()
 		else
 			EmitSound("Ball.Kicknormal");
 
-		SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_keeperhands.GetFloat()) + m_vPlForward2D * 36);
+		SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_keeperhands.GetFloat()) + m_vPlForward2D * 36, false);
 		SetVel(vel, 1.0f, FL_SPIN_PERMIT_ALL, BODY_PART_KEEPERHANDS, false, true, true);
 
 		return State_Transition(BALL_STATE_NORMAL);

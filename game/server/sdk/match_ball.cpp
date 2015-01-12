@@ -1004,7 +1004,7 @@ void CMatchBall::State_PENALTY_Leave(ball_state_t newState)
 
 void CMatchBall::State_KEEPERHANDS_Enter()
 {
-	SetPos(m_vPos);
+	SetPos(m_vPos, false);
 }
 
 void CMatchBall::State_KEEPERHANDS_Think()
@@ -1067,7 +1067,7 @@ void CMatchBall::State_KEEPERHANDS_Think()
 		}
 
 		RemoveAllTouches();
-		SetPos(pos);
+		SetPos(pos, false);
 		SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_KEEPERHANDS, false, true, false, 0.5f);
 
 		return State_Transition(BALL_STATE_NORMAL);
@@ -1076,8 +1076,7 @@ void CMatchBall::State_KEEPERHANDS_Think()
 	Vector handPos;
 	QAngle handAng;
 	m_pPl->GetAttachment("keeperballrighthand", handPos, handAng);
-	handPos.z -= BALL_PHYS_RADIUS;
-	SetPos(handPos);
+	SetPos(handPos, false);
 	SetAng(handAng);
 
 	if (m_bIsAdvantage)
@@ -1105,7 +1104,7 @@ void CMatchBall::State_KEEPERHANDS_Think()
 			EmitSound("Ball.Kicknormal");
 
 		RemoveAllTouches();
-		SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_keeperhands.GetFloat()) + m_vPlForward2D * 36);
+		SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_keeperhands.GetFloat()) + m_vPlForward2D * 36, false);
 		SetVel(vel, 1.0f, FL_SPIN_PERMIT_ALL, BODY_PART_KEEPERHANDS, false, true, true);
 
 		return State_Transition(BALL_STATE_NORMAL);
@@ -1138,7 +1137,7 @@ bool CMatchBall::CheckSideline()
 	if (SDKGameRules()->HasWalledField())
 	{
 		float safePosX = m_vPos.x < SDKGameRules()->m_vKickOff.GetX() ? SDKGameRules()->m_vFieldMin.GetX() + 50 : SDKGameRules()->m_vFieldMax.GetX() - 50;
-		SetPos(Vector(safePosX, m_vPos.y, SDKGameRules()->m_vKickOff.GetZ()), false);
+		SetPos(Vector(safePosX, m_vPos.y, SDKGameRules()->m_vKickOff.GetZ()), true, false);
 		return true;
 	}
 
@@ -1190,7 +1189,7 @@ bool CMatchBall::CheckGoalLine()
 	if (SDKGameRules()->HasWalledField())
 	{
 		float safePosY = m_vPos.y < SDKGameRules()->m_vKickOff.GetY() ? SDKGameRules()->m_vFieldMin.GetY() + 50 : SDKGameRules()->m_vFieldMax.GetY() - 50;
-		SetPos(Vector(m_vPos.x, safePosY, SDKGameRules()->m_vKickOff.GetZ()), false);
+		SetPos(Vector(m_vPos.x, safePosY, SDKGameRules()->m_vKickOff.GetZ()), true, false);
 		return true;
 	}
 

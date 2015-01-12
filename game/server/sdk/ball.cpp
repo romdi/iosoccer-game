@@ -442,9 +442,13 @@ CSDKPlayer *CBall::FindNearestPlayer(int team /*= TEAM_INVALID*/, int posFlags /
 	return pNearest;
 }
 
-void CBall::SetPos(const Vector &pos, bool freeze/* = true*/)
+void CBall::SetPos(const Vector &pos, bool addBallRadiusZOffset/* = true*/, bool freeze/* = true*/)
 {
-	m_vPos = Vector(pos.x, pos.y, pos.z + BALL_PHYS_RADIUS);
+	m_vPos = pos;
+
+	if (addBallRadiusZOffset)
+		m_vPos.z += BALL_PHYS_RADIUS;
+
 	m_vVel = vec3_origin;
 	m_vRot = vec3_origin;
 	m_pPhys->EnableMotion(true);
