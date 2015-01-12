@@ -1138,7 +1138,7 @@ bool CMatchBall::CheckSideline()
 	if (SDKGameRules()->HasWalledField())
 	{
 		float safePosX = m_vPos.x < SDKGameRules()->m_vKickOff.GetX() ? SDKGameRules()->m_vFieldMin.GetX() + 50 : SDKGameRules()->m_vFieldMax.GetX() - 50;
-		SetPos(Vector(safePosX, m_vPos.y, m_vPos.z), false);
+		SetPos(Vector(safePosX, m_vPos.y, SDKGameRules()->m_vKickOff.GetZ()), false);
 		return true;
 	}
 
@@ -1190,7 +1190,7 @@ bool CMatchBall::CheckGoalLine()
 	if (SDKGameRules()->HasWalledField())
 	{
 		float safePosY = m_vPos.y < SDKGameRules()->m_vKickOff.GetY() ? SDKGameRules()->m_vFieldMin.GetY() + 50 : SDKGameRules()->m_vFieldMax.GetY() - 50;
-		SetPos(Vector(m_vPos.x, safePosY, m_vPos.z), false);
+		SetPos(Vector(m_vPos.x, safePosY, SDKGameRules()->m_vKickOff.GetZ()), false);
 		return true;
 	}
 
