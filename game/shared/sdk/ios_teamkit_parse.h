@@ -83,7 +83,7 @@ public:
 	int m_nShirtAndShortsFrontNumberPixelsHeight;
 	chr_t m_ShirtAndShortsFrontNumberChars[64];
 
-	CFontAtlas(const char *folderPath);
+	CFontAtlas(const char *folderPath, bool hasShirtAndShortsFrontNumberAtlas);
 	glyphWithOutline_t **ParseInfo(const char *folderPath, const char *type, chr_t *chars, int maxChars, int &width, int &height);
 };
 
@@ -111,9 +111,11 @@ public:
 	int			m_nOutfieldShirtFrontNumberHorizontalOffset;
 	int			m_nOutfieldShirtFrontNumberVerticalOffset;
 
+	bool		m_bHasOutfieldShortsFrontNumber;
 	Color		m_OutfieldShortsFrontNumberColor;
 	Color		m_OutfieldShortsFrontNumberOutlineColor;
 	int			m_nOutfieldShortsFrontNumberHorizontalOffset;
+	int			m_nOutfieldShortsFrontNumberVerticalOffset;
 
 	Color		m_KeeperShirtNameAndNumberColor;
 
@@ -128,9 +130,11 @@ public:
 	int			m_nKeeperShirtFrontNumberHorizontalOffset;
 	int			m_nKeeperShirtFrontNumberVerticalOffset;
 
+	bool		m_bHasKeeperShortsFrontNumber;
 	Color		m_KeeperShortsFrontNumberColor;
 	Color		m_KeeperShortsFrontNumberOutlineColor;
 	int			m_nKeeperShortsFrontNumberHorizontalOffset;
+	int			m_nKeeperShortsFrontNumberVerticalOffset;
 
 	CFontAtlas	*m_pFontAtlas;
 	CTeamInfo	*m_pTeamInfo;

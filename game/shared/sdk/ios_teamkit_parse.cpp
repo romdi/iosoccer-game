@@ -43,9 +43,26 @@
 #include "utlbuffer.h"
 #include "checksum_md5.h"
 #include "threadtools.h"
+
 #ifdef CLIENT_DLL
+
 #include "vgui_controls/messagebox.h"
 #include "clientmode_shared.h"
+
+#endif
+
+
+#ifdef CLIENT_DLL
+
+void CC_ReloadTeamKits(const CCommand &args)
+{
+	CTeamInfo::ParseTeamKits();
+	// For some reason we have to do this twice to prevent kit swapping
+	CTeamInfo::ParseTeamKits();
+}
+
+static ConCommand reloadteamkits("reloadteamkits", CC_ReloadTeamKits);
+
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -305,9 +322,11 @@ CTeamKitInfo::CTeamKitInfo()
 	m_nOutfieldShirtFrontNumberHorizontalOffset = 0;
 	m_nOutfieldShirtFrontNumberVerticalOffset = 0;
 
+	m_bHasOutfieldShortsFrontNumber = false;
 	m_OutfieldShortsFrontNumberColor = Color(255, 255, 0, 0);
 	m_OutfieldShortsFrontNumberOutlineColor = Color(255, 0, 0, 0);
 	m_nOutfieldShortsFrontNumberHorizontalOffset = 0;
+	m_nOutfieldShortsFrontNumberVerticalOffset = 0;
 
 	m_KeeperShirtNameAndNumberColor = Color(255, 255, 0, 0);
 
@@ -322,9 +341,11 @@ CTeamKitInfo::CTeamKitInfo()
 	m_nKeeperShirtFrontNumberHorizontalOffset = 0;
 	m_nKeeperShirtFrontNumberVerticalOffset = 0;
 
+	m_bHasKeeperShortsFrontNumber = false;
 	m_KeeperShortsFrontNumberColor = Color(255, 255, 0, 0);
 	m_KeeperShortsFrontNumberOutlineColor = Color(255, 0, 0, 0);
 	m_nKeeperShortsFrontNumberHorizontalOffset = 0;
+	m_nKeeperShortsFrontNumberVerticalOffset = 0;
 
 	m_pFontAtlas = NULL;
 	m_pTeamInfo = NULL;
@@ -383,11 +404,15 @@ void FindFiles(const char *path, CUtlVector<FileInfo_t> &fileInfos)
 
 #define DEFAULT_FONTATLAS_FOLDER "materials/models/player/default"
 
-CFontAtlas::CFontAtlas(const char *folderPath)
+CFontAtlas::CFontAtlas(const char *folderPath, bool hasShirtAndShortsFrontNumberAtlas)
 {
 	m_ShirtBackNamePixels = ParseInfo(folderPath, "shirt_back_name", m_NameChars, sizeof(m_NameChars), m_nNamePixelsWidth, m_nNamePixelsHeight);
 	m_ShirtBackNumberPixels = ParseInfo(folderPath, "shirt_back_number", m_ShirtBackNumberChars, sizeof(m_ShirtBackNumberChars), m_nShirtBackNumberPixelsWidth, m_nShirtBackNumberPixelsHeight);
-	m_ShirtAndShortsFrontNumberPixels = ParseInfo(folderPath, "shorts_front_number", m_ShirtAndShortsFrontNumberChars, sizeof(m_ShirtAndShortsFrontNumberChars), m_nShirtAndShortsFrontNumberPixelsWidth, m_nShirtAndShortsFrontNumberPixelsHeight);
+
+	if (hasShirtAndShortsFrontNumberAtlas)
+		m_ShirtAndShortsFrontNumberPixels = ParseInfo(folderPath, "shirt_and_shorts_front_number", m_ShirtAndShortsFrontNumberChars, sizeof(m_ShirtAndShortsFrontNumberChars), m_nShirtAndShortsFrontNumberPixelsWidth, m_nShirtAndShortsFrontNumberPixelsHeight);
+	else
+		m_ShirtAndShortsFrontNumberPixels = NULL;
 }
 
 glyphWithOutline_t **CFontAtlas::ParseInfo(const char *folderPath, const char *type, chr_t *chars, int maxChars, int &width, int &height)
@@ -472,7 +497,7 @@ glyphWithOutline_t **CFontAtlas::ParseInfo(const char *folderPath, const char *t
 void CTeamInfo::ParseTeamKits()
 {
 #ifdef CLIENT_DLL
-	CTeamKitInfo::m_pDefaultFontAtlas = new CFontAtlas(DEFAULT_FONTATLAS_FOLDER);
+	CTeamKitInfo::m_pDefaultFontAtlas = new CFontAtlas(DEFAULT_FONTATLAS_FOLDER, true);
 #endif
 
 	CTeamInfo::m_TeamInfo.PurgeAndDeleteElements();
@@ -522,10 +547,12 @@ void CTeamInfo::ParseTeamKits()
 				CUtlVector<FileInfo_t> kitFiles;
 				FindFiles(teamFolderFiles[j].path, kitFiles);
 				
-				bool hasNameAtlasTga = false;
-				bool hasNameAtlasTxt = false;
-				bool hasNumberAtlasTga = false;
-				bool hasNumberAtlasTxt = false;
+				bool hasBackNameAtlasTga = false;
+				bool hasBackNameAtlasTxt = false;
+				bool hasBackNumberAtlasTga = false;
+				bool hasBackNumberAtlasTxt = false;
+				bool hasShirtAndShortsFrontNumberAtlasTga = false;
+				bool hasShirtAndShortsFrontNumberAtlasTxt = false;
 
 				for (int k = 0; k < kitFiles.Count(); k++)
 				{
@@ -560,7 +587,7 @@ void CTeamInfo::ParseTeamKits()
 							pKitInfo->m_OutfieldShirtNumberOutlineColor = Color(c.r(), c.g(), c.b(), c.a());
 						}
 
-						pKitInfo->m_nOutfieldShirtBackNameVerticalOffset = pKV->GetInt("OutfieldNameOffset");
+						pKitInfo->m_nOutfieldShirtBackNameVerticalOffset = pKV->GetInt("OutfieldShirtBackNameVerticalOffset");
 
 						if (!pKV->IsEmpty("OutfieldShirtBackNameOutlineColor"))
 						{
@@ -568,7 +595,7 @@ void CTeamInfo::ParseTeamKits()
 							pKitInfo->m_OutfieldShirtBackNameOutlineColor = Color(c.r(), c.g(), c.b(), c.a());
 						}
 
-						pKitInfo->m_nOutfieldShirtBackNumberVerticalOffset = pKV->GetInt("OutfieldShirtBackNameVerticalOffset");
+						pKitInfo->m_nOutfieldShirtBackNumberVerticalOffset = pKV->GetInt("OutfieldShirtBackNumberVerticalOffset");
 
 						if (!pKV->IsEmpty("OutfieldShirtFrontNumberHorizontalOffset") && !pKV->IsEmpty("OutfieldShirtFrontNumberVerticalOffset"))
 						{
@@ -591,7 +618,14 @@ void CTeamInfo::ParseTeamKits()
 							pKitInfo->m_OutfieldShortsFrontNumberOutlineColor = Color(c.r(), c.g(), c.b(), c.a());
 						}
 
-						pKitInfo->m_nOutfieldShortsFrontNumberHorizontalOffset = pKV->GetInt("OutfieldShortsFrontNumberHorizontalOffset");
+						if (!pKV->IsEmpty("OutfieldShortsFrontNumberHorizontalOffset") && !pKV->IsEmpty("OutfieldShortsFrontNumberVerticalOffset"))
+						{
+							pKitInfo->m_nOutfieldShortsFrontNumberHorizontalOffset = pKV->GetInt("OutfieldShortsFrontNumberHorizontalOffset");
+							pKitInfo->m_nOutfieldShortsFrontNumberVerticalOffset = pKV->GetInt("OutfieldShortsFrontNumberVerticalOffset");
+							pKitInfo->m_bHasOutfieldShortsFrontNumber = true;
+						}
+						else
+							pKitInfo->m_bHasOutfieldShortsFrontNumber = false;
 
 						if (!pKV->IsEmpty("KeeperShirtNameAndNumberColor"))
 						{
@@ -605,7 +639,7 @@ void CTeamInfo::ParseTeamKits()
 							pKitInfo->m_KeeperShirtNumberOutlineColor = Color(c.r(), c.g(), c.b(), c.a());
 						}
 
-						pKitInfo->m_nKeeperShirtBackNameVerticalOffset = pKV->GetInt("KeeperNameOffset");
+						pKitInfo->m_nKeeperShirtBackNameVerticalOffset = pKV->GetInt("KeeperShirtBackNameVerticalOffset");
 
 						if (!pKV->IsEmpty("KeeperShirtBackNameOutlineColor"))
 						{
@@ -613,7 +647,7 @@ void CTeamInfo::ParseTeamKits()
 							pKitInfo->m_KeeperShirtBackNameOutlineColor = Color(c.r(), c.g(), c.b(), c.a());
 						}
 
-						pKitInfo->m_nKeeperShirtBackNumberVerticalOffset = pKV->GetInt("KeeperShirtBackNameVerticalOffset");
+						pKitInfo->m_nKeeperShirtBackNumberVerticalOffset = pKV->GetInt("KeeperShirtBackNumberVerticalOffset");
 
 						if (!pKV->IsEmpty("KeeperShirtFrontNumberHorizontalOffset") && !pKV->IsEmpty("KeeperShirtFrontNumberVerticalOffset"))
 						{
@@ -636,7 +670,14 @@ void CTeamInfo::ParseTeamKits()
 							pKitInfo->m_KeeperShortsFrontNumberOutlineColor = Color(c.r(), c.g(), c.b(), c.a());
 						}
 
-						pKitInfo->m_nKeeperShortsFrontNumberHorizontalOffset = pKV->GetInt("KeeperShortsFrontNumberHorizontalOffset");
+						if (!pKV->IsEmpty("KeeperShortsFrontNumberHorizontalOffset") && !pKV->IsEmpty("KeeperShortsFrontNumberVerticalOffset"))
+						{
+							pKitInfo->m_nKeeperShortsFrontNumberHorizontalOffset = pKV->GetInt("KeeperShortsFrontNumberHorizontalOffset");
+							pKitInfo->m_nKeeperShortsFrontNumberVerticalOffset = pKV->GetInt("KeeperShortsFrontNumberVerticalOffset");
+							pKitInfo->m_bHasKeeperShortsFrontNumber = true;
+						}
+						else
+							pKitInfo->m_bHasKeeperShortsFrontNumber = false;
 
 						//RGB primaryRgb = { pKitInfo->m_PrimaryColor.r(), pKitInfo->m_PrimaryColor.g(), pKitInfo->m_PrimaryColor.b() };
 						//RGB secondaryRgb = { pKitInfo->m_SecondaryColor.r(), pKitInfo->m_SecondaryColor.g(), pKitInfo->m_SecondaryColor.b() };
@@ -647,20 +688,24 @@ void CTeamInfo::ParseTeamKits()
 
 						pKV->deleteThis();
 					}
-					else if (!Q_strcmp(kitFiles[k].name, "name_atlas.tga"))
-						hasNameAtlasTga = true;
-					else if (!Q_strcmp(kitFiles[k].name, "name_atlas.txt"))
-						hasNameAtlasTxt = true;
-					else if (!Q_strcmp(kitFiles[k].name, "number_atlas.tga"))
-						hasNumberAtlasTga = true;
-					else if (!Q_strcmp(kitFiles[k].name, "number_atlas.txt"))
-						hasNumberAtlasTxt = true;
+					else if (!Q_strcmp(kitFiles[k].name, "shirt_back_name_atlas.tga"))
+						hasBackNameAtlasTga = true;
+					else if (!Q_strcmp(kitFiles[k].name, "shirt_back_name_atlas.txt"))
+						hasBackNameAtlasTxt = true;
+					else if (!Q_strcmp(kitFiles[k].name, "shirt_back_number_atlas.tga"))
+						hasBackNumberAtlasTga = true;
+					else if (!Q_strcmp(kitFiles[k].name, "shirt_back_number_atlas.txt"))
+						hasBackNumberAtlasTxt = true;
+					else if (!Q_strcmp(kitFiles[k].name, "shirt_and_shorts_front_number_atlas.tga"))
+						hasShirtAndShortsFrontNumberAtlasTga = true;
+					else if (!Q_strcmp(kitFiles[k].name, "shirt_and_shorts_front_number_atlas.txt"))
+						hasShirtAndShortsFrontNumberAtlasTxt = true;
 				}
 				
 #ifdef CLIENT_DLL
-				if (hasNameAtlasTga && hasNameAtlasTxt && hasNumberAtlasTga && hasNumberAtlasTxt)
+				if (hasBackNameAtlasTga && hasBackNameAtlasTxt && hasBackNumberAtlasTga && hasBackNumberAtlasTxt)
 				{
-					pKitInfo->m_pFontAtlas = new CFontAtlas(teamFolderFiles[j].path);
+					pKitInfo->m_pFontAtlas = new CFontAtlas(teamFolderFiles[j].path, hasShirtAndShortsFrontNumberAtlasTga && hasShirtAndShortsFrontNumberAtlasTxt);
 				}
 				else
 					pKitInfo->m_pFontAtlas = CTeamKitInfo::m_pDefaultFontAtlas;
