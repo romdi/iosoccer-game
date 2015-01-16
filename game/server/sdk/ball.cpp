@@ -783,12 +783,10 @@ bool CBall::CheckCollision()
 	Vector vel = m_vVel - optimizedP * sv_player_mass.GetFloat() * dirToBallNormal;
 	vel *= collisionCoeff;
 
-	if (m_vVel.Length() > 900.0f)
-		m_pPl->EmitSound ("Player.Oomph");
+	if (m_vVel.Length() > 900)
+		m_pPl->EmitSound("Player.Oomph");
 
 	Touched(false, BODY_PART_UNKNOWN, m_vVel);
-
-	EmitSound("Ball.Touch");
 
 	m_vVel = vel;
 
