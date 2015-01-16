@@ -68,7 +68,7 @@ struct chr_t
 class CFontAtlas
 {
 public:
-	glyphWithOutline_t **m_ShirtBackNamePixels;
+	glyphWithOutline_t **m_ShirtNamePixels;
 	int m_nNamePixelsWidth;
 	int m_nNamePixelsHeight;
 	chr_t m_NameChars[512];
@@ -78,12 +78,12 @@ public:
 	int m_nShirtBackNumberPixelsHeight;
 	chr_t m_ShirtBackNumberChars[64];
 
-	glyphWithOutline_t **m_ShirtAndShortsFrontNumberPixels;
-	int m_nShirtAndShortsFrontNumberPixelsWidth;
-	int m_nShirtAndShortsFrontNumberPixelsHeight;
-	chr_t m_ShirtAndShortsFrontNumberChars[64];
+	glyphWithOutline_t **m_ShirtAndShortsNumberPixels;
+	int m_nShirtAndShortsNumberPixelsWidth;
+	int m_nShirtAndShortsNumberPixelsHeight;
+	chr_t m_ShirtAndShortsNumberChars[64];
 
-	CFontAtlas(const char *folderPath, bool hasShirtAndShortsFrontNumberAtlas);
+	CFontAtlas(const char *folderPath, bool hasShirtAndShortsNumberAtlas);
 	glyphWithOutline_t **ParseInfo(const char *folderPath, const char *type, chr_t *chars, int maxChars, int &width, int &height);
 };
 
@@ -98,43 +98,46 @@ public:
 	Color		m_PrimaryColor;
 	Color		m_SecondaryColor;
 
-	Color		m_OutfieldShirtNameAndNumberColor;
 
-	Color		m_OutfieldShirtNumberOutlineColor;
+	Color		m_OutfieldShirtNameFillColor;
+	Color		m_OutfieldShirtNameOutlineColor;
+	int			m_nOutfieldShirtNameVerticalOffset;
 
-	Color		m_OutfieldShirtBackNameOutlineColor;
-	int			m_nOutfieldShirtBackNameVerticalOffset;
-
+	Color		m_OutfieldShirtBackNumberFillColor;
+	Color		m_OutfieldShirtBackNumberOutlineColor;
 	int			m_nOutfieldShirtBackNumberVerticalOffset;
 
+	Color		m_OutfieldShortsNumberFillColor;
+	Color		m_OutfieldShortsNumberOutlineColor;
+	int			m_nOutfieldShortsNumberHorizontalOffset;
+	int			m_nOutfieldShortsNumberVerticalOffset;
+
 	bool		m_bHasOutfieldShirtFrontNumber;
+	Color		m_OutfieldShirtFrontNumberFillColor;
+	Color		m_OutfieldShirtFrontNumberOutlineColor;
 	int			m_nOutfieldShirtFrontNumberHorizontalOffset;
 	int			m_nOutfieldShirtFrontNumberVerticalOffset;
 
-	bool		m_bHasOutfieldShortsFrontNumber;
-	Color		m_OutfieldShortsFrontNumberColor;
-	Color		m_OutfieldShortsFrontNumberOutlineColor;
-	int			m_nOutfieldShortsFrontNumberHorizontalOffset;
-	int			m_nOutfieldShortsFrontNumberVerticalOffset;
 
-	Color		m_KeeperShirtNameAndNumberColor;
+	Color		m_KeeperShirtNameFillColor;
+	Color		m_KeeperShirtNameOutlineColor;
+	int			m_nKeeperShirtNameVerticalOffset;
 
-	Color		m_KeeperShirtNumberOutlineColor;
-
-	Color		m_KeeperShirtBackNameOutlineColor;
-	int			m_nKeeperShirtBackNameVerticalOffset;
-
+	Color		m_KeeperShirtBackNumberFillColor;
+	Color		m_KeeperShirtBackNumberOutlineColor;
 	int			m_nKeeperShirtBackNumberVerticalOffset;
 
+	Color		m_KeeperShortsNumberFillColor;
+	Color		m_KeeperShortsNumberOutlineColor;
+	int			m_nKeeperShortsNumberHorizontalOffset;
+	int			m_nKeeperShortsNumberVerticalOffset;
+
 	bool		m_bHasKeeperShirtFrontNumber;
+	Color		m_KeeperShirtFrontNumberFillColor;
+	Color		m_KeeperShirtFrontNumberOutlineColor;
 	int			m_nKeeperShirtFrontNumberHorizontalOffset;
 	int			m_nKeeperShirtFrontNumberVerticalOffset;
 
-	bool		m_bHasKeeperShortsFrontNumber;
-	Color		m_KeeperShortsFrontNumberColor;
-	Color		m_KeeperShortsFrontNumberOutlineColor;
-	int			m_nKeeperShortsFrontNumberHorizontalOffset;
-	int			m_nKeeperShortsFrontNumberVerticalOffset;
 
 	CFontAtlas	*m_pFontAtlas;
 	CTeamInfo	*m_pTeamInfo;

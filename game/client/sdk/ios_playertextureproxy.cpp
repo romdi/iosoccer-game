@@ -26,34 +26,38 @@ public:
 	CProceduralRegenerator( void );
 	virtual void RegenerateTextureBits( ITexture *pTexture, IVTFTexture *pVTFTexture, Rect_t *pSubRect );
 	virtual void Release( void );
-	bool SetPlayerInfo(const char *name, int number, const Color &shirtNameAndNumberColor, const Color &shirtNumberOutlineColor, const Color &shirtBackNameOutlineColor,
-						int shirtBackNameVerticalOffset, int shirtBackNumberVerticalOffset, bool hasShirtFrontNumber, int shirtFrontNumberHorizontalOffset, int shirtFrontNumberVerticalOffset, bool hasShortsFrontNumber,
-						const Color &shortsFrontNumberColor, const Color &shortsFrontNumberOutlineColor, int shortsFrontNumberHorizontalOffset, int shortsFrontNumberVerticalOffset, bool isKeeper, CFontAtlas *pFontAtlas);
+	bool SetPlayerInfo(const char *name, int number, bool isKeeper, CFontAtlas *pFontAtlas,
+					   const Color &shirtNameFillColor, const Color &shirtNameOutlineColor, int shirtNameVerticalOffset,
+					   const Color &shirtBackNumberFillColor, const Color &shirtBackNumberOutlineColor, int shirtBackNumberVerticalOffset,
+					   const Color &shortsNumberFillColor, const Color &shortsNumberOutlineColor, int shortsNumberHorizontalOffset, int shortsNumberVerticalOffset,
+					   bool hasShirtFrontNumber, const Color &shirtFrontNumberFillColor, const Color &shirtFrontNumberOutlineColor, int shirtFrontNumberHorizontalOffset, int shirtFrontNumberVerticalOffset);
 private:
-	virtual void WriteText(CPixelWriter &pixelWriter, const char *text, glyphWithOutline_t **pixels, const chr_t *chars, const int &width, const int &height, int offsetX, int offsetY, const Color &color, bool isKeeper, bool isOutline);
+	virtual void WriteText(CPixelWriter &pixelWriter, const char *text, glyphWithOutline_t **pixels, const chr_t *chars, const int &width, const int &height, int offsetX, int offsetY, const Color &color, int rotation, bool isOutline);
 	char m_szShirtName[MAX_PLAYER_NAME_LENGTH];
 	char m_szShirtNumber[4];
 	bool m_bIsKeeper;
 	CFontAtlas *m_pFontAtlas;
 
-	Color m_ShirtNameAndNumberColor;
-	
-	Color m_ShirtNumberOutlineColor;
+	Color m_ShirtNameFillColor;
+	Color m_ShirtNameOutlineColor;
+	int m_nShirtNameHorizontalOffset;
+	int m_nShirtNameVerticalOffset;
 
-	Color m_ShirtBackNameOutlineColor;
-	int m_nShirtBackNameVerticalOffset;
-
+	Color m_ShirtBackNumberFillColor;
+	Color m_ShirtBackNumberOutlineColor;
+	int m_nShirtBackNumberHorizontalOffset;
 	int m_nShirtBackNumberVerticalOffset;
 
+	Color m_ShortsNumberFillColor;
+	Color m_ShortsNumberOutlineColor;
+	int m_nShortsNumberHorizontalOffset;
+	int m_nShortsNumberVerticalOffset;
+
 	bool m_bHasShirtFrontNumber;
+	Color m_ShirtFrontNumberFillColor;
+	Color m_ShirtFrontNumberOutlineColor;
 	int m_nShirtFrontNumberHorizontalOffset;
 	int m_nShirtFrontNumberVerticalOffset;
-
-	bool m_bHasShortsFrontNumber;
-	Color m_ShortsFrontNumberColor;
-	Color m_ShortsFrontNumberOutlineColor;
-	int m_nShortsFrontNumberHorizontalOffset;
-	int m_nShortsFrontNumberVerticalOffset;
 };
 
 CProceduralRegenerator::CProceduralRegenerator()
@@ -63,29 +67,33 @@ CProceduralRegenerator::CProceduralRegenerator()
 	m_bIsKeeper = false;
 	m_pFontAtlas = NULL;
 
-	m_ShirtNameAndNumberColor = Color(0, 0, 0, 255);
-	
-	m_ShirtNumberOutlineColor = Color(0, 0, 0, 255);
+	m_ShirtNameFillColor = Color(0, 255, 0, 255);
+	m_ShirtNameOutlineColor = Color(0, 255, 0, 255);
+	m_nShirtNameHorizontalOffset = 0;
+	m_nShirtNameVerticalOffset = 0;
 
-	m_ShirtBackNameOutlineColor = Color(0, 0, 0, 255);
-	m_nShirtBackNameVerticalOffset = 0;
-
+	m_ShirtBackNumberFillColor = Color(0, 255, 0, 255);
+	m_ShirtBackNumberOutlineColor = Color(0, 255, 0, 255);
+	m_nShirtBackNumberHorizontalOffset = 0;
 	m_nShirtBackNumberVerticalOffset = 0;
 
+	m_ShortsNumberFillColor = Color(0, 255, 0, 255);
+	m_ShortsNumberOutlineColor = Color(0, 255, 0, 255);
+	m_nShortsNumberHorizontalOffset = 0;
+	m_nShortsNumberVerticalOffset = 0;
+
 	m_bHasShirtFrontNumber = false;
+	m_ShirtFrontNumberFillColor = Color(0, 255, 0, 255);
+	m_ShirtFrontNumberOutlineColor = Color(0, 255, 0, 255);
 	m_nShirtFrontNumberHorizontalOffset = 0;
 	m_nShirtFrontNumberVerticalOffset = 0;
-
-	m_bHasShortsFrontNumber = false;
-	m_ShortsFrontNumberColor = Color(0, 0, 0, 255);
-	m_ShortsFrontNumberOutlineColor = Color(0, 0, 0, 255);
-	m_nShortsFrontNumberHorizontalOffset = 0;
-	m_nShortsFrontNumberVerticalOffset = 0;
 }
 
-bool CProceduralRegenerator::SetPlayerInfo(const char *name, int number, const Color &shirtNameAndNumberColor, const Color &shirtNumberOutlineColor, const Color &shirtBackNameOutlineColor,
-											int shirtBackNameVerticalOffset, int shirtBackNumberVerticalOffset, bool hasShirtFrontNumber, int shirtFrontNumberHorizontalOffset, int shirtFrontNumberVerticalOffset, bool hasShortsFrontNumber,
-											const Color &shortsFrontNumberColor, const Color &shortsFrontNumberOutlineColor, int shortsFrontNumberHorizontalOffset, int shortsFrontNumberVerticalOffset, bool isKeeper, CFontAtlas *pFontAtlas)
+bool CProceduralRegenerator::SetPlayerInfo(const char *name, int number, bool isKeeper, CFontAtlas *pFontAtlas,
+										   const Color &shirtNameFillColor, const Color &shirtNameOutlineColor, int shirtNameVerticalOffset,
+										   const Color &shirtBackNumberFillColor, const Color &shirtBackNumberOutlineColor, int shirtBackNumberVerticalOffset,
+										   const Color &shortsNumberFillColor, const Color &shortsNumberOutlineColor, int shortsNumberHorizontalOffset, int shortsNumberVerticalOffset,
+										   bool hasShirtFrontNumber, const Color &shirtFrontNumberFillColor, const Color &shirtFrontNumberOutlineColor, int shirtFrontNumberHorizontalOffset, int shirtFrontNumberVerticalOffset)
 {
 	bool hasChanged = false;
 
@@ -101,21 +109,47 @@ bool CProceduralRegenerator::SetPlayerInfo(const char *name, int number, const C
 		hasChanged = true;
 	}
 
-	if (shirtNumberOutlineColor != m_ShirtNumberOutlineColor)
+	if (isKeeper != m_bIsKeeper)
 	{
-		m_ShirtNumberOutlineColor = shirtNumberOutlineColor;
+		m_bIsKeeper = isKeeper;
 		hasChanged = true;
 	}
 
-	if (shirtBackNameOutlineColor != m_ShirtBackNameOutlineColor)
+	if (pFontAtlas != m_pFontAtlas)
 	{
-		m_ShirtBackNameOutlineColor = shirtBackNameOutlineColor;
+		m_pFontAtlas = pFontAtlas;
 		hasChanged = true;
 	}
 
-	if (shirtBackNameVerticalOffset != m_nShirtBackNameVerticalOffset)
+
+	if (shirtNameFillColor != m_ShirtNameFillColor)
 	{
-		m_nShirtBackNameVerticalOffset = shirtBackNameVerticalOffset;
+		m_ShirtNameFillColor = shirtNameFillColor;
+		hasChanged = true;
+	}
+
+	if (shirtNameOutlineColor != m_ShirtNameOutlineColor)
+	{
+		m_ShirtNameOutlineColor = shirtNameOutlineColor;
+		hasChanged = true;
+	}
+
+	if (shirtNameVerticalOffset != m_nShirtNameVerticalOffset)
+	{
+		m_nShirtNameVerticalOffset = shirtNameVerticalOffset;
+		hasChanged = true;
+	}
+
+
+	if (shirtBackNumberFillColor != m_ShirtBackNumberFillColor)
+	{
+		m_ShirtBackNumberFillColor = shirtBackNumberFillColor;
+		hasChanged = true;
+	}
+
+	if (shirtBackNumberOutlineColor != m_ShirtBackNumberOutlineColor)
+	{
+		m_ShirtBackNumberOutlineColor = shirtBackNumberOutlineColor;
 		hasChanged = true;
 	}
 
@@ -125,9 +159,47 @@ bool CProceduralRegenerator::SetPlayerInfo(const char *name, int number, const C
 		hasChanged = true;
 	}
 
+
+	if (shortsNumberFillColor != m_ShortsNumberFillColor)
+	{
+		m_ShortsNumberFillColor = shortsNumberFillColor;
+		hasChanged = true;
+	}
+
+	if (shortsNumberOutlineColor != m_ShortsNumberOutlineColor)
+	{
+		m_ShortsNumberOutlineColor = shortsNumberOutlineColor;
+		hasChanged = true;
+	}
+
+	if (shortsNumberHorizontalOffset != m_nShortsNumberHorizontalOffset)
+	{
+		m_nShortsNumberHorizontalOffset = shortsNumberHorizontalOffset;
+		hasChanged = true;
+	}
+
+	if (shortsNumberVerticalOffset != m_nShortsNumberVerticalOffset)
+	{
+		m_nShortsNumberVerticalOffset = shortsNumberVerticalOffset;
+		hasChanged = true;
+	}
+
+
 	if (hasShirtFrontNumber != m_bHasShirtFrontNumber)
 	{
 		m_bHasShirtFrontNumber = hasShirtFrontNumber;
+		hasChanged = true;
+	}
+
+	if (shirtFrontNumberFillColor != m_ShirtFrontNumberFillColor)
+	{
+		m_ShirtFrontNumberFillColor = shirtFrontNumberFillColor;
+		hasChanged = true;
+	}
+
+	if (shirtFrontNumberOutlineColor != m_ShirtFrontNumberOutlineColor)
+	{
+		m_ShirtFrontNumberOutlineColor = shirtFrontNumberOutlineColor;
 		hasChanged = true;
 	}
 
@@ -140,48 +212,6 @@ bool CProceduralRegenerator::SetPlayerInfo(const char *name, int number, const C
 	if (shirtFrontNumberVerticalOffset != m_nShirtFrontNumberVerticalOffset)
 	{
 		m_nShirtFrontNumberVerticalOffset = shirtFrontNumberVerticalOffset;
-		hasChanged = true;
-	}
-
-	if (hasShortsFrontNumber != m_bHasShortsFrontNumber)
-	{
-		m_bHasShortsFrontNumber = hasShortsFrontNumber;
-		hasChanged = true;
-	}
-
-	if (shortsFrontNumberColor != m_ShortsFrontNumberColor)
-	{
-		m_ShortsFrontNumberColor = shortsFrontNumberColor;
-		hasChanged = true;
-	}
-
-	if (shortsFrontNumberOutlineColor != m_ShortsFrontNumberOutlineColor)
-	{
-		m_ShortsFrontNumberOutlineColor = shortsFrontNumberOutlineColor;
-		hasChanged = true;
-	}
-
-	if (shortsFrontNumberHorizontalOffset != m_nShortsFrontNumberHorizontalOffset)
-	{
-		m_nShortsFrontNumberHorizontalOffset = shortsFrontNumberHorizontalOffset;
-		hasChanged = true;
-	}
-
-	if (shortsFrontNumberVerticalOffset != m_nShortsFrontNumberVerticalOffset)
-	{
-		m_nShortsFrontNumberVerticalOffset = shortsFrontNumberVerticalOffset;
-		hasChanged = true;
-	}
-
-	if (isKeeper != m_bIsKeeper)
-	{
-		m_bIsKeeper = isKeeper;
-		hasChanged = true;
-	}
-
-	if (pFontAtlas != m_pFontAtlas)
-	{
-		m_pFontAtlas = pFontAtlas;
 		hasChanged = true;
 	}
 
@@ -221,35 +251,34 @@ void CProceduralRegenerator::RegenerateTextureBits( ITexture *pTexture, IVTFText
 	// Write outline pixels
 	
 	// Shirt back name
-	WriteText(pixelWriter, m_szShirtName, m_pFontAtlas->m_ShirtBackNamePixels, m_pFontAtlas->m_NameChars, m_pFontAtlas->m_nNamePixelsWidth, m_pFontAtlas->m_nNamePixelsHeight, m_bIsKeeper ? keeperHorizontalOffset : outfieldHorizontalOffset, m_nShirtBackNameVerticalOffset, m_ShirtBackNameOutlineColor, m_bIsKeeper, true);
+	WriteText(pixelWriter, m_szShirtName, m_pFontAtlas->m_ShirtNamePixels, m_pFontAtlas->m_NameChars, m_pFontAtlas->m_nNamePixelsWidth, m_pFontAtlas->m_nNamePixelsHeight, m_bIsKeeper ? keeperHorizontalOffset : outfieldHorizontalOffset, m_nShirtNameVerticalOffset, m_ShirtNameOutlineColor, 180, true);
 	
 	// Shirt back number
-	WriteText(pixelWriter, m_szShirtNumber, m_pFontAtlas->m_ShirtBackNumberPixels, m_pFontAtlas->m_ShirtBackNumberChars, m_pFontAtlas->m_nShirtBackNumberPixelsWidth, m_pFontAtlas->m_nShirtBackNumberPixelsHeight, m_bIsKeeper ? keeperHorizontalOffset : outfieldHorizontalOffset, m_nShirtBackNumberVerticalOffset, m_ShirtNumberOutlineColor, m_bIsKeeper, true);	
-	
-	// Shirt front number
-	if (m_bHasShirtFrontNumber)
-		WriteText(pixelWriter, m_szShirtNumber, m_pFontAtlas->m_ShirtAndShortsFrontNumberPixels, m_pFontAtlas->m_ShirtAndShortsFrontNumberChars, m_pFontAtlas->m_nShirtAndShortsFrontNumberPixelsWidth, m_pFontAtlas->m_nShirtAndShortsFrontNumberPixelsHeight, m_nShirtFrontNumberHorizontalOffset, m_nShirtFrontNumberVerticalOffset, m_ShirtNumberOutlineColor, m_bIsKeeper, true);	
+	WriteText(pixelWriter, m_szShirtNumber, m_pFontAtlas->m_ShirtBackNumberPixels, m_pFontAtlas->m_ShirtBackNumberChars, m_pFontAtlas->m_nShirtBackNumberPixelsWidth, m_pFontAtlas->m_nShirtBackNumberPixelsHeight, m_bIsKeeper ? keeperHorizontalOffset : outfieldHorizontalOffset, m_nShirtBackNumberVerticalOffset, m_ShirtBackNumberOutlineColor, 180, true);	
 	
 	// Shorts front number
-	if (m_bHasShortsFrontNumber)
-		WriteText(pixelWriter, m_szShirtNumber, m_pFontAtlas->m_ShirtAndShortsFrontNumberPixels, m_pFontAtlas->m_ShirtAndShortsFrontNumberChars, m_pFontAtlas->m_nShirtAndShortsFrontNumberPixelsWidth, m_pFontAtlas->m_nShirtAndShortsFrontNumberPixelsHeight, m_nShortsFrontNumberHorizontalOffset, m_nShortsFrontNumberVerticalOffset, m_ShortsFrontNumberOutlineColor, m_bIsKeeper, true);	
+	WriteText(pixelWriter, m_szShirtNumber, m_pFontAtlas->m_ShirtAndShortsNumberPixels, m_pFontAtlas->m_ShirtAndShortsNumberChars, m_pFontAtlas->m_nShirtAndShortsNumberPixelsWidth, m_pFontAtlas->m_nShirtAndShortsNumberPixelsHeight, m_nShortsNumberHorizontalOffset, m_nShortsNumberVerticalOffset, m_ShortsNumberOutlineColor, m_bIsKeeper ? 0 : 270, true);	
+
+	// Shirt front number
+	if (m_bHasShirtFrontNumber)
+		WriteText(pixelWriter, m_szShirtNumber, m_pFontAtlas->m_ShirtAndShortsNumberPixels, m_pFontAtlas->m_ShirtAndShortsNumberChars, m_pFontAtlas->m_nShirtAndShortsNumberPixelsWidth, m_pFontAtlas->m_nShirtAndShortsNumberPixelsHeight, m_nShirtFrontNumberHorizontalOffset, m_nShirtFrontNumberVerticalOffset, m_ShirtFrontNumberOutlineColor, 0, true);	
 	
 
 	// Write glyph pixels
 	
 	// Shirt back name
-	WriteText(pixelWriter, m_szShirtName, m_pFontAtlas->m_ShirtBackNamePixels, m_pFontAtlas->m_NameChars, m_pFontAtlas->m_nNamePixelsWidth, m_pFontAtlas->m_nNamePixelsHeight, m_bIsKeeper ? keeperHorizontalOffset : outfieldHorizontalOffset, m_nShirtBackNameVerticalOffset, m_ShirtNameAndNumberColor, m_bIsKeeper, false);
+	WriteText(pixelWriter, m_szShirtName, m_pFontAtlas->m_ShirtNamePixels, m_pFontAtlas->m_NameChars, m_pFontAtlas->m_nNamePixelsWidth, m_pFontAtlas->m_nNamePixelsHeight, m_bIsKeeper ? keeperHorizontalOffset : outfieldHorizontalOffset, m_nShirtNameVerticalOffset, m_ShirtNameFillColor, 180, false);
 	
 	// Shirt back number
-	WriteText(pixelWriter, m_szShirtNumber, m_pFontAtlas->m_ShirtBackNumberPixels, m_pFontAtlas->m_ShirtBackNumberChars, m_pFontAtlas->m_nShirtBackNumberPixelsWidth, m_pFontAtlas->m_nShirtBackNumberPixelsHeight, m_bIsKeeper ? keeperHorizontalOffset : outfieldHorizontalOffset, m_nShirtBackNumberVerticalOffset, m_ShirtNameAndNumberColor, m_bIsKeeper, false);	
-	
-	// Shirt front number
-	if (m_bHasShirtFrontNumber)	
-		WriteText(pixelWriter, m_szShirtNumber, m_pFontAtlas->m_ShirtAndShortsFrontNumberPixels, m_pFontAtlas->m_ShirtAndShortsFrontNumberChars, m_pFontAtlas->m_nShirtAndShortsFrontNumberPixelsWidth, m_pFontAtlas->m_nShirtAndShortsFrontNumberPixelsHeight, m_nShirtFrontNumberHorizontalOffset, m_nShirtFrontNumberVerticalOffset, m_ShirtNameAndNumberColor, m_bIsKeeper, false);	
+	WriteText(pixelWriter, m_szShirtNumber, m_pFontAtlas->m_ShirtBackNumberPixels, m_pFontAtlas->m_ShirtBackNumberChars, m_pFontAtlas->m_nShirtBackNumberPixelsWidth, m_pFontAtlas->m_nShirtBackNumberPixelsHeight, m_bIsKeeper ? keeperHorizontalOffset : outfieldHorizontalOffset, m_nShirtBackNumberVerticalOffset, m_ShirtBackNumberFillColor, 180, false);	
 	
 	// Shorts front number
-	if (m_bHasShortsFrontNumber)	
-		WriteText(pixelWriter, m_szShirtNumber, m_pFontAtlas->m_ShirtAndShortsFrontNumberPixels, m_pFontAtlas->m_ShirtAndShortsFrontNumberChars, m_pFontAtlas->m_nShirtAndShortsFrontNumberPixelsWidth, m_pFontAtlas->m_nShirtAndShortsFrontNumberPixelsHeight, m_nShortsFrontNumberHorizontalOffset, m_nShortsFrontNumberVerticalOffset, m_ShortsFrontNumberColor, m_bIsKeeper, false);	
+	WriteText(pixelWriter, m_szShirtNumber, m_pFontAtlas->m_ShirtAndShortsNumberPixels, m_pFontAtlas->m_ShirtAndShortsNumberChars, m_pFontAtlas->m_nShirtAndShortsNumberPixelsWidth, m_pFontAtlas->m_nShirtAndShortsNumberPixelsHeight, m_nShortsNumberHorizontalOffset, m_nShortsNumberVerticalOffset, m_ShortsNumberFillColor, m_bIsKeeper ? 0 : 270, false);	
+
+	// Shirt front number
+	if (m_bHasShirtFrontNumber)	
+		WriteText(pixelWriter, m_szShirtNumber, m_pFontAtlas->m_ShirtAndShortsNumberPixels, m_pFontAtlas->m_ShirtAndShortsNumberChars, m_pFontAtlas->m_nShirtAndShortsNumberPixelsWidth, m_pFontAtlas->m_nShirtAndShortsNumberPixelsHeight, m_nShirtFrontNumberHorizontalOffset, m_nShirtFrontNumberVerticalOffset, m_ShirtFrontNumberFillColor, 0, false);	
+	
 }
 
 struct compColor_t
@@ -284,13 +313,14 @@ void GetCompositeColor(const compColor_t &colorA, const compColor_t &colorB, com
 	compColor.a = alpha * 255;
 }
 
-void CProceduralRegenerator::WriteText(CPixelWriter &pixelWriter, const char *text, glyphWithOutline_t **pixels, const chr_t *chars, const int &width, const int &height, int offsetX, int offsetY, const Color &color, bool isKeeper, bool isOutline)
+void CProceduralRegenerator::WriteText(CPixelWriter &pixelWriter, const char *text, glyphWithOutline_t **pixels, const chr_t *chars, const int &width, const int &height, int offsetX, int offsetY, const Color &color, int rotation, bool isOutline)
 {
 	// Name and Number are upside down on the texture
 
 	int totalWidth = 0;
 	int maxHeight = 0;
 
+	// Calculate the total width and max height of the text with kerning
 	for (int i = 0; i < strlen(text); i++)
 	{
 		const chr_t &chr = chars[text[i]];
@@ -302,26 +332,86 @@ void CProceduralRegenerator::WriteText(CPixelWriter &pixelWriter, const char *te
 		maxHeight = max(maxHeight, chr.height + chr.offsetY);
 	}
 
-	int posX = offsetX + totalWidth / 2;
-	int posY = offsetY + maxHeight / 2;
+	int posX;
+	int posY;
+
+	if (rotation == 90)
+	{
+		posX = offsetX + maxHeight / 2;
+		posY = offsetY - totalWidth / 2;
+	}
+	else if (rotation == 180)
+	{
+		posX = offsetX + totalWidth / 2;
+		posY = offsetY + maxHeight / 2;
+	}
+	else if (rotation == 270)
+	{
+		posX = offsetX - maxHeight / 2;
+		posY = offsetY + totalWidth / 2;
+	}
+	else
+	{
+		posX = offsetX - totalWidth / 2;
+		posY = offsetY - maxHeight / 2;
+	}
+
+	const int textureWidth = 1024;
+	const int textureHeight = 1024;
 
 	for (int i = 0; i < strlen(text); i++)
 	{
 		const chr_t &chr = chars[text[i]];
 
 		if (i > 0)
-			posX -= chr.GetKerning(text[i - 1]);
+		{
+			int kerning = chr.GetKerning(text[i - 1]);
+
+			if (rotation == 90)
+				posY += kerning;
+			if (rotation == 180)
+				posX -= kerning;
+			if (rotation == 270)
+				posY -= kerning;
+			else
+				posX += kerning;
+		}
 
 		for (int y = 0; y < chr.height; y++)
 		{
 			for (int x = 0; x < chr.width; x++)
 			{
-				pixelWriter.Seek(clamp(posX - x - chr.offsetX, 0, 1023), clamp(posY - y - chr.offsetY, 0, 1023));
-				int srcY = chr.y + y;
-				int srcX = chr.x + x;
+				int destX;
+				int destY;
+
+				if (rotation == 90)
+				{
+					destX = posX - y - chr.offsetY;
+					destY = posY + x + chr.offsetX;
+				}
+				else if (rotation == 180)
+				{
+					destX = posX - x - chr.offsetX;
+					destY = posY - y - chr.offsetY;
+				}
+				else if (rotation == 270)
+				{
+					destX = posX + y + chr.offsetY;
+					destY = posY - x - chr.offsetX;
+				}
+				else
+				{
+					destX = posX + x + chr.offsetX;
+					destY = posY + y + chr.offsetY;
+				}
+
+				pixelWriter.Seek(clamp(destX, 0, textureWidth - 1), clamp(destY, 0, textureHeight - 1));
 
 				compColor_t curCol;
 				pixelWriter.ReadPixelNoAdvance(curCol.r, curCol.g, curCol.b, curCol.a);
+
+				int srcX = chr.x + x;
+				int srcY = chr.y + y;
 
 				compColor_t col(color);
 				col.a = isOutline ? pixels[srcY][srcX].outline : pixels[srcY][srcX].glyph;
@@ -520,17 +610,19 @@ void CPlayerTextureProxy::OnBind( C_BaseEntity *pEnt )
 
 		if (isKeeper)
 		{
-			needsUpdate = (*pProcReg)->SetPlayerInfo(shirtName, shirtNumber, pKitInfo->m_KeeperShirtNameAndNumberColor, pKitInfo->m_KeeperShirtNumberOutlineColor,
-							pKitInfo->m_KeeperShirtBackNameOutlineColor, pKitInfo->m_nKeeperShirtBackNameVerticalOffset, pKitInfo->m_nKeeperShirtBackNumberVerticalOffset, pKitInfo->m_bHasKeeperShirtFrontNumber,
-							pKitInfo->m_nKeeperShirtFrontNumberHorizontalOffset, pKitInfo->m_nKeeperShirtFrontNumberVerticalOffset, pKitInfo->m_bHasKeeperShortsFrontNumber, pKitInfo->m_KeeperShortsFrontNumberColor,
-							pKitInfo->m_KeeperShortsFrontNumberOutlineColor, pKitInfo->m_nKeeperShortsFrontNumberHorizontalOffset, pKitInfo->m_nKeeperShortsFrontNumberVerticalOffset, true, pKitInfo->m_pFontAtlas);
+			needsUpdate = (*pProcReg)->SetPlayerInfo(shirtName, shirtNumber, true, pKitInfo->m_pFontAtlas,
+													 pKitInfo->m_KeeperShirtNameFillColor, pKitInfo->m_KeeperShirtNameOutlineColor, pKitInfo->m_nKeeperShirtNameVerticalOffset,
+													 pKitInfo->m_KeeperShirtBackNumberFillColor, pKitInfo->m_KeeperShirtBackNumberOutlineColor, pKitInfo->m_nKeeperShirtBackNumberVerticalOffset,
+													 pKitInfo->m_KeeperShortsNumberFillColor, pKitInfo->m_KeeperShortsNumberOutlineColor, pKitInfo->m_nKeeperShortsNumberHorizontalOffset, pKitInfo->m_nKeeperShortsNumberVerticalOffset,
+													 pKitInfo->m_bHasKeeperShirtFrontNumber, pKitInfo->m_KeeperShirtFrontNumberFillColor, pKitInfo->m_KeeperShirtFrontNumberOutlineColor, pKitInfo->m_nKeeperShirtFrontNumberHorizontalOffset, pKitInfo->m_nKeeperShirtFrontNumberVerticalOffset);
 		}
 		else
 		{
-			needsUpdate = (*pProcReg)->SetPlayerInfo(shirtName, shirtNumber, pKitInfo->m_OutfieldShirtNameAndNumberColor, pKitInfo->m_OutfieldShirtNumberOutlineColor,
-							pKitInfo->m_OutfieldShirtBackNameOutlineColor, pKitInfo->m_nOutfieldShirtBackNameVerticalOffset, pKitInfo->m_nOutfieldShirtBackNumberVerticalOffset, pKitInfo->m_bHasOutfieldShirtFrontNumber,
-							pKitInfo->m_nOutfieldShirtFrontNumberHorizontalOffset, pKitInfo->m_nOutfieldShirtFrontNumberVerticalOffset, pKitInfo->m_bHasOutfieldShortsFrontNumber, pKitInfo->m_OutfieldShortsFrontNumberColor,
-							pKitInfo->m_OutfieldShortsFrontNumberOutlineColor, pKitInfo->m_nOutfieldShortsFrontNumberHorizontalOffset, pKitInfo->m_nOutfieldShortsFrontNumberVerticalOffset, false, pKitInfo->m_pFontAtlas);
+			needsUpdate = (*pProcReg)->SetPlayerInfo(shirtName, shirtNumber, false, pKitInfo->m_pFontAtlas,
+													 pKitInfo->m_OutfieldShirtNameFillColor, pKitInfo->m_OutfieldShirtNameOutlineColor, pKitInfo->m_nOutfieldShirtNameVerticalOffset,
+													 pKitInfo->m_OutfieldShirtBackNumberFillColor, pKitInfo->m_OutfieldShirtBackNumberOutlineColor, pKitInfo->m_nOutfieldShirtBackNumberVerticalOffset,
+													 pKitInfo->m_OutfieldShortsNumberFillColor, pKitInfo->m_OutfieldShortsNumberOutlineColor, pKitInfo->m_nOutfieldShortsNumberHorizontalOffset, pKitInfo->m_nOutfieldShortsNumberVerticalOffset,
+													 pKitInfo->m_bHasOutfieldShirtFrontNumber, pKitInfo->m_OutfieldShirtFrontNumberFillColor, pKitInfo->m_OutfieldShirtFrontNumberOutlineColor, pKitInfo->m_nOutfieldShirtFrontNumberHorizontalOffset, pKitInfo->m_nOutfieldShirtFrontNumberVerticalOffset);
 		}
 				
 		if (needsUpdate || *pLastTextureUpdate <= ClientModeSDKNormal::m_flLastMapChange)
