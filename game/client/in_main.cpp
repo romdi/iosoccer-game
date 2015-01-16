@@ -756,7 +756,7 @@ void CInput::AdjustAngles ( float frametime )
 
 	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
 
-	if (pPlayer && ((pPlayer->GetFlags() & (FL_FREECAM | FL_REMOTECONTROLLED)) || (pPlayer->m_nButtons & IN_RELOAD)))
+	if (pPlayer && ((pPlayer->GetFlags() & (FL_FREECAM | FL_REMOTECONTROLLED)) || (pPlayer->m_nButtons & IN_WALK)))
 		return;
 
 	// Retrieve latest view direction from engine

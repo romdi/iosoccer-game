@@ -1040,7 +1040,7 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 	float nextShotMinDelay = 0.0f;
 	float pitchCoeff = GetPitchCoeff(true);
 
-	if (m_pPl->m_nButtons & IN_RELOAD)
+	if (m_pPl->m_nButtons & IN_WALK)
 	{
 		spinFlags = FL_SPIN_FORCE_NONE;
 		shotAngle = m_aPlCamAng;
@@ -1185,7 +1185,7 @@ bool CBall::DoVolleyShot()
 
 bool CBall::DoHeader()
 {
-	if (m_pPl->m_nButtons & IN_RELOAD)
+	if (m_pPl->m_nButtons & IN_WALK)
 	{
 		Vector camDir;
 		AngleVectors(m_aPlCamAng, &camDir);
