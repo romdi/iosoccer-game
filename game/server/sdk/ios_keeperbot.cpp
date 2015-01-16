@@ -229,7 +229,7 @@ void CKeeperBot::BotCalcCommand(CUserCmd &cmd)
 			if (abs(m_vLocalDirToBall.x) > 50 && abs(m_vLocalDirToBall.x) < 225 && m_vDirToBall.z < 50 && abs(m_vLocalDirToBall.y) < 40 && m_vBallVel.Length() < 750 && pClosestPl != this)
 			{
 				cmd.buttons |= IN_ATTACK;
-				cmd.buttons |= IN_DUCK;
+				cmd.buttons |= IN_JUMP;
 				cmd.buttons |= Sign(m_vLocalDirToBall.x) == 1 ? IN_FORWARD : IN_BACK;
 			}
 			// Standing catch
