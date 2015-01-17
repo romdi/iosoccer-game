@@ -411,7 +411,7 @@ void CMatchBall::State_THROWIN_Think()
 
 		m_pPl->AddThrowIn();
 		RemoveAllTouches();
-		SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_HANDS, false, false, false);
+		SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_HANDS, false, false);
 		m_bBallInAirAfterThrowIn = true;
 		State_Transition(BALL_STATE_NORMAL);
 	}
@@ -549,7 +549,7 @@ void CMatchBall::State_KICKOFF_Think()
 	if (m_pPl->ShotButtonsReleased() && m_pPl->IsShooting())
 	{
 		RemoveAllTouches();
-		SetVel(m_vPlForward2D * 350, 0, FL_SPIN_FORCE_NONE, BODY_PART_FEET, false, false, false);
+		SetVel(m_vPlForward2D * 350, 0, FL_SPIN_FORCE_NONE, BODY_PART_FEET, false, false);
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
 		m_pPl->RemoveFlag(FL_ATCONTROLS);
 		if (m_pOtherPl)
@@ -1068,7 +1068,7 @@ void CMatchBall::State_KEEPERHANDS_Think()
 
 		RemoveAllTouches();
 		SetPos(pos, false);
-		SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_KEEPERHANDS, false, true, false, 0.5f);
+		SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_KEEPERHANDS, true, false, 0.5f);
 
 		return State_Transition(BALL_STATE_NORMAL);
 	}
@@ -1105,7 +1105,7 @@ void CMatchBall::State_KEEPERHANDS_Think()
 
 		RemoveAllTouches();
 		SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_keeperhands.GetFloat()) + m_vPlForward2D * 36, false);
-		SetVel(vel, 1.0f, FL_SPIN_PERMIT_ALL, BODY_PART_KEEPERHANDS, false, true, true);
+		SetVel(vel, 1.0f, FL_SPIN_PERMIT_ALL, BODY_PART_KEEPERHANDS, true, true);
 
 		return State_Transition(BALL_STATE_NORMAL);
 	}
@@ -1884,9 +1884,9 @@ bool CMatchBall::IsPlayerClose()
 	return (m_vPos - m_vPlPos).Length2DSqr() <= pow(sv_ball_setpiece_close_dist.GetFloat(), 2);
 }
 
-void CMatchBall::SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyPart, bool isDeflection, bool markOffsidePlayers, bool ensureMinShotStrength, float nextShotMinDelay)
+void CMatchBall::SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyPart, bool markOffsidePlayers, bool ensureMinShotStrength, float nextShotMinDelay)
 {
-	CBall::SetVel(vel, spinCoeff, spinFlags, bodyPart, isDeflection, markOffsidePlayers, ensureMinShotStrength, nextShotMinDelay);
+	CBall::SetVel(vel, spinCoeff, spinFlags, bodyPart, markOffsidePlayers, ensureMinShotStrength, nextShotMinDelay);
 
 	if (markOffsidePlayers)
 		MarkOffsidePlayers();

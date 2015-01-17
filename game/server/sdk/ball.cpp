@@ -466,7 +466,7 @@ void CBall::SetAng(const QAngle &ang)
 	m_pPhys->SetPosition(m_vPos, m_aAng, false);
 }
 
-void CBall::SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyPart, bool isDeflection, bool markOffsidePlayers, bool ensureMinShotStrength, float nextShotMinDelay /*= 0*/)
+void CBall::SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyPart, bool markOffsidePlayers, bool ensureMinShotStrength, float nextShotMinDelay /*= 0*/)
 {
 	Vector oldVel = m_vVel;
 
@@ -494,12 +494,9 @@ void CBall::SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyP
 	m_flGlobalLastShot = gpGlobals->curtime;
 	m_flGlobalDynamicShotDelay = dynamicDelay;
 
-	if (isDeflection)
-		m_pPl->m_flNextShot = m_flGlobalLastShot + m_flGlobalDynamicShotDelay * sv_ball_shotdelay_global_coeff.GetFloat();
-	else
-		m_pPl->m_flNextShot = gpGlobals->curtime + max(dynamicDelay, nextShotMinDelay);
+	m_pPl->m_flNextShot = gpGlobals->curtime + max(dynamicDelay, nextShotMinDelay);
 
-	Touched(!isDeflection, bodyPart, oldVel);
+	Touched(true, bodyPart, oldVel);
 }
 
 void CBall::SetRot(AngularImpulse rot)
@@ -825,7 +822,7 @@ bool CBall::DoSlideAction()
 
 	Vector ballVel = forward * GetNormalshotStrength(GetPitchCoeff(), sv_ball_slide_strength.GetInt());
 
-	SetVel(ballVel, 0, FL_SPIN_FORCE_NONE, BODY_PART_FEET, false, true, true);
+	SetVel(ballVel, 0, FL_SPIN_FORCE_NONE, BODY_PART_FEET, true, true);
 
 	if (!SDKGameRules()->IsIntermissionState() && State_Get() == BALL_STATE_NORMAL && !HasQueuedState())
 		m_pPl->AddSlidingTackleCompleted();
@@ -976,12 +973,12 @@ bool CBall::CheckKeeperCatch()
 
 		Vector vel = punchDir * max(m_vVel.Length2D(), sv_ball_keeper_punch_minstrength.GetFloat()) * sv_ball_keeperdeflectioncoeff.GetFloat();
 
-		SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_KEEPERPUNCH, false, false, false);
+		SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_KEEPERPUNCH, false, false);
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
 	}
 	else // Catch ball
 	{
-		SetVel(vec3_origin, 0, FL_SPIN_FORCE_NONE, BODY_PART_KEEPERCATCH, false, false, false);
+		SetVel(vec3_origin, 0, FL_SPIN_FORCE_NONE, BODY_PART_KEEPERCATCH, false, false);
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);		
 		State_Transition(BALL_STATE_KEEPERHANDS);
 	}
@@ -1151,7 +1148,7 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 	}
 
 	if (setVel)
-		SetVel(vel, spinCoeff, spinFlags, BODY_PART_FEET, false, markOffsidePlayers, true, nextShotMinDelay);
+		SetVel(vel, spinCoeff, spinFlags, BODY_PART_FEET, markOffsidePlayers, true, nextShotMinDelay);
 
 	return true;
 }
@@ -1189,7 +1186,7 @@ bool CBall::DoVolleyShot()
 	else
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
 
-	SetVel(vel, 1.0f, FL_SPIN_PERMIT_ALL, BODY_PART_FEET, false, true, true);
+	SetVel(vel, 1.0f, FL_SPIN_PERMIT_ALL, BODY_PART_FEET, true, true);
 
 	return true;
 }
@@ -1218,7 +1215,7 @@ bool CBall::DoHeader()
 			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BICYCLE_KICK);
 			EmitSound("Ball.Kickhard");
 
-			SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_FEET, false, true, true);
+			SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_FEET, true, true);
 		}
 		// Diving header
 		else
@@ -1235,7 +1232,7 @@ bool CBall::DoHeader()
 			EmitSound("Ball.Kickhard");
 			EmitSound("Player.DivingHeader");
 
-			SetVel(vel, sv_ball_header_spincoeff.GetFloat(), FL_SPIN_PERMIT_SIDE, BODY_PART_HEAD, false, true, true, sv_ball_header_mindelay.GetFloat());
+			SetVel(vel, sv_ball_header_spincoeff.GetFloat(), FL_SPIN_PERMIT_SIDE, BODY_PART_HEAD, true, true, sv_ball_header_mindelay.GetFloat());
 		}
 	}
 	else
@@ -1270,7 +1267,7 @@ bool CBall::DoHeader()
 		// Add player forward move speed to ball speed
 		vel += m_vPlForwardVel2D * sv_ball_header_playerspeedcoeff.GetFloat();
 
-		SetVel(vel, sv_ball_header_spincoeff.GetFloat(), FL_SPIN_PERMIT_SIDE, BODY_PART_HEAD, false, true, true, sv_ball_header_mindelay.GetFloat());
+		SetVel(vel, sv_ball_header_spincoeff.GetFloat(), FL_SPIN_PERMIT_SIDE, BODY_PART_HEAD, true, true, sv_ball_header_mindelay.GetFloat());
 	}
 
 	return true;

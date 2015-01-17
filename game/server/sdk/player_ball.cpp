@@ -180,9 +180,9 @@ void CPlayerBall::State_Think()
 	}
 }
 
-void CPlayerBall::SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyPart, bool isDeflection, bool markOffsidePlayers, bool ensureMinShotStrength, float nextShotMinDelay)
+void CPlayerBall::SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyPart, bool markOffsidePlayers, bool ensureMinShotStrength, float nextShotMinDelay)
 {
-	CBall::SetVel(vel, spinCoeff, spinFlags, bodyPart, isDeflection, markOffsidePlayers, ensureMinShotStrength, nextShotMinDelay);
+	CBall::SetVel(vel, spinCoeff, spinFlags, bodyPart, markOffsidePlayers, ensureMinShotStrength, nextShotMinDelay);
 
 	if (m_bSaveNextShotToBallCannon && m_pPl == GetCreator())
 	{
@@ -322,7 +322,7 @@ void CPlayerBall::State_KEEPERHANDS_Think()
 		}
 
 		SetPos(pos, false);
-		SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_KEEPERHANDS, false, true, false, 0.5f);
+		SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_KEEPERHANDS, true, false, 0.5f);
 
 		return State_Transition(BALL_STATE_NORMAL);
 	}
@@ -348,7 +348,7 @@ void CPlayerBall::State_KEEPERHANDS_Think()
 			EmitSound("Ball.Kicknormal");
 
 		SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_keeperhands.GetFloat()) + m_vPlForward2D * 36, false);
-		SetVel(vel, 1.0f, FL_SPIN_PERMIT_ALL, BODY_PART_KEEPERHANDS, false, true, true);
+		SetVel(vel, 1.0f, FL_SPIN_PERMIT_ALL, BODY_PART_KEEPERHANDS, true, true);
 
 		return State_Transition(BALL_STATE_NORMAL);
 	}
