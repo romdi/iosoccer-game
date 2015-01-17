@@ -1042,6 +1042,9 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 
 	if (m_pPl->m_nButtons & IN_WALK)
 	{
+		if (!m_pPl->IsNormalshooting())
+			return false;
+
 		spinFlags = FL_SPIN_FORCE_NONE;
 		shotAngle = m_aPlCamAng;
 		Vector camDir;
@@ -1101,11 +1104,15 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 			}
 		}
 		// Fake shot
-		else
+		else if (!(m_pPl->m_nButtons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT)))
 		{
 			setVel = false;
 			m_pPl->m_flNextShot = gpGlobals->curtime + 0.5f;
 			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KICK);
+		}
+		else
+		{
+			return false;
 		}
 
 		Vector shotDir;
@@ -1151,6 +1158,10 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 
 bool CBall::DoVolleyShot()
 {
+	// Do nothing when holding trick key
+	if (m_pPl->m_nButtons & IN_WALK)
+		return false;
+
 	float shotStrength;
 
 	if (m_pPl->IsNormalshooting())
@@ -1187,34 +1198,45 @@ bool CBall::DoHeader()
 {
 	if (m_pPl->m_nButtons & IN_WALK)
 	{
+		if (!m_pPl->IsChargedshooting())
+			return false;
+
 		Vector camDir;
 		AngleVectors(m_aPlCamAng, &camDir);
 		float angDiff = RAD2DEG(acos(DotProduct2D(m_vPlForward.AsVector2D(), camDir.AsVector2D())));
 
-		// Heel kick
+		// Bicycle shot
 		if (angDiff >= 90)
 		{
-			float strength;
-
-			if (m_pPl->IsNormalshooting())
-				strength = GetNormalshotStrength(GetPitchCoeff(true), sv_ball_normalheader_strength.GetInt());
-			else
-				strength = GetChargedshotStrength(GetPitchCoeff(true), sv_ball_chargedheader_minstrength.GetInt(), sv_ball_chargedheader_maxstrength.GetInt());
-
 			QAngle ang = m_aPlCamAng;
 
 			Vector forward;
 			AngleVectors(ang, &forward);
 
-			Vector vel = forward * strength;
+			Vector vel = forward * GetChargedshotStrength(GetPitchCoeff(true), sv_ball_chargedheader_minstrength.GetInt(), sv_ball_chargedheader_maxstrength.GetInt());
 
 			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BICYCLE_KICK);
 			EmitSound("Ball.Kickhard");
 
 			SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_FEET, false, true, true);
 		}
+		// Diving header
 		else
-			m_pPl->m_flNextShot = gpGlobals->curtime + 0.5f;
+		{
+			Vector vel, forward;
+			QAngle headerAngle = m_aPlAng;
+
+			headerAngle[PITCH] = clamp(headerAngle[PITCH], sv_ball_divingheader_maxangle.GetFloat(), sv_ball_divingheader_minangle.GetFloat());
+			AngleVectors(headerAngle, &forward);
+
+			vel = forward * GetChargedshotStrength(1.0f, sv_ball_chargeddivingheader_minstrength.GetInt(), sv_ball_chargeddivingheader_maxstrength.GetInt());
+
+			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_DIVINGHEADER);
+			EmitSound("Ball.Kickhard");
+			EmitSound("Player.DivingHeader");
+
+			SetVel(vel, sv_ball_header_spincoeff.GetFloat(), FL_SPIN_PERMIT_SIDE, BODY_PART_HEAD, false, true, true, sv_ball_header_mindelay.GetFloat());
+		}
 	}
 	else
 	{
@@ -1232,20 +1254,6 @@ bool CBall::DoHeader()
 
 			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEADER_STATIONARY);
 			EmitSound("Ball.Kickhard");
-		}
-		// Charged diving header
-		else if (m_vPlForwardVel2D.Length2D() >= mp_walkspeed.GetInt()
-			&& (m_nInPenBoxOfTeam == m_pPl->GetTeamNumber() || m_nInPenBoxOfTeam == m_pPl->GetOppTeamNumber())
-			&& (m_pPl->m_nButtons & IN_SPEED) && m_pPl->GetGroundEntity())
-		{
-			headerAngle[PITCH] = clamp(headerAngle[PITCH], sv_ball_divingheader_maxangle.GetFloat(), sv_ball_divingheader_minangle.GetFloat());
-			AngleVectors(headerAngle, &forward);
-
-			vel = forward * GetChargedshotStrength(1.0f, sv_ball_chargeddivingheader_minstrength.GetInt(), sv_ball_chargeddivingheader_maxstrength.GetInt());
-
-			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_DIVINGHEADER);
-			EmitSound("Ball.Kickhard");
-			EmitSound("Player.DivingHeader");
 		}
 		// Charged header
 		else
