@@ -1025,11 +1025,8 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 	float pitchCoeff = GetPitchCoeff(true);
 	float shotTakerMinDelay = 0.0f;
 
-	if (m_pPl->m_nButtons & IN_WALK)
+	if (m_pPl->m_nButtons & IN_WALK && m_pPl->IsNormalshooting())
 	{
-		if (!m_pPl->IsNormalshooting())
-			return false;
-
 		spinFlags = FL_SPIN_FORCE_NONE;
 		shotAngle = m_aPlCamAng;
 		Vector camDir;
@@ -1108,14 +1105,38 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 	}
 	else
 	{
+		bool useCamViewAngles = false;
+
+		if (m_pPl->m_nButtons & IN_WALK)
+		{
+			useCamViewAngles = true;
+
+			// Topspin
+			if (m_pPl->m_nButtons & IN_FORWARD)
+			{
+				spinFlags = FL_SPIN_FORCE_TOP;
+				spinCoeff = 0.5f;
+			}
+			// Backspin
+			else if (m_pPl->m_nButtons & IN_BACK)
+			{
+				spinFlags = FL_SPIN_FORCE_BACK;
+				spinCoeff = 0.5f;
+			}
+			else
+			{
+				return false;
+			}
+		}
+
 		shotTakerMinDelay = 0.0f;
 
 		if (m_pPl->IsNormalshooting())
-			shotStrength = GetNormalshotStrength(GetPitchCoeff(), sv_ball_normalshot_strength.GetInt());
+			shotStrength = GetNormalshotStrength(GetPitchCoeff(useCamViewAngles), sv_ball_normalshot_strength.GetInt());
 		else
-			shotStrength = GetChargedshotStrength(GetPitchCoeff(), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
+			shotStrength = GetChargedshotStrength(GetPitchCoeff(useCamViewAngles), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
 
-		shotAngle = m_aPlAng;
+		shotAngle = useCamViewAngles ? m_aPlCamAng : m_aPlAng;
 		shotAngle[PITCH] = min(sv_ball_groundshot_minangle.GetFloat(), shotAngle[PITCH]);
 
 		Vector shotDir;
