@@ -1123,6 +1123,12 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 				spinFlags = FL_SPIN_FORCE_BACK;
 				spinCoeff = 0.5f;
 			}
+			// Reversed sidespin
+			else if (m_pPl->m_nButtons & IN_MOVELEFT || m_pPl->m_nButtons & IN_MOVERIGHT)
+			{
+				spinFlags = FL_SPIN_PERMIT_ALL | FL_SPIN_REVERSE_SIDE;
+				spinCoeff = 1.0f;
+			}
 			else
 			{
 				return false;
@@ -1309,11 +1315,11 @@ AngularImpulse CBall::CalcSpin(float coeff, int spinFlags)
 
 			if ((m_pPl->m_nButtons & IN_MOVELEFT) && (!(m_pPl->m_nButtons & IN_MOVERIGHT) || m_pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVERIGHT)) 
 			{
-				sideRot = Vector(0, 0, m_pPl->IsLegacySideCurl() ? 1 : -1);
+				sideRot = Vector(0, 0, (m_pPl->IsLegacySideCurl() ? 1 : -1) * (spinFlags & FL_SPIN_REVERSE_SIDE ? -1 : 1));
 			}
 			else if ((m_pPl->m_nButtons & IN_MOVERIGHT) && (!(m_pPl->m_nButtons & IN_MOVELEFT) || m_pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVELEFT)) 
 			{
-				sideRot = Vector(0, 0, m_pPl->IsLegacySideCurl() ? -1 : 1);
+				sideRot = Vector(0, 0, (m_pPl->IsLegacySideCurl() ? -1 : 1) * (spinFlags & FL_SPIN_REVERSE_SIDE ? -1 : 1));
 			}
 		}
 
