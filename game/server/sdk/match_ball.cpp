@@ -8,7 +8,9 @@ extern ConVar
 	sv_ball_chargedshot_minstrength,
 	sv_ball_chargedshot_maxstrength,
 	sv_ball_keepershot_minangle,
-	sv_ball_maxplayerfinddist;
+	sv_ball_maxplayerfinddist,
+	sv_ball_shottaker_mindelay_short,
+	sv_ball_shottaker_mindelay_long;
 
 ConVar
 	sv_ball_statetransition_activationdelay_short("sv_ball_statetransition_activationdelay_short", "0.1", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
@@ -411,7 +413,7 @@ void CMatchBall::State_THROWIN_Think()
 
 		m_pPl->AddThrowIn();
 		RemoveAllTouches();
-		SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_HANDS, false);
+		SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_HANDS, false, sv_ball_shottaker_mindelay_long.GetFloat());
 		m_bBallInAirAfterThrowIn = true;
 		State_Transition(BALL_STATE_NORMAL);
 	}
@@ -549,7 +551,7 @@ void CMatchBall::State_KICKOFF_Think()
 	if (m_pPl->ShotButtonsReleased() && m_pPl->IsShooting())
 	{
 		RemoveAllTouches();
-		SetVel(m_vPlForward2D * 350, 0, FL_SPIN_FORCE_NONE, BODY_PART_FEET, false);
+		SetVel(m_vPlForward2D * 350, 0, FL_SPIN_FORCE_NONE, BODY_PART_FEET, false, sv_ball_shottaker_mindelay_short.GetFloat());
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
 		m_pPl->RemoveFlag(FL_ATCONTROLS);
 		if (m_pOtherPl)
@@ -1068,7 +1070,7 @@ void CMatchBall::State_KEEPERHANDS_Think()
 
 		RemoveAllTouches();
 		SetPos(pos, false);
-		SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_KEEPERHANDS, true, 0.5f);
+		SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_KEEPERHANDS, true, sv_ball_shottaker_mindelay_short.GetFloat());
 
 		return State_Transition(BALL_STATE_NORMAL);
 	}
@@ -1104,8 +1106,8 @@ void CMatchBall::State_KEEPERHANDS_Think()
 			EmitSound("Ball.Kicknormal");
 
 		RemoveAllTouches();
-		SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_keeperhands.GetFloat()) + m_vPlForward2D * 36, false);
-		SetVel(vel, 1.0f, FL_SPIN_PERMIT_ALL, BODY_PART_KEEPERHANDS, true);
+		SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_keeperhands.GetFloat()) + m_vPlForward2D * 36, false, sv_ball_shottaker_mindelay_short.GetFloat());
+		SetVel(vel, 1.0f, FL_SPIN_PERMIT_ALL, BODY_PART_KEEPERHANDS, true, sv_ball_shottaker_mindelay_short.GetFloat());
 
 		return State_Transition(BALL_STATE_NORMAL);
 	}
@@ -1884,9 +1886,9 @@ bool CMatchBall::IsPlayerClose()
 	return (m_vPos - m_vPlPos).Length2DSqr() <= pow(sv_ball_setpiece_close_dist.GetFloat(), 2);
 }
 
-void CMatchBall::SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyPart, bool markOffsidePlayers, float nextShotMinDelay)
+void CMatchBall::SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyPart, bool markOffsidePlayers, float shotTakerMinDelay)
 {
-	CBall::SetVel(vel, spinCoeff, spinFlags, bodyPart, markOffsidePlayers, nextShotMinDelay);
+	CBall::SetVel(vel, spinCoeff, spinFlags, bodyPart, markOffsidePlayers, shotTakerMinDelay);
 
 	if (markOffsidePlayers)
 		MarkOffsidePlayers();

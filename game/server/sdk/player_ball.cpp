@@ -9,7 +9,9 @@ extern ConVar
 	sv_ball_chargedshot_minstrength,
 	sv_ball_chargedshot_maxstrength,
 	sv_ball_keepershot_minangle,
-	sv_ball_maxplayerfinddist;
+	sv_ball_maxplayerfinddist,
+	sv_ball_shottaker_mindelay_short,
+	sv_ball_shottaker_mindelay_long;
 
 ConVar sv_ball_update_physics("sv_ball_update_physics", "0", FCVAR_NOTIFY);
 
@@ -180,9 +182,9 @@ void CPlayerBall::State_Think()
 	}
 }
 
-void CPlayerBall::SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyPart, bool markOffsidePlayers, float nextShotMinDelay)
+void CPlayerBall::SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyPart, bool markOffsidePlayers, float shotTakerMinDelay)
 {
-	CBall::SetVel(vel, spinCoeff, spinFlags, bodyPart, markOffsidePlayers, nextShotMinDelay);
+	CBall::SetVel(vel, spinCoeff, spinFlags, bodyPart, markOffsidePlayers, shotTakerMinDelay);
 
 	if (m_bSaveNextShotToBallCannon && m_pPl == GetCreator())
 	{
@@ -322,7 +324,7 @@ void CPlayerBall::State_KEEPERHANDS_Think()
 		}
 
 		SetPos(pos, false);
-		SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_KEEPERHANDS, true, 0.5f);
+		SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_KEEPERHANDS, true, sv_ball_shottaker_mindelay_short.GetFloat());
 
 		return State_Transition(BALL_STATE_NORMAL);
 	}
@@ -348,7 +350,7 @@ void CPlayerBall::State_KEEPERHANDS_Think()
 			EmitSound("Ball.Kicknormal");
 
 		SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_keeperhands.GetFloat()) + m_vPlForward2D * 36, false);
-		SetVel(vel, 1.0f, FL_SPIN_PERMIT_ALL, BODY_PART_KEEPERHANDS, true);
+		SetVel(vel, 1.0f, FL_SPIN_PERMIT_ALL, BODY_PART_KEEPERHANDS, true, sv_ball_shottaker_mindelay_short.GetFloat());
 
 		return State_Transition(BALL_STATE_NORMAL);
 	}

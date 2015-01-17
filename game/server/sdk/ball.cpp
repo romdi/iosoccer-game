@@ -98,6 +98,9 @@ ConVar
 	sv_ball_dynamicshotdelay_maxdelay("sv_ball_dynamicshotdelay_maxdelay", "1.0", FCVAR_NOTIFY),
 	sv_ball_dynamicshotdelay_minshotstrength("sv_ball_dynamicshotdelay_minshotstrength", "360", FCVAR_NOTIFY),
 	sv_ball_dynamicshotdelay_maxshotstrength("sv_ball_dynamicshotdelay_maxshotstrength", "1440", FCVAR_NOTIFY),
+
+	sv_ball_shottaker_mindelay_short("sv_ball_shottaker_mindelay_short", "0.5", FCVAR_NOTIFY),
+	sv_ball_shottaker_mindelay_long("sv_ball_shottaker_mindelay_long", "1.0", FCVAR_NOTIFY),
 	
 	sv_ball_bestshotangle("sv_ball_bestshotangle", "-20", FCVAR_NOTIFY),
 	
@@ -126,8 +129,6 @@ ConVar
 	sv_ball_divingheader_minangle("sv_ball_divingheader_minangle", "30", FCVAR_NOTIFY), 
 	sv_ball_divingheader_maxangle("sv_ball_divingheader_maxangle", "-30", FCVAR_NOTIFY),
 
-	sv_ball_header_mindelay("sv_ball_header_mindelay", "0.33", FCVAR_NOTIFY), 
-	
 	sv_ball_slide_strength("sv_ball_slide_strength", "720", FCVAR_NOTIFY), 
 	sv_ball_slide_pitchangle("sv_ball_slide_pitchangle", "-15", FCVAR_NOTIFY), 
 	
@@ -465,7 +466,7 @@ void CBall::SetAng(const QAngle &ang)
 	m_pPhys->SetPosition(m_vPos, m_aAng, false);
 }
 
-void CBall::SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyPart, bool markOffsidePlayers, float nextShotMinDelay /*= 0*/)
+void CBall::SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyPart, bool markOffsidePlayers, float shotTakerMinDelay)
 {
 	Vector oldVel = m_vVel;
 
@@ -475,16 +476,14 @@ void CBall::SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyP
 	m_pPhys->SetVelocity(&m_vVel, &m_vRot);
 
 	if (spinCoeff != -1)
-	{
 		SetRot(CalcSpin(spinCoeff, spinFlags));
-	}
 
 	float dynamicDelay = RemapValClamped(m_vVel.Length(), sv_ball_dynamicshotdelay_minshotstrength.GetInt(), sv_ball_dynamicshotdelay_maxshotstrength.GetInt(), sv_ball_dynamicshotdelay_mindelay.GetFloat(), sv_ball_dynamicshotdelay_maxdelay.GetFloat());
 	
 	m_flGlobalLastShot = gpGlobals->curtime;
 	m_flGlobalDynamicShotDelay = dynamicDelay;
 
-	m_pPl->m_flNextShot = gpGlobals->curtime + max(dynamicDelay, nextShotMinDelay);
+	m_pPl->m_flNextShot = gpGlobals->curtime + max(dynamicDelay, shotTakerMinDelay);
 
 	Touched(true, bodyPart, oldVel);
 }
@@ -812,7 +811,7 @@ bool CBall::DoSlideAction()
 
 	Vector ballVel = forward * GetNormalshotStrength(GetPitchCoeff(), sv_ball_slide_strength.GetInt());
 
-	SetVel(ballVel, 0, FL_SPIN_FORCE_NONE, BODY_PART_FEET, true);
+	SetVel(ballVel, 0, FL_SPIN_FORCE_NONE, BODY_PART_FEET, true, sv_ball_shottaker_mindelay_short.GetFloat());
 
 	if (!SDKGameRules()->IsIntermissionState() && State_Get() == BALL_STATE_NORMAL && !HasQueuedState())
 		m_pPl->AddSlidingTackleCompleted();
@@ -963,12 +962,12 @@ bool CBall::CheckKeeperCatch()
 
 		Vector vel = punchDir * max(m_vVel.Length2D(), sv_ball_keeper_punch_minstrength.GetFloat()) * sv_ball_keeperdeflectioncoeff.GetFloat();
 
-		SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_KEEPERPUNCH, false);
+		SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_KEEPERPUNCH, false, sv_ball_shottaker_mindelay_short.GetFloat());
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
 	}
 	else // Catch ball
 	{
-		SetVel(vec3_origin, 0, FL_SPIN_FORCE_NONE, BODY_PART_KEEPERCATCH, false);
+		SetVel(vec3_origin, 0, FL_SPIN_FORCE_NONE, BODY_PART_KEEPERCATCH, false, sv_ball_shottaker_mindelay_short.GetFloat());
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);		
 		State_Transition(BALL_STATE_KEEPERHANDS);
 	}
@@ -1023,9 +1022,8 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 	float shotStrength = 0;
 	QAngle shotAngle;
 	Vector vel;
-	bool setVel = true;
-	float nextShotMinDelay = 0.0f;
 	float pitchCoeff = GetPitchCoeff(true);
+	float shotTakerMinDelay = 0.0f;
 
 	if (m_pPl->m_nButtons & IN_WALK)
 	{
@@ -1044,10 +1042,12 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 			shotAngle[PITCH] = -5;
 			shotStrength = 150 + 400 * pitchCoeff;
 			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEELKICK);
+			shotTakerMinDelay = sv_ball_shottaker_mindelay_short.GetFloat();
 		}
 		// Ball roll
 		else if (m_vPlLocalDirToBall.x >= 0 && (m_pPl->m_nButtons & IN_MOVELEFT || m_pPl->m_nButtons & IN_MOVERIGHT || m_pPl->m_nButtons & IN_BACK))
 		{
+			shotTakerMinDelay = 0.0f;
 			shotAngle = m_aPlAng;
 
 			if (m_pPl->m_nButtons & IN_MOVELEFT)
@@ -1076,7 +1076,7 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 				shotStrength = 150 + 425 * pitchCoeff;
 				spinFlags = FL_SPIN_FORCE_BACK;
 				spinCoeff = pow(pitchCoeff, 2);
-				nextShotMinDelay = pitchCoeff;
+				shotTakerMinDelay = pitchCoeff;
 			}
 			// Rainbow flick
 			else
@@ -1087,15 +1087,15 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 				spinFlags = FL_SPIN_FORCE_TOP;
 				spinCoeff = 1.0f;
 				m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_RAINBOW_FLICK);
-				nextShotMinDelay = 1.0f;
+				shotTakerMinDelay = sv_ball_shottaker_mindelay_long.GetFloat();
 			}
 		}
 		// Fake shot
 		else if (!(m_pPl->m_nButtons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT)))
 		{
-			setVel = false;
-			m_pPl->m_flNextShot = gpGlobals->curtime + 0.5f;
+			m_pPl->m_flNextShot = gpGlobals->curtime + sv_ball_shottaker_mindelay_short.GetFloat();
 			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KICK);
+			return false;
 		}
 		else
 		{
@@ -1108,6 +1108,8 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 	}
 	else
 	{
+		shotTakerMinDelay = 0.0f;
+
 		if (m_pPl->IsNormalshooting())
 			shotStrength = GetNormalshotStrength(GetPitchCoeff(), sv_ball_normalshot_strength.GetInt());
 		else
@@ -1137,8 +1139,7 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 		}
 	}
 
-	if (setVel)
-		SetVel(vel, spinCoeff, spinFlags, BODY_PART_FEET, markOffsidePlayers, nextShotMinDelay);
+	SetVel(vel, spinCoeff, spinFlags, BODY_PART_FEET, markOffsidePlayers, shotTakerMinDelay);
 
 	return true;
 }
@@ -1176,7 +1177,7 @@ bool CBall::DoVolleyShot()
 	else
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
 
-	SetVel(vel, 1.0f, FL_SPIN_PERMIT_ALL, BODY_PART_FEET, true);
+	SetVel(vel, 1.0f, FL_SPIN_PERMIT_ALL, BODY_PART_FEET, true, sv_ball_shottaker_mindelay_short.GetFloat());
 
 	return true;
 }
@@ -1205,7 +1206,7 @@ bool CBall::DoHeader()
 			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BICYCLE_KICK);
 			EmitSound("Ball.Kickhard");
 
-			SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_FEET, true);
+			SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_FEET, true, sv_ball_shottaker_mindelay_long.GetFloat());
 		}
 		// Diving header
 		else
@@ -1222,7 +1223,7 @@ bool CBall::DoHeader()
 			EmitSound("Ball.Kickhard");
 			EmitSound("Player.DivingHeader");
 
-			SetVel(vel, sv_ball_header_spincoeff.GetFloat(), FL_SPIN_PERMIT_SIDE, BODY_PART_HEAD, true, sv_ball_header_mindelay.GetFloat());
+			SetVel(vel, sv_ball_header_spincoeff.GetFloat(), FL_SPIN_PERMIT_SIDE, BODY_PART_HEAD, true, sv_ball_shottaker_mindelay_long.GetFloat());
 		}
 	}
 	else
@@ -1257,7 +1258,7 @@ bool CBall::DoHeader()
 		// Add player forward move speed to ball speed
 		vel += m_vPlForwardVel2D * sv_ball_header_playerspeedcoeff.GetFloat();
 
-		SetVel(vel, sv_ball_header_spincoeff.GetFloat(), FL_SPIN_PERMIT_SIDE, BODY_PART_HEAD, true, sv_ball_header_mindelay.GetFloat());
+		SetVel(vel, sv_ball_header_spincoeff.GetFloat(), FL_SPIN_PERMIT_SIDE, BODY_PART_HEAD, true, sv_ball_shottaker_mindelay_short.GetFloat());
 	}
 
 	return true;

@@ -54,19 +54,6 @@ enum foul_type_t
 #define FL_POS_CENTER					(1 << 7)
 #define FL_POS_RIGHT					(1 << 8)
 
-#define	PS_OFF							0
-#define	PS_BESTOFFIVE					1
-#define	PS_SUDDENDEATH					2
-#define	PS_DONE							3
-
-#define BALL_MAINSTATUS_FOUL			0
-#define BALL_MAINSTATUS_YELLOW			1
-#define BALL_MAINSTATUS_RED				2
-#define BALL_MAINSTATUS_OFFSIDE			3
-#define BALL_MAINSTATUS_PLAYON			4
-#define BALL_MAINSTATUS_PENALTY			5
-#define BALL_MAINSTATUS_FINAL_WHISTLE	6
-
 class CBall;
 
 struct CBallStateInfo
@@ -144,7 +131,7 @@ public:
 
 	void			SetPos(const Vector &pos, bool addBallRadiusZOffset = true, bool freeze = true);
 	void			SetAng(const QAngle &ang);
-	virtual void	SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyPart, bool markOffsidePlayers, float nextShotMinDelay = 0);
+	virtual void	SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyPart, bool markOffsidePlayers, float shotTakerMinDelay);
 	void			SetRot(AngularImpulse rot = NULL);
 
 	inline ball_state_t State_Get( void ) { return m_pCurStateInfo->m_eBallState; }

@@ -46,7 +46,7 @@ public:
 	bool			CheckFoul(bool canShootBall, const Vector &localDirToBall);
 	void			SetFoulParams(foul_type_t type, Vector pos, CSDKPlayer *pFoulingPl, CSDKPlayer *pFouledPl = NULL);
 	bool			IsPlayerClose();
-	void			SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyPart, bool markOffsidePlayers, float nextShotMinDelay = 0);
+	void			SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyPart, bool markOffsidePlayers, float shotTakerMinDelay);
 	void			MarkOffsidePlayers();
 	void			UnmarkOffsidePlayers();
 	float			GetFieldZone();
