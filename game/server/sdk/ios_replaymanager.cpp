@@ -328,7 +328,7 @@ void CReplayManager::StopReplay()
 
 		//pRealPl->SetRenderMode(kRenderNormal);
 		//pRealPl->SetRenderColorA(255);
-		pRealPl->SetLocalOrigin(pRealPl->GetSpawnPos(true));
+		pRealPl->SetLocalOrigin(pRealPl->GetSpawnPos());
 		QAngle ang;
 		VectorAngles(Vector(0, pRealPl->GetTeam()->m_nForward, 0), ang);
 		pRealPl->SetLocalAngles(ang);

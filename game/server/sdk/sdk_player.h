@@ -533,7 +533,7 @@ public:
 	void				GetTargetPos(const Vector &pos, Vector &targetPos);
 	void				ActivateRemoteControlling(const Vector &targetPos);
 
-	Vector				GetSpawnPos(bool findSafePos);
+	Vector				GetSpawnPos();
 	Vector				GetCeremonyPos();
 
 	bool				IsAway() { return m_bIsAway; }

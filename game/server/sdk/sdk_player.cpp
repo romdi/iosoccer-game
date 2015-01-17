@@ -676,14 +676,18 @@ void CSDKPlayer::ChangeTeam()
 
 		if (State_Get() != PLAYER_STATE_ACTIVE)
 			State_Transition(PLAYER_STATE_ACTIVE);
-		
+
 		Vector dir = Vector(0, GetTeam()->m_nForward, 0);
-		QAngle ang;
-		VectorAngles(dir, ang);
+		QAngle modelAng;
+		VectorAngles(dir, modelAng);
+
+		QAngle eyeAng = EyeAngles();
+		eyeAng[YAW] = modelAng[YAW];
+
 		SetLocalVelocity(vec3_origin);
-		SetLocalAngles(ang);
-		SetLocalOrigin(GetSpawnPos(true));
-		SnapEyeAngles(ang);
+		SetLocalAngles(modelAng);
+		SetLocalOrigin(GetSpawnPos());
+		SnapEyeAngles(eyeAng);
 
 		if (SDKGameRules()->m_nShieldType != SHIELD_NONE)
 			SetPosOutsideShield(true);
@@ -1314,7 +1318,7 @@ void CSDKPlayer::SetPosOutsideShield(bool teleport)
 	switch (SDKGameRules()->m_nShieldType)
 	{
 	case SHIELD_KICKOFF:
-		m_vTargetPos = GetSpawnPos(true);
+		m_vTargetPos = GetSpawnPos();
 		break;
 	case SHIELD_KEEPERHANDS:
 		return;
@@ -1508,24 +1512,25 @@ Vector CSDKPlayer::GetOffsideBallPos()
 	return m_vOffsideBallPos;
 }
 
-Vector CSDKPlayer::GetSpawnPos(bool findSafePos)
+Vector CSDKPlayer::GetSpawnPos()
 {
-	//Vector spawnPos = pPlayer->GetTeam()->m_vPlayerSpawns[ToSDKPlayer(pPlayer)->GetShirtNumber() - 1];
-	Vector halfField = (SDKGameRules()->m_vFieldMax - SDKGameRules()->m_vFieldMin);
-	halfField.y /= 2;
-	float xDist = halfField.x / 5;
-	float yDist = halfField.y / 5;
-	float xPos = GetTeam()->GetFormation()->positions[GetTeamPosIndex()]->x * xDist + xDist;
-	float yPos = GetTeam()->GetFormation()->positions[GetTeamPosIndex()]->y * yDist + max(mp_shield_kickoff_radius.GetInt() + 2 * mp_shield_border.GetInt(), yDist);
+	Vector area = (SDKGameRules()->m_vFieldMax - SDKGameRules()->m_vFieldMin);
+	area.y /= 2;
+	float xOffset = 300;
+	float yOffset = 150;
+	float yKickOffOffset = mp_shield_kickoff_radius.GetInt() + mp_shield_border.GetInt();
+	float xFrac = clamp(GetTeam()->GetFormation()->positions[GetTeamPosIndex()]->x / 3.0f, 0.0f, 1.0f);
+	float yFrac = clamp(GetTeam()->GetFormation()->positions[GetTeamPosIndex()]->y / 3.0f, 0.0f, 1.0f);
+	float xPos = xOffset + xFrac * (area.x - 2 * xOffset);
+	float yPos = yOffset + yKickOffOffset + yFrac * (area.y - 2 * yOffset - yKickOffOffset);
 
 	Vector spawnPos;
 	if (GetTeam()->m_nForward == 1)
-		spawnPos = Vector(SDKGameRules()->m_vFieldMin.GetX(), SDKGameRules()->m_vKickOff.GetY(), SDKGameRules()->m_vKickOff.GetZ()) + Vector(xPos, -yPos, 10);
+		spawnPos = Vector(SDKGameRules()->m_vFieldMin.GetX(), SDKGameRules()->m_vKickOff.GetY(), SDKGameRules()->m_vKickOff.GetZ()) + Vector(xPos, -yPos, 0);
 	else
-		spawnPos = Vector(SDKGameRules()->m_vFieldMax.GetX(), SDKGameRules()->m_vKickOff.GetY(), SDKGameRules()->m_vKickOff.GetZ()) + Vector(-xPos, yPos, 10);
+		spawnPos = Vector(SDKGameRules()->m_vFieldMax.GetX(), SDKGameRules()->m_vKickOff.GetY(), SDKGameRules()->m_vKickOff.GetZ()) + Vector(-xPos, yPos, 0);
 
-	if (findSafePos)
-		FindSafePos(spawnPos);
+	FindSafePos(spawnPos);
 
 	return spawnPos;
 }
