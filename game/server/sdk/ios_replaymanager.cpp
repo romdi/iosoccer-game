@@ -332,6 +332,7 @@ void CReplayManager::StopReplay()
 		QAngle ang;
 		VectorAngles(Vector(0, pRealPl->GetTeam()->m_nForward, 0), ang);
 		pRealPl->SetLocalAngles(ang);
+		pRealPl->SnapEyeAngles(ang);
 		pRealPl->SetLocalVelocity(vec3_origin);
 		pRealPl->RemoveEffects(EF_NODRAW);
 		//pRealPl->RemoveEFlags(EFL_NOCLIP_ACTIVE);
