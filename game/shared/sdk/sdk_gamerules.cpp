@@ -1634,7 +1634,16 @@ void CSDKGameRules::State_Think()
 					for (int i = mp_maxplayers.GetInt() - 1; i >= 1; i--)
 					{
 						CSDKPlayer *pPl1 = pTeam->GetPlayerByPosIndex(i);
+						Vector pl1Pos = pPl1->GetLocalOrigin();
+						Vector pl1Vel = pPl1->GetLocalVelocity();
+						QAngle pl1ModelAng = pPl1->GetLocalAngles();
+						QAngle pl1EyeAng = pPl1->EyeAngles();
+
 						CSDKPlayer *pPl2 = pTeam->GetPlayerByPosIndex(i - 1);
+						Vector pl2Pos = pPl2->GetLocalOrigin();
+						Vector pl2Vel = pPl2->GetLocalVelocity();
+						QAngle pl2ModelAng = pPl2->GetLocalAngles();
+						QAngle pl2EyeAng = pPl2->EyeAngles();
 
 						if (pPl1 && !pPl1->IsBot() && (!pPl2 || !pPl2->IsBot()))
 							pPl1->SetDesiredTeam(team, team, i - 1, true, false, true);
@@ -1644,10 +1653,15 @@ void CSDKGameRules::State_Think()
 
 						if (pPl1 && !pPl1->IsBot() && pPl2 && !pPl2->IsBot())
 						{
-							// Swap world location
-							Vector pl1Pos = pPl1->GetLocalOrigin();
-							pPl1->SetLocalOrigin(pPl2->GetLocalOrigin());
+							pPl1->SetLocalOrigin(pl2Pos);
+							pPl1->SetLocalVelocity(pl2Vel);
+							pPl1->SetLocalAngles(pl2ModelAng);
+							pPl1->SnapEyeAngles(pl2EyeAng);
+
 							pPl2->SetLocalOrigin(pl1Pos);
+							pPl2->SetLocalVelocity(pl1Vel);
+							pPl2->SetLocalAngles(pl1ModelAng);
+							pPl2->SnapEyeAngles(pl1EyeAng);
 						}
 					}
 				}
