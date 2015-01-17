@@ -144,7 +144,7 @@ public:
 
 	void			SetPos(const Vector &pos, bool addBallRadiusZOffset = true, bool freeze = true);
 	void			SetAng(const QAngle &ang);
-	virtual void	SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyPart, bool markOffsidePlayers, bool ensureMinShotStrength, float nextShotMinDelay = 0);
+	virtual void	SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyPart, bool markOffsidePlayers, float nextShotMinDelay = 0);
 	void			SetRot(AngularImpulse rot = NULL);
 
 	inline ball_state_t State_Get( void ) { return m_pCurStateInfo->m_eBallState; }

@@ -149,7 +149,6 @@ ConVar
 	
 	sv_ball_highlightsdelay_intermissions("sv_ball_highlightsdelay_intermissions", "5.0", FCVAR_NOTIFY),
 	sv_ball_highlightsdelay_cooldown("sv_ball_highlightsdelay_cooldown", "30.0", FCVAR_NOTIFY),
-	sv_ball_minshotstrength("sv_ball_minshotstrength", "180", FCVAR_NOTIFY),  
 	
 	sv_ball_bodypos_feet_start("sv_ball_bodypos_feet_start", "-25", FCVAR_NOTIFY),
 	sv_ball_bodypos_hip_start("sv_ball_bodypos_hip_start", "15", FCVAR_NOTIFY),
@@ -466,20 +465,11 @@ void CBall::SetAng(const QAngle &ang)
 	m_pPhys->SetPosition(m_vPos, m_aAng, false);
 }
 
-void CBall::SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyPart, bool markOffsidePlayers, bool ensureMinShotStrength, float nextShotMinDelay /*= 0*/)
+void CBall::SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyPart, bool markOffsidePlayers, float nextShotMinDelay /*= 0*/)
 {
 	Vector oldVel = m_vVel;
 
 	m_vVel = vel;
-
-	float length = m_vVel.Length();
-	m_vVel.NormalizeInPlace();
-
-	if (ensureMinShotStrength)
-		length = max(length, sv_ball_minshotstrength.GetInt());
-
-	length = min(length, sv_ball_chargedshot_maxstrength.GetInt());
-	m_vVel *= length;
 	m_pPhys->EnableMotion(true);
 	m_pPhys->Wake();
 	m_pPhys->SetVelocity(&m_vVel, &m_vRot);
@@ -822,7 +812,7 @@ bool CBall::DoSlideAction()
 
 	Vector ballVel = forward * GetNormalshotStrength(GetPitchCoeff(), sv_ball_slide_strength.GetInt());
 
-	SetVel(ballVel, 0, FL_SPIN_FORCE_NONE, BODY_PART_FEET, true, true);
+	SetVel(ballVel, 0, FL_SPIN_FORCE_NONE, BODY_PART_FEET, true);
 
 	if (!SDKGameRules()->IsIntermissionState() && State_Get() == BALL_STATE_NORMAL && !HasQueuedState())
 		m_pPl->AddSlidingTackleCompleted();
@@ -973,12 +963,12 @@ bool CBall::CheckKeeperCatch()
 
 		Vector vel = punchDir * max(m_vVel.Length2D(), sv_ball_keeper_punch_minstrength.GetFloat()) * sv_ball_keeperdeflectioncoeff.GetFloat();
 
-		SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_KEEPERPUNCH, false, false);
+		SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_KEEPERPUNCH, false);
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
 	}
 	else // Catch ball
 	{
-		SetVel(vec3_origin, 0, FL_SPIN_FORCE_NONE, BODY_PART_KEEPERCATCH, false, false);
+		SetVel(vec3_origin, 0, FL_SPIN_FORCE_NONE, BODY_PART_KEEPERCATCH, false);
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);		
 		State_Transition(BALL_STATE_KEEPERHANDS);
 	}
@@ -1148,7 +1138,7 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 	}
 
 	if (setVel)
-		SetVel(vel, spinCoeff, spinFlags, BODY_PART_FEET, markOffsidePlayers, true, nextShotMinDelay);
+		SetVel(vel, spinCoeff, spinFlags, BODY_PART_FEET, markOffsidePlayers, nextShotMinDelay);
 
 	return true;
 }
@@ -1186,7 +1176,7 @@ bool CBall::DoVolleyShot()
 	else
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
 
-	SetVel(vel, 1.0f, FL_SPIN_PERMIT_ALL, BODY_PART_FEET, true, true);
+	SetVel(vel, 1.0f, FL_SPIN_PERMIT_ALL, BODY_PART_FEET, true);
 
 	return true;
 }
@@ -1215,7 +1205,7 @@ bool CBall::DoHeader()
 			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BICYCLE_KICK);
 			EmitSound("Ball.Kickhard");
 
-			SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_FEET, true, true);
+			SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_FEET, true);
 		}
 		// Diving header
 		else
@@ -1232,7 +1222,7 @@ bool CBall::DoHeader()
 			EmitSound("Ball.Kickhard");
 			EmitSound("Player.DivingHeader");
 
-			SetVel(vel, sv_ball_header_spincoeff.GetFloat(), FL_SPIN_PERMIT_SIDE, BODY_PART_HEAD, true, true, sv_ball_header_mindelay.GetFloat());
+			SetVel(vel, sv_ball_header_spincoeff.GetFloat(), FL_SPIN_PERMIT_SIDE, BODY_PART_HEAD, true, sv_ball_header_mindelay.GetFloat());
 		}
 	}
 	else
@@ -1267,7 +1257,7 @@ bool CBall::DoHeader()
 		// Add player forward move speed to ball speed
 		vel += m_vPlForwardVel2D * sv_ball_header_playerspeedcoeff.GetFloat();
 
-		SetVel(vel, sv_ball_header_spincoeff.GetFloat(), FL_SPIN_PERMIT_SIDE, BODY_PART_HEAD, true, true, sv_ball_header_mindelay.GetFloat());
+		SetVel(vel, sv_ball_header_spincoeff.GetFloat(), FL_SPIN_PERMIT_SIDE, BODY_PART_HEAD, true, sv_ball_header_mindelay.GetFloat());
 	}
 
 	return true;
