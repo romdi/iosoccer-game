@@ -31,7 +31,7 @@ public:
 	void			SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyPart, bool markOffsidePlayers, float shotTakerMinDelay);
 	void			SaveBallCannonSettings();
 	void			RestoreBallCannonSettings();
-	void			SetSaveNextShotToBallCannon(bool save);
+	void			SetBallCannonMode(bool isBallCannonMode);
 	static void		RemoveAllPlayerBalls();
 	void			RemovePlayerBall();
 	CSDKPlayer		*GetCreator() { return m_pCreator; }
@@ -57,7 +57,7 @@ public:
 
 protected:
 
-	bool			m_bSaveNextShotToBallCannon;
+	bool			m_bIsBallCannonMode;
 	BallCannonSettings m_BallCannonSettings;
 	CHandle<CSDKPlayer>	m_pLastShooter;
 	Vector			m_vLastShotPos;

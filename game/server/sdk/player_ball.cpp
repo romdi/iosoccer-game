@@ -82,8 +82,8 @@ void CC_CreatePlayerBall(const CCommand &args)
 
 	//pPl->GetPlayerBall()->m_nSkin = pPl->GetPlayerBallSkin() == -1 ? g_IOSRand.RandomInt(0, BALL_SKIN_COUNT - 1) : pPl->GetPlayerBallSkin();
 	pPl->GetPlayerBall()->SetSkinName(pPl->GetPlayerBallSkinName());
+	pPl->GetPlayerBall()->SetBallCannonMode(false);
 	pPl->GetPlayerBall()->SaveBallCannonSettings();
-	pPl->GetPlayerBall()->SetSaveNextShotToBallCannon(true);
 	pPl->m_Shared.SetStamina(100);
 }
 
@@ -95,6 +95,7 @@ void CC_ShootPlayerBall(const CCommand &args)
 	if (!CSDKPlayer::IsOnField(pPl) || !pPl->GetPlayerBall())
 		return;
 
+	pPl->GetPlayerBall()->SetBallCannonMode(true);
 	pPl->GetPlayerBall()->RestoreBallCannonSettings();
 	pPl->m_Shared.SetStamina(100);
 }
@@ -186,11 +187,8 @@ void CPlayerBall::SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t
 {
 	CBall::SetVel(vel, spinCoeff, spinFlags, bodyPart, markOffsidePlayers, shotTakerMinDelay);
 
-	if (m_bSaveNextShotToBallCannon && m_pPl == GetCreator())
-	{
+	if (!m_bIsBallCannonMode && m_pPl == GetCreator())
 		SaveBallCannonSettings();
-		m_bSaveNextShotToBallCannon = false;
-	}
 }
 
 void CPlayerBall::SaveBallCannonSettings()
@@ -212,9 +210,9 @@ void CPlayerBall::RestoreBallCannonSettings()
 	m_pPhys->SetVelocity(&m_BallCannonSettings.vel, &m_BallCannonSettings.rot);
 }
 
-void CPlayerBall::SetSaveNextShotToBallCannon(bool save)
+void CPlayerBall::SetBallCannonMode(bool isBallCannonMode)
 {
-	m_bSaveNextShotToBallCannon = save;
+	m_bIsBallCannonMode = isBallCannonMode;
 }
 
 void CPlayerBall::RemoveAllPlayerBalls()
