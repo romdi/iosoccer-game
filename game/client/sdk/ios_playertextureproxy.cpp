@@ -422,7 +422,22 @@ void CProceduralRegenerator::WriteText(CPixelWriter &pixelWriter, const char *te
 			}
 		}
 
-		posX -= chr.advanceX;
+		if (rotation == 90)
+		{
+			posY += chr.advanceX;
+		}
+		else if (rotation == 180)
+		{
+			posX -= chr.advanceX;
+		}
+		else if (rotation == 270)
+		{
+			posY -= chr.advanceX;
+		}
+		else
+		{
+			posX += chr.advanceX;
+		}
 	}
 }
 
