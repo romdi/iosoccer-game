@@ -634,7 +634,7 @@ void CMatchBall::State_GOALKICK_Think()
 
 	if (!m_pPl->ShotsBlocked()
 		&& m_pPl->ShotButtonsReleased()
-		&& CanTouchBallXY()
+		&& CanReachBallStandingXY()
 		&& (m_pPl->IsNormalshooting() || !m_pPl->ChargedshotBlocked() && m_pPl->IsChargedshooting()))
 	{
 		m_pPl->AddGoalKick();
@@ -713,7 +713,7 @@ void CMatchBall::State_CORNER_Think()
 
 	if (!m_pPl->ShotsBlocked()
 		&& m_pPl->ShotButtonsReleased()
-		&& CanTouchBallXY()
+		&& CanReachBallStandingXY()
 		&& (m_pPl->IsNormalshooting() || !m_pPl->ChargedshotBlocked() && m_pPl->IsChargedshooting()))
 	{
 		//EmitSound("Crowd.Way");
@@ -859,7 +859,7 @@ void CMatchBall::State_FREEKICK_Think()
 
 	if (!m_pPl->ShotsBlocked()
 		&& m_pPl->ShotButtonsReleased()
-		&& CanTouchBallXY()
+		&& CanReachBallStandingXY()
 		&& (m_pPl->IsNormalshooting() || !m_pPl->ChargedshotBlocked() && m_pPl->IsChargedshooting()))
 	{
 		//EmitSound("Crowd.Way");
@@ -983,7 +983,7 @@ void CMatchBall::State_PENALTY_Think()
 
 	if (!m_pPl->ShotsBlocked()
 		&& m_pPl->ShotButtonsReleased()
-		&& CanTouchBallXY()
+		&& CanReachBallStandingXY()
 		&& (m_pPl->IsNormalshooting() || !m_pPl->ChargedshotBlocked() && m_pPl->IsChargedshooting()))
 	{
 		if (SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES)

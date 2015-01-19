@@ -44,10 +44,7 @@ ConVar
 	sv_ball_deflectionradius( "sv_ball_deflectionradius", "30", FCVAR_NOTIFY ),
 	sv_ball_collisionradius( "sv_ball_collisionradius", "15", FCVAR_NOTIFY ),
 	
-	sv_ball_standing_reach_shortside( "sv_ball_standing_reach_shortside", "40", FCVAR_NOTIFY ),
-	sv_ball_standing_reach_longside( "sv_ball_standing_reach_longside", "40", FCVAR_NOTIFY ),
-	sv_ball_standing_reach_shift( "sv_ball_standing_reach_shift", "0", FCVAR_NOTIFY ),
-	sv_ball_standing_reach_ellipse( "sv_ball_standing_reach_ellipse", "1", FCVAR_NOTIFY ),
+	sv_ball_standing_reach( "sv_ball_standing_reach", "40", FCVAR_NOTIFY ),
 	
 	sv_ball_slidesidereach_ball( "sv_ball_slidesidereach_ball", "25", FCVAR_NOTIFY ),
 	sv_ball_slideforwardreach_ball( "sv_ball_slideforwardreach_ball", "40", FCVAR_NOTIFY ),
@@ -57,9 +54,7 @@ ConVar
 	sv_ball_slidezstart("sv_ball_slidezstart", "-50", FCVAR_NOTIFY), 
 	sv_ball_slidezend("sv_ball_slidezend", "30", FCVAR_NOTIFY), 
 	
-	sv_ball_keeper_standing_reach_top( "sv_ball_keeper_standing_reach_top", "50", FCVAR_NOTIFY ),
-	sv_ball_keeper_standing_reach_bottom( "sv_ball_keeper_standing_reach_bottom", "50", FCVAR_NOTIFY ),
-	sv_ball_keeper_standing_catchcenteroffset_side( "sv_ball_keeper_standing_catchcenteroffset_side", "0", FCVAR_NOTIFY ),
+	sv_ball_keeper_standing_reach( "sv_ball_keeper_standing_reach", "45", FCVAR_NOTIFY ),
 	sv_ball_keeper_standing_catchcenteroffset_z( "sv_ball_keeper_standing_catchcenteroffset_z", "70", FCVAR_NOTIFY ),
 	
 	sv_ball_keeper_forwarddive_shortsidereach( "sv_ball_keeper_forwarddive_shortsidereach", "50", FCVAR_NOTIFY ),
@@ -521,36 +516,9 @@ CBallStateInfo *CBall::State_LookupInfo(ball_state_t state)
 	return NULL;
 }
 
-bool CBall::CanTouchBallXY()
+bool CBall::CanReachBallStandingXY()
 {
-	Vector center = m_vPlPos + m_vPlForward2D * sv_ball_standing_reach_shift.GetFloat();
-
-	if (sv_ball_standing_reach_ellipse.GetBool())
-	{
-		// http://stackoverflow.com/questions/7946187/point-and-ellipse-rotated-position-test-algorithm
-
-		float ang = DEG2RAD(m_aPlAng[YAW] + 90);
-		float cosa = cos(ang);
-		float sina = sin(ang);
-		float dshortd = Square(sv_ball_standing_reach_shortside.GetFloat());
-		float dlongd = Square(sv_ball_standing_reach_longside.GetFloat());
-
-		float a = Square(cosa * (m_vPos.x - center.x) + sina * (m_vPos.y - center.y));
-		float b = Square(sina * (m_vPos.x - center.x) - cosa * (m_vPos.y - center.y));
-
-		float ellipse = (a / dshortd) + (b / dlongd);
-
-		if (ellipse <= 1)
-			return true;
-		else
-			return false;
-	}
-	else
-	{
-		return abs(m_vPlLocalDirToBall.y) <= sv_ball_standing_reach_shortside.GetFloat()
-			&& m_vPlLocalDirToBall.x >= -sv_ball_standing_reach_longside.GetFloat() + sv_ball_standing_reach_shift.GetFloat()
-			&& m_vPlLocalDirToBall.x <= sv_ball_standing_reach_longside.GetFloat() + sv_ball_standing_reach_shift.GetFloat();
-	}
+	return m_vPlDirToBall.Length2D() <= sv_ball_standing_reach.GetFloat();
 }
 
 bool CBall::GetCollisionPoint(bool isDeflection, Vector &collisionPoint)
@@ -685,15 +653,15 @@ bool CBall::DoBodyPartAction()
 
 	if (zDist >= sv_ball_bodypos_feet_start.GetFloat()
 		&& zDist < sv_ball_bodypos_hip_start.GetFloat()
-		&& CanTouchBallXY())
+		&& CanReachBallStandingXY())
 	{
 		return DoGroundShot(true);
 	}
 
-	if (zDist >= sv_ball_bodypos_hip_start.GetFloat() && zDist < sv_ball_bodypos_head_start.GetFloat() && CanTouchBallXY())
+	if (zDist >= sv_ball_bodypos_hip_start.GetFloat() && zDist < sv_ball_bodypos_head_start.GetFloat() && CanReachBallStandingXY())
 		return DoVolleyShot();
 
-	if (zDist >= sv_ball_bodypos_head_start.GetFloat() && zDist < sv_ball_bodypos_head_end.GetFloat() && CanTouchBallXY())
+	if (zDist >= sv_ball_bodypos_head_start.GetFloat() && zDist < sv_ball_bodypos_head_end.GetFloat() && CanReachBallStandingXY())
 		return DoHeader();
 
 	return false;
@@ -897,7 +865,7 @@ bool CBall::CheckKeeperCatch()
 		break;
 	case PLAYERANIMEVENT_KEEPER_JUMP:
 	default:
-		float maxReachXY = (localDirToBall.z < sv_ball_keeper_standing_catchcenteroffset_z.GetFloat() ? sv_ball_keeper_standing_reach_bottom.GetFloat() : sv_ball_keeper_standing_reach_top.GetFloat());
+		float maxReachXY = sv_ball_keeper_standing_reach.GetFloat();
 
 		canReach = (localDirToBall.z < sv_ball_bodypos_keeperarms_end.GetFloat()
 			&& localDirToBall.z >= sv_ball_bodypos_feet_start.GetFloat()
@@ -905,8 +873,8 @@ bool CBall::CheckKeeperCatch()
 
 		if (canReach)
 		{
-			float distY = localDirToBall.y - sv_ball_keeper_standing_catchcenteroffset_side.GetFloat(); 
-			float maxYReach = (distY >= 0 ? maxReachXY : -maxReachXY) - sv_ball_keeper_standing_catchcenteroffset_side.GetFloat();
+			float distY = localDirToBall.y; 
+			float maxYReach = distY >= 0 ? maxReachXY : -maxReachXY;
 
 			ballPosCatchCoeff = Square(min(1, abs(distY) / maxYReach));
 			diveTypeCatchCoeff = sv_ball_keepercatchdelay_standing_global_coeff.GetFloat();
