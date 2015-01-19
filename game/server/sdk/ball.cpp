@@ -1028,7 +1028,11 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 	if (m_pPl->m_nButtons & IN_WALK)
 	{
 		if (!m_pPl->IsNormalshooting())
+		{
+			m_pPl->m_flNextShot = gpGlobals->curtime + sv_ball_shottaker_mindelay_short.GetFloat();
+			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KICK);
 			return false;
+		}
 
 		spinFlags = FL_SPIN_FORCE_NONE;
 		shotAngle = m_aPlCamAng;
@@ -1089,13 +1093,6 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 				m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_RAINBOW_FLICK);
 				shotTakerMinDelay = sv_ball_shottaker_mindelay_long.GetFloat();
 			}
-		}
-		// Fake shot
-		else if (!(m_pPl->m_nButtons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT)))
-		{
-			m_pPl->m_flNextShot = gpGlobals->curtime + sv_ball_shottaker_mindelay_short.GetFloat();
-			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KICK);
-			return false;
 		}
 		else
 		{
