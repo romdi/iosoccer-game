@@ -470,7 +470,9 @@ void CMatchBall::State_KICKOFF_Think()
 
 		if (!m_pPl)
 		{
-			SDKGameRules()->EnableShield(SHIELD_KICKOFF, GetGlobalTeam(TEAM_HOME)->GetTeamNumber(), SDKGameRules()->m_vKickOff);
+			if (SDKGameRules()->m_nShieldType != SHIELD_KICKOFF)
+				SDKGameRules()->EnableShield(SHIELD_KICKOFF, GetGlobalTeam(TEAM_HOME)->GetTeamNumber(), SDKGameRules()->m_vKickOff);
+
 			if (!CSDKPlayer::PlayersAtTargetPos())
 				return;
 
