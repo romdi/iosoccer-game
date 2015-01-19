@@ -54,8 +54,8 @@ ConVar
 	sv_ball_slidezstart("sv_ball_slidezstart", "-50", FCVAR_NOTIFY), 
 	sv_ball_slidezend("sv_ball_slidezend", "30", FCVAR_NOTIFY), 
 	
-	sv_ball_keeper_standing_reach( "sv_ball_keeper_standing_reach", "45", FCVAR_NOTIFY ),
-	sv_ball_keeper_standing_catchcenteroffset_z( "sv_ball_keeper_standing_catchcenteroffset_z", "70", FCVAR_NOTIFY ),
+	sv_ball_keeper_standing_reach( "sv_ball_keeper_standing_reach", "40", FCVAR_NOTIFY ),
+	sv_ball_keeper_standing_reach_walking( "sv_ball_keeper_standing_reach_walking", "50", FCVAR_NOTIFY ),
 	
 	sv_ball_keeper_forwarddive_shortsidereach( "sv_ball_keeper_forwarddive_shortsidereach", "50", FCVAR_NOTIFY ),
 	sv_ball_keeper_forwarddive_longsidereach( "sv_ball_keeper_forwarddive_longsidereach", "80", FCVAR_NOTIFY ),
@@ -864,8 +864,8 @@ bool CBall::CheckKeeperCatch()
 		}
 		break;
 	case PLAYERANIMEVENT_KEEPER_JUMP:
-	default:
-		float maxReachXY = sv_ball_keeper_standing_reach.GetFloat();
+	default: // Keeper standing
+		float maxReachXY = m_pPl->m_nButtons & IN_WALK ? sv_ball_keeper_standing_reach_walking.GetFloat() : sv_ball_keeper_standing_reach.GetFloat();
 
 		canReach = (localDirToBall.z < sv_ball_bodypos_keeperarms_end.GetFloat()
 			&& localDirToBall.z >= sv_ball_bodypos_feet_start.GetFloat()
