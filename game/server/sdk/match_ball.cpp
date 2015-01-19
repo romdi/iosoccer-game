@@ -1108,7 +1108,7 @@ void CMatchBall::State_KEEPERHANDS_Think()
 			EmitSound("Ball.Kicknormal");
 
 		RemoveAllTouches();
-		SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_keeperhands.GetFloat()) + m_vPlForward2D * 36, false, sv_ball_shottaker_mindelay_short.GetFloat());
+		SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_keeperhands.GetFloat()) + m_vPlForward2D * 36, false);
 		SetVel(vel, 1.0f, FL_SPIN_PERMIT_ALL, BODY_PART_KEEPERHANDS, true, sv_ball_shottaker_mindelay_short.GetFloat());
 
 		return State_Transition(BALL_STATE_NORMAL);
