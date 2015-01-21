@@ -411,6 +411,7 @@ void CProceduralRegenerator::WriteText(unsigned char *imageData, const char *tex
 
 				compColor_t col(color);
 				col.a = isOutline ? pixels[srcY][srcX].outline : pixels[srcY][srcX].glyph;
+				col.a *= color.a() / 255.0f;
 
 				compColor_t compCol;
 				GetCompositeColor(col, curCol, compCol);
