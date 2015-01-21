@@ -315,7 +315,7 @@ void CProceduralRegenerator::WriteText(unsigned char *imageData, const char *tex
 	int maxHeight = 0;
 
 	// Calculate the total width and max height of the text with kerning
-	for (int i = 0; i < strlen(text); i++)
+	for (size_t i = 0; i < strlen(text); i++)
 	{
 		const chr_t &chr = chars[text[i]];
 		totalWidth += chr.advanceX;
@@ -353,7 +353,7 @@ void CProceduralRegenerator::WriteText(unsigned char *imageData, const char *tex
 	const int textureWidth = 1024;
 	const int textureHeight = 1024;
 
-	for (int i = 0; i < strlen(text); i++)
+	for (size_t i = 0; i < strlen(text); i++)
 	{
 		const chr_t &chr = chars[text[i]];
 
@@ -593,8 +593,6 @@ void CPlayerTextureProxy::OnBind( C_BaseEntity *pEnt )
 	}
 	else if (dynamic_cast<C_BaseAnimatingOverlay *>(pEnt))
 	{
-		C_BaseAnimatingOverlay *pPlayerModelPreview = dynamic_cast<C_BaseAnimatingOverlay *>(pEnt);
-
 		CAppearanceSettingPanel *pPanel = (CAppearanceSettingPanel *)iosOptionsMenu->GetPanel()->GetSettingPanel(SETTING_PANEL_APPEARANCE);
 
 		pPanel->GetPlayerTeamInfo(&teamFolder, &kitFolder);
