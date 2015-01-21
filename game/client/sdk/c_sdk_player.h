@@ -15,6 +15,7 @@
 #include "c_baseplayer.h"
 #include "baseparticleentity.h"
 #include "sdk_player_shared.h"
+#include "colorcorrectionmgr.h"
 
 class C_Ball;
 
@@ -52,6 +53,9 @@ public:
 
 	// Have this player play the sounds from his view model's reload animation.
 	void PlayReloadEffect();
+
+	ClientCCHandle_t m_hColorCorrection;
+	char m_szColorCorrectionFile[128];
 
 // Called by shared code.
 public:

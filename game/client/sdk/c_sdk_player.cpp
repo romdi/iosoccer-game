@@ -635,6 +635,9 @@ C_SDKPlayer::C_SDKPlayer() :
 
 	m_nModelScale = 100;
 	m_pHoldingBall = NULL;
+
+	m_hColorCorrection = INVALID_CLIENT_CCHANDLE;
+	m_szColorCorrectionFile[0] = '\0';
 }
 
 
@@ -949,6 +952,10 @@ bool C_SDKPlayer::CanShowTeamMenu( void )
 	return true;
 }
 #endif
+
+ConVar cl_colorcorrection_file("cl_colorcorrection_file", "night");
+ConVar cl_colorcorrection_weight("cl_colorcorrection_weight", "0.0");
+
 void C_SDKPlayer::ClientThink()
 {
 	UpdateSoundEvents();
@@ -1001,7 +1008,19 @@ void C_SDKPlayer::ClientThink()
 		PerformObstaclePushaway( this );
 		m_fNextThinkPushAway =  gpGlobals->curtime + PUSHAWAY_THINK_INTERVAL;
 	}
+
+	if (Q_strcmp(m_szColorCorrectionFile, cl_colorcorrection_file.GetString()))
+	{
+		if (m_hColorCorrection != INVALID_CLIENT_CCHANDLE)
+			g_pColorCorrectionMgr->RemoveColorCorrection(m_hColorCorrection);
+
+		m_hColorCorrection = g_pColorCorrectionMgr->AddColorCorrection(VarArgs("materials/correction/%s.raw", cl_colorcorrection_file.GetString()));
+		Q_strncpy(m_szColorCorrectionFile, cl_colorcorrection_file.GetString(), sizeof(m_szColorCorrectionFile));
+	}
+
+	g_pColorCorrectionMgr->SetColorCorrectionWeight(m_hColorCorrection, cl_colorcorrection_weight.GetFloat());
 }
+
 
 //-----------------------------------------------------------------------------
 // Purpose:
