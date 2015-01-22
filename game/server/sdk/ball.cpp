@@ -168,10 +168,6 @@ ConVar
 	sv_ball_freecamshot_maxangle("sv_ball_freecamshot_maxangle", "60", FCVAR_NOTIFY),
 	sv_ball_heelshot_strength("sv_ball_heelshot_strength", "720", FCVAR_NOTIFY),
 	
-	sv_ball_keeperautopunch_limit("sv_ball_keeperautopunch_limit", "30", FCVAR_NOTIFY),
-	sv_ball_keeperautopunch_pitch("sv_ball_keeperautopunch_pitch", "-45", FCVAR_NOTIFY),
-	sv_ball_keeperautopunch_yaw("sv_ball_keeperautopunch_yaw", "45", FCVAR_NOTIFY),
-	
 	sv_ball_keepercatchdelay_poscoeffmin("sv_ball_keepercatchdelay_poscoeffmin", "0.5", FCVAR_NOTIFY),
 	
 	sv_ball_dribbling_collide("sv_ball_dribbling_collide", "0", FCVAR_NOTIFY),
@@ -904,28 +900,7 @@ bool CBall::CheckKeeperCatch()
 		}
 		else
 		{
-			if (m_pPl->IsBot() || Square(angDiff[PITCH]) + Square(angDiff[YAW]) <= Square(sv_ball_keeperautopunch_limit.GetFloat()))
-			{
-				int buttonSign;
-
-				if ((m_pPl->m_nButtons & IN_MOVELEFT) && (!(m_pPl->m_nButtons & IN_MOVERIGHT) || m_pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVERIGHT)) 
-					buttonSign = 1;
-				else if ((m_pPl->m_nButtons & IN_MOVERIGHT) && (!(m_pPl->m_nButtons & IN_MOVELEFT) || m_pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVELEFT)) 
-					buttonSign = -1;
-				else
-					buttonSign = 0;
-
-				QAngle ang = m_aPlAng;
-
-				ang[PITCH] = sv_ball_keeperautopunch_pitch.GetFloat();
-				ang[YAW] += sv_ball_keeperautopunch_yaw.GetFloat() * buttonSign;
-
-				AngleVectors(ang, &punchDir);
-			}
-			else
-			{
-				AngleVectors(m_aPlCamAng, &punchDir);
-			}
+			AngleVectors(m_aPlCamAng, &punchDir);
 		}
 
 		Vector vel = punchDir * max(m_vVel.Length2D(), sv_ball_keeper_punch_minstrength.GetFloat()) * sv_ball_keeperdeflectioncoeff.GetFloat();
