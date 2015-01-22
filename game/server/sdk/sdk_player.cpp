@@ -119,6 +119,11 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayerShared, DT_SDKSharedLocalPlayerExclusive )
 
 	SendPropInt( SENDINFO( m_nLastPressedSingleMoveKey ) ),
 
+	SendPropInt( SENDINFO( m_nBoostRightDive ) ),
+	SendPropTime( SENDINFO( m_flBoostRightDiveStart ) ),
+	SendPropInt( SENDINFO( m_nBoostForwardDive ) ),
+	SendPropTime( SENDINFO( m_flBoostForwardDiveStart ) )
+
 END_SEND_TABLE()
 
 BEGIN_SEND_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )

@@ -46,6 +46,8 @@ extern ConVar mp_stamina_max_reduce_coeff;
 extern ConVar mp_stamina_max_add_halftime;
 extern ConVar mp_stamina_max_add_extratime_intermission;
 extern ConVar mp_stamina_max_add_extratime_halftime;
+extern ConVar mp_dive_boost_duration;
+extern ConVar mp_dive_boost_coeff;
 
 extern ConVar mp_pitchup;
 extern ConVar mp_pitchdown;

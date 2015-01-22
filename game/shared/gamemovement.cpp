@@ -1414,9 +1414,12 @@ void CGameMovement::WalkMove( void )
 //-----------------------------------------------------------------------------
 void CGameMovement::FullWalkMove( )
 {
+	CSDKPlayer *pPl = ToSDKPlayer(player);
 	Vector oldPos = mv->GetAbsOrigin();
 	Vector oldVel = mv->m_vecVelocity;
 	QAngle oldAng = mv->m_vecAbsViewAngles;
+
+	bool isWalkMove = false;
 
 	if (CheckPlayerAnimEvent())
 	{
@@ -1457,6 +1460,7 @@ void CGameMovement::FullWalkMove( )
 		if (player->GetGroundEntity() != NULL)
 		{
 			WalkMove();
+			isWalkMove = true;
 		}
 		else
 		{
@@ -1502,13 +1506,38 @@ void CGameMovement::FullWalkMove( )
 	Vector newVel = mv->m_vecVelocity;
 	QAngle newAng = mv->m_vecAbsViewAngles;
 
-	ToSDKPlayer(player)->CheckBallShield(oldPos, newPos, oldVel, newVel, oldAng, newAng);
+	pPl->CheckBallShield(oldPos, newPos, oldVel, newVel, oldAng, newAng);
 
 	mv->SetAbsOrigin(newPos);
 	mv->m_vecVelocity = newVel;
 	mv->m_vecAbsViewAngles = newAng;
 
-	ToSDKPlayer(player)->m_Shared.m_nInPenBoxOfTeam = TEAM_INVALID;
+	Vector forward, right, up;
+	AngleVectors(mv->m_vecAbsViewAngles, &forward, &right, &up);
+
+	if (isWalkMove)
+	{
+		Vector moveDir = newPos - oldPos;
+		moveDir.NormalizeInPlace();
+		float rightDot = DotProduct2D(right.AsVector2D(), moveDir.AsVector2D());
+		float forwardDot = DotProduct2D(forward.AsVector2D(), moveDir.AsVector2D());
+		int BoostRightDive = rightDot > 0 ? 1 : (rightDot < 0 ? -1 : 0);
+		int BoostForwardDive  = forwardDot > 0 ? 1 : (forwardDot < 0 ? -1 : 0);
+
+		if (BoostRightDive != pPl->m_Shared.m_nBoostRightDive)
+		{
+			pPl->m_Shared.m_nBoostRightDive = BoostRightDive;
+			pPl->m_Shared.m_flBoostRightDiveStart = gpGlobals->curtime;
+		}
+
+		if (BoostForwardDive != pPl->m_Shared.m_nBoostForwardDive)
+		{
+			pPl->m_Shared.m_nBoostForwardDive = BoostForwardDive;
+			pPl->m_Shared.m_flBoostForwardDiveStart = gpGlobals->curtime;
+		}
+	}
+
+	pPl->m_Shared.m_nInPenBoxOfTeam = TEAM_INVALID;
 
 	for (int team = TEAM_HOME; team <= TEAM_AWAY; team++)
 	{
@@ -1527,7 +1556,7 @@ void CGameMovement::FullWalkMove( )
 			&& mv->GetAbsOrigin().x <= max.x + halfBounds
 			&& mv->GetAbsOrigin().y <= max.y + halfBounds)
 		{
-			ToSDKPlayer(player)->m_Shared.m_nInPenBoxOfTeam = team;
+			pPl->m_Shared.m_nInPenBoxOfTeam = team;
 			break;
 		}
 	}
@@ -1535,7 +1564,7 @@ void CGameMovement::FullWalkMove( )
 #ifdef GAME_DLL
 	if (!SDKGameRules()->IsIntermissionState() && GetMatchBall()->State_Get() == BALL_STATE_NORMAL && !GetMatchBall()->HasQueuedState() && newPos != oldPos)
 	{
-		ToSDKPlayer(player)->AddExactDistanceCovered((newPos - oldPos).Length2D() * 2.54f / 100);
+		pPl->AddExactDistanceCovered((newPos - oldPos).Length2D() * 2.54f / 100);
 	}
 #endif
 }
@@ -1591,15 +1620,36 @@ bool CGameMovement::CheckPlayerAnimEvent()
 
 			if (pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_LEFT && sidemoveSign == 1
 				|| pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT && sidemoveSign == -1)
+			{
 				moveCoeff = mp_keeperdive_movebackcoeff.GetFloat();
+			}
 			else
-				moveCoeff = 1.0f;
+			{
+				if (pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT)
+				{
+					if (pPl->m_Shared.m_nBoostRightDive == 1)
+						moveCoeff = 1.0f + mp_dive_boost_coeff.GetFloat();
+					else if (pPl->m_Shared.m_nBoostRightDive == -1)
+						moveCoeff = 1.0f - mp_dive_boost_coeff.GetFloat();
+					else
+						moveCoeff = 1.0f;
+				}
+				else
+				{
+					if (pPl->m_Shared.m_nBoostRightDive == -1)
+						moveCoeff = 1.0f + mp_dive_boost_coeff.GetFloat();
+					else if (pPl->m_Shared.m_nBoostRightDive == 1)
+						moveCoeff = 1.0f - mp_dive_boost_coeff.GetFloat();
+					else
+						moveCoeff = 1.0f;
+				}
+			}
 				
 			mv->m_vecVelocity = forward2D * ZeroSign(mv->m_flForwardMove) * mp_keeperdivespeed_shortside.GetFloat();
 			mv->m_vecVelocity += right * sidemoveSign * moveCoeff * mp_keeperdivespeed_longside.GetFloat();
 
 			mv->m_vecVelocity.z = 0;
-			float maxSpeed = max(mp_keeperdivespeed_shortside.GetFloat(), mp_keeperdivespeed_longside.GetFloat());
+			float maxSpeed = max(mp_keeperdivespeed_shortside.GetFloat(), mp_keeperdivespeed_longside.GetFloat() * moveCoeff);
 			float speed = mv->m_vecVelocity.NormalizeInPlace();
 			mv->m_vecVelocity *= min(speed, maxSpeed);
 			mv->m_vecVelocity *= max(0, (1 - pow(timePassed / mp_keepersidewarddive_move_duration.GetFloat(), 2)));
@@ -1619,15 +1669,24 @@ bool CGameMovement::CheckPlayerAnimEvent()
 			float moveCoeff;
 
 			if (mv->m_nButtons & IN_BACK)
+			{
 				moveCoeff = mp_keeperdive_movebackcoeff.GetFloat();
+			}
 			else
-				moveCoeff = 1.0f;
+			{
+				if (pPl->m_Shared.m_nBoostForwardDive == 1)
+					moveCoeff = 1.0f + mp_dive_boost_coeff.GetFloat();
+				else if (pPl->m_Shared.m_nBoostForwardDive == -1)
+					moveCoeff = 1.0f - mp_dive_boost_coeff.GetFloat();
+				else
+					moveCoeff = 1.0f;
+			}
 					
 			mv->m_vecVelocity = forward2D * ZeroSign(mv->m_flForwardMove) * moveCoeff * mp_keeperdivespeed_longside.GetFloat();		
 			mv->m_vecVelocity += right * sidemoveSign * mp_keeperdivespeed_shortside.GetFloat();
 
 			mv->m_vecVelocity.z = 0;
-			float maxSpeed = max(mp_keeperdivespeed_shortside.GetFloat(), mp_keeperdivespeed_longside.GetFloat());
+			float maxSpeed = max(mp_keeperdivespeed_shortside.GetFloat(), mp_keeperdivespeed_longside.GetFloat() * moveCoeff);
 			float speed = mv->m_vecVelocity.NormalizeInPlace();
 			mv->m_vecVelocity *= min(speed, maxSpeed);
 			mv->m_vecVelocity *= max(0, (1 - pow(timePassed / mp_keeperforwarddive_move_duration.GetFloat(), 2)));
@@ -1644,11 +1703,30 @@ bool CGameMovement::CheckPlayerAnimEvent()
 				return false;
 			}
 
-			AngleVectors(pPl->m_Shared.GetAnimEventStartAngle(), &forward2D);
-			forward2D.z = 0;
-			forward2D.NormalizeInPlace();
+			float moveCoeff;
 
-			mv->m_vecVelocity = -forward2D * mp_keeperdivespeed_longside.GetFloat() * max(0, (1 - pow(timePassed / mp_keeperbackwarddive_move_duration.GetFloat(), 2)));		
+			if (mv->m_nButtons & IN_FORWARD)
+			{
+				moveCoeff = mp_keeperdive_movebackcoeff.GetFloat();
+			}
+			else
+			{
+				if (pPl->m_Shared.m_nBoostForwardDive == -1)
+					moveCoeff = 1.0f + mp_dive_boost_coeff.GetFloat();
+				else if (pPl->m_Shared.m_nBoostForwardDive == 1)
+					moveCoeff = 1.0f - mp_dive_boost_coeff.GetFloat();
+				else
+					moveCoeff = 1.0f;
+			}
+
+			mv->m_vecVelocity = forward2D * ZeroSign(mv->m_flForwardMove) * moveCoeff * mp_keeperdivespeed_longside.GetFloat();		
+			mv->m_vecVelocity += right * sidemoveSign * mp_keeperdivespeed_shortside.GetFloat();
+
+			mv->m_vecVelocity.z = 0;
+			float maxSpeed = max(mp_keeperdivespeed_shortside.GetFloat(), mp_keeperdivespeed_longside.GetFloat() * moveCoeff);
+			float speed = mv->m_vecVelocity.NormalizeInPlace();
+			mv->m_vecVelocity *= min(speed, maxSpeed);
+			mv->m_vecVelocity *= max(0, (1 - pow(timePassed / mp_keeperbackwarddive_move_duration.GetFloat(), 2)));
 			mv->m_vecVelocity.z = mp_jump_height.GetInt();
 
 			break;
@@ -1900,6 +1978,12 @@ bool CGameMovement::CheckJumpButton( void )
 	pPl->m_Shared.SetAnimEventStartButtons(mv->m_nButtons);
 
 	pPl->DoAnimationEvent(animEvent);
+
+	if (gpGlobals->curtime < pPl->m_Shared.m_flBoostRightDiveStart + mp_dive_boost_duration.GetFloat())
+		pPl->m_Shared.m_nBoostRightDive = 0;
+
+	if (gpGlobals->curtime < pPl->m_Shared.m_flBoostForwardDiveStart + mp_dive_boost_duration.GetFloat())
+		pPl->m_Shared.m_nBoostForwardDive = 0;
 
 	//pPl->m_Shared.SetAnimEvent(animEvent);
 

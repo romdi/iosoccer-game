@@ -126,6 +126,10 @@ BEGIN_RECV_TABLE_NOBASE( CSDKPlayerShared, DT_SDKSharedLocalPlayerExclusive )
 	RecvPropBool(RECVINFO(m_bShotButtonsReleased)),
 
 	RecvPropInt( RECVINFO( m_nLastPressedSingleMoveKey ) ),
+	RecvPropInt( RECVINFO( m_nBoostRightDive ) ),
+	RecvPropTime( RECVINFO( m_flBoostRightDiveStart ) ),
+	RecvPropInt( RECVINFO( m_nBoostForwardDive ) ),
+	RecvPropTime( RECVINFO( m_flBoostForwardDiveStart ) ),
 END_RECV_TABLE()
 
 BEGIN_RECV_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
@@ -236,6 +240,11 @@ BEGIN_PREDICTION_DATA_NO_BASE( CSDKPlayerShared )
 	DEFINE_PRED_FIELD( m_bShotButtonsReleased, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 
 	DEFINE_PRED_FIELD( m_nLastPressedSingleMoveKey, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
+
+	DEFINE_PRED_FIELD( m_nBoostRightDive, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_flBoostRightDiveStart, FIELD_TIME, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_nBoostForwardDive, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_flBoostForwardDiveStart, FIELD_TIME, FTYPEDESC_INSENDTABLE ),
 
 END_PREDICTION_DATA()
 

@@ -100,6 +100,9 @@ ConVar  mp_stamina_max_add_halftime	("mp_stamina_max_add_halftime", "0", FCVAR_N
 ConVar  mp_stamina_max_add_extratime_intermission	("mp_stamina_max_add_extratime_intermission", "0", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar  mp_stamina_max_add_extratime_halftime	("mp_stamina_max_add_extratime_halftime", "0", FCVAR_NOTIFY | FCVAR_REPLICATED);
 
+ConVar	mp_dive_boost_duration("mp_dive_boost_duration", "0.25", FCVAR_REPLICATED | FCVAR_NOTIFY);
+ConVar	mp_dive_boost_coeff("mp_dive_boost_coeff", "0.125", FCVAR_REPLICATED | FCVAR_NOTIFY);
+
 ConVar  mp_pitchup("mp_pitchup", "50", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar  mp_pitchdown("mp_pitchdown", "50", FCVAR_NOTIFY | FCVAR_REPLICATED);
 
