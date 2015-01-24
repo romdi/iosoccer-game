@@ -118,11 +118,13 @@ ConVar
 	sv_ball_chargedheader_minstrength("sv_ball_chargedheader_minstrength", "450", FCVAR_NOTIFY), 
 	sv_ball_chargedheader_maxstrength("sv_ball_chargedheader_maxstrength", "900", FCVAR_NOTIFY), 
 	
-	sv_ball_chargeddivingheader_minstrength("sv_ball_chargeddivingheader_minstrength", "630", FCVAR_NOTIFY), 
-	sv_ball_chargeddivingheader_maxstrength("sv_ball_chargeddivingheader_maxstrength", "990", FCVAR_NOTIFY),
-
+	sv_ball_divingheader_minstrength("sv_ball_divingheader_minstrength", "750", FCVAR_NOTIFY), 
+	sv_ball_divingheader_maxstrength("sv_ball_divingheader_maxstrength", "1050", FCVAR_NOTIFY),
 	sv_ball_divingheader_minangle("sv_ball_divingheader_minangle", "30", FCVAR_NOTIFY), 
 	sv_ball_divingheader_maxangle("sv_ball_divingheader_maxangle", "-30", FCVAR_NOTIFY),
+
+	sv_ball_bicycleshot_minstrength("sv_ball_bicycleshot_minstrength", "750", FCVAR_NOTIFY), 
+	sv_ball_bicycleshot_maxstrength("sv_ball_bicycleshot_maxstrength", "1050", FCVAR_NOTIFY),
 
 	sv_ball_slide_strength("sv_ball_slide_strength", "720", FCVAR_NOTIFY), 
 	sv_ball_slide_pitchangle("sv_ball_slide_pitchangle", "-15", FCVAR_NOTIFY), 
@@ -1141,7 +1143,7 @@ bool CBall::DoHeader()
 			Vector forward;
 			AngleVectors(ang, &forward);
 
-			Vector vel = forward * GetChargedshotStrength(GetPitchCoeff(true), sv_ball_chargedheader_minstrength.GetInt(), sv_ball_chargedheader_maxstrength.GetInt());
+			Vector vel = forward * GetChargedshotStrength(GetPitchCoeff(true), sv_ball_bicycleshot_minstrength.GetInt(), sv_ball_bicycleshot_maxstrength.GetInt());
 
 			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BICYCLE_KICK);
 			EmitSound("Ball.Kickhard");
@@ -1157,7 +1159,7 @@ bool CBall::DoHeader()
 			headerAngle[PITCH] = clamp(headerAngle[PITCH], sv_ball_divingheader_maxangle.GetFloat(), sv_ball_divingheader_minangle.GetFloat());
 			AngleVectors(headerAngle, &forward);
 
-			vel = forward * GetChargedshotStrength(1.0f, sv_ball_chargeddivingheader_minstrength.GetInt(), sv_ball_chargeddivingheader_maxstrength.GetInt());
+			vel = forward * GetChargedshotStrength(1.0f, sv_ball_divingheader_minstrength.GetInt(), sv_ball_divingheader_maxstrength.GetInt());
 
 			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_DIVINGHEADER);
 			EmitSound("Ball.Kickhard");
