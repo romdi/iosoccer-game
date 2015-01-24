@@ -658,3 +658,15 @@ void CSDKPlayer::SetShotButtonsReleased(bool released)
 {
 	m_Shared.m_bShotButtonsReleased = released;
 }
+
+bool CSDKPlayer::DoSkillMove()
+{
+	int teamPosType;
+#ifdef CLIENT_DLL
+	teamPosType = GameResources()->GetTeamPosType(entindex());
+#else
+	teamPosType = GetTeamPosType();
+#endif
+
+	return m_nButtons & IN_WALK && (teamPosType != POS_GK || m_Shared.m_nInPenBoxOfTeam != GetTeamNumber());
+}

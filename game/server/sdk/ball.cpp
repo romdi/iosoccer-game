@@ -863,7 +863,7 @@ bool CBall::CheckKeeperCatch()
 		break;
 	case PLAYERANIMEVENT_KEEPER_JUMP:
 	default: // Keeper standing
-		float maxReachXY = m_pPl->m_nButtons & IN_WALK ? sv_ball_keeper_standing_reach_walking.GetFloat() : sv_ball_keeper_standing_reach.GetFloat();
+		float maxReachXY = m_pPl->DoSkillMove() ? sv_ball_keeper_standing_reach_walking.GetFloat() : sv_ball_keeper_standing_reach.GetFloat();
 
 		canReach = (localDirToBall.z < sv_ball_bodypos_keeperarms_end.GetFloat()
 			&& localDirToBall.z >= sv_ball_bodypos_feet_start.GetFloat()
@@ -970,7 +970,7 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 	float pitchCoeff = GetPitchCoeff(true);
 	float shotTakerMinDelay = 0.0f;
 
-	if (m_pPl->m_nButtons & IN_WALK)
+	if (m_pPl->DoSkillMove())
 	{
 		if (!m_pPl->IsNormalshooting())
 		{
@@ -1089,7 +1089,7 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 bool CBall::DoVolleyShot()
 {
 	// Do nothing when holding trick key
-	if (m_pPl->m_nButtons & IN_WALK)
+	if (m_pPl->DoSkillMove())
 		return false;
 
 	float shotStrength;
@@ -1126,7 +1126,7 @@ bool CBall::DoVolleyShot()
 
 bool CBall::DoHeader()
 {
-	if (m_pPl->m_nButtons & IN_WALK)
+	if (m_pPl->DoSkillMove())
 	{
 		if (!m_pPl->IsChargedshooting())
 			return false;

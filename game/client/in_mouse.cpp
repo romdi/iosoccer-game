@@ -27,6 +27,7 @@
 #include "tier1/convar_serverbounded.h"
 #include "in_buttons.h"
 #include "in_main.h"
+#include "c_sdk_player.h"
 
 #if defined( _X360 )
 #include "xbox/xbox_win32stubs.h"
@@ -544,7 +545,7 @@ void CInput::MouseMove( CUserCmd *cmd )
 
 	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
 
-	if (pPlayer && ((pPlayer->GetFlags() & (FL_FREECAM | FL_REMOTECONTROLLED)) || (pPlayer->m_nButtons & IN_WALK)))
+	if (pPlayer && (pPlayer->GetFlags() & (FL_FREECAM | FL_REMOTECONTROLLED) || ToSDKPlayer(pPlayer)->DoSkillMove()))
 	{
 		viewangles = m_aCameraViewAngles;
 		m_bWasFreeCam = true;
@@ -596,7 +597,7 @@ void CInput::MouseMove( CUserCmd *cmd )
 	m_aCameraViewAngles = viewangles;
 	cmd->camviewangles = viewangles;
 
-	if (!((pPlayer->GetFlags() & (FL_FREECAM | FL_REMOTECONTROLLED)) || (pPlayer->m_nButtons & IN_WALK)))
+	if (!((pPlayer->GetFlags() & (FL_FREECAM | FL_REMOTECONTROLLED)) || ToSDKPlayer(pPlayer)->DoSkillMove()))
 		engine->SetViewAngles( viewangles );
 }
 

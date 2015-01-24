@@ -68,6 +68,8 @@ public:
 	float				GetChargedShotStrength();
 
 	void				CheckLastPressedSingleMoveButton();
+
+	bool				DoSkillMove();
 	
 	void DoAnimationEvent(PlayerAnimEvent_t event);
 	virtual bool ShouldDraw();

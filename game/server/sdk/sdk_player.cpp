@@ -1612,7 +1612,7 @@ bool CSDKPlayer::IsChargedshooting()
 
 bool CSDKPlayer::IsShooting()
 {
-	return IsNormalshooting() /*|| IsSkillshooting() */|| IsChargedshooting();
+	return IsNormalshooting() || IsChargedshooting();
 }
 
 bool CSDKPlayer::CanShoot()
