@@ -444,12 +444,16 @@ void CTeam::InitFieldSpots(bool isBottomTeam)
 	if (!pPenbox)
 		Error("'trigger_penaltybox' entity is missing from map");
 	pPenbox->CollisionProp()->WorldSpaceAABB(&penboxMin, &penboxMax);
+	penboxMin += Vector(1, 1, 1);
+	penboxMax -= Vector(1, 1, 1);
 
 	Vector sixyardMin, sixyardMax;
 	CBaseEntity *pSixyard = gEntList.FindEntityByClassname(NULL, "trigger_sixyardbox");
 	if (!pSixyard)
 		Error("'trigger_sixyardbox' entity is missing from map");
 	pSixyard->CollisionProp()->WorldSpaceAABB(&sixyardMin, &sixyardMax);
+	sixyardMin += Vector(1, 1, 1);
+	sixyardMax -= Vector(1, 1, 1);
 
 	if (isBottomTeam)
 	{

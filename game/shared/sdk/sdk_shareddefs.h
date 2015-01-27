@@ -445,7 +445,7 @@ enum
 	MODEL_KEEPER,
 };
 
-#define BALL_PHYS_RADIUS 4.5f
+#define BALL_PHYS_RADIUS 4.75f
 
 #define PLAYER_SKIN_COUNT 6
 

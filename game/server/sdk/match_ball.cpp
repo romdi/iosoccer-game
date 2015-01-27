@@ -1232,9 +1232,9 @@ bool CMatchBall::CheckGoal()
 {
 	int team = TEAM_INVALID;
 
-	if (m_vPos.x + BALL_PHYS_RADIUS >= SDKGameRules()->m_vKickOff.GetX() - SDKGameRules()->m_vGoalTriggerSize.x
-		&& m_vPos.x - BALL_PHYS_RADIUS <= SDKGameRules()->m_vKickOff.GetX() + SDKGameRules()->m_vGoalTriggerSize.x
-		&& m_vPos.z - BALL_PHYS_RADIUS <= SDKGameRules()->m_vKickOff.GetZ() + SDKGameRules()->m_vGoalTriggerSize.z)
+	if (m_vPos.x >= SDKGameRules()->m_vKickOff.GetX() - SDKGameRules()->m_vGoalTriggerSize.x
+		&& m_vPos.x <= SDKGameRules()->m_vKickOff.GetX() + SDKGameRules()->m_vGoalTriggerSize.x
+		&& m_vPos.z <= SDKGameRules()->m_vKickOff.GetZ() + SDKGameRules()->m_vGoalTriggerSize.z)
 	{
 		if (m_vPos.y + BALL_PHYS_RADIUS < SDKGameRules()->m_vFieldMin.GetY())
 			team = SDKGameRules()->GetBottomTeam();

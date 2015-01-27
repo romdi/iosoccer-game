@@ -628,12 +628,16 @@ void CSDKGameRules::InitFieldSpots()
 	if (!pField)
 		Error("'trigger_field' entity is missing from map");
 	pField->CollisionProp()->WorldSpaceAABB(&fieldMin, &fieldMax);
+	fieldMin += Vector(1, 1, 1);
+	fieldMax -= Vector(1, 1, 1);
 
 	Vector goalMin, goalMax;
 	CBaseEntity *pGoal = gEntList.FindEntityByClassname(NULL, "trigger_goal");
 	if (!pGoal)
 		Error("'trigger_goal' entity is missing from map");
 	pGoal->CollisionProp()->WorldSpaceAABB(&goalMin, &goalMax);
+	goalMin += Vector(1, 1, 1);
+	goalMax -= Vector(1, 1, 1);
 
 	m_vKickOff = fieldMin;
 
