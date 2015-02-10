@@ -569,6 +569,7 @@ public:
 
 	void				CheckBallShield(const Vector &oldPos, Vector &newPos, const Vector &oldVel, Vector &newVel, const QAngle &oldAng, QAngle &newAng);
 	void				MoveToTargetPos(Vector &pos, Vector &vel, QAngle &ang);
+	int				GetSidemoveSign();
 
 	bool				IsNormalshooting();
 	bool				IsSkillshooting();

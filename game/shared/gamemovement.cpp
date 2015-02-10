@@ -1595,14 +1595,7 @@ bool CGameMovement::CheckPlayerAnimEvent()
 	forward2D.z = 0;
 	forward2D.NormalizeInPlace();
 
-	int sidemoveSign;
-
-	if ((mv->m_nButtons & IN_MOVELEFT) && (!(mv->m_nButtons & IN_MOVERIGHT) || pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVERIGHT))
-		sidemoveSign = -1;
-	else if ((mv->m_nButtons & IN_MOVERIGHT) && (!(mv->m_nButtons & IN_MOVELEFT) || pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVELEFT))
-		sidemoveSign = 1;
-	else
-		sidemoveSign = 0;
+	int sidemoveSign = pPl->GetSidemoveSign();
 
 	switch (pPl->m_Shared.GetAnimEvent())
 	{
@@ -1932,14 +1925,7 @@ bool CGameMovement::CheckJumpButton( void )
 
 	if (isKeeper && pPl->m_Shared.m_nInPenBoxOfTeam == team && !pPl->m_pHoldingBall && mv->m_nButtons & IN_ATTACK)
 	{
-		int sidemoveSign;
-
-		if ((mv->m_nButtons & IN_MOVELEFT) && (!(mv->m_nButtons & IN_MOVERIGHT) || pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVERIGHT))
-			sidemoveSign = -1;
-		else if ((mv->m_nButtons & IN_MOVERIGHT) && (!(mv->m_nButtons & IN_MOVELEFT) || pPl->m_Shared.m_nLastPressedSingleMoveKey == IN_MOVELEFT))
-			sidemoveSign = 1;
-		else
-			sidemoveSign = 0;
+		int sidemoveSign = pPl->GetSidemoveSign();
 
 		if (sidemoveSign == -1)
 		{

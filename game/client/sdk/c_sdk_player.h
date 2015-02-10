@@ -213,6 +213,7 @@ public:
 	bool ShotButtonsPressed();
 	bool ShotButtonsReleased();
 	void SetShotButtonsReleased(bool released);
+	int GetSidemoveSign();
 };
 
 

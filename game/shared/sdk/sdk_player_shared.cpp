@@ -670,3 +670,17 @@ bool CSDKPlayer::DoSkillMove()
 
 	return m_nButtons & IN_WALK && (teamPosType != POS_GK || m_Shared.m_nInPenBoxOfTeam != GetTeamNumber());
 }
+
+int CSDKPlayer::GetSidemoveSign()
+{
+	int sidemoveSign;
+
+	if ((m_nButtons & IN_MOVELEFT) && (!(m_nButtons & IN_MOVERIGHT) || m_Shared.m_nLastPressedSingleMoveKey == IN_MOVERIGHT))
+		sidemoveSign = -1;
+	else if ((m_nButtons & IN_MOVERIGHT) && (!(m_nButtons & IN_MOVELEFT) || m_Shared.m_nLastPressedSingleMoveKey == IN_MOVELEFT))
+		sidemoveSign = 1;
+	else
+		sidemoveSign = 0;
+
+	return sidemoveSign;
+}
