@@ -211,7 +211,7 @@ protected:
 	CUtlVector<BallTouchInfo *> m_Touches;
 
 	QAngle			m_aPlAng, m_aPlCamAng;
-	Vector			m_vPlVel, m_vPlVel2D, m_vPlForwardVel2D, m_vPlPos, m_vPlForward, m_vPlForward2D, m_vPlRight, m_vPlUp, m_vPlDirToBall, m_vPlLocalDirToBall;
+	Vector			m_vPlVel, m_vPlVel2D, m_vPlForwardVel2D, m_vPlBackVel2D, m_vPlSideVel2D, m_vPlPos, m_vPlForward, m_vPlForward2D, m_vPlRight, m_vPlUp, m_vPlDirToBall, m_vPlLocalDirToBall;
 
 	Vector			m_vPos, m_vVel, m_vOffsidePos;
 	QAngle			m_aAng;

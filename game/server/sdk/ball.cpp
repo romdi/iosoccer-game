@@ -80,7 +80,8 @@ ConVar
 	sv_ball_keeper_sidedive_catchcenteroffset_side( "sv_ball_keeper_sidedive_catchcenteroffset_side", "0", FCVAR_NOTIFY ),
 	sv_ball_keeper_sidedive_catchcenteroffset_z( "sv_ball_keeper_sidedive_catchcenteroffset_z", "40", FCVAR_NOTIFY ),
 	
-	sv_ball_keeper_punch_minstrength( "sv_ball_keeper_punch_minstrength", "900", FCVAR_NOTIFY ),
+	sv_ball_keeper_punch_minstrength("sv_ball_keeper_punch_minstrength", "900", FCVAR_NOTIFY),
+	sv_ball_keeper_punch_sidespeedcoeff("sv_ball_keeper_punch_sidespeedcoeff", "0.1", FCVAR_NOTIFY),
 	
 	sv_ball_keeperdeflectioncoeff("sv_ball_keeperdeflectioncoeff", "0.5", FCVAR_NOTIFY),
 	
@@ -168,7 +169,9 @@ ConVar
 	sv_ball_maxplayerfinddist("sv_ball_maxplayerfinddist", "200", FCVAR_NOTIFY),
 	
 	sv_ball_freecamshot_maxangle("sv_ball_freecamshot_maxangle", "60", FCVAR_NOTIFY),
-	sv_ball_heelshot_strength("sv_ball_heelshot_strength", "720", FCVAR_NOTIFY),
+	sv_ball_heelshot_pitch("sv_ball_heelshot_pitch", "-5", FCVAR_NOTIFY),
+	sv_ball_heelshot_fixedstrength("sv_ball_heelshot_fixedstrength", "150", FCVAR_NOTIFY),
+	sv_ball_heelshot_variablestrength("sv_ball_heelshot_variablestrength", "400", FCVAR_NOTIFY),
 	
 	sv_ball_keepercatchdelay_poscoeffmin("sv_ball_keepercatchdelay_poscoeffmin", "0.5", FCVAR_NOTIFY),
 	
@@ -902,7 +905,9 @@ bool CBall::CheckKeeperCatch()
 		}
 		else
 		{
-			AngleVectors(m_aPlCamAng, &punchDir);
+			QAngle ang = m_aPlCamAng;
+			ang[YAW] += -ZeroSign(m_vPlVel2D.Dot(m_vPlRight)) * m_vPlSideVel2D.Length() * sv_ball_keeper_punch_sidespeedcoeff.GetFloat();
+			AngleVectors(ang, &punchDir);
 		}
 
 		Vector vel = punchDir * max(m_vVel.Length2D(), sv_ball_keeper_punch_minstrength.GetFloat()) * sv_ball_keeperdeflectioncoeff.GetFloat();
@@ -988,8 +993,8 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 		// Heel kick
 		if (angDiff >= 90)
 		{
-			shotAngle[PITCH] = -5;
-			shotStrength = 150 + 400 * pitchCoeff;
+			shotAngle[PITCH] = sv_ball_heelshot_pitch.GetFloat();
+			shotStrength = sv_ball_heelshot_fixedstrength.GetFloat() + sv_ball_heelshot_variablestrength.GetFloat() * pitchCoeff;
 			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEELKICK);
 			shotTakerMinDelay = sv_ball_shottaker_mindelay_short.GetFloat();
 		}
@@ -1311,7 +1316,10 @@ void CBall::UpdateCarrier()
 		m_vPlForward2D = m_vPlForward;
 		m_vPlForward2D.z = 0;
 		m_vPlForward2D.NormalizeInPlace();
-		m_vPlForwardVel2D = m_vPlForward2D * max(0, (m_vPlVel2D.x * m_vPlForward2D.x + m_vPlVel2D.y * m_vPlForward2D.y));
+
+		m_vPlForwardVel2D = m_vPlForward2D * max(0, m_vPlVel2D.Dot(m_vPlForward2D));
+		m_vPlBackVel2D = m_vPlForward2D * min(0, m_vPlVel2D.Dot(m_vPlForward2D));
+		m_vPlSideVel2D = -m_vPlRight * m_vPlVel2D.Dot(m_vPlRight);
 		
 		m_vPlDirToBall = m_vPos - m_vPlPos;
 		VectorIRotate(m_vPlDirToBall, m_pPl->EntityToWorldTransform(), m_vPlLocalDirToBall);
