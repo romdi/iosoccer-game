@@ -22,24 +22,22 @@ struct FileData
 	FileHandle_t fh;
 	MD5Context_t md5Ctx;
 	IOSUpdateInfo *pUpdateInfo;
-	int receivedFileBytes;
 };
 
 static size_t rcvFileListData(void *ptr, size_t size, size_t nmemb, CUtlBuffer &buffer)
 {
 	buffer.Put(ptr, nmemb);
 
-	return size * nmemb;
+	return nmemb;
 }
 
 static size_t rcvFile(void *ptr, size_t size, size_t nmemb, FileData *vars)
 {
 	filesystem->Write(ptr, nmemb, vars->fh);
 	MD5Update(&vars->md5Ctx, (unsigned char *)ptr, nmemb);
-	vars->receivedFileBytes += nmemb;
 	vars->pUpdateInfo->receivedBytes += nmemb;
 
-	return size * nmemb;
+	return nmemb;
 }
 
 void GetLocalFileList(char *fileListString, CUtlVector<FileInfo> &fileList)
@@ -257,7 +255,6 @@ unsigned PerformUpdate(void *params)
 		curlData.fh = filesystem->Open(filePath, "wb", "MOD");
 		memset(&curlData.md5Ctx, 0, sizeof(MD5Context_t));
 		MD5Init(&curlData.md5Ctx);
-		curlData.receivedFileBytes = 0;
 		curlData.pUpdateInfo = pUpdateInfo;
 
 		curl = curl_easy_init();
