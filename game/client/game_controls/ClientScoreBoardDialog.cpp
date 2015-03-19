@@ -314,7 +314,6 @@ void CClientScoreBoardDialog::Reset()
 	for (int i = 0; i < 2; i++)
 	{
 		KeyValues *kv = new KeyValues("data");
-		kv->SetInt("posindex", 0);
 		m_pPlayerList[i]->AddItem(0, kv);
 		kv->deleteThis();
 		m_pPlayerList[i]->SetItemFont(0, m_pScheme->GetFont("IOSTeamMenuNormalBold"));
@@ -323,11 +322,6 @@ void CClientScoreBoardDialog::Reset()
 		for (int j = 0; j < mp_maxplayers.GetInt(); j++)
 		{
 			kv = new KeyValues("data");
-
-			if (GameResources())
-				kv->SetString("posname", g_szPosNames[(int)GetGlobalTeam(GameResources()->GetTeam(TEAM_HOME + i))->GetFormation()->positions[j]->type]);
-
-			kv->SetInt("posindex", j + 1);
 			m_pPlayerList[i]->AddItem(0, kv);
 			kv->deleteThis();
 			m_pPlayerList[i]->SetItemFont(j + 1, m_pScheme->GetFont("IOSTeamMenuNormal"));
@@ -868,7 +862,8 @@ void CClientScoreBoardDialog::UpdatePlayerInfo()
 			{
 				KeyValues *emptyData = new KeyValues("data");
 				emptyData->SetString("posname", g_szPosNames[(int)GetGlobalTeam(gr->GetTeam(TEAM_HOME + i))->GetFormation()->positions[j]->type]);
-				emptyData->SetInt("posindex", j + 1);
+				emptyData->SetInt("posindex", j);
+				emptyData->SetString("name", "JOIN");
 				m_pPlayerList[i]->ModifyItem(j + 1, 0, emptyData);
 				emptyData->deleteThis();
 				m_pPlayerList[i]->SetItemFgColor(j + 1, g_ColorGray);
@@ -960,7 +955,7 @@ void CClientScoreBoardDialog::AddHeader()
 	{
 		m_iSectionId = 0; //make a blank one
 
-		m_pPlayerList[i]->AddSection(m_iSectionId, "", StaticPlayerSortFunc);
+		m_pPlayerList[i]->AddSection(m_iSectionId, "", NULL);
 		m_pPlayerList[i]->SetSectionAlwaysVisible(m_iSectionId);
 		m_pPlayerList[i]->SetFontSection(m_iSectionId, m_pScheme->GetFont("IOSTeamMenuSmall"));
 		m_pPlayerList[i]->SetLineSpacing(29);
@@ -1035,35 +1030,6 @@ void CClientScoreBoardDialog::AddHeader()
 		//m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "voice",		"Voice", SectionedListPanel::COLUMN_IMAGE, scheme()->GetProportionalScaledValue(VOICE_WIDTH) );
 		//m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "tracker", "#PlayerTracker", SectionedListPanel::COLUMN_IMAGE, scheme()->GetProportionalScaledValueEx( GetScheme(),FRIENDS_WIDTH) );
 	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Used for sorting players
-//-----------------------------------------------------------------------------
-bool CClientScoreBoardDialog::StaticPlayerSortFunc(vgui::SectionedListPanel *list, int itemID1, int itemID2)
-{
-	KeyValues *it1 = list->GetItemData(itemID1);
-	KeyValues *it2 = list->GetItemData(itemID2);
-	Assert(it1 && it2);
-
-	// first compare frags
-	int v1 = it1->GetInt("posindex");
-	int v2 = it2->GetInt("posindex");
-	if (v1 > v2)
-		return false;
-	else if (v1 < v2)
-		return true;
-
-	//// next compare deaths
-	//v1 = it1->GetInt("assists");
-	//v2 = it2->GetInt("assists");
-	//if (v1 > v2)
-	//	return false;
-	//else if (v1 < v2)
-	//	return true;
-
-	// the same, so compare itemID's (as a sentinel value to get deterministic sorts)
-	return itemID1 < itemID2;
 }
 
 // prints the float into dst, returns the number
@@ -1609,13 +1575,19 @@ void CClientScoreBoardDialog::OnItemSelected(KeyValues *data)
 
 void CClientScoreBoardDialog::OnItemLeftClick(KeyValues *data)
 {
-	if (m_bCanSetSetpieceTaker
+	SectionedListPanel *panel = (SectionedListPanel *)data->GetPtr("panel");
+	int team = panel == m_pPlayerList[0] ? TEAM_HOME : TEAM_AWAY;
+	KeyValues *kv = panel->GetItemData(data->GetInt("itemID"));
+
+	if (kv->GetInt("playerindex", 0) == 0)
+	{
+		engine->ClientCmd(VarArgs("jointeam %d %d", team, kv->GetInt("posindex", 0)));
+	}
+	else if (m_bCanSetSetpieceTaker
 		&& m_nSelectedPlayerIndex > 0
 		&& GameResources()->GetTeam(m_nSelectedPlayerIndex) == GetLocalPlayerTeam())
 	{
-		int playerIndex = ((SectionedListPanel *)data->GetPtr("panel"))->GetItemData(data->GetInt("itemID"))->GetInt("playerindex", 0);
-		//DevMsg("changing taker with index: %d\n", playerIndex);
-		engine->ClientCmd(VarArgs("settaker %d", playerIndex));
+		engine->ClientCmd(VarArgs("settaker %d", kv->GetInt("playerindex", 0)));
 	}
 }
 

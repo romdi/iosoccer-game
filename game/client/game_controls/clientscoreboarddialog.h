@@ -173,9 +173,6 @@ protected:
 
 	void Paint();
 
-	// sorts players within a section
-	static bool StaticPlayerSortFunc(vgui::SectionedListPanel *list, int itemID1, int itemID2);
-
 	virtual void ApplySchemeSettings(vgui::IScheme *pScheme);
 
 	// finds the player in the scoreboard
