@@ -3044,9 +3044,13 @@ void CGameMovement::SetPlayerSpeed()
 	{
 		flMaxSpeed = mp_remotecontrolledspeed.GetInt();
 	}
-	else if (mv->m_nButtons & IN_WALK || SDKGameRules()->IsCeremony())
+	else if (SDKGameRules()->IsCeremony())
 	{
-		flMaxSpeed = mp_walkspeed.GetInt();
+		flMaxSpeed = mp_ceremonyspeed.GetInt();
+	}
+	else if (mv->m_nButtons & IN_WALK)
+	{
+		flMaxSpeed = pPl->DoSkillMove() ? mp_skillspeed.GetInt() : mp_keeper1on1speed.GetInt();
 	}
 	else
 	{
