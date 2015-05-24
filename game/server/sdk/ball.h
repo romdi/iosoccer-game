@@ -35,14 +35,10 @@ enum foul_type_t
 };
 
 #define FL_SPIN_FORCE_NONE		0
-#define FL_SPIN_PERMIT_BACK		(1 << 0)
-#define FL_SPIN_PERMIT_TOP		(1 << 1)
-#define FL_SPIN_PERMIT_SIDE		(1 << 2)
-#define FL_SPIN_FORCE_BACK		(1 << 3)
-#define FL_SPIN_FORCE_TOP		(1 << 4)
-#define FL_SPIN_RETAIN_SIDE		(1 << 5)
-
-#define FL_SPIN_PERMIT_ALL		(FL_SPIN_PERMIT_BACK | FL_SPIN_PERMIT_TOP | FL_SPIN_PERMIT_SIDE)
+#define FL_SPIN_PERMIT_SIDE		(1 << 0)
+#define FL_SPIN_FORCE_BACK		(1 << 1)
+#define FL_SPIN_FORCE_TOP		(1 << 2)
+#define FL_SPIN_RETAIN_SIDE		(1 << 3)
 
 #define FL_POS_KEEPER					(1 << 0)
 #define FL_POS_DEFENDER					(1 << 1)

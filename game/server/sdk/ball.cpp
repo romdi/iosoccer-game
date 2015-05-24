@@ -34,7 +34,6 @@ ConVar
 	sv_ball_drag_enabled("sv_ball_drag_enabled", "1", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY ),
 	
 	sv_ball_spin( "sv_ball_spin", "4000", FCVAR_NOTIFY ),
-	sv_ball_spin_exponent( "sv_ball_spin_exponent", "0.5", FCVAR_NOTIFY ),
 	sv_ball_spin_mincoeff( "sv_ball_spin_mincoeff", "0.0", FCVAR_NOTIFY ),
 	sv_ball_defaultspin( "sv_ball_defaultspin", "150", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY ),
 	sv_ball_topspin_coeff( "sv_ball_topspin_coeff", "1.25", FCVAR_NOTIFY ),
@@ -105,12 +104,6 @@ ConVar
 	sv_ball_pitchup_exponent("sv_ball_pitchup_exponent", "3.0", FCVAR_NOTIFY),
 	sv_ball_pitchup_fixedcoeff("sv_ball_pitchup_fixedcoeff", "0.3", FCVAR_NOTIFY),
 
-	sv_ball_bestbackspinangle_start("sv_ball_bestbackspinangle_start", "-65", FCVAR_NOTIFY),
-	sv_ball_bestbackspinangle_end("sv_ball_bestbackspinangle_end", "-30", FCVAR_NOTIFY),
-	
-	sv_ball_besttopspinangle_start("sv_ball_besttopspinangle_start", "-50", FCVAR_NOTIFY),
-	sv_ball_besttopspinangle_end("sv_ball_besttopspinangle_end", "0", FCVAR_NOTIFY),
-	
 	sv_ball_normalshot_strength("sv_ball_normalshot_strength", "810", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_chargedshot_minstrength("sv_ball_chargedshot_minstrength", "810", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_chargedshot_maxstrength("sv_ball_chargedshot_maxstrength", "1440", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
@@ -135,9 +128,9 @@ ConVar
 	sv_ball_groundshot_minangle("sv_ball_groundshot_minangle", "-7", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_volleyshot_minangle("sv_ball_volleyshot_minangle", "60", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_volleyshot_spincoeff("sv_ball_volleyshot_spincoeff", "1.25", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_rainbowflick_spincoeff("sv_ball_rainbowflick_spincoeff", "0.75", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_rainbowflick_angle("sv_ball_rainbowflick_angle", "-30", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_rainbowflick_dist("sv_ball_rainbowflick_dist", "-10", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_rainbowflick_spincoeff("sv_ball_rainbowflick_spincoeff", "1.0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_chipshot_spincoeff("sv_ball_chipshot_spincoeff", "1.75", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_finesseshot_spincoeff("sv_ball_finesseshot_spincoeff", "1.33", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_header_spincoeff("sv_ball_header_spincoeff", "0.5", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_header_minangle("sv_ball_header_minangle", "70", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_header_maxangle("sv_ball_header_maxangle", "-40", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
@@ -145,6 +138,7 @@ ConVar
 
 	sv_ball_animation_minstrength_strongshot("sv_ball_animation_minstrength_strongshot", "800", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_animation_minstrength_weakshot("sv_ball_animation_minstrength_weakshot", "600", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_animation_minstrength_dribbleshot("sv_ball_animation_minstrength_dribbleshot", "400", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	
 	sv_ball_highlightsdelay_intermissions("sv_ball_highlightsdelay_intermissions", "5.0", FCVAR_NOTIFY),
 	sv_ball_highlightsdelay_cooldown("sv_ball_highlightsdelay_cooldown", "30.0", FCVAR_NOTIFY),
@@ -967,7 +961,7 @@ float CBall::GetChargedshotStrength(float coeff, int minStrength, int maxStrengt
 
 bool CBall::DoGroundShot(bool markOffsidePlayers)
 {
-	int spinFlags = FL_SPIN_PERMIT_ALL;
+	int spinFlags = FL_SPIN_FORCE_NONE;
 	float spinCoeff = 1.0f;
 	float shotStrength = 0;
 	QAngle shotAngle;
@@ -995,11 +989,12 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 		{
 			shotAngle[PITCH] = sv_ball_heelshot_pitch.GetFloat();
 			shotStrength = sv_ball_heelshot_fixedstrength.GetFloat() + sv_ball_heelshot_variablestrength.GetFloat() * pitchCoeff;
-			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEELKICK);
 			shotTakerMinDelay = sv_ball_shottaker_mindelay_short.GetFloat();
+			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEELKICK);
+			EmitSound("Ball.Kicknormal");
 		}
 		// Ball roll
-		else if (m_vPlLocalDirToBall.x >= 0 && (m_pPl->m_nButtons & IN_MOVELEFT || m_pPl->m_nButtons & IN_MOVERIGHT || m_pPl->m_nButtons & IN_BACK))
+		else if (m_vPlLocalDirToBall.x >= 0 && !(m_pPl->m_nButtons & IN_FORWARD) && (m_pPl->m_nButtons & IN_MOVELEFT || m_pPl->m_nButtons & IN_MOVERIGHT || m_pPl->m_nButtons & IN_BACK))
 		{
 			shotTakerMinDelay = 0.0f;
 			shotAngle = m_aPlAng;
@@ -1022,27 +1017,58 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 		}
 		else if (m_pPl->m_nButtons & IN_FORWARD)
 		{
-			// Lift up
-			if (m_vPlLocalDirToBall.x >= 0)
+			if (m_pPl->m_nButtons & IN_MOVELEFT || m_pPl->m_nButtons & IN_MOVERIGHT)
 			{
+				// Finesse shot
+				shotTakerMinDelay = sv_ball_shottaker_mindelay_long.GetFloat();
+				spinFlags = FL_SPIN_PERMIT_SIDE;
+				spinCoeff = sv_ball_finesseshot_spincoeff.GetFloat();
+				shotStrength = GetNormalshotStrength(pitchCoeff, sv_ball_normalshot_strength.GetInt());
 				shotAngle = m_aPlAng;
-				shotAngle[PITCH] = -50;
-				shotStrength = 150 + 425 * pitchCoeff;
-				spinFlags = FL_SPIN_FORCE_BACK;
-				spinCoeff = pow(pitchCoeff, 2);
-				shotTakerMinDelay = pitchCoeff;
+				shotAngle[PITCH] = m_aPlCamAng[PITCH];
+				shotAngle[PITCH] = min(sv_ball_groundshot_minangle.GetFloat(), shotAngle[PITCH]);
+				m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_PASS);
+				EmitSound("Ball.Kicknormal");
 			}
-			// Rainbow flick
 			else
 			{
-				shotAngle = m_aPlAng;
-				shotAngle[PITCH] = -50 - 30 * (1 - pitchCoeff);
-				shotStrength = 475;
-				spinFlags = FL_SPIN_FORCE_TOP;
-				spinCoeff = 1.0f;
-				m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_RAINBOW_FLICK);
-				shotTakerMinDelay = sv_ball_shottaker_mindelay_long.GetFloat();
+				// Chip shot
+				if (m_vPlLocalDirToBall.x >= 0)
+				{
+					shotAngle = m_aPlAng;
+					shotAngle[PITCH] = -35;
+					shotStrength = 125 + 500 * pitchCoeff;
+					spinFlags = FL_SPIN_FORCE_BACK;
+					spinCoeff = pow(pitchCoeff, 3) * sv_ball_chipshot_spincoeff.GetFloat();
+					shotTakerMinDelay = pitchCoeff;
+					m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
+					EmitSound("Ball.Kicknormal");
+				}
+				// Rainbow flick
+				else
+				{
+					shotAngle = m_aPlAng;
+					shotAngle[PITCH] = -50 - 30 * (1 - pitchCoeff);
+					shotStrength = 475;
+					spinFlags = FL_SPIN_FORCE_TOP;
+					spinCoeff = sv_ball_rainbowflick_spincoeff.GetFloat();
+					shotTakerMinDelay = sv_ball_shottaker_mindelay_long.GetFloat();
+					m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_RAINBOW_FLICK);
+					EmitSound("Ball.Kicknormal");
+				}
 			}
+		}
+		else if (m_vPlLocalDirToBall.x >= 0)
+		{
+			// Lift ball
+			shotAngle = m_aPlAng;
+			shotAngle[PITCH] = -70;
+			shotStrength = 250;
+			spinFlags = FL_SPIN_FORCE_NONE;
+			spinCoeff = 0;
+			shotTakerMinDelay = sv_ball_shottaker_mindelay_short.GetFloat();
+			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
+			EmitSound("Ball.Touch");
 		}
 		else
 		{
@@ -1055,6 +1081,7 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 	}
 	else
 	{
+		spinFlags = FL_SPIN_PERMIT_SIDE;
 		shotTakerMinDelay = 0.0f;
 
 		if (m_pPl->IsNormalshooting())
@@ -1076,13 +1103,17 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 		}
 		else if (vel.Length() >= sv_ball_animation_minstrength_weakshot.GetInt())
 		{
-			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_PASS);
+			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KICK);
 			EmitSound("Ball.Kicknormal");
+		}
+		else if (vel.Length() >= sv_ball_animation_minstrength_dribbleshot.GetInt())
+		{
+			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
+			EmitSound("Ball.Touch");
 		}
 		else
 		{
 			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
-			EmitSound("Ball.Touch");
 		}
 	}
 
@@ -1124,7 +1155,7 @@ bool CBall::DoVolleyShot()
 	else
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
 
-	SetVel(vel, 1.0f, FL_SPIN_PERMIT_ALL, BODY_PART_FEET, true, sv_ball_shottaker_mindelay_short.GetFloat());
+	SetVel(vel, 1.0f, FL_SPIN_PERMIT_SIDE, BODY_PART_FEET, true, sv_ball_shottaker_mindelay_short.GetFloat());
 
 	return true;
 }
@@ -1225,13 +1256,12 @@ AngularImpulse CBall::CalcSpin(float coeff, int spinFlags)
 	}
 	else
 	{
-		float speedCoeff = pow(sin(RemapValClamped(m_vVel.Length(), sv_ball_dynamicshotdelay_minshotstrength.GetInt(), sv_ball_dynamicshotdelay_maxshotstrength.GetInt(), sv_ball_spin_mincoeff.GetFloat(), 1.0f) * M_PI), (double)sv_ball_spin_exponent.GetFloat());
 		Vector sideRot = vec3_origin;
 		float sideSpin = 0;
 
-		if (coeff > 0 && (spinFlags & FL_SPIN_PERMIT_SIDE))
+		if (spinFlags & FL_SPIN_PERMIT_SIDE)
 		{
-			sideSpin = speedCoeff * sv_ball_spin.GetInt() * coeff * GetPitchCoeff();
+			sideSpin = sv_ball_spin.GetInt() * coeff * GetPitchCoeff();
 
 			int sidemoveSign = m_pPl->GetSidemoveSign();
 
@@ -1247,28 +1277,11 @@ AngularImpulse CBall::CalcSpin(float coeff, int spinFlags)
 		Vector topRot = -m_vPlRight;
 		float topSpin = 0;
 
-		if (coeff > 0)
-		{
-			if ((spinFlags & FL_SPIN_PERMIT_BACK)
-				&& pitch >= sv_ball_bestbackspinangle_start.GetFloat() && pitch <= sv_ball_bestbackspinangle_end.GetFloat()
-				|| (spinFlags & FL_SPIN_FORCE_BACK))
-			{
-				backSpin = speedCoeff * sv_ball_spin.GetInt() * coeff;
+		if (spinFlags & FL_SPIN_FORCE_BACK)
+			backSpin = sv_ball_spin.GetInt() * coeff;
 
-				if (!(spinFlags & FL_SPIN_FORCE_BACK))
-					backSpin *= sv_ball_backspin_coeff.GetFloat() * pow((double)cos(RemapValClamped(pitch, sv_ball_bestbackspinangle_start.GetFloat(), sv_ball_bestbackspinangle_end.GetFloat(), M_PI * 0.5, M_PI * 1.5)), 2.0);
-			}
-
-			if ((!m_pPl->GetGroundEntity() || (m_pPl->m_nButtons & IN_JUMP)) && (spinFlags & FL_SPIN_PERMIT_TOP)
-				&& pitch >= sv_ball_besttopspinangle_start.GetFloat() && pitch <= sv_ball_besttopspinangle_end.GetFloat()
-				|| (spinFlags & FL_SPIN_FORCE_TOP))
-			{
-				topSpin = speedCoeff * sv_ball_spin.GetInt() * coeff;
-
-				if (!(spinFlags & FL_SPIN_FORCE_TOP))
-					topSpin *= sv_ball_topspin_coeff.GetFloat() * pow((double)cos(RemapValClamped(pitch, sv_ball_besttopspinangle_start.GetFloat(), sv_ball_besttopspinangle_end.GetFloat(), M_PI * 0.5, M_PI * 1.5)), 2.0);
-			}
-		}
+		if (spinFlags & FL_SPIN_FORCE_TOP)
+			topSpin = sv_ball_spin.GetInt() * coeff;
 
 		worldRot = sideRot * sideSpin + backRot * backSpin + topRot * topSpin;
 	}
