@@ -289,17 +289,14 @@ void CMatchBall::State_NORMAL_Think()
 
 	if (SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES)
 	{
-		if (m_ePenaltyState == PENALTY_KICKED)
+		if (m_ePenaltyState == PENALTY_KICKED && !CheckGoal() && !CheckGoalLine())
 		{
-			if (!CheckGoal())
-			{
-				m_pPl = GetGlobalTeam(m_nFoulingTeam)->GetPlayerByPosType(POS_GK);
+			m_pPl = GetGlobalTeam(m_nFoulingTeam)->GetPlayerByPosType(POS_GK);
 
-				if (m_pPl && m_pPl->IsShooting())
-				{
-					UpdateCarrier();
-					DoBodyPartAction();
-				}
+			if (m_pPl && m_pPl->IsShooting())
+			{
+				UpdateCarrier();
+				DoBodyPartAction();
 			}
 		}
 
@@ -1180,6 +1177,13 @@ bool CMatchBall::CheckGoalLine()
 	if (team == TEAM_INVALID)
 		return false;
 
+	if (SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES)
+	{
+		SetPenaltyState(PENALTY_MISSED);
+		m_bHasQueuedState = true;
+		return true;
+	}
+
 	if (m_bIsAdvantage)
 	{
 		if (m_bIsPenalty)
@@ -1226,6 +1230,8 @@ bool CMatchBall::CheckGoalLine()
 		//SetMatchEvent(MATCH_EVENT_THROWIN, NULL, LastOppTeam(false));
 		State_Transition(BALL_STATE_GOALKICK, sv_ball_statetransition_activationdelay_normal.GetFloat());
 	}
+
+	return true;
 }
 
 bool CMatchBall::CheckGoal()
