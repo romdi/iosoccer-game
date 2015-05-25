@@ -43,7 +43,7 @@ public:
 	void			State_Enter(ball_state_t newState, bool cancelQueuedState);
 	void			State_Think();
 	void			State_Leave(ball_state_t newState);
-	void			State_Transition(ball_state_t newState, float delay = 0.0f, bool cancelQueuedState = false, bool isShortMessageDelay = false);
+	void			State_Transition(ball_state_t nextState, float nextStateMessageDelay = 0, float nextStatePostMessageDelay = 0, bool cancelQueuedState = false);
 
 	void State_NORMAL_Enter();			void State_NORMAL_Think();			void State_NORMAL_Leave(ball_state_t newState);
 	void State_KEEPERHANDS_Enter();		void State_KEEPERHANDS_Think();		void State_KEEPERHANDS_Leave(ball_state_t newState);

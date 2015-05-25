@@ -13,9 +13,9 @@ extern ConVar
 	sv_ball_shottaker_mindelay_long;
 
 ConVar
-	sv_ball_statetransition_activationdelay_short("sv_ball_statetransition_activationdelay_short", "0.1", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_statetransition_activationdelay_normal("sv_ball_statetransition_activationdelay_normal", "1.25", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_statetransition_activationdelay_long("sv_ball_statetransition_activationdelay_long", "2.0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_statetransition_postmessagedelay_short("sv_ball_statetransition_postmessagedelay_short", "0.1", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_statetransition_postmessagedelay_normal("sv_ball_statetransition_postmessagedelay_normal", "1.25", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_statetransition_postmessagedelay_long("sv_ball_statetransition_postmessagedelay_long", "2.0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_statetransition_messagedelay_normal("sv_ball_statetransition_messagedelay_normal", "0.5", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_statetransition_messagedelay_short("sv_ball_statetransition_messagedelay_short", "0.1", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_yellowcardballdist_forward("sv_ball_yellowcardballdist_forward", "70", FCVAR_NOTIFY),
@@ -119,7 +119,7 @@ void CMatchBall::Reset()
 	m_pLastActivePlayer = NULL;
 	m_pSetpieceTaker = NULL;
 	m_flStateLeaveTime = gpGlobals->curtime;
-	m_flStateActivationDelay = 0;
+	m_flNextStateMessageTime = -1;
 	m_pOtherPl = NULL;
 	m_pPossessingPl = NULL;
 	m_nPossessingTeam = TEAM_INVALID;
@@ -133,24 +133,24 @@ void CMatchBall::Reset()
 	RemoveAllTouches();
 }
 
-void CMatchBall::State_Transition(ball_state_t newState, float delay /*= 0.0f*/, bool cancelQueuedState /*= false*/, bool isShortMessageDelay /*= false*/)
+void CMatchBall::State_Transition(ball_state_t nextState, float nextStateMessageDelay /*= 0*/, float nextStatePostMessageDelay /*= 0*/, bool cancelQueuedState /*= false*/)
 {
-	if (newState != BALL_STATE_KEEPERHANDS)
+	if (nextState != BALL_STATE_KEEPERHANDS)
 		m_bIsAdvantage = false;
 
-	if (newState != BALL_STATE_NORMAL)
+	if (nextState != BALL_STATE_NORMAL)
 		m_bBallInAirAfterThrowIn = false;
 
-	if (delay == 0)
+	if (nextStateMessageDelay == 0 && nextStatePostMessageDelay == 0)
 	{
-		State_Leave(newState);
-		State_Enter(newState, cancelQueuedState);
+		State_Leave(nextState);
+		State_Enter(nextState, cancelQueuedState);
 	}
 	else
 	{
-		m_eNextState = newState;
-		m_flStateActivationDelay = delay;
-		m_flStateLeaveTime = gpGlobals->curtime + m_flStateActivationDelay + (isShortMessageDelay ? sv_ball_statetransition_messagedelay_short : sv_ball_statetransition_messagedelay_normal).GetFloat();
+		m_eNextState = nextState;
+		m_flNextStateMessageTime = gpGlobals->curtime + nextStateMessageDelay;
+		m_flStateLeaveTime = gpGlobals->curtime + nextStateMessageDelay + nextStatePostMessageDelay;
 		m_bHasQueuedState = true;
 	}
 }
@@ -168,7 +168,7 @@ void CMatchBall::State_Enter(ball_state_t newState, bool cancelQueuedState)
 
 	m_flStateEnterTime = gpGlobals->curtime;
 	m_flStateTimelimit = -1;
-	m_bNextStateMessageSent = false;
+	m_flNextStateMessageTime = -1;
 
 	m_pPl = NULL;
 	m_pOtherPl = NULL;
@@ -216,10 +216,10 @@ void CMatchBall::State_Think()
 
 	if (m_eNextState != BALL_STATE_NONE)
 	{
-		if (!m_bNextStateMessageSent && gpGlobals->curtime >= m_flStateLeaveTime - m_flStateActivationDelay && m_eNextState != BALL_STATE_KICKOFF)
+		if (m_flNextStateMessageTime != -1 && gpGlobals->curtime >= m_flNextStateMessageTime && m_eNextState != BALL_STATE_KICKOFF)
 		{
 			SendNotifications();
-			m_bNextStateMessageSent = true;
+			m_flNextStateMessageTime = -1;
 		}
 		else if (gpGlobals->curtime >= m_flStateLeaveTime)
 		{
@@ -757,7 +757,7 @@ void CMatchBall::State_GOAL_Enter()
 		gameeventmanager->FireEvent(pEvent);
 	}
 
-	State_Transition(BALL_STATE_KICKOFF, delay);
+	State_Transition(BALL_STATE_KICKOFF, 0, delay);
 
 	ReplayManager()->StartReplay(false);
 }
@@ -1083,9 +1083,9 @@ void CMatchBall::State_KEEPERHANDS_Think()
 	if (m_bIsAdvantage)
 	{
 		if (m_bIsPenalty)
-			State_Transition(BALL_STATE_PENALTY, sv_ball_statetransition_activationdelay_short.GetFloat());
+			State_Transition(BALL_STATE_PENALTY, sv_ball_statetransition_messagedelay_normal.GetFloat(), sv_ball_statetransition_postmessagedelay_short.GetFloat());
 		else
-			State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_activationdelay_short.GetFloat());
+			State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_messagedelay_normal.GetFloat(), sv_ball_statetransition_postmessagedelay_short.GetFloat());
 
 		return;
 	}
@@ -1128,9 +1128,9 @@ bool CMatchBall::CheckSideline()
 	if (m_bIsAdvantage)
 	{
 		if (m_bIsPenalty)
-			State_Transition(BALL_STATE_PENALTY, sv_ball_statetransition_activationdelay_short.GetFloat());
+			State_Transition(BALL_STATE_PENALTY, sv_ball_statetransition_messagedelay_normal.GetFloat(), sv_ball_statetransition_postmessagedelay_short.GetFloat());
 		else
-			State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_activationdelay_short.GetFloat());
+			State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_messagedelay_normal.GetFloat(), sv_ball_statetransition_postmessagedelay_short.GetFloat());
 
 		return true;
 	}
@@ -1160,7 +1160,7 @@ bool CMatchBall::CheckSideline()
 	m_vTriggerTouchPos = m_vPos;
 
 	//SetMatchEvent(MATCH_EVENT_THROWIN, NULL, LastOppTeam(false));
-	State_Transition(BALL_STATE_THROWIN, sv_ball_statetransition_activationdelay_normal.GetFloat());
+	State_Transition(BALL_STATE_THROWIN, sv_ball_statetransition_messagedelay_normal.GetFloat(), sv_ball_statetransition_postmessagedelay_normal.GetFloat());
 
 	return true;
 }
@@ -1187,9 +1187,9 @@ bool CMatchBall::CheckGoalLine()
 	if (m_bIsAdvantage)
 	{
 		if (m_bIsPenalty)
-			State_Transition(BALL_STATE_PENALTY, sv_ball_statetransition_activationdelay_short.GetFloat());
+			State_Transition(BALL_STATE_PENALTY, sv_ball_statetransition_messagedelay_normal.GetFloat(), sv_ball_statetransition_postmessagedelay_short.GetFloat());
 		else
-			State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_activationdelay_short.GetFloat());
+			State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_messagedelay_normal.GetFloat(), sv_ball_statetransition_postmessagedelay_short.GetFloat());
 
 		return true;
 	}
@@ -1223,12 +1223,12 @@ bool CMatchBall::CheckGoalLine()
 	if (LastTeam(false) == team)
 	{
 		//SetMatchEvent(MATCH_EVENT_CORNER, NULL, LastOppTeam(false));
-		State_Transition(BALL_STATE_CORNER, sv_ball_statetransition_activationdelay_normal.GetFloat());
+		State_Transition(BALL_STATE_CORNER, sv_ball_statetransition_messagedelay_normal.GetFloat(), sv_ball_statetransition_postmessagedelay_normal.GetFloat());
 	}
 	else
 	{
 		//SetMatchEvent(MATCH_EVENT_THROWIN, NULL, LastOppTeam(false));
-		State_Transition(BALL_STATE_GOALKICK, sv_ball_statetransition_activationdelay_normal.GetFloat());
+		State_Transition(BALL_STATE_GOALKICK, sv_ball_statetransition_messagedelay_normal.GetFloat(), sv_ball_statetransition_postmessagedelay_normal.GetFloat());
 	}
 
 	return true;
@@ -1257,9 +1257,9 @@ bool CMatchBall::CheckGoal()
 	if (m_bIsAdvantage && m_nTeam == m_nFouledTeam)
 	{
 		if (m_bIsPenalty)
-			State_Transition(BALL_STATE_PENALTY, sv_ball_statetransition_activationdelay_short.GetFloat());
+			State_Transition(BALL_STATE_PENALTY, sv_ball_statetransition_messagedelay_normal.GetFloat(), sv_ball_statetransition_postmessagedelay_short.GetFloat());
 		else
-			State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_activationdelay_short.GetFloat());
+			State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_messagedelay_normal.GetFloat(), sv_ball_statetransition_postmessagedelay_short.GetFloat());
 
 		return true;
 	}
@@ -1280,12 +1280,12 @@ bool CMatchBall::CheckGoal()
 		if (LastTeam(true) == team)
 		{
 			//SetMatchEvent(MATCH_EVENT_CORNER, NULL, LastOppTeam(false));
-			State_Transition(BALL_STATE_CORNER, sv_ball_statetransition_activationdelay_normal.GetFloat());
+			State_Transition(BALL_STATE_CORNER, sv_ball_statetransition_messagedelay_normal.GetFloat(), sv_ball_statetransition_postmessagedelay_normal.GetFloat());
 		}
 		else
 		{
 			//SetMatchEvent(MATCH_EVENT_THROWIN, NULL, LastOppTeam(false));
-			State_Transition(BALL_STATE_GOALKICK, sv_ball_statetransition_activationdelay_normal.GetFloat());
+			State_Transition(BALL_STATE_GOALKICK, sv_ball_statetransition_messagedelay_normal.GetFloat(), sv_ball_statetransition_postmessagedelay_normal.GetFloat());
 		}
 
 		return true;
@@ -1331,7 +1331,7 @@ bool CMatchBall::CheckGoal()
 	if (pKeeper)
 		pKeeper->AddGoalConceded();
 
-	State_Transition(BALL_STATE_GOAL, sv_ball_statetransition_activationdelay_short.GetFloat(), false, true);
+	State_Transition(BALL_STATE_GOAL, sv_ball_statetransition_messagedelay_short.GetFloat(), sv_ball_statetransition_postmessagedelay_short.GetFloat());
 
 	return true;
 }
@@ -1360,16 +1360,16 @@ bool CMatchBall::CheckOffside()
 		if (m_bIsAdvantage)
 		{
 			if (m_bIsPenalty)
-				State_Transition(BALL_STATE_PENALTY, sv_ball_statetransition_activationdelay_short.GetFloat());
+				State_Transition(BALL_STATE_PENALTY, sv_ball_statetransition_messagedelay_normal.GetFloat(), sv_ball_statetransition_postmessagedelay_short.GetFloat());
 			else
-				State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_activationdelay_short.GetFloat());
+				State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_messagedelay_normal.GetFloat(), sv_ball_statetransition_postmessagedelay_short.GetFloat());
 		}
 		else
 		{
 			pPl->AddOffside();
 			SetFoulParams(FOUL_OFFSIDE, pPl->GetOffsidePos(), pPl);
 			SDKGameRules()->SetOffsideLinePositions(pPl->GetOffsideBallPos().y, pPl->GetOffsidePos().y, pPl->GetOffsideLastOppPlayerPos().y);
-			State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_activationdelay_long.GetFloat());
+			State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_messagedelay_normal.GetFloat(), sv_ball_statetransition_postmessagedelay_long.GetFloat());
 		}
 
 		return true;
@@ -1607,7 +1607,7 @@ void CMatchBall::Touched(bool isShot, body_part_t bodyPart, const Vector &oldVel
 		&& m_Touches.Tail()->m_eBallState != BALL_STATE_KEEPERHANDS && m_pPl->GetTeam()->GetNumPlayers() > 2 && m_pPl->GetOppTeam()->GetNumPlayers() > 2) // Double touch foul
 	{
 		SetFoulParams(FOUL_DOUBLETOUCH, m_pPl->GetLocalOrigin(), m_pPl);
-		State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_activationdelay_long.GetFloat());
+		State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_messagedelay_normal.GetFloat(), sv_ball_statetransition_postmessagedelay_long.GetFloat());
 
 		return;
 	}
@@ -1674,16 +1674,16 @@ void CMatchBall::Touched(bool isShot, body_part_t bodyPart, const Vector &oldVel
 		if (m_bIsAdvantage)
 		{
 			if (m_bIsPenalty)
-				State_Transition(BALL_STATE_PENALTY, sv_ball_statetransition_activationdelay_short.GetFloat());
+				State_Transition(BALL_STATE_PENALTY, sv_ball_statetransition_messagedelay_normal.GetFloat(), sv_ball_statetransition_postmessagedelay_short.GetFloat());
 			else
-				State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_activationdelay_short.GetFloat());
+				State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_messagedelay_normal.GetFloat(), sv_ball_statetransition_postmessagedelay_short.GetFloat());
 		}
 		else
 		{
 			m_pPl->AddOffside();
 			SetFoulParams(FOUL_OFFSIDE, m_pPl->GetOffsidePos(), m_pPl);
 			SDKGameRules()->SetOffsideLinePositions(m_pPl->GetOffsideBallPos().y, m_pPl->GetOffsidePos().y, m_pPl->GetOffsideLastOppPlayerPos().y);
-			State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_activationdelay_long.GetFloat());
+			State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_messagedelay_normal.GetFloat(), sv_ball_statetransition_postmessagedelay_long.GetFloat());
 		}
 	}
 }
@@ -1812,7 +1812,7 @@ bool CMatchBall::CheckFoul(bool canShootBall, const Vector &localDirToBall)
 		// Don't overwrite a pending penalty with a free-kick
 		if (m_bIsAdvantage && m_bIsPenalty && !isPenalty)
 		{
-			State_Transition(BALL_STATE_PENALTY, sv_ball_statetransition_activationdelay_short.GetFloat());
+			State_Transition(BALL_STATE_PENALTY, sv_ball_statetransition_messagedelay_normal.GetFloat(), sv_ball_statetransition_postmessagedelay_short.GetFloat());
 		}
 		else
 		{
@@ -2165,7 +2165,7 @@ void CMatchBall::CheckAdvantage()
 		{
 			if (m_bIsPenalty)
 			{
-				State_Transition(BALL_STATE_PENALTY, sv_ball_statetransition_activationdelay_short.GetFloat());
+				State_Transition(BALL_STATE_PENALTY, sv_ball_statetransition_messagedelay_normal.GetFloat(), sv_ball_statetransition_postmessagedelay_short.GetFloat());
 			}
 			else
 			{
@@ -2178,9 +2178,9 @@ void CMatchBall::CheckAdvantage()
 					|| pLastInfo && pLastInfo->m_flTime <= m_flFoulTime + sv_ball_advantage_ignore_duration.GetFloat()) // Last shot happened shortly after the foul was committed
 				{
 					if (m_bIsPenalty)
-						State_Transition(BALL_STATE_PENALTY, sv_ball_statetransition_activationdelay_long.GetFloat());
+						State_Transition(BALL_STATE_PENALTY, sv_ball_statetransition_messagedelay_normal.GetFloat(), sv_ball_statetransition_postmessagedelay_long.GetFloat());
 					else
-						State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_activationdelay_long.GetFloat());
+						State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_messagedelay_normal.GetFloat(), sv_ball_statetransition_postmessagedelay_long.GetFloat());
 				}
 			}
 
@@ -2197,9 +2197,9 @@ void CMatchBall::CheckAdvantage()
 					if (pPl && pPl->GetTeamNumber() == m_nFoulingTeam)
 					{
 						if (m_bIsPenalty)
-							State_Transition(BALL_STATE_PENALTY, sv_ball_statetransition_activationdelay_long.GetFloat());
+							State_Transition(BALL_STATE_PENALTY, sv_ball_statetransition_messagedelay_normal.GetFloat(), sv_ball_statetransition_postmessagedelay_long.GetFloat());
 						else
-							State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_activationdelay_long.GetFloat());
+							State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_messagedelay_normal.GetFloat(), sv_ball_statetransition_postmessagedelay_long.GetFloat());
 					}
 				}
 				else if (LastPl(true) && LastPl(true)->GetTeamNumber() == m_nFouledTeam && m_nInPenBoxOfTeam == m_nFoulingTeam)

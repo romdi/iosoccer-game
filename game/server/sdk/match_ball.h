@@ -20,7 +20,7 @@ public:
 	void			State_Enter(ball_state_t newState, bool cancelQueuedState);
 	void			State_Think();
 	void			State_Leave(ball_state_t newState);
-	void			State_Transition(ball_state_t newState, float delay = 0.0f, bool cancelQueuedState = false, bool isShortMessageDelay = false);
+	void			State_Transition(ball_state_t nextState, float nextStateMessageDelay = 0, float nextStatePostMessageDelay = 0, bool cancelQueuedState = false);
 
 	void State_STATIC_Enter();			void State_STATIC_Think();			void State_STATIC_Leave(ball_state_t newState);
 	void State_NORMAL_Enter();			void State_NORMAL_Think();			void State_NORMAL_Leave(ball_state_t newState);
@@ -63,9 +63,8 @@ public:
 	bool			CheckGoal();
 	void			CheckFieldZone();
 
-	float			m_flStateActivationDelay;
+	float			m_flNextStateMessageTime;
 	float			m_flSetpieceCloseStartTime;
-	bool			m_bNextStateMessageSent;
 	float			m_flStateTimelimit;
 
 	CHandle<CSDKPlayer>	m_pOtherPl;

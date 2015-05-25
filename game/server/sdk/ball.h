@@ -144,7 +144,7 @@ public:
 	const char		*GetSkinName() { return m_szSkinName; }
 	void			SetSkinName(const char *skinName);
 
-	virtual void State_Transition(ball_state_t newState, float delay = 0.0f, bool cancelQueuedState = false, bool isShortMessageDelay = false) = 0;
+	virtual void State_Transition(ball_state_t nextState, float nextStateMessageDelay = 0, float nextStatePostMessageDelay = 0, bool cancelQueuedState = false) = 0;
 
 	float			GetStateEnterTime() { return m_flStateEnterTime; }
 	void			RemoveAllTouches();

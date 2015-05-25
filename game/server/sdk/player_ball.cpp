@@ -142,10 +142,10 @@ CPlayerBall::~CPlayerBall()
 {
 }
 
-void CPlayerBall::State_Transition(ball_state_t newState, float delay /*= 0.0f*/, bool cancelQueuedState /*= false*/, bool isShortMessageDelay /*= false*/)
+void CPlayerBall::State_Transition(ball_state_t nextState, float nextStateMessageDelay /*= 0*/, float nextStatePostMessageDelay /*= 0*/, bool cancelQueuedState /*= false*/)
 {
-	State_Leave(newState);
-	State_Enter(newState, cancelQueuedState);
+	State_Leave(nextState);
+	State_Enter(nextState, cancelQueuedState);
 }
 
 void CPlayerBall::State_Enter(ball_state_t newState, bool cancelQueuedState)

@@ -1740,7 +1740,7 @@ void CSDKGameRules::State_FIRST_HALF_Enter()
 	m_nRealMatchStartTime = time(NULL);
 
 	ReloadSettings();
-	GetMatchBall()->State_Transition(BALL_STATE_KICKOFF, 0, true);
+	GetMatchBall()->State_Transition(BALL_STATE_KICKOFF, 0, 0, true);
 
 	IGameEvent *pEvent = gameeventmanager->CreateEvent("wakeupcall");
 	if (pEvent)
@@ -1791,7 +1791,7 @@ void CSDKGameRules::State_SECOND_HALF_Enter()
 	SetKickOffTeam(GetGlobalTeam(m_nFirstHalfKickOffTeam)->GetOppTeamNumber());
 
 	CPlayerPersistentData::AddToAllMaxStaminas(mp_stamina_max_add_halftime.GetFloat());
-	GetMatchBall()->State_Transition(BALL_STATE_KICKOFF, 0, true);
+	GetMatchBall()->State_Transition(BALL_STATE_KICKOFF, 0, 0, true);
 	//GetMatchBall()->EmitSound("Crowd.YNWA");
 }
 
@@ -1839,7 +1839,7 @@ void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Enter()
 	SetKickOffTeam(m_nFirstHalfKickOffTeam);
 
 	CPlayerPersistentData::AddToAllMaxStaminas(mp_stamina_max_add_extratime_intermission.GetFloat());
-	GetMatchBall()->State_Transition(BALL_STATE_KICKOFF, 0, true);
+	GetMatchBall()->State_Transition(BALL_STATE_KICKOFF, 0, 0, true);
 }
 
 void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Think()
@@ -1881,7 +1881,7 @@ void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Enter()
 	SetKickOffTeam(GetGlobalTeam(m_nFirstHalfKickOffTeam)->GetOppTeamNumber());
 
 	CPlayerPersistentData::AddToAllMaxStaminas(mp_stamina_max_add_extratime_halftime.GetFloat());
-	GetMatchBall()->State_Transition(BALL_STATE_KICKOFF, 0, true);
+	GetMatchBall()->State_Transition(BALL_STATE_KICKOFF, 0, 0, true);
 }
 
 void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Think()
@@ -1963,7 +1963,7 @@ void CSDKGameRules::State_PENALTIES_Think()
 				|| GetMatchBall()->GetPenaltyState() == PENALTY_MISSED
 				|| GetMatchBall()->GetPenaltyState() == PENALTY_ABORTED_ILLEGAL_MOVE)
 			{
-				GetMatchBall()->State_Transition(BALL_STATE_NORMAL, 0, true);
+				GetMatchBall()->State_Transition(BALL_STATE_NORMAL, 0, 0, true);
 
 				if (GetMatchBall()->GetPenaltyState() == PENALTY_SCORED)
 				{
@@ -2053,7 +2053,7 @@ void CSDKGameRules::State_PENALTIES_Think()
 
 				GetMatchBall()->SetPenaltyTaker(pPenTaker);
 				GetMatchBall()->SetPenaltyState(PENALTY_ASSIGNED);
-				GetMatchBall()->State_Transition(BALL_STATE_PENALTY, 0, true);
+				GetMatchBall()->State_Transition(BALL_STATE_PENALTY, 0, 0, true);
 				m_flNextPenalty = -1;
 				return;
 			}
@@ -2137,7 +2137,7 @@ void CSDKGameRules::ApplyIntermissionSettings(bool startHighlights, bool movePla
 {
 	if (movePlayers)
 	{
-		GetMatchBall()->State_Transition(BALL_STATE_NORMAL, 0, true);
+		GetMatchBall()->State_Transition(BALL_STATE_NORMAL, 0, 0, true);
 		GetMatchBall()->SetPos(m_vKickOff);
 
 		if (m_bIsCeremony)
@@ -2958,7 +2958,7 @@ void CSDKGameRules::SetMatchDisplayTimeSeconds(int seconds)
 
 	ResetMatch();
 	m_flMatchStartTime = gpGlobals->curtime - (seconds / (90.0f / mp_timelimit_match.GetFloat()));
-	GetMatchBall()->State_Transition(BALL_STATE_STATIC, 0, true);
+	GetMatchBall()->State_Transition(BALL_STATE_STATIC, 0, 0, true);
 	SetBottomTeam(m_nFirstHalfBottomTeam);
 	SetKickOffTeam(m_nFirstHalfKickOffTeam);
 	State_Transition(matchPeriod);
