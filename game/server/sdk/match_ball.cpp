@@ -95,6 +95,7 @@ CMatchBall::CMatchBall()
 	m_bIsAdvantage = false;
 	m_bBallInAirAfterThrowIn = false;
 	m_flStateTimelimit = -1;
+	m_flTotalStateTransitionTime = 0;
 }
 
 CMatchBall::~CMatchBall()
@@ -128,6 +129,7 @@ void CMatchBall::Reset()
 	m_bIsAdvantage = false;
 	m_bBallInAirAfterThrowIn = false;
 	m_flStateTimelimit = -1;
+	m_flTotalStateTransitionTime = 0;
 
 	UnmarkOffsidePlayers();
 	RemoveAllTouches();
@@ -152,6 +154,8 @@ void CMatchBall::State_Transition(ball_state_t nextState, float nextStateMessage
 		m_flNextStateMessageTime = gpGlobals->curtime + nextStateMessageDelay;
 		m_flStateLeaveTime = gpGlobals->curtime + nextStateMessageDelay + nextStatePostMessageDelay;
 		m_bHasQueuedState = true;
+
+		m_flTotalStateTransitionTime += nextStateMessageDelay + nextStatePostMessageDelay;
 	}
 }
 
@@ -259,7 +263,7 @@ void CMatchBall::State_Think()
 
 void CMatchBall::State_STATIC_Enter()
 {
-	SDKGameRules()->StopMeteringInjuryTime();
+	SDKGameRules()->StopMeteringClockStoppedTime();
 }
 
 void CMatchBall::State_STATIC_Think()
@@ -269,7 +273,7 @@ void CMatchBall::State_STATIC_Think()
 void CMatchBall::State_STATIC_Leave(ball_state_t newState)
 {
 	if (!SDKGameRules()->IsIntermissionState())
-		SDKGameRules()->StartMeteringInjuryTime();
+		SDKGameRules()->StartMeteringClockStoppedTime();
 }
 
 void CMatchBall::State_NORMAL_Enter()
@@ -277,7 +281,7 @@ void CMatchBall::State_NORMAL_Enter()
 	m_pPhys->EnableMotion(true);
 	EnablePlayerCollisions(true);
 	m_pPhys->Wake();
-	SDKGameRules()->StopMeteringInjuryTime();
+	SDKGameRules()->StopMeteringClockStoppedTime();
 	//SetMatchEvent(MATCH_EVENT_NONE);
 	//SetMatchSubEvent(MATCH_EVENT_NONE);
 }
@@ -345,7 +349,7 @@ void CMatchBall::State_NORMAL_Leave(ball_state_t newState)
 	UpdatePossession(NULL);
 
 	if (!SDKGameRules()->IsIntermissionState())
-		SDKGameRules()->StartMeteringInjuryTime();
+		SDKGameRules()->StartMeteringClockStoppedTime();
 }
 
 void CMatchBall::State_THROWIN_Enter()

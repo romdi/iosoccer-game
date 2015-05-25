@@ -72,6 +72,7 @@ ConVar mp_timelimit_extratime_intermission( "mp_timelimit_extratime_intermission
 ConVar mp_timelimit_penalties_intermission( "mp_timelimit_penalties_intermission", "0.5", FCVAR_NOTIFY|FCVAR_REPLICATED, "time before penalties start" );
 ConVar mp_injurytime_min("mp_injurytime_min", "1", FCVAR_NOTIFY);
 ConVar mp_injurytime_max("mp_injurytime_max", "4", FCVAR_NOTIFY);
+ConVar mp_injurytime_coeff("mp_injurytime_coeff", "1.0", FCVAR_NOTIFY);
 ConVar mp_extratime( "mp_extratime", "1", FCVAR_NOTIFY|FCVAR_REPLICATED );
 ConVar mp_penalties( "mp_penalties", "1", FCVAR_NOTIFY|FCVAR_REPLICATED );
 

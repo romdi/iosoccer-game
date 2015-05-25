@@ -28,6 +28,7 @@ extern ConVar
 	mp_timelimit_cooldown,
 	mp_injurytime_min,
 	mp_injurytime_max,
+	mp_injurytime_coeff,
 	mp_extratime,
 	mp_penalties,
 	mp_showstatetransitions,

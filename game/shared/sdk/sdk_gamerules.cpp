@@ -274,8 +274,8 @@ BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 	RecvPropTime( RECVINFO( m_flMatchStartTime ) ),
 	RecvPropInt( RECVINFO( m_eMatchPeriod) ),
 	RecvPropIntWithMinusOneFlag( RECVINFO( m_nAnnouncedInjuryTime) ),
-	RecvPropTime( RECVINFO( m_flInjuryTimeStart) ),
-	RecvPropTime( RECVINFO( m_flInjuryTime) ),
+	RecvPropTime( RECVINFO( m_flClockStoppedStart) ),
+	RecvPropTime( RECVINFO( m_flClockStoppedTime) ),
 
 	RecvPropInt(RECVINFO(m_nShieldType)),
 	RecvPropInt(RECVINFO(m_nShieldTeam)),
@@ -306,8 +306,8 @@ BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 	//SendPropInt( SENDINFO( m_iDuration) ),
 	SendPropInt( SENDINFO( m_eMatchPeriod ), 4, SPROP_UNSIGNED),
 	SendPropIntWithMinusOneFlag( SENDINFO( m_nAnnouncedInjuryTime ), 4),
-	SendPropTime( SENDINFO( m_flInjuryTimeStart )),
-	SendPropTime( SENDINFO( m_flInjuryTime )),
+	SendPropTime( SENDINFO( m_flClockStoppedStart )),
+	SendPropTime( SENDINFO( m_flClockStoppedTime )),
 
 	SendPropInt(SENDINFO(m_nShieldType), 3, SPROP_UNSIGNED),
 	SendPropInt(SENDINFO(m_nShieldTeam), 3),
@@ -449,8 +449,8 @@ CSDKGameRules::CSDKGameRules()
 	m_flLastAwayCheckTime = gpGlobals->curtime;
 	m_flNextPenalty = gpGlobals->curtime;
 	m_nPenaltyTakingTeam = TEAM_HOME;
-	m_flInjuryTime = 0;
-	m_flInjuryTimeStart = -1;
+	m_flClockStoppedTime = 0;
+	m_flClockStoppedStart = -1;
 	m_pPrecip = NULL;
 	m_nFirstHalfBottomTeam = TEAM_HOME;
 	m_nBottomTeam = TEAM_HOME;
@@ -1474,8 +1474,8 @@ void CSDKGameRules::State_Enter( match_period_t newState )
 	else
 		m_flStateEnterTime = gpGlobals->curtime;
 
-	m_flInjuryTime = 0.0f;
-	m_flInjuryTimeStart = -1;
+	m_flClockStoppedTime = 0.0f;
+	m_flClockStoppedStart = -1;
 	m_nAnnouncedInjuryTime = -1;
 
 	if ( mp_showstatetransitions.GetInt() > 0 )
@@ -1622,7 +1622,7 @@ void CSDKGameRules::State_Think()
 			}
 
 			int additionalTime = m_nAnnouncedInjuryTime == -1 ? 0 : m_nAnnouncedInjuryTime + (abs(m_nBallZone) < 50 ? 0 : 30);
-			m_flStateTimeLeft += m_flInjuryTime + additionalTime * 60 / (90.0f / mp_timelimit_match.GetFloat());
+			m_flStateTimeLeft += m_flClockStoppedTime + additionalTime * 60 / (90.0f / mp_timelimit_match.GetFloat());
 
 			// Check for player auto-rotation
 			if (sv_playerrotation_enabled.GetBool() && m_PlayerRotationMinutes.Count() > 0 && GetMatchDisplayTimeSeconds(false) / 60 >= m_PlayerRotationMinutes.Head()
@@ -2188,7 +2188,10 @@ bool CSDKGameRules::CheckAutoStart()
 
 void CSDKGameRules::CalcAnnouncedInjuryTime()
 {
-	m_nAnnouncedInjuryTime = max(0, g_IOSRand.RandomInt(mp_injurytime_min.GetInt(), mp_injurytime_max.GetInt()));
+	int adjustedTransitionTime = GetMatchBall()->m_flTotalStateTransitionTime / 60 * (90.0f / mp_timelimit_match.GetFloat()) * mp_injurytime_coeff.GetFloat();
+	m_nAnnouncedInjuryTime = clamp(adjustedTransitionTime, mp_injurytime_min.GetInt(), mp_injurytime_max.GetInt());
+
+	UTIL_ClientPrintAll(HUD_PRINTTALK, UTIL_VarArgs("DEBUG: State transition time: raw: %.2f seconds, adjusted: %d minutes", GetMatchBall()->m_flTotalStateTransitionTime, adjustedTransitionTime));
 }
 
 #include <ctype.h>
@@ -2686,19 +2689,19 @@ CBaseEntity *CSDKGameRules::GetPlayerSpawnSpot( CBasePlayer *pPlayer )
 	return NULL;
 }
 
-void CSDKGameRules::StartMeteringInjuryTime()
+void CSDKGameRules::StartMeteringClockStoppedTime()
 {
-	StopMeteringInjuryTime();
-	m_flInjuryTimeStart = gpGlobals->curtime;
+	StopMeteringClockStoppedTime();
+	m_flClockStoppedStart = gpGlobals->curtime;
 }
 
-void CSDKGameRules::StopMeteringInjuryTime()
+void CSDKGameRules::StopMeteringClockStoppedTime()
 {
-	if (m_flInjuryTimeStart != -1)
+	if (m_flClockStoppedStart != -1)
 	{
-		float timePassed = gpGlobals->curtime - m_flInjuryTimeStart;
-		m_flInjuryTime += timePassed;
-		m_flInjuryTimeStart = -1;
+		float timePassed = gpGlobals->curtime - m_flClockStoppedStart;
+		m_flClockStoppedTime += timePassed;
+		m_flClockStoppedStart = -1;
 
 		//for (int i = 1; i <= gpGlobals->maxClients; i++)
 		//{
@@ -2747,9 +2750,9 @@ int CSDKGameRules::GetShieldRadius(int team, bool isTaker)
 
 int CSDKGameRules::GetMatchDisplayTimeSeconds(bool addInjuryTime /*= true*/, bool getCountdownAtIntermissions /*= true*/)
 {
-	float flTime = gpGlobals->curtime - SDKGameRules()->m_flStateEnterTime - SDKGameRules()->m_flInjuryTime;
-	if (SDKGameRules()->m_flInjuryTimeStart != -1)
-		flTime -= gpGlobals->curtime - SDKGameRules()->m_flInjuryTimeStart;
+	float flTime = gpGlobals->curtime - SDKGameRules()->m_flStateEnterTime - SDKGameRules()->m_flClockStoppedTime;
+	if (SDKGameRules()->m_flClockStoppedStart != -1)
+		flTime -= gpGlobals->curtime - SDKGameRules()->m_flClockStoppedStart;
 	int nTime;
 
 	switch ( SDKGameRules()->State_Get() )

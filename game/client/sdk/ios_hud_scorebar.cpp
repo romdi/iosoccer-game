@@ -103,7 +103,7 @@ private:
 	match_event_t m_eCurMatchEvent;
 	bool m_bIsHighlight;
 	float m_flNotificationStart;
-	float m_flInjuryTimeStart;
+	float m_flClockStoppedStart;
 	int m_nCurMatchEventTeam;
 	IScheme *m_pScheme;
 	Panel *m_pMainPanel;
@@ -414,14 +414,14 @@ void CHudScorebar::OnThink( void )
 			m_pTime->SetBgColor(Color(0, 0, 0, 0));
 	}
 
-	if (SDKGameRules()->m_nAnnouncedInjuryTime > -1 && m_flInjuryTimeStart == -1)
+	if (SDKGameRules()->m_nAnnouncedInjuryTime > -1 && m_flClockStoppedStart == -1)
 	{
-		m_flInjuryTimeStart = gpGlobals->curtime;
+		m_flClockStoppedStart = gpGlobals->curtime;
 		m_pInjuryTime->SetText(VarArgs("+%d", SDKGameRules()->m_nAnnouncedInjuryTime));
 	}
-	else if (SDKGameRules()->m_nAnnouncedInjuryTime == -1 && m_flInjuryTimeStart != -1)
+	else if (SDKGameRules()->m_nAnnouncedInjuryTime == -1 && m_flClockStoppedStart != -1)
 	{
-		m_flInjuryTimeStart = -1;
+		m_flClockStoppedStart = -1;
 		m_pInjuryTime->SetText("");
 	}
 
@@ -557,11 +557,11 @@ void CHudScorebar::OnThink( void )
 		m_pGoalInfoPanel->SetAlpha(0);
 	}
 
-	if (m_flInjuryTimeStart != -1)
+	if (m_flClockStoppedStart != -1)
 	{
-		if (gpGlobals->curtime - m_flInjuryTimeStart <= slideDownDuration)
+		if (gpGlobals->curtime - m_flClockStoppedStart <= slideDownDuration)
 		{
-			float fraction = (gpGlobals->curtime - m_flInjuryTimeStart) / slideDownDuration;
+			float fraction = (gpGlobals->curtime - m_flClockStoppedStart) / slideDownDuration;
 			m_pInjuryTime->SetX(m_pBackgroundPanel->GetWide() - m_pInjuryTime->GetWide() + (1 - pow(1 - fraction, slideDownExp)) * m_pInjuryTime->GetWide());
 		}
 		else
@@ -1214,7 +1214,7 @@ void CHudScorebar::LevelInit()
 {
 	m_eCurMatchEvent = MATCH_EVENT_NONE;
 	m_flNotificationStart = -1;
-	m_flInjuryTimeStart = -1;
+	m_flClockStoppedStart = -1;
 	m_nCurMatchEventTeam = TEAM_UNASSIGNED;
 	m_flStayDuration = 3.0f;
 	m_nTransitionIndex = -1;

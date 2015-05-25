@@ -265,7 +265,7 @@ public:
 public:
 	CNetworkVar(match_period_t, m_eMatchPeriod);
 	CNetworkVar(int, m_nAnnouncedInjuryTime);
-	CNetworkVar(float, m_flInjuryTime);
+	CNetworkVar(float, m_flClockStoppedTime);
 
 	CNetworkVector(m_vFieldMin);
 	CNetworkVector(m_vFieldMax);
@@ -304,7 +304,6 @@ protected:
 	float m_flLastAwayCheckTime;
 	int m_nOldMaxplayers;
 	bool m_bUseOldMaxplayers;
-
 	bool m_bHasWalledField;
 	bool m_bIsTrainingMap;
 	int m_nAllowedFieldMaterials;
@@ -312,7 +311,7 @@ protected:
 	CUtlVector<int> m_PlayerRotationMinutes;
 
 	CSDKGameRulesStateInfo		*m_pCurStateInfo;			// Per-state data 
-	float						m_flStateTransitionTime;	// Timer for round states
+
 	// State machine handling
 	void State_Transition( match_period_t newState );
 	void State_Enter(match_period_t newState);	// Initialize the new state.
@@ -378,8 +377,8 @@ public:
 	int GetBottomTeam();
 	void SetKickOffTeam(int team);
 	int GetKickOffTeam();
-	void StartMeteringInjuryTime();
-	void StopMeteringInjuryTime();
+	void StartMeteringClockStoppedTime();
+	void StopMeteringClockStoppedTime();
 	void ClientSettingsChanged( CBasePlayer *pPlayer );
 	void EnableShield(int type, int team, const Vector &pos);
 	void DisableShield();
@@ -446,7 +445,7 @@ public:
 	CNetworkVar(int, m_nShieldType);
 	CNetworkVar(int, m_nShieldTeam);
 	CNetworkVector(m_vShieldPos);
-	CNetworkVar(float, m_flInjuryTimeStart);
+	CNetworkVar(float, m_flClockStoppedStart);
 	CNetworkVar(int, m_nBallZone);
 	CNetworkVar(int, m_nBottomTeam);
 
