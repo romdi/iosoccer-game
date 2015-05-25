@@ -38,7 +38,7 @@ ConVar
 	sv_ball_defaultspin( "sv_ball_defaultspin", "150", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY ),
 	sv_ball_topspin_coeff( "sv_ball_topspin_coeff", "1.25", FCVAR_NOTIFY ),
 	sv_ball_backspin_coeff( "sv_ball_backspin_coeff", "0.1", FCVAR_NOTIFY ),
-	sv_ball_curve("sv_ball_curve", "150", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_magnus_coeff("sv_ball_magnus_coeff", "200", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	
 	sv_ball_deflectionradius( "sv_ball_deflectionradius", "30", FCVAR_NOTIFY ),
 	sv_ball_collisionradius( "sv_ball_collisionradius", "15", FCVAR_NOTIFY ),
@@ -342,7 +342,7 @@ void CBall::VPhysicsUpdate(IPhysicsObject *pPhysics)
 	Vector magnusDir = worldAngImp.Cross(vel);
 
 	if (vel.Length() > 0)
-		vel += magnusDir * 1e-6 * sv_ball_curve.GetFloat() * gpGlobals->frametime;
+		vel += magnusDir * 1e-6 * sv_ball_magnus_coeff.GetFloat() * gpGlobals->frametime;
 
 	VPhysicsGetObject()->SetVelocity(&vel, &angImp);
 
@@ -1155,7 +1155,7 @@ bool CBall::DoVolleyShot()
 	else
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
 
-	SetVel(vel, 1.0f, FL_SPIN_PERMIT_SIDE, BODY_PART_FEET, true, sv_ball_shottaker_mindelay_short.GetFloat());
+	SetVel(vel, sv_ball_volleyshot_spincoeff.GetFloat(), FL_SPIN_PERMIT_SIDE, BODY_PART_FEET, true, sv_ball_shottaker_mindelay_short.GetFloat());
 
 	return true;
 }
