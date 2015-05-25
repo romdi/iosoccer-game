@@ -1123,8 +1123,6 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 			gameeventmanager->FireEvent(pEvent);
 		}
 
-		UTIL_ClientPrintAll(HUD_PRINTCENTER, "Timeout pending");
-
 		return true;
 	}
 	else if (!Q_stricmp(args[0], "endtimeout"))

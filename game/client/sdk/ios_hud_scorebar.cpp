@@ -838,7 +838,7 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 		m_pNotifications[0]->SetText(VarArgs("%s", g_szMatchPeriodNames[matchPeriod]));
 
 		m_eCurMatchEvent = MATCH_EVENT_NONE;
-		m_flStayDuration = INT_MAX;
+		m_flStayDuration = FLT_MAX;
 	}
 	else if (!Q_strcmp(event->GetName(), "kickoff"))
 	{
@@ -931,7 +931,7 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 
 
 		m_eCurMatchEvent = MATCH_EVENT_GOAL;
-		m_flStayDuration = INT_MAX;
+		m_flStayDuration = FLT_MAX;
 
 		m_pNotificationPanel->SetVisible(false);
 		m_pGoalInfoPanel->SetVisible(true);
@@ -971,7 +971,7 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 
 		m_eCurMatchEvent = MATCH_EVENT_GOAL;
 		m_bIsHighlight = true;
-		m_flStayDuration = INT_MAX;
+		m_flStayDuration = FLT_MAX;
 
 		m_pExtraInfo->SetText(g_szMatchPeriodNames[event->GetInt("match_period")]);
 		m_pExtraInfo->SetVisible(true);
@@ -990,7 +990,7 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 
 		m_eCurMatchEvent = MATCH_EVENT_OWNGOAL;
 		m_bIsHighlight = true;
-		m_flStayDuration = INT_MAX;
+		m_flStayDuration = FLT_MAX;
 
 		m_pExtraInfo->SetText(g_szMatchPeriodNames[event->GetInt("match_period")]);
 		m_pExtraInfo->SetVisible(true);
@@ -1021,7 +1021,7 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 
 		m_eCurMatchEvent = MATCH_EVENT_MISS;
 		m_bIsHighlight = true;
-		m_flStayDuration = INT_MAX;
+		m_flStayDuration = FLT_MAX;
 
 		m_pExtraInfo->SetText(g_szMatchPeriodNames[event->GetInt("match_period")]);
 		m_pExtraInfo->SetVisible(true);
@@ -1046,7 +1046,7 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 
 		m_eCurMatchEvent = MATCH_EVENT_KEEPERSAVE;
 		m_bIsHighlight = true;
-		m_flStayDuration = INT_MAX;
+		m_flStayDuration = FLT_MAX;
 
 		m_pExtraInfo->SetText(g_szMatchPeriodNames[event->GetInt("match_period")]);
 		m_pExtraInfo->SetVisible(true);
@@ -1065,7 +1065,7 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 
 		m_eCurMatchEvent = MATCH_EVENT_REDCARD;
 		m_bIsHighlight = true;
-		m_flStayDuration = INT_MAX;
+		m_flStayDuration = FLT_MAX;
 
 		m_pExtraInfo->SetText(g_szMatchPeriodNames[event->GetInt("match_period")]);
 		m_pExtraInfo->SetVisible(true);
@@ -1083,7 +1083,7 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 		}
 
 		m_eCurMatchEvent = MATCH_EVENT_OWNGOAL;
-		m_flStayDuration = INT_MAX;
+		m_flStayDuration = FLT_MAX;
 
 		m_pExtraInfo->SetText(GetShotsOnGoalText());
 		m_pExtraInfo->SetVisible(true);
@@ -1200,13 +1200,13 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 		else
 			m_pNotifications[0]->SetText(VarArgs("TIMEOUT PENDING: %s", GetGlobalTeam(m_nCurMatchEventTeam)->GetCode()));
 
-		m_flStayDuration = INT_MAX;
+		m_flStayDuration = FLT_MAX;
 	}
 	else if (!Q_strcmp(event->GetName(), "start_timeout"))
 	{
 		m_nCurMatchEventTeam = event->GetInt("requesting_team");
 		m_eCurMatchEvent = MATCH_EVENT_TIMEOUT;
-		m_flStayDuration = INT_MAX;
+		m_flStayDuration = FLT_MAX;
 	}
 }
 
