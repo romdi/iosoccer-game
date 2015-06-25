@@ -3186,9 +3186,9 @@ void CC_BenchAll(const CCommand &args)
 		if (!CSDKPlayer::IsOnField(pPl)/* || pPl->IsBot()*/)
 			continue;
 
-		if (team == 0 || (pPl->GetTeamNumber() - TEAM_HOME + 1) == team)
+		if (team == 0 || pPl->GetTeamNumber() == team + TEAM_HOME - 1)
 		{
-			pPl->SetDesiredTeam(TEAM_SPECTATOR, pPl->GetTeamNumber(), 0, true, true, true);
+			pPl->SetDesiredTeam(TEAM_SPECTATOR, team == 0 ? TEAM_SPECTATOR : pPl->GetTeamNumber(), 0, true, true, true);
 			UTIL_ClientPrintAll(HUD_PRINTTALK, "#game_player_benched", pPl->GetPlayerName());
 		}
 	}
