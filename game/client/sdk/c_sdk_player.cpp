@@ -53,7 +53,6 @@ ConVar nationalityindex("nationalityindex", "0", FCVAR_USERINFO | FCVAR_ARCHIVE,
 ConVar preferredoutfieldshirtnumber("preferredoutfieldshirtnumber", "2", FCVAR_USERINFO | FCVAR_ARCHIVE, "Your preferred outfield shirt number");
 ConVar preferredkeepershirtnumber("preferredkeepershirtnumber", "1", FCVAR_USERINFO | FCVAR_ARCHIVE, "Your preferred keeper shirt number");
 ConVar legacysidecurl("legacysidecurl", "0", FCVAR_USERINFO | FCVAR_ARCHIVE, "");
-ConVar legacyverticallook("legacyverticallook", "0", FCVAR_USERINFO | FCVAR_ARCHIVE, "");
 ConVar modelskinindex("modelskinindex", "0", FCVAR_USERINFO | FCVAR_ARCHIVE, "");
 ConVar playerballskinname("playerballskinname", "", FCVAR_USERINFO | FCVAR_ARCHIVE, "");
 

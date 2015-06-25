@@ -50,7 +50,6 @@ extern ConVar mp_pitchdown;
 extern ConVar cl_pitchdown;
 extern ConVar mp_pitchup;
 extern ConVar cl_pitchup;
-extern ConVar legacyverticallook;
 extern const ConVar *sv_cheats;
 
 extern ConVar thirdperson_platformer;

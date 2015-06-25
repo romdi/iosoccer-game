@@ -16,7 +16,6 @@ extern ConVar mp_pitchdown;
 extern ConVar cl_pitchdown;
 extern ConVar mp_pitchup;
 extern ConVar cl_pitchup;
-extern ConVar legacyverticallook;
 
 // ConCommands useful for creating view animations
 CViewAngleAnimation *g_pTestAnimation = NULL;
@@ -382,7 +381,7 @@ void CViewAngleAnimation::SetAngles( QAngle vecCalculatedAngles )
 		vecViewAngle[ROLL] = vecCalculatedAngles[ROLL];
 
 	// clamp pitch
-	vecViewAngle[PITCH] = clamp( vecViewAngle[PITCH], (legacyverticallook.GetBool() || in_zoom.state & 1 ? -cl_pitchup.GetFloat() : -mp_pitchup.GetFloat()), (legacyverticallook.GetBool() || in_zoom.state & 1 ? cl_pitchdown.GetFloat() : mp_pitchdown.GetFloat()) );
+	vecViewAngle[PITCH] = clamp( vecViewAngle[PITCH], (in_zoom.state & 1 ? -cl_pitchup.GetFloat() : -mp_pitchup.GetFloat()), (in_zoom.state & 1 ? cl_pitchdown.GetFloat() : mp_pitchdown.GetFloat()) );
 
 	engine->SetViewAngles( vecViewAngle );
 }

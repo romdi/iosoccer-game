@@ -17,7 +17,6 @@ extern ConVar
 	nationalityindex,
 	goalteamcrests,
 	legacysidecurl,
-	legacyverticallook,
 	modelskinindex,
 	playerballskinname,
 	playername,
@@ -756,7 +755,6 @@ CGameplaySettingPanel::CGameplaySettingPanel(Panel *parent, const char *panelNam
 {
 	m_pContent = new Panel(this, "");
 	m_pLegacySideCurl = new CheckButton(m_pContent, "", "Invert the ball curl direction");
-	m_pLegacyVerticalLook = new CheckButton(m_pContent, "", "Don't limit the vertical view range");
 }
 
 void CGameplaySettingPanel::PerformLayout()
@@ -765,19 +763,16 @@ void CGameplaySettingPanel::PerformLayout()
 
 	m_pContent->SetBounds(PADDING, PADDING, GetWide() - 2 * PADDING, GetTall() - 2 * PADDING);
 	m_pLegacySideCurl->SetBounds(0, 0, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
-	m_pLegacyVerticalLook->SetBounds(0, TEXT_HEIGHT + TEXT_MARGIN, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
 }
 
 void CGameplaySettingPanel::Save()
 {
 	legacysidecurl.SetValue(m_pLegacySideCurl->IsSelected() ? 1 : 0);
-	legacyverticallook.SetValue(m_pLegacyVerticalLook->IsSelected() ? 1 : 0);
 }
 
 void CGameplaySettingPanel::Load()
 {
 	m_pLegacySideCurl->SetSelected(legacysidecurl.GetBool());
-	m_pLegacyVerticalLook->SetSelected(legacyverticallook.GetBool());
 }
 
 void CGameplaySettingPanel::Update()

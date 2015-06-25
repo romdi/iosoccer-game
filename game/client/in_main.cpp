@@ -59,7 +59,6 @@ extern ConVar mp_pitchdown;
 extern ConVar cl_pitchdown;
 extern ConVar mp_pitchup;
 extern ConVar cl_pitchup;
-extern ConVar legacyverticallook;
 
 ConVar thirdperson_platformer( "thirdperson_platformer", "0", 0, "Player will aim in the direction they are moving." );
 ConVar thirdperson_screenspace( "thirdperson_screenspace", "0", 0, "Movement will be relative to the camera, eg: left means screen-left" );
@@ -73,7 +72,7 @@ extern ConVar cl_mouselook;
 float GetPitchup()
 {
 	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
-	if (pPlayer && (pPlayer->GetTeamNumber() == TEAM_HOME || pPlayer->GetTeamNumber() == TEAM_AWAY) && !(in_zoom.state & 1) && !legacyverticallook.GetBool())
+	if (pPlayer && (pPlayer->GetTeamNumber() == TEAM_HOME || pPlayer->GetTeamNumber() == TEAM_AWAY) && !(in_zoom.state & 1))
 		return mp_pitchup.GetFloat();
 	else
 		return cl_pitchup.GetFloat();
@@ -82,7 +81,7 @@ float GetPitchup()
 float GetPitchdown()
 {
 	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
-	if (pPlayer && (pPlayer->GetTeamNumber() == TEAM_HOME || pPlayer->GetTeamNumber() == TEAM_AWAY) && !(in_zoom.state & 1) && !legacyverticallook.GetBool())
+	if (pPlayer && (pPlayer->GetTeamNumber() == TEAM_HOME || pPlayer->GetTeamNumber() == TEAM_AWAY) && !(in_zoom.state & 1))
 		return mp_pitchdown.GetFloat();
 	else
 		return cl_pitchdown.GetFloat();
