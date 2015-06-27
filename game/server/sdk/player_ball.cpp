@@ -251,7 +251,7 @@ void CPlayerBall::State_NORMAL_Think()
 {
 	for (int ignoredPlayerBits = 0;;)
 	{
-		m_pPl = FindNearestPlayer(TEAM_INVALID, FL_POS_ANY, false, ignoredPlayerBits, sv_ball_maxplayerfinddist.GetFloat());
+		m_pPl = FindNearestPlayer(TEAM_NONE, FL_POS_ANY, false, ignoredPlayerBits, sv_ball_maxplayerfinddist.GetFloat());
 
 		if (!m_pPl)
 			return;
@@ -280,7 +280,7 @@ void CPlayerBall::State_KEEPERHANDS_Enter()
 
 void CPlayerBall::State_KEEPERHANDS_Think()
 {
-	int wasOrIsinPenBoxOfTeam = m_nInPenBoxOfTeam != TEAM_INVALID ? m_nInPenBoxOfTeam : m_nWasInPenBoxOfTeam;
+	int wasOrIsinPenBoxOfTeam = m_nInPenBoxOfTeam != TEAM_NONE ? m_nInPenBoxOfTeam : m_nWasInPenBoxOfTeam;
 
 	if (!CSDKPlayer::IsOnField(m_pPl, wasOrIsinPenBoxOfTeam))
 	{
@@ -302,7 +302,7 @@ void CPlayerBall::State_KEEPERHANDS_Think()
 	Vector max = GetGlobalTeam(m_pPl->GetTeamNumber())->m_vPenBoxMax + Vector(BALL_PHYS_RADIUS, BALL_PHYS_RADIUS, 0);
 
 	// Ball outside the penalty box
-	if (m_nInPenBoxOfTeam == TEAM_INVALID)
+	if (m_nInPenBoxOfTeam == TEAM_NONE)
 	{
 		Vector vel, pos;
 

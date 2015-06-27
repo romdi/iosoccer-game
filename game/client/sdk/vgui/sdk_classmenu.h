@@ -101,7 +101,7 @@ public:
 	}
 	virtual int GetTeamNumber( void )
 	{
-		return TEAM_UNASSIGNED;
+		return TEAM_NONE;
 	}
 };
 #else

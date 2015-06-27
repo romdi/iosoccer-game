@@ -548,7 +548,7 @@ public:
 	CNetworkVar(float, m_flNextJoin);
 	CNetworkVar(int, m_nModelScale);
 
-	static bool			IsOnField(CSDKPlayer *pPl, int teamNumber = TEAM_UNASSIGNED);
+	static bool			IsOnField(CSDKPlayer *pPl, int teamNumber = TEAM_NONE);
 	static bool			PlayersAtTargetPos();
 
 	void				CheckShotCharging();

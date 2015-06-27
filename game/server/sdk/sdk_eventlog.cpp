@@ -74,7 +74,7 @@ protected:
 #if defined ( SDK_USE_TEAMS )
 			if ( iTeam != SDK_TEAM_BLUE && iTeam != SDK_TEAM_RED )
 #else
-			if ( iTeam != TEAM_UNASSIGNED )
+			if ( iTeam != TEAM_NONE )
 #endif
 				return true;
 

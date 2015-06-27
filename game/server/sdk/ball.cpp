@@ -226,7 +226,7 @@ CBall::CBall()
 	m_bHasQueuedState = false;
 	m_pHoldingPlayer = NULL;
 	m_bHitThePost = false;
-	m_nInPenBoxOfTeam = TEAM_INVALID;
+	m_nInPenBoxOfTeam = TEAM_NONE;
 	memset(m_szSkinName.GetForModify(), 0, sizeof(m_szSkinName));
 }
 
@@ -362,7 +362,7 @@ void CBall::VPhysicsCollision(int index, gamevcollisionevent_t *pEvent)
 		EmitSound("Ball.Touch");
 }
 
-CSDKPlayer *CBall::FindNearestPlayer(int team /*= TEAM_INVALID*/, int posFlags /*= FL_POS_OUTFIELD*/, bool checkIfShooting /*= false*/, int ignoredPlayerBits /*= 0*/, float radius /*= -1*/)
+CSDKPlayer *CBall::FindNearestPlayer(int team /*= TEAM_NONE*/, int posFlags /*= FL_POS_OUTFIELD*/, bool checkIfShooting /*= false*/, int ignoredPlayerBits /*= 0*/, float radius /*= -1*/)
 {
 	CSDKPlayer *pNearest = NULL;
 	float shortestDist = FLT_MAX;
@@ -406,7 +406,7 @@ CSDKPlayer *CBall::FindNearestPlayer(int team /*= TEAM_INVALID*/, int posFlags /
 				continue;
 		}
 
-		if (team != TEAM_INVALID && pPlayer->GetTeamNumber() != team)
+		if (team != TEAM_NONE && pPlayer->GetTeamNumber() != team)
 			continue;
 
 		if (checkIfShooting && (!pPlayer->IsShooting() || !pPlayer->CanShoot()))
@@ -426,7 +426,7 @@ CSDKPlayer *CBall::FindNearestPlayer(int team /*= TEAM_INVALID*/, int posFlags /
 	}
 
 	//// If we didn't find a player of a certain team, just look for any other player
-	//if (!pNearest && team != TEAM_INVALID)
+	//if (!pNearest && team != TEAM_NONE)
 	//	pNearest = FindNearestPlayer();
 
 	return pNearest;
@@ -1355,7 +1355,7 @@ void CBall::Reset()
 	m_pPhys->Wake();
 	m_pHoldingPlayer = NULL;
 	m_bHitThePost = false;
-	m_nInPenBoxOfTeam = TEAM_INVALID;
+	m_nInPenBoxOfTeam = TEAM_NONE;
 }
 
 void CBall::ReloadSettings()
@@ -1444,7 +1444,7 @@ void CBall::CheckPenBoxPosition()
 	}
 
 	m_nWasInPenBoxOfTeam = m_nInPenBoxOfTeam;
-	m_nInPenBoxOfTeam = TEAM_INVALID;
+	m_nInPenBoxOfTeam = TEAM_NONE;
 }
 
 void CBall::RemoveAllTouches()
@@ -1485,13 +1485,13 @@ CSDKPlayer *CBall::LastPl(bool wasShooting, CSDKPlayer *pSkipPl /*= NULL*/, CSDK
 int CBall::LastTeam(bool wasShooting, CSDKPlayer *pSkipPl /*= NULL*/, CSDKPlayer *pSkipPl2 /*= NULL*/, CSDKPlayer *pSkipPl3 /*= NULL*/)
 {
 	BallTouchInfo *info = LastInfo(wasShooting, pSkipPl, pSkipPl2, pSkipPl3);
-	return info ? info->m_nTeam : TEAM_INVALID;
+	return info ? info->m_nTeam : TEAM_NONE;
 }
 
 int CBall::LastOppTeam(bool wasShooting, CSDKPlayer *pSkipPl /*= NULL*/, CSDKPlayer *pSkipPl2 /*= NULL*/, CSDKPlayer *pSkipPl3 /*= NULL*/)
 {
 	BallTouchInfo *info = LastInfo(wasShooting, pSkipPl, pSkipPl2, pSkipPl3);
-	return info ? (info->m_nTeam == TEAM_HOME ? TEAM_AWAY : TEAM_HOME) : TEAM_INVALID;
+	return info ? (info->m_nTeam == TEAM_HOME ? TEAM_AWAY : TEAM_HOME) : TEAM_NONE;
 }
 
 void CBall::GetPredictedGoalLineCrossPosX(int &xPos, int &team)
@@ -1501,7 +1501,7 @@ void CBall::GetPredictedGoalLineCrossPosX(int &xPos, int &team)
 	dir.z = 0;
 	dir.NormalizeInPlace();
 
-	team = TEAM_INVALID;
+	team = TEAM_NONE;
 
 	for (int i = 0; i < 2; i++)
 	{
@@ -1512,7 +1512,7 @@ void CBall::GetPredictedGoalLineCrossPosX(int &xPos, int &team)
 		}
 	}
 
-	if (team == TEAM_INVALID)
+	if (team == TEAM_NONE)
 	{
 		xPos = 0;
 	}

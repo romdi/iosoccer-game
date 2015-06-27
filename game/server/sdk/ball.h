@@ -181,7 +181,7 @@ protected:
 
 	bool			CanReachBallStandingXY();
 	virtual bool	CheckFoul(bool canShootBall, const Vector &localDirToBall) = 0;
-	CSDKPlayer		*FindNearestPlayer(int team = TEAM_INVALID, int posFlags = FL_POS_OUTFIELD, bool checkIfShooting = false, int ignoredPlayerBits = 0, float radius = -1);
+	CSDKPlayer		*FindNearestPlayer(int team = TEAM_NONE, int posFlags = FL_POS_OUTFIELD, bool checkIfShooting = false, int ignoredPlayerBits = 0, float radius = -1);
 	bool			GetCollisionPoint(bool isDeflection, Vector &collisionPoint);
 	bool			DoBodyPartAction();
 	bool			CheckCollision();

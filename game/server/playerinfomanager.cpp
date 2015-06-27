@@ -100,7 +100,7 @@ edict_t *CPluginBotManager::CreateBot( const char *botname )
 
 	pPlayer->ClearFlags();
 	pPlayer->AddFlag( FL_CLIENT | FL_FAKECLIENT );
-	pPlayer->ChangeTeam( TEAM_UNASSIGNED );
+	pPlayer->ChangeTeam( TEAM_NONE );
 	pPlayer->AddEFlags( EFL_PLUGIN_BASED_BOT );		// Mark it as a plugin based bot
 	pPlayer->RemoveAllItems( true );
 	pPlayer->Spawn();

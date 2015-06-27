@@ -450,7 +450,7 @@ void CHudScorebar::OnThink( void )
 		{
 			int time = max(0, SDKGameRules()->GetTimeoutEnd() - gpGlobals->curtime);
 
-			if (m_nCurMatchEventTeam == TEAM_UNASSIGNED)
+			if (m_nCurMatchEventTeam == TEAM_NONE)
 				m_pNotifications[0]->SetText(VarArgs("TIMEOUT (%d:%02d)", time / 60, time % 60));
 			else
 				m_pNotifications[0]->SetText(VarArgs("TIMEOUT: %s (%d:%02d)", GetGlobalTeam(m_nCurMatchEventTeam)->GetCode(), time / 60, time % 60));
@@ -820,7 +820,7 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 	}
 
 	m_flNotificationStart = gpGlobals->curtime;
-	m_nCurMatchEventTeam = TEAM_UNASSIGNED;
+	m_nCurMatchEventTeam = TEAM_NONE;
 	m_pNotificationPanel->SetVisible(true);
 	m_pNotificationPanel->SetTall(NOTIFICATION_HEIGHT);
 	m_pExtraInfo->SetVisible(false);
@@ -1195,7 +1195,7 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 		m_nCurMatchEventTeam = event->GetInt("requesting_team");
 		m_eCurMatchEvent = MATCH_EVENT_TIMEOUT_PENDING;
 
-		if (m_nCurMatchEventTeam == TEAM_UNASSIGNED)
+		if (m_nCurMatchEventTeam == TEAM_NONE)
 			m_pNotifications[0]->SetText("TIMEOUT PENDING");
 		else
 			m_pNotifications[0]->SetText(VarArgs("TIMEOUT PENDING: %s", GetGlobalTeam(m_nCurMatchEventTeam)->GetCode()));
@@ -1215,7 +1215,7 @@ void CHudScorebar::LevelInit()
 	m_eCurMatchEvent = MATCH_EVENT_NONE;
 	m_flNotificationStart = -1;
 	m_flClockStoppedStart = -1;
-	m_nCurMatchEventTeam = TEAM_UNASSIGNED;
+	m_nCurMatchEventTeam = TEAM_NONE;
 	m_flStayDuration = 3.0f;
 	m_nTransitionIndex = -1;
 	m_flTickerStartTime = -1;

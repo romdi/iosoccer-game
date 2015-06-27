@@ -327,7 +327,7 @@ CSDKPlayer::CSDKPlayer()
 	m_angCamViewAngles.Init();
 
 	m_pCurStateInfo = NULL;	// no state yet
-	m_nTeamToJoin = TEAM_INVALID;
+	m_nTeamToJoin = TEAM_NONE;
 	m_nTeamPosIndexToJoin = 0;
 	m_nSpecTeamToJoin = TEAM_SPECTATOR;
 	m_nTeamPosIndex = 0;
@@ -415,11 +415,11 @@ void CSDKPlayer::PreThink(void)
 		&& (SDKGameRules()->GetMatchDisplayTimeSeconds() < GetNextCardJoin()
 		|| SDKGameRules()->GetMatchDisplayTimeSeconds() < GetGlobalTeam(GetTeamToJoin())->GetPosNextJoinSeconds(GetTeamPosIndexToJoin())))
 	{
-		m_nTeamToJoin = TEAM_INVALID;
+		m_nTeamToJoin = TEAM_NONE;
 	}
 
 	// Let the player take the desired position
-	if (m_nTeamToJoin != TEAM_INVALID
+	if (m_nTeamToJoin != TEAM_NONE
 		&& gpGlobals->curtime >= GetNextJoin()
 		&& (SDKGameRules()->IsIntermissionState()	
 			|| SDKGameRules()->GetMatchDisplayTimeSeconds() >= GetNextCardJoin()
@@ -626,9 +626,9 @@ void CSDKPlayer::ChangeTeam()
 {
 	if (m_nTeamToJoin == GetTeamNumber() && m_nTeamPosIndexToJoin == GetTeamPosIndex() && m_nSpecTeamToJoin == m_nSpecTeam)
 	{
-		m_nTeamToJoin = TEAM_INVALID;
+		m_nTeamToJoin = TEAM_NONE;
 		m_nTeamPosIndexToJoin = 0;
-		m_nSpecTeamToJoin = TEAM_INVALID;
+		m_nSpecTeamToJoin = TEAM_NONE;
 		//m_bSetNextJoinDelay = false;
 
 		return;
@@ -639,12 +639,12 @@ void CSDKPlayer::ChangeTeam()
 	if (GetTeam())
 		GetTeam()->RemovePlayer(this);
 
-	if (m_nTeamToJoin != TEAM_UNASSIGNED)
+	if (m_nTeamToJoin != TEAM_NONE)
 		GetGlobalTeam(m_nTeamToJoin)->AddPlayer(this, m_nTeamPosIndexToJoin);
 
 	int oldTeam = GetTeamNumber();
 	SetTeamNumber(m_nTeamToJoin);
-	m_nTeamToJoin = TEAM_INVALID;
+	m_nTeamToJoin = TEAM_NONE;
 
 	int oldPosIndex = m_nTeamPosIndex;
 	int oldPosType = GetTeamPosType();
@@ -653,10 +653,10 @@ void CSDKPlayer::ChangeTeam()
 
 	int oldSpecTeam = m_nSpecTeam;
 	m_nSpecTeam = m_nSpecTeamToJoin;
-	m_nSpecTeamToJoin = TEAM_INVALID;
+	m_nSpecTeamToJoin = TEAM_NONE;
 
 	// update client state 
-	if (GetTeamNumber() == TEAM_UNASSIGNED || GetTeamNumber() == TEAM_SPECTATOR)
+	if (GetTeamNumber() == TEAM_NONE || GetTeamNumber() == TEAM_SPECTATOR)
 	{
 		Reset();
 
@@ -1062,7 +1062,7 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 		// Cancel the request if the desired position is the current position or the current target position
 		if (team == GetTeamNumber() && posIndex == GetTeamPosIndex() || team == m_nTeamToJoin && posIndex == m_nTeamPosIndexToJoin)
 		{
-			m_nTeamToJoin = TEAM_INVALID;
+			m_nTeamToJoin = TEAM_NONE;
 			return true;
 		}
 
@@ -1184,7 +1184,7 @@ bool CSDKPlayer::IsTeamPosFree(int team, int posIndex, bool ignoreBots, CSDKPlay
 	if (posIndex < 0 || posIndex > mp_maxplayers.GetInt() - 1)
 		return false;
 
-	if (team == TEAM_SPECTATOR || team == TEAM_UNASSIGNED)
+	if (team == TEAM_SPECTATOR || team == TEAM_NONE)
 		return true;
 
 	if (GetTeam()->GetFormation()->positions[posIndex]->type == POS_GK)
@@ -1468,11 +1468,11 @@ void CSDKPlayer::GetTargetPos(const Vector &pos, Vector &targetPos)
 		targetPos = pos;
 }
 
-bool CSDKPlayer::IsOnField(CSDKPlayer *pPl, int teamNumber/* = TEAM_UNASSIGNED*/)
+bool CSDKPlayer::IsOnField(CSDKPlayer *pPl, int teamNumber/* = TEAM_NONE*/)
 {
 	return (pPl && pPl->IsConnected() // Is on server
-		&& ((teamNumber == TEAM_UNASSIGNED && (pPl->GetTeamNumber() == TEAM_HOME || pPl->GetTeamNumber() == TEAM_AWAY)) // No specific team given - is on field
-			|| (teamNumber != TEAM_UNASSIGNED && pPl->GetTeamNumber() == teamNumber))); // Specific team given - is in this team
+		&& ((teamNumber == TEAM_NONE && (pPl->GetTeamNumber() == TEAM_HOME || pPl->GetTeamNumber() == TEAM_AWAY)) // No specific team given - is on field
+			|| (teamNumber != TEAM_NONE && pPl->GetTeamNumber() == teamNumber))); // Specific team given - is in this team
 }
 
 bool CSDKPlayer::IsOffside()

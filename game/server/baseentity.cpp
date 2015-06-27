@@ -310,7 +310,7 @@ CBaseEntity::CBaseEntity( bool bServerOnly )
 	if (dynamic_cast<CBasePlayer *>(this))
 		m_iTeamNum = m_iInitialTeamNum = TEAM_SPECTATOR;
 	else
-		m_iTeamNum = m_iInitialTeamNum = TEAM_UNASSIGNED;
+		m_iTeamNum = m_iInitialTeamNum = TEAM_NONE;
 	m_nLastThinkTick = gpGlobals->tickcount;
 	m_nSimulationTick = -1;
 	SetIdentityMatrix( m_rgflCoordinateFrame );

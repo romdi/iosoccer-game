@@ -483,7 +483,7 @@ bool C_LocalTempEntity::Frame( float frametime, int framenumber )
 				data.m_nSurfaceProp = trace.surface.surfaceProps;
 				data.m_nHitBox = trace.hitbox;
 
-				data.m_nDamageType = TEAM_UNASSIGNED;
+				data.m_nDamageType = TEAM_NONE;
 
 				IClientNetworkable *pClient = cl_entitylist->GetClientEntity( clientIndex );
 

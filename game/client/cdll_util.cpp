@@ -98,7 +98,7 @@ int GetLocalPlayerTeam( void )
 	if ( pPlayer )
 		return pPlayer->GetTeamNumber(); 
 	else
-		return TEAM_UNASSIGNED;
+		return TEAM_NONE;
 }
 
 //-----------------------------------------------------------------------------

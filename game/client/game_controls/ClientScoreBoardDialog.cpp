@@ -825,7 +825,7 @@ void CClientScoreBoardDialog::UpdatePlayerInfo()
 
 			playerData->deleteThis();
 
-			if (gr->GetTeamToJoin(i) == TEAM_INVALID)
+			if (gr->GetTeamToJoin(i) == TEAM_NONE)
 				continue;
 		}
 		else
@@ -856,7 +856,7 @@ void CClientScoreBoardDialog::UpdatePlayerInfo()
 			playerData->deleteThis();
 		}
 
-		int team = gr->GetTeamToJoin(i) != TEAM_INVALID ? gr->GetTeamToJoin(i) : gr->GetTeam(i);
+		int team = gr->GetTeamToJoin(i) != TEAM_NONE ? gr->GetTeamToJoin(i) : gr->GetTeam(i);
 		int teamIndex = team - TEAM_HOME;
 	}
 

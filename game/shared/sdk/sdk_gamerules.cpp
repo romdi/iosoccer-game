@@ -455,7 +455,7 @@ CSDKGameRules::CSDKGameRules()
 	m_nFirstHalfBottomTeam = TEAM_HOME;
 	m_nBottomTeam = TEAM_HOME;
 	m_bIsCeremony = false;
-	m_nTimeoutTeam = TEAM_INVALID;
+	m_nTimeoutTeam = TEAM_NONE;
 	m_eTimeoutState = TIMEOUT_STATE_NONE;
 	m_flTimeoutEnd = 0;
 	m_nFirstHalfKickOffTeam = TEAM_HOME;
@@ -519,7 +519,7 @@ static const char *s_PreserveEnts[] =
 	"ai_hint",
 	"sdk_gamerules",
 	"sdk_team_manager",
-	"sdk_team_unassigned",
+	"sdk_TEAM_NONE",
 	"sdk_team_blue",
 	"sdk_team_red",
 	"sdk_player_manager",
@@ -1098,7 +1098,7 @@ void CSDKGameRules::ClientDisconnected( edict_t *pClient )
 
 		// Remove the player from his team
 		if (pPl->GetTeam())
-			pPl->SetDesiredTeam(TEAM_UNASSIGNED, TEAM_SPECTATOR, 0, true, false, false);
+			pPl->SetDesiredTeam(TEAM_NONE, TEAM_SPECTATOR, 0, true, false, false);
 	}
 
 	BaseClass::ClientDisconnected( pClient );
@@ -1184,12 +1184,12 @@ void CC_SV_StartTimeout(const CCommand &args)
 		return;
 
 	SDKGameRules()->SetTimeoutState(TIMEOUT_STATE_PENDING);
-	SDKGameRules()->SetTimeoutTeam(TEAM_UNASSIGNED);
+	SDKGameRules()->SetTimeoutTeam(TEAM_NONE);
 
 	IGameEvent *pEvent = gameeventmanager->CreateEvent("timeout_pending");
 	if (pEvent)
 	{
-		pEvent->SetInt("requesting_team", TEAM_UNASSIGNED);
+		pEvent->SetInt("requesting_team", TEAM_NONE);
 		gameeventmanager->FireEvent(pEvent);
 	}
 }
@@ -2886,7 +2886,7 @@ void CSDKGameRules::ResetMatch()
 
 	SetOffsideLinesEnabled(false);
 	DisableShield();
-	m_nTimeoutTeam = TEAM_INVALID;
+	m_nTimeoutTeam = TEAM_NONE;
 	m_eTimeoutState = TIMEOUT_STATE_NONE;
 	m_flTimeoutEnd = 0;
 	m_flLastAwayCheckTime = gpGlobals->curtime;
@@ -2991,7 +2991,7 @@ bool CSDKGameRules::CheckTimeout()
 	{
 		SetTimeoutState(TIMEOUT_STATE_ACTIVE);
 
-		if (GetTimeoutTeam() == TEAM_UNASSIGNED)
+		if (GetTimeoutTeam() == TEAM_NONE)
 			SetTimeoutEnd(-1);
 		else
 			SetTimeoutEnd(gpGlobals->curtime + GetGlobalTeam(GetTimeoutTeam())->GetTimeoutTimeLeft());
@@ -3030,7 +3030,7 @@ bool CSDKGameRules::EndTimeout()
 	}
 	else if (SDKGameRules()->GetTimeoutState() == TIMEOUT_STATE_ACTIVE)
 	{
-		if (SDKGameRules()->GetTimeoutTeam() == TEAM_UNASSIGNED && GetTimeoutEnd() != -1)
+		if (SDKGameRules()->GetTimeoutTeam() == TEAM_NONE && GetTimeoutEnd() != -1)
 		{
 			SDKGameRules()->SetTimeoutState(TIMEOUT_STATE_NONE);
 
@@ -3040,10 +3040,10 @@ bool CSDKGameRules::EndTimeout()
 			return false;
 		}
 		
-		if (SDKGameRules()->GetTimeoutTeam() != TEAM_UNASSIGNED)
+		if (SDKGameRules()->GetTimeoutTeam() != TEAM_NONE)
 		{
 			GetGlobalTeam(SDKGameRules()->GetTimeoutTeam())->SetTimeoutTimeLeft(max(0, (int)(SDKGameRules()->GetTimeoutEnd() - gpGlobals->curtime)));
-			SDKGameRules()->SetTimeoutTeam(TEAM_UNASSIGNED);
+			SDKGameRules()->SetTimeoutTeam(TEAM_NONE);
 		}
 
 		SDKGameRules()->SetTimeoutEnd(gpGlobals->curtime + 10);
@@ -3051,7 +3051,7 @@ bool CSDKGameRules::EndTimeout()
 		IGameEvent *pEvent = gameeventmanager->CreateEvent("start_timeout");
 		if (pEvent)
 		{
-			pEvent->SetInt("requesting_team", TEAM_UNASSIGNED);
+			pEvent->SetInt("requesting_team", TEAM_NONE);
 			gameeventmanager->FireEvent(pEvent);
 		}
 

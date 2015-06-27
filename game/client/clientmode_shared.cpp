@@ -751,7 +751,7 @@ void ClientModeShared::FireGameEvent( IGameEvent *event )
 
 		int maxplayers = event->GetInt("maxplayers");
 
-		if (newTeam == TEAM_UNASSIGNED)
+		if (newTeam == TEAM_NONE)
 			return;
 
 		const char *pszName = event->GetString("name");

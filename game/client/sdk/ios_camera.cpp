@@ -126,7 +126,7 @@ void C_Camera::Reset()
 	m_vOldTargetPos = vec3_invalid;
 	m_flLerpTime = 0;
 	m_flLastPossessionChange = 0;
-	m_nLastPossessingTeam = TEAM_UNASSIGNED;
+	m_nLastPossessingTeam = TEAM_NONE;
 }
 
 int C_Camera::GetCamMode()
@@ -662,9 +662,9 @@ void C_Camera::CalcTVCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov, b
 			targetPos = pTarget->GetLocalOrigin();
 
 			// Move the camera towards the defending team's goal
-			if (GetMatchBall()->m_nLastActiveTeam != TEAM_UNASSIGNED)
+			if (GetMatchBall()->m_nLastActiveTeam != TEAM_NONE)
 			{
-				if (m_nLastPossessingTeam == TEAM_UNASSIGNED)
+				if (m_nLastPossessingTeam == TEAM_NONE)
 				{
 					m_nLastPossessingTeam = GetMatchBall()->m_nLastActiveTeam;
 					m_flLastPossessionChange = gpGlobals->curtime;

@@ -27,7 +27,7 @@ FilePlayerClassInfo_t* CreatePlayerClassInfo()
 
 CSDKPlayerClassInfo::CSDKPlayerClassInfo()
 {
-	m_iTeam				= TEAM_UNASSIGNED;
+	m_iTeam				= TEAM_NONE;
 	
 	m_iPrimaryWeapon	= WEAPON_NONE;
 	m_iSecondaryWeapon	= WEAPON_NONE;
@@ -50,10 +50,10 @@ void CSDKPlayerClassInfo::Parse( KeyValues *pKeyValuesData, const char *szWeapon
 {
 	BaseClass::Parse( pKeyValuesData, szWeaponName );
 
-	m_iTeam= pKeyValuesData->GetInt( "team", TEAM_UNASSIGNED );
+	m_iTeam= pKeyValuesData->GetInt( "team", TEAM_NONE );
 
 	// Figure out what team can have this player class
-	m_iTeam = TEAM_UNASSIGNED;
+	m_iTeam = TEAM_NONE;
 
 //Tony; don't check for teams unless we're using teams. You could do a free for all, but class / character based game if you wanted.
 #ifdef SDK_USE_TEAMS

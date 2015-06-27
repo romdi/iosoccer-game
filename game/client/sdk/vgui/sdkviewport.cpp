@@ -73,7 +73,7 @@ CON_COMMAND_F( changeclass, "Choose a new class", FCVAR_SERVER_CAN_EXECUTE|FCVAR
 			gViewPortInterface->ShowPanel( PANEL_CLASS_RED, true );
 			break;
 #else
-		case TEAM_UNASSIGNED:
+		case TEAM_NONE:
 			gViewPortInterface->ShowPanel( PANEL_CLASS, true );
 			break;
 #endif

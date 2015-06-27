@@ -87,9 +87,9 @@ CMatchBall::CMatchBall()
 {
 	g_pMatchBall = NULL;
 	m_pLastActivePlayer = NULL;
-	m_nLastActiveTeam = TEAM_UNASSIGNED;
+	m_nLastActiveTeam = TEAM_NONE;
 	m_pPossessingPl = NULL;
-	m_nPossessingTeam = TEAM_INVALID;
+	m_nPossessingTeam = TEAM_NONE;
 	m_flPossessionStart = -1;
 	m_ePenaltyState = PENALTY_NONE;
 	m_bIsAdvantage = false;
@@ -123,7 +123,7 @@ void CMatchBall::Reset()
 	m_flNextStateMessageTime = -1;
 	m_pOtherPl = NULL;
 	m_pPossessingPl = NULL;
-	m_nPossessingTeam = TEAM_INVALID;
+	m_nPossessingTeam = TEAM_NONE;
 	m_flPossessionStart = -1;
 	m_ePenaltyState = PENALTY_NONE;
 	m_bIsAdvantage = false;
@@ -326,7 +326,7 @@ void CMatchBall::State_NORMAL_Think()
 
 	for (int ignoredPlayerBits = 0;;)
 	{
-		m_pPl = FindNearestPlayer(TEAM_INVALID, FL_POS_ANY, false, ignoredPlayerBits, sv_ball_maxplayerfinddist.GetFloat());
+		m_pPl = FindNearestPlayer(TEAM_NONE, FL_POS_ANY, false, ignoredPlayerBits, sv_ball_maxplayerfinddist.GetFloat());
 
 		if (!m_pPl)
 			return;
@@ -1015,7 +1015,7 @@ void CMatchBall::State_KEEPERHANDS_Enter()
 
 void CMatchBall::State_KEEPERHANDS_Think()
 {
-	int wasOrIsinPenBoxOfTeam = m_nInPenBoxOfTeam != TEAM_INVALID ? m_nInPenBoxOfTeam : m_nWasInPenBoxOfTeam;
+	int wasOrIsinPenBoxOfTeam = m_nInPenBoxOfTeam != TEAM_NONE ? m_nInPenBoxOfTeam : m_nWasInPenBoxOfTeam;
 
 	if (!CSDKPlayer::IsOnField(m_pPl, wasOrIsinPenBoxOfTeam))
 	{
@@ -1053,7 +1053,7 @@ void CMatchBall::State_KEEPERHANDS_Think()
 	Vector max = GetGlobalTeam(m_pPl->GetTeamNumber())->m_vPenBoxMax + Vector(BALL_PHYS_RADIUS, BALL_PHYS_RADIUS, 0);
 
 	// Ball outside the penalty box
-	if (m_nInPenBoxOfTeam == TEAM_INVALID)
+	if (m_nInPenBoxOfTeam == TEAM_NONE)
 	{
 		Vector vel, pos;
 
@@ -1172,14 +1172,14 @@ bool CMatchBall::CheckSideline()
 
 bool CMatchBall::CheckGoalLine()
 {
-	int team = TEAM_INVALID;
+	int team = TEAM_NONE;
 
 	if (m_vPos.y + BALL_PHYS_RADIUS < SDKGameRules()->m_vFieldMin.GetY())
 		team = SDKGameRules()->GetBottomTeam();
 	else if (m_vPos.y - BALL_PHYS_RADIUS > SDKGameRules()->m_vFieldMax.GetY())
 		team = GetGlobalTeam(SDKGameRules()->GetBottomTeam())->GetOppTeamNumber();
 
-	if (team == TEAM_INVALID)
+	if (team == TEAM_NONE)
 		return false;
 
 	if (SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES)
@@ -1241,7 +1241,7 @@ bool CMatchBall::CheckGoalLine()
 
 bool CMatchBall::CheckGoal()
 {
-	int team = TEAM_INVALID;
+	int team = TEAM_NONE;
 
 	if (m_vPos.x >= SDKGameRules()->m_vKickOff.GetX() - SDKGameRules()->m_vGoalTriggerSize.x
 		&& m_vPos.x <= SDKGameRules()->m_vKickOff.GetX() + SDKGameRules()->m_vGoalTriggerSize.x
@@ -1253,7 +1253,7 @@ bool CMatchBall::CheckGoal()
 			team = GetGlobalTeam(SDKGameRules()->GetBottomTeam())->GetOppTeamNumber();
 	}
 
-	if (team == TEAM_INVALID)
+	if (team == TEAM_NONE)
 		return false;
 
 	m_nTeam = team;
@@ -2082,7 +2082,7 @@ void CMatchBall::UpdatePossession(CSDKPlayer *pNewPossessor)
 	else
 	{
 		m_pPossessingPl = NULL;
-		m_nPossessingTeam = TEAM_INVALID;
+		m_nPossessingTeam = TEAM_NONE;
 		m_flPossessionStart = -1;
 	}
 }

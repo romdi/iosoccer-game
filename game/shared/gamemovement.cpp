@@ -1537,7 +1537,7 @@ void CGameMovement::FullWalkMove( )
 		}
 	}
 
-	pPl->m_Shared.m_nInPenBoxOfTeam = TEAM_INVALID;
+	pPl->m_Shared.m_nInPenBoxOfTeam = TEAM_NONE;
 
 	for (int team = TEAM_HOME; team <= TEAM_AWAY; team++)
 	{

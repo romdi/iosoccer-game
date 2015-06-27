@@ -397,7 +397,7 @@ void C_Team::SetKitName(const char *pKitName)
 	}
 	else
 	{
-		if (GetTeamNumber() == TEAM_INVALID || GetTeamNumber() == TEAM_UNASSIGNED || GetTeamNumber() == TEAM_SPECTATOR)
+		if (GetTeamNumber() == TEAM_NONE || GetTeamNumber() == TEAM_SPECTATOR)
 		{
 			m_pKitInfo = CTeamInfo::m_TeamInfo[0]->m_TeamKitInfo[0];
 		}
