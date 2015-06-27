@@ -22,6 +22,8 @@ struct FileData
 	FileHandle_t fh;
 	MD5Context_t md5Ctx;
 	IOSUpdateInfo *pUpdateInfo;
+	long prevReceivedBytes;
+	CURL *curl;
 };
 
 static size_t rcvFileListData(void *ptr, size_t size, size_t nmemb, CUtlBuffer &buffer)
@@ -35,7 +37,10 @@ static size_t rcvFile(void *ptr, size_t size, size_t nmemb, FileData *vars)
 {
 	filesystem->Write(ptr, nmemb, vars->fh);
 	MD5Update(&vars->md5Ctx, (unsigned char *)ptr, nmemb);
-	vars->pUpdateInfo->receivedBytes += nmemb;
+
+	double receivedBytes;
+	curl_easy_getinfo(vars->curl, CURLINFO_SIZE_DOWNLOAD, &receivedBytes);
+	vars->pUpdateInfo->receivedBytes = vars->prevReceivedBytes + (long)receivedBytes;
 
 	return nmemb;
 }
@@ -252,17 +257,24 @@ unsigned PerformUpdate(void *params)
 		Q_strncpy(pUpdateInfo->filePath, serverFileList[i].path, sizeof(pUpdateInfo->filePath));
 
 		FileData curlData;
+
 		curlData.fh = filesystem->Open(filePath, "wb", "MOD");
+
 		memset(&curlData.md5Ctx, 0, sizeof(MD5Context_t));
 		MD5Init(&curlData.md5Ctx);
+
 		curlData.pUpdateInfo = pUpdateInfo;
+		curlData.prevReceivedBytes = pUpdateInfo->receivedBytes;
 
 		curl = curl_easy_init();
+		curlData.curl = curl;
+
 		Q_snprintf(url, sizeof(url), "%s/%s.gz", downloadUrl, serverFileList[i].path);
 		curl_easy_setopt(curl, CURLOPT_URL, url);
 		curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, "gzip");
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, rcvFile);
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &curlData);
+
 		CURLcode result = curl_easy_perform(curl);
 		curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &code);
 		curl_easy_cleanup(curl);
