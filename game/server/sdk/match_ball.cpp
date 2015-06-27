@@ -155,7 +155,8 @@ void CMatchBall::State_Transition(ball_state_t nextState, float nextStateMessage
 		m_flStateLeaveTime = gpGlobals->curtime + nextStateMessageDelay + nextStatePostMessageDelay;
 		m_bHasQueuedState = true;
 
-		m_flTotalStateTransitionTime += nextStateMessageDelay + nextStatePostMessageDelay;
+		if (State_Get() != BALL_STATE_GOAL)
+			m_flTotalStateTransitionTime += nextStateMessageDelay + nextStatePostMessageDelay;
 	}
 }
 
