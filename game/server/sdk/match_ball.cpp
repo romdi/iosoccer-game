@@ -234,7 +234,7 @@ void CMatchBall::State_Think()
 		}
 	}
 
-	if (State_Get() == BALL_STATE_THROWIN || State_Get() == BALL_STATE_CORNER || State_Get() == BALL_STATE_GOALKICK)
+	if (State_Get() == BALL_STATE_THROWIN || State_Get() == BALL_STATE_CORNER || State_Get() == BALL_STATE_GOALKICK || State_Get() == BALL_STATE_KICKOFF)
 	{
 		if (SDKGameRules()->CheckTimeout())
 			m_flStateTimelimit = -1;
