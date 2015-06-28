@@ -1265,7 +1265,7 @@ void CServerGameDLL::OnQueryCvarValueFinished( QueryCvarCookie_t iCookie, edict_
 // Called when a level is shutdown (including changing levels)
 void CServerGameDLL::LevelShutdown( void )
 {
-	for (int i = 0; i <= gpGlobals->maxClients; i++)
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
 		CBasePlayer *pPl = UTIL_PlayerByIndex(i);
 		if (!pPl || !pPl->IsBot())
