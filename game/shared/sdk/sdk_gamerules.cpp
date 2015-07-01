@@ -451,6 +451,7 @@ CSDKGameRules::CSDKGameRules()
 	m_nPenaltyTakingTeam = TEAM_HOME;
 	m_flClockStoppedTime = 0;
 	m_flClockStoppedStart = -1;
+	m_flBallStateTransitionTime = 0;
 	m_pPrecip = NULL;
 	m_nFirstHalfBottomTeam = TEAM_HOME;
 	m_nBottomTeam = TEAM_HOME;
@@ -1477,6 +1478,7 @@ void CSDKGameRules::State_Enter( match_period_t newState )
 	m_flClockStoppedTime = 0.0f;
 	m_flClockStoppedStart = -1;
 	m_nAnnouncedInjuryTime = -1;
+	m_flBallStateTransitionTime = 0.0f;
 
 	if ( mp_showstatetransitions.GetInt() > 0 )
 	{
@@ -2206,10 +2208,8 @@ bool CSDKGameRules::CheckAutoStart()
 
 void CSDKGameRules::CalcAnnouncedInjuryTime()
 {
-	int adjustedTransitionTime = GetMatchBall()->m_flTotalStateTransitionTime / 60 * (90.0f / mp_timelimit_match.GetFloat()) * mp_injurytime_coeff.GetFloat();
+	int adjustedTransitionTime = m_flBallStateTransitionTime / 60 * (90.0f / mp_timelimit_match.GetFloat()) * mp_injurytime_coeff.GetFloat();
 	m_nAnnouncedInjuryTime = clamp(adjustedTransitionTime, mp_injurytime_min.GetInt(), mp_injurytime_max.GetInt());
-
-	UTIL_ClientPrintAll(HUD_PRINTTALK, UTIL_VarArgs("DEBUG: State transition time: raw: %.2f seconds, adjusted: %d minutes", GetMatchBall()->m_flTotalStateTransitionTime, adjustedTransitionTime));
 }
 
 #include <ctype.h>
@@ -2720,19 +2720,12 @@ void CSDKGameRules::StopMeteringClockStoppedTime()
 		float timePassed = gpGlobals->curtime - m_flClockStoppedStart;
 		m_flClockStoppedTime += timePassed;
 		m_flClockStoppedStart = -1;
-
-		//for (int i = 1; i <= gpGlobals->maxClients; i++)
-		//{
-		//	CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
-		//	if (!pPl)
-		//		continue;
-
-		//	if (pPl->IsCardBanned() && pPl->GetNextJoin() > gpGlobals->curtime)
-		//	{
-		//		pPl->SetNextJoin(pPl->GetNextJoin() + timePassed);
-		//	}
-		//}
 	}
+}
+
+void CSDKGameRules::AddBallStateTransitionTime(float duration)
+{
+	m_flBallStateTransitionTime += duration;
 }
 
 #endif

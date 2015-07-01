@@ -91,7 +91,6 @@ public:
 	bool			m_bIsPenalty;
 	int				m_nTeam;
 	float			m_flFieldZone;
-	float			m_flTotalStateTransitionTime;
 };
 
 extern CMatchBall *GetMatchBall();

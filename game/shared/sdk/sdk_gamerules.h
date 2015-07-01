@@ -307,6 +307,7 @@ protected:
 	bool m_bHasWalledField;
 	bool m_bIsTrainingMap;
 	int m_nAllowedFieldMaterials;
+	float m_flBallStateTransitionTime;
 
 	CUtlVector<int> m_PlayerRotationMinutes;
 
@@ -379,6 +380,7 @@ public:
 	int GetKickOffTeam();
 	void StartMeteringClockStoppedTime();
 	void StopMeteringClockStoppedTime();
+	void AddBallStateTransitionTime(float duration);
 	void ClientSettingsChanged( CBasePlayer *pPlayer );
 	void EnableShield(int type, int team, const Vector &pos);
 	void DisableShield();

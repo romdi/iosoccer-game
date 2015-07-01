@@ -95,7 +95,6 @@ CMatchBall::CMatchBall()
 	m_bIsAdvantage = false;
 	m_bBallInAirAfterThrowIn = false;
 	m_flStateTimelimit = -1;
-	m_flTotalStateTransitionTime = 0;
 }
 
 CMatchBall::~CMatchBall()
@@ -129,7 +128,6 @@ void CMatchBall::Reset()
 	m_bIsAdvantage = false;
 	m_bBallInAirAfterThrowIn = false;
 	m_flStateTimelimit = -1;
-	m_flTotalStateTransitionTime = 0;
 
 	UnmarkOffsidePlayers();
 	RemoveAllTouches();
@@ -156,7 +154,7 @@ void CMatchBall::State_Transition(ball_state_t nextState, float nextStateMessage
 		m_bHasQueuedState = true;
 
 		if (State_Get() != BALL_STATE_GOAL)
-			m_flTotalStateTransitionTime += nextStateMessageDelay + nextStatePostMessageDelay;
+			SDKGameRules()->AddBallStateTransitionTime(nextStateMessageDelay + nextStatePostMessageDelay);
 	}
 }
 
