@@ -138,7 +138,6 @@ extern ConVar
 	mp_keeper1on1speed,
 	mp_jumplandingspeed,
 	mp_remotecontrolledspeed,
-	mp_speed_chargedshot_slowdown,
 	mp_keepersidewarddive_move_duration,
 	mp_keepersidewarddive_idle_duration,
 	mp_keeperbackwarddive_move_duration,

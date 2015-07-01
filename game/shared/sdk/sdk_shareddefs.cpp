@@ -116,7 +116,6 @@ ConVar mp_ceremonyspeed("mp_ceremonyspeed", "100", FCVAR_REPLICATED | FCVAR_NOTI
 ConVar mp_keeper1on1speed("mp_keeper1on1speed", "175", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_jumplandingspeed("mp_jumplandingspeed", "0", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_remotecontrolledspeed("mp_remotecontrolledspeed", "500", FCVAR_REPLICATED | FCVAR_NOTIFY);
-ConVar mp_speed_chargedshot_slowdown("mp_speed_chargedshot_slowdown", "1", FCVAR_REPLICATED | FCVAR_NOTIFY);
 
 ConVar mp_keepersidewarddive_move_duration("mp_keepersidewarddive_move_duration", "0.8", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_keepersidewarddive_idle_duration("mp_keepersidewarddive_idle_duration", "0.2", FCVAR_REPLICATED | FCVAR_NOTIFY);

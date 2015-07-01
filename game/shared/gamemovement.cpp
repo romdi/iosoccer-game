@@ -3054,10 +3054,8 @@ void CGameMovement::SetPlayerSpeed()
 	}
 	else
 	{
-		float speedCoeff = mp_speed_chargedshot_slowdown.GetBool() && (pPl->m_Shared.m_bIsShotCharging || pPl->m_Shared.m_bDoChargedShot) ? 1.0f - pPl->GetChargedShotStrength() : 1.0f;
-
 		if ((mv->m_nButtons & IN_SPEED) && pPl->m_Shared.GetStamina() > 0 && (mv->m_nButtons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT)))
-			flMaxSpeed = mp_runspeed.GetInt() + (mp_sprintspeed.GetInt() - mp_runspeed.GetInt()) * speedCoeff;
+			flMaxSpeed = mp_sprintspeed.GetInt();
 		else
 			flMaxSpeed = mp_runspeed.GetInt();
 	}
