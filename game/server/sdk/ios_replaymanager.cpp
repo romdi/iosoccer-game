@@ -197,16 +197,29 @@ void CReplayManager::Think()
 
 bool matchEventFitsMatchPeriod(const MatchEvent *pMatchEvent, match_period_t matchPeriod)
 {
-	if (matchPeriod == pMatchEvent->matchPeriod
-		|| matchPeriod == MATCH_PERIOD_COOLDOWN
-		|| matchPeriod == MATCH_PERIOD_HALFTIME && (pMatchEvent->matchEventType == MATCH_EVENT_KEEPERSAVE || pMatchEvent->matchEventType == MATCH_EVENT_MISS)
-		|| matchPeriod == MATCH_PERIOD_EXTRATIME_INTERMISSION && pMatchEvent->matchPeriod == MATCH_PERIOD_SECOND_HALF
-		|| matchPeriod == MATCH_PERIOD_EXTRATIME_HALFTIME && pMatchEvent->matchPeriod == MATCH_PERIOD_EXTRATIME_FIRST_HALF
-		|| matchPeriod == MATCH_PERIOD_PENALTIES_INTERMISSION
-		&& (mp_extratime.GetBool() && pMatchEvent->matchPeriod == MATCH_PERIOD_EXTRATIME_SECOND_HALF
-		|| !mp_extratime.GetBool() && pMatchEvent->matchPeriod == MATCH_PERIOD_SECOND_HALF))
-	{
+	// Instant replays while match is running
+	if (matchPeriod == pMatchEvent->matchPeriod)
 		return true;
+
+	// All replays after match end
+	if (matchPeriod == MATCH_PERIOD_COOLDOWN)
+		return true;
+
+	// Only saves and misses in other intermissions
+	if (pMatchEvent->matchEventType == MATCH_EVENT_KEEPERSAVE || pMatchEvent->matchEventType == MATCH_EVENT_MISS)
+	{
+		if (matchPeriod == MATCH_PERIOD_HALFTIME)
+			return true;
+
+		if (matchPeriod == MATCH_PERIOD_EXTRATIME_INTERMISSION && pMatchEvent->matchPeriod == MATCH_PERIOD_SECOND_HALF)
+			return true;
+
+		if (matchPeriod == MATCH_PERIOD_EXTRATIME_HALFTIME && pMatchEvent->matchPeriod == MATCH_PERIOD_EXTRATIME_FIRST_HALF)
+			return true;
+
+		if (matchPeriod == MATCH_PERIOD_PENALTIES_INTERMISSION
+			&& (mp_extratime.GetBool() && pMatchEvent->matchPeriod == MATCH_PERIOD_EXTRATIME_SECOND_HALF || !mp_extratime.GetBool() && pMatchEvent->matchPeriod == MATCH_PERIOD_SECOND_HALF))
+			return true;
 	}
 
 	return false;
