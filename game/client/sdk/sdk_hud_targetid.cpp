@@ -18,6 +18,7 @@
 #include "view.h"
 #include "c_team.h"
 #include "clientmode_shared.h"
+#include "c_match_ball.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -27,6 +28,8 @@
 
 ConVar hud_names_visible("hud_names_visible", "1");
 ConVar hud_names_offset("hud_names_offset", "120");
+ConVar hud_names_opacity("hud_names_opacity", "0.5");
+ConVar hud_names_possessor_only("hud_names_possessor_only", "0");
 
 void CC_HudNamesToggle(const CCommand &args)
 {
@@ -110,6 +113,8 @@ void DrawPlayerName(HFont font, const Vector &origin, const char *playerName, in
 
 	Color c = GetGlobalTeam(teamNumber)->GetHudKitColor();
 
+	c.SetColor(c.r(), c.g(), c.b(), 255 * hud_names_opacity.GetFloat());
+
 	Vector pos = origin;
 	pos.z += VEC_HULL_MAX.z + hud_names_offset.GetInt();
 
@@ -150,6 +155,9 @@ void CSDKTargetId::Paint()
 		{
 			C_SDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
 			if (!pPl || pPl->IsDormant())
+				continue;
+
+			if (hud_names_possessor_only.GetBool() && (!GetMatchBall() || pPl != GetMatchBall()->m_pLastActivePlayer))
 				continue;
 
 			if (pPl != pLocal && hud_names_visible.GetBool())
