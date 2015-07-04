@@ -1370,7 +1370,12 @@ ConVar sv_highlights("sv_highlights", "1", FCVAR_NOTIFY);
 
 static void OnMaxPlayersChange(IConVar *var, const char *pOldValue, float flOldValue)
 {
+	// Do nothing if the new and old values are identical
+	if (((ConVar *)var)->GetInt() == atoi(pOldValue))
+		return;
+
 #ifdef GAME_DLL
+
 	if (SDKGameRules())
 	{
 		SDKGameRules()->SetOldMaxplayers(atoi(pOldValue));
@@ -1406,6 +1411,7 @@ static void OnMaxPlayersChange(IConVar *var, const char *pOldValue, float flOldV
 			GetGlobalTeam(team)->UpdatePosIndices(true);
 		}
 	}
+
 #endif
 }
 
