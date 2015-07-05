@@ -58,6 +58,7 @@ enum { GOALINFOPANEL_WIDTH = 500, GOALINFOPANEL_HEIGHT = 120, GOALINFOPANEL_MARG
 enum { STATUSPANEL_WIDTH = 120, STATUSPANEL_HEIGHT = 30, STATUSPANEL_MARGIN = 30 };
 enum { TEAMCREST_SIZE = 70, TEAMCREST_HMARGIN = 10, TEAMCREST_VMARGIN = 10 };
 enum { TICKER_PANEL_HEIGHT = 50, TICKER_PANEL_MARGIN = 30 };
+enum { POSITION_PANEL_WIDTH = 150, POSITION_PANEL_HMARGIN = 30, POSITION_PANEL_VMARGIN = 30, POSITION_LABEL_HEIGHT = 30, POSITION_LABEL_VMARGIN = 10 };
 
 const float slideDownDuration = 0.5f;
 const float slideUpDuration = 0.5f;
@@ -132,6 +133,9 @@ private:
 	float m_flTickerStartTime;
 	int m_nTickerTeamIndex;
 	int m_nTickerTextWidth;
+
+	Panel *m_pPositionStatusPanel[2];
+	Label *m_pPositionStatuses[2][11];
 };
 
 DECLARE_HUDELEMENT( CHudScorebar );
@@ -193,6 +197,14 @@ CHudScorebar::CHudScorebar( const char *pElementName ) : BaseClass(NULL, "HudSco
 
 	m_pTickerPanel = new Panel(this, "");
 	m_pTickerText = new Label(m_pTickerPanel, "", "");
+
+	for (int team = 0; team < 2; team++)
+	{
+		m_pPositionStatusPanel[team] = new Panel(this);
+
+		for (int pos = 0; pos < 11; pos++)
+			m_pPositionStatuses[team][pos] = new Label(m_pPositionStatusPanel[team], "", "");
+	}
 
 	m_flTickerStartTime = -1;
 	m_nTickerTeamIndex = 0;
@@ -357,6 +369,18 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 	m_pTickerText->SetFont(m_pScheme->GetFont("IOSScorebarMedium"));
 	m_pTickerText->SetFgColor(Color(255, 255, 255, 255));
 	m_pTickerText->SetContentAlignment(Label::a_west);
+
+	for (int team = 0; team < 2; team++)
+	{
+		m_pPositionStatusPanel[team]->SetBounds(ScreenWidth() - POSITION_PANEL_HMARGIN - POSITION_PANEL_WIDTH, POSITION_PANEL_VMARGIN, POSITION_PANEL_WIDTH, 0);
+
+		for (int pos = 0; pos < 11; pos++)
+		{
+			m_pPositionStatuses[team][pos]->SetBounds(0, pos * (POSITION_LABEL_HEIGHT + POSITION_LABEL_VMARGIN), POSITION_PANEL_WIDTH, POSITION_LABEL_HEIGHT);
+			m_pPositionStatuses[team][pos]->SetFont(m_pScheme->GetFont("IOSPlayerName"));
+			m_pPositionStatuses[team][pos]->SetVisible(false);
+		}
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -397,6 +421,10 @@ void CHudScorebar::OnThink( void )
 	C_SDKPlayer *pLocal = C_SDKPlayer::GetLocalSDKPlayer();
 
 	if (!SDKGameRules() || !GetGlobalTeam(TEAM_HOME) || !GetGlobalTeam(TEAM_AWAY) || !pLocal)
+		return;
+
+	IGameResources *gr = GameResources();
+	if (!gr)
 		return;
 
 	if (SDKGameRules()->State_Get() == MATCH_PERIOD_WARMUP && mp_timelimit_warmup.GetFloat() < 0)
@@ -610,10 +638,6 @@ void CHudScorebar::OnThink( void )
 		}
 	}
 
-	IGameResources *gr = GameResources();
-	if (!gr)
-		return;
-
 	if (SDKGameRules()->IsCeremony())
 	{
 		if (m_flTickerStartTime == -1 || m_pTickerText->GetX() < -m_nTickerTextWidth)
@@ -670,6 +694,35 @@ void CHudScorebar::OnThink( void )
 	{
 		m_pTickerPanel->SetVisible(false);
 		m_flTickerStartTime = -1;
+	}
+
+	for (int team = 0; team < 2; team++)
+	{
+		int redCardCount = 0;
+
+		for (int pos = 0; pos < 11; pos++)
+		{
+			m_pPositionStatuses[team][pos]->SetVisible(false);
+
+			int nextJoin = GetGlobalTeam(TEAM_HOME + team)->m_PosNextJoinSeconds[pos];
+
+			if (pos < mp_maxplayers.GetInt() && nextJoin > SDKGameRules()->GetMatchDisplayTimeSeconds(true, false))
+			{
+				Color c = GetGlobalTeam(TEAM_HOME + team)->GetHudKitColor();
+				c = Color(c.r(), c.g(), c.b(), 1.0f * 255);
+
+				m_pPositionStatuses[team][redCardCount]->SetFgColor(c);
+				m_pPositionStatuses[team][redCardCount]->SetText(VarArgs("%s unblock @ %d:%02d", g_szPosNames[GetGlobalTeam(TEAM_HOME + team)->GetFormation()->positions[pos]->type], nextJoin / 60, nextJoin % 60));
+				m_pPositionStatuses[team][redCardCount]->SetVisible(true);
+
+				redCardCount += 1;
+			}
+		}
+
+		m_pPositionStatusPanel[team]->SetTall(redCardCount * (POSITION_LABEL_HEIGHT + POSITION_LABEL_VMARGIN));
+
+		if (team == 1)
+			m_pPositionStatusPanel[team]->SetY(POSITION_PANEL_VMARGIN + m_pPositionStatusPanel[0]->GetTall());
 	}
 }
 
