@@ -140,6 +140,11 @@ CPlayerBall::CPlayerBall()
 
 CPlayerBall::~CPlayerBall()
 {
+	if (GetHoldingPlayer())
+		RemoveFromPlayerHands(GetHoldingPlayer());
+
+	if (GetCreator())
+		GetCreator()->SetPlayerBall(NULL);
 }
 
 void CPlayerBall::State_Transition(ball_state_t nextState, float nextStateMessageDelay /*= 0*/, float nextStatePostMessageDelay /*= 0*/, bool cancelQueuedState /*= false*/)
@@ -231,12 +236,6 @@ void CPlayerBall::RemoveAllPlayerBalls()
 
 void CPlayerBall::RemovePlayerBall()
 {
-	if (GetHoldingPlayer())
-		RemoveFromPlayerHands(GetHoldingPlayer());
-
-	if (GetCreator())
-		GetCreator()->SetPlayerBall(NULL);
-
 	UTIL_Remove(this);
 }
 

@@ -224,7 +224,6 @@ CBall::CBall()
 	m_pPl = NULL;
 	m_pHoldingPlayer = NULL;
 	m_bHasQueuedState = false;
-	m_pHoldingPlayer = NULL;
 	m_bHitThePost = false;
 	m_nInPenBoxOfTeam = TEAM_NONE;
 	memset(m_szSkinName.GetForModify(), 0, sizeof(m_szSkinName));
@@ -1376,11 +1375,14 @@ void CBall::RemoveFromPlayerHands(CSDKPlayer *pPl)
 		pPl->DoServerAnimationEvent(PLAYERANIMEVENT_CARRY_END);
 	}
 
-	m_pHoldingPlayer = NULL;
-	RemoveEffects(EF_NODRAW);
-	EnablePlayerCollisions(true);
-	m_pPhys->EnableMotion(true);
-	m_pPhys->Wake();
+	if (!IsMarkedForDeletion())
+	{
+		m_pHoldingPlayer = NULL;
+		RemoveEffects(EF_NODRAW);
+		EnablePlayerCollisions(true);
+		m_pPhys->EnableMotion(true);
+		m_pPhys->Wake();
+	}
 }
 
 Vector CBall::GetPos()

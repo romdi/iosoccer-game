@@ -66,17 +66,19 @@ IMPLEMENT_SERVERCLASS_ST( CMatchBall, DT_MatchBall )
 	SendPropInt(SENDINFO(m_nLastActiveTeam)),
 END_SEND_TABLE()
 
+CMatchBall *g_pMatchBall = NULL;
+
 CMatchBall *CreateMatchBall(const Vector &pos)
 {
-	CMatchBall *pBall = static_cast<CMatchBall *>(CreateEntityByName("match_ball"));
-	pBall->SetAbsOrigin(pos);
-	pBall->Spawn();
-	pBall->SetPos(pos);
+	if (!g_pMatchBall)
+		g_pMatchBall = static_cast<CMatchBall *>(CreateEntityByName("match_ball"));
 
-	return pBall;
+	g_pMatchBall->SetAbsOrigin(pos);
+	g_pMatchBall->Spawn();
+	g_pMatchBall->SetPos(pos);
+
+	return g_pMatchBall;
 }
-
-CMatchBall *g_pMatchBall = NULL;
 
 CMatchBall *GetMatchBall()
 {
@@ -85,7 +87,6 @@ CMatchBall *GetMatchBall()
 
 CMatchBall::CMatchBall()
 {
-	g_pMatchBall = NULL;
 	m_pLastActivePlayer = NULL;
 	m_nLastActiveTeam = TEAM_NONE;
 	m_pPossessingPl = NULL;
@@ -99,7 +100,7 @@ CMatchBall::CMatchBall()
 
 CMatchBall::~CMatchBall()
 {
-
+	g_pMatchBall = NULL;
 }
 
 void CMatchBall::Spawn()
@@ -107,8 +108,6 @@ void CMatchBall::Spawn()
 	//TODO: Move the ball skin parsing to a better spot
 	CBallInfo::ParseBallSkins();
 	
-	g_pMatchBall = this;
-
 	CBall::Spawn();
 }
 

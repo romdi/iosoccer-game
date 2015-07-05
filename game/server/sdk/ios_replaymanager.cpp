@@ -296,10 +296,7 @@ void CReplayManager::StartReplay(bool isHighlightReplay)
 void CReplayManager::StopReplay()
 {
 	if (m_bReplayIsPending)
-	{
 		m_bReplayIsPending = false;
-		return;
-	}
 
 	if (!m_bIsReplaying)
 		return;
@@ -323,6 +320,9 @@ void CReplayManager::StopReplay()
 			}
 		}
 	}
+
+	if (IsMarkedForDeletion())
+		return;
 
 	CBall *pRealBall = GetMatchBall();
 	if (pRealBall)

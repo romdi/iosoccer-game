@@ -853,11 +853,6 @@ void CSDKGameRules::CreateStandardEntities()
 
 void CSDKGameRules::LevelShutdown()
 {
-	if (g_pReplayManager)
-	{
-		UTIL_Remove(g_pReplayManager);
-		g_pReplayManager = NULL;
-	}
 }
 
 #endif
