@@ -27,8 +27,10 @@ ConVar
 	sv_ball_stats_shot_mindist("sv_ball_stats_shot_mindist", "270", FCVAR_NOTIFY),
 	sv_ball_stats_save_minspeed("sv_ball_stats_save_minspeed", "720", FCVAR_NOTIFY),
 	sv_ball_stats_assist_maxtime("sv_ball_stats_assist_maxtime", "8", FCVAR_NOTIFY),
-	sv_ball_advantage_duration("sv_ball_advantage_duration", "3", FCVAR_NOTIFY),
-	sv_ball_advantage_ignore_duration("sv_ball_advantage_ignore_duration", "1", FCVAR_NOTIFY),
+	sv_ball_advantage_duration_freekick("sv_ball_advantage_duration_freekick", "3", FCVAR_NOTIFY),
+	sv_ball_advantage_ignore_duration_freekick("sv_ball_advantage_ignore_duration_freekick", "1", FCVAR_NOTIFY),
+	sv_ball_advantage_duration_penalty("sv_ball_advantage_duration_penalty", "1.5", FCVAR_NOTIFY),
+	sv_ball_advantage_ignore_duration_penalty("sv_ball_advantage_ignore_duration_penalty", "1", FCVAR_NOTIFY),
 	sv_ball_offsidedist("sv_ball_offsidedist", "60", FCVAR_NOTIFY),
 	sv_ball_goalcelebduration("sv_ball_goalcelebduration", "8.0", FCVAR_NOTIFY),
 	sv_ball_setpiece_close_time("sv_ball_setpiece_close_time", "0.75", FCVAR_NOTIFY),
@@ -2161,10 +2163,14 @@ bool CMatchBall::IsLegallyCatchableByKeeper()
 
 void CMatchBall::CheckAdvantage()
 {
-	if (m_bIsAdvantage && !SDKGameRules()->IsIntermissionState() && !m_bHasQueuedState && gpGlobals->curtime > m_flFoulTime + sv_ball_advantage_ignore_duration.GetFloat())
+	if (m_bIsAdvantage && !SDKGameRules()->IsIntermissionState() && !m_bHasQueuedState
+		&& (m_bIsPenalty && gpGlobals->curtime > m_flFoulTime + sv_ball_advantage_ignore_duration_penalty.GetFloat()
+			|| !m_bIsPenalty && gpGlobals->curtime > m_flFoulTime + sv_ball_advantage_ignore_duration_freekick.GetFloat()))
 	{
-		if (gpGlobals->curtime > m_flFoulTime + sv_ball_advantage_duration.GetFloat())
+		if (m_bIsPenalty && gpGlobals->curtime > m_flFoulTime + sv_ball_advantage_duration_penalty.GetFloat()
+			|| !m_bIsPenalty && gpGlobals->curtime > m_flFoulTime + sv_ball_advantage_duration_freekick.GetFloat())
 		{
+			// Always give a penalty if the advantage time is over and no goal was scored by the fouled team
 			if (m_bIsPenalty)
 			{
 				State_Transition(BALL_STATE_PENALTY, sv_ball_statetransition_messagedelay_normal.GetFloat(), sv_ball_statetransition_postmessagedelay_short.GetFloat());
@@ -2177,12 +2183,9 @@ void CMatchBall::CheckAdvantage()
 
 				if (pPl && pPl->GetTeamNumber() == m_nFoulingTeam // Fouling team player is closest
 					|| pLastInfo && pLastInfo->m_nTeam == m_nFoulingTeam // Fouling team shot last
-					|| pLastInfo && pLastInfo->m_flTime <= m_flFoulTime + sv_ball_advantage_ignore_duration.GetFloat()) // Last shot happened shortly after the foul was committed
+					|| pLastInfo && pLastInfo->m_flTime <= m_flFoulTime + sv_ball_advantage_ignore_duration_freekick.GetFloat()) // Last shot happened shortly after the foul was committed
 				{
-					if (m_bIsPenalty)
-						State_Transition(BALL_STATE_PENALTY, sv_ball_statetransition_messagedelay_normal.GetFloat(), sv_ball_statetransition_postmessagedelay_long.GetFloat());
-					else
-						State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_messagedelay_normal.GetFloat(), sv_ball_statetransition_postmessagedelay_long.GetFloat());
+					State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_messagedelay_normal.GetFloat(), sv_ball_statetransition_postmessagedelay_long.GetFloat());
 				}
 			}
 
