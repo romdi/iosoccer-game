@@ -479,9 +479,9 @@ void CReplayManager::TakeSnapshot()
 
 void CReplayManager::RestoreSnapshot()
 {
-	float timeSinceReplayStart = gpGlobals->curtime - m_flReplayStartTime;
+	float watchDuration = gpGlobals->curtime - m_flReplayStartTime;
 
-	if (timeSinceReplayStart > m_flRunDuration)
+	if (watchDuration > m_flRunDuration)
 	{
 		if (m_nReplayRunIndex < m_nMaxReplayRuns - 1)
 		{
@@ -518,7 +518,7 @@ void CReplayManager::RestoreSnapshot()
 		m_bIsReplaying = true;
 		m_bReplayIsPending = false;
 		CalcMaxReplayRunsAndDuration(pMatchEvent, gpGlobals->curtime);
-		timeSinceReplayStart = 0;
+		watchDuration = 0;
 
 		if (m_bIsHighlightReplay && m_bIsHighlightStart)
 		{
@@ -620,35 +620,40 @@ void CReplayManager::RestoreSnapshot()
 		}
 	}
 
+	// To find the correct snapshot calculate the time passed since we started watching the replay and match it to the right snapshot in our recording list
+
 	Snapshot *pNextSnap = NULL;
 	Snapshot *pSnap = NULL;
-	float timeSinceFirstSnap = 0;
+	float snapDuration = 0;
 
-	// Walk context looking for any invalidating event
+	// Traverse backwards looking for a recorded snapshot matching the time since replay start
 	for (int i = pMatchEvent->snapshots.Count() - 1; i >= 0; i--)
 	{
-		// remember last record
+		// Save the snapshot of the previous iteration, so we have a snapshot to interpolate to when we found our target snapshot
 		pNextSnap = pSnap;
 
-		// get next record
+		// Save the current snapshot
 		pSnap = pMatchEvent->snapshots[i];
 
-		timeSinceFirstSnap = pSnap->snaptime - pMatchEvent->snapshots[0]->snaptime;
+		// Snapshots have absolute match times, so calculate the relative time span between the first recorded snapshot and the current snapshot
+		snapDuration = pSnap->snaptime - pMatchEvent->snapshots[0]->snaptime - m_flReplayStartTimeOffset;
 
-		// did we find a context smaller than target time ?
-		if (timeSinceFirstSnap - m_flReplayStartTimeOffset <= timeSinceReplayStart)
-			break; // hurra, stop
+		// We usually only play the last x seconds of a replay instead of the whole thing, so subtract the start time offset from the time since the first snapshot.
+		// The first snapshot which time span is equal or shorter than the duration since replay start is the one which should be shown next.
+		if (snapDuration <= watchDuration)
+			break;
 	}
 
+	// No snapshots in the list
 	if (!pSnap)
 		return;
 
-	float nextTimeSinceFirstSnap;
+	float nextSnapDuration;
 
 	if (pNextSnap)
-		nextTimeSinceFirstSnap = pNextSnap->snaptime - pMatchEvent->snapshots[0]->snaptime;
+		nextSnapDuration = pNextSnap->snaptime - pMatchEvent->snapshots[0]->snaptime - m_flReplayStartTimeOffset;
 	else
-		nextTimeSinceFirstSnap = 0;
+		nextSnapDuration = 0;
 
 	BallSnapshot *pBallSnap = pSnap->pBallSnapshot;
 
@@ -674,23 +679,14 @@ void CReplayManager::RestoreSnapshot()
 
 	float frac;
 
-	if (pNextSnap &&
-		(timeSinceFirstSnap < timeSinceReplayStart) &&
-		(timeSinceFirstSnap < nextTimeSinceFirstSnap) )
+	if (pNextSnap)
 	{
-		// we didn't find the exact time but have a valid previous record
-		// so interpolate between these two records;
-
-		// calc fraction between both records
-		frac = ( timeSinceReplayStart - (timeSinceFirstSnap - m_flReplayStartTimeOffset) ) / 
-			( nextTimeSinceFirstSnap - timeSinceFirstSnap );
-
-		Assert( frac > 0 && frac < 1 ); // should never extrapolate
+		// Calc fraction between both snapshots
+		frac = clamp((watchDuration - snapDuration) / (nextSnapDuration - snapDuration), 0.0f, 1.0f);
 	}
 	else
 	{
-		// we found the exact record or no other record to interpolate with
-		// just copy these values since they are the best we have
+		// Exact snapshot time matched or no next snapshot to interpolate to
 		frac = 0.0f;
 	}
 
