@@ -1358,9 +1358,15 @@ void CSDKGameRules::SetWeather(PrecipitationType_t type)
 
 ConVar sv_replays("sv_replays", "1", FCVAR_NOTIFY);
 ConVar sv_replay_count("sv_replay_count", "2", FCVAR_NOTIFY);
-ConVar sv_replay_duration1("sv_replay_duration1", "6", FCVAR_NOTIFY);
-ConVar sv_replay_duration2("sv_replay_duration2", "6", FCVAR_NOTIFY);
-ConVar sv_replay_duration3("sv_replay_duration3", "4", FCVAR_NOTIFY);
+ConVar sv_replay_duration1("sv_replay_duration1", "5", FCVAR_NOTIFY);
+ConVar sv_replay_slowmo_duration1("sv_replay_slowmo_duration1", "3", FCVAR_NOTIFY);
+ConVar sv_replay_slowmo_coeff1("sv_replay_slowmo_coeff1", "0.5", FCVAR_NOTIFY);
+ConVar sv_replay_duration2("sv_replay_duration2", "5", FCVAR_NOTIFY);
+ConVar sv_replay_slowmo_duration2("sv_replay_slowmo_duration2", "3", FCVAR_NOTIFY);
+ConVar sv_replay_slowmo_coeff2("sv_replay_slowmo_coeff2", "0.5", FCVAR_NOTIFY);
+ConVar sv_replay_duration3("sv_replay_duration3", "5", FCVAR_NOTIFY);
+ConVar sv_replay_slowmo_duration3("sv_replay_slowmo_duration3", "3", FCVAR_NOTIFY);
+ConVar sv_replay_slowmo_coeff3("sv_replay_slowmo_coeff3", "0.5", FCVAR_NOTIFY);
 ConVar sv_highlights("sv_highlights", "1", FCVAR_NOTIFY);
 
 static void OnMaxPlayersChange(IConVar *var, const char *pOldValue, float flOldValue)

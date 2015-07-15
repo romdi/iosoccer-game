@@ -620,6 +620,11 @@ void CReplayManager::RestoreSnapshot()
 		}
 	}
 
+	float normalRunDuration = m_flRunDuration - m_flSlowMoDuration;
+
+	if (watchDuration > normalRunDuration)
+		watchDuration = normalRunDuration + m_flSlowMoCoeff * (watchDuration - normalRunDuration);
+
 	// To find the correct snapshot calculate the time passed since we started watching the replay and match it to the right snapshot in our recording list
 
 	Snapshot *pNextSnap = NULL;
@@ -868,22 +873,42 @@ void CReplayManager::CalcMaxReplayRunsAndDuration(const MatchEvent *pMatchEvent,
 	{
 		m_nMaxReplayRuns = sv_replay_count.GetInt();
 
-		if (m_nReplayRunIndex == 0)
+		switch (m_nReplayRunIndex)
+		{
+		case 0:
+		default:
 			m_flRunDuration = sv_replay_duration1.GetFloat();
-		else if (m_nReplayRunIndex == 1)
+			m_flSlowMoDuration = sv_replay_slowmo_duration1.GetFloat();
+			m_flSlowMoCoeff = sv_replay_slowmo_coeff1.GetFloat();
+			break;
+		case 1:
 			m_flRunDuration = sv_replay_duration2.GetFloat();
-		else if (m_nReplayRunIndex == 2)
+			m_flSlowMoDuration = sv_replay_slowmo_duration2.GetFloat();
+			m_flSlowMoCoeff = sv_replay_slowmo_coeff2.GetFloat();
+			break;
+		case 2:
 			m_flRunDuration = sv_replay_duration3.GetFloat();
+			m_flSlowMoDuration = sv_replay_slowmo_duration3.GetFloat();
+			m_flSlowMoCoeff = sv_replay_slowmo_coeff3.GetFloat();
+			break;
+		}
 	}
 	else
 	{
 		m_nMaxReplayRuns = 1;
 		m_flRunDuration = 4.0f;
+		m_flSlowMoDuration = 0;
+		m_flSlowMoCoeff = 1.0f;
 	}
 
 	m_flReplayStartTime = startTime;
-	// If the new replay duration is shorter than the recorded time span, set the offset so it starts playing later and finishes with the last snapshot
+
+	// If the new replay duration is shorter than the recorded time span, set the offset so it starts playing later and finishes with the last snapshot.
+	// The recorded duration is the maximum of all duration convars
 	m_flReplayStartTimeOffset = max(max(sv_replay_duration1.GetFloat(), sv_replay_duration2.GetFloat()), sv_replay_duration3.GetFloat()) - m_flRunDuration;
+
+	// Compensate for slow mo
+	m_flReplayStartTimeOffset += (1.0f - m_flSlowMoCoeff) * m_flSlowMoDuration;
 }
 
 void CReplayManager::AddMatchEvent(match_event_t type, int team, CSDKPlayer *pPlayer1, CSDKPlayer *pPlayer2/* = NULL*/, CSDKPlayer *pPlayer3/* = NULL*/)

@@ -250,6 +250,8 @@ private:
 	float					m_flReplayActivationTime;
 	float					m_flReplayStartTime;
 	float					m_flReplayStartTimeOffset;
+	float					m_flSlowMoDuration;
+	float					m_flSlowMoCoeff;
 	bool					m_bIsHighlightReplay;
 	bool					m_bIsReplayStart;
 	bool					m_bIsHighlightStart;
