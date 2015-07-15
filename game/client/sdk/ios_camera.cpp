@@ -181,7 +181,12 @@ int C_Camera::GetTVCamMode()
 	}
 	else if (GetReplayManager() && GetReplayManager()->IsReplaying())
 	{
-		return GetReplayManager()->m_nReplayRunIndex == 0 ? mp_tvcam_firstreplaycam.GetInt() : mp_tvcam_secondreplaycam.GetInt();
+		switch (GetReplayManager()->m_nReplayRunIndex)
+		{
+		case 0: default: return mp_tvcam_replaycam1.GetInt();
+		case 1: return mp_tvcam_replaycam2.GetInt();
+		case 2: return mp_tvcam_replaycam3.GetInt();
+		}
 	}
 	else if (GetMatchBall() && GetMatchBall()->m_eBallState == BALL_STATE_GOAL)
 	{
