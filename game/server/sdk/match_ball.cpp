@@ -2163,16 +2163,18 @@ bool CMatchBall::IsLegallyCatchableByKeeper()
 
 void CMatchBall::CheckAdvantage()
 {
+	// Check if we're beyond the initial ignore period after a foul during which no checks should be performed until ball possession is settled
 	if (m_bIsAdvantage && !SDKGameRules()->IsIntermissionState() && !m_bHasQueuedState
 		&& (m_bIsPenalty && gpGlobals->curtime > m_flFoulTime + sv_ball_advantage_ignore_duration_penalty.GetFloat()
 			|| !m_bIsPenalty && gpGlobals->curtime > m_flFoulTime + sv_ball_advantage_ignore_duration_freekick.GetFloat()))
 	{
+		// Check if the advantage period is over
 		if (m_bIsPenalty && gpGlobals->curtime > m_flFoulTime + sv_ball_advantage_duration_penalty.GetFloat()
 			|| !m_bIsPenalty && gpGlobals->curtime > m_flFoulTime + sv_ball_advantage_duration_freekick.GetFloat())
 		{
-			// Always give a penalty if the advantage time is over and no goal was scored by the fouled team
 			if (m_bIsPenalty)
 			{
+				// Always give a penalty if the advantage time is over and no goal was scored by the fouled team
 				State_Transition(BALL_STATE_PENALTY, sv_ball_statetransition_messagedelay_normal.GetFloat(), sv_ball_statetransition_postmessagedelay_short.GetFloat());
 			}
 			else
@@ -2191,6 +2193,7 @@ void CMatchBall::CheckAdvantage()
 
 			m_bIsAdvantage = false;
 		}
+		// After ignore period, but before end of advantage
 		else
 		{
 			if (!m_bIsPenalty)
@@ -2200,12 +2203,7 @@ void CMatchBall::CheckAdvantage()
 					CSDKPlayer *pPl = FindNearestPlayer();
 
 					if (pPl && pPl->GetTeamNumber() == m_nFoulingTeam)
-					{
-						if (m_bIsPenalty)
-							State_Transition(BALL_STATE_PENALTY, sv_ball_statetransition_messagedelay_normal.GetFloat(), sv_ball_statetransition_postmessagedelay_long.GetFloat());
-						else
-							State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_messagedelay_normal.GetFloat(), sv_ball_statetransition_postmessagedelay_long.GetFloat());
-					}
+						State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_messagedelay_normal.GetFloat(), sv_ball_statetransition_postmessagedelay_long.GetFloat());
 				}
 				else if (LastPl(true) && LastPl(true)->GetTeamNumber() == m_nFouledTeam && m_nInPenBoxOfTeam == m_nFoulingTeam)
 				{
