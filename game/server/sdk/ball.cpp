@@ -970,6 +970,9 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 
 	if (m_pPl->DoSkillMove())
 	{
+		if (!m_pPl->GetGroundEntity())
+			return false;
+
 		if (!m_pPl->IsNormalshooting())
 		{
 			m_pPl->m_flNextShot = gpGlobals->curtime + sv_ball_shottaker_mindelay_short.GetFloat();
