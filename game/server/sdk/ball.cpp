@@ -157,9 +157,6 @@ ConVar
 	sv_ball_bodypos_deflection_start("sv_ball_bodypos_deflection_start", "0", FCVAR_NOTIFY),
 	sv_ball_bodypos_deflection_end("sv_ball_bodypos_deflection_end", "80", FCVAR_NOTIFY),
 	
-	sv_ball_deflectioncoeff("sv_ball_deflectioncoeff", "0.66", FCVAR_NOTIFY),
-	sv_ball_collisioncoeff("sv_ball_collisioncoeff", "0.66", FCVAR_NOTIFY),
-	
 	sv_ball_maxplayerfinddist("sv_ball_maxplayerfinddist", "200", FCVAR_NOTIFY),
 	
 	sv_ball_freecamshot_maxangle("sv_ball_freecamshot_maxangle", "60", FCVAR_NOTIFY),
@@ -168,14 +165,18 @@ ConVar
 	sv_ball_heelshot_variablestrength("sv_ball_heelshot_variablestrength", "400", FCVAR_NOTIFY),
 	
 	sv_ball_keepercatchdelay_poscoeffmin("sv_ball_keepercatchdelay_poscoeffmin", "0.5", FCVAR_NOTIFY),
-	
-	sv_ball_dribbling_collide("sv_ball_dribbling_collide", "0", FCVAR_NOTIFY),
-	sv_ball_dribbling_mass("sv_ball_dribbling_mass", "75", FCVAR_NOTIFY),
-	sv_ball_dribbling_collisioncoeff("sv_ball_dribbling_collisioncoeff", "1.25", FCVAR_NOTIFY),
 
-	sv_ball_selfhit_collide("sv_ball_selfhit_collide", "0", FCVAR_NOTIFY),
-	sv_ball_selfhit_mass("sv_ball_selfhit_mass", "75", FCVAR_NOTIFY),
-	sv_ball_selfhit_collisioncoeff("sv_ball_selfhit_collisioncoeff", "0.25", FCVAR_NOTIFY);
+	sv_ball_collision_passive_mass("sv_ball_collision_passive_mass", "5", FCVAR_NOTIFY),
+	sv_ball_collision_passive_coeff("sv_ball_collision_passive_coeff", "0.5", FCVAR_NOTIFY),
+
+	sv_ball_collision_deflection_mass("sv_ball_collision_deflection_mass", "5", FCVAR_NOTIFY),
+	sv_ball_collision_deflection_coeff("sv_ball_collision_deflection_coeff", "0.5", FCVAR_NOTIFY),
+	
+	sv_ball_collision_dribbling_mass("sv_ball_collision_dribbling_mass", "75", FCVAR_NOTIFY),
+	sv_ball_collision_dribbling_coeff("sv_ball_collision_dribbling_coeff", "1.0", FCVAR_NOTIFY),
+
+	sv_ball_collision_selfhit_mass("sv_ball_collision_selfhit_mass", "225", FCVAR_NOTIFY),
+	sv_ball_collision_selfhit_coeff("sv_ball_collision_selfhit_coeff", "1.0", FCVAR_NOTIFY);
 	
 
 //==========================================================
@@ -684,25 +685,19 @@ bool CBall::CheckCollision()
 				&& DotProduct2D(m_vVel.AsVector2D(), dirToBall.AsVector2D()) >= 0
 				&& DotProduct2D(m_vPlVel.AsVector2D(), dirToBall.AsVector2D()) >= 0)
 			{
-				if (!sv_ball_dribbling_collide.GetBool())
-					return false;
-
-				collisionCoeff = sv_ball_dribbling_collisioncoeff.GetFloat();
-				ballMass = sv_ball_dribbling_mass.GetFloat();
+				collisionCoeff = sv_ball_collision_dribbling_coeff.GetFloat();
+				ballMass = sv_ball_collision_dribbling_mass.GetFloat();
 			}
 			else
 			{
-				if (!sv_ball_selfhit_collide.GetBool())
-					return false;
-
-				collisionCoeff = sv_ball_selfhit_collisioncoeff.GetFloat();
-				ballMass = sv_ball_selfhit_mass.GetFloat();
+				collisionCoeff = sv_ball_collision_selfhit_coeff.GetFloat();
+				ballMass = sv_ball_collision_selfhit_mass.GetFloat();
 			}
 		}
 		else
 		{
-			collisionCoeff = sv_ball_collisioncoeff.GetFloat();
-			ballMass = sv_ball_mass.GetFloat();
+			collisionCoeff = sv_ball_collision_passive_coeff.GetFloat();
+			ballMass = sv_ball_collision_passive_mass.GetFloat();
 		}
 	}
 	else if (m_pPl->IsShooting() && m_pPl->CanShoot()
@@ -710,8 +705,8 @@ bool CBall::CheckCollision()
 		&& GetCollisionPoint(true, collisionPoint))
 	{
 		collide = true;
-		collisionCoeff = sv_ball_deflectioncoeff.GetFloat();
-		ballMass = sv_ball_mass.GetFloat();
+		collisionCoeff = sv_ball_collision_deflection_coeff.GetFloat();
+		ballMass = sv_ball_collision_deflection_mass.GetFloat();
 	}
 
 	if (!collide)
