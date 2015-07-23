@@ -1186,6 +1186,9 @@ bool CBall::DoHeader()
 		// Diving header
 		else
 		{
+			if (!m_pPl->GetGroundEntity())
+				return false;
+
 			Vector vel, forward;
 			QAngle headerAngle = m_aPlAng;
 
