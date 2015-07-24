@@ -176,7 +176,13 @@ ConVar
 	sv_ball_collision_dribbling_coeff("sv_ball_collision_dribbling_coeff", "1.0", FCVAR_NOTIFY),
 
 	sv_ball_collision_selfhit_mass("sv_ball_collision_selfhit_mass", "225", FCVAR_NOTIFY),
-	sv_ball_collision_selfhit_coeff("sv_ball_collision_selfhit_coeff", "1.0", FCVAR_NOTIFY);
+	sv_ball_collision_selfhit_coeff("sv_ball_collision_selfhit_coeff", "1.0", FCVAR_NOTIFY),
+
+	sv_ball_sandground_enabled("sv_ball_sandground_enabled", "0", FCVAR_NOTIFY),
+	sv_ball_sandground_maxshotstrength("sv_ball_sandground_maxshotstrength", "500", FCVAR_NOTIFY),
+	sv_ball_sandground_rollfriction("sv_ball_sandground_rollfriction", "30", FCVAR_NOTIFY),
+	sv_ball_sandground_bouncefriction("sv_ball_sandground_bouncefriction", "30", FCVAR_NOTIFY);
+
 	
 
 //==========================================================
@@ -344,7 +350,16 @@ void CBall::VPhysicsUpdate(IPhysicsObject *pPhysics)
 	if (vel.Length() > 0)
 		vel += magnusDir * 1e-6 * sv_ball_magnus_coeff.GetFloat() * gpGlobals->frametime;
 
-	VPhysicsGetObject()->SetVelocity(&vel, &angImp);
+	if (sv_ball_sandground_enabled.GetBool())
+	{
+		if (vel.z <= 0 && m_pPhys->GetContactPoint(NULL, NULL))
+		{
+			vel -= sv_ball_sandground_rollfriction.GetFloat() * vel * gpGlobals->frametime;
+			angImp -= sv_ball_sandground_rollfriction.GetFloat() * angImp * gpGlobals->frametime;
+		}
+	}
+
+	m_pPhys->SetVelocity(&vel, &angImp);
 
 	BaseClass::VPhysicsUpdate(pPhysics);
 }
@@ -360,6 +375,20 @@ void CBall::VPhysicsCollision(int index, gamevcollisionevent_t *pEvent)
 		EmitSound("Ball.Post");
 	else if (speed > 500.0f)
 		EmitSound("Ball.Touch");
+
+	if (sv_ball_sandground_enabled.GetBool())
+	{
+		if (surfaceProps == 0)
+		{
+			Vector vel;
+			AngularImpulse angImp;
+			m_pPhys->GetVelocity(&vel, &angImp);
+
+			vel -= sv_ball_sandground_bouncefriction.GetFloat() * vel * gpGlobals->frametime;
+			angImp -= sv_ball_sandground_bouncefriction.GetFloat() * angImp * gpGlobals->frametime;
+			m_pPhys->SetVelocity(&vel, &angImp);
+		}
+	}
 }
 
 CSDKPlayer *CBall::FindNearestPlayer(int team /*= TEAM_NONE*/, int posFlags /*= FL_POS_OUTFIELD*/, bool checkIfShooting /*= false*/, int ignoredPlayerBits /*= 0*/, float radius /*= -1*/)
@@ -461,6 +490,16 @@ void CBall::SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyP
 	Vector oldVel = m_vVel;
 
 	m_vVel = vel;
+
+	if (sv_ball_sandground_enabled.GetBool())
+	{
+		if (m_pPhys->GetContactPoint(NULL, NULL))
+		{
+			float speed = VectorNormalize(m_vVel);
+			m_vVel *= min(speed, sv_ball_sandground_maxshotstrength.GetInt());
+		}
+	}
+
 	m_pPhys->EnableMotion(true);
 	m_pPhys->Wake();
 	m_pPhys->SetVelocity(&m_vVel, &m_vRot);
