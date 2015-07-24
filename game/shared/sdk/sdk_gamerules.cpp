@@ -90,8 +90,10 @@ void CSDKGameRules::SetupFormations()
 	for (int i = 0; i < 11; i++)
 		m_Formations[i].PurgeAndDeleteElements();
 
+	Formation *f;
+
 	// 1
-	Formation *f = new Formation("0");
+	f = new Formation("0");
 	f->positions.AddToTail(new Position(1.5f, 3, POS_GK, 1));
 	m_Formations[0].AddToTail(f);
 
@@ -104,119 +106,99 @@ void CSDKGameRules::SetupFormations()
 	// 3
 	f = new Formation("2");
 	f->positions.AddToTail(new Position(0.5f, 1, POS_LM, 11));
-	f->positions.AddToTail(new Position(2.5f, 1, POS_RM, 9));
+	f->positions.AddToTail(new Position(2.5f, 1, POS_RM, 7));
 	f->positions.AddToTail(new Position(1.5f, 3, POS_GK, 1));
 	m_Formations[2].AddToTail(f);
 
 	// 4
 	f = new Formation("1-2");
 	f->positions.AddToTail(new Position(0.5f, 1, POS_LM, 11));
-	f->positions.AddToTail(new Position(2.5f, 1, POS_RM, 9));
-	f->positions.AddToTail(new Position(1.5f, 1.5f, POS_CM, 10));
+	f->positions.AddToTail(new Position(2.5f, 1, POS_RM, 7));
+	f->positions.AddToTail(new Position(1.5f, 2, POS_CB, 3));
 	f->positions.AddToTail(new Position(1.5f, 3, POS_GK, 1));
 	m_Formations[3].AddToTail(f);
 
 	// 5
-	f = new Formation("2-2");
+	f = new Formation("1-2-1");
+	f->positions.AddToTail(new Position(1.5f, 0, POS_CF, 9));
 	f->positions.AddToTail(new Position(0.5f, 1, POS_LM, 11));
-	f->positions.AddToTail(new Position(2.5f, 1, POS_RM, 9));
-	f->positions.AddToTail(new Position(0.5f, 2, POS_LB, 2));
-	f->positions.AddToTail(new Position(2.5f, 2, POS_RB, 3));
+	f->positions.AddToTail(new Position(2.5f, 1, POS_RM, 7));
+	f->positions.AddToTail(new Position(1.5f, 2, POS_CB, 3));
 	f->positions.AddToTail(new Position(1.5f, 3, POS_GK, 1));
 	m_Formations[4].AddToTail(f);
 
 	// 6
 	f = new Formation("2-1-2");
-	f->positions.AddToTail(new Position(0.5f, 0, POS_LW, 11));
-	f->positions.AddToTail(new Position(2.5f, 0, POS_RW, 9));
+	f->positions.AddToTail(new Position(0.5f, 0, POS_LF, 11));
+	f->positions.AddToTail(new Position(2.5f, 0, POS_RF, 7));
 	f->positions.AddToTail(new Position(1.5f, 1, POS_CM, 10));
 	f->positions.AddToTail(new Position(0.5f, 2, POS_LB, 2));
-	f->positions.AddToTail(new Position(2.5f, 2, POS_RB, 3));
+	f->positions.AddToTail(new Position(2.5f, 2, POS_RB, 5));
 	f->positions.AddToTail(new Position(1.5f, 3, POS_GK, 1));
 	m_Formations[5].AddToTail(f);
 
 	// 7
-	f = new Formation("2-1-1-2");
-	f->positions.AddToTail(new Position(0.5f, 0, POS_LW, 8));
-	f->positions.AddToTail(new Position(2.5f, 0, POS_RW, 7));
-	f->positions.AddToTail(new Position(1.5f, 0.5f, POS_CAM, 10));
-	f->positions.AddToTail(new Position(1.5f, 1.75f, POS_CDM, 6));
-	f->positions.AddToTail(new Position(0.5f, 2, POS_LB, 2));
-	f->positions.AddToTail(new Position(2.5f, 2, POS_RB, 3));
-	f->positions.AddToTail(new Position(1.5f, 3, POS_GK, 1));
-	m_Formations[6].AddToTail(f);
-
-	f = new Formation("2-2-2");
-	f->positions.AddToTail(new Position(0.5f, 0, POS_LW, 8));
-	f->positions.AddToTail(new Position(2.5f, 0, POS_RW, 7));
-	f->positions.AddToTail(new Position(1.0f, 1, POS_LCM, 6));
-	f->positions.AddToTail(new Position(2.0f, 1, POS_RCM, 9));
-	f->positions.AddToTail(new Position(0.5f, 2, POS_LB, 2));
-	f->positions.AddToTail(new Position(2.5f, 2, POS_RB, 3));
-	f->positions.AddToTail(new Position(1.5f, 3, POS_GK, 1));
-	m_Formations[6].AddToTail(f);
-
-	f = new Formation("2-3-1");
-	f->positions.AddToTail(new Position(1.5f, 0, POS_CF, 8));
-	f->positions.AddToTail(new Position(0.5f, 1, POS_LM, 6));
+	f = new Formation("3-1-2");
+	f->positions.AddToTail(new Position(0.5f, 0, POS_LF, 11));
+	f->positions.AddToTail(new Position(2.5f, 0, POS_RF, 7));
 	f->positions.AddToTail(new Position(1.5f, 1, POS_CM, 10));
-	f->positions.AddToTail(new Position(2.5f, 1, POS_RM, 9));
 	f->positions.AddToTail(new Position(0.5f, 2, POS_LB, 2));
-	f->positions.AddToTail(new Position(2.5f, 2, POS_RB, 3));
+	f->positions.AddToTail(new Position(1.5f, 2, POS_CB, 3));
+	f->positions.AddToTail(new Position(2.5f, 2, POS_RB, 5));
 	f->positions.AddToTail(new Position(1.5f, 3, POS_GK, 1));
 	m_Formations[6].AddToTail(f);
 
 	// 8
 	f = new Formation("3-3-1");
-	f->positions.AddToTail(new Position(1.5f, 0, POS_CF, 10));
-	f->positions.AddToTail(new Position(0.5f, 0.5f, POS_LM, 11));
-	f->positions.AddToTail(new Position(2.5f, 0.5f, POS_RM, 7));
-	f->positions.AddToTail(new Position(1.5f, 1, POS_CM, 6));
-	f->positions.AddToTail(new Position(0.5f, 1.5f, POS_LB, 3));
-	f->positions.AddToTail(new Position(2.5f, 1.5f, POS_RB, 5));
-	f->positions.AddToTail(new Position(1.5f, 2, POS_SWP, 4));
+	f->positions.AddToTail(new Position(1.5f, 0, POS_CF, 9));
+	f->positions.AddToTail(new Position(0.5f, 1, POS_LM, 11));
+	f->positions.AddToTail(new Position(1.5f, 1, POS_CM, 10));
+	f->positions.AddToTail(new Position(2.5f, 1, POS_RM, 7));
+	f->positions.AddToTail(new Position(0.5f, 2, POS_LB, 5));
+	f->positions.AddToTail(new Position(1.5f, 2, POS_CB, 3));
+	f->positions.AddToTail(new Position(2.5f, 2, POS_RB, 2));
 	f->positions.AddToTail(new Position(1.5f, 3, POS_GK, 1));
 	m_Formations[7].AddToTail(f);
 
 	// 9
-	f = new Formation("3-3-2");
+	f = new Formation("3-2-3");
 	f->positions.AddToTail(new Position(0.5f, 0, POS_LW, 11));
-	f->positions.AddToTail(new Position(2.5f, 0, POS_RW, 9));
-	f->positions.AddToTail(new Position(0.5f, 1, POS_LCM, 8));
-	f->positions.AddToTail(new Position(1.5f, 0.5f, POS_CM, 10));
-	f->positions.AddToTail(new Position(2.5f, 1, POS_RCM, 7));
-	f->positions.AddToTail(new Position(0.5f, 2, POS_LB, 2));
+	f->positions.AddToTail(new Position(1.5f, 0, POS_CF, 9));
+	f->positions.AddToTail(new Position(2.5f, 0, POS_RW, 7));
+	f->positions.AddToTail(new Position(0.5f, 1, POS_LCM, 10));
+	f->positions.AddToTail(new Position(2.5f, 1, POS_RCM, 8));
+	f->positions.AddToTail(new Position(0.5f, 2, POS_LB, 5));
 	f->positions.AddToTail(new Position(1.5f, 2, POS_CB, 3));
-	f->positions.AddToTail(new Position(2.5f, 2, POS_RB, 4));
+	f->positions.AddToTail(new Position(2.5f, 2, POS_RB, 2));
 	f->positions.AddToTail(new Position(1.5f, 3, POS_GK, 1));
 	m_Formations[8].AddToTail(f);
 
 	// 10
 	f = new Formation("3-3-3");
 	f->positions.AddToTail(new Position(0.5f, 0, POS_LW, 11));
-	f->positions.AddToTail(new Position(1.5f, 0, POS_CF, 10));
-	f->positions.AddToTail(new Position(2.5f, 0, POS_RW, 9));
+	f->positions.AddToTail(new Position(1.5f, 0, POS_CF, 9));
+	f->positions.AddToTail(new Position(2.5f, 0, POS_RW, 7));
 	f->positions.AddToTail(new Position(0.5f, 1, POS_LCM, 8));
 	f->positions.AddToTail(new Position(1.5f, 1, POS_CM, 6));
-	f->positions.AddToTail(new Position(2.5f, 1, POS_RCM, 7));
-	f->positions.AddToTail(new Position(0.5f, 2, POS_LB, 2));
+	f->positions.AddToTail(new Position(2.5f, 1, POS_RCM, 10));
+	f->positions.AddToTail(new Position(0.5f, 2, POS_LB, 5));
 	f->positions.AddToTail(new Position(1.5f, 2, POS_CB, 3));
-	f->positions.AddToTail(new Position(2.5f, 2, POS_RB, 4));
+	f->positions.AddToTail(new Position(2.5f, 2, POS_RB, 2));
 	f->positions.AddToTail(new Position(1.5f, 3, POS_GK, 1));
 	m_Formations[9].AddToTail(f);
 
 	// 11
 	f = new Formation("4-3-3");
 	f->positions.AddToTail(new Position(0.5f, 0, POS_LW, 11));
-	f->positions.AddToTail(new Position(1.5f, 0, POS_CF, 10));
-	f->positions.AddToTail(new Position(2.5f, 0, POS_RW, 9));
-	f->positions.AddToTail(new Position(0.5f, 1, POS_LCM, 8));
+	f->positions.AddToTail(new Position(1.5f, 0, POS_CF, 9));
+	f->positions.AddToTail(new Position(2.5f, 0, POS_RW, 7));
+	f->positions.AddToTail(new Position(0.5f, 1, POS_LCM, 10));
 	f->positions.AddToTail(new Position(1.5f, 1, POS_CM, 6));
-	f->positions.AddToTail(new Position(2.5f, 1, POS_RCM, 7));
-	f->positions.AddToTail(new Position(0.0f, 2, POS_LB, 2));
-	f->positions.AddToTail(new Position(1.0f, 2, POS_LCB, 3));
-	f->positions.AddToTail(new Position(2.0f, 2, POS_RCB, 4));
-	f->positions.AddToTail(new Position(3.0f, 2, POS_RB, 5));
+	f->positions.AddToTail(new Position(2.5f, 1, POS_RCM, 8));
+	f->positions.AddToTail(new Position(0.0f, 2, POS_LB, 5));
+	f->positions.AddToTail(new Position(1.0f, 2, POS_LCB, 4));
+	f->positions.AddToTail(new Position(2.0f, 2, POS_RCB, 3));
+	f->positions.AddToTail(new Position(3.0f, 2, POS_RB, 2));
 	f->positions.AddToTail(new Position(1.5f, 3, POS_GK, 1));
 	m_Formations[10].AddToTail(f);
 }
