@@ -27,21 +27,8 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-extern ConVar centeredstaminabar;
-
-ConVar cl_staminabar_x("cl_staminabar_x", "30", FCVAR_ARCHIVE);
-ConVar cl_staminabar_y("cl_staminabar_y", "-30", FCVAR_ARCHIVE);
-ConVar cl_staminabar_width("cl_staminabar_width", "200", FCVAR_ARCHIVE);
-ConVar cl_staminabar_height("cl_staminabar_height", "12", FCVAR_ARCHIVE);
-ConVar cl_staminabar_vertical("cl_staminabar_vertical", "0", FCVAR_ARCHIVE);
-ConVar cl_staminabar_border("cl_staminabar_border", "2", FCVAR_ARCHIVE);
-
-ConVar cl_shotbar_x("cl_shotbar_x", "30", FCVAR_ARCHIVE);
-ConVar cl_shotbar_y("cl_shotbar_y", "-50", FCVAR_ARCHIVE);
-ConVar cl_shotbar_width("cl_shotbar_width", "200", FCVAR_ARCHIVE);
-ConVar cl_shotbar_height("cl_shotbar_height", "12", FCVAR_ARCHIVE);
-ConVar cl_shotbar_vertical("cl_shotbar_vertical", "0", FCVAR_ARCHIVE);
-ConVar cl_shotbar_border("cl_shotbar_border", "2", FCVAR_ARCHIVE);
+enum { STAMINABAR_HMARGIN = 30, STAMINABAR_VMARGIN = 30, STAMINABAR_WIDTH = 200, STAMINABAR_HEIGHT = 12, STAMINABAR_BORDER = 2 };
+enum { SHOTBAR_VMARGIN = 30, SHOTBAR_WIDTH = 200, SHOTBAR_HEIGHT = 12, SHOTBAR_BORDER = 2 };
 
 class CHudChargedshotBar : public CHudElement, public vgui::Panel
 {
@@ -147,109 +134,69 @@ void CHudChargedshotBar::Paint()
 
 	float stamina = pPlayer->m_Shared.GetStamina() / 100.0f;
 	
-
 	Color staminaFgColor, staminaBgColor, shotFgColor, shotBgColor;
 
-	bool shotUnusable = true;
+	bool shotBlocked = true;
 
 	if (pPlayer->GetFlags() & FL_REMOTECONTROLLED)
-		shotFgColor = Color(100, 100, 100, 255);
+		staminaFgColor = Color(100, 100, 100, 255);
 	else if (pPlayer->m_bShotsBlocked)
-		shotFgColor = Color(139, 0, 0, 255);
+		staminaFgColor = Color(139, 0, 0, 255);
 	else if (pPlayer->m_bChargedshotBlocked)
-		shotFgColor = Color(255, 69, 0, 255);
+		staminaFgColor = Color(255, 69, 0, 255);
 	else
-		shotUnusable = false;
+		shotBlocked = false;
 
 	float shotStrength;
 
-	if (shotUnusable)
+	if (shotBlocked)
 	{
-		shotStrength = 1.0f;
+		stamina = 1.0f;
 	}
 	else
 	{
-		shotStrength = pPlayer->m_Shared.m_bDoChargedShot || pPlayer->m_Shared.m_bIsShotCharging ? pPlayer->GetChargedShotStrength() : 0;
-		shotFgColor = Color(255 * (1 - shotStrength), 255, 255, 255);
+		staminaFgColor = Color(255 * (1 - stamina), 255 * stamina, 0, 255);
+		staminaBgColor = Color(0, 0, 0, 255);
 	}
 
-	staminaFgColor = Color(255 * (1 - stamina), 255 * stamina, 0, 255);
-	staminaBgColor = Color(0, 0, 0, 255);
+	shotStrength = pPlayer->m_Shared.m_bDoChargedShot || pPlayer->m_Shared.m_bIsShotCharging ? pPlayer->GetChargedShotStrength() : 0;
+	shotFgColor = Color(255 * (1 - shotStrength), 255, 255, 255);
 
 	shotBgColor = Color(0, 0, 0, 255);
-
-	int centerX;
-	int centerY;
-
-	centerX = cl_staminabar_x.GetInt() > 0 ?
-		cl_staminabar_x.GetInt() + cl_staminabar_border.GetInt() + cl_staminabar_width.GetInt() / 2
-		: GetWide() + cl_staminabar_x.GetInt() - cl_staminabar_border.GetInt() - cl_staminabar_width.GetInt() / 2;
-	
-	centerY = cl_staminabar_y.GetInt() > 0 ?
-		cl_staminabar_y.GetInt() + cl_staminabar_border.GetInt() + cl_staminabar_height.GetInt() / 2
-		: GetTall() + cl_staminabar_y.GetInt() - cl_staminabar_border.GetInt() - cl_staminabar_height.GetInt() / 2;
 
 	// Draw stamina bar back
 	surface()->DrawSetColor(staminaBgColor);
 	surface()->DrawFilledRect(
-		centerX - (cl_staminabar_width.GetInt() / 2 + cl_staminabar_border.GetInt()),
-		centerY - (cl_staminabar_height.GetInt() / 2 + cl_staminabar_border.GetInt()),
-		centerX + (cl_staminabar_width.GetInt() / 2 + cl_staminabar_border.GetInt()),
-		centerY + (cl_staminabar_height.GetInt() / 2 + cl_staminabar_border.GetInt()));
+		ScreenWidth() - STAMINABAR_HMARGIN - STAMINABAR_WIDTH - 2 * STAMINABAR_BORDER,
+		STAMINABAR_VMARGIN,
+		ScreenWidth() - STAMINABAR_HMARGIN - STAMINABAR_WIDTH - 2 * STAMINABAR_BORDER + STAMINABAR_WIDTH + 2 * STAMINABAR_BORDER,
+		STAMINABAR_VMARGIN + STAMINABAR_HEIGHT + 2 * STAMINABAR_BORDER
+	);
 
 	// Draw stamina bar front
 	surface()->DrawSetColor(staminaFgColor);
-
-	if (cl_staminabar_vertical.GetBool())
-	{
-		surface()->DrawFilledRect(
-			centerX - (cl_staminabar_width.GetInt() / 2),
-			centerY - (cl_staminabar_height.GetInt() / 2) + (1 - stamina) * (cl_staminabar_width.GetInt()),
-			centerX + (cl_staminabar_width.GetInt() / 2),
-			centerY + (cl_staminabar_height.GetInt() / 2));
-	}
-	else
-	{
-		surface()->DrawFilledRect(
-			centerX - (cl_staminabar_width.GetInt() / 2),
-			centerY - (cl_staminabar_height.GetInt() / 2),
-			centerX - (cl_staminabar_width.GetInt() / 2) + stamina * (cl_staminabar_width.GetInt()),
-			centerY + (cl_staminabar_height.GetInt() / 2));
-	}
-
-	centerX = cl_shotbar_x.GetInt() > 0 ?
-		cl_shotbar_x.GetInt() + cl_shotbar_border.GetInt() + cl_shotbar_width.GetInt() / 2
-		: GetWide() + cl_shotbar_x.GetInt() - cl_shotbar_border.GetInt() - cl_shotbar_width.GetInt() / 2;
-	
-	centerY = cl_shotbar_y.GetInt() > 0 ?
-		cl_shotbar_y.GetInt() + cl_shotbar_border.GetInt() + cl_shotbar_height.GetInt() / 2
-		: GetTall() + cl_shotbar_y.GetInt() - cl_shotbar_border.GetInt() - cl_shotbar_height.GetInt() / 2;
+	surface()->DrawFilledRect(
+		ScreenWidth() - STAMINABAR_HMARGIN - STAMINABAR_WIDTH - STAMINABAR_BORDER,
+		STAMINABAR_VMARGIN + STAMINABAR_BORDER,
+		ScreenWidth() - STAMINABAR_HMARGIN - STAMINABAR_WIDTH - STAMINABAR_BORDER + stamina * STAMINABAR_WIDTH,
+		STAMINABAR_VMARGIN + STAMINABAR_BORDER + STAMINABAR_HEIGHT
+	);
 
 	// Draw shot bar back
 	surface()->DrawSetColor(shotBgColor);
 	surface()->DrawFilledRect(
-		centerX - (cl_shotbar_width.GetInt() / 2 + cl_shotbar_border.GetInt()),
-		centerY - (cl_shotbar_height.GetInt() / 2 + cl_shotbar_border.GetInt()),
-		centerX + (cl_shotbar_width.GetInt() / 2 + cl_shotbar_border.GetInt()),
-		centerY + (cl_shotbar_height.GetInt() / 2 + cl_shotbar_border.GetInt()));
+		ScreenWidth() / 2 - SHOTBAR_WIDTH / 2 - SHOTBAR_BORDER,
+		ScreenHeight() - SHOTBAR_VMARGIN - SHOTBAR_HEIGHT - 2 * SHOTBAR_BORDER,
+		ScreenWidth() / 2 - SHOTBAR_WIDTH / 2 - SHOTBAR_BORDER + SHOTBAR_WIDTH + 2 * SHOTBAR_BORDER,
+		ScreenHeight() - SHOTBAR_VMARGIN - SHOTBAR_HEIGHT - 2 * SHOTBAR_BORDER + SHOTBAR_HEIGHT + 2 * SHOTBAR_BORDER
+	);
 
 	// Draw shot bar front
 	surface()->DrawSetColor(shotFgColor);
-
-	if (cl_shotbar_vertical.GetBool())
-	{
-		surface()->DrawFilledRect(
-			centerX - (cl_shotbar_width.GetInt() / 2),
-			centerY - (cl_shotbar_height.GetInt() / 2) + (1 - shotStrength) * (cl_shotbar_height.GetInt()),
-			centerX + (cl_shotbar_width.GetInt() / 2),
-			centerY + (cl_shotbar_height.GetInt() / 2));
-	}
-	else
-	{
-		surface()->DrawFilledRect(
-			centerX - (cl_shotbar_width.GetInt() / 2),
-			centerY - (cl_shotbar_height.GetInt() / 2),
-			centerX - (cl_shotbar_width.GetInt() / 2) + shotStrength * (cl_shotbar_width.GetInt()),
-			centerY + (cl_shotbar_height.GetInt() / 2));
-	}
+	surface()->DrawFilledRect(
+		ScreenWidth() / 2 - SHOTBAR_WIDTH / 2,
+		ScreenHeight() - SHOTBAR_VMARGIN - SHOTBAR_HEIGHT - SHOTBAR_BORDER,
+		ScreenWidth() / 2 - SHOTBAR_WIDTH / 2 + shotStrength * SHOTBAR_WIDTH,
+		ScreenHeight() - SHOTBAR_VMARGIN - SHOTBAR_HEIGHT - SHOTBAR_BORDER + SHOTBAR_HEIGHT
+	);
 }
