@@ -5,9 +5,7 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-ConVar cl_radar_show("cl_radar_show", "1");
-
-enum { SIZE = 200, HMARGIN = 30, VMARGIN = 200 };
+enum { WIDTH = 150, HMARGIN = 30, VMARGIN = 150 };
 
 CHudRadar::CHudRadar(const char *pElementName) : CHudElement(pElementName), BaseClass(NULL, "HudRadar")
 {
@@ -23,15 +21,12 @@ void CHudRadar::ApplySchemeSettings(IScheme *scheme)
 {
 	BaseClass::ApplySchemeSettings(scheme);
 
-	SetBounds(ScreenWidth() - HMARGIN - SIZE, VMARGIN, SIZE, SIZE);
+	SetBounds(ScreenWidth() - HMARGIN - WIDTH, VMARGIN, WIDTH, WIDTH);
 }
 
 bool CHudRadar::ShouldDraw()
 {
 	if (!CHudElement::ShouldDraw())
-		return false;
-
-	if (!cl_radar_show.GetBool())
 		return false;
 
 	C_SDKPlayer *pPlayer = C_SDKPlayer::GetLocalSDKPlayer();
@@ -62,45 +57,34 @@ void CHudRadar::Paint()
 	if (!pLocal)
 		return;
 
-	float rotation = -::input->GetCameraAngles()[YAW] - 90;
-
 	Vector field = SDKGameRules()->m_vFieldMax - SDKGameRules()->m_vFieldMin;
-	float height = SIZE * 0.75f;
-	float width = height / (field.y / field.x);
+	int width = WIDTH;
+	int height = WIDTH * (field.y / field.x);
 
-	Color black = Color(0, 0, 0, 255);
-	surface()->DrawSetColor(black);
+	SetTall(height);
 
-	const int pointCount = 6;
+	Color bg = Color(0, 0, 0, 200);
+	surface()->DrawSetColor(bg);
+	surface()->DrawFilledRect(0, 0, width, height);
 
-	int pointsX[pointCount];
-	pointsX[0] = -width / 2;
-	pointsX[1] = width / 2;
-	pointsX[2] = width / 2;
-	pointsX[3] = -width / 2;
-	pointsX[4] = -width / 2;
-	pointsX[5] = width / 2;
+	Color line = Color(255, 255, 255, 50);
+	surface()->DrawSetColor(line);
+	surface()->DrawOutlinedRect(0, 0, width, height);
+	surface()->DrawLine(0, height / 2, width, height / 2);
+	surface()->DrawOutlinedCircle(width / 2, height / 2, mp_shield_kickoff_radius.GetInt() / field.x * width, 24);
 
-	int pointsY[pointCount];
-	pointsY[0] = -height / 2;
-	pointsY[1] = -height / 2;
-	pointsY[2] = height / 2;
-	pointsY[3] = height / 2;
-	pointsY[4] = 0;
-	pointsY[5] = 0;
+	Vector penBox = GetGlobalTeam(TEAM_HOME)->m_vPenBoxMax - GetGlobalTeam(TEAM_HOME)->m_vPenBoxMin;
+	penBox /= field;
+	penBox.x *= width;
+	penBox.y *= height;
 
-	for (int i = 0; i < pointCount; i++)
-	{
-		Vector point = Vector(pointsX[i], pointsY[i], 0);
-		VectorYawRotate(point, -rotation, point);
-		pointsX[i] = point.x + SIZE / 2;
-		pointsY[i] = point.y + SIZE / 2;
-	}
+	surface()->DrawLine(width / 2 - penBox.x / 2, 0, width / 2 - penBox.x / 2, penBox.y);
+	surface()->DrawLine(width / 2 - penBox.x / 2, penBox.y, width / 2 + penBox.x / 2, penBox.y);
+	surface()->DrawLine(width / 2 + penBox.x / 2, penBox.y, width / 2 + penBox.x / 2, 0);
 
-	surface()->DrawPolyLine(pointsX, pointsY, pointCount - 2);
-	surface()->DrawLine(pointsX[4], pointsY[4], pointsX[5], pointsY[5]);
-
-	const int radius = 4;
+	surface()->DrawLine(width / 2 - penBox.x / 2, height, width / 2 - penBox.x / 2, height - penBox.y);
+	surface()->DrawLine(width / 2 - penBox.x / 2, height - penBox.y, width / 2 + penBox.x / 2, height - penBox.y);
+	surface()->DrawLine(width / 2 + penBox.x / 2, height - penBox.y, width / 2 + penBox.x / 2, height);
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
@@ -108,29 +92,40 @@ void CHudRadar::Paint()
 		if (!pPl || pPl->IsDormant())
 			continue;
 
-		Vector offset = pPl->GetLocalOrigin() - SDKGameRules()->m_vKickOff;
-		offset /= field / 2;
-		offset.x *= width / 2;
-		offset.y *= height / 2;
+		Vector pos = pPl->GetLocalOrigin() - SDKGameRules()->m_vFieldMin;
+		pos /= field;
 
-		VectorYawRotate(offset, rotation, offset);
-		
+		pos.x = clamp(pos.x, 0.0f, 1.0f);
+
+		if (pLocal->GetTeamNumber() != SDKGameRules()->m_nBottomTeam)
+			pos.x = 1.0f - pos.x;
+
+		pos.x *= width;
+
+		pos.y = (1.0f - clamp(pos.y, 0.0f, 1.0f));
+
+		if (pLocal->GetTeamNumber() != SDKGameRules()->m_nBottomTeam)
+			pos.y = 1.0f - pos.y;
+
+		pos.y *= height;
+
 		Color c = GetGlobalTeam(pPl->GetTeamNumber())->GetHudKitColor();
 
 		surface()->DrawSetColor(c);
 
 		if (pPl == pLocal)
 		{
-			surface()->DrawOutlinedRect(SIZE / 2 - offset.x - radius, SIZE / 2 + offset.y - radius, SIZE / 2 - offset.x + radius, SIZE / 2 + offset.y + radius);
+			surface()->DrawFilledRect(pos.x - 3, pos.y - 3, pos.x + 3, pos.y + 3);
+			surface()->DrawOutlinedCircle(pos.x, pos.y, 6, 12);
 		}
 		else if (GameResources()->GetTeamPosType(pPl->index) == POS_GK)
 		{
-			surface()->DrawLine(SIZE / 2 - offset.x - radius, SIZE / 2 + offset.y - radius, SIZE / 2 - offset.x + radius, SIZE / 2 + offset.y + radius);
-			surface()->DrawLine(SIZE / 2 - offset.x + radius, SIZE / 2 + offset.y - radius, SIZE / 2 - offset.x - radius, SIZE / 2 + offset.y + radius);
+			surface()->DrawFilledRect(pos.x - 2, pos.y - 2, pos.x + 2, pos.y + 2);
+			surface()->DrawOutlinedRect(pos.x - 4, pos.y - 4, pos.x + 4, pos.y + 4);
 		}
 		else
 		{
-			surface()->DrawOutlinedCircle(SIZE / 2 - offset.x, SIZE / 2 + offset.y, radius, 16);
+			surface()->DrawFilledRect(pos.x - 4, pos.y - 4, pos.x + 4, pos.y + 4);
 		}
 	}
 }

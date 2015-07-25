@@ -58,6 +58,9 @@
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">server</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">server</TargetName>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <IgnoreImportLibrary>true</IgnoreImportLibrary>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <PreBuildEvent>
       <Command>
