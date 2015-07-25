@@ -31,6 +31,8 @@
 
 #define CHAT_WIDTH_PERCENTAGE 0.6f
 
+#define MARGIN 30
+
 #ifndef _XBOX
 ConVar hud_saytext_time( "hud_saytext_time", "12", 0 );
 ConVar cl_showtextmsg( "cl_showtextmsg", "1", 0, "Enable/disable text messages printing on the screen." );
@@ -668,6 +670,9 @@ void CBaseHudChat::ApplySchemeSettings( vgui::IScheme *pScheme )
 	SetBgColor( Color ( cColor.r(), cColor.g(), cColor.b(), CHAT_HISTORY_ALPHA ) );
 
 	GetChatHistory()->SetVerticalScrollbar( false );
+
+	SetX(MARGIN);
+	SetY(ScreenHeight() - MARGIN - GetTall());
 }
 
 void CBaseHudChat::Reset( void )
