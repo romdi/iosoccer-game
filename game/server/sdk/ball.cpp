@@ -917,7 +917,8 @@ bool CBall::CheckKeeperCatch()
 
 	float nextCatch = m_flGlobalLastShot + m_flGlobalDynamicShotDelay * diveTypeCatchCoeff * ballPosCatchCoeff;
 
-	if (m_bHasQueuedState || gpGlobals->curtime < nextCatch || m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD) // Punch ball away
+	// Check if ball should be punched away
+	if (m_bHasQueuedState || gpGlobals->curtime < nextCatch || m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD)
 	{
 		Vector punchDir;
 
@@ -932,8 +933,17 @@ bool CBall::CheckKeeperCatch()
 		}
 		else
 		{
+			// Punch into the player camera direction
 			QAngle ang = m_aPlCamAng;
-			ang[YAW] += -ZeroSign(m_vPlVel2D.Dot(m_vPlRight)) * m_vPlSideVel2D.Length() * sv_ball_keeper_punch_sidespeedcoeff.GetFloat();
+
+			// Add the player speed to the punch yaw direction, so new players who don't move the camera don't punch straight ahead every time
+			float extraYaw = -ZeroSign(m_vPlVel2D.Dot(m_vPlRight)) * m_vPlSideVel2D.Length() * sv_ball_keeper_punch_sidespeedcoeff.GetFloat();
+
+			// Make the extra yaw weaker the closer to 90° the model to free cam yaw difference is
+			extraYaw *= 1.0f - clamp(abs(AngleDiff(m_aPlAng[YAW], m_aPlCamAng[YAW])) / 90.0f, 0.0f, 1.0f);
+
+			ang[YAW] += extraYaw;
+
 			AngleVectors(ang, &punchDir);
 		}
 
@@ -942,7 +952,8 @@ bool CBall::CheckKeeperCatch()
 		SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_KEEPERPUNCH, false, sv_ball_shottaker_mindelay_short.GetFloat());
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
 	}
-	else // Catch ball
+	// Catch ball instead of punching
+	else
 	{
 		SetVel(vec3_origin, 0, FL_SPIN_FORCE_NONE, BODY_PART_KEEPERCATCH, false, sv_ball_shottaker_mindelay_short.GetFloat());
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);		
