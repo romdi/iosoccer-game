@@ -620,6 +620,7 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClCompile Include="sdk\ios_hud_scorebar.cpp" />
     <ClCompile Include="sdk\ios_pitchtextureproxy.cpp" />
     <ClCompile Include="sdk\ios_playertextureproxy.cpp" />
+    <ClCompile Include="sdk\sdk_hud_names.cpp" />
     <ClCompile Include="simple_keys.cpp" />
     <ClCompile Include="..\..\public\simple_physics.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -800,7 +801,6 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClCompile Include="sdk\sdk_hud_health.cpp" />
     <ClCompile Include="sdk\sdk_hud_message.cpp" />
     <ClCompile Include="sdk\sdk_hud_stamina.cpp" />
-    <ClCompile Include="sdk\sdk_hud_targetid.cpp" />
     <ClCompile Include="..\shared\sdk\sdk_basegrenade_projectile.cpp" />
     <ClCompile Include="sdk\sdk_fx_impacts.cpp" />
     <ClCompile Include="..\shared\sdk\sdk_fx_shared.cpp" />

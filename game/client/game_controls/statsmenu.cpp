@@ -79,7 +79,7 @@ void CStatsMenu::Reset()
 
 		m_pPlayerStats[i]->AddSection(sectionId, "");
 		m_pPlayerStats[i]->SetSectionAlwaysVisible(sectionId);
-		m_pPlayerStats[i]->SetFontSection(sectionId, m_pScheme->GetFont("IOSTeamMenuSmall"));
+		m_pPlayerStats[i]->SetFontSection(sectionId, m_pScheme->GetFont("ScoreboardStatLine"));
 		m_pPlayerStats[i]->SetLineSpacing(25);
 		m_pPlayerStats[i]->SetFgColor(Color(255, 255, 255, 255));
 		m_pPlayerStats[i]->SetSectionFgColor(0, Color(255, 255, 255, 255));
@@ -136,7 +136,7 @@ void CStatsMenu::Reset()
 		////kv->SetInt("playerindex", i - 1);
 		m_pPlayerStats[i]->AddItem(0, kv);
 		kv->deleteThis();
-		m_pPlayerStats[i]->SetItemFont(0, m_pScheme->GetFont("IOSTeamMenuNormal"));
+		m_pPlayerStats[i]->SetItemFont(0, m_pScheme->GetFont("ScoreboardInfo"));
 	}
 }
 

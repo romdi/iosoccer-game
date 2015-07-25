@@ -76,7 +76,7 @@ void CMatchEventMenu::Reset()
 		m_pMatchEvents[i]->RemoveAllSections();
 		m_pMatchEvents[i]->AddSection(0, "");
 		m_pMatchEvents[i]->SetSectionAlwaysVisible(0);
-		m_pMatchEvents[i]->SetFontSection(0, m_pScheme->GetFont("IOSTeamMenuNormal"));
+		m_pMatchEvents[i]->SetFontSection(0, m_pScheme->GetFont("ScoreboardInfo"));
 		//m_pMatchEvents[i]->SetLineSpacing(20);
 		m_pMatchEvents[i]->SetFgColor(Color(255, 255, 255, 255));
 		m_pMatchEvents[i]->SetSectionFgColor(0, Color(255, 255, 255, 255));

@@ -200,8 +200,6 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Editabl
 	for (int i = 0; i < 3; i++)
 		m_pSpectateButtons[i] = new Button(m_pMainPanel, "SpectateButton", (i == 0 ? "Spectate" : "Bench"), this, VarArgs("spectate %d", (i == 0 ? TEAM_SPECTATOR : TEAM_HOME + i - 1)));
 
-	m_pSpecInfo = new Label(m_pMainPanel, "", "");
-
 	m_pTopBar = new Panel(m_pMainPanel, "");
 
 	m_pServerInfo = new Label(m_pMainPanel, "", "");
@@ -317,7 +315,7 @@ void CClientScoreBoardDialog::Reset()
 		kv->SetInt("posindex", 0);
 		m_pPlayerList[i]->AddItem(0, kv);
 		kv->deleteThis();
-		m_pPlayerList[i]->SetItemFont(0, m_pScheme->GetFont("IOSTeamMenuNormalBold"));
+		m_pPlayerList[i]->SetItemFont(0, m_pScheme->GetFont("ScoreboardTeamLine"));
 		m_pPlayerList[i]->SetLineSpacing(400 / (mp_maxplayers.GetInt() + 2.5f));
 
 		for (int j = 0; j < mp_maxplayers.GetInt(); j++)
@@ -330,7 +328,7 @@ void CClientScoreBoardDialog::Reset()
 			kv->SetInt("posindex", j + 1);
 			m_pPlayerList[i]->AddItem(0, kv);
 			kv->deleteThis();
-			m_pPlayerList[i]->SetItemFont(j + 1, m_pScheme->GetFont("IOSTeamMenuNormal"));
+			m_pPlayerList[i]->SetItemFont(j + 1, m_pScheme->GetFont("ScoreboardPlayerLine"));
 
 			if (GetGlobalTeam(TEAM_HOME + i))
 				m_pPlayerList[i]->SetItemFgColor(j + 1, g_ColorGray);
@@ -452,42 +450,30 @@ void CClientScoreBoardDialog::ApplySchemeSettings( IScheme *pScheme )
 	m_pSpectatorContainer->SetBgColor(Color(0, 0, 0, 150));
 	//m_pSpectatorContainer->SetPaintBackgroundType(2);
 
-	m_pSpectatorFontList[0] = m_pScheme->GetFont("SpectatorListNormal");
-	m_pSpectatorFontList[1] = m_pScheme->GetFont("SpectatorListSmall");
-	m_pSpectatorFontList[2] = m_pScheme->GetFont("SpectatorListSmaller");
-	m_pSpectatorFontList[3] = m_pScheme->GetFont("SpectatorListSmallest");
-
 	m_pSpectatorNames->SetBounds(SPECLIST_PADDING + SPECTEXT_WIDTH + SPECTEXT_MARGIN, 0, m_pSpectatorContainer->GetWide() - (SPECLIST_PADDING + SPECTEXT_WIDTH + SPECTEXT_MARGIN), SPECLIST_HEIGHT);
 	
 	m_pSpectatorText->SetBounds(SPECLIST_PADDING, 0, SPECTEXT_WIDTH, SPECLIST_HEIGHT);
-	m_pSpectatorText->SetFont(m_pScheme->GetFont("SpectatorListNormal"));
-
-	m_pSpecInfo->SetBounds(0, m_pSpectatorContainer->GetY() - SPECLIST_HEIGHT, m_pMainPanel->GetWide(), SPECLIST_HEIGHT);
-	m_pSpecInfo->SetZPos(10);
-	m_pSpecInfo->SetBgColor(Color(0, 0, 0, 240));
-	m_pSpecInfo->SetFont(m_pScheme->GetFont("SpectatorListNormal"));
-	m_pSpecInfo->SetContentAlignment(Label::a_center);
-	m_pSpecInfo->SetVisible(false);
+	m_pSpectatorText->SetFont(m_pScheme->GetFont("SpectatorList"));
 
 	m_pTopBar->SetBounds(0, 0, m_pMainPanel->GetWide(), TOPBAR_HEIGHT);
 	m_pTopBar->SetBgColor(Color(0, 0, 0, 150));
 
 	m_pServerInfo->SetBounds(0, 0, SERVERINFO_WIDTH, TOPBAR_HEIGHT);
-	m_pServerInfo->SetFont(m_pScheme->GetFont("IOSTeamMenuNormal"));
+	m_pServerInfo->SetFont(m_pScheme->GetFont("ScoreboardInfo"));
 	m_pServerInfo->SetContentAlignment(Label::a_west);
 	m_pServerInfo->SetFgColor(Color(255, 255, 255, 255));
 	//m_pServerInfo->SetBgColor(Color(0, 0, 0, 150));
 	m_pServerInfo->SetTextInset(5, 0);
 
 	m_pMatchInfo->SetBounds(m_pMainPanel->GetWide() - MATCHINFO_WIDTH, 0, MATCHINFO_WIDTH, TOPBAR_HEIGHT);
-	m_pMatchInfo->SetFont(m_pScheme->GetFont("IOSTeamMenuNormal"));
+	m_pMatchInfo->SetFont(m_pScheme->GetFont("ScoreboardInfo"));
 	m_pMatchInfo->SetContentAlignment(Label::a_east);
 	m_pMatchInfo->SetFgColor(Color(255, 255, 255, 255));
 	//m_pMatchInfo->SetBgColor(Color(0, 0, 0, 150));
 	m_pMatchInfo->SetTextInset(5, 0);
 
 	m_pMatchPeriod->SetBounds(SERVERINFO_WIDTH, 0, m_pMainPanel->GetWide() - SERVERINFO_WIDTH - MATCHINFO_WIDTH, TOPBAR_HEIGHT);
-	m_pMatchPeriod->SetFont(m_pScheme->GetFont("IOSTeamMenuNormal"));
+	m_pMatchPeriod->SetFont(m_pScheme->GetFont("ScoreboardInfo"));
 	m_pMatchPeriod->SetContentAlignment(Label::a_center);
 	m_pMatchPeriod->SetFgColor(Color(255, 255, 255, 255));
 	//m_pMatchPeriod->SetBgColor(Color(0, 0, 0, 150));
@@ -708,7 +694,7 @@ void CClientScoreBoardDialog::Update( void )
 	if (m_bShowCaptainMenu)
 	{
 		wchar_t text[32];
-		_snwprintf(text, sizeof(text) / sizeof(wchar_t), L"(%d • %d:%02dm)", pLocal->GetTeam()->GetTimeoutsLeft(), pLocal->GetTeam()->GetTimeoutTimeLeft() / 60, pLocal->GetTeam()->GetTimeoutTimeLeft() % 60);
+		_snwprintf(text, sizeof(text) / sizeof(wchar_t), L"(%d · %d:%02dm)", pLocal->GetTeam()->GetTimeoutsLeft(), pLocal->GetTeam()->GetTimeoutTimeLeft() / 60, pLocal->GetTeam()->GetTimeoutTimeLeft() % 60);
 		m_pTimeoutInfo->SetText(text);
 
 		if (SDKGameRules()->m_eTimeoutState != TIMEOUT_STATE_NONE && SDKGameRules()->m_nTimeoutTeam == pLocal->GetTeamNumber())
@@ -877,7 +863,7 @@ void CClientScoreBoardDialog::UpdatePlayerInfo()
 	}
 
 	wchar_t specText[32];
-	_snwprintf(specText, sizeof(specText) / sizeof(wchar_t), L"%d on TV • %d %s:", m_HLTVSpectators, specList.Count(), (specList.Count() == 1 ? L"spec" : L"specs"));
+	_snwprintf(specText, sizeof(specText) / sizeof(wchar_t), L"%d on TV · %d %s:", m_HLTVSpectators, specList.Count(), (specList.Count() == 1 ? L"spec" : L"specs"));
 	m_pSpectatorText->SetText(specText);
 
 	if (specList.Count() != m_SpecList.Count())
@@ -923,7 +909,7 @@ void CClientScoreBoardDialog::UpdatePlayerInfo()
 
 			wchar_t separator[16] = {};
 			if (i > 0)
-				_snwprintf(separator, sizeof(separator) / sizeof(wchar_t), L"• ");
+				_snwprintf(separator, sizeof(separator) / sizeof(wchar_t), L"· ");
 
 			wchar_t text[64];
 			_snwprintf(text, sizeof(text) / sizeof(wchar_t), L"%s%s%s", separator, truncatedName, cardText);
@@ -934,7 +920,7 @@ void CClientScoreBoardDialog::UpdatePlayerInfo()
 			pPl->SetBounds(totalWidth, 0, SPECNAME_WIDTH, SPECLIST_HEIGHT);
 			pPl->SetDefaultColor(gr->GetPlayerColor(specList[i].playerIndex), Color(0, 0, 0, 0));
 			pPl->SetArmedColor(gr->GetPlayerColor(specList[i].playerIndex), Color(75, 75, 75, 150));
-			pPl->SetFont(m_pSpectatorFontList[1]);
+			pPl->SetFont(m_pScheme->GetFont("SpectatorList"));
 			pPl->SetContentAlignment(Label::a_center);
 			//pPl->SetPaintBackgroundEnabled(false);
 			pPl->SetPaintBorderEnabled(false);
@@ -962,7 +948,7 @@ void CClientScoreBoardDialog::AddHeader()
 
 		m_pPlayerList[i]->AddSection(m_iSectionId, "", StaticPlayerSortFunc);
 		m_pPlayerList[i]->SetSectionAlwaysVisible(m_iSectionId);
-		m_pPlayerList[i]->SetFontSection(m_iSectionId, m_pScheme->GetFont("IOSTeamMenuSmall"));
+		m_pPlayerList[i]->SetFontSection(m_iSectionId, m_pScheme->GetFont("ScoreboardStatLine"));
 		m_pPlayerList[i]->SetLineSpacing(29);
 		m_pPlayerList[i]->SetFgColor(g_ColorGray);
 		m_pPlayerList[i]->SetSectionFgColor(0, g_ColorGray);

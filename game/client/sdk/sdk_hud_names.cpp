@@ -27,9 +27,6 @@
 #define PLAYER_HINT_DISTANCE_SQ	(PLAYER_HINT_DISTANCE*PLAYER_HINT_DISTANCE)
 
 ConVar hud_names_visible("hud_names_visible", "1");
-ConVar hud_names_offset("hud_names_offset", "120");
-ConVar hud_names_opacity("hud_names_opacity", "0.5");
-ConVar hud_names_possessor_only("hud_names_possessor_only", "0");
 
 void CC_HudNamesToggle(const CCommand &args)
 {
@@ -43,12 +40,12 @@ using namespace vgui;
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-class CSDKTargetId : public CHudElement, public vgui::Panel
+class CSDKNames : public CHudElement, public vgui::Panel
 {
-	DECLARE_CLASS_SIMPLE( CSDKTargetId, vgui::Panel );
+	DECLARE_CLASS_SIMPLE( CSDKNames, vgui::Panel );
 
 public:
-	CSDKTargetId( const char *pElementName );
+	CSDKNames( const char *pElementName );
 	void Init( void );
 	virtual void	ApplySchemeSettings( vgui::IScheme *scheme );
 	virtual void	Paint( void );
@@ -59,15 +56,15 @@ private:
 	vgui::HFont		m_hFont;
 };
 
-DECLARE_HUDELEMENT( CSDKTargetId );
+DECLARE_HUDELEMENT( CSDKNames );
 
 using namespace vgui;
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-CSDKTargetId::CSDKTargetId( const char *pElementName ) :
-	CHudElement( pElementName ), BaseClass( NULL, "TargetID" )
+CSDKNames::CSDKNames( const char *pElementName ) :
+	CHudElement( pElementName ), BaseClass( NULL, "Names" )
 {
 	SetHiddenBits(HIDEHUD_PLAYERNAMES);
 
@@ -80,15 +77,14 @@ CSDKTargetId::CSDKTargetId( const char *pElementName ) :
 //-----------------------------------------------------------------------------
 // Purpose: Setup
 //-----------------------------------------------------------------------------
-void CSDKTargetId::Init( void )
+void CSDKNames::Init( void )
 {
 }
 
-void CSDKTargetId::ApplySchemeSettings( vgui::IScheme *scheme )
+void CSDKNames::ApplySchemeSettings( vgui::IScheme *scheme )
 {
 	BaseClass::ApplySchemeSettings( scheme );
 
-	//m_hFont = scheme->GetFont( "TargetID", IsProportional() );
 	m_hFont = scheme->GetFont("IOSPlayerName");
 
 	SetPaintBackgroundEnabled( false );
@@ -98,7 +94,7 @@ void CSDKTargetId::ApplySchemeSettings( vgui::IScheme *scheme )
 //-----------------------------------------------------------------------------
 // Purpose: clear out string etc between levels
 //-----------------------------------------------------------------------------
-void CSDKTargetId::VidInit()
+void CSDKNames::VidInit()
 {
 	CHudElement::VidInit();
 }
@@ -113,10 +109,10 @@ void DrawPlayerName(HFont font, const Vector &origin, const char *playerName, in
 
 	Color c = GetGlobalTeam(teamNumber)->GetHudKitColor();
 
-	c.SetColor(c.r(), c.g(), c.b(), 255 * hud_names_opacity.GetFloat());
+	c.SetColor(c.r(), c.g(), c.b(), 255 * 0.75f);
 
 	Vector pos = origin;
-	pos.z += VEC_HULL_MAX.z + hud_names_offset.GetInt();
+	pos.z += VEC_HULL_MAX.z + 50;
 
 	int xPos, yPos;
 	GetVectorInScreenSpace(pos, xPos, yPos);
@@ -130,7 +126,7 @@ void DrawPlayerName(HFont font, const Vector &origin, const char *playerName, in
 //-----------------------------------------------------------------------------
 // Purpose: Draw function for the element
 //-----------------------------------------------------------------------------
-void CSDKTargetId::Paint()
+void CSDKNames::Paint()
 {
 	C_SDKPlayer *pLocal = C_SDKPlayer::GetLocalSDKPlayer();
 
@@ -157,15 +153,12 @@ void CSDKTargetId::Paint()
 			if (!pPl || pPl->IsDormant())
 				continue;
 
-			if (hud_names_possessor_only.GetBool() && (!GetMatchBall() || pPl != GetMatchBall()->m_pLastActivePlayer))
-				continue;
-
 			if (pPl != pLocal && hud_names_visible.GetBool())
 				DrawPlayerName(m_hFont, pPl->GetLocalOrigin(), pPl->GetPlayerName(), pPl->GetTeamNumber());
 		}
 	}
 }
 
-void CSDKTargetId::FireGameEvent(IGameEvent *event)
+void CSDKNames::FireGameEvent(IGameEvent *event)
 {
 }

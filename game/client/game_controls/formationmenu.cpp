@@ -105,7 +105,7 @@ void CFormationMenu::PerformLayout()
 			m_pFormationButtons[i][j]->SetBounds(0, 0, FORMATION_BUTTON_WIDTH, FORMATION_BUTTON_HEIGHT);
 			m_pFormationButtons[i][j]->SetContentAlignment(Label::a_center);
 			m_pFormationButtons[i][j]->SetTextInset(0, 0);
-			m_pFormationButtons[i][j]->SetFont(m_pScheme->GetFont("IOSTeamMenuBig"));
+			m_pFormationButtons[i][j]->SetFont(m_pScheme->GetFont("ScoreboardShirtPos"));
 			/*color32 enabled = { 150, 150, 150, 150 };
 			color32 mouseover = { 150, 150, 150, 240 };
 			color32 pressed = { 255, 255, 255, 240 };
@@ -125,7 +125,7 @@ void CFormationMenu::PerformLayout()
 			m_pToolTips[i][j]->SetZPos(10);
 			m_pToolTips[i][j]->SetTextInset(0, 0);
 			m_pToolTips[i][j]->SetContentAlignment(Label::a_north);
-			m_pToolTips[i][j]->SetFont(m_pScheme->GetFont("Tooltip"));
+			m_pToolTips[i][j]->SetFont(m_pScheme->GetFont("ScoreboardShirtText"));
 			m_pToolTips[i][j]->SetPaintBackgroundEnabled(false);
 			m_pToolTips[i][j]->SetPaintBorderEnabled(false);
 			m_pToolTips[i][j]->SetFgColor(Color(255, 255, 255, 255));
@@ -228,7 +228,6 @@ void CFormationMenu::Update(bool showCaptainMenu)
 
 			bool isFree = (playerIndexAtPos[i][j] == 0);
 
-			m_pFormationButtons[i][j]->SetFont(m_pScheme->GetFont("IOSTeamMenuBig"));
 			m_pFormationButtons[i][j]->SetCursor(m_bShowCaptainMenu ? dc_arrow : dc_hand);
 
 			KeyValues *kv = new KeyValues("Command");

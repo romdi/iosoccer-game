@@ -203,7 +203,7 @@ void CHudVoiceStatus::ApplySchemeSettings(vgui::IScheme *pScheme)
 
 	SetPaintBackgroundEnabled( false );
 
-	m_hFont = pScheme->GetFont("IOSPlayerName");
+	m_hFont = pScheme->GetFont("IOSVoice");
 
 	SetBounds(0, 0, ScreenWidth(), ScreenHeight());
 }

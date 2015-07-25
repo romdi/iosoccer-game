@@ -233,7 +233,6 @@ private:
 	Panel		*m_pSpectatorNames;
 	Button		*m_pSpectateButtons[3];
 	Panel		*m_pSpectatorContainer;
-	HFont		m_pSpectatorFontList[SPEC_FONT_COUNT];
 	Label		*m_pPlayerCount[2];
 	Label		*m_pPossession[2];
 	Panel		*m_pStatButtonContainer;

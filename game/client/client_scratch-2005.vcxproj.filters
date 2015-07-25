@@ -1275,9 +1275,6 @@
     <ClCompile Include="sdk\sdk_hud_stamina.cpp">
       <Filter>Source Files\SDK\Hud Elements</Filter>
     </ClCompile>
-    <ClCompile Include="sdk\sdk_hud_targetid.cpp">
-      <Filter>Source Files\SDK\Hud Elements</Filter>
-    </ClCompile>
     <ClCompile Include="..\shared\sdk\sdk_basegrenade_projectile.cpp">
       <Filter>Source Files\SDK\Weapons</Filter>
     </ClCompile>
@@ -1417,6 +1414,9 @@
       <Filter>Source Files\SDK</Filter>
     </ClCompile>
     <ClCompile Include="sdk\ios_hud_radar.cpp">
+      <Filter>Source Files\SDK\Hud Elements</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\sdk_hud_names.cpp">
       <Filter>Source Files\SDK\Hud Elements</Filter>
     </ClCompile>
   </ItemGroup>
