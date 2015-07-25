@@ -550,16 +550,6 @@ void CSDKPlayer::FindSafePos(Vector &startPos)
 
 void CSDKPlayer::CheckShotCharging()
 {
-	float currentTime;
-
-#ifdef CLIENT_DLL
-	currentTime = GetFinalPredictedTime();
-	currentTime -= TICK_INTERVAL;
-	currentTime += (gpGlobals->interpolation_amount * TICK_INTERVAL);
-#else
-	currentTime = gpGlobals->curtime;
-#endif
-
 	if (!(m_nButtons & IN_ATTACK2))
 		m_Shared.m_bChargedShotReleaseRequired = false;
 
@@ -576,11 +566,11 @@ void CSDKPlayer::CheckShotCharging()
 	{
 		m_Shared.m_bDoChargedShot = false;
 		m_Shared.m_bIsShotCharging = true;
-		m_Shared.m_flShotChargingStart = currentTime;
+		m_Shared.m_flShotChargingStart = gpGlobals->curtime;
 	}
 	else if (m_Shared.m_bDoChargedShot)
 	{
-		if (currentTime > m_Shared.m_flShotChargingStart + m_Shared.m_flShotChargingDuration + mp_chargedshot_idleduration.GetFloat())
+		if (gpGlobals->curtime > m_Shared.m_flShotChargingStart + m_Shared.m_flShotChargingDuration + mp_chargedshot_idleduration.GetFloat())
 		{
 			m_Shared.m_bDoChargedShot = false;
 		}
@@ -590,7 +580,7 @@ void CSDKPlayer::CheckShotCharging()
 	{
 		if (m_nButtons & IN_ATTACK2)
 		{
-			if (currentTime > m_Shared.m_flShotChargingStart + mp_chargedshot_increaseduration.GetFloat())
+			if (gpGlobals->curtime > m_Shared.m_flShotChargingStart + mp_chargedshot_increaseduration.GetFloat())
 			{
 				m_Shared.m_bIsShotCharging = false;
 				m_Shared.m_flShotChargingDuration = mp_chargedshot_increaseduration.GetFloat();
@@ -601,7 +591,7 @@ void CSDKPlayer::CheckShotCharging()
 		else
 		{
 			m_Shared.m_bIsShotCharging = false;
-			m_Shared.m_flShotChargingDuration = currentTime - m_Shared.m_flShotChargingStart;
+			m_Shared.m_flShotChargingDuration = gpGlobals->curtime - m_Shared.m_flShotChargingStart;
 			m_Shared.m_bDoChargedShot = true;
 		}
 	}
