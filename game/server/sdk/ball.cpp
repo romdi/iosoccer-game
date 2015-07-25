@@ -131,6 +131,7 @@ ConVar
 	sv_ball_rainbowflick_spincoeff("sv_ball_rainbowflick_spincoeff", "1.0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_chipshot_spincoeff("sv_ball_chipshot_spincoeff", "1.75", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_finesseshot_spincoeff("sv_ball_finesseshot_spincoeff", "1.33", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_finesseshot_strength("sv_ball_finesseshot_strength", "900", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_header_spincoeff("sv_ball_header_spincoeff", "0.5", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_header_minangle("sv_ball_header_minangle", "70", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_header_maxangle("sv_ball_header_maxangle", "-40", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
@@ -1070,7 +1071,7 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 				shotTakerMinDelay = sv_ball_shottaker_mindelay_long.GetFloat();
 				spinFlags = FL_SPIN_PERMIT_SIDE;
 				spinCoeff = sv_ball_finesseshot_spincoeff.GetFloat();
-				shotStrength = GetNormalshotStrength(pitchCoeff, sv_ball_normalshot_strength.GetInt());
+				shotStrength = GetNormalshotStrength(pitchCoeff, sv_ball_finesseshot_strength.GetInt());
 				shotAngle = m_aPlAng;
 				shotAngle[PITCH] = m_aPlCamAng[PITCH];
 				shotAngle[PITCH] = min(sv_ball_groundshot_minangle.GetFloat(), shotAngle[PITCH]);
