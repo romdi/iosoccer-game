@@ -110,7 +110,8 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayerShared, DT_SDKSharedLocalPlayerExclusive )
 	SendPropInt( SENDINFO( m_nPlayerAnimEventStartButtons ) ),
 
 	SendPropBool( SENDINFO( m_bIsShotCharging ) ),
-	SendPropBool( SENDINFO( m_bDoChargedShot ) ),
+	SendPropBool( SENDINFO( m_bDoChargedShot)),
+	SendPropBool( SENDINFO( m_bChargedShotReleaseRequired ) ),
 	SendPropTime( SENDINFO( m_flShotChargingStart ) ),
 	SendPropTime( SENDINFO( m_flShotChargingDuration ) ),
 

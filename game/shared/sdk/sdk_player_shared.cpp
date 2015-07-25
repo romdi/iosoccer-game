@@ -476,22 +476,22 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 	{
 		float border = mp_field_border.GetInt();
 		Vector min = SDKGameRules()->m_vFieldMin - border;
-		Vector max = SDKGameRules()->m_vFieldMax + border;
+Vector max = SDKGameRules()->m_vFieldMax + border;
 
-		if (newPos.x < min.x || newPos.y < min.y || newPos.x > max.x || newPos.y > max.y)
-		{
-			if (newPos.x < min.x)
-				newPos.x = min.x;
-			else if (newPos.x > max.x)
-				newPos.x = max.x;
+if (newPos.x < min.x || newPos.y < min.y || newPos.x > max.x || newPos.y > max.y)
+{
+	if (newPos.x < min.x)
+		newPos.x = min.x;
+	else if (newPos.x > max.x)
+		newPos.x = max.x;
 
-			if (newPos.y < min.y)
-				newPos.y = min.y;
-			else if (newPos.y > max.y)
-				newPos.y = max.y;
+	if (newPos.y < min.y)
+		newPos.y = min.y;
+	else if (newPos.y > max.y)
+		newPos.y = max.y;
 
-			stopPlayer = true;
-		}
+	stopPlayer = true;
+}
 	}
 
 	if (stopPlayer)
@@ -550,6 +550,19 @@ void CSDKPlayer::FindSafePos(Vector &startPos)
 
 void CSDKPlayer::CheckShotCharging()
 {
+	float currentTime;
+
+#ifdef CLIENT_DLL
+	currentTime = GetFinalPredictedTime();
+	currentTime -= TICK_INTERVAL;
+	currentTime += (gpGlobals->interpolation_amount * TICK_INTERVAL);
+#else
+	currentTime = gpGlobals->curtime;
+#endif
+
+	if (!(m_nButtons & IN_ATTACK2))
+		m_Shared.m_bChargedShotReleaseRequired = false;
+
 	if ((m_nButtons & IN_ATTACK)
 		|| (GetFlags() & FL_REMOTECONTROLLED)
 		|| m_bChargedshotBlocked
@@ -559,23 +572,36 @@ void CSDKPlayer::CheckShotCharging()
 		m_Shared.m_bDoChargedShot = false;
 		m_Shared.m_bIsShotCharging = false;
 	}
-	else if ((m_nButtons & IN_ATTACK2) && !m_Shared.m_bIsShotCharging)
+	else if ((m_nButtons & IN_ATTACK2) && !m_Shared.m_bIsShotCharging && !m_Shared.m_bChargedShotReleaseRequired)
 	{
 		m_Shared.m_bDoChargedShot = false;
 		m_Shared.m_bIsShotCharging = true;
-		m_Shared.m_flShotChargingStart = gpGlobals->curtime;
+		m_Shared.m_flShotChargingStart = currentTime;
 	}
+	else if (m_Shared.m_bDoChargedShot)
+	{
+		if (currentTime > m_Shared.m_flShotChargingStart + m_Shared.m_flShotChargingDuration + mp_chargedshot_idleduration.GetFloat())
+		{
+			m_Shared.m_bDoChargedShot = false;
+		}
+	}
+
 	else if (m_Shared.m_bIsShotCharging)
 	{
 		if (m_nButtons & IN_ATTACK2)
 		{
-			//m_flShotChargingDuration = gpGlobals->curtime - m_flShotChargingStart;
-			//float fraction = m_flShotChargingDuration / mp_chargedshot_increaseduration.GetFloat();
+			if (currentTime > m_Shared.m_flShotChargingStart + mp_chargedshot_increaseduration.GetFloat())
+			{
+				m_Shared.m_bIsShotCharging = false;
+				m_Shared.m_flShotChargingDuration = mp_chargedshot_increaseduration.GetFloat();
+				m_Shared.m_bDoChargedShot = true;
+				m_Shared.m_bChargedShotReleaseRequired = true;
+			}
 		}
 		else
 		{
 			m_Shared.m_bIsShotCharging = false;
-			m_Shared.m_flShotChargingDuration = gpGlobals->curtime - m_Shared.m_flShotChargingStart;
+			m_Shared.m_flShotChargingDuration = currentTime - m_Shared.m_flShotChargingStart;
 			m_Shared.m_bDoChargedShot = true;
 		}
 	}
@@ -602,32 +628,20 @@ float CSDKPlayer::GetChargedShotStrength()
 	float activeDuration;
 
 	if (m_Shared.m_bIsShotCharging)
+	{
 		activeDuration = currentTime - m_Shared.m_flShotChargingStart;
+	}
 	else
 	{
 		// Let the bar idle at the release position for a short amount of time to allow more precise shots and passes
-		if (currentTime - m_Shared.m_flShotChargingStart <= m_Shared.m_flShotChargingDuration + mp_chargedshot_idleduration.GetFloat())
-			currentTime = m_Shared.m_flShotChargingStart + m_Shared.m_flShotChargingDuration;
-		else
-			currentTime -= mp_chargedshot_idleduration.GetFloat();
+		if (currentTime > m_Shared.m_flShotChargingStart + m_Shared.m_flShotChargingDuration + mp_chargedshot_idleduration.GetFloat())
+			return 0;
 
 		activeDuration = m_Shared.m_flShotChargingDuration;
 	}
 
-	// The time since the start of the charge. Is identical to the duration if we are still charging.
-	float totalDuration = currentTime - m_Shared.m_flShotChargingStart;
-
 	// Calculate the fraction of the upwards movement using a convar as exponent.
-	float moveUpFraction = pow(clamp(activeDuration / mp_chargedshot_increaseduration.GetFloat(), 0, 1), mp_chargedshot_increaseexponent.GetFloat());
-
-	// Convert the bar position of the upwards move to the fictional downwards move time from the top
-	float moveDownDuration = (pow(1 - moveUpFraction, 1.0f / mp_chargedshot_decreaseexponent.GetFloat())) * mp_chargedshot_decreaseduration.GetFloat();
-
-	// Calculate the new bar pos with the additional time passed
-	float moveDownFraction = clamp((moveDownDuration + (totalDuration - min(mp_chargedshot_increaseduration.GetFloat(), activeDuration))) / mp_chargedshot_decreaseduration.GetFloat(), 0, 1);
-
-	// Adjust the bar pos
-	return 1 - pow(moveDownFraction, mp_chargedshot_decreaseexponent.GetFloat());
+	return pow(clamp(activeDuration / mp_chargedshot_increaseduration.GetFloat(), 0.0f, 1.0f), mp_chargedshot_increaseexponent.GetFloat());
 }
 
 void CSDKPlayer::CheckLastPressedSingleMoveButton()

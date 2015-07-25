@@ -144,8 +144,6 @@ ConVar mp_divingheaderspeed("mp_divingheaderspeed", "400", FCVAR_REPLICATED | FC
 
 ConVar mp_chargedshot_increaseduration("mp_chargedshot_increaseduration", "1.5", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_chargedshot_increaseexponent("mp_chargedshot_increaseexponent", "1", FCVAR_REPLICATED | FCVAR_NOTIFY);
-ConVar mp_chargedshot_decreaseduration("mp_chargedshot_decreaseduration", "3.0", FCVAR_REPLICATED | FCVAR_NOTIFY);
-ConVar mp_chargedshot_decreaseexponent("mp_chargedshot_decreaseexponent", "1", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_chargedshot_idleduration("mp_chargedshot_idleduration", "0", FCVAR_REPLICATED | FCVAR_NOTIFY);
 
 ConVar mp_throwinthrow_idle_duration("mp_throwinthrow_idle_duration", "1.0", FCVAR_REPLICATED | FCVAR_NOTIFY);

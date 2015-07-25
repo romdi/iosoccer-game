@@ -155,14 +155,9 @@ void CHudChargedshotBar::Paint()
 	}
 	else
 	{
-		staminaFgColor = Color(255 * (1 - stamina), 255 * stamina, 0, 255);
+		staminaFgColor = Color(0, 255, 127, 255);
 		staminaBgColor = Color(0, 0, 0, 255);
 	}
-
-	shotStrength = pPlayer->m_Shared.m_bDoChargedShot || pPlayer->m_Shared.m_bIsShotCharging ? pPlayer->GetChargedShotStrength() : 0;
-	shotFgColor = Color(255 * (1 - shotStrength), 255, 255, 255);
-
-	shotBgColor = Color(0, 0, 0, 255);
 
 	// Draw stamina bar back
 	surface()->DrawSetColor(staminaBgColor);
@@ -182,21 +177,28 @@ void CHudChargedshotBar::Paint()
 		STAMINABAR_VMARGIN + STAMINABAR_BORDER + STAMINABAR_HEIGHT
 	);
 
-	// Draw shot bar back
-	surface()->DrawSetColor(shotBgColor);
-	surface()->DrawFilledRect(
-		ScreenWidth() / 2 - SHOTBAR_WIDTH / 2 - SHOTBAR_BORDER,
-		ScreenHeight() - SHOTBAR_VMARGIN - SHOTBAR_HEIGHT - 2 * SHOTBAR_BORDER,
-		ScreenWidth() / 2 - SHOTBAR_WIDTH / 2 - SHOTBAR_BORDER + SHOTBAR_WIDTH + 2 * SHOTBAR_BORDER,
-		ScreenHeight() - SHOTBAR_VMARGIN - SHOTBAR_HEIGHT - 2 * SHOTBAR_BORDER + SHOTBAR_HEIGHT + 2 * SHOTBAR_BORDER
-	);
+	if (pPlayer->m_Shared.m_bDoChargedShot || pPlayer->m_Shared.m_bIsShotCharging)
+	{
+		shotStrength = pPlayer->GetChargedShotStrength();
+		shotFgColor = Color(255, 165, 0, 255);
+		shotBgColor = Color(0, 0, 0, 255);
 
-	// Draw shot bar front
-	surface()->DrawSetColor(shotFgColor);
-	surface()->DrawFilledRect(
-		ScreenWidth() / 2 - SHOTBAR_WIDTH / 2,
-		ScreenHeight() - SHOTBAR_VMARGIN - SHOTBAR_HEIGHT - SHOTBAR_BORDER,
-		ScreenWidth() / 2 - SHOTBAR_WIDTH / 2 + shotStrength * SHOTBAR_WIDTH,
-		ScreenHeight() - SHOTBAR_VMARGIN - SHOTBAR_HEIGHT - SHOTBAR_BORDER + SHOTBAR_HEIGHT
-	);
+		// Draw shot bar back
+		surface()->DrawSetColor(shotBgColor);
+		surface()->DrawFilledRect(
+			ScreenWidth() / 2 - SHOTBAR_WIDTH / 2 - SHOTBAR_BORDER,
+			ScreenHeight() - SHOTBAR_VMARGIN - SHOTBAR_HEIGHT - 2 * SHOTBAR_BORDER,
+			ScreenWidth() / 2 - SHOTBAR_WIDTH / 2 - SHOTBAR_BORDER + SHOTBAR_WIDTH + 2 * SHOTBAR_BORDER,
+			ScreenHeight() - SHOTBAR_VMARGIN - SHOTBAR_HEIGHT - 2 * SHOTBAR_BORDER + SHOTBAR_HEIGHT + 2 * SHOTBAR_BORDER
+			);
+
+		// Draw shot bar front
+		surface()->DrawSetColor(shotFgColor);
+		surface()->DrawFilledRect(
+			ScreenWidth() / 2 - SHOTBAR_WIDTH / 2,
+			ScreenHeight() - SHOTBAR_VMARGIN - SHOTBAR_HEIGHT - SHOTBAR_BORDER,
+			ScreenWidth() / 2 - SHOTBAR_WIDTH / 2 + shotStrength * SHOTBAR_WIDTH,
+			ScreenHeight() - SHOTBAR_VMARGIN - SHOTBAR_HEIGHT - SHOTBAR_BORDER + SHOTBAR_HEIGHT
+			);
+	}
 }

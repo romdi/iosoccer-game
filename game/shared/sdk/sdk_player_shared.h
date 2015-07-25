@@ -84,6 +84,7 @@ public:
 
 	CNetworkVar(bool, m_bIsShotCharging);
 	CNetworkVar(bool, m_bDoChargedShot);
+	CNetworkVar(bool, m_bChargedShotReleaseRequired);
 	CNetworkVar(float, m_flShotChargingStart);
 	CNetworkVar(float, m_flShotChargingDuration);
 
