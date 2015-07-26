@@ -1786,12 +1786,12 @@ static ConCommand sv_propcreation("sv_propcreation", CC_SV_PropCreation);
 
 #define PLAYER_PROP_COUNT 4
 
-const char *g_szPlayerProps[4] =
+const char *g_szPlayerProps[PLAYER_PROP_COUNT] =
 {
-	"props_junk/trafficcone001a",
-	"props_lab/blastdoor001a",
-	"props_lab/blastdoor001c",
-	"props_pipes/concrete_pipe001a"
+	"gb/posts/regularposts",
+	"grandstand/net",
+	"bench/bench",
+	"floodlights/floodlightbar"
 };
 
 void CC_CreateProp(const CCommand &args)
