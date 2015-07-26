@@ -3433,7 +3433,7 @@ void CSDKGameRules::DrawCelebScreen()
 	QAngle angles;
 	float fov;
 
-	Camera()->CalcTVCamView(origin, angles, fov, false);
+	Camera()->CalcTVCamView(origin, angles, fov);
 
 	Vector forward, right, up;
 	AngleVectors(angles, &forward, &right, &up);

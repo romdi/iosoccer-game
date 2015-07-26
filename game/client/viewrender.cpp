@@ -3000,7 +3000,7 @@ void CViewRender::DrawTVScreen( const CViewSetup &viewSet )
 	screenView.m_bOrtho = false;
 	screenView.m_flAspectRatio = 1.0f;
 
-	Camera()->CalcTVCamView(screenView.origin, screenView.angles, screenView.fov, false);
+	Camera()->CalcTVCamView(screenView.origin, screenView.angles, screenView.fov);
  
 	//Set the view up and output the scene to our RenderTarget (Camera Material).
  	render->Push3DView(screenView, VIEW_CLEAR_DEPTH | VIEW_CLEAR_COLOR, pRenderTarget, m_Frustum);

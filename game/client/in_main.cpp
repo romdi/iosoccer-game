@@ -926,8 +926,7 @@ void CInput::ControllerMove( float frametime, CUserCmd *cmd )
 	if ( IsPC() )
 	{
 		C_BasePlayer *pLocal = C_BasePlayer::GetLocalPlayer();
-		if (!m_fCameraInterceptingMouse && m_fMouseActive
-			&& Camera()->GetCamMode() != CAM_MODE_LOCKED_CHASE && Camera()->GetCamMode() != CAM_MODE_TVCAM)
+		if (!m_fCameraInterceptingMouse && m_fMouseActive)
 		{
 			MouseMove( cmd);
 		}

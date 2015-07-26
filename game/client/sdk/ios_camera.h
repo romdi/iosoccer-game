@@ -80,7 +80,7 @@ public:
 
 	void CalcChaseCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov);
 	void CalcRoamingView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov);
-	void CalcTVCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov, bool setViewAngles = true);
+	void CalcTVCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov);
 	void CalcHawkEyeView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov);
 
 protected:

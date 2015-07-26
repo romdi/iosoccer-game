@@ -625,7 +625,7 @@ void C_Camera::CalcChaseCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov
 	fov = pLocal->GetFOV();
 }
 
-void C_Camera::CalcTVCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov, bool setViewAngles/* = true*/)
+void C_Camera::CalcTVCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov)
 {
 	if (!GetMatchBall())
 		return;
@@ -875,9 +875,6 @@ void C_Camera::CalcTVCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov, b
 	}
 
 	m_vOldTargetPos = targetPos;
-
-	if (setViewAngles)
-		engine->SetViewAngles(eyeAngles);
 
 	fov = C_SDKPlayer::GetLocalSDKPlayer()->GetFOV();
 }
