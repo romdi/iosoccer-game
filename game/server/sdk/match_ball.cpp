@@ -944,7 +944,7 @@ void CMatchBall::State_PENALTY_Think()
 				return State_Transition(BALL_STATE_NORMAL);
 		}
 
-		Vector pos = m_pOtherPl->GetTeam()->m_vGoalCenter + Vector(0, m_pOtherPl->GetTeam()->m_nForward * 20, 0);
+		Vector pos = m_pOtherPl->GetTeam()->m_vGoalCenter + Vector(0, m_pOtherPl->GetTeam()->m_nForward * 5, 0);
 		m_pOtherPl->SetPosInsideShield(pos, false);
 		m_pOtherPl->AddFlag(FL_NO_Y_MOVEMENT);
 	}
