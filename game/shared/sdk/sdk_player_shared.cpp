@@ -575,23 +575,27 @@ void CSDKPlayer::CheckShotCharging()
 			m_Shared.m_bDoChargedShot = false;
 		}
 	}
-
 	else if (m_Shared.m_bIsShotCharging)
 	{
 		if (m_nButtons & IN_ATTACK2)
 		{
 			if (gpGlobals->curtime > m_Shared.m_flShotChargingStart + mp_chargedshot_increaseduration.GetFloat())
 			{
-				m_Shared.m_bIsShotCharging = false;
-				m_Shared.m_flShotChargingDuration = mp_chargedshot_increaseduration.GetFloat();
-				m_Shared.m_bDoChargedShot = true;
-				m_Shared.m_bChargedShotReleaseRequired = true;
+				if (gpGlobals->curtime > m_Shared.m_flShotChargingStart + mp_chargedshot_increaseduration.GetFloat() + mp_chargedshot_idleduration.GetFloat())
+				{
+					m_Shared.m_bIsShotCharging = false;
+					m_Shared.m_bChargedShotReleaseRequired = true;
+				}
+				else
+				{
+					m_Shared.m_flShotChargingDuration = mp_chargedshot_increaseduration.GetFloat();
+				}
 			}
 		}
 		else
 		{
 			m_Shared.m_bIsShotCharging = false;
-			m_Shared.m_flShotChargingDuration = gpGlobals->curtime - m_Shared.m_flShotChargingStart;
+			m_Shared.m_flShotChargingDuration = min(gpGlobals->curtime - m_Shared.m_flShotChargingStart, mp_chargedshot_increaseduration.GetFloat());
 			m_Shared.m_bDoChargedShot = true;
 		}
 	}
