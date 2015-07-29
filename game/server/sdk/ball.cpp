@@ -126,12 +126,29 @@ ConVar
 	sv_ball_keepershot_minangle("sv_ball_keepershot_minangle", "60", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	
 	sv_ball_groundshot_minangle("sv_ball_groundshot_minangle", "-7", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+
 	sv_ball_volleyshot_minangle("sv_ball_volleyshot_minangle", "60", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_volleyshot_spincoeff("sv_ball_volleyshot_spincoeff", "1.25", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+
+	sv_ball_rainbowflick_fixedangle("sv_ball_rainbowflick_fixedangle", "-50", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_rainbowflick_dynamicangle("sv_ball_rainbowflick_dynamicangle", "-30", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_rainbowflick_strength("sv_ball_rainbowflick_strength", "475", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_rainbowflick_spincoeff("sv_ball_rainbowflick_spincoeff", "1.0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+
+	sv_ball_lift_angle("sv_ball_lift_angle", "-90", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_lift_fixedstrength("sv_ball_lift_fixedstrength", "100", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_lift_variablestrength("sv_ball_lift_variablestrength", "300", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+
+	sv_ball_roll_strength("sv_ball_roll_strength", "225", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+
+	sv_ball_chipshot_angle("sv_ball_chipshot_angle", "-35", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_chipshot_fixedstrength("sv_ball_chipshot_fixedstrength", "125", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_chipshot_dynamicstrength("sv_ball_chipshot_dynamicstrength", "500", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_chipshot_spincoeff("sv_ball_chipshot_spincoeff", "1.75", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+
 	sv_ball_finesseshot_spincoeff("sv_ball_finesseshot_spincoeff", "1.33", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_finesseshot_strength("sv_ball_finesseshot_strength", "900", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+
 	sv_ball_header_spincoeff("sv_ball_header_spincoeff", "0.5", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_header_minangle("sv_ball_header_minangle", "70", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_header_maxangle("sv_ball_header_maxangle", "-40", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
@@ -1050,17 +1067,17 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 			if (m_pPl->m_nButtons & IN_MOVELEFT)
 			{
 				shotAngle = QAngle(0, m_aPlAng[YAW] + 90, 0);
-				shotStrength = 225;
+				shotStrength = sv_ball_roll_strength.GetInt();
 			}
 			else if (m_pPl->m_nButtons & IN_MOVERIGHT)
 			{
 				shotAngle = QAngle(0, m_aPlAng[YAW] - 90, 0);
-				shotStrength = 225;
+				shotStrength = sv_ball_roll_strength.GetInt();
 			}
 			else
 			{
 				shotAngle = QAngle(0, m_aPlAng[YAW] + 180, 0);
-				shotStrength = 175;
+				shotStrength = sv_ball_roll_strength.GetInt();
 			}
 		}
 		else if (m_pPl->m_nButtons & IN_FORWARD)
@@ -1084,8 +1101,8 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 				if (m_vPlLocalDirToBall.x >= 0)
 				{
 					shotAngle = m_aPlAng;
-					shotAngle[PITCH] = -35;
-					shotStrength = 125 + 500 * pitchCoeff;
+					shotAngle[PITCH] = sv_ball_chipshot_angle.GetInt();
+					shotStrength = sv_ball_chipshot_fixedstrength.GetInt() + sv_ball_chipshot_dynamicstrength.GetInt() * pitchCoeff;
 					spinFlags = FL_SPIN_FORCE_BACK;
 					spinCoeff = pow(pitchCoeff, 3) * sv_ball_chipshot_spincoeff.GetFloat();
 					shotTakerMinDelay = pitchCoeff;
@@ -1096,8 +1113,8 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 				else
 				{
 					shotAngle = m_aPlAng;
-					shotAngle[PITCH] = -50 - 30 * (1 - pitchCoeff);
-					shotStrength = 475;
+					shotAngle[PITCH] = sv_ball_rainbowflick_fixedangle.GetInt() + sv_ball_rainbowflick_dynamicangle.GetInt() * (1 - pitchCoeff);
+					shotStrength = sv_ball_rainbowflick_strength.GetInt();
 					spinFlags = FL_SPIN_FORCE_TOP;
 					spinCoeff = sv_ball_rainbowflick_spincoeff.GetFloat();
 					shotTakerMinDelay = sv_ball_shottaker_mindelay_long.GetFloat();
@@ -1110,8 +1127,8 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 		{
 			// Lift ball
 			shotAngle = m_aPlAng;
-			shotAngle[PITCH] = -70;
-			shotStrength = 250;
+			shotAngle[PITCH] = sv_ball_lift_angle.GetInt();
+			shotStrength = sv_ball_lift_fixedstrength.GetInt() + sv_ball_lift_variablestrength.GetInt() * pitchCoeff;
 			spinFlags = FL_SPIN_FORCE_NONE;
 			spinCoeff = 0;
 			shotTakerMinDelay = sv_ball_shottaker_mindelay_short.GetFloat();
