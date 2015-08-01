@@ -115,17 +115,17 @@ void CHudRadar::Paint()
 
 		if (pPl == pLocal)
 		{
-			surface()->DrawFilledRect(pos.x - 3, pos.y - 3, pos.x + 3, pos.y + 3);
-			surface()->DrawOutlinedCircle(pos.x, pos.y, 6, 12);
+			surface()->DrawFilledRect(pos.x - 2, pos.y - 2, pos.x + 2, pos.y + 2);
+			surface()->DrawOutlinedCircle(pos.x, pos.y, 5, 12);
 		}
 		else if (GameResources()->GetTeamPosType(pPl->index) == POS_GK)
 		{
-			surface()->DrawFilledRect(pos.x - 2, pos.y - 2, pos.x + 2, pos.y + 2);
-			surface()->DrawOutlinedRect(pos.x - 4, pos.y - 4, pos.x + 4, pos.y + 4);
+			surface()->DrawFilledRect(pos.x - 1, pos.y - 1, pos.x + 1, pos.y + 1);
+			surface()->DrawOutlinedRect(pos.x - 3, pos.y - 3, pos.x + 3, pos.y + 3);
 		}
 		else
 		{
-			surface()->DrawFilledRect(pos.x - 4, pos.y - 4, pos.x + 4, pos.y + 4);
+			surface()->DrawFilledRect(pos.x - 3, pos.y - 3, pos.x + 3, pos.y + 3);
 		}
 	}
 }
