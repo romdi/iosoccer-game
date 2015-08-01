@@ -2529,17 +2529,10 @@ void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 
 	pPl->m_flNextClientSettingsChangeTime = gpGlobals->curtime + mp_clientsettingschangeinterval.GetFloat();
 
-	int countryIndex = atoi(engine->GetClientConVarValue(pPl->entindex(), "hiddengeoipcountryindex"));
+	int countryIndex = atoi(engine->GetClientConVarValue(pPl->entindex(), "countryindex"));
 
 	if (countryIndex <= 0 || countryIndex > COUNTRY_NAMES_COUNT - 1)
-	{
-		countryIndex = atoi(engine->GetClientConVarValue(pPl->entindex(), "fallbackcountryindex"));
-
-		if (countryIndex <= 0 || countryIndex > COUNTRY_NAMES_COUNT - 1)
-		{
-			countryIndex = 0;
-		}
-	}
+		countryIndex = 0;
 
 	pPl->SetCountryIndex(countryIndex);
 

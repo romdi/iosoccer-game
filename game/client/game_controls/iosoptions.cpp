@@ -13,7 +13,7 @@ extern ConVar
 	rate,
 	clubname,
 	nationalteamname,
-	fallbackcountryindex,
+	countryindex,
 	goalteamcrests,
 	legacysidecurl,
 	modelskinindex,
@@ -421,7 +421,7 @@ void CNetworkSettingPanel::Save()
 	m_pNationalTeamNameText->GetText(text, sizeof(text));
 	nationalteamname.SetValue(text);
 
-	fallbackcountryindex.SetValue(m_pCountryNameList->GetActiveItemUserData()->GetInt("index"));
+	countryindex.SetValue(m_pCountryNameList->GetActiveItemUserData()->GetInt("index"));
 
 	g_pCVar->FindVar("cl_interp_ratio")->SetValue(atoi(m_pInterpDurationList->GetActiveItemUserData()->GetString("value")));
 	g_pCVar->FindVar("cl_smoothtime")->SetValue(atoi(m_pSmoothDurationList->GetActiveItemUserData()->GetString("value")) / 100.0f);
@@ -434,7 +434,7 @@ void CNetworkSettingPanel::Save()
 void CNetworkSettingPanel::Load()
 {
 	m_pPlayerNameText->SetText(playername.GetString());
-	m_pCountryNameList->ActivateItemByRow(fallbackcountryindex.GetInt());
+	m_pCountryNameList->ActivateItemByRow(countryindex.GetInt());
 	m_pClubNameText->SetText(clubname.GetString());
 	m_pNationalTeamNameText->SetText(nationalteamname.GetString());
 
