@@ -967,7 +967,6 @@ void CClientScoreBoardDialog::AddHeader()
 		{
 		case DEFAULT_STATS:
 			//m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "countryindex",			"Loc.",			defaultFlags | SectionedListPanel::COLUMN_IMAGE, 50);
-			//m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "nationalityindex",		"Nat.",			defaultFlags | SectionedListPanel::COLUMN_IMAGE, 50);
 			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "number",					"No.",			defaultFlags, 45);
 			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "club",						"Club",			defaultFlags, 70);
 			m_pPlayerList[i]->AddColumnToSection(m_iSectionId, "nationalteam",				"Nat.T.",		defaultFlags, 70);
@@ -1202,9 +1201,6 @@ bool CClientScoreBoardDialog::GetPlayerInfo(int playerIndex, KeyValues *kv)
 	kv->SetInt("countryindex", GetCountryFlagImageIndex(gr->GetCountryIndex(playerIndex)));
 	kv->SetString("countryname", g_szCountryNames[gr->GetCountryIndex(playerIndex)]);
 
-	kv->SetInt("nationalityindex", GetCountryFlagImageIndex(gr->GetNationalityIndex(playerIndex)));
-	kv->SetString("nationalityname", g_szCountryNames[gr->GetNationalityIndex(playerIndex)]);
-
 	int cardIndex;
 
 	if (SDKGameRules()->GetMatchDisplayTimeSeconds(true, false) < gr->GetNextCardJoin(playerIndex))
@@ -1239,8 +1235,6 @@ bool CClientScoreBoardDialog::GetTeamInfo(int team, KeyValues *kv)
 	bool isTeamSameNationalTeam = true;
 	int teamCountry = -1;
 	bool isTeamSameCountry = true;
-	int teamNationality = -1;
-	bool isTeamSameNationality = true;
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
@@ -1270,12 +1264,6 @@ bool CClientScoreBoardDialog::GetTeamInfo(int team, KeyValues *kv)
 
 		if (gr->GetCountryIndex(i) != teamCountry)
 			isTeamSameCountry = false;
-
-		if (teamNationality == -1)
-			teamNationality = gr->GetNationalityIndex(i);
-
-		if (gr->GetNationalityIndex(i) != teamNationality)
-			isTeamSameNationality = false;
 	}
 
 	if (!isTeamSameClub)
@@ -1287,15 +1275,11 @@ bool CClientScoreBoardDialog::GetTeamInfo(int team, KeyValues *kv)
 	if (!isTeamSameCountry || teamCountry == -1)
 		teamCountry = 0;
 
-	if (!isTeamSameNationality || teamNationality == -1)
-		teamNationality = 0;
-
 	kv->SetString("name", pTeam->GetShortName());
 	kv->SetInt("playerindex", teamIndex - 2);
 	kv->SetInt("posname", pTeam->GetNumPlayers());
 	kv->SetInt("index", -1);
 	kv->SetInt("countryindex", GetCountryFlagImageIndex(teamCountry));
-	kv->SetInt("nationalityindex", GetCountryFlagImageIndex(teamNationality));
 	kv->SetString("club", teamClub);
 	kv->SetString("nationalteam", teamNationalTeam);
 	kv->SetString("ping", GET_TSTAT_TEXT(pTeam->m_Ping));

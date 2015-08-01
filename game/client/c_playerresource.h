@@ -41,7 +41,6 @@ public : // IGameResources intreface
 	virtual const char *GetNationalTeamName( int index );
 	virtual const char *GetShirtName( int index );
 	virtual int		GetCountryIndex( int index );
-	virtual int		GetNationalityIndex( int index );
 	virtual int		GetPing( int index );
 //	virtual int		GetPacketloss( int index );
 	virtual int		GetTeam( int index );
@@ -98,7 +97,6 @@ protected:
 	char	m_szNationalTeamNames[MAX_PLAYERS+1][MAX_CLUBNAME_LENGTH];
 	char	m_szShirtNames[MAX_PLAYERS+1][MAX_PLAYER_NAME_LENGTH];
 	int		m_CountryIndices[MAX_PLAYERS+1];
-	int		m_NationalityIndices[MAX_PLAYERS+1];
 	int		m_iPing[MAX_PLAYERS+1];
 	bool	m_bConnected[MAX_PLAYERS+1];
 	int		m_iTeam[MAX_PLAYERS+1];

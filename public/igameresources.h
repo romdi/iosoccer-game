@@ -27,7 +27,6 @@ public:
 	virtual const char *GetClubName( int index ) = 0;
 	virtual const char *GetNationalTeamName( int index ) = 0;
 	virtual int		GetCountryIndex( int index ) = 0;
-	virtual int		GetNationalityIndex( int index ) = 0;
 	virtual int		GetPing( int index ) = 0;
 //	virtual int		GetPacketloss( int index ) = 0;
 	virtual int		GetTeam( int index ) = 0;

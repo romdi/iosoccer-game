@@ -356,7 +356,6 @@ CSDKPlayer::CSDKPlayer()
 	m_szShirtName[0] = '\0';
 
 	m_nCountryIndex = 0;
-	m_nNationalityIndex = 0;
 
 	m_nSkinIndex = 0;
 

@@ -2543,14 +2543,6 @@ void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 
 	pPl->SetCountryIndex(countryIndex);
 
-	int nationalityIndex = atoi(engine->GetClientConVarValue(pPl->entindex(), "nationalityindex"));
-	if (nationalityIndex <= 0 || nationalityIndex > COUNTRY_NAMES_COUNT - 1)
-	{
-		nationalityIndex = 0;
-	}
-
-	pPl->SetNationalityIndex(nationalityIndex);
-
 	pPl->SetLegacySideCurl(atoi(engine->GetClientConVarValue(pPl->entindex(), "legacysidecurl")) != 0);
 
 	pPl->SetPreferredOutfieldShirtNumber(atoi(engine->GetClientConVarValue(pPl->entindex(), "preferredoutfieldshirtnumber")));

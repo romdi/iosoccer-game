@@ -74,7 +74,6 @@ protected:
 	CNetworkArray( string_t, m_szNationalTeamNames, MAX_PLAYERS+1 );
 	CNetworkArray( string_t, m_szShirtNames, MAX_PLAYERS+1 );
 	CNetworkArray( int, m_CountryIndices, MAX_PLAYERS+1 );
-	CNetworkArray( int, m_NationalityIndices, MAX_PLAYERS+1 );
 		
 	int	m_nUpdateCounter;
 };

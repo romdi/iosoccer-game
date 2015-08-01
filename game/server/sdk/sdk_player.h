@@ -476,9 +476,6 @@ public:
 	int					GetCountryIndex() { return m_nCountryIndex; }
 	void				SetCountryIndex(int index) { m_nCountryIndex = index; }
 
-	int					GetNationalityIndex() { return m_nNationalityIndex; }
-	void				SetNationalityIndex(int index) { m_nNationalityIndex = index; } 
-
 	bool				IsLegacySideCurl() { return m_bLegacySideCurl; } 
 	void				SetLegacySideCurl(bool enable) { m_bLegacySideCurl = enable; }
 
@@ -511,8 +508,6 @@ public:
 	bool				m_bShirtNameChanged;
 
 	int					m_nCountryIndex;
-
-	int					m_nNationalityIndex;
 
 	bool				m_bLegacySideCurl;
 

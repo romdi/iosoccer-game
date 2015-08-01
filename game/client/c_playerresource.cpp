@@ -68,7 +68,6 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_PlayerResource, DT_PlayerResource, CPlayerReso
 	RecvPropArray3( RECVINFO_ARRAY(m_szNationalTeamNames), RecvPropString( RECVINFO(m_szNationalTeamNames[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_szShirtNames), RecvPropString( RECVINFO(m_szShirtNames[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_CountryIndices), RecvPropInt( RECVINFO(m_CountryIndices[0]))),
-	RecvPropArray3( RECVINFO_ARRAY(m_NationalityIndices), RecvPropInt( RECVINFO(m_NationalityIndices[0]))),
 END_RECV_TABLE()
 
 BEGIN_PREDICTION_DATA( C_PlayerResource )
@@ -135,7 +134,6 @@ C_PlayerResource::C_PlayerResource()
 	memset( m_szNationalTeamNames, 0, sizeof( m_szNationalTeamNames ) );
 	memset( m_szShirtNames, 0, sizeof( m_szShirtNames ) );
 	memset( m_CountryIndices, 0, sizeof( m_CountryIndices ) );
-	memset( m_NationalityIndices, 0, sizeof( m_NationalityIndices ) );
 
 	g_PR = this;
 }
@@ -280,20 +278,6 @@ int C_PlayerResource::GetCountryIndex( int iIndex )
 		return 0;
 
 	return m_CountryIndices[iIndex];
-}
-
-int C_PlayerResource::GetNationalityIndex( int iIndex )
-{
-	if ( iIndex < 1 || iIndex > MAX_PLAYERS )
-	{
-		Assert( false );
-		return 0;
-	}
-	
-	if ( !IsConnected( iIndex ) )
-		return 0;
-
-	return m_NationalityIndices[iIndex];
 }
 
 int C_PlayerResource::GetTeam(int iIndex )

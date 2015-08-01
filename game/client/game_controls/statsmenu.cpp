@@ -91,10 +91,9 @@ void CStatsMenu::Reset()
 			int columnWidth = GetWide() / 11;
 
 			m_pPlayerStats[i]->AddColumnToSection(sectionId, "posname",					"Pos.",			defaultFlags,	columnWidth);
-			m_pPlayerStats[i]->AddColumnToSection(sectionId, "name",					"Name",			0,				2 * columnWidth);
-			m_pPlayerStats[i]->AddColumnToSection(sectionId, "steamname",				"Steam name",	0,				2 * columnWidth);
+			m_pPlayerStats[i]->AddColumnToSection(sectionId, "name",					"Name",			0,				3 * columnWidth);
+			m_pPlayerStats[i]->AddColumnToSection(sectionId, "steamname",				"Steam name",	0,				3 * columnWidth);
 			m_pPlayerStats[i]->AddColumnToSection(sectionId, "countryname",				"Location",		0,				2 * columnWidth);
-			m_pPlayerStats[i]->AddColumnToSection(sectionId, "nationalityname",			"Nationality",	0,				2 * columnWidth);
 			m_pPlayerStats[i]->AddColumnToSection(sectionId, "club",					"Club",			defaultFlags,	columnWidth);
 			m_pPlayerStats[i]->AddColumnToSection(sectionId, "nationalteam",			"National team",defaultFlags,	columnWidth);
 		}

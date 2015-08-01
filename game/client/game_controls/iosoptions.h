@@ -93,9 +93,6 @@ class CNetworkSettingPanel : public PropertyPage, public ISettingPanel
 	Label *m_pCountryNameLabel;
 	ComboBox *m_pCountryNameList;
 
-	Label *m_pNationalityNameLabel;
-	ComboBox *m_pNationalityNameList;
-
 	Label *m_pInterpDurationLabel;
 	ComboBox *m_pInterpDurationList;
 	Button *m_pInterpDurationSuggestedValueButton;

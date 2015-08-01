@@ -14,7 +14,6 @@ extern ConVar
 	clubname,
 	nationalteamname,
 	fallbackcountryindex,
-	nationalityindex,
 	goalteamcrests,
 	legacysidecurl,
 	modelskinindex,
@@ -262,22 +261,6 @@ CNetworkSettingPanel::CNetworkSettingPanel(Panel *parent, const char *panelName)
 		kv->deleteThis();
 	}
 
-	m_pNationalityNameLabel = new Label(m_pContent, "", "Nationality:");
-	m_pNationalityNameList = new ComboBox(m_pContent, "", MAX_VISIBLE_DROPDOWN, false);
-
-	m_pNationalityNameList->RemoveAll();
-
-	kv = new KeyValues("UserData", "index", 0);
-	m_pNationalityNameList->AddItem("<None>", kv);
-	kv->deleteThis();
-
-	for (int i = 1; i < COUNTRY_NAMES_COUNT; i++)
-	{
-		kv = new KeyValues("UserData", "index", i);
-		m_pNationalityNameList->AddItem(g_szCountryNames[i], kv);
-		kv->deleteThis();
-	}
-
 	const char *suggestedValueText = "Set Recommended Value";
 
 	m_pInterpDurationLabel = new Label(m_pContent, "", "Network Smoothing Ratio (cl_interp_ratio):");
@@ -374,42 +357,39 @@ void CNetworkSettingPanel::PerformLayout()
 	m_pCountryNameLabel->SetBounds(0, 6 * TEXT_HEIGHT + 2 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
 	m_pCountryNameList->SetBounds(0, 7 * TEXT_HEIGHT + 2 * TEXT_MARGIN, INPUT_WIDTH, TEXT_HEIGHT);
 
-	m_pNationalityNameLabel->SetBounds(0, 8 * TEXT_HEIGHT + 2 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pNationalityNameList->SetBounds(0, 9 * TEXT_HEIGHT + 2 * TEXT_MARGIN, INPUT_WIDTH, TEXT_HEIGHT);
-
-	m_pInterpDurationLabel->SetBounds(0, 10 * TEXT_HEIGHT + 3 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pInterpDurationList->SetBounds(0, 11 * TEXT_HEIGHT + 3 * TEXT_MARGIN, INPUT_WIDTH, TEXT_HEIGHT);
-	m_pInterpDurationSuggestedValueButton->SetBounds(INPUT_WIDTH + SUGGESTED_VALUE_MARGIN, 11 * TEXT_HEIGHT + 3 * TEXT_MARGIN, SUGGESTED_VALUE_WIDTH, TEXT_HEIGHT);
+	m_pInterpDurationLabel->SetBounds(0, 8 * TEXT_HEIGHT + 3 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pInterpDurationList->SetBounds(0, 9 * TEXT_HEIGHT + 3 * TEXT_MARGIN, INPUT_WIDTH, TEXT_HEIGHT);
+	m_pInterpDurationSuggestedValueButton->SetBounds(INPUT_WIDTH + SUGGESTED_VALUE_MARGIN, 9 * TEXT_HEIGHT + 3 * TEXT_MARGIN, SUGGESTED_VALUE_WIDTH, TEXT_HEIGHT);
 	m_pInterpDurationSuggestedValueButton->SetContentAlignment(Label::a_center);
-	m_pInterpDurationInfoButton->SetBounds(INPUT_WIDTH + SUGGESTED_VALUE_MARGIN + SUGGESTED_VALUE_WIDTH + INFOBUTTON_MARGIN, 11 * TEXT_HEIGHT + 3 * TEXT_MARGIN, INFOBUTTON_WIDTH, TEXT_HEIGHT);
+	m_pInterpDurationInfoButton->SetBounds(INPUT_WIDTH + SUGGESTED_VALUE_MARGIN + SUGGESTED_VALUE_WIDTH + INFOBUTTON_MARGIN, 9 * TEXT_HEIGHT + 3 * TEXT_MARGIN, INFOBUTTON_WIDTH, TEXT_HEIGHT);
 	m_pInterpDurationInfoButton->SetContentAlignment(Label::a_center);
 
-	m_pSmoothDurationLabel->SetBounds(0, 12 * TEXT_HEIGHT + 4 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pSmoothDurationList->SetBounds(0, 13 * TEXT_HEIGHT + 4 * TEXT_MARGIN, INPUT_WIDTH, TEXT_HEIGHT);
-	m_pSmoothDurationSuggestedValueButton->SetBounds(INPUT_WIDTH + SUGGESTED_VALUE_MARGIN, 13 * TEXT_HEIGHT + 4 * TEXT_MARGIN, SUGGESTED_VALUE_WIDTH, TEXT_HEIGHT);
+	m_pSmoothDurationLabel->SetBounds(0, 10 * TEXT_HEIGHT + 4 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pSmoothDurationList->SetBounds(0, 11 * TEXT_HEIGHT + 4 * TEXT_MARGIN, INPUT_WIDTH, TEXT_HEIGHT);
+	m_pSmoothDurationSuggestedValueButton->SetBounds(INPUT_WIDTH + SUGGESTED_VALUE_MARGIN, 11 * TEXT_HEIGHT + 4 * TEXT_MARGIN, SUGGESTED_VALUE_WIDTH, TEXT_HEIGHT);
 	m_pSmoothDurationSuggestedValueButton->SetContentAlignment(Label::a_center);
-	m_pSmoothDurationInfoButton->SetBounds(INPUT_WIDTH + SUGGESTED_VALUE_MARGIN + SUGGESTED_VALUE_WIDTH + INFOBUTTON_MARGIN, 13 * TEXT_HEIGHT + 4 * TEXT_MARGIN, INFOBUTTON_WIDTH, TEXT_HEIGHT);
+	m_pSmoothDurationInfoButton->SetBounds(INPUT_WIDTH + SUGGESTED_VALUE_MARGIN + SUGGESTED_VALUE_WIDTH + INFOBUTTON_MARGIN, 11 * TEXT_HEIGHT + 4 * TEXT_MARGIN, INFOBUTTON_WIDTH, TEXT_HEIGHT);
 	m_pSmoothDurationInfoButton->SetContentAlignment(Label::a_center);
 
-	m_pRateLabel->SetBounds(0, 14 * TEXT_HEIGHT + 5 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pRateList->SetBounds(0, 15 * TEXT_HEIGHT + 5 * TEXT_MARGIN, INPUT_WIDTH, TEXT_HEIGHT);
-	m_pRateSuggestedValueButton->SetBounds(INPUT_WIDTH + SUGGESTED_VALUE_MARGIN, 15 * TEXT_HEIGHT + 5 * TEXT_MARGIN, SUGGESTED_VALUE_WIDTH, TEXT_HEIGHT);
+	m_pRateLabel->SetBounds(0, 12 * TEXT_HEIGHT + 5 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pRateList->SetBounds(0, 13 * TEXT_HEIGHT + 5 * TEXT_MARGIN, INPUT_WIDTH, TEXT_HEIGHT);
+	m_pRateSuggestedValueButton->SetBounds(INPUT_WIDTH + SUGGESTED_VALUE_MARGIN, 13 * TEXT_HEIGHT + 5 * TEXT_MARGIN, SUGGESTED_VALUE_WIDTH, TEXT_HEIGHT);
 	m_pRateSuggestedValueButton->SetContentAlignment(Label::a_center);
-	m_pRateInfoButton->SetBounds(INPUT_WIDTH + SUGGESTED_VALUE_MARGIN + SUGGESTED_VALUE_WIDTH + INFOBUTTON_MARGIN, 15 * TEXT_HEIGHT + 5 * TEXT_MARGIN, INFOBUTTON_WIDTH, TEXT_HEIGHT);
+	m_pRateInfoButton->SetBounds(INPUT_WIDTH + SUGGESTED_VALUE_MARGIN + SUGGESTED_VALUE_WIDTH + INFOBUTTON_MARGIN, 13 * TEXT_HEIGHT + 5 * TEXT_MARGIN, INFOBUTTON_WIDTH, TEXT_HEIGHT);
 	m_pRateInfoButton->SetContentAlignment(Label::a_center);
 
-	m_pUpdaterateLabel->SetBounds(0, 16 * TEXT_HEIGHT + 6 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pUpdaterateList->SetBounds(0, 17 * TEXT_HEIGHT + 6 * TEXT_MARGIN, INPUT_WIDTH, TEXT_HEIGHT);
-	m_pUpdaterateSuggestedValueButton->SetBounds(INPUT_WIDTH + SUGGESTED_VALUE_MARGIN, 17 * TEXT_HEIGHT + 6 * TEXT_MARGIN, SUGGESTED_VALUE_WIDTH, TEXT_HEIGHT);
+	m_pUpdaterateLabel->SetBounds(0, 14 * TEXT_HEIGHT + 6 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pUpdaterateList->SetBounds(0, 15 * TEXT_HEIGHT + 6 * TEXT_MARGIN, INPUT_WIDTH, TEXT_HEIGHT);
+	m_pUpdaterateSuggestedValueButton->SetBounds(INPUT_WIDTH + SUGGESTED_VALUE_MARGIN, 15 * TEXT_HEIGHT + 6 * TEXT_MARGIN, SUGGESTED_VALUE_WIDTH, TEXT_HEIGHT);
 	m_pUpdaterateSuggestedValueButton->SetContentAlignment(Label::a_center);
-	m_pUpdaterateInfoButton->SetBounds(INPUT_WIDTH + SUGGESTED_VALUE_MARGIN + SUGGESTED_VALUE_WIDTH + INFOBUTTON_MARGIN, 17 * TEXT_HEIGHT + 6 * TEXT_MARGIN, INFOBUTTON_WIDTH, TEXT_HEIGHT);
+	m_pUpdaterateInfoButton->SetBounds(INPUT_WIDTH + SUGGESTED_VALUE_MARGIN + SUGGESTED_VALUE_WIDTH + INFOBUTTON_MARGIN, 15 * TEXT_HEIGHT + 6 * TEXT_MARGIN, INFOBUTTON_WIDTH, TEXT_HEIGHT);
 	m_pUpdaterateInfoButton->SetContentAlignment(Label::a_center);
 
-	m_pCommandrateLabel->SetBounds(0, 18 * TEXT_HEIGHT + 7 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pCommandrateList->SetBounds(0, 19 * TEXT_HEIGHT + 7 * TEXT_MARGIN, INPUT_WIDTH, TEXT_HEIGHT);
-	m_pCommandrateSuggestedValueButton->SetBounds(INPUT_WIDTH + SUGGESTED_VALUE_MARGIN, 19 * TEXT_HEIGHT + 7 * TEXT_MARGIN, SUGGESTED_VALUE_WIDTH, TEXT_HEIGHT);
+	m_pCommandrateLabel->SetBounds(0, 16 * TEXT_HEIGHT + 7 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pCommandrateList->SetBounds(0, 17 * TEXT_HEIGHT + 7 * TEXT_MARGIN, INPUT_WIDTH, TEXT_HEIGHT);
+	m_pCommandrateSuggestedValueButton->SetBounds(INPUT_WIDTH + SUGGESTED_VALUE_MARGIN, 17 * TEXT_HEIGHT + 7 * TEXT_MARGIN, SUGGESTED_VALUE_WIDTH, TEXT_HEIGHT);
 	m_pCommandrateSuggestedValueButton->SetContentAlignment(Label::a_center);
-	m_pCommandrateInfoButton->SetBounds(INPUT_WIDTH + SUGGESTED_VALUE_MARGIN + SUGGESTED_VALUE_WIDTH + INFOBUTTON_MARGIN, 19 * TEXT_HEIGHT + 7 * TEXT_MARGIN, INFOBUTTON_WIDTH, TEXT_HEIGHT);
+	m_pCommandrateInfoButton->SetBounds(INPUT_WIDTH + SUGGESTED_VALUE_MARGIN + SUGGESTED_VALUE_WIDTH + INFOBUTTON_MARGIN, 17 * TEXT_HEIGHT + 7 * TEXT_MARGIN, INFOBUTTON_WIDTH, TEXT_HEIGHT);
 	m_pCommandrateInfoButton->SetContentAlignment(Label::a_center);
 }
 
@@ -443,8 +423,6 @@ void CNetworkSettingPanel::Save()
 
 	fallbackcountryindex.SetValue(m_pCountryNameList->GetActiveItemUserData()->GetInt("index"));
 
-	nationalityindex.SetValue(m_pNationalityNameList->GetActiveItemUserData()->GetInt("index"));
-
 	g_pCVar->FindVar("cl_interp_ratio")->SetValue(atoi(m_pInterpDurationList->GetActiveItemUserData()->GetString("value")));
 	g_pCVar->FindVar("cl_smoothtime")->SetValue(atoi(m_pSmoothDurationList->GetActiveItemUserData()->GetString("value")) / 100.0f);
 
@@ -457,7 +435,6 @@ void CNetworkSettingPanel::Load()
 {
 	m_pPlayerNameText->SetText(playername.GetString());
 	m_pCountryNameList->ActivateItemByRow(fallbackcountryindex.GetInt());
-	m_pNationalityNameList->ActivateItemByRow(nationalityindex.GetInt());
 	m_pClubNameText->SetText(clubname.GetString());
 	m_pNationalTeamNameText->SetText(nationalteamname.GetString());
 
