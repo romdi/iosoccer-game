@@ -1,6 +1,7 @@
 #include "cbase.h"
 #include "ios_hud_radar.h"
 #include "c_team.h"
+#include "c_ball.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -127,6 +128,31 @@ void CHudRadar::Paint()
 		{
 			surface()->DrawFilledRect(pos.x - 3, pos.y - 3, pos.x + 3, pos.y + 3);
 		}
+	}
+
+	if (GetMatchBall())
+	{
+		Vector pos = GetMatchBall()->GetLocalOrigin() - SDKGameRules()->m_vFieldMin;
+		pos /= field;
+
+		pos.x = clamp(pos.x, 0.0f, 1.0f);
+
+		if (pLocal->GetTeamNumber() != SDKGameRules()->m_nBottomTeam)
+			pos.x = 1.0f - pos.x;
+
+		pos.x *= width;
+
+		pos.y = (1.0f - clamp(pos.y, 0.0f, 1.0f));
+
+		if (pLocal->GetTeamNumber() != SDKGameRules()->m_nBottomTeam)
+			pos.y = 1.0f - pos.y;
+
+		pos.y *= height;
+
+		surface()->DrawSetColor(Color(255, 255, 255, 255));
+		surface()->DrawOutlinedCircle(pos.x, pos.y, 1, 12);
+		surface()->DrawOutlinedCircle(pos.x, pos.y, 2, 12);
+		surface()->DrawOutlinedCircle(pos.x, pos.y, 3, 12);
 	}
 }
 
