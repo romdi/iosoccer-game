@@ -34,7 +34,6 @@
 #define MARGIN 30
 
 #ifndef _XBOX
-ConVar hud_saytext_time( "hud_saytext_time", "12", 0 );
 ConVar cl_showtextmsg( "cl_showtextmsg", "1", 0, "Enable/disable text messages printing on the screen." );
 ConVar cl_chatfilters( "cl_chatfilters", "31", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Stores the chat filter settings " );
 
@@ -295,7 +294,7 @@ void CBaseHudChatLine::PerformFadeout( void )
 void CBaseHudChatLine::SetExpireTime( void )
 {
 	m_flStartTime = gpGlobals->curtime;
-	m_flExpireTime = m_flStartTime + hud_saytext_time.GetFloat();
+	m_flExpireTime = m_flStartTime + CHAT_HISTORY_IDLE_TIME;
 	m_nCount = CBaseHudChat::m_nLineCounter++;
 }
 
@@ -1449,7 +1448,7 @@ void CBaseHudChatLine::Colorize( int alpha )
 			{	
 				pChat->GetChatHistory()->InsertColorChange( color );
 				pChat->GetChatHistory()->InsertString( wText );
-				pChat->GetChatHistory()->InsertFade( hud_saytext_time.GetFloat(), CHAT_HISTORY_IDLE_FADE_TIME );
+				pChat->GetChatHistory()->InsertFade( CHAT_HISTORY_IDLE_TIME, CHAT_HISTORY_IDLE_FADE_TIME );
 
 				if ( i == m_textRanges.Count()-1 )
 				{
