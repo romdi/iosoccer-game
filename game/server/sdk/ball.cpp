@@ -1085,7 +1085,7 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 			if (m_pPl->m_nButtons & IN_MOVELEFT || m_pPl->m_nButtons & IN_MOVERIGHT)
 			{
 				// Finesse shot
-				shotTakerMinDelay = sv_ball_shottaker_mindelay_long.GetFloat();
+				shotTakerMinDelay = sv_ball_shottaker_mindelay_short.GetFloat();
 				spinFlags = FL_SPIN_PERMIT_SIDE;
 				spinCoeff = sv_ball_finesseshot_spincoeff.GetFloat();
 				shotStrength = GetNormalshotStrength(pitchCoeff, sv_ball_finesseshot_strength.GetInt());
