@@ -243,7 +243,7 @@ CNetworkSettingPanel::CNetworkSettingPanel(Panel *parent, const char *panelName)
 	m_pNationalTeamNameText->SetMaximumCharCount(MAX_CLUBNAME_LENGTH - 1);
 	m_pNationalTeamNameText->SetAllowNonAsciiCharacters(true);
 
-	m_pCountryNameLabel = new Label(m_pContent, "", "Location (Fallback):");
+	m_pCountryNameLabel = new Label(m_pContent, "", "Country:");
 	m_pCountryNameList = new ComboBox(m_pContent, "", MAX_VISIBLE_DROPDOWN, false);
 
 	m_pCountryNameList->RemoveAll();
