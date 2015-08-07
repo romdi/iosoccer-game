@@ -119,12 +119,9 @@ protected:
 	// Handle movement in noclip mode.
 	void			FullNoClipMove( float factor, float maxacceleration );
 
-	// Returns true if he started a jump (ie: should he play the jump animation)?
-	virtual bool	CheckJumpButton( void );	// Overridden by each game.
+	bool			CheckActionStart();
 
-	bool			CheckSlideButton();
-
-	bool			CheckPlayerAnimEvent();
+	bool			CheckActionOverTime();
 
 	// The basic solid body movement clip that slides along multiple planes
 	virtual int		TryPlayerMove( Vector *pFirstDest=NULL, trace_t *pFirstTrace=NULL );

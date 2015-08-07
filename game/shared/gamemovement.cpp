@@ -1421,30 +1421,17 @@ void CGameMovement::FullWalkMove( )
 
 	bool isWalkMove = false;
 
-	if (CheckPlayerAnimEvent())
+	if (CheckActionOverTime())
+	{
+		TryPlayerMove();
+	}
+	else if (!SDKGameRules()->IsCeremony() && CheckActionStart() && CheckActionOverTime())
 	{
 		TryPlayerMove();
 	}
 	else
 	{
 		StartGravity();
-
-		if (!SDKGameRules()->IsCeremony())
-		{
-			if (mv->m_nButtons & IN_JUMP)
-			{
-				CheckJumpButton();
-			}
-			else
-				mv->m_nOldButtons &= ~IN_JUMP;
-
-			if (mv->m_nButtons & IN_DUCK)
-			{
-				CheckSlideButton();
-			}
-			else
-				mv->m_nOldButtons &= ~IN_DUCK;
-		}
 
 		// Fricion is handled before we add in any base velocity. That way, if we are on a conveyor, 
 		//  we don't slow when standing still, relative to the conveyor.
@@ -1585,7 +1572,7 @@ void CGameMovement::MoveToTargetPos()
 	#endif
 }
 
-bool CGameMovement::CheckPlayerAnimEvent()
+bool CGameMovement::CheckActionOverTime()
 {
 	CSDKPlayer *pPl = ToSDKPlayer(player);
 	float timePassed = gpGlobals->curtime - pPl->m_Shared.GetAnimEventStartTime();
@@ -1601,195 +1588,203 @@ bool CGameMovement::CheckPlayerAnimEvent()
 	{
 	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT:
 	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT:
+	{
+		if (timePassed > mp_keepersidewarddive_move_duration.GetFloat() + mp_keepersidewarddive_idle_duration.GetFloat())
 		{
-			if (timePassed > mp_keepersidewarddive_move_duration.GetFloat() + mp_keepersidewarddive_idle_duration.GetFloat())
-			{
-				pPl->DoAnimationEvent(PLAYERANIMEVENT_NONE);
-				pPl->RemoveFlag(FL_FREECAM);
-				return false;
-			}
+			pPl->DoAnimationEvent(PLAYERANIMEVENT_NONE);
+			pPl->RemoveFlag(FL_FREECAM);
+			return false;
+		}
 
-			float moveCoeff;
+		float moveCoeff;
 
-			if (pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_LEFT && sidemoveSign == 1
-				|| pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT && sidemoveSign == -1)
+		if (pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_LEFT && sidemoveSign == 1
+			|| pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT && sidemoveSign == -1)
+		{
+			moveCoeff = mp_keeperdive_movebackcoeff.GetFloat();
+		}
+		else
+		{
+			if (pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT)
 			{
-				moveCoeff = mp_keeperdive_movebackcoeff.GetFloat();
+				if (pPl->m_Shared.m_nBoostRightDive == 1)
+					moveCoeff = 1.0f + mp_dive_boost_coeff.GetFloat();
+				else if (pPl->m_Shared.m_nBoostRightDive == -1)
+					moveCoeff = 1.0f - mp_dive_boost_coeff.GetFloat();
+				else
+					moveCoeff = 1.0f;
 			}
 			else
 			{
-				if (pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT)
-				{
-					if (pPl->m_Shared.m_nBoostRightDive == 1)
-						moveCoeff = 1.0f + mp_dive_boost_coeff.GetFloat();
-					else if (pPl->m_Shared.m_nBoostRightDive == -1)
-						moveCoeff = 1.0f - mp_dive_boost_coeff.GetFloat();
-					else
-						moveCoeff = 1.0f;
-				}
+				if (pPl->m_Shared.m_nBoostRightDive == -1)
+					moveCoeff = 1.0f + mp_dive_boost_coeff.GetFloat();
+				else if (pPl->m_Shared.m_nBoostRightDive == 1)
+					moveCoeff = 1.0f - mp_dive_boost_coeff.GetFloat();
 				else
-				{
-					if (pPl->m_Shared.m_nBoostRightDive == -1)
-						moveCoeff = 1.0f + mp_dive_boost_coeff.GetFloat();
-					else if (pPl->m_Shared.m_nBoostRightDive == 1)
-						moveCoeff = 1.0f - mp_dive_boost_coeff.GetFloat();
-					else
-						moveCoeff = 1.0f;
-				}
+					moveCoeff = 1.0f;
 			}
-				
-			mv->m_vecVelocity = forward2D * ZeroSign(mv->m_flForwardMove) * mp_keeperdivespeed_shortside.GetFloat();
-			mv->m_vecVelocity += right * sidemoveSign * moveCoeff * mp_keeperdivespeed_longside.GetFloat();
-
-			mv->m_vecVelocity.z = 0;
-			float maxSpeed = max(mp_keeperdivespeed_shortside.GetFloat(), mp_keeperdivespeed_longside.GetFloat() * moveCoeff);
-			float speed = mv->m_vecVelocity.NormalizeInPlace();
-			mv->m_vecVelocity *= min(speed, maxSpeed);
-			mv->m_vecVelocity *= max(0, (1 - pow(timePassed / mp_keepersidewarddive_move_duration.GetFloat(), 2)));
-			mv->m_vecVelocity.z = mp_keeperdivespeed_z.GetInt();
-
-			break;
 		}
+
+		mv->m_vecVelocity = forward2D * ZeroSign(mv->m_flForwardMove) * mp_keeperdivespeed_shortside.GetFloat();
+		mv->m_vecVelocity += right * sidemoveSign * moveCoeff * mp_keeperdivespeed_longside.GetFloat();
+
+		mv->m_vecVelocity.z = 0;
+		float maxSpeed = max(mp_keeperdivespeed_shortside.GetFloat(), mp_keeperdivespeed_longside.GetFloat() * moveCoeff);
+		float speed = mv->m_vecVelocity.NormalizeInPlace();
+		mv->m_vecVelocity *= min(speed, maxSpeed);
+		mv->m_vecVelocity *= max(0, (1 - pow(timePassed / mp_keepersidewarddive_move_duration.GetFloat(), 2)));
+		mv->m_vecVelocity.z = mp_keeperdivespeed_z.GetInt();
+
+		break;
+	}
 	case PLAYERANIMEVENT_KEEPER_DIVE_FORWARD:
+	{
+		if (timePassed > mp_keeperforwarddive_move_duration.GetFloat() + mp_keeperforwarddive_idle_duration.GetFloat())
 		{
-			if (timePassed > mp_keeperforwarddive_move_duration.GetFloat() + mp_keeperforwarddive_idle_duration.GetFloat())
-			{
-				pPl->DoAnimationEvent(PLAYERANIMEVENT_NONE);
-				pPl->RemoveFlag(FL_FREECAM);
-				return false;
-			}
-
-			float moveCoeff;
-
-			if (mv->m_nButtons & IN_BACK)
-			{
-				moveCoeff = mp_keeperdive_movebackcoeff.GetFloat();
-			}
-			else
-			{
-				if (pPl->m_Shared.m_nBoostForwardDive == 1)
-					moveCoeff = 1.0f + mp_dive_boost_coeff.GetFloat();
-				else if (pPl->m_Shared.m_nBoostForwardDive == -1)
-					moveCoeff = 1.0f - mp_dive_boost_coeff.GetFloat();
-				else
-					moveCoeff = 1.0f;
-			}
-					
-			mv->m_vecVelocity = forward2D * ZeroSign(mv->m_flForwardMove) * moveCoeff * mp_keeperdivespeed_longside.GetFloat();		
-			mv->m_vecVelocity += right * sidemoveSign * mp_keeperdivespeed_shortside.GetFloat();
-
-			mv->m_vecVelocity.z = 0;
-			float maxSpeed = max(mp_keeperdivespeed_shortside.GetFloat(), mp_keeperdivespeed_longside.GetFloat() * moveCoeff);
-			float speed = mv->m_vecVelocity.NormalizeInPlace();
-			mv->m_vecVelocity *= min(speed, maxSpeed);
-			mv->m_vecVelocity *= max(0, (1 - pow(timePassed / mp_keeperforwarddive_move_duration.GetFloat(), 2)));
-			mv->m_vecVelocity.z = 0;
-
-			break;
+			pPl->DoAnimationEvent(PLAYERANIMEVENT_NONE);
+			pPl->RemoveFlag(FL_FREECAM);
+			return false;
 		}
+
+		float moveCoeff;
+
+		if (mv->m_nButtons & IN_BACK)
+		{
+			moveCoeff = mp_keeperdive_movebackcoeff.GetFloat();
+		}
+		else
+		{
+			if (pPl->m_Shared.m_nBoostForwardDive == 1)
+				moveCoeff = 1.0f + mp_dive_boost_coeff.GetFloat();
+			else if (pPl->m_Shared.m_nBoostForwardDive == -1)
+				moveCoeff = 1.0f - mp_dive_boost_coeff.GetFloat();
+			else
+				moveCoeff = 1.0f;
+		}
+
+		mv->m_vecVelocity = forward2D * ZeroSign(mv->m_flForwardMove) * moveCoeff * mp_keeperdivespeed_longside.GetFloat();
+		mv->m_vecVelocity += right * sidemoveSign * mp_keeperdivespeed_shortside.GetFloat();
+
+		mv->m_vecVelocity.z = 0;
+		float maxSpeed = max(mp_keeperdivespeed_shortside.GetFloat(), mp_keeperdivespeed_longside.GetFloat() * moveCoeff);
+		float speed = mv->m_vecVelocity.NormalizeInPlace();
+		mv->m_vecVelocity *= min(speed, maxSpeed);
+		mv->m_vecVelocity *= max(0, (1 - pow(timePassed / mp_keeperforwarddive_move_duration.GetFloat(), 2)));
+		mv->m_vecVelocity.z = 0;
+
+		break;
+	}
 	case PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD:
+	{
+		if (timePassed > mp_keeperbackwarddive_move_duration.GetFloat() + mp_keeperbackwarddive_idle_duration.GetFloat())
 		{
-			if (timePassed > mp_keeperbackwarddive_move_duration.GetFloat() + mp_keeperbackwarddive_idle_duration.GetFloat())
-			{
-				pPl->DoAnimationEvent(PLAYERANIMEVENT_NONE);
-				pPl->RemoveFlag(FL_FREECAM);
-				return false;
-			}
-
-			float moveCoeff;
-
-			if (mv->m_nButtons & IN_FORWARD)
-			{
-				moveCoeff = mp_keeperdive_movebackcoeff.GetFloat();
-			}
-			else
-			{
-				if (pPl->m_Shared.m_nBoostForwardDive == -1)
-					moveCoeff = 1.0f + mp_dive_boost_coeff.GetFloat();
-				else if (pPl->m_Shared.m_nBoostForwardDive == 1)
-					moveCoeff = 1.0f - mp_dive_boost_coeff.GetFloat();
-				else
-					moveCoeff = 1.0f;
-			}
-
-			mv->m_vecVelocity = forward2D * ZeroSign(mv->m_flForwardMove) * moveCoeff * mp_keeperdivespeed_longside.GetFloat();		
-			mv->m_vecVelocity += right * sidemoveSign * mp_keeperdivespeed_shortside.GetFloat();
-
-			mv->m_vecVelocity.z = 0;
-			float maxSpeed = max(mp_keeperdivespeed_shortside.GetFloat(), mp_keeperdivespeed_longside.GetFloat() * moveCoeff);
-			float speed = mv->m_vecVelocity.NormalizeInPlace();
-			mv->m_vecVelocity *= min(speed, maxSpeed);
-			mv->m_vecVelocity *= max(0, (1 - pow(timePassed / mp_keeperbackwarddive_move_duration.GetFloat(), 2)));
-			mv->m_vecVelocity.z = mp_jump_height.GetInt();
-
-			break;
+			pPl->DoAnimationEvent(PLAYERANIMEVENT_NONE);
+			pPl->RemoveFlag(FL_FREECAM);
+			return false;
 		}
+
+		float moveCoeff;
+
+		if (mv->m_nButtons & IN_FORWARD)
+		{
+			moveCoeff = mp_keeperdive_movebackcoeff.GetFloat();
+		}
+		else
+		{
+			if (pPl->m_Shared.m_nBoostForwardDive == -1)
+				moveCoeff = 1.0f + mp_dive_boost_coeff.GetFloat();
+			else if (pPl->m_Shared.m_nBoostForwardDive == 1)
+				moveCoeff = 1.0f - mp_dive_boost_coeff.GetFloat();
+			else
+				moveCoeff = 1.0f;
+		}
+
+		mv->m_vecVelocity = forward2D * ZeroSign(mv->m_flForwardMove) * moveCoeff * mp_keeperdivespeed_longside.GetFloat();
+		mv->m_vecVelocity += right * sidemoveSign * mp_keeperdivespeed_shortside.GetFloat();
+
+		mv->m_vecVelocity.z = 0;
+		float maxSpeed = max(mp_keeperdivespeed_shortside.GetFloat(), mp_keeperdivespeed_longside.GetFloat() * moveCoeff);
+		float speed = mv->m_vecVelocity.NormalizeInPlace();
+		mv->m_vecVelocity *= min(speed, maxSpeed);
+		mv->m_vecVelocity *= max(0, (1 - pow(timePassed / mp_keeperbackwarddive_move_duration.GetFloat(), 2)));
+		mv->m_vecVelocity.z = mp_jump_height.GetInt();
+
+		break;
+	}
 	case PLAYERANIMEVENT_KEEPER_HANDS_THROW:
 	case PLAYERANIMEVENT_KEEPER_HANDS_KICK:
+	{
+		return false;
+	}
+	case PLAYERANIMEVENT_SLIDE:
+	{
+		if (timePassed > mp_slide_move_duration.GetFloat() + mp_slide_idle_duration.GetFloat())
 		{
+			pPl->DoAnimationEvent(PLAYERANIMEVENT_NONE);
 			return false;
 		}
-	case PLAYERANIMEVENT_SLIDE:
-		{
-			if (timePassed > mp_slide_move_duration.GetFloat() + mp_slide_idle_duration.GetFloat())
-			{
-				pPl->DoAnimationEvent(PLAYERANIMEVENT_NONE);
-				return false;
-			}
 
-			AngleVectors(pPl->m_Shared.GetAnimEventStartAngle(), &forward2D);
-			forward2D.z = 0;
-			forward2D.NormalizeInPlace();
+		AngleVectors(pPl->m_Shared.GetAnimEventStartAngle(), &forward2D);
+		forward2D.z = 0;
+		forward2D.NormalizeInPlace();
 
-			mv->m_vecVelocity = forward2D * mp_slidespeed.GetInt() * max(0, (1 - pow(timePassed / mp_slide_move_duration.GetFloat(), 2)));
-			break;
-		}
+		mv->m_vecVelocity = forward2D * mp_slidespeed.GetInt() * max(0, (1 - pow(timePassed / mp_slide_move_duration.GetFloat(), 2)));
+		break;
+	}
 	case PLAYERANIMEVENT_TACKLED_FORWARD:
 	case PLAYERANIMEVENT_TACKLED_BACKWARD:
+	{
+		if (timePassed > mp_tackled_idle_duration.GetFloat())
 		{
-			if (timePassed > mp_tackled_idle_duration.GetFloat())
-			{
-				pPl->DoAnimationEvent(PLAYERANIMEVENT_NONE);
-				return false;
-			}
-
-			mv->m_vecVelocity = vec3_origin;
-			break;
+			pPl->DoAnimationEvent(PLAYERANIMEVENT_NONE);
+			return false;
 		}
+
+		mv->m_vecVelocity = vec3_origin;
+		break;
+	}
 	case PLAYERANIMEVENT_THROWIN:
-		{
-			break;
-		}
+	{
+		break;
+	}
 	case PLAYERANIMEVENT_THROW:
+	{
+		if (timePassed > mp_throwinthrow_idle_duration.GetFloat())
 		{
-			if (timePassed > mp_throwinthrow_idle_duration.GetFloat())
-			{
-				pPl->DoAnimationEvent(PLAYERANIMEVENT_NONE);
-				return false;
-			}
-
-			mv->m_vecVelocity = vec3_origin;
-			break;
+			pPl->DoAnimationEvent(PLAYERANIMEVENT_NONE);
+			return false;
 		}
+
+		mv->m_vecVelocity = vec3_origin;
+		break;
+	}
 	case PLAYERANIMEVENT_DIVINGHEADER:
+	{
+		if (timePassed > mp_divingheader_move_duration.GetFloat() + mp_divingheader_idle_duration.GetFloat())
 		{
-			if (timePassed > mp_divingheader_move_duration.GetFloat() + mp_divingheader_idle_duration.GetFloat())
-			{
-				pPl->DoAnimationEvent(PLAYERANIMEVENT_NONE);
-				return false;
-			}
+			pPl->DoAnimationEvent(PLAYERANIMEVENT_NONE);
+			return false;
+		}
 
-			mv->m_vecVelocity = forward2D * mp_divingheaderspeed.GetInt() * max(0, (1 - pow(timePassed / mp_divingheader_move_duration.GetFloat(), 2)));
-			break;
-		}
+		mv->m_vecVelocity = forward2D * mp_divingheaderspeed.GetInt() * max(0, (1 - pow(timePassed / mp_divingheader_move_duration.GetFloat(), 2)));
+		break;
+	}
 	case PLAYERANIMEVENT_KICK:
-		{
-			return false;
-		}
+	{
+		return false;
+	}
+	case PLAYERANIMEVENT_JUMP:
+	{
+		return false;
+	}
+	case PLAYERANIMEVENT_KEEPER_JUMP:
+	{
+		return false;
+	}
 	default:
-		{
-			return false;
-		}
+	{
+		return false;
+	}
 	}
 
 	mv->m_vecVelocity.z -= sv_gravity.GetFloat() * timePassed;
@@ -1885,15 +1880,21 @@ void CGameMovement::FullNoClipMove( float factor, float maxacceleration )
 	}
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-bool CGameMovement::CheckJumpButton( void )
+bool CGameMovement::CheckActionStart()
 {
 	CSDKPlayer *pPl = ToSDKPlayer(player);
 
+	// Require unrestricted movement
+	if (pPl->GetFlags() & (FL_FROZEN | FL_ATCONTROLS | FL_REMOTECONTROLLED))
+		return false;
+
+	// Require ground contact
+	if (!pPl->GetGroundEntity())
+		return false;
+
 	bool isKeeper;
 	int team;
+
 #ifdef CLIENT_DLL
 	isKeeper = GameResources()->GetTeamPosType(pPl->index) == POS_GK;
 	team = GameResources()->GetTeam(pPl->index);
@@ -1902,119 +1903,78 @@ bool CGameMovement::CheckJumpButton( void )
 	team = pPl->GetTeamNumber();
 #endif
 
-	if (mv->m_nOldButtons & IN_JUMP
-		|| isKeeper && GetMatchBall() && GetMatchBall()->State_Get() == BALL_STATE_PENALTY)
+	PlayerAnimEvent_t animEvent = PLAYERANIMEVENT_NONE;
+
+	if (isKeeper && pPl->m_Shared.m_nInPenBoxOfTeam == team)
 	{
-		return false;
-	}
-
-	if (gpGlobals->curtime < pPl->m_Shared.m_flNextJump
-		|| !player->GetGroundEntity()
-		|| player->GetFlags() & FL_ATCONTROLS)
-	{
-		mv->m_nOldButtons |= IN_JUMP;
-		return false;
-	}
-
-	// In the air now.
-    SetGroundEntity( NULL );
-
-	player->PlayStepSound((Vector &)mv->GetAbsOrigin(), player->m_pSurfaceData, 1.0, true);
-
-	PlayerAnimEvent_t animEvent = PLAYERANIMEVENT_JUMP;
-
-	if (isKeeper && pPl->m_Shared.m_nInPenBoxOfTeam == team && !pPl->m_pHoldingBall && mv->m_nButtons & IN_ATTACK)
-	{
-		int sidemoveSign = pPl->GetSidemoveSign();
-
-		if (sidemoveSign == -1)
+		if (mv->m_nButtons & IN_JUMP && !(mv->m_nOldButtons & IN_JUMP) && !pPl->m_pHoldingBall)
 		{
-			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_LEFT;
-			pPl->AddFlag(FL_FREECAM);
-			MoveHelper()->StartSound( mv->GetAbsOrigin(), "Player.DiveKeeper" );
-		}
-		else if (sidemoveSign == 1)
-		{
-			animEvent = PLAYERANIMEVENT_KEEPER_DIVE_RIGHT;
-			pPl->AddFlag(FL_FREECAM);
-			MoveHelper()->StartSound( mv->GetAbsOrigin(), "Player.DiveKeeper" );
-		}
-		else
-		{
-			if (mv->m_nButtons & IN_FORWARD)
-			{
+			int sidemoveSign = pPl->GetSidemoveSign();
+
+			if (sidemoveSign == -1)
+				animEvent = PLAYERANIMEVENT_KEEPER_DIVE_LEFT;
+			else if (sidemoveSign == 1)
+				animEvent = PLAYERANIMEVENT_KEEPER_DIVE_RIGHT;
+			else if (mv->m_nButtons & IN_FORWARD)
 				animEvent = PLAYERANIMEVENT_KEEPER_DIVE_FORWARD;
-				pPl->AddFlag(FL_FREECAM);
-				MoveHelper()->StartSound( mv->GetAbsOrigin(), "Player.DiveKeeper" );
-			}
 			else if (mv->m_nButtons & IN_BACK)
-			{
 				animEvent = PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD;
-				pPl->AddFlag(FL_FREECAM);
-				MoveHelper()->StartSound( mv->GetAbsOrigin(), "Player.DiveKeeper" );
-			}
 			else
-			{
 				animEvent = PLAYERANIMEVENT_KEEPER_JUMP;
+
+			if (animEvent != PLAYERANIMEVENT_KEEPER_JUMP)
+			{
+				pPl->AddFlag(FL_FREECAM);
+				MoveHelper()->StartSound(mv->GetAbsOrigin(), "Player.DiveKeeper");
+
+				if (gpGlobals->curtime < pPl->m_Shared.m_flBoostRightDiveStart + mp_dive_boost_duration.GetFloat())
+					pPl->m_Shared.m_nBoostRightDive = 0;
+
+				if (gpGlobals->curtime < pPl->m_Shared.m_flBoostForwardDiveStart + mp_dive_boost_duration.GetFloat())
+					pPl->m_Shared.m_nBoostForwardDive = 0;
 			}
 		}
+		else if (mv->m_nButtons & IN_DUCK && !(mv->m_nOldButtons & IN_DUCK) || mv->m_nButtons & IN_JUMP && !(mv->m_nOldButtons & IN_JUMP) && pPl->m_pHoldingBall)
+		{
+			animEvent = PLAYERANIMEVENT_KEEPER_JUMP;
+		}
 	}
-
-	pPl->m_Shared.SetAnimEventStartAngle(mv->m_vecAbsViewAngles);
-	pPl->m_Shared.SetAnimEventStartButtons(mv->m_nButtons);
-
-	pPl->DoAnimationEvent(animEvent);
-
-	if (gpGlobals->curtime < pPl->m_Shared.m_flBoostRightDiveStart + mp_dive_boost_duration.GetFloat())
-		pPl->m_Shared.m_nBoostRightDive = 0;
-
-	if (gpGlobals->curtime < pPl->m_Shared.m_flBoostForwardDiveStart + mp_dive_boost_duration.GetFloat())
-		pPl->m_Shared.m_nBoostForwardDive = 0;
-
-	//pPl->m_Shared.SetAnimEvent(animEvent);
-
-	mv->m_vecVelocity.z = mp_jump_height.GetInt();
-
-	// Flag that we jumped.
-	mv->m_nOldButtons |= IN_JUMP;	// don't jump again until released
-
-	pPl->m_Shared.m_flNextJump = gpGlobals->curtime + mp_jump_delay.GetFloat();
-
-	return true;
-}
-
-bool CGameMovement::CheckSlideButton()
-{
-	CSDKPlayer *pPl = ToSDKPlayer(player);
-
-	if (mv->m_nOldButtons & IN_DUCK)
-		return false;
-
-	if (player->GetFlags() & FL_ATCONTROLS
-		|| gpGlobals->curtime < pPl->m_Shared.m_flNextSlide)
+	else
 	{
-		mv->m_nOldButtons |= IN_DUCK;
-		return false;
-	}
+		if (mv->m_nButtons & IN_JUMP && !(mv->m_nOldButtons & IN_JUMP))
+		{
+			animEvent = PLAYERANIMEVENT_JUMP;
+		}
+		else if (mv->m_nButtons & IN_DUCK && !(mv->m_nOldButtons & IN_DUCK))
+		{
+			MoveHelper()->StartSound(mv->GetAbsOrigin(), "Player.Slide");
 
-	if (!pPl->m_pHoldingBall)
-	{
-		MoveHelper()->StartSound( mv->GetAbsOrigin(), "Player.Slide" );
+			animEvent = PLAYERANIMEVENT_SLIDE;
 
-		pPl->m_Shared.SetAnimEventStartAngle(mv->m_vecAbsViewAngles);
-		pPl->m_Shared.SetAnimEventStartButtons(mv->m_nButtons);
-
-		pPl->DoAnimationEvent(PLAYERANIMEVENT_SLIDE);
-
-		pPl->m_Shared.m_flNextSlide = gpGlobals->curtime + mp_slide_delay.GetFloat();
-
-		#ifdef GAME_DLL
+#ifdef GAME_DLL
 			if (!SDKGameRules()->IsIntermissionState() && GetMatchBall()->State_Get() == BALL_STATE_NORMAL && !GetMatchBall()->HasQueuedState())
 				pPl->AddSlidingTackle();
-		#endif
+#endif
+		}
+		else if (pPl->GetGroundEntity() && mv->m_nButtons & IN_JUMP && !(mv->m_nOldButtons & IN_JUMP))
+		{
+			animEvent = PLAYERANIMEVENT_JUMP;
+		}
 	}
 
-	mv->m_nOldButtons |= IN_DUCK;
+	if (animEvent == PLAYERANIMEVENT_KEEPER_JUMP || animEvent == PLAYERANIMEVENT_JUMP)
+	{
+		mv->m_vecVelocity.z = mp_jump_height.GetInt();
+		SetGroundEntity(NULL);
+		player->PlayStepSound((Vector &)mv->GetAbsOrigin(), player->m_pSurfaceData, 1.0, true);
+	}
+
+	if (animEvent != PLAYERANIMEVENT_NONE)
+	{
+		pPl->m_Shared.SetAnimEventStartAngle(mv->m_vecAbsViewAngles);
+		pPl->m_Shared.SetAnimEventStartButtons(mv->m_nButtons);
+		pPl->DoAnimationEvent(animEvent);
+	}
 
 	return true;
 }
