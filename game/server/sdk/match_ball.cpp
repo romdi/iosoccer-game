@@ -1603,12 +1603,14 @@ void CMatchBall::GetGoalInfo(bool &isOwnGoal, int &scoringTeam, CSDKPlayer **pSc
 
 void CMatchBall::Touched(bool isShot, body_part_t bodyPart, const Vector &oldVel)
 {
+	// Check if touch should be recorded and statistics updated
 	if (SDKGameRules()->IsIntermissionState() || m_bHasQueuedState || SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES)
 		return;
 
+	// Check if double touch foul
 	if (m_Touches.Count() > 0 && m_Touches.Tail()->m_pPl == m_pPl && m_Touches.Tail()->m_nTeam == m_pPl->GetTeamNumber()
 		&& sv_ball_doubletouchfouls.GetBool() && State_Get() == BALL_STATE_NORMAL && m_Touches.Tail()->m_eBallState != BALL_STATE_NORMAL
-		&& m_Touches.Tail()->m_eBallState != BALL_STATE_KEEPERHANDS && m_pPl->GetTeam()->GetNumPlayers() > 2 && m_pPl->GetOppTeam()->GetNumPlayers() > 2) // Double touch foul
+		&& m_Touches.Tail()->m_eBallState != BALL_STATE_KEEPERHANDS && m_pPl->GetTeam()->GetNumPlayers() > 2 && m_pPl->GetOppTeam()->GetNumPlayers() > 2)
 	{
 		SetFoulParams(FOUL_DOUBLETOUCH, m_pPl->GetLocalOrigin(), m_pPl);
 		State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_messagedelay_normal.GetFloat(), sv_ball_statetransition_postmessagedelay_long.GetFloat());
@@ -1616,47 +1618,54 @@ void CMatchBall::Touched(bool isShot, body_part_t bodyPart, const Vector &oldVel
 		return;
 	}
 
-	// Regular touch
-	BallTouchInfo *pInfo = LastInfo(true);
-	CSDKPlayer *pLastPl = LastPl(true);
+	// Only update statistics on shots instead of touches
+	if (isShot)
+	{
+		BallTouchInfo *pInfo = LastInfo(true);
+		CSDKPlayer *pLastPl = LastPl(true);
 
-	if (pInfo && CSDKPlayer::IsOnField(pLastPl) && pLastPl != m_pPl)
-	{ 
-		if (pInfo->m_nTeam != m_pPl->GetTeamNumber()
-			&& (bodyPart == BODY_PART_KEEPERPUNCH
-				|| bodyPart == BODY_PART_KEEPERCATCH
-				&& oldVel.Length2DSqr() >= pow(sv_ball_stats_save_minspeed.GetInt(), 2.0f))) // All fast balls by an opponent which are caught or punched away by the keeper count as shots on goal
+		if (pInfo && CSDKPlayer::IsOnField(pLastPl) && pLastPl != m_pPl)
 		{
-			m_pPl->AddKeeperSave();
-
-			if (bodyPart == BODY_PART_KEEPERCATCH)
-				m_pPl->AddKeeperSaveCaught();
-
-			pLastPl->AddShot();
-			pLastPl->AddShotOnGoal();
-			//EmitSound("Crowd.Save");
-			ReplayManager()->AddMatchEvent(MATCH_EVENT_KEEPERSAVE, m_pPl->GetTeamNumber(), m_pPl, pLastPl);
-		}
-		else if ((m_vPos - pInfo->m_vBallPos).Length2DSqr() >= pow(sv_ball_stats_pass_mindist.GetInt(), 2.0f) && pInfo->m_eBodyPart != BODY_PART_KEEPERPUNCH) // Pass or interception
-		{
-			if (m_bHitThePost)
+			if (pInfo->m_nTeam != m_pPl->GetTeamNumber()
+				&& (bodyPart == BODY_PART_KEEPERPUNCH
+					|| bodyPart == BODY_PART_KEEPERCATCH
+					&& oldVel.Length2DSqr() >= pow(sv_ball_stats_save_minspeed.GetInt(), 2.0f))) // All fast balls by an opponent which are caught or punched away by the keeper count as shots on goal
 			{
+				m_pPl->AddKeeperSave();
+
+				if (bodyPart == BODY_PART_KEEPERCATCH)
+					m_pPl->AddKeeperSaveCaught();
+
 				pLastPl->AddShot();
+				pLastPl->AddShotOnGoal();
+				ReplayManager()->AddMatchEvent(MATCH_EVENT_KEEPERSAVE, m_pPl->GetTeamNumber(), m_pPl, pLastPl);
 			}
-			else
+			// Pass or interception
+			else if ((m_vPos - pInfo->m_vBallPos).Length2DSqr() >= pow(sv_ball_stats_pass_mindist.GetInt(), 2.0f) && pInfo->m_eBodyPart != BODY_PART_KEEPERPUNCH)
 			{
-				pLastPl->AddPass();
-
-				if (pInfo->m_nTeam == m_pPl->GetTeamNumber()) // Pass to teammate
+				if (m_bHitThePost)
 				{
-					pLastPl->AddPassCompleted();
+					pLastPl->AddShot();
 				}
-				else // Intercepted by opponent
+				else
 				{
-					m_pPl->AddInterception();
+					pLastPl->AddPass();
+
+					// Pass to teammate
+					if (pInfo->m_nTeam == m_pPl->GetTeamNumber())
+					{
+						pLastPl->AddPassCompleted();
+					}
+					// Intercepted by opponent
+					else
+					{
+						m_pPl->AddInterception();
+					}
 				}
 			}
 		}
+
+		m_bHitThePost = false;
 	}
 
 	UpdatePossession(m_pPl);
@@ -1670,7 +1679,6 @@ void CMatchBall::Touched(bool isShot, body_part_t bodyPart, const Vector &oldVel
 	info->m_vBallVel = m_vVel;
 	info->m_flTime = gpGlobals->curtime;
 	m_Touches.AddToTail(info);
-	m_bHitThePost = false;
 	m_bBallInAirAfterThrowIn = false;
 
 	if (m_pPl->IsOffside())
