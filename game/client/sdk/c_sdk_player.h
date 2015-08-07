@@ -69,6 +69,8 @@ public:
 
 	void				CheckLastPressedSingleMoveButton();
 
+	bool				IsKeeperDiving();
+
 	bool				DoSkillMove();
 	
 	void DoAnimationEvent(PlayerAnimEvent_t event);

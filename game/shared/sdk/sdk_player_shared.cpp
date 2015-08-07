@@ -550,6 +550,10 @@ void CSDKPlayer::FindSafePos(Vector &startPos)
 
 void CSDKPlayer::CheckShotCharging()
 {
+	if (IsKeeperDiving())
+		return;
+
+
 	if (!(m_nButtons & IN_ATTACK2))
 		m_Shared.m_bChargedShotReleaseRequired = false;
 
@@ -605,6 +609,7 @@ void CSDKPlayer::ResetShotCharging()
 {
 	m_Shared.m_bDoChargedShot = false;
 	m_Shared.m_bIsShotCharging = false;
+	m_Shared.m_bChargedShotReleaseRequired = true;
 }
 
 float CSDKPlayer::GetChargedShotStrength()
@@ -686,4 +691,12 @@ int CSDKPlayer::GetSidemoveSign()
 		sidemoveSign = 0;
 
 	return sidemoveSign;
+}
+
+bool CSDKPlayer::IsKeeperDiving()
+{
+	return m_Shared.m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_DIVE_LEFT
+		|| m_Shared.m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT
+		|| m_Shared.m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_DIVE_FORWARD
+		|| m_Shared.m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD;
 }

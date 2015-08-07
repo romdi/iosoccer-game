@@ -356,26 +356,29 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 {
 	bool resetShotCharging = false;
 
-	switch(event)
+	switch (event)
 	{
+	// Stop shot charging, but keep current animations running (e.g. while diving as keeper)
 	case PLAYERANIMEVENT_BLANK:
-		{
-			GetSDKPlayer()->ResetShotCharging();
-			return; // This is a dummy event, so don't do anything and return early
-		}
+	{
+		GetSDKPlayer()->ResetShotCharging();
+		return; // This is a dummy event, so don't do anything and return early
+	}
+	// Set current animation to none (e.g. after playing another animation)
 	case PLAYERANIMEVENT_NONE:
-		{
-			resetShotCharging = true;
-			//GetSDKPlayer()->RemoveFlag(FL_FREECAM | FL_KEEPER_SIDEWAYS_DIVING | FL_SLIDING);
-			break;
-		}
+	{
+		GetSDKPlayer()->ResetShotCharging();
+		GetSDKPlayer()->m_Shared.SetAnimEvent(event);
+		return;
+	}
+	// Reset player animations (e.g. when restarting the match)
 	case PLAYERANIMEVENT_CANCEL:
-		{
-			resetShotCharging = true;
-			//GetSDKPlayer()->RemoveFlag(FL_FREECAM | FL_KEEPER_SIDEWAYS_DIVING | FL_SLIDING);
-			ClearAnimationState();
-			break;
-		}
+	{
+		GetSDKPlayer()->ResetShotCharging();
+		ClearAnimationState();
+		GetSDKPlayer()->m_Shared.SetAnimEvent(event);
+		return;
+	}
 	case PLAYERANIMEVENT_KICK:
 	case PLAYERANIMEVENT_PASS:
 	case PLAYERANIMEVENT_PASS_STATIONARY:
@@ -389,9 +392,9 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 	case PLAYERANIMEVENT_KEEPER_HANDS_KICK:
 	case PLAYERANIMEVENT_KEEPER_HANDS_PUNCH:
 	case PLAYERANIMEVENT_DIVINGHEADER:
-		{
-			resetShotCharging = true;
-		}
+	{
+		resetShotCharging = true;
+	}
 	case PLAYERANIMEVENT_SLIDE:
 	case PLAYERANIMEVENT_TACKLED_FORWARD:
 	case PLAYERANIMEVENT_TACKLED_BACKWARD:
@@ -405,53 +408,47 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 	case PLAYERANIMEVENT_FAKE_SHOT:
 	case PLAYERANIMEVENT_RAINBOW_FLICK:
 	case PLAYERANIMEVENT_BICYCLE_KICK:
-		{
-			// HACKHACK: Side effects?
-			//if (GetSDKPlayer()->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_SLIDE)
-			//{
-			//	return;
-			//}
-
-			m_flPrimaryActionSequenceCycle = 0;
-			m_iPrimaryActionSequence = CalcPrimaryActionSequence( event );
-			m_bIsPrimaryActionSequenceActive = m_iPrimaryActionSequence != -1;
-			break;
-		}
+	{
+		m_flPrimaryActionSequenceCycle = 0;
+		m_iPrimaryActionSequence = CalcPrimaryActionSequence(event);
+		m_bIsPrimaryActionSequenceActive = m_iPrimaryActionSequence != -1;
+		break;
+	}
 	case PLAYERANIMEVENT_JUMP:
 	case PLAYERANIMEVENT_KEEPER_JUMP:
+	{
+		// Play the jump animation.
+		if (!m_bJumping)
 		{
-			// Play the jump animation.
-			if (!m_bJumping)
-			{
-				m_bJumping = true;
-				m_bFirstJumpFrame = true;
-				m_flJumpStartTime = gpGlobals->curtime;
-			}
-			break;
+			m_bJumping = true;
+			m_bFirstJumpFrame = true;
+			m_flJumpStartTime = gpGlobals->curtime;
 		}
+		break;
+	}
 	case PLAYERANIMEVENT_CARRY:
+	{
+		m_iSecondaryActionSequence = CalcSecondaryActionSequence();			//add keeper carry as layer
+		if (m_iSecondaryActionSequence != -1)
 		{
-			m_iSecondaryActionSequence = CalcSecondaryActionSequence();			//add keeper carry as layer
-			if ( m_iSecondaryActionSequence != -1 )
-			{
-				m_bIsSecondaryActionSequenceActive = true;
-				m_flSecondaryActionSequenceCycle = 0;
-				m_bCarryHold = true;
-			}
-			break;
+			m_bIsSecondaryActionSequenceActive = true;
+			m_flSecondaryActionSequenceCycle = 0;
+			m_bCarryHold = true;
 		}
+		break;
+	}
 	case PLAYERANIMEVENT_CARRY_END:
+	{
+		//GetSDKPlayer()->RemoveFlag(FL_FREECAM);
+		m_iSecondaryActionSequence = CalcSecondaryActionSequence();
+		if (m_iSecondaryActionSequence != -1)
 		{
-			//GetSDKPlayer()->RemoveFlag(FL_FREECAM);
-			m_iSecondaryActionSequence = CalcSecondaryActionSequence();
-			if ( m_iSecondaryActionSequence != -1 )
-			{
-				m_bIsSecondaryActionSequenceActive = true;
-				m_flSecondaryActionSequenceCycle = 1.1f;
-				m_bCarryHold = false;
-			}
-			break;
+			m_bIsSecondaryActionSequenceActive = true;
+			m_flSecondaryActionSequenceCycle = 1.1f;
+			m_bCarryHold = false;
 		}
+		break;
+	}
 	}
 
 	if (resetShotCharging)
@@ -480,25 +477,6 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 	{
 		GetSDKPlayer()->m_Shared.SetAnimEvent(event);
 	}
-
-	//GetSDKPlayer()->RemoveFlag(FL_KEEPER_SIDEWAYS_DIVING | FL_SLIDING);
-
-	//switch(event)
-	//{
-	//case PLAYERANIMEVENT_KEEPER_DIVE_LEFT:
-	//case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT:
-	//	//TODO: Uncomment once the getting stuck problem is fixed
-	//	//GetSDKPlayer()->AddFlag(FL_KEEPER_SIDEWAYS_DIVING);
-	//	break;
-	//case PLAYERANIMEVENT_KEEPER_DIVE_FORWARD:
-	//case PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD:
-	//case PLAYERANIMEVENT_SLIDE:
-	//	//TODO: Uncomment once the getting stuck problem is fixed
-	//	//GetSDKPlayer()->AddFlag(FL_SLIDING);
-	//	break;
-	//}
-
-	//GetSDKPlayer()->m_Shared.SetAnimEvent(event);
 }
 
 bool CSDKPlayerAnimState::HandleJumping( Activity &idealActivity )

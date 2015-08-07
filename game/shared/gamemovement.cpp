@@ -1924,14 +1924,15 @@ bool CGameMovement::CheckActionStart()
 
 			if (animEvent != PLAYERANIMEVENT_KEEPER_JUMP)
 			{
-				pPl->AddFlag(FL_FREECAM);
-				MoveHelper()->StartSound(mv->GetAbsOrigin(), "Player.DiveKeeper");
-
 				if (gpGlobals->curtime < pPl->m_Shared.m_flBoostRightDiveStart + mp_dive_boost_duration.GetFloat())
 					pPl->m_Shared.m_nBoostRightDive = 0;
 
 				if (gpGlobals->curtime < pPl->m_Shared.m_flBoostForwardDiveStart + mp_dive_boost_duration.GetFloat())
 					pPl->m_Shared.m_nBoostForwardDive = 0;
+
+				pPl->ResetShotCharging();
+				pPl->AddFlag(FL_FREECAM);
+				MoveHelper()->StartSound(mv->GetAbsOrigin(), "Player.DiveKeeper");
 			}
 		}
 		else if (mv->m_nButtons & IN_DUCK && !(mv->m_nOldButtons & IN_DUCK) || mv->m_nButtons & IN_JUMP && !(mv->m_nOldButtons & IN_JUMP) && pPl->m_pHoldingBall)
