@@ -568,7 +568,6 @@ public:
 
 	bool				IsKeeperDiving();
 	bool				IsNormalshooting();
-	bool				IsSkillshooting();
 	bool				IsChargedshooting();
 	bool				IsShooting();
 	bool				CanShoot();

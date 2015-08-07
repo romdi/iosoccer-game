@@ -653,7 +653,7 @@ void CSDKPlayer::CheckLastPressedSingleMoveButton()
 
 bool CSDKPlayer::ShotButtonsPressed()
 {
-	return m_nButtons & (IN_ATTACK | IN_ATTACK2 | IN_ALT1);
+	return m_nButtons & (IN_ATTACK | IN_ATTACK2);
 }
 
 bool CSDKPlayer::ShotButtonsReleased()

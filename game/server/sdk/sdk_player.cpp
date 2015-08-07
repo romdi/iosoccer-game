@@ -1598,11 +1598,6 @@ bool CSDKPlayer::IsNormalshooting()
 	return m_nButtons & IN_ATTACK;
 }
 
-bool CSDKPlayer::IsSkillshooting()
-{
-	return m_nButtons & IN_ALT1;
-}
-
 bool CSDKPlayer::IsChargedshooting()
 {
 	return m_Shared.m_bDoChargedShot;
