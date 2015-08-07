@@ -297,7 +297,7 @@ void CMatchBall::State_NORMAL_Think()
 		{
 			m_pPl = GetGlobalTeam(m_nFoulingTeam)->GetPlayerByPosType(POS_GK);
 
-			if (m_pPl && m_pPl->IsShooting())
+			if (m_pPl && (m_pPl->IsShooting() || m_pPl->IsKeeperDiving()))
 			{
 				UpdateCarrier();
 				DoBodyPartAction();

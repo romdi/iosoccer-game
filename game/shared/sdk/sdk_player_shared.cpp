@@ -553,7 +553,6 @@ void CSDKPlayer::CheckShotCharging()
 	if (IsKeeperDiving())
 		return;
 
-
 	if (!(m_nButtons & IN_ATTACK2))
 		m_Shared.m_bChargedShotReleaseRequired = false;
 

@@ -456,7 +456,7 @@ CSDKPlayer *CBall::FindNearestPlayer(int team /*= TEAM_NONE*/, int posFlags /*= 
 		if (team != TEAM_NONE && pPlayer->GetTeamNumber() != team)
 			continue;
 
-		if (checkIfShooting && (!pPlayer->IsShooting() || !pPlayer->CanShoot()))
+		if (checkIfShooting && (!pPlayer->IsShooting() || !pPlayer->CanShoot()) && !pPlayer->IsKeeperDiving())
 			continue;
 
 		if (radius != -1 && (pPlayer->GetLocalOrigin() - m_vPos).Length2DSqr() > Sqr(radius))
@@ -683,7 +683,7 @@ bool CBall::DoBodyPartAction()
 	VectorIRotate(dirToBall, m_pPl->EntityToWorldTransform(), localDirToBall);
 	float zDist = dirToBall.z;
 
-	if (m_pPl->IsNormalshooting()
+	if (m_pPl->IsKeeperDiving()
 		&& m_pPl->CanShoot()
 		&& m_pPl->GetTeamPosType() == POS_GK
 		&& m_nInPenBoxOfTeam == m_pPl->GetTeamNumber()
@@ -695,6 +695,9 @@ bool CBall::DoBodyPartAction()
 	}
 
 	if (CheckCollision())
+		return false;
+
+	if (m_pPl->IsKeeperDiving())
 		return false;
 
 	if (!m_pPl->IsShooting() || !m_pPl->CanShoot() || gpGlobals->curtime < m_flGlobalLastShot + m_flGlobalDynamicShotDelay * sv_ball_shotdelay_global_coeff.GetFloat())
@@ -730,7 +733,16 @@ bool CBall::CheckCollision()
 	float ballMass;
 	Vector collisionPoint;
 
-	if ((!m_pPl->IsShooting() || !m_pPl->CanShoot()) && GetCollisionPoint(false, collisionPoint))
+	if ((m_pPl->IsShooting() && m_pPl->CanShoot()
+		&& gpGlobals->curtime < m_flGlobalLastShot + m_flGlobalDynamicShotDelay * sv_ball_shotdelay_global_coeff.GetFloat()
+		|| m_pPl->IsKeeperDiving())
+		&& GetCollisionPoint(true, collisionPoint))
+	{
+		collide = true;
+		collisionCoeff = sv_ball_collision_deflection_coeff.GetFloat();
+		ballMass = sv_ball_collision_deflection_mass.GetFloat();
+	}
+	else if (GetCollisionPoint(false, collisionPoint))
 	{
 		collide = true;
 
@@ -756,14 +768,6 @@ bool CBall::CheckCollision()
 			collisionCoeff = sv_ball_collision_passive_coeff.GetFloat();
 			ballMass = sv_ball_collision_passive_mass.GetFloat();
 		}
-	}
-	else if (m_pPl->IsShooting() && m_pPl->CanShoot()
-		&& gpGlobals->curtime < m_flGlobalLastShot + m_flGlobalDynamicShotDelay * sv_ball_shotdelay_global_coeff.GetFloat()
-		&& GetCollisionPoint(true, collisionPoint))
-	{
-		collide = true;
-		collisionCoeff = sv_ball_collision_deflection_coeff.GetFloat();
-		ballMass = sv_ball_collision_deflection_mass.GetFloat();
 	}
 
 	if (!collide)
