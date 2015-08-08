@@ -116,7 +116,6 @@ BEGIN_RECV_TABLE_NOBASE( CSDKPlayerShared, DT_SDKSharedLocalPlayerExclusive )
 
 	RecvPropBool( RECVINFO( m_bIsShotCharging ) ),
 	RecvPropBool(RECVINFO(m_bDoChargedShot)),
-	RecvPropBool( RECVINFO( m_bChargedShotReleaseRequired ) ),
 	RecvPropTime( RECVINFO( m_flShotChargingStart ) ),
 	RecvPropTime(RECVINFO(m_flShotChargingDuration)),
 
@@ -226,7 +225,6 @@ BEGIN_PREDICTION_DATA_NO_BASE( CSDKPlayerShared )
 
 	DEFINE_PRED_FIELD( m_bIsShotCharging, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_bDoChargedShot, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE),
-	DEFINE_PRED_FIELD( m_bChargedShotReleaseRequired, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flShotChargingStart, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flShotChargingDuration, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 

@@ -359,13 +359,13 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 	// Stop shot charging, but keep current animations running (e.g. while diving as keeper)
 	case PLAYERANIMEVENT_BLANK:
 	{
-		GetSDKPlayer()->ResetShotCharging();
+		//GetSDKPlayer()->ResetShotCharging();
 		return; // This is a dummy event, so don't do anything and return early
 	}
 	// Set current animation to none (e.g. after playing another animation)
 	case PLAYERANIMEVENT_NONE:
 	{
-		GetSDKPlayer()->ResetShotCharging();
+		//GetSDKPlayer()->ResetShotCharging();
 		GetSDKPlayer()->m_Shared.SetAnimEvent(event);
 		GetSDKPlayer()->RemoveFlag(FL_FREECAM);
 		return;
@@ -393,7 +393,7 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 	case PLAYERANIMEVENT_KEEPER_HANDS_PUNCH:
 	case PLAYERANIMEVENT_DIVINGHEADER:
 	{
-		GetSDKPlayer()->ResetShotCharging();
+		//GetSDKPlayer()->ResetShotCharging();
 	}
 	case PLAYERANIMEVENT_SLIDE:
 	case PLAYERANIMEVENT_TACKLED_FORWARD:

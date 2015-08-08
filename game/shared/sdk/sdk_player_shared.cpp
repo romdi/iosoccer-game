@@ -553,9 +553,6 @@ void CSDKPlayer::CheckShotCharging()
 	if (IsKeeperDiving())
 		return;
 
-	if (!(m_nButtons & IN_ATTACK2))
-		m_Shared.m_bChargedShotReleaseRequired = false;
-
 	if ((m_nButtons & IN_ATTACK)
 		|| (GetFlags() & FL_REMOTECONTROLLED)
 		|| m_bChargedshotBlocked
@@ -565,7 +562,7 @@ void CSDKPlayer::CheckShotCharging()
 		m_Shared.m_bDoChargedShot = false;
 		m_Shared.m_bIsShotCharging = false;
 	}
-	else if ((m_nButtons & IN_ATTACK2) && !m_Shared.m_bIsShotCharging && !m_Shared.m_bChargedShotReleaseRequired)
+	else if ((m_nButtons & IN_ATTACK2) && !m_Shared.m_bIsShotCharging)
 	{
 		m_Shared.m_bDoChargedShot = false;
 		m_Shared.m_bIsShotCharging = true;
@@ -586,8 +583,7 @@ void CSDKPlayer::CheckShotCharging()
 			{
 				if (gpGlobals->curtime > m_Shared.m_flShotChargingStart + mp_chargedshot_increaseduration.GetFloat() + mp_chargedshot_idleduration.GetFloat())
 				{
-					m_Shared.m_bIsShotCharging = false;
-					m_Shared.m_bChargedShotReleaseRequired = true;
+					m_Shared.m_flShotChargingStart = gpGlobals->curtime;
 				}
 				else
 				{
@@ -608,7 +604,6 @@ void CSDKPlayer::ResetShotCharging()
 {
 	m_Shared.m_bDoChargedShot = false;
 	m_Shared.m_bIsShotCharging = false;
-	m_Shared.m_bChargedShotReleaseRequired = true;
 }
 
 float CSDKPlayer::GetChargedShotStrength()
