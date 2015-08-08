@@ -123,9 +123,9 @@ ConVar
 	sv_ball_slide_strength("sv_ball_slide_strength", "720", FCVAR_NOTIFY), 
 	sv_ball_slide_pitchangle("sv_ball_slide_pitchangle", "-15", FCVAR_NOTIFY), 
 	
-	sv_ball_keepershot_minangle("sv_ball_keepershot_minangle", "60", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_keepershot_minangle("sv_ball_keepershot_minangle", "20", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 
-	sv_ball_keeperthrow_strength("sv_ball_keeperthrow_strength", "200", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_keeperthrow_strength("sv_ball_keeperthrow_strength", "100", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	
 	sv_ball_groundshot_minangle("sv_ball_groundshot_minangle", "-7", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 
