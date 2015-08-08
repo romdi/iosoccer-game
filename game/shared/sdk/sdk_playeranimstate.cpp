@@ -354,8 +354,6 @@ extern ConVar mp_reset_spin_toggles_on_shot;
 //-----------------------------------------------------------------------------
 void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 {
-	bool resetShotCharging = false;
-
 	switch (event)
 	{
 	// Stop shot charging, but keep current animations running (e.g. while diving as keeper)
@@ -369,6 +367,7 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 	{
 		GetSDKPlayer()->ResetShotCharging();
 		GetSDKPlayer()->m_Shared.SetAnimEvent(event);
+		GetSDKPlayer()->RemoveFlag(FL_FREECAM);
 		return;
 	}
 	// Reset player animations (e.g. when restarting the match)
@@ -377,6 +376,7 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 		GetSDKPlayer()->ResetShotCharging();
 		ClearAnimationState();
 		GetSDKPlayer()->m_Shared.SetAnimEvent(event);
+		GetSDKPlayer()->RemoveFlag(FL_FREECAM);
 		return;
 	}
 	case PLAYERANIMEVENT_KICK:
@@ -393,7 +393,7 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 	case PLAYERANIMEVENT_KEEPER_HANDS_PUNCH:
 	case PLAYERANIMEVENT_DIVINGHEADER:
 	{
-		resetShotCharging = true;
+		GetSDKPlayer()->ResetShotCharging();
 	}
 	case PLAYERANIMEVENT_SLIDE:
 	case PLAYERANIMEVENT_TACKLED_FORWARD:
@@ -450,9 +450,6 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 		break;
 	}
 	}
-
-	if (resetShotCharging)
-		GetSDKPlayer()->ResetShotCharging();
 
 	switch (event)
 	{
