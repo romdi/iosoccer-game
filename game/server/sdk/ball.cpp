@@ -124,6 +124,8 @@ ConVar
 	sv_ball_slide_pitchangle("sv_ball_slide_pitchangle", "-15", FCVAR_NOTIFY), 
 	
 	sv_ball_keepershot_minangle("sv_ball_keepershot_minangle", "60", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+
+	sv_ball_keeperthrow_strength("sv_ball_keeperthrow_strength", "200", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	
 	sv_ball_groundshot_minangle("sv_ball_groundshot_minangle", "-7", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 
@@ -683,7 +685,7 @@ bool CBall::DoBodyPartAction()
 	VectorIRotate(dirToBall, m_pPl->EntityToWorldTransform(), localDirToBall);
 	float zDist = dirToBall.z;
 
-	if (m_pPl->IsKeeperDiving()
+	if ((m_pPl->IsNormalshooting() || m_pPl->IsKeeperDiving())
 		&& m_pPl->CanShoot()
 		&& m_pPl->GetTeamPosType() == POS_GK
 		&& m_nInPenBoxOfTeam == m_pPl->GetTeamNumber()
