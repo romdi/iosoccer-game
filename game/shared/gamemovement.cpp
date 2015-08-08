@@ -793,7 +793,7 @@ void CGameMovement::ReduceTimers( void )
 		{
 			replenishAmount = mp_stamina_replenish_standing.GetInt() * gpGlobals->frametime;
 		}
-		else if (mv->m_nButtons & IN_WALK)
+		else if (mv->m_nButtons & IN_WALK && pPl->DoSkillMove() || mv->m_nButtons & IN_DUCK && pPl->IsInOwnBoxAsKeeper())
 		{
 			replenishAmount = mp_stamina_replenish_walking.GetInt() * gpGlobals->frametime;
 		}
@@ -1892,20 +1892,9 @@ bool CGameMovement::CheckActionStart()
 	if (!pPl->GetGroundEntity())
 		return false;
 
-	bool isKeeper;
-	int team;
-
-#ifdef CLIENT_DLL
-	isKeeper = GameResources()->GetTeamPosType(pPl->index) == POS_GK;
-	team = GameResources()->GetTeam(pPl->index);
-#else
-	isKeeper = pPl->GetTeamPosType() == POS_GK;
-	team = pPl->GetTeamNumber();
-#endif
-
 	PlayerAnimEvent_t animEvent = PLAYERANIMEVENT_NONE;
 
-	if (isKeeper && pPl->m_Shared.m_nInPenBoxOfTeam == team)
+	if (pPl->IsInOwnBoxAsKeeper())
 	{
 		if (mv->m_nButtons & IN_JUMP && !(mv->m_nOldButtons & IN_JUMP) && !pPl->m_pHoldingBall)
 		{
@@ -1935,7 +1924,7 @@ bool CGameMovement::CheckActionStart()
 				MoveHelper()->StartSound(mv->GetAbsOrigin(), "Player.DiveKeeper");
 			}
 		}
-		else if (mv->m_nButtons & IN_DUCK && !(mv->m_nOldButtons & IN_DUCK) || mv->m_nButtons & IN_JUMP && !(mv->m_nOldButtons & IN_JUMP) && pPl->m_pHoldingBall)
+		else if (mv->m_nButtons & IN_WALK && !(mv->m_nOldButtons & IN_WALK) || mv->m_nButtons & IN_JUMP && !(mv->m_nOldButtons & IN_JUMP) && pPl->m_pHoldingBall)
 		{
 			animEvent = PLAYERANIMEVENT_KEEPER_JUMP;
 		}
@@ -2991,16 +2980,6 @@ void CGameMovement::SetPlayerSpeed()
 
 	float flMaxSpeed;
 
-	bool isKeeper;
-	int team;
-	#ifdef CLIENT_DLL
-		isKeeper = GameResources()->GetTeamPosType(pPl->index) == POS_GK;
-		team = GameResources()->GetTeam(pPl->index);
-	#else
-		isKeeper = pPl->GetTeamPosType() == POS_GK;
-		team = pPl->GetTeamNumber();
-	#endif
-
 	if (pPl->GetFlags() & FL_REMOTECONTROLLED)
 	{
 		flMaxSpeed = mp_remotecontrolledspeed.GetInt();
@@ -3009,9 +2988,13 @@ void CGameMovement::SetPlayerSpeed()
 	{
 		flMaxSpeed = mp_ceremonyspeed.GetInt();
 	}
-	else if (mv->m_nButtons & IN_WALK)
+	else if (mv->m_nButtons & IN_DUCK && pPl->IsInOwnBoxAsKeeper())
 	{
-		flMaxSpeed = pPl->DoSkillMove() ? mp_skillspeed.GetInt() : mp_keeper1on1speed.GetInt();
+		flMaxSpeed = mp_keeper1on1speed.GetInt();
+	}
+	else if (mv->m_nButtons & IN_WALK && pPl->DoSkillMove())
+	{
+		flMaxSpeed = mp_skillspeed.GetInt();
 	}
 	else
 	{

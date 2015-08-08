@@ -572,6 +572,7 @@ public:
 	bool				IsShooting();
 	bool				CanShoot();
 	bool				DoSkillMove();
+	bool				IsInOwnBoxAsKeeper();
 	CSDKPlayer			*FindClosestPlayerToSelf(bool teammatesOnly, bool forwardOnly = false, float maxYawAngle = 360);
 
 	void				AllowPropCreation(bool allow);

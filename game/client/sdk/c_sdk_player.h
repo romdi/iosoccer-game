@@ -70,8 +70,8 @@ public:
 	void				CheckLastPressedSingleMoveButton();
 
 	bool				IsKeeperDiving();
-
 	bool				DoSkillMove();
+	bool				IsInOwnBoxAsKeeper();
 	
 	void DoAnimationEvent(PlayerAnimEvent_t event);
 	virtual bool ShouldDraw();

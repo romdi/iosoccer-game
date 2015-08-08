@@ -668,14 +668,23 @@ void CSDKPlayer::SetShotButtonsReleased(bool released)
 
 bool CSDKPlayer::DoSkillMove()
 {
-	int teamPosType;
+	return m_nButtons & IN_WALK && !IsInOwnBoxAsKeeper();
+}
+
+bool CSDKPlayer::IsInOwnBoxAsKeeper()
+{
+	bool isKeeper;
+	int team;
+
 #ifdef CLIENT_DLL
-	teamPosType = GameResources()->GetTeamPosType(entindex());
+	isKeeper = GameResources()->GetTeamPosType(index) == POS_GK;
+	team = GameResources()->GetTeam(index);
 #else
-	teamPosType = GetTeamPosType();
+	isKeeper = GetTeamPosType() == POS_GK;
+	team = GetTeamNumber();
 #endif
 
-	return m_nButtons & IN_WALK && (teamPosType != POS_GK || m_Shared.m_nInPenBoxOfTeam != GetTeamNumber());
+	return isKeeper && m_Shared.m_nInPenBoxOfTeam == team;
 }
 
 int CSDKPlayer::GetSidemoveSign()
