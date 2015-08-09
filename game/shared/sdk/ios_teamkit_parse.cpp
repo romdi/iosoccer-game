@@ -251,6 +251,19 @@ double deltaE2000(RGB rgb1, RGB rgb2)
 enum colors_t { BLACKS, WHITES, GRAYS, REDS, YELLOWS, GREENS, CYANS, BLUES, MAGENTAS, COLOR_COUNT };
 char colorNames[COLOR_COUNT][16] = { "BLACKS", "WHITES", "GRAYS", "REDS", "YELLOWS", "GREENS", "CYANS", "BLUES", "MAGENTAS" };
 
+// https://www.google.com/design/spec/style/color.html#color-color-palette
+Color colors[COLOR_COUNT] = {
+	Color(255, 255, 255, 255),		// black => white
+	Color(255, 255, 255, 255),		// white
+	Color(238, 238, 238, 255),		// gray
+	Color(239, 154, 154, 255),		// red
+	Color(255, 245, 157, 255),		// yellow
+	Color(165, 214, 167, 255),		// green
+	Color(128, 222, 234, 255),		// cyan
+	Color(144, 202, 249, 255),		// blue
+	Color(244, 143, 177, 255)		// magenta
+};
+
 colors_t classify(const HSL &hsl)
 {
 	double hue = hsl.H;
@@ -667,12 +680,12 @@ void CTeamInfo::ParseTeamKits()
 
 						}
 
-						//RGB primaryRgb = { pKitInfo->m_PrimaryColor.r(), pKitInfo->m_PrimaryColor.g(), pKitInfo->m_PrimaryColor.b() };
-						//RGB secondaryRgb = { pKitInfo->m_SecondaryColor.r(), pKitInfo->m_SecondaryColor.g(), pKitInfo->m_SecondaryColor.b() };
-						//HSL primaryHsl, secondaryHsl;
-						//RGBtoHSL(primaryRgb, primaryHsl);
-						//colors_t color = classify(primaryHsl);
-						pKitInfo->m_HudColor = pKitInfo->m_PrimaryColor;//Color(substituteColors[color][0], substituteColors[color][1], substituteColors[color][2], 255);
+						RGB primaryRgb = { pKitInfo->m_PrimaryColor.r(), pKitInfo->m_PrimaryColor.g(), pKitInfo->m_PrimaryColor.b() };
+						RGB secondaryRgb = { pKitInfo->m_SecondaryColor.r(), pKitInfo->m_SecondaryColor.g(), pKitInfo->m_SecondaryColor.b() };
+						HSL primaryHsl, secondaryHsl;
+						RGBtoHSL(primaryRgb, primaryHsl);
+						colors_t color = classify(primaryHsl);
+						pKitInfo->m_HudColor = colors[color];
 
 						pKV->deleteThis();
 					}

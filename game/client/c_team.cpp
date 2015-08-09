@@ -297,23 +297,15 @@ char *C_Team::GetFolderName( void )
 
 Color &C_Team::GetHudKitColor()
 {
-	if (GetTeamNumber() == TEAM_HOME)
+	if (GetTeamNumber() == TEAM_HOME || GetTeamNumber() == TEAM_AWAY)
 	{
-		static Color col = Color(120, 192, 168, 255);
-		return col;
-	}
-	else if (GetTeamNumber() == TEAM_AWAY)
-	{
-		static Color col = Color(255, 155, 116, 255);
-		return col;
+		return m_pKitInfo->m_HudColor;
 	}
 	else
 	{
 		static Color col = Color(255, 255, 255, 255);
 		return col;
 	}
-
-	return m_pKitInfo->m_HudColor;
 }
 
 Color &C_Team::GetPrimaryKitColor()
