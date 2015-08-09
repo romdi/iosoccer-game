@@ -735,16 +735,7 @@ bool CBall::CheckCollision()
 	float ballMass;
 	Vector collisionPoint;
 
-	if ((m_pPl->IsShooting() && m_pPl->CanShoot()
-		&& gpGlobals->curtime < m_flGlobalLastShot + m_flGlobalDynamicShotDelay * sv_ball_shotdelay_global_coeff.GetFloat()
-		|| m_pPl->IsKeeperDiving())
-		&& GetCollisionPoint(true, collisionPoint))
-	{
-		collide = true;
-		collisionCoeff = sv_ball_collision_deflection_coeff.GetFloat();
-		ballMass = sv_ball_collision_deflection_mass.GetFloat();
-	}
-	else if (GetCollisionPoint(false, collisionPoint))
+	if ((!m_pPl->IsShooting() || !m_pPl->CanShoot()) && GetCollisionPoint(false, collisionPoint))
 	{
 		collide = true;
 
@@ -770,6 +761,15 @@ bool CBall::CheckCollision()
 			collisionCoeff = sv_ball_collision_passive_coeff.GetFloat();
 			ballMass = sv_ball_collision_passive_mass.GetFloat();
 		}
+	}
+	else if ((m_pPl->IsShooting() && m_pPl->CanShoot()
+		&& gpGlobals->curtime < m_flGlobalLastShot + m_flGlobalDynamicShotDelay * sv_ball_shotdelay_global_coeff.GetFloat()
+		|| m_pPl->IsKeeperDiving())
+		&& GetCollisionPoint(true, collisionPoint))
+	{
+		collide = true;
+		collisionCoeff = sv_ball_collision_deflection_coeff.GetFloat();
+		ballMass = sv_ball_collision_deflection_mass.GetFloat();
 	}
 
 	if (!collide)
