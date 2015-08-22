@@ -1481,12 +1481,6 @@ void CGameMovement::FullWalkMove( )
 	{
 		mv->m_vecVelocity[1] = 0;
 		mv->SetAbsOrigin(Vector(newPos.x, oldPos.y, newPos.z));
-
-		if (mv->m_nButtons & IN_ATTACK)
-		{
-			mv->m_vecVelocity[0] = 0;
-			mv->SetAbsOrigin(Vector(oldPos.x, oldPos.y, newPos.z));
-		}
 	}
 
 	newPos = mv->GetAbsOrigin();
