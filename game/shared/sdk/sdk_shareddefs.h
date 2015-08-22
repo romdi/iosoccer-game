@@ -11,6 +11,7 @@
 #endif
 
 #include "convar.h"
+#include "color.h"
 
 //=========================
 // GAMEPLAY RELATED OPTIONS
@@ -496,6 +497,34 @@ static const char *g_szFieldMaterials[FIELD_MATERIAL_COUNT] =
 	"street",
 	"sand",
 	"mud"
+};
+
+enum hud_colors_t { BLACKS, WHITES, GRAYS, REDS, YELLOWS, GREENS, CYANS, BLUES, MAGENTAS, HUD_COLOR_COUNT };
+
+// https://www.google.com/design/spec/style/color.html#color-color-palette
+
+static Color hudColors[HUD_COLOR_COUNT] = {
+	Color(255, 255, 255, 255),		// black (white)
+	Color(255, 255, 255, 255),		// white
+	Color(238, 238, 238, 255),		// gray
+	Color(239, 154, 154, 255),		// red
+	Color(255, 245, 157, 255),		// yellow
+	Color(165, 214, 167, 255),		// green
+	Color(128, 222, 234, 255),		// cyan
+	Color(144, 202, 249, 255),		// blue
+	Color(244, 143, 177, 255)		// magenta
+};
+
+static Color hudFallbackColors[HUD_COLOR_COUNT] = {
+	Color(238, 238, 238, 255),		// black (white) => gray
+	Color(238, 238, 238, 255),		// white => gray
+	Color(255, 255, 255, 255),		// gray => white
+	Color(244, 143, 177, 255),		// red => pink
+	Color(255, 224, 130, 255),		// yellow => amber
+	Color(197, 225, 165, 255),		// green => light green
+	Color(128, 203, 196, 255),		// cyan => teal
+	Color(129, 212, 250, 255),		// blue => light blue
+	Color(206, 147, 216, 255)		// magenta => purple
 };
 
 #endif // SDK_SHAREDDEFS_H

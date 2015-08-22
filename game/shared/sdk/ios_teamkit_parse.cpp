@@ -248,32 +248,16 @@ double deltaE2000(RGB rgb1, RGB rgb2)
 	return sqrt(delta_L * delta_L + delta_C * delta_C + delta_H * delta_H + RT * delta_C * delta_H);
 }
 
-enum colors_t { BLACKS, WHITES, GRAYS, REDS, YELLOWS, GREENS, CYANS, BLUES, MAGENTAS, COLOR_COUNT };
-char colorNames[COLOR_COUNT][16] = { "BLACKS", "WHITES", "GRAYS", "REDS", "YELLOWS", "GREENS", "CYANS", "BLUES", "MAGENTAS" };
-
-// https://www.google.com/design/spec/style/color.html#color-color-palette
-Color colors[COLOR_COUNT] = {
-	Color(255, 255, 255, 255),		// black => white
-	Color(255, 255, 255, 255),		// white
-	Color(238, 238, 238, 255),		// gray
-	Color(239, 154, 154, 255),		// red
-	Color(255, 245, 157, 255),		// yellow
-	Color(165, 214, 167, 255),		// green
-	Color(128, 222, 234, 255),		// cyan
-	Color(144, 202, 249, 255),		// blue
-	Color(244, 143, 177, 255)		// magenta
-};
-
-colors_t classify(const HSL &hsl)
+hud_colors_t classify(const HSL &hsl)
 {
 	double hue = hsl.H;
 	double sat = hsl.S;
 	double lgt = hsl.L;
 
-    if (lgt < 20)  return BLACKS;
-    if (lgt > 80)  return WHITES;
+    if (lgt < 20)	return BLACKS;
+    if (lgt > 80)	return WHITES;
 
-    if (sat < 25) return GRAYS;
+    if (sat < 25)	return GRAYS;
 
     if (hue < 30)   return REDS;
     if (hue < 90)   return YELLOWS;
@@ -281,33 +265,8 @@ colors_t classify(const HSL &hsl)
     if (hue < 210)  return CYANS;
     if (hue < 270)  return BLUES;
     if (hue < 330)  return MAGENTAS;
-	
-	return REDS; // (hue >= 330)
+	else			return REDS; // (hue >= 330)
 }
-
-//int main(int argc, char **argv)
-//{
-//	while (true)
-//	{
-//		RGB rgb[2];
-//		for (int i = 0; i < 2; i++)
-//		{
-//			char input[4];
-//			printf("RGB%d: ", i + 1);
-//			gets(input);
-//			rgb[i].R = atof(strtok(input, ", "));
-//			rgb[i].G = atof(strtok(NULL, ", "));
-//			rgb[i].B = atof(strtok(NULL, ", "));
-//		}
-//		HSL hsl1, hsl2;
-//		RGBtoHSL(rgb[0], hsl1);
-//		RGBtoHSL(rgb[1], hsl2);
-//		printf("Color classification: %s & %s\n", colorNames[classify(hsl1)], colorNames[classify(hsl2)]);
-//		printf("Distance between [%d, %d, %d] and [%d, %d, %d]: %f\n\n", rgb[0].R, rgb[0].G, rgb[0].B, rgb[1].R, rgb[1].G, rgb[1].B, deltaE2000(rgb[0], rgb[1]));
-//	}
-//
-//	return 0;
-//}
 
 float CTeamInfo::m_flLastUpdateTime = 0;
 
@@ -684,8 +643,8 @@ void CTeamInfo::ParseTeamKits()
 						RGB secondaryRgb = { pKitInfo->m_SecondaryColor.r(), pKitInfo->m_SecondaryColor.g(), pKitInfo->m_SecondaryColor.b() };
 						HSL primaryHsl, secondaryHsl;
 						RGBtoHSL(primaryRgb, primaryHsl);
-						colors_t color = classify(primaryHsl);
-						pKitInfo->m_HudColor = colors[color];
+						hud_colors_t color = classify(primaryHsl);
+						pKitInfo->m_HudColor = hudColors[color];
 
 						pKV->deleteThis();
 					}
