@@ -534,6 +534,8 @@ void CBall::SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyP
 
 	m_pPl->m_flNextShot = gpGlobals->curtime + max(dynamicDelay, shotTakerMinDelay);
 
+	m_pPl->ResetShotCharging();
+
 	Touched(true, bodyPart, oldVel);
 }
 
