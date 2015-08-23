@@ -132,6 +132,9 @@ void CHudChargedshotBar::Paint()
 	if ( !pPlayer )
 		return;
 
+	if (!SDKGameRules())
+		return;
+
 	float stamina = pPlayer->m_Shared.GetStamina() / 100.0f;
 	
 	Color staminaFgColor, staminaBgColor, shotFgColor, shotBgColor;
@@ -159,6 +162,9 @@ void CHudChargedshotBar::Paint()
 		staminaBgColor = Color(0, 0, 0, 255);
 	}
 
+	Color staminaLimitFgColor = Color(100, 100, 100, 255);
+	Color shotLimitFgColor = Color(100, 100, 100, 255);
+
 	// Draw stamina bar back
 	surface()->DrawSetColor(staminaBgColor);
 	surface()->DrawFilledRect(
@@ -166,6 +172,14 @@ void CHudChargedshotBar::Paint()
 		STAMINABAR_VMARGIN,
 		ScreenWidth() - STAMINABAR_HMARGIN - STAMINABAR_WIDTH - 2 * STAMINABAR_BORDER + STAMINABAR_WIDTH + 2 * STAMINABAR_BORDER,
 		STAMINABAR_VMARGIN + STAMINABAR_HEIGHT + 2 * STAMINABAR_BORDER
+	);
+
+	surface()->DrawSetColor(staminaLimitFgColor);
+	surface()->DrawFilledRect(
+		ScreenWidth() - STAMINABAR_HMARGIN - STAMINABAR_WIDTH - STAMINABAR_BORDER + SDKGameRules()->GetStrengthScalingCoeff() * STAMINABAR_WIDTH,
+		STAMINABAR_VMARGIN + STAMINABAR_BORDER,
+		ScreenWidth() - STAMINABAR_HMARGIN - STAMINABAR_WIDTH - STAMINABAR_BORDER + STAMINABAR_WIDTH,
+		STAMINABAR_VMARGIN + STAMINABAR_BORDER + STAMINABAR_HEIGHT
 	);
 
 	// Draw stamina bar front
@@ -190,7 +204,15 @@ void CHudChargedshotBar::Paint()
 			ScreenHeight() - SHOTBAR_VMARGIN - SHOTBAR_HEIGHT - 2 * SHOTBAR_BORDER,
 			ScreenWidth() / 2 - SHOTBAR_WIDTH / 2 - SHOTBAR_BORDER + SHOTBAR_WIDTH + 2 * SHOTBAR_BORDER,
 			ScreenHeight() - SHOTBAR_VMARGIN - SHOTBAR_HEIGHT - 2 * SHOTBAR_BORDER + SHOTBAR_HEIGHT + 2 * SHOTBAR_BORDER
-			);
+		);
+
+		surface()->DrawSetColor(shotLimitFgColor);
+		surface()->DrawFilledRect(
+			ScreenWidth() / 2 - SHOTBAR_WIDTH / 2 + pow(SDKGameRules()->GetStrengthScalingCoeff(), mp_chargedshot_increaseexponent.GetFloat()) * SHOTBAR_WIDTH,
+			ScreenHeight() - SHOTBAR_VMARGIN - SHOTBAR_HEIGHT - SHOTBAR_BORDER,
+			ScreenWidth() / 2 - SHOTBAR_WIDTH / 2 + SHOTBAR_WIDTH,
+			ScreenHeight() - SHOTBAR_VMARGIN - SHOTBAR_HEIGHT - SHOTBAR_BORDER + SHOTBAR_HEIGHT
+		);
 
 		// Draw shot bar front
 		surface()->DrawSetColor(shotFgColor);
@@ -199,6 +221,6 @@ void CHudChargedshotBar::Paint()
 			ScreenHeight() - SHOTBAR_VMARGIN - SHOTBAR_HEIGHT - SHOTBAR_BORDER,
 			ScreenWidth() / 2 - SHOTBAR_WIDTH / 2 + shotStrength * SHOTBAR_WIDTH,
 			ScreenHeight() - SHOTBAR_VMARGIN - SHOTBAR_HEIGHT - SHOTBAR_BORDER + SHOTBAR_HEIGHT
-			);
+		);
 	}
 }

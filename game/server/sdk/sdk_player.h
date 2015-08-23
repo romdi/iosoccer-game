@@ -549,6 +549,7 @@ public:
 	void				CheckShotCharging();
 	void				ResetShotCharging();
 	float				GetChargedShotStrength();
+	float				GetChargedShotIncreaseDuration();
 
 	void				CheckLastPressedSingleMoveButton();
 

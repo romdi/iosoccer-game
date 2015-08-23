@@ -162,7 +162,7 @@ void CSDKPlayerShared::SetJumping( bool bJumping )
 
 void CSDKPlayerShared::SetStamina( float flStamina )
 {
-	m_flStamina = clamp(flStamina, 0, m_flMaxStamina);
+	m_flStamina = clamp(flStamina, 0, min(m_flMaxStamina, SDKGameRules()->GetStrengthScalingCoeff() * 100));
 }
 
 void CSDKPlayerShared::SetMaxStamina(float maxStamina, bool savePersistently)
@@ -579,22 +579,22 @@ void CSDKPlayer::CheckShotCharging()
 	{
 		if (m_nButtons & IN_ATTACK2)
 		{
-			if (gpGlobals->curtime > m_Shared.m_flShotChargingStart + mp_chargedshot_increaseduration.GetFloat())
+			if (gpGlobals->curtime > m_Shared.m_flShotChargingStart + GetChargedShotIncreaseDuration())
 			{
-				if (gpGlobals->curtime > m_Shared.m_flShotChargingStart + mp_chargedshot_increaseduration.GetFloat() + mp_chargedshot_idleduration.GetFloat())
+				if (gpGlobals->curtime > m_Shared.m_flShotChargingStart + GetChargedShotIncreaseDuration() + mp_chargedshot_idleduration.GetFloat())
 				{
 					m_Shared.m_flShotChargingStart = gpGlobals->curtime;
 				}
 				else
 				{
-					m_Shared.m_flShotChargingDuration = mp_chargedshot_increaseduration.GetFloat();
+					m_Shared.m_flShotChargingDuration = GetChargedShotIncreaseDuration();
 				}
 			}
 		}
 		else
 		{
 			m_Shared.m_bIsShotCharging = false;
-			m_Shared.m_flShotChargingDuration = min(gpGlobals->curtime - m_Shared.m_flShotChargingStart, mp_chargedshot_increaseduration.GetFloat());
+			m_Shared.m_flShotChargingDuration = min(gpGlobals->curtime - m_Shared.m_flShotChargingStart, GetChargedShotIncreaseDuration());
 			m_Shared.m_bDoChargedShot = true;
 		}
 	}
@@ -622,16 +622,14 @@ float CSDKPlayer::GetChargedShotStrength()
 
 	if (m_Shared.m_bIsShotCharging)
 	{
-		activeDuration = currentTime - m_Shared.m_flShotChargingStart;
+		activeDuration = min(currentTime - m_Shared.m_flShotChargingStart, GetChargedShotIncreaseDuration());
 	}
-	else
+	else if (m_Shared.m_bDoChargedShot)
 	{
-		// Let the bar idle at the release position for a short amount of time to allow more precise shots and passes
-		if (currentTime > m_Shared.m_flShotChargingStart + m_Shared.m_flShotChargingDuration + mp_chargedshot_idleduration.GetFloat())
-			return 0;
-
 		activeDuration = m_Shared.m_flShotChargingDuration;
 	}
+	else
+		return 0;
 
 	// Calculate the fraction of the upwards movement using a convar as exponent.
 	return pow(clamp(activeDuration / mp_chargedshot_increaseduration.GetFloat(), 0.0f, 1.0f), mp_chargedshot_increaseexponent.GetFloat());
@@ -644,6 +642,11 @@ void CSDKPlayer::CheckLastPressedSingleMoveButton()
 	{
 		m_Shared.m_nLastPressedSingleMoveKey = (m_nButtons & IN_MOVELEFT) ? IN_MOVELEFT : IN_MOVERIGHT;
 	}
+}
+
+float CSDKPlayer::GetChargedShotIncreaseDuration()
+{
+	return SDKGameRules()->GetStrengthScalingCoeff() * mp_chargedshot_increaseduration.GetFloat();
 }
 
 bool CSDKPlayer::ShotButtonsPressed()

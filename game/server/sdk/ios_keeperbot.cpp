@@ -351,5 +351,5 @@ void CKeeperBot::SetChargedshotParams(QAngle &ang, QAngle &camAng, CUserCmd &cmd
 	VectorAngles(dir, ang);
 	ang[PITCH] = -5 + distCoeff * -30;
 	VectorAngles(dir, camAng);
-	chargeTime = distCoeff * mp_chargedshot_increaseduration.GetFloat();
+	chargeTime = distCoeff * GetChargedShotIncreaseDuration();
 }
