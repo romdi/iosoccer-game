@@ -2165,11 +2165,11 @@ bool CMatchBall::IsLegallyCatchableByKeeper()
 			// Only allow the keeper to pick up the ball if the shot or touch before the last header or chest action was by an opponent
 			for (int i = m_Touches.Count() - 1; i >= 1; i--)
 			{
-				if (m_Touches[i]->m_bIsShot)
+				if (m_Touches[i]->m_bIsShot && m_Touches[i]->m_pPl != m_pPl)
 				{
 					for (int j = i - 1; j >= 0; j--)
 					{
-						if (m_Touches[j]->m_bIsShot)
+						if (m_Touches[j]->m_bIsShot && m_Touches[j]->m_pPl != m_pPl)
 						{
 							if (m_Touches[j]->m_nTeam != pLastTouch->m_nTeam)
 								return true;
