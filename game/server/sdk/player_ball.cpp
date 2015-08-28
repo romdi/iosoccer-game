@@ -189,9 +189,9 @@ void CPlayerBall::State_Think()
 	}
 }
 
-void CPlayerBall::SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyPart, bool markOffsidePlayers, float shotTakerMinDelay)
+void CPlayerBall::SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyPart, bool markOffsidePlayers, float shotTakerMinDelay, bool resetShotCharging)
 {
-	CBall::SetVel(vel, spinCoeff, spinFlags, bodyPart, markOffsidePlayers, shotTakerMinDelay);
+	CBall::SetVel(vel, spinCoeff, spinFlags, bodyPart, markOffsidePlayers, shotTakerMinDelay, resetShotCharging);
 
 	if (!m_bIsBallCannonMode && m_pPl == GetCreator())
 		SaveBallCannonSettings();
@@ -322,7 +322,7 @@ void CPlayerBall::State_KEEPERHANDS_Think()
 		}
 
 		SetPos(pos, false);
-		SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_KEEPERHANDS, true, sv_ball_shottaker_mindelay_short.GetFloat());
+		SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_KEEPERHANDS, true, sv_ball_shottaker_mindelay_short.GetFloat(), true);
 
 		return State_Transition(BALL_STATE_NORMAL);
 	}
@@ -366,7 +366,7 @@ void CPlayerBall::State_KEEPERHANDS_Think()
 		m_pPl->DoServerAnimationEvent(animEvent);
 		RemoveAllTouches();
 		SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_keeperhands.GetFloat()) + m_vPlForward2D * 36, false);
-		SetVel(vel, 1.0f, spinFlags, BODY_PART_KEEPERHANDS, true, sv_ball_shottaker_mindelay_short.GetFloat());
+		SetVel(vel, 1.0f, spinFlags, BODY_PART_KEEPERHANDS, true, sv_ball_shottaker_mindelay_short.GetFloat(), true);
 
 		return State_Transition(BALL_STATE_NORMAL);
 	}

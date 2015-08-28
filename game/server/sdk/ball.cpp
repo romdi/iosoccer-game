@@ -156,6 +156,10 @@ ConVar
 	sv_ball_header_maxangle("sv_ball_header_maxangle", "-40", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_header_playerspeedcoeff("sv_ball_header_playerspeedcoeff", "1.0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 
+	sv_ball_chestdrop_strength("sv_ball_chestdrop_strength", "100", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_chestdrop_playerspeedcoeff("sv_ball_chestdrop_playerspeedcoeff", "1.0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_chestdrop_angle("sv_ball_chestdrop_angle", "90", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+
 	sv_ball_animation_minstrength_strongshot("sv_ball_animation_minstrength_strongshot", "800", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_animation_minstrength_weakshot("sv_ball_animation_minstrength_weakshot", "600", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_animation_minstrength_dribbleshot("sv_ball_animation_minstrength_dribbleshot", "400", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
@@ -163,10 +167,11 @@ ConVar
 	sv_ball_highlightsdelay_intermissions("sv_ball_highlightsdelay_intermissions", "5.0", FCVAR_NOTIFY),
 	sv_ball_highlightsdelay_cooldown("sv_ball_highlightsdelay_cooldown", "30.0", FCVAR_NOTIFY),
 	
-	sv_ball_bodypos_feet_start("sv_ball_bodypos_feet_start", "-25", FCVAR_NOTIFY),
-	sv_ball_bodypos_hip_start("sv_ball_bodypos_hip_start", "15", FCVAR_NOTIFY),
-	sv_ball_bodypos_head_start("sv_ball_bodypos_head_start", "50", FCVAR_NOTIFY),
-	sv_ball_bodypos_head_end("sv_ball_bodypos_head_end", "80", FCVAR_NOTIFY),
+	sv_ball_bodypos_feet_start("sv_ball_bodypos_feet_start", "-15", FCVAR_NOTIFY),
+	sv_ball_bodypos_hip_start("sv_ball_bodypos_hip_start", "20", FCVAR_NOTIFY),
+	sv_ball_bodypos_chest_start("sv_ball_bodypos_chest_start", "45", FCVAR_NOTIFY),
+	sv_ball_bodypos_head_start("sv_ball_bodypos_head_start", "60", FCVAR_NOTIFY),
+	sv_ball_bodypos_head_end("sv_ball_bodypos_head_end", "85", FCVAR_NOTIFY),
 	sv_ball_bodypos_keeperarms_end("sv_ball_bodypos_keeperarms_end", "100", FCVAR_NOTIFY),
 	
 	sv_ball_bodypos_keeperhands("sv_ball_bodypos_keeperhands", "40", FCVAR_NOTIFY),
@@ -505,7 +510,7 @@ void CBall::SetAng(const QAngle &ang)
 	m_pPhys->SetPosition(m_vPos, m_aAng, false);
 }
 
-void CBall::SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyPart, bool markOffsidePlayers, float shotTakerMinDelay)
+void CBall::SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyPart, bool markOffsidePlayers, float shotTakerMinDelay, bool resetShotCharging)
 {
 	Vector oldVel = m_vVel;
 
@@ -534,7 +539,8 @@ void CBall::SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyP
 
 	m_pPl->m_flNextShot = gpGlobals->curtime + max(dynamicDelay, shotTakerMinDelay);
 
-	m_pPl->ResetShotCharging();
+	if (resetShotCharging)
+		m_pPl->ResetShotCharging();
 
 	Touched(true, bodyPart, oldVel);
 }
@@ -717,8 +723,11 @@ bool CBall::DoBodyPartAction()
 		return DoGroundShot(true);
 	}
 
-	if (zDist >= sv_ball_bodypos_hip_start.GetFloat() && zDist < sv_ball_bodypos_head_start.GetFloat() && CanReachBallStandingXY())
+	if (zDist >= sv_ball_bodypos_hip_start.GetFloat() && zDist < sv_ball_bodypos_chest_start.GetFloat() && CanReachBallStandingXY())
 		return DoVolleyShot();
+
+	if (zDist >= sv_ball_bodypos_chest_start.GetFloat() && zDist < sv_ball_bodypos_head_start.GetFloat() && CanReachBallStandingXY())
+		return DoChestDrop();
 
 	if (zDist >= sv_ball_bodypos_head_start.GetFloat() && zDist < sv_ball_bodypos_head_end.GetFloat() && CanReachBallStandingXY())
 		return DoHeader();
@@ -833,7 +842,7 @@ bool CBall::DoSlideAction()
 
 	Vector ballVel = forward * GetNormalshotStrength(GetPitchCoeff(), sv_ball_slide_strength.GetInt());
 
-	SetVel(ballVel, 0, FL_SPIN_FORCE_NONE, BODY_PART_FEET, true, sv_ball_shottaker_mindelay_short.GetFloat());
+	SetVel(ballVel, 0, FL_SPIN_FORCE_NONE, BODY_PART_FEET, true, sv_ball_shottaker_mindelay_short.GetFloat(), true);
 
 	if (!SDKGameRules()->IsIntermissionState() && State_Get() == BALL_STATE_NORMAL && !HasQueuedState())
 		m_pPl->AddSlidingTackleCompleted();
@@ -975,13 +984,13 @@ bool CBall::CheckKeeperCatch()
 
 		Vector vel = punchDir * max(m_vVel.Length2D(), sv_ball_keeper_punch_minstrength.GetFloat()) * sv_ball_keeperdeflectioncoeff.GetFloat();
 
-		SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_KEEPERPUNCH, false, sv_ball_shottaker_mindelay_short.GetFloat());
+		SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_KEEPERPUNCH, false, sv_ball_shottaker_mindelay_short.GetFloat(), true);
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
 	}
 	// Catch ball instead of punching
 	else
 	{
-		SetVel(vec3_origin, 0, FL_SPIN_FORCE_NONE, BODY_PART_KEEPERCATCH, false, sv_ball_shottaker_mindelay_short.GetFloat());
+		SetVel(vec3_origin, 0, FL_SPIN_FORCE_NONE, BODY_PART_KEEPERCATCH, false, sv_ball_shottaker_mindelay_short.GetFloat(), true);
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);		
 		State_Transition(BALL_STATE_KEEPERHANDS);
 	}
@@ -1190,7 +1199,7 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 		}
 	}
 
-	SetVel(vel, spinCoeff, spinFlags, BODY_PART_FEET, markOffsidePlayers, shotTakerMinDelay);
+	SetVel(vel, spinCoeff, spinFlags, BODY_PART_FEET, markOffsidePlayers, shotTakerMinDelay, true);
 
 	return true;
 }
@@ -1228,7 +1237,26 @@ bool CBall::DoVolleyShot()
 	else
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
 
-	SetVel(vel, sv_ball_volleyshot_spincoeff.GetFloat(), FL_SPIN_PERMIT_SIDE, BODY_PART_FEET, true, sv_ball_shottaker_mindelay_short.GetFloat());
+	SetVel(vel, sv_ball_volleyshot_spincoeff.GetFloat(), FL_SPIN_PERMIT_SIDE, BODY_PART_FEET, true, sv_ball_shottaker_mindelay_short.GetFloat(), true);
+
+	return true;
+}
+
+bool CBall::DoChestDrop()
+{
+	QAngle ang = m_aPlAng;
+	ang[PITCH] = sv_ball_chestdrop_angle.GetInt();
+
+	Vector dir;
+	AngleVectors(ang, &dir);
+
+	Vector vel = dir * sv_ball_chestdrop_strength.GetInt();
+	vel += m_vPlForwardVel2D * sv_ball_chestdrop_playerspeedcoeff.GetFloat();
+
+	m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
+	EmitSound("Ball.Touch");
+
+	SetVel(vel, 0.0f, FL_SPIN_FORCE_NONE, BODY_PART_CHEST, true, sv_ball_shottaker_mindelay_short.GetFloat(), false);
 
 	return true;
 }
@@ -1257,7 +1285,7 @@ bool CBall::DoHeader()
 			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BICYCLE_KICK);
 			EmitSound("Ball.Kickhard");
 
-			SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_FEET, true, sv_ball_shottaker_mindelay_long.GetFloat());
+			SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_FEET, true, sv_ball_shottaker_mindelay_long.GetFloat(), true);
 		}
 		// Diving header
 		else
@@ -1277,7 +1305,7 @@ bool CBall::DoHeader()
 			EmitSound("Ball.Kickhard");
 			EmitSound("Player.DivingHeader");
 
-			SetVel(vel, sv_ball_header_spincoeff.GetFloat(), FL_SPIN_PERMIT_SIDE, BODY_PART_HEAD, true, sv_ball_shottaker_mindelay_long.GetFloat());
+			SetVel(vel, sv_ball_header_spincoeff.GetFloat(), FL_SPIN_PERMIT_SIDE, BODY_PART_HEAD, true, sv_ball_shottaker_mindelay_long.GetFloat(), true);
 		}
 	}
 	else
@@ -1312,7 +1340,7 @@ bool CBall::DoHeader()
 		// Add player forward move speed to ball speed
 		vel += m_vPlForwardVel2D * sv_ball_header_playerspeedcoeff.GetFloat();
 
-		SetVel(vel, sv_ball_header_spincoeff.GetFloat(), FL_SPIN_PERMIT_SIDE, BODY_PART_HEAD, true, sv_ball_shottaker_mindelay_short.GetFloat());
+		SetVel(vel, sv_ball_header_spincoeff.GetFloat(), FL_SPIN_PERMIT_SIDE, BODY_PART_HEAD, true, sv_ball_shottaker_mindelay_short.GetFloat(), true);
 	}
 
 	return true;

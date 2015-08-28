@@ -28,7 +28,7 @@ public:
 	CPlayerBall();
 	~CPlayerBall();
 
-	void			SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyPart, bool markOffsidePlayers, float shotTakerMinDelay);
+	void			SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyPart, bool markOffsidePlayers, float shotTakerMinDelay, bool resetShotCharging);
 	void			SaveBallCannonSettings();
 	void			RestoreBallCannonSettings();
 	void			SetBallCannonMode(bool isBallCannonMode);

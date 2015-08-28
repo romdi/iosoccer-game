@@ -127,7 +127,7 @@ public:
 
 	void			SetPos(const Vector &pos, bool addBallRadiusZOffset = true, bool freeze = true);
 	void			SetAng(const QAngle &ang);
-	virtual void	SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyPart, bool markOffsidePlayers, float shotTakerMinDelay);
+	virtual void	SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyPart, bool markOffsidePlayers, float shotTakerMinDelay, bool resetShotCharging);
 	void			SetRot(AngularImpulse rot = NULL);
 
 	inline ball_state_t State_Get( void ) { return m_pCurStateInfo->m_eBallState; }
@@ -189,6 +189,7 @@ protected:
 	bool			CheckKeeperCatch();
 	bool			DoGroundShot(bool markOffsidePlayers);
 	bool			DoVolleyShot();
+	bool			DoChestDrop();
 	bool			DoHeader();
 	AngularImpulse	CalcSpin(float coeff, int spinFlags);
 	float			GetPitchCoeff(bool useCamViewAngles = false);
