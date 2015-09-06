@@ -4,14 +4,19 @@
 #include "ios_replaymanager.h"
 
 extern ConVar
-	sv_ball_bodypos_keeperhands,
-	sv_ball_chargedshot_minstrength,
-	sv_ball_chargedshot_maxstrength,
-	sv_ball_keepershot_minangle,
-	sv_ball_maxplayerfinddist,
-	sv_ball_shottaker_mindelay_short,
-	sv_ball_shottaker_mindelay_long,
-	sv_ball_keeperthrow_strength;
+sv_ball_bodypos_keeperhands,
+sv_ball_chargedshot_minstrength,
+sv_ball_chargedshot_maxstrength,
+sv_ball_keepershot_minangle,
+sv_ball_maxplayerfinddist,
+sv_ball_shottaker_mindelay_short,
+sv_ball_shottaker_mindelay_long,
+sv_ball_keeperthrow_strength,
+sv_ball_slidezstart,
+sv_ball_slidezend,
+sv_ball_slidesidereach_ball,
+sv_ball_slideforwardreach_ball,
+sv_ball_slidebackwardreach_ball;
 
 ConVar
 	sv_ball_statetransition_postmessagedelay_short("sv_ball_statetransition_postmessagedelay_short", "0.1", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
@@ -1718,67 +1723,79 @@ void CMatchBall::Touched(bool isShot, body_part_t bodyPart, const Vector &oldVel
 	}
 }
 
-bool CMatchBall::CheckFoul(bool canShootBall, const Vector &localDirToBall)
+bool CMatchBall::CheckFoul(CSDKPlayer *pPl)
 {
-	if (gpGlobals->curtime < m_pPl->m_flNextFoulCheck)
+	if (SDKGameRules()->IsIntermissionState() || m_bHasQueuedState)
 		return false;
+
+	if (gpGlobals->curtime < pPl->m_flNextFoulCheck)
+		return false;
+
+	Vector dirToBall = GetPos() - pPl->GetTeamNumber();
+	float zDist = dirToBall.z;
+	Vector localDirToBall;
+	VectorIRotate(dirToBall, pPl->EntityToWorldTransform(), localDirToBall);
+
+	bool canShootBall = zDist < sv_ball_slidezend.GetFloat()
+		&& zDist >= sv_ball_slidezstart.GetFloat()
+		&& localDirToBall.x >= -sv_ball_slidebackwardreach_ball.GetFloat()
+		&& localDirToBall.x <= sv_ball_slideforwardreach_ball.GetFloat()
+		&& abs(localDirToBall.y) <= sv_ball_slidesidereach_ball.GetFloat();
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++) 
 	{
-		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+		CSDKPlayer *pOtherPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
 
-		if (!CSDKPlayer::IsOnField(pPl))
+		if (!CSDKPlayer::IsOnField(pOtherPl))
 			continue;
 
-		if (pPl == m_pPl || pPl->GetTeamNumber() == m_pPl->GetTeamNumber())
+		if (pOtherPl == pPl || pOtherPl->GetTeamNumber() == pPl->GetTeamNumber())
 			continue;
 
-		Vector plPos = pPl->GetLocalOrigin();
+		Vector dirToOtherPl = pOtherPl->GetLocalOrigin() - pPl->GetLocalOrigin();
 
-		Vector dirToPl = pPl->GetLocalOrigin() - m_vPlPos;
+		Vector localDirToOtherPl;
+		VectorIRotate(dirToOtherPl, pPl->EntityToWorldTransform(), localDirToOtherPl);
 
-		Vector localDirToPl;
-		VectorIRotate(dirToPl, m_pPl->EntityToWorldTransform(), localDirToPl);
-
-		dirToPl.z = 0;
-		dirToPl.NormalizeInPlace();
+		dirToOtherPl.z = 0;
+		dirToOtherPl.NormalizeInPlace();
 
 		// Can't reach the other player
-		if (localDirToPl.x < -sv_ball_slidebackwardreach_foul.GetInt()
-			|| localDirToPl.x > sv_ball_slideforwardreach_foul.GetInt()
-			|| abs(localDirToPl.y) > sv_ball_slidesidereach_foul.GetInt())		
+		if (localDirToOtherPl.x < -sv_ball_slidebackwardreach_foul.GetInt()
+			|| localDirToOtherPl.x > sv_ball_slideforwardreach_foul.GetInt()
+			|| abs(localDirToOtherPl.y) > sv_ball_slidesidereach_foul.GetInt())
 			continue;
 
 		// Can shoot the ball and ball is closer to the player than the opponent
-		if (canShootBall && localDirToBall.x <= localDirToPl.x)
+		if (canShootBall && localDirToBall.x <= localDirToOtherPl.x)
 			continue;
 
 		// It's a foul
 
-		PlayerAnimEvent_t anim = RAD2DEG(acos(m_vPlForward2D.Dot(pPl->EyeDirection2D()))) <= 90 ? PLAYERANIMEVENT_TACKLED_BACKWARD : PLAYERANIMEVENT_TACKLED_FORWARD;
-		pPl->DoServerAnimationEvent(anim);
+		PlayerAnimEvent_t anim = RAD2DEG(acos(pPl->EyeDirection2D().Dot(pOtherPl->EyeDirection2D()))) <= 90 ? PLAYERANIMEVENT_TACKLED_BACKWARD : PLAYERANIMEVENT_TACKLED_FORWARD;
+		pOtherPl->DoServerAnimationEvent(anim);
 
-		m_pPl->m_flNextFoulCheck = gpGlobals->curtime + sv_ball_foulcheckdelay.GetFloat();
+		pPl->m_flNextFoulCheck = gpGlobals->curtime + sv_ball_foulcheckdelay.GetFloat();
 
 		int teammatesCloserToGoalCount = 0;
 
-		bool isCloseToOwnGoal = ((m_vPos - m_pPl->GetTeam()->m_vGoalCenter).Length2D() <= sv_ball_closetogoaldist.GetInt());
+		bool isCloseToOwnGoal = ((GetPos() - pPl->GetTeam()->m_vGoalCenter).Length2D() <= sv_ball_closetogoaldist.GetInt());
 
 		if (isCloseToOwnGoal)
 		{
 			for (int j = 1; j <= gpGlobals->maxClients; j++) 
 			{
-				CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(j));
+				CSDKPlayer *pOtherPl = ToSDKPlayer(UTIL_PlayerByIndex(j));
 
-				if (!CSDKPlayer::IsOnField(pPl) || pPl == m_pPl || pPl->GetTeamNumber() != m_pPl->GetTeamNumber())
+				if (!CSDKPlayer::IsOnField(pOtherPl) || pOtherPl == pPl || pOtherPl->GetTeamNumber() != pPl->GetTeamNumber())
 					continue;
 
-				if ((m_pPl->GetTeam()->m_vGoalCenter - pPl->GetLocalOrigin()).Length2DSqr() < (m_pPl->GetTeam()->m_vGoalCenter - m_vPlPos).Length2DSqr())
+				if ((pPl->GetTeam()->m_vGoalCenter - pOtherPl->GetLocalOrigin()).Length2DSqr() < (pPl->GetTeam()->m_vGoalCenter - pPl->GetLocalOrigin()).Length2DSqr())
 					teammatesCloserToGoalCount += 1;
 			}
 		}
 
-		bool isPenalty = pPl->m_Shared.m_nInPenBoxOfTeam == m_pPl->GetTeamNumber();
+		bool isPenalty = pOtherPl->m_Shared.m_nInPenBoxOfTeam == pPl->GetTeamNumber();
 
 		foul_type_t foulType;
 
@@ -1786,33 +1803,33 @@ bool CMatchBall::CheckFoul(bool canShootBall, const Vector &localDirToBall)
 			foulType = FOUL_NORMAL_RED_CARD;
 		else if (anim == PLAYERANIMEVENT_TACKLED_FORWARD && localDirToBall.Length2DSqr() >= Sqr(sv_ball_yellowcardballdist_forward.GetFloat()) ||
 				 anim == PLAYERANIMEVENT_TACKLED_BACKWARD && localDirToBall.Length2DSqr() >= Sqr(sv_ball_yellowcardballdist_backward.GetFloat()))
-			foulType = m_pPl->GetYellowCards() % 2 == 0 ? FOUL_NORMAL_YELLOW_CARD : FOUL_NORMAL_SECOND_YELLOW_CARD;
+			foulType = pPl->GetYellowCards() % 2 == 0 ? FOUL_NORMAL_YELLOW_CARD : FOUL_NORMAL_SECOND_YELLOW_CARD;
 		else
 			foulType = FOUL_NORMAL_NO_CARD;
 
 		if (!m_bIsAdvantage || !m_bIsPenalty || isPenalty)
-			SetFoulParams(foulType, pPl->GetLocalOrigin(), m_pPl, pPl);
+			SetFoulParams(foulType, pOtherPl->GetLocalOrigin(), pPl, pOtherPl);
 
-		m_pPl->AddFoul();
-		pPl->AddFoulSuffered();
+		pPl->AddFoul();
+		pOtherPl->AddFoulSuffered();
 
 		if (foulType == FOUL_NORMAL_YELLOW_CARD || foulType == FOUL_NORMAL_SECOND_YELLOW_CARD)
-			m_pPl->AddYellowCard();
+			pPl->AddYellowCard();
 
 		if (foulType == FOUL_NORMAL_SECOND_YELLOW_CARD || foulType == FOUL_NORMAL_RED_CARD)
 		{
-			m_pPl->AddRedCard();
+			pPl->AddRedCard();
 			int banDuration = 60 * (foulType == FOUL_NORMAL_SECOND_YELLOW_CARD ? sv_ball_player_secondyellowcard_banduration.GetFloat() : sv_ball_player_redcard_banduration.GetFloat());
 			int nextJoin = SDKGameRules()->GetMatchDisplayTimeSeconds(false) + banDuration;
-			m_pPl->SetNextCardJoin(nextJoin);
+			pPl->SetNextCardJoin(nextJoin);
 
-			ReplayManager()->AddMatchEvent(foulType == FOUL_NORMAL_SECOND_YELLOW_CARD ? MATCH_EVENT_SECONDYELLOWCARD : MATCH_EVENT_REDCARD, m_pPl->GetTeamNumber(), m_pPl);
+			ReplayManager()->AddMatchEvent(foulType == FOUL_NORMAL_SECOND_YELLOW_CARD ? MATCH_EVENT_SECONDYELLOWCARD : MATCH_EVENT_REDCARD, pPl->GetTeamNumber(), pPl);
 
-			int team = m_pPl->GetTeamNumber();
-			int posIndex = m_pPl->GetTeamPosIndex();
-			int posType = m_pPl->GetTeamPosType();
+			int team = pPl->GetTeamNumber();
+			int posIndex = pPl->GetTeamPosIndex();
+			int posType = pPl->GetTeamPosType();
 
-			m_pPl->SetDesiredTeam(TEAM_SPECTATOR, team, 0, true, false, false);
+			pPl->SetDesiredTeam(TEAM_SPECTATOR, team, 0, true, false, false);
 
 			if (posType != POS_GK)
 			{
@@ -1823,20 +1840,20 @@ bool CMatchBall::CheckFoul(bool canShootBall, const Vector &localDirToBall)
 			{
 				for (int i = 1; i <= gpGlobals->maxClients; i++)
 				{
-					CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
-					if (!CSDKPlayer::IsOnField(pPl) || pPl == m_pPl || pPl->GetTeamNumber() != team)
+					CSDKPlayer *pOtherPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+					if (!CSDKPlayer::IsOnField(pOtherPl) || pOtherPl == pPl || pOtherPl->GetTeamNumber() != team)
 						continue;
 
 					// Switch another player to the keeper pos and block this player's pos instead
-					pPl->GetTeam()->SetPosNextJoinSeconds(pPl->GetTeamPosIndex(), nextJoin);
-					pPl->SetDesiredTeam(team, team, posIndex, true, false, false);
+					pOtherPl->GetTeam()->SetPosNextJoinSeconds(pOtherPl->GetTeamPosIndex(), nextJoin);
+					pOtherPl->SetDesiredTeam(team, team, posIndex, true, false, false);
 					break;
 				}
 			}
 		}
 		else if (foulType == FOUL_NORMAL_YELLOW_CARD)
 		{
-			ReplayManager()->AddMatchEvent(MATCH_EVENT_YELLOWCARD, m_pPl->GetTeamNumber(), m_pPl);
+			ReplayManager()->AddMatchEvent(MATCH_EVENT_YELLOWCARD, pPl->GetTeamNumber(), pPl);
 		}
 
 		// Don't overwrite a pending penalty with a free-kick

@@ -43,7 +43,7 @@ public:
 	void			SetSetpieceTaker(CSDKPlayer *pPlayer);
 
 	void			Touched(bool isShot, body_part_t bodyPart, const Vector &oldVel);
-	bool			CheckFoul(bool canShootBall, const Vector &localDirToBall);
+	bool			CheckFoul(CSDKPlayer *pPl);
 	void			SetFoulParams(foul_type_t type, Vector pos, CSDKPlayer *pFoulingPl, CSDKPlayer *pFouledPl = NULL);
 	bool			IsPlayerClose();
 	void			SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyPart, bool markOffsidePlayers, float shotTakerMinDelay, bool resetShotCharging);

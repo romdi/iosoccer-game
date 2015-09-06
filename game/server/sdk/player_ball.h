@@ -49,7 +49,6 @@ public:
 	void State_KEEPERHANDS_Enter();		void State_KEEPERHANDS_Think();		void State_KEEPERHANDS_Leave(ball_state_t newState);
 
 	void			Touched(bool isShot, body_part_t bodyPart, const Vector &oldVel);
-	bool			CheckFoul(bool canShootBall, const Vector &localDirToBall) { return false; }
 	void			VPhysicsCollision(int index, gamevcollisionevent_t	*pEvent);
 	bool			IsLegallyCatchableByKeeper();
 

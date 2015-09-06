@@ -49,7 +49,6 @@ ConVar
 	sv_ball_slideforwardreach_ball( "sv_ball_slideforwardreach_ball", "40", FCVAR_NOTIFY ),
 	sv_ball_slidebackwardreach_ball( "sv_ball_slidebackwardreach_ball", "20", FCVAR_NOTIFY ),
 	
-	sv_ball_slidesidespeedcoeff("sv_ball_slidesidespeedcoeff", "0.66", FCVAR_NOTIFY), 
 	sv_ball_slidezstart("sv_ball_slidezstart", "-50", FCVAR_NOTIFY), 
 	sv_ball_slidezend("sv_ball_slidezend", "30", FCVAR_NOTIFY), 
 	
@@ -122,6 +121,7 @@ ConVar
 
 	sv_ball_slide_strength("sv_ball_slide_strength", "720", FCVAR_NOTIFY), 
 	sv_ball_slide_pitchangle("sv_ball_slide_pitchangle", "-15", FCVAR_NOTIFY), 
+	sv_ball_slide_playerspeedcoeff("sv_ball_slide_playerspeedcoeff", "1.0", FCVAR_NOTIFY),
 	
 	sv_ball_keepershot_minangle("sv_ball_keepershot_minangle", "20", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 
@@ -827,12 +827,6 @@ bool CBall::DoSlideAction()
 		&& localDirToBall.x >= -sv_ball_slidebackwardreach_ball.GetFloat()
 		&& localDirToBall.x <= sv_ball_slideforwardreach_ball.GetFloat()
 		&& abs(localDirToBall.y) <= sv_ball_slidesidereach_ball.GetFloat();
-
-	if (!SDKGameRules()->IsIntermissionState() && !m_bHasQueuedState)
-	{
-		if (CheckFoul(canShootBall, localDirToBall))
-			return true;
-	}
 	
 	if (!canShootBall)
 		return false;
@@ -840,9 +834,11 @@ bool CBall::DoSlideAction()
 	Vector forward;
 	AngleVectors(QAngle(sv_ball_slide_pitchangle.GetFloat(), m_aPlAng[YAW], 0), &forward, NULL, NULL);
 
-	Vector ballVel = forward * GetNormalshotStrength(GetPitchCoeff(), sv_ball_slide_strength.GetInt());
+	Vector vel = forward * GetNormalshotStrength(GetPitchCoeff(), sv_ball_slide_strength.GetInt());
 
-	SetVel(ballVel, 0, FL_SPIN_FORCE_NONE, BODY_PART_FEET, true, sv_ball_shottaker_mindelay_short.GetFloat(), true);
+	vel += m_vPlForwardVel2D * sv_ball_slide_playerspeedcoeff.GetFloat();
+
+	SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_FEET, true, sv_ball_shottaker_mindelay_short.GetFloat(), true);
 
 	if (!SDKGameRules()->IsIntermissionState() && State_Get() == BALL_STATE_NORMAL && !HasQueuedState())
 		m_pPl->AddSlidingTackleCompleted();
