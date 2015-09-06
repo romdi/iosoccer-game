@@ -1025,7 +1025,7 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 		if (!SDKGameRules()->IsIntermissionState()
 			&& (SDKGameRules()->GetMatchDisplayTimeSeconds() < GetNextCardJoin()
 				|| SDKGameRules()->GetMatchDisplayTimeSeconds() < GetGlobalTeam(team)->GetPosNextJoinSeconds(posIndex))
-				|| sv_singlekeeper.GetInt() == 2
+				|| sv_singlekeeper.GetBool()
 					&& posIndex == GetGlobalTeam(team)->GetPosIndexByPosType(POS_GK)
 					&& !GetGlobalTeam(team)->GetPlayerByPosType(POS_GK)
 					&& GetGlobalTeam(team)->GetOppTeam()->GetPlayerByPosType(POS_GK))

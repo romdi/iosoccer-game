@@ -1588,7 +1588,7 @@ void CSDKGameRules::State_Think()
 		if (!IsIntermissionState())
 		{
 			// If there's only one keeper for both teams, switch him to the other team when the ball comes near the goal
-			if (sv_singlekeeper.GetInt() > 0)
+			if (sv_singlekeeper.GetBool())
 			{
 				if (abs(m_nBallZone) > sv_singlekeeper_switchvalue.GetFloat())
 				{
@@ -2180,7 +2180,7 @@ bool CSDKGameRules::CheckAutoStart()
 {
 	int requiredPlayerCount = mp_maxplayers.GetInt() * 2;
 
-	if (sv_singlekeeper.GetInt() > 0)
+	if (sv_singlekeeper.GetBool())
 		requiredPlayerCount -= 1;
 
 	if (sv_autostartmatch.GetBool()
