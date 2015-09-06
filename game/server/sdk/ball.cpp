@@ -130,7 +130,9 @@ ConVar
 	sv_ball_groundshot_minangle("sv_ball_groundshot_minangle", "-7", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 
 	sv_ball_volleyshot_minangle("sv_ball_volleyshot_minangle", "60", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_volleyshot_spincoeff("sv_ball_volleyshot_spincoeff", "1.25", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_volleyshot_sidespincoeff("sv_ball_volleyshot_sidespincoeff", "1.5", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_volleyshot_topspincoeff("sv_ball_volleyshot_topspincoeff", "1.0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_volleyshot_backspincoeff("sv_ball_volleyshot_backspincoeff", "1.0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 
 	sv_ball_rainbowflick_fixedangle("sv_ball_rainbowflick_fixedangle", "-50", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_rainbowflick_dynamicangle("sv_ball_rainbowflick_dynamicangle", "-30", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
@@ -1204,9 +1206,42 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 
 bool CBall::DoVolleyShot()
 {
-	// Do nothing when holding trick key
+	float spinCoeff = 1.0f;
+	int spinFlags = FL_SPIN_PERMIT_SIDE;
+	QAngle shotAngle = m_aPlAng;
+
 	if (m_pPl->DoSkillMove())
-		return false;
+	{
+		shotAngle[PITCH] = m_aPlCamAng[PITCH];
+
+		if (m_pPl->m_nButtons & IN_MOVELEFT || m_pPl->m_nButtons & IN_MOVERIGHT)
+		{
+			spinFlags = FL_SPIN_PERMIT_SIDE;
+
+			if (m_pPl->m_nButtons & IN_FORWARD)
+			{
+				spinFlags |= FL_SPIN_FORCE_TOP;
+				spinCoeff = sv_ball_volleyshot_topspincoeff.GetFloat();
+			}
+			else if (m_pPl->m_nButtons & IN_BACK)
+			{
+				spinFlags |= FL_SPIN_FORCE_BACK;
+				spinCoeff = sv_ball_volleyshot_backspincoeff.GetFloat();
+			}
+			else
+				spinCoeff = sv_ball_volleyshot_sidespincoeff.GetFloat();
+		}
+		else if (m_pPl->m_nButtons & IN_FORWARD)
+		{
+			spinCoeff = sv_ball_volleyshot_topspincoeff.GetFloat();
+			spinFlags = FL_SPIN_FORCE_TOP;
+		}
+		else if (m_pPl->m_nButtons & IN_BACK)
+		{
+			spinCoeff = sv_ball_volleyshot_backspincoeff.GetFloat();
+			spinFlags = FL_SPIN_FORCE_BACK;
+		}
+	}
 
 	float shotStrength;
 
@@ -1215,8 +1250,7 @@ bool CBall::DoVolleyShot()
 	else
 		shotStrength = GetChargedshotStrength(GetPitchCoeff(), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
 
-	QAngle shotAngle = m_aPlAng;
-	shotAngle[PITCH] = min(sv_ball_volleyshot_minangle.GetFloat(), m_aPlAng[PITCH]);
+	shotAngle[PITCH] = min(sv_ball_volleyshot_minangle.GetFloat(), shotAngle[PITCH]);
 
 	Vector shotDir;
 	AngleVectors(shotAngle, &shotDir);
@@ -1235,7 +1269,7 @@ bool CBall::DoVolleyShot()
 	else
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
 
-	SetVel(vel, sv_ball_volleyshot_spincoeff.GetFloat(), FL_SPIN_PERMIT_SIDE, BODY_PART_FEET, true, sv_ball_shottaker_mindelay_short.GetFloat(), true);
+	SetVel(vel, spinCoeff, spinFlags, BODY_PART_FEET, true, sv_ball_shottaker_mindelay_short.GetFloat(), true);
 
 	return true;
 }
