@@ -73,6 +73,8 @@ public:
 
 	void	SetKitName(const char *pKitName);
 
+	int		GetOffensiveLevel();
+
 // IClientThinkable overrides.
 public:
 
@@ -156,6 +158,7 @@ public:
 private:
 
 	CNetworkVar(int, m_nFormationIndex);
+	CNetworkVar(int, m_nOffensiveLevel);
 };
 
 

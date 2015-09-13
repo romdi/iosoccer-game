@@ -104,6 +104,7 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_Team, DT_Team, CTeam)
 	RecvPropInt(RECVINFO(m_Rating)),
 
 	RecvPropInt(RECVINFO(m_nFormationIndex)),
+	RecvPropInt(RECVINFO(m_nOffensiveLevel)),
 END_RECV_TABLE()
 
 BEGIN_PREDICTION_DATA( C_Team )
@@ -138,6 +139,8 @@ C_Team::C_Team()
 	m_iPacketloss = 0;
 
 	m_nFormationIndex = 0;
+
+	m_nOffensiveLevel = 0;
 
 	for (int i = 0; i < MAX_MATCH_EVENTS; i++)
 	{
@@ -464,6 +467,11 @@ Formation *C_Team::GetFormation()
 {
 	// FIXME: Clamping this to avoid problems when mp_maxplayers is lowered, since mp_maxplayers seems to get synced before other variables do
 	return SDKGameRules()->GetFormations()[clamp(m_nFormationIndex, 0, SDKGameRules()->GetFormations().Count() - 1)];
+}
+
+int C_Team::GetOffensiveLevel()
+{
+	return m_nOffensiveLevel;
 }
 
 //-----------------------------------------------------------------------------

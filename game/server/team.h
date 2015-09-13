@@ -133,6 +133,10 @@ public:
 	virtual CSDKPlayer *GetCaptain() { return GetPlayerByPosIndex(m_nCaptainPosIndex); }
 	virtual void AddMatchEvent(match_period_t matchPeriod, int seconds, match_event_t event, const char *text);
 
+	int GetOffensiveLevel();
+	void IncreaseOffensiveLevel();
+	void DecreaseOffensiveLevel();
+
 	//-----------------------------------------------------------------------------
 	// Scoring
 	//-----------------------------------------------------------------------------
@@ -235,6 +239,7 @@ public:
 private:
 
 	CNetworkVar(int, m_nFormationIndex);
+	CNetworkVar(int, m_nOffensiveLevel);
 };
 
 extern CUtlVector< CTeam * > g_Teams;

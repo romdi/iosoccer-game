@@ -1174,6 +1174,24 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 
 		return true;
 	}
+	else if (!Q_strcmp(args[0], "captain_increase_offensive_level"))
+	{
+		if (this != GetTeam()->GetCaptain() || (GetTeamNumber() != TEAM_HOME && GetTeamNumber() != TEAM_AWAY))
+			return true;
+
+		GetTeam()->IncreaseOffensiveLevel();
+
+		return true;
+	}
+	else if (!Q_strcmp(args[0], "captain_decrease_offensive_level"))
+	{
+		if (this != GetTeam()->GetCaptain() || (GetTeamNumber() != TEAM_HOME && GetTeamNumber() != TEAM_AWAY))
+			return true;
+
+		GetTeam()->DecreaseOffensiveLevel();
+
+		return true;
+	}
 
 	return BaseClass::ClientCommand (args);
 }

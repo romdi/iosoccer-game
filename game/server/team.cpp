@@ -112,6 +112,7 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CTeam, DT_Team)
 	SendPropInt(SENDINFO(m_Rating), 7, SPROP_UNSIGNED),
 
 	SendPropInt(SENDINFO(m_nFormationIndex), 4, SPROP_UNSIGNED),
+	SendPropInt(SENDINFO(m_nOffensiveLevel), 3, 0),
 END_SEND_TABLE()
 
 LINK_ENTITY_TO_CLASS( team_manager, CTeam );
@@ -149,6 +150,7 @@ CTeam::CTeam( void )
 	m_nTimeoutsLeft = mp_timeout_count.GetInt();
 	m_nTimeoutTimeLeft = mp_timeout_duration.GetInt() * 60;
 	m_nFormationIndex = 0;
+	m_nOffensiveLevel = 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -530,6 +532,7 @@ void CTeam::ResetStats()
 	m_Ping = 0;
 	m_nTimeoutsLeft = mp_timeout_count.GetInt();
 	m_nTimeoutTimeLeft = mp_timeout_duration.GetInt() * 60;
+	m_nOffensiveLevel = 0;
 
 	for (int i = 0; i < MAX_MATCH_EVENTS; i++)
 	{
@@ -567,6 +570,21 @@ void CTeam::AddMatchEvent(match_period_t matchPeriod, int seconds, match_event_t
 Formation *CTeam::GetFormation()
 {
 	return SDKGameRules()->GetFormations()[m_nFormationIndex];
+}
+
+int CTeam::GetOffensiveLevel()
+{
+	return m_nOffensiveLevel;
+}
+
+void CTeam::IncreaseOffensiveLevel()
+{
+	m_nOffensiveLevel = min(2, m_nOffensiveLevel + 1);
+}
+
+void CTeam::DecreaseOffensiveLevel()
+{
+	m_nOffensiveLevel = max(-2, m_nOffensiveLevel - 1);
 }
 
 void CTeam::SetFormationIndex(int index, bool silent)
