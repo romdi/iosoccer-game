@@ -1573,6 +1573,120 @@ void CSDKGameRules::State_Leave(match_period_t newState)
 	}
 }
 
+void CSDKGameRules::CalcPeriodTimeLeft()
+{
+	if (m_pCurStateInfo->m_eMatchPeriod == MATCH_PERIOD_WARMUP && mp_timelimit_warmup.GetFloat() < 0)
+		m_flStateTimeLeft = 1.0f;
+	else
+		m_flStateTimeLeft = (m_flStateEnterTime + m_pCurStateInfo->m_MinDurationConVar->GetFloat() * 60 / m_pCurStateInfo->m_flMinDurationDivisor) - gpGlobals->curtime;
+
+	if (!IsIntermissionState())
+	{
+		m_flStateTimeLeft += m_flClockStoppedTime;
+
+		if (m_nAnnouncedInjuryTime > -1)
+		{
+			int additionalTime = m_nAnnouncedInjuryTime + (abs(m_nBallZone) < 50 ? 0 : 30);
+			m_flStateTimeLeft += additionalTime * 60 / (90.0f / mp_timelimit_match.GetFloat());
+		}
+	}
+}
+
+void CSDKGameRules::CheckSingleKeeperSideSwitching()
+{
+	// If there's only one keeper for both teams, switch him to the other team when the ball comes near the goal
+	if (sv_singlekeeper.GetBool() && abs(m_nBallZone) > sv_singlekeeper_switchvalue.GetFloat())
+	{
+		CSDKPlayer *pKeeper = NULL;
+
+		// If ball is on left side and no keeper on left side team
+		if (m_nBallZone < 0 && !GetGlobalTeam(TEAM_HOME)->GetPlayerByPosType(POS_GK))
+		{
+			pKeeper = GetGlobalTeam(TEAM_AWAY)->GetPlayerByPosType(POS_GK);
+		}
+		// If ball is on right side and no keeper on right side team
+		else if (m_nBallZone >= 0 && !GetGlobalTeam(TEAM_AWAY)->GetPlayerByPosType(POS_GK))
+		{
+			pKeeper = GetGlobalTeam(TEAM_HOME)->GetPlayerByPosType(POS_GK);
+		}
+
+		if (pKeeper)
+		{
+			pKeeper->SetDesiredTeam(pKeeper->GetOppTeamNumber(), pKeeper->GetOppTeamNumber(), pKeeper->GetTeamPosIndex(), true, false, true);
+		}
+	}
+}
+
+void CSDKGameRules::CheckPlayerRotation()
+{
+	// Check for player auto-rotation
+	if (sv_playerrotation_enabled.GetBool() && m_PlayerRotationMinutes.Count() > 0 && GetMatchDisplayTimeSeconds(false) / 60 >= m_PlayerRotationMinutes.Head()
+		&& (m_PlayerRotationMinutes.Head() != 45 && m_PlayerRotationMinutes.Head() != 90 && m_PlayerRotationMinutes.Head() != 105
+			|| m_PlayerRotationMinutes.Head() == 45 && SDKGameRules()->State_Get() == MATCH_PERIOD_SECOND_HALF
+			|| m_PlayerRotationMinutes.Head() == 90 && SDKGameRules()->State_Get() == MATCH_PERIOD_EXTRATIME_FIRST_HALF
+			|| m_PlayerRotationMinutes.Head() == 105 && SDKGameRules()->State_Get() == MATCH_PERIOD_EXTRATIME_SECOND_HALF))
+	{
+		for (int team = TEAM_HOME; team <= TEAM_AWAY; team++)
+		{
+			CTeam *pTeam = GetGlobalTeam(team);
+
+			for (int i = mp_maxplayers.GetInt() - 1; i >= 1; i--)
+			{
+				Vector pl1Pos, pl1Vel, pl2Pos, pl2Vel;
+				QAngle pl1ModelAng, pl1EyeAng, pl2ModelAng, pl2EyeAng;
+
+				CSDKPlayer *pPl1 = pTeam->GetPlayerByPosIndex(i);
+
+				if (pPl1)
+				{
+					pl1Pos = pPl1->GetLocalOrigin();
+					pl1Vel = pPl1->GetLocalVelocity();
+					pl1ModelAng = pPl1->GetLocalAngles();
+					pl1EyeAng = pPl1->EyeAngles();
+				}
+
+				CSDKPlayer *pPl2 = pTeam->GetPlayerByPosIndex(i - 1);
+
+				if (pPl2)
+				{
+					pl2Pos = pPl2->GetLocalOrigin();
+					pl2Vel = pPl2->GetLocalVelocity();
+					pl2ModelAng = pPl2->GetLocalAngles();
+					pl2EyeAng = pPl2->EyeAngles();
+				}
+
+				if (pPl1 && !pPl1->IsBot() && (!pPl2 || !pPl2->IsBot()))
+				{
+					pPl1->SetDesiredTeam(team, team, i - 1, true, false, true);
+
+					if (pPl2)
+					{
+						pPl1->SetLocalOrigin(pl2Pos);
+						pPl1->SetLocalVelocity(pl2Vel);
+						pPl1->SetLocalAngles(pl2ModelAng);
+						pPl1->SnapEyeAngles(pl2EyeAng);
+					}
+				}
+
+				if (pPl2 && !pPl2->IsBot() && (!pPl1 || !pPl1->IsBot()))
+				{
+					pPl2->SetDesiredTeam(team, team, i, true, false, true);
+
+					if (pPl1)
+					{
+						pPl2->SetLocalOrigin(pl1Pos);
+						pPl2->SetLocalVelocity(pl1Vel);
+						pPl2->SetLocalAngles(pl1ModelAng);
+						pPl2->SnapEyeAngles(pl1EyeAng);
+					}
+				}
+			}
+		}
+
+		m_PlayerRotationMinutes.Remove(0);
+	}
+}
+
 void CSDKGameRules::State_Think()
 {
 	if ( m_pCurStateInfo && m_pCurStateInfo->pfnThink )
@@ -1580,107 +1694,12 @@ void CSDKGameRules::State_Think()
 		if (GetMatchBall())
 			m_nBallZone = GetMatchBall()->GetFieldZone();
 
-		if (m_pCurStateInfo->m_eMatchPeriod == MATCH_PERIOD_WARMUP && mp_timelimit_warmup.GetFloat() < 0)
-			m_flStateTimeLeft = 1.0f;
-		else
-			m_flStateTimeLeft = (m_flStateEnterTime + m_pCurStateInfo->m_MinDurationConVar->GetFloat() * 60 / m_pCurStateInfo->m_flMinDurationDivisor) - gpGlobals->curtime;
+		CalcPeriodTimeLeft();
 
 		if (!IsIntermissionState())
 		{
-			// If there's only one keeper for both teams, switch him to the other team when the ball comes near the goal
-			if (sv_singlekeeper.GetBool())
-			{
-				if (abs(m_nBallZone) > sv_singlekeeper_switchvalue.GetFloat())
-				{
-					CSDKPlayer *pKeeper = NULL;
-
-					// If ball is on left side and no keeper on left side team
-					if (m_nBallZone < 0 && !GetGlobalTeam(TEAM_HOME)->GetPlayerByPosType(POS_GK))
-					{
-						pKeeper = GetGlobalTeam(TEAM_AWAY)->GetPlayerByPosType(POS_GK);
-					}
-					// If ball is on right side and no keeper on right side team
-					else if (m_nBallZone >= 0 && !GetGlobalTeam(TEAM_AWAY)->GetPlayerByPosType(POS_GK))
-					{
-						pKeeper = GetGlobalTeam(TEAM_HOME)->GetPlayerByPosType(POS_GK);
-					}
-					
-					if (pKeeper)
-					{
-						pKeeper->SetDesiredTeam(pKeeper->GetOppTeamNumber(), pKeeper->GetOppTeamNumber(), pKeeper->GetTeamPosIndex(), true, false, true);
-					}
-				}
-			}
-
-			int additionalTime = m_nAnnouncedInjuryTime == -1 ? 0 : m_nAnnouncedInjuryTime + (abs(m_nBallZone) < 50 ? 0 : 30);
-			m_flStateTimeLeft += m_flClockStoppedTime + additionalTime * 60 / (90.0f / mp_timelimit_match.GetFloat());
-
-			// Check for player auto-rotation
-			if (sv_playerrotation_enabled.GetBool() && m_PlayerRotationMinutes.Count() > 0 && GetMatchDisplayTimeSeconds(false) / 60 >= m_PlayerRotationMinutes.Head()
-				&& (m_PlayerRotationMinutes.Head() != 45 && m_PlayerRotationMinutes.Head() != 90 && m_PlayerRotationMinutes.Head() != 105
-				|| m_PlayerRotationMinutes.Head() == 45 && SDKGameRules()->State_Get() == MATCH_PERIOD_SECOND_HALF
-				|| m_PlayerRotationMinutes.Head() == 90 && SDKGameRules()->State_Get() == MATCH_PERIOD_EXTRATIME_FIRST_HALF
-				|| m_PlayerRotationMinutes.Head() == 105 && SDKGameRules()->State_Get() == MATCH_PERIOD_EXTRATIME_SECOND_HALF))
-			{
-				for (int team = TEAM_HOME; team <= TEAM_AWAY; team++)
-				{
-					CTeam *pTeam = GetGlobalTeam(team);
-
-					for (int i = mp_maxplayers.GetInt() - 1; i >= 1; i--)
-					{
-						Vector pl1Pos, pl1Vel, pl2Pos, pl2Vel;
-						QAngle pl1ModelAng, pl1EyeAng, pl2ModelAng, pl2EyeAng;
-
-						CSDKPlayer *pPl1 = pTeam->GetPlayerByPosIndex(i);
-
-						if (pPl1)
-						{
-							pl1Pos = pPl1->GetLocalOrigin();
-							pl1Vel = pPl1->GetLocalVelocity();
-							pl1ModelAng = pPl1->GetLocalAngles();
-							pl1EyeAng = pPl1->EyeAngles();
-						}
-
-						CSDKPlayer *pPl2 = pTeam->GetPlayerByPosIndex(i - 1);
-
-						if (pPl2)
-						{
-							pl2Pos = pPl2->GetLocalOrigin();
-							pl2Vel = pPl2->GetLocalVelocity();
-							pl2ModelAng = pPl2->GetLocalAngles();
-							pl2EyeAng = pPl2->EyeAngles();
-						}
-
-						if (pPl1 && !pPl1->IsBot() && (!pPl2 || !pPl2->IsBot()))
-						{
-							pPl1->SetDesiredTeam(team, team, i - 1, true, false, true);
-
-							if (pPl2)
-							{
-								pPl1->SetLocalOrigin(pl2Pos);
-								pPl1->SetLocalVelocity(pl2Vel);
-								pPl1->SetLocalAngles(pl2ModelAng);
-								pPl1->SnapEyeAngles(pl2EyeAng);
-							}
-						}
-
-						if (pPl2 && !pPl2->IsBot() && (!pPl1 || !pPl1->IsBot()))
-						{
-							pPl2->SetDesiredTeam(team, team, i, true, false, true);
-
-							if (pPl1)
-							{
-								pPl2->SetLocalOrigin(pl1Pos);
-								pPl2->SetLocalVelocity(pl1Vel);
-								pPl2->SetLocalAngles(pl1ModelAng);
-								pPl2->SnapEyeAngles(pl1EyeAng);
-							}
-						}
-					}
-				}
-
-				m_PlayerRotationMinutes.Remove(0);
-			}
+			CheckSingleKeeperSideSwitching();
+			CheckPlayerRotation();
 		}
 
 		(this->*m_pCurStateInfo->pfnThink)();

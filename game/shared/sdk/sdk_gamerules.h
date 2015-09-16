@@ -258,6 +258,10 @@ public:
 
 	virtual void ServerActivate();
 
+	void			CalcPeriodTimeLeft();
+	void			CheckSingleKeeperSideSwitching();
+	void			CheckPlayerRotation();
+
 private:
 
 	void RadiusDamage( const CTakeDamageInfo &info, const Vector &vecSrcIn, float flRadius, int iClassIgnore, bool bIgnoreWorld ) {};
