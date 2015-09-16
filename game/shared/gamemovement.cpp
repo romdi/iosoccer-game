@@ -1427,6 +1427,11 @@ void CGameMovement::FullWalkMove( )
 	}
 	else if (!SDKGameRules()->IsCeremony() && CheckActionStart() && CheckActionOverTime())
 	{
+#ifdef GAME_DLL
+		if (!CSDKPlayer::IsOnField(pPl))
+			return;
+#endif
+
 		TryPlayerMove();
 	}
 	else
@@ -1569,6 +1574,12 @@ void CGameMovement::MoveToTargetPos()
 bool CGameMovement::CheckActionOverTime()
 {
 	CSDKPlayer *pPl = ToSDKPlayer(player);
+
+#ifdef GAME_DLL
+	if (!CSDKPlayer::IsOnField(pPl))
+		return true;
+#endif
+
 	float timePassed = gpGlobals->curtime - pPl->m_Shared.GetAnimEventStartTime();
 	Vector forward, right, up;
 	AngleVectors(mv->m_vecViewAngles, &forward, &right, &up);
@@ -1940,6 +1951,9 @@ bool CGameMovement::CheckActionStart()
 				pPl->AddSlidingTackle();
 
 			GetMatchBall()->CheckFoul(pPl);
+
+			if (!CSDKPlayer::IsOnField(pPl))
+				return true;
 #endif
 		}
 		else if (pPl->GetGroundEntity() && mv->m_nButtons & IN_JUMP && !(mv->m_nOldButtons & IN_JUMP))
