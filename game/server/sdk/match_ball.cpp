@@ -61,7 +61,8 @@ ConVar
 	sv_ball_timelimit_remotecontrolled("sv_ball_timelimit_remotecontrolled", "15", FCVAR_NOTIFY),
 	sv_ball_throwin_minangle("sv_ball_throwin_minangle", "-5", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_throwin_minstrength("sv_ball_throwin_minstrength", "270", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_foulcheckdelay("sv_ball_foulcheckdelay", "2.0", FCVAR_NOTIFY);
+	sv_ball_foulcheckdelay("sv_ball_foulcheckdelay", "2.0", FCVAR_NOTIFY),
+	sv_ball_foulcheckmaxdist("sv_ball_foulcheckmaxdist", "200", FCVAR_NOTIFY);
 
 
 LINK_ENTITY_TO_CLASS( match_ball, CMatchBall );
@@ -1732,6 +1733,10 @@ bool CMatchBall::CheckFoul(CSDKPlayer *pPl)
 		return false;
 
 	Vector dirToBall = GetPos() - pPl->GetTeamNumber();
+
+	if (dirToBall.Length2D() > sv_ball_foulcheckmaxdist.GetInt())
+		return false;
+
 	float zDist = dirToBall.z;
 	Vector localDirToBall;
 	VectorIRotate(dirToBall, pPl->EntityToWorldTransform(), localDirToBall);
