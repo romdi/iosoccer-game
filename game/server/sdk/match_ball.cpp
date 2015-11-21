@@ -1732,7 +1732,7 @@ bool CMatchBall::CheckFoul(CSDKPlayer *pPl)
 	if (gpGlobals->curtime < pPl->m_flNextFoulCheck)
 		return false;
 
-	Vector dirToBall = GetPos() - pPl->GetTeamNumber();
+	Vector dirToBall = GetPos() - pPl->GetLocalOrigin();
 
 	if (dirToBall.Length2D() > sv_ball_foulcheckmaxdist.GetInt())
 		return false;

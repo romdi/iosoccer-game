@@ -1948,12 +1948,14 @@ bool CGameMovement::CheckActionStart()
 
 #ifdef GAME_DLL
 			if (!SDKGameRules()->IsIntermissionState() && GetMatchBall()->State_Get() == BALL_STATE_NORMAL && !GetMatchBall()->HasQueuedState())
+			{
 				pPl->AddSlidingTackle();
 
-			GetMatchBall()->CheckFoul(pPl);
+				GetMatchBall()->CheckFoul(pPl);
 
-			if (!CSDKPlayer::IsOnField(pPl))
-				return true;
+				if (!CSDKPlayer::IsOnField(pPl))
+					return true;
+			}
 #endif
 		}
 		else if (pPl->GetGroundEntity() && mv->m_nButtons & IN_JUMP && !(mv->m_nOldButtons & IN_JUMP))
