@@ -706,3 +706,61 @@ bool CSDKPlayer::IsKeeperDiving()
 		|| m_Shared.m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_DIVE_FORWARD
 		|| m_Shared.m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD;
 }
+
+#ifdef CLIENT_DLL
+extern ConVar keeperkeybindings;
+#endif
+
+int CSDKPlayer::GetKeeperJumpKey()
+{
+	int keeperKeyBindings;
+#ifdef CLIENT_DLL
+	keeperKeyBindings = keeperkeybindings.GetInt();
+#else
+	keeperKeyBindings = GetKeeperKeyBindings();
+#endif
+
+	switch (keeperKeyBindings)
+	{
+	case 0: default: return IN_JUMP;
+	case 1: return IN_JUMP;
+	case 2: return IN_DUCK;
+	case 3: return IN_WALK;
+	}
+}
+
+int CSDKPlayer::GetKeeperDiveKey()
+{
+	int keeperKeyBindings;
+#ifdef CLIENT_DLL
+	keeperKeyBindings = keeperkeybindings.GetInt();
+#else
+	keeperKeyBindings = GetKeeperKeyBindings();
+#endif
+
+	switch (keeperKeyBindings)
+	{
+	case 0: default: return IN_DUCK;
+	case 1: return IN_WALK;
+	case 2: return IN_JUMP;
+	case 3: return IN_JUMP;
+	}
+}
+
+int CSDKPlayer::GetKeeper1on1Key()
+{
+	int keeperKeyBindings;
+#ifdef CLIENT_DLL
+	keeperKeyBindings = keeperkeybindings.GetInt();
+#else
+	keeperKeyBindings = GetKeeperKeyBindings();
+#endif
+
+	switch (keeperKeyBindings)
+	{
+	case 0: default: return IN_WALK;
+	case 1: return IN_DUCK;
+	case 2: return IN_WALK;
+	case 3: return IN_DUCK;
+	}
+}

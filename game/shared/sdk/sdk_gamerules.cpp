@@ -2557,6 +2557,8 @@ void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 
 	pPl->SetLegacySideCurl(atoi(engine->GetClientConVarValue(pPl->entindex(), "legacysidecurl")) != 0);
 
+	pPl->SetKeeperKeyBindings(atoi(engine->GetClientConVarValue(pPl->entindex(), "keeperkeybindings")));
+
 	pPl->SetPreferredOutfieldShirtNumber(atoi(engine->GetClientConVarValue(pPl->entindex(), "preferredoutfieldshirtnumber")));
 	pPl->SetPreferredKeeperShirtNumber(atoi(engine->GetClientConVarValue(pPl->entindex(), "preferredkeepershirtnumber")));
 

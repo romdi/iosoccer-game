@@ -926,7 +926,7 @@ bool CBall::CheckKeeperCatch()
 		break;
 	case PLAYERANIMEVENT_KEEPER_JUMP:
 	default: // Keeper standing
-		float maxReachXY = m_pPl->m_nButtons & IN_DUCK ? sv_ball_keeper_standing_reach_walking.GetFloat() : sv_ball_keeper_standing_reach.GetFloat();
+		float maxReachXY = m_pPl->m_nButtons & m_pPl->GetKeeper1on1Key() ? sv_ball_keeper_standing_reach_walking.GetFloat() : sv_ball_keeper_standing_reach.GetFloat();
 
 		canReach = (localDirToBall.z < sv_ball_bodypos_keeperarms_end.GetFloat()
 			&& localDirToBall.z >= sv_ball_bodypos_feet_start.GetFloat()

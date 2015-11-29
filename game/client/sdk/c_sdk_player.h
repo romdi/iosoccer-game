@@ -73,6 +73,10 @@ public:
 	bool				IsKeeperDiving();
 	bool				DoSkillMove();
 	bool				IsInOwnBoxAsKeeper();
+
+	int					GetKeeperJumpKey();
+	int					GetKeeperDiveKey();
+	int					GetKeeper1on1Key();
 	
 	void DoAnimationEvent(PlayerAnimEvent_t event);
 	virtual bool ShouldDraw();

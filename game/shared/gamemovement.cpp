@@ -793,7 +793,7 @@ void CGameMovement::ReduceTimers( void )
 		{
 			replenishAmount = mp_stamina_replenish_standing.GetInt() * gpGlobals->frametime;
 		}
-		else if (mv->m_nButtons & IN_WALK && pPl->DoSkillMove() || mv->m_nButtons & IN_DUCK && pPl->IsInOwnBoxAsKeeper())
+		else if (mv->m_nButtons & IN_WALK && pPl->DoSkillMove() || mv->m_nButtons & pPl->GetKeeper1on1Key() && pPl->IsInOwnBoxAsKeeper())
 		{
 			replenishAmount = mp_stamina_replenish_walking.GetInt() * gpGlobals->frametime;
 		}
@@ -1901,7 +1901,7 @@ bool CGameMovement::CheckActionStart()
 
 	if (pPl->IsInOwnBoxAsKeeper())
 	{
-		if (mv->m_nButtons & IN_JUMP && !(mv->m_nOldButtons & IN_JUMP) && !pPl->m_pHoldingBall)
+		if (mv->m_nButtons & pPl->GetKeeperDiveKey() && !(mv->m_nOldButtons & pPl->GetKeeperDiveKey()) && !pPl->m_pHoldingBall)
 		{
 			int sidemoveSign = pPl->GetSidemoveSign();
 
@@ -1929,7 +1929,7 @@ bool CGameMovement::CheckActionStart()
 				MoveHelper()->StartSound(mv->GetAbsOrigin(), "Player.DiveKeeper");
 			}
 		}
-		else if (mv->m_nButtons & IN_WALK && !(mv->m_nOldButtons & IN_WALK) || mv->m_nButtons & IN_JUMP && !(mv->m_nOldButtons & IN_JUMP) && pPl->m_pHoldingBall)
+		else if (mv->m_nButtons & pPl->GetKeeperJumpKey() && !(mv->m_nOldButtons & pPl->GetKeeperJumpKey()) || mv->m_nButtons & pPl->GetKeeperDiveKey() && !(mv->m_nOldButtons & pPl->GetKeeperDiveKey()) && pPl->m_pHoldingBall)
 		{
 			animEvent = PLAYERANIMEVENT_KEEPER_JUMP;
 		}
@@ -3000,7 +3000,7 @@ void CGameMovement::SetPlayerSpeed()
 	{
 		flMaxSpeed = mp_ceremonyspeed.GetInt();
 	}
-	else if (mv->m_nButtons & IN_DUCK && pPl->IsInOwnBoxAsKeeper())
+	else if (mv->m_nButtons & pPl->GetKeeper1on1Key() && pPl->IsInOwnBoxAsKeeper())
 	{
 		flMaxSpeed = mp_keeper1on1speed.GetInt();
 	}

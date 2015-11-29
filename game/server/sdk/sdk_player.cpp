@@ -345,6 +345,7 @@ CSDKPlayer::CSDKPlayer()
 	m_pHoldingBall = NULL;
 	m_flNextClientSettingsChangeTime = gpGlobals->curtime;
 	m_bLegacySideCurl = false;
+	m_nKeeperKeyBindings = 0;
 	m_bJoinSilently = false;
 	SetChargedshotBlocked(false);
 	SetShotsBlocked(false);
