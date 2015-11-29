@@ -1898,10 +1898,10 @@ bool CGameMovement::CheckActionStart()
 		return false;
 
 	PlayerAnimEvent_t animEvent = PLAYERANIMEVENT_NONE;
-
+	
 	if (pPl->IsInOwnBoxAsKeeper())
 	{
-		if (mv->m_nButtons & pPl->GetKeeperDiveKey() && !(mv->m_nOldButtons & pPl->GetKeeperDiveKey()) && !pPl->m_pHoldingBall)
+		if (mv->m_nButtons & pPl->GetKeeperDiveKey() && !pPl->m_pHoldingBall)
 		{
 			int sidemoveSign = pPl->GetSidemoveSign();
 
@@ -1914,9 +1914,9 @@ bool CGameMovement::CheckActionStart()
 			else if (mv->m_nButtons & IN_BACK)
 				animEvent = PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD;
 			else
-				animEvent = PLAYERANIMEVENT_KEEPER_JUMP;
+				animEvent = PLAYERANIMEVENT_NONE;
 
-			if (animEvent != PLAYERANIMEVENT_KEEPER_JUMP)
+			if (animEvent != PLAYERANIMEVENT_NONE)
 			{
 				if (gpGlobals->curtime < pPl->m_Shared.m_flBoostRightDiveStart + mp_dive_boost_duration.GetFloat())
 					pPl->m_Shared.m_nBoostRightDive = 0;
@@ -1929,7 +1929,7 @@ bool CGameMovement::CheckActionStart()
 				MoveHelper()->StartSound(mv->GetAbsOrigin(), "Player.DiveKeeper");
 			}
 		}
-		else if (mv->m_nButtons & pPl->GetKeeperJumpKey() && !(mv->m_nOldButtons & pPl->GetKeeperJumpKey()) || mv->m_nButtons & pPl->GetKeeperDiveKey() && !(mv->m_nOldButtons & pPl->GetKeeperDiveKey()) && pPl->m_pHoldingBall)
+		else if (mv->m_nButtons & pPl->GetKeeperJumpKey() && !(mv->m_nOldButtons & pPl->GetKeeperJumpKey()))
 		{
 			animEvent = PLAYERANIMEVENT_KEEPER_JUMP;
 		}
