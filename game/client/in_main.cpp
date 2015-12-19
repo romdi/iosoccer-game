@@ -755,7 +755,7 @@ void CInput::AdjustAngles ( float frametime )
 
 	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
 
-	if (pPlayer && (pPlayer->GetFlags() & (FL_FREECAM | FL_REMOTECONTROLLED) || ToSDKPlayer(pPlayer)->DoSkillMove()))
+	if (pPlayer && pPlayer->GetFlags() & (FL_FREECAM | FL_REMOTECONTROLLED))
 		return;
 
 	// Retrieve latest view direction from engine
