@@ -130,28 +130,17 @@ ConVar
 	sv_ball_groundshot_minangle("sv_ball_groundshot_minangle", "-7", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 
 	sv_ball_volleyshot_minangle("sv_ball_volleyshot_minangle", "60", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_volleyshot_sidespincoeff("sv_ball_volleyshot_sidespincoeff", "1.5", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_volleyshot_topspincoeff("sv_ball_volleyshot_topspincoeff", "1.0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_volleyshot_backspincoeff("sv_ball_volleyshot_backspincoeff", "1.0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 
-	sv_ball_rainbowflick_fixedangle("sv_ball_rainbowflick_fixedangle", "-50", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_rainbowflick_dynamicangle("sv_ball_rainbowflick_dynamicangle", "-30", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_rainbowflick_strength("sv_ball_rainbowflick_strength", "475", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_rainbowflick_spincoeff("sv_ball_rainbowflick_spincoeff", "1.0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_rainbowflick_angle("sv_ball_rainbowflick_angle", "-90", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_rainbowflick_minstrength("sv_ball_rainbowflick_minstrength", "300", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_rainbowflick_maxstrength("sv_ball_rainbowflick_maxstrength", "500", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_rainbowflick_spincoeff("sv_ball_rainbowflick_spincoeff", "0.33", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 
 	sv_ball_lift_angle("sv_ball_lift_angle", "-90", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_lift_fixedstrength("sv_ball_lift_fixedstrength", "100", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_lift_variablestrength("sv_ball_lift_variablestrength", "300", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_lift_minstrength("sv_ball_lift_minstrength", "200", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_lift_maxstrength("sv_ball_lift_maxstrength", "400", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 
 	sv_ball_roll_strength("sv_ball_roll_strength", "225", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-
-	sv_ball_chipshot_angle("sv_ball_chipshot_angle", "-35", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_chipshot_fixedstrength("sv_ball_chipshot_fixedstrength", "125", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_chipshot_dynamicstrength("sv_ball_chipshot_dynamicstrength", "500", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_chipshot_spincoeff("sv_ball_chipshot_spincoeff", "1.75", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-
-	sv_ball_finesseshot_spincoeff("sv_ball_finesseshot_spincoeff", "1.33", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_finesseshot_strength("sv_ball_finesseshot_strength", "900", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 
 	sv_ball_header_spincoeff("sv_ball_header_spincoeff", "0.5", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_header_minangle("sv_ball_header_minangle", "70", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
@@ -186,10 +175,7 @@ ConVar
 	
 	sv_ball_maxplayerfinddist("sv_ball_maxplayerfinddist", "200", FCVAR_NOTIFY),
 	
-	sv_ball_freecamshot_maxangle("sv_ball_freecamshot_maxangle", "60", FCVAR_NOTIFY),
-	sv_ball_heelshot_pitch("sv_ball_heelshot_pitch", "-5", FCVAR_NOTIFY),
-	sv_ball_heelshot_fixedstrength("sv_ball_heelshot_fixedstrength", "150", FCVAR_NOTIFY),
-	sv_ball_heelshot_variablestrength("sv_ball_heelshot_variablestrength", "400", FCVAR_NOTIFY),
+	sv_ball_heelshot_strengthcoeff("sv_ball_heelshot_strengthcoeff", "0.75", FCVAR_NOTIFY),
 	
 	sv_ball_keepercatchdelay_poscoeffmin("sv_ball_keepercatchdelay_poscoeffmin", "0.5", FCVAR_NOTIFY),
 
@@ -996,13 +982,16 @@ bool CBall::CheckKeeperCatch()
 	return true;
 }
 
-float CBall::GetPitchCoeff(bool useCamViewAngles/* = false*/)
+float CBall::GetPitchCoeff(bool invertPitch/* = false*/)
 {
 	//return pow(cos((m_aPlAng[PITCH] - sv_ball_bestshotangle.GetInt()) / (PITCH_LIMIT - sv_ball_bestshotangle.GetInt()) * M_PI / 2), 2);
 	// plot 0.5 + (cos(x/89 * pi/2) * 0.5), x=-89..89
 
 	float bestAng = sv_ball_bestshotangle.GetFloat();
-	float pitch = useCamViewAngles ? m_aPlCamAng[PITCH] : m_aPlAng[PITCH];
+	float pitch = m_aPlAng[PITCH];
+
+	if (invertPitch)
+		pitch *= -1;
 
 	float coeff;
 
@@ -1041,125 +1030,108 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 	int spinFlags = FL_SPIN_FORCE_NONE;
 	float spinCoeff = 1.0f;
 	float shotStrength = 0;
-	QAngle shotAngle;
+	QAngle shotAngle = m_aPlAng;
 	Vector vel;
 	float pitchCoeff = GetPitchCoeff(true);
 	float shotTakerMinDelay = 0.0f;
+	bool addPlayerSpeed = false;
 
 	if (m_pPl->DoSkillMove())
 	{
 		if (!m_pPl->GetGroundEntity())
 			return false;
 
-		// Fake shot
-		if (!m_pPl->IsNormalshooting())
+		if (m_pPl->IsChargedshooting())
 		{
-			m_pPl->m_flNextShot = gpGlobals->curtime + sv_ball_shottaker_mindelay_short.GetFloat();
-			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KICK);
-			m_pPl->ResetShotCharging();
-			return false;
-		}
-
-		spinFlags = FL_SPIN_FORCE_NONE;
-		shotAngle = m_aPlCamAng;
-		Vector camDir;
-		AngleVectors(m_aPlCamAng, &camDir);
-		float angDiff = RAD2DEG(acos(DotProduct2D(m_vPlForward.AsVector2D(), camDir.AsVector2D())));
-
-		// Heel kick
-		if (angDiff >= 90)
-		{
-			shotAngle[PITCH] = sv_ball_heelshot_pitch.GetFloat();
-			shotStrength = sv_ball_heelshot_fixedstrength.GetFloat() + sv_ball_heelshot_variablestrength.GetFloat() * pitchCoeff;
-			shotTakerMinDelay = sv_ball_shottaker_mindelay_short.GetFloat();
-			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEELKICK);
-			EmitSound("Ball.Kicknormal");
-		}
-		// Ball roll
-		else if (m_vPlLocalDirToBall.x >= 0 && !(m_pPl->m_nButtons & IN_FORWARD) && (m_pPl->m_nButtons & IN_MOVELEFT || m_pPl->m_nButtons & IN_MOVERIGHT || m_pPl->m_nButtons & IN_BACK))
-		{
-			shotTakerMinDelay = 0.0f;
-			shotAngle = m_aPlAng;
-
-			if (m_pPl->m_nButtons & IN_MOVELEFT)
+			if (m_vPlLocalDirToBall.x >= 0)
 			{
-				shotAngle = QAngle(0, m_aPlAng[YAW] + 90, 0);
-				shotStrength = sv_ball_roll_strength.GetInt();
-			}
-			else if (m_pPl->m_nButtons & IN_MOVERIGHT)
-			{
-				shotAngle = QAngle(0, m_aPlAng[YAW] - 90, 0);
-				shotStrength = sv_ball_roll_strength.GetInt();
+				// Ball lift
+				shotAngle[PITCH] = sv_ball_lift_angle.GetInt();
+				shotStrength = GetChargedshotStrength(1.0f, sv_ball_lift_minstrength.GetInt(), sv_ball_lift_maxstrength.GetInt());
+				spinFlags = FL_SPIN_FORCE_NONE;
+				spinCoeff = 0;
+				shotTakerMinDelay = sv_ball_shottaker_mindelay_short.GetFloat();
+				addPlayerSpeed = true;
+				m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
+				EmitSound("Ball.Touch");
 			}
 			else
 			{
-				shotAngle = QAngle(0, m_aPlAng[YAW] + 180, 0);
-				shotStrength = sv_ball_roll_strength.GetInt();
+				// Rainbow flick
+				shotAngle = m_aPlAng;
+				shotAngle[PITCH] = sv_ball_rainbowflick_angle.GetInt();
+				shotStrength = GetChargedshotStrength(1.0f, sv_ball_rainbowflick_minstrength.GetInt(), sv_ball_rainbowflick_maxstrength.GetInt());
+				spinFlags = FL_SPIN_FORCE_TOP;
+				spinCoeff = sv_ball_rainbowflick_spincoeff.GetFloat();
+				shotTakerMinDelay = sv_ball_shottaker_mindelay_long.GetFloat();
+				addPlayerSpeed = true;
+				m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_RAINBOW_FLICK);
+				EmitSound("Ball.Kicknormal");
 			}
 		}
-		else if (m_pPl->m_nButtons & IN_FORWARD)
+		else
 		{
-			if (m_pPl->m_nButtons & IN_MOVELEFT || m_pPl->m_nButtons & IN_MOVERIGHT)
+			if (m_vPlLocalDirToBall.x >= 0 && !(m_pPl->m_nButtons & IN_FORWARD) && (m_pPl->m_nButtons & IN_MOVELEFT || m_pPl->m_nButtons & IN_MOVERIGHT || m_pPl->m_nButtons & IN_BACK))
 			{
-				// Finesse shot
-				shotTakerMinDelay = sv_ball_shottaker_mindelay_short.GetFloat();
-				spinFlags = FL_SPIN_PERMIT_SIDE;
-				spinCoeff = sv_ball_finesseshot_spincoeff.GetFloat();
-				shotStrength = GetNormalshotStrength(pitchCoeff, sv_ball_finesseshot_strength.GetInt());
+				// Ball roll
+				shotTakerMinDelay = 0.0f;
 				shotAngle = m_aPlAng;
-				shotAngle[PITCH] = m_aPlCamAng[PITCH];
-				shotAngle[PITCH] = min(sv_ball_groundshot_minangle.GetFloat(), shotAngle[PITCH]);
-				m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_PASS);
+
+				if (m_pPl->m_nButtons & IN_MOVELEFT)
+				{
+					shotAngle = QAngle(0, m_aPlAng[YAW] + 90, 0);
+					shotStrength = sv_ball_roll_strength.GetInt();
+				}
+				else if (m_pPl->m_nButtons & IN_MOVERIGHT)
+				{
+					shotAngle = QAngle(0, m_aPlAng[YAW] - 90, 0);
+					shotStrength = sv_ball_roll_strength.GetInt();
+				}
+				else
+				{
+					shotAngle = QAngle(0, m_aPlAng[YAW] + 180, 0);
+					shotStrength = sv_ball_roll_strength.GetInt();
+				}
+			}
+			else if (m_vPlLocalDirToBall.x < 0 && (m_pPl->m_nButtons & IN_BACK || m_pPl->m_nButtons & IN_MOVELEFT || m_pPl->m_nButtons & IN_MOVERIGHT))
+			{
+				// Heel shot
+				shotAngle[PITCH] *= -1;
+
+				if (m_pPl->m_nButtons & IN_BACK)
+				{
+					if (m_pPl->m_nButtons & IN_MOVELEFT)
+						shotAngle[YAW] += 135;
+					else if (m_pPl->m_nButtons & IN_MOVERIGHT)
+						shotAngle[YAW] -= 135;
+					else
+						shotAngle[YAW] += 180;
+				}
+				else
+				{
+					if (m_pPl->m_nButtons & IN_MOVELEFT)
+						shotAngle[YAW] += 90;
+					else if (m_pPl->m_nButtons & IN_MOVERIGHT)
+						shotAngle[YAW] -= 90;
+				}
+
+				shotStrength = m_vVel.Length2D() * sv_ball_heelshot_strengthcoeff.GetFloat();
+				shotTakerMinDelay = sv_ball_shottaker_mindelay_long.GetFloat();
+				m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEELKICK);
 				EmitSound("Ball.Kicknormal");
 			}
 			else
 			{
-				// Chip shot
-				if (m_vPlLocalDirToBall.x >= 0)
-				{
-					shotAngle = m_aPlAng;
-					shotAngle[PITCH] = sv_ball_chipshot_angle.GetInt();
-					shotStrength = sv_ball_chipshot_fixedstrength.GetInt() + sv_ball_chipshot_dynamicstrength.GetInt() * pitchCoeff;
-					spinFlags = FL_SPIN_FORCE_BACK;
-					spinCoeff = pow(pitchCoeff, 3) * sv_ball_chipshot_spincoeff.GetFloat();
-					shotTakerMinDelay = pitchCoeff;
-					m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
-					EmitSound("Ball.Kicknormal");
-				}
-				// Rainbow flick
-				else
-				{
-					shotAngle = m_aPlAng;
-					shotAngle[PITCH] = sv_ball_rainbowflick_fixedangle.GetInt() + sv_ball_rainbowflick_dynamicangle.GetInt() * (1 - pitchCoeff);
-					shotStrength = sv_ball_rainbowflick_strength.GetInt();
-					spinFlags = FL_SPIN_FORCE_TOP;
-					spinCoeff = sv_ball_rainbowflick_spincoeff.GetFloat();
-					shotTakerMinDelay = sv_ball_shottaker_mindelay_long.GetFloat();
-					m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_RAINBOW_FLICK);
-					EmitSound("Ball.Kicknormal");
-				}
+				return false;
 			}
-		}
-		else if (m_vPlLocalDirToBall.x >= 0)
-		{
-			// Lift ball
-			shotAngle = m_aPlAng;
-			shotAngle[PITCH] = sv_ball_lift_angle.GetInt();
-			shotStrength = sv_ball_lift_fixedstrength.GetInt() + sv_ball_lift_variablestrength.GetInt() * pitchCoeff;
-			spinFlags = FL_SPIN_FORCE_NONE;
-			spinCoeff = 0;
-			shotTakerMinDelay = sv_ball_shottaker_mindelay_short.GetFloat();
-			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
-			EmitSound("Ball.Touch");
-		}
-		else
-		{
-			return false;
 		}
 
 		Vector shotDir;
 		AngleVectors(shotAngle, &shotDir);
 		vel = shotDir * shotStrength;
+
+		if (addPlayerSpeed)
+			vel += m_vPlForwardVel2D;
 	}
 	else
 	{
@@ -1171,7 +1143,6 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 		else
 			shotStrength = GetChargedshotStrength(GetPitchCoeff(), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
 
-		shotAngle = m_aPlAng;
 		shotAngle[PITCH] = min(sv_ball_groundshot_minangle.GetFloat(), shotAngle[PITCH]);
 
 		Vector shotDir;
@@ -1209,39 +1180,6 @@ bool CBall::DoVolleyShot()
 	float spinCoeff = 1.0f;
 	int spinFlags = FL_SPIN_PERMIT_SIDE;
 	QAngle shotAngle = m_aPlAng;
-
-	if (m_pPl->DoSkillMove())
-	{
-		shotAngle[PITCH] = m_aPlCamAng[PITCH];
-
-		if (m_pPl->m_nButtons & IN_MOVELEFT || m_pPl->m_nButtons & IN_MOVERIGHT)
-		{
-			spinFlags = FL_SPIN_PERMIT_SIDE;
-
-			if (m_pPl->m_nButtons & IN_FORWARD)
-			{
-				spinFlags |= FL_SPIN_FORCE_TOP;
-				spinCoeff = sv_ball_volleyshot_topspincoeff.GetFloat();
-			}
-			else if (m_pPl->m_nButtons & IN_BACK)
-			{
-				spinFlags |= FL_SPIN_FORCE_BACK;
-				spinCoeff = sv_ball_volleyshot_backspincoeff.GetFloat();
-			}
-			else
-				spinCoeff = sv_ball_volleyshot_sidespincoeff.GetFloat();
-		}
-		else if (m_pPl->m_nButtons & IN_FORWARD)
-		{
-			spinCoeff = sv_ball_volleyshot_topspincoeff.GetFloat();
-			spinFlags = FL_SPIN_FORCE_TOP;
-		}
-		else if (m_pPl->m_nButtons & IN_BACK)
-		{
-			spinCoeff = sv_ball_volleyshot_backspincoeff.GetFloat();
-			spinFlags = FL_SPIN_FORCE_BACK;
-		}
-	}
 
 	float shotStrength;
 
@@ -1300,19 +1238,15 @@ bool CBall::DoHeader()
 		if (!m_pPl->IsChargedshooting())
 			return false;
 
-		Vector camDir;
-		AngleVectors(m_aPlCamAng, &camDir);
-		float angDiff = RAD2DEG(acos(DotProduct2D(m_vPlForward.AsVector2D(), camDir.AsVector2D())));
-
 		// Bicycle shot
-		if (angDiff >= 90)
+		if (m_pPl->m_nButtons & IN_BACK)
 		{
 			QAngle ang = m_aPlCamAng;
 
 			Vector forward;
 			AngleVectors(ang, &forward);
 
-			Vector vel = forward * GetChargedshotStrength(GetPitchCoeff(true), sv_ball_bicycleshot_minstrength.GetInt(), sv_ball_bicycleshot_maxstrength.GetInt());
+			Vector vel = -forward * GetChargedshotStrength(GetPitchCoeff(true), sv_ball_bicycleshot_minstrength.GetInt(), sv_ball_bicycleshot_maxstrength.GetInt());
 
 			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BICYCLE_KICK);
 			EmitSound("Ball.Kickhard");
@@ -1320,7 +1254,7 @@ bool CBall::DoHeader()
 			SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_FEET, true, sv_ball_shottaker_mindelay_long.GetFloat(), true);
 		}
 		// Diving header
-		else
+		else if (m_pPl->m_nButtons & IN_FORWARD)
 		{
 			if (!m_pPl->GetGroundEntity())
 				return false;
@@ -1338,6 +1272,10 @@ bool CBall::DoHeader()
 			EmitSound("Player.DivingHeader");
 
 			SetVel(vel, sv_ball_header_spincoeff.GetFloat(), FL_SPIN_PERMIT_SIDE, BODY_PART_HEAD, true, sv_ball_shottaker_mindelay_long.GetFloat(), true);
+		}
+		else
+		{
+			return false;
 		}
 	}
 	else
