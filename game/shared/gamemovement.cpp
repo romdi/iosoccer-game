@@ -793,7 +793,7 @@ void CGameMovement::ReduceTimers( void )
 		{
 			replenishAmount = mp_stamina_replenish_standing.GetInt() * gpGlobals->frametime;
 		}
-		else if (mv->m_nButtons & IN_WALK && pPl->DoSkillMove() || mv->m_nButtons & pPl->GetKeeper1on1Key() && pPl->IsInOwnBoxAsKeeper())
+		else if (pPl->DoSkillMove())
 		{
 			replenishAmount = mp_stamina_replenish_walking.GetInt() * gpGlobals->frametime;
 		}
@@ -3000,11 +3000,7 @@ void CGameMovement::SetPlayerSpeed()
 	{
 		flMaxSpeed = mp_ceremonyspeed.GetInt();
 	}
-	else if (mv->m_nButtons & pPl->GetKeeper1on1Key() && pPl->IsInOwnBoxAsKeeper())
-	{
-		flMaxSpeed = mp_keeper1on1speed.GetInt();
-	}
-	else if (mv->m_nButtons & IN_WALK && pPl->DoSkillMove())
+	else if (pPl->DoSkillMove())
 	{
 		flMaxSpeed = mp_skillspeed.GetInt();
 	}

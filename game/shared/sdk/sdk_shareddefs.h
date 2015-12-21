@@ -136,7 +136,6 @@ extern ConVar
 	mp_sprintspeed,
 	mp_skillspeed,
 	mp_ceremonyspeed,
-	mp_keeper1on1speed,
 	mp_jumplandingspeed,
 	mp_remotecontrolledspeed,
 	mp_keepersidewarddive_move_duration,

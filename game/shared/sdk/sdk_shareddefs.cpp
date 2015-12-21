@@ -113,7 +113,6 @@ ConVar mp_runspeed("mp_runspeed", "225", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_sprintspeed("mp_sprintspeed", "325", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_skillspeed("mp_skillspeed", "125", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_ceremonyspeed("mp_ceremonyspeed", "100", FCVAR_REPLICATED | FCVAR_NOTIFY);
-ConVar mp_keeper1on1speed("mp_keeper1on1speed", "175", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_jumplandingspeed("mp_jumplandingspeed", "0", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_remotecontrolledspeed("mp_remotecontrolledspeed", "500", FCVAR_REPLICATED | FCVAR_NOTIFY);
 

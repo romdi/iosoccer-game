@@ -666,7 +666,7 @@ void CSDKPlayer::SetShotButtonsReleased(bool released)
 
 bool CSDKPlayer::DoSkillMove()
 {
-	return m_nButtons & IN_WALK && !IsInOwnBoxAsKeeper();
+	return m_nButtons & IN_WALK && !IsInOwnBoxAsKeeper() || m_nButtons & GetKeeperSkillKey() && IsInOwnBoxAsKeeper();
 }
 
 bool CSDKPlayer::IsInOwnBoxAsKeeper()
@@ -747,7 +747,7 @@ int CSDKPlayer::GetKeeperDiveKey()
 	}
 }
 
-int CSDKPlayer::GetKeeper1on1Key()
+int CSDKPlayer::GetKeeperSkillKey()
 {
 	int keeperKeyBindings;
 #ifdef CLIENT_DLL

@@ -582,7 +582,7 @@ public:
 
 	int					GetKeeperJumpKey();
 	int					GetKeeperDiveKey();
-	int					GetKeeper1on1Key();
+	int					GetKeeperSkillKey();
 
 	CSDKPlayer			*FindClosestPlayerToSelf(bool teammatesOnly, bool forwardOnly = false, float maxYawAngle = 360);
 

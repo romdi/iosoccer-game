@@ -734,10 +734,10 @@ CGameplaySettingPanel::CGameplaySettingPanel(Panel *parent, const char *panelNam
 	m_pContent = new Panel(this, "");
 	m_pLegacySideCurl = new CheckButton(m_pContent, "", "Reverse the ball curl direction");
 	m_pKeeperSection = new Label(m_pContent, "", "KEEPER KEY BINDINGS:");
-	m_pKeeperKeyBindings[0] = new RadioButton(m_pContent, "", "Jump key = jump   /   slide key = dive   /   skill key = 1on1 mode");
-	m_pKeeperKeyBindings[1] = new RadioButton(m_pContent, "", "Jump key = jump   /   slide key = 1on1 mode   /   skill key = dive");
-	m_pKeeperKeyBindings[2] = new RadioButton(m_pContent, "", "Jump key = dive   /   slide key = jump   /   skill key = 1on1 mode");
-	m_pKeeperKeyBindings[3] = new RadioButton(m_pContent, "", "Jump key = dive   /   slide key = 1on1 mode   /   skill key = jump");
+	m_pKeeperKeyBindings[0] = new RadioButton(m_pContent, "", "Jump key = jump   /   slide key = dive   /   skill key = skill move");
+	m_pKeeperKeyBindings[1] = new RadioButton(m_pContent, "", "Jump key = jump   /   slide key = skill move   /   skill key = dive");
+	m_pKeeperKeyBindings[2] = new RadioButton(m_pContent, "", "Jump key = dive   /   slide key = jump   /   skill key = skill move");
+	m_pKeeperKeyBindings[3] = new RadioButton(m_pContent, "", "Jump key = dive   /   slide key = skill move   /   skill key = jump");
 }
 
 void CGameplaySettingPanel::PerformLayout()
