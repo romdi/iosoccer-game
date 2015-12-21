@@ -510,6 +510,9 @@ void CBall::SetPos(const Vector &pos, bool addBallRadiusZOffset/* = true*/, bool
 {
 	m_vPos = pos;
 
+	// The ball origin is right in the center of the ball, not at the bottom.
+	// When setting the ball position it's often easier to just assume the origin is at the bottom of the ball.
+	// By default this method compensates for the origin difference automatically.
 	if (addBallRadiusZOffset)
 		m_vPos.z += BALL_PHYS_RADIUS;
 

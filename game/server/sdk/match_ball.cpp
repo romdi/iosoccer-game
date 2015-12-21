@@ -1058,27 +1058,27 @@ void CMatchBall::State_KEEPERHANDS_Think()
 
 	UpdateCarrier();
 
-	Vector min = GetGlobalTeam(m_pPl->GetTeamNumber())->m_vPenBoxMin - Vector(BALL_PHYS_RADIUS, BALL_PHYS_RADIUS, 0);
-	Vector max = GetGlobalTeam(m_pPl->GetTeamNumber())->m_vPenBoxMax + Vector(BALL_PHYS_RADIUS, BALL_PHYS_RADIUS, 0);
-
 	// Ball outside the penalty box
 	if (m_nInPenBoxOfTeam == TEAM_NONE)
 	{
 		Vector vel, pos;
 
+		bool isBehindGoalLine = m_pPl->GetTeam()->m_nForward == 1 && m_vPos.y + BALL_PHYS_RADIUS < m_pPl->GetTeam()->m_vPenBoxMin.GetY() || m_pPl->GetTeam()->m_nForward == -1 && m_vPos.y - BALL_PHYS_RADIUS > m_pPl->GetTeam()->m_vPenBoxMax.GetY();
+		bool isInsideGoal = m_vPos.x + BALL_PHYS_RADIUS >= m_pPl->GetTeam()->m_vGoalCenter.GetX() - SDKGameRules()->m_vGoalTriggerSize.x && m_vPos.x - BALL_PHYS_RADIUS <= m_pPl->GetTeam()->m_vGoalCenter.GetX() + SDKGameRules()->m_vGoalTriggerSize.x;
+
+		float zPos = max(m_vPos.z, SDKGameRules()->m_vKickOff.GetZ() + BALL_PHYS_RADIUS);
+
 		// Throw the ball towards the kick-off spot if it's behind the goal line and either would end up inside the goal or is in a map with a walled field
-		if ((m_pPl->GetTeam()->m_nForward == 1 && m_vPos.y < min.y || m_pPl->GetTeam()->m_nForward == -1 && m_vPos.y > max.y)
-			&& (SDKGameRules()->HasWalledField()
-				|| (m_vPos.x >= m_pPl->GetTeam()->m_vGoalCenter.GetX() - SDKGameRules()->m_vGoalTriggerSize.x
-					&& m_vPos.x <= m_pPl->GetTeam()->m_vGoalCenter.GetX() + SDKGameRules()->m_vGoalTriggerSize.x)))
+		if (isBehindGoalLine && (isInsideGoal || SDKGameRules()->HasWalledField()))
 		{
-			pos = Vector(m_vPos.x, (m_pPl->GetTeam()->m_nForward == 1 ? SDKGameRules()->m_vFieldMin.GetY() - BALL_PHYS_RADIUS : SDKGameRules()->m_vFieldMax.GetY() + BALL_PHYS_RADIUS) + m_pPl->GetTeam()->m_nForward * 36, m_vPos.z);
+			float yPos = (m_pPl->GetTeam()->m_nForward == 1 ? SDKGameRules()->m_vFieldMin.GetY() - BALL_PHYS_RADIUS : SDKGameRules()->m_vFieldMax.GetY() + BALL_PHYS_RADIUS) + m_pPl->GetTeam()->m_nForward * 36;
+			pos = Vector(m_vPos.x, yPos, zPos);
 			vel = 25 * Vector(0, m_pPl->GetTeam()->m_nForward, 0);
 		}
 		else
 		{
-			pos = m_vPos;
-			vel = m_vPlVel;
+			pos = Vector(m_vPos.x, m_vPos.y, zPos);
+			vel = m_vPlVel2D;
 		}
 
 		RemoveAllTouches();
