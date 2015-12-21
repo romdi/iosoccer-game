@@ -25,176 +25,209 @@
 
 
 ConVar
-	sv_ball_mass( "sv_ball_mass", "5", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY ),
-	sv_ball_damping( "sv_ball_damping", "0.01", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY ),
-	sv_ball_rotdamping( "sv_ball_rotdamping", "0.7", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY ),
-	sv_ball_rotinertialimit( "sv_ball_rotinertialimit", "1.5", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY ),
-	sv_ball_dragcoeff( "sv_ball_dragcoeff", "1", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY ),
-	sv_ball_inertia( "sv_ball_inertia", "1.5", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY ),
-	sv_ball_drag_enabled("sv_ball_drag_enabled", "1", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY ),
-	
-	sv_ball_spin( "sv_ball_spin", "4000", FCVAR_NOTIFY ),
-	sv_ball_spin_mincoeff( "sv_ball_spin_mincoeff", "0.0", FCVAR_NOTIFY ),
-	sv_ball_defaultspin( "sv_ball_defaultspin", "150", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY ),
-	sv_ball_topspin_coeff( "sv_ball_topspin_coeff", "1.25", FCVAR_NOTIFY ),
-	sv_ball_backspin_coeff( "sv_ball_backspin_coeff", "0.1", FCVAR_NOTIFY ),
-	sv_ball_magnus_coeff("sv_ball_magnus_coeff", "200", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	
-	sv_ball_deflectionradius( "sv_ball_deflectionradius", "30", FCVAR_NOTIFY ),
-	sv_ball_collisionradius( "sv_ball_collisionradius", "15", FCVAR_NOTIFY ),
-	
-	sv_ball_standing_reach( "sv_ball_standing_reach", "40", FCVAR_NOTIFY ),
-	
-	sv_ball_slidesidereach_ball( "sv_ball_slidesidereach_ball", "25", FCVAR_NOTIFY ),
-	sv_ball_slideforwardreach_ball( "sv_ball_slideforwardreach_ball", "40", FCVAR_NOTIFY ),
-	sv_ball_slidebackwardreach_ball( "sv_ball_slidebackwardreach_ball", "20", FCVAR_NOTIFY ),
-	
-	sv_ball_slidezstart("sv_ball_slidezstart", "-50", FCVAR_NOTIFY), 
-	sv_ball_slidezend("sv_ball_slidezend", "30", FCVAR_NOTIFY), 
-	
-	sv_ball_keeper_standing_reach( "sv_ball_keeper_standing_reach", "40", FCVAR_NOTIFY ),
-	sv_ball_keeper_standing_reach_walking( "sv_ball_keeper_standing_reach_walking", "50", FCVAR_NOTIFY ),
-	
-	sv_ball_keeper_forwarddive_shortsidereach( "sv_ball_keeper_forwarddive_shortsidereach", "50", FCVAR_NOTIFY ),
-	sv_ball_keeper_forwarddive_longsidereach( "sv_ball_keeper_forwarddive_longsidereach", "80", FCVAR_NOTIFY ),
-	sv_ball_keeper_forwarddive_longsidereach_opposite( "sv_ball_keeper_forwarddive_longsidereach_opposite", "50", FCVAR_NOTIFY ),
-	sv_ball_keeper_forwarddive_zstart( "sv_ball_keeper_forwarddive_zstart", "-50", FCVAR_NOTIFY ),
-	sv_ball_keeper_forwarddive_zend( "sv_ball_keeper_forwarddive_zend", "90", FCVAR_NOTIFY ),
-	sv_ball_keeper_forwarddive_catchcoeff( "sv_ball_keeper_forwarddive_catchcoeff", "0.5", FCVAR_NOTIFY ),
 
-	sv_ball_keeper_backwarddive_shortsidereach( "sv_ball_keeper_backwarddive_shortsidereach", "50", FCVAR_NOTIFY ),
-	sv_ball_keeper_backwarddive_longsidereach( "sv_ball_keeper_backwarddive_longsidereach", "100", FCVAR_NOTIFY ),
-	sv_ball_keeper_backwarddive_longsidereach_opposite( "sv_ball_keeper_backwarddive_longsidereach_opposite", "0", FCVAR_NOTIFY ),
-	sv_ball_keeper_backwarddive_zstart( "sv_ball_keeper_backwarddive_zstart", "50", FCVAR_NOTIFY ),
-	sv_ball_keeper_backwarddive_zend( "sv_ball_keeper_backwarddive_zend", "100", FCVAR_NOTIFY ),
-	sv_ball_keeper_backwarddive_catchcoeff( "sv_ball_keeper_backwarddive_catchcoeff", "0.5", FCVAR_NOTIFY ),
-	sv_ball_keeper_backwarddive_punchupangle( "sv_ball_keeper_backwarddive_punchupangle", "45", FCVAR_NOTIFY ),
-	
-	sv_ball_keeper_sidedive_shortsidereach( "sv_ball_keeper_sidedive_shortsidereach", "50", FCVAR_NOTIFY ),
-	sv_ball_keeper_sidedive_longsidereach( "sv_ball_keeper_sidedive_longsidereach", "60", FCVAR_NOTIFY ),
-	sv_ball_keeper_sidedive_longsidereach_opposite( "sv_ball_keeper_sidedive_longsidereach_opposite", "50", FCVAR_NOTIFY ),
-	sv_ball_keeper_sidedive_zstart( "sv_ball_keeper_sidedive_zstart", "-30", FCVAR_NOTIFY ),
-	sv_ball_keeper_sidedive_zend( "sv_ball_keeper_sidedive_zend", "70", FCVAR_NOTIFY ),
-	sv_ball_keeper_sidedive_catchcenteroffset_side( "sv_ball_keeper_sidedive_catchcenteroffset_side", "0", FCVAR_NOTIFY ),
-	sv_ball_keeper_sidedive_catchcenteroffset_z( "sv_ball_keeper_sidedive_catchcenteroffset_z", "40", FCVAR_NOTIFY ),
-	
-	sv_ball_keeper_punch_minstrength("sv_ball_keeper_punch_minstrength", "900", FCVAR_NOTIFY),
-	sv_ball_keeper_punch_sidespeedcoeff("sv_ball_keeper_punch_sidespeedcoeff", "0.1", FCVAR_NOTIFY),
-	
-	sv_ball_keeperdeflectioncoeff("sv_ball_keeperdeflectioncoeff", "0.5", FCVAR_NOTIFY),
-	
-	sv_ball_shotdelay_global_coeff("sv_ball_shotdelay_global_coeff", "0.33", FCVAR_NOTIFY),
-	sv_ball_keepercatchdelay_sidedive_global_coeff("sv_ball_keepercatchdelay_sidedive_global_coeff", "1.0", FCVAR_NOTIFY),
-	sv_ball_keepercatchdelay_forwarddive_global_coeff("sv_ball_keepercatchdelay_forwarddive_global_coeff", "0.75", FCVAR_NOTIFY),
-	sv_ball_keepercatchdelay_backwarddive_global_coeff("sv_ball_keepercatchdelay_backwarddive_global_coeff", "1.0", FCVAR_NOTIFY),
-	sv_ball_keepercatchdelay_standing_global_coeff("sv_ball_keepercatchdelay_standing_global_coeff", "0.5", FCVAR_NOTIFY),
-	sv_ball_dynamicshotdelay_mindelay("sv_ball_dynamicshotdelay_mindelay", "0.2", FCVAR_NOTIFY),
-	sv_ball_dynamicshotdelay_maxdelay("sv_ball_dynamicshotdelay_maxdelay", "1.0", FCVAR_NOTIFY),
-	sv_ball_dynamicshotdelay_minshotstrength("sv_ball_dynamicshotdelay_minshotstrength", "360", FCVAR_NOTIFY),
-	sv_ball_dynamicshotdelay_maxshotstrength("sv_ball_dynamicshotdelay_maxshotstrength", "1440", FCVAR_NOTIFY),
+	// Physics
 
-	sv_ball_shottaker_mindelay_short("sv_ball_shottaker_mindelay_short", "0.5", FCVAR_NOTIFY),
-	sv_ball_shottaker_mindelay_long("sv_ball_shottaker_mindelay_long", "1.0", FCVAR_NOTIFY),
+	sv_ball_mass											("sv_ball_mass",											"5",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_damping											("sv_ball_damping",											"0.01",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_rotdamping										("sv_ball_rotdamping",										"0.7",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_rotinertialimit									("sv_ball_rotinertialimit",									"1.5",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_dragcoeff										("sv_ball_dragcoeff",										"1",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_inertia											("sv_ball_inertia",											"1.5",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_drag_enabled									("sv_ball_drag_enabled",									"1",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	
-	sv_ball_bestshotangle("sv_ball_bestshotangle", "-20", FCVAR_NOTIFY),
+	sv_ball_spin											("sv_ball_spin",											"4000",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_spin_mincoeff									("sv_ball_spin_mincoeff",									"0.0",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_defaultspin										("sv_ball_defaultspin",										"150",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_topspin_coeff									("sv_ball_topspin_coeff",									"1.25",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_backspin_coeff									("sv_ball_backspin_coeff",									"0.1",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_magnus_coeff									("sv_ball_magnus_coeff",									"200",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+
+	sv_ball_sandground_enabled								("sv_ball_sandground_enabled",								"0",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_sandground_maxshotstrength						("sv_ball_sandground_maxshotstrength",						"500",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_sandground_rollfriction							("sv_ball_sandground_rollfriction",							"30",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_sandground_bouncefriction						("sv_ball_sandground_bouncefriction",						"30",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+
+
+
+	// Distances
+
+	sv_ball_maxplayerfinddist								("sv_ball_maxplayerfinddist",								"200",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	
-	sv_ball_pitchdown_exponent("sv_ball_pitchdown_exponent", "3.0", FCVAR_NOTIFY),
-	sv_ball_pitchdown_fixedcoeff("sv_ball_pitchdown_fixedcoeff", "0.3", FCVAR_NOTIFY),
-	sv_ball_pitchup_exponent("sv_ball_pitchup_exponent", "3.0", FCVAR_NOTIFY),
-	sv_ball_pitchup_fixedcoeff("sv_ball_pitchup_fixedcoeff", "0.3", FCVAR_NOTIFY),
-
-	sv_ball_normalshot_strength("sv_ball_normalshot_strength", "810", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_chargedshot_minstrength("sv_ball_chargedshot_minstrength", "810", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_chargedshot_maxstrength("sv_ball_chargedshot_maxstrength", "1440", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_standing_reach									("sv_ball_standing_reach",									"40",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	
-	sv_ball_normalheader_strength("sv_ball_normalheader_strength", "450", FCVAR_NOTIFY), 
-	sv_ball_chargedheader_minstrength("sv_ball_chargedheader_minstrength", "450", FCVAR_NOTIFY), 
-	sv_ball_chargedheader_maxstrength("sv_ball_chargedheader_maxstrength", "900", FCVAR_NOTIFY), 
+	sv_ball_slidesidereach_ball								("sv_ball_slidesidereach_ball",								"25",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_slideforwardreach_ball							("sv_ball_slideforwardreach_ball",							"40",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_slidebackwardreach_ball							("sv_ball_slidebackwardreach_ball",							"20",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	
-	sv_ball_divingheader_minstrength("sv_ball_divingheader_minstrength", "750", FCVAR_NOTIFY), 
-	sv_ball_divingheader_maxstrength("sv_ball_divingheader_maxstrength", "1050", FCVAR_NOTIFY),
-	sv_ball_divingheader_minangle("sv_ball_divingheader_minangle", "30", FCVAR_NOTIFY), 
-	sv_ball_divingheader_maxangle("sv_ball_divingheader_maxangle", "-30", FCVAR_NOTIFY),
-
-	sv_ball_bicycleshot_minstrength("sv_ball_bicycleshot_minstrength", "750", FCVAR_NOTIFY), 
-	sv_ball_bicycleshot_maxstrength("sv_ball_bicycleshot_maxstrength", "1050", FCVAR_NOTIFY),
-
-	sv_ball_slide_strength("sv_ball_slide_strength", "720", FCVAR_NOTIFY), 
-	sv_ball_slide_pitchangle("sv_ball_slide_pitchangle", "-15", FCVAR_NOTIFY), 
-	sv_ball_slide_playerspeedcoeff("sv_ball_slide_playerspeedcoeff", "1.0", FCVAR_NOTIFY),
+	sv_ball_slidezstart										("sv_ball_slidezstart",										"-50",		 FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY), 
+	sv_ball_slidezend										("sv_ball_slidezend",										"30",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY), 
 	
-	sv_ball_keepershot_minangle("sv_ball_keepershot_minangle", "20", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-
-	sv_ball_keeperthrow_strength("sv_ball_keeperthrow_strength", "100", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_keeper_standing_reach							("sv_ball_keeper_standing_reach",							"40",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_keeper_standing_reach_walking					("sv_ball_keeper_standing_reach_walking",					"50",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	
-	sv_ball_groundshot_minangle("sv_ball_groundshot_minangle", "-7", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_keeper_forwarddive_shortsidereach				("sv_ball_keeper_forwarddive_shortsidereach",				"50",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_keeper_forwarddive_longsidereach				("sv_ball_keeper_forwarddive_longsidereach",				"80",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_keeper_forwarddive_longsidereach_opposite		("sv_ball_keeper_forwarddive_longsidereach_opposite",		"50",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_keeper_forwarddive_zstart						("sv_ball_keeper_forwarddive_zstart",						"-50",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_keeper_forwarddive_zend							("sv_ball_keeper_forwarddive_zend",							"90",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 
-	sv_ball_volleyshot_minangle("sv_ball_volleyshot_minangle", "60", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-
-	sv_ball_rainbowflick_angle("sv_ball_rainbowflick_angle", "-90", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_rainbowflick_minstrength("sv_ball_rainbowflick_minstrength", "300", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_rainbowflick_maxstrength("sv_ball_rainbowflick_maxstrength", "500", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_rainbowflick_spincoeff("sv_ball_rainbowflick_spincoeff", "0.33", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-
-	sv_ball_lift_angle("sv_ball_lift_angle", "-90", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_lift_minstrength("sv_ball_lift_minstrength", "200", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_lift_maxstrength("sv_ball_lift_maxstrength", "400", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-
-	sv_ball_roll_strength("sv_ball_roll_strength", "225", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-
-	sv_ball_header_spincoeff("sv_ball_header_spincoeff", "0.5", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_header_minangle("sv_ball_header_minangle", "70", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_header_maxangle("sv_ball_header_maxangle", "-40", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_header_playerspeedcoeff("sv_ball_header_playerspeedcoeff", "1.0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-
-	sv_ball_chestdrop_strength("sv_ball_chestdrop_strength", "100", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_chestdrop_playerspeedcoeff("sv_ball_chestdrop_playerspeedcoeff", "1.0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_chestdrop_angle("sv_ball_chestdrop_angle", "90", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-
-	sv_ball_animation_minstrength_strongshot("sv_ball_animation_minstrength_strongshot", "800", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_animation_minstrength_weakshot("sv_ball_animation_minstrength_weakshot", "600", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_animation_minstrength_dribbleshot("sv_ball_animation_minstrength_dribbleshot", "400", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_keeper_backwarddive_shortsidereach				("sv_ball_keeper_backwarddive_shortsidereach",				"50",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_keeper_backwarddive_longsidereach				("sv_ball_keeper_backwarddive_longsidereach",				"100",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_keeper_backwarddive_longsidereach_opposite		("sv_ball_keeper_backwarddive_longsidereach_opposite",		"0",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_keeper_backwarddive_zstart						("sv_ball_keeper_backwarddive_zstart",						"50",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_keeper_backwarddive_zend						("sv_ball_keeper_backwarddive_zend",						"100",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	
-	sv_ball_highlightsdelay_intermissions("sv_ball_highlightsdelay_intermissions", "5.0", FCVAR_NOTIFY),
-	sv_ball_highlightsdelay_cooldown("sv_ball_highlightsdelay_cooldown", "30.0", FCVAR_NOTIFY),
-	
-	sv_ball_bodypos_feet_start("sv_ball_bodypos_feet_start", "-15", FCVAR_NOTIFY),
-	sv_ball_bodypos_hip_start("sv_ball_bodypos_hip_start", "20", FCVAR_NOTIFY),
-	sv_ball_bodypos_chest_start("sv_ball_bodypos_chest_start", "45", FCVAR_NOTIFY),
-	sv_ball_bodypos_head_start("sv_ball_bodypos_head_start", "60", FCVAR_NOTIFY),
-	sv_ball_bodypos_head_end("sv_ball_bodypos_head_end", "85", FCVAR_NOTIFY),
-	sv_ball_bodypos_keeperarms_end("sv_ball_bodypos_keeperarms_end", "100", FCVAR_NOTIFY),
-	
-	sv_ball_bodypos_keeperhands("sv_ball_bodypos_keeperhands", "40", FCVAR_NOTIFY),
-	
-	sv_ball_bodypos_collision_start("sv_ball_bodypos_collision_start", "15", FCVAR_NOTIFY),
-	sv_ball_bodypos_collision_end("sv_ball_bodypos_collision_end", "75", FCVAR_NOTIFY),
-	
-	sv_ball_bodypos_deflection_start("sv_ball_bodypos_deflection_start", "0", FCVAR_NOTIFY),
-	sv_ball_bodypos_deflection_end("sv_ball_bodypos_deflection_end", "80", FCVAR_NOTIFY),
-	
-	sv_ball_maxplayerfinddist("sv_ball_maxplayerfinddist", "200", FCVAR_NOTIFY),
-	
-	sv_ball_heelshot_strengthcoeff("sv_ball_heelshot_strengthcoeff", "0.75", FCVAR_NOTIFY),
-	
-	sv_ball_keepercatchdelay_poscoeffmin("sv_ball_keepercatchdelay_poscoeffmin", "0.5", FCVAR_NOTIFY),
+	sv_ball_keeper_sidedive_shortsidereach					("sv_ball_keeper_sidedive_shortsidereach",					"50",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_keeper_sidedive_longsidereach					("sv_ball_keeper_sidedive_longsidereach",					"60",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_keeper_sidedive_longsidereach_opposite			("sv_ball_keeper_sidedive_longsidereach_opposite",			"50",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_keeper_sidedive_zstart							("sv_ball_keeper_sidedive_zstart",							"-30",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_keeper_sidedive_zend							("sv_ball_keeper_sidedive_zend",							"70",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_keeper_sidedive_catchcenteroffset_side			("sv_ball_keeper_sidedive_catchcenteroffset_side",			"0",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_keeper_sidedive_catchcenteroffset_z				("sv_ball_keeper_sidedive_catchcenteroffset_z",				"40",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 
-	sv_ball_collision_passive_mass("sv_ball_collision_passive_mass", "5", FCVAR_NOTIFY),
-	sv_ball_collision_passive_coeff("sv_ball_collision_passive_coeff", "0.5", FCVAR_NOTIFY),
+	sv_ball_bodypos_feet_start								("sv_ball_bodypos_feet_start",								"-15",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_bodypos_hip_start								("sv_ball_bodypos_hip_start",								"20",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_bodypos_chest_start								("sv_ball_bodypos_chest_start",								"45",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_bodypos_head_start								("sv_ball_bodypos_head_start",								"60",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_bodypos_head_end								("sv_ball_bodypos_head_end",								"85",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_bodypos_keeperarms_end							("sv_ball_bodypos_keeperarms_end",							"100",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 
-	sv_ball_collision_deflection_mass("sv_ball_collision_deflection_mass", "5", FCVAR_NOTIFY),
-	sv_ball_collision_deflection_coeff("sv_ball_collision_deflection_coeff", "0.5", FCVAR_NOTIFY),
-	
-	sv_ball_collision_dribbling_mass("sv_ball_collision_dribbling_mass", "75", FCVAR_NOTIFY),
-	sv_ball_collision_dribbling_coeff("sv_ball_collision_dribbling_coeff", "1.0", FCVAR_NOTIFY),
+	sv_ball_bodypos_keeperhands								("sv_ball_bodypos_keeperhands",								"40",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 
-	sv_ball_collision_selfhit_mass("sv_ball_collision_selfhit_mass", "225", FCVAR_NOTIFY),
-	sv_ball_collision_selfhit_coeff("sv_ball_collision_selfhit_coeff", "1.0", FCVAR_NOTIFY),
+	sv_ball_bodypos_collision_start							("sv_ball_bodypos_collision_start",							"15",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_bodypos_collision_end							("sv_ball_bodypos_collision_end",							"75",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 
-	sv_ball_sandground_enabled("sv_ball_sandground_enabled", "0", FCVAR_NOTIFY),
-	sv_ball_sandground_maxshotstrength("sv_ball_sandground_maxshotstrength", "500", FCVAR_NOTIFY),
-	sv_ball_sandground_rollfriction("sv_ball_sandground_rollfriction", "30", FCVAR_NOTIFY),
-	sv_ball_sandground_bouncefriction("sv_ball_sandground_bouncefriction", "30", FCVAR_NOTIFY);
+	sv_ball_bodypos_deflection_start						("sv_ball_bodypos_deflection_start",						"0",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_bodypos_deflection_end							("sv_ball_bodypos_deflection_end",							"80",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+
+
+
+	// Shots
+
+	sv_ball_bestshotangle									("sv_ball_bestshotangle",									"-20",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+
+	sv_ball_pitchdown_exponent								("sv_ball_pitchdown_exponent",								"3.0",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_pitchdown_fixedcoeff							("sv_ball_pitchdown_fixedcoeff",							"0.3",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_pitchup_exponent								("sv_ball_pitchup_exponent",								"3.0",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_pitchup_fixedcoeff								("sv_ball_pitchup_fixedcoeff",								"0.3",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+
+	sv_ball_dynamicshotdelay_mindelay						("sv_ball_dynamicshotdelay_mindelay",						"0.2",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_dynamicshotdelay_maxdelay						("sv_ball_dynamicshotdelay_maxdelay",						"1.0",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_dynamicshotdelay_minshotstrength				("sv_ball_dynamicshotdelay_minshotstrength",				"360",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_dynamicshotdelay_maxshotstrength				("sv_ball_dynamicshotdelay_maxshotstrength",				"1440",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+
+	sv_ball_shotdelay_global_coeff							("sv_ball_shotdelay_global_coeff",							"0.33",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+
+	sv_ball_groundshot_minangle								("sv_ball_groundshot_minangle",								"-7",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+
+	sv_ball_normalshot_strength								("sv_ball_normalshot_strength",								"810",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_normalshot_minpostdelay							("sv_ball_normalshot_minpostdelay",							"0.0",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+
+	sv_ball_chargedshot_minstrength							("sv_ball_chargedshot_minstrength",							"810",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_chargedshot_maxstrength							("sv_ball_chargedshot_maxstrength",							"1440",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_chargedshot_minpostdelay						("sv_ball_chargedshot_minpostdelay",						"0.0",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+
+	sv_ball_normalheader_strength							("sv_ball_normalheader_strength",							"450",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+
+	sv_ball_chargedheader_minstrength						("sv_ball_chargedheader_minstrength",						"450",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_chargedheader_maxstrength						("sv_ball_chargedheader_maxstrength",						"900",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+
+	sv_ball_slide_strength									("sv_ball_slide_strength",									"720",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_slide_pitchangle								("sv_ball_slide_pitchangle",								"-15",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_slide_minpostdelay								("sv_ball_slide_minpostdelay",								"0.5",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+
+	sv_ball_keeper_forwarddive_catchcoeff					("sv_ball_keeper_forwarddive_catchcoeff",					"0.5",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+
+	sv_ball_keepershot_minangle								("sv_ball_keepershot_minangle",								"20",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+
+	sv_ball_keeperthrow_strength							("sv_ball_keeperthrow_strength",							"100",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_keeperthrow_minpostdelay						("sv_ball_keeperthrow_minpostdelay",						"0.25",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+
+	sv_ball_keeperpunch_minstrength							("sv_ball_keeperpunch_minstrength",							"900",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_keeperpunch_sidespeedcoeff						("sv_ball_keeperpunch_sidespeedcoeff",						"0.1",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_keeperpunch_minpostdelay						("sv_ball_keeperpunch_minpostdelay",						"0.25",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+
+	sv_ball_keeper_backwarddive_catchcoeff					("sv_ball_keeper_backwarddive_catchcoeff",					"0.5",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_keeper_backwarddive_punchupangle				("sv_ball_keeper_backwarddive_punchupangle",				"45",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+
+	sv_ball_keepercatchdelay_sidedive_global_coeff			("sv_ball_keepercatchdelay_sidedive_global_coeff",			"1.0",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_keepercatchdelay_forwarddive_global_coeff		("sv_ball_keepercatchdelay_forwarddive_global_coeff",		"0.75",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_keepercatchdelay_backwarddive_global_coeff		("sv_ball_keepercatchdelay_backwarddive_global_coeff",		"1.0",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_keepercatchdelay_standing_global_coeff			("sv_ball_keepercatchdelay_standing_global_coeff",			"0.5",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_keepercatchdelay_poscoeffmin					("sv_ball_keepercatchdelay_poscoeffmin",					"0.5",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+
+	sv_ball_keepercatch_minpostdelay						("sv_ball_keepercatch_minpostdelay",						"0.25",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+
+	sv_ball_volleyshot_minangle								("sv_ball_volleyshot_minangle",								"60",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_volleyshot_minpostdelay							("sv_ball_volleyshot_minpostdelay",							"0.25",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+
+	sv_ball_header_spincoeff								("sv_ball_header_spincoeff",								"0.5",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_header_minangle									("sv_ball_header_minangle",									"70",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_header_maxangle									("sv_ball_header_maxangle",									"-40",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_header_minpostdelay								("sv_ball_header_minpostdelay",								"0.5",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+
+	sv_ball_chestdrop_strength								("sv_ball_chestdrop_strength",								"100",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_chestdrop_angle									("sv_ball_chestdrop_angle",									"90",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_chestdrop_minpostdelay							("sv_ball_chestdrop_minpostdelay",							"0.5",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+
+	sv_ball_rainbowflick_angle								("sv_ball_rainbowflick_angle",								"-90",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_rainbowflick_minstrength						("sv_ball_rainbowflick_minstrength",						"300",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_rainbowflick_maxstrength						("sv_ball_rainbowflick_maxstrength",						"500",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_rainbowflick_spincoeff							("sv_ball_rainbowflick_spincoeff",							"0.33",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_rainbowflick_minpostdelay						("sv_ball_rainbowflick_minpostdelay",						"0.75",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+
+	sv_ball_divingheader_minstrength						("sv_ball_divingheader_minstrength",						"750",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_divingheader_maxstrength						("sv_ball_divingheader_maxstrength",						"1050",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_divingheader_minangle							("sv_ball_divingheader_minangle",							"30",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_divingheader_maxangle							("sv_ball_divingheader_maxangle",							"-30",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+
+	sv_ball_bicycleshot_minstrength							("sv_ball_bicycleshot_minstrength",							"750",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_bicycleshot_maxstrength							("sv_ball_bicycleshot_maxstrength",							"1050",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_bicycleshot_minpostdelay						("sv_ball_bicycleshot_minpostdelay",						"0.5",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+
+	sv_ball_lift_angle										("sv_ball_lift_angle",										"-90",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_lift_minstrength								("sv_ball_lift_minstrength",								"200",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_lift_maxstrength								("sv_ball_lift_maxstrength",								"400",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_lift_minpostdelay								("sv_ball_lift_minpostdelay",								"0.0",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+
+	sv_ball_roll_strength									("sv_ball_roll_strength",									"225",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_roll_minpostdelay								("sv_ball_roll_minpostdelay",								"0.0",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+
+	sv_ball_heelshot_strengthcoeff							("sv_ball_heelshot_strengthcoeff",							"0.75",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_heelshot_minpostdelay							("sv_ball_heelshot_minpostdelay",							"0.25",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+
+
+
+	// Collisions
+
+	sv_ball_deflectionradius								("sv_ball_deflectionradius",								"30",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_collisionradius									("sv_ball_collisionradius",									"15",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+
+	sv_ball_collision_passive_mass							("sv_ball_collision_passive_mass",							"5",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_collision_passive_coeff							("sv_ball_collision_passive_coeff",							"0.5",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+
+	sv_ball_collision_deflection_mass						("sv_ball_collision_deflection_mass",						"5",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_collision_deflection_coeff						("sv_ball_collision_deflection_coeff",						"0.5",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+
+	sv_ball_collision_dribbling_mass						("sv_ball_collision_dribbling_mass",						"75",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_collision_dribbling_coeff						("sv_ball_collision_dribbling_coeff",						"1.0",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+
+	sv_ball_collision_selfhit_mass							("sv_ball_collision_selfhit_mass",							"225",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_collision_selfhit_coeff							("sv_ball_collision_selfhit_coeff",							"1.0",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+
+	sv_ball_keeperdeflectioncoeff							("sv_ball_keeperdeflectioncoeff",							"0.5",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+
+
+
+	// Misc
+
+	sv_ball_animation_minstrength_strongshot				("sv_ball_animation_minstrength_strongshot",				"800",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_animation_minstrength_weakshot					("sv_ball_animation_minstrength_weakshot",					"600",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_animation_minstrength_dribbleshot				("sv_ball_animation_minstrength_dribbleshot",				"400",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+
+	sv_ball_highlightsdelay_intermissions					("sv_ball_highlightsdelay_intermissions",					"5.0",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_highlightsdelay_cooldown						("sv_ball_highlightsdelay_cooldown",						"30.0",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
 
 	
 
@@ -498,7 +531,7 @@ void CBall::SetAng(const QAngle &ang)
 	m_pPhys->SetPosition(m_vPos, m_aAng, false);
 }
 
-void CBall::SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyPart, bool markOffsidePlayers, float shotTakerMinDelay, bool resetShotCharging)
+void CBall::SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyPart, bool markOffsidePlayers, float minPostDelay, bool resetShotCharging)
 {
 	Vector oldVel = m_vVel;
 
@@ -525,7 +558,7 @@ void CBall::SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyP
 	m_flGlobalLastShot = gpGlobals->curtime;
 	m_flGlobalDynamicShotDelay = dynamicDelay;
 
-	m_pPl->m_flNextShot = gpGlobals->curtime + max(dynamicDelay, shotTakerMinDelay);
+	m_pPl->m_flNextShot = gpGlobals->curtime + max(dynamicDelay, minPostDelay);
 
 	if (resetShotCharging)
 		m_pPl->ResetShotCharging();
@@ -824,9 +857,9 @@ bool CBall::DoSlideAction()
 
 	Vector vel = forward * GetNormalshotStrength(GetPitchCoeff(), sv_ball_slide_strength.GetInt());
 
-	vel += m_vPlForwardVel2D * sv_ball_slide_playerspeedcoeff.GetFloat();
+	vel += m_vPlForwardVel2D;
 
-	SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_FEET, true, sv_ball_shottaker_mindelay_short.GetFloat(), true);
+	SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_FEET, true, sv_ball_slide_minpostdelay.GetFloat(), true);
 
 	if (!SDKGameRules()->IsIntermissionState() && State_Get() == BALL_STATE_NORMAL && !HasQueuedState())
 		m_pPl->AddSlidingTackleCompleted();
@@ -956,7 +989,7 @@ bool CBall::CheckKeeperCatch()
 			QAngle ang = m_aPlCamAng;
 
 			// Add the player speed to the punch yaw direction, so new players who don't move the camera don't punch straight ahead every time
-			float extraYaw = -ZeroSign(m_vPlVel2D.Dot(m_vPlRight)) * m_vPlSideVel2D.Length() * sv_ball_keeper_punch_sidespeedcoeff.GetFloat();
+			float extraYaw = -ZeroSign(m_vPlVel2D.Dot(m_vPlRight)) * m_vPlSideVel2D.Length() * sv_ball_keeperpunch_sidespeedcoeff.GetFloat();
 
 			// Make the extra yaw weaker the closer to 90° the model to free cam yaw difference is
 			extraYaw *= 1.0f - clamp(abs(AngleDiff(m_aPlAng[YAW], m_aPlCamAng[YAW])) / 90.0f, 0.0f, 1.0f);
@@ -966,15 +999,15 @@ bool CBall::CheckKeeperCatch()
 			AngleVectors(ang, &punchDir);
 		}
 
-		Vector vel = punchDir * max(m_vVel.Length2D(), sv_ball_keeper_punch_minstrength.GetFloat()) * sv_ball_keeperdeflectioncoeff.GetFloat();
+		Vector vel = punchDir * max(m_vVel.Length2D(), sv_ball_keeperpunch_minstrength.GetFloat()) * sv_ball_keeperdeflectioncoeff.GetFloat();
 
-		SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_KEEPERPUNCH, false, sv_ball_shottaker_mindelay_short.GetFloat(), true);
+		SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_KEEPERPUNCH, false, sv_ball_keeperpunch_minpostdelay.GetFloat(), true);
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
 	}
 	// Catch ball instead of punching
 	else
 	{
-		SetVel(vec3_origin, 0, FL_SPIN_FORCE_NONE, BODY_PART_KEEPERCATCH, false, sv_ball_shottaker_mindelay_short.GetFloat(), true);
+		SetVel(vec3_origin, 0, FL_SPIN_FORCE_NONE, BODY_PART_KEEPERCATCH, false, sv_ball_keepercatch_minpostdelay.GetFloat(), true);
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);		
 		State_Transition(BALL_STATE_KEEPERHANDS);
 	}
@@ -1033,7 +1066,7 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 	QAngle shotAngle = m_aPlAng;
 	Vector vel;
 	float pitchCoeff = GetPitchCoeff(true);
-	float shotTakerMinDelay = 0.0f;
+	float minPostDelay = 0.0f;
 	bool addPlayerSpeed = false;
 
 	if (m_pPl->DoSkillMove())
@@ -1050,7 +1083,7 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 				shotStrength = GetChargedshotStrength(1.0f, sv_ball_lift_minstrength.GetInt(), sv_ball_lift_maxstrength.GetInt());
 				spinFlags = FL_SPIN_FORCE_NONE;
 				spinCoeff = 0;
-				shotTakerMinDelay = sv_ball_shottaker_mindelay_short.GetFloat();
+				minPostDelay = sv_ball_lift_minpostdelay.GetFloat();
 				addPlayerSpeed = true;
 				m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
 				EmitSound("Ball.Touch");
@@ -1063,7 +1096,7 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 				shotStrength = GetChargedshotStrength(1.0f, sv_ball_rainbowflick_minstrength.GetInt(), sv_ball_rainbowflick_maxstrength.GetInt());
 				spinFlags = FL_SPIN_FORCE_TOP;
 				spinCoeff = sv_ball_rainbowflick_spincoeff.GetFloat();
-				shotTakerMinDelay = sv_ball_shottaker_mindelay_long.GetFloat();
+				minPostDelay = sv_ball_rainbowflick_minpostdelay.GetFloat();
 				addPlayerSpeed = true;
 				m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_RAINBOW_FLICK);
 				EmitSound("Ball.Kicknormal");
@@ -1074,7 +1107,7 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 			if (m_vPlLocalDirToBall.x >= 0 && !(m_pPl->m_nButtons & IN_FORWARD) && (m_pPl->m_nButtons & IN_MOVELEFT || m_pPl->m_nButtons & IN_MOVERIGHT || m_pPl->m_nButtons & IN_BACK))
 			{
 				// Ball roll
-				shotTakerMinDelay = 0.0f;
+				minPostDelay = sv_ball_roll_minpostdelay.GetFloat();
 				shotAngle = m_aPlAng;
 
 				if (m_pPl->m_nButtons & IN_MOVELEFT)
@@ -1116,7 +1149,7 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 				}
 
 				shotStrength = m_vVel.Length2D() * sv_ball_heelshot_strengthcoeff.GetFloat();
-				shotTakerMinDelay = sv_ball_shottaker_mindelay_long.GetFloat();
+				minPostDelay = sv_ball_heelshot_minpostdelay.GetFloat();
 				m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEELKICK);
 				EmitSound("Ball.Kicknormal");
 			}
@@ -1135,13 +1168,19 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 	}
 	else
 	{
+		// Dribble shot
 		spinFlags = FL_SPIN_PERMIT_SIDE;
-		shotTakerMinDelay = 0.0f;
 
 		if (m_pPl->IsNormalshooting())
+		{
 			shotStrength = GetNormalshotStrength(GetPitchCoeff(), sv_ball_normalshot_strength.GetInt());
+			minPostDelay = sv_ball_normalshot_minpostdelay.GetFloat();
+		}
 		else
+		{
 			shotStrength = GetChargedshotStrength(GetPitchCoeff(), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
+			minPostDelay = sv_ball_chargedshot_minpostdelay.GetFloat();
+		}
 
 		shotAngle[PITCH] = min(sv_ball_groundshot_minangle.GetFloat(), shotAngle[PITCH]);
 
@@ -1170,7 +1209,7 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 		}
 	}
 
-	SetVel(vel, spinCoeff, spinFlags, BODY_PART_FEET, markOffsidePlayers, shotTakerMinDelay, true);
+	SetVel(vel, spinCoeff, spinFlags, BODY_PART_FEET, markOffsidePlayers, minPostDelay, true);
 
 	return true;
 }
@@ -1207,7 +1246,7 @@ bool CBall::DoVolleyShot()
 	else
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
 
-	SetVel(vel, spinCoeff, spinFlags, BODY_PART_FEET, true, sv_ball_shottaker_mindelay_short.GetFloat(), true);
+	SetVel(vel, spinCoeff, spinFlags, BODY_PART_FEET, true, sv_ball_volleyshot_minpostdelay.GetFloat(), true);
 
 	return true;
 }
@@ -1221,12 +1260,12 @@ bool CBall::DoChestDrop()
 	AngleVectors(ang, &dir);
 
 	Vector vel = dir * sv_ball_chestdrop_strength.GetInt();
-	vel += m_vPlForwardVel2D * sv_ball_chestdrop_playerspeedcoeff.GetFloat();
+	vel += m_vPlForwardVel2D;
 
 	m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
 	EmitSound("Ball.Touch");
 
-	SetVel(vel, 0.0f, FL_SPIN_FORCE_NONE, BODY_PART_CHEST, true, sv_ball_shottaker_mindelay_short.GetFloat(), false);
+	SetVel(vel, 0.0f, FL_SPIN_FORCE_NONE, BODY_PART_CHEST, true, sv_ball_chestdrop_minpostdelay.GetFloat(), false);
 
 	return true;
 }
@@ -1251,7 +1290,7 @@ bool CBall::DoHeader()
 			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BICYCLE_KICK);
 			EmitSound("Ball.Kickhard");
 
-			SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_FEET, true, sv_ball_shottaker_mindelay_long.GetFloat(), true);
+			SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_FEET, true, sv_ball_bicycleshot_minpostdelay.GetFloat(), true);
 		}
 		// Diving header
 		else if (m_pPl->m_nButtons & IN_FORWARD)
@@ -1271,7 +1310,7 @@ bool CBall::DoHeader()
 			EmitSound("Ball.Kickhard");
 			EmitSound("Player.DivingHeader");
 
-			SetVel(vel, sv_ball_header_spincoeff.GetFloat(), FL_SPIN_PERMIT_SIDE, BODY_PART_HEAD, true, sv_ball_shottaker_mindelay_long.GetFloat(), true);
+			SetVel(vel, sv_ball_header_spincoeff.GetFloat(), FL_SPIN_PERMIT_SIDE, BODY_PART_HEAD, true, sv_ball_header_minpostdelay.GetFloat(), true);
 		}
 		else
 		{
@@ -1281,7 +1320,6 @@ bool CBall::DoHeader()
 	else
 	{
 		Vector vel, forward;
-
 		QAngle headerAngle = m_aPlAng;
 
 		// Normal header
@@ -1308,9 +1346,9 @@ bool CBall::DoHeader()
 		}
 
 		// Add player forward move speed to ball speed
-		vel += m_vPlForwardVel2D * sv_ball_header_playerspeedcoeff.GetFloat();
+		vel += m_vPlForwardVel2D;
 
-		SetVel(vel, sv_ball_header_spincoeff.GetFloat(), FL_SPIN_PERMIT_SIDE, BODY_PART_HEAD, true, sv_ball_shottaker_mindelay_short.GetFloat(), true);
+		SetVel(vel, sv_ball_header_spincoeff.GetFloat(), FL_SPIN_PERMIT_SIDE, BODY_PART_HEAD, true, sv_ball_header_minpostdelay.GetFloat(), true);
 	}
 
 	return true;

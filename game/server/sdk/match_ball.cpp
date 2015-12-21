@@ -4,65 +4,68 @@
 #include "ios_replaymanager.h"
 
 extern ConVar
-sv_ball_bodypos_keeperhands,
-sv_ball_chargedshot_minstrength,
-sv_ball_chargedshot_maxstrength,
-sv_ball_keepershot_minangle,
-sv_ball_maxplayerfinddist,
-sv_ball_shottaker_mindelay_short,
-sv_ball_shottaker_mindelay_long,
-sv_ball_keeperthrow_strength,
-sv_ball_slidezstart,
-sv_ball_slidezend,
-sv_ball_slidesidereach_ball,
-sv_ball_slideforwardreach_ball,
-sv_ball_slidebackwardreach_ball;
+	sv_ball_bodypos_keeperhands,
+	sv_ball_chargedshot_minstrength,
+	sv_ball_chargedshot_maxstrength,
+	sv_ball_keepershot_minangle,
+	sv_ball_maxplayerfinddist,
+	sv_ball_keeperthrow_strength,
+	sv_ball_slidezstart,
+	sv_ball_slidezend,
+	sv_ball_slidesidereach_ball,
+	sv_ball_slideforwardreach_ball,
+	sv_ball_slidebackwardreach_ball,
+	sv_ball_keeperthrow_minpostdelay;
 
 ConVar
-	sv_ball_statetransition_postmessagedelay_short("sv_ball_statetransition_postmessagedelay_short", "0.1", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_statetransition_postmessagedelay_normal("sv_ball_statetransition_postmessagedelay_normal", "1.25", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_statetransition_postmessagedelay_long("sv_ball_statetransition_postmessagedelay_long", "2.0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_statetransition_messagedelay_normal("sv_ball_statetransition_messagedelay_normal", "0.5", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_statetransition_messagedelay_short("sv_ball_statetransition_messagedelay_short", "0.1", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_yellowcardballdist_forward("sv_ball_yellowcardballdist_forward", "70", FCVAR_NOTIFY),
-	sv_ball_yellowcardballdist_backward("sv_ball_yellowcardballdist_backward", "70", FCVAR_NOTIFY),
-	sv_ball_goalreplay_count("sv_ball_goalreplay_count", "2", FCVAR_NOTIFY),
-	sv_ball_goalreplay_delay("sv_ball_goalreplay_delay", "1", FCVAR_NOTIFY),
-	sv_ball_stats_pass_mindist("sv_ball_stats_pass_mindist", "300", FCVAR_NOTIFY),
-	sv_ball_stats_clearance_minspeed("sv_ball_stats_clearance_minspeed", "720", FCVAR_NOTIFY),
-	sv_ball_stats_shot_mindist("sv_ball_stats_shot_mindist", "270", FCVAR_NOTIFY),
-	sv_ball_stats_save_minspeed("sv_ball_stats_save_minspeed", "720", FCVAR_NOTIFY),
-	sv_ball_stats_assist_maxtime("sv_ball_stats_assist_maxtime", "8", FCVAR_NOTIFY),
-	sv_ball_advantage_duration_freekick("sv_ball_advantage_duration_freekick", "3", FCVAR_NOTIFY),
-	sv_ball_advantage_ignore_duration_freekick("sv_ball_advantage_ignore_duration_freekick", "1", FCVAR_NOTIFY),
-	sv_ball_advantage_duration_penalty("sv_ball_advantage_duration_penalty", "1.5", FCVAR_NOTIFY),
-	sv_ball_advantage_ignore_duration_penalty("sv_ball_advantage_ignore_duration_penalty", "1", FCVAR_NOTIFY),
-	sv_ball_offsidedist("sv_ball_offsidedist", "60", FCVAR_NOTIFY),
-	sv_ball_goalcelebduration("sv_ball_goalcelebduration", "8.0", FCVAR_NOTIFY),
-	sv_ball_setpiece_close_time("sv_ball_setpiece_close_time", "0.75", FCVAR_NOTIFY),
-	sv_ball_setpiece_close_dist( "sv_ball_setpiece_close_dist", "75", FCVAR_NOTIFY ),
-	sv_ball_doubletouchfouls("sv_ball_doubletouchfouls", "1", FCVAR_NOTIFY),
-	sv_ball_player_secondyellowcard_banduration("sv_ball_player_secondyellowcard_banduration", "15", FCVAR_NOTIFY),
-	sv_ball_player_redcard_banduration("sv_ball_player_redcard_banduration", "15", FCVAR_NOTIFY),
-	sv_ball_freekickdist_owngoal("sv_ball_freekickdist_owngoal", "850", FCVAR_NOTIFY),
-	sv_ball_freekickdist_opponentgoal("sv_ball_freekickdist_opponentgoal", "1300", FCVAR_NOTIFY),
-	sv_ball_freekickangle_opponentgoal("sv_ball_freekickangle_opponentgoal", "60", FCVAR_NOTIFY),
-	sv_ball_closetogoaldist("sv_ball_closetogoaldist", "1300", FCVAR_NOTIFY),
-	sv_ball_chargedshotblocktime_freekick("sv_ball_chargedshotblocktime_freekick", "4.0", FCVAR_NOTIFY),
-	sv_ball_chargedshotblocktime_corner("sv_ball_chargedshotblocktime_corner", "4.0", FCVAR_NOTIFY),
-	sv_ball_shotsblocktime_penalty("sv_ball_shotsblocktime_penalty", "4.0", FCVAR_NOTIFY),
-	sv_ball_slidesidereach_foul( "sv_ball_slidesidereach_foul", "10", FCVAR_NOTIFY ),
-	sv_ball_slideforwardreach_foul( "sv_ball_slideforwardreach_foul", "25", FCVAR_NOTIFY ),
-	sv_ball_slidebackwardreach_foul( "sv_ball_slidebackwardreach_foul", "20", FCVAR_NOTIFY ),
-	sv_ball_powerthrow_strength("sv_ball_powerthrow_strength", "720", FCVAR_NOTIFY),
-	sv_ball_chargedthrow_minstrength("sv_ball_chargedthrow_minstrength", "450", FCVAR_NOTIFY),
-	sv_ball_chargedthrow_maxstrength("sv_ball_chargedthrow_maxstrength", "990", FCVAR_NOTIFY),
-	sv_ball_timelimit_setpiece("sv_ball_timelimit_setpiece", "15", FCVAR_NOTIFY),
-	sv_ball_timelimit_remotecontrolled("sv_ball_timelimit_remotecontrolled", "15", FCVAR_NOTIFY),
-	sv_ball_throwin_minangle("sv_ball_throwin_minangle", "-5", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_throwin_minstrength("sv_ball_throwin_minstrength", "270", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_foulcheckdelay("sv_ball_foulcheckdelay", "2.0", FCVAR_NOTIFY),
-	sv_ball_foulcheckmaxdist("sv_ball_foulcheckmaxdist", "200", FCVAR_NOTIFY);
+	sv_ball_statetransition_postmessagedelay_short			("sv_ball_statetransition_postmessagedelay_short",			"0.1",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_statetransition_postmessagedelay_normal			("sv_ball_statetransition_postmessagedelay_normal",			"1.25",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_statetransition_postmessagedelay_long			("sv_ball_statetransition_postmessagedelay_long",			"2.0",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_statetransition_messagedelay_normal				("sv_ball_statetransition_messagedelay_normal",				"0.5",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_statetransition_messagedelay_short				("sv_ball_statetransition_messagedelay_short",				"0.1",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_yellowcardballdist_forward						("sv_ball_yellowcardballdist_forward",						"70",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_yellowcardballdist_backward						("sv_ball_yellowcardballdist_backward",						"70",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_goalreplay_count								("sv_ball_goalreplay_count",								"2",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_goalreplay_delay								("sv_ball_goalreplay_delay",								"1",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_stats_pass_mindist								("sv_ball_stats_pass_mindist",								"300",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_stats_clearance_minspeed						("sv_ball_stats_clearance_minspeed",						"720",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_stats_shot_mindist								("sv_ball_stats_shot_mindist",								"270",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_stats_save_minspeed								("sv_ball_stats_save_minspeed",								"720",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_stats_assist_maxtime							("sv_ball_stats_assist_maxtime",							"8",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_advantage_duration_freekick						("sv_ball_advantage_duration_freekick",						"3",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_advantage_ignore_duration_freekick				("sv_ball_advantage_ignore_duration_freekick",				"1",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_advantage_duration_penalty						("sv_ball_advantage_duration_penalty",						"1.5",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_advantage_ignore_duration_penalty				("sv_ball_advantage_ignore_duration_penalty",				"1",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_offsidedist										("sv_ball_offsidedist",										"60",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_goalcelebduration								("sv_ball_goalcelebduration",								"8.0",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_setpiece_close_time								("sv_ball_setpiece_close_time",								"0.75",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_setpiece_close_dist								("sv_ball_setpiece_close_dist",								"75",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_doubletouchfouls								("sv_ball_doubletouchfouls",								"1",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_player_secondyellowcard_banduration				("sv_ball_player_secondyellowcard_banduration",				"15",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_player_redcard_banduration						("sv_ball_player_redcard_banduration",						"15",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_freekickdist_owngoal							("sv_ball_freekickdist_owngoal",							"850",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_freekickdist_opponentgoal						("sv_ball_freekickdist_opponentgoal",						"1300",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_freekickangle_opponentgoal						("sv_ball_freekickangle_opponentgoal",						"60",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_closetogoaldist									("sv_ball_closetogoaldist",									"1300",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_chargedshotblocktime_freekick					("sv_ball_chargedshotblocktime_freekick",					"4.0",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_chargedshotblocktime_corner						("sv_ball_chargedshotblocktime_corner",						"4.0",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_shotsblocktime_penalty							("sv_ball_shotsblocktime_penalty",							"4.0",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_slidesidereach_foul								("sv_ball_slidesidereach_foul",								"10",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_slideforwardreach_foul							("sv_ball_slideforwardreach_foul",							"25",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_slidebackwardreach_foul							("sv_ball_slidebackwardreach_foul",							"20",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_powerthrow_strength								("sv_ball_powerthrow_strength",								"720",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_chargedthrow_minstrength						("sv_ball_chargedthrow_minstrength",						"450",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_chargedthrow_maxstrength						("sv_ball_chargedthrow_maxstrength",						"990",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_timelimit_setpiece								("sv_ball_timelimit_setpiece",								"15",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_timelimit_remotecontrolled						("sv_ball_timelimit_remotecontrolled",						"15",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_throwin_minangle								("sv_ball_throwin_minangle",								"-5",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_throwin_minstrength								("sv_ball_throwin_minstrength",								"270",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_foulcheckdelay									("sv_ball_foulcheckdelay",									"2.0",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_foulcheckmaxdist								("sv_ball_foulcheckmaxdist",								"200",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_kickoff_strength								("sv_ball_kickoff_strength",								"350",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_kickoff_minpostdelay							("sv_ball_kickoff_minpostdelay",							"0.5",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_throw_minpostdelay								("sv_ball_throw_minpostdelay",								"0.5",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
+
 
 
 LINK_ENTITY_TO_CLASS( match_ball, CMatchBall );
@@ -421,7 +424,7 @@ void CMatchBall::State_THROWIN_Think()
 
 		m_pPl->AddThrowIn();
 		RemoveAllTouches();
-		SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_HANDS, false, sv_ball_shottaker_mindelay_long.GetFloat(), true);
+		SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_HANDS, false, sv_ball_throw_minpostdelay.GetFloat(), true);
 		m_bBallInAirAfterThrowIn = true;
 		State_Transition(BALL_STATE_NORMAL);
 	}
@@ -561,7 +564,7 @@ void CMatchBall::State_KICKOFF_Think()
 	if (m_pPl->ShotButtonsReleased() && m_pPl->IsShooting())
 	{
 		RemoveAllTouches();
-		SetVel(m_vPlForward2D * 350, 0, FL_SPIN_FORCE_NONE, BODY_PART_FEET, false, sv_ball_shottaker_mindelay_short.GetFloat(), true);
+		SetVel(m_vPlForward2D * sv_ball_kickoff_strength.GetInt(), 0, FL_SPIN_FORCE_NONE, BODY_PART_FEET, false, sv_ball_kickoff_minpostdelay.GetFloat(), true);
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
 		m_pPl->RemoveFlag(FL_ATCONTROLS);
 		if (m_pOtherPl)
@@ -1080,7 +1083,7 @@ void CMatchBall::State_KEEPERHANDS_Think()
 
 		RemoveAllTouches();
 		SetPos(pos, false);
-		SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_KEEPERHANDS, true, sv_ball_shottaker_mindelay_short.GetFloat(), true);
+		SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_KEEPERHANDS, true, sv_ball_keeperthrow_minpostdelay.GetFloat(), true);
 
 		return State_Transition(BALL_STATE_NORMAL);
 	}
@@ -1134,7 +1137,7 @@ void CMatchBall::State_KEEPERHANDS_Think()
 		m_pPl->DoServerAnimationEvent(animEvent);
 		RemoveAllTouches();
 		SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_keeperhands.GetFloat()) + m_vPlForward2D * 36, false);
-		SetVel(vel, 1.0f, spinFlags, BODY_PART_KEEPERHANDS, true, sv_ball_shottaker_mindelay_short.GetFloat(), true);
+		SetVel(vel, 1.0f, spinFlags, BODY_PART_KEEPERHANDS, true, sv_ball_keeperthrow_minpostdelay.GetFloat(), true);
 
 		return State_Transition(BALL_STATE_NORMAL);
 	}
@@ -1946,9 +1949,9 @@ bool CMatchBall::IsPlayerClose()
 	return (m_vPos - m_vPlPos).Length2DSqr() <= pow(sv_ball_setpiece_close_dist.GetFloat(), 2);
 }
 
-void CMatchBall::SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyPart, bool markOffsidePlayers, float shotTakerMinDelay, bool resetShotCharging)
+void CMatchBall::SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyPart, bool markOffsidePlayers, float minPostDelay, bool resetShotCharging)
 {
-	CBall::SetVel(vel, spinCoeff, spinFlags, bodyPart, markOffsidePlayers, shotTakerMinDelay, resetShotCharging);
+	CBall::SetVel(vel, spinCoeff, spinFlags, bodyPart, markOffsidePlayers, minPostDelay, resetShotCharging);
 
 	if (markOffsidePlayers)
 		MarkOffsidePlayers();
