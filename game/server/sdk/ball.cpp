@@ -1216,6 +1216,9 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 
 bool CBall::DoVolleyShot()
 {
+	if (m_pPl->DoSkillMove())
+		return false;
+
 	float spinCoeff = 1.0f;
 	int spinFlags = FL_SPIN_PERMIT_SIDE;
 	QAngle shotAngle = m_aPlAng;
@@ -1253,6 +1256,9 @@ bool CBall::DoVolleyShot()
 
 bool CBall::DoChestDrop()
 {
+	if (m_pPl->DoSkillMove())
+		return false;
+
 	QAngle ang = m_aPlAng;
 	ang[PITCH] = sv_ball_chestdrop_angle.GetInt();
 
