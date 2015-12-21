@@ -1413,9 +1413,6 @@
     <ClCompile Include="sdk\ios_pitchtextureproxy.cpp">
       <Filter>Source Files\SDK</Filter>
     </ClCompile>
-    <ClCompile Include="sdk\ios_hud_radar.cpp">
-      <Filter>Source Files\SDK\Hud Elements</Filter>
-    </ClCompile>
     <ClCompile Include="sdk\sdk_hud_names.cpp">
       <Filter>Source Files\SDK\Hud Elements</Filter>
     </ClCompile>
@@ -3196,9 +3193,6 @@
     </ClInclude>
     <ClInclude Include="sdk\c_match_ball.h">
       <Filter>Source Files\SDK</Filter>
-    </ClInclude>
-    <ClInclude Include="sdk\ios_hud_radar.h">
-      <Filter>Source Files\SDK\Hud Elements</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

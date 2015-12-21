@@ -616,7 +616,6 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClCompile Include="sdk\ios_camera.cpp" />
     <ClCompile Include="sdk\ios_crowdtextureproxy.cpp" />
     <ClCompile Include="sdk\ios_hud_powershotbar.cpp" />
-    <ClCompile Include="sdk\ios_hud_radar.cpp" />
     <ClCompile Include="sdk\ios_hud_scorebar.cpp" />
     <ClCompile Include="sdk\ios_pitchtextureproxy.cpp" />
     <ClCompile Include="sdk\ios_playertextureproxy.cpp" />
@@ -857,7 +856,6 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClInclude Include="sdk\c_match_ball.h" />
     <ClInclude Include="sdk\c_player_ball.h" />
     <ClInclude Include="sdk\ios_camera.h" />
-    <ClInclude Include="sdk\ios_hud_radar.h" />
     <ClInclude Include="vgui_avatarimage.h" />
     <ClInclude Include="viewdebug.h" />
     <ClInclude Include="viewpostprocess.h" />
