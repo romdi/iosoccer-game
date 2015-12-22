@@ -859,8 +859,6 @@ bool CBall::DoSlideAction()
 
 	Vector vel = forward * GetNormalshotStrength(GetPitchCoeff(), sv_ball_slide_strength.GetInt());
 
-	vel += m_vPlForwardVel2D;
-
 	SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_FEET, true, sv_ball_slide_minpostdelay.GetFloat(), true);
 
 	if (!SDKGameRules()->IsIntermissionState() && State_Get() == BALL_STATE_NORMAL && !HasQueuedState())
@@ -1069,7 +1067,6 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 	Vector vel;
 	float pitchCoeff = GetPitchCoeff(true);
 	float minPostDelay = 0.0f;
-	bool addPlayerSpeed = false;
 
 	if (m_pPl->DoSkillMove())
 	{
@@ -1086,7 +1083,6 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 				spinFlags = FL_SPIN_FORCE_NONE;
 				spinCoeff = 0;
 				minPostDelay = sv_ball_lift_minpostdelay.GetFloat();
-				addPlayerSpeed = true;
 				m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
 				EmitSound("Ball.Touch");
 			}
@@ -1099,7 +1095,6 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 				spinFlags = FL_SPIN_FORCE_TOP;
 				spinCoeff = sv_ball_rainbowflick_spincoeff.GetFloat();
 				minPostDelay = sv_ball_rainbowflick_minpostdelay.GetFloat();
-				addPlayerSpeed = true;
 				m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_RAINBOW_FLICK);
 				EmitSound("Ball.Kicknormal");
 			}
@@ -1164,9 +1159,6 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 		Vector shotDir;
 		AngleVectors(shotAngle, &shotDir);
 		vel = shotDir * shotStrength;
-
-		if (addPlayerSpeed)
-			vel += m_vPlForwardVel2D;
 	}
 	else
 	{
@@ -1268,7 +1260,6 @@ bool CBall::DoChestDrop()
 	AngleVectors(ang, &dir);
 
 	Vector vel = dir * sv_ball_chestdrop_strength.GetInt();
-	vel += m_vPlForwardVel2D;
 
 	m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
 	EmitSound("Ball.Touch");
@@ -1352,9 +1343,6 @@ bool CBall::DoHeader()
 			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEADER);
 			EmitSound("Ball.Kickhard");
 		}
-
-		// Add player forward move speed to ball speed
-		vel += m_vPlForwardVel2D;
 
 		SetVel(vel, sv_ball_header_spincoeff.GetFloat(), FL_SPIN_PERMIT_SIDE, BODY_PART_HEAD, true, sv_ball_header_minpostdelay.GetFloat(), true);
 	}
