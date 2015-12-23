@@ -479,9 +479,6 @@ public:
 	bool				IsLegacySideCurl() { return m_bLegacySideCurl; } 
 	void				SetLegacySideCurl(bool enable) { m_bLegacySideCurl = enable; }
 
-	int					GetKeeperKeyBindings() { return m_nKeeperKeyBindings; }
-	void				SetKeeperKeyBindings(int mode) { m_nKeeperKeyBindings = mode; }
-
 	bool				ShotButtonsPressed();
 	bool				ShotButtonsReleased();
 	void				SetShotButtonsReleased(bool released);
@@ -513,8 +510,6 @@ public:
 	int					m_nCountryIndex;
 
 	bool				m_bLegacySideCurl;
-
-	int				m_nKeeperKeyBindings;
 
 	Vector				EyeDirection2D();
 	Vector				EyeDirection3D();
@@ -579,10 +574,6 @@ public:
 	bool				CanShoot();
 	bool				DoSkillMove();
 	bool				IsInOwnBoxAsKeeper();
-
-	int					GetKeeperJumpKey();
-	int					GetKeeperDiveKey();
-	int					GetKeeperSkillKey();
 
 	CSDKPlayer			*FindClosestPlayerToSelf(bool teammatesOnly, bool forwardOnly = false, float maxYawAngle = 360);
 

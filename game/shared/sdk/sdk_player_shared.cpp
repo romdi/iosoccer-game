@@ -666,7 +666,7 @@ void CSDKPlayer::SetShotButtonsReleased(bool released)
 
 bool CSDKPlayer::DoSkillMove()
 {
-	return m_nButtons & IN_WALK && !IsInOwnBoxAsKeeper() || m_nButtons & GetKeeperSkillKey() && IsInOwnBoxAsKeeper();
+	return m_nButtons & IN_WALK;
 }
 
 bool CSDKPlayer::IsInOwnBoxAsKeeper()
@@ -705,62 +705,4 @@ bool CSDKPlayer::IsKeeperDiving()
 		|| m_Shared.m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT
 		|| m_Shared.m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_DIVE_FORWARD
 		|| m_Shared.m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD;
-}
-
-#ifdef CLIENT_DLL
-extern ConVar keeperkeybindings;
-#endif
-
-int CSDKPlayer::GetKeeperJumpKey()
-{
-	int keeperKeyBindings;
-#ifdef CLIENT_DLL
-	keeperKeyBindings = keeperkeybindings.GetInt();
-#else
-	keeperKeyBindings = GetKeeperKeyBindings();
-#endif
-
-	switch (keeperKeyBindings)
-	{
-	case 0: default: return IN_JUMP;
-	case 1: return IN_JUMP;
-	case 2: return IN_DUCK;
-	case 3: return IN_WALK;
-	}
-}
-
-int CSDKPlayer::GetKeeperDiveKey()
-{
-	int keeperKeyBindings;
-#ifdef CLIENT_DLL
-	keeperKeyBindings = keeperkeybindings.GetInt();
-#else
-	keeperKeyBindings = GetKeeperKeyBindings();
-#endif
-
-	switch (keeperKeyBindings)
-	{
-	case 0: default: return IN_DUCK;
-	case 1: return IN_WALK;
-	case 2: return IN_JUMP;
-	case 3: return IN_JUMP;
-	}
-}
-
-int CSDKPlayer::GetKeeperSkillKey()
-{
-	int keeperKeyBindings;
-#ifdef CLIENT_DLL
-	keeperKeyBindings = keeperkeybindings.GetInt();
-#else
-	keeperKeyBindings = GetKeeperKeyBindings();
-#endif
-
-	switch (keeperKeyBindings)
-	{
-	case 0: default: return IN_WALK;
-	case 1: return IN_DUCK;
-	case 2: return IN_WALK;
-	case 3: return IN_DUCK;
-	}
 }

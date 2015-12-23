@@ -16,7 +16,6 @@ extern ConVar
 	countryindex,
 	goalteamcrests,
 	legacysidecurl,
-	keeperkeybindings,
 	modelskinindex,
 	playerballskinname,
 	playername,
@@ -733,11 +732,6 @@ CGameplaySettingPanel::CGameplaySettingPanel(Panel *parent, const char *panelNam
 {
 	m_pContent = new Panel(this, "");
 	m_pLegacySideCurl = new CheckButton(m_pContent, "", "Reverse the ball curl direction");
-	m_pKeeperSection = new Label(m_pContent, "", "KEEPER KEY BINDINGS:");
-	m_pKeeperKeyBindings[0] = new RadioButton(m_pContent, "", "Jump key = jump   /   slide key = dive   /   skill key = skill move");
-	m_pKeeperKeyBindings[1] = new RadioButton(m_pContent, "", "Jump key = jump   /   slide key = skill move   /   skill key = dive");
-	m_pKeeperKeyBindings[2] = new RadioButton(m_pContent, "", "Jump key = dive   /   slide key = jump   /   skill key = skill move");
-	m_pKeeperKeyBindings[3] = new RadioButton(m_pContent, "", "Jump key = dive   /   slide key = skill move   /   skill key = jump");
 }
 
 void CGameplaySettingPanel::PerformLayout()
@@ -746,31 +740,16 @@ void CGameplaySettingPanel::PerformLayout()
 
 	m_pContent->SetBounds(PADDING, PADDING, GetWide() - 2 * PADDING, GetTall() - 2 * PADDING);
 	m_pLegacySideCurl->SetBounds(0, 0, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
-	m_pKeeperSection->SetBounds(0, TEXT_HEIGHT + TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pKeeperKeyBindings[0]->SetBounds(0, 2 * TEXT_HEIGHT + 2 * TEXT_MARGIN, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
-	m_pKeeperKeyBindings[1]->SetBounds(0, 3 * TEXT_HEIGHT + 3 * TEXT_MARGIN, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
-	m_pKeeperKeyBindings[2]->SetBounds(0, 4 * TEXT_HEIGHT + 4 * TEXT_MARGIN, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
-	m_pKeeperKeyBindings[3]->SetBounds(0, 5 * TEXT_HEIGHT + 5 * TEXT_MARGIN, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
 }
 
 void CGameplaySettingPanel::Save()
 {
 	legacysidecurl.SetValue(m_pLegacySideCurl->IsSelected() ? 1 : 0);
-
-	for (int i = 0; i < 4; i++)
-	{
-		if (m_pKeeperKeyBindings[i]->IsSelected())
-		{
-			keeperkeybindings.SetValue(i);
-			break;
-		}
-	}
 }
 
 void CGameplaySettingPanel::Load()
 {
 	m_pLegacySideCurl->SetSelected(legacysidecurl.GetBool());
-	m_pKeeperKeyBindings[clamp(keeperkeybindings.GetInt(), 0, 3)]->SetSelected(true);
 }
 
 void CGameplaySettingPanel::Update()

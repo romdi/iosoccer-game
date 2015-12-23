@@ -229,7 +229,7 @@ void CKeeperBot::BotCalcCommand(CUserCmd &cmd)
 			if (abs(m_vLocalDirToBall.x) > 50 && abs(m_vLocalDirToBall.x) < 225 && m_vDirToBall.z < 50 && abs(m_vLocalDirToBall.y) < 40 && m_vBallVel.Length() < 750 && pClosestPl != this)
 			{
 				cmd.buttons |= IN_ATTACK;
-				cmd.buttons |= GetKeeperDiveKey();
+				cmd.buttons |= IN_JUMP;
 				cmd.buttons |= Sign(m_vLocalDirToBall.x) == 1 ? IN_FORWARD : IN_BACK;
 			}
 			// Standing catch
@@ -241,14 +241,14 @@ void CKeeperBot::BotCalcCommand(CUserCmd &cmd)
 			else if (m_vLocalDirToBall.z > 80 && m_vDirToBall.z < 150 && m_vDirToBall.Length2D() < 50)
 			{
 				cmd.buttons |= IN_ATTACK;
-				cmd.buttons |= GetKeeperDiveKey();
+				cmd.buttons |= IN_JUMP;
 			}
 			// Sideward dive
 			else if (m_flAngToBallMoveDir > 15
 				&& abs(m_vLocalDirToBall.y) > 40 && abs(m_vLocalDirToBall.y) < 350 && m_vDirToBall.z < 100 && abs(m_vLocalDirToBall.x) < 150 && m_vBallVel.Length() > 200)
 			{
 				cmd.buttons |= IN_ATTACK;
-				cmd.buttons |= GetKeeperDiveKey();
+				cmd.buttons |= IN_JUMP;
 				cmd.buttons |= Sign(m_vLocalDirToBall.y) == 1 ? IN_MOVELEFT : IN_MOVERIGHT;
 			}
 		}

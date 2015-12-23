@@ -1897,11 +1897,14 @@ bool CGameMovement::CheckActionStart()
 	if (!pPl->GetGroundEntity())
 		return false;
 
+	if (pPl->m_pHoldingBall)
+		return false;
+
 	PlayerAnimEvent_t animEvent = PLAYERANIMEVENT_NONE;
 	
-	if (pPl->IsInOwnBoxAsKeeper())
+	if (mv->m_nButtons & IN_JUMP && !(mv->m_nOldButtons & IN_JUMP))
 	{
-		if (mv->m_nButtons & pPl->GetKeeperDiveKey() && !pPl->m_pHoldingBall)
+		if (pPl->IsInOwnBoxAsKeeper())
 		{
 			int sidemoveSign = pPl->GetSidemoveSign();
 
@@ -1914,61 +1917,49 @@ bool CGameMovement::CheckActionStart()
 			else if (mv->m_nButtons & IN_BACK)
 				animEvent = PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD;
 			else
-				animEvent = PLAYERANIMEVENT_NONE;
-
-			if (animEvent != PLAYERANIMEVENT_NONE)
-			{
-				if (gpGlobals->curtime < pPl->m_Shared.m_flBoostRightDiveStart + mp_dive_boost_duration.GetFloat())
-					pPl->m_Shared.m_nBoostRightDive = 0;
-
-				if (gpGlobals->curtime < pPl->m_Shared.m_flBoostForwardDiveStart + mp_dive_boost_duration.GetFloat())
-					pPl->m_Shared.m_nBoostForwardDive = 0;
-
-				pPl->ResetShotCharging();
-				pPl->AddFlag(FL_FREECAM);
-				MoveHelper()->StartSound(mv->GetAbsOrigin(), "Player.DiveKeeper");
-			}
+				animEvent = PLAYERANIMEVENT_KEEPER_JUMP;
 		}
-		else if (mv->m_nButtons & pPl->GetKeeperJumpKey() && !(mv->m_nOldButtons & pPl->GetKeeperJumpKey()))
-		{
-			animEvent = PLAYERANIMEVENT_KEEPER_JUMP;
-		}
-	}
-	else
-	{
-		if (mv->m_nButtons & IN_JUMP && !(mv->m_nOldButtons & IN_JUMP))
+		else
 		{
 			animEvent = PLAYERANIMEVENT_JUMP;
 		}
-		else if (mv->m_nButtons & IN_DUCK && !(mv->m_nOldButtons & IN_DUCK))
-		{
-			MoveHelper()->StartSound(mv->GetAbsOrigin(), "Player.Slide");
 
-			animEvent = PLAYERANIMEVENT_SLIDE;
+		if (animEvent == PLAYERANIMEVENT_KEEPER_JUMP || animEvent == PLAYERANIMEVENT_JUMP)
+		{
+			mv->m_vecVelocity.z = mp_jump_height.GetInt();
+			SetGroundEntity(NULL);
+			player->PlayStepSound((Vector &)mv->GetAbsOrigin(), player->m_pSurfaceData, 1.0, true);
+		}
+		else
+		{
+			if (gpGlobals->curtime < pPl->m_Shared.m_flBoostRightDiveStart + mp_dive_boost_duration.GetFloat())
+				pPl->m_Shared.m_nBoostRightDive = 0;
+
+			if (gpGlobals->curtime < pPl->m_Shared.m_flBoostForwardDiveStart + mp_dive_boost_duration.GetFloat())
+				pPl->m_Shared.m_nBoostForwardDive = 0;
+
+			SetGroundEntity(NULL);
+			pPl->ResetShotCharging();
+			pPl->AddFlag(FL_FREECAM);
+			MoveHelper()->StartSound(mv->GetAbsOrigin(), "Player.DiveKeeper");
+		}
+	}
+	else if (mv->m_nButtons & IN_DUCK && !(mv->m_nOldButtons & IN_DUCK))
+	{
+		animEvent = PLAYERANIMEVENT_SLIDE;
+		MoveHelper()->StartSound(mv->GetAbsOrigin(), "Player.Slide");
 
 #ifdef GAME_DLL
-			if (!SDKGameRules()->IsIntermissionState() && GetMatchBall()->State_Get() == BALL_STATE_NORMAL && !GetMatchBall()->HasQueuedState())
-			{
-				pPl->AddSlidingTackle();
-
-				GetMatchBall()->CheckFoul(pPl);
-
-				if (!CSDKPlayer::IsOnField(pPl))
-					return true;
-			}
-#endif
-		}
-		else if (pPl->GetGroundEntity() && mv->m_nButtons & IN_JUMP && !(mv->m_nOldButtons & IN_JUMP))
+		if (!SDKGameRules()->IsIntermissionState() && GetMatchBall()->State_Get() == BALL_STATE_NORMAL && !GetMatchBall()->HasQueuedState())
 		{
-			animEvent = PLAYERANIMEVENT_JUMP;
-		}
-	}
+			pPl->AddSlidingTackle();
 
-	if (animEvent == PLAYERANIMEVENT_KEEPER_JUMP || animEvent == PLAYERANIMEVENT_JUMP)
-	{
-		mv->m_vecVelocity.z = mp_jump_height.GetInt();
-		SetGroundEntity(NULL);
-		player->PlayStepSound((Vector &)mv->GetAbsOrigin(), player->m_pSurfaceData, 1.0, true);
+			GetMatchBall()->CheckFoul(pPl);
+
+			if (!CSDKPlayer::IsOnField(pPl))
+				return true;
+		}
+#endif
 	}
 
 	if (animEvent != PLAYERANIMEVENT_NONE)

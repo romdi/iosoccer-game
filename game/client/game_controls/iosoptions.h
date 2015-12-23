@@ -180,8 +180,6 @@ class CGameplaySettingPanel : public PropertyPage, public ISettingPanel
 	Panel *m_pContent;
 
 	CheckButton *m_pLegacySideCurl;
-	Label *m_pKeeperSection;
-	RadioButton *m_pKeeperKeyBindings[4];
 
 public:
 
