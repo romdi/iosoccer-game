@@ -1064,9 +1064,9 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 	float spinCoeff = 1.0f;
 	float shotStrength = 0;
 	QAngle shotAngle = m_aPlAng;
-	Vector vel;
 	float pitchCoeff = GetPitchCoeff(true);
 	float minPostDelay = 0.0f;
+	bool addPlayerSpeed = false;
 
 	if (m_pPl->DoSkillMove())
 	{
@@ -1083,6 +1083,7 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 				spinFlags = FL_SPIN_FORCE_NONE;
 				spinCoeff = 0;
 				minPostDelay = sv_ball_lift_minpostdelay.GetFloat();
+				addPlayerSpeed = true;
 				m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
 				EmitSound("Ball.Touch");
 			}
@@ -1095,6 +1096,7 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 				spinFlags = FL_SPIN_FORCE_TOP;
 				spinCoeff = sv_ball_rainbowflick_spincoeff.GetFloat();
 				minPostDelay = sv_ball_rainbowflick_minpostdelay.GetFloat();
+				addPlayerSpeed = true;
 				m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_RAINBOW_FLICK);
 				EmitSound("Ball.Kicknormal");
 			}
@@ -1155,10 +1157,6 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 				return false;
 			}
 		}
-
-		Vector shotDir;
-		AngleVectors(shotAngle, &shotDir);
-		vel = shotDir * shotStrength;
 	}
 	else
 	{
@@ -1178,21 +1176,17 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 
 		shotAngle[PITCH] = min(sv_ball_groundshot_minangle.GetFloat(), shotAngle[PITCH]);
 
-		Vector shotDir;
-		AngleVectors(shotAngle, &shotDir);
-		vel = shotDir * shotStrength;
-
-		if (vel.Length() >= sv_ball_animation_minstrength_strongshot.GetInt())
+		if (shotStrength >= sv_ball_animation_minstrength_strongshot.GetInt())
 		{
 			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KICK);
 			EmitSound("Ball.Kickhard");
 		}
-		else if (vel.Length() >= sv_ball_animation_minstrength_weakshot.GetInt())
+		else if (shotStrength >= sv_ball_animation_minstrength_weakshot.GetInt())
 		{
 			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KICK);
 			EmitSound("Ball.Kicknormal");
 		}
-		else if (vel.Length() >= sv_ball_animation_minstrength_dribbleshot.GetInt())
+		else if (shotStrength >= sv_ball_animation_minstrength_dribbleshot.GetInt())
 		{
 			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
 			EmitSound("Ball.Touch");
@@ -1202,6 +1196,13 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
 		}
 	}
+
+	Vector shotDir;
+	AngleVectors(shotAngle, &shotDir);
+	Vector vel = shotDir * shotStrength;
+
+	if (addPlayerSpeed)
+		vel += m_vPlForwardVel2D;
 
 	SetVel(vel, spinCoeff, spinFlags, BODY_PART_FEET, markOffsidePlayers, minPostDelay, true);
 
