@@ -194,7 +194,7 @@ ConVar
 	sv_ball_roll_minpostdelay								("sv_ball_roll_minpostdelay",								"0.0",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 
 	sv_ball_heelshot_strengthcoeff							("sv_ball_heelshot_strengthcoeff",							"0.75",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_heelshot_minpostdelay							("sv_ball_heelshot_minpostdelay",							"0.25",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_heelshot_minpostdelay							("sv_ball_heelshot_minpostdelay",							"0.75",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 
 
 
