@@ -454,6 +454,7 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 	switch (event)
 	{
 	case PLAYERANIMEVENT_DIVINGHEADER:
+	case PLAYERANIMEVENT_BICYCLE_KICK:
 	case PLAYERANIMEVENT_TACKLED_FORWARD:
 	case PLAYERANIMEVENT_TACKLED_BACKWARD:
 		GetSDKPlayer()->AddFlag(FL_FREECAM);

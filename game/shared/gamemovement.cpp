@@ -1774,6 +1774,17 @@ bool CGameMovement::CheckActionOverTime()
 		mv->m_vecVelocity = forward2D * mp_divingheaderspeed.GetInt() * max(0, (1 - pow(timePassed / mp_divingheader_move_duration.GetFloat(), 2)));
 		break;
 	}
+	case PLAYERANIMEVENT_BICYCLE_KICK:
+	{
+		if (timePassed > mp_bicycleshot_idle_duration.GetFloat())
+		{
+			pPl->DoAnimationEvent(PLAYERANIMEVENT_NONE);
+			return false;
+		}
+
+		mv->m_vecVelocity = Vector(0, 0, 0);
+		break;
+	}
 	case PLAYERANIMEVENT_KICK:
 	{
 		return false;
