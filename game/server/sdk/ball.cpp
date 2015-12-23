@@ -193,6 +193,7 @@ ConVar
 	sv_ball_roll_strength									("sv_ball_roll_strength",									"225",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_roll_minpostdelay								("sv_ball_roll_minpostdelay",								"0.0",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 
+	sv_ball_heelshot_minangle								("sv_ball_heelshot_minangle",								"0",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_heelshot_strengthcoeff							("sv_ball_heelshot_strengthcoeff",							"0.75",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_heelshot_minpostdelay							("sv_ball_heelshot_minpostdelay",							"0.75",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 
@@ -1015,16 +1016,13 @@ bool CBall::CheckKeeperCatch()
 	return true;
 }
 
-float CBall::GetPitchCoeff(bool invertPitch/* = false*/)
+float CBall::GetPitchCoeff()
 {
 	//return pow(cos((m_aPlAng[PITCH] - sv_ball_bestshotangle.GetInt()) / (PITCH_LIMIT - sv_ball_bestshotangle.GetInt()) * M_PI / 2), 2);
 	// plot 0.5 + (cos(x/89 * pi/2) * 0.5), x=-89..89
 
 	float bestAng = sv_ball_bestshotangle.GetFloat();
 	float pitch = m_aPlAng[PITCH];
-
-	if (invertPitch)
-		pitch *= -1;
 
 	float coeff;
 
@@ -1064,7 +1062,6 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 	float spinCoeff = 1.0f;
 	float shotStrength = 0;
 	QAngle shotAngle = m_aPlAng;
-	float pitchCoeff = GetPitchCoeff(true);
 	float minPostDelay = 0.0f;
 	bool addPlayerSpeed = false;
 
@@ -1128,8 +1125,6 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 			else if (m_vPlLocalDirToBall.x < 0 && (m_pPl->m_nButtons & IN_BACK || m_pPl->m_nButtons & IN_MOVELEFT || m_pPl->m_nButtons & IN_MOVERIGHT))
 			{
 				// Heel shot
-				shotAngle[PITCH] *= -1;
-
 				if (m_pPl->m_nButtons & IN_BACK)
 				{
 					if (m_pPl->m_nButtons & IN_MOVELEFT)
@@ -1147,6 +1142,7 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 						shotAngle[YAW] -= 90;
 				}
 
+				shotAngle[PITCH] = min(sv_ball_heelshot_minangle.GetFloat(), shotAngle[PITCH]);
 				shotStrength = m_vVel.Length2D() * sv_ball_heelshot_strengthcoeff.GetFloat();
 				minPostDelay = sv_ball_heelshot_minpostdelay.GetFloat();
 				m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEELKICK);
@@ -1280,12 +1276,13 @@ bool CBall::DoHeader()
 		// Bicycle shot
 		if (m_pPl->m_nButtons & IN_BACK)
 		{
-			QAngle ang = m_aPlCamAng;
+			QAngle ang = m_aPlAng;
+			ang[YAW] += 180;
 
-			Vector forward;
-			AngleVectors(ang, &forward);
+			Vector dir;
+			AngleVectors(ang, &dir);
 
-			Vector vel = -forward * GetChargedshotStrength(GetPitchCoeff(true), sv_ball_bicycleshot_minstrength.GetInt(), sv_ball_bicycleshot_maxstrength.GetInt());
+			Vector vel = dir * GetChargedshotStrength(GetPitchCoeff(), sv_ball_bicycleshot_minstrength.GetInt(), sv_ball_bicycleshot_maxstrength.GetInt());
 
 			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BICYCLE_KICK);
 			EmitSound("Ball.Kickhard");
@@ -1354,7 +1351,6 @@ bool CBall::DoHeader()
 AngularImpulse CBall::CalcSpin(float coeff, int spinFlags)
 {	
 	Vector worldRot;
-	float pitch = m_aPlAng[PITCH];
 
 	if (spinFlags & FL_SPIN_RETAIN_SIDE)
 	{

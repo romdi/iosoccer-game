@@ -191,7 +191,7 @@ protected:
 	bool			DoChestDrop();
 	bool			DoHeader();
 	AngularImpulse	CalcSpin(float coeff, int spinFlags);
-	float			GetPitchCoeff(bool invertPitch = false);
+	float			GetPitchCoeff();
 	float			GetNormalshotStrength(float coeff, int strength);
 	float			GetPowershotStrength(float coeff, int strength);
 	float			GetChargedshotStrength(float coeff, int minStrength, int maxStrength);
