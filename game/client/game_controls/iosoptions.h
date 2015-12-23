@@ -226,6 +226,10 @@ class CVisualSettingPanel : public PropertyPage, public ISettingPanel
 
 	Panel *m_pContent;
 
+	CheckButton *m_pShowHudPlayerInfo;
+	Label *m_pHudPlayerInfoLabel;
+	RadioButton *m_pHudPlayerInfo[3];
+
 public:
 
 	CVisualSettingPanel(Panel *parent, const char *panelName);

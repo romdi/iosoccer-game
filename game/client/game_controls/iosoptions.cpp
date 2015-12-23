@@ -756,9 +756,18 @@ void CGameplaySettingPanel::Update()
 {
 }
 
+extern ConVar hud_names_visible, hud_names_type;
+
 CVisualSettingPanel::CVisualSettingPanel(Panel *parent, const char *panelName) : BaseClass(parent, panelName)
 {
 	m_pContent = new Panel(this, "");
+
+	m_pShowHudPlayerInfo = new CheckButton(m_pContent, "", "Draw info text above players");
+
+	m_pHudPlayerInfoLabel = new Label(m_pContent, "", "Player info text type:");
+	m_pHudPlayerInfo[0] = new RadioButton(m_pContent, "", "Name");
+	m_pHudPlayerInfo[1] = new RadioButton(m_pContent, "", "Position");
+	m_pHudPlayerInfo[2] = new RadioButton(m_pContent, "", "Number");
 }
 
 void CVisualSettingPanel::PerformLayout()
@@ -766,14 +775,33 @@ void CVisualSettingPanel::PerformLayout()
 	BaseClass::PerformLayout();
 
 	m_pContent->SetBounds(PADDING, PADDING, GetWide() - 2 * PADDING, GetTall() - 2 * PADDING);
+
+	m_pShowHudPlayerInfo->SetBounds(0, 0, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
+
+	m_pHudPlayerInfoLabel->SetBounds(0, TEXT_HEIGHT + TEXT_MARGIN, 150, TEXT_HEIGHT);
+	m_pHudPlayerInfo[0]->SetBounds(150, TEXT_HEIGHT + TEXT_MARGIN, 100, TEXT_HEIGHT);
+	m_pHudPlayerInfo[1]->SetBounds(250, TEXT_HEIGHT + TEXT_MARGIN, 100, TEXT_HEIGHT);
+	m_pHudPlayerInfo[2]->SetBounds(350, TEXT_HEIGHT + TEXT_MARGIN, 100, TEXT_HEIGHT);
 }
 
 void CVisualSettingPanel::Save()
 {
+	hud_names_visible.SetValue(m_pShowHudPlayerInfo->IsSelected() ? 1 : 0);
+
+	for (int i = 0; i < 3; i++)
+	{
+		if (m_pHudPlayerInfo[i]->IsSelected())
+		{
+			hud_names_type.SetValue(i);
+			break;
+		}
+	}
 }
 
 void CVisualSettingPanel::Load()
 {
+	m_pShowHudPlayerInfo->SetSelected(hud_names_visible.GetBool());
+	m_pHudPlayerInfo[clamp(hud_names_type.GetInt(), 0, 2)]->SetSelected(true);
 }
 
 void CVisualSettingPanel::Update()

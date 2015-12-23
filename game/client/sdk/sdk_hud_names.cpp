@@ -26,7 +26,9 @@
 #define PLAYER_HINT_DISTANCE	150
 #define PLAYER_HINT_DISTANCE_SQ	(PLAYER_HINT_DISTANCE*PLAYER_HINT_DISTANCE)
 
-ConVar hud_names_visible("hud_names_visible", "1");
+ConVar hud_names_visible("hud_names_visible", "1", FCVAR_ARCHIVE);
+
+ConVar hud_names_type("hud_names_type", "0", FCVAR_ARCHIVE, "", true, 0, true, 2);
 
 void CC_HudNamesToggle(const CCommand &args)
 {
@@ -99,13 +101,13 @@ void CSDKNames::VidInit()
 	CHudElement::VidInit();
 }
 
-void DrawPlayerName(HFont font, const Vector &origin, const char *playerName, int teamNumber)
+void DrawPlayerInfo(HFont font, const Vector &origin, const char *playerText, int teamNumber)
 {
-	wchar_t wszPlayerName[MAX_PLAYER_NAME_LENGTH];
-	g_pVGuiLocalize->ConvertANSIToUnicode(playerName, wszPlayerName, sizeof(wszPlayerName));
+	wchar_t wszPlayerText[MAX_PLAYER_NAME_LENGTH];
+	g_pVGuiLocalize->ConvertANSIToUnicode(playerText, wszPlayerText, sizeof(wszPlayerText));
 
 	int wide, tall;
-	vgui::surface()->GetTextSize(font, wszPlayerName, wide, tall);
+	vgui::surface()->GetTextSize(font, wszPlayerText, wide, tall);
 
 	Color c = GetGlobalTeam(teamNumber)->GetHudKitColor();
 
@@ -120,7 +122,7 @@ void DrawPlayerName(HFont font, const Vector &origin, const char *playerName, in
 	surface()->DrawSetTextFont(font);
 	surface()->DrawSetTextColor(c);
 	surface()->DrawSetTextPos(xPos - wide / 2, yPos - tall);
-	surface()->DrawPrintText(wszPlayerName, wcslen(wszPlayerName));
+	surface()->DrawPrintText(wszPlayerText, wcslen(wszPlayerText));
 }
 
 //-----------------------------------------------------------------------------
@@ -142,7 +144,18 @@ void CSDKNames::Paint()
 				continue;
 
 			if (hud_names_visible.GetBool())
-				DrawPlayerName(m_hFont, pPl->GetLocalOrigin(), pPl->m_szPlayerName, pPl->m_nTeamNumber);
+			{
+				const char *playerText;
+
+				if (hud_names_type.GetInt() == 0)
+					playerText = pPl->m_szPlayerName;
+				else if (hud_names_type.GetInt() == 1)
+					playerText = g_szPosNames[GetGlobalTeam(pPl->m_nTeamNumber)->GetFormation()->positions[pPl->m_nTeamPosIndex]->type];
+				else
+					playerText = VarArgs("%d", pPl->m_nShirtNumber);
+
+				DrawPlayerInfo(m_hFont, pPl->GetLocalOrigin(), playerText, pPl->m_nTeamNumber);
+			}
 		}
 	}
 	else
@@ -154,7 +167,18 @@ void CSDKNames::Paint()
 				continue;
 
 			if (pPl != pLocal && hud_names_visible.GetBool())
-				DrawPlayerName(m_hFont, pPl->GetLocalOrigin(), pPl->GetPlayerName(), pPl->GetTeamNumber());
+			{
+				const char *playerText;
+
+				if (hud_names_type.GetInt() == 0)
+					playerText = pPl->GetPlayerName();
+				else if (hud_names_type.GetInt() == 1)
+					playerText = g_szPosNames[pPl->GetTeam()->GetFormation()->positions[GameResources()->GetTeamPosIndex(i)]->type];
+				else
+					playerText = VarArgs("%d", GameResources()->GetShirtNumber(i));
+
+				DrawPlayerInfo(m_hFont, pPl->GetLocalOrigin(), playerText, pPl->GetTeamNumber());
+			}
 		}
 	}
 }
