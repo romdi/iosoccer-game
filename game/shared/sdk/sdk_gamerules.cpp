@@ -2534,7 +2534,7 @@ void CC_MP_PitchTexture(const CCommand &args)
 ConCommand mp_pitchtexture("mp_pitchtexture", CC_MP_PitchTexture, "", 0);
 
 
-ConVar mp_clientsettingschangeinterval("mp_clientsettingschangeinterval", "5", FCVAR_REPLICATED|FCVAR_NOTIFY, "");
+ConVar mp_clientsettingschangeinterval("mp_clientsettingschangeinterval", "2", FCVAR_REPLICATED|FCVAR_NOTIFY, "");
 
 
 void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )

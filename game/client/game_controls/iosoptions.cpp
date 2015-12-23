@@ -162,7 +162,7 @@ void CIOSOptionsPanel::OnThink()
 			//m_pSaveButton->SetText(text);
 			m_pSaveButton->SetEnabled(false);
 			m_pChangeInfoText->SetVisible(true);
-			m_pChangeInfoText->SetText(VarArgs("Wait %d seconds to change", (int)(pLocal->m_flNextClientSettingsChangeTime - gpGlobals->curtime)));
+			m_pChangeInfoText->SetText(VarArgs("Wait %d seconds to change", 1 + (int)(pLocal->m_flNextClientSettingsChangeTime - gpGlobals->curtime)));
 			return;
 		}
 		else if (!SDKGameRules()->IsIntermissionState() && (GetLocalPlayerTeam() == TEAM_HOME || GetLocalPlayerTeam() == TEAM_AWAY))
