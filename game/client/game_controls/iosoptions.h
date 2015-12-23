@@ -230,6 +230,14 @@ class CVisualSettingPanel : public PropertyPage, public ISettingPanel
 	Label *m_pHudPlayerInfoLabel;
 	RadioButton *m_pHudPlayerInfo[3];
 
+	Label *m_pCameraDistanceLabel;
+	TextEntry *m_pCameraDistanceValue;
+	Slider *m_pCameraDistanceSlider;
+
+	Label *m_pCameraHeightLabel;
+	TextEntry *m_pCameraHeightValue;
+	Slider *m_pCameraHeightSlider;
+
 public:
 
 	CVisualSettingPanel(Panel *parent, const char *panelName);

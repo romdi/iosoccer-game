@@ -757,6 +757,7 @@ void CGameplaySettingPanel::Update()
 }
 
 extern ConVar hud_names_visible, hud_names_type;
+extern ConVar cl_cam_dist, cl_cam_height;
 
 CVisualSettingPanel::CVisualSettingPanel(Panel *parent, const char *panelName) : BaseClass(parent, panelName)
 {
@@ -768,6 +769,14 @@ CVisualSettingPanel::CVisualSettingPanel(Panel *parent, const char *panelName) :
 	m_pHudPlayerInfo[0] = new RadioButton(m_pContent, "", "Name");
 	m_pHudPlayerInfo[1] = new RadioButton(m_pContent, "", "Position");
 	m_pHudPlayerInfo[2] = new RadioButton(m_pContent, "", "Number");
+
+	m_pCameraDistanceLabel = new Label(m_pContent, "", "Camera distance:");
+	m_pCameraDistanceValue = new TextEntry(m_pContent, "");
+	m_pCameraDistanceSlider = new Slider(m_pContent, "");
+
+	m_pCameraHeightLabel = new Label(m_pContent, "", "Camera height:");
+	m_pCameraHeightValue = new TextEntry(m_pContent, "");
+	m_pCameraHeightSlider = new Slider(m_pContent, "");
 }
 
 void CVisualSettingPanel::PerformLayout()
@@ -778,10 +787,32 @@ void CVisualSettingPanel::PerformLayout()
 
 	m_pShowHudPlayerInfo->SetBounds(0, 0, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
 
-	m_pHudPlayerInfoLabel->SetBounds(0, TEXT_HEIGHT + TEXT_MARGIN, 150, TEXT_HEIGHT);
-	m_pHudPlayerInfo[0]->SetBounds(150, TEXT_HEIGHT + TEXT_MARGIN, 100, TEXT_HEIGHT);
-	m_pHudPlayerInfo[1]->SetBounds(250, TEXT_HEIGHT + TEXT_MARGIN, 100, TEXT_HEIGHT);
-	m_pHudPlayerInfo[2]->SetBounds(350, TEXT_HEIGHT + TEXT_MARGIN, 100, TEXT_HEIGHT);
+	m_pHudPlayerInfoLabel->SetBounds(0, TEXT_HEIGHT + TEXT_MARGIN, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
+	m_pHudPlayerInfo[0]->SetBounds(0, 2 * TEXT_HEIGHT + TEXT_MARGIN, 125, TEXT_HEIGHT);
+	m_pHudPlayerInfo[1]->SetBounds(125, 2 * TEXT_HEIGHT + TEXT_MARGIN, 125, TEXT_HEIGHT);
+	m_pHudPlayerInfo[2]->SetBounds(250, 2 * TEXT_HEIGHT + TEXT_MARGIN, 125, TEXT_HEIGHT);
+
+	m_pCameraDistanceLabel->SetBounds(0, 3 * TEXT_HEIGHT + 2 * TEXT_MARGIN, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
+	m_pCameraDistanceValue->SetBounds(0, 4 * TEXT_HEIGHT + 2 * TEXT_MARGIN, 50, TEXT_HEIGHT);
+	m_pCameraDistanceSlider->SetBounds(70, 4 * TEXT_HEIGHT + 2 * TEXT_MARGIN, INPUT_WIDTH, TEXT_HEIGHT);
+
+	m_pCameraHeightLabel->SetBounds(0, 5 * TEXT_HEIGHT + 3 * TEXT_MARGIN, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
+	m_pCameraHeightValue->SetBounds(0, 6 * TEXT_HEIGHT + 3 * TEXT_MARGIN, 50, TEXT_HEIGHT);
+	m_pCameraHeightSlider->SetBounds(70, 6 * TEXT_HEIGHT + 3 * TEXT_MARGIN, INPUT_WIDTH, TEXT_HEIGHT);
+
+	float minDist, maxDist;
+	cl_cam_dist.GetMin(minDist);
+	cl_cam_dist.GetMax(maxDist);
+
+	m_pCameraDistanceValue->SetAllowNumericInputOnly(true);
+	m_pCameraDistanceSlider->SetRange(minDist, maxDist);
+
+	float minHeight, maxHeight;
+	cl_cam_height.GetMin(minHeight);
+	cl_cam_height.GetMax(maxHeight);
+
+	m_pCameraHeightValue->SetAllowNumericInputOnly(true);
+	m_pCameraHeightSlider->SetRange(minHeight, maxHeight);
 }
 
 void CVisualSettingPanel::Save()
@@ -796,16 +827,31 @@ void CVisualSettingPanel::Save()
 			break;
 		}
 	}
+
+	cl_cam_dist.SetValue(m_pCameraDistanceValue->GetValueAsInt());
+	cl_cam_height.SetValue(m_pCameraHeightValue->GetValueAsInt());
 }
 
 void CVisualSettingPanel::Load()
 {
 	m_pShowHudPlayerInfo->SetSelected(hud_names_visible.GetBool());
 	m_pHudPlayerInfo[clamp(hud_names_type.GetInt(), 0, 2)]->SetSelected(true);
+
+	m_pCameraDistanceValue->SetText(cl_cam_dist.GetString());
+	m_pCameraHeightValue->SetText(cl_cam_height.GetString());
 }
 
 void CVisualSettingPanel::Update()
 {
+	if (m_pCameraDistanceSlider->IsDragged())
+		m_pCameraDistanceValue->SetText(VarArgs("%d", m_pCameraDistanceSlider->GetValue()));
+	else
+		m_pCameraDistanceSlider->SetValue(m_pCameraDistanceValue->GetValueAsInt());
+
+	if (m_pCameraHeightSlider->IsDragged())
+		m_pCameraHeightValue->SetText(VarArgs("%d", m_pCameraHeightSlider->GetValue()));
+	else
+		m_pCameraHeightSlider->SetValue(m_pCameraHeightValue->GetValueAsInt());
 }
 
 #include "engine/IEngineSound.h"
