@@ -817,17 +817,22 @@ void CMatchBall::State_FREEKICK_Think()
 {
 	if (!CSDKPlayer::IsOnField(m_pPl, m_nFouledTeam))
 	{
-		m_pPl = NULL;
+		// Take player assigned by captain
+		m_pPl = m_pSetpieceTaker;
 
-		if (CSDKPlayer::IsOnField(m_pSetpieceTaker, m_nFouledTeam))
-			m_pPl = m_pSetpieceTaker;
+		// Take fouled player if close to opponent goal
+		if (!CSDKPlayer::IsOnField(m_pPl, m_nFouledTeam) && (m_vPos - GetGlobalTeam(m_nFoulingTeam)->m_vGoalCenter).Length2D() <= sv_ball_freekickdist_opponentgoal.GetInt())
+			m_pPl = m_pFouledPl;
 
-		if (!m_pPl && (m_vPos - GetGlobalTeam(m_nFouledTeam)->m_vGoalCenter).Length2D() <= sv_ball_freekickdist_owngoal.GetInt()) // Close to own goal
+		// Take keeper if close to own goal
+		if (!CSDKPlayer::IsOnField(m_pPl, m_nFouledTeam) && (m_vPos - GetGlobalTeam(m_nFouledTeam)->m_vGoalCenter).Length2D() <= sv_ball_freekickdist_owngoal.GetInt())
 			m_pPl = GetGlobalTeam(m_nFouledTeam)->GetPlayerByPosType(POS_GK);
 
-		if (!CSDKPlayer::IsOnField(m_pPl) || m_pPl->GetTeamPosType() == POS_GK && m_pPl->IsBot())
+		// Take player closest to foul spot if no one else found or found keeper is bot
+		if (!CSDKPlayer::IsOnField(m_pPl, m_nFouledTeam) || m_pPl->GetTeamPosType() == POS_GK && m_pPl->IsBot())
 			m_pPl = FindNearestPlayer(m_nFouledTeam);
 
+		// Bail out if no player found
 		if (!m_pPl)
 			return State_Transition(BALL_STATE_NORMAL);
 
