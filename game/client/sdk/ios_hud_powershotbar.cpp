@@ -137,30 +137,8 @@ void CHudChargedshotBar::Paint()
 
 	float stamina = pPlayer->m_Shared.GetStamina() / 100.0f;
 	
-	Color staminaFgColor, staminaBgColor, shotFgColor, shotBgColor;
-
-	bool shotBlocked = true;
-
-	if (pPlayer->GetFlags() & FL_REMOTECONTROLLED)
-		staminaFgColor = Color(100, 100, 100, 255);
-	else if (pPlayer->m_bShotsBlocked)
-		staminaFgColor = Color(139, 0, 0, 255);
-	else if (pPlayer->m_bChargedshotBlocked)
-		staminaFgColor = Color(255, 69, 0, 255);
-	else
-		shotBlocked = false;
-
-	float shotStrength;
-
-	if (shotBlocked)
-	{
-		stamina = 1.0f;
-	}
-	else
-	{
-		staminaFgColor = Color(0, 255, 127, 255);
-		staminaBgColor = Color(0, 0, 0, 255);
-	}
+	Color staminaFgColor = Color(139, 195, 74, 255);
+	Color staminaBgColor = Color(0, 0, 0, 255);
 
 	Color staminaLimitFgColor = Color(100, 100, 100, 255);
 	Color shotLimitFgColor = Color(100, 100, 100, 255);
@@ -191,11 +169,25 @@ void CHudChargedshotBar::Paint()
 		STAMINABAR_VMARGIN + STAMINABAR_BORDER + STAMINABAR_HEIGHT
 	);
 
-	if (pPlayer->m_Shared.m_bDoChargedShot || pPlayer->m_Shared.m_bIsShotCharging)
+	Color shotFgColor;
+	Color shotBgColor = Color(0, 0, 0, 255);
+	bool shotBlocked = true;
+
+	if (pPlayer->GetFlags() & FL_REMOTECONTROLLED)
+		shotFgColor = Color(121, 85, 72, 255);
+	else if (pPlayer->m_bShotsBlocked)
+		shotFgColor = Color(244, 67, 54, 255);
+	else if (pPlayer->m_bChargedshotBlocked)
+		shotFgColor = Color(255, 87, 34, 255);
+	else
 	{
-		shotStrength = pPlayer->GetChargedShotStrength();
-		shotFgColor = Color(255, 165, 0, 255);
-		shotBgColor = Color(0, 0, 0, 255);
+		shotFgColor = Color(33, 150, 243, 255);
+		shotBlocked = false;
+	}
+
+	if (pPlayer->m_Shared.m_bDoChargedShot || pPlayer->m_Shared.m_bIsShotCharging || shotBlocked)
+	{
+		float shotStrength = shotBlocked ? 1.0f : pPlayer->GetChargedShotStrength();
 
 		// Draw shot bar back
 		surface()->DrawSetColor(shotBgColor);
