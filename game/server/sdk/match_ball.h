@@ -45,7 +45,7 @@ public:
 	void			Touched(bool isShot, body_part_t bodyPart, const Vector &oldVel);
 	bool			CheckFoul(CSDKPlayer *pPl);
 	void			SetFoulParams(foul_type_t type, Vector pos, CSDKPlayer *pFoulingPl, CSDKPlayer *pFouledPl = NULL);
-	bool			IsPlayerClose();
+	bool			HasProximityRestriction();
 	void			SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyPart, bool markOffsidePlayers, float minPostDelay, bool resetShotCharging);
 	void			MarkOffsidePlayers();
 	void			UnmarkOffsidePlayers();
@@ -64,7 +64,8 @@ public:
 	void			CheckFieldZone();
 
 	float			m_flNextStateMessageTime;
-	float			m_flSetpieceCloseStartTime;
+	float			m_flSetpieceProximityStartTime;
+	float			m_flSetpieceProximityEndTime;
 	float			m_flStateTimelimit;
 
 	CHandle<CSDKPlayer>	m_pOtherPl;

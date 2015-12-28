@@ -38,8 +38,9 @@ ConVar
 	sv_ball_advantage_ignore_duration_penalty				("sv_ball_advantage_ignore_duration_penalty",				"1",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_offsidedist										("sv_ball_offsidedist",										"60",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_goalcelebduration								("sv_ball_goalcelebduration",								"8.0",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_setpiece_close_time								("sv_ball_setpiece_close_time",								"0.75",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_setpiece_close_dist								("sv_ball_setpiece_close_dist",								"75",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_setpiece_proximity_activationtime				("sv_ball_setpiece_proximity_activationtime",				"0.75",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_setpiece_proximity_lingertime					("sv_ball_setpiece_proximity_lingertime",					"1.0",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_setpiece_proximity_dist							("sv_ball_setpiece_proximity_dist",							"75",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_doubletouchfouls								("sv_ball_doubletouchfouls",								"1",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_player_secondyellowcard_banduration				("sv_ball_player_secondyellowcard_banduration",				"15",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_player_redcard_banduration						("sv_ball_player_redcard_banduration",						"15",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
@@ -628,20 +629,7 @@ void CMatchBall::State_GOALKICK_Think()
 		m_pPl->SetShotButtonsReleased(false);
 	}
 
-	if (IsPlayerClose())
-	{
-		if (m_flSetpieceCloseStartTime == -1)
-			m_flSetpieceCloseStartTime = gpGlobals->curtime;
-	}
-	else
-		m_flSetpieceCloseStartTime = -1;
-
-	if (m_flSetpieceCloseStartTime != -1 && gpGlobals->curtime > m_flSetpieceCloseStartTime + sv_ball_setpiece_close_time.GetFloat())
-	{
-		m_pPl->SetChargedshotBlocked(true);
-	}
-	else
-		m_pPl->SetChargedshotBlocked(false);
+	m_pPl->SetChargedshotBlocked(HasProximityRestriction());
 
 	if (!m_pPl->ShotsBlocked()
 		&& m_pPl->ShotButtonsReleased()
@@ -706,21 +694,7 @@ void CMatchBall::State_CORNER_Think()
 		m_pPl->SetShotButtonsReleased(false);
 	}
 
-	if (IsPlayerClose())
-	{
-		if (m_flSetpieceCloseStartTime == -1)
-			m_flSetpieceCloseStartTime = gpGlobals->curtime;
-	}
-	else
-		m_flSetpieceCloseStartTime = -1;
-
-	if (gpGlobals->curtime <= m_flStateEnterTime + sv_ball_chargedshotblocktime_corner.GetFloat()
-		|| m_flSetpieceCloseStartTime != -1 && gpGlobals->curtime > m_flSetpieceCloseStartTime + sv_ball_setpiece_close_time.GetFloat())
-	{
-		m_pPl->SetChargedshotBlocked(true);
-	}
-	else
-		m_pPl->SetChargedshotBlocked(false);
+	m_pPl->SetChargedshotBlocked(gpGlobals->curtime <= m_flStateEnterTime + sv_ball_chargedshotblocktime_corner.GetFloat() || HasProximityRestriction());
 
 	if (!m_pPl->ShotsBlocked()
 		&& m_pPl->ShotButtonsReleased()
@@ -855,28 +829,16 @@ void CMatchBall::State_FREEKICK_Think()
 	if (m_flStateTimelimit == -1)
 	{
 		m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit_setpiece.GetFloat();
-		m_flSetpieceCloseStartTime = -1;
+		m_flSetpieceProximityStartTime = -1;
+		m_flSetpieceProximityEndTime = -1;
 		m_pPl->RemoveFlag(FL_ATCONTROLS);
 		m_pPl->SetShotsBlocked(false);
 		m_pPl->SetShotButtonsReleased(false);
 	}
 
-	if (IsPlayerClose())
-	{
-		if (m_flSetpieceCloseStartTime == -1)
-			m_flSetpieceCloseStartTime = gpGlobals->curtime;
-	}
-	else
-		m_flSetpieceCloseStartTime = -1;
+	float distToGoal = (m_vPos - GetGlobalTeam(m_nFoulingTeam)->m_vGoalCenter).Length2D();
 
-	if (abs(m_vPos.y - GetGlobalTeam(m_nFoulingTeam)->m_vGoalCenter.GetY()) <= sv_ball_freekickdist_opponentgoal.GetInt()
-		&& gpGlobals->curtime <= m_flStateEnterTime + sv_ball_chargedshotblocktime_freekick.GetFloat()
-		|| m_flSetpieceCloseStartTime != -1 && gpGlobals->curtime > m_flSetpieceCloseStartTime + sv_ball_setpiece_close_time.GetFloat())
-	{
-		m_pPl->SetChargedshotBlocked(true);
-	}
-	else
-		m_pPl->SetChargedshotBlocked(false);
+	m_pPl->SetChargedshotBlocked(distToGoal <= sv_ball_freekickdist_opponentgoal.GetInt() && gpGlobals->curtime <= m_flStateEnterTime + sv_ball_chargedshotblocktime_freekick.GetFloat() || HasProximityRestriction());
 
 	if (!m_pPl->ShotsBlocked()
 		&& m_pPl->ShotButtonsReleased()
@@ -977,7 +939,8 @@ void CMatchBall::State_PENALTY_Think()
 	if (m_flStateTimelimit == -1)
 	{
 		m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit_setpiece.GetFloat();
-		m_flSetpieceCloseStartTime = -1;
+		m_flSetpieceProximityStartTime = -1;
+		m_flSetpieceProximityEndTime = -1;
 		m_pPl->RemoveFlag(FL_ATCONTROLS);
 	}
 
@@ -987,20 +950,7 @@ void CMatchBall::State_PENALTY_Think()
 		m_pPl->SetShotButtonsReleased(false);
 	}
 
-	if (IsPlayerClose())
-	{
-		if (m_flSetpieceCloseStartTime == -1)
-			m_flSetpieceCloseStartTime = gpGlobals->curtime;
-	}
-	else
-		m_flSetpieceCloseStartTime = -1;
-
-	if (m_flSetpieceCloseStartTime != -1 && gpGlobals->curtime > m_flSetpieceCloseStartTime + sv_ball_setpiece_close_time.GetFloat())
-	{
-		m_pPl->SetChargedshotBlocked(true);
-	}
-	else
-		m_pPl->SetChargedshotBlocked(false);
+	m_pPl->SetChargedshotBlocked(HasProximityRestriction());
 
 	if (!m_pPl->ShotsBlocked()
 		&& m_pPl->ShotButtonsReleased()
@@ -1954,9 +1904,44 @@ void CMatchBall::SetFoulParams(foul_type_t type, Vector pos, CSDKPlayer *pFoulin
 	}
 }
 
-bool CMatchBall::IsPlayerClose()
+bool CMatchBall::HasProximityRestriction()
 {
-	return (m_vPos - m_vPlPos).Length2DSqr() <= pow(sv_ball_setpiece_close_dist.GetFloat(), 2);
+	float ballDistToGoal = (m_pPl->GetOppTeam()->m_vGoalCenter - m_vPos).Length2D();
+	float plDistToGoal = (m_pPl->GetOppTeam()->m_vGoalCenter - m_vPlPos).Length2D();
+
+	if (plDistToGoal < ballDistToGoal + sv_ball_setpiece_proximity_dist.GetFloat())
+	{
+		if (m_flSetpieceProximityStartTime == -1)
+		{
+			m_flSetpieceProximityStartTime = gpGlobals->curtime + sv_ball_setpiece_proximity_activationtime.GetFloat();
+			m_flSetpieceProximityEndTime = -1;
+		}
+		
+		return gpGlobals->curtime >= m_flSetpieceProximityStartTime;
+	}
+	else
+	{
+		if (m_flSetpieceProximityStartTime == -1)
+		{
+			return false;
+		}
+		else
+		{
+			if (m_flSetpieceProximityEndTime == -1)
+				m_flSetpieceProximityEndTime = gpGlobals->curtime + sv_ball_setpiece_proximity_lingertime.GetFloat();
+
+			if (gpGlobals->curtime <= m_flSetpieceProximityEndTime)
+			{
+				return true;
+			}
+			else
+			{
+				m_flSetpieceProximityStartTime = -1;
+				m_flSetpieceProximityEndTime = -1;
+				return false;
+			}
+		}
+	}
 }
 
 void CMatchBall::SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t bodyPart, bool markOffsidePlayers, float minPostDelay, bool resetShotCharging)
