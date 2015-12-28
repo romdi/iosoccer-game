@@ -109,11 +109,6 @@ void CReplayPlayer::Think()
 	StudioFrameAdvance();
 }
 
-float GetReplayStartTime()
-{
-	return gpGlobals->curtime - max(max(sv_replay_duration1.GetFloat(), sv_replay_duration2.GetFloat()), sv_replay_duration3.GetFloat());
-}
-
 LINK_ENTITY_TO_CLASS(replaymanager, CReplayManager);
 
 IMPLEMENT_SERVERCLASS_ST(CReplayManager, DT_ReplayManager)
@@ -186,7 +181,7 @@ void CReplayManager::Think()
 {
 	SetNextThink(gpGlobals->curtime);
 
-	if (!sv_replays.GetBool())
+	if (!sv_replay_instant_enabled.GetBool() && !sv_replay_highlight_enabled.GetBool())
 		return;
 
 	if (!GetMatchBall())
@@ -205,22 +200,18 @@ bool matchEventFitsMatchPeriod(const MatchEvent *pMatchEvent, match_period_t mat
 	if (matchPeriod == MATCH_PERIOD_COOLDOWN)
 		return true;
 
-	// Only saves and misses in other intermissions
-	if (pMatchEvent->matchEventType == MATCH_EVENT_KEEPERSAVE || pMatchEvent->matchEventType == MATCH_EVENT_MISS)
-	{
-		if (matchPeriod == MATCH_PERIOD_HALFTIME)
-			return true;
+	if (matchPeriod == MATCH_PERIOD_HALFTIME && pMatchEvent->matchPeriod == MATCH_PERIOD_FIRST_HALF)
+		return true;
 
-		if (matchPeriod == MATCH_PERIOD_EXTRATIME_INTERMISSION && pMatchEvent->matchPeriod == MATCH_PERIOD_SECOND_HALF)
-			return true;
+	if (matchPeriod == MATCH_PERIOD_EXTRATIME_INTERMISSION && pMatchEvent->matchPeriod == MATCH_PERIOD_SECOND_HALF)
+		return true;
 
-		if (matchPeriod == MATCH_PERIOD_EXTRATIME_HALFTIME && pMatchEvent->matchPeriod == MATCH_PERIOD_EXTRATIME_FIRST_HALF)
-			return true;
+	if (matchPeriod == MATCH_PERIOD_EXTRATIME_HALFTIME && pMatchEvent->matchPeriod == MATCH_PERIOD_EXTRATIME_FIRST_HALF)
+		return true;
 
-		if (matchPeriod == MATCH_PERIOD_PENALTIES_INTERMISSION
-			&& (mp_extratime.GetBool() && pMatchEvent->matchPeriod == MATCH_PERIOD_EXTRATIME_SECOND_HALF || !mp_extratime.GetBool() && pMatchEvent->matchPeriod == MATCH_PERIOD_SECOND_HALF))
-			return true;
-	}
+	if (matchPeriod == MATCH_PERIOD_PENALTIES_INTERMISSION
+		&& (mp_extratime.GetBool() && pMatchEvent->matchPeriod == MATCH_PERIOD_EXTRATIME_SECOND_HALF || !mp_extratime.GetBool() && pMatchEvent->matchPeriod == MATCH_PERIOD_SECOND_HALF))
+		return true;
 
 	return false;
 }
@@ -264,10 +255,10 @@ extern ConVar sv_ball_highlightsdelay_cooldown;
 
 void CReplayManager::StartReplay(bool isHighlightReplay)
 {
-	if (!sv_replays.GetBool())
-		return;
-
 	m_bIsHighlightReplay = isHighlightReplay;
+
+	if (m_bIsHighlightReplay && !sv_replay_highlight_enabled.GetBool() || !m_bIsHighlightReplay && !sv_replay_instant_enabled.GetBool())
+		return;
 
 	m_nReplayIndex = FindNextHighlightReplayIndex((m_bIsHighlightReplay ? 0 : -1), SDKGameRules()->State_Get());
 
@@ -465,10 +456,10 @@ void CReplayManager::TakeSnapshot()
 		}
 	}
 	
-	float replayStartTime = GetReplayStartTime();
+	float recordStartTime = gpGlobals->curtime - GetLongestReplayDuration();
 
 	// Remove old snapshots from the list. Only free a snapshot's memory if it isn't part of any highlight.
-	while (m_Snapshots.Count() >= 2 && m_Snapshots[0]->snaptime < replayStartTime && m_Snapshots[1]->snaptime <= replayStartTime)
+	while (m_Snapshots.Count() >= 2 && m_Snapshots[0]->snaptime < recordStartTime && m_Snapshots[1]->snaptime <= recordStartTime)
 	{
 		if (m_Snapshots[0]->replayCount == 0)
 			delete m_Snapshots[0];
@@ -856,9 +847,6 @@ void CReplayManager::RestoreSnapshot()
 
 void CReplayManager::StartHighlights()
 {
-	if (!sv_replays.GetBool() || !sv_highlights.GetBool())
-		return;
-
 	StartReplay(true);
 }
 
@@ -869,43 +857,86 @@ void CReplayManager::StopHighlights()
 
 void CReplayManager::CalcMaxReplayRunsAndDuration(const MatchEvent *pMatchEvent, float startTime)
 {
-	if (pMatchEvent->matchEventType == MATCH_EVENT_GOAL || pMatchEvent->matchEventType == MATCH_EVENT_OWNGOAL)
+	if (SDKGameRules()->IsIntermissionState())
 	{
-		m_nMaxReplayRuns = sv_replay_count.GetInt();
+		m_nMaxReplayRuns = 0;
+
+		if (sv_replay_highlight_first_enabled.GetBool())
+		{
+			m_nMaxReplayRuns = 1;
+
+			if (sv_replay_highlight_second_enabled.GetBool())
+			{
+				m_nMaxReplayRuns = 2;
+
+				if (sv_replay_highlight_second_enabled.GetBool())
+					m_nMaxReplayRuns = 3;
+			}
+		}
 
 		switch (m_nReplayRunIndex)
 		{
 		case 0:
 		default:
-			m_flRunDuration = sv_replay_duration1.GetFloat();
-			m_flSlowMoDuration = sv_replay_slowmo_duration1.GetFloat();
-			m_flSlowMoCoeff = sv_replay_slowmo_coeff1.GetFloat();
+			m_flRunDuration = sv_replay_highlight_first_duration.GetFloat();
+			m_flSlowMoDuration = sv_replay_highlight_first_slowmo_duration.GetFloat();
+			m_flSlowMoCoeff = sv_replay_highlight_first_slowmo_coeff.GetFloat();
 			break;
 		case 1:
-			m_flRunDuration = sv_replay_duration2.GetFloat();
-			m_flSlowMoDuration = sv_replay_slowmo_duration2.GetFloat();
-			m_flSlowMoCoeff = sv_replay_slowmo_coeff2.GetFloat();
+			m_flRunDuration = sv_replay_highlight_second_duration.GetFloat();
+			m_flSlowMoDuration = sv_replay_highlight_second_slowmo_duration.GetFloat();
+			m_flSlowMoCoeff = sv_replay_highlight_second_slowmo_coeff.GetFloat();
 			break;
 		case 2:
-			m_flRunDuration = sv_replay_duration3.GetFloat();
-			m_flSlowMoDuration = sv_replay_slowmo_duration3.GetFloat();
-			m_flSlowMoCoeff = sv_replay_slowmo_coeff3.GetFloat();
+			m_flRunDuration = sv_replay_highlight_third_duration.GetFloat();
+			m_flSlowMoDuration = sv_replay_highlight_third_slowmo_duration.GetFloat();
+			m_flSlowMoCoeff = sv_replay_highlight_third_slowmo_coeff.GetFloat();
 			break;
 		}
 	}
 	else
 	{
-		m_nMaxReplayRuns = 1;
-		m_flRunDuration = 4.0f;
-		m_flSlowMoDuration = 0;
-		m_flSlowMoCoeff = 1.0f;
+		m_nMaxReplayRuns = 0;
+
+		if (sv_replay_instant_first_enabled.GetBool())
+		{
+			m_nMaxReplayRuns = 1;
+
+			if (sv_replay_instant_second_enabled.GetBool())
+			{
+				m_nMaxReplayRuns = 2;
+
+				if (sv_replay_instant_second_enabled.GetBool())
+					m_nMaxReplayRuns = 3;
+			}
+		}
+
+		switch (m_nReplayRunIndex)
+		{
+		case 0:
+		default:
+			m_flRunDuration = sv_replay_instant_first_duration.GetFloat();
+			m_flSlowMoDuration = sv_replay_instant_first_slowmo_duration.GetFloat();
+			m_flSlowMoCoeff = sv_replay_instant_first_slowmo_coeff.GetFloat();
+			break;
+		case 1:
+			m_flRunDuration = sv_replay_instant_second_duration.GetFloat();
+			m_flSlowMoDuration = sv_replay_instant_second_slowmo_duration.GetFloat();
+			m_flSlowMoCoeff = sv_replay_instant_second_slowmo_coeff.GetFloat();
+			break;
+		case 2:
+			m_flRunDuration = sv_replay_instant_third_duration.GetFloat();
+			m_flSlowMoDuration = sv_replay_instant_third_slowmo_duration.GetFloat();
+			m_flSlowMoCoeff = sv_replay_instant_third_slowmo_coeff.GetFloat();
+			break;
+		}
 	}
 
 	m_flReplayStartTime = startTime;
 
 	// If the new replay duration is shorter than the recorded time span, set the offset so it starts playing later and finishes with the last snapshot.
 	// The recorded duration is the maximum of all duration convars
-	m_flReplayStartTimeOffset = max(max(sv_replay_duration1.GetFloat(), sv_replay_duration2.GetFloat()), sv_replay_duration3.GetFloat()) - m_flRunDuration;
+	m_flReplayStartTimeOffset = GetLongestReplayDuration() - m_flRunDuration;
 
 	// Compensate for slow mo
 	m_flReplayStartTimeOffset += (1.0f - m_flSlowMoCoeff) * m_flSlowMoDuration;
@@ -917,18 +948,18 @@ void CReplayManager::AddMatchEvent(match_event_t type, int team, CSDKPlayer *pPl
 
 	if (type == MATCH_EVENT_GOAL || type == MATCH_EVENT_OWNGOAL || type == MATCH_EVENT_MISS || type == MATCH_EVENT_KEEPERSAVE || type == MATCH_EVENT_REDCARD)
 	{
-		float replayStartTime = GetReplayStartTime() + 1.0f;
+		float recordStartTime = gpGlobals->curtime - GetLongestReplayDuration() + sv_replay_endpadding.GetFloat();
 
 		for (int i = 0; i < m_Snapshots.Count(); i++)
 		{
-			if (m_Snapshots[i]->snaptime >= replayStartTime)
+			if (m_Snapshots[i]->snaptime >= recordStartTime)
 			{
 				pMatchEvent->snapshots.AddToTail(m_Snapshots[i]);
 				m_Snapshots[i]->replayCount += 1;
 			}
 		}
 
-		pMatchEvent->snapshotEndTime = gpGlobals->curtime + 1.0f;
+		pMatchEvent->snapshotEndTime = gpGlobals->curtime + sv_replay_endpadding.GetFloat();
 	}
 	else
 		pMatchEvent->snapshotEndTime = 0;
@@ -956,4 +987,12 @@ void CReplayManager::AddMatchEvent(match_event_t type, int team, CSDKPlayer *pPl
 
 		GetGlobalTeam(pMatchEvent->team)->AddMatchEvent(pMatchEvent->matchPeriod, pMatchEvent->second, pMatchEvent->matchEventType, matchEventPlayerNames);
 	}
+}
+
+float CReplayManager::GetLongestReplayDuration()
+{
+	float instantMax = max(max(sv_replay_instant_first_duration.GetFloat(), sv_replay_instant_second_duration.GetFloat()), sv_replay_instant_third_duration.GetFloat());
+	float highlightMax = max(max(sv_replay_highlight_first_duration.GetFloat(), sv_replay_highlight_second_duration.GetFloat()), sv_replay_highlight_third_duration.GetFloat());
+
+	return max(instantMax, highlightMax);
 }

@@ -40,18 +40,42 @@
 #ifdef GAME_DLL
 void IOS_LogPrintf(char *fmt, ...);
 extern ConVar
-	sv_replays,
-	sv_replay_count,
-	sv_replay_duration1,
-	sv_replay_slowmo_duration1,
-	sv_replay_slowmo_coeff1,
-	sv_replay_duration2,
-	sv_replay_slowmo_duration2,
-	sv_replay_slowmo_coeff2,
-	sv_replay_duration3,
-	sv_replay_slowmo_duration3,
-	sv_replay_slowmo_coeff3,
-	sv_highlights,
+	sv_replay_highlight_enabled,
+	sv_replay_instant_enabled,
+	sv_replay_endpadding,
+
+	sv_replay_instant_first_enabled,
+	sv_replay_instant_first_duration,
+	sv_replay_instant_first_slowmo_duration,
+	sv_replay_instant_first_slowmo_coeff,
+
+	sv_replay_instant_second_enabled,
+	sv_replay_instant_second_duration,
+	sv_replay_instant_second_slowmo_duration,
+	sv_replay_instant_second_slowmo_coeff,
+
+	sv_replay_instant_third_enabled,
+	sv_replay_instant_third_duration,
+	sv_replay_instant_third_slowmo_duration,
+	sv_replay_instant_third_slowmo_coeff,
+
+
+	sv_replay_highlight_first_enabled,
+	sv_replay_highlight_first_duration,
+	sv_replay_highlight_first_slowmo_duration,
+	sv_replay_highlight_first_slowmo_coeff,
+
+	sv_replay_highlight_second_enabled,
+	sv_replay_highlight_second_duration,
+	sv_replay_highlight_second_slowmo_duration,
+	sv_replay_highlight_second_slowmo_coeff,
+
+	sv_replay_highlight_third_enabled,
+	sv_replay_highlight_third_duration,
+	sv_replay_highlight_third_slowmo_duration,
+	sv_replay_highlight_third_slowmo_coeff,
+
+
 	sv_awaytime_warmup,
 	sv_awaytime_warmup_autospec,
 	sv_autostartmatch;

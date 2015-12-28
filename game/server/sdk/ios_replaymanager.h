@@ -233,6 +233,7 @@ public:
 	void AddMatchEvent(match_event_t type, int team, CSDKPlayer *pPlayer1, CSDKPlayer *pPlayer2 = NULL, CSDKPlayer *pPlayer3 = NULL);
 	int GetMatchEventCount() { return m_MatchEvents.Count(); }
 	MatchEvent *GetMatchEvent(int index) { return m_MatchEvents[index]; }
+	float GetLongestReplayDuration();
 	
 	CNetworkVar(bool, m_bIsReplaying);
 	CNetworkVar(int, m_nReplayRunIndex);
@@ -241,6 +242,7 @@ public:
 	int UpdateTransmitState() {	return SetTransmitState(FL_EDICT_ALWAYS); }
 
 private:
+
 	CUtlVector<Snapshot *>	m_Snapshots;
 	bool					m_bReplayIsPending;
 	int						m_nReplayIndex;

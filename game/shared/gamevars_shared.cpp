@@ -116,9 +116,6 @@ ConVar mp_tvcam_offset_north("mp_tvcam_offset_north", "250", FCVAR_NOTIFY | FCVA
 ConVar mp_tvcam_sideline_offset_height("mp_tvcam_sideline_offset_height", "600", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar mp_tvcam_sideline_offset_north("mp_tvcam_sideline_offset_north", "750", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar mp_tvcam_sideline_zoomcoeff("mp_tvcam_sideline_zoomcoeff", "0.5", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar mp_tvcam_replaycam1("mp_tvcam_replaycam1", "4", FCVAR_NOTIFY | FCVAR_REPLICATED, "0: sideline, 1: fixed sideline, 2: behind goal, 3: topdown, 4: fly follow, 5: goal line, 6: celebration");
-ConVar mp_tvcam_replaycam2("mp_tvcam_replaycam2", "2", FCVAR_NOTIFY | FCVAR_REPLICATED, "0: sideline, 1: fixed sideline, 2: behind goal, 3: topdown, 4: fly follow, 5: goal line, 6: celebration");
-ConVar mp_tvcam_replaycam3("mp_tvcam_replaycam3", "5", FCVAR_NOTIFY | FCVAR_REPLICATED, "0: sideline, 1: fixed sideline, 2: behind goal, 3: topdown, 4: fly follow, 5: goal line, 6: celebration");
 
 ConVar mp_timeout_count("mp_timeout_count", "3", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar mp_timeout_duration("mp_timeout_duration", "5", FCVAR_NOTIFY | FCVAR_REPLICATED);

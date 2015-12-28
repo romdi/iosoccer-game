@@ -752,15 +752,20 @@ void CMatchBall::State_GOAL_Enter()
 
 	float delay = sv_ball_goalcelebduration.GetFloat();
 
-	if (sv_replays.GetBool())
+	if (sv_replay_instant_enabled.GetBool())
 	{
-		delay += sv_replay_duration1.GetFloat();
+		if (sv_replay_instant_first_enabled.GetBool())
+		{
+			delay += sv_replay_instant_first_duration.GetFloat();
 
-		if (sv_replay_count.GetInt() >= 2)
-			delay += sv_replay_duration2.GetFloat();
+			if (sv_replay_instant_second_enabled.GetBool())
+			{
+				delay += sv_replay_instant_second_duration.GetFloat();
 
-		if (sv_replay_count.GetInt() >= 3)
-			delay += sv_replay_duration3.GetFloat();
+				if (sv_replay_instant_third_enabled.GetBool())
+					delay += sv_replay_instant_third_duration.GetFloat();
+			}
+		}
 	}
 
 	IGameEvent *pEvent = gameeventmanager->CreateEvent("transition");

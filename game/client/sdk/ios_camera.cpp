@@ -169,6 +169,14 @@ void C_Camera::SetCamMode(int mode)
 	}
 }
 
+extern ConVar
+	sv_replay_instant_first_camera,
+	sv_replay_instant_second_camera,
+	sv_replay_instant_third_camera,
+	sv_replay_highlight_first_camera,
+	sv_replay_highlight_second_camera,
+	sv_replay_highlight_third_camera;
+
 int C_Camera::GetTVCamMode()
 {
 	C_SDKPlayer *pLocal = C_SDKPlayer::GetLocalSDKPlayer();
@@ -181,11 +189,23 @@ int C_Camera::GetTVCamMode()
 	}
 	else if (GetReplayManager() && GetReplayManager()->IsReplaying())
 	{
-		switch (GetReplayManager()->m_nReplayRunIndex)
+		if (SDKGameRules()->IsIntermissionState())
 		{
-		case 0: default: return mp_tvcam_replaycam1.GetInt();
-		case 1: return mp_tvcam_replaycam2.GetInt();
-		case 2: return mp_tvcam_replaycam3.GetInt();
+			switch (GetReplayManager()->m_nReplayRunIndex)
+			{
+			case 0: default: return sv_replay_highlight_first_camera.GetInt();
+			case 1: return sv_replay_highlight_second_camera.GetInt();
+			case 2: return sv_replay_highlight_third_camera.GetInt();
+			}
+		}
+		else
+		{
+			switch (GetReplayManager()->m_nReplayRunIndex)
+			{
+			case 0: default: return sv_replay_instant_first_camera.GetInt();
+			case 1: return sv_replay_instant_second_camera.GetInt();
+			case 2: return sv_replay_instant_third_camera.GetInt();
+			}
 		}
 	}
 	else if (GetMatchBall() && GetMatchBall()->m_eBallState == BALL_STATE_GOAL)

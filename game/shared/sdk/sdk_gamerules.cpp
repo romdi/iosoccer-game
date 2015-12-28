@@ -1338,18 +1338,52 @@ void CSDKGameRules::SetWeather(PrecipitationType_t type)
 
 #endif
 
-ConVar sv_replays("sv_replays", "1", FCVAR_NOTIFY);
-ConVar sv_replay_count("sv_replay_count", "2", FCVAR_NOTIFY);
-ConVar sv_replay_duration1("sv_replay_duration1", "5", FCVAR_NOTIFY);
-ConVar sv_replay_slowmo_duration1("sv_replay_slowmo_duration1", "3", FCVAR_NOTIFY);
-ConVar sv_replay_slowmo_coeff1("sv_replay_slowmo_coeff1", "0.5", FCVAR_NOTIFY);
-ConVar sv_replay_duration2("sv_replay_duration2", "5", FCVAR_NOTIFY);
-ConVar sv_replay_slowmo_duration2("sv_replay_slowmo_duration2", "3", FCVAR_NOTIFY);
-ConVar sv_replay_slowmo_coeff2("sv_replay_slowmo_coeff2", "0.5", FCVAR_NOTIFY);
-ConVar sv_replay_duration3("sv_replay_duration3", "5", FCVAR_NOTIFY);
-ConVar sv_replay_slowmo_duration3("sv_replay_slowmo_duration3", "3", FCVAR_NOTIFY);
-ConVar sv_replay_slowmo_coeff3("sv_replay_slowmo_coeff3", "0.5", FCVAR_NOTIFY);
-ConVar sv_highlights("sv_highlights", "1", FCVAR_NOTIFY);
+
+ConVar sv_replay_endpadding							("sv_replay_endpadding",						"1.0",		FCVAR_NOTIFY);
+
+
+ConVar sv_replay_instant_enabled					("sv_replay_instant_enabled",					"1",		FCVAR_NOTIFY);
+
+ConVar sv_replay_instant_first_enabled				("sv_replay_instant_first_enabled",				"1",		FCVAR_NOTIFY);
+ConVar sv_replay_instant_first_camera				("sv_replay_instant_first_camera",				"0",		FCVAR_NOTIFY | FCVAR_REPLICATED, "0: sideline, 1: fixed sideline, 2: behind goal, 3: topdown, 4: fly follow, 5: goal line, 6: celebration");
+ConVar sv_replay_instant_first_duration				("sv_replay_instant_first_duration",			"6",		FCVAR_NOTIFY);
+ConVar sv_replay_instant_first_slowmo_duration		("sv_replay_instant_first_slowmo_duration",		"0",		FCVAR_NOTIFY);
+ConVar sv_replay_instant_first_slowmo_coeff			("sv_replay_instant_first_slowmo_coeff",		"0",		FCVAR_NOTIFY);
+
+ConVar sv_replay_instant_second_enabled				("sv_replay_instant_second_enabled",			"1",		FCVAR_NOTIFY);
+ConVar sv_replay_instant_second_camera				("sv_replay_instant_second_camera",				"2",		FCVAR_NOTIFY | FCVAR_REPLICATED, "0: sideline, 1: fixed sideline, 2: behind goal, 3: topdown, 4: fly follow, 5: goal line, 6: celebration");
+ConVar sv_replay_instant_second_duration			("sv_replay_instant_second_duration",			"6",		FCVAR_NOTIFY);
+ConVar sv_replay_instant_second_slowmo_duration		("sv_replay_instant_second_slowmo_duration",	"6",		FCVAR_NOTIFY);
+ConVar sv_replay_instant_second_slowmo_coeff		("sv_replay_instant_second_slowmo_coeff",		"0.5",		FCVAR_NOTIFY);
+
+ConVar sv_replay_instant_third_enabled				("sv_replay_instant_third_enabled",				"1",		FCVAR_NOTIFY);
+ConVar sv_replay_instant_third_camera				("sv_replay_instant_third_camera",				"5",		FCVAR_NOTIFY | FCVAR_REPLICATED, "0: sideline, 1: fixed sideline, 2: behind goal, 3: topdown, 4: fly follow, 5: goal line, 6: celebration");
+ConVar sv_replay_instant_third_duration				("sv_replay_instant_third_duration",			"4",		FCVAR_NOTIFY);
+ConVar sv_replay_instant_third_slowmo_duration		("sv_replay_instant_third_slowmo_duration",		"4",		FCVAR_NOTIFY);
+ConVar sv_replay_instant_third_slowmo_coeff			("sv_replay_instant_third_slowmo_coeff",		"0.33",		FCVAR_NOTIFY);
+
+
+ConVar sv_replay_highlight_enabled					("sv_replay_highlight_enabled",					"1",		FCVAR_NOTIFY);
+
+ConVar sv_replay_highlight_first_enabled			("sv_replay_highlight_first_enabled",			"1",		FCVAR_NOTIFY);
+ConVar sv_replay_highlight_first_camera				("sv_replay_highlight_first_camera",			"0",		FCVAR_NOTIFY | FCVAR_REPLICATED, "0: sideline, 1: fixed sideline, 2: behind goal, 3: topdown, 4: fly follow, 5: goal line, 6: celebration");
+ConVar sv_replay_highlight_first_duration			("sv_replay_highlight_first_duration",			"4",		FCVAR_NOTIFY);
+ConVar sv_replay_highlight_first_slowmo_duration	("sv_replay_highlight_first_slowmo_duration",	"0",		FCVAR_NOTIFY);
+ConVar sv_replay_highlight_first_slowmo_coeff		("sv_replay_highlight_first_slowmo_coeff",		"0",		FCVAR_NOTIFY);
+
+ConVar sv_replay_highlight_second_enabled			("sv_replay_highlight_second_enabled",			"0",		FCVAR_NOTIFY);
+ConVar sv_replay_highlight_second_camera			("sv_replay_highlight_second_camera",			"2",		FCVAR_NOTIFY | FCVAR_REPLICATED, "0: sideline, 1: fixed sideline, 2: behind goal, 3: topdown, 4: fly follow, 5: goal line, 6: celebration");
+ConVar sv_replay_highlight_second_duration			("sv_replay_highlight_second_duration",			"4",		FCVAR_NOTIFY);
+ConVar sv_replay_highlight_second_slowmo_duration	("sv_replay_highlight_second_slowmo_duration",	"4",		FCVAR_NOTIFY);
+ConVar sv_replay_highlight_second_slowmo_coeff		("sv_replay_highlight_second_slowmo_coeff",		"0",		FCVAR_NOTIFY);
+
+ConVar sv_replay_highlight_third_enabled			("sv_replay_highlight_third_enabled",			"0",		FCVAR_NOTIFY);
+ConVar sv_replay_highlight_third_camera				("sv_replay_highlight_third_camera",			"5",		FCVAR_NOTIFY | FCVAR_REPLICATED, "0: sideline, 1: fixed sideline, 2: behind goal, 3: topdown, 4: fly follow, 5: goal line, 6: celebration");
+ConVar sv_replay_highlight_third_duration			("sv_replay_highlight_third_duration",			"4",		FCVAR_NOTIFY);
+ConVar sv_replay_highlight_third_slowmo_duration	("sv_replay_highlight_third_slowmo_duration",	"4",		FCVAR_NOTIFY);
+ConVar sv_replay_highlight_third_slowmo_coeff		("sv_replay_highlight_third_slowmo_coeff",		"0",		FCVAR_NOTIFY);
+
+
 
 static void OnMaxPlayersChange(IConVar *var, const char *pOldValue, float flOldValue)
 {
