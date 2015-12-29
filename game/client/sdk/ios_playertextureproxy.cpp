@@ -12,6 +12,7 @@
 #include "c_ios_replaymanager.h"
 #include "iosoptions.h"
 #include "clientmode_sdk.h"
+#include "vgui/ILocalize.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -314,14 +315,22 @@ void CProceduralRegenerator::WriteText(unsigned char *imageData, const char *tex
 	int totalWidth = 0;
 	int maxHeight = 0;
 
+	wchar_t wszText[100];
+	g_pVGuiLocalize->ConvertANSIToUnicode(text, wszText, sizeof(wszText));
+
 	// Calculate the total width and max height of the text with kerning
-	for (size_t i = 0; i < strlen(text); i++)
+	for (size_t i = 0; i < wcslen(wszText); i++)
 	{
-		const chr_t &chr = chars[text[i]];
+		const chr_t &chr = chars[wszText[i]];
+
+		// Skip non-matching glyphs
+		if (chr.glyph == 0)
+			continue;
+
 		totalWidth += chr.advanceX;
 
 		if (i > 0)
-			totalWidth += chr.GetKerning(text[i - 1]);
+			totalWidth += chr.GetKerning(wszText[i - 1]);
 
 		maxHeight = max(maxHeight, chr.height + chr.offsetY);
 	}
@@ -353,13 +362,13 @@ void CProceduralRegenerator::WriteText(unsigned char *imageData, const char *tex
 	const int textureWidth = 1024;
 	const int textureHeight = 1024;
 
-	for (size_t i = 0; i < strlen(text); i++)
+	for (size_t i = 0; i < wcslen(wszText); i++)
 	{
-		const chr_t &chr = chars[text[i]];
+		const chr_t &chr = chars[wszText[i]];
 
 		if (i > 0)
 		{
-			int kerning = chr.GetKerning(text[i - 1]);
+			int kerning = chr.GetKerning(wszText[i - 1]);
 
 			if (rotation == 90)
 				posY += kerning;
