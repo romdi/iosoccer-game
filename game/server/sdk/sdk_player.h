@@ -447,6 +447,9 @@ public:
 
 	int					GetTeamPosIndexToJoin(void) { return m_nTeamPosIndexToJoin; }
 
+	void				SetPositionAfterTeamChange(const Vector &pos, const QAngle &ang);
+	QAngle				GetAngleToBall(const Vector &pos, bool centerPitch);
+
 	void				SetPreferredOutfieldShirtNumber(int num);
 	void				SetPreferredKeeperShirtNumber(int num);
 	int					FindAvailableShirtNumber();
@@ -529,7 +532,6 @@ public:
 	void				ActivateRemoteControlling(const Vector &targetPos);
 
 	Vector				GetSpawnPos();
-	Vector				GetCeremonyPos();
 
 	bool				IsAway() { return m_bIsAway; }
 	void				SetAway(bool away) { m_bIsAway = away; }

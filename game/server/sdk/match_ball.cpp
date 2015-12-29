@@ -887,46 +887,43 @@ void CMatchBall::State_PENALTY_Think()
 				SetPenaltyState(PENALTY_ABORTED_NO_TAKER);
 				return State_Transition(BALL_STATE_NORMAL);
 			}
+
+			SDKGameRules()->EnableShield(SHIELD_PENALTYSHOOTOUT, m_nFouledTeam, GetGlobalTeam(m_nFoulingTeam)->m_vPenalty);
 		}
 		else
 		{
-			if (CSDKPlayer::IsOnField(m_pSetpieceTaker, m_nFouledTeam))
-				m_pPl = m_pSetpieceTaker;
+			m_pPl = m_pSetpieceTaker;
 
-			if (!m_pPl)
+			if (!CSDKPlayer::IsOnField(m_pPl, m_nFouledTeam))
 				m_pPl = m_pFouledPl;
-			if (!CSDKPlayer::IsOnField(m_pPl))
+			if (!CSDKPlayer::IsOnField(m_pPl, m_nFouledTeam))
 				m_pPl = FindNearestPlayer(m_nFouledTeam);
-			if (!m_pPl)
+			if (!CSDKPlayer::IsOnField(m_pPl, m_nFouledTeam))
 				return State_Transition(BALL_STATE_NORMAL);
+
+			SDKGameRules()->EnableShield(SHIELD_PENALTY, m_nFouledTeam, GetGlobalTeam(m_nFoulingTeam)->m_vPenalty);
 		}
 
-		SDKGameRules()->EnableShield(SHIELD_PENALTY, m_nFouledTeam, GetGlobalTeam(m_nFoulingTeam)->m_vPenalty);
 		m_pPl->SetPosInsideShield(Vector(m_vPos.x, m_vPos.y - 150 * m_pPl->GetTeam()->m_nForward, SDKGameRules()->m_vKickOff.GetZ()), true);
 		m_flStateTimelimit = -1;
 		m_pPl->SetShotsBlocked(true);
 		takerHasChanged = true;
 	}
 
-	if (!CSDKPlayer::IsOnField(m_pOtherPl) || takerHasChanged)
+	if (!CSDKPlayer::IsOnField(m_pOtherPl, m_nFoulingTeam) || m_pOtherPl->GetTeamPosType() != POS_GK || takerHasChanged)
 	{
-		if (SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES)
+		m_pOtherPl = GetGlobalTeam(m_nFoulingTeam)->GetPlayerByPosType(POS_GK);
+
+		if (!CSDKPlayer::IsOnField(m_pOtherPl, m_nFoulingTeam))
 		{
-			m_pOtherPl = GetGlobalTeam(m_pPl->GetOppTeamNumber())->GetPlayerByPosType(POS_GK);
-			if (!m_pOtherPl)
-			{
+			if (SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES)
 				SetPenaltyState(PENALTY_ABORTED_NO_KEEPER);
-				return State_Transition(BALL_STATE_NORMAL);
-			}
-		}
-		else
-		{
-			m_pOtherPl = GetGlobalTeam(m_nInPenBoxOfTeam)->GetPlayerByPosType(POS_GK);
-			if (!m_pOtherPl)
-				return State_Transition(BALL_STATE_NORMAL);
+
+			return State_Transition(BALL_STATE_NORMAL);
 		}
 
-		Vector pos = m_pOtherPl->GetTeam()->m_vGoalCenter + Vector(0, m_pOtherPl->GetTeam()->m_nForward * 5, 0);
+		Vector pos = m_pOtherPl->GetTeam()->m_vGoalCenter;
+		pos.y += m_pOtherPl->GetTeam()->m_nForward * 5;
 		m_pOtherPl->SetPosInsideShield(pos, false);
 		m_pOtherPl->AddFlag(FL_NO_Y_MOVEMENT);
 	}
@@ -2146,6 +2143,11 @@ void CMatchBall::SetPenaltyTaker(CSDKPlayer *pPl)
 	m_nFouledTeam = pPl->GetTeamNumber();
 	m_nFoulingTeam = pPl->GetOppTeamNumber();
 	m_pFoulingPl = GetGlobalTeam(m_nFoulingTeam)->GetPlayerByPosType(POS_GK);
+}
+
+CSDKPlayer *CMatchBall::GetPenaltyTaker()
+{
+	return m_pFouledPl;
 }
 
 void CMatchBall::VPhysicsCollision(int index, gamevcollisionevent_t *pEvent)

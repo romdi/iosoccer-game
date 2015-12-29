@@ -476,22 +476,22 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 	{
 		float border = mp_field_border.GetInt();
 		Vector min = SDKGameRules()->m_vFieldMin - border;
-Vector max = SDKGameRules()->m_vFieldMax + border;
+		Vector max = SDKGameRules()->m_vFieldMax + border;
 
-if (newPos.x < min.x || newPos.y < min.y || newPos.x > max.x || newPos.y > max.y)
-{
-	if (newPos.x < min.x)
-		newPos.x = min.x;
-	else if (newPos.x > max.x)
-		newPos.x = max.x;
+		if (newPos.x < min.x || newPos.y < min.y || newPos.x > max.x || newPos.y > max.y)
+		{
+			if (newPos.x < min.x)
+				newPos.x = min.x;
+			else if (newPos.x > max.x)
+				newPos.x = max.x;
 
-	if (newPos.y < min.y)
-		newPos.y = min.y;
-	else if (newPos.y > max.y)
-		newPos.y = max.y;
+			if (newPos.y < min.y)
+				newPos.y = min.y;
+			else if (newPos.y > max.y)
+				newPos.y = max.y;
 
-	stopPlayer = true;
-}
+			stopPlayer = true;
+		}
 	}
 
 	if (stopPlayer)

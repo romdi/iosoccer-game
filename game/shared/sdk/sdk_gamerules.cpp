@@ -2099,41 +2099,52 @@ void CSDKGameRules::State_PENALTIES_Think()
 
 			if (pPenTaker)
 			{
-				for (int i = 1; i <= gpGlobals->maxClients; i++)
-				{
-					CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
-
-					if (!CSDKPlayer::IsOnField(pPl))
-						continue;
-
-					// Use TV camera mode for all players other than the penalty taker and the opponent keeper
-					if (pPl == pPenTaker || pPl == pPenTaker->GetOppTeam()->GetPlayerByPosType(POS_GK))
-						pPl->RemoveFlag(FL_USE_TV_CAM);
-					else
-						pPl->AddFlag(FL_USE_TV_CAM);
-				}
-
 				GetMatchBall()->SetPenaltyTaker(pPenTaker);
 				GetMatchBall()->SetPenaltyState(PENALTY_ASSIGNED);
 				GetMatchBall()->State_Transition(BALL_STATE_PENALTY, 0, 0, true);
 				m_flNextPenalty = -1;
-				return;
+				break;
 			}
 			else
 			{
-				for (int i = 1; i <= gpGlobals->maxClients; i++)
+				if (attemptCount == 1)
 				{
-					CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+					// Can't find a player who hasn't already taken a penalty on the first attempt, so reset all and start over
+					for (int i = 1; i <= gpGlobals->maxClients; i++)
+					{
+						CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
 
-					if (!CSDKPlayer::IsOnField(pPl) || pPl->GetTeamNumber() != m_nPenaltyTakingTeam)
-						continue;
+						if (!CSDKPlayer::IsOnField(pPl) || pPl->GetTeamNumber() != m_nPenaltyTakingTeam)
+							continue;
 
-					pPl->m_ePenaltyState = PENALTY_NONE;
+						pPl->m_ePenaltyState = PENALTY_NONE;
+					}
+				}
+				else
+				{
+					// Can't find any suitable player even after the second attempt, so bail out
+					State_Transition(MATCH_PERIOD_COOLDOWN);
+					return;
 				}
 			}
 		}
+	}
 
-		State_Transition(MATCH_PERIOD_COOLDOWN);
+	CSDKPlayer *pPenTaker = GetMatchBall()->GetPenaltyTaker();
+	CSDKPlayer *pKeeper = pPenTaker ? pPenTaker->GetOppTeam()->GetPlayerByPosType(POS_GK) : NULL;
+
+	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	{
+		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
+
+		if (!CSDKPlayer::IsOnField(pPl))
+			continue;
+
+		// Use TV camera mode for all players other than the penalty taker and the opponent keeper
+		if (pPl == pPenTaker || pPl == pKeeper)
+			pPl->RemoveFlag(FL_USE_TV_CAM);
+		else
+			pPl->AddFlag(FL_USE_TV_CAM);
 	}
 }
 

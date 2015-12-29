@@ -447,27 +447,34 @@ void CSDKPlayer::PreThink(void)
 		if (canJoin)
 		{
 			Vector partnerPos = vec3_invalid;
+			QAngle partnerAng = vec3_angle;
 
 			if (pSwapPartner)
 			{
 				partnerPos = pSwapPartner->GetLocalOrigin();
+				partnerAng = pSwapPartner->GetLocalAngles();
 				pSwapPartner->ChangeTeam();
-				pSwapPartner->SetLocalOrigin(GetLocalOrigin());
+				pSwapPartner->SetPositionAfterTeamChange(GetLocalOrigin(), EyeAngles());
 			}
 
 			ChangeTeam();
 
 			if (pSwapPartner)
 			{
-				SetLocalOrigin(partnerPos);
+				pSwapPartner->SetPositionAfterTeamChange(partnerPos, partnerAng);
 			}
-			else if (!SDKGameRules()->IsIntermissionState())
+			else if (SDKGameRules()->IsIntermissionState())
+			{
+				Vector pos = GetSpawnPos();
+				SetPositionAfterTeamChange(pos, GetAngleToBall(pos, true));
+			}
+			else
 			{
 				Vector pos = GetTeam()->GetLastPlayerCoordsByPosIndex(GetTeamPosIndex());
 
 				if (pos != vec3_invalid)
 				{
-					SetLocalOrigin(pos);
+					SetPositionAfterTeamChange(pos, GetAngleToBall(pos, true));
 				}
 				else if (GetTeamPosType() != POS_GK)
 				{
@@ -481,7 +488,7 @@ void CSDKPlayer::PreThink(void)
 						pos.x = SDKGameRules()->m_vFieldMin.GetX() + 50;
 
 					FindSafePos(pos);
-					SetLocalOrigin(pos);
+					SetPositionAfterTeamChange(pos, GetAngleToBall(pos, true));
 				}
 			}
 		}
@@ -616,7 +623,15 @@ bool CSDKPlayer::SetDesiredTeam(int desiredTeam, int desiredSpecTeam, int desire
 		SetNextJoin(gpGlobals->curtime);
 
 	if (switchInstantly)
+	{
 		ChangeTeam();
+
+		if (GetTeamNumber() == TEAM_HOME || GetTeamNumber() == TEAM_AWAY)
+		{
+			Vector pos = GetSpawnPos();
+			SetPositionAfterTeamChange(pos, GetAngleToBall(pos, true));
+		}
+	}
 
 	return true;
 }
@@ -680,21 +695,6 @@ void CSDKPlayer::ChangeTeam()
 
 		if (State_Get() != PLAYER_STATE_ACTIVE)
 			State_Transition(PLAYER_STATE_ACTIVE);
-
-		Vector dir = Vector(0, GetTeam()->m_nForward, 0);
-		QAngle modelAng;
-		VectorAngles(dir, modelAng);
-
-		QAngle eyeAng = EyeAngles();
-		eyeAng[YAW] = modelAng[YAW];
-
-		SetLocalVelocity(vec3_origin);
-		SetLocalAngles(modelAng);
-		SetLocalOrigin(GetSpawnPos());
-		SnapEyeAngles(eyeAng);
-
-		if (SDKGameRules()->m_nShieldType != SHIELD_NONE)
-			SetPosOutsideShield(true);
 	}
 
 	IGameEvent *event = gameeventmanager->CreateEvent("player_team");
@@ -716,6 +716,36 @@ void CSDKPlayer::ChangeTeam()
 	}
 
 	g_pPlayerResource->UpdatePlayerData();
+}
+
+void CSDKPlayer::SetPositionAfterTeamChange(const Vector &pos, const QAngle &ang)
+{
+	QAngle modelAng = ang;
+	modelAng[PITCH] = 0;
+
+	SetLocalVelocity(vec3_origin);
+	SetLocalAngles(modelAng);
+	SetLocalOrigin(pos);
+	SnapEyeAngles(ang);
+
+	if (SDKGameRules()->m_nShieldType != SHIELD_NONE)
+		SetPosOutsideShield(true);
+}
+
+extern ConVar mp_pitchup, mp_pitchdown;
+
+QAngle CSDKPlayer::GetAngleToBall(const Vector &pos, bool centerPitch)
+{
+	Vector dir = GetMatchBall()->GetPos() - pos;
+	QAngle ang;
+	VectorAngles(dir, ang);
+
+	if (centerPitch)
+		ang[PITCH] = 0;
+	else
+		ang[PITCH] = clamp(AngleNormalize(ang[PITCH]), -mp_pitchup.GetFloat(), mp_pitchdown.GetFloat());
+
+	return ang;
 }
 
 void CSDKPlayer::SetPreferredOutfieldShirtNumber(int num)
@@ -1344,7 +1374,11 @@ void CSDKPlayer::SetPosOutsideShield(bool teleport)
 		return;
 		break;
 	case SHIELD_CEREMONY:
-		m_vTargetPos = GetCeremonyPos();
+		GetTargetPos(GetLocalOrigin(), m_vTargetPos.GetForModify());
+		m_bHoldAtTargetPos = true;
+		break;
+	case SHIELD_PENALTYSHOOTOUT:
+		GetTargetPos(GetLocalOrigin(), m_vTargetPos.GetForModify());
 		m_bHoldAtTargetPos = true;
 		break;
 	default:
@@ -1481,6 +1515,19 @@ void CSDKPlayer::GetTargetPos(const Vector &pos, Vector &targetPos)
 		}
 	}
 
+	if (SDKGameRules()->m_nShieldType == SHIELD_CEREMONY)
+	{
+		targetPos = SDKGameRules()->m_vKickOff;
+		targetPos.y -= GetTeam()->m_nForward * 50;
+		targetPos.x = SDKGameRules()->m_vFieldMin.GetX() + GetTeamPosIndex() * 50;
+	}
+
+	if (SDKGameRules()->m_nShieldType == SHIELD_PENALTYSHOOTOUT)
+	{
+		targetPos = SDKGameRules()->m_vKickOff;
+		targetPos.x += (100 + GetTeamPosIndex() * 50) * GetTeam()->m_nForward;
+	}
+
 	if (targetPos == vec3_invalid)
 		targetPos = pos;
 }
@@ -1553,15 +1600,6 @@ Vector CSDKPlayer::GetSpawnPos()
 	FindSafePos(spawnPos);
 
 	return spawnPos;
-}
-
-Vector CSDKPlayer::GetCeremonyPos()
-{
-	Vector pos = SDKGameRules()->m_vKickOff;
-	pos.y -= GetTeam()->m_nForward * 50;
-	pos.x = SDKGameRules()->m_vFieldMin.GetX() + GetTeamPosIndex() * 50;
-
-	return pos;
 }
 
 int CSDKPlayer::GetShirtNumber()

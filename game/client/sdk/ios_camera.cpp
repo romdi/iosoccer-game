@@ -212,6 +212,10 @@ int C_Camera::GetTVCamMode()
 	{
 		return TVCAM_MODE_CELEBRATION;
 	}
+	else if (SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES)
+	{
+		return TVCAM_MODE_BEHIND_GOAL;
+	}
 	else
 	{
 		return m_nTVCamMode;
