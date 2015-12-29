@@ -34,6 +34,7 @@ struct kerning_t
 	int charBefore;
 	int amount;
 
+	kerning_t() {}
 	kerning_t(int charBefore, int amount) : charBefore(charBefore), amount(amount) {}
 };
 
@@ -47,9 +48,7 @@ struct chr_t
 	int offsetX;
 	int offsetY;
 	int advanceX;
-	CUtlVector<kerning_t> kernings;
-
-	chr_t() : glyph(0), x(0), y(0), width(0), height(0), offsetX(0), offsetY(0), advanceX(0) {}
+	CCopyableUtlVector<kerning_t> kernings;
 
 	int GetKerning(int charBefore) const
 	{
@@ -71,20 +70,21 @@ public:
 	glyphWithOutline_t **m_ShirtNamePixels;
 	int m_nNamePixelsWidth;
 	int m_nNamePixelsHeight;
-	chr_t m_NameChars[512];
+	CUtlVector<chr_t> m_NameChars;
 
 	glyphWithOutline_t **m_ShirtBackNumberPixels;
 	int m_nShirtBackNumberPixelsWidth;
 	int m_nShirtBackNumberPixelsHeight;
-	chr_t m_ShirtBackNumberChars[64];
+	CUtlVector<chr_t> m_ShirtBackNumberChars;
 
 	glyphWithOutline_t **m_ShirtAndShortsNumberPixels;
 	int m_nShirtAndShortsNumberPixelsWidth;
 	int m_nShirtAndShortsNumberPixelsHeight;
-	chr_t m_ShirtAndShortsNumberChars[64];
+	CUtlVector<chr_t> m_ShirtAndShortsNumberChars;
 
 	CFontAtlas(const char *folderPath, bool hasShirtAndShortsNumberAtlas);
-	glyphWithOutline_t **ParseInfo(const char *folderPath, const char *type, chr_t *chars, int maxChars, int &width, int &height);
+	glyphWithOutline_t **ParseInfo(const char *folderPath, const char *type, CUtlVector<chr_t> &chars, int &width, int &height);
+	chr_t *FindCharById(CUtlVector<chr_t> &chars, int id);
 };
 
 class CTeamKitInfo

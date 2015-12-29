@@ -381,16 +381,16 @@ void FindFiles(const char *path, CUtlVector<FileInfo_t> &fileInfos)
 
 CFontAtlas::CFontAtlas(const char *folderPath, bool hasShirtAndShortsNumberAtlas)
 {
-	m_ShirtNamePixels = ParseInfo(folderPath, "shirt_back_name", m_NameChars, sizeof(m_NameChars), m_nNamePixelsWidth, m_nNamePixelsHeight);
-	m_ShirtBackNumberPixels = ParseInfo(folderPath, "shirt_back_number", m_ShirtBackNumberChars, sizeof(m_ShirtBackNumberChars), m_nShirtBackNumberPixelsWidth, m_nShirtBackNumberPixelsHeight);
+	m_ShirtNamePixels = ParseInfo(folderPath, "shirt_back_name", m_NameChars, m_nNamePixelsWidth, m_nNamePixelsHeight);
+	m_ShirtBackNumberPixels = ParseInfo(folderPath, "shirt_back_number", m_ShirtBackNumberChars, m_nShirtBackNumberPixelsWidth, m_nShirtBackNumberPixelsHeight);
 
 	if (hasShirtAndShortsNumberAtlas)
-		m_ShirtAndShortsNumberPixels = ParseInfo(folderPath, "shirt_and_shorts_front_number", m_ShirtAndShortsNumberChars, sizeof(m_ShirtAndShortsNumberChars), m_nShirtAndShortsNumberPixelsWidth, m_nShirtAndShortsNumberPixelsHeight);
+		m_ShirtAndShortsNumberPixels = ParseInfo(folderPath, "shirt_and_shorts_front_number", m_ShirtAndShortsNumberChars, m_nShirtAndShortsNumberPixelsWidth, m_nShirtAndShortsNumberPixelsHeight);
 	else
 		m_ShirtAndShortsNumberPixels = NULL;
 }
 
-glyphWithOutline_t **CFontAtlas::ParseInfo(const char *folderPath, const char *type, chr_t *chars, int maxChars, int &width, int &height)
+glyphWithOutline_t **CFontAtlas::ParseInfo(const char *folderPath, const char *type, CUtlVector<chr_t> &chars, int &width, int &height)
 {
 	char path[128];
 
@@ -441,9 +441,8 @@ glyphWithOutline_t **CFontAtlas::ParseInfo(const char *folderPath, const char *t
 	{
 		if (!Q_strncmp(pch, "char ", 5))
 		{
-			int glyph = clamp(atoi(strstr(pch, "id=") + 3), 0, maxChars - 1);
-			chr_t &chr = chars[glyph];
-			chr.glyph = glyph;
+			chr_t chr;
+			chr.glyph = atoi(strstr(pch, "id=") + 3);
 			chr.x = atoi(strstr(pch, "x=") + 2);
 			chr.y = atoi(strstr(pch, "y=") + 2);
 			chr.width = atoi(strstr(pch, "width=") + 6);
@@ -451,13 +450,15 @@ glyphWithOutline_t **CFontAtlas::ParseInfo(const char *folderPath, const char *t
 			chr.offsetX = atoi(strstr(pch, "xoffset=") + 8);
 			chr.offsetY = atoi(strstr(pch, "yoffset=") + 8);
 			chr.advanceX = atoi(strstr(pch, "xadvance=") + 9);
+			chars.AddToTail(chr);
 		}
 		else if (!Q_strncmp(pch, "kerning ", 8))
 		{
 			int first = atoi(strstr(pch, "first=") + 6);
 			int second = atoi(strstr(pch, "second=") + 7);
 			int amount = atoi(strstr(pch, "amount=") + 7);
-			chars[second].kernings.AddToTail(kerning_t(first, amount));
+
+			FindCharById(chars, second)->kernings.AddToTail(kerning_t(first, amount));
 		}
 
 		pch = strtok(NULL, "\n");
@@ -467,6 +468,17 @@ glyphWithOutline_t **CFontAtlas::ParseInfo(const char *folderPath, const char *t
     filesystem->Close(fh);
 
 	return pixels;
+}
+
+chr_t *CFontAtlas::FindCharById(CUtlVector<chr_t> &chars, int id)
+{
+	for (int i = 0; i < chars.Count(); i++)
+	{
+		if (chars[i].glyph == id)
+			return &chars[i];
+	}
+
+	return NULL;
 }
 
 void CTeamInfo::ParseTeamKits()

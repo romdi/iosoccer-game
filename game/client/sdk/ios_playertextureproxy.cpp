@@ -31,7 +31,7 @@ public:
 					   const Color &shortsNumberFillColor, const Color &shortsNumberOutlineColor, int shortsNumberHorizontalOffset, int shortsNumberVerticalOffset,
 					   bool hasShirtFrontNumber, const Color &shirtFrontNumberFillColor, const Color &shirtFrontNumberOutlineColor, int shirtFrontNumberHorizontalOffset, int shirtFrontNumberVerticalOffset);
 private:
-	virtual void WriteText(unsigned char *imageData, const char *text, glyphWithOutline_t **pixels, const chr_t *chars, const int &width, const int &height, int offsetX, int offsetY, const Color &color, int rotation, bool isOutline);
+	virtual void WriteText(unsigned char *imageData, const char *text, glyphWithOutline_t **pixels, CUtlVector<chr_t> &chars, const int &width, const int &height, int offsetX, int offsetY, const Color &color, int rotation, bool isOutline);
 	char m_szShirtName[MAX_PLAYER_NAME_LENGTH];
 	char m_szShirtNumber[4];
 	bool m_bIsKeeper;
@@ -308,31 +308,31 @@ void GetCompositeColor(const compColor_t &colorA, const compColor_t &colorB, com
 	compColor.a = alpha * 255;
 }
 
-void CProceduralRegenerator::WriteText(unsigned char *imageData, const char *text, glyphWithOutline_t **pixels, const chr_t *chars, const int &width, const int &height, int offsetX, int offsetY, const Color &color, int rotation, bool isOutline)
+void CProceduralRegenerator::WriteText(unsigned char *imageData, const char *text, glyphWithOutline_t **pixels, CUtlVector<chr_t> &chars, const int &width, const int &height, int offsetX, int offsetY, const Color &color, int rotation, bool isOutline)
 {
 	// Name and Number are upside down on the texture
 
 	int totalWidth = 0;
 	int maxHeight = 0;
 
-	wchar_t wszText[100];
+	wchar_t wszText[MAX_PLAYER_NAME_LENGTH];
 	g_pVGuiLocalize->ConvertANSIToUnicode(text, wszText, sizeof(wszText));
 
 	// Calculate the total width and max height of the text with kerning
 	for (size_t i = 0; i < wcslen(wszText); i++)
 	{
-		const chr_t &chr = chars[wszText[i]];
+		const chr_t *pChr = m_pFontAtlas->FindCharById(chars, wszText[i]);
 
 		// Skip non-matching glyphs
-		if (chr.glyph == 0)
+		if (!pChr)
 			continue;
 
-		totalWidth += chr.advanceX;
+		totalWidth += pChr->advanceX;
 
 		if (i > 0)
-			totalWidth += chr.GetKerning(wszText[i - 1]);
+			totalWidth += pChr->GetKerning(wszText[i - 1]);
 
-		maxHeight = max(maxHeight, chr.height + chr.offsetY);
+		maxHeight = max(maxHeight, pChr->height + pChr->offsetY);
 	}
 
 	int posX;
@@ -364,11 +364,15 @@ void CProceduralRegenerator::WriteText(unsigned char *imageData, const char *tex
 
 	for (size_t i = 0; i < wcslen(wszText); i++)
 	{
-		const chr_t &chr = chars[wszText[i]];
+		const chr_t *pChr = m_pFontAtlas->FindCharById(chars, wszText[i]);
+
+		// Skip non-matching glyphs
+		if (!pChr)
+			continue;
 
 		if (i > 0)
 		{
-			int kerning = chr.GetKerning(wszText[i - 1]);
+			int kerning = pChr->GetKerning(wszText[i - 1]);
 
 			if (rotation == 90)
 				posY += kerning;
@@ -380,32 +384,32 @@ void CProceduralRegenerator::WriteText(unsigned char *imageData, const char *tex
 				posX += kerning;
 		}
 
-		for (int y = 0; y < chr.height; y++)
+		for (int y = 0; y < pChr->height; y++)
 		{
-			for (int x = 0; x < chr.width; x++)
+			for (int x = 0; x < pChr->width; x++)
 			{
 				int destX;
 				int destY;
 
 				if (rotation == 90)
 				{
-					destX = posX - y - chr.offsetY;
-					destY = posY + x + chr.offsetX;
+					destX = posX - y - pChr->offsetY;
+					destY = posY + x + pChr->offsetX;
 				}
 				else if (rotation == 180)
 				{
-					destX = posX - x - chr.offsetX;
-					destY = posY - y - chr.offsetY;
+					destX = posX - x - pChr->offsetX;
+					destY = posY - y - pChr->offsetY;
 				}
 				else if (rotation == 270)
 				{
-					destX = posX + y + chr.offsetY;
-					destY = posY - x - chr.offsetX;
+					destX = posX + y + pChr->offsetY;
+					destY = posY - x - pChr->offsetX;
 				}
 				else
 				{
-					destX = posX + x + chr.offsetX;
-					destY = posY + y + chr.offsetY;
+					destX = posX + x + pChr->offsetX;
+					destY = posY + y + pChr->offsetY;
 				}
 
 				compColor_t curCol;
@@ -415,8 +419,8 @@ void CProceduralRegenerator::WriteText(unsigned char *imageData, const char *tex
 				curCol.r = imageData[index + 2];
 				curCol.a = imageData[index + 3];
 
-				int srcX = chr.x + x;
-				int srcY = chr.y + y;
+				int srcX = pChr->x + x;
+				int srcY = pChr->y + y;
 
 				compColor_t col(color);
 				col.a = isOutline ? pixels[srcY][srcX].outline : pixels[srcY][srcX].glyph;
@@ -434,19 +438,19 @@ void CProceduralRegenerator::WriteText(unsigned char *imageData, const char *tex
 
 		if (rotation == 90)
 		{
-			posY += chr.advanceX;
+			posY += pChr->advanceX;
 		}
 		else if (rotation == 180)
 		{
-			posX -= chr.advanceX;
+			posX -= pChr->advanceX;
 		}
 		else if (rotation == 270)
 		{
-			posY -= chr.advanceX;
+			posY -= pChr->advanceX;
 		}
 		else
 		{
-			posX += chr.advanceX;
+			posX += pChr->advanceX;
 		}
 	}
 }
