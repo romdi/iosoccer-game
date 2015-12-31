@@ -661,15 +661,13 @@ void CSDKPlayer::ChangeTeam()
 	m_nSpecTeam = m_nSpecTeamToJoin;
 	m_nSpecTeamToJoin = TEAM_NONE;
 
+	Reset();
+
 	// update client state 
 	if (GetTeamNumber() == TEAM_NONE || GetTeamNumber() == TEAM_SPECTATOR)
 	{
-		Reset();
-
 		if (State_Get() != PLAYER_STATE_OBSERVER_MODE)
-		{
 			State_Transition(PLAYER_STATE_OBSERVER_MODE);
-		}
 	}
 	else // active player
 	{
@@ -682,8 +680,6 @@ void CSDKPlayer::ChangeTeam()
 			m_nBody = MODEL_KEEPER;
 		else
 			m_nBody = MODEL_PLAYER;
-
-		Reset();
 
 		if (State_Get() != PLAYER_STATE_ACTIVE)
 			State_Transition(PLAYER_STATE_ACTIVE);
@@ -1617,15 +1613,17 @@ void CSDKPlayer::Reset()
 	SetChargedshotBlocked(false);
 	SetShotsBlocked(false);
 
-	if (GetPlayerBall())
-		GetPlayerBall()->RemovePlayerBall();
-
 	if ((GetTeamNumber() == TEAM_HOME || GetTeamNumber() == TEAM_AWAY) && !ReplayManager()->IsReplaying())
 	{
 		RemoveSolidFlags(FSOLID_NOT_SOLID);
 		SetCollisionGroup(COLLISION_GROUP_PLAYER);
 		RemoveEffects(EF_NODRAW);
 	}
+
+	if (GetPlayerBall())
+		GetPlayerBall()->RemovePlayerBall();
+
+	GetMatchBall()->RemovePlayerAssignments(this);
 }
 
 void CSDKPlayer::RemoveFlags()

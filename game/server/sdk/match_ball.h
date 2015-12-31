@@ -63,6 +63,7 @@ public:
 	bool			CheckGoalLine();
 	bool			CheckGoal();
 	void			CheckFieldZone();
+	void			RemovePlayerAssignments(CSDKPlayer *pPl);
 
 	float			m_flNextStateMessageTime;
 	float			m_flSetpieceProximityStartTime;

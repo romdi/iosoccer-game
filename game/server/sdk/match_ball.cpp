@@ -2299,3 +2299,24 @@ void CMatchBall::SetSetpieceTaker(CSDKPlayer *pPlayer)
 
 	m_pPl = NULL;
 }
+
+void CMatchBall::RemovePlayerAssignments(CSDKPlayer *pPl)
+{
+	if (pPl == m_pPl)
+		m_pPl = NULL;
+
+	if (pPl == m_pOtherPl)
+		m_pOtherPl = NULL;
+
+	if (pPl == m_pFouledPl)
+		m_pFouledPl = NULL;
+
+	if (pPl == m_pFoulingPl)
+		m_pFoulingPl = NULL;
+
+	if (pPl == m_pPossessingPl)
+		m_pPossessingPl = NULL;
+
+	if (pPl == m_pLastActivePlayer)
+		m_pLastActivePlayer = NULL;
+}
