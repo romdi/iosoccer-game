@@ -405,7 +405,7 @@ void CSDKPlayer::CheckAwayState()
 
 void CSDKPlayer::CheckPosChange()
 {
-	if (m_nTeamToJoin == TEAM_NONE)
+	if (m_nTeamToJoin == TEAM_NONE || gpGlobals->curtime < GetNextJoin())
 		return;
 
 	if (m_nTeamToJoin != TEAM_SPECTATOR && (IsCardBanned() || GetGlobalTeam(m_nTeamToJoin)->IsPosBlocked(m_nTeamPosIndexToJoin)))
