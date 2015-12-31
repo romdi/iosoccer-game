@@ -1527,19 +1527,8 @@ void CSDKGameRules::State_Enter( match_period_t newState )
 
 		pPl->m_Shared.SetStamina(100);
 
-		// Remove the player if he's in a team but card banned or in a blocked position
-		if (!IsIntermissionState()
-			&& (pPl->GetTeamNumber() == TEAM_HOME || pPl->GetTeamNumber() == TEAM_AWAY)
-			&& (GetMatchDisplayTimeSeconds() < pPl->GetNextCardJoin()
-			|| GetMatchDisplayTimeSeconds() < pPl->GetTeam()->GetPosNextJoinSeconds(pPl->GetTeamPosIndex())))
-		{
-			pPl->SetDesiredTeam(TEAM_SPECTATOR, pPl->GetTeamNumber(), 0, true, false, false);
-		}
-
 		if (!IsIntermissionState())
-		{
 			pPl->GetPlayerData()->StartNewMatchPeriod();
-		}
 	}
 
 	if (!IsIntermissionState())

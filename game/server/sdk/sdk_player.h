@@ -232,16 +232,12 @@ public:
 	virtual void		SetPlayerName(const char *name);
 
 private:
-	//ios bool SelectSpawnSpot( const char *pEntClassName, CBaseEntity* &pSpot );
-
 	void State_Enter( SDKPlayerState newState );	// Initialize the new state.
 	void State_Leave();								// Cleanup the previous state.
 	void State_PreThink();							// Update the current state.
 
 	void State_PICKINGTEAM_Enter();
 	void State_PICKINGCLASS_Enter();
-
-private:
 
 	void State_ACTIVE_Enter();
 	void State_ACTIVE_PreThink();
@@ -492,6 +488,8 @@ public:
 	void				SetShotsBlocked(bool blocked);
 	bool				ShotsBlocked();
 
+	bool				IsCardBanned();
+
 	void				LookAtBall(void);
 
 	float				m_flRemoteControlledStartTime;
@@ -603,6 +601,9 @@ protected:
 
 	CNetworkVar(bool, m_bChargedshotBlocked);
 	CNetworkVar(bool, m_bShotsBlocked);
+
+	void CheckPosChange();
+	void CheckAwayState();
 };
 
 

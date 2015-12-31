@@ -310,6 +310,14 @@ Vector CTeam::GetLastPlayerCoordsByPosIndex(int posIndex)
 	return gpGlobals->curtime > m_LastPlayerCoordsByPosIndex[posIndex].leaveTime + mp_joincoordduration.GetFloat() ? vec3_invalid : m_LastPlayerCoordsByPosIndex[posIndex].coords;
 }
 
+extern ConVar sv_singlekeeper;
+
+bool CTeam::IsPosBlocked(int posIndex)
+{
+	return SDKGameRules()->GetMatchDisplayTimeSeconds(true, false) < GetPosNextJoinSeconds(posIndex)
+		|| sv_singlekeeper.GetBool() && posIndex == GetPosIndexByPosType(POS_GK) && GetOppTeam()->GetPlayerByPosType(POS_GK);
+}
+
 //-----------------------------------------------------------------------------
 // Purpose: Return the number of players in this team.
 //-----------------------------------------------------------------------------

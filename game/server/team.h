@@ -120,6 +120,7 @@ public:
 	void UnblockAllPos();
 	void UpdatePosIndices(bool reset);
 	Vector GetLastPlayerCoordsByPosIndex(int posIndex);
+	bool IsPosBlocked(int posIndex);
 
 	virtual void SetCaptainPosIndex(int posIndex) { m_nCaptainPosIndex = clamp(posIndex, -1, 10); }
 	virtual int GetCaptainPosIndex() { return m_nCaptainPosIndex; }

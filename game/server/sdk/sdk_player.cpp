@@ -377,7 +377,7 @@ CSDKPlayer *CSDKPlayer::CreatePlayer( const char *className, edict_t *ed )
 	return (CSDKPlayer*)CreateEntityByName( className );
 }
 
-void CSDKPlayer::PreThink(void)
+void CSDKPlayer::CheckAwayState()
 {
 	// Check if player is away
 	if (SDKGameRules()->IsIntermissionState() && (GetTeamNumber() == TEAM_HOME || GetTeamNumber() == TEAM_AWAY))
@@ -401,98 +401,90 @@ void CSDKPlayer::PreThink(void)
 			}
 		}
 	}
+}
 
-	// Reset the block time when the card ban ends
-	if (GetNextCardJoin() != 0 && !SDKGameRules()->IsIntermissionState() && SDKGameRules()->GetMatchDisplayTimeSeconds() >= GetNextCardJoin())
-	{
-		SetNextCardJoin(0);
-	}
+void CSDKPlayer::CheckPosChange()
+{
+	if (m_nTeamToJoin == TEAM_NONE)
+		return;
 
-	// Prevent the player from reserving a position if he's card banned or if the position is blocked
-	if (!SDKGameRules()->IsIntermissionState()
-		&& (GetTeamToJoin() == TEAM_HOME || GetTeamToJoin() == TEAM_AWAY)
-		&& (SDKGameRules()->GetMatchDisplayTimeSeconds() < GetNextCardJoin()
-		|| SDKGameRules()->GetMatchDisplayTimeSeconds() < GetGlobalTeam(GetTeamToJoin())->GetPosNextJoinSeconds(GetTeamPosIndexToJoin())))
+	if (m_nTeamToJoin != TEAM_SPECTATOR && (IsCardBanned() || GetGlobalTeam(m_nTeamToJoin)->IsPosBlocked(m_nTeamPosIndexToJoin)))
 	{
 		m_nTeamToJoin = TEAM_NONE;
+		return;
 	}
 
-	// Let the player take the desired position
-	if (m_nTeamToJoin != TEAM_NONE
-		&& gpGlobals->curtime >= GetNextJoin()
-		&& (SDKGameRules()->IsIntermissionState()	
-			|| SDKGameRules()->GetMatchDisplayTimeSeconds() >= GetNextCardJoin()
-			&& SDKGameRules()->GetMatchDisplayTimeSeconds() >= GetGlobalTeam(m_nTeamToJoin)->GetPosNextJoinSeconds(m_nTeamPosIndexToJoin)))
+	CSDKPlayer *pSwapPartner = NULL;
+
+	if (!IsTeamPosFree(m_nTeamToJoin, m_nTeamPosIndexToJoin, false, &pSwapPartner))
 	{
-		bool canJoin = true;
-
-		CSDKPlayer *pSwapPartner = NULL;
-
-		if (!IsTeamPosFree(m_nTeamToJoin, m_nTeamPosIndexToJoin, false, &pSwapPartner))
+		if (pSwapPartner && pSwapPartner->IsBot())
 		{
-			if (pSwapPartner && pSwapPartner->IsBot())
-			{
-				char kickcmd[512];
-				Q_snprintf(kickcmd, sizeof(kickcmd), "kickid %i Human player taking the position\n", pSwapPartner->GetUserID());
-				engine->ServerCommand(kickcmd);
-				pSwapPartner = NULL;
-				canJoin = true;
-			}
-			else if (pSwapPartner && pSwapPartner->GetTeamToJoin() == GetTeamNumber() && pSwapPartner->GetTeamPosIndexToJoin() == GetTeamPosIndex())
-				canJoin = true;
-			else
-				canJoin = false;
+			char kickcmd[512];
+			Q_snprintf(kickcmd, sizeof(kickcmd), "kickid %i Human player taking the position\n", pSwapPartner->GetUserID());
+			engine->ServerCommand(kickcmd);
+			pSwapPartner = NULL;
 		}
+		else if (!pSwapPartner || pSwapPartner->GetTeamToJoin() != GetTeamNumber() || pSwapPartner->GetTeamPosIndexToJoin() != GetTeamPosIndex())
+			return;
+	}
 
-		if (canJoin)
+	Vector partnerPos = vec3_invalid;
+	QAngle partnerAng = vec3_angle;
+
+	if (pSwapPartner)
+	{
+		partnerPos = pSwapPartner->GetLocalOrigin();
+		partnerAng = pSwapPartner->GetLocalAngles();
+		pSwapPartner->ChangeTeam();
+		pSwapPartner->SetPositionAfterTeamChange(GetLocalOrigin(), EyeAngles());
+	}
+
+	ChangeTeam();
+
+	if (pSwapPartner)
+	{
+		pSwapPartner->SetPositionAfterTeamChange(partnerPos, partnerAng);
+	}
+	else if (SDKGameRules()->IsIntermissionState())
+	{
+		Vector pos = GetSpawnPos();
+		SetPositionAfterTeamChange(pos, GetAngleToBall(pos, true));
+	}
+	else
+	{
+		Vector pos = GetTeam()->GetLastPlayerCoordsByPosIndex(GetTeamPosIndex());
+
+		if (pos != vec3_invalid)
 		{
-			Vector partnerPos = vec3_invalid;
-			QAngle partnerAng = vec3_angle;
+			SetPositionAfterTeamChange(pos, GetAngleToBall(pos, true));
+		}
+		else if (GetTeamPosType() != POS_GK)
+		{
+			pos = SDKGameRules()->m_vKickOff;
 
-			if (pSwapPartner)
-			{
-				partnerPos = pSwapPartner->GetLocalOrigin();
-				partnerAng = pSwapPartner->GetLocalAngles();
-				pSwapPartner->ChangeTeam();
-				pSwapPartner->SetPositionAfterTeamChange(GetLocalOrigin(), EyeAngles());
-			}
+			pos.y -= 50 * GetTeam()->m_nForward;
 
-			ChangeTeam();
-
-			if (pSwapPartner)
-			{
-				pSwapPartner->SetPositionAfterTeamChange(partnerPos, partnerAng);
-			}
-			else if (SDKGameRules()->IsIntermissionState())
-			{
-				Vector pos = GetSpawnPos();
-				SetPositionAfterTeamChange(pos, GetAngleToBall(pos, true));
-			}
+			if (GetLocalOrigin().x > SDKGameRules()->m_vKickOff.GetX())
+				pos.x = SDKGameRules()->m_vFieldMax.GetX() - 50;
 			else
-			{
-				Vector pos = GetTeam()->GetLastPlayerCoordsByPosIndex(GetTeamPosIndex());
+				pos.x = SDKGameRules()->m_vFieldMin.GetX() + 50;
 
-				if (pos != vec3_invalid)
-				{
-					SetPositionAfterTeamChange(pos, GetAngleToBall(pos, true));
-				}
-				else if (GetTeamPosType() != POS_GK)
-				{
-					pos = SDKGameRules()->m_vKickOff;
-
-					pos.y -= 50 * GetTeam()->m_nForward;
-
-					if (GetLocalOrigin().x > SDKGameRules()->m_vKickOff.GetX())
-						pos.x = SDKGameRules()->m_vFieldMax.GetX() - 50;
-					else
-						pos.x = SDKGameRules()->m_vFieldMin.GetX() + 50;
-
-					FindSafePos(pos);
-					SetPositionAfterTeamChange(pos, GetAngleToBall(pos, true));
-				}
-			}
+			FindSafePos(pos);
+			SetPositionAfterTeamChange(pos, GetAngleToBall(pos, true));
 		}
 	}
+}
+
+void CSDKPlayer::PreThink(void)
+{
+	// Reset the block time when the card ban ends
+	if (GetNextCardJoin() != 0 && !IsCardBanned())
+		SetNextCardJoin(0);
+
+	CheckAwayState();
+
+	CheckPosChange();
 
 	State_PreThink();
 
@@ -1042,26 +1034,18 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 		if (args.ArgC() < 3)
 		{
 			Warning("Player sent bad jointeam syntax\n");
-			return true;	//go away
+			return false;
 		}
 
 		int team = atoi(args[1]);
 		int posIndex = atoi(args[2]);
 
 		if (posIndex < 0 || posIndex > mp_maxplayers.GetInt() - 1 || team < TEAM_SPECTATOR || team > TEAM_AWAY)
-			return true;
+			return false;
 
 		// Player is card banned or position is blocked due to a card ban
-		if (!SDKGameRules()->IsIntermissionState()
-			&& (SDKGameRules()->GetMatchDisplayTimeSeconds() < GetNextCardJoin()
-				|| SDKGameRules()->GetMatchDisplayTimeSeconds() < GetGlobalTeam(team)->GetPosNextJoinSeconds(posIndex))
-				|| sv_singlekeeper.GetBool()
-					&& posIndex == GetGlobalTeam(team)->GetPosIndexByPosType(POS_GK)
-					&& !GetGlobalTeam(team)->GetPlayerByPosType(POS_GK)
-					&& GetGlobalTeam(team)->GetOppTeam()->GetPlayerByPosType(POS_GK))
-		{
-			return true;
-		}
+		if (team != TEAM_SPECTATOR && (IsCardBanned() || GetGlobalTeam(team)->IsPosBlocked(posIndex)))
+			return false;
 
 		CSDKPlayer *pSwapPartner = NULL;
 
@@ -1092,7 +1076,7 @@ bool CSDKPlayer::ClientCommand( const CCommand &args )
 		if (team == GetTeamNumber() && posIndex == GetTeamPosIndex() || team == m_nTeamToJoin && posIndex == m_nTeamPosIndexToJoin)
 		{
 			m_nTeamToJoin = TEAM_NONE;
-			return true;
+			return false;
 		}
 
 		// Notify the player on the target position that this player wants to swap
@@ -1234,11 +1218,11 @@ bool CSDKPlayer::IsTeamPosFree(int team, int posIndex, bool ignoreBots, CSDKPlay
 	if (team == TEAM_SPECTATOR || team == TEAM_NONE)
 		return true;
 
-	if (GetTeam()->GetFormation()->positions[posIndex]->type == POS_GK)
-	{
-		if (!IsBot() && !humankeepers.GetBool())
-			return false;
-	}
+	if (GetGlobalTeam(team)->GetFormation()->positions[posIndex]->type == POS_GK && !IsBot() && !humankeepers.GetBool())
+		return false;
+
+	if (GetGlobalTeam(team)->IsPosBlocked(posIndex))
+		return false;
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++)	
 	{
@@ -1247,7 +1231,7 @@ bool CSDKPlayer::IsTeamPosFree(int team, int posIndex, bool ignoreBots, CSDKPlay
 		if (!pPl || pPl == this)
 			continue;
 
-		if (pPl->GetTeamNumber() == team && pPl->GetTeamPosIndex() == posIndex || pPl->GetTeamToJoin() == team && pPl->GetTeamPosIndexToJoin() == posIndex)
+		if (pPl->GetTeamNumber() == team && pPl->GetTeamPosIndex() == posIndex)
 		{
 			if (IsBot() || !pPl->IsBot() || !ignoreBots)
 			{
@@ -1258,6 +1242,7 @@ bool CSDKPlayer::IsTeamPosFree(int team, int posIndex, bool ignoreBots, CSDKPlay
 			return true;
 		}
 	}
+
 	return true;
 }
 
@@ -1686,6 +1671,11 @@ void CSDKPlayer::SetShotsBlocked(bool blocked)
 bool CSDKPlayer::ShotsBlocked()
 {
 	return m_bShotsBlocked;
+}
+
+bool CSDKPlayer::IsCardBanned()
+{
+	return SDKGameRules()->GetMatchDisplayTimeSeconds(true, false) < GetNextCardJoin();
 }
 
 CSDKPlayer *CSDKPlayer::FindClosestPlayerToSelf(bool teammatesOnly, bool forwardOnly /*= false*/, float maxYawAngle /*= 360*/)

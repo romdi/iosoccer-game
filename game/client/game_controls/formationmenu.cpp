@@ -205,7 +205,7 @@ void CFormationMenu::Update(bool showCaptainMenu)
 			}
 
 			bool posBlocked = SDKGameRules()->GetMatchDisplayTimeSeconds(true, false) < GetGlobalTeam(TEAM_HOME + i)->m_PosNextJoinSeconds[j]
-							  || sv_singlekeeper.GetBool() && GetGlobalTeam(TEAM_HOME + i)->GetFormation()->positions[j]->type == POS_GK && playerIndexAtPos[i][j] == 0 && keeperCount == 1;
+								|| sv_singlekeeper.GetBool() && GetGlobalTeam(TEAM_HOME + i)->GetFormation()->positions[j]->type == POS_GK && keeperCount == 1 && playerIndexAtPos[i][j] == 0;
 
 			Color color = posBlocked ? g_ColorRed : g_ColorGray;
 

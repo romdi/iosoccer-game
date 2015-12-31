@@ -1949,8 +1949,6 @@ void CMatchBall::SetVel(Vector vel, float spinCoeff, int spinFlags, body_part_t 
 		MarkOffsidePlayers();
 }
 
-extern ConVar sv_singlekeeper;
-
 void CMatchBall::MarkOffsidePlayers()
 {
 	if (SDKGameRules()->IsIntermissionState() || m_bHasQueuedState || SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES)
