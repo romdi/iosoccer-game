@@ -239,8 +239,8 @@ void CProceduralRegenerator::RegenerateTextureBits( ITexture *pTexture, IVTFText
 		}
 	}
 
-	static int keeperHorizontalOffset = 600;
-	static int outfieldHorizontalOffset = 350;
+	const int keeperHorizontalOffset = 600;
+	const int outfieldHorizontalOffset = 350;
 
 
 	// Write outline pixels
