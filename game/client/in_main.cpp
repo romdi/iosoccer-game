@@ -143,6 +143,7 @@ static  kbutton_t   in_grenade1;
 static  kbutton_t   in_grenade2;
 static	kbutton_t	in_topspin;
 static	kbutton_t	in_backspin;
+static	kbutton_t	in_skill;
 kbutton_t	in_ducktoggle;
 
 /*
@@ -473,6 +474,8 @@ void IN_TopspinUp( const CCommand &args ) { KeyUp( &in_topspin, args[1] ); }
 void IN_TopspinDown( const CCommand &args ) { KeyDown( &in_topspin, args[1] ); }
 void IN_BackspinUp( const CCommand &args ) { KeyUp( &in_backspin, args[1] ); }
 void IN_BackspinDown( const CCommand &args ) { KeyDown( &in_backspin, args[1] ); }
+void IN_SkillUp(const CCommand &args) { KeyUp(&in_skill, args[1]); }
+void IN_SkillDown(const CCommand &args) { KeyDown(&in_skill, args[1]); }
 void IN_XboxStub( const CCommand &args ) { /*do nothing*/ }
 
 void IN_DuckToggle( const CCommand &args ) 
@@ -755,7 +758,7 @@ void CInput::AdjustAngles ( float frametime )
 
 	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
 
-	if (pPlayer && pPlayer->GetFlags() & (FL_FREECAM | FL_REMOTECONTROLLED))
+	if (pPlayer && (pPlayer->GetFlags() & (FL_FREECAM | FL_REMOTECONTROLLED) || pPlayer->m_nButtons & IN_WALK))
 		return;
 
 	// Retrieve latest view direction from engine
@@ -1297,7 +1300,8 @@ int CInput::GetButtonBits( int bResetState )
 	CalcButtonBits( bits, IN_GRENADE1, s_ClearInputState, &in_grenade1, bResetState );
 	CalcButtonBits( bits, IN_GRENADE2, s_ClearInputState, &in_grenade2, bResetState );
 	CalcButtonBits( bits, IN_TOPSPIN, s_ClearInputState, &in_topspin, bResetState );
-	CalcButtonBits( bits, IN_BACKSPIN, s_ClearInputState, &in_backspin, bResetState );
+	CalcButtonBits( bits, IN_BACKSPIN, s_ClearInputState, &in_backspin, bResetState);
+	CalcButtonBits( bits, IN_SKILL, s_ClearInputState, &in_skill, bResetState );
 
 	if ( KeyState(&in_ducktoggle) )
 	{
@@ -1455,6 +1459,8 @@ static ConCommand starttopspin( "+topspin", IN_TopspinDown );
 static ConCommand endtopspin( "-topspin", IN_TopspinUp );
 static ConCommand startbackspin( "+backspin", IN_BackspinDown );
 static ConCommand endbackspin( "-backspin", IN_BackspinUp );
+static ConCommand startskill("+skill", IN_SkillDown);
+static ConCommand endskill("-skill", IN_SkillUp);
 
 #ifdef TF_CLIENT_DLL
 static ConCommand toggle_duck( "toggle_duck", IN_DuckToggle );

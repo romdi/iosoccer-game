@@ -3002,6 +3002,10 @@ void CGameMovement::SetPlayerSpeed()
 	{
 		flMaxSpeed = mp_ceremonyspeed.GetInt();
 	}
+	else if (mv->m_nButtons & IN_WALK)
+	{
+		flMaxSpeed = mp_walkspeed.GetInt();
+	}
 	else if (pPl->DoSkillMove())
 	{
 		flMaxSpeed = mp_skillspeed.GetInt();

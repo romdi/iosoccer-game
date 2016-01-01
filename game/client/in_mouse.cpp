@@ -544,7 +544,7 @@ void CInput::MouseMove( CUserCmd *cmd )
 
 	C_BasePlayer *pPlayer = C_BasePlayer::GetLocalPlayer();
 
-	if (pPlayer && pPlayer->GetFlags() & (FL_FREECAM | FL_REMOTECONTROLLED))
+	if (pPlayer && (pPlayer->GetFlags() & (FL_FREECAM | FL_REMOTECONTROLLED) || pPlayer->m_nButtons & IN_WALK))
 	{
 		viewangles = m_aCameraViewAngles;
 		m_bWasFreeCam = true;
@@ -596,7 +596,7 @@ void CInput::MouseMove( CUserCmd *cmd )
 	m_aCameraViewAngles = viewangles;
 	cmd->camviewangles = viewangles;
 
-	if (!(pPlayer->GetFlags() & (FL_FREECAM | FL_REMOTECONTROLLED)))
+	if (!(pPlayer->GetFlags() & (FL_FREECAM | FL_REMOTECONTROLLED) || pPlayer->m_nButtons & IN_WALK))
 		engine->SetViewAngles( viewangles );
 }
 

@@ -666,7 +666,7 @@ void CSDKPlayer::SetShotButtonsReleased(bool released)
 
 bool CSDKPlayer::DoSkillMove()
 {
-	return m_nButtons & IN_WALK;
+	return m_nButtons & IN_SKILL;
 }
 
 bool CSDKPlayer::IsInOwnBoxAsKeeper()
