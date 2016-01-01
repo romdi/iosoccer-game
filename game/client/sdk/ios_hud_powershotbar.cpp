@@ -137,7 +137,7 @@ void CHudChargedshotBar::Paint()
 
 	float stamina = pPlayer->m_Shared.GetStamina() / 100.0f;
 	
-	Color staminaFgColor = Color(139, 195, 74, 255);
+	Color staminaFgColor = g_ColorGreen;
 	Color staminaBgColor = Color(0, 0, 0, 255);
 
 	Color staminaLimitFgColor = Color(100, 100, 100, 255);
@@ -174,14 +174,14 @@ void CHudChargedshotBar::Paint()
 	bool shotBlocked = true;
 
 	if (pPlayer->GetFlags() & FL_REMOTECONTROLLED)
-		shotFgColor = Color(121, 85, 72, 255);
+		shotFgColor = g_ColorBrown;
 	else if (pPlayer->m_bShotsBlocked)
-		shotFgColor = Color(244, 67, 54, 255);
+		shotFgColor = g_ColorRed;
 	else if (pPlayer->m_bChargedshotBlocked)
-		shotFgColor = Color(255, 87, 34, 255);
+		shotFgColor = g_ColorOrange;
 	else
 	{
-		shotFgColor = Color(33, 150, 243, 255);
+		shotFgColor = g_ColorBlue;
 		shotBlocked = false;
 	}
 

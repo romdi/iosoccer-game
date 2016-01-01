@@ -300,15 +300,25 @@ char *C_Team::GetFolderName( void )
 
 Color &C_Team::GetHudKitColor()
 {
+	Color *color;
+
 	if (GetTeamNumber() == TEAM_HOME || GetTeamNumber() == TEAM_AWAY)
-	{
-		return m_pKitInfo->m_HudColor;
-	}
+		color = &m_pKitInfo->m_HudPrimaryColor;
 	else
+		color = &g_ColorWhite;
+
+	if (GetTeamNumber() == TEAM_AWAY)
 	{
-		static Color col = Color(255, 255, 255, 255);
-		return col;
+		if (*color == GetGlobalTeam(TEAM_HOME)->GetHudKitColor())
+		{
+			color = &m_pKitInfo->m_HudSecondaryColor;
+
+			if (*color == GetGlobalTeam(TEAM_HOME)->GetHudKitColor())
+				color = &g_HudAlternativeColors[m_pKitInfo->m_HudPrimaryColorClass];
+		}
 	}
+
+	return *color;
 }
 
 Color &C_Team::GetPrimaryKitColor()

@@ -189,13 +189,13 @@ Color CHudChat::GetTextColorForClient( TextColor colorNum, int clientIndex )
 
 	case COLOR_LOCATION:
 		if (clientIndex == 0)
-			c = g_ColorBlue;
+			c = g_ColorGray;
 		else
 			c = GetGlobalTeam(GameResources()->GetSpecTeam(clientIndex))->GetHudKitColor();
 		break;
 
 	case COLOR_ACHIEVEMENT:
-		c = g_ColorGreen;
+		c = g_ColorTeal;
 		break;
 	default:
 		c = g_ColorWhite;

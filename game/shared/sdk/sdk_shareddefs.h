@@ -404,12 +404,7 @@ enum statistic_type_t
 static const char g_szCountryNames[COUNTRY_NAMES_COUNT][64] = { "", "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cambodia", "Cameroon", "Canada", "Cape Verde", "Central African Republic", "Chad", "Chile", "China", "Colombia", "Comoros", "Congo", "Cook Islands", "Costa Rica", "Cote d'Ivoire", "Croatia", "Cuba", "Cyprus", "Czech Republic", "Democratic Republic of Congo", "Denmark", "Djibouti", "Dominica", "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Greenland", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", "Macedonia", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Moldova", "Monaco", "Mongolia", "Montenegro", "Mozambique", "Myanmar", "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea", "Norway", "Oman", "Pakistan", "Palau", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Romania", "Russia", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Korea", "South Sudan", "Spain", "Sri Lanka", "Sudan", "Suriname", "Swaziland", "Sweden", "Switzerland", "Syria", "Tajikistan", "Tanzania", "Thailand", "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States", "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City", "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe" };
 static const char g_szCountryISOCodes[COUNTRY_NAMES_COUNT][3] = { "", "AF", "AL", "DZ", "AD", "AO", "AG", "AR", "AM", "AU", "AT", "AZ", "BS", "BH", "BD", "BB", "BY", "BE", "BZ", "BJ", "BT", "BO", "BA", "BW", "BR", "BN", "BG", "BF", "BI", "KH", "CM", "CA", "CV", "CF", "TD", "CL", "CN", "CO", "KM", "CG", "CK", "CR", "CI", "HR", "CU", "CY", "CZ", "CD", "DK", "DJ", "DM", "DO", "EC", "EG", "SV", "GQ", "ER", "EE", "ET", "FJ", "FI", "FR", "GA", "GM", "GE", "DE", "GH", "GR", "GL", "GD", "GT", "GN", "GW", "GY", "HT", "HN", "HU", "IS", "IN", "ID", "IR", "IQ", "IE", "IL", "IT", "JM", "JP", "JO", "KZ", "KE", "KI", "KW", "KG", "LA", "LV", "LB", "LS", "LR", "LY", "LI", "LT", "LU", "MK", "MG", "MW", "MY", "MV", "ML", "MT", "MH", "MR", "MU", "MX", "MD", "MC", "MN", "ME", "MZ", "MM", "NA", "NR", "NP", "NL", "NZ", "NI", "NE", "NG", "KP", "NO", "OM", "PK", "PW", "PA", "PG", "PY", "PE", "PH", "PL", "PT", "QA", "RO", "RU", "RW", "KN", "LC", "VC", "WS", "SM", "ST", "SA", "SN", "RS", "SC", "SL", "SG", "SK", "SI", "SB", "SO", "ZA", "KR", "SS", "ES", "LK", "SD", "SR", "SZ", "SE", "CH", "SY", "TJ", "TZ", "TH", "TL", "TG", "TO", "TT", "TR", "TM", "TV", "UG", "UA", "AE", "GB", "US", "UY", "UZ", "VU", "VA", "VE", "VN", "YE", "ZM", "ZW" };
 
-extern Color g_ColorBlue;
-extern Color g_ColorRed;
-extern Color g_ColorGreen;
-extern Color g_ColorYellow;
-extern Color g_ColorGray;
-extern Color g_ColorWhite;
+extern Color g_ColorBlue, g_ColorRed, g_ColorGreen, g_ColorYellow, g_ColorGray, g_ColorWhite, g_ColorBrown, g_ColorLime, g_ColorBlueGray, g_ColorOrange, g_ColorTeal;
 
 enum
 {
@@ -503,32 +498,11 @@ static const char *g_szFieldMaterials[FIELD_MATERIAL_COUNT] =
 	"mud"
 };
 
-enum hud_colors_t { BLACKS, WHITES, GRAYS, REDS, YELLOWS, GREENS, CYANS, BLUES, MAGENTAS, HUD_COLOR_COUNT };
+enum color_class_t { COLOR_CLASS_BLACK, COLOR_CLASS_WHITE, COLOR_CLASS_GRAY, COLOR_CLASS_RED, COLOR_CLASS_YELLOW, COLOR_CLASS_GREEN, COLOR_CLASS_CYAN, COLOR_CLASS_BLUE, COLOR_CLASS_MAGENTA, COLOR_CLASS_COUNT };
 
 // https://www.google.com/design/spec/style/color.html#color-color-palette
 
-static Color hudColors[HUD_COLOR_COUNT] = {
-	Color(255, 255, 255, 255),		// black (white)
-	Color(255, 255, 255, 255),		// white
-	Color(238, 238, 238, 255),		// gray
-	Color(239, 154, 154, 255),		// red
-	Color(255, 245, 157, 255),		// yellow
-	Color(165, 214, 167, 255),		// green
-	Color(128, 222, 234, 255),		// cyan
-	Color(144, 202, 249, 255),		// blue
-	Color(244, 143, 177, 255)		// magenta
-};
-
-static Color hudFallbackColors[HUD_COLOR_COUNT] = {
-	Color(238, 238, 238, 255),		// black (white) => gray
-	Color(238, 238, 238, 255),		// white => gray
-	Color(255, 255, 255, 255),		// gray => white
-	Color(244, 143, 177, 255),		// red => pink
-	Color(255, 224, 130, 255),		// yellow => amber
-	Color(197, 225, 165, 255),		// green => light green
-	Color(128, 203, 196, 255),		// cyan => teal
-	Color(129, 212, 250, 255),		// blue => light blue
-	Color(206, 147, 216, 255)		// magenta => purple
-};
+extern Color g_HudColors[];
+extern Color g_HudAlternativeColors[];
 
 #endif // SDK_SHAREDDEFS_H

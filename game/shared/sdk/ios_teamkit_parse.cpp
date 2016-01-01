@@ -1,32 +1,3 @@
-/*
-	Color conversions
-	Copyright (c) 2011, Cory Nelson (phrosty@gmail.com)
-	All rights reserved.
-
-	Redistribution and use in source and binary forms, with or without
-	modification, are permitted provided that the following conditions are met:
-		* Redistributions of source code must retain the above copyright
-			notice, this list of conditions and the following disclaimer.
-		* Redistributions in binary form must reproduce the above copyright
-			notice, this list of conditions and the following disclaimer in the
-			documentation and/or other materials provided with the distribution.
-
-	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-	ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-	WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-	DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
-	DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-	(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-	LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-	ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-	When possible, constants are given as accurate pre-computed rationals. When not,
-	they are given at double precision with a comment on how to compute them.
-*/
-
-
 #include "cbase.h"
 #include <KeyValues.h>
 #include <tier0/mem.h>
@@ -43,6 +14,7 @@
 #include "utlbuffer.h"
 #include "checksum_md5.h"
 #include "threadtools.h"
+#include "ios_color_classifier.h"
 
 #ifdef CLIENT_DLL
 
@@ -51,6 +23,8 @@
 
 #endif
 
+// memdbgon must be the last include file in a .cpp file!!!
+#include "tier0/memdbgon.h"
 
 #ifdef CLIENT_DLL
 
@@ -65,209 +39,6 @@ static ConCommand reloadteamkits("reloadteamkits", CC_ReloadTeamKits);
 
 #endif
 
-// memdbgon must be the last include file in a .cpp file!!!
-#include "tier0/memdbgon.h"
-
-inline double clamphue(double hue)
-{
-	hue = fmod(hue, M_PI * 2);
-
-	if(hue < 0)
-	{
-		hue += M_PI * 2;
-	}
-
-	return hue;
-}
-
-struct RGB
-{
-	int R;
-	int G;
-	int B;
-};
-
-struct LCh
-{
-	double L;
-	double C;
-	double h;
-};
-
-struct HSL
-{
-	double H;
-	double S;
-	double L;
-};
-
-
-double toLabc(double c)
-{
-	if (c > 216 / 24389.0) return pow(c, 1 / 3.0);
-	return c * (841 / 108.0) + (4 / 49.0);
-}
-
-void RGBtoLCh(const RGB &rgb, LCh &lch)
-{
-	double R = clamp(rgb.R, 0, 255) / 255.0;        //R from 0 to 255
-	double G = clamp(rgb.G, 0, 255) / 255.0;        //G from 0 to 255
-	double B = clamp(rgb.B, 0, 255) / 255.0;        //B from 0 to 255
-
-	if ( R > 0.04045 )
-		R = pow( ( R + 0.055 ) / 1.055 , 2.4);
-	else
-		R = R / 12.92;
-		
-	if ( G > 0.04045 )
-		G = pow( ( G + 0.055 ) / 1.055 , 2.4);
-	else
-		G = G / 12.92;
-		
-	if ( B > 0.04045 )
-		B = pow( ( B + 0.055 ) / 1.055 , 2.4);
-	else
-		B = B / 12.92;
-
-	double X = clamp(0.4124564 * R + 0.3575761 * G + 0.1804375 * B, 0, (31271 / 32902.0));
-	double Y = clamp(0.2126729 * R + 0.7151522 * G + 0.0721750 * B, 0, 1);
-	double Z = clamp(0.0193339 * R + 0.1191920 * G + 0.9503041 * B, 0, (35827 / 32902.0));
-
-	double X_Lab = toLabc(X / (31271 / 32902.0)); // normalized standard observer D65.
-	double Y_Lab = toLabc(Y / 1.0);
-	double Z_Lab = toLabc(Z / (35827 / 32902.0));
-
-	double L = clamp(116 * Y_Lab - 16, 0, 100);
-	double a = clamp(500 * (X_Lab - Y_Lab), -12500 / 29.0, 12500 / 29.0);
-	double b = clamp(200 * (Y_Lab - Z_Lab), -5000 / 29.0, 5000 / 29.0);
-	
-	double C = clamp(sqrt(a * a + b * b), 0, 4.64238345442629658e2); // 2500*sqrt(1 / 29.0)
-	double h = clamphue(atan2(b, a));
-
-	lch.L = L;
-	lch.C = C;
-	lch.h = h;
-}
-
-void RGBtoHSL(const RGB &rgb, HSL &hsl)
-{
-	double R = ( rgb.R / 255.0 );                     //RGB from 0 to 255
-	double G = ( rgb.G / 255.0 );
-	double B = ( rgb.B / 255.0 );
-
-	double minVal = min(min( R, G), B );    //Min. value of RGB
-	double maxVal = max(max( R, G), B );    //Max. value of RGB
-	double deltaMax = maxVal - minVal;             //Delta RGB value
-
-	double L = ( maxVal + minVal ) / 2;
-	double H = 0;
-	double S = 0;
-
-	if ( deltaMax == 0 )                     //This is a gray, no chroma...
-	{
-		H = 0;                                //HSL results from 0 to 1
-		S = 0;
-	}
-	else                                    //Chromatic data...
-	{
-		if ( L < 0.5 ) S = deltaMax / ( maxVal + minVal );
-		else           S = deltaMax / ( 2 - maxVal - minVal );
-
-		double deltaR = ( ( ( maxVal - R ) / 6 ) + ( deltaMax / 2 ) ) / deltaMax;
-		double deltaG = ( ( ( maxVal - G ) / 6 ) + ( deltaMax / 2 ) ) / deltaMax;
-		double deltaB = ( ( ( maxVal - B ) / 6 ) + ( deltaMax / 2 ) ) / deltaMax;
-
-		if      ( R == maxVal ) H = deltaB - deltaG;
-		else if ( G == maxVal ) H = ( 1 / 3.0 ) + deltaR - deltaB;
-		else if ( B == maxVal ) H = ( 2 / 3.0 ) + deltaG - deltaR;
-
-		if ( H < 0 ) H += 1;
-		if ( H > 1 ) H -= 1;
-	}
-
-	hsl.H = H * 360;
-	hsl.S = S * 100;
-	hsl.L = L * 100;
-}
-
-// CIE Delta E 2000
-// Note: maximum is about 158 for colors in the sRGB gamut.
-double deltaE2000(RGB rgb1, RGB rgb2)
-{
-	LCh lch1, lch2;
-	RGBtoLCh(rgb1, lch1);
-	RGBtoLCh(rgb2, lch2);
-	
-	double avg_L = (lch1.L + lch2.L) * 0.5;
-	double delta_L = lch2.L - lch1.L;
-
-	double avg_C = (lch1.C + lch2.C) * 0.5;
-	double delta_C = lch1.C - lch2.C;
-
-	double avg_H = (lch1.h + lch2.h) * 0.5;
-
-	if(abs(lch1.h - lch2.h) > M_PI)
-	{
-		avg_H += M_PI;
-	}
-
-	double delta_H = lch2.h - lch1.h;
-
-	if(abs(delta_H) > M_PI)
-	{
-		if(lch2.h <= lch1.h) delta_H += M_PI * 2;
-		else delta_H -= M_PI * 2;
-	}
-
-	delta_H = sqrt(lch1.C * lch2.C) * sin(delta_H) * 2;
-
-	double T = 1
-	- 0.17 * cos(avg_H - M_PI / 6.0)
-	+ 0.24 * cos(avg_H * 2)
-	+ 0.32 * cos(avg_H * 3 + M_PI / 30.0)
-	- 0.20 * cos(avg_H * 4 - M_PI * 7 / 20.0);
-
-	double SL = avg_L - 50;
-	SL *= SL;
-	SL = SL * 0.015 / sqrt(SL + 20) + 1;
-
-	double SC = avg_C * 0.045 + 1;
-
-	double SH = avg_C * T * 0.015 + 1;
-
-	double delta_Theta = avg_H / 25.0 - M_PI * 11 / 180.0;
-	delta_Theta = exp(delta_Theta * -delta_Theta) * (M_PI / 6.0);
-
-	double RT = pow(avg_C, 7);
-	RT = sqrt(RT / (RT + 6103515625)) * sin(delta_Theta) * -2; // 6103515625 = 25^7
-
-	delta_L /= SL;
-	delta_C /= SC;
-	delta_H /= SH;
-
-	return sqrt(delta_L * delta_L + delta_C * delta_C + delta_H * delta_H + RT * delta_C * delta_H);
-}
-
-hud_colors_t classify(const HSL &hsl)
-{
-	double hue = hsl.H;
-	double sat = hsl.S;
-	double lgt = hsl.L;
-
-    if (lgt < 20)	return BLACKS;
-    if (lgt > 80)	return WHITES;
-
-    if (sat < 25)	return GRAYS;
-
-    if (hue < 30)   return REDS;
-    if (hue < 90)   return YELLOWS;
-    if (hue < 150)  return GREENS;
-    if (hue < 210)  return CYANS;
-    if (hue < 270)  return BLUES;
-    if (hue < 330)  return MAGENTAS;
-	else			return REDS; // (hue >= 330)
-}
-
 float CTeamInfo::m_flLastUpdateTime = 0;
 
 CFontAtlas *CTeamKitInfo::m_pDefaultFontAtlas = NULL;
@@ -277,9 +48,12 @@ CTeamKitInfo::CTeamKitInfo()
 	m_szName[0] = 0;
 	m_szAuthor[0] = 0;
 	m_szFolderName[0] = 0;
-	m_HudColor = Color(0, 255, 0, 255);
 	m_PrimaryColor = Color(0, 255, 0, 255);
+	m_HudPrimaryColor = Color(0, 255, 0, 255);
+	m_HudPrimaryColorClass = COLOR_CLASS_WHITE;
 	m_SecondaryColor = Color(0, 255, 0, 255);
+	m_HudSecondaryColor = Color(0, 255, 0, 255);
+	m_HudSecondaryColorClass = COLOR_CLASS_WHITE;
 
 
 	m_OutfieldShirtNameFillColor = Color(0, 255, 0, 255);
@@ -648,15 +422,13 @@ void CTeamInfo::ParseTeamKits()
 									}
 								}
 							}
-
 						}
 
-						RGB primaryRgb = { pKitInfo->m_PrimaryColor.r(), pKitInfo->m_PrimaryColor.g(), pKitInfo->m_PrimaryColor.b() };
-						RGB secondaryRgb = { pKitInfo->m_SecondaryColor.r(), pKitInfo->m_SecondaryColor.g(), pKitInfo->m_SecondaryColor.b() };
-						HSL primaryHsl, secondaryHsl;
-						RGBtoHSL(primaryRgb, primaryHsl);
-						hud_colors_t color = classify(primaryHsl);
-						pKitInfo->m_HudColor = hudColors[color];
+						pKitInfo->m_HudPrimaryColorClass = CColorClassifier::Classify(pKitInfo->m_PrimaryColor);
+						pKitInfo->m_HudPrimaryColor = g_HudColors[pKitInfo->m_HudPrimaryColorClass];
+
+						pKitInfo->m_HudSecondaryColorClass = CColorClassifier::Classify(pKitInfo->m_SecondaryColor);
+						pKitInfo->m_HudSecondaryColor = g_HudColors[pKitInfo->m_HudSecondaryColorClass];
 
 						pKV->deleteThis();
 					}

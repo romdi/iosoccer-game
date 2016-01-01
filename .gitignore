@@ -12,3 +12,4 @@ vgui_controls.lib
 [Dd]ebug*/
 [Rr]elease*/
 ipch/
+*.opendb

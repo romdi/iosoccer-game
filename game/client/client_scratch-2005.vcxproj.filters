@@ -1416,6 +1416,9 @@
     <ClCompile Include="sdk\sdk_hud_names.cpp">
       <Filter>Source Files\SDK\Hud Elements</Filter>
     </ClCompile>
+    <ClCompile Include="..\shared\sdk\ios_color_classifier.cpp">
+      <Filter>Source Files\SDK</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="achievement_notification_panel.h">
@@ -3192,6 +3195,9 @@
       <Filter>Source Files\SDK</Filter>
     </ClInclude>
     <ClInclude Include="sdk\c_match_ball.h">
+      <Filter>Source Files\SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\sdk\ios_color_classifier.h">
       <Filter>Source Files\SDK</Filter>
     </ClInclude>
   </ItemGroup>

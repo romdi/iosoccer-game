@@ -227,6 +227,7 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "d:\games\steam\
     <ClCompile Include="..\shared\achievementmgr.cpp" />
     <ClCompile Include="..\shared\achievements_hlx.cpp" />
     <ClCompile Include="..\shared\activitylist.cpp" />
+    <ClCompile Include="..\shared\sdk\ios_color_classifier.cpp" />
     <ClCompile Include="..\shared\sdk\ios_fileupdater.cpp" />
     <ClCompile Include="..\shared\sdk\ios_teamkit_parse.cpp" />
     <ClCompile Include="ai_activity.cpp" />
@@ -825,6 +826,7 @@ if exist "$(TargetDir)"server.pdb copy "$(TargetDir)"server.pdb "d:\games\steam\
     <ClInclude Include="..\shared\achievementmgr.h" />
     <ClInclude Include="..\shared\activitylist.h" />
     <ClInclude Include="..\shared\ai_activity.h" />
+    <ClInclude Include="..\shared\sdk\ios_color_classifier.h" />
     <ClInclude Include="..\shared\sdk\ios_fileupdater.h" />
     <ClInclude Include="..\shared\sdk\ios_teamkit_parse.h" />
     <ClInclude Include="ai_baseactor.h" />

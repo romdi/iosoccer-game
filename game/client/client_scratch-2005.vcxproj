@@ -224,6 +224,7 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\shared\sdk\ios_color_classifier.cpp" />
     <ClCompile Include="..\shared\sdk\ios_fileupdater.cpp" />
     <ClCompile Include="..\shared\sdk\ios_teamkit_parse.cpp" />
     <ClCompile Include="achievement_notification_panel.cpp" />
@@ -827,6 +828,7 @@ if exist "$(TargetDir)"client.pdb copy "$(TargetDir)"client.pdb "d:\games\steam\
     <ClCompile Include="worldlight.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\shared\sdk\ios_color_classifier.h" />
     <ClInclude Include="..\shared\sdk\ios_fileupdater.h" />
     <ClInclude Include="..\shared\sdk\ios_requiredclientversion.h" />
     <ClInclude Include="..\shared\sdk\ios_teamkit_parse.h" />

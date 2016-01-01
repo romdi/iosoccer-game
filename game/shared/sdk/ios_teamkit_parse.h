@@ -94,9 +94,12 @@ public:
 	char		m_szName[MAX_KITNAME_LENGTH];
 	char		m_szAuthor[MAX_PLAYER_NAME_LENGTH];
 	char		m_szFolderName[MAX_FOLDERNAME_LENGTH];
-	Color		m_HudColor;
 	Color		m_PrimaryColor;
+	Color		m_HudPrimaryColor;
+	color_class_t m_HudPrimaryColorClass;
 	Color		m_SecondaryColor;
+	Color		m_HudSecondaryColor;
+	color_class_t m_HudSecondaryColorClass;
 
 
 	Color		m_OutfieldShirtNameFillColor;
