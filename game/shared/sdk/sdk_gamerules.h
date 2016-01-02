@@ -476,7 +476,7 @@ public:
 
 	bool IsIntermissionState();
 	int GetShieldRadius(int team, bool isTaker);
-	int GetMatchDisplayTimeSeconds(bool addInjuryTime = true, bool getCountdownAtIntermissions = true);
+	float GetMatchDisplayTimeSeconds(bool addInjuryTime = true, bool getCountdownAtIntermissions = true);
 
 	float GetStrengthScalingCoeff();
 

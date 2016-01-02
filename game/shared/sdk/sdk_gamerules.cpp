@@ -2786,67 +2786,69 @@ int CSDKGameRules::GetShieldRadius(int team, bool isTaker)
 	}
 }
 
-int CSDKGameRules::GetMatchDisplayTimeSeconds(bool addInjuryTime /*= true*/, bool getCountdownAtIntermissions /*= true*/)
+float CSDKGameRules::GetMatchDisplayTimeSeconds(bool addInjuryTime /*= true*/, bool getCountdownAtIntermissions /*= true*/)
 {
-	float flTime = gpGlobals->curtime - SDKGameRules()->m_flStateEnterTime - SDKGameRules()->m_flClockStoppedTime;
+	float realSeconds = gpGlobals->curtime - SDKGameRules()->m_flStateEnterTime - SDKGameRules()->m_flClockStoppedTime;
+
 	if (SDKGameRules()->m_flClockStoppedStart != -1)
-		flTime -= gpGlobals->curtime - SDKGameRules()->m_flClockStoppedStart;
-	int nTime;
+		realSeconds -= gpGlobals->curtime - SDKGameRules()->m_flClockStoppedStart;
+
+	float matchSeconds;
 
 	switch ( SDKGameRules()->State_Get() )
 	{
 	case MATCH_PERIOD_PENALTIES:
-		nTime = (mp_extratime.GetBool() ? 120 : 90) * 60;
+		matchSeconds = (mp_extratime.GetBool() ? 120 : 90) * 60;
 		break;
 	case MATCH_PERIOD_EXTRATIME_SECOND_HALF:
-		nTime = (int)(flTime * (90.0f / mp_timelimit_match.GetFloat())) + 105 * 60;
+		matchSeconds = (int)(realSeconds * (90.0f / mp_timelimit_match.GetFloat())) + 105 * 60;
 		if (!addInjuryTime)
-			nTime = min(120 * 60, nTime);
+			matchSeconds = min(120 * 60, matchSeconds);
 		break;
 	case MATCH_PERIOD_EXTRATIME_FIRST_HALF:
-		nTime = (int)(flTime * (90.0f / mp_timelimit_match.GetFloat())) + 90 * 60;
+		matchSeconds = (int)(realSeconds * (90.0f / mp_timelimit_match.GetFloat())) + 90 * 60;
 		if (!addInjuryTime)
-			nTime = min(105 * 60, nTime);
+			matchSeconds = min(105 * 60, matchSeconds);
 		break;
 	case MATCH_PERIOD_SECOND_HALF:
-		nTime = (int)(flTime * (90.0f / mp_timelimit_match.GetFloat())) + 45 * 60;
+		matchSeconds = (int)(realSeconds * (90.0f / mp_timelimit_match.GetFloat())) + 45 * 60;
 		if (!addInjuryTime)
-			nTime = min(90 * 60, nTime);
+			matchSeconds = min(90 * 60, matchSeconds);
 		break;
 	case MATCH_PERIOD_FIRST_HALF:
-		nTime = (int)(flTime * (90.0f / mp_timelimit_match.GetFloat()));
+		matchSeconds = (int)(realSeconds * (90.0f / mp_timelimit_match.GetFloat()));
 		if (!addInjuryTime)
-			nTime = min(45 * 60, nTime);
+			matchSeconds = min(45 * 60, matchSeconds);
 		break;
 	case MATCH_PERIOD_WARMUP:
 		if (!getCountdownAtIntermissions)
-			nTime = 0;
+			matchSeconds = 0;
 		else
-			nTime = (int)(flTime - mp_timelimit_warmup.GetFloat() * 60);
+			matchSeconds = (int)(realSeconds - mp_timelimit_warmup.GetFloat() * 60);
 		break;
 	case MATCH_PERIOD_HALFTIME:
 		if (!getCountdownAtIntermissions)
-			nTime = 45 * 60;
+			matchSeconds = 45 * 60;
 		else
-			nTime = (int)(flTime - mp_timelimit_halftime.GetFloat() * 60);
+			matchSeconds = (int)(realSeconds - mp_timelimit_halftime.GetFloat() * 60);
 		break;
 	case MATCH_PERIOD_EXTRATIME_INTERMISSION:
 		if (!getCountdownAtIntermissions)
-			nTime = 90 * 60;
+			matchSeconds = 90 * 60;
 		else
-			nTime = (int)(flTime - mp_timelimit_extratime_intermission.GetFloat() * 60);
+			matchSeconds = (int)(realSeconds - mp_timelimit_extratime_intermission.GetFloat() * 60);
 		break;
 	case MATCH_PERIOD_EXTRATIME_HALFTIME:
 		if (!getCountdownAtIntermissions)
-			nTime = 105 * 60;
+			matchSeconds = 105 * 60;
 		else
-			nTime = (int)(flTime - mp_timelimit_extratime_halftime.GetFloat() * 60);
+			matchSeconds = (int)(realSeconds - mp_timelimit_extratime_halftime.GetFloat() * 60);
 		break;
 	case MATCH_PERIOD_PENALTIES_INTERMISSION:
 		if (!getCountdownAtIntermissions)
-			nTime = (mp_extratime.GetBool() ? 120 : 90) * 60;
+			matchSeconds = (mp_extratime.GetBool() ? 120 : 90) * 60;
 		else
-			nTime = (int)(flTime - mp_timelimit_penalties_intermission.GetFloat() * 60);
+			matchSeconds = (int)(realSeconds - mp_timelimit_penalties_intermission.GetFloat() * 60);
 		break;
 	case MATCH_PERIOD_COOLDOWN:
 		if (!getCountdownAtIntermissions)
@@ -2862,17 +2864,17 @@ int CSDKGameRules::GetMatchDisplayTimeSeconds(bool addInjuryTime /*= true*/, boo
 			else
 				minute = 90;
 
-			nTime = minute * 60;
+			matchSeconds = minute * 60;
 		}
 		else
-			nTime = (int)(flTime - mp_timelimit_cooldown.GetFloat() * 60);
+			matchSeconds = (int)(realSeconds - mp_timelimit_cooldown.GetFloat() * 60);
 		break;
 	default:
-		nTime = 0;
+		matchSeconds = 0;
 		break;
 	}
 
-	return nTime;
+	return matchSeconds;
 }
 
 float CSDKGameRules::GetStrengthScalingCoeff()
