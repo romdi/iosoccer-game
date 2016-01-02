@@ -33,7 +33,7 @@ ConVar cl_goal_opacity("cl_goal_opacity", "0.25", FCVAR_ARCHIVE, "Goal opacity w
 ConVar cl_goal_opacity_fieldoffset("cl_goal_opacity_fieldoffset", "20", FCVAR_ARCHIVE, "Offset from the field end where to start making it transparent");
 
 ConVar cl_cam_dist("cl_cam_dist", "175", FCVAR_ARCHIVE, "", true, 0, true, 175);
-ConVar cl_cam_height("cl_cam_height", "20", FCVAR_ARCHIVE, "", true, -50, true, 50);
+ConVar cl_cam_height("cl_cam_height", "15", FCVAR_ARCHIVE, "", true, -50, true, 50);
 ConVar cl_cam_firstperson("cl_cam_firstperson", "0", FCVAR_ARCHIVE, "");
 
 void CheckAutoTransparentProps(const Vector &pos, const QAngle &ang)
