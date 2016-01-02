@@ -793,7 +793,7 @@ void CGameMovement::ReduceTimers( void )
 		{
 			replenishAmount = mp_stamina_replenish_standing.GetInt() * gpGlobals->frametime;
 		}
-		else if (pPl->DoSkillMove())
+		else if (pPl->m_nButtons & IN_WALK)
 		{
 			replenishAmount = mp_stamina_replenish_walking.GetInt() * gpGlobals->frametime;
 		}
