@@ -685,7 +685,10 @@ void CHudScorebar::Paint( void )
 
 		for (int j = 0; j < mp_maxplayers.GetInt(); j++)
 		{
-			if (SDKGameRules()->GetMatchDisplayTimeSeconds(true, false) < GetGlobalTeam(TEAM_HOME + i)->m_PosNextJoinSeconds[j])
+			float blockTimeLeft = GetGlobalTeam(TEAM_HOME + i)->m_PosNextJoinSeconds[j] - SDKGameRules()->GetMatchDisplayTimeSeconds(true, false);
+			blockTimeLeft /= 90.0f / mp_timelimit_match.GetFloat();
+
+			if (blockTimeLeft > 0.0f)
 			{
 				int xPos = xStartPos;
 				
@@ -694,7 +697,15 @@ void CHudScorebar::Paint( void )
 				else
 					xPos += REDCARD_CENTERMARGIN + cardCount * (REDCARD_WIDTH + REDCARD_MARGIN);
 
-				surface()->DrawSetColor(g_ColorBlack);
+				float bgCoeff;
+
+				if (blockTimeLeft <= 1.0f)
+					bgCoeff = Square(cos((1.0f - blockTimeLeft) * (M_PI / 2.0f)));
+				else
+					bgCoeff = 1.0f;
+
+				Color bg = Color(g_ColorBlack.r(), g_ColorBlack.g(), g_ColorBlack.b(), bgCoeff * 255);
+				surface()->DrawSetColor(bg);
 				surface()->DrawFilledRect(
 					xPos - 2,
 					yStartPos - 2,
@@ -702,7 +713,17 @@ void CHudScorebar::Paint( void )
 					yStartPos + REDCARD_HEIGHT
 				);
 
-				surface()->DrawSetColor(g_ColorRed);
+				float fgCoeff;
+				
+				if (blockTimeLeft <= 1.0f)
+					fgCoeff = bgCoeff;
+				else if (blockTimeLeft <= 4.0f)
+					fgCoeff = Square(cos((1.0f - (blockTimeLeft - 1.0f) / 3.0f) * (3 * M_PI)));
+				else
+					fgCoeff = 1.0f;
+
+				Color fg = Color(g_ColorRed.r(), g_ColorRed.g(), g_ColorRed.b(), fgCoeff * 255);
+				surface()->DrawSetColor(fg);
 				surface()->DrawFilledRect(
 					xPos,
 					yStartPos,
