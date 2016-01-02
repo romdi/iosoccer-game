@@ -464,6 +464,8 @@ CSDKGameRules::CSDKGameRules()
 #else
 	PrecacheMaterial("pitch/offside_line");
 	m_pOffsideLineMaterial = materials->FindMaterial( "pitch/offside_line", TEXTURE_GROUP_CLIENT_EFFECTS );
+
+	PrecacheMaterial("pitch/spray_line");
 #endif
 }
 
