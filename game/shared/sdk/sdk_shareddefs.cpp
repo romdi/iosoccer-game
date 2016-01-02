@@ -164,6 +164,7 @@ Color g_ColorYellow(255, 238, 88, 255);
 Color g_ColorGreen(102, 187, 106, 255);
 Color g_ColorGray(189, 189, 189, 255);
 Color g_ColorWhite(255, 255, 255, 255);
+Color g_ColorBlack(0, 0, 0, 255);
 Color g_ColorBrown(141, 110, 99, 255);
 Color g_ColorLime(212, 225, 87, 255);
 Color g_ColorBlueGray(120, 144, 156, 255);

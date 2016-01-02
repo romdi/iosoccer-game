@@ -58,6 +58,7 @@ enum { GOALINFOPANEL_WIDTH = 500, GOALINFOPANEL_HEIGHT = 120, GOALINFOPANEL_MARG
 enum { STATUSPANEL_WIDTH = 120, STATUSPANEL_HEIGHT = 30, STATUSPANEL_MARGIN = 30 };
 enum { TEAMCREST_SIZE = 70, TEAMCREST_HMARGIN = 10, TEAMCREST_VMARGIN = 10 };
 enum { TICKER_PANEL_HEIGHT = 50, TICKER_PANEL_MARGIN = 30 };
+enum { REDCARD_WIDTH = 15, REDCARD_HEIGHT = 15, REDCARD_MARGIN = 5, REDCARD_CENTERMARGIN = 7 };
 
 const float slideDownDuration = 0.5f;
 const float slideUpDuration = 0.5f;
@@ -676,6 +677,43 @@ void CHudScorebar::OnThink( void )
 
 void CHudScorebar::Paint( void )
 {
+	for (int i = 0; i < 2; i++)
+	{
+		int cardCount = 0;
+		int xStartPos = (i == 0 ? m_pTeamNames[0]->GetX() + m_pTeamNames[0]->GetWide() : m_pTeamNames[1]->GetX()) + m_pMainPanel->GetX();
+		int yStartPos = m_pBackgroundPanel->GetY() - REDCARD_HEIGHT;
+
+		for (int j = 0; j < mp_maxplayers.GetInt(); j++)
+		{
+			if (SDKGameRules()->GetMatchDisplayTimeSeconds(true, false) < GetGlobalTeam(TEAM_HOME + i)->m_PosNextJoinSeconds[j])
+			{
+				int xPos = xStartPos;
+				
+				if (i == 0)
+					xPos -= REDCARD_CENTERMARGIN + cardCount * (REDCARD_WIDTH + REDCARD_MARGIN) + REDCARD_WIDTH;
+				else
+					xPos += REDCARD_CENTERMARGIN + cardCount * (REDCARD_WIDTH + REDCARD_MARGIN);
+
+				surface()->DrawSetColor(g_ColorBlack);
+				surface()->DrawFilledRect(
+					xPos - 2,
+					yStartPos - 2,
+					xPos + REDCARD_WIDTH + 2,
+					yStartPos + REDCARD_HEIGHT
+				);
+
+				surface()->DrawSetColor(g_ColorRed);
+				surface()->DrawFilledRect(
+					xPos,
+					yStartPos,
+					xPos + REDCARD_WIDTH,
+					yStartPos + REDCARD_HEIGHT
+				);
+
+				cardCount += 1;
+			}
+		}
+	}
 }
 
 char *GetPossessionText()
