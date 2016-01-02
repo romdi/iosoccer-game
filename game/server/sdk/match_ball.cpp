@@ -2311,8 +2311,9 @@ void CMatchBall::RemovePlayerAssignments(CSDKPlayer *pPl)
 	if (pPl == m_pFouledPl)
 		m_pFouledPl = NULL;
 
-	if (pPl == m_pFoulingPl)
-		m_pFoulingPl = NULL;
+	// Don't reset the fouling player or they won't be accessible for notifications
+	//if (pPl == m_pFoulingPl)
+	//	m_pFoulingPl = NULL;
 
 	if (pPl == m_pPossessingPl)
 		m_pPossessingPl = NULL;
