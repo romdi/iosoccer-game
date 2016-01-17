@@ -45,8 +45,8 @@ ConVar
 
 	sv_ball_sandground_enabled								("sv_ball_sandground_enabled",								"0",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_sandground_maxshotstrength						("sv_ball_sandground_maxshotstrength",						"500",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_sandground_rollfriction							("sv_ball_sandground_rollfriction",							"30",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_sandground_bouncefriction						("sv_ball_sandground_bouncefriction",						"30",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_sandground_rollfriction							("sv_ball_sandground_rollfriction",							"5.0",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_sandground_bouncefriction						("sv_ball_sandground_bouncefriction",						"0.5",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 
 
 
@@ -393,15 +393,14 @@ void CBall::VPhysicsUpdate(IPhysicsObject *pPhysics)
 	VectorRotate(angImp, EntityToWorldTransform(), worldAngImp);
 	Vector magnusDir = worldAngImp.Cross(vel);
 
-	if (vel.Length() > 0)
+	if (vel.Length() >= 0.1f)
+	{
 		vel += magnusDir * 1e-6 * sv_ball_magnus_coeff.GetFloat() * gpGlobals->frametime;
 
-	if (sv_ball_sandground_enabled.GetBool())
-	{
-		if (vel.z <= 0 && m_pPhys->GetContactPoint(NULL, NULL))
+		if (sv_ball_sandground_enabled.GetBool() && vel.z <= 0.1f && m_pPhys->GetContactPoint(NULL, NULL))
 		{
-			vel -= sv_ball_sandground_rollfriction.GetFloat() * vel * gpGlobals->frametime;
-			angImp -= sv_ball_sandground_rollfriction.GetFloat() * angImp * gpGlobals->frametime;
+			vel *= 1 - min(1.0f, sv_ball_sandground_rollfriction.GetFloat() * gpGlobals->frametime);
+			angImp *= 1 - min(1.0f, sv_ball_sandground_rollfriction.GetFloat() * gpGlobals->frametime);
 		}
 	}
 
@@ -430,8 +429,9 @@ void CBall::VPhysicsCollision(int index, gamevcollisionevent_t *pEvent)
 			AngularImpulse angImp;
 			m_pPhys->GetVelocity(&vel, &angImp);
 
-			vel -= sv_ball_sandground_bouncefriction.GetFloat() * vel * gpGlobals->frametime;
-			angImp -= sv_ball_sandground_bouncefriction.GetFloat() * angImp * gpGlobals->frametime;
+			vel *= 1 - sv_ball_sandground_bouncefriction.GetFloat();
+			angImp *= 1 - sv_ball_sandground_bouncefriction.GetFloat();
+
 			m_pPhys->SetVelocity(&vel, &angImp);
 		}
 	}
