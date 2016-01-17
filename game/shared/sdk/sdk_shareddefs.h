@@ -457,8 +457,8 @@ enum TimeoutState_t
 	TIMEOUT_STATE_ACTIVE
 };
 
-#define POST_SURFACEPROPS 84
-#define NET_SURFACEPROPS 85
+#define SURFACEPROPS_POST 84
+#define SURFACEPROPS_NET 85
 
 enum penalty_state_t
 {

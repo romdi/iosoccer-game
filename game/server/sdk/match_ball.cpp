@@ -2153,7 +2153,7 @@ void CMatchBall::VPhysicsCollision(int index, gamevcollisionevent_t *pEvent)
 	float speed = pEvent->collisionSpeed;
 	int surfaceProps = pEvent->surfaceProps[!index];
 
-	if (surfaceProps == POST_SURFACEPROPS && speed > 300.0f)
+	if (surfaceProps == SURFACEPROPS_POST && speed > 300.0f)
 	{
 		CSDKPlayer *pLastPl = LastPl(true);
 		if (pLastPl && Sign(m_vPos.y - SDKGameRules()->m_vKickOff.GetY()) == pLastPl->GetTeam()->m_nForward) // Check if it's the opponent's goal

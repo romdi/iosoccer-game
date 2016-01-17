@@ -35,6 +35,9 @@ ConVar
 	sv_ball_dragcoeff										("sv_ball_dragcoeff",										"1",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_inertia											("sv_ball_inertia",											"1.5",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_drag_enabled									("sv_ball_drag_enabled",									"1",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_goalpostfriction								("sv_ball_goalpostfriction",								"0.15",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_goalnetfriction_min								("sv_ball_goalnetfriction_min",								"0.25",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_goalnetfriction_max								("sv_ball_goalnetfriction_max",								"0.9",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	
 	sv_ball_spin											("sv_ball_spin",											"4000",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_spin_mincoeff									("sv_ball_spin_mincoeff",									"0.0",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
@@ -45,7 +48,7 @@ ConVar
 
 	sv_ball_sandground_enabled								("sv_ball_sandground_enabled",								"0",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_sandground_maxshotstrength						("sv_ball_sandground_maxshotstrength",						"500",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_sandground_rollfriction							("sv_ball_sandground_rollfriction",							"5.0",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_sandground_rollfriction							("sv_ball_sandground_rollfriction",							"10",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_sandground_bouncefriction						("sv_ball_sandground_bouncefriction",						"0.5",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 
 
@@ -391,20 +394,20 @@ void CBall::VPhysicsUpdate(IPhysicsObject *pPhysics)
 	AngularImpulse angImp;
 	m_pPhys->GetVelocity(&vel, &angImp);
 	VectorRotate(angImp, EntityToWorldTransform(), worldAngImp);
-	Vector magnusDir = worldAngImp.Cross(vel);
+	Vector magnusVel = worldAngImp.Cross(vel);
 
 	if (vel.Length() >= 0.1f)
 	{
-		vel += magnusDir * 1e-6 * sv_ball_magnus_coeff.GetFloat() * gpGlobals->frametime;
+		vel += magnusVel * 1e-6 * sv_ball_magnus_coeff.GetFloat() * gpGlobals->frametime;
 
-		if (sv_ball_sandground_enabled.GetBool() && vel.z <= 0.1f && m_pPhys->GetContactPoint(NULL, NULL))
+		if (sv_ball_sandground_enabled.GetBool() && vel.z < 0.1f && m_pPhys->GetContactPoint(NULL, NULL))
 		{
-			vel *= 1 - min(1.0f, sv_ball_sandground_rollfriction.GetFloat() * gpGlobals->frametime);
+			//vel *= 1 - min(1.0f, sv_ball_sandground_rollfriction.GetFloat() * gpGlobals->frametime);
 			angImp *= 1 - min(1.0f, sv_ball_sandground_rollfriction.GetFloat() * gpGlobals->frametime);
 		}
-	}
 
-	m_pPhys->SetVelocity(&vel, &angImp);
+		m_pPhys->SetVelocity(&vel, &angImp);
+	}
 
 	BaseClass::VPhysicsUpdate(pPhysics);
 }
@@ -414,26 +417,39 @@ void CBall::VPhysicsCollision(int index, gamevcollisionevent_t *pEvent)
 	float speed = pEvent->collisionSpeed;
 	int surfaceProps = pEvent->surfaceProps[!index];
 
-	if (surfaceProps == NET_SURFACEPROPS && speed > 300.0f)
+	if (surfaceProps == SURFACEPROPS_NET && speed > 300.0f)
 		EmitSound("Ball.Net");
-	else if (surfaceProps == POST_SURFACEPROPS && speed > 300.0f)
+	else if (surfaceProps == SURFACEPROPS_POST && speed > 300.0f)
 		EmitSound("Ball.Post");
 	else if (speed > 500.0f)
 		EmitSound("Ball.Touch");
 
-	if (sv_ball_sandground_enabled.GetBool())
+	Vector vel;
+	AngularImpulse angImp;
+	m_pPhys->GetVelocity(&vel, &angImp);
+
+	if (vel.Length() >= 0.1f)
 	{
-		if (surfaceProps == 0)
+		if (surfaceProps == SURFACEPROPS_POST)
 		{
-			Vector vel;
-			AngularImpulse angImp;
-			m_pPhys->GetVelocity(&vel, &angImp);
-
-			vel *= 1 - sv_ball_sandground_bouncefriction.GetFloat();
-			angImp *= 1 - sv_ball_sandground_bouncefriction.GetFloat();
-
-			m_pPhys->SetVelocity(&vel, &angImp);
+			vel *= 1 - sv_ball_goalpostfriction.GetFloat();
 		}
+		else if (surfaceProps == SURFACEPROPS_NET)
+		{
+			Vector dir = pEvent->preVelocity[index];
+			dir.NormalizeInPlace();
+			Vector normal;
+			pEvent->pInternalData->GetSurfaceNormal(normal);
+			float netFriction = Lerp(abs(dir.Dot(normal)), sv_ball_goalnetfriction_min.GetFloat(), sv_ball_goalnetfriction_max.GetFloat());
+			vel *= 1 - netFriction;
+			angImp *= 1 - netFriction;
+		}
+		else if (sv_ball_sandground_enabled.GetBool() && surfaceProps == 0) // 0 == ground
+		{
+			vel *= 1 - sv_ball_sandground_bouncefriction.GetFloat();
+		}
+
+		m_pPhys->SetVelocity(&vel, &angImp);
 	}
 }
 
