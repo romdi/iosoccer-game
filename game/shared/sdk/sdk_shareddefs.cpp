@@ -158,39 +158,47 @@ ConVar mp_strengthscaling_length("mp_strengthscaling_length", "6000", FCVAR_REPL
 ConVar mp_strengthscaling_exponent("mp_strengthscaling_exponent", "1.0", FCVAR_REPLICATED | FCVAR_NOTIFY);
 
 // basic team colors
-Color g_ColorRed(239, 83, 80, 255);
-Color g_ColorBlue(66, 165, 245, 255);
-Color g_ColorYellow(255, 238, 88, 255);
-Color g_ColorGreen(102, 187, 106, 255);
-Color g_ColorGray(189, 189, 189, 255);
-Color g_ColorWhite(255, 255, 255, 255);
-Color g_ColorBlack(0, 0, 0, 255);
-Color g_ColorBrown(141, 110, 99, 255);
-Color g_ColorLime(212, 225, 87, 255);
-Color g_ColorBlueGray(120, 144, 156, 255);
-Color g_ColorOrange(255, 167, 38, 255);
-Color g_ColorTeal(38, 166, 154, 255);
+Color
+	g_ColorRed(239, 83, 80, 255),
+	g_ColorBlue(66, 165, 245, 255),
+	g_ColorYellow(255, 238, 88, 255),
+	g_ColorGreen(102, 187, 106, 255),
+	g_ColorGray(189, 189, 189, 255),
+	g_ColorWhite(255, 255, 255, 255),
+	g_ColorBlack(0, 0, 0, 255),
+	g_ColorBrown(141, 110, 99, 255),
+	g_ColorLime(212, 225, 87, 255),
+	g_ColorBlueGray(120, 144, 156, 255),
+	g_ColorOrange(255, 167, 38, 255),
+	g_ColorTeal(38, 166, 154, 255),
+	g_ColorCyan(38, 198, 218, 255),
+	g_ColorMagenta(236, 64, 122, 255),
+	g_ColorPink(255, 112, 67, 255),
+	g_ColorAmber(255, 202, 40, 255),
+	g_ColorLightGreen(156, 204, 101, 255),
+	g_ColorLightBlue(41, 182, 246, 255),
+	g_ColorPurple(171, 71, 188, 255);
 
 Color g_HudColors[COLOR_CLASS_COUNT] = {
-	Color(141, 110, 99, 255),		// black => brown
-	Color(141, 110, 99, 255),		// white => brown
-	Color(141, 110, 99, 255),		// gray => brown
-	Color(239, 83, 80, 255),		// red
-	Color(255, 238, 88, 255),		// yellow
-	Color(102, 187, 106, 255),		// green
-	Color(38, 198, 218, 255),		// cyan
-	Color(66, 165, 245, 255),		// blue
-	Color(236, 64, 122, 255)		// magenta
+	g_ColorBrown,			// black => brown
+	g_ColorBrown,			// white => brown
+	g_ColorBrown,			// gray => brown
+	g_ColorRed,				// red
+	g_ColorYellow,			// yellow
+	g_ColorGreen,			// green
+	g_ColorCyan,			// cyan
+	g_ColorBlue,			// blue
+	g_ColorMagenta			// magenta
 };
 
 Color g_HudAlternativeColors[COLOR_CLASS_COUNT] = {
-	Color(120, 144, 156, 255),		// (black => brown) => blue gray
-	Color(120, 144, 156, 255),		// (white => brown) => blue gray
-	Color(120, 144, 156, 255),		// (gray => brown) => blue gray
-	Color(255, 112, 67, 255),		// red => pink
-	Color(255, 202, 40, 255),		// yellow => amber
-	Color(156, 204, 101, 255),		// green => light green
-	Color(41, 182, 246, 255),		// cyan => light blue
-	Color(41, 182, 246, 255),		// blue => light blue
-	Color(171, 71, 188, 255)		// magenta => purple
+	g_ColorBlueGray,		// (black => brown) => blue gray
+	g_ColorBlueGray,		// (white => brown) => blue gray
+	g_ColorBlueGray,		// (gray => brown) => blue gray
+	g_ColorPink,			// red => pink
+	g_ColorAmber,			// yellow => amber
+	g_ColorLightGreen,		// green => light green
+	g_ColorLightBlue,		// cyan => light blue
+	g_ColorLightBlue,		// blue => light blue
+	g_ColorPurple			// magenta => purple
 };
