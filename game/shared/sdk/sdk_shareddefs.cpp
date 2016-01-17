@@ -157,27 +157,26 @@ ConVar mp_strengthscaling_enabled("mp_strengthscaling_enabled", "1", FCVAR_REPLI
 ConVar mp_strengthscaling_length("mp_strengthscaling_length", "6000", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_strengthscaling_exponent("mp_strengthscaling_exponent", "1.0", FCVAR_REPLICATED | FCVAR_NOTIFY);
 
-// basic team colors
+// Google's material colors (mostly 300)
 Color
-	g_ColorRed(239, 83, 80, 255),
-	g_ColorBlue(66, 165, 245, 255),
-	g_ColorYellow(255, 238, 88, 255),
-	g_ColorGreen(102, 187, 106, 255),
-	g_ColorGray(189, 189, 189, 255),
+	g_ColorRed(229, 115, 115, 255),
+	g_ColorBlue(100, 181, 246, 255),
+	g_ColorYellow(255, 241, 118, 255),
+	g_ColorGreen(129, 199, 132, 255),
+	g_ColorGray(158, 158, 158, 255),
 	g_ColorWhite(255, 255, 255, 255),
 	g_ColorBlack(0, 0, 0, 255),
 	g_ColorBrown(141, 110, 99, 255),
-	g_ColorLime(212, 225, 87, 255),
+	g_ColorLime(220, 231, 117, 255),
 	g_ColorBlueGray(120, 144, 156, 255),
-	g_ColorOrange(255, 167, 38, 255),
-	g_ColorTeal(38, 166, 154, 255),
-	g_ColorCyan(38, 198, 218, 255),
-	g_ColorMagenta(236, 64, 122, 255),
-	g_ColorPink(255, 112, 67, 255),
-	g_ColorAmber(255, 202, 40, 255),
-	g_ColorLightGreen(156, 204, 101, 255),
-	g_ColorLightBlue(41, 182, 246, 255),
-	g_ColorPurple(171, 71, 188, 255);
+	g_ColorOrange(255, 183, 77, 255),
+	g_ColorTeal(77, 182, 172, 255),
+	g_ColorCyan(77, 208, 225, 255),
+	g_ColorPink(240, 98, 146, 255),
+	g_ColorAmber(255, 213, 79, 255),
+	g_ColorLightGreen(174, 213, 129, 255),
+	g_ColorLightBlue(79, 195, 247, 255),
+	g_ColorPurple(186, 104, 200, 255);
 
 Color g_HudColors[COLOR_CLASS_COUNT] = {
 	g_ColorBrown,			// black => brown
@@ -188,7 +187,7 @@ Color g_HudColors[COLOR_CLASS_COUNT] = {
 	g_ColorGreen,			// green
 	g_ColorCyan,			// cyan
 	g_ColorBlue,			// blue
-	g_ColorMagenta			// magenta
+	g_ColorPink				// magenta => pink
 };
 
 Color g_HudAlternativeColors[COLOR_CLASS_COUNT] = {
@@ -200,5 +199,5 @@ Color g_HudAlternativeColors[COLOR_CLASS_COUNT] = {
 	g_ColorLightGreen,		// green => light green
 	g_ColorLightBlue,		// cyan => light blue
 	g_ColorLightBlue,		// blue => light blue
-	g_ColorPurple			// magenta => purple
+	g_ColorPurple			// (magenta => pink) => purple
 };
