@@ -1843,7 +1843,6 @@ void CSDKGameRules::State_SECOND_HALF_Enter()
 	SetBottomTeam(GetGlobalTeam(m_nFirstHalfBottomTeam)->GetOppTeamNumber());
 	SetKickOffTeam(GetGlobalTeam(m_nFirstHalfKickOffTeam)->GetOppTeamNumber());
 
-	CPlayerPersistentData::AddToAllMaxStaminas(mp_stamina_max_add_halftime.GetFloat());
 	GetMatchBall()->State_Transition(BALL_STATE_KICKOFF, 0, 0, true);
 	//GetMatchBall()->EmitSound("Crowd.YNWA");
 }
@@ -1891,7 +1890,6 @@ void CSDKGameRules::State_EXTRATIME_FIRST_HALF_Enter()
 	SetBottomTeam(m_nFirstHalfBottomTeam);
 	SetKickOffTeam(m_nFirstHalfKickOffTeam);
 
-	CPlayerPersistentData::AddToAllMaxStaminas(mp_stamina_max_add_extratime_intermission.GetFloat());
 	GetMatchBall()->State_Transition(BALL_STATE_KICKOFF, 0, 0, true);
 }
 
@@ -1933,7 +1931,6 @@ void CSDKGameRules::State_EXTRATIME_SECOND_HALF_Enter()
 	SetBottomTeam(GetGlobalTeam(m_nFirstHalfBottomTeam)->GetOppTeamNumber());
 	SetKickOffTeam(GetGlobalTeam(m_nFirstHalfKickOffTeam)->GetOppTeamNumber());
 
-	CPlayerPersistentData::AddToAllMaxStaminas(mp_stamina_max_add_extratime_halftime.GetFloat());
 	GetMatchBall()->State_Transition(BALL_STATE_KICKOFF, 0, 0, true);
 }
 

@@ -129,7 +129,6 @@ END_SEND_TABLE()
 BEGIN_SEND_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 #if defined ( SDK_USE_STAMINA ) || defined ( SDK_USE_SPRINTING )
 	SendPropFloat( SENDINFO( m_flStamina ), 0, SPROP_NOSCALE | SPROP_CHANGES_OFTEN ),
-	SendPropFloat( SENDINFO( m_flMaxStamina ), 0, SPROP_NOSCALE | SPROP_CHANGES_OFTEN ),
 #endif
 
 #if defined ( SDK_USE_PRONE )
@@ -2465,9 +2464,6 @@ void CPlayerMatchPeriodData::ResetData()
 void CPlayerPersistentData::ResetData()
 {
 	m_nNextCardJoin = 0;
-	m_flMaxStamina = 100;
-	m_pPl->m_Shared.SetMaxStamina(100, false);
-
 	m_pMatchData->ResetData();
 	m_MatchPeriodData.PurgeAndDeleteElements();
 }
@@ -2484,7 +2480,6 @@ void CPlayerPersistentData::AllocateData(CSDKPlayer *pPl)
 
 		data = m_PlayerPersistentData[i];
 		data->m_pPl = pPl;
-		data->m_pPl->m_Shared.SetMaxStamina(data->m_flMaxStamina, false);
 		break;
 	}
 
@@ -2495,19 +2490,6 @@ void CPlayerPersistentData::AllocateData(CSDKPlayer *pPl)
 	}
 
 	pPl->SetData(data);
-}
-
-void CPlayerPersistentData::AddToAllMaxStaminas(float staminaToAdd)
-{
-	for (int i = 0; i < m_PlayerPersistentData.Count(); i++)
-	{
-		CPlayerPersistentData *pData = m_PlayerPersistentData[i];
-
-		pData->m_flMaxStamina = min(100, pData->m_flMaxStamina + staminaToAdd);
-
-		if (pData->m_pPl)
-			pData->m_pPl->m_Shared.SetMaxStamina(pData->m_flMaxStamina, false);
-	}
 }
 
 void CPlayerPersistentData::ReallocateAllPlayerData()

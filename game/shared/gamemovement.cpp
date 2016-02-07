@@ -777,12 +777,7 @@ void CGameMovement::ReduceTimers( void )
 
 	if ( reduceStamina && vel.Length2DSqr() > 10000 ) //speed > 100
 	{
-		float reduceAmount = mp_stamina_drain_sprinting.GetInt() * gpGlobals->frametime;
-
-		if (!SDKGameRules()->IsIntermissionState())
-			pPl->m_Shared.SetMaxStamina(pPl->m_Shared.GetMaxStamina() - reduceAmount * mp_stamina_max_reduce_coeff.GetFloat(), true);
-
-		pPl->m_Shared.SetStamina(pPl->m_Shared.GetStamina() - reduceAmount);
+		pPl->m_Shared.SetStamina(pPl->m_Shared.GetStamina() - mp_stamina_drain_sprinting.GetInt() * gpGlobals->frametime);
 	}
 	else
 	{
