@@ -36,12 +36,10 @@ extern ConVar sv_specspeed;
 extern ConVar sv_specnoclip;
 
 extern ConVar mp_jump_height;
-extern ConVar mp_jump_delay; //ios
-extern ConVar mp_slide_delay; //ios
-extern ConVar mp_stamina_drain_sprinting; //ios
-extern ConVar mp_stamina_replenish_standing; //ios
-extern ConVar mp_stamina_replenish_walking; //ios
-extern ConVar mp_stamina_replenish_running; //ios
+extern ConVar mp_jump_delay;
+extern ConVar mp_slide_delay;
+extern ConVar mp_stamina_drain;
+extern ConVar mp_stamina_replenish;
 extern ConVar mp_stamina_max_reduce_coeff;
 extern ConVar mp_stamina_max_add_halftime;
 extern ConVar mp_stamina_max_add_extratime_intermission;

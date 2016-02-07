@@ -762,42 +762,15 @@ void CGameMovement::ReduceTimers( void )
 	teamPosType = pPl->GetTeamPosType();
 #endif
 
-	bool reduceStamina = false;
-
-	// If moving and holding sprint button
-	if ((mv->m_nButtons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT)) != 0 && (mv->m_nButtons & IN_SPEED))
-		reduceStamina = true;
-
-	// If celebrating after a goal
-	if (GetMatchBall() && GetMatchBall()->m_eBallState == BALL_STATE_GOAL)
-		reduceStamina = false;
-
-	// If we're holding the sprint key and also actually moving, remove some stamina
-	Vector vel = pPl->GetAbsVelocity();
-
-	if ( reduceStamina && vel.Length2DSqr() > 10000 ) //speed > 100
+	if (GetMatchBall()->m_eBallState != BALL_STATE_GOAL
+		&& mv->m_nButtons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT) != 0
+		&& mv->m_nButtons & IN_SPEED)
 	{
-		pPl->m_Shared.SetStamina(pPl->m_Shared.GetStamina() - mp_stamina_drain_sprinting.GetInt() * gpGlobals->frametime);
+		pPl->m_Shared.SetStamina(pPl->m_Shared.GetStamina() - mp_stamina_drain.GetInt() * gpGlobals->frametime);
 	}
 	else
 	{
-		float replenishAmount;
-
-		//gain some back		
-		if (vel.Length2DSqr() <= 0)
-		{
-			replenishAmount = mp_stamina_replenish_standing.GetInt() * gpGlobals->frametime;
-		}
-		else if (pPl->m_nButtons & IN_WALK)
-		{
-			replenishAmount = mp_stamina_replenish_walking.GetInt() * gpGlobals->frametime;
-		}
-		else
-		{
-			replenishAmount = mp_stamina_replenish_running.GetInt() * gpGlobals->frametime;
-		}
-
-		pPl->m_Shared.SetStamina(pPl->m_Shared.GetStamina() + replenishAmount);	
+		pPl->m_Shared.SetStamina(pPl->m_Shared.GetStamina() + mp_stamina_replenish.GetInt() * gpGlobals->frametime);
 	}
 
 	float frame_msec = 1000.0f * gpGlobals->frametime;
