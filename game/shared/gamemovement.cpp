@@ -1580,19 +1580,19 @@ bool CGameMovement::CheckActionOverTime()
 		{
 			if (pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT)
 			{
-				if (pPl->m_Shared.m_nBoostRightDive == 1)
-					moveCoeff = 1.0f + mp_dive_boost_coeff.GetFloat();
-				else if (pPl->m_Shared.m_nBoostRightDive == -1)
-					moveCoeff = 1.0f - mp_dive_boost_coeff.GetFloat();
+				if (pPl->m_Shared.m_nBoostRightDive == 1 && mp_keeperdive_boost_enabled.GetBool())
+					moveCoeff = 1.0f + mp_keeperdive_boost_coeff.GetFloat();
+				else if (pPl->m_Shared.m_nBoostRightDive == -1 && mp_keeperdive_boost_enabled.GetBool())
+					moveCoeff = 1.0f - mp_keeperdive_boost_coeff.GetFloat();
 				else
 					moveCoeff = 1.0f;
 			}
 			else
 			{
-				if (pPl->m_Shared.m_nBoostRightDive == -1)
-					moveCoeff = 1.0f + mp_dive_boost_coeff.GetFloat();
-				else if (pPl->m_Shared.m_nBoostRightDive == 1)
-					moveCoeff = 1.0f - mp_dive_boost_coeff.GetFloat();
+				if (pPl->m_Shared.m_nBoostRightDive == -1 && mp_keeperdive_boost_enabled.GetBool())
+					moveCoeff = 1.0f + mp_keeperdive_boost_coeff.GetFloat();
+				else if (pPl->m_Shared.m_nBoostRightDive == 1 && mp_keeperdive_boost_enabled.GetBool())
+					moveCoeff = 1.0f - mp_keeperdive_boost_coeff.GetFloat();
 				else
 					moveCoeff = 1.0f;
 			}
@@ -1627,10 +1627,10 @@ bool CGameMovement::CheckActionOverTime()
 		}
 		else
 		{
-			if (pPl->m_Shared.m_nBoostForwardDive == 1)
-				moveCoeff = 1.0f + mp_dive_boost_coeff.GetFloat();
-			else if (pPl->m_Shared.m_nBoostForwardDive == -1)
-				moveCoeff = 1.0f - mp_dive_boost_coeff.GetFloat();
+			if (pPl->m_Shared.m_nBoostForwardDive == 1 && mp_keeperdive_boost_enabled.GetBool())
+				moveCoeff = 1.0f + mp_keeperdive_boost_coeff.GetFloat();
+			else if (pPl->m_Shared.m_nBoostForwardDive == -1 && mp_keeperdive_boost_enabled.GetBool())
+				moveCoeff = 1.0f - mp_keeperdive_boost_coeff.GetFloat();
 			else
 				moveCoeff = 1.0f;
 		}
@@ -1664,10 +1664,10 @@ bool CGameMovement::CheckActionOverTime()
 		}
 		else
 		{
-			if (pPl->m_Shared.m_nBoostForwardDive == -1)
-				moveCoeff = 1.0f + mp_dive_boost_coeff.GetFloat();
-			else if (pPl->m_Shared.m_nBoostForwardDive == 1)
-				moveCoeff = 1.0f - mp_dive_boost_coeff.GetFloat();
+			if (pPl->m_Shared.m_nBoostForwardDive == -1 && mp_keeperdive_boost_enabled.GetBool())
+				moveCoeff = 1.0f + mp_keeperdive_boost_coeff.GetFloat();
+			else if (pPl->m_Shared.m_nBoostForwardDive == 1 && mp_keeperdive_boost_enabled.GetBool())
+				moveCoeff = 1.0f - mp_keeperdive_boost_coeff.GetFloat();
 			else
 				moveCoeff = 1.0f;
 		}
@@ -1911,10 +1911,10 @@ bool CGameMovement::CheckActionStart()
 		}
 		else
 		{
-			if (gpGlobals->curtime < pPl->m_Shared.m_flBoostRightDiveStart + mp_dive_boost_duration.GetFloat())
+			if (gpGlobals->curtime < pPl->m_Shared.m_flBoostRightDiveStart + mp_keeperdive_boost_duration.GetFloat())
 				pPl->m_Shared.m_nBoostRightDive = 0;
 
-			if (gpGlobals->curtime < pPl->m_Shared.m_flBoostForwardDiveStart + mp_dive_boost_duration.GetFloat())
+			if (gpGlobals->curtime < pPl->m_Shared.m_flBoostForwardDiveStart + mp_keeperdive_boost_duration.GetFloat())
 				pPl->m_Shared.m_nBoostForwardDive = 0;
 
 			SetGroundEntity(NULL);
