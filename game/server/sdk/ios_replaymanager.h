@@ -221,7 +221,7 @@ public:
 	void TakeSnapshot();
 	void StartReplay(bool isHighlightReplay);
 	void StopReplay();
-	void RestoreSnapshot();
+	void PlayReplay();
 	bool IsReplaying() { return m_bIsReplaying; }
 	void Think();
 	void Spawn();
@@ -257,8 +257,14 @@ private:
 	bool					m_bIsHighlightReplay;
 	bool					m_bIsReplayStart;
 	bool					m_bIsHighlightStart;
-	float					m_flRunDuration;
+	float					m_flRunningTime;
 	CUtlVector<MatchEvent *> m_MatchEvents;
+
+	bool					FindNextReplay();
+	void					InitReplay(MatchEvent *pMatchEvent);
+	void					HideRealBallAndPlayers();
+	void					RestoreReplayBallState(Snapshot *pSnap, Snapshot *pNextSnap, float interpolant);
+	void					RestoreReplayPlayerStates(Snapshot *pSnap, Snapshot *pNextSnap, float interpolant);
 };
 
 extern CReplayManager *g_pReplayManager;

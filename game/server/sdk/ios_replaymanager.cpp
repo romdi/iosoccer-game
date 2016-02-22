@@ -143,7 +143,7 @@ CReplayManager::CReplayManager()
 	m_bIsHighlightReplay = false;
 	m_bIsReplayStart = true;
 	m_bIsHighlightStart = true;
-	m_flRunDuration = 0;
+	m_flRunningTime = 0;
 }
 
 CReplayManager::~CReplayManager()
@@ -243,7 +243,7 @@ int CReplayManager::FindNextHighlightReplayIndex(int startIndex, match_period_t 
 void CReplayManager::CheckReplay()
 {
 	if (m_bReplayIsPending && gpGlobals->curtime >= m_flReplayActivationTime || m_bIsReplaying)
-		RestoreSnapshot();
+		PlayReplay();
 	else if (!m_bIsReplaying && !SDKGameRules()->IsIntermissionState()
 		&& (!m_bReplayIsPending || m_MatchEvents.Count() > 0 && m_MatchEvents.Tail()->snapshotEndTime >= gpGlobals->curtime))
 		TakeSnapshot();
@@ -468,121 +468,197 @@ void CReplayManager::TakeSnapshot()
 	}
 }
 
-void CReplayManager::RestoreSnapshot()
+void CReplayManager::PlayReplay()
 {
-	float watchDuration = gpGlobals->curtime - m_flReplayStartTime;
+	float elapsedPlayTime = gpGlobals->curtime - m_flReplayStartTime;
 
-	if (watchDuration > m_flRunDuration)
+	if (elapsedPlayTime > m_flRunningTime)
 	{
-		if (m_nReplayRunIndex < m_nMaxReplayRuns - 1)
-		{
-			m_nReplayRunIndex += 1;
-			m_bIsReplayStart = true;
-		}
-		else if (m_bIsHighlightReplay)
-		{
-			m_nReplayIndex = FindNextHighlightReplayIndex(m_nReplayIndex + 1, SDKGameRules()->State_Get());
-
-			if (m_nReplayIndex == -1)
-			{
-				StopReplay();
-				return;
-			}
-
-			m_nReplayRunIndex = 0;
-			m_bIsReplayStart = true;
-			m_bIsHighlightStart = true;
-		}
-		else
-		{
-			StopReplay();
+		if (!FindNextReplay())
 			return;
-		}
 	}
 
 	MatchEvent *pMatchEvent = m_MatchEvents[m_nReplayIndex];
 
 	if (m_bIsReplayStart)
 	{
-		m_bIsReplayStart = false;
-		m_bAtMinGoalPos = pMatchEvent->atMinGoalPos;
-		m_bIsReplaying = true;
-		m_bReplayIsPending = false;
-		CalcMaxReplayRunsAndDuration(pMatchEvent, gpGlobals->curtime);
-		watchDuration = 0;
+		InitReplay(pMatchEvent);
+		elapsedPlayTime = 0;
+	}
 
-		if (m_bIsHighlightReplay && m_bIsHighlightStart)
+	HideRealBallAndPlayers();
+
+	float realTimeDuration = m_flRunningTime - m_flSlowMoDuration;
+
+	float elapsedSlowMoTime = elapsedPlayTime - realTimeDuration;
+
+	if (elapsedSlowMoTime > 0)
+		elapsedPlayTime = realTimeDuration + elapsedSlowMoTime * m_flSlowMoCoeff;
+
+	// To find the correct snapshot calculate the time passed since we started watching the replay and match it to the right snapshot in our recording list
+
+	Snapshot *pSnap = NULL;
+	Snapshot *pNextSnap = NULL;
+	float relativeSnapTime = 0;
+
+	// Traverse backwards looking for a recorded snapshot matching the time since replay start
+	for (int i = pMatchEvent->snapshots.Count() - 1; i >= 0; i--)
+	{
+		// Save the snapshot of the previous iteration, so we have a snapshot to interpolate to when we found our target snapshot
+		pNextSnap = pSnap;
+
+		// Save the current snapshot
+		pSnap = pMatchEvent->snapshots[i];
+
+		// Snapshots have absolute match times, so calculate the relative time span between the first recorded snapshot and the current snapshot
+		relativeSnapTime = pSnap->snaptime - pMatchEvent->snapshots[0]->snaptime - m_flReplayStartTimeOffset;
+
+		// We usually only play the last x seconds of a replay instead of the whole thing, so subtract the start time offset from the time since the first snapshot.
+		// The first snapshot which time span is equal or shorter than the duration since replay start is the one which should be shown next.
+		if (relativeSnapTime <= elapsedPlayTime)
+			break;
+	}
+
+	// No snapshots in the list
+	if (!pSnap)
+		return;
+
+	float nextSnapDuration;
+
+	if (pNextSnap)
+		nextSnapDuration = pNextSnap->snaptime - pMatchEvent->snapshots[0]->snaptime - m_flReplayStartTimeOffset;
+	else
+		nextSnapDuration = 0;
+
+	float interpolant;
+
+	if (pNextSnap)
+	{
+		// Calc fraction between both snapshots
+		interpolant = clamp((elapsedPlayTime - relativeSnapTime) / (nextSnapDuration - relativeSnapTime), 0.0f, 1.0f);
+	}
+	else
+	{
+		// Exact snapshot time matched or no next snapshot to interpolate to
+		interpolant = 0.0f;
+	}
+
+	RestoreReplayBallState(pSnap, pNextSnap, interpolant);
+	RestoreReplayPlayerStates(pSnap, pNextSnap, interpolant);
+}
+
+bool CReplayManager::FindNextReplay()
+{
+	if (m_nReplayRunIndex < m_nMaxReplayRuns - 1)
+	{
+		m_nReplayRunIndex += 1;
+		m_bIsReplayStart = true;
+	}
+	else if (m_bIsHighlightReplay)
+	{
+		m_nReplayIndex = FindNextHighlightReplayIndex(m_nReplayIndex + 1, SDKGameRules()->State_Get());
+
+		if (m_nReplayIndex == -1)
 		{
-			m_bIsHighlightStart = false;
+			StopReplay();
+			return false;
+		}
 
-			if (pMatchEvent->matchEventType == MATCH_EVENT_GOAL)
+		m_nReplayRunIndex = 0;
+		m_bIsReplayStart = true;
+		m_bIsHighlightStart = true;
+	}
+	else
+	{
+		StopReplay();
+		return false;
+	}
+
+	return true;
+}
+
+void CReplayManager::InitReplay(MatchEvent *pMatchEvent)
+{
+	m_bIsReplayStart = false;
+	m_bAtMinGoalPos = pMatchEvent->atMinGoalPos;
+	m_bIsReplaying = true;
+	m_bReplayIsPending = false;
+	CalcMaxReplayRunsAndDuration(pMatchEvent, gpGlobals->curtime);
+
+	if (m_bIsHighlightReplay && m_bIsHighlightStart)
+	{
+		m_bIsHighlightStart = false;
+
+		if (pMatchEvent->matchEventType == MATCH_EVENT_GOAL)
+		{
+			IGameEvent *pEvent = gameeventmanager->CreateEvent("highlight_goal");
+			if (pEvent)
 			{
-				IGameEvent *pEvent = gameeventmanager->CreateEvent("highlight_goal");
-				if (pEvent)
-				{
-					pEvent->SetInt("second", pMatchEvent->second);
-					pEvent->SetInt("match_period", pMatchEvent->matchPeriod);
-					pEvent->SetInt("scoring_team", pMatchEvent->team);
-					pEvent->SetString("scorer", pMatchEvent->pPlayer1Data ? pMatchEvent->pPlayer1Data->m_szName : "");
-					pEvent->SetString("first_assister", pMatchEvent->pPlayer2Data ? pMatchEvent->pPlayer2Data->m_szName : "");
-					pEvent->SetString("second_assister", pMatchEvent->pPlayer3Data ? pMatchEvent->pPlayer3Data->m_szName : "");
-					gameeventmanager->FireEvent(pEvent);
-				}
+				pEvent->SetInt("second", pMatchEvent->second);
+				pEvent->SetInt("match_period", pMatchEvent->matchPeriod);
+				pEvent->SetInt("scoring_team", pMatchEvent->team);
+				pEvent->SetString("scorer", pMatchEvent->pPlayer1Data ? pMatchEvent->pPlayer1Data->m_szName : "");
+				pEvent->SetString("first_assister", pMatchEvent->pPlayer2Data ? pMatchEvent->pPlayer2Data->m_szName : "");
+				pEvent->SetString("second_assister", pMatchEvent->pPlayer3Data ? pMatchEvent->pPlayer3Data->m_szName : "");
+				gameeventmanager->FireEvent(pEvent);
 			}
-			else if (pMatchEvent->matchEventType == MATCH_EVENT_OWNGOAL)
+		}
+		else if (pMatchEvent->matchEventType == MATCH_EVENT_OWNGOAL)
+		{
+			IGameEvent *pEvent = gameeventmanager->CreateEvent("highlight_owngoal");
+			if (pEvent)
 			{
-				IGameEvent *pEvent = gameeventmanager->CreateEvent("highlight_owngoal");
-				if (pEvent)
-				{
-					pEvent->SetInt("second", pMatchEvent->second);
-					pEvent->SetInt("match_period", pMatchEvent->matchPeriod);
-					pEvent->SetInt("scoring_team", pMatchEvent->team);
-					pEvent->SetString("scorer", pMatchEvent->pPlayer1Data ? pMatchEvent->pPlayer1Data->m_szName : "");
-					gameeventmanager->FireEvent(pEvent);
-				}
+				pEvent->SetInt("second", pMatchEvent->second);
+				pEvent->SetInt("match_period", pMatchEvent->matchPeriod);
+				pEvent->SetInt("scoring_team", pMatchEvent->team);
+				pEvent->SetString("scorer", pMatchEvent->pPlayer1Data ? pMatchEvent->pPlayer1Data->m_szName : "");
+				gameeventmanager->FireEvent(pEvent);
 			}
-			else if (pMatchEvent->matchEventType == MATCH_EVENT_MISS)
+		}
+		else if (pMatchEvent->matchEventType == MATCH_EVENT_MISS)
+		{
+			IGameEvent *pEvent = gameeventmanager->CreateEvent("highlight_miss");
+			if (pEvent)
 			{
-				IGameEvent *pEvent = gameeventmanager->CreateEvent("highlight_miss");
-				if (pEvent)
-				{
-					pEvent->SetInt("second", pMatchEvent->second);
-					pEvent->SetInt("match_period", pMatchEvent->matchPeriod);
-					pEvent->SetInt("finishing_team", pMatchEvent->team);
-					pEvent->SetString("finisher", pMatchEvent->pPlayer1Data ? pMatchEvent->pPlayer1Data->m_szName : "");
-					pEvent->SetString("first_assister", pMatchEvent->pPlayer2Data ? pMatchEvent->pPlayer2Data->m_szName : "");
-					pEvent->SetString("second_assister", pMatchEvent->pPlayer3Data ? pMatchEvent->pPlayer3Data->m_szName : "");
-					gameeventmanager->FireEvent(pEvent);
-				}
+				pEvent->SetInt("second", pMatchEvent->second);
+				pEvent->SetInt("match_period", pMatchEvent->matchPeriod);
+				pEvent->SetInt("finishing_team", pMatchEvent->team);
+				pEvent->SetString("finisher", pMatchEvent->pPlayer1Data ? pMatchEvent->pPlayer1Data->m_szName : "");
+				pEvent->SetString("first_assister", pMatchEvent->pPlayer2Data ? pMatchEvent->pPlayer2Data->m_szName : "");
+				pEvent->SetString("second_assister", pMatchEvent->pPlayer3Data ? pMatchEvent->pPlayer3Data->m_szName : "");
+				gameeventmanager->FireEvent(pEvent);
 			}
-			else if (pMatchEvent->matchEventType == MATCH_EVENT_KEEPERSAVE)
+		}
+		else if (pMatchEvent->matchEventType == MATCH_EVENT_KEEPERSAVE)
+		{
+			IGameEvent *pEvent = gameeventmanager->CreateEvent("highlight_keepersave");
+			if (pEvent)
 			{
-				IGameEvent *pEvent = gameeventmanager->CreateEvent("highlight_keepersave");
-				if (pEvent)
-				{
-					pEvent->SetInt("second", pMatchEvent->second);
-					pEvent->SetInt("match_period", pMatchEvent->matchPeriod);
-					pEvent->SetInt("keeper_team", pMatchEvent->team);
-					pEvent->SetString("keeper", pMatchEvent->pPlayer1Data ? pMatchEvent->pPlayer1Data->m_szName : "");
-					pEvent->SetString("finisher", pMatchEvent->pPlayer2Data ? pMatchEvent->pPlayer2Data->m_szName : "");
-					gameeventmanager->FireEvent(pEvent);
-				}
+				pEvent->SetInt("second", pMatchEvent->second);
+				pEvent->SetInt("match_period", pMatchEvent->matchPeriod);
+				pEvent->SetInt("keeper_team", pMatchEvent->team);
+				pEvent->SetString("keeper", pMatchEvent->pPlayer1Data ? pMatchEvent->pPlayer1Data->m_szName : "");
+				pEvent->SetString("finisher", pMatchEvent->pPlayer2Data ? pMatchEvent->pPlayer2Data->m_szName : "");
+				gameeventmanager->FireEvent(pEvent);
 			}
-			else if (pMatchEvent->matchEventType == MATCH_EVENT_REDCARD)
+		}
+		else if (pMatchEvent->matchEventType == MATCH_EVENT_REDCARD)
+		{
+			IGameEvent *pEvent = gameeventmanager->CreateEvent("highlight_redcard");
+			if (pEvent)
 			{
-				IGameEvent *pEvent = gameeventmanager->CreateEvent("highlight_redcard");
-				if (pEvent)
-				{
-					pEvent->SetInt("second", pMatchEvent->second);
-					pEvent->SetInt("match_period", pMatchEvent->matchPeriod);
-					pEvent->SetInt("fouling_team", pMatchEvent->team);
-					pEvent->SetString("fouling_player", pMatchEvent->pPlayer1Data ? pMatchEvent->pPlayer1Data->m_szName : "");
-					gameeventmanager->FireEvent(pEvent);
-				}
+				pEvent->SetInt("second", pMatchEvent->second);
+				pEvent->SetInt("match_period", pMatchEvent->matchPeriod);
+				pEvent->SetInt("fouling_team", pMatchEvent->team);
+				pEvent->SetString("fouling_player", pMatchEvent->pPlayer1Data ? pMatchEvent->pPlayer1Data->m_szName : "");
+				gameeventmanager->FireEvent(pEvent);
 			}
 		}
 	}
+}
 
+void CReplayManager::HideRealBallAndPlayers()
+{
 	CBall *pRealBall = GetMatchBall();
 	if (pRealBall && !(pRealBall->GetEffects() & EF_NODRAW))
 	{
@@ -603,54 +679,17 @@ void CReplayManager::RestoreSnapshot()
 			pRealPl->AddSolidFlags(FSOLID_NOT_SOLID);
 			pRealPl->SetMoveType(MOVETYPE_NONE);
 		}
-		
+
 		if (pRealPl->GetPlayerBall() && !(pRealPl->GetPlayerBall()->GetEffects() & EF_NODRAW))
 		{
 			pRealPl->GetPlayerBall()->AddEffects(EF_NODRAW);
 			pRealPl->GetPlayerBall()->AddSolidFlags(FSOLID_NOT_SOLID);
 		}
 	}
+}
 
-	float normalRunDuration = m_flRunDuration - m_flSlowMoDuration;
-
-	if (watchDuration > normalRunDuration)
-		watchDuration = normalRunDuration + m_flSlowMoCoeff * (watchDuration - normalRunDuration);
-
-	// To find the correct snapshot calculate the time passed since we started watching the replay and match it to the right snapshot in our recording list
-
-	Snapshot *pNextSnap = NULL;
-	Snapshot *pSnap = NULL;
-	float snapDuration = 0;
-
-	// Traverse backwards looking for a recorded snapshot matching the time since replay start
-	for (int i = pMatchEvent->snapshots.Count() - 1; i >= 0; i--)
-	{
-		// Save the snapshot of the previous iteration, so we have a snapshot to interpolate to when we found our target snapshot
-		pNextSnap = pSnap;
-
-		// Save the current snapshot
-		pSnap = pMatchEvent->snapshots[i];
-
-		// Snapshots have absolute match times, so calculate the relative time span between the first recorded snapshot and the current snapshot
-		snapDuration = pSnap->snaptime - pMatchEvent->snapshots[0]->snaptime - m_flReplayStartTimeOffset;
-
-		// We usually only play the last x seconds of a replay instead of the whole thing, so subtract the start time offset from the time since the first snapshot.
-		// The first snapshot which time span is equal or shorter than the duration since replay start is the one which should be shown next.
-		if (snapDuration <= watchDuration)
-			break;
-	}
-
-	// No snapshots in the list
-	if (!pSnap)
-		return;
-
-	float nextSnapDuration;
-
-	if (pNextSnap)
-		nextSnapDuration = pNextSnap->snaptime - pMatchEvent->snapshots[0]->snaptime - m_flReplayStartTimeOffset;
-	else
-		nextSnapDuration = 0;
-
+void CReplayManager::RestoreReplayBallState(Snapshot *pSnap, Snapshot *pNextSnap, float interpolant)
+{
 	BallSnapshot *pBallSnap = pSnap->pBallSnapshot;
 
 	if (pBallSnap)
@@ -664,33 +703,37 @@ void CReplayManager::RestoreSnapshot()
 		if (Q_strcmp(m_pBall->m_szSkinName, GetMatchBall()->GetSkinName()))
 			Q_strncpy(m_pBall->m_szSkinName.GetForModify(), GetMatchBall()->GetSkinName(), MAX_KITNAME_LENGTH);
 
-		m_pBall->VPhysicsGetObject()->SetPosition(pBallSnap->pos, pBallSnap->ang, false);
-		m_pBall->VPhysicsGetObject()->SetVelocity(&pBallSnap->vel, &pBallSnap->rot);
+		BallSnapshot *pNextBallSnap = NULL;
+		
+		if (pNextSnap)
+			pNextBallSnap = pNextSnap->pBallSnapshot;
+
+		if (interpolant > 0.0f && pNextBallSnap)
+		{
+			m_pBall->VPhysicsGetObject()->SetPosition(Lerp(interpolant, pBallSnap->pos, pNextBallSnap->pos), Lerp(interpolant, pBallSnap->ang, pNextBallSnap->ang), false);
+			m_pBall->VPhysicsGetObject()->SetVelocity(&Lerp(interpolant, pBallSnap->vel, pNextBallSnap->vel), &Lerp(interpolant, pBallSnap->rot, pNextBallSnap->rot));
+		}
+		else
+		{
+			m_pBall->VPhysicsGetObject()->SetPosition(pBallSnap->pos, pBallSnap->ang, false);
+			m_pBall->VPhysicsGetObject()->SetVelocity(&pBallSnap->vel, &pBallSnap->rot);
+		}
 	}
 	else
 	{
 		UTIL_Remove(m_pBall);
 		m_pBall = NULL;
 	}
+}
 
-	float frac;
-
-	if (pNextSnap)
-	{
-		// Calc fraction between both snapshots
-		frac = clamp((watchDuration - snapDuration) / (nextSnapDuration - snapDuration), 0.0f, 1.0f);
-	}
-	else
-	{
-		// Exact snapshot time matched or no next snapshot to interpolate to
-		frac = 0.0f;
-	}
-
+void CReplayManager::RestoreReplayPlayerStates(Snapshot *pSnap, Snapshot *pNextSnap, float interpolant)
+{
 	for (int i = 0; i < 2; i++)
 	{
 		for (int j = 0; j < 11; j++)
 		{
 			PlayerSnapshot *pPlSnap = pSnap->pPlayerSnapshot[i][j];
+
 			if (!pPlSnap)
 			{
 				UTIL_Remove(m_pPlayers[i][j]);
@@ -726,11 +769,11 @@ void CReplayManager::RestoreSnapshot()
 			if (pNextSnap)
 				pNextPlSnap = pNextSnap->pPlayerSnapshot[i][j];
 
-			if (frac > 0.0f && pNextPlSnap)
+			if (interpolant > 0.0f && pNextPlSnap)
 			{
-				pPl->SetLocalOrigin(Lerp( frac, pPlSnap->pos, pNextPlSnap->pos  ));
-				//pPl->SetLocalVelocity(Lerp( frac, pPlSnap->vel, pNextPlSnap->vel  ));
-				pPl->SetLocalAngles(Lerp( frac, pPlSnap->ang, pNextPlSnap->ang ));
+				pPl->SetLocalOrigin(Lerp(interpolant, pPlSnap->pos, pNextPlSnap->pos));
+				//pPl->SetLocalVelocity(Lerp( interpolant, pPlSnap->vel, pNextPlSnap->vel  ));
+				pPl->SetLocalAngles(Lerp(interpolant, pPlSnap->ang, pNextPlSnap->ang));
 			}
 			else
 			{
@@ -741,7 +784,7 @@ void CReplayManager::RestoreSnapshot()
 
 			bool interpolationAllowed;
 
-			if (frac > 0.0f && pNextPlSnap && pPlSnap->masterSequence == pNextPlSnap->masterSequence)
+			if (interpolant > 0.0f && pNextPlSnap && pPlSnap->masterSequence == pNextPlSnap->masterSequence)
 			{
 				// If the master state changes, all layers will be invalid too, so don't interp (ya know, interp barely ever happens anyway)
 				interpolationAllowed = true;
@@ -752,23 +795,23 @@ void CReplayManager::RestoreSnapshot()
 			// First do the master settings
 			if (interpolationAllowed)
 			{
-				pPl->SetSequence( Lerp( frac, pPlSnap->masterSequence, pNextPlSnap->masterSequence ) );
-				pPl->SetCycle( Lerp( frac, pPlSnap->masterCycle, pNextPlSnap->masterCycle ) );
+				pPl->SetSequence(Lerp(interpolant, pPlSnap->masterSequence, pNextPlSnap->masterSequence));
+				pPl->SetCycle(Lerp(interpolant, pPlSnap->masterCycle, pNextPlSnap->masterCycle));
 
-				if( pPlSnap->masterCycle > pNextPlSnap->masterCycle )
+				if (pPlSnap->masterCycle > pNextPlSnap->masterCycle)
 				{
 					// the older record is higher in frame than the newer, it must have wrapped around from 1 back to 0
 					// add one to the newer so it is lerping from .9 to 1.1 instead of .9 to .1, for example.
-					float newCycle = Lerp( frac, pPlSnap->masterCycle, pNextPlSnap->masterCycle + 1 );
-					pPl->SetCycle(newCycle < 1 ? newCycle : newCycle - 1 );// and make sure .9 to 1.2 does not end up 1.05
+					float newCycle = Lerp(interpolant, pPlSnap->masterCycle, pNextPlSnap->masterCycle + 1);
+					pPl->SetCycle(newCycle < 1 ? newCycle : newCycle - 1);// and make sure .9 to 1.2 does not end up 1.05
 				}
 				else
 				{
-					pPl->SetCycle( Lerp( frac, pPlSnap->masterCycle, pNextPlSnap->masterCycle ) );
+					pPl->SetCycle(Lerp(interpolant, pPlSnap->masterCycle, pNextPlSnap->masterCycle));
 				}
 
-				pPl->SetPoseParameter(pPl->GetModelPtr(), 4, Lerp(frac, pPlSnap->moveX, pNextPlSnap->moveX));
-				pPl->SetPoseParameter(pPl->GetModelPtr(), 3, Lerp(frac, pPlSnap->moveY, pNextPlSnap->moveY));
+				pPl->SetPoseParameter(pPl->GetModelPtr(), 4, Lerp(interpolant, pPlSnap->moveX, pNextPlSnap->moveX));
+				pPl->SetPoseParameter(pPl->GetModelPtr(), 3, Lerp(interpolant, pPlSnap->moveY, pNextPlSnap->moveY));
 			}
 			else
 			{
@@ -782,7 +825,7 @@ void CReplayManager::RestoreSnapshot()
 			for (int layerIndex = 0; layerIndex < NUM_LAYERS_WANTED; layerIndex++)
 			{
 				CAnimationLayer *pTargetLayer = pPl->GetAnimOverlay(layerIndex);
-				if(!pTargetLayer)
+				if (!pTargetLayer)
 					continue;
 
 				LayerRecord *pSourceLayer = &pPlSnap->layerRecords[layerIndex];
@@ -802,29 +845,29 @@ void CReplayManager::RestoreSnapshot()
 				{
 					LayerRecord *pNextSourceLayer = &pNextPlSnap->layerRecords[layerIndex];
 
-					if(pSourceLayer->order == pNextSourceLayer->order && pSourceLayer->sequence == pNextSourceLayer->sequence)
+					if (pSourceLayer->order == pNextSourceLayer->order && pSourceLayer->sequence == pNextSourceLayer->sequence)
 					{
 						// We can't interpolate across a sequence or order change
-						if( pSourceLayer->cycle > pNextSourceLayer->cycle )
+						if (pSourceLayer->cycle > pNextSourceLayer->cycle)
 						{
 							// the older record is higher in frame than the newer, it must have wrapped around from 1 back to 0
 							// add one to the newer so it is lerping from .9 to 1.1 instead of .9 to .1, for example.
-							float newCycle = Lerp( frac, pSourceLayer->cycle, pNextSourceLayer->cycle + 1 );
+							float newCycle = Lerp(interpolant, pSourceLayer->cycle, pNextSourceLayer->cycle + 1);
 							pTargetLayer->m_flCycle = newCycle < 1 ? newCycle : newCycle - 1;// and make sure .9 to 1.2 does not end up 1.05
 						}
 						else
 						{
-							pTargetLayer->m_flCycle = Lerp(frac, pSourceLayer->cycle, pNextSourceLayer->cycle);
+							pTargetLayer->m_flCycle = Lerp(interpolant, pSourceLayer->cycle, pNextSourceLayer->cycle);
 						}
 
-						pTargetLayer->m_flWeight = Lerp(frac, pSourceLayer->weight, pNextSourceLayer->weight);
-						pTargetLayer->m_flLayerAnimtime = Lerp(frac, pSourceLayer->layerAnimtime, pNextSourceLayer->layerAnimtime);
-						pTargetLayer->m_flBlendIn = Lerp(frac, pSourceLayer->blendIn, pNextSourceLayer->blendIn);
-						pTargetLayer->m_flBlendOut = Lerp(frac, pSourceLayer->blendOut, pNextSourceLayer->blendOut);
-						pTargetLayer->m_flPrevCycle = Lerp(frac, pSourceLayer->prevCycle, pNextSourceLayer->prevCycle);
-						pTargetLayer->m_flKillDelay = Lerp(frac, pSourceLayer->killDelay, pNextSourceLayer->killDelay);
-						pTargetLayer->m_flKillRate = Lerp(frac, pSourceLayer->killRate, pNextSourceLayer->killRate);
-						pTargetLayer->m_flLayerFadeOuttime = Lerp(frac, pSourceLayer->layerFadeOuttime, pNextSourceLayer->layerFadeOuttime);
+						pTargetLayer->m_flWeight = Lerp(interpolant, pSourceLayer->weight, pNextSourceLayer->weight);
+						pTargetLayer->m_flLayerAnimtime = Lerp(interpolant, pSourceLayer->layerAnimtime, pNextSourceLayer->layerAnimtime);
+						pTargetLayer->m_flBlendIn = Lerp(interpolant, pSourceLayer->blendIn, pNextSourceLayer->blendIn);
+						pTargetLayer->m_flBlendOut = Lerp(interpolant, pSourceLayer->blendOut, pNextSourceLayer->blendOut);
+						pTargetLayer->m_flPrevCycle = Lerp(interpolant, pSourceLayer->prevCycle, pNextSourceLayer->prevCycle);
+						pTargetLayer->m_flKillDelay = Lerp(interpolant, pSourceLayer->killDelay, pNextSourceLayer->killDelay);
+						pTargetLayer->m_flKillRate = Lerp(interpolant, pSourceLayer->killRate, pNextSourceLayer->killRate);
+						pTargetLayer->m_flLayerFadeOuttime = Lerp(interpolant, pSourceLayer->layerFadeOuttime, pNextSourceLayer->layerFadeOuttime);
 					}
 				}
 				else
@@ -878,17 +921,17 @@ void CReplayManager::CalcMaxReplayRunsAndDuration(const MatchEvent *pMatchEvent,
 		{
 		case 0:
 		default:
-			m_flRunDuration = sv_replay_highlight_first_duration.GetFloat();
+			m_flRunningTime = sv_replay_highlight_first_duration.GetFloat();
 			m_flSlowMoDuration = sv_replay_highlight_first_slowmo_duration.GetFloat();
 			m_flSlowMoCoeff = sv_replay_highlight_first_slowmo_coeff.GetFloat();
 			break;
 		case 1:
-			m_flRunDuration = sv_replay_highlight_second_duration.GetFloat();
+			m_flRunningTime = sv_replay_highlight_second_duration.GetFloat();
 			m_flSlowMoDuration = sv_replay_highlight_second_slowmo_duration.GetFloat();
 			m_flSlowMoCoeff = sv_replay_highlight_second_slowmo_coeff.GetFloat();
 			break;
 		case 2:
-			m_flRunDuration = sv_replay_highlight_third_duration.GetFloat();
+			m_flRunningTime = sv_replay_highlight_third_duration.GetFloat();
 			m_flSlowMoDuration = sv_replay_highlight_third_slowmo_duration.GetFloat();
 			m_flSlowMoCoeff = sv_replay_highlight_third_slowmo_coeff.GetFloat();
 			break;
@@ -915,17 +958,17 @@ void CReplayManager::CalcMaxReplayRunsAndDuration(const MatchEvent *pMatchEvent,
 		{
 		case 0:
 		default:
-			m_flRunDuration = sv_replay_instant_first_duration.GetFloat();
+			m_flRunningTime = sv_replay_instant_first_duration.GetFloat();
 			m_flSlowMoDuration = sv_replay_instant_first_slowmo_duration.GetFloat();
 			m_flSlowMoCoeff = sv_replay_instant_first_slowmo_coeff.GetFloat();
 			break;
 		case 1:
-			m_flRunDuration = sv_replay_instant_second_duration.GetFloat();
+			m_flRunningTime = sv_replay_instant_second_duration.GetFloat();
 			m_flSlowMoDuration = sv_replay_instant_second_slowmo_duration.GetFloat();
 			m_flSlowMoCoeff = sv_replay_instant_second_slowmo_coeff.GetFloat();
 			break;
 		case 2:
-			m_flRunDuration = sv_replay_instant_third_duration.GetFloat();
+			m_flRunningTime = sv_replay_instant_third_duration.GetFloat();
 			m_flSlowMoDuration = sv_replay_instant_third_slowmo_duration.GetFloat();
 			m_flSlowMoCoeff = sv_replay_instant_third_slowmo_coeff.GetFloat();
 			break;
@@ -936,7 +979,7 @@ void CReplayManager::CalcMaxReplayRunsAndDuration(const MatchEvent *pMatchEvent,
 
 	// If the new replay duration is shorter than the recorded time span, set the offset so it starts playing later and finishes with the last snapshot.
 	// The recorded duration is the maximum of all duration convars
-	m_flReplayStartTimeOffset = GetLongestReplayDuration() - m_flRunDuration;
+	m_flReplayStartTimeOffset = GetLongestReplayDuration() - m_flRunningTime;
 
 	// Compensate for slow mo
 	m_flReplayStartTimeOffset += (1.0f - m_flSlowMoCoeff) * m_flSlowMoDuration;
