@@ -769,6 +769,8 @@ void CMatchBall::State_GOAL_Think()
 		else
 			pPl->AddFlag(FL_CELEB);
 	}
+
+	State_NORMAL_Think();
 }
 
 void CMatchBall::State_GOAL_Leave(ball_state_t newState)
