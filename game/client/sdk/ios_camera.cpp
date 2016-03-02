@@ -649,15 +649,9 @@ void C_Camera::CalcChaseCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov
 	fov = pLocal->GetFOV();
 }
 
-void C_Camera::CalcTVCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov)
+void C_Camera::GetTargetPos(Vector &targetPos, bool &atBottomGoal)
 {
-	if (!GetMatchBall())
-		return;
-
 	C_BaseEntity *pTarget;
-	bool atMinGoalPos;
-	Vector targetPos;
-	int tvcamMode = GetTVCamMode();
 
 	if (GetReplayManager() && GetReplayManager()->IsReplaying())
 	{
@@ -666,7 +660,7 @@ void C_Camera::CalcTVCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov)
 		if (!pTarget)
 			return;
 
-		atMinGoalPos = GetReplayManager()->m_bAtMinGoalPos;
+		atBottomGoal = GetReplayManager()->m_bAtMinGoalPos;
 		targetPos = pTarget->GetLocalOrigin();
 	}
 	else
@@ -678,7 +672,7 @@ void C_Camera::CalcTVCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov)
 			if (!pTarget)
 				pTarget = GetMatchBall();
 
-			atMinGoalPos = pTarget->GetLocalOrigin().y < SDKGameRules()->m_vKickOff.GetY();
+			atBottomGoal = pTarget->GetLocalOrigin().y < SDKGameRules()->m_vKickOff.GetY();
 			targetPos = pTarget->GetLocalOrigin();
 		}
 		else
@@ -687,7 +681,7 @@ void C_Camera::CalcTVCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov)
 			if (!pTarget)
 				pTarget = GetMatchBall();
 
-			atMinGoalPos = pTarget->GetLocalOrigin().y < SDKGameRules()->m_vKickOff.GetY();
+			atBottomGoal = pTarget->GetLocalOrigin().y < SDKGameRules()->m_vKickOff.GetY();
 			targetPos = pTarget->GetLocalOrigin();
 
 			// Move the camera towards the defending team's goal
@@ -710,17 +704,29 @@ void C_Camera::CalcTVCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov)
 					}
 
 					float timeFrac = min(1.0f, (gpGlobals->curtime - m_flLastPossessionChange) / mp_tvcam_offset_forward_time.GetFloat());
-					float frac = pow(timeFrac, 2) * (3 - 2 * timeFrac); 
+					float frac = pow(timeFrac, 2) * (3 - 2 * timeFrac);
 					m_flPossCoeff = Lerp(frac, m_flOldPossCoeff, (float)GetGlobalTeam(GetMatchBall()->m_nLastActiveTeam)->m_nForward);
 				}
 
-				if (tvcamMode == TVCAM_MODE_SIDELINE)
+				if (GetTVCamMode() == TVCAM_MODE_SIDELINE)
 				{
 					targetPos.y += m_flPossCoeff * mp_tvcam_offset_forward.GetInt();
 				}
 			}
 		}
 	}
+}
+
+void C_Camera::CalcTVCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov)
+{
+	if (!GetMatchBall())
+		return;
+
+	bool atBottomGoal;
+	Vector targetPos;
+	int tvcamMode = GetTVCamMode();
+
+	GetTargetPos(targetPos, atBottomGoal);
 
 	if (tvcamMode != TVCAM_MODE_CELEBRATION)
 	{
@@ -846,9 +852,9 @@ void C_Camera::CalcTVCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov)
 		break;
 	case TVCAM_MODE_BEHIND_GOAL:
 		{
-			float yPos = atMinGoalPos ? SDKGameRules()->m_vFieldMin.GetY() : SDKGameRules()->m_vFieldMax.GetY();
+			float yPos = atBottomGoal ? SDKGameRules()->m_vFieldMin.GetY() : SDKGameRules()->m_vFieldMax.GetY();
 			Vector goalCenter = Vector((SDKGameRules()->m_vFieldMin.GetX() + SDKGameRules()->m_vFieldMax.GetX()) / 2.0f, yPos, SDKGameRules()->m_vKickOff.GetZ());
-			Vector newPos = goalCenter + Vector(0, 300 * (atMinGoalPos ? -1 : 1), 300);
+			Vector newPos = goalCenter + Vector(0, 300 * (atBottomGoal ? -1 : 1), 300);
 			Vector newDir = targetPos - newPos;
 			newDir.NormalizeInPlace();
 			eyeOrigin = newPos;
@@ -863,7 +869,7 @@ void C_Camera::CalcTVCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov)
 		break;
 	case TVCAM_MODE_FLY_FOLLOW:
 		{
-			Vector newPos = Vector(targetPos.x, targetPos.y + (atMinGoalPos ? 1 : -1) * 500, SDKGameRules()->m_vKickOff.GetZ() + 225);
+			Vector newPos = Vector(targetPos.x, targetPos.y + (atBottomGoal ? 1 : -1) * 500, SDKGameRules()->m_vKickOff.GetZ() + 225);
 			Vector newDir = targetPos - newPos;
 			newDir.NormalizeInPlace();
 			eyeOrigin = newPos;
@@ -872,7 +878,7 @@ void C_Camera::CalcTVCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov)
 		break;
 	case TVCAM_MODE_GOAL_LINE:
 		{
-			Vector center = Vector(SDKGameRules()->m_vKickOff.GetX(), (atMinGoalPos ? SDKGameRules()->m_vFieldMin.GetY() + 5 : SDKGameRules()->m_vFieldMax.GetY() - 5), SDKGameRules()->m_vKickOff.GetZ());
+			Vector center = Vector(SDKGameRules()->m_vKickOff.GetX(), (atBottomGoal ? SDKGameRules()->m_vFieldMin.GetY() + 5 : SDKGameRules()->m_vFieldMax.GetY() - 5), SDKGameRules()->m_vKickOff.GetZ());
 			Vector newPos = center;
 			newPos.x -= 350;
 			newPos.z += 200;

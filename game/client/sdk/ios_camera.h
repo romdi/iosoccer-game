@@ -85,6 +85,8 @@ public:
 
 protected:
 
+	void GetTargetPos(Vector &targetPos, bool &atBottomGoal);
+
 	void Accelerate( Vector& wishdir, float wishspeed, float accel );
 
 	Vector		m_vCamOrigin;  //current camera origin
