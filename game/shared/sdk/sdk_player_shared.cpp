@@ -386,7 +386,7 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 			}
 		}
 
-		if (SDKGameRules()->m_nShieldType == SHIELD_THROWIN || 
+		if (SDKGameRules()->m_nShieldType == SHIELD_THROWIN && GetFlags() & FL_SHIELD_KEEP_OUT ||
 			SDKGameRules()->m_nShieldType == SHIELD_FREEKICK || 
 			SDKGameRules()->m_nShieldType == SHIELD_CORNER ||  
 			SDKGameRules()->m_nShieldType == SHIELD_KICKOFF ||
@@ -460,6 +460,32 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 				}
 			}
 		}
+
+		if (SDKGameRules()->m_nShieldType == SHIELD_THROWIN && GetFlags() & FL_SHIELD_KEEP_IN)
+		{
+			const int xLength = mp_shield_throwin_movement_x.GetInt();
+			const int yLength = mp_shield_throwin_movement_y.GetInt();
+			Vector xSign = SDKGameRules()->m_vShieldPos.GetX() > SDKGameRules()->m_vKickOff.GetX() ? 1 : -1;
+			Vector min = SDKGameRules()->m_vShieldPos + Vector(xSign == -1 ? -xLength : 0, -yLength / 2, 0);
+			Vector max = SDKGameRules()->m_vShieldPos + Vector(xSign == -1 ? 0 : xLength, yLength / 2, 0);
+
+			bool isInsideBox = newPos.x > min.x && newPos.y > min.y && newPos.x < max.x && newPos.y < max.y;
+
+			if (!isInsideBox)
+			{
+				if (newPos.x < min.x)
+					newPos.x = min.x;
+				else if (newPos.x > max.x)
+					newPos.x = max.x;
+
+				if (newPos.y < min.y)
+					newPos.y = min.y;
+				else if (newPos.y > max.y)
+					newPos.y = max.y;
+
+				stopPlayer = true;
+			}
+		}
 	}
 
 	if (!SDKGameRules()->IsIntermissionState() && mp_field_border_enabled.GetBool())
@@ -496,8 +522,12 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 			newPos = oldPos;
 		}
 
-		newVel.x = (newPos - oldPos).x * 50;
-		newVel.y = (newPos - oldPos).y * 50;
+		Vector dir = newPos - oldPos;
+		dir.z = 0;
+		float speed = dir.NormalizeInPlace();
+		newVel = dir * min(speed * 100, mp_runspeed.GetInt());
+		//newVel.x = (newPos - oldPos).x * 100;
+		//newVel.y = (newPos - oldPos).y * 100;
 		//newPos = pos;
 	}
 }

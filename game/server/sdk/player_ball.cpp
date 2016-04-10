@@ -291,10 +291,8 @@ void CPlayerBall::State_KEEPERHANDS_Think()
 			return State_Transition(BALL_STATE_NORMAL);
 
 		m_pPl->SetShotButtonsReleased(false);
-		m_pHoldingPlayer = m_pPl;
-		m_pPl->m_pHoldingBall = this;
+		AddToPlayerHands(m_pPl);
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_CARRY);
-		EnablePlayerCollisions(false);
 	}
 
 	UpdateCarrier();

@@ -33,6 +33,8 @@ extern ConVar
 	mp_penalties,
 	mp_showstatetransitions,
 	mp_shield_throwin_radius_taker,
+	mp_shield_throwin_movement_x,
+	mp_shield_throwin_movement_y,
 	mp_shield_throwin_radius_opponent,
 	mp_shield_freekick_radius_taker,
 	mp_shield_freekick_radius_opponent,

@@ -135,6 +135,7 @@ public:
 	CSDKPlayer		*GetCurrentPlayer() { return m_pPl; }
 	CSDKPlayer		*GetHoldingPlayer() { return m_pHoldingPlayer; }
 	void			EnablePlayerCollisions(bool enable);
+	void			AddToPlayerHands(CSDKPlayer *pPl);
 	void			RemoveFromPlayerHands(CSDKPlayer *pPl);
 	Vector			GetPos();
 	QAngle			GetAng();

@@ -55,17 +55,18 @@ ConVar
 	sv_ball_slideforwardreach_foul							("sv_ball_slideforwardreach_foul",							"25",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_slidebackwardreach_foul							("sv_ball_slidebackwardreach_foul",							"20",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_powerthrow_strength								("sv_ball_powerthrow_strength",								"720",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_chargedthrow_minstrength						("sv_ball_chargedthrow_minstrength",						"450",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_chargedthrow_maxstrength						("sv_ball_chargedthrow_maxstrength",						"990",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_timelimit_setpiece								("sv_ball_timelimit_setpiece",								"15",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_timelimit_remotecontrolled						("sv_ball_timelimit_remotecontrolled",						"15",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_chargedthrow_minstrength						("sv_ball_chargedthrow_minstrength",						"450",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_chargedthrow_maxstrength						("sv_ball_chargedthrow_maxstrength",						"990",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_throwin_minangle								("sv_ball_throwin_minangle",								"-5",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_throwin_minstrength								("sv_ball_throwin_minstrength",								"270",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_throw_minpostdelay								("sv_ball_throw_minpostdelay",								"0.5",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_throw_playerspeedcoeff							("sv_ball_throw_playerspeedcoeff",							"1.0",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_foulcheckdelay									("sv_ball_foulcheckdelay",									"2.0",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_foulcheckmaxdist								("sv_ball_foulcheckmaxdist",								"200",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_kickoff_strength								("sv_ball_kickoff_strength",								"350",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_kickoff_minpostdelay							("sv_ball_kickoff_minpostdelay",							"0.5",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_throw_minpostdelay								("sv_ball_throw_minpostdelay",								"0.5",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
+	sv_ball_kickoff_minpostdelay							("sv_ball_kickoff_minpostdelay",							"0.5",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
 
 
 
@@ -404,12 +405,19 @@ void CMatchBall::State_THROWIN_Think()
 		m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit_setpiece.GetFloat();
 		SetPos(groundPos + Vector(0, 0, m_pPl->GetPlayerMaxs().z + 2));
 		m_pPl->RemoveFlag(FL_ATCONTROLS);
+		AddToPlayerHands(m_pPl);
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_THROWIN);
 		m_pPl->SetShotButtonsReleased(false);
 		m_pPl->SetShotsBlocked(false);
 	}
 
 	UpdateCarrier();
+
+	Vector handPos;
+	QAngle handAng;
+	m_pPl->GetAttachment("keeperballrighthand", handPos, handAng);
+	SetPos(handPos, false);
+	SetAng(handAng);
 
 	if (m_pPl->ShotButtonsReleased() && m_pPl->IsChargedshooting())
 	{
@@ -422,8 +430,10 @@ void CMatchBall::State_THROWIN_Think()
 		float strength = GetChargedshotStrength(GetPitchCoeff(), sv_ball_chargedthrow_minstrength.GetInt(), sv_ball_chargedthrow_maxstrength.GetInt());
 
 		Vector vel = dir * max(strength, sv_ball_throwin_minstrength.GetInt());
+		vel += m_vPlVel2D * sv_ball_throw_playerspeedcoeff.GetFloat();
 
 		m_pPl->AddThrowIn();
+		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_THROW);
 		RemoveAllTouches();
 		SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_HANDS, false, sv_ball_throw_minpostdelay.GetFloat(), true);
 		m_bBallInAirAfterThrowIn = true;
@@ -433,10 +443,7 @@ void CMatchBall::State_THROWIN_Think()
 
 void CMatchBall::State_THROWIN_Leave(ball_state_t newState)
 {
-	if (CSDKPlayer::IsOnField(m_pPl))
-		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_THROW);
-
-	EnablePlayerCollisions(true);
+	RemoveFromPlayerHands(m_pPl);
 }
 
 void CMatchBall::State_KICKOFF_Enter()
@@ -999,10 +1006,8 @@ void CMatchBall::State_KEEPERHANDS_Think()
 		}
 
 		m_pPl->SetShotButtonsReleased(false);
-		m_pHoldingPlayer = m_pPl;
-		m_pPl->m_pHoldingBall = this;
+		AddToPlayerHands(m_pPl);
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_CARRY);
-		EnablePlayerCollisions(false);
 		m_flStateTimelimit = -1;
 		CSDKPlayer::PlayersAtTargetPos();
 	}

@@ -147,7 +147,7 @@ ConVar mp_chargedshot_increaseduration("mp_chargedshot_increaseduration", "1.5",
 ConVar mp_chargedshot_increaseexponent("mp_chargedshot_increaseexponent", "1", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_chargedshot_idleduration("mp_chargedshot_idleduration", "0", FCVAR_REPLICATED | FCVAR_NOTIFY);
 
-ConVar mp_throwinthrow_idle_duration("mp_throwinthrow_idle_duration", "1.0", FCVAR_REPLICATED | FCVAR_NOTIFY);
+ConVar mp_throwinthrow_idle_duration("mp_throwinthrow_idle_duration", "0.5", FCVAR_REPLICATED | FCVAR_NOTIFY);
 
 ConVar mp_tackled_idle_duration("mp_tackled_idle_duration", "1.9", FCVAR_REPLICATED | FCVAR_NOTIFY);
 

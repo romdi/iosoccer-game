@@ -76,7 +76,9 @@ ConVar mp_injurytime_coeff("mp_injurytime_coeff", "1.0", FCVAR_NOTIFY);
 ConVar mp_extratime( "mp_extratime", "1", FCVAR_NOTIFY|FCVAR_REPLICATED );
 ConVar mp_penalties( "mp_penalties", "1", FCVAR_NOTIFY|FCVAR_REPLICATED );
 
-ConVar mp_shield_throwin_radius_taker("mp_shield_throwin_radius_taker", "60", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar mp_shield_throwin_radius_taker("mp_shield_throwin_radius_taker", "60", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_shield_throwin_movement_x("mp_shield_throwin_movement_x", "150", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_shield_throwin_movement_y("mp_shield_throwin_movement_y", "150", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar mp_shield_throwin_radius_opponent("mp_shield_throwin_radius_opponent", "180", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar mp_shield_freekick_radius_taker("mp_shield_freekick_radius_taker", "60", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar mp_shield_freekick_radius_opponent("mp_shield_freekick_radius_opponent", "360", FCVAR_NOTIFY|FCVAR_REPLICATED);

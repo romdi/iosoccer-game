@@ -118,7 +118,7 @@ void CSDKPlayerAnimState::ClearAnimationState( void )
 	m_bIsSecondaryActionSequenceActive = false;
 	m_bJumping = false;
 	m_bDying = false;
-	m_bCarryHold = false;		//ios
+	m_bCarryHold = false;
 	ClearAnimationLayers();
 }
 
@@ -216,13 +216,16 @@ void CSDKPlayerAnimState::ComputePrimaryActionSequence( CStudioHdr *pStudioHdr )
 
 void CSDKPlayerAnimState::ComputeSecondaryActionSequence( CStudioHdr *pStudioHdr )
 {
-	//Keeper Carry layer
-	UpdateLayerSequenceGeneric( pStudioHdr, SECONDARYACTIONSEQUENCE_LAYER, m_bIsSecondaryActionSequenceActive, m_flSecondaryActionSequenceCycle, m_iSecondaryActionSequence, m_bCarryHold);
+	UpdateLayerSequenceGeneric( pStudioHdr, SECONDARYACTIONSEQUENCE_LAYER, m_bIsSecondaryActionSequenceActive, m_flSecondaryActionSequenceCycle, m_iSecondaryActionSequence, m_bCarryHold );
 }
 
-int CSDKPlayerAnimState::CalcSecondaryActionSequence()
+int CSDKPlayerAnimState::CalcSecondaryActionSequence(PlayerAnimEvent_t event)
 {
-	return GetBasePlayer()->LookupSequence("CarryBall");
+	switch (event)
+	{
+	case PLAYERANIMEVENT_CARRY: return CalcSequenceIndex("CarryBall");
+	case PLAYERANIMEVENT_THROWIN: return CalcSequenceIndex("CarryBall"); // iosthrowin
+	}
 }
 
 int CSDKPlayerAnimState::CalcPrimaryActionSequence(PlayerAnimEvent_t event)
@@ -236,7 +239,6 @@ int CSDKPlayerAnimState::CalcPrimaryActionSequence(PlayerAnimEvent_t event)
 	case PLAYERANIMEVENT_HEELKICK: return CalcSequenceIndex("iosheelkick");
 	case PLAYERANIMEVENT_HEADER: return CalcSequenceIndex("iosheader");
 	case PLAYERANIMEVENT_HEADER_STATIONARY: return CalcSequenceIndex("iosheader_stationary");
-	case PLAYERANIMEVENT_THROWIN: return CalcSequenceIndex("iosthrowin");
 	case PLAYERANIMEVENT_THROW: return CalcSequenceIndex("iosthrow");
 	case PLAYERANIMEVENT_SLIDE: return CalcSequenceIndex((GetBasePlayer()->GetFlags() & FL_CELEB) ? "iosslideceleb" : "iosslide");
 	case PLAYERANIMEVENT_TACKLED_FORWARD: return CalcSequenceIndex("iostackled_forward");
@@ -386,7 +388,6 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 	case PLAYERANIMEVENT_HEELKICK:
 	case PLAYERANIMEVENT_HEADER:
 	case PLAYERANIMEVENT_HEADER_STATIONARY:
-	case PLAYERANIMEVENT_THROWIN:
 	case PLAYERANIMEVENT_THROW:
 	case PLAYERANIMEVENT_KEEPER_HANDS_THROW:
 	case PLAYERANIMEVENT_KEEPER_HANDS_KICK:
@@ -427,8 +428,9 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 		break;
 	}
 	case PLAYERANIMEVENT_CARRY:
+	case PLAYERANIMEVENT_THROWIN:
 	{
-		m_iSecondaryActionSequence = CalcSecondaryActionSequence();			//add keeper carry as layer
+		m_iSecondaryActionSequence = CalcSecondaryActionSequence(event);			//add keeper carry as layer
 		if (m_iSecondaryActionSequence != -1)
 		{
 			m_bIsSecondaryActionSequenceActive = true;
@@ -438,15 +440,10 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 		break;
 	}
 	case PLAYERANIMEVENT_CARRY_END:
+	case PLAYERANIMEVENT_THROWIN_END:
 	{
-		//GetSDKPlayer()->RemoveFlag(FL_FREECAM);
-		m_iSecondaryActionSequence = CalcSecondaryActionSequence();
-		if (m_iSecondaryActionSequence != -1)
-		{
-			m_bIsSecondaryActionSequenceActive = true;
-			m_flSecondaryActionSequenceCycle = 1.1f;
-			m_bCarryHold = false;
-		}
+		m_flSecondaryActionSequenceCycle = 1.1f;
+		m_bCarryHold = false;
 		break;
 	}
 	}
@@ -471,7 +468,8 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 		break;
 	}
 
-	if (event != PLAYERANIMEVENT_CARRY && event != PLAYERANIMEVENT_CARRY_END)
+	if (event != PLAYERANIMEVENT_CARRY && event != PLAYERANIMEVENT_CARRY_END
+		&& event != PLAYERANIMEVENT_THROWIN && event != PLAYERANIMEVENT_THROWIN_END)
 	{
 		GetSDKPlayer()->m_Shared.SetAnimEvent(event);
 	}

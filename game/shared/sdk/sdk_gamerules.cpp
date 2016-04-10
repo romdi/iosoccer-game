@@ -2694,7 +2694,7 @@ void CSDKGameRules::DisableShield()
 		if (!CSDKPlayer::IsOnField(pPl))
 			continue;
 
-		pPl->RemoveFlag(FL_SHIELD_KEEP_IN | FL_SHIELD_KEEP_OUT | FL_REMOTECONTROLLED | FL_NO_X_MOVEMENT | FL_NO_Y_MOVEMENT | FL_ATCONTROLS | FL_FROZEN);
+		pPl->RemoveFlags();
 		//pPl->RemoveSolidFlags(FSOLID_NOT_SOLID);
 		pPl->SetCollisionGroup(COLLISION_GROUP_PLAYER);
 		pPl->m_bIsAtTargetPos = true;

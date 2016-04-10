@@ -1489,21 +1489,31 @@ void CBall::EnablePlayerCollisions(bool enable)
 	SetCollisionGroup(enable ? COLLISION_GROUP_SOLID_BALL : COLLISION_GROUP_NONSOLID_BALL);
 }
 
+void CBall::AddToPlayerHands(CSDKPlayer *pPl)
+{
+	m_pHoldingPlayer = m_pPl;
+	m_pPl->m_pHoldingBall = this;
+	EnablePlayerCollisions(false);
+	m_pPl->AddFlag(FL_ONLY_XY_MOVEMENT);
+}
+
 void CBall::RemoveFromPlayerHands(CSDKPlayer *pPl)
 {
-	if (CSDKPlayer::IsOnField(pPl) && pPl->GetTeamPosType() == POS_GK && pPl->m_pHoldingBall.Get() == this)
+	if (CSDKPlayer::IsOnField(pPl) && pPl->m_pHoldingBall.Get() == this)
 	{
 		pPl->m_pHoldingBall = NULL;
-		pPl->DoServerAnimationEvent(PLAYERANIMEVENT_CARRY_END);
+		pPl->RemoveFlag(FL_ONLY_XY_MOVEMENT);
+
+		if (pPl->GetTeamPosType() == POS_GK)
+			pPl->DoServerAnimationEvent(PLAYERANIMEVENT_CARRY_END);
+		else
+			pPl->DoServerAnimationEvent(PLAYERANIMEVENT_THROWIN_END);
 	}
 
 	if (!IsMarkedForDeletion())
 	{
 		m_pHoldingPlayer = NULL;
-		RemoveEffects(EF_NODRAW);
 		EnablePlayerCollisions(true);
-		m_pPhys->EnableMotion(true);
-		m_pPhys->Wake();
 	}
 }
 

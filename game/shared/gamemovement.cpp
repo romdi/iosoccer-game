@@ -1716,10 +1716,6 @@ bool CGameMovement::CheckActionOverTime()
 		mv->m_vecVelocity = vec3_origin;
 		break;
 	}
-	case PLAYERANIMEVENT_THROWIN:
-	{
-		break;
-	}
 	case PLAYERANIMEVENT_THROW:
 	{
 		if (timePassed > mp_throwinthrow_idle_duration.GetFloat())
@@ -1868,15 +1864,8 @@ bool CGameMovement::CheckActionStart()
 {
 	CSDKPlayer *pPl = ToSDKPlayer(player);
 
-	// Require unrestricted movement
-	if (pPl->GetFlags() & (FL_FROZEN | FL_ATCONTROLS | FL_REMOTECONTROLLED))
-		return false;
-
-	// Require ground contact
-	if (!pPl->GetGroundEntity())
-		return false;
-
-	if (pPl->m_pHoldingBall)
+	if (pPl->GetFlags() & (FL_FROZEN | FL_ATCONTROLS | FL_REMOTECONTROLLED | FL_ONLY_XY_MOVEMENT)
+		|| !pPl->GetGroundEntity())
 		return false;
 
 	PlayerAnimEvent_t animEvent = PLAYERANIMEVENT_NONE;

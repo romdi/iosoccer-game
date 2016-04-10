@@ -62,7 +62,6 @@ enum PlayerAnimEvent_t
 	PLAYERANIMEVENT_HEELKICK,
 	PLAYERANIMEVENT_HEADER,
 	PLAYERANIMEVENT_HEADER_STATIONARY,
-	PLAYERANIMEVENT_THROWIN,
 	PLAYERANIMEVENT_THROW,
 	PLAYERANIMEVENT_KEEPER_JUMP,
 	PLAYERANIMEVENT_KEEPER_DIVE_LEFT,
@@ -78,6 +77,8 @@ enum PlayerAnimEvent_t
 	PLAYERANIMEVENT_DIVINGHEADER,
 	PLAYERANIMEVENT_CARRY,
 	PLAYERANIMEVENT_CARRY_END,
+	PLAYERANIMEVENT_THROWIN,
+	PLAYERANIMEVENT_THROWIN_END,
 	PLAYERANIMEVENT_CELEB,
 	PLAYERANIMEVENT_CELEB_END,
 	PLAYERANIMEVENT_BLANK,
@@ -189,7 +190,7 @@ private:
 	float	m_flJumpStartTime;	
 	bool	m_bFirstJumpFrame;
 
-	bool m_bCarryHold;
+	bool	m_bCarryHold;
 
 	// Swimming.
 	bool	m_bInSwim;
@@ -214,7 +215,7 @@ private:
 	int CalcPrimaryActionSequence(PlayerAnimEvent_t event);
 	void ComputePrimaryActionSequence(CStudioHdr *pStudioHdr);
 	void ComputeSecondaryActionSequence( CStudioHdr *pStudioHdr );
-	int CalcSecondaryActionSequence();
+	int CalcSecondaryActionSequence(PlayerAnimEvent_t event);
 	int CalcSequenceIndex( const char *pBaseName, ... );
 	void ClearAnimationLayers();
 	virtual void RestartMainSequence();
