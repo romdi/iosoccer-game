@@ -10,7 +10,7 @@ ConVar bot_shootatgoal("bot_shootatgoal", "1");
 
 void CFieldBot::BotThink()
 {
-	if (m_vDirToBall.Length2D() > 50)
+	if (m_vDirToBall.Length2D() > 25)
 		BotRunToBall();
 	else
 		BotShootBall();
@@ -52,15 +52,15 @@ void CFieldBot::BotShootBall()
 		if (isGoalShot)
 		{
 			if (ownDistToGoal > 1000)
-				m_cmd.buttons |= IN_ALT1;
+				m_cmd.buttons |= IN_ATTACK;
 			else
 			{
-				m_cmd.buttons |= IN_ALT1;
+				m_cmd.buttons |= IN_ATTACK;
 			}
 		}
 		else
 		{
-			m_cmd.buttons |= IN_ALT1;
+			m_cmd.buttons |= IN_ATTACK;
 		}
 
 		VectorAngles(shotDir, m_cmd.viewangles);
@@ -80,7 +80,7 @@ void CFieldBot::BotShootBall()
 		}
 
 		VectorAngles(shotDir, m_cmd.viewangles);
-		m_cmd.buttons |= IN_ALT1;
+		m_cmd.buttons |= IN_ATTACK;
 		m_cmd.viewangles[PITCH] = 0;
 	}
 
