@@ -649,7 +649,7 @@ void C_Camera::CalcChaseCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov
 	fov = pLocal->GetFOV();
 }
 
-void C_Camera::GetTargetPos(Vector &targetPos, bool &atBottomGoal)
+void C_Camera::GetTargetPos(Vector &targetPos, Vector &targetVel, bool &atBottomGoal)
 {
 	C_BaseEntity *pTarget;
 
@@ -683,6 +683,9 @@ void C_Camera::GetTargetPos(Vector &targetPos, bool &atBottomGoal)
 
 			atBottomGoal = pTarget->GetLocalOrigin().y < SDKGameRules()->m_vKickOff.GetY();
 			targetPos = pTarget->GetLocalOrigin();
+			targetVel = pTarget->GetLocalVelocity();
+
+			return;
 
 			// Move the camera towards the defending team's goal
 			if (GetMatchBall()->m_nLastActiveTeam != TEAM_NONE)
@@ -723,10 +726,12 @@ void C_Camera::CalcTVCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov)
 		return;
 
 	bool atBottomGoal;
-	Vector targetPos;
+	Vector targetPos, targetVel;
 	int tvcamMode = GetTVCamMode();
 
-	GetTargetPos(targetPos, atBottomGoal);
+	GetTargetPos(targetPos, targetVel, atBottomGoal);
+
+	Vector tmpTargetPos = targetPos;
 
 	if (tvcamMode != TVCAM_MODE_CELEBRATION)
 	{
@@ -828,7 +833,27 @@ void C_Camera::CalcTVCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov)
 				VectorAngles(Vector(SDKGameRules()->m_vKickOff.GetX(), SDKGameRules()->m_vKickOff.GetY(), SDKGameRules()->m_vKickOff.GetZ() + 100) - output, eyeAngles);
 			}*/
 			else
-			{		
+			{	
+				Vector innerWindow = Vector(500, 200, 0);
+				Vector outerWindow = Vector(750, 500, 1000);
+
+				Vector camPos = m_vOldTargetPos;
+				targetPos = tmpTargetPos;
+
+				for (int axis = 0; axis < 3; axis++)
+				{
+					if ((targetPos[axis] < camPos[axis] - outerWindow[axis] || targetPos[axis] > camPos[axis] - innerWindow[axis])
+						&& (targetPos[axis] < camPos[axis] + innerWindow[axis] || targetPos[axis] > camPos[axis] + outerWindow[axis]))
+					{
+						if (targetVel[axis] > 0)
+							camPos[axis] = targetPos[axis] + innerWindow[axis];
+						else
+							camPos[axis] = targetPos[axis] - innerWindow[axis];
+					}
+				}
+
+				targetPos = camPos;
+
 				Vector newPos = Vector(targetPos.x - mp_tvcam_sideline_offset_north.GetInt(), targetPos.y, targetPos.z + mp_tvcam_sideline_offset_height.GetInt());
 				Vector offsetTargetPos = Vector(targetPos.x - mp_tvcam_offset_north.GetInt(), targetPos.y, targetPos.z);
 				Vector newDir = offsetTargetPos - newPos;

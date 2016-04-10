@@ -85,7 +85,7 @@ public:
 
 protected:
 
-	void GetTargetPos(Vector &targetPos, bool &atBottomGoal);
+	void GetTargetPos(Vector &targetPos, Vector &targetVel, bool &atBottomGoal);
 
 	void Accelerate( Vector& wishdir, float wishspeed, float accel );
 

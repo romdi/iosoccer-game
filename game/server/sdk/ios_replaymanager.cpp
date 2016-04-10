@@ -282,6 +282,7 @@ void CReplayManager::StartReplay(bool isHighlightReplay)
 	m_bReplayIsPending = true;
 	m_bIsReplaying = false;
 	CalcMaxReplayRunsAndDuration(pMatchEvent, m_flReplayActivationTime);
+	m_flPrevSnapTime = -1;
 }
 
 void CReplayManager::StopReplay()
@@ -523,17 +524,11 @@ void CReplayManager::PlayReplay()
 	if (!pSnap)
 		return;
 
-	float nextSnapDuration;
-
-	if (pNextSnap)
-		nextSnapDuration = pNextSnap->snaptime - pMatchEvent->snapshots[0]->snaptime - m_flReplayStartTimeOffset;
-	else
-		nextSnapDuration = 0;
-
 	float interpolant;
 
 	if (pNextSnap)
 	{
+		float nextSnapDuration = pNextSnap->snaptime - pMatchEvent->snapshots[0]->snaptime - m_flReplayStartTimeOffset;
 		// Calc fraction between both snapshots
 		interpolant = clamp((elapsedPlayTime - relativeSnapTime) / (nextSnapDuration - relativeSnapTime), 0.0f, 1.0f);
 	}
@@ -545,6 +540,11 @@ void CReplayManager::PlayReplay()
 
 	RestoreReplayBallState(pSnap, pNextSnap, interpolant);
 	RestoreReplayPlayerStates(pSnap, pNextSnap, interpolant);
+
+	if (interpolant > 0.0f && pNextSnap)
+		m_flPrevSnapTime = Lerp(interpolant, pSnap->snaptime, pNextSnap->snaptime);
+	else
+		m_flPrevSnapTime = pSnap->snaptime;
 }
 
 bool CReplayManager::FindNextReplay()

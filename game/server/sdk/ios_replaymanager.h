@@ -259,6 +259,7 @@ private:
 	bool					m_bIsHighlightStart;
 	float					m_flRunningTime;
 	CUtlVector<MatchEvent *> m_MatchEvents;
+	float					m_flPrevSnapTime;
 
 	bool					FindNextReplay();
 	void					InitReplay(MatchEvent *pMatchEvent);
