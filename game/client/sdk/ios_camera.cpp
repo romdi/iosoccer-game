@@ -685,7 +685,7 @@ void C_Camera::GetTargetPos(Vector &targetPos, Vector &targetVel, bool &atBottom
 			targetPos = pTarget->GetLocalOrigin();
 			targetVel = pTarget->GetLocalVelocity();
 
-			return;
+			//return;
 
 			// Move the camera towards the defending team's goal
 			if (GetMatchBall()->m_nLastActiveTeam != TEAM_NONE)
@@ -834,6 +834,7 @@ void C_Camera::CalcTVCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov)
 			}*/
 			else
 			{	
+				/*
 				Vector innerWindow = Vector(500, 200, 0);
 				Vector outerWindow = Vector(750, 500, 1000);
 
@@ -853,6 +854,7 @@ void C_Camera::CalcTVCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov)
 				}
 
 				targetPos = camPos;
+				*/
 
 				Vector newPos = Vector(targetPos.x - mp_tvcam_sideline_offset_north.GetInt(), targetPos.y, targetPos.z + mp_tvcam_sideline_offset_height.GetInt());
 				Vector offsetTargetPos = Vector(targetPos.x - mp_tvcam_offset_north.GetInt(), targetPos.y, targetPos.z);
