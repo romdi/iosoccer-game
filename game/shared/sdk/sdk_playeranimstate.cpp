@@ -223,8 +223,11 @@ int CSDKPlayerAnimState::CalcSecondaryActionSequence(PlayerAnimEvent_t event)
 {
 	switch (event)
 	{
-	case PLAYERANIMEVENT_CARRY: return CalcSequenceIndex("CarryBall");
-	case PLAYERANIMEVENT_THROWIN: return CalcSequenceIndex("CarryBall"); // iosthrowin
+	case PLAYERANIMEVENT_CARRY:
+	default:
+		return CalcSequenceIndex("CarryBall");
+	case PLAYERANIMEVENT_THROWIN:
+		return CalcSequenceIndex("CarryBall"); // iosthrowin
 	}
 }
 
@@ -528,9 +531,9 @@ Activity CSDKPlayerAnimState::CalcMainActivity()
 			return ACT_IOS_JUMPCELEB;							//cartwheel celeb
 		//else if (pPlayer->m_nBody > 0)
 		else if (pPlayer->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_JUMP)
-			return ACT_IDLE;//FIXME: Buggy jump animation: ACT_LEAP;									//keepers jump
+			return ACT_LEAP;									//keepers jump
 		else
-			return ACT_IDLE;//FIXME: Buggy jump animation: ACT_HOP;										//normal jump
+			return ACT_HOP;										//normal jump
 	}
 	else
 	{

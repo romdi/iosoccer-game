@@ -13,3 +13,4 @@ vgui_controls.lib
 [Rr]elease*/
 ipch/
 *.opendb
+/Game_Scratch.VC.db
