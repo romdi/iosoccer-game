@@ -427,7 +427,7 @@ void CMatchBall::State_THROWIN_Think()
 		float strength = GetChargedshotStrength(GetPitchCoeff(), sv_ball_chargedthrow_minstrength.GetInt(), sv_ball_chargedthrow_maxstrength.GetInt());
 
 		Vector vel = dir * max(strength, sv_ball_throwin_minstrength.GetInt());
-		vel += m_vPlVel2D * sv_ball_throw_playerspeedcoeff.GetFloat();
+		vel += m_vPlForwardVel2D * sv_ball_throw_playerspeedcoeff.GetFloat();
 
 		m_pPl->AddThrowIn();
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_THROW);
