@@ -371,8 +371,8 @@ static CSDKViewVectors g_SDKViewVectors(
 	//Vector(-16, -16, 0 ),		//VEC_HULL_MIN
 	//Vector( 16,  16,  72 ),		//VEC_HULL_MAX
 	
-	Vector(-12, -12, 0 ),		//VEC_HULL_MIN
-	Vector( 12,  12,  72 ),		//VEC_HULL_MAX
+	Vector(-10, -10, 0 ),		//VEC_HULL_MIN
+	Vector( 10,  10,  80 ),		//VEC_HULL_MAX
 
 	Vector( 0, 0, 58 ),		
 	Vector(-12, -12, 0 ),	
@@ -682,7 +682,7 @@ bool CSDKGameRules::ClientCommand( CBaseEntity *pEdict, const CCommand &args )
 	return false;
 }
 
-ConVar sv_master_legacy_mode_hack_enabled("sv_master_legacy_mode_hack_enabled", "1", 0);
+ConVar sv_master_legacy_mode_hack_enabled("sv_master_legacy_mode_hack_enabled", "0", 0);
 ConVar sv_master_legacy_mode_hack_interval("sv_master_legacy_mode_hack_interval", "5", 0);
 ConVar sv_master_legacy_mode_hack_duration("sv_master_legacy_mode_hack_duration", "0.05", 0);
 
@@ -1295,7 +1295,7 @@ void CC_SV_WakeUpCall(const CCommand &args)
 
 ConCommand sv_wakeupcall("sv_wakeupcall", CC_SV_WakeUpCall, "Wake up all players", 0);
 
-ConVar sv_wakeupcall_interval("sv_wakeupcall_interval", "10", FCVAR_NOTIFY);
+ConVar sv_wakeupcall_interval("sv_wakeupcall_interval", "15", FCVAR_NOTIFY);
 
 void CSDKGameRules::StartPenalties()
 {
@@ -1434,7 +1434,7 @@ static void OnMaxPlayersChange(IConVar *var, const char *pOldValue, float flOldV
 #endif
 }
 
-ConVar mp_maxplayers("mp_maxplayers", "7", FCVAR_NOTIFY|FCVAR_REPLICATED, "Maximum number of players per team <1-11>", true, 1, true, 11, OnMaxPlayersChange);
+ConVar mp_maxplayers("mp_maxplayers", "11", FCVAR_NOTIFY|FCVAR_REPLICATED, "Maximum number of players per team <1-11>", true, 1, true, 11, OnMaxPlayersChange);
 
 
 void OnCaptaincyHomeChange(IConVar *var, const char *pOldValue, float flOldValue)
@@ -1450,7 +1450,7 @@ void OnCaptaincyHomeChange(IConVar *var, const char *pOldValue, float flOldValue
 #endif
 }
 
-ConVar mp_captaincy_home("mp_captaincy_home", "1", FCVAR_REPLICATED | FCVAR_NOTIFY, "", &OnCaptaincyHomeChange);
+ConVar mp_captaincy_home("mp_captaincy_home", "0", FCVAR_REPLICATED | FCVAR_NOTIFY, "", &OnCaptaincyHomeChange);
 
 void OnCaptaincyAwayChange(IConVar *var, const char *pOldValue, float flOldValue)
 {
@@ -1465,11 +1465,11 @@ void OnCaptaincyAwayChange(IConVar *var, const char *pOldValue, float flOldValue
 #endif
 }
 
-ConVar mp_captaincy_away("mp_captaincy_away", "1", FCVAR_REPLICATED | FCVAR_NOTIFY, "", &OnCaptaincyAwayChange);
+ConVar mp_captaincy_away("mp_captaincy_away", "0", FCVAR_REPLICATED | FCVAR_NOTIFY, "", &OnCaptaincyAwayChange);
 
 
 ConVar sv_autostartmatch("sv_autostartmatch", "1", FCVAR_NOTIFY|FCVAR_REPLICATED, "");
-ConVar sv_awaytime_warmup("sv_awaytime_warmup", "30", FCVAR_NOTIFY);
+ConVar sv_awaytime_warmup("sv_awaytime_warmup", "15", FCVAR_NOTIFY);
 ConVar sv_awaytime_warmup_autospec("sv_awaytime_warmup_autospec", "3600", FCVAR_NOTIFY);
 
 ConVar sv_singlekeeper("sv_singlekeeper", "0", FCVAR_NOTIFY | FCVAR_REPLICATED);
@@ -1479,7 +1479,7 @@ ConVar sv_singlekeeper("sv_singlekeeper", "0", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar sv_playerrotation_enabled("sv_playerrotation_enabled", "0", FCVAR_NOTIFY);
 ConVar sv_playerrotation_minutes("sv_playerrotation_minutes", "30,60", FCVAR_NOTIFY);
 
-ConVar sv_singlekeeper_switchvalue("sv_singlekeeper_switchvalue", "10", FCVAR_NOTIFY);
+ConVar sv_singlekeeper_switchvalue("sv_singlekeeper_switchvalue", "0", FCVAR_NOTIFY);
 
 void CSDKGameRules::State_Transition( match_period_t newState )
 {
@@ -2884,7 +2884,7 @@ float CSDKGameRules::GetStrengthScalingCoeff()
 	return pow(min(1.0f, (SDKGameRules()->m_vFieldMax.GetY() - SDKGameRules()->m_vFieldMin.GetY()) / mp_strengthscaling_length.GetInt()), mp_strengthscaling_exponent.GetFloat());
 }
 
-ConVar mp_daytime_enabled("mp_daytime_enabled", "1", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_daytime_enabled("mp_daytime_enabled", "0", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar mp_daytime_start("mp_daytime_start", "19", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar mp_daytime_speed("mp_daytime_speed", "7", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar mp_daytime_transition("mp_daytime_transition", "1.5", FCVAR_NOTIFY | FCVAR_REPLICATED);

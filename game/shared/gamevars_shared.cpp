@@ -71,29 +71,29 @@ ConVar mp_timelimit_extratime_halftime( "mp_timelimit_extratime_halftime", "0.5"
 ConVar mp_timelimit_extratime_intermission( "mp_timelimit_extratime_intermission", "0.5", FCVAR_NOTIFY|FCVAR_REPLICATED, "time before extra time start" );
 ConVar mp_timelimit_penalties_intermission( "mp_timelimit_penalties_intermission", "0.5", FCVAR_NOTIFY|FCVAR_REPLICATED, "time before penalties start" );
 ConVar mp_injurytime_min("mp_injurytime_min", "1", FCVAR_NOTIFY);
-ConVar mp_injurytime_max("mp_injurytime_max", "4", FCVAR_NOTIFY);
-ConVar mp_injurytime_coeff("mp_injurytime_coeff", "1.0", FCVAR_NOTIFY);
-ConVar mp_extratime( "mp_extratime", "1", FCVAR_NOTIFY|FCVAR_REPLICATED );
-ConVar mp_penalties( "mp_penalties", "1", FCVAR_NOTIFY|FCVAR_REPLICATED );
+ConVar mp_injurytime_max("mp_injurytime_max", "5", FCVAR_NOTIFY);
+ConVar mp_injurytime_coeff("mp_injurytime_coeff", "1", FCVAR_NOTIFY);
+ConVar mp_extratime( "mp_extratime", "0", FCVAR_NOTIFY|FCVAR_REPLICATED );
+ConVar mp_penalties( "mp_penalties", "0", FCVAR_NOTIFY|FCVAR_REPLICATED );
 
-ConVar mp_shield_throwin_radius_taker("mp_shield_throwin_radius_taker", "60", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_shield_throwin_radius_taker("mp_shield_throwin_radius_taker", "90", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar mp_shield_throwin_movement_x("mp_shield_throwin_movement_x", "150", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar mp_shield_throwin_movement_y("mp_shield_throwin_movement_y", "150", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar mp_shield_throwin_radius_opponent("mp_shield_throwin_radius_opponent", "180", FCVAR_NOTIFY|FCVAR_REPLICATED);
-ConVar mp_shield_freekick_radius_taker("mp_shield_freekick_radius_taker", "60", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar mp_shield_freekick_radius_taker("mp_shield_freekick_radius_taker", "180", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar mp_shield_freekick_radius_opponent("mp_shield_freekick_radius_opponent", "360", FCVAR_NOTIFY|FCVAR_REPLICATED);
-ConVar mp_shield_corner_radius_taker("mp_shield_corner_radius_taker", "60", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar mp_shield_corner_radius_taker("mp_shield_corner_radius_taker", "180", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar mp_shield_corner_radius_opponent("mp_shield_corner_radius_opponent", "360", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar mp_shield_kickoff_radius("mp_shield_kickoff_radius", "360", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar mp_shield_ball_radius("mp_shield_ball_radius", "30", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar mp_shield_border("mp_shield_border", "20", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar mp_shield_block_sixyardbox("mp_shield_block_sixyardbox", "1", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar mp_shield_block_opponent_half("mp_shield_block_opponent_half", "1", FCVAR_NOTIFY|FCVAR_REPLICATED);
-ConVar mp_field_border("mp_field_border", "175", FCVAR_NOTIFY|FCVAR_REPLICATED);
-ConVar mp_field_border_enabled("mp_field_border_enabled", "1", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar mp_field_padding("mp_field_padding", "200", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar mp_field_padding_enabled("mp_field_padding_enabled", "1", FCVAR_NOTIFY|FCVAR_REPLICATED);
 
 ConVar mp_offside("mp_offside", "1", FCVAR_NOTIFY|FCVAR_REPLICATED);
-ConVar mp_joindelay("mp_joindelay", "2", FCVAR_NOTIFY|FCVAR_REPLICATED);
+ConVar mp_joindelay("mp_joindelay", "1", FCVAR_NOTIFY|FCVAR_REPLICATED);
 ConVar mp_joincoordduration("mp_joincoordduration", "5", FCVAR_NOTIFY|FCVAR_REPLICATED);
 
 ConVar mp_custom_shirt_numbers("mp_custom_shirt_numbers", "1", FCVAR_NOTIFY);

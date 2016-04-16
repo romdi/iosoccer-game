@@ -10,8 +10,6 @@ extern ConVar
 	sv_ball_chargedshot_maxstrength,
 	sv_ball_keepershot_minangle,
 	sv_ball_maxplayerfinddist,
-	sv_ball_shottaker_mindelay_short,
-	sv_ball_shottaker_mindelay_long,
 	sv_ball_keeperthrow_strength,
 	sv_ball_keeperthrow_minpostdelay;
 

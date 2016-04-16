@@ -45,7 +45,7 @@ extern ConVar
 	sv_ball_maxplayerfinddist;
 
 ConVar mp_botkeeperspeed( "mp_botkeeperspeed", "100", FCVAR_NOTIFY, "Bot keeper speed <0-100>" );
-ConVar mp_botkeeperdelay( "mp_botkeeperdelay", "30", FCVAR_NOTIFY, "Reaction time in ms" );
+ConVar mp_botkeeperdelay( "mp_botkeeperdelay", "15", FCVAR_NOTIFY, "Reaction time in ms" );
 
 
 ///////////////////////////////////////////////////

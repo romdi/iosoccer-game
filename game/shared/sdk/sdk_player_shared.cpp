@@ -488,9 +488,9 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 		}
 	}
 
-	if (!SDKGameRules()->IsIntermissionState() && mp_field_border_enabled.GetBool())
+	if (!SDKGameRules()->IsIntermissionState() && mp_field_padding_enabled.GetBool())
 	{
-		float border = mp_field_border.GetInt();
+		float border = mp_field_padding.GetInt();
 		Vector min = SDKGameRules()->m_vFieldMin - border;
 		Vector max = SDKGameRules()->m_vFieldMax + border;
 

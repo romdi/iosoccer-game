@@ -12,9 +12,6 @@
 #include "tier0/memdbgon.h"
 #include "GameEventListener.h"
 
-// some cvars used by player movement system
-#define DEFAULT_GRAVITY_STRING	"700"
-
 inline void UpdatePhysicsGravity(float gravity)
 {
 	if(physenv)
@@ -54,7 +51,7 @@ public:
 static CGravityChange s_GravityChange;
 #endif
 
-ConVar sv_gravity ("sv_gravity", DEFAULT_GRAVITY_STRING, FCVAR_NOTIFY | FCVAR_REPLICATED, "World gravity.", GravityChanged_Callback);
+ConVar sv_gravity ("sv_gravity", "800", FCVAR_NOTIFY | FCVAR_REPLICATED, "World gravity.", GravityChanged_Callback);
 
 #if defined(DOD_DLL)
 ConVar	sv_stopspeed	( "sv_stopspeed","100", FCVAR_NOTIFY | FCVAR_REPLICATED, "Minimum stopping speed when on ground." );
@@ -88,9 +85,7 @@ ConVar	sv_maxspeed		( "sv_maxspeed", "320", FCVAR_NOTIFY | FCVAR_REPLICATED | FC
 ConVar  sv_maxspeed		( "sv_maxspeed", "500", FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY);
 ConVar  sv_accelerate	( "sv_accelerate", "7", FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY);
 
-ConVar	mp_jump_height("mp_jump_height", "35", FCVAR_REPLICATED | FCVAR_NOTIFY);
-ConVar  mp_jump_delay	("mp_jump_delay", "0.7", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar  mp_slide_delay	("mp_slide_delay", "2", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar	mp_jump_height("mp_jump_height", "250", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar  mp_stamina_drain	("mp_stamina_drain", "13", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar  mp_stamina_replenish	("mp_stamina_replenish", "10", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar  mp_stamina_max_reduce_coeff	("mp_stamina_max_reduce_coeff", "0.0", FCVAR_NOTIFY | FCVAR_REPLICATED);
@@ -105,7 +100,7 @@ ConVar	mp_keeperdive_boost_coeff("mp_keeperdive_boost_coeff", "0.1", FCVAR_REPLI
 ConVar  mp_pitchup("mp_pitchup", "50", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar  mp_pitchdown("mp_pitchdown", "50", FCVAR_NOTIFY | FCVAR_REPLICATED);
 
-ConVar	sv_airaccelerate(  "sv_airaccelerate", "10", FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );    
+ConVar	sv_airaccelerate(  "sv_airaccelerate", "7", FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );    
 ConVar	sv_wateraccelerate(  "sv_wateraccelerate", "10", FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );     
 ConVar	sv_waterfriction(  "sv_waterfriction", "1", FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );      
 ConVar	sv_footsteps	( "sv_footsteps", "1", FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY, "Play footstep sound for players" );
