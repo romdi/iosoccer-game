@@ -436,19 +436,19 @@ void CSDKPlayer::CheckPosChange()
 		partnerPos = pSwapPartner->GetLocalOrigin();
 		partnerAng = pSwapPartner->GetLocalAngles();
 		pSwapPartner->ChangeTeam();
-		pSwapPartner->SetPositionAfterTeamChange(GetLocalOrigin(), EyeAngles());
+		pSwapPartner->SetPositionAfterTeamChange(GetLocalOrigin(), EyeAngles(), false);
 	}
 
 	ChangeTeam();
 
 	if (pSwapPartner)
 	{
-		pSwapPartner->SetPositionAfterTeamChange(partnerPos, partnerAng);
+		pSwapPartner->SetPositionAfterTeamChange(partnerPos, partnerAng, false);
 	}
 	else if (SDKGameRules()->IsIntermissionState())
 	{
 		Vector pos = GetSpawnPos();
-		SetPositionAfterTeamChange(pos, GetAngleToBall(pos, true));
+		SetPositionAfterTeamChange(pos, GetAngleToBall(pos, true), true);
 	}
 	else
 	{
@@ -456,7 +456,7 @@ void CSDKPlayer::CheckPosChange()
 
 		if (pos != vec3_invalid)
 		{
-			SetPositionAfterTeamChange(pos, GetAngleToBall(pos, true));
+			SetPositionAfterTeamChange(pos, GetAngleToBall(pos, true), true);
 		}
 		else if (GetTeamPosType() != POS_GK)
 		{
@@ -469,8 +469,12 @@ void CSDKPlayer::CheckPosChange()
 			else
 				pos.x = SDKGameRules()->m_vFieldMin.GetX() + 50;
 
-			FindSafePos(pos);
-			SetPositionAfterTeamChange(pos, GetAngleToBall(pos, true));
+			SetPositionAfterTeamChange(pos, GetAngleToBall(pos, true), true);
+		}
+		else
+		{
+			pos = GetSpawnPos();
+			SetPositionAfterTeamChange(pos, GetAngleToBall(pos, true), true);
 		}
 	}
 }
@@ -620,7 +624,7 @@ bool CSDKPlayer::SetDesiredTeam(int desiredTeam, int desiredSpecTeam, int desire
 		if (GetTeamNumber() == TEAM_HOME || GetTeamNumber() == TEAM_AWAY)
 		{
 			Vector pos = GetSpawnPos();
-			SetPositionAfterTeamChange(pos, GetAngleToBall(pos, true));
+			SetPositionAfterTeamChange(pos, GetAngleToBall(pos, true), true);
 		}
 	}
 
@@ -705,14 +709,19 @@ void CSDKPlayer::ChangeTeam()
 	g_pPlayerResource->UpdatePlayerData();
 }
 
-void CSDKPlayer::SetPositionAfterTeamChange(const Vector &pos, const QAngle &ang)
+void CSDKPlayer::SetPositionAfterTeamChange(const Vector &pos, const QAngle &ang, bool findSafePos)
 {
+	Vector safePos = pos;
+
+	if (findSafePos)
+		FindSafePos(safePos);
+
 	QAngle modelAng = ang;
 	modelAng[PITCH] = 0;
 
 	SetLocalVelocity(vec3_origin);
 	SetLocalAngles(modelAng);
-	SetLocalOrigin(pos);
+	SetLocalOrigin(safePos);
 	SnapEyeAngles(ang);
 
 	if (SDKGameRules()->m_nShieldType != SHIELD_NONE)
