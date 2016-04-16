@@ -763,8 +763,8 @@ void CGameMovement::ReduceTimers( void )
 #endif
 
 	if (GetMatchBall()->m_eBallState != BALL_STATE_GOAL
-		&& mv->m_nButtons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT) != 0
-		&& mv->m_nButtons & IN_SPEED)
+		&& (mv->m_nButtons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT))
+		&& (mv->m_nButtons & IN_SPEED))
 	{
 		pPl->m_Shared.SetStamina(pPl->m_Shared.GetStamina() - mp_stamina_drain.GetInt() * gpGlobals->frametime);
 	}
