@@ -1357,9 +1357,11 @@ void CSDKPlayer::SetPosOutsideShield(bool teleport)
 		GetTargetPos(GetLocalOrigin(), m_vTargetPos.GetForModify());
 		m_bHoldAtTargetPos = true;
 		break;
-	case SHIELD_PENALTYSHOOTOUT:
+	case SHIELD_PENALTY:
 		GetTargetPos(GetLocalOrigin(), m_vTargetPos.GetForModify());
-		m_bHoldAtTargetPos = true;
+
+		if (SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES)
+			m_bHoldAtTargetPos = true;
 		break;
 	default:
 		GetTargetPos(GetLocalOrigin(), m_vTargetPos.GetForModify());
@@ -1502,7 +1504,7 @@ void CSDKPlayer::GetTargetPos(const Vector &pos, Vector &targetPos)
 		targetPos.x = SDKGameRules()->m_vFieldMin.GetX() + GetTeamPosIndex() * 50;
 	}
 
-	if (SDKGameRules()->m_nShieldType == SHIELD_PENALTYSHOOTOUT)
+	if (SDKGameRules()->m_nShieldType == SHIELD_PENALTY && SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES)
 	{
 		targetPos = SDKGameRules()->m_vKickOff;
 		targetPos.x += (100 + GetTeamPosIndex() * 50) * GetTeam()->m_nForward;

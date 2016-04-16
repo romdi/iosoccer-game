@@ -893,8 +893,6 @@ void CMatchBall::State_PENALTY_Think()
 				SetPenaltyState(PENALTY_ABORTED_NO_TAKER);
 				return State_Transition(BALL_STATE_NORMAL);
 			}
-
-			SDKGameRules()->EnableShield(SHIELD_PENALTYSHOOTOUT, m_nFouledTeam, GetGlobalTeam(m_nFoulingTeam)->m_vPenalty);
 		}
 		else
 		{
@@ -906,10 +904,9 @@ void CMatchBall::State_PENALTY_Think()
 				m_pPl = FindNearestPlayer(m_nFouledTeam);
 			if (!CSDKPlayer::IsOnField(m_pPl, m_nFouledTeam))
 				return State_Transition(BALL_STATE_NORMAL);
-
-			SDKGameRules()->EnableShield(SHIELD_PENALTY, m_nFouledTeam, GetGlobalTeam(m_nFoulingTeam)->m_vPenalty);
 		}
 
+		SDKGameRules()->EnableShield(SHIELD_PENALTY, m_nFouledTeam, GetGlobalTeam(m_nFoulingTeam)->m_vPenalty);
 		m_pPl->SetPosInsideShield(Vector(m_vPos.x, m_vPos.y - 150 * m_pPl->GetTeam()->m_nForward, SDKGameRules()->m_vKickOff.GetZ()), true);
 		m_flStateTimelimit = -1;
 		m_pPl->SetShotsBlocked(true);
