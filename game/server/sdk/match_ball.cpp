@@ -119,9 +119,6 @@ CMatchBall::~CMatchBall()
 
 void CMatchBall::Spawn()
 {
-	//TODO: Move the ball skin parsing to a better spot
-	CBallInfo::ParseBallSkins();
-	
 	CBall::Spawn();
 }
 

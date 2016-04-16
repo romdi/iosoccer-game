@@ -552,13 +552,21 @@ void CSDKGameRules::ServerActivate()
 {
 	CPlayerPersistentData::ReallocateAllPlayerData();
 
+	CTeamInfo::ParseTeamKits();
+
+	CBallInfo::ParseBallSkins();
+
 	CPitchInfo::ParsePitchTextures();
+
+	SetPitchTextureName(CPitchInfo::m_PitchInfo[0]->m_szFolderName);
 
 	InitTeams();
 
 	InitFieldSpots();
 
 	CreateMatchBall(m_vKickOff);
+
+	GetMatchBall()->SetSkinName(CBallInfo::m_BallInfo[0]->m_szFolderName);
 
 	m_pPrecip = (CPrecipitation *)CreateEntityByName("func_precipitation");
 	m_pPrecip->SetType(PRECIPITATION_TYPE_NONE);
@@ -793,8 +801,6 @@ void CSDKGameRules::InitTeams( void )
 
 		g_Teams.AddToTail( pTeam );
 	}
-
-	CTeamInfo::ParseTeamKits();
 
 	ChooseTeamNames(true, true, true, false);
 
