@@ -1385,9 +1385,9 @@ AngularImpulse CBall::CalcSpin(float coeff, int spinFlags)
 			int sidemoveSign = m_pPl->GetSidemoveSign();
 
 			if (sidemoveSign == -1) 
-				sideRot = Vector(0, 0, m_pPl->IsLegacySideCurl() ? 1 : -1);
+				sideRot = Vector(0, 0, m_pPl->IsReverseSideCurl() ? -1 : 1);
 			else if (sidemoveSign == 1) 
-				sideRot = Vector(0, 0, m_pPl->IsLegacySideCurl() ? -1 : 1);
+				sideRot = Vector(0, 0, m_pPl->IsReverseSideCurl() ? 1 : -1);
 		}
 
 		Vector backRot = m_vPlRight;

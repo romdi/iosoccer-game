@@ -470,8 +470,8 @@ public:
 	int					GetCountryIndex() { return m_nCountryIndex; }
 	void				SetCountryIndex(int index) { m_nCountryIndex = index; }
 
-	bool				IsLegacySideCurl() { return m_bLegacySideCurl; } 
-	void				SetLegacySideCurl(bool enable) { m_bLegacySideCurl = enable; }
+	bool				IsReverseSideCurl() { return m_bReverseSideCurl; } 
+	void				SetReverseSideCurl(bool enable) { m_bReverseSideCurl = enable; }
 
 	bool				ShotButtonsPressed();
 	bool				ShotButtonsReleased();
@@ -505,7 +505,7 @@ public:
 
 	int					m_nCountryIndex;
 
-	bool				m_bLegacySideCurl;
+	bool				m_bReverseSideCurl;
 
 	Vector				EyeDirection2D();
 	Vector				EyeDirection3D();

@@ -15,7 +15,7 @@ extern ConVar
 	nationalteamname,
 	countryindex,
 	goalteamcrests,
-	legacysidecurl,
+	reversesidecurl,
 	modelskinindex,
 	playerballskinname,
 	playername,
@@ -731,7 +731,7 @@ void CAppearanceSettingPanel::GetPlayerTeamInfo(const char **teamFolder, const c
 CGameplaySettingPanel::CGameplaySettingPanel(Panel *parent, const char *panelName) : BaseClass(parent, panelName)
 {
 	m_pContent = new Panel(this, "");
-	m_pLegacySideCurl = new CheckButton(m_pContent, "", "Reverse the ball curl direction");
+	m_pReverseSideCurl = new CheckButton(m_pContent, "", "Reverse ball side curl direction");
 }
 
 void CGameplaySettingPanel::PerformLayout()
@@ -739,17 +739,17 @@ void CGameplaySettingPanel::PerformLayout()
 	BaseClass::PerformLayout();
 
 	m_pContent->SetBounds(PADDING, PADDING, GetWide() - 2 * PADDING, GetTall() - 2 * PADDING);
-	m_pLegacySideCurl->SetBounds(0, 0, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
+	m_pReverseSideCurl->SetBounds(0, 0, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
 }
 
 void CGameplaySettingPanel::Save()
 {
-	legacysidecurl.SetValue(m_pLegacySideCurl->IsSelected() ? 1 : 0);
+	reversesidecurl.SetValue(m_pReverseSideCurl->IsSelected() ? 1 : 0);
 }
 
 void CGameplaySettingPanel::Load()
 {
-	m_pLegacySideCurl->SetSelected(legacysidecurl.GetBool());
+	m_pReverseSideCurl->SetSelected(reversesidecurl.GetBool());
 }
 
 void CGameplaySettingPanel::Update()

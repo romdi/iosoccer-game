@@ -179,7 +179,7 @@ class CGameplaySettingPanel : public PropertyPage, public ISettingPanel
 
 	Panel *m_pContent;
 
-	CheckButton *m_pLegacySideCurl;
+	CheckButton *m_pReverseSideCurl;
 
 public:
 

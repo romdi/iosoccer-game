@@ -2594,7 +2594,7 @@ void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 
 	pPl->SetCountryIndex(countryIndex);
 
-	pPl->SetLegacySideCurl(atoi(engine->GetClientConVarValue(pPl->entindex(), "legacysidecurl")) != 0);
+	pPl->SetReverseSideCurl(atoi(engine->GetClientConVarValue(pPl->entindex(), "reversesidecurl")) != 0);
 
 	pPl->SetPreferredOutfieldShirtNumber(atoi(engine->GetClientConVarValue(pPl->entindex(), "preferredoutfieldshirtnumber")));
 	pPl->SetPreferredKeeperShirtNumber(atoi(engine->GetClientConVarValue(pPl->entindex(), "preferredkeepershirtnumber")));
