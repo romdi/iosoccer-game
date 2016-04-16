@@ -88,10 +88,6 @@ ConVar  sv_accelerate	( "sv_accelerate", "7", FCVAR_NOTIFY | FCVAR_REPLICATED | 
 ConVar	mp_jump_height("mp_jump_height", "250", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar  mp_stamina_drain	("mp_stamina_drain", "13", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar  mp_stamina_replenish	("mp_stamina_replenish", "10", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar  mp_stamina_max_reduce_coeff	("mp_stamina_max_reduce_coeff", "0.0", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar  mp_stamina_max_add_halftime	("mp_stamina_max_add_halftime", "0", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar  mp_stamina_max_add_extratime_intermission	("mp_stamina_max_add_extratime_intermission", "0", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar  mp_stamina_max_add_extratime_halftime	("mp_stamina_max_add_extratime_halftime", "0", FCVAR_NOTIFY | FCVAR_REPLICATED);
 
 ConVar	mp_keeperdive_boost_enabled("mp_keeperdive_boost_enabled", "0", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
 ConVar	mp_keeperdive_boost_duration("mp_keeperdive_boost_duration", "0.4", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);

@@ -140,8 +140,6 @@ void CHudChargedshotBar::Paint()
 	Color staminaFgColor = g_ColorGreen;
 	Color staminaBgColor = Color(0, 0, 0, 255);
 
-	Color staminaLimitFgColor = Color(100, 100, 100, 255);
-
 	// Draw stamina bar back
 	surface()->DrawSetColor(staminaBgColor);
 	surface()->DrawFilledRect(
@@ -149,14 +147,6 @@ void CHudChargedshotBar::Paint()
 		STAMINABAR_VMARGIN,
 		ScreenWidth() - STAMINABAR_HMARGIN - STAMINABAR_WIDTH - 2 * STAMINABAR_BORDER + STAMINABAR_WIDTH + 2 * STAMINABAR_BORDER,
 		STAMINABAR_VMARGIN + STAMINABAR_HEIGHT + 2 * STAMINABAR_BORDER
-	);
-
-	surface()->DrawSetColor(staminaLimitFgColor);
-	surface()->DrawFilledRect(
-		ScreenWidth() - STAMINABAR_HMARGIN - STAMINABAR_WIDTH - STAMINABAR_BORDER + STAMINABAR_WIDTH,
-		STAMINABAR_VMARGIN + STAMINABAR_BORDER,
-		ScreenWidth() - STAMINABAR_HMARGIN - STAMINABAR_WIDTH - STAMINABAR_BORDER + STAMINABAR_WIDTH,
-		STAMINABAR_VMARGIN + STAMINABAR_BORDER + STAMINABAR_HEIGHT
 	);
 
 	// Draw stamina bar front
