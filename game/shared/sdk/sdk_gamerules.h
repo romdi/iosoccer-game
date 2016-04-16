@@ -478,8 +478,6 @@ public:
 	int GetShieldRadius(int team, bool isTaker);
 	float GetMatchDisplayTimeSeconds(bool addInjuryTime = true, bool getCountdownAtIntermissions = true);
 
-	float GetStrengthScalingCoeff();
-
 	CNetworkVar(int, m_nShieldType);
 	CNetworkVar(int, m_nShieldTeam);
 	CNetworkVector(m_vShieldPos);

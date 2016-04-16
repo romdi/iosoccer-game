@@ -2882,14 +2882,6 @@ float CSDKGameRules::GetMatchDisplayTimeSeconds(bool addInjuryTime /*= true*/, b
 	return matchSeconds;
 }
 
-float CSDKGameRules::GetStrengthScalingCoeff()
-{
-	if (!mp_strengthscaling_enabled.GetBool())
-		return 1.0f;
-
-	return pow(min(1.0f, (SDKGameRules()->m_vFieldMax.GetY() - SDKGameRules()->m_vFieldMin.GetY()) / mp_strengthscaling_length.GetInt()), mp_strengthscaling_exponent.GetFloat());
-}
-
 ConVar mp_daytime_enabled("mp_daytime_enabled", "0", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar mp_daytime_start("mp_daytime_start", "19", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar mp_daytime_speed("mp_daytime_speed", "7", FCVAR_NOTIFY | FCVAR_REPLICATED);

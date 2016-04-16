@@ -666,7 +666,7 @@ void CSDKPlayer::CheckLastPressedSingleMoveButton()
 
 float CSDKPlayer::GetChargedShotIncreaseDuration()
 {
-	return SDKGameRules()->GetStrengthScalingCoeff() * mp_chargedshot_increaseduration.GetFloat();
+	return mp_chargedshot_increaseduration.GetFloat();
 }
 
 bool CSDKPlayer::ShotButtonsPressed()
