@@ -290,7 +290,7 @@ void CPlayerBall::State_KEEPERHANDS_Think()
 
 		m_pPl->SetShotButtonsReleased(false);
 		AddToPlayerHands(m_pPl);
-		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_CARRY);
+		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HOLD);
 	}
 
 	UpdateCarrier();
@@ -326,7 +326,7 @@ void CPlayerBall::State_KEEPERHANDS_Think()
 
 	Vector handPos;
 	QAngle handAng;
-	m_pPl->GetAttachment("keeperballrighthand", handPos, handAng);
+	m_pPl->GetAttachment("ball_right_hand", handPos, handAng);
 	SetPos(handPos, false);
 	SetAng(handAng);
 
@@ -352,7 +352,7 @@ void CPlayerBall::State_KEEPERHANDS_Think()
 			AngleVectors(m_aPlAng, &dir);
 			vel = dir * GetChargedshotStrength(GetPitchCoeff(), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
 			spinFlags = FL_SPIN_PERMIT_SIDE;
-			animEvent = PLAYERANIMEVENT_KEEPER_HANDS_KICK;
+			animEvent = PLAYERANIMEVENT_KEEPER_HANDS_VOLLEY;
 
 			if (vel.Length() > 1000)
 				EmitSound("Ball.Kickhard");

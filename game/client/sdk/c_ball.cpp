@@ -48,7 +48,7 @@ void C_Ball::ClientThink()
 	{
 		Vector handPos;
 		QAngle handAng;
-		m_pHoldingPlayer->GetAttachment("keeperballrighthand", handPos, handAng);
+		m_pHoldingPlayer->GetAttachment("ball_right_hand", handPos, handAng);
 		SetLocalOrigin(handPos);
 		SetLocalAngles(handAng);
 	}

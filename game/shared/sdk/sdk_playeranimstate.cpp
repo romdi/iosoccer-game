@@ -223,11 +223,11 @@ int CSDKPlayerAnimState::CalcSecondaryActionSequence(PlayerAnimEvent_t event)
 {
 	switch (event)
 	{
-	case PLAYERANIMEVENT_CARRY:
+	case PLAYERANIMEVENT_HOLD:
 	default:
-		return CalcSequenceIndex("CarryBall");
-	case PLAYERANIMEVENT_THROWIN:
-		return CalcSequenceIndex("CarryBall"); // iosthrowin
+		return CalcSequenceIndex("keeper_hands_hold");
+	case PLAYERANIMEVENT_THROW_IN_HOLD:
+		return CalcSequenceIndex("throw_in_hold"); // iosthrowin
 	}
 }
 
@@ -235,28 +235,28 @@ int CSDKPlayerAnimState::CalcPrimaryActionSequence(PlayerAnimEvent_t event)
 {
 	switch (event)
 	{
-	case PLAYERANIMEVENT_KICK: return CalcSequenceIndex("ioskick");
-	case PLAYERANIMEVENT_PASS: return CalcSequenceIndex("iospass");
-	case PLAYERANIMEVENT_PASS_STATIONARY: return CalcSequenceIndex("iospass_stationary");
-	case PLAYERANIMEVENT_VOLLEY: return CalcSequenceIndex("iosvolley");
-	case PLAYERANIMEVENT_HEELKICK: return CalcSequenceIndex("iosheelkick");
-	case PLAYERANIMEVENT_HEADER: return CalcSequenceIndex("iosheader");
-	case PLAYERANIMEVENT_HEADER_STATIONARY: return CalcSequenceIndex("iosheader_stationary");
-	case PLAYERANIMEVENT_THROW: return CalcSequenceIndex("iosthrow");
-	case PLAYERANIMEVENT_SLIDE: return CalcSequenceIndex((GetBasePlayer()->GetFlags() & FL_CELEB) ? "iosslideceleb" : "iosslide");
-	case PLAYERANIMEVENT_TACKLED_FORWARD: return CalcSequenceIndex("iostackled_forward");
-	case PLAYERANIMEVENT_TACKLED_BACKWARD: return CalcSequenceIndex("iostackled_backward");
-	case PLAYERANIMEVENT_DIVINGHEADER: return CalcSequenceIndex("iosdivingheader");
-	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT: return CalcSequenceIndex("iosdiveright");
-	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT: return CalcSequenceIndex("iosdiveleft");
-	case PLAYERANIMEVENT_KEEPER_DIVE_FORWARD: return CalcSequenceIndex("iostackled_forward");
-	case PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD: return CalcSequenceIndex("iostackled_backward");
-	case PLAYERANIMEVENT_KEEPER_HANDS_THROW: return CalcSequenceIndex("iosthrow");
-	case PLAYERANIMEVENT_KEEPER_HANDS_KICK: return CalcSequenceIndex("iosvolley");
-	case PLAYERANIMEVENT_KEEPER_HANDS_PUNCH: return CalcSequenceIndex("iosthrow");
-	case PLAYERANIMEVENT_FAKE_SHOT: return CalcSequenceIndex("ioskick");
-	case PLAYERANIMEVENT_RAINBOW_FLICK: return CalcSequenceIndex("iosheelkick");
-	case PLAYERANIMEVENT_BICYCLE_KICK: return CalcSequenceIndex("iostackled_backward");
+	case PLAYERANIMEVENT_KICK_DRIBBLE: return CalcSequenceIndex("kick_dribble");
+	case PLAYERANIMEVENT_KICK_WEAK: return CalcSequenceIndex("kick_weak");
+	case PLAYERANIMEVENT_KICK_STRONG: return CalcSequenceIndex("kick_strong");
+	case PLAYERANIMEVENT_VOLLEY: return CalcSequenceIndex("volley");
+	case PLAYERANIMEVENT_HEEL_KICK: return CalcSequenceIndex("heel_kick");
+	case PLAYERANIMEVENT_HEADER_WEAK: return CalcSequenceIndex("header_weak");
+	case PLAYERANIMEVENT_HEADER_STRONG: return CalcSequenceIndex("header_strong");
+	case PLAYERANIMEVENT_THROW_IN_THROW: return CalcSequenceIndex("throw_in_throw");
+	case PLAYERANIMEVENT_SLIDE_TACKLE: return CalcSequenceIndex((GetBasePlayer()->GetFlags() & FL_CELEB) ? "celeb_slide" : "slide_tackle");
+	case PLAYERANIMEVENT_TACKLED_FORWARD: return CalcSequenceIndex("tackled_forward");
+	case PLAYERANIMEVENT_TACKLED_BACKWARD: return CalcSequenceIndex("tackled_backward");
+	case PLAYERANIMEVENT_DIVING_HEADER: return CalcSequenceIndex("diving_header");
+	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT: return CalcSequenceIndex("keeper_dive_left");
+	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT: return CalcSequenceIndex("keeper_dive_right");
+	case PLAYERANIMEVENT_KEEPER_DIVE_FORWARD: return CalcSequenceIndex("keeper_dive_forward");
+	case PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD: return CalcSequenceIndex("keeper_dive_backward");
+	case PLAYERANIMEVENT_KEEPER_HANDS_THROW: return CalcSequenceIndex("keeper_hands_throw");
+	case PLAYERANIMEVENT_KEEPER_HANDS_VOLLEY: return CalcSequenceIndex("keeper_hands_volley");
+	case PLAYERANIMEVENT_KEEPER_HANDS_PUNCH: return CalcSequenceIndex("keeper_hands_punch");
+	case PLAYERANIMEVENT_FAKE_SHOT: return CalcSequenceIndex("fake_shot");
+	case PLAYERANIMEVENT_RAINBOW_FLICK: return CalcSequenceIndex("rainbow_flick");
+	case PLAYERANIMEVENT_BICYCLE_KICK: return CalcSequenceIndex("bicycle_kick");
 	default: return -1;
 	}
 }
@@ -384,22 +384,22 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 		GetSDKPlayer()->RemoveFlag(FL_FREECAM);
 		return;
 	}
-	case PLAYERANIMEVENT_KICK:
-	case PLAYERANIMEVENT_PASS:
-	case PLAYERANIMEVENT_PASS_STATIONARY:
+	case PLAYERANIMEVENT_KICK_DRIBBLE:
+	case PLAYERANIMEVENT_KICK_WEAK:
+	case PLAYERANIMEVENT_KICK_STRONG:
 	case PLAYERANIMEVENT_VOLLEY:
-	case PLAYERANIMEVENT_HEELKICK:
-	case PLAYERANIMEVENT_HEADER:
-	case PLAYERANIMEVENT_HEADER_STATIONARY:
-	case PLAYERANIMEVENT_THROW:
+	case PLAYERANIMEVENT_HEEL_KICK:
+	case PLAYERANIMEVENT_HEADER_WEAK:
+	case PLAYERANIMEVENT_HEADER_STRONG:
+	case PLAYERANIMEVENT_THROW_IN_THROW:
 	case PLAYERANIMEVENT_KEEPER_HANDS_THROW:
-	case PLAYERANIMEVENT_KEEPER_HANDS_KICK:
+	case PLAYERANIMEVENT_KEEPER_HANDS_VOLLEY:
 	case PLAYERANIMEVENT_KEEPER_HANDS_PUNCH:
-	case PLAYERANIMEVENT_DIVINGHEADER:
+	case PLAYERANIMEVENT_DIVING_HEADER:
 	{
 		//GetSDKPlayer()->ResetShotCharging();
 	}
-	case PLAYERANIMEVENT_SLIDE:
+	case PLAYERANIMEVENT_SLIDE_TACKLE:
 	case PLAYERANIMEVENT_TACKLED_FORWARD:
 	case PLAYERANIMEVENT_TACKLED_BACKWARD:
 	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT:
@@ -430,8 +430,8 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 		}
 		break;
 	}
-	case PLAYERANIMEVENT_CARRY:
-	case PLAYERANIMEVENT_THROWIN:
+	case PLAYERANIMEVENT_HOLD:
+	case PLAYERANIMEVENT_THROW_IN_HOLD:
 	{
 		m_iSecondaryActionSequence = CalcSecondaryActionSequence(event);			//add keeper carry as layer
 		if (m_iSecondaryActionSequence != -1)
@@ -443,7 +443,7 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 		break;
 	}
 	case PLAYERANIMEVENT_CARRY_END:
-	case PLAYERANIMEVENT_THROWIN_END:
+	case PLAYERANIMEVENT_THROW_IN_END:
 	{
 		m_flSecondaryActionSequenceCycle = 1.1f;
 		m_bCarryHold = false;
@@ -453,14 +453,14 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 
 	switch (event)
 	{
-	case PLAYERANIMEVENT_DIVINGHEADER:
+	case PLAYERANIMEVENT_DIVING_HEADER:
 	case PLAYERANIMEVENT_BICYCLE_KICK:
 	case PLAYERANIMEVENT_TACKLED_FORWARD:
 	case PLAYERANIMEVENT_TACKLED_BACKWARD:
 		GetSDKPlayer()->AddFlag(FL_FREECAM);
 		break;
-	case PLAYERANIMEVENT_CARRY:
-	case PLAYERANIMEVENT_SLIDE:
+	case PLAYERANIMEVENT_HOLD:
+	case PLAYERANIMEVENT_SLIDE_TACKLE:
 	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT:
 	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT:
 	case PLAYERANIMEVENT_KEEPER_DIVE_FORWARD:
@@ -471,8 +471,8 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 		break;
 	}
 
-	if (event != PLAYERANIMEVENT_CARRY && event != PLAYERANIMEVENT_CARRY_END
-		&& event != PLAYERANIMEVENT_THROWIN && event != PLAYERANIMEVENT_THROWIN_END)
+	if (event != PLAYERANIMEVENT_HOLD && event != PLAYERANIMEVENT_CARRY_END
+		&& event != PLAYERANIMEVENT_THROW_IN_HOLD && event != PLAYERANIMEVENT_THROW_IN_END)
 	{
 		GetSDKPlayer()->m_Shared.SetAnimEvent(event);
 	}

@@ -403,7 +403,7 @@ void CMatchBall::State_THROWIN_Think()
 		SetPos(groundPos + Vector(0, 0, m_pPl->GetPlayerMaxs().z + 2));
 		m_pPl->RemoveFlag(FL_ATCONTROLS);
 		AddToPlayerHands(m_pPl);
-		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_THROWIN);
+		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_THROW_IN_HOLD);
 		m_pPl->SetShotButtonsReleased(false);
 		m_pPl->SetShotsBlocked(false);
 	}
@@ -412,7 +412,7 @@ void CMatchBall::State_THROWIN_Think()
 
 	Vector handPos;
 	QAngle handAng;
-	m_pPl->GetAttachment("keeperballrighthand", handPos, handAng);
+	m_pPl->GetAttachment("ball_right_hand", handPos, handAng);
 	SetPos(handPos, false);
 	SetAng(handAng);
 
@@ -430,7 +430,7 @@ void CMatchBall::State_THROWIN_Think()
 		vel += m_vPlForwardVel2D * sv_ball_throw_playerspeedcoeff.GetFloat();
 
 		m_pPl->AddThrowIn();
-		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_THROW);
+		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_THROW_IN_THROW);
 		RemoveAllTouches();
 		SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_HANDS, false, sv_ball_throw_minpostdelay.GetFloat(), true);
 		m_bBallInAirAfterThrowIn = true;
@@ -1001,7 +1001,7 @@ void CMatchBall::State_KEEPERHANDS_Think()
 
 		m_pPl->SetShotButtonsReleased(false);
 		AddToPlayerHands(m_pPl);
-		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_CARRY);
+		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HOLD);
 		m_flStateTimelimit = -1;
 		CSDKPlayer::PlayersAtTargetPos();
 	}
@@ -1048,7 +1048,7 @@ void CMatchBall::State_KEEPERHANDS_Think()
 
 	Vector handPos;
 	QAngle handAng;
-	m_pPl->GetAttachment("keeperballrighthand", handPos, handAng);
+	m_pPl->GetAttachment("ball_right_hand", handPos, handAng);
 	SetPos(handPos, false);
 	SetAng(handAng);
 
@@ -1084,7 +1084,7 @@ void CMatchBall::State_KEEPERHANDS_Think()
 			AngleVectors(m_aPlAng, &dir);
 			vel = dir * GetChargedshotStrength(GetPitchCoeff(), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
 			spinFlags = FL_SPIN_PERMIT_SIDE;
-			animEvent = PLAYERANIMEVENT_KEEPER_HANDS_KICK;
+			animEvent = PLAYERANIMEVENT_KEEPER_HANDS_VOLLEY;
 
 			if (vel.Length() > 1000)
 				EmitSound("Ball.Kickhard");

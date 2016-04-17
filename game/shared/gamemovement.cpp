@@ -1685,11 +1685,11 @@ bool CGameMovement::CheckActionOverTime()
 		break;
 	}
 	case PLAYERANIMEVENT_KEEPER_HANDS_THROW:
-	case PLAYERANIMEVENT_KEEPER_HANDS_KICK:
+	case PLAYERANIMEVENT_KEEPER_HANDS_VOLLEY:
 	{
 		return false;
 	}
-	case PLAYERANIMEVENT_SLIDE:
+	case PLAYERANIMEVENT_SLIDE_TACKLE:
 	{
 		if (timePassed > mp_slide_move_duration.GetFloat() + mp_slide_idle_duration.GetFloat())
 		{
@@ -1716,7 +1716,7 @@ bool CGameMovement::CheckActionOverTime()
 		mv->m_vecVelocity = vec3_origin;
 		break;
 	}
-	case PLAYERANIMEVENT_THROW:
+	case PLAYERANIMEVENT_THROW_IN_THROW:
 	{
 		if (timePassed > mp_throwinthrow_idle_duration.GetFloat())
 		{
@@ -1727,7 +1727,7 @@ bool CGameMovement::CheckActionOverTime()
 		mv->m_vecVelocity = vec3_origin;
 		break;
 	}
-	case PLAYERANIMEVENT_DIVINGHEADER:
+	case PLAYERANIMEVENT_DIVING_HEADER:
 	{
 		if (timePassed > mp_divingheader_move_duration.GetFloat() + mp_divingheader_idle_duration.GetFloat())
 		{
@@ -1749,7 +1749,9 @@ bool CGameMovement::CheckActionOverTime()
 		mv->m_vecVelocity = Vector(0, 0, 0);
 		break;
 	}
-	case PLAYERANIMEVENT_KICK:
+	case PLAYERANIMEVENT_KICK_DRIBBLE:
+	case PLAYERANIMEVENT_KICK_WEAK:
+	case PLAYERANIMEVENT_KICK_STRONG:
 	{
 		return false;
 	}
@@ -1914,7 +1916,7 @@ bool CGameMovement::CheckActionStart()
 	}
 	else if (mv->m_nButtons & IN_DUCK && !(mv->m_nOldButtons & IN_DUCK))
 	{
-		animEvent = PLAYERANIMEVENT_SLIDE;
+		animEvent = PLAYERANIMEVENT_SLIDE_TACKLE;
 		MoveHelper()->StartSound(mv->GetAbsOrigin(), "Player.Slide");
 
 #ifdef GAME_DLL

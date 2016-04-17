@@ -629,8 +629,8 @@ bool CBall::GetCollisionPoint(bool isDeflection, Vector &collisionPoint)
 	float zDist = dirToBall.z;
 	float xyDist = dirToBall.Length2D();
 
-	if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_SLIDE
-		|| m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_DIVINGHEADER
+	if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_SLIDE_TACKLE
+		|| m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_DIVING_HEADER
 		|| m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_LEFT
 		|| m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT
 		|| m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_FORWARD
@@ -751,7 +751,7 @@ bool CBall::DoBodyPartAction()
 	if (!m_pPl->IsShooting() || !m_pPl->CanShoot() || gpGlobals->curtime < m_flGlobalLastShot + m_flGlobalDynamicShotDelay * sv_ball_shotdelay_global_coeff.GetFloat())
 		return false;
 
-	if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_SLIDE)
+	if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_SLIDE_TACKLE)
 		return DoSlideAction();
 
 	if (zDist >= sv_ball_bodypos_feet_start.GetFloat()
@@ -1159,7 +1159,7 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 				shotAngle[PITCH] = min(sv_ball_heelshot_minangle.GetFloat(), shotAngle[PITCH]);
 				shotStrength = m_vVel.Length2D() * sv_ball_heelshot_strengthcoeff.GetFloat();
 				minPostDelay = sv_ball_heelshot_minpostdelay.GetFloat();
-				m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEELKICK);
+				m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEEL_KICK);
 				EmitSound("Ball.Kicknormal");
 			}
 			else
@@ -1188,17 +1188,17 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 
 		if (shotStrength >= sv_ball_animation_minstrength_strongshot.GetInt())
 		{
-			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KICK);
+			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KICK_STRONG);
 			EmitSound("Ball.Kickhard");
 		}
 		else if (shotStrength >= sv_ball_animation_minstrength_weakshot.GetInt())
 		{
-			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KICK);
+			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KICK_WEAK);
 			EmitSound("Ball.Kicknormal");
 		}
 		else if (shotStrength >= sv_ball_animation_minstrength_dribbleshot.GetInt())
 		{
-			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
+			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KICK_DRIBBLE);
 			EmitSound("Ball.Touch");
 		}
 		else
@@ -1317,7 +1317,7 @@ bool CBall::DoHeader()
 
 			vel = forward * GetChargedshotStrength(1.0f, sv_ball_divingheader_minstrength.GetInt(), sv_ball_divingheader_maxstrength.GetInt());
 
-			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_DIVINGHEADER);
+			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_DIVING_HEADER);
 			EmitSound("Ball.Kickhard");
 			EmitSound("Player.DivingHeader");
 
@@ -1341,7 +1341,7 @@ bool CBall::DoHeader()
 
 			vel = forward * GetNormalshotStrength(GetPitchCoeff(), sv_ball_normalheader_strength.GetInt());
 
-			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEADER_STATIONARY);
+			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEADER_WEAK);
 			EmitSound("Ball.Kickhard");
 		}
 		// Charged header
@@ -1352,7 +1352,7 @@ bool CBall::DoHeader()
 
 			vel = forward * GetChargedshotStrength(GetPitchCoeff(), sv_ball_chargedheader_minstrength.GetInt(), sv_ball_chargedheader_maxstrength.GetInt());
 
-			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEADER);
+			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEADER_STRONG);
 			EmitSound("Ball.Kickhard");
 		}
 
@@ -1505,7 +1505,7 @@ void CBall::RemoveFromPlayerHands(CSDKPlayer *pPl)
 		if (pPl->GetTeamPosType() == POS_GK)
 			pPl->DoServerAnimationEvent(PLAYERANIMEVENT_CARRY_END);
 		else
-			pPl->DoServerAnimationEvent(PLAYERANIMEVENT_THROWIN_END);
+			pPl->DoServerAnimationEvent(PLAYERANIMEVENT_THROW_IN_END);
 	}
 
 	if (!IsMarkedForDeletion())
