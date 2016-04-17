@@ -486,27 +486,15 @@ CAppearanceSettingPanel::CAppearanceSettingPanel(Panel *parent, const char *pane
 	KeyValues *kv = NULL;
 
 	kv = new KeyValues("UserData", "index", 0);
-	m_pSkinIndexList->AddItem("Dark skin", kv);
+	m_pSkinIndexList->AddItem("Caucasian", kv);
 	kv->deleteThis();
 
 	kv = new KeyValues("UserData", "index", 1);
-	m_pSkinIndexList->AddItem("Light skin, blond hair", kv);
+	m_pSkinIndexList->AddItem("Asian", kv);
 	kv->deleteThis();
 
 	kv = new KeyValues("UserData", "index", 2);
-	m_pSkinIndexList->AddItem("Light skin, brown hair", kv);
-	kv->deleteThis();
-
-	kv = new KeyValues("UserData", "index", 3);
-	m_pSkinIndexList->AddItem("Light skin, black hair", kv);
-	kv->deleteThis();
-
-	kv = new KeyValues("UserData", "index", 4);
-	m_pSkinIndexList->AddItem("Light skin, black hair, beard", kv);
-	kv->deleteThis();
-
-	kv = new KeyValues("UserData", "index", 5);
-	m_pSkinIndexList->AddItem("Darkish skin", kv);
+	m_pSkinIndexList->AddItem("Black", kv);
 	kv->deleteThis();
 
 

@@ -280,7 +280,7 @@ void UpdateClassImageEntity(const char* pModelName, float angle, int bodypart)
 
 	if (bodypart == 0)
 	{
-		target = origin + Vector(-15, 0, vMaxs.z - 9);
+		target = origin + Vector(-25, 0, vMaxs.z - 9);
 	}
 	else if (bodypart == 1)
 	{
@@ -338,19 +338,21 @@ void UpdateClassImageEntity(const char* pModelName, float angle, int bodypart)
 	view.zFar = 1000;
 	//view.m_bForceAspectRatio1To1 = false;
 
+	const float v = 1.0f;
+
 	CMatRenderContextPtr pRenderContext( materials );
 
 	pRenderContext->SetLightingOrigin( vec3_origin );
-	pRenderContext->SetAmbientLight( 0.4, 0.4, 0.4 );
+	pRenderContext->SetAmbientLight(v, v, v);
 
 	static Vector white[6] = 
 	{
-		Vector( 0.4, 0.4, 0.4 ),
-		Vector( 0.4, 0.4, 0.4 ),
-		Vector( 0.4, 0.4, 0.4 ),
-		Vector( 0.4, 0.4, 0.4 ),
-		Vector( 0.4, 0.4, 0.4 ),
-		Vector( 0.4, 0.4, 0.4 ),
+		Vector(v, v, v),
+		Vector(v, v, v),
+		Vector(v, v, v),
+		Vector(v, v, v),
+		Vector(v, v, v),
+		Vector(v, v, v),
 	};
 
 	g_pStudioRender->SetAmbientLightColors( white );

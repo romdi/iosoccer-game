@@ -436,15 +436,9 @@ static const char *g_szPosNames[POS_NAME_COUNT] =
 	"LF", "RF", "CF", "ST", "SS", "LW", "RW"
 };
 
-enum
-{
-	MODEL_PLAYER,
-	MODEL_KEEPER,
-};
-
 #define BALL_PHYS_RADIUS 4.75f
 
-#define PLAYER_SKIN_COUNT 6
+#define PLAYER_SKIN_COUNT 3
 
 enum TimeoutState_t
 {

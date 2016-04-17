@@ -8,8 +8,8 @@ ITexture* CIOSRenderTargets::CreatePlayerModelTexture( IMaterialSystem* pMateria
 //	DevMsg("Creating Scope Render Target: _rt_Scope\n");
 	return pMaterialSystem->CreateNamedRenderTargetTextureEx2(
 		"_rt_playermodel",
-		256, 512, RT_SIZE_OFFSCREEN,
-		pMaterialSystem->GetBackBufferFormat(),
+		1024, 2048, RT_SIZE_OFFSCREEN,
+		IMAGE_FORMAT_BGRA8888,
 		MATERIAL_RT_DEPTH_SHARED, 
 		TEXTUREFLAGS_CLAMPS | TEXTUREFLAGS_CLAMPT,
 		0 );

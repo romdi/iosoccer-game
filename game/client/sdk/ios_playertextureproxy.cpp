@@ -359,8 +359,8 @@ void CProceduralRegenerator::WriteText(unsigned char *imageData, const char *tex
 		posY = offsetY - maxHeight / 2;
 	}
 
-	const int textureWidth = 1024;
-	const int textureHeight = 1024;
+	const int textureWidth = 2048;
+	const int textureHeight = 2048;
 
 	for (size_t i = 0; i < wcslen(wszText); i++)
 	{
@@ -537,7 +537,7 @@ bool CPlayerTextureProxy::Init( IMaterial *pMaterial, KeyValues *pKeyValues )
 	
 	Q_strncpy(m_szTextureType, pKeyValues->GetString("type"), sizeof(m_szTextureType));
 
-	if (!Q_strcmp(m_szTextureType, "shirt") || !Q_strcmp(m_szTextureType, "keepershirt"))
+	if (!Q_strcmp(m_szTextureType, "kit"))
 	{
 		m_pDetailTextureVar = pMaterial->FindVar("$detail", NULL);
 	}
@@ -661,18 +661,21 @@ void CPlayerTextureProxy::OnBind( C_BaseEntity *pEnt )
 
 	char texture[128];
 
-	if (Q_stricmp(m_szTextureType, "shirt") == 0)
-		Q_snprintf(texture, sizeof(texture), "%s/%s/%s/outfield", TEAMKITS_PATH, teamFolder, kitFolder);
-	else if (Q_stricmp(m_szTextureType, "keepershirt") == 0)
-		Q_snprintf(texture, sizeof(texture), "%s/%s/%s/keeper", TEAMKITS_PATH, teamFolder, kitFolder);
-	else if (Q_stricmp(m_szTextureType, "socks") == 0)
-		Q_snprintf(texture, sizeof(texture), "%s/%s/%s/socks", TEAMKITS_PATH, teamFolder, kitFolder);
-	else if (Q_stricmp(m_szTextureType, "gksocks") == 0)
-		Q_snprintf(texture, sizeof(texture), "%s/%s/%s/gksocks", TEAMKITS_PATH, teamFolder, kitFolder);
+	if (Q_stricmp(m_szTextureType, "kit") == 0)
+	{
+		if (isKeeper)
+			Q_snprintf(texture, sizeof(texture), "%s/%s/%s/keeper", TEAMKITS_PATH, teamFolder, kitFolder);
+		else
+			Q_snprintf(texture, sizeof(texture), "%s/%s/%s/outfield", TEAMKITS_PATH, teamFolder, kitFolder);
+	}
 	else if (Q_stricmp(m_szTextureType, "skin") == 0)
-		Q_snprintf(texture, sizeof(texture), "models/player/skins/skin%d", skinIndex + 1);
+	{
+		Q_snprintf(texture, sizeof(texture), "models/player/skins/skin_%d", skinIndex);
+	}
 	else
+	{
 		Q_snprintf(texture, sizeof(texture), "%s", m_pTexture->GetName());
+	}
 
 	ITexture *pNewTex = materials->FindTexture(texture, NULL, false);
 

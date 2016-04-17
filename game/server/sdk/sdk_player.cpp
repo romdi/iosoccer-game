@@ -679,11 +679,6 @@ void CSDKPlayer::ChangeTeam()
 
 		m_nShirtNumber = FindAvailableShirtNumber();
 
-		if (GetTeamPosType() == POS_GK)
-			m_nBody = MODEL_KEEPER;
-		else
-			m_nBody = MODEL_PLAYER;
-
 		if (State_Get() != PLAYER_STATE_ACTIVE)
 			State_Transition(PLAYER_STATE_ACTIVE);
 	}
