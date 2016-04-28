@@ -553,9 +553,9 @@ void CSDKGameRules::ServerActivate()
 	CPlayerPersistentData::ReallocateAllPlayerData();
 
 	CTeamInfo::ParseTeamKits();
-
+	CShoeInfo::ParseShoes();
+	CKeeperGloveInfo::ParseKeeperGloves();
 	CBallInfo::ParseBallSkins();
-
 	CPitchInfo::ParsePitchTextures();
 
 	SetPitchTextureName(CPitchInfo::m_PitchInfo[0]->m_szFolderName);
@@ -2599,9 +2599,17 @@ void CSDKGameRules::ClientSettingsChanged( CBasePlayer *pPlayer )
 	pPl->SetPreferredOutfieldShirtNumber(atoi(engine->GetClientConVarValue(pPl->entindex(), "preferredoutfieldshirtnumber")));
 	pPl->SetPreferredKeeperShirtNumber(atoi(engine->GetClientConVarValue(pPl->entindex(), "preferredkeepershirtnumber")));
 
-	pPl->SetPlayerBallSkinName(engine->GetClientConVarValue(pPl->entindex(), "playerballskinname"));
-
 	pPl->SetSkinIndex(atoi(engine->GetClientConVarValue(pPl->entindex(), "modelskinindex")));
+
+	pPl->SetHairIndex(atoi(engine->GetClientConVarValue(pPl->entindex(), "modelhairindex")));
+
+	pPl->SetSleeveIndex(atoi(engine->GetClientConVarValue(pPl->entindex(), "modelsleeveindex")));
+
+	pPl->SetShoeName(engine->GetClientConVarValue(pPl->entindex(), "modelshoename"));
+
+	pPl->SetKeeperGloveName(engine->GetClientConVarValue(pPl->entindex(), "modelkeeperglovename"));
+
+	pPl->SetPlayerBallSkinName(engine->GetClientConVarValue(pPl->entindex(), "playerballskinname"));
 
 	char pszName[MAX_PLAYER_NAME_LENGTH];
 	Q_strncpy(pszName, engine->GetClientConVarValue( pPl->entindex(), "playername" ), MAX_PLAYER_NAME_LENGTH);

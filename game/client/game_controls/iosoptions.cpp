@@ -17,6 +17,10 @@ extern ConVar
 	goalteamcrests,
 	reversesidecurl,
 	modelskinindex,
+	modelhairindex,
+	modelsleeveindex,
+	modelshoename,
+	modelkeeperglovename,
 	playerballskinname,
 	playername,
 	preferredkeepershirtnumber,
@@ -471,6 +475,8 @@ void CNetworkSettingPanel::Update()
 
 CAppearanceSettingPanel::CAppearanceSettingPanel(Panel *parent, const char *panelName) : BaseClass(parent, panelName)
 {
+	KeyValues *kv = NULL;
+
 	m_pContent = new Panel(this, "");
 
 	m_pPlayerPreviewPanel = new ImagePanel(m_pContent, "");
@@ -480,22 +486,44 @@ CAppearanceSettingPanel::CAppearanceSettingPanel(Panel *parent, const char *pane
 	m_pShirtNameText->SetMaximumCharCount(MAX_PLAYER_NAME_LENGTH - 1);
 	m_pShirtNameText->SetAllowNonAsciiCharacters(true);
 
-	m_pSkinIndexLabel = new Label(m_pContent, "", "Player Skin:");
+
+	m_pSkinIndexLabel = new Label(m_pContent, "", "Model:");
 	m_pSkinIndexList = new ComboBox(m_pContent, "", 0, false);
 
-	KeyValues *kv = NULL;
+	const char *skins[] = { "White", "Asian", "Black" };
 
-	kv = new KeyValues("UserData", "index", 0);
-	m_pSkinIndexList->AddItem("Caucasian", kv);
-	kv->deleteThis();
+	for (int i = 0; i < PLAYER_SKIN_COUNT; i++)
+	{
+		kv = new KeyValues("UserData", "index", i);
+		m_pSkinIndexList->AddItem(skins[i], kv);
+		kv->deleteThis();
+	}
 
-	kv = new KeyValues("UserData", "index", 1);
-	m_pSkinIndexList->AddItem("Asian", kv);
-	kv->deleteThis();
 
-	kv = new KeyValues("UserData", "index", 2);
-	m_pSkinIndexList->AddItem("Black", kv);
-	kv->deleteThis();
+	m_pHairIndexLabel = new Label(m_pContent, "", "Hair:");
+	m_pHairIndexList = new ComboBox(m_pContent, "", 0, false);
+
+	const char *hair[] = { "Shaved", "Gentleman", "Mohawk", "Short", "Spikey 1", "Spikey 2", "Sweeping" };
+
+	for (int i = 0; i < PLAYER_HAIR_COUNT; i++)
+	{
+		kv = new KeyValues("UserData", "index", i);
+		m_pHairIndexList->AddItem(hair[i], kv);
+		kv->deleteThis();
+	}
+
+
+	m_pSleeveIndexLabel = new Label(m_pContent, "", "Sleeves:");
+	m_pSleeveIndexList = new ComboBox(m_pContent, "", 0, false);
+
+	const char *sleeves[] = { "Short", "Long" };
+
+	for (int i = 0; i < PLAYER_SLEEVE_COUNT; i++)
+	{
+		kv = new KeyValues("UserData", "index", i);
+		m_pSleeveIndexList->AddItem(sleeves[i], kv);
+		kv->deleteThis();
+	}
 
 
 	m_pPreferredOutfieldShirtNumberLabel = new Label(m_pContent, "", "Preferred Outfield Shirt Number:");
@@ -519,7 +547,14 @@ CAppearanceSettingPanel::CAppearanceSettingPanel(Panel *parent, const char *pane
 		kv->deleteThis();
 	}
 
-	m_pPlayerBallSkinLabel = new Label(m_pContent, "", "Player Ball Skin:");
+
+	m_pShoeLabel = new Label(m_pContent, "", "Shoes:");
+	m_pShoeList = new ComboBox(m_pContent, "", MAX_VISIBLE_DROPDOWN, false);
+
+	m_pKeeperGloveLabel = new Label(m_pContent, "", "Keeper Gloves:");
+	m_pKeeperGloveList = new ComboBox(m_pContent, "", MAX_VISIBLE_DROPDOWN, false);
+
+	m_pPlayerBallSkinLabel = new Label(m_pContent, "", "Warm Up Ball:");
 	m_pPlayerBallSkinList = new ComboBox(m_pContent, "", MAX_VISIBLE_DROPDOWN, false);
 
 	m_pPreviewTeamLabel = new Label(m_pContent, "", "Preview Team Kit:");
@@ -542,6 +577,8 @@ CAppearanceSettingPanel::CAppearanceSettingPanel(Panel *parent, const char *pane
 
 	m_flLastTeamKitUpdateTime = -1;
 	m_flLastBallSkinUpdateTime = -1;
+	m_flLastShoeUpdateTime = -1;
+	m_flLastKeeperGloveUpdateTime = -1;
 }
 
 void CAppearanceSettingPanel::PerformLayout()
@@ -566,11 +603,23 @@ void CAppearanceSettingPanel::PerformLayout()
 	m_pSkinIndexLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 6 * TEXT_HEIGHT + 3 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
 	m_pSkinIndexList->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 7 * TEXT_HEIGHT + 3 * TEXT_MARGIN, SHORTINPUT_WIDTH, TEXT_HEIGHT);
 
-	m_pPlayerBallSkinLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 8 * TEXT_HEIGHT + 4 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pPlayerBallSkinList->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 9 * TEXT_HEIGHT + 4 * TEXT_MARGIN, SHORTINPUT_WIDTH, TEXT_HEIGHT);
+	m_pHairIndexLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 8 * TEXT_HEIGHT + 4 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pHairIndexList->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 9 * TEXT_HEIGHT + 4 * TEXT_MARGIN, SHORTINPUT_WIDTH, TEXT_HEIGHT);
 
-	m_pPreviewTeamLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 10 * TEXT_HEIGHT + 5 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pPreviewTeamList->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 11 * TEXT_HEIGHT + 5 * TEXT_MARGIN, SHORTINPUT_WIDTH, TEXT_HEIGHT);
+	m_pSleeveIndexLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 10 * TEXT_HEIGHT + 5 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pSleeveIndexList->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 11 * TEXT_HEIGHT + 5 * TEXT_MARGIN, SHORTINPUT_WIDTH, TEXT_HEIGHT);
+
+	m_pShoeLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 12 * TEXT_HEIGHT + 6 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pShoeList->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 13 * TEXT_HEIGHT + 6 * TEXT_MARGIN, SHORTINPUT_WIDTH, TEXT_HEIGHT);
+
+	m_pKeeperGloveLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 14 * TEXT_HEIGHT + 7 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pKeeperGloveList->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 15 * TEXT_HEIGHT + 7 * TEXT_MARGIN, SHORTINPUT_WIDTH, TEXT_HEIGHT);
+
+	m_pPlayerBallSkinLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 16 * TEXT_HEIGHT + 8 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pPlayerBallSkinList->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 17 * TEXT_HEIGHT + 8 * TEXT_MARGIN, SHORTINPUT_WIDTH, TEXT_HEIGHT);
+
+	m_pPreviewTeamLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 18 * TEXT_HEIGHT + 9 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
+	m_pPreviewTeamList->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 19 * TEXT_HEIGHT + 9 * TEXT_MARGIN, SHORTINPUT_WIDTH, TEXT_HEIGHT);
 
 	m_pPlayerAngleSlider->SetBounds(APPEARANCE_RADIOBUTTONWIDTH, RENDER_TEXTURE_HEIGHT, RENDER_TEXTURE_WIDTH + 8, TEXT_HEIGHT);
 
@@ -592,8 +641,12 @@ void CAppearanceSettingPanel::Save()
 	m_pShirtNameText->GetText(shirtName, sizeof(shirtName));
 	shirtname.SetValue(shirtName);
 	modelskinindex.SetValue(m_pSkinIndexList->GetActiveItemUserData()->GetInt("index"));
+	modelhairindex.SetValue(m_pHairIndexList->GetActiveItemUserData()->GetInt("index"));
+	modelsleeveindex.SetValue(m_pSleeveIndexList->GetActiveItemUserData()->GetInt("index"));
 	preferredoutfieldshirtnumber.SetValue(m_pPreferredOutfieldShirtNumberList->GetActiveItemUserData()->GetInt("number"));
 	preferredkeepershirtnumber.SetValue(m_pPreferredKeeperShirtNumberList->GetActiveItemUserData()->GetInt("number"));
+	modelshoename.SetValue(m_pShoeList->GetActiveItemUserData()->GetString("shoe"));
+	modelkeeperglovename.SetValue(m_pKeeperGloveList->GetActiveItemUserData()->GetString("keeperglove"));
 	playerballskinname.SetValue(m_pPlayerBallSkinList->GetActiveItemUserData()->GetString("ballskinname"));
 }
 
@@ -602,6 +655,10 @@ void CAppearanceSettingPanel::Load()
 	m_pShirtNameText->SetText(shirtname.GetString());
 
 	m_pSkinIndexList->ActivateItemByRow(clamp(modelskinindex.GetInt(), 0, PLAYER_SKIN_COUNT - 1));
+
+	m_pHairIndexList->ActivateItemByRow(clamp(modelhairindex.GetInt(), 0, PLAYER_HAIR_COUNT - 1));
+
+	m_pSleeveIndexList->ActivateItemByRow(clamp(modelsleeveindex.GetInt(), 0, PLAYER_SLEEVE_COUNT - 1));
 
 	int outfieldNumber = clamp(preferredoutfieldshirtnumber.GetInt(), 2, 99);
 	m_pPreferredOutfieldShirtNumberList->ActivateItemByRow(outfieldNumber - 2);
@@ -621,6 +678,22 @@ void CAppearanceSettingPanel::Update()
 	for (int i = 0; i < 3; i++)
 		m_pBodypartRadioButtons[i]->SetEnabled(isConnected);
 
+	if (m_pPlayerAngleAutoRotate->IsSelected() && isConnected)
+	{
+		float value = m_pPlayerAngleSlider->GetValue() / 100.0f + 180;
+		value = fmodf(value + 60 * gpGlobals->frametime, 360);
+		value = (value - 180) * 100;
+		m_pPlayerAngleSlider->SetValue((int)value);
+	}
+
+	UpdateTeamKits();
+	UpdateBalls();
+	UpdateShoes();
+	UpdateKeeperGloves();
+}
+
+void CAppearanceSettingPanel::UpdateTeamKits()
+{
 	if (m_flLastTeamKitUpdateTime == -1 || m_flLastTeamKitUpdateTime < CTeamInfo::m_flLastUpdateTime)
 	{
 		m_flLastTeamKitUpdateTime = CTeamInfo::m_flLastUpdateTime;
@@ -642,7 +715,10 @@ void CAppearanceSettingPanel::Update()
 
 		m_pPreviewTeamList->ActivateItemByRow(0);
 	}
+}
 
+void CAppearanceSettingPanel::UpdateBalls()
+{
 	if (m_flLastBallSkinUpdateTime == -1 || m_flLastBallSkinUpdateTime < CBallInfo::m_flLastUpdateTime)
 	{
 		m_flLastBallSkinUpdateTime = CBallInfo::m_flLastUpdateTime;
@@ -666,13 +742,59 @@ void CAppearanceSettingPanel::Update()
 
 		m_pPlayerBallSkinList->ActivateItem(activeItemID);
 	}
+}
 
-	if (m_pPlayerAngleAutoRotate->IsSelected() && isConnected)
+void CAppearanceSettingPanel::UpdateShoes()
+{
+	if (m_flLastShoeUpdateTime == -1 || m_flLastShoeUpdateTime < CShoeInfo::m_flLastUpdateTime)
 	{
-		float value = m_pPlayerAngleSlider->GetValue() / 100.0f + 180;
-		value = fmodf(value + 60 * gpGlobals->frametime, 360);
-		value = (value - 180) * 100;
-		m_pPlayerAngleSlider->SetValue((int)value);
+		m_flLastShoeUpdateTime = CShoeInfo::m_flLastUpdateTime;
+
+		m_pShoeList->RemoveAll();
+
+		int activeItemID = 0;
+		int ballCount = 0;
+
+		for (int i = 0; i < CShoeInfo::m_ShoeInfo.Count(); i++)
+		{
+			ballCount += 1;
+			KeyValues *kv = new KeyValues("UserData", "shoe", CShoeInfo::m_ShoeInfo[i]->m_szFolderName);
+			int itemID = m_pShoeList->AddItem(VarArgs("%s [by %s]", CShoeInfo::m_ShoeInfo[i]->m_szName, CShoeInfo::m_ShoeInfo[i]->m_szAuthor), kv);
+
+			if (!Q_strcmp(CShoeInfo::m_ShoeInfo[i]->m_szFolderName, modelshoename.GetString()))
+				activeItemID = itemID;
+
+			kv->deleteThis();
+		}
+
+		m_pShoeList->ActivateItem(activeItemID);
+	}
+}
+
+void CAppearanceSettingPanel::UpdateKeeperGloves()
+{
+	if (m_flLastKeeperGloveUpdateTime == -1 || m_flLastKeeperGloveUpdateTime < CKeeperGloveInfo::m_flLastUpdateTime)
+	{
+		m_flLastKeeperGloveUpdateTime = CKeeperGloveInfo::m_flLastUpdateTime;
+
+		m_pKeeperGloveList->RemoveAll();
+
+		int activeItemID = 0;
+		int ballCount = 0;
+
+		for (int i = 0; i < CKeeperGloveInfo::m_KeeperGloveInfo.Count(); i++)
+		{
+			ballCount += 1;
+			KeyValues *kv = new KeyValues("UserData", "keeperglove", CKeeperGloveInfo::m_KeeperGloveInfo[i]->m_szFolderName);
+			int itemID = m_pKeeperGloveList->AddItem(VarArgs("%s [by %s]", CKeeperGloveInfo::m_KeeperGloveInfo[i]->m_szName, CKeeperGloveInfo::m_KeeperGloveInfo[i]->m_szAuthor), kv);
+
+			if (!Q_strcmp(CKeeperGloveInfo::m_KeeperGloveInfo[i]->m_szFolderName, modelkeeperglovename.GetString()))
+				activeItemID = itemID;
+
+			kv->deleteThis();
+		}
+
+		m_pKeeperGloveList->ActivateItem(activeItemID);
 	}
 }
 
@@ -687,6 +809,32 @@ const char *CAppearanceSettingPanel::GetPlayerShirtName()
 int CAppearanceSettingPanel::GetPlayerSkinIndex()
 {
 	return m_pSkinIndexList->GetActiveItemUserData()->GetInt("index");
+}
+
+int CAppearanceSettingPanel::GetPlayerHairIndex()
+{
+	return m_pHairIndexList->GetActiveItemUserData()->GetInt("index");
+}
+
+int CAppearanceSettingPanel::GetPlayerSleeveIndex()
+{
+	return m_pSleeveIndexList->GetActiveItemUserData()->GetInt("index");
+}
+
+const char *CAppearanceSettingPanel::GetPlayerShoeName()
+{
+	static char shoeName[MAX_PLAYER_NAME_LENGTH];
+	m_pShirtNameText->GetText(shoeName, sizeof(shoeName));
+
+	return shoeName;
+}
+
+const char *CAppearanceSettingPanel::GetPlayerKeeperGloveName()
+{
+	static char keeperGloveName[MAX_PLAYER_NAME_LENGTH];
+	m_pShirtNameText->GetText(keeperGloveName, sizeof(keeperGloveName));
+
+	return keeperGloveName;
 }
 
 int CAppearanceSettingPanel::GetPlayerOutfieldShirtNumber()

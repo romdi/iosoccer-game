@@ -176,6 +176,42 @@ public:
 	static float m_flLastUpdateTime;
 };
 
+class CShoeInfo
+{
+public:
+
+	static void ParseShoes();
+	static CUtlVector<CShoeInfo *> m_ShoeInfo;
+	char m_szName[MAX_KITNAME_LENGTH];
+	char m_szAuthor[MAX_PLAYER_NAME_LENGTH];
+	char m_szFolderName[MAX_FOLDERNAME_LENGTH];
+	static float m_flLastUpdateTime;
+
+	CShoeInfo()
+	{
+		m_szName[0] = '\0';
+		m_szAuthor[0] = '\0';
+	}
+};
+
+class CKeeperGloveInfo
+{
+public:
+
+	static void ParseKeeperGloves();
+	static CUtlVector<CKeeperGloveInfo *> m_KeeperGloveInfo;
+	char m_szName[MAX_KITNAME_LENGTH];
+	char m_szAuthor[MAX_PLAYER_NAME_LENGTH];
+	char m_szFolderName[MAX_FOLDERNAME_LENGTH];
+	static float m_flLastUpdateTime;
+
+	CKeeperGloveInfo()
+	{
+		m_szName[0] = '\0';
+		m_szAuthor[0] = '\0';
+	}
+};
+
 class CBallInfo
 {
 public:

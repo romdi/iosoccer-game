@@ -35,6 +35,10 @@ ConVar cl_goal_opacity_fieldoffset("cl_goal_opacity_fieldoffset", "20", FCVAR_AR
 ConVar cl_cam_dist("cl_cam_dist", "175", FCVAR_ARCHIVE, "", true, 0, true, 175);
 ConVar cl_cam_height("cl_cam_height", "15", FCVAR_ARCHIVE, "", true, -50, true, 50);
 ConVar cl_cam_firstperson("cl_cam_firstperson", "0", FCVAR_ARCHIVE, "");
+ConVar cl_cam_offset_pitch("cl_cam_offset_pitch", "0");
+ConVar cl_cam_offset_yaw("cl_cam_offset_yaw", "0");
+ConVar cl_cam_offset_roll("cl_cam_offset_roll", "0");
+ConVar cl_cam_offset_side("cl_cam_offset_side", "0");
 
 void CheckAutoTransparentProps(const Vector &pos, const QAngle &ang)
 {
@@ -627,14 +631,15 @@ void C_Camera::CalcChaseCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov
 		camOffset[ROLL] = min((VEC_VIEW.z + height - 5) / coeff, dist);
 	}
 
-	eyeAngles[PITCH] = camOffset[PITCH];
-	eyeAngles[YAW] = camOffset[YAW];
-	eyeAngles[ROLL] = 0;
+	eyeAngles[PITCH] = camOffset[PITCH] + cl_cam_offset_pitch.GetFloat();
+	eyeAngles[YAW] = camOffset[YAW] + cl_cam_offset_yaw.GetFloat();
+	eyeAngles[ROLL] = cl_cam_offset_roll.GetFloat();
 
 	Vector camForward, camRight, camUp;
 	AngleVectors(eyeAngles, &camForward, &camRight, &camUp);
 
 	VectorMA(eyeOrigin, -camOffset[ROLL], camForward, eyeOrigin);
+	VectorMA(eyeOrigin, cl_cam_offset_side.GetFloat(), camRight, eyeOrigin);
 
 	eyeOrigin.z += height;
 

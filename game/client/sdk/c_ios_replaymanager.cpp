@@ -30,6 +30,7 @@ IMPLEMENT_CLIENTCLASS_DT(C_ReplayPlayer, DT_ReplayPlayer, CReplayPlayer)
 	RecvPropBool(RECVINFO(m_bIsKeeper)),
 	RecvPropInt(RECVINFO(m_nShirtNumber)),
 	RecvPropInt(RECVINFO(m_nSkinIndex)),
+	RecvPropInt(RECVINFO(m_nHairIndex)),
 	RecvPropString(RECVINFO(m_szPlayerName)),
 	RecvPropString(RECVINFO(m_szShirtName)),
 END_RECV_TABLE()
@@ -41,6 +42,7 @@ C_ReplayPlayer::C_ReplayPlayer()
 	m_bIsKeeper = false;
 	m_nShirtNumber = 2;
 	m_nSkinIndex = 0;
+	m_nHairIndex = 0;
 	m_szPlayerName[0] = '\0';
 	m_szShirtName[0] = '\0';
 }

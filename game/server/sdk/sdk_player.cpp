@@ -211,7 +211,11 @@ IMPLEMENT_SERVERCLASS_ST( CSDKPlayer, DT_SDKPlayer )
 	SendPropBool( SENDINFO( m_bSpawnInterpCounter ) ),
 
 	SendPropInt(SENDINFO(m_nModelScale), 8, SPROP_UNSIGNED),
-	SendPropEHandle(SENDINFO(m_pHoldingBall))
+	SendPropEHandle(SENDINFO(m_pHoldingBall)),
+	SendPropInt(SENDINFO(m_nSkinIndex), 3, SPROP_UNSIGNED),
+	SendPropInt(SENDINFO(m_nHairIndex), 3, SPROP_UNSIGNED),
+	SendPropString(SENDINFO(m_szShoeName)),
+	SendPropString(SENDINFO(m_szKeeperGloveName)),
 END_SEND_TABLE()
 
 class CSDKRagdoll : public CBaseAnimatingOverlay
@@ -332,7 +336,6 @@ CSDKPlayer::CSDKPlayer()
 	m_nTeamPosIndex = 0;
 	m_nPreferredOutfieldShirtNumber = 2;
 	m_nPreferredKeeperShirtNumber = 1;
-	m_szPlayerBallSkinName[0] = '\0';
 	m_pPlayerBall = NULL;
 	m_Shared.m_flPlayerAnimEventStartTime = gpGlobals->curtime;
 	m_Shared.m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
@@ -356,6 +359,11 @@ CSDKPlayer::CSDKPlayer()
 	m_nCountryIndex = 0;
 
 	m_nSkinIndex = 0;
+	m_nHairIndex = 0;
+	m_nSleeveIndex = 0;
+	m_szShoeName.GetForModify()[0] = '\0';
+	m_szKeeperGloveName.GetForModify()[0] = '\0';
+	m_szPlayerBallSkinName[0] = '\0';
 
 	m_iPlayerState = PLAYER_STATE_NONE;
 
@@ -678,6 +686,16 @@ void CSDKPlayer::ChangeTeam()
 			GetPlayerData()->StartNewMatchPeriod();
 
 		m_nShirtNumber = FindAvailableShirtNumber();
+
+		int handIndex;
+
+		if (GetTeamPosType() == POS_GK)
+			handIndex = 1;
+		else
+			handIndex = 0;
+
+		static int sleeveBodyGroup = FindBodygroupByName("hands");
+		SetBodygroup(sleeveBodyGroup, handIndex);
 
 		if (State_Get() != PLAYER_STATE_ACTIVE)
 			State_Transition(PLAYER_STATE_ACTIVE);
@@ -2397,16 +2415,99 @@ void CSDKPlayer::DrawDebugGeometryOverlays(void)
 	BaseClass::DrawDebugGeometryOverlays();
 }
 
+void CSDKPlayer::SetShoeName(const char *shoeName)
+{
+	if (shoeName[0] != '\0' && !Q_strcmp(shoeName, m_szShoeName))
+		return;
+
+	int shoeIndex = -1;
+
+	for (int i = 0; i < CShoeInfo::m_ShoeInfo.Count(); i++)
+	{
+		if (!Q_strcmp(CShoeInfo::m_ShoeInfo[i]->m_szFolderName, shoeName))
+		{
+			shoeIndex = i;
+			break;
+		}
+	}
+
+	if (shoeIndex == -1)
+		shoeIndex = g_IOSRand.RandomInt(0, CShoeInfo::m_ShoeInfo.Count() - 1);
+
+	Q_strncpy(m_szShoeName.GetForModify(), CShoeInfo::m_ShoeInfo[shoeIndex]->m_szFolderName, sizeof(m_szShoeName));
+}
+
+void CSDKPlayer::SetKeeperGloveName(const char *keeperGloveName)
+{
+	if (keeperGloveName[0] != '\0' && !Q_strcmp(keeperGloveName, m_szKeeperGloveName))
+		return;
+
+	int keeperGloveIndex = -1;
+
+	for (int i = 0; i < CKeeperGloveInfo::m_KeeperGloveInfo.Count(); i++)
+	{
+		if (!Q_strcmp(CKeeperGloveInfo::m_KeeperGloveInfo[i]->m_szFolderName, keeperGloveName))
+		{
+			keeperGloveIndex = i;
+			break;
+		}
+	}
+
+	if (keeperGloveIndex == -1)
+		keeperGloveIndex = g_IOSRand.RandomInt(0, CKeeperGloveInfo::m_KeeperGloveInfo.Count() - 1);
+
+	Q_strncpy(m_szKeeperGloveName.GetForModify(), CKeeperGloveInfo::m_KeeperGloveInfo[keeperGloveIndex]->m_szFolderName, sizeof(m_szKeeperGloveName));
+}
+
 void CSDKPlayer::SetPlayerBallSkinName(const char *skinName)
 {
 	for (int i = 0; i < CBallInfo::m_BallInfo.Count(); i++)
 	{
-		if (!Q_strcmp(skinName, CBallInfo::m_BallInfo[i]->m_szFolderName))
+		if (!Q_strcmp(CBallInfo::m_BallInfo[i]->m_szFolderName, skinName))
 		{
 			Q_strncpy(m_szPlayerBallSkinName, skinName, sizeof(m_szPlayerBallSkinName));
 			break;
 		}
 	}
+}
+
+int CSDKPlayer::GetSkinIndex()
+{
+	return m_nSkinIndex;
+}
+
+void CSDKPlayer::SetSkinIndex(int index)
+{
+	m_nSkinIndex = clamp(index, 0, PLAYER_SKIN_COUNT - 1);
+	static int headBodyGroup = FindBodygroupByName("head");
+	SetBodygroup(headBodyGroup, m_nSkinIndex);
+}
+
+int CSDKPlayer::GetHairIndex()
+{
+	return m_nHairIndex;
+}
+
+void CSDKPlayer::SetHairIndex(int index)
+{
+	m_nHairIndex = clamp(index, 0, PLAYER_HAIR_COUNT - 1);
+	static int hairBodyGroup = FindBodygroupByName("hair");
+	SetBodygroup(hairBodyGroup, m_nHairIndex);
+}
+
+int CSDKPlayer::GetSleeveIndex()
+{
+	return m_nSleeveIndex;
+}
+
+void CSDKPlayer::SetSleeveIndex(int index)
+{
+	m_nSleeveIndex = clamp(index, 0, PLAYER_SLEEVE_COUNT - 1);
+	static int sleeveBodyGroup = FindBodygroupByName("sleeves");
+	SetBodygroup(sleeveBodyGroup, m_nSleeveIndex);
+
+	static int armBodyGroup = FindBodygroupByName("arms");
+	SetBodygroup(armBodyGroup, m_nSleeveIndex == 0 ? 1 : 0);
 }
 
 CUtlVector<CPlayerPersistentData *> CPlayerPersistentData::m_PlayerPersistentData;

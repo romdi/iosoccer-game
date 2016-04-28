@@ -31,6 +31,7 @@ public:
 	bool m_bIsKeeper;
 	int m_nShirtNumber;
 	int m_nSkinIndex;
+	int m_nHairIndex;
 	char m_szPlayerName[MAX_PLAYER_NAME_LENGTH];
 	char m_szShirtName[MAX_PLAYER_NAME_LENGTH];
 };

@@ -324,7 +324,7 @@ public:
 	int					m_nPreferredOutfieldShirtNumber;
 	int					m_nPreferredKeeperShirtNumber;
 	char				m_szPlayerBallSkinName[MAX_KITNAME_LENGTH];
-	
+
 	float				m_flNextShot;
 	float				m_flNextFoulCheck;
 
@@ -445,8 +445,20 @@ public:
 	void				SetPreferredKeeperShirtNumber(int num);
 	int					FindAvailableShirtNumber();
 
-	int					GetSkinIndex() { return m_nSkinIndex; }
-	void				SetSkinIndex(int index) { m_nSkinIndex = clamp(index, 0, PLAYER_SKIN_COUNT - 1); }
+	int					GetSkinIndex();
+	void				SetSkinIndex(int index);
+
+	int					GetHairIndex();
+	void				SetHairIndex(int index);
+
+	int					GetSleeveIndex();
+	void				SetSleeveIndex(int index);
+
+	const char 			*GetShoeName() { return m_szShoeName; }
+	void				SetShoeName(const char *shoeName);
+
+	const char 			*GetKeeperGloveName() { return m_szKeeperGloveName; }
+	void				SetKeeperGloveName(const char *keeperGloveName);
 
 	const char 			*GetPlayerBallSkinName() { return m_szPlayerBallSkinName; }
 	void				SetPlayerBallSkinName(const char *skinName);
@@ -537,6 +549,8 @@ public:
 	CNetworkVar(float, m_flNextClientSettingsChangeTime);
 	CNetworkVar(float, m_flNextJoin);
 	CNetworkVar(int, m_nModelScale);
+	CNetworkString(m_szShoeName, MAX_KITNAME_LENGTH);
+	CNetworkString(m_szKeeperGloveName, MAX_KITNAME_LENGTH);
 
 	static bool			IsOnField(CSDKPlayer *pPl, int teamNumber = TEAM_NONE);
 	static bool			PlayersAtTargetPos();
@@ -591,11 +605,14 @@ protected:
 	Vector				m_vOffsideLastOppPlayerPos;
 	Vector				m_vOffsideBallPos;
 	int					m_nSpecTeam;
-	int					m_nSkinIndex;
 	bool				m_bAllowPropCreation;
 
 	CNetworkVar(bool, m_bChargedshotBlocked);
 	CNetworkVar(bool, m_bShotsBlocked);
+
+	CNetworkVar(int, m_nSkinIndex);
+	CNetworkVar(int, m_nHairIndex);
+	int m_nSleeveIndex;
 
 	void CheckPosChange();
 	void CheckAwayState();

@@ -112,6 +112,7 @@ struct PlayerSnapshot
 	bool			isKeeper;
 	int				shirtNumber;
 	int				skinIndex;
+	int				hairIndex;
 	int				body;
 	const CPlayerPersistentData *pPlayerData;
 };
@@ -204,6 +205,9 @@ public:
 	CNetworkVar(bool, m_bIsKeeper);
 	CNetworkVar(int, m_nShirtNumber);
 	CNetworkVar(int, m_nSkinIndex);
+	CNetworkVar(int, m_nHairIndex);
+	CNetworkString(m_szShoeName, MAX_KITNAME_LENGTH);
+	CNetworkString(m_szKeeperGloveName, MAX_KITNAME_LENGTH);
 	CNetworkString(m_szPlayerName, MAX_PLAYER_NAME_LENGTH);
 	CNetworkString(m_szShirtName, MAX_PLAYER_NAME_LENGTH);
 };

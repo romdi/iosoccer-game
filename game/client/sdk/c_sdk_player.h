@@ -16,6 +16,7 @@
 #include "baseparticleentity.h"
 #include "sdk_player_shared.h"
 #include "colorcorrectionmgr.h"
+#include "ios_teamkit_parse.h"
 
 class C_Ball;
 
@@ -206,6 +207,11 @@ public:
 	CNetworkVar(bool, m_bChargedshotBlocked);
 	CNetworkVar(bool, m_bShotsBlocked);
 
+	CNetworkVar(int, m_nSkinIndex);
+	CNetworkVar(int, m_nHairIndex);
+	CNetworkString(m_szShoeName, MAX_KITNAME_LENGTH);
+	CNetworkString(m_szKeeperGloveName, MAX_KITNAME_LENGTH);
+
 	CHandle<C_Ball> m_pHoldingBall;
 
 	void CheckBallShield(const Vector &oldPos, Vector &newPos, const Vector &oldVel, Vector &newVel, const QAngle &oldAng, QAngle &newAng);
@@ -217,6 +223,11 @@ public:
 	bool ShotButtonsReleased();
 	void SetShotButtonsReleased(bool released);
 	int GetSidemoveSign();
+
+	int GetSkinIndex() { return m_nSkinIndex; }
+	int GetHairIndex() { return m_nHairIndex; }
+	const char *GetShoeName() { return m_szShoeName; }
+	const char *GetKeeperGloveName() { return m_szKeeperGloveName; }
 };
 
 

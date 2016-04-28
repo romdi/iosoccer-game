@@ -87,6 +87,8 @@ void CSDKModeManager::Init()
 	PanelMetaClassMgr()->LoadMetaClassDefinitionFile( SCREEN_FILE );
 
 	CTeamInfo::ParseTeamKits();
+	CShoeInfo::ParseShoes();
+	CKeeperGloveInfo::ParseKeeperGloves();
 	CBallInfo::ParseBallSkins();
 
 	if (g_pCVar->FindVar("playername")->GetString()[0] == '\0')
@@ -249,9 +251,25 @@ void UpdateClassImageEntity(const char* pModelName, float angle, int bodypart)
 		pModel->SetPoseParameter( 2, 0.0f ); // body_yaw
 		pModel->SetPoseParameter( 3, 0.0f ); // move_y
 		pModel->SetPoseParameter( 4, 0.0f ); // move_x
- 
+
+		pModel->m_nBody = pLocalPlayer->m_nBody;
+
 		g_ClassImagePlayer = pModel;
 	}
+
+	CAppearanceSettingPanel *pPanel = (CAppearanceSettingPanel *)iosOptionsMenu->GetPanel()->GetSettingPanel(SETTING_PANEL_APPEARANCE);
+
+	static int headBodyGroup = pModel->FindBodygroupByName("head");
+	pModel->SetBodygroup(headBodyGroup, pPanel->GetPlayerSkinIndex());
+
+	static int hairBodyGroup = pModel->FindBodygroupByName("hair");
+	pModel->SetBodygroup(hairBodyGroup, pPanel->GetPlayerHairIndex());
+
+	static int sleeveBodyGroup = pModel->FindBodygroupByName("sleeves");
+	pModel->SetBodygroup(sleeveBodyGroup, pPanel->GetPlayerSleeveIndex());
+
+	static int armBodyGroup = pModel->FindBodygroupByName("arms");
+	pModel->SetBodygroup(armBodyGroup, pPanel->GetPlayerSleeveIndex() == 0 ? 1 : 0);
  
 	Vector origin = pLocalPlayer->EyePosition();
 

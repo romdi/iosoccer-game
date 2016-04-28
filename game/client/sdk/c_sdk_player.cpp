@@ -52,6 +52,10 @@ ConVar preferredoutfieldshirtnumber("preferredoutfieldshirtnumber", "2", FCVAR_U
 ConVar preferredkeepershirtnumber("preferredkeepershirtnumber", "1", FCVAR_USERINFO | FCVAR_ARCHIVE, "Your preferred keeper shirt number");
 ConVar reversesidecurl("reversesidecurl", "0", FCVAR_USERINFO | FCVAR_ARCHIVE, "");
 ConVar modelskinindex("modelskinindex", "0", FCVAR_USERINFO | FCVAR_ARCHIVE, "");
+ConVar modelhairindex("modelhairindex", "0", FCVAR_USERINFO | FCVAR_ARCHIVE, "");
+ConVar modelsleeveindex("modelsleeveindex", "0", FCVAR_USERINFO | FCVAR_ARCHIVE, "");
+ConVar modelshoename("modelshoename", "", FCVAR_USERINFO | FCVAR_ARCHIVE, "");
+ConVar modelkeeperglovename("modelkeeperglovename", "", FCVAR_USERINFO | FCVAR_ARCHIVE, "");
 ConVar playerballskinname("playerballskinname", "", FCVAR_USERINFO | FCVAR_ARCHIVE, "");
 
 ConVar clientversion("clientversion", g_szRequiredClientVersion, FCVAR_USERINFO | FCVAR_HIDDEN, "");
@@ -193,8 +197,11 @@ IMPLEMENT_CLIENTCLASS_DT( C_SDKPlayer, DT_SDKPlayer, CSDKPlayer )
 	RecvPropBool( RECVINFO( m_bSpawnInterpCounter ) ),
 
 	RecvPropInt(RECVINFO(m_nModelScale)),
-	RecvPropEHandle(RECVINFO(m_pHoldingBall))
-
+	RecvPropEHandle(RECVINFO(m_pHoldingBall)),
+	RecvPropInt(RECVINFO(m_nSkinIndex)),
+	RecvPropInt(RECVINFO(m_nHairIndex)),
+	RecvPropString(RECVINFO(m_szShoeName)),
+	RecvPropString(RECVINFO(m_szKeeperGloveName)),
 END_RECV_TABLE()
 
 // ------------------------------------------------------------------------------------------ //

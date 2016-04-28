@@ -57,7 +57,6 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE(C_PlayerResource, DT_PlayerResource, CPlayerReso
 	RecvPropArray3( RECVINFO_ARRAY(m_Ratings), RecvPropInt( RECVINFO(m_Ratings[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_TeamPosIndex), RecvPropInt( RECVINFO(m_TeamPosIndex[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_ShirtNumber), RecvPropInt( RECVINFO(m_ShirtNumber[0]))),
-	RecvPropArray3( RECVINFO_ARRAY(m_SkinIndex), RecvPropInt( RECVINFO(m_SkinIndex[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_TeamToJoin), RecvPropInt( RECVINFO(m_TeamToJoin[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_TeamPosIndexToJoin), RecvPropInt( RECVINFO(m_TeamPosIndexToJoin[0]))),
 	RecvPropArray3( RECVINFO_ARRAY(m_NextCardJoin), RecvPropInt( RECVINFO(m_NextCardJoin[0]))),
@@ -123,7 +122,6 @@ C_PlayerResource::C_PlayerResource()
 	memset( m_Ratings, 0, sizeof( m_Ratings ) );
 	memset( m_TeamPosIndex, 0, sizeof( m_TeamPosIndex ) );
 	memset( m_ShirtNumber, 0, sizeof( m_ShirtNumber ) );
-	memset( m_SkinIndex, 0, sizeof( m_SkinIndex ) );
 	memset( m_TeamToJoin, 0, sizeof( m_TeamToJoin ) );
 	memset( m_TeamPosIndexToJoin, 0, sizeof( m_TeamPosIndexToJoin ) );
 	memset( m_NextCardJoin, 0, sizeof( m_NextCardJoin ) );
@@ -581,14 +579,6 @@ int	C_PlayerResource::GetShirtNumber( int iIndex )
 		return 0;
 
 	return m_ShirtNumber[iIndex];
-}
-
-int	C_PlayerResource::GetSkinIndex( int iIndex )
-{
-	if ( !IsConnected( iIndex ) )
-		return 0;
-
-	return m_SkinIndex[iIndex];
 }
 
 int	C_PlayerResource::GetTeamPosType( int iIndex )

@@ -68,6 +68,7 @@ IMPLEMENT_SERVERCLASS_ST(CReplayPlayer, DT_ReplayPlayer)
 	SendPropBool(SENDINFO(m_bIsKeeper)),
 	SendPropInt(SENDINFO(m_nShirtNumber), 7, SPROP_UNSIGNED),
 	SendPropInt(SENDINFO(m_nSkinIndex), 3, SPROP_UNSIGNED),
+	SendPropInt(SENDINFO(m_nHairIndex), 3, SPROP_UNSIGNED),
 	SendPropString(SENDINFO(m_szPlayerName)),
 	SendPropString(SENDINFO(m_szShirtName)),
 END_SEND_TABLE()
@@ -85,6 +86,7 @@ CReplayPlayer::CReplayPlayer()
 	m_bIsKeeper = false;
 	m_nShirtNumber = 2;
 	m_nSkinIndex = 0;
+	m_nHairIndex = 0;
 	m_szPlayerName.GetForModify()[0] = '\0';
 	m_szShirtName.GetForModify()[0] = '\0';
 }
@@ -438,6 +440,7 @@ void CReplayManager::TakeSnapshot()
 		pPlSnap->isKeeper = pPl->GetTeamPosType() == POS_GK;
 		pPlSnap->shirtNumber = pPl->GetShirtNumber();
 		pPlSnap->skinIndex = pPl->GetSkinIndex();
+		pPlSnap->hairIndex = pPl->GetHairIndex();
 		pPlSnap->body = pPl->m_nBody;
 
 		pPlSnap->pPlayerData = pPl->GetPlayerData();
@@ -762,6 +765,7 @@ void CReplayManager::RestoreReplayPlayerStates(Snapshot *pSnap, Snapshot *pNextS
 				Q_strncpy(pPl->m_szShirtName.GetForModify(), pPlSnap->pPlayerData->m_szShirtName, MAX_PLAYER_NAME_LENGTH);
 
 			pPl->m_nSkinIndex = pPlSnap->skinIndex;
+			pPl->m_nHairIndex = pPlSnap->hairIndex;
 			pPl->m_nBody = pPlSnap->body;
 
 			PlayerSnapshot *pNextPlSnap = NULL;

@@ -331,6 +331,8 @@ int CFileUpdater::UpdateFinished(IOSUpdateInfo *pUpdateInfo)
 		else
 		{
 			CTeamInfo::ParseTeamKits();
+			CShoeInfo::ParseShoes();
+			CKeeperGloveInfo::ParseKeeperGloves();
 			CBallInfo::ParseBallSkins();
 			CPitchInfo::ParsePitchTextures();
 

@@ -555,6 +555,97 @@ CTeamKitInfo *CTeamInfo::FindTeamByCode(const char *code)
 	return NULL;
 }
 
+
+CUtlVector<CShoeInfo *> CShoeInfo::m_ShoeInfo;
+float CShoeInfo::m_flLastUpdateTime = 0;
+
+void CShoeInfo::ParseShoes()
+{
+	CShoeInfo::m_ShoeInfo.PurgeAndDeleteElements();
+
+	CUtlVector<FileInfo_t> shoeFolders;
+	FindFiles("materials/models/player/shoes/", shoeFolders);
+
+	for (int i = 0; i < shoeFolders.Count(); i++)
+	{
+		if (!shoeFolders[i].isDirectory)
+			continue;
+
+		CShoeInfo *pShoeInfo = new CShoeInfo();
+		Q_strncpy(pShoeInfo->m_szFolderName, shoeFolders[i].name, sizeof(pShoeInfo->m_szFolderName));
+
+		CUtlVector<FileInfo_t> shoeFolderFiles;
+		FindFiles(shoeFolders[i].path, shoeFolderFiles);
+
+		for (int j = 0; j < shoeFolderFiles.Count(); j++)
+		{
+			if (shoeFolderFiles[j].isDirectory)
+				continue;
+
+			if (!Q_strcmp(shoeFolderFiles[j].name, "shoedata.txt"))
+			{
+				KeyValues *pKV = new KeyValues("ShoeData");
+				pKV->LoadFromFile(filesystem, shoeFolderFiles[j].path, "MOD");
+
+				Q_strncpy(pShoeInfo->m_szName, pKV->GetString("Name", "???"), sizeof(pShoeInfo->m_szName));
+				Q_strncpy(pShoeInfo->m_szAuthor, pKV->GetString("Author", "???"), sizeof(pShoeInfo->m_szAuthor));
+
+				pKV->deleteThis();
+			}
+		}
+
+		CShoeInfo::m_ShoeInfo.AddToTail(pShoeInfo);
+	}
+
+	m_flLastUpdateTime = gpGlobals->curtime;
+}
+
+
+CUtlVector<CKeeperGloveInfo *> CKeeperGloveInfo::m_KeeperGloveInfo;
+float CKeeperGloveInfo::m_flLastUpdateTime = 0;
+
+void CKeeperGloveInfo::ParseKeeperGloves()
+{
+	CKeeperGloveInfo::m_KeeperGloveInfo.PurgeAndDeleteElements();
+
+	CUtlVector<FileInfo_t> keeperGloveFolders;
+	FindFiles("materials/models/player/keepergloves/", keeperGloveFolders);
+
+	for (int i = 0; i < keeperGloveFolders.Count(); i++)
+	{
+		if (!keeperGloveFolders[i].isDirectory)
+			continue;
+
+		CKeeperGloveInfo *pKeeperGloveInfo = new CKeeperGloveInfo();
+		Q_strncpy(pKeeperGloveInfo->m_szFolderName, keeperGloveFolders[i].name, sizeof(pKeeperGloveInfo->m_szFolderName));
+
+		CUtlVector<FileInfo_t> keeperGloveFolderFiles;
+		FindFiles(keeperGloveFolders[i].path, keeperGloveFolderFiles);
+
+		for (int j = 0; j < keeperGloveFolderFiles.Count(); j++)
+		{
+			if (keeperGloveFolderFiles[j].isDirectory)
+				continue;
+
+			if (!Q_strcmp(keeperGloveFolderFiles[j].name, "keeperglovedata.txt"))
+			{
+				KeyValues *pKV = new KeyValues("KeeperGloveData");
+				pKV->LoadFromFile(filesystem, keeperGloveFolderFiles[j].path, "MOD");
+
+				Q_strncpy(pKeeperGloveInfo->m_szName, pKV->GetString("Name", "???"), sizeof(pKeeperGloveInfo->m_szName));
+				Q_strncpy(pKeeperGloveInfo->m_szAuthor, pKV->GetString("Author", "???"), sizeof(pKeeperGloveInfo->m_szAuthor));
+
+				pKV->deleteThis();
+			}
+		}
+
+		CKeeperGloveInfo::m_KeeperGloveInfo.AddToTail(pKeeperGloveInfo);
+	}
+
+	m_flLastUpdateTime = gpGlobals->curtime;
+}
+
+
 CUtlVector<CBallInfo *> CBallInfo::m_BallInfo;
 float CBallInfo::m_flLastUpdateTime = 0;
 

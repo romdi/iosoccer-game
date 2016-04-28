@@ -439,6 +439,8 @@ static const char *g_szPosNames[POS_NAME_COUNT] =
 #define BALL_PHYS_RADIUS 4.75f
 
 #define PLAYER_SKIN_COUNT 3
+#define PLAYER_HAIR_COUNT 7
+#define PLAYER_SLEEVE_COUNT 2
 
 enum TimeoutState_t
 {

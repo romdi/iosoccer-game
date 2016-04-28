@@ -61,7 +61,6 @@ public:
 	virtual int		GetGoalKicks( int index ) = 0;
 	virtual int		GetRatings( int index ) = 0;
 	virtual int		GetShirtNumber( int iIndex ) = 0;
-	virtual int		GetSkinIndex( int iIndex ) = 0;
 	virtual int		GetTeamPosType( int iIndex ) = 0;
 	virtual int		GetTeamPosIndex( int iIndex ) = 0;
 	virtual int		GetTeamToJoin( int iIndex ) = 0;

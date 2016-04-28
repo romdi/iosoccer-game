@@ -139,23 +139,47 @@ class CAppearanceSettingPanel : public PropertyPage, public ISettingPanel
 
 	Label *m_pSkinIndexLabel;
 	ComboBox *m_pSkinIndexList;
+
+	Label *m_pHairIndexLabel;
+	ComboBox *m_pHairIndexList;
+
+	Label *m_pSleeveIndexLabel;
+	ComboBox *m_pSleeveIndexList;
+
+	Label *m_pShoeLabel;
+	ComboBox *m_pShoeList;
+
+	Label *m_pKeeperGloveLabel;
+	ComboBox *m_pKeeperGloveList;
+
 	Label *m_pPreferredOutfieldShirtNumberLabel;
 	ComboBox *m_pPreferredOutfieldShirtNumberList;
+
 	Label *m_pPreferredKeeperShirtNumberLabel;
 	ComboBox *m_pPreferredKeeperShirtNumberList;
+
 	Label *m_pPlayerBallSkinLabel;
 	ComboBox *m_pPlayerBallSkinList;
+
 	ImagePanel *m_pPlayerPreviewPanel;
+
 	Slider *m_pPlayerAngleSlider;
+
 	CheckButton *m_pPlayerAngleAutoRotate;
+
 	Label *m_pPreviewTeamLabel;
 	ComboBox *m_pPreviewTeamList;
+
 	Panel *m_pBodypartPanel;
+
 	RadioButton *m_pBodypartRadioButtons[3];
+
 	Label *m_pConnectionInfoLabel;
 
 	float m_flLastTeamKitUpdateTime;
 	float m_flLastBallSkinUpdateTime;
+	float m_flLastShoeUpdateTime;
+	float m_flLastKeeperGloveUpdateTime;
 
 public:
 
@@ -164,9 +188,17 @@ public:
 	void Save();
 	void Load();
 	void Update();
+	void UpdateBalls();
+	void UpdateTeamKits();
+	void UpdateShoes();
+	void UpdateKeeperGloves();
 	Panel *GetPlayerPreviewPanel() { return m_pPlayerPreviewPanel; }
 	const char *GetPlayerShirtName();
 	int GetPlayerSkinIndex();
+	int GetPlayerHairIndex();
+	int GetPlayerSleeveIndex();
+	const char *GetPlayerShoeName();
+	const char *GetPlayerKeeperGloveName();
 	int GetPlayerOutfieldShirtNumber();
 	void GetPlayerTeamInfo(const char **teamFolder, const char **kitFolder);
 	float GetPlayerPreviewAngle();

@@ -460,6 +460,10 @@ void CProceduralRegenerator::Release()
 }
 
 #define TEAMKITS_PATH "models/player/teamkits"
+#define SKINS_PATH "models/player/skins"
+#define HAIR_PATH "models/player/hair"
+#define SHOES_PATH "models/player/shoes"
+#define KEEPER_GLOVES_PATH "models/player/keepergloves"
 
 class CPlayerTextureProxy : public CEntityMaterialProxy
 {
@@ -473,10 +477,12 @@ public:
 
 private:
 	IMaterialVar	*m_pBaseTextureVar;		// variable for our base texture
+	ITexture		*m_pBaseTexture;		// default texture
+	IMaterialVar	*m_pNormalMapVar;
+	ITexture		*m_pNormalMap;
 	IMaterialVar	*m_pDetailTextureVar;
-	ITexture		*m_pTexture;		// default texture
 	char m_szTextureType[64];
-	CProceduralRegenerator	*m_pTextureRegen[2][11]; // The regenerator
+	CProceduralRegenerator	*m_pBaseTextureRegen[2][11]; // The regenerator
 	CProceduralRegenerator *m_pPreviewTextureRegen;
 	float m_flLastPreviewTextureUpdate;
 	float m_flLastTextureUpdate[2][11];
@@ -485,14 +491,16 @@ private:
 CPlayerTextureProxy::CPlayerTextureProxy()
 {
 	m_pBaseTextureVar = NULL;
+	m_pBaseTexture = NULL;
+	m_pNormalMapVar = NULL;
+	m_pNormalMap = NULL;
 	m_pDetailTextureVar = NULL;
-	m_pTexture = NULL;
 
 	for (int i = 0; i < 2; i++)
 	{
 		for (int j = 0; j < 11; j++)
 		{
-			m_pTextureRegen[i][j] = NULL;
+			m_pBaseTextureRegen[i][j] = NULL;
 			m_flLastTextureUpdate[2][11] = -1;
 		}
 	}
@@ -509,7 +517,7 @@ void CPlayerTextureProxy::Release()
 {
 //	for (int i = 0; i < 2; i++)
 //		for (int j = 0; j < 11; j++)
-//			delete m_pTextureRegen[i][j];
+//			delete m_pBaseTextureRegen[i][j];
 //
 //	delete m_pPreviewTextureRegen;
 //
@@ -529,10 +537,15 @@ bool CPlayerTextureProxy::Init( IMaterial *pMaterial, KeyValues *pKeyValues )
 		return false;
 
 	// Set default texture and make sure its not an error texture
-	m_pTexture = m_pBaseTextureVar->GetTextureValue();
+	m_pBaseTexture = m_pBaseTextureVar->GetTextureValue();
 
-	if ( IsErrorTexture( m_pTexture ) )
+	if ( IsErrorTexture( m_pBaseTexture ) )
 		return false;
+
+	m_pNormalMapVar = pMaterial->FindVar("$bumpmap", NULL);
+
+	if (m_pNormalMapVar)
+		m_pNormalMap = m_pNormalMapVar->GetTextureValue();
 	
 	Q_strncpy(m_szTextureType, pKeyValues->GetString("type"), sizeof(m_szTextureType));
 
@@ -553,7 +566,10 @@ void CPlayerTextureProxy::OnBind( C_BaseEntity *pEnt )
 	CTeamKitInfo *pKitInfo;
 	const char *teamFolder;
 	const char *kitFolder;
+	const char *shoeFolder;
+	const char *keeperGloveFolder;
 	int skinIndex;
+	int hairIndex;
 	int shirtNumber;
 	const char *shirtName;
 	bool isKeeper;
@@ -571,7 +587,10 @@ void CPlayerTextureProxy::OnBind( C_BaseEntity *pEnt )
 		teamFolder = pTeam->GetFolderName();
 		kitFolder = pTeam->GetKitFolderName();
 		pKitInfo = pTeam->GetKitInfo();
-		skinIndex = g_PR->GetSkinIndex(pPl->index);
+		skinIndex = pPl->GetSkinIndex();
+		hairIndex = pPl->GetHairIndex();
+		shoeFolder = pPl->GetShoeName();
+		keeperGloveFolder = pPl->GetKeeperGloveName();
 		shirtNumber = g_PR->GetShirtNumber(pPl->index);
 		shirtName = g_PR->GetShirtName(pPl->index);
 		isKeeper = g_PR->GetTeamPosType(pPl->index) == POS_GK;
@@ -580,7 +599,7 @@ void CPlayerTextureProxy::OnBind( C_BaseEntity *pEnt )
 		int posIndex = g_PR->GetTeamPosIndex(pPl->index);
 
 		pDetailTexture = materials->FindTexture(VarArgs("models/player/default/detail_%d_%d", teamIndex, posIndex), NULL, true);
-		pProcReg = &m_pTextureRegen[teamIndex][posIndex];
+		pProcReg = &m_pBaseTextureRegen[teamIndex][posIndex];
 		pLastTextureUpdate = &m_flLastTextureUpdate[teamIndex][posIndex];
 	}
 	else if (dynamic_cast<C_ReplayPlayer *>(pEnt))
@@ -593,6 +612,9 @@ void CPlayerTextureProxy::OnBind( C_BaseEntity *pEnt )
 		kitFolder = pTeam->GetKitFolderName();
 		pKitInfo = pTeam->GetKitInfo();
 		skinIndex = pReplayPl->m_nSkinIndex;
+		hairIndex = pReplayPl->m_nHairIndex;
+		shoeFolder = 0;//pReplayPl->m_szShoeName;
+		keeperGloveFolder = 0;//pReplayPl->m_szKeeperGloveName;
 		shirtNumber = pReplayPl->m_nShirtNumber;
 		shirtName = pReplayPl->m_szShirtName;
 		isKeeper = pReplayPl->m_bIsKeeper;
@@ -601,7 +623,7 @@ void CPlayerTextureProxy::OnBind( C_BaseEntity *pEnt )
 		int posIndex = pReplayPl->m_nTeamPosIndex;
 
 		pDetailTexture = materials->FindTexture(VarArgs("models/player/default/detail_%d_%d", teamIndex, posIndex), NULL, true);
-		pProcReg = &m_pTextureRegen[teamIndex][posIndex];
+		pProcReg = &m_pBaseTextureRegen[teamIndex][posIndex];
 		pLastTextureUpdate = &m_flLastTextureUpdate[teamIndex][posIndex];
 	}
 	else if (dynamic_cast<C_BaseAnimatingOverlay *>(pEnt))
@@ -611,6 +633,9 @@ void CPlayerTextureProxy::OnBind( C_BaseEntity *pEnt )
 		pPanel->GetPlayerTeamInfo(&teamFolder, &kitFolder);
 		pKitInfo = CTeamInfo::FindTeamByKitName(VarArgs("%s/%s", teamFolder, kitFolder));
 		skinIndex = pPanel->GetPlayerSkinIndex();
+		hairIndex = pPanel->GetPlayerHairIndex();
+		shoeFolder = pPanel->GetPlayerShoeName();
+		keeperGloveFolder = pPanel->GetPlayerKeeperGloveName();
 		shirtNumber = pPanel->GetPlayerOutfieldShirtNumber();
 		shirtName = pPanel->GetPlayerShirtName();
 		isKeeper = false;
@@ -658,30 +683,53 @@ void CPlayerTextureProxy::OnBind( C_BaseEntity *pEnt )
 		}
 	}
 
-	char texture[128];
+	char baseTexture[128] = "";
+	char normalMap[128] = "";
 
 	if (Q_stricmp(m_szTextureType, "kit") == 0)
 	{
 		if (isKeeper)
-			Q_snprintf(texture, sizeof(texture), "%s/%s/%s/keeper", TEAMKITS_PATH, teamFolder, kitFolder);
+			Q_snprintf(baseTexture, sizeof(baseTexture), "%s/%s/%s/keeper", TEAMKITS_PATH, teamFolder, kitFolder);
 		else
-			Q_snprintf(texture, sizeof(texture), "%s/%s/%s/outfield", TEAMKITS_PATH, teamFolder, kitFolder);
+			Q_snprintf(baseTexture, sizeof(baseTexture), "%s/%s/%s/outfield", TEAMKITS_PATH, teamFolder, kitFolder);
 	}
 	else if (Q_stricmp(m_szTextureType, "skin") == 0)
 	{
-		Q_snprintf(texture, sizeof(texture), "models/player/skins/skin_%d", skinIndex);
+		Q_snprintf(baseTexture, sizeof(baseTexture), "%s/skin_%d", SKINS_PATH, skinIndex);
+		Q_snprintf(normalMap, sizeof(normalMap), "%s/skin_%d_nm", SKINS_PATH, skinIndex);
+	}
+	else if (Q_stricmp(m_szTextureType, "hair") == 0)
+	{
+		Q_snprintf(baseTexture, sizeof(baseTexture), "%s/hair_%d", HAIR_PATH, hairIndex);
+	}
+	else if (Q_stricmp(m_szTextureType, "shoe") == 0)
+	{
+		Q_snprintf(baseTexture, sizeof(baseTexture), "%s/%s/shoes", SHOES_PATH, shoeFolder);
+	}
+	else if (Q_stricmp(m_szTextureType, "keeperglove") == 0)
+	{
+		Q_snprintf(baseTexture, sizeof(baseTexture), "%s/%s/keepergloves", KEEPER_GLOVES_PATH, keeperGloveFolder);
 	}
 	else
 	{
-		Q_snprintf(texture, sizeof(texture), "%s", m_pTexture->GetName());
+		Q_snprintf(baseTexture, sizeof(baseTexture), "%s", m_pBaseTexture->GetName());
 	}
 
-	ITexture *pNewTex = materials->FindTexture(texture, NULL, false);
+	ITexture *pNewBaseTexture = materials->FindTexture(baseTexture, NULL, false);
 
-	if (!pNewTex->IsError())
-		m_pTexture = pNewTex;
+	if (!pNewBaseTexture->IsError())
+		m_pBaseTexture = pNewBaseTexture;
 
-	m_pBaseTextureVar->SetTextureValue(m_pTexture);
+	m_pBaseTextureVar->SetTextureValue(m_pBaseTexture);
+
+	/*
+	ITexture *pNewNormalMap = materials->FindTexture(normalMap, NULL, false);
+
+	if (!pNewNormalMap->IsError())
+		m_pNormalMap = pNewNormalMap;
+
+	m_pNormalMapVar->SetTextureValue(m_pNormalMap);
+	*/
 		
 	GetMaterial()->RecomputeStateSnapshots();
 }

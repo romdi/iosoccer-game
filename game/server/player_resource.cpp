@@ -58,7 +58,6 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE(CPlayerResource, DT_PlayerResource)
 	SendPropArray3( SENDINFO_ARRAY3(m_Ratings), SendPropInt( SENDINFO_ARRAY(m_Ratings), 7, SPROP_UNSIGNED ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_TeamPosIndex), SendPropInt( SENDINFO_ARRAY(m_TeamPosIndex), 4, SPROP_UNSIGNED  ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_ShirtNumber), SendPropInt( SENDINFO_ARRAY(m_ShirtNumber), 7, SPROP_UNSIGNED  ) ),
-	SendPropArray3( SENDINFO_ARRAY3(m_SkinIndex), SendPropInt( SENDINFO_ARRAY(m_SkinIndex), 3, SPROP_UNSIGNED  ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_NextCardJoin), SendPropInt( SENDINFO_ARRAY(m_NextCardJoin) ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_IsAway), SendPropBool( SENDINFO_ARRAY(m_IsAway) ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_TeamToJoin), SendPropInt( SENDINFO_ARRAY(m_TeamToJoin), 3 ) ),
@@ -135,7 +134,6 @@ void CPlayerResource::Spawn( void )
 		m_Ratings.Set( i, 0 );
 		m_TeamPosIndex.Set( i, 0 );
 		m_ShirtNumber.Set( i, 0 );
-		m_SkinIndex.Set( i, 0 );
 		m_NextCardJoin.Set( i, 0 );
 		m_IsAway.Set( i, 0 );
 		m_TeamToJoin.Set( i, 0 );
@@ -197,7 +195,6 @@ void CPlayerResource::UpdatePlayerData( void )
 		m_nSpecTeam.Set( i, pPl->GetSpecTeam() );
 		m_TeamPosIndex.Set(i, pPl->GetTeamPosIndex() );
 		m_ShirtNumber.Set(i, pPl->GetShirtNumber() );
-		m_SkinIndex.Set(i, pPl->GetSkinIndex() );
 		m_TeamToJoin.Set(i, pPl->GetTeamToJoin() );
 		m_TeamPosIndexToJoin.Set(i, pPl->GetTeamPosIndexToJoin() );
 		m_NextCardJoin.Set(i, pPl->GetNextCardJoin() );
