@@ -126,6 +126,11 @@ CBasePlayer *BotPutInServer( bool bFrozen, int keeper )
 	pPlayer->ClearFlags();
 	pPlayer->AddFlag( FL_CLIENT | FL_FAKECLIENT );
 	pPlayer->m_nPlayerType = keeper;
+	pPlayer->SetSkinIndex(g_IOSRand.RandomInt(0, PLAYER_SKIN_COUNT - 1));
+	pPlayer->SetHairIndex(g_IOSRand.RandomInt(0, PLAYER_HAIR_COUNT - 1));
+	pPlayer->SetSleeveIndex(g_IOSRand.RandomInt(0, PLAYER_SLEEVE_COUNT - 1));
+	pPlayer->SetShoeName("");
+	pPlayer->SetKeeperGloveName("");
 
 	if ( bFrozen )
 		pPlayer->AddEFlags( EFL_BOT_FROZEN );

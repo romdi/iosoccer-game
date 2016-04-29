@@ -358,8 +358,8 @@ void CProceduralRegenerator::WriteText(unsigned char *imageData, const char *tex
 		posY = offsetY - maxHeight / 2;
 	}
 
-	const int textureWidth = 2048;
-	const int textureHeight = 2048;
+	const int textureWidth = 1024;
+	const int textureHeight = 1024;
 
 	for (size_t i = 0; i < wcslen(wszText); i++)
 	{
@@ -700,7 +700,17 @@ void CPlayerTextureProxy::OnBind( C_BaseEntity *pEnt )
 	}
 	else if (Q_stricmp(m_szTextureType, "hair") == 0)
 	{
-		Q_snprintf(baseTexture, sizeof(baseTexture), "%s/hair_%d", HAIR_PATH, hairIndex);
+		int hairTextureIndex;
+
+		switch (hairIndex)
+		{
+		case 0: case 1: default: hairTextureIndex = 0; break;
+		case 2: case 3: hairTextureIndex = 3; break;
+		case 4: case 5: hairTextureIndex = 2; break;
+		case 6: hairTextureIndex = 1; break;
+		}
+
+		Q_snprintf(baseTexture, sizeof(baseTexture), "%s/hair_%d", HAIR_PATH, hairTextureIndex);
 	}
 	else if (Q_stricmp(m_szTextureType, "shoe") == 0)
 	{

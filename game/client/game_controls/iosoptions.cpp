@@ -487,10 +487,10 @@ CAppearanceSettingPanel::CAppearanceSettingPanel(Panel *parent, const char *pane
 	m_pShirtNameText->SetAllowNonAsciiCharacters(true);
 
 
-	m_pSkinIndexLabel = new Label(m_pContent, "", "Model:");
+	m_pSkinIndexLabel = new Label(m_pContent, "", "Ethnicity:");
 	m_pSkinIndexList = new ComboBox(m_pContent, "", 0, false);
 
-	const char *skins[] = { "White", "Asian", "Black" };
+	const char *skins[] = { "White, Black Hair", "White, Bald", "White, Brown Hair", "Asian, Black Hair", "Black, Black Hair" };
 
 	for (int i = 0; i < PLAYER_SKIN_COUNT; i++)
 	{

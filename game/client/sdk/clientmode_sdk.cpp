@@ -260,7 +260,17 @@ void UpdateClassImageEntity(const char* pModelName, float angle, int bodypart)
 	CAppearanceSettingPanel *pPanel = (CAppearanceSettingPanel *)iosOptionsMenu->GetPanel()->GetSettingPanel(SETTING_PANEL_APPEARANCE);
 
 	static int headBodyGroup = pModel->FindBodygroupByName("head");
-	pModel->SetBodygroup(headBodyGroup, pPanel->GetPlayerSkinIndex());
+
+	int headIndex;
+
+	switch (pPanel->GetPlayerSkinIndex())
+	{
+	case 0: case 1: case 2: default: headIndex = 0; break;
+	case 3: headIndex = 1; break;
+	case 4: headIndex = 2; break;
+	}
+
+	pModel->SetBodygroup(headBodyGroup, headIndex);
 
 	static int hairBodyGroup = pModel->FindBodygroupByName("hair");
 	pModel->SetBodygroup(hairBodyGroup, pPanel->GetPlayerHairIndex());

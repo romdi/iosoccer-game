@@ -515,7 +515,10 @@ void CSDKPlayer::PostThink()
 
 	m_PlayerAnimState->Update( m_angEyeAngles[YAW], m_angEyeAngles[PITCH] );
 
-	m_angCamViewAngles = m_aCamViewAngles;
+	if (IsBot())
+		m_angCamViewAngles = angles;
+	else
+		m_angCamViewAngles = m_aCamViewAngles;
 	
 	//LookAtBall();
 
@@ -2480,7 +2483,17 @@ void CSDKPlayer::SetSkinIndex(int index)
 {
 	m_nSkinIndex = clamp(index, 0, PLAYER_SKIN_COUNT - 1);
 	static int headBodyGroup = FindBodygroupByName("head");
-	SetBodygroup(headBodyGroup, m_nSkinIndex);
+
+	int headIndex;
+
+	switch (m_nSkinIndex)
+	{
+	case 0: case 1: case 2: default: headIndex = 0; break;
+	case 3: headIndex = 1; break;
+	case 4: headIndex = 2; break;
+	}
+
+	SetBodygroup(headBodyGroup, headIndex);
 }
 
 int CSDKPlayer::GetHairIndex()
