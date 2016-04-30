@@ -823,18 +823,12 @@ int CAppearanceSettingPanel::GetPlayerSleeveIndex()
 
 const char *CAppearanceSettingPanel::GetPlayerShoeName()
 {
-	static char shoeName[MAX_PLAYER_NAME_LENGTH];
-	m_pShirtNameText->GetText(shoeName, sizeof(shoeName));
-
-	return shoeName;
+	return m_pShoeList->GetActiveItemUserData()->GetString("shoe");
 }
 
 const char *CAppearanceSettingPanel::GetPlayerKeeperGloveName()
 {
-	static char keeperGloveName[MAX_PLAYER_NAME_LENGTH];
-	m_pShirtNameText->GetText(keeperGloveName, sizeof(keeperGloveName));
-
-	return keeperGloveName;
+	return m_pKeeperGloveList->GetActiveItemUserData()->GetString("keeperglove");
 }
 
 int CAppearanceSettingPanel::GetPlayerOutfieldShirtNumber()
