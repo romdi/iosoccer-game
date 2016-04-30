@@ -527,10 +527,7 @@ Activity CSDKPlayerAnimState::CalcMainActivity()
 
 	if ( HandleJumping(idealActivity) )
 	{
-		if (pPlayer->GetFlags() & FL_CELEB)
-			return ACT_IOS_JUMPCELEB;							//cartwheel celeb
-		//else if (pPlayer->m_nBody > 0)
-		else if (pPlayer->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_JUMP)
+		if (pPlayer->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_JUMP)
 			return ACT_LEAP;									//keepers jump
 		else
 			return ACT_HOP;										//normal jump
@@ -545,10 +542,7 @@ Activity CSDKPlayerAnimState::CalcMainActivity()
 			}
 			else if ( flOuterSpeed > (mp_walkspeed.GetInt() + mp_runspeed.GetInt()) / 2.0f )
 			{
-				if (pPlayer->GetFlags() & FL_CELEB)		//now on layer
-					idealActivity = ACT_IOS_RUNCELEB;
-				else
-					idealActivity = ACT_RUN;
+				idealActivity = ACT_RUN;
 			}
 			else
 			{
