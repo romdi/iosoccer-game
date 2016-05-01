@@ -1763,6 +1763,11 @@ bool CGameMovement::CheckActionOverTime()
 	{
 		return false;
 	}
+	case PLAYERANIMEVENT_GESTURE_POINT:
+	case PLAYERANIMEVENT_GESTURE_WAVE:
+	{
+		return false;
+	}
 	default:
 	{
 		return false;
@@ -1872,7 +1877,18 @@ bool CGameMovement::CheckActionStart()
 
 	PlayerAnimEvent_t animEvent = PLAYERANIMEVENT_NONE;
 	
-	if (mv->m_nButtons & IN_JUMP && !(mv->m_nOldButtons & IN_JUMP))
+	if (mv->m_nButtons & IN_GESTURE)
+	{
+		if (mv->m_nButtons & IN_ATTACK)
+		{
+			animEvent = PLAYERANIMEVENT_GESTURE_POINT;
+		}
+		else if (mv->m_nButtons & IN_ATTACK2)
+		{
+			animEvent = PLAYERANIMEVENT_GESTURE_WAVE;
+		}
+	}
+	else if (mv->m_nButtons & IN_JUMP && !(mv->m_nOldButtons & IN_JUMP))
 	{
 		if (pPl->IsInOwnBoxAsKeeper())
 		{

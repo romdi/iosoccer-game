@@ -239,7 +239,7 @@ void CProceduralRegenerator::RegenerateTextureBits( ITexture *pTexture, IVTFText
 		}
 	}
 
-	const int shirtBackHorizontalOffset = 1025;
+	const int shirtBackHorizontalOffset = 510;
 
 
 	// Write outline pixels

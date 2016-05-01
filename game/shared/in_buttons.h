@@ -39,5 +39,6 @@
 #define IN_TOPSPIN		(1 << 25)
 #define IN_BACKSPIN		(1 << 26)
 #define IN_SKILL		(1 << 27)
+#define IN_GESTURE		(1 << 28)
 
 #endif // IN_BUTTONS_H

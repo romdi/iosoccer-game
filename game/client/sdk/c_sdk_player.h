@@ -73,6 +73,7 @@ public:
 
 	bool				IsKeeperDiving();
 	bool				DoSkillMove();
+	bool				DoGesture();
 	bool				IsInOwnBoxAsKeeper();
 
 	void DoAnimationEvent(PlayerAnimEvent_t event);

@@ -689,6 +689,11 @@ bool CSDKPlayer::DoSkillMove()
 	return m_nButtons & IN_SKILL;
 }
 
+bool CSDKPlayer::DoGesture()
+{
+	return m_nButtons & IN_GESTURE;
+}
+
 bool CSDKPlayer::IsInOwnBoxAsKeeper()
 {
 	bool isKeeper;

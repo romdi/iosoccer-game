@@ -257,6 +257,8 @@ int CSDKPlayerAnimState::CalcPrimaryActionSequence(PlayerAnimEvent_t event)
 	case PLAYERANIMEVENT_FAKE_SHOT: return CalcSequenceIndex("fake_shot");
 	case PLAYERANIMEVENT_RAINBOW_FLICK: return CalcSequenceIndex("rainbow_flick");
 	case PLAYERANIMEVENT_BICYCLE_KICK: return CalcSequenceIndex("bicycle_kick");
+	case PLAYERANIMEVENT_GESTURE_POINT: return CalcSequenceIndex("gesture_point");
+	case PLAYERANIMEVENT_GESTURE_WAVE: return CalcSequenceIndex("gesture_wave");
 	default: return -1;
 	}
 }
@@ -412,6 +414,8 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 	case PLAYERANIMEVENT_FAKE_SHOT:
 	case PLAYERANIMEVENT_RAINBOW_FLICK:
 	case PLAYERANIMEVENT_BICYCLE_KICK:
+	case PLAYERANIMEVENT_GESTURE_POINT:
+	case PLAYERANIMEVENT_GESTURE_WAVE:
 	{
 		m_flPrimaryActionSequenceCycle = 0;
 		m_iPrimaryActionSequence = CalcPrimaryActionSequence(event);

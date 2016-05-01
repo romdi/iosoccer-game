@@ -144,6 +144,7 @@ static  kbutton_t   in_grenade2;
 static	kbutton_t	in_topspin;
 static	kbutton_t	in_backspin;
 static	kbutton_t	in_skill;
+static	kbutton_t	in_gesture;
 kbutton_t	in_ducktoggle;
 
 /*
@@ -476,6 +477,8 @@ void IN_BackspinUp( const CCommand &args ) { KeyUp( &in_backspin, args[1] ); }
 void IN_BackspinDown( const CCommand &args ) { KeyDown( &in_backspin, args[1] ); }
 void IN_SkillUp(const CCommand &args) { KeyUp(&in_skill, args[1]); }
 void IN_SkillDown(const CCommand &args) { KeyDown(&in_skill, args[1]); }
+void IN_GestureUp(const CCommand &args) { KeyUp(&in_gesture, args[1]); }
+void IN_GestureDown(const CCommand &args) { KeyDown(&in_gesture, args[1]); }
 void IN_XboxStub( const CCommand &args ) { /*do nothing*/ }
 
 void IN_DuckToggle( const CCommand &args ) 
@@ -1302,6 +1305,7 @@ int CInput::GetButtonBits( int bResetState )
 	CalcButtonBits( bits, IN_TOPSPIN, s_ClearInputState, &in_topspin, bResetState );
 	CalcButtonBits( bits, IN_BACKSPIN, s_ClearInputState, &in_backspin, bResetState);
 	CalcButtonBits( bits, IN_SKILL, s_ClearInputState, &in_skill, bResetState );
+	CalcButtonBits( bits, IN_GESTURE, s_ClearInputState, &in_gesture, bResetState );
 
 	if ( KeyState(&in_ducktoggle) )
 	{
@@ -1461,6 +1465,8 @@ static ConCommand startbackspin( "+backspin", IN_BackspinDown );
 static ConCommand endbackspin( "-backspin", IN_BackspinUp );
 static ConCommand startskill("+skill", IN_SkillDown);
 static ConCommand endskill("-skill", IN_SkillUp);
+static ConCommand startgesture("+gesture", IN_GestureDown);
+static ConCommand endgesture("-gesture", IN_GestureUp);
 
 #ifdef TF_CLIENT_DLL
 static ConCommand toggle_duck( "toggle_duck", IN_DuckToggle );
