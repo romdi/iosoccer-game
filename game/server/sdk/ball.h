@@ -189,7 +189,6 @@ protected:
 	bool			CheckKeeperCatch();
 	bool			DoGroundShot(bool markOffsidePlayers);
 	bool			DoVolleyShot();
-	bool			DoChestDrop();
 	bool			DoHeader();
 	AngularImpulse	CalcSpin(float coeff, int spinFlags);
 	float			GetPitchCoeff();

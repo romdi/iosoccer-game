@@ -82,14 +82,13 @@ ConVar
 	sv_ball_keeper_sidedive_longsidereach					("sv_ball_keeper_sidedive_longsidereach",					"60",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_keeper_sidedive_longsidereach_opposite			("sv_ball_keeper_sidedive_longsidereach_opposite",			"50",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_keeper_sidedive_zstart							("sv_ball_keeper_sidedive_zstart",							"-20",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_keeper_sidedive_zend							("sv_ball_keeper_sidedive_zend",							"70",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_keeper_sidedive_zend							("sv_ball_keeper_sidedive_zend",							"90",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_keeper_sidedive_catchcenteroffset_side			("sv_ball_keeper_sidedive_catchcenteroffset_side",			"0",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_keeper_sidedive_catchcenteroffset_z				("sv_ball_keeper_sidedive_catchcenteroffset_z",				"40",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 
 	sv_ball_bodypos_feet_start								("sv_ball_bodypos_feet_start",								"-15",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_bodypos_hip_start								("sv_ball_bodypos_hip_start",								"20",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_bodypos_chest_start								("sv_ball_bodypos_chest_start",								"50",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_bodypos_head_start								("sv_ball_bodypos_head_start",								"50",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_bodypos_head_start								("sv_ball_bodypos_head_start",								"60",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_bodypos_head_end								("sv_ball_bodypos_head_end",								"90",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_bodypos_keeperarms_end							("sv_ball_bodypos_keeperarms_end",							"105",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 
@@ -761,11 +760,8 @@ bool CBall::DoBodyPartAction()
 		return DoGroundShot(true);
 	}
 
-	if (zDist >= sv_ball_bodypos_hip_start.GetFloat() && zDist < sv_ball_bodypos_chest_start.GetFloat() && CanReachBallStandingXY())
+	if (zDist >= sv_ball_bodypos_hip_start.GetFloat() && zDist < sv_ball_bodypos_head_start.GetFloat() && CanReachBallStandingXY())
 		return DoVolleyShot();
-
-	if (zDist >= sv_ball_bodypos_chest_start.GetFloat() && zDist < sv_ball_bodypos_head_start.GetFloat() && CanReachBallStandingXY())
-		return DoChestDrop();
 
 	if (zDist >= sv_ball_bodypos_head_start.GetFloat() && zDist < sv_ball_bodypos_head_end.GetFloat() && CanReachBallStandingXY())
 		return DoHeader();
@@ -1255,27 +1251,6 @@ bool CBall::DoVolleyShot()
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
 
 	SetVel(vel, spinCoeff, spinFlags, BODY_PART_FEET, true, sv_ball_volleyshot_minpostdelay.GetFloat(), true);
-
-	return true;
-}
-
-bool CBall::DoChestDrop()
-{
-	if (m_pPl->DoSkillMove())
-		return false;
-
-	QAngle ang = m_aPlAng;
-	ang[PITCH] = sv_ball_chestdrop_angle.GetInt();
-
-	Vector dir;
-	AngleVectors(ang, &dir);
-
-	Vector vel = dir * sv_ball_chestdrop_strength.GetInt();
-
-	m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
-	EmitSound("Ball.Touch");
-
-	SetVel(vel, 0.0f, FL_SPIN_FORCE_NONE, BODY_PART_CHEST, true, sv_ball_chestdrop_minpostdelay.GetFloat(), false);
 
 	return true;
 }
