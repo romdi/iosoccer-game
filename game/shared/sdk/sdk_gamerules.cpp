@@ -2926,13 +2926,8 @@ void CSDKGameRules::ResetMatch()
 	m_flTimeoutEnd = 0;
 	m_flLastAwayCheckTime = gpGlobals->curtime;
 
-	FileHandle_t logfile = filesystem->Open("logs/cleanup.log", "a", "MOD");
-
-	FlushLog(logfile, "Start ball reset");
 	GetMatchBall()->Reset();
-	FlushLog(logfile, "End ball reset");
 
-	FlushLog(logfile, "Start player flags reset");
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
 		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
@@ -2942,22 +2937,12 @@ void CSDKGameRules::ResetMatch()
 		pPl->Reset();
 	}
 
-	FlushLog(logfile, "End player flags reset");
-
-	FlushLog(logfile, "Start team stats reset");
 	GetGlobalTeam(TEAM_HOME)->ResetStats();
 	GetGlobalTeam(TEAM_AWAY)->ResetStats();
-	FlushLog(logfile, "End team stats reset");
 
-	FlushLog(logfile, "Start player stats reset");
 	CPlayerPersistentData::ReallocateAllPlayerData();
-	FlushLog(logfile, "End player stats reset");
 
-	FlushLog(logfile, "Start replay clean-up");
 	ReplayManager()->CleanUp();
-	FlushLog(logfile, "End replay clean-up\n");
-
-	filesystem->Close(logfile);
 }
 
 void CSDKGameRules::ReloadSettings()
