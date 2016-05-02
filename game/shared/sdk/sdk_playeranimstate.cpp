@@ -243,7 +243,7 @@ int CSDKPlayerAnimState::CalcPrimaryActionSequence(PlayerAnimEvent_t event)
 	case PLAYERANIMEVENT_HEADER_WEAK: return CalcSequenceIndex("header_weak");
 	case PLAYERANIMEVENT_HEADER_STRONG: return CalcSequenceIndex("header_strong");
 	case PLAYERANIMEVENT_THROW_IN_THROW: return CalcSequenceIndex("throw_in_throw");
-	case PLAYERANIMEVENT_SLIDE_TACKLE: return CalcSequenceIndex((GetBasePlayer()->GetFlags() & FL_CELEB) ? "celeb_slide" : "slide_tackle");
+	case PLAYERANIMEVENT_SLIDE_TACKLE: return CalcSequenceIndex("slide_tackle");
 	case PLAYERANIMEVENT_TACKLED_FORWARD: return CalcSequenceIndex("tackled_forward");
 	case PLAYERANIMEVENT_TACKLED_BACKWARD: return CalcSequenceIndex("tackled_backward");
 	case PLAYERANIMEVENT_DIVING_HEADER: return CalcSequenceIndex("diving_header");
@@ -259,6 +259,7 @@ int CSDKPlayerAnimState::CalcPrimaryActionSequence(PlayerAnimEvent_t event)
 	case PLAYERANIMEVENT_BICYCLE_KICK: return CalcSequenceIndex("bicycle_kick");
 	case PLAYERANIMEVENT_GESTURE_POINT: return CalcSequenceIndex("gesture_point");
 	case PLAYERANIMEVENT_GESTURE_WAVE: return CalcSequenceIndex("gesture_wave");
+	case PLAYERANIMEVENT_CELEB_SLIDE: return CalcSequenceIndex("celeb_slide");
 	default: return -1;
 	}
 }
@@ -416,6 +417,7 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 	case PLAYERANIMEVENT_BICYCLE_KICK:
 	case PLAYERANIMEVENT_GESTURE_POINT:
 	case PLAYERANIMEVENT_GESTURE_WAVE:
+	case PLAYERANIMEVENT_CELEB_SLIDE:
 	{
 		m_flPrimaryActionSequenceCycle = 0;
 		m_iPrimaryActionSequence = CalcPrimaryActionSequence(event);

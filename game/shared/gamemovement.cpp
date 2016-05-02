@@ -1684,12 +1684,8 @@ bool CGameMovement::CheckActionOverTime()
 
 		break;
 	}
-	case PLAYERANIMEVENT_KEEPER_HANDS_THROW:
-	case PLAYERANIMEVENT_KEEPER_HANDS_VOLLEY:
-	{
-		return false;
-	}
 	case PLAYERANIMEVENT_SLIDE_TACKLE:
+	case PLAYERANIMEVENT_CELEB_SLIDE:
 	{
 		if (timePassed > mp_slide_move_duration.GetFloat() + mp_slide_idle_duration.GetFloat())
 		{
@@ -1748,25 +1744,6 @@ bool CGameMovement::CheckActionOverTime()
 
 		mv->m_vecVelocity = Vector(0, 0, 0);
 		break;
-	}
-	case PLAYERANIMEVENT_KICK_DRIBBLE:
-	case PLAYERANIMEVENT_KICK_WEAK:
-	case PLAYERANIMEVENT_KICK_STRONG:
-	{
-		return false;
-	}
-	case PLAYERANIMEVENT_JUMP:
-	{
-		return false;
-	}
-	case PLAYERANIMEVENT_KEEPER_JUMP:
-	{
-		return false;
-	}
-	case PLAYERANIMEVENT_GESTURE_POINT:
-	case PLAYERANIMEVENT_GESTURE_WAVE:
-	{
-		return false;
 	}
 	default:
 	{
@@ -1879,13 +1856,21 @@ bool CGameMovement::CheckActionStart()
 	
 	if (mv->m_nButtons & IN_GESTURE)
 	{
-		if (mv->m_nButtons & IN_ATTACK)
+		if (mv->m_nButtons & IN_ATTACK && !(mv->m_nOldButtons & IN_ATTACK))
 		{
 			animEvent = PLAYERANIMEVENT_GESTURE_POINT;
 		}
-		else if (mv->m_nButtons & IN_ATTACK2)
+		else if (mv->m_nButtons & IN_ATTACK2 && !(mv->m_nOldButtons & IN_ATTACK2))
 		{
 			animEvent = PLAYERANIMEVENT_GESTURE_WAVE;
+		}
+		else
+		{
+			if ((pPl->GetFlags() & FL_CELEB) || SDKGameRules()->State_Get() == MATCH_PERIOD_WARMUP)
+			{
+				if (mv->m_nButtons & IN_DUCK && !(mv->m_nOldButtons & IN_DUCK))
+					animEvent = PLAYERANIMEVENT_CELEB_SLIDE;
+			}
 		}
 	}
 	else if (mv->m_nButtons & IN_JUMP && !(mv->m_nOldButtons & IN_JUMP))
