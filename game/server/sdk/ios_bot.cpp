@@ -161,7 +161,7 @@ void CBot::FieldBotJoinTeam()
 	if (playerCount[team] == mp_maxplayers.GetInt())
 		team = team == TEAM_HOME ? TEAM_AWAY : TEAM_HOME;
 
-	if (playerCount[team] == mp_maxplayers.GetInt() || !SDKGameRules()->IsIntermissionState() && SDKGameRules()->GetMatchDisplayTimeSeconds() < GetNextCardJoin())
+	if (playerCount[team] == mp_maxplayers.GetInt() || !SDKGameRules()->IsIntermissionState() && SDKGameRules()->GetMatchDisplayTimeSeconds() < GetData()->GetNextCardJoin())
 		SetDesiredTeam(TEAM_SPECTATOR, GetTeamNumber(), 0, true, true, false);
 	else
 	{

@@ -114,7 +114,7 @@ struct PlayerSnapshot
 	int				skinIndex;
 	int				hairIndex;
 	int				body;
-	const CPlayerPersistentData *pPlayerData;
+	const CPlayerData *pPlayerData;
 };
 
 struct Snapshot
@@ -146,9 +146,9 @@ struct MatchEvent
 	int second;
 	int team;
 	bool atMinGoalPos;
-	const CPlayerPersistentData *pPlayer1Data;
-	const CPlayerPersistentData *pPlayer2Data;
-	const CPlayerPersistentData *pPlayer3Data;
+	const CPlayerData *pPlayer1Data;
+	const CPlayerData *pPlayer2Data;
+	const CPlayerData *pPlayer3Data;
 	CUtlVector<Snapshot *> snapshots;
 	float snapshotEndTime;
 

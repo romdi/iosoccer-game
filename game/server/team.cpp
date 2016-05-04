@@ -559,7 +559,7 @@ void CTeam::ResetStats()
 		m_LastPlayerCoordsByPosIndex[i].leaveTime = -1;
 	}
 
-	m_MatchPeriodData.PurgeAndDeleteElements();
+	m_PeriodData.PurgeAndDeleteElements();
 }
 
 void CTeam::AddMatchEvent(match_period_t matchPeriod, int seconds, match_event_t event, const char *text)
@@ -615,7 +615,7 @@ void CTeam::SetFormationIndex(int index, bool silent)
 	m_nFormationIndex = index;
 }
 
-void CTeamMatchPeriodData::ResetData()
+void CTeamPeriodData::ResetData()
 {
 	m_nRedCards = 0;
 	m_nYellowCards = 0;

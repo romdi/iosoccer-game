@@ -550,7 +550,7 @@ void InitBodyQue()
 
 void CSDKGameRules::ServerActivate()
 {
-	CPlayerPersistentData::ReallocateAllPlayerData();
+	CPlayerData::ReallocateAllPlayerData();
 
 	CTeamInfo::ParseTeamKits();
 	CShoeInfo::ParseShoes();
@@ -715,7 +715,7 @@ void CSDKGameRules::Think()
 		//	if (!pPl)
 		//		continue;
 
-		//	CPlayerPersistentData::SavePlayerData(pPl);
+		//	CPlayerData::SavePlayerData(pPl);
 		//}
 
 		ChangeLevel(); // intermission is over
@@ -1536,7 +1536,7 @@ void CSDKGameRules::State_Enter( match_period_t newState )
 		pPl->m_Shared.SetStamina(100);
 
 		if (!IsIntermissionState())
-			pPl->GetPlayerData()->StartNewMatchPeriod();
+			pPl->GetData()->StartNewMatchPeriod();
 	}
 
 	if (!IsIntermissionState())
@@ -1546,9 +1546,9 @@ void CSDKGameRules::State_Enter( match_period_t newState )
 
 		for (int i = 0; i < 2; i++)
 		{
-			CTeamMatchPeriodData *pTeamData = new CTeamMatchPeriodData(g_szMatchPeriodNames[m_pCurStateInfo->m_eMatchPeriod]);
+			CTeamPeriodData *pTeamData = new CTeamPeriodData(g_szMatchPeriodNames[m_pCurStateInfo->m_eMatchPeriod]);
 			pTeamData->ResetData();
-			GetGlobalTeam(TEAM_HOME + i)->m_MatchPeriodData.AddToTail(pTeamData); 
+			GetGlobalTeam(TEAM_HOME + i)->m_PeriodData.AddToTail(pTeamData); 
 		}
 	}
 
@@ -1576,10 +1576,10 @@ void CSDKGameRules::State_Leave(match_period_t newState)
 	{
 		for (int i = 0; i < 2; i++)
 		{
-			if (GetGlobalTeam(TEAM_HOME + i)->m_MatchPeriodData.Count() == 0)
+			if (GetGlobalTeam(TEAM_HOME + i)->m_PeriodData.Count() == 0)
 				continue;
 
-			CTeamMatchPeriodData *pTeamData = GetGlobalTeam(TEAM_HOME + i)->m_MatchPeriodData.Tail();
+			CTeamPeriodData *pTeamData = GetGlobalTeam(TEAM_HOME + i)->m_PeriodData.Tail();
 			pTeamData->m_nAnnouncedInjuryTimeSeconds = m_nAnnouncedInjuryTime == -1 ? -1 : m_nAnnouncedInjuryTime * 60;
 			pTeamData->m_nActualInjuryTimeSeconds = GetMatchDisplayTimeSeconds() - GetMatchDisplayTimeSeconds(false);
 		}
@@ -1594,7 +1594,7 @@ void CSDKGameRules::State_Leave(match_period_t newState)
 
 		if (!IsIntermissionState())
 		{
-			pPl->GetPlayerData()->EndCurrentMatchPeriod();
+			pPl->GetData()->EndCurrentMatchPeriod();
 		}
 	}
 
@@ -2187,7 +2187,7 @@ void CSDKGameRules::State_COOLDOWN_Enter()
 		}
 	}
 
-	CPlayerPersistentData::ConvertAllPlayerDataToJson();
+	CPlayerData::ConvertAllPlayerDataToJson();
 }
 
 void CSDKGameRules::State_COOLDOWN_Think()
@@ -2940,7 +2940,7 @@ void CSDKGameRules::ResetMatch()
 	GetGlobalTeam(TEAM_HOME)->ResetStats();
 	GetGlobalTeam(TEAM_AWAY)->ResetStats();
 
-	CPlayerPersistentData::ReallocateAllPlayerData();
+	CPlayerData::ReallocateAllPlayerData();
 
 	ReplayManager()->CleanUp();
 }

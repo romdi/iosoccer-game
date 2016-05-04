@@ -28,7 +28,7 @@ struct LastPlayerCoords
 	float leaveTime;
 };
 
-class CTeamMatchPeriodData
+class CTeamPeriodData
 {
 public:
 	int		m_nRedCards;
@@ -66,7 +66,7 @@ public:
 
 	virtual void ResetData();
 
-	CTeamMatchPeriodData(const char *szMatchPeriodName) { Q_strncpy(m_szMatchPeriodName, szMatchPeriodName, sizeof(m_szMatchPeriodName)); }
+	CTeamPeriodData(const char *szMatchPeriodName) { Q_strncpy(m_szMatchPeriodName, szMatchPeriodName, sizeof(m_szMatchPeriodName)); }
 };
 
 class CTeam : public CBaseEntity
@@ -233,9 +233,9 @@ public:
 	int GetFormationIndex() { return m_nFormationIndex; }
 	void SetFormationIndex(int index, bool silent);
 
-	CUtlVector<CTeamMatchPeriodData *> m_MatchPeriodData;
+	CUtlVector<CTeamPeriodData *> m_PeriodData;
 
-	CTeamMatchPeriodData *GetMatchPeriodData() { return m_MatchPeriodData.Tail(); }
+	CTeamPeriodData *GetPeriodData() { return m_PeriodData.Tail(); }
 
 private:
 

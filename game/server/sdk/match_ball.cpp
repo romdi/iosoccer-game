@@ -429,7 +429,7 @@ void CMatchBall::State_THROWIN_Think()
 		Vector vel = dir * max(strength, sv_ball_throwin_minstrength.GetInt());
 		vel += m_vPlForwardVel2D * sv_ball_throw_playerspeedcoeff.GetFloat();
 
-		m_pPl->AddThrowIn();
+		m_pPl->GetData()->AddThrowIn();
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_THROW_IN_THROW);
 		RemoveAllTouches();
 		SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_HANDS, false, sv_ball_throw_minpostdelay.GetFloat(), true);
@@ -640,7 +640,7 @@ void CMatchBall::State_GOALKICK_Think()
 		&& CanReachBallStandingXY()
 		&& (m_pPl->IsNormalshooting() || !m_pPl->ChargedshotBlocked() && m_pPl->IsChargedshooting()))
 	{
-		m_pPl->AddGoalKick();
+		m_pPl->GetData()->AddGoalKick();
 		RemoveAllTouches();
 		DoGroundShot(false);
 		State_Transition(BALL_STATE_NORMAL);
@@ -706,7 +706,7 @@ void CMatchBall::State_CORNER_Think()
 		&& (m_pPl->IsNormalshooting() || !m_pPl->ChargedshotBlocked() && m_pPl->IsChargedshooting()))
 	{
 		//EmitSound("Crowd.Way");
-		m_pPl->AddCorner();
+		m_pPl->GetData()->AddCorner();
 		RemoveAllTouches();
 		DoGroundShot(false);
 		State_Transition(BALL_STATE_NORMAL);
@@ -852,7 +852,7 @@ void CMatchBall::State_FREEKICK_Think()
 		&& (m_pPl->IsNormalshooting() || !m_pPl->ChargedshotBlocked() && m_pPl->IsChargedshooting()))
 	{
 		//EmitSound("Crowd.Way");
-		m_pPl->AddFreeKick();
+		m_pPl->GetData()->AddFreeKick();
 		RemoveAllTouches();
 		DoGroundShot(true);
 		State_Transition(BALL_STATE_NORMAL);
@@ -963,7 +963,7 @@ void CMatchBall::State_PENALTY_Think()
 			m_pPl->m_ePenaltyState = PENALTY_KICKED;
 		}
 		else
-			m_pPl->AddPenalty();
+			m_pPl->GetData()->AddPenalty();
 
 		RemoveAllTouches();
 		DoGroundShot(false);
@@ -1137,12 +1137,12 @@ bool CMatchBall::CheckSideline()
 	if (pInfo && CSDKPlayer::IsOnField(pLastPl))
 	{
 		if (m_bHitThePost) // Goal post hits don't trigger a statistic change right away, since we don't know if it ends up being a goal or a miss. So do the check here.
-			pLastPl->AddShot();
+			pLastPl->GetData()->AddShot();
 		else if (pInfo->m_eBodyPart != BODY_PART_KEEPERPUNCH
 			&& GetVel().Length2DSqr() < pow(sv_ball_stats_clearance_minspeed.GetFloat(), 2.0f)
 			&& (m_vPos - pInfo->m_vBallPos).Length2DSqr() >= pow(sv_ball_stats_pass_mindist.GetFloat(), 2.0f)) // Pass or interception if over a distance threshold and wasn't punched away by a keeper
 		{
-			pLastPl->AddPass();
+			pLastPl->GetData()->AddPass();
 		}
 	}
 
@@ -1201,12 +1201,12 @@ bool CMatchBall::CheckGoalLine()
 
 		if (m_bHitThePost || m_vTriggerTouchPos.x >= minX && m_vTriggerTouchPos.x <= maxX) // Bounced off the post or crossed the goal line inside the six-yard box
 		{
-			LastPl(true)->AddShot();
+			LastPl(true)->GetData()->AddShot();
 			//EmitSound("Crowd.Miss");
 			ReplayManager()->AddMatchEvent(MATCH_EVENT_MISS, GetGlobalTeam(team)->GetOppTeamNumber(), LastPl(true));
 		}
 		else
-			LastPl(true)->AddPass();
+			LastPl(true)->GetData()->AddPass();
 	}
 
 	if (LastTeam(false) == team)
@@ -1282,8 +1282,8 @@ bool CMatchBall::CheckGoal()
 
 	if (LastTeam(true) != m_nTeam && LastPl(true))
 	{
-		LastPl(true)->AddShot();
-		LastPl(true)->AddShotOnGoal();
+		LastPl(true)->GetData()->AddShot();
+		LastPl(true)->GetData()->AddShotOnGoal();
 	}
 
 	SDKGameRules()->SetKickOffTeam(m_nTeam);
@@ -1298,27 +1298,27 @@ bool CMatchBall::CheckGoal()
 	if (isOwnGoal)
 	{
 		if (pScorer)
-			pScorer->AddOwnGoal();
+			pScorer->GetData()->AddOwnGoal();
 
 		ReplayManager()->AddMatchEvent(MATCH_EVENT_OWNGOAL, scoringTeam, pScorer);
 	}
 	else
 	{
 		if (pScorer)
-			pScorer->AddGoal();
+			pScorer->GetData()->AddGoal();
 
 		if (pFirstAssister)
-			pFirstAssister->AddAssist();
+			pFirstAssister->GetData()->AddAssist();
 
 		if (pSecondAssister)
-			pSecondAssister->AddAssist();
+			pSecondAssister->GetData()->AddAssist();
 
 		ReplayManager()->AddMatchEvent(MATCH_EVENT_GOAL, scoringTeam, pScorer, pFirstAssister, pSecondAssister);
 	}
 
 	CSDKPlayer *pKeeper = GetGlobalTeam(m_nTeam)->GetPlayerByPosType(POS_GK);
 	if (pKeeper)
-		pKeeper->AddGoalConceded();
+		pKeeper->GetData()->AddGoalConceded();
 
 	State_Transition(BALL_STATE_GOAL, sv_ball_statetransition_messagedelay_short.GetFloat(), sv_ball_statetransition_postmessagedelay_short.GetFloat());
 
@@ -1355,7 +1355,7 @@ bool CMatchBall::CheckOffside()
 		}
 		else
 		{
-			pPl->AddOffside();
+			pPl->GetData()->AddOffside();
 			SetFoulParams(FOUL_OFFSIDE, pPl->GetOffsidePos(), pPl);
 			SDKGameRules()->SetOffsideLinePositions(pPl->GetOffsideBallPos().y, pPl->GetOffsidePos().y, pPl->GetOffsideLastOppPlayerPos().y);
 			State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_messagedelay_normal.GetFloat(), sv_ball_statetransition_postmessagedelay_long.GetFloat());
@@ -1616,13 +1616,13 @@ void CMatchBall::Touched(bool isShot, body_part_t bodyPart, const Vector &oldVel
 					|| bodyPart == BODY_PART_KEEPERCATCH
 					&& oldVel.Length2DSqr() >= pow(sv_ball_stats_save_minspeed.GetInt(), 2.0f))) // All fast balls by an opponent which are caught or punched away by the keeper count as shots on goal
 			{
-				m_pPl->AddKeeperSave();
+				m_pPl->GetData()->AddKeeperSave();
 
 				if (bodyPart == BODY_PART_KEEPERCATCH)
-					m_pPl->AddKeeperSaveCaught();
+					m_pPl->GetData()->AddKeeperSaveCaught();
 
-				pLastPl->AddShot();
-				pLastPl->AddShotOnGoal();
+				pLastPl->GetData()->AddShot();
+				pLastPl->GetData()->AddShotOnGoal();
 				ReplayManager()->AddMatchEvent(MATCH_EVENT_KEEPERSAVE, m_pPl->GetTeamNumber(), m_pPl, pLastPl);
 			}
 			// Pass or interception
@@ -1630,21 +1630,21 @@ void CMatchBall::Touched(bool isShot, body_part_t bodyPart, const Vector &oldVel
 			{
 				if (m_bHitThePost)
 				{
-					pLastPl->AddShot();
+					pLastPl->GetData()->AddShot();
 				}
 				else
 				{
-					pLastPl->AddPass();
+					pLastPl->GetData()->AddPass();
 
 					// Pass to teammate
 					if (pInfo->m_nTeam == m_pPl->GetTeamNumber())
 					{
-						pLastPl->AddPassCompleted();
+						pLastPl->GetData()->AddPassCompleted();
 					}
 					// Intercepted by opponent
 					else
 					{
-						m_pPl->AddInterception();
+						m_pPl->GetData()->AddInterception();
 					}
 				}
 			}
@@ -1677,7 +1677,7 @@ void CMatchBall::Touched(bool isShot, body_part_t bodyPart, const Vector &oldVel
 		}
 		else
 		{
-			m_pPl->AddOffside();
+			m_pPl->GetData()->AddOffside();
 			SetFoulParams(FOUL_OFFSIDE, m_pPl->GetOffsidePos(), m_pPl);
 			SDKGameRules()->SetOffsideLinePositions(m_pPl->GetOffsideBallPos().y, m_pPl->GetOffsidePos().y, m_pPl->GetOffsideLastOppPlayerPos().y);
 			State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_messagedelay_normal.GetFloat(), sv_ball_statetransition_postmessagedelay_long.GetFloat());
@@ -1769,25 +1769,25 @@ bool CMatchBall::CheckFoul(CSDKPlayer *pPl)
 			foulType = FOUL_NORMAL_RED_CARD;
 		else if (anim == PLAYERANIMEVENT_TACKLED_FORWARD && localDirToBall.Length2DSqr() >= Sqr(sv_ball_yellowcardballdist_forward.GetFloat()) ||
 				 anim == PLAYERANIMEVENT_TACKLED_BACKWARD && localDirToBall.Length2DSqr() >= Sqr(sv_ball_yellowcardballdist_backward.GetFloat()))
-			foulType = pPl->GetYellowCards() % 2 == 0 ? FOUL_NORMAL_YELLOW_CARD : FOUL_NORMAL_SECOND_YELLOW_CARD;
+			foulType = pPl->GetData()->GetYellowCards() % 2 == 0 ? FOUL_NORMAL_YELLOW_CARD : FOUL_NORMAL_SECOND_YELLOW_CARD;
 		else
 			foulType = FOUL_NORMAL_NO_CARD;
 
 		if (!m_bIsAdvantage || !m_bIsPenalty || isPenalty)
 			SetFoulParams(foulType, pOtherPl->GetLocalOrigin(), pPl, pOtherPl);
 
-		pPl->AddFoul();
-		pOtherPl->AddFoulSuffered();
+		pPl->GetData()->AddFoul();
+		pOtherPl->GetData()->AddFoulSuffered();
 
 		if (foulType == FOUL_NORMAL_YELLOW_CARD || foulType == FOUL_NORMAL_SECOND_YELLOW_CARD)
-			pPl->AddYellowCard();
+			pPl->GetData()->AddYellowCard();
 
 		if (foulType == FOUL_NORMAL_SECOND_YELLOW_CARD || foulType == FOUL_NORMAL_RED_CARD)
 		{
-			pPl->AddRedCard();
+			pPl->GetData()->AddRedCard();
 			int banDuration = 60 * (foulType == FOUL_NORMAL_SECOND_YELLOW_CARD ? sv_ball_player_secondyellowcard_banduration.GetFloat() : sv_ball_player_redcard_banduration.GetFloat());
 			int nextJoin = SDKGameRules()->GetMatchDisplayTimeSeconds(false) + banDuration;
-			pPl->SetNextCardJoin(nextJoin);
+			pPl->GetData()->SetNextCardJoin(nextJoin);
 
 			ReplayManager()->AddMatchEvent(foulType == FOUL_NORMAL_SECOND_YELLOW_CARD ? MATCH_EVENT_SECONDYELLOWCARD : MATCH_EVENT_REDCARD, pPl->GetTeamNumber(), pPl);
 
@@ -2056,7 +2056,7 @@ void CMatchBall::UpdatePossession(CSDKPlayer *pNewPossessor)
 		float duration = gpGlobals->curtime - m_flPossessionStart;
 
 		if (CSDKPlayer::IsOnField(m_pPossessingPl))
-			m_pPossessingPl->AddPossessionTime(duration);
+			m_pPossessingPl->GetData()->AddPossessionTime(duration);
 
 		float total = GetGlobalTeam(TEAM_HOME)->m_flPossessionTime + GetGlobalTeam(TEAM_AWAY)->m_flPossessionTime;
 
@@ -2072,11 +2072,11 @@ void CMatchBall::UpdatePossession(CSDKPlayer *pNewPossessor)
 			remainder_t() : dataIndex(0), remainder(0) {}
 		};
 
-		remainder_t *sortedRemainders = new remainder_t[CPlayerPersistentData::m_PlayerPersistentData.Count()];
+		remainder_t *sortedRemainders = new remainder_t[CPlayerData::m_PlayerData.Count()];
 
-		for (int i = 0; i < CPlayerPersistentData::m_PlayerPersistentData.Count(); i++)
+		for (int i = 0; i < CPlayerData::m_PlayerData.Count(); i++)
 		{
-			CPlayerMatchData *pData = CPlayerPersistentData::m_PlayerPersistentData[i]->m_pMatchData;
+			CPlayerMatchData *pData = CPlayerData::m_PlayerData[i]->m_pMatchData;
 			
 			float exactPossession = pData->m_flPossessionTime * 100 / max(1, total);
 			pData->m_nPossession = (int)exactPossession;
@@ -2101,12 +2101,12 @@ void CMatchBall::UpdatePossession(CSDKPlayer *pNewPossessor)
 			}
 		}
 
-		for (int i = 0; i < CPlayerPersistentData::m_PlayerPersistentData.Count(); i++)
+		for (int i = 0; i < CPlayerData::m_PlayerData.Count(); i++)
 		{
 			if (possSum == 100)
 				break;
 
-			CPlayerMatchData *pData = CPlayerPersistentData::m_PlayerPersistentData[sortedRemainders[i].dataIndex]->m_pMatchData;
+			CPlayerMatchData *pData = CPlayerData::m_PlayerData[sortedRemainders[i].dataIndex]->m_pMatchData;
 			pData->m_nPossession += 1;
 			possSum += 1;
 		}

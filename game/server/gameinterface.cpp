@@ -2900,7 +2900,7 @@ void CServerGameClients::NetworkIDValidated( const char *pszUserName, const char
 		if (!pPlayer)
 			continue;
 
-		CPlayerPersistentData::AllocateData(pPlayer);
+		CPlayerData::AllocateData(pPlayer);
 
 		break;
 	}

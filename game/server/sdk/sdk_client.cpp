@@ -40,11 +40,11 @@ extern bool			g_fGameOver;
 
 void FinishClientPutInServer( CSDKPlayer *pPlayer )
 {
-	CPlayerPersistentData::AllocateData(pPlayer);
+	CPlayerData::AllocateData(pPlayer);
 
 	pPlayer->InitialSpawn();
 
-	//CPlayerPersistentData::LoadPlayerData(pPlayer);
+	//CPlayerData::LoadPlayerData(pPlayer);
 
 	char sName[128];
 	Q_strncpy( sName, pPlayer->GetPlayerName(), sizeof( sName ) );

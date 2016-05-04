@@ -1518,7 +1518,7 @@ void CGameMovement::FullWalkMove( )
 #ifdef GAME_DLL
 	if (!SDKGameRules()->IsIntermissionState() && GetMatchBall()->State_Get() == BALL_STATE_NORMAL && !GetMatchBall()->HasQueuedState() && newPos != oldPos)
 	{
-		pPl->AddExactDistanceCovered((newPos - oldPos).Length2D() * 2.54f / 100);
+		pPl->GetData()->AddExactDistanceCovered((newPos - oldPos).Length2D() * 2.54f / 100);
 	}
 #endif
 }
@@ -1923,7 +1923,7 @@ bool CGameMovement::CheckActionStart()
 #ifdef GAME_DLL
 		if (!SDKGameRules()->IsIntermissionState() && GetMatchBall()->State_Get() == BALL_STATE_NORMAL && !GetMatchBall()->HasQueuedState())
 		{
-			pPl->AddSlidingTackle();
+			pPl->GetData()->AddSlidingTackle();
 
 			GetMatchBall()->CheckFoul(pPl);
 

@@ -873,7 +873,7 @@ bool CBall::DoSlideAction()
 	SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_FEET, true, sv_ball_slide_minpostdelay.GetFloat(), true);
 
 	if (!SDKGameRules()->IsIntermissionState() && State_Get() == BALL_STATE_NORMAL && !HasQueuedState())
-		m_pPl->AddSlidingTackleCompleted();
+		m_pPl->GetData()->AddSlidingTackleCompleted();
 
 	return true;
 }

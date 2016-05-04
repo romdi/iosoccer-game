@@ -443,7 +443,7 @@ void CReplayManager::TakeSnapshot()
 		pPlSnap->hairIndex = pPl->GetHairIndex();
 		pPlSnap->body = pPl->m_nBody;
 
-		pPlSnap->pPlayerData = pPl->GetPlayerData();
+		pPlSnap->pPlayerData = pPl->GetData();
 
 		pSnap->pPlayerSnapshot[pPl->GetTeamNumber() - TEAM_HOME][pPl->GetTeamPosIndex()] = pPlSnap;
 	}
@@ -1016,9 +1016,9 @@ void CReplayManager::AddMatchEvent(match_event_t type, int team, CSDKPlayer *pPl
 	pMatchEvent->second = SDKGameRules()->GetMatchDisplayTimeSeconds();
 	pMatchEvent->team = team;
 	pMatchEvent->atMinGoalPos = GetMatchBall()->GetPos().y < SDKGameRules()->m_vKickOff.GetY();
-	pMatchEvent->pPlayer1Data = pPlayer1 ? pPlayer1->GetPlayerData() : NULL;
-	pMatchEvent->pPlayer2Data = pPlayer2 ? pPlayer2->GetPlayerData() : NULL;
-	pMatchEvent->pPlayer3Data = pPlayer3 ? pPlayer3->GetPlayerData() : NULL;
+	pMatchEvent->pPlayer1Data = pPlayer1 ? pPlayer1->GetData() : NULL;
+	pMatchEvent->pPlayer2Data = pPlayer2 ? pPlayer2->GetData() : NULL;
+	pMatchEvent->pPlayer3Data = pPlayer3 ? pPlayer3->GetData() : NULL;
 
 	m_MatchEvents.AddToTail(pMatchEvent);
 
