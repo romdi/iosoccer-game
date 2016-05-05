@@ -917,8 +917,12 @@ void CGameplaySettingPanel::Update()
 {
 }
 
-extern ConVar hud_names_visible, hud_names_type;
-extern ConVar cl_cam_dist, cl_cam_height;
+extern ConVar
+	hud_names_visible,
+	hud_names_type,
+	cl_cam_dist,
+	cl_cam_height,
+	cl_cam_firstperson;
 
 CVisualSettingPanel::CVisualSettingPanel(Panel *parent, const char *panelName) : BaseClass(parent, panelName)
 {
@@ -938,6 +942,8 @@ CVisualSettingPanel::CVisualSettingPanel(Panel *parent, const char *panelName) :
 	m_pCameraHeightLabel = new Label(m_pContent, "", "Camera height:");
 	m_pCameraHeightValue = new TextEntry(m_pContent, "");
 	m_pCameraHeightSlider = new Slider(m_pContent, "");
+
+	m_pFirstPersonCamera = new CheckButton(m_pContent, "", "First person camera");
 }
 
 void CVisualSettingPanel::PerformLayout()
@@ -946,20 +952,25 @@ void CVisualSettingPanel::PerformLayout()
 
 	m_pContent->SetBounds(PADDING, PADDING, GetWide() - 2 * PADDING, GetTall() - 2 * PADDING);
 
-	m_pShowHudPlayerInfo->SetBounds(0, 0, CONTROL_WIDE_WIDTH + CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
+	int row = 0;
+	int group = 0;
 
-	m_pHudPlayerInfoLabel->SetBounds(0, CONTROL_HEIGHT + CONTROL_VMARGIN, CONTROL_WIDE_WIDTH + CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
-	m_pHudPlayerInfo[0]->SetBounds(0, 2 * CONTROL_HEIGHT + CONTROL_VMARGIN, 125, CONTROL_HEIGHT);
-	m_pHudPlayerInfo[1]->SetBounds(125, 2 * CONTROL_HEIGHT + CONTROL_VMARGIN, 125, CONTROL_HEIGHT);
-	m_pHudPlayerInfo[2]->SetBounds(250, 2 * CONTROL_HEIGHT + CONTROL_VMARGIN, 125, CONTROL_HEIGHT);
+	m_pShowHudPlayerInfo->SetBounds(0, row++, CONTROL_WIDE_WIDTH + CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
 
-	m_pCameraDistanceLabel->SetBounds(0, 3 * CONTROL_HEIGHT + 2 * CONTROL_VMARGIN, CONTROL_WIDE_WIDTH + CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
-	m_pCameraDistanceValue->SetBounds(0, 4 * CONTROL_HEIGHT + 2 * CONTROL_VMARGIN, 50, CONTROL_HEIGHT);
-	m_pCameraDistanceSlider->SetBounds(70, 4 * CONTROL_HEIGHT + 2 * CONTROL_VMARGIN, CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
+	m_pHudPlayerInfoLabel->SetBounds(0, row++ * CONTROL_HEIGHT + group * CONTROL_VMARGIN, CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
+	m_pHudPlayerInfo[0]->SetBounds(0, row * CONTROL_HEIGHT + group * CONTROL_VMARGIN, CONTROL_SHORT_WIDTH, CONTROL_HEIGHT);
+	m_pHudPlayerInfo[1]->SetBounds(CONTROL_SHORT_WIDTH + CONTROL_HMARGIN, row * CONTROL_HEIGHT + group * CONTROL_VMARGIN, CONTROL_SHORT_WIDTH, CONTROL_HEIGHT);
+	m_pHudPlayerInfo[2]->SetBounds(2 * CONTROL_SHORT_WIDTH + 2* CONTROL_HMARGIN, row++ * CONTROL_HEIGHT + group++ * CONTROL_VMARGIN, CONTROL_SHORT_WIDTH, CONTROL_HEIGHT);
 
-	m_pCameraHeightLabel->SetBounds(0, 5 * CONTROL_HEIGHT + 3 * CONTROL_VMARGIN, CONTROL_WIDE_WIDTH + CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
-	m_pCameraHeightValue->SetBounds(0, 6 * CONTROL_HEIGHT + 3 * CONTROL_VMARGIN, 50, CONTROL_HEIGHT);
-	m_pCameraHeightSlider->SetBounds(70, 6 * CONTROL_HEIGHT + 3 * CONTROL_VMARGIN, CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
+	m_pCameraDistanceLabel->SetBounds(0, row++ * CONTROL_HEIGHT + group * CONTROL_VMARGIN, CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
+	m_pCameraDistanceValue->SetBounds(0, row * CONTROL_HEIGHT + group * CONTROL_VMARGIN, CONTROL_SHORT_WIDTH, CONTROL_HEIGHT);
+	m_pCameraDistanceSlider->SetBounds(CONTROL_SHORT_WIDTH + CONTROL_HMARGIN, row++ * CONTROL_HEIGHT + group++ * CONTROL_VMARGIN, CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
+
+	m_pCameraHeightLabel->SetBounds(0, row++ * CONTROL_HEIGHT + group * CONTROL_VMARGIN, CONTROL_WIDE_WIDTH + CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
+	m_pCameraHeightValue->SetBounds(0, row * CONTROL_HEIGHT + group * CONTROL_VMARGIN, CONTROL_SHORT_WIDTH, CONTROL_HEIGHT);
+	m_pCameraHeightSlider->SetBounds(CONTROL_SHORT_WIDTH + CONTROL_HMARGIN, row++ * CONTROL_HEIGHT + group++ * CONTROL_VMARGIN, CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
+
+	m_pFirstPersonCamera->SetBounds(0, row++ * CONTROL_HEIGHT + group++ * CONTROL_VMARGIN, CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
 
 	float minDist, maxDist;
 	cl_cam_dist.GetMin(minDist);
@@ -991,6 +1002,7 @@ void CVisualSettingPanel::Save()
 
 	cl_cam_dist.SetValue(m_pCameraDistanceValue->GetValueAsInt());
 	cl_cam_height.SetValue(m_pCameraHeightValue->GetValueAsInt());
+	cl_cam_firstperson.SetValue(m_pFirstPersonCamera->IsSelected());
 }
 
 void CVisualSettingPanel::Load()
@@ -1000,19 +1012,40 @@ void CVisualSettingPanel::Load()
 
 	m_pCameraDistanceValue->SetText(cl_cam_dist.GetString());
 	m_pCameraHeightValue->SetText(cl_cam_height.GetString());
+	m_pFirstPersonCamera->SetSelected(cl_cam_firstperson.GetBool());
 }
 
 void CVisualSettingPanel::Update()
 {
-	if (m_pCameraDistanceSlider->IsDragged())
-		m_pCameraDistanceValue->SetText(VarArgs("%d", m_pCameraDistanceSlider->GetValue()));
-	else
-		m_pCameraDistanceSlider->SetValue(m_pCameraDistanceValue->GetValueAsInt());
+	for (int i = 0; i < 3; i++)
+	{
+		m_pHudPlayerInfo[i]->SetEnabled(m_pShowHudPlayerInfo->IsSelected());
+	}
 
-	if (m_pCameraHeightSlider->IsDragged())
-		m_pCameraHeightValue->SetText(VarArgs("%d", m_pCameraHeightSlider->GetValue()));
+	if (m_pFirstPersonCamera->IsSelected())
+	{
+		m_pCameraDistanceValue->SetEnabled(false);
+		m_pCameraDistanceSlider->SetEnabled(false);
+		m_pCameraHeightValue->SetEnabled(false);
+		m_pCameraHeightSlider->SetEnabled(false);
+	}
 	else
-		m_pCameraHeightSlider->SetValue(m_pCameraHeightValue->GetValueAsInt());
+	{
+		m_pCameraDistanceValue->SetEnabled(true);
+		m_pCameraDistanceSlider->SetEnabled(true);
+		m_pCameraHeightValue->SetEnabled(true);
+		m_pCameraHeightSlider->SetEnabled(true);
+
+		if (m_pCameraDistanceSlider->IsDragged())
+			m_pCameraDistanceValue->SetText(VarArgs("%d", m_pCameraDistanceSlider->GetValue()));
+		else
+			m_pCameraDistanceSlider->SetValue(m_pCameraDistanceValue->GetValueAsInt());
+
+		if (m_pCameraHeightSlider->IsDragged())
+			m_pCameraHeightValue->SetText(VarArgs("%d", m_pCameraHeightSlider->GetValue()));
+		else
+			m_pCameraHeightSlider->SetValue(m_pCameraHeightValue->GetValueAsInt());
+	}
 }
 
 #include "engine/IEngineSound.h"

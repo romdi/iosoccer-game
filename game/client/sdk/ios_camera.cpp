@@ -607,8 +607,8 @@ void C_Camera::CalcChaseCamView(Vector& eyeOrigin, QAngle& eyeAngles, float& fov
 	const QAngle camAngles = ::input->GetCameraAngles();
 	Vector &camOffset = ::input->GetCameraOffset();
 
-	float dist = cl_cam_firstperson.GetBool() ? -10 : cl_cam_dist.GetFloat();
-	float height = cl_cam_firstperson.GetBool() ? 8 : cl_cam_height.GetFloat();
+	float dist = cl_cam_firstperson.GetBool() ? -15 : cl_cam_dist.GetFloat();
+	float height = cl_cam_firstperson.GetBool() ? 15 : cl_cam_height.GetFloat();
 
 	if (pLocal->IsObserver() && GetCamMode() == CAM_MODE_LOCKED_CHASE && !dynamic_cast<C_MatchBall *>(pTarget))
 	{

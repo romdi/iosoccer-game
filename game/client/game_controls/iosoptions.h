@@ -277,6 +277,8 @@ class CVisualSettingPanel : public PropertyPage, public ISettingPanel
 	TextEntry *m_pCameraHeightValue;
 	Slider *m_pCameraHeightSlider;
 
+	CheckButton *m_pFirstPersonCamera;
+
 public:
 
 	CVisualSettingPanel(Panel *parent, const char *panelName);
