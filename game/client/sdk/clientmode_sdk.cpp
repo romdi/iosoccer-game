@@ -186,7 +186,8 @@ int ClientModeSDKNormal::GetDeathMessageStartHeight( void )
 #include "rendertexture.h"
 #include "materialsystem/ITexture.h"
 
-CHandle<C_BaseAnimatingOverlay> g_ClassImagePlayer;	// player
+CHandle<C_BaseAnimatingOverlay> g_PlayerPreview = NULL;
+CHandle<C_BaseAnimatingOverlay> g_BallPreview = NULL;
 Vector camPos = vec3_invalid;
 Vector newCamPos = vec3_invalid;
 Vector oldCamPos = vec3_invalid;
@@ -194,27 +195,18 @@ float oldCamPosTime = FLT_MAX;
 int oldBodypart = -1;
 bool isAtTarget = false;
 
-bool ShouldRecreateClassImageEntity( C_BaseAnimating* pEnt, const char* pNewModelName )
+void UpdatePlayerPreviewEntity()
 {
-	if ( !pNewModelName || !pNewModelName[0] )
-		return false;
-	if ( !pEnt )
-		return true;
- 
-	const model_t* pModel = pEnt->GetModel();
- 
-	if ( !pModel )
-		return true;
-	const char* pName = modelinfo->GetModelName( pModel );
- 
-	if ( !pName )
-		return true;
-	// reload only if names are different
-	return( V_stricmp( pName, pNewModelName ) != 0 );
-}
+	C_SDKPlayer* pLocalPlayer = CSDKPlayer::GetLocalSDKPlayer();
 
-void UpdateClassImageEntity(const char* pModelName, float angle, int bodypart)
-{
+	if (!pLocalPlayer)
+		return;
+
+	CAppearanceSettingPanel *pPanel = (CAppearanceSettingPanel *)iosOptionsMenu->GetPanel()->GetSettingPanel(SETTING_PANEL_APPEARANCE);
+
+	if (!pPanel->IsVisible())
+		return;
+
 	MDLCACHE_CRITICAL_SECTION();
 
 	ITexture *pRenderTarget = GetPlayerModelTexture();
@@ -225,41 +217,40 @@ void UpdateClassImageEntity(const char* pModelName, float angle, int bodypart)
 	if(!pRenderTarget->IsRenderTarget())
 		Msg(" not a render target");
 
-	C_BasePlayer* pLocalPlayer = C_BasePlayer::GetLocalPlayer();
+	C_BaseAnimatingOverlay *pPlayerPreview = g_PlayerPreview.Get();
  
-	if ( !pLocalPlayer )
-		return;
- 
-	C_BaseAnimatingOverlay* pModel = g_ClassImagePlayer.Get();
- 
-	// Does the entity even exist yet?
-	bool recreatePlayer = ShouldRecreateClassImageEntity( pModel, pModelName );
-	if ( recreatePlayer )
+	if (!pPlayerPreview)
 	{
-		// if the pointer already exists, remove it as we create a new one.
-		if ( pModel )
-			pModel->Remove();
- 
-		// create a new instance
-		pModel = new C_BaseAnimatingOverlay();
-		pModel->InitializeAsClientEntity( pModelName, RENDER_GROUP_OPAQUE_ENTITY );
-		pModel->AddEffects( EF_NODRAW ); // don't let the renderer draw the model normally
-		// have the player stand idle
-		pModel->SetSequence( pModel->LookupSequence( "walk_lower" ) );
-		pModel->SetPoseParameter( 0, 0.0f ); // move_yaw
-		pModel->SetPoseParameter( 1, 0.0f ); // body_pitch, look down a bit
-		pModel->SetPoseParameter( 2, 0.0f ); // body_yaw
-		pModel->SetPoseParameter( 3, 0.0f ); // move_y
-		pModel->SetPoseParameter( 4, 0.0f ); // move_x
+		pPlayerPreview = new C_BaseAnimatingOverlay();
+		pPlayerPreview->InitializeAsClientEntity("models/player/player.mdl", RENDER_GROUP_OPAQUE_ENTITY);
+		pPlayerPreview->AddEffects(EF_NODRAW); // don't let the renderer draw the model normally
+		pPlayerPreview->SetSequence(pPlayerPreview->LookupSequence("idle"));
+		pPlayerPreview->SetPoseParameter(0, 0.0f); // move_yaw
+		pPlayerPreview->SetPoseParameter(1, 0.0f); // body_pitch, look down a bit
+		pPlayerPreview->SetPoseParameter(2, 0.0f); // body_yaw
+		pPlayerPreview->SetPoseParameter(3, 0.0f); // move_y
+		pPlayerPreview->SetPoseParameter(4, 0.0f); // move_x
+		g_PlayerPreview = pPlayerPreview;
 
-		pModel->m_nBody = pLocalPlayer->m_nBody;
-
-		g_ClassImagePlayer = pModel;
 	}
 
-	CAppearanceSettingPanel *pPanel = (CAppearanceSettingPanel *)iosOptionsMenu->GetPanel()->GetSettingPanel(SETTING_PANEL_APPEARANCE);
+	C_BaseAnimatingOverlay *pBallPreview = g_BallPreview.Get();
 
-	static int headBodyGroup = pModel->FindBodygroupByName("head");
+	if (!pBallPreview)
+	{
+		pBallPreview = new C_BaseAnimatingOverlay();
+		pBallPreview->InitializeAsClientEntity("models/ball/ball.mdl", RENDER_GROUP_OPAQUE_ENTITY);
+		pBallPreview->AddEffects(EF_NODRAW);
+		g_BallPreview = pBallPreview;
+	}
+
+	Vector handPos;
+	QAngle handAng;
+	pPlayerPreview->GetAttachment("ball_right_hand", handPos, handAng);
+	pBallPreview->SetLocalOrigin(handPos);
+	pBallPreview->SetLocalAngles(handAng);
+	
+	static int headBodyGroup = pPlayerPreview->FindBodygroupByName("head");
 
 	int headIndex;
 
@@ -270,24 +261,30 @@ void UpdateClassImageEntity(const char* pModelName, float angle, int bodypart)
 	case 4: headIndex = 2; break;
 	}
 
-	pModel->SetBodygroup(headBodyGroup, headIndex);
+	pPlayerPreview->SetBodygroup(headBodyGroup, headIndex);
 
-	static int hairBodyGroup = pModel->FindBodygroupByName("hair");
-	pModel->SetBodygroup(hairBodyGroup, pPanel->GetPlayerHairIndex());
+	static int hairBodyGroup = pPlayerPreview->FindBodygroupByName("hair");
+	pPlayerPreview->SetBodygroup(hairBodyGroup, pPanel->GetPlayerHairIndex());
 
-	static int sleeveBodyGroup = pModel->FindBodygroupByName("sleeves");
-	pModel->SetBodygroup(sleeveBodyGroup, pPanel->GetPlayerSleeveIndex());
+	static int sleeveBodyGroup = pPlayerPreview->FindBodygroupByName("sleeves");
+	pPlayerPreview->SetBodygroup(sleeveBodyGroup, pPanel->GetPlayerSleeveIndex());
 
-	static int armBodyGroup = pModel->FindBodygroupByName("arms");
-	pModel->SetBodygroup(armBodyGroup, pPanel->GetPlayerSleeveIndex() == 0 ? 1 : 0);
+	static int armBodyGroup = pPlayerPreview->FindBodygroupByName("arms");
+	pPlayerPreview->SetBodygroup(armBodyGroup, pPanel->GetPlayerSleeveIndex() == 0 ? 1 : 0);
+
+	static int handBodyGroup = pPlayerPreview->FindBodygroupByName("hands");
+	pPlayerPreview->SetBodygroup(handBodyGroup, pPanel->IsKeeperPreview() ? 1 : 0);
  
 	Vector origin = pLocalPlayer->EyePosition();
 
+	float angle = pPanel->GetPlayerPreviewAngle();
+	int bodypart = pPanel->GetPlayerBodypart();
+
 	// move player model in front of our view
-	pModel->SetAbsOrigin( origin );
-	pModel->SetAbsAngles( QAngle( 0, 180 + angle, 0 ) );
+	pPlayerPreview->SetAbsOrigin( origin );
+	pPlayerPreview->SetAbsAngles( QAngle( 0, 180 + angle, 0 ) );
  
-	pModel->FrameAdvance( gpGlobals->frametime );
+	pPlayerPreview->FrameAdvance( gpGlobals->frametime );
 
 	// Now draw it.
 	CViewSetup view;
@@ -302,17 +299,17 @@ void UpdateClassImageEntity(const char* pModelName, float angle, int bodypart)
  
 	// make sure that we see all of the player model
 	Vector vMins, vMaxs;
-	pModel->C_BaseAnimating::GetRenderBounds( vMins, vMaxs );
+	pPlayerPreview->C_BaseAnimating::GetRenderBounds( vMins, vMaxs );
 
 	Vector target;
 
 	if (bodypart == 0)
 	{
-		target = origin + Vector(-25, 0, vMaxs.z - 9);
+		target = origin + Vector(-28, 0, vMaxs.z - 9);
 	}
 	else if (bodypart == 1)
 	{
-		target = origin + Vector(-45, 0, (vMins.z + vMaxs.z) * 0.5f + 15);
+		target = origin + Vector(-46, 0, (vMins.z + vMaxs.z) * 0.5f + 20);
 	}
 	else
 	{
@@ -398,7 +395,10 @@ void UpdateClassImageEntity(const char* pModelName, float angle, int bodypart)
 	render->SetColorModulation( color );
 	render->SetBlend( 1.0f );
  
-	pModel->DrawModel( STUDIO_RENDER );
+	pPlayerPreview->DrawModel(STUDIO_RENDER);
+
+	if (pPanel->ShowBallPreview())
+		pBallPreview->DrawModel( STUDIO_RENDER );
 
 	modelrender->SuppressEngineLighting( false );
  
@@ -411,17 +411,7 @@ void ClientModeSDKNormal::PostRenderVGui()
 
 void ClientModeSDKNormal::PostRenderVGuiOnTop()
 {
-	if (!CSDKPlayer::GetLocalSDKPlayer())
-		return;
-
-	CAppearanceSettingPanel *pAppearanceSettingPanel = (CAppearanceSettingPanel *)iosOptionsMenu->GetPanel()->GetSettingPanel(SETTING_PANEL_APPEARANCE);
-
-	if (!pAppearanceSettingPanel->IsVisible())
-		return;
-
-	float angle = pAppearanceSettingPanel->GetPlayerPreviewAngle();
-	int bodypart = pAppearanceSettingPanel->GetPlayerBodypart();
-	UpdateClassImageEntity("models/player/player.mdl", angle, bodypart);
+	UpdatePlayerPreviewEntity();
 }
 
 bool ClientModeSDKNormal::CanRecordDemo( char *errorMsg, int length ) const

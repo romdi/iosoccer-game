@@ -152,11 +152,11 @@ class CAppearanceSettingPanel : public PropertyPage, public ISettingPanel
 	Label *m_pKeeperGloveLabel;
 	ComboBox *m_pKeeperGloveList;
 
-	Label *m_pPreferredOutfieldShirtNumberLabel;
-	ComboBox *m_pPreferredOutfieldShirtNumberList;
+	Label *m_pOutfieldShirtNumberLabel;
+	ComboBox *m_pOutfieldShirtNumberList;
 
-	Label *m_pPreferredKeeperShirtNumberLabel;
-	ComboBox *m_pPreferredKeeperShirtNumberList;
+	Label *m_pKeeperShirtNumberLabel;
+	ComboBox *m_pKeeperShirtNumberList;
 
 	Label *m_pPlayerBallSkinLabel;
 	ComboBox *m_pPlayerBallSkinList;
@@ -173,6 +173,10 @@ class CAppearanceSettingPanel : public PropertyPage, public ISettingPanel
 	Panel *m_pBodypartPanel;
 
 	RadioButton *m_pBodypartRadioButtons[3];
+
+	RadioButton *m_pPositionPreviewType[2];
+
+	CheckButton *m_pShowBallPreview;
 
 	Label *m_pConnectionInfoLabel;
 
@@ -199,10 +203,13 @@ public:
 	int GetPlayerSleeveIndex();
 	const char *GetPlayerShoeName();
 	const char *GetPlayerKeeperGloveName();
-	int GetPlayerOutfieldShirtNumber();
+	int GetShirtNumber(bool keeper);
 	void GetPlayerTeamInfo(const char **teamFolder, const char **kitFolder);
 	float GetPlayerPreviewAngle();
 	int GetPlayerBodypart();
+	bool IsKeeperPreview();
+	bool ShowBallPreview();
+	const char *GetBallName();
 };
 
 class CGameplaySettingPanel : public PropertyPage, public ISettingPanel

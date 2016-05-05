@@ -72,9 +72,9 @@ void CC_IOSOptionsMenu(const CCommand &args)
 
 ConCommand iosoptionsmenu("iosoptionsmenu", CC_IOSOptionsMenu);
 
-enum { LABEL_WIDTH = 260, INPUT_WIDTH = 260, SHORTINPUT_WIDTH = 200, TEXT_HEIGHT = 26, TEXT_MARGIN = 5 };
-enum { PANEL_TOPMARGIN = 70, PANEL_MARGIN = 5, PANEL_WIDTH = (1024 - 2 * PANEL_MARGIN), PANEL_HEIGHT = (720 - 2 * PANEL_MARGIN) };
-enum { PADDING = 10, TOP_PADDING = 30 };
+enum { PANEL_MARGIN = 5, PANEL_WIDTH = (768 - 2 * PANEL_MARGIN), PANEL_HEIGHT = (768 - 2 * PANEL_MARGIN) };
+enum { CONTROL_HMARGIN = 15, CONTROL_VMARGIN = 5, CONTROL_WIDE_WIDTH = 280, CONTROL_SHORT_WIDTH = CONTROL_WIDE_WIDTH / 2 - CONTROL_HMARGIN / 2, CONTROL_HEIGHT = 26 };
+enum { PADDING = 15, TOP_PADDING = 30 };
 enum { BUTTON_WIDTH = 80, BUTTON_HEIGHT = 26, BUTTON_MARGIN = 5 };
 enum { SUGGESTED_VALUE_WIDTH = 150, SUGGESTED_VALUE_MARGIN = 5 };
 enum { INFOBUTTON_WIDTH = 30, INFOBUTTON_MARGIN = 5 };
@@ -124,7 +124,7 @@ void CIOSOptionsPanel::ApplySchemeSettings( IScheme *pScheme )
 	SetTitle("IOS Settings", false);
 	SetProportional(false);
 	SetSizeable(false);
-	SetBounds(0, 0, 600, PANEL_HEIGHT);
+	SetBounds(0, 0, PANEL_WIDTH, PANEL_HEIGHT);
 	//SetBgColor(Color(0, 0, 0, 255));
 	SetPaintBackgroundEnabled(true);
 	MoveToCenterOfScreen();
@@ -347,53 +347,53 @@ void CNetworkSettingPanel::PerformLayout()
 
 	m_pContent->SetBounds(PADDING, PADDING, GetWide() - 2 * PADDING, GetTall() - 2 * PADDING);
 
-	m_pPlayerNameLabel->SetBounds(0, 0, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pPlayerNameText->SetBounds(0, TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
+	m_pPlayerNameLabel->SetBounds(0, 0, CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
+	m_pPlayerNameText->SetBounds(0, CONTROL_HEIGHT, CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
 	m_pPlayerNameText->AddActionSignalTarget( this );
 	m_pPlayerNameText->SendNewLine(true); // with the txtEntry Type you need to set it to pass the return key as a message
 
-	m_pClubNameLabel->SetBounds(0, 2 * TEXT_HEIGHT + TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pClubNameText->SetBounds(0, 3 * TEXT_HEIGHT + TEXT_MARGIN, INPUT_WIDTH, TEXT_HEIGHT);
+	m_pClubNameLabel->SetBounds(0, 2 * CONTROL_HEIGHT + CONTROL_VMARGIN, CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
+	m_pClubNameText->SetBounds(0, 3 * CONTROL_HEIGHT + CONTROL_VMARGIN, CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
 
-	m_pNationalTeamNameLabel->SetBounds(0, 4 * TEXT_HEIGHT + 2 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pNationalTeamNameText->SetBounds(0, 5 * TEXT_HEIGHT + 2 * TEXT_MARGIN, INPUT_WIDTH, TEXT_HEIGHT);
+	m_pNationalTeamNameLabel->SetBounds(0, 4 * CONTROL_HEIGHT + 2 * CONTROL_VMARGIN, CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
+	m_pNationalTeamNameText->SetBounds(0, 5 * CONTROL_HEIGHT + 2 * CONTROL_VMARGIN, CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
 
-	m_pCountryNameLabel->SetBounds(0, 6 * TEXT_HEIGHT + 3 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pCountryNameList->SetBounds(0, 7 * TEXT_HEIGHT + 3 * TEXT_MARGIN, INPUT_WIDTH, TEXT_HEIGHT);
+	m_pCountryNameLabel->SetBounds(0, 6 * CONTROL_HEIGHT + 3 * CONTROL_VMARGIN, CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
+	m_pCountryNameList->SetBounds(0, 7 * CONTROL_HEIGHT + 3 * CONTROL_VMARGIN, CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
 
-	m_pInterpDurationLabel->SetBounds(0, 8 * TEXT_HEIGHT + 4 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pInterpDurationList->SetBounds(0, 9 * TEXT_HEIGHT + 4 * TEXT_MARGIN, INPUT_WIDTH, TEXT_HEIGHT);
-	m_pInterpDurationSuggestedValueButton->SetBounds(INPUT_WIDTH + SUGGESTED_VALUE_MARGIN, 9 * TEXT_HEIGHT + 4 * TEXT_MARGIN, SUGGESTED_VALUE_WIDTH, TEXT_HEIGHT);
+	m_pInterpDurationLabel->SetBounds(0, 8 * CONTROL_HEIGHT + 4 * CONTROL_VMARGIN, CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
+	m_pInterpDurationList->SetBounds(0, 9 * CONTROL_HEIGHT + 4 * CONTROL_VMARGIN, CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
+	m_pInterpDurationSuggestedValueButton->SetBounds(CONTROL_WIDE_WIDTH + SUGGESTED_VALUE_MARGIN, 9 * CONTROL_HEIGHT + 4 * CONTROL_VMARGIN, SUGGESTED_VALUE_WIDTH, CONTROL_HEIGHT);
 	m_pInterpDurationSuggestedValueButton->SetContentAlignment(Label::a_center);
-	m_pInterpDurationInfoButton->SetBounds(INPUT_WIDTH + SUGGESTED_VALUE_MARGIN + SUGGESTED_VALUE_WIDTH + INFOBUTTON_MARGIN, 9 * TEXT_HEIGHT + 4 * TEXT_MARGIN, INFOBUTTON_WIDTH, TEXT_HEIGHT);
+	m_pInterpDurationInfoButton->SetBounds(CONTROL_WIDE_WIDTH + SUGGESTED_VALUE_MARGIN + SUGGESTED_VALUE_WIDTH + INFOBUTTON_MARGIN, 9 * CONTROL_HEIGHT + 4 * CONTROL_VMARGIN, INFOBUTTON_WIDTH, CONTROL_HEIGHT);
 	m_pInterpDurationInfoButton->SetContentAlignment(Label::a_center);
 
-	m_pSmoothDurationLabel->SetBounds(0, 10 * TEXT_HEIGHT + 5 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pSmoothDurationList->SetBounds(0, 11 * TEXT_HEIGHT + 5 * TEXT_MARGIN, INPUT_WIDTH, TEXT_HEIGHT);
-	m_pSmoothDurationSuggestedValueButton->SetBounds(INPUT_WIDTH + SUGGESTED_VALUE_MARGIN, 11 * TEXT_HEIGHT + 5 * TEXT_MARGIN, SUGGESTED_VALUE_WIDTH, TEXT_HEIGHT);
+	m_pSmoothDurationLabel->SetBounds(0, 10 * CONTROL_HEIGHT + 5 * CONTROL_VMARGIN, CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
+	m_pSmoothDurationList->SetBounds(0, 11 * CONTROL_HEIGHT + 5 * CONTROL_VMARGIN, CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
+	m_pSmoothDurationSuggestedValueButton->SetBounds(CONTROL_WIDE_WIDTH + SUGGESTED_VALUE_MARGIN, 11 * CONTROL_HEIGHT + 5 * CONTROL_VMARGIN, SUGGESTED_VALUE_WIDTH, CONTROL_HEIGHT);
 	m_pSmoothDurationSuggestedValueButton->SetContentAlignment(Label::a_center);
-	m_pSmoothDurationInfoButton->SetBounds(INPUT_WIDTH + SUGGESTED_VALUE_MARGIN + SUGGESTED_VALUE_WIDTH + INFOBUTTON_MARGIN, 11 * TEXT_HEIGHT + 5 * TEXT_MARGIN, INFOBUTTON_WIDTH, TEXT_HEIGHT);
+	m_pSmoothDurationInfoButton->SetBounds(CONTROL_WIDE_WIDTH + SUGGESTED_VALUE_MARGIN + SUGGESTED_VALUE_WIDTH + INFOBUTTON_MARGIN, 11 * CONTROL_HEIGHT + 5 * CONTROL_VMARGIN, INFOBUTTON_WIDTH, CONTROL_HEIGHT);
 	m_pSmoothDurationInfoButton->SetContentAlignment(Label::a_center);
 
-	m_pRateLabel->SetBounds(0, 12 * TEXT_HEIGHT + 6 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pRateList->SetBounds(0, 13 * TEXT_HEIGHT + 6 * TEXT_MARGIN, INPUT_WIDTH, TEXT_HEIGHT);
-	m_pRateSuggestedValueButton->SetBounds(INPUT_WIDTH + SUGGESTED_VALUE_MARGIN, 13 * TEXT_HEIGHT + 6 * TEXT_MARGIN, SUGGESTED_VALUE_WIDTH, TEXT_HEIGHT);
+	m_pRateLabel->SetBounds(0, 12 * CONTROL_HEIGHT + 6 * CONTROL_VMARGIN, CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
+	m_pRateList->SetBounds(0, 13 * CONTROL_HEIGHT + 6 * CONTROL_VMARGIN, CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
+	m_pRateSuggestedValueButton->SetBounds(CONTROL_WIDE_WIDTH + SUGGESTED_VALUE_MARGIN, 13 * CONTROL_HEIGHT + 6 * CONTROL_VMARGIN, SUGGESTED_VALUE_WIDTH, CONTROL_HEIGHT);
 	m_pRateSuggestedValueButton->SetContentAlignment(Label::a_center);
-	m_pRateInfoButton->SetBounds(INPUT_WIDTH + SUGGESTED_VALUE_MARGIN + SUGGESTED_VALUE_WIDTH + INFOBUTTON_MARGIN, 13 * TEXT_HEIGHT + 6 * TEXT_MARGIN, INFOBUTTON_WIDTH, TEXT_HEIGHT);
+	m_pRateInfoButton->SetBounds(CONTROL_WIDE_WIDTH + SUGGESTED_VALUE_MARGIN + SUGGESTED_VALUE_WIDTH + INFOBUTTON_MARGIN, 13 * CONTROL_HEIGHT + 6 * CONTROL_VMARGIN, INFOBUTTON_WIDTH, CONTROL_HEIGHT);
 	m_pRateInfoButton->SetContentAlignment(Label::a_center);
 
-	m_pUpdaterateLabel->SetBounds(0, 14 * TEXT_HEIGHT + 7 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pUpdaterateList->SetBounds(0, 15 * TEXT_HEIGHT + 7 * TEXT_MARGIN, INPUT_WIDTH, TEXT_HEIGHT);
-	m_pUpdaterateSuggestedValueButton->SetBounds(INPUT_WIDTH + SUGGESTED_VALUE_MARGIN, 15 * TEXT_HEIGHT + 7 * TEXT_MARGIN, SUGGESTED_VALUE_WIDTH, TEXT_HEIGHT);
+	m_pUpdaterateLabel->SetBounds(0, 14 * CONTROL_HEIGHT + 7 * CONTROL_VMARGIN, CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
+	m_pUpdaterateList->SetBounds(0, 15 * CONTROL_HEIGHT + 7 * CONTROL_VMARGIN, CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
+	m_pUpdaterateSuggestedValueButton->SetBounds(CONTROL_WIDE_WIDTH + SUGGESTED_VALUE_MARGIN, 15 * CONTROL_HEIGHT + 7 * CONTROL_VMARGIN, SUGGESTED_VALUE_WIDTH, CONTROL_HEIGHT);
 	m_pUpdaterateSuggestedValueButton->SetContentAlignment(Label::a_center);
-	m_pUpdaterateInfoButton->SetBounds(INPUT_WIDTH + SUGGESTED_VALUE_MARGIN + SUGGESTED_VALUE_WIDTH + INFOBUTTON_MARGIN, 15 * TEXT_HEIGHT + 7 * TEXT_MARGIN, INFOBUTTON_WIDTH, TEXT_HEIGHT);
+	m_pUpdaterateInfoButton->SetBounds(CONTROL_WIDE_WIDTH + SUGGESTED_VALUE_MARGIN + SUGGESTED_VALUE_WIDTH + INFOBUTTON_MARGIN, 15 * CONTROL_HEIGHT + 7 * CONTROL_VMARGIN, INFOBUTTON_WIDTH, CONTROL_HEIGHT);
 	m_pUpdaterateInfoButton->SetContentAlignment(Label::a_center);
 
-	m_pCommandrateLabel->SetBounds(0, 16 * TEXT_HEIGHT + 8 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pCommandrateList->SetBounds(0, 17 * TEXT_HEIGHT + 8 * TEXT_MARGIN, INPUT_WIDTH, TEXT_HEIGHT);
-	m_pCommandrateSuggestedValueButton->SetBounds(INPUT_WIDTH + SUGGESTED_VALUE_MARGIN, 17 * TEXT_HEIGHT + 8 * TEXT_MARGIN, SUGGESTED_VALUE_WIDTH, TEXT_HEIGHT);
+	m_pCommandrateLabel->SetBounds(0, 16 * CONTROL_HEIGHT + 8 * CONTROL_VMARGIN, CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
+	m_pCommandrateList->SetBounds(0, 17 * CONTROL_HEIGHT + 8 * CONTROL_VMARGIN, CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
+	m_pCommandrateSuggestedValueButton->SetBounds(CONTROL_WIDE_WIDTH + SUGGESTED_VALUE_MARGIN, 17 * CONTROL_HEIGHT + 8 * CONTROL_VMARGIN, SUGGESTED_VALUE_WIDTH, CONTROL_HEIGHT);
 	m_pCommandrateSuggestedValueButton->SetContentAlignment(Label::a_center);
-	m_pCommandrateInfoButton->SetBounds(INPUT_WIDTH + SUGGESTED_VALUE_MARGIN + SUGGESTED_VALUE_WIDTH + INFOBUTTON_MARGIN, 17 * TEXT_HEIGHT + 8 * TEXT_MARGIN, INFOBUTTON_WIDTH, TEXT_HEIGHT);
+	m_pCommandrateInfoButton->SetBounds(CONTROL_WIDE_WIDTH + SUGGESTED_VALUE_MARGIN + SUGGESTED_VALUE_WIDTH + INFOBUTTON_MARGIN, 17 * CONTROL_HEIGHT + 8 * CONTROL_VMARGIN, INFOBUTTON_WIDTH, CONTROL_HEIGHT);
 	m_pCommandrateInfoButton->SetContentAlignment(Label::a_center);
 }
 
@@ -481,7 +481,7 @@ CAppearanceSettingPanel::CAppearanceSettingPanel(Panel *parent, const char *pane
 
 	m_pPlayerPreviewPanel = new ImagePanel(m_pContent, "");
 
-	m_pShirtNameLabel = new Label(m_pContent, "", "Shirt Name:");
+	m_pShirtNameLabel = new Label(m_pContent, "", "Shirt name:");
 	m_pShirtNameText = new TextEntry(m_pContent, "");
 	m_pShirtNameText->SetMaximumCharCount(MAX_PLAYER_NAME_LENGTH - 1);
 	m_pShirtNameText->SetAllowNonAsciiCharacters(true);
@@ -526,24 +526,24 @@ CAppearanceSettingPanel::CAppearanceSettingPanel(Panel *parent, const char *pane
 	}
 
 
-	m_pPreferredOutfieldShirtNumberLabel = new Label(m_pContent, "", "Preferred Outfield Shirt Number:");
-	m_pPreferredOutfieldShirtNumberList = new ComboBox(m_pContent, "", MAX_VISIBLE_DROPDOWN, false);
+	m_pOutfieldShirtNumberLabel = new Label(m_pContent, "", "Outfield number:");
+	m_pOutfieldShirtNumberList = new ComboBox(m_pContent, "", MAX_VISIBLE_DROPDOWN, false);
 
 	for (int i = 2; i <= 99; i++)
 	{
 		kv = new KeyValues("UserData", "number", i);
-		m_pPreferredOutfieldShirtNumberList->AddItem(VarArgs("%d", i), kv);
+		m_pOutfieldShirtNumberList->AddItem(VarArgs("%d", i), kv);
 		kv->deleteThis();
 	}
 
 
-	m_pPreferredKeeperShirtNumberLabel = new Label(m_pContent, "", "Preferred Keeper Shirt Number:");
-	m_pPreferredKeeperShirtNumberList = new ComboBox(m_pContent, "", MAX_VISIBLE_DROPDOWN, false);
+	m_pKeeperShirtNumberLabel = new Label(m_pContent, "", "Keeper number:");
+	m_pKeeperShirtNumberList = new ComboBox(m_pContent, "", MAX_VISIBLE_DROPDOWN, false);
 
 	for (int i = 1; i <= 99; i++)
 	{
 		kv = new KeyValues("UserData", "number", i);
-		m_pPreferredKeeperShirtNumberList->AddItem(VarArgs("%d", i), kv);
+		m_pKeeperShirtNumberList->AddItem(VarArgs("%d", i), kv);
 		kv->deleteThis();
 	}
 
@@ -551,13 +551,13 @@ CAppearanceSettingPanel::CAppearanceSettingPanel(Panel *parent, const char *pane
 	m_pShoeLabel = new Label(m_pContent, "", "Shoes:");
 	m_pShoeList = new ComboBox(m_pContent, "", MAX_VISIBLE_DROPDOWN, false);
 
-	m_pKeeperGloveLabel = new Label(m_pContent, "", "Keeper Gloves:");
+	m_pKeeperGloveLabel = new Label(m_pContent, "", "Keeper gloves:");
 	m_pKeeperGloveList = new ComboBox(m_pContent, "", MAX_VISIBLE_DROPDOWN, false);
 
-	m_pPlayerBallSkinLabel = new Label(m_pContent, "", "Warm Up Ball:");
+	m_pPlayerBallSkinLabel = new Label(m_pContent, "", "Warm up ball:");
 	m_pPlayerBallSkinList = new ComboBox(m_pContent, "", MAX_VISIBLE_DROPDOWN, false);
 
-	m_pPreviewTeamLabel = new Label(m_pContent, "", "Preview Team Kit:");
+	m_pPreviewTeamLabel = new Label(m_pContent, "", "Preview team kit:");
 	m_pPreviewTeamList = new ComboBox(m_pContent, "", MAX_VISIBLE_DROPDOWN, false);
 
 	m_pBodypartPanel = new Panel(m_pContent, "");
@@ -566,14 +566,21 @@ CAppearanceSettingPanel::CAppearanceSettingPanel(Panel *parent, const char *pane
 	m_pBodypartRadioButtons[2] = new RadioButton(m_pBodypartPanel, "", "Shoes");
 	m_pBodypartRadioButtons[1]->SetSelected(true);
 
+	m_pPositionPreviewType[0] = new RadioButton(m_pContent, "", "Outfield preview");
+	m_pPositionPreviewType[1] = new RadioButton(m_pContent, "", "Keeper preview");
+	m_pPositionPreviewType[0]->SetSelected(true);
+
+	m_pShowBallPreview = new CheckButton(m_pContent, "", "Ball preview");
+	m_pShowBallPreview->SetSelected(true);
+
 	m_pPlayerAngleSlider = new Slider(m_pContent, "");
 	m_pPlayerAngleSlider->SetRange(-18000, 18000);
 	m_pPlayerAngleSlider->SetValue(0);
 
-	m_pPlayerAngleAutoRotate = new CheckButton(m_pContent, "", "Auto-rotate the player model preview");
+	m_pPlayerAngleAutoRotate = new CheckButton(m_pContent, "", "Auto-rotate preview");
 	m_pPlayerAngleAutoRotate->SetSelected(true);
 
-	m_pConnectionInfoLabel = new Label(m_pContent, "", "No preview when disconnected");
+	m_pConnectionInfoLabel = new Label(m_pContent, "", "Can't preview when disconnected");
 
 	m_flLastTeamKitUpdateTime = -1;
 	m_flLastBallSkinUpdateTime = -1;
@@ -591,44 +598,53 @@ void CAppearanceSettingPanel::PerformLayout()
 	m_pPlayerPreviewPanel->SetImage("../_rt_playermodel");
 	m_pPlayerPreviewPanel->SetShouldScaleImage(false);
 
-	m_pShirtNameLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 0 * TEXT_HEIGHT + 0 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pShirtNameText->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 1 * TEXT_HEIGHT + 0 * TEXT_MARGIN, SHORTINPUT_WIDTH, TEXT_HEIGHT);
+	int offset = APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH;
+	int row = 0;
+	int group = 0;
 
-	m_pPreferredKeeperShirtNumberLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 2 * TEXT_HEIGHT + 1 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pPreferredKeeperShirtNumberList->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 3 * TEXT_HEIGHT + 1 * TEXT_MARGIN, SHORTINPUT_WIDTH, TEXT_HEIGHT);
+	m_pShirtNameLabel->SetBounds(offset, row++ * CONTROL_HEIGHT + group * CONTROL_VMARGIN, CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
+	m_pShirtNameText->SetBounds(offset, row++ * CONTROL_HEIGHT + group++ * CONTROL_VMARGIN, CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
 
-	m_pPreferredOutfieldShirtNumberLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 4 * TEXT_HEIGHT + 2 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pPreferredOutfieldShirtNumberList->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 5 * TEXT_HEIGHT + 2 * TEXT_MARGIN, SHORTINPUT_WIDTH, TEXT_HEIGHT);
+	m_pOutfieldShirtNumberLabel->SetBounds(offset, row * CONTROL_HEIGHT + group * CONTROL_VMARGIN, CONTROL_SHORT_WIDTH, CONTROL_HEIGHT);
+	m_pKeeperShirtNumberLabel->SetBounds(offset + CONTROL_SHORT_WIDTH + CONTROL_HMARGIN, row++ * CONTROL_HEIGHT + group * CONTROL_VMARGIN, CONTROL_SHORT_WIDTH, CONTROL_HEIGHT);
+	m_pOutfieldShirtNumberList->SetBounds(offset, row * CONTROL_HEIGHT + group * CONTROL_VMARGIN, CONTROL_SHORT_WIDTH, CONTROL_HEIGHT);
+	m_pKeeperShirtNumberList->SetBounds(offset + CONTROL_SHORT_WIDTH + CONTROL_HMARGIN, row++ * CONTROL_HEIGHT + group++ * CONTROL_VMARGIN, CONTROL_SHORT_WIDTH, CONTROL_HEIGHT);
 
-	m_pSkinIndexLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 6 * TEXT_HEIGHT + 3 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pSkinIndexList->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 7 * TEXT_HEIGHT + 3 * TEXT_MARGIN, SHORTINPUT_WIDTH, TEXT_HEIGHT);
+	m_pSkinIndexLabel->SetBounds(offset, row * CONTROL_HEIGHT + group * CONTROL_VMARGIN, CONTROL_SHORT_WIDTH, CONTROL_HEIGHT);
+	m_pHairIndexLabel->SetBounds(offset + CONTROL_SHORT_WIDTH + CONTROL_HMARGIN, row++ * CONTROL_HEIGHT + group * CONTROL_VMARGIN, CONTROL_SHORT_WIDTH, CONTROL_HEIGHT);
+	m_pSkinIndexList->SetBounds(offset, row * CONTROL_HEIGHT + group * CONTROL_VMARGIN, CONTROL_SHORT_WIDTH, CONTROL_HEIGHT);
+	m_pHairIndexList->SetBounds(offset + CONTROL_SHORT_WIDTH + CONTROL_HMARGIN, row++ * CONTROL_HEIGHT + group++ * CONTROL_VMARGIN, CONTROL_SHORT_WIDTH, CONTROL_HEIGHT);
 
-	m_pHairIndexLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 8 * TEXT_HEIGHT + 4 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pHairIndexList->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 9 * TEXT_HEIGHT + 4 * TEXT_MARGIN, SHORTINPUT_WIDTH, TEXT_HEIGHT);
+	m_pSleeveIndexLabel->SetBounds(offset, row++ * CONTROL_HEIGHT + group * CONTROL_VMARGIN, CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
+	m_pSleeveIndexList->SetBounds(offset, row++ * CONTROL_HEIGHT + group++ * CONTROL_VMARGIN, CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
 
-	m_pSleeveIndexLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 10 * TEXT_HEIGHT + 5 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pSleeveIndexList->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 11 * TEXT_HEIGHT + 5 * TEXT_MARGIN, SHORTINPUT_WIDTH, TEXT_HEIGHT);
+	m_pShoeLabel->SetBounds(offset, row++ * CONTROL_HEIGHT + group * CONTROL_VMARGIN, CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
+	m_pShoeList->SetBounds(offset, row++ * CONTROL_HEIGHT + group++ * CONTROL_VMARGIN, CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
 
-	m_pShoeLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 12 * TEXT_HEIGHT + 6 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pShoeList->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 13 * TEXT_HEIGHT + 6 * TEXT_MARGIN, SHORTINPUT_WIDTH, TEXT_HEIGHT);
+	m_pKeeperGloveLabel->SetBounds(offset, row++ * CONTROL_HEIGHT + group * CONTROL_VMARGIN, CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
+	m_pKeeperGloveList->SetBounds(offset, row++ * CONTROL_HEIGHT + group++ * CONTROL_VMARGIN, CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
 
-	m_pKeeperGloveLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 14 * TEXT_HEIGHT + 7 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pKeeperGloveList->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 15 * TEXT_HEIGHT + 7 * TEXT_MARGIN, SHORTINPUT_WIDTH, TEXT_HEIGHT);
+	m_pPlayerBallSkinLabel->SetBounds(offset, row++ * CONTROL_HEIGHT + group * CONTROL_VMARGIN, CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
+	m_pPlayerBallSkinList->SetBounds(offset, row++ * CONTROL_HEIGHT + group++ * CONTROL_VMARGIN, CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
 
-	m_pPlayerBallSkinLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 16 * TEXT_HEIGHT + 8 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pPlayerBallSkinList->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 17 * TEXT_HEIGHT + 8 * TEXT_MARGIN, SHORTINPUT_WIDTH, TEXT_HEIGHT);
+	row++;
 
-	m_pPreviewTeamLabel->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 18 * TEXT_HEIGHT + 9 * TEXT_MARGIN, LABEL_WIDTH, TEXT_HEIGHT);
-	m_pPreviewTeamList->SetBounds(APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH, 19 * TEXT_HEIGHT + 9 * TEXT_MARGIN, SHORTINPUT_WIDTH, TEXT_HEIGHT);
+	m_pPreviewTeamLabel->SetBounds(offset, row++ * CONTROL_HEIGHT + group * CONTROL_VMARGIN, CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
+	m_pPreviewTeamList->SetBounds(offset, row++ * CONTROL_HEIGHT + group++ * CONTROL_VMARGIN, CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
 
-	m_pPlayerAngleSlider->SetBounds(APPEARANCE_RADIOBUTTONWIDTH, RENDER_TEXTURE_HEIGHT, RENDER_TEXTURE_WIDTH + 8, TEXT_HEIGHT);
+	m_pPositionPreviewType[0]->SetBounds(offset, row * CONTROL_HEIGHT + group * CONTROL_VMARGIN, CONTROL_SHORT_WIDTH, CONTROL_HEIGHT);
+	m_pPositionPreviewType[1]->SetBounds(offset + CONTROL_SHORT_WIDTH + CONTROL_HMARGIN, row++ * CONTROL_HEIGHT + group++ * CONTROL_VMARGIN, CONTROL_SHORT_WIDTH, CONTROL_HEIGHT);
 
-	m_pPlayerAngleAutoRotate->SetBounds(APPEARANCE_RADIOBUTTONWIDTH, RENDER_TEXTURE_HEIGHT + TEXT_HEIGHT, RENDER_TEXTURE_WIDTH + 8, TEXT_HEIGHT);
+	m_pShowBallPreview->SetBounds(offset, row++ * CONTROL_HEIGHT + group++ * CONTROL_VMARGIN, CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
+
+	m_pPlayerAngleSlider->SetBounds(APPEARANCE_RADIOBUTTONWIDTH, RENDER_TEXTURE_HEIGHT, RENDER_TEXTURE_WIDTH + 8, CONTROL_HEIGHT);
+
+	m_pPlayerAngleAutoRotate->SetBounds(APPEARANCE_RADIOBUTTONWIDTH, RENDER_TEXTURE_HEIGHT + CONTROL_HEIGHT, RENDER_TEXTURE_WIDTH + 8, CONTROL_HEIGHT);
 
 	m_pBodypartPanel->SetBounds(0, 0, APPEARANCE_RADIOBUTTONWIDTH, m_pPlayerPreviewPanel->GetTall());
-	m_pBodypartRadioButtons[0]->SetBounds(0, 0, APPEARANCE_RADIOBUTTONWIDTH, TEXT_HEIGHT);
-	m_pBodypartRadioButtons[1]->SetBounds(0, RENDER_TEXTURE_HEIGHT / 2 - TEXT_HEIGHT / 2, APPEARANCE_RADIOBUTTONWIDTH, TEXT_HEIGHT);
-	m_pBodypartRadioButtons[2]->SetBounds(0, RENDER_TEXTURE_HEIGHT - TEXT_HEIGHT, APPEARANCE_RADIOBUTTONWIDTH, TEXT_HEIGHT);
+	m_pBodypartRadioButtons[0]->SetBounds(0, 0, APPEARANCE_RADIOBUTTONWIDTH, CONTROL_HEIGHT);
+	m_pBodypartRadioButtons[1]->SetBounds(0, RENDER_TEXTURE_HEIGHT / 2 - CONTROL_HEIGHT / 2, APPEARANCE_RADIOBUTTONWIDTH, CONTROL_HEIGHT);
+	m_pBodypartRadioButtons[2]->SetBounds(0, RENDER_TEXTURE_HEIGHT - CONTROL_HEIGHT, APPEARANCE_RADIOBUTTONWIDTH, CONTROL_HEIGHT);
 
 	m_pConnectionInfoLabel->SetBounds(APPEARANCE_RADIOBUTTONWIDTH, 0, RENDER_TEXTURE_WIDTH, RENDER_TEXTURE_HEIGHT);
 	m_pConnectionInfoLabel->SetFgColor(Color(255, 153, 153, 255));
@@ -643,8 +659,8 @@ void CAppearanceSettingPanel::Save()
 	modelskinindex.SetValue(m_pSkinIndexList->GetActiveItemUserData()->GetInt("index"));
 	modelhairindex.SetValue(m_pHairIndexList->GetActiveItemUserData()->GetInt("index"));
 	modelsleeveindex.SetValue(m_pSleeveIndexList->GetActiveItemUserData()->GetInt("index"));
-	preferredoutfieldshirtnumber.SetValue(m_pPreferredOutfieldShirtNumberList->GetActiveItemUserData()->GetInt("number"));
-	preferredkeepershirtnumber.SetValue(m_pPreferredKeeperShirtNumberList->GetActiveItemUserData()->GetInt("number"));
+	preferredoutfieldshirtnumber.SetValue(m_pOutfieldShirtNumberList->GetActiveItemUserData()->GetInt("number"));
+	preferredkeepershirtnumber.SetValue(m_pKeeperShirtNumberList->GetActiveItemUserData()->GetInt("number"));
 	modelshoename.SetValue(m_pShoeList->GetActiveItemUserData()->GetString("shoe"));
 	modelkeeperglovename.SetValue(m_pKeeperGloveList->GetActiveItemUserData()->GetString("keeperglove"));
 	playerballskinname.SetValue(m_pPlayerBallSkinList->GetActiveItemUserData()->GetString("ballskinname"));
@@ -661,10 +677,10 @@ void CAppearanceSettingPanel::Load()
 	m_pSleeveIndexList->ActivateItemByRow(clamp(modelsleeveindex.GetInt(), 0, PLAYER_SLEEVE_COUNT - 1));
 
 	int outfieldNumber = clamp(preferredoutfieldshirtnumber.GetInt(), 2, 99);
-	m_pPreferredOutfieldShirtNumberList->ActivateItemByRow(outfieldNumber - 2);
+	m_pOutfieldShirtNumberList->ActivateItemByRow(outfieldNumber - 2);
 
 	int keeperNumber = clamp(preferredkeepershirtnumber.GetInt(), 1, 99);
-	m_pPreferredKeeperShirtNumberList->ActivateItemByRow(keeperNumber - 1);
+	m_pKeeperShirtNumberList->ActivateItemByRow(keeperNumber - 1);
 }
 
 void CAppearanceSettingPanel::Update()
@@ -708,7 +724,7 @@ void CAppearanceSettingPanel::UpdateTeamKits()
 			{
 				kitCount += 1;
 				KeyValues *kv = new KeyValues("UserData", "teamfolder", CTeamInfo::m_TeamInfo[i]->m_szFolderName, "kitfolder", CTeamInfo::m_TeamInfo[i]->m_TeamKitInfo[j]->m_szFolderName);
-				m_pPreviewTeamList->AddItem(VarArgs("%s/%s", CTeamInfo::m_TeamInfo[i]->m_szFolderName, CTeamInfo::m_TeamInfo[i]->m_TeamKitInfo[j]->m_szFolderName), kv);
+				m_pPreviewTeamList->AddItem(VarArgs("%s - %s   [ by %s ]", CTeamInfo::m_TeamInfo[i]->m_szShortName, CTeamInfo::m_TeamInfo[i]->m_TeamKitInfo[j]->m_szName, CTeamInfo::m_TeamInfo[i]->m_TeamKitInfo[j]->m_szAuthor), kv);
 				kv->deleteThis();
 			}
 		}
@@ -732,7 +748,7 @@ void CAppearanceSettingPanel::UpdateBalls()
 		{
 			ballCount += 1;
 			KeyValues *kv = new KeyValues("UserData", "ballskinname", CBallInfo::m_BallInfo[i]->m_szFolderName);
-			int itemID = m_pPlayerBallSkinList->AddItem(VarArgs("%s [by %s]", CBallInfo::m_BallInfo[i]->m_szName, CBallInfo::m_BallInfo[i]->m_szAuthor), kv);
+			int itemID = m_pPlayerBallSkinList->AddItem(VarArgs("%s   [ by %s ]", CBallInfo::m_BallInfo[i]->m_szName, CBallInfo::m_BallInfo[i]->m_szAuthor), kv);
 
 			if (!Q_strcmp(CBallInfo::m_BallInfo[i]->m_szFolderName, playerballskinname.GetString()))
 				activeItemID = itemID;
@@ -759,7 +775,7 @@ void CAppearanceSettingPanel::UpdateShoes()
 		{
 			ballCount += 1;
 			KeyValues *kv = new KeyValues("UserData", "shoe", CShoeInfo::m_ShoeInfo[i]->m_szFolderName);
-			int itemID = m_pShoeList->AddItem(VarArgs("%s [by %s]", CShoeInfo::m_ShoeInfo[i]->m_szName, CShoeInfo::m_ShoeInfo[i]->m_szAuthor), kv);
+			int itemID = m_pShoeList->AddItem(VarArgs("%s   [ by %s ]", CShoeInfo::m_ShoeInfo[i]->m_szName, CShoeInfo::m_ShoeInfo[i]->m_szAuthor), kv);
 
 			if (!Q_strcmp(CShoeInfo::m_ShoeInfo[i]->m_szFolderName, modelshoename.GetString()))
 				activeItemID = itemID;
@@ -786,7 +802,7 @@ void CAppearanceSettingPanel::UpdateKeeperGloves()
 		{
 			ballCount += 1;
 			KeyValues *kv = new KeyValues("UserData", "keeperglove", CKeeperGloveInfo::m_KeeperGloveInfo[i]->m_szFolderName);
-			int itemID = m_pKeeperGloveList->AddItem(VarArgs("%s [by %s]", CKeeperGloveInfo::m_KeeperGloveInfo[i]->m_szName, CKeeperGloveInfo::m_KeeperGloveInfo[i]->m_szAuthor), kv);
+			int itemID = m_pKeeperGloveList->AddItem(VarArgs("%s   [ by %s ]", CKeeperGloveInfo::m_KeeperGloveInfo[i]->m_szName, CKeeperGloveInfo::m_KeeperGloveInfo[i]->m_szAuthor), kv);
 
 			if (!Q_strcmp(CKeeperGloveInfo::m_KeeperGloveInfo[i]->m_szFolderName, modelkeeperglovename.GetString()))
 				activeItemID = itemID;
@@ -831,9 +847,9 @@ const char *CAppearanceSettingPanel::GetPlayerKeeperGloveName()
 	return m_pKeeperGloveList->GetActiveItemUserData()->GetString("keeperglove");
 }
 
-int CAppearanceSettingPanel::GetPlayerOutfieldShirtNumber()
+int CAppearanceSettingPanel::GetShirtNumber(bool keeper)
 {
-	return m_pPreferredOutfieldShirtNumberList->GetActiveItemUserData()->GetInt("number");
+	return keeper ? m_pKeeperShirtNumberList->GetActiveItemUserData()->GetInt("number") : m_pOutfieldShirtNumberList->GetActiveItemUserData()->GetInt("number");
 }
 
 float CAppearanceSettingPanel::GetPlayerPreviewAngle()
@@ -850,6 +866,21 @@ int CAppearanceSettingPanel::GetPlayerBodypart()
 	}
 
 	return 0;
+}
+
+bool CAppearanceSettingPanel::IsKeeperPreview()
+{
+	return m_pPositionPreviewType[1]->IsSelected();
+}
+
+bool CAppearanceSettingPanel::ShowBallPreview()
+{
+	return m_pShowBallPreview->IsSelected();
+}
+
+const char *CAppearanceSettingPanel::GetBallName()
+{
+	return m_pPlayerBallSkinList->GetActiveItemUserData()->GetString("ballskinname");
 }
 
 void CAppearanceSettingPanel::GetPlayerTeamInfo(const char **teamFolder, const char **kitFolder)
@@ -869,7 +900,7 @@ void CGameplaySettingPanel::PerformLayout()
 	BaseClass::PerformLayout();
 
 	m_pContent->SetBounds(PADDING, PADDING, GetWide() - 2 * PADDING, GetTall() - 2 * PADDING);
-	m_pReverseSideCurl->SetBounds(0, 0, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
+	m_pReverseSideCurl->SetBounds(0, 0, CONTROL_WIDE_WIDTH + CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
 }
 
 void CGameplaySettingPanel::Save()
@@ -915,20 +946,20 @@ void CVisualSettingPanel::PerformLayout()
 
 	m_pContent->SetBounds(PADDING, PADDING, GetWide() - 2 * PADDING, GetTall() - 2 * PADDING);
 
-	m_pShowHudPlayerInfo->SetBounds(0, 0, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
+	m_pShowHudPlayerInfo->SetBounds(0, 0, CONTROL_WIDE_WIDTH + CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
 
-	m_pHudPlayerInfoLabel->SetBounds(0, TEXT_HEIGHT + TEXT_MARGIN, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
-	m_pHudPlayerInfo[0]->SetBounds(0, 2 * TEXT_HEIGHT + TEXT_MARGIN, 125, TEXT_HEIGHT);
-	m_pHudPlayerInfo[1]->SetBounds(125, 2 * TEXT_HEIGHT + TEXT_MARGIN, 125, TEXT_HEIGHT);
-	m_pHudPlayerInfo[2]->SetBounds(250, 2 * TEXT_HEIGHT + TEXT_MARGIN, 125, TEXT_HEIGHT);
+	m_pHudPlayerInfoLabel->SetBounds(0, CONTROL_HEIGHT + CONTROL_VMARGIN, CONTROL_WIDE_WIDTH + CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
+	m_pHudPlayerInfo[0]->SetBounds(0, 2 * CONTROL_HEIGHT + CONTROL_VMARGIN, 125, CONTROL_HEIGHT);
+	m_pHudPlayerInfo[1]->SetBounds(125, 2 * CONTROL_HEIGHT + CONTROL_VMARGIN, 125, CONTROL_HEIGHT);
+	m_pHudPlayerInfo[2]->SetBounds(250, 2 * CONTROL_HEIGHT + CONTROL_VMARGIN, 125, CONTROL_HEIGHT);
 
-	m_pCameraDistanceLabel->SetBounds(0, 3 * TEXT_HEIGHT + 2 * TEXT_MARGIN, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
-	m_pCameraDistanceValue->SetBounds(0, 4 * TEXT_HEIGHT + 2 * TEXT_MARGIN, 50, TEXT_HEIGHT);
-	m_pCameraDistanceSlider->SetBounds(70, 4 * TEXT_HEIGHT + 2 * TEXT_MARGIN, INPUT_WIDTH, TEXT_HEIGHT);
+	m_pCameraDistanceLabel->SetBounds(0, 3 * CONTROL_HEIGHT + 2 * CONTROL_VMARGIN, CONTROL_WIDE_WIDTH + CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
+	m_pCameraDistanceValue->SetBounds(0, 4 * CONTROL_HEIGHT + 2 * CONTROL_VMARGIN, 50, CONTROL_HEIGHT);
+	m_pCameraDistanceSlider->SetBounds(70, 4 * CONTROL_HEIGHT + 2 * CONTROL_VMARGIN, CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
 
-	m_pCameraHeightLabel->SetBounds(0, 5 * TEXT_HEIGHT + 3 * TEXT_MARGIN, LABEL_WIDTH + INPUT_WIDTH, TEXT_HEIGHT);
-	m_pCameraHeightValue->SetBounds(0, 6 * TEXT_HEIGHT + 3 * TEXT_MARGIN, 50, TEXT_HEIGHT);
-	m_pCameraHeightSlider->SetBounds(70, 6 * TEXT_HEIGHT + 3 * TEXT_MARGIN, INPUT_WIDTH, TEXT_HEIGHT);
+	m_pCameraHeightLabel->SetBounds(0, 5 * CONTROL_HEIGHT + 3 * CONTROL_VMARGIN, CONTROL_WIDE_WIDTH + CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
+	m_pCameraHeightValue->SetBounds(0, 6 * CONTROL_HEIGHT + 3 * CONTROL_VMARGIN, 50, CONTROL_HEIGHT);
+	m_pCameraHeightSlider->SetBounds(70, 6 * CONTROL_HEIGHT + 3 * CONTROL_VMARGIN, CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
 
 	float minDist, maxDist;
 	cl_cam_dist.GetMin(minDist);
@@ -1042,11 +1073,11 @@ void CSoundSettingPanel::PerformLayout()
 
 	m_pContent->SetBounds(PADDING, PADDING, GetWide() - 2 * PADDING, GetTall() - 2 * PADDING);
 
-	m_pCrowdBgVolume->SetBounds(0, 0, INPUT_WIDTH, TEXT_HEIGHT);
-	m_pCrowdBg->SetBounds(INPUT_WIDTH, 0, INPUT_WIDTH, TEXT_HEIGHT);
+	m_pCrowdBgVolume->SetBounds(0, 0, CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
+	m_pCrowdBg->SetBounds(CONTROL_WIDE_WIDTH, 0, CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
 
-	m_pCrowdEventVolume->SetBounds(0, TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
-	m_pCrowdEvent->SetBounds(INPUT_WIDTH, TEXT_HEIGHT, INPUT_WIDTH, TEXT_HEIGHT);
+	m_pCrowdEventVolume->SetBounds(0, CONTROL_HEIGHT, CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
+	m_pCrowdEvent->SetBounds(CONTROL_WIDE_WIDTH, CONTROL_HEIGHT, CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
 }
 
 void CSoundSettingPanel::Save()

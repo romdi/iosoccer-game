@@ -636,9 +636,9 @@ void CPlayerTextureProxy::OnBind( C_BaseEntity *pEnt )
 		hairIndex = pPanel->GetPlayerHairIndex();
 		shoeFolder = pPanel->GetPlayerShoeName();
 		keeperGloveFolder = pPanel->GetPlayerKeeperGloveName();
-		shirtNumber = pPanel->GetPlayerOutfieldShirtNumber();
+		isKeeper = pPanel->IsKeeperPreview();
 		shirtName = pPanel->GetPlayerShirtName();
-		isKeeper = false;
+		shirtNumber = pPanel->GetShirtNumber(isKeeper);
 
 		pDetailTexture = materials->FindTexture("models/player/default/detail_preview", NULL, true);
 		pProcReg = &m_pPreviewTextureRegen;

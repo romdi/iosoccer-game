@@ -689,15 +689,8 @@ void CSDKPlayer::ChangeTeam()
 
 		m_nShirtNumber = FindAvailableShirtNumber();
 
-		int handIndex;
-
-		if (GetTeamPosType() == POS_GK)
-			handIndex = 1;
-		else
-			handIndex = 0;
-
-		static int sleeveBodyGroup = FindBodygroupByName("hands");
-		SetBodygroup(sleeveBodyGroup, handIndex);
+		static int handBodyGroup = FindBodygroupByName("hands");
+		SetBodygroup(handBodyGroup, GetTeamPosType() == POS_GK ? 1 : 0);
 
 		if (State_Get() != PLAYER_STATE_ACTIVE)
 			State_Transition(PLAYER_STATE_ACTIVE);

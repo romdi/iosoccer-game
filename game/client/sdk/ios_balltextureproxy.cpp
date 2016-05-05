@@ -18,6 +18,7 @@
 #include "materialsystem/ITexture.h"
 #include "c_ball.h"
 #include "c_ios_replaymanager.h"
+#include "iosoptions.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -87,22 +88,31 @@ void CBallTextureProxy::OnBind( C_BaseEntity *pEnt )
 	if ( !m_pBaseTextureVar )
 		return;
 
-	char texture[128];
+	const char *name;
 
-	C_Ball *pBall = dynamic_cast<C_Ball *>(pEnt);
-
-	if (pBall)
+	if (dynamic_cast<C_Ball *>(pEnt))
 	{
-		Q_snprintf(texture, sizeof(texture), "models/ball/skins/%s/ball.vtf", pBall->GetSkinName());
+		C_Ball *pBall = dynamic_cast<C_Ball *>(pEnt);
+		name = pBall->GetSkinName();
+	}
+	else if (dynamic_cast<C_BaseAnimatingOverlay *>(pEnt))
+	{
+		CAppearanceSettingPanel *pPanel = (CAppearanceSettingPanel *)iosOptionsMenu->GetPanel()->GetSettingPanel(SETTING_PANEL_APPEARANCE);
+		name = pPanel->GetBallName();
+	}
+	else if (dynamic_cast<C_ReplayBall *>(pEnt))
+	{
+		C_ReplayBall *pReplayBall = dynamic_cast<C_ReplayBall *>(pEnt);
+		name = pReplayBall->m_szSkinName;
 	}
 	else
 	{
-		C_ReplayBall *pReplayBall = dynamic_cast<C_ReplayBall *>(pEnt);
-		Q_snprintf(texture, sizeof(texture), "models/ball/skins/%s/ball.vtf", pReplayBall->m_szSkinName);
+		return;
 	}
 
+	char texture[128];
+	Q_snprintf(texture, sizeof(texture), "models/ball/skins/%s/ball.vtf", name);
 	m_pNewTexture = materials->FindTexture(texture, NULL, true);
-		
 	m_pBaseTextureVar->SetTextureValue(m_pNewTexture);
 
 	GetMaterial()->RecomputeStateSnapshots();
