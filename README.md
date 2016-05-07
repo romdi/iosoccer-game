@@ -1,2 +1,5 @@
-[![Stories in Ready](https://badge.waffle.io/romdi/IOS.png?label=ready&title=Ready)](https://waffle.io/romdi/IOS)
-Compilation tutorial coming soon...
+Website: http://iosoccer.com
+
+Wiki: https://github.com/romdi/IOS/wiki
+
+Chat (Discord): http://chat.iosoccer.com
