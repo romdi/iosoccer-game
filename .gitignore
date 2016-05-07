@@ -5,7 +5,6 @@ vgui_controls.lib
 *.opensdf
 *.sbr
 *.suo
-*.user
 *.ncb
 *.*log
 
@@ -14,3 +13,6 @@ vgui_controls.lib
 ipch/
 *.opendb
 /Game_Scratch.VC.db
+
+*.user
+!client_scratch-2005.vcxproj.user
