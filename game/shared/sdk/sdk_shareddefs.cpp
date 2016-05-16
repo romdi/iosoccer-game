@@ -125,7 +125,7 @@ ConVar mp_keeperbackwarddive_idle_duration("mp_keeperbackwarddive_idle_duration"
 
 ConVar mp_keeperdivespeed_longside("mp_keeperdivespeed_longside", "400", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_keeperdivespeed_shortside("mp_keeperdivespeed_shortside", "50", FCVAR_REPLICATED | FCVAR_NOTIFY);
-ConVar mp_keeperdivespeed_z("mp_keeperdivespeed_z", "200", FCVAR_REPLICATED | FCVAR_NOTIFY);
+ConVar mp_keeperdivespeed_z("mp_keeperdivespeed_z", "225", FCVAR_REPLICATED | FCVAR_NOTIFY);
 
 ConVar mp_keeperdiveviewcoeff_enabled("mp_keeperdiveviewcoeff_enabled", "0", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_keeperdiveviewcoeff_pitchdownangle("mp_keeperdiveviewcoeff_pitchdownangle", "45", FCVAR_REPLICATED | FCVAR_NOTIFY);

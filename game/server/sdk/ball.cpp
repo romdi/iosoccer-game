@@ -81,7 +81,7 @@ ConVar
 	sv_ball_keeper_sidedive_shortsidereach					("sv_ball_keeper_sidedive_shortsidereach",					"40",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_keeper_sidedive_longsidereach					("sv_ball_keeper_sidedive_longsidereach",					"60",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_keeper_sidedive_longsidereach_opposite			("sv_ball_keeper_sidedive_longsidereach_opposite",			"50",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_keeper_sidedive_zstart							("sv_ball_keeper_sidedive_zstart",							"-20",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_keeper_sidedive_zstart							("sv_ball_keeper_sidedive_zstart",							"-30",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_keeper_sidedive_zend							("sv_ball_keeper_sidedive_zend",							"90",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_keeper_sidedive_catchcenteroffset_side			("sv_ball_keeper_sidedive_catchcenteroffset_side",			"0",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_keeper_sidedive_catchcenteroffset_z				("sv_ball_keeper_sidedive_catchcenteroffset_z",				"40",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
