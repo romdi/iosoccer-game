@@ -436,7 +436,7 @@ static const char *g_szPosNames[POS_NAME_COUNT] =
 	"LF", "RF", "CF", "ST", "SS", "LW", "RW"
 };
 
-#define BALL_PHYS_RADIUS 4.0f
+#define BALL_PHYS_RADIUS 4.5f
 
 #define PLAYER_SKIN_COUNT 5
 #define PLAYER_HAIR_COUNT 7
