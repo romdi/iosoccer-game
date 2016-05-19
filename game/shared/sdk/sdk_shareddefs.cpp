@@ -155,24 +155,25 @@ ConVar mp_charging_animation_enabled("mp_charging_animation_enabled", "0", FCVAR
 
 // Google's material colors (mostly 300)
 Color
-	g_ColorRed(229, 115, 115, 255),
-	g_ColorBlue(100, 181, 246, 255),
-	g_ColorYellow(255, 241, 118, 255),
-	g_ColorGreen(129, 199, 132, 255),
-	g_ColorGray(158, 158, 158, 255),
+	g_ColorRed(239, 83, 80, 255),
+	g_ColorBlue(66, 165, 245, 255),
+	g_ColorYellow(255, 238, 88, 255),
+	g_ColorGreen(102, 187, 106, 255),
+	g_ColorGray(117, 117, 117, 255),
 	g_ColorWhite(255, 255, 255, 255),
+	g_ColorOffWhite(224, 224, 224, 255),
 	g_ColorBlack(0, 0, 0, 255),
-	g_ColorBrown(141, 110, 99, 255),
-	g_ColorLime(220, 231, 117, 255),
-	g_ColorBlueGray(120, 144, 156, 255),
-	g_ColorOrange(255, 183, 77, 255),
-	g_ColorTeal(77, 182, 172, 255),
-	g_ColorCyan(77, 208, 225, 255),
-	g_ColorPink(240, 98, 146, 255),
-	g_ColorAmber(255, 213, 79, 255),
-	g_ColorLightGreen(174, 213, 129, 255),
-	g_ColorLightBlue(79, 195, 247, 255),
-	g_ColorPurple(186, 104, 200, 255);
+	g_ColorBrown(121, 85, 72, 255),
+	g_ColorLime(212, 225, 87, 255),
+	g_ColorBlueGray(96, 125, 139, 255),
+	g_ColorOrange(255, 167, 38, 255),
+	g_ColorTeal(38, 166, 154, 255),
+	g_ColorCyan(38, 198, 218, 255),
+	g_ColorPink(236, 64, 122, 255),
+	g_ColorAmber(255, 202, 40, 255),
+	g_ColorLightGreen(156, 204, 101, 255),
+	g_ColorLightBlue(41, 182, 246, 255),
+	g_ColorPurple(171, 71, 188, 255);
 
 Color g_HudColors[COLOR_CLASS_COUNT] = {
 	g_ColorBrown,			// black => brown

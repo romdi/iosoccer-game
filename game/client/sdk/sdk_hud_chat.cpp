@@ -198,7 +198,7 @@ Color CHudChat::GetTextColorForClient( TextColor colorNum, int clientIndex )
 		c = g_ColorTeal;
 		break;
 	default:
-		c = g_ColorWhite;
+		c = g_ColorOffWhite;
 	}
 
 	return Color( c[0], c[1], c[2], 255 );

@@ -305,7 +305,7 @@ Color &C_Team::GetHudKitColor()
 	if (GetTeamNumber() == TEAM_HOME || GetTeamNumber() == TEAM_AWAY)
 		color = &m_pKitInfo->m_HudPrimaryColor;
 	else
-		color = &g_ColorWhite;
+		color = &g_ColorGray;
 
 	if (GetTeamNumber() == TEAM_AWAY)
 	{
