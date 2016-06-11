@@ -371,8 +371,8 @@ static CSDKViewVectors g_SDKViewVectors(
 	//Vector(-16, -16, 0 ),		//VEC_HULL_MIN
 	//Vector( 16,  16,  72 ),		//VEC_HULL_MAX
 	
-	Vector(-10, -10, 0 ),		//VEC_HULL_MIN
-	Vector( 10,  10,  80 ),		//VEC_HULL_MAX
+	Vector(-11, -11, 0 ),		//VEC_HULL_MIN
+	Vector( 11,  11,  80 ),		//VEC_HULL_MAX
 
 	Vector( 0, 0, 58 ),		
 	Vector(-12, -12, 0 ),	
