@@ -429,6 +429,8 @@ public:
 	void SetOffsideLinePositions(float ballPosY, float offsidePlayerPosY, float lastOppPlayerPosY);
 	void SetOffsideLinesEnabled(bool enable);
 
+	void SetSprayLinesEnabled(bool enable);
+
 	void SetTimeoutTeam(int team) { m_nTimeoutTeam = team; }
 	int GetTimeoutTeam() { return m_nTimeoutTeam; }
 
@@ -458,7 +460,7 @@ public:
 
 public:
 	void DrawFieldTeamCrests();
-	void DrawSprayLine();
+	void DrawSprayLines();
 	void DrawGoalTeamCrests();
 	void DrawOffsideLines();
 	void DrawCelebScreen();
@@ -493,6 +495,7 @@ public:
 	CNetworkVar(float, m_flOffsideLineOffsidePlayerPosY);
 	CNetworkVar(float, m_flOffsideLineLastOppPlayerPosY);
 	CNetworkVar(bool, m_bOffsideLinesEnabled);
+	CNetworkVar(bool, m_bSprayLinesEnabled);
 
 	void SetupFormations();
 	CUtlVector<Formation *> &GetFormations();

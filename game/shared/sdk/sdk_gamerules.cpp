@@ -278,6 +278,7 @@ BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 	RecvPropFloat(RECVINFO(m_flOffsideLineOffsidePlayerPosY)),
 	RecvPropFloat(RECVINFO(m_flOffsideLineLastOppPlayerPosY)),
 	RecvPropBool(RECVINFO(m_bOffsideLinesEnabled)),
+	RecvPropBool(RECVINFO(m_bSprayLinesEnabled)),
 	RecvPropBool(RECVINFO(m_bIsCeremony)),
 	RecvPropString(RECVINFO(m_szPitchTextureName)),
 
@@ -310,6 +311,7 @@ BEGIN_NETWORK_TABLE_NOBASE( CSDKGameRules, DT_SDKGameRules )
 	SendPropFloat(SENDINFO(m_flOffsideLineOffsidePlayerPosY), -1, SPROP_COORD),
 	SendPropFloat(SENDINFO(m_flOffsideLineLastOppPlayerPosY), -1, SPROP_COORD),
 	SendPropBool(SENDINFO(m_bOffsideLinesEnabled)),
+	SendPropBool(SENDINFO(m_bSprayLinesEnabled)),
 	SendPropBool(SENDINFO(m_bIsCeremony)),
 	SendPropString(SENDINFO(m_szPitchTextureName)),
 
@@ -444,6 +446,7 @@ CSDKGameRules::CSDKGameRules()
 	m_nFirstHalfKickOffTeam = TEAM_HOME;
 	m_nKickOffTeam = TEAM_HOME;
 	m_bOffsideLinesEnabled = false;
+	m_bSprayLinesEnabled = false;
 	m_flOffsideLineBallPosY = 0;
 	m_flOffsideLineOffsidePlayerPosY = 0;
 	m_flOffsideLineLastOppPlayerPosY = 0;
@@ -2920,6 +2923,7 @@ void CSDKGameRules::ResetMatch()
 	ReloadSettings();
 
 	SetOffsideLinesEnabled(false);
+	SetSprayLinesEnabled(false);
 	DisableShield();
 	m_nTimeoutTeam = TEAM_NONE;
 	m_eTimeoutState = TIMEOUT_STATE_NONE;
@@ -3092,6 +3096,11 @@ void CSDKGameRules::SetOffsideLinePositions(float ballPosY, float offsidePlayerP
 void CSDKGameRules::SetOffsideLinesEnabled(bool enable)
 {
 	m_bOffsideLinesEnabled = enable;
+}
+
+void CSDKGameRules::SetSprayLinesEnabled(bool enable)
+{
+	m_bSprayLinesEnabled = enable;
 }
 
 void CSDKGameRules::CheckChatText(CBasePlayer *pPlayer, char *pText)
@@ -3330,9 +3339,9 @@ void CSDKGameRules::DrawFieldTeamCrests()
 	}
 }
 
-void CSDKGameRules::DrawSprayLine()
+void CSDKGameRules::DrawSprayLines()
 {
-	if (m_nShieldType != SHIELD_FREEKICK)
+	if (!m_bSprayLinesEnabled)
 		return;
 
 	float length = 75;

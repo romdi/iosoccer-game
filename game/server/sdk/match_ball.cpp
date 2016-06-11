@@ -397,6 +397,8 @@ void CMatchBall::State_THROWIN_Think()
 	if (!CSDKPlayer::PlayersAtTargetPos())
 		return;
 
+	UpdateCarrier();
+
 	if (m_flStateTimelimit == -1)
 	{
 		m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit_setpiece.GetFloat();
@@ -407,8 +409,6 @@ void CMatchBall::State_THROWIN_Think()
 		m_pPl->SetShotButtonsReleased(false);
 		m_pPl->SetShotsBlocked(false);
 	}
-
-	UpdateCarrier();
 
 	Vector handPos;
 	QAngle handAng;
@@ -557,14 +557,14 @@ void CMatchBall::State_KICKOFF_Think()
 		}
 	}
 
+	UpdateCarrier();
+
 	if (m_flStateTimelimit == -1)
 	{
 		m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit_setpiece.GetFloat();
 		m_pPl->SetShotButtonsReleased(false);
 		m_pPl->SetShotsBlocked(false);
 	}
-
-	UpdateCarrier();
 
 	if (m_pPl->ShotButtonsReleased() && m_pPl->IsShooting())
 	{
@@ -633,12 +633,10 @@ void CMatchBall::State_GOALKICK_Think()
 		m_pPl->SetShotButtonsReleased(false);
 	}
 
-	m_pPl->SetChargedshotBlocked(HasProximityRestriction());
-
 	if (!m_pPl->ShotsBlocked()
 		&& m_pPl->ShotButtonsReleased()
 		&& CanReachBallStandingXY()
-		&& (m_pPl->IsNormalshooting() || !m_pPl->ChargedshotBlocked() && m_pPl->IsChargedshooting()))
+		&& m_pPl->IsShooting())
 	{
 		m_pPl->GetData()->AddGoalKick();
 		RemoveAllTouches();
@@ -698,7 +696,7 @@ void CMatchBall::State_CORNER_Think()
 		m_pPl->SetShotButtonsReleased(false);
 	}
 
-	m_pPl->SetChargedshotBlocked(gpGlobals->curtime <= m_flStateEnterTime + sv_ball_chargedshotblocktime_corner.GetFloat() || HasProximityRestriction());
+	m_pPl->SetChargedshotBlocked(gpGlobals->curtime <= m_flStateEnterTime + sv_ball_chargedshotblocktime_corner.GetFloat());
 
 	if (!m_pPl->ShotsBlocked()
 		&& m_pPl->ShotButtonsReleased()
@@ -796,6 +794,9 @@ void CMatchBall::State_GOAL_Leave(ball_state_t newState)
 void CMatchBall::State_FREEKICK_Enter()
 {
 	SetPos(m_vFoulPos);
+
+	if ((m_vPos - GetGlobalTeam(m_nFoulingTeam)->m_vGoalCenter).Length2D() <= sv_ball_freekickdist_opponentgoal.GetInt())
+		SDKGameRules()->SetSprayLinesEnabled(true);
 }
 
 void CMatchBall::State_FREEKICK_Think()
@@ -844,7 +845,7 @@ void CMatchBall::State_FREEKICK_Think()
 
 	float distToGoal = (m_vPos - GetGlobalTeam(m_nFoulingTeam)->m_vGoalCenter).Length2D();
 
-	m_pPl->SetChargedshotBlocked(distToGoal <= sv_ball_freekickdist_opponentgoal.GetInt() && gpGlobals->curtime <= m_flStateEnterTime + sv_ball_chargedshotblocktime_freekick.GetFloat() || HasProximityRestriction());
+	m_pPl->SetChargedshotBlocked(distToGoal <= sv_ball_freekickdist_opponentgoal.GetInt() && (gpGlobals->curtime <= m_flStateEnterTime + sv_ball_chargedshotblocktime_freekick.GetFloat() || HasProximityRestriction()));
 
 	if (!m_pPl->ShotsBlocked()
 		&& m_pPl->ShotButtonsReleased()
@@ -862,6 +863,7 @@ void CMatchBall::State_FREEKICK_Think()
 void CMatchBall::State_FREEKICK_Leave(ball_state_t newState)
 {
 	SDKGameRules()->SetOffsideLinesEnabled(false);
+	SDKGameRules()->SetSprayLinesEnabled(false);
 }
 
 void CMatchBall::State_PENALTY_Enter()
@@ -1006,6 +1008,8 @@ void CMatchBall::State_KEEPERHANDS_Think()
 		CSDKPlayer::PlayersAtTargetPos();
 	}
 
+	UpdateCarrier();
+
 	if (!SDKGameRules()->IsIntermissionState() && !m_bHasQueuedState && SDKGameRules()->State_Get() != MATCH_PERIOD_PENALTIES)
 	{
 		if (m_flStateTimelimit == -1)
@@ -1013,8 +1017,6 @@ void CMatchBall::State_KEEPERHANDS_Think()
 			m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit_setpiece.GetFloat();
 		}
 	}
-
-	UpdateCarrier();
 
 	// Ball outside the penalty box
 	if (m_nInPenBoxOfTeam == TEAM_NONE)

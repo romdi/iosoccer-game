@@ -1974,7 +1974,7 @@ void CViewRender::RenderView( const CViewSetup &view, int nClearFlags, int whatT
 
 		SDKGameRules()->DrawFieldTeamCrests();
 
-		SDKGameRules()->DrawSprayLine();
+		SDKGameRules()->DrawSprayLines();
 
 		SDKGameRules()->DrawGoalTeamCrests();
 
