@@ -151,9 +151,9 @@ void CSDKGameRules::SetupFormations()
 	// 8
 	f = new Formation("3-3-1");
 	f->positions.AddToTail(new Position(1.5f, 0, POS_CF, 9));
-	f->positions.AddToTail(new Position(0.5f, 1, POS_LM, 11));
+	f->positions.AddToTail(new Position(0.5f, 1, POS_LW, 11));
 	f->positions.AddToTail(new Position(1.5f, 1, POS_CM, 10));
-	f->positions.AddToTail(new Position(2.5f, 1, POS_RM, 7));
+	f->positions.AddToTail(new Position(2.5f, 1, POS_RW, 7));
 	f->positions.AddToTail(new Position(0.5f, 2, POS_LB, 5));
 	f->positions.AddToTail(new Position(1.5f, 2, POS_CB, 3));
 	f->positions.AddToTail(new Position(2.5f, 2, POS_RB, 2));
