@@ -492,7 +492,16 @@ void CMatchBall::State_KICKOFF_Think()
 			if (!CSDKPlayer::PlayersAtTargetPos())
 				return;
 
-			return State_Transition(BALL_STATE_NORMAL);
+			IGameEvent *pEvent = gameeventmanager->CreateEvent("kickoff");
+			if (pEvent)
+			{
+				pEvent->SetInt("team", GetGlobalTeam(TEAM_HOME)->GetTeamNumber());
+				gameeventmanager->FireEvent(pEvent);
+			}
+
+			State_Transition(BALL_STATE_NORMAL);
+
+			return;
 		}
 
 		SDKGameRules()->EnableShield(SHIELD_KICKOFF, m_pPl->GetTeamNumber(), SDKGameRules()->m_vKickOff);
