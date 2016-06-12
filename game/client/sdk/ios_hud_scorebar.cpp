@@ -90,6 +90,7 @@ protected:
 	void FireGameEvent(IGameEvent *event);
 	void ApplySettings(KeyValues *inResourceData);
 	void LevelInit();
+	void MatchRestart();
 
 private:
 
@@ -893,7 +894,7 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 
 	if (!Q_strcmp(event->GetName(), "match_restart"))
 	{
-		LevelInit(); // Reset all notifications
+		MatchRestart(); // Reset all notifications
 		return;
 	}
 
@@ -1290,6 +1291,12 @@ void CHudScorebar::FireGameEvent(IGameEvent *event)
 
 void CHudScorebar::LevelInit()
 {
+	MatchRestart();
+	m_bShowNewbieMessage = true;
+}
+
+void CHudScorebar::MatchRestart()
+{
 	m_eCurMatchEvent = MATCH_EVENT_NONE;
 	m_flNotificationStart = -1;
 	m_flInjuryTimeAnnouncementStart = -1;
@@ -1297,5 +1304,4 @@ void CHudScorebar::LevelInit()
 	m_flStayDuration = 3.0f;
 	m_nTransitionIndex = -1;
 	m_flTickerStartTime = -1;
-	m_bShowNewbieMessage = true;
 }
