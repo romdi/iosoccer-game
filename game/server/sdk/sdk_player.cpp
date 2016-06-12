@@ -1649,21 +1649,6 @@ void CSDKPlayer::RemoveFlags()
 	RemoveFlag(FL_SHIELD_KEEP_IN | FL_SHIELD_KEEP_OUT | FL_REMOTECONTROLLED | FL_FREECAM | FL_CELEB | FL_USE_TV_CAM | FL_NO_X_MOVEMENT | FL_NO_Y_MOVEMENT | FL_ATCONTROLS | FL_FROZEN | FL_ONLY_XY_MOVEMENT);
 }
 
-bool CSDKPlayer::IsNormalshooting()
-{
-	return m_nButtons & IN_ATTACK;
-}
-
-bool CSDKPlayer::IsChargedshooting()
-{
-	return m_Shared.m_bDoChargedShot;
-}
-
-bool CSDKPlayer::IsShooting()
-{
-	return IsNormalshooting() || IsChargedshooting();
-}
-
 bool CSDKPlayer::CanShoot()
 {
 	return gpGlobals->curtime >= m_flNextShot;

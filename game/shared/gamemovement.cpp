@@ -1736,7 +1736,7 @@ bool CGameMovement::CheckActionOverTime()
 	}
 	case PLAYERANIMEVENT_BICYCLE_KICK:
 	{
-		if (timePassed > mp_bicycleshot_idle_duration.GetFloat())
+		if (timePassed > mp_bicycleshot_move_duration.GetFloat() + mp_bicycleshot_idle_duration.GetFloat())
 		{
 			pPl->DoAnimationEvent(PLAYERANIMEVENT_NONE);
 			return false;
@@ -1871,6 +1871,21 @@ bool CGameMovement::CheckActionStart()
 				if (mv->m_nButtons & IN_DUCK && !(mv->m_nOldButtons & IN_DUCK))
 					animEvent = PLAYERANIMEVENT_CELEB_SLIDE;
 			}
+		}
+	}
+	else if (mv->m_nButtons & IN_SKILL)
+	{
+		if ((mv->m_nButtons & IN_FORWARD) && pPl->IsChargedshooting())
+		{
+			animEvent = PLAYERANIMEVENT_DIVING_HEADER;
+			pPl->AddFlag(FL_FREECAM);
+			MoveHelper()->StartSound(mv->GetAbsOrigin(), "Player.DivingHeader");
+		}
+		else if ((mv->m_nButtons & IN_BACK) && pPl->IsChargedshooting())
+		{
+			animEvent = PLAYERANIMEVENT_BICYCLE_KICK;
+			pPl->AddFlag(FL_FREECAM);
+			MoveHelper()->StartSound(mv->GetAbsOrigin(), "Player.DivingHeader");
 		}
 	}
 	else if (mv->m_nButtons & IN_JUMP && !(mv->m_nOldButtons & IN_JUMP))

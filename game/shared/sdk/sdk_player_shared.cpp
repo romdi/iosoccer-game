@@ -731,3 +731,18 @@ bool CSDKPlayer::IsKeeperDiving()
 		|| m_Shared.m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_DIVE_FORWARD
 		|| m_Shared.m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD;
 }
+
+bool CSDKPlayer::IsNormalshooting()
+{
+	return m_nButtons & IN_ATTACK;
+}
+
+bool CSDKPlayer::IsChargedshooting()
+{
+	return m_Shared.m_bDoChargedShot;
+}
+
+bool CSDKPlayer::IsShooting()
+{
+	return IsNormalshooting() || IsChargedshooting();
+}

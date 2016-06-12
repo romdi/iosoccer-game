@@ -157,6 +157,7 @@ extern ConVar
 	mp_divingheader_move_duration,
 	mp_divingheader_idle_duration,
 	mp_divingheaderspeed,
+	mp_bicycleshot_move_duration,
 	mp_bicycleshot_idle_duration,
 	mp_chargedshot_increaseduration,
 	mp_chargedshot_increaseexponent,

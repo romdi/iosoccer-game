@@ -72,6 +72,9 @@ public:
 	void				CheckLastPressedSingleMoveButton();
 
 	bool				IsKeeperDiving();
+	bool				IsNormalshooting();
+	bool				IsChargedshooting();
+	bool				IsShooting();
 	bool				DoSkillMove();
 	bool				DoGesture();
 	bool				IsInOwnBoxAsKeeper();
