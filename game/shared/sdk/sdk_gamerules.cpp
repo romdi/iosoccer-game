@@ -464,6 +464,8 @@ CSDKGameRules::CSDKGameRules()
 	m_flLastMasterServerPingTime = -FLT_MAX;
 	m_bIsPingingMasterServer = false;
 
+	m_pServerUpdateInfo = new IOSUpdateInfo();
+
 #else
 	PrecacheMaterial("pitch/offside_line");
 	m_pOffsideLineMaterial = materials->FindMaterial( "pitch/offside_line", TEXTURE_GROUP_CLIENT_EFFECTS );
@@ -699,6 +701,8 @@ ConVar sv_master_legacy_mode_hack_duration("sv_master_legacy_mode_hack_duration"
 
 void CSDKGameRules::Think()
 {
+	CheckServerUpdateStatus();
+
 	State_Think();
 	//BaseClass::Think();		//this breaks stuff, like voice comms!
 
@@ -2394,15 +2398,58 @@ void CC_SV_UpdateServer(const CCommand &args)
 	if (!UTIL_IsCommandIssuedByServerAdmin())
         return;
 
-	Msg("Server Updater: Updating all server files. Please wait...\n");
-
-	IOSUpdateInfo* pUpdateInfo = new IOSUpdateInfo();
-	pUpdateInfo->async = true;
-	CFileUpdater::UpdateFiles(pUpdateInfo);
+	SDKGameRules()->StartServerUpdate();
 }
 
 ConCommand sv_update_server("sv_update_server", CC_SV_UpdateServer, "", 0);
 
+void CSDKGameRules::StartServerUpdate()
+{
+	Msg("Server Updater: Updating all server files. Please wait...\n");
+
+	m_pServerUpdateInfo->Reset();
+	m_pServerUpdateInfo->async = true;
+	CFileUpdater::UpdateFiles(m_pServerUpdateInfo);
+}
+
+void CSDKGameRules::CheckServerUpdateStatus()
+{
+	if (!m_pServerUpdateInfo->finished)
+		return;
+
+	const char *msg;
+
+	if (m_pServerUpdateInfo->connectionError)
+		msg = "Server Updater: Couldn't connect to the update server.";
+	else if (m_pServerUpdateInfo->checkOnly)
+		msg = "Server Updater: Check for changes successful.";
+	else
+	{
+		if (m_pServerUpdateInfo->filesToUpdateCount == 0)
+			msg = "Server Updater: All server files are up to date.";
+		else
+		{
+			CTeamInfo::ParseTeamKits();
+			CShoeInfo::ParseShoes();
+			CKeeperGloveInfo::ParseKeeperGloves();
+			CBallInfo::ParseBallSkins();
+			CPitchInfo::ParsePitchTextures();
+
+			if (m_pServerUpdateInfo->restartRequired)
+				msg = "Server Updater: Server files successfully updated. A server restart is required to use the new binaries.";
+			else
+				msg = "Server Updater: Server files successfully updated. A server restart might be required to use the new files.";
+		}
+	}
+
+	char consoleMsg[256];
+	Q_snprintf(consoleMsg, sizeof(consoleMsg), "%s\n", msg);
+	Msg(consoleMsg);
+
+	UTIL_ClientPrintAll(HUD_PRINTCONSOLE, msg);
+
+	m_pServerUpdateInfo->finished = false;
+}
 
 void CC_MP_Teamkits(const CCommand &args)
 {

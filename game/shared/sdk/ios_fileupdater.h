@@ -55,7 +55,6 @@ class CFileUpdater
 {
 public:
 	static void UpdateFiles(IOSUpdateInfo *pUpdateInfo);
-	static int UpdateFinished(IOSUpdateInfo *pUpdateInfo);
 };
 
 #endif

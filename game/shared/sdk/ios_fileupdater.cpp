@@ -150,7 +150,8 @@ unsigned PerformUpdate(void *params)
 	if (result != CURLE_OK || code != 200)
 	{
 		pUpdateInfo->connectionError = true;
-		return CFileUpdater::UpdateFinished(pUpdateInfo);
+		pUpdateInfo->finished = true;
+		return 0;
 	}
 
 	char *serverFileListString = new char[buffer.Size() + 1];
@@ -212,7 +213,8 @@ unsigned PerformUpdate(void *params)
 			pUpdateInfo->changelogDownloaded = true;
 		}
 
-		return CFileUpdater::UpdateFinished(pUpdateInfo);
+		pUpdateInfo->finished = true;
+		return 0;
 	}
 
 	FileHandle_t fh = filesystem->Open(fileListPath, "wb", "MOD");
@@ -299,8 +301,8 @@ unsigned PerformUpdate(void *params)
 	}
 
 	filesystem->Close(fh);
-
-	return CFileUpdater::UpdateFinished(pUpdateInfo);
+	pUpdateInfo->finished = true;
+	return 0;
 }
 
 void CFileUpdater::UpdateFiles(IOSUpdateInfo *pUpdateInfo)
@@ -309,49 +311,4 @@ void CFileUpdater::UpdateFiles(IOSUpdateInfo *pUpdateInfo)
 		CreateSimpleThread(PerformUpdate, pUpdateInfo);
 	else
 		PerformUpdate(pUpdateInfo);
-}
-
-int CFileUpdater::UpdateFinished(IOSUpdateInfo *pUpdateInfo)
-{
-	pUpdateInfo->finished = true;
-
-#ifdef CLIENT_DLL
-	return 0;
-#else
-	const char *msg;
-
-	if (pUpdateInfo->connectionError)
-		msg = "Server Updater: Couldn't connect to the update server.";
-	else if (pUpdateInfo->checkOnly)
-		msg = "Server Updater: Check for changes successful.";
-	else
-	{
-		if (pUpdateInfo->filesToUpdateCount == 0)
-			msg = "Server Updater: All server files are up to date.";
-		else
-		{
-			CTeamInfo::ParseTeamKits();
-			CShoeInfo::ParseShoes();
-			CKeeperGloveInfo::ParseKeeperGloves();
-			CBallInfo::ParseBallSkins();
-			CPitchInfo::ParsePitchTextures();
-
-			if (pUpdateInfo->restartRequired)
-				msg = "Server Updater: Server files successfully updated. A server restart is required to use the new binaries.";
-			else
-				msg = "Server Updater: Server files successfully updated. A server restart might be required to use the new files.";
-		}
-	}
-
-	char consoleMsg[256];
-	Q_snprintf(consoleMsg, sizeof(consoleMsg), "%s\n", msg);
-	Msg(consoleMsg);
-
-	UTIL_ClientPrintAll(HUD_PRINTCONSOLE, msg);
-
-	if (pUpdateInfo->async)
-		delete pUpdateInfo;
-
-	return 0;
-#endif
 }

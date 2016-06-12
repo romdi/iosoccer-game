@@ -113,6 +113,7 @@ extern ConVar
 	r_snow_initialramp;
 
 class CSDKGameRules;
+class IOSUpdateInfo;
 
 struct Position
 {
@@ -406,7 +407,12 @@ protected:
 
 	void CheckChatText(CBasePlayer *pPlayer, char *text);
 
+	IOSUpdateInfo *m_pServerUpdateInfo;
+	void CheckServerUpdateStatus();
+
 public:
+
+	void StartServerUpdate();
 
 	void SetBottomTeam(int team);
 	int GetBottomTeam();
