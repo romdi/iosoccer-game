@@ -59,6 +59,7 @@ enum { STATUSPANEL_WIDTH = 120, STATUSPANEL_HEIGHT = 30, STATUSPANEL_MARGIN = 30
 enum { TEAMCREST_SIZE = 70, TEAMCREST_HMARGIN = 10, TEAMCREST_VMARGIN = 10 };
 enum { TICKER_PANEL_HEIGHT = 50, TICKER_PANEL_MARGIN = 30 };
 enum { REDCARD_WIDTH = 15, REDCARD_HEIGHT = 15, REDCARD_MARGIN = 5, REDCARD_CENTERMARGIN = 7 };
+enum { NEWBIE_MESSAGE_WIDTH = 1000, NEWBIE_MESSAGE_HEIGHT = 300 };
 
 const float slideDownDuration = 0.5f;
 const float slideUpDuration = 0.5f;
@@ -134,6 +135,9 @@ private:
 	float m_flTickerStartTime;
 	int m_nTickerTeamIndex;
 	int m_nTickerTextWidth;
+
+	Label *m_pNewbieMessage;
+	bool m_bShowNewbieMessage;
 };
 
 DECLARE_HUDELEMENT( CHudScorebar );
@@ -202,6 +206,9 @@ CHudScorebar::CHudScorebar( const char *pElementName ) : BaseClass(NULL, "HudSco
 	m_flTickerStartTime = -1;
 	m_nTickerTeamIndex = 0;
 	m_nTickerTextWidth = 0;
+
+	m_pNewbieMessage = new Label(this, "", "HOLD [TAB] AND CLICK ON A SHIRT TO JOIN");
+	m_bShowNewbieMessage = false;
 
 	SetProportional(false);
 }
@@ -364,6 +371,12 @@ void CHudScorebar::ApplySchemeSettings( IScheme *pScheme )
 	m_pTickerText->SetFont(m_pScheme->GetFont("IOSScorebarMedium"));
 	m_pTickerText->SetFgColor(Color(255, 255, 255, 255));
 	m_pTickerText->SetContentAlignment(Label::a_west);
+
+	m_pNewbieMessage->SetBounds(ScreenWidth() / 2 - NEWBIE_MESSAGE_WIDTH / 2, ScreenHeight() / 2 - NEWBIE_MESSAGE_HEIGHT / 2, NEWBIE_MESSAGE_WIDTH, NEWBIE_MESSAGE_HEIGHT);
+	m_pNewbieMessage->SetFgColor(Color(255, 255, 255, 255));
+	m_pNewbieMessage->SetFont(m_pScheme->GetFont("IOSNewbieMessage"));
+	m_pNewbieMessage->SetContentAlignment(Label::a_center);
+	m_pNewbieMessage->SetVisible(m_bShowNewbieMessage);
 }
 
 //-----------------------------------------------------------------------------
@@ -673,6 +686,11 @@ void CHudScorebar::OnThink( void )
 		m_pTickerPanel->SetVisible(false);
 		m_flTickerStartTime = -1;
 	}
+
+	if (m_bShowNewbieMessage && gViewPortInterface->FindPanelByName(PANEL_SCOREBOARD)->IsVisible())
+		m_bShowNewbieMessage = false;
+
+	m_pNewbieMessage->SetVisible(m_bShowNewbieMessage);
 }
 
 void CHudScorebar::Paint( void )
@@ -1279,4 +1297,5 @@ void CHudScorebar::LevelInit()
 	m_flStayDuration = 3.0f;
 	m_nTransitionIndex = -1;
 	m_flTickerStartTime = -1;
+	m_bShowNewbieMessage = true;
 }
