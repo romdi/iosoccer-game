@@ -596,7 +596,7 @@ void CAppearanceSettingPanel::PerformLayout()
 
 	m_pPlayerPreviewPanel->SetBounds(APPEARANCE_RADIOBUTTONWIDTH, 0, RENDER_TEXTURE_WIDTH, RENDER_TEXTURE_HEIGHT);
 	m_pPlayerPreviewPanel->SetImage("../_rt_playermodel");
-	m_pPlayerPreviewPanel->SetShouldScaleImage(false);
+	m_pPlayerPreviewPanel->SetShouldScaleImage(true);
 
 	int offset = APPEARANCE_HOFFSET + APPEARANCE_RADIOBUTTONWIDTH;
 	int row = 0;
