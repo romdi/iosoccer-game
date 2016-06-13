@@ -630,20 +630,34 @@ bool CBall::GetCollisionPoint(bool isDeflection, Vector &collisionPoint)
 
 	if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_SLIDE_TACKLE
 		|| m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_DIVING_HEADER
-		|| m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_LEFT
-		|| m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT
 		|| m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_FORWARD
-		|| m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD)
+		|| m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT_FORWARD
+		|| m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT
+		|| m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT_BACKWARD
+		|| m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD
+		|| m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_LEFT_BACKWARD
+		|| m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_LEFT
+		|| m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_LEFT_FORWARD)
 	{
 		float padding = isDeflection ? 0 : -15;
 		Vector plDir;
 
-		if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_LEFT)
-			plDir = -m_vPlRight;
-		else if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT)
-			plDir = m_vPlRight;
-		else
+		switch (m_pPl->m_Shared.GetAnimEvent())
+		{
+		default:
 			plDir = m_vPlForward2D;
+			break;
+		case PLAYERANIMEVENT_KEEPER_DIVE_LEFT_FORWARD:
+		case PLAYERANIMEVENT_KEEPER_DIVE_LEFT:
+		case PLAYERANIMEVENT_KEEPER_DIVE_LEFT_BACKWARD:
+			plDir = -m_vPlRight;
+			break;
+		case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT_FORWARD:
+		case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT:
+		case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT_BACKWARD:
+			plDir = m_vPlRight;
+			break;
+		}
 
 		Vector plOffsetPos = Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + BALL_PHYS_RADIUS);
 		float dot = (m_vPos - plOffsetPos).Dot(plDir);
@@ -892,7 +906,9 @@ bool CBall::CheckKeeperCatch()
 
 	switch (m_pPl->m_Shared.GetAnimEvent())
 	{
+	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT_FORWARD:
 	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT:
+	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT_BACKWARD:
 		{
 			canReach = (localDirToBall.z < sv_ball_keeper_sidedive_zend.GetFloat()
 				&& localDirToBall.z >= sv_ball_keeper_sidedive_zstart.GetFloat()
@@ -910,7 +926,9 @@ bool CBall::CheckKeeperCatch()
 			}
 		}
 		break;
+	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT_FORWARD:
 	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT:
+	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT_BACKWARD:
 		{
 			canReach = (localDirToBall.z < sv_ball_keeper_sidedive_zend.GetFloat()
 				&& localDirToBall.z >= sv_ball_keeper_sidedive_zstart.GetFloat()

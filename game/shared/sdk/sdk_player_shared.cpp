@@ -726,10 +726,14 @@ int CSDKPlayer::GetSidemoveSign()
 
 bool CSDKPlayer::IsKeeperDiving()
 {
-	return m_Shared.m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_DIVE_LEFT
+	return m_Shared.m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_DIVE_FORWARD
+		|| m_Shared.m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT_FORWARD
 		|| m_Shared.m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT
-		|| m_Shared.m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_DIVE_FORWARD
-		|| m_Shared.m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD;
+		|| m_Shared.m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT_BACKWARD
+		|| m_Shared.m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD
+		|| m_Shared.m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_DIVE_LEFT_BACKWARD
+		|| m_Shared.m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_DIVE_LEFT
+		|| m_Shared.m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_DIVE_LEFT_FORWARD;
 }
 
 bool CSDKPlayer::IsNormalshooting()

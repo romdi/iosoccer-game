@@ -1559,8 +1559,12 @@ bool CGameMovement::CheckActionOverTime()
 
 	switch (pPl->m_Shared.GetAnimEvent())
 	{
-	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT:
+	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT_FORWARD:
 	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT:
+	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT_BACKWARD:
+	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT_BACKWARD:
+	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT:
+	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT_FORWARD:
 	{
 		if (timePassed > mp_keepersidewarddive_move_duration.GetFloat() + mp_keepersidewarddive_idle_duration.GetFloat())
 		{
@@ -1571,14 +1575,14 @@ bool CGameMovement::CheckActionOverTime()
 
 		float moveCoeff;
 
-		if (pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_LEFT && sidemoveSign == 1
-			|| pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT && sidemoveSign == -1)
+		if ((pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_LEFT_FORWARD || pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_LEFT || pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_LEFT_BACKWARD) && sidemoveSign == 1
+			|| (pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT_FORWARD || pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT || pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT_BACKWARD) && sidemoveSign == -1)
 		{
 			moveCoeff = mp_keeperdive_movebackcoeff.GetFloat();
 		}
 		else
 		{
-			if (pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT)
+			if (pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT_FORWARD || pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT || pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT_BACKWARD)
 			{
 				if (pPl->m_Shared.m_nBoostRightDive == 1 && mp_keeperdive_boost_enabled.GetBool())
 					moveCoeff = 1.0f + mp_keeperdive_boost_coeff.GetFloat();
@@ -1598,8 +1602,38 @@ bool CGameMovement::CheckActionOverTime()
 			}
 		}
 
-		mv->m_vecVelocity = forward2D * ZeroSign(mv->m_flForwardMove) * mp_keeperdivespeed_shortside.GetFloat();
-		mv->m_vecVelocity += right * sidemoveSign * moveCoeff * mp_keeperdivespeed_longside.GetFloat();
+		float forwardMove, rightMove;
+
+		switch (pPl->m_Shared.GetAnimEvent())
+		{
+		case PLAYERANIMEVENT_KEEPER_DIVE_LEFT_FORWARD:
+			forwardMove = mp_keeperdivespeed_longside.GetFloat();
+			rightMove = mp_keeperdivespeed_longside.GetFloat();
+			break;
+		case PLAYERANIMEVENT_KEEPER_DIVE_LEFT:
+			forwardMove = 0;
+			rightMove = mp_keeperdivespeed_longside.GetFloat();
+			break;
+		case PLAYERANIMEVENT_KEEPER_DIVE_LEFT_BACKWARD:
+			forwardMove = -mp_keeperdivespeed_longside.GetFloat();
+			rightMove = mp_keeperdivespeed_longside.GetFloat();
+			break;
+		case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT_FORWARD:
+			forwardMove = mp_keeperdivespeed_longside.GetFloat();
+			rightMove = mp_keeperdivespeed_longside.GetFloat();
+			break;
+		case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT:
+			forwardMove = 0;
+			rightMove = mp_keeperdivespeed_longside.GetFloat();
+			break;
+		case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT_BACKWARD:
+			forwardMove = -mp_keeperdivespeed_longside.GetFloat();
+			rightMove = mp_keeperdivespeed_longside.GetFloat();
+			break;
+		}
+
+		mv->m_vecVelocity = forward2D * forwardMove;
+		mv->m_vecVelocity += right * sidemoveSign * moveCoeff * rightMove;
 
 		mv->m_vecVelocity.z = 0;
 		float maxSpeed = max(mp_keeperdivespeed_shortside.GetFloat(), mp_keeperdivespeed_longside.GetFloat() * moveCoeff);
@@ -1894,7 +1928,15 @@ bool CGameMovement::CheckActionStart()
 		{
 			int sidemoveSign = pPl->GetSidemoveSign();
 
-			if (sidemoveSign == -1)
+			if (sidemoveSign == -1 && (mv->m_nButtons & IN_BACK))
+				animEvent = PLAYERANIMEVENT_KEEPER_DIVE_LEFT_BACKWARD;
+			else if (sidemoveSign == 1 && (mv->m_nButtons & IN_BACK))
+				animEvent = PLAYERANIMEVENT_KEEPER_DIVE_RIGHT_BACKWARD;
+			else if (sidemoveSign == -1 && (mv->m_nButtons & IN_FORWARD))
+				animEvent = PLAYERANIMEVENT_KEEPER_DIVE_LEFT_FORWARD;
+			else if (sidemoveSign == 1 && (mv->m_nButtons & IN_FORWARD))
+				animEvent = PLAYERANIMEVENT_KEEPER_DIVE_RIGHT_FORWARD;
+			else if (sidemoveSign == -1)
 				animEvent = PLAYERANIMEVENT_KEEPER_DIVE_LEFT;
 			else if (sidemoveSign == 1)
 				animEvent = PLAYERANIMEVENT_KEEPER_DIVE_RIGHT;
