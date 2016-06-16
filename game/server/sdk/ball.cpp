@@ -171,7 +171,8 @@ ConVar
 	sv_ball_chestdrop_minpostdelay							("sv_ball_chestdrop_minpostdelay",							"0.5",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 
 	sv_ball_rainbowflick_angle								("sv_ball_rainbowflick_angle",								"-90",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_rainbowflick_strength							("sv_ball_rainbowflick_strength",							"500",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_rainbowflick_minstrength						("sv_ball_rainbowflick_minstrength",						"200",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_rainbowflick_maxstrength						("sv_ball_rainbowflick_maxstrength",						"500",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_rainbowflick_spincoeff							("sv_ball_rainbowflick_spincoeff",							"0.33",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_rainbowflick_minpostdelay						("sv_ball_rainbowflick_minpostdelay",						"0.75",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 
@@ -185,7 +186,8 @@ ConVar
 	sv_ball_bicycleshot_minpostdelay						("sv_ball_bicycleshot_minpostdelay",						"0.5",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 
 	sv_ball_lift_angle										("sv_ball_lift_angle",										"-90",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_lift_strength									("sv_ball_lift_strength",									"400",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_lift_minstrength								("sv_ball_lift_minstrength",								"100",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_lift_maxstrength								("sv_ball_lift_maxstrength",								"400",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_lift_minpostdelay								("sv_ball_lift_minpostdelay",								"0.0",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 
 	sv_ball_roll_strength									("sv_ball_roll_strength",									"250",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
@@ -194,6 +196,7 @@ ConVar
 	sv_ball_heelshot_minangle								("sv_ball_heelshot_minangle",								"0",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_heelshot_strengthcoeff							("sv_ball_heelshot_strengthcoeff",							"0.75",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_heelshot_minpostdelay							("sv_ball_heelshot_minpostdelay",							"0.75",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_heelshot_minstrength							("sv_ball_heelshot_minstrength",							"300",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 
 
 
@@ -1186,7 +1189,7 @@ bool CBall::DoGroundHeightAction(bool markOffsidePlayers)
 			{
 				// Ball lift
 				shotAngle[PITCH] = sv_ball_lift_angle.GetInt();
-				shotStrength = GetNormalshotStrength(GetPitchCoeff(), sv_ball_lift_strength.GetInt());
+				shotStrength = Lerp(GetPitchCoeff(), sv_ball_lift_minstrength.GetInt(), sv_ball_lift_maxstrength.GetInt());
 				spinFlags = FL_SPIN_FORCE_NONE;
 				spinCoeff = 0;
 				minPostDelay = sv_ball_lift_minpostdelay.GetFloat();
@@ -1221,7 +1224,7 @@ bool CBall::DoGroundHeightAction(bool markOffsidePlayers)
 				}
 
 				shotAngle[PITCH] = min(sv_ball_heelshot_minangle.GetFloat(), shotAngle[PITCH]);
-				shotStrength = m_vVel.Length2D() * sv_ball_heelshot_strengthcoeff.GetFloat();
+				shotStrength = max(sv_ball_heelshot_minstrength.GetInt(), m_vVel.Length2D() * sv_ball_heelshot_strengthcoeff.GetFloat());
 				minPostDelay = sv_ball_heelshot_minpostdelay.GetFloat();
 				m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEEL_KICK);
 				EmitSound("Ball.Kicknormal");
@@ -1231,7 +1234,7 @@ bool CBall::DoGroundHeightAction(bool markOffsidePlayers)
 				// Rainbow flick
 				shotAngle = m_aPlAng;
 				shotAngle[PITCH] = sv_ball_rainbowflick_angle.GetInt();
-				shotStrength = GetNormalshotStrength(GetPitchCoeff(), sv_ball_rainbowflick_strength.GetInt());
+				shotStrength = Lerp(GetPitchCoeff(), sv_ball_rainbowflick_minstrength.GetInt(), sv_ball_rainbowflick_maxstrength.GetInt());
 				spinFlags = FL_SPIN_FORCE_TOP;
 				spinCoeff = sv_ball_rainbowflick_spincoeff.GetFloat();
 				minPostDelay = sv_ball_rainbowflick_minpostdelay.GetFloat();
