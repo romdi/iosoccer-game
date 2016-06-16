@@ -649,7 +649,7 @@ void CMatchBall::State_GOALKICK_Think()
 	{
 		m_pPl->GetData()->AddGoalKick();
 		RemoveAllTouches();
-		DoGroundShot(false);
+		DoGroundHeightAction(false);
 		State_Transition(BALL_STATE_NORMAL);
 	}
 }
@@ -715,7 +715,7 @@ void CMatchBall::State_CORNER_Think()
 		//EmitSound("Crowd.Way");
 		m_pPl->GetData()->AddCorner();
 		RemoveAllTouches();
-		DoGroundShot(false);
+		DoGroundHeightAction(false);
 		State_Transition(BALL_STATE_NORMAL);
 	}
 }
@@ -864,7 +864,7 @@ void CMatchBall::State_FREEKICK_Think()
 		//EmitSound("Crowd.Way");
 		m_pPl->GetData()->AddFreeKick();
 		RemoveAllTouches();
-		DoGroundShot(true);
+		DoGroundHeightAction(true);
 		State_Transition(BALL_STATE_NORMAL);
 	}
 }
@@ -977,7 +977,7 @@ void CMatchBall::State_PENALTY_Think()
 			m_pPl->GetData()->AddPenalty();
 
 		RemoveAllTouches();
-		DoGroundShot(false);
+		DoGroundHeightAction(false);
 		State_Transition(BALL_STATE_NORMAL);
 	}
 }

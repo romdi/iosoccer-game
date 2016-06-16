@@ -771,14 +771,14 @@ bool CBall::DoBodyPartAction()
 		&& zDist < sv_ball_bodypos_hip_start.GetFloat()
 		&& CanReachBallStandingXY())
 	{
-		return DoGroundShot(true);
+		return DoGroundHeightAction(true);
 	}
 
 	if (zDist >= sv_ball_bodypos_hip_start.GetFloat() && zDist < sv_ball_bodypos_head_start.GetFloat() && CanReachBallStandingXY())
-		return DoVolleyShot();
+		return DoHipHeightAction();
 
 	if (zDist >= sv_ball_bodypos_head_start.GetFloat() && zDist < sv_ball_bodypos_head_end.GetFloat() && CanReachBallStandingXY())
-		return DoHeader();
+		return DoHeadHeightAction();
 
 	return false;
 }
@@ -1084,7 +1084,7 @@ float CBall::GetChargedshotStrength(float coeff, int minStrength, int maxStrengt
 	return coeff * shotStrength;
 }
 
-bool CBall::DoGroundShot(bool markOffsidePlayers)
+bool CBall::DoGroundHeightAction(bool markOffsidePlayers)
 {
 	int spinFlags = FL_SPIN_FORCE_NONE;
 	float spinCoeff = 1.0f;
@@ -1233,47 +1233,7 @@ bool CBall::DoGroundShot(bool markOffsidePlayers)
 	return true;
 }
 
-bool CBall::DoVolleyShot()
-{
-	if (m_pPl->DoSkillMove())
-		return false;
-
-	float spinCoeff = 1.0f;
-	int spinFlags = FL_SPIN_PERMIT_SIDE;
-	QAngle shotAngle = m_aPlAng;
-
-	float shotStrength;
-
-	if (m_pPl->IsNormalshooting())
-		shotStrength = GetNormalshotStrength(GetPitchCoeff(), sv_ball_normalshot_strength.GetInt());
-	else
-		shotStrength = GetChargedshotStrength(GetPitchCoeff(), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
-
-	shotAngle[PITCH] = min(sv_ball_volleyshot_minangle.GetFloat(), shotAngle[PITCH]);
-
-	Vector shotDir;
-	AngleVectors(shotAngle, &shotDir);
-
-	Vector vel = shotDir * shotStrength;
-
-	if (vel.Length() > 700)
-	{
-		if (vel.Length() > 1000)
-			EmitSound("Ball.Kickhard");
-		else
-			EmitSound("Ball.Kicknormal");
-
-		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_VOLLEY);
-	}
-	else
-		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
-
-	SetVel(vel, spinCoeff, spinFlags, BODY_PART_FEET, true, sv_ball_volleyshot_minpostdelay.GetFloat(), true);
-
-	return true;
-}
-
-bool CBall::DoHeader()
+bool CBall::DoHipHeightAction()
 {
 	// Diving header
 	if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_DIVING_HEADER)
@@ -1292,8 +1252,51 @@ bool CBall::DoHeader()
 
 		SetVel(vel, sv_ball_header_spincoeff.GetFloat(), FL_SPIN_PERMIT_SIDE, BODY_PART_HEAD, true, sv_ball_header_minpostdelay.GetFloat(), true);
 	}
+	else
+	{
+		if (m_pPl->DoSkillMove())
+			return false;
+
+		float spinCoeff = 1.0f;
+		int spinFlags = FL_SPIN_PERMIT_SIDE;
+		QAngle shotAngle = m_aPlAng;
+
+		float shotStrength;
+
+		if (m_pPl->IsNormalshooting())
+			shotStrength = GetNormalshotStrength(GetPitchCoeff(), sv_ball_normalshot_strength.GetInt());
+		else
+			shotStrength = GetChargedshotStrength(GetPitchCoeff(), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
+
+		shotAngle[PITCH] = min(sv_ball_volleyshot_minangle.GetFloat(), shotAngle[PITCH]);
+
+		Vector shotDir;
+		AngleVectors(shotAngle, &shotDir);
+
+		Vector vel = shotDir * shotStrength;
+
+		if (vel.Length() > 700)
+		{
+			if (vel.Length() > 1000)
+				EmitSound("Ball.Kickhard");
+			else
+				EmitSound("Ball.Kicknormal");
+
+			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_VOLLEY);
+		}
+		else
+			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
+
+		SetVel(vel, spinCoeff, spinFlags, BODY_PART_FEET, true, sv_ball_volleyshot_minpostdelay.GetFloat(), true);
+	}
+
+	return true;
+}
+
+bool CBall::DoHeadHeightAction()
+{
 	// Bicycle kick
-	else if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_BICYCLE_KICK)
+	if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_BICYCLE_KICK)
 	{
 		if (gpGlobals->curtime > m_pPl->m_Shared.GetAnimEventStartTime() + mp_bicycleshot_move_duration.GetFloat())
 			return false;
@@ -1309,15 +1312,11 @@ bool CBall::DoHeader()
 
 		SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_FEET, true, sv_ball_bicycleshot_minpostdelay.GetFloat(), true);
 	}
-	else if (m_pPl->DoSkillMove())
-	{
-		if (!m_pPl->IsChargedshooting())
-			return false;
-
-		return false;
-	}
 	else
 	{
+		if (m_pPl->DoSkillMove())
+			return false;
+
 		Vector vel, forward;
 		QAngle headerAngle = m_aPlAng;
 

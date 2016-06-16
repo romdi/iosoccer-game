@@ -187,9 +187,9 @@ protected:
 	bool			CheckCollision();
 	bool			DoSlideAction();
 	bool			CheckKeeperCatch();
-	bool			DoGroundShot(bool markOffsidePlayers);
-	bool			DoVolleyShot();
-	bool			DoHeader();
+	bool			DoGroundHeightAction(bool markOffsidePlayers);
+	bool			DoHipHeightAction();
+	bool			DoHeadHeightAction();
 	AngularImpulse	CalcSpin(float coeff, int spinFlags);
 	float			GetPitchCoeff();
 	float			GetNormalshotStrength(float coeff, int strength);
