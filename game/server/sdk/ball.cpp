@@ -171,8 +171,7 @@ ConVar
 	sv_ball_chestdrop_minpostdelay							("sv_ball_chestdrop_minpostdelay",							"0.5",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 
 	sv_ball_rainbowflick_angle								("sv_ball_rainbowflick_angle",								"-90",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_rainbowflick_minstrength						("sv_ball_rainbowflick_minstrength",						"300",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_rainbowflick_maxstrength						("sv_ball_rainbowflick_maxstrength",						"500",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_rainbowflick_strength							("sv_ball_rainbowflick_strength",							"500",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_rainbowflick_spincoeff							("sv_ball_rainbowflick_spincoeff",							"0.33",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_rainbowflick_minpostdelay						("sv_ball_rainbowflick_minpostdelay",						"0.75",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 
@@ -186,8 +185,7 @@ ConVar
 	sv_ball_bicycleshot_minpostdelay						("sv_ball_bicycleshot_minpostdelay",						"0.5",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 
 	sv_ball_lift_angle										("sv_ball_lift_angle",										"-90",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_lift_minstrength								("sv_ball_lift_minstrength",								"200",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_lift_maxstrength								("sv_ball_lift_maxstrength",								"400",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_lift_strength									("sv_ball_lift_strength",									"400",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_lift_minpostdelay								("sv_ball_lift_minpostdelay",								"0.0",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 
 	sv_ball_roll_strength									("sv_ball_roll_strength",									"250",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
@@ -1095,40 +1093,12 @@ bool CBall::DoGroundHeightAction(bool markOffsidePlayers)
 
 	if (m_pPl->DoSkillMove())
 	{
-		if (!m_pPl->GetGroundEntity())
+		if (!m_pPl->GetGroundEntity() || m_pPl->IsChargedshooting())
 			return false;
 
-		if (m_pPl->IsChargedshooting())
+		if (m_vPlLocalDirToBall.x >= 0)
 		{
-			if (m_vPlLocalDirToBall.x >= 0)
-			{
-				// Ball lift
-				shotAngle[PITCH] = sv_ball_lift_angle.GetInt();
-				shotStrength = GetChargedshotStrength(1.0f, sv_ball_lift_minstrength.GetInt(), sv_ball_lift_maxstrength.GetInt());
-				spinFlags = FL_SPIN_FORCE_NONE;
-				spinCoeff = 0;
-				minPostDelay = sv_ball_lift_minpostdelay.GetFloat();
-				addPlayerSpeed = true;
-				m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
-				EmitSound("Ball.Touch");
-			}
-			else
-			{
-				// Rainbow flick
-				shotAngle = m_aPlAng;
-				shotAngle[PITCH] = sv_ball_rainbowflick_angle.GetInt();
-				shotStrength = GetChargedshotStrength(1.0f, sv_ball_rainbowflick_minstrength.GetInt(), sv_ball_rainbowflick_maxstrength.GetInt());
-				spinFlags = FL_SPIN_FORCE_TOP;
-				spinCoeff = sv_ball_rainbowflick_spincoeff.GetFloat();
-				minPostDelay = sv_ball_rainbowflick_minpostdelay.GetFloat();
-				addPlayerSpeed = true;
-				m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_RAINBOW_FLICK);
-				EmitSound("Ball.Kicknormal");
-			}
-		}
-		else
-		{
-			if (m_vPlLocalDirToBall.x >= 0 && !(m_pPl->m_nButtons & IN_FORWARD) && (m_pPl->m_nButtons & IN_MOVELEFT || m_pPl->m_nButtons & IN_MOVERIGHT || m_pPl->m_nButtons & IN_BACK))
+			if ((m_pPl->m_nButtons & IN_MOVELEFT) || (m_pPl->m_nButtons & IN_MOVERIGHT) || (m_pPl->m_nButtons & IN_BACK))
 			{
 				// Ball roll
 				minPostDelay = sv_ball_roll_minpostdelay.GetFloat();
@@ -1150,8 +1120,26 @@ bool CBall::DoGroundHeightAction(bool markOffsidePlayers)
 					shotStrength = sv_ball_roll_strength.GetInt();
 				}
 			}
-			else if (m_vPlLocalDirToBall.x < 0 && (m_pPl->m_nButtons & IN_BACK || m_pPl->m_nButtons & IN_MOVELEFT || m_pPl->m_nButtons & IN_MOVERIGHT))
+			else
 			{
+				// Ball lift
+				shotAngle[PITCH] = sv_ball_lift_angle.GetInt();
+				shotStrength = GetNormalshotStrength(GetPitchCoeff(), sv_ball_lift_strength.GetInt());
+				spinFlags = FL_SPIN_FORCE_NONE;
+				spinCoeff = 0;
+				minPostDelay = sv_ball_lift_minpostdelay.GetFloat();
+				addPlayerSpeed = true;
+				m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
+				EmitSound("Ball.Touch");
+			}
+		}
+		else
+		{
+			if ((m_pPl->m_nButtons & IN_BACK) || (m_pPl->m_nButtons & IN_MOVELEFT) || (m_pPl->m_nButtons & IN_MOVERIGHT))
+			{
+				if (LastPl(false) == m_pPl)
+					return false;
+
 				// Heel shot
 				if (m_pPl->m_nButtons & IN_BACK)
 				{
@@ -1178,7 +1166,16 @@ bool CBall::DoGroundHeightAction(bool markOffsidePlayers)
 			}
 			else
 			{
-				return false;
+				// Rainbow flick
+				shotAngle = m_aPlAng;
+				shotAngle[PITCH] = sv_ball_rainbowflick_angle.GetInt();
+				shotStrength = GetNormalshotStrength(GetPitchCoeff(), sv_ball_rainbowflick_strength.GetInt());
+				spinFlags = FL_SPIN_FORCE_TOP;
+				spinCoeff = sv_ball_rainbowflick_spincoeff.GetFloat();
+				minPostDelay = sv_ball_rainbowflick_minpostdelay.GetFloat();
+				addPlayerSpeed = true;
+				m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_RAINBOW_FLICK);
+				EmitSound("Ball.Kicknormal");
 			}
 		}
 	}
