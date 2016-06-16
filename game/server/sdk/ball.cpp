@@ -765,6 +765,12 @@ bool CBall::DoBodyPartAction()
 	if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_SLIDE_TACKLE)
 		return DoSlideAction();
 
+	if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_DIVING_HEADER)
+		return DoDivingHeader();
+
+	if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_BICYCLE_KICK)
+		return DoBicycleKick();
+
 	if (zDist >= sv_ball_bodypos_feet_start.GetFloat()
 		&& zDist < sv_ball_bodypos_hip_start.GetFloat()
 		&& CanReachBallStandingXY())
@@ -886,6 +892,62 @@ bool CBall::DoSlideAction()
 
 	if (!SDKGameRules()->IsIntermissionState() && State_Get() == BALL_STATE_NORMAL && !HasQueuedState())
 		m_pPl->GetData()->AddSlidingTackleCompleted();
+
+	return true;
+}
+
+bool CBall::DoDivingHeader()
+{
+	if (!m_pPl->IsChargedshooting())
+		return false;
+
+	Vector dirToBall = m_vPos - m_vPlPos;
+	float zDist = dirToBall.z;
+
+	if (zDist < sv_ball_bodypos_hip_start.GetFloat() || zDist >= sv_ball_bodypos_head_start.GetFloat() || !CanReachBallStandingXY())
+		return false;
+
+	if (gpGlobals->curtime > m_pPl->m_Shared.GetAnimEventStartTime() + mp_divingheader_move_duration.GetFloat())
+		return false;
+
+	Vector forward;
+	QAngle headerAngle = m_aPlAng;
+
+	headerAngle[PITCH] = clamp(headerAngle[PITCH], sv_ball_divingheader_maxangle.GetFloat(), sv_ball_divingheader_minangle.GetFloat());
+	AngleVectors(headerAngle, &forward);
+
+	Vector vel = forward * GetChargedshotStrength(1.0f, sv_ball_divingheader_minstrength.GetInt(), sv_ball_divingheader_maxstrength.GetInt());
+	EmitSound("Ball.Kickhard");
+
+	SetVel(vel, sv_ball_header_spincoeff.GetFloat(), FL_SPIN_PERMIT_SIDE, BODY_PART_HEAD, true, sv_ball_header_minpostdelay.GetFloat(), true);
+
+	return true;
+}
+
+bool CBall::DoBicycleKick()
+{
+	if (!m_pPl->IsChargedshooting())
+		return false;
+
+	Vector dirToBall = m_vPos - m_vPlPos;
+	float zDist = dirToBall.z;
+
+	if (zDist < sv_ball_bodypos_head_start.GetFloat() || zDist >= sv_ball_bodypos_head_end.GetFloat() || !CanReachBallStandingXY())
+		return false;
+
+	if (gpGlobals->curtime > m_pPl->m_Shared.GetAnimEventStartTime() + mp_bicycleshot_move_duration.GetFloat())
+		return false;
+
+	QAngle ang = m_aPlAng;
+	ang[YAW] += 180;
+
+	Vector dir;
+	AngleVectors(ang, &dir);
+
+	Vector vel = dir * GetChargedshotStrength(GetPitchCoeff(), sv_ball_bicycleshot_minstrength.GetInt(), sv_ball_bicycleshot_maxstrength.GetInt());
+	EmitSound("Ball.Kickhard");
+
+	SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_FEET, true, sv_ball_bicycleshot_minpostdelay.GetFloat(), true);
 
 	return true;
 }
@@ -1232,116 +1294,76 @@ bool CBall::DoGroundHeightAction(bool markOffsidePlayers)
 
 bool CBall::DoHipHeightAction()
 {
-	// Diving header
-	if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_DIVING_HEADER)
+	if (m_pPl->DoSkillMove())
+		return false;
+
+	float spinCoeff = 1.0f;
+	int spinFlags = FL_SPIN_PERMIT_SIDE;
+	QAngle shotAngle = m_aPlAng;
+
+	float shotStrength;
+
+	if (m_pPl->IsNormalshooting())
+		shotStrength = GetNormalshotStrength(GetPitchCoeff(), sv_ball_normalshot_strength.GetInt());
+	else
+		shotStrength = GetChargedshotStrength(GetPitchCoeff(), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
+
+	shotAngle[PITCH] = min(sv_ball_volleyshot_minangle.GetFloat(), shotAngle[PITCH]);
+
+	Vector shotDir;
+	AngleVectors(shotAngle, &shotDir);
+
+	Vector vel = shotDir * shotStrength;
+
+	if (vel.Length() > 700)
 	{
-		if (gpGlobals->curtime > m_pPl->m_Shared.GetAnimEventStartTime() + mp_divingheader_move_duration.GetFloat())
-			return false;
+		if (vel.Length() > 1000)
+			EmitSound("Ball.Kickhard");
+		else
+			EmitSound("Ball.Kicknormal");
 
-		Vector forward;
-		QAngle headerAngle = m_aPlAng;
-
-		headerAngle[PITCH] = clamp(headerAngle[PITCH], sv_ball_divingheader_maxangle.GetFloat(), sv_ball_divingheader_minangle.GetFloat());
-		AngleVectors(headerAngle, &forward);
-
-		Vector vel = forward * GetChargedshotStrength(1.0f, sv_ball_divingheader_minstrength.GetInt(), sv_ball_divingheader_maxstrength.GetInt());
-		EmitSound("Ball.Kickhard");
-
-		SetVel(vel, sv_ball_header_spincoeff.GetFloat(), FL_SPIN_PERMIT_SIDE, BODY_PART_HEAD, true, sv_ball_header_minpostdelay.GetFloat(), true);
+		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_VOLLEY);
 	}
 	else
-	{
-		if (m_pPl->DoSkillMove())
-			return false;
+		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
 
-		float spinCoeff = 1.0f;
-		int spinFlags = FL_SPIN_PERMIT_SIDE;
-		QAngle shotAngle = m_aPlAng;
-
-		float shotStrength;
-
-		if (m_pPl->IsNormalshooting())
-			shotStrength = GetNormalshotStrength(GetPitchCoeff(), sv_ball_normalshot_strength.GetInt());
-		else
-			shotStrength = GetChargedshotStrength(GetPitchCoeff(), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
-
-		shotAngle[PITCH] = min(sv_ball_volleyshot_minangle.GetFloat(), shotAngle[PITCH]);
-
-		Vector shotDir;
-		AngleVectors(shotAngle, &shotDir);
-
-		Vector vel = shotDir * shotStrength;
-
-		if (vel.Length() > 700)
-		{
-			if (vel.Length() > 1000)
-				EmitSound("Ball.Kickhard");
-			else
-				EmitSound("Ball.Kicknormal");
-
-			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_VOLLEY);
-		}
-		else
-			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
-
-		SetVel(vel, spinCoeff, spinFlags, BODY_PART_FEET, true, sv_ball_volleyshot_minpostdelay.GetFloat(), true);
-	}
+	SetVel(vel, spinCoeff, spinFlags, BODY_PART_FEET, true, sv_ball_volleyshot_minpostdelay.GetFloat(), true);
 
 	return true;
 }
 
 bool CBall::DoHeadHeightAction()
 {
-	// Bicycle kick
-	if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_BICYCLE_KICK)
+	if (m_pPl->DoSkillMove())
+		return false;
+
+	Vector vel, forward;
+	QAngle headerAngle = m_aPlAng;
+
+	// Normal header
+	if (m_pPl->IsNormalshooting())
 	{
-		if (gpGlobals->curtime > m_pPl->m_Shared.GetAnimEventStartTime() + mp_bicycleshot_move_duration.GetFloat())
-			return false;
+		headerAngle[PITCH] = clamp(headerAngle[PITCH], sv_ball_header_maxangle.GetFloat(), sv_ball_header_minangle.GetFloat());
+		AngleVectors(headerAngle, &forward);
 
-		QAngle ang = m_aPlAng;
-		ang[YAW] += 180;
+		vel = forward * GetNormalshotStrength(GetPitchCoeff(), sv_ball_normalheader_strength.GetInt());
 
-		Vector dir;
-		AngleVectors(ang, &dir);
-
-		Vector vel = dir * GetChargedshotStrength(GetPitchCoeff(), sv_ball_bicycleshot_minstrength.GetInt(), sv_ball_bicycleshot_maxstrength.GetInt());
+		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEADER_WEAK);
 		EmitSound("Ball.Kickhard");
-
-		SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_FEET, true, sv_ball_bicycleshot_minpostdelay.GetFloat(), true);
 	}
+	// Charged header
 	else
 	{
-		if (m_pPl->DoSkillMove())
-			return false;
+		headerAngle[PITCH] = clamp(headerAngle[PITCH], sv_ball_header_maxangle.GetFloat(), sv_ball_header_minangle.GetFloat());
+		AngleVectors(headerAngle, &forward);
 
-		Vector vel, forward;
-		QAngle headerAngle = m_aPlAng;
+		vel = forward * GetChargedshotStrength(GetPitchCoeff(), sv_ball_chargedheader_minstrength.GetInt(), sv_ball_chargedheader_maxstrength.GetInt());
 
-		// Normal header
-		if (m_pPl->IsNormalshooting())
-		{
-			headerAngle[PITCH] = clamp(headerAngle[PITCH], sv_ball_header_maxangle.GetFloat(), sv_ball_header_minangle.GetFloat());
-			AngleVectors(headerAngle, &forward);
-
-			vel = forward * GetNormalshotStrength(GetPitchCoeff(), sv_ball_normalheader_strength.GetInt());
-
-			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEADER_WEAK);
-			EmitSound("Ball.Kickhard");
-		}
-		// Charged header
-		else
-		{
-			headerAngle[PITCH] = clamp(headerAngle[PITCH], sv_ball_header_maxangle.GetFloat(), sv_ball_header_minangle.GetFloat());
-			AngleVectors(headerAngle, &forward);
-
-			vel = forward * GetChargedshotStrength(GetPitchCoeff(), sv_ball_chargedheader_minstrength.GetInt(), sv_ball_chargedheader_maxstrength.GetInt());
-
-			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEADER_STRONG);
-			EmitSound("Ball.Kickhard");
-		}
-
-		SetVel(vel, sv_ball_header_spincoeff.GetFloat(), FL_SPIN_PERMIT_SIDE, BODY_PART_HEAD, true, sv_ball_header_minpostdelay.GetFloat(), true);
+		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HEADER_STRONG);
+		EmitSound("Ball.Kickhard");
 	}
+
+	SetVel(vel, sv_ball_header_spincoeff.GetFloat(), FL_SPIN_PERMIT_SIDE, BODY_PART_HEAD, true, sv_ball_header_minpostdelay.GetFloat(), true);
 
 	return true;
 }

@@ -186,6 +186,8 @@ protected:
 	bool			DoBodyPartAction();
 	bool			CheckCollision();
 	bool			DoSlideAction();
+	bool			DoDivingHeader();
+	bool			DoBicycleKick();
 	bool			CheckKeeperCatch();
 	bool			DoGroundHeightAction(bool markOffsidePlayers);
 	bool			DoHipHeightAction();
