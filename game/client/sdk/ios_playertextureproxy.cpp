@@ -564,8 +564,6 @@ void CPlayerTextureProxy::OnBind( C_BaseEntity *pEnt )
 		return;
 
 	CTeamKitInfo *pKitInfo;
-	const char *teamFolder;
-	const char *kitFolder;
 	const char *shoeFolder;
 	const char *keeperGloveFolder;
 	int skinIndex;
@@ -584,8 +582,6 @@ void CPlayerTextureProxy::OnBind( C_BaseEntity *pEnt )
 
 		C_Team *pTeam = GetGlobalTeam(g_PR->GetTeam(pPl->index));
 
-		teamFolder = pTeam->GetFolderName();
-		kitFolder = pTeam->GetKitFolderName();
 		pKitInfo = pTeam->GetKitInfo();
 		skinIndex = pPl->GetSkinIndex();
 		hairIndex = pPl->GetHairIndex();
@@ -608,8 +604,6 @@ void CPlayerTextureProxy::OnBind( C_BaseEntity *pEnt )
 
 		C_Team *pTeam = GetGlobalTeam(pReplayPl->m_nTeamNumber);
 
-		teamFolder = pTeam->GetFolderName();
-		kitFolder = pTeam->GetKitFolderName();
 		pKitInfo = pTeam->GetKitInfo();
 		skinIndex = pReplayPl->m_nSkinIndex;
 		hairIndex = pReplayPl->m_nHairIndex;
@@ -630,8 +624,7 @@ void CPlayerTextureProxy::OnBind( C_BaseEntity *pEnt )
 	{
 		CAppearanceSettingPanel *pPanel = (CAppearanceSettingPanel *)iosOptionsMenu->GetPanel()->GetSettingPanel(SETTING_PANEL_APPEARANCE);
 
-		pPanel->GetPlayerTeamInfo(&teamFolder, &kitFolder);
-		pKitInfo = CTeamInfo::FindTeamByKitName(VarArgs("%s/%s", teamFolder, kitFolder));
+		pKitInfo = pPanel->GetPlayerTeamKitInfo();
 		skinIndex = pPanel->GetPlayerSkinIndex();
 		hairIndex = pPanel->GetPlayerHairIndex();
 		shoeFolder = pPanel->GetPlayerShoeName();
@@ -689,9 +682,9 @@ void CPlayerTextureProxy::OnBind( C_BaseEntity *pEnt )
 	if (Q_stricmp(m_szTextureType, "kit") == 0)
 	{
 		if (isKeeper)
-			Q_snprintf(baseTexture, sizeof(baseTexture), "%s/%s/%s/keeper", TEAMKITS_PATH, teamFolder, kitFolder);
+			Q_snprintf(baseTexture, sizeof(baseTexture), "%s/%s/%s/keeper", TEAMKITS_PATH, pKitInfo->m_pTeamInfo->m_szFolderName, pKitInfo->m_szFolderName);
 		else
-			Q_snprintf(baseTexture, sizeof(baseTexture), "%s/%s/%s/outfield", TEAMKITS_PATH, teamFolder, kitFolder);
+			Q_snprintf(baseTexture, sizeof(baseTexture), "%s/%s/%s/outfield", TEAMKITS_PATH, pKitInfo->m_pTeamInfo->m_szFolderName, pKitInfo->m_szFolderName);
 	}
 	else if (Q_stricmp(m_szTextureType, "skin") == 0)
 	{

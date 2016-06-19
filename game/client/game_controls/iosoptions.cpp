@@ -716,14 +716,11 @@ void CAppearanceSettingPanel::UpdateTeamKits()
 
 		m_pPreviewTeamList->RemoveAll();
 
-		int kitCount = 0;
-
 		for (int i = 0; i < CTeamInfo::m_TeamInfo.Count(); i++)
 		{
 			for (int j = 0; j < CTeamInfo::m_TeamInfo[i]->m_TeamKitInfo.Count(); j++)
 			{
-				kitCount += 1;
-				KeyValues *kv = new KeyValues("UserData", "teamfolder", CTeamInfo::m_TeamInfo[i]->m_szFolderName, "kitfolder", CTeamInfo::m_TeamInfo[i]->m_TeamKitInfo[j]->m_szFolderName);
+				KeyValues *kv = new KeyValues("UserData", "teamindex", i, "kitindex", j);
 				m_pPreviewTeamList->AddItem(VarArgs("%s - %s   [ by %s ]", CTeamInfo::m_TeamInfo[i]->m_szShortName, CTeamInfo::m_TeamInfo[i]->m_TeamKitInfo[j]->m_szName, CTeamInfo::m_TeamInfo[i]->m_TeamKitInfo[j]->m_szAuthor), kv);
 				kv->deleteThis();
 			}
@@ -883,10 +880,11 @@ const char *CAppearanceSettingPanel::GetBallName()
 	return m_pPlayerBallSkinList->GetActiveItemUserData()->GetString("ballskinname");
 }
 
-void CAppearanceSettingPanel::GetPlayerTeamInfo(const char **teamFolder, const char **kitFolder)
+CTeamKitInfo *CAppearanceSettingPanel::GetPlayerTeamKitInfo()
 {
-	*teamFolder = m_pPreviewTeamList->GetActiveItemUserData()->GetString("teamfolder");
-	*kitFolder = m_pPreviewTeamList->GetActiveItemUserData()->GetString("kitfolder");
+	int teamIndex = m_pPreviewTeamList->GetActiveItemUserData()->GetInt("teamindex");
+	int kitIndex = m_pPreviewTeamList->GetActiveItemUserData()->GetInt("kitindex");
+	return CTeamInfo::m_TeamInfo[teamIndex]->m_TeamKitInfo[kitIndex];
 }
 
 CGameplaySettingPanel::CGameplaySettingPanel(Panel *parent, const char *panelName) : BaseClass(parent, panelName)

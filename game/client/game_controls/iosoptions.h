@@ -18,6 +18,8 @@
 
 using namespace vgui;
 
+class CTeamKitInfo;
+
 enum SettingPanel_t
 {
 	SETTING_PANEL_NETWORK, SETTING_PANEL_APPEARANCE, SETTING_PANEL_GAMEPLAY, SETTING_PANEL_VISUAL, SETTING_PANEL_SOUND, SETTING_PANEL_COUNT
@@ -204,7 +206,7 @@ public:
 	const char *GetPlayerShoeName();
 	const char *GetPlayerKeeperGloveName();
 	int GetShirtNumber(bool keeper);
-	void GetPlayerTeamInfo(const char **teamFolder, const char **kitFolder);
+	CTeamKitInfo *GetPlayerTeamKitInfo();
 	float GetPlayerPreviewAngle();
 	int GetPlayerBodypart();
 	bool IsKeeperPreview();
