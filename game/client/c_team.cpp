@@ -408,7 +408,8 @@ void C_Team::SetKitName(const char *pKitName)
 		}
 		else
 		{
-			ChatMsg("%s kit not found on disk. Try updating your files.\n", m_szServerKitName);
+			ChatMsg("WARNING: SERVER'S KIT \"%s\" NOT FOUND! USING SUBSTITUTE KIT! TRY UPDATING!\n", m_szServerKitName);
+			m_pKitInfo = CTeamInfo::m_TeamInfo[GetTeamNumber() == TEAM_HOME ? 0 : 1]->m_TeamKitInfo[0];
 		}
 	}
 }

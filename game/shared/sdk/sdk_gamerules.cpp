@@ -3164,7 +3164,7 @@ bool CSDKGameRules::ClientConnected(edict_t *pEntity, const char *pszName, const
 		const char *pszClientVersion = engine->GetClientConVarValue(engine->IndexOfEdict(pEntity), "clientversion");
 		if (Q_strcmp(pszClientVersion, sv_required_client_version.GetString()))
 		{
-			Q_snprintf(reject, maxrejectlen, "%s", "Client update required. Use the 'IOS Updater' in the main menu.");
+			Q_snprintf(reject, maxrejectlen, "%s", "GAME UPDATE REQUIRED");
 			return false;
 		}
 	}
