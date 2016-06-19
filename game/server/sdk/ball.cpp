@@ -88,7 +88,7 @@ ConVar
 
 	sv_ball_bodypos_feet_start								("sv_ball_bodypos_feet_start",								"-15",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_bodypos_hip_start								("sv_ball_bodypos_hip_start",								"20",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_bodypos_head_start								("sv_ball_bodypos_head_start",								"60",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_bodypos_head_start								("sv_ball_bodypos_head_start",								"55",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_bodypos_head_end								("sv_ball_bodypos_head_end",								"90",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_bodypos_keeperarms_end							("sv_ball_bodypos_keeperarms_end",							"105",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 
