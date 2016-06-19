@@ -102,6 +102,8 @@ public:
 	color_class_t m_HudSecondaryColorClass;
 
 
+	bool		m_bOutfieldHasCollar;
+
 	Color		m_OutfieldShirtNameFillColor;
 	Color		m_OutfieldShirtNameOutlineColor;
 	int			m_nOutfieldShirtNameVerticalOffset;
@@ -121,6 +123,8 @@ public:
 	int			m_nOutfieldShirtFrontNumberHorizontalOffset;
 	int			m_nOutfieldShirtFrontNumberVerticalOffset;
 
+
+	bool		m_bKeeperHasCollar;
 
 	Color		m_KeeperShirtNameFillColor;
 	Color		m_KeeperShirtNameOutlineColor;

@@ -692,6 +692,10 @@ void CSDKPlayer::ChangeTeam()
 		static int handBodyGroup = FindBodygroupByName("hands");
 		SetBodygroup(handBodyGroup, GetTeamPosType() == POS_GK ? 1 : 0);
 
+		static int collarBodyGroup = FindBodygroupByName("collar");
+		CTeamKitInfo *pTeamKitInfo = CTeamInfo::FindTeamByKitName(GetTeam()->GetKitName());
+		SetBodygroup(collarBodyGroup, GetTeamPosType() == POS_GK ? pTeamKitInfo->m_bKeeperHasCollar : pTeamKitInfo->m_bOutfieldHasCollar);
+
 		if (State_Get() != PLAYER_STATE_ACTIVE)
 			State_Transition(PLAYER_STATE_ACTIVE);
 	}

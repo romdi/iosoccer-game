@@ -56,6 +56,8 @@ CTeamKitInfo::CTeamKitInfo()
 	m_HudSecondaryColorClass = COLOR_CLASS_WHITE;
 
 
+	m_bOutfieldHasCollar = false;
+
 	m_OutfieldShirtNameFillColor = Color(0, 255, 0, 255);
 	m_OutfieldShirtNameOutlineColor = Color(0, 255, 0, 255);
 	m_nOutfieldShirtNameVerticalOffset = 0;
@@ -75,6 +77,8 @@ CTeamKitInfo::CTeamKitInfo()
 	m_nOutfieldShirtFrontNumberHorizontalOffset = 0;
 	m_nOutfieldShirtFrontNumberVerticalOffset = 0;
 
+
+	m_bKeeperHasCollar = false;
 
 	m_KeeperShirtNameFillColor = Color(0, 255, 0, 255);
 	m_KeeperShirtNameOutlineColor = Color(0, 255, 0, 255);
@@ -339,6 +343,7 @@ void CTeamInfo::ParseTeamKits()
 							if (!Q_stricmp(pTypeKey->GetName(), "Outfield"))
 							{
 								pKitInfo->m_bHasOutfieldShirtFrontNumber = false;
+								pKitInfo->m_bOutfieldHasCollar = pTypeKey->GetInt("HasCollar", 0) != 0;
 
 								for (KeyValues *pPosKey = pTypeKey->GetFirstTrueSubKey(); pPosKey; pPosKey = pPosKey->GetNextTrueSubKey())
 								{
@@ -382,6 +387,7 @@ void CTeamInfo::ParseTeamKits()
 							else if (!Q_stricmp(pTypeKey->GetName(), "Keeper"))
 							{
 								pKitInfo->m_bHasKeeperShirtFrontNumber = false;
+								pKitInfo->m_bKeeperHasCollar = pTypeKey->GetInt("HasCollar", 0) != 0;
 
 								for (KeyValues *pPosKey = pTypeKey->GetFirstTrueSubKey(); pPosKey; pPosKey = pPosKey->GetNextTrueSubKey())
 								{

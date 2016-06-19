@@ -274,6 +274,9 @@ void UpdatePlayerPreviewEntity()
 
 	static int handBodyGroup = pPlayerPreview->FindBodygroupByName("hands");
 	pPlayerPreview->SetBodygroup(handBodyGroup, pPanel->IsKeeperPreview() ? 1 : 0);
+
+	static int collarBodyGroup = pPlayerPreview->FindBodygroupByName("collar");
+	pPlayerPreview->SetBodygroup(collarBodyGroup, pPanel->IsKeeperPreview() ? pPanel->GetPlayerTeamKitInfo()->m_bKeeperHasCollar : pPanel->GetPlayerTeamKitInfo()->m_bOutfieldHasCollar);
  
 	Vector origin = pLocalPlayer->EyePosition();
 
