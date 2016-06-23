@@ -20,6 +20,8 @@ public:
 	C_Ball();
 	~C_Ball();
 
+	int DrawModel(int flags);
+
 	virtual int GetMultiplayerPhysicsMode()
 	{
 		Assert( m_iPhysicsMode != PHYSICS_MULTIPLAYER_CLIENTSIDE );
