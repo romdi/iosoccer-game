@@ -1787,7 +1787,7 @@ void CSDKGameRules::State_WARMUP_Think()
 		State_Transition(MATCH_PERIOD_FIRST_HALF);
 	else
 	{
-		if (m_bIsCeremony && m_nShieldType == SHIELD_CEREMONY && CSDKPlayer::PlayersAtTargetPos())
+		if (m_bIsCeremony && m_nShieldType == SHIELD_CEREMONY && CSDKPlayer::CheckPlayersAtShieldPos(true))
 			DisableShield();
 	}
 }
@@ -2761,6 +2761,14 @@ void CSDKGameRules::DisableShield()
 		pPl->RemoveFlags();
 		//pPl->RemoveSolidFlags(FSOLID_NOT_SOLID);
 		pPl->SetCollisionGroup(COLLISION_GROUP_PLAYER);
+
+		if (!pPl->m_bIsAtTargetPos)
+		{
+			Vector pos = pPl->GetLocalOrigin();
+			pPl->FindSafePos(pos);
+			pPl->SetLocalOrigin(pos);
+		}
+
 		pPl->m_bIsAtTargetPos = true;
 		pPl->m_flRemoteControlledStartTime = -1;
 	}

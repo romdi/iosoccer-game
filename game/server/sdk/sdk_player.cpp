@@ -1306,9 +1306,9 @@ Vector CSDKPlayer::EyeDirection3D( void )
 extern ConVar sv_ball_timelimit_remotecontrolled;
 
 // Make sure that all players are walked to the intended positions when setting shields
-bool CSDKPlayer::PlayersAtTargetPos()
+bool CSDKPlayer::CheckPlayersAtShieldPos(bool waitUntilOutsideShield)
 {
-	bool playersAtTarget = true;
+	bool playersAtTargetPos = true;
 
 	for (int i = 1; i <= gpGlobals->maxClients; i++)
 	{
@@ -1317,27 +1317,25 @@ bool CSDKPlayer::PlayersAtTargetPos()
 		if (!CSDKPlayer::IsOnField(pPl))
 			continue;
 
-		if (!pPl->m_bIsAtTargetPos)
-		{
-			if (!(pPl->GetFlags() & FL_REMOTECONTROLLED))
-				pPl->SetPosOutsideShield(false);
+		if (pPl->m_bIsAtTargetPos)
+			continue;
 
-			if (!pPl->m_bIsAtTargetPos)
-			{
-				if (pPl->m_flRemoteControlledStartTime == -1)
-				{
-					pPl->m_flRemoteControlledStartTime = gpGlobals->curtime;
-					playersAtTarget = false;
-				}
-				else if (gpGlobals->curtime >= pPl->m_flRemoteControlledStartTime + sv_ball_timelimit_remotecontrolled.GetFloat()) // Player timed out and blocks progress, so move him to specs
-					pPl->SetDesiredTeam(TEAM_SPECTATOR, pPl->GetTeamNumber(), 0, true, false, false);
-				else
-					playersAtTarget = false;
-			}
-		}
+		if (!(pPl->GetFlags() & FL_REMOTECONTROLLED))
+			pPl->SetPosOutsideShield(false);
+
+		if (pPl->m_bIsAtTargetPos)
+			continue;
+
+		if (pPl->m_flRemoteControlledStartTime == -1)
+			pPl->m_flRemoteControlledStartTime = gpGlobals->curtime;
+
+		if (gpGlobals->curtime >= pPl->m_flRemoteControlledStartTime + sv_ball_timelimit_remotecontrolled.GetFloat()) // Player timed out and blocks progress, so move him to specs
+			pPl->SetDesiredTeam(TEAM_SPECTATOR, pPl->GetTeamNumber(), 0, true, false, false);
+		else if (waitUntilOutsideShield || (pPl->GetFlags() & FL_SHIELD_KEEP_IN))
+			playersAtTargetPos = false;
 	}
 
-	return playersAtTarget;
+	return playersAtTargetPos;
 }
 
 void CSDKPlayer::SetPosInsideShield(const Vector &pos, bool holdAtTargetPos)

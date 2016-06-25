@@ -381,7 +381,7 @@ public:
 	CNetworkString(m_szKeeperGloveName, MAX_KITNAME_LENGTH);
 
 	static bool			IsOnField(CSDKPlayer *pPl, int teamNumber = TEAM_NONE);
-	static bool			PlayersAtTargetPos();
+	static bool			CheckPlayersAtShieldPos(bool waitUntilOutsideShield);
 
 	void				CheckShotCharging();
 	void				ResetShotCharging();
