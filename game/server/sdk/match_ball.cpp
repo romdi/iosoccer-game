@@ -464,23 +464,23 @@ void CMatchBall::State_KICKOFF_Think()
 	{
 		m_pPl = NULL;
 
-		m_pPl = FindNearestPlayer(SDKGameRules()->GetKickOffTeam(), FL_POS_ATTACKER | FL_POS_LEFT);
+		m_pPl = FindNearestPlayer(SDKGameRules()->GetKickOffTeam(), FL_POS_ATTACKER | FL_POS_CENTER);
 		if (!m_pPl)
-			m_pPl = FindNearestPlayer(SDKGameRules()->GetKickOffTeam(), FL_POS_ATTACKER | FL_POS_CENTER);
+			m_pPl = FindNearestPlayer(SDKGameRules()->GetKickOffTeam(), FL_POS_ATTACKER | FL_POS_LEFT);
 		if (!m_pPl)
 			m_pPl = FindNearestPlayer(SDKGameRules()->GetKickOffTeam(), FL_POS_ATTACKER | FL_POS_RIGHT);
 
 		if (!m_pPl)
-			m_pPl = FindNearestPlayer(SDKGameRules()->GetKickOffTeam(), FL_POS_MIDFIELDER | FL_POS_LEFT);
-		if (!m_pPl)
 			m_pPl = FindNearestPlayer(SDKGameRules()->GetKickOffTeam(), FL_POS_MIDFIELDER | FL_POS_CENTER);
+		if (!m_pPl)
+			m_pPl = FindNearestPlayer(SDKGameRules()->GetKickOffTeam(), FL_POS_MIDFIELDER | FL_POS_LEFT);
 		if (!m_pPl)
 			m_pPl = FindNearestPlayer(SDKGameRules()->GetKickOffTeam(), FL_POS_MIDFIELDER | FL_POS_RIGHT);
 
 		if (!m_pPl)
-			m_pPl = FindNearestPlayer(SDKGameRules()->GetKickOffTeam(), FL_POS_DEFENDER | FL_POS_LEFT);
-		if (!m_pPl)
 			m_pPl = FindNearestPlayer(SDKGameRules()->GetKickOffTeam(), FL_POS_DEFENDER | FL_POS_CENTER);
+		if (!m_pPl)
+			m_pPl = FindNearestPlayer(SDKGameRules()->GetKickOffTeam(), FL_POS_DEFENDER | FL_POS_LEFT);
 		if (!m_pPl)
 			m_pPl = FindNearestPlayer(SDKGameRules()->GetKickOffTeam(), FL_POS_DEFENDER | FL_POS_RIGHT);
 
@@ -505,7 +505,7 @@ void CMatchBall::State_KICKOFF_Think()
 		}
 
 		SDKGameRules()->EnableShield(SHIELD_KICKOFF, m_pPl->GetTeamNumber(), SDKGameRules()->m_vKickOff);
-		m_pPl->SetPosInsideShield(Vector(m_vPos.x - m_pPl->GetTeam()->m_nRight * 30, m_vPos.y, SDKGameRules()->m_vKickOff.GetZ()), true);
+		m_pPl->SetPosInsideShield(Vector(m_vPos.x, m_vPos.y + m_pPl->GetTeam()->m_nForward * 35, SDKGameRules()->m_vKickOff.GetZ()), true);
 		m_flStateTimelimit = -1;
 		m_pPl->SetShotsBlocked(true);
 
@@ -519,70 +519,26 @@ void CMatchBall::State_KICKOFF_Think()
 		}
 	}
 
-	if (!CSDKPlayer::IsOnField(m_pOtherPl, SDKGameRules()->GetKickOffTeam()) || m_pOtherPl == m_pPl)
-	{
-		m_pOtherPl = NULL;
-
-		m_pOtherPl = FindNearestPlayer(m_pPl->GetTeamNumber(), FL_POS_ATTACKER | FL_POS_RIGHT, false, (1 << (m_pPl->entindex() - 1)));
-		if (!m_pOtherPl)
-			m_pOtherPl = FindNearestPlayer(m_pPl->GetTeamNumber(), FL_POS_ATTACKER | FL_POS_CENTER, false, (1 << (m_pPl->entindex() - 1)));
-		if (!m_pOtherPl)
-			m_pOtherPl = FindNearestPlayer(m_pPl->GetTeamNumber(), FL_POS_ATTACKER | FL_POS_LEFT, false, (1 << (m_pPl->entindex() - 1)));
-
-		if (!m_pOtherPl)
-			m_pOtherPl = FindNearestPlayer(m_pPl->GetTeamNumber(), FL_POS_MIDFIELDER | FL_POS_RIGHT, false, (1 << (m_pPl->entindex() - 1)));
-		if (!m_pOtherPl)
-			m_pOtherPl = FindNearestPlayer(m_pPl->GetTeamNumber(), FL_POS_MIDFIELDER | FL_POS_CENTER, false, (1 << (m_pPl->entindex() - 1)));
-		if (!m_pOtherPl)
-			m_pOtherPl = FindNearestPlayer(m_pPl->GetTeamNumber(), FL_POS_MIDFIELDER | FL_POS_LEFT, false, (1 << (m_pPl->entindex() - 1)));
-
-		if (!m_pOtherPl)
-			m_pOtherPl = FindNearestPlayer(m_pPl->GetTeamNumber(), FL_POS_DEFENDER | FL_POS_RIGHT, false, (1 << (m_pPl->entindex() - 1)));
-		if (!m_pOtherPl)
-			m_pOtherPl = FindNearestPlayer(m_pPl->GetTeamNumber(), FL_POS_DEFENDER | FL_POS_CENTER, false, (1 << (m_pPl->entindex() - 1)));
-		if (!m_pOtherPl)
-			m_pOtherPl = FindNearestPlayer(m_pPl->GetTeamNumber(), FL_POS_DEFENDER | FL_POS_LEFT, false, (1 << (m_pPl->entindex() - 1)));
-
-		if (m_pOtherPl)
-		{
-			m_pOtherPl->SetPosInsideShield(Vector(m_vPos.x + m_pPl->GetTeam()->m_nRight * 100, m_vPos.y, SDKGameRules()->m_vKickOff.GetZ()), true);
-		}
-	}
-
 	if (!CSDKPlayer::PlayersAtTargetPos())
 		return;
-
-	for (int i = 1; i <= gpGlobals->maxClients; i++) 
-	{
-		CSDKPlayer *pPl = ToSDKPlayer(UTIL_PlayerByIndex(i));
-
-		if (!CSDKPlayer::IsOnField(pPl))
-			continue;
-
-		if (pPl->GetFlags() & FL_ATCONTROLS)
-		{
-			if (pPl != m_pPl && pPl != m_pOtherPl)
-				pPl->RemoveFlag(FL_ATCONTROLS);
-		}
-	}
 
 	UpdateCarrier();
 
 	if (m_flStateTimelimit == -1)
 	{
 		m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit_setpiece.GetFloat();
+		m_pPl->RemoveFlag(FL_ATCONTROLS);
 		m_pPl->SetShotButtonsReleased(false);
 		m_pPl->SetShotsBlocked(false);
 	}
 
-	if (m_pPl->ShotButtonsReleased() && m_pPl->IsShooting())
+	if (!m_pPl->ShotsBlocked()
+		&& m_pPl->ShotButtonsReleased()
+		&& CanReachBallStandingXY()
+		&& m_pPl->IsShooting())
 	{
 		RemoveAllTouches();
-		SetVel(m_vPlForward2D * sv_ball_kickoff_strength.GetInt(), 0, FL_SPIN_FORCE_NONE, BODY_PART_FEET, false, sv_ball_kickoff_minpostdelay.GetFloat(), true);
-		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
-		m_pPl->RemoveFlag(FL_ATCONTROLS);
-		if (m_pOtherPl)
-			m_pOtherPl->RemoveFlag(FL_ATCONTROLS);
+		DoGroundHeightAction(false);
 		State_Transition(BALL_STATE_NORMAL);
 	}
 }

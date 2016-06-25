@@ -294,6 +294,7 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 		if (SDKGameRules()->m_nShieldType == SHIELD_GOALKICK || 
 			SDKGameRules()->m_nShieldType == SHIELD_PENALTY ||
 			SDKGameRules()->m_nShieldType == SHIELD_FREEKICK ||
+			SDKGameRules()->m_nShieldType == SHIELD_KICKOFF ||
 			SDKGameRules()->m_nShieldType == SHIELD_CORNER)
 		{
 			const float radius = mp_shield_ball_radius.GetFloat();

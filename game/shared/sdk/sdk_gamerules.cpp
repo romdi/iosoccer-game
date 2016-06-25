@@ -2840,11 +2840,11 @@ int CSDKGameRules::GetShieldRadius(int team, bool isTaker)
 {
 	switch (m_nShieldType)
 	{
-	case SHIELD_THROWIN: return (team == m_nShieldTeam && !isTaker ? mp_shield_throwin_radius_taker.GetInt() : mp_shield_throwin_radius_opponent.GetInt());
-	case SHIELD_FREEKICK: return (team == m_nShieldTeam && !isTaker ? mp_shield_freekick_radius_taker.GetInt() : mp_shield_freekick_radius_opponent.GetInt());
-	case SHIELD_CORNER: return (team == m_nShieldTeam && !isTaker ? mp_shield_corner_radius_taker.GetInt() : mp_shield_corner_radius_opponent.GetInt());
-	case SHIELD_KICKOFF: return mp_shield_kickoff_radius.GetInt();
-	case SHIELD_PENALTY: return mp_shield_kickoff_radius.GetInt();
+	case SHIELD_THROWIN: return (team == m_nShieldTeam && !isTaker ? mp_shield_throwin_radius_teammate.GetInt() : mp_shield_throwin_radius_opponent.GetInt());
+	case SHIELD_FREEKICK: return (team == m_nShieldTeam && !isTaker ? mp_shield_freekick_radius_teammate.GetInt() : mp_shield_freekick_radius_opponent.GetInt());
+	case SHIELD_CORNER: return (team == m_nShieldTeam && !isTaker ? mp_shield_corner_radius_teammate.GetInt() : mp_shield_corner_radius_opponent.GetInt());
+	case SHIELD_KICKOFF: return (team == m_nShieldTeam && !isTaker ? mp_shield_kickoff_radius_teammate.GetInt() : mp_shield_kickoff_radius_opponent.GetInt());
+	case SHIELD_PENALTY: return mp_shield_kickoff_radius_opponent.GetInt();
 	default: return 0;
 	}
 }

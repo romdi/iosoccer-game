@@ -1588,7 +1588,7 @@ Vector CSDKPlayer::GetSpawnPos()
 	area.y /= 2;
 	float xOffset = 300;
 	float yOffset = 150;
-	float yKickOffOffset = mp_shield_kickoff_radius.GetInt() + mp_shield_border.GetInt();
+	float yKickOffOffset = mp_shield_kickoff_radius_opponent.GetInt() + mp_shield_border.GetInt();
 	float xFrac = clamp(GetTeam()->GetFormation()->positions[GetTeamPosIndex()]->x / 3.0f, 0.0f, 1.0f);
 	float yFrac = clamp(GetTeam()->GetFormation()->positions[GetTeamPosIndex()]->y / 3.0f, 0.0f, 1.0f);
 	float xPos = xOffset + xFrac * (area.x - 2 * xOffset);
