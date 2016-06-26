@@ -223,9 +223,9 @@ ConVar
 
 	// Misc
 
-	sv_ball_animation_minstrength_strongshot				("sv_ball_animation_minstrength_strongshot",				"800",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_animation_minstrength_weakshot					("sv_ball_animation_minstrength_weakshot",					"600",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	sv_ball_animation_minstrength_dribbleshot				("sv_ball_animation_minstrength_dribbleshot",				"400",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_animation_minstrength_strongshot				("sv_ball_animation_minstrength_strongshot",				"600",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_animation_minstrength_weakshot					("sv_ball_animation_minstrength_weakshot",					"400",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_animation_minstrength_dribbleshot				("sv_ball_animation_minstrength_dribbleshot",				"200",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 
 	sv_ball_highlightsdelay_intermissions					("sv_ball_highlightsdelay_intermissions",					"3",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_highlightsdelay_cooldown						("sv_ball_highlightsdelay_cooldown",						"3",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
