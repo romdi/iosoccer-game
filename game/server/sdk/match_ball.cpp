@@ -1025,17 +1025,17 @@ void CMatchBall::State_KEEPERHANDS_Think()
 		return;
 	}
 
-	if (m_pPl->ShotButtonsReleased() && m_pPl->IsChargedshooting() && m_pPl->CanShoot())
+	if (m_pPl->ShotButtonsReleased() && m_pPl->IsShooting() && m_pPl->CanShoot())
 	{
 		Vector vel;
 		int spinFlags;
 		PlayerAnimEvent_t animEvent;
 
-		if (m_aPlAng[PITCH] > sv_ball_keepershot_minangle.GetInt())
+		if (m_pPl->IsNormalshooting())
 		{
 			Vector dir;
 			AngleVectors(m_aPlAng, &dir);
-			vel = dir * sv_ball_keeperthrow_strength.GetInt();
+			vel = m_vPlForwardVel2D + dir * sv_ball_keeperthrow_strength.GetInt();
 			spinFlags = FL_SPIN_FORCE_NONE;
 			animEvent = PLAYERANIMEVENT_KEEPER_HANDS_THROW;
 		}
@@ -1044,7 +1044,7 @@ void CMatchBall::State_KEEPERHANDS_Think()
 			QAngle ang = m_aPlAng;
 			ang[PITCH] = min(sv_ball_keepershot_minangle.GetFloat(), m_aPlAng[PITCH]);
 			Vector dir;
-			AngleVectors(m_aPlAng, &dir);
+			AngleVectors(ang, &dir);
 			vel = dir * GetChargedshotStrength(GetPitchCoeff(), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
 			spinFlags = FL_SPIN_PERMIT_SIDE;
 			animEvent = PLAYERANIMEVENT_KEEPER_HANDS_VOLLEY;

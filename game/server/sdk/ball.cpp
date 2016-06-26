@@ -138,9 +138,9 @@ ConVar
 
 	sv_ball_keeper_forwarddive_catchcoeff					("sv_ball_keeper_forwarddive_catchcoeff",					"0.5",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 
-	sv_ball_keepershot_minangle								("sv_ball_keepershot_minangle",								"20",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_keepershot_minangle								("sv_ball_keepershot_minangle",								"0",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 
-	sv_ball_keeperthrow_strength							("sv_ball_keeperthrow_strength",							"100",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_keeperthrow_strength							("sv_ball_keeperthrow_strength",							"400",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_keeperthrow_minpostdelay						("sv_ball_keeperthrow_minpostdelay",						"0.25",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 
 	sv_ball_keeperpunch_minstrength							("sv_ball_keeperpunch_minstrength",							"900",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
