@@ -94,7 +94,7 @@ protected:
 	char	m_szPlayerNames[MAX_PLAYERS+1][MAX_PLAYER_NAME_LENGTH];
 	char	m_szClubNames[MAX_PLAYERS+1][MAX_CLUBNAME_LENGTH];
 	char	m_szNationalTeamNames[MAX_PLAYERS+1][MAX_CLUBNAME_LENGTH];
-	char	m_szShirtNames[MAX_PLAYERS+1][MAX_PLAYER_NAME_LENGTH];
+	char	m_szShirtNames[MAX_PLAYERS+1][MAX_SHIRT_NAME_LENGTH];
 	int		m_CountryIndices[MAX_PLAYERS+1];
 	int		m_iPing[MAX_PLAYERS+1];
 	bool	m_bConnected[MAX_PLAYERS+1];
