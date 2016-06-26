@@ -1262,17 +1262,23 @@ bool CBall::DoGroundHeightAction(bool markOffsidePlayers)
 
 		shotAngle[PITCH] = min(sv_ball_groundshot_minangle.GetFloat(), shotAngle[PITCH]);
 
-		if (shotStrength >= sv_ball_animation_minstrength_strongshot.GetInt())
+		Vector shotDir;
+		AngleVectors(shotAngle, &shotDir);
+		Vector vel = shotDir * shotStrength;
+
+		float relativeShotStrength = max(0, 1 - (m_vPlVel2D.Dot(vel) / vel.Dot(vel))) * shotStrength;
+
+		if (relativeShotStrength >= sv_ball_animation_minstrength_strongshot.GetInt())
 		{
 			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KICK_STRONG);
 			EmitSound("Ball.Kickhard");
 		}
-		else if (shotStrength >= sv_ball_animation_minstrength_weakshot.GetInt())
+		else if (relativeShotStrength >= sv_ball_animation_minstrength_weakshot.GetInt())
 		{
 			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KICK_WEAK);
 			EmitSound("Ball.Kicknormal");
 		}
-		else if (shotStrength >= sv_ball_animation_minstrength_dribbleshot.GetInt())
+		else if (relativeShotStrength >= sv_ball_animation_minstrength_dribbleshot.GetInt())
 		{
 			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KICK_DRIBBLE);
 			EmitSound("Ball.Touch");
