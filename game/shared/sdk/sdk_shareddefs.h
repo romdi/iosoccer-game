@@ -498,4 +498,6 @@ enum color_class_t { COLOR_CLASS_BLACK, COLOR_CLASS_WHITE, COLOR_CLASS_GRAY, COL
 extern Color g_HudColors[];
 extern Color g_HudAlternativeColors[];
 
+#define MAX_SHIRT_NAME_LENGTH 32
+
 #endif // SDK_SHAREDDEFS_H

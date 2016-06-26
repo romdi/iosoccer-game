@@ -209,7 +209,7 @@ public:
 	CNetworkString(m_szShoeName, MAX_KITNAME_LENGTH);
 	CNetworkString(m_szKeeperGloveName, MAX_KITNAME_LENGTH);
 	CNetworkString(m_szPlayerName, MAX_PLAYER_NAME_LENGTH);
-	CNetworkString(m_szShirtName, MAX_PLAYER_NAME_LENGTH);
+	CNetworkString(m_szShirtName, MAX_SHIRT_NAME_LENGTH);
 };
 
 class CReplayManager : public CBaseEntity

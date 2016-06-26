@@ -33,7 +33,7 @@ public:
 	int m_nSkinIndex;
 	int m_nHairIndex;
 	char m_szPlayerName[MAX_PLAYER_NAME_LENGTH];
-	char m_szShirtName[MAX_PLAYER_NAME_LENGTH];
+	char m_szShirtName[MAX_SHIRT_NAME_LENGTH];
 };
 
 class C_ReplayManager : public CBaseEntity

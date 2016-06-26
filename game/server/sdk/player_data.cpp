@@ -13,7 +13,7 @@ CPlayerData::CPlayerData(CSDKPlayer *pPl)
 	m_nSteamCommunityID = engine->GetClientSteamID(pPl->edict()) ? engine->GetClientSteamID(pPl->edict())->ConvertToUint64() : 0;
 	Q_strncpy(m_szSteamID, engine->GetPlayerNetworkIDString(pPl->edict()), 32);
 	Q_strncpy(m_szName, pPl->GetPlayerName(), MAX_PLAYER_NAME_LENGTH);
-	Q_strncpy(m_szShirtName, pPl->GetShirtName(), MAX_PLAYER_NAME_LENGTH);
+	Q_strncpy(m_szShirtName, pPl->GetShirtName(), MAX_SHIRT_NAME_LENGTH);
 	m_pMatchData = new CPlayerMatchData();
 	ResetData();
 }

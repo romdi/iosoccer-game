@@ -762,7 +762,7 @@ void CReplayManager::RestoreReplayPlayerStates(Snapshot *pSnap, Snapshot *pNextS
 				Q_strncpy(pPl->m_szPlayerName.GetForModify(), pPlSnap->pPlayerData->m_szName, MAX_PLAYER_NAME_LENGTH);
 
 			if (Q_strcmp(pPl->m_szShirtName, pPlSnap->pPlayerData->m_szShirtName))
-				Q_strncpy(pPl->m_szShirtName.GetForModify(), pPlSnap->pPlayerData->m_szShirtName, MAX_PLAYER_NAME_LENGTH);
+				Q_strncpy(pPl->m_szShirtName.GetForModify(), pPlSnap->pPlayerData->m_szShirtName, MAX_SHIRT_NAME_LENGTH);
 
 			pPl->m_nSkinIndex = pPlSnap->skinIndex;
 			pPl->m_nHairIndex = pPlSnap->hairIndex;

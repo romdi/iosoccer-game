@@ -3,6 +3,7 @@
 #pragma once
 
 #include "cbase.h"
+#include "sdk_shareddefs.h"
 
 class CSDKPlayer;
 
@@ -67,7 +68,7 @@ public:
 	unsigned long long m_nSteamCommunityID;
 	char	m_szSteamID[32];
 	char	m_szName[MAX_PLAYER_NAME_LENGTH];
-	char	m_szShirtName[MAX_PLAYER_NAME_LENGTH];
+	char	m_szShirtName[MAX_SHIRT_NAME_LENGTH];
 	CPlayerMatchData *m_pMatchData;
 	CUtlVector<CPlayerPeriodData *> m_PeriodData;
 	int		m_nNextCardJoin;
@@ -176,7 +177,7 @@ public:
 	void				SetLastKnownName(const char *name) { Q_strncpy(m_szName, name, MAX_PLAYER_NAME_LENGTH); }
 
 	const char			*GetLastKnownShirtName() { return m_szShirtName; }
-	void				SetLastKnownShirtName(const char *name) { Q_strncpy(m_szShirtName, name, MAX_PLAYER_NAME_LENGTH); }
+	void				SetLastKnownShirtName(const char *name) { Q_strncpy(m_szShirtName, name, MAX_SHIRT_NAME_LENGTH); }
 };
 
 #endif

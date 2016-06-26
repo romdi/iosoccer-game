@@ -32,7 +32,7 @@ public:
 					   bool hasShirtFrontNumber, const Color &shirtFrontNumberFillColor, const Color &shirtFrontNumberOutlineColor, int shirtFrontNumberHorizontalOffset, int shirtFrontNumberVerticalOffset);
 private:
 	virtual void WriteText(unsigned char *imageData, const char *text, glyphWithOutline_t **pixels, CUtlVector<chr_t> &chars, const int &width, const int &height, int offsetX, int offsetY, const Color &color, int rotation, bool isOutline);
-	char m_szShirtName[MAX_PLAYER_NAME_LENGTH];
+	char m_szShirtName[MAX_SHIRT_NAME_LENGTH];
 	char m_szShirtNumber[4];
 	bool m_bIsKeeper;
 	CFontAtlas *m_pFontAtlas;
@@ -310,12 +310,13 @@ void GetCompositeColor(const compColor_t &colorA, const compColor_t &colorB, com
 void CProceduralRegenerator::WriteText(unsigned char *imageData, const char *text, glyphWithOutline_t **pixels, CUtlVector<chr_t> &chars, const int &width, const int &height, int offsetX, int offsetY, const Color &color, int rotation, bool isOutline)
 {
 	// Name and Number are upside down on the texture
+	wchar_t wszText[MAX_SHIRT_NAME_LENGTH];
+	g_pVGuiLocalize->ConvertANSIToUnicode(text, wszText, sizeof(wszText));
 
 	int totalWidth = 0;
 	int maxHeight = 0;
-
-	wchar_t wszText[MAX_PLAYER_NAME_LENGTH];
-	g_pVGuiLocalize->ConvertANSIToUnicode(text, wszText, sizeof(wszText));
+	const int widthLimit = 200;
+	int endCharIndex = 0;
 
 	// Calculate the total width and max height of the text with kerning
 	for (size_t i = 0; i < wcslen(wszText); i++)
@@ -326,12 +327,21 @@ void CProceduralRegenerator::WriteText(unsigned char *imageData, const char *tex
 		if (!pChr)
 			continue;
 
+		int prevTotalWidth = totalWidth;
+
 		totalWidth += pChr->advanceX;
 
 		if (i > 0)
 			totalWidth += pChr->GetKerning(wszText[i - 1]);
 
+		if (totalWidth > widthLimit)
+		{
+			totalWidth = prevTotalWidth;
+			break;
+		}
+
 		maxHeight = max(maxHeight, pChr->height + pChr->offsetY);
+		endCharIndex = i;
 	}
 
 	int posX;
@@ -361,7 +371,7 @@ void CProceduralRegenerator::WriteText(unsigned char *imageData, const char *tex
 	const int textureWidth = 1024;
 	const int textureHeight = 1024;
 
-	for (size_t i = 0; i < wcslen(wszText); i++)
+	for (size_t i = 0; i <= endCharIndex; i++)
 	{
 		const chr_t *pChr = m_pFontAtlas->FindCharById(chars, wszText[i]);
 

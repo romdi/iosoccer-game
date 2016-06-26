@@ -483,7 +483,7 @@ CAppearanceSettingPanel::CAppearanceSettingPanel(Panel *parent, const char *pane
 
 	m_pShirtNameLabel = new Label(m_pContent, "", "Shirt name:");
 	m_pShirtNameText = new TextEntry(m_pContent, "");
-	m_pShirtNameText->SetMaximumCharCount(MAX_PLAYER_NAME_LENGTH - 1);
+	m_pShirtNameText->SetMaximumCharCount(MAX_SHIRT_NAME_LENGTH - 1);
 	m_pShirtNameText->SetAllowNonAsciiCharacters(true);
 
 
@@ -653,7 +653,7 @@ void CAppearanceSettingPanel::PerformLayout()
 
 void CAppearanceSettingPanel::Save()
 {
-	char shirtName[MAX_PLAYER_NAME_LENGTH];
+	char shirtName[MAX_SHIRT_NAME_LENGTH];
 	m_pShirtNameText->GetText(shirtName, sizeof(shirtName));
 	shirtname.SetValue(shirtName);
 	modelskinindex.SetValue(m_pSkinIndexList->GetActiveItemUserData()->GetInt("index"));
@@ -813,7 +813,7 @@ void CAppearanceSettingPanel::UpdateKeeperGloves()
 
 const char *CAppearanceSettingPanel::GetPlayerShirtName()
 {
-	static char shirtName[MAX_PLAYER_NAME_LENGTH];
+	static char shirtName[MAX_SHIRT_NAME_LENGTH];
 	m_pShirtNameText->GetText(shirtName, sizeof(shirtName));
 
 	return shirtName;

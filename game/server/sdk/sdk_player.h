@@ -340,7 +340,7 @@ public:
 	char				m_szNationalTeamName[MAX_CLUBNAME_LENGTH];
 	bool				m_bNationalTeamNameChanged;
 
-	char				m_szShirtName[MAX_PLAYER_NAME_LENGTH];
+	char				m_szShirtName[MAX_SHIRT_NAME_LENGTH];
 	bool				m_bShirtNameChanged;
 
 	int					m_nCountryIndex;

@@ -2162,7 +2162,7 @@ const char *CSDKPlayer::GetShirtName()
 
 void CSDKPlayer::SetShirtName(const char *name)
 {
-	char sanitizedName[MAX_PLAYER_NAME_LENGTH];
+	char sanitizedName[MAX_SHIRT_NAME_LENGTH];
 
 	Q_strncpy(sanitizedName, name, sizeof(sanitizedName));
 
