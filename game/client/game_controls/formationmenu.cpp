@@ -207,7 +207,10 @@ void CFormationMenu::Update(bool showCaptainMenu)
 			bool posBlocked = SDKGameRules()->GetMatchDisplayTimeSeconds(true, false) < GetGlobalTeam(TEAM_HOME + i)->m_PosNextJoinSeconds[j]
 								|| sv_singlekeeper.GetBool() && GetGlobalTeam(TEAM_HOME + i)->GetFormation()->positions[j]->type == POS_GK && keeperCount == 1 && playerIndexAtPos[i][j] == 0;
 
-			Color color = posBlocked ? g_ColorRed : g_ColorGray;
+			bool isFree = playerIndexAtPos[i][j] == 0;
+			bool isLocalPlayer = playerIndexAtPos[i][j] == GetLocalPlayerIndex();
+
+			Color color = posBlocked ? g_ColorRed : (isLocalPlayer ? g_ColorWhite : g_ColorGray);
 
 			color32 taken = { color.r(), color.g(), color.b(), 240 };
 			color32 free = { color.r(), color.g(), color.b(), 20 };
@@ -225,8 +228,6 @@ void CFormationMenu::Update(bool showCaptainMenu)
 			xPos += (i == 0 ? -1 : 1) * FORMATION_CENTERPADDING;
 			float yPos = FORMATION_VTOPPADDING + GetGlobalTeam(TEAM_HOME + i)->GetFormation()->positions[j]->y * yDist - m_pFormationButtons[i][j]->GetTall() / 2;
 			m_pFormationButtons[i][j]->SetPos(xPos, yPos);
-
-			bool isFree = (playerIndexAtPos[i][j] == 0);
 
 			m_pFormationButtons[i][j]->SetCursor(m_bShowCaptainMenu ? dc_arrow : dc_hand);
 
@@ -258,7 +259,7 @@ void CFormationMenu::Update(bool showCaptainMenu)
 			{
 				if (kv->GetInt("playerindex") > 0)
 				{
-					if (playerIndexAtPos[i][j] == GetLocalPlayerIndex())
+					if (isLocalPlayer)
 					{
 						if (localPlayerWantsToJoinPos)
 							msg = "CANCEL";
@@ -350,7 +351,7 @@ void CFormationMenu::OnCursorEntered(Panel *panel)
 		return;
 
 	KeyValues *old = ((Button *)panel)->GetCommand();
-	((CClientScoreBoardDialog *)gViewPortInterface->FindPanelByName(PANEL_SCOREBOARD))->SetHighlightedPlayer(old->GetInt("playerindex"));
+	((CClientScoreBoardDialog *)gViewPortInterface->FindPanelByName(PANEL_SCOREBOARD))->SetSelectedItem(old->GetInt("team") - TEAM_HOME, old->GetInt("posindex") + 1);
 	//KeyValues *kv = ((Button *)panel)->GetCommand();
 	//kv->SetInt("selected", 1);
 	//((Button *)panel)->SetCommand(kv);
@@ -372,7 +373,7 @@ void CFormationMenu::OnCursorExited(Panel *panel)
 		return;
 
 	KeyValues *old = ((Button *)panel)->GetCommand();
-	((CClientScoreBoardDialog *)gViewPortInterface->FindPanelByName(PANEL_SCOREBOARD))->SetHighlightedPlayer(0);
+	((CClientScoreBoardDialog *)gViewPortInterface->FindPanelByName(PANEL_SCOREBOARD))->SetSelectedItem(-1, -1);
 	KeyValues *kv = new KeyValues("Command");
 	kv->SetString("command", old->GetString("command"));
 	kv->SetInt("playerindex", old->GetInt("playerindex"));

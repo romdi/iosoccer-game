@@ -154,7 +154,7 @@ public:
 	virtual int GetCountryFlagImageIndex(int countryIndex);
 	virtual int GetCardImageIndex(int cardIndex);
 
-	void SetHighlightedPlayer(int playerIndex);
+	void SetSelectedItem(int side, int itemId);
 			
 protected:
 	MESSAGE_FUNC_INT( OnPollHideCode, "PollHideCode", code );
@@ -274,6 +274,8 @@ private:
 	int			m_nCursorPosY;
 
 	bool		m_bCanSetSetpieceTaker;
+
+	int			m_nLocalPlayerHighlight;
 
 	IScheme *m_pScheme;
 };

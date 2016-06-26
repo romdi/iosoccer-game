@@ -232,6 +232,8 @@ CClientScoreBoardDialog::CClientScoreBoardDialog(IViewPort *pViewPort) : Editabl
 
 	m_bCanSetSetpieceTaker = false;
 
+	m_nLocalPlayerHighlight = 0;
+
 	MakePopup();
 }
 
@@ -536,7 +538,6 @@ void CClientScoreBoardDialog::ShowPanel(bool bShow)
 		SetKeyBoardInputEnabled(false);
 		SetMouseInputEnabled(true);
 		input()->SetCursorPos(m_nCursorPosX, m_nCursorPosY);
-		SetHighlightedPlayer(0);
 	}
 	else
 	{
@@ -586,7 +587,7 @@ bool CClientScoreBoardDialog::NeedsUpdate( void )
 //-----------------------------------------------------------------------------
 // Purpose: Recalculate the internal scoreboard data
 //-----------------------------------------------------------------------------
-void CClientScoreBoardDialog::Update( void )
+void CClientScoreBoardDialog::Update(void)
 {
 	IGameResources *gr = GameResources();
 	if (!gr)
@@ -638,7 +639,7 @@ void CClientScoreBoardDialog::Update( void )
 		m_pMatchEventMenu->SetVisible(true);
 		m_pStatButtonContainer->SetVisible(true);
 	}
-	
+
 	if (m_eActivePanelType == FORMATION_MENU_NORMAL || m_eActivePanelType == FORMATION_MENU_HIGHLIGHT)
 	{
 		m_pFormationMenu->Update(m_bShowCaptainMenu);
@@ -726,6 +727,19 @@ void CClientScoreBoardDialog::Update( void )
 
 	for (int i = 0; i < 2; i++)
 		m_pPlayerList[i]->SetCursor(m_bCanSetSetpieceTaker && i == GetLocalPlayerTeam() - TEAM_HOME ? dc_hand : dc_arrow);
+
+
+	int side = -1;
+	int itemId = FindItemIDForPlayerIndex(GetLocalPlayerIndex(), side);
+
+	if (itemId > -1
+		&& (m_pPlayerList[0]->GetSelectedItem() == -1 && m_pPlayerList[1]->GetSelectedItem() == -1
+		|| m_nLocalPlayerHighlight == 2 && m_pPlayerList[0]->GetSelectedItem() != itemId && m_pPlayerList[1]->GetSelectedItem() != itemId))
+	{
+		m_nLocalPlayerHighlight = 1;
+		//m_pPlayerList[1 - side]->ClearSelection();
+		//m_pPlayerList[side]->SetSelectedItem(itemId);
+	}
 
 	m_fNextUpdateTime = gpGlobals->curtime + 0.25f; 
 }
@@ -1548,13 +1562,12 @@ void CClientScoreBoardDialog::ToggleMenu()
 
 void CClientScoreBoardDialog::OnItemSelected(KeyValues *data)
 {
-	if (m_eActivePanelType == FORMATION_MENU_HIGHLIGHT)
-		return;
-
 	int itemId = data->GetInt("itemID");
 
 	if (itemId == -1)
+	{
 		m_nSelectedPlayerIndex = 0;
+	}
 	else
 	{
 		SectionedListPanel *pPanel = (SectionedListPanel *)data->GetPtr("panel");
@@ -1567,12 +1580,23 @@ void CClientScoreBoardDialog::OnItemSelected(KeyValues *data)
 				//DevMsg("selectedplayer: %d\n", m_nSelectedPlayerIndex);
 			}
 		}
+
+		if (m_nLocalPlayerHighlight == 1)
+			m_nLocalPlayerHighlight = 2;
+		else if (m_nLocalPlayerHighlight == 2)
+			m_nLocalPlayerHighlight = 0;
 	}
 
-	if (m_nSelectedPlayerIndex == 0)
-		m_eActivePanelType = FORMATION_MENU_NORMAL;
-	else
-		m_eActivePanelType = STATS_MENU;
+	if (m_eActivePanelType != FORMATION_MENU_HIGHLIGHT)
+	{
+		if (m_nSelectedPlayerIndex == 0 || m_nLocalPlayerHighlight == 2)
+			m_eActivePanelType = FORMATION_MENU_NORMAL;
+		else
+		{
+			m_eActivePanelType = STATS_MENU;
+			//DevMsg("%d, %d\n", m_nSelectedPlayerIndex, m_nLocalPlayerHighlight);
+		}
+	}
 
 	Update();
 }
@@ -1623,24 +1647,19 @@ void CClientScoreBoardDialog::OnCursorExited(Panel *panel)
 	}
 }
 
-void CClientScoreBoardDialog::SetHighlightedPlayer(int playerIndex)
+void CClientScoreBoardDialog::SetSelectedItem(int side, int itemId)
 {
-	int side = -1;
-	int itemID = -1;
-
-	if (playerIndex > 0)
-		itemID = FindItemIDForPlayerIndex(playerIndex, side);
-
-	if (itemID > -1)
+	if (side == -1)
 	{
-		m_eActivePanelType = FORMATION_MENU_HIGHLIGHT;
-		m_pPlayerList[side]->SetSelectedItem(itemID);
+		m_eActivePanelType = FORMATION_MENU_NORMAL;
+		m_pPlayerList[0]->ClearSelection();
+		m_pPlayerList[1]->ClearSelection();
 	}
 	else
 	{
-		m_pPlayerList[0]->ClearSelection();
-		m_pPlayerList[1]->ClearSelection();
-		m_eActivePanelType = FORMATION_MENU_NORMAL;
+		m_eActivePanelType = FORMATION_MENU_HIGHLIGHT;
+		//m_pPlayerList[1 - side]->ClearSelection();
+		m_pPlayerList[side]->SetSelectedItem(itemId);
 	}
 }
 
