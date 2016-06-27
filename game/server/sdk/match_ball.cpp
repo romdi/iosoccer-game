@@ -1035,7 +1035,7 @@ void CMatchBall::State_KEEPERHANDS_Think()
 		{
 			Vector dir;
 			AngleVectors(m_aPlAng, &dir);
-			vel = m_vPlForwardVel2D + dir * sv_ball_keeperthrow_strength.GetInt();
+			vel = m_vPlForwardVel2D + dir * GetNormalshotStrength(GetPitchCoeff(), sv_ball_keeperthrow_strength.GetInt());
 			spinFlags = FL_SPIN_FORCE_NONE;
 			animEvent = PLAYERANIMEVENT_KEEPER_HANDS_THROW;
 		}
