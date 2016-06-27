@@ -729,17 +729,17 @@ void CClientScoreBoardDialog::Update(void)
 		m_pPlayerList[i]->SetCursor(m_bCanSetSetpieceTaker && i == GetLocalPlayerTeam() - TEAM_HOME ? dc_hand : dc_arrow);
 
 
-	int side = -1;
-	int itemId = FindItemIDForPlayerIndex(GetLocalPlayerIndex(), side);
+	//int side = -1;
+	//int itemId = FindItemIDForPlayerIndex(GetLocalPlayerIndex(), side);
 
-	if (itemId > -1
-		&& (m_pPlayerList[0]->GetSelectedItem() == -1 && m_pPlayerList[1]->GetSelectedItem() == -1
-		|| m_nLocalPlayerHighlight == 2 && m_pPlayerList[0]->GetSelectedItem() != itemId && m_pPlayerList[1]->GetSelectedItem() != itemId))
-	{
-		m_nLocalPlayerHighlight = 1;
-		//m_pPlayerList[1 - side]->ClearSelection();
-		//m_pPlayerList[side]->SetSelectedItem(itemId);
-	}
+	//if (itemId > -1
+	//	&& (m_pPlayerList[0]->GetSelectedItem() == -1 && m_pPlayerList[1]->GetSelectedItem() == -1
+	//	|| m_nLocalPlayerHighlight == 2 && m_pPlayerList[0]->GetSelectedItem() != itemId && m_pPlayerList[1]->GetSelectedItem() != itemId))
+	//{
+	//	m_nLocalPlayerHighlight = 1;
+	//	//m_pPlayerList[1 - side]->ClearSelection();
+	//	//m_pPlayerList[side]->SetSelectedItem(itemId);
+	//}
 
 	m_fNextUpdateTime = gpGlobals->curtime + 0.25f; 
 }
@@ -1580,16 +1580,17 @@ void CClientScoreBoardDialog::OnItemSelected(KeyValues *data)
 				//DevMsg("selectedplayer: %d\n", m_nSelectedPlayerIndex);
 			}
 		}
-
+		/*
 		if (m_nLocalPlayerHighlight == 1)
 			m_nLocalPlayerHighlight = 2;
 		else if (m_nLocalPlayerHighlight == 2)
 			m_nLocalPlayerHighlight = 0;
+		*/
 	}
 
 	if (m_eActivePanelType != FORMATION_MENU_HIGHLIGHT)
 	{
-		if (m_nSelectedPlayerIndex == 0 || m_nLocalPlayerHighlight == 2)
+		if (m_nSelectedPlayerIndex == 0/* || m_nLocalPlayerHighlight == 2*/)
 			m_eActivePanelType = FORMATION_MENU_NORMAL;
 		else
 		{
