@@ -9,7 +9,9 @@ extern ConVar
 	sv_ball_chargedshot_maxstrength,
 	sv_ball_keepershot_minangle,
 	sv_ball_maxplayerfinddist,
-	sv_ball_keeperthrow_strength,
+	sv_ball_keeperthrow_minstrength,
+	sv_ball_keeperthrow_maxstrength,
+	sv_ball_keeperthrow_minangle,
 	sv_ball_slidezstart,
 	sv_ball_slidezend,
 	sv_ball_slidesidereach_ball,
@@ -1025,17 +1027,21 @@ void CMatchBall::State_KEEPERHANDS_Think()
 		return;
 	}
 
-	if (m_pPl->ShotButtonsReleased() && m_pPl->IsShooting() && m_pPl->CanShoot())
+	if (m_pPl->ShotButtonsReleased() && m_pPl->IsChargedshooting() && m_pPl->CanShoot())
 	{
 		Vector vel;
 		int spinFlags;
 		PlayerAnimEvent_t animEvent;
+		float zOffset;
 
-		if (m_pPl->IsNormalshooting())
+		if (m_pPl->DoSkillMove())
 		{
+			QAngle ang = m_aPlAng;
+			ang[PITCH] = min(sv_ball_keeperthrow_minangle.GetFloat(), m_aPlAng[PITCH]);
 			Vector dir;
-			AngleVectors(m_aPlAng, &dir);
-			vel = m_vPlForwardVel2D + dir * GetNormalshotStrength(GetPitchCoeff(), sv_ball_keeperthrow_strength.GetInt());
+			AngleVectors(ang, &dir);
+			vel = m_vPlForwardVel2D + dir * GetChargedshotStrength(GetPitchCoeff(), sv_ball_keeperthrow_minstrength.GetInt(), sv_ball_keeperthrow_maxstrength.GetInt());
+			zOffset = m_pPl->GetPlayerMaxs().z + 2;
 			spinFlags = FL_SPIN_FORCE_NONE;
 			animEvent = PLAYERANIMEVENT_KEEPER_HANDS_THROW;
 		}
@@ -1046,6 +1052,7 @@ void CMatchBall::State_KEEPERHANDS_Think()
 			Vector dir;
 			AngleVectors(ang, &dir);
 			vel = dir * GetChargedshotStrength(GetPitchCoeff(), sv_ball_chargedshot_minstrength.GetInt(), sv_ball_chargedshot_maxstrength.GetInt());
+			zOffset = sv_ball_bodypos_keeperhands.GetInt();
 			spinFlags = FL_SPIN_PERMIT_SIDE;
 			animEvent = PLAYERANIMEVENT_KEEPER_HANDS_VOLLEY;
 
@@ -1057,7 +1064,7 @@ void CMatchBall::State_KEEPERHANDS_Think()
 
 		m_pPl->DoServerAnimationEvent(animEvent);
 		RemoveAllTouches();
-		SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + sv_ball_bodypos_keeperhands.GetFloat()) + m_vPlForward2D * 36, false);
+		SetPos(Vector(m_vPlPos.x, m_vPlPos.y, m_vPlPos.z + zOffset) + m_vPlForward2D * 36, false);
 		SetVel(vel, 1.0f, spinFlags, BODY_PART_KEEPERHANDS, true, sv_ball_keeperthrow_minpostdelay.GetFloat(), true);
 
 		return State_Transition(BALL_STATE_NORMAL);

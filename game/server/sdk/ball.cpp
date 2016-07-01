@@ -140,8 +140,10 @@ ConVar
 
 	sv_ball_keepershot_minangle								("sv_ball_keepershot_minangle",								"0",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 
-	sv_ball_keeperthrow_strength							("sv_ball_keeperthrow_strength",							"400",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_keeperthrow_minstrength							("sv_ball_keeperthrow_minstrength",							"100",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_keeperthrow_maxstrength							("sv_ball_keeperthrow_maxstrength",							"800",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_keeperthrow_minpostdelay						("sv_ball_keeperthrow_minpostdelay",						"0.25",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_keeperthrow_minangle							("sv_ball_keeperthrow_minangle",							"90",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 
 	sv_ball_keeperpunch_minstrength							("sv_ball_keeperpunch_minstrength",							"900",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_keeperpunch_sidespeedcoeff						("sv_ball_keeperpunch_sidespeedcoeff",						"0.1",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
