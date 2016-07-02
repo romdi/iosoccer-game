@@ -116,12 +116,8 @@ ConVar mp_ceremonyspeed("mp_ceremonyspeed", "100", FCVAR_REPLICATED | FCVAR_NOTI
 ConVar mp_jumplandingspeed("mp_jumplandingspeed", "175", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_remotecontrolledspeed("mp_remotecontrolledspeed", "500", FCVAR_REPLICATED | FCVAR_NOTIFY);
 
-ConVar mp_keepersidewarddive_move_duration("mp_keepersidewarddive_move_duration", "0.66", FCVAR_REPLICATED | FCVAR_NOTIFY);
-ConVar mp_keepersidewarddive_idle_duration("mp_keepersidewarddive_idle_duration", "0.33", FCVAR_REPLICATED | FCVAR_NOTIFY);
-ConVar mp_keeperforwarddive_move_duration("mp_keeperforwarddive_move_duration", "0.66", FCVAR_REPLICATED | FCVAR_NOTIFY);
-ConVar mp_keeperforwarddive_idle_duration("mp_keeperforwarddive_idle_duration", "0.33", FCVAR_REPLICATED | FCVAR_NOTIFY);
-ConVar mp_keeperbackwarddive_move_duration("mp_keeperbackwarddive_move_duration", "0.66", FCVAR_REPLICATED | FCVAR_NOTIFY);
-ConVar mp_keeperbackwarddive_idle_duration("mp_keeperbackwarddive_idle_duration", "0.33", FCVAR_REPLICATED | FCVAR_NOTIFY);
+ConVar mp_keeperdive_move_duration("mp_keeperdive_move_duration", "0.66", FCVAR_REPLICATED | FCVAR_NOTIFY);
+ConVar mp_keeperdive_idle_duration("mp_keeperdive_idle_duration", "0.33", FCVAR_REPLICATED | FCVAR_NOTIFY);
 
 ConVar mp_keeperdivespeed_longside("mp_keeperdivespeed_longside", "400", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_keeperdivespeed_shortside("mp_keeperdivespeed_shortside", "50", FCVAR_REPLICATED | FCVAR_NOTIFY);
