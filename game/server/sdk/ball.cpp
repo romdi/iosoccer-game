@@ -1268,7 +1268,7 @@ bool CBall::DoGroundHeightAction(bool markOffsidePlayers)
 		AngleVectors(shotAngle, &shotDir);
 		Vector vel = shotDir * shotStrength;
 
-		float relativeShotStrength = max(0, 1 - (m_vPlVel2D.Dot(vel) / vel.Dot(vel))) * shotStrength;
+		float relativeShotStrength = (1 - clamp(m_vPlVel2D.Dot(vel) / vel.Dot(vel), 0.0f, 1.0f)) * shotStrength;
 
 		if (relativeShotStrength >= sv_ball_animation_minstrength_strongshot.GetInt())
 		{
