@@ -692,9 +692,7 @@ void CSDKPlayer::ChangeTeam()
 		static int handBodyGroup = FindBodygroupByName("hands");
 		SetBodygroup(handBodyGroup, GetTeamPosType() == POS_GK ? 1 : 0);
 
-		static int collarBodyGroup = FindBodygroupByName("collar");
-		CTeamKitInfo *pTeamKitInfo = CTeamInfo::FindTeamByKitName(GetTeam()->GetKitName());
-		SetBodygroup(collarBodyGroup, GetTeamPosType() == POS_GK ? pTeamKitInfo->m_bKeeperHasCollar : pTeamKitInfo->m_bOutfieldHasCollar);
+		UpdateBodyGroups();
 
 		if (State_Get() != PLAYER_STATE_ACTIVE)
 			State_Transition(PLAYER_STATE_ACTIVE);
@@ -719,6 +717,13 @@ void CSDKPlayer::ChangeTeam()
 	}
 
 	g_pPlayerResource->UpdatePlayerData();
+}
+
+void CSDKPlayer::UpdateBodyGroups()
+{
+	static int collarBodyGroup = FindBodygroupByName("collar");
+	CTeamKitInfo *pTeamKitInfo = CTeamInfo::FindTeamByKitName(GetTeam()->GetKitName());
+	SetBodygroup(collarBodyGroup, GetTeamPosType() == POS_GK ? pTeamKitInfo->m_bKeeperHasCollar : pTeamKitInfo->m_bOutfieldHasCollar);
 }
 
 void CSDKPlayer::SetPositionAfterTeamChange(const Vector &pos, const QAngle &ang, bool findSafePos)

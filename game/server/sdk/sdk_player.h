@@ -266,6 +266,8 @@ public:
 
 	int					GetTeamPosIndexToJoin(void) { return m_nTeamPosIndexToJoin; }
 
+	void				UpdateBodyGroups();
+
 	void				SetPositionAfterTeamChange(const Vector &pos, const QAngle &ang, bool findSafePos);
 	QAngle				GetAngleToBall(const Vector &pos, bool centerPitch);
 

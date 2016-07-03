@@ -232,6 +232,9 @@ void CTeam::SetTeamNumber(int teamNum)
 void CTeam::SetKitName(const char *pName)
 {
 	Q_strncpy( m_szServerKitName.GetForModify(), pName, MAX_TEAM_NAME_LENGTH );
+
+	for (int i = 0; i < m_aPlayers.Count(); i++)
+		ToSDKPlayer(m_aPlayers[i])->UpdateBodyGroups();
 }
 
 void CTeam::SetTeamCode(const char *pCode)
