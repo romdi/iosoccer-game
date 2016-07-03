@@ -315,7 +315,7 @@ void CProceduralRegenerator::WriteText(unsigned char *imageData, const char *tex
 
 	int totalWidth = 0;
 	int maxHeight = 0;
-	const int widthLimit = 200;
+	const int widthLimit = 230;
 	int endCharIndex = 0;
 
 	// Calculate the total width and max height of the text with kerning
