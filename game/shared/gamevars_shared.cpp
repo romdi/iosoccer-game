@@ -113,12 +113,20 @@ ConVar mp_tvcam_border_east("mp_tvcam_border_east", "400", FCVAR_NOTIFY | FCVAR_
 ConVar mp_tvcam_border_west("mp_tvcam_border_west", "400", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar mp_tvcam_border_north("mp_tvcam_border_north", "900", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar mp_tvcam_border_south("mp_tvcam_border_south", "500", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar mp_tvcam_offset_forward("mp_tvcam_offset_forward", "500", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar mp_tvcam_offset_forward_time("mp_tvcam_offset_forward_time", "3", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_tvcam_offset_forward("mp_tvcam_offset_forward", "400", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_tvcam_offset_forward_time("mp_tvcam_offset_forward_time", "2", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar mp_tvcam_offset_north("mp_tvcam_offset_north", "250", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar mp_tvcam_sideline_offset_height("mp_tvcam_sideline_offset_height", "600", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar mp_tvcam_sideline_offset_north("mp_tvcam_sideline_offset_north", "750", FCVAR_NOTIFY | FCVAR_REPLICATED);
-ConVar mp_tvcam_sideline_zoomcoeff("mp_tvcam_sideline_zoomcoeff", "0.5", FCVAR_NOTIFY | FCVAR_REPLICATED);
+
+ConVar mp_tvcam_fixed_sideline_border_right("mp_tvcam_fixed_sideline_border_right", "1250", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_tvcam_fixed_sideline_border_left("mp_tvcam_fixed_sideline_border_left", "1250", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_tvcam_fixed_sideline_border_top("mp_tvcam_fixed_sideline_border_top", "0", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_tvcam_fixed_sideline_border_bottom("mp_tvcam_fixed_sideline_border_bottom", "1100", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_tvcam_fixed_sideline_offset_height("mp_tvcam_fixed_sideline_offset_height", "1000", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_tvcam_fixed_sideline_offset_top("mp_tvcam_fixed_sideline_offset_top", "750", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_tvcam_fixed_sideline_max_dist("mp_tvcam_fixed_sideline_max_dist", "600", FCVAR_NOTIFY | FCVAR_REPLICATED);
+ConVar mp_tvcam_fixed_sideline_targetpos_offset_top("mp_tvcam_fixed_sideline_targetpos_offset_top", "750", FCVAR_NOTIFY | FCVAR_REPLICATED);
 
 ConVar mp_timeout_count("mp_timeout_count", "3", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar mp_timeout_duration("mp_timeout_duration", "5", FCVAR_NOTIFY | FCVAR_REPLICATED);

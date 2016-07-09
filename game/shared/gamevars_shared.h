@@ -71,7 +71,17 @@ extern ConVar
 	mp_tvcam_offset_north,
 	mp_tvcam_sideline_offset_height,
 	mp_tvcam_sideline_offset_north,
-	mp_tvcam_sideline_zoomcoeff,
+
+	mp_tvcam_fixed_sideline_border_top,
+	mp_tvcam_fixed_sideline_border_right,
+	mp_tvcam_fixed_sideline_border_bottom,
+	mp_tvcam_fixed_sideline_border_left,
+	mp_tvcam_fixed_sideline_offset_height,
+	mp_tvcam_fixed_sideline_offset_top,
+	mp_tvcam_fixed_sideline_max_dist,
+	mp_tvcam_targetpos_offset_top,
+	mp_tvcam_fixed_sideline_targetpos_offset_top,
+
 	mp_timeout_count,
 	mp_timeout_duration,
 	mp_captaincy_home,
