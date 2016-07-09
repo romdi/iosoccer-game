@@ -10,7 +10,10 @@ ConVar bot_shootatgoal("bot_shootatgoal", "1");
 
 void CFieldBot::BotThink()
 {
-	if (m_vDirToBall.Length2D() > 25)
+	if (!ShotButtonsReleased())
+		return;
+
+	if (m_vDirToBall.Length2D() > 35)
 		BotRunToBall();
 	else
 		BotShootBall();
@@ -44,15 +47,23 @@ void CFieldBot::BotShootBall()
 				break;
 			}
 		}
-
 		
 		target.x += g_IOSRand.RandomFloat(-200, 200);
 		shotDir = target - GetLocalOrigin();
-		
-		if (isGoalShot)
+
+		if (m_pHoldingBall)
+		{
+			if (!m_Shared.m_bIsShotCharging)
+			{
+				m_cmd.buttons |= IN_ATTACK2;
+			}
+		}
+		else if (isGoalShot)
 		{
 			if (ownDistToGoal > 1000)
+			{
 				m_cmd.buttons |= IN_ATTACK;
+			}
 			else
 			{
 				m_cmd.buttons |= IN_ATTACK;
@@ -71,16 +82,30 @@ void CFieldBot::BotShootBall()
 		if (GetFlags() & FL_ATCONTROLS)
 		{
 			//float xDir = g_IOSRand.RandomFloat(0.1f, 1) * Sign((SDKGameRules()->m_vKickOff - GetLocalOrigin()).x);
-			float xDir = g_IOSRand.RandomFloat(-1, 1);
-			shotDir = Vector(xDir, GetTeam()->m_nForward, 0);
+			
 		}
 		else
 		{
+		}
+
+
+		if (m_pHoldingBall)
+		{
+			if (!m_Shared.m_bIsShotCharging)
+			{
+				m_cmd.buttons |= IN_ATTACK2;
+			}
+
+			int kickOffDir = Sign(SDKGameRules()->m_vKickOff.GetX() - GetLocalOrigin().x);
+			shotDir = Vector(g_IOSRand.RandomFloat(0.25f, 1.0f) * kickOffDir, g_IOSRand.RandomFloat(-1, 1), 0);
+		}
+		else
+		{
+			m_cmd.buttons |= IN_ATTACK;
 			shotDir = Vector(g_IOSRand.RandomFloat(-1, 1), GetTeam()->m_nForward, 0);
 		}
 
 		VectorAngles(shotDir, m_cmd.viewangles);
-		m_cmd.buttons |= IN_ATTACK;
 		m_cmd.viewangles[PITCH] = 0;
 	}
 
@@ -114,7 +139,7 @@ void CFieldBot::BotRunToBall()
 	if (pClosest == this)
 	{
 		VectorAngles(m_vDirToBall, m_cmd.viewangles);
-		m_cmd.forwardmove = clamp(m_oldcmd.forwardmove + g_IOSRand.RandomFloat(-200, 200) * gpGlobals->frametime * 2, mp_runspeed.GetInt(), mp_sprintspeed.GetInt());
+		m_cmd.forwardmove = clamp(m_oldcmd.forwardmove + g_IOSRand.RandomFloat(-mp_runspeed.GetInt(), mp_sprintspeed.GetInt()) * gpGlobals->frametime * 2, mp_runspeed.GetInt(), mp_sprintspeed.GetInt());
 	}
 	else
 	{
@@ -127,14 +152,11 @@ void CFieldBot::BotRunToBall()
 		}
 		else
 			m_cmd.viewangles[YAW] = m_oldcmd.viewangles[YAW] + g_IOSRand.RandomFloat(-180, 180) * gpGlobals->frametime * 4;
-		m_cmd.forwardmove = clamp(m_oldcmd.forwardmove + g_IOSRand.RandomFloat(-200, 200) * gpGlobals->frametime * 2, -mp_walkspeed.GetInt() / 2, mp_walkspeed.GetInt());
-		m_cmd.sidemove = clamp(m_oldcmd.sidemove + g_IOSRand.RandomFloat(-200, 200) * gpGlobals->frametime * 2, -mp_walkspeed.GetInt() / 2, mp_walkspeed.GetInt() / 2);
-		//Vector forward = Vector(0, GetTeam()->m_nForward, 0);
-		//VectorAngles(forward, m_cmd.viewangles);
-		//
-		//if (!m_bIsOffside && Sign(m_vDirToBall.y) == GetTeam()->m_nForward)
-		//	m_cmd.forwardmove = mp_runspeed.GetInt();
-		//else if (Sign(pos.y - GetTeam()->m_vPlayerSpawns[GetShirtNumber() - 1].y) == GetTeam()->m_nForward)
-		//	m_cmd.forwardmove = -mp_runspeed.GetInt();
+
+		m_cmd.forwardmove = clamp(m_oldcmd.forwardmove + g_IOSRand.RandomFloat(-mp_sprintspeed.GetInt(), mp_sprintspeed.GetInt()) * gpGlobals->frametime * 2, -mp_sprintspeed.GetInt() / 2, mp_sprintspeed.GetInt());
+		m_cmd.sidemove = clamp(m_oldcmd.sidemove + g_IOSRand.RandomFloat(-mp_sprintspeed.GetInt(), mp_sprintspeed.GetInt()) * gpGlobals->frametime * 2, -mp_sprintspeed.GetInt() / 2, mp_sprintspeed.GetInt() / 2);
 	}
+
+	if (m_cmd.forwardmove > mp_runspeed.GetInt() || m_cmd.sidemove > mp_runspeed.GetInt())
+		m_cmd.buttons |= IN_SPEED;
 }
