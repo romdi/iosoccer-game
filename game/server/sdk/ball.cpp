@@ -417,11 +417,11 @@ void CBall::VPhysicsCollision(int index, gamevcollisionevent_t *pEvent)
 	float speed = pEvent->collisionSpeed;
 	int surfaceProps = pEvent->surfaceProps[!index];
 
-	if (surfaceProps == SURFACEPROPS_NET && speed > 300.0f)
+	if (surfaceProps == SURFACEPROPS_NET && speed >= 100.0f)
 		EmitSound("Ball.Net");
-	else if (surfaceProps == SURFACEPROPS_POST && speed > 300.0f)
+	else if (surfaceProps == SURFACEPROPS_POST && speed >= 100.0f)
 		EmitSound("Ball.Post");
-	else if (speed > 500.0f)
+	else if (speed >= 100.0f)
 		EmitSound("Ball.Touch");
 
 	Vector vel;
