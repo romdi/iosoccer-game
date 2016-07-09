@@ -38,9 +38,6 @@ extern ConVar sv_specnoclip;
 extern ConVar mp_jump_height;
 extern ConVar mp_stamina_drain;
 extern ConVar mp_stamina_replenish;
-extern ConVar mp_keeperdive_boost_enabled;
-extern ConVar mp_keeperdive_boost_duration;
-extern ConVar mp_keeperdive_boost_coeff;
 
 extern ConVar mp_pitchup;
 extern ConVar mp_pitchdown;

@@ -97,11 +97,6 @@ public:
 
 	CNetworkVar(int, m_nLastPressedSingleMoveKey);
 
-	CNetworkVar(int, m_nBoostRightDive);
-	CNetworkVar(float, m_flBoostRightDiveStart);
-	CNetworkVar(int, m_nBoostForwardDive);
-	CNetworkVar(float, m_flBoostForwardDiveStart);
-
 private:
 
 	CNetworkVar(PlayerAnimEvent_t, m_ePlayerAnimEvent);

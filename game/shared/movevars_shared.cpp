@@ -89,10 +89,6 @@ ConVar	mp_jump_height("mp_jump_height", "250", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar  mp_stamina_drain	("mp_stamina_drain", "13", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar  mp_stamina_replenish	("mp_stamina_replenish", "10", FCVAR_NOTIFY | FCVAR_REPLICATED);
 
-ConVar	mp_keeperdive_boost_enabled("mp_keeperdive_boost_enabled", "0", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
-ConVar	mp_keeperdive_boost_duration("mp_keeperdive_boost_duration", "0.4", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
-ConVar	mp_keeperdive_boost_coeff("mp_keeperdive_boost_coeff", "0.1", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY);
-
 ConVar  mp_pitchup("mp_pitchup", "50", FCVAR_NOTIFY | FCVAR_REPLICATED);
 ConVar  mp_pitchdown("mp_pitchdown", "50", FCVAR_NOTIFY | FCVAR_REPLICATED);
 

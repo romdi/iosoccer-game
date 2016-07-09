@@ -121,10 +121,6 @@ void CSDKPlayerShared::Init( CSDKPlayer *pPlayer )
 	m_pOuter = pPlayer;
 	m_bShotButtonsReleased = false;
 	m_nInPenBoxOfTeam = TEAM_NONE;
-	m_nBoostRightDive = 0;
-	m_flBoostRightDiveStart = -1;
-	m_nBoostForwardDive = 0;
-	m_flBoostForwardDiveStart = -1;
 }
 
 void CSDKPlayerShared::SetSprinting( bool bSprinting )

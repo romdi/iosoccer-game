@@ -1469,28 +1469,6 @@ void CGameMovement::FullWalkMove( )
 	Vector forward, right, up;
 	AngleVectors(mv->m_vecAbsViewAngles, &forward, &right, &up);
 
-	if (isWalkMove)
-	{
-		Vector moveDir = newPos - oldPos;
-		moveDir.NormalizeInPlace();
-		float rightDot = DotProduct2D(right.AsVector2D(), moveDir.AsVector2D());
-		float forwardDot = DotProduct2D(forward.AsVector2D(), moveDir.AsVector2D());
-		int BoostRightDive = rightDot > 0 ? 1 : (rightDot < 0 ? -1 : 0);
-		int BoostForwardDive  = forwardDot > 0 ? 1 : (forwardDot < 0 ? -1 : 0);
-
-		if (BoostRightDive != pPl->m_Shared.m_nBoostRightDive)
-		{
-			pPl->m_Shared.m_nBoostRightDive = BoostRightDive;
-			pPl->m_Shared.m_flBoostRightDiveStart = gpGlobals->curtime;
-		}
-
-		if (BoostForwardDive != pPl->m_Shared.m_nBoostForwardDive)
-		{
-			pPl->m_Shared.m_nBoostForwardDive = BoostForwardDive;
-			pPl->m_Shared.m_flBoostForwardDiveStart = gpGlobals->curtime;
-		}
-	}
-
 	pPl->m_Shared.m_nInPenBoxOfTeam = TEAM_NONE;
 
 	for (int team = TEAM_HOME; team <= TEAM_AWAY; team++)
