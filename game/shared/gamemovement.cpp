@@ -1734,7 +1734,70 @@ bool CGameMovement::CheckActionStart()
 
 	PlayerAnimEvent_t animEvent = PLAYERANIMEVENT_NONE;
 	
-	if (mv->m_nButtons & IN_GESTURE)
+
+	if (mv->m_nButtons & IN_JUMP)
+	{
+		if (pPl->IsInOwnBoxAsKeeper())
+		{
+			int sidemoveSign = pPl->GetSidemoveSign();
+
+			if (sidemoveSign == -1)
+				animEvent = PLAYERANIMEVENT_KEEPER_DIVE_LEFT;
+			else if (sidemoveSign == 1)
+				animEvent = PLAYERANIMEVENT_KEEPER_DIVE_RIGHT;
+			else
+				animEvent = PLAYERANIMEVENT_KEEPER_JUMP;
+		}
+		else
+		{
+			animEvent = PLAYERANIMEVENT_JUMP;
+		}
+
+		
+	}
+	else if (mv->m_nButtons & IN_DUCK)
+	{
+		if (pPl->IsInOwnBoxAsKeeper() && !(mv->m_nButtons & IN_SKILL))
+		{
+			if (mv->m_nButtons & IN_FORWARD)
+				animEvent = PLAYERANIMEVENT_KEEPER_DIVE_FORWARD;
+			else if (mv->m_nButtons & IN_BACK)
+				animEvent = PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD;
+		}
+		else
+		{
+			if (mv->m_nButtons & IN_FORWARD)
+			{
+				animEvent = PLAYERANIMEVENT_SLIDE_TACKLE;
+
+#ifdef GAME_DLL
+				if (!SDKGameRules()->IsIntermissionState() && GetMatchBall()->State_Get() == BALL_STATE_NORMAL && !GetMatchBall()->HasQueuedState())
+				{
+					pPl->GetData()->AddSlidingTackle();
+
+					GetMatchBall()->CheckFoul(pPl);
+
+					if (!CSDKPlayer::IsOnField(pPl))
+						return true;
+				}
+#endif
+			}
+		}
+	}
+	else if (mv->m_nButtons & IN_SKILL)
+	{
+		if ((mv->m_nButtons & IN_FORWARD) && pPl->IsChargedshooting())
+		{
+			animEvent = PLAYERANIMEVENT_DIVING_HEADER;
+			pPl->AddFlag(FL_FREECAM);
+		}
+		else if ((mv->m_nButtons & IN_BACK) && pPl->IsChargedshooting())
+		{
+			animEvent = PLAYERANIMEVENT_BICYCLE_KICK;
+			pPl->AddFlag(FL_FREECAM);
+		}
+	}
+	else if (mv->m_nButtons & IN_GESTURE)
 	{
 		if ((mv->m_nButtons & IN_ATTACK) && !(mv->m_nOldButtons & IN_ATTACK))
 		{
@@ -1753,81 +1816,42 @@ bool CGameMovement::CheckActionStart()
 			}
 		}
 	}
-	else if (mv->m_nButtons & IN_SKILL)
+
+	switch (animEvent)
 	{
-		if ((mv->m_nButtons & IN_FORWARD) && pPl->IsChargedshooting())
-		{
-			animEvent = PLAYERANIMEVENT_DIVING_HEADER;
-			pPl->AddFlag(FL_FREECAM);
-			MoveHelper()->StartSound(mv->GetAbsOrigin(), "Player.DivingHeader");
-		}
-		else if ((mv->m_nButtons & IN_BACK) && pPl->IsChargedshooting())
-		{
-			animEvent = PLAYERANIMEVENT_BICYCLE_KICK;
-			pPl->AddFlag(FL_FREECAM);
-			MoveHelper()->StartSound(mv->GetAbsOrigin(), "Player.DivingHeader");
-		}
+	case PLAYERANIMEVENT_NONE:
+	{
+		return true;
 	}
-	else if (mv->m_nButtons & IN_JUMP)
+	case PLAYERANIMEVENT_JUMP:
+	case PLAYERANIMEVENT_KEEPER_JUMP:
 	{
-		if (pPl->IsInOwnBoxAsKeeper())
-		{
-			int sidemoveSign = pPl->GetSidemoveSign();
-
-			if (sidemoveSign == -1)
-				animEvent = PLAYERANIMEVENT_KEEPER_DIVE_LEFT;
-			else if (sidemoveSign == 1)
-				animEvent = PLAYERANIMEVENT_KEEPER_DIVE_RIGHT;
-			else if (mv->m_nButtons & IN_FORWARD)
-				animEvent = PLAYERANIMEVENT_KEEPER_DIVE_FORWARD;
-			else if (mv->m_nButtons & IN_BACK)
-				animEvent = PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD;
-			else
-				animEvent = PLAYERANIMEVENT_KEEPER_JUMP;
-		}
-		else
-		{
-			animEvent = PLAYERANIMEVENT_JUMP;
-		}
-
-		if (animEvent == PLAYERANIMEVENT_KEEPER_JUMP || animEvent == PLAYERANIMEVENT_JUMP)
-		{
-			mv->m_vecVelocity.z = mp_jump_height.GetInt();
-			SetGroundEntity(NULL);
-			player->PlayStepSound((Vector &)mv->GetAbsOrigin(), player->m_pSurfaceData, 1.0, true);
-		}
-		else
-		{
-			SetGroundEntity(NULL);
-			pPl->ResetShotCharging();
-			//pPl->AddFlag(FL_FREECAM);
-			MoveHelper()->StartSound(mv->GetAbsOrigin(), "Player.DiveKeeper");
-		}
+		mv->m_vecVelocity.z = mp_jump_height.GetInt();
+		SetGroundEntity(NULL);
+		player->PlayStepSound((Vector &)mv->GetAbsOrigin(), player->m_pSurfaceData, 1.0, true);
+		break;
 	}
-	else if ((mv->m_nButtons & IN_DUCK) && (mv->m_nButtons & IN_FORWARD))
+	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT:
+	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT:
+	case PLAYERANIMEVENT_KEEPER_DIVE_FORWARD:
+	case PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD:
 	{
-		animEvent = PLAYERANIMEVENT_SLIDE_TACKLE;
-		MoveHelper()->StartSound(mv->GetAbsOrigin(), "Player.Slide");
-
-#ifdef GAME_DLL
-		if (!SDKGameRules()->IsIntermissionState() && GetMatchBall()->State_Get() == BALL_STATE_NORMAL && !GetMatchBall()->HasQueuedState())
-		{
-			pPl->GetData()->AddSlidingTackle();
-
-			GetMatchBall()->CheckFoul(pPl);
-
-			if (!CSDKPlayer::IsOnField(pPl))
-				return true;
-		}
-#endif
+		SetGroundEntity(NULL);
+		pPl->ResetShotCharging();
+		MoveHelper()->StartSound(mv->GetAbsOrigin(), "Player.DiveKeeper");
+		break;
+	}
+	case PLAYERANIMEVENT_DIVING_HEADER:
+	case PLAYERANIMEVENT_BICYCLE_KICK:
+	case PLAYERANIMEVENT_CELEB_SLIDE:
+	{
+		MoveHelper()->StartSound(mv->GetAbsOrigin(), "Player.DivingHeader");
+	}
 	}
 
-	if (animEvent != PLAYERANIMEVENT_NONE)
-	{
-		pPl->m_Shared.SetAnimEventStartAngle(mv->m_vecAbsViewAngles);
-		pPl->m_Shared.SetAnimEventStartButtons(mv->m_nButtons);
-		pPl->DoAnimationEvent(animEvent);
-	}
+	pPl->m_Shared.SetAnimEventStartAngle(mv->m_vecAbsViewAngles);
+	pPl->m_Shared.SetAnimEventStartButtons(mv->m_nButtons);
+	pPl->DoAnimationEvent(animEvent);
 
 	return true;
 }
