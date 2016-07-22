@@ -1804,7 +1804,7 @@ bool CGameMovement::CheckActionStart()
 			MoveHelper()->StartSound(mv->GetAbsOrigin(), "Player.DiveKeeper");
 		}
 	}
-	else if (mv->m_nButtons & IN_DUCK && !(mv->m_nOldButtons & IN_DUCK))
+	else if (mv->m_nButtons & IN_DUCK && !(mv->m_nOldButtons & IN_DUCK) && (mv->m_nButtons & IN_FORWARD))
 	{
 		animEvent = PLAYERANIMEVENT_SLIDE_TACKLE;
 		MoveHelper()->StartSound(mv->GetAbsOrigin(), "Player.Slide");
