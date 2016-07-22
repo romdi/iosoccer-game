@@ -1736,7 +1736,7 @@ bool CGameMovement::CheckActionStart()
 	
 	if (mv->m_nButtons & IN_GESTURE)
 	{
-		if (mv->m_nButtons & IN_ATTACK && !(mv->m_nOldButtons & IN_ATTACK))
+		if ((mv->m_nButtons & IN_ATTACK) && !(mv->m_nOldButtons & IN_ATTACK))
 		{
 			animEvent = PLAYERANIMEVENT_GESTURE_POINT;
 		}
@@ -1768,7 +1768,7 @@ bool CGameMovement::CheckActionStart()
 			MoveHelper()->StartSound(mv->GetAbsOrigin(), "Player.DivingHeader");
 		}
 	}
-	else if (mv->m_nButtons & IN_JUMP && !(mv->m_nOldButtons & IN_JUMP))
+	else if (mv->m_nButtons & IN_JUMP)
 	{
 		if (pPl->IsInOwnBoxAsKeeper())
 		{
@@ -1804,7 +1804,7 @@ bool CGameMovement::CheckActionStart()
 			MoveHelper()->StartSound(mv->GetAbsOrigin(), "Player.DiveKeeper");
 		}
 	}
-	else if (mv->m_nButtons & IN_DUCK && !(mv->m_nOldButtons & IN_DUCK) && (mv->m_nButtons & IN_FORWARD))
+	else if ((mv->m_nButtons & IN_DUCK) && (mv->m_nButtons & IN_FORWARD))
 	{
 		animEvent = PLAYERANIMEVENT_SLIDE_TACKLE;
 		MoveHelper()->StartSound(mv->GetAbsOrigin(), "Player.Slide");
