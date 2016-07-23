@@ -118,7 +118,6 @@ void CSDKPlayerAnimState::ClearAnimationState( void )
 	m_bIsSecondaryActionSequenceActive = false;
 	m_bJumping = false;
 	m_bDying = false;
-	m_bCarryHold = false;
 	ClearAnimationLayers();
 }
 
@@ -209,14 +208,14 @@ void CSDKPlayerAnimState::Update( float eyeYaw, float eyePitch )
 #endif
 }
 
-void CSDKPlayerAnimState::ComputePrimaryActionSequence( CStudioHdr *pStudioHdr )
+void CSDKPlayerAnimState::ComputePrimaryActionSequence(CStudioHdr *pStudioHdr)
 {
-	UpdateLayerSequenceGeneric( pStudioHdr, PRIMARYACTIONSEQUENCE_LAYER, m_bIsPrimaryActionSequenceActive, m_flPrimaryActionSequenceCycle, m_iPrimaryActionSequence, false );
+	UpdateLayerSequenceGeneric(pStudioHdr, PRIMARYACTIONSEQUENCE_LAYER, m_bIsPrimaryActionSequenceActive, m_flPrimaryActionSequenceCycle, m_iPrimaryActionSequence, false);
 }
 
-void CSDKPlayerAnimState::ComputeSecondaryActionSequence( CStudioHdr *pStudioHdr )
+void CSDKPlayerAnimState::ComputeSecondaryActionSequence(CStudioHdr *pStudioHdr)
 {
-	UpdateLayerSequenceGeneric( pStudioHdr, SECONDARYACTIONSEQUENCE_LAYER, m_bIsSecondaryActionSequenceActive, m_flSecondaryActionSequenceCycle, m_iSecondaryActionSequence, m_bCarryHold );
+	UpdateLayerSequenceGeneric(pStudioHdr, SECONDARYACTIONSEQUENCE_LAYER, m_bIsSecondaryActionSequenceActive, m_flSecondaryActionSequenceCycle, m_iSecondaryActionSequence, m_bSecondaryActionSequenceWaitAtEnd);
 }
 
 int CSDKPlayerAnimState::CalcSecondaryActionSequence(PlayerAnimEvent_t event)
@@ -224,10 +223,11 @@ int CSDKPlayerAnimState::CalcSecondaryActionSequence(PlayerAnimEvent_t event)
 	switch (event)
 	{
 	case PLAYERANIMEVENT_HOLD:
-	default:
 		return CalcSequenceIndex("keeper_hands_hold");
 	case PLAYERANIMEVENT_THROW_IN_HOLD:
 		return CalcSequenceIndex("throw_in_hold"); // iosthrowin
+	default:
+		return 0;
 	}
 }
 
@@ -264,7 +264,7 @@ int CSDKPlayerAnimState::CalcPrimaryActionSequence(PlayerAnimEvent_t event)
 	case PLAYERANIMEVENT_GESTURE_POINT: return CalcSequenceIndex("gesture_point");
 	case PLAYERANIMEVENT_GESTURE_WAVE: return CalcSequenceIndex("gesture_wave");
 	case PLAYERANIMEVENT_CELEB_SLIDE: return CalcSequenceIndex("celeb_slide");
-	default: return -1;
+	default: return 0;
 	}
 }
 
@@ -309,38 +309,10 @@ void CSDKPlayerAnimState::UpdateLayerSequenceGeneric( CStudioHdr *pStudioHdr, in
 		}
 		else
 		{
-			//GetSDKPlayer()->RemoveFlag(FL_FREECAM);
-
-			bool canResetHull = true;
-
-			/*if (GetSDKPlayer()->GetFlags() & (FL_SLIDING | FL_KEEPER_SIDEWAYS_DIVING))
-			{
-				Vector pos = GetSDKPlayer()->GetLocalOrigin();
-				trace_t	trace;
-				UTIL_TraceHull(pos, pos, VEC_HULL_MIN, VEC_HULL_MAX, MASK_PLAYERSOLID, GetSDKPlayer(), COLLISION_GROUP_PLAYER, &trace);
-
-				if (trace.startsolid)
-				{
-					canResetHull = false;
-				}
-			}*/
-
-			if (canResetHull)
-			{
-				// Not firing anymore.
-				bEnabled = false;
-				iSequence = 0;
-				if (iLayer == PRIMARYACTIONSEQUENCE_LAYER)
-				{
-					//GetSDKPlayer()->m_Shared.m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
-					//GetSDKPlayer()->RemoveFlag(FL_SLIDING | FL_KEEPER_SIDEWAYS_DIVING);
-				}
-				return;
-			}
-			else
-			{
-				flCurCycle = 1;
-			}
+			// Not firing anymore.
+			bEnabled = false;
+			iSequence = 0;
+			return;
 		}
 	}
 
@@ -424,9 +396,9 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 	case PLAYERANIMEVENT_GESTURE_WAVE:
 	case PLAYERANIMEVENT_CELEB_SLIDE:
 	{
-		m_flPrimaryActionSequenceCycle = 0;
 		m_iPrimaryActionSequence = CalcPrimaryActionSequence(event);
-		m_bIsPrimaryActionSequenceActive = m_iPrimaryActionSequence != -1;
+		m_flPrimaryActionSequenceCycle = 0;
+		m_bIsPrimaryActionSequenceActive = m_iPrimaryActionSequence != 0;
 		break;
 	}
 	case PLAYERANIMEVENT_JUMP:
@@ -444,20 +416,16 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 	case PLAYERANIMEVENT_HOLD:
 	case PLAYERANIMEVENT_THROW_IN_HOLD:
 	{
-		m_iSecondaryActionSequence = CalcSecondaryActionSequence(event);			//add keeper carry as layer
-		if (m_iSecondaryActionSequence != -1)
-		{
-			m_bIsSecondaryActionSequenceActive = true;
-			m_flSecondaryActionSequenceCycle = 0;
-			m_bCarryHold = true;
-		}
+		m_iSecondaryActionSequence = CalcSecondaryActionSequence(event);
+		m_flSecondaryActionSequenceCycle = 0;
+		m_bIsSecondaryActionSequenceActive = m_iSecondaryActionSequence != 0;
+		m_bSecondaryActionSequenceWaitAtEnd = true;
 		break;
 	}
 	case PLAYERANIMEVENT_CARRY_END:
 	case PLAYERANIMEVENT_THROW_IN_END:
 	{
-		m_flSecondaryActionSequenceCycle = 1.1f;
-		m_bCarryHold = false;
+		m_bIsSecondaryActionSequenceActive = false;
 		break;
 	}
 	}

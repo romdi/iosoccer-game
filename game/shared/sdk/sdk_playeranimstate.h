@@ -195,8 +195,6 @@ private:
 	float	m_flJumpStartTime;	
 	bool	m_bFirstJumpFrame;
 
-	bool	m_bCarryHold;
-
 	// Swimming.
 	bool	m_bInSwim;
 	bool	m_bFirstSwimFrame;
@@ -224,13 +222,15 @@ private:
 	int CalcSequenceIndex( const char *pBaseName, ... );
 	void ClearAnimationLayers();
 	virtual void RestartMainSequence();
-	bool m_bIsPrimaryActionSequenceActive;						// If this is on, then it'll continue the fire animation in the fire layer
-										// until it completes.
-	int m_iPrimaryActionSequence;				// (For any sequences in the fire layer, including grenade throw).
+
+	int m_iPrimaryActionSequence;
+	bool m_bIsPrimaryActionSequenceActive;
 	float m_flPrimaryActionSequenceCycle;
+
+	int m_iSecondaryActionSequence;
 	bool m_bIsSecondaryActionSequenceActive;
 	float m_flSecondaryActionSequenceCycle;
-	int m_iSecondaryActionSequence;
+	bool m_bSecondaryActionSequenceWaitAtEnd;
 
 	bool				SetupPoseParameters( CStudioHdr *pStudioHdr );
 	virtual void		ComputePoseParam_MoveYaw( CStudioHdr *pStudioHdr );
