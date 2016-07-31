@@ -59,15 +59,17 @@ public:
 	void	StartSprinting( void );
 	void	StopSprinting( void );
 
-	void	SetAnimEvent(PlayerAnimEvent_t animEvent);
-	//void	ResetAnimEvent();
-	PlayerAnimEvent_t GetAnimEvent();
-	float	GetAnimEventStartTime();
-	QAngle GetAnimEventStartAngle();
-	void SetAnimEventStartAngle(QAngle ang);
+	void	SetAction(PlayerAnimEvent_t animEvent);
+	PlayerAnimEvent_t GetAction();
+	float	GetActionStartTime();
+	QAngle GetActionStartAngle();
+	void SetActionStartAngle(QAngle ang);
+	int GetActionStartButtons();
+	void SetActionStartButtons(int buttons);
 
-	int GetAnimEventStartButtons();
-	void SetAnimEventStartButtons(int buttons);
+	void	SetGesture(PlayerAnimEvent_t gesture);
+	PlayerAnimEvent_t GetGesture();
+
 
 	void ComputeWorldSpaceSurroundingBox( Vector *pVecWorldMins, Vector *pVecWorldMaxs );
 	
@@ -99,12 +101,16 @@ public:
 
 private:
 
-	CNetworkVar(PlayerAnimEvent_t, m_ePlayerAnimEvent);
-	CNetworkVar(float, m_flPlayerAnimEventStartTime);
-	CNetworkVector(m_aPlayerAnimEventStartAngle);
-	CNetworkVar(int, m_nPlayerAnimEventStartButtons);
+	CNetworkVar(PlayerAnimEvent_t, m_eAction);
+	CNetworkVar(float, m_flActionStartTime);
+	CNetworkVector(m_aActionStartAngle);
+	CNetworkVar(int, m_nActionStartButtons);
 	CNetworkVar( bool, m_bIsSprinting );
 	CNetworkVar( float, m_flStamina );
+
+	CNetworkVar(PlayerAnimEvent_t, m_eGesture);
+	CNetworkVar(float, m_flGestureStartTime);
+
 	OuterClass *m_pOuter;
 };			   
 

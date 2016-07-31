@@ -114,9 +114,11 @@ BEGIN_RECV_TABLE_NOBASE( CSDKPlayerShared, DT_SDKSharedLocalPlayerExclusive )
 	RecvPropTime( RECVINFO( m_flNextJump ) ),
 	RecvPropTime( RECVINFO( m_flNextSlide ) ),
 
-	RecvPropTime( RECVINFO( m_flPlayerAnimEventStartTime ) ),
-	RecvPropVector( RECVINFO( m_aPlayerAnimEventStartAngle ) ),
-	RecvPropInt( RECVINFO( m_nPlayerAnimEventStartButtons ) ),
+	RecvPropTime( RECVINFO( m_flActionStartTime ) ),
+	RecvPropVector( RECVINFO( m_aActionStartAngle ) ),
+	RecvPropInt( RECVINFO( m_nActionStartButtons ) ),
+
+	RecvPropTime(RECVINFO(m_flGestureStartTime)),
 
 	RecvPropBool( RECVINFO( m_bIsShotCharging ) ),
 	RecvPropBool(RECVINFO(m_bDoChargedShot)),
@@ -148,7 +150,8 @@ BEGIN_RECV_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	RecvPropBool( RECVINFO( m_bFirstJumpFrame ) ),
 	RecvPropTime( RECVINFO( m_flJumpStartTime ) ),
 
-	RecvPropInt( RECVINFO( m_ePlayerAnimEvent ) ),
+	RecvPropInt(RECVINFO(m_eAction)),
+	RecvPropInt(RECVINFO(m_eGesture)),
 
 	RecvPropDataTable( "sdksharedlocaldata", 0, 0, &REFERENCE_RECV_TABLE(DT_SDKSharedLocalPlayerExclusive) ),
 END_RECV_TABLE()
@@ -229,10 +232,12 @@ BEGIN_PREDICTION_DATA_NO_BASE( CSDKPlayerShared )
 	DEFINE_PRED_FIELD( m_flShotChargingStart, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flShotChargingDuration, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 
-	DEFINE_PRED_FIELD( m_ePlayerAnimEvent, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
-	DEFINE_PRED_FIELD_TOL( m_flPlayerAnimEventStartTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE, TD_MSECTOLERANCE ),	
-	DEFINE_PRED_FIELD( m_aPlayerAnimEventStartAngle, FIELD_VECTOR, FTYPEDESC_INSENDTABLE ),
-	DEFINE_PRED_FIELD( m_nPlayerAnimEventStartButtons, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_eAction, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_eGesture, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD_TOL( m_flActionStartTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE, TD_MSECTOLERANCE ),	
+	DEFINE_PRED_FIELD_TOL( m_flGestureStartTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE, TD_MSECTOLERANCE ),	
+	DEFINE_PRED_FIELD( m_aActionStartAngle, FIELD_VECTOR, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_nActionStartButtons, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
 
 	DEFINE_PRED_FIELD(m_nInPenBoxOfTeam, FIELD_INTEGER, FTYPEDESC_INSENDTABLE),
 	DEFINE_PRED_FIELD( m_bShotButtonsReleased, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
@@ -630,10 +635,12 @@ C_SDKPlayer::C_SDKPlayer() :
 	m_angCamViewAngles.Init();
 
 	m_fNextThinkPushAway = 0.0f;
-	m_Shared.m_flPlayerAnimEventStartTime = gpGlobals->curtime;
-	m_Shared.m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
-	m_Shared.m_aPlayerAnimEventStartAngle = vec3_origin;
-	m_Shared.m_nPlayerAnimEventStartButtons = 0;
+	m_Shared.m_flActionStartTime = gpGlobals->curtime;
+	m_Shared.m_eAction = PLAYERANIMEVENT_NONE;
+	m_Shared.m_aActionStartAngle = vec3_origin;
+	m_Shared.m_nActionStartButtons = 0;
+	m_Shared.m_eGesture = PLAYERANIMEVENT_NONE;
+	m_Shared.m_flGestureStartTime = gpGlobals->curtime;
 
 	m_nModelScale = 100;
 	m_pHoldingBall = NULL;
@@ -1383,6 +1390,7 @@ void C_SDKPlayer::PreThink()
 	if (!ShotButtonsPressed())
 		SetShotButtonsReleased(true);
 
+	CheckGesture();
 	CheckShotCharging();
 	CheckLastPressedSingleMoveButton();
 }

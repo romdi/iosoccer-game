@@ -203,7 +203,7 @@ void CBaseSDKGrenade::ItemPostFrame()
 	// If they let go of the fire button, they want to throw the grenade.
 	if ( m_bPinPulled && !(pPlayer->m_nButtons & IN_ATTACK) ) 
 	{
-		pPlayer->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
+		//pPlayer->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
 //		if (m_bSecondary)
 //			DropGrenade();
 //		else

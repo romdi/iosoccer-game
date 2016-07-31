@@ -367,7 +367,7 @@ void CWeaponSDKBase::SendReloadEvents()
 	MessageEnd();
 #endif
 	// Make the player play his reload animation.
-	pPlayer->DoAnimationEvent( PLAYERANIMEVENT_RELOAD );
+	//pPlayer->DoAnimationEvent( PLAYERANIMEVENT_RELOAD );
 }
 //-----------------------------------------------------------------------------
 // Purpose: 

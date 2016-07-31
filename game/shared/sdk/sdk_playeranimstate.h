@@ -25,36 +25,7 @@ class CSDKPlayer;
 enum PlayerAnimEvent_t
 {
 	PLAYERANIMEVENT_NONE,
-	PLAYERANIMEVENT_ATTACK_PRIMARY,
-	PLAYERANIMEVENT_ATTACK_SECONDARY,
-	PLAYERANIMEVENT_ATTACK_GRENADE,
-	PLAYERANIMEVENT_RELOAD,
-	PLAYERANIMEVENT_RELOAD_LOOP,
-	PLAYERANIMEVENT_RELOAD_END,
 	PLAYERANIMEVENT_JUMP,
-	PLAYERANIMEVENT_SWIM,
-	PLAYERANIMEVENT_DIE,
-	PLAYERANIMEVENT_FLINCH_CHEST,
-	PLAYERANIMEVENT_FLINCH_HEAD,
-	PLAYERANIMEVENT_FLINCH_LEFTARM,
-	PLAYERANIMEVENT_FLINCH_RIGHTARM,
-	PLAYERANIMEVENT_FLINCH_LEFTLEG,
-	PLAYERANIMEVENT_FLINCH_RIGHTLEG,
-	PLAYERANIMEVENT_DOUBLEJUMP,
-
-	// Cancel.
-	PLAYERANIMEVENT_CANCEL,
-	PLAYERANIMEVENT_SPAWN,
-
-	// Snap to current yaw exactly
-	PLAYERANIMEVENT_SNAP_YAW,
-
-	PLAYERANIMEVENT_CUSTOM,				// Used to play specific activities
-	PLAYERANIMEVENT_CUSTOM_GESTURE,
-	PLAYERANIMEVENT_CUSTOM_SEQUENCE,	// Used to play specific sequences
-	PLAYERANIMEVENT_CUSTOM_GESTURE_SEQUENCE,
-
-	//ios
 	PLAYERANIMEVENT_KICK_DRIBBLE,
 	PLAYERANIMEVENT_KICK_WEAK,
 	PLAYERANIMEVENT_KICK_STRONG,
@@ -80,10 +51,7 @@ enum PlayerAnimEvent_t
 	PLAYERANIMEVENT_TACKLED_BACKWARD,
 	PLAYERANIMEVENT_DIVING_HEADER,
 	PLAYERANIMEVENT_HOLD,
-	PLAYERANIMEVENT_CARRY_END,
 	PLAYERANIMEVENT_THROW_IN_HOLD,
-	PLAYERANIMEVENT_THROW_IN_END,
-	PLAYERANIMEVENT_BLANK,
 	PLAYERANIMEVENT_LIFT_UP,
 	PLAYERANIMEVENT_BALL_ROLL_LEFT,
 	PLAYERANIMEVENT_BALL_ROLL_RIGHT,
@@ -213,24 +181,24 @@ private:
 	void ComputeMainSequence();
 	void UpdateInterpolators();
 	void ComputeSequences( CStudioHdr *pStudioHdr );
-	void ComputeIosSequence(CStudioHdr *pStudioHdr);
 	void UpdateLayerSequenceGeneric( CStudioHdr *pStudioHdr, int iLayer, bool &bEnabled, float &flCurCycle, int &iSequence, bool bWaitAtEnd );
-	int CalcPrimaryActionSequence(PlayerAnimEvent_t event);
-	void ComputePrimaryActionSequence(CStudioHdr *pStudioHdr);
-	void ComputeSecondaryActionSequence( CStudioHdr *pStudioHdr );
-	int CalcSecondaryActionSequence(PlayerAnimEvent_t event);
+	int CalcActionSequence(PlayerAnimEvent_t event);
+	void ComputeActionSequence(CStudioHdr *pStudioHdr);
+	void ComputeGestureSequence( CStudioHdr *pStudioHdr );
+	int CalcGestureSequence(PlayerAnimEvent_t event);
 	int CalcSequenceIndex( const char *pBaseName, ... );
 	void ClearAnimationLayers();
 	virtual void RestartMainSequence();
 
-	int m_iPrimaryActionSequence;
-	bool m_bIsPrimaryActionSequenceActive;
-	float m_flPrimaryActionSequenceCycle;
+	int m_nActionSequence;
+	bool m_bIsActionSequenceActive;
+	float m_flActionSequenceCycle;
+	bool m_bActionSequenceWaitAtEnd;
 
-	int m_iSecondaryActionSequence;
-	bool m_bIsSecondaryActionSequenceActive;
-	float m_flSecondaryActionSequenceCycle;
-	bool m_bSecondaryActionSequenceWaitAtEnd;
+	int m_nGestureSequence;
+	bool m_bIsGestureSequenceActive;
+	float m_flGestureSequenceCycle;
+	bool m_bGestureSequenceWaitAtEnd;
 
 	bool				SetupPoseParameters( CStudioHdr *pStudioHdr );
 	virtual void		ComputePoseParam_MoveYaw( CStudioHdr *pStudioHdr );
@@ -245,9 +213,9 @@ private:
 
 CSDKPlayerAnimState *CreateSDKPlayerAnimState( CSDKPlayer *pPlayer );
 
-#define PRIMARYACTIONSEQUENCE_LAYER		0
-#define SECONDARYACTIONSEQUENCE_LAYER	1
-#define NUM_LAYERS_WANTED		2
+#define ACTIONSEQUENCE_LAYER		0
+#define GESTURESEQUENCE_LAYER		1
+#define NUM_LAYERS_WANTED			2
 
 #define ANIM_TOPSPEED_WALK			150
 #define ANIM_TOPSPEED_RUN			250			//ios - was 250 in sdk

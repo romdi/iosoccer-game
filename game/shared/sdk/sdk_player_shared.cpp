@@ -161,46 +161,51 @@ void CSDKPlayerShared::SetStamina( float flStamina )
 	m_flStamina = clamp(flStamina, 0, 100);
 }
 
-void CSDKPlayerShared::SetAnimEvent(PlayerAnimEvent_t animEvent)
+void CSDKPlayerShared::SetAction(PlayerAnimEvent_t animEvent)
 {
-	m_ePlayerAnimEvent = animEvent;
-	m_flPlayerAnimEventStartTime = gpGlobals->curtime;
+	m_eAction = animEvent;
+	m_flActionStartTime = gpGlobals->curtime;
 }
 
-//void CSDKPlayerShared::ResetAnimEvent()
-//{
-//	m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
-//	GetSDKPlayer()->RemoveFlag(FL_FREECAM);
-//}
-
-PlayerAnimEvent_t CSDKPlayerShared::GetAnimEvent()
+PlayerAnimEvent_t CSDKPlayerShared::GetAction()
 {
-	return m_ePlayerAnimEvent;
+	return m_eAction;
 }
 
-float CSDKPlayerShared::GetAnimEventStartTime()
+float CSDKPlayerShared::GetActionStartTime()
 {
-	return m_flPlayerAnimEventStartTime;
+	return m_flActionStartTime;
 }
 
-QAngle CSDKPlayerShared::GetAnimEventStartAngle()
+QAngle CSDKPlayerShared::GetActionStartAngle()
 {
-	return QAngle(m_aPlayerAnimEventStartAngle.GetX(), m_aPlayerAnimEventStartAngle.GetY(), m_aPlayerAnimEventStartAngle.GetZ());
+	return QAngle(m_aActionStartAngle.GetX(), m_aActionStartAngle.GetY(), m_aActionStartAngle.GetZ());
 }
 
-void CSDKPlayerShared::SetAnimEventStartAngle(QAngle ang)
+void CSDKPlayerShared::SetActionStartAngle(QAngle ang)
 {
-	m_aPlayerAnimEventStartAngle = Vector(ang[PITCH], ang[YAW], ang[ROLL]);
+	m_aActionStartAngle = Vector(ang[PITCH], ang[YAW], ang[ROLL]);
 }
 
-int CSDKPlayerShared::GetAnimEventStartButtons()
+int CSDKPlayerShared::GetActionStartButtons()
 {
-	return m_nPlayerAnimEventStartButtons;
+	return m_nActionStartButtons;
 }
 
-void CSDKPlayerShared::SetAnimEventStartButtons(int buttons)
+void CSDKPlayerShared::SetActionStartButtons(int buttons)
 {
-	m_nPlayerAnimEventStartButtons = buttons;
+	m_nActionStartButtons = buttons;
+}
+
+void CSDKPlayerShared::SetGesture(PlayerAnimEvent_t gesture)
+{
+	m_eGesture = gesture;
+	m_flGestureStartTime = gpGlobals->curtime;
+}
+
+PlayerAnimEvent_t CSDKPlayerShared::GetGesture()
+{
+	return m_eGesture;
 }
 
 void CSDKPlayerShared::ComputeWorldSpaceSurroundingBox( Vector *pVecWorldMins, Vector *pVecWorldMaxs )
@@ -565,55 +570,75 @@ void CSDKPlayer::FindSafePos(Vector &startPos)
 		startPos.z += GetPlayerMaxs().z * 2;
 }
 
+void CSDKPlayer::CheckGesture()
+{
+	if (m_Shared.GetAction() != PLAYERANIMEVENT_NONE || m_Shared.GetGesture() != PLAYERANIMEVENT_NONE)
+		return;
+
+	if (m_nButtons & IN_GESTURE)
+	{
+		if (m_nButtons & IN_ATTACK)
+		{
+			DoAnimationEvent(PLAYERANIMEVENT_GESTURE_POINT);
+		}
+		else if (m_nButtons & IN_ATTACK2)
+		{
+			DoAnimationEvent(PLAYERANIMEVENT_GESTURE_WAVE);
+		}
+	}
+}
+
 void CSDKPlayer::CheckShotCharging()
 {
 	if (IsKeeperDiving())
 		return;
 
-	if ((m_nButtons & IN_ATTACK)
-		|| (GetFlags() & FL_REMOTECONTROLLED)
-		|| m_bChargedshotBlocked
-		|| m_bShotsBlocked
-		|| !m_Shared.m_bShotButtonsReleased)
+	if ((m_nButtons & IN_ATTACK) ||
+		(GetFlags() & FL_REMOTECONTROLLED) ||
+		m_bChargedshotBlocked ||
+		m_bShotsBlocked ||
+		!m_Shared.m_bShotButtonsReleased ||
+		(m_nButtons & IN_GESTURE))
 	{
 		m_Shared.m_bDoChargedShot = false;
 		m_Shared.m_bIsShotCharging = false;
+		return;
 	}
-	else if ((m_nButtons & IN_ATTACK2) && !m_Shared.m_bIsShotCharging)
+
+	if ((m_nButtons & IN_ATTACK2) && !m_Shared.m_bIsShotCharging)
 	{
 		m_Shared.m_bDoChargedShot = false;
 		m_Shared.m_bIsShotCharging = true;
 		m_Shared.m_flShotChargingStart = gpGlobals->curtime;
+		return;
 	}
-	else if (m_Shared.m_bDoChargedShot)
+
+	if (m_Shared.m_bDoChargedShot)
 	{
 		if (gpGlobals->curtime > m_Shared.m_flShotChargingStart + m_Shared.m_flShotChargingDuration + mp_chargedshot_idleduration.GetFloat())
-		{
 			m_Shared.m_bDoChargedShot = false;
-		}
+
+		return;
 	}
-	else if (m_Shared.m_bIsShotCharging)
+
+	if (m_Shared.m_bIsShotCharging)
 	{
 		if (m_nButtons & IN_ATTACK2)
 		{
 			if (gpGlobals->curtime > m_Shared.m_flShotChargingStart + GetChargedShotIncreaseDuration())
 			{
 				if (gpGlobals->curtime > m_Shared.m_flShotChargingStart + GetChargedShotIncreaseDuration() + mp_chargedshot_idleduration.GetFloat())
-				{
 					m_Shared.m_flShotChargingStart = gpGlobals->curtime;
-				}
 				else
-				{
 					m_Shared.m_flShotChargingDuration = GetChargedShotIncreaseDuration();
-				}
 			}
+
+			return;
 		}
-		else
-		{
-			m_Shared.m_bIsShotCharging = false;
-			m_Shared.m_flShotChargingDuration = min(gpGlobals->curtime - m_Shared.m_flShotChargingStart, GetChargedShotIncreaseDuration());
-			m_Shared.m_bDoChargedShot = true;
-		}
+
+		m_Shared.m_bIsShotCharging = false;
+		m_Shared.m_flShotChargingDuration = min(gpGlobals->curtime - m_Shared.m_flShotChargingStart, GetChargedShotIncreaseDuration());
+		m_Shared.m_bDoChargedShot = true;
 	}
 }
 
@@ -723,24 +748,24 @@ int CSDKPlayer::GetSidemoveSign()
 
 bool CSDKPlayer::IsKeeperDiving()
 {
-	return m_Shared.m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_DIVE_FORWARD
-		|| m_Shared.m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT_FORWARD
-		|| m_Shared.m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT
-		|| m_Shared.m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT_BACKWARD
-		|| m_Shared.m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD
-		|| m_Shared.m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_DIVE_LEFT_BACKWARD
-		|| m_Shared.m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_DIVE_LEFT
-		|| m_Shared.m_ePlayerAnimEvent == PLAYERANIMEVENT_KEEPER_DIVE_LEFT_FORWARD;
+	return m_Shared.m_eAction == PLAYERANIMEVENT_KEEPER_DIVE_FORWARD
+		|| m_Shared.m_eAction == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT_FORWARD
+		|| m_Shared.m_eAction == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT
+		|| m_Shared.m_eAction == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT_BACKWARD
+		|| m_Shared.m_eAction == PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD
+		|| m_Shared.m_eAction == PLAYERANIMEVENT_KEEPER_DIVE_LEFT_BACKWARD
+		|| m_Shared.m_eAction == PLAYERANIMEVENT_KEEPER_DIVE_LEFT
+		|| m_Shared.m_eAction == PLAYERANIMEVENT_KEEPER_DIVE_LEFT_FORWARD;
 }
 
 bool CSDKPlayer::IsNormalshooting()
 {
-	return m_nButtons & IN_ATTACK;
+	return (m_nButtons & IN_ATTACK) && !(m_nButtons & IN_GESTURE);
 }
 
 bool CSDKPlayer::IsChargedshooting()
 {
-	return m_Shared.m_bDoChargedShot;
+	return m_Shared.m_bDoChargedShot && !(m_nButtons & IN_GESTURE);
 }
 
 bool CSDKPlayer::IsShooting()

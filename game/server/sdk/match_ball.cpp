@@ -751,7 +751,9 @@ void CMatchBall::State_GOAL_Leave(ball_state_t newState)
 			continue;
 
 		pPl->RemoveFlag(FL_CELEB | FL_ATCONTROLS | FL_USE_TV_CAM);
-		pPl->DoServerAnimationEvent(PLAYERANIMEVENT_CANCEL);
+		pPl->DoServerAnimationEvent(PLAYERANIMEVENT_NONE);
+		pPl->ResetShotCharging();
+		pPl->GetAnimState()->ClearAnimationState();
 	}
 }
 

@@ -114,8 +114,8 @@ CSDKPlayerAnimState::~CSDKPlayerAnimState()
 //-----------------------------------------------------------------------------
 void CSDKPlayerAnimState::ClearAnimationState( void )
 {
-	m_bIsPrimaryActionSequenceActive = false;
-	m_bIsSecondaryActionSequenceActive = false;
+	m_bIsActionSequenceActive = false;
+	m_bIsGestureSequenceActive = false;
 	m_bJumping = false;
 	m_bDying = false;
 	ClearAnimationLayers();
@@ -208,30 +208,20 @@ void CSDKPlayerAnimState::Update( float eyeYaw, float eyePitch )
 #endif
 }
 
-void CSDKPlayerAnimState::ComputePrimaryActionSequence(CStudioHdr *pStudioHdr)
+void CSDKPlayerAnimState::ComputeActionSequence(CStudioHdr *pStudioHdr)
 {
-	UpdateLayerSequenceGeneric(pStudioHdr, PRIMARYACTIONSEQUENCE_LAYER, m_bIsPrimaryActionSequenceActive, m_flPrimaryActionSequenceCycle, m_iPrimaryActionSequence, false);
+	UpdateLayerSequenceGeneric(pStudioHdr, ACTIONSEQUENCE_LAYER, m_bIsActionSequenceActive, m_flActionSequenceCycle, m_nActionSequence, m_bActionSequenceWaitAtEnd);
 }
 
-void CSDKPlayerAnimState::ComputeSecondaryActionSequence(CStudioHdr *pStudioHdr)
+void CSDKPlayerAnimState::ComputeGestureSequence(CStudioHdr *pStudioHdr)
 {
-	UpdateLayerSequenceGeneric(pStudioHdr, SECONDARYACTIONSEQUENCE_LAYER, m_bIsSecondaryActionSequenceActive, m_flSecondaryActionSequenceCycle, m_iSecondaryActionSequence, m_bSecondaryActionSequenceWaitAtEnd);
+	UpdateLayerSequenceGeneric(pStudioHdr, GESTURESEQUENCE_LAYER, m_bIsGestureSequenceActive, m_flGestureSequenceCycle, m_nGestureSequence, false);
+
+	if (!m_bIsGestureSequenceActive && m_pSDKPlayer->m_Shared.GetGesture() != PLAYERANIMEVENT_NONE)
+		m_pSDKPlayer->m_Shared.SetGesture(PLAYERANIMEVENT_NONE);
 }
 
-int CSDKPlayerAnimState::CalcSecondaryActionSequence(PlayerAnimEvent_t event)
-{
-	switch (event)
-	{
-	case PLAYERANIMEVENT_HOLD:
-		return CalcSequenceIndex("keeper_hands_hold");
-	case PLAYERANIMEVENT_THROW_IN_HOLD:
-		return CalcSequenceIndex("throw_in_hold"); // iosthrowin
-	default:
-		return 0;
-	}
-}
-
-int CSDKPlayerAnimState::CalcPrimaryActionSequence(PlayerAnimEvent_t event)
+int CSDKPlayerAnimState::CalcActionSequence(PlayerAnimEvent_t event)
 {
 	switch (event)
 	{
@@ -261,13 +251,22 @@ int CSDKPlayerAnimState::CalcPrimaryActionSequence(PlayerAnimEvent_t event)
 	case PLAYERANIMEVENT_FAKE_SHOT: return CalcSequenceIndex("fake_shot");
 	case PLAYERANIMEVENT_RAINBOW_FLICK: return CalcSequenceIndex("rainbow_flick");
 	case PLAYERANIMEVENT_BICYCLE_KICK: return CalcSequenceIndex("bicycle_kick");
-	case PLAYERANIMEVENT_GESTURE_POINT: return CalcSequenceIndex("gesture_point");
-	case PLAYERANIMEVENT_GESTURE_WAVE: return CalcSequenceIndex("gesture_wave");
 	case PLAYERANIMEVENT_CELEB_SLIDE: return CalcSequenceIndex("celeb_slide");
+	case PLAYERANIMEVENT_HOLD: return CalcSequenceIndex("keeper_hands_hold");
+	case PLAYERANIMEVENT_THROW_IN_HOLD: return CalcSequenceIndex("throw_in_hold");
 	default: return 0;
 	}
 }
 
+int CSDKPlayerAnimState::CalcGestureSequence(PlayerAnimEvent_t event)
+{
+	switch (event)
+	{
+	case PLAYERANIMEVENT_GESTURE_POINT: return CalcSequenceIndex("gesture_point");
+	case PLAYERANIMEVENT_GESTURE_WAVE: return CalcSequenceIndex("gesture_wave");
+	default: return 0;
+	}
+}
 
 int CSDKPlayerAnimState::CalcSequenceIndex( const char *pBaseName, ... )
 {
@@ -340,28 +339,41 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 {
 	switch (event)
 	{
-	// Stop shot charging, but keep current animations running (e.g. while diving as keeper)
-	case PLAYERANIMEVENT_BLANK:
-	{
-		//GetSDKPlayer()->ResetShotCharging();
-		return; // This is a dummy event, so don't do anything and return early
-	}
 	// Set current animation to none (e.g. after playing another animation)
 	case PLAYERANIMEVENT_NONE:
 	{
-		//GetSDKPlayer()->ResetShotCharging();
-		GetSDKPlayer()->m_Shared.SetAnimEvent(event);
+		GetSDKPlayer()->m_Shared.SetAction(event);
 		GetSDKPlayer()->RemoveFlag(FL_FREECAM);
+		m_bIsActionSequenceActive = false;
 		return;
 	}
-	// Reset player animations (e.g. when restarting the match)
-	case PLAYERANIMEVENT_CANCEL:
+	case PLAYERANIMEVENT_GESTURE_POINT:
+	case PLAYERANIMEVENT_GESTURE_WAVE:
 	{
-		GetSDKPlayer()->ResetShotCharging();
-		ClearAnimationState();
-		GetSDKPlayer()->m_Shared.SetAnimEvent(event);
-		GetSDKPlayer()->RemoveFlag(FL_FREECAM);
+		m_nGestureSequence = CalcGestureSequence(event);
+		m_flGestureSequenceCycle = 0;
+		m_bIsGestureSequenceActive = m_nGestureSequence != 0;
+		GetSDKPlayer()->m_Shared.SetGesture(event);
 		return;
+	}
+	case PLAYERANIMEVENT_SLIDE_TACKLE:
+	case PLAYERANIMEVENT_CELEB_SLIDE:
+	case PLAYERANIMEVENT_DIVING_HEADER:
+	case PLAYERANIMEVENT_BICYCLE_KICK:
+	case PLAYERANIMEVENT_TACKLED_FORWARD:
+	case PLAYERANIMEVENT_TACKLED_BACKWARD:
+	case PLAYERANIMEVENT_KEEPER_DIVE_FORWARD:
+	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT_FORWARD:
+	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT:
+	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT_BACKWARD:
+	case PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD:
+	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT_BACKWARD:
+	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT:
+	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT_FORWARD:
+	case PLAYERANIMEVENT_HOLD:
+	case PLAYERANIMEVENT_THROW_IN_HOLD:
+	{
+		GetSDKPlayer()->m_Shared.SetAction(event);
 	}
 	case PLAYERANIMEVENT_KICK_DRIBBLE:
 	case PLAYERANIMEVENT_KICK_WEAK:
@@ -374,31 +386,20 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 	case PLAYERANIMEVENT_KEEPER_HANDS_THROW:
 	case PLAYERANIMEVENT_KEEPER_HANDS_VOLLEY:
 	case PLAYERANIMEVENT_KEEPER_HANDS_PUNCH:
-	case PLAYERANIMEVENT_SLIDE_TACKLE:
-	case PLAYERANIMEVENT_TACKLED_FORWARD:
-	case PLAYERANIMEVENT_TACKLED_BACKWARD:
-	case PLAYERANIMEVENT_KEEPER_DIVE_FORWARD:
-	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT_FORWARD:
-	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT:
-	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT_BACKWARD:
-	case PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD:
-	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT_BACKWARD:
-	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT:
-	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT_FORWARD:
 	case PLAYERANIMEVENT_LIFT_UP:
 	case PLAYERANIMEVENT_BALL_ROLL_LEFT:
 	case PLAYERANIMEVENT_BALL_ROLL_RIGHT:
 	case PLAYERANIMEVENT_FAKE_SHOT:
 	case PLAYERANIMEVENT_RAINBOW_FLICK:
-	case PLAYERANIMEVENT_DIVING_HEADER:
-	case PLAYERANIMEVENT_BICYCLE_KICK:
-	case PLAYERANIMEVENT_GESTURE_POINT:
-	case PLAYERANIMEVENT_GESTURE_WAVE:
-	case PLAYERANIMEVENT_CELEB_SLIDE:
 	{
-		m_iPrimaryActionSequence = CalcPrimaryActionSequence(event);
-		m_flPrimaryActionSequenceCycle = 0;
-		m_bIsPrimaryActionSequenceActive = m_iPrimaryActionSequence != 0;
+		m_nActionSequence = CalcActionSequence(event);
+		m_flActionSequenceCycle = 0;
+		m_bIsActionSequenceActive = m_nActionSequence != 0;
+		m_bActionSequenceWaitAtEnd = event == PLAYERANIMEVENT_HOLD || event == PLAYERANIMEVENT_THROW_IN_HOLD;
+
+		if (event == PLAYERANIMEVENT_TACKLED_FORWARD || event == PLAYERANIMEVENT_TACKLED_BACKWARD)
+			GetSDKPlayer()->AddFlag(FL_FREECAM);
+
 		break;
 	}
 	case PLAYERANIMEVENT_JUMP:
@@ -410,54 +411,10 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 			m_bJumping = true;
 			m_bFirstJumpFrame = true;
 			m_flJumpStartTime = gpGlobals->curtime;
+			GetSDKPlayer()->m_Shared.SetAction(event);
 		}
 		break;
 	}
-	case PLAYERANIMEVENT_HOLD:
-	case PLAYERANIMEVENT_THROW_IN_HOLD:
-	{
-		m_iSecondaryActionSequence = CalcSecondaryActionSequence(event);
-		m_flSecondaryActionSequenceCycle = 0;
-		m_bIsSecondaryActionSequenceActive = m_iSecondaryActionSequence != 0;
-		m_bSecondaryActionSequenceWaitAtEnd = true;
-		break;
-	}
-	case PLAYERANIMEVENT_CARRY_END:
-	case PLAYERANIMEVENT_THROW_IN_END:
-	{
-		m_bIsSecondaryActionSequenceActive = false;
-		break;
-	}
-	}
-
-	switch (event)
-	{
-	case PLAYERANIMEVENT_TACKLED_FORWARD:
-	case PLAYERANIMEVENT_TACKLED_BACKWARD:
-		GetSDKPlayer()->AddFlag(FL_FREECAM);
-		break;
-	case PLAYERANIMEVENT_HOLD:
-	case PLAYERANIMEVENT_SLIDE_TACKLE:
-	case PLAYERANIMEVENT_DIVING_HEADER:
-	case PLAYERANIMEVENT_BICYCLE_KICK:
-	case PLAYERANIMEVENT_KEEPER_DIVE_FORWARD:
-	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT_FORWARD:
-	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT:
-	case PLAYERANIMEVENT_KEEPER_DIVE_RIGHT_BACKWARD:
-	case PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD:
-	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT_BACKWARD:
-	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT:
-	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT_FORWARD:
-		break;
-	default:
-		GetSDKPlayer()->RemoveFlag(FL_FREECAM);
-		break;
-	}
-
-	if (event != PLAYERANIMEVENT_HOLD && event != PLAYERANIMEVENT_CARRY_END
-		&& event != PLAYERANIMEVENT_THROW_IN_HOLD && event != PLAYERANIMEVENT_THROW_IN_END)
-	{
-		GetSDKPlayer()->m_Shared.SetAnimEvent(event);
 	}
 }
 
@@ -478,7 +435,7 @@ bool CSDKPlayerAnimState::HandleJumping( Activity &idealActivity )
 			if ( GetBasePlayer()->GetFlags() & FL_ONGROUND )
 			{
 				m_bJumping = false;
-				//GetSDKPlayer()->m_Shared.m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
+				GetSDKPlayer()->m_Shared.SetAction(PLAYERANIMEVENT_NONE);
 				RestartMainSequence();	// Reset the animation.
 				GetSDKPlayer()->m_Shared.m_bWasJumping = true;
 			}
@@ -510,7 +467,7 @@ Activity CSDKPlayerAnimState::CalcMainActivity()
 
 	if ( HandleJumping(idealActivity) )
 	{
-		if (pPlayer->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_JUMP)
+		if (pPlayer->m_Shared.GetAction() == PLAYERANIMEVENT_KEEPER_JUMP)
 			return ACT_LEAP;									//keepers jump
 		else
 			return ACT_HOP;										//normal jump
@@ -550,9 +507,8 @@ void CSDKPlayerAnimState::ComputeSequences( CStudioHdr *pStudioHdr )
 
 	// The groundspeed interpolator uses the main sequence info.
 	UpdateInterpolators();		
-	//ios ComputeGestureSequence( pStudioHdr );
-	ComputePrimaryActionSequence(pStudioHdr);
-	ComputeSecondaryActionSequence( pStudioHdr );
+	ComputeGestureSequence( pStudioHdr );
+	ComputeActionSequence(pStudioHdr);
 }
 
 float CSDKPlayerAnimState::GetCurrentMaxGroundSpeed()

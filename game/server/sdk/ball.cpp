@@ -631,21 +631,21 @@ bool CBall::GetCollisionPoint(bool isDeflection, Vector &collisionPoint)
 	float zDist = dirToBall.z;
 	float xyDist = dirToBall.Length2D();
 
-	if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_SLIDE_TACKLE
-		|| m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_DIVING_HEADER
-		|| m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_FORWARD
-		|| m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT_FORWARD
-		|| m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT
-		|| m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT_BACKWARD
-		|| m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD
-		|| m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_LEFT_BACKWARD
-		|| m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_LEFT
-		|| m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_LEFT_FORWARD)
+	if (m_pPl->m_Shared.GetAction() == PLAYERANIMEVENT_SLIDE_TACKLE
+		|| m_pPl->m_Shared.GetAction() == PLAYERANIMEVENT_DIVING_HEADER
+		|| m_pPl->m_Shared.GetAction() == PLAYERANIMEVENT_KEEPER_DIVE_FORWARD
+		|| m_pPl->m_Shared.GetAction() == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT_FORWARD
+		|| m_pPl->m_Shared.GetAction() == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT
+		|| m_pPl->m_Shared.GetAction() == PLAYERANIMEVENT_KEEPER_DIVE_RIGHT_BACKWARD
+		|| m_pPl->m_Shared.GetAction() == PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD
+		|| m_pPl->m_Shared.GetAction() == PLAYERANIMEVENT_KEEPER_DIVE_LEFT_BACKWARD
+		|| m_pPl->m_Shared.GetAction() == PLAYERANIMEVENT_KEEPER_DIVE_LEFT
+		|| m_pPl->m_Shared.GetAction() == PLAYERANIMEVENT_KEEPER_DIVE_LEFT_FORWARD)
 	{
 		float padding = isDeflection ? 0 : -15;
 		Vector plDir;
 
-		switch (m_pPl->m_Shared.GetAnimEvent())
+		switch (m_pPl->m_Shared.GetAction())
 		{
 		default:
 			plDir = m_vPlForward2D;
@@ -767,13 +767,13 @@ bool CBall::DoBodyPartAction()
 	if (!m_pPl->IsShooting() || !m_pPl->CanShoot() || gpGlobals->curtime < m_flGlobalLastShot + m_flGlobalDynamicShotDelay * sv_ball_shotdelay_global_coeff.GetFloat())
 		return false;
 
-	if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_SLIDE_TACKLE)
+	if (m_pPl->m_Shared.GetAction() == PLAYERANIMEVENT_SLIDE_TACKLE)
 		return DoSlideAction();
 
-	if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_DIVING_HEADER)
+	if (m_pPl->m_Shared.GetAction() == PLAYERANIMEVENT_DIVING_HEADER)
 		return DoDivingHeader();
 
-	if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_BICYCLE_KICK)
+	if (m_pPl->m_Shared.GetAction() == PLAYERANIMEVENT_BICYCLE_KICK)
 		return DoBicycleKick();
 
 	if (zDist >= sv_ball_bodypos_feet_start.GetFloat()
@@ -912,7 +912,7 @@ bool CBall::DoDivingHeader()
 	if (zDist < sv_ball_bodypos_hip_start.GetFloat() || zDist >= sv_ball_bodypos_head_start.GetFloat() || !CanReachBallStandingXY())
 		return false;
 
-	if (gpGlobals->curtime > m_pPl->m_Shared.GetAnimEventStartTime() + mp_divingheader_move_duration.GetFloat())
+	if (gpGlobals->curtime > m_pPl->m_Shared.GetActionStartTime() + mp_divingheader_move_duration.GetFloat())
 		return false;
 
 	Vector forward;
@@ -940,7 +940,7 @@ bool CBall::DoBicycleKick()
 	if (zDist < sv_ball_bodypos_head_start.GetFloat() || zDist >= sv_ball_bodypos_head_end.GetFloat() || !CanReachBallStandingXY())
 		return false;
 
-	if (gpGlobals->curtime > m_pPl->m_Shared.GetAnimEventStartTime() + mp_bicycleshot_move_duration.GetFloat())
+	if (gpGlobals->curtime > m_pPl->m_Shared.GetActionStartTime() + mp_bicycleshot_move_duration.GetFloat())
 		return false;
 
 	QAngle ang = m_aPlAng;
@@ -969,7 +969,7 @@ bool CBall::CheckKeeperCatch()
 	float diveTypeCatchCoeff = 1.0f;
 	float ballPosCatchCoeff = 1.0f;
 
-	switch (m_pPl->m_Shared.GetAnimEvent())
+	switch (m_pPl->m_Shared.GetAction())
 	{
 	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT_FORWARD:
 	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT:
@@ -1064,13 +1064,13 @@ bool CBall::CheckKeeperCatch()
 	float nextCatch = m_flGlobalLastShot + m_flGlobalDynamicShotDelay * diveTypeCatchCoeff * ballPosCatchCoeff;
 
 	// Check if ball should be punched away
-	if (m_bHasQueuedState || gpGlobals->curtime < nextCatch || m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD)
+	if (m_bHasQueuedState || gpGlobals->curtime < nextCatch || m_pPl->m_Shared.GetAction() == PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD)
 	{
 		Vector punchDir;
 
 		QAngle angDiff = m_aPlCamAng - m_aPlAng;
 
-		if (m_pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD)
+		if (m_pPl->m_Shared.GetAction() == PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD)
 		{
 			QAngle ang = m_aPlCamAng;
 			ang[YAW] += 180;
@@ -1096,13 +1096,11 @@ bool CBall::CheckKeeperCatch()
 		Vector vel = punchDir * max(m_vVel.Length2D(), sv_ball_keeperpunch_minstrength.GetFloat()) * sv_ball_keeperdeflectioncoeff.GetFloat();
 
 		SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_KEEPERPUNCH, false, sv_ball_keeperpunch_minpostdelay.GetFloat(), true);
-		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
 	}
 	// Catch ball instead of punching
 	else
 	{
 		SetVel(vec3_origin, 0, FL_SPIN_FORCE_NONE, BODY_PART_KEEPERCATCH, false, sv_ball_keepercatch_minpostdelay.GetFloat(), true);
-		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);		
 		State_Transition(BALL_STATE_KEEPERHANDS);
 	}
 
@@ -1196,7 +1194,6 @@ bool CBall::DoGroundHeightAction(bool markOffsidePlayers)
 				spinCoeff = 0;
 				minPostDelay = sv_ball_lift_minpostdelay.GetFloat();
 				addPlayerSpeed = true;
-				m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
 				EmitSound("Ball.Touch");
 			}
 		}
@@ -1285,10 +1282,6 @@ bool CBall::DoGroundHeightAction(bool markOffsidePlayers)
 			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KICK_DRIBBLE);
 			EmitSound("Ball.Touch");
 		}
-		else
-		{
-			m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
-		}
 	}
 
 	Vector shotDir;
@@ -1335,8 +1328,6 @@ bool CBall::DoHipHeightAction()
 
 		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_VOLLEY);
 	}
-	else
-		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_BLANK);
 
 	SetVel(vel, spinCoeff, spinFlags, BODY_PART_FEET, true, sv_ball_volleyshot_minpostdelay.GetFloat(), true);
 
@@ -1519,10 +1510,8 @@ void CBall::RemoveFromPlayerHands(CSDKPlayer *pPl)
 		pPl->m_pHoldingBall = NULL;
 		pPl->RemoveFlag(FL_ONLY_XY_MOVEMENT);
 
-		if (pPl->GetTeamPosType() == POS_GK)
-			pPl->DoServerAnimationEvent(PLAYERANIMEVENT_CARRY_END);
-		else
-			pPl->DoServerAnimationEvent(PLAYERANIMEVENT_THROW_IN_END);
+		if (pPl->m_Shared.GetAction() == PLAYERANIMEVENT_HOLD || pPl->m_Shared.GetAction() == PLAYERANIMEVENT_THROW_IN_HOLD)
+			pPl->DoServerAnimationEvent(PLAYERANIMEVENT_NONE);
 	}
 
 	if (!IsMarkedForDeletion())

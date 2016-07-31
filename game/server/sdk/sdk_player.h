@@ -154,6 +154,8 @@ public:
 	virtual const char	*GetPlayerName();
 	virtual void		SetPlayerName(const char *name);
 
+	CSDKPlayerAnimState *GetAnimState() { return m_PlayerAnimState; }
+
 private:
 	void State_Enter( SDKPlayerState newState );	// Initialize the new state.
 	void State_Leave();								// Cleanup the previous state.
@@ -385,6 +387,7 @@ public:
 	static bool			IsOnField(CSDKPlayer *pPl, int teamNumber = TEAM_NONE);
 	static bool			CheckPlayersAtShieldPos(bool waitUntilOutsideShield);
 
+	void				CheckGesture();
 	void				CheckShotCharging();
 	void				ResetShotCharging();
 	float				GetChargedShotStrength();

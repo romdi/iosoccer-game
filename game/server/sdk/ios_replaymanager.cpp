@@ -678,7 +678,9 @@ void CReplayManager::HideRealBallAndPlayers()
 		if (!(pRealPl->GetEffects() & EF_NODRAW))
 		{
 			pRealPl->AddEffects(EF_NODRAW);
-			pRealPl->DoServerAnimationEvent(PLAYERANIMEVENT_CANCEL);
+			pRealPl->DoServerAnimationEvent(PLAYERANIMEVENT_NONE);
+			pRealPl->ResetShotCharging();
+			pRealPl->GetAnimState()->ClearAnimationState();
 			pRealPl->AddSolidFlags(FSOLID_NOT_SOLID);
 			pRealPl->SetMoveType(MOVETYPE_NONE);
 		}

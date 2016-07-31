@@ -104,9 +104,11 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayerShared, DT_SDKSharedLocalPlayerExclusive )
 	SendPropTime( SENDINFO( m_flNextJump ) ),
 	SendPropTime( SENDINFO( m_flNextSlide) ),
 
-	SendPropTime( SENDINFO( m_flPlayerAnimEventStartTime ) ),
-	SendPropVector( SENDINFO( m_aPlayerAnimEventStartAngle ) ),
-	SendPropInt( SENDINFO( m_nPlayerAnimEventStartButtons ) ),
+	SendPropTime( SENDINFO( m_flActionStartTime ) ),
+	SendPropVector( SENDINFO( m_aActionStartAngle ) ),
+	SendPropInt( SENDINFO( m_nActionStartButtons ) ),
+
+	SendPropTime(SENDINFO(m_flGestureStartTime)),
 
 	SendPropBool( SENDINFO( m_bIsShotCharging ) ),
 	SendPropBool( SENDINFO( m_bDoChargedShot)),
@@ -139,7 +141,8 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	SendPropBool( SENDINFO( m_bFirstJumpFrame ) ),
 	SendPropTime( SENDINFO( m_flJumpStartTime ) ),
 
-	SendPropInt( SENDINFO( m_ePlayerAnimEvent ) ),
+	SendPropInt(SENDINFO(m_eAction)),
+	SendPropInt(SENDINFO(m_eGesture)),
 
 	SendPropDataTable( "sdksharedlocaldata", 0, &REFERENCE_SEND_TABLE(DT_SDKSharedLocalPlayerExclusive), SendProxy_SendLocalDataTable ),
 END_SEND_TABLE()
@@ -331,10 +334,12 @@ CSDKPlayer::CSDKPlayer()
 	m_nPreferredOutfieldShirtNumber = 2;
 	m_nPreferredKeeperShirtNumber = 1;
 	m_pPlayerBall = NULL;
-	m_Shared.m_flPlayerAnimEventStartTime = gpGlobals->curtime;
-	m_Shared.m_ePlayerAnimEvent = PLAYERANIMEVENT_NONE;
-	m_Shared.m_aPlayerAnimEventStartAngle = vec3_origin;
-	m_Shared.m_nPlayerAnimEventStartButtons = 0;
+	m_Shared.m_flActionStartTime = gpGlobals->curtime;
+	m_Shared.m_eAction = PLAYERANIMEVENT_NONE;
+	m_Shared.m_aActionStartAngle = vec3_origin;
+	m_Shared.m_nActionStartButtons = 0;
+	m_Shared.m_eGesture = PLAYERANIMEVENT_NONE;
+	m_Shared.m_flGestureStartTime = gpGlobals->curtime;
 	m_nModelScale = 100;
 	m_nSpecTeam = TEAM_SPECTATOR;
 	m_ePenaltyState = PENALTY_NONE;
@@ -997,6 +1002,7 @@ void CSDKPlayer::State_ACTIVE_PreThink()
 	if (!ShotButtonsPressed())
 		SetShotButtonsReleased(true);
 
+	CheckGesture();
 	CheckShotCharging();
 	CheckLastPressedSingleMoveButton();
 }
@@ -1406,7 +1412,9 @@ void CSDKPlayer::ActivateRemoteControlling(const Vector &targetPos)
 {
 	m_vTargetPos = targetPos;
 	m_bIsAtTargetPos = false;
-	DoServerAnimationEvent(PLAYERANIMEVENT_CANCEL);
+	DoServerAnimationEvent(PLAYERANIMEVENT_NONE);
+	ResetShotCharging();
+	GetAnimState()->ClearAnimationState();
 	AddFlag(FL_REMOTECONTROLLED);
 	SetCollisionGroup(COLLISION_GROUP_NONSOLID_PLAYER);
 }
@@ -1622,7 +1630,9 @@ void CSDKPlayer::Reset()
 	m_flNextFoulCheck = gpGlobals->curtime;
 	m_bIsAtTargetPos = false;
 	RemoveFlags();
-	DoServerAnimationEvent(PLAYERANIMEVENT_CANCEL);
+	DoServerAnimationEvent(PLAYERANIMEVENT_NONE);
+	ResetShotCharging();
+	GetAnimState()->ClearAnimationState();
 	m_pHoldingBall = NULL;
 	m_bIsAway = true;
 	m_flLastMoveTime = gpGlobals->curtime;

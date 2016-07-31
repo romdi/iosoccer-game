@@ -1526,7 +1526,7 @@ bool CGameMovement::CheckActionOverTime()
 		return true;
 #endif
 
-	float timePassed = gpGlobals->curtime - pPl->m_Shared.GetAnimEventStartTime();
+	float timePassed = gpGlobals->curtime - pPl->m_Shared.GetActionStartTime();
 	Vector forward, right, up;
 	AngleVectors(mv->m_vecViewAngles, &forward, &right, &up);
 	Vector forward2D = forward;
@@ -1535,7 +1535,7 @@ bool CGameMovement::CheckActionOverTime()
 
 	int sidemoveSign = pPl->GetSidemoveSign();
 
-	switch (pPl->m_Shared.GetAnimEvent())
+	switch (pPl->m_Shared.GetAction())
 	{
 	case PLAYERANIMEVENT_KEEPER_DIVE_FORWARD:
 	case PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD:
@@ -1545,7 +1545,6 @@ bool CGameMovement::CheckActionOverTime()
 		if (timePassed > mp_keeperdive_move_duration.GetFloat() + mp_keeperdive_idle_duration.GetFloat())
 		{
 			pPl->DoAnimationEvent(PLAYERANIMEVENT_NONE);
-			pPl->RemoveFlag(FL_FREECAM);
 			return false;
 		}
 
@@ -1555,9 +1554,9 @@ bool CGameMovement::CheckActionOverTime()
 		mv->m_vecVelocity *= min(speed, mp_keeperdivespeed_longside.GetInt());
 		mv->m_vecVelocity *= max(0, (1 - pow(timePassed / mp_keeperdive_move_duration.GetFloat(), 2)));
 
-		if (pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_FORWARD)
+		if (pPl->m_Shared.GetAction() == PLAYERANIMEVENT_KEEPER_DIVE_FORWARD)
 			mv->m_vecVelocity.z = 0;
-		else if (pPl->m_Shared.GetAnimEvent() == PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD)
+		else if (pPl->m_Shared.GetAction() == PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD)
 			mv->m_vecVelocity.z = mp_jump_height.GetInt();
 		else
 			mv->m_vecVelocity.z = mp_keeperdivespeed_z.GetInt();
@@ -1573,7 +1572,7 @@ bool CGameMovement::CheckActionOverTime()
 			return false;
 		}
 
-		AngleVectors(pPl->m_Shared.GetAnimEventStartAngle(), &forward2D);
+		AngleVectors(pPl->m_Shared.GetActionStartAngle(), &forward2D);
 		forward2D.z = 0;
 		forward2D.NormalizeInPlace();
 
@@ -1728,12 +1727,10 @@ bool CGameMovement::CheckActionStart()
 {
 	CSDKPlayer *pPl = ToSDKPlayer(player);
 
-	if (pPl->GetFlags() & (FL_FROZEN | FL_ATCONTROLS | FL_REMOTECONTROLLED | FL_ONLY_XY_MOVEMENT)
-		|| !pPl->GetGroundEntity())
+	if (pPl->GetFlags() & (FL_FROZEN | FL_ATCONTROLS | FL_REMOTECONTROLLED | FL_ONLY_XY_MOVEMENT) || !pPl->GetGroundEntity())
 		return false;
 
 	PlayerAnimEvent_t animEvent = PLAYERANIMEVENT_NONE;
-	
 
 	if (mv->m_nButtons & IN_JUMP)
 	{
@@ -1752,8 +1749,6 @@ bool CGameMovement::CheckActionStart()
 		{
 			animEvent = PLAYERANIMEVENT_JUMP;
 		}
-
-		
 	}
 	else if (mv->m_nButtons & IN_DUCK)
 	{
@@ -1768,19 +1763,26 @@ bool CGameMovement::CheckActionStart()
 		{
 			if (mv->m_nButtons & IN_FORWARD)
 			{
-				animEvent = PLAYERANIMEVENT_SLIDE_TACKLE;
+				if ((mv->m_nButtons & IN_GESTURE) && ((pPl->GetFlags() & FL_CELEB) || SDKGameRules()->State_Get() == MATCH_PERIOD_WARMUP))
+				{
+					animEvent = PLAYERANIMEVENT_CELEB_SLIDE;
+				}
+				else
+				{
+					animEvent = PLAYERANIMEVENT_SLIDE_TACKLE;
 
 #ifdef GAME_DLL
-				if (!SDKGameRules()->IsIntermissionState() && GetMatchBall()->State_Get() == BALL_STATE_NORMAL && !GetMatchBall()->HasQueuedState())
-				{
-					pPl->GetData()->AddSlidingTackle();
+					if (!SDKGameRules()->IsIntermissionState() && GetMatchBall()->State_Get() == BALL_STATE_NORMAL && !GetMatchBall()->HasQueuedState())
+					{
+						pPl->GetData()->AddSlidingTackle();
 
-					GetMatchBall()->CheckFoul(pPl);
+						GetMatchBall()->CheckFoul(pPl);
 
-					if (!CSDKPlayer::IsOnField(pPl))
-						return true;
+						if (!CSDKPlayer::IsOnField(pPl))
+							return true;
+					}
+#endif				
 				}
-#endif
 			}
 		}
 	}
@@ -1795,25 +1797,6 @@ bool CGameMovement::CheckActionStart()
 		{
 			animEvent = PLAYERANIMEVENT_BICYCLE_KICK;
 			pPl->AddFlag(FL_FREECAM);
-		}
-	}
-	else if (mv->m_nButtons & IN_GESTURE)
-	{
-		if ((mv->m_nButtons & IN_ATTACK) && !(mv->m_nOldButtons & IN_ATTACK))
-		{
-			animEvent = PLAYERANIMEVENT_GESTURE_POINT;
-		}
-		else if (mv->m_nButtons & IN_ATTACK2 && !(mv->m_nOldButtons & IN_ATTACK2))
-		{
-			animEvent = PLAYERANIMEVENT_GESTURE_WAVE;
-		}
-		else
-		{
-			if ((pPl->GetFlags() & FL_CELEB) || SDKGameRules()->State_Get() == MATCH_PERIOD_WARMUP)
-			{
-				if (mv->m_nButtons & IN_DUCK && !(mv->m_nOldButtons & IN_DUCK))
-					animEvent = PLAYERANIMEVENT_CELEB_SLIDE;
-			}
 		}
 	}
 
@@ -1843,14 +1826,18 @@ bool CGameMovement::CheckActionStart()
 	}
 	case PLAYERANIMEVENT_DIVING_HEADER:
 	case PLAYERANIMEVENT_BICYCLE_KICK:
-	case PLAYERANIMEVENT_CELEB_SLIDE:
 	{
 		MoveHelper()->StartSound(mv->GetAbsOrigin(), "Player.DivingHeader");
 	}
+	case PLAYERANIMEVENT_SLIDE_TACKLE:
+	case PLAYERANIMEVENT_CELEB_SLIDE:
+	{
+		MoveHelper()->StartSound(mv->GetAbsOrigin(), "Player.Slide");
+	}
 	}
 
-	pPl->m_Shared.SetAnimEventStartAngle(mv->m_vecAbsViewAngles);
-	pPl->m_Shared.SetAnimEventStartButtons(mv->m_nButtons);
+	pPl->m_Shared.SetActionStartAngle(mv->m_vecAbsViewAngles);
+	pPl->m_Shared.SetActionStartButtons(mv->m_nButtons);
 	pPl->DoAnimationEvent(animEvent);
 
 	return true;

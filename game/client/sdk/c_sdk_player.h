@@ -64,6 +64,7 @@ public:
 
 	SDKPlayerState		State_Get() const;
 
+	void				CheckGesture();
 	void				CheckShotCharging();
 	void				ResetShotCharging();
 	float				GetChargedShotStrength();

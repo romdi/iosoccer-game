@@ -147,7 +147,7 @@ void FX_FireBullets(
 	// Do the firing animation event.
 	if ( pPlayer && !pPlayer->IsDormant() )
 	{
-		pPlayer->m_PlayerAnimState->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
+		//pPlayer->m_PlayerAnimState->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
 	}
 #else
 	// if this is server code, send the effect over to client as temp entity
