@@ -281,6 +281,8 @@ class CVisualSettingPanel : public PropertyPage, public ISettingPanel
 
 	CheckButton *m_pFirstPersonCamera;
 
+	CheckButton *m_pBallHaloEnabled;
+
 public:
 
 	CVisualSettingPanel(Panel *parent, const char *panelName);

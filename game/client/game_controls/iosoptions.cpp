@@ -920,7 +920,8 @@ extern ConVar
 	hud_names_type,
 	cl_cam_dist,
 	cl_cam_height,
-	cl_cam_firstperson;
+	cl_cam_firstperson,
+	cl_ball_halo_enabled;
 
 CVisualSettingPanel::CVisualSettingPanel(Panel *parent, const char *panelName) : BaseClass(parent, panelName)
 {
@@ -941,7 +942,9 @@ CVisualSettingPanel::CVisualSettingPanel(Panel *parent, const char *panelName) :
 	m_pCameraHeightValue = new TextEntry(m_pContent, "");
 	m_pCameraHeightSlider = new Slider(m_pContent, "");
 
-	m_pFirstPersonCamera = new CheckButton(m_pContent, "", "First person camera");
+	m_pFirstPersonCamera = new CheckButton(m_pContent, "", "Use first person camera");
+
+	m_pBallHaloEnabled = new CheckButton(m_pContent, "", "Draw ball halo");
 }
 
 void CVisualSettingPanel::PerformLayout()
@@ -969,6 +972,8 @@ void CVisualSettingPanel::PerformLayout()
 	m_pCameraHeightSlider->SetBounds(CONTROL_SHORT_WIDTH + CONTROL_HMARGIN, row++ * CONTROL_HEIGHT + group++ * CONTROL_VMARGIN, CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
 
 	m_pFirstPersonCamera->SetBounds(0, row++ * CONTROL_HEIGHT + group++ * CONTROL_VMARGIN, CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
+
+	m_pBallHaloEnabled->SetBounds(0, row++ * CONTROL_HEIGHT + group++ * CONTROL_VMARGIN, CONTROL_WIDE_WIDTH, CONTROL_HEIGHT);
 
 	float minDist, maxDist;
 	cl_cam_dist.GetMin(minDist);
@@ -1001,6 +1006,7 @@ void CVisualSettingPanel::Save()
 	cl_cam_dist.SetValue(m_pCameraDistanceValue->GetValueAsInt());
 	cl_cam_height.SetValue(m_pCameraHeightValue->GetValueAsInt());
 	cl_cam_firstperson.SetValue(m_pFirstPersonCamera->IsSelected());
+	cl_ball_halo_enabled.SetValue(m_pBallHaloEnabled->IsSelected());
 }
 
 void CVisualSettingPanel::Load()
@@ -1011,6 +1017,7 @@ void CVisualSettingPanel::Load()
 	m_pCameraDistanceValue->SetText(cl_cam_dist.GetString());
 	m_pCameraHeightValue->SetText(cl_cam_height.GetString());
 	m_pFirstPersonCamera->SetSelected(cl_cam_firstperson.GetBool());
+	m_pBallHaloEnabled->SetSelected(cl_ball_halo_enabled.GetBool());
 }
 
 void CVisualSettingPanel::Update()
