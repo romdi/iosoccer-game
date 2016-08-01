@@ -295,7 +295,7 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 		if (SDKGameRules()->m_nShieldType == SHIELD_GOALKICK || 
 			SDKGameRules()->m_nShieldType == SHIELD_PENALTY ||
 			SDKGameRules()->m_nShieldType == SHIELD_FREEKICK ||
-			SDKGameRules()->m_nShieldType == SHIELD_KICKOFF ||
+			(SDKGameRules()->m_nShieldType == SHIELD_KICKOFF && !SDKGameRules()->IsIntermissionState()) ||
 			SDKGameRules()->m_nShieldType == SHIELD_CORNER)
 		{
 			const float radius = mp_shield_ball_radius.GetFloat();
@@ -397,8 +397,9 @@ void CSDKPlayer::CheckBallShield(const Vector &oldPos, Vector &newPos, const Vec
 			float radius = SDKGameRules()->GetShieldRadius(GetTeamNumber(), GetFlags() & FL_SHIELD_KEEP_IN) + border;
 			Vector dir = newPos - SDKGameRules()->m_vShieldPos;
 
-			if ((GetFlags() & FL_SHIELD_KEEP_OUT && dir.Length2D() < radius || GetFlags() & FL_SHIELD_KEEP_IN && dir.Length2D() > radius)
-				&& (!SDKGameRules()->IsIntermissionState() || SDKGameRules()->State_Get() == MATCH_PERIOD_WARMUP && mp_shield_block_opponent_half.GetBool()))
+			if (!SDKGameRules()->IsIntermissionState() &&
+				((GetFlags() & FL_SHIELD_KEEP_OUT) && dir.Length2D() < radius ||
+				(GetFlags() & FL_SHIELD_KEEP_IN) && dir.Length2D() > radius))
 			{
 				dir.z = 0;
 				dir.NormalizeInPlace();
