@@ -3358,9 +3358,11 @@ void CSDKGameRules::DrawFieldTeamCrests()
 
 		Vector right = Vector(1, 0, 0);
 		Vector forward = Vector(0, 1, 0);
-		float size = 150;
+		const int size = 150;
+		const int offset = 100;
 		Vector origin = SDKGameRules()->m_vKickOff;
-		origin.y += sign * (40 + size);
+		origin.x = SDKGameRules()->m_vFieldMin.GetX() + (offset + size);
+		origin.y += sign * (offset + size);
 		origin.z += 1;
 
 		CMatRenderContextPtr pRenderContext( materials );
@@ -3371,23 +3373,23 @@ void CSDKGameRules::DrawFieldTeamCrests()
 		meshBuilder.Begin( pMesh, MATERIAL_QUADS, 1 );
 
 		meshBuilder.Color3f( 1.0, 1.0, 1.0 );
-		meshBuilder.TexCoord2f( 0,0,0 );
-		meshBuilder.Position3fv( (origin + (right * sign * size) + (forward * sign * -size)).Base() );
-		meshBuilder.AdvanceVertex();
-
-		meshBuilder.Color3f( 1.0, 1.0, 1.0 );
 		meshBuilder.TexCoord2f( 0,1,0 );
-		meshBuilder.Position3fv( (origin + (right * sign * -size) + (forward * sign * -size)).Base() );
+		meshBuilder.Position3fv( (origin + (right * size) + (forward * -size)).Base() );
 		meshBuilder.AdvanceVertex();
 
 		meshBuilder.Color3f( 1.0, 1.0, 1.0 );
 		meshBuilder.TexCoord2f( 0,1,1 );
-		meshBuilder.Position3fv( (origin + (right * sign * -size) + (forward * sign * size)).Base() );
+		meshBuilder.Position3fv( (origin + (right * -size) + (forward * -size)).Base() );
 		meshBuilder.AdvanceVertex();
 
 		meshBuilder.Color3f( 1.0, 1.0, 1.0 );
 		meshBuilder.TexCoord2f( 0,0,1 );
-		meshBuilder.Position3fv( (origin + (right * sign * size) + (forward * sign * size)).Base() );
+		meshBuilder.Position3fv( (origin + (right * -size) + (forward * size)).Base() );
+		meshBuilder.AdvanceVertex();
+
+		meshBuilder.Color3f( 1.0, 1.0, 1.0 );
+		meshBuilder.TexCoord2f( 0,0,0 );
+		meshBuilder.Position3fv( (origin + (right * size) + (forward * size)).Base() );
 		meshBuilder.AdvanceVertex();
 		meshBuilder.End();
 		pMesh->Draw();
