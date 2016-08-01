@@ -1828,11 +1828,13 @@ bool CGameMovement::CheckActionStart()
 	case PLAYERANIMEVENT_BICYCLE_KICK:
 	{
 		MoveHelper()->StartSound(mv->GetAbsOrigin(), "Player.DivingHeader");
+		break;
 	}
 	case PLAYERANIMEVENT_SLIDE_TACKLE:
 	case PLAYERANIMEVENT_CELEB_SLIDE:
 	{
 		MoveHelper()->StartSound(mv->GetAbsOrigin(), "Player.Slide");
+		break;
 	}
 	}
 
