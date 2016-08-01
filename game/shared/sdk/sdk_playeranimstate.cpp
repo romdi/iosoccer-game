@@ -337,6 +337,8 @@ extern ConVar mp_reset_spin_toggles_on_shot;
 //-----------------------------------------------------------------------------
 void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 {
+	bool isAction = false;
+
 	switch (event)
 	{
 	// Set current animation to none (e.g. after playing another animation)
@@ -373,7 +375,7 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 	case PLAYERANIMEVENT_HOLD:
 	case PLAYERANIMEVENT_THROW_IN_HOLD:
 	{
-		GetSDKPlayer()->m_Shared.SetAction(event);
+		isAction = true;
 	}
 	case PLAYERANIMEVENT_KICK_DRIBBLE:
 	case PLAYERANIMEVENT_KICK_WEAK:
@@ -392,6 +394,9 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 	case PLAYERANIMEVENT_FAKE_SHOT:
 	case PLAYERANIMEVENT_RAINBOW_FLICK:
 	{
+		// Reset event if no action, so the event after throw-in or keeper holding is handled properly
+		GetSDKPlayer()->m_Shared.SetAction(isAction ? event : PLAYERANIMEVENT_NONE);
+
 		m_nActionSequence = CalcActionSequence(event);
 		m_flActionSequenceCycle = 0;
 		m_bIsActionSequenceActive = m_nActionSequence != 0;

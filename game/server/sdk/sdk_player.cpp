@@ -1624,6 +1624,14 @@ int CSDKPlayer::GetTeamPosType()
 
 void CSDKPlayer::Reset()
 {
+	if (m_pHoldingBall)
+		m_pHoldingBall->RemoveFromPlayerHands(this);
+
+	if (GetPlayerBall())
+		GetPlayerBall()->RemovePlayerBall();
+
+	GetMatchBall()->RemovePlayerAssignments(this);
+
 	m_Shared.SetStamina(100);
 	InitSprinting();
 	m_flNextShot = gpGlobals->curtime;
@@ -1633,7 +1641,6 @@ void CSDKPlayer::Reset()
 	DoServerAnimationEvent(PLAYERANIMEVENT_NONE);
 	ResetShotCharging();
 	GetAnimState()->ClearAnimationState();
-	m_pHoldingBall = NULL;
 	m_bIsAway = true;
 	m_flLastMoveTime = gpGlobals->curtime;
 	//m_flNextJoin = gpGlobals->curtime;
@@ -1649,11 +1656,6 @@ void CSDKPlayer::Reset()
 		SetCollisionGroup(COLLISION_GROUP_PLAYER);
 		RemoveEffects(EF_NODRAW);
 	}
-
-	if (GetPlayerBall())
-		GetPlayerBall()->RemovePlayerBall();
-
-	GetMatchBall()->RemovePlayerAssignments(this);
 }
 
 void CSDKPlayer::RemoveFlags()
