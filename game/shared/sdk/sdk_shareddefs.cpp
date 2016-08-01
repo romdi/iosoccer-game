@@ -160,7 +160,7 @@ Color
 	g_ColorWhite(255, 255, 255, 255),
 	g_ColorOffWhite(224, 224, 224, 255),
 	g_ColorBlack(0, 0, 0, 255),
-	g_ColorBrown(121, 85, 72, 255),
+	g_ColorBrown(161, 136, 127, 255),
 	g_ColorLime(212, 225, 87, 255),
 	g_ColorBlueGray(96, 125, 139, 255),
 	g_ColorOrange(255, 167, 38, 255),
@@ -173,9 +173,9 @@ Color
 	g_ColorPurple(171, 71, 188, 255);
 
 Color g_HudColors[COLOR_CLASS_COUNT] = {
-	g_ColorBrown,			// black => brown
-	g_ColorBrown,			// white => brown
-	g_ColorBrown,			// gray => brown
+	g_ColorBlueGray,		// black => blue gray
+	g_ColorBlueGray,		// white => blue gray
+	g_ColorBlueGray,		// gray => blue gray
 	g_ColorRed,				// red
 	g_ColorYellow,			// yellow
 	g_ColorGreen,			// green
@@ -185,9 +185,9 @@ Color g_HudColors[COLOR_CLASS_COUNT] = {
 };
 
 Color g_HudAlternativeColors[COLOR_CLASS_COUNT] = {
-	g_ColorBlueGray,		// (black => brown) => blue gray
-	g_ColorBlueGray,		// (white => brown) => blue gray
-	g_ColorBlueGray,		// (gray => brown) => blue gray
+	g_ColorBrown,			// (black => blue gray) => brown
+	g_ColorBrown,			// (white => blue gray) => brown
+	g_ColorBrown,			// (gray => blue gray) => brown
 	g_ColorPink,			// red => pink
 	g_ColorAmber,			// yellow => amber
 	g_ColorLightGreen,		// green => light green
