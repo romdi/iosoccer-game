@@ -1732,56 +1732,62 @@ bool CGameMovement::CheckActionStart()
 
 	PlayerAnimEvent_t animEvent = PLAYERANIMEVENT_NONE;
 
-	if (mv->m_nButtons & IN_JUMP)
+	if ((mv->m_nButtons & IN_JUMP))
 	{
-		if (pPl->IsInOwnBoxAsKeeper())
+		if (!(mv->m_nOldButtons & IN_JUMP))
 		{
-			int sidemoveSign = pPl->GetSidemoveSign();
+			if (pPl->IsInOwnBoxAsKeeper())
+			{
+				int sidemoveSign = pPl->GetSidemoveSign();
 
-			if (sidemoveSign == -1)
-				animEvent = PLAYERANIMEVENT_KEEPER_DIVE_LEFT;
-			else if (sidemoveSign == 1)
-				animEvent = PLAYERANIMEVENT_KEEPER_DIVE_RIGHT;
+				if (sidemoveSign == -1)
+					animEvent = PLAYERANIMEVENT_KEEPER_DIVE_LEFT;
+				else if (sidemoveSign == 1)
+					animEvent = PLAYERANIMEVENT_KEEPER_DIVE_RIGHT;
+				else
+					animEvent = PLAYERANIMEVENT_KEEPER_JUMP;
+			}
 			else
-				animEvent = PLAYERANIMEVENT_KEEPER_JUMP;
-		}
-		else
-		{
-			animEvent = PLAYERANIMEVENT_JUMP;
+			{
+				animEvent = PLAYERANIMEVENT_JUMP;
+			}
 		}
 	}
 	else if (mv->m_nButtons & IN_DUCK)
 	{
-		if (pPl->IsInOwnBoxAsKeeper() && !(mv->m_nButtons & IN_SKILL))
+		if (!(mv->m_nOldButtons & IN_DUCK))
 		{
-			if (mv->m_nButtons & IN_FORWARD)
-				animEvent = PLAYERANIMEVENT_KEEPER_DIVE_FORWARD;
-			else if (mv->m_nButtons & IN_BACK)
-				animEvent = PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD;
-		}
-		else
-		{
-			if (mv->m_nButtons & IN_FORWARD)
+			if (pPl->IsInOwnBoxAsKeeper() && !(mv->m_nButtons & IN_SKILL))
 			{
-				if ((mv->m_nButtons & IN_GESTURE) && ((pPl->GetFlags() & FL_CELEB) || SDKGameRules()->State_Get() == MATCH_PERIOD_WARMUP))
+				if (mv->m_nButtons & IN_FORWARD)
+					animEvent = PLAYERANIMEVENT_KEEPER_DIVE_FORWARD;
+				else if (mv->m_nButtons & IN_BACK)
+					animEvent = PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD;
+			}
+			else
+			{
+				if (mv->m_nButtons & IN_FORWARD)
 				{
-					animEvent = PLAYERANIMEVENT_CELEB_SLIDE;
-				}
-				else
-				{
-					animEvent = PLAYERANIMEVENT_SLIDE_TACKLE;
+					if ((mv->m_nButtons & IN_GESTURE) && ((pPl->GetFlags() & FL_CELEB) || SDKGameRules()->State_Get() == MATCH_PERIOD_WARMUP))
+					{
+						animEvent = PLAYERANIMEVENT_CELEB_SLIDE;
+					}
+					else
+					{
+						animEvent = PLAYERANIMEVENT_SLIDE_TACKLE;
 
 #ifdef GAME_DLL
-					if (!SDKGameRules()->IsIntermissionState() && GetMatchBall()->State_Get() == BALL_STATE_NORMAL && !GetMatchBall()->HasQueuedState())
-					{
-						pPl->GetData()->AddSlidingTackle();
+						if (!SDKGameRules()->IsIntermissionState() && GetMatchBall()->State_Get() == BALL_STATE_NORMAL && !GetMatchBall()->HasQueuedState())
+						{
+							pPl->GetData()->AddSlidingTackle();
 
-						GetMatchBall()->CheckFoul(pPl);
+							GetMatchBall()->CheckFoul(pPl);
 
-						if (!CSDKPlayer::IsOnField(pPl))
-							return true;
-					}
+							if (!CSDKPlayer::IsOnField(pPl))
+								return true;
+						}
 #endif				
+					}
 				}
 			}
 		}
