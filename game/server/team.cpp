@@ -450,7 +450,7 @@ Vector CTeam::GetSpotPos(const char *name)
 void CTeam::InitFieldSpots(bool isBottomTeam)
 {
 	float zPos = SDKGameRules()->m_vKickOff.GetZ();
-	float setPieceOffset = 25;
+	const int setPieceOffset = 15;
 
 	Vector penboxMin, penboxMax;
 	CBaseEntity *pPenbox = gEntList.FindEntityByClassname(NULL, "trigger_penaltybox");
