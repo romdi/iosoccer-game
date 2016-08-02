@@ -1387,25 +1387,27 @@ void CGameMovement::FullWalkMove( )
 	Vector oldVel = mv->m_vecVelocity;
 	QAngle oldAng = mv->m_vecAbsViewAngles;
 
-	bool isWalkMove = false;
+	Vector2D vel2D = oldVel.AsVector2D();
 
-	if (CheckActionOverTime())
+	StartGravity();
+
+	if (CheckActionOverTime(vel2D))
 	{
+		mv->m_vecVelocity = Vector(vel2D.x, vel2D.y, mv->m_vecVelocity.z);
 		TryPlayerMove();
 	}
-	else if (!SDKGameRules()->IsCeremony() && CheckActionStart() && CheckActionOverTime())
+	else if (!SDKGameRules()->IsCeremony() && CheckActionStart() && CheckActionOverTime(vel2D))
 	{
 #ifdef GAME_DLL
 		if (!CSDKPlayer::IsOnField(pPl))
 			return;
 #endif
 
+		mv->m_vecVelocity = Vector(vel2D.x, vel2D.y, mv->m_vecVelocity.z);
 		TryPlayerMove();
 	}
 	else
 	{
-		StartGravity();
-
 		// Fricion is handled before we add in any base velocity. That way, if we are on a conveyor, 
 		//  we don't slow when standing still, relative to the conveyor.
 		if (player->GetGroundEntity() != NULL)
@@ -1420,7 +1422,6 @@ void CGameMovement::FullWalkMove( )
 		if (player->GetGroundEntity() != NULL)
 		{
 			WalkMove();
-			isWalkMove = true;
 		}
 		else
 		{
@@ -1432,8 +1433,6 @@ void CGameMovement::FullWalkMove( )
 
 		// Make sure velocity is valid.
 		CheckVelocity();
-
-		FinishGravity();
 
 		// If we are on ground, no downward velocity.
 		if ( player->GetGroundEntity() != NULL )
@@ -1456,11 +1455,18 @@ void CGameMovement::FullWalkMove( )
 		mv->SetAbsOrigin(Vector(newPos.x, oldPos.y, newPos.z));
 	}
 
+	FinishGravity();
+
 	newPos = mv->GetAbsOrigin();
 	Vector newVel = mv->m_vecVelocity;
 	QAngle newAng = mv->m_vecAbsViewAngles;
+	float newPosZ = newPos.z;
+	float newVelZ = newVel.z;
 
 	pPl->CheckBallShield(oldPos, newPos, oldVel, newVel, oldAng, newAng);
+
+	newPos.z = newPosZ;
+	newVel.z = newVelZ;
 
 	mv->SetAbsOrigin(newPos);
 	mv->m_vecVelocity = newVel;
@@ -1517,7 +1523,7 @@ void CGameMovement::MoveToTargetPos()
 	#endif
 }
 
-bool CGameMovement::CheckActionOverTime()
+bool CGameMovement::CheckActionOverTime(Vector2D &vel2D)
 {
 	CSDKPlayer *pPl = ToSDKPlayer(player);
 
@@ -1529,9 +1535,12 @@ bool CGameMovement::CheckActionOverTime()
 	float timePassed = gpGlobals->curtime - pPl->m_Shared.GetActionStartTime();
 	Vector forward, right, up;
 	AngleVectors(mv->m_vecViewAngles, &forward, &right, &up);
-	Vector forward2D = forward;
-	forward2D.z = 0;
+	Vector2D right2D = right.AsVector2D();
+	Vector2D forward2D = forward.AsVector2D();
 	forward2D.NormalizeInPlace();
+	Vector tmpForward;
+	AngleVectors(pPl->m_Shared.GetActionStartAngle(), &tmpForward);
+	Vector2D startForward2D = tmpForward.AsVector2D();
 
 	int sidemoveSign = pPl->GetSidemoveSign();
 
@@ -1549,17 +1558,10 @@ bool CGameMovement::CheckActionOverTime()
 		}
 
 		int forwardmoveSign = (mv->m_nButtons & IN_FORWARD) ? 1 : ((mv->m_nButtons & IN_BACK) ? -1 : 0);
-		mv->m_vecVelocity = forward2D * forwardmoveSign * mp_keeperdivespeed_longside.GetInt() + right * sidemoveSign * mp_keeperdivespeed_longside.GetInt();
-		float speed = mv->m_vecVelocity.NormalizeInPlace();
-		mv->m_vecVelocity *= min(speed, mp_keeperdivespeed_longside.GetInt());
-		mv->m_vecVelocity *= max(0, (1 - pow(timePassed / mp_keeperdive_move_duration.GetFloat(), 2)));
-
-		if (pPl->m_Shared.GetAction() == PLAYERANIMEVENT_KEEPER_DIVE_FORWARD)
-			mv->m_vecVelocity.z = 0;
-		else if (pPl->m_Shared.GetAction() == PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD)
-			mv->m_vecVelocity.z = mp_jump_height.GetInt();
-		else
-			mv->m_vecVelocity.z = mp_keeperdivespeed_z.GetInt();
+		vel2D = forward2D * forwardmoveSign * mp_keeperdivespeed_longside.GetInt() + right2D * sidemoveSign * mp_keeperdivespeed_longside.GetInt();
+		float speed = vel2D.NormalizeInPlace();
+		vel2D *= min(speed, mp_keeperdivespeed_longside.GetInt());
+		vel2D *= max(0, (1 - pow(timePassed / mp_keeperdive_move_duration.GetFloat(), 2)));
 
 		break;
 	}
@@ -1571,12 +1573,10 @@ bool CGameMovement::CheckActionOverTime()
 			pPl->DoAnimationEvent(PLAYERANIMEVENT_NONE);
 			return false;
 		}
+		
+		startForward2D.NormalizeInPlace();
 
-		AngleVectors(pPl->m_Shared.GetActionStartAngle(), &forward2D);
-		forward2D.z = 0;
-		forward2D.NormalizeInPlace();
-
-		mv->m_vecVelocity = forward2D * mp_slidespeed.GetInt() * max(0, (1 - pow(timePassed / mp_slide_move_duration.GetFloat(), 2)));
+		vel2D = forward2D * mp_slidespeed.GetInt() * max(0, (1 - pow(timePassed / mp_slide_move_duration.GetFloat(), 2)));
 		break;
 	}
 	case PLAYERANIMEVENT_TACKLED_FORWARD:
@@ -1588,7 +1588,7 @@ bool CGameMovement::CheckActionOverTime()
 			return false;
 		}
 
-		mv->m_vecVelocity = vec3_origin;
+		vel2D = vec2_origin;
 		break;
 	}
 	case PLAYERANIMEVENT_THROW_IN_THROW:
@@ -1599,7 +1599,7 @@ bool CGameMovement::CheckActionOverTime()
 			return false;
 		}
 
-		mv->m_vecVelocity = vec3_origin;
+		vel2D = vec2_origin;
 		break;
 	}
 	case PLAYERANIMEVENT_DIVING_HEADER:
@@ -1610,7 +1610,7 @@ bool CGameMovement::CheckActionOverTime()
 			return false;
 		}
 
-		mv->m_vecVelocity = forward2D * mp_divingheaderspeed.GetInt() * max(0, (1 - pow(timePassed / mp_divingheader_move_duration.GetFloat(), 2)));
+		vel2D = forward2D * mp_divingheaderspeed.GetInt() * max(0, (1 - pow(timePassed / mp_divingheader_move_duration.GetFloat(), 2)));
 		break;
 	}
 	case PLAYERANIMEVENT_BICYCLE_KICK:
@@ -1621,7 +1621,7 @@ bool CGameMovement::CheckActionOverTime()
 			return false;
 		}
 
-		mv->m_vecVelocity = Vector(0, 0, 0);
+		vel2D = vec2_origin;
 		break;
 	}
 	default:
@@ -1629,8 +1629,6 @@ bool CGameMovement::CheckActionOverTime()
 		return false;
 	}
 	}
-
-	mv->m_vecVelocity.z -= sv_gravity.GetFloat() * timePassed;
 
 	return true;
 }
@@ -1828,6 +1826,14 @@ bool CGameMovement::CheckActionStart()
 		SetGroundEntity(NULL);
 		pPl->ResetShotCharging();
 		MoveHelper()->StartSound(mv->GetAbsOrigin(), "Player.DiveKeeper");
+
+		if (animEvent == PLAYERANIMEVENT_KEEPER_DIVE_FORWARD)
+			mv->m_vecVelocity.z = 0;
+		else if (animEvent == PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD)
+			mv->m_vecVelocity.z = mp_jump_height.GetInt();
+		else
+			mv->m_vecVelocity.z = mp_keeperdivespeed_z.GetInt();
+
 		break;
 	}
 	case PLAYERANIMEVENT_DIVING_HEADER:

@@ -121,7 +121,7 @@ protected:
 
 	bool			CheckActionStart();
 
-	bool			CheckActionOverTime();
+	bool			CheckActionOverTime(Vector2D &vel2D);
 
 	// The basic solid body movement clip that slides along multiple planes
 	virtual int		TryPlayerMove( Vector *pFirstDest=NULL, trace_t *pFirstTrace=NULL );
