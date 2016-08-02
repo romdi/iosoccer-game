@@ -441,7 +441,7 @@ void CSDKPlayer::CheckPosChange()
 	if (pSwapPartner)
 	{
 		partnerPos = pSwapPartner->GetLocalOrigin();
-		partnerAng = pSwapPartner->GetLocalAngles();
+		partnerAng = pSwapPartner->EyeAngles();
 		pSwapPartner->ChangeTeam();
 		pSwapPartner->SetPositionAfterTeamChange(GetLocalOrigin(), EyeAngles(), false);
 	}
@@ -450,7 +450,7 @@ void CSDKPlayer::CheckPosChange()
 
 	if (pSwapPartner)
 	{
-		pSwapPartner->SetPositionAfterTeamChange(partnerPos, partnerAng, false);
+		SetPositionAfterTeamChange(partnerPos, partnerAng, false);
 	}
 	else if (SDKGameRules()->IsIntermissionState())
 	{
