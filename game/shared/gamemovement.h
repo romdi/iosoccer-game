@@ -15,6 +15,7 @@
 #include "igamemovement.h"
 #include "cmodel.h"
 #include "tier0/vprof.h"
+#include "sdk_playeranimstate.h"
 
 #define CTEXTURESMAX		512			// max number of textures loaded
 #define CBTEXTURENAMEMAX	13			// only load first n chars of name
@@ -121,6 +122,8 @@ protected:
 
 	bool			CheckActionStart();
 
+	PlayerAnimEvent_t GetActionStartAnimEvent();
+
 	bool			CheckActionOverTime(Vector2D &vel2D);
 
 	// The basic solid body movement clip that slides along multiple planes
@@ -159,6 +162,8 @@ protected:
 	virtual void	SetGroundEntity( trace_t *pm );
 
 	virtual void	StepMove( Vector &vecDestination, trace_t &trace );
+
+	void			CategorizeGroundSurface(trace_t &pm);
 
 protected:
 

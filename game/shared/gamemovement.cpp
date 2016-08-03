@@ -1576,7 +1576,7 @@ bool CGameMovement::CheckActionOverTime(Vector2D &vel2D)
 		
 		startForward2D.NormalizeInPlace();
 
-		vel2D = forward2D * mp_slidespeed.GetInt() * max(0, (1 - pow(timePassed / mp_slide_move_duration.GetFloat(), 2)));
+		vel2D = startForward2D * mp_slidespeed.GetInt() * max(0, (1 - pow(timePassed / mp_slide_move_duration.GetFloat(), 2)));
 		break;
 	}
 	case PLAYERANIMEVENT_TACKLED_FORWARD:
@@ -1728,81 +1728,7 @@ bool CGameMovement::CheckActionStart()
 	if (pPl->GetFlags() & (FL_FROZEN | FL_ATCONTROLS | FL_REMOTECONTROLLED | FL_ONLY_XY_MOVEMENT) || !pPl->GetGroundEntity())
 		return false;
 
-	PlayerAnimEvent_t animEvent = PLAYERANIMEVENT_NONE;
-
-	if ((mv->m_nButtons & IN_JUMP))
-	{
-		if (!(mv->m_nOldButtons & IN_JUMP))
-		{
-			if (pPl->IsInOwnBoxAsKeeper())
-			{
-				int sidemoveSign = pPl->GetSidemoveSign();
-
-				if (sidemoveSign == -1)
-					animEvent = PLAYERANIMEVENT_KEEPER_DIVE_LEFT;
-				else if (sidemoveSign == 1)
-					animEvent = PLAYERANIMEVENT_KEEPER_DIVE_RIGHT;
-				else
-					animEvent = PLAYERANIMEVENT_KEEPER_JUMP;
-			}
-			else
-			{
-				animEvent = PLAYERANIMEVENT_JUMP;
-			}
-		}
-	}
-	else if (mv->m_nButtons & IN_DUCK)
-	{
-		if (!(mv->m_nOldButtons & IN_DUCK))
-		{
-			if (pPl->IsInOwnBoxAsKeeper() && !(mv->m_nButtons & IN_SKILL))
-			{
-				if (mv->m_nButtons & IN_FORWARD)
-					animEvent = PLAYERANIMEVENT_KEEPER_DIVE_FORWARD;
-				else if (mv->m_nButtons & IN_BACK)
-					animEvent = PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD;
-			}
-			else
-			{
-				if (mv->m_nButtons & IN_FORWARD)
-				{
-					if ((mv->m_nButtons & IN_GESTURE) && ((pPl->GetFlags() & FL_CELEB) || SDKGameRules()->State_Get() == MATCH_PERIOD_WARMUP))
-					{
-						animEvent = PLAYERANIMEVENT_CELEB_SLIDE;
-					}
-					else
-					{
-						animEvent = PLAYERANIMEVENT_SLIDE_TACKLE;
-
-#ifdef GAME_DLL
-						if (!SDKGameRules()->IsIntermissionState() && GetMatchBall()->State_Get() == BALL_STATE_NORMAL && !GetMatchBall()->HasQueuedState())
-						{
-							pPl->GetData()->AddSlidingTackle();
-
-							GetMatchBall()->CheckFoul(pPl);
-
-							if (!CSDKPlayer::IsOnField(pPl))
-								return true;
-						}
-#endif				
-					}
-				}
-			}
-		}
-	}
-	else if (mv->m_nButtons & IN_SKILL)
-	{
-		if ((mv->m_nButtons & IN_FORWARD) && pPl->IsChargedshooting())
-		{
-			animEvent = PLAYERANIMEVENT_DIVING_HEADER;
-			pPl->AddFlag(FL_FREECAM);
-		}
-		else if ((mv->m_nButtons & IN_BACK) && pPl->IsChargedshooting())
-		{
-			animEvent = PLAYERANIMEVENT_BICYCLE_KICK;
-			pPl->AddFlag(FL_FREECAM);
-		}
-	}
+	PlayerAnimEvent_t animEvent = GetActionStartAnimEvent();
 
 	switch (animEvent)
 	{
@@ -1813,9 +1739,9 @@ bool CGameMovement::CheckActionStart()
 	case PLAYERANIMEVENT_JUMP:
 	case PLAYERANIMEVENT_KEEPER_JUMP:
 	{
-		mv->m_vecVelocity.z = mp_jump_height.GetInt();
 		SetGroundEntity(NULL);
 		player->PlayStepSound((Vector &)mv->GetAbsOrigin(), player->m_pSurfaceData, 1.0, true);
+		mv->m_vecVelocity.z = mp_jump_height.GetInt();
 		break;
 	}
 	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT:
@@ -1824,8 +1750,8 @@ bool CGameMovement::CheckActionStart()
 	case PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD:
 	{
 		SetGroundEntity(NULL);
-		pPl->ResetShotCharging();
 		MoveHelper()->StartSound(mv->GetAbsOrigin(), "Player.DiveKeeper");
+		pPl->ResetShotCharging();
 
 		if (animEvent == PLAYERANIMEVENT_KEEPER_DIVE_FORWARD)
 			mv->m_vecVelocity.z = 0;
@@ -1839,13 +1765,29 @@ bool CGameMovement::CheckActionStart()
 	case PLAYERANIMEVENT_DIVING_HEADER:
 	case PLAYERANIMEVENT_BICYCLE_KICK:
 	{
+		SetGroundEntity(NULL);
 		MoveHelper()->StartSound(mv->GetAbsOrigin(), "Player.DivingHeader");
+		pPl->AddFlag(FL_FREECAM);
 		break;
 	}
 	case PLAYERANIMEVENT_SLIDE_TACKLE:
 	case PLAYERANIMEVENT_CELEB_SLIDE:
 	{
+		SetGroundEntity(NULL);
 		MoveHelper()->StartSound(mv->GetAbsOrigin(), "Player.Slide");
+
+#ifdef GAME_DLL
+		if (!SDKGameRules()->IsIntermissionState() && GetMatchBall()->State_Get() == BALL_STATE_NORMAL && !GetMatchBall()->HasQueuedState())
+		{
+			pPl->GetData()->AddSlidingTackle();
+
+			GetMatchBall()->CheckFoul(pPl);
+
+			if (!CSDKPlayer::IsOnField(pPl))
+				return true;
+		}
+#endif				
+
 		break;
 	}
 	}
@@ -1855,6 +1797,70 @@ bool CGameMovement::CheckActionStart()
 	pPl->DoAnimationEvent(animEvent);
 
 	return true;
+}
+
+PlayerAnimEvent_t CGameMovement::GetActionStartAnimEvent()
+{
+	CSDKPlayer *pPl = ToSDKPlayer(player);
+
+	if (mv->m_nButtons & IN_JUMP)
+	{
+		if (mv->m_nOldButtons & IN_JUMP)
+			return PLAYERANIMEVENT_NONE;
+
+		if (!pPl->IsInOwnBoxAsKeeper())
+			return PLAYERANIMEVENT_JUMP;
+
+		int sidemoveSign = pPl->GetSidemoveSign();
+
+		if (sidemoveSign == -1)
+			return PLAYERANIMEVENT_KEEPER_DIVE_LEFT;
+
+		if (sidemoveSign == 1)
+			return PLAYERANIMEVENT_KEEPER_DIVE_RIGHT;
+				
+		return PLAYERANIMEVENT_KEEPER_JUMP;
+	}
+
+	if (mv->m_nButtons & IN_DUCK)
+	{
+		if (mv->m_nOldButtons & IN_DUCK)
+			return PLAYERANIMEVENT_NONE;
+
+		if (pPl->IsInOwnBoxAsKeeper() && !(mv->m_nButtons & IN_SKILL))
+		{
+			if (mv->m_nButtons & IN_FORWARD)
+				return PLAYERANIMEVENT_KEEPER_DIVE_FORWARD;
+
+			if (mv->m_nButtons & IN_BACK)
+				return PLAYERANIMEVENT_KEEPER_DIVE_BACKWARD;
+
+			return PLAYERANIMEVENT_KEEPER_JUMP;
+		}
+
+		if (mv->m_nButtons & IN_FORWARD)
+		{
+			if ((mv->m_nButtons & IN_GESTURE) && ((pPl->GetFlags() & FL_CELEB) || SDKGameRules()->State_Get() == MATCH_PERIOD_WARMUP))
+				return PLAYERANIMEVENT_CELEB_SLIDE;
+
+			return PLAYERANIMEVENT_SLIDE_TACKLE;
+		}
+
+		return PLAYERANIMEVENT_NONE;
+	}
+
+	if (mv->m_nButtons & IN_SKILL)
+	{
+		if ((mv->m_nButtons & IN_FORWARD) && pPl->IsChargedshooting())
+			return PLAYERANIMEVENT_DIVING_HEADER;
+
+		if ((mv->m_nButtons & IN_BACK) && pPl->IsChargedshooting())
+			return PLAYERANIMEVENT_BICYCLE_KICK;
+
+		return PLAYERANIMEVENT_NONE;
+	}
+
+	return PLAYERANIMEVENT_NONE;
 }
 
 //-----------------------------------------------------------------------------
@@ -2521,6 +2527,8 @@ void CGameMovement::SetGroundEntity( trace_t *pm )
 
 	if ( newGround )
 	{
+		CategorizeGroundSurface(*pm);
+
 		// Standing on an entity other than the world, so signal that we are touching something.
 		if ( !pm->DidHitWorld() )
 		{
@@ -2529,6 +2537,24 @@ void CGameMovement::SetGroundEntity( trace_t *pm )
 
 		mv->m_vecVelocity.z = 0.0f;
 	}
+}
+
+void CGameMovement::CategorizeGroundSurface(trace_t &pm)
+{
+	IPhysicsSurfaceProps *physprops = MoveHelper()->GetSurfaceProps();
+	player->m_surfaceProps = pm.surface.surfaceProps;
+	player->m_pSurfaceData = physprops->GetSurfaceData(player->m_surfaceProps);
+	//physprops->GetPhysicsProperties(player->m_surfaceProps, NULL, NULL, &player->m_surfaceFriction, NULL);
+
+	// HACKHACK: Scale this to fudge the relationship between vphysics friction values and player friction values.
+	// A value of 0.8f feels pretty normal for vphysics, whereas 1.0f is normal for players.
+	// This scaling trivially makes them equivalent.  REVISIT if this affects low friction surfaces too much.
+	//player->m_surfaceFriction *= 1.25f;
+	//if (player->m_surfaceFriction > 1.0f)
+	//	player->m_surfaceFriction = 1.0f;
+	player->m_surfaceFriction = 1.0f;
+
+	player->m_chTextureType = player->m_pSurfaceData->game.material;
 }
 
 //-----------------------------------------------------------------------------
