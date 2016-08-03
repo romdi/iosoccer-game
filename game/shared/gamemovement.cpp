@@ -1538,9 +1538,6 @@ bool CGameMovement::CheckActionOverTime(Vector2D &vel2D)
 	Vector2D right2D = right.AsVector2D();
 	Vector2D forward2D = forward.AsVector2D();
 	forward2D.NormalizeInPlace();
-	Vector tmpForward;
-	AngleVectors(pPl->m_Shared.GetActionStartAngle(), &tmpForward);
-	Vector2D startForward2D = tmpForward.AsVector2D();
 
 	int sidemoveSign = pPl->GetSidemoveSign();
 
@@ -1574,9 +1571,7 @@ bool CGameMovement::CheckActionOverTime(Vector2D &vel2D)
 			return false;
 		}
 		
-		startForward2D.NormalizeInPlace();
-
-		vel2D = startForward2D * mp_slidespeed.GetInt() * max(0, (1 - pow(timePassed / mp_slide_move_duration.GetFloat(), 2)));
+		vel2D = forward2D * mp_slidespeed.GetInt() * max(0, (1 - pow(timePassed / mp_slide_move_duration.GetFloat(), 2)));
 		break;
 	}
 	case PLAYERANIMEVENT_TACKLED_FORWARD:
