@@ -244,6 +244,14 @@ void CBasePlayer::UpdateStepSound( surfacedata_t *psurface, const Vector &vecOri
 		return;
 
 	SetStepSoundTime( STEPSOUNDTIME_NORMAL, bWalking );
+
+#ifdef CLIENT_DLL
+	if (this == GetLocalPlayer())
+	{
+		fvol = 0.1f;
+	}
+#endif
+
 	PlayStepSound( feet, psurface, fvol, false );
 }
 
