@@ -197,7 +197,6 @@ enum MessageMode_t
 #define TEAM_AWAY					3	//IOS
 
 #define MAX_TEAMS				2	// Max number of teams in a game
-#define MAX_TEAM_NAME_LENGTH	32	// Max length of a team's name
 
 // Weapon m_iState
 #define WEAPON_IS_ONTARGET				0x40

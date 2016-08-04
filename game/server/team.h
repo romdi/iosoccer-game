@@ -155,7 +155,7 @@ public:
 	LastPlayerCoords m_LastPlayerCoordsByPosIndex[11];
 
 	// Data
-	CNetworkString( m_szServerKitName, MAX_TEAM_NAME_LENGTH );
+	CNetworkString( m_szServerKitName, MAX_KITNAME_LENGTH );
 	CNetworkString( m_szServerCode, MAX_TEAMCODE_LENGTH );
 	CNetworkString( m_szServerShortName, MAX_SHORTTEAMNAME_LENGTH );
 	CNetworkVar( int, m_iTeamNum );
