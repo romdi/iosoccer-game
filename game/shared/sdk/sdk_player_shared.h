@@ -67,9 +67,11 @@ public:
 	int GetActionStartButtons();
 	void SetActionStartButtons(int buttons);
 
+	void	SetCarryAnimation(PlayerAnimEvent_t animation);
+	PlayerAnimEvent_t GetCarryAnimation();
+
 	void	SetGesture(PlayerAnimEvent_t gesture);
 	PlayerAnimEvent_t GetGesture();
-
 
 	void ComputeWorldSpaceSurroundingBox( Vector *pVecWorldMins, Vector *pVecWorldMaxs );
 	
@@ -107,6 +109,8 @@ private:
 	CNetworkVar(int, m_nActionStartButtons);
 	CNetworkVar( bool, m_bIsSprinting );
 	CNetworkVar( float, m_flStamina );
+
+	CNetworkVar(PlayerAnimEvent_t, m_eCarryAnimation);
 
 	CNetworkVar(PlayerAnimEvent_t, m_eGesture);
 	CNetworkVar(float, m_flGestureStartTime);

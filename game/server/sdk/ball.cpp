@@ -1500,7 +1500,6 @@ void CBall::AddToPlayerHands(CSDKPlayer *pPl)
 	m_pHoldingPlayer = m_pPl;
 	m_pPl->m_pHoldingBall = this;
 	EnablePlayerCollisions(false);
-	m_pPl->AddFlag(FL_ONLY_XY_MOVEMENT);
 }
 
 void CBall::RemoveFromPlayerHands(CSDKPlayer *pPl)
@@ -1508,10 +1507,9 @@ void CBall::RemoveFromPlayerHands(CSDKPlayer *pPl)
 	if (CSDKPlayer::IsOnField(pPl) && pPl->m_pHoldingBall.Get() == this)
 	{
 		pPl->m_pHoldingBall = NULL;
-		pPl->RemoveFlag(FL_ONLY_XY_MOVEMENT);
 
-		if (pPl->m_Shared.GetAction() == PLAYERANIMEVENT_HOLD || pPl->m_Shared.GetAction() == PLAYERANIMEVENT_THROW_IN_HOLD)
-			pPl->DoServerAnimationEvent(PLAYERANIMEVENT_NONE);
+		if (pPl->m_Shared.GetCarryAnimation() != PLAYERANIMEVENT_NONE)
+			pPl->DoServerAnimationEvent(PLAYERANIMEVENT_CARRY_END);
 	}
 
 	if (!IsMarkedForDeletion())

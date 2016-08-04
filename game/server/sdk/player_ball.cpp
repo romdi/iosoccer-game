@@ -293,7 +293,7 @@ void CPlayerBall::State_KEEPERHANDS_Think()
 
 		m_pPl->SetShotButtonsReleased(false);
 		AddToPlayerHands(m_pPl);
-		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HOLD);
+		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KEEPER_HANDS_CARRY);
 	}
 
 	UpdateCarrier();

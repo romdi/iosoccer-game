@@ -50,8 +50,9 @@ enum PlayerAnimEvent_t
 	PLAYERANIMEVENT_TACKLED_FORWARD,
 	PLAYERANIMEVENT_TACKLED_BACKWARD,
 	PLAYERANIMEVENT_DIVING_HEADER,
-	PLAYERANIMEVENT_HOLD,
-	PLAYERANIMEVENT_THROW_IN_HOLD,
+	PLAYERANIMEVENT_KEEPER_HANDS_CARRY,
+	PLAYERANIMEVENT_THROW_IN_CARRY,
+	PLAYERANIMEVENT_CARRY_END,
 	PLAYERANIMEVENT_LIFT_UP,
 	PLAYERANIMEVENT_BALL_ROLL_LEFT,
 	PLAYERANIMEVENT_BALL_ROLL_RIGHT,
@@ -183,9 +184,11 @@ private:
 	void ComputeSequences( CStudioHdr *pStudioHdr );
 	void UpdateLayerSequenceGeneric( CStudioHdr *pStudioHdr, int iLayer, bool &bEnabled, float &flCurCycle, int &iSequence, bool bWaitAtEnd );
 	int CalcActionSequence(PlayerAnimEvent_t event);
-	void ComputeActionSequence(CStudioHdr *pStudioHdr);
-	void ComputeGestureSequence( CStudioHdr *pStudioHdr );
+	int CalcCarrySequence(PlayerAnimEvent_t event);
 	int CalcGestureSequence(PlayerAnimEvent_t event);
+	void ComputeActionSequence(CStudioHdr *pStudioHdr);
+	void ComputeCarrySequence(CStudioHdr *pStudioHdr);
+	void ComputeGestureSequence( CStudioHdr *pStudioHdr );
 	int CalcSequenceIndex( const char *pBaseName, ... );
 	void ClearAnimationLayers();
 	virtual void RestartMainSequence();
@@ -194,6 +197,10 @@ private:
 	bool m_bIsActionSequenceActive;
 	float m_flActionSequenceCycle;
 	bool m_bActionSequenceWaitAtEnd;
+
+	int m_nCarrySequence;
+	float m_flCarrySequenceCycle;
+	bool m_bIsCarrySequenceActive;
 
 	int m_nGestureSequence;
 	bool m_bIsGestureSequenceActive;
@@ -214,8 +221,9 @@ private:
 CSDKPlayerAnimState *CreateSDKPlayerAnimState( CSDKPlayer *pPlayer );
 
 #define ACTIONSEQUENCE_LAYER		0
-#define GESTURESEQUENCE_LAYER		1
-#define NUM_LAYERS_WANTED			2
+#define CARRYSEQUENCE_LAYER			1
+#define GESTURESEQUENCE_LAYER		2
+#define NUM_LAYERS_WANTED			3
 
 #define ANIM_TOPSPEED_WALK			150
 #define ANIM_TOPSPEED_RUN			250			//ios - was 250 in sdk

@@ -142,6 +142,7 @@ BEGIN_SEND_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	SendPropTime( SENDINFO( m_flJumpStartTime ) ),
 
 	SendPropInt(SENDINFO(m_eAction)),
+	SendPropInt(SENDINFO(m_eCarryAnimation)),
 	SendPropInt(SENDINFO(m_eGesture)),
 
 	SendPropDataTable( "sdksharedlocaldata", 0, &REFERENCE_SEND_TABLE(DT_SDKSharedLocalPlayerExclusive), SendProxy_SendLocalDataTable ),
@@ -338,6 +339,7 @@ CSDKPlayer::CSDKPlayer()
 	m_Shared.m_eAction = PLAYERANIMEVENT_NONE;
 	m_Shared.m_aActionStartAngle = vec3_origin;
 	m_Shared.m_nActionStartButtons = 0;
+	m_Shared.m_eCarryAnimation = PLAYERANIMEVENT_NONE;
 	m_Shared.m_eGesture = PLAYERANIMEVENT_NONE;
 	m_Shared.m_flGestureStartTime = gpGlobals->curtime;
 	m_nModelScale = 100;
@@ -1660,7 +1662,7 @@ void CSDKPlayer::Reset()
 
 void CSDKPlayer::RemoveFlags()
 {
-	RemoveFlag(FL_SHIELD_KEEP_IN | FL_SHIELD_KEEP_OUT | FL_REMOTECONTROLLED | FL_FREECAM | FL_CELEB | FL_USE_TV_CAM | FL_NO_X_MOVEMENT | FL_NO_Y_MOVEMENT | FL_ATCONTROLS | FL_FROZEN | FL_ONLY_XY_MOVEMENT);
+	RemoveFlag(FL_SHIELD_KEEP_IN | FL_SHIELD_KEEP_OUT | FL_REMOTECONTROLLED | FL_FREECAM | FL_CELEB | FL_USE_TV_CAM | FL_NO_X_MOVEMENT | FL_NO_Y_MOVEMENT | FL_ATCONTROLS | FL_FROZEN);
 }
 
 bool CSDKPlayer::CanShoot()

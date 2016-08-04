@@ -406,7 +406,7 @@ void CMatchBall::State_THROWIN_Think()
 		m_flStateTimelimit = gpGlobals->curtime + sv_ball_timelimit_setpiece.GetFloat();
 		SetPos(groundPos + Vector(0, 0, m_pPl->GetPlayerMaxs().z + 2));
 		AddToPlayerHands(m_pPl);
-		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_THROW_IN_HOLD);
+		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_THROW_IN_CARRY);
 		m_pPl->SetShotButtonsReleased(false);
 		m_pPl->SetShotsBlocked(false);
 	}
@@ -968,7 +968,7 @@ void CMatchBall::State_KEEPERHANDS_Think()
 
 		m_pPl->SetShotButtonsReleased(false);
 		AddToPlayerHands(m_pPl);
-		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_HOLD);
+		m_pPl->DoServerAnimationEvent(PLAYERANIMEVENT_KEEPER_HANDS_CARRY);
 		m_flStateTimelimit = -1;
 		CSDKPlayer::CheckPlayersAtShieldPos(false);
 	}

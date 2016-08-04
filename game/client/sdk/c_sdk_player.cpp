@@ -151,6 +151,7 @@ BEGIN_RECV_TABLE_NOBASE( CSDKPlayerShared, DT_SDKPlayerShared )
 	RecvPropTime( RECVINFO( m_flJumpStartTime ) ),
 
 	RecvPropInt(RECVINFO(m_eAction)),
+	RecvPropInt(RECVINFO(m_eCarryAnimation)),
 	RecvPropInt(RECVINFO(m_eGesture)),
 
 	RecvPropDataTable( "sdksharedlocaldata", 0, 0, &REFERENCE_RECV_TABLE(DT_SDKSharedLocalPlayerExclusive) ),
@@ -233,6 +234,7 @@ BEGIN_PREDICTION_DATA_NO_BASE( CSDKPlayerShared )
 	DEFINE_PRED_FIELD( m_flShotChargingDuration, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 
 	DEFINE_PRED_FIELD( m_eAction, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
+	DEFINE_PRED_FIELD( m_eCarryAnimation, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_eGesture, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD_TOL( m_flActionStartTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE, TD_MSECTOLERANCE ),	
 	DEFINE_PRED_FIELD_TOL( m_flGestureStartTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE, TD_MSECTOLERANCE ),	
@@ -639,6 +641,7 @@ C_SDKPlayer::C_SDKPlayer() :
 	m_Shared.m_eAction = PLAYERANIMEVENT_NONE;
 	m_Shared.m_aActionStartAngle = vec3_origin;
 	m_Shared.m_nActionStartButtons = 0;
+	m_Shared.m_eCarryAnimation = PLAYERANIMEVENT_NONE;
 	m_Shared.m_eGesture = PLAYERANIMEVENT_NONE;
 	m_Shared.m_flGestureStartTime = gpGlobals->curtime;
 

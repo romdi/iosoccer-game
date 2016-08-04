@@ -115,6 +115,7 @@ CSDKPlayerAnimState::~CSDKPlayerAnimState()
 void CSDKPlayerAnimState::ClearAnimationState( void )
 {
 	m_bIsActionSequenceActive = false;
+	m_bIsCarrySequenceActive = false;
 	m_bIsGestureSequenceActive = false;
 	m_bJumping = false;
 	m_bDying = false;
@@ -213,6 +214,11 @@ void CSDKPlayerAnimState::ComputeActionSequence(CStudioHdr *pStudioHdr)
 	UpdateLayerSequenceGeneric(pStudioHdr, ACTIONSEQUENCE_LAYER, m_bIsActionSequenceActive, m_flActionSequenceCycle, m_nActionSequence, m_bActionSequenceWaitAtEnd);
 }
 
+void CSDKPlayerAnimState::ComputeCarrySequence(CStudioHdr *pStudioHdr)
+{
+	UpdateLayerSequenceGeneric(pStudioHdr, CARRYSEQUENCE_LAYER, m_bIsCarrySequenceActive, m_flCarrySequenceCycle, m_nCarrySequence, true);
+}
+
 void CSDKPlayerAnimState::ComputeGestureSequence(CStudioHdr *pStudioHdr)
 {
 	UpdateLayerSequenceGeneric(pStudioHdr, GESTURESEQUENCE_LAYER, m_bIsGestureSequenceActive, m_flGestureSequenceCycle, m_nGestureSequence, false);
@@ -252,8 +258,16 @@ int CSDKPlayerAnimState::CalcActionSequence(PlayerAnimEvent_t event)
 	case PLAYERANIMEVENT_RAINBOW_FLICK: return CalcSequenceIndex("rainbow_flick");
 	case PLAYERANIMEVENT_BICYCLE_KICK: return CalcSequenceIndex("bicycle_kick");
 	case PLAYERANIMEVENT_CELEB_SLIDE: return CalcSequenceIndex("celeb_slide");
-	case PLAYERANIMEVENT_HOLD: return CalcSequenceIndex("keeper_hands_hold");
-	case PLAYERANIMEVENT_THROW_IN_HOLD: return CalcSequenceIndex("throw_in_hold");
+	default: return 0;
+	}
+}
+
+int CSDKPlayerAnimState::CalcCarrySequence(PlayerAnimEvent_t event)
+{
+	switch (event)
+	{
+	case PLAYERANIMEVENT_KEEPER_HANDS_CARRY: return CalcSequenceIndex("keeper_hands_hold");
+	case PLAYERANIMEVENT_THROW_IN_CARRY: return CalcSequenceIndex("throw_in_hold");
 	default: return 0;
 	}
 }
@@ -358,6 +372,21 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 		GetSDKPlayer()->m_Shared.SetGesture(event);
 		return;
 	}
+	case PLAYERANIMEVENT_KEEPER_HANDS_CARRY:
+	case PLAYERANIMEVENT_THROW_IN_CARRY:
+	{
+		m_nCarrySequence = CalcCarrySequence(event);
+		m_flCarrySequenceCycle = 0;
+		m_bIsCarrySequenceActive = true;
+		GetSDKPlayer()->m_Shared.SetCarryAnimation(event);
+		return;
+	}
+	case PLAYERANIMEVENT_CARRY_END:
+	{
+		m_bIsCarrySequenceActive = false;
+		GetSDKPlayer()->m_Shared.SetCarryAnimation(PLAYERANIMEVENT_NONE);
+		return;
+	}
 	case PLAYERANIMEVENT_SLIDE_TACKLE:
 	case PLAYERANIMEVENT_CELEB_SLIDE:
 	case PLAYERANIMEVENT_DIVING_HEADER:
@@ -372,8 +401,6 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT_BACKWARD:
 	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT:
 	case PLAYERANIMEVENT_KEEPER_DIVE_LEFT_FORWARD:
-	case PLAYERANIMEVENT_HOLD:
-	case PLAYERANIMEVENT_THROW_IN_HOLD:
 	{
 		isAction = true;
 	}
@@ -400,7 +427,7 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 		m_nActionSequence = CalcActionSequence(event);
 		m_flActionSequenceCycle = 0;
 		m_bIsActionSequenceActive = m_nActionSequence != 0;
-		m_bActionSequenceWaitAtEnd = event == PLAYERANIMEVENT_HOLD || event == PLAYERANIMEVENT_THROW_IN_HOLD;
+		m_bActionSequenceWaitAtEnd = event == PLAYERANIMEVENT_KEEPER_HANDS_CARRY || event == PLAYERANIMEVENT_THROW_IN_CARRY;
 
 		if (event == PLAYERANIMEVENT_TACKLED_FORWARD || event == PLAYERANIMEVENT_TACKLED_BACKWARD)
 			GetSDKPlayer()->AddFlag(FL_FREECAM);
@@ -512,8 +539,9 @@ void CSDKPlayerAnimState::ComputeSequences( CStudioHdr *pStudioHdr )
 
 	// The groundspeed interpolator uses the main sequence info.
 	UpdateInterpolators();		
-	ComputeGestureSequence( pStudioHdr );
 	ComputeActionSequence(pStudioHdr);
+	ComputeCarrySequence(pStudioHdr);
+	ComputeGestureSequence(pStudioHdr);
 }
 
 float CSDKPlayerAnimState::GetCurrentMaxGroundSpeed()

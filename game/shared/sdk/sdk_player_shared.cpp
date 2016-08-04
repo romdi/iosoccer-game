@@ -197,6 +197,16 @@ void CSDKPlayerShared::SetActionStartButtons(int buttons)
 	m_nActionStartButtons = buttons;
 }
 
+void CSDKPlayerShared::SetCarryAnimation(PlayerAnimEvent_t animation)
+{
+	m_eCarryAnimation = animation;
+}
+
+PlayerAnimEvent_t CSDKPlayerShared::GetCarryAnimation()
+{
+	return m_eCarryAnimation;
+}
+
 void CSDKPlayerShared::SetGesture(PlayerAnimEvent_t gesture)
 {
 	m_eGesture = gesture;

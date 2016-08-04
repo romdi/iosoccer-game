@@ -1720,16 +1720,26 @@ bool CGameMovement::CheckActionStart()
 {
 	CSDKPlayer *pPl = ToSDKPlayer(player);
 
-	if (pPl->GetFlags() & (FL_FROZEN | FL_ATCONTROLS | FL_REMOTECONTROLLED | FL_ONLY_XY_MOVEMENT) || !pPl->GetGroundEntity())
+	if (pPl->GetFlags() & (FL_FROZEN | FL_ATCONTROLS | FL_REMOTECONTROLLED) ||
+		!pPl->GetGroundEntity() ||
+		pPl->m_Shared.GetCarryAnimation() == PLAYERANIMEVENT_THROW_IN_CARRY)
+	{
 		return false;
+	}
 
 	PlayerAnimEvent_t animEvent = GetActionStartAnimEvent();
+
+	if (pPl->m_Shared.GetCarryAnimation() == PLAYERANIMEVENT_KEEPER_HANDS_CARRY &&
+		animEvent != PLAYERANIMEVENT_KEEPER_JUMP)
+	{
+		return false;
+	}
 
 	switch (animEvent)
 	{
 	case PLAYERANIMEVENT_NONE:
 	{
-		return true;
+		return false;
 	}
 	case PLAYERANIMEVENT_JUMP:
 	case PLAYERANIMEVENT_KEEPER_JUMP:
