@@ -994,8 +994,6 @@ void CInput::ExtraMouseSample( float frametime, bool active )
 	// Retreive view angles from engine ( could have been set in IN_AdjustAngles above )
 	engine->GetViewAngles( viewangles );
 
-	cmd->camviewangles = m_aCameraViewAngles;
-
 	// Set button and flag bits, don't blow away state
 	cmd->buttons = GetButtonBits( 0 );
 
@@ -1064,6 +1062,8 @@ void CInput::CreateMove ( int sequence_number, float input_sample_frametime, boo
 	}
 	// Retreive view angles from engine ( could have been set in IN_AdjustAngles above )
 	engine->GetViewAngles( viewangles );
+
+	cmd->camviewangles = m_aCameraViewAngles;
 
 	// Set button and flag bits
 	cmd->buttons = GetButtonBits( 1 );
