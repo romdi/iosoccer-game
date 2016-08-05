@@ -931,7 +931,6 @@ void CInput::ControllerMove( float frametime, CUserCmd *cmd )
 {
 	if ( IsPC() )
 	{
-		C_BasePlayer *pLocal = C_BasePlayer::GetLocalPlayer();
 		if (!m_fCameraInterceptingMouse && m_fMouseActive)
 		{
 			MouseMove( cmd);
@@ -994,6 +993,8 @@ void CInput::ExtraMouseSample( float frametime, bool active )
 
 	// Retreive view angles from engine ( could have been set in IN_AdjustAngles above )
 	engine->GetViewAngles( viewangles );
+
+	cmd->camviewangles = m_aCameraViewAngles;
 
 	// Set button and flag bits, don't blow away state
 	cmd->buttons = GetButtonBits( 0 );
