@@ -186,6 +186,7 @@ protected:
 	bool			DoBodyPartAction();
 	bool			CheckCollision();
 	bool			DoSlideAction();
+	bool			DoStandingTackle();
 	bool			DoDivingHeader();
 	bool			DoBicycleKick();
 	bool			CheckKeeperCatch();

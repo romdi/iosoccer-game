@@ -60,9 +60,14 @@ ConVar
 	sv_ball_slidesidereach_ball								("sv_ball_slidesidereach_ball",								"30",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_slideforwardreach_ball							("sv_ball_slideforwardreach_ball",							"50",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_slidebackwardreach_ball							("sv_ball_slidebackwardreach_ball",							"40",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
-	
-	sv_ball_slidezstart										("sv_ball_slidezstart",										"-20",		 FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY), 
+	sv_ball_slidezstart										("sv_ball_slidezstart",										"-20",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY), 
 	sv_ball_slidezend										("sv_ball_slidezend",										"25",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY), 
+
+	sv_ball_standing_tackle_sidereach						("sv_ball_standing_tackle_sidereach",						"40",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_standing_tackle_forwardreach					("sv_ball_standing_tackle_forwardreach",					"40",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_standing_tackle_backwardreach					("sv_ball_standing_tackle_backwardreach",					"0",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_standing_tackle_zstart							("sv_ball_standing_tackle_zstart",							"-20",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY), 
+	sv_ball_standing_tackle_zend							("sv_ball_standing_tackle_zend",							"25",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	
 	sv_ball_keeper_standing_reach							("sv_ball_keeper_standing_reach",							"50",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	
@@ -135,6 +140,10 @@ ConVar
 	sv_ball_slide_strength									("sv_ball_slide_strength",									"800",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_slide_pitchangle								("sv_ball_slide_pitchangle",								"-15",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_slide_minpostdelay								("sv_ball_slide_minpostdelay",								"0.5",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+
+	sv_ball_standing_tackle_strength						("sv_ball_standing_tackle_strength",						"500",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_standing_tackle_pitchangle						("sv_ball_standing_tackle_pitchangle",						"-10",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_standing_tackle_minpostdelay					("sv_ball_standing_tackle_minpostdelay",					"0.1",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 
 	sv_ball_keeper_forwarddive_catchcoeff					("sv_ball_keeper_forwarddive_catchcoeff",					"0.5",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 
@@ -770,6 +779,9 @@ bool CBall::DoBodyPartAction()
 	if (m_pPl->m_Shared.GetAction() == PLAYERANIMEVENT_SLIDE_TACKLE)
 		return DoSlideAction();
 
+	if (m_pPl->m_Shared.GetAction() == PLAYERANIMEVENT_STANDING_TACKLE)
+		return DoStandingTackle();
+
 	if (m_pPl->m_Shared.GetAction() == PLAYERANIMEVENT_DIVING_HEADER)
 		return DoDivingHeader();
 
@@ -900,6 +912,36 @@ bool CBall::DoSlideAction()
 
 	return true;
 }
+
+bool CBall::DoStandingTackle()
+{
+	if (gpGlobals->curtime > m_pPl->m_Shared.GetActionStartTime() + mp_standing_tackle_move_duration.GetFloat())
+		return false;
+
+	Vector dirToBall = m_vPos - m_vPlPos;
+	float zDist = dirToBall.z;
+	Vector localDirToBall;
+	VectorIRotate(dirToBall, m_pPl->EntityToWorldTransform(), localDirToBall);
+
+	bool canShootBall = zDist < sv_ball_standing_tackle_zend.GetFloat()
+		&& zDist >= sv_ball_standing_tackle_zstart.GetFloat()
+		&& localDirToBall.x >= -sv_ball_standing_tackle_backwardreach.GetFloat()
+		&& localDirToBall.x <= sv_ball_standing_tackle_forwardreach.GetFloat()
+		&& abs(localDirToBall.y) <= sv_ball_standing_tackle_sidereach.GetFloat();
+
+	if (!canShootBall)
+		return false;
+
+	Vector forward;
+	AngleVectors(QAngle(sv_ball_standing_tackle_pitchangle.GetFloat(), m_aPlAng[YAW], 0), &forward, NULL, NULL);
+
+	Vector vel = forward * GetNormalshotStrength(1.0f, sv_ball_standing_tackle_strength.GetInt());
+
+	SetVel(vel, 0, FL_SPIN_FORCE_NONE, BODY_PART_FEET, true, sv_ball_standing_tackle_minpostdelay.GetFloat(), true);
+
+	return true;
+}
+
 
 bool CBall::DoDivingHeader()
 {

@@ -240,6 +240,7 @@ int CSDKPlayerAnimState::CalcActionSequence(PlayerAnimEvent_t event)
 	case PLAYERANIMEVENT_HEADER_STRONG: return CalcSequenceIndex("header_strong");
 	case PLAYERANIMEVENT_THROW_IN_THROW: return CalcSequenceIndex("throw_in_throw");
 	case PLAYERANIMEVENT_SLIDE_TACKLE: return CalcSequenceIndex("slide_tackle");
+	case PLAYERANIMEVENT_STANDING_TACKLE: return CalcSequenceIndex("kick_weak");
 	case PLAYERANIMEVENT_TACKLED_FORWARD: return CalcSequenceIndex("tackled_forward");
 	case PLAYERANIMEVENT_TACKLED_BACKWARD: return CalcSequenceIndex("tackled_backward");
 	case PLAYERANIMEVENT_DIVING_HEADER: return CalcSequenceIndex("diving_header");
@@ -388,6 +389,7 @@ void CSDKPlayerAnimState::DoAnimationEvent(PlayerAnimEvent_t event)
 		return;
 	}
 	case PLAYERANIMEVENT_SLIDE_TACKLE:
+	case PLAYERANIMEVENT_STANDING_TACKLE:
 	case PLAYERANIMEVENT_CELEB_SLIDE:
 	case PLAYERANIMEVENT_DIVING_HEADER:
 	case PLAYERANIMEVENT_BICYCLE_KICK:

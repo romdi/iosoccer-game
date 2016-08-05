@@ -133,6 +133,10 @@ ConVar mp_slide_move_duration("mp_slide_move_duration", "0.66", FCVAR_REPLICATED
 ConVar mp_slide_idle_duration("mp_slide_idle_duration", "0.33", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_slidespeed("mp_slidespeed", "400", FCVAR_REPLICATED | FCVAR_NOTIFY);
 
+ConVar mp_standing_tackle_move_duration("mp_standing_tackle_move_duration", "0.25", FCVAR_REPLICATED | FCVAR_NOTIFY);
+ConVar mp_standing_tackle_idle_duration("mp_standing_tackle_idle_duration", "0.25", FCVAR_REPLICATED | FCVAR_NOTIFY);
+ConVar mp_standing_tackle_speed("mp_standing_tackle_speed", "400", FCVAR_REPLICATED | FCVAR_NOTIFY);
+
 ConVar mp_divingheader_move_duration("mp_divingheader_move_duration", "1", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_divingheader_idle_duration("mp_divingheader_idle_duration", "0.25", FCVAR_REPLICATED | FCVAR_NOTIFY);
 ConVar mp_divingheaderspeed("mp_divingheaderspeed", "400", FCVAR_REPLICATED | FCVAR_NOTIFY);

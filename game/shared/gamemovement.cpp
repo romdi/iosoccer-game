@@ -1574,6 +1574,17 @@ bool CGameMovement::CheckActionOverTime(Vector2D &vel2D)
 		vel2D = forward2D * mp_slidespeed.GetInt() * max(0, (1 - pow(timePassed / mp_slide_move_duration.GetFloat(), 2)));
 		break;
 	}
+	case PLAYERANIMEVENT_STANDING_TACKLE:
+	{
+		if (timePassed > mp_standing_tackle_move_duration.GetFloat() + mp_standing_tackle_idle_duration.GetFloat())
+		{
+			pPl->DoAnimationEvent(PLAYERANIMEVENT_NONE);
+			return false;
+		}
+
+		vel2D = forward2D * mp_standing_tackle_speed.GetInt() * max(0, (1 - pow(timePassed / mp_standing_tackle_move_duration.GetFloat(), 2)));
+		break;
+	}
 	case PLAYERANIMEVENT_TACKLED_FORWARD:
 	case PLAYERANIMEVENT_TACKLED_BACKWARD:
 	{
@@ -1795,6 +1806,12 @@ bool CGameMovement::CheckActionStart()
 
 		break;
 	}
+	case PLAYERANIMEVENT_STANDING_TACKLE:
+	{
+		pPl->ResetShotCharging();
+		player->PlayStepSound((Vector &)mv->GetAbsOrigin(), player->m_pSurfaceData, 1.0, true);
+		break;
+	}
 	}
 
 	pPl->m_Shared.SetActionStartAngle(mv->m_vecAbsViewAngles);
@@ -1851,7 +1868,7 @@ PlayerAnimEvent_t CGameMovement::GetActionStartAnimEvent()
 			return PLAYERANIMEVENT_SLIDE_TACKLE;
 		}
 
-		return PLAYERANIMEVENT_NONE;
+		return PLAYERANIMEVENT_STANDING_TACKLE;
 	}
 
 	if (mv->m_nButtons & IN_SKILL)
