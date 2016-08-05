@@ -1791,6 +1791,7 @@ bool CGameMovement::CheckActionStart()
 	{
 		SetGroundEntity(NULL);
 		MoveHelper()->StartSound(mv->GetAbsOrigin(), "Player.Slide");
+		pPl->ResetShotCharging();
 
 #ifdef GAME_DLL
 		if (!SDKGameRules()->IsIntermissionState() && GetMatchBall()->State_Get() == BALL_STATE_NORMAL && !GetMatchBall()->HasQueuedState())
