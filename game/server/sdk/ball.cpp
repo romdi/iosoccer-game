@@ -23,6 +23,7 @@
 #include "movevars_shared.h"
 #include "ios_replaymanager.h"
 
+extern ConVar sv_player_mass;
 
 ConVar
 
@@ -141,7 +142,7 @@ ConVar
 	sv_ball_slide_pitchangle								("sv_ball_slide_pitchangle",								"-15",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_slide_minpostdelay								("sv_ball_slide_minpostdelay",								"0.5",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 
-	sv_ball_standing_tackle_strength						("sv_ball_standing_tackle_strength",						"500",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
+	sv_ball_standing_tackle_strength						("sv_ball_standing_tackle_strength",						"700",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_standing_tackle_pitchangle						("sv_ball_standing_tackle_pitchangle",						"-10",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 	sv_ball_standing_tackle_minpostdelay					("sv_ball_standing_tackle_minpostdelay",					"0.1",		FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY),
 
@@ -747,9 +748,17 @@ bool CBall::GetCollisionPoint(bool isDeflection, Vector &collisionPoint)
 	return false;
 }
 
-extern ConVar sv_player_mass;
+bool CBall::CheckPlayerInteraction()
+{
+	bool actionPerformed = CheckBodyPartAction();
+	
+	if (!actionPerformed)
+		CheckCollision();
 
-bool CBall::DoBodyPartAction()
+	return actionPerformed;
+}
+
+bool CBall::CheckBodyPartAction()
 {
 	Vector dirToBall = m_vPos - m_vPlPos;
 	Vector localDirToBall;
@@ -767,14 +776,12 @@ bool CBall::DoBodyPartAction()
 			return CheckKeeperCatch();
 	}
 
-	if (CheckCollision())
+	if (m_pPl->IsKeeperDiving() ||
+		!m_pPl->CanShoot() ||
+		gpGlobals->curtime < m_flGlobalLastShot + m_flGlobalDynamicShotDelay * sv_ball_shotdelay_global_coeff.GetFloat())
+	{
 		return false;
-
-	if (m_pPl->IsKeeperDiving())
-		return false;
-
-	if (!m_pPl->IsShooting() || !m_pPl->CanShoot() || gpGlobals->curtime < m_flGlobalLastShot + m_flGlobalDynamicShotDelay * sv_ball_shotdelay_global_coeff.GetFloat())
-		return false;
+	}
 
 	if (m_pPl->m_Shared.GetAction() == PLAYERANIMEVENT_SLIDE_TACKLE)
 		return DoSlideAction();
@@ -787,6 +794,9 @@ bool CBall::DoBodyPartAction()
 
 	if (m_pPl->m_Shared.GetAction() == PLAYERANIMEVENT_BICYCLE_KICK)
 		return DoBicycleKick();
+
+	if (!m_pPl->IsShooting())
+		return false;
 
 	if (zDist >= sv_ball_bodypos_feet_start.GetFloat()
 		&& zDist < sv_ball_bodypos_hip_start.GetFloat()
@@ -815,16 +825,13 @@ bool CBall::CheckCollision()
 	float ballMass;
 	Vector collisionPoint;
 
-	if ((m_pPl->IsShooting() && m_pPl->CanShoot()
-		&& gpGlobals->curtime < m_flGlobalLastShot + m_flGlobalDynamicShotDelay * sv_ball_shotdelay_global_coeff.GetFloat()
-		|| m_pPl->IsKeeperDiving())
-		&& GetCollisionPoint(true, collisionPoint))
+	if (m_pPl->IsShooting() && m_pPl->CanShoot() && GetCollisionPoint(true, collisionPoint))
 	{
 		collide = true;
 		collisionCoeff = sv_ball_collision_deflection_coeff.GetFloat();
 		ballMass = sv_ball_collision_deflection_mass.GetFloat();
 	}
-	else if ((!m_pPl->IsShooting() || !m_pPl->CanShoot() || m_pPl->IsKeeperDiving()) && GetCollisionPoint(false, collisionPoint))
+	else if (GetCollisionPoint(false, collisionPoint))
 	{
 		collide = true;
 
@@ -883,7 +890,7 @@ bool CBall::CheckCollision()
 
 bool CBall::DoSlideAction()
 {
-	if (!m_pPl->IsShooting())
+	if (!m_pPl->IsNormalshooting())
 		return false;
 
 	Vector dirToBall = m_vPos - m_vPlPos;

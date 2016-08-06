@@ -311,7 +311,7 @@ void CMatchBall::State_NORMAL_Think()
 			if (m_pPl && (m_pPl->IsShooting() || m_pPl->IsKeeperDiving()))
 			{
 				UpdateCarrier();
-				DoBodyPartAction();
+				CheckPlayerInteraction();
 			}
 		}
 
@@ -344,7 +344,7 @@ void CMatchBall::State_NORMAL_Think()
 		UpdateCarrier();
 
 		// The current player was able to perform an action, so exit the loop
-		if (DoBodyPartAction())
+		if (CheckPlayerInteraction())
 			break;
 
 		// Exclude the current player from subsequent checks

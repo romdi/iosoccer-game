@@ -261,7 +261,7 @@ void CPlayerBall::State_NORMAL_Think()
 		UpdateCarrier();
 
 		// The current player was able to perform an action, so exit the loop
-		if (DoBodyPartAction())
+		if (CheckPlayerInteraction())
 			break;
 
 		// Exclude the current player from subsequent checks
