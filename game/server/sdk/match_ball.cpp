@@ -1561,71 +1561,75 @@ void CMatchBall::GetGoalInfo(bool &isOwnGoal, int &scoringTeam, CSDKPlayer **pSc
 void CMatchBall::Touched(bool isShot, body_part_t bodyPart, const Vector &oldVel)
 {
 	// Check if touch should be recorded and statistics updated
-	if (SDKGameRules()->IsIntermissionState() || m_bHasQueuedState || SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES)
+	if (m_bHasQueuedState || SDKGameRules()->State_Get() == MATCH_PERIOD_PENALTIES)
 		return;
 
-	// Check if double touch foul
-	if (m_Touches.Count() > 0 && m_Touches.Tail()->m_pPl == m_pPl && m_Touches.Tail()->m_nTeam == m_pPl->GetTeamNumber()
-		&& sv_ball_doubletouchfouls.GetBool() && State_Get() == BALL_STATE_NORMAL && m_Touches.Tail()->m_eBallState != BALL_STATE_NORMAL
-		&& m_Touches.Tail()->m_eBallState != BALL_STATE_KEEPERHANDS && m_pPl->GetTeam()->GetNumPlayers() > 2 && m_pPl->GetOppTeam()->GetNumPlayers() > 2)
+	if (!SDKGameRules()->IsIntermissionState())
 	{
-		SetFoulParams(FOUL_DOUBLETOUCH, m_pPl->GetLocalOrigin(), m_pPl);
-		State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_messagedelay_normal.GetFloat(), sv_ball_statetransition_postmessagedelay_long.GetFloat());
-
-		return;
-	}
-
-	// Only update statistics on shots instead of touches
-	if (isShot)
-	{
-		BallTouchInfo *pInfo = LastInfo(true);
-		CSDKPlayer *pLastPl = LastPl(true);
-
-		if (pInfo && CSDKPlayer::IsOnField(pLastPl) && pLastPl != m_pPl)
+		// Check if double touch foul
+		if (m_Touches.Count() > 0 && m_Touches.Tail()->m_pPl == m_pPl && m_Touches.Tail()->m_nTeam == m_pPl->GetTeamNumber()
+			&& sv_ball_doubletouchfouls.GetBool() && State_Get() == BALL_STATE_NORMAL && m_Touches.Tail()->m_eBallState != BALL_STATE_NORMAL
+			&& m_Touches.Tail()->m_eBallState != BALL_STATE_KEEPERHANDS && m_pPl->GetTeam()->GetNumPlayers() > 2 && m_pPl->GetOppTeam()->GetNumPlayers() > 2)
 		{
-			if (pInfo->m_nTeam != m_pPl->GetTeamNumber()
-				&& (bodyPart == BODY_PART_KEEPERPUNCH
-					|| bodyPart == BODY_PART_KEEPERCATCH
-					&& oldVel.Length2DSqr() >= pow(sv_ball_stats_save_minspeed.GetInt(), 2.0f))) // All fast balls by an opponent which are caught or punched away by the keeper count as shots on goal
-			{
-				m_pPl->GetData()->AddKeeperSave();
+			SetFoulParams(FOUL_DOUBLETOUCH, m_pPl->GetLocalOrigin(), m_pPl);
+			State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_messagedelay_normal.GetFloat(), sv_ball_statetransition_postmessagedelay_long.GetFloat());
 
-				if (bodyPart == BODY_PART_KEEPERCATCH)
-					m_pPl->GetData()->AddKeeperSaveCaught();
-
-				pLastPl->GetData()->AddShot();
-				pLastPl->GetData()->AddShotOnGoal();
-				ReplayManager()->AddMatchEvent(MATCH_EVENT_KEEPERSAVE, m_pPl->GetTeamNumber(), m_pPl, pLastPl);
-			}
-			// Pass or interception
-			else if ((m_vPos - pInfo->m_vBallPos).Length2DSqr() >= pow(sv_ball_stats_pass_mindist.GetInt(), 2.0f) && pInfo->m_eBodyPart != BODY_PART_KEEPERPUNCH)
-			{
-				if (m_bHitThePost)
-				{
-					pLastPl->GetData()->AddShot();
-				}
-				else
-				{
-					pLastPl->GetData()->AddPass();
-
-					// Pass to teammate
-					if (pInfo->m_nTeam == m_pPl->GetTeamNumber())
-					{
-						pLastPl->GetData()->AddPassCompleted();
-					}
-					// Intercepted by opponent
-					else
-					{
-						m_pPl->GetData()->AddInterception();
-					}
-				}
-			}
+			return;
 		}
 
-		m_bHitThePost = false;
+		// Only update statistics on shots instead of touches
+		if (isShot)
+		{
+			BallTouchInfo *pInfo = LastInfo(true);
+			CSDKPlayer *pLastPl = LastPl(true);
+
+			if (pInfo && CSDKPlayer::IsOnField(pLastPl) && pLastPl != m_pPl)
+			{
+				if (pInfo->m_nTeam != m_pPl->GetTeamNumber()
+					&& (bodyPart == BODY_PART_KEEPERPUNCH
+						|| bodyPart == BODY_PART_KEEPERCATCH
+						&& oldVel.Length2DSqr() >= pow(sv_ball_stats_save_minspeed.GetInt(), 2.0f))) // All fast balls by an opponent which are caught or punched away by the keeper count as shots on goal
+				{
+					m_pPl->GetData()->AddKeeperSave();
+
+					if (bodyPart == BODY_PART_KEEPERCATCH)
+						m_pPl->GetData()->AddKeeperSaveCaught();
+
+					pLastPl->GetData()->AddShot();
+					pLastPl->GetData()->AddShotOnGoal();
+					ReplayManager()->AddMatchEvent(MATCH_EVENT_KEEPERSAVE, m_pPl->GetTeamNumber(), m_pPl, pLastPl);
+				}
+				// Pass or interception
+				else if ((m_vPos - pInfo->m_vBallPos).Length2DSqr() >= pow(sv_ball_stats_pass_mindist.GetInt(), 2.0f) && pInfo->m_eBodyPart != BODY_PART_KEEPERPUNCH)
+				{
+					if (m_bHitThePost)
+					{
+						pLastPl->GetData()->AddShot();
+					}
+					else
+					{
+						pLastPl->GetData()->AddPass();
+
+						// Pass to teammate
+						if (pInfo->m_nTeam == m_pPl->GetTeamNumber())
+						{
+							pLastPl->GetData()->AddPassCompleted();
+						}
+						// Intercepted by opponent
+						else
+						{
+							m_pPl->GetData()->AddInterception();
+						}
+					}
+				}
+			}
+
+			m_bHitThePost = false;
+		}
+
+		UpdatePossession(m_pPl);
 	}
 
-	UpdatePossession(m_pPl);
 	BallTouchInfo *info = new BallTouchInfo;
 	info->m_pPl = m_pPl;
 	info->m_nTeam = m_pPl->GetTeamNumber();
@@ -1636,23 +1640,34 @@ void CMatchBall::Touched(bool isShot, body_part_t bodyPart, const Vector &oldVel
 	info->m_vBallVel = m_vVel;
 	info->m_flTime = gpGlobals->curtime;
 	m_Touches.AddToTail(info);
-	m_bBallInAirAfterThrowIn = false;
 
-	if (m_pPl->IsOffside())
+	// Prevent excessive growth
+	if (m_Touches.Count() > 1000)
 	{
-		if (m_bIsAdvantage)
+		delete m_Touches[0];
+		m_Touches.Remove(0);
+	}
+
+	if (!SDKGameRules()->IsIntermissionState())
+	{
+		m_bBallInAirAfterThrowIn = false;
+
+		if (m_pPl->IsOffside())
 		{
-			if (m_bIsPenalty)
-				State_Transition(BALL_STATE_PENALTY, sv_ball_statetransition_messagedelay_normal.GetFloat(), sv_ball_statetransition_postmessagedelay_short.GetFloat());
+			if (m_bIsAdvantage)
+			{
+				if (m_bIsPenalty)
+					State_Transition(BALL_STATE_PENALTY, sv_ball_statetransition_messagedelay_normal.GetFloat(), sv_ball_statetransition_postmessagedelay_short.GetFloat());
+				else
+					State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_messagedelay_normal.GetFloat(), sv_ball_statetransition_postmessagedelay_short.GetFloat());
+			}
 			else
-				State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_messagedelay_normal.GetFloat(), sv_ball_statetransition_postmessagedelay_short.GetFloat());
-		}
-		else
-		{
-			m_pPl->GetData()->AddOffside();
-			SetFoulParams(FOUL_OFFSIDE, m_pPl->GetOffsidePos(), m_pPl);
-			SDKGameRules()->SetOffsideLinePositions(m_pPl->GetOffsideBallPos().y, m_pPl->GetOffsidePos().y, m_pPl->GetOffsideLastOppPlayerPos().y);
-			State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_messagedelay_normal.GetFloat(), sv_ball_statetransition_postmessagedelay_long.GetFloat());
+			{
+				m_pPl->GetData()->AddOffside();
+				SetFoulParams(FOUL_OFFSIDE, m_pPl->GetOffsidePos(), m_pPl);
+				SDKGameRules()->SetOffsideLinePositions(m_pPl->GetOffsideBallPos().y, m_pPl->GetOffsidePos().y, m_pPl->GetOffsideLastOppPlayerPos().y);
+				State_Transition(BALL_STATE_FREEKICK, sv_ball_statetransition_messagedelay_normal.GetFloat(), sv_ball_statetransition_postmessagedelay_long.GetFloat());
+			}
 		}
 	}
 }

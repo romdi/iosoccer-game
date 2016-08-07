@@ -2211,8 +2211,8 @@ void CSDKGameRules::ApplyIntermissionSettings(bool startHighlights, bool movePla
 {
 	if (movePlayers)
 	{
-		GetMatchBall()->State_Transition(BALL_STATE_NORMAL, 0, 0, true);
 		GetMatchBall()->SetPos(m_vKickOff);
+		GetMatchBall()->State_Transition(BALL_STATE_NORMAL, 0, 0, true);
 
 		if (m_bIsCeremony)
 			EnableShield(SHIELD_CEREMONY, TEAM_HOME, SDKGameRules()->m_vKickOff);

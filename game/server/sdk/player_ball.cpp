@@ -394,6 +394,13 @@ void CPlayerBall::Touched(bool isShot, body_part_t bodyPart, const Vector &oldVe
 	info->m_vBallVel = m_vVel;
 	info->m_flTime = gpGlobals->curtime;
 	m_Touches.AddToTail(info);
+
+	// Prevent excessive growth
+	if (m_Touches.Count() > 1000)
+	{
+		delete m_Touches[0];
+		m_Touches.Remove(0);
+	}
 }
 
 void CPlayerBall::VPhysicsCollision(int index, gamevcollisionevent_t *pEvent)
