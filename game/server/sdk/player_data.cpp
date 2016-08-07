@@ -14,6 +14,8 @@ CPlayerData::CPlayerData(CSDKPlayer *pPl)
 	Q_strncpy(m_szSteamID, engine->GetPlayerNetworkIDString(pPl->edict()), 32);
 	Q_strncpy(m_szName, pPl->GetPlayerName(), MAX_PLAYER_NAME_LENGTH);
 	Q_strncpy(m_szShirtName, pPl->GetShirtName(), MAX_SHIRT_NAME_LENGTH);
+	Q_strncpy(m_szShoeName, pPl->GetShoeName(), MAX_KITNAME_LENGTH);
+	Q_strncpy(m_szKeeperGloveName, pPl->GetKeeperGloveName(), MAX_KITNAME_LENGTH);
 	m_pMatchData = new CPlayerMatchData();
 	ResetData();
 }

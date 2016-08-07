@@ -33,6 +33,8 @@ IMPLEMENT_CLIENTCLASS_DT(C_ReplayPlayer, DT_ReplayPlayer, CReplayPlayer)
 	RecvPropInt(RECVINFO(m_nHairIndex)),
 	RecvPropString(RECVINFO(m_szPlayerName)),
 	RecvPropString(RECVINFO(m_szShirtName)),
+	RecvPropString(RECVINFO(m_szShoeName)),
+	RecvPropString(RECVINFO(m_szKeeperGloveName)),
 END_RECV_TABLE()
 
 C_ReplayPlayer::C_ReplayPlayer()
@@ -45,6 +47,8 @@ C_ReplayPlayer::C_ReplayPlayer()
 	m_nHairIndex = 0;
 	m_szPlayerName[0] = '\0';
 	m_szShirtName[0] = '\0';
+	m_szShoeName[0] = '\0';
+	m_szKeeperGloveName[0] = '\0';
 }
 
 C_ReplayPlayer::~C_ReplayPlayer()

@@ -2220,6 +2220,9 @@ void CSDKPlayer::SetShoeName(const char *shoeName)
 		shoeIndex = g_IOSRand.RandomInt(0, CShoeInfo::m_ShoeInfo.Count() - 1);
 
 	Q_strncpy(m_szShoeName.GetForModify(), CShoeInfo::m_ShoeInfo[shoeIndex]->m_szFolderName, sizeof(m_szShoeName));
+
+	if (GetData())
+		GetData()->SetLastKnownShoeName(m_szShoeName);
 }
 
 void CSDKPlayer::SetKeeperGloveName(const char *keeperGloveName)
@@ -2242,6 +2245,9 @@ void CSDKPlayer::SetKeeperGloveName(const char *keeperGloveName)
 		keeperGloveIndex = g_IOSRand.RandomInt(0, CKeeperGloveInfo::m_KeeperGloveInfo.Count() - 1);
 
 	Q_strncpy(m_szKeeperGloveName.GetForModify(), CKeeperGloveInfo::m_KeeperGloveInfo[keeperGloveIndex]->m_szFolderName, sizeof(m_szKeeperGloveName));
+
+	if (GetData())
+		GetData()->SetLastKnownKeeperGloveName(m_szKeeperGloveName);
 }
 
 void CSDKPlayer::SetPlayerBallSkinName(const char *skinName)

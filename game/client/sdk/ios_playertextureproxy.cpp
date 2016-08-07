@@ -617,8 +617,8 @@ void CPlayerTextureProxy::OnBind( C_BaseEntity *pEnt )
 		pKitInfo = pTeam->GetKitInfo();
 		skinIndex = pReplayPl->m_nSkinIndex;
 		hairIndex = pReplayPl->m_nHairIndex;
-		shoeFolder = 0;//pReplayPl->m_szShoeName;
-		keeperGloveFolder = 0;//pReplayPl->m_szKeeperGloveName;
+		shoeFolder = pReplayPl->m_szShoeName;
+		keeperGloveFolder = pReplayPl->m_szKeeperGloveName;
 		shirtNumber = pReplayPl->m_nShirtNumber;
 		shirtName = pReplayPl->m_szShirtName;
 		isKeeper = pReplayPl->m_bIsKeeper;

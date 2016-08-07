@@ -71,6 +71,8 @@ IMPLEMENT_SERVERCLASS_ST(CReplayPlayer, DT_ReplayPlayer)
 	SendPropInt(SENDINFO(m_nHairIndex), 3, SPROP_UNSIGNED),
 	SendPropString(SENDINFO(m_szPlayerName)),
 	SendPropString(SENDINFO(m_szShirtName)),
+	SendPropString(SENDINFO(m_szShoeName)),
+	SendPropString(SENDINFO(m_szKeeperGloveName)),
 END_SEND_TABLE()
 
 void CReplayPlayer::Precache()
@@ -89,6 +91,8 @@ CReplayPlayer::CReplayPlayer()
 	m_nHairIndex = 0;
 	m_szPlayerName.GetForModify()[0] = '\0';
 	m_szShirtName.GetForModify()[0] = '\0';
+	m_szShoeName.GetForModify()[0] = '\0';
+	m_szKeeperGloveName.GetForModify()[0] = '\0';
 }
 
 void CReplayPlayer::Spawn( void )
@@ -765,6 +769,12 @@ void CReplayManager::RestoreReplayPlayerStates(Snapshot *pSnap, Snapshot *pNextS
 
 			if (Q_strcmp(pPl->m_szShirtName, pPlSnap->pPlayerData->m_szShirtName))
 				Q_strncpy(pPl->m_szShirtName.GetForModify(), pPlSnap->pPlayerData->m_szShirtName, MAX_SHIRT_NAME_LENGTH);
+
+			if (Q_strcmp(pPl->m_szShoeName, pPlSnap->pPlayerData->m_szShoeName))
+				Q_strncpy(pPl->m_szShoeName.GetForModify(), pPlSnap->pPlayerData->m_szShoeName, MAX_KITNAME_LENGTH);
+
+			if (Q_strcmp(pPl->m_szKeeperGloveName, pPlSnap->pPlayerData->m_szKeeperGloveName))
+				Q_strncpy(pPl->m_szKeeperGloveName.GetForModify(), pPlSnap->pPlayerData->m_szKeeperGloveName, MAX_KITNAME_LENGTH);
 
 			pPl->m_nSkinIndex = pPlSnap->skinIndex;
 			pPl->m_nHairIndex = pPlSnap->hairIndex;

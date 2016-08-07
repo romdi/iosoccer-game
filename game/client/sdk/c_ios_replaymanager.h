@@ -34,6 +34,8 @@ public:
 	int m_nHairIndex;
 	char m_szPlayerName[MAX_PLAYER_NAME_LENGTH];
 	char m_szShirtName[MAX_SHIRT_NAME_LENGTH];
+	char m_szShoeName[MAX_KITNAME_LENGTH];
+	char m_szKeeperGloveName[MAX_KITNAME_LENGTH];
 };
 
 class C_ReplayManager : public CBaseEntity

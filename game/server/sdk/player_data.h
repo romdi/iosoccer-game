@@ -4,6 +4,7 @@
 
 #include "cbase.h"
 #include "sdk_shareddefs.h"
+#include "ios_teamkit_parse.h"
 
 class CSDKPlayer;
 
@@ -69,6 +70,8 @@ public:
 	char	m_szSteamID[32];
 	char	m_szName[MAX_PLAYER_NAME_LENGTH];
 	char	m_szShirtName[MAX_SHIRT_NAME_LENGTH];
+	char	m_szShoeName[MAX_KITNAME_LENGTH];
+	char	m_szKeeperGloveName[MAX_KITNAME_LENGTH];
 	CPlayerMatchData *m_pMatchData;
 	CUtlVector<CPlayerPeriodData *> m_PeriodData;
 	int		m_nNextCardJoin;
@@ -178,6 +181,12 @@ public:
 
 	const char			*GetLastKnownShirtName() { return m_szShirtName; }
 	void				SetLastKnownShirtName(const char *name) { Q_strncpy(m_szShirtName, name, MAX_SHIRT_NAME_LENGTH); }
+
+	const char			*GetLastKnownShoeName() { return m_szShoeName; }
+	void				SetLastKnownShoeName(const char *name) { Q_strncpy(m_szShoeName, name, MAX_KITNAME_LENGTH); }
+
+	const char			*GetLastKnownKeeperGloveName() { return m_szKeeperGloveName; }
+	void				SetLastKnownKeeperGloveName(const char *name) { Q_strncpy(m_szKeeperGloveName, name, MAX_KITNAME_LENGTH); }
 };
 
 #endif
